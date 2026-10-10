@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
@@ -18,9 +19,10 @@ namespace LinqToDB
 	/// <remarks>
 	/// It is handed to the cell lambda of the <see cref="LinqExtensions"/> <c>Pivot</c> overloads, by which point
 	/// both type arguments are already inferred from the query - so a pivot over a join projected into an anonymous
-	/// type works, where naming <typeparamref name="TSource"/> would be impossible.
+	/// type works, where naming <typeparamref name="TSource"/> would be impossible. A result type that cannot name
+	/// it either can declare the member as <see cref="IReadOnlyDictionary{TKey,TValue}"/> instead.
 	/// </remarks>
-	public sealed class PivotCells<TSource, TFor>
+	public sealed class PivotCells<TSource, TFor> : IReadOnlyDictionary<string, object?>
 	{
 		internal sealed class Template
 		{
@@ -90,5 +92,38 @@ namespace LinqToDB
 		/// <typeparam name="T">Expected cell type.</typeparam>
 		/// <param name="name">Cell name.</param>
 		public T? Get<T>(string name) => this[name] is T value ? value : default;
+
+		#region IReadOnlyDictionary
+
+		int IReadOnlyCollection<KeyValuePair<string, object?>>.Count => Values?.Count ?? 0;
+
+		IEnumerable<string>  IReadOnlyDictionary<string, object?>.Keys   => Values?.Keys   ?? [];
+		IEnumerable<object?> IReadOnlyDictionary<string, object?>.Values => Values?.Values ?? [];
+
+		object? IReadOnlyDictionary<string, object?>.this[string key] => Values != null && Values.TryGetValue(key, out var value)
+			? value
+			: throw new KeyNotFoundException($"No pivot cell is named '{key}'.");
+
+		bool IReadOnlyDictionary<string, object?>.ContainsKey(string key) => Values != null && Values.ContainsKey(key);
+
+		bool IReadOnlyDictionary<string, object?>.TryGetValue(string key, out object? value)
+		{
+			if (Values != null && Values.TryGetValue(key, out var found))
+			{
+				value = found;
+				return true;
+			}
+
+			value = null;
+			return false;
+		}
+
+		IEnumerator<KeyValuePair<string, object?>> IEnumerable<KeyValuePair<string, object?>>.GetEnumerator()
+			=> ((IEnumerable<KeyValuePair<string, object?>>?)Values ?? []).GetEnumerator();
+
+		IEnumerator IEnumerable.GetEnumerator()
+			=> ((IEnumerable<KeyValuePair<string, object?>>)this).GetEnumerator();
+
+		#endregion
 	}
 }

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq.Expressions;
 
 using LinqToDB.Expressions;
@@ -36,21 +35,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var staticBody = SequenceHelper.PrepareBody(staticSelector, sequence);
 
-			var generic = staticBody switch
-			{
-				MemberInitExpression memberInit => new SqlGenericConstructorExpression(memberInit),
-				NewExpression newExpression     => new SqlGenericConstructorExpression(newExpression),
-				_ => throw new LinqToDBException($"{nameof(LinqExtensions.SelectDynamic)} static selector must be an object construction expression (new T {{ ... }})."),
-			};
-
-			generic = generic.WithMappingSchema(sequence.MappingSchema);
-
-			// A pivot that nests its cells leaves a PivotCells<,> placeholder at the member they belong to; with no
-			// placeholder the generated columns go into the result type's own dynamic-columns store.
-			var cellsIndex = FindCellsPlaceholder(generic, out var inParameters);
-			var storeType  = cellsIndex < 0
-				? resultType
-				: (inParameters ? generic.Parameters[cellsIndex].Expression.Type : generic.Assignments[cellsIndex].Expression.Type);
+			// A pivot that nests its cells leaves a PivotCells<,> placeholder at the member they belong to, at any
+			// depth; with no placeholder the generated columns go into the result type's own dynamic-columns store.
+			var placeholder = staticBody.Find(IsCellsPlaceholder);
+			var storeType   = placeholder?.Type ?? resultType;
 
 			var entityDescriptor = sequence.MappingSchema.GetEntityDescriptor(storeType);
 
@@ -69,32 +57,29 @@ namespace LinqToDB.Internal.Linq.Builder
 					cellBody, true, false);
 			}
 
-			if (cellsIndex < 0)
-			{
-				foreach (var cell in cells)
-					generic = generic.AppendAssignment(cell);
-			}
-			else
+			if (placeholder != null)
 			{
 				var store = new SqlGenericConstructorExpression(Expression.New(storeType)).WithMappingSchema(sequence.MappingSchema);
 
 				foreach (var cell in cells)
 					store = store.AppendAssignment(cell);
 
-				if (inParameters)
-				{
-					var parameters = new List<SqlGenericConstructorExpression.Parameter>(generic.Parameters);
+				staticBody = staticBody.Replace(placeholder, store);
+			}
 
-					parameters[cellsIndex] = parameters[cellsIndex].WithExpression(store);
-					generic                = generic.ReplaceParameters(parameters.AsReadOnly());
-				}
-				else
-				{
-					var assignments = new List<SqlGenericConstructorExpression.Assignment>(generic.Assignments);
+			var generic = staticBody switch
+			{
+				MemberInitExpression memberInit => new SqlGenericConstructorExpression(memberInit),
+				NewExpression newExpression     => new SqlGenericConstructorExpression(newExpression),
+				_ => throw new LinqToDBException($"{nameof(LinqExtensions.SelectDynamic)} static selector must be an object construction expression (new T {{ ... }})."),
+			};
 
-					assignments[cellsIndex] = assignments[cellsIndex].WithExpression(store);
-					generic                 = generic.ReplaceAssignments(assignments.AsReadOnly());
-				}
+			generic = generic.WithMappingSchema(sequence.MappingSchema);
+
+			if (placeholder == null)
+			{
+				foreach (var cell in cells)
+					generic = generic.AppendAssignment(cell);
 			}
 
 			var context = new SelectContext(buildInfo.Parent, generic, sequence, buildInfo.IsSubQuery);
@@ -104,30 +89,6 @@ namespace LinqToDB.Internal.Linq.Builder
 #endif
 
 			return BuildSequenceResult.FromContext(context);
-		}
-
-		static int FindCellsPlaceholder(SqlGenericConstructorExpression generic, out bool inParameters)
-		{
-			for (var i = 0; i < generic.Assignments.Count; i++)
-			{
-				if (IsCellsPlaceholder(generic.Assignments[i].Expression))
-				{
-					inParameters = false;
-					return i;
-				}
-			}
-
-			for (var i = 0; i < generic.Parameters.Count; i++)
-			{
-				if (IsCellsPlaceholder(generic.Parameters[i].Expression))
-				{
-					inParameters = true;
-					return i;
-				}
-			}
-
-			inParameters = false;
-			return -1;
 		}
 
 		static bool IsCellsPlaceholder(Expression expression)

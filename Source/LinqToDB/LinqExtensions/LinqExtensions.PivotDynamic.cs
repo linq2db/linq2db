@@ -66,10 +66,14 @@ namespace LinqToDB
 
 			// The builder recognizes the placeholder and replaces it with the cells it generates, so the cell set
 			// lands inside the projected object rather than in a store the result type has to declare itself.
-			var body = selector.Body.Replace(chain, Expression.Constant(null, typeof(PivotCells<TSource, TFor>)));
+			var placeholder = Expression.Constant(null, typeof(PivotCells<TSource, TFor>));
+			var body        = selector.Body.Replace(chain, placeholder);
 
 			if (body.Find(cellsParam) != null)
 				throw new ArgumentException($"'{cellsParam.Name}' may only be used to build one cell set, assigned to a single member of the projection.", nameof(selector));
+
+			if (!IsConstructedWith(body, placeholder))
+				throw new ArgumentException($"The cell set built from '{cellsParam.Name}' must be assigned to a member of an object the projection constructs, directly or in a nested object.", nameof(selector));
 
 			var staticSelector = Expression.Lambda<Func<IGrouping<TKey, TSource>, TResult>>(body, selector.Parameters[0]);
 
@@ -118,6 +122,23 @@ namespace LinqToDB
 				?? throw new ArgumentException("The cell set was not built.", nameof(cells));
 
 			return BuildPivot(source, keySelector, forColumn, forValues, staticSelector, built.Templates, null, nameof(cells));
+		}
+
+		// Member positions only: anywhere else the builder has no member to put the generated cells in.
+		static bool IsConstructedWith(Expression node, Expression placeholder)
+		{
+			return node switch
+			{
+				NewExpression        newExpr    => newExpr.Arguments.Any(a => IsMemberValue(a, placeholder)),
+				MemberInitExpression memberInit => IsConstructedWith(memberInit.NewExpression, placeholder)
+					|| memberInit.Bindings.Any(b => b is MemberAssignment assignment && IsMemberValue(assignment.Expression, placeholder)),
+				_                               => false,
+			};
+
+			static bool IsMemberValue(Expression value, Expression placeholder)
+				=> value == placeholder
+					|| value is UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked or ExpressionType.TypeAs } unary && IsMemberValue(unary.Operand, placeholder)
+					|| IsConstructedWith(value, placeholder);
 		}
 
 		static bool IsCellCall<TSource, TFor>(Expression expression)

@@ -493,6 +493,143 @@ namespace Tests.Linq
 			act.ShouldThrow<ArgumentException>();
 		}
 
+		[Test]
+		public void PivotsIntoANestedObject([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(Sales.Data);
+
+			var result = t
+				.Pivot(x => x.Category, x => x.Year, new[] { 2000, 2010 },
+					(g, p) => new
+					{
+						Category = g.Key,
+						Data     = new
+						{
+							Total = g.Sum(x => x.Amount),
+							Cells = p.Cell(rows => rows.Sum(x => x.Amount), Year),
+						},
+					})
+				.ToList()
+				.OrderBy(r => r.Category, StringComparer.Ordinal)
+				.ToList();
+
+			result.Count.ShouldBe(2);
+
+			result[0].Category.ShouldBe("A");
+			result[0].Data.Total.ShouldBe(30m);
+			result[0].Data.Cells["Y2000"].ShouldBe(10m);
+			result[0].Data.Cells["Y2010"].ShouldBe(20m);
+
+			result[1].Category.ShouldBe("B");
+			result[1].Data.Total.ShouldBe(20m);
+			result[1].Data.Cells["Y2000"].ShouldBe(5m);
+			result[1].Data.Cells["Y2010"].ShouldBe(15m);
+		}
+
+		sealed class RootStoreRow
+		{
+			public string      Category { get; set; } = null!;
+			public NestedCells Inner    { get; set; } = null!;
+
+			[DynamicColumnsStore]
+			public IDictionary<string, object>? Extra { get; set; }
+		}
+
+		sealed class NestedCells
+		{
+			public PivotCells<Sales, int> Cells { get; set; } = null!;
+		}
+
+		/// <summary>The cells belong to the nested member, not to a dynamic-columns store the result type also has.</summary>
+		[Test]
+		public void PivotsIntoANestedMemberBesideARootStore([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(Sales.Data);
+
+			var result = t
+				.Pivot(x => x.Category, x => x.Year, new[] { 2000, 2010 },
+					(g, p) => new RootStoreRow
+					{
+						Category = g.Key,
+						Inner    = new NestedCells { Cells = p.Cell(rows => rows.Sum(x => x.Amount), Year) },
+					})
+				.ToList()
+				.OrderBy(r => r.Category, StringComparer.Ordinal)
+				.ToList();
+
+			result.Count.ShouldBe(2);
+
+			result[0].Inner.Cells["Y2000"].ShouldBe(10m);
+			result[0].Inner.Cells["Y2010"].ShouldBe(20m);
+			result[1].Inner.Cells["Y2000"].ShouldBe(5m);
+			result[1].Inner.Cells["Y2010"].ShouldBe(15m);
+
+			result.ShouldAllBe(r => r.Extra == null || r.Extra.Count == 0);
+		}
+
+		sealed class InterfaceCellsRow
+		{
+			public string                               Category { get; set; } = null!;
+			public IReadOnlyDictionary<string, object?> Cells    { get; set; } = null!;
+		}
+
+		/// <summary>
+		/// The source is anonymous, so the result type cannot name <c>PivotCells&lt;TSource, TFor&gt;</c>; it declares
+		/// the member through the dictionary interface instead.
+		/// </summary>
+		[Test]
+		public void PivotsIntoAnInterfaceTypedMember([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(Sales.Data);
+
+			var result = t
+				.Select(x => new { x.Category, x.Year, x.Amount })
+				.Pivot(x => x.Category, x => x.Year, new[] { 2000, 2010 },
+					(g, p) => new InterfaceCellsRow
+					{
+						Category = g.Key,
+						Cells    = p.Cell(rows => rows.Sum(x => x.Amount), Year),
+					})
+				.ToList()
+				.OrderBy(r => r.Category, StringComparer.Ordinal)
+				.ToList();
+
+			result.Count.ShouldBe(2);
+
+			result[0].Cells.Count.ShouldBe(2);
+			result[0].Cells["Y2000"].ShouldBe(10m);
+			result[0].Cells["Y2010"].ShouldBe(20m);
+			result[1].Cells["Y2000"].ShouldBe(5m);
+			result[1].Cells["Y2010"].ShouldBe(15m);
+
+			result[0].Cells.ContainsKey("Y2020").ShouldBeFalse();
+		}
+
+		static T PassThrough<T>(T value) => value;
+
+		[Test]
+		public void CellSetOutsideAMemberThrows([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(Sales.Data);
+
+			Action asArgument = () => t
+				.Pivot(x => x.Category, x => x.Year, new[] { 2000 },
+					(g, p) => new { g.Key, Cells = PassThrough(p.Cell(rows => rows.Sum(x => x.Amount), Year)) })
+				.ToList();
+
+			Action asWholeProjection = () => t
+				.Pivot(x => x.Category, x => x.Year, new[] { 2000 },
+					(g, p) => p.Cell(rows => rows.Sum(x => x.Amount), Year))
+				.ToList();
+
+			asArgument       .ShouldThrow<ArgumentException>().Message.ShouldContain("assigned to a member");
+			asWholeProjection.ShouldThrow<ArgumentException>().Message.ShouldContain("assigned to a member");
+		}
+
 		#endregion
 
 		#region Aggregate vocabulary and empty cells
