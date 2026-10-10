@@ -53,7 +53,13 @@ namespace Tests.Remote
 		const string HubPath       = "/hub/linq2db";
 		const string Configuration = "SignalRTransportTests";
 
-		static readonly TimeSpan Prompt = TimeSpan.FromSeconds(2);
+		// How long a test waits for something it expects to happen: the wait ends as soon as it does, so the limit only
+		// has to keep a regression from hanging the run, and is generous for loaded CI agents.
+		static readonly TimeSpan WaitLimit = TimeSpan.FromSeconds(30);
+
+		// How soon something must happen when the test asserts it is prompt: well above any healthy latency, and well
+		// below the hang it guards against (the 10 s pg_sleep of CancellationReachesTheDatabase).
+		static readonly TimeSpan Prompt = TimeSpan.FromSeconds(5);
 
 		#region Plain calls
 
@@ -123,13 +129,13 @@ namespace Tests.Remote
 			var error = await CatchAsync(() => client.ExecuteReaderAsync(Configuration, "query", cts.Token));
 			error.ShouldBeAssignableTo<OperationCanceledException>();
 
-			(await service.WaitCancelledAsync(Prompt)).ShouldBeTrue("the server-side token did not fire");
+			(await service.WaitCancelledAsync(WaitLimit)).ShouldBeTrue("the server-side token did not fire");
 
 			// The cancelled call released the connection's only call slot: the next call runs at once.
 			service.Behavior = static (_, _) => Task.FromResult("next");
 
 			var sw = Stopwatch.StartNew();
-			(await client.ExecuteReaderAsync(Configuration, "query")).ShouldBe("next");
+			(await WithinLimit(client.ExecuteReaderAsync(Configuration, "query"))).ShouldBe("next");
 			sw.Elapsed.ShouldBeLessThan(Prompt);
 		}
 
@@ -144,14 +150,14 @@ namespace Tests.Remote
 
 			var call = client.ExecuteNonQueryAsync(Configuration, "query");
 
-			(await service.WaitStartedAsync(Prompt)).ShouldBeTrue("the call did not reach the server");
+			(await service.WaitStartedAsync(WaitLimit)).ShouldBeTrue("the call did not reach the server");
 
 			await hubConnection.DisposeAsync();
 
-			(await service.WaitCancelledAsync(Prompt)).ShouldBeTrue("the server-side token did not fire on disconnect");
+			(await service.WaitCancelledAsync(WaitLimit)).ShouldBeTrue("the server-side token did not fire on disconnect");
 
 			// No replay: the call fails, and the server ran it once.
-			(await CatchAsync(() => call)).ShouldNotBeNull();
+			(await CatchAsync(() => WithinLimit(call))).ShouldNotBeNull();
 			service.Calls.ShouldBe(1);
 		}
 
@@ -198,7 +204,7 @@ namespace Tests.Remote
 
 			(await CatchAsync(() => client.ExecuteReaderAsync(Configuration, "query", cts.Token))).ShouldBeAssignableTo<OperationCanceledException>();
 
-			(await WaitAsync(ScopedLinqService.Finished.Task, Prompt + Prompt)).ShouldBeTrue("the operation did not finish");
+			(await WaitAsync(ScopedLinqService.Finished.Task, WaitLimit)).ShouldBeTrue("the operation did not finish");
 			ScopedLinqService.UsedAfterDispose.ShouldBeFalse("the scope was disposed while the operation was still running");
 		}
 
@@ -234,7 +240,7 @@ namespace Tests.Remote
 
 				// Wait for the server to give up on the reader, then check it really stopped: one that kept reading
 				// would still be adding rows (at most one per millisecond, so a row-count bound alone cannot tell).
-				await database.WaitIdleAsync(Prompt + Prompt);
+				await database.WaitIdleAsync(WaitLimit);
 
 				var rowsRead = database.RowsRead;
 				await Task.Delay(500);
@@ -276,7 +282,7 @@ namespace Tests.Remote
 			var reader = (ChannelReader<string>)Activator.CreateInstance(readerType, operation, CancellationToken.None)!;
 
 			(await reader.WaitToReadAsync()).ShouldBeFalse();
-			(await WaitAsync(reader.Completion, Prompt)).ShouldBeTrue("the stream never completed");
+			(await WaitAsync(reader.Completion, WaitLimit)).ShouldBeTrue("the stream never completed");
 		}
 
 		// Signal/R reads a stream through TryRead / WaitToReadAsync / ReadAsync and never looks at its Completion: a
@@ -432,7 +438,7 @@ namespace Tests.Remote
 			using var holder = new CancellationTokenSource();
 
 			var running = client.ExecuteReaderAsync(Configuration, "first", holder.Token);
-			(await service.WaitStartedAsync(Prompt)).ShouldBeTrue();
+			(await service.WaitStartedAsync(WaitLimit)).ShouldBeTrue();
 
 			using (var queued = new CancellationTokenSource(TimeSpan.FromMilliseconds(200)))
 				(await CatchAsync(() => client.ExecuteReaderAsync(Configuration, "second", queued.Token))).ShouldBeAssignableTo<OperationCanceledException>();
@@ -443,9 +449,9 @@ namespace Tests.Remote
 			service.Behavior = static (query, _) => Task.FromResult(query);
 
 			holder.Cancel();
-			(await CatchAsync(() => running)).ShouldBeAssignableTo<OperationCanceledException>();
+			(await CatchAsync(() => WithinLimit(running))).ShouldBeAssignableTo<OperationCanceledException>();
 
-			(await client.ExecuteReaderAsync(Configuration, "third")).ShouldBe("third");
+			(await WithinLimit(client.ExecuteReaderAsync(Configuration, "third"))).ShouldBe("third");
 			service.Calls.ShouldBe(2);
 		}
 
@@ -474,13 +480,13 @@ namespace Tests.Remote
 			var first = await host.ConnectAsync();
 			var call  = ((ILinqService)new SignalRLinqServiceClient(first)).ExecuteReaderAsync(Configuration, "query");
 
-			(await service.WaitStartedAsync(Prompt)).ShouldBeTrue();
+			(await service.WaitStartedAsync(WaitLimit)).ShouldBeTrue();
 
 			await first.DisposeAsync();
-			_ = await CatchAsync(() => call);
+			_ = await CatchAsync(() => WithinLimit(call));
 
 			release.SetResult(true);
-			(await service.WaitFinishedAsync(Prompt)).ShouldBeTrue();
+			(await service.WaitFinishedAsync(WaitLimit)).ShouldBeTrue();
 
 			service.Behavior = static (_, _) => Task.FromResult("next");
 
@@ -489,7 +495,7 @@ namespace Tests.Remote
 
 			var next = ((ILinqService)new SignalRLinqServiceClient(second)).ExecuteReaderAsync(Configuration, "query");
 
-			(await WaitAsync(next, Prompt + Prompt)).ShouldBeTrue("the late call kept its permit");
+			(await WaitAsync(next, WaitLimit)).ShouldBeTrue("the late call kept its permit");
 			(await next).ShouldBe("next");
 		}
 
@@ -717,7 +723,7 @@ namespace Tests.Remote
 			var hubConnection = await host.ConnectAsync();
 			await using var owner = Own(hubConnection);
 
-			return await CatchAsync(() => ((ILinqService)new SignalRLinqServiceClient(hubConnection)).ExecuteReaderAsync(Configuration, "query"));
+			return await CatchAsync(() => WithinLimit(((ILinqService)new SignalRLinqServiceClient(hubConnection)).ExecuteReaderAsync(Configuration, "query")));
 		}
 
 		#endregion
@@ -778,7 +784,7 @@ namespace Tests.Remote
 				(await scope.ServiceProvider.GetRequiredService<ClientContext>().GetTable<Item>().CountAsync()).ShouldBe(0);
 			}
 
-			(await WaitAsync(lost.Task, Prompt + Prompt)).ShouldBeTrue("the client did not notice the server going away");
+			(await WaitAsync(lost.Task, WaitLimit)).ShouldBeTrue("the client did not notice the server going away");
 
 			using var restarted = TestHost.Start<SqliteHub>(services => services.AddSingleton(database), port: port);
 
@@ -964,6 +970,7 @@ namespace Tests.Remote
 				(await query).ShouldBeAssignableTo<OperationCanceledException>();
 				sw.Elapsed.ShouldBeLessThan(Prompt);
 
+				// Bounded by Prompt, not WaitLimit: the sleep would end by itself after 10 s.
 				(await WaitForAsync(() => admin.Execute<int>(SleepingQuery) == 0, Prompt)).ShouldBeTrue("the query kept running in the database");
 
 				sw.Restart();
@@ -1094,6 +1101,19 @@ namespace Tests.Remote
 			return await Task.WhenAny(task, Task.Delay(timeout)) == task;
 		}
 
+		// Fails the test, rather than hanging the run, when a call never finishes.
+		static async Task<T> WithinLimit<T>(Task<T> task)
+		{
+			(await WaitAsync(task, WaitLimit)).ShouldBeTrue("the call did not finish");
+			return await task;
+		}
+
+		static async Task WithinLimit(Task task)
+		{
+			(await WaitAsync(task, WaitLimit)).ShouldBeTrue("the call did not finish");
+			await task;
+		}
+
 		static async Task<bool> WaitForAsync(Func<bool> condition, TimeSpan timeout)
 		{
 			var sw = Stopwatch.StartNew();
@@ -1131,8 +1151,8 @@ namespace Tests.Remote
 				for (var i = 0; i < connections; i++)
 					hubConnections.Add(await host.ConnectAsync());
 
-				await Task.WhenAll(hubConnections.SelectMany(c => Enumerable.Range(0, callsPerConnection).Select(n =>
-					((ILinqService)new SignalRLinqServiceClient(c)).ExecuteReaderAsync(Configuration, "query"))));
+				await WithinLimit(Task.WhenAll(hubConnections.SelectMany(c => Enumerable.Range(0, callsPerConnection).Select(n =>
+					((ILinqService)new SignalRLinqServiceClient(c)).ExecuteReaderAsync(Configuration, "query")))));
 			}
 			finally
 			{
