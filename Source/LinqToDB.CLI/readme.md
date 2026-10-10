@@ -166,7 +166,7 @@ dotnet linq2db credentials list
 dotnet linq2db credentials remove --credentials linq2db/project-a/production
 ```
 
-Reference the record using `"credentials": "linq2db/project-a/production"` or `--credentials linq2db/project-a/production`. Windows Credential Manager entries and the local store are scoped to the account that created them, so an MCP process running under another account cannot read them.
+Reference the record using `"credentials": "linq2db/project-a/production"` or `--credentials linq2db/project-a/production`. Windows Credential Manager entries and the local store are scoped to the account that created them, so an MCP process running under another account cannot read them. An MCP host may start the server with a reduced environment: if you set `XDG_CONFIG_HOME` or `LINQ2DB_CREDENTIALS_DIR`, pass it in the server's `env` as well, or the server looks for the local store in another directory.
 
 Ordinary generic Credential Manager entries remain supported. Create one without placing the password in command-line arguments:
 

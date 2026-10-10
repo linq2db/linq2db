@@ -643,6 +643,7 @@ Tool-call boundary:
 - `output` optionally overrides the startup/config output format. MCP supports only `json` and `json-table`.
 - Provider, connection string, credentials, credential store, impersonation, provider assembly location, and timeout setup are not accepted through MCP tool input.
 - A credentials CLI started for an MCP tool call runs non-interactively (`LINQ2DB_CREDENTIAL_INTERACTIVE=0`). If it fails, its first standard-error line (with the password linq2db-cli sent redacted) is included in the tool's error response. After it times out (for example a locked keyring), the server does not start it again for 60 seconds; unlock the credential store and retry.
+- An MCP host may start the server with a reduced environment (on Linux and macOS often only `HOME`, `PATH`, `USER` and a few more). If you set `XDG_CONFIG_HOME` or `LINQ2DB_CREDENTIALS_DIR`, pass it in the server registration's `env` as well, or the server looks for the local store in another directory than `credentials set` used.
 
 The MCP default output format is `json-table`, which preserves duplicate column names and carries `rowCount`, `truncated`, `truncationReason`, `maxOutputBytes`, and `recordsAffected` in-band when applicable. The existing `query` command keeps `json` as its default.
 

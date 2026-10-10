@@ -69,7 +69,9 @@ One directory holds the local store's files and the generated scripts:
 
 A relative value of these variables is ignored. `LINQ2DB_CREDENTIALS_DIR` is meant for tests and containers; it must not
 be under a directory that every user can write to (see below), and it must be a directory you created. When no
-directory can be determined (no home directory), set `LINQ2DB_CREDENTIALS_DIR` to an absolute path.
+directory can be determined (no home directory), set `LINQ2DB_CREDENTIALS_DIR` to an absolute path. An MCP host may
+start the server with a reduced environment: if you set `XDG_CONFIG_HOME` or `LINQ2DB_CREDENTIALS_DIR`, pass it in the
+server registration's `env` as well, or the server uses another directory than your shell.
 
 On Linux and macOS the directory is created owner-only (`0700`); a directory that is a symbolic link or that other users
 can write to (group or other write permission) is refused, because they could replace the key, the data or a generated
