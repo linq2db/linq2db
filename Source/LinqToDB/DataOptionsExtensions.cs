@@ -325,10 +325,8 @@ namespace LinqToDB
 
 		/// <summary>
 		/// When enabled, computed expressions in the final projection are calculated on the client during
-		/// materialization instead of being translated into additional SQL columns. Expressions that prefer or
-		/// require server-side evaluation (for example, members or methods mapped with
-		/// <see cref="Sql.ExpressionAttribute.PreferServerSide"/> or <see cref="Sql.ExpressionAttribute.ServerSideOnly"/>)
-		/// are still translated to SQL.
+		/// materialization instead of being translated into additional SQL columns. Which expressions move is
+		/// described on <see cref="LinqOptions.PreferClientCalculation"/>.
 		/// Default value: <see langword="false"/>.
 		/// </summary>
 		[Pure]
@@ -650,10 +648,8 @@ namespace LinqToDB
 
 		/// <summary>
 		/// When enabled, computed expressions in the final projection are calculated on the client during
-		/// materialization instead of being translated into additional SQL columns. Expressions that prefer or
-		/// require server-side evaluation (for example, members or methods mapped with
-		/// <see cref="Sql.ExpressionAttribute.PreferServerSide"/> or <see cref="Sql.ExpressionAttribute.ServerSideOnly"/>)
-		/// are still translated to SQL.
+		/// materialization instead of being translated into additional SQL columns. Which expressions move is
+		/// described on <see cref="LinqOptions.PreferClientCalculation"/>.
 		/// Default value: <see langword="false"/>.
 		/// </summary>
 		[Pure]

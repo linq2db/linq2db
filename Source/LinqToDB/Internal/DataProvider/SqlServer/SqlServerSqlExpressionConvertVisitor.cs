@@ -376,6 +376,38 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			return base.ConvertSqlFunction(func);
 		}
 
+		public override ISqlExpression ConvertDefaultValue(SqlDefaultValueExpression expression)
+		{
+			if (LeastDate(expression.Type) is { } least && RaiseDefaultDate(expression, least) is { } raised)
+			{
+				// Every path that clamps writes a DateTimeOffset through LocalDateTime, which moves with the time zone.
+				return raised.Value is DateTimeOffset dateTimeOffset
+					? new SqlValue(expression.Type.WithSystemType(typeof(DateTime)), dateTimeOffset.DateTime)
+					: raised;
+			}
+
+			return base.ConvertDefaultValue(expression);
+		}
+
+		// The least date of the type the mapping schema's converters write a date as, where it is later than 0001-01-01: a text
+		// type is a string, date and datetime2 hold 0001-01-01 from 2008 on and so does the datetimeoffset an offset outside the
+		// datetime family is written as, and everything else is written as datetime.
+		DateTime? LeastDate(DbDataType type)
+		{
+			var v2008Plus = _sqlServerVersion >= SqlServerVersion.v2008;
+
+			return type.DataType switch
+			{
+				DataType.Char or DataType.VarChar or DataType.Text or DataType.NChar or DataType.NVarChar or DataType.NText => null,
+
+				DataType.SmallDateTime                                                             => new DateTime(1900, 1, 1),
+				DataType.DateTime                                                                  => new DateTime(1753, 1, 1),
+				DataType.Date or DataType.DateTime2 when v2008Plus                                 => null,
+				_ when v2008Plus && type.SystemType.UnwrapNullableType() == typeof(DateTimeOffset) => null,
+				_                                                                                  => new DateTime(1753, 1, 1),
+			};
+		}
+
 		protected override ISqlExpression WrapColumnExpression(ISqlExpression expr)
 		{
 			if (expr is SqlValue

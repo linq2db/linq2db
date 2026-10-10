@@ -154,12 +154,25 @@ namespace LinqToDB
 	/// Default value: <see langword="false"/>.
 	/// </param>
 	/// <param name="PreferClientCalculation">
-	/// When enabled, computed expressions in the final projection (arithmetic, conditionals, unary operations, and
-	/// mapped members/methods that do not prefer server-side evaluation) are calculated on the client during
-	/// materialization instead of being translated into additional SQL columns. Real database columns,
-	/// already-built subqueries, and expressions that prefer or require server-side evaluation (for example,
-	/// members or methods mapped with <see cref="Sql.ExpressionAttribute.PreferServerSide"/> or
-	/// <see cref="Sql.ExpressionAttribute.ServerSideOnly"/>) are still translated to SQL.
+	/// When enabled, computed expressions in the final projection (arithmetic, conditionals, unary operations, string
+	/// interpolation, and methods mapped with <see cref="Sql.ExpressionAttribute"/> that do not prefer server-side
+	/// evaluation) are calculated on the client during materialization instead of being translated into additional
+	/// SQL columns. Real database columns, already-built subqueries, and expressions that prefer or require
+	/// server-side evaluation (for example, members or methods mapped with
+	/// <see cref="Sql.ExpressionAttribute.PreferServerSide"/> or <see cref="Sql.ExpressionAttribute.ServerSideOnly"/>)
+	/// are still translated to SQL, as are members with a built-in translation — for example
+	/// <c>Convert.ToString</c>, <c>Guid.ToString</c>, <c>Math.Max</c> / <c>Math.Min</c>, the <c>AddXxx</c> date methods
+	/// and the <see cref="string"/> instance methods — and their arguments.
+	/// <para>
+	/// The option changes where a value is calculated, not what it is: over a row a <c>LEFT JOIN</c> did not match,
+	/// a calculation reads a non-nullable column as <c>default(T)</c>, as the client does, whether it runs on the
+	/// client or in SQL. A conversion to a nullable type, <c>Sql.ToNullable</c> and <c>Sql.AsNullable</c> keep the
+	/// SQL <see langword="null"/> instead.
+	/// </para>
+	/// <para>
+	/// A projection that produced one computed SQL column may select several raw columns instead, so more data can
+	/// cross the wire.
+	/// </para>
 	/// Default value: <see langword="false"/>.
 	/// </param>
 	/// <param name="UpsertEmulationPolicy">

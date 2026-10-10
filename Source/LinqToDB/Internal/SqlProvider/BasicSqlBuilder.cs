@@ -3454,6 +3454,14 @@ namespace LinqToDB.Internal.SqlProvider
 					BuildSqlValue(sqlval);
 					break;
 
+				case QueryElementType.SqlDefaultValueExpression:
+				{
+					var defaultValue = (SqlDefaultValueExpression)expr;
+
+					BuildSqlValue(new SqlValue(defaultValue.Type, defaultValue.Value));
+					break;
+				}
+
 				case QueryElementType.SqlExpression:
 				{
 					var e = (SqlExpression)expr;

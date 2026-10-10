@@ -1,4 +1,6 @@
-﻿using LinqToDB.Internal.DataProvider.Translation;
+﻿using System;
+
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
@@ -99,6 +101,42 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			}
 
 			return result;
+		}
+
+		static bool IsDate(Type type)
+		{
+#if SUPPORTS_DATEONLY
+			if (type == typeof(DateOnly))
+				return true;
+#endif
+
+			return type == typeof(DateTime) || type == typeof(DateTimeOffset);
+		}
+
+		// Sybase writes a date as an untyped string, which takes the type of the column beside it: cast to the mapped type, a
+		// physical column narrower than its mapping is promoted rather than handed a date it cannot hold. A mapped type ASE does
+		// not spell - an offset, a rowversion timestamp - is cast to datetime, which ASE reads an offset through.
+		static SqlCastExpression ConvertDefaultDate(SqlDefaultValueExpression expression)
+		{
+			var least = expression.Type.DataType switch
+			{
+				DataType.SmallDateTime => new DateTime(1900, 1, 1),
+				DataType.Date          => default(DateTime?),
+				_                      => new DateTime(1753, 1, 1),
+			};
+
+			var value = (least == null ? null : RaiseDefaultDate(expression, least.Value)) ?? new SqlValue(expression.Type, expression.Value);
+
+			var dataType = expression.Type.DataType is DataType.DateTime or DataType.DateTime2 or DataType.SmallDateTime or DataType.Date or DataType.Time
+				? expression.Type.DataType
+				: DataType.DateTime;
+
+			return new SqlCastExpression(value, new DbDataType(expression.Type.SystemType, dataType), null, isMandatory: true);
+		}
+
+		public override ISqlExpression ConvertDefaultValue(SqlDefaultValueExpression expression)
+		{
+			return IsDate(expression.Type.SystemType) ? ConvertDefaultDate(expression) : base.ConvertDefaultValue(expression);
 		}
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)

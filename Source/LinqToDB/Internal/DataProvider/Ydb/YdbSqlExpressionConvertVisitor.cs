@@ -252,6 +252,16 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			return element;
 		}
 
+		// The mapping schema writes a date narrow, from 1970-01-01, as whatever type it is mapped to except the wide Date32,
+		// Datetime64 and Timestamp64, which hold 0001-01-01.
+		public override ISqlExpression ConvertDefaultValue(SqlDefaultValueExpression expression)
+		{
+			return expression.Type.DataType is not (DataType.Date32 or DataType.DateTime64 or DataType.Timestamp64)
+				&& RaiseDefaultDate(expression, new DateTime(1970, 1, 1)) is { } raised
+					? raised
+					: base.ConvertDefaultValue(expression);
+		}
+
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
 			// Math::Floor/Ceil/Trunc are Double-only. For a Decimal argument, route through Double and
