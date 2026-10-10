@@ -1,12 +1,24 @@
-﻿#nullable enable
-const LinqToDB.Internal.Common.ErrorHelper.Error_ValueConverter_DivergentOperands = "Cannot combine '{0}' and '{1}' in the database: their value converters do not agree on what a stored value counts, so the two stored values are not commensurable and the result would be read through one of the conversions only. Combine them in .NET, or give both columns the same conversion." -> string!
+#nullable enable
+*REMOVED*LinqToDB.Internal.SqlProvider.OptimizationContext.TransformationInfo.get -> LinqToDB.Internal.SqlQuery.Visitors.SqlQueryVisitor.IVisitorTransformationInfo!
 const LinqToDB.Internal.Common.ErrorHelper.Error_OutputAsSource_NotSupported = "Provider does not support using the output of a data-modifying statement (INSERT ... RETURNING/OUTPUT) as a query source. Execute the statement with InsertWithOutput and compose the returned records on the client instead." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_OutputAsSource_Projection = "The output rows of a data-modifying statement were composed into a shape that cannot be rendered as a RETURNING/OUTPUT clause. Project only columns of the inserted record in the output expression and apply further logic in the consuming query." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_ValueConverter_DivergentOperands = "Cannot combine '{0}' and '{1}' in the database: their value converters do not agree on what a stored value counts, so the two stored values are not commensurable and the result would be read through one of the conversions only. Combine them in .NET, or give both columns the same conversion." -> string!
 LinqToDB.Internal.SqlProvider.BasicSqlBuilder.CreateDataModificationOutputStatement(LinqToDB.Internal.SqlQuery.CteClause! cte) -> LinqToDB.Internal.SqlQuery.SqlStatementWithQueryBase!
 LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsOutputAsSourceSupported.get -> bool
 LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsOutputAsSourceSupported.set -> void
 LinqToDB.Internal.SqlQuery.CteClause.DataModification.get -> LinqToDB.Internal.SqlQuery.SqlStatementWithQueryBase?
 LinqToDB.Internal.SqlQuery.CteClause.DataModification.set -> void
+override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlExpressionConvertVisitor.CanLowerIntervalShift.get -> bool
+override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.CanLowerIntervalShift.get -> bool
+override LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlExpressionConvertVisitor.CanLowerIntervalShift.get -> bool
+override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.ElapsedTicks(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.IntervalResolution.get -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.CanLowerIntervalShift.get -> bool
+override LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 static LinqToDB.LinqExtensions.InsertWithOutputQuery<TSource, TTarget, TOutput>(this System.Linq.IQueryable<TSource>! source, LinqToDB.ITable<TTarget>! target, System.Linq.Expressions.Expression<System.Func<TSource, TTarget>!>! setter, System.Linq.Expressions.Expression<System.Func<TTarget, TOutput>!>! outputExpression) -> System.Linq.IQueryable<TOutput>!
 static LinqToDB.LinqExtensions.InsertWithOutputQuery<TSource, TTarget>(this System.Linq.IQueryable<TSource>! source, LinqToDB.ITable<TTarget>! target, System.Linq.Expressions.Expression<System.Func<TSource, TTarget>!>! setter) -> System.Linq.IQueryable<TTarget>!
 static LinqToDB.LinqExtensions.InsertWithOutputQuery<TTarget, TOutput>(this LinqToDB.ITable<TTarget>! target, System.Linq.Expressions.Expression<System.Func<TTarget>!>! setter, System.Linq.Expressions.Expression<System.Func<TTarget, TOutput>!>! outputExpression) -> System.Linq.IQueryable<TOutput>!
