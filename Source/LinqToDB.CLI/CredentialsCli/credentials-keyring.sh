@@ -80,17 +80,16 @@ case $verb in
 		printf 'username=%s\npassword=%s\n' "$user" "$secret"
 		;;
 	store)
+		# secret-tool store writes to the default collection and unlocks it with a prompt when it is locked; whether it
+		# is cannot be told without one (an unlocked item of ours may be in another collection). So storing needs a
+		# user who can answer.
+		if [ "${LINQ2DB_CREDENTIAL_INTERACTIVE-1}" = 0 ]; then
+			fail 'storing may need the keyring unlock prompt, and nobody can answer it here; run credentials set from a terminal'
+		fi
 		# libsecret replaces an item only when all its attributes match, so a new user name would add a second
 		# item. Store first (nothing is lost if that fails), then remove the items stored under other user names.
 		search target "$target"
 		old_users=$(printf '%s\n' "$found_attributes" | LC_ALL=C sed -n 's/^attribute\.user = //p')
-		# secret-tool store unlocks a locked keyring with a prompt, and secret-tool cannot tell whether it is locked
-		# without one. With nobody to answer, store only when an item of ours shows the keyring unlocked (search fails
-		# on a locked one).
-		if [ "${LINQ2DB_CREDENTIAL_INTERACTIVE-1}" = 0 ] && [ "$found_items" = 0 ]; then
-			search
-			[ "$found_items" != 0 ] || fail 'cannot tell without a prompt whether the keyring is locked; store the first record from a terminal'
-		fi
 		printf '%s' "$password" | st store --label="linq2db-cli $target" service linq2db-cli target "$target" user "$username" \
 			|| fail 'secret-tool store failed'
 		printf '%s\n' "$old_users" | while IFS= read -r old; do

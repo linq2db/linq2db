@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -26,18 +27,20 @@ namespace Tests.LinqToDB.CLI
 		const string HostilePassword = "  p'a\"s$HOME`id`$(id)=é  ";
 		const string HostileTarget   = "linq2db/it's a \"test\" $x";
 
-		// A fake secret-tool: items are directories under $FAKE_STATE/items with one file per attribute. "search --all"
-		// prints the item header and secret on stdout and the attributes on stderr, like the real tool; a "locked" file
-		// makes the keyring locked (no secret lines, lookup fails). "search --unlock" and "store" unlock it, as libsecret does
-		// with a prompt that a user answers; "store" also leaves a "prompted" file, since nobody may be there to answer.
+		// A fake secret-tool: items are directories under $FAKE_STATE/items with one file per attribute, and a "collection"
+		// file (missing: the default collection). "search --all" prints the item header and secret on stdout and the
+		// attributes on stderr, like the real tool. A collection is locked by a file: "locked" for the default one,
+		// "locked.<name>" for another; a locked item has no secret line and lookup fails. "search --unlock" unlocks the
+		// collections of the items found, and "store" (which writes to the default collection) unlocks that one, as libsecret
+		// does with a prompt that a user answers; "store" also leaves a "prompted" file, since nobody may be there to answer.
 		const string FakeSecretTool = """
 			#!/bin/sh
 			set -u
 			for a in "$@"; do printf '%s\n' "$a" >> "$FAKE_STATE/argv.log"; done
 			cmd=$1; shift
-			label=''
+			label=''; unlock=0
 			if [ "$cmd" = search ] && [ "${1-}" = --all ]; then shift; fi
-			if [ "$cmd" = search ] && [ "${1-}" = --unlock ]; then shift; rm -f "$FAKE_STATE/locked"; fi
+			if [ "$cmd" = search ] && [ "${1-}" = --unlock ]; then shift; unlock=1; fi
 			case ${1-} in --label=*) label=${1#--label=}; shift ;; esac
 			ws=''; wt=''; wu=''; hs=0; ht=0; hu=0
 			while [ $# -ge 2 ]; do
@@ -55,21 +58,25 @@ namespace Tests.LinqToDB.CLI
 				[ $hu = 0 ] || [ "$(cat "$1/user")" = "$wu" ] || return 1
 				return 0
 			}
-			locked() { [ -e "$FAKE_STATE/locked" ]; }
+			collection() { if [ -f "$1/collection" ]; then cat "$1/collection"; else printf default; fi; }
+			lockfile() { if [ "$1" = default ]; then printf '%s' "$FAKE_STATE/locked"; else printf '%s' "$FAKE_STATE/locked.$1"; fi; }
+			locked() { [ -e "$(lockfile "$1")" ]; }
 			case $cmd in
 				store)
-					if locked; then : > "$FAKE_STATE/prompted"; rm -f "$FAKE_STATE/locked"; fi
+					if locked default; then : > "$FAKE_STATE/prompted"; rm -f "$(lockfile default)"; fi
 					secret=$(cat; printf x); secret=${secret%x}
 					item=''
-					for d in "$FAKE_STATE"/items/*; do [ -d "$d" ] && matches "$d" && item=$d; done
+					for d in "$FAKE_STATE"/items/*; do [ -d "$d" ] && [ "$(collection "$d")" = default ] && matches "$d" && item=$d; done
 					[ -n "$item" ] || { item=$FAKE_STATE/items/$(date +%s%N); mkdir "$item"; }
 					printf '%s' "$ws" > "$item/service"; printf '%s' "$wt" > "$item/target"; printf '%s' "$wu" > "$item/user"
 					printf '%s' "$secret" > "$item/secret"; printf '%s' "$label" > "$item/label"
 					;;
 				lookup)
-					locked && { echo 'secret-tool: Cannot get secret of a locked object' >&2; exit 1; }
 					for d in "$FAKE_STATE"/items/*; do
-						if [ -d "$d" ] && matches "$d"; then cat "$d/secret"; exit 0; fi
+						if [ -d "$d" ] && matches "$d"; then
+							locked "$(collection "$d")" && { echo 'secret-tool: Cannot get secret of a locked object' >&2; exit 1; }
+							cat "$d/secret"; exit 0
+						fi
 					done
 					exit 1
 					;;
@@ -84,9 +91,10 @@ namespace Tests.LinqToDB.CLI
 					n=0
 					for d in "$FAKE_STATE"/items/*; do
 						[ -d "$d" ] && matches "$d" || continue
+						[ $unlock = 0 ] || rm -f "$(lockfile "$(collection "$d")")"
 						n=$((n + 1))
 						printf '[/%s]\nlabel = %s\n' "$n" "$(cat "$d/label")"
-						locked || printf 'secret = %s\n' "$(cat "$d/secret")"
+						locked "$(collection "$d")" || printf 'secret = %s\n' "$(cat "$d/secret")"
 						printf 'attribute.service = %s\nattribute.target = %s\nattribute.user = %s\n' "$(cat "$d/service")" "$(cat "$d/target")" "$(cat "$d/user")" >&2
 					done
 					;;
@@ -299,24 +307,36 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
-		public void SecretToolNonInteractiveStoreNeedsAnUnlockedItem()
+		public void SecretToolNonInteractiveStoreIsRefused()
 		{
-			// Without a prompt the script cannot tell an empty keyring from a locked one: the first record is stored from a
-			// terminal; after that an unlocked item of ours shows the keyring unlocked.
+			// secret-tool store writes to the default collection and prompts when it is locked; without a prompt the script
+			// cannot tell. Here the record is in another, unlocked collection while the default one is locked: neither a
+			// new record nor an update may be stored without a user to answer.
+			CreateStore("keyring", interactive: true).TryStore("a", "u", "p", out var error).ShouldBeTrue(error);
+
+			var item = Directory.GetDirectories(Path.Combine(_state, "items")).Single();
+			File.WriteAllText(Path.Combine(item, "collection"), "other");
+			File.WriteAllText(Path.Combine(_state, "locked"), string.Empty);
+
 			var cli = CreateStore("keyring");
 
+			// The record in the unlocked collection stays readable.
+			cli.TryRead("linq2db/a", out _, out var password, out error).ShouldBeTrue(error);
+			password.ShouldBe("p");
+
 			// A password long enough for the client to remove it from standard error and show the reason.
-			cli.TryStore("a", "u", "secret-value", out var error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain("cannot tell without a prompt whether the keyring is locked");
+			cli.TryStore("b", "u", "secret-value", out error).ShouldBeFalse();
+			error.ShouldNotBeNull().ShouldContain("run credentials set from a terminal");
 
-			CreateStore("keyring", interactive: true).TryStore("a", "u", "p", out error).ShouldBeTrue(error);
-
-			cli.TryStore("b", "v", "q", out error).ShouldBeTrue(error);
-			cli.TryRead("linq2db/b", out var user, out var password, out error).ShouldBeTrue(error);
-			user.    ShouldBe("v");
-			password.ShouldBe("q");
+			cli.TryStore("a", "u", "secret-value", out error).ShouldBeFalse();
+			error.ShouldNotBeNull().ShouldContain("run credentials set from a terminal");
 
 			File.Exists(Path.Combine(_state, "prompted")).ShouldBeFalse();
+			File.Exists(Path.Combine(_state, "locked")).ShouldBeTrue();
+
+			// From a terminal the prompt is raised and answered.
+			CreateStore("keyring", interactive: true).TryStore("b", "u", "secret-value", out error).ShouldBeTrue(error);
+			File.Exists(Path.Combine(_state, "prompted")).ShouldBeTrue();
 		}
 
 		[Test]
