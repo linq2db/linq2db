@@ -299,7 +299,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected IQueryElement Optimize(IQueryElement element)
 		{
-			return OptimizationContext.OptimizerVisitor.Optimize(EvaluationContext, NullabilityContext, OptimizationContext.TransformationInfo, DataOptions, OptimizationContext.MappingSchema, element, VisitQueries, reducePredicates: false);
+			return OptimizationContext.OptimizerVisitor.Optimize(EvaluationContext, NullabilityContext, OptimizationContext.TransformationInfoConvert, DataOptions, OptimizationContext.MappingSchema, element, VisitQueries, reducePredicates: false);
 		}
 
 		protected internal override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
@@ -1414,8 +1414,11 @@ namespace LinqToDB.Internal.SqlProvider
 		protected internal override IQueryElement VisitSqlTemporalArithmeticExpression(SqlTemporalArithmeticExpression element)
 		{
 			var lowered = LowerTemporalArithmetic(element);
+			// Optimized before it is visited, like every other rewrite here: the statement-level optimizer has already
+			// run, so the redundant casts a lowering builds would otherwise stay in the SQL - and a remote query, which is
+			// optimized again on the server, would drop them and render differently from the same query run directly.
 			if (lowered != null)
-				return Visit(lowered);
+				return Visit(Optimize(lowered));
 
 			return base.VisitSqlTemporalArithmeticExpression(element);
 		}
@@ -1472,7 +1475,7 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			var lowered = LowerIntervalDifference(element);
 			if (lowered != null)
-				return Visit(lowered);
+				return Visit(Optimize(lowered));
 
 			return base.VisitSqlIntervalDifferenceExpression(element);
 		}
@@ -1619,7 +1622,7 @@ namespace LinqToDB.Internal.SqlProvider
 			// first would unwrap it to a bare amount.
 			var lowered = LowerIntervalPart(element);
 			if (lowered != null)
-				return Visit(lowered);
+				return Visit(Optimize(lowered));
 
 			return base.VisitSqlIntervalPartExpression(element);
 		}

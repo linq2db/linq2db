@@ -53,7 +53,8 @@
     <File Path="Build/Azure/net100/access.ace.odbc.json" />
     <File Path="Build/Azure/net100/access.ace.oledb.json" />
     <File Path="Build/Azure/net100/access.ace.x64.json" />
-    <File Path="Build/Azure/net100/access.mdb.json" />
+    <File Path="Build/Azure/net100/access.mdb.odbc.json" />
+    <File Path="Build/Azure/net100/access.mdb.oledb.json" />
     <File Path="Build/Azure/net100/clickhouse.json" />
     <File Path="Build/Azure/net100/db2informixduckdb.json" />
     <File Path="Build/Azure/net100/duckdb.json" />
@@ -82,7 +83,8 @@
     <File Path="Build/Azure/net80/access.ace.odbc.json" />
     <File Path="Build/Azure/net80/access.ace.oledb.json" />
     <File Path="Build/Azure/net80/access.ace.x64.json" />
-    <File Path="Build/Azure/net80/access.mdb.json" />
+    <File Path="Build/Azure/net80/access.mdb.odbc.json" />
+    <File Path="Build/Azure/net80/access.mdb.oledb.json" />
     <File Path="Build/Azure/net80/clickhouse.json" />
     <File Path="Build/Azure/net80/db2informixduckdb.json" />
     <File Path="Build/Azure/net80/duckdb.json" />
@@ -111,7 +113,8 @@
     <File Path="Build/Azure/net90/access.ace.odbc.json" />
     <File Path="Build/Azure/net90/access.ace.oledb.json" />
     <File Path="Build/Azure/net90/access.ace.x64.json" />
-    <File Path="Build/Azure/net90/access.mdb.json" />
+    <File Path="Build/Azure/net90/access.mdb.odbc.json" />
+    <File Path="Build/Azure/net90/access.mdb.oledb.json" />
     <File Path="Build/Azure/net90/clickhouse.json" />
     <File Path="Build/Azure/net90/db2informixduckdb.json" />
     <File Path="Build/Azure/net90/duckdb.json" />
@@ -140,7 +143,8 @@
     <File Path="Build/Azure/netfx/access.ace.odbc.json" />
     <File Path="Build/Azure/netfx/access.ace.oledb.json" />
     <File Path="Build/Azure/netfx/access.ace.x64.json" />
-    <File Path="Build/Azure/netfx/access.mdb.json" />
+    <File Path="Build/Azure/netfx/access.mdb.odbc.json" />
+    <File Path="Build/Azure/netfx/access.mdb.oledb.json" />
     <File Path="Build/Azure/netfx/sqlce.json" />
     <File Path="Build/Azure/netfx/sqlite.json" />
     <File Path="Build/Azure/netfx/sqlserver.2005.json" />
@@ -243,7 +247,7 @@
     <File Path="Data/Setup Scripts/readme.md" />
     <File Path="Data/Setup Scripts/saphana2.cmd" />
     <File Path="Data/Setup Scripts/sqlserver2005-win.cmd" />
-    <File Path="Data/Setup Scripts/sqlserver2016.cmd" />
+    <File Path="Data/Setup Scripts/sqlserver2016-win.cmd" />
     <File Path="Data/Setup Scripts/sqlserver2017.cmd" />
     <File Path="Data/Setup Scripts/sqlserver2019.cmd" />
     <File Path="Data/Setup Scripts/sqlserver2022-win.cmd" />

@@ -520,8 +520,12 @@ namespace LinqToDB.Internal.Linq.Builder
 							if (valueConverter.ToProviderExpression.Parameters.Count != 1)
 								throw new InvalidOperationException("ToProviderExpression should have exactly one parameter.");
 
-							sqlExpr = valueConverter.ToProviderExpression.GetBody(value);
-							sqlExpr = builder.BuildSqlExpression(valuesContext, sqlExpr, BuildPurpose.Sql, buildFlags);
+							var converted = valueConverter.ToProviderExpression.GetBody(value);
+							converted = builder.BuildSqlExpression(valuesContext, converted, BuildPurpose.Sql, buildFlags);
+
+							// a conversion SQL cannot express leaves a server-side value unconverted
+							if (converted is SqlPlaceholderExpression)
+								sqlExpr = converted;
 						}
 					}
 				}

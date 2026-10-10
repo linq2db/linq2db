@@ -546,6 +546,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (temporal == null)
 				return null;
 
+			if (TranslateClientDifferenceShift(translationContext, binaryExpression, temporal, translationFlags, out var clientShift))
+				return clientShift;
+
 			// Without dropping the ambient descriptor the interval is built against the column the whole shift is
 			// assigned to, which is a date - and a TimeSpan parameter typed as a DateTime throws outright rather
 			// than producing a wrong value.
@@ -604,6 +607,88 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				factory.GetDbDataType(binaryExpression.Type));
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, shifted, binaryExpression);
+		}
+
+		/// <summary>
+		/// A date shifted by the difference of two client values.
+		/// </summary>
+		/// <remarks>
+		/// <see cref="MakeDateDifference"/> leaves such a difference to .NET, which has it exactly, and it would then
+		/// reach the shift as a bare <see cref="TimeSpan"/> parameter. That carries no unit, so the shift would be left
+		/// to the generic binary handling: a plain <c>+</c> between a date and a time, which SQL Server refuses. The
+		/// client's tick count is passed instead, the amount every lowering of a shift takes. A shift with no column
+		/// in it at all is left to .NET whole, and so is one the provider cannot lower.
+		/// </remarks>
+		/// <returns>
+		/// <see langword="false"/> when the amount is not such a difference, and the shift is translated as usual;
+		/// otherwise <see langword="true"/>, with <paramref name="result"/> <see langword="null"/> where the shift is
+		/// left untranslated.
+		/// </returns>
+		bool TranslateClientDifferenceShift(
+			ITranslationContext      translationContext,
+			BinaryExpression         binaryExpression,
+			SqlPlaceholderExpression temporal,
+			TranslationFlags         translationFlags,
+			out Expression?          result)
+		{
+			result = null;
+
+			// Over a nullable date the addition is lifted and the amount converted to TimeSpan?, and between two
+			// nullable locals the difference is a TimeSpan? itself; all three spellings are the same shift.
+			var amount = binaryExpression.Right;
+
+			if (amount is UnaryExpression { NodeType: ExpressionType.Convert } lifted && lifted.Type == typeof(TimeSpan?))
+				amount = lifted.Operand;
+
+			if (amount is not BinaryExpression { NodeType: ExpressionType.Subtract } subtraction
+				|| subtraction.Type.ToUnderlying() != typeof(TimeSpan)
+				|| AsDateDifference(subtraction) == null
+				|| !translationContext.CanBeEvaluatedOnClient(subtraction.Left)
+				|| !translationContext.CanBeEvaluatedOnClient(subtraction.Right))
+			{
+				return false;
+			}
+
+			if (translationContext.CanBeEvaluatedOnClient(binaryExpression.Left) || !translationContext.ProviderFlags.CanLowerIntervalShift)
+				return true;
+
+			SqlPlaceholderExpression? ticks;
+
+			using (translationContext.UsingColumnDescriptor(null))
+			{
+				ticks = TranslateNoRequiredExpression(translationContext, TicksOf(subtraction), translationFlags, skipIfParameter: false);
+			}
+
+			if (ticks == null)
+				return true;
+
+			var factory = translationContext.ExpressionFactory;
+
+			// Cast, because the lowering only does arithmetic on it, and Firebird cannot type a bare parameter that
+			// is divided ("Invalid data type for division").
+			var shifted = new SqlTemporalArithmeticExpression(
+				temporal.Sql,
+				factory.Cast(ticks.Sql, factory.GetDbDataType(typeof(long)), true),
+				binaryExpression.NodeType == ExpressionType.Subtract,
+				factory.GetDbDataType(binaryExpression.Type));
+
+			result = translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, shifted, binaryExpression);
+
+			return true;
+
+			// An absent difference has no ticks, and the shift by it is absent too.
+			static Expression TicksOf(Expression difference)
+			{
+				if (difference.Type == typeof(TimeSpan))
+					return Expression.Property(difference, nameof(TimeSpan.Ticks));
+
+				return Expression.Condition(
+					Expression.Property(difference, nameof(Nullable<>.HasValue)),
+					Expression.Convert(
+						Expression.Property(Expression.Property(difference, nameof(Nullable<>.Value)), nameof(TimeSpan.Ticks)),
+						typeof(long?)),
+					Expression.Constant(null, typeof(long?)));
+			}
 		}
 
 		/// <summary>
@@ -1186,22 +1271,40 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		/// <summary>
 		/// Whether an operand is the difference between two date/time values, in either the shape it was written
-		/// in or the one a projection leaves behind.
+		/// in or the one a projection leaves behind, that the database would be asked to measure.
 		/// </summary>
+		/// <remarks>
+		/// A difference of two client values is not one: <see cref="MakeDateDifference"/> leaves it to .NET, so a
+		/// provider that cannot measure a difference has nothing to refuse there.
+		/// </remarks>
 		static bool IsDateDifference(ITranslationContext translationContext, Expression? operand)
 		{
 			if (operand == null)
 				return false;
 
-			return AsDateDifference(operand) != null
-				|| AsDateDifference(translationContext.Translate(operand, TranslationFlags.Expand)) != null;
+			var subtraction = AsDateDifference(operand)
+				?? AsDateDifference(translationContext.Translate(operand, TranslationFlags.Expand));
+
+			return subtraction != null
+				&& !(translationContext.CanBeEvaluatedOnClient(subtraction.Left) && translationContext.CanBeEvaluatedOnClient(subtraction.Right));
 		}
 
 		/// <summary>
 		/// The expression as a subtraction of two date/time values of the same type, or <see langword="null"/>.
 		/// </summary>
+		/// <remarks>
+		/// A subtraction with a nullable operand is lifted to <see cref="Nullable{T}"/> of <see cref="TimeSpan"/>, and
+		/// a member of it is read through <c>.Value</c> or a cast back to <see cref="TimeSpan"/>. Either is looked
+		/// through: it is the same difference, and a provider that lowers only a member of one has no other route to
+		/// it.
+		/// </remarks>
 		static BinaryExpression? AsDateDifference(Expression? expression)
 		{
+			if (expression is MemberExpression { Expression: { } lifted } valueAccess && valueAccess.Member.IsNullableValueMember())
+				expression = lifted;
+			else if (expression is UnaryExpression { NodeType: ExpressionType.Convert, Operand: var operand } convert && operand.Type.IsNullableType && operand.Type.ToUnderlying() == convert.Type)
+				expression = operand;
+
 			if (expression is not BinaryExpression { NodeType: ExpressionType.Subtract } subtraction)
 				return null;
 
@@ -1213,11 +1316,25 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		SqlIntervalDifferenceExpression? MakeDateDifference(ITranslationContext translationContext, BinaryExpression binaryExpression, TranslationFlags translationFlags)
 		{
-			var left = TranslateNoRequiredExpression(translationContext, binaryExpression.Left, translationFlags);
+			// A subtraction with no column in it at all is left to .NET, as TranslateDateTimeAddMember leaves its own:
+			// the client already has the exact value, and the database would only measure it again at its own,
+			// possibly coarser, resolution.
+			if (translationContext.CanBeEvaluatedOnClient(binaryExpression.Left) && translationContext.CanBeEvaluatedOnClient(binaryExpression.Right))
+				return null;
+
+			// Both operands are dates, so whatever column the difference itself is assigned to or compared with -
+			// a number, as a rule - says nothing about either of them, and a parameter typed by it would be bound
+			// as that number.
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
+
+			// Parameters are taken, as for a shift: measuring from a fixed date - a variable, an argument - is the
+			// ordinary case, and skipping it leaves the member with nothing to lower, so a filter or an ordering on
+			// it is refused outright.
+			var left = TranslateNoRequiredExpression(translationContext, binaryExpression.Left, translationFlags, skipIfParameter: false);
 			if (left == null)
 				return null;
 
-			var right = TranslateNoRequiredExpression(translationContext, binaryExpression.Right, translationFlags);
+			var right = TranslateNoRequiredExpression(translationContext, binaryExpression.Right, translationFlags, skipIfParameter: false);
 			if (right == null)
 				return null;
 
