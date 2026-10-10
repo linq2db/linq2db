@@ -37,6 +37,14 @@ namespace Tests.LinqToDB.CLI
 		//
 		const string UnreachableSqlServer  = "Server=127.0.0.1,1;Database=master;User Id=sa;Password=x;TrustServerCertificate=True;Connect Timeout=2;ConnectRetryCount=0";
 		const string UnreachablePostgreSql = "Host=127.0.0.1;Port=1;Username=user;Password=x;Timeout=2";
+		const string UnreachableOracle     = "Data Source=127.0.0.1:1/XE;User Id=user;Password=x;Connection Timeout=2";
+		const string UnreachableDB2        = "Server=127.0.0.1:1;Database=x;UID=user;PWD=x;Connect Timeout=2";
+
+		// Optional: a reachable SQL Server connection string, and the path to IBM.Data.Db2.dll with its clidriver folder
+		// next to it. Cases that need them are ignored when they are not set.
+		//
+		const string SqlServerVariable   = "LINQ2DB_CLI_COLD_SQLSERVER";
+		const string DB2ProviderVariable = "LINQ2DB_CLI_COLD_DB2_PROVIDER";
 
 		[Test]
 		public async Task QueryRejectsWriteSqlBeforeExecution()
@@ -208,7 +216,15 @@ namespace Tests.LinqToDB.CLI
 			["SqlServer schema"]                 = ["schema",  "--provider", "SqlServer",      "--connection-string", UnreachableSqlServer],
 			["PostgreSQL query"]                 = ["query",   "--provider", "PostgreSQL",     "--connection-string", UnreachablePostgreSql, "--sql", "select 1 as Value"],
 			["PostgreSQL.15 query"]              = ["query",   "--provider", "PostgreSQL.15",  "--connection-string", UnreachablePostgreSql, "--sql", "select 1 as Value"],
+			["Oracle.Managed query"]             = ["query",   "--provider", "Oracle.Managed", "--connection-string", UnreachableOracle, "--sql", "select 1 as Value from dual"],
+			["DB2 query"]                        = ["query",   "--provider", "DB2",            "--provider-location", "%DB2%", "--connection-string", UnreachableDB2, "--sql", "select 1 as Value from sysibm.sysdummy1"],
+			["SqlServer.2022 geography"]         = ["query",   "--provider", "SqlServer.2022", "--connection-string", "%SQLSERVER%", "--sql", "select geography::Point(1, 1, 4326) as Value"],
 		};
+
+		static bool IsColdSuccessCase(string coldCase)
+		{
+			return coldCase.StartsWith("SQLite", StringComparison.Ordinal) || _coldCases[coldCase].Contains("%SQLSERVER%");
+		}
 
 		static IEnumerable<string> ColdCases => _coldCases.Keys;
 
@@ -218,6 +234,12 @@ namespace Tests.LinqToDB.CLI
 		[TestCaseSource(nameof(ColdCases))]
 		public async Task NothingIsLoadedWhileImpersonating(string coldCase)
 		{
+			if (_coldCases[coldCase].Contains("%SQLSERVER%") && Environment.GetEnvironmentVariable(SqlServerVariable) == null)
+				Assert.Ignore($"Set {SqlServerVariable} to a reachable SQL Server connection string.");
+
+			if (_coldCases[coldCase].Contains("%DB2%") && Environment.GetEnvironmentVariable(DB2ProviderVariable) == null)
+				Assert.Ignore($"Set {DB2ProviderVariable} to the path of IBM.Data.Db2.dll.");
+
 			var database   = CreateSqliteDatabase();
 			var resultsDir = Path.Combine(Path.GetTempPath(), $"linq2db-cli-cold-{Guid.NewGuid():N}");
 
@@ -298,22 +320,31 @@ namespace Tests.LinqToDB.CLI
 				}
 				""".Replace("%DATABASE%", database.Replace("\\", "\\\\", StringComparison.Ordinal), StringComparison.Ordinal));
 
+			var db2Provider = Environment.GetEnvironmentVariable(DB2ProviderVariable);
+
 			var arguments = _coldCases[coldCase]
-				.Select(a => a.Replace("%DATABASE%", database, StringComparison.Ordinal).Replace("%CONFIG%", config, StringComparison.Ordinal))
+				.Select(a => a
+					.Replace("%DATABASE%",  database,                                              StringComparison.Ordinal)
+					.Replace("%CONFIG%",    config,                                                StringComparison.Ordinal)
+					.Replace("%SQLSERVER%", Environment.GetEnvironmentVariable(SqlServerVariable), StringComparison.Ordinal)
+					.Replace("%DB2%",       db2Provider,                                           StringComparison.Ordinal))
 				.Concat(coldCase.Contains("execute", StringComparison.Ordinal) ? [] : ["--user", "user", "--password", "secret", "--impersonate"])
 				.ToArray();
 
 			var result  = await RunCli(environment, arguments);
 			var session = environment.ImpersonationSessions.ShouldHaveSingleItem();
 
-			// Native libraries shipped with the tool or the .NET runtime. Those of the operating system (e.g. the
-			// Kerberos libraries the runtime's GSSAPI shim loads on Linux) are readable by every account.
+			// Native libraries shipped with the tool, the .NET runtime or an external provider. Those of the operating
+			// system (e.g. the Kerberos libraries the runtime's GSSAPI shim loads on Linux) are readable by every account.
 			//
-			var shippedDirectories = new[] { AppContext.BaseDirectory, RuntimeEnvironment.GetRuntimeDirectory() };
+			var shippedDirectories = new List<string> { AppContext.BaseDirectory, RuntimeEnvironment.GetRuntimeDirectory() };
+
+			if (_coldCases[coldCase].Contains("%DB2%"))
+				shippedDirectories.Add(Path.GetDirectoryName(Path.GetFullPath(db2Provider!))!);
 
 			using (Assert.EnterMultipleScope())
 			{
-				if (coldCase.StartsWith("SQLite", StringComparison.Ordinal))
+				if (IsColdSuccessCase(coldCase))
 					result.ExitCode.ShouldBe(0, result.Error);
 				else
 					result.Error.ShouldContain(coldCase.Contains("schema", StringComparison.Ordinal) ? "Schema inspection failed:" : "SQL execution failed:");
