@@ -34,7 +34,7 @@ builder.Services.Configure<LinqToDBHubOptions>(o =>
 app.MapHub<LinqToDBHub<IMyDataContext>>("/hub/linq2db");
 ```
 
-Every call is a Signal/R streaming invocation:
+Every call from a 6.6.0 or later client is a Signal/R streaming invocation:
 
 - Cancelling a query on the client cancels it on the server: while the command executes through the provider's
   cancellation, while rows are read at the next row. Serializing and sending a result that was already read is not
