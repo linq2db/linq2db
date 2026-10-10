@@ -283,6 +283,27 @@ namespace Tests.Linq
 			db.Person.Where(p => p.ID == Sql.Expr<int>(sql)).Select(p => p.ID).OrderBy(id => id).ToArray().ShouldBe([2]);
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000"), QueryCacheTest]
+		public void Expr_Captured_ArgumentChanges([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query(FormattableString sql) =>
+				from p in db.Person
+				where p.ID == Sql.Expr<int>(sql)
+				select p.ID;
+
+			Query($"{1}").ToArray().ShouldBe([1]);
+
+			var query  = Query($"{2}");
+			var misses = query.GetCacheMissCount();
+
+			query.ToArray().ShouldBe([2]);
+			query.GetCacheMissCount().ShouldBe(misses);
+
+			Query($"{1}").ToArray().ShouldBe([1]);
+		}
+
 		public class FreeTextKey<T>
 		{
 			public T   Key = default!;
