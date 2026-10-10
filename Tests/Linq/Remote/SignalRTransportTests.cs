@@ -663,6 +663,53 @@ namespace Tests.Remote
 			(error is null or LinqToDBException).ShouldBeTrue(error?.ToString());
 			hubConnection.State.ShouldBe(HubConnectionState.Connected);
 		}
+
+		// The trace context the client propagates grows with the tracestate and baggage of the current activity, far
+		// beyond a fixed reserve. The limit admits the request with a traceparent only, but not with the real headers:
+		// with little slack the exact measurement decides, with more the cheap bound alone would let it through.
+		[Test]
+		public async Task RequestSizeCheckCountsThePropagatedTraceContext([Values(50, 400)] int slack)
+		{
+			var queryData = new string('a', 20_000);
+			var frame     = new System.Buffers.ArrayBufferWriter<byte>();
+
+			new JsonHubProtocol().WriteMessage(new StreamInvocationMessage("2147483647", "ExecuteNonQueryStream", [Configuration, queryData]), frame);
+
+			// The request, a traceparent with its "headers" wrapper (well under 128 bytes), and the slack; the tracestate
+			// and baggage below take about 2 KB more.
+			var limit = frame.WrittenCount + 128 + slack;
+
+			var service = new ScriptedLinqService { Behavior = static (query, _) => Task.FromResult(query) };
+			using var host = TestHost.Start<ScriptedHub>(services => services.AddSingleton<ILinqService>(service), perHub: hub => hub.MaximumReceiveMessageSize = limit);
+
+			using var trace = new Activity(nameof(RequestSizeCheckCountsThePropagatedTraceContext)).SetIdFormat(ActivityIdFormat.W3C);
+
+			trace.TraceStateString = "vendor=" + new string('s', 200);
+
+			for (var i = 0; i < 15; i++)
+				trace.AddBaggage("item" + i.ToString(System.Globalization.CultureInfo.InvariantCulture), new string('b', 100));
+
+			trace.Start();
+
+			var traceId  = trace.TraceId;
+			using var listener = new ActivityListener
+			{
+				ShouldListenTo = static source => source.Name == "Microsoft.AspNetCore.SignalR.Client",
+				Sample         = (ref options) => options.Parent.TraceId == traceId ? ActivitySamplingResult.AllDataAndRecorded : ActivitySamplingResult.None,
+			};
+
+			ActivitySource.AddActivityListener(listener);
+
+			var hubConnection = await host.ConnectAsync();
+			await using var owner = Own(hubConnection);
+
+			var error = await WithinLimit(CatchAsync(() => ((ILinqService)new SignalRLinqServiceClient(hubConnection)).ExecuteNonQueryAsync(Configuration, queryData)));
+
+			// Refused before sending: sent, it would close the connection.
+			error.ShouldBeOfType<LinqToDBException>(error?.ToString());
+			hubConnection.State.ShouldBe(HubConnectionState.Connected);
+			service.Calls.ShouldBe(0);
+		}
 #endif
 
 #endif
