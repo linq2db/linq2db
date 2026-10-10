@@ -15,10 +15,22 @@ namespace LinqToDB.Remote.Grpc
 	{
 		private readonly GrpcChannel      _channel;
 		private readonly IGrpcLinqService _client;
+		private readonly bool             _ownsChannel;
 
+		/// <summary>
+		/// Creates a client that owns <paramref name="channel"/> and disposes it when the client is disposed.
+		/// </summary>
+		/// <param name="channel">gRPC channel to the server.</param>
 		public GrpcLinqServiceClient(GrpcChannel channel)
+			: this(channel, ownsChannel: true)
 		{
-			_channel = channel;
+		}
+
+		// A client over a channel whose lifetime is managed elsewhere leaves it open when disposed.
+		internal GrpcLinqServiceClient(GrpcChannel channel, bool ownsChannel)
+		{
+			_channel     = channel;
+			_ownsChannel = ownsChannel;
 			// through the generated factory rather than CreateGrpcService(), whose proxy is reflection-built
 			_client  = GrpcLinqServiceProxies.Instance.CreateClient<IGrpcLinqService>(channel.CreateCallInvoker());
 		}
@@ -82,7 +94,8 @@ namespace LinqToDB.Remote.Grpc
 
 		void IDisposable.Dispose()
 		{
-			_channel.Dispose();
+			if (_ownsChannel)
+				_channel.Dispose();
 		}
 	}
 }
