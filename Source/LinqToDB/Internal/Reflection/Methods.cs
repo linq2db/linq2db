@@ -40,6 +40,8 @@ namespace LinqToDB.Internal.Reflection
 			public static readonly MethodInfo Guid_ToByteArray     = MemberHelper.MethodOf<Guid>(g => g.ToByteArray());
 			public static readonly MethodInfo String_ObjectsConcat = MemberHelper.MethodOf(() => string.Concat((object?)null, (object?)null));
 
+			internal static readonly MethodInfo FormattableStringFactory_Create = MemberHelper.MethodOf(() => global::System.Runtime.CompilerServices.FormattableStringFactory.Create(null!, null!));
+
 		}
 
 		public static class Enumerable
@@ -227,6 +229,8 @@ namespace LinqToDB.Internal.Reflection
 			internal static readonly MethodInfo SelectDistinct            = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.SelectDistinct());
 			internal static readonly MethodInfo AggregateExecute          = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.AggregateExecute(e => 1));
 			internal static readonly MethodInfo AsCte                     = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.AsCte());
+			internal static readonly MethodInfo FromSqlFormattable        = MemberHelper.MethodOfGeneric<IDataContext>(dc => dc.FromSql<int>((FormattableString)null!));
+			internal static readonly MethodInfo FromSqlRaw                = MemberHelper.MethodOfGeneric<IDataContext>(dc => dc.FromSql<int>(default(RawSqlString)));
 
 			#endregion
 
@@ -261,6 +265,9 @@ namespace LinqToDB.Internal.Reflection
 				public static readonly MethodInfo Alias            = MemberHelper.MethodOfGeneric<int?>(i => global::LinqToDB.Sql.Alias(i, ""));
 				// don't use MethodOfGeneric here (Sql.Property treatened in special way by it)
 				public static readonly MethodInfo Property         = typeof(global::LinqToDB.Sql).GetMethodEx(nameof(global::LinqToDB.Sql.Property))!.GetGenericMethodDefinition();
+
+				internal static readonly MethodInfo ExprFormattable = MemberHelper.MethodOfGeneric(() => global::LinqToDB.Sql.Expr<int>((FormattableString)null!));
+				internal static readonly MethodInfo ExprRaw         = MemberHelper.MethodOfGeneric(() => global::LinqToDB.Sql.Expr<int>(default(RawSqlString)));
 			}
 
 			public static class Update

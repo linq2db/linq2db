@@ -157,6 +157,11 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				return Visit(newNode);
 			}
 
+			if (ConvertRawSqlString(node) is { } formattableCall)
+			{
+				return Visit(formattableCall);
+			}
+
 			var dependentParameters = SqlQueryDependentAttributeHelper.GetQueryDependentAttributes(node.Method);
 
 			if (dependentParameters != null)
@@ -190,7 +195,9 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 						var argument = arguments[i];
 						if (argument.NodeType != ExpressionType.Constant)
 						{
-							var newArgument = attr.PrepareForCache(argument, this);
+							var newArgument = argument.Type == typeof(FormattableString)
+								? PrepareFormattableString(argument)
+								: attr.PrepareForCache(argument, this);
 
 							// A dependent argument taken from a compiled query's own arguments cannot be
 							// evaluated while ps is a free parameter, so it would reach the SQL as a parameter
@@ -198,7 +205,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 							// materialise it here; CompiledTable carries the same values in its cache key.
 							// Resolved against newArgument rather than argument: PrepareForCache rebuilds a
 							// params array when any element folds, and leaves the ps-reading elements in place.
-							if (_parameterValues != null)
+							if (_parameterValues != null && argument.Type != typeof(FormattableString))
 							{
 								var resolved = ResolveCompiledQueryArguments(newArgument);
 
@@ -228,6 +235,72 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				}
 
 				return node;
+			}
+
+			// FromSql(sql, parameters) and Sql.Expr(sql, parameters) are their FormattableString overloads over
+			// FormattableStringFactory.Create(sql.Format, parameters), so both overloads reach the cache in one shape.
+			MethodCallExpression? ConvertRawSqlString(MethodCallExpression node)
+			{
+				if (!node.Method.IsGenericMethod)
+					return null;
+
+				var definition = node.Method.GetGenericMethodDefinition();
+
+				MethodInfo formattableMethod;
+
+				if (definition == Methods.LinqToDB.FromSqlRaw)
+					formattableMethod = Methods.LinqToDB.FromSqlFormattable;
+				else if (definition == Methods.LinqToDB.SqlExt.ExprRaw)
+					formattableMethod = Methods.LinqToDB.SqlExt.ExprFormattable;
+				else
+					return null;
+
+				// sql and parameters are the last two arguments of both methods
+				var sql = node.Arguments[^2];
+
+				if (!IsCompilable(sql))
+					return null;
+
+				var format    = ((RawSqlString)EvaluateExpression(sql)!).Format;
+				var arguments = node.Arguments.Take(node.Arguments.Count - 2).ToList();
+
+				arguments.Add(DataExtensions.GenerateFormattableString(format, node.Arguments[^1]));
+
+				return Expression.Call(formattableMethod.MakeGenericMethod(node.Method.GetGenericArguments()), arguments);
+			}
+
+			// Only the format shapes the SQL, so only the format is evaluated; the arguments stay
+			// expressions and become parameters as they would in the outer query.
+			Expression PrepareFormattableString(Expression argument)
+			{
+				if (argument is MethodCallExpression { Arguments: [var format, { NodeType: ExpressionType.NewArrayInit } arguments] } create
+					&& create.Method == Methods.System.FormattableStringFactory_Create)
+				{
+					if (format.NodeType == ExpressionType.Constant)
+						return argument;
+
+					var resolvedFormat = ResolveCompiledQueryArguments(format);
+
+					if (!IsCompilable(resolvedFormat))
+						return argument;
+
+					if (!ReferenceEquals(resolvedFormat, format))
+						RecordMaterializedArgumentSlots(format);
+
+					return create.Update(null, [Expression.Constant(EvaluateExpression(resolvedFormat), typeof(string)), arguments]);
+				}
+
+				var resolvedArgument = ResolveCompiledQueryArguments(argument);
+
+				if (IsCompilable(resolvedArgument) && EvaluateExpression(resolvedArgument) is FormattableString formattable)
+				{
+					if (!ReferenceEquals(resolvedArgument, argument))
+						RecordMaterializedArgumentSlots(argument);
+
+					return DataExtensions.GenerateFormattableString(formattable);
+				}
+
+				return argument;
 			}
 
 			Expression HandleSqlProperty(MethodCallExpression node)

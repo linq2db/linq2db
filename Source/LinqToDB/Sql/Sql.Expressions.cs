@@ -560,7 +560,7 @@ namespace LinqToDB
 
 		[Extension("", BuilderType = typeof(ExprBuilder), ServerSideOnly = true)]
 		[StringFormatMethod("sql")]
-		public static T Expr<T>(FormattableString sql)
+		public static T Expr<T>([SqlQueryDependent] FormattableString sql)
 			=> throw new ServerSideOnlyException(nameof(Expr));
 
 		[Extension("", BuilderType = typeof(ExprBuilder), ServerSideOnly = true)]

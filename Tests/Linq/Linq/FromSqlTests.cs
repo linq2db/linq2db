@@ -1148,6 +1148,290 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void FromSqlScalar_Nested_FormatChanges([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query(string sql) =>
+				from p in db.Person
+				where p.ID.In(db.FromSqlScalar<int>(FormattableStringFactory.Create(sql)))
+				select p.ID;
+
+			Query("SELECT 1 AS value").ToArray().ShouldBe([1]);
+			Query("SELECT 2 AS value").ToArray().ShouldBe([2]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000"), QueryCacheTest]
+		public void FromSqlScalar_Nested_Interpolated_ArgumentChanges([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query(int id) =>
+				from p in db.Person
+				where p.ID.In(db.FromSqlScalar<int>($"SELECT {id} AS value"))
+				select p.ID;
+
+			var query = Query(1);
+			query.ToArray().ShouldBe([1]);
+			var misses = query.GetCacheMissCount();
+
+			query = Query(2);
+			query.ToArray().ShouldBe([2]);
+			query.GetCacheMissCount().ShouldBe(misses);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000"), QueryCacheTest]
+		public void FromSqlScalar_Nested_Captured_ArgumentChanges([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query(FormattableString sql) =>
+				from p in db.Person
+				where p.ID.In(db.FromSqlScalar<int>(sql))
+				select p.ID;
+
+			var query = Query($"SELECT {1} AS value");
+			query.ToArray().ShouldBe([1]);
+			var misses = query.GetCacheMissCount();
+
+			query = Query($"SELECT {2} AS value");
+			query.ToArray().ShouldBe([2]);
+			query.GetCacheMissCount().ShouldBe(misses);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void FromSqlScalar_Nested_Captured_FormatChanges([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query(FormattableString sql) =>
+				from p in db.Person
+				where p.ID.In(db.FromSqlScalar<int>(sql))
+				select p.ID;
+
+			Query($"SELECT {1} AS value").ToArray().ShouldBe([1]);
+			Query($"SELECT {1} + 1 AS value").ToArray().ShouldBe([2]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void FromSqlScalar_Nested_Captured_ArgumentTypeChanges([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query(FormattableString sql) =>
+				from p in db.Person
+				where p.ID.In(db.FromSqlScalar<int>(sql))
+				select p.ID;
+
+			Query($"SELECT {1} AS value").ToArray().ShouldBe([1]);
+			Query($"SELECT {2L} AS value").ToArray().ShouldBe([2]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void FromSqlScalar_Nested_Captured_SqlExpressionArgumentChanges([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query(FormattableString sql) =>
+				from p in db.Person
+				where p.ID.In(db.FromSqlScalar<int>(sql))
+				select p.ID;
+
+			Query($"SELECT {new SqlValue(1)} AS value").ToArray().ShouldBe([1]);
+			Query($"SELECT {new SqlValue(2)} AS value").ToArray().ShouldBe([2]);
+			Query($"SELECT {new SqlValue(1)} AS value").ToArray().ShouldBe([1]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void FromSql_Nested_FormatChanges([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query(string sql) =>
+				from p in db.Person
+				where db.FromSql<Person>(FormattableStringFactory.Create(sql)).Any(s => s.ID == p.ID)
+				select p.ID;
+
+			Query("SELECT * FROM Person WHERE PersonID = 1").ToArray().ShouldBe([1]);
+			Query("SELECT * FROM Person WHERE PersonID = 2").ToArray().ShouldBe([2]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void FromSql_Nested_RawSqlString_FormatChanges([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query(RawSqlString sql) =>
+				from p in db.Person
+				where db.FromSql<Person>(sql).Any(s => s.ID == p.ID)
+				select p.ID;
+
+			Query("SELECT * FROM Person WHERE PersonID = 1").ToArray().ShouldBe([1]);
+			Query("SELECT * FROM Person WHERE PersonID = 2").ToArray().ShouldBe([2]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void FromSql_Nested_RawSqlString_ArgumentsChange([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query(params object[] arguments) =>
+				from p in db.Person
+				where db.FromSql<Person>("SELECT * FROM Person WHERE PersonID = {0}", arguments).Any(s => s.ID == p.ID)
+				select p.ID;
+
+			Query(1).ToArray().ShouldBe([1]);
+			Query(2L).ToArray().ShouldBe([2]);
+			Query(3, 4).ToArray().ShouldBe([3]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void FromSql_Compiled_Interpolated_ArgumentIsParameter([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var query = CompiledQuery.Compile((IDataContext dc, int id) =>
+				dc.FromSql<Person>($"SELECT * FROM Person WHERE PersonID = {id}").Select(p => p.ID));
+
+			query(db, 1).ToArray().ShouldBe([1]);
+			var sql = db.LastQuery;
+
+			query(db, 2).ToArray().ShouldBe([2]);
+			db.LastQuery.ShouldBe(sql);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void FromSqlScalar_Nested_Compiled_ArgumentIsParameter([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var query = CompiledQuery.Compile((IDataContext dc, int id) =>
+				dc.GetTable<Person>().Where(p => p.ID.In(dc.FromSqlScalar<int>($"SELECT {id} AS value"))).Select(p => p.ID));
+
+			query(db, 1).ToArray().ShouldBe([1]);
+			var sql = db.LastQuery;
+
+			query(db, 2).ToArray().ShouldBe([2]);
+			db.LastQuery.ShouldBe(sql);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void FromSql_Compiled_FormattableStringArgument([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var query = CompiledQuery.Compile((IDataContext dc, FormattableString fs) =>
+				dc.FromSql<Person>(fs).Select(p => p.ID));
+
+			query(db, $"SELECT * FROM Person WHERE PersonID = {1}").ToArray().ShouldBe([1]);
+			var sql = db.LastQuery;
+
+			query(db, $"SELECT * FROM Person WHERE PersonID = {2}").ToArray().ShouldBe([2]);
+			db.LastQuery.ShouldBe(sql);
+
+			query(db, $"SELECT * FROM Person WHERE PersonID <> {1}").ToArray().ShouldNotContain(1);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void FromSql_Compiled_Interpolated_BuildsOnce([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var query = CompiledQuery.Compile((IDataContext dc, int id) =>
+				dc.FromSql<Person>($"SELECT * FROM Person WHERE PersonID = {id}").Select(p => p.ID));
+
+			var query1 = query(db, 1);
+			query1.ToArray().ShouldBe([1]);
+
+			var query2 = query(db, 2);
+			query2.ToArray().ShouldBe([2]);
+
+			query2.GetCompiledQueryInfo().ShouldBeSameAs(query1.GetCompiledQueryInfo());
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void FromSqlScalar_Nested_Compiled_BuildsOnce([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var query = CompiledQuery.Compile((IDataContext dc, int id) =>
+				dc.GetTable<Person>().Where(p => p.ID.In(dc.FromSqlScalar<int>($"SELECT {id} AS value"))).Select(p => p.ID));
+
+			var query1 = query(db, 1);
+			query1.ToArray().ShouldBe([1]);
+
+			var query2 = query(db, 2);
+			query2.ToArray().ShouldBe([2]);
+
+			query2.GetCompiledQueryInfo().ShouldBeSameAs(query1.GetCompiledQueryInfo());
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000"), QueryCacheTest]
+		public void FromSqlScalar_Nested_FormatChanges_Cached([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query(string sql) =>
+				from p in db.Person
+				where p.ID.In(db.FromSqlScalar<int>(FormattableStringFactory.Create(sql)))
+				select p.ID;
+
+			Query("SELECT 1 AS value").ToArray().ShouldBe([1]);
+			Query("SELECT 2 AS value").ToArray().ShouldBe([2]);
+
+			var query  = Query("SELECT 1 AS value");
+			var misses = query.GetCacheMissCount();
+
+			query.ToArray().ShouldBe([1]);
+			query.GetCacheMissCount().ShouldBe(misses);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void FromSql_Nested_RawSqlString_ArgumentsShrinkAndNull([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query(params object?[] arguments) =>
+				from p in db.Person
+				where db.FromSql<Person>("SELECT * FROM Person WHERE PersonID = {0}", arguments).Any(s => s.ID == p.ID)
+				select p.ID;
+
+			Query(3, 4).ToArray().ShouldBe([3]);
+			Query(4).ToArray().ShouldBe([4]);
+			Query([null]).ToArray().ShouldBeEmpty();
+			Query(1).ToArray().ShouldBe([1]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void FromSqlScalar_Nested_Captured_NullArgument([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query(FormattableString sql) =>
+				from p in db.Person
+				where p.ID.In(db.FromSqlScalar<int>(sql))
+				select p.ID;
+
+			Query($"SELECT {1} AS value").ToArray().ShouldBe([1]);
+			Query($"SELECT {(int?)null} AS value").ToArray().ShouldBeEmpty();
+			Query($"SELECT {2} AS value").ToArray().ShouldBe([2]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void FromSqlScalar_Nested_Captured_ArgumentCountShrinks([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query(FormattableString sql) =>
+				from p in db.Person
+				where p.ID.In(db.FromSqlScalar<int>(sql))
+				select p.ID;
+
+			Query(FormattableStringFactory.Create("SELECT {0} AS value", 1, 99)).ToArray().ShouldBe([1]);
+			Query(FormattableStringFactory.Create("SELECT {0} AS value", 2)).ToArray().ShouldBe([2]);
+		}
+
 		sealed record Projection1(int i1, int i2);
 
 		sealed record Projection2(int i);

@@ -42,7 +42,7 @@ namespace LinqToDB.Internal.Linq
 			var hash = _values.Length;
 
 			foreach (var value in _values)
-				hash = unchecked(hash * 397 + ValueHashCode(value));
+				hash = hash * 397 + ValueHashCode(value);
 
 			return hash;
 		}
@@ -54,6 +54,9 @@ namespace LinqToDB.Internal.Linq
 
 			if (value1 == null || value2 == null)
 				return false;
+
+			if (value1 is FormattableString fs1 && value2 is FormattableString fs2)
+				return string.Equals(fs1.Format, fs2.Format, StringComparison.Ordinal) && ValuesEqual(fs1.GetArguments(), fs2.GetArguments());
 
 			if (value1 is not string and IEnumerable list1 && value2 is not string and IEnumerable list2)
 			{
@@ -76,12 +79,15 @@ namespace LinqToDB.Internal.Linq
 
 		static int ValueHashCode(object? value)
 		{
+			if (value is FormattableString fs)
+				return StringComparer.Ordinal.GetHashCode(fs.Format) * 397 + ValueHashCode(fs.GetArguments());
+
 			if (value is not string and IEnumerable list)
 			{
 				var hash = 17;
 
 				foreach (var item in list)
-					hash = unchecked(hash * 397 + ValueHashCode(item));
+					hash = hash * 397 + ValueHashCode(item);
 
 				return hash;
 			}
