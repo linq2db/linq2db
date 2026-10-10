@@ -147,11 +147,31 @@ namespace Tests.Linq
 				})
 				.AsSubQuery();
 
-			var boundary = CoarseSubSecond;
-
 			windowed.Count(r => r.First < CoarseSubSecond).ShouldBe(2);
 			windowed.Count(r => r.Lag   < CoarseSubSecond).ShouldBe(2);
-			windowed.Count(r => r.Lag   < boundary).ShouldBe(2);
+		}
+
+		/// <summary>
+		/// A parameter compared with a value computed from a whole-second column takes the column's type, as it does
+		/// beside the column itself, so its sub-second part is lost.
+		/// </summary>
+		[ActiveIssue(5997, Configuration = TestProvName.AllClickHouse, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}2{1}but was")]
+		[Test]
+		public void ComputedSecondPrecisionValueComparedWithSubSecondParameter([IncludeDataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarseNullable(db);
+
+			var windowed = t
+				.Select(r => new
+				{
+					Lag = Sql.Window.Lag(r.StartedOn, 1, r.StartedOn, w => w.OrderBy(r.Id)),
+				})
+				.AsSubQuery();
+
+			var boundary = CoarseSubSecond;
+
+			windowed.Count(r => r.Lag < boundary).ShouldBe(2);
 		}
 	}
 }
