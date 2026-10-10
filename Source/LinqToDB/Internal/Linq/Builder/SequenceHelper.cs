@@ -88,8 +88,11 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// </remarks>
 		static bool ConversionsMatch(LambdaExpression lambda1, LambdaExpression lambda2)
 		{
+			if (ExpressionEqualityComparer.Instance.Equals(lambda1, lambda2))
+				return true;
+
 			if (lambda1.Parameters.Count != 1 || lambda2.Parameters.Count != 1)
-				return ExpressionEqualityComparer.Instance.Equals(lambda1, lambda2);
+				return false;
 
 			var parameter1 = lambda1.Parameters[0];
 			var parameter2 = lambda2.Parameters[0];
@@ -110,8 +113,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (!TryCanonicalize(lambda1.Body, parameter1, common, out var body1)
 				|| !TryCanonicalize(lambda2.Body, parameter2, common, out var body2))
 			{
-				body1 = Canonicalize(lambda1.Body, parameter1, AsWrittenIn(parameter1, common));
-				body2 = Canonicalize(lambda2.Body, parameter2, AsWrittenIn(parameter2, common));
+				// stripping a nullability cast can still leave a node whose operands no longer agree
+				if (!TryCanonicalize(lambda1.Body, parameter1, AsWrittenIn(parameter1, common), out body1)
+					|| !TryCanonicalize(lambda2.Body, parameter2, AsWrittenIn(parameter2, common), out body2))
+				{
+					return false;
+				}
 			}
 
 			return ExpressionEqualityComparer.Instance.Equals(body1, body2);
@@ -131,10 +138,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				result = Canonicalize(body, parameter, replacement);
 				return true;
 			}
-			catch (ArgumentException)
+			catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
 			{
 				// Rebuilding an access against a type that does not have it - Property 'Int64 Value' is not
-				// defined for type 'System.Int64' - says this body is written in terms of its own nullability.
+				// defined for type 'System.Int64' - or a lifted operator around an operand that is no longer
+				// nullable says this body is written in terms of its own nullability.
 				result = null;
 				return false;
 			}
