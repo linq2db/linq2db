@@ -102,7 +102,9 @@ loses the passwords; do not commit them. Default on Linux and macOS.
   `credentials.key`). The directory itself is not flushed after the rename, so after a power loss the previous data may
   come back; a torn or partly written file never does.
 - Every operation takes an operating-system lock on `credentials.lock`; it is released when the process ends, so it is
-  never stale. A command and an MCP server can use the store at the same time.
+  never stale. A command and an MCP server can use the store at the same time. Only a lock held by another process is
+  waited for (at most 5 seconds); a lock file that cannot be opened for another reason is an error at once. Reading
+  needs no write access, so a store on a read-only file system can be read.
 - Reading never creates anything: before the first `credentials set` (or `credentials cli init --store local`) there is
   no directory, and a read finds nothing.
 - `credentials.dat` without `credentials.key` is an error for every operation, and no new key is created then; delete
