@@ -397,6 +397,25 @@ namespace Tests.Linq
 			hours.ShouldBe(0d);
 		}
 
+		/// <summary>
+		/// A shift that crosses a daylight-saving change. <see cref="DateTimeOffset.AddMonths(int)"/> keeps the offset the
+		/// value carries, so re-attaching the zone by name after the shift - which resolves the offset afresh at the new
+		/// wall clock - lands on a different instant.
+		/// </summary>
+		[Test]
+		public void ShiftAcrossDaylightSavingKeepsTheOffset([IncludeDataSources(false, ZoneReadingProviders)] string context)
+		{
+			var zone = PragueZone(context);
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows(Value));
+
+			var shifted = table.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto, zone)!.Value.AddMonths(6))).Single();
+
+			// 11:20 UTC is 13:20 +02:00 in Prague; six months on .NET answers 2020-12-15 13:20 +02:00, i.e. 11:20 UTC.
+			shifted.UtcDateTime.ShouldBe(new DateTime(2020, 12, 15, 11, 20, 0, DateTimeKind.Utc));
+		}
+
 		#endregion
 
 		#region Members whose zone is their own
