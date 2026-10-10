@@ -1080,6 +1080,16 @@ namespace Tests.Linq
 			}
 		}
 
+		// SQL Server writes a DateTimeOffset mapped to any datetime-family type through LocalDateTime, clamped or not, so an
+		// unclamped default on such a mapping must be given a DateTime as well.
+		[Test]
+		public void DateTimeOffsetDefaultOnALocalDateTimePathIsADateTime([Values(DataType.DateTime2, DataType.Date)] DataType dataType)
+		{
+			var sqlServer = LowerDefault(SqlServerTools.GetDataProvider(SqlServerVersion.v2019, SqlServerProvider.MicrosoftDataSqlClient), typeof(DateTimeOffset), dataType);
+
+			sqlServer.ShouldBeOfType<SqlValue>().Value.ShouldBeOfType<DateTime>().ShouldBe(default(DateTime));
+		}
+
 		static ISqlExpression LowerDefault(IDataProvider dataProvider, Type systemType, DataType dataType)
 		{
 			var dataOptions  = new DataOptions();
