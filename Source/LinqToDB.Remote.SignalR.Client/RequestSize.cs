@@ -1,5 +1,9 @@
 ﻿using System;
 using System.Buffers;
+#if NET9_0_OR_GREATER
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+#endif
 
 using Microsoft.AspNetCore.SignalR.Protocol;
 
@@ -20,11 +24,13 @@ namespace LinqToDB.Remote.SignalR
 		/// Returns the size of the request when it is larger than <paramref name="limit"/>, or <see langword="null"/>
 		/// when it fits. The upper bound settles most requests without serializing them; a request above it is
 		/// measured as the JSON protocol writes it (the default protocol, and never smaller than MessagePack's frame,
-		/// which writes the same strings as UTF-8 without property names).
+		/// which writes the same strings as UTF-8 without property names). Both leave room for the trace headers the
+		/// client may add.
 		/// </summary>
 		public static long? Exceeds(string methodName, string? configuration, string queryData, long limit)
 		{
-			var estimate = Estimate(methodName, configuration, queryData, limit);
+			var headers  = EstimateHeaders();
+			var estimate = Estimate(methodName, configuration, queryData, limit) + headers;
 
 			if (estimate <= limit)
 				return null;
@@ -37,7 +43,42 @@ namespace LinqToDB.Remote.SignalR
 
 			_jsonProtocol.WriteMessage(new StreamInvocationMessage(InvocationIdPlaceholder, methodName, [configuration, queryData]), counter);
 
-			return counter.Count > limit ? counter.Count : null;
+			var size = counter.Count + headers;
+
+			return size > limit ? size : null;
+		}
+
+#if NET9_0_OR_GREATER
+		// "headers":{"traceparent":"00-<trace id>-<span id>-<flags>"} of an invocation activity without a parent, with
+		// room for the id of a child activity being longer than its parent's (hierarchical ids).
+		const int TraceHeadersOverhead = 128;
+#endif
+
+		/// <summary>
+		/// The .NET 9+ client starts an activity for every invocation when its activity source is listened to
+		/// (OpenTelemetry, for example), and puts the activity's trace context into the message headers: traceparent,
+		/// tracestate and baggage, which the invocation activity inherits from <c>Activity.Current</c>. The
+		/// server counts them against its message size limit. Returns no less than they take, without knowing whether
+		/// the client will add them at all.
+		/// </summary>
+		static long EstimateHeaders()
+		{
+#if NET9_0_OR_GREATER
+			var size = new StrongBox<long>(TraceHeadersOverhead);
+
+			if (Activity.Current is { } parent)
+			{
+				DistributedContextPropagator.Current.Inject(parent, size, static (carrier, name, value) =>
+				{
+					// Name, value, a colon and a comma.
+					((StrongBox<long>)carrier!).Value += Estimate(name) + Estimate(value) + 2;
+				});
+			}
+
+			return size.Value;
+#else
+			return 0;
+#endif
 		}
 
 		// Counts the bytes written through one reused buffer instead of keeping them.
