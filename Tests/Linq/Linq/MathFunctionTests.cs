@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -355,6 +356,172 @@ namespace Tests.Linq
 
 			if (iteration > 1)
 				q.GetCacheMissCount().ShouldBe(cacheMissCount);
+		}
+
+		// Rounds server-side to more digits than the column's declared scale, so a provider that emulates
+		// ROUND by scaling has to widen the intermediate: MoneyValue is Decimal(6,2) on YDB, and 11.45 * 10^5
+		// does not fit that.
+		[Test]
+		public void Round13([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in    Types where p.MoneyValue != 0 select Math.Round(p.MoneyValue, 5),
+				from p in db.Types where p.MoneyValue != 0 select Sql.AsSql(Math.Round(p.MoneyValue, 5)));
+		}
+
+		// The widened intermediate must not leak into the result type: YQL arithmetic and IF reject
+		// Decimal operands of different types.
+		[Test]
+		public void Round14([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in    Types where p.MoneyValue != 0 select Math.Round(p.MoneyValue, 5) + p.MoneyValue,
+				from p in db.Types where p.MoneyValue != 0 select Sql.AsSql(Math.Round(p.MoneyValue, 5) + p.MoneyValue));
+			AreEqual(
+				from p in    Types where p.MoneyValue != 0 select p.ID > 2 ? Math.Round(p.MoneyValue, 5) : p.MoneyValue,
+				from p in db.Types where p.MoneyValue != 0 select Sql.AsSql(p.ID > 2 ? Math.Round(p.MoneyValue, 5) : p.MoneyValue));
+		}
+
+		[Test]
+		public void Round15([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in    Types where p.MoneyValue != 0 select Sql.Round(p.MoneyValue, 5) + p.MoneyValue,
+				from p in db.Types where p.MoneyValue != 0 select Sql.AsSql(Sql.Round(p.MoneyValue, 5) + p.MoneyValue));
+			AreEqual(
+				from p in    Types where p.MoneyValue != 0 select Sql.RoundToEven(p.MoneyValue, 5) + p.MoneyValue,
+				from p in db.Types where p.MoneyValue != 0 select Sql.AsSql(Sql.RoundToEven(p.MoneyValue, 5) + p.MoneyValue));
+		}
+
+		// A non-constant precision must not cost the value its fractional digits.
+		[Test]
+		public void Round16([DataSources(TestProvName.AllDuckDB)] string context)
+		{
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in    Types where p.MoneyValue != 0 select Math.Round(p.MoneyValue, p.ID % 2 + 2),
+				from p in db.Types where p.MoneyValue != 0 select Sql.AsSql(Math.Round(p.MoneyValue, p.ID % 2 + 2)));
+			AreEqual(
+				from p in    Types where p.MoneyValue != 0 select Math.Round(p.MoneyValue, p.ID % 2 + 1),
+				from p in db.Types where p.MoneyValue != 0 select Sql.AsSql(Math.Round(p.MoneyValue, p.ID % 2 + 1)));
+		}
+
+		sealed class RoundNearLimit
+		{
+			[PrimaryKey                       ] public int     Id    { get; set; }
+			[Column(Precision = 34, Scale = 2)] public decimal D34s2 { get; set; }
+			[Column(Precision = 35, Scale = 2)] public decimal D35s2 { get; set; }
+			[Column(Precision = 35, Scale = 6)] public decimal D35s6 { get; set; }
+		}
+
+		// Near the 35-digit limit the widened intermediate must not cost the value its fractional digits.
+		[Test]
+		public void Round17([IncludeDataSources(true, TestProvName.AllYdb)] string context, [Values(MidpointRounding.ToEven, MidpointRounding.AwayFromZero)] MidpointRounding mp)
+		{
+			var data = new[]
+			{
+				new RoundNearLimit { Id = 1, D34s2 =  1.75m, D35s2 =  1.75m, D35s6 =  1.114951m },
+				new RoundNearLimit { Id = 2, D34s2 = -2.35m, D35s2 = -2.35m, D35s6 =  1.125001m },
+				new RoundNearLimit { Id = 3, D34s2 = 11.45m, D35s2 = 11.45m, D35s6 = -1.114951m },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			AreEqual(
+				from r in data orderby r.Id select new { r.Id, R34 = Math.Round(r.D34s2, 2, mp), R35 = Math.Round(r.D35s2, 5, mp), R6 = Math.Round(r.D35s6, 2, mp) },
+				from r in t    orderby r.Id select new { r.Id, R34 = Sql.AsSql(Math.Round(r.D34s2, 2, mp)), R35 = Sql.AsSql(Math.Round(r.D35s2, 5, mp)), R6 = Sql.AsSql(Math.Round(r.D35s6, 2, mp)) });
+		}
+
+		sealed class RoundNegative
+		{
+			[PrimaryKey                      ] public int     Id { get; set; }
+			[Column(Precision = 6, Scale = 2)] public decimal D  { get; set; }
+		}
+
+		// A negative precision rounds left of the point: the intermediate keeps the integer digits and gains scale.
+		[Test]
+		public void Round18([IncludeDataSources(true, TestProvName.AllYdb)] string context)
+		{
+			var data = new[]
+			{
+				new RoundNegative { Id = 1, D =  1234.56m },
+				new RoundNegative { Id = 2, D =  1234.96m },
+				new RoundNegative { Id = 3, D = -1234.96m },
+				new RoundNegative { Id = 4, D =  1225.00m },
+				new RoundNegative { Id = 5, D = -1225.00m },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var result = t.OrderBy(r => r.Id).Select(r => new { Away = Sql.AsSql(Sql.Round(r.D, -1)), Even = Sql.AsSql(Sql.RoundToEven(r.D, -1)) }).ToArray();
+
+			result.Select(r => r.Away).ShouldBe(new decimal?[] { 1230m, 1230m, -1230m, 1230m, -1230m });
+			result.Select(r => r.Even).ShouldBe(new decimal?[] { 1230m, 1230m, -1230m, 1220m, -1220m });
+		}
+
+		sealed class RoundNegativeNearLimit
+		{
+			[PrimaryKey                       ] public int     Id { get; set; }
+			[Column(Precision = 35, Scale = 2)] public decimal D  { get; set; }
+		}
+
+		// A negative precision on a type with no spare digits must still gain the scale 10^p needs.
+		[Test]
+		public void Round19([IncludeDataSources(true, TestProvName.AllYdb)] string context)
+		{
+			var data = new[]
+			{
+				new RoundNegativeNearLimit { Id = 1, D =  1234.56m },
+				new RoundNegativeNearLimit { Id = 2, D =  1499.99m },
+				new RoundNegativeNearLimit { Id = 3, D =  2500.00m },
+				new RoundNegativeNearLimit { Id = 4, D = -2500.00m },
+				new RoundNegativeNearLimit { Id = 5, D =  3500.00m },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var result = t.OrderBy(r => r.Id).Select(r => new { Away = Sql.AsSql(Sql.Round(r.D, -3)), Even = Sql.AsSql(Sql.RoundToEven(r.D, -3)) }).ToArray();
+
+			result.Select(r => r.Away).ShouldBe(new decimal?[] { 1000m, 1000m, 3000m, -3000m, 4000m });
+			result.Select(r => r.Even).ShouldBe(new decimal?[] { 1000m, 1000m, 2000m, -2000m, 4000m });
+		}
+
+		sealed class RoundNegativeDynamic
+		{
+			[PrimaryKey                      ] public int     Id { get; set; }
+			[Column(Precision = 6, Scale = 2)] public decimal D  { get; set; }
+			[Column                          ] public int     P  { get; set; }
+		}
+
+		// A negative precision that is not a constant must still get the scale 10^p needs.
+		[Test]
+		public void Round20([IncludeDataSources(true, TestProvName.AllYdb)] string context)
+		{
+			var data = new[]
+			{
+				new RoundNegativeDynamic { Id = 1, D =  1234.56m, P = -1 },
+				new RoundNegativeDynamic { Id = 2, D =  1249.60m, P = -2 },
+				new RoundNegativeDynamic { Id = 3, D =  1234.96m, P = -1 },
+				new RoundNegativeDynamic { Id = 4, D =  1225.00m, P = -1 },
+				new RoundNegativeDynamic { Id = 5, D =  1234.56m, P = -3 },
+				new RoundNegativeDynamic { Id = 6, D = -2500.00m, P = -3 },
+				new RoundNegativeDynamic { Id = 7, D =  4999.99m, P = -4 },
+				new RoundNegativeDynamic { Id = 8, D =  9999.99m, P =  3 },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var result = t.OrderBy(r => r.Id).Select(r => new { Away = Sql.AsSql(Sql.Round(r.D, r.P)), Even = Sql.AsSql(Sql.RoundToEven(r.D, r.P)) }).ToArray();
+
+			result.Select(r => r.Away).ShouldBe(new decimal?[] { 1230m, 1200m, 1230m, 1230m, 1000m, -3000m, 0m, 9999.99m });
+			result.Select(r => r.Even).ShouldBe(new decimal?[] { 1230m, 1200m, 1230m, 1220m, 1000m, -2000m, 0m, 9999.99m });
 		}
 
 		[Test]

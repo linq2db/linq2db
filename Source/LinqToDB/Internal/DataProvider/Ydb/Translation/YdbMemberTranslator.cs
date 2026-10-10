@@ -749,18 +749,78 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				var doubleType = factory.GetDbDataType(typeof(double));
 				var isDecimal  = valueType.SystemType.UnwrappedNullableType == typeof(decimal);
 
+				// rounding a Decimal to at least its own scale is a no-op
+				if (isDecimal
+					&& precision is SqlValue { Value: int or long } constant
+					&& Convert.ToInt64(constant.Value, CultureInfo.InvariantCulture) >= (valueType.Scale ?? YdbMappingSchema.DEFAULT_DECIMAL_SCALE))
+					return value;
+
 				var hasPrecision = precision is not (null or SqlValue { Value: 0 } or SqlValue { Value: 0L });
 
-				// scale by 10^p in the value's own type (exact for Decimal)
-				var scaled = hasPrecision ? factory.Multiply(valueType, value, Pow10(factory, valueType, precision!)) : value;
+				// the runtime twin of the no-op above, which bounds the integer digits ScaledDecimalType reserves
+				if (isDecimal && hasPrecision && precision is not SqlValue)
+				{
+					var maxPrecision = factory.Value(factory.GetDbDataType(precision!), valueType.Scale ?? YdbMappingSchema.DEFAULT_DECIMAL_SCALE);
+
+					precision = factory.Condition(
+						factory.SearchCondition().AddGreater(precision!, maxPrecision, CompareNulls.LikeSql),
+						maxPrecision,
+						precision!);
+				}
+
+				// The scaled value needs p more integer digits than the source declares, and so does 10^p
+				// itself: Decimal(6,2) holds 9999.99, so neither 11.45 * 10^5 nor Decimal('100000', 6, 2)
+				// fits it. YDB answers an out-of-range Decimal with an empty optional rather than an error,
+				// which the surrounding Unwrap then turns into a query-terminating PreconditionFailed.
+				var scaleType = isDecimal && hasPrecision ? ScaledDecimalType(valueType, precision!) : valueType;
+
+				// scale by 10^p in the widened type (exact for Decimal). YQL's DecimalMul demands both operands
+				// carry the identical Decimal type - "Cannot calculate with different decimals: Decimal(6,2) !=
+				// Decimal(7,2)" - so the value is widened first rather than multiplied by a wider literal.
+				var widened = scaleType.EqualsDbOnly(valueType) ? value : factory.Cast(value, scaleType);
+				var scaled  = hasPrecision ? factory.Multiply(scaleType, widened, Pow10(factory, scaleType, precision!)) : value;
 
 				// round to an integer in Double — the scaled rounding boundary is exactly representable
 				var rounded = roundToInt(factory, doubleType, factory.Cast(scaled, doubleType));
 
-				// back to the value's type (Double->Decimal becomes the string round-trip)
-				var back = isDecimal || !valueType.EqualsDbOnly(doubleType) ? factory.Cast(rounded, valueType) : rounded;
+				// back to the scaled type (Double->Decimal becomes the string round-trip)
+				var back = isDecimal || !scaleType.EqualsDbOnly(doubleType) ? factory.Cast(rounded, scaleType) : rounded;
 
-				return hasPrecision ? factory.Div(valueType, back, Pow10(factory, valueType, precision!)) : back;
+				var result = hasPrecision ? factory.Div(scaleType, back, Pow10(factory, scaleType, precision!)) : back;
+
+				// narrow back to the value's type: YQL arithmetic and IF demand identical Decimal types
+				return scaleType.EqualsDbOnly(valueType) ? result : factory.Cast(result, valueType);
+			}
+
+			// valueType widened by the rounding digits, clamped to what YQL accepts. The source scale is never
+			// cut: dropping fractional digits corrupts every row, while running out of integer digits only
+			// fails values near the type's limit. A non-constant precision is capped at the source scale, so it
+			// needs at most P integer digits and every remaining digit goes to scale, for a negative one. A
+			// negative constant precision shifts digits the other way, so it widens the scale instead.
+			static DbDataType ScaledDecimalType(DbDataType valueType, ISqlExpression precision)
+			{
+				var scale     = valueType.Scale ?? YdbMappingSchema.DEFAULT_DECIMAL_SCALE;
+				var intDigits = (valueType.Precision ?? YdbMappingSchema.DEFAULT_DECIMAL_PRECISION) - scale;
+				var p         = precision switch
+				{
+					SqlValue { Value: int pi }  => pi,
+					SqlValue { Value: long pl } => (int)pl,
+					_                           => (int?)null,
+				};
+
+				if (p == null)
+				{
+					intDigits += scale;
+					scale      = Math.Max(scale, YdbMappingSchema.MAX_DECIMAL_PRECISION - intDigits);
+				}
+				else if (p > 0)
+					intDigits += p.Value;
+				else
+					scale = Math.Min(scale - p.Value, YdbMappingSchema.MAX_DECIMAL_PRECISION);
+
+				intDigits     = Math.Min(intDigits, YdbMappingSchema.MAX_DECIMAL_PRECISION - scale);
+
+				return valueType.WithPrecisionScale(intDigits + scale, scale);
 			}
 
 			// 10^precision rendered in the requested type (decimal or double).

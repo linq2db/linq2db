@@ -207,6 +207,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (translationFlags.HasFlag(TranslationFlags.Expression) && methodCall.Arguments.Skip(1).All(translationContext.CanBeEvaluatedOnClient))
 				return null;
 
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
+
 			ISqlExpression? precision = null;
 
 			if (methodCall.Arguments.Count > 1)
@@ -258,6 +260,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (translationFlags.HasFlag(TranslationFlags.Expression) && methodCall.Arguments.Skip(1).All(translationContext.CanBeEvaluatedOnClient))
 				return null;
 
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
+
 			ISqlExpression? precision = null;
 
 			if (methodCall.Arguments.Count > 1)
@@ -289,6 +293,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			if (translationFlags.HasFlag(TranslationFlags.Expression) && methodCall.Arguments.Skip(1).All(translationContext.CanBeEvaluatedOnClient))
 				return null;
+
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
 
 			ISqlExpression? precision = null;
 
