@@ -77,7 +77,8 @@ On Linux and macOS the directory is created owner-only (`0700`); a directory tha
 can write to (group or other write permission) is refused, because they could replace the key, the data or a generated
 script. So is a directory whose real path (symbolic links resolved) has an ancestor that every user can write to
 without the sticky bit (`/tmp` has the sticky bit): another user could rename the whole directory and put their own in
-its place. Group write on an ancestor is accepted, since with private user groups (umask `002`) `~/.config` is often
+its place. The same holds for a directory that holds a symbolic link on the way: another user could point the link
+elsewhere. Group write on an ancestor is accepted, since with private user groups (umask `002`) `~/.config` is often
 `0775`. The error names that ancestor. linq2db-cli warns when the directory is inside a git working tree.
 
 Ownership is not checked: the directory, its files and the generated scripts must be created by you. A predictable path
@@ -389,7 +390,7 @@ dotnet linq2db credentials cli init --store local --config .agents/linq2db-query
 - The script is written to `credentials-<store>.sh` in the credentials directory unless `--output`/`-o` names another
   path, owner-only (`0700`). An existing script is replaced only with `--force`. Whoever can replace the script receives
   the passwords given to it, so an `--output` path inside a directory that every user can write to without the sticky
-  bit (the script's directory or an ancestor of its real path) is refused, and a group-writable script directory gives a
+  bit (the script's directory, an ancestor of its real path, or a directory holding a symbolic link on the way) is refused, and a group-writable script directory gives a
   warning.
 - With `--config <file>` the store is recorded as `credentialsCli` in that file's `default` profile (the file is created
   when missing): `@keyring`/`@gpg`/`@local` for the default location, otherwise the script's path (quoted when it has

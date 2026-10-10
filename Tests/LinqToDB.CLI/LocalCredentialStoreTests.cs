@@ -422,6 +422,34 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public void LinkInAWorldWritableDirectoryIsRefused()
+		{
+			if (OperatingSystem.IsWindows())
+				Assert.Ignore("POSIX symbolic links.");
+
+			// <shared>/link -> ~/private: the real path is the user's own, but any user can point the link elsewhere later.
+			var shared  = Path.Combine(_root, "shared");
+			var real    = Path.Combine(_root, "private");
+			var link    = Path.Combine(shared, "link");
+
+			Directory.CreateDirectory(shared);
+			Directory.CreateDirectory(real);
+			File.SetUnixFileMode(real, Owner700);
+			Directory.CreateSymbolicLink(link, real);
+			File.SetUnixFileMode(shared, (UnixFileMode)0b111_111_111);
+
+			try
+			{
+				new LocalCredentialStore(Path.Combine(link, "credentials"), _root).TryStore("a", "u", "p", out var error).ShouldBeFalse();
+				error.ShouldNotBeNull().ShouldContain($"is inside '{shared}', which every user can write to without the sticky bit");
+			}
+			finally
+			{
+				File.SetUnixFileMode(shared, Owner700);
+			}
+		}
+
+		[Test]
 		public void SymlinkedDirectoryIsRefused()
 		{
 			if (OperatingSystem.IsWindows())

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
@@ -161,10 +162,21 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 					return false;
 				}
 
-				// Ancestors of the real path: a link such as ~/work -> /srv/shared/work puts the directory under /srv/shared.
+				// Every directory the path goes through: the ancestors of the real path (a link such as ~/work ->
+				// /srv/shared/work puts the directory under /srv/shared), and the directories holding the links on the way
+				// (/srv/shared/link -> ~/private: whoever can write to /srv/shared can point the link elsewhere later).
 				// Group write is accepted there: with private user groups (umask 002) ~/.config is often 0775.
-				for (var ancestor = new DirectoryInfo(GetRealPath(directory)).Parent; ancestor != null; ancestor = ancestor.Parent)
+				var traversed = new List<string>();
+
+				GetRealPath(directory, traversed);
+
+				foreach (var path in traversed)
 				{
+					var ancestor = new DirectoryInfo(path);
+
+					if (!ancestor.Exists)
+						continue;
+
 					var mode = ancestor.UnixFileMode;
 
 					if (mode.HasFlag(UnixFileMode.OtherWrite) && !mode.HasFlag(UnixFileMode.StickyBit))
@@ -199,10 +211,17 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 
 			try
 			{
-				var nearest = true;
+				// The script's real directory first, then every directory the path goes through: the ancestors of the real
+				// path and the directories holding the links on the way, since the configuration keeps the path as written
+				// and a link there can be pointed elsewhere later.
+				var traversed = new List<string>();
+				var real      = GetRealPath(Path.GetDirectoryName(script)!, traversed);
+				var nearest   = true;
 
-				for (var directory = new DirectoryInfo(GetRealPath(Path.GetDirectoryName(script)!)); directory != null; directory = directory.Parent)
+				foreach (var path in traversed.Prepend(real))
 				{
+					var directory = new DirectoryInfo(path);
+
 					if (!directory.Exists)
 						continue;
 
@@ -210,7 +229,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 
 					if (mode.HasFlag(UnixFileMode.OtherWrite) && !mode.HasFlag(UnixFileMode.StickyBit))
 					{
-						error = $"Cannot write '{script}': it would be inside '{directory.FullName}', which every user can write to without the sticky bit; another user could replace the script and receive the passwords given to it. Choose another --output or run: chmod o-w '{directory.FullName}'";
+						error = $"Cannot write '{script}': its path goes through '{directory.FullName}', which every user can write to without the sticky bit; another user could replace the script and receive the passwords given to it. Choose another --output or run: chmod o-w '{directory.FullName}'";
 						return false;
 					}
 
@@ -235,7 +254,10 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		/// Resolves symbolic links in every component of an absolute Unix path (like realpath; components that do not exist
 		/// are kept as written). Gives up after 40 links, as the kernel does.
 		/// </summary>
-		internal static string GetRealPath(string path)
+		/// <param name="path">The path to resolve.</param>
+		/// <param name="traversed">Receives every directory that holds a component on the way, each once: the directories
+		/// holding the links followed and all ancestors of the result.</param>
+		internal static string GetRealPath(string path, ICollection<string>? traversed = null)
 		{
 			var current = Path.GetFullPath(path);
 
@@ -247,6 +269,9 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 
 				for (var i = 0; i < parts.Length; i++)
 				{
+					if (traversed != null && !traversed.Contains(resolved))
+						traversed.Add(resolved);
+
 					var candidate = Path.Combine(resolved, parts[i]);
 					var target    = new FileInfo(candidate).LinkTarget;
 

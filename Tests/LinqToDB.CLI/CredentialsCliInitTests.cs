@@ -147,8 +147,33 @@ namespace Tests.LinqToDB.CLI
 			var (exitCode, _, error) = await RunCli(CreateEnvironment(), "credentials", "cli", "init", "--store", "gpg", "-o", script, "--config", "new.json");
 
 			exitCode.ShouldBe(-3);
-			error.ShouldContain($"inside '{shared}', which every user can write to without the sticky bit");
+			error.ShouldContain($"its path goes through '{shared}', which every user can write to without the sticky bit");
 			File.Exists(script).ShouldBeFalse();
+		}
+
+		[Test]
+		public async Task OutputThroughLinkInWorldWritableDirectoryIsRefused()
+		{
+			// shared/link -> private: the real directory is the user's own, but the configuration keeps the path as written,
+			// and any user can point shared/link elsewhere later.
+			RequirePosix();
+
+			var shared = Directory.CreateDirectory(Path.Combine(_root, "shared")).FullName;
+			File.SetUnixFileMode(shared, Owner700 | UnixFileMode.GroupRead | UnixFileMode.GroupWrite | UnixFileMode.GroupExecute | UnixFileMode.OtherRead | UnixFileMode.OtherWrite | UnixFileMode.OtherExecute);
+
+			var real = Directory.CreateDirectory(Path.Combine(_root, "private")).FullName;
+			File.SetUnixFileMode(real, Owner700);
+
+			var link = Path.Combine(shared, "link");
+			Directory.CreateSymbolicLink(link, real);
+
+			var script = Path.Combine(link, "h.sh");
+
+			var (exitCode, _, error) = await RunCli(CreateEnvironment(), "credentials", "cli", "init", "--store", "gpg", "-o", script, "--config", "new.json");
+
+			exitCode.ShouldBe(-3);
+			error.ShouldContain($"its path goes through '{shared}', which every user can write to without the sticky bit");
+			File.Exists(Path.Combine(real, "h.sh")).ShouldBeFalse();
 		}
 
 		[TestCase(UnixFileMode.GroupWrite, true,  TestName = "OutputInGroupWritableDirectoryWarns")]
