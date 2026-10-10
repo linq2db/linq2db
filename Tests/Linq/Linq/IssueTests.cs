@@ -1213,7 +1213,6 @@ namespace Tests.Linq
 		[ActiveIssue(5973, Configuration = TestProvName.AllSybase,        ErrorMessage = "Arithmetic overflow during explicit conversion")]
 		[ActiveIssue(5973, Configuration = TestProvName.AllFirebird4Plus, ErrorMessage = "numeric overflow")]
 		[ActiveIssue(5973, Configuration = TestProvName.AllFirebirdLess4, ErrorMessage = "Token unknown")]
-		[ActiveIssue(5973, Configuration = TestProvName.AllPostgreSQL,    SkipForNonLinqService = true, ErrorMessage = "Baselines for remote context doesn't match direct access baselines")]
 		public void Issue5972_UInt64([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using var db = GetDataContext(context);
