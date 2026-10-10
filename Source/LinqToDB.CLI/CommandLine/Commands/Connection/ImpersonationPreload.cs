@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
@@ -13,6 +14,7 @@ using System.Threading.Tasks;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.DataProvider.SqlServer;
 
 namespace LinqToDB.CommandLine.Commands.Connection
 {
@@ -38,6 +40,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		static readonly Lock _lock = new();
 
 		static bool                                 _applicationAssembliesLoaded;
+		static bool                                 _spatialLibrariesLoaded;
 		static readonly HashSet<Assembly>           _referencesLoaded     = new();
 		static readonly HashSet<Assembly>           _runtimeImportsLoaded = new();
 		static readonly HashSet<(Assembly, string)> _satellitesLoaded     = new();
@@ -62,6 +65,10 @@ namespace LinqToDB.CommandLine.Commands.Connection
 			{
 				LoadReferencedAssemblies();
 				LoadRuntimeNativeLibraries();
+
+				if (dataProvider is SqlServerDataProvider)
+					LoadSpatialNativeLibraries();
+
 				LoadSatelliteAssemblies(CultureInfo.CurrentUICulture);
 			}
 		}
@@ -246,6 +253,62 @@ namespace LinqToDB.CommandLine.Commands.Connection
 						return true;
 
 				return false;
+			}
+		}
+
+		/// <summary>
+		/// Loads the native libraries Microsoft.SqlServer.Types imports (SqlServerSpatial*.dll, shipped for Windows
+		/// only). SqlClient resolves the user-defined type of a <c>geography</c> or <c>geometry</c> column to that
+		/// assembly by name, and it loads its native library when the first value is read, so neither the warm-up
+		/// connection nor the reference closure reaches it. Each library is loaded from the file the runtime would
+		/// resolve, by its full path; a library that fails to load is left alone, and a spatial read then fails as it
+		/// would without impersonation.
+		/// </summary>
+		static unsafe void LoadSpatialNativeLibraries()
+		{
+			if (_spatialLibrariesLoaded || !OperatingSystem.IsWindows())
+				return;
+
+			_spatialLibrariesLoaded = true;
+
+			var assembly = Array.Find(AppDomain.CurrentDomain.GetAssemblies(), static a => string.Equals(a.GetName().Name, "Microsoft.SqlServer.Types", StringComparison.Ordinal));
+
+			if (assembly == null || assembly.IsDynamic || !assembly.TryGetRawMetadata(out var blob, out var length))
+				return;
+
+			// The runtime looks for a DllImport library in the native search directories of the dependency manifest
+			// (e.g. runtimes/win-x64/native), then in the importing assembly's folder.
+			//
+			var directories = new List<string>();
+
+			if (AppContext.GetData("NATIVE_DLL_SEARCH_DIRECTORIES") is string searchDirectories)
+				directories.AddRange(searchDirectories.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries));
+
+			if (Path.GetDirectoryName(assembly.Location) is { Length: > 0 } assemblyDirectory)
+				directories.Add(assemblyDirectory);
+
+			var reader = new MetadataReader(blob, length);
+
+			for (var row = 1; row <= reader.GetTableRowCount(TableIndex.ModuleRef); row++)
+			{
+				var name = reader.GetString(reader.GetModuleReference(MetadataTokens.ModuleReferenceHandle(row)).Name);
+
+				if (!name.StartsWith("SqlServerSpatial", StringComparison.OrdinalIgnoreCase))
+					continue;
+
+				// The runtime's name variants on Windows: the name, then the name with .dll unless it has an extension
+				// the loader keeps. Each variant is looked up in every directory before the next one.
+				//
+				string[] variants = name.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) || name.EndsWith('.')
+					? [name]
+					: [name, name + ".dll"];
+
+				var path = variants
+					.SelectMany(variant => directories.Select(directory => Path.Combine(directory, variant)))
+					.FirstOrDefault(File.Exists);
+
+				if (path != null)
+					NativeLibrary.TryLoad(Path.GetFullPath(path), out _);
 			}
 		}
 
