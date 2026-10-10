@@ -32,6 +32,8 @@ Update:
 
 `dotnet tool update -g linq2db.cli`
 
+Or run a command once without installing the tool, using `dnx` from the .NET 10 SDK (it downloads the tool on first use and caches it), e.g. `dnx linq2db.cli skill install` (or `dotnet dnx linq2db.cli skill install`). Tool arguments follow the package id as usual; add `@<version>` to the package id to pin a version.
+
 General information on .NET Tools could be found [here](https://docs.microsoft.com/en-us/dotnet/core/tools/global-tools)
 
 ### Choosing 32-bit vs 64-bit (Windows)
@@ -109,7 +111,7 @@ Available commands:
 - `dotnet linq2db credentials <set|list|remove|clear> <options>`: manages encrypted credential profiles for connection configuration
 - `dotnet linq2db mcp <options>`: runs a STDIO Model Context Protocol server exposing `linq2db_info`, `linq2db_schema`, `linq2db_query`, `linq2db_execute`, and `linq2db_skill`
 - `dotnet linq2db skill`: prints agent-oriented CLI usage instructions
-- `dotnet linq2db skill install [--project <project file or directory>] [--root <directory>] [--check] [--force]`: copies the `linq2db` library skill (from the linq2db package the project references, or the copy embedded in the tool) and the `linq2db-cli` skill into `.agents/skills/` and `.claude/skills/` of the repository; `--check` only verifies them and fails when they are missing, stale or edited (for CI)
+- `dotnet linq2db skill install [--project <project file or directory>] [--root <directory>] [--check] [--force]`: copies the `linq2db` library skill (from the linq2db package the project references, or the copy embedded in the tool) and the `linq2db-cli` skill into `.agents/skills/` and `.claude/skills/` of the repository; `--check` only verifies them and fails when they are missing, stale or edited (for CI). Referencing the `linq2db` package does not install this command: it needs the `linq2db.cli` tool, either installed (see [Installation](#installation)) or run once without installing: `dnx linq2db.cli skill install` (.NET 10 SDK)
 
 For MCP-capable agent hosts, `mcp` is the intended integration mode. Use `query` for lighter direct invocation when MCP is unavailable, not allowed by policy, or not needed for a specific environment.
 

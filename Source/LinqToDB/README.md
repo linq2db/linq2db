@@ -7,7 +7,9 @@ NuGet global packages folder, next to this README: <global-packages>/linq2db/<ve
 (default ~/.nuget/packages on Linux and macOS, %UserProfile%\.nuget\packages on Windows;
 `dotnet nuget locals global-packages --list` prints the folder). A user who wants an agent to load it
 as a skill can copy the skills/linq2db folder into the project's .agents/skills/ (or .claude/skills/,
-.github/skills/).
+.github/skills/), or let the linq2db.cli tool do it: `dnx linq2db.cli skill install` (.NET 10 SDK, nothing
+to install), or `dotnet tool install -g linq2db.cli` followed by `dotnet linq2db skill install`. The command
+is not available just by referencing this package; it needs linq2db.cli.
 -->
 
 [![License](https://img.shields.io/github/license/linq2db/linq2db)](MIT-LICENSE.txt)

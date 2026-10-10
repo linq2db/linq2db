@@ -719,7 +719,7 @@ Use `dotnet linq2db skill` to print this agent-oriented Markdown document to std
 
 Use this command when an agent needs current instructions for using linq2db CLI from the installed tool instead of relying on repository files or external documentation.
 
-Use `dotnet linq2db skill install [--project <project file or directory>] [--root <directory>] [--check] [--force]` to add the agent skills to a repository. It installs two skills, each as a real copy in both `.agents/skills/<name>/` (Codex, GitHub Copilot, Cursor, Gemini, Junie and others) and `.claude/skills/<name>/` (Claude Code):
+Use `dotnet linq2db skill install [--project <project file or directory>] [--root <directory>] [--check] [--force]` to add the agent skills to a repository (it needs the `linq2db.cli` tool, which referencing the `linq2db` package does not provide; without installing the tool, run it as `dnx linq2db.cli skill install [options]` with the .NET 10 SDK). It installs two skills, each as a real copy in both `.agents/skills/<name>/` (Codex, GitHub Copilot, Cursor, Gemini, Junie and others) and `.claude/skills/<name>/` (Claude Code):
 
 - `linq2db`: guidance for writing code with the linq2db library. It is taken from the linq2db NuGet package version the project references (the project must be restored; the package's assets file is located through MSBuild), so the guidance matches the API in use. When the package carries no skill, or no restored project references linq2db, the copy embedded in the tool is used and a warning says so when its version differs.
 - `linq2db-cli`: this document, taken from the tool.

@@ -30,7 +30,8 @@ The skill is used from one of two places:
 
 - the restored package, `<global-packages>/linq2db/<version>/skills/linq2db/`;
 - a copy in the consuming repository, `.agents/skills/linq2db/` or `.claude/skills/linq2db/`
-  (made by `dotnet linq2db skill install` or by hand).
+  (made by `dotnet linq2db skill install` or by hand; the command comes with the `linq2db.cli` tool, installed or run
+  without installing as `dnx linq2db.cli skill install`).
 
 ## Rules for skill content
 
