@@ -5120,7 +5120,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			};
 		}
 
-		static bool IsCoarserDateTime(DataType dataType, DataType than)
+		internal static bool IsCoarserDateTime(DataType dataType, DataType than)
 		{
 			var rank = DateTimeRank(dataType);
 			return rank >= 0 && rank < DateTimeRank(than);
@@ -5134,7 +5134,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// COALESCE, MIN/MAX and the value window functions. A cast is transparent to the structural walk because
 		/// <see cref="QueryHelper.GetColumnDescriptorForTyping"/> already refuses one that changed the database type.
 		/// </remarks>
-		static bool IsStoredColumn(ISqlExpression expr)
+		internal static bool IsStoredColumn(ISqlExpression expr)
 		{
 			return QueryHelper.GetColumnDescriptorForTyping(expr) != null && IsStoredValue(expr);
 		}

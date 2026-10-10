@@ -1875,6 +1875,21 @@ namespace Tests.Linq
 			t.GroupBy(r => r.Id).Where(g => g.Max(r => r.Value) == CoarseSubSecondBoundary).Count().ShouldBe(0);
 		}
 
+		/// <summary>
+		/// A literal set beside an aggregate over a coarse column in a set operation keeps its time part.
+		/// </summary>
+		[Test]
+		public void CoarseAggregateSetOperationKeepsLiteralTime([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarse(db);
+
+			t.GroupBy(r => r.Id).Select(g => g.Max(r => r.Day)).Concat(t.Select(r => CoarseValue)).ToArray()
+				.ShouldContain(CoarseValue);
+			t.GroupBy(r => r.Id).Select(g => g.Max(r => r.Value)).Concat(t.Select(r => CoarseSubSecondBoundary)).ToArray()
+				.ShouldContain(CoarseSubSecondBoundary);
+		}
+
 		static readonly DateTime CoarseMidnight = new(2026, 6, 1);
 
 		/// <summary>
