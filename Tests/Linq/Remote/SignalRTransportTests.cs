@@ -1346,6 +1346,10 @@ namespace Tests.Remote
 				for (var max = MaxConcurrency; running > max; max = MaxConcurrency)
 					Interlocked.CompareExchange(ref _maxConcurrency, running, max);
 
+				// Reports a token that fires while the behaviour ignores it. One that ends the behaviour is seen by the check
+				// in finally instead: .NET Framework runs the continuations of a cancelled Task.Delay inside Cancel(),
+				// before this callback (callbacks run in reverse order of registration), and the registration is
+				// disposed before its turn comes.
 				using var registration = cancellationToken.Register(() => _cancelled.TrySetResult(true));
 
 				_started.TrySetResult(true);
@@ -1362,6 +1366,9 @@ namespace Tests.Remote
 				}
 				finally
 				{
+					if (cancellationToken.IsCancellationRequested)
+						_cancelled.TrySetResult(true);
+
 					Interlocked.Decrement(ref _running);
 					_finished.TrySetResult(true);
 				}
