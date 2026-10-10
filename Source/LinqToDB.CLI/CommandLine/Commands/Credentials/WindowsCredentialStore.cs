@@ -17,7 +17,6 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 
 		const int CredentialTypeGeneric         = 1;
 		const int CredentialPersistLocalMachine = 2;
-		const int CryptProtectUiForbidden       = 1;
 		const int ErrorNotFound                 = 1168;
 
 		const int PayloadMagic = 0x3143324C;
@@ -56,12 +55,12 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 			}
 		}
 
-		public bool TryStore(string profile, string user, string password, out string? error)
+		public bool TryStore(string name, string user, string password, out string? error)
 		{
 			if (!CheckPlatform(out error))
 				return false;
 
-			var target = TargetPrefix + profile;
+			var target = TargetPrefix + name;
 			byte[] payload;
 
 			using (var stream = new MemoryStream())
@@ -113,13 +112,13 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 
 					var nativeError = Marshal.GetLastWin32Error();
 
-					error = $"Cannot store credential profile '{profile}': {new Win32Exception(nativeError).Message}";
+					error = $"Cannot store credential record '{TargetPrefix}{name}': {new Win32Exception(nativeError).Message}";
 					return false;
 				}
 				finally
 				{
 					Marshal.FreeHGlobal(credentialPointer);
-					ZeroAndFree(secretPointer, protectedPayload.Length);
+					Dpapi.ZeroAndFree(secretPointer, protectedPayload.Length);
 					Marshal.FreeCoTaskMem(markerPointer);
 					Marshal.FreeCoTaskMem(targetPointer);
 				}
@@ -186,14 +185,14 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 			return true;
 		}
 
-		public bool TryRemove(string profile, out bool removed, out string? error)
+		public bool TryRemove(string name, out bool removed, out string? error)
 		{
 			removed = false;
 
 			if (!CheckPlatform(out error))
 				return false;
 
-			if (CredDelete(TargetPrefix + profile, CredentialTypeGeneric, 0))
+			if (CredDelete(TargetPrefix + name, CredentialTypeGeneric, 0))
 			{
 				removed = true;
 				error   = null;
@@ -208,7 +207,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 				return true;
 			}
 
-			error = $"Cannot remove credential profile '{profile}': {new Win32Exception(nativeError).Message}";
+			error = $"Cannot remove credential record '{TargetPrefix}{name}': {new Win32Exception(nativeError).Message}";
 			return false;
 		}
 
@@ -408,53 +407,21 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 
 		static bool TryTransformData(string target, byte[] input, bool protect, out byte[]? output, out string? error)
 		{
-			output = null;
-
 			var entropy = SHA256.HashData(Encoding.UTF8.GetBytes(FormatMarker + "\0" + target));
-			var inputPointer   = Marshal.AllocHGlobal(input.Length);
-			var entropyPointer = Marshal.AllocHGlobal(entropy.Length);
 
 			try
 			{
-				Marshal.Copy(input,   0, inputPointer,   input.Length);
-				Marshal.Copy(entropy, 0, entropyPointer, entropy.Length);
-
-				var inputBlob   = new DataBlob(input.Length, inputPointer);
-				var entropyBlob = new DataBlob(entropy.Length, entropyPointer);
-				var succeeded   = protect
-					? CryptProtectData(ref inputBlob, null, ref entropyBlob, IntPtr.Zero, IntPtr.Zero, CryptProtectUiForbidden, out var outputBlob)
-					: CryptUnprotectData(ref inputBlob, IntPtr.Zero, ref entropyBlob, IntPtr.Zero, IntPtr.Zero, CryptProtectUiForbidden, out outputBlob);
-
-				if (!succeeded)
+				if (Dpapi.TryTransform(input, entropy, protect, out output, out var nativeError))
 				{
-					var nativeError = Marshal.GetLastWin32Error();
-
-					error = $"{(protect ? "Cannot protect" : "Cannot decrypt")} linq2db credential data: {new Win32Exception(nativeError).Message}";
-					return false;
+					error = null;
+					return true;
 				}
 
-				try
-				{
-					output = new byte[outputBlob.Size];
-					Marshal.Copy(outputBlob.Data, output, 0, output.Length);
-				}
-				finally
-				{
-					// The decrypt output holds the plaintext credential payload. ZeroAndFree cannot be reused
-					// here because this block is LocalAlloc-owned rather than HGlobal-owned.
-					if (outputBlob.Size > 0)
-						Marshal.Copy(new byte[outputBlob.Size], 0, outputBlob.Data, outputBlob.Size);
-
-					LocalFree(outputBlob.Data);
-				}
-
-				error = null;
-				return true;
+				error = $"{(protect ? "Cannot protect" : "Cannot decrypt")} linq2db credential data: {nativeError}";
+				return false;
 			}
 			finally
 			{
-				ZeroAndFree(inputPointer, input.Length);
-				ZeroAndFree(entropyPointer, entropy.Length);
 				CryptographicOperations.ZeroMemory(entropy);
 			}
 		}
@@ -467,19 +434,8 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 				return true;
 			}
 
-			error = "System credential profiles are currently supported only on Windows.";
+			error = "Windows Credential Manager is available only on Windows.";
 			return false;
-		}
-
-		static void ZeroAndFree(IntPtr pointer, int length)
-		{
-			if (pointer == IntPtr.Zero)
-				return;
-
-			if (length > 0)
-				Marshal.Copy(new byte[length], 0, pointer, length);
-
-			Marshal.FreeHGlobal(pointer);
 		}
 
 		[StructLayout(LayoutKind.Sequential)]
@@ -497,13 +453,6 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 			public IntPtr   Attributes;
 			public IntPtr   TargetAlias;
 			public IntPtr   UserName;
-		}
-
-		[StructLayout(LayoutKind.Sequential)]
-		readonly struct DataBlob(int size, IntPtr data)
-		{
-			public readonly int    Size = size;
-			public readonly IntPtr Data = data;
 		}
 
 		[DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
@@ -529,19 +478,5 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		[DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
 		[LibraryImport("advapi32.dll")]
 		private static partial void CredFree(IntPtr buffer);
-
-		[DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
-		[LibraryImport("crypt32.dll", EntryPoint = "CryptProtectData", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
-		[return: MarshalAs(UnmanagedType.Bool)]
-		private static partial bool CryptProtectData(ref DataBlob data, string? description, ref DataBlob entropy, IntPtr reserved, IntPtr prompt, int flags, out DataBlob output);
-
-		[DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
-		[LibraryImport("crypt32.dll", EntryPoint = "CryptUnprotectData", SetLastError = true)]
-		[return: MarshalAs(UnmanagedType.Bool)]
-		private static partial bool CryptUnprotectData(ref DataBlob data, IntPtr description, ref DataBlob entropy, IntPtr reserved, IntPtr prompt, int flags, out DataBlob output);
-
-		[DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
-		[LibraryImport("kernel32.dll")]
-		private static partial IntPtr LocalFree(IntPtr memory);
 	}
 }

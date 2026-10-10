@@ -3,6 +3,7 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 
+using LinqToDB.CommandLine.Commands.Credentials;
 using LinqToDB.CommandLine.Commands.QueryExecution;
 using LinqToDB.CommandLine.Options;
 
@@ -81,7 +82,12 @@ namespace LinqToDB.CommandLine.Commands.Connection
 
 			if (credentials != null && !string.Equals(credentials, MissingEnvironmentVariable, StringComparison.Ordinal))
 			{
-				if (!_environment.CredentialStore.TryRead(credentials, out user, out password, out var credentialError))
+				var credentialStore = GetCredentialStore(values.CredentialsCli, configuration, configFileName);
+
+				if (credentialStore == null)
+					return null;
+
+				if (!credentialStore.TryRead(credentials, out user, out password, out var credentialError))
 				{
 					_environment.Error.WriteLine(credentialError);
 					return null;
@@ -211,6 +217,22 @@ namespace LinqToDB.CommandLine.Commands.Connection
 			}
 		}
 
+		/// <summary>
+		/// Returns the credential store for <c>credentials</c> targets: the <c>--credentials-cli</c> value, else the profile's
+		/// <c>credentialsCli</c>, else the OS default. Returns <see langword="null"/> after writing a diagnostic when no store
+		/// can be selected.
+		/// </summary>
+		public ICredentialStore? GetCredentialStore(string? optionValue, QueryExecutionConfiguration? configuration, string? configFile)
+		{
+			if (!CredentialStoreSelector.TrySelect(_environment, optionValue, configuration, configFile, out var choice, out var error))
+			{
+				_environment.Error.WriteLine(error);
+				return null;
+			}
+
+			return CredentialStoreSelector.Create(_environment, choice);
+		}
+
 		public string? ResolvePath(CliOption option, string? path, string? baseDirectory = null)
 		{
 			if (path == null)
@@ -239,7 +261,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 			return MissingEnvironmentVariable;
 		}
 
-		string? ResolveEnvironmentVariables(CliOption option, string? value)
+		internal string? ResolveEnvironmentVariables(CliOption option, string? value)
 		{
 			if (value == null)
 				return null;

@@ -55,6 +55,7 @@ namespace LinqToDB.CommandLine.Commands.Query
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.Password);
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.PasswordEnv);
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.Credentials);
+			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.CredentialsCli);
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.Impersonate);
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.ImpersonateMode);
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.CommandTimeout);
@@ -136,6 +137,7 @@ namespace LinqToDB.CommandLine.Commands.Query
 			options.Remove(QueryExecutionCliOptions.Password,            out var password);
 			options.Remove(QueryExecutionCliOptions.PasswordEnv,         out var passwordEnv);
 			options.Remove(QueryExecutionCliOptions.Credentials,         out var credentials);
+			options.Remove(QueryExecutionCliOptions.CredentialsCli,      out var credentialsCli);
 			options.Remove(QueryExecutionCliOptions.Impersonate,         out var impersonate);
 			options.Remove(QueryExecutionCliOptions.ImpersonateMode,     out var impersonateMode);
 			options.Remove(QueryExecutionCliOptions.CommandTimeout,      out var commandTimeout);
@@ -171,7 +173,10 @@ namespace LinqToDB.CommandLine.Commands.Query
 				QueryExecutionMode.Query,
 				(string?)sql,
 				(string?)sqlFile,
-				"json");
+				"json")
+			{
+				CredentialsCli = (string?)credentialsCli,
+			};
 
 			var resolver = new QueryExecutionSettingsResolver(environment);
 			var settings = resolver.Resolve(values);

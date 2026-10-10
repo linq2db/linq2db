@@ -111,6 +111,52 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task ConfigInitWritesCredentialsCli()
+		{
+			var environment = new TestCliEnvironment();
+
+			var result = await RunCli(
+				environment,
+				"config-init",
+				"--provider",
+				"PostgreSQL",
+				"--connection-string-env",
+				"PG_CONNECTION",
+				"--credentials",
+				"linq2db/project-a/read",
+				"--credentials-cli",
+				"@gpg");
+
+			result.ExitCode.ShouldBe(0);
+
+			using var json = JsonDocument.Parse(environment.Files[".agents/linq2db-query.json"]);
+			json.RootElement.GetProperty("default").GetProperty("credentialsCli").GetString().ShouldBe("@gpg");
+		}
+
+		[TestCase("",     TestName = "ConfigInitRejectsEmptyCredentialsCli")]
+		[TestCase("@gpq", TestName = "ConfigInitRejectsUnknownReservedCredentialsCli")]
+		public async Task ConfigInitRejectsCredentialsCliTheProfileCannotLoad(string value)
+		{
+			// config-init must not write a profile that every later query/execute/schema/mcp --config refuses to use.
+			var environment = new TestCliEnvironment();
+
+			var result = await RunCli(
+				environment,
+				"config-init",
+				"--provider",
+				"PostgreSQL",
+				"--connection-string-env",
+				"PG_CONNECTION",
+				"--credentials",
+				"linq2db/project-a/read",
+				"--credentials-cli",
+				value);
+
+			result.ExitCode.ShouldBe(-1);
+			environment.Files.ShouldNotContainKey(".agents/linq2db-query.json");
+		}
+
+		[Test]
 		public async Task ConfigInitAddsProfileToExistingConfig()
 		{
 			var environment = new TestCliEnvironment();
