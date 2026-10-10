@@ -44,18 +44,29 @@ namespace SignalRServer
 				.UseDefaultLogging(provider)),
 				ServiceLifetime.Transient);
 
+			// The client application shares one connection between all its contexts: let up to 8 of its queries
+			// run at the same time (by default the hub runs one call per connection at a time).
+			//
+			builder.Services.Configure<LinqToDBHubOptions>(options =>
+			{
+				options.MaxConcurrentCallsPerConnection   = 8;
+				options.TransferInternalExceptionToClient = builder.Environment.IsDevelopment();
+			});
+
 			builder.Services
 				// Adds SignalR services and configures the SignalR options.
 				//
 				.AddLinqToDBService<IDemoDataModel>()
 				.AddSignalR(hubOptions =>
 				{
-					hubOptions.ClientTimeoutInterval               = TimeSpan.FromSeconds(60);
-					hubOptions.HandshakeTimeout                    = TimeSpan.FromSeconds(30);
-					hubOptions.MaximumParallelInvocationsPerClient = 30;
-					hubOptions.EnableDetailedErrors                = true;
-					hubOptions.MaximumReceiveMessageSize           = 1024 * 1024 * 1024;
+					hubOptions.ClientTimeoutInterval = TimeSpan.FromSeconds(60);
+					hubOptions.HandshakeTimeout      = TimeSpan.FromSeconds(30);
 				})
+				// The largest request the hub accepts (default 32 KB). Size it to the largest expected query:
+				// a long string parameter, a large Contains list or a batch. Larger requests fail on the client
+				// before they are sent.
+				//
+				.AddHubOptions<LinqToDBHub<IDemoDataModel>>(hubOptions => hubOptions.MaximumReceiveMessageSize = 1024 * 1024)
 				;
 
 			var app = builder.Build();

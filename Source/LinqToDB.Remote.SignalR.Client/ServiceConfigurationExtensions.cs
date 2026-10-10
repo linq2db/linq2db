@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
-using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LinqToDB.Remote.SignalR
@@ -18,15 +17,10 @@ namespace LinqToDB.Remote.SignalR
 		/// </summary>
 		/// <example>
 		///     <code>
-		///           public void ConfigureServices(IServiceCollection services)
-		///           {
-		///               var connectionString = "connection string to database";
-		///
-		///               services.AddLinqToDBSignalRDataContext&lt;IMyContext, MyContext&gt;(
-		///                   builder.HostEnvironment.BaseAddress,
-		///                   "api/linq2db",
-		///                   (service,options) => options.UseSqlServer(connectionString));
-		///           }
+		///           services.AddLinqToDBSignalRDataContext&lt;IMyContext&gt;(
+		///               builder.HostEnvironment.BaseAddress,
+		///               "/hub/linq2db",
+		///               client => new MyContext(client));
 		///       </code>
 		/// </example>
 		/// <typeparam name="TContext">
@@ -50,19 +44,51 @@ namespace LinqToDB.Remote.SignalR
 			Func<SignalRLinqServiceClient,TContext> getContext)
 			where TContext: class, IDataContext
 		{
-			services.AddSingleton(provider =>
-				new Container<HubConnection>(new HubConnectionBuilder()
-					.WithUrl(new Uri(new Uri(baseAddress), serviceName))
-#if NET8_0_OR_GREATER
-					.WithAutomaticReconnect()
-#endif
-					.Build()));
+			return services.AddLinqToDBSignalRDataContext(new Uri(new Uri(baseAddress), serviceName), getContext);
+		}
 
-			services.AddScoped(provider =>
+		/// <summary>
+		///     Registers <typeparamref name="TContext"/> as a service in the <see cref="IServiceCollection" />, together
+		///     with a singleton <see cref="LinqToDBSignalRConnection"/> to the hub at <paramref name="hubUrl"/> shared
+		///     by all contexts. The connection starts with the first query, and a query after the connection was lost
+		///     starts it again.
+		/// </summary>
+		/// <example>
+		///     <code>
+		///           services.AddLinqToDBSignalRDataContext&lt;IMyContext&gt;(
+		///               new Uri(new Uri(builder.HostEnvironment.BaseAddress), "/hub/linq2db"),
+		///               client => new MyContext(client),
+		///               options => options.ConfigureHttpConnection = http => http.AccessTokenProvider = GetTokenAsync);
+		///       </code>
+		/// </example>
+		/// <typeparam name="TContext">
+		/// 	The class or interface that will be used to resolve the context from the container.
+		/// </typeparam>
+		/// <param name="services"> The <see cref="IServiceCollection" /> to add services to. </param>
+		/// <param name="hubUrl">LinqToDB hub URL.</param>
+		/// <param name="getContext">Creates a context over the scoped client.</param>
+		/// <param name="configure">Configures the connection: access token, headers, transports, protocol, logging.</param>
+		/// <returns>
+		///     The same service collection so that multiple calls can be chained.
+		/// </returns>
+		public static IServiceCollection AddLinqToDBSignalRDataContext<TContext>(
+			this IServiceCollection                 services,
+			Uri                                     hubUrl,
+			Func<SignalRLinqServiceClient,TContext> getContext,
+			Action<LinqToDBSignalRClientOptions>?   configure = null)
+			where TContext: class, IDataContext
+		{
+			ArgumentNullException.ThrowIfNull(hubUrl);
+			ArgumentNullException.ThrowIfNull(getContext);
+
+			services.AddSingleton(provider =>
 			{
-				var client = provider.GetRequiredService<Container<HubConnection>>();
-				return new SignalRLinqServiceClient(client.Object);
+				var options = new LinqToDBSignalRClientOptions();
+				configure?.Invoke(options);
+				return new LinqToDBSignalRConnection(hubUrl, options);
 			});
+
+			services.AddScoped(provider => new SignalRLinqServiceClient(provider.GetRequiredService<LinqToDBSignalRConnection>()));
 
 			services.AddTransient(provider =>
 			{
@@ -89,14 +115,9 @@ namespace LinqToDB.Remote.SignalR
 		/// </summary>
 		/// <example>
 		///     <code>
-		///           public void ConfigureServices(IServiceCollection services)
-		///           {
-		///               var connectionString = "connection string to database";
-		///
-		///               services.AddLinqToDBSignalRDataContext&lt;IMyContext, MyContext&gt;(
-		///                   builder.HostEnvironment.BaseAddress,
-		///                   (service,options) => options.UseSqlServer(connectionString));
-		///           }
+		///           services.AddLinqToDBSignalRDataContext&lt;IMyContext&gt;(
+		///               builder.HostEnvironment.BaseAddress,
+		///               client => new MyContext(client));
 		///       </code>
 		/// </example>
 		/// <typeparam name="TContext">
@@ -135,7 +156,9 @@ namespace LinqToDB.Remote.SignalR
 		}
 
 		/// <summary>
-		/// Initializes SignalR connection for <typeparamref name="T"/> context.
+		/// Starts the registered <see cref="LinqToDBSignalRConnection"/> unless it is connected already, and loads the
+		/// configuration information of <typeparamref name="T"/> context. Calling it is optional: the first query
+		/// does the same. Safe to call more than once.
 		/// </summary>
 		/// <typeparam name="T">IDataContext type.</typeparam>
 		/// <param name="serviceProvider">The <see cref="IServiceProvider"/> to get services from.</param>
@@ -143,7 +166,7 @@ namespace LinqToDB.Remote.SignalR
 		public static async Task InitSignalRAsync<T>(this IServiceProvider serviceProvider)
 			where T : IDataContext
 		{
-			await serviceProvider.GetRequiredService<Container<HubConnection>>().Object.StartAsync().ConfigureAwait(false);
+			await serviceProvider.GetRequiredService<LinqToDBSignalRConnection>().EnsureConnectedAsync().ConfigureAwait(false);
 			await serviceProvider.GetRequiredService<T>().InitSignalRAsync().ConfigureAwait(false);
 		}
 	}
