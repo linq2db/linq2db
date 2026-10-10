@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
 using LinqToDB.Expressions;
 using LinqToDB.Interceptors;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Interceptors;
@@ -610,7 +612,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			// Fail softly: projection merging probes construction without materializing anything.
 			if (dynamicProperties != null && ed.DynamicColumnSetter == null)
 			{
-				failureReason = $"Type '{typeAccessor.Type.Name}' is materialized with dynamic column(s) {string.Join(", ", dynamicProperties.Select(static d => d.MemberInfo.Name))}, but has no dynamic column setter. Add a member marked with {nameof(DynamicColumnsStoreAttribute)}, or configure a setter through {nameof(DynamicColumnAccessorAttribute)} or {nameof(EntityMappingBuilder<>.DynamicPropertyAccessors)}.";
+				failureReason = string.Format(
+					CultureInfo.InvariantCulture,
+					ErrorHelper.Error_DynamicColumns_NoSetter,
+					typeAccessor.Type.Name,
+					string.Join(", ", dynamicProperties.Select(static d => d.MemberInfo.Name)));
 				return null;
 			}
 
