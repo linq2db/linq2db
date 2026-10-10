@@ -12,7 +12,7 @@ namespace LinqToDB.Remote.Grpc
 	public class GrpcDataContext : RemoteDataContextBase
 	{
 		/// <summary>
-		/// Gets erver address. For a context created over a caller's channel, it is the channel's <see cref="global::Grpc.Core.ChannelBase.Target"/>.
+		/// Gets server address. For a context created over a caller's channel, it is the channel's <see cref="global::Grpc.Core.ChannelBase.Target"/>.
 		/// </summary>
 		protected string              Address { get; }
 		/// <summary>

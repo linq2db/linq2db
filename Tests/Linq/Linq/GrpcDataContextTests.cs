@@ -165,7 +165,8 @@ namespace Tests.Linq
 #pragma warning disable MA0039 // Do not write your own certificate validation method
 			using var handler = new HttpClientHandler { ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator };
 #pragma warning restore MA0039 // Do not write your own certificate validation method
-			using var httpClient = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(1) };
+			// the timeout also covers configuration and connection setup, so it leaves room for a slow runner
+			using var httpClient = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(5) };
 
 			using var db = new GrpcDataContext(address, new GrpcChannelOptions { HttpClient = httpClient }, o => o.UseConfiguration(context.StripRemote()));
 
