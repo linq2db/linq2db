@@ -640,6 +640,32 @@ namespace Tests.Linq
 			result[1].Cells["NOTE_Y2000"].ShouldBe("b0");
 		}
 
+		/// <summary>
+		/// A generated name is a cell key, not SQL text: quote characters and spaces survive the round trip, and two
+		/// names that differ only in such characters stay distinct.
+		/// </summary>
+		[Test]
+		public void CellNamesNeedNoIdentifierSyntax([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(Sales.Data);
+
+			var result = t
+				.Pivot(x => x.Category, x => x.Year, new[] { 2000, 2010 },
+					(g, p) => new { g.Key, Cells = p.Cell(rows => rows.Sum(x => x.Amount), y => y == 2000 ? "Men's \"[2000]\"" : "Mens 2000") })
+				.Where(r => Sql.Property<decimal?>(r.Cells, "Men's \"[2000]\"") >= 5)
+				.ToList()
+				.OrderBy(r => r.Key, StringComparer.Ordinal)
+				.ToList();
+
+			result.Count.ShouldBe(2);
+
+			result[0].Cells["Men's \"[2000]\""].ShouldBe(10m);
+			result[0].Cells["Mens 2000"].ShouldBe(20m);
+			result[1].Cells["Men's \"[2000]\""].ShouldBe(5m);
+			result[1].Cells["Mens 2000"].ShouldBe(15m);
+		}
+
 		static T PassThrough<T>(T value) => value;
 
 		[Test]

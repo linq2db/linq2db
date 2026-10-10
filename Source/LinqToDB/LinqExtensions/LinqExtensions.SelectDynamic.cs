@@ -69,15 +69,7 @@ namespace LinqToDB
 				if (string.IsNullOrEmpty(name))
 					throw new ArgumentException($"Key at index {i.ToString(CultureInfo.InvariantCulture)} produced an empty dynamic column name.", nameof(keys));
 
-				// The name is emitted as a SQL identifier and identifier quoting is incomplete on some providers,
-				// so reject anything that could terminate a quoted identifier.
-				foreach (var ch in name!)
-				{
-					if (ch is '"' or '\'' or '`' or '[' or ']' or '\\' || char.IsControl(ch))
-						throw new ArgumentException($"Dynamic column name '{name}' contains a character that cannot be used in a SQL identifier.", nameof(keys));
-				}
-
-				if (!seen.Add(name))
+				if (!seen.Add(name!))
 					throw new ArgumentException($"Duplicate dynamic column name '{name}'.", nameof(keys));
 
 				names[i] = name;

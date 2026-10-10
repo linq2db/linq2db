@@ -74,6 +74,32 @@ namespace Tests.Linq
 			result[1].Values!["Eur"].ShouldBe(40m);
 		}
 
+		/// <summary>
+		/// A generated name is a store key, not SQL text: quote characters and spaces survive the round trip, and two
+		/// names that differ only in such characters stay distinct.
+		/// </summary>
+		[Test]
+		public void NamesNeedNoIdentifierSyntax([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_data);
+
+			var result = t
+				.SelectDynamic(
+					x => new AmountsDto { Id = x.Id },
+					new[] { "Usd", "Eur" },
+					(x, n) => Sql.Property<decimal>(x, n),
+					n => n == "Usd" ? "U's \"[D]\"" : "Us D")
+				.ToList()
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			result[0].Values!["U's \"[D]\""].ShouldBe(10.5m);
+			result[0].Values!["Us D"].ShouldBe(20.25m);
+			result[1].Values!["U's \"[D]\""].ShouldBe(30m);
+			result[1].Values!["Us D"].ShouldBe(40m);
+		}
+
 		[Test]
 		public void ResultWithoutStoreThrows([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
