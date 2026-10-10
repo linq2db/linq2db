@@ -5,7 +5,7 @@ This file is **self-contained on purpose.** The full contributor ruleset lives i
 ## Repository invariants worth flagging in review
 
 - **Generated files are never hand-edited:** `Source/**/CompatibilitySuppressions.xml` (ApiCompat baselines) and `linq2db.baselines` test baselines are tool output. A hand-written change to them is a finding.
-- **New or changed public API** needs the matching `PublicAPI.Unshipped.txt` entry and XML doc comments on the new public types/members (`TreatWarningsAsErrors` is on, so a dangling `<see cref="…"/>` is a build error, not doc rot).
+- **New or changed public API** needs XML doc comments on the new public types/members (`TreatWarningsAsErrors` is on, so a dangling `<see cref="…"/>` is a build error, not doc rot). A missing `PublicAPI.Unshipped.txt` entry is **not** a finding — that drift is reconciled at release time.
 - **Never interpolate a value into a SQL string.** linq2db generates SQL: a concatenated value is SQL injection by construction. Values go through a parameter or a `Sql.*` / AST builder.
 - **Tabs for C#/VB; spaces for F#, YAML, shell, markdown.** Target frameworks include `net462` and `netstandard2.0`, so a BCL API newer than .NET Standard 2.0 needs a polyfill rather than an unguarded call.
 - **Don't propose reformatting, renaming, or cleanup of lines the PR doesn't already touch** — the column-aligned formatting in this codebase is deliberate (see below).
