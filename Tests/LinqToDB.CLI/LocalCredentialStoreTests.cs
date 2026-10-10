@@ -450,6 +450,45 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public void ReadOnlyStoreCanBeRead()
+		{
+			if (OperatingSystem.IsWindows())
+				Assert.Ignore("Unix file modes.");
+
+			// A store mounted read-only (here: files and directory without write permission): reading only locks, so it
+			// needs no write access; writing fails at once instead of waiting for the lock.
+			CreateStore().TryStore("a", "u", "p", out var error).ShouldBeTrue(error);
+
+			const UnixFileMode ReadOnly = UnixFileMode.UserRead;
+
+			File.SetUnixFileMode(LockPath, ReadOnly);
+			File.SetUnixFileMode(DataPath, ReadOnly);
+			File.SetUnixFileMode(KeyPath,  ReadOnly);
+			File.SetUnixFileMode(_directory, UnixFileMode.UserRead | UnixFileMode.UserExecute);
+
+			try
+			{
+				CreateStore().TryRead("linq2db/a", out var user, out var password, out error).ShouldBeTrue(error);
+				user.    ShouldBe("u");
+				password.ShouldBe("p");
+
+				if (Environment.UserName != "root")
+				{
+					var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+					CreateStore(TimeSpan.FromSeconds(3)).TryStore("b", "u", "p", out error).ShouldBeFalse();
+					stopwatch.Elapsed.ShouldBeLessThan(TimeSpan.FromSeconds(3));
+					error.ShouldNotBeNull().ShouldNotContain("another linq2db-cli process");
+				}
+			}
+			finally
+			{
+				File.SetUnixFileMode(_directory, Owner700);
+				File.SetUnixFileMode(LockPath, CredentialsDirectory.FileMode);
+			}
+		}
+
+		[Test]
 		public void SymlinkedDirectoryIsRefused()
 		{
 			if (OperatingSystem.IsWindows())
