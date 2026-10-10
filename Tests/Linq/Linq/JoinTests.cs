@@ -828,6 +828,38 @@ namespace Tests.Linq
 			AssertQuery(q2);
 		}
 
+		[ActiveIssue("Oracle 11g bug: merged outer-joined view returns COALESCE constant for null-extended row", Configurations = [TestProvName.AllOracle11])]
+		[Test]
+		public void Issue5970Test([DataSources(TestProvName.AllAccess)] string context, [Values] bool parameterDependent)
+		{
+			using var db = GetDataContext(context);
+
+			var ids = new[] { 1, 2, 3, 4 };
+
+			var q1 =
+				from p in db.Person
+				select new
+				{
+					p.ID,
+					MiddleName = p.MiddleName ?? "default1",
+				};
+
+			var q2 =
+				from p in db.Person
+				join m in q1 on p.ID equals m.ID + 1 into lj1
+				from m in lj1.DefaultIfEmpty()
+				select new
+				{
+					p.ID,
+					MiddleName = Sql.AsSql(m.MiddleName == null ? "default2" : m.MiddleName),
+				};
+
+			if (parameterDependent)
+				q2 = q2.Where(r => ids.Contains(r.ID));
+
+			AssertQuery(q2.OrderBy(r => r.ID));
+		}
+
 		[Table("Child")]
 		public class CountedChild
 		{

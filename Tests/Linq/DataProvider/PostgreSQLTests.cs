@@ -1877,6 +1877,56 @@ namespace Tests.DataProvider
 			}
 		}
 
+		sealed class BulkCopyTimeoutTable
+		{
+			[Column] public int     Id    { get; set; }
+			[Column] public string? Value { get; set; }
+		}
+
+		public enum BulkCopyTimeoutMode
+		{
+			Sync,
+			Async,
+			AsyncEnumerable,
+		}
+
+		[Test]
+		public async Task BulkCopyTimeoutAppliesToAllBatches(
+			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
+			[Values]                                         BulkCopyTimeoutMode mode,
+			[Values(5, 15)]                                  int rows)
+		{
+			var connectionString = new NpgsqlConnectionStringBuilder(GetConnectionString(context)) { CommandTimeout = 1 }.ConnectionString;
+
+			using var db    = (DataConnection)GetDataContext(context, o => o.UseConnectionString(GetDataProvider(context), connectionString));
+			using var table = db.CreateLocalTable<BulkCopyTimeoutTable>(tableOptions: TableOptions.IsTemporary);
+
+			// each COPY statement outlives the 1s connection command timeout
+			db.Execute("CREATE FUNCTION pg_temp.bulkcopy_timeout_slow() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN PERFORM pg_sleep(1.5); RETURN NULL; END $$");
+			db.Execute($"CREATE TRIGGER bulkcopy_timeout_slow_trg AFTER INSERT ON \"{nameof(BulkCopyTimeoutTable)}\" FOR EACH STATEMENT EXECUTE PROCEDURE pg_temp.bulkcopy_timeout_slow()");
+
+			var options = new BulkCopyOptions { BulkCopyType = BulkCopyType.ProviderSpecific, BulkCopyTimeout = 0, MaxBatchSize = 10 };
+			var items   = Enumerable.Range(1, rows).Select(i => new BulkCopyTimeoutTable { Id = i, Value = "x" }).ToList();
+
+			switch (mode)
+			{
+				case BulkCopyTimeoutMode.Sync           : table.BulkCopy(options, items);                                 break;
+				case BulkCopyTimeoutMode.Async          : await table.BulkCopyAsync(options, items);                      break;
+				case BulkCopyTimeoutMode.AsyncEnumerable: await table.BulkCopyAsync(options, AsAsyncEnumerable(items));   break;
+			}
+
+			table.Count().ShouldBe(rows);
+
+			static async IAsyncEnumerable<BulkCopyTimeoutTable> AsAsyncEnumerable(IEnumerable<BulkCopyTimeoutTable> source)
+			{
+				foreach (var item in source)
+				{
+					await Task.Yield();
+					yield return item;
+				}
+			}
+		}
+
 		public class NpgsqlTableWithDateRanges
 		{
 			[Column]

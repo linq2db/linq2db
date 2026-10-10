@@ -103,6 +103,14 @@ steps:
   condition: and(variables.title, variables.script_local, succeeded())
   displayName: Mark script as executable
 
+- task: Docker@2
+  displayName: Auth on hub.docker.com
+  inputs:
+    command: login
+    containerRegistry: dockerhub
+  condition: and(variables.title, variables.script_global, succeeded())
+  continueOnError: true
+
 - task: CmdLine@2
   inputs:
     script: '$(System.DefaultWorkingDirectory)/scripts/$(script_global)'
