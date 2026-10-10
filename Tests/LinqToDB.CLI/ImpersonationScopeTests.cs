@@ -242,6 +242,18 @@ namespace Tests.LinqToDB.CLI
 			if (_coldCases[coldCase].Contains("%DB2%") && Environment.GetEnvironmentVariable(DB2ProviderVariable) == null)
 				Assert.Ignore($"Set {DB2ProviderVariable} to the path of IBM.Data.Db2.dll.");
 
+			if (coldCase.StartsWith("DuckDB", StringComparison.Ordinal) && RuntimeInformation.ProcessArchitecture is not (Architecture.X64 or Architecture.Arm64))
+				Assert.Ignore("DuckDB ships its native library only for x64 and arm64 processes.");
+
+			await RunInNewProcess(nameof(ColdProcess), coldCase);
+		}
+
+		/// <summary>
+		/// Runs the explicit test <paramref name="testName"/> in a new process, with <paramref name="coldCase"/> and a new
+		/// SQLite database passed in environment variables, and checks that it passed.
+		/// </summary>
+		static async Task RunInNewProcess(string testName, string coldCase)
+		{
 			var database   = CreateSqliteDatabase();
 			var resultsDir = Path.Combine(Path.GetTempPath(), $"linq2db-cli-cold-{Guid.NewGuid():N}");
 
@@ -256,7 +268,7 @@ namespace Tests.LinqToDB.CLI
 
 				startInfo.ArgumentList.Add(typeof(ImpersonationScopeTests).Assembly.Location);
 				startInfo.ArgumentList.Add("--filter");
-				startInfo.ArgumentList.Add($"FullyQualifiedName={typeof(ImpersonationScopeTests).FullName}.{nameof(ColdProcess)}");
+				startInfo.ArgumentList.Add($"FullyQualifiedName={typeof(ImpersonationScopeTests).FullName}.{testName}");
 				startInfo.ArgumentList.Add("--results-directory");
 				startInfo.ArgumentList.Add(resultsDir);
 				startInfo.Environment[ColdCaseVariable]     = coldCase;
@@ -384,16 +396,64 @@ namespace Tests.LinqToDB.CLI
 					result.Error.ShouldNotContain("A network-related or instance-specific error", Case.Sensitive);
 				}
 			}
+		}
 
-			// The native library itself, not managed assemblies such as SQLitePCLRaw.provider.e_sqlite3.dll, which
-			// Windows lists among process modules too.
+		/// <summary>
+		/// Runs <see cref="NativePreloadFailureProcess"/> in a new process: the preload state is per process, and in
+		/// this one native SQLite has been loaded already.
+		/// </summary>
+		[Test]
+		public async Task NativePreloadFailureIsReportedAndRetried()
+		{
+			await RunInNewProcess(nameof(NativePreloadFailureProcess), "native preload failure");
+		}
+
+		[Test, Explicit("Started in a new process by NativePreloadFailureIsReportedAndRetried.")]
+		public async Task NativePreloadFailureProcess()
+		{
+			var database = Environment.GetEnvironmentVariable(ColdDatabaseVariable);
+
+			if (database == null)
+				Assert.Ignore($"Runs only from {nameof(NativePreloadFailureIsReportedAndRetried)}.");
+
+			string[] arguments = ["query", "--provider", "SQLite", "--connection-string", $"Data Source={database};Pooling=False", "--user", "user", "--password", "secret", "--impersonate", "--sql", "select Id from Person"];
+
+			// The first command cannot load native SQLite before impersonating; the second one can.
 			//
-			static bool IsSqliteNative(string module)
-			{
-				var name = Path.GetFileNameWithoutExtension(module);
+			var first  = new TestCliEnvironment { NativeLibraryLoadError = static path => IsSqliteNative(path) ? "Simulated load failure." : null };
+			var second = new TestCliEnvironment();
 
-				return name.Equals("e_sqlite3", StringComparison.OrdinalIgnoreCase) || name.Equals("libe_sqlite3", StringComparison.OrdinalIgnoreCase);
+			var firstResult  = await RunCli(first,  arguments);
+			var secondResult = await RunCli(second, arguments);
+
+			var firstSession = first.ImpersonationSessions.ShouldHaveSingleItem();
+
+			using (Assert.EnterMultipleScope())
+			{
+				firstResult.ExitCode.ShouldBe(0, firstResult.Error);
+
+				// Reported before anything runs in the session.
+				//
+				firstSession.Runs[0].ErrorOutputAtEntry.ShouldContain("Warning: cannot load native library");
+				firstSession.Runs[0].ErrorOutputAtEntry.ShouldContain("Simulated load failure.");
+
+				// Not remembered as loaded: the next command tries again.
+				//
+				second.NativeLibraryLoads.Any(IsSqliteNative).ShouldBeTrue();
+				secondResult.ExitCode.ShouldBe(0, secondResult.Error);
+				secondResult.Error.ShouldNotContain("Warning: cannot load native library");
 			}
+		}
+
+		/// <summary>
+		/// The native SQLite library itself, not managed assemblies such as SQLitePCLRaw.provider.e_sqlite3.dll, which
+		/// Windows lists among process modules too.
+		/// </summary>
+		static bool IsSqliteNative(string module)
+		{
+			var name = Path.GetFileNameWithoutExtension(module);
+
+			return name.Equals("e_sqlite3", StringComparison.OrdinalIgnoreCase) || name.Equals("libe_sqlite3", StringComparison.OrdinalIgnoreCase);
 		}
 
 		[Test]
