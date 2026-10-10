@@ -161,11 +161,8 @@ namespace Tests.Linq
 		/// </para>
 		/// </remarks>
 		const string UnsupportedShiftProviders =
-			TestProvName.AllOracle            + "," +
-			TestProvName.AllFirebird          + "," +
 			TestProvName.AllSapHana           + "," +
-			TestProvName.AllDB2               + "," +
-			TestProvName.AllYdb;
+			TestProvName.AllDB2;
 
 		/// <summary>
 		/// Providers that refuse a date shifted by a <em>declared</em> duration.
@@ -176,7 +173,7 @@ namespace Tests.Linq
 		/// column hands the amount over directly, and then the refusal is the shift's own.
 		/// <para>
 		/// SQL Server is absent at every version: <c>DATEADD</c> is as old as the product, so a declared duration
-		/// shifts a date there even where the difference between two dates cannot be measured.
+		/// shifts a date there.
 		/// </para>
 		/// </remarks>
 		const string UnsupportedDeclaredShiftProviders =
@@ -209,16 +206,12 @@ namespace Tests.Linq
 		/// operation or a grouping key read back is computed on the row and is exact.
 		/// </para>
 		/// <para>
-		/// The two entries are refused for different reasons. Informix has no exact measure to offer at all. SQL
-		/// Server below 2016 lacks <c>DATEDIFF_BIG</c>, which is a version boundary rather than a provider limit -
-		/// reaching those versions through the shared day-anchored decomposition, the way SQL CE and Sybase already
-		/// do, is issue 5777, and that is what would un-gate them here and the eleven
-		/// <c>ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)</c> sites outside this fixture.
+		/// Informix is the one entry: it has no exact measure to offer at all. SQL Server below 2016, which lacks
+		/// <c>DATEDIFF_BIG</c>, is not one - it counts through the 32-bit <c>DATEDIFF</c> over windows kept short
+		/// enough for it.
 		/// </para>
 		/// </remarks>
-		const string UnsupportedDifferenceProviders =
-			TestProvName.AllInformix          + "," +
-			TestProvName.AllSqlServer2014Minus;
+		const string UnsupportedDifferenceProviders = TestProvName.AllInformix;
 
 		/// <summary>
 		/// Providers that measure an elapsed difference but cannot express one as a tick count.

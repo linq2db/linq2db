@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Extensions;
@@ -232,6 +234,47 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 				return expr;
 			}
+		}
+
+		/// <inheritdoc />
+		protected internal override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
+		{
+			var element = base.VisitInListPredicate(predicate);
+			if (element is not SqlPredicate.InList list)
+				return element;
+
+			var dateType = QueryHelper.GetDbDataType(list.Expr1, MappingSchema);
+			if (!IsDateTime(dateType))
+				return list;
+
+			// Scalar collections normally expand in the SQL builder, after this visitor. Expand them
+			// here so each item can be normalized, rather than wrapping the collection parameter.
+			if (list.Values is [SqlParameter parameter]
+				&& parameter.GetParameterValue(EvaluationContext.ParameterValues).ProviderValue is IEnumerable items and not string)
+			{
+				var expanded = new List<ISqlExpression>();
+				foreach (var item in items)
+					expanded.Add(new SqlValue(dateType, item));
+				if (expanded.Count == 0)
+					return SqlPredicate.MakeBool(list.IsNot);
+				list = new SqlPredicate.InList(list.Expr1, list.WithNull, list.IsNot, expanded);
+			}
+
+			var expression = WrapDateTime(list.Expr1, dateType);
+			var changed    = !ReferenceEquals(expression, list.Expr1);
+			var values     = new ISqlExpression[list.Values.Count];
+
+			for (var i = 0; i < values.Length; i++)
+			{
+				var value = list.Values[i];
+				// Keep null elements visible to the SQL builder's nullable IN-list handling.
+				values[i] = value.TryEvaluateExpression(EvaluationContext, out var evaluated) && evaluated is null
+					? value
+					: WrapDateTime(value, dateType);
+				changed |= !ReferenceEquals(values[i], value);
+			}
+
+			return changed ? new SqlPredicate.InList(expression, list.WithNull, list.IsNot, values) : list;
 		}
 
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)

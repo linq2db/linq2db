@@ -27,6 +27,97 @@ namespace Tests.UserTests
 		static readonly DateTime Start = new DateTime(2026, 9, 15, 12, 0, 0);
 
 		[Table]
+		sealed class OffsetContainsRow
+		{
+			[PrimaryKey] public int             Id     { get; set; }
+			[Column]     public DateTimeOffset? Value  { get; set; }
+			[Column]     public int             Marker { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5930")]
+		public void LegacyDateTimeOffsetContains(
+			[IncludeDataSources(false, TestProvName.AllSQLite)] string context,
+			[Values] bool includeNull,
+			[Values] bool negate)
+		{
+			var first = new DateTimeOffset(Start, TimeSpan.FromMinutes(345));
+			var dates = new[] { first, first.AddTicks(1234567), first.AddTicks(1200000) };
+			using var db    = GetDataConnection(context);
+			using var table = db.CreateLocalTable<OffsetContainsRow>();
+			for (var i = 0; i < dates.Length; i++)
+			{
+				// Default BulkCopy before this PR used fixed .fff literals on both SQLite providers.
+				db.Execute("INSERT INTO [OffsetContainsRow] ([Id], [Value], [Marker]) VALUES (@id, @value, 0)",
+					new { id = i + 1, value = dates[i].ToString("yyyy-MM-dd HH:mm:ss.fffzzz", CultureInfo.InvariantCulture) });
+				db.Insert(new OffsetContainsRow { Id = i + 11, Value = dates[i] });
+			}
+
+			db.BulkCopy(new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows, UseParameters = false },
+				dates.Select((d, i) => new OffsetContainsRow { Id = i + 21, Value = d }));
+			db.Insert(new OffsetContainsRow { Id = 4 });
+			db.Execute("INSERT INTO [OffsetContainsRow] ([Id], [Value], [Marker]) VALUES (5, @value, 0)",
+				new { value = first.ToOffset(TimeSpan.FromHours(-4)).ToString("yyyy-MM-dd HH:mm:ss.fffzzz", CultureInfo.InvariantCulture) });
+			db.Insert(new OffsetContainsRow { Id = 6, Value = first.AddDays(1) });
+
+			var values = dates.Select(d => (DateTimeOffset?)d).Concat(includeNull ? new DateTimeOffset?[] { null } : []).ToArray();
+			var matching = new[] { 1, 2, 3, 5, 11, 12, 13, 21, 22, 23 }.Concat(includeNull ? new[] { 4 } : []).ToArray();
+			var all = new[] { 1, 2, 3, 4, 5, 6, 11, 12, 13, 21, 22, 23 };
+			var expected = (negate ? all.Except(matching) : matching).OrderBy(id => id).ToArray();
+			var query = table.Where(r => negate ? !values.Contains(r.Value) : values.Contains(r.Value));
+
+			var mixedKeys = table.Where(r => r.Id == 1 || r.Id == 11 || r.Id == 21);
+			mixedKeys.GroupBy(r => r.Value).Count().ShouldBe(2);
+			mixedKeys.Select(r => r.Value).Distinct().Count().ShouldBe(2);
+			query.OrderBy(r => r.Id).Select(r => r.Id).ToArray().ShouldBe(expected);
+			var nullOnly = new DateTimeOffset?[] { null };
+			table.Where(r => nullOnly.Contains(r.Value)).Select(r => r.Id).ToArray().ShouldBe(new[] { 4 });
+			table.Count(r => !nullOnly.Contains(r.Value)).ShouldBe(all.Length - 1);
+			var empty = Array.Empty<DateTimeOffset?>();
+			table.Count(r => empty.Contains(r.Value)).ShouldBe(0);
+			table.Count(r => !empty.Contains(r.Value)).ShouldBe(all.Length);
+			// Reuse the same query after changing its captured collection, including its length.
+			var originalValues = values;
+			values = [first.AddDays(1)];
+			query.OrderBy(r => r.Id).Select(r => r.Id).ToArray()
+				.ShouldBe(negate ? all.Except(new[] { 6 }) : new[] { 6 });
+			values = [null];
+			query.OrderBy(r => r.Id).Select(r => r.Id).ToArray()
+				.ShouldBe(negate ? all.Except(new[] { 4 }) : new[] { 4 });
+			values = [];
+			query.OrderBy(r => r.Id).Select(r => r.Id).ToArray().ShouldBe(negate ? all : []);
+			values = originalValues;
+			query.Set(r => r.Marker, 1).Update().ShouldBe(expected.Length);
+			table.Where(r => r.Marker == 1).OrderBy(r => r.Id).Select(r => r.Id).ToArray().ShouldBe(expected);
+			query.Delete().ShouldBe(expected.Length);
+			table.OrderBy(r => r.Id).Select(r => r.Id).ToArray().ShouldBe(all.Except(expected));
+		}
+
+		[Table]
+		sealed class DateTimeContainsRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column] public DateTime? Timestamp { get; set; }
+			[Column(DataType = DataType.Date)] public DateTime? Date { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5930")]
+		public void DateTimeContainsNormalization([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataConnection(context);
+			using var table = db.CreateLocalTable<DateTimeContainsRow>();
+			db.Execute("INSERT INTO [DateTimeContainsRow] ([Id], [Timestamp], [Date]) VALUES (1, @value, @date)",
+				new { value = "2026-09-15T12:00:00.1200000", date = "2026-09-15" });
+			db.Insert(new DateTimeContainsRow { Id = 2, Timestamp = Start.AddDays(1), Date = Start.AddDays(1).Date });
+			db.Insert(new DateTimeContainsRow { Id = 3 });
+			var values = new DateTime?[] { Start.AddMilliseconds(120), null };
+			table.Where(r => values.Contains(r.Timestamp)).OrderBy(r => r.Id).Select(r => r.Id).ToArray().ShouldBe(new[] { 1, 3 });
+			table.Where(r => !values.Contains(r.Timestamp)).Select(r => r.Id).ToArray().ShouldBe(new[] { 2 });
+			var dates = new DateTime?[] { Start, null };
+			table.Where(r => dates.Contains(r.Date)).OrderBy(r => r.Id).Select(r => r.Id).ToArray().ShouldBe(new[] { 1, 3 });
+			table.Where(r => !dates.Contains(r.Date)).Select(r => r.Id).ToArray().ShouldBe(new[] { 2 });
+		}
+
+		[Table]
 		sealed class DateTypedRow
 		{
 			[PrimaryKey] public int Id { get; set; }

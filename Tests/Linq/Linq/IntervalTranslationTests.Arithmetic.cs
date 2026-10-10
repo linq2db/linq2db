@@ -320,8 +320,6 @@ namespace Tests.Linq
 		[ThrowsCannotBeConverted(UnsupportedDifferenceProviders)]
 		public void ADurationCombinesWithAPlainValue([DataSources(false)] string context)
 		{
-			using var noBaseline = new DisableBaseline("Direct and remote differ by redundant cast placement only.");
-
 			var taken  = TimeSpan.FromHours(1);
 			var budget = TimeSpan.FromHours(3);
 			var extra  = TimeSpan.FromMinutes(5);
@@ -368,8 +366,6 @@ namespace Tests.Linq
 		[ThrowsCannotBeConverted(ShiftRefusedWhileBuildingProviders)]
 		public void ADateShiftsByAComputedDuration([DataSources(false)] string context)
 		{
-			using var noBaseline = new DisableBaseline("Direct and remote differ by redundant cast placement only.");
-
 			var taken  = TimeSpan.FromHours(1);
 			var budget = TimeSpan.FromHours(3);
 
@@ -408,8 +404,6 @@ namespace Tests.Linq
 		[ThrowsCannotBeConverted(ShiftRefusedWhileBuildingProviders + "," + UnsupportedDifferenceProviders)]
 		public void ADateShiftsByAComputedDurationInSql([DataSources(false)] string context)
 		{
-			using var noBaseline = new DisableBaseline("Direct and remote differ by redundant cast placement only.");
-
 			var taken  = TimeSpan.FromHours(1);
 			var budget = TimeSpan.FromHours(3);
 
@@ -472,11 +466,6 @@ namespace Tests.Linq
 		[ThrowsForProvider(typeof(LinqToDBException), NoTickTotalProviders, ErrorMessage = ErrorHelper.Error_Interval_Operation)]
 		public void DurationsInDifferentUnitsCombineAsDurations([DataSources] string context, [Values] bool inSql)
 		{
-			// Direct and remote fold the operand casts differently - remote folds them into the enclosing cast,
-			// direct keeps them - so the two traces differ by cast placement alone while denoting the same
-			// arithmetic. The values are asserted in both contexts, which is what this case is here to hold.
-			using var noBaseline = new DisableBaseline("Direct and remote differ by redundant cast placement only.");
-
 			var value = TimeSpan.FromMinutes(90);
 
 			using var db = GetDataContext(context, BuildSchema());
@@ -584,8 +573,6 @@ namespace Tests.Linq
 		[ThrowsForProvider(typeof(LinqToDBException), NoTickTotalProviders, ErrorMessage = ErrorHelper.Error_Interval_Operation)]
 		public void ADifferenceAndADeclaredDurationCombineAsDurations([DataSources(false)] string context)
 		{
-			using var noBaseline = new DisableBaseline("Direct and remote differ by redundant cast placement only.");
-
 			var taken  = TimeSpan.FromHours(1);
 			var budget = TimeSpan.FromHours(3);
 
@@ -616,7 +603,7 @@ namespace Tests.Linq
 		/// <remarks>
 		/// The forced half of the case above, and the reason it is worth its own method: plain, a difference the
 		/// provider cannot measure is computed in .NET and the values still come out right, so the case would pass on
-		/// a provider that translated none of it. Informix reaches exactly that, and so does SQL Server before 2016.
+		/// a provider that translated none of it. Informix reaches exactly that.
 		/// <para>
 		/// The subtraction is lopsided and one case is negative, for the reason the sibling above gives.
 		/// </para>
@@ -626,8 +613,6 @@ namespace Tests.Linq
 		[ThrowsCannotBeConverted(UnsupportedDifferenceProviders)]
 		public void ADifferenceAndADeclaredDurationCombineInSql([DataSources(false)] string context)
 		{
-			using var noBaseline = new DisableBaseline("Direct and remote differ by redundant cast placement only.");
-
 			var taken  = TimeSpan.FromHours(1);
 			var budget = TimeSpan.FromHours(3);
 
@@ -938,7 +923,9 @@ namespace Tests.Linq
 		/// </remarks>
 		[Test]
 		public void AShiftTravelsToARemoteContext(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2016Plus, TestProvName.AllPostgreSQL, TestProvName.AllMySql, TestProvName.AllDuckDB, TestProvName.AllSQLite)] string context)
+			[IncludeDataSources(true,
+				TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySql, TestProvName.AllDuckDB,
+				TestProvName.AllSQLite, TestProvName.AllFirebird, TestProvName.AllYdb, TestProvName.AllOracle)] string context)
 		{
 			var started = new DateTime(2026, 1, 1, 10, 0, 0);
 
@@ -950,6 +937,635 @@ namespace Tests.Linq
 			ShiftedInAPredicate(t)
 				.ToArray()
 				.ShouldBe([1]);
+		}
+
+		/// <summary>
+		/// The providers whose own lowering spends a computed difference on a date, pinned by the cases below.
+		/// </summary>
+		const string ComputedShiftProviders =
+			TestProvName.AllSQLite   + "," +
+			TestProvName.AllFirebird + "," +
+			TestProvName.AllOracle   + "," +
+			TestProvName.AllYdb;
+
+		/// <summary>
+		/// A shift by a computed difference keeps an amount below a millisecond wherever the storage holds one.
+		/// </summary>
+		/// <remarks>
+		/// Firebird stores a tenth of a millisecond, Oracle and YDB a microsecond, so a millisecond and a half has to
+		/// arrive intact. Truncated to a whole millisecond it lands on the bound of the predicate and drops the row.
+		/// SQLite and Firebird 2.5 measure the difference in whole milliseconds to begin with and are not asked.
+		/// </remarks>
+		[Test]
+		public void AComputedShiftKeepsASubMillisecondAmount(
+			[IncludeDataSources(TestProvName.AllFirebird3Plus, TestProvName.AllOracle, TestProvName.AllYdb)] string context)
+		{
+			var started = new DateTime(2026, 1, 1, 10, 0, 0);
+			var amount  = TimeSpan.FromTicks(15_000);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = started + amount });
+
+			t
+				.Select(r => Sql.AsSql(ShiftOrigin + (r.FinishedOn - r.StartedOn)))
+				.Single()
+				.ShouldBe(ShiftOrigin + amount);
+
+			t
+				.Where(r => ShiftOrigin + (r.FinishedOn - r.StartedOn) > ShiftOrigin.AddMilliseconds(1))
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([1]);
+		}
+
+		/// <summary>
+		/// A shift by a computed difference longer than 2<sup>31</sup> seconds, a little over 68 years, in both
+		/// directions.
+		/// </summary>
+		/// <remarks>
+		/// A second count of that size no longer fits a 32-bit amount, which is what an interval built from seconds
+		/// alone runs into. The dates stay inside every provider's range: YDB's timestamp starts in 1970 and ends
+		/// before 2106.
+		/// </remarks>
+		[Test]
+		public void AComputedShiftSpansMoreThanSixtyEightYears([IncludeDataSources(ComputedShiftProviders)] string context)
+		{
+			var started  = new DateTime(1980, 1, 1,  0, 0, 0);
+			var finished = new DateTime(2060, 1, 1, 12, 0, 0);
+			var early    = new DateTime(1971, 1, 1);
+			var late     = new DateTime(2100, 1, 1);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = finished });
+
+			var row = t
+				.Select(r => new
+				{
+					Forward  = Sql.AsSql(early + (r.FinishedOn - r.StartedOn)),
+					Backward = Sql.AsSql(late  - (r.FinishedOn - r.StartedOn)),
+				})
+				.Single();
+
+			row.Forward.ShouldBe(early + (finished - started));
+			row.Backward.ShouldBe(late - (finished - started));
+		}
+
+		/// <summary>
+		/// A shift by a computed difference of three thousand years, in both directions.
+		/// </summary>
+		/// <remarks>
+		/// Far past what an amount of ticks can be widened by before it overflows a fixed-point type of eighteen
+		/// digits. YDB is not asked: its timestamp covers 1970 to 2105 only. The dates stay after 1582, before which
+		/// Oracle counts in the Julian calendar and .NET does not.
+		/// </remarks>
+		[Test]
+		public void AComputedShiftSpansMillennia(
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllFirebird, TestProvName.AllOracle)] string context)
+		{
+			var started  = new DateTime(1600, 1, 1);
+			var finished = new DateTime(4700, 1, 1, 12, 0, 0);
+			var early    = new DateTime(1650, 1, 1);
+			var late     = new DateTime(8000, 1, 1);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = finished });
+
+			var row = t
+				.Select(r => new
+				{
+					Forward  = Sql.AsSql(early + (r.FinishedOn - r.StartedOn)),
+					Backward = Sql.AsSql(late  - (r.FinishedOn - r.StartedOn)),
+				})
+				.Single();
+
+			row.Forward.ShouldBe(early + (finished - started));
+			row.Backward.ShouldBe(late - (finished - started));
+		}
+
+		[Table]
+		sealed class ShiftTargetRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			public DateTime StartedOn  { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			public DateTime FinishedOn { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			public DateTime Due        { get; set; }
+		}
+
+		/// <summary>
+		/// A shift by a computed difference written to a column that cannot be null.
+		/// </summary>
+		/// <remarks>
+		/// YQL types the sum of a timestamp and an interval as optional whatever its operands, and refuses to write an
+		/// optional to a column declared not null, so the value has to arrive in the column's own type.
+		/// </remarks>
+		[Test]
+		public void AComputedShiftIsWrittenByAnUpdate([IncludeDataSources(ComputedShiftProviders)] string context)
+		{
+			var started = new DateTime(2026, 1, 1, 10, 0, 0);
+			var amount  = new TimeSpan(0, 5, 30, 0, 250);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<ShiftTargetRow>();
+
+			db.Insert(new ShiftTargetRow { Id = 1, StartedOn = started, FinishedOn = started + amount, Due = started });
+
+			t
+				.Where(r => r.Id == 1)
+				.Set(r => r.Due, r => ShiftOrigin + (r.FinishedOn - r.StartedOn))
+				.Update();
+
+			t.Select(r => r.Due).Single().ShouldBe(ShiftOrigin + amount);
+		}
+
+		[Table]
+		sealed class DatedEventRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Date)]
+			public DateTime Day { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			public DateTime StartedOn  { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			public DateTime FinishedOn { get; set; }
+		}
+
+		/// <summary>
+		/// A date column shifted by a computed difference keeps the time of day the difference adds.
+		/// </summary>
+		/// <remarks>
+		/// A date type has no time part, so a shift that stays in it drops the hours - and, where it keeps seconds
+		/// but no fraction of one, the milliseconds. The amount carries both.
+		/// </remarks>
+		[Test]
+		public void AComputedShiftOfADateColumnKeepsTheTime([IncludeDataSources(ComputedShiftProviders)] string context)
+		{
+			var day     = new DateTime(2026, 3, 1);
+			var started = new DateTime(2026, 1, 1, 10, 0, 0);
+			var amount  = new TimeSpan(0, 5, 30, 0, 250);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<DatedEventRow>();
+
+			db.Insert(new DatedEventRow { Id = 1, Day = day, StartedOn = started, FinishedOn = started + amount });
+
+			t
+				.Select(r => Sql.AsSql(r.Day + (r.FinishedOn - r.StartedOn)))
+				.Single()
+				.ShouldBe(day + amount);
+
+			// Compared, the shifted value has to keep the time as well: read back as a date on either side, it
+			// equals the date it started from and the row is dropped.
+			t
+				.Where(r => r.Day + (r.FinishedOn - r.StartedOn) > r.Day)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([1]);
+		}
+
+		[Table]
+		sealed class DatedEventAsDateTimeRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column]
+			public DateTime Day { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			public DateTime StartedOn  { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			public DateTime FinishedOn { get; set; }
+		}
+
+		[Table]
+		sealed class DatedEventWithDbTypeRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Date, DbType = "Date")]
+			public DateTime Day { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			public DateTime StartedOn  { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			public DateTime FinishedOn { get; set; }
+		}
+
+		/// <summary>
+		/// The date column of <see cref="AComputedShiftOfADateColumnKeepsTheTime"/>, read through the two mappings
+		/// that do not declare it as a date alone.
+		/// </summary>
+		/// <remarks>
+		/// A plain <see cref="DateTime"/> - what a scaffolder writes - declares nothing, so a widening keyed on the
+		/// declared type never sees a date; and a declared <c>DbType</c>, carried into a cast built from the declared
+		/// type, renders that cast as the date it was meant to leave. Either way the shift stays in the date type and
+		/// drops the time it adds.
+		/// </remarks>
+		[Test]
+		public void AComputedShiftOfADateColumnKeepsTheTimeWhateverTheMapping(
+			[IncludeDataSources(ComputedShiftProviders + "," + TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			var day     = new DateTime(2026, 3, 1);
+			var started = new DateTime(2026, 1, 1, 10, 0, 0);
+			var amount  = new TimeSpan(0, 5, 30, 0, 250);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<DatedEventRow>();
+
+			db.Insert(new DatedEventRow { Id = 1, Day = day, StartedOn = started, FinishedOn = started + amount });
+
+			var plain = db.GetTable<DatedEventAsDateTimeRow>().TableName(t.TableName);
+
+			plain
+				.Select(r => Sql.AsSql(r.Day + (r.FinishedOn - r.StartedOn)))
+				.Single()
+				.ShouldBe(day + amount);
+
+			plain
+				.Where(r => r.Day + (r.FinishedOn - r.StartedOn) > r.Day)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([1]);
+
+			var withDbType = db.GetTable<DatedEventWithDbTypeRow>().TableName(t.TableName);
+
+			withDbType
+				.Select(r => Sql.AsSql(r.Day + (r.FinishedOn - r.StartedOn)))
+				.Single()
+				.ShouldBe(day + amount);
+
+			withDbType
+				.Where(r => r.Day + (r.FinishedOn - r.StartedOn) > r.Day)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([1]);
+		}
+
+		[Table]
+		sealed class CoarseShiftRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.DateTime)]
+			public DateTime OnDateTime { get; set; }
+
+			[Column(DataType = DataType.SmallDateTime)]
+			public DateTime OnSmall { get; set; }
+
+			[Column(DataType = DataType.Date)]
+			public DateTime OnDate { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			public DateTime StartedOn  { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			public DateTime FinishedOn { get; set; }
+		}
+
+		/// <summary>
+		/// A SQL Server <c>datetime</c>, <c>smalldatetime</c> and <c>date</c> shifted by a computed difference with a
+		/// part below the millisecond.
+		/// </summary>
+		/// <remarks>
+		/// The shift spends the part below a second through <c>DATEADD(nanosecond, ...)</c>, which SQL Server refuses
+		/// on all three types, and the last two could not hold the time of day it adds anyway. Each starting value is
+		/// one the type stores exactly, so the answer is the CLR one to the tick.
+		/// </remarks>
+		[Test]
+		public void AComputedShiftOfACoarseSqlServerType([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			var on      = new DateTime(2026, 3, 1, 10, 0, 0);
+			var started = new DateTime(2026, 1, 1, 10, 0, 0);
+			var amount  = new TimeSpan(0, 5, 30, 0, 250) + TimeSpan.FromTicks(1234);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<CoarseShiftRow>();
+
+			db.Insert(new CoarseShiftRow { Id = 1, OnDateTime = on, OnSmall = on, OnDate = on.Date, StartedOn = started, FinishedOn = started + amount });
+
+			var row = t
+				.Select(r => new
+				{
+					FromDateTime = Sql.AsSql(r.OnDateTime + (r.FinishedOn - r.StartedOn)),
+					FromSmall    = Sql.AsSql(r.OnSmall    + (r.FinishedOn - r.StartedOn)),
+					FromDate     = Sql.AsSql(r.OnDate     + (r.FinishedOn - r.StartedOn)),
+				})
+				.Single();
+
+			row.FromDateTime.ShouldBe(on + amount);
+			row.FromSmall.ShouldBe(on + amount);
+			row.FromDate.ShouldBe(on.Date + amount);
+
+			t
+				.Where(r => r.OnDateTime + (r.FinishedOn - r.StartedOn) > r.OnDateTime.AddHours(5))
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([1]);
+		}
+
+		/// <summary>
+		/// A column shifted by the difference of two client values, in SQL and in a predicate, both ways.
+		/// </summary>
+		/// <remarks>
+		/// The difference itself is the client's to compute, but it has to reach the shift as a duration. Handed over as
+		/// a bare <see cref="TimeSpan"/> it carries no unit, and the shift became a plain <c>+</c> between a date and a
+		/// time, which SQL Server refuses. The providers that cannot shift a date by an amount at all are not asked.
+		/// </remarks>
+		[Test]
+		public void AShiftOfAColumnByADifferenceOfClientValues([DataSources(UnsupportedDeclaredShiftProviders)] string context)
+		{
+			var earlier = new DateTime(2026, 1, 3, 13, 30, 0);
+			var later   = earlier.AddHours(1).AddMilliseconds(250);
+			var started = new DateTime(2026, 1, 1, 10, 0, 0);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = started.AddHours(2) });
+
+			t.Select(r => Sql.AsSql(r.StartedOn + (later - earlier))).Single().ShouldBe(started + (later - earlier));
+			t.Select(r => Sql.AsSql(r.FinishedOn - (later - earlier))).Single().ShouldBe(started.AddHours(2) - (later - earlier));
+
+			t.Where(r => r.StartedOn + (later - earlier) < r.FinishedOn).Select(r => r.Id).ToArray().ShouldBe([1]);
+			t.Where(r => r.FinishedOn - (later - earlier) > r.StartedOn.AddHours(1)).Select(r => r.Id).ToArray().ShouldBeEmpty();
+		}
+
+		[Table]
+		sealed class WideTimestampDeclaredRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Timestamp64)]
+			public DateTime On { get; set; }
+
+			[Column(DataType = DataType.Date32)]
+			public DateTime Day32 { get; set; }
+
+			[Column(DataType = DataType.DateTime64)]
+			public DateTime On64 { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			public DateTime StartedOn  { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			public DateTime FinishedOn { get; set; }
+		}
+
+		[Table]
+		sealed class WideTimestampRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DbType = "Timestamp64")]
+			public DateTime On { get; set; }
+
+			[Column(DbType = "Date32")]
+			public DateTime Day32 { get; set; }
+
+			[Column(DbType = "Datetime64")]
+			public DateTime On64 { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			public DateTime StartedOn  { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			public DateTime FinishedOn { get; set; }
+		}
+
+		/// <summary>
+		/// YDB's 64-bit date types declared through their <c>DbType</c> alone, shifted by a computed difference.
+		/// </summary>
+		/// <remarks>
+		/// Such a column is typed as a plain timestamp, and widening it like one would cast it to a
+		/// <c>Timestamp</c>, which starts in 1970 and cannot hold the value. Left as it is, a <c>Date32</c> or a
+		/// <c>Datetime64</c> would drop the time of day or the fraction of a second the shift adds; all three go to
+		/// <c>Timestamp64</c>. The row is written through a mapping that
+		/// declares the data type: the DbType-only one would bind the 1960 parameter as a <c>Timestamp</c> too.
+		/// </remarks>
+		[Test]
+		public void AComputedShiftOfAWideTimestampKeepsItsRange([IncludeDataSources(TestProvName.AllYdb)] string context)
+		{
+			var on      = new DateTime(1960, 3, 1, 8, 0, 0);
+			var started = new DateTime(2026, 1, 1, 10, 0, 0);
+			var amount  = new TimeSpan(0, 5, 30, 0, 250);
+
+			using var db = GetDataContext(context);
+			using var declared = db.CreateLocalTable<WideTimestampDeclaredRow>();
+
+			db.Insert(new WideTimestampDeclaredRow { Id = 1, On = on, Day32 = on.Date, On64 = on, StartedOn = started, FinishedOn = started + amount });
+
+			var t = db.GetTable<WideTimestampRow>().TableName(declared.TableName);
+
+			var row = t
+				.Select(r => new
+				{
+					On    = Sql.AsSql(r.On    + (r.FinishedOn - r.StartedOn)),
+					Day32 = Sql.AsSql(r.Day32 + (r.FinishedOn - r.StartedOn)),
+					On64  = Sql.AsSql(r.On64  + (r.FinishedOn - r.StartedOn)),
+				})
+				.Single();
+
+			row.On.ShouldBe(on + amount);
+			row.Day32.ShouldBe(on.Date + amount);
+			row.On64.ShouldBe(on + amount);
+
+			// The same shift through the mapping that declares the data type.
+			var declaredRow = declared
+				.Select(r => new
+				{
+					Day32 = Sql.AsSql(r.Day32 + (r.FinishedOn - r.StartedOn)),
+					On64  = Sql.AsSql(r.On64  + (r.FinishedOn - r.StartedOn)),
+				})
+				.Single();
+
+			declaredRow.Day32.ShouldBe(on.Date + amount);
+			declaredRow.On64.ShouldBe(on + amount);
+
+			t.Where(r => r.On    + (r.FinishedOn - r.StartedOn) > r.On).Select(r => r.Id).ToArray().ShouldBe([1]);
+			t.Where(r => r.Day32 + (r.FinishedOn - r.StartedOn) > r.Day32).Select(r => r.Id).ToArray().ShouldBe([1]);
+			t.Where(r => r.On64  + (r.FinishedOn - r.StartedOn) > r.On64.AddHours(5).AddMinutes(30)).Select(r => r.Id).ToArray().ShouldBe([1]);
+
+			// Chained, the outer shift is lowered while the inner one is still a node typed by the CLR mapping alone;
+			// it has to keep the wide type all the same. Once by a computed difference, once by client values.
+			var earlier = new DateTime(2026, 1, 3, 13, 30, 0);
+			var later   = earlier + amount;
+
+			var chained = t
+				.Select(r => new
+				{
+					On    = Sql.AsSql(r.On    + (r.FinishedOn - r.StartedOn) + (r.FinishedOn - r.StartedOn)),
+					Day32 = Sql.AsSql(r.Day32 + (r.FinishedOn - r.StartedOn) + (later - earlier)),
+					On64  = Sql.AsSql(r.On64  + (later - earlier) + (r.FinishedOn - r.StartedOn)),
+				})
+				.Single();
+
+			chained.On.ShouldBe(on + amount + amount);
+			chained.Day32.ShouldBe(on.Date + amount + amount);
+			chained.On64.ShouldBe(on + amount + amount);
+
+			// Against the Timestamp64 column three hours on: 08:00 + 3 h is 11:00, which only the half second the two
+			// shifts add puts the Date32 past.
+			t.Where(r => r.Day32 + (later - earlier) + (later - earlier) > r.On.AddHours(3)).Select(r => r.Id).ToArray().ShouldBe([1]);
+		}
+
+		[Table]
+		sealed class SmallDateTimeShiftRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.SmallDateTime)]
+			public DateTime OnSmall { get; set; }
+
+			[Column(DataType = DataType.DateTime)]
+			public DateTime StartedOn  { get; set; }
+
+			[Column(DataType = DataType.DateTime)]
+			public DateTime FinishedOn { get; set; }
+		}
+
+		/// <summary>
+		/// A SQL Server <c>smalldatetime</c> shifted by a computed difference keeps the seconds the shift adds, on every
+		/// version.
+		/// </summary>
+		/// <remarks>
+		/// <c>DATEADD</c> returns a <c>smalldatetime</c> for one, which keeps no seconds. 2005 has no <c>datetime2</c>
+		/// to widen to, so it widens to <c>datetime</c>; every value here is one a <c>datetime</c> stores exactly.
+		/// </remarks>
+		[Test]
+		public void AComputedShiftOfASmallDateTimeKeepsItsSeconds([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			var on      = new DateTime(2020, 1, 1, 3, 0, 0);
+			var started = new DateTime(2026, 1, 1, 10, 0, 0);
+			var amount  = new TimeSpan(0, 5, 30, 15, 250);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<SmallDateTimeShiftRow>();
+
+			db.Insert(new SmallDateTimeShiftRow { Id = 1, OnSmall = on, StartedOn = started, FinishedOn = started + amount });
+
+			t.Select(r => Sql.AsSql(r.OnSmall + (r.FinishedOn - r.StartedOn))).Single().ShouldBe(on + amount);
+
+			var bound = on + amount - TimeSpan.FromSeconds(1);
+
+			t.Where(r => r.OnSmall + (r.FinishedOn - r.StartedOn) > bound).Select(r => r.Id).ToArray().ShouldBe([1]);
+		}
+
+		[Table]
+		sealed class OptionalDueRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			[Column(Configuration = ProviderName.ClickHouse)]
+			public DateTime? DueOn { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			[Column(Configuration = ProviderName.ClickHouse)]
+			public DateTime StartedOn { get; set; }
+		}
+
+		/// <summary>
+		/// A column shifted by the difference of two client values, written in its nullable spellings.
+		/// </summary>
+		/// <remarks>
+		/// Over a nullable column the addition is lifted and the difference converted to a nullable
+		/// <see cref="TimeSpan"/>; between two nullable locals the difference is one itself. Both are the shift
+		/// <see cref="AShiftOfAColumnByADifferenceOfClientValues"/> asks, and an absent local makes the result absent.
+		/// </remarks>
+		[Test]
+		public void AShiftByADifferenceOfClientValuesInANullableSpelling([DataSources(UnsupportedDeclaredShiftProviders)] string context)
+		{
+			var earlier = new DateTime(2026, 1, 3, 13, 30, 0);
+			var later   = earlier.AddHours(1).AddMilliseconds(250);
+			var started = new DateTime(2026, 1, 1, 10, 0, 0);
+
+			DateTime? earlierN = earlier;
+			DateTime? laterN   = later;
+			DateTime? absent   = null;
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<OptionalDueRow>();
+
+			db.Insert(new OptionalDueRow { Id = 1, DueOn = started,             StartedOn = started });
+			db.Insert(new OptionalDueRow { Id = 2, DueOn = null,                StartedOn = started });
+			db.Insert(new OptionalDueRow { Id = 3, DueOn = started.AddHours(2), StartedOn = started });
+
+			var one = t.Where(r => r.Id == 1);
+			var amount = later - earlier;
+
+			one.Select(r => Sql.AsSql(r.DueOn + (later - earlier))).Single().ShouldBe(started + amount);
+			one.Select(r => Sql.AsSql(r.StartedOn + (laterN - earlierN))).Single().ShouldBe(started + amount);
+			one.Select(r => Sql.AsSql(r.DueOn - (laterN - earlierN))).Single().ShouldBe(started - amount);
+			one.Select(r => Sql.AsSql(r.StartedOn + (laterN - absent))).Single().ShouldBeNull();
+
+			// An absent column makes the shift absent as well.
+			t.OrderBy(r => r.Id).Select(r => Sql.AsSql(r.DueOn + (later - earlier))).ToArray()
+				.ShouldBe([started + amount, null, started.AddHours(2) + amount]);
+
+			t.Where(r => r.DueOn + (later - earlier) > r.StartedOn.AddHours(1)).OrderBy(r => r.Id).Select(r => r.Id).ToArray().ShouldBe([1, 3]);
+			one.Where(r => r.StartedOn + (laterN - earlierN) < r.StartedOn.AddHours(1)).Select(r => r.Id).ToArray().ShouldBeEmpty();
+
+			// The same query, run as the captured endpoint goes from present to absent and back: the amount is a
+			// parameter computed from it on every run, not a value fixed when the query was first built.
+			DateTime? endpoint = later;
+
+			DateTime? Shifted()
+			{
+				return one.Select(r => Sql.AsSql(r.StartedOn + (endpoint - earlierN))).Single();
+			}
+
+			Shifted().ShouldBe(started + amount);
+			endpoint = null;
+			Shifted().ShouldBeNull();
+			endpoint = later.AddHours(1);
+			Shifted().ShouldBe(started + amount + TimeSpan.FromHours(1));
+
+			// Not a difference of client values: the difference of a column, which is a computed shift. (A captured
+			// TimeSpan? is not one either, and keeps the handling of a bare duration, which is not asked here.)
+			t.OrderBy(r => r.Id).Select(r => Sql.AsSql(r.DueOn + (r.DueOn - r.StartedOn))).ToArray()
+				.ShouldBe([started, null, started.AddHours(4)]);
+		}
+
+		/// <summary>
+		/// A <see cref="DateTimeOffset"/> shifted by a computed difference, answered as the same instant or refused.
+		/// </summary>
+		/// <remarks>
+		/// SQLite preserves the original offset at millisecond resolution. Both offsets are the same here, so the
+		/// difference itself is not what is being asked. Firebird is not asked, for the reason
+		/// <see cref="SupportsDateTimeOffsetContextAttribute"/> gives: its client refuses the offset on write.
+		/// </remarks>
+		[Test]
+		public void AComputedShiftOfADateTimeOffset(
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllYdb)] string context)
+		{
+			var started  = new DateTimeOffset(2026, 1, 1, 10, 0, 0, TimeSpan.FromHours(2));
+			var finished = started + new TimeSpan(0, 5, 30, 0, 250);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<ZonedEventRow>();
+
+			db.Insert(new ZonedEventRow { Id = 1, StartedOn = started, FinishedOn = finished });
+
+			t
+				.Select(r => Sql.AsSql(r.FinishedOn + (r.FinishedOn - r.StartedOn)))
+				.Single()
+				.ShouldBe(finished + (finished - started));
 		}
 
 		[Test]

@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.Linq.Builder
@@ -184,6 +185,12 @@ namespace LinqToDB.Internal.Linq.Builder
 					selectProjections ??= new();
 					selectProjections.Add(arg.UnwrapLambda());
 				}
+				else if (mc.Type.GetItemType() != mc.Arguments[0].Type.GetItemType())
+				{
+					// Only Select can remap ordering lambdas; any other operator that changes the element type
+					// (SelectMany, Cast, OfType, GroupBy...) leaves no client-side ordering to apply.
+					return null;
+				}
 
 				current = mc.Arguments[0];
 			}
@@ -211,6 +218,8 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// so they reference members of the projected type.
 		/// E.g., <c>(Department d =&gt; d.Id)</c> through <c>Select(d =&gt; new { d.Id, d.Name })</c>
 		/// becomes <c>(AnonymousType p =&gt; p.Id)</c>.
+		/// Returns <see langword="null"/> when any ordering key cannot be expressed through the projection,
+		/// which disables the client-side re-sort; the SQL <c>ORDER BY</c> still applies.
 		/// </summary>
 		static List<(LambdaExpression, bool)>? RemapOrderByThroughSelect(
 			List<(LambdaExpression lambda, bool descending)> orderByList,
@@ -282,7 +291,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 
 				if (!found)
-					remapped.Add((lambda, descending));
+					return null;
 			}
 
 			return remapped;

@@ -23,9 +23,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			return new FSharpContext.AppDbContext(options);
 		}
 
-		protected override DbContextOptionsBuilder<FSharpContext.AppDbContext> ProviderSetup(string provider, string connectionString, DbContextOptionsBuilder<FSharpContext.AppDbContext> optionsBuilder)
+		protected override DbContextOptionsBuilder<FSharpContext.AppDbContext> ProviderSetup(string provider, string connectionString, DbContextOptionsBuilder<FSharpContext.AppDbContext> optionsBuilder, bool useNodaTime)
 		{
-			var builder = base.ProviderSetup(provider, connectionString, optionsBuilder);
+			var builder = base.ProviderSetup(provider, connectionString, optionsBuilder, useNodaTime);
 
 			FSharpExtensions.WithFSharp(builder);
 			return builder;
