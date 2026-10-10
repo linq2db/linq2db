@@ -37,6 +37,13 @@ namespace Tests.Linq
 			[Column(DataType = DataType.DateTime)] public DateTime Dt { get; set; }
 		}
 
+		[Table]
+		sealed class StampRow
+		{
+			[PrimaryKey]                           public int            Id  { get; set; }
+			[Column(DataType = DataType.DateTime2)] public DateTimeOffset Dto { get; set; }
+		}
+
 		static ZonedRow[] Rows(params DateTimeOffset[] values)
 			=> values.Select((v, i) => new ZonedRow { Id = i + 1, Dto = v }).ToArray();
 
@@ -422,6 +429,22 @@ namespace Tests.Linq
 
 			// 11:20 UTC is 13:20 +02:00 in Prague; six months on .NET answers 2020-12-15 13:20 +02:00, i.e. 11:20 UTC.
 			shifted.UtcDateTime.ShouldBe(new DateTime(2020, 12, 15, 11, 20, 0, DateTimeKind.Utc));
+		}
+
+		/// <summary>
+		/// A <see cref="DateTimeOffset"/> mapped onto a column that carries no offset. The frame leaves such a value
+		/// alone, so the way back out of it has to leave it alone too.
+		/// </summary>
+		[Test]
+		public void ShiftOfAValueStoredWithoutAnOffset([IncludeDataSources(false, ZoneReadingProviders)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new StampRow { Id = 1, Dto = Value } });
+
+			var stored  = table.Select(r => r.Dto).Single();
+			var shifted = table.Select(r => Sql.AsSql(r.Dto.AddDays(1))).Single();
+
+			shifted.ShouldBe(stored.AddDays(1));
 		}
 
 		#endregion
