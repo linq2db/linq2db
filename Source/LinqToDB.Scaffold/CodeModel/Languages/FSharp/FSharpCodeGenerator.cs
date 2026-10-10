@@ -63,6 +63,8 @@ namespace LinqToDB.CodeModel
 			"atomic"  , "break"   , "checked"  , "component", "const"   , "constraint", "continue", "eager"   , "event"    , "external",
 			"functor" , "include" , "measure"  , "method"   , "mixin"   , "object"  , "parallel" , "process"  , "protected", "pure",
 			"recursive", "sealed" , "tailcall" , "trait"    , "virtual" , "volatile",
+			// reserved because they are OCaml keywords (usable as identifiers only under --mlcompatibility)
+			"asr"     , "land"    , "lor"      , "lsl"      , "lsr"     , "lxor"    , "mod",
 		};
 
 		private readonly List<CodeIdentifier>                                                   _currentScope = new();
