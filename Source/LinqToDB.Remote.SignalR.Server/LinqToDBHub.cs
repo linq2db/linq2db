@@ -51,6 +51,11 @@ namespace LinqToDB.Remote.SignalR
 		/// <summary>
 		/// Creates a hub that uses the <see cref="LinqToDBHubOptions"/> registered in the services
 		/// (<c>services.Configure&lt;LinqToDBHubOptions&gt;</c>), or the default options when none are registered.
+		/// <para>
+		/// The legacy (.NET Framework / .NET Standard) server gives connections of the long polling transport no request
+		/// services, so there such a hub uses the default options: a hub that needs its options on every transport takes
+		/// <c>IOptions&lt;LinqToDBHubOptions&gt;</c> in its constructor.
+		/// </para>
 		/// </summary>
 		public LinqToDBHub()
 		{
@@ -277,7 +282,7 @@ namespace LinqToDB.Remote.SignalR
 			}
 			catch (Exception ex) when (ex is ObjectDisposedException or TargetInvocationException)
 			{
-				// The legacy long polling transport may keep the services of a request that has ended.
+				// The connection may hold the HTTP context of a request that has ended, and its services with it.
 				return null;
 			}
 #endif
@@ -287,7 +292,8 @@ namespace LinqToDB.Remote.SignalR
 		const string HttpContextFeatureName = "Microsoft.AspNetCore.Http.Connections.Features.IHttpContextFeature";
 
 		// The legacy server's GetHttpContext() is in Microsoft.AspNetCore.SignalR, which this package does not
-		// reference (it needs Microsoft.AspNetCore.SignalR.Core only); it reads the connection feature below.
+		// reference (it needs Microsoft.AspNetCore.SignalR.Core only); it reads the connection feature below. A long
+		// polling connection holds a copy of the HTTP context without services there.
 		IServiceProvider? GetRequestServices()
 		{
 			foreach (var feature in Context.Features)

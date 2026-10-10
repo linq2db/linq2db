@@ -15,6 +15,11 @@ namespace LinqToDB.Remote.SignalR
 		/// <summary>
 		/// Creates a hub that uses the <see cref="LinqToDBHubOptions"/> registered in the services, or the default
 		/// options when none are registered.
+		/// <para>
+		/// The legacy (.NET Framework / .NET Standard) server gives connections of the long polling transport no request
+		/// services, so there such a hub uses the default options: a hub that needs its options on every transport takes
+		/// <c>IOptions&lt;LinqToDBHubOptions&gt;</c> in its constructor.
+		/// </para>
 		/// </summary>
 		/// <param name="linqService">Service that executes remote calls.</param>
 		public LinqToDBHub(ILinqService<T> linqService)

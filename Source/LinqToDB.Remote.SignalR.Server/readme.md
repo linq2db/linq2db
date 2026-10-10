@@ -46,6 +46,11 @@ Every call is a Signal/R streaming invocation:
 To validate or authorize calls, decorate the `ILinqService` the hub uses (`ILinqService<T>` in DI, or
 `CreateLinqService()` in a derived hub). Class-level `[Authorize]` on a derived hub applies to all its methods.
 
+A hub derived from `LinqToDBHub` or `LinqToDBHub<T>` that does not pass `IOptions<LinqToDBHubOptions>` to its base
+constructor reads the registered options from the connection's request services. The legacy (.NET Framework /
+.NET Standard) server has none for long polling connections, where such a hub uses the default options; pass the
+options to the base constructor to have them on every transport.
+
 `TransferInternalExceptionToClient` works on .NET 8+ servers. The legacy (.NET Framework / .NET Standard) Signal/R
 server drops error text unless `HubOptions.EnableDetailedErrors` is set, which exposes the errors of all hub methods.
 
