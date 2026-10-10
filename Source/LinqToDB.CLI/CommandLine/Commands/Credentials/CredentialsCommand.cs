@@ -42,7 +42,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 			null,
 			false,
 			false,
-			"configuration profile of --config, as for query; defaults to 'default'");
+			"configuration profile of --config, as for query; defaults to 'default'. Before 6.6 '--profile <name>' named the record linq2db/<name>; that is now '--credentials linq2db/<name>'");
 
 		static readonly CliOption _credentials = new StringCliOption(
 			"credentials",
@@ -196,7 +196,10 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 
 			if (profile != null && config == null)
 			{
-				await environment.Error.WriteLineAsync($"Option '--{_profile.Name}' requires option '--{_config.Name}'.");
+				// Before 6.6 '--profile <name>' named the record linq2db/<name>: point a command line of that time at its new spelling.
+				await environment.Error.WriteLineAsync(operation is "set" or "remove"
+					? $"Option '--{_profile.Name}' requires option '--{_config.Name}'. Since 6.6 it selects a configuration profile; to name the record linq2db/{profile}, as '--{_profile.Name}' did before, use '--{_credentials.Name} linq2db/{profile}'."
+					: $"Option '--{_profile.Name}' requires option '--{_config.Name}'.");
 				return StatusCodes.INVALID_ARGUMENTS;
 			}
 
