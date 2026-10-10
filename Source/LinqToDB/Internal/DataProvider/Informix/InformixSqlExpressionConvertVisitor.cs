@@ -144,6 +144,10 @@ namespace LinqToDB.Internal.DataProvider.Informix
 							return new SqlCastExpression(new SqlExpression(QueryHelper.GetDbDataType(cast.Expression, MappingSchema), "Extend({0}, Hour to Second)", Precedence.Primary, argument), new DbDataType(typeof(string), DataType.Char, null, 8), null, true);
 						}
 
+						// To_Date over a value that already is a date/time cannot pick an overload
+						if (argument.SystemType?.ToUnderlying() is var argSystemType && (argSystemType == typeof(DateTime) || argSystemType == typeof(DateTimeOffset)))
+							break;
+
 						return new SqlFunction(cast.Type, "To_Date", argument);
 
 					case TypeCode.Boolean:

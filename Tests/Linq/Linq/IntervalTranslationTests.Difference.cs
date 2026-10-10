@@ -227,8 +227,6 @@ namespace Tests.Linq
 		/// both sides, so the sign and rough size of each member stay stable regardless of clock skew between the
 		/// test host and the server.
 		/// </remarks>
-		[ActiveIssue(5955, Configuration = TestProvName.AllClickHouse, ErrorMessage = "toUnixTimestamp64Nano",
-			Details = "now() is a plain DateTime, which toUnixTimestamp64Nano refuses; the difference does not coerce its operands to DateTime64 yet.")]
 		[Test]
 		public void DateDifferenceFromServerNow([DataSources(UnsupportedDifferenceProviders)] string context)
 		{

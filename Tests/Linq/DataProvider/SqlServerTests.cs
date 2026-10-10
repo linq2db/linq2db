@@ -2478,5 +2478,49 @@ DROP TABLE IF EXISTS TemporalTable3History
 			res[1].Text3.ShouldBe("Element тест1 Text3");
 			res[1].Text4.ShouldBe("Element тест2 Text4");
 		}
+
+		sealed class MixedCharsetCoalesceTable
+		{
+			[PrimaryKey]                                         public int     Id { get; set; }
+			[Column(DataType = DataType.VarChar,  Length = 10)]  public string? V  { get; set; }
+			[Column(DataType = DataType.NVarChar, Length = 100)] public string? N  { get; set; }
+		}
+
+		/// <summary>
+		/// A COALESCE of varchar and nvarchar is nvarchar, so the literal compared with it stays Unicode.
+		/// </summary>
+		[Test]
+		public void MixedCharsetCoalesceComparedWithUnicodeLiteral([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<MixedCharsetCoalesceTable>([new() { Id = 1, V = null, N = "Ж" }]);
+
+			tb.Count(r => (r.V ?? r.N) == "Ж").ShouldBe(1);
+		}
+
+		sealed class DateTimeReadBackTable
+		{
+			[PrimaryKey]                           public int       Id { get; set; }
+			[Column(DataType = DataType.DateTime)] public DateTime  D  { get; set; }
+			[Column(DataType = DataType.DateTime)] public DateTime? ND { get; set; }
+		}
+
+		/// <summary>
+		/// A <c>datetime</c> value read back compares equal to MIN/MAX/COALESCE over its column: the parameter takes the
+		/// column's type, as it does beside the column itself, rather than a <c>datetime2</c> that misses the 1/300 s step.
+		/// </summary>
+		[Test]
+		public void DateTimeReadBackComparedWithComputedValue([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<DateTimeReadBackTable>([new() { Id = 1, D = new DateTime(2026, 6, 1, 10, 0, 0, 3) }]);
+
+			var value = tb.Select(r => r.D).Single();
+
+			tb.Count(r => r.D == value).ShouldBe(1);
+			tb.GroupBy(r => r.Id).Count(g => g.Max(r => r.D) == value).ShouldBe(1);
+			tb.GroupBy(r => r.Id).Count(g => g.Min(r => r.D) == value).ShouldBe(1);
+			tb.Count(r => (r.ND ?? r.D) == value).ShouldBe(1);
+		}
 	}
 }

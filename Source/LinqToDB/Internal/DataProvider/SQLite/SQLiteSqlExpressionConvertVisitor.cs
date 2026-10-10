@@ -222,12 +222,20 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 			if (IsDateTime(leftType) || IsDateTime(rightType))
 			{
-				var dateType = IsDateTime(leftType) ? leftType : rightType;
+				// A date compared with a timestamp is compared as a timestamp whichever side it is on, so the time part
+				// is not dropped.
+				var dateType = IsDateTime(leftType) && !(IsDateDataType(leftType, "Date") && IsDateTime(rightType) && rightType.DataType != DataType.Time)
+					? leftType
+					: rightType;
 				var expr1 = GetActualExpr(predicate.Expr1);
 				if (expr1 is not (SqlCastExpression or SqlFunction { DoNotOptimize: true }))
 				{
 					var left = PseudoFunctions.MakeMandatoryCast(predicate.Expr1, dateType, null);
 					predicate = new SqlPredicate.ExprExpr(left, predicate.Operator, predicate.Expr2, predicate.UnknownAsValue);
+				}
+				else if (IsDateComparedAsTimestamp(leftType, dateType))
+				{
+					predicate = new SqlPredicate.ExprExpr(ToTimestamp(predicate.Expr1, dateType), predicate.Operator, predicate.Expr2, predicate.UnknownAsValue);
 				}
 
 				var expr2 = GetActualExpr(predicate.Expr2);
@@ -236,9 +244,27 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 					var right = PseudoFunctions.MakeMandatoryCast(predicate.Expr2, dateType, null);
 					predicate = new SqlPredicate.ExprExpr(predicate.Expr1, predicate.Operator, right, predicate.UnknownAsValue);
 				}
+				else if (IsDateComparedAsTimestamp(rightType, dateType))
+				{
+					predicate = new SqlPredicate.ExprExpr(predicate.Expr1, predicate.Operator, ToTimestamp(predicate.Expr2, dateType), predicate.UnknownAsValue);
+				}
 			}
 
 			return base.ConvertExprExprPredicate(predicate);
+
+			// A side already rendered as Date(...) is not cast again, so it is brought to the timestamp text form here.
+			static bool IsDateComparedAsTimestamp(DbDataType exprType, DbDataType dateType)
+			{
+				return IsDateDataType(exprType, "Date")
+					&& IsDateTime(dateType)
+					&& !IsDateDataType(dateType, "Date")
+					&& dateType.DataType != DataType.Time;
+			}
+
+			static ISqlExpression ToTimestamp(ISqlExpression expr, DbDataType dateType)
+			{
+				return new SqlFunction(dateType, "strftime", ParametersNullabilityType.SameAsSecondParameter, new SqlValue("%Y-%m-%d %H:%M:%f"), expr) { DoNotOptimize = true };
+			}
 
 			static ISqlExpression GetActualExpr(ISqlExpression expr)
 			{

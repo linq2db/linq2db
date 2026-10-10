@@ -39,9 +39,10 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		/// Elapsed ticks from the nanosecond timestamps, divided by a hundred.
 		/// </summary>
 		/// <remarks>
-		/// linq2db maps date/time values to <c>DateTime64(7)</c>, which is a tick exactly, so every nanosecond
-		/// value here is a whole multiple of a hundred and the division is exact. <c>date_diff</c> is not used
-		/// because its finest unit is the second.
+		/// An operand that is not already a <c>DateTime64</c> is coerced to <c>DateTime64(7)</c>, which is a tick
+		/// exactly, so its nanosecond value is a whole multiple of a hundred and the division is exact. A
+		/// <c>DateTime64</c> keeps its own precision, so one finer than a tick is truncated to whole ticks.
+		/// <c>date_diff</c> is not used because its finest unit is the second.
 		/// <para>
 		/// Nanoseconds in an <see cref="long"/> reach from 1678 to 2262, narrower than what a
 		/// <c>DateTime64(7)</c> column itself holds. That is the same boundary the millisecond form of
@@ -59,10 +60,10 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			var longType = Factory.GetDbDataType(typeof(long));
 
 			var nanoseconds = Factory.Sub(longType,
-				Factory.Function(longType, "toUnixTimestamp64Nano", element.End),
-				Factory.Function(longType, "toUnixTimestamp64Nano", element.Start));
+				Factory.ToUnixTimestamp64Nano(element.End),
+				Factory.ToUnixTimestamp64Nano(element.Start));
 
-			return Factory.Function(longType, "intDiv", nanoseconds, Factory.Value(longType, 100L));
+			return TruncateDivide(nanoseconds, 100L);
 		}
 
 		/// <inheritdoc />
@@ -77,16 +78,21 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		/// by a hundred caps the amount at <c>long.MaxValue / 100</c> - about 292 years, far short of what a
 		/// <c>TimeSpan</c> holds, but past any span these timestamps measure exactly: <see cref="ElapsedTicks"/>
 		/// above carries the same ceiling, and for the same reason.
+		/// <para>
+		/// The date being shifted is coerced as well: a sub-second interval cannot be added to a <c>Date</c> or a
+		/// <c>Date32</c>, which ClickHouse refuses with <c>addNanoseconds cannot be used with Date32</c>.
+		/// </para>
 		/// </remarks>
 		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
 		{
 			var longType = Factory.GetDbDataType(typeof(long));
 			var interval = Factory.Function(longType, "toIntervalNanosecond", Factory.Multiply(longType, element.Interval, 100L));
-			var type     = Factory.GetDbDataType(element.Temporal);
+			var temporal = Factory.AsDateTime64(element.Temporal);
+			var type     = Factory.GetDbDataType(temporal);
 
 			return element.IsSubtract
-				? Factory.Sub(type, element.Temporal, interval)
-				: Factory.Add(type, element.Temporal, interval);
+				? Factory.Sub(type, temporal, interval)
+				: Factory.Add(type, temporal, interval);
 		}
 
 		#region LIKE

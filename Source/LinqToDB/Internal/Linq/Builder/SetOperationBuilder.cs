@@ -601,6 +601,18 @@ namespace LinqToDB.Internal.Linq.Builder
 				return false;
 			}
 
+			// A value computed from a coarse date/time column has no stored precision to match, so the value keeps its own
+			// type rather than lose its sub-second or time part. A stored column still lends its type.
+			DbDataType GetValueTypeBeside(SqlValue value, ISqlExpression other)
+			{
+				var otherType = QueryHelper.GetDbDataType(other, MappingSchema);
+
+				if (ExpressionBuildVisitor.IsCoarserDateTime(otherType.DataType, value.ValueType.DataType) && !ExpressionBuildVisitor.IsStoredColumn(other))
+					return value.ValueType;
+
+				return otherType;
+			}
+
 			bool InitializeProjections([NotNullWhen(false)] out SqlErrorExpression? error)
 			{
 				error = null;
@@ -681,11 +693,11 @@ namespace LinqToDB.Internal.Linq.Builder
 					else
 					{
 						if (ExtractValue(placeholder1, out var sqlValue1) && !ExtractValue(placeholder2, out _))
-							sqlValue1.ValueType = QueryHelper.GetDbDataType(placeholder2.Sql, MappingSchema);
+							sqlValue1.ValueType = GetValueTypeBeside(sqlValue1, placeholder2.Sql);
 						else
 						{
 							if (ExtractValue(placeholder2, out var sqlValue2) && !ExtractValue(placeholder1, out _))
-								sqlValue2.ValueType = QueryHelper.GetDbDataType(placeholder1.Sql, MappingSchema);
+								sqlValue2.ValueType = GetValueTypeBeside(sqlValue2, placeholder1.Sql);
 						}
 
 						placeholder2 = Builder.UpdateNesting(_sequence2, placeholder2);

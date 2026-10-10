@@ -589,5 +589,26 @@ namespace Tests.DataProvider
 			t.OrderBy(x => x.Id).Select(x => x.Date).ToArray()
 				.ShouldBe([DateParameterInCaseValue, DateParameterInCaseStored.AddDays(1)]);
 		}
+
+		sealed class DateTime2FractionRow
+		{
+			[PrimaryKey]                            public int      Id    { get; set; }
+			[Column(DataType = DataType.DateTime2)] public DateTime Value { get; set; }
+		}
+
+		/// <summary>
+		/// A DateTime2 column and a cast to DateTime2 keep the five fraction digits Informix can hold.
+		/// </summary>
+		[Test]
+		public void DateTime2KeepsFiveFractionDigits([IncludeDataSources(true, TestProvName.AllInformix)] string context)
+		{
+			var value = new DateTime(2026, 6, 1, 10, 0, 0).AddTicks(1234500);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable([new DateTime2FractionRow { Id = 1, Value = value }]);
+
+			t.Select(r => r.Value).Single().ShouldBe(value);
+			t.Select(r => Sql.AsSql(Sql.Convert(Sql.Types.DateTime2, r.Value))).Single().ShouldBe(value);
+		}
 	}
 }
