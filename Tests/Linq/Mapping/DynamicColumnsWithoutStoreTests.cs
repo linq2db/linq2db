@@ -66,7 +66,7 @@ namespace Tests.Mapping
 			// additionalSteps, which entered the block that then dereferenced the null dynamic-column setter.
 			Action act = () => db.GetTable<NoStoreWithAssociation>().LoadWith(x => x.Child).ToList();
 
-			act.ShouldThrow<LinqToDBException>().Message.ShouldContain(nameof(DynamicColumnsStoreAttribute));
+			act.ShouldThrow<InvalidOperationException>().Message.ShouldContain(nameof(DynamicColumnsStoreAttribute));
 		}
 
 		[Test]
@@ -78,7 +78,27 @@ namespace Tests.Mapping
 			// Previously the dynamic column was dropped silently and the query returned rows missing it.
 			Action act = () => db.GetTable<NoStorePlain>().ToList();
 
-			act.ShouldThrow<LinqToDBException>().Message.ShouldContain(nameof(DynamicColumnsStoreAttribute));
+			act.ShouldThrow<InvalidOperationException>().Message.ShouldContain(nameof(DynamicColumnsStoreAttribute));
+		}
+
+		[Test]
+		public void SetOperationWithPartialEntityWithoutStore([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool partialFirst)
+		{
+			using var db = GetDataContext(context, WithDynamicColumn<NoStorePlain>());
+			using var t  = db.CreateLocalTable<NoStorePlain>();
+
+			t.Value(x => x.Id, 1).Insert();
+			t.Value(x => x.Id, -1).Insert();
+
+			var full    = t.Where(x => x.Id > 0);
+			var partial = t.Where(x => x.Id < 0).Select(x => new NoStorePlain { Id = x.Id });
+
+			// Projection merging constructs the entity speculatively; nothing is materialized here.
+			var result = (partialFirst ? partial.Concat(full) : full.Concat(partial))
+				.Select(x => x.Id)
+				.ToList();
+
+			result.OrderBy(x => x).ShouldBe([-1, 1]);
 		}
 	}
 }
