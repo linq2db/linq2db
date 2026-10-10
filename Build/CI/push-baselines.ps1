@@ -175,8 +175,11 @@ if ($LASTEXITCODE -ne 0) {
     Write-Host "PR search failed. Error code ${LASTEXITCODE}, output: ${output}"
     exit 1
 }
+. "$PSScriptRoot/baselines-base.ps1"
+$base = Get-BaselinesBase -PrId $PrId -BaselinesMaster $BaselinesMaster -RepoUrl $repoUrl -Org $Org -SourceRepo $SourceRepo
 if ($output -match "html_url") {
     Write-Host "Baselines PR already exists"
+    Update-BaselinesPrBase -Branch $Branch -Base $base -Org $Org -BaselinesRepo $BaselinesRepo
     exit 0
 }
 if ($PrId) {
@@ -187,7 +190,7 @@ if ($PrId) {
     $prName = "Baselines"
     $prMessage = "Not associated with any pull request (tests pipeline triggered from admin console?)"
 }
-$output = gh api /repos/$Org/$BaselinesRepo/pulls -F title="${prName}" -F head=$Branch -F base=$BaselinesMaster -F draft=true -F body="${prMessage}" 2>&1
+$output = gh api /repos/$Org/$BaselinesRepo/pulls -F title="${prName}" -F head=$Branch -F base=$base -F draft=true -F body="${prMessage}" 2>&1
 if ($output -match "A pull request already exists") {
     Write-Host "Baselines PR was opened by a concurrent leg"
     exit 0
