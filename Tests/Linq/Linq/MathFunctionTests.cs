@@ -404,6 +404,9 @@ namespace Tests.Linq
 			AreEqual(
 				from p in    Types where p.MoneyValue != 0 select Math.Round(p.MoneyValue, p.ID % 2 + 2),
 				from p in db.Types where p.MoneyValue != 0 select Sql.AsSql(Math.Round(p.MoneyValue, p.ID % 2 + 2)));
+			AreEqual(
+				from p in    Types where p.MoneyValue != 0 select Math.Round(p.MoneyValue, p.ID % 2 + 1),
+				from p in db.Types where p.MoneyValue != 0 select Sql.AsSql(Math.Round(p.MoneyValue, p.ID % 2 + 1)));
 		}
 
 		sealed class RoundNearLimit
