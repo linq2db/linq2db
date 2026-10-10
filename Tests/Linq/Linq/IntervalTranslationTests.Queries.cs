@@ -373,7 +373,7 @@ namespace Tests.Linq
 		/// </remarks>
 		[ActiveIssue(5787, Configurations = [NoTickTotalProviders, UnsupportedDifferenceProviders],
 			ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "There is no method 'AggregateExecute' on type 'LinqToDB.LinqExtensions' that matches the specified arguments",
-			Details = "Every provider that cannot translate the aggregate's body lands on that core defect, so none of them reaches the refusal it would otherwise report: verified on Access, on Informix and on SQL Server 2014-minus, all three giving the same 'no method AggregateExecute' failure in this shape. Asked outside a projection the same aggregates do refuse by name - LinqToDBException, 'could not be converted to SQL' - which is what this would assert once the fallback is fixed.")]
+			Details = "Every provider that cannot translate the aggregate's body lands on that core defect, so none of them reaches the refusal it would otherwise report: verified on Access and on Informix, both giving the same 'no method AggregateExecute' failure in this shape. Asked outside a projection the same aggregates do refuse by name - LinqToDBException, 'could not be converted to SQL' - which is what this would assert once the fallback is fixed.")]
 		[Test]
 		public void AggregatesOverADifference([DataSources(false)] string context)
 		{
@@ -437,7 +437,7 @@ namespace Tests.Linq
 		/// wanted and the unwanted durations are both present, which is what tells a working conversion from one
 		/// that matched everything or nothing.
 		/// </remarks>
-		[ActiveIssue(5776, Configurations = [TestProvName.AllSQLite, TestProvName.AllSqlServer2016Plus, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllDuckDB],
+		[ActiveIssue(5776, Configurations = [TestProvName.AllSQLite, TestProvName.AllSqlServer, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllDuckDB],
 			Details = "no-declaration: " + ContainsSkipsIntervalTranslation + " Measured five ways: an IConvertible cast on SQLite, 'Operand type clash: time is incompatible with bigint' on SQL Server, a DuckDB INTERVAL-vs-BIGINT binder error, a Sybase VARCHAR-to-BIGINT conversion refusal, and 'No mapping exists from DbType Time' on SqlCe.")]
 		[ActiveIssue(5776, Configurations = [TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllYdb, TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllSapHana],
 			Details = "no-declaration: unvalidated: " + ContainsSkipsIntervalTranslation + " Not measured - these have no container running here.")]

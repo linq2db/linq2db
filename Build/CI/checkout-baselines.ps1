@@ -62,7 +62,13 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
-$base = if ($refs | Where-Object { $_ -match '^[0-9a-f]{40}\s' }) { $Branch } else { $BaselinesMaster }
+if ($refs | Where-Object { $_ -match '^[0-9a-f]{40}\s' }) {
+    $base = $Branch
+} else {
+    # a stacked PR's first push must create its branch off the parent's baselines, not master
+    . "$PSScriptRoot/baselines-base.ps1"
+    $base = Get-BaselinesBase -PrId (Get-BaselinesPrId $Branch) -BaselinesMaster $BaselinesMaster -RepoUrl $repoUrl -Org $Org
+}
 Write-Host "Cloning baselines from '${base}'"
 
 $output = git clone --depth 1 --single-branch --sparse -c http.proactiveAuth=basic --branch $base $repoUrl $Path 2>&1
