@@ -112,10 +112,36 @@ namespace LinqToDB.Remote.SignalR
 
 		async Task<ChannelReader<T>> StartAsync<T>(string methodName, string? configuration, string? queryData, CancellationToken cancellationToken)
 		{
-			if (_connection != null)
-				await _connection.EnsureConnectedAsync(cancellationToken).ConfigureAwait(false);
+			var connection = _connection;
+
+#if NET8_0_OR_GREATER
+			if (connection != null)
+				await connection.EnsureConnectedAsync(cancellationToken).ConfigureAwait(false);
 
 			return await SendAsync<T>(methodName, configuration, queryData, cancellationToken).ConfigureAwait(false);
+#else
+			for (var retried = false;; retried = true)
+			{
+				var generation = 0;
+
+				if (connection != null)
+				{
+					await connection.EnsureConnectedAsync(cancellationToken).ConfigureAwait(false);
+					generation = connection.Generation;
+				}
+
+				try
+				{
+					return await SendAsync<T>(methodName, configuration, queryData, cancellationToken).ConfigureAwait(false);
+				}
+				catch (InvalidOperationException ex) when (!retried && connection != null && LinqToDBSignalRConnection.IsNotActive(ex))
+				{
+					// The connection was lost and the legacy client has not raised Closed yet. Nothing was sent: start
+					// the connection again and send the call once more.
+					connection.OnNotActive(generation);
+				}
+			}
+#endif
 		}
 
 		// queryData is null for GetInfoStream, which takes the configuration only.

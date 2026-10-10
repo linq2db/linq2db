@@ -253,6 +253,49 @@ namespace LinqToDB.Remote.SignalR
 		}
 #endif
 
+#if !NET8_0_OR_GREATER
+		/// <summary>
+		/// Whether a call failed because the legacy client has no active connection. Its receive loop clears the
+		/// connection state as soon as the connection is lost, but raises <see cref="HubConnection.Closed"/> only after
+		/// it has disposed the transport, which may take seconds; a call in between fails with this exception before
+		/// anything is sent.
+		/// </summary>
+		internal static bool IsNotActive(Exception exception)
+		{
+			return exception is InvalidOperationException && exception.Message.EndsWith("cannot be called if the connection is not active", StringComparison.Ordinal);
+		}
+
+		/// <summary>
+		/// Increases with every connection lost; a call reads it after <see cref="EnsureConnectedAsync"/>.
+		/// </summary>
+		internal int Generation
+		{
+			get
+			{
+				lock (_sync)
+					return _generation;
+			}
+		}
+
+		/// <summary>
+		/// Marks the connection lost when a call found it not active (<see cref="IsNotActive"/>), unless it was marked
+		/// lost since the call read <paramref name="generation"/>.
+		/// </summary>
+		internal void OnNotActive(int generation)
+		{
+			lock (_sync)
+			{
+				if (generation != _generation)
+					return;
+
+				_connected = false;
+				_generation++;
+			}
+
+			PulseStateChanged();
+		}
+#endif
+
 		/// <summary>
 		/// Stops and disposes the hub connection. On .NET Framework / .NET Standard a start still in progress is not
 		/// waited for (that client cannot cancel it): the connection is disposed when the start ends.
