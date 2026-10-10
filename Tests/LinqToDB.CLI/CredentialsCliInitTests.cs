@@ -176,6 +176,35 @@ namespace Tests.LinqToDB.CLI
 			File.Exists(Path.Combine(real, "h.sh")).ShouldBeFalse();
 		}
 
+		[Test]
+		public async Task OutputThroughDotDotInLinkTargetIsResolvedLikeTheKernel()
+		{
+			// safe/link -> safe/jump/../private and safe/jump -> shared/sub: the kernel resolves '..' after jump, so the
+			// script lands in shared/private, under a directory every user can write to, not in safe/private.
+			RequirePosix();
+
+			var safe   = Directory.CreateDirectory(Path.Combine(_root, "safe")).FullName;
+			var shared = Directory.CreateDirectory(Path.Combine(_root, "shared")).FullName;
+
+			Directory.CreateDirectory(Path.Combine(safe, "private"));
+			Directory.CreateDirectory(Path.Combine(shared, "sub"));
+			Directory.CreateDirectory(Path.Combine(shared, "private"));
+			File.SetUnixFileMode(Path.Combine(shared, "private"), Owner700);
+			Directory.CreateSymbolicLink(Path.Combine(safe, "jump"), Path.Combine(shared, "sub"));
+			Directory.CreateSymbolicLink(Path.Combine(safe, "link"), Path.Combine(safe, "jump", "..", "private"));
+			File.SetUnixFileMode(shared, Owner700 | UnixFileMode.GroupRead | UnixFileMode.GroupWrite | UnixFileMode.GroupExecute | UnixFileMode.OtherRead | UnixFileMode.OtherWrite | UnixFileMode.OtherExecute);
+
+			CredentialsDirectory.GetRealPath(Path.Combine(safe, "link")).ShouldBe(CredentialsDirectory.GetRealPath(Path.Combine(shared, "private")));
+
+			var script = Path.Combine(safe, "link", "h.sh");
+
+			var (exitCode, _, error) = await RunCli(CreateEnvironment(), "credentials", "cli", "init", "--store", "gpg", "-o", script);
+
+			exitCode.ShouldBe(-3);
+			error.ShouldContain($"its path goes through '{shared}', which every user can write to without the sticky bit");
+			File.Exists(Path.Combine(shared, "private", "h.sh")).ShouldBeFalse();
+		}
+
 		[TestCase(UnixFileMode.GroupWrite, true,  TestName = "OutputInGroupWritableDirectoryWarns")]
 		[TestCase(UnixFileMode.StickyBit | UnixFileMode.GroupWrite | UnixFileMode.OtherWrite, false, TestName = "OutputInStickyDirectoryIsAccepted")]
 		public async Task OutputInDirectoryOthersCanWriteTo(UnixFileMode extra, bool warns)

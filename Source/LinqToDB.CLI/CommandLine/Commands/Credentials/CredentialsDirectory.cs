@@ -251,47 +251,68 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		}
 
 		/// <summary>
-		/// Resolves symbolic links in every component of an absolute Unix path (like realpath; components that do not exist
-		/// are kept as written). Gives up after 40 links, as the kernel does.
+		/// Resolves symbolic links in every component of a Unix path the way the kernel does (like realpath): component by
+		/// component, a link's target is resolved in turn, and <c>..</c> goes to the parent of the prefix resolved so far,
+		/// never of the path as written. Components that do not exist are kept as written. Gives up after 40 links, as the
+		/// kernel does, and returns the rest of the path unresolved.
 		/// </summary>
-		/// <param name="path">The path to resolve.</param>
-		/// <param name="traversed">Receives every directory that holds a component on the way, each once: the directories
+		/// <param name="path">The path to resolve; a relative path is taken from the current directory.</param>
+		/// <param name="traversed">Receives every directory a component is looked up in, each once: the directories
 		/// holding the links followed and all ancestors of the result.</param>
 		internal static string GetRealPath(string path, ICollection<string>? traversed = null)
 		{
-			var current = Path.GetFullPath(path);
+			// Not Path.GetFullPath: it removes '..' as text, before the links in front of it are resolved.
+			var pending  = new LinkedList<string>(Split(Path.IsPathRooted(path) ? path : Path.Combine(Directory.GetCurrentDirectory(), path)));
+			var resolved = new List<string>();
+			var links    = 0;
 
-			for (var links = 0; links < 40; links++)
+			while (pending.Count > 0)
 			{
-				var parts    = current.Split('/', StringSplitOptions.RemoveEmptyEntries);
-				var resolved = "/";
-				string? next = null;
+				var component = pending.First!.Value;
+				pending.RemoveFirst();
 
-				for (var i = 0; i < parts.Length; i++)
+				if (string.Equals(component, "..", StringComparison.Ordinal))
 				{
-					if (traversed != null && !traversed.Contains(resolved))
-						traversed.Add(resolved);
+					if (resolved.Count > 0)
+						resolved.RemoveAt(resolved.Count - 1);
 
-					var candidate = Path.Combine(resolved, parts[i]);
-					var target    = new FileInfo(candidate).LinkTarget;
-
-					if (target != null)
-					{
-						var linked = Path.IsPathRooted(target) ? target : Path.Combine(resolved, target);
-						next = Path.GetFullPath(Path.Combine([linked, .. parts.Skip(i + 1)]));
-						break;
-					}
-
-					resolved = candidate;
+					continue;
 				}
 
-				if (next == null)
-					return resolved;
+				var directory = Join(resolved);
 
-				current = next;
+				if (traversed != null && !traversed.Contains(directory))
+					traversed.Add(directory);
+
+				var target = new FileInfo(Path.Combine(directory, component)).LinkTarget;
+
+				if (target == null)
+				{
+					resolved.Add(component);
+					continue;
+				}
+
+				if (++links > 40)
+					return Join([.. resolved, component, .. pending]);
+
+				if (Path.IsPathRooted(target))
+					resolved.Clear();
+
+				foreach (var part in Split(target).Reverse())
+					pending.AddFirst(part);
 			}
 
-			return current;
+			return Join(resolved);
+
+			static IEnumerable<string> Split(string value)
+			{
+				return value.Split('/', StringSplitOptions.RemoveEmptyEntries).Where(static part => !string.Equals(part, ".", StringComparison.Ordinal));
+			}
+
+			static string Join(IEnumerable<string> parts)
+			{
+				return "/" + string.Join('/', parts.ToArray());
+			}
 		}
 
 		/// <summary>The hint added to an access-denied error: the usual cause is a file created with sudo.</summary>
