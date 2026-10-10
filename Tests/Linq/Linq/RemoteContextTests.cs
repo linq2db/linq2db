@@ -338,7 +338,7 @@ namespace Tests.Linq
 
 			await new SignalRDataContext(hubConnection, disposeHubConnection: true).DisposeAsync();
 
-			Assert.ThrowsAsync<ObjectDisposedException>(() => hubConnection.StartAsync());
+			await Shouldly.Should.ThrowAsync<ObjectDisposedException>(() => hubConnection.StartAsync());
 		}
 
 		[Test]
@@ -348,7 +348,7 @@ namespace Tests.Linq
 
 			new SignalRDataContext(hubConnection, disposeHubConnection: true).Dispose();
 
-			Assert.ThrowsAsync<ObjectDisposedException>(() => hubConnection.StartAsync());
+			Shouldly.Should.Throw<ObjectDisposedException>(() => hubConnection.StartAsync());
 		}
 
 		// A hub connection is long-lived and meant to be shared: SignalRDataContext(HubConnection) leaves it to
@@ -374,9 +374,9 @@ namespace Tests.Linq
 
 			// Nothing listens on the port, so starting fails either way - what matters is that it fails for
 			// that reason and not because a context disposed the connection underneath its owner.
-			var error = Assert.CatchAsync(() => hubConnection.StartAsync());
+			var error = await Shouldly.Should.ThrowAsync<Exception>(() => hubConnection.StartAsync());
 
-			Assert.That(error, Is.Not.InstanceOf<ObjectDisposedException>());
+			error.ShouldNotBeOfType<ObjectDisposedException>();
 
 			await hubConnection.DisposeAsync();
 		}
@@ -392,9 +392,9 @@ namespace Tests.Linq
 
 			// Nothing listens on the port, so starting fails either way - what matters is that it fails for
 			// that reason and not because the connection was disposed underneath its owner.
-			var error = Assert.CatchAsync(() => hubConnection.StartAsync());
+			var error = await Shouldly.Should.ThrowAsync<Exception>(() => hubConnection.StartAsync());
 
-			Assert.That(error, Is.Not.InstanceOf<ObjectDisposedException>());
+			error.ShouldNotBeOfType<ObjectDisposedException>();
 		}
 
 		// Never started and pointed at a port nothing listens on: these tests only ever observe whether the
