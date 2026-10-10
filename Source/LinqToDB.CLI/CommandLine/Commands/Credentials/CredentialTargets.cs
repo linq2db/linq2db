@@ -53,6 +53,26 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 			return true;
 		}
 
+		/// <summary>
+		/// Validates a <c>linq2db/</c> target for Windows Credential Manager, which keeps targets as written. Only the rules of
+		/// earlier versions apply (a name after the prefix, no leading or trailing '/', no control characters), so records
+		/// they stored, such as <c>linq2db/a//b</c> or <c>linq2db/../prod</c>, stay manageable one by one. Empty, '.' and
+		/// '..' segments matter only to the stores that map a name to a path.
+		/// </summary>
+		public static bool TryValidateForCredentialManager(string target, out string? error)
+		{
+			var name = IsLinq2Db(target) ? target.Substring(Prefix.Length) : string.Empty;
+
+			if (string.IsNullOrWhiteSpace(name) || name[0] == '/' || name[^1] == '/' || name.Any(char.IsControl))
+			{
+				error = $"Credential target '{target}' must name a record after '{Prefix}' without leading or trailing '/' or control characters.";
+				return false;
+			}
+
+			error = null;
+			return true;
+		}
+
 		/// <summary>Whether a target is in linq2db's own namespace (<c>linq2db/</c>, any case).</summary>
 		public static bool IsLinq2Db(string target)
 		{

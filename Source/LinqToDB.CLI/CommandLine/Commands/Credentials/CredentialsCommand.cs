@@ -240,6 +240,12 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 				return StatusCodes.INVALID_ARGUMENTS;
 			}
 
+			if (recordName != null && !ValidateRecordName(choice, recordName, out var recordError))
+			{
+				await environment.Error.WriteLineAsync(recordError);
+				return StatusCodes.INVALID_ARGUMENTS;
+			}
+
 			// Never on standard output: it carries the command's result (list output is piped).
 			await environment.Error.WriteLineAsync($"Using {choice.Describe()}.");
 			await WriteStoreNotes(environment, choice);
@@ -449,13 +455,21 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 				return null;
 			}
 
-			if (!CredentialTargets.TryNormalize(target, out _, out var error))
-			{
-				await environment.Error.WriteLineAsync(error);
-				return null;
-			}
-
 			return target.Substring(CredentialTargets.Prefix.Length);
+		}
+
+		/// <summary>
+		/// Validates the record name for the selected store. Windows Credential Manager keeps targets as written and gets the
+		/// rules of earlier versions, so records they stored (such as <c>linq2db/a//b</c>) can still be updated and removed;
+		/// every other store gets the stricter rules of <see cref="CredentialTargets.TryNormalize"/>.
+		/// </summary>
+		static bool ValidateRecordName(CredentialStoreChoice choice, string name, out string? error)
+		{
+			var target = CredentialTargets.Prefix + name;
+
+			return choice.Kind == CredentialStoreKind.CredentialManager
+				? CredentialTargets.TryValidateForCredentialManager(target, out error)
+				: CredentialTargets.TryNormalize(target, out _, out error);
 		}
 
 		/// <summary>The record as the store keeps it: case-folded except in Windows Credential Manager.</summary>
