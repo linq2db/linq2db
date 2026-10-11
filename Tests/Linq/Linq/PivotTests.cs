@@ -289,7 +289,7 @@ namespace Tests.Linq
 
 		/// <summary>An unpivot over a projected source, built as a sub-query: under <c>Any</c> and on the collection side of a join.</summary>
 		[Test]
-		[ActiveIssue(6024, Configurations = [TestProvName.AllOracle11])]
+		[ActiveIssue(6024, Configurations = [TestProvName.AllOracle11], ErrorType = typeof(LinqToDBException), ErrorMessage = LinqToDB.Internal.Common.ErrorHelper.Oracle.Error_ColumnSubqueryShouldNotContainParentIsNotNull)]
 		public void UnpivotOverAProjectionInASubQuery([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
