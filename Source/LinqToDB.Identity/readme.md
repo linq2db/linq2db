@@ -219,29 +219,30 @@ Association helpers for the standard Identity entity types are provided as **ext
 
 | Receiver | Method | Related rows |
 |---|---|---|
-| `IdentityUser<TKey>` | `.Roles()`  | `AspNetUserRoles`  for the user |
+| `IdentityUser<TKey>` | `.Roles()`  | `AspNetRoles` the user belongs to (through `AspNetUserRoles`) |
 | `IdentityUser<TKey>` | `.Claims()` | `AspNetUserClaims` |
 | `IdentityUser<TKey>` | `.Logins()` | `AspNetUserLogins` |
-| `IdentityRole<TKey>` | `.Users()`  | `AspNetUserRoles`  for the role |
+| `IdentityRole<TKey>` | `.Users()`  | `AspNetUsers` in the role (through `AspNetUserRoles`) |
 | `IdentityRole<TKey>` | `.Claims()` | `AspNetRoleClaims` |
 
 ```csharp
 using LinqToDB;
 using LinqToDB.Identity;
 
-var roleIds = db.GetTable<IdentityUser>()
+var roleNames = db.GetTable<IdentityUser>()
     .Where(u => u.NormalizedUserName == "ALICE")
     .SelectMany(u => u.Roles())
-    .Select(r => r.RoleId)
+    .Select(r => r.Name)
     .ToList();
 ```
 
 They are query-only markers — linq2db expands them into the corresponding join; calling one outside a query throws.
 
-They return the stock satellite types (`IdentityUserRole<TKey>`, …) even when the context uses your own: the generic
-contexts map the stock types to the same `AspNet*` tables for that reason, so your satellites' extra members are not
-visible through a navigation. If your `ConfigureMappings` override renames a satellite's table, rename the stock type's
-table as well, or join `GetTable<TUserRole>()` directly.
+They return the stock types (`IdentityRole<TKey>`, `IdentityUserClaim<TKey>`, …) even when the context uses your own:
+the generic contexts map the stock types to the same `AspNet*` tables for that reason, so your types' extra members
+are not visible through a navigation — join your own table on `Id` for those. If your `ConfigureMappings` override
+renames a table, rename the stock type's table as well, or query `GetTable<TRole>()` / `GetTable<TUserRole>()`
+directly.
 
 ## Supported frameworks
 

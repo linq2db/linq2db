@@ -320,15 +320,15 @@ namespace Tests.Identity
 			await users.AddLoginAsync(user, new UserLoginInfo("google", "key-1", "Google"));
 
 			// extension-method associations on the standard IdentityUser/IdentityRole types, expanded by linq2db inside the query
-			var roleIds   = await ctx.GetTable<IdentityUser>().Where(u => u.Id == user.Id).SelectMany(u => u.Roles ()).Select(r  => r.RoleId)       .ToListAsync();
-			var claims    = await ctx.GetTable<IdentityUser>().Where(u => u.Id == user.Id).SelectMany(u => u.Claims()).Select(c  => c.ClaimValue)   .ToListAsync();
-			var logins    = await ctx.GetTable<IdentityUser>().Where(u => u.Id == user.Id).SelectMany(u => u.Logins()).Select(l  => l.LoginProvider).ToListAsync();
-			var roleUsers = await ctx.GetTable<IdentityRole>().Where(r => r.Id == role.Id).SelectMany(r => r.Users ()).Select(ur => ur.UserId)      .ToListAsync();
+			var roleNames = await ctx.GetTable<IdentityUser>().Where(u => u.Id == user.Id).SelectMany(u => u.Roles ()).Select(r => r.Name)         .ToListAsync();
+			var claims    = await ctx.GetTable<IdentityUser>().Where(u => u.Id == user.Id).SelectMany(u => u.Claims()).Select(c => c.ClaimValue)   .ToListAsync();
+			var logins    = await ctx.GetTable<IdentityUser>().Where(u => u.Id == user.Id).SelectMany(u => u.Logins()).Select(l => l.LoginProvider).ToListAsync();
+			var userNames = await ctx.GetTable<IdentityRole>().Where(r => r.Id == role.Id).SelectMany(r => r.Users ()).Select(u => u.UserName)     .ToListAsync();
 
-			roleIds  .ShouldContain(role.Id);
+			roleNames.ShouldBe(["nav-role"]);
 			claims   .ShouldContain("read");
 			logins   .ShouldContain("google");
-			roleUsers.ShouldContain(user.Id);
+			userNames.ShouldBe(["nav"]);
 		}
 
 		[Test]

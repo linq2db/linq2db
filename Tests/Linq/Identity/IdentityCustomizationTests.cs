@@ -166,11 +166,11 @@ namespace Tests.Identity
 			await users.AddLoginAsync(user, new UserLoginInfo("google", "key-nav", "Google"));
 			await roles.AddClaimAsync(role, new Claim("perm", "all"));
 
-			// the navigations return the stock satellite types - which the custom-model context maps to the same tables
-			(await ctx.GetTable<AppUser>().Where(u => u.Id == user.Id).SelectMany(u => u.Roles ()).Select(r => r.RoleId)       .ToListAsync()).ShouldBe([role.Id]);
+			// the navigations return the stock types - which the custom-model context maps to the same tables
+			(await ctx.GetTable<AppUser>().Where(u => u.Id == user.Id).SelectMany(u => u.Roles ()).Select(r => r.Name)         .ToListAsync()).ShouldBe(["nav-role"]);
 			(await ctx.GetTable<AppUser>().Where(u => u.Id == user.Id).SelectMany(u => u.Claims()).Select(c => c.ClaimValue)   .ToListAsync()).ShouldBe(["read"]);
 			(await ctx.GetTable<AppUser>().Where(u => u.Id == user.Id).SelectMany(u => u.Logins()).Select(l => l.LoginProvider).ToListAsync()).ShouldBe(["google"]);
-			(await ctx.GetTable<AppRole>().Where(r => r.Id == role.Id).SelectMany(r => r.Users ()).Select(u => u.UserId)       .ToListAsync()).ShouldBe([user.Id]);
+			(await ctx.GetTable<AppRole>().Where(r => r.Id == role.Id).SelectMany(r => r.Users ()).Select(u => u.UserName)     .ToListAsync()).ShouldBe(["nav"]);
 			(await ctx.GetTable<AppRole>().Where(r => r.Id == role.Id).SelectMany(r => r.Claims()).Select(c => c.ClaimValue)   .ToListAsync()).ShouldBe(["all"]);
 		}
 

@@ -321,6 +321,8 @@ namespace LinqToDB.Identity
 
 			if (typeof(TUserRole ) != typeof(IdentityUserRole <TKey>)) DefaultMappings.SetupIdentityUserRole <TKey, IdentityUserRole <TKey>>(builder);
 			if (typeof(TRoleClaim) != typeof(IdentityRoleClaim<TKey>)) DefaultMappings.SetupIdentityRoleClaim<TKey, IdentityRoleClaim<TKey>>(builder);
+			if (typeof(TRole     ) != typeof(IdentityRole     <TKey>)) DefaultMappings.SetupIdentityRole     <TKey, IdentityRole     <TKey>>(builder);
+			if (typeof(TUser     ) != typeof(IdentityUser     <TKey>)) DefaultMappings.SetupIdentityUser     <TKey, IdentityUser     <TKey>>(builder);
 
 			builder.Build();
 		}
