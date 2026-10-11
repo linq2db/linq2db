@@ -187,6 +187,26 @@ namespace Tests.Scaffold
 		}
 
 		[Test]
+		public void CSharpGeneratorRejectsRecord()
+		{
+			var language = new DelegatingLanguageProvider(LanguageProviders.CSharp, LanguageProviders.CSharp.Features | LanguageFeatures.RecordEntities);
+
+			Assert.That(
+				() => GenerateFiles(FSharpOptions(), language: language, columns: [new Column("Id", null, new DatabaseType("int", null, null, null), false, true, true, 0)]),
+				Throws.TypeOf<NotSupportedException>().With.Message.Contains("record"));
+		}
+
+		[Test]
+		public void CSharpGeneratorRejectsModule()
+		{
+			var language = new DelegatingLanguageProvider(LanguageProviders.CSharp, LanguageProviders.CSharp.Features & ~LanguageFeatures.NestedTypes);
+
+			Assert.That(
+				() => GenerateFiles(FSharpOptions(), language: language, tableSchema: "other", columns: [new Column("Id", null, new DatabaseType("int", null, null, null), false, true, true, 0)]),
+				Throws.TypeOf<NotSupportedException>().With.Message.Contains("module"));
+		}
+
+		[Test]
 		public void LanguageProviderFeatures()
 		{
 			using (Assert.EnterMultipleScope())
@@ -223,10 +243,10 @@ namespace Tests.Scaffold
 			return string.Join("\n", GenerateFiles(options, columns, procedures, primaryKey));
 		}
 
-		static string[] GenerateFiles(ScaffoldOptions options, IReadOnlyCollection<Column>? columns = null, IReadOnlyCollection<StoredProcedure>? procedures = null, PrimaryKey? primaryKey = null)
+		static string[] GenerateFiles(ScaffoldOptions options, IReadOnlyCollection<Column>? columns = null, IReadOnlyCollection<StoredProcedure>? procedures = null, PrimaryKey? primaryKey = null, ILanguageProvider? language = null, string tableSchema = "dbo")
 		{
-			var scaffolder = new Scaffolder(LanguageProviders.FSharp, HumanizerNameConverter.Instance, options, null);
-			var schema     = new TestSchemaProvider(columns ?? [], procedures ?? [], primaryKey);
+			var scaffolder = new Scaffolder(language ?? LanguageProviders.FSharp, HumanizerNameConverter.Instance, options, null);
+			var schema     = new TestSchemaProvider(columns ?? [], procedures ?? [], primaryKey, tableSchema);
 			var dataModel  = scaffolder.LoadDataModel(schema, TestTypeMappingProvider.Instance);
 
 			var provider   = SqlServerTools.GetDataProvider(SqlServerVersion.v2012, SqlServerProvider.MicrosoftDataSqlClient);
@@ -241,12 +261,12 @@ namespace Tests.Scaffold
 			return scaffolder.GenerateSourceCode(dataModel, files).Select(f => f.Code).ToArray();
 		}
 
-		sealed class TestSchemaProvider(IReadOnlyCollection<Column> columns, IReadOnlyCollection<StoredProcedure> procedures, PrimaryKey? primaryKey) : ISchemaProvider
+		sealed class TestSchemaProvider(IReadOnlyCollection<Column> columns, IReadOnlyCollection<StoredProcedure> procedures, PrimaryKey? primaryKey, string tableSchema) : ISchemaProvider
 		{
 			IEnumerable<Table> ISchemaProvider.GetTables()
 			{
 				if (columns.Count > 0)
-					yield return new Table(new SqlObjectName("TestTable", Schema: "dbo"), null, columns, null, primaryKey);
+					yield return new Table(new SqlObjectName("TestTable", Schema: tableSchema), null, columns, null, primaryKey);
 			}
 
 			IEnumerable<View>              ISchemaProvider.GetViews()              => [];
@@ -263,7 +283,7 @@ namespace Tests.Scaffold
 		}
 
 		// a language provider that is not the built-in instance but behaves exactly like the wrapped one
-		sealed class DelegatingLanguageProvider(ILanguageProvider provider) : ILanguageProvider
+		sealed class DelegatingLanguageProvider(ILanguageProvider provider, LanguageFeatures? features = null) : ILanguageProvider
 		{
 			IEqualityComparer<CodeIdentifier>              ILanguageProvider.IdentifierEqualityComparer     => provider.IdentifierEqualityComparer;
 			IEqualityComparer<IEnumerable<CodeIdentifier>> ILanguageProvider.FullNameEqualityComparer       => provider.FullNameEqualityComparer;
@@ -273,7 +293,7 @@ namespace Tests.Scaffold
 			IEqualityComparer<IType>                       ILanguageProvider.TypeEqualityComparerWithoutNRT => provider.TypeEqualityComparerWithoutNRT;
 			ITypeParser                                    ILanguageProvider.TypeParser                     => provider.TypeParser;
 			bool                                           ILanguageProvider.NRTSupported                   => provider.NRTSupported;
-			LanguageFeatures                               ILanguageProvider.Features                       => provider.Features;
+			LanguageFeatures                               ILanguageProvider.Features                       => features ?? provider.Features;
 			string[]                                       ILanguageProvider.MissingXmlCommentWarnCodes     => provider.MissingXmlCommentWarnCodes;
 			string                                         ILanguageProvider.FileExtension                  => provider.FileExtension;
 			CodeBuilder                                    ILanguageProvider.ASTBuilder                     => provider.ASTBuilder;
