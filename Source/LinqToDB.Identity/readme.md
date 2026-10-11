@@ -125,6 +125,21 @@ defaults outrank anything supplied that way.
 * **`AddLinqToDBStores<TContext>` applies no mappings when `TContext` is not one of the identity contexts.** The
   stores are still registered and will run, but against tables named after the CLR types.
 
+### Remote (LinqService) clients
+
+A remote context cannot derive from the identity contexts, so give **both ends** the identity mapping schema. Take
+it from an identity context built for the provider - constructing one opens no connection:
+
+```csharp
+var identitySchema = new IdentityDataConnection(new DataOptions().UseSqlServer(connectionString)).MappingSchema;
+
+// client: the remote context the stores run on
+services.AddScoped<IDataContext>(_ => new MyRemoteContext(remoteOptions.UseMappingSchema(identitySchema)));
+
+// server: the DataConnection the LinqService executes on
+dataConnection.AddMappingSchema(identitySchema);
+```
+
 ## Custom key types (int / Guid)
 
 Arbitrary `TKey` is supported via the generic context and stores:
