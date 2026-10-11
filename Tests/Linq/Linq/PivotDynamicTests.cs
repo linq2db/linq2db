@@ -77,7 +77,7 @@ namespace Tests.Linq
 
 		/// <summary>
 		/// Several cell templates crossed with the runtime values, alongside static aggregated members - the
-		/// shape a real report needs, and the one the static projection API cannot express.
+		/// shape a real report needs, and one a single <c>SelectDynamic</c> value template cannot express.
 		/// </summary>
 		[Test]
 		public void PivotsMultipleCellsIntoUserType([DataSources] string context)
