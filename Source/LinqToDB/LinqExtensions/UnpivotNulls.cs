@@ -1,7 +1,8 @@
 namespace LinqToDB
 {
 	/// <summary>
-	/// NULL handling for <see cref="LinqExtensions.Unpivot{TSource,TValue,TResult}(System.Linq.IQueryable{TSource},UnpivotNulls,System.Linq.Expressions.Expression{System.Func{TSource,string,TValue,TResult}},System.Linq.Expressions.Expression{System.Func{TSource,TValue}},System.Linq.Expressions.Expression{System.Func{TSource,TValue}}[])"/>.
+	/// NULL handling for the selector and column-name <see cref="LinqExtensions"/> <c>Unpivot</c> overloads that take
+	/// it; the multi-value overloads keep every row.
 	/// </summary>
 	public enum UnpivotNulls
 	{
