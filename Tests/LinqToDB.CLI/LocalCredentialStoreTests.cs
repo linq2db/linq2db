@@ -593,6 +593,7 @@ namespace Tests.LinqToDB.CLI
 			};
 
 			Task<string?>? writing = null;
+			var writerDoneWhileOpen = false;
 
 			var reader = new LocalCredentialStore(_directory, _root)
 			{
@@ -616,7 +617,7 @@ namespace Tests.LinqToDB.CLI
 					}
 					else
 					{
-						writing.Wait(timeout);
+						writerDoneWhileOpen = writing.Wait(timeout);
 					}
 				},
 			};
@@ -640,9 +641,14 @@ namespace Tests.LinqToDB.CLI
 			written.Result.ShouldBeNull();
 
 			if (OperatingSystem.IsWindows())
+			{
 				replaceFailed.IsSet.ShouldBeTrue("the writer's rename did not run into the open reader");
+			}
 			else
+			{
+				writerDoneWhileOpen.ShouldBeTrue("the writer did not finish while the reader held the file open");
 				failures.ShouldBe(0);
+			}
 
 			CreateStore().TryGetCount(out count, out error).ShouldBeTrue(error);
 			count.ShouldBe(2);
