@@ -45,11 +45,12 @@ namespace Tests.Linq
 				.ThenBy(r => r.Quarter)
 				.ToArray();
 
-			// 2 rows x 4 quarters - 2 NULL cells excluded = 6
-			result.Length.ShouldBe(6);
-			result.ShouldAllBe(r => r.Amount != null);
-			result.Count(r => r.Id == 1).ShouldBe(3);
-			result.Count(r => r.Id == 2).ShouldBe(3);
+			// 2 rows x 4 quarters - 2 NULL cells excluded = 6, each quarter name carrying its own column's value
+			result.Select(r => (r.Id, r.Quarter, r.Amount)).ShouldBe(new (int, string, decimal?)[]
+			{
+				(1, "Q1", 10m), (1, "Q2", 20m), (1, "Q3", 30m),
+				(2, "Q1", 5m),  (2, "Q3", 15m), (2, "Q4", 25m),
+			});
 		}
 
 		[Test]
@@ -325,7 +326,9 @@ namespace Tests.Linq
 
 			result.Length.ShouldBe(2);
 			result[0].Name.ShouldBe("Q_ONE");
+			result[0].Value.ShouldBe(10m);
 			result[1].Name.ShouldBe("Q_TWO");
+			result[1].Value.ShouldBe(20m);
 		}
 
 		/// <summary>
