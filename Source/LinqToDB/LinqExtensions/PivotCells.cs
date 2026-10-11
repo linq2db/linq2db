@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
 using JetBrains.Annotations;
@@ -24,6 +25,7 @@ namespace LinqToDB
 	/// type works, where naming <typeparamref name="TSource"/> would be impossible. A result type that cannot name
 	/// it either can declare the member as <see cref="IReadOnlyDictionary{TKey,TValue}"/> instead.
 	/// </remarks>
+	[SuppressMessage("Naming", "CA1710:Identifiers should have correct suffix", Justification = "named for its pivot role; the dictionary view is secondary")]
 	public sealed class PivotCells<TSource, TFor> : IReadOnlyDictionary<string, object?>
 	{
 		internal sealed class Template
