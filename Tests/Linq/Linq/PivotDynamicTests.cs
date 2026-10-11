@@ -1052,6 +1052,36 @@ namespace Tests.Linq
 			widened[0].Cells["IDE_10"]    .ShouldBe("IDE-A");
 		}
 
+		/// <summary>
+		/// A name factory that does not encode the value gives two value sets the same generated names, so the
+		/// names alone cannot keep their queries apart - each execution must still filter on its own values.
+		/// </summary>
+		[Test, QueryCacheTest]
+		public void SameNamesOverDifferentValuesReadTheirOwnValues([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(Sales.Data);
+
+			IQueryable<KeyValuePair<string, PivotCells<Sales, int>>> Build(int current, int prior) => t
+				.Pivot(x => x.Category, x => x.Year, new[] { current, prior },
+					(g, p) => new KeyValuePair<string, PivotCells<Sales, int>>(
+						g.Key,
+						p.Cell(rows => rows.Sum(x => x.Amount), y => y == current ? "Current" : "Prior")));
+
+			var first  = Build(2010, 2000).ToList().OrderBy(r => r.Key, StringComparer.Ordinal).ToList();
+			var second = Build(2000, 2010).ToList().OrderBy(r => r.Key, StringComparer.Ordinal).ToList();
+
+			first[0].Value["Current"].ShouldBe(20m);
+			first[0].Value["Prior"]  .ShouldBe(10m);
+			first[1].Value["Current"].ShouldBe(15m);
+			first[1].Value["Prior"]  .ShouldBe(5m);
+
+			second[0].Value["Current"].ShouldBe(10m);
+			second[0].Value["Prior"]  .ShouldBe(20m);
+			second[1].Value["Current"].ShouldBe(5m);
+			second[1].Value["Prior"]  .ShouldBe(15m);
+		}
+
 		/// <summary>The same production shape with no result type declared at all.</summary>
 		[Test]
 		public void PivotsProductionShapeWithoutAResultType([DataSources] string context)
