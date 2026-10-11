@@ -187,9 +187,12 @@ They are query-only markers — linq2db expands them into the corresponding join
 
 ## Migrating from the standalone `linq2db.Identity`
 
-The package id stays **`linq2db.Identity`**; the monorepo build is a new **major** version. The default database schema
-is **unchanged** — existing `AspNet*` tables keep working with no DB migration. The breaking changes are all at the API
-level.
+The package id stays **`linq2db.Identity`** and now follows linq2db's own version line — a *minor* step from the
+standalone 6.0.0, but the API is **breaking**: don't let a `6.*` range or an automated minor update pick it up
+unreviewed. Existing `AspNet*` tables keep working with **no DB migration** — the breaking changes are all at the
+API level. Tables created by this version's `CreateTable` differ on some providers: wider claim, token and passkey
+data columns, and a `DATETIME` `LockoutEnd` on MySQL. Widening an existing table to match is optional; values that
+did not fit the old columns never could be stored.
 
 | Area | Before (standalone) | After (monorepo) |
 |---|---|---|
