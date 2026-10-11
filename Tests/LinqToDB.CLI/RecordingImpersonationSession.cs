@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -80,10 +81,32 @@ namespace Tests.LinqToDB.CLI
 
 		static HashSet<string> GetNativeModules()
 		{
+			// On macOS Process.Modules lists only the main executable; the dynamic loader lists every loaded image.
+			//
+			if (OperatingSystem.IsMacOS())
+			{
+				var images = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+				var count  = DyldImageCount();
+
+				for (var i = 0u; i < count; i++)
+					if (Marshal.PtrToStringUTF8(DyldGetImageName(i)) is { } name)
+						images.Add(name);
+
+				return images;
+			}
+
 			using var process = Process.GetCurrentProcess();
 
 			return process.Modules.Cast<ProcessModule>().Select(static m => m.FileName).ToHashSet(StringComparer.OrdinalIgnoreCase);
 		}
+
+		[DllImport("/usr/lib/libSystem.dylib", EntryPoint = "_dyld_image_count")]
+		[DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+		static extern uint DyldImageCount();
+
+		[DllImport("/usr/lib/libSystem.dylib", EntryPoint = "_dyld_get_image_name")]
+		[DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+		static extern IntPtr DyldGetImageName(uint imageIndex);
 
 		internal sealed record ImpersonatedRun(string ErrorOutputAtEntry, HashSet<string> LoadedAtEntry, HashSet<string> NativeModulesAtEntry)
 		{
