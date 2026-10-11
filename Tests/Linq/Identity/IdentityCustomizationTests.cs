@@ -39,8 +39,17 @@ namespace Tests.Identity
 		public class AppRoleClaim : IdentityRoleClaim<string>;
 		public class AppUserToken : IdentityUserToken<string>;
 
+		// The same extension on the stock string-keyed user, for the single-type-argument contexts.
+		public class AppStockUser : IdentityUser
+		{
+			public string? Tenant { get; set; }
+		}
+
 		sealed class AppIdentityConnection(DataOptions options)
 			: IdentityDataConnection<AppUser, AppRole, string, AppUserClaim, AppUserRole, AppUserLogin, AppRoleClaim, AppUserToken>(options);
+
+		sealed class AppUserOnlyConnection(DataOptions options)
+			: IdentityDataConnection<AppUser, string, AppUserClaim, AppUserLogin, AppUserToken>(options);
 
 		[Test]
 		public void CustomModelTypesKeepDefaultMappings([DataSources(false)] string context)
@@ -141,6 +150,80 @@ namespace Tests.Identity
 			(await ctx.GetTable<AppUser>().Where(u => u.Id == user.Id).SelectMany(u => u.Logins()).Select(l => l.LoginProvider).ToListAsync()).ShouldBe(["google"]);
 			(await ctx.GetTable<AppRole>().Where(r => r.Id == role.Id).SelectMany(r => r.Users ()).Select(u => u.UserId)       .ToListAsync()).ShouldBe([user.Id]);
 			(await ctx.GetTable<AppRole>().Where(r => r.Id == role.Id).SelectMany(r => r.Claims()).Select(c => c.ClaimValue)   .ToListAsync()).ShouldBe(["all"]);
+		}
+
+		[Test]
+		public void GenericContextsKeepDefaultMappings([DataSources(false)] string context)
+		{
+			var options = new DataOptions().UseConfiguration(context.StripRemote());
+
+			using (var db = new IdentityDataContext   <AppStockUser>(options)) ShouldMapDefaults<AppStockUser, IdentityUserClaim<string>, IdentityUserLogin<string>, IdentityUserToken<string>>(db.MappingSchema, typeof(IdentityRole));
+			using (var db = new IdentityDataConnection<AppStockUser>(options)) ShouldMapDefaults<AppStockUser, IdentityUserClaim<string>, IdentityUserLogin<string>, IdentityUserToken<string>>(db.MappingSchema, typeof(IdentityRole));
+
+			using (var db = new IdentityDataContext<AppUser, AppRole, string>(options))
+				ShouldMapDefaults<AppUser, IdentityUserClaim<string>, IdentityUserLogin<string>, IdentityUserToken<string>>(db.MappingSchema, typeof(AppRole));
+			using (var db = new IdentityDataContext<AppUser, AppRole, string, AppUserClaim, AppUserRole, AppUserLogin, AppRoleClaim, AppUserToken>(options))
+				ShouldMapDefaults<AppUser, AppUserClaim, AppUserLogin, AppUserToken>(db.MappingSchema, typeof(AppRole));
+
+			using (var db = new IdentityDataContext<AppUser, string, AppUserClaim, AppUserLogin, AppUserToken>(options))
+				ShouldMapDefaults<AppUser, AppUserClaim, AppUserLogin, AppUserToken>(db.MappingSchema, role: null);
+			using (var db = new AppUserOnlyConnection(options))
+				ShouldMapDefaults<AppUser, AppUserClaim, AppUserLogin, AppUserToken>(db.MappingSchema, role: null);
+		}
+
+		static void ShouldMapDefaults<TUser, TUserClaim, TUserLogin, TUserToken>(MappingSchema ms, Type? role)
+		{
+			var user = ms.GetEntityDescriptor(typeof(TUser));
+
+			user.Name.Name.ShouldBe("AspNetUsers");
+			user.Columns.Single(c => c.MemberName == nameof(IdentityUser.Id)).Length.ShouldBe(36);
+			user.Columns.Select(c => c.MemberName).ShouldContain(nameof(AppUser.Tenant));
+
+			ms.GetEntityDescriptor(typeof(TUserClaim)).Name.Name.ShouldBe("AspNetUserClaims");
+			ms.GetEntityDescriptor(typeof(TUserLogin)).Name.Name.ShouldBe("AspNetUserLogins");
+			ms.GetEntityDescriptor(typeof(TUserToken)).Name.Name.ShouldBe("AspNetUserTokens");
+
+			// what the user navigations return, whatever the context's own satellite types are
+			ms.GetEntityDescriptor(typeof(IdentityUserClaim<string>)).Name.Name.ShouldBe("AspNetUserClaims");
+			ms.GetEntityDescriptor(typeof(IdentityUserLogin<string>)).Name.Name.ShouldBe("AspNetUserLogins");
+
+			if (role != null)
+				ms.GetEntityDescriptor(role).Name.Name.ShouldBe("AspNetRoles");
+			else
+				ms.GetEntityDescriptor(typeof(IdentityRole)).Name.Name.ShouldBe(nameof(IdentityRole));
+		}
+
+		[Test]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
+		[ActiveIssue(Configuration = TestProvName.AllYdb,        Details = YdbGate)]
+		public async Task UserOnlyContextRoundTrip([DataSources] string context)
+		{
+			using var setup  = new AppUserOnlyConnection(new DataOptions().UseConfiguration(context.StripRemote()));
+			using var users  = setup.CreateLocalTable<AppUser>();
+			using var claims = setup.CreateLocalTable<AppUserClaim>();
+			using var logins = setup.CreateLocalTable<AppUserLogin>();
+			using var tokens = setup.CreateLocalTable<AppUserToken>();
+			using var ctx    = GetDataContext(context, setup.MappingSchema);
+
+			var store = new UserOnlyStore<AppUser, IDataContext, string, AppUserClaim, AppUserLogin, AppUserToken>(ctx);
+			var user  = new AppUser { Id = Guid.NewGuid().ToString(), UserName = "solo", NormalizedUserName = "SOLO", Tenant = "acme" };
+
+			(await store.CreateAsync(user)).Succeeded.ShouldBeTrue();
+			(await store.FindByNameAsync("SOLO")).ShouldNotBeNull().Tenant.ShouldBe("acme");
+
+			await store.AddClaimsAsync(user, [new Claim("tenant", "acme")]);
+			(await store.GetClaimsAsync(user)).Single().Type.ShouldBe("tenant");
+
+			await store.AddLoginAsync(user, new UserLoginInfo("prov", "key", "disp"));
+			(await store.FindByLoginAsync("prov", "key")).ShouldNotBeNull().Id.ShouldBe(user.Id);
+
+			await store.SetTokenAsync(user, "prov", "tok", "value", default);
+			(await store.GetTokenAsync(user, "prov", "tok", default)).ShouldBe("value");
+
+			(await store.DeleteAsync(user)).Succeeded.ShouldBeTrue();
+			ctx.GetTable<AppUserClaim>().Count(r => r.UserId == user.Id).ShouldBe(0);
+			ctx.GetTable<AppUserLogin>().Count(r => r.UserId == user.Id).ShouldBe(0);
+			ctx.GetTable<AppUserToken>().Count(r => r.UserId == user.Id).ShouldBe(0);
 		}
 
 		#endregion
