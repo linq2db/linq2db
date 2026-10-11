@@ -67,6 +67,35 @@ namespace LinqToDB.Identity
 		// the same reason as the LockoutEnd pins - the latter would replace the unscoped one wholesale.
 		private static DataTypeAttribute AccessTextLimit() => new (DataType.NVarChar, "NVarChar(255)") { Configuration = ProviderName.Access };
 
+		// EF Core leaves ClaimValue and the token Value unbounded; an unmapped string defaults to 255 on these. The
+		// stores filter on ClaimValue with '=', which LOB types reject on most of them, so it gets the widest
+		// comparable varchar instead. Token values (a saved JWT is 1-2 KB) are never filtered on, so they can be LOBs.
+		private static readonly (string Configuration, DataType DataType, string DbType)[] _claimValueTypes =
+		[
+			(ProviderName.MySql,    DataType.NVarChar, "VarChar(2000)"  ),
+			(ProviderName.Oracle,   DataType.NVarChar, "NVarChar2(2000)"),
+			(ProviderName.Firebird, DataType.NVarChar, "VarChar(2000)"  ),
+			(ProviderName.Access,   DataType.NText,    "LongText"       ),
+			(ProviderName.DB2,      DataType.NVarChar, "NVarChar(2000)" ),
+			(ProviderName.Informix, DataType.NVarChar, "LVarChar(2000)" ),
+			(ProviderName.SapHana,  DataType.NVarChar, "NVarChar(2000)" ),
+			(ProviderName.Sybase,   DataType.NVarChar, "NVarChar(2000)" ),
+			(ProviderName.SqlCe,    DataType.NVarChar, "NVarChar(2000)" ),
+		];
+
+		private static readonly (string Configuration, DataType DataType, string DbType)[] _tokenValueTypes =
+		[
+			(ProviderName.MySql,    DataType.NText,    "Text"              ),
+			(ProviderName.Oracle,   DataType.NText,    "NClob"             ),
+			(ProviderName.Firebird, DataType.NText,    "BLOB SUB_TYPE TEXT"),
+			(ProviderName.Access,   DataType.NText,    "LongText"          ),
+			(ProviderName.DB2,      DataType.NText,    "NClob"             ),
+			(ProviderName.Informix, DataType.NVarChar, "LVarChar(8000)"    ),
+			(ProviderName.SapHana,  DataType.NVarChar, "NVarChar(5000)"    ),
+			(ProviderName.Sybase,   DataType.NText,    "UniText"           ),
+			(ProviderName.SqlCe,    DataType.NText,    "NText"             ),
+		];
+
 		public static void SetupIdentityUserClaim<TKey, TUserClaim>(FluentMappingBuilder mappings)
 			where TKey       : IEquatable<TKey>
 			where TUserClaim : IdentityUserClaim<TKey>
@@ -80,6 +109,11 @@ namespace LinqToDB.Identity
 				.Property(e => e.ClaimType)
 				.Property(e => e.ClaimValue)
 				;
+
+			foreach (var (configuration, dataType, dbType) in _claimValueTypes)
+				mappings.Entity<TUserClaim>()
+					.Property(e => e.ClaimValue)
+						.HasAttribute(new DataTypeAttribute(dataType, dbType) { Configuration = configuration });
 
 			// add length
 			if (IsStringKey<TKey>())
@@ -105,6 +139,11 @@ namespace LinqToDB.Identity
 				.Property(e => e.ClaimType)
 				.Property(e => e.ClaimValue)
 				;
+
+			foreach (var (configuration, dataType, dbType) in _claimValueTypes)
+				mappings.Entity<TRoleClaim>()
+					.Property(e => e.ClaimValue)
+						.HasAttribute(new DataTypeAttribute(dataType, dbType) { Configuration = configuration });
 
 			// add length
 			if (IsStringKey<TKey>())
@@ -297,8 +336,12 @@ namespace LinqToDB.Identity
 					.IsNullable(false)
 					.HasLength(KEYS_LENGTH)
 				.Property(e => e.Value)
-					//.HasLength(???)
 				;
+
+			foreach (var (configuration, dataType, dbType) in _tokenValueTypes)
+				mappings.Entity<TUserToken>()
+					.Property(e => e.Value)
+						.HasAttribute(new DataTypeAttribute(dataType, dbType) { Configuration = configuration });
 
 			// Firebird 2.5's index key is narrower than this three-column PK (36 + 128 + 128 characters, rendered
 			// CHARACTER SET UNICODE_FSS at 3 bytes each), so CREATE TABLE fails outright with "cannot create index

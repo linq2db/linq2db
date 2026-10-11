@@ -276,6 +276,13 @@ namespace Tests.Identity
 
 			await store.RemoveClaimsAsync(user, new[] { new Claim("scope", "admin") });
 			Assert.That((await store.GetClaimsAsync(user)).Select(c => c.Value), Is.EquivalentTo(new[] { "write" }));
+
+			// a serialized-permissions claim: past the 255 default, and still matched by '=' in the store's filters
+			var permissions = new Claim("permissions", string.Join(",", Enumerable.Range(0, 120).Select(i => $"perm{i:D3}")));
+			await store.AddClaimsAsync(user, [permissions]);
+			(await store.GetUsersForClaimAsync(permissions)).Select(u => u.Id).ShouldBe([user.Id]);
+			await store.RemoveClaimsAsync(user, [permissions]);
+			(await store.GetClaimsAsync(user)).Select(c => c.Value).ShouldBe(["write"]);
 		}
 
 		[Test]
@@ -368,6 +375,11 @@ namespace Tests.Identity
 			Assert.That(await store.GetTokenAsync(user, "google", "refresh", default), Is.EqualTo("tok-2"));
 			await store.RemoveTokenAsync(user, "google", "refresh", default);
 			Assert.That(await store.GetTokenAsync(user, "google", "refresh", default), Is.Null);
+
+			// an id_token saved by SaveTokens - a JWT is typically 1-2 KB
+			var jwt = new string('j', 1800);
+			await store.SetTokenAsync(user, "google", "id_token", jwt, default);
+			(await store.GetTokenAsync(user, "google", "id_token", default)).ShouldBe(jwt);
 
 			await store.RemoveLoginAsync(user, "google", "key-123");
 			Assert.That(await store.FindByLoginAsync("google", "key-123"), Is.Null);
