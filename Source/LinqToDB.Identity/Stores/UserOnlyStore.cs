@@ -74,7 +74,39 @@ namespace LinqToDB.Identity
 	/// <typeparam name="TUserClaim">The type representing a claim.</typeparam>
 	/// <typeparam name="TUserLogin">The type representing a user external login.</typeparam>
 	/// <typeparam name="TUserToken">The type representing a user token.</typeparam>
+#if NET10_0_OR_GREATER
 	public class UserOnlyStore<TUser, TContext, TKey, TUserClaim, TUserLogin, TUserToken> :
+		UserOnlyStore<TUser, TContext, TKey, TUserClaim, TUserLogin, TUserToken, IdentityUserPasskey<TKey>>
+		where TUser      : IdentityUser<TKey>
+		where TContext   : IDataContext
+		where TKey       : IEquatable<TKey>
+		where TUserClaim : IdentityUserClaim<TKey>, new()
+		where TUserLogin : IdentityUserLogin<TKey>, new()
+		where TUserToken : IdentityUserToken<TKey>, new()
+	{
+		/// <summary>
+		/// Creates a new instance of the store.
+		/// </summary>
+		/// <param name="context">The context used to access the store.</param>
+		/// <param name="describer">The <see cref="IdentityErrorDescriber"/> used to describe store errors.</param>
+		/// <param name="options">The identity options; only <see cref="StoreOptions.SchemaVersion"/> is used.</param>
+		public UserOnlyStore(TContext context, IdentityErrorDescriber? describer = null, IOptions<IdentityOptions>? options = null) : base(context, describer, options) { }
+	}
+
+	/// <summary>
+	/// Represents a new instance of a persistence store for the specified user type.
+	/// </summary>
+	/// <typeparam name="TUser">The type representing a user.</typeparam>
+	/// <typeparam name="TContext">The type of the data context class used to access the store.</typeparam>
+	/// <typeparam name="TKey">The type of the primary key for a user.</typeparam>
+	/// <typeparam name="TUserClaim">The type representing a claim.</typeparam>
+	/// <typeparam name="TUserLogin">The type representing a user external login.</typeparam>
+	/// <typeparam name="TUserToken">The type representing a user token.</typeparam>
+	/// <typeparam name="TUserPasskey">The type representing a user passkey.</typeparam>
+	public class UserOnlyStore<TUser, TContext, TKey, TUserClaim, TUserLogin, TUserToken, TUserPasskey> :
+#else
+	public class UserOnlyStore<TUser, TContext, TKey, TUserClaim, TUserLogin, TUserToken> :
+#endif
 		UserStoreBase<TUser, TKey, TUserClaim, TUserLogin, TUserToken>,
 		IUserLoginStore<TUser>,
 		IUserClaimStore<TUser>,
@@ -99,6 +131,9 @@ namespace LinqToDB.Identity
 		where TUserClaim : IdentityUserClaim<TKey>, new()
 		where TUserLogin : IdentityUserLogin<TKey>, new()
 		where TUserToken : IdentityUserToken<TKey>, new()
+#if NET10_0_OR_GREATER
+		where TUserPasskey : IdentityUserPasskey<TKey>, new()
+#endif
 	{
 		/// <summary>
 		/// Creates a new instance of the store.
@@ -456,7 +491,7 @@ namespace LinqToDB.Identity
 		/// <summary>
 		/// A navigation property for the user passkeys the store contains.
 		/// </summary>
-		protected virtual IQueryable<IdentityUserPasskey<TKey>> UserPasskeys => Context.GetTable<IdentityUserPasskey<TKey>>();
+		protected virtual IQueryable<TUserPasskey> UserPasskeys => Context.GetTable<TUserPasskey>();
 
 		/// <inheritdoc cref="AddOrUpdatePasskeyAsync(TUser, UserPasskeyInfo, CancellationToken)"/>
 		public virtual async Task AddOrUpdatePasskeyAsync(TUser user, UserPasskeyInfo passkey, CancellationToken cancellationToken)
@@ -544,19 +579,19 @@ namespace LinqToDB.Identity
 		/// <summary>
 		/// Finds a passkey for the specified user with the specified credential id.
 		/// </summary>
-		protected virtual Task<IdentityUserPasskey<TKey>?> FindUserPasskeyAsync(TKey userId, byte[] credentialId, CancellationToken cancellationToken)
+		protected virtual Task<TUserPasskey?> FindUserPasskeyAsync(TKey userId, byte[] credentialId, CancellationToken cancellationToken)
 			=> UserPasskeys.SingleOrDefaultAsync(p => p.UserId.Equals(userId) && p.CredentialId == credentialId, cancellationToken);
 
 		/// <summary>
 		/// Finds a passkey with the specified credential id.
 		/// </summary>
-		protected virtual Task<IdentityUserPasskey<TKey>?> FindUserPasskeyByIdAsync(byte[] credentialId, CancellationToken cancellationToken)
+		protected virtual Task<TUserPasskey?> FindUserPasskeyByIdAsync(byte[] credentialId, CancellationToken cancellationToken)
 			=> UserPasskeys.SingleOrDefaultAsync(p => p.CredentialId == credentialId, cancellationToken);
 
 		/// <summary>
-		/// Called to create a new instance of <see cref="IdentityUserPasskey{TKey}"/>.
+		/// Called to create a new instance of the passkey entity.
 		/// </summary>
-		protected virtual IdentityUserPasskey<TKey> CreateUserPasskey(TUser user, UserPasskeyInfo passkey)
+		protected virtual TUserPasskey CreateUserPasskey(TUser user, UserPasskeyInfo passkey)
 			=> new()
 			{
 				UserId       = user.Id,
@@ -579,7 +614,7 @@ namespace LinqToDB.Identity
 				},
 			};
 
-		private static UserPasskeyInfo ToUserPasskeyInfo(IdentityUserPasskey<TKey> passkey)
+		private static UserPasskeyInfo ToUserPasskeyInfo(TUserPasskey passkey)
 			=> new(
 				passkey.CredentialId,
 				passkey.Data.PublicKey,
@@ -600,7 +635,7 @@ namespace LinqToDB.Identity
 
 		// Only properties mutable after passkey creation are updated.
 		// See https://www.w3.org/TR/webauthn-3/#authn-ceremony-update-credential-record
-		private static void UpdateFromUserPasskeyInfo(IdentityUserPasskey<TKey> passkey, UserPasskeyInfo info)
+		private static void UpdateFromUserPasskeyInfo(TUserPasskey passkey, UserPasskeyInfo info)
 		{
 			passkey.Data.Name           = info.Name;
 			passkey.Data.SignCount      = info.SignCount;

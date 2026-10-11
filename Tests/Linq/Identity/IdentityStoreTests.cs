@@ -493,6 +493,41 @@ namespace Tests.Identity
 
 			ctx.GetTable<IdentityUserPasskey<string>>().Count(r => r.UserId == user.Id).ShouldBe(schemaV3 ? 0 : 1);
 		}
+
+		// The passkey members now live on the passkey-generic base; an override written against the
+		// six-argument store keeps the signature it always had.
+		sealed class CountingPasskeyStore(IDataContext context)
+			: UserOnlyStore<IdentityUser, IDataContext, string, IdentityUserClaim<string>, IdentityUserLogin<string>, IdentityUserToken<string>>(context)
+		{
+			public int Created { get; private set; }
+
+			protected override IdentityUserPasskey<string> CreateUserPasskey(IdentityUser user, UserPasskeyInfo passkey)
+			{
+				Created++;
+				return base.CreateUserPasskey(user, passkey);
+			}
+		}
+
+		[Test]
+		[ActiveIssue(Configuration = TestProvName.AllInformix, Details = InformixPasskeyGate)]
+		public async Task StockStorePasskeyOverride([DataSources] string context)
+		{
+			using var setup  = GetSetup(context);
+			using var schema = new Schema(setup);
+			using var ctx    = GetDataContext(context, setup.MappingSchema);
+
+			var store = new CountingPasskeyStore(ctx);
+			var user  = NewUser("olga");
+			await store.CreateAsync(user);
+
+			await store.AddOrUpdatePasskeyAsync(user, new UserPasskeyInfo(
+				[3, 3, 3], [9, 9], DateTimeOffset.UtcNow, signCount: 1,
+				transports: ["internal"], isUserVerified: true, isBackupEligible: false,
+				isBackedUp: false, attestationObject: [5], clientDataJson: [6]), default);
+
+			store.Created.ShouldBe(1);
+			(await store.GetPasskeysAsync(user, default)).Count.ShouldBe(1);
+		}
 #endif
 	}
 }

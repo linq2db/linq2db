@@ -400,12 +400,13 @@ namespace LinqToDB.Identity
 			(ProviderName.Access,   "LongText"          ),
 		];
 
-		public static void SetupIdentityUserPasskey<TKey>(FluentMappingBuilder mappings)
-			where TKey : IEquatable<TKey>
+		public static void SetupIdentityUserPasskey<TKey, TUserPasskey>(FluentMappingBuilder mappings)
+			where TKey         : IEquatable<TKey>
+			where TUserPasskey : IdentityUserPasskey<TKey>
 		{
 			// IdentityPasskeyData is stored as a single JSON column, matching the EF Core provider's
 			// complex-property mapping so the AspNetUserPasskeys schema stays interchangeable.
-			mappings.Entity<IdentityUserPasskey<TKey>>().HasTableName("AspNetUserPasskeys")
+			mappings.Entity<TUserPasskey>().HasTableName("AspNetUserPasskeys")
 				.Property(e => e.CredentialId)
 					.IsPrimaryKey()
 					.IsNullable(false)
@@ -420,13 +421,13 @@ namespace LinqToDB.Identity
 				;
 
 			foreach (var (configuration, dbType) in _passkeyDataAsText)
-				mappings.Entity<IdentityUserPasskey<TKey>>()
+				mappings.Entity<TUserPasskey>()
 					.Property(e => e.Data)
 						.HasAttribute(new ColumnAttribute { Configuration = configuration, DataType = DataType.NText, DbType = dbType });
 
 			// add length
 			if (IsStringKey<TKey>())
-				mappings.Entity<IdentityUserPasskey<TKey>>()
+				mappings.Entity<TUserPasskey>()
 					.Property(e => e.UserId)
 						.HasLength(STRING_KEY_LENGTH);
 
@@ -436,13 +437,13 @@ namespace LinqToDB.Identity
 			// constraint - which beats not being able to create it at all. Uniqueness then rests on
 			// AddOrUpdatePasskeyAsync's find-then-insert rather than on the database.
 			foreach (var (configuration, dbType) in _passkeyIdWithoutPrimaryKey)
-				mappings.Entity<IdentityUserPasskey<TKey>>()
+				mappings.Entity<TUserPasskey>()
 					.Property(e => e.CredentialId)
 						.HasAttribute(new ColumnAttribute { Configuration = configuration, CanBeNull = false, DbType = dbType, Length = CREDENTIAL_ID_LENGTH, IsPrimaryKey = false });
 		}
 
 		public static void SetupIdentityUserPasskey(FluentMappingBuilder mappings)
-			=> SetupIdentityUserPasskey<string>(mappings);
+			=> SetupIdentityUserPasskey<string, IdentityUserPasskey<string>>(mappings);
 
 		[UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Passkey data is a flat DTO serialized with reflection-based JSON; passkey storage is not supported in trimmed/AOT apps.")]
 		[UnconditionalSuppressMessage("AOT",      "IL3050", Justification = "See IL2026.")]

@@ -95,8 +95,47 @@ namespace LinqToDB.Identity
 	/// <typeparam name="TUserLogin">The type representing a user external login.</typeparam>
 	/// <typeparam name="TUserToken">The type representing a user token.</typeparam>
 	/// <typeparam name="TRoleClaim">The type representing a role claim.</typeparam>
+#if NET10_0_OR_GREATER
+	public class UserStore<TUser, TRole, TContext, TKey, TUserClaim, TUserRole, TUserLogin, TUserToken, TRoleClaim> :
+		UserStore<TUser, TRole, TContext, TKey, TUserClaim, TUserRole, TUserLogin, TUserToken, TRoleClaim, IdentityUserPasskey<TKey>>
+		where TUser      : IdentityUser<TKey>
+		where TRole      : IdentityRole<TKey>
+		where TContext   : IDataContext
+		where TKey       : IEquatable<TKey>
+		where TUserClaim : IdentityUserClaim<TKey>, new()
+		where TUserRole  : IdentityUserRole<TKey>, new()
+		where TUserLogin : IdentityUserLogin<TKey>, new()
+		where TUserToken : IdentityUserToken<TKey>, new()
+		where TRoleClaim : IdentityRoleClaim<TKey>, new()
+	{
+		/// <summary>
+		/// Creates a new instance of the store.
+		/// </summary>
+		/// <param name="context">The context used to access the store.</param>
+		/// <param name="describer">The <see cref="IdentityErrorDescriber"/> used to describe store errors.</param>
+		/// <param name="options">The identity options; only <see cref="StoreOptions.SchemaVersion"/> is used.</param>
+		public UserStore(TContext context, IdentityErrorDescriber? describer = null, IOptions<IdentityOptions>? options = null) : base(context, describer, options) { }
+	}
+
+	/// <summary>
+	/// Represents a new instance of a persistence store for the specified user and role types.
+	/// </summary>
+	/// <typeparam name="TUser">The type representing a user.</typeparam>
+	/// <typeparam name="TRole">The type representing a role.</typeparam>
+	/// <typeparam name="TContext">The type of the data context class used to access the store.</typeparam>
+	/// <typeparam name="TKey">The type of the primary key for a role.</typeparam>
+	/// <typeparam name="TUserClaim">The type representing a claim.</typeparam>
+	/// <typeparam name="TUserRole">The type representing a user role.</typeparam>
+	/// <typeparam name="TUserLogin">The type representing a user external login.</typeparam>
+	/// <typeparam name="TUserToken">The type representing a user token.</typeparam>
+	/// <typeparam name="TRoleClaim">The type representing a role claim.</typeparam>
+	/// <typeparam name="TUserPasskey">The type representing a user passkey.</typeparam>
+	public class UserStore<TUser, TRole, TContext, TKey, TUserClaim, TUserRole, TUserLogin, TUserToken, TRoleClaim, TUserPasskey> :
+		UserOnlyStore<TUser, TContext, TKey, TUserClaim, TUserLogin, TUserToken, TUserPasskey>,
+#else
 	public class UserStore<TUser, TRole, TContext, TKey, TUserClaim, TUserRole, TUserLogin, TUserToken, TRoleClaim> :
 		UserOnlyStore<TUser, TContext, TKey, TUserClaim, TUserLogin, TUserToken>,
+#endif
 		IUserRoleStore<TUser>
 		where TUser      : IdentityUser<TKey>
 		where TRole      : IdentityRole<TKey>
@@ -107,6 +146,9 @@ namespace LinqToDB.Identity
 		where TUserLogin : IdentityUserLogin<TKey>, new()
 		where TUserToken : IdentityUserToken<TKey>, new()
 		where TRoleClaim : IdentityRoleClaim<TKey>, new()
+#if NET10_0_OR_GREATER
+		where TUserPasskey : IdentityUserPasskey<TKey>, new()
+#endif
 	{
 		/// <summary>
 		/// Creates a new instance of the store.

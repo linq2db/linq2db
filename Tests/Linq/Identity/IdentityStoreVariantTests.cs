@@ -254,6 +254,88 @@ namespace Tests.Identity
 			(await users.FindByNameAsync("solo-di")).ShouldNotBeNull().Tenant.ShouldBe("acme");
 		}
 
+		// A full context registered without AddRoles takes the user-only path, and must still find the
+		// context's satellite types through its base chain.
+		[Test]
+		public void DependencyInjection_FullContextWithoutRoles([DataSources(false)] string context)
+		{
+			var services = new ServiceCollection();
+			services.AddLogging();
+			services.AddScoped(_ => new IdentityCustomizationTests.AppIdentityConnection(new DataOptions().UseConfiguration(context.StripRemote())));
+			services
+				.AddIdentityCore<IdentityCustomizationTests.AppUser>()
+				.AddLinqToDBStores<IdentityCustomizationTests.AppIdentityConnection>();
+
+			using var provider = services.BuildServiceProvider();
+			using var scope    = provider.CreateScope();
+
+			scope.ServiceProvider.GetRequiredService<IUserStore<IdentityCustomizationTests.AppUser>>().ShouldBeOfType<UserOnlyStore<
+				IdentityCustomizationTests.AppUser, IdentityCustomizationTests.AppIdentityConnection, string,
+				IdentityCustomizationTests.AppUserClaim, IdentityCustomizationTests.AppUserLogin, IdentityCustomizationTests.AppUserToken>>();
+		}
+
+#if NET10_0_OR_GREATER
+		[Test]
+		[ActiveIssue(Configuration = TestProvName.AllInformix, Details = InformixPasskeyGate)]
+		public async Task DependencyInjection_CustomPasskey([DataSources(false)] string context, [Values] bool withRoles)
+		{
+			using var setup    = new IdentityCustomizationTests.AppPasskeyConnection(new DataOptions().UseConfiguration(context.StripRemote()));
+			using var schema   = new KeyedSchema<
+				IdentityCustomizationTests.AppUser, IdentityCustomizationTests.AppRole, string, IdentityCustomizationTests.AppUserClaim,
+				IdentityCustomizationTests.AppUserRole, IdentityCustomizationTests.AppUserLogin, IdentityCustomizationTests.AppRoleClaim,
+				IdentityCustomizationTests.AppUserToken>(setup);
+			using var passkeys = setup.CreateLocalTable<IdentityCustomizationTests.AppUserPasskey>();
+
+			var services = new ServiceCollection();
+			services.AddLogging();
+
+			if (withRoles)
+			{
+				services.AddScoped(_ => new IdentityCustomizationTests.AppPasskeyConnection(new DataOptions().UseConfiguration(context.StripRemote())));
+				services
+					.AddIdentityCore<IdentityCustomizationTests.AppUser>()
+					.AddRoles<IdentityCustomizationTests.AppRole>()
+					.AddLinqToDBStores<IdentityCustomizationTests.AppPasskeyConnection>();
+			}
+			else
+			{
+				services.AddScoped(_ => new IdentityCustomizationTests.AppUserOnlyPasskeyConnection(new DataOptions().UseConfiguration(context.StripRemote())));
+				services
+					.AddIdentityCore<IdentityCustomizationTests.AppUser>()
+					.AddLinqToDBStores<IdentityCustomizationTests.AppUserOnlyPasskeyConnection>();
+			}
+
+			using var provider = services.BuildServiceProvider();
+			using var scope    = provider.CreateScope();
+			var sp = scope.ServiceProvider;
+
+			var store = sp.GetRequiredService<IUserStore<IdentityCustomizationTests.AppUser>>();
+
+			if (withRoles)
+				store.ShouldBeOfType<UserStore<
+					IdentityCustomizationTests.AppUser, IdentityCustomizationTests.AppRole, IdentityCustomizationTests.AppPasskeyConnection, string,
+					IdentityCustomizationTests.AppUserClaim, IdentityCustomizationTests.AppUserRole, IdentityCustomizationTests.AppUserLogin,
+					IdentityCustomizationTests.AppUserToken, IdentityCustomizationTests.AppRoleClaim, IdentityCustomizationTests.AppUserPasskey>>();
+			else
+				store.ShouldBeOfType<UserOnlyStore<
+					IdentityCustomizationTests.AppUser, IdentityCustomizationTests.AppUserOnlyPasskeyConnection, string,
+					IdentityCustomizationTests.AppUserClaim, IdentityCustomizationTests.AppUserLogin, IdentityCustomizationTests.AppUserToken,
+					IdentityCustomizationTests.AppUserPasskey>>();
+
+			var users = sp.GetRequiredService<UserManager<IdentityCustomizationTests.AppUser>>();
+			var user  = new IdentityCustomizationTests.AppUser { Id = Guid.NewGuid().ToString(), UserName = "pk-di" };
+			(await users.CreateAsync(user, "P@ssw0rd1!")).Succeeded.ShouldBeTrue();
+
+			var passkeyStore = (IUserPasskeyStore<IdentityCustomizationTests.AppUser>)store;
+			await passkeyStore.AddOrUpdatePasskeyAsync(user, new UserPasskeyInfo(
+				[8, 8, 8], [9, 9], DateTimeOffset.UtcNow, signCount: 1,
+				transports: ["internal"], isUserVerified: true, isBackupEligible: false,
+				isBackedUp: false, attestationObject: [5], clientDataJson: [6]), default);
+
+			(await passkeyStore.GetPasskeysAsync(user, default)).Count.ShouldBe(1);
+		}
+#endif
+
 		[Test]
 		public void DependencyInjection_RejectsNonIdentityTypes()
 		{

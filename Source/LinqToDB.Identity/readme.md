@@ -119,6 +119,11 @@ defaults outrank anything supplied that way.
 * **Extra properties on a subclass become columns.** `class AppUser : IdentityUser<string> { public string Tenant { get; set; } }`
   maps `Tenant` as a column, so `CreateTable` emits it and inserts include it — the same as EF Core, but the table is
   then no longer interchangeable with a stock `AspNetUsers` unless you `Ignore` the property.
+* **A custom passkey type needs the matching store.** On .NET 10 the contexts and stores take an optional
+  `TUserPasskey` (`IdentityDataConnection<TUser, TRole, TKey, …, TUserToken, TUserPasskey>`,
+  `UserStore<…, TRoleClaim, TUserPasskey>`, `UserOnlyStore<…, TUserToken, TUserPasskey>`), as EF Core does.
+  `AddLinqToDBStores` picks the passkey-aware store for such a context; a store built by hand without the
+  `TUserPasskey` argument queries the stock `IdentityUserPasskey<TKey>`, which that context does not map.
 * **Mappings are built once per context type, for the process lifetime.** `ConfigureMappings` runs on the first
   instantiation of a given context class and the result is cached against that class, so mappings cannot vary per
   instance — per-tenant table names, for example.

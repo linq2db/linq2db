@@ -10,6 +10,7 @@ using LinqToDB.Identity;
 using LinqToDB.Mapping;
 
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 
 using NUnit.Framework;
 
@@ -45,11 +46,36 @@ namespace Tests.Identity
 			public string? Tenant { get; set; }
 		}
 
-		sealed class AppIdentityConnection(DataOptions options)
+		internal sealed class AppIdentityConnection(DataOptions options)
 			: IdentityDataConnection<AppUser, AppRole, string, AppUserClaim, AppUserRole, AppUserLogin, AppRoleClaim, AppUserToken>(options);
 
 		internal sealed class AppUserOnlyConnection(DataOptions options)
 			: IdentityDataConnection<AppUser, string, AppUserClaim, AppUserLogin, AppUserToken>(options);
+
+#if NET10_0_OR_GREATER
+		public class AppUserPasskey : IdentityUserPasskey<string>
+		{
+			public string? Device { get; set; }
+		}
+
+		internal sealed class AppPasskeyConnection(DataOptions options)
+			: IdentityDataConnection<AppUser, AppRole, string, AppUserClaim, AppUserRole, AppUserLogin, AppRoleClaim, AppUserToken, AppUserPasskey>(options);
+
+		internal sealed class AppUserOnlyPasskeyConnection(DataOptions options)
+			: IdentityDataConnection<AppUser, string, AppUserClaim, AppUserLogin, AppUserToken, AppUserPasskey>(options);
+
+		// The store writes only the stock passkey members, so the extra one is the consumer's to fill.
+		sealed class AppPasskeyStore(IDataContext context, IOptions<IdentityOptions> options)
+			: UserStore<AppUser, AppRole, IDataContext, string, AppUserClaim, AppUserRole, AppUserLogin, AppUserToken, AppRoleClaim, AppUserPasskey>(context, options: options)
+		{
+			protected override AppUserPasskey CreateUserPasskey(AppUser user, UserPasskeyInfo passkey)
+			{
+				var entity = base.CreateUserPasskey(user, passkey);
+				entity.Device = passkey.Name;
+				return entity;
+			}
+		}
+#endif
 
 		[Test]
 		public void CustomModelTypesKeepDefaultMappings([DataSources(false)] string context)
@@ -225,6 +251,70 @@ namespace Tests.Identity
 			ctx.GetTable<AppUserLogin>().Count(r => r.UserId == user.Id).ShouldBe(0);
 			ctx.GetTable<AppUserToken>().Count(r => r.UserId == user.Id).ShouldBe(0);
 		}
+
+#if NET10_0_OR_GREATER
+		[Test]
+		public void CustomPasskeyTypeKeepsDefaultMappings([DataSources(false)] string context)
+		{
+			var options = new DataOptions().UseConfiguration(context.StripRemote());
+
+			using (var db = new AppPasskeyConnection        (options)) ShouldMapPasskey(db.MappingSchema);
+			using (var db = new AppUserOnlyPasskeyConnection(options)) ShouldMapPasskey(db.MappingSchema);
+			using (var db = new IdentityDataContext<AppUser, string, AppUserClaim, AppUserLogin, AppUserToken, AppUserPasskey>(options)) ShouldMapPasskey(db.MappingSchema);
+			using (var db = new IdentityDataContext<AppUser, AppRole, string, AppUserClaim, AppUserRole, AppUserLogin, AppRoleClaim, AppUserToken, AppUserPasskey>(options)) ShouldMapPasskey(db.MappingSchema);
+
+			static void ShouldMapPasskey(MappingSchema ms)
+			{
+				var passkey = ms.GetEntityDescriptor(typeof(AppUserPasskey));
+
+				passkey.Name.Name.ShouldBe("AspNetUserPasskeys");
+				passkey.Columns.Single(c => c.MemberName == nameof(AppUserPasskey.CredentialId)).Length.ShouldBe(1024);
+				passkey.Columns.Single(c => c.MemberName == nameof(AppUserPasskey.UserId))      .Length.ShouldBe(36);
+				passkey.Columns.Select(c => c.MemberName).ShouldContain(nameof(AppUserPasskey.Device));
+
+				// no passkey navigation exists, so the stock type is not mapped alongside the custom one
+				ms.GetEntityDescriptor(typeof(IdentityUserPasskey<string>)).Name.Name.ShouldNotBe("AspNetUserPasskeys");
+			}
+		}
+
+		[Test]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
+		[ActiveIssue(Configuration = TestProvName.AllYdb,        Details = YdbGate)]
+		[ActiveIssue(Configuration = TestProvName.AllInformix,   Details = InformixPasskeyGate)]
+		public async Task CustomPasskeyTypeRoundTrip([DataSources] string context)
+		{
+			using var setup    = new AppPasskeyConnection(new DataOptions().UseConfiguration(context.StripRemote()));
+			using var schema   = new KeyedSchema<AppUser, AppRole, string, AppUserClaim, AppUserRole, AppUserLogin, AppRoleClaim, AppUserToken>(setup);
+			using var passkeys = setup.CreateLocalTable<AppUserPasskey>();
+			using var ctx      = GetDataContext(context, setup.MappingSchema);
+
+			var store = new AppPasskeyStore(ctx, Options.Create(new IdentityOptions { Stores = { SchemaVersion = IdentitySchemaVersions.Version3 } }));
+			var user  = new AppUser { Id = Guid.NewGuid().ToString(), UserName = "pk", NormalizedUserName = "PK" };
+			(await store.CreateAsync(user)).Succeeded.ShouldBeTrue();
+
+			var laptop = NewPasskey([1, 2, 3], "laptop");
+			var phone  = NewPasskey([4, 5, 6], "phone");
+			await store.AddOrUpdatePasskeyAsync(user, laptop, default);
+			await store.AddOrUpdatePasskeyAsync(user, phone,  default);
+
+			ctx.GetTable<AppUserPasskey>().Where(p => p.UserId == user.Id).Select(p => p.Device).ToList().ShouldBe(["laptop", "phone"], ignoreOrder: true);
+			(await store.FindByPasskeyIdAsync(laptop.CredentialId, default)).ShouldNotBeNull().Id.ShouldBe(user.Id);
+
+			laptop.SignCount = 7;
+			await store.AddOrUpdatePasskeyAsync(user, laptop, default);
+			(await store.FindPasskeyAsync(user, laptop.CredentialId, default)).ShouldNotBeNull().SignCount.ShouldBe(7u);
+
+			await store.RemovePasskeyAsync(user, phone.CredentialId, default);
+			(await store.GetPasskeysAsync(user, default)).Count.ShouldBe(1);
+
+			(await store.DeleteAsync(user)).Succeeded.ShouldBeTrue();
+			ctx.GetTable<AppUserPasskey>().Count(p => p.UserId == user.Id).ShouldBe(0);
+
+			static UserPasskeyInfo NewPasskey(byte[] credentialId, string name)
+				=> new(credentialId, [9, 9], DateTimeOffset.UtcNow, signCount: 1, transports: ["internal"], isUserVerified: true,
+					isBackupEligible: false, isBackedUp: false, attestationObject: [5], clientDataJson: [6]) { Name = name };
+		}
+#endif
 
 		#endregion
 

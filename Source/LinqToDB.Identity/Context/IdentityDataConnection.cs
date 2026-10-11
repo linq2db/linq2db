@@ -127,13 +127,54 @@ namespace LinqToDB.Identity
 	/// <typeparam name="TUserClaim">The type of the user claim object.</typeparam>
 	/// <typeparam name="TUserLogin">The type of the user login object.</typeparam>
 	/// <typeparam name="TUserToken">The type of the user token object.</typeparam>
+#if NET10_0_OR_GREATER
 	public class IdentityDataConnection<TUser, TKey, TUserClaim, TUserLogin, TUserToken> :
+		IdentityDataConnection<TUser, TKey, TUserClaim, TUserLogin, TUserToken, IdentityUserPasskey<TKey>>
+		where TUser      : IdentityUser<TKey>
+		where TKey       : IEquatable<TKey>
+		where TUserClaim : IdentityUserClaim<TKey>
+		where TUserLogin : IdentityUserLogin<TKey>
+		where TUserToken : IdentityUserToken<TKey>
+	{
+		/// <summary>
+		/// Constructor with options.
+		/// </summary>
+		/// <param name="options">Connection options.</param>
+		public IdentityDataConnection(DataOptions options)
+			: base(options)
+		{
+		}
+
+		/// <summary>
+		/// Default constructor.
+		/// </summary>
+		public IdentityDataConnection()
+		{
+		}
+	}
+
+	/// <summary>
+	/// Base class for the LinqToDB database context used for identity.
+	/// </summary>
+	/// <typeparam name="TUser">The type of user objects.</typeparam>
+	/// <typeparam name="TKey">The type of the primary key for users and roles.</typeparam>
+	/// <typeparam name="TUserClaim">The type of the user claim object.</typeparam>
+	/// <typeparam name="TUserLogin">The type of the user login object.</typeparam>
+	/// <typeparam name="TUserToken">The type of the user token object.</typeparam>
+	/// <typeparam name="TUserPasskey">The type of the user passkey object.</typeparam>
+	public class IdentityDataConnection<TUser, TKey, TUserClaim, TUserLogin, TUserToken, TUserPasskey> :
+#else
+	public class IdentityDataConnection<TUser, TKey, TUserClaim, TUserLogin, TUserToken> :
+#endif
 		DataConnection
 		where TUser      : IdentityUser<TKey>
 		where TKey       : IEquatable<TKey>
 		where TUserClaim : IdentityUserClaim<TKey>
 		where TUserLogin : IdentityUserLogin<TKey>
 		where TUserToken : IdentityUserToken<TKey>
+#if NET10_0_OR_GREATER
+		where TUserPasskey : IdentityUserPasskey<TKey>
+#endif
 	{
 		// Keyed by the most-derived type: role mappings are added by derived ConfigureMappings overrides whose
 		// role type arguments aren't part of this base type, so a single base-scoped cache would let two contexts
@@ -181,7 +222,7 @@ namespace LinqToDB.Identity
 			DefaultMappings.SetupIdentityUserLogin<TKey, TUserLogin>(builder);
 			DefaultMappings.SetupIdentityUserToken<TKey, TUserToken>(builder);
 #if NET10_0_OR_GREATER
-			DefaultMappings.SetupIdentityUserPasskey<TKey>(builder);
+			DefaultMappings.SetupIdentityUserPasskey<TKey, TUserPasskey>(builder);
 #endif
 
 			// IdentityNavigations return the stock satellite types, so they need the AspNet* tables too
@@ -210,6 +251,13 @@ namespace LinqToDB.Identity
 		/// Gets the <see cref="ITable{TEntity}" /> of User tokens.
 		/// </summary>
 		public ITable<TUserToken> UserTokens => this.GetTable<TUserToken>();
+
+#if NET10_0_OR_GREATER
+		/// <summary>
+		/// Gets the <see cref="ITable{TEntity}" /> of User passkeys.
+		/// </summary>
+		public ITable<TUserPasskey> UserPasskeys => this.GetTable<TUserPasskey>();
+#endif
 	}
 
 	/// <summary>
@@ -223,8 +271,9 @@ namespace LinqToDB.Identity
 	/// <typeparam name="TUserLogin">The type of the user login object.</typeparam>
 	/// <typeparam name="TRoleClaim">The type of the role claim object.</typeparam>
 	/// <typeparam name="TUserToken">The type of the user token object.</typeparam>
+#if NET10_0_OR_GREATER
 	public class IdentityDataConnection<TUser, TRole, TKey, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken> :
-		IdentityDataConnection<TUser, TKey, TUserClaim, TUserLogin, TUserToken>
+		IdentityDataConnection<TUser, TRole, TKey, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken, IdentityUserPasskey<TKey>>
 		where TUser      : IdentityUser<TKey>
 		where TRole      : IdentityRole<TKey>
 		where TKey       : IEquatable<TKey>
@@ -233,6 +282,53 @@ namespace LinqToDB.Identity
 		where TUserLogin : IdentityUserLogin<TKey>
 		where TRoleClaim : IdentityRoleClaim<TKey>
 		where TUserToken : IdentityUserToken<TKey>
+	{
+		/// <summary>
+		/// Constructor with options.
+		/// </summary>
+		/// <param name="options">Connection options.</param>
+		public IdentityDataConnection(DataOptions options)
+			: base(options)
+		{
+		}
+
+		/// <summary>
+		/// Default constructor.
+		/// </summary>
+		public IdentityDataConnection()
+		{
+		}
+	}
+
+	/// <summary>
+	/// Base class for the LinqToDB database context used for identity.
+	/// </summary>
+	/// <typeparam name="TUser">The type of user objects.</typeparam>
+	/// <typeparam name="TRole">The type of role objects.</typeparam>
+	/// <typeparam name="TKey">The type of the primary key for users and roles.</typeparam>
+	/// <typeparam name="TUserClaim">The type of the user claim object.</typeparam>
+	/// <typeparam name="TUserRole">The type of the user role object.</typeparam>
+	/// <typeparam name="TUserLogin">The type of the user login object.</typeparam>
+	/// <typeparam name="TRoleClaim">The type of the role claim object.</typeparam>
+	/// <typeparam name="TUserToken">The type of the user token object.</typeparam>
+	/// <typeparam name="TUserPasskey">The type of the user passkey object.</typeparam>
+	public class IdentityDataConnection<TUser, TRole, TKey, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken, TUserPasskey> :
+		IdentityDataConnection<TUser, TKey, TUserClaim, TUserLogin, TUserToken, TUserPasskey>
+#else
+	public class IdentityDataConnection<TUser, TRole, TKey, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken> :
+		IdentityDataConnection<TUser, TKey, TUserClaim, TUserLogin, TUserToken>
+#endif
+		where TUser      : IdentityUser<TKey>
+		where TRole      : IdentityRole<TKey>
+		where TKey       : IEquatable<TKey>
+		where TUserClaim : IdentityUserClaim<TKey>
+		where TUserRole  : IdentityUserRole<TKey>
+		where TUserLogin : IdentityUserLogin<TKey>
+		where TRoleClaim : IdentityRoleClaim<TKey>
+		where TUserToken : IdentityUserToken<TKey>
+#if NET10_0_OR_GREATER
+		where TUserPasskey : IdentityUserPasskey<TKey>
+#endif
 	{
 		/// <summary>
 		/// Constructor with options.

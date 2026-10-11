@@ -40,8 +40,13 @@ namespace Microsoft.Extensions.DependencyInjection
 				Type userStoreType;
 				Type roleStoreType;
 
+#if NET10_0_OR_GREATER
+				var identityContext =  FindGenericBaseType(contextType, typeof(IdentityDataContext   <,,,,,,,,>))
+									?? FindGenericBaseType(contextType, typeof(IdentityDataConnection<,,,,,,,,>));
+#else
 				var identityContext =  FindGenericBaseType(contextType, typeof(IdentityDataContext   <,,,,,,,>))
 									?? FindGenericBaseType(contextType, typeof(IdentityDataConnection<,,,,,,,>));
+#endif
 
 				if (identityContext == null)
 				{
@@ -50,12 +55,25 @@ namespace Microsoft.Extensions.DependencyInjection
 				}
 				else
 				{
-					userStoreType = typeof(UserStore<,,,,,,,,>).MakeGenericType(userType, roleType, contextType, keyType,
+					Type[] userStoreArguments =
+					[
+						userType, roleType, contextType, keyType,
 						identityContext.GenericTypeArguments[3], // TUserClaim
 						identityContext.GenericTypeArguments[4], // TUserRole
 						identityContext.GenericTypeArguments[5], // TUserLogin
 						identityContext.GenericTypeArguments[7], // TUserToken
-						identityContext.GenericTypeArguments[6]); // TRoleClaim
+						identityContext.GenericTypeArguments[6], // TRoleClaim
+					];
+
+#if NET10_0_OR_GREATER
+					// a stock passkey type keeps the 9-argument store, so existing contexts resolve what they always did
+					var passkeyType = identityContext.GenericTypeArguments[8];
+					userStoreType = passkeyType == typeof(IdentityUserPasskey<>).MakeGenericType(keyType)
+						? typeof(UserStore<,,,,,,,,>) .MakeGenericType(userStoreArguments)
+						: typeof(UserStore<,,,,,,,,,>).MakeGenericType([.. userStoreArguments, passkeyType]);
+#else
+					userStoreType = typeof(UserStore<,,,,,,,,>).MakeGenericType(userStoreArguments);
+#endif
 					roleStoreType = typeof(RoleStore<,,,,>).MakeGenericType(roleType, contextType, keyType,
 						identityContext.GenericTypeArguments[4], // TUserRole
 						identityContext.GenericTypeArguments[6]); // TRoleClaim
@@ -68,8 +86,13 @@ namespace Microsoft.Extensions.DependencyInjection
 			{
 				Type userStoreType;
 
+#if NET10_0_OR_GREATER
+				var identityContext =  FindGenericBaseType(contextType, typeof(IdentityDataContext   <,,,,,>))
+									?? FindGenericBaseType(contextType, typeof(IdentityDataConnection<,,,,,>));
+#else
 				var identityContext =  FindGenericBaseType(contextType, typeof(IdentityDataContext   <,,,,>))
 									?? FindGenericBaseType(contextType, typeof(IdentityDataConnection<,,,,>));
+#endif
 
 				if (identityContext == null)
 				{
@@ -77,10 +100,22 @@ namespace Microsoft.Extensions.DependencyInjection
 				}
 				else
 				{
-					userStoreType = typeof(UserOnlyStore<,,,,,>).MakeGenericType(userType, contextType, keyType,
+					Type[] userStoreArguments =
+					[
+						userType, contextType, keyType,
 						identityContext.GenericTypeArguments[2], // TUserClaim
 						identityContext.GenericTypeArguments[3], // TUserLogin
-						identityContext.GenericTypeArguments[4]); // TUserToken
+						identityContext.GenericTypeArguments[4], // TUserToken
+					];
+
+#if NET10_0_OR_GREATER
+					var passkeyType = identityContext.GenericTypeArguments[5];
+					userStoreType = passkeyType == typeof(IdentityUserPasskey<>).MakeGenericType(keyType)
+						? typeof(UserOnlyStore<,,,,,>) .MakeGenericType(userStoreArguments)
+						: typeof(UserOnlyStore<,,,,,,>).MakeGenericType([.. userStoreArguments, passkeyType]);
+#else
+					userStoreType = typeof(UserOnlyStore<,,,,,>).MakeGenericType(userStoreArguments);
+#endif
 				}
 
 				services.TryAddScoped(typeof(IUserStore<>).MakeGenericType(userType), userStoreType);
