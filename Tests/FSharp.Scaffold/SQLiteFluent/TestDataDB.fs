@@ -119,6 +119,37 @@ type AllType =
 
     static let _equalityComparer : IEqualityComparer<AllType> = ComparerBuilder.GetEqualityComparer<AllType>((fun c -> box (c.Id)))
 
+    /// <summary>
+    /// Record with default field values, to create new records with <c>{ ... with ... }</c> expression.
+    /// </summary>
+    static member Empty : AllType =
+        {
+            Id = Unchecked.defaultof<_>
+            BigintDataType = None
+            NumericDataType = None
+            BitDataType = None
+            SmallintDataType = None
+            DecimalDataType = None
+            IntDataType = None
+            TinyintDataType = None
+            MoneyDataType = None
+            FloatDataType = None
+            RealDataType = None
+            DatetimeDataType = None
+            CharDataType = None
+            Char20DataType = None
+            VarcharDataType = None
+            TextDataType = None
+            NcharDataType = None
+            NvarcharDataType = None
+            NtextDataType = None
+            BinaryDataType = Unchecked.defaultof<_>
+            VarbinaryDataType = Unchecked.defaultof<_>
+            ImageDataType = Unchecked.defaultof<_>
+            UniqueidentifierDataType = None
+            ObjectDataType = Unchecked.defaultof<_>
+        }
+
     interface IEquatable<AllType> with
         member this.Equals (other : AllType | null) : bool = _equalityComparer.Equals(this, Unchecked.nonNull(other))
 
@@ -389,6 +420,15 @@ type Child =
         ChildId : int option // INT
     }
 
+    /// <summary>
+    /// Record with default field values, to create new records with <c>{ ... with ... }</c> expression.
+    /// </summary>
+    static member Empty : Child =
+        {
+            ParentId = None
+            ChildId = None
+        }
+
 
 [<CustomEquality; NoComparison>]
 type Doctor =
@@ -402,6 +442,16 @@ type Doctor =
     }
 
     static let _equalityComparer : IEqualityComparer<Doctor> = ComparerBuilder.GetEqualityComparer<Doctor>((fun c -> box (c.PersonId)))
+
+    /// <summary>
+    /// Record with default field values, to create new records with <c>{ ... with ... }</c> expression.
+    /// </summary>
+    static member Empty : Doctor =
+        {
+            PersonId = Unchecked.defaultof<_>
+            Taxonomy = Unchecked.defaultof<_>
+            FkDoctor0 = Unchecked.defaultof<_>
+        }
 
     interface IEquatable<Doctor> with
         member this.Equals (other : Doctor | null) : bool = _equalityComparer.Equals(this, Unchecked.nonNull(other))
@@ -417,6 +467,14 @@ type Dual =
         Dummy : string option // VARCHAR(10)
     }
 
+    /// <summary>
+    /// Record with default field values, to create new records with <c>{ ... with ... }</c> expression.
+    /// </summary>
+    static member Empty : Dual =
+        {
+            Dummy = None
+        }
+
 
 [<CustomEquality; NoComparison>]
 type FkTestPosition =
@@ -428,6 +486,17 @@ type FkTestPosition =
     }
 
     static let _equalityComparer : IEqualityComparer<FkTestPosition> = ComparerBuilder.GetEqualityComparer<FkTestPosition>((fun c -> box (c.Company)), (fun c -> box (c.Department)), (fun c -> box (c.PositionId)))
+
+    /// <summary>
+    /// Record with default field values, to create new records with <c>{ ... with ... }</c> expression.
+    /// </summary>
+    static member Empty : FkTestPosition =
+        {
+            Company = Unchecked.defaultof<_>
+            Department = Unchecked.defaultof<_>
+            PositionId = Unchecked.defaultof<_>
+            Name = Unchecked.defaultof<_>
+        }
 
     interface IEquatable<FkTestPosition> with
         member this.Equals (other : FkTestPosition | null) : bool = _equalityComparer.Equals(this, Unchecked.nonNull(other))
@@ -448,6 +517,16 @@ type ForeignKeyTable =
         PrimaryKeyTable : PrimaryKeyTable
     }
 
+    /// <summary>
+    /// Record with default field values, to create new records with <c>{ ... with ... }</c> expression.
+    /// </summary>
+    static member Empty : ForeignKeyTable =
+        {
+            PrimaryKeyTableId = Unchecked.defaultof<_>
+            Name = Unchecked.defaultof<_>
+            PrimaryKeyTable = Unchecked.defaultof<_>
+        }
+
 
 [<NoComparison>]
 type GrandChild =
@@ -456,6 +535,16 @@ type GrandChild =
         ChildId : int option // INT
         GrandChildId : int option // INT
     }
+
+    /// <summary>
+    /// Record with default field values, to create new records with <c>{ ... with ... }</c> expression.
+    /// </summary>
+    static member Empty : GrandChild =
+        {
+            ParentId = None
+            ChildId = None
+            GrandChildId = None
+        }
 
 
 [<NoComparison>]
@@ -467,6 +556,17 @@ type InheritanceChild =
         Name : string option // nvarchar(50)
     }
 
+    /// <summary>
+    /// Record with default field values, to create new records with <c>{ ... with ... }</c> expression.
+    /// </summary>
+    static member Empty : InheritanceChild =
+        {
+            InheritanceChildId = Unchecked.defaultof<_>
+            InheritanceParentId = Unchecked.defaultof<_>
+            TypeDiscriminator = None
+            Name = None
+        }
+
 
 [<NoComparison>]
 type InheritanceParent =
@@ -475,6 +575,16 @@ type InheritanceParent =
         TypeDiscriminator : int64 option // INTEGER
         Name : string option // nvarchar(50)
     }
+
+    /// <summary>
+    /// Record with default field values, to create new records with <c>{ ... with ... }</c> expression.
+    /// </summary>
+    static member Empty : InheritanceParent =
+        {
+            InheritanceParentId = Unchecked.defaultof<_>
+            TypeDiscriminator = None
+            Name = None
+        }
 
 
 [<NoComparison>]
@@ -493,6 +603,24 @@ type LinqDataType =
         StringValue : string option // nvarchar(50)
     }
 
+    /// <summary>
+    /// Record with default field values, to create new records with <c>{ ... with ... }</c> expression.
+    /// </summary>
+    static member Empty : LinqDataType =
+        {
+            Id = None
+            MoneyValue = None
+            DateTimeValue = None
+            DateTimeValue2 = None
+            BoolValue = None
+            GuidValue = None
+            BinaryValue = Unchecked.defaultof<_>
+            SmallIntValue = None
+            IntValue = None
+            BigIntValue = None
+            StringValue = None
+        }
+
 
 [<NoComparison>]
 type Parent =
@@ -500,6 +628,15 @@ type Parent =
         ParentId : int option // INT
         Value1 : int option // INT
     }
+
+    /// <summary>
+    /// Record with default field values, to create new records with <c>{ ... with ... }</c> expression.
+    /// </summary>
+    static member Empty : Parent =
+        {
+            ParentId = None
+            Value1 = None
+        }
 
 
 [<CustomEquality; NoComparison>]
@@ -514,6 +651,16 @@ type Patient =
     }
 
     static let _equalityComparer : IEqualityComparer<Patient> = ComparerBuilder.GetEqualityComparer<Patient>((fun c -> box (c.PersonId)))
+
+    /// <summary>
+    /// Record with default field values, to create new records with <c>{ ... with ... }</c> expression.
+    /// </summary>
+    static member Empty : Patient =
+        {
+            PersonId = Unchecked.defaultof<_>
+            Diagnosis = Unchecked.defaultof<_>
+            FkPatient0 = Unchecked.defaultof<_>
+        }
 
     interface IEquatable<Patient> with
         member this.Equals (other : Patient | null) : bool = _equalityComparer.Equals(this, Unchecked.nonNull(other))
@@ -543,6 +690,20 @@ type Person =
 
     static let _equalityComparer : IEqualityComparer<Person> = ComparerBuilder.GetEqualityComparer<Person>((fun c -> box (c.PersonId)))
 
+    /// <summary>
+    /// Record with default field values, to create new records with <c>{ ... with ... }</c> expression.
+    /// </summary>
+    static member Empty : Person =
+        {
+            PersonId = Unchecked.defaultof<_>
+            FirstName = Unchecked.defaultof<_>
+            LastName = Unchecked.defaultof<_>
+            MiddleName = None
+            Gender = Unchecked.defaultof<_>
+            Doctor = Unchecked.defaultof<_>
+            Patient = Unchecked.defaultof<_>
+        }
+
     interface IEquatable<Person> with
         member this.Equals (other : Person | null) : bool = _equalityComparer.Equals(this, Unchecked.nonNull(other))
 
@@ -564,6 +725,16 @@ type PrimaryKeyTable =
 
     static let _equalityComparer : IEqualityComparer<PrimaryKeyTable> = ComparerBuilder.GetEqualityComparer<PrimaryKeyTable>((fun c -> box (c.Id)))
 
+    /// <summary>
+    /// Record with default field values, to create new records with <c>{ ... with ... }</c> expression.
+    /// </summary>
+    static member Empty : PrimaryKeyTable =
+        {
+            Id = Unchecked.defaultof<_>
+            Name = Unchecked.defaultof<_>
+            ForeignKeyTables = Unchecked.defaultof<_>
+        }
+
     interface IEquatable<PrimaryKeyTable> with
         member this.Equals (other : PrimaryKeyTable | null) : bool = _equalityComparer.Equals(this, Unchecked.nonNull(other))
 
@@ -584,6 +755,20 @@ type TestT4Casing =
         CamelCase : int // INT
     }
 
+    /// <summary>
+    /// Record with default field values, to create new records with <c>{ ... with ... }</c> expression.
+    /// </summary>
+    static member Empty : TestT4Casing =
+        {
+            AllCaps = Unchecked.defaultof<_>
+            Caps = Unchecked.defaultof<_>
+            PascalCase = Unchecked.defaultof<_>
+            PascalSnakeCase = Unchecked.defaultof<_>
+            PascalCaseSnakeCase = Unchecked.defaultof<_>
+            SnakeCase = Unchecked.defaultof<_>
+            CamelCase = Unchecked.defaultof<_>
+        }
+
 
 [<CustomEquality; NoComparison>]
 type TestIdentity =
@@ -592,6 +777,14 @@ type TestIdentity =
     }
 
     static let _equalityComparer : IEqualityComparer<TestIdentity> = ComparerBuilder.GetEqualityComparer<TestIdentity>((fun c -> box (c.Id)))
+
+    /// <summary>
+    /// Record with default field values, to create new records with <c>{ ... with ... }</c> expression.
+    /// </summary>
+    static member Empty : TestIdentity =
+        {
+            Id = Unchecked.defaultof<_>
+        }
 
     interface IEquatable<TestIdentity> with
         member this.Equals (other : TestIdentity | null) : bool = _equalityComparer.Equals(this, Unchecked.nonNull(other))
@@ -626,6 +819,33 @@ type TestMerge1 =
         FieldEnumNumber : int option // INT
     }
 
+    /// <summary>
+    /// Record with default field values, to create new records with <c>{ ... with ... }</c> expression.
+    /// </summary>
+    static member Empty : TestMerge1 =
+        {
+            Id = Unchecked.defaultof<_>
+            Field1 = None
+            Field2 = None
+            Field3 = None
+            Field4 = None
+            Field5 = None
+            FieldInt64 = None
+            FieldBoolean = None
+            FieldString = None
+            FieldNString = None
+            FieldChar = None
+            FieldNChar = None
+            FieldFloat = None
+            FieldDouble = None
+            FieldDateTime = None
+            FieldBinary = Unchecked.defaultof<_>
+            FieldGuid = None
+            FieldDate = None
+            FieldEnumString = None
+            FieldEnumNumber = None
+        }
+
 
 [<NoComparison>]
 type TestMerge2 =
@@ -651,6 +871,33 @@ type TestMerge2 =
         FieldEnumString : string option // VARCHAR(20)
         FieldEnumNumber : int option // INT
     }
+
+    /// <summary>
+    /// Record with default field values, to create new records with <c>{ ... with ... }</c> expression.
+    /// </summary>
+    static member Empty : TestMerge2 =
+        {
+            Id = Unchecked.defaultof<_>
+            Field1 = None
+            Field2 = None
+            Field3 = None
+            Field4 = None
+            Field5 = None
+            FieldInt64 = None
+            FieldBoolean = None
+            FieldString = None
+            FieldNString = None
+            FieldChar = None
+            FieldNChar = None
+            FieldFloat = None
+            FieldDouble = None
+            FieldDateTime = None
+            FieldBinary = Unchecked.defaultof<_>
+            FieldGuid = None
+            FieldDate = None
+            FieldEnumString = None
+            FieldEnumNumber = None
+        }
 
 
 [<NoComparison>]
@@ -682,4 +929,36 @@ type AllTypesView =
         ObjectDataType : obj | null // Object
         Number : int64 option // INTEGER
     }
+
+    /// <summary>
+    /// Record with default field values, to create new records with <c>{ ... with ... }</c> expression.
+    /// </summary>
+    static member Empty : AllTypesView =
+        {
+            Id = Unchecked.defaultof<_>
+            BigintDataType = None
+            NumericDataType = None
+            BitDataType = None
+            SmallintDataType = None
+            DecimalDataType = None
+            IntDataType = None
+            TinyintDataType = None
+            MoneyDataType = None
+            FloatDataType = None
+            RealDataType = None
+            DatetimeDataType = None
+            CharDataType = None
+            Char20DataType = None
+            VarcharDataType = None
+            TextDataType = None
+            NcharDataType = None
+            NvarcharDataType = None
+            NtextDataType = None
+            BinaryDataType = Unchecked.defaultof<_>
+            VarbinaryDataType = Unchecked.defaultof<_>
+            ImageDataType = Unchecked.defaultof<_>
+            UniqueidentifierDataType = None
+            ObjectDataType = Unchecked.defaultof<_>
+            Number = None
+        }
 

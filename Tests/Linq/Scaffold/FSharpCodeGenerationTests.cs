@@ -187,6 +187,32 @@ namespace Tests.Scaffold
 		}
 
 		[Test]
+		public void RecordTemplate()
+		{
+			var source = GenerateSource(
+				FSharpOptions(),
+				columns: [new Column("Id", null, new DatabaseType("int", null, null, null), false, true, true, 0), new Column("Name", null, new DatabaseType("nvarchar", 50, null, null), true, true, true, 1)]);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(source, Does.Contain("static member Empty : TestTable ="));
+				Assert.That(source, Does.Contain("Id = Unchecked.defaultof<_>"));
+				Assert.That(source, Does.Contain("Name = None"));
+			}
+		}
+
+		[Test]
+		public void RecordTemplateNameConflict()
+		{
+			var options = FSharpOptions();
+			options.DataModel.EntityColumnPropertyNameOptions = new() { Casing = NameCasing.None };
+
+			var source = GenerateSource(options, columns: [new Column("Empty", null, new DatabaseType("int", null, null, null), false, true, true, 0)]);
+
+			Assert.That(source, Does.Contain("static member Empty1 : TestTable ="));
+		}
+
+		[Test]
 		public void CSharpGeneratorRejectsRecord()
 		{
 			var language = new DelegatingLanguageProvider(LanguageProviders.CSharp, LanguageProviders.CSharp.Features | LanguageFeatures.RecordEntities);

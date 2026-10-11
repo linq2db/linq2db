@@ -703,6 +703,49 @@ namespace LinqToDB.CodeModel
 		}
 
 		/// <summary>
+		/// Renders <c>static member Empty</c> with every record field defaulted. F# record expressions must assign all
+		/// fields, so new records are created by copy-and-update from it: <c>{ T.Empty with ... }</c>.
+		/// </summary>
+		private void WriteRecordTemplate(CodeClass @class)
+		{
+			var properties = @class.Members.EnumerateMembers<PropertyGroup, CodeProperty>().ToList();
+			var names      = new HashSet<string>(properties.Select(static p => p.Name.Name), StringComparer.Ordinal);
+
+			var name = "Empty";
+			for (var i = 1; names.Contains(name); i++)
+				name = "Empty" + i.ToString(CultureInfo.InvariantCulture);
+
+			WriteLine();
+			WriteLine("/// <summary>");
+			WriteLine("/// Record with default field values, to create new records with <c>{ ... with ... }</c> expression.");
+			WriteLine("/// </summary>");
+			Write("static member ");
+			WriteIdentifier(name);
+			Write(" : ");
+			Visit(@class.Name);
+			WriteLine(" =");
+			IncreaseIdent();
+			WriteLine("{");
+			IncreaseIdent();
+
+			foreach (var property in properties)
+			{
+				Visit(property.Name);
+				WriteLine(IsOptionType(property.Type.Type) ? " = None" : " = Unchecked.defaultof<_>");
+			}
+
+			DecreaseIdent();
+			WriteLine("}");
+			DecreaseIdent();
+		}
+
+		// nullable scalar types are rendered as 'T option
+		private bool IsOptionType(IType type)
+		{
+			return type.IsNullable && (type.IsValueType || string.Equals(_languageProvider.GetAlias(type.WithNullability(false)), "string", StringComparison.Ordinal));
+		}
+
+		/// <summary>
 		/// Renders record members after the field block: static fields as <c>static let</c> values (they must precede
 		/// members), instance non-override methods inside an <c>interface ... with</c> block of the implemented
 		/// interface, then the remaining (static and override) methods.
@@ -722,6 +765,8 @@ namespace LinqToDB.CodeModel
 				foreach (var field in fields)
 					Visit(field);
 			}
+
+			WriteRecordTemplate(@class);
 
 			if (@class.Implements.Count > 0)
 			{
@@ -1271,7 +1316,7 @@ namespace LinqToDB.CodeModel
 			// option-typed targets explicitly, since a boxed value is never a boxed option
 			var type = expression.Type.Type;
 
-			if (type.IsNullable && (type.IsValueType || string.Equals(_languageProvider.GetAlias(type.WithNullability(false)), "string", StringComparison.Ordinal)))
+			if (IsOptionType(type))
 			{
 				Write("(match ");
 				Visit(expression.Value);
@@ -1699,6 +1744,7 @@ namespace LinqToDB.CodeModel
 		/// </summary>
 		private void RenderType(IType type, CodeIdentifier? nameOverride, bool typeOnlyContext)
 		{
+			var isOption = IsOptionType(type);
 			var nullable = type.IsNullable;
 			if (nullable)
 				type = type.WithNullability(false);
@@ -1710,13 +1756,10 @@ namespace LinqToDB.CodeModel
 			// entity associations, byte[], obj, method return types - are not option-wrapped (option over a
 			// non-scalar element is not auto-mapped and an entity/array option would not round-trip); they get
 			// an F# 9 `| null` annotation when NRT is enabled, and stay plain references otherwise.
-			if (nullable)
-			{
-				if (type.IsValueType || string.Equals(_languageProvider.GetAlias(type), "string", StringComparison.Ordinal))
-					Write(" option");
-				else if (_useNRT)
-					Write(" | null");
-			}
+			if (isOption)
+				Write(" option");
+			else if (nullable && _useNRT)
+				Write(" | null");
 		}
 
 		private void RenderTypeName(IType type, CodeIdentifier? nameOverride, bool typeOnlyContext)

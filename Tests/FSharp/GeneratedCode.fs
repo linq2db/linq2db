@@ -41,6 +41,13 @@ let TestGeneratedQueries (db : DataConnection) =
     Assert.That(people.Find(fun p -> p.PersonId <> person.PersonId), Is.Not.EqualTo person)
     Assert.That(people.Concat(ctx.People.ToList()).Distinct().Count(), Is.EqualTo people.Count)
 
+    // new records are created from the generated template
+    use tr = ctx.BeginTransaction()
+    let id = ctx.InsertWithInt64Identity({ SQLite.Person.Empty with FirstName = "Empty"; LastName = "Template"; Gender = 'M' })
+    let inserted = ctx.People.Single(fun p -> p.PersonId = id)
+    Assert.That((inserted.FirstName, inserted.LastName, inserted.MiddleName, inserted.Gender), Is.EqualTo(("Empty", "Template", (None : string option), 'M')))
+    tr.Rollback()
+
 let TestGeneratedFluentMapping (db : DataConnection) =
     use ctx = new SQLiteFluent.TestDataDB(new DataOptions<SQLiteFluent.TestDataDB>(db.Options))
 

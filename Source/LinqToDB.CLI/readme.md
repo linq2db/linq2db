@@ -227,6 +227,11 @@ F# generation emits idiomatic code:
 Generated F# records rely on the `linq2db.FSharp` package: the consuming application must call
 `DataOptions.UseFSharp()` so that records and `option`-typed columns materialize correctly.
 
+F# record expressions must assign every field, including association fields, so each generated record has a
+`static member Empty` template with all fields defaulted. Create new records from it with copy-and-update:
+`{ Person.Empty with FirstName = "John"; LastName = "Doe" }`. `Empty` itself is only a template: its non-nullable
+fields hold default (null) values.
+
 Some options apply to C# only (partial classes / methods, entity base class, association extension methods,
 data context constructor selection, multi-file output, xml-doc warning suppression); the `help scaffold` output
 shows a `Supported in:` line for such options, and specifying one together with `--target-language f#` is
