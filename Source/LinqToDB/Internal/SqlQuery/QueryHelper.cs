@@ -796,8 +796,25 @@ namespace LinqToDB.Internal.SqlQuery
 				// TODO: v7 - type COALESCE by each database's own result-type rule (the new type mapping system), not by operand agreement
 				DbDataType? result = null;
 
+				return AgreeOnOperandType(coalesce, ref result, visited) && result != null
+					? result.Value
+					: new DbDataType(coalesce.SystemType ?? typeof(object));
+			}
+
+			// a ?? b ?? c is built as nested COALESCE nodes, so a disagreement inside a nested one must reach the outer one
+			static bool AgreeOnOperandType(SqlCoalesceExpression coalesce, ref DbDataType? result, HashSet<IQueryElement>? visited)
+			{
 				foreach (var expression in coalesce.Expressions)
 				{
+					if (expression is SqlCoalesceExpression or SqlNullabilityExpression { SqlExpression: SqlCoalesceExpression })
+					{
+						var nested = (SqlCoalesceExpression)(expression is SqlNullabilityExpression nullability ? nullability.SqlExpression : expression);
+						if (!AgreeOnOperandType(nested, ref result, visited))
+							return false;
+
+						continue;
+					}
+
 					var type = GetDbDataTypeImpl(expression, visited);
 					if (type.DataType == DataType.Undefined)
 						continue;
@@ -805,10 +822,10 @@ namespace LinqToDB.Internal.SqlQuery
 					if (result == null)
 						result = type;
 					else if (result.Value.DataType != type.DataType || !string.Equals(result.Value.DbType, type.DbType, StringComparison.Ordinal))
-						return new DbDataType(coalesce.SystemType ?? typeof(object));
+						return false;
 				}
 
-				return result ?? new DbDataType(coalesce.SystemType ?? typeof(object));
+				return true;
 			}
 		}
 

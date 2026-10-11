@@ -2483,6 +2483,7 @@ DROP TABLE IF EXISTS TemporalTable3History
 		{
 			[PrimaryKey]                                         public int     Id { get; set; }
 			[Column(DataType = DataType.VarChar,  Length = 10)]  public string? V  { get; set; }
+			[Column(DataType = DataType.VarChar,  Length = 100)] public string? V2 { get; set; }
 			[Column(DataType = DataType.NVarChar, Length = 100)] public string? N  { get; set; }
 		}
 
@@ -2496,6 +2497,9 @@ DROP TABLE IF EXISTS TemporalTable3History
 			using var tb = db.CreateLocalTable<MixedCharsetCoalesceTable>([new() { Id = 1, V = null, N = "Ж" }]);
 
 			tb.Count(r => (r.V ?? r.N) == "Ж").ShouldBe(1);
+			tb.Count(r => (r.V2 ?? r.V ?? r.N) == "Ж").ShouldBe(1);
+			tb.Count(r => (r.V ?? r.N ?? r.V2) == "Ж").ShouldBe(1);
+			tb.Count(r => ((r.V ?? r.N) ?? r.V2) == "Ж").ShouldBe(1);
 		}
 
 		sealed class DateTimeReadBackTable
