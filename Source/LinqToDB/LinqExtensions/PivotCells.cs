@@ -25,7 +25,9 @@ namespace LinqToDB
 	/// It is handed to the cell lambda of the <see cref="LinqExtensions"/> <c>Pivot</c> overloads, by which point
 	/// both type arguments are already inferred from the query - so a pivot over a join projected into an anonymous
 	/// type works, where naming <typeparamref name="TSource"/> would be impossible. A result type that cannot name
-	/// it either can declare the member as <see cref="IReadOnlyDictionary{TKey,TValue}"/> instead.
+	/// it either can declare the member as <see cref="IReadOnlyDictionary{TKey,TValue}"/> instead. That view follows
+	/// the dictionary contract: its indexer throws <see cref="KeyNotFoundException"/> for a name no cell carries,
+	/// where <c>cells[name]</c> on this type returns <see langword="null"/>.
 	/// </remarks>
 	[SuppressMessage("Naming", "CA1710:Identifiers should have correct suffix", Justification = "named for its pivot role; the dictionary view is secondary")]
 	public sealed class PivotCells<TSource, TFor> : IReadOnlyDictionary<string, object?>

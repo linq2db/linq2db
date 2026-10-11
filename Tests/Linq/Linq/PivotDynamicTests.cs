@@ -755,6 +755,9 @@ namespace Tests.Linq
 			result[1].Cells["Y2010"].ShouldBe(15m);
 
 			result[0].Cells.ContainsKey("Y2020").ShouldBeFalse();
+
+			System.Action absentCell = () => _ = result[0].Cells["Y2020"];
+			absentCell.ShouldThrow<KeyNotFoundException>();
 		}
 
 		static Expression<Func<IEnumerable<Sales>, string?>> MaxNote() => rows => rows.Max(x => x.Note);
