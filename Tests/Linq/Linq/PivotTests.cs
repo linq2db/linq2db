@@ -265,10 +265,10 @@ namespace Tests.Linq
 				.Unpivot((row, name, value) => new { row.Id, name, value }, x => x.Q1 * 2)
 				.ToArray();
 
-			var noGroups = new (string name, System.Linq.Expressions.Expression<System.Func<QuarterlySales, decimal?>> column1, System.Linq.Expressions.Expression<System.Func<QuarterlySales, decimal?>> column2)[0];
+			var noGroups = System.Array.Empty<(string name, System.Linq.Expressions.Expression<System.Func<QuarterlySales, decimal?>> column1, System.Linq.Expressions.Expression<System.Func<QuarterlySales, decimal?>> column2)>();
 
 			System.Action noColumnGroup = () => t
-				.Unpivot((QuarterlySales row, string half, decimal? a, decimal? b) => new { row.Id, half, a, b }, noGroups)
+				.Unpivot((row, half, a, b) => new { row.Id, half, a, b }, noGroups)
 				.ToArray();
 
 			System.Action emptyGroupName = () => t
@@ -276,7 +276,7 @@ namespace Tests.Linq
 				.ToArray();
 
 			System.Action nullGroupColumn = () => t
-				.Unpivot((QuarterlySales row, string half, decimal? a, decimal? b) => new { row.Id, half, a, b }, ("H1", x => x.Q1, null!))
+				.Unpivot((row, half, a, b) => new { row.Id, half, a, b }, ("H1", x => x.Q1, null!))
 				.ToArray();
 
 			noColumnName   .ShouldThrow<System.ArgumentException>().Message.ShouldContain("at least one column");
