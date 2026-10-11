@@ -437,7 +437,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinAggregateArrayNotNullAndFilter([DataSources(true, TestProvName.AllOracle11, TestProvName.AllSybase)] string context)
+		public void JoinAggregateArrayNotNullAndFilter([DataSources(true, TestProvName.AllSybase)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniqueId();
 			using var db    = GetDataContext(context);
