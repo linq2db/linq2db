@@ -442,6 +442,9 @@ namespace Tests.Identity
 				transports: new[] { "internal", "hybrid" }, isUserVerified: true, isBackupEligible: false,
 				isBackedUp: false, attestationObject: Bytes(220), clientDataJson: Bytes(200))
 			{ Name = "key1" };
+#if NET11_0_OR_GREATER
+			passkey.Aaguid = Bytes(16);
+#endif
 
 			static byte[] Bytes(int length)
 			{
@@ -462,6 +465,9 @@ namespace Tests.Identity
 			found.PublicKey        .ShouldBe(passkey.PublicKey);
 			found.AttestationObject.ShouldBe(passkey.AttestationObject);
 			found.ClientDataJson   .ShouldBe(passkey.ClientDataJson);
+#if NET11_0_OR_GREATER
+			found.Aaguid           .ShouldBe(passkey.Aaguid);
+#endif
 
 			// update (SignCount/Name are the mutable-after-creation fields)
 			passkey.SignCount = 5;

@@ -573,6 +573,9 @@ namespace LinqToDB.Identity
 					IsBackedUp        = passkey.IsBackedUp,
 					AttestationObject = passkey.AttestationObject,
 					ClientDataJson    = passkey.ClientDataJson,
+#if NET11_0_OR_GREATER
+					Aaguid            = passkey.Aaguid,
+#endif
 				},
 			};
 
@@ -589,7 +592,10 @@ namespace LinqToDB.Identity
 				passkey.Data.AttestationObject,
 				passkey.Data.ClientDataJson)
 			{
-				Name = passkey.Data.Name,
+				Name   = passkey.Data.Name,
+#if NET11_0_OR_GREATER
+				Aaguid = passkey.Data.Aaguid,
+#endif
 			};
 
 		// Only properties mutable after passkey creation are updated.
