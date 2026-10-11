@@ -371,6 +371,30 @@ namespace Tests.Linq
 			result[1].M3.ShouldBe(60m);
 		}
 
+		[Test]
+		public void UnpivotMultiValueTwoColumns([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(MonthlySales.Data);
+
+			var result = t
+				.Unpivot(
+					(row, half, a, b) => new { row.Id, Half = half, A = a, B = b },
+					("H1", x => x.Jan, x => x.Feb),
+					("H2", x => x.Mar, x => x.Apr),
+					("H3", x => x.May, x => x.Jun))
+				.OrderBy(r => r.Half)
+				.ToArray()
+				.Select(r => (r.Id, r.Half, r.A, r.B));
+
+			result.ShouldBe(new (int, string, decimal?, decimal?)[]
+			{
+				(1, "H1", 10m, 20m),
+				(1, "H2", 30m, 40m),
+				(1, "H3", 50m, 60m),
+			});
+		}
+
 		/// <summary>
 		/// A group whose measures are all NULL is still a row - the overload filters nothing.
 		/// </summary>
