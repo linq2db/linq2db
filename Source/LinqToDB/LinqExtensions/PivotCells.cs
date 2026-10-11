@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
+using JetBrains.Annotations;
+
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Mapping;
 
@@ -69,6 +71,7 @@ namespace LinqToDB
 		/// when a pivot declares more than one cell.
 		/// </param>
 		/// <returns>The cell set with <paramref name="aggregate"/> added.</returns>
+		[Pure]
 		public PivotCells<TSource, TFor> Cell<TCell>(Expression<Func<IEnumerable<TSource>, TCell>> aggregate, Func<TFor, string>? name = null)
 		{
 			ArgumentNullException.ThrowIfNull(aggregate);
