@@ -88,6 +88,8 @@ namespace LinqToDB.CodeModel
 		private IReadOnlyList<CodeImport>? _fileImports;
 		// types rendered as F# modules; nested types of any other class are lifted out of it
 		private readonly HashSet<IType>    _moduleTypes = new();
+		// names of types rendered as F# records
+		private readonly HashSet<CodeIdentifier> _recordNames = new();
 		// static auto-properties of the current class rendered over a `static let` backing value
 		private HashSet<CodeProperty>?     _staticBackedProperties;
 
@@ -127,10 +129,6 @@ namespace LinqToDB.CodeModel
 					// directive like C#'s `#nullable enable` - the `| null` annotations are emitted inline; nothing here
 					break;
 				case PragmaType.DisableWarning:
-					// F# has no missing-xml-doc warning, so the suppression list can be empty
-					if (pragma.Parameters.Count == 0)
-						break;
-
 					WriteUnindented("#nowarn");
 					foreach (var warn in pragma.Parameters)
 					{
@@ -156,9 +154,22 @@ namespace LinqToDB.CodeModel
 			_fileImports = file.Imports;
 
 			foreach (var @namespace in file.Items.OfType<CodeNamespace>())
+			{
 				foreach (var @class in EnumerateAllClasses(@namespace.Members))
-					if (@class.Attributes.HasFlag(Modifiers.Module))
-						_moduleTypes.Add(@class.Type);
+				{
+					if (!@class.Attributes.HasFlag(Modifiers.Module))
+						continue;
+
+					_moduleTypes.Add(@class.Type);
+					foreach (var nested in EnumerateAllClasses(@class.Members))
+						if (nested.Attributes.HasFlag(Modifiers.Record))
+							_recordNames.Add(nested.Name);
+				}
+
+				foreach (var @class in EnumerateAllClasses(@namespace.Members))
+					if (@class.Attributes.HasFlag(Modifiers.Record))
+						_recordNames.Add(@class.Name);
+			}
 
 			VisitList(file);
 		}
@@ -729,8 +740,10 @@ namespace LinqToDB.CodeModel
 			// entity records can contain non-comparable fields (obj, byte[], collection/entity associations);
 			// F# would otherwise try to derive structural comparison and fail (FS1178). Structural equality is
 			// retained; ordering is not meaningful for entities.
+			// association fields hold other entities: structural equality would dereference an unloaded (null)
+			// association and recurse through back-references, so such records compare by reference
 			if (isRecord)
-				WriteLine("[<NoComparison>]");
+				WriteLine(@class.Members.EnumerateMembers<PropertyGroup, CodeProperty>().Any(p => IsRecordReference(p.Type.Type)) ? "[<ReferenceEquality>]" : "[<NoComparison>]");
 
 			Write("type ");
 			WriteAccessibility(@class.Attributes);
@@ -989,6 +1002,12 @@ namespace LinqToDB.CodeModel
 			}
 
 			DecreaseIdent();
+		}
+
+		private bool IsRecordReference(IType type)
+		{
+			return type.Name != null && _recordNames.Contains(type.Name)
+				|| type.TypeArguments?.Any(IsRecordReference) == true;
 		}
 
 		private void WriteStaticBackingName(CodeProperty property)
