@@ -126,7 +126,7 @@ namespace Tests.Linq
 					})
 				.ToList();
 
-			act.ShouldThrow<System.ArgumentException>();
+			act.ShouldThrow<System.ArgumentException>().Message.ShouldContain("name factory");
 		}
 
 		#region Compile-time-known value sets
