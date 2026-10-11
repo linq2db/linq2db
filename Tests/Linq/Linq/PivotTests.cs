@@ -270,7 +270,36 @@ namespace Tests.Linq
 			computedColumn .ShouldThrow<LinqToDBException>().Message.ShouldContain("simple member access");
 		}
 
-		/// <summary>The source is built once per branch, as a hand-written <c>Concat</c> builds it, and no more.</summary>
+		/// <summary>An unpivot over a projected source, built as a sub-query: under <c>Any</c> and on the collection side of a join.</summary>
+		[Test]
+		public void UnpivotOverAProjectionInASubQuery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(QuarterlySales.Data);
+
+			var source = t.Select(x => new { x.Id, x.Q1, x.Q2 });
+
+			source
+				.Unpivot((r, quarter, amount) => new { r.Id, Quarter = quarter, Amount = amount }, x => x.Q1, x => x.Q2)
+				.Any(r => r.Amount > 15)
+				.ShouldBeTrue();
+
+			var joined =
+				from p in t
+				from u in source
+					.Unpivot((r, quarter, amount) => new { r.Id, Quarter = quarter, Amount = amount }, x => x.Q1, x => x.Q2)
+					.Where(u => u.Id == p.Id)
+				select new { p.Region, u.Quarter, u.Amount };
+
+			joined.OrderBy(r => r.Region).ThenBy(r => r.Quarter).ToArray()
+				.Select(r => (r.Region, r.Quarter, r.Amount))
+				.ShouldBe(new (string, string, decimal?)[] { ("EU", "Q1", 10m), ("EU", "Q2", 20m), ("US", "Q1", 5m) });
+		}
+
+		/// <summary>
+		/// The source is built once per branch, as a hand-written <c>Concat</c> builds it, and no more: a tag ahead of
+		/// an N-column unpivot appears N times.
+		/// </summary>
 		[Test]
 		public void UnpivotBuildsTheSourceOncePerBranch([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -283,6 +312,13 @@ namespace Tests.Linq
 				.ToArray();
 
 			LastQuery!.Split(new[] { "unpivot-tag" }, System.StringSplitOptions.None).Length.ShouldBe(2);
+
+			_ = t
+				.TagQuery("unpivot-tag")
+				.Unpivot((row, quarter, amount) => new { row.Id, Quarter = quarter, Amount = amount }, x => x.Q1, x => x.Q2)
+				.ToArray();
+
+			LastQuery!.Split(new[] { "unpivot-tag" }, System.StringSplitOptions.None).Length.ShouldBe(3);
 		}
 
 		[Table]

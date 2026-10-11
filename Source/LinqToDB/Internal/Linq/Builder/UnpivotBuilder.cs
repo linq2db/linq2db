@@ -28,15 +28,15 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var info = UnpivotInfo.Parse(methodCall);
 
-			// Resolve the name column through the source's own mapping schema rather than the context's: build it
-			// ahead of the lowering for that, and reuse it as the first branch's source - building it a second
-			// time would repeat builder-wide state such as query tags and hints.
+			// Resolve the name column through the source's own mapping schema: build the source ahead of the lowering, and
+			// at the root reuse that build as the first branch so builder-wide state (query tags, hints) is not repeated.
+			// A sub-query re-resolves a context reference through GetContext, which a projected source cannot answer.
 			var sourceResult = builder.TryBuildSequence(new BuildInfo(buildInfo, info.Source, new SelectQuery()));
 
 			if (sourceResult.BuildContext == null)
 				return sourceResult;
 
-			var lowered = BuildLoweredExpression(info, sourceResult.BuildContext);
+			var lowered = BuildLoweredExpression(info, sourceResult.BuildContext.MappingSchema, buildInfo.CreateSubQuery ? null : sourceResult.BuildContext);
 
 			return BuildSequenceResult.FromContext(builder.BuildSequence(new BuildInfo(buildInfo, lowered)));
 		}
@@ -93,10 +93,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		#region Portable lowering
 
-		static Expression BuildLoweredExpression(UnpivotInfo info, IBuildContext sourceContext)
+		static Expression BuildLoweredExpression(UnpivotInfo info, MappingSchema mappingSchema, IBuildContext? builtSourceContext)
 		{
-			var mappingSchema = sourceContext.MappingSchema;
-			var builtSource   = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(info.SourceType), sourceContext);
+			var builtSource = builtSourceContext == null
+				? info.Source
+				: new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(info.SourceType), builtSourceContext);
 
 			var selectMethod = Methods.Queryable.Select.MakeGenericMethod(info.SourceType, info.ResultType);
 			var whereMethod  = Methods.Queryable.Where .MakeGenericMethod(info.SourceType);
