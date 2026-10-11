@@ -31,11 +31,9 @@ $repoRoot = Resolve-Path "$PSScriptRoot/../.."
 $cliProj  = Join-Path $repoRoot 'Source/LinqToDB.CLI/LinqToDB.CLI.csproj'
 $cliDll   = Join-Path $repoRoot ".build/bin/LinqToDB.CLI/$Configuration/net10.0/dotnet-linq2db.dll"
 
-if (-not (Test-Path $cliDll)) {
-    Write-Host "CLI not found at $cliDll - building..."
-    dotnet build $cliProj -c $Configuration -f net10.0
-    if ($LASTEXITCODE -ne 0) { throw "CLI build failed" }
-}
+Write-Host "Building CLI ($Configuration, net10.0)..."
+dotnet build $cliProj -c $Configuration -f net10.0
+if ($LASTEXITCODE -ne 0) { throw "CLI build failed" }
 
 # --- Connection-string resolution (mirrors release-test-cli-scaffold.ps1's CN()) ------------------
 # Priority: UserDataProviders.json MyConnectionStrings -> DataProviders.json LocalConnectionStrings
