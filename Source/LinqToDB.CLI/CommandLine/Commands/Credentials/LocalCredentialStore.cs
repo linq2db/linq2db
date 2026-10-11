@@ -69,6 +69,12 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		/// </summary>
 		internal Action? DataFileOpenedForRead { get; init; }
 
+		/// <summary>
+		/// Test hook: runs on Windows after a failed attempt to rename new data over the data file, before the attempt is
+		/// retried, so a test can release a reader that holds the file once the writer has run into it.
+		/// </summary>
+		internal Action? DataFileReplaceFailed { get; init; }
+
 		/// <summary>Set when the last operation created the key, which is when the store comes into existence.</summary>
 		public bool KeyCreated { get; private set; }
 
@@ -597,7 +603,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 			{
 				WriteNewFile(temporary, data);
 				// The rename replaces the file atomically: a reader sees the old or the new data, never a part.
-				ReplaceFile(temporary, DataPath);
+				ReplaceFile(temporary, DataPath, DataFileReplaceFailed);
 				return null;
 			}
 			finally
@@ -628,7 +634,8 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		/// antivirus scanner, an indexer, a reader of a store without a lock file) can hold the file briefly, so the rename
 		/// is retried a few times.
 		/// </summary>
-		static void ReplaceFile(string source, string destination)
+		/// <param name="failed">Runs after each failed attempt that is retried.</param>
+		static void ReplaceFile(string source, string destination, Action? failed)
 		{
 			for (var attempt = 1; ; attempt++)
 			{
@@ -639,6 +646,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 				}
 				catch (Exception ex) when ((ex is IOException or UnauthorizedAccessException) && OperatingSystem.IsWindows() && attempt < 5)
 				{
+					failed?.Invoke();
 					Thread.Sleep(50);
 				}
 			}

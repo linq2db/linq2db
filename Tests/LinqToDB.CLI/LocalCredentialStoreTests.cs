@@ -571,7 +571,27 @@ namespace Tests.LinqToDB.CLI
 			CreateStore().TryStore("seed", "u", "p", out var error).ShouldBeTrue(error);
 			File.Delete(LockPath);
 
-			var writer = CreateStore();
+			var timeout = TimeSpan.FromSeconds(30);
+			var failures = 0;
+
+			// Not disposed: the writer task may still hold them when an assertion fails, and they own no kernel handle.
+			var replaceFailed = new ManualResetEventSlim();
+			var readerDone    = new ManualResetEventSlim();
+
+			var writer = new LocalCredentialStore(_directory, _root)
+			{
+				DataFileReplaceFailed = () =>
+				{
+					// The first failure is the reader's open handle: hold the retry until the reader has closed it, so the
+					// next attempt runs against a closed file however the threads are scheduled.
+					if (Interlocked.Increment(ref failures) == 1)
+					{
+						replaceFailed.Set();
+						readerDone.Wait(timeout);
+					}
+				},
+			};
+
 			Task<string?>? writing = null;
 
 			var reader = new LocalCredentialStore(_directory, _root)
@@ -589,26 +609,40 @@ namespace Tests.LinqToDB.CLI
 
 					if (OperatingSystem.IsWindows())
 					{
-						// Hold the file until the writer has its new data ready to rename into place, then let the read finish.
-						var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(30);
-
-						while (!writing.IsCompleted && DateTime.UtcNow < deadline && !Directory.EnumerateFiles(_directory, "credentials.dat.*.tmp").Any())
-							Thread.Sleep(1);
+						// Keep the file open until the writer's rename has failed on it (or the writer gave up), then let the
+						// read finish.
+						var started = writing;
+						SpinWait.SpinUntil(() => replaceFailed.IsSet || started.IsCompleted, timeout);
 					}
 					else
 					{
-						writing.Wait();
+						writing.Wait(timeout);
 					}
 				},
 			};
 
-			reader.TryGetCount(out var count, out error).ShouldBeTrue(error);
+			int count;
+
+			try
+			{
+				reader.TryGetCount(out count, out error).ShouldBeTrue(error);
+			}
+			finally
+			{
+				readerDone.Set();
+			}
+
+			count.ShouldBe(1);
 
 			var written = writing.ShouldNotBeNull("the reader did not open the data file");
 
-			written.Wait(TimeSpan.FromSeconds(30)).ShouldBeTrue("the writer did not finish");
+			written.Wait(timeout).ShouldBeTrue("the writer did not finish");
 			written.Result.ShouldBeNull();
-			count.ShouldBe(1);
+
+			if (OperatingSystem.IsWindows())
+				replaceFailed.IsSet.ShouldBeTrue("the writer's rename did not run into the open reader");
+			else
+				failures.ShouldBe(0);
 
 			CreateStore().TryGetCount(out count, out error).ShouldBeTrue(error);
 			count.ShouldBe(2);
