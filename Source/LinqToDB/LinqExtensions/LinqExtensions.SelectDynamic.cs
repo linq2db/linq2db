@@ -100,7 +100,9 @@ namespace LinqToDB
 			foreach (var name in names)
 			{
 				// A real member wins the lookup, so the generated column would be shadowed rather than reachable.
-				if (storeType.GetMember(name, BindingFlags.Public | BindingFlags.Instance).Length > 0)
+				// Methods and indexers do not take part in that lookup.
+				if (storeType.GetField(name, BindingFlags.Public | BindingFlags.Instance) != null
+					|| storeType.GetProperties(BindingFlags.Public | BindingFlags.Instance).Any(p => string.Equals(p.Name, name, StringComparison.Ordinal) && p.GetIndexParameters().Length == 0))
 					throw new ArgumentException($"Dynamic column name '{name}' collides with a member of '{storeType.Name}', which would be resolved instead of the generated column.");
 			}
 

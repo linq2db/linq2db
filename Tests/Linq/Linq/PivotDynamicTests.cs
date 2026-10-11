@@ -535,6 +535,32 @@ namespace Tests.Linq
 			unrootedChain  .ShouldThrow<ArgumentException>().Message.ShouldContain("must be built from 'p'");
 		}
 
+		/// <summary>
+		/// Only a field or a property shadows a generated cell; a cell named after a method or the indexer stays
+		/// reachable, through the indexer and through <c>Sql.Property</c> alike.
+		/// </summary>
+		[Test]
+		public void CellsNamedAfterMethodsAndTheIndexer([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(Sales.Data);
+
+			var result = t
+				.Pivot(x => x.Category, x => x.Year, new[] { 2000, 2010 },
+					(g, p) => new { g.Key, Cells = p.Cell(rows => rows.Sum(x => x.Amount), y => y == 2000 ? "Item" : "ToString") })
+				.Where(r => Sql.Property<decimal?>(r.Cells, "Item") >= 10)
+				.Select(r => new { r.Key, Item = Sql.Property<decimal?>(r.Cells, "Item"), Text = Sql.Property<decimal?>(r.Cells, "ToString"), r.Cells })
+				.ToList();
+
+			result.Count.ShouldBe(1);
+
+			result[0].Key          .ShouldBe("A");
+			result[0].Item         .ShouldBe(10m);
+			result[0].Text         .ShouldBe(20m);
+			result[0].Cells["Item"].ShouldBe(10m);
+			result[0].Cells["ToString"].ShouldBe(20m);
+		}
+
 		[Test]
 		public void PivotsIntoANestedObject([DataSources] string context)
 		{
