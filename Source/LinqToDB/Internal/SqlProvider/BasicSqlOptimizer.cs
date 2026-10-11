@@ -106,6 +106,10 @@ namespace LinqToDB.Internal.SqlProvider
 				insertStatement.Output          = new SqlOutputClause { OutputColumns = cte.Body!.Select.Columns.Select(static c => c.Expression).ToList() };
 				insertStatement.ParentStatement = statement;
 
+				// TransformStatement corrects output tables of the top-level statement only:
+				// without a special output table (PostgreSQL < 18) the Inserted anchors become target table fields.
+				CorrectOutputTables(insertStatement);
+
 				cte.DataModification = insertStatement;
 			}
 		}

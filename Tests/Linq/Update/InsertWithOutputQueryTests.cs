@@ -3,7 +3,10 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.Mapping;
+
+using Npgsql;
 
 using NUnit.Framework;
 
@@ -242,7 +245,9 @@ namespace Tests.xUpdate
 			var query = db.GetTable<SourceTable>()
 				.InsertWithOutputQuery(db.GetTable<TargetTable>(), s => new TargetTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr });
 
-			var ex = Assert.Throws<LinqToDBException>(() => query.ToArray());
+			Action act = () => query.ToArray();
+
+			var ex = act.ShouldThrow<LinqToDBException>();
 			ex.Message.ShouldBe(LinqToDB.Internal.Common.ErrorHelper.Error_OutputQuery_NotSupported);
 		}
 
@@ -254,7 +259,9 @@ namespace Tests.xUpdate
 			var query = db.GetTable<SourceTable>()
 				.InsertWithOutputQuery(db.GetTable<TargetTable>(), s => new TargetTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr });
 
-			var ex = Assert.Throws<LinqToDBException>(() => query.ToArray());
+			Action act = () => query.ToArray();
+
+			var ex = act.ShouldThrow<LinqToDBException>();
 			ex.Message.ShouldContain(LinqToDB.Internal.Common.ErrorHelper.Error_OutputQuery_NotSupported);
 		}
 
@@ -291,6 +298,31 @@ namespace Tests.xUpdate
 
 			output.Length.ShouldBe(3);
 			output.Select(o => o.Id).Distinct().Count().ShouldBe(3);
+			target.Count().ShouldBe(3);
+		}
+
+		[Test]
+		public void FromQuery_PreV18Dialect([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			// PostgreSQL < 18 has no NEW/OLD in RETURNING: the nested output must reference the target table.
+			// The v15 dialect runs against the test server, which accepts both forms.
+			var provider = PostgreSQLTools.GetDataProvider(PostgreSQLVersion.v15);
+			var cs       = DataConnection.GetConnectionString(context);
+
+			using var cn     = new NpgsqlConnection(cs);
+			using var db     = new DataConnection(new DataOptions().UseConnection(provider, cn));
+			using var source = db.CreateLocalTable(GetSourceData());
+			using var target = db.CreateLocalTable<TargetTable>();
+
+			var query = source
+				.Where(s => s.Id <= 3)
+				.InsertWithOutputQuery(target, s => new TargetTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr })
+				.OrderBy(t => t.Id)
+				.Select(t => t.Id);
+
+			query.ToSqlQuery().Sql.ShouldNotContain("NEW.");
+
+			query.ToArray().ShouldBe(new[] { 1, 2, 3 });
 			target.Count().ShouldBe(3);
 		}
 
@@ -370,7 +402,9 @@ namespace Tests.xUpdate
 					Children = lookup.Select(s => s.Id + t.Id).ToList(),
 				});
 
-			var ex = Assert.Throws<LinqToDBException>(() => query.ToArray());
+			Action act = () => query.ToArray();
+
+			var ex = act.ShouldThrow<LinqToDBException>();
 			ex.Message.ShouldBe(LinqToDB.Internal.Common.ErrorHelper.Error_OutputQuery_EagerLoad);
 
 			target.Count().ShouldBe(0);
@@ -437,7 +471,9 @@ namespace Tests.xUpdate
 				.Select(s => new { s.Id, Inserted = inserted.Count() })
 				.Select(x => x.Id);
 
-			var ex = Assert.Throws<LinqToDBException>(() => query.ToArray());
+			Action act = () => query.ToArray();
+
+			var ex = act.ShouldThrow<LinqToDBException>();
 			ex.Message.ShouldBe(LinqToDB.Internal.Common.ErrorHelper.Error_OutputQuery_NotRead);
 
 			target.Count().ShouldBe(0);
