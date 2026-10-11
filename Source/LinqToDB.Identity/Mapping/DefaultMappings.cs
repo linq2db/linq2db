@@ -34,9 +34,11 @@ namespace LinqToDB.Identity
 		// LockoutEnd is DateTimeOffset?, which these providers cannot store as one: most cannot render the type in
 		// DDL at all - CreateTable emits the literal token "DateTimeOffset" - and Firebird, which does render it
 		// from 4.0 on, cannot write the value (https://github.com/linq2db/linq2db/issues/5915). DB2 z/OS renders
-		// it, hence the LUW-only pin. Each value is that provider's widest datetime type.
+		// it, hence the LUW-only pin. MySQL renders it as TIMESTAMP, which ends in 2038. Each value is that provider's
+		// widest datetime type.
 		private static readonly (string Configuration, DataType DataType)[] _lockoutEndDataTypes =
 		[
+			(ProviderName.MySql,    DataType.DateTime2),
 			(ProviderName.Access,   DataType.DateTime ),
 			(ProviderName.SqlCe,    DataType.DateTime2),
 			(ProviderName.Sybase,   DataType.DateTime2),

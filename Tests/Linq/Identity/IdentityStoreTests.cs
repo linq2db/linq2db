@@ -222,6 +222,13 @@ namespace Tests.Identity
 			await store.ResetAccessFailedCountAsync(u);
 			await store.UpdateAsync(u);
 			Assert.That(await store.GetAccessFailedCountAsync((await store.FindByIdAsync(user.Id))!), Is.EqualTo(0));
+
+			// a near-permanent lockout, past the end of a 1970-2038 TIMESTAMP
+			var permanent = DateTimeOffset.MaxValue.AddDays(-1);
+			await store.SetLockoutEndDateAsync(u, permanent);
+			(await store.UpdateAsync(u)).Succeeded.ShouldBeTrue();
+			var locked = await store.GetLockoutEndDateAsync((await store.FindByIdAsync(user.Id)).ShouldNotBeNull());
+			locked.ShouldNotBeNull().ShouldBe(permanent, TimeSpan.FromSeconds(1));
 		}
 
 		[Test]
