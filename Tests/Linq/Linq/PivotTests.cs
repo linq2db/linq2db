@@ -272,6 +272,7 @@ namespace Tests.Linq
 
 		/// <summary>An unpivot over a projected source, built as a sub-query: under <c>Any</c> and on the collection side of a join.</summary>
 		[Test]
+		[ActiveIssue(6024, Configurations = [TestProvName.AllOracle11])]
 		public void UnpivotOverAProjectionInASubQuery([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
