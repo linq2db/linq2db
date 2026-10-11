@@ -35,30 +35,32 @@ namespace LinqToDB.Identity
 		// LockoutEnd is DateTimeOffset?, which these providers cannot store as one: most cannot render the type in
 		// DDL at all - CreateTable emits the literal token "DateTimeOffset" - and Firebird, which does render it
 		// from 4.0 on, cannot write the value (https://github.com/linq2db/linq2db/issues/5915). DB2 z/OS renders
-		// it, hence the LUW-only pin. MySQL renders it as TIMESTAMP, which ends in 2038. Each value is that provider's
-		// widest datetime type.
+		// it, hence the LUW-only pin. MySQL renders it as TIMESTAMP, which ends in 2038, and YDB as Timestamp, which
+		// ends in 2105. Each value is that provider's widest datetime type.
 		private static readonly (string Configuration, DataType DataType)[] _lockoutEndDataTypes =
 		[
-			(ProviderName.MySql,    DataType.DateTime2),
-			(ProviderName.Access,   DataType.DateTime ),
-			(ProviderName.SqlCe,    DataType.DateTime2),
-			(ProviderName.Sybase,   DataType.DateTime2),
-			(ProviderName.SapHana,  DataType.DateTime2),
-			(ProviderName.Informix, DataType.DateTime2),
-			(ProviderName.DB2LUW,   DataType.DateTime2),
-			(ProviderName.Firebird, DataType.DateTime2),
+			(ProviderName.MySql,    DataType.DateTime2  ),
+			(ProviderName.Access,   DataType.DateTime   ),
+			(ProviderName.SqlCe,    DataType.DateTime2  ),
+			(ProviderName.Sybase,   DataType.DateTime2  ),
+			(ProviderName.SapHana,  DataType.DateTime2  ),
+			(ProviderName.Informix, DataType.DateTime2  ),
+			(ProviderName.DB2LUW,   DataType.DateTime2  ),
+			(ProviderName.Firebird, DataType.DateTime2  ),
+			(ProviderName.Ydb,      DataType.Timestamp64),
 		];
 
 		// The DataType pin above only fixes the DDL; the value needs converting too. A column that cannot hold an
 		// offset otherwise round-trips the value through the machine's *local* offset (Firebird returns
 		// 13:52+02:00 for a 13:52Z write), and Sybase and SAP HANA reject the DateTimeOffset parameter outright
 		// ("Specified cast is not valid. From: DateTimeOffset to: DateTime"). Store UTC and read back at zero
-		// offset - the only answer that holds outside a UTC machine.
+		// offset - the only answer that holds outside a UTC machine. Whole seconds: the pinned types round a finer
+		// fraction, which carries DateTimeOffset.MaxValue - the usual permanent lockout - past their maximum.
 		private static ValueConverterAttribute LockoutEndAsUtc(string configuration) => new ()
 		{
 			Configuration  = configuration,
 			ValueConverter = new ValueConverter<DateTimeOffset?, DateTime?>(
-				v => v == null ? null : v.Value.UtcDateTime,
+				v => v == null ? null : new DateTime(v.Value.UtcTicks - v.Value.UtcTicks % TimeSpan.TicksPerSecond, DateTimeKind.Utc),
 				v => v == null ? null : new DateTimeOffset(DateTime.SpecifyKind(v.Value, DateTimeKind.Utc)),
 				handlesNulls: true),
 		};

@@ -215,8 +215,8 @@ namespace Tests.Identity
 			await store.UpdateAsync(u);
 			(await store.GetAccessFailedCountAsync((await store.FindByIdAsync(user.Id)).ShouldNotBeNull())).ShouldBe(0);
 
-			// a near-permanent lockout, past the end of a 1970-2038 TIMESTAMP
-			var permanent = DateTimeOffset.MaxValue.AddDays(-1);
+			// a permanent lockout, past the end of a 1970-2038 TIMESTAMP
+			var permanent = context.IsAnyOf(TestProvName.AllSQLite) ? DateTimeOffset.MaxValue.AddDays(-1) : DateTimeOffset.MaxValue;
 			await store.SetLockoutEndDateAsync(u, permanent);
 			(await store.UpdateAsync(u)).Succeeded.ShouldBeTrue();
 			var locked = await store.GetLockoutEndDateAsync((await store.FindByIdAsync(user.Id)).ShouldNotBeNull());
