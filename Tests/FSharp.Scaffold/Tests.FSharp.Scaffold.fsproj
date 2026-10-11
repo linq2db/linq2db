@@ -25,6 +25,7 @@
          each file uses a distinct namespace (Tests.FSharp.Scaffold.<Provider>) so the TestDataDB
          context names don't collide in the single assembly. Regenerate via generate.ps1. -->
     <Compile Include="SQLite\TestDataDB.fs" />
+    <Compile Include="SQLiteFluent\TestDataDB.fs" />
     <Compile Include="PostgreSQL\TestDataDB.fs" />
     <Compile Include="SqlServer\TestDataDB.fs" />
   </ItemGroup>

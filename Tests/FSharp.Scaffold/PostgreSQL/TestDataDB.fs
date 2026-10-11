@@ -1003,7 +1003,7 @@ type CollatedTable =
 
 
 [<Table("Doctor")>]
-[<NoComparison>]
+[<ReferenceEquality>]
 type Doctor =
     {
         [<Column("PersonID", DataType = DataType.Int32, DbType = "integer", Precision = 32, Scale = 0, IsPrimaryKey = true)>] PersonId : int // integer
@@ -1074,7 +1074,7 @@ type Parent =
 
 
 [<Table("Patient")>]
-[<NoComparison>]
+[<ReferenceEquality>]
 type Patient =
     {
         [<Column("PersonID", DataType = DataType.Int32, DbType = "integer", Precision = 32, Scale = 0, IsPrimaryKey = true)>] PersonId : int // integer
@@ -1090,7 +1090,7 @@ type Patient =
 /// This is the Person table
 /// </summary>
 [<Table("Person")>]
-[<NoComparison>]
+[<ReferenceEquality>]
 type Person =
     {
         /// <summary>
@@ -1246,7 +1246,7 @@ type MultitenantTable =
 
 
 [<Table("same_name")>]
-[<NoComparison>]
+[<ReferenceEquality>]
 type SameName =
     {
         [<Column("id", DataType = DataType.Int32, DbType = "integer", Precision = 32, Scale = 0, IsPrimaryKey = true)>] Id : int // integer
@@ -1262,7 +1262,7 @@ type SameName =
 
 
 [<Table("same_name1")>]
-[<NoComparison>]
+[<ReferenceEquality>]
 type SameName1 =
     {
         [<Column("id", DataType = DataType.Int32, DbType = "integer", Precision = 32, Scale = 0, IsPrimaryKey = true)>] Id : int // integer
@@ -1275,7 +1275,7 @@ type SameName1 =
 
 
 [<Table("same_name2")>]
-[<NoComparison>]
+[<ReferenceEquality>]
 type SameName2 =
     {
         [<Column("id", DataType = DataType.Int32, DbType = "integer", Precision = 32, Scale = 0, IsPrimaryKey = true)>] Id : int // integer

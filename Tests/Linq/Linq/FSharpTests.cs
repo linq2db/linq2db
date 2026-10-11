@@ -149,6 +149,27 @@ namespace Tests.Linq
 			FSharp.GeneratedModel.TestGeneratedOptionReadBack();
 		}
 
+		[Test(Description = "queries, associations and Find methods of the scaffolder's generated F# model (#1553)")]
+		public void GeneratedCode_Queries([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.GeneratedCode.TestGeneratedQueries(db);
+		}
+
+		[Test(Description = "the scaffolder's generated F# fluent mapping (static initializer) is applied (#1553)")]
+		public void GeneratedCode_FluentMapping([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.GeneratedCode.TestGeneratedFluentMapping(db);
+		}
+
+		[Test(Description = "a generated F# stored-procedure wrapper accepts Some/None arguments and reads the output back (#1553)")]
+		public void GeneratedCode_ProcedureOptionParameters([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.GeneratedCode.TestGeneratedProcedureOptionParameters(db);
+		}
+
 		[Test(Description = "Auto 'T option mapping must not override an explicit fluent DataType on an option column (#195 follow-up)")]
 		public void OptionMapping_ExplicitDataTypePreserved([DataSources] string context)
 		{

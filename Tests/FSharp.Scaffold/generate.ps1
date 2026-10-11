@@ -128,7 +128,7 @@ foreach ($p in $providers) {
 
 # fluent mapping is emitted into the context's static initializer (static do)
 Invoke-Scaffold -Provider 'SQLite' -Connection $SQLiteConnection `
-    -Namespace 'Tests.FSharp.Scaffold.NoNrt.SQLiteFluent' -OutputSubfolder (Join-Path 'NoNrt' 'SQLiteFluent') `
-    -ExtraOptions @('--nrt', 'false', '--metadata', 'fluent')
+    -Namespace 'Tests.FSharp.Scaffold.SQLiteFluent' -OutputSubfolder 'SQLiteFluent' `
+    -ExtraOptions @('--nrt', 'true', '--metadata', 'fluent')
 
 Write-Host 'Done. Review the git diff and build Tests.FSharp.Scaffold.fsproj + Tests.FSharp.Scaffold.NoNrt.fsproj to validate.'

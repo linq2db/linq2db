@@ -338,7 +338,7 @@ type Child =
 
 
 [<Table("Doctor")>]
-[<NoComparison>]
+[<ReferenceEquality>]
 type Doctor =
     {
         [<Column("PersonID", DataType = DataType.Int64, DbType = "INTEGER", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)>] PersonId : int64 // INTEGER
@@ -370,7 +370,7 @@ type FkTestPosition =
 
 
 [<Table("ForeignKeyTable")>]
-[<NoComparison>]
+[<ReferenceEquality>]
 type ForeignKeyTable =
     {
         [<Column("PrimaryKeyTableID", DataType = DataType.Int64, DbType = "INTEGER")>] PrimaryKeyTableId : int64 // INTEGER
@@ -441,7 +441,7 @@ type Parent =
 
 
 [<Table("Patient")>]
-[<NoComparison>]
+[<ReferenceEquality>]
 type Patient =
     {
         [<Column("PersonID", DataType = DataType.Int64, DbType = "INTEGER", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)>] PersonId : int64 // INTEGER
@@ -454,7 +454,7 @@ type Patient =
 
 
 [<Table("Person")>]
-[<NoComparison>]
+[<ReferenceEquality>]
 type Person =
     {
         [<Column("PersonID", DataType = DataType.Int64, DbType = "INTEGER", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)>] PersonId : int64 // INTEGER
@@ -474,7 +474,7 @@ type Person =
 
 
 [<Table("PrimaryKeyTable")>]
-[<NoComparison>]
+[<ReferenceEquality>]
 type PrimaryKeyTable =
     {
         [<Column("ID", DataType = DataType.Int64, DbType = "INTEGER", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)>] Id : int64 // INTEGER

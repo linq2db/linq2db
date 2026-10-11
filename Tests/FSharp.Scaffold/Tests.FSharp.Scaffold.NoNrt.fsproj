@@ -22,7 +22,6 @@
     <!-- one generated file per (provider) baseline, distinct namespace (Tests.FSharp.Scaffold.NoNrt.<Provider>)
          so context names don't collide. Regenerate via generate.ps1. -->
     <Compile Include="NoNrt\SQLite\TestDataDB.fs" />
-    <Compile Include="NoNrt\SQLiteFluent\TestDataDB.fs" />
     <Compile Include="NoNrt\PostgreSQL\TestDataDB.fs" />
     <Compile Include="NoNrt\SqlServer\TestDataDB.fs" />
   </ItemGroup>

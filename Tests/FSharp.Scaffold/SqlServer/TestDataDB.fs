@@ -1077,48 +1077,48 @@ type ExtensionMethods =
 
     [<System.Runtime.CompilerServices.Extension>]
     static member AddIssue792Record (dataConnection : TestDataDB, ``return`` : outref<int>) : int =
-        let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+        let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.ExecuteProc("[AddIssue792Record]", parameters)
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[0].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member AddIssue792RecordAsync (dataConnection : TestDataDB, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<AddIssue792RecordResults> =
+    static member AddIssue792RecordAsync (dataConnection : TestDataDB, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<AddIssue792RecordResults> =
         task {
-            let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.ExecuteProcAsync("[AddIssue792Record]", cancellationToken, parameters)
             return AddIssue792RecordResults(Result = result, Return = Converter.ChangeTypeTo<int>(parameters.[0].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
     static member DuplicateColumnNames (dataConnection : TestDataDB, ``return`` : outref<int>) : IEnumerable<DuplicateColumnNamesResult> =
-        let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+        let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.QueryProc<DuplicateColumnNamesResult>(Func<DbDataReader, DuplicateColumnNamesResult>(fun dataReader -> DuplicateColumnNamesResult(Id = Converter.ChangeTypeTo<SqlInt32>(dataReader.GetValue(0), dataConnection.MappingSchema), Id1 = Converter.ChangeTypeTo<SqlString>(dataReader.GetValue(1), dataConnection.MappingSchema))), "[DuplicateColumnNames]", parameters).ToList()
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[0].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member DuplicateColumnNamesAsync (dataConnection : TestDataDB, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<DuplicateColumnNamesResults> =
+    static member DuplicateColumnNamesAsync (dataConnection : TestDataDB, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<DuplicateColumnNamesResults> =
         task {
-            let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.QueryProcAsync<DuplicateColumnNamesResult>(Func<DbDataReader, DuplicateColumnNamesResult>(fun dataReader -> DuplicateColumnNamesResult(Id = Converter.ChangeTypeTo<SqlInt32>(dataReader.GetValue(0), dataConnection.MappingSchema), Id1 = Converter.ChangeTypeTo<SqlString>(dataReader.GetValue(1), dataConnection.MappingSchema))), "[DuplicateColumnNames]", cancellationToken, parameters)
             return DuplicateColumnNamesResults(Result = result.ToList(), Return = Converter.ChangeTypeTo<int>(parameters.[0].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
     static member ExecuteProcIntParameters (dataConnection : TestDataDB, input : SqlInt32 option, output : byref<SqlInt32 option>, ``return`` : outref<int>) : int =
-        let mutable parameters = [| DataParameter("@input", Option.toNullable(input), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@output", Option.toNullable(output), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+        let mutable parameters = [| DataParameter("@input", Option.toNullable(input), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@output", Option.toNullable(output), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.ExecuteProc("[ExecuteProcIntParameters]", parameters)
-        output <- Converter.ChangeTypeTo<SqlInt32 option>(parameters.[1].Value)
+        output <- Option.ofNullable(Converter.ChangeTypeTo<Nullable<SqlInt32>>(parameters.[1].Value))
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[2].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member ExecuteProcIntParametersAsync (dataConnection : TestDataDB, input : SqlInt32 option, output : SqlInt32 option, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<ExecuteProcIntParametersResults> =
+    static member ExecuteProcIntParametersAsync (dataConnection : TestDataDB, input : SqlInt32 option, output : SqlInt32 option, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<ExecuteProcIntParametersResults> =
         task {
-            let mutable parameters = [| DataParameter("@input", Option.toNullable(input), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@output", Option.toNullable(output), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@input", Option.toNullable(input), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@output", Option.toNullable(output), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.ExecuteProcAsync("[ExecuteProcIntParameters]", cancellationToken, parameters)
-            return ExecuteProcIntParametersResults(Result = result, Output = Converter.ChangeTypeTo<SqlInt32 option>(parameters.[1].Value), Return = Converter.ChangeTypeTo<int>(parameters.[2].Value))
+            return ExecuteProcIntParametersResults(Result = result, Output = Option.ofNullable(Converter.ChangeTypeTo<Nullable<SqlInt32>>(parameters.[1].Value)), Return = Converter.ChangeTypeTo<int>(parameters.[2].Value))
         }
 
     /// <summary>
@@ -1129,9 +1129,9 @@ type ExtensionMethods =
     /// </param>
     [<System.Runtime.CompilerServices.Extension>]
     static member ExecuteProcStringParameters (dataConnection : TestDataDB, input : SqlInt32 option, output : byref<SqlInt32 option>, ``return`` : outref<int>) : IEnumerable<ExecuteProcStringParametersResult> =
-        let mutable parameters = [| DataParameter("@input", Option.toNullable(input), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@output", Option.toNullable(output), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+        let mutable parameters = [| DataParameter("@input", Option.toNullable(input), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@output", Option.toNullable(output), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.QueryProc<ExecuteProcStringParametersResult>(Func<DbDataReader, ExecuteProcStringParametersResult>(fun dataReader -> ExecuteProcStringParametersResult(Column = Converter.ChangeTypeTo<SqlString>(dataReader.GetValue(0), dataConnection.MappingSchema))), "[ExecuteProcStringParameters]", parameters).ToList()
-        output <- Converter.ChangeTypeTo<SqlInt32 option>(parameters.[1].Value)
+        output <- Option.ofNullable(Converter.ChangeTypeTo<Nullable<SqlInt32>>(parameters.[1].Value))
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[2].Value)
         ret
 
@@ -1142,321 +1142,321 @@ type ExtensionMethods =
     /// This is &lt;тест&gt; procedure parameter!
     /// </param>
     [<System.Runtime.CompilerServices.Extension>]
-    static member ExecuteProcStringParametersAsync (dataConnection : TestDataDB, input : SqlInt32 option, output : SqlInt32 option, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<ExecuteProcStringParametersResults> =
+    static member ExecuteProcStringParametersAsync (dataConnection : TestDataDB, input : SqlInt32 option, output : SqlInt32 option, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<ExecuteProcStringParametersResults> =
         task {
-            let mutable parameters = [| DataParameter("@input", Option.toNullable(input), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@output", Option.toNullable(output), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@input", Option.toNullable(input), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@output", Option.toNullable(output), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.QueryProcAsync<ExecuteProcStringParametersResult>(Func<DbDataReader, ExecuteProcStringParametersResult>(fun dataReader -> ExecuteProcStringParametersResult(Column = Converter.ChangeTypeTo<SqlString>(dataReader.GetValue(0), dataConnection.MappingSchema))), "[ExecuteProcStringParameters]", cancellationToken, parameters)
-            return ExecuteProcStringParametersResults(Result = result.ToList(), Output = Converter.ChangeTypeTo<SqlInt32 option>(parameters.[1].Value), Return = Converter.ChangeTypeTo<int>(parameters.[2].Value))
+            return ExecuteProcStringParametersResults(Result = result.ToList(), Output = Option.ofNullable(Converter.ChangeTypeTo<Nullable<SqlInt32>>(parameters.[1].Value)), Return = Converter.ChangeTypeTo<int>(parameters.[2].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
     static member Issue1897 (dataConnection : TestDataDB, ``return`` : outref<int>) : int =
-        let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+        let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.ExecuteProc("[Issue1897]", parameters)
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[0].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member Issue1897Async (dataConnection : TestDataDB, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Issue1897Results> =
+    static member Issue1897Async (dataConnection : TestDataDB, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Issue1897Results> =
         task {
-            let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.ExecuteProcAsync("[Issue1897]", cancellationToken, parameters)
             return Issue1897Results(Result = result, Return = Converter.ChangeTypeTo<int>(parameters.[0].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
     static member OutRefEnumTest (dataConnection : TestDataDB, str : SqlString option, outputStr : byref<SqlString option>, inputOutputStr : byref<SqlString option>, ``return`` : outref<int>) : int =
-        let mutable parameters = [| DataParameter("@str", Option.toNullable(str), LinqToDB.DataType.VarChar, DbType = "varchar(50)", Size = 50); DataParameter("@outputStr", Option.toNullable(outputStr), LinqToDB.DataType.VarChar, Direction = ParameterDirection.InputOutput, DbType = "varchar(50)", Size = 50); DataParameter("@inputOutputStr", Option.toNullable(inputOutputStr), LinqToDB.DataType.VarChar, Direction = ParameterDirection.InputOutput, DbType = "varchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+        let mutable parameters = [| DataParameter("@str", Option.toNullable(str), LinqToDB.DataType.VarChar, DbType = "varchar(50)", Size = 50); DataParameter("@outputStr", Option.toNullable(outputStr), LinqToDB.DataType.VarChar, Direction = ParameterDirection.InputOutput, DbType = "varchar(50)", Size = 50); DataParameter("@inputOutputStr", Option.toNullable(inputOutputStr), LinqToDB.DataType.VarChar, Direction = ParameterDirection.InputOutput, DbType = "varchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.ExecuteProc("[OutRefEnumTest]", parameters)
-        outputStr <- Converter.ChangeTypeTo<SqlString option>(parameters.[1].Value)
-        inputOutputStr <- Converter.ChangeTypeTo<SqlString option>(parameters.[2].Value)
+        outputStr <- Option.ofNullable(Converter.ChangeTypeTo<Nullable<SqlString>>(parameters.[1].Value))
+        inputOutputStr <- Option.ofNullable(Converter.ChangeTypeTo<Nullable<SqlString>>(parameters.[2].Value))
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[3].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member OutRefEnumTestAsync (dataConnection : TestDataDB, str : SqlString option, outputStr : SqlString option, inputOutputStr : SqlString option, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<OutRefEnumTestResults> =
+    static member OutRefEnumTestAsync (dataConnection : TestDataDB, str : SqlString option, outputStr : SqlString option, inputOutputStr : SqlString option, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<OutRefEnumTestResults> =
         task {
-            let mutable parameters = [| DataParameter("@str", Option.toNullable(str), LinqToDB.DataType.VarChar, DbType = "varchar(50)", Size = 50); DataParameter("@outputStr", Option.toNullable(outputStr), LinqToDB.DataType.VarChar, Direction = ParameterDirection.InputOutput, DbType = "varchar(50)", Size = 50); DataParameter("@inputOutputStr", Option.toNullable(inputOutputStr), LinqToDB.DataType.VarChar, Direction = ParameterDirection.InputOutput, DbType = "varchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@str", Option.toNullable(str), LinqToDB.DataType.VarChar, DbType = "varchar(50)", Size = 50); DataParameter("@outputStr", Option.toNullable(outputStr), LinqToDB.DataType.VarChar, Direction = ParameterDirection.InputOutput, DbType = "varchar(50)", Size = 50); DataParameter("@inputOutputStr", Option.toNullable(inputOutputStr), LinqToDB.DataType.VarChar, Direction = ParameterDirection.InputOutput, DbType = "varchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.ExecuteProcAsync("[OutRefEnumTest]", cancellationToken, parameters)
-            return OutRefEnumTestResults(Result = result, InputOutputStr = Converter.ChangeTypeTo<SqlString option>(parameters.[2].Value), OutputStr = Converter.ChangeTypeTo<SqlString option>(parameters.[1].Value), Return = Converter.ChangeTypeTo<int>(parameters.[3].Value))
+            return OutRefEnumTestResults(Result = result, InputOutputStr = Option.ofNullable(Converter.ChangeTypeTo<Nullable<SqlString>>(parameters.[2].Value)), OutputStr = Option.ofNullable(Converter.ChangeTypeTo<Nullable<SqlString>>(parameters.[1].Value)), Return = Converter.ChangeTypeTo<int>(parameters.[3].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
     static member OutRefTest (dataConnection : TestDataDB, id : SqlInt32 option, outputId : byref<SqlInt32 option>, inputOutputId : byref<SqlInt32 option>, str : SqlString option, outputStr : byref<SqlString option>, inputOutputStr : byref<SqlString option>, ``return`` : outref<int>) : int =
-        let mutable parameters = [| DataParameter("@ID", Option.toNullable(id), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@outputID", Option.toNullable(outputId), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@inputOutputID", Option.toNullable(inputOutputId), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@str", Option.toNullable(str), LinqToDB.DataType.VarChar, DbType = "varchar(50)", Size = 50); DataParameter("@outputStr", Option.toNullable(outputStr), LinqToDB.DataType.VarChar, Direction = ParameterDirection.InputOutput, DbType = "varchar(50)", Size = 50); DataParameter("@inputOutputStr", Option.toNullable(inputOutputStr), LinqToDB.DataType.VarChar, Direction = ParameterDirection.InputOutput, DbType = "varchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+        let mutable parameters = [| DataParameter("@ID", Option.toNullable(id), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@outputID", Option.toNullable(outputId), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@inputOutputID", Option.toNullable(inputOutputId), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@str", Option.toNullable(str), LinqToDB.DataType.VarChar, DbType = "varchar(50)", Size = 50); DataParameter("@outputStr", Option.toNullable(outputStr), LinqToDB.DataType.VarChar, Direction = ParameterDirection.InputOutput, DbType = "varchar(50)", Size = 50); DataParameter("@inputOutputStr", Option.toNullable(inputOutputStr), LinqToDB.DataType.VarChar, Direction = ParameterDirection.InputOutput, DbType = "varchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.ExecuteProc("[OutRefTest]", parameters)
-        outputId <- Converter.ChangeTypeTo<SqlInt32 option>(parameters.[1].Value)
-        inputOutputId <- Converter.ChangeTypeTo<SqlInt32 option>(parameters.[2].Value)
-        outputStr <- Converter.ChangeTypeTo<SqlString option>(parameters.[4].Value)
-        inputOutputStr <- Converter.ChangeTypeTo<SqlString option>(parameters.[5].Value)
+        outputId <- Option.ofNullable(Converter.ChangeTypeTo<Nullable<SqlInt32>>(parameters.[1].Value))
+        inputOutputId <- Option.ofNullable(Converter.ChangeTypeTo<Nullable<SqlInt32>>(parameters.[2].Value))
+        outputStr <- Option.ofNullable(Converter.ChangeTypeTo<Nullable<SqlString>>(parameters.[4].Value))
+        inputOutputStr <- Option.ofNullable(Converter.ChangeTypeTo<Nullable<SqlString>>(parameters.[5].Value))
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[6].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member OutRefTestAsync (dataConnection : TestDataDB, id : SqlInt32 option, outputId : SqlInt32 option, inputOutputId : SqlInt32 option, str : SqlString option, outputStr : SqlString option, inputOutputStr : SqlString option, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<OutRefTestResults> =
+    static member OutRefTestAsync (dataConnection : TestDataDB, id : SqlInt32 option, outputId : SqlInt32 option, inputOutputId : SqlInt32 option, str : SqlString option, outputStr : SqlString option, inputOutputStr : SqlString option, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<OutRefTestResults> =
         task {
-            let mutable parameters = [| DataParameter("@ID", Option.toNullable(id), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@outputID", Option.toNullable(outputId), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@inputOutputID", Option.toNullable(inputOutputId), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@str", Option.toNullable(str), LinqToDB.DataType.VarChar, DbType = "varchar(50)", Size = 50); DataParameter("@outputStr", Option.toNullable(outputStr), LinqToDB.DataType.VarChar, Direction = ParameterDirection.InputOutput, DbType = "varchar(50)", Size = 50); DataParameter("@inputOutputStr", Option.toNullable(inputOutputStr), LinqToDB.DataType.VarChar, Direction = ParameterDirection.InputOutput, DbType = "varchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@ID", Option.toNullable(id), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@outputID", Option.toNullable(outputId), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@inputOutputID", Option.toNullable(inputOutputId), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@str", Option.toNullable(str), LinqToDB.DataType.VarChar, DbType = "varchar(50)", Size = 50); DataParameter("@outputStr", Option.toNullable(outputStr), LinqToDB.DataType.VarChar, Direction = ParameterDirection.InputOutput, DbType = "varchar(50)", Size = 50); DataParameter("@inputOutputStr", Option.toNullable(inputOutputStr), LinqToDB.DataType.VarChar, Direction = ParameterDirection.InputOutput, DbType = "varchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.ExecuteProcAsync("[OutRefTest]", cancellationToken, parameters)
-            return OutRefTestResults(Result = result, InputOutputId = Converter.ChangeTypeTo<SqlInt32 option>(parameters.[2].Value), InputOutputStr = Converter.ChangeTypeTo<SqlString option>(parameters.[5].Value), OutputId = Converter.ChangeTypeTo<SqlInt32 option>(parameters.[1].Value), OutputStr = Converter.ChangeTypeTo<SqlString option>(parameters.[4].Value), Return = Converter.ChangeTypeTo<int>(parameters.[6].Value))
+            return OutRefTestResults(Result = result, InputOutputId = Option.ofNullable(Converter.ChangeTypeTo<Nullable<SqlInt32>>(parameters.[2].Value)), InputOutputStr = Option.ofNullable(Converter.ChangeTypeTo<Nullable<SqlString>>(parameters.[5].Value)), OutputId = Option.ofNullable(Converter.ChangeTypeTo<Nullable<SqlInt32>>(parameters.[1].Value)), OutputStr = Option.ofNullable(Converter.ChangeTypeTo<Nullable<SqlString>>(parameters.[4].Value)), Return = Converter.ChangeTypeTo<int>(parameters.[6].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
     static member PatientSelectAll (dataConnection : TestDataDB, ``return`` : outref<int>) : IEnumerable<PatientSelectAllResult> =
-        let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+        let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.QueryProc<PatientSelectAllResult>("[Patient_SelectAll]", parameters).ToList()
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[0].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PatientSelectAllAsync (dataConnection : TestDataDB, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PatientSelectAllResults> =
+    static member PatientSelectAllAsync (dataConnection : TestDataDB, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PatientSelectAllResults> =
         task {
-            let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.QueryProcAsync<PatientSelectAllResult>("[Patient_SelectAll]", cancellationToken, parameters)
             return PatientSelectAllResults(Result = result.ToList(), Return = Converter.ChangeTypeTo<int>(parameters.[0].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
     static member PatientSelectByName (dataConnection : TestDataDB, firstName : SqlString option, lastName : SqlString option, ``return`` : outref<int>) : IEnumerable<PatientSelectByNameResult> =
-        let mutable parameters = [| DataParameter("@firstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@lastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+        let mutable parameters = [| DataParameter("@firstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@lastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.QueryProc<PatientSelectByNameResult>("[Patient_SelectByName]", parameters).ToList()
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[2].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PatientSelectByNameAsync (dataConnection : TestDataDB, firstName : SqlString option, lastName : SqlString option, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PatientSelectByNameResults> =
+    static member PatientSelectByNameAsync (dataConnection : TestDataDB, firstName : SqlString option, lastName : SqlString option, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PatientSelectByNameResults> =
         task {
-            let mutable parameters = [| DataParameter("@firstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@lastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@firstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@lastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.QueryProcAsync<PatientSelectByNameResult>("[Patient_SelectByName]", cancellationToken, parameters)
             return PatientSelectByNameResults(Result = result.ToList(), Return = Converter.ChangeTypeTo<int>(parameters.[2].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
     static member PersonSearch (dataConnection : TestDataDB, nameFilter : SqlString option, ``return`` : outref<int>) : int =
-        let mutable parameters = [| DataParameter("@nameFilter", Option.toNullable(nameFilter), LinqToDB.DataType.NVarChar, DbType = "nvarchar(512)", Size = 512); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+        let mutable parameters = [| DataParameter("@nameFilter", Option.toNullable(nameFilter), LinqToDB.DataType.NVarChar, DbType = "nvarchar(512)", Size = 512); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.ExecuteProc("[PersonSearch]", parameters)
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[1].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PersonSearchAsync (dataConnection : TestDataDB, nameFilter : SqlString option, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PersonSearchResults> =
+    static member PersonSearchAsync (dataConnection : TestDataDB, nameFilter : SqlString option, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PersonSearchResults> =
         task {
-            let mutable parameters = [| DataParameter("@nameFilter", Option.toNullable(nameFilter), LinqToDB.DataType.NVarChar, DbType = "nvarchar(512)", Size = 512); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@nameFilter", Option.toNullable(nameFilter), LinqToDB.DataType.NVarChar, DbType = "nvarchar(512)", Size = 512); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.ExecuteProcAsync("[PersonSearch]", cancellationToken, parameters)
             return PersonSearchResults(Result = result, Return = Converter.ChangeTypeTo<int>(parameters.[1].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
     static member PersonDelete (dataConnection : TestDataDB, personId : SqlInt32 option, ``return`` : outref<int>) : int =
-        let mutable parameters = [| DataParameter("@PersonID", Option.toNullable(personId), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+        let mutable parameters = [| DataParameter("@PersonID", Option.toNullable(personId), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.ExecuteProc("[Person_Delete]", parameters)
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[1].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PersonDeleteAsync (dataConnection : TestDataDB, personId : SqlInt32 option, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PersonDeleteResults> =
+    static member PersonDeleteAsync (dataConnection : TestDataDB, personId : SqlInt32 option, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PersonDeleteResults> =
         task {
-            let mutable parameters = [| DataParameter("@PersonID", Option.toNullable(personId), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@PersonID", Option.toNullable(personId), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.ExecuteProcAsync("[Person_Delete]", cancellationToken, parameters)
             return PersonDeleteResults(Result = result, Return = Converter.ChangeTypeTo<int>(parameters.[1].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
     static member PersonInsert (dataConnection : TestDataDB, firstName : SqlString option, lastName : SqlString option, middleName : SqlString option, gender : SqlString option, ``return`` : outref<int>) : IEnumerable<PersonInsertResult> =
-        let mutable parameters = [| DataParameter("@FirstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@LastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@MiddleName", Option.toNullable(middleName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@Gender", Option.toNullable(gender), LinqToDB.DataType.Char, DbType = "char(1)", Size = 1); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+        let mutable parameters = [| DataParameter("@FirstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@LastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@MiddleName", Option.toNullable(middleName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@Gender", Option.toNullable(gender), LinqToDB.DataType.Char, DbType = "char(1)", Size = 1); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.QueryProc<PersonInsertResult>("[Person_Insert]", parameters).ToList()
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[4].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PersonInsertAsync (dataConnection : TestDataDB, firstName : SqlString option, lastName : SqlString option, middleName : SqlString option, gender : SqlString option, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PersonInsertResults> =
+    static member PersonInsertAsync (dataConnection : TestDataDB, firstName : SqlString option, lastName : SqlString option, middleName : SqlString option, gender : SqlString option, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PersonInsertResults> =
         task {
-            let mutable parameters = [| DataParameter("@FirstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@LastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@MiddleName", Option.toNullable(middleName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@Gender", Option.toNullable(gender), LinqToDB.DataType.Char, DbType = "char(1)", Size = 1); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@FirstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@LastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@MiddleName", Option.toNullable(middleName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@Gender", Option.toNullable(gender), LinqToDB.DataType.Char, DbType = "char(1)", Size = 1); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.QueryProcAsync<PersonInsertResult>("[Person_Insert]", cancellationToken, parameters)
             return PersonInsertResults(Result = result.ToList(), Return = Converter.ChangeTypeTo<int>(parameters.[4].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
     static member PersonInsertOutputParameter (dataConnection : TestDataDB, firstName : SqlString option, lastName : SqlString option, middleName : SqlString option, gender : SqlString option, personId : byref<SqlInt32 option>, ``return`` : outref<int>) : int =
-        let mutable parameters = [| DataParameter("@FirstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@LastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@MiddleName", Option.toNullable(middleName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@Gender", Option.toNullable(gender), LinqToDB.DataType.Char, DbType = "char(1)", Size = 1); DataParameter("@PersonID", Option.toNullable(personId), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+        let mutable parameters = [| DataParameter("@FirstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@LastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@MiddleName", Option.toNullable(middleName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@Gender", Option.toNullable(gender), LinqToDB.DataType.Char, DbType = "char(1)", Size = 1); DataParameter("@PersonID", Option.toNullable(personId), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.ExecuteProc("[Person_Insert_OutputParameter]", parameters)
-        personId <- Converter.ChangeTypeTo<SqlInt32 option>(parameters.[4].Value)
+        personId <- Option.ofNullable(Converter.ChangeTypeTo<Nullable<SqlInt32>>(parameters.[4].Value))
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[5].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PersonInsertOutputParameterAsync (dataConnection : TestDataDB, firstName : SqlString option, lastName : SqlString option, middleName : SqlString option, gender : SqlString option, personId : SqlInt32 option, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PersonInsertOutputParameterResults> =
+    static member PersonInsertOutputParameterAsync (dataConnection : TestDataDB, firstName : SqlString option, lastName : SqlString option, middleName : SqlString option, gender : SqlString option, personId : SqlInt32 option, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PersonInsertOutputParameterResults> =
         task {
-            let mutable parameters = [| DataParameter("@FirstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@LastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@MiddleName", Option.toNullable(middleName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@Gender", Option.toNullable(gender), LinqToDB.DataType.Char, DbType = "char(1)", Size = 1); DataParameter("@PersonID", Option.toNullable(personId), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@FirstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@LastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@MiddleName", Option.toNullable(middleName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@Gender", Option.toNullable(gender), LinqToDB.DataType.Char, DbType = "char(1)", Size = 1); DataParameter("@PersonID", Option.toNullable(personId), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.ExecuteProcAsync("[Person_Insert_OutputParameter]", cancellationToken, parameters)
-            return PersonInsertOutputParameterResults(Result = result, PersonId = Converter.ChangeTypeTo<SqlInt32 option>(parameters.[4].Value), Return = Converter.ChangeTypeTo<int>(parameters.[5].Value))
+            return PersonInsertOutputParameterResults(Result = result, PersonId = Option.ofNullable(Converter.ChangeTypeTo<Nullable<SqlInt32>>(parameters.[4].Value)), Return = Converter.ChangeTypeTo<int>(parameters.[5].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
     static member PersonSelectAll (dataConnection : TestDataDB, ``return`` : outref<int>) : IEnumerable<PersonSelectAllResult> =
-        let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+        let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.QueryProc<PersonSelectAllResult>("[Person_SelectAll]", parameters).ToList()
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[0].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PersonSelectAllAsync (dataConnection : TestDataDB, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PersonSelectAllResults> =
+    static member PersonSelectAllAsync (dataConnection : TestDataDB, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PersonSelectAllResults> =
         task {
-            let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.QueryProcAsync<PersonSelectAllResult>("[Person_SelectAll]", cancellationToken, parameters)
             return PersonSelectAllResults(Result = result.ToList(), Return = Converter.ChangeTypeTo<int>(parameters.[0].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
     static member PersonSelectByKey (dataConnection : TestDataDB, id : SqlInt32 option, ``return`` : outref<int>) : IEnumerable<PersonSelectByKeyResult> =
-        let mutable parameters = [| DataParameter("@id", Option.toNullable(id), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+        let mutable parameters = [| DataParameter("@id", Option.toNullable(id), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.QueryProc<PersonSelectByKeyResult>("[Person_SelectByKey]", parameters).ToList()
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[1].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PersonSelectByKeyAsync (dataConnection : TestDataDB, id : SqlInt32 option, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PersonSelectByKeyResults> =
+    static member PersonSelectByKeyAsync (dataConnection : TestDataDB, id : SqlInt32 option, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PersonSelectByKeyResults> =
         task {
-            let mutable parameters = [| DataParameter("@id", Option.toNullable(id), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@id", Option.toNullable(id), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.QueryProcAsync<PersonSelectByKeyResult>("[Person_SelectByKey]", cancellationToken, parameters)
             return PersonSelectByKeyResults(Result = result.ToList(), Return = Converter.ChangeTypeTo<int>(parameters.[1].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
     static member PersonSelectByKeyLowercase (dataConnection : TestDataDB, id : SqlInt32 option, ``return`` : outref<int>) : IEnumerable<PersonSelectByKeyLowercaseResult> =
-        let mutable parameters = [| DataParameter("@id", Option.toNullable(id), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+        let mutable parameters = [| DataParameter("@id", Option.toNullable(id), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.QueryProc<PersonSelectByKeyLowercaseResult>("[Person_SelectByKeyLowercase]", parameters).ToList()
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[1].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PersonSelectByKeyLowercaseAsync (dataConnection : TestDataDB, id : SqlInt32 option, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PersonSelectByKeyLowercaseResults> =
+    static member PersonSelectByKeyLowercaseAsync (dataConnection : TestDataDB, id : SqlInt32 option, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PersonSelectByKeyLowercaseResults> =
         task {
-            let mutable parameters = [| DataParameter("@id", Option.toNullable(id), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@id", Option.toNullable(id), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.QueryProcAsync<PersonSelectByKeyLowercaseResult>("[Person_SelectByKeyLowercase]", cancellationToken, parameters)
             return PersonSelectByKeyLowercaseResults(Result = result.ToList(), Return = Converter.ChangeTypeTo<int>(parameters.[1].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
     static member PersonSelectByName (dataConnection : TestDataDB, firstName : SqlString option, lastName : SqlString option, ``return`` : outref<int>) : IEnumerable<PersonSelectByNameResult> =
-        let mutable parameters = [| DataParameter("@firstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@lastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+        let mutable parameters = [| DataParameter("@firstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@lastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.QueryProc<PersonSelectByNameResult>("[Person_SelectByName]", parameters).ToList()
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[2].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PersonSelectByNameAsync (dataConnection : TestDataDB, firstName : SqlString option, lastName : SqlString option, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PersonSelectByNameResults> =
+    static member PersonSelectByNameAsync (dataConnection : TestDataDB, firstName : SqlString option, lastName : SqlString option, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PersonSelectByNameResults> =
         task {
-            let mutable parameters = [| DataParameter("@firstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@lastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@firstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@lastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.QueryProcAsync<PersonSelectByNameResult>("[Person_SelectByName]", cancellationToken, parameters)
             return PersonSelectByNameResults(Result = result.ToList(), Return = Converter.ChangeTypeTo<int>(parameters.[2].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
     static member PersonSelectListByName (dataConnection : TestDataDB, firstName : SqlString option, lastName : SqlString option, ``return`` : outref<int>) : IEnumerable<PersonSelectListByNameResult> =
-        let mutable parameters = [| DataParameter("@firstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@lastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+        let mutable parameters = [| DataParameter("@firstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@lastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.QueryProc<PersonSelectListByNameResult>("[Person_SelectListByName]", parameters).ToList()
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[2].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PersonSelectListByNameAsync (dataConnection : TestDataDB, firstName : SqlString option, lastName : SqlString option, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PersonSelectListByNameResults> =
+    static member PersonSelectListByNameAsync (dataConnection : TestDataDB, firstName : SqlString option, lastName : SqlString option, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PersonSelectListByNameResults> =
         task {
-            let mutable parameters = [| DataParameter("@firstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@lastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@firstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@lastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.QueryProcAsync<PersonSelectListByNameResult>("[Person_SelectListByName]", cancellationToken, parameters)
             return PersonSelectListByNameResults(Result = result.ToList(), Return = Converter.ChangeTypeTo<int>(parameters.[2].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
     static member PersonUpdate (dataConnection : TestDataDB, personId : SqlInt32 option, firstName : SqlString option, lastName : SqlString option, middleName : SqlString option, gender : SqlString option, ``return`` : outref<int>) : int =
-        let mutable parameters = [| DataParameter("@PersonID", Option.toNullable(personId), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@FirstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@LastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@MiddleName", Option.toNullable(middleName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@Gender", Option.toNullable(gender), LinqToDB.DataType.Char, DbType = "char(1)", Size = 1); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+        let mutable parameters = [| DataParameter("@PersonID", Option.toNullable(personId), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@FirstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@LastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@MiddleName", Option.toNullable(middleName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@Gender", Option.toNullable(gender), LinqToDB.DataType.Char, DbType = "char(1)", Size = 1); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.ExecuteProc("[Person_Update]", parameters)
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[5].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PersonUpdateAsync (dataConnection : TestDataDB, personId : SqlInt32 option, firstName : SqlString option, lastName : SqlString option, middleName : SqlString option, gender : SqlString option, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PersonUpdateResults> =
+    static member PersonUpdateAsync (dataConnection : TestDataDB, personId : SqlInt32 option, firstName : SqlString option, lastName : SqlString option, middleName : SqlString option, gender : SqlString option, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PersonUpdateResults> =
         task {
-            let mutable parameters = [| DataParameter("@PersonID", Option.toNullable(personId), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@FirstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@LastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@MiddleName", Option.toNullable(middleName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@Gender", Option.toNullable(gender), LinqToDB.DataType.Char, DbType = "char(1)", Size = 1); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@PersonID", Option.toNullable(personId), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@FirstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@LastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@MiddleName", Option.toNullable(middleName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@Gender", Option.toNullable(gender), LinqToDB.DataType.Char, DbType = "char(1)", Size = 1); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.ExecuteProcAsync("[Person_Update]", cancellationToken, parameters)
             return PersonUpdateResults(Result = result, Return = Converter.ChangeTypeTo<int>(parameters.[5].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
     static member QueryProcMultipleParameters (dataConnection : TestDataDB, input : SqlInt32 option, output1 : byref<SqlInt32 option>, output2 : byref<SqlInt32 option>, output3 : byref<SqlInt32 option>, ``return`` : outref<int>) : IEnumerable<QueryProcMultipleParametersResult> =
-        let mutable parameters = [| DataParameter("@input", Option.toNullable(input), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@output1", Option.toNullable(output1), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@output2", Option.toNullable(output2), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@output3", Option.toNullable(output3), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+        let mutable parameters = [| DataParameter("@input", Option.toNullable(input), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@output1", Option.toNullable(output1), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@output2", Option.toNullable(output2), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@output3", Option.toNullable(output3), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.QueryProc<QueryProcMultipleParametersResult>("[QueryProcMultipleParameters]", parameters).ToList()
-        output1 <- Converter.ChangeTypeTo<SqlInt32 option>(parameters.[1].Value)
-        output2 <- Converter.ChangeTypeTo<SqlInt32 option>(parameters.[2].Value)
-        output3 <- Converter.ChangeTypeTo<SqlInt32 option>(parameters.[3].Value)
+        output1 <- Option.ofNullable(Converter.ChangeTypeTo<Nullable<SqlInt32>>(parameters.[1].Value))
+        output2 <- Option.ofNullable(Converter.ChangeTypeTo<Nullable<SqlInt32>>(parameters.[2].Value))
+        output3 <- Option.ofNullable(Converter.ChangeTypeTo<Nullable<SqlInt32>>(parameters.[3].Value))
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[4].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member QueryProcMultipleParametersAsync (dataConnection : TestDataDB, input : SqlInt32 option, output1 : SqlInt32 option, output2 : SqlInt32 option, output3 : SqlInt32 option, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<QueryProcMultipleParametersResults> =
+    static member QueryProcMultipleParametersAsync (dataConnection : TestDataDB, input : SqlInt32 option, output1 : SqlInt32 option, output2 : SqlInt32 option, output3 : SqlInt32 option, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<QueryProcMultipleParametersResults> =
         task {
-            let mutable parameters = [| DataParameter("@input", Option.toNullable(input), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@output1", Option.toNullable(output1), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@output2", Option.toNullable(output2), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@output3", Option.toNullable(output3), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@input", Option.toNullable(input), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@output1", Option.toNullable(output1), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@output2", Option.toNullable(output2), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@output3", Option.toNullable(output3), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.QueryProcAsync<QueryProcMultipleParametersResult>("[QueryProcMultipleParameters]", cancellationToken, parameters)
-            return QueryProcMultipleParametersResults(Result = result.ToList(), Output1 = Converter.ChangeTypeTo<SqlInt32 option>(parameters.[1].Value), Output2 = Converter.ChangeTypeTo<SqlInt32 option>(parameters.[2].Value), Output3 = Converter.ChangeTypeTo<SqlInt32 option>(parameters.[3].Value), Return = Converter.ChangeTypeTo<int>(parameters.[4].Value))
+            return QueryProcMultipleParametersResults(Result = result.ToList(), Output1 = Option.ofNullable(Converter.ChangeTypeTo<Nullable<SqlInt32>>(parameters.[1].Value)), Output2 = Option.ofNullable(Converter.ChangeTypeTo<Nullable<SqlInt32>>(parameters.[2].Value)), Output3 = Option.ofNullable(Converter.ChangeTypeTo<Nullable<SqlInt32>>(parameters.[3].Value)), Return = Converter.ChangeTypeTo<int>(parameters.[4].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
     static member QueryProcParameters (dataConnection : TestDataDB, input : SqlInt32 option, output1 : byref<SqlInt32 option>, output2 : byref<SqlInt32 option>, ``return`` : outref<int>) : IEnumerable<QueryProcParametersResult> =
-        let mutable parameters = [| DataParameter("@input", Option.toNullable(input), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@output1", Option.toNullable(output1), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@output2", Option.toNullable(output2), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+        let mutable parameters = [| DataParameter("@input", Option.toNullable(input), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@output1", Option.toNullable(output1), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@output2", Option.toNullable(output2), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.QueryProc<QueryProcParametersResult>("[QueryProcParameters]", parameters).ToList()
-        output1 <- Converter.ChangeTypeTo<SqlInt32 option>(parameters.[1].Value)
-        output2 <- Converter.ChangeTypeTo<SqlInt32 option>(parameters.[2].Value)
+        output1 <- Option.ofNullable(Converter.ChangeTypeTo<Nullable<SqlInt32>>(parameters.[1].Value))
+        output2 <- Option.ofNullable(Converter.ChangeTypeTo<Nullable<SqlInt32>>(parameters.[2].Value))
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[3].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member QueryProcParametersAsync (dataConnection : TestDataDB, input : SqlInt32 option, output1 : SqlInt32 option, output2 : SqlInt32 option, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<QueryProcParametersResults> =
+    static member QueryProcParametersAsync (dataConnection : TestDataDB, input : SqlInt32 option, output1 : SqlInt32 option, output2 : SqlInt32 option, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<QueryProcParametersResults> =
         task {
-            let mutable parameters = [| DataParameter("@input", Option.toNullable(input), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@output1", Option.toNullable(output1), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@output2", Option.toNullable(output2), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@input", Option.toNullable(input), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@output1", Option.toNullable(output1), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@output2", Option.toNullable(output2), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.QueryProcAsync<QueryProcParametersResult>("[QueryProcParameters]", cancellationToken, parameters)
-            return QueryProcParametersResults(Result = result.ToList(), Output1 = Converter.ChangeTypeTo<SqlInt32 option>(parameters.[1].Value), Output2 = Converter.ChangeTypeTo<SqlInt32 option>(parameters.[2].Value), Return = Converter.ChangeTypeTo<int>(parameters.[3].Value))
+            return QueryProcParametersResults(Result = result.ToList(), Output1 = Option.ofNullable(Converter.ChangeTypeTo<Nullable<SqlInt32>>(parameters.[1].Value)), Output2 = Option.ofNullable(Converter.ChangeTypeTo<Nullable<SqlInt32>>(parameters.[2].Value)), Return = Converter.ChangeTypeTo<int>(parameters.[3].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
     static member SelectImplicitColumn (dataConnection : TestDataDB, ``return`` : outref<int>) : IEnumerable<SelectImplicitColumnResult> =
-        let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+        let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.QueryProc<SelectImplicitColumnResult>(Func<DbDataReader, SelectImplicitColumnResult>(fun dataReader -> SelectImplicitColumnResult(Column = Converter.ChangeTypeTo<SqlInt32>(dataReader.GetValue(0), dataConnection.MappingSchema))), "[SelectImplicitColumn]", parameters).ToList()
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[0].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member SelectImplicitColumnAsync (dataConnection : TestDataDB, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<SelectImplicitColumnResults> =
+    static member SelectImplicitColumnAsync (dataConnection : TestDataDB, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<SelectImplicitColumnResults> =
         task {
-            let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.QueryProcAsync<SelectImplicitColumnResult>(Func<DbDataReader, SelectImplicitColumnResult>(fun dataReader -> SelectImplicitColumnResult(Column = Converter.ChangeTypeTo<SqlInt32>(dataReader.GetValue(0), dataConnection.MappingSchema))), "[SelectImplicitColumn]", cancellationToken, parameters)
             return SelectImplicitColumnResults(Result = result.ToList(), Return = Converter.ChangeTypeTo<int>(parameters.[0].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
     static member TableTypeTestProc (dataConnection : TestDataDB, table : DataTable | null, ``return`` : outref<int>) : IEnumerable<TableTypeTestProcResult> =
-        let mutable parameters = [| DataParameter("@table", table, LinqToDB.DataType.Structured, DbType = "[dbo].[TestTableType]"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+        let mutable parameters = [| DataParameter("@table", table, LinqToDB.DataType.Structured, DbType = "[dbo].[TestTableType]"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.QueryProc<TableTypeTestProcResult>("[TableTypeTestProc]", parameters).ToList()
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[1].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member TableTypeTestProcAsync (dataConnection : TestDataDB, table : DataTable | null, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TableTypeTestProcResults> =
+    static member TableTypeTestProcAsync (dataConnection : TestDataDB, table : DataTable | null, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TableTypeTestProcResults> =
         task {
-            let mutable parameters = [| DataParameter("@table", table, LinqToDB.DataType.Structured, DbType = "[dbo].[TestTableType]"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@table", table, LinqToDB.DataType.Structured, DbType = "[dbo].[TestTableType]"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.QueryProcAsync<TableTypeTestProcResult>("[TableTypeTestProc]", cancellationToken, parameters)
             return TableTypeTestProcResults(Result = result.ToList(), Return = Converter.ChangeTypeTo<int>(parameters.[1].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
     static member VariableResults (dataConnection : TestDataDB, returnFullRow : SqlBoolean option, ``return`` : outref<int>) : IEnumerable<VariableResultsResult> =
-        let mutable parameters = [| DataParameter("@ReturnFullRow", Option.toNullable(returnFullRow), LinqToDB.DataType.Boolean, DbType = "bit"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+        let mutable parameters = [| DataParameter("@ReturnFullRow", Option.toNullable(returnFullRow), LinqToDB.DataType.Boolean, DbType = "bit"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.QueryProc<VariableResultsResult>("[VariableResults]", parameters).ToList()
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[1].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member VariableResultsAsync (dataConnection : TestDataDB, returnFullRow : SqlBoolean option, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<VariableResultsResults> =
+    static member VariableResultsAsync (dataConnection : TestDataDB, returnFullRow : SqlBoolean option, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<VariableResultsResults> =
         task {
-            let mutable parameters = [| DataParameter("@ReturnFullRow", Option.toNullable(returnFullRow), LinqToDB.DataType.Boolean, DbType = "bit"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@ReturnFullRow", Option.toNullable(returnFullRow), LinqToDB.DataType.Boolean, DbType = "bit"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.QueryProcAsync<VariableResultsResult>("[VariableResults]", cancellationToken, parameters)
             return VariableResultsResults(Result = result.ToList(), Return = Converter.ChangeTypeTo<int>(parameters.[1].Value))
         }
@@ -1813,7 +1813,7 @@ type DecimalOverflow =
 
 
 [<Table("Doctor")>]
-[<NoComparison>]
+[<ReferenceEquality>]
 type Doctor =
     {
         [<Column("PersonID", DataType = LinqToDB.DataType.Int32, DbType = "int", IsPrimaryKey = true)>] PersonId : SqlInt32 // int
@@ -1854,7 +1854,7 @@ type GuidId2 =
 
 
 [<Table("IndexTable")>]
-[<NoComparison>]
+[<ReferenceEquality>]
 type IndexTable =
     {
         [<Column("PKField1", DataType = LinqToDB.DataType.Int32, DbType = "int", IsPrimaryKey = true, PrimaryKeyOrder = 1)>] PkField1 : SqlInt32 // int
@@ -1869,7 +1869,7 @@ type IndexTable =
 
 
 [<Table("IndexTable2")>]
-[<NoComparison>]
+[<ReferenceEquality>]
 type IndexTable2 =
     {
         [<Column("PKField1", DataType = LinqToDB.DataType.Int32, DbType = "int", IsPrimaryKey = true, PrimaryKeyOrder = 1)>] PkField1 : SqlInt32 // int
@@ -1941,7 +1941,7 @@ type LinqDataType =
 
 
 [<Table("Member")>]
-[<NoComparison>]
+[<ReferenceEquality>]
 type Member =
     {
         [<Column("MemberId", DataType = LinqToDB.DataType.Int32, DbType = "int", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)>] MemberId : SqlInt32 // int
@@ -1975,7 +1975,7 @@ type Parent =
 
 
 [<Table("Patient")>]
-[<NoComparison>]
+[<ReferenceEquality>]
 type Patient =
     {
         [<Column("PersonID", DataType = LinqToDB.DataType.Int32, DbType = "int", IsPrimaryKey = true)>] PersonId : SqlInt32 // int
@@ -1988,7 +1988,7 @@ type Patient =
 
 
 [<Table("Person")>]
-[<NoComparison>]
+[<ReferenceEquality>]
 type Person =
     {
         [<Column("PersonID", DataType = LinqToDB.DataType.Int32, DbType = "int", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)>] PersonId : SqlInt32 // int
@@ -2008,7 +2008,7 @@ type Person =
 
 
 [<Table("Provider")>]
-[<NoComparison>]
+[<ReferenceEquality>]
 type Provider =
     {
         [<Column("ProviderId", DataType = LinqToDB.DataType.Int32, DbType = "int", IsPrimaryKey = true)>] ProviderId : SqlInt32 // int
@@ -2115,7 +2115,7 @@ type TestMergeIdentity =
 
 
 [<Table("TestSchemaX")>]
-[<NoComparison>]
+[<ReferenceEquality>]
 type TestSchemaX =
     {
         [<Column("TestSchemaXID", DataType = LinqToDB.DataType.Int32, DbType = "int", IsPrimaryKey = true)>] TestSchemaXid : SqlInt32 // int
@@ -2132,7 +2132,7 @@ type TestSchemaX =
 
 
 [<Table("TestSchemaY")>]
-[<NoComparison>]
+[<ReferenceEquality>]
 type TestSchemaY =
     {
         [<Column("TestSchemaXID", DataType = LinqToDB.DataType.Int32, DbType = "int")>] TestSchemaXid : SqlInt32 // int
@@ -2198,7 +2198,7 @@ module TestSchemaSchema =
 
 
     [<Table("TestSchemaA", Schema = "TestSchema")>]
-    [<NoComparison>]
+    [<ReferenceEquality>]
     type TestSchemaA =
         {
             [<Column("TestSchemaAID", DataType = LinqToDB.DataType.Int32, DbType = "int", IsPrimaryKey = true)>] TestSchemaAid : SqlInt32 // int
@@ -2219,7 +2219,7 @@ module TestSchemaSchema =
 
 
     [<Table("TestSchemaB", Schema = "TestSchema")>]
-    [<NoComparison>]
+    [<ReferenceEquality>]
     type TestSchemaB =
         {
             [<Column("TestSchemaBID", DataType = LinqToDB.DataType.Int32, DbType = "int", IsPrimaryKey = true)>] TestSchemaBid : SqlInt32 // int
@@ -2326,15 +2326,15 @@ module TestSchemaSchema =
 
         [<System.Runtime.CompilerServices.Extension>]
         static member TestProcedure (dataConnection : TestDataDB, ``return`` : outref<int>) : IEnumerable<TestProcedureResult> =
-            let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let mutable ret = dataConnection.QueryProc<TestProcedureResult>(Func<DbDataReader, TestProcedureResult>(fun dataReader -> TestProcedureResult(Column = Converter.ChangeTypeTo<SqlInt32>(dataReader.GetValue(0), dataConnection.MappingSchema))), "[TestSchema].[TestProcedure]", parameters).ToList()
             ``return`` <- Converter.ChangeTypeTo<int>(parameters.[0].Value)
             ret
 
         [<System.Runtime.CompilerServices.Extension>]
-        static member TestProcedureAsync (dataConnection : TestDataDB, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TestProcedureResults> =
+        static member TestProcedureAsync (dataConnection : TestDataDB, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TestProcedureResults> =
             task {
-                let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+                let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.ReturnValue, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
                 let! result = dataConnection.QueryProcAsync<TestProcedureResult>(Func<DbDataReader, TestProcedureResult>(fun dataReader -> TestProcedureResult(Column = Converter.ChangeTypeTo<SqlInt32>(dataReader.GetValue(0), dataConnection.MappingSchema))), "[TestSchema].[TestProcedure]", cancellationToken, parameters)
                 return TestProcedureResults(Result = result.ToList(), Return = Converter.ChangeTypeTo<int>(parameters.[0].Value))
             }
