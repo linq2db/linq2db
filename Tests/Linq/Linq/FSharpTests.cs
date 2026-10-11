@@ -136,6 +136,19 @@ namespace Tests.Linq
 			FSharp.GeneratedModel.TestGeneratedContextTableAccess(db);
 		}
 
+		[Test(Description = "an option-typed argument of a generated stored-procedure wrapper reaches the database as its value (#1553)")]
+		public void GeneratedShape_OptionParameter([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.GeneratedModel.TestGeneratedOptionParameter(db);
+		}
+
+		[Test(Description = "a generated stored-procedure wrapper reads an output parameter value back into an option (#1553)")]
+		public void GeneratedShape_OptionReadBack()
+		{
+			FSharp.GeneratedModel.TestGeneratedOptionReadBack();
+		}
+
 		[Test(Description = "Auto 'T option mapping must not override an explicit fluent DataType on an option column (#195 follow-up)")]
 		public void OptionMapping_ExplicitDataTypePreserved([DataSources] string context)
 		{

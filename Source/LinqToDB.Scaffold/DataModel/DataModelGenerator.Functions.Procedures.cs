@@ -556,7 +556,7 @@ namespace LinqToDB.DataModel
 			// pass parameter value for in and inout parameters
 			// otherwise pass null
 			ctorParams[1] = direction is System.Data.ParameterDirection.Input or System.Data.ParameterDirection.InputOutput
-				? parameter!.Reference
+				? BuildProcedureParameterValue(context, parameter!)
 				: context.AST.Null(WellKnownTypes.System.ObjectNullable, true);
 			if (dataType != null)
 				ctorParams[2] = context.AST.Constant(dataType.Value, true);
@@ -634,6 +634,34 @@ namespace LinqToDB.DataModel
 			}
 
 			return context.AST.New(WellKnownTypes.LinqToDB.Data.DataParameter, ctorParams, ctorInitializers);
+		}
+
+		/// <summary>
+		/// Generates <c>DataParameter</c> value for procedure parameter.
+		/// F# option-typed parameter (nullable scalar) is unwrapped to its value or <see langword="null"/>,
+		/// as providers don't know F# option type.
+		/// </summary>
+		private static ICodeExpression BuildProcedureParameterValue(IDataModelGenerationContext context, CodeParameter parameter)
+		{
+			var type = parameter.Type.Type;
+
+			// TODO: handle F# option values in DataParameter by mapping infrastructure instead of generating conversion
+			if (!ReferenceEquals(context.LanguageProvider, LanguageProviders.FSharp) || !type.IsNullable)
+				return parameter.Reference;
+
+			string method;
+			if (type.IsValueType)
+				method = "toNullable";
+			else if (string.Equals(context.LanguageProvider.GetAlias(type.WithNullability(false)), "string", StringComparison.Ordinal))
+				method = "toObj";
+			else
+				return parameter.Reference;
+
+			return context.AST.Call(
+				new CodeTypeReference(context.LanguageProvider.TypeParser.Parse("Microsoft.FSharp.Core.Option", false)),
+				context.AST.Name(method),
+				WellKnownTypes.System.ObjectNullable,
+				parameter.Reference);
 		}
 	}
 }

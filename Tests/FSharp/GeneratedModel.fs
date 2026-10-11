@@ -64,3 +64,18 @@ let TestGeneratedContextTableAccess (db : DataConnection) =
     let people = ctx.People |> Seq.toList
     Assert.That(people.Length, Is.EqualTo 1)
     Assert.That(people.[0].MiddleName, Is.EqualTo(Some "Q"))
+
+// Mirrors the generated stored-procedure wrapper's parameter handling: an option-typed argument is unwrapped
+// into the DataParameter value, and an output parameter value is read back into an option.
+let TestGeneratedOptionParameter (db : DataConnection) =
+    let some : int option = Some 5
+    let none : int option = None
+    Assert.That(db.Execute<int>("SELECT @p", [| DataParameter("@p", Option.toNullable(some), DataType.Int32) |]), Is.EqualTo 5)
+    Assert.That(db.Execute<System.Nullable<int>>("SELECT @p", [| DataParameter("@p", Option.toNullable(none), DataType.Int32) |]), Is.Null)
+
+let TestGeneratedOptionReadBack () =
+    Assert.That(LinqToDB.Common.Converter.ChangeTypeTo<int option>(box 7), Is.EqualTo(Some 7))
+    Assert.That(LinqToDB.Common.Converter.ChangeTypeTo<int option>(null), Is.EqualTo None)
+    Assert.That(LinqToDB.Common.Converter.ChangeTypeTo<int option>(box System.DBNull.Value), Is.EqualTo None)
+    Assert.That(LinqToDB.Common.Converter.ChangeTypeTo<string option>(box "x"), Is.EqualTo(Some "x"))
+    Assert.That(LinqToDB.Common.Converter.ChangeTypeTo<string option>(box System.DBNull.Value), Is.EqualTo None)
