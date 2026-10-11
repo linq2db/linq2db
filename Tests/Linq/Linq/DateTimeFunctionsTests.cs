@@ -1881,7 +1881,12 @@ namespace Tests.Linq
 		[Test]
 		[ActiveIssue(Configuration = TestProvName.AllInformix, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
 			Details = "no-issue: the server rejects a datetime literal set beside a DATETIME YEAR TO DAY aggregate; master fails the same query on To_Date.")]
-		public void CoarseAggregateSetOperationKeepsLiteralTime([DataSources] string context)
+		[ActiveIssue(Configuration = TestProvName.AllFirebird, ErrorMessage = "Datatypes are not comparable in expression UNION",
+			Details = "no-issue: the server rejects a UNION of DATE and TIMESTAMP.")]
+		[ActiveIssue(Configuration = TestProvName.AllSybase, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should contain 2026-06-01T10:00:00.0000000 but did not",
+			Details = "no-issue: the server types a UNION of date and datetime as date.")]
+		[ActiveIssue(5998, Configuration = TestProvName.AllAccessOdbc, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should contain 2026-06-01T10:00:00.5000000 but did not")]
+		public void CoarseAggregateSetOperationKeepsLiteralTime([DataSources(TestProvName.AllMySql)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = SeedCoarse(db);
