@@ -256,10 +256,13 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		// Datetime64 and Timestamp64, which hold 0001-01-01.
 		public override ISqlExpression ConvertDefaultValue(SqlDefaultValueExpression expression)
 		{
-			return expression.Type.DataType is not (DataType.Date32 or DataType.DateTime64 or DataType.Timestamp64)
-				&& RaiseDefaultDate(expression, new DateTime(1970, 1, 1)) is { } raised
-					? raised
-					: base.ConvertDefaultValue(expression);
+			var lowered = (expression.Type.DataType is DataType.Date32 or DataType.DateTime64 or DataType.Timestamp64 ? null : RaiseDefaultDate(expression, new DateTime(1970, 1, 1)))
+				?? base.ConvertDefaultValue(expression);
+
+			// DateTz writes a DateTimeOffset through LocalDateTime, which moves with the time zone.
+			return lowered is SqlValue { Value: DateTimeOffset dateTimeOffset } && expression.Type.DataType == DataType.DateTz
+				? new SqlValue(expression.Type.WithSystemType(typeof(DateTime)), dateTimeOffset.DateTime)
+				: lowered;
 		}
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)

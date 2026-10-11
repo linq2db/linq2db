@@ -378,15 +378,14 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 		public override ISqlExpression ConvertDefaultValue(SqlDefaultValueExpression expression)
 		{
-			if (LeastDate(expression.Type) is { } least && RaiseDefaultDate(expression, least) is { } raised)
-			{
-				// Every path that clamps writes a DateTimeOffset through LocalDateTime, which moves with the time zone.
-				return raised.Value is DateTimeOffset dateTimeOffset
-					? new SqlValue(expression.Type.WithSystemType(typeof(DateTime)), dateTimeOffset.DateTime)
-					: raised;
-			}
+			var least   = LeastDate(expression.Type);
+			var lowered = (least == null ? null : RaiseDefaultDate(expression, least.Value)) ?? base.ConvertDefaultValue(expression);
 
-			return base.ConvertDefaultValue(expression);
+			// date, datetime2 and every type with a least date write a DateTimeOffset through LocalDateTime, which moves with the
+			// time zone, clamped or not.
+			return lowered is SqlValue { Value: DateTimeOffset dateTimeOffset } && (least != null || expression.Type.DataType is DataType.Date or DataType.DateTime2)
+				? new SqlValue(expression.Type.WithSystemType(typeof(DateTime)), dateTimeOffset.DateTime)
+				: lowered;
 		}
 
 		// The least date of the type the mapping schema's converters write a date as, where it is later than 0001-01-01: a text
