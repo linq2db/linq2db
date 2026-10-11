@@ -1332,7 +1332,7 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 
-			query.ToSqlQuery().Sql.ShouldNotContain("DefaultValue");
+			query.ToSqlQuery().Sql.ToUpperInvariant().ShouldContain("COALESCE");
 
 			// Asserted apart: the in-memory arm of AssertQuery does not null-guard an instance call on a value type.
 			var texts =
