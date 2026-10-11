@@ -35,6 +35,9 @@ namespace LinqToDB
 		/// <param name="nameSelector">
 		/// Maps a key to the store key of the generated column. Defaults to the invariant string form of the key.
 		/// Evaluated once per key while the query is built; the resulting names take part in the query cache key.
+		/// Written in a sub-query, the selector's own state is compared instead: every value it reads is evaluated when
+		/// the query is built and again at each cache lookup, whether or not the selector reaches it, and a captured
+		/// delegate or object counts as unchanged while it is the same instance, so replace it rather than mutating it.
 		/// </param>
 		/// <returns>Query producing <typeparamref name="TResult"/> with one dynamic column per key.</returns>
 		[Pure, LinqTunnel]

@@ -27,7 +27,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (string.Equals(methodCall.Method.Name, nameof(LinqExtensions.UnpivotMulti), StringComparison.Ordinal))
 				return BuildMultiValue(builder, methodCall, buildInfo);
 
-			var info = UnpivotInfo.Parse(methodCall);
+			var info = UnpivotInfo.Parse(builder, methodCall);
 
 			// Resolve the name column through the source's own mapping schema: build the source ahead of the lowering, and
 			// at the root reuse that build as the first branch so builder-wide state (query tags, hints) is not repeated.
@@ -185,19 +185,20 @@ namespace LinqToDB.Internal.Linq.Builder
 			public required Type                            ValueType      { get; init; }
 			public required Type                            ResultType     { get; init; }
 
-			public static UnpivotInfo Parse(MethodCallExpression methodCall)
+			// Written inline in a sub-query, the marker arrives as written rather than as the public method builds it:
+			// a selector or the params array can be a captured value.
+			public static UnpivotInfo Parse(ExpressionBuilder builder, MethodCallExpression methodCall)
 			{
 				var genericArgs = methodCall.Method.GetGenericArguments();
 
-				var columns = new List<LambdaExpression> { methodCall.Arguments[3].UnwrapLambda() };
-				if (methodCall.Arguments[4] is NewArrayExpression array)
-					columns.AddRange(array.Expressions.Select(static e => e.UnwrapLambda()));
+				var columns = new List<LambdaExpression> { (LambdaExpression)PivotSugarBuilder.ReadArgument(builder, methodCall.Arguments[3])! };
+				columns.AddRange((IEnumerable<LambdaExpression>)PivotSugarBuilder.ReadArgument(builder, methodCall.Arguments[4])!);
 
 				return new UnpivotInfo
 				{
 					Source         = methodCall.Arguments[0],
-					IncludeNulls   = (UnpivotNulls)methodCall.Arguments[1].EvaluateExpression()! == UnpivotNulls.IncludeNulls,
-					ResultSelector = methodCall.Arguments[2].UnwrapLambda(),
+					IncludeNulls   = (UnpivotNulls)PivotSugarBuilder.ReadArgument(builder, methodCall.Arguments[1])! == UnpivotNulls.IncludeNulls,
+					ResultSelector = (LambdaExpression)PivotSugarBuilder.ReadArgument(builder, methodCall.Arguments[2])!,
 					Columns        = columns,
 					SourceType     = genericArgs[0],
 					ValueType      = genericArgs[1],

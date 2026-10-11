@@ -331,6 +331,158 @@ namespace Tests.Linq
 			regions.ToArray().ShouldBe(new[] { "EU" });
 		}
 
+		/// <summary>
+		/// Written inline in a sub-query, the operator is built after the query cache key was taken, so a captured
+		/// argument has to take part in the query's identity: a changed value is a new query, not a cache hit.
+		/// </summary>
+		[Test]
+		public void InlineUnpivotRereadsCapturedColumns([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(QuarterlySales.Data);
+
+			var cols = new System.Linq.Expressions.Expression<System.Func<QuarterlySales, decimal?>>[] { x => x.Q2 };
+
+			string[] Regions() =>
+				(from p in t
+				 where t.Where(x => x.Id > 0)
+					.Unpivot((r, q, a) => new { r.Id, Quarter = q, Amount = a }, x => x.Q1, cols)
+					.Any(u => u.Id == p.Id && u.Quarter == "Q2")
+				 select p.Region).ToArray();
+
+			Regions().ShouldBe(new[] { "EU" });
+
+			cols = new System.Linq.Expressions.Expression<System.Func<QuarterlySales, decimal?>>[] { x => x.Q3 };
+			Regions().ShouldBeEmpty();
+
+			cols = new System.Linq.Expressions.Expression<System.Func<QuarterlySales, decimal?>>[] { x => x.Q2 };
+			Regions().ShouldBe(new[] { "EU" });
+		}
+
+		[Test]
+		public void InlineUnpivotRereadsCapturedColumnNames([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(QuarterlySales.Data);
+
+			var names = new[] { "Q1", "Q2" };
+
+			string[] Regions() =>
+				(from p in t
+				 where t.Where(x => x.Id > 0)
+					.Unpivot((QuarterlySales r, string q, decimal? a) => new { r.Id, Quarter = q, Amount = a }, names)
+					.Any(u => u.Id == p.Id && u.Quarter == "Q2")
+				 select p.Region).ToArray();
+
+			Regions().ShouldBe(new[] { "EU" });
+
+			names = new[] { "Q1", "Q3" };
+			Regions().ShouldBeEmpty();
+		}
+
+		/// <summary>The marker overload written inline, with its params array passed as a variable.</summary>
+		[Test]
+		public void InlineUnpivotWithAColumnArrayVariable([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(QuarterlySales.Data);
+
+			System.Linq.Expressions.Expression<System.Func<QuarterlySales, decimal?>> first = x => x.Q1;
+
+			var extra = new System.Linq.Expressions.Expression<System.Func<QuarterlySales, decimal?>>[] { x => x.Q2 };
+
+			string[] Regions() =>
+				(from p in t
+				 where t.Where(x => x.Id > 0)
+					.Unpivot(UnpivotNulls.ExcludeNulls, (r, q, a) => new { r.Id, Quarter = q, Amount = a }, first, extra)
+					.Any(u => u.Id == p.Id && u.Quarter == "Q2")
+				 select p.Region).ToArray();
+
+			Regions().ShouldBe(new[] { "EU" });
+
+			extra = new System.Linq.Expressions.Expression<System.Func<QuarterlySales, decimal?>>[] { x => x.Q3 };
+			Regions().ShouldBeEmpty();
+
+			first = x => x.Q2;
+			Regions().ShouldBe(new[] { "EU" });
+		}
+
+		sealed class ColumnSource
+		{
+			public string[] Columns = null!;
+
+			public string[] GetColumns() => Columns;
+		}
+
+		/// <summary>A column set read through a method call is compared by its result, not by the call.</summary>
+		[Test]
+		public void InlineUnpivotRereadsColumnNamesFromAMethod([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(QuarterlySales.Data);
+
+			var source = new ColumnSource { Columns = new[] { "Q1", "Q2" } };
+
+			string[] Regions() =>
+				(from p in t
+				 where t.Where(x => x.Id > 0)
+					.Unpivot((QuarterlySales r, string q, decimal? a) => new { r.Id, Quarter = q, Amount = a }, source.GetColumns())
+					.Any(u => u.Id == p.Id && u.Quarter == "Q2")
+				 select p.Region).ToArray();
+
+			Regions().ShouldBe(new[] { "EU" });
+
+			source.Columns = new[] { "Q1", "Q3" };
+			Regions().ShouldBeEmpty();
+		}
+
+		/// <summary>A value the result selector captures is a parameter, not part of the query's identity.</summary>
+		[Test, QueryCacheTest]
+		public void UnpivotSelectorCaptureReusesTheCachedQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(QuarterlySales.Data);
+
+			IQueryable<decimal?> Build(decimal rate) => t
+				.Unpivot((r, q, a) => new { r.Id, Quarter = q, Amount = a * rate }, x => x.Q1, x => x.Q2)
+				.Where(u => u.Id == 1 && u.Quarter == "Q1")
+				.Select(u => u.Amount);
+
+			var probe = Build(1m);
+
+			probe.ClearCache();
+
+			var start = probe.GetCacheMissCount();
+
+			Build(2m).ToArray().ShouldBe(new decimal?[] { 20m });
+			Build(3m).ToArray().ShouldBe(new decimal?[] { 30m });
+			(probe.GetCacheMissCount() - start).ShouldBe(1);
+		}
+
+		[Test, QueryCacheTest]
+		public void InlineUnpivotSelectorCaptureReusesTheCachedQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(QuarterlySales.Data);
+
+			IQueryable<string> Build(decimal rate) =>
+				from p in t
+				where t.Where(x => x.Id > 0)
+					.Unpivot((r, q, a) => new { r.Id, Quarter = q, Amount = a * rate }, x => x.Q1, x => x.Q2)
+					.Any(u => u.Id == p.Id && u.Amount > 30)
+				select p.Region;
+
+			var probe = Build(1m);
+
+			probe.ClearCache();
+
+			var start = probe.GetCacheMissCount();
+
+			Build(2m).ToArray().ShouldBe(new[] { "EU" });
+			Build(1m).ToArray().ShouldBeEmpty();
+			(probe.GetCacheMissCount() - start).ShouldBe(1);
+		}
+
 		[Test]
 		[ThrowsRequiredOuterJoins(TestProvName.AllSQLite, TestProvName.AllAccess, TestProvName.AllMySql57, TestProvName.AllMariaDB, TestProvName.AllFirebirdLess4, ProviderName.PostgreSQL92, TestProvName.AllOracle11, TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllClickHouse, TestProvName.AllYdb)]
 		public void UnpivotOverACorrelatedSource([DataSources] string context)

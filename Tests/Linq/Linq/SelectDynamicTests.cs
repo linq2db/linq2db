@@ -94,6 +94,37 @@ namespace Tests.Linq
 			ids.ToArray().ShouldBe(new[] { 2 });
 		}
 
+		static readonly System.Collections.Concurrent.ConcurrentDictionary<string, int> _currentKeys = new();
+
+		static int CurrentKey(string context) => _currentKeys[context];
+
+		/// <summary>
+		/// Written inline in a sub-query, the projection is built after the query cache key was taken, so what the name
+		/// selector reads has to take part in the query's identity.
+		/// </summary>
+		[Test]
+		public void InlineSelectDynamicRereadsWhatTheNameSelectorReads([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_data);
+
+			var factors = new[] { 1, 2 };
+
+			_currentKeys[context] = 2;
+
+			int[] Ids() =>
+				(from a in t
+				 where t.Where(x => x.Id > 0)
+					.SelectDynamic(x => new AmountsDto { Id = x.Id }, factors, (x, k) => x.Usd * k, k => k == CurrentKey(context) ? "V" : "W" + k)
+					.Any(r => r.Id == a.Id && Sql.Property<decimal>(r, "V") > 50)
+				 select a.Id).ToArray();
+
+			Ids().ShouldBe(new[] { 2 });
+
+			_currentKeys[context] = 1;
+			Ids().ShouldBeEmpty();
+		}
+
 		[Test]
 		[ActiveIssue(5953, ErrorType = typeof(InvalidOperationException), ErrorMessage = "variable 'n' of type 'System.String' referenced from scope '', but it is not defined")]
 		public void SelectDynamicOverACorrelatedSource([DataSources] string context)

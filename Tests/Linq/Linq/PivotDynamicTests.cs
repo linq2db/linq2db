@@ -209,6 +209,209 @@ namespace Tests.Linq
 			categories.Distinct().ToArray().ShouldBe(new[] { "A" });
 		}
 
+		/// <summary>
+		/// Written inline in a sub-query, the pivot is built after the query cache key was taken, so its captured value
+		/// set has to take part in the query's identity. The cell keeps one name across both sets.
+		/// </summary>
+		[Test]
+		public void InlinePivotRereadsCapturedValues([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var years = new[] { 2010 };
+
+			string[] Categories() =>
+				(from c in t
+				 where t.Where(x => x.Amount > 0)
+					.Pivot(x => x.Category, x => x.Year, years,
+						(g, p) => new { g.Key, Cells = p.Cell(rows => rows.Sum(x => x.Amount), _ => "V") })
+					.Any(r => r.Key == c.Category && Sql.Property<decimal?>(r.Cells, "V") > 16)
+				 select c.Category).Distinct().ToArray();
+
+			Categories().ShouldBe(new[] { "A" });
+
+			years = new[] { 2000 };
+			Categories().ShouldBeEmpty();
+
+			years = new[] { 2010 };
+			Categories().ShouldBe(new[] { "A" });
+		}
+
+		static readonly System.Collections.Concurrent.ConcurrentDictionary<string, int[]> _pivotYears = new();
+
+		static int[] PivotYears(string context) => _pivotYears[context];
+
+		sealed class YearSource
+		{
+			public int[] Years = null!;
+
+			public int[] GetYears() => Years;
+		}
+
+		/// <summary>A value set read through a method call is compared by its result, not by the call.</summary>
+		[Test]
+		public void InlinePivotRereadsAValueSetMethod([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			_pivotYears[context] = new[] { 2010 };
+
+			string[] Categories() =>
+				(from c in t
+				 where t.Where(x => x.Amount > 0)
+					.Pivot(x => x.Category, x => x.Year, PivotYears(context),
+						(g, p) => new { g.Key, Cells = p.Cell(rows => rows.Sum(x => x.Amount), _ => "V") })
+					.Any(r => r.Key == c.Category && Sql.Property<decimal?>(r.Cells, "V") > 16)
+				 select c.Category).Distinct().ToArray();
+
+			Categories().ShouldBe(new[] { "A" });
+
+			_pivotYears[context] = new[] { 2000 };
+			Categories().ShouldBeEmpty();
+		}
+
+		[Test]
+		public void InlinePivotRereadsAValueSetInstanceMethod([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var source = new YearSource { Years = new[] { 2010 } };
+
+			string[] Categories() =>
+				(from c in t
+				 where t.Where(x => x.Amount > 0)
+					.Pivot(x => x.Category, x => x.Year, source.GetYears(),
+						(g, p) => new { g.Key, Cells = p.Cell(rows => rows.Sum(x => x.Amount), _ => "V") })
+					.Any(r => r.Key == c.Category && Sql.Property<decimal?>(r.Cells, "V") > 16)
+				 select c.Category).Distinct().ToArray();
+
+			Categories().ShouldBe(new[] { "A" });
+
+			source.Years = new[] { 2000 };
+			Categories().ShouldBeEmpty();
+		}
+
+		/// <summary>A captured list is compared by its contents as they were when the query was built.</summary>
+		[Test]
+		public void InlinePivotRereadsAValueListMutatedInPlace([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var years = new List<int> { 2010 };
+
+			string[] Categories() =>
+				(from c in t
+				 where t.Where(x => x.Amount > 0)
+					.Pivot(x => x.Category, x => x.Year, years,
+						(g, p) => new { g.Key, Cells = p.Cell(rows => rows.Sum(x => x.Amount), _ => "V") })
+					.Any(r => r.Key == c.Category && Sql.Property<decimal?>(r.Cells, "V") > 16)
+				 select c.Category).Distinct().ToArray();
+
+			Categories().ShouldBe(new[] { "A" });
+
+			years[0] = 2000;
+			Categories().ShouldBeEmpty();
+		}
+
+		sealed class NameConfig
+		{
+			public string Prefix = null!;
+		}
+
+		/// <summary>
+		/// A read the name factory guards may throw where the factory would not reach it: it compares as the value or the
+		/// fact that it threw.
+		/// </summary>
+		[Test, QueryCacheTest]
+		public void InlinePivotNameFactoryWithAGuardedCapture([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			NameConfig? cfg = null;
+
+			IQueryable<string> Categories() =>
+				(from c in t
+				 where t.Where(x => x.Amount > 0)
+					.Pivot(x => x.Category, x => x.Year, new[] { 2010 },
+						(g, p) => new { g.Key, Cells = p.Cell(rows => rows.Sum(x => x.Amount), y => y > 3000 ? cfg!.Prefix : "V") })
+					.Any(r => r.Key == c.Category && Sql.Property<decimal?>(r.Cells, "V") > 16)
+				 select c.Category).Distinct();
+
+			var probe = Categories();
+
+			probe.ClearCache();
+
+			var start = probe.GetCacheMissCount();
+
+			Categories().ToArray().ShouldBe(new[] { "A" });
+			Categories().ToArray().ShouldBe(new[] { "A" });
+			(probe.GetCacheMissCount() - start).ShouldBe(1, "the same failed read reuses the cached query");
+
+			cfg = new NameConfig { Prefix = "W" };
+			Categories().ToArray().ShouldBe(new[] { "A" });
+			(probe.GetCacheMissCount() - start).ShouldBe(2, "a read that now succeeds is a different query");
+
+			cfg = null;
+			Categories().ToArray().ShouldBe(new[] { "A" });
+			(probe.GetCacheMissCount() - start).ShouldBe(2, "a read that fails again reuses the first query");
+		}
+
+		static readonly System.Collections.Concurrent.ConcurrentDictionary<string, int> _currentYears = new();
+
+		static int CurrentYear(string context) => _currentYears[context];
+
+		/// <summary>A cell set built by a lambda the call runs: what the lambda reads is part of the query's identity.</summary>
+		[Test]
+		public void InlinePivotCellSetRereadsWhatItReads([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(Sales.Data);
+
+			_currentYears[context] = 2010;
+
+			string[] Categories() =>
+				(from c in t
+				 where t.Where(x => x.Amount > 0)
+					.Pivot(x => x.Category, x => x.Year, new[] { 2000, 2010 },
+						g => new SalesDto { Category = g.Key, Total = g.Sum(x => x.Amount) },
+						cells => cells.Cell(rows => rows.Sum(x => x.Amount), y => y == CurrentYear(context) ? "V" : "W"))
+					.Any(r => r.Category == c.Category && Sql.Property<decimal?>(r, "V") > 16)
+				 select c.Category).Distinct().ToArray();
+
+			Categories().ShouldBe(new[] { "A" });
+
+			_currentYears[context] = 2000;
+			Categories().ShouldBeEmpty();
+		}
+
+		/// <summary>The name factory runs when the query is built, so a value it captures is part of the query's identity.</summary>
+		[Test]
+		public void InlinePivotRereadsANameFactoryCapture([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var current = 2010;
+
+			string[] Categories() =>
+				(from c in t
+				 where t.Where(x => x.Amount > 0)
+					.Pivot(x => x.Category, x => x.Year, new[] { 2000, 2010 },
+						(g, p) => new { g.Key, Cells = p.Cell(rows => rows.Sum(x => x.Amount), y => y == current ? "V" : "W") })
+					.Any(r => r.Key == c.Category && Sql.Property<decimal?>(r.Cells, "V") > 16)
+				 select c.Category).Distinct().ToArray();
+
+			Categories().ShouldBe(new[] { "A" });
+
+			current = 2000;
+			Categories().ShouldBeEmpty();
+		}
+
 		[Test]
 		public void PivotOverACorrelatedSource([DataSources] string context)
 		{
@@ -1115,6 +1318,8 @@ namespace Tests.Linq
 			var activityIds = acts.Select(a => a.Id).OrderBy(id => id).ToList();
 
 			IQueryable<ListDto> Build(IEnumerable<int> ids) => ProductionShape(mods, acts, masks, atiRubs, iasRubs, ids);
+
+			Build(activityIds).ClearCache();
 
 			var rows = Build(activityIds).ToList().OrderBy(r => r.Id).ToList();
 

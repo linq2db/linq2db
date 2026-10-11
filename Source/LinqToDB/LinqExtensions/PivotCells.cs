@@ -73,7 +73,10 @@ namespace LinqToDB
 		/// <param name="aggregate">Aggregate over the matching rows.</param>
 		/// <param name="name">
 		/// Names the generated column for a pivoted value; defaults to the value's invariant string form. Required
-		/// when a pivot declares more than one cell.
+		/// when a pivot declares more than one cell. Written in a sub-query, the factory's own state takes part in the
+		/// query cache key: every value it reads is evaluated when the query is built and again at each cache lookup,
+		/// whether or not the factory reaches it, and a captured delegate or object counts as unchanged while it is the
+		/// same instance, so replace it rather than mutating it.
 		/// </param>
 		/// <returns>The cell set with <paramref name="aggregate"/> added.</returns>
 		[Pure]

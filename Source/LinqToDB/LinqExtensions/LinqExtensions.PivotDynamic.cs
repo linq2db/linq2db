@@ -96,7 +96,10 @@ namespace LinqToDB
 		/// <param name="forColumn">The column whose values become columns.</param>
 		/// <param name="forValues">The runtime set of pivoted values.</param>
 		/// <param name="staticSelector">Projection for the statically known members, over the grouping.</param>
-		/// <param name="cells">Builds the cell set. More than one cell requires each to supply a name factory.</param>
+		/// <param name="cells">
+		/// Builds the cell set. More than one cell requires each to supply a name factory. Written in a sub-query, a
+		/// captured delegate counts as unchanged while it is the same instance, so replace it rather than mutating its state.
+		/// </param>
 		/// <returns>Query with one row per key and one generated column per (cell, value) pair.</returns>
 		/// <remarks>
 		/// For a value set known at compile time, an ordinary
