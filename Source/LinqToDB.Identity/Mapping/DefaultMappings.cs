@@ -70,6 +70,9 @@ namespace LinqToDB.Identity
 		// the same reason as the LockoutEnd pins - the latter would replace the unscoped one wholesale.
 		private static DataTypeAttribute AccessTextLimit() => new (DataType.NVarChar, "NVarChar(255)") { Configuration = ProviderName.Access };
 
+		// Informix clamps NVarChar to 255 bytes, fewer than 256 characters in a multi-byte locale; LVarChar is byte-sized too.
+		private static DataTypeAttribute InformixTextLimit() => new (DataType.NVarChar, "LVarChar(1024)") { Configuration = ProviderName.Informix };
+
 		// EF Core leaves ClaimValue and the token Value unbounded; an unmapped string defaults to 255 on these. The
 		// stores filter on ClaimValue with '=', which LOB types reject on most of them, so it gets the widest
 		// comparable varchar instead. Token values (a saved JWT is 1-2 KB) are never filtered on, so they can be LOBs.
@@ -201,9 +204,11 @@ namespace LinqToDB.Identity
 				.Property(e => e.Name)
 					.HasLength(NAME_LENGTH)
 					.HasAttribute(AccessTextLimit())
+					.HasAttribute(InformixTextLimit())
 				.Property(e => e.NormalizedName)
 					.HasLength(NAME_LENGTH)
 					.HasAttribute(AccessTextLimit())
+					.HasAttribute(InformixTextLimit())
 				.Property(e => e.ConcurrencyStamp)
 					.HasLength(STAMP_LENGTH)
 					.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.Guid))
@@ -236,15 +241,19 @@ namespace LinqToDB.Identity
 				.Property(e => e.UserName)
 					.HasLength(NAME_LENGTH)
 					.HasAttribute(AccessTextLimit())
+					.HasAttribute(InformixTextLimit())
 				.Property(e => e.NormalizedUserName)
 					.HasLength(NAME_LENGTH)
 					.HasAttribute(AccessTextLimit())
+					.HasAttribute(InformixTextLimit())
 				.Property(e => e.Email)
 					.HasLength(EMAIL_LENGTH)
 					.HasAttribute(AccessTextLimit())
+					.HasAttribute(InformixTextLimit())
 				.Property(e => e.NormalizedEmail)
 					.HasLength(EMAIL_LENGTH)
 					.HasAttribute(AccessTextLimit())
+					.HasAttribute(InformixTextLimit())
 				.Property(e => e.EmailConfirmed)
 
 				// length for those fields not set by ef.core implementation
@@ -382,24 +391,26 @@ namespace LinqToDB.Identity
 		private const int CREDENTIAL_ID_LENGTH = 1024;
 
 		// Access needs the type changed too: VarBinary caps at 255 bytes there, LongBinary is the unbounded one.
-		// Informix (BYTE) and Firebird 2.5 (VARCHAR(1024) CHARACTER SET OCTETS) both hold the value fine - for
-		// them only the index was ever the problem. Firebird 3+ indexes a 1024-byte key, so it keeps its PK.
+		// Firebird 2.5 (VARCHAR(1024) CHARACTER SET OCTETS) holds the value fine - only the index was ever the
+		// problem. Firebird 3+ indexes a 1024-byte key, so it keeps its PK.
 		private static readonly (string Configuration, string? DbType)[] _passkeyIdWithoutPrimaryKey =
 		[
 			(ProviderName.Access,     "LongBinary"),
-			(ProviderName.Informix,   null),
 			(ProviderName.Firebird25, null),
 		];
 
 		// A real credential's JSON is ~1 KB, which overruns the width an unbounded NVarChar renders as on these
-		// (MySQL/Firebird/Access 255, Oracle 2000). A scoped ColumnAttribute, as DataTypeAttribute cannot override the
-		// unscoped DataType - and NText also makes the parameter bind as a CLOB, not only the DDL.
-		private static readonly (string Configuration, string? DbType)[] _passkeyDataAsText =
+		// (MySQL/Firebird/Access/Informix 255, Oracle 2000), and a direct-attestation certificate chain can pass SQL CE's
+		// 4000. A scoped ColumnAttribute, as DataTypeAttribute cannot override the unscoped DataType - and NText also
+		// makes the parameter bind as a CLOB, not only the DDL.
+		private static readonly (string Configuration, DataType DataType, string? DbType)[] _passkeyDataAsText =
 		[
-			(ProviderName.MySql,    null                                         ),
-			(ProviderName.Oracle,   null                                         ),
-			(ProviderName.Firebird, "BLOB SUB_TYPE TEXT CHARACTER SET UNICODE_FSS"),
-			(ProviderName.Access,   "LongText"                                   ),
+			(ProviderName.MySql,    DataType.NText,    null                                         ),
+			(ProviderName.Oracle,   DataType.NText,    null                                         ),
+			(ProviderName.Firebird, DataType.NText,    "BLOB SUB_TYPE TEXT CHARACTER SET UNICODE_FSS"),
+			(ProviderName.Access,   DataType.NText,    "LongText"                                   ),
+			(ProviderName.Informix, DataType.NVarChar, "LVarChar(8000)"                             ),
+			(ProviderName.SqlCe,    DataType.NText,    "NText"                                      ),
 		];
 
 		public static void SetupIdentityUserPasskey<TKey, TUserPasskey>(FluentMappingBuilder mappings)
@@ -422,10 +433,10 @@ namespace LinqToDB.Identity
 					.HasDataType(DataType.NVarChar)
 				;
 
-			foreach (var (configuration, dbType) in _passkeyDataAsText)
+			foreach (var (configuration, dataType, dbType) in _passkeyDataAsText)
 				mappings.Entity<TUserPasskey>()
 					.Property(e => e.Data)
-						.HasAttribute(new ColumnAttribute { Configuration = configuration, DataType = DataType.NText, DbType = dbType });
+						.HasAttribute(new ColumnAttribute { Configuration = configuration, DataType = dataType, DbType = dbType });
 
 			// add length
 			if (IsStringKey<TKey>())
@@ -434,14 +445,24 @@ namespace LinqToDB.Identity
 						.HasLength(STRING_KEY_LENGTH);
 
 			// Access caps a binary column at 255 bytes, so it rejects the column itself ("Size of field
-			// 'CredentialId' is too long"); Informix accepts BYTE but cannot index a blob ("-103 illegal key
-			// descriptor"). Neither can carry a 1024-byte key, so on those two the table is emitted without the
-			// constraint - which beats not being able to create it at all. Uniqueness then rests on
+			// 'CredentialId' is too long"); Firebird 2.5 cannot index the key. On those the table is emitted without
+			// the constraint - which beats not being able to create it at all. Uniqueness then rests on
 			// AddOrUpdatePasskeyAsync's find-then-insert rather than on the database.
 			foreach (var (configuration, dbType) in _passkeyIdWithoutPrimaryKey)
 				mappings.Entity<TUserPasskey>()
 					.Property(e => e.CredentialId)
 						.HasAttribute(new ColumnAttribute { Configuration = configuration, CanBeNull = false, DbType = dbType, Length = CREDENTIAL_ID_LENGTH, IsPrimaryKey = false });
+
+			// Informix holds a 1024-byte id only as BYTE, which it can neither index nor compare, so every passkey
+			// lookup would fail. It stores the id as hex text instead - also too wide for its index, hence no PK.
+			mappings.Entity<TUserPasskey>()
+				.Property(e => e.CredentialId)
+					.HasAttribute(new ColumnAttribute { Configuration = ProviderName.Informix, CanBeNull = false, DataType = DataType.NVarChar, DbType = "LVarChar(2048)", Length = CREDENTIAL_ID_LENGTH * 2, IsPrimaryKey = false })
+					.HasAttribute(new ValueConverterAttribute
+					{
+						Configuration  = ProviderName.Informix,
+						ValueConverter = new ValueConverter<byte[], string>(v => Convert.ToHexString(v), v => Convert.FromHexString(v), handlesNulls: false),
+					});
 		}
 
 		public static void SetupIdentityUserPasskey(FluentMappingBuilder mappings)

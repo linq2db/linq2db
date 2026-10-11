@@ -252,17 +252,20 @@ namespace Tests.Identity
 		{
 			var options = new DataOptions().UseConfiguration(context.StripRemote());
 
-			using (var db = new AppPasskeyConnection        (options)) ShouldMapPasskey(db.MappingSchema);
-			using (var db = new AppUserOnlyPasskeyConnection(options)) ShouldMapPasskey(db.MappingSchema);
-			using (var db = new IdentityDataContext<AppUser, string, AppUserClaim, AppUserLogin, AppUserToken, AppUserPasskey>(options)) ShouldMapPasskey(db.MappingSchema);
-			using (var db = new IdentityDataContext<AppUser, AppRole, string, AppUserClaim, AppUserRole, AppUserLogin, AppRoleClaim, AppUserToken, AppUserPasskey>(options)) ShouldMapPasskey(db.MappingSchema);
+			// Informix stores the id as hex text, two characters per byte
+			var credentialIdLength = context.IsAnyOf(TestProvName.AllInformix) ? 2048 : 1024;
 
-			static void ShouldMapPasskey(MappingSchema ms)
+			using (var db = new AppPasskeyConnection        (options)) ShouldMapPasskey(db.MappingSchema, credentialIdLength);
+			using (var db = new AppUserOnlyPasskeyConnection(options)) ShouldMapPasskey(db.MappingSchema, credentialIdLength);
+			using (var db = new IdentityDataContext<AppUser, string, AppUserClaim, AppUserLogin, AppUserToken, AppUserPasskey>(options)) ShouldMapPasskey(db.MappingSchema, credentialIdLength);
+			using (var db = new IdentityDataContext<AppUser, AppRole, string, AppUserClaim, AppUserRole, AppUserLogin, AppRoleClaim, AppUserToken, AppUserPasskey>(options)) ShouldMapPasskey(db.MappingSchema, credentialIdLength);
+
+			static void ShouldMapPasskey(MappingSchema ms, int credentialIdLength)
 			{
 				var passkey = ms.GetEntityDescriptor(typeof(AppUserPasskey));
 
 				passkey.Name.Name.ShouldBe("AspNetUserPasskeys");
-				passkey.Columns.Single(c => c.MemberName == nameof(AppUserPasskey.CredentialId)).Length.ShouldBe(1024);
+				passkey.Columns.Single(c => c.MemberName == nameof(AppUserPasskey.CredentialId)).Length.ShouldBe(credentialIdLength);
 				passkey.Columns.Single(c => c.MemberName == nameof(AppUserPasskey.UserId))      .Length.ShouldBe(36);
 				passkey.Columns.Select(c => c.MemberName).ShouldContain(nameof(AppUserPasskey.Device));
 
@@ -272,7 +275,6 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		[ActiveIssue(Configuration = TestProvName.AllInformix,   Details = InformixPasskeyGate)]
 		public async Task CustomPasskeyTypeRoundTrip([DataSources] string context)
 		{
 			using var setup    = new AppPasskeyConnection(new DataOptions().UseConfiguration(context.StripRemote()));

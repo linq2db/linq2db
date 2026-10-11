@@ -138,9 +138,10 @@ defaults outrank anything supplied that way.
 * **A column the defaults pin for a specific provider cannot be renamed on that provider by an unscoped mapping.**
   `AspNetUserTokens.UserId` / `LoginProvider` / `Name` on Firebird 2.5, and `AspNetUserPasskeys.CredentialId` on
   Access, Informix and Firebird 2.5, carry provider-scoped mappings that drop a primary key those engines cannot
-  index; `AspNetUserPasskeys.Data` on MySQL, Oracle, Firebird and Access carries one that widens it to a text/CLOB
-  column. A provider-scoped mapping outranks an unscoped one, so the rename is dropped with no error. Scope your own
-  mapping to the same provider to override it.
+  index (Informix also stores the id as hex text, as it cannot compare a binary value that wide);
+  `AspNetUserPasskeys.Data` on MySQL, Oracle, Firebird, Access, Informix and SQL CE carries one that widens it to a
+  text/CLOB column. A provider-scoped mapping outranks an unscoped one, so the rename is dropped with no error. Scope
+  your own mapping to the same provider to override it.
 * **Extra properties on a subclass become columns.** `class AppUser : IdentityUser<string> { public string Tenant { get; set; } }`
   maps `Tenant` as a column, so `CreateTable` emits it and inserts include it — the same as EF Core, but the table is
   then no longer interchangeable with a stock `AspNetUsers` unless you `Ignore` the property.
@@ -207,6 +208,9 @@ affected-rows count for an `UPDATE`, so the optimistic-concurrency check behind 
 there: user and role updates throw, and every `UserManager` operation that saves the user throws with them. It has no
 identity columns either, so int / long keys must be assigned by the caller. Reads, claims, logins, tokens, roles and
 deletes work.
+
+On **SAP HANA** a passkey's `Data` column holds at most 5000 characters, the widest `NVARCHAR` it binds: enough for
+the default `none` attestation, possibly not for a direct-attestation certificate chain.
 
 ## Navigations
 

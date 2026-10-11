@@ -22,9 +22,6 @@ namespace Tests.Identity
 		protected const string IdentityGate  = "ClickHouse has no identity columns, so a database-generated int key is never read back.";
 		protected const string IdentityError = "should be greater than{0}0";
 
-		// The table itself creates (without its key - see DefaultMappings); it is the lookups that cannot run.
-		protected const string InformixPasskeyGate = "A 1024-byte credential id fits only an Informix BYTE column, and BYTE values cannot appear in a comparison - so every passkey lookup filters on a column Informix refuses to filter on.";
-
 		// ASP.NET Core Identity entities carry non-deterministic values - GUID Ids (IdentityUser/IdentityRole default
 		// ctors), the security stamp, and the optimistic-concurrency stamp are all freshly generated per run. The SQL
 		// is structurally identical between the direct and remote (LinqService) paths; only those random parameter

@@ -268,7 +268,6 @@ namespace Tests.Identity
 
 #if NET10_0_OR_GREATER
 		[Test]
-		[ActiveIssue(Configuration = TestProvName.AllInformix, Details = InformixPasskeyGate)]
 		public async Task DependencyInjection_CustomPasskey([DataSources(false)] string context, [Values] bool withRoles)
 		{
 			using var setup    = new IdentityCustomizationTests.AppPasskeyConnection(new DataOptions().UseConfiguration(context.StripRemote()));

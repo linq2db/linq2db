@@ -401,7 +401,6 @@ namespace Tests.Identity
 
 #if NET10_0_OR_GREATER
 		[Test]
-		[ActiveIssue(Configuration = TestProvName.AllInformix, Details = InformixPasskeyGate)]
 		public async Task Passkeys([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
@@ -459,7 +458,6 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		[ActiveIssue(Configuration = TestProvName.AllInformix,   Details = InformixPasskeyGate)]
 		public async Task UserDeleteRemovesPasskeys([DataSources] string context, [Values] bool schemaV3)
 		{
 			using var setup  = GetSetup(context);
@@ -499,7 +497,6 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		[ActiveIssue(Configuration = TestProvName.AllInformix, Details = InformixPasskeyGate)]
 		public async Task StockStorePasskeyOverride([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
