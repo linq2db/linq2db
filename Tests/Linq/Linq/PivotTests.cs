@@ -297,6 +297,41 @@ namespace Tests.Linq
 				.ShouldBe(new (string, string, decimal?)[] { ("EU", "Q1", 10m), ("EU", "Q2", 20m), ("US", "Q1", 5m) });
 		}
 
+		/// <summary>An unpivot written inline in a sub-query, over a source that is itself a query rather than a captured local.</summary>
+		[Test]
+		public void UnpivotInlineInASubQuery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(QuarterlySales.Data);
+
+			var regions =
+				from p in t
+				where t.Where(x => x.Id > 0)
+					.Unpivot((r, quarter, amount) => new { r.Id, Quarter = quarter, Amount = amount }, x => x.Q1, x => x.Q2)
+					.Any(u => u.Id == p.Id && u.Amount > 15)
+				select p.Region;
+
+			regions.ToArray().ShouldBe(new[] { "EU" });
+		}
+
+		[Test]
+		[ThrowsRequiredOuterJoins(TestProvName.AllSQLite, TestProvName.AllAccess, TestProvName.AllMySql57, TestProvName.AllMariaDB, TestProvName.AllFirebirdLess4, ProviderName.PostgreSQL92, TestProvName.AllOracle11, TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllClickHouse, TestProvName.AllYdb)]
+		public void UnpivotOverACorrelatedSource([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(QuarterlySales.Data);
+
+			var joined =
+				from p in t
+				from u in t.Where(x => x.Id == p.Id)
+					.Unpivot((r, quarter, amount) => new { r.Id, Quarter = quarter, Amount = amount }, x => x.Q1, x => x.Q2)
+				select new { p.Region, u.Quarter, u.Amount };
+
+			joined.OrderBy(r => r.Region).ThenBy(r => r.Quarter).ToArray()
+				.Select(r => (r.Region, r.Quarter, r.Amount))
+				.ShouldBe(new (string, string, decimal?)[] { ("EU", "Q1", 10m), ("EU", "Q2", 20m), ("US", "Q1", 5m) });
+		}
+
 		/// <summary>
 		/// The source is built once per branch, as a hand-written <c>Concat</c> builds it, and no more: a tag ahead of
 		/// an N-column unpivot appears N times.

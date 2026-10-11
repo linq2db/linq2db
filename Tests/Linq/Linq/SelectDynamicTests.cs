@@ -74,6 +74,45 @@ namespace Tests.Linq
 			result[1].Values!["Eur"].ShouldBe(40m);
 		}
 
+		/// <summary>A dynamic projection written inline in a sub-query, over a source that is itself a query.</summary>
+		[Test]
+		[ActiveIssue(5953, ErrorType = typeof(InvalidOperationException), ErrorMessage = "variable 'n' of type 'System.String' referenced from scope '', but it is not defined")]
+		public void SelectDynamicInlineInASubQuery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_data);
+
+			var names = new[] { "Usd", "Eur" };
+
+			var ids =
+				from a in t
+				where t.Where(x => x.Id > 0)
+					.SelectDynamic(x => new AmountsDto { Id = x.Id }, names, (x, n) => Sql.Property<decimal>(x, n))
+					.Any(r => r.Id == a.Id && Sql.Property<decimal>(r, "Eur") > 30)
+				select a.Id;
+
+			ids.ToArray().ShouldBe(new[] { 2 });
+		}
+
+		[Test]
+		[ActiveIssue(5953, ErrorType = typeof(InvalidOperationException), ErrorMessage = "variable 'n' of type 'System.String' referenced from scope '', but it is not defined")]
+		public void SelectDynamicOverACorrelatedSource([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_data);
+
+			var names = new[] { "Usd", "Eur" };
+
+			var correlated =
+				from a in t
+				from r in t.Where(x => x.Id == a.Id)
+					.SelectDynamic(x => new AmountsDto { Id = x.Id }, names, (x, n) => Sql.Property<decimal>(x, n))
+				select new { a.Id, Eur = Sql.Property<decimal>(r, "Eur") };
+
+			correlated.ToArray().OrderBy(r => r.Id).Select(r => (r.Id, r.Eur))
+				.ShouldBe(new (int, decimal)[] { (1, 20.25m), (2, 40m) });
+		}
+
 		/// <summary>
 		/// A generated name is a store key, not SQL text: quote characters and spaces survive the round trip, and two
 		/// names that differ only in such characters stay distinct.

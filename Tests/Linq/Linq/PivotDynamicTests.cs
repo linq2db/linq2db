@@ -191,6 +191,41 @@ namespace Tests.Linq
 			result[1].Cells["Y2010"].ShouldBe(15m);
 		}
 
+		/// <summary>A pivot written inline in a sub-query, over a source that is itself a query rather than a captured local.</summary>
+		[Test]
+		public void PivotInlineInASubQuery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var categories =
+				from c in t
+				where t.Where(x => x.Amount > 0)
+					.Pivot(x => x.Category, x => x.Year, new[] { 2000, 2010 },
+						(g, p) => new { g.Key, Cells = p.Cell(rows => rows.Sum(x => x.Amount), Year) })
+					.Any(r => r.Key == c.Category && Sql.Property<decimal?>(r.Cells, "Y2010") > 16)
+				select c.Category;
+
+			categories.Distinct().ToArray().ShouldBe(new[] { "A" });
+		}
+
+		[Test]
+		public void PivotOverACorrelatedSource([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var correlated =
+				from c in t
+				from r in t.Where(x => x.Category == c.Category)
+					.Pivot(x => x.Category, x => x.Year, new[] { 2000, 2010 },
+						(g, p) => new { g.Key, Cells = p.Cell(rows => rows.Sum(x => x.Amount), Year) })
+				select new { c.Id, r.Key, Y2010 = Sql.Property<decimal?>(r.Cells, "Y2010") };
+
+			correlated.ToArray().OrderBy(r => r.Id).Select(r => (r.Id, r.Key, r.Y2010))
+				.ShouldBe(new (int, string, decimal?)[] { (1, "A", 20m), (2, "A", 20m), (3, "B", 15m), (4, "B", 15m) });
+		}
+
 		[Test]
 		public void PivotsMultipleAggregatesOfOneValue([DataSources] string context)
 		{
