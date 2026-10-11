@@ -223,7 +223,24 @@ namespace Tests.Linq
 					(x, n) => Sql.Property<decimal>(x, n))
 				.ToList();
 
-			act.ShouldThrow<ArgumentException>();
+			act.ShouldThrow<ArgumentException>().Message.ShouldContain("Duplicate dynamic column name");
+		}
+
+		[Test]
+		public void EmptyNameThrows([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_data);
+
+			Action act = () => t
+				.SelectDynamic(
+					x => new AmountsDto { Id = x.Id },
+					new[] { "Usd" },
+					(x, n) => Sql.Property<decimal>(x, n),
+					_ => "")
+				.ToList();
+
+			act.ShouldThrow<ArgumentException>().Message.ShouldContain("empty dynamic column name");
 		}
 
 		/// <summary>A generated column named after a real member would be shadowed by it, silently.</summary>

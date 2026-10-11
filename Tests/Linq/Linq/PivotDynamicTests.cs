@@ -495,6 +495,47 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void ArgumentGuardsThrow([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(Sales.Data);
+
+			// A runtime value set read from a nullable column can carry null, whose default name is empty.
+			Action emptyName = () => t
+				.Pivot(x => x.Category, x => x.Note, new[] { "a0", null },
+					(g, p) => new { g.Key, Cells = p.Cell(rows => rows.Sum(x => x.Amount)) })
+				.ToList();
+
+			Action duplicateName = () => t
+				.Pivot(x => x.Category, x => x.Year, new[] { 2000, 2010 },
+					(g, p) => new { g.Key, Cells = p.Cell(rows => rows.Sum(x => x.Amount), _ => "Same") })
+				.ToList();
+
+			Action cellSetNotBuilt = () => t
+				.Pivot(x => x.Category, x => x.Year, new[] { 2000 },
+					g => new SalesDto { Category = g.Key },
+					c => null!)
+				.ToList();
+
+			Action noTemplate = () => t
+				.Pivot(x => x.Category, x => x.Year, new[] { 2000 },
+					g => new SalesDto { Category = g.Key },
+					c => c)
+				.ToList();
+
+			Action unrootedChain = () => t
+				.Pivot(x => x.Category, x => x.Year, new[] { 2000 },
+					(g, p) => new { g.Key, Cells = new PivotCells<Sales, int>().Cell(rows => rows.Sum(x => x.Amount)) })
+				.ToList();
+
+			emptyName      .ShouldThrow<ArgumentException>().Message.ShouldContain("empty column name");
+			duplicateName  .ShouldThrow<ArgumentException>().Message.ShouldContain("Duplicate pivot column name 'Same'");
+			cellSetNotBuilt.ShouldThrow<ArgumentException>().Message.ShouldContain("cell set was not built");
+			noTemplate     .ShouldThrow<ArgumentException>().Message.ShouldContain("at least one cell template");
+			unrootedChain  .ShouldThrow<ArgumentException>().Message.ShouldContain("must be built from 'p'");
+		}
+
+		[Test]
 		public void PivotsIntoANestedObject([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

@@ -207,6 +207,29 @@ namespace Tests.Linq
 			sql.ShouldContain("UNION ALL");
 		}
 
+		[Test]
+		public void ArgumentGuardsThrow([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(QuarterlySales.Data);
+
+			System.Action noColumnName = () => t
+				.Unpivot((QuarterlySales row, string name, decimal? value) => new { row.Id, name, value })
+				.ToArray();
+
+			System.Action emptyColumnName = () => t
+				.Unpivot((QuarterlySales row, string name, decimal? value) => new { row.Id, name, value }, "Q1", "")
+				.ToArray();
+
+			System.Action computedColumn = () => t
+				.Unpivot((row, name, value) => new { row.Id, name, value }, x => x.Q1 * 2)
+				.ToArray();
+
+			noColumnName   .ShouldThrow<System.ArgumentException>().Message.ShouldContain("at least one column");
+			emptyColumnName.ShouldThrow<System.ArgumentException>().Message.ShouldContain("index 1 is empty");
+			computedColumn .ShouldThrow<LinqToDBException>().Message.ShouldContain("simple member access");
+		}
+
 		/// <summary>The source is built once per branch, as a hand-written <c>Concat</c> builds it, and no more.</summary>
 		[Test]
 		public void UnpivotBuildsTheSourceOncePerBranch([IncludeDataSources(TestProvName.AllSQLite)] string context)
