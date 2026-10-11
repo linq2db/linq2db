@@ -42,7 +42,7 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TSource, TResult>>     staticSelector,
 			[InstantHandle] IEnumerable<TKey>                      keys,
 			[InstantHandle] Expression<Func<TSource, TKey, TCell>> valueTemplate,
-			                Func<TKey, string>?                    nameSelector = null)
+			[InstantHandle] Func<TKey, string>?                    nameSelector = null)
 		{
 			ArgumentNullException.ThrowIfNull(source);
 			ArgumentNullException.ThrowIfNull(staticSelector);
