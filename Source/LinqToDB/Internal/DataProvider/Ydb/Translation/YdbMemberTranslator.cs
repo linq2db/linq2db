@@ -768,10 +768,10 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 						precision!);
 				}
 
-				// The scaled value needs p more integer digits than the source declares, and so does 10^p
-				// itself: Decimal(6,2) holds 9999.99, so neither 11.45 * 10^5 nor Decimal('100000', 6, 2)
-				// fits it. YDB answers an out-of-range Decimal with an empty optional rather than an error,
-				// which the surrounding Unwrap then turns into a query-terminating PreconditionFailed.
+				// The scaled value needs p more integer digits than the source declares: Decimal(6,2) holds
+				// 9999.99, so 1234.56 * 10^1 does not fit it. YDB answers an out-of-range Decimal with an empty
+				// optional rather than an error, which the surrounding Unwrap then turns into a query-terminating
+				// PreconditionFailed.
 				var scaleType = isDecimal && hasPrecision ? ScaledDecimalType(valueType, precision!) : valueType;
 
 				// scale by 10^p in the widened type (exact for Decimal). YQL's DecimalMul demands both operands

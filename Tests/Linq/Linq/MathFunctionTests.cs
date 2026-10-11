@@ -358,9 +358,8 @@ namespace Tests.Linq
 				q.GetCacheMissCount().ShouldBe(cacheMissCount);
 		}
 
-		// Rounds server-side to more digits than the column's declared scale, so a provider that emulates
-		// ROUND by scaling has to widen the intermediate: MoneyValue is Decimal(6,2) on YDB, and 11.45 * 10^5
-		// does not fit that.
+		// Rounds server-side to more digits than the column's declared scale, a no-op that a provider emulating
+		// ROUND by scaling must not overflow on: MoneyValue is Decimal(6,2) on YDB, and 11.45 * 10^5 does not fit that.
 		[Test]
 		public void Round13([DataSources] string context)
 		{
@@ -462,6 +461,25 @@ namespace Tests.Linq
 
 			result.Select(r => r.Away).ShouldBe(new decimal?[] { 1230m, 1230m, -1230m, 1230m, -1230m });
 			result.Select(r => r.Even).ShouldBe(new decimal?[] { 1230m, 1230m, -1230m, 1220m, -1220m });
+		}
+
+		// A precision below the scale still needs a digit more than the type has: 1234.56 * 10^1 does not fit Decimal(6,2).
+		[Test]
+		public void Round21([IncludeDataSources(true, TestProvName.AllYdb)] string context, [Values(MidpointRounding.ToEven, MidpointRounding.AwayFromZero)] MidpointRounding mp)
+		{
+			var data = new[]
+			{
+				new RoundNegative { Id = 1, D =  1234.56m },
+				new RoundNegative { Id = 2, D = -1234.55m },
+				new RoundNegative { Id = 3, D =  1000.05m },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			AreEqual(
+				from r in data orderby r.Id select new { r.Id, R = Math.Round(r.D, 1, mp), Sum = Math.Round(r.D, 1, mp) + r.D, Cond = r.Id > 2 ? Math.Round(r.D, 1, mp) : r.D },
+				from r in t    orderby r.Id select new { r.Id, R = Sql.AsSql(Math.Round(r.D, 1, mp)), Sum = Sql.AsSql(Math.Round(r.D, 1, mp) + r.D), Cond = Sql.AsSql(r.Id > 2 ? Math.Round(r.D, 1, mp) : r.D) });
 		}
 
 		sealed class RoundNegativeNearLimit
