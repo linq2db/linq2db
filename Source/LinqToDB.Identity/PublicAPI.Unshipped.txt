@@ -71,12 +71,8 @@ LinqToDB.Identity.UserStore<TUser, TRole, TContext>.UserStore(TContext context, 
 LinqToDB.Identity.UserStore<TUser>
 LinqToDB.Identity.UserStore<TUser>.UserStore(LinqToDB.IDataContext! context, Microsoft.AspNetCore.Identity.IdentityErrorDescriber? describer = null, Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Identity.IdentityOptions!>? options = null) -> void
 Microsoft.Extensions.DependencyInjection.IdentityLinqToDBBuilderExtensions
-override LinqToDB.Identity.IdentityDataConnection.ConfigureMappings(LinqToDB.Mapping.MappingSchema! mappingSchema) -> void
 override LinqToDB.Identity.IdentityDataConnection<TUser, TRole, TKey, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken>.ConfigureMappings(LinqToDB.Mapping.MappingSchema! mappingSchema) -> void
-override LinqToDB.Identity.IdentityDataConnection<TUser>.ConfigureMappings(LinqToDB.Mapping.MappingSchema! mappingSchema) -> void
-override LinqToDB.Identity.IdentityDataContext.ConfigureMappings(LinqToDB.Mapping.MappingSchema! mappingSchema) -> void
 override LinqToDB.Identity.IdentityDataContext<TUser, TRole, TKey, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken>.ConfigureMappings(LinqToDB.Mapping.MappingSchema! mappingSchema) -> void
-override LinqToDB.Identity.IdentityDataContext<TUser>.ConfigureMappings(LinqToDB.Mapping.MappingSchema! mappingSchema) -> void
 override LinqToDB.Identity.RoleStore<TRole, TContext, TKey, TUserRole, TRoleClaim>.AddClaimAsync(TRole! role, System.Security.Claims.Claim! claim, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 override LinqToDB.Identity.RoleStore<TRole, TContext, TKey, TUserRole, TRoleClaim>.CreateAsync(TRole! role, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Microsoft.AspNetCore.Identity.IdentityResult!>!
 override LinqToDB.Identity.RoleStore<TRole, TContext, TKey, TUserRole, TRoleClaim>.DeleteAsync(TRole! role, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Microsoft.AspNetCore.Identity.IdentityResult!>!

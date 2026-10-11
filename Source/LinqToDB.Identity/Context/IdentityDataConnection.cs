@@ -26,25 +26,6 @@ namespace LinqToDB.Identity
 		public IdentityDataConnection()
 		{
 		}
-
-		/// <inheritdoc />
-		protected override void ConfigureMappings(MappingSchema mappingSchema)
-		{
-			var builder = new FluentMappingBuilder(mappingSchema);
-
-			DefaultMappings.SetupIdentityUser     <IdentityUser             >(builder);
-			DefaultMappings.SetupIdentityUserClaim<IdentityUserClaim<string>>(builder);
-			DefaultMappings.SetupIdentityUserLogin<IdentityUserLogin<string>>(builder);
-			DefaultMappings.SetupIdentityUserToken<IdentityUserToken<string>>(builder);
-#if NET10_0_OR_GREATER
-			DefaultMappings.SetupIdentityUserPasskey(builder);
-#endif
-			DefaultMappings.SetupIdentityRole     <IdentityRole             >(builder);
-			DefaultMappings.SetupIdentityUserRole <IdentityUserRole<string >>(builder);
-			DefaultMappings.SetupIdentityRoleClaim<IdentityRoleClaim<string>>(builder);
-
-			builder.Build();
-		}
 	}
 
 	/// <summary>
@@ -68,25 +49,6 @@ namespace LinqToDB.Identity
 		/// </summary>
 		public IdentityDataConnection()
 		{
-		}
-
-		/// <inheritdoc />
-		protected override void ConfigureMappings(MappingSchema mappingSchema)
-		{
-			var builder = new FluentMappingBuilder(mappingSchema);
-
-			DefaultMappings.SetupIdentityUser     <TUser                    >(builder);
-			DefaultMappings.SetupIdentityUserClaim<IdentityUserClaim<string>>(builder);
-			DefaultMappings.SetupIdentityUserLogin<IdentityUserLogin<string>>(builder);
-			DefaultMappings.SetupIdentityUserToken<IdentityUserToken<string>>(builder);
-#if NET10_0_OR_GREATER
-			DefaultMappings.SetupIdentityUserPasskey(builder);
-#endif
-			DefaultMappings.SetupIdentityRole     <IdentityRole             >(builder);
-			DefaultMappings.SetupIdentityUserRole <IdentityUserRole<string >>(builder);
-			DefaultMappings.SetupIdentityRoleClaim<IdentityRoleClaim<string>>(builder);
-
-			builder.Build();
 		}
 	}
 
