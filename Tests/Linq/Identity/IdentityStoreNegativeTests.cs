@@ -11,6 +11,8 @@ using Microsoft.AspNetCore.Identity;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Identity
 {
 	[TestFixture]
@@ -59,7 +61,7 @@ namespace Tests.Identity
 
 		[Test]
 		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
-		public async Task ConcurrencyFailure([DataSources] string context)
+		public async Task ConcurrencyFailureOnUpdate([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
 			using var schema = new Schema(setup);
@@ -68,25 +70,52 @@ namespace Tests.Identity
 			var users = new UserStore<IdentityUser>(ctx);
 			var roles = new RoleStore<IdentityRole>(ctx);
 
-			var u1 = NewUser("conc-u1");
-			var u2 = NewUser("conc-u2");
-			await users.CreateAsync(u1);
-			await users.CreateAsync(u2);
+			var fresh = NewUser("conc-fresh");
+			var user  = NewUser("conc-user");
+			var role  = NewRole("conc-role");
+			await users.CreateAsync(fresh);
+			await users.CreateAsync(user);
+			await roles.CreateAsync(role);
+
+			(await users.UpdateAsync(fresh)).Succeeded.ShouldBeTrue();
 
 			// Corrupt the stored ConcurrencyStamp out-of-band so the optimistic filter no longer matches. Through
 			// ctx, not the setup connection: Access does not show one connection the rows another just inserted,
 			// so the same statement there matches 0 rows and the test's premise silently evaporates.
-			await ctx.GetTable<IdentityUser>().Where(u => u.Id == u1.Id).Set(u => u.ConcurrencyStamp, "stale").UpdateAsync();
-			await ctx.GetTable<IdentityUser>().Where(u => u.Id == u2.Id).Set(u => u.ConcurrencyStamp, "stale").UpdateAsync();
-
-			Assert.That((await users.UpdateAsync(u1)).Succeeded, Is.False);
-			Assert.That((await users.DeleteAsync(u2)).Succeeded, Is.False);
-
-			var role = NewRole("conc-role");
-			await roles.CreateAsync(role);
+			await ctx.GetTable<IdentityUser>().Where(u => u.Id == user.Id).Set(u => u.ConcurrencyStamp, "stale").UpdateAsync();
 			await ctx.GetTable<IdentityRole>().Where(r => r.Id == role.Id).Set(r => r.ConcurrencyStamp, "stale").UpdateAsync();
-			Assert.That((await roles.UpdateAsync(role)).Succeeded, Is.False);
-			Assert.That((await roles.DeleteAsync(role)).Succeeded, Is.False);
+
+			(await users.UpdateAsync(user)).Succeeded.ShouldBeFalse();
+			(await roles.UpdateAsync(role)).Succeeded.ShouldBeFalse();
+		}
+
+		[Test]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
+		[ActiveIssue(Configuration = TestProvName.AllYdb,        Details = YdbGate)]
+		public async Task ConcurrencyFailureOnDelete([DataSources] string context)
+		{
+			using var setup  = GetSetup(context);
+			using var schema = new Schema(setup);
+			using var ctx    = GetDataContext(context, setup.MappingSchema);
+
+			var users = new UserStore<IdentityUser>(ctx);
+			var roles = new RoleStore<IdentityRole>(ctx);
+
+			var fresh = NewUser("conc-fresh");
+			var user  = NewUser("conc-user");
+			var role  = NewRole("conc-role");
+			await users.CreateAsync(fresh);
+			await users.CreateAsync(user);
+			await roles.CreateAsync(role);
+
+			(await users.DeleteAsync(fresh)).Succeeded.ShouldBeTrue();
+
+			// see ConcurrencyFailureOnUpdate for why this goes through ctx
+			await ctx.GetTable<IdentityUser>().Where(u => u.Id == user.Id).Set(u => u.ConcurrencyStamp, "stale").UpdateAsync();
+			await ctx.GetTable<IdentityRole>().Where(r => r.Id == role.Id).Set(r => r.ConcurrencyStamp, "stale").UpdateAsync();
+
+			(await users.DeleteAsync(user)).Succeeded.ShouldBeFalse();
+			(await roles.DeleteAsync(role)).Succeeded.ShouldBeFalse();
 		}
 
 		[Test]
