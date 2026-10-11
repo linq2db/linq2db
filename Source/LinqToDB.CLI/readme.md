@@ -232,6 +232,11 @@ F# record expressions must assign every field, including association fields, so 
 `{ Person.Empty with FirstName = "John"; LastName = "Doe" }`. `Empty` itself is only a template: its non-nullable
 fields hold default (null) values.
 
+The generated file is a single `namespace rec`, so all generated types are mutually visible regardless of order; the
+generator qualifies its own references where an entity name shadows a framework type. Code that opens the generated
+namespace sees the same shadowing (e.g. an entity named `Task` hides `System.Threading.Tasks.Task`) and should
+qualify such types itself.
+
 Some options apply to C# only (partial classes / methods, entity base class, association extension methods,
 data context constructor selection, multi-file output, xml-doc warning suppression); the `help scaffold` output
 shows a `Supported in:` line for such options, and specifying one together with `--target-language f#` is

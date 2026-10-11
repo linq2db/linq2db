@@ -264,6 +264,44 @@ namespace Tests.Scaffold
 			}
 		}
 
+		// all generated types share one `namespace rec` scope, so references to framework types shadowed by entity names
+		// (including names of namespace segments) must be qualified until unambiguous
+		[Test]
+		public void ShadowedTypeReferencesQualified()
+		{
+			var options = FSharpOptions();
+			options.Schema.LoadedObjects |= SchemaObjects.StoredProcedure;
+			options.DataModel.EntityClassNameOptions = new() { Casing = NameCasing.None, Pluralization = Pluralization.None };
+			options.DataModel.GenerateProcedureAsync = true;
+
+			var procedure = new StoredProcedure(
+				new SqlObjectName("Proc", Schema: "dbo"),
+				null,
+				[new Parameter("@value", null, new DatabaseType("int", null, null, null), true, LinqToDB.Schema.ParameterDirection.Input)],
+				null,
+				[[new ResultColumn("Value", new DatabaseType("nvarchar", 50, null, null), true)]],
+				new VoidResult());
+
+			Table T(string name) => new(new SqlObjectName(name, Schema: "dbo"), null, [new Column("Id", null, new DatabaseType("int", null, null, null), false, true, true, 0), new Column("Val", null, new DatabaseType("int", null, null, null), true, true, true, 1)], null, new PrimaryKey(null, ["Id"]));
+
+			var source = GenerateSource(
+				options,
+				tableName  : "Task",
+				columns    : [new Column("Id", null, new DatabaseType("int", null, null, null), false, true, true, 0)],
+				primaryKey : new PrimaryKey(null, ["Id"]),
+				procedures : [procedure],
+				extraTables: [T("DataConnection"), T("Option"), T("DataOptions"), T("ITable"), T("Func"), T("DataParameter"), T("Extensions"), T("Sql"), T("Data"), T("Core"), T("Tasks"), T("LinqToDB"), T("System"), T("Microsoft")]);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(source, Does.Contain("type TestDataContext (options : LinqToDB.DataOptions<TestDataContext>) ="));
+				Assert.That(source, Does.Contain("inherit LinqToDB.Data.DataConnection(options.Options)"));
+				Assert.That(source, Does.Contain("LinqToDB.Data.DataParameter(\"@value\", FSharp.Core.Option.toNullable(value), DataType.Int32)"));
+				Assert.That(source, Does.Contain(": Threading.Tasks.Task<IEnumerable<ProcResult>> ="));
+				Assert.That(source, Does.Contain("(table : LinqToDB.ITable<Task>, id : int)"));
+			}
+		}
+
 		[Test]
 		public void CSharpGeneratorRejectsRecord()
 		{
