@@ -795,8 +795,9 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 			// valueType widened by the rounding digits, clamped to what YQL accepts. The source scale is never
 			// cut: dropping fractional digits corrupts every row, while running out of integer digits only
 			// fails values near the type's limit. A non-constant precision is capped at the source scale, so it
-			// needs at most P integer digits and every remaining digit goes to scale, for a negative one. A
-			// negative constant precision shifts digits the other way, so it widens the scale instead.
+			// needs at most P integer digits (10^p needs one even when the type has none) and every remaining
+			// digit goes to scale, for a negative one. A negative constant precision shifts digits the other
+			// way, so it widens the scale instead.
 			static DbDataType ScaledDecimalType(DbDataType valueType, ISqlExpression precision)
 			{
 				var scale     = valueType.Scale ?? YdbMappingSchema.DEFAULT_DECIMAL_SCALE;
@@ -810,11 +811,11 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 
 				if (p == null)
 				{
-					intDigits += scale;
+					intDigits  = Math.Max(intDigits, 1) + scale;
 					scale      = Math.Max(scale, YdbMappingSchema.MAX_DECIMAL_PRECISION - intDigits);
 				}
 				else if (p > 0)
-					intDigits += p.Value;
+					intDigits = Math.Max(intDigits, 1) + p.Value;
 				else
 					scale = Math.Min(scale - p.Value, YdbMappingSchema.MAX_DECIMAL_PRECISION);
 
