@@ -12,6 +12,7 @@ open LinqToDB.Async
 open LinqToDB.Common
 open LinqToDB.Data
 open LinqToDB.Mapping
+open Microsoft.FSharp.Core
 open Microsoft.SqlServer.Types
 open System
 open System.Collections.Generic
@@ -141,7 +142,7 @@ type ExtensionMethods =
     static member Find (table : ITable<AllType>, id : SqlInt32) : AllType = table.FirstOrDefault((fun e -> e.Id.Equals(id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<AllType>, id : SqlInt32, cancellationToken : CancellationToken) : Task<AllType> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
+    static member FindAsync (table : ITable<AllType>, id : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<AllType> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<AllType>, id : SqlInt32) : IQueryable<AllType> = table.Where((fun e -> e.Id.Equals(id)))
@@ -150,7 +151,7 @@ type ExtensionMethods =
     static member Find (table : ITable<AllType>, record : AllType) : AllType = table.FirstOrDefault((fun e -> e.Id.Equals(record.Id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<AllType>, record : AllType, cancellationToken : CancellationToken) : Task<AllType> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
+    static member FindAsync (table : ITable<AllType>, record : AllType, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<AllType> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<AllType>, record : AllType) : IQueryable<AllType> = table.Where((fun e -> e.Id.Equals(record.Id)))
@@ -159,7 +160,7 @@ type ExtensionMethods =
     static member FindAllType (db : TestDataDB, id : SqlInt32) : AllType = db.GetTable<AllType>().FirstOrDefault((fun e -> e.Id.Equals(id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAllTypeAsync (db : TestDataDB, id : SqlInt32, cancellationToken : CancellationToken) : Task<AllType> = db.GetTable<AllType>().FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
+    static member FindAllTypeAsync (db : TestDataDB, id : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<AllType> = db.GetTable<AllType>().FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindAllTypeQuery (db : TestDataDB, id : SqlInt32) : IQueryable<AllType> = db.GetTable<AllType>().Where((fun e -> e.Id.Equals(id)))
@@ -168,7 +169,7 @@ type ExtensionMethods =
     static member Find (db : TestDataDB, record : AllType) : AllType = db.GetTable<AllType>().FirstOrDefault((fun e -> e.Id.Equals(record.Id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : AllType, cancellationToken : CancellationToken) : Task<AllType> = db.GetTable<AllType>().FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
+    static member FindAsync (db : TestDataDB, record : AllType, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<AllType> = db.GetTable<AllType>().FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (db : TestDataDB, record : AllType) : IQueryable<AllType> = db.GetTable<AllType>().Where((fun e -> e.Id.Equals(record.Id)))
@@ -177,7 +178,7 @@ type ExtensionMethods =
     static member Find (table : ITable<AllTypes2>, id : SqlInt32) : AllTypes2 = table.FirstOrDefault((fun e -> e.Id.Equals(id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<AllTypes2>, id : SqlInt32, cancellationToken : CancellationToken) : Task<AllTypes2> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
+    static member FindAsync (table : ITable<AllTypes2>, id : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<AllTypes2> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<AllTypes2>, id : SqlInt32) : IQueryable<AllTypes2> = table.Where((fun e -> e.Id.Equals(id)))
@@ -186,7 +187,7 @@ type ExtensionMethods =
     static member Find (table : ITable<AllTypes2>, record : AllTypes2) : AllTypes2 = table.FirstOrDefault((fun e -> e.Id.Equals(record.Id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<AllTypes2>, record : AllTypes2, cancellationToken : CancellationToken) : Task<AllTypes2> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
+    static member FindAsync (table : ITable<AllTypes2>, record : AllTypes2, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<AllTypes2> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<AllTypes2>, record : AllTypes2) : IQueryable<AllTypes2> = table.Where((fun e -> e.Id.Equals(record.Id)))
@@ -195,7 +196,7 @@ type ExtensionMethods =
     static member FindAllTypes2 (db : TestDataDB, id : SqlInt32) : AllTypes2 = db.GetTable<AllTypes2>().FirstOrDefault((fun e -> e.Id.Equals(id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAllTypes2Async (db : TestDataDB, id : SqlInt32, cancellationToken : CancellationToken) : Task<AllTypes2> = db.GetTable<AllTypes2>().FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
+    static member FindAllTypes2Async (db : TestDataDB, id : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<AllTypes2> = db.GetTable<AllTypes2>().FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindAllTypes2Query (db : TestDataDB, id : SqlInt32) : IQueryable<AllTypes2> = db.GetTable<AllTypes2>().Where((fun e -> e.Id.Equals(id)))
@@ -204,7 +205,7 @@ type ExtensionMethods =
     static member Find (db : TestDataDB, record : AllTypes2) : AllTypes2 = db.GetTable<AllTypes2>().FirstOrDefault((fun e -> e.Id.Equals(record.Id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : AllTypes2, cancellationToken : CancellationToken) : Task<AllTypes2> = db.GetTable<AllTypes2>().FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
+    static member FindAsync (db : TestDataDB, record : AllTypes2, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<AllTypes2> = db.GetTable<AllTypes2>().FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (db : TestDataDB, record : AllTypes2) : IQueryable<AllTypes2> = db.GetTable<AllTypes2>().Where((fun e -> e.Id.Equals(record.Id)))
@@ -213,7 +214,7 @@ type ExtensionMethods =
     static member Find (table : ITable<Child>, id : SqlInt32) : Child = table.FirstOrDefault((fun e -> e.Id.Equals(id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<Child>, id : SqlInt32, cancellationToken : CancellationToken) : Task<Child> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
+    static member FindAsync (table : ITable<Child>, id : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Child> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<Child>, id : SqlInt32) : IQueryable<Child> = table.Where((fun e -> e.Id.Equals(id)))
@@ -222,7 +223,7 @@ type ExtensionMethods =
     static member Find (table : ITable<Child>, record : Child) : Child = table.FirstOrDefault((fun e -> e.Id.Equals(record.Id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<Child>, record : Child, cancellationToken : CancellationToken) : Task<Child> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
+    static member FindAsync (table : ITable<Child>, record : Child, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Child> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<Child>, record : Child) : IQueryable<Child> = table.Where((fun e -> e.Id.Equals(record.Id)))
@@ -231,7 +232,7 @@ type ExtensionMethods =
     static member FindChild (db : TestDataDB, id : SqlInt32) : Child = db.GetTable<Child>().FirstOrDefault((fun e -> e.Id.Equals(id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindChildAsync (db : TestDataDB, id : SqlInt32, cancellationToken : CancellationToken) : Task<Child> = db.GetTable<Child>().FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
+    static member FindChildAsync (db : TestDataDB, id : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Child> = db.GetTable<Child>().FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindChildQuery (db : TestDataDB, id : SqlInt32) : IQueryable<Child> = db.GetTable<Child>().Where((fun e -> e.Id.Equals(id)))
@@ -240,7 +241,7 @@ type ExtensionMethods =
     static member Find (db : TestDataDB, record : Child) : Child = db.GetTable<Child>().FirstOrDefault((fun e -> e.Id.Equals(record.Id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : Child, cancellationToken : CancellationToken) : Task<Child> = db.GetTable<Child>().FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
+    static member FindAsync (db : TestDataDB, record : Child, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Child> = db.GetTable<Child>().FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (db : TestDataDB, record : Child) : IQueryable<Child> = db.GetTable<Child>().Where((fun e -> e.Id.Equals(record.Id)))
@@ -249,7 +250,7 @@ type ExtensionMethods =
     static member Find (table : ITable<DecimalOverflow>, decimal1 : SqlDecimal) : DecimalOverflow = table.FirstOrDefault((fun e -> e.Decimal1.Equals(decimal1)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<DecimalOverflow>, decimal1 : SqlDecimal, cancellationToken : CancellationToken) : Task<DecimalOverflow> = table.FirstOrDefaultAsync((fun e -> e.Decimal1.Equals(decimal1)), cancellationToken)
+    static member FindAsync (table : ITable<DecimalOverflow>, decimal1 : SqlDecimal, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<DecimalOverflow> = table.FirstOrDefaultAsync((fun e -> e.Decimal1.Equals(decimal1)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<DecimalOverflow>, decimal1 : SqlDecimal) : IQueryable<DecimalOverflow> = table.Where((fun e -> e.Decimal1.Equals(decimal1)))
@@ -258,7 +259,7 @@ type ExtensionMethods =
     static member Find (table : ITable<DecimalOverflow>, record : DecimalOverflow) : DecimalOverflow = table.FirstOrDefault((fun e -> e.Decimal1.Equals(record.Decimal1)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<DecimalOverflow>, record : DecimalOverflow, cancellationToken : CancellationToken) : Task<DecimalOverflow> = table.FirstOrDefaultAsync((fun e -> e.Decimal1.Equals(record.Decimal1)), cancellationToken)
+    static member FindAsync (table : ITable<DecimalOverflow>, record : DecimalOverflow, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<DecimalOverflow> = table.FirstOrDefaultAsync((fun e -> e.Decimal1.Equals(record.Decimal1)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<DecimalOverflow>, record : DecimalOverflow) : IQueryable<DecimalOverflow> = table.Where((fun e -> e.Decimal1.Equals(record.Decimal1)))
@@ -267,7 +268,7 @@ type ExtensionMethods =
     static member FindDecimalOverflow (db : TestDataDB, decimal1 : SqlDecimal) : DecimalOverflow = db.GetTable<DecimalOverflow>().FirstOrDefault((fun e -> e.Decimal1.Equals(decimal1)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindDecimalOverflowAsync (db : TestDataDB, decimal1 : SqlDecimal, cancellationToken : CancellationToken) : Task<DecimalOverflow> = db.GetTable<DecimalOverflow>().FirstOrDefaultAsync((fun e -> e.Decimal1.Equals(decimal1)), cancellationToken)
+    static member FindDecimalOverflowAsync (db : TestDataDB, decimal1 : SqlDecimal, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<DecimalOverflow> = db.GetTable<DecimalOverflow>().FirstOrDefaultAsync((fun e -> e.Decimal1.Equals(decimal1)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindDecimalOverflowQuery (db : TestDataDB, decimal1 : SqlDecimal) : IQueryable<DecimalOverflow> = db.GetTable<DecimalOverflow>().Where((fun e -> e.Decimal1.Equals(decimal1)))
@@ -276,7 +277,7 @@ type ExtensionMethods =
     static member Find (db : TestDataDB, record : DecimalOverflow) : DecimalOverflow = db.GetTable<DecimalOverflow>().FirstOrDefault((fun e -> e.Decimal1.Equals(record.Decimal1)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : DecimalOverflow, cancellationToken : CancellationToken) : Task<DecimalOverflow> = db.GetTable<DecimalOverflow>().FirstOrDefaultAsync((fun e -> e.Decimal1.Equals(record.Decimal1)), cancellationToken)
+    static member FindAsync (db : TestDataDB, record : DecimalOverflow, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<DecimalOverflow> = db.GetTable<DecimalOverflow>().FirstOrDefaultAsync((fun e -> e.Decimal1.Equals(record.Decimal1)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (db : TestDataDB, record : DecimalOverflow) : IQueryable<DecimalOverflow> = db.GetTable<DecimalOverflow>().Where((fun e -> e.Decimal1.Equals(record.Decimal1)))
@@ -285,7 +286,7 @@ type ExtensionMethods =
     static member Find (table : ITable<Doctor>, personId : SqlInt32) : Doctor = table.FirstOrDefault((fun e -> e.PersonId.Equals(personId)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<Doctor>, personId : SqlInt32, cancellationToken : CancellationToken) : Task<Doctor> = table.FirstOrDefaultAsync((fun e -> e.PersonId.Equals(personId)), cancellationToken)
+    static member FindAsync (table : ITable<Doctor>, personId : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Doctor> = table.FirstOrDefaultAsync((fun e -> e.PersonId.Equals(personId)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<Doctor>, personId : SqlInt32) : IQueryable<Doctor> = table.Where((fun e -> e.PersonId.Equals(personId)))
@@ -294,7 +295,7 @@ type ExtensionMethods =
     static member Find (table : ITable<Doctor>, record : Doctor) : Doctor = table.FirstOrDefault((fun e -> e.PersonId.Equals(record.PersonId)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<Doctor>, record : Doctor, cancellationToken : CancellationToken) : Task<Doctor> = table.FirstOrDefaultAsync((fun e -> e.PersonId.Equals(record.PersonId)), cancellationToken)
+    static member FindAsync (table : ITable<Doctor>, record : Doctor, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Doctor> = table.FirstOrDefaultAsync((fun e -> e.PersonId.Equals(record.PersonId)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<Doctor>, record : Doctor) : IQueryable<Doctor> = table.Where((fun e -> e.PersonId.Equals(record.PersonId)))
@@ -303,7 +304,7 @@ type ExtensionMethods =
     static member FindDoctor (db : TestDataDB, personId : SqlInt32) : Doctor = db.GetTable<Doctor>().FirstOrDefault((fun e -> e.PersonId.Equals(personId)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindDoctorAsync (db : TestDataDB, personId : SqlInt32, cancellationToken : CancellationToken) : Task<Doctor> = db.GetTable<Doctor>().FirstOrDefaultAsync((fun e -> e.PersonId.Equals(personId)), cancellationToken)
+    static member FindDoctorAsync (db : TestDataDB, personId : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Doctor> = db.GetTable<Doctor>().FirstOrDefaultAsync((fun e -> e.PersonId.Equals(personId)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindDoctorQuery (db : TestDataDB, personId : SqlInt32) : IQueryable<Doctor> = db.GetTable<Doctor>().Where((fun e -> e.PersonId.Equals(personId)))
@@ -312,7 +313,7 @@ type ExtensionMethods =
     static member Find (db : TestDataDB, record : Doctor) : Doctor = db.GetTable<Doctor>().FirstOrDefault((fun e -> e.PersonId.Equals(record.PersonId)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : Doctor, cancellationToken : CancellationToken) : Task<Doctor> = db.GetTable<Doctor>().FirstOrDefaultAsync((fun e -> e.PersonId.Equals(record.PersonId)), cancellationToken)
+    static member FindAsync (db : TestDataDB, record : Doctor, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Doctor> = db.GetTable<Doctor>().FirstOrDefaultAsync((fun e -> e.PersonId.Equals(record.PersonId)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (db : TestDataDB, record : Doctor) : IQueryable<Doctor> = db.GetTable<Doctor>().Where((fun e -> e.PersonId.Equals(record.PersonId)))
@@ -321,7 +322,7 @@ type ExtensionMethods =
     static member Find (table : ITable<GrandChild>, id : SqlInt32) : GrandChild = table.FirstOrDefault((fun e -> e.Id.Equals(id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<GrandChild>, id : SqlInt32, cancellationToken : CancellationToken) : Task<GrandChild> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
+    static member FindAsync (table : ITable<GrandChild>, id : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<GrandChild> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<GrandChild>, id : SqlInt32) : IQueryable<GrandChild> = table.Where((fun e -> e.Id.Equals(id)))
@@ -330,7 +331,7 @@ type ExtensionMethods =
     static member Find (table : ITable<GrandChild>, record : GrandChild) : GrandChild = table.FirstOrDefault((fun e -> e.Id.Equals(record.Id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<GrandChild>, record : GrandChild, cancellationToken : CancellationToken) : Task<GrandChild> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
+    static member FindAsync (table : ITable<GrandChild>, record : GrandChild, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<GrandChild> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<GrandChild>, record : GrandChild) : IQueryable<GrandChild> = table.Where((fun e -> e.Id.Equals(record.Id)))
@@ -339,7 +340,7 @@ type ExtensionMethods =
     static member FindGrandChild (db : TestDataDB, id : SqlInt32) : GrandChild = db.GetTable<GrandChild>().FirstOrDefault((fun e -> e.Id.Equals(id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindGrandChildAsync (db : TestDataDB, id : SqlInt32, cancellationToken : CancellationToken) : Task<GrandChild> = db.GetTable<GrandChild>().FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
+    static member FindGrandChildAsync (db : TestDataDB, id : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<GrandChild> = db.GetTable<GrandChild>().FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindGrandChildQuery (db : TestDataDB, id : SqlInt32) : IQueryable<GrandChild> = db.GetTable<GrandChild>().Where((fun e -> e.Id.Equals(id)))
@@ -348,7 +349,7 @@ type ExtensionMethods =
     static member Find (db : TestDataDB, record : GrandChild) : GrandChild = db.GetTable<GrandChild>().FirstOrDefault((fun e -> e.Id.Equals(record.Id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : GrandChild, cancellationToken : CancellationToken) : Task<GrandChild> = db.GetTable<GrandChild>().FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
+    static member FindAsync (db : TestDataDB, record : GrandChild, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<GrandChild> = db.GetTable<GrandChild>().FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (db : TestDataDB, record : GrandChild) : IQueryable<GrandChild> = db.GetTable<GrandChild>().Where((fun e -> e.Id.Equals(record.Id)))
@@ -357,7 +358,7 @@ type ExtensionMethods =
     static member Find (table : ITable<GuidId>, id : SqlGuid) : GuidId = table.FirstOrDefault((fun e -> e.Id.Equals(id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<GuidId>, id : SqlGuid, cancellationToken : CancellationToken) : Task<GuidId> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
+    static member FindAsync (table : ITable<GuidId>, id : SqlGuid, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<GuidId> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<GuidId>, id : SqlGuid) : IQueryable<GuidId> = table.Where((fun e -> e.Id.Equals(id)))
@@ -366,7 +367,7 @@ type ExtensionMethods =
     static member Find (table : ITable<GuidId>, record : GuidId) : GuidId = table.FirstOrDefault((fun e -> e.Id.Equals(record.Id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<GuidId>, record : GuidId, cancellationToken : CancellationToken) : Task<GuidId> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
+    static member FindAsync (table : ITable<GuidId>, record : GuidId, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<GuidId> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<GuidId>, record : GuidId) : IQueryable<GuidId> = table.Where((fun e -> e.Id.Equals(record.Id)))
@@ -375,7 +376,7 @@ type ExtensionMethods =
     static member FindGuidId (db : TestDataDB, id : SqlGuid) : GuidId = db.GetTable<GuidId>().FirstOrDefault((fun e -> e.Id.Equals(id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindGuidIdAsync (db : TestDataDB, id : SqlGuid, cancellationToken : CancellationToken) : Task<GuidId> = db.GetTable<GuidId>().FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
+    static member FindGuidIdAsync (db : TestDataDB, id : SqlGuid, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<GuidId> = db.GetTable<GuidId>().FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindGuidIdQuery (db : TestDataDB, id : SqlGuid) : IQueryable<GuidId> = db.GetTable<GuidId>().Where((fun e -> e.Id.Equals(id)))
@@ -384,7 +385,7 @@ type ExtensionMethods =
     static member Find (db : TestDataDB, record : GuidId) : GuidId = db.GetTable<GuidId>().FirstOrDefault((fun e -> e.Id.Equals(record.Id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : GuidId, cancellationToken : CancellationToken) : Task<GuidId> = db.GetTable<GuidId>().FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
+    static member FindAsync (db : TestDataDB, record : GuidId, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<GuidId> = db.GetTable<GuidId>().FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (db : TestDataDB, record : GuidId) : IQueryable<GuidId> = db.GetTable<GuidId>().Where((fun e -> e.Id.Equals(record.Id)))
@@ -393,7 +394,7 @@ type ExtensionMethods =
     static member Find (table : ITable<GuidId2>, id : SqlGuid) : GuidId2 = table.FirstOrDefault((fun e -> e.Id.Equals(id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<GuidId2>, id : SqlGuid, cancellationToken : CancellationToken) : Task<GuidId2> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
+    static member FindAsync (table : ITable<GuidId2>, id : SqlGuid, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<GuidId2> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<GuidId2>, id : SqlGuid) : IQueryable<GuidId2> = table.Where((fun e -> e.Id.Equals(id)))
@@ -402,7 +403,7 @@ type ExtensionMethods =
     static member Find (table : ITable<GuidId2>, record : GuidId2) : GuidId2 = table.FirstOrDefault((fun e -> e.Id.Equals(record.Id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<GuidId2>, record : GuidId2, cancellationToken : CancellationToken) : Task<GuidId2> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
+    static member FindAsync (table : ITable<GuidId2>, record : GuidId2, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<GuidId2> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<GuidId2>, record : GuidId2) : IQueryable<GuidId2> = table.Where((fun e -> e.Id.Equals(record.Id)))
@@ -411,7 +412,7 @@ type ExtensionMethods =
     static member FindGuidId2 (db : TestDataDB, id : SqlGuid) : GuidId2 = db.GetTable<GuidId2>().FirstOrDefault((fun e -> e.Id.Equals(id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindGuidId2Async (db : TestDataDB, id : SqlGuid, cancellationToken : CancellationToken) : Task<GuidId2> = db.GetTable<GuidId2>().FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
+    static member FindGuidId2Async (db : TestDataDB, id : SqlGuid, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<GuidId2> = db.GetTable<GuidId2>().FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindGuidId2Query (db : TestDataDB, id : SqlGuid) : IQueryable<GuidId2> = db.GetTable<GuidId2>().Where((fun e -> e.Id.Equals(id)))
@@ -420,7 +421,7 @@ type ExtensionMethods =
     static member Find (db : TestDataDB, record : GuidId2) : GuidId2 = db.GetTable<GuidId2>().FirstOrDefault((fun e -> e.Id.Equals(record.Id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : GuidId2, cancellationToken : CancellationToken) : Task<GuidId2> = db.GetTable<GuidId2>().FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
+    static member FindAsync (db : TestDataDB, record : GuidId2, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<GuidId2> = db.GetTable<GuidId2>().FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (db : TestDataDB, record : GuidId2) : IQueryable<GuidId2> = db.GetTable<GuidId2>().Where((fun e -> e.Id.Equals(record.Id)))
@@ -429,7 +430,7 @@ type ExtensionMethods =
     static member Find (table : ITable<IndexTable>, pkField2 : SqlInt32, pkField1 : SqlInt32) : IndexTable = table.FirstOrDefault((fun e -> e.PkField2.Equals(pkField2) && e.PkField1.Equals(pkField1)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<IndexTable>, pkField2 : SqlInt32, pkField1 : SqlInt32, cancellationToken : CancellationToken) : Task<IndexTable> = table.FirstOrDefaultAsync((fun e -> e.PkField2.Equals(pkField2) && e.PkField1.Equals(pkField1)), cancellationToken)
+    static member FindAsync (table : ITable<IndexTable>, pkField2 : SqlInt32, pkField1 : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<IndexTable> = table.FirstOrDefaultAsync((fun e -> e.PkField2.Equals(pkField2) && e.PkField1.Equals(pkField1)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<IndexTable>, pkField2 : SqlInt32, pkField1 : SqlInt32) : IQueryable<IndexTable> = table.Where((fun e -> e.PkField2.Equals(pkField2) && e.PkField1.Equals(pkField1)))
@@ -438,7 +439,7 @@ type ExtensionMethods =
     static member Find (table : ITable<IndexTable>, record : IndexTable) : IndexTable = table.FirstOrDefault((fun e -> e.PkField2.Equals(record.PkField2) && e.PkField1.Equals(record.PkField1)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<IndexTable>, record : IndexTable, cancellationToken : CancellationToken) : Task<IndexTable> = table.FirstOrDefaultAsync((fun e -> e.PkField2.Equals(record.PkField2) && e.PkField1.Equals(record.PkField1)), cancellationToken)
+    static member FindAsync (table : ITable<IndexTable>, record : IndexTable, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<IndexTable> = table.FirstOrDefaultAsync((fun e -> e.PkField2.Equals(record.PkField2) && e.PkField1.Equals(record.PkField1)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<IndexTable>, record : IndexTable) : IQueryable<IndexTable> = table.Where((fun e -> e.PkField2.Equals(record.PkField2) && e.PkField1.Equals(record.PkField1)))
@@ -447,7 +448,7 @@ type ExtensionMethods =
     static member FindIndexTable (db : TestDataDB, pkField2 : SqlInt32, pkField1 : SqlInt32) : IndexTable = db.GetTable<IndexTable>().FirstOrDefault((fun e -> e.PkField2.Equals(pkField2) && e.PkField1.Equals(pkField1)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindIndexTableAsync (db : TestDataDB, pkField2 : SqlInt32, pkField1 : SqlInt32, cancellationToken : CancellationToken) : Task<IndexTable> = db.GetTable<IndexTable>().FirstOrDefaultAsync((fun e -> e.PkField2.Equals(pkField2) && e.PkField1.Equals(pkField1)), cancellationToken)
+    static member FindIndexTableAsync (db : TestDataDB, pkField2 : SqlInt32, pkField1 : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<IndexTable> = db.GetTable<IndexTable>().FirstOrDefaultAsync((fun e -> e.PkField2.Equals(pkField2) && e.PkField1.Equals(pkField1)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindIndexTableQuery (db : TestDataDB, pkField2 : SqlInt32, pkField1 : SqlInt32) : IQueryable<IndexTable> = db.GetTable<IndexTable>().Where((fun e -> e.PkField2.Equals(pkField2) && e.PkField1.Equals(pkField1)))
@@ -456,7 +457,7 @@ type ExtensionMethods =
     static member Find (db : TestDataDB, record : IndexTable) : IndexTable = db.GetTable<IndexTable>().FirstOrDefault((fun e -> e.PkField2.Equals(record.PkField2) && e.PkField1.Equals(record.PkField1)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : IndexTable, cancellationToken : CancellationToken) : Task<IndexTable> = db.GetTable<IndexTable>().FirstOrDefaultAsync((fun e -> e.PkField2.Equals(record.PkField2) && e.PkField1.Equals(record.PkField1)), cancellationToken)
+    static member FindAsync (db : TestDataDB, record : IndexTable, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<IndexTable> = db.GetTable<IndexTable>().FirstOrDefaultAsync((fun e -> e.PkField2.Equals(record.PkField2) && e.PkField1.Equals(record.PkField1)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (db : TestDataDB, record : IndexTable) : IQueryable<IndexTable> = db.GetTable<IndexTable>().Where((fun e -> e.PkField2.Equals(record.PkField2) && e.PkField1.Equals(record.PkField1)))
@@ -465,7 +466,7 @@ type ExtensionMethods =
     static member Find (table : ITable<IndexTable2>, pkField2 : SqlInt32, pkField1 : SqlInt32) : IndexTable2 = table.FirstOrDefault((fun e -> e.PkField2.Equals(pkField2) && e.PkField1.Equals(pkField1)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<IndexTable2>, pkField2 : SqlInt32, pkField1 : SqlInt32, cancellationToken : CancellationToken) : Task<IndexTable2> = table.FirstOrDefaultAsync((fun e -> e.PkField2.Equals(pkField2) && e.PkField1.Equals(pkField1)), cancellationToken)
+    static member FindAsync (table : ITable<IndexTable2>, pkField2 : SqlInt32, pkField1 : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<IndexTable2> = table.FirstOrDefaultAsync((fun e -> e.PkField2.Equals(pkField2) && e.PkField1.Equals(pkField1)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<IndexTable2>, pkField2 : SqlInt32, pkField1 : SqlInt32) : IQueryable<IndexTable2> = table.Where((fun e -> e.PkField2.Equals(pkField2) && e.PkField1.Equals(pkField1)))
@@ -474,7 +475,7 @@ type ExtensionMethods =
     static member Find (table : ITable<IndexTable2>, record : IndexTable2) : IndexTable2 = table.FirstOrDefault((fun e -> e.PkField2.Equals(record.PkField2) && e.PkField1.Equals(record.PkField1)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<IndexTable2>, record : IndexTable2, cancellationToken : CancellationToken) : Task<IndexTable2> = table.FirstOrDefaultAsync((fun e -> e.PkField2.Equals(record.PkField2) && e.PkField1.Equals(record.PkField1)), cancellationToken)
+    static member FindAsync (table : ITable<IndexTable2>, record : IndexTable2, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<IndexTable2> = table.FirstOrDefaultAsync((fun e -> e.PkField2.Equals(record.PkField2) && e.PkField1.Equals(record.PkField1)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<IndexTable2>, record : IndexTable2) : IQueryable<IndexTable2> = table.Where((fun e -> e.PkField2.Equals(record.PkField2) && e.PkField1.Equals(record.PkField1)))
@@ -483,7 +484,7 @@ type ExtensionMethods =
     static member FindIndexTable2 (db : TestDataDB, pkField2 : SqlInt32, pkField1 : SqlInt32) : IndexTable2 = db.GetTable<IndexTable2>().FirstOrDefault((fun e -> e.PkField2.Equals(pkField2) && e.PkField1.Equals(pkField1)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindIndexTable2Async (db : TestDataDB, pkField2 : SqlInt32, pkField1 : SqlInt32, cancellationToken : CancellationToken) : Task<IndexTable2> = db.GetTable<IndexTable2>().FirstOrDefaultAsync((fun e -> e.PkField2.Equals(pkField2) && e.PkField1.Equals(pkField1)), cancellationToken)
+    static member FindIndexTable2Async (db : TestDataDB, pkField2 : SqlInt32, pkField1 : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<IndexTable2> = db.GetTable<IndexTable2>().FirstOrDefaultAsync((fun e -> e.PkField2.Equals(pkField2) && e.PkField1.Equals(pkField1)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindIndexTable2Query (db : TestDataDB, pkField2 : SqlInt32, pkField1 : SqlInt32) : IQueryable<IndexTable2> = db.GetTable<IndexTable2>().Where((fun e -> e.PkField2.Equals(pkField2) && e.PkField1.Equals(pkField1)))
@@ -492,7 +493,7 @@ type ExtensionMethods =
     static member Find (db : TestDataDB, record : IndexTable2) : IndexTable2 = db.GetTable<IndexTable2>().FirstOrDefault((fun e -> e.PkField2.Equals(record.PkField2) && e.PkField1.Equals(record.PkField1)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : IndexTable2, cancellationToken : CancellationToken) : Task<IndexTable2> = db.GetTable<IndexTable2>().FirstOrDefaultAsync((fun e -> e.PkField2.Equals(record.PkField2) && e.PkField1.Equals(record.PkField1)), cancellationToken)
+    static member FindAsync (db : TestDataDB, record : IndexTable2, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<IndexTable2> = db.GetTable<IndexTable2>().FirstOrDefaultAsync((fun e -> e.PkField2.Equals(record.PkField2) && e.PkField1.Equals(record.PkField1)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (db : TestDataDB, record : IndexTable2) : IQueryable<IndexTable2> = db.GetTable<IndexTable2>().Where((fun e -> e.PkField2.Equals(record.PkField2) && e.PkField1.Equals(record.PkField1)))
@@ -501,7 +502,7 @@ type ExtensionMethods =
     static member Find (table : ITable<InheritanceChild>, inheritanceChildId : SqlInt32) : InheritanceChild = table.FirstOrDefault((fun e -> e.InheritanceChildId.Equals(inheritanceChildId)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<InheritanceChild>, inheritanceChildId : SqlInt32, cancellationToken : CancellationToken) : Task<InheritanceChild> = table.FirstOrDefaultAsync((fun e -> e.InheritanceChildId.Equals(inheritanceChildId)), cancellationToken)
+    static member FindAsync (table : ITable<InheritanceChild>, inheritanceChildId : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<InheritanceChild> = table.FirstOrDefaultAsync((fun e -> e.InheritanceChildId.Equals(inheritanceChildId)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<InheritanceChild>, inheritanceChildId : SqlInt32) : IQueryable<InheritanceChild> = table.Where((fun e -> e.InheritanceChildId.Equals(inheritanceChildId)))
@@ -510,7 +511,7 @@ type ExtensionMethods =
     static member Find (table : ITable<InheritanceChild>, record : InheritanceChild) : InheritanceChild = table.FirstOrDefault((fun e -> e.InheritanceChildId.Equals(record.InheritanceChildId)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<InheritanceChild>, record : InheritanceChild, cancellationToken : CancellationToken) : Task<InheritanceChild> = table.FirstOrDefaultAsync((fun e -> e.InheritanceChildId.Equals(record.InheritanceChildId)), cancellationToken)
+    static member FindAsync (table : ITable<InheritanceChild>, record : InheritanceChild, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<InheritanceChild> = table.FirstOrDefaultAsync((fun e -> e.InheritanceChildId.Equals(record.InheritanceChildId)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<InheritanceChild>, record : InheritanceChild) : IQueryable<InheritanceChild> = table.Where((fun e -> e.InheritanceChildId.Equals(record.InheritanceChildId)))
@@ -519,7 +520,7 @@ type ExtensionMethods =
     static member FindInheritanceChild (db : TestDataDB, inheritanceChildId : SqlInt32) : InheritanceChild = db.GetTable<InheritanceChild>().FirstOrDefault((fun e -> e.InheritanceChildId.Equals(inheritanceChildId)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindInheritanceChildAsync (db : TestDataDB, inheritanceChildId : SqlInt32, cancellationToken : CancellationToken) : Task<InheritanceChild> = db.GetTable<InheritanceChild>().FirstOrDefaultAsync((fun e -> e.InheritanceChildId.Equals(inheritanceChildId)), cancellationToken)
+    static member FindInheritanceChildAsync (db : TestDataDB, inheritanceChildId : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<InheritanceChild> = db.GetTable<InheritanceChild>().FirstOrDefaultAsync((fun e -> e.InheritanceChildId.Equals(inheritanceChildId)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindInheritanceChildQuery (db : TestDataDB, inheritanceChildId : SqlInt32) : IQueryable<InheritanceChild> = db.GetTable<InheritanceChild>().Where((fun e -> e.InheritanceChildId.Equals(inheritanceChildId)))
@@ -528,7 +529,7 @@ type ExtensionMethods =
     static member Find (db : TestDataDB, record : InheritanceChild) : InheritanceChild = db.GetTable<InheritanceChild>().FirstOrDefault((fun e -> e.InheritanceChildId.Equals(record.InheritanceChildId)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : InheritanceChild, cancellationToken : CancellationToken) : Task<InheritanceChild> = db.GetTable<InheritanceChild>().FirstOrDefaultAsync((fun e -> e.InheritanceChildId.Equals(record.InheritanceChildId)), cancellationToken)
+    static member FindAsync (db : TestDataDB, record : InheritanceChild, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<InheritanceChild> = db.GetTable<InheritanceChild>().FirstOrDefaultAsync((fun e -> e.InheritanceChildId.Equals(record.InheritanceChildId)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (db : TestDataDB, record : InheritanceChild) : IQueryable<InheritanceChild> = db.GetTable<InheritanceChild>().Where((fun e -> e.InheritanceChildId.Equals(record.InheritanceChildId)))
@@ -537,7 +538,7 @@ type ExtensionMethods =
     static member Find (table : ITable<InheritanceParent>, inheritanceParentId : SqlInt32) : InheritanceParent = table.FirstOrDefault((fun e -> e.InheritanceParentId.Equals(inheritanceParentId)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<InheritanceParent>, inheritanceParentId : SqlInt32, cancellationToken : CancellationToken) : Task<InheritanceParent> = table.FirstOrDefaultAsync((fun e -> e.InheritanceParentId.Equals(inheritanceParentId)), cancellationToken)
+    static member FindAsync (table : ITable<InheritanceParent>, inheritanceParentId : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<InheritanceParent> = table.FirstOrDefaultAsync((fun e -> e.InheritanceParentId.Equals(inheritanceParentId)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<InheritanceParent>, inheritanceParentId : SqlInt32) : IQueryable<InheritanceParent> = table.Where((fun e -> e.InheritanceParentId.Equals(inheritanceParentId)))
@@ -546,7 +547,7 @@ type ExtensionMethods =
     static member Find (table : ITable<InheritanceParent>, record : InheritanceParent) : InheritanceParent = table.FirstOrDefault((fun e -> e.InheritanceParentId.Equals(record.InheritanceParentId)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<InheritanceParent>, record : InheritanceParent, cancellationToken : CancellationToken) : Task<InheritanceParent> = table.FirstOrDefaultAsync((fun e -> e.InheritanceParentId.Equals(record.InheritanceParentId)), cancellationToken)
+    static member FindAsync (table : ITable<InheritanceParent>, record : InheritanceParent, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<InheritanceParent> = table.FirstOrDefaultAsync((fun e -> e.InheritanceParentId.Equals(record.InheritanceParentId)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<InheritanceParent>, record : InheritanceParent) : IQueryable<InheritanceParent> = table.Where((fun e -> e.InheritanceParentId.Equals(record.InheritanceParentId)))
@@ -555,7 +556,7 @@ type ExtensionMethods =
     static member FindInheritanceParent (db : TestDataDB, inheritanceParentId : SqlInt32) : InheritanceParent = db.GetTable<InheritanceParent>().FirstOrDefault((fun e -> e.InheritanceParentId.Equals(inheritanceParentId)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindInheritanceParentAsync (db : TestDataDB, inheritanceParentId : SqlInt32, cancellationToken : CancellationToken) : Task<InheritanceParent> = db.GetTable<InheritanceParent>().FirstOrDefaultAsync((fun e -> e.InheritanceParentId.Equals(inheritanceParentId)), cancellationToken)
+    static member FindInheritanceParentAsync (db : TestDataDB, inheritanceParentId : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<InheritanceParent> = db.GetTable<InheritanceParent>().FirstOrDefaultAsync((fun e -> e.InheritanceParentId.Equals(inheritanceParentId)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindInheritanceParentQuery (db : TestDataDB, inheritanceParentId : SqlInt32) : IQueryable<InheritanceParent> = db.GetTable<InheritanceParent>().Where((fun e -> e.InheritanceParentId.Equals(inheritanceParentId)))
@@ -564,7 +565,7 @@ type ExtensionMethods =
     static member Find (db : TestDataDB, record : InheritanceParent) : InheritanceParent = db.GetTable<InheritanceParent>().FirstOrDefault((fun e -> e.InheritanceParentId.Equals(record.InheritanceParentId)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : InheritanceParent, cancellationToken : CancellationToken) : Task<InheritanceParent> = db.GetTable<InheritanceParent>().FirstOrDefaultAsync((fun e -> e.InheritanceParentId.Equals(record.InheritanceParentId)), cancellationToken)
+    static member FindAsync (db : TestDataDB, record : InheritanceParent, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<InheritanceParent> = db.GetTable<InheritanceParent>().FirstOrDefaultAsync((fun e -> e.InheritanceParentId.Equals(record.InheritanceParentId)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (db : TestDataDB, record : InheritanceParent) : IQueryable<InheritanceParent> = db.GetTable<InheritanceParent>().Where((fun e -> e.InheritanceParentId.Equals(record.InheritanceParentId)))
@@ -573,7 +574,7 @@ type ExtensionMethods =
     static member Find (table : ITable<Issue1115>, id : SqlHierarchyId) : Issue1115 = table.FirstOrDefault((fun e -> e.Id.Equals(id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<Issue1115>, id : SqlHierarchyId, cancellationToken : CancellationToken) : Task<Issue1115> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
+    static member FindAsync (table : ITable<Issue1115>, id : SqlHierarchyId, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Issue1115> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<Issue1115>, id : SqlHierarchyId) : IQueryable<Issue1115> = table.Where((fun e -> e.Id.Equals(id)))
@@ -582,7 +583,7 @@ type ExtensionMethods =
     static member Find (table : ITable<Issue1115>, record : Issue1115) : Issue1115 = table.FirstOrDefault((fun e -> e.Id.Equals(record.Id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<Issue1115>, record : Issue1115, cancellationToken : CancellationToken) : Task<Issue1115> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
+    static member FindAsync (table : ITable<Issue1115>, record : Issue1115, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Issue1115> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<Issue1115>, record : Issue1115) : IQueryable<Issue1115> = table.Where((fun e -> e.Id.Equals(record.Id)))
@@ -591,7 +592,7 @@ type ExtensionMethods =
     static member FindIssue1115 (db : TestDataDB, id : SqlHierarchyId) : Issue1115 = db.GetTable<Issue1115>().FirstOrDefault((fun e -> e.Id.Equals(id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindIssue1115Async (db : TestDataDB, id : SqlHierarchyId, cancellationToken : CancellationToken) : Task<Issue1115> = db.GetTable<Issue1115>().FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
+    static member FindIssue1115Async (db : TestDataDB, id : SqlHierarchyId, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Issue1115> = db.GetTable<Issue1115>().FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindIssue1115Query (db : TestDataDB, id : SqlHierarchyId) : IQueryable<Issue1115> = db.GetTable<Issue1115>().Where((fun e -> e.Id.Equals(id)))
@@ -600,7 +601,7 @@ type ExtensionMethods =
     static member Find (db : TestDataDB, record : Issue1115) : Issue1115 = db.GetTable<Issue1115>().FirstOrDefault((fun e -> e.Id.Equals(record.Id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : Issue1115, cancellationToken : CancellationToken) : Task<Issue1115> = db.GetTable<Issue1115>().FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
+    static member FindAsync (db : TestDataDB, record : Issue1115, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Issue1115> = db.GetTable<Issue1115>().FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (db : TestDataDB, record : Issue1115) : IQueryable<Issue1115> = db.GetTable<Issue1115>().Where((fun e -> e.Id.Equals(record.Id)))
@@ -609,7 +610,7 @@ type ExtensionMethods =
     static member Find (table : ITable<Issue1144>, id : SqlInt32) : Issue1144 = table.FirstOrDefault((fun e -> e.Id.Equals(id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<Issue1144>, id : SqlInt32, cancellationToken : CancellationToken) : Task<Issue1144> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
+    static member FindAsync (table : ITable<Issue1144>, id : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Issue1144> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<Issue1144>, id : SqlInt32) : IQueryable<Issue1144> = table.Where((fun e -> e.Id.Equals(id)))
@@ -618,7 +619,7 @@ type ExtensionMethods =
     static member Find (table : ITable<Issue1144>, record : Issue1144) : Issue1144 = table.FirstOrDefault((fun e -> e.Id.Equals(record.Id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<Issue1144>, record : Issue1144, cancellationToken : CancellationToken) : Task<Issue1144> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
+    static member FindAsync (table : ITable<Issue1144>, record : Issue1144, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Issue1144> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<Issue1144>, record : Issue1144) : IQueryable<Issue1144> = table.Where((fun e -> e.Id.Equals(record.Id)))
@@ -627,7 +628,7 @@ type ExtensionMethods =
     static member FindIssue1144 (db : TestDataDB, id : SqlInt32) : Issue1144 = db.GetTable<Issue1144>().FirstOrDefault((fun e -> e.Id.Equals(id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindIssue1144Async (db : TestDataDB, id : SqlInt32, cancellationToken : CancellationToken) : Task<Issue1144> = db.GetTable<Issue1144>().FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
+    static member FindIssue1144Async (db : TestDataDB, id : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Issue1144> = db.GetTable<Issue1144>().FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindIssue1144Query (db : TestDataDB, id : SqlInt32) : IQueryable<Issue1144> = db.GetTable<Issue1144>().Where((fun e -> e.Id.Equals(id)))
@@ -636,7 +637,7 @@ type ExtensionMethods =
     static member Find (db : TestDataDB, record : Issue1144) : Issue1144 = db.GetTable<Issue1144>().FirstOrDefault((fun e -> e.Id.Equals(record.Id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : Issue1144, cancellationToken : CancellationToken) : Task<Issue1144> = db.GetTable<Issue1144>().FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
+    static member FindAsync (db : TestDataDB, record : Issue1144, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Issue1144> = db.GetTable<Issue1144>().FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (db : TestDataDB, record : Issue1144) : IQueryable<Issue1144> = db.GetTable<Issue1144>().Where((fun e -> e.Id.Equals(record.Id)))
@@ -645,7 +646,7 @@ type ExtensionMethods =
     static member Find (table : ITable<LinqDataType>, id : SqlInt32) : LinqDataType = table.FirstOrDefault((fun e -> e.Id.Equals(id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<LinqDataType>, id : SqlInt32, cancellationToken : CancellationToken) : Task<LinqDataType> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
+    static member FindAsync (table : ITable<LinqDataType>, id : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<LinqDataType> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<LinqDataType>, id : SqlInt32) : IQueryable<LinqDataType> = table.Where((fun e -> e.Id.Equals(id)))
@@ -654,7 +655,7 @@ type ExtensionMethods =
     static member Find (table : ITable<LinqDataType>, record : LinqDataType) : LinqDataType = table.FirstOrDefault((fun e -> e.Id.Equals(record.Id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<LinqDataType>, record : LinqDataType, cancellationToken : CancellationToken) : Task<LinqDataType> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
+    static member FindAsync (table : ITable<LinqDataType>, record : LinqDataType, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<LinqDataType> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<LinqDataType>, record : LinqDataType) : IQueryable<LinqDataType> = table.Where((fun e -> e.Id.Equals(record.Id)))
@@ -663,7 +664,7 @@ type ExtensionMethods =
     static member FindLinqDataType (db : TestDataDB, id : SqlInt32) : LinqDataType = db.GetTable<LinqDataType>().FirstOrDefault((fun e -> e.Id.Equals(id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindLinqDataTypeAsync (db : TestDataDB, id : SqlInt32, cancellationToken : CancellationToken) : Task<LinqDataType> = db.GetTable<LinqDataType>().FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
+    static member FindLinqDataTypeAsync (db : TestDataDB, id : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<LinqDataType> = db.GetTable<LinqDataType>().FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindLinqDataTypeQuery (db : TestDataDB, id : SqlInt32) : IQueryable<LinqDataType> = db.GetTable<LinqDataType>().Where((fun e -> e.Id.Equals(id)))
@@ -672,7 +673,7 @@ type ExtensionMethods =
     static member Find (db : TestDataDB, record : LinqDataType) : LinqDataType = db.GetTable<LinqDataType>().FirstOrDefault((fun e -> e.Id.Equals(record.Id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : LinqDataType, cancellationToken : CancellationToken) : Task<LinqDataType> = db.GetTable<LinqDataType>().FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
+    static member FindAsync (db : TestDataDB, record : LinqDataType, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<LinqDataType> = db.GetTable<LinqDataType>().FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (db : TestDataDB, record : LinqDataType) : IQueryable<LinqDataType> = db.GetTable<LinqDataType>().Where((fun e -> e.Id.Equals(record.Id)))
@@ -681,7 +682,7 @@ type ExtensionMethods =
     static member Find (table : ITable<Member>, memberId : SqlInt32) : Member = table.FirstOrDefault((fun e -> e.MemberId.Equals(memberId)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<Member>, memberId : SqlInt32, cancellationToken : CancellationToken) : Task<Member> = table.FirstOrDefaultAsync((fun e -> e.MemberId.Equals(memberId)), cancellationToken)
+    static member FindAsync (table : ITable<Member>, memberId : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Member> = table.FirstOrDefaultAsync((fun e -> e.MemberId.Equals(memberId)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<Member>, memberId : SqlInt32) : IQueryable<Member> = table.Where((fun e -> e.MemberId.Equals(memberId)))
@@ -690,7 +691,7 @@ type ExtensionMethods =
     static member Find (table : ITable<Member>, record : Member) : Member = table.FirstOrDefault((fun e -> e.MemberId.Equals(record.MemberId)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<Member>, record : Member, cancellationToken : CancellationToken) : Task<Member> = table.FirstOrDefaultAsync((fun e -> e.MemberId.Equals(record.MemberId)), cancellationToken)
+    static member FindAsync (table : ITable<Member>, record : Member, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Member> = table.FirstOrDefaultAsync((fun e -> e.MemberId.Equals(record.MemberId)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<Member>, record : Member) : IQueryable<Member> = table.Where((fun e -> e.MemberId.Equals(record.MemberId)))
@@ -699,7 +700,7 @@ type ExtensionMethods =
     static member FindMember (db : TestDataDB, memberId : SqlInt32) : Member = db.GetTable<Member>().FirstOrDefault((fun e -> e.MemberId.Equals(memberId)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindMemberAsync (db : TestDataDB, memberId : SqlInt32, cancellationToken : CancellationToken) : Task<Member> = db.GetTable<Member>().FirstOrDefaultAsync((fun e -> e.MemberId.Equals(memberId)), cancellationToken)
+    static member FindMemberAsync (db : TestDataDB, memberId : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Member> = db.GetTable<Member>().FirstOrDefaultAsync((fun e -> e.MemberId.Equals(memberId)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindMemberQuery (db : TestDataDB, memberId : SqlInt32) : IQueryable<Member> = db.GetTable<Member>().Where((fun e -> e.MemberId.Equals(memberId)))
@@ -708,7 +709,7 @@ type ExtensionMethods =
     static member Find (db : TestDataDB, record : Member) : Member = db.GetTable<Member>().FirstOrDefault((fun e -> e.MemberId.Equals(record.MemberId)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : Member, cancellationToken : CancellationToken) : Task<Member> = db.GetTable<Member>().FirstOrDefaultAsync((fun e -> e.MemberId.Equals(record.MemberId)), cancellationToken)
+    static member FindAsync (db : TestDataDB, record : Member, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Member> = db.GetTable<Member>().FirstOrDefaultAsync((fun e -> e.MemberId.Equals(record.MemberId)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (db : TestDataDB, record : Member) : IQueryable<Member> = db.GetTable<Member>().Where((fun e -> e.MemberId.Equals(record.MemberId)))
@@ -717,7 +718,7 @@ type ExtensionMethods =
     static member Find (table : ITable<Parent>, id : SqlInt32) : Parent = table.FirstOrDefault((fun e -> e.Id.Equals(id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<Parent>, id : SqlInt32, cancellationToken : CancellationToken) : Task<Parent> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
+    static member FindAsync (table : ITable<Parent>, id : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Parent> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<Parent>, id : SqlInt32) : IQueryable<Parent> = table.Where((fun e -> e.Id.Equals(id)))
@@ -726,7 +727,7 @@ type ExtensionMethods =
     static member Find (table : ITable<Parent>, record : Parent) : Parent = table.FirstOrDefault((fun e -> e.Id.Equals(record.Id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<Parent>, record : Parent, cancellationToken : CancellationToken) : Task<Parent> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
+    static member FindAsync (table : ITable<Parent>, record : Parent, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Parent> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<Parent>, record : Parent) : IQueryable<Parent> = table.Where((fun e -> e.Id.Equals(record.Id)))
@@ -735,7 +736,7 @@ type ExtensionMethods =
     static member FindParent (db : TestDataDB, id : SqlInt32) : Parent = db.GetTable<Parent>().FirstOrDefault((fun e -> e.Id.Equals(id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindParentAsync (db : TestDataDB, id : SqlInt32, cancellationToken : CancellationToken) : Task<Parent> = db.GetTable<Parent>().FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
+    static member FindParentAsync (db : TestDataDB, id : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Parent> = db.GetTable<Parent>().FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindParentQuery (db : TestDataDB, id : SqlInt32) : IQueryable<Parent> = db.GetTable<Parent>().Where((fun e -> e.Id.Equals(id)))
@@ -744,7 +745,7 @@ type ExtensionMethods =
     static member Find (db : TestDataDB, record : Parent) : Parent = db.GetTable<Parent>().FirstOrDefault((fun e -> e.Id.Equals(record.Id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : Parent, cancellationToken : CancellationToken) : Task<Parent> = db.GetTable<Parent>().FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
+    static member FindAsync (db : TestDataDB, record : Parent, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Parent> = db.GetTable<Parent>().FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (db : TestDataDB, record : Parent) : IQueryable<Parent> = db.GetTable<Parent>().Where((fun e -> e.Id.Equals(record.Id)))
@@ -753,7 +754,7 @@ type ExtensionMethods =
     static member Find (table : ITable<Patient>, personId : SqlInt32) : Patient = table.FirstOrDefault((fun e -> e.PersonId.Equals(personId)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<Patient>, personId : SqlInt32, cancellationToken : CancellationToken) : Task<Patient> = table.FirstOrDefaultAsync((fun e -> e.PersonId.Equals(personId)), cancellationToken)
+    static member FindAsync (table : ITable<Patient>, personId : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Patient> = table.FirstOrDefaultAsync((fun e -> e.PersonId.Equals(personId)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<Patient>, personId : SqlInt32) : IQueryable<Patient> = table.Where((fun e -> e.PersonId.Equals(personId)))
@@ -762,7 +763,7 @@ type ExtensionMethods =
     static member Find (table : ITable<Patient>, record : Patient) : Patient = table.FirstOrDefault((fun e -> e.PersonId.Equals(record.PersonId)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<Patient>, record : Patient, cancellationToken : CancellationToken) : Task<Patient> = table.FirstOrDefaultAsync((fun e -> e.PersonId.Equals(record.PersonId)), cancellationToken)
+    static member FindAsync (table : ITable<Patient>, record : Patient, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Patient> = table.FirstOrDefaultAsync((fun e -> e.PersonId.Equals(record.PersonId)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<Patient>, record : Patient) : IQueryable<Patient> = table.Where((fun e -> e.PersonId.Equals(record.PersonId)))
@@ -771,7 +772,7 @@ type ExtensionMethods =
     static member FindPatient (db : TestDataDB, personId : SqlInt32) : Patient = db.GetTable<Patient>().FirstOrDefault((fun e -> e.PersonId.Equals(personId)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindPatientAsync (db : TestDataDB, personId : SqlInt32, cancellationToken : CancellationToken) : Task<Patient> = db.GetTable<Patient>().FirstOrDefaultAsync((fun e -> e.PersonId.Equals(personId)), cancellationToken)
+    static member FindPatientAsync (db : TestDataDB, personId : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Patient> = db.GetTable<Patient>().FirstOrDefaultAsync((fun e -> e.PersonId.Equals(personId)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindPatientQuery (db : TestDataDB, personId : SqlInt32) : IQueryable<Patient> = db.GetTable<Patient>().Where((fun e -> e.PersonId.Equals(personId)))
@@ -780,7 +781,7 @@ type ExtensionMethods =
     static member Find (db : TestDataDB, record : Patient) : Patient = db.GetTable<Patient>().FirstOrDefault((fun e -> e.PersonId.Equals(record.PersonId)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : Patient, cancellationToken : CancellationToken) : Task<Patient> = db.GetTable<Patient>().FirstOrDefaultAsync((fun e -> e.PersonId.Equals(record.PersonId)), cancellationToken)
+    static member FindAsync (db : TestDataDB, record : Patient, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Patient> = db.GetTable<Patient>().FirstOrDefaultAsync((fun e -> e.PersonId.Equals(record.PersonId)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (db : TestDataDB, record : Patient) : IQueryable<Patient> = db.GetTable<Patient>().Where((fun e -> e.PersonId.Equals(record.PersonId)))
@@ -789,7 +790,7 @@ type ExtensionMethods =
     static member Find (table : ITable<Person>, personId : SqlInt32) : Person = table.FirstOrDefault((fun e -> e.PersonId.Equals(personId)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<Person>, personId : SqlInt32, cancellationToken : CancellationToken) : Task<Person> = table.FirstOrDefaultAsync((fun e -> e.PersonId.Equals(personId)), cancellationToken)
+    static member FindAsync (table : ITable<Person>, personId : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Person> = table.FirstOrDefaultAsync((fun e -> e.PersonId.Equals(personId)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<Person>, personId : SqlInt32) : IQueryable<Person> = table.Where((fun e -> e.PersonId.Equals(personId)))
@@ -798,7 +799,7 @@ type ExtensionMethods =
     static member Find (table : ITable<Person>, record : Person) : Person = table.FirstOrDefault((fun e -> e.PersonId.Equals(record.PersonId)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<Person>, record : Person, cancellationToken : CancellationToken) : Task<Person> = table.FirstOrDefaultAsync((fun e -> e.PersonId.Equals(record.PersonId)), cancellationToken)
+    static member FindAsync (table : ITable<Person>, record : Person, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Person> = table.FirstOrDefaultAsync((fun e -> e.PersonId.Equals(record.PersonId)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<Person>, record : Person) : IQueryable<Person> = table.Where((fun e -> e.PersonId.Equals(record.PersonId)))
@@ -807,7 +808,7 @@ type ExtensionMethods =
     static member FindPerson (db : TestDataDB, personId : SqlInt32) : Person = db.GetTable<Person>().FirstOrDefault((fun e -> e.PersonId.Equals(personId)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindPersonAsync (db : TestDataDB, personId : SqlInt32, cancellationToken : CancellationToken) : Task<Person> = db.GetTable<Person>().FirstOrDefaultAsync((fun e -> e.PersonId.Equals(personId)), cancellationToken)
+    static member FindPersonAsync (db : TestDataDB, personId : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Person> = db.GetTable<Person>().FirstOrDefaultAsync((fun e -> e.PersonId.Equals(personId)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindPersonQuery (db : TestDataDB, personId : SqlInt32) : IQueryable<Person> = db.GetTable<Person>().Where((fun e -> e.PersonId.Equals(personId)))
@@ -816,7 +817,7 @@ type ExtensionMethods =
     static member Find (db : TestDataDB, record : Person) : Person = db.GetTable<Person>().FirstOrDefault((fun e -> e.PersonId.Equals(record.PersonId)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : Person, cancellationToken : CancellationToken) : Task<Person> = db.GetTable<Person>().FirstOrDefaultAsync((fun e -> e.PersonId.Equals(record.PersonId)), cancellationToken)
+    static member FindAsync (db : TestDataDB, record : Person, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Person> = db.GetTable<Person>().FirstOrDefaultAsync((fun e -> e.PersonId.Equals(record.PersonId)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (db : TestDataDB, record : Person) : IQueryable<Person> = db.GetTable<Person>().Where((fun e -> e.PersonId.Equals(record.PersonId)))
@@ -825,7 +826,7 @@ type ExtensionMethods =
     static member Find (table : ITable<Provider>, providerId : SqlInt32) : Provider = table.FirstOrDefault((fun e -> e.ProviderId.Equals(providerId)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<Provider>, providerId : SqlInt32, cancellationToken : CancellationToken) : Task<Provider> = table.FirstOrDefaultAsync((fun e -> e.ProviderId.Equals(providerId)), cancellationToken)
+    static member FindAsync (table : ITable<Provider>, providerId : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Provider> = table.FirstOrDefaultAsync((fun e -> e.ProviderId.Equals(providerId)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<Provider>, providerId : SqlInt32) : IQueryable<Provider> = table.Where((fun e -> e.ProviderId.Equals(providerId)))
@@ -834,7 +835,7 @@ type ExtensionMethods =
     static member Find (table : ITable<Provider>, record : Provider) : Provider = table.FirstOrDefault((fun e -> e.ProviderId.Equals(record.ProviderId)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<Provider>, record : Provider, cancellationToken : CancellationToken) : Task<Provider> = table.FirstOrDefaultAsync((fun e -> e.ProviderId.Equals(record.ProviderId)), cancellationToken)
+    static member FindAsync (table : ITable<Provider>, record : Provider, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Provider> = table.FirstOrDefaultAsync((fun e -> e.ProviderId.Equals(record.ProviderId)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<Provider>, record : Provider) : IQueryable<Provider> = table.Where((fun e -> e.ProviderId.Equals(record.ProviderId)))
@@ -843,7 +844,7 @@ type ExtensionMethods =
     static member FindProvider (db : TestDataDB, providerId : SqlInt32) : Provider = db.GetTable<Provider>().FirstOrDefault((fun e -> e.ProviderId.Equals(providerId)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindProviderAsync (db : TestDataDB, providerId : SqlInt32, cancellationToken : CancellationToken) : Task<Provider> = db.GetTable<Provider>().FirstOrDefaultAsync((fun e -> e.ProviderId.Equals(providerId)), cancellationToken)
+    static member FindProviderAsync (db : TestDataDB, providerId : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Provider> = db.GetTable<Provider>().FirstOrDefaultAsync((fun e -> e.ProviderId.Equals(providerId)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindProviderQuery (db : TestDataDB, providerId : SqlInt32) : IQueryable<Provider> = db.GetTable<Provider>().Where((fun e -> e.ProviderId.Equals(providerId)))
@@ -852,7 +853,7 @@ type ExtensionMethods =
     static member Find (db : TestDataDB, record : Provider) : Provider = db.GetTable<Provider>().FirstOrDefault((fun e -> e.ProviderId.Equals(record.ProviderId)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : Provider, cancellationToken : CancellationToken) : Task<Provider> = db.GetTable<Provider>().FirstOrDefaultAsync((fun e -> e.ProviderId.Equals(record.ProviderId)), cancellationToken)
+    static member FindAsync (db : TestDataDB, record : Provider, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Provider> = db.GetTable<Provider>().FirstOrDefaultAsync((fun e -> e.ProviderId.Equals(record.ProviderId)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (db : TestDataDB, record : Provider) : IQueryable<Provider> = db.GetTable<Provider>().Where((fun e -> e.ProviderId.Equals(record.ProviderId)))
@@ -861,7 +862,7 @@ type ExtensionMethods =
     static member Find (table : ITable<SqlType>, id : SqlInt32) : SqlType = table.FirstOrDefault((fun e -> e.Id.Equals(id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<SqlType>, id : SqlInt32, cancellationToken : CancellationToken) : Task<SqlType> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
+    static member FindAsync (table : ITable<SqlType>, id : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<SqlType> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<SqlType>, id : SqlInt32) : IQueryable<SqlType> = table.Where((fun e -> e.Id.Equals(id)))
@@ -870,7 +871,7 @@ type ExtensionMethods =
     static member Find (table : ITable<SqlType>, record : SqlType) : SqlType = table.FirstOrDefault((fun e -> e.Id.Equals(record.Id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<SqlType>, record : SqlType, cancellationToken : CancellationToken) : Task<SqlType> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
+    static member FindAsync (table : ITable<SqlType>, record : SqlType, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<SqlType> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<SqlType>, record : SqlType) : IQueryable<SqlType> = table.Where((fun e -> e.Id.Equals(record.Id)))
@@ -879,7 +880,7 @@ type ExtensionMethods =
     static member FindSqlType (db : TestDataDB, id : SqlInt32) : SqlType = db.GetTable<SqlType>().FirstOrDefault((fun e -> e.Id.Equals(id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindSqlTypeAsync (db : TestDataDB, id : SqlInt32, cancellationToken : CancellationToken) : Task<SqlType> = db.GetTable<SqlType>().FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
+    static member FindSqlTypeAsync (db : TestDataDB, id : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<SqlType> = db.GetTable<SqlType>().FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindSqlTypeQuery (db : TestDataDB, id : SqlInt32) : IQueryable<SqlType> = db.GetTable<SqlType>().Where((fun e -> e.Id.Equals(id)))
@@ -888,7 +889,7 @@ type ExtensionMethods =
     static member Find (db : TestDataDB, record : SqlType) : SqlType = db.GetTable<SqlType>().FirstOrDefault((fun e -> e.Id.Equals(record.Id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : SqlType, cancellationToken : CancellationToken) : Task<SqlType> = db.GetTable<SqlType>().FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
+    static member FindAsync (db : TestDataDB, record : SqlType, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<SqlType> = db.GetTable<SqlType>().FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (db : TestDataDB, record : SqlType) : IQueryable<SqlType> = db.GetTable<SqlType>().Where((fun e -> e.Id.Equals(record.Id)))
@@ -897,7 +898,7 @@ type ExtensionMethods =
     static member Find (table : ITable<TestIdentity>, id : SqlInt32) : TestIdentity = table.FirstOrDefault((fun e -> e.Id.Equals(id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<TestIdentity>, id : SqlInt32, cancellationToken : CancellationToken) : Task<TestIdentity> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
+    static member FindAsync (table : ITable<TestIdentity>, id : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TestIdentity> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<TestIdentity>, id : SqlInt32) : IQueryable<TestIdentity> = table.Where((fun e -> e.Id.Equals(id)))
@@ -906,7 +907,7 @@ type ExtensionMethods =
     static member Find (table : ITable<TestIdentity>, record : TestIdentity) : TestIdentity = table.FirstOrDefault((fun e -> e.Id.Equals(record.Id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<TestIdentity>, record : TestIdentity, cancellationToken : CancellationToken) : Task<TestIdentity> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
+    static member FindAsync (table : ITable<TestIdentity>, record : TestIdentity, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TestIdentity> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<TestIdentity>, record : TestIdentity) : IQueryable<TestIdentity> = table.Where((fun e -> e.Id.Equals(record.Id)))
@@ -915,7 +916,7 @@ type ExtensionMethods =
     static member FindTestIdentity (db : TestDataDB, id : SqlInt32) : TestIdentity = db.GetTable<TestIdentity>().FirstOrDefault((fun e -> e.Id.Equals(id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindTestIdentityAsync (db : TestDataDB, id : SqlInt32, cancellationToken : CancellationToken) : Task<TestIdentity> = db.GetTable<TestIdentity>().FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
+    static member FindTestIdentityAsync (db : TestDataDB, id : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TestIdentity> = db.GetTable<TestIdentity>().FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindTestIdentityQuery (db : TestDataDB, id : SqlInt32) : IQueryable<TestIdentity> = db.GetTable<TestIdentity>().Where((fun e -> e.Id.Equals(id)))
@@ -924,7 +925,7 @@ type ExtensionMethods =
     static member Find (db : TestDataDB, record : TestIdentity) : TestIdentity = db.GetTable<TestIdentity>().FirstOrDefault((fun e -> e.Id.Equals(record.Id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : TestIdentity, cancellationToken : CancellationToken) : Task<TestIdentity> = db.GetTable<TestIdentity>().FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
+    static member FindAsync (db : TestDataDB, record : TestIdentity, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TestIdentity> = db.GetTable<TestIdentity>().FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (db : TestDataDB, record : TestIdentity) : IQueryable<TestIdentity> = db.GetTable<TestIdentity>().Where((fun e -> e.Id.Equals(record.Id)))
@@ -933,7 +934,7 @@ type ExtensionMethods =
     static member Find (table : ITable<TestMerge1>, id : SqlInt32) : TestMerge1 = table.FirstOrDefault((fun e -> e.Id.Equals(id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<TestMerge1>, id : SqlInt32, cancellationToken : CancellationToken) : Task<TestMerge1> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
+    static member FindAsync (table : ITable<TestMerge1>, id : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TestMerge1> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<TestMerge1>, id : SqlInt32) : IQueryable<TestMerge1> = table.Where((fun e -> e.Id.Equals(id)))
@@ -942,7 +943,7 @@ type ExtensionMethods =
     static member Find (table : ITable<TestMerge1>, record : TestMerge1) : TestMerge1 = table.FirstOrDefault((fun e -> e.Id.Equals(record.Id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<TestMerge1>, record : TestMerge1, cancellationToken : CancellationToken) : Task<TestMerge1> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
+    static member FindAsync (table : ITable<TestMerge1>, record : TestMerge1, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TestMerge1> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<TestMerge1>, record : TestMerge1) : IQueryable<TestMerge1> = table.Where((fun e -> e.Id.Equals(record.Id)))
@@ -951,7 +952,7 @@ type ExtensionMethods =
     static member FindTestMerge1 (db : TestDataDB, id : SqlInt32) : TestMerge1 = db.GetTable<TestMerge1>().FirstOrDefault((fun e -> e.Id.Equals(id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindTestMerge1Async (db : TestDataDB, id : SqlInt32, cancellationToken : CancellationToken) : Task<TestMerge1> = db.GetTable<TestMerge1>().FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
+    static member FindTestMerge1Async (db : TestDataDB, id : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TestMerge1> = db.GetTable<TestMerge1>().FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindTestMerge1Query (db : TestDataDB, id : SqlInt32) : IQueryable<TestMerge1> = db.GetTable<TestMerge1>().Where((fun e -> e.Id.Equals(id)))
@@ -960,7 +961,7 @@ type ExtensionMethods =
     static member Find (db : TestDataDB, record : TestMerge1) : TestMerge1 = db.GetTable<TestMerge1>().FirstOrDefault((fun e -> e.Id.Equals(record.Id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : TestMerge1, cancellationToken : CancellationToken) : Task<TestMerge1> = db.GetTable<TestMerge1>().FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
+    static member FindAsync (db : TestDataDB, record : TestMerge1, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TestMerge1> = db.GetTable<TestMerge1>().FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (db : TestDataDB, record : TestMerge1) : IQueryable<TestMerge1> = db.GetTable<TestMerge1>().Where((fun e -> e.Id.Equals(record.Id)))
@@ -969,7 +970,7 @@ type ExtensionMethods =
     static member Find (table : ITable<TestMerge2>, id : SqlInt32) : TestMerge2 = table.FirstOrDefault((fun e -> e.Id.Equals(id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<TestMerge2>, id : SqlInt32, cancellationToken : CancellationToken) : Task<TestMerge2> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
+    static member FindAsync (table : ITable<TestMerge2>, id : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TestMerge2> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<TestMerge2>, id : SqlInt32) : IQueryable<TestMerge2> = table.Where((fun e -> e.Id.Equals(id)))
@@ -978,7 +979,7 @@ type ExtensionMethods =
     static member Find (table : ITable<TestMerge2>, record : TestMerge2) : TestMerge2 = table.FirstOrDefault((fun e -> e.Id.Equals(record.Id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<TestMerge2>, record : TestMerge2, cancellationToken : CancellationToken) : Task<TestMerge2> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
+    static member FindAsync (table : ITable<TestMerge2>, record : TestMerge2, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TestMerge2> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<TestMerge2>, record : TestMerge2) : IQueryable<TestMerge2> = table.Where((fun e -> e.Id.Equals(record.Id)))
@@ -987,7 +988,7 @@ type ExtensionMethods =
     static member FindTestMerge2 (db : TestDataDB, id : SqlInt32) : TestMerge2 = db.GetTable<TestMerge2>().FirstOrDefault((fun e -> e.Id.Equals(id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindTestMerge2Async (db : TestDataDB, id : SqlInt32, cancellationToken : CancellationToken) : Task<TestMerge2> = db.GetTable<TestMerge2>().FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
+    static member FindTestMerge2Async (db : TestDataDB, id : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TestMerge2> = db.GetTable<TestMerge2>().FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindTestMerge2Query (db : TestDataDB, id : SqlInt32) : IQueryable<TestMerge2> = db.GetTable<TestMerge2>().Where((fun e -> e.Id.Equals(id)))
@@ -996,7 +997,7 @@ type ExtensionMethods =
     static member Find (db : TestDataDB, record : TestMerge2) : TestMerge2 = db.GetTable<TestMerge2>().FirstOrDefault((fun e -> e.Id.Equals(record.Id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : TestMerge2, cancellationToken : CancellationToken) : Task<TestMerge2> = db.GetTable<TestMerge2>().FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
+    static member FindAsync (db : TestDataDB, record : TestMerge2, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TestMerge2> = db.GetTable<TestMerge2>().FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (db : TestDataDB, record : TestMerge2) : IQueryable<TestMerge2> = db.GetTable<TestMerge2>().Where((fun e -> e.Id.Equals(record.Id)))
@@ -1005,7 +1006,7 @@ type ExtensionMethods =
     static member Find (table : ITable<TestMergeIdentity>, id : SqlInt32) : TestMergeIdentity = table.FirstOrDefault((fun e -> e.Id.Equals(id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<TestMergeIdentity>, id : SqlInt32, cancellationToken : CancellationToken) : Task<TestMergeIdentity> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
+    static member FindAsync (table : ITable<TestMergeIdentity>, id : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TestMergeIdentity> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<TestMergeIdentity>, id : SqlInt32) : IQueryable<TestMergeIdentity> = table.Where((fun e -> e.Id.Equals(id)))
@@ -1014,7 +1015,7 @@ type ExtensionMethods =
     static member Find (table : ITable<TestMergeIdentity>, record : TestMergeIdentity) : TestMergeIdentity = table.FirstOrDefault((fun e -> e.Id.Equals(record.Id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<TestMergeIdentity>, record : TestMergeIdentity, cancellationToken : CancellationToken) : Task<TestMergeIdentity> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
+    static member FindAsync (table : ITable<TestMergeIdentity>, record : TestMergeIdentity, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TestMergeIdentity> = table.FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<TestMergeIdentity>, record : TestMergeIdentity) : IQueryable<TestMergeIdentity> = table.Where((fun e -> e.Id.Equals(record.Id)))
@@ -1023,7 +1024,7 @@ type ExtensionMethods =
     static member FindTestMergeIdentity (db : TestDataDB, id : SqlInt32) : TestMergeIdentity = db.GetTable<TestMergeIdentity>().FirstOrDefault((fun e -> e.Id.Equals(id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindTestMergeIdentityAsync (db : TestDataDB, id : SqlInt32, cancellationToken : CancellationToken) : Task<TestMergeIdentity> = db.GetTable<TestMergeIdentity>().FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
+    static member FindTestMergeIdentityAsync (db : TestDataDB, id : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TestMergeIdentity> = db.GetTable<TestMergeIdentity>().FirstOrDefaultAsync((fun e -> e.Id.Equals(id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindTestMergeIdentityQuery (db : TestDataDB, id : SqlInt32) : IQueryable<TestMergeIdentity> = db.GetTable<TestMergeIdentity>().Where((fun e -> e.Id.Equals(id)))
@@ -1032,7 +1033,7 @@ type ExtensionMethods =
     static member Find (db : TestDataDB, record : TestMergeIdentity) : TestMergeIdentity = db.GetTable<TestMergeIdentity>().FirstOrDefault((fun e -> e.Id.Equals(record.Id)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : TestMergeIdentity, cancellationToken : CancellationToken) : Task<TestMergeIdentity> = db.GetTable<TestMergeIdentity>().FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
+    static member FindAsync (db : TestDataDB, record : TestMergeIdentity, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TestMergeIdentity> = db.GetTable<TestMergeIdentity>().FirstOrDefaultAsync((fun e -> e.Id.Equals(record.Id)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (db : TestDataDB, record : TestMergeIdentity) : IQueryable<TestMergeIdentity> = db.GetTable<TestMergeIdentity>().Where((fun e -> e.Id.Equals(record.Id)))
@@ -1041,7 +1042,7 @@ type ExtensionMethods =
     static member Find (table : ITable<TestSchemaX>, testSchemaXid : SqlInt32) : TestSchemaX = table.FirstOrDefault((fun e -> e.TestSchemaXid.Equals(testSchemaXid)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<TestSchemaX>, testSchemaXid : SqlInt32, cancellationToken : CancellationToken) : Task<TestSchemaX> = table.FirstOrDefaultAsync((fun e -> e.TestSchemaXid.Equals(testSchemaXid)), cancellationToken)
+    static member FindAsync (table : ITable<TestSchemaX>, testSchemaXid : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TestSchemaX> = table.FirstOrDefaultAsync((fun e -> e.TestSchemaXid.Equals(testSchemaXid)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<TestSchemaX>, testSchemaXid : SqlInt32) : IQueryable<TestSchemaX> = table.Where((fun e -> e.TestSchemaXid.Equals(testSchemaXid)))
@@ -1050,7 +1051,7 @@ type ExtensionMethods =
     static member Find (table : ITable<TestSchemaX>, record : TestSchemaX) : TestSchemaX = table.FirstOrDefault((fun e -> e.TestSchemaXid.Equals(record.TestSchemaXid)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<TestSchemaX>, record : TestSchemaX, cancellationToken : CancellationToken) : Task<TestSchemaX> = table.FirstOrDefaultAsync((fun e -> e.TestSchemaXid.Equals(record.TestSchemaXid)), cancellationToken)
+    static member FindAsync (table : ITable<TestSchemaX>, record : TestSchemaX, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TestSchemaX> = table.FirstOrDefaultAsync((fun e -> e.TestSchemaXid.Equals(record.TestSchemaXid)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<TestSchemaX>, record : TestSchemaX) : IQueryable<TestSchemaX> = table.Where((fun e -> e.TestSchemaXid.Equals(record.TestSchemaXid)))
@@ -1059,7 +1060,7 @@ type ExtensionMethods =
     static member FindTestSchemaX (db : TestDataDB, testSchemaXid : SqlInt32) : TestSchemaX = db.GetTable<TestSchemaX>().FirstOrDefault((fun e -> e.TestSchemaXid.Equals(testSchemaXid)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindTestSchemaXAsync (db : TestDataDB, testSchemaXid : SqlInt32, cancellationToken : CancellationToken) : Task<TestSchemaX> = db.GetTable<TestSchemaX>().FirstOrDefaultAsync((fun e -> e.TestSchemaXid.Equals(testSchemaXid)), cancellationToken)
+    static member FindTestSchemaXAsync (db : TestDataDB, testSchemaXid : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TestSchemaX> = db.GetTable<TestSchemaX>().FirstOrDefaultAsync((fun e -> e.TestSchemaXid.Equals(testSchemaXid)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindTestSchemaXQuery (db : TestDataDB, testSchemaXid : SqlInt32) : IQueryable<TestSchemaX> = db.GetTable<TestSchemaX>().Where((fun e -> e.TestSchemaXid.Equals(testSchemaXid)))
@@ -1068,20 +1069,20 @@ type ExtensionMethods =
     static member Find (db : TestDataDB, record : TestSchemaX) : TestSchemaX = db.GetTable<TestSchemaX>().FirstOrDefault((fun e -> e.TestSchemaXid.Equals(record.TestSchemaXid)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : TestSchemaX, cancellationToken : CancellationToken) : Task<TestSchemaX> = db.GetTable<TestSchemaX>().FirstOrDefaultAsync((fun e -> e.TestSchemaXid.Equals(record.TestSchemaXid)), cancellationToken)
+    static member FindAsync (db : TestDataDB, record : TestSchemaX, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TestSchemaX> = db.GetTable<TestSchemaX>().FirstOrDefaultAsync((fun e -> e.TestSchemaXid.Equals(record.TestSchemaXid)), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (db : TestDataDB, record : TestSchemaX) : IQueryable<TestSchemaX> = db.GetTable<TestSchemaX>().Where((fun e -> e.TestSchemaXid.Equals(record.TestSchemaXid)))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member AddIssue792Record (dataConnection : TestDataDB, ``return`` : byref<int>) : int =
+    static member AddIssue792Record (dataConnection : TestDataDB, ``return`` : outref<int>) : int =
         let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.ExecuteProc("[AddIssue792Record]", parameters)
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[0].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member AddIssue792RecordAsync (dataConnection : TestDataDB, ``return`` : int, cancellationToken : CancellationToken) : Task<AddIssue792RecordResults> =
+    static member AddIssue792RecordAsync (dataConnection : TestDataDB, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<AddIssue792RecordResults> =
         task {
             let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.ExecuteProcAsync("[AddIssue792Record]", cancellationToken, parameters)
@@ -1089,14 +1090,14 @@ type ExtensionMethods =
         }
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member DuplicateColumnNames (dataConnection : TestDataDB, ``return`` : byref<int>) : IEnumerable<DuplicateColumnNamesResult> =
+    static member DuplicateColumnNames (dataConnection : TestDataDB, ``return`` : outref<int>) : IEnumerable<DuplicateColumnNamesResult> =
         let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.QueryProc<DuplicateColumnNamesResult>(Func<DbDataReader, DuplicateColumnNamesResult>(fun dataReader -> DuplicateColumnNamesResult(Id = Converter.ChangeTypeTo<SqlInt32>(dataReader.GetValue(0), dataConnection.MappingSchema), Id1 = Converter.ChangeTypeTo<SqlString>(dataReader.GetValue(1), dataConnection.MappingSchema))), "[DuplicateColumnNames]", parameters).ToList()
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[0].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member DuplicateColumnNamesAsync (dataConnection : TestDataDB, ``return`` : int, cancellationToken : CancellationToken) : Task<DuplicateColumnNamesResults> =
+    static member DuplicateColumnNamesAsync (dataConnection : TestDataDB, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<DuplicateColumnNamesResults> =
         task {
             let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.QueryProcAsync<DuplicateColumnNamesResult>(Func<DbDataReader, DuplicateColumnNamesResult>(fun dataReader -> DuplicateColumnNamesResult(Id = Converter.ChangeTypeTo<SqlInt32>(dataReader.GetValue(0), dataConnection.MappingSchema), Id1 = Converter.ChangeTypeTo<SqlString>(dataReader.GetValue(1), dataConnection.MappingSchema))), "[DuplicateColumnNames]", cancellationToken, parameters)
@@ -1104,17 +1105,17 @@ type ExtensionMethods =
         }
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member ExecuteProcIntParameters (dataConnection : TestDataDB, input : SqlInt32 option, output : byref<SqlInt32 option>, ``return`` : byref<int>) : int =
-        let mutable parameters = [| DataParameter("@input", input, LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@output", output, LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+    static member ExecuteProcIntParameters (dataConnection : TestDataDB, input : SqlInt32 option, output : byref<SqlInt32 option>, ``return`` : outref<int>) : int =
+        let mutable parameters = [| DataParameter("@input", Option.toNullable(input), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@output", Option.toNullable(output), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.ExecuteProc("[ExecuteProcIntParameters]", parameters)
         output <- Converter.ChangeTypeTo<SqlInt32 option>(parameters.[1].Value)
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[2].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member ExecuteProcIntParametersAsync (dataConnection : TestDataDB, input : SqlInt32 option, output : SqlInt32 option, ``return`` : int, cancellationToken : CancellationToken) : Task<ExecuteProcIntParametersResults> =
+    static member ExecuteProcIntParametersAsync (dataConnection : TestDataDB, input : SqlInt32 option, output : SqlInt32 option, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<ExecuteProcIntParametersResults> =
         task {
-            let mutable parameters = [| DataParameter("@input", input, LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@output", output, LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@input", Option.toNullable(input), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@output", Option.toNullable(output), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.ExecuteProcAsync("[ExecuteProcIntParameters]", cancellationToken, parameters)
             return ExecuteProcIntParametersResults(Result = result, Output = Converter.ChangeTypeTo<SqlInt32 option>(parameters.[1].Value), Return = Converter.ChangeTypeTo<int>(parameters.[2].Value))
         }
@@ -1126,8 +1127,8 @@ type ExtensionMethods =
     /// This is &lt;тест&gt; procedure parameter!
     /// </param>
     [<System.Runtime.CompilerServices.Extension>]
-    static member ExecuteProcStringParameters (dataConnection : TestDataDB, input : SqlInt32 option, output : byref<SqlInt32 option>, ``return`` : byref<int>) : IEnumerable<ExecuteProcStringParametersResult> =
-        let mutable parameters = [| DataParameter("@input", input, LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@output", output, LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+    static member ExecuteProcStringParameters (dataConnection : TestDataDB, input : SqlInt32 option, output : byref<SqlInt32 option>, ``return`` : outref<int>) : IEnumerable<ExecuteProcStringParametersResult> =
+        let mutable parameters = [| DataParameter("@input", Option.toNullable(input), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@output", Option.toNullable(output), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.QueryProc<ExecuteProcStringParametersResult>(Func<DbDataReader, ExecuteProcStringParametersResult>(fun dataReader -> ExecuteProcStringParametersResult(Column = Converter.ChangeTypeTo<SqlString>(dataReader.GetValue(0), dataConnection.MappingSchema))), "[ExecuteProcStringParameters]", parameters).ToList()
         output <- Converter.ChangeTypeTo<SqlInt32 option>(parameters.[1].Value)
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[2].Value)
@@ -1140,22 +1141,22 @@ type ExtensionMethods =
     /// This is &lt;тест&gt; procedure parameter!
     /// </param>
     [<System.Runtime.CompilerServices.Extension>]
-    static member ExecuteProcStringParametersAsync (dataConnection : TestDataDB, input : SqlInt32 option, output : SqlInt32 option, ``return`` : int, cancellationToken : CancellationToken) : Task<ExecuteProcStringParametersResults> =
+    static member ExecuteProcStringParametersAsync (dataConnection : TestDataDB, input : SqlInt32 option, output : SqlInt32 option, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<ExecuteProcStringParametersResults> =
         task {
-            let mutable parameters = [| DataParameter("@input", input, LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@output", output, LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@input", Option.toNullable(input), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@output", Option.toNullable(output), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.QueryProcAsync<ExecuteProcStringParametersResult>(Func<DbDataReader, ExecuteProcStringParametersResult>(fun dataReader -> ExecuteProcStringParametersResult(Column = Converter.ChangeTypeTo<SqlString>(dataReader.GetValue(0), dataConnection.MappingSchema))), "[ExecuteProcStringParameters]", cancellationToken, parameters)
             return ExecuteProcStringParametersResults(Result = result.ToList(), Output = Converter.ChangeTypeTo<SqlInt32 option>(parameters.[1].Value), Return = Converter.ChangeTypeTo<int>(parameters.[2].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member Issue1897 (dataConnection : TestDataDB, ``return`` : byref<int>) : int =
+    static member Issue1897 (dataConnection : TestDataDB, ``return`` : outref<int>) : int =
         let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.ExecuteProc("[Issue1897]", parameters)
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[0].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member Issue1897Async (dataConnection : TestDataDB, ``return`` : int, cancellationToken : CancellationToken) : Task<Issue1897Results> =
+    static member Issue1897Async (dataConnection : TestDataDB, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Issue1897Results> =
         task {
             let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.ExecuteProcAsync("[Issue1897]", cancellationToken, parameters)
@@ -1163,8 +1164,8 @@ type ExtensionMethods =
         }
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member OutRefEnumTest (dataConnection : TestDataDB, str : SqlString option, outputStr : byref<SqlString option>, inputOutputStr : byref<SqlString option>, ``return`` : byref<int>) : int =
-        let mutable parameters = [| DataParameter("@str", str, LinqToDB.DataType.VarChar, DbType = "varchar(50)", Size = 50); DataParameter("@outputStr", outputStr, LinqToDB.DataType.VarChar, Direction = ParameterDirection.InputOutput, DbType = "varchar(50)", Size = 50); DataParameter("@inputOutputStr", inputOutputStr, LinqToDB.DataType.VarChar, Direction = ParameterDirection.InputOutput, DbType = "varchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+    static member OutRefEnumTest (dataConnection : TestDataDB, str : SqlString option, outputStr : byref<SqlString option>, inputOutputStr : byref<SqlString option>, ``return`` : outref<int>) : int =
+        let mutable parameters = [| DataParameter("@str", Option.toNullable(str), LinqToDB.DataType.VarChar, DbType = "varchar(50)", Size = 50); DataParameter("@outputStr", Option.toNullable(outputStr), LinqToDB.DataType.VarChar, Direction = ParameterDirection.InputOutput, DbType = "varchar(50)", Size = 50); DataParameter("@inputOutputStr", Option.toNullable(inputOutputStr), LinqToDB.DataType.VarChar, Direction = ParameterDirection.InputOutput, DbType = "varchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.ExecuteProc("[OutRefEnumTest]", parameters)
         outputStr <- Converter.ChangeTypeTo<SqlString option>(parameters.[1].Value)
         inputOutputStr <- Converter.ChangeTypeTo<SqlString option>(parameters.[2].Value)
@@ -1172,16 +1173,16 @@ type ExtensionMethods =
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member OutRefEnumTestAsync (dataConnection : TestDataDB, str : SqlString option, outputStr : SqlString option, inputOutputStr : SqlString option, ``return`` : int, cancellationToken : CancellationToken) : Task<OutRefEnumTestResults> =
+    static member OutRefEnumTestAsync (dataConnection : TestDataDB, str : SqlString option, outputStr : SqlString option, inputOutputStr : SqlString option, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<OutRefEnumTestResults> =
         task {
-            let mutable parameters = [| DataParameter("@str", str, LinqToDB.DataType.VarChar, DbType = "varchar(50)", Size = 50); DataParameter("@outputStr", outputStr, LinqToDB.DataType.VarChar, Direction = ParameterDirection.InputOutput, DbType = "varchar(50)", Size = 50); DataParameter("@inputOutputStr", inputOutputStr, LinqToDB.DataType.VarChar, Direction = ParameterDirection.InputOutput, DbType = "varchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@str", Option.toNullable(str), LinqToDB.DataType.VarChar, DbType = "varchar(50)", Size = 50); DataParameter("@outputStr", Option.toNullable(outputStr), LinqToDB.DataType.VarChar, Direction = ParameterDirection.InputOutput, DbType = "varchar(50)", Size = 50); DataParameter("@inputOutputStr", Option.toNullable(inputOutputStr), LinqToDB.DataType.VarChar, Direction = ParameterDirection.InputOutput, DbType = "varchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.ExecuteProcAsync("[OutRefEnumTest]", cancellationToken, parameters)
             return OutRefEnumTestResults(Result = result, InputOutputStr = Converter.ChangeTypeTo<SqlString option>(parameters.[2].Value), OutputStr = Converter.ChangeTypeTo<SqlString option>(parameters.[1].Value), Return = Converter.ChangeTypeTo<int>(parameters.[3].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member OutRefTest (dataConnection : TestDataDB, id : SqlInt32 option, outputId : byref<SqlInt32 option>, inputOutputId : byref<SqlInt32 option>, str : SqlString option, outputStr : byref<SqlString option>, inputOutputStr : byref<SqlString option>, ``return`` : byref<int>) : int =
-        let mutable parameters = [| DataParameter("@ID", id, LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@outputID", outputId, LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@inputOutputID", inputOutputId, LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@str", str, LinqToDB.DataType.VarChar, DbType = "varchar(50)", Size = 50); DataParameter("@outputStr", outputStr, LinqToDB.DataType.VarChar, Direction = ParameterDirection.InputOutput, DbType = "varchar(50)", Size = 50); DataParameter("@inputOutputStr", inputOutputStr, LinqToDB.DataType.VarChar, Direction = ParameterDirection.InputOutput, DbType = "varchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+    static member OutRefTest (dataConnection : TestDataDB, id : SqlInt32 option, outputId : byref<SqlInt32 option>, inputOutputId : byref<SqlInt32 option>, str : SqlString option, outputStr : byref<SqlString option>, inputOutputStr : byref<SqlString option>, ``return`` : outref<int>) : int =
+        let mutable parameters = [| DataParameter("@ID", Option.toNullable(id), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@outputID", Option.toNullable(outputId), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@inputOutputID", Option.toNullable(inputOutputId), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@str", Option.toNullable(str), LinqToDB.DataType.VarChar, DbType = "varchar(50)", Size = 50); DataParameter("@outputStr", Option.toNullable(outputStr), LinqToDB.DataType.VarChar, Direction = ParameterDirection.InputOutput, DbType = "varchar(50)", Size = 50); DataParameter("@inputOutputStr", Option.toNullable(inputOutputStr), LinqToDB.DataType.VarChar, Direction = ParameterDirection.InputOutput, DbType = "varchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.ExecuteProc("[OutRefTest]", parameters)
         outputId <- Converter.ChangeTypeTo<SqlInt32 option>(parameters.[1].Value)
         inputOutputId <- Converter.ChangeTypeTo<SqlInt32 option>(parameters.[2].Value)
@@ -1191,22 +1192,22 @@ type ExtensionMethods =
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member OutRefTestAsync (dataConnection : TestDataDB, id : SqlInt32 option, outputId : SqlInt32 option, inputOutputId : SqlInt32 option, str : SqlString option, outputStr : SqlString option, inputOutputStr : SqlString option, ``return`` : int, cancellationToken : CancellationToken) : Task<OutRefTestResults> =
+    static member OutRefTestAsync (dataConnection : TestDataDB, id : SqlInt32 option, outputId : SqlInt32 option, inputOutputId : SqlInt32 option, str : SqlString option, outputStr : SqlString option, inputOutputStr : SqlString option, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<OutRefTestResults> =
         task {
-            let mutable parameters = [| DataParameter("@ID", id, LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@outputID", outputId, LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@inputOutputID", inputOutputId, LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@str", str, LinqToDB.DataType.VarChar, DbType = "varchar(50)", Size = 50); DataParameter("@outputStr", outputStr, LinqToDB.DataType.VarChar, Direction = ParameterDirection.InputOutput, DbType = "varchar(50)", Size = 50); DataParameter("@inputOutputStr", inputOutputStr, LinqToDB.DataType.VarChar, Direction = ParameterDirection.InputOutput, DbType = "varchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@ID", Option.toNullable(id), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@outputID", Option.toNullable(outputId), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@inputOutputID", Option.toNullable(inputOutputId), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@str", Option.toNullable(str), LinqToDB.DataType.VarChar, DbType = "varchar(50)", Size = 50); DataParameter("@outputStr", Option.toNullable(outputStr), LinqToDB.DataType.VarChar, Direction = ParameterDirection.InputOutput, DbType = "varchar(50)", Size = 50); DataParameter("@inputOutputStr", Option.toNullable(inputOutputStr), LinqToDB.DataType.VarChar, Direction = ParameterDirection.InputOutput, DbType = "varchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.ExecuteProcAsync("[OutRefTest]", cancellationToken, parameters)
             return OutRefTestResults(Result = result, InputOutputId = Converter.ChangeTypeTo<SqlInt32 option>(parameters.[2].Value), InputOutputStr = Converter.ChangeTypeTo<SqlString option>(parameters.[5].Value), OutputId = Converter.ChangeTypeTo<SqlInt32 option>(parameters.[1].Value), OutputStr = Converter.ChangeTypeTo<SqlString option>(parameters.[4].Value), Return = Converter.ChangeTypeTo<int>(parameters.[6].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PatientSelectAll (dataConnection : TestDataDB, ``return`` : byref<int>) : IEnumerable<PatientSelectAllResult> =
+    static member PatientSelectAll (dataConnection : TestDataDB, ``return`` : outref<int>) : IEnumerable<PatientSelectAllResult> =
         let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.QueryProc<PatientSelectAllResult>("[Patient_SelectAll]", parameters).ToList()
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[0].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PatientSelectAllAsync (dataConnection : TestDataDB, ``return`` : int, cancellationToken : CancellationToken) : Task<PatientSelectAllResults> =
+    static member PatientSelectAllAsync (dataConnection : TestDataDB, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PatientSelectAllResults> =
         task {
             let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.QueryProcAsync<PatientSelectAllResult>("[Patient_SelectAll]", cancellationToken, parameters)
@@ -1214,90 +1215,90 @@ type ExtensionMethods =
         }
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PatientSelectByName (dataConnection : TestDataDB, firstName : SqlString option, lastName : SqlString option, ``return`` : byref<int>) : IEnumerable<PatientSelectByNameResult> =
-        let mutable parameters = [| DataParameter("@firstName", firstName, LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@lastName", lastName, LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+    static member PatientSelectByName (dataConnection : TestDataDB, firstName : SqlString option, lastName : SqlString option, ``return`` : outref<int>) : IEnumerable<PatientSelectByNameResult> =
+        let mutable parameters = [| DataParameter("@firstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@lastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.QueryProc<PatientSelectByNameResult>("[Patient_SelectByName]", parameters).ToList()
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[2].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PatientSelectByNameAsync (dataConnection : TestDataDB, firstName : SqlString option, lastName : SqlString option, ``return`` : int, cancellationToken : CancellationToken) : Task<PatientSelectByNameResults> =
+    static member PatientSelectByNameAsync (dataConnection : TestDataDB, firstName : SqlString option, lastName : SqlString option, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PatientSelectByNameResults> =
         task {
-            let mutable parameters = [| DataParameter("@firstName", firstName, LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@lastName", lastName, LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@firstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@lastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.QueryProcAsync<PatientSelectByNameResult>("[Patient_SelectByName]", cancellationToken, parameters)
             return PatientSelectByNameResults(Result = result.ToList(), Return = Converter.ChangeTypeTo<int>(parameters.[2].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PersonSearch (dataConnection : TestDataDB, nameFilter : SqlString option, ``return`` : byref<int>) : int =
-        let mutable parameters = [| DataParameter("@nameFilter", nameFilter, LinqToDB.DataType.NVarChar, DbType = "nvarchar(512)", Size = 512); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+    static member PersonSearch (dataConnection : TestDataDB, nameFilter : SqlString option, ``return`` : outref<int>) : int =
+        let mutable parameters = [| DataParameter("@nameFilter", Option.toNullable(nameFilter), LinqToDB.DataType.NVarChar, DbType = "nvarchar(512)", Size = 512); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.ExecuteProc("[PersonSearch]", parameters)
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[1].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PersonSearchAsync (dataConnection : TestDataDB, nameFilter : SqlString option, ``return`` : int, cancellationToken : CancellationToken) : Task<PersonSearchResults> =
+    static member PersonSearchAsync (dataConnection : TestDataDB, nameFilter : SqlString option, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PersonSearchResults> =
         task {
-            let mutable parameters = [| DataParameter("@nameFilter", nameFilter, LinqToDB.DataType.NVarChar, DbType = "nvarchar(512)", Size = 512); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@nameFilter", Option.toNullable(nameFilter), LinqToDB.DataType.NVarChar, DbType = "nvarchar(512)", Size = 512); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.ExecuteProcAsync("[PersonSearch]", cancellationToken, parameters)
             return PersonSearchResults(Result = result, Return = Converter.ChangeTypeTo<int>(parameters.[1].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PersonDelete (dataConnection : TestDataDB, personId : SqlInt32 option, ``return`` : byref<int>) : int =
-        let mutable parameters = [| DataParameter("@PersonID", personId, LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+    static member PersonDelete (dataConnection : TestDataDB, personId : SqlInt32 option, ``return`` : outref<int>) : int =
+        let mutable parameters = [| DataParameter("@PersonID", Option.toNullable(personId), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.ExecuteProc("[Person_Delete]", parameters)
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[1].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PersonDeleteAsync (dataConnection : TestDataDB, personId : SqlInt32 option, ``return`` : int, cancellationToken : CancellationToken) : Task<PersonDeleteResults> =
+    static member PersonDeleteAsync (dataConnection : TestDataDB, personId : SqlInt32 option, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PersonDeleteResults> =
         task {
-            let mutable parameters = [| DataParameter("@PersonID", personId, LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@PersonID", Option.toNullable(personId), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.ExecuteProcAsync("[Person_Delete]", cancellationToken, parameters)
             return PersonDeleteResults(Result = result, Return = Converter.ChangeTypeTo<int>(parameters.[1].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PersonInsert (dataConnection : TestDataDB, firstName : SqlString option, lastName : SqlString option, middleName : SqlString option, gender : SqlString option, ``return`` : byref<int>) : IEnumerable<PersonInsertResult> =
-        let mutable parameters = [| DataParameter("@FirstName", firstName, LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@LastName", lastName, LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@MiddleName", middleName, LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@Gender", gender, LinqToDB.DataType.Char, DbType = "char(1)", Size = 1); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+    static member PersonInsert (dataConnection : TestDataDB, firstName : SqlString option, lastName : SqlString option, middleName : SqlString option, gender : SqlString option, ``return`` : outref<int>) : IEnumerable<PersonInsertResult> =
+        let mutable parameters = [| DataParameter("@FirstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@LastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@MiddleName", Option.toNullable(middleName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@Gender", Option.toNullable(gender), LinqToDB.DataType.Char, DbType = "char(1)", Size = 1); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.QueryProc<PersonInsertResult>("[Person_Insert]", parameters).ToList()
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[4].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PersonInsertAsync (dataConnection : TestDataDB, firstName : SqlString option, lastName : SqlString option, middleName : SqlString option, gender : SqlString option, ``return`` : int, cancellationToken : CancellationToken) : Task<PersonInsertResults> =
+    static member PersonInsertAsync (dataConnection : TestDataDB, firstName : SqlString option, lastName : SqlString option, middleName : SqlString option, gender : SqlString option, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PersonInsertResults> =
         task {
-            let mutable parameters = [| DataParameter("@FirstName", firstName, LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@LastName", lastName, LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@MiddleName", middleName, LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@Gender", gender, LinqToDB.DataType.Char, DbType = "char(1)", Size = 1); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@FirstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@LastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@MiddleName", Option.toNullable(middleName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@Gender", Option.toNullable(gender), LinqToDB.DataType.Char, DbType = "char(1)", Size = 1); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.QueryProcAsync<PersonInsertResult>("[Person_Insert]", cancellationToken, parameters)
             return PersonInsertResults(Result = result.ToList(), Return = Converter.ChangeTypeTo<int>(parameters.[4].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PersonInsertOutputParameter (dataConnection : TestDataDB, firstName : SqlString option, lastName : SqlString option, middleName : SqlString option, gender : SqlString option, personId : byref<SqlInt32 option>, ``return`` : byref<int>) : int =
-        let mutable parameters = [| DataParameter("@FirstName", firstName, LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@LastName", lastName, LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@MiddleName", middleName, LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@Gender", gender, LinqToDB.DataType.Char, DbType = "char(1)", Size = 1); DataParameter("@PersonID", personId, LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+    static member PersonInsertOutputParameter (dataConnection : TestDataDB, firstName : SqlString option, lastName : SqlString option, middleName : SqlString option, gender : SqlString option, personId : byref<SqlInt32 option>, ``return`` : outref<int>) : int =
+        let mutable parameters = [| DataParameter("@FirstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@LastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@MiddleName", Option.toNullable(middleName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@Gender", Option.toNullable(gender), LinqToDB.DataType.Char, DbType = "char(1)", Size = 1); DataParameter("@PersonID", Option.toNullable(personId), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.ExecuteProc("[Person_Insert_OutputParameter]", parameters)
         personId <- Converter.ChangeTypeTo<SqlInt32 option>(parameters.[4].Value)
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[5].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PersonInsertOutputParameterAsync (dataConnection : TestDataDB, firstName : SqlString option, lastName : SqlString option, middleName : SqlString option, gender : SqlString option, personId : SqlInt32 option, ``return`` : int, cancellationToken : CancellationToken) : Task<PersonInsertOutputParameterResults> =
+    static member PersonInsertOutputParameterAsync (dataConnection : TestDataDB, firstName : SqlString option, lastName : SqlString option, middleName : SqlString option, gender : SqlString option, personId : SqlInt32 option, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PersonInsertOutputParameterResults> =
         task {
-            let mutable parameters = [| DataParameter("@FirstName", firstName, LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@LastName", lastName, LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@MiddleName", middleName, LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@Gender", gender, LinqToDB.DataType.Char, DbType = "char(1)", Size = 1); DataParameter("@PersonID", personId, LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@FirstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@LastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@MiddleName", Option.toNullable(middleName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@Gender", Option.toNullable(gender), LinqToDB.DataType.Char, DbType = "char(1)", Size = 1); DataParameter("@PersonID", Option.toNullable(personId), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.ExecuteProcAsync("[Person_Insert_OutputParameter]", cancellationToken, parameters)
             return PersonInsertOutputParameterResults(Result = result, PersonId = Converter.ChangeTypeTo<SqlInt32 option>(parameters.[4].Value), Return = Converter.ChangeTypeTo<int>(parameters.[5].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PersonSelectAll (dataConnection : TestDataDB, ``return`` : byref<int>) : IEnumerable<PersonSelectAllResult> =
+    static member PersonSelectAll (dataConnection : TestDataDB, ``return`` : outref<int>) : IEnumerable<PersonSelectAllResult> =
         let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.QueryProc<PersonSelectAllResult>("[Person_SelectAll]", parameters).ToList()
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[0].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PersonSelectAllAsync (dataConnection : TestDataDB, ``return`` : int, cancellationToken : CancellationToken) : Task<PersonSelectAllResults> =
+    static member PersonSelectAllAsync (dataConnection : TestDataDB, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PersonSelectAllResults> =
         task {
             let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.QueryProcAsync<PersonSelectAllResult>("[Person_SelectAll]", cancellationToken, parameters)
@@ -1305,83 +1306,83 @@ type ExtensionMethods =
         }
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PersonSelectByKey (dataConnection : TestDataDB, id : SqlInt32 option, ``return`` : byref<int>) : IEnumerable<PersonSelectByKeyResult> =
-        let mutable parameters = [| DataParameter("@id", id, LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+    static member PersonSelectByKey (dataConnection : TestDataDB, id : SqlInt32 option, ``return`` : outref<int>) : IEnumerable<PersonSelectByKeyResult> =
+        let mutable parameters = [| DataParameter("@id", Option.toNullable(id), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.QueryProc<PersonSelectByKeyResult>("[Person_SelectByKey]", parameters).ToList()
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[1].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PersonSelectByKeyAsync (dataConnection : TestDataDB, id : SqlInt32 option, ``return`` : int, cancellationToken : CancellationToken) : Task<PersonSelectByKeyResults> =
+    static member PersonSelectByKeyAsync (dataConnection : TestDataDB, id : SqlInt32 option, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PersonSelectByKeyResults> =
         task {
-            let mutable parameters = [| DataParameter("@id", id, LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@id", Option.toNullable(id), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.QueryProcAsync<PersonSelectByKeyResult>("[Person_SelectByKey]", cancellationToken, parameters)
             return PersonSelectByKeyResults(Result = result.ToList(), Return = Converter.ChangeTypeTo<int>(parameters.[1].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PersonSelectByKeyLowercase (dataConnection : TestDataDB, id : SqlInt32 option, ``return`` : byref<int>) : IEnumerable<PersonSelectByKeyLowercaseResult> =
-        let mutable parameters = [| DataParameter("@id", id, LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+    static member PersonSelectByKeyLowercase (dataConnection : TestDataDB, id : SqlInt32 option, ``return`` : outref<int>) : IEnumerable<PersonSelectByKeyLowercaseResult> =
+        let mutable parameters = [| DataParameter("@id", Option.toNullable(id), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.QueryProc<PersonSelectByKeyLowercaseResult>("[Person_SelectByKeyLowercase]", parameters).ToList()
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[1].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PersonSelectByKeyLowercaseAsync (dataConnection : TestDataDB, id : SqlInt32 option, ``return`` : int, cancellationToken : CancellationToken) : Task<PersonSelectByKeyLowercaseResults> =
+    static member PersonSelectByKeyLowercaseAsync (dataConnection : TestDataDB, id : SqlInt32 option, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PersonSelectByKeyLowercaseResults> =
         task {
-            let mutable parameters = [| DataParameter("@id", id, LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@id", Option.toNullable(id), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.QueryProcAsync<PersonSelectByKeyLowercaseResult>("[Person_SelectByKeyLowercase]", cancellationToken, parameters)
             return PersonSelectByKeyLowercaseResults(Result = result.ToList(), Return = Converter.ChangeTypeTo<int>(parameters.[1].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PersonSelectByName (dataConnection : TestDataDB, firstName : SqlString option, lastName : SqlString option, ``return`` : byref<int>) : IEnumerable<PersonSelectByNameResult> =
-        let mutable parameters = [| DataParameter("@firstName", firstName, LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@lastName", lastName, LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+    static member PersonSelectByName (dataConnection : TestDataDB, firstName : SqlString option, lastName : SqlString option, ``return`` : outref<int>) : IEnumerable<PersonSelectByNameResult> =
+        let mutable parameters = [| DataParameter("@firstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@lastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.QueryProc<PersonSelectByNameResult>("[Person_SelectByName]", parameters).ToList()
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[2].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PersonSelectByNameAsync (dataConnection : TestDataDB, firstName : SqlString option, lastName : SqlString option, ``return`` : int, cancellationToken : CancellationToken) : Task<PersonSelectByNameResults> =
+    static member PersonSelectByNameAsync (dataConnection : TestDataDB, firstName : SqlString option, lastName : SqlString option, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PersonSelectByNameResults> =
         task {
-            let mutable parameters = [| DataParameter("@firstName", firstName, LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@lastName", lastName, LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@firstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@lastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.QueryProcAsync<PersonSelectByNameResult>("[Person_SelectByName]", cancellationToken, parameters)
             return PersonSelectByNameResults(Result = result.ToList(), Return = Converter.ChangeTypeTo<int>(parameters.[2].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PersonSelectListByName (dataConnection : TestDataDB, firstName : SqlString option, lastName : SqlString option, ``return`` : byref<int>) : IEnumerable<PersonSelectListByNameResult> =
-        let mutable parameters = [| DataParameter("@firstName", firstName, LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@lastName", lastName, LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+    static member PersonSelectListByName (dataConnection : TestDataDB, firstName : SqlString option, lastName : SqlString option, ``return`` : outref<int>) : IEnumerable<PersonSelectListByNameResult> =
+        let mutable parameters = [| DataParameter("@firstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@lastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.QueryProc<PersonSelectListByNameResult>("[Person_SelectListByName]", parameters).ToList()
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[2].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PersonSelectListByNameAsync (dataConnection : TestDataDB, firstName : SqlString option, lastName : SqlString option, ``return`` : int, cancellationToken : CancellationToken) : Task<PersonSelectListByNameResults> =
+    static member PersonSelectListByNameAsync (dataConnection : TestDataDB, firstName : SqlString option, lastName : SqlString option, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PersonSelectListByNameResults> =
         task {
-            let mutable parameters = [| DataParameter("@firstName", firstName, LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@lastName", lastName, LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@firstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@lastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.QueryProcAsync<PersonSelectListByNameResult>("[Person_SelectListByName]", cancellationToken, parameters)
             return PersonSelectListByNameResults(Result = result.ToList(), Return = Converter.ChangeTypeTo<int>(parameters.[2].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PersonUpdate (dataConnection : TestDataDB, personId : SqlInt32 option, firstName : SqlString option, lastName : SqlString option, middleName : SqlString option, gender : SqlString option, ``return`` : byref<int>) : int =
-        let mutable parameters = [| DataParameter("@PersonID", personId, LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@FirstName", firstName, LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@LastName", lastName, LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@MiddleName", middleName, LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@Gender", gender, LinqToDB.DataType.Char, DbType = "char(1)", Size = 1); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+    static member PersonUpdate (dataConnection : TestDataDB, personId : SqlInt32 option, firstName : SqlString option, lastName : SqlString option, middleName : SqlString option, gender : SqlString option, ``return`` : outref<int>) : int =
+        let mutable parameters = [| DataParameter("@PersonID", Option.toNullable(personId), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@FirstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@LastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@MiddleName", Option.toNullable(middleName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@Gender", Option.toNullable(gender), LinqToDB.DataType.Char, DbType = "char(1)", Size = 1); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.ExecuteProc("[Person_Update]", parameters)
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[5].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member PersonUpdateAsync (dataConnection : TestDataDB, personId : SqlInt32 option, firstName : SqlString option, lastName : SqlString option, middleName : SqlString option, gender : SqlString option, ``return`` : int, cancellationToken : CancellationToken) : Task<PersonUpdateResults> =
+    static member PersonUpdateAsync (dataConnection : TestDataDB, personId : SqlInt32 option, firstName : SqlString option, lastName : SqlString option, middleName : SqlString option, gender : SqlString option, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PersonUpdateResults> =
         task {
-            let mutable parameters = [| DataParameter("@PersonID", personId, LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@FirstName", firstName, LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@LastName", lastName, LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@MiddleName", middleName, LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@Gender", gender, LinqToDB.DataType.Char, DbType = "char(1)", Size = 1); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@PersonID", Option.toNullable(personId), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@FirstName", Option.toNullable(firstName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@LastName", Option.toNullable(lastName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@MiddleName", Option.toNullable(middleName), LinqToDB.DataType.NVarChar, DbType = "nvarchar(50)", Size = 50); DataParameter("@Gender", Option.toNullable(gender), LinqToDB.DataType.Char, DbType = "char(1)", Size = 1); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.ExecuteProcAsync("[Person_Update]", cancellationToken, parameters)
             return PersonUpdateResults(Result = result, Return = Converter.ChangeTypeTo<int>(parameters.[5].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member QueryProcMultipleParameters (dataConnection : TestDataDB, input : SqlInt32 option, output1 : byref<SqlInt32 option>, output2 : byref<SqlInt32 option>, output3 : byref<SqlInt32 option>, ``return`` : byref<int>) : IEnumerable<QueryProcMultipleParametersResult> =
-        let mutable parameters = [| DataParameter("@input", input, LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@output1", output1, LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@output2", output2, LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@output3", output3, LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+    static member QueryProcMultipleParameters (dataConnection : TestDataDB, input : SqlInt32 option, output1 : byref<SqlInt32 option>, output2 : byref<SqlInt32 option>, output3 : byref<SqlInt32 option>, ``return`` : outref<int>) : IEnumerable<QueryProcMultipleParametersResult> =
+        let mutable parameters = [| DataParameter("@input", Option.toNullable(input), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@output1", Option.toNullable(output1), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@output2", Option.toNullable(output2), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@output3", Option.toNullable(output3), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.QueryProc<QueryProcMultipleParametersResult>("[QueryProcMultipleParameters]", parameters).ToList()
         output1 <- Converter.ChangeTypeTo<SqlInt32 option>(parameters.[1].Value)
         output2 <- Converter.ChangeTypeTo<SqlInt32 option>(parameters.[2].Value)
@@ -1390,16 +1391,16 @@ type ExtensionMethods =
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member QueryProcMultipleParametersAsync (dataConnection : TestDataDB, input : SqlInt32 option, output1 : SqlInt32 option, output2 : SqlInt32 option, output3 : SqlInt32 option, ``return`` : int, cancellationToken : CancellationToken) : Task<QueryProcMultipleParametersResults> =
+    static member QueryProcMultipleParametersAsync (dataConnection : TestDataDB, input : SqlInt32 option, output1 : SqlInt32 option, output2 : SqlInt32 option, output3 : SqlInt32 option, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<QueryProcMultipleParametersResults> =
         task {
-            let mutable parameters = [| DataParameter("@input", input, LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@output1", output1, LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@output2", output2, LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@output3", output3, LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@input", Option.toNullable(input), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@output1", Option.toNullable(output1), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@output2", Option.toNullable(output2), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@output3", Option.toNullable(output3), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.QueryProcAsync<QueryProcMultipleParametersResult>("[QueryProcMultipleParameters]", cancellationToken, parameters)
             return QueryProcMultipleParametersResults(Result = result.ToList(), Output1 = Converter.ChangeTypeTo<SqlInt32 option>(parameters.[1].Value), Output2 = Converter.ChangeTypeTo<SqlInt32 option>(parameters.[2].Value), Output3 = Converter.ChangeTypeTo<SqlInt32 option>(parameters.[3].Value), Return = Converter.ChangeTypeTo<int>(parameters.[4].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member QueryProcParameters (dataConnection : TestDataDB, input : SqlInt32 option, output1 : byref<SqlInt32 option>, output2 : byref<SqlInt32 option>, ``return`` : byref<int>) : IEnumerable<QueryProcParametersResult> =
-        let mutable parameters = [| DataParameter("@input", input, LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@output1", output1, LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@output2", output2, LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+    static member QueryProcParameters (dataConnection : TestDataDB, input : SqlInt32 option, output1 : byref<SqlInt32 option>, output2 : byref<SqlInt32 option>, ``return`` : outref<int>) : IEnumerable<QueryProcParametersResult> =
+        let mutable parameters = [| DataParameter("@input", Option.toNullable(input), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@output1", Option.toNullable(output1), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@output2", Option.toNullable(output2), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.QueryProc<QueryProcParametersResult>("[QueryProcParameters]", parameters).ToList()
         output1 <- Converter.ChangeTypeTo<SqlInt32 option>(parameters.[1].Value)
         output2 <- Converter.ChangeTypeTo<SqlInt32 option>(parameters.[2].Value)
@@ -1407,22 +1408,22 @@ type ExtensionMethods =
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member QueryProcParametersAsync (dataConnection : TestDataDB, input : SqlInt32 option, output1 : SqlInt32 option, output2 : SqlInt32 option, ``return`` : int, cancellationToken : CancellationToken) : Task<QueryProcParametersResults> =
+    static member QueryProcParametersAsync (dataConnection : TestDataDB, input : SqlInt32 option, output1 : SqlInt32 option, output2 : SqlInt32 option, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<QueryProcParametersResults> =
         task {
-            let mutable parameters = [| DataParameter("@input", input, LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@output1", output1, LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@output2", output2, LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@input", Option.toNullable(input), LinqToDB.DataType.Int32, DbType = "int"); DataParameter("@output1", Option.toNullable(output1), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@output2", Option.toNullable(output2), LinqToDB.DataType.Int32, Direction = ParameterDirection.InputOutput, DbType = "int"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.QueryProcAsync<QueryProcParametersResult>("[QueryProcParameters]", cancellationToken, parameters)
             return QueryProcParametersResults(Result = result.ToList(), Output1 = Converter.ChangeTypeTo<SqlInt32 option>(parameters.[1].Value), Output2 = Converter.ChangeTypeTo<SqlInt32 option>(parameters.[2].Value), Return = Converter.ChangeTypeTo<int>(parameters.[3].Value))
         }
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member SelectImplicitColumn (dataConnection : TestDataDB, ``return`` : byref<int>) : IEnumerable<SelectImplicitColumnResult> =
+    static member SelectImplicitColumn (dataConnection : TestDataDB, ``return`` : outref<int>) : IEnumerable<SelectImplicitColumnResult> =
         let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.QueryProc<SelectImplicitColumnResult>(Func<DbDataReader, SelectImplicitColumnResult>(fun dataReader -> SelectImplicitColumnResult(Column = Converter.ChangeTypeTo<SqlInt32>(dataReader.GetValue(0), dataConnection.MappingSchema))), "[SelectImplicitColumn]", parameters).ToList()
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[0].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member SelectImplicitColumnAsync (dataConnection : TestDataDB, ``return`` : int, cancellationToken : CancellationToken) : Task<SelectImplicitColumnResults> =
+    static member SelectImplicitColumnAsync (dataConnection : TestDataDB, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<SelectImplicitColumnResults> =
         task {
             let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.QueryProcAsync<SelectImplicitColumnResult>(Func<DbDataReader, SelectImplicitColumnResult>(fun dataReader -> SelectImplicitColumnResult(Column = Converter.ChangeTypeTo<SqlInt32>(dataReader.GetValue(0), dataConnection.MappingSchema))), "[SelectImplicitColumn]", cancellationToken, parameters)
@@ -1430,14 +1431,14 @@ type ExtensionMethods =
         }
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member TableTypeTestProc (dataConnection : TestDataDB, table : DataTable, ``return`` : byref<int>) : IEnumerable<TableTypeTestProcResult> =
+    static member TableTypeTestProc (dataConnection : TestDataDB, table : DataTable, ``return`` : outref<int>) : IEnumerable<TableTypeTestProcResult> =
         let mutable parameters = [| DataParameter("@table", table, LinqToDB.DataType.Structured, DbType = "[dbo].[TestTableType]"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.QueryProc<TableTypeTestProcResult>("[TableTypeTestProc]", parameters).ToList()
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[1].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member TableTypeTestProcAsync (dataConnection : TestDataDB, table : DataTable, ``return`` : int, cancellationToken : CancellationToken) : Task<TableTypeTestProcResults> =
+    static member TableTypeTestProcAsync (dataConnection : TestDataDB, table : DataTable, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TableTypeTestProcResults> =
         task {
             let mutable parameters = [| DataParameter("@table", table, LinqToDB.DataType.Structured, DbType = "[dbo].[TestTableType]"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.QueryProcAsync<TableTypeTestProcResult>("[TableTypeTestProc]", cancellationToken, parameters)
@@ -1445,16 +1446,16 @@ type ExtensionMethods =
         }
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member VariableResults (dataConnection : TestDataDB, returnFullRow : SqlBoolean option, ``return`` : byref<int>) : IEnumerable<VariableResultsResult> =
-        let mutable parameters = [| DataParameter("@ReturnFullRow", returnFullRow, LinqToDB.DataType.Boolean, DbType = "bit"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+    static member VariableResults (dataConnection : TestDataDB, returnFullRow : SqlBoolean option, ``return`` : outref<int>) : IEnumerable<VariableResultsResult> =
+        let mutable parameters = [| DataParameter("@ReturnFullRow", Option.toNullable(returnFullRow), LinqToDB.DataType.Boolean, DbType = "bit"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
         let mutable ret = dataConnection.QueryProc<VariableResultsResult>("[VariableResults]", parameters).ToList()
         ``return`` <- Converter.ChangeTypeTo<int>(parameters.[1].Value)
         ret
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member VariableResultsAsync (dataConnection : TestDataDB, returnFullRow : SqlBoolean option, ``return`` : int, cancellationToken : CancellationToken) : Task<VariableResultsResults> =
+    static member VariableResultsAsync (dataConnection : TestDataDB, returnFullRow : SqlBoolean option, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<VariableResultsResults> =
         task {
-            let mutable parameters = [| DataParameter("@ReturnFullRow", returnFullRow, LinqToDB.DataType.Boolean, DbType = "bit"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
+            let mutable parameters = [| DataParameter("@ReturnFullRow", Option.toNullable(returnFullRow), LinqToDB.DataType.Boolean, DbType = "bit"); DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let! result = dataConnection.QueryProcAsync<VariableResultsResult>("[VariableResults]", cancellationToken, parameters)
             return VariableResultsResults(Result = result.ToList(), Return = Converter.ChangeTypeTo<int>(parameters.[1].Value))
         }
@@ -2254,7 +2255,7 @@ module TestSchemaSchema =
         static member Find (table : ITable<TestSchemaA>, testSchemaAid : SqlInt32) : TestSchemaA = table.FirstOrDefault((fun e -> e.TestSchemaAid.Equals(testSchemaAid)))
 
         [<System.Runtime.CompilerServices.Extension>]
-        static member FindAsync (table : ITable<TestSchemaA>, testSchemaAid : SqlInt32, cancellationToken : CancellationToken) : Task<TestSchemaA> = table.FirstOrDefaultAsync((fun e -> e.TestSchemaAid.Equals(testSchemaAid)), cancellationToken)
+        static member FindAsync (table : ITable<TestSchemaA>, testSchemaAid : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TestSchemaA> = table.FirstOrDefaultAsync((fun e -> e.TestSchemaAid.Equals(testSchemaAid)), cancellationToken)
 
         [<System.Runtime.CompilerServices.Extension>]
         static member FindQuery (table : ITable<TestSchemaA>, testSchemaAid : SqlInt32) : IQueryable<TestSchemaA> = table.Where((fun e -> e.TestSchemaAid.Equals(testSchemaAid)))
@@ -2263,7 +2264,7 @@ module TestSchemaSchema =
         static member Find (table : ITable<TestSchemaA>, record : TestSchemaA) : TestSchemaA = table.FirstOrDefault((fun e -> e.TestSchemaAid.Equals(record.TestSchemaAid)))
 
         [<System.Runtime.CompilerServices.Extension>]
-        static member FindAsync (table : ITable<TestSchemaA>, record : TestSchemaA, cancellationToken : CancellationToken) : Task<TestSchemaA> = table.FirstOrDefaultAsync((fun e -> e.TestSchemaAid.Equals(record.TestSchemaAid)), cancellationToken)
+        static member FindAsync (table : ITable<TestSchemaA>, record : TestSchemaA, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TestSchemaA> = table.FirstOrDefaultAsync((fun e -> e.TestSchemaAid.Equals(record.TestSchemaAid)), cancellationToken)
 
         [<System.Runtime.CompilerServices.Extension>]
         static member FindQuery (table : ITable<TestSchemaA>, record : TestSchemaA) : IQueryable<TestSchemaA> = table.Where((fun e -> e.TestSchemaAid.Equals(record.TestSchemaAid)))
@@ -2272,7 +2273,7 @@ module TestSchemaSchema =
         static member FindTestSchemaA (db : TestDataDB, testSchemaAid : SqlInt32) : TestSchemaA = db.GetTable<TestSchemaA>().FirstOrDefault((fun e -> e.TestSchemaAid.Equals(testSchemaAid)))
 
         [<System.Runtime.CompilerServices.Extension>]
-        static member FindTestSchemaAAsync (db : TestDataDB, testSchemaAid : SqlInt32, cancellationToken : CancellationToken) : Task<TestSchemaA> = db.GetTable<TestSchemaA>().FirstOrDefaultAsync((fun e -> e.TestSchemaAid.Equals(testSchemaAid)), cancellationToken)
+        static member FindTestSchemaAAsync (db : TestDataDB, testSchemaAid : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TestSchemaA> = db.GetTable<TestSchemaA>().FirstOrDefaultAsync((fun e -> e.TestSchemaAid.Equals(testSchemaAid)), cancellationToken)
 
         [<System.Runtime.CompilerServices.Extension>]
         static member FindTestSchemaAQuery (db : TestDataDB, testSchemaAid : SqlInt32) : IQueryable<TestSchemaA> = db.GetTable<TestSchemaA>().Where((fun e -> e.TestSchemaAid.Equals(testSchemaAid)))
@@ -2281,7 +2282,7 @@ module TestSchemaSchema =
         static member Find (db : TestDataDB, record : TestSchemaA) : TestSchemaA = db.GetTable<TestSchemaA>().FirstOrDefault((fun e -> e.TestSchemaAid.Equals(record.TestSchemaAid)))
 
         [<System.Runtime.CompilerServices.Extension>]
-        static member FindAsync (db : TestDataDB, record : TestSchemaA, cancellationToken : CancellationToken) : Task<TestSchemaA> = db.GetTable<TestSchemaA>().FirstOrDefaultAsync((fun e -> e.TestSchemaAid.Equals(record.TestSchemaAid)), cancellationToken)
+        static member FindAsync (db : TestDataDB, record : TestSchemaA, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TestSchemaA> = db.GetTable<TestSchemaA>().FirstOrDefaultAsync((fun e -> e.TestSchemaAid.Equals(record.TestSchemaAid)), cancellationToken)
 
         [<System.Runtime.CompilerServices.Extension>]
         static member FindQuery (db : TestDataDB, record : TestSchemaA) : IQueryable<TestSchemaA> = db.GetTable<TestSchemaA>().Where((fun e -> e.TestSchemaAid.Equals(record.TestSchemaAid)))
@@ -2290,7 +2291,7 @@ module TestSchemaSchema =
         static member Find (table : ITable<TestSchemaB>, testSchemaBid : SqlInt32) : TestSchemaB = table.FirstOrDefault((fun e -> e.TestSchemaBid.Equals(testSchemaBid)))
 
         [<System.Runtime.CompilerServices.Extension>]
-        static member FindAsync (table : ITable<TestSchemaB>, testSchemaBid : SqlInt32, cancellationToken : CancellationToken) : Task<TestSchemaB> = table.FirstOrDefaultAsync((fun e -> e.TestSchemaBid.Equals(testSchemaBid)), cancellationToken)
+        static member FindAsync (table : ITable<TestSchemaB>, testSchemaBid : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TestSchemaB> = table.FirstOrDefaultAsync((fun e -> e.TestSchemaBid.Equals(testSchemaBid)), cancellationToken)
 
         [<System.Runtime.CompilerServices.Extension>]
         static member FindQuery (table : ITable<TestSchemaB>, testSchemaBid : SqlInt32) : IQueryable<TestSchemaB> = table.Where((fun e -> e.TestSchemaBid.Equals(testSchemaBid)))
@@ -2299,7 +2300,7 @@ module TestSchemaSchema =
         static member Find (table : ITable<TestSchemaB>, record : TestSchemaB) : TestSchemaB = table.FirstOrDefault((fun e -> e.TestSchemaBid.Equals(record.TestSchemaBid)))
 
         [<System.Runtime.CompilerServices.Extension>]
-        static member FindAsync (table : ITable<TestSchemaB>, record : TestSchemaB, cancellationToken : CancellationToken) : Task<TestSchemaB> = table.FirstOrDefaultAsync((fun e -> e.TestSchemaBid.Equals(record.TestSchemaBid)), cancellationToken)
+        static member FindAsync (table : ITable<TestSchemaB>, record : TestSchemaB, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TestSchemaB> = table.FirstOrDefaultAsync((fun e -> e.TestSchemaBid.Equals(record.TestSchemaBid)), cancellationToken)
 
         [<System.Runtime.CompilerServices.Extension>]
         static member FindQuery (table : ITable<TestSchemaB>, record : TestSchemaB) : IQueryable<TestSchemaB> = table.Where((fun e -> e.TestSchemaBid.Equals(record.TestSchemaBid)))
@@ -2308,7 +2309,7 @@ module TestSchemaSchema =
         static member FindTestSchemaB (db : TestDataDB, testSchemaBid : SqlInt32) : TestSchemaB = db.GetTable<TestSchemaB>().FirstOrDefault((fun e -> e.TestSchemaBid.Equals(testSchemaBid)))
 
         [<System.Runtime.CompilerServices.Extension>]
-        static member FindTestSchemaBAsync (db : TestDataDB, testSchemaBid : SqlInt32, cancellationToken : CancellationToken) : Task<TestSchemaB> = db.GetTable<TestSchemaB>().FirstOrDefaultAsync((fun e -> e.TestSchemaBid.Equals(testSchemaBid)), cancellationToken)
+        static member FindTestSchemaBAsync (db : TestDataDB, testSchemaBid : SqlInt32, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TestSchemaB> = db.GetTable<TestSchemaB>().FirstOrDefaultAsync((fun e -> e.TestSchemaBid.Equals(testSchemaBid)), cancellationToken)
 
         [<System.Runtime.CompilerServices.Extension>]
         static member FindTestSchemaBQuery (db : TestDataDB, testSchemaBid : SqlInt32) : IQueryable<TestSchemaB> = db.GetTable<TestSchemaB>().Where((fun e -> e.TestSchemaBid.Equals(testSchemaBid)))
@@ -2317,20 +2318,20 @@ module TestSchemaSchema =
         static member Find (db : TestDataDB, record : TestSchemaB) : TestSchemaB = db.GetTable<TestSchemaB>().FirstOrDefault((fun e -> e.TestSchemaBid.Equals(record.TestSchemaBid)))
 
         [<System.Runtime.CompilerServices.Extension>]
-        static member FindAsync (db : TestDataDB, record : TestSchemaB, cancellationToken : CancellationToken) : Task<TestSchemaB> = db.GetTable<TestSchemaB>().FirstOrDefaultAsync((fun e -> e.TestSchemaBid.Equals(record.TestSchemaBid)), cancellationToken)
+        static member FindAsync (db : TestDataDB, record : TestSchemaB, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TestSchemaB> = db.GetTable<TestSchemaB>().FirstOrDefaultAsync((fun e -> e.TestSchemaBid.Equals(record.TestSchemaBid)), cancellationToken)
 
         [<System.Runtime.CompilerServices.Extension>]
         static member FindQuery (db : TestDataDB, record : TestSchemaB) : IQueryable<TestSchemaB> = db.GetTable<TestSchemaB>().Where((fun e -> e.TestSchemaBid.Equals(record.TestSchemaBid)))
 
         [<System.Runtime.CompilerServices.Extension>]
-        static member TestProcedure (dataConnection : TestDataDB, ``return`` : byref<int>) : IEnumerable<TestProcedureResult> =
+        static member TestProcedure (dataConnection : TestDataDB, ``return`` : outref<int>) : IEnumerable<TestProcedureResult> =
             let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
             let mutable ret = dataConnection.QueryProc<TestProcedureResult>(Func<DbDataReader, TestProcedureResult>(fun dataReader -> TestProcedureResult(Column = Converter.ChangeTypeTo<SqlInt32>(dataReader.GetValue(0), dataConnection.MappingSchema))), "[TestSchema].[TestProcedure]", parameters).ToList()
             ``return`` <- Converter.ChangeTypeTo<int>(parameters.[0].Value)
             ret
 
         [<System.Runtime.CompilerServices.Extension>]
-        static member TestProcedureAsync (dataConnection : TestDataDB, ``return`` : int, cancellationToken : CancellationToken) : Task<TestProcedureResults> =
+        static member TestProcedureAsync (dataConnection : TestDataDB, ``return`` : int, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TestProcedureResults> =
             task {
                 let mutable parameters = [| DataParameter("@return", null, LinqToDB.DataType.Int32, Direction = ParameterDirection.Output, DbType = "INT", Size = 0, Precision = 0, Scale = 0) |]
                 let! result = dataConnection.QueryProcAsync<TestProcedureResult>(Func<DbDataReader, TestProcedureResult>(fun dataReader -> TestProcedureResult(Column = Converter.ChangeTypeTo<SqlInt32>(dataReader.GetValue(0), dataConnection.MappingSchema))), "[TestSchema].[TestProcedure]", cancellationToken, parameters)
