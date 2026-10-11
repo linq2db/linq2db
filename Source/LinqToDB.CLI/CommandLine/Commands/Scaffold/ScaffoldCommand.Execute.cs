@@ -42,7 +42,7 @@ namespace LinqToDB.CommandLine.Commands.Scaffold
 			if (language == LanguageProviders.FSharp
 				&& options.TryGetValue(General.OptionsTemplate, out var templateValue) && templateValue is "t4")
 			{
-				await Console.Error.WriteLineAsync("F# generation (--target-language f#) is not supported together with the T4 template mode (-t t4).").ConfigureAwait(false);
+				await environment.Error.WriteLineAsync("F# generation (--target-language f#) is not supported together with the T4 template mode (-t t4).").ConfigureAwait(false);
 				return StatusCodes.INVALID_ARGUMENTS;
 			}
 
@@ -54,7 +54,7 @@ namespace LinqToDB.CommandLine.Commands.Scaffold
 				{
 					if (!specified.Languages.HasFlag(TargetLanguages.FSharp))
 					{
-						await Console.Error.WriteLineAsync($"Option '--{specified.Name}' is not supported for target language F#.").ConfigureAwait(false);
+						await environment.Error.WriteLineAsync($"Option '--{specified.Name}' is not supported for target language F#.").ConfigureAwait(false);
 						hasUnsupported = true;
 					}
 				}
