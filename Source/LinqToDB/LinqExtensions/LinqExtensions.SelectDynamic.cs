@@ -49,8 +49,7 @@ namespace LinqToDB
 			ArgumentNullException.ThrowIfNull(keys);
 			ArgumentNullException.ThrowIfNull(valueTemplate);
 
-			// Materialize to an array: a List<T> constant is dropped from the query cache key, which would let two
-			// different column sets share one compiled query.
+			// Materialize once: the key set may be a lazy query, and it is read by index below.
 			var keyArray = keys as TKey[] ?? keys.ToArray();
 
 			var names    = new string[keyArray.Length];
