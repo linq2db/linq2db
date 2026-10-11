@@ -49,8 +49,8 @@ namespace LinqToDB.CodeModel
 		/// </summary>
 		ConstructorPropertyInitialization = 0x0040,
 		/// <summary>
-		/// Partial types support. Without it, <see cref="Scaffold.DataModelOptions.EntityClassIsPartial"/> option is
-		/// disabled.
+		/// Partial types support. Without it, generated classes are not marked with <see cref="Modifiers.Partial"/> and
+		/// <see cref="Scaffold.DataModelOptions.EntityClassIsPartial"/> option is disabled.
 		/// </summary>
 		PartialTypes                      = 0x0080,
 		/// <summary>

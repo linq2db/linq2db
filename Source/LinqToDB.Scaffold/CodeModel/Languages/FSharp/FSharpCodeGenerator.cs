@@ -149,6 +149,10 @@ namespace LinqToDB.CodeModel
 			VisitList(file.Header);
 			WriteLine();
 
+			// imports, nested type lifting and the `rec` scope are all emitted by the namespace visitor
+			if (file.Items.Any(static item => item is CodeClass or ClassGroup { IsEmpty: false }))
+				throw new NotSupportedException("F# code generation requires a namespace (CodeGenerationOptions.Namespace)");
+
 			// F# requires the `namespace` declaration before any `open` statements, so imports are emitted by
 			// the namespace visitor rather than here.
 			_fileImports = file.Imports;
@@ -708,8 +712,13 @@ namespace LinqToDB.CodeModel
 		/// </summary>
 		private void WriteRecordTemplate(CodeClass @class)
 		{
+			// the template is renamed rather than a member, as member names are user-visible API (e.g. column properties)
 			var properties = @class.Members.EnumerateMembers<PropertyGroup, CodeProperty>().ToList();
-			var names      = new HashSet<string>(properties.Select(static p => p.Name.Name), StringComparer.Ordinal);
+			var names      = new HashSet<string>(
+				properties.Select(static p => p.Name.Name)
+					.Concat(@class.Members.EnumerateMembers<MethodGroup, CodeMethod>().Select(static m => m.Name.Name))
+					.Concat(@class.Members.EnumerateMembers<FieldGroup, CodeField>().Select(static f => f.Name.Name)),
+				StringComparer.Ordinal);
 
 			var name = "Empty";
 			for (var i = 1; names.Contains(name); i++)

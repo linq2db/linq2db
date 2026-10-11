@@ -26,7 +26,7 @@ namespace LinqToDB.Scaffold
 		/// <param name="languageProvider">Language provider to use for data model codegeneration.</param>
 		/// <param name="nameConverter"><see cref="INameConversionProvider"/> pluralization service implementation.</param>
 		/// <param name="options">Scaffolding process customization options. Options, not supported by
-		/// <paramref name="languageProvider"/> (see <see cref="ILanguageProvider.Features"/>), are disabled in this instance.</param>
+		/// <paramref name="languageProvider"/> (see <see cref="ILanguageProvider.Features"/>), are reset on this object.</param>
 		/// <param name="interceptors">Optional custom scaffold interceptors.</param>
 		public Scaffolder(ILanguageProvider languageProvider, INameConversionProvider nameConverter, ScaffoldOptions options, ScaffoldInterceptors? interceptors)
 		{

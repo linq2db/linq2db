@@ -245,10 +245,11 @@ namespace LinqToDB.CodeModel
 			var oldModuleTypeNames = _moduleTypeNames;
 			if (@class.Attributes.HasFlag(Modifiers.Module))
 			{
-				// module scope: the extension methods type synthesized by the code generator, then the module's own
-				// types, which keep their names over types lifted from deeper levels
+				// module scope: the extension methods type the code generator synthesizes for module methods, then the
+				// module's own types, which keep their names over types lifted from deeper levels
 				_moduleTypeNames = CreateNewNamesSet();
-				_moduleTypeNames.Add(FSharpCodeGenerator.SchemaExtensionsTypeName);
+				if (@class.Members.EnumerateMembers<MethodGroup, CodeMethod>().Any())
+					_moduleTypeNames.Add(FSharpCodeGenerator.SchemaExtensionsTypeName);
 
 				foreach (var nested in @class.Members.EnumerateMembers<ClassGroup, CodeClass>())
 					FixName(_moduleTypeNames, nested.Name, null, true);

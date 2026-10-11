@@ -229,8 +229,8 @@ Generated F# records rely on the `linq2db.FSharp` package: the consuming applica
 
 F# record expressions must assign every field, including association fields, so each generated record has a
 `static member Empty` template with all fields defaulted. Create new records from it with copy-and-update:
-`{ Person.Empty with FirstName = "John"; LastName = "Doe" }`. `Empty` itself is only a template: its non-nullable
-fields hold default (null) values.
+`{ Person.Empty with FirstName = "John"; LastName = "Doe" }`. `Empty` itself is only a template: its fields hold
+default values, i.e. `null` for non-nullable reference fields such as strings and associations.
 
 The generated file is a single `namespace rec`, so all generated types are mutually visible regardless of order; the
 generator qualifies its own references where an entity name shadows a framework type. Code that opens the generated

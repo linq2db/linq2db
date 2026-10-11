@@ -264,6 +264,26 @@ namespace Tests.Scaffold
 			}
 		}
 
+		[Test]
+		public void ModuleWithoutMethodsKeepsExtensionsName()
+		{
+			var options = FSharpOptions();
+			options.DataModel.EntityClassNameOptions = new() { Casing = NameCasing.None, Pluralization = Pluralization.None };
+
+			// no primary key: no Find extension, so the module gets no synthesized Extensions type
+			var source = GenerateSource(
+				options,
+				tableName  : "Extensions",
+				tableSchema: "other",
+				columns    : [new Column("Id", null, new DatabaseType("int", null, null, null), false, true, true, 0)]);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(source, Does.Contain("type Extensions ="));
+				Assert.That(source, Does.Not.Contain("Extensions1"));
+			}
+		}
+
 		// all generated types share one `namespace rec` scope, so references to framework types shadowed by entity names
 		// (including names of namespace segments) must be qualified until unambiguous
 		[Test]
@@ -299,6 +319,95 @@ namespace Tests.Scaffold
 				Assert.That(source, Does.Contain("LinqToDB.Data.DataParameter(\"@value\", FSharp.Core.Option.toNullable(value), DataType.Int32)"));
 				Assert.That(source, Does.Contain(": Threading.Tasks.Task<IEnumerable<ProcResult>> ="));
 				Assert.That(source, Does.Contain("(table : LinqToDB.ITable<Task>, id : int)"));
+			}
+		}
+
+		[Test]
+		public void RejectsMissingNamespace()
+		{
+			var options = FSharpOptions();
+			options.CodeGeneration.Namespace = null;
+
+			Assert.That(
+				() => GenerateSource(options, columns: [new Column("Id", null, new DatabaseType("int", null, null, null), false, true, true, 0)]),
+				Throws.TypeOf<NotSupportedException>().With.Message.Contains("namespace"));
+		}
+
+		[Test]
+		public void RecordTemplateMemberNameConflict()
+		{
+			var options = FSharpOptions();
+			options.DataModel.GenerateIEquatable = true;
+
+			var source = GenerateSource(
+				options,
+				columns    : [new Column("Id", null, new DatabaseType("int", null, null, null), false, true, true, 0)],
+				primaryKey : new PrimaryKey(null, ["Id"]),
+				converters : [new RenameIdentifier("_equalityComparer", "Empty")]);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(source, Does.Contain("static let Empty : IEqualityComparer<TestTable>"));
+				Assert.That(source, Does.Contain("static member Empty1 : TestTable ="));
+			}
+		}
+
+		[Test]
+		public void NoPartialClassesWithoutPartialTypes()
+		{
+			var options = FSharpOptions();
+			options.Schema.LoadedObjects |= SchemaObjects.StoredProcedure | SchemaObjects.ScalarFunction;
+
+			var procedure = new StoredProcedure(
+				new SqlObjectName("GetData", Schema: "dbo"),
+				null,
+				[],
+				null,
+				[[new ResultColumn("Value", new DatabaseType("nvarchar", 50, null, null), true)]],
+				new VoidResult());
+
+			var function = new ScalarFunction(
+				new SqlObjectName("GetPair", Schema: "dbo"),
+				null,
+				[],
+				new TupleResult([new ScalarResult("First", new DatabaseType("int", null, null, null), false), new ScalarResult("Second", new DatabaseType("nvarchar", 50, null, null), true)], false));
+
+			// data context, extensions class (Find), procedure result class, function tuple class, schema wrapper and
+			// schema context
+			var schema = new TestSchemaProvider(
+				[new Column("Id", null, new DatabaseType("int", null, null, null), false, true, true, 0)],
+				[procedure],
+				new PrimaryKey(null, ["Id"]),
+				"other",
+				"OtherTable",
+				[new Table(new SqlObjectName("Account", Schema: "dbo"), null, [new Column("Id", null, new DatabaseType("int", null, null, null), false, true, true, 0)], null, new PrimaryKey(null, ["Id"]))],
+				[function]);
+
+			var scaffolder = new Scaffolder(LanguageProviders.FSharp, HumanizerNameConverter.Instance, options, null);
+			var dataModel  = scaffolder.LoadDataModel(schema, TestTypeMappingProvider.Instance);
+			var provider   = SqlServerTools.GetDataProvider(SqlServerVersion.v2012, SqlServerProvider.MicrosoftDataSqlClient);
+			var files      = scaffolder.GenerateCodeModel(provider.CreateSqlBuilder(provider.MappingSchema, new DataOptions()), dataModel, MetadataBuilders.GetMetadataBuilder(scaffolder.Language, options.DataModel.Metadata));
+
+			var classes = files
+				.SelectMany(f => f.Items.OfType<CodeNamespace>())
+				.SelectMany(ns => AllClasses(ns.Members))
+				.ToList();
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(classes, Has.Count.GreaterThanOrEqualTo(6));
+				Assert.That(classes.Where(static c => c.Attributes.HasFlag(Modifiers.Partial)).Select(static c => c.Name.Name), Is.Empty);
+			}
+
+			static IEnumerable<CodeClass> AllClasses(IEnumerable<IMemberGroup> groups)
+			{
+				foreach (var @class in groups.EnumerateMembers<ClassGroup, CodeClass>())
+				{
+					yield return @class;
+
+					foreach (var nested in AllClasses(@class.Members))
+						yield return nested;
+				}
 			}
 		}
 
@@ -354,12 +463,12 @@ namespace Tests.Scaffold
 			return options;
 		}
 
-		static string GenerateSource(ScaffoldOptions options, IReadOnlyCollection<Column>? columns = null, IReadOnlyCollection<StoredProcedure>? procedures = null, PrimaryKey? primaryKey = null, string tableName = "TestTable", string tableSchema = "dbo", IReadOnlyCollection<Table>? extraTables = null)
+		static string GenerateSource(ScaffoldOptions options, IReadOnlyCollection<Column>? columns = null, IReadOnlyCollection<StoredProcedure>? procedures = null, PrimaryKey? primaryKey = null, string tableName = "TestTable", string tableSchema = "dbo", IReadOnlyCollection<Table>? extraTables = null, ConvertCodeModelVisitor[]? converters = null)
 		{
-			return string.Join("\n", GenerateFiles(options, columns, procedures, primaryKey, tableSchema: tableSchema, tableName: tableName, extraTables: extraTables));
+			return string.Join("\n", GenerateFiles(options, columns, procedures, primaryKey, tableSchema: tableSchema, tableName: tableName, extraTables: extraTables, converters: converters));
 		}
 
-		static string[] GenerateFiles(ScaffoldOptions options, IReadOnlyCollection<Column>? columns = null, IReadOnlyCollection<StoredProcedure>? procedures = null, PrimaryKey? primaryKey = null, ILanguageProvider? language = null, string tableSchema = "dbo", string tableName = "TestTable", IReadOnlyCollection<Table>? extraTables = null)
+		static string[] GenerateFiles(ScaffoldOptions options, IReadOnlyCollection<Column>? columns = null, IReadOnlyCollection<StoredProcedure>? procedures = null, PrimaryKey? primaryKey = null, ILanguageProvider? language = null, string tableSchema = "dbo", string tableName = "TestTable", IReadOnlyCollection<Table>? extraTables = null, ConvertCodeModelVisitor[]? converters = null)
 		{
 			var scaffolder = new Scaffolder(language ?? LanguageProviders.FSharp, HumanizerNameConverter.Instance, options, null);
 			var schema     = new TestSchemaProvider(columns ?? [], procedures ?? [], primaryKey, tableSchema, tableName, extraTables ?? []);
@@ -372,12 +481,19 @@ namespace Tests.Scaffold
 				sqlBuilder,
 				dataModel,
 				MetadataBuilders.GetMetadataBuilder(scaffolder.Language, options.DataModel.Metadata),
-				new ProviderSpecificStructsEqualityFixer(scaffolder.Language));
+				[new ProviderSpecificStructsEqualityFixer(scaffolder.Language), .. converters ?? []]);
 
 			return scaffolder.GenerateSourceCode(dataModel, files).Select(f => f.Code).ToArray();
 		}
 
-		sealed class TestSchemaProvider(IReadOnlyCollection<Column> columns, IReadOnlyCollection<StoredProcedure> procedures, PrimaryKey? primaryKey, string tableSchema, string tableName, IReadOnlyCollection<Table> extraTables) : ISchemaProvider
+		// renames identifiers in the code model, standing in for user code model converters
+		sealed class RenameIdentifier(string from, string to) : ConvertCodeModelVisitor
+		{
+			protected override ICodeElement Visit(CodeIdentifier identifier)
+				=> string.Equals(identifier.Name, from, StringComparison.Ordinal) ? new CodeIdentifier(to, false) : identifier;
+		}
+
+		sealed class TestSchemaProvider(IReadOnlyCollection<Column> columns, IReadOnlyCollection<StoredProcedure> procedures, PrimaryKey? primaryKey, string tableSchema, string tableName, IReadOnlyCollection<Table> extraTables, IReadOnlyCollection<ScalarFunction>? scalarFunctions = null) : ISchemaProvider
 		{
 			IEnumerable<Table> ISchemaProvider.GetTables()
 			{
@@ -392,7 +508,7 @@ namespace Tests.Scaffold
 			IEnumerable<ForeignKey>        ISchemaProvider.GetForeignKeys()        => [];
 			IEnumerable<StoredProcedure>   ISchemaProvider.GetProcedures(bool withSchema, bool safeSchemaOnly) => procedures;
 			IEnumerable<TableFunction>     ISchemaProvider.GetTableFunctions()     => [];
-			IEnumerable<ScalarFunction>    ISchemaProvider.GetScalarFunctions()    => [];
+			IEnumerable<ScalarFunction>    ISchemaProvider.GetScalarFunctions()    => scalarFunctions ?? [];
 			IEnumerable<AggregateFunction> ISchemaProvider.GetAggregateFunctions() => [];
 			ISet<string>                   ISchemaProvider.GetDefaultSchemas()     => new HashSet<string>(["dbo"], StringComparer.Ordinal);
 			string?                        ISchemaProvider.DatabaseName            => null;
