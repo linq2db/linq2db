@@ -150,18 +150,27 @@ namespace LinqToDB.DataModel
 
 			// override object.Equals
 			parameter = context.AST.Parameter(WellKnownTypes.System.ObjectNullable, WellKnownTypes.System.Object_Equals_Parameter, CodeParameterDirection.In);
+
+			// F# implements IEquatable<T> explicitly, so this.Equals(T) would bind to object.Equals and recurse
+			var equalsCall = ReferenceEquals(context.LanguageProvider, LanguageProviders.FSharp)
+				? context.AST.Call(
+					comparerField.Field.Reference,
+					WellKnownTypes.System.Collections.Generic.IEqualityComparer_Equals,
+					WellKnownTypes.System.Boolean,
+					entityBuilder.Type.This,
+					context.AST.As(entityBuilder.Type.Type, parameter.Reference))
+				: context.AST.Call(
+					entityBuilder.Type.This,
+					WellKnownTypes.System.IEquatable_Equals,
+					WellKnownTypes.System.Boolean,
+					context.AST.As(entityBuilder.Type.Type, parameter.Reference));
+
 			methods.New(WellKnownTypes.System.Object_Equals)
 				.SetModifiers(Modifiers.Public | Modifiers.Override)
 				.Parameter(parameter)
 				.Returns(WellKnownTypes.System.Boolean)
 				.Body()
-					.Append(
-						context.AST.Return(
-							context.AST.Call(
-								entityBuilder.Type.This,
-								WellKnownTypes.System.IEquatable_Equals,
-								WellKnownTypes.System.Boolean,
-								context.AST.As(entityBuilder.Type.Type, parameter.Reference))));
+					.Append(context.AST.Return(equalsCall));
 		}
 
 		/// <summary>

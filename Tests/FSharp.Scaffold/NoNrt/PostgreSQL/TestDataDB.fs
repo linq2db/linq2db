@@ -11,6 +11,7 @@ open LinqToDB
 open LinqToDB.Async
 open LinqToDB.Data
 open LinqToDB.Mapping
+open LinqToDB.Tools.Comparers
 open NpgsqlTypes
 open System
 open System.Collections
@@ -194,7 +195,7 @@ type TestTableFunctionSchemaResult () =
 
 
 [<Table("AllTypes")>]
-[<NoComparison>]
+[<CustomEquality; NoComparison>]
 type AllType =
     {
         [<Column("ID", DataType = DataType.Int32, DbType = "integer", Precision = 32, Scale = 0, IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)>] Id : int // integer
@@ -245,6 +246,15 @@ type AllType =
         [<Column("numericarray", DbType = "numeric[]")>] Numericarray : decimal[] // numeric[]
         [<Column("decimalarray", DbType = "numeric[]")>] Decimalarray : decimal[] // numeric[]
     }
+
+    static let _equalityComparer : IEqualityComparer<AllType> = ComparerBuilder.GetEqualityComparer<AllType>((fun c -> box (c.Id)))
+
+    interface IEquatable<AllType> with
+        member this.Equals (other : AllType) : bool = _equalityComparer.Equals(this, other)
+
+    override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+    override this.Equals (obj : obj) : bool = _equalityComparer.Equals(this, (match box obj with :? AllType as value -> value | _ -> Unchecked.defaultof<AllType>))
 
 
 [<System.Runtime.CompilerServices.Extension>]
@@ -1002,7 +1012,7 @@ type CollatedTable =
 
 
 [<Table("Doctor")>]
-[<ReferenceEquality>]
+[<CustomEquality; NoComparison>]
 type Doctor =
     {
         [<Column("PersonID", DataType = DataType.Int32, DbType = "integer", Precision = 32, Scale = 0, IsPrimaryKey = true)>] PersonId : int // integer
@@ -1012,6 +1022,15 @@ type Doctor =
         /// </summary>
         [<Association(CanBeNull = false, ThisKey = "PersonId", OtherKey = "PersonId")>] PersonIDfkey : Person
     }
+
+    static let _equalityComparer : IEqualityComparer<Doctor> = ComparerBuilder.GetEqualityComparer<Doctor>((fun c -> box (c.PersonId)))
+
+    interface IEquatable<Doctor> with
+        member this.Equals (other : Doctor) : bool = _equalityComparer.Equals(this, other)
+
+    override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+    override this.Equals (obj : obj) : bool = _equalityComparer.Equals(this, (match box obj with :? Doctor as value -> value | _ -> Unchecked.defaultof<Doctor>))
 
 
 [<Table("GrandChild")>]
@@ -1025,7 +1044,7 @@ type GrandChild =
 
 
 [<Table("InheritanceChild")>]
-[<NoComparison>]
+[<CustomEquality; NoComparison>]
 type InheritanceChild =
     {
         [<Column("InheritanceChildId", DataType = DataType.Int32, DbType = "integer", Precision = 32, Scale = 0, IsPrimaryKey = true)>] InheritanceChildId : int // integer
@@ -1034,15 +1053,33 @@ type InheritanceChild =
         [<Column("Name", DataType = DataType.NVarChar, DbType = "character varying(50)", Length = 50)>] Name : string option // character varying(50)
     }
 
+    static let _equalityComparer : IEqualityComparer<InheritanceChild> = ComparerBuilder.GetEqualityComparer<InheritanceChild>((fun c -> box (c.InheritanceChildId)))
+
+    interface IEquatable<InheritanceChild> with
+        member this.Equals (other : InheritanceChild) : bool = _equalityComparer.Equals(this, other)
+
+    override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+    override this.Equals (obj : obj) : bool = _equalityComparer.Equals(this, (match box obj with :? InheritanceChild as value -> value | _ -> Unchecked.defaultof<InheritanceChild>))
+
 
 [<Table("InheritanceParent")>]
-[<NoComparison>]
+[<CustomEquality; NoComparison>]
 type InheritanceParent =
     {
         [<Column("InheritanceParentId", DataType = DataType.Int32, DbType = "integer", Precision = 32, Scale = 0, IsPrimaryKey = true)>] InheritanceParentId : int // integer
         [<Column("TypeDiscriminator", DataType = DataType.Int32, DbType = "integer", Precision = 32, Scale = 0)>] TypeDiscriminator : int option // integer
         [<Column("Name", DataType = DataType.NVarChar, DbType = "character varying(50)", Length = 50)>] Name : string option // character varying(50)
     }
+
+    static let _equalityComparer : IEqualityComparer<InheritanceParent> = ComparerBuilder.GetEqualityComparer<InheritanceParent>((fun c -> box (c.InheritanceParentId)))
+
+    interface IEquatable<InheritanceParent> with
+        member this.Equals (other : InheritanceParent) : bool = _equalityComparer.Equals(this, other)
+
+    override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+    override this.Equals (obj : obj) : bool = _equalityComparer.Equals(this, (match box obj with :? InheritanceParent as value -> value | _ -> Unchecked.defaultof<InheritanceParent>))
 
 
 [<Table("LinqDataTypes")>]
@@ -1073,7 +1110,7 @@ type Parent =
 
 
 [<Table("Patient")>]
-[<ReferenceEquality>]
+[<CustomEquality; NoComparison>]
 type Patient =
     {
         [<Column("PersonID", DataType = DataType.Int32, DbType = "integer", Precision = 32, Scale = 0, IsPrimaryKey = true)>] PersonId : int // integer
@@ -1084,12 +1121,21 @@ type Patient =
         [<Association(CanBeNull = false, ThisKey = "PersonId", OtherKey = "PersonId")>] PersonIDfkey : Person
     }
 
+    static let _equalityComparer : IEqualityComparer<Patient> = ComparerBuilder.GetEqualityComparer<Patient>((fun c -> box (c.PersonId)))
+
+    interface IEquatable<Patient> with
+        member this.Equals (other : Patient) : bool = _equalityComparer.Equals(this, other)
+
+    override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+    override this.Equals (obj : obj) : bool = _equalityComparer.Equals(this, (match box obj with :? Patient as value -> value | _ -> Unchecked.defaultof<Patient>))
+
 
 /// <summary>
 /// This is the Person table
 /// </summary>
 [<Table("Person")>]
-[<ReferenceEquality>]
+[<CustomEquality; NoComparison>]
 type Person =
     {
         /// <summary>
@@ -1110,53 +1156,107 @@ type Person =
         [<Association(ThisKey = "PersonId", OtherKey = "PersonId")>] Patient : Patient
     }
 
+    static let _equalityComparer : IEqualityComparer<Person> = ComparerBuilder.GetEqualityComparer<Person>((fun c -> box (c.PersonId)))
+
+    interface IEquatable<Person> with
+        member this.Equals (other : Person) : bool = _equalityComparer.Equals(this, other)
+
+    override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+    override this.Equals (obj : obj) : bool = _equalityComparer.Equals(this, (match box obj with :? Person as value -> value | _ -> Unchecked.defaultof<Person>))
+
 
 [<Table("SequenceCustomNamingTest")>]
-[<NoComparison>]
+[<CustomEquality; NoComparison>]
 type SequenceCustomNamingTest =
     {
         [<Column("ID", DataType = DataType.Int32, DbType = "integer", Precision = 32, Scale = 0, IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)>] Id : int // integer
         [<Column("Value", DataType = DataType.NVarChar, DbType = "character varying(50)", Length = 50)>] Value : string option // character varying(50)
     }
 
+    static let _equalityComparer : IEqualityComparer<SequenceCustomNamingTest> = ComparerBuilder.GetEqualityComparer<SequenceCustomNamingTest>((fun c -> box (c.Id)))
+
+    interface IEquatable<SequenceCustomNamingTest> with
+        member this.Equals (other : SequenceCustomNamingTest) : bool = _equalityComparer.Equals(this, other)
+
+    override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+    override this.Equals (obj : obj) : bool = _equalityComparer.Equals(this, (match box obj with :? SequenceCustomNamingTest as value -> value | _ -> Unchecked.defaultof<SequenceCustomNamingTest>))
+
 
 [<Table("SequenceTest1")>]
-[<NoComparison>]
+[<CustomEquality; NoComparison>]
 type SequenceTest1 =
     {
         [<Column("ID", DataType = DataType.Int32, DbType = "integer", Precision = 32, Scale = 0, IsPrimaryKey = true)>] Id : int // integer
         [<Column("Value", DataType = DataType.NVarChar, DbType = "character varying(50)", Length = 50)>] Value : string option // character varying(50)
     }
 
+    static let _equalityComparer : IEqualityComparer<SequenceTest1> = ComparerBuilder.GetEqualityComparer<SequenceTest1>((fun c -> box (c.Id)))
+
+    interface IEquatable<SequenceTest1> with
+        member this.Equals (other : SequenceTest1) : bool = _equalityComparer.Equals(this, other)
+
+    override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+    override this.Equals (obj : obj) : bool = _equalityComparer.Equals(this, (match box obj with :? SequenceTest1 as value -> value | _ -> Unchecked.defaultof<SequenceTest1>))
+
 
 [<Table("SequenceTest2")>]
-[<NoComparison>]
+[<CustomEquality; NoComparison>]
 type SequenceTest2 =
     {
         [<Column("ID", DataType = DataType.Int32, DbType = "integer", Precision = 32, Scale = 0, IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)>] Id : int // integer
         [<Column("Value", DataType = DataType.NVarChar, DbType = "character varying(50)", Length = 50)>] Value : string option // character varying(50)
     }
 
+    static let _equalityComparer : IEqualityComparer<SequenceTest2> = ComparerBuilder.GetEqualityComparer<SequenceTest2>((fun c -> box (c.Id)))
+
+    interface IEquatable<SequenceTest2> with
+        member this.Equals (other : SequenceTest2) : bool = _equalityComparer.Equals(this, other)
+
+    override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+    override this.Equals (obj : obj) : bool = _equalityComparer.Equals(this, (match box obj with :? SequenceTest2 as value -> value | _ -> Unchecked.defaultof<SequenceTest2>))
+
 
 [<Table("SequenceTest3")>]
-[<NoComparison>]
+[<CustomEquality; NoComparison>]
 type SequenceTest3 =
     {
         [<Column("ID", DataType = DataType.Int32, DbType = "integer", Precision = 32, Scale = 0, IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)>] Id : int // integer
         [<Column("Value", DataType = DataType.NVarChar, DbType = "character varying(50)", Length = 50)>] Value : string option // character varying(50)
     }
 
+    static let _equalityComparer : IEqualityComparer<SequenceTest3> = ComparerBuilder.GetEqualityComparer<SequenceTest3>((fun c -> box (c.Id)))
+
+    interface IEquatable<SequenceTest3> with
+        member this.Equals (other : SequenceTest3) : bool = _equalityComparer.Equals(this, other)
+
+    override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+    override this.Equals (obj : obj) : bool = _equalityComparer.Equals(this, (match box obj with :? SequenceTest3 as value -> value | _ -> Unchecked.defaultof<SequenceTest3>))
+
 
 [<Table("TestIdentity")>]
-[<NoComparison>]
+[<CustomEquality; NoComparison>]
 type TestIdentity =
     {
         [<Column("ID", DataType = DataType.Int32, DbType = "integer", Precision = 32, Scale = 0, IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)>] Id : int // integer
     }
 
+    static let _equalityComparer : IEqualityComparer<TestIdentity> = ComparerBuilder.GetEqualityComparer<TestIdentity>((fun c -> box (c.Id)))
+
+    interface IEquatable<TestIdentity> with
+        member this.Equals (other : TestIdentity) : bool = _equalityComparer.Equals(this, other)
+
+    override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+    override this.Equals (obj : obj) : bool = _equalityComparer.Equals(this, (match box obj with :? TestIdentity as value -> value | _ -> Unchecked.defaultof<TestIdentity>))
+
 
 [<Table("TestMerge1")>]
-[<NoComparison>]
+[<CustomEquality; NoComparison>]
 type TestMerge1 =
     {
         [<Column("Id", DataType = DataType.Int32, DbType = "integer", Precision = 32, Scale = 0, IsPrimaryKey = true)>] Id : int // integer
@@ -1184,9 +1284,18 @@ type TestMerge1 =
         [<Column("FieldEnumNumber", DataType = DataType.Int32, DbType = "integer", Precision = 32, Scale = 0)>] FieldEnumNumber : int option // integer
     }
 
+    static let _equalityComparer : IEqualityComparer<TestMerge1> = ComparerBuilder.GetEqualityComparer<TestMerge1>((fun c -> box (c.Id)))
+
+    interface IEquatable<TestMerge1> with
+        member this.Equals (other : TestMerge1) : bool = _equalityComparer.Equals(this, other)
+
+    override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+    override this.Equals (obj : obj) : bool = _equalityComparer.Equals(this, (match box obj with :? TestMerge1 as value -> value | _ -> Unchecked.defaultof<TestMerge1>))
+
 
 [<Table("TestMerge2")>]
-[<NoComparison>]
+[<CustomEquality; NoComparison>]
 type TestMerge2 =
     {
         [<Column("Id", DataType = DataType.Int32, DbType = "integer", Precision = 32, Scale = 0, IsPrimaryKey = true)>] Id : int // integer
@@ -1214,14 +1323,32 @@ type TestMerge2 =
         [<Column("FieldEnumNumber", DataType = DataType.Int32, DbType = "integer", Precision = 32, Scale = 0)>] FieldEnumNumber : int option // integer
     }
 
+    static let _equalityComparer : IEqualityComparer<TestMerge2> = ComparerBuilder.GetEqualityComparer<TestMerge2>((fun c -> box (c.Id)))
+
+    interface IEquatable<TestMerge2> with
+        member this.Equals (other : TestMerge2) : bool = _equalityComparer.Equals(this, other)
+
+    override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+    override this.Equals (obj : obj) : bool = _equalityComparer.Equals(this, (match box obj with :? TestMerge2 as value -> value | _ -> Unchecked.defaultof<TestMerge2>))
+
 
 [<Table("TestMergeIdentity")>]
-[<NoComparison>]
+[<CustomEquality; NoComparison>]
 type TestMergeIdentity =
     {
         [<Column("Id", DataType = DataType.Int32, DbType = "integer", Precision = 32, Scale = 0, IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)>] Id : int // integer
         [<Column("Field", DataType = DataType.Int32, DbType = "integer", Precision = 32, Scale = 0)>] Field : int option // integer
     }
+
+    static let _equalityComparer : IEqualityComparer<TestMergeIdentity> = ComparerBuilder.GetEqualityComparer<TestMergeIdentity>((fun c -> box (c.Id)))
+
+    interface IEquatable<TestMergeIdentity> with
+        member this.Equals (other : TestMergeIdentity) : bool = _equalityComparer.Equals(this, other)
+
+    override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+    override this.Equals (obj : obj) : bool = _equalityComparer.Equals(this, (match box obj with :? TestMergeIdentity as value -> value | _ -> Unchecked.defaultof<TestMergeIdentity>))
 
 
 [<Table("entity")>]
@@ -1233,7 +1360,7 @@ type Entity =
 
 
 [<Table("multitenant_table")>]
-[<NoComparison>]
+[<CustomEquality; NoComparison>]
 type MultitenantTable =
     {
         [<Column("tenantid", DataType = DataType.Guid, DbType = "uuid", IsPrimaryKey = true, PrimaryKeyOrder = 0, SkipOnUpdate = true)>] Tenantid : Guid // uuid
@@ -1243,9 +1370,18 @@ type MultitenantTable =
         [<Column("createdat", DataType = DataType.DateTime2, DbType = "timestamp (6) without time zone", Precision = 6, SkipOnUpdate = true)>] Createdat : DateTime // timestamp (6) without time zone
     }
 
+    static let _equalityComparer : IEqualityComparer<MultitenantTable> = ComparerBuilder.GetEqualityComparer<MultitenantTable>((fun c -> box (c.Tenantid)), (fun c -> box (c.Id)))
+
+    interface IEquatable<MultitenantTable> with
+        member this.Equals (other : MultitenantTable) : bool = _equalityComparer.Equals(this, other)
+
+    override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+    override this.Equals (obj : obj) : bool = _equalityComparer.Equals(this, (match box obj with :? MultitenantTable as value -> value | _ -> Unchecked.defaultof<MultitenantTable>))
+
 
 [<Table("same_name")>]
-[<ReferenceEquality>]
+[<CustomEquality; NoComparison>]
 type SameName =
     {
         [<Column("id", DataType = DataType.Int32, DbType = "integer", Precision = 32, Scale = 0, IsPrimaryKey = true)>] Id : int // integer
@@ -1259,9 +1395,18 @@ type SameName =
         [<Association(ThisKey = "Id", OtherKey = "SameName")>] SameNames2 : IEnumerable<SameName2>
     }
 
+    static let _equalityComparer : IEqualityComparer<SameName> = ComparerBuilder.GetEqualityComparer<SameName>((fun c -> box (c.Id)))
+
+    interface IEquatable<SameName> with
+        member this.Equals (other : SameName) : bool = _equalityComparer.Equals(this, other)
+
+    override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+    override this.Equals (obj : obj) : bool = _equalityComparer.Equals(this, (match box obj with :? SameName as value -> value | _ -> Unchecked.defaultof<SameName>))
+
 
 [<Table("same_name1")>]
-[<ReferenceEquality>]
+[<CustomEquality; NoComparison>]
 type SameName1 =
     {
         [<Column("id", DataType = DataType.Int32, DbType = "integer", Precision = 32, Scale = 0, IsPrimaryKey = true)>] Id : int // integer
@@ -1272,9 +1417,18 @@ type SameName1 =
         [<Association(ThisKey = "SameName", OtherKey = "Id")>] Samename : SameName
     }
 
+    static let _equalityComparer : IEqualityComparer<SameName1> = ComparerBuilder.GetEqualityComparer<SameName1>((fun c -> box (c.Id)))
+
+    interface IEquatable<SameName1> with
+        member this.Equals (other : SameName1) : bool = _equalityComparer.Equals(this, other)
+
+    override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+    override this.Equals (obj : obj) : bool = _equalityComparer.Equals(this, (match box obj with :? SameName1 as value -> value | _ -> Unchecked.defaultof<SameName1>))
+
 
 [<Table("same_name2")>]
-[<ReferenceEquality>]
+[<CustomEquality; NoComparison>]
 type SameName2 =
     {
         [<Column("id", DataType = DataType.Int32, DbType = "integer", Precision = 32, Scale = 0, IsPrimaryKey = true)>] Id : int // integer
@@ -1285,13 +1439,31 @@ type SameName2 =
         [<Association(ThisKey = "SameName", OtherKey = "Id")>] Samename : SameName
     }
 
+    static let _equalityComparer : IEqualityComparer<SameName2> = ComparerBuilder.GetEqualityComparer<SameName2>((fun c -> box (c.Id)))
+
+    interface IEquatable<SameName2> with
+        member this.Equals (other : SameName2) : bool = _equalityComparer.Equals(this, other)
+
+    override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+    override this.Equals (obj : obj) : bool = _equalityComparer.Equals(this, (match box obj with :? SameName2 as value -> value | _ -> Unchecked.defaultof<SameName2>))
+
 
 [<Table("testsamename")>]
-[<NoComparison>]
+[<CustomEquality; NoComparison>]
 type Testsamename =
     {
         [<Column("id", DataType = DataType.Int32, DbType = "integer", Precision = 32, Scale = 0, IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)>] Id : int // integer
     }
+
+    static let _equalityComparer : IEqualityComparer<Testsamename> = ComparerBuilder.GetEqualityComparer<Testsamename>((fun c -> box (c.Id)))
+
+    interface IEquatable<Testsamename> with
+        member this.Equals (other : Testsamename) : bool = _equalityComparer.Equals(this, other)
+
+    override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+    override this.Equals (obj : obj) : bool = _equalityComparer.Equals(this, (match box obj with :? Testsamename as value -> value | _ -> Unchecked.defaultof<Testsamename>))
 
 
 /// <summary>
@@ -1322,27 +1494,54 @@ module TestSchemaSchema =
 
 
     [<Table("TestSchemaIdentity", Schema = "test_schema")>]
-    [<NoComparison>]
+    [<CustomEquality; NoComparison>]
     type TestSchemaIdentity =
         {
             [<Column("ID", DataType = DataType.Int32, DbType = "integer", Precision = 32, Scale = 0, IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)>] Id : int // integer
         }
 
+        static let _equalityComparer : IEqualityComparer<TestSchemaIdentity> = ComparerBuilder.GetEqualityComparer<TestSchemaIdentity>((fun c -> box (c.Id)))
+
+        interface IEquatable<TestSchemaIdentity> with
+            member this.Equals (other : TestSchemaIdentity) : bool = _equalityComparer.Equals(this, other)
+
+        override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+        override this.Equals (obj : obj) : bool = _equalityComparer.Equals(this, (match box obj with :? TestSchemaIdentity as value -> value | _ -> Unchecked.defaultof<TestSchemaIdentity>))
+
 
     [<Table("testsamename", Schema = "test_schema")>]
-    [<NoComparison>]
+    [<CustomEquality; NoComparison>]
     type Testsamename =
         {
             [<Column("id", DataType = DataType.Int32, DbType = "integer", Precision = 32, Scale = 0, IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)>] Id : int // integer
         }
 
+        static let _equalityComparer : IEqualityComparer<Testsamename> = ComparerBuilder.GetEqualityComparer<Testsamename>((fun c -> box (c.Id)))
+
+        interface IEquatable<Testsamename> with
+            member this.Equals (other : Testsamename) : bool = _equalityComparer.Equals(this, other)
+
+        override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+        override this.Equals (obj : obj) : bool = _equalityComparer.Equals(this, (match box obj with :? Testsamename as value -> value | _ -> Unchecked.defaultof<Testsamename>))
+
 
     [<Table("testserialidentity", Schema = "test_schema")>]
-    [<NoComparison>]
+    [<CustomEquality; NoComparison>]
     type Testserialidentity =
         {
             [<Column("ID", DataType = DataType.Int32, DbType = "integer", Precision = 32, Scale = 0, IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)>] Id : int // integer
         }
+
+        static let _equalityComparer : IEqualityComparer<Testserialidentity> = ComparerBuilder.GetEqualityComparer<Testserialidentity>((fun c -> box (c.Id)))
+
+        interface IEquatable<Testserialidentity> with
+            member this.Equals (other : Testserialidentity) : bool = _equalityComparer.Equals(this, other)
+
+        override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+        override this.Equals (obj : obj) : bool = _equalityComparer.Equals(this, (match box obj with :? Testserialidentity as value -> value | _ -> Unchecked.defaultof<Testserialidentity>))
 
 
     [<System.Runtime.CompilerServices.Extension>]

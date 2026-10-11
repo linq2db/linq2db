@@ -51,6 +51,28 @@ namespace Tests.Scaffold
 		}
 
 		[Test]
+		public void EquatableEntityRecord()
+		{
+			var options = FSharpOptions();
+			options.DataModel.GenerateIEquatable = true;
+
+			var source = GenerateSource(
+				options,
+				columns   : [new Column("Id", null, new DatabaseType("int", null, null, null), false, true, true, 0), new Column("Name", null, new DatabaseType("nvarchar", 50, null, null), true, true, true, 1)],
+				primaryKey: new PrimaryKey(null, ["Id"]));
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(source, Does.Contain("[<CustomEquality; NoComparison>]"));
+				Assert.That(source, Does.Contain("static let _equalityComparer : IEqualityComparer<TestTable> = ComparerBuilder.GetEqualityComparer<TestTable>((fun c -> box (c.Id)))"));
+				Assert.That(source, Does.Contain("interface IEquatable<TestTable> with"));
+				Assert.That(source, Does.Contain("member this.Equals (other : TestTable | null) : bool = _equalityComparer.Equals(this, Unchecked.nonNull(other))"));
+				Assert.That(source, Does.Contain("override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)"));
+				Assert.That(source, Does.Contain("override this.Equals (obj : obj | null) : bool = _equalityComparer.Equals(this, (match box obj with :? TestTable as value -> value | _ -> Unchecked.defaultof<TestTable>))"));
+			}
+		}
+
+		[Test]
 		public void RejectsEntityBaseClass()
 		{
 			var options = FSharpOptions();
@@ -110,10 +132,10 @@ namespace Tests.Scaffold
 			return options;
 		}
 
-		static string GenerateSource(ScaffoldOptions options, IReadOnlyCollection<Column>? columns = null, IReadOnlyCollection<StoredProcedure>? procedures = null)
+		static string GenerateSource(ScaffoldOptions options, IReadOnlyCollection<Column>? columns = null, IReadOnlyCollection<StoredProcedure>? procedures = null, PrimaryKey? primaryKey = null)
 		{
 			var scaffolder = new Scaffolder(LanguageProviders.FSharp, HumanizerNameConverter.Instance, options, null);
-			var schema     = new TestSchemaProvider(columns ?? [], procedures ?? []);
+			var schema     = new TestSchemaProvider(columns ?? [], procedures ?? [], primaryKey);
 			var dataModel  = scaffolder.LoadDataModel(schema, TestTypeMappingProvider.Instance);
 
 			var provider   = SqlServerTools.GetDataProvider(SqlServerVersion.v2012, SqlServerProvider.MicrosoftDataSqlClient);
@@ -128,12 +150,12 @@ namespace Tests.Scaffold
 			return string.Join("\n", scaffolder.GenerateSourceCode(dataModel, files).Select(f => f.Code));
 		}
 
-		sealed class TestSchemaProvider(IReadOnlyCollection<Column> columns, IReadOnlyCollection<StoredProcedure> procedures) : ISchemaProvider
+		sealed class TestSchemaProvider(IReadOnlyCollection<Column> columns, IReadOnlyCollection<StoredProcedure> procedures, PrimaryKey? primaryKey) : ISchemaProvider
 		{
 			IEnumerable<Table> ISchemaProvider.GetTables()
 			{
 				if (columns.Count > 0)
-					yield return new Table(new SqlObjectName("TestTable", Schema: "dbo"), null, columns, null, null);
+					yield return new Table(new SqlObjectName("TestTable", Schema: "dbo"), null, columns, null, primaryKey);
 			}
 
 			IEnumerable<View>              ISchemaProvider.GetViews()              => [];

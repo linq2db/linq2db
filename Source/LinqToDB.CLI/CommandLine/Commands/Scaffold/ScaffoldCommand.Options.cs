@@ -996,8 +996,7 @@ static class CustomFluentExtensions
 					null,
 					null,
 					_defaultOptions.DataModel.GenerateIEquatable,
-					_t4ModeOptions.DataModel.GenerateIEquatable)
-					{ Languages = TargetLanguages.CSharp };
+					_t4ModeOptions.DataModel.GenerateIEquatable);
 
 			/// <summary>
 			/// Generate Find extension method for entity option.

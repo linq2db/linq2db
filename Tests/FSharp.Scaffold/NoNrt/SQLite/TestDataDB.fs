@@ -11,6 +11,7 @@ open LinqToDB
 open LinqToDB.Async
 open LinqToDB.Data
 open LinqToDB.Mapping
+open LinqToDB.Tools.Comparers
 open System
 open System.Collections.Generic
 open System.Linq
@@ -42,7 +43,7 @@ type TestDataDB (options : DataOptions<TestDataDB>) =
 
 
 [<Table("AllTypes")>]
-[<NoComparison>]
+[<CustomEquality; NoComparison>]
 type AllType =
     {
         [<Column("ID", DataType = DataType.Int64, DbType = "INTEGER", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)>] Id : int64 // INTEGER
@@ -70,6 +71,15 @@ type AllType =
         [<Column("uniqueidentifierDataType", DataType = DataType.Guid, DbType = "uniqueidentifier")>] UniqueidentifierDataType : Guid option // uniqueidentifier
         [<Column("objectDataType", DataType = DataType.Variant, DbType = "Object")>] ObjectDataType : obj // Object
     }
+
+    static let _equalityComparer : IEqualityComparer<AllType> = ComparerBuilder.GetEqualityComparer<AllType>((fun c -> box (c.Id)))
+
+    interface IEquatable<AllType> with
+        member this.Equals (other : AllType) : bool = _equalityComparer.Equals(this, other)
+
+    override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+    override this.Equals (obj : obj) : bool = _equalityComparer.Equals(this, (match box obj with :? AllType as value -> value | _ -> Unchecked.defaultof<AllType>))
 
 
 [<System.Runtime.CompilerServices.Extension>]
@@ -337,7 +347,7 @@ type Child =
 
 
 [<Table("Doctor")>]
-[<ReferenceEquality>]
+[<CustomEquality; NoComparison>]
 type Doctor =
     {
         [<Column("PersonID", DataType = DataType.Int64, DbType = "INTEGER", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)>] PersonId : int64 // INTEGER
@@ -347,6 +357,15 @@ type Doctor =
         /// </summary>
         [<Association(CanBeNull = false, ThisKey = "PersonId", OtherKey = "PersonId")>] FkDoctor0 : Person
     }
+
+    static let _equalityComparer : IEqualityComparer<Doctor> = ComparerBuilder.GetEqualityComparer<Doctor>((fun c -> box (c.PersonId)))
+
+    interface IEquatable<Doctor> with
+        member this.Equals (other : Doctor) : bool = _equalityComparer.Equals(this, other)
+
+    override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+    override this.Equals (obj : obj) : bool = _equalityComparer.Equals(this, (match box obj with :? Doctor as value -> value | _ -> Unchecked.defaultof<Doctor>))
 
 
 [<Table("Dual")>]
@@ -358,7 +377,7 @@ type Dual =
 
 
 [<Table("FKTestPosition")>]
-[<NoComparison>]
+[<CustomEquality; NoComparison>]
 type FkTestPosition =
     {
         [<Column("Company", DataType = DataType.Int64, DbType = "INTEGER", IsPrimaryKey = true, PrimaryKeyOrder = 0)>] Company : int64 // INTEGER
@@ -366,6 +385,15 @@ type FkTestPosition =
         [<Column("PositionID", DataType = DataType.Int64, DbType = "INTEGER", IsPrimaryKey = true, PrimaryKeyOrder = 2)>] PositionId : int64 // INTEGER
         [<Column("Name", CanBeNull = false, DataType = DataType.NVarChar, DbType = "nvarchar(50)", Length = 50)>] Name : string // nvarchar(50)
     }
+
+    static let _equalityComparer : IEqualityComparer<FkTestPosition> = ComparerBuilder.GetEqualityComparer<FkTestPosition>((fun c -> box (c.Company)), (fun c -> box (c.Department)), (fun c -> box (c.PositionId)))
+
+    interface IEquatable<FkTestPosition> with
+        member this.Equals (other : FkTestPosition) : bool = _equalityComparer.Equals(this, other)
+
+    override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+    override this.Equals (obj : obj) : bool = _equalityComparer.Equals(this, (match box obj with :? FkTestPosition as value -> value | _ -> Unchecked.defaultof<FkTestPosition>))
 
 
 [<Table("ForeignKeyTable")>]
@@ -440,7 +468,7 @@ type Parent =
 
 
 [<Table("Patient")>]
-[<ReferenceEquality>]
+[<CustomEquality; NoComparison>]
 type Patient =
     {
         [<Column("PersonID", DataType = DataType.Int64, DbType = "INTEGER", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)>] PersonId : int64 // INTEGER
@@ -451,9 +479,18 @@ type Patient =
         [<Association(CanBeNull = false, ThisKey = "PersonId", OtherKey = "PersonId")>] FkPatient0 : Person
     }
 
+    static let _equalityComparer : IEqualityComparer<Patient> = ComparerBuilder.GetEqualityComparer<Patient>((fun c -> box (c.PersonId)))
+
+    interface IEquatable<Patient> with
+        member this.Equals (other : Patient) : bool = _equalityComparer.Equals(this, other)
+
+    override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+    override this.Equals (obj : obj) : bool = _equalityComparer.Equals(this, (match box obj with :? Patient as value -> value | _ -> Unchecked.defaultof<Patient>))
+
 
 [<Table("Person")>]
-[<ReferenceEquality>]
+[<CustomEquality; NoComparison>]
 type Person =
     {
         [<Column("PersonID", DataType = DataType.Int64, DbType = "INTEGER", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)>] PersonId : int64 // INTEGER
@@ -471,9 +508,18 @@ type Person =
         [<Association(ThisKey = "PersonId", OtherKey = "PersonId")>] Patient : Patient
     }
 
+    static let _equalityComparer : IEqualityComparer<Person> = ComparerBuilder.GetEqualityComparer<Person>((fun c -> box (c.PersonId)))
+
+    interface IEquatable<Person> with
+        member this.Equals (other : Person) : bool = _equalityComparer.Equals(this, other)
+
+    override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+    override this.Equals (obj : obj) : bool = _equalityComparer.Equals(this, (match box obj with :? Person as value -> value | _ -> Unchecked.defaultof<Person>))
+
 
 [<Table("PrimaryKeyTable")>]
-[<ReferenceEquality>]
+[<CustomEquality; NoComparison>]
 type PrimaryKeyTable =
     {
         [<Column("ID", DataType = DataType.Int64, DbType = "INTEGER", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)>] Id : int64 // INTEGER
@@ -483,6 +529,15 @@ type PrimaryKeyTable =
         /// </summary>
         [<Association(ThisKey = "Id", OtherKey = "PrimaryKeyTableId")>] ForeignKeyTables : IEnumerable<ForeignKeyTable>
     }
+
+    static let _equalityComparer : IEqualityComparer<PrimaryKeyTable> = ComparerBuilder.GetEqualityComparer<PrimaryKeyTable>((fun c -> box (c.Id)))
+
+    interface IEquatable<PrimaryKeyTable> with
+        member this.Equals (other : PrimaryKeyTable) : bool = _equalityComparer.Equals(this, other)
+
+    override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+    override this.Equals (obj : obj) : bool = _equalityComparer.Equals(this, (match box obj with :? PrimaryKeyTable as value -> value | _ -> Unchecked.defaultof<PrimaryKeyTable>))
 
 
 [<Table("TEST_T4_CASING")>]
@@ -500,11 +555,20 @@ type TestT4Casing =
 
 
 [<Table("TestIdentity")>]
-[<NoComparison>]
+[<CustomEquality; NoComparison>]
 type TestIdentity =
     {
         [<Column("ID", DataType = DataType.Int64, DbType = "INTEGER", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)>] Id : int64 // INTEGER
     }
+
+    static let _equalityComparer : IEqualityComparer<TestIdentity> = ComparerBuilder.GetEqualityComparer<TestIdentity>((fun c -> box (c.Id)))
+
+    interface IEquatable<TestIdentity> with
+        member this.Equals (other : TestIdentity) : bool = _equalityComparer.Equals(this, other)
+
+    override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+    override this.Equals (obj : obj) : bool = _equalityComparer.Equals(this, (match box obj with :? TestIdentity as value -> value | _ -> Unchecked.defaultof<TestIdentity>))
 
 
 [<Table("TestMerge1")>]

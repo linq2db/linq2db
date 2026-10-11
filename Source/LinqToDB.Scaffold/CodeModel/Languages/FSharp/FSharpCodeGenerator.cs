@@ -232,8 +232,30 @@ namespace LinqToDB.CodeModel
 				WriteDelimitedList(method.Parameters, p => Visit(p.Name), " ", false);
 			Write(" -> ");
 
+			// F# converts a value to obj implicitly only when overload resolution has already fixed the expected
+			// type, which a single argument to an overloaded method (ComparerBuilder key selector) doesn't
+			var boxBody = ReturnsObject(method.TargetType);
+			if (boxBody)
+				Write("box (");
+
 			WriteMethodBodyExpression(method.Body);
+
+			if (boxBody)
+				Write(')');
+
 			Write(")");
+		}
+
+		// Func<..., object> or Expression<Func<..., object>>
+		private bool ReturnsObject(IType lambdaType)
+		{
+			var delegateType = string.Equals(lambdaType.Name?.Name, "Expression", StringComparison.Ordinal) && lambdaType.TypeArguments?.Count == 1
+				? lambdaType.TypeArguments[0]
+				: lambdaType;
+
+			return string.Equals(delegateType.Name?.Name, "Func", StringComparison.Ordinal)
+				&& delegateType.TypeArguments is { Count: > 0 } arguments
+				&& string.Equals(_languageProvider.GetAlias(arguments[arguments.Count - 1].WithNullability(false)), "obj", StringComparison.Ordinal);
 		}
 
 		// Func<...>/Action<...> delegate types (System namespace). Used to decide when a lambda must be
@@ -367,10 +389,11 @@ namespace LinqToDB.CodeModel
 			// static field/property references must be qualified with the declaring type in F# (C# allows
 			// unqualified access within the class). Example: the context mapping schema referenced from the
 			// primary constructor's base call.
+			// (record static fields are `static let` values, which are not type members and are accessed unqualified)
 			var isStatic = reference.Referenced switch
 			{
 				CodeProperty p => p.Attributes.HasFlag(Modifiers.Static),
-				CodeField    f => f.Attributes.HasFlag(Modifiers.Static),
+				CodeField    f => f.Attributes.HasFlag(Modifiers.Static) && !_currentIsRecord,
 				_              => false,
 			};
 
@@ -405,6 +428,11 @@ namespace LinqToDB.CodeModel
 			{
 				Write("static member ");
 				WriteAccessibility(method.Attributes);
+				WriteIdentifier(method.Name.Name);
+			}
+			else if (method.Attributes.HasFlag(Modifiers.Override))
+			{
+				Write("override this.");
 				WriteIdentifier(method.Name.Name);
 			}
 			else
@@ -674,6 +702,54 @@ namespace LinqToDB.CodeModel
 				WriteLine();
 		}
 
+		/// <summary>
+		/// Renders record members after the field block: static fields as <c>static let</c> values (they must precede
+		/// members), instance non-override methods inside an <c>interface ... with</c> block of the implemented
+		/// interface, then the remaining (static and override) methods.
+		/// </summary>
+		private void WriteRecordMembers(CodeClass @class)
+		{
+			var fields  = @class.Members.EnumerateMembers<FieldGroup, CodeField>().ToList();
+			var methods = @class.Members.EnumerateMembers<MethodGroup, CodeMethod>().ToList();
+
+			var interfaceMethods = @class.Implements.Count == 0
+				? []
+				: methods.Where(static m => !m.Attributes.HasFlag(Modifiers.Static) && !m.Attributes.HasFlag(Modifiers.Override)).ToList();
+
+			if (fields.Count > 0)
+			{
+				WriteLine();
+				foreach (var field in fields)
+					Visit(field);
+			}
+
+			if (@class.Implements.Count > 0)
+			{
+				WriteLine();
+				Write("interface ");
+				Visit(@class.Implements[0]);
+
+				if (interfaceMethods.Count > 0)
+				{
+					WriteLine(" with");
+					IncreaseIdent();
+					WriteNewLineDelimitedList(interfaceMethods);
+					DecreaseIdent();
+				}
+				else
+					WriteLine();
+			}
+
+			foreach (var method in methods)
+			{
+				if (interfaceMethods.Contains(method))
+					continue;
+
+				WriteLine();
+				Visit(method);
+			}
+		}
+
 		protected override void Visit(CodeNamespace @namespace)
 		{
 			_currentScope.AddRange(@namespace.Name);
@@ -725,9 +801,10 @@ namespace LinqToDB.CodeModel
 			if ((isRecord || isExtensionType) && @class.TypeInitializer != null)
 				throw new NotSupportedException($"Static type initializer on F# {(isRecord ? "record" : "extension type")} '{@class.Name.Name}' is not supported");
 
-			// F# records cannot inherit, and interface implementations can't come from a partial class
-			if (isRecord && (@class.Inherits != null || @class.Implements.Count > 0))
-				throw new NotSupportedException($"F# record '{@class.Name.Name}' cannot inherit a base type or implement interfaces");
+			// F# records cannot inherit. Instance non-override methods are rendered as the members of an explicit
+			// interface implementation, which is unambiguous only for a single interface.
+			if (isRecord && (@class.Inherits != null || @class.Implements.Count > 1))
+				throw new NotSupportedException($"F# record '{@class.Name.Name}' cannot inherit a base type or implement more than one interface");
 
 			if (@class.XmlDoc != null)
 				Visit(@class.XmlDoc);
@@ -741,9 +818,15 @@ namespace LinqToDB.CodeModel
 			// F# would otherwise try to derive structural comparison and fail (FS1178). Structural equality is
 			// retained; ordering is not meaningful for entities.
 			// association fields hold other entities: structural equality would dereference an unloaded (null)
-			// association and recurse through back-references, so such records compare by reference
+			// association and recurse through back-references, so such records compare by reference.
+			// A record with its own Equals override (primary-key IEquatable) opts out of compiler equality.
 			if (isRecord)
-				WriteLine(@class.Members.EnumerateMembers<PropertyGroup, CodeProperty>().Any(p => IsRecordReference(p.Type.Type)) ? "[<ReferenceEquality>]" : "[<NoComparison>]");
+			{
+				if (@class.Members.EnumerateMembers<MethodGroup, CodeMethod>().Any(static m => m.Attributes.HasFlag(Modifiers.Override) && string.Equals(m.Name.Name, WellKnownTypes.System.Object_Equals.Name, StringComparison.Ordinal)))
+					WriteLine("[<CustomEquality; NoComparison>]");
+				else
+					WriteLine(@class.Members.EnumerateMembers<PropertyGroup, CodeProperty>().Any(p => IsRecordReference(p.Type.Type)) ? "[<ReferenceEquality>]" : "[<NoComparison>]");
+			}
 
 			Write("type ");
 			WriteAccessibility(@class.Attributes);
@@ -773,15 +856,7 @@ namespace LinqToDB.CodeModel
 				DecreaseIdent();
 				WriteLine("}");
 
-				// method members (e.g. custom equality) are rendered after the field block as record members
-				var methodGroups = @class.Members.EnumerateMemberGroups<MethodGroup>().ToList();
-				if (methodGroups.Exists(static g => !g.IsEmpty))
-				{
-					WriteLine();
-					foreach (var group in methodGroups)
-						if (!group.IsEmpty)
-							Visit(group);
-				}
+				WriteRecordMembers(@class);
 
 				DecreaseIdent();
 			}
@@ -1122,8 +1197,22 @@ namespace LinqToDB.CodeModel
 			// F# type field: 'let mutable name : type = init' inside a class, or a record field elsewhere
 			if (_currentIsRecord)
 			{
+				// static record field -> `static let` (F# 8), e.g. the IEquatable comparer
 				if (field.Attributes.HasFlag(Modifiers.Static))
-					throw new NotImplementedException("Static fields are not supported on F# records");
+				{
+					Write(field.Attributes.HasFlag(Modifiers.ReadOnly) ? "static let " : "static let mutable ");
+					Visit(field.Name);
+					Write(" : ");
+					Visit(field.Type);
+					Write(" = ");
+					if (field.Initializer != null)
+						Visit(field.Initializer);
+					else
+						Write("Unchecked.defaultof<_>");
+
+					WriteLine();
+					return;
+				}
 
 				Visit(field.Name);
 				Write(" : ");
@@ -1202,8 +1291,14 @@ namespace LinqToDB.CodeModel
 
 		protected override void Visit(CodeAsOperator expression)
 		{
-			// F# safe downcast-ish; not emitted by the F# model path
-			throw new NotImplementedException("'as' operator is not supported by F# code generator");
+			// C# `value as T`: type test, with default(T) (null) on mismatch - records have no null literal
+			Write("(match box ");
+			Visit(expression.Value);
+			Write(" with :? ");
+			RenderType(expression.Type.Type.WithNullability(false), null, true);
+			Write(" as value -> value | _ -> Unchecked.defaultof<");
+			RenderType(expression.Type.Type.WithNullability(false), null, true);
+			Write(">)");
 		}
 
 		protected override void Visit(CodeSuppressNull expression)

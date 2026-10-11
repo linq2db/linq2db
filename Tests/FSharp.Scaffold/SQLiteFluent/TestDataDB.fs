@@ -12,6 +12,7 @@ open LinqToDB
 open LinqToDB.Async
 open LinqToDB.Data
 open LinqToDB.Mapping
+open LinqToDB.Tools.Comparers
 open System
 open System.Collections.Generic
 open System.Linq
@@ -25,7 +26,7 @@ type TestDataDB (options : DataOptions<TestDataDB>) =
     static do
         let mutable builder = FluentMappingBuilder(TestDataDB.ContextSchema)
 
-        builder.Entity<AllType>().HasAttribute(TableAttribute("AllTypes")).Member((fun e -> e.Id)).HasAttribute(ColumnAttribute("ID", DataType = DataType.Int64, DbType = "INTEGER", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)).Member((fun e -> e.BigintDataType)).HasAttribute(ColumnAttribute("bigintDataType", DataType = DataType.Int64, DbType = "bigint")).Member((fun e -> e.NumericDataType)).HasAttribute(ColumnAttribute("numericDataType", DataType = DataType.Decimal, DbType = "numeric")).Member((fun e -> e.BitDataType)).HasAttribute(ColumnAttribute("bitDataType", DataType = DataType.Boolean, DbType = "bit")).Member((fun e -> e.SmallintDataType)).HasAttribute(ColumnAttribute("smallintDataType", DataType = DataType.Int16, DbType = "smallint")).Member((fun e -> e.DecimalDataType)).HasAttribute(ColumnAttribute("decimalDataType", DataType = DataType.Decimal, DbType = "decimal")).Member((fun e -> e.IntDataType)).HasAttribute(ColumnAttribute("intDataType", DataType = DataType.Int32, DbType = "INT")).Member((fun e -> e.TinyintDataType)).HasAttribute(ColumnAttribute("tinyintDataType", DataType = DataType.Byte, DbType = "tinyint")).Member((fun e -> e.MoneyDataType)).HasAttribute(ColumnAttribute("moneyDataType", DataType = DataType.Decimal, DbType = "money")).Member((fun e -> e.FloatDataType)).HasAttribute(ColumnAttribute("floatDataType", DataType = DataType.Double, DbType = "float")).Member((fun e -> e.RealDataType)).HasAttribute(ColumnAttribute("realDataType", DataType = DataType.Double, DbType = "REAL")).Member((fun e -> e.DatetimeDataType)).HasAttribute(ColumnAttribute("datetimeDataType", DataType = DataType.DateTime2, DbType = "datetime")).Member((fun e -> e.CharDataType)).HasAttribute(ColumnAttribute("charDataType", DataType = DataType.NVarChar, DbType = "char(1)", Length = 1)).Member((fun e -> e.Char20DataType)).HasAttribute(ColumnAttribute("char20DataType", DataType = DataType.NVarChar, DbType = "char(20)", Length = 20)).Member((fun e -> e.VarcharDataType)).HasAttribute(ColumnAttribute("varcharDataType", DataType = DataType.NVarChar, DbType = "varchar(20)", Length = 20)).Member((fun e -> e.TextDataType)).HasAttribute(ColumnAttribute("textDataType", DataType = DataType.NVarChar, DbType = "TEXT")).Member((fun e -> e.NcharDataType)).HasAttribute(ColumnAttribute("ncharDataType", DataType = DataType.NVarChar, DbType = "nchar(20)", Length = 20)).Member((fun e -> e.NvarcharDataType)).HasAttribute(ColumnAttribute("nvarcharDataType", DataType = DataType.NVarChar, DbType = "nvarchar(20)", Length = 20)).Member((fun e -> e.NtextDataType)).HasAttribute(ColumnAttribute("ntextDataType", DataType = DataType.NVarChar, DbType = "ntext")).Member((fun e -> e.BinaryDataType)).HasAttribute(ColumnAttribute("binaryDataType", DataType = DataType.VarBinary, DbType = "binary")).Member((fun e -> e.VarbinaryDataType)).HasAttribute(ColumnAttribute("varbinaryDataType", DataType = DataType.VarBinary, DbType = "varbinary")).Member((fun e -> e.ImageDataType)).HasAttribute(ColumnAttribute("imageDataType", DataType = DataType.VarBinary, DbType = "image")).Member((fun e -> e.UniqueidentifierDataType)).HasAttribute(ColumnAttribute("uniqueidentifierDataType", DataType = DataType.Guid, DbType = "uniqueidentifier")).Member((fun e -> e.ObjectDataType)).HasAttribute(ColumnAttribute("objectDataType", DataType = DataType.Variant, DbType = "Object")) |> ignore
+        builder.Entity<AllType>().HasAttribute(TableAttribute("AllTypes")).Member((fun e -> e.Id)).HasAttribute(ColumnAttribute("ID", DataType = DataType.Int64, DbType = "INTEGER", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)).Member((fun e -> e.BigintDataType)).HasAttribute(ColumnAttribute("bigintDataType", DataType = DataType.Int64, DbType = "bigint")).Member((fun e -> e.NumericDataType)).HasAttribute(ColumnAttribute("numericDataType", DataType = DataType.Decimal, DbType = "numeric")).Member((fun e -> e.BitDataType)).HasAttribute(ColumnAttribute("bitDataType", DataType = DataType.Boolean, DbType = "bit")).Member((fun e -> e.SmallintDataType)).HasAttribute(ColumnAttribute("smallintDataType", DataType = DataType.Int16, DbType = "smallint")).Member((fun e -> e.DecimalDataType)).HasAttribute(ColumnAttribute("decimalDataType", DataType = DataType.Decimal, DbType = "decimal")).Member((fun e -> e.IntDataType)).HasAttribute(ColumnAttribute("intDataType", DataType = DataType.Int32, DbType = "INT")).Member((fun e -> e.TinyintDataType)).HasAttribute(ColumnAttribute("tinyintDataType", DataType = DataType.Byte, DbType = "tinyint")).Member((fun e -> e.MoneyDataType)).HasAttribute(ColumnAttribute("moneyDataType", DataType = DataType.Decimal, DbType = "money")).Member((fun e -> e.FloatDataType)).HasAttribute(ColumnAttribute("floatDataType", DataType = DataType.Double, DbType = "float")).Member((fun e -> e.RealDataType)).HasAttribute(ColumnAttribute("realDataType", DataType = DataType.Double, DbType = "REAL")).Member((fun e -> e.DatetimeDataType)).HasAttribute(ColumnAttribute("datetimeDataType", DataType = DataType.DateTime2, DbType = "datetime")).Member((fun e -> e.CharDataType)).HasAttribute(ColumnAttribute("charDataType", DataType = DataType.NVarChar, DbType = "char(1)", Length = 1)).Member((fun e -> e.Char20DataType)).HasAttribute(ColumnAttribute("char20DataType", DataType = DataType.NVarChar, DbType = "char(20)", Length = 20)).Member((fun e -> e.VarcharDataType)).HasAttribute(ColumnAttribute("varcharDataType", DataType = DataType.NVarChar, DbType = "varchar(20)", Length = 20)).Member((fun e -> e.TextDataType)).HasAttribute(ColumnAttribute("textDataType", DataType = DataType.NVarChar, DbType = "TEXT")).Member((fun e -> e.NcharDataType)).HasAttribute(ColumnAttribute("ncharDataType", DataType = DataType.NVarChar, DbType = "nchar(20)", Length = 20)).Member((fun e -> e.NvarcharDataType)).HasAttribute(ColumnAttribute("nvarcharDataType", DataType = DataType.NVarChar, DbType = "nvarchar(20)", Length = 20)).Member((fun e -> e.NtextDataType)).HasAttribute(ColumnAttribute("ntextDataType", DataType = DataType.NVarChar, DbType = "ntext")).Member((fun e -> e.BinaryDataType)).HasAttribute(ColumnAttribute("binaryDataType", DataType = DataType.VarBinary, DbType = "binary")).Member((fun e -> e.VarbinaryDataType)).HasAttribute(ColumnAttribute("varbinaryDataType", DataType = DataType.VarBinary, DbType = "varbinary")).Member((fun e -> e.ImageDataType)).HasAttribute(ColumnAttribute("imageDataType", DataType = DataType.VarBinary, DbType = "image")).Member((fun e -> e.UniqueidentifierDataType)).HasAttribute(ColumnAttribute("uniqueidentifierDataType", DataType = DataType.Guid, DbType = "uniqueidentifier")).Member((fun e -> box (e.ObjectDataType))).HasAttribute(ColumnAttribute("objectDataType", DataType = DataType.Variant, DbType = "Object")) |> ignore
 
         builder.Entity<Child>().HasAttribute(TableAttribute("Child")).Member((fun e -> e.ParentId)).HasAttribute(ColumnAttribute("ParentID", DataType = DataType.Int32, DbType = "INT")).Member((fun e -> e.ChildId)).HasAttribute(ColumnAttribute("ChildID", DataType = DataType.Int32, DbType = "INT")) |> ignore
 
@@ -61,7 +62,7 @@ type TestDataDB (options : DataOptions<TestDataDB>) =
 
         builder.Entity<TestMerge2>().HasAttribute(TableAttribute("TestMerge2")).Member((fun e -> e.Id)).HasAttribute(ColumnAttribute("Id", DataType = DataType.Int64, DbType = "INTEGER")).Member((fun e -> e.Field1)).HasAttribute(ColumnAttribute("Field1", DataType = DataType.Int64, DbType = "INTEGER")).Member((fun e -> e.Field2)).HasAttribute(ColumnAttribute("Field2", DataType = DataType.Int64, DbType = "INTEGER")).Member((fun e -> e.Field3)).HasAttribute(ColumnAttribute("Field3", DataType = DataType.Int64, DbType = "INTEGER")).Member((fun e -> e.Field4)).HasAttribute(ColumnAttribute("Field4", DataType = DataType.Int64, DbType = "INTEGER")).Member((fun e -> e.Field5)).HasAttribute(ColumnAttribute("Field5", DataType = DataType.Int64, DbType = "INTEGER")).Member((fun e -> e.FieldInt64)).HasAttribute(ColumnAttribute("FieldInt64", DataType = DataType.Int64, DbType = "BIGINT")).Member((fun e -> e.FieldBoolean)).HasAttribute(ColumnAttribute("FieldBoolean", DataType = DataType.Boolean, DbType = "BIT")).Member((fun e -> e.FieldString)).HasAttribute(ColumnAttribute("FieldString", DataType = DataType.NVarChar, DbType = "VARCHAR(20)", Length = 20)).Member((fun e -> e.FieldNString)).HasAttribute(ColumnAttribute("FieldNString", DataType = DataType.NVarChar, DbType = "NVARCHAR(20)", Length = 20)).Member((fun e -> e.FieldChar)).HasAttribute(ColumnAttribute("FieldChar", DataType = DataType.NVarChar, DbType = "CHAR(1)", Length = 1)).Member((fun e -> e.FieldNChar)).HasAttribute(ColumnAttribute("FieldNChar", DataType = DataType.NVarChar, DbType = "NCHAR(1)", Length = 1)).Member((fun e -> e.FieldFloat)).HasAttribute(ColumnAttribute("FieldFloat", DataType = DataType.Double, DbType = "FLOAT(24)")).Member((fun e -> e.FieldDouble)).HasAttribute(ColumnAttribute("FieldDouble", DataType = DataType.Double, DbType = "FLOAT(53)")).Member((fun e -> e.FieldDateTime)).HasAttribute(ColumnAttribute("FieldDateTime", DataType = DataType.DateTime2, DbType = "DATETIME")).Member((fun e -> e.FieldBinary)).HasAttribute(ColumnAttribute("FieldBinary", DataType = DataType.VarBinary, DbType = "VARBINARY(20)", Length = 20)).Member((fun e -> e.FieldGuid)).HasAttribute(ColumnAttribute("FieldGuid", DataType = DataType.Guid, DbType = "UNIQUEIDENTIFIER")).Member((fun e -> e.FieldDate)).HasAttribute(ColumnAttribute("FieldDate", DataType = DataType.Date, DbType = "DATE")).Member((fun e -> e.FieldEnumString)).HasAttribute(ColumnAttribute("FieldEnumString", DataType = DataType.NVarChar, DbType = "VARCHAR(20)", Length = 20)).Member((fun e -> e.FieldEnumNumber)).HasAttribute(ColumnAttribute("FieldEnumNumber", DataType = DataType.Int32, DbType = "INT")) |> ignore
 
-        builder.Entity<AllTypesView>().HasAttribute(TableAttribute("AllTypesView", IsView = true)).Member((fun e -> e.Id)).HasAttribute(ColumnAttribute("ID", DataType = DataType.Int64, DbType = "INTEGER", IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)).Member((fun e -> e.BigintDataType)).HasAttribute(ColumnAttribute("bigintDataType", DataType = DataType.Int64, DbType = "bigint")).Member((fun e -> e.NumericDataType)).HasAttribute(ColumnAttribute("numericDataType", DataType = DataType.Decimal, DbType = "numeric")).Member((fun e -> e.BitDataType)).HasAttribute(ColumnAttribute("bitDataType", DataType = DataType.Boolean, DbType = "bit")).Member((fun e -> e.SmallintDataType)).HasAttribute(ColumnAttribute("smallintDataType", DataType = DataType.Int16, DbType = "smallint")).Member((fun e -> e.DecimalDataType)).HasAttribute(ColumnAttribute("decimalDataType", DataType = DataType.Decimal, DbType = "decimal")).Member((fun e -> e.IntDataType)).HasAttribute(ColumnAttribute("intDataType", DataType = DataType.Int32, DbType = "INT")).Member((fun e -> e.TinyintDataType)).HasAttribute(ColumnAttribute("tinyintDataType", DataType = DataType.Byte, DbType = "tinyint")).Member((fun e -> e.MoneyDataType)).HasAttribute(ColumnAttribute("moneyDataType", DataType = DataType.Decimal, DbType = "money")).Member((fun e -> e.FloatDataType)).HasAttribute(ColumnAttribute("floatDataType", DataType = DataType.Double, DbType = "float")).Member((fun e -> e.RealDataType)).HasAttribute(ColumnAttribute("realDataType", DataType = DataType.Double, DbType = "REAL")).Member((fun e -> e.DatetimeDataType)).HasAttribute(ColumnAttribute("datetimeDataType", DataType = DataType.DateTime2, DbType = "datetime")).Member((fun e -> e.CharDataType)).HasAttribute(ColumnAttribute("charDataType", DataType = DataType.NVarChar, DbType = "char(1)", Length = 1)).Member((fun e -> e.Char20DataType)).HasAttribute(ColumnAttribute("char20DataType", DataType = DataType.NVarChar, DbType = "char(20)", Length = 20)).Member((fun e -> e.VarcharDataType)).HasAttribute(ColumnAttribute("varcharDataType", DataType = DataType.NVarChar, DbType = "varchar(20)", Length = 20)).Member((fun e -> e.TextDataType)).HasAttribute(ColumnAttribute("textDataType", DataType = DataType.NVarChar, DbType = "TEXT")).Member((fun e -> e.NcharDataType)).HasAttribute(ColumnAttribute("ncharDataType", DataType = DataType.NVarChar, DbType = "nchar(20)", Length = 20)).Member((fun e -> e.NvarcharDataType)).HasAttribute(ColumnAttribute("nvarcharDataType", DataType = DataType.NVarChar, DbType = "nvarchar(20)", Length = 20)).Member((fun e -> e.NtextDataType)).HasAttribute(ColumnAttribute("ntextDataType", DataType = DataType.NVarChar, DbType = "ntext")).Member((fun e -> e.BinaryDataType)).HasAttribute(ColumnAttribute("binaryDataType", DataType = DataType.VarBinary, DbType = "binary")).Member((fun e -> e.VarbinaryDataType)).HasAttribute(ColumnAttribute("varbinaryDataType", DataType = DataType.VarBinary, DbType = "varbinary")).Member((fun e -> e.ImageDataType)).HasAttribute(ColumnAttribute("imageDataType", DataType = DataType.VarBinary, DbType = "image")).Member((fun e -> e.UniqueidentifierDataType)).HasAttribute(ColumnAttribute("uniqueidentifierDataType", DataType = DataType.Guid, DbType = "uniqueidentifier")).Member((fun e -> e.ObjectDataType)).HasAttribute(ColumnAttribute("objectDataType", DataType = DataType.Variant, DbType = "Object")).Member((fun e -> e.Number)).HasAttribute(ColumnAttribute("Number", DataType = DataType.Int64, DbType = "INTEGER")) |> ignore
+        builder.Entity<AllTypesView>().HasAttribute(TableAttribute("AllTypesView", IsView = true)).Member((fun e -> e.Id)).HasAttribute(ColumnAttribute("ID", DataType = DataType.Int64, DbType = "INTEGER", IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)).Member((fun e -> e.BigintDataType)).HasAttribute(ColumnAttribute("bigintDataType", DataType = DataType.Int64, DbType = "bigint")).Member((fun e -> e.NumericDataType)).HasAttribute(ColumnAttribute("numericDataType", DataType = DataType.Decimal, DbType = "numeric")).Member((fun e -> e.BitDataType)).HasAttribute(ColumnAttribute("bitDataType", DataType = DataType.Boolean, DbType = "bit")).Member((fun e -> e.SmallintDataType)).HasAttribute(ColumnAttribute("smallintDataType", DataType = DataType.Int16, DbType = "smallint")).Member((fun e -> e.DecimalDataType)).HasAttribute(ColumnAttribute("decimalDataType", DataType = DataType.Decimal, DbType = "decimal")).Member((fun e -> e.IntDataType)).HasAttribute(ColumnAttribute("intDataType", DataType = DataType.Int32, DbType = "INT")).Member((fun e -> e.TinyintDataType)).HasAttribute(ColumnAttribute("tinyintDataType", DataType = DataType.Byte, DbType = "tinyint")).Member((fun e -> e.MoneyDataType)).HasAttribute(ColumnAttribute("moneyDataType", DataType = DataType.Decimal, DbType = "money")).Member((fun e -> e.FloatDataType)).HasAttribute(ColumnAttribute("floatDataType", DataType = DataType.Double, DbType = "float")).Member((fun e -> e.RealDataType)).HasAttribute(ColumnAttribute("realDataType", DataType = DataType.Double, DbType = "REAL")).Member((fun e -> e.DatetimeDataType)).HasAttribute(ColumnAttribute("datetimeDataType", DataType = DataType.DateTime2, DbType = "datetime")).Member((fun e -> e.CharDataType)).HasAttribute(ColumnAttribute("charDataType", DataType = DataType.NVarChar, DbType = "char(1)", Length = 1)).Member((fun e -> e.Char20DataType)).HasAttribute(ColumnAttribute("char20DataType", DataType = DataType.NVarChar, DbType = "char(20)", Length = 20)).Member((fun e -> e.VarcharDataType)).HasAttribute(ColumnAttribute("varcharDataType", DataType = DataType.NVarChar, DbType = "varchar(20)", Length = 20)).Member((fun e -> e.TextDataType)).HasAttribute(ColumnAttribute("textDataType", DataType = DataType.NVarChar, DbType = "TEXT")).Member((fun e -> e.NcharDataType)).HasAttribute(ColumnAttribute("ncharDataType", DataType = DataType.NVarChar, DbType = "nchar(20)", Length = 20)).Member((fun e -> e.NvarcharDataType)).HasAttribute(ColumnAttribute("nvarcharDataType", DataType = DataType.NVarChar, DbType = "nvarchar(20)", Length = 20)).Member((fun e -> e.NtextDataType)).HasAttribute(ColumnAttribute("ntextDataType", DataType = DataType.NVarChar, DbType = "ntext")).Member((fun e -> e.BinaryDataType)).HasAttribute(ColumnAttribute("binaryDataType", DataType = DataType.VarBinary, DbType = "binary")).Member((fun e -> e.VarbinaryDataType)).HasAttribute(ColumnAttribute("varbinaryDataType", DataType = DataType.VarBinary, DbType = "varbinary")).Member((fun e -> e.ImageDataType)).HasAttribute(ColumnAttribute("imageDataType", DataType = DataType.VarBinary, DbType = "image")).Member((fun e -> e.UniqueidentifierDataType)).HasAttribute(ColumnAttribute("uniqueidentifierDataType", DataType = DataType.Guid, DbType = "uniqueidentifier")).Member((fun e -> box (e.ObjectDataType))).HasAttribute(ColumnAttribute("objectDataType", DataType = DataType.Variant, DbType = "Object")).Member((fun e -> e.Number)).HasAttribute(ColumnAttribute("Number", DataType = DataType.Int64, DbType = "INTEGER")) |> ignore
 
         builder.Build() |> ignore
     static member ContextSchema with get() : MappingSchema = _ContextSchema
@@ -87,7 +88,7 @@ type TestDataDB (options : DataOptions<TestDataDB>) =
     member this.AllTypesViews = this.GetTable<AllTypesView>()
 
 
-[<NoComparison>]
+[<CustomEquality; NoComparison>]
 type AllType =
     {
         Id : int64 // INTEGER
@@ -115,6 +116,15 @@ type AllType =
         UniqueidentifierDataType : Guid option // uniqueidentifier
         ObjectDataType : obj | null // Object
     }
+
+    static let _equalityComparer : IEqualityComparer<AllType> = ComparerBuilder.GetEqualityComparer<AllType>((fun c -> box (c.Id)))
+
+    interface IEquatable<AllType> with
+        member this.Equals (other : AllType | null) : bool = _equalityComparer.Equals(this, Unchecked.nonNull(other))
+
+    override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+    override this.Equals (obj : obj | null) : bool = _equalityComparer.Equals(this, (match box obj with :? AllType as value -> value | _ -> Unchecked.defaultof<AllType>))
 
 
 [<System.Runtime.CompilerServices.Extension>]
@@ -380,7 +390,7 @@ type Child =
     }
 
 
-[<ReferenceEquality>]
+[<CustomEquality; NoComparison>]
 type Doctor =
     {
         PersonId : int64 // INTEGER
@@ -391,6 +401,15 @@ type Doctor =
         FkDoctor0 : Person
     }
 
+    static let _equalityComparer : IEqualityComparer<Doctor> = ComparerBuilder.GetEqualityComparer<Doctor>((fun c -> box (c.PersonId)))
+
+    interface IEquatable<Doctor> with
+        member this.Equals (other : Doctor | null) : bool = _equalityComparer.Equals(this, Unchecked.nonNull(other))
+
+    override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+    override this.Equals (obj : obj | null) : bool = _equalityComparer.Equals(this, (match box obj with :? Doctor as value -> value | _ -> Unchecked.defaultof<Doctor>))
+
 
 [<NoComparison>]
 type Dual =
@@ -399,7 +418,7 @@ type Dual =
     }
 
 
-[<NoComparison>]
+[<CustomEquality; NoComparison>]
 type FkTestPosition =
     {
         Company : int64 // INTEGER
@@ -407,6 +426,15 @@ type FkTestPosition =
         PositionId : int64 // INTEGER
         Name : string // nvarchar(50)
     }
+
+    static let _equalityComparer : IEqualityComparer<FkTestPosition> = ComparerBuilder.GetEqualityComparer<FkTestPosition>((fun c -> box (c.Company)), (fun c -> box (c.Department)), (fun c -> box (c.PositionId)))
+
+    interface IEquatable<FkTestPosition> with
+        member this.Equals (other : FkTestPosition | null) : bool = _equalityComparer.Equals(this, Unchecked.nonNull(other))
+
+    override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+    override this.Equals (obj : obj | null) : bool = _equalityComparer.Equals(this, (match box obj with :? FkTestPosition as value -> value | _ -> Unchecked.defaultof<FkTestPosition>))
 
 
 [<ReferenceEquality>]
@@ -474,7 +502,7 @@ type Parent =
     }
 
 
-[<ReferenceEquality>]
+[<CustomEquality; NoComparison>]
 type Patient =
     {
         PersonId : int64 // INTEGER
@@ -485,8 +513,17 @@ type Patient =
         FkPatient0 : Person
     }
 
+    static let _equalityComparer : IEqualityComparer<Patient> = ComparerBuilder.GetEqualityComparer<Patient>((fun c -> box (c.PersonId)))
 
-[<ReferenceEquality>]
+    interface IEquatable<Patient> with
+        member this.Equals (other : Patient | null) : bool = _equalityComparer.Equals(this, Unchecked.nonNull(other))
+
+    override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+    override this.Equals (obj : obj | null) : bool = _equalityComparer.Equals(this, (match box obj with :? Patient as value -> value | _ -> Unchecked.defaultof<Patient>))
+
+
+[<CustomEquality; NoComparison>]
 type Person =
     {
         PersonId : int64 // INTEGER
@@ -504,8 +541,17 @@ type Person =
         Patient : Patient | null
     }
 
+    static let _equalityComparer : IEqualityComparer<Person> = ComparerBuilder.GetEqualityComparer<Person>((fun c -> box (c.PersonId)))
 
-[<ReferenceEquality>]
+    interface IEquatable<Person> with
+        member this.Equals (other : Person | null) : bool = _equalityComparer.Equals(this, Unchecked.nonNull(other))
+
+    override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+    override this.Equals (obj : obj | null) : bool = _equalityComparer.Equals(this, (match box obj with :? Person as value -> value | _ -> Unchecked.defaultof<Person>))
+
+
+[<CustomEquality; NoComparison>]
 type PrimaryKeyTable =
     {
         Id : int64 // INTEGER
@@ -515,6 +561,15 @@ type PrimaryKeyTable =
         /// </summary>
         ForeignKeyTables : IEnumerable<ForeignKeyTable>
     }
+
+    static let _equalityComparer : IEqualityComparer<PrimaryKeyTable> = ComparerBuilder.GetEqualityComparer<PrimaryKeyTable>((fun c -> box (c.Id)))
+
+    interface IEquatable<PrimaryKeyTable> with
+        member this.Equals (other : PrimaryKeyTable | null) : bool = _equalityComparer.Equals(this, Unchecked.nonNull(other))
+
+    override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+    override this.Equals (obj : obj | null) : bool = _equalityComparer.Equals(this, (match box obj with :? PrimaryKeyTable as value -> value | _ -> Unchecked.defaultof<PrimaryKeyTable>))
 
 
 [<NoComparison>]
@@ -530,11 +585,20 @@ type TestT4Casing =
     }
 
 
-[<NoComparison>]
+[<CustomEquality; NoComparison>]
 type TestIdentity =
     {
         Id : int64 // INTEGER
     }
+
+    static let _equalityComparer : IEqualityComparer<TestIdentity> = ComparerBuilder.GetEqualityComparer<TestIdentity>((fun c -> box (c.Id)))
+
+    interface IEquatable<TestIdentity> with
+        member this.Equals (other : TestIdentity | null) : bool = _equalityComparer.Equals(this, Unchecked.nonNull(other))
+
+    override this.GetHashCode () : int = _equalityComparer.GetHashCode(this)
+
+    override this.Equals (obj : obj | null) : bool = _equalityComparer.Equals(this, (match box obj with :? TestIdentity as value -> value | _ -> Unchecked.defaultof<TestIdentity>))
 
 
 [<NoComparison>]

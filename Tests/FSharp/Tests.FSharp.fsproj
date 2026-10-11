@@ -38,6 +38,8 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Base\Tests.Base.csproj" />
 		<ProjectReference Include="..\..\Source\LinqToDB.FSharp\LinqToDB.FSharp.fsproj" />
+		<!-- ComparerBuilder for the linked scaffold output's equatable entities -->
+		<ProjectReference Include="..\..\Source\LinqToDB.Tools\LinqToDB.Tools.csproj" />
 
 		<PackageReference Include="FSharp.Core" />
 		<PackageReference Include="Npgsql.NodaTime" />

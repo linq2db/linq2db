@@ -66,10 +66,11 @@ if (-not $SQLiteConnection)     { $SQLiteConnection     = "Data Source=" + (Join
 if (-not $PostgreSQLConnection) { $PostgreSQLConnection = CN $PostgreSQLConnectionName }
 if (-not $SqlServerConnection)  { $SqlServerConnection  = CN $SqlServerConnectionName }
 
-# options shared by every provider baseline. C#-only options (partial/init-context, IEquatable,
-# association extensions, context constructors, single-file) are rejected for F#, so they're omitted
-# here. --nrt is set per mode below.
+# options shared by every provider baseline. C#-only options (partial/init-context, association
+# extensions, context constructors, single-file) are rejected for F#, so they're omitted here. --nrt is
+# set per mode below.
 $commonOptions = @(
+    '--equatable-entities', 'true',
     '--objects', 'table,view,foreign-key,stored-procedure,scalar-function,table-function,aggregate-function',
     '--find-methods', 'sync-pk-table,async-pk-table,query-pk-table,sync-pk-context,async-pk-context,query-pk-context,sync-entity-table,async-entity-table,query-entity-table,sync-entity-context,async-entity-context,query-entity-context',
     '--include-datatype', 'true',

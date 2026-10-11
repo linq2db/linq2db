@@ -78,9 +78,7 @@ namespace LinqToDB.CommandLine.Commands.Scaffold
 					settings.CodeGeneration.Indent = "    ";
 
 				// C#-shaped features F# doesn't emit; the matching options are TargetLanguages.CSharp, so these only
-				// override defaults. F# records are structurally value-equal already, so the C#-style IEquatable
-				// comparer is not emitted (it would conflict with the compiler-generated equality)
-				settings.DataModel.GenerateIEquatable                = false;
+				// override defaults.
 				// associations become extra record fields with [<Association>] attributes (namespace rec covers
 				// the mutual references); association *extension* methods remain gated off for now
 				settings.DataModel.GenerateAssociationExtensions     = false;

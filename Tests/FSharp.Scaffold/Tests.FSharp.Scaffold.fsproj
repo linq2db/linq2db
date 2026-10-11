@@ -33,6 +33,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
     <ProjectReference Include="..\..\Source\LinqToDB.FSharp\LinqToDB.FSharp.fsproj" />
+    <!-- ComparerBuilder for equatable entities (generated with equatable-entities) -->
+    <ProjectReference Include="..\..\Source\LinqToDB.Tools\LinqToDB.Tools.csproj" />
     <PackageReference Include="FSharp.Core" />
     <!-- baselines are generated with prefer-provider-types, so they reference provider-specific CLR
          types (NpgsqlTypes.*, Microsoft.SqlServer.Types.*); these packages make them resolve, mirroring

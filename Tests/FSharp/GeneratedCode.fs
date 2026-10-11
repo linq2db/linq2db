@@ -34,6 +34,13 @@ let TestGeneratedQueries (db : DataConnection) =
     Assert.That(isNull (ctx.People.Find(-1L)), Is.True)
     Assert.That((nonNull (ctx.FindPersonAsync(doctor.PersonId).Result)).PersonId, Is.EqualTo doctor.PersonId)
 
+    // equatable entities (--equatable-entities) compare by primary key only
+    let person = nonNull (ctx.People.Find(doctor.PersonId))
+    Assert.That(loaded, Is.EqualTo doctor)
+    Assert.That({ person with FirstName = person.FirstName + "!" }, Is.EqualTo person)
+    Assert.That(people.Find(fun p -> p.PersonId <> person.PersonId), Is.Not.EqualTo person)
+    Assert.That(people.Concat(ctx.People.ToList()).Distinct().Count(), Is.EqualTo people.Count)
+
 let TestGeneratedFluentMapping (db : DataConnection) =
     use ctx = new SQLiteFluent.TestDataDB(new DataOptions<SQLiteFluent.TestDataDB>(db.Options))
 
