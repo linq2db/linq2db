@@ -1068,18 +1068,14 @@ namespace Tests.Linq
 		/// beside the generated cells. It used to need a throwaway <see cref="MappingSchema"/>, a
 		/// <c>ToSqlQuery().Sql</c> regex splice and a re-entry through <c>FromSql</c> that destroyed composability.
 		/// </summary>
-		[Test, QueryCacheTest]
-		public void PivotsProductionShapeIntoUserType([DataSources] string context)
+		static IQueryable<ListDto> ProductionShape(
+			IQueryable<ModTemplate> mods,
+			IQueryable<Activity>    acts,
+			IQueryable<CoaMask>     masks,
+			IQueryable<AtiRub>      atiRubs,
+			IQueryable<IasRub>      iasRubs,
+			IEnumerable<int>        ids)
 		{
-			using var db      = GetDataContext(context);
-			using var mods    = db.CreateLocalTable(ModTemplate.Data);
-			using var acts    = db.CreateLocalTable(Activity.Data);
-			using var masks   = db.CreateLocalTable(CoaMask.Data);
-			using var atiRubs = db.CreateLocalTable(AtiRub.Data);
-			using var iasRubs = db.CreateLocalTable(IasRub.Data);
-
-			var activityIds = acts.Select(a => a.Id).OrderBy(id => id).ToList();
-
 			// The source stays an anonymous projection, as it is in the original query: the cell templates come
 			// from the cell set, so the row type never has to be named.
 			var source =
@@ -1090,7 +1086,7 @@ namespace Tests.Linq
 				from rub in iasRubs.LeftJoin(r => r.Id == e.RubId)
 				select new { e, cm, pos, rub };
 
-			IQueryable<ListDto> Build(IEnumerable<int> ids) => source
+			return source
 				.Pivot(
 					x => x.e.Id,
 					x => x.e.TheKey,
@@ -1104,6 +1100,21 @@ namespace Tests.Linq
 					},
 					c => c.Cell(rows => rows.Max(x => x.rub.IdeRub), Ide)
 						.Cell(rows => rows.Max(x => x.rub.LibRub), Lib));
+		}
+
+		[Test]
+		public void PivotsProductionShapeIntoUserType([DataSources] string context)
+		{
+			using var db      = GetDataContext(context);
+			using var mods    = db.CreateLocalTable(ModTemplate.Data);
+			using var acts    = db.CreateLocalTable(Activity.Data);
+			using var masks   = db.CreateLocalTable(CoaMask.Data);
+			using var atiRubs = db.CreateLocalTable(AtiRub.Data);
+			using var iasRubs = db.CreateLocalTable(IasRub.Data);
+
+			var activityIds = acts.Select(a => a.Id).OrderBy(id => id).ToList();
+
+			IQueryable<ListDto> Build(IEnumerable<int> ids) => ProductionShape(mods, acts, masks, atiRubs, iasRubs, ids);
 
 			var rows = Build(activityIds).ToList().OrderBy(r => r.Id).ToList();
 
@@ -1144,6 +1155,28 @@ namespace Tests.Linq
 			filtered.Count.ShouldBe(1);
 			filtered[0].Cells["IDE_20"].ShouldBe("IDE-B");
 
+			var widened = Build(activityIds.Concat(new[] { 40 }).ToList()).ToList().OrderBy(r => r.Id).ToList();
+
+			widened[0].Cells.Count        .ShouldBe(8);
+			widened[0].Cells["IDE_40"]    .ShouldBeNull();
+			widened[0].Cells["IDE_10"]    .ShouldBe("IDE-A");
+		}
+
+		[Test, QueryCacheTest]
+		[ActiveIssue(6028, Configurations = [ProviderName.SQLiteMS], ErrorType = typeof(LinqToDB.Common.LinqToDBConvertException), ErrorMessage = "value failed")]
+		public void PivotsProductionShapeQueryCache([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db      = GetDataContext(context);
+			using var mods    = db.CreateLocalTable(ModTemplate.Data);
+			using var acts    = db.CreateLocalTable(Activity.Data);
+			using var masks   = db.CreateLocalTable(CoaMask.Data);
+			using var atiRubs = db.CreateLocalTable(AtiRub.Data);
+			using var iasRubs = db.CreateLocalTable(IasRub.Data);
+
+			var activityIds = acts.Select(a => a.Id).OrderBy(id => id).ToList();
+
+			IQueryable<ListDto> Build(IEnumerable<int> ids) => ProductionShape(mods, acts, masks, atiRubs, iasRubs, ids);
+
 			var probe = Build(activityIds);
 
 			probe.ClearCache();
@@ -1153,13 +1186,11 @@ namespace Tests.Linq
 			_ = Build(activityIds).ToList();
 			(probe.GetCacheMissCount() - start).ShouldBe(1);
 
-			var widened = Build(activityIds.Concat(new[] { 40 }).ToList()).ToList().OrderBy(r => r.Id).ToList();
+			_ = Build(activityIds).ToList();
+			(probe.GetCacheMissCount() - start).ShouldBe(1, "the same value set reuses the cached query");
 
+			_ = Build(activityIds.Concat(new[] { 40 }).ToList()).ToList();
 			(probe.GetCacheMissCount() - start).ShouldBe(2, "a wider value set is a different query");
-
-			widened[0].Cells.Count        .ShouldBe(8);
-			widened[0].Cells["IDE_40"]    .ShouldBeNull();
-			widened[0].Cells["IDE_10"]    .ShouldBe("IDE-A");
 		}
 
 		/// <summary>
