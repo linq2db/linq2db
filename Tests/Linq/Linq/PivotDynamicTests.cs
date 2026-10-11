@@ -226,6 +226,28 @@ namespace Tests.Linq
 				.ShouldBe(new (int, string, decimal?)[] { (1, "A", 20m), (2, "A", 20m), (3, "B", 15m), (4, "B", 15m) });
 		}
 
+		/// <summary>A cell aggregate may read the whole group through the selector's own grouping parameter.</summary>
+		[Test]
+		public void PivotsAgainstTheGroupTotal([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var result = t
+				.Pivot(x => x.Category, x => x.Year, new[] { 2000, 2010 },
+					(g, p) => new { g.Key, Cells = p.Cell(rows => g.Sum(x => x.Amount) - rows.Sum(x => x.Amount), Year) })
+				.ToList()
+				.OrderBy(r => r.Key, StringComparer.Ordinal)
+				.ToList();
+
+			result.Count.ShouldBe(2);
+
+			result[0].Cells["Y2000"].ShouldBe(20m);
+			result[0].Cells["Y2010"].ShouldBe(10m);
+			result[1].Cells["Y2000"].ShouldBe(15m);
+			result[1].Cells["Y2010"].ShouldBe(5m);
+		}
+
 		[Test]
 		public void PivotsMultipleAggregatesOfOneValue([DataSources] string context)
 		{

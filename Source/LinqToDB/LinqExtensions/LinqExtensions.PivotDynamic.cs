@@ -77,7 +77,7 @@ namespace LinqToDB
 
 			var staticSelector = Expression.Lambda<Func<IGrouping<TKey, TSource>, TResult>>(body, selector.Parameters[0]);
 
-			return BuildPivot(source, keySelector, forColumn, forValues, staticSelector, templates, typeof(PivotCells<TSource, TFor>), nameof(selector));
+			return BuildPivot(source, keySelector, forColumn, forValues, staticSelector, templates, typeof(PivotCells<TSource, TFor>), selector.Parameters[0], nameof(selector));
 		}
 
 		/// <summary>
@@ -121,7 +121,7 @@ namespace LinqToDB
 			var built = cells(PivotCells<TSource, TFor>.Empty)
 				?? throw new ArgumentException("The cell set was not built.", nameof(cells));
 
-			return BuildPivot(source, keySelector, forColumn, forValues, staticSelector, built.Templates, null, nameof(cells));
+			return BuildPivot(source, keySelector, forColumn, forValues, staticSelector, built.Templates, null, null, nameof(cells));
 		}
 
 		// Member positions only: anywhere else the builder has no member to put the generated cells in.
@@ -188,6 +188,7 @@ namespace LinqToDB
 			Expression<Func<IGrouping<TKey, TSource>, TResult>> staticSelector,
 			PivotCells<TSource, TFor>.Template[]                templates,
 			Type?                                               cellsType,
+			ParameterExpression?                                groupParam,
 			string                                              paramName)
 		{
 			if (templates.Length == 0)
@@ -221,7 +222,7 @@ namespace LinqToDB
 						throw new ArgumentException($"Duplicate pivot column name '{name}'.", paramName);
 
 					names[k]     = name!;
-					cellExprs[k] = Expression.Quote(BuildCell(cell, forColumn, value, groupType));
+					cellExprs[k] = Expression.Quote(BuildCell(cell, forColumn, value, groupType, groupParam));
 
 					k++;
 				}
@@ -233,9 +234,11 @@ namespace LinqToDB
 		// g => aggregate(g.Where(row => forColumn(row) == value))
 		// One filtered aggregate per (cell, value) pair - the shape the engine already models as a grouped
 		// aggregate with a filter, so a cell can carry any aggregate the provider can translate.
-		static LambdaExpression BuildCell<TSource, TFor>(PivotCells<TSource, TFor>.Template cell, Expression<Func<TSource, TFor>> forColumn, TFor value, Type groupType)
+		// A cell written inside the projection may also read the projection's own grouping parameter, so the cell lambda
+		// is declared over that same parameter.
+		static LambdaExpression BuildCell<TSource, TFor>(PivotCells<TSource, TFor>.Template cell, Expression<Func<TSource, TFor>> forColumn, TFor value, Type groupType, ParameterExpression? groupParam)
 		{
-			var gParam   = Expression.Parameter(groupType, "g");
+			var gParam   = groupParam ?? Expression.Parameter(groupType, "g");
 			var rowParam = Expression.Parameter(typeof(TSource), "row");
 
 			var predicate = Expression.Lambda(
