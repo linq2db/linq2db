@@ -163,6 +163,13 @@ namespace Tests.Identity
 			}
 		}
 
+		[Table(RenamedIdentityConnection.UserTable)]
+		sealed class RenamedUserRow
+		{
+			[Column]                                        public string  Id    { get; set; } = null!;
+			[Column(RenamedIdentityConnection.EmailColumn)] public string? Email { get; set; }
+		}
+
 		[Test]
 		public void ConfigureMappingsOverridesDefaults([DataSources(false)] string context)
 		{
@@ -194,8 +201,12 @@ namespace Tests.Identity
 
 			(await store.CreateAsync(user)).Succeeded.ShouldBeTrue();
 
-			// reads the renamed column off the renamed table, so the override reached the SQL and not just the metadata
-			(await store.FindByEmailAsync(user.NormalizedEmail!))?.UserName.ShouldBe("rena");
+			var found = await store.FindByEmailAsync(user.NormalizedEmail!);
+			found.ShouldNotBeNull();
+			found.UserName.ShouldBe("rena");
+
+			// an independent mapping pins the physical names, which DDL and DML sharing one schema cannot
+			(await ctx.GetTable<RenamedUserRow>().Where(r => r.Id == user.Id).Select(r => r.Email).SingleAsync()).ShouldBe(user.Email);
 
 			(await store.DeleteAsync(user)).Succeeded.ShouldBeTrue();
 		}
