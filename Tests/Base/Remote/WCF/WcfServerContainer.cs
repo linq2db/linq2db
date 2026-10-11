@@ -12,6 +12,7 @@ using LinqToDB.Remote;
 using LinqToDB.Remote.Wcf;
 
 using Tests.Model;
+using Tests.Model.Remote;
 using Tests.Model.Remote.Wcf;
 
 namespace Tests.Remote.ServerContainer
@@ -30,7 +31,7 @@ namespace Tests.Remote.ServerContainer
 					AllowUpdates = true,
 				};
 
-			var host = new ServiceHost(service, new Uri($"net.tcp://localhost:{port}"));
+			var host = new ServiceHost(service, new Uri($"net.tcp://{RemoteHost.Loopback}:{port}"));
 #pragma warning restore CA2000 // Dispose objects before losing scope
 
 			host.Description.Behaviors.Add(new ServiceMetadataBehavior());
