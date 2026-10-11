@@ -75,28 +75,28 @@ namespace LinqToDB.Identity
 		// comparable varchar instead. Token values (a saved JWT is 1-2 KB) are never filtered on, so they can be LOBs.
 		private static readonly (string Configuration, DataType DataType, string DbType)[] _claimValueTypes =
 		[
-			(ProviderName.MySql,    DataType.NVarChar, "VarChar(2000)"  ),
-			(ProviderName.Oracle,   DataType.NVarChar, "NVarChar2(2000)"),
-			(ProviderName.Firebird, DataType.NVarChar, "VarChar(2000)"  ),
-			(ProviderName.Access,   DataType.NText,    "LongText"       ),
-			(ProviderName.DB2,      DataType.NVarChar, "NVarChar(2000)" ),
-			(ProviderName.Informix, DataType.NVarChar, "LVarChar(2000)" ),
-			(ProviderName.SapHana,  DataType.NVarChar, "NVarChar(2000)" ),
-			(ProviderName.Sybase,   DataType.NVarChar, "NVarChar(2000)" ),
-			(ProviderName.SqlCe,    DataType.NVarChar, "NVarChar(2000)" ),
+			(ProviderName.MySql,    DataType.NVarChar, "VarChar(2000)"                          ),
+			(ProviderName.Oracle,   DataType.NVarChar, "NVarChar2(2000)"                        ),
+			(ProviderName.Firebird, DataType.NVarChar, "VarChar(2000) CHARACTER SET UNICODE_FSS"),
+			(ProviderName.Access,   DataType.NText,    "LongText"                               ),
+			(ProviderName.DB2,      DataType.NVarChar, "NVarChar(2000)"                         ),
+			(ProviderName.Informix, DataType.NVarChar, "LVarChar(2000)"                         ),
+			(ProviderName.SapHana,  DataType.NVarChar, "NVarChar(2000)"                         ),
+			(ProviderName.Sybase,   DataType.NVarChar, "NVarChar(2000)"                         ),
+			(ProviderName.SqlCe,    DataType.NVarChar, "NVarChar(2000)"                         ),
 		];
 
 		private static readonly (string Configuration, DataType DataType, string DbType)[] _tokenValueTypes =
 		[
-			(ProviderName.MySql,    DataType.NText,    "Text"              ),
-			(ProviderName.Oracle,   DataType.NText,    "NClob"             ),
-			(ProviderName.Firebird, DataType.NText,    "BLOB SUB_TYPE TEXT"),
-			(ProviderName.Access,   DataType.NText,    "LongText"          ),
-			(ProviderName.DB2,      DataType.NText,    "NClob"             ),
-			(ProviderName.Informix, DataType.NVarChar, "LVarChar(8000)"    ),
-			(ProviderName.SapHana,  DataType.NVarChar, "NVarChar(5000)"    ),
-			(ProviderName.Sybase,   DataType.NText,    "UniText"           ),
-			(ProviderName.SqlCe,    DataType.NText,    "NText"             ),
+			(ProviderName.MySql,    DataType.NText,    "Text"                                    ),
+			(ProviderName.Oracle,   DataType.NText,    "NClob"                                   ),
+			(ProviderName.Firebird, DataType.NText,    "BLOB SUB_TYPE TEXT CHARACTER SET UNICODE_FSS"),
+			(ProviderName.Access,   DataType.NText,    "LongText"                                ),
+			(ProviderName.DB2,      DataType.NText,    "NClob"                                   ),
+			(ProviderName.Informix, DataType.NVarChar, "LVarChar(8000)"                          ),
+			(ProviderName.SapHana,  DataType.NVarChar, "NVarChar(5000)"                          ),
+			(ProviderName.Sybase,   DataType.NText,    "UniText"                                 ),
+			(ProviderName.SqlCe,    DataType.NText,    "NText"                                   ),
 		];
 
 		public static void SetupIdentityUserClaim<TKey, TUserClaim>(FluentMappingBuilder mappings)
@@ -396,10 +396,10 @@ namespace LinqToDB.Identity
 		// unscoped DataType - and NText also makes the parameter bind as a CLOB, not only the DDL.
 		private static readonly (string Configuration, string? DbType)[] _passkeyDataAsText =
 		[
-			(ProviderName.MySql,    null                ),
-			(ProviderName.Oracle,   null                ),
-			(ProviderName.Firebird, "BLOB SUB_TYPE TEXT"),
-			(ProviderName.Access,   "LongText"          ),
+			(ProviderName.MySql,    null                                         ),
+			(ProviderName.Oracle,   null                                         ),
+			(ProviderName.Firebird, "BLOB SUB_TYPE TEXT CHARACTER SET UNICODE_FSS"),
+			(ProviderName.Access,   "LongText"                                   ),
 		];
 
 		public static void SetupIdentityUserPasskey<TKey, TUserPasskey>(FluentMappingBuilder mappings)
