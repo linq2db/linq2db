@@ -78,6 +78,27 @@ the same rule EF Core applies. Without options the stores behave as `Version1`.
 No other option is applied — `Stores.MaxLengthForKeys` and `Stores.ProtectPersonalData` included. If you need one,
 please open a [feature request](https://github.com/linq2db/linq2db/issues/new/choose).
 
+### `UserManager` operations are not atomic
+
+linq2db has no change tracker, so every store call is written when it runs. A `UserManager` method that makes several
+store calls is therefore not one unit of work, as it is under EF Core's single `SaveChanges`: `AddClaimsAsync`
+inserts the claims and then updates the user under the optimistic concurrency check, and when that update returns
+`ConcurrencyFailure` the claims are already stored. Retrying `AddClaimsAsync` then duplicates them (nothing in
+`AspNetUserClaims` prevents it), and retrying `AddLoginAsync` fails on the `AspNetUserLogins` primary key. Token and
+role writes are safe to repeat.
+
+To make such an operation atomic, run it in a transaction on the same scoped context the stores resolve, and commit
+only on success:
+
+```csharp
+await using var tx = await db.BeginTransactionAsync();   // db: the scoped IdentityDataConnection
+
+var result = await userManager.AddClaimsAsync(user, claims);
+
+if (result.Succeeded)
+    await tx.CommitAsync();                              // otherwise disposing rolls the claims back
+```
+
 ## The identity context
 
 `IdentityDataConnection` / `IdentityDataContext` (and their generic `<TUser, TRole, TKey, …>` forms) apply the default
