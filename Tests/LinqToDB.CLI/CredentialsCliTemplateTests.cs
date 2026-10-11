@@ -687,8 +687,9 @@ namespace Tests.LinqToDB.CLI
 
 			if (shellcheck == null)
 			{
-				if (Environment.GetEnvironmentVariable("GITHUB_ACTIONS") != null || Environment.GetEnvironmentVariable("TF_BUILD") != null)
-					Assert.Fail("shellcheck is required on CI to check the generated credentials CLI scripts.");
+				// The scripts are the same on every Unix, so CI checks them once, on Linux, whose runners ship shellcheck.
+				if (OperatingSystem.IsLinux() && (Environment.GetEnvironmentVariable("GITHUB_ACTIONS") != null || Environment.GetEnvironmentVariable("TF_BUILD") != null))
+					Assert.Fail("shellcheck is required on Linux CI to check the generated credentials CLI scripts.");
 
 				Assert.Ignore("shellcheck is not installed.");
 			}

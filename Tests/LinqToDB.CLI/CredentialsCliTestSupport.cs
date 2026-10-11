@@ -22,14 +22,18 @@ namespace Tests.LinqToDB.CLI
 		static readonly Lock _buildLock = new();
 		static string? _secretHelperPath;
 
-		/// <summary>Root for every directory these tests create, private to the current user.</summary>
+		/// <summary>
+		/// Root for every directory these tests create, private to the current user. On Unix its symbolic links are
+		/// resolved (macOS keeps the temporary directory under <c>/var</c>, a link to <c>/private/var</c>): the tool
+		/// reports the directories it checks by their real paths, and the tests compare against paths under this root.
+		/// </summary>
 		public static string Root
 		{
 			get
 			{
 				var root = Path.Combine(Path.GetTempPath(), $"linq2db-cli-tests-{Environment.UserName}");
 				CreatePrivateDirectory(root);
-				return root;
+				return OperatingSystem.IsWindows() ? root : CredentialsDirectory.GetRealPath(root);
 			}
 		}
 

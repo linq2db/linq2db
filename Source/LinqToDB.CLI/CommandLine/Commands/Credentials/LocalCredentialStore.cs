@@ -609,7 +609,8 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 
 		/// <summary>
 		/// Reads a whole file while letting a writer replace it: a read can run without the lock (when no lock file exists
-		/// yet), and on Windows an open handle without delete sharing would make the writer's replacing move fail.
+		/// yet). On Windows the writer's replacing move still fails while this handle is open, so the writer retries it
+		/// (see <see cref="ReplaceFile"/>) until the read is done.
 		/// </summary>
 		static byte[] ReadAllBytesShared(string path, Action? opened)
 		{
@@ -624,7 +625,8 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 
 		/// <summary>
 		/// Renames <paramref name="source"/> over <paramref name="destination"/>. On Windows a process outside the lock (an
-		/// antivirus scanner, an indexer) can hold the file briefly, so the rename is retried a few times.
+		/// antivirus scanner, an indexer, a reader of a store without a lock file) can hold the file briefly, so the rename
+		/// is retried a few times.
 		/// </summary>
 		static void ReplaceFile(string source, string destination)
 		{

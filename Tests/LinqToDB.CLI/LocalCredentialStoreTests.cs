@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.CommandLine.Commands.Credentials;
@@ -565,30 +566,48 @@ namespace Tests.LinqToDB.CLI
 		public void ReaderWithoutLockFileDoesNotBlockAWriter()
 		{
 			// A store whose lock file is gone (deleted by hand): a reader runs without the lock, so a writer can replace the
-			// data file while the reader holds it open. On Windows that replace fails unless the reader's handle shares
-			// delete access; elsewhere a rename over an open file always succeeds.
+			// data file while the reader holds it open. Elsewhere a rename over an open file succeeds at once; on Windows it
+			// fails while the reader's handle is open, and the writer retries the rename until the read is done.
 			CreateStore().TryStore("seed", "u", "p", out var error).ShouldBeTrue(error);
 			File.Delete(LockPath);
 
 			var writer = CreateStore();
-			var stored = false;
+			Task<string?>? writing = null;
 
 			var reader = new LocalCredentialStore(_directory, _root)
 			{
 				DataFileOpenedForRead = () =>
 				{
 					// Once only: the writer runs its own reads through another instance, without this hook.
-					if (!stored)
+					if (writing != null)
+						return;
+
+					writing = Task.Run(() =>
 					{
-						stored = true;
-						writer.TryStore("written", "u", "p", out var writerError).ShouldBeTrue(writerError);
+						return writer.TryStore("written", "u", "p", out var writerError) ? null : writerError ?? "failed";
+					});
+
+					if (OperatingSystem.IsWindows())
+					{
+						// Hold the file until the writer has its new data ready to rename into place, then let the read finish.
+						var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(30);
+
+						while (!writing.IsCompleted && DateTime.UtcNow < deadline && !Directory.EnumerateFiles(_directory, "credentials.dat.*.tmp").Any())
+							Thread.Sleep(1);
+					}
+					else
+					{
+						writing.Wait();
 					}
 				},
 			};
 
 			reader.TryGetCount(out var count, out error).ShouldBeTrue(error);
 
-			stored.ShouldBeTrue("the reader did not open the data file");
+			var written = writing.ShouldNotBeNull("the reader did not open the data file");
+
+			written.Wait(TimeSpan.FromSeconds(30)).ShouldBeTrue("the writer did not finish");
+			written.Result.ShouldBeNull();
 			count.ShouldBe(1);
 
 			CreateStore().TryGetCount(out count, out error).ShouldBeTrue(error);
