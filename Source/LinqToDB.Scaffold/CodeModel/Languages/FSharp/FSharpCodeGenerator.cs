@@ -1634,9 +1634,9 @@ namespace LinqToDB.CodeModel
 
 					if (type.Parent != null && !nested)
 					{
-						// nested types are lifted out of every class except modules, so only a module qualifies
+						// generated nested types are lifted out of every class except modules, so only a module qualifies
 						var qualifier = type.Parent;
-						while (qualifier != null && !_moduleTypes.Contains(qualifier))
+						while (!type.External && qualifier != null && !_moduleTypes.Contains(qualifier))
 							qualifier = qualifier.Parent;
 
 						var inQualifier = false;
@@ -1739,7 +1739,12 @@ namespace LinqToDB.CodeModel
 				}
 				case TypeKind.Array:
 				{
-					RenderType(type.ArrayElementType!, null, typeOnlyContext);
+					// `T | null` binds looser than `[]`, so a nullable element type needs parentheses
+					var element = BuildFragment(() => RenderType(type.ArrayElementType!, null, typeOnlyContext));
+					if (element.EndsWith(" | null", StringComparison.Ordinal))
+						element = $"({element})";
+
+					Write(element);
 					Write('[');
 					var first = true;
 					foreach (var size in type.ArraySizes!)
