@@ -93,6 +93,105 @@ namespace Tests.UserTests
 		}
 
 		[Table]
+		sealed class TemporalSubqueryRow
+		{
+			[PrimaryKey] public int             Id            { get; set; }
+			[Column]     public DateTimeOffset  Value         { get; set; }
+			[Column]     public DateTimeOffset? NullableValue { get; set; }
+			[Column]     public DateTime        Timestamp     { get; set; }
+			[Column(DataType = DataType.Date)] public DateTime Date { get; set; }
+			[Column]     public int             Marker        { get; set; }
+		}
+
+		static void SeedTemporalSubquery(DataConnection db, int ticks = 0)
+		{
+			// Rows 1 and 2 represent the same instant in legacy and current literal formats.
+			var value = new DateTimeOffset(Start, TimeSpan.FromMinutes(345)).AddTicks(ticks);
+			db.Execute("INSERT INTO [TemporalSubqueryRow] ([Id], [Value], [NullableValue], [Timestamp], [Date], [Marker]) VALUES (1, @value, @value, @timestamp, @date, 0)",
+				new { value = value.ToString("yyyy-MM-dd HH:mm:ss.fffzzz", CultureInfo.InvariantCulture), timestamp = "2026-09-15T12:00:00.0000000", date = "2026-09-15 12:00:00" });
+			db.BulkCopy(new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows, UseParameters = false },
+				new[]
+				{
+					new TemporalSubqueryRow { Id = 2, Value = value, NullableValue = value, Timestamp = Start, Date = Start.Date },
+					new TemporalSubqueryRow { Id = 3, Value = value.AddDays(1), Timestamp = Start.AddDays(1), Date = Start.AddDays(1).Date },
+					new TemporalSubqueryRow { Id = 4, Value = value.ToOffset(TimeSpan.FromHours(-4)), NullableValue = value.ToOffset(TimeSpan.FromHours(-4)), Timestamp = Start, Date = Start.Date },
+				});
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5930")]
+		public void TemporalSubqueryContains(
+			[IncludeDataSources(false, TestProvName.AllSQLite)] string context,
+			[Values(0, 1200000)] int ticks,
+			[Values] bool negate)
+		{
+			using var db    = GetDataConnection(context);
+			using var table = db.CreateLocalTable<TemporalSubqueryRow>();
+			SeedTemporalSubquery(db, ticks);
+			var selectedId = 2;
+			var values = table.Where(r => r.Id == selectedId).Select(r => r.Value);
+			var query = table.Where(r => negate ? !values.Contains(r.Value) : values.Contains(r.Value));
+			query.OrderBy(r => r.Id).Select(r => r.Id).ToArray().ShouldBe(negate ? new[] { 3 } : new[] { 1, 2, 4 });
+			// Reuse the same query with legacy, nonmatching, and empty inner results.
+			selectedId = 1;
+			query.OrderBy(r => r.Id).Select(r => r.Id).ToArray().ShouldBe(negate ? new[] { 3 } : new[] { 1, 2, 4 });
+			selectedId = 3;
+			query.OrderBy(r => r.Id).Select(r => r.Id).ToArray().ShouldBe(negate ? new[] { 1, 2, 4 } : new[] { 3 });
+			selectedId = 0;
+			query.OrderBy(r => r.Id).Select(r => r.Id).ToArray().ShouldBe(negate ? new[] { 1, 2, 3, 4 } : []);
+			selectedId = 2;
+			var expected = negate ? new[] { 3 } : new[] { 1, 2, 4 };
+			query.Set(r => r.Marker, 1).Update().ShouldBe(expected.Length);
+			table.Where(r => r.Marker == 1).OrderBy(r => r.Id).Select(r => r.Id).ToArray().ShouldBe(expected);
+			// Keep the membership source intact while deleting the matched/unmatched legacy row.
+			query.Where(r => r.Id == 1).Delete().ShouldBe(negate ? 0 : 1);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5930")]
+		public void TemporalSubqueryContainsTypesAndNulls([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataConnection(context);
+			using var table = db.CreateLocalTable<TemporalSubqueryRow>();
+			SeedTemporalSubquery(db);
+			var source = table.Where(r => r.Id == 2);
+			table.Where(r => source.Select(s => s.Timestamp).Contains(r.Timestamp)).OrderBy(r => r.Id).Select(r => r.Id).ToArray().ShouldBe(new[] { 1, 2, 4 });
+			table.Where(r => source.Select(s => s.Date).Contains(r.Date)).OrderBy(r => r.Id).Select(r => r.Id).ToArray().ShouldBe(new[] { 1, 2, 4 });
+			table.Where(r => source.Select(s => s.Value).Contains(r.NullableValue!.Value)).OrderBy(r => r.Id).Select(r => r.Id).ToArray().ShouldBe(new[] { 1, 2, 4 });
+			table.Where(r => !source.Select(s => s.Value).Contains(r.NullableValue!.Value)).Select(r => r.Id).ToArray().ShouldBe(new[] { 3 });
+			table.Where(r => source.Select(s => s.NullableValue).Contains(r.Value)).OrderBy(r => r.Id).Select(r => r.Id).ToArray().ShouldBe(new[] { 1, 2, 4 });
+			var nullable = table.Where(r => r.Id == 2 || r.Id == 3).Select(r => r.NullableValue);
+			table.Count(r => nullable.Contains(r.NullableValue)).ShouldBe(4);
+			table.Count(r => !nullable.Contains(r.NullableValue)).ShouldBe(0);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5930")]
+		public void TemporalSubqueryContainsPreservesSelection([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataConnection(context);
+			using var table = db.CreateLocalTable<TemporalSubqueryRow>();
+			SeedTemporalSubquery(db);
+			// Raw DISTINCT retains both text formats. Normalizing before DISTINCT would remove
+			// one and cause Skip(1) to select the next day instead of the same instant.
+			var paged = table.Where(r => r.Id <= 3).Select(r => r.Value).Distinct().OrderBy(v => v).Skip(1).Take(1);
+			table.Where(r => paged.Contains(r.Value)).OrderBy(r => r.Id).Select(r => r.Id).ToArray().ShouldBe(new[] { 1, 2, 4 });
+			var first = table.Where(r => r.Id == 2).Select(r => r.Value);
+			var second = table.Where(r => r.Id == 3).Select(r => r.Value);
+			var union = first.Union(second);
+			var concat = first.Concat(second);
+			table.Count(r => union.Contains(r.Value)).ShouldBe(4);
+			table.Count(r => concat.Contains(r.Value)).ShouldBe(4);
+			var shifted = table.Where(r => r.Id == 2).Select(r => r.Value.AddDays(0));
+			var mixedUnion = shifted.Union(second);
+			var mixedConcat = shifted.Concat(second);
+			table.Count(r => mixedUnion.Contains(r.Value)).ShouldBe(4);
+			table.Count(r => mixedConcat.Contains(r.Value)).ShouldBe(4);
+			var converted = table.Where(r => r.Id == 2).Select(r => Sql.ConvertTo<DateTimeOffset>.From(r.Value.ToString().Trim()));
+			var convertedUnion = converted.Union(second);
+			table.Count(r => convertedUnion.Contains(r.Value)).ShouldBe(4);
+			table.Where(r => table.Where(s => s.Id > r.Id).OrderBy(s => s.Id).Take(1).Select(s => s.Value).Contains(r.Value))
+				.Select(r => r.Id).ToArray().ShouldBe(new[] { 1 });
+		}
+
+		[Table]
 		sealed class DateTimeContainsRow
 		{
 			[PrimaryKey] public int Id { get; set; }

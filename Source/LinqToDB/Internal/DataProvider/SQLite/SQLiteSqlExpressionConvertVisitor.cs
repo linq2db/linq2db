@@ -277,6 +277,34 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			return changed ? new SqlPredicate.InList(expression, list.WithNull, list.IsNot, values) : list;
 		}
 
+		/// <inheritdoc />
+		protected internal override IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
+		{
+			var element = base.VisitInSubQueryPredicate(predicate);
+			if (element is not SqlPredicate.InSubQuery { SubQuery.Select.Columns: [var column] } subQuery)
+				return element;
+
+			var dateType = QueryHelper.GetDbDataType(subQuery.Expr1, MappingSchema);
+			if (!IsDateTime(dateType))
+				return subQuery;
+
+			var expression = WrapDateTime(subQuery.Expr1, dateType);
+			var query      = subQuery.SubQuery;
+			if (query.HasSetOperators || !ReferenceEquals(WrapDateTime(column.Expression, dateType), column.Expression))
+			{
+				// Normalize the final result, after DISTINCT, paging and set operations have
+				// selected their rows. Reference the inner column without changing its query.
+				// A normalized first projection doesn't imply normalized set-operation branches.
+				query = new SelectQuery();
+				query.From.Tables.Add(new SqlTableSource(subQuery.SubQuery, null));
+				query.Select.AddNew(WrapDateTime(column, dateType));
+			}
+
+			return ReferenceEquals(expression, subQuery.Expr1) && ReferenceEquals(query, subQuery.SubQuery)
+				? subQuery
+				: new SqlPredicate.InSubQuery(expression, subQuery.IsNot, query, subQuery.DoNotConvert);
+		}
+
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
 		{
 			var underlying = cast.SystemType.ToUnderlying();
