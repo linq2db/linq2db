@@ -90,13 +90,13 @@ namespace LinqToDB
 			return new PivotCells<TSource, TFor>(templates);
 		}
 
-		IDictionary<string, object>? _values;
+		IDictionary<string, object?>? _values;
 
 		/// <summary>The generated cells, keyed by the name each pivoted value was given; empty when there are none.</summary>
 		[DynamicColumnsStore]
-		public IDictionary<string, object> Values
+		public IDictionary<string, object?> Values
 		{
-			get => _values ??= new Dictionary<string, object>();
+			get => _values ??= new Dictionary<string, object?>();
 			set => _values = value;
 		}
 
@@ -135,7 +135,7 @@ namespace LinqToDB
 		}
 
 		IEnumerator<KeyValuePair<string, object?>> IEnumerable<KeyValuePair<string, object?>>.GetEnumerator()
-			=> ((IEnumerable<KeyValuePair<string, object?>>)Values).GetEnumerator();
+			=> Values.GetEnumerator();
 
 		IEnumerator IEnumerable.GetEnumerator()
 			=> ((IEnumerable<KeyValuePair<string, object?>>)this).GetEnumerator();
