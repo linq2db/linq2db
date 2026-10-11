@@ -63,8 +63,8 @@ namespace Tests.Identity
 		}
 
 		// The same thing for an arbitrary key type and satellite set, via the generic contexts. No passkey table:
-		// the eight type parameters of IdentityDataConnection<...> don't include one, and the fixtures that need
-		// passkeys are string-keyed and use Schema above.
+		// the eight type parameters of IdentityDataConnection<...> don't include one - a fixture that needs passkeys
+		// uses Schema above, or creates its custom passkey table itself.
 		protected sealed class KeyedSchema<TUser, TRole, TKey, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken> : IDisposable
 			where TKey       : IEquatable<TKey>
 			where TUser      : IdentityUser     <TKey>

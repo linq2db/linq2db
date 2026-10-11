@@ -494,7 +494,7 @@ namespace LinqToDB.Identity
 		/// </summary>
 		protected virtual IQueryable<TUserPasskey> UserPasskeys => Context.GetTable<TUserPasskey>();
 
-		/// <inheritdoc cref="AddOrUpdatePasskeyAsync(TUser, UserPasskeyInfo, CancellationToken)"/>
+		/// <inheritdoc/>
 		public virtual async Task AddOrUpdatePasskeyAsync(TUser user, UserPasskeyInfo passkey, CancellationToken cancellationToken)
 		{
 			ThrowIfDisposed();
@@ -523,7 +523,7 @@ namespace LinqToDB.Identity
 			}
 		}
 
-		/// <inheritdoc cref="GetPasskeysAsync(TUser, CancellationToken)"/>
+		/// <inheritdoc/>
 		public virtual async Task<IList<UserPasskeyInfo>> GetPasskeysAsync(TUser user, CancellationToken cancellationToken)
 		{
 			ThrowIfDisposed();
@@ -538,7 +538,7 @@ namespace LinqToDB.Identity
 			return passkeys.Select(ToUserPasskeyInfo).ToList();
 		}
 
-		/// <inheritdoc cref="FindByPasskeyIdAsync(byte[], CancellationToken)"/>
+		/// <inheritdoc/>
 		public virtual async Task<TUser?> FindByPasskeyIdAsync(byte[] credentialId, CancellationToken cancellationToken)
 		{
 			ThrowIfDisposed();
@@ -550,7 +550,7 @@ namespace LinqToDB.Identity
 			return passkey == null ? null : await FindUserAsync(passkey.UserId, cancellationToken).ConfigureAwait(false);
 		}
 
-		/// <inheritdoc cref="FindPasskeyAsync(TUser, byte[], CancellationToken)"/>
+		/// <inheritdoc/>
 		public virtual async Task<UserPasskeyInfo?> FindPasskeyAsync(TUser user, byte[] credentialId, CancellationToken cancellationToken)
 		{
 			ThrowIfDisposed();
@@ -563,7 +563,7 @@ namespace LinqToDB.Identity
 			return passkey == null ? null : ToUserPasskeyInfo(passkey);
 		}
 
-		/// <inheritdoc cref="RemovePasskeyAsync(TUser, byte[], CancellationToken)"/>
+		/// <inheritdoc/>
 		public virtual async Task RemovePasskeyAsync(TUser user, byte[] credentialId, CancellationToken cancellationToken)
 		{
 			ThrowIfDisposed();

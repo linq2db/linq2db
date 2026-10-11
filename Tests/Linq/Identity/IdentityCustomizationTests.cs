@@ -400,6 +400,28 @@ namespace Tests.Identity
 			db.MappingSchema.GetEntityDescriptor(typeof(IdentityUser)).Name.Name.ShouldBe("AspNetUsers");
 		}
 
+		[Test]
+		public void AddedMappingSchemaReplacesDefaultColumn([DataSources(false)] string context)
+		{
+			var consumer = new MappingSchema();
+
+			new FluentMappingBuilder(consumer)
+				.Entity<IdentityUser>()
+					.Property(e => e.Email).HasColumnName("EmailAddress")
+				.Build();
+
+			using var db = new IdentityDataConnection(new DataOptions().UseConfiguration(context.StripRemote()));
+
+			db.AddMappingSchema(consumer);
+
+			var email = db.MappingSchema.GetEntityDescriptor(typeof(IdentityUser)).Columns.Single(c => c.MemberName == nameof(IdentityUser.Email));
+
+			// unlike a second pass in ConfigureMappings, a schema built on its own starts from a blank attribute,
+			// so the rename wins but the default length is gone
+			email.ColumnName.ShouldBe("EmailAddress");
+			email.Length.ShouldNotBe(256);
+		}
+
 		sealed class RenamedTokenConnection(DataOptions options) : IdentityDataConnection(options)
 		{
 			protected override void ConfigureMappings(MappingSchema mappingSchema)

@@ -88,8 +88,9 @@ linq2db has no change tracker, so every store call is written when it runs. A `U
 store calls is therefore not one unit of work, as it is under EF Core's single `SaveChanges`: `AddClaimsAsync`
 inserts the claims and then updates the user under the optimistic concurrency check, and when that update returns
 `ConcurrencyFailure` the claims are already stored. Retrying `AddClaimsAsync` then duplicates them (nothing in
-`AspNetUserClaims` prevents it), and retrying `AddLoginAsync` fails on the `AspNetUserLogins` primary key. Token and
-role writes are safe to repeat.
+`AspNetUserClaims` prevents it). Retrying `AddLoginAsync` or `AddToRoleAsync` returns a failed result instead
+(`LoginAlreadyAssociated` / `UserAlreadyInRole`), because `UserManager` finds the row the first attempt stored. Token
+writes are safe to repeat.
 
 To make such an operation atomic, run it in a transaction on the same scoped context the stores resolve, and commit
 only on success:
@@ -129,9 +130,10 @@ protected override void ConfigureMappings(MappingSchema ms)
 }
 ```
 
-`context.AddMappingSchema(ms)` after construction works the same way. `DataOptions.UseMappingSchema(...)` does
-**not** — the contexts add their own schema in the constructor, after the options have been applied, so the
-defaults outrank anything supplied that way.
+`context.AddMappingSchema(ms)` after construction also outranks the defaults, but a schema built on its own starts
+from blank attributes: a rename there replaces the default column mapping instead of inheriting its length and
+nullability. `DataOptions.UseMappingSchema(...)` does **not** work at all — the contexts add their own schema in the
+constructor, after the options have been applied, so the defaults outrank anything supplied that way.
 
 ### Customization limits
 
@@ -142,6 +144,11 @@ defaults outrank anything supplied that way.
   `AspNetUserPasskeys.Data` on MySQL, Oracle, Firebird, Access, Informix and SQL CE carries one that widens it to a
   text/CLOB column. A provider-scoped mapping outranks an unscoped one, so the rename is dropped with no error. Scope
   your own mapping to the same provider to override it.
+* **Some columns carry a provider-scoped database type that outranks an unscoped `HasDataType` / `HasLength`.**
+  `ClaimValue` on both claim tables and `AspNetUserTokens.Value` on MySQL, Oracle, Firebird, Access, DB2, Informix,
+  SAP HANA, Sybase and SQL CE, and the 256-character name/email columns on Access and Informix, are typed for those
+  providers by the defaults. An unscoped `HasDataType` or `HasLength` on them is ignored by `CreateTable` there; set
+  `HasDbType` to override.
 * **Extra properties on a subclass become columns.** `class AppUser : IdentityUser<string> { public string Tenant { get; set; } }`
   maps `Tenant` as a column, so `CreateTable` emits it and inserts include it — the same as EF Core, but the table is
   then no longer interchangeable with a stock `AspNetUsers` unless you `Ignore` the property.
@@ -150,6 +157,11 @@ defaults outrank anything supplied that way.
   `UserStore<…, TRoleClaim, TUserPasskey>`, `UserOnlyStore<…, TUserToken, TUserPasskey>`), as EF Core does.
   `AddLinqToDBStores` picks the passkey-aware store for such a context; a store built by hand without the
   `TUserPasskey` argument queries the stock `IdentityUserPasskey<TKey>`, which that context does not map.
+* **On .NET 10 the role-aware store and contexts no longer derive from their user-only counterparts.** They derive
+  from the passkey-aware forms instead, as in EF Core, so `UserStore<…, TRoleClaim>` is not a
+  `UserOnlyStore<…, TUserToken>` there. Code that upcasts between them should target the `IUser*Store<TUser>`
+  interfaces or `UserStoreBase<TUser, TKey, TUserClaim, TUserLogin, TUserToken>` instead, which are the same on every
+  target framework.
 * **Mappings are built once per context type, for the process lifetime.** `ConfigureMappings` runs on the first
   instantiation of a given context class and the result is cached against that class, so mappings cannot vary per
   instance — per-tenant table names, for example.
