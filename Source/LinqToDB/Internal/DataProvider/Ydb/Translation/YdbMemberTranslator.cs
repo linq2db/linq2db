@@ -755,30 +755,69 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 					&& Convert.ToInt64(constant.Value, CultureInfo.InvariantCulture) >= (valueType.Scale ?? YdbMappingSchema.DEFAULT_DECIMAL_SCALE))
 					return value;
 
-				var hasPrecision = precision is not (null or SqlValue { Value: 0 } or SqlValue { Value: 0L });
-
-				// the runtime twin of the no-op above, which bounds the integer digits ScaledDecimalType reserves
-				if (isDecimal && hasPrecision && precision is not SqlValue)
+				var hasPrecision      = precision is not (null or SqlValue { Value: 0 } or SqlValue { Value: 0L });
+				var constantPrecision = precision switch
 				{
-					var maxPrecision = factory.Value(factory.GetDbDataType(precision!), valueType.Scale ?? YdbMappingSchema.DEFAULT_DECIMAL_SCALE);
+					SqlValue { Value: int pi }  => pi,
+					SqlValue { Value: long pl } => (int)pl,
+					_                           => (int?)null,
+				};
 
-					precision = factory.Condition(
+				// A runtime precision gets a type per sign: once P + S + |p| exceeds 35, no type has room for both the
+				// integer digits a positive precision needs and the scale a negative one needs.
+				if (isDecimal && hasPrecision && constantPrecision == null)
+				{
+					var scale         = valueType.Scale     ?? YdbMappingSchema.DEFAULT_DECIMAL_SCALE;
+					var intDigits     = (valueType.Precision ?? YdbMappingSchema.DEFAULT_DECIMAL_PRECISION) - scale;
+					var precisionType = factory.GetDbDataType(precision!);
+					var positiveType  = ScaledDecimalType(valueType, scale);
+					var negativeType  = ScaledDecimalType(valueType, intDigits + scale - YdbMappingSchema.MAX_DECIMAL_PRECISION);
+					var maxPrecision  = factory.Value(precisionType, scale);
+					var minPrecision  = factory.Value(precisionType, scale - negativeType.Scale!.Value);
+
+					// the runtime twin of the no-op above, which bounds the integer digits positiveType reserves
+					var positive = factory.Condition(
 						factory.SearchCondition().AddGreater(precision!, maxPrecision, CompareNulls.LikeSql),
 						maxPrecision,
 						precision!);
+
+					// a precision needing more scale than negativeType has would be rounded twice: fail instead
+					var negative = factory.Function(precisionType, "Ensure",
+						precision!,
+						factory.SearchCondition(isOr: true).AddGreaterOrEqual(precision!, minPrecision, CompareNulls.LikeSql).AddIsNull(precision!),
+						factory.Value(factory.GetDbDataType(typeof(string)), string.Create(CultureInfo.InvariantCulture, $"ROUND precision is out of range for Decimal({intDigits + scale},{scale})")));
+
+					return factory.Condition(
+						factory.SearchCondition().AddGreaterOrEqual(precision!, factory.Value(precisionType, 0), CompareNulls.LikeSql),
+						RoundScaledAs(factory, value, valueType, positiveType, positive, roundToInt),
+						RoundScaledAs(factory, value, valueType, negativeType, negative, roundToInt));
 				}
 
 				// The scaled value needs p more integer digits than the source declares: Decimal(6,2) holds
 				// 9999.99, so 1234.56 * 10^1 does not fit it. YDB answers an out-of-range Decimal with an empty
 				// optional rather than an error, which the surrounding Unwrap then turns into a query-terminating
 				// PreconditionFailed.
-				var scaleType = isDecimal && hasPrecision ? ScaledDecimalType(valueType, precision!) : valueType;
+				var scaleType = isDecimal && hasPrecision ? ScaledDecimalType(valueType, constantPrecision!.Value) : valueType;
+
+				return RoundScaledAs(factory, value, valueType, scaleType, hasPrecision ? precision : null, roundToInt);
+			}
+
+			static ISqlExpression RoundScaledAs(
+				ISqlExpressionFactory                                                       factory,
+				ISqlExpression                                                              value,
+				DbDataType                                                                  valueType,
+				DbDataType                                                                  scaleType,
+				ISqlExpression?                                                             precision,
+				Func<ISqlExpressionFactory, DbDataType, ISqlExpression, ISqlExpression>     roundToInt)
+			{
+				var doubleType = factory.GetDbDataType(typeof(double));
+				var isDecimal  = valueType.SystemType.UnwrappedNullableType == typeof(decimal);
 
 				// scale by 10^p in the widened type (exact for Decimal). YQL's DecimalMul demands both operands
 				// carry the identical Decimal type - "Cannot calculate with different decimals: Decimal(6,2) !=
 				// Decimal(7,2)" - so the value is widened first rather than multiplied by a wider literal.
 				var widened = scaleType.EqualsDbOnly(valueType) ? value : factory.Cast(value, scaleType);
-				var scaled  = hasPrecision ? factory.Multiply(scaleType, widened, Pow10(factory, scaleType, precision!)) : value;
+				var scaled  = precision != null ? factory.Multiply(scaleType, widened, Pow10(factory, scaleType, precision)) : value;
 
 				// round to an integer in Double — the scaled rounding boundary is exactly representable
 				var rounded = roundToInt(factory, doubleType, factory.Cast(scaled, doubleType));
@@ -786,7 +825,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				// back to the scaled type (Double->Decimal becomes the string round-trip)
 				var back = isDecimal || !scaleType.EqualsDbOnly(doubleType) ? factory.Cast(rounded, scaleType) : rounded;
 
-				var result = hasPrecision ? factory.Div(scaleType, back, Pow10(factory, scaleType, precision!)) : back;
+				var result = precision != null ? factory.Div(scaleType, back, Pow10(factory, scaleType, precision)) : back;
 
 				// narrow back to the value's type: YQL arithmetic and IF demand identical Decimal types
 				return scaleType.EqualsDbOnly(valueType) ? result : factory.Cast(result, valueType);
@@ -794,30 +833,17 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 
 			// valueType widened by the rounding digits, clamped to what YQL accepts. The source scale is never
 			// cut: dropping fractional digits corrupts every row, while running out of integer digits only
-			// fails values near the type's limit. A non-constant precision is capped at the source scale, so it
-			// needs at most P integer digits (10^p needs one even when the type has none) and every remaining
-			// digit goes to scale, for a negative one. A negative constant precision shifts digits the other
-			// way, so it widens the scale instead.
-			static DbDataType ScaledDecimalType(DbDataType valueType, ISqlExpression precision)
+			// fails values near the type's limit. 10^p needs an integer digit even when the type has
+			// none. A negative precision shifts digits the other way, so it widens the scale instead.
+			static DbDataType ScaledDecimalType(DbDataType valueType, int p)
 			{
 				var scale     = valueType.Scale ?? YdbMappingSchema.DEFAULT_DECIMAL_SCALE;
 				var intDigits = (valueType.Precision ?? YdbMappingSchema.DEFAULT_DECIMAL_PRECISION) - scale;
-				var p         = precision switch
-				{
-					SqlValue { Value: int pi }  => pi,
-					SqlValue { Value: long pl } => (int)pl,
-					_                           => (int?)null,
-				};
 
-				if (p == null)
-				{
-					intDigits  = Math.Max(intDigits, 1) + scale;
-					scale      = Math.Max(scale, YdbMappingSchema.MAX_DECIMAL_PRECISION - intDigits);
-				}
-				else if (p > 0)
-					intDigits = Math.Max(intDigits, 1) + p.Value;
+				if (p > 0)
+					intDigits = Math.Max(intDigits, 1) + p;
 				else
-					scale = Math.Min(scale - p.Value, YdbMappingSchema.MAX_DECIMAL_PRECISION);
+					scale = Math.Min(scale - p, YdbMappingSchema.MAX_DECIMAL_PRECISION);
 
 				intDigits     = Math.Min(intDigits, YdbMappingSchema.MAX_DECIMAL_PRECISION - scale);
 

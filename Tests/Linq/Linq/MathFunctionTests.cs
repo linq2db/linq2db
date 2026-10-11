@@ -573,6 +573,44 @@ namespace Tests.Linq
 			result.Select(r => r.Even).ShouldBe(new decimal?[] { 0.1234m, 0.125m, 0.12m, -0.124m, 0m });
 		}
 
+		sealed class RoundNegativeDynamicWide
+		{
+			[PrimaryKey                        ] public int     Id    { get; set; }
+			[Column(Precision = 22, Scale =  9)] public decimal D22s9 { get; set; }
+			[Column(Precision = 35, Scale =  2)] public decimal D35s2 { get; set; }
+			[Column                            ] public int     P     { get; set; }
+		}
+
+		// A wide type has no room for both the integer digits a positive precision needs and the scale a negative
+		// one needs: a negative precision gets a type of its own, and one no type can hold fails instead of misrounding.
+		[Test]
+		public void Round23([IncludeDataSources(true, TestProvName.AllYdb)] string context)
+		{
+			var data = new[]
+			{
+				new RoundNegativeDynamicWide { Id = 1, D22s9 =  149999.999999999m, D35s2 = 1234.96m, P =  -5 },
+				new RoundNegativeDynamicWide { Id = 2, D22s9 = -250000.000000000m, D35s2 = 1234.96m, P =  -5 },
+				new RoundNegativeDynamicWide { Id = 3, D22s9 = 14999999999.5m,     D35s2 = 1234.96m, P = -10 },
+				new RoundNegativeDynamicWide { Id = 4, D22s9 = 1234567.891m,       D35s2 = 1234.96m, P = -13 },
+				new RoundNegativeDynamicWide { Id = 5, D22s9 = 1234.565m,          D35s2 = 1234.96m, P =   2 },
+				new RoundNegativeDynamicWide { Id = 6, D22s9 = 1234.565m,          D35s2 = 1234.96m, P =   0 },
+				new RoundNegativeDynamicWide { Id = 7, D22s9 = 12.5m,              D35s2 = 1234.96m, P =  12 },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var result = t.OrderBy(r => r.Id).Select(r => new { Away = Sql.AsSql(Sql.Round(r.D22s9, r.P)), Even = Sql.AsSql(Sql.RoundToEven(r.D22s9, r.P)) }).ToArray();
+
+			result.Select(r => r.Away).ShouldBe(new decimal?[] { 100000m, -300000m, 10000000000m, 0m, 1234.57m, 1235m, 12.5m });
+			result.Select(r => r.Even).ShouldBe(new decimal?[] { 100000m, -200000m, 10000000000m, 0m, 1234.56m, 1235m, 12.5m });
+
+			t.Select(r => Sql.AsSql(Sql.Round(r.D22s9, r.Id > 0 ? null : r.P))).ToArray().ShouldAllBe(v => v == null);
+
+			Action act = () => t.Where(r => r.P < 0).Select(r => Sql.AsSql(Sql.Round(r.D35s2, r.P))).ToArray();
+			act.ShouldThrow<Exception>().Message.ShouldContain("ROUND precision is out of range for Decimal(35,2)");
+		}
+
 		[Test]
 		public void Sign([DataSources(TestProvName.AllYdb)] string context)
 		{
