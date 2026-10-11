@@ -781,6 +781,24 @@ namespace Tests.Linq
 			result[1].Cells["SumY2010"].ShouldBe(20);
 		}
 
+		/// <summary>A runtime value set can be empty; the row then carries an empty cell set, not a null one.</summary>
+		[Test]
+		public void AnEmptyValueSetYieldsNoCells([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(Sales.Data);
+
+			var result = t
+				.Pivot(x => x.Category, x => x.Year, Array.Empty<int>(),
+					(g, p) => new { g.Key, Cells = p.Cell(rows => rows.Sum(x => x.Amount), Year) })
+				.ToList()
+				.OrderBy(r => r.Key, StringComparer.Ordinal)
+				.ToList();
+
+			result.Select(r => r.Key).ShouldBe(new[] { "A", "B" });
+			result.ShouldAllBe(r => r.Cells.Values.Count == 0 && r.Cells["Y2000"] == null);
+		}
+
 		/// <summary>An empty cell reads what its aggregate yields over no rows - for a count that is 0, not null.</summary>
 		[Test]
 		public void AnEmptyCountCellReadsZero([DataSources] string context)

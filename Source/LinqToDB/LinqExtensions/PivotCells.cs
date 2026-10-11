@@ -84,13 +84,19 @@ namespace LinqToDB
 			return new PivotCells<TSource, TFor>(templates);
 		}
 
-		/// <summary>The generated cells, keyed by the name each pivoted value was given.</summary>
+		IDictionary<string, object>? _values;
+
+		/// <summary>The generated cells, keyed by the name each pivoted value was given; empty when there are none.</summary>
 		[DynamicColumnsStore]
-		public IDictionary<string, object> Values { get; set; } = null!;
+		public IDictionary<string, object> Values
+		{
+			get => _values ??= new Dictionary<string, object>();
+			set => _values = value;
+		}
 
 		/// <summary>Reads a cell, or <see langword="null"/> when no cell carries <paramref name="name"/>.</summary>
 		/// <param name="name">Cell name.</param>
-		public object? this[string name] => Values != null && Values.TryGetValue(name, out var value) ? value : null;
+		public object? this[string name] => Values.TryGetValue(name, out var value) ? value : null;
 
 		/// <summary>Reads a cell as <typeparamref name="T"/>, or <see langword="default"/> when absent or of another type.</summary>
 		/// <typeparam name="T">Expected cell type.</typeparam>
@@ -99,20 +105,20 @@ namespace LinqToDB
 
 		#region IReadOnlyDictionary
 
-		int IReadOnlyCollection<KeyValuePair<string, object?>>.Count => Values?.Count ?? 0;
+		int IReadOnlyCollection<KeyValuePair<string, object?>>.Count => Values.Count;
 
-		IEnumerable<string>  IReadOnlyDictionary<string, object?>.Keys   => Values?.Keys   ?? [];
-		IEnumerable<object?> IReadOnlyDictionary<string, object?>.Values => Values?.Values ?? [];
+		IEnumerable<string>  IReadOnlyDictionary<string, object?>.Keys   => Values.Keys;
+		IEnumerable<object?> IReadOnlyDictionary<string, object?>.Values => Values.Values;
 
-		object? IReadOnlyDictionary<string, object?>.this[string key] => Values != null && Values.TryGetValue(key, out var value)
+		object? IReadOnlyDictionary<string, object?>.this[string key] => Values.TryGetValue(key, out var value)
 			? value
 			: throw new KeyNotFoundException($"No pivot cell is named '{key}'.");
 
-		bool IReadOnlyDictionary<string, object?>.ContainsKey(string key) => Values != null && Values.ContainsKey(key);
+		bool IReadOnlyDictionary<string, object?>.ContainsKey(string key) => Values.ContainsKey(key);
 
 		bool IReadOnlyDictionary<string, object?>.TryGetValue(string key, out object? value)
 		{
-			if (Values != null && Values.TryGetValue(key, out var found))
+			if (Values.TryGetValue(key, out var found))
 			{
 				value = found;
 				return true;
@@ -123,7 +129,7 @@ namespace LinqToDB
 		}
 
 		IEnumerator<KeyValuePair<string, object?>> IEnumerable<KeyValuePair<string, object?>>.GetEnumerator()
-			=> ((IEnumerable<KeyValuePair<string, object?>>?)Values ?? []).GetEnumerator();
+			=> ((IEnumerable<KeyValuePair<string, object?>>)Values).GetEnumerator();
 
 		IEnumerator IEnumerable.GetEnumerator()
 			=> ((IEnumerable<KeyValuePair<string, object?>>)this).GetEnumerator();
