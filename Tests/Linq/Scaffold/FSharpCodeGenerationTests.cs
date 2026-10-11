@@ -213,6 +213,58 @@ namespace Tests.Scaffold
 		}
 
 		[Test]
+		public void LiftedTypeNameConflict()
+		{
+			var options = FSharpOptions();
+			options.Schema.LoadedObjects |= SchemaObjects.StoredProcedure;
+
+			var procedure = new StoredProcedure(
+				new SqlObjectName("GetData", Schema: "dbo"),
+				null,
+				[],
+				null,
+				[[new ResultColumn("Value", new DatabaseType("nvarchar", 50, null, null), true)]],
+				new VoidResult());
+
+			// a table with primary key ahead of the conflicting one: its Find extension creates the extensions class
+			// holding the procedure result class before the conflicting entity in the code model
+			var source = GenerateSource(
+				options,
+				tableName  : "GetDataResult",
+				columns    : [new Column("Id", null, new DatabaseType("int", null, null, null), false, true, true, 0)],
+				primaryKey : new PrimaryKey(null, ["Id"]),
+				procedures : [procedure],
+				extraTables: [new Table(new SqlObjectName("Account", Schema: "dbo"), null, [new Column("Id", null, new DatabaseType("int", null, null, null), false, true, true, 0)], null, new PrimaryKey(null, ["Id"]))]);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(System.Text.RegularExpressions.Regex.Matches(source, @"^type GetDataResult\b", System.Text.RegularExpressions.RegexOptions.Multiline), Has.Count.EqualTo(1));
+				Assert.That(source, Does.Contain("type GetDataResult ="));
+				Assert.That(source, Does.Contain("type GetDataResult1 () ="));
+			}
+		}
+
+		[Test]
+		public void ModuleExtensionsTypeNameConflict()
+		{
+			var options = FSharpOptions();
+			options.DataModel.EntityClassNameOptions = new() { Casing = NameCasing.None, Pluralization = Pluralization.None };
+
+			var source = GenerateSource(
+				options,
+				tableName  : "Extensions",
+				tableSchema: "other",
+				columns    : [new Column("Id", null, new DatabaseType("int", null, null, null), false, true, true, 0)],
+				primaryKey : new PrimaryKey(null, ["Id"]));
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(System.Text.RegularExpressions.Regex.Matches(source, @"^\s*type Extensions\b", System.Text.RegularExpressions.RegexOptions.Multiline), Has.Count.EqualTo(1));
+				Assert.That(source, Does.Contain("type Extensions1 ="));
+			}
+		}
+
+		[Test]
 		public void CSharpGeneratorRejectsRecord()
 		{
 			var language = new DelegatingLanguageProvider(LanguageProviders.CSharp, LanguageProviders.CSharp.Features | LanguageFeatures.RecordEntities);
@@ -264,15 +316,15 @@ namespace Tests.Scaffold
 			return options;
 		}
 
-		static string GenerateSource(ScaffoldOptions options, IReadOnlyCollection<Column>? columns = null, IReadOnlyCollection<StoredProcedure>? procedures = null, PrimaryKey? primaryKey = null)
+		static string GenerateSource(ScaffoldOptions options, IReadOnlyCollection<Column>? columns = null, IReadOnlyCollection<StoredProcedure>? procedures = null, PrimaryKey? primaryKey = null, string tableName = "TestTable", string tableSchema = "dbo", IReadOnlyCollection<Table>? extraTables = null)
 		{
-			return string.Join("\n", GenerateFiles(options, columns, procedures, primaryKey));
+			return string.Join("\n", GenerateFiles(options, columns, procedures, primaryKey, tableSchema: tableSchema, tableName: tableName, extraTables: extraTables));
 		}
 
-		static string[] GenerateFiles(ScaffoldOptions options, IReadOnlyCollection<Column>? columns = null, IReadOnlyCollection<StoredProcedure>? procedures = null, PrimaryKey? primaryKey = null, ILanguageProvider? language = null, string tableSchema = "dbo")
+		static string[] GenerateFiles(ScaffoldOptions options, IReadOnlyCollection<Column>? columns = null, IReadOnlyCollection<StoredProcedure>? procedures = null, PrimaryKey? primaryKey = null, ILanguageProvider? language = null, string tableSchema = "dbo", string tableName = "TestTable", IReadOnlyCollection<Table>? extraTables = null)
 		{
 			var scaffolder = new Scaffolder(language ?? LanguageProviders.FSharp, HumanizerNameConverter.Instance, options, null);
-			var schema     = new TestSchemaProvider(columns ?? [], procedures ?? [], primaryKey, tableSchema);
+			var schema     = new TestSchemaProvider(columns ?? [], procedures ?? [], primaryKey, tableSchema, tableName, extraTables ?? []);
 			var dataModel  = scaffolder.LoadDataModel(schema, TestTypeMappingProvider.Instance);
 
 			var provider   = SqlServerTools.GetDataProvider(SqlServerVersion.v2012, SqlServerProvider.MicrosoftDataSqlClient);
@@ -287,12 +339,15 @@ namespace Tests.Scaffold
 			return scaffolder.GenerateSourceCode(dataModel, files).Select(f => f.Code).ToArray();
 		}
 
-		sealed class TestSchemaProvider(IReadOnlyCollection<Column> columns, IReadOnlyCollection<StoredProcedure> procedures, PrimaryKey? primaryKey, string tableSchema) : ISchemaProvider
+		sealed class TestSchemaProvider(IReadOnlyCollection<Column> columns, IReadOnlyCollection<StoredProcedure> procedures, PrimaryKey? primaryKey, string tableSchema, string tableName, IReadOnlyCollection<Table> extraTables) : ISchemaProvider
 		{
 			IEnumerable<Table> ISchemaProvider.GetTables()
 			{
+				foreach (var table in extraTables)
+					yield return table;
+
 				if (columns.Count > 0)
-					yield return new Table(new SqlObjectName("TestTable", Schema: tableSchema), null, columns, null, primaryKey);
+					yield return new Table(new SqlObjectName(tableName, Schema: tableSchema), null, columns, null, primaryKey);
 			}
 
 			IEnumerable<View>              ISchemaProvider.GetViews()              => [];

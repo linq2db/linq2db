@@ -51,6 +51,11 @@ namespace LinqToDB.CodeModel
 		/// Tracks current type name including parent type(s) name but without namespace.
 		/// </summary>
 		private string?                                _typeName;
+		/// <summary>
+		/// Tracks names of types nested (at any depth) into current module type, rendered by the code generator in
+		/// module scope.
+		/// </summary>
+		private ISet<string>?                          _moduleTypeNames;
 
 		public FSharpNameNormalizationVisitor(ILanguageProvider languageProvider)
 		{
@@ -211,6 +216,10 @@ namespace LinqToDB.CodeModel
 			// save namespace name to context only after it was fixed
 			_namespace = string.JoinStrings('.', @namespace.Name.Select(_ => _.Name));
 
+			// top-level types keep their names: register them before nested types, lifted into the same scope
+			foreach (var @class in @namespace.Members.EnumerateMembers<ClassGroup, CodeClass>())
+				_globalTypeNames.Add(FixName(_globalNames, @class.Name, n => _namespace + "." + n, true));
+
 			base.Visit(@namespace);
 
 			_namespace = oldNamespace;
@@ -218,13 +227,32 @@ namespace LinqToDB.CodeModel
 
 		protected override void Visit(CodeClass @class)
 		{
+			// F# has no nested types: the code generator lifts them into the enclosing module or namespace, so their
+			// names must be unique there
 			if (@class.Type.Parent == null)
 			{
 				var fullName = FixName(_globalNames, @class.Name, n => _namespace + (_namespace != null ? "." : null) + _typeName + (_typeName != null ? "." : null) + n, true);
 				_globalTypeNames.Add(fullName);
 			}
+			else if (_moduleTypeNames != null)
+				FixName(_moduleTypeNames, @class.Name, null, true);
 			else
-				FixName(_memberNames!, @class.Name, null, true);
+			{
+				var fullName = FixName(_globalNames, @class.Name, n => _namespace + (_namespace != null ? "." : null) + n, true);
+				_globalTypeNames.Add(fullName);
+			}
+
+			var oldModuleTypeNames = _moduleTypeNames;
+			if (@class.Attributes.HasFlag(Modifiers.Module))
+			{
+				// module scope: the extension methods type synthesized by the code generator, then the module's own
+				// types, which keep their names over types lifted from deeper levels
+				_moduleTypeNames = CreateNewNamesSet();
+				_moduleTypeNames.Add(FSharpCodeGenerator.SchemaExtensionsTypeName);
+
+				foreach (var nested in @class.Members.EnumerateMembers<ClassGroup, CodeClass>())
+					FixName(_moduleTypeNames, nested.Name, null, true);
+			}
 
 			var oldOverloads = _overloads;
 			_overloads       = new Dictionary<string, List<CodeMethod>>(_languageProvider.RawIdentifierEqualityComparer);
@@ -239,9 +267,10 @@ namespace LinqToDB.CodeModel
 
 			base.Visit(@class);
 
-			_typeName    = oldTypeName;
-			_memberNames = oldMembers;
-			_overloads   = oldOverloads;
+			_typeName        = oldTypeName;
+			_memberNames     = oldMembers;
+			_overloads       = oldOverloads;
+			_moduleTypeNames = oldModuleTypeNames;
 		}
 
 		protected override void Visit(CodeField field)

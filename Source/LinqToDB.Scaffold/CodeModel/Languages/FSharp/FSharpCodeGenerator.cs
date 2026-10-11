@@ -1052,7 +1052,7 @@ namespace LinqToDB.CodeModel
 
 				WriteLine("[<System.Runtime.CompilerServices.Extension>]");
 				Write("type ");
-				WriteIdentifier(DataModelConstants_FSharpSchemaExtensionsType);
+				WriteIdentifier(SchemaExtensionsTypeName);
 				WriteLine(" =");
 				IncreaseIdent();
 
@@ -1080,7 +1080,7 @@ namespace LinqToDB.CodeModel
 		}
 
 		// name of the [<Extension>] type synthesized inside a schema module to hold its extension methods
-		private const string DataModelConstants_FSharpSchemaExtensionsType = "Extensions";
+		internal const string SchemaExtensionsTypeName = "Extensions";
 
 		/// <summary>
 		/// Renders the static constructor as a <c>static do</c> block. F# runs <c>static do</c> before
