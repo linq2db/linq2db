@@ -161,22 +161,27 @@ namespace Tests.Identity
 			var user  = NewUser("dave");
 			await store.CreateAsync(user);
 
-			await store.SetPasswordHashAsync(user, "HASH");
-			await store.SetPhoneNumberAsync(user, "+15551234");
+			// EF Core leaves all three unbounded
+			var hash  = new string('h', 150);
+			var phone = "+1 (555) 123-4567 x89";
+			var stamp = new string('s', 64);
+
+			await store.SetPasswordHashAsync(user, hash);
+			await store.SetPhoneNumberAsync(user, phone);
 			await store.SetPhoneNumberConfirmedAsync(user, true);
 			await store.SetEmailConfirmedAsync(user, true);
 			await store.SetTwoFactorEnabledAsync(user, true);
-			await store.SetSecurityStampAsync(user, "STAMP-1");
+			await store.SetSecurityStampAsync(user, stamp);
 			(await store.UpdateAsync(user)).Succeeded.ShouldBeTrue();
 
 			var u = (await store.FindByIdAsync(user.Id)).ShouldNotBeNull();
-			(await store.GetPasswordHashAsync(u))        .ShouldBe("HASH");
+			(await store.GetPasswordHashAsync(u))        .ShouldBe(hash);
 			(await store.HasPasswordAsync(u))            .ShouldBeTrue();
-			(await store.GetPhoneNumberAsync(u))         .ShouldBe("+15551234");
+			(await store.GetPhoneNumberAsync(u))         .ShouldBe(phone);
 			(await store.GetPhoneNumberConfirmedAsync(u)).ShouldBeTrue();
 			(await store.GetEmailConfirmedAsync(u))      .ShouldBeTrue();
 			(await store.GetTwoFactorEnabledAsync(u))    .ShouldBeTrue();
-			(await store.GetSecurityStampAsync(u))       .ShouldBe("STAMP-1");
+			(await store.GetSecurityStampAsync(u))       .ShouldBe(stamp);
 
 			// the original instance is still usable for a further update (concurrency stamp refreshed)
 			await store.SetPhoneNumberAsync(user, "+15559999");

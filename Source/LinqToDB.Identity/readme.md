@@ -146,9 +146,13 @@ constructor, after the options have been applied, so the defaults outrank anythi
   your own mapping to the same provider to override it.
 * **Some columns carry a provider-scoped database type that outranks an unscoped `HasDataType` / `HasLength`.**
   `ClaimValue` on both claim tables and `AspNetUserTokens.Value` on MySQL, Oracle, Firebird, Access, DB2, Informix,
-  SAP HANA, Sybase and SQL CE, and the 256-character name/email columns on Access and Informix, are typed for those
-  providers by the defaults. An unscoped `HasDataType` or `HasLength` on them is ignored by `CreateTable` there; set
-  `HasDbType` to override.
+  SAP HANA, Sybase and SQL CE, and the 256-character name, email, phone, password-hash and security-stamp columns on
+  Access and Informix, are typed for those providers by the defaults. An unscoped `HasDataType` or `HasLength` on
+  them is ignored by `CreateTable` there; set `HasDbType` to override.
+* **String keys are 36 characters wide**, the length of the GUID string `IdentityUser` / `IdentityRole` generate
+  (EF Core uses 450 on SQL Server). Ids you assign yourself — an external subject id, an email — need a wider key:
+  `HasLength` on `Id` and on every `UserId` / `RoleId` column in a `ConfigureMappings` override. Mind the index
+  limit of composite keys such as `AspNetUserRoles (UserId, RoleId)` on your provider.
 * **Extra properties on a subclass become columns.** `class AppUser : IdentityUser<string> { public string Tenant { get; set; } }`
   maps `Tenant` as a column, so `CreateTable` emits it and inserts include it — the same as EF Core, but the table is
   then no longer interchangeable with a stock `AspNetUsers` unless you `Ignore` the property.

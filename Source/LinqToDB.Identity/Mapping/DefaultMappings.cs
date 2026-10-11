@@ -19,6 +19,7 @@ namespace LinqToDB.Identity
 		private const int STAMP_LENGTH      = 36;
 		private const int NAME_LENGTH       = 256;
 		private const int EMAIL_LENGTH      = 256;
+		private const int PROFILE_LENGTH    = 256;
 		// see https://github.com/dotnet/aspnetcore/issues/7568
 		private const int KEYS_LENGTH       = 128;
 
@@ -256,15 +257,19 @@ namespace LinqToDB.Identity
 					.HasAttribute(InformixTextLimit())
 				.Property(e => e.EmailConfirmed)
 
-				// length for those fields not set by ef.core implementation
-				// so we use information from here (with some extra added)
-				// https://github.com/dotnet/aspnetcore/issues/5823
+				// EF Core leaves these unbounded; never filtered on, so the widest comparable width every provider takes
 				.Property(e => e.PasswordHash)
-					.HasLength(100) // 84 min
+					.HasLength(PROFILE_LENGTH)
+					.HasAttribute(AccessTextLimit())
+					.HasAttribute(InformixTextLimit())
 				.Property(e => e.SecurityStamp)
-					.HasLength(40) // 36 min
+					.HasLength(PROFILE_LENGTH)
+					.HasAttribute(AccessTextLimit())
+					.HasAttribute(InformixTextLimit())
 				.Property(e => e.PhoneNumber)
-					.HasLength(20) // 15 min
+					.HasLength(PROFILE_LENGTH)
+					.HasAttribute(AccessTextLimit())
+					.HasAttribute(InformixTextLimit())
 
 				.Property(e => e.ConcurrencyStamp)
 					.HasLength(STAMP_LENGTH)
