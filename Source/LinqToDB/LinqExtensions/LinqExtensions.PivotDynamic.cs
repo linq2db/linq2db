@@ -200,7 +200,7 @@ namespace LinqToDB
 			var names     = new string[values.Length * templates.Length];
 			var cellExprs = new Expression[names.Length];
 			var seen      = new HashSet<string>(StringComparer.Ordinal);
-			var grouped   = source.GroupBy(keySelector);
+			var grouped   = source.ProcessIQueryable().GroupBy(keySelector);
 			var groupType = typeof(IGrouping<,>).MakeGenericType(typeof(TKey), typeof(TSource));
 
 			var k = 0;
