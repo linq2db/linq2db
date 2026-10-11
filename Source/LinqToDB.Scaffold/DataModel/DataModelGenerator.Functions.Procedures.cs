@@ -372,9 +372,9 @@ namespace LinqToDB.DataModel
 					// omitted. F# cannot: an un-annotated call is ambiguous between the objectReader:Func<..>
 					// and template:T overloads (both match a Func value), so emit the explicit type argument to
 					// pin T = result type and eliminate the template overloads (FS0041).
-					queryProcTypeArgs = ReferenceEquals(context.LanguageProvider, LanguageProviders.FSharp)
-						? new[] { returnElementType! }
-						: [];
+					queryProcTypeArgs = context.LanguageProvider.Features.HasFlag(LanguageFeatures.LambdaReturnTypeInference)
+						? []
+						: new[] { returnElementType! };
 				}
 				else
 				{
@@ -477,7 +477,7 @@ namespace LinqToDB.DataModel
 					// assigned to it exactly. generateToList materializes the result to a List<T> (it must be
 					// consumed before the output parameters are populated), whereas returnType is IEnumerable<T>;
 					// C# tolerates the implicit List->IEnumerable conversion, F# rejects it (FS3172).
-					asyncResult.MainResult.Type = generateToList && ReferenceEquals(context.LanguageProvider, LanguageProviders.FSharp)
+					asyncResult.MainResult.Type = generateToList && !context.LanguageProvider.Features.HasFlag(LanguageFeatures.ImplicitUpcast)
 						? WellKnownTypes.System.Collections.Generic.List(returnElementType!)
 						: returnType;
 					var prop                    = context.DefineProperty(properties, asyncResult.MainResult);
@@ -678,7 +678,7 @@ namespace LinqToDB.DataModel
 		/// </summary>
 		private static string? GetFSharpOptionMethod(IDataModelGenerationContext context, IType type, string valueTypeMethod, string stringMethod)
 		{
-			if (!ReferenceEquals(context.LanguageProvider, LanguageProviders.FSharp) || !type.IsNullable)
+			if (!context.LanguageProvider.Features.HasFlag(LanguageFeatures.OptionTypes) || !type.IsNullable)
 				return null;
 
 			if (type.IsValueType)

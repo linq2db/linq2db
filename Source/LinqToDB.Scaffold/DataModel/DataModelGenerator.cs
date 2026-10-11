@@ -89,7 +89,7 @@ namespace LinqToDB.DataModel
 			// F# emits computed schema-accessor properties (created on access). This avoids an InitSchemas
 			// method whose constructor `do`-binding call would touch the not-yet-initialized `member val`
 			// auto-properties, which F# rejects at runtime (recursive initialization).
-			var isFSharp = ReferenceEquals(context.LanguageProvider, LanguageProviders.FSharp);
+			var computedSchemaProperties = !context.LanguageProvider.Features.HasFlag(LanguageFeatures.ConstructorPropertyInitialization);
 
 			// optional method to initialize references to additional schemas
 			MethodBuilder? initSchemasMethod       = null;
@@ -99,7 +99,7 @@ namespace LinqToDB.DataModel
 			// if we have additional schemas, create region with init method in data context for them
 			if (context.Model.DataContext.AdditionalSchemas.Count > 0)
 			{
-				if (!isFSharp)
+				if (!computedSchemaProperties)
 					initSchemasMethod = context.SchemasContextRegion
 						.Methods(false)
 							.New(context.AST.Name(DataModelConstants.SCHEMAS_INIT_METHOD))
@@ -123,7 +123,7 @@ namespace LinqToDB.DataModel
 					.New(context.AST.Name(schema.DataContextPropertyName), schemaContextType)
 						.SetModifiers(Modifiers.Public);
 
-				if (isFSharp)
+				if (computedSchemaProperties)
 				{
 					// computed get-only property: creates the (lightweight) schema context on access
 					schemaProp

@@ -132,9 +132,9 @@ namespace LinqToDB.DataModel
 					// In the else arm the schema is known non-null (guarded by the == null check), but F#
 					// nullness does not narrow a re-accessed property the way C# flow analysis does, so suppress
 					// the null there for F# (renders Unchecked.nonNull). C# narrows on its own - leave it raw.
-					var combineExisting = ReferenceEquals(context.LanguageProvider, LanguageProviders.FSharp)
-						? (ICodeExpression)context.AST.SuppressNull(existingSchema)
-						: existingSchema;
+					var combineExisting = context.LanguageProvider.Features.HasFlag(LanguageFeatures.NullableFlowAnalysis)
+						? existingSchema
+						: (ICodeExpression)context.AST.SuppressNull(existingSchema);
 
 					ctor.Base(
 						context.AST.ExtCall(

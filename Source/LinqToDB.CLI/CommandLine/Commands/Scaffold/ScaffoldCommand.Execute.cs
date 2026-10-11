@@ -68,31 +68,6 @@ namespace LinqToDB.CommandLine.Commands.Scaffold
 			if (settings == null)
 				return StatusCodes.INVALID_ARGUMENTS;
 
-			// F# uses a single generated file (no partial types, order-sensitive compilation)
-			if (language == LanguageProviders.FSharp)
-			{
-				settings.CodeGeneration.ClassPerFile = false;
-
-				// F# does not allow TAB indentation (FS1161); use spaces
-				if (string.Equals(settings.CodeGeneration.Indent, "\t", StringComparison.Ordinal))
-					settings.CodeGeneration.Indent = "    ";
-
-				// C#-shaped features F# doesn't emit; the matching options are TargetLanguages.CSharp, so these only
-				// override defaults.
-				// associations become extra record fields with [<Association>] attributes (namespace rec covers
-				// the mutual references); association *extension* methods remain gated off for now
-				settings.DataModel.GenerateAssociationExtensions     = false;
-				settings.DataModel.GenerateInitDataContextMethod     = false;
-				settings.DataModel.GenerateStaticInitDataContextMethod = false;
-				settings.DataModel.EntityClassIsPartial              = false;
-
-				// single primary constructor (typed options) for the data context
-				settings.DataModel.HasDefaultConstructor       = false;
-				settings.DataModel.HasConfigurationConstructor = false;
-				settings.DataModel.HasUntypedOptionsConstructor = false;
-				settings.DataModel.HasTypedOptionsConstructor  = true;
-			}
-
 			// process remaining utility-specific (general) options
 
 			// output folder

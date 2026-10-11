@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 using LinqToDB;
 using LinqToDB.CodeModel;
+using LinqToDB.Data;
 using LinqToDB.DataModel;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Metadata;
@@ -111,28 +113,117 @@ namespace Tests.Scaffold
 			}
 		}
 
-		// mirrors the options the CLI forces for --target-language f#
+		[Test]
+		public void DelegatingProviderMatchesFSharp([IncludeDataSources(TestProvName.SqlServer2022MS, ProviderName.SQLiteMS)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var metadata = context.IsAnyOf(TestProvName.AllSQLite) ? MetadataSource.FluentMapping : MetadataSource.Attributes;
+
+			var expected = GenerateDatabaseSource(LanguageProviders.FSharp, db, DatabaseOptions(metadata));
+			var actual   = GenerateDatabaseSource(new DelegatingLanguageProvider(LanguageProviders.FSharp), db, DatabaseOptions(metadata));
+
+			Assert.That(actual, Is.EqualTo(expected));
+		}
+
+		static ScaffoldOptions DatabaseOptions(MetadataSource metadata)
+		{
+			var options = FSharpOptions();
+
+			options.Schema.LoadedObjects               = SchemaObjects.Table | SchemaObjects.View | SchemaObjects.ForeignKey | SchemaObjects.StoredProcedure | SchemaObjects.ScalarFunction | SchemaObjects.TableFunction | SchemaObjects.AggregateFunction;
+			options.Schema.LoadProceduresSchema        = true;
+			options.DataModel.GenerateProcedureSync    = true;
+			options.DataModel.GenerateProcedureAsync   = true;
+			options.DataModel.GenerateIEquatable       = true;
+			options.DataModel.Metadata                 = metadata;
+
+			return options;
+		}
+
+		static string GenerateDatabaseSource(ILanguageProvider language, DataConnection db, ScaffoldOptions options)
+		{
+			var schema     = new LegacySchemaProvider(db, options.Schema, language);
+			var scaffolder = new Scaffolder(language, HumanizerNameConverter.Instance, options, null);
+			var dataModel  = scaffolder.LoadDataModel(schema, schema);
+			var files      = scaffolder.GenerateCodeModel(
+				db.DataProvider.CreateSqlBuilder(db.MappingSchema, db.Options),
+				dataModel,
+				MetadataBuilders.GetMetadataBuilder(scaffolder.Language, options.DataModel.Metadata),
+				new ProviderSpecificStructsEqualityFixer(scaffolder.Language));
+
+			return string.Join("\n", scaffolder.GenerateSourceCode(dataModel, files).Select(f => f.Code));
+		}
+
+		[Test]
+		public void DefaultOptionsAdjustedToLanguage()
+		{
+			var options = ScaffoldOptions.Default();
+			options.DataModel.ContextClassName = "TestDataContext";
+
+			var files = GenerateFiles(options, columns: [new Column("Id", null, new DatabaseType("int", null, null, null), false, true, true, 0)]);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(files, Has.Length.EqualTo(1));
+				Assert.That(files[0], Does.Not.Contain("\t"));
+				Assert.That(files[0], Does.Contain("type TestDataContext (options : DataOptions<TestDataContext>) ="));
+				Assert.That(files[0], Does.Not.Contain("InitDataContext"));
+			}
+		}
+
+		[Test]
+		public void TabIndentReplaced()
+		{
+			var options = FSharpOptions();
+			options.CodeGeneration.Indent = "\t\t";
+
+			var source = GenerateSource(options, columns: [new Column("Id", null, new DatabaseType("int", null, null, null), false, true, true, 0)]);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(source, Does.Not.Contain("\t"));
+				Assert.That(source, Does.Contain("\n        inherit "));
+			}
+		}
+
+		[Test]
+		public void LanguageProviderFeatures()
+		{
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(LanguageProviders.FSharp.Features, Is.EqualTo(LanguageFeatures.RecordEntities | LanguageFeatures.OptionTypes));
+				Assert.That(LanguageProviders.CSharp.Features, Is.EqualTo(
+					  LanguageFeatures.NestedTypes
+					| LanguageFeatures.NullableFlowAnalysis
+					| LanguageFeatures.LambdaReturnTypeInference
+					| LanguageFeatures.ImplicitUpcast
+					| LanguageFeatures.ImplicitInterfaceImplementation
+					| LanguageFeatures.ImplicitDelegateConversion
+					| LanguageFeatures.ConstructorPropertyInitialization
+					| LanguageFeatures.PartialTypes
+					| LanguageFeatures.PartialMethods
+					| LanguageFeatures.MultipleConstructors
+					| LanguageFeatures.TabIndentation
+					| LanguageFeatures.MultipleFiles));
+			}
+		}
+
 		static ScaffoldOptions FSharpOptions()
 		{
 			var options = ScaffoldOptions.Default();
 
-			options.CodeGeneration.ClassPerFile                  = false;
-			options.CodeGeneration.Indent                        = "    ";
-			options.DataModel.ContextClassName                   = "TestDataContext";
-			options.DataModel.GenerateIEquatable                 = false;
-			options.DataModel.GenerateAssociationExtensions      = false;
-			options.DataModel.GenerateInitDataContextMethod      = false;
-			options.DataModel.GenerateStaticInitDataContextMethod = false;
-			options.DataModel.EntityClassIsPartial               = false;
-			options.DataModel.HasDefaultConstructor              = false;
-			options.DataModel.HasConfigurationConstructor        = false;
-			options.DataModel.HasUntypedOptionsConstructor       = false;
-			options.DataModel.HasTypedOptionsConstructor         = true;
+			options.DataModel.ContextClassName   = "TestDataContext";
+			options.DataModel.GenerateIEquatable = false;
 
 			return options;
 		}
 
 		static string GenerateSource(ScaffoldOptions options, IReadOnlyCollection<Column>? columns = null, IReadOnlyCollection<StoredProcedure>? procedures = null, PrimaryKey? primaryKey = null)
+		{
+			return string.Join("\n", GenerateFiles(options, columns, procedures, primaryKey));
+		}
+
+		static string[] GenerateFiles(ScaffoldOptions options, IReadOnlyCollection<Column>? columns = null, IReadOnlyCollection<StoredProcedure>? procedures = null, PrimaryKey? primaryKey = null)
 		{
 			var scaffolder = new Scaffolder(LanguageProviders.FSharp, HumanizerNameConverter.Instance, options, null);
 			var schema     = new TestSchemaProvider(columns ?? [], procedures ?? [], primaryKey);
@@ -147,7 +238,7 @@ namespace Tests.Scaffold
 				MetadataBuilders.GetMetadataBuilder(scaffolder.Language, options.DataModel.Metadata),
 				new ProviderSpecificStructsEqualityFixer(scaffolder.Language));
 
-			return string.Join("\n", scaffolder.GenerateSourceCode(dataModel, files).Select(f => f.Code));
+			return scaffolder.GenerateSourceCode(dataModel, files).Select(f => f.Code).ToArray();
 		}
 
 		sealed class TestSchemaProvider(IReadOnlyCollection<Column> columns, IReadOnlyCollection<StoredProcedure> procedures, PrimaryKey? primaryKey) : ISchemaProvider
@@ -169,6 +260,38 @@ namespace Tests.Scaffold
 			string?                        ISchemaProvider.ServerVersion           => null;
 			string?                        ISchemaProvider.DataSource              => null;
 			DatabaseOptions                ISchemaProvider.DatabaseOptions         => SqlServerDatabaseOptions.Instance;
+		}
+
+		// a language provider that is not the built-in instance but behaves exactly like the wrapped one
+		sealed class DelegatingLanguageProvider(ILanguageProvider provider) : ILanguageProvider
+		{
+			IEqualityComparer<CodeIdentifier>              ILanguageProvider.IdentifierEqualityComparer     => provider.IdentifierEqualityComparer;
+			IEqualityComparer<IEnumerable<CodeIdentifier>> ILanguageProvider.FullNameEqualityComparer       => provider.FullNameEqualityComparer;
+			IComparer<IEnumerable<CodeIdentifier>>         ILanguageProvider.FullNameComparer               => provider.FullNameComparer;
+			IEqualityComparer<string>                      ILanguageProvider.RawIdentifierEqualityComparer  => provider.RawIdentifierEqualityComparer;
+			IEqualityComparer<IType>                       ILanguageProvider.TypeEqualityComparerWithNRT    => provider.TypeEqualityComparerWithNRT;
+			IEqualityComparer<IType>                       ILanguageProvider.TypeEqualityComparerWithoutNRT => provider.TypeEqualityComparerWithoutNRT;
+			ITypeParser                                    ILanguageProvider.TypeParser                     => provider.TypeParser;
+			bool                                           ILanguageProvider.NRTSupported                   => provider.NRTSupported;
+			LanguageFeatures                               ILanguageProvider.Features                       => provider.Features;
+			string[]                                       ILanguageProvider.MissingXmlCommentWarnCodes     => provider.MissingXmlCommentWarnCodes;
+			string                                         ILanguageProvider.FileExtension                  => provider.FileExtension;
+			CodeBuilder                                    ILanguageProvider.ASTBuilder                     => provider.ASTBuilder;
+
+			bool ILanguageProvider.IsValidIdentifierFirstChar   (string character, UnicodeCategory category) => provider.IsValidIdentifierFirstChar   (character, category);
+			bool ILanguageProvider.IsValidIdentifierNonFirstChar(string character, UnicodeCategory category) => provider.IsValidIdentifierNonFirstChar(character, category);
+
+			string?          ILanguageProvider.GetAlias(IType type)        => provider.GetAlias(type);
+			CodeModelVisitor ILanguageProvider.GetIdentifiersNormalizer() => provider.GetIdentifiersNormalizer();
+
+			CodeGenerationVisitor ILanguageProvider.GetCodeGenerator(
+				string                                                                 newLine,
+				string                                                                 indent,
+				bool                                                                   useNRT,
+				IReadOnlyDictionary<CodeIdentifier, ISet<IEnumerable<CodeIdentifier>>> knownTypes,
+				IReadOnlyDictionary<IEnumerable<CodeIdentifier>, ISet<CodeIdentifier>> scopedNames,
+				IReadOnlyDictionary<IEnumerable<CodeIdentifier>, ISet<CodeIdentifier>> scopedTypes)
+				=> provider.GetCodeGenerator(newLine, indent, useNRT, knownTypes, scopedNames, scopedTypes);
 		}
 
 		sealed class TestTypeMappingProvider : ITypeMappingProvider

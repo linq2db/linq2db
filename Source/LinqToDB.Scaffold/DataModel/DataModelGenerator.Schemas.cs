@@ -39,7 +39,7 @@ namespace LinqToDB.DataModel
 			// F# forbids nested type definitions inside a class, so the per-schema wrapper is emitted as a
 			// module (its schema-context, entity and result types stay isolated under it instead of being
 			// lifted to namespace level, avoiding collisions between same-named tables in different schemas).
-			if (ReferenceEquals(context.LanguageProvider, LanguageProviders.FSharp))
+			if (!context.LanguageProvider.Features.HasFlag(LanguageFeatures.NestedTypes))
 				schemaWrapper.SetModifiers(schemaWrapper.Type.Attributes | Modifiers.Module);
 
 			var schemaContext = context.DefineClass(schemaWrapper.Classes(), schema.ContextClass);

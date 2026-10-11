@@ -68,6 +68,7 @@ namespace LinqToDB.CodeModel
 		ITypeParser                                    ILanguageProvider.TypeParser                        => _typeParser;
 		// F# 9 nullness: the generator emits `| null` on nullable reference types when --nrt is enabled.
 		bool                                           ILanguageProvider.NRTSupported                      => true;
+		LanguageFeatures                               ILanguageProvider.Features                          => LanguageFeatures.RecordEntities | LanguageFeatures.OptionTypes;
 		string[]                                       ILanguageProvider.MissingXmlCommentWarnCodes        => _xmlDocWarnings;
 		string                                         ILanguageProvider.FileExtension                     => "fs";
 		CodeBuilder                                    ILanguageProvider.ASTBuilder                        => _builder;

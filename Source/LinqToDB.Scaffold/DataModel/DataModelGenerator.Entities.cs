@@ -47,7 +47,7 @@ namespace LinqToDB.DataModel
 
 			// F# entities are emitted as records; mark the class so the F# code generator renders record syntax
 			// (the C# generator ignores this modifier).
-			if (ReferenceEquals(context.LanguageProvider, LanguageProviders.FSharp))
+			if (context.LanguageProvider.Features.HasFlag(LanguageFeatures.RecordEntities))
 				entityBuilder.SetModifiers(entityBuilder.Type.Attributes | Modifiers.Record);
 
 			// generate colum properties
@@ -152,17 +152,17 @@ namespace LinqToDB.DataModel
 			parameter = context.AST.Parameter(WellKnownTypes.System.ObjectNullable, WellKnownTypes.System.Object_Equals_Parameter, CodeParameterDirection.In);
 
 			// F# implements IEquatable<T> explicitly, so this.Equals(T) would bind to object.Equals and recurse
-			var equalsCall = ReferenceEquals(context.LanguageProvider, LanguageProviders.FSharp)
+			var equalsCall = context.LanguageProvider.Features.HasFlag(LanguageFeatures.ImplicitInterfaceImplementation)
 				? context.AST.Call(
+					entityBuilder.Type.This,
+					WellKnownTypes.System.IEquatable_Equals,
+					WellKnownTypes.System.Boolean,
+					context.AST.As(entityBuilder.Type.Type, parameter.Reference))
+				: context.AST.Call(
 					comparerField.Field.Reference,
 					WellKnownTypes.System.Collections.Generic.IEqualityComparer_Equals,
 					WellKnownTypes.System.Boolean,
 					entityBuilder.Type.This,
-					context.AST.As(entityBuilder.Type.Type, parameter.Reference))
-				: context.AST.Call(
-					entityBuilder.Type.This,
-					WellKnownTypes.System.IEquatable_Equals,
-					WellKnownTypes.System.Boolean,
 					context.AST.As(entityBuilder.Type.Type, parameter.Reference));
 
 			methods.New(WellKnownTypes.System.Object_Equals)
