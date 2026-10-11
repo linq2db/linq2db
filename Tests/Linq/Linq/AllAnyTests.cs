@@ -380,7 +380,7 @@ namespace Tests.Linq
 				.ShouldBe(Parent.Where(p => p.Value1 != null).All(p => p.Value1 > 0));
 		}
 
-		[ThrowsRequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6024")]
 		public void Issue6024_CorrelatedAnyOwnIsNotNull([DataSources] string context)
 		{
