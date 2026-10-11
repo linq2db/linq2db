@@ -60,7 +60,7 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = RefreshGate,  ErrorType = typeof(LinqToDBException),     ErrorMessage = RefreshError)]
 		public async Task ConcurrencyFailureOnUpdate([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
@@ -70,14 +70,17 @@ namespace Tests.Identity
 			var users = new UserStore<IdentityUser>(ctx);
 			var roles = new RoleStore<IdentityRole>(ctx);
 
-			var fresh = NewUser("conc-fresh");
-			var user  = NewUser("conc-user");
-			var role  = NewRole("conc-role");
+			var fresh     = NewUser("conc-fresh");
+			var user      = NewUser("conc-user");
+			var freshRole = NewRole("conc-fresh-role");
+			var role      = NewRole("conc-role");
 			await users.CreateAsync(fresh);
 			await users.CreateAsync(user);
+			await roles.CreateAsync(freshRole);
 			await roles.CreateAsync(role);
 
-			(await users.UpdateAsync(fresh)).Succeeded.ShouldBeTrue();
+			(await users.UpdateAsync(fresh))    .Succeeded.ShouldBeTrue();
+			(await roles.UpdateAsync(freshRole)).Succeeded.ShouldBeTrue();
 
 			// Corrupt the stored ConcurrencyStamp out-of-band so the optimistic filter no longer matches. Through
 			// ctx, not the setup connection: Access does not show one connection the rows another just inserted,
@@ -90,8 +93,6 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
-		[ActiveIssue(Configuration = TestProvName.AllYdb,        Details = YdbGate)]
 		public async Task ConcurrencyFailureOnDelete([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);

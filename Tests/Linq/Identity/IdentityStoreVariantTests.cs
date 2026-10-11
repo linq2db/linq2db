@@ -20,8 +20,6 @@ namespace Tests.Identity
 	public class IdentityStoreVariantTests : IdentityTestData
 	{
 		[Test]
-		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
-		[ActiveIssue(Configuration = TestProvName.AllYdb,        Details = YdbGate)]
 		public async Task UserOnlyStore_NoRoles([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
@@ -43,8 +41,6 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
-		[ActiveIssue(Configuration = TestProvName.AllYdb,        Details = YdbGate)]
 		public async Task IdentityDataContext_StoreOps([DataSources(false)] string context)
 		{
 			// DDL via a connection; store operations over the DataContext-based identity context (covers its
@@ -63,8 +59,6 @@ namespace Tests.Identity
 
 		// Regression for LinqToDB.Identity#18: non-string key types (Guid here, int below) are supported.
 		[Test]
-		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
-		[ActiveIssue(Configuration = TestProvName.AllYdb,        Details = YdbGate)]
 		public async Task GuidKeys([DataSources] string context)
 		{
 			using var setup  = new IdentityDataConnection<IdentityUser<Guid>, IdentityRole<Guid>, Guid>(new DataOptions().UseConfiguration(context.StripRemote()));
@@ -88,8 +82,7 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
-		[ActiveIssue(Configuration = TestProvName.AllYdb,        Details = YdbGate)]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = IdentityGate, ErrorType = typeof(ShouldAssertException), ErrorMessage = IdentityError)]
 		public async Task IntKeys_IdentityGenerated([DataSources] string context)
 		{
 			using var setup  = new IdentityDataConnection<IdentityUser<int>, IdentityRole<int>, int>(new DataOptions().UseConfiguration(context.StripRemote()));
@@ -117,8 +110,7 @@ namespace Tests.Identity
 
 		// Regression for LinqToDB.Identity#12: the stores resolve through DI (AddLinqToDBStores) and drive a UserManager.
 		[Test]
-		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
-		[ActiveIssue(Configuration = TestProvName.AllYdb,        Details = YdbGate)]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = RefreshGate,  ErrorType = typeof(LinqToDBException),     ErrorMessage = RefreshError)]
 		public async Task DependencyInjection_ResolvesStores_AndUserManagerRoundTrips([DataSources(false)] string context)
 		{
 			// DI / UserManager is provider-independent — direct-only.
@@ -159,7 +151,7 @@ namespace Tests.Identity
 		// Regression for LinqToDB.Identity#21: a UserManager over an int-keyed user works end to end, and the
 		// framework's string-typed FindByIdAsync resolves through the store's string->int key conversion.
 		[Test]
-		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = IdentityGate, ErrorType = typeof(ShouldAssertException), ErrorMessage = IdentityError)]
 		public async Task DependencyInjection_IntKeys_UserManagerRoundTrips([DataSources(false)] string context)
 		{
 			using var setup  = new IdentityDataConnection<IdentityUser<int>, IdentityRole<int>, int>(new DataOptions().UseConfiguration(context.StripRemote()));

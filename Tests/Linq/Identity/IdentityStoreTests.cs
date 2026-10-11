@@ -37,8 +37,7 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
-		[ActiveIssue(Configuration = TestProvName.AllYdb,        Details = YdbGate)]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = RefreshGate,  ErrorType = typeof(LinqToDBException),     ErrorMessage = RefreshError)]
 		public async Task UserCrud([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
@@ -69,8 +68,6 @@ namespace Tests.Identity
 
 		// CreateTable emits no foreign keys, so nothing cascades: the store itself has to remove the dependents
 		[Test]
-		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
-		[ActiveIssue(Configuration = TestProvName.AllYdb,        Details = YdbGate)]
 		public async Task UserDeleteRemovesDependents([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
@@ -104,8 +101,6 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
-		[ActiveIssue(Configuration = TestProvName.AllYdb,        Details = YdbGate)]
 		public async Task RoleDeleteRemovesDependents([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
@@ -130,8 +125,7 @@ namespace Tests.Identity
 
 		// a delete that loses the optimistic check must not have removed the dependents either
 		[Test]
-		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
-		[ActiveIssue(Configuration = TestProvName.AllYdb,        Details = YdbGate)]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = RefreshGate,  ErrorType = typeof(LinqToDBException),     ErrorMessage = RefreshError)]
 		public async Task UserDeleteConflictKeepsDependents([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
@@ -151,10 +145,12 @@ namespace Tests.Identity
 
 			(await users.FindByIdAsync(user.Id)).ShouldNotBeNull();
 			(await users.GetClaimsAsync(user)).Select(c => c.Value).ShouldBe(["read"]);
+
+			(await users.DeleteAsync(user)).Succeeded.ShouldBeTrue();
 		}
 
 		[Test]
-		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = RefreshGate,  ErrorType = typeof(LinqToDBException),     ErrorMessage = RefreshError)]
 		public async Task UserProfileFields([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
@@ -188,7 +184,7 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = RefreshGate,  ErrorType = typeof(LinqToDBException),     ErrorMessage = RefreshError)]
 		public async Task UserLockout([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
@@ -278,8 +274,6 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
-		[ActiveIssue(Configuration = TestProvName.AllYdb,        Details = YdbGate)]
 		public async Task UserRoles([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
@@ -308,8 +302,6 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
-		[ActiveIssue(Configuration = TestProvName.AllYdb,        Details = YdbGate)]
 		public async Task NavigationAssociations([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
@@ -373,8 +365,7 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
-		[ActiveIssue(Configuration = TestProvName.AllYdb,        Details = YdbGate)]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = RefreshGate,  ErrorType = typeof(LinqToDBException),     ErrorMessage = RefreshError)]
 		public async Task RoleCrudAndClaims([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
@@ -468,7 +459,6 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
 		[ActiveIssue(Configuration = TestProvName.AllInformix,   Details = InformixPasskeyGate)]
 		public async Task UserDeleteRemovesPasskeys([DataSources] string context, [Values] bool schemaV3)
 		{

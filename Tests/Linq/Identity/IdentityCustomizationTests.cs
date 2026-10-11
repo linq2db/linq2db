@@ -109,8 +109,6 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
-		[ActiveIssue(Configuration = TestProvName.AllYdb,        Details = YdbGate)]
 		public async Task CustomModelTypesRoundTrip([DataSources] string context)
 		{
 			using var setup  = new AppIdentityConnection(new DataOptions().UseConfiguration(context.StripRemote()));
@@ -150,8 +148,6 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
-		[ActiveIssue(Configuration = TestProvName.AllYdb,        Details = YdbGate)]
 		public async Task CustomModelNavigations([DataSources] string context)
 		{
 			using var setup  = new AppIdentityConnection(new DataOptions().UseConfiguration(context.StripRemote()));
@@ -220,8 +216,6 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
-		[ActiveIssue(Configuration = TestProvName.AllYdb,        Details = YdbGate)]
 		public async Task UserOnlyContextRoundTrip([DataSources] string context)
 		{
 			using var setup  = new AppUserOnlyConnection(new DataOptions().UseConfiguration(context.StripRemote()));
@@ -278,8 +272,6 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
-		[ActiveIssue(Configuration = TestProvName.AllYdb,        Details = YdbGate)]
 		[ActiveIssue(Configuration = TestProvName.AllInformix,   Details = InformixPasskeyGate)]
 		public async Task CustomPasskeyTypeRoundTrip([DataSources] string context)
 		{
@@ -363,8 +355,6 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
-		[ActiveIssue(Configuration = TestProvName.AllYdb,        Details = YdbGate)]
 		public async Task RenamedSchemaRoundTrips([DataSources] string context)
 		{
 			using var setup  = new RenamedIdentityConnection(new DataOptions().UseConfiguration(context.StripRemote()));

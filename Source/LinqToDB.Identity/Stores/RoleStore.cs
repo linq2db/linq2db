@@ -137,7 +137,9 @@ namespace LinqToDB.Identity
 
 			var result = await Context.DeleteOptimisticAsync(role, cancellationToken).ConfigureAwait(false);
 
-			if (result != 1)
+			// a provider without an affected-rows count reports 0 either way, so whether the row is gone decides it
+			if (result != 1 && (Context.SqlProviderFlags.IsAffectedRowsCountSupported
+				|| await Context.GetTable<TRole>().AnyAsync(r => r.Id.Equals(role.Id), cancellationToken).ConfigureAwait(false)))
 				return IdentityResult.Failed(ErrorDescriber.ConcurrencyFailure());
 
 			// CreateTable emits no foreign keys, so nothing cascades from the role row (EF Core relies on ON DELETE CASCADE)

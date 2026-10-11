@@ -14,10 +14,13 @@ namespace Tests.Identity
 	// and entity factories. DDL always runs on a direct connection - it can't go over the remote path.
 	public abstract class IdentityTestData : TestBase
 	{
-		// Both engines can host the schema but not the store's write model, so the gates are per-test rather
-		// than a blanket provider exclusion - the read-only and claim tests pass on both.
-		protected const string ClickHouseGate = "ClickHouse reports no affected-rows count and has no UPDATE ... RETURNING, so the store's optimistic update and delete cannot tell a conflict from a success; InsertOrUpdate is unsupported outright.";
-		protected const string YdbGate        = "linq2db's YDB provider implements no InsertOrUpdate, which the role and token upserts need, and reports no affected-rows count for the optimistic delete.";
+		// ClickHouse hosts the schema and runs everything but the optimistic update and identity keys, so the gates
+		// are per-test rather than a blanket provider exclusion. Each gate pins the failure its mechanism produces,
+		// so a case failing for any other reason still reports.
+		protected const string RefreshGate   = "ClickHouse has neither UPDATE ... RETURNING nor an affected-rows count, so UpdateOptimisticWithRefresh refuses the store's optimistic update.";
+		protected const string RefreshError  = "UpdateOptimisticWithRefresh requires the provider";
+		protected const string IdentityGate  = "ClickHouse has no identity columns, so a database-generated int key is never read back.";
+		protected const string IdentityError = "should be greater than{0}0";
 
 		// The table itself creates (without its key - see DefaultMappings); it is the lookups that cannot run.
 		protected const string InformixPasskeyGate = "A 1024-byte credential id fits only an Informix BYTE column, and BYTE values cannot appear in a comparison - so every passkey lookup filters on a column Informix refuses to filter on.";

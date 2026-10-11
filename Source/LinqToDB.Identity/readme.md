@@ -200,6 +200,14 @@ The full modern store contract:
 * Roleless **`UserOnlyStore`**.
 * **Passkeys** (`IUserPasskeyStore`) on .NET 10.
 
+### Provider support
+
+Every linq2db provider runs the stores, with one exception. **ClickHouse** reports neither updated rows nor an
+affected-rows count for an `UPDATE`, so the optimistic-concurrency check behind `UpdateAsync` cannot be decided
+there: user and role updates throw, and every `UserManager` operation that saves the user throws with them. It has no
+identity columns either, so int / long keys must be assigned by the caller. Reads, claims, logins, tokens, roles and
+deletes work.
+
 ## Navigations
 
 Association helpers for the standard Identity entity types are provided as **extension methods** (extension

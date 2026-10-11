@@ -241,12 +241,11 @@ namespace LinqToDB.Identity
 			var roleEntity = await FindRoleAsync(normalizedRoleName, cancellationToken).ConfigureAwait(false)
 				?? throw new InvalidOperationException(Resources.RoleNotFound(normalizedRoleName));
 
-			// Upsert with SkipUpdate (insert-or-ignore): re-adding a role the user already has is an idempotent
-			// no-op rather than a primary-key violation on AspNetUserRoles (composite PK, no non-key columns).
-			// UserManager dedups one layer up, but this keeps direct store callers robust. Match defaults to the PK.
-			await Context.GetTable<TUserRole>()
-				.UpsertAsync(CreateUserRole(user, roleEntity), u => u.SkipUpdate(), cancellationToken)
-				.ConfigureAwait(false);
+			// Re-adding a role the user already has is an idempotent no-op rather than a primary-key violation.
+			// UserManager dedups one layer up, but this keeps direct store callers robust. Find-then-insert rather than
+			// an upsert: not every provider implements InsertOrUpdate, and CreateUserRole stays the one entity source.
+			if (!await UserRoles.AnyAsync(r => r.UserId.Equals(user.Id) && r.RoleId.Equals(roleEntity.Id), cancellationToken).ConfigureAwait(false))
+				await Context.InsertAsync(CreateUserRole(user, roleEntity), token: cancellationToken).ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -256,20 +255,21 @@ namespace LinqToDB.Identity
 		/// <param name="normalizedRoleName">The role to remove.</param>
 		/// <param name="cancellationToken">The <see cref="CancellationToken"/> used to propagate notifications that the operation should be canceled.</param>
 		/// <returns>The <see cref="Task"/> that represents the asynchronous operation.</returns>
-		public virtual Task RemoveFromRoleAsync(TUser user, string normalizedRoleName, CancellationToken cancellationToken = default)
+		public virtual async Task RemoveFromRoleAsync(TUser user, string normalizedRoleName, CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
 
 			ArgumentNullException.ThrowIfNull(user);
 			if (string.IsNullOrWhiteSpace(normalizedRoleName)) throw new ArgumentException(Resources.ValueCannotBeNullOrEmpty, nameof(normalizedRoleName));
 
-			var q =
-				from ur in UserRoles
-				join r in Roles on ur.RoleId equals r.Id
-				where r.NormalizedName == normalizedRoleName && ur.UserId.Equals(user.Id)
-				select ur;
+			// two statements rather than a DELETE joined to AspNetRoles, which not every provider can run
+			var roleEntity = await FindRoleAsync(normalizedRoleName, cancellationToken).ConfigureAwait(false);
 
-			return q.DeleteAsync(cancellationToken);
+			if (roleEntity != null)
+				await UserRoles
+					.Where(ur => ur.UserId.Equals(user.Id) && ur.RoleId.Equals(roleEntity.Id))
+					.DeleteAsync(cancellationToken)
+					.ConfigureAwait(false);
 		}
 
 		/// <summary>
