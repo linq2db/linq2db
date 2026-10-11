@@ -159,9 +159,19 @@ namespace LinqToDB.Internal.Linq.Builder
 			while (body is UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked } unary)
 				body = unary.Operand;
 
-			return body is MemberExpression member
-				? member.Member.Name
-				: throw new LinqToDBException($"{nameof(LinqExtensions.Unpivot)} column selector must be a simple member access (e.g. x => x.Jan).");
+			if (body is not MemberExpression member)
+				throw new LinqToDBException($"{nameof(LinqExtensions.Unpivot)} column selector must be a simple member access (e.g. x => x.Jan).");
+
+			// A complex column is keyed by its full member path, as the entity descriptor keys it.
+			var path = member.Member.Name;
+
+			while (member.Expression is MemberExpression parent)
+			{
+				member = parent;
+				path   = member.Member.Name + "." + path;
+			}
+
+			return path;
 		}
 
 		sealed class UnpivotInfo

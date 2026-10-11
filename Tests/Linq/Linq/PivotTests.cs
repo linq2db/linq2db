@@ -490,6 +490,46 @@ namespace Tests.Linq
 			result[1].Value.ShouldBe(20m);
 		}
 
+		sealed class AmountHolder
+		{
+			public decimal? Amount { get; set; }
+		}
+
+		[Table]
+		[Column("SHIP_AMT", "Ship.Amount")]
+		[Column("BILL_AMT", "Bill.Amount")]
+		sealed class NestedAmounts
+		{
+			[PrimaryKey(Configuration = ProviderName.Ydb)]
+			[Column]             public int          Id     { get; set; }
+			[Column("ROOT_AMT")] public decimal?     Amount { get; set; }
+			                     public AmountHolder Ship   { get; set; } = null!;
+			                     public AmountHolder Bill   { get; set; } = null!;
+
+			public static readonly NestedAmounts[] Data =
+			{
+				new() { Id = 1, Amount = 10m, Ship = new() { Amount = 20m }, Bill = new() { Amount = 30m } },
+			};
+		}
+
+		/// <summary>
+		/// A nested member reads as its own column's physical name, not as a root member sharing its leaf name.
+		/// </summary>
+		[Test]
+		public void UnpivotNameColumnUsesTheNestedColumnsName([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(NestedAmounts.Data);
+
+			var result = t
+				.Unpivot((row, name, value) => new { row.Id, Name = name, Value = value }, x => x.Amount, x => x.Ship.Amount, x => x.Bill.Amount)
+				.ToArray()
+				.OrderBy(r => r.Value)
+				.Select(r => (r.Name, r.Value));
+
+			result.ShouldBe(new (string, decimal?)[] { ("ROOT_AMT", 10m), ("SHIP_AMT", 20m), ("BILL_AMT", 30m) });
+		}
+
 		/// <summary>
 		/// A table captured before a <c>UseMappingSchema</c> scope keeps the schema it was created with - the
 		/// contract <c>UseMappingSchemaTests.Test2</c> pins. The name column therefore has to be resolved through
