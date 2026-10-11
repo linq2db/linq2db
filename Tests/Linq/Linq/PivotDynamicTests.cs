@@ -511,7 +511,7 @@ namespace Tests.Linq
 
 			Action act = () => t
 				.Pivot(x => x.Category, x => x.Year, new[] { 2000 },
-					(g, p) => new { g.Key, Cells = p.Cell(rows => rows.Sum(x => x.Amount), _ => nameof(PivotCells<,>.Values)) })
+					(g, p) => new { g.Key, Cells = p.Cell(rows => rows.Sum(x => x.Amount), _ => nameof(PivotCells<,>.Store)) })
 				.ToList();
 
 			act.ShouldThrow<ArgumentException>();
@@ -947,7 +947,7 @@ namespace Tests.Linq
 				.ToList();
 
 			result.Select(r => r.Key).ShouldBe(new[] { "A", "B" });
-			result.ShouldAllBe(r => r.Cells.Values.Count == 0 && r.Cells["Y2000"] == null);
+			result.ShouldAllBe(r => r.Cells.Store.Count == 0 && r.Cells["Y2000"] == null);
 		}
 
 		/// <summary>An empty cell reads what its aggregate yields over no rows - for a count that is 0, not null.</summary>

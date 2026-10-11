@@ -96,7 +96,7 @@ namespace LinqToDB
 
 		/// <summary>The generated cells, keyed by the name each pivoted value was given; empty when there are none.</summary>
 		[DynamicColumnsStore]
-		public IDictionary<string, object?> Values
+		public IDictionary<string, object?> Store
 		{
 			get => _values ??= new Dictionary<string, object?>();
 			private set => _values = value;
@@ -104,7 +104,7 @@ namespace LinqToDB
 
 		/// <summary>Reads a cell, or <see langword="null"/> when no cell carries <paramref name="name"/>.</summary>
 		/// <param name="name">Cell name.</param>
-		public object? this[string name] => Values.TryGetValue(name, out var value) ? value : null;
+		public object? this[string name] => Store.TryGetValue(name, out var value) ? value : null;
 
 		/// <summary>Reads a cell as <typeparamref name="T"/>, or <see langword="default"/> when absent or of another type.</summary>
 		/// <typeparam name="T">Expected cell type.</typeparam>
@@ -113,20 +113,20 @@ namespace LinqToDB
 
 		#region IReadOnlyDictionary
 
-		int IReadOnlyCollection<KeyValuePair<string, object?>>.Count => Values.Count;
+		int IReadOnlyCollection<KeyValuePair<string, object?>>.Count => Store.Count;
 
-		IEnumerable<string>  IReadOnlyDictionary<string, object?>.Keys   => Values.Keys;
-		IEnumerable<object?> IReadOnlyDictionary<string, object?>.Values => Values.Values;
+		IEnumerable<string>  IReadOnlyDictionary<string, object?>.Keys   => Store.Keys;
+		IEnumerable<object?> IReadOnlyDictionary<string, object?>.Values => Store.Values;
 
-		object? IReadOnlyDictionary<string, object?>.this[string key] => Values.TryGetValue(key, out var value)
+		object? IReadOnlyDictionary<string, object?>.this[string key] => Store.TryGetValue(key, out var value)
 			? value
 			: throw new KeyNotFoundException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_PivotCellNotFound, key));
 
-		bool IReadOnlyDictionary<string, object?>.ContainsKey(string key) => Values.ContainsKey(key);
+		bool IReadOnlyDictionary<string, object?>.ContainsKey(string key) => Store.ContainsKey(key);
 
 		bool IReadOnlyDictionary<string, object?>.TryGetValue(string key, out object? value)
 		{
-			if (Values.TryGetValue(key, out var found))
+			if (Store.TryGetValue(key, out var found))
 			{
 				value = found;
 				return true;
@@ -137,7 +137,7 @@ namespace LinqToDB
 		}
 
 		IEnumerator<KeyValuePair<string, object?>> IEnumerable<KeyValuePair<string, object?>>.GetEnumerator()
-			=> Values.GetEnumerator();
+			=> Store.GetEnumerator();
 
 		IEnumerator IEnumerable.GetEnumerator()
 			=> ((IEnumerable<KeyValuePair<string, object?>>)this).GetEnumerator();
