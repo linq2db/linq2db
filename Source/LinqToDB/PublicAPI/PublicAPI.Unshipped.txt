@@ -19,6 +19,9 @@ const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_QueryMarkerInvoked = "{0}
 const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_StaticProjectionNotAnObject = "The static projection must construct an object (new T { ... })." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_UnpivotColumnSelector = "Unpivot column selector must be a simple member access (e.g. x => x.Jan)." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_UnpivotEmptyColumnName = "Column name at index {0} is empty." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_UnpivotEmptyGroupName = "Column group name at index {0} is empty." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_UnpivotNeedsColumnGroup = "An unpivot needs at least one column group." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_UnpivotNullGroupColumn = "Column group '{0}' has a null column selector." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_UnpivotNeedsColumn = "An unpivot needs at least one column." -> string!
 LinqToDB.Internal.Common.ErrorHelper.Pivot
 LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQLMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator

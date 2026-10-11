@@ -172,6 +172,9 @@
 			public const string Error_UnpivotNeedsColumn            = "An unpivot needs at least one column.";
 			public const string Error_UnpivotEmptyColumnName        = "Column name at index {0} is empty.";
 			public const string Error_UnpivotColumnSelector         = "Unpivot column selector must be a simple member access (e.g. x => x.Jan).";
+			public const string Error_UnpivotNeedsColumnGroup       = "An unpivot needs at least one column group.";
+			public const string Error_UnpivotEmptyGroupName         = "Column group name at index {0} is empty.";
+			public const string Error_UnpivotNullGroupColumn        = "Column group '{0}' has a null column selector.";
 			public const string Error_DynamicColumnEmptyName        = "Key at index {0} produced an empty dynamic column name.";
 			public const string Error_DynamicColumnDuplicateName    = "Duplicate dynamic column name '{0}'.";
 			public const string Error_DynamicColumnShadowsMember    = "Dynamic column name '{0}' collides with a member of '{1}', which would be resolved instead of the generated column.";

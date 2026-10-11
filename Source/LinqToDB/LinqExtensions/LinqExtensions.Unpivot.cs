@@ -224,6 +224,18 @@ namespace LinqToDB
 			LambdaExpression                           resultSelector,
 			(string name, LambdaExpression[] columns)[] groups)
 		{
+			if (groups.Length == 0)
+				throw new ArgumentException(ErrorHelper.Pivot.Error_UnpivotNeedsColumnGroup, nameof(groups));
+
+			for (var i = 0; i < groups.Length; i++)
+			{
+				if (string.IsNullOrEmpty(groups[i].name))
+					throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_UnpivotEmptyGroupName, i), nameof(groups));
+
+				if (Array.Exists(groups[i].columns, static c => c == null))
+					throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_UnpivotNullGroupColumn, groups[i].name), nameof(groups));
+			}
+
 			var currentSource = source.ProcessIQueryable();
 
 			var names   = groups.Select(static g => g.name).ToArray();
