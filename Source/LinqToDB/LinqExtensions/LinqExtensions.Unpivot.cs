@@ -169,6 +169,7 @@ namespace LinqToDB
 		/// <param name="source">Source query.</param>
 		/// <param name="resultSelector">Projection over the source row, the group name, and the two column values.</param>
 		/// <param name="groups">The named column groups; each contributes one output row per source row.</param>
+		/// <returns>Query producing one row per (source row, column group).</returns>
 		[Pure, LinqTunnel]
 		public static IQueryable<TResult> Unpivot<TSource, TValue, TResult>(
 			this            IQueryable<TSource>                                        source,
@@ -193,6 +194,7 @@ namespace LinqToDB
 		/// <param name="source">Source query.</param>
 		/// <param name="resultSelector">Projection over the source row, the group name, and the three column values.</param>
 		/// <param name="groups">The named column groups; each contributes one output row per source row.</param>
+		/// <returns>Query producing one row per (source row, column group).</returns>
 		[Pure, LinqTunnel]
 		public static IQueryable<TResult> Unpivot<TSource, TValue, TResult>(
 			this            IQueryable<TSource>                                                source,
