@@ -7,6 +7,8 @@ open System.Linq
 open System.Linq.Expressions
 open System.Reflection
 
+open Microsoft.FSharp.Reflection
+
 open LinqToDB.Mapping
 open LinqToDB.Extensions
 open LinqToDB.Internal.Interceptors
@@ -42,13 +44,14 @@ type FSharpEntityBindingInterceptor private () =
         else
             if FSharpEntityBindingInterceptor.isRecord typeAccessor.Type
             then
+                // constructor position is the field's index in declaration order, not its CompilationMapping
+                // sequence number (static let bindings take sequence numbers too)
+                let fields = FSharpType.GetRecordFields(typeAccessor.Type, BindingFlags.Public ||| BindingFlags.NonPublic)
                 let mappings = Dictionary<int, MemberAccessor>()
-                for m in typeAccessor.Members do
-                    m.MemberInfo.GetAttribute<CompilationMappingAttribute> true
-                    |> Option.ofObj
-                    |> Option.iter (fun attr ->
-                        if attr.SourceConstructFlags = SourceConstructFlags.Field then
-                            mappings.Add(attr.SequenceNumber, m))
+                for i in 0 .. fields.Length - 1 do
+                    typeAccessor.Members
+                    |> Seq.tryFind (fun m -> m.MemberInfo.Name = fields[i].Name)
+                    |> Option.iter (fun m -> mappings.Add(i, m))
                 _cache.GetOrAdd(typeAccessor.Type, Some(mappings :> IReadOnlyDictionary<int, MemberAccessor>))
             else None
 

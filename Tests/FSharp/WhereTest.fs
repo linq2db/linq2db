@@ -33,6 +33,12 @@ let LoadSingle (db : IDataContext) =
     })
 
 
+let LoadSingleWithStaticLet (db : IDataContext) =
+    let person = db.GetTable<PersonWithStaticLet>().First(fun p -> p.ID = 1)
+
+    Assert.That(person.FirstName, Is.EqualTo "John")
+    Assert.That(person.LastName, Is.EqualTo "Pupkin")
+
 let LoadSinglesWithPatient (db : IDataContext) =
     let persons = db.GetTable<Person>().LoadWith( fun x -> x.Patient)
     let johnId = 1

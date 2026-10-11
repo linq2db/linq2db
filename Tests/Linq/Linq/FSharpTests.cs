@@ -21,6 +21,13 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void LoadSingleWithStaticLet([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.WhereTest.LoadSingleWithStaticLet(db);
+		}
+
+		[Test]
 		public void RecordParametersMapping([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
