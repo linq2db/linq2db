@@ -99,7 +99,7 @@ namespace LinqToDB
 		public IDictionary<string, object?> Values
 		{
 			get => _values ??= new Dictionary<string, object?>();
-			set => _values = value;
+			private set => _values = value;
 		}
 
 		/// <summary>Reads a cell, or <see langword="null"/> when no cell carries <paramref name="name"/>.</summary>

@@ -31,7 +31,6 @@ LinqToDB.PivotCells<TSource, TFor>.Cell<TCell>(System.Linq.Expressions.Expressio
 LinqToDB.PivotCells<TSource, TFor>.Get<T>(string! name) -> T?
 LinqToDB.PivotCells<TSource, TFor>.this[string! name].get -> object?
 LinqToDB.PivotCells<TSource, TFor>.Values.get -> System.Collections.Generic.IDictionary<string!, object?>!
-LinqToDB.PivotCells<TSource, TFor>.Values.set -> void
 LinqToDB.UnpivotNulls
 LinqToDB.UnpivotNulls.ExcludeNulls = 0 -> LinqToDB.UnpivotNulls
 LinqToDB.UnpivotNulls.IncludeNulls = 1 -> LinqToDB.UnpivotNulls
