@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Data;
 using LinqToDB.Identity;
 using LinqToDB.Mapping;
@@ -109,6 +110,35 @@ namespace Tests.Identity
 			(await users.GetTokenAsync(user, "prov", "tok", default)).ShouldBe("value");
 
 			(await users.DeleteAsync(user)).Succeeded.ShouldBeTrue();
+		}
+
+		[Test]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
+		[ActiveIssue(Configuration = TestProvName.AllYdb,        Details = YdbGate)]
+		public async Task CustomModelNavigations([DataSources] string context)
+		{
+			using var setup  = new AppIdentityConnection(new DataOptions().UseConfiguration(context.StripRemote()));
+			using var schema = new KeyedSchema<AppUser, AppRole, string, AppUserClaim, AppUserRole, AppUserLogin, AppRoleClaim, AppUserToken>(setup);
+			using var ctx    = GetDataContext(context, setup.MappingSchema);
+
+			var users = new UserStore<AppUser, AppRole, IDataContext, string, AppUserClaim, AppUserRole, AppUserLogin, AppUserToken, AppRoleClaim>(ctx);
+			var roles = new RoleStore<AppRole, IDataContext, string, AppUserRole, AppRoleClaim>(ctx);
+
+			var user = new AppUser { Id = Guid.NewGuid().ToString(), UserName = "nav", NormalizedUserName = "NAV" };
+			var role = new AppRole { Id = Guid.NewGuid().ToString(), Name = "nav-role", NormalizedName = "NAV-ROLE" };
+			await users.CreateAsync(user);
+			await roles.CreateAsync(role);
+			await users.AddToRoleAsync(user, "NAV-ROLE");
+			await users.AddClaimsAsync(user, [new Claim("scope", "read")]);
+			await users.AddLoginAsync(user, new UserLoginInfo("google", "key-nav", "Google"));
+			await roles.AddClaimAsync(role, new Claim("perm", "all"));
+
+			// the navigations return the stock satellite types - which the custom-model context maps to the same tables
+			(await ctx.GetTable<AppUser>().Where(u => u.Id == user.Id).SelectMany(u => u.Roles ()).Select(r => r.RoleId)       .ToListAsync()).ShouldBe([role.Id]);
+			(await ctx.GetTable<AppUser>().Where(u => u.Id == user.Id).SelectMany(u => u.Claims()).Select(c => c.ClaimValue)   .ToListAsync()).ShouldBe(["read"]);
+			(await ctx.GetTable<AppUser>().Where(u => u.Id == user.Id).SelectMany(u => u.Logins()).Select(l => l.LoginProvider).ToListAsync()).ShouldBe(["google"]);
+			(await ctx.GetTable<AppRole>().Where(r => r.Id == role.Id).SelectMany(r => r.Users ()).Select(u => u.UserId)       .ToListAsync()).ShouldBe([user.Id]);
+			(await ctx.GetTable<AppRole>().Where(r => r.Id == role.Id).SelectMany(r => r.Claims()).Select(c => c.ClaimValue)   .ToListAsync()).ShouldBe(["all"]);
 		}
 
 		#endregion

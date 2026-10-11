@@ -196,6 +196,11 @@ var roleIds = db.GetTable<IdentityUser>()
 
 They are query-only markers — linq2db expands them into the corresponding join; calling one outside a query throws.
 
+They return the stock satellite types (`IdentityUserRole<TKey>`, …) even when the context uses your own: the generic
+contexts map the stock types to the same `AspNet*` tables for that reason, so your satellites' extra members are not
+visible through a navigation. If your `ConfigureMappings` override renames a satellite's table, rename the stock type's
+table as well, or join `GetTable<TUserRole>()` directly.
+
 ## Supported frameworks
 
 `net462`, `netstandard2.0`, `net8.0`, `net9.0`, `net10.0`. (Passkeys are .NET 10 only.)

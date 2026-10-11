@@ -184,6 +184,10 @@ namespace LinqToDB.Identity
 			DefaultMappings.SetupIdentityUserPasskey<TKey>(builder);
 #endif
 
+			// IdentityNavigations return the stock satellite types, so they need the AspNet* tables too
+			if (typeof(TUserClaim) != typeof(IdentityUserClaim<TKey>)) DefaultMappings.SetupIdentityUserClaim<TKey, IdentityUserClaim<TKey>>(builder);
+			if (typeof(TUserLogin) != typeof(IdentityUserLogin<TKey>)) DefaultMappings.SetupIdentityUserLogin<TKey, IdentityUserLogin<TKey>>(builder);
+
 			builder.Build();
 		}
 
@@ -256,6 +260,9 @@ namespace LinqToDB.Identity
 			DefaultMappings.SetupIdentityRole     <TKey, TRole     >(builder);
 			DefaultMappings.SetupIdentityUserRole <TKey, TUserRole >(builder);
 			DefaultMappings.SetupIdentityRoleClaim<TKey, TRoleClaim>(builder);
+
+			if (typeof(TUserRole ) != typeof(IdentityUserRole <TKey>)) DefaultMappings.SetupIdentityUserRole <TKey, IdentityUserRole <TKey>>(builder);
+			if (typeof(TRoleClaim) != typeof(IdentityRoleClaim<TKey>)) DefaultMappings.SetupIdentityRoleClaim<TKey, IdentityRoleClaim<TKey>>(builder);
 
 			builder.Build();
 		}
