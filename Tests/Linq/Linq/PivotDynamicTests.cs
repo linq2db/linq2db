@@ -523,9 +523,15 @@ namespace Tests.Linq
 					c => c)
 				.ToList();
 
+			// The only cell set a caller can hold outside a selector is one a previous pivot materialized.
+			var materialized = t
+				.Pivot(x => x.Category, x => x.Year, new[] { 2000 },
+					(g, p) => new { g.Key, Cells = p.Cell(rows => rows.Sum(x => x.Amount)) })
+				.First().Cells;
+
 			Action unrootedChain = () => t
 				.Pivot(x => x.Category, x => x.Year, new[] { 2000 },
-					(g, p) => new { g.Key, Cells = new PivotCells<Sales, int>().Cell(rows => rows.Sum(x => x.Amount)) })
+					(g, p) => new { g.Key, Cells = materialized.Cell(rows => rows.Sum(x => x.Amount)) })
 				.ToList();
 
 			emptyName      .ShouldThrow<ArgumentException>().Message.ShouldContain("empty column name");

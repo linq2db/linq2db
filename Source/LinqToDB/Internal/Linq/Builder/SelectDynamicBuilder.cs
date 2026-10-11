@@ -1,5 +1,6 @@
 using System;
 using System.Linq.Expressions;
+using System.Reflection;
 
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
@@ -59,7 +60,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (placeholder != null)
 			{
-				var store = new SqlGenericConstructorExpression(Expression.New(storeType)).WithMappingSchema(sequence.MappingSchema);
+				var constructor = storeType.GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic, null, Type.EmptyTypes, null)!;
+				var store       = new SqlGenericConstructorExpression(Expression.New(constructor)).WithMappingSchema(sequence.MappingSchema);
 
 				foreach (var cell in cells)
 					store = store.AppendAssignment(cell);

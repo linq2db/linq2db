@@ -45,8 +45,7 @@ namespace LinqToDB
 
 		readonly Template[] _templates;
 
-		/// <summary>Creates an empty cell set.</summary>
-		public PivotCells()
+		internal PivotCells()
 		{
 			_templates = [];
 		}
