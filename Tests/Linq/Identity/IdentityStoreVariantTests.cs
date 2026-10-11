@@ -351,7 +351,7 @@ namespace Tests.Identity
 			using var provider = services.BuildServiceProvider();
 			using var scope    = provider.CreateScope();
 
-			Shouldly.Should.Throw<InvalidOperationException>(() => scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>())
+			Shouldly.Should.Throw<InvalidOperationException>(scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>)
 				.Message.ShouldContain(nameof(IProtectedUserStore<>));
 		}
 

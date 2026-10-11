@@ -442,7 +442,7 @@ namespace Tests.Identity
 
 			var userId = db.MappingSchema
 				.GetEntityDescriptor(typeof(IdentityUserToken<string>))
-				.Columns.Single(c => c.MemberName == nameof(IdentityUserToken<string>.UserId));
+				.Columns.Single(c => c.MemberName == nameof(IdentityUserToken<>.UserId));
 
 			// Firebird 2.5 cannot index the token table's key, so DefaultMappings drops it with a provider-scoped
 			// ColumnAttribute - and a scoped mapping outranks an unscoped one, which is what swallows the rename.
