@@ -119,8 +119,7 @@ namespace LinqToDB.Identity
 		IUserTwoFactorStore<TUser>,
 		IUserAuthenticationTokenStore<TUser>,
 		IUserAuthenticatorKeyStore<TUser>,
-		IUserTwoFactorRecoveryCodeStore<TUser>,
-		IProtectedUserStore<TUser>
+		IUserTwoFactorRecoveryCodeStore<TUser>
 #if NET10_0_OR_GREATER
 		,
 		IUserPasskeyStore<TUser>

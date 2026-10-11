@@ -75,8 +75,12 @@ the store constructor when creating a store by hand). It decides whether `Delete
 passkeys: only at `IdentitySchemaVersions.Version3`, the first schema version with the `AspNetUserPasskeys` table —
 the same rule EF Core applies. Without options the stores behave as `Version1`.
 
-No other option is applied — `Stores.MaxLengthForKeys` and `Stores.ProtectPersonalData` included. If you need one,
-please open a [feature request](https://github.com/linq2db/linq2db/issues/new/choose).
+No other option is applied — `Stores.MaxLengthForKeys` included. If you need one, please open a
+[feature request](https://github.com/linq2db/linq2db/issues/new/choose).
+
+`Stores.ProtectPersonalData` is **not supported**: the stores do not encrypt the `[ProtectedPersonalData]` columns,
+so they do not implement `IProtectedUserStore<TUser>`, and `UserManager` refuses the option at construction rather
+than storing that data in plaintext.
 
 ### `UserManager` operations are not atomic
 
@@ -192,7 +196,7 @@ The full modern store contract:
 * Roles, role claims, user-role membership.
 * Password hash, security stamp, email/phone confirmation, two-factor, lockout.
 * Authenticator keys and two-factor **recovery codes**.
-* `IProtectedUserStore` and the queryable user/role stores.
+* The queryable user/role stores.
 * Roleless **`UserOnlyStore`**.
 * **Passkeys** (`IUserPasskeyStore`) on .NET 10.
 

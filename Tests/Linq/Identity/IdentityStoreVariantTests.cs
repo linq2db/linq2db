@@ -336,6 +336,34 @@ namespace Tests.Identity
 		}
 #endif
 
+#nullable disable
+		sealed class PassThroughLookupProtector : ILookupProtector
+		{
+			public string Protect  (string keyId, string data) => data;
+			public string Unprotect(string keyId, string data) => data;
+		}
+#nullable restore
+
+		// The stores apply no PersonalDataConverter, so UserManager must refuse ProtectPersonalData rather than
+		// accept it and store the [ProtectedPersonalData] columns in plaintext.
+		[Test]
+		public void DependencyInjection_ProtectPersonalDataIsRejected([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var services = new ServiceCollection();
+			services.AddLogging();
+			services.AddScoped(_ => new IdentityDataConnection(new DataOptions().UseConfiguration(context.StripRemote())));
+			services.AddSingleton<ILookupProtector, PassThroughLookupProtector>();
+			services
+				.AddIdentityCore<IdentityUser>(o => o.Stores.ProtectPersonalData = true)
+				.AddLinqToDBStores<IdentityDataConnection>();
+
+			using var provider = services.BuildServiceProvider();
+			using var scope    = provider.CreateScope();
+
+			Shouldly.Should.Throw<InvalidOperationException>(() => scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>())
+				.Message.ShouldContain(nameof(IProtectedUserStore<>));
+		}
+
 		[Test]
 		public void DependencyInjection_RejectsNonIdentityTypes()
 		{
