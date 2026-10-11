@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 using JetBrains.Annotations;
 
 using LinqToDB.Expressions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq;
@@ -60,7 +61,7 @@ namespace LinqToDB
 			var chain      = selector.Body.Find(IsCellCall<TSource, TFor>);
 
 			if (chain == null)
-				throw new ArgumentException($"The projection builds no cell: call {nameof(PivotCells<,>.Cell)} on '{cellsParam.Name}' and assign the result to a member.", nameof(selector));
+				throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_ProjectionBuildsNoCell, cellsParam.Name), nameof(selector));
 
 			var templates = ReadTemplates<TSource, TFor>((MethodCallExpression)chain, cellsParam, nameof(selector));
 
@@ -70,10 +71,10 @@ namespace LinqToDB
 			var body        = selector.Body.Replace(chain, placeholder);
 
 			if (body.Find(cellsParam) != null)
-				throw new ArgumentException($"'{cellsParam.Name}' may only be used to build one cell set, assigned to a single member of the projection.", nameof(selector));
+				throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_CellSetUsedMoreThanOnce, cellsParam.Name), nameof(selector));
 
 			if (!IsConstructedWith(body, placeholder))
-				throw new ArgumentException($"The cell set built from '{cellsParam.Name}' must be assigned to a member of an object the projection constructs, directly or in a nested object.", nameof(selector));
+				throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_CellSetNotAMember, cellsParam.Name), nameof(selector));
 
 			var staticSelector = Expression.Lambda<Func<IGrouping<TKey, TSource>, TResult>>(body, selector.Parameters[0]);
 
@@ -119,7 +120,7 @@ namespace LinqToDB
 			ArgumentNullException.ThrowIfNull(cells);
 
 			var built = cells(PivotCells<TSource, TFor>.Empty)
-				?? throw new ArgumentException("The cell set was not built.", nameof(cells));
+				?? throw new ArgumentException(ErrorHelper.Pivot.Error_CellSetNotBuilt, nameof(cells));
 
 			return BuildPivot(source, keySelector, forColumn, forValues, staticSelector, built.Templates, null, null, nameof(cells));
 		}
@@ -162,7 +163,7 @@ namespace LinqToDB
 			}
 
 			if (node != cellsParam)
-				throw new ArgumentException($"A pivot cell set must be built from '{cellsParam.Name}'.", paramName);
+				throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_CellSetNotFromParameter, cellsParam.Name), paramName);
 
 			var templates = new PivotCells<TSource, TFor>.Template[calls.Count];
 
@@ -192,7 +193,7 @@ namespace LinqToDB
 			string                                              paramName)
 		{
 			if (templates.Length == 0)
-				throw new ArgumentException("A pivot needs at least one cell template.", paramName);
+				throw new ArgumentException(ErrorHelper.Pivot.Error_PivotNeedsCellTemplate, paramName);
 
 			var values = forValues as TFor[] ?? forValues.ToArray();
 
@@ -207,7 +208,7 @@ namespace LinqToDB
 			foreach (var cell in templates)
 			{
 				if (cell.Name == null && templates.Length > 1)
-					throw new ArgumentException("A pivot with more than one cell template needs a name factory on each, so the generated columns can be told apart.", paramName);
+					throw new ArgumentException(ErrorHelper.Pivot.Error_PivotNameFactoryRequired, paramName);
 
 				foreach (var value in values)
 				{
@@ -216,10 +217,10 @@ namespace LinqToDB
 						: Convert.ToString(value, CultureInfo.InvariantCulture);
 
 					if (string.IsNullOrEmpty(name))
-						throw new ArgumentException($"Pivot value '{value}' produced an empty column name.", nameof(forValues));
+						throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_PivotValueEmptyName, value), nameof(forValues));
 
 					if (!seen.Add(name!))
-						throw new ArgumentException($"Duplicate pivot column name '{name}'.", paramName);
+						throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_PivotDuplicateName, name), paramName);
 
 					names[k]     = name!;
 					cellExprs[k] = Expression.Quote(BuildCell(cell, forColumn, value, groupType, groupParam));

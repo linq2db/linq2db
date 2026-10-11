@@ -165,5 +165,28 @@
 		{
 			public const string Error_SkipInUpdate = "Feature not supported by database: Skip in UPDATE.";
 		}
+
+		public static class Pivot
+		{
+			public const string Error_QueryMarkerInvoked            = "{0} is a query marker and must not be invoked directly.";
+			public const string Error_UnpivotNeedsColumn            = "An unpivot needs at least one column.";
+			public const string Error_UnpivotEmptyColumnName        = "Column name at index {0} is empty.";
+			public const string Error_UnpivotColumnSelector         = "Unpivot column selector must be a simple member access (e.g. x => x.Jan).";
+			public const string Error_DynamicColumnEmptyName        = "Key at index {0} produced an empty dynamic column name.";
+			public const string Error_DynamicColumnDuplicateName    = "Duplicate dynamic column name '{0}'.";
+			public const string Error_DynamicColumnShadowsMember    = "Dynamic column name '{0}' collides with a member of '{1}', which would be resolved instead of the generated column.";
+			public const string Error_NoDynamicColumnsStore         = "Type '{0}' has no member marked with DynamicColumnsStoreAttribute, so the generated columns would have nowhere to go.";
+			public const string Error_StaticProjectionNotAnObject   = "The static projection must construct an object (new T { ... }).";
+			public const string Error_ProjectionBuildsNoCell        = "The projection builds no cell: call Cell on '{0}' and assign the result to a member.";
+			public const string Error_CellSetUsedMoreThanOnce       = "'{0}' may only be used to build one cell set, assigned to a single member of the projection.";
+			public const string Error_CellSetNotAMember             = "The cell set built from '{0}' must be assigned to a member of an object the projection constructs, directly or in a nested object.";
+			public const string Error_CellSetNotBuilt               = "The cell set was not built.";
+			public const string Error_CellSetNotFromParameter       = "A pivot cell set must be built from '{0}'.";
+			public const string Error_PivotNeedsCellTemplate        = "A pivot needs at least one cell template.";
+			public const string Error_PivotNameFactoryRequired      = "A pivot with more than one cell template needs a name factory on each, so the generated columns can be told apart.";
+			public const string Error_PivotValueEmptyName           = "Pivot value '{0}' produced an empty column name.";
+			public const string Error_PivotDuplicateName            = "Duplicate pivot column name '{0}'.";
+			public const string Error_PivotCellNotFound             = "No pivot cell is named '{0}'.";
+		}
 	}
 }

@@ -8,6 +8,7 @@ using System.Reflection;
 using JetBrains.Annotations;
 
 using LinqToDB.Expressions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
@@ -132,7 +133,7 @@ namespace LinqToDB
 			ArgumentNullException.ThrowIfNull(columnNames);
 
 			if (columnNames.Length == 0)
-				throw new ArgumentException("An unpivot needs at least one column.", nameof(columnNames));
+				throw new ArgumentException(ErrorHelper.Pivot.Error_UnpivotNeedsColumn, nameof(columnNames));
 
 			var property  = _sqlPropertyMethodInfo.MakeGenericMethod(typeof(TValue));
 			var selectors = new Expression<Func<TSource, TValue>>[columnNames.Length];
@@ -140,7 +141,7 @@ namespace LinqToDB
 			for (var i = 0; i < columnNames.Length; i++)
 			{
 				if (string.IsNullOrEmpty(columnNames[i]))
-					throw new ArgumentException($"Column name at index {i.ToString(CultureInfo.InvariantCulture)} is empty.", nameof(columnNames));
+					throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_UnpivotEmptyColumnName, i), nameof(columnNames));
 
 				var row = Expression.Parameter(typeof(TSource), "row");
 
@@ -246,6 +247,6 @@ namespace LinqToDB
 			LambdaExpression                    resultSelector,
 			[SqlQueryDependent] string[]        names,
 			Expression<Func<TSource, TValue>>[] columns)
-			=> throw new InvalidOperationException($"{nameof(UnpivotMulti)} is a query marker and must not be invoked directly.");
+			=> throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_QueryMarkerInvoked, nameof(UnpivotMulti)));
 	}
 }

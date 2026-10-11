@@ -8,6 +8,7 @@ using System.Reflection;
 using JetBrains.Annotations;
 
 using LinqToDB.Expressions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;
 
@@ -66,10 +67,10 @@ namespace LinqToDB
 					: Convert.ToString(key, CultureInfo.InvariantCulture);
 
 				if (string.IsNullOrEmpty(name))
-					throw new ArgumentException($"Key at index {i.ToString(CultureInfo.InvariantCulture)} produced an empty dynamic column name.", nameof(keys));
+					throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_DynamicColumnEmptyName, i), nameof(keys));
 
 				if (!seen.Add(name!))
-					throw new ArgumentException($"Duplicate dynamic column name '{name}'.", nameof(keys));
+					throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_DynamicColumnDuplicateName, name), nameof(keys));
 
 				names[i] = name;
 				cells[i] = Expression.Quote(
@@ -103,7 +104,7 @@ namespace LinqToDB
 				// Methods and indexers do not take part in that lookup.
 				if (storeType.GetField(name, BindingFlags.Public | BindingFlags.Instance) != null
 					|| storeType.GetProperties(BindingFlags.Public | BindingFlags.Instance).Any(p => string.Equals(p.Name, name, StringComparison.Ordinal) && p.GetIndexParameters().Length == 0))
-					throw new ArgumentException($"Dynamic column name '{name}' collides with a member of '{storeType.Name}', which would be resolved instead of the generated column.");
+					throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_DynamicColumnShadowsMember, name, storeType.Name));
 			}
 
 			var expr = Expression.Call(
@@ -128,6 +129,6 @@ namespace LinqToDB
 			Expression<Func<TSource, TResult>> staticSelector,
 			[SqlQueryDependent] string[]       names,
 			LambdaExpression[]                 cells)
-			=> throw new InvalidOperationException($"{nameof(SelectDynamicCore)} is a query marker and must not be invoked directly.");
+			=> throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_QueryMarkerInvoked, nameof(SelectDynamicCore)));
 	}
 }

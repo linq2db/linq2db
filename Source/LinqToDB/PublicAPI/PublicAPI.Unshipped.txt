@@ -1,6 +1,26 @@
 ﻿#nullable enable
 *REMOVED*LinqToDB.Internal.SqlProvider.OptimizationContext.TransformationInfo.get -> LinqToDB.Internal.SqlQuery.Visitors.SqlQueryVisitor.IVisitorTransformationInfo!
 const LinqToDB.Internal.Common.ErrorHelper.Error_ValueConverter_DivergentOperands = "Cannot combine '{0}' and '{1}' in the database: their value converters do not agree on what a stored value counts, so the two stored values are not commensurable and the result would be read through one of the conversions only. Combine them in .NET, or give both columns the same conversion." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_CellSetNotAMember = "The cell set built from '{0}' must be assigned to a member of an object the projection constructs, directly or in a nested object." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_CellSetNotBuilt = "The cell set was not built." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_CellSetNotFromParameter = "A pivot cell set must be built from '{0}'." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_CellSetUsedMoreThanOnce = "'{0}' may only be used to build one cell set, assigned to a single member of the projection." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_DynamicColumnDuplicateName = "Duplicate dynamic column name '{0}'." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_DynamicColumnEmptyName = "Key at index {0} produced an empty dynamic column name." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_DynamicColumnShadowsMember = "Dynamic column name '{0}' collides with a member of '{1}', which would be resolved instead of the generated column." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_NoDynamicColumnsStore = "Type '{0}' has no member marked with DynamicColumnsStoreAttribute, so the generated columns would have nowhere to go." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_PivotCellNotFound = "No pivot cell is named '{0}'." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_PivotDuplicateName = "Duplicate pivot column name '{0}'." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_PivotNameFactoryRequired = "A pivot with more than one cell template needs a name factory on each, so the generated columns can be told apart." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_PivotNeedsCellTemplate = "A pivot needs at least one cell template." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_PivotValueEmptyName = "Pivot value '{0}' produced an empty column name." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_ProjectionBuildsNoCell = "The projection builds no cell: call Cell on '{0}' and assign the result to a member." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_QueryMarkerInvoked = "{0} is a query marker and must not be invoked directly." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_StaticProjectionNotAnObject = "The static projection must construct an object (new T { ... })." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_UnpivotColumnSelector = "Unpivot column selector must be a simple member access (e.g. x => x.Jan)." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_UnpivotEmptyColumnName = "Column name at index {0} is empty." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_UnpivotNeedsColumn = "An unpivot needs at least one column." -> string!
+LinqToDB.Internal.Common.ErrorHelper.Pivot
 LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQLMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator
 LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQLMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator() -> void
 LinqToDB.PivotCells<TSource, TFor>

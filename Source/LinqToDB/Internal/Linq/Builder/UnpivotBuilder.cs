@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB.Expressions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
@@ -160,7 +161,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				body = unary.Operand;
 
 			if (body is not MemberExpression member)
-				throw new LinqToDBException($"{nameof(LinqExtensions.Unpivot)} column selector must be a simple member access (e.g. x => x.Jan).");
+				throw new LinqToDBException(ErrorHelper.Pivot.Error_UnpivotColumnSelector);
 
 			// A complex column is keyed by its full member path, as the entity descriptor keys it.
 			var path = member.Member.Name;

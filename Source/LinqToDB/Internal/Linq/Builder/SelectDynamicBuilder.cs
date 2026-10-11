@@ -1,11 +1,12 @@
 using System;
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
 
 using LinqToDB.Expressions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Mapping;
-using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
@@ -44,8 +45,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var entityDescriptor = sequence.MappingSchema.GetEntityDescriptor(storeType);
 
 			if (entityDescriptor.DynamicColumnSetter == null)
-				throw new LinqToDBException(
-					$"Type '{storeType.Name}' has no member marked with {nameof(DynamicColumnsStoreAttribute)}, so the generated columns would have nowhere to go.");
+				throw new LinqToDBException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_NoDynamicColumnsStore, storeType.Name));
 
 			var cells = new SqlGenericConstructorExpression.Assignment[names.Length];
 
@@ -73,7 +73,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				MemberInitExpression memberInit => new SqlGenericConstructorExpression(memberInit),
 				NewExpression newExpression     => new SqlGenericConstructorExpression(newExpression),
-				_ => throw new LinqToDBException("The static projection must construct an object (new T { ... })."),
+				_ => throw new LinqToDBException(ErrorHelper.Pivot.Error_StaticProjectionNotAnObject),
 			};
 
 			generic = generic.WithMappingSchema(sequence.MappingSchema);

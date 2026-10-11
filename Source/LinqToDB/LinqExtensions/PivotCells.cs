@@ -2,10 +2,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Mapping;
 
@@ -116,7 +118,7 @@ namespace LinqToDB
 
 		object? IReadOnlyDictionary<string, object?>.this[string key] => Values.TryGetValue(key, out var value)
 			? value
-			: throw new KeyNotFoundException($"No pivot cell is named '{key}'.");
+			: throw new KeyNotFoundException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_PivotCellNotFound, key));
 
 		bool IReadOnlyDictionary<string, object?>.ContainsKey(string key) => Values.ContainsKey(key);
 
