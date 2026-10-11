@@ -102,8 +102,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			var whereMethod  = Methods.Queryable.Where .MakeGenericMethod(info.SourceType);
 			var concatMethod = Methods.Queryable.Concat.MakeGenericMethod(info.ResultType);
 
-			var excludeNulls = !info.IncludeNulls
-				&& (!info.ValueType.IsValueType || Nullable.GetUnderlyingType(info.ValueType) != null);
+			// A non-nullable member still reads NULL from the outer side of a join, so the test is lifted rather
+			// than skipped.
+			var nullableValueType = info.ValueType.IsValueType && Nullable.GetUnderlyingType(info.ValueType) == null
+				? typeof(Nullable<>).MakeGenericType(info.ValueType)
+				: info.ValueType;
 
 			Expression? accumulated = null;
 
@@ -117,10 +120,13 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var branchSource = accumulated == null ? builtSource : info.Source;
 
-				if (excludeNulls)
+				if (!info.IncludeNulls)
 				{
 					var whereParam  = Expression.Parameter(info.SourceType, "row");
-					var whereBody   = Expression.NotEqual(column.GetBody(whereParam), Expression.Constant(null, info.ValueType));
+					var value       = column.GetBody(whereParam);
+					var whereBody   = Expression.NotEqual(
+						value.Type == nullableValueType ? value : Expression.Convert(value, nullableValueType),
+						Expression.Constant(null, nullableValueType));
 					var whereLambda = Expression.Lambda(whereBody, whereParam);
 
 					branchSource = Expression.Call(whereMethod, branchSource, Expression.Quote(whereLambda));

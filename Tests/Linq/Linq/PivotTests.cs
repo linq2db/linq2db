@@ -207,6 +207,46 @@ namespace Tests.Linq
 			sql.ShouldContain("UNION ALL");
 		}
 
+		[Table]
+		sealed class OuterParent
+		{
+			[PrimaryKey(Configuration = ProviderName.Ydb)]
+			[Column] public int Id { get; set; }
+		}
+
+		[Table]
+		sealed class OuterChild
+		{
+			[PrimaryKey(Configuration = ProviderName.Ydb)]
+			[Column] public int ParentId { get; set; }
+			[Column] public int Jan      { get; set; }
+			[Column] public int Feb      { get; set; }
+		}
+
+		/// <summary>
+		/// A non-nullable member can still read NULL from SQL when it comes from the outer side of a join; such a
+		/// cell is excluded like any other NULL cell, rather than read as <c>default(TValue)</c>.
+		/// </summary>
+		[Test]
+		public void UnpivotExcludeNullsOverAnOuterJoin([DataSources] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var parents  = db.CreateLocalTable(new[] { new OuterParent { Id = 1 }, new OuterParent { Id = 2 } });
+			using var children = db.CreateLocalTable(new[] { new OuterChild { ParentId = 1, Jan = 3, Feb = 4 } });
+
+			var source =
+				from p in parents
+				from c in children.Where(c => c.ParentId == p.Id).DefaultIfEmpty()
+				select new { p.Id, c.Jan, c.Feb };
+
+			var result = source
+				.Unpivot((row, month, amount) => new { row.Id, Month = month, Amount = amount }, x => x.Jan, x => x.Feb)
+				.OrderBy(r => r.Month)
+				.ToArray();
+
+			result.Select(r => (r.Id, r.Month, r.Amount)).ShouldBe(new[] { (1, "Feb", 4), (1, "Jan", 3) });
+		}
+
 		[Test]
 		public void ArgumentGuardsThrow([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
