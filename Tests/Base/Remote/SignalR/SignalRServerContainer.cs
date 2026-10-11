@@ -7,11 +7,11 @@ using LinqToDB.Remote;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 using Tests.Model;
+using Tests.Model.Remote;
 using Tests.Model.Remote.SignalR;
 
 #if NETFRAMEWORK
@@ -24,7 +24,7 @@ namespace Tests.Remote.ServerContainer
 	{
 		private const string HUB_PATH = "/remote/linq2db";
 
-		private static string GetServiceUrl(int port) => $"http://localhost:{port}";
+		private static string GetServiceUrl(int port) => $"http://{RemoteHost.Loopback}:{port}";
 
 		protected override ITestLinqService StartHost(int port, Func<string?, MappingSchema?, DataConnection> connectionFactory)
 		{
@@ -59,10 +59,7 @@ namespace Tests.Remote.ServerContainer
 
 		protected override ITestDataContext CreateClientContext(ITestLinqService service, int port, Func<ITestLinqService, DataOptions, DataOptions> optionBuilder)
 		{
-			var hubConnection = new HubConnectionBuilder().WithUrl(GetServiceUrl(port) + HUB_PATH).Build();
-			hubConnection.StartAsync().GetAwaiter().GetResult();
-
-			return new TestSignalRDataContext(hubConnection, o => optionBuilder(service, o));
+			return new TestSignalRDataContext(GetServiceUrl(port) + HUB_PATH, o => optionBuilder(service, o));
 		}
 
 		private sealed class Startup
