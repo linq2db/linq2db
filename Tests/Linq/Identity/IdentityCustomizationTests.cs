@@ -104,7 +104,9 @@ namespace Tests.Identity
 			(await users.IsInRoleAsync(user, "CUSTOM")).ShouldBeTrue();
 
 			await users.AddLoginAsync(user, new UserLoginInfo("prov", "key", "disp"));
-			(await users.FindByLoginAsync("prov", "key"))?.Id.ShouldBe(user.Id);
+			var byLogin = await users.FindByLoginAsync("prov", "key");
+			byLogin.ShouldNotBeNull();
+			byLogin.Id.ShouldBe(user.Id);
 
 			await users.SetTokenAsync(user, "prov", "tok", "value", default);
 			(await users.GetTokenAsync(user, "prov", "tok", default)).ShouldBe("value");
