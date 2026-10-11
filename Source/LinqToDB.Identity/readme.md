@@ -23,8 +23,8 @@ existing Identity database.
 ## Why use it
 
 * **No EF Core dependency** — Identity storage on linq2db alone.
-* **Same schema** as the EF Core Identity provider (`AspNetUsers`, `AspNetRoles`, …) — compatible with existing
-  databases, no migration required.
+* **Same schema** as the EF Core Identity provider (`AspNetUsers`, `AspNetRoles`, …) — compatible with databases
+  EF Core created, no migration required.
 * **Fast, type-safe** SQL via linq2db; automatic optimistic concurrency (the `ConcurrencyStamp` is a linq2db
   optimistic-lock column).
 * Works over the **direct** connection and the **remote [LinqService](https://linq2db.github.io/articles/general/Client-Server.html)** path.
@@ -264,8 +264,8 @@ directly.
 
 The package id stays **`linq2db.Identity`** and now follows linq2db's own version line — a *minor* step from the
 standalone 6.0.0, but the API is **breaking**: don't let a `6.*` range or an automated minor update pick it up
-unreviewed. Existing `AspNet*` tables keep working with **no DB migration** — the breaking changes are all at the
-API level. Tables created by this version's `CreateTable` differ on some providers: wider claim, token and passkey
+unreviewed. Existing `AspNet*` tables keep working with **no DB migration**; tables the standalone package created
+need their names mapped or renamed — see *Database* below. Tables created by this version's `CreateTable` differ on some providers: wider claim, token and passkey
 data columns, and a `DATETIME` `LockoutEnd` on MySQL. Widening an existing table to match is optional; values that
 did not fit the old columns never could be stored.
 
@@ -275,7 +275,7 @@ did not fit the old columns never could be stored.
 | Context wiring | `IConnectionFactory` / `DefaultConnectionFactory` | a linq2db `IDataContext` registered in DI (e.g. `IdentityDataConnection`) |
 | DI registration | `AddLinqToDBStores(new DefaultConnectionFactory())` (+ entity-type generic args) | `AddLinqToDBStores<TContext>()` |
 | Concurrency stamp | manual | automatic (linq2db `OptimisticLockPropertyAttribute` / `VersionBehavior`) |
-| DB schema | `AspNet*` | **identical** `AspNet*` |
+| Table names | none mapped — `CreateTable` used the CLR type names | `AspNet*`, as EF Core |
 | TFMs | `netstandard2.0` | `net462; netstandard2.0; net8.0; net9.0; net10.0` |
 
 **Entity model.** Replace types implementing the old custom interfaces with subclasses of the ASP.NET Core base types
@@ -302,6 +302,31 @@ did not fit the old columns never could be stored.
 +     .AddDefaultTokenProviders();
 ```
 
-**Database.** No schema change — the default mapping produces the same `AspNetUsers` / `AspNetRoles` /
-`AspNetUserClaims` / `AspNetUserRoles` / `AspNetUserLogins` / `AspNetUserTokens` / `AspNetRoleClaims` layout (plus
-`AspNetUserPasskeys` on .NET 10). Existing databases are compatible as-is.
+**Database.** The default mapping produces EF Core's `AspNetUsers` / `AspNetRoles` / `AspNetUserClaims` /
+`AspNetUserRoles` / `AspNetUserLogins` / `AspNetUserTokens` / `AspNetRoleClaims` layout (plus `AspNetUserPasskeys` on
+.NET 10), so a database EF Core created, or one you had already mapped to those names, is compatible as-is.
+
+The standalone package mapped no table names, so a schema it created with `CreateTable<T>()` — as its sample did —
+has tables named after the CLR types: `ApplicationUser`, `IdentityRole`, ``IdentityUserClaim`1``, and so on. Either
+rename those tables to the `AspNet*` names, or map the old names in a `ConfigureMappings` override:
+
+```csharp
+public class AppDataConnection(DataOptions options) : IdentityDataConnection<ApplicationUser>(options)
+{
+    protected override void ConfigureMappings(MappingSchema ms)
+    {
+        base.ConfigureMappings(ms);
+        new FluentMappingBuilder(ms)
+            .Entity<ApplicationUser>()          .HasTableName("ApplicationUser")
+            .Entity<IdentityRole>()             .HasTableName("IdentityRole")
+            .Entity<IdentityUserClaim<string>>().HasTableName("IdentityUserClaim`1")
+            .Entity<IdentityUserRole<string>>() .HasTableName("IdentityUserRole`1")
+            .Entity<IdentityUserLogin<string>>().HasTableName("IdentityUserLogin`1")
+            .Entity<IdentityUserToken<string>>().HasTableName("IdentityUserToken`1")
+            .Entity<IdentityRoleClaim<string>>().HasTableName("IdentityRoleClaim`1")
+            .Build();
+    }
+}
+```
+
+The navigation helpers query the stock types, so rename those as well if you use them (see [Navigations](#navigations)).
