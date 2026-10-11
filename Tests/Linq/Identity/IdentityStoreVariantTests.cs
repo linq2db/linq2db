@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Identity;
 
 using Microsoft.AspNetCore.Identity;
@@ -183,6 +184,89 @@ namespace Tests.Identity
 
 			// UserManager.FindByIdAsync takes a string; the store converts it to the int key (issue #21).
 			(await users.FindByIdAsync(byName.Id.ToString())).ShouldNotBeNull().Id.ShouldBe(byName.Id);
+		}
+
+		// AddLinqToDBStores without an identity context: the stores fall back to the stock satellite types, and the
+		// mappings come from wherever the consumer's context gets them.
+		[Test]
+		public async Task DependencyInjection_PlainContext([DataSources(false)] string context, [Values] bool withRoles)
+		{
+			using var setup  = GetSetup(context);
+			using var schema = new Schema(setup);
+
+			var services = new ServiceCollection();
+			services.AddLogging();
+			services.AddScoped(_ => new DataConnection(new DataOptions().UseConfiguration(context.StripRemote()).UseMappingSchema(setup.MappingSchema)));
+
+			var builder = services.AddIdentityCore<IdentityUser>();
+			if (withRoles)
+				builder.AddRoles<IdentityRole>();
+			builder.AddLinqToDBStores<DataConnection>();
+
+			using var provider = services.BuildServiceProvider();
+			using var scope    = provider.CreateScope();
+			var sp = scope.ServiceProvider;
+
+			if (withRoles)
+			{
+				sp.GetRequiredService<IUserStore<IdentityUser>>().ShouldBeOfType<UserStore<IdentityUser, IdentityRole, DataConnection, string>>();
+				sp.GetRequiredService<IRoleStore<IdentityRole>>().ShouldBeOfType<RoleStore<IdentityRole, DataConnection, string>>();
+			}
+			else
+			{
+				sp.GetRequiredService<IUserStore<IdentityUser>>().ShouldBeOfType<UserOnlyStore<IdentityUser, DataConnection, string>>();
+				sp.GetService<IRoleStore<IdentityRole>>().ShouldBeNull();
+			}
+
+			var users = sp.GetRequiredService<UserManager<IdentityUser>>();
+			(await users.CreateAsync(new IdentityUser("plain-di"), "P@ssw0rd1!")).Succeeded.ShouldBeTrue();
+			(await users.FindByNameAsync("plain-di")).ShouldNotBeNull();
+		}
+
+		// The documented minimal setup has no AddRoles, so it takes the user-only path - which has to find the
+		// five-argument context base, and read the satellite types off it in the right order.
+		[Test]
+		public async Task DependencyInjection_UserOnly_IdentityContext([DataSources(false)] string context)
+		{
+			using var setup  = new IdentityCustomizationTests.AppUserOnlyConnection(new DataOptions().UseConfiguration(context.StripRemote()));
+			using var people = setup.CreateLocalTable<IdentityCustomizationTests.AppUser>();
+			using var claims = setup.CreateLocalTable<IdentityCustomizationTests.AppUserClaim>();
+			using var logins = setup.CreateLocalTable<IdentityCustomizationTests.AppUserLogin>();
+			using var tokens = setup.CreateLocalTable<IdentityCustomizationTests.AppUserToken>();
+
+			var services = new ServiceCollection();
+			services.AddLogging();
+			services.AddScoped(_ => new IdentityCustomizationTests.AppUserOnlyConnection(new DataOptions().UseConfiguration(context.StripRemote())));
+			services
+				.AddIdentityCore<IdentityCustomizationTests.AppUser>()
+				.AddLinqToDBStores<IdentityCustomizationTests.AppUserOnlyConnection>();
+
+			using var provider = services.BuildServiceProvider();
+			using var scope    = provider.CreateScope();
+			var sp = scope.ServiceProvider;
+
+			sp.GetRequiredService<IUserStore<IdentityCustomizationTests.AppUser>>().ShouldBeOfType<UserOnlyStore<
+				IdentityCustomizationTests.AppUser, IdentityCustomizationTests.AppUserOnlyConnection, string,
+				IdentityCustomizationTests.AppUserClaim, IdentityCustomizationTests.AppUserLogin, IdentityCustomizationTests.AppUserToken>>();
+
+			var users = sp.GetRequiredService<UserManager<IdentityCustomizationTests.AppUser>>();
+			(await users.CreateAsync(new IdentityCustomizationTests.AppUser { Id = Guid.NewGuid().ToString(), UserName = "solo-di", Tenant = "acme" }, "P@ssw0rd1!")).Succeeded.ShouldBeTrue();
+			(await users.FindByNameAsync("solo-di")).ShouldNotBeNull().Tenant.ShouldBe("acme");
+		}
+
+		[Test]
+		public void DependencyInjection_RejectsNonIdentityTypes()
+		{
+			Shouldly.Should.Throw<InvalidOperationException>(() => new ServiceCollection()
+				.AddIdentityCore<object>()
+				.AddLinqToDBStores<IdentityDataConnection>())
+				.Message.ShouldContain("IdentityUser<TKey>");
+
+			Shouldly.Should.Throw<InvalidOperationException>(() => new ServiceCollection()
+				.AddIdentityCore<IdentityUser>()
+				.AddRoles<object>()
+				.AddLinqToDBStores<IdentityDataConnection>())
+				.Message.ShouldContain("IdentityRole<TKey>");
 		}
 	}
 }

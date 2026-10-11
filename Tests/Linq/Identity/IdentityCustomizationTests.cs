@@ -48,7 +48,7 @@ namespace Tests.Identity
 		sealed class AppIdentityConnection(DataOptions options)
 			: IdentityDataConnection<AppUser, AppRole, string, AppUserClaim, AppUserRole, AppUserLogin, AppRoleClaim, AppUserToken>(options);
 
-		sealed class AppUserOnlyConnection(DataOptions options)
+		internal sealed class AppUserOnlyConnection(DataOptions options)
 			: IdentityDataConnection<AppUser, string, AppUserClaim, AppUserLogin, AppUserToken>(options);
 
 		[Test]
