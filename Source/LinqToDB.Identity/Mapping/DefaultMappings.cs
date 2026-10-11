@@ -22,7 +22,8 @@ namespace LinqToDB.Identity
 		// see https://github.com/dotnet/aspnetcore/issues/7568
 		private const int KEYS_LENGTH       = 128;
 
-		// EF Core maps integral keys (int/long) as store-generated identity columns; string/Guid keys are client-assigned.
+		// EF Core maps integral keys (int/long) as store-generated identity columns. String/Guid keys must be set by the
+		// caller: EF Core generates Guid keys, these stores do not.
 		private static bool IsAutoIncrementKey<TKey>() => typeof(TKey) == typeof(int) || typeof(TKey) == typeof(long);
 
 		// The string-key width has to be pinned here rather than only in the string-specific overloads below: a

@@ -147,7 +147,7 @@ namespace LinqToDB.Identity
 			return IdentityResult.Success;
 		}
 
-		/// <inheritdoc cref="DeleteAsync(TRole, CancellationToken)"/>
+		/// <inheritdoc cref="FindByIdAsync(string, CancellationToken)"/>
 		public override Task<TRole?> FindByIdAsync(string id, CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();

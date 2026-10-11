@@ -123,7 +123,7 @@ namespace LinqToDB.Identity
 		/// </summary>
 		protected virtual IQueryable<TUserRole>  UserRoles  => Context.GetTable<TUserRole>();
 		/// <summary>
-		/// A navigation property for the user roles the store contains.
+		/// A navigation property for the roles the store contains.
 		/// </summary>
 		protected virtual IQueryable<TRole>      Roles      => Context.GetTable<TRole>();
 
@@ -132,7 +132,7 @@ namespace LinqToDB.Identity
 		/// </summary>
 		/// <param name="user">The associated user.</param>
 		/// <param name="role">The associated role.</param>
-		/// <returns></returns>
+		/// <returns>The new user-role link entity.</returns>
 		protected virtual TUserRole CreateUserRole(TUser user, TRole role)
 		{
 			return new TUserRole()

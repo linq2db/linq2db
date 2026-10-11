@@ -26,6 +26,7 @@ namespace LinqToDB.Identity
 		{
 		}
 
+		/// <inheritdoc />
 		protected override void ConfigureMappings(MappingSchema mappingSchema)
 		{
 			var builder = new FluentMappingBuilder(mappingSchema);
@@ -68,6 +69,7 @@ namespace LinqToDB.Identity
 		{
 		}
 
+		/// <inheritdoc />
 		protected override void ConfigureMappings(MappingSchema mappingSchema)
 		{
 			var builder = new FluentMappingBuilder(mappingSchema);
@@ -163,6 +165,12 @@ namespace LinqToDB.Identity
 				return ms;
 			});
 
+		/// <summary>
+		/// Registers the identity entity mappings (the <c>AspNet*</c> tables) into <paramref name="mappingSchema"/>.
+		/// Runs once per context type and the result is cached for the process lifetime, so mappings cannot vary per instance.
+		/// To customize, call the base implementation first, then apply a further <see cref="FluentMappingBuilder"/> pass.
+		/// </summary>
+		/// <param name="mappingSchema">The schema to configure.</param>
 		protected virtual void ConfigureMappings(MappingSchema mappingSchema)
 		{
 			var builder = new FluentMappingBuilder(mappingSchema);
@@ -237,6 +245,7 @@ namespace LinqToDB.Identity
 		{
 		}
 
+		/// <inheritdoc />
 		protected override void ConfigureMappings(MappingSchema mappingSchema)
 		{
 			base.ConfigureMappings(mappingSchema);

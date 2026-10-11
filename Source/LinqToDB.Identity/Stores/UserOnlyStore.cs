@@ -28,7 +28,7 @@ namespace LinqToDB.Identity
 	}
 
 	/// <summary>
-	/// Represents a new instance of a persistence store for the specified user and role types.
+	/// Represents a new instance of a persistence store for the specified user type.
 	/// </summary>
 	/// <typeparam name="TUser">The type representing a user.</typeparam>
 	/// <typeparam name="TContext">The type of the data context class used to access the store.</typeparam>
@@ -37,7 +37,7 @@ namespace LinqToDB.Identity
 		where TContext : IDataContext
 	{
 		/// <summary>
-		/// Constructs a new instance of <see cref="UserStore{TUser, TRole, TContext}"/>.
+		/// Constructs a new instance of <see cref="UserOnlyStore{TUser, TContext}"/>.
 		/// </summary>
 		/// <param name="context">The <see cref="IDataContext"/>.</param>
 		/// <param name="describer">The <see cref="IdentityErrorDescriber"/>.</param>
@@ -46,18 +46,18 @@ namespace LinqToDB.Identity
 	}
 
 	/// <summary>
-	/// Represents a new instance of a persistence store for the specified user and role types.
+	/// Represents a new instance of a persistence store for the specified user type.
 	/// </summary>
 	/// <typeparam name="TUser">The type representing a user.</typeparam>
 	/// <typeparam name="TContext">The type of the data context class used to access the store.</typeparam>
-	/// <typeparam name="TKey">The type of the primary key for a role.</typeparam>
+	/// <typeparam name="TKey">The type of the primary key for a user.</typeparam>
 	public class UserOnlyStore<TUser, TContext, TKey> : UserOnlyStore<TUser, TContext, TKey, IdentityUserClaim<TKey>, IdentityUserLogin<TKey>, IdentityUserToken<TKey>>
 		where TUser    : IdentityUser<TKey>
 		where TContext : IDataContext
 		where TKey     : IEquatable<TKey>
 	{
 		/// <summary>
-		/// Constructs a new instance of <see cref="UserStore{TUser, TRole, TContext, TKey}"/>.
+		/// Constructs a new instance of <see cref="UserOnlyStore{TUser, TContext, TKey}"/>.
 		/// </summary>
 		/// <param name="context">The <see cref="IDataContext"/>.</param>
 		/// <param name="describer">The <see cref="IdentityErrorDescriber"/>.</param>
@@ -66,11 +66,11 @@ namespace LinqToDB.Identity
 	}
 
 	/// <summary>
-	/// Represents a new instance of a persistence store for the specified user and role types.
+	/// Represents a new instance of a persistence store for the specified user type.
 	/// </summary>
 	/// <typeparam name="TUser">The type representing a user.</typeparam>
 	/// <typeparam name="TContext">The type of the data context class used to access the store.</typeparam>
-	/// <typeparam name="TKey">The type of the primary key for a role.</typeparam>
+	/// <typeparam name="TKey">The type of the primary key for a user.</typeparam>
 	/// <typeparam name="TUserClaim">The type representing a claim.</typeparam>
 	/// <typeparam name="TUserLogin">The type representing a user external login.</typeparam>
 	/// <typeparam name="TUserToken">The type representing a user token.</typeparam>
@@ -119,7 +119,7 @@ namespace LinqToDB.Identity
 
 		/// <summary>
 		/// Gets the identity schema version (<see cref="StoreOptions.SchemaVersion"/>), <see cref="IdentitySchemaVersions.Version1"/> when no options were supplied.
-		/// The passkey table exists only from <see cref="IdentitySchemaVersions.Version3"/>.
+		/// The passkey table exists only from <c>IdentitySchemaVersions.Version3</c> (.NET 10).
 		/// </summary>
 		protected Version SchemaVersion { get; }
 
@@ -422,15 +422,13 @@ namespace LinqToDB.Identity
 		/// <inheritdoc cref="AddUserTokenAsync(TUserToken)"/>
 		protected override async Task AddUserTokenAsync(TUserToken token)
 		{
-			// wut? no cancellation token parameter?
 			await Context.InsertAndSetIdentity(token, default)
 				.ConfigureAwait(false);
 		}
 
-		/// <inheritdoc cref="AddUserTokenAsync(TUserToken)"/>
+		/// <inheritdoc cref="RemoveUserTokenAsync(TUserToken)"/>
 		protected override Task RemoveUserTokenAsync(TUserToken token)
 		{
-			// wut? no cancellation token parameter?
 			return Context.DeleteAsync(token, default);
 		}
 
