@@ -366,6 +366,13 @@ namespace Tests.Linq
 			FSharp.Issue5598.UpdateNoOpExcludesPrimaryKey(db, false);
 		}
 
+		[Test]
+		public void UpdateWithStaticLet([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.Issue5598.UpdateWithStaticLet(db, true);
+		}
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
 		public void Issue1813Test1([DataSources] string context)
 		{
