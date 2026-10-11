@@ -5,8 +5,8 @@
     The committed .fs files are produced by scaffolding with target-language f# and nrt=true, and must compile
     under F# 9 nullness (Nullable=enable): nullable reference members carry a `| null` annotation. The
     nullness-disabled (nrt=false) variant is Tests.FSharp.Scaffold.NoNrt.fsproj; the two together give both-mode
-    coverage. CI detects generator regressions when either project fails to build. Regenerate both via
-    generate.ps1.
+    coverage. CI only checks that the committed files compile; regenerate both via generate.ps1 after any
+    generator change.
   -->
 
   <PropertyGroup>

@@ -3,8 +3,8 @@
 #
 # One .fs file per provider, each in its own namespace (Tests.FSharp.Scaffold.<Provider>) so the
 # generated TestDataDB context names don't collide in the single test assembly. The committed files
-# are the golden output: after any change to the F# code generator, rerun this and commit the diff;
-# CI's compile of Tests.FSharp.Scaffold.fsproj is the regression gate.
+# are the golden output: after any change to the F# code generator, rerun this and commit the diff.
+# CI only compiles the committed files (Tests.FSharp.Scaffold*.fsproj); it never runs the generator.
 #
 # Requires the provider databases to be reachable (the same docker containers the test suite uses).
 # Docker-backed connection strings (PostgreSQL, SQL Server) are resolved by name from
