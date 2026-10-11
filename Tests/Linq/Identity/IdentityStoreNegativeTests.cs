@@ -19,7 +19,7 @@ namespace Tests.Identity
 	public class IdentityStoreNegativeTests : IdentityTestData
 	{
 		[Test]
-		public void NullArguments([DataSources] string context)
+		public async Task NullArguments([DataSources] string context)
 		{
 			// no schema needed: every assertion throws during argument validation before touching the database.
 			using var setup = GetSetup(context);
@@ -29,14 +29,14 @@ namespace Tests.Identity
 			var roles = new RoleStore<IdentityRole>(ctx);
 			var user  = NewUser("nullarg");
 
-			Assert.ThrowsAsync<ArgumentNullException>(() => users.CreateAsync(null!));
-			Assert.ThrowsAsync<ArgumentNullException>(() => users.UpdateAsync(null!));
-			Assert.ThrowsAsync<ArgumentNullException>(() => users.DeleteAsync(null!));
-			Assert.ThrowsAsync<ArgumentNullException>(() => users.AddClaimsAsync(user, null!));
-			Assert.ThrowsAsync<ArgumentNullException>(() => users.AddLoginAsync(user, null!));
-			Assert.ThrowsAsync<ArgumentNullException>(() => users.GetUsersForClaimAsync(null!));
-			Assert.ThrowsAsync<ArgumentNullException>(() => roles.CreateAsync(null!));
-			Assert.ThrowsAsync<ArgumentNullException>(() => roles.AddClaimAsync(NewRole("r"), null!));
+			await Shouldly.Should.ThrowAsync<ArgumentNullException>(() => users.CreateAsync(null!));
+			await Shouldly.Should.ThrowAsync<ArgumentNullException>(() => users.UpdateAsync(null!));
+			await Shouldly.Should.ThrowAsync<ArgumentNullException>(() => users.DeleteAsync(null!));
+			await Shouldly.Should.ThrowAsync<ArgumentNullException>(() => users.AddClaimsAsync(user, null!));
+			await Shouldly.Should.ThrowAsync<ArgumentNullException>(() => users.AddLoginAsync(user, null!));
+			await Shouldly.Should.ThrowAsync<ArgumentNullException>(() => users.GetUsersForClaimAsync(null!));
+			await Shouldly.Should.ThrowAsync<ArgumentNullException>(() => roles.CreateAsync(null!));
+			await Shouldly.Should.ThrowAsync<ArgumentNullException>(() => roles.AddClaimAsync(NewRole("r"), null!));
 		}
 
 		[Test]
@@ -50,13 +50,13 @@ namespace Tests.Identity
 			var user  = NewUser("rolename");
 
 			// empty/whitespace role name
-			Assert.ThrowsAsync<ArgumentException>(() => users.AddToRoleAsync(user, " "));
-			Assert.ThrowsAsync<ArgumentException>(() => users.RemoveFromRoleAsync(user, " "));
-			Assert.ThrowsAsync<ArgumentException>(() => users.IsInRoleAsync(user, " "));
+			await Shouldly.Should.ThrowAsync<ArgumentException>(() => users.AddToRoleAsync(user, " "));
+			await Shouldly.Should.ThrowAsync<ArgumentException>(() => users.RemoveFromRoleAsync(user, " "));
+			await Shouldly.Should.ThrowAsync<ArgumentException>(() => users.IsInRoleAsync(user, " "));
 
 			// role does not exist
 			await users.CreateAsync(user);
-			Assert.ThrowsAsync<InvalidOperationException>(() => users.AddToRoleAsync(user, "DOES-NOT-EXIST"));
+			await Shouldly.Should.ThrowAsync<InvalidOperationException>(() => users.AddToRoleAsync(user, "DOES-NOT-EXIST"));
 		}
 
 		[Test]
@@ -119,7 +119,7 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		public void DisposedStore([DataSources] string context)
+		public async Task DisposedStore([DataSources] string context)
 		{
 			// no schema needed: the disposed-guard throws before any database access.
 			using var setup = GetSetup(context);
@@ -128,8 +128,8 @@ namespace Tests.Identity
 			var store = new UserStore<IdentityUser>(ctx);
 			store.Dispose();
 
-			Assert.ThrowsAsync<ObjectDisposedException>(() => store.CreateAsync(NewUser("zed")));
-			Assert.ThrowsAsync<ObjectDisposedException>(() => store.FindByIdAsync("any"));
+			await Shouldly.Should.ThrowAsync<ObjectDisposedException>(() => store.CreateAsync(NewUser("zed")));
+			await Shouldly.Should.ThrowAsync<ObjectDisposedException>(() => store.FindByIdAsync("any"));
 		}
 
 		[Test]
@@ -142,12 +142,12 @@ namespace Tests.Identity
 			var users = new UserStore<IdentityUser>(ctx);
 			var roles = new RoleStore<IdentityRole>(ctx);
 
-			Assert.That(await users.FindByIdAsync(Guid.NewGuid().ToString()), Is.Null);
-			Assert.That(await users.FindByNameAsync("NOSUCH"),                Is.Null);
-			Assert.That(await users.FindByEmailAsync("NOSUCH@TEST.COM"),      Is.Null);
-			Assert.That(await users.FindByLoginAsync("p", "k"),              Is.Null);
-			Assert.That(await roles.FindByIdAsync(Guid.NewGuid().ToString()), Is.Null);
-			Assert.That(await roles.FindByNameAsync("NOSUCH"),               Is.Null);
+			(await users.FindByIdAsync(Guid.NewGuid().ToString())).ShouldBeNull();
+			(await users.FindByNameAsync("NOSUCH"))               .ShouldBeNull();
+			(await users.FindByEmailAsync("NOSUCH@TEST.COM"))     .ShouldBeNull();
+			(await users.FindByLoginAsync("p", "k"))              .ShouldBeNull();
+			(await roles.FindByIdAsync(Guid.NewGuid().ToString())).ShouldBeNull();
+			(await roles.FindByNameAsync("NOSUCH"))               .ShouldBeNull();
 		}
 
 		[Test]
@@ -162,9 +162,9 @@ namespace Tests.Identity
 			await store.CreateAsync(user);
 
 			// removing things that don't exist is a no-op, not an error
-			Assert.DoesNotThrowAsync(() => store.RemoveLoginAsync(user, "missing", "missing"));
-			Assert.DoesNotThrowAsync(() => store.RemoveTokenAsync(user, "missing", "missing", default));
-			Assert.DoesNotThrowAsync(() => store.RemoveClaimsAsync(user, new[] { new Claim("none", "none") }));
+			await Shouldly.Should.NotThrowAsync(() => store.RemoveLoginAsync(user, "missing", "missing"));
+			await Shouldly.Should.NotThrowAsync(() => store.RemoveTokenAsync(user, "missing", "missing", default));
+			await Shouldly.Should.NotThrowAsync(() => store.RemoveClaimsAsync(user, new[] { new Claim("none", "none") }));
 		}
 	}
 }

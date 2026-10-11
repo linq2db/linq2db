@@ -11,6 +11,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Identity
 {
 	[TestFixture]
@@ -28,15 +30,15 @@ namespace Tests.Identity
 			var store = new UserOnlyStore<IdentityUser>(ctx);
 			var user  = NewUser("ulf");
 
-			Assert.That((await store.CreateAsync(user)).Succeeded, Is.True);
+			(await store.CreateAsync(user)).Succeeded.ShouldBeTrue();
 
 			await store.AddClaimsAsync(user, new[] { new Claim("x", "1") });
-			Assert.That((await store.GetClaimsAsync(user)).Count, Is.EqualTo(1));
+			(await store.GetClaimsAsync(user)).Count.ShouldBe(1);
 
 			await store.AddLoginAsync(user, new UserLoginInfo("p", "k", "P"));
-			Assert.That(await store.FindByLoginAsync("p", "k"), Is.Not.Null);
+			(await store.FindByLoginAsync("p", "k")).ShouldNotBeNull();
 
-			Assert.That((await store.DeleteAsync(user)).Succeeded, Is.True);
+			(await store.DeleteAsync(user)).Succeeded.ShouldBeTrue();
 		}
 
 		[Test]
@@ -53,9 +55,9 @@ namespace Tests.Identity
 			var store = new UserStore<IdentityUser>(dc);
 			var user  = NewUser("dctx");
 
-			Assert.That((await store.CreateAsync(user)).Succeeded, Is.True);
-			Assert.That(await store.FindByIdAsync(user.Id), Is.Not.Null);
-			Assert.That((await store.DeleteAsync(user)).Succeeded, Is.True);
+			(await store.CreateAsync(user)).Succeeded.ShouldBeTrue();
+			(await store.FindByIdAsync(user.Id)).ShouldNotBeNull();
+			(await store.DeleteAsync(user)).Succeeded.ShouldBeTrue();
 		}
 
 		// Regression for LinqToDB.Identity#18: non-string key types (Guid here, int below) are supported.
@@ -73,15 +75,15 @@ namespace Tests.Identity
 
 			var user = new IdentityUser<Guid> { Id = Guid.NewGuid(), UserName = "gail", NormalizedUserName = "GAIL" };
 			var role = new IdentityRole<Guid> { Id = Guid.NewGuid(), Name = "gadmin", NormalizedName = "GADMIN" };
-			Assert.That((await users.CreateAsync(user)).Succeeded, Is.True);
-			Assert.That((await roles.CreateAsync(role)).Succeeded, Is.True);
+			(await users.CreateAsync(user)).Succeeded.ShouldBeTrue();
+			(await roles.CreateAsync(role)).Succeeded.ShouldBeTrue();
 
-			Assert.That((await users.FindByIdAsync(user.Id.ToString()))?.UserName, Is.EqualTo("gail"));
+			(await users.FindByIdAsync(user.Id.ToString())).ShouldNotBeNull().UserName.ShouldBe("gail");
 
 			await users.AddToRoleAsync(user, "GADMIN");
-			Assert.That(await users.IsInRoleAsync(user, "GADMIN"), Is.True);
+			(await users.IsInRoleAsync(user, "GADMIN")).ShouldBeTrue();
 
-			Assert.That((await users.DeleteAsync(user)).Succeeded, Is.True);
+			(await users.DeleteAsync(user)).Succeeded.ShouldBeTrue();
 		}
 
 		[Test]
@@ -97,19 +99,19 @@ namespace Tests.Identity
 			var roles = new RoleStore<IdentityRole<int>, IDataContext, int>(ctx);
 
 			var user = new IdentityUser<int> { UserName = "ivan", NormalizedUserName = "IVAN" };
-			Assert.That((await users.CreateAsync(user)).Succeeded, Is.True);
-			Assert.That(user.Id, Is.GreaterThan(0)); // DB-generated identity key read back
+			(await users.CreateAsync(user)).Succeeded.ShouldBeTrue();
+			user.Id.ShouldBeGreaterThan(0); // DB-generated identity key read back
 
-			Assert.That((await users.FindByIdAsync(user.Id.ToString()))?.UserName, Is.EqualTo("ivan"));
+			(await users.FindByIdAsync(user.Id.ToString())).ShouldNotBeNull().UserName.ShouldBe("ivan");
 
 			var role = new IdentityRole<int> { Name = "iadmin", NormalizedName = "IADMIN" };
 			await roles.CreateAsync(role);
-			Assert.That(role.Id, Is.GreaterThan(0));
+			role.Id.ShouldBeGreaterThan(0);
 
 			await users.AddToRoleAsync(user, "IADMIN");
-			Assert.That(await users.IsInRoleAsync(user, "IADMIN"), Is.True);
+			(await users.IsInRoleAsync(user, "IADMIN")).ShouldBeTrue();
 
-			Assert.That((await users.DeleteAsync(user)).Succeeded, Is.True);
+			(await users.DeleteAsync(user)).Succeeded.ShouldBeTrue();
 		}
 
 		// Regression for LinqToDB.Identity#12: the stores resolve through DI (AddLinqToDBStores) and drive a UserManager.
@@ -136,22 +138,21 @@ namespace Tests.Identity
 
 			var userStore = sp.GetRequiredService<IUserStore<IdentityUser>>();
 			var roleStore = sp.GetRequiredService<IRoleStore<IdentityRole>>();
-			Assert.That(userStore.GetType().FullName!, Does.StartWith("LinqToDB.Identity.UserStore"));
-			Assert.That(roleStore.GetType().FullName!, Does.StartWith("LinqToDB.Identity.RoleStore"));
+			userStore.GetType().FullName!.ShouldStartWith("LinqToDB.Identity.UserStore");
+			roleStore.GetType().FullName!.ShouldStartWith("LinqToDB.Identity.RoleStore");
 
 			var users = sp.GetRequiredService<UserManager<IdentityUser>>();
 			var roles = sp.GetRequiredService<RoleManager<IdentityRole>>();
 
-			Assert.That((await roles.CreateAsync(new IdentityRole("manager"))).Succeeded, Is.True);
+			(await roles.CreateAsync(new IdentityRole("manager"))).Succeeded.ShouldBeTrue();
 
 			var created = await users.CreateAsync(new IdentityUser("di-user"), "P@ssw0rd1!");
-			Assert.That(created.Succeeded, Is.True);
+			created.Succeeded.ShouldBeTrue();
 
-			var found = await users.FindByNameAsync("di-user");
-			Assert.That(found, Is.Not.Null);
+			var found = (await users.FindByNameAsync("di-user")).ShouldNotBeNull();
 
-			Assert.That((await users.AddToRoleAsync(found!, "manager")).Succeeded, Is.True);
-			Assert.That(await users.IsInRoleAsync(found!, "manager"), Is.True);
+			(await users.AddToRoleAsync(found, "manager")).Succeeded.ShouldBeTrue();
+			(await users.IsInRoleAsync(found, "manager")).ShouldBeTrue();
 		}
 
 		// Regression for LinqToDB.Identity#21: a UserManager over an int-keyed user works end to end, and the
@@ -175,15 +176,13 @@ namespace Tests.Identity
 			using var scope    = provider.CreateScope();
 			var users = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser<int>>>();
 
-			Assert.That((await users.CreateAsync(new IdentityUser<int> { UserName = "int-di" }, "P@ssw0rd1!")).Succeeded, Is.True);
+			(await users.CreateAsync(new IdentityUser<int> { UserName = "int-di" }, "P@ssw0rd1!")).Succeeded.ShouldBeTrue();
 
-			var byName = await users.FindByNameAsync("int-di");
-			Assert.That(byName,     Is.Not.Null);
-			Assert.That(byName!.Id, Is.GreaterThan(0));
+			var byName = (await users.FindByNameAsync("int-di")).ShouldNotBeNull();
+			byName.Id.ShouldBeGreaterThan(0);
 
 			// UserManager.FindByIdAsync takes a string; the store converts it to the int key (issue #21).
-			var byId = await users.FindByIdAsync(byName.Id.ToString());
-			Assert.That(byId?.Id, Is.EqualTo(byName.Id));
+			(await users.FindByIdAsync(byName.Id.ToString())).ShouldNotBeNull().Id.ShouldBe(byName.Id);
 		}
 	}
 }
