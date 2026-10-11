@@ -113,7 +113,7 @@ namespace Tests.Linq
 					(x, n) => Sql.Property<decimal>(x, n))
 				.ToList();
 
-			act.ShouldThrow<LinqToDBException>();
+			act.ShouldThrow<LinqToDBException>().Message.ShouldContain("has no member marked with DynamicColumnsStoreAttribute");
 		}
 
 		/// <summary>

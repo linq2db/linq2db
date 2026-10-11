@@ -494,6 +494,8 @@ namespace Tests.Linq
 			act.ShouldThrow<ArgumentException>();
 		}
 
+		static SalesDto ToSalesDto(string category) => new() { Category = category };
+
 		[Test]
 		public void ArgumentGuardsThrow([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -533,6 +535,22 @@ namespace Tests.Linq
 				.Pivot(x => x.Category, x => x.Year, new[] { 2000 },
 					(g, p) => new { g.Key, Cells = materialized.Cell(rows => rows.Sum(x => x.Amount)) })
 				.ToList();
+
+			// The builder is shared with SelectDynamic; its errors must not name an operator the caller never used.
+			Action storelessResult = () => t
+				.Pivot(x => x.Category, x => x.Year, new[] { 2000 },
+					g => new { g.Key },
+					c => c.Cell(rows => rows.Sum(x => x.Amount)))
+				.ToList();
+
+			Action nonConstructingProjection = () => t
+				.Pivot(x => x.Category, x => x.Year, new[] { 2000 },
+					g => ToSalesDto(g.Key),
+					c => c.Cell(rows => rows.Sum(x => x.Amount)))
+				.ToList();
+
+			storelessResult          .ShouldThrow<LinqToDBException>().Message.ShouldContain("has no member marked with DynamicColumnsStoreAttribute");
+			nonConstructingProjection.ShouldThrow<LinqToDBException>().Message.ShouldContain("must construct an object");
 
 			emptyName      .ShouldThrow<ArgumentException>().Message.ShouldContain("empty column name");
 			duplicateName  .ShouldThrow<ArgumentException>().Message.ShouldContain("Duplicate pivot column name 'Same'");

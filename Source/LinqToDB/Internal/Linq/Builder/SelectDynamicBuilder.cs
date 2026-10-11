@@ -45,7 +45,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (entityDescriptor.DynamicColumnSetter == null)
 				throw new LinqToDBException(
-					$"Type '{storeType.Name}' cannot be used as a {nameof(LinqExtensions.SelectDynamic)} result: it has no member marked with {nameof(DynamicColumnsStoreAttribute)}, so the generated columns would have nowhere to go.");
+					$"Type '{storeType.Name}' has no member marked with {nameof(DynamicColumnsStoreAttribute)}, so the generated columns would have nowhere to go.");
 
 			var cells = new SqlGenericConstructorExpression.Assignment[names.Length];
 
@@ -73,7 +73,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				MemberInitExpression memberInit => new SqlGenericConstructorExpression(memberInit),
 				NewExpression newExpression     => new SqlGenericConstructorExpression(newExpression),
-				_ => throw new LinqToDBException($"{nameof(LinqExtensions.SelectDynamic)} static selector must be an object construction expression (new T {{ ... }})."),
+				_ => throw new LinqToDBException("The static projection must construct an object (new T { ... })."),
 			};
 
 			generic = generic.WithMappingSchema(sequence.MappingSchema);
