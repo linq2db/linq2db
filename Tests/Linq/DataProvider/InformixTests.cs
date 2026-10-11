@@ -610,5 +610,25 @@ namespace Tests.DataProvider
 			t.Select(r => r.Value).Single().ShouldBe(value);
 			t.Select(r => Sql.AsSql(Sql.Convert(Sql.Types.DateTime2, r.Value))).Single().ShouldBe(value);
 		}
+
+		sealed class DateTime2NoFractionRow
+		{
+			[PrimaryKey]                                           public int      Id    { get; set; }
+			[Column(DataType = DataType.DateTime2, Precision = 0)] public DateTime Value { get; set; }
+		}
+
+		/// <summary>
+		/// A DateTime2 column with no fractional seconds is a whole-second datetime, not FRACTION(1).
+		/// </summary>
+		[Test]
+		public void DateTime2WithZeroPrecisionKeepsWholeSeconds([IncludeDataSources(true, TestProvName.AllInformix)] string context)
+		{
+			var value = new DateTime(2026, 6, 1, 10, 0, 0);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable([new DateTime2NoFractionRow { Id = 1, Value = value.AddTicks(1234500) }]);
+
+			t.Select(r => r.Value).Single().ShouldBe(value);
+		}
 	}
 }
