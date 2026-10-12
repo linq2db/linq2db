@@ -4244,10 +4244,9 @@ namespace LinqToDB.Internal.SqlProvider
 					return context.ordered.Count - 1;
 				});
 
-			// an argument no {n} references can still be bound by a literal '?' in the SQL text
-			for (var i = 0; i < values.Length; i++)
-				if (!referenced[i])
-					ordered.Add(values[i]);
+			// an argument no {n} references can only be bound by a literal '?', which binds in argument order
+			if (Array.IndexOf(referenced, false) >= 0)
+				return (format, values);
 
 			return (newFormat, ordered.ToArray());
 		}
