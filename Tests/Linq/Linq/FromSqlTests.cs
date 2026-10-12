@@ -1324,11 +1324,16 @@ namespace Tests.Linq
 			var query = CompiledQuery.Compile((IDataContext dc, FormattableString fs) =>
 				dc.FromSql<Person>(fs).Select(p => p.ID));
 
-			query(db, $"SELECT * FROM Person WHERE PersonID = {1}").ToArray().ShouldBe([1]);
+			var query1 = query(db, $"SELECT * FROM Person WHERE PersonID = {1}");
+			query1.ToArray().ShouldBe([1]);
 			var sql = db.LastQuery;
 
 			query(db, $"SELECT * FROM Person WHERE PersonID = {2}").ToArray().ShouldBe([2]);
 			db.LastQuery.ShouldBe(sql);
+
+			var query3 = query(db, $"SELECT * FROM Person WHERE PersonID = {1}");
+			query3.ToArray().ShouldBe([1]);
+			query3.GetCompiledQueryInfo().ShouldBeSameAs(query1.GetCompiledQueryInfo());
 
 			query(db, $"SELECT * FROM Person WHERE PersonID <> {1}").ToArray().ShouldNotContain(1);
 		}
