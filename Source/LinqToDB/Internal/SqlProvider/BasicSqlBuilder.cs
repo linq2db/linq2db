@@ -4228,19 +4228,26 @@ namespace LinqToDB.Internal.SqlProvider
 			if (values.Length == 0)
 				return (format, values);
 
-			var ordered = new List<ISqlExpression>(values.Length);
+			var ordered    = new List<ISqlExpression>(values.Length);
+			var referenced = new bool[values.Length];
 
 			var newFormat = QueryHelper.TransformExpressionIndexes(
-				(values, ordered),
+				(values, ordered, referenced),
 				format,
 				static (context, idx) =>
 				{
 					if (idx < 0 || idx >= context.values.Length)
 						return idx;
 
+					context.referenced[idx] = true;
 					context.ordered.Add(context.values[idx]);
 					return context.ordered.Count - 1;
 				});
+
+			// an argument no {n} references can still be bound by a literal '?' in the SQL text
+			for (var i = 0; i < values.Length; i++)
+				if (!referenced[i])
+					ordered.Add(values[i]);
 
 			return (newFormat, ordered.ToArray());
 		}

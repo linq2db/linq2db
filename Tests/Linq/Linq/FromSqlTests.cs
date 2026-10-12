@@ -1371,6 +1371,18 @@ namespace Tests.Linq
 			query.GetCompiledQueryInfo().ShouldBeSameAs(info);
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void FromSql_PositionalPlaceholder_DataParameter([IncludeDataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.FromSql<Person>("SELECT * FROM Person WHERE PersonID = ?", new DataParameter("id", 2, DataType.Int32))
+				.Select(p => p.ID).ToArray().ShouldBe([2]);
+
+			db.FromSql<Person>("SELECT * FROM Person WHERE PersonID = {0} OR PersonID = ?", 1, new DataParameter("id", 2, DataType.Int32))
+				.Select(p => p.ID).OrderBy(id => id).ToArray().ShouldBe([1, 2]);
+		}
+
 		static string OutOfFormatOrderSql(string context, bool repeated)
 		{
 			var person   = QuoteTableName("Person",   context);
