@@ -40,15 +40,16 @@ namespace LinqToDB.Identity
 		// ends in 2105. Each value is that provider's widest datetime type.
 		private static readonly (string Configuration, DataType DataType)[] _lockoutEndDataTypes =
 		[
-			(ProviderName.MySql,    DataType.DateTime2  ),
-			(ProviderName.Access,   DataType.DateTime   ),
-			(ProviderName.SqlCe,    DataType.DateTime2  ),
-			(ProviderName.Sybase,   DataType.DateTime2  ),
-			(ProviderName.SapHana,  DataType.DateTime2  ),
-			(ProviderName.Informix, DataType.DateTime2  ),
-			(ProviderName.DB2LUW,   DataType.DateTime2  ),
-			(ProviderName.Firebird, DataType.DateTime2  ),
-			(ProviderName.Ydb,      DataType.Timestamp64),
+			(ProviderName.MySql,         DataType.DateTime2  ),
+			(ProviderName.Access,        DataType.DateTime   ),
+			(ProviderName.SqlCe,         DataType.DateTime2  ),
+			(ProviderName.SqlServer2005, DataType.DateTime   ),
+			(ProviderName.Sybase,        DataType.DateTime2  ),
+			(ProviderName.SapHana,       DataType.DateTime2  ),
+			(ProviderName.Informix,      DataType.DateTime2  ),
+			(ProviderName.DB2LUW,        DataType.DateTime2  ),
+			(ProviderName.Firebird,      DataType.DateTime2  ),
+			(ProviderName.Ydb,           DataType.Timestamp64),
 		];
 
 		// The DataType pin above only fixes the DDL; the value needs converting too. A column that cannot hold an
