@@ -5383,7 +5383,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							if (Visit(newArr.Expressions[i]) is not SqlPlaceholderExpression exprPlaceholder)
 								return null;
 
-							exprs[i] = exprPlaceholder.Sql;
+							exprs[i] = ReadAsTheReaderReadsNested(newArr.Expressions[i], exprPlaceholder).Sql;
 						}
 
 						return new SqlPredicate.InList(expr, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false, exprs);
