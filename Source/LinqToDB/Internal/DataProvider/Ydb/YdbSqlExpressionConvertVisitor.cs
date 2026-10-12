@@ -252,11 +252,13 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			return element;
 		}
 
-		// The mapping schema writes a date narrow, from 1970-01-01, as whatever type it is mapped to except the wide Date32,
-		// Datetime64 and Timestamp64, which hold 0001-01-01.
+		// The mapping schema writes a date narrow, from 1970-01-01, as whatever type it is mapped to except the wide Date32 and,
+		// for a DateTime or DateTimeOffset only, Datetime64 and Timestamp64, which hold 0001-01-01.
 		public override ISqlExpression ConvertDefaultValue(SqlDefaultValueExpression expression)
 		{
-			var lowered = (expression.Type.DataType is DataType.Date32 or DataType.DateTime64 or DataType.Timestamp64 ? null : RaiseDefaultDate(expression, new DateTime(1970, 1, 1)))
+			var wide    = expression.Type.DataType is DataType.Date32
+				|| expression.Value is DateTime or DateTimeOffset && expression.Type.DataType is DataType.DateTime64 or DataType.Timestamp64;
+			var lowered = (wide ? null : RaiseDefaultDate(expression, new DateTime(1970, 1, 1)))
 				?? base.ConvertDefaultValue(expression);
 
 			// DateTz writes a DateTimeOffset through LocalDateTime, which moves with the time zone.
