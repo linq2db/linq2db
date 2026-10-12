@@ -28,6 +28,12 @@ namespace LinqToDB.Internal.SqlProvider
 		protected EvaluationContext EvaluationContext { get; private set; } = default!;
 		protected MappingSchema     MappingSchema     { get; private set; } = default!;
 
+		/// <summary>
+		/// When <see langword="false"/>, VALUES tables over client collections are left without rows (they are then built
+		/// while the SQL is printed). Used only by the render verification mode to reproduce the previous pipeline.
+		/// </summary>
+		internal bool BuildValuesTableRows { get; set; } = true;
+
 		public SqlExpressionOptimizerVisitor(bool allowModify) : base(allowModify ? VisitMode.Modify : VisitMode.Transform, null)
 		{
 		}
@@ -122,6 +128,28 @@ namespace LinqToDB.Internal.SqlProvider
 		}
 
 		#endregion
+
+		protected internal override IQueryElement VisitSqlValuesTable(SqlValuesTable element)
+		{
+			// A VALUES table over a client collection has no rows in the cached statement: they depend on the
+			// collection passed to this execution. Build them here, while the parameter values are known, so the
+			// rest of the optimize and convert pass sees the cells like any other part of the statement (the
+			// remote path does the same when it serializes the rows) and the SQL builder only prints them.
+			// Only a Transform pass may do this: it produces a new tree and leaves the cached statement untouched.
+			if (element.Rows == null
+				&& element.Source != null
+				&& BuildValuesTableRows
+				&& EvaluationContext.ParameterValues != null
+				&& GetVisitMode(element) == VisitMode.Transform)
+			{
+				var rows     = element.BuildRows(EvaluationContext);
+				var newTable = new SqlValuesTable(element.Source, element.ValueBuilders, CopyFields(element.Fields), rows as List<List<ISqlExpression>> ?? rows.ToList());
+
+				return NotifyReplaced(base.VisitSqlValuesTable(newTable), element);
+			}
+
+			return base.VisitSqlValuesTable(element);
+		}
 
 		protected internal override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
 		{

@@ -45,7 +45,9 @@ namespace LinqToDB.Internal.SqlProvider
 			Cleanup();
 
 			OptimizationContext = optimizationContext;
-			NullabilityContext = nullabilityContext;
+			// A Transform pass replaces sources and columns while it goes; with the transformation info the context
+			// still recognises a replaced source (e.g. an OUTER APPLY sub-query) as the nullable one it was.
+			NullabilityContext = nullabilityContext.WithTransformationInfo(optimizationContext.TransformationInfoConvert);
 			VisitQueries = visitQueries;
 			SetTransformationInfo(optimizationContext.TransformationInfoConvert);
 
@@ -78,6 +80,19 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 
 			var newElement = base.Visit(element);
+
+			// In a Transform pass an element whose children changed is first copied and the copy registered as its
+			// replacement; the copy is then converted itself (e.g. a cast narrowed), possibly into another new element.
+			// Register that one too, or a second reference to the original element (a shared expression, such as a
+			// SET value also used as a column of the source query) resolves to the half-converted copy and is never
+			// converted - nothing converts the statement again after this pass.
+			if (!ReferenceEquals(newElement, element)
+				&& VisitMode == VisitMode.Transform
+				&& GetVisitMode(element) == VisitMode.Modify
+				&& !newElement.HasElement(element))
+			{
+				NotifyReplaced(newElement, element);
+			}
 
 			IsInsidePredicate = saveIsInsidePredicate;
 

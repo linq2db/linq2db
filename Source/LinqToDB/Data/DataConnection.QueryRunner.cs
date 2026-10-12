@@ -16,6 +16,7 @@ using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Linq.Translation;
 using LinqToDB.Metrics;
 
 namespace LinqToDB.Data
@@ -233,10 +234,9 @@ namespace LinqToDB.Data
 					var optimizeAndConvertAll = !continuousRun && !statement.IsParameterDependent;
 					// Non-parameter-dependent, first-run queries may be optimized/converted in place (Modify
 					// mode) and their built commands cached/reused. Parameter-dependent / continuous-run
-					// queries must stay non-mutating (Transform mode) and rebuild per execution. NOTE: the
-					// convert pass itself now runs unconditionally before aliasing (below) regardless of this
-					// flag; the flag selects visitor mutability, command caching, and (via
-					// isAlreadyOptimizedAndConverted) whether the per-element build-time convert still runs.
+					// queries must stay non-mutating (Transform mode) and rebuild per execution. The convert
+					// pass itself runs unconditionally before aliasing (below) regardless of this flag; the
+					// flag selects visitor mutability, command caching and whether parameter values take part.
 
 					var optimizeVisitor = sqlOptimizer.CreateOptimizerVisitor(optimizeAndConvertAll);
 					var convertVisitor  = sqlOptimizer.CreateConvertVisitor(optimizeAndConvertAll);
@@ -251,22 +251,21 @@ namespace LinqToDB.Data
 						convertVisitor,
 						factory,
 						dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent,
-						isAlreadyOptimizedAndConverted : optimizeAndConvertAll,
+						isAlreadyOptimizedAndConverted : true,
 						parametersNormalizerFactory : dataConnection.DataProvider.GetQueryParameterNormalizer);
+
+					var verifiedStatement = statement;
 
 					// Optimize+convert the whole statement before aliasing, unconditionally. Any conversion
 					// that restructures the AST (e.g. IN->EXISTS clones its sub-query) must run before the
 					// aliasing pass: the alias context is keyed to the nodes it visits, so nodes created
 					// after aliasing carry SourceIDs it never recorded and the SQL builder can't resolve
-					// their aliases. Parameter-dependent queries previously deferred conversion into BuildSql
-					// (after aliasing) - that was the alias-corruption bug. Mirrors the remote runner, which
-					// already prepares-then-aliases. This upfront pass does not cover every localized
-					// refinement the per-element build-time convert applies (e.g. narrowing an InsertOrUpdate
-					// SET-value cast to the target column's DbDataType, or provider expression conversions
-					// like ClickHouse bitAnd); so parameter-dependent queries keep isAlreadyOptimizedAndConverted
-					// false (above) and re-run that convert in BuildSql. That is safe because their visitors are
-					// non-mutating (Transform mode), so the build-time pass produces new nodes without mutating
-					// the shared cached statement - it cannot reintroduce the aliasing race.
+					// their aliases. Mirrors the remote runner, which already prepares-then-aliases.
+					// This pass is the only optimize/convert of the statement: the SQL builder does not convert
+					// elements again while printing (isAlreadyOptimizedAndConverted above), for parameter-dependent
+					// queries as well. Everything the builder prints must therefore exist in the statement by now;
+					// in particular the rows of a VALUES table over a client collection are built by this pass
+					// (SqlExpressionOptimizerVisitor.VisitSqlValuesTable), not by the builder.
 					{
 						var nullability = NullabilityContext.GetContext(statement.SelectQuery);
 						statement = optimizationContext.OptimizeAndConvertAll(statement, nullability);
@@ -298,6 +297,10 @@ namespace LinqToDB.Data
 					{
 						query.Context = commands;
 					}
+					else if (RenderVerification.IsEnabled)
+					{
+						VerifyRender(dataConnection, options, sqlOptimizer, factory, verifiedStatement, parameterValues, startIndent, commands);
+					}
 
 					query.IsContinuousRun = true;
 
@@ -308,6 +311,117 @@ namespace LinqToDB.Data
 					if (aquiredLock)
 						Monitor.Exit(query);
 				}
+			}
+
+			/// <summary>
+			/// Render verification mode (tests only, see <see cref="RenderVerification"/>): renders a parameter-dependent
+			/// statement again (a) with the SQL builder's per-element convert switched back on and (b) through the previous
+			/// pipeline (no up-front VALUES rows, per-element convert on), and reports any difference in the command text or
+			/// the parameter list against the commands that were actually built.
+			/// </summary>
+			static void VerifyRender(
+				DataConnection            dataConnection,
+				DataOptions               options,
+				ISqlOptimizer             sqlOptimizer,
+				ISqlExpressionFactory     factory,
+				SqlStatement              statement,
+				IReadOnlyParameterValues? parameterValues,
+				int                       startIndent,
+				CommandWithParameters[]   commands)
+			{
+				var expected = Describe(commands, parameterValues);
+
+				string? withSecondPass;
+				string? previousPipeline;
+
+				try
+				{
+					withSecondPass = RenderVerification.Compare(
+						expected,
+						Describe(RenderDependent(dataConnection, options, sqlOptimizer, factory, statement, parameterValues, startIndent, secondPass : true, buildValuesTableRows : true), parameterValues));
+				}
+				catch (Exception ex)
+				{
+					withSecondPass = "exception: " + ex;
+				}
+
+				try
+				{
+					previousPipeline = RenderVerification.Compare(
+						expected,
+						Describe(RenderDependent(dataConnection, options, sqlOptimizer, factory, statement, parameterValues, startIndent, secondPass : true, buildValuesTableRows : false), parameterValues));
+				}
+				catch (Exception ex)
+				{
+					previousPipeline = "exception: " + ex;
+				}
+
+				RenderVerification.Report(dataConnection.DataProvider.Name, expected, withSecondPass, previousPipeline);
+			}
+
+			static string Describe(CommandWithParameters[] commands, IReadOnlyParameterValues? parameterValues)
+			{
+				using var sb = Pools.StringBuilder.Allocate();
+
+				foreach (var command in commands)
+				{
+					sb.Value.Append(command.Command).AppendLine();
+
+					foreach (var parameter in command.SqlParameters)
+						RenderVerification.DescribeParameter(sb.Value, parameter, parameterValues);
+
+					sb.Value.AppendLine("--");
+				}
+
+				return sb.Value.ToString();
+			}
+
+			static CommandWithParameters[] RenderDependent(
+				DataConnection            dataConnection,
+				DataOptions               options,
+				ISqlOptimizer             sqlOptimizer,
+				ISqlExpressionFactory     factory,
+				SqlStatement              statement,
+				IReadOnlyParameterValues? parameterValues,
+				int                       startIndent,
+				bool                      secondPass,
+				bool                      buildValuesTableRows)
+			{
+				var sqlBuilder      = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, options);
+				var optimizeVisitor = sqlOptimizer.CreateOptimizerVisitor(false);
+				var convertVisitor  = sqlOptimizer.CreateConvertVisitor(false);
+
+				optimizeVisitor.BuildValuesTableRows = buildValuesTableRows;
+
+				var optimizationContext = new OptimizationContext(new EvaluationContext(parameterValues), options,
+					dataConnection.DataProvider.SqlProviderFlags,
+					dataConnection.MappingSchema,
+					optimizeVisitor,
+					convertVisitor,
+					factory,
+					dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent,
+					isAlreadyOptimizedAndConverted : !secondPass,
+					parametersNormalizerFactory : dataConnection.DataProvider.GetQueryParameterNormalizer);
+
+				statement = optimizationContext.OptimizeAndConvertAll(statement, NullabilityContext.GetContext(statement.SelectQuery));
+
+				var serviceProvider = ((IInfrastructure<IServiceProvider>)dataConnection.DataProvider).Instance;
+				AliasesHelper.PrepareQueryAndAliases(serviceProvider.GetRequiredService<IIdentifierService>(), statement, out var aliases);
+
+				var cc       = sqlBuilder.CommandCount(statement);
+				var commands = new CommandWithParameters[cc];
+
+				using var sb = Pools.StringBuilder.Allocate();
+
+				for (var i = 0; i < cc; i++)
+				{
+					sb.Value.Length = 0;
+					sqlBuilder.BuildSql(i, statement, sb.Value, optimizationContext, aliases, null, startIndent);
+					commands[i] = new CommandWithParameters(sb.Value.ToString(), optimizationContext.GetParameters());
+					optimizationContext.ClearParameters();
+				}
+
+				return commands;
 			}
 
 			static DbParameter[]?[] GetParameters(DataConnection dataConnection, PreparedQuery pq, IReadOnlyParameterValues? parameterValues)
