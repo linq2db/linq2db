@@ -72,6 +72,18 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void RecordProjectionWithStaticLet([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.WhereTest.RecordProjectionWithStaticLet(db);
+
+			if (db is DataConnection dc)
+			{
+				Assert.That(dc.LastQuery, Contains.Substring("WHERE"));
+			}
+		}
+
+		[Test]
 		public void ComplexRecordParametersMapping([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
