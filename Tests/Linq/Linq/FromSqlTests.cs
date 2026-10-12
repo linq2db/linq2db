@@ -1342,6 +1342,22 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void FromSql_Compiled_RawSqlStringArgument([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = CompiledQuery.Compile((IDataContext dc, RawSqlString sql, int id) =>
+				dc.FromSql<Person>(sql, id).Select(p => p.ID));
+
+			query(db, "SELECT * FROM Person WHERE PersonID = {0}", 1).ToArray().ShouldBe([1]);
+			query(db, "SELECT * FROM Person WHERE PersonID = {0}", 2).ToArray().ShouldBe([2]);
+
+			var ids = query(db, "SELECT * FROM Person WHERE PersonID <> {0}", 1).ToArray();
+			ids.ShouldNotContain(1);
+			ids.ShouldContain(2);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
 		public void FromSql_RawSqlString_TopLevel_QueryReused([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);

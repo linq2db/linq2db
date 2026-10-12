@@ -256,15 +256,13 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 					return null;
 
 				// sql and parameters are the last two arguments of both methods
-				var sql = node.Arguments[^2];
-
-				if (!IsCompilable(sql))
-					return null;
-
-				var format    = ((RawSqlString)EvaluateExpression(sql)!).Format;
+				var sql       = node.Arguments[^2];
 				var arguments = node.Arguments.Take(node.Arguments.Count - 2).ToList();
 
-				arguments.Add(DataExtensions.GenerateFormattableString(format, node.Arguments[^1]));
+				// a format read from a compiled query's arguments is resolved later, with the FormattableString's format
+				arguments.Add(IsCompilable(sql)
+					? DataExtensions.GenerateFormattableString(((RawSqlString)EvaluateExpression(sql)!).Format, node.Arguments[^1])
+					: Expression.Call(null, Methods.System.FormattableStringFactory_Create, Expression.Property(sql, nameof(RawSqlString.Format)), node.Arguments[^1]));
 
 				return Expression.Call(formattableMethod.MakeGenericMethod(node.Method.GetGenericArguments()), arguments);
 			}
