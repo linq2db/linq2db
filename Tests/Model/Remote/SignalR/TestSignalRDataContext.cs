@@ -1,14 +1,272 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Remote;
 using LinqToDB.Remote.SignalR;
 
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace Tests.Model.Remote.SignalR
 {
-	public class TestSignalRDataContext(HubConnection hubConnection, Func<DataOptions, DataOptions>? optionBuilder = null) : SignalRDataContext(hubConnection, optionBuilder), ITestDataContext
+	public class TestSignalRDataContext : SignalRDataContext, ITestDataContext
 	{
+		// Started hub connections not leased by any context, per hub URL. Contexts alive at the same time get
+		// separate connections: the test hub runs one invocation per connection at a time.
+		static readonly Dictionary<string, Stack<PooledHubConnection>> _idleConnections = new(StringComparer.Ordinal);
+		static readonly Lock                                           _idleConnectionsLock = new();
+
+		// Idle connections kept per URL; more than this only exist while that many contexts are alive.
+		const int MaxIdleConnectionsPerUrl = 32;
+
+		readonly Lease _lease;
+
+		public TestSignalRDataContext(string hubUrl, Func<DataOptions, DataOptions>? optionBuilder = null)
+			: this(new Lease(hubUrl, RentConnection(hubUrl)), optionBuilder)
+		{
+		}
+
+		TestSignalRDataContext(Lease lease, Func<DataOptions, DataOptions>? optionBuilder)
+			: base(lease.Connection.Client, optionBuilder)
+		{
+			_lease = lease;
+		}
+
+		/// <summary>
+		/// The client this context runs its queries through. It stops working when the context is disposed.
+		/// </summary>
+		public ILinqService LeasedClient => _lease;
+
+		/// <summary>
+		/// The pooled hub connection this context leased.
+		/// </summary>
+		public HubConnection HubConnection => _lease.Connection.Connection;
+
+		protected override ILinqService GetClient()
+		{
+			return _lease;
+		}
+
+		public override void Dispose()
+		{
+			try
+			{
+				base.Dispose();
+			}
+			finally
+			{
+				_lease.Return();
+			}
+		}
+
+		public override async ValueTask DisposeAsync()
+		{
+			try
+			{
+				await base.DisposeAsync().ConfigureAwait(false);
+			}
+			finally
+			{
+				_lease.Return();
+			}
+		}
+
+		static PooledHubConnection RentConnection(string hubUrl)
+		{
+			while (true)
+			{
+				PooledHubConnection? connection = null;
+
+				lock (_idleConnectionsLock)
+				{
+					if (_idleConnections.TryGetValue(hubUrl, out var idle) && idle.Count > 0)
+						connection = idle.Pop();
+				}
+
+				if (connection == null)
+					return PooledHubConnection.Start(hubUrl);
+
+				// It may have dropped while idle; a dropped connection would fail the test that gets it.
+				if (connection.IsConnected)
+					return connection;
+
+				connection.Dispose();
+			}
+		}
+
+		static void ReturnConnection(string hubUrl, PooledHubConnection connection)
+		{
+			if (connection.IsConnected)
+			{
+				lock (_idleConnectionsLock)
+				{
+					if (!_idleConnections.TryGetValue(hubUrl, out var idle))
+						_idleConnections.Add(hubUrl, idle = new Stack<PooledHubConnection>());
+
+					if (idle.Count < MaxIdleConnectionsPerUrl)
+					{
+						idle.Push(connection);
+						return;
+					}
+				}
+			}
+
+			connection.Dispose();
+		}
+
+		// One context's use of a pooled connection. A call after Return is refused, and the connection is
+		// pooled again only if no call is running and none was cancelled or failed: the hub keeps running a
+		// cancelled invocation and runs one invocation per connection at a time.
+		sealed class Lease(string hubUrl, PooledHubConnection connection) : ILinqService
+		{
+			readonly Lock _lock = new();
+
+			int  _running;
+			bool _interrupted;
+			bool _returned;
+
+			public PooledHubConnection Connection { get; } = connection;
+
+			public void Return()
+			{
+				bool reusable;
+
+				lock (_lock)
+				{
+					if (_returned)
+						return;
+
+					_returned = true;
+					reusable  = _running == 0 && !_interrupted;
+				}
+
+				if (reusable)
+					ReturnConnection(hubUrl, Connection);
+				else
+					Connection.Dispose();
+			}
+
+			async Task<T> RunAsync<T>(Func<ILinqService, Task<T>> invoke)
+			{
+				lock (_lock)
+				{
+					ObjectDisposedException.ThrowIf(_returned, typeof(TestSignalRDataContext));
+
+					_running++;
+				}
+
+				try
+				{
+					return await invoke(Connection.Client).ConfigureAwait(false);
+				}
+				catch
+				{
+					lock (_lock)
+						_interrupted = true;
+
+					throw;
+				}
+				finally
+				{
+					lock (_lock)
+						_running--;
+				}
+			}
+
+			Task<LinqServiceInfo> ILinqService.GetInfoAsync(string? configuration, CancellationToken cancellationToken)
+			{
+				return RunAsync(c => c.GetInfoAsync(configuration, cancellationToken));
+			}
+
+			Task<int> ILinqService.ExecuteNonQueryAsync(string? configuration, string queryData, CancellationToken cancellationToken)
+			{
+				return RunAsync(c => c.ExecuteNonQueryAsync(configuration, queryData, cancellationToken));
+			}
+
+			Task<string?> ILinqService.ExecuteScalarAsync(string? configuration, string queryData, CancellationToken cancellationToken)
+			{
+				return RunAsync(c => c.ExecuteScalarAsync(configuration, queryData, cancellationToken));
+			}
+
+			Task<string> ILinqService.ExecuteReaderAsync(string? configuration, string queryData, CancellationToken cancellationToken)
+			{
+				return RunAsync(c => c.ExecuteReaderAsync(configuration, queryData, cancellationToken));
+			}
+
+			Task<int> ILinqService.ExecuteBatchAsync(string? configuration, string queryData, CancellationToken cancellationToken)
+			{
+				return RunAsync(c => c.ExecuteBatchAsync(configuration, queryData, cancellationToken));
+			}
+
+			string? ILinqService.RemoteClientTag
+			{
+				get => ((ILinqService)Connection.Client).RemoteClientTag;
+				set => ((ILinqService)Connection.Client).RemoteClientTag = value;
+			}
+		}
+
+		sealed class PooledHubConnection : IDisposable
+		{
+			volatile bool _closed;
+
+			PooledHubConnection(HubConnection connection)
+			{
+				Connection         = connection;
+				Client             = new SignalRLinqServiceClient(connection);
+				Connection.Closed += _ =>
+				{
+					_closed = true;
+					return Task.CompletedTask;
+				};
+			}
+
+			public HubConnection            Connection { get; }
+			public SignalRLinqServiceClient Client     { get; }
+
+			// Without automatic reconnect a connection that drops stays down. It reports Disconnected
+			// before it raises Closed, so check both where the client has State. The net462 client has
+			// no State, so a connection that dropped but has not raised Closed yet can still be handed
+			// out there; only the test using it fails, and it is not pooled again after that failure.
+#if NETFRAMEWORK
+			public bool IsConnected => !_closed;
+#else
+			public bool IsConnected => !_closed && Connection.State == HubConnectionState.Connected;
+#endif
+
+			public static PooledHubConnection Start(string hubUrl)
+			{
+				var connection = new PooledHubConnection(new HubConnectionBuilder().WithUrl(hubUrl).Build());
+
+				try
+				{
+					connection.Connection.StartAsync().GetAwaiter().GetResult();
+				}
+				catch
+				{
+					connection.Dispose();
+					throw;
+				}
+
+				return connection;
+			}
+
+			public void Dispose()
+			{
+				Task.Run(DisposeConnectionAsync).GetAwaiter().GetResult();
+			}
+
+			// DisposeAsync returns Task on net462 and ValueTask on net8.0+, so awaiting it is the one form
+			// that compiles on both; MA0215 fires on net462 only, where returning the task would compile.
+#pragma warning disable MA0215 // Return the task instead of awaiting it
+			async Task DisposeConnectionAsync()
+			{
+				await Connection.DisposeAsync().ConfigureAwait(false);
+			}
+#pragma warning restore MA0215
+		}
+
 		public ITable<Person>                 Person                 => this.GetTable<Person>();
 		public ITable<ComplexPerson>          ComplexPerson          => this.GetTable<ComplexPerson>();
 		public ITable<Patient>                Patient                => this.GetTable<Patient>();
