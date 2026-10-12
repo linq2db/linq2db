@@ -1335,7 +1335,10 @@ namespace Tests.Linq
 			query3.ToArray().ShouldBe([1]);
 			query3.GetCompiledQueryInfo().ShouldBeSameAs(query1.GetCompiledQueryInfo());
 
-			query(db, $"SELECT * FROM Person WHERE PersonID <> {1}").ToArray().ShouldNotContain(1);
+			var ids = query(db, $"SELECT * FROM Person WHERE PersonID <> {1}").ToArray();
+			db.LastQuery.ShouldNotBe(sql);
+			ids.ShouldNotContain(1);
+			ids.ShouldContain(2);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
