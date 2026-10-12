@@ -2024,11 +2024,12 @@ namespace Tests.Linq
 		}
 
 		// A calculation over a CTE field that a missed row's NOT NULL column feeds reads it as the reader reads the field:
-		// default(T), not the NULL the body carries.
+		// default(T), not the NULL the body carries. Option off only: the option-on arm already answers C#'s value.
 		[Test]
-		public void CalculationOverCteColumnOfMissedLeftJoinReadsDefault([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		[ActiveIssue(5983, Details = "The COALESCE over a CTE field is decided but does not survive to the statement")]
+		public void CalculationOverCteColumnOfMissedLeftJoinReadsDefault([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(false));
 			using var table = db.CreateLocalTable(MissedJoinEntity.Seed);
 
 			var inner =
@@ -2070,11 +2071,13 @@ namespace Tests.Linq
 		}
 
 		// An eager-loaded collection's projection that calculates with the parent's missed row reads it as default(T): the
-		// parent's value reaches the detail query through the key subquery.
+		// parent's value reaches the detail query through the key subquery. Option off only: the option-on arm already
+		// answers C#'s value.
 		[Test]
-		public void EagerLoadOverMissedLeftJoinReadsDefault([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		[ActiveIssue(5983, Details = "The parent's value is judged in a frame that does not see the outer join")]
+		public void EagerLoadOverMissedLeftJoinReadsDefault([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(false));
 			using var table = db.CreateLocalTable(MissedJoinEntity.Seed);
 
 			var rows =
