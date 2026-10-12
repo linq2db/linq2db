@@ -1342,6 +1342,28 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void FromSqlScalar_ArgumentsOutOfFormatOrder([IncludeDataSources(TestProvName.AllAccess, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.FromSqlScalar<int>(FormattableStringFactory.Create("SELECT {1} - {0} AS [value] FROM Person WHERE PersonID = 1", 1, 10))
+				.ToArray().ShouldBe([9]);
+
+			db.FromSqlScalar<int>(FormattableStringFactory.Create("SELECT {0} + {0} - {1} AS [value] FROM Person WHERE PersonID = 1", 5, 1))
+				.ToArray().ShouldBe([9]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void FromSqlScalar_Nested_Captured_ArgumentsOutOfFormatOrder([IncludeDataSources(TestProvName.AllAccess, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var sql = FormattableStringFactory.Create("SELECT {1} - {0} AS [value] FROM Person WHERE PersonID = 1", 1, 10);
+
+			db.Person.Where(p => db.FromSqlScalar<int>(sql).Contains(p.ID + 8)).Select(p => p.ID).ToArray().ShouldBe([1]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
 		public void FromSql_Compiled_Interpolated_BuildsOnce([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataConnection(context);

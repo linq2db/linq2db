@@ -2061,7 +2061,13 @@ namespace LinqToDB.Internal.SqlProvider
 							.ToArray();
 					}
 
-					BuildFormatValues(IdentText(rawSqlTable.SQL, multiLine ? Indent + 1 : 0), parameters, Precedence.Primary);
+					var format = IdentText(rawSqlTable.SQL, multiLine ? Indent + 1 : 0);
+
+					// positional parameters bind in the order they appear in the text, not in argument order
+					if (SqlProviderFlags.IsParameterOrderDependent)
+						(format, parameters) = OrderFormatValues(format, parameters);
+
+					BuildFormatValues(format, parameters, Precedence.Primary);
 
 					if (multiLine)
 						StringBuilder.AppendLine();
@@ -4215,6 +4221,28 @@ namespace LinqToDB.Internal.SqlProvider
 
 				StringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, values);
 			}
+		}
+
+		static (string format, ISqlExpression[] values) OrderFormatValues(string format, ISqlExpression[] values)
+		{
+			if (values.Length == 0)
+				return (format, values);
+
+			var ordered = new List<ISqlExpression>(values.Length);
+
+			var newFormat = QueryHelper.TransformExpressionIndexes(
+				(values, ordered),
+				format,
+				static (context, idx) =>
+				{
+					if (idx < 0 || idx >= context.values.Length)
+						return idx;
+
+					context.ordered.Add(context.values[idx]);
+					return context.ordered.Count - 1;
+				});
+
+			return (newFormat, ordered.ToArray());
 		}
 
 		static string IdentText(string text, int ident)
