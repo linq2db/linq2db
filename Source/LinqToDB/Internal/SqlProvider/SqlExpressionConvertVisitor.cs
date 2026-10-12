@@ -2122,8 +2122,9 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </para>
 		/// <para>
 		/// The sub-query is cloned before its column is rewritten unless this visitor owns it outright, the same
-		/// condition <see cref="ConvertToExists"/> applies for the same reason - it may be shared, and a statement
-		/// reached through the query cache must not be edited in place.
+		/// query-level check <see cref="ConvertToExists"/> applies for the same reason - it may be shared, and a
+		/// statement reached through the query cache must not be edited in place. Only the query is checked here:
+		/// a transformed query always has its own columns.
 		/// </para>
 		/// </remarks>
 		ISqlPredicate? ReconcileDurationUnits(SqlPredicate.InSubQuery predicate)
