@@ -782,6 +782,41 @@ namespace Tests.Linq
 			years.Length.ShouldBe(MissedDayEntity.Seed.Length);
 			years.ShouldAllBe(year => year == MissedRowNativeYear(context));
 		}
+
+		[Table]
+		sealed class MissedWideDayEntity
+		{
+			[Column, PrimaryKey]                      public int      Id      { get; set; }
+			[Column(DataType = DataType.DateTime64)]  public DateOnly Day64   { get; set; }
+			[Column(DataType = DataType.Timestamp64)] public DateOnly DayTs64 { get; set; }
+
+			public static readonly MissedWideDayEntity[] Seed =
+			[
+				new() { Id = 1, Day64 = new DateOnly(2020, 1, 15), DayTs64 = new DateOnly(2020, 1, 15) },
+				new() { Id = 2, Day64 = new DateOnly(2021, 2, 16), DayTs64 = new DateOnly(2021, 2, 16) },
+			];
+		}
+
+		// YDB writes a DateOnly mapped to a wide timestamp type as a narrow Date, so its default must be clamped as one.
+		// Not over LinqService: the remote path cannot insert a DateOnly into a column mapped as DataType.DateTime64.
+		[Test]
+		public void DateOnlyMappedWideOverMissedLeftJoinReadsDefault([IncludeDataSources(TestProvName.AllYdb)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(MissedWideDayEntity.Seed);
+
+			var query =
+				from e in table
+				from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				select new
+				{
+					e.Id,
+					Earlier64   = j.Day64   < e.Day64   ? "y" : "n",
+					EarlierTs64 = j.DayTs64 < e.DayTs64 ? "y" : "n",
+				};
+
+			AssertQuery(query);
+		}
 #endif
 
 		[Table]
@@ -1104,6 +1139,19 @@ namespace Tests.Linq
 
 			sql.ToString().ShouldContain("1970-01-01");
 		}
+
+		// YDB writes a DateOnly through its narrow Date arm whatever the mapped type, DateTime64 and Timestamp64 included.
+		[Test]
+		public void DateOnlyDefaultMappedWideIsWrittenAtTheClamp([Values(DataType.DateTime64, DataType.Timestamp64)] DataType dataType)
+		{
+			var ydb     = YdbTools.GetDataProvider();
+			var lowered = LowerDefault(ydb, typeof(DateOnly), dataType);
+			var sql     = new StringBuilder();
+
+			ydb.CreateSqlBuilder(ydb.MappingSchema, new DataOptions()).BuildExpression(sql, lowered, false);
+
+			sql.ToString().ShouldBe("Date('1970-01-01')");
+		}
 #endif
 
 		static ISqlExpression LowerDefault(IDataProvider dataProvider, Type systemType, DataType dataType)
@@ -1123,7 +1171,7 @@ namespace Tests.Linq
 				isAlreadyOptimizedAndConverted: false,
 				parametersNormalizerFactory   : static () => NoopQueryParametersNormalizer.Instance);
 
-			var defaultValue = new SqlDefaultValueExpression(new DbDataType(systemType, dataType), systemType == typeof(DateTime) ? (object)default(DateTime) : default(DateTimeOffset));
+			var defaultValue = new SqlDefaultValueExpression(new DbDataType(systemType, dataType), Activator.CreateInstance(systemType)!);
 
 			return optimizationContext.OptimizeAndConvertAll<ISqlExpression>(defaultValue, NullabilityContext.NonQuery);
 		}
