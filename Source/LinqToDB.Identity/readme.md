@@ -225,6 +225,9 @@ there: user and role updates throw, and every `UserManager` operation that saves
 identity columns either, so int / long keys must be assigned by the caller. Reads, claims, logins, tokens, roles and
 deletes work.
 
+Providers without a date/time-with-offset type — MySQL, Access, SQL CE, SQL Server 2005, Sybase, SAP HANA, Informix,
+DB2 LUW, Firebird and YDB — store `LockoutEnd` as UTC, truncated to whole seconds, and read it back at a zero offset.
+
 On **SAP HANA** a passkey's `Data` column holds at most 5000 characters, the widest `NVARCHAR` it binds: enough for
 the default `none` attestation, possibly not for a direct-attestation certificate chain.
 
@@ -271,7 +274,9 @@ standalone 6.0.0, but the API is **breaking**: don't let a `6.*` range or an aut
 unreviewed. Existing `AspNet*` tables keep working with **no DB migration**; tables the standalone package created
 need their names mapped or renamed — see *Database* below. Tables created by this version's `CreateTable` differ on some providers: wider claim, token and passkey
 data columns, and a `DATETIME` `LockoutEnd` on MySQL. Widening an existing table to match is optional; values that
-did not fit the old columns never could be stored.
+did not fit the old columns never could be stored. On the providers that store `LockoutEnd` as UTC (see *Provider
+support*), a value an earlier version stored in server-local time reads back shifted by that offset until it is next
+written.
 
 | Area | Before (standalone) | After (monorepo) |
 |---|---|---|
