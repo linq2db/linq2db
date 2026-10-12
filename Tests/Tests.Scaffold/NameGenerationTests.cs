@@ -9,7 +9,7 @@ using NUnit.Framework;
 namespace Tests.Scaffold
 {
 	[TestFixture]
-	public class NameGenerationTests : TestBase
+	public class NameGenerationTests
 	{
 		private static readonly TestCaseData[] _associationTestCases = new[]
 		{

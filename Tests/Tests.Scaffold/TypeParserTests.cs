@@ -7,7 +7,7 @@ using NUnit.Framework;
 namespace Tests.Scaffold
 {
 	[TestFixture]
-	public class TypeParserTests : TestBase
+	public class TypeParserTests
 	{
 		private sealed class TestType : IType
 		{
