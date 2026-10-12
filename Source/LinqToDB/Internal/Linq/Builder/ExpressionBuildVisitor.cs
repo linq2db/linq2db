@@ -2510,7 +2510,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			dbDataType   = default;
 			defaultValue = null;
 
-			if (!column.CanBeNullable(nullability) || column.CanBeNullable(declared))
+			if (!column.CanBeNullable(nullability) || CanBeNullAsDeclared(column, declared, null))
 				return false;
 
 			dbDataType = QueryHelper.GetDbDataType(column, MappingSchema);
@@ -2528,6 +2528,42 @@ namespace LinqToDB.Internal.Linq.Builder
 			defaultValue = MappingSchema.GetDefaultValue(type);
 
 			return !defaultValue.IsNullValue;
+		}
+
+		// The nullability a column has as declared, through set-operation branches: the NULL of a join inside a branch is not a
+		// declared one.
+		static bool CanBeNullAsDeclared(ISqlExpression expression, NullabilityContext declared, HashSet<ISqlExpression>? visited)
+		{
+			switch (expression)
+			{
+				case SqlColumn when !(visited ??= new(Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default)).Add(expression):
+					return expression.SystemType?.IsNullableOrReferenceType != false;
+
+				case SqlColumn { Parent.HasSetOperators: true } column:
+				{
+					var index = column.Parent.Select.Columns.IndexOf(column);
+
+					if (index < 0 || CanBeNullAsDeclared(column.Expression, declared, visited))
+						return true;
+
+					foreach (var set in column.Parent.SetOperators)
+					{
+						if (set.Operation is not (SetOperation.Union or SetOperation.UnionAll))
+							continue;
+
+						if (index >= set.SelectQuery.Select.Columns.Count || CanBeNullAsDeclared(set.SelectQuery.Select.Columns[index], declared, visited))
+							return true;
+					}
+
+					return false;
+				}
+
+				case SqlColumn column:
+					return CanBeNullAsDeclared(column.Expression, declared, visited);
+
+				default:
+					return expression.CanBeNullable(declared);
+			}
 		}
 
 		static bool IsIdentityTemplate(Sql.ExpressionAttribute attribute)
