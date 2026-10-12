@@ -1416,6 +1416,18 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void FromSql_Compiled_ArgumentArray([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var query = CompiledQuery.Compile((IDataContext dc, object[] args) =>
+				dc.FromSql<Person>("SELECT * FROM Person WHERE PersonID = {0}", args).Select(p => p.ID));
+
+			query(db, [1]).ToArray().ShouldBe([1]);
+			query(db, [2]).ToArray().ShouldBe([2]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
 		public void FromSql_Compiled_Interpolated_BuildsOnce([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataConnection(context);
