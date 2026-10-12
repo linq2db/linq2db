@@ -304,6 +304,23 @@ namespace Tests.Linq
 			Query($"{1}").ToArray().ShouldBe([1]);
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5857"), QueryCacheTest]
+		public void Expr_Interpolated_ArgumentChanges_Cached([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query(int value) =>
+				db.Person.Where(p => p.ID == 1).Select(_ => Sql.Expr<int>($"{value}"));
+
+			Query(1).ToArray().ShouldBe([1]);
+
+			var query  = Query(2);
+			var misses = query.GetCacheMissCount();
+
+			query.ToArray().ShouldBe([2]);
+			query.GetCacheMissCount().ShouldBe(misses);
+		}
+
 		public class FreeTextKey<T>
 		{
 			public T   Key = default!;
