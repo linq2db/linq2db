@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<AssemblyName>linq2db.Tests.Scaffold.Harness</AssemblyName>
+		<RootNamespace>Tests.Scaffold.Harness</RootNamespace>
+		<TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">net10.0</TargetFrameworks>
+		<SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectCapability Remove="TestContainer" />
+
+		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB.Scaffold\LinqToDB.Scaffold.csproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB.FSharp\LinqToDB.FSharp.fsproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB.Tools\LinqToDB.Tools.csproj" />
+
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+		<PackageReference Include="FSharp.Compiler.Service" />
+		<PackageReference Include="FSharp.Core" />
+		<PackageReference Include="Microsoft.Data.Sqlite" />
+		<PackageReference Include="NUnit" />
+		<PackageReference Include="NUnit.Analyzers" />
+		<PackageReference Include="Shouldly" />
+	</ItemGroup>
+
+</Project>
