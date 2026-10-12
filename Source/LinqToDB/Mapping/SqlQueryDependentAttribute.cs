@@ -75,13 +75,17 @@ namespace LinqToDB.Mapping
 			Func<TContext, Expression, Expression, bool> comparer)
 		{
 			// FormattableStringFactory.Create(format, new object[] { ... }): the format is compared by value,
-			// the arguments as any other expression of the query.
-			if (TrySplitFormattableString(expr1, out var format1, out var arguments1) &&
-				TrySplitFormattableString(expr2, out var format2, out var arguments2))
+			// the arguments as any other expression of the query. The arguments can reference query parameters,
+			// so a split side is never evaluated.
+			if (TrySplitFormattableString(expr1, out var format1, out var arguments1))
 			{
-				return string.Equals(format1.EvaluateExpression<string>(), format2.EvaluateExpression<string>(), StringComparison.Ordinal)
+				return TrySplitFormattableString(expr2, out var format2, out var arguments2)
+					&& string.Equals(format1.EvaluateExpression<string>(), format2.EvaluateExpression<string>(), StringComparison.Ordinal)
 					&& comparer(context, arguments1, arguments2);
 			}
+
+			if (TrySplitFormattableString(expr2, out _, out _))
+				return false;
 
 			return ObjectsEqual(expr1.EvaluateExpression(), expr2.EvaluateExpression());
 		}
