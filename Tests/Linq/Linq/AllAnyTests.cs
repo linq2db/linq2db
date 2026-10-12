@@ -367,8 +367,14 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			db.Parent.Where(p => p.Value1 != null).Any(p => p.Value1 > 1)
-				.ShouldBe(Parent.Where(p => p.Value1 != null).Any(p => p.Value1 > 1));
+			var expected = Parent
+				.Where(p => p.Value1 != null)
+				.Any(p => p.Value1 > 1);
+
+			db.Parent
+				.Where(p => p.Value1 != null)
+				.Any(p => p.Value1 > 1)
+				.ShouldBe(expected);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6024")]
@@ -376,8 +382,14 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			db.Parent.Where(p => p.Value1 != null).All(p => p.Value1 > 0)
-				.ShouldBe(Parent.Where(p => p.Value1 != null).All(p => p.Value1 > 0));
+			var expected = Parent
+				.Where(p => p.Value1 != null)
+				.All(p => p.Value1 > 0);
+
+			db.Parent
+				.Where(p => p.Value1 != null)
+				.All(p => p.Value1 > 0)
+				.ShouldBe(expected);
 		}
 
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
@@ -386,9 +398,18 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			AreEqual(
-				from p in    Parent orderby p.ParentID select new { p.ParentID, Has =    GrandChild.Where(g => g.ChildID != null).Any(g => g.ParentID == p.ParentID) },
-				from p in db.Parent orderby p.ParentID select new { p.ParentID, Has = db.GrandChild.Where(g => g.ChildID != null).Any(g => g.ParentID == p.ParentID) });
+			var query =
+				from p in db.Parent
+				orderby p.ParentID
+				select new
+				{
+					p.ParentID,
+					Has = db.GrandChild
+						.Where(g => g.ChildID != null)
+						.Any(g => g.ParentID == p.ParentID),
+				};
+
+			AssertQuery(query);
 		}
 
 		[ThrowsRequiresCorrelatedSubquery]
@@ -397,9 +418,16 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			AreEqual(
-				from p in    Parent orderby p.ParentID select new { p.ParentID, Cnt =    GrandChild.Count(g => g.ParentID == p.ParentID && g.ChildID != null) },
-				from p in db.Parent orderby p.ParentID select new { p.ParentID, Cnt = db.GrandChild.Count(g => g.ParentID == p.ParentID && g.ChildID != null) });
+			var query =
+				from p in db.Parent
+				orderby p.ParentID
+				select new
+				{
+					p.ParentID,
+					Cnt = db.GrandChild.Count(g => g.ParentID == p.ParentID && g.ChildID != null),
+				};
+
+			AssertQuery(query);
 		}
 
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllOracle11], ErrorMessage = ErrorHelper.Oracle.Error_ColumnSubqueryShouldNotContainParentIsNotNull)]
@@ -409,9 +437,16 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			AreEqual(
-				from p in    Parent orderby p.ParentID select new { p.ParentID, Cnt =    Child.Count(c => c.ParentID == p.ParentID && p.Value1 != null) },
-				from p in db.Parent orderby p.ParentID select new { p.ParentID, Cnt = db.Child.Count(c => c.ParentID == p.ParentID && p.Value1 != null) });
+			var query =
+				from p in db.Parent
+				orderby p.ParentID
+				select new
+				{
+					p.ParentID,
+					Cnt = db.Child.Count(c => c.ParentID == p.ParentID && p.Value1 != null),
+				};
+
+			AssertQuery(query);
 		}
 	}
 }
