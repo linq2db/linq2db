@@ -14,11 +14,17 @@ namespace LinqToDB.Mapping
 	/// Used for controlling query caching of custom SQL Functions.
 	/// Parameter with this attribute will be evaluated on client side before generating SQL.
 	/// </summary>
+	/// <remarks>
+	/// A <see cref="FormattableString"/> parameter is the exception: only its format is evaluated on client side.
+	/// Its arguments are translated as part of the query, so they usually become query parameters, and the query cache
+	/// compares the format by value and the arguments as any other expression of the query.
+	/// </remarks>
 	[AttributeUsage(AttributeTargets.Parameter)]
 	public class SqlQueryDependentAttribute : Attribute
 	{
 		/// <summary>
 		/// Compares two objects during expression tree comparison. Handles sequences also.
+		/// Two <see cref="FormattableString"/> values are compared by format and arguments.
 		/// Has to be overriden if specific comparison required.
 		/// </summary>
 		/// <param name="obj1"></param>
@@ -64,6 +70,8 @@ namespace LinqToDB.Mapping
 
 		/// <summary>
 		/// Compares two expressions during expression tree comparison.
+		/// A <c>FormattableStringFactory.Create(format, new object[] { ... })</c> call is compared by the value of its format
+		/// and by its argument expressions, without evaluating the arguments.
 		/// Has to be overriden if specific comparison required.
 		/// </summary>
 		/// <param name="context"></param>
