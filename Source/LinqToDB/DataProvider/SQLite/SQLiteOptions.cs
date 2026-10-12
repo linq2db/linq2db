@@ -28,17 +28,32 @@ namespace LinqToDB.DataProvider.SQLite
 	)
 		: DataProviderOptions<SQLiteOptions>(BulkCopyType)
 	{
+		/// <summary>
+		/// When enabled, System.Data.SQLite parameters of type <see cref="DateTimeOffset"/> use invariant
+		/// <c>yyyy-MM-dd HH:mm:ss.fffzzz</c> text instead of the driver's culture-dependent format.
+		/// Default value: <see langword="false"/>.
+		/// </summary>
+		/// <remarks>
+		/// Sub-millisecond precision is truncated. Inline literals and default bulk-copy literals already
+		/// use this format; Microsoft.Data.Sqlite parameters are unaffected. Existing rows are not migrated:
+		/// normalize culture-formatted data before enabling this option to preserve text-key matching.
+		/// For remote queries, configure the option on the server's data connection.
+		/// </remarks>
+		public bool UseInvariantDateTimeOffsetFormat { get; init; }
+
 		public SQLiteOptions() : this(BulkCopyType.MultipleRows)
 		{
 		}
 
 		SQLiteOptions(SQLiteOptions original) : base(original)
 		{
-			AlwaysCheckDbNull = original.AlwaysCheckDbNull;
+			AlwaysCheckDbNull                = original.AlwaysCheckDbNull;
+			UseInvariantDateTimeOffsetFormat = original.UseInvariantDateTimeOffsetFormat;
 		}
 
 		protected override IdentifierBuilder CreateID(IdentifierBuilder builder) => builder
 			.Add(AlwaysCheckDbNull)
+			.Add(UseInvariantDateTimeOffsetFormat)
 			;
 
 		#region IEquatable implementation

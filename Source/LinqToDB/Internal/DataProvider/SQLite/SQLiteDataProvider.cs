@@ -293,10 +293,11 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 					dataType = dataType.WithDataType(DataType.VarChar);
 			}
 
-			if (Provider == SQLiteProvider.System && value is DateTimeOffset dto)
+			if (Provider == SQLiteProvider.System && value is DateTimeOffset dto
+				&& dataConnection.Options.FindOrDefault(SQLiteOptions.Default).UseInvariantDateTimeOffsetFormat)
 			{
 				// System.Data.SQLite otherwise uses culture-dependent text that SQLite date functions cannot parse.
-				value    = dto.ToString("yyyy-MM-dd HH:mm:ss.FFFFFFFzzz", DateTimeFormatInfo.InvariantInfo);
+				value    = dto.ToString(SQLiteMappingSchema.DATETIMEOFFSET_FORMAT_RAW, DateTimeFormatInfo.InvariantInfo);
 				dataType = dataType.WithDataType(DataType.VarChar);
 			}
 
