@@ -17,7 +17,6 @@ using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.Linq.Builder;
-using LinqToDB.Internal.Reflection;
 
 namespace LinqToDB
 {
@@ -115,11 +114,8 @@ namespace LinqToDB
 					var argument = mc.Arguments[i];
 
 					// interpolation arguments render as parameters, only the format shapes the SQL
-					if (argument is MethodCallExpression { Arguments: [var format, { NodeType: ExpressionType.NewArrayInit }] } create
-						&& create.Method == Methods.System.FormattableStringFactory_Create)
-					{
+					if (dependent[i] is SqlQueryDependentFormatAttribute && SqlQueryDependentFormatAttribute.TrySplit(argument, out var format, out _))
 						argument = format;
-					}
 
 					argument.Visit(context, static (c, a) =>
 					{

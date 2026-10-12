@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
-using LinqToDB.Internal.Reflection;
 
 namespace LinqToDB.Mapping
 {
@@ -15,11 +13,6 @@ namespace LinqToDB.Mapping
 	/// Used for controlling query caching of custom SQL Functions.
 	/// Parameter with this attribute will be evaluated on client side before generating SQL.
 	/// </summary>
-	/// <remarks>
-	/// A <see cref="FormattableString"/> parameter is the exception: only its format is evaluated on client side.
-	/// Its arguments are translated as part of the query, so they usually become query parameters, and the query cache
-	/// compares the format by value and the arguments as any other expression of the query.
-	/// </remarks>
 	[AttributeUsage(AttributeTargets.Parameter)]
 	public class SqlQueryDependentAttribute : Attribute
 	{
@@ -71,8 +64,6 @@ namespace LinqToDB.Mapping
 
 		/// <summary>
 		/// Compares two expressions during expression tree comparison.
-		/// A <c>FormattableStringFactory.Create(format, new object[] { ... })</c> call is compared by the value of its format
-		/// and by its argument expressions, without evaluating the arguments.
 		/// Has to be overriden if specific comparison required.
 		/// </summary>
 		/// <param name="context"></param>
@@ -83,35 +74,7 @@ namespace LinqToDB.Mapping
 		public virtual bool ExpressionsEqual<TContext>(TContext context, Expression expr1, Expression expr2,
 			Func<TContext, Expression, Expression, bool> comparer)
 		{
-			// FormattableStringFactory.Create(format, new object[] { ... }): the format is compared by value,
-			// the arguments as any other expression of the query. The arguments can reference query parameters,
-			// so a split side is never evaluated.
-			if (TrySplitFormattableString(expr1, out var format1, out var arguments1))
-			{
-				return TrySplitFormattableString(expr2, out var format2, out var arguments2)
-					&& string.Equals(format1.EvaluateExpression<string>(), format2.EvaluateExpression<string>(), StringComparison.Ordinal)
-					&& comparer(context, arguments1, arguments2);
-			}
-
-			if (TrySplitFormattableString(expr2, out _, out _))
-				return false;
-
 			return ObjectsEqual(expr1.EvaluateExpression(), expr2.EvaluateExpression());
-		}
-
-		static bool TrySplitFormattableString(Expression expression, [NotNullWhen(true)] out Expression? format, [NotNullWhen(true)] out Expression? arguments)
-		{
-			if (expression is MethodCallExpression { Arguments: [var f, { NodeType: ExpressionType.NewArrayInit } a] } create
-				&& create.Method == Methods.System.FormattableStringFactory_Create)
-			{
-				format    = f;
-				arguments = a;
-				return true;
-			}
-
-			format    = null;
-			arguments = null;
-			return false;
 		}
 
 		/// <summary>

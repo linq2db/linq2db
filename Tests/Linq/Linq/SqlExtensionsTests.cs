@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
@@ -6,6 +7,9 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
+using Tests.Model;
 
 using NUnit.Framework;
 
@@ -334,6 +338,43 @@ namespace Tests.Linq
 			attribute.ObjectsEqual(value1, sameValue1) .ShouldBeTrue();
 			attribute.ObjectsEqual(value1, value2)     .ShouldBeFalse();
 			attribute.ObjectsEqual(value1, otherFormat).ShouldBeFalse();
+		}
+
+		sealed class InlineFormatBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqlExtensionBuilder builder)
+			{
+				var sql = builder.GetValue<FormattableString>("sql");
+				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(int)), sql.ToString(CultureInfo.InvariantCulture), Precedence.Primary);
+			}
+		}
+
+		[Sql.Extension("", BuilderType = typeof(InlineFormatBuilder), ServerSideOnly = true)]
+		static int InlineFormat([SqlQueryDependent] FormattableString sql) => throw new ServerSideOnlyException(nameof(InlineFormat));
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void CustomExtension_DependentFormattableString_ArgumentChanges([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			int[] Query(int value) => db.Person.Where(p => p.ID == 1).Select(_ => InlineFormat($"{value}")).ToArray();
+
+			Query(1).ShouldBe([1]);
+			Query(2).ShouldBe([2]);
+			Query(1).ShouldBe([1]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void CustomExtension_DependentFormattableString_Compiled([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = CompiledQuery.Compile((IDataContext dc, int value) =>
+				dc.GetTable<Person>().Where(p => p.ID == 1).Select(_ => InlineFormat($"{value}")));
+
+			query(db, 1).ToArray().ShouldBe([1]);
+			query(db, 2).ToArray().ShouldBe([2]);
+			query(db, 1).ToArray().ShouldBe([1]);
 		}
 
 		public class FreeTextKey<T>

@@ -195,7 +195,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 						var argument = arguments[i];
 						if (argument.NodeType != ExpressionType.Constant)
 						{
-							var newArgument = argument.Type == typeof(FormattableString)
+							var newArgument = attr is SqlQueryDependentFormatAttribute
 								? PrepareFormattableString(argument)
 								: attr.PrepareForCache(argument, this);
 
@@ -205,7 +205,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 							// materialise it here; CompiledTable carries the same values in its cache key.
 							// Resolved against newArgument rather than argument: PrepareForCache rebuilds a
 							// params array when any element folds, and leaves the ps-reading elements in place.
-							if (_parameterValues != null && argument.Type != typeof(FormattableString))
+							if (_parameterValues != null && attr is not SqlQueryDependentFormatAttribute)
 							{
 								var resolved = ResolveCompiledQueryArguments(newArgument);
 

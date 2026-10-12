@@ -1493,8 +1493,8 @@ namespace LinqToDB
 		/// <returns> An <see cref="IQueryable{T}" /> representing the raw SQL query. </returns>
 		[StringFormatMethod("sql")]
 		public static IQueryable<TEntity> FromSql<TEntity>(
-			this                IDataContext      dataContext,
-			[SqlQueryDependent] FormattableString sql)
+			this                      IDataContext      dataContext,
+			[SqlQueryDependentFormat] FormattableString sql)
 		{
 			ArgumentNullException.ThrowIfNull(dataContext);
 			ArgumentNullException.ThrowIfNull(sql);
@@ -1535,8 +1535,8 @@ namespace LinqToDB
 		/// <returns> An <see cref="IQueryable{T}" /> representing the raw SQL query. </returns>
 		[StringFormatMethod("sql")]
 		public static IQueryable<TEntity> FromSqlScalar<TEntity>(
-			this                         IDataContext      dataContext,
-			[SqlQueryDependent] FormattableString sql)
+			this                      IDataContext      dataContext,
+			[SqlQueryDependentFormat] FormattableString sql)
 		{
 			ArgumentNullException.ThrowIfNull(dataContext);
 			ArgumentNullException.ThrowIfNull(sql);
