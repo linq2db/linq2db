@@ -316,6 +316,7 @@ namespace Tests.Linq
 
 		/// <summary>An unpivot written inline in a sub-query, over a source that is itself a query rather than a captured local.</summary>
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void UnpivotInlineInASubQuery([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -483,8 +484,12 @@ namespace Tests.Linq
 			(probe.GetCacheMissCount() - start).ShouldBe(1);
 		}
 
+		// Gated for now: SAP HANA rejects a set operator inside LATERAL — linq2db#6034 decorrelates it away.
 		[Test]
-		[ThrowsRequiredOuterJoins(TestProvName.AllSQLite, TestProvName.AllAccess, TestProvName.AllMySql57, TestProvName.AllMariaDB, TestProvName.AllFirebirdLess4, ProviderName.PostgreSQL92, TestProvName.AllOracle11, TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllClickHouse, TestProvName.AllYdb)]
+		[ThrowsRequiredOuterJoins(TestProvName.AllSQLite, TestProvName.AllAccess, TestProvName.AllMySql57, TestProvName.AllMariaDB, TestProvName.AllFirebirdLess4, ProviderName.PostgreSQL92, TestProvName.AllOracle11, TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllSybase)]
+		[ThrowsRequiresCorrelatedSubquery]
+		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative, ErrorMessage = "SET operator in LATERAL")]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, ErrorMessage = "SET operator in LATERAL")]
 		public void UnpivotOverACorrelatedSource([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

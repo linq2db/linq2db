@@ -193,6 +193,7 @@ namespace Tests.Linq
 
 		/// <summary>A pivot written inline in a sub-query, over a source that is itself a query rather than a captured local.</summary>
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void PivotInlineInASubQuery([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
