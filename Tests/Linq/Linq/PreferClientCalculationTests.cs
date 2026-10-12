@@ -2241,9 +2241,9 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
 			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
 
-			// AssertQuery cannot be used here: a missed LeftJoin materializes as null in LINQ to Objects, so the in-memory
-			// arm would throw. The SQL answer is NULL, and it has to survive the option on every provider and through the
-			// remote context, which the [IncludeDataSources] tests in this fixture exclude.
+			// AssertQuery cannot be used here: its in-memory arm keeps the NULL only for a member read directly under the nullable
+			// marker, so it reads Sql.ToNullable(j.Value1 + 1) over a missed row as 1. The SQL answer is NULL, and it has to survive
+			// the option on every provider and through the remote context, which the ToNullable tests above exclude.
 			var results =
 				(from e in table
 				 from j in table.LeftJoin(j => j.Id == e.Id + 1000)
