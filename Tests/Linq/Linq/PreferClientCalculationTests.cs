@@ -2023,6 +2023,52 @@ namespace Tests.Linq
 			nested.ShouldAllBe(n => n.Inner.X == 1);
 		}
 
+		// A calculation over a CTE field that a missed row's NOT NULL column feeds reads it as the reader reads the field:
+		// default(T), not the NULL the body carries.
+		[Test]
+		public void CalculationOverCteColumnOfMissedLeftJoinReadsDefault([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(MissedJoinEntity.Seed);
+
+			var inner =
+				from e in table
+				from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				select new { e.Id, V = j.Value1 };
+
+			var rows =
+				(from x in inner.AsCte()
+				 select new { x.Id, x.V, W = x.V + 1 })
+				.ToArray();
+
+			rows.Length.ShouldBe(MissedJoinEntity.Seed.Length);
+			rows.Select(r => r.V).ShouldAllBe(v => v == 0);
+			rows.Select(r => r.W).ShouldAllBe(w => w == 1);
+		}
+
+		// A calculation over a set-operation column that a missed row's NOT NULL column feeds reads it as the reader reads the
+		// column: default(T), not the NULL the branch carries.
+		[Test]
+		public void CalculationOverSetColumnOfMissedLeftJoinReadsDefault([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(MissedJoinEntity.Seed);
+
+			var inner =
+				from e in table
+				from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				select new { e.Id, V = j.Value1 };
+
+			var rows =
+				(from x in inner.Concat(inner)
+				 select new { x.Id, x.V, W = x.V + 1 })
+				.ToArray();
+
+			rows.Length.ShouldBe(MissedJoinEntity.Seed.Length * 2);
+			rows.Select(r => r.V).ShouldAllBe(v => v == 0);
+			rows.Select(r => r.W).ShouldAllBe(w => w == 1);
+		}
+
 		// An eager-loaded collection's projection that calculates with the parent's missed row reads it as default(T): the
 		// parent's value reaches the detail query through the key subquery.
 		[Test]
