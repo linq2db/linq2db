@@ -5964,7 +5964,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		/// <summary>
 		/// A call that takes a sequence or a per-element lambda is a function of a set (an aggregate, a window function).
-		/// An inline array passed to a <see langword="params"/> parameter is a list of values, not a set.
+		/// An inline array passed to a <see langword="params"/> parameter, or to a <see cref="string"/> method, is a list of
+		/// values, not a set.
 		/// </summary>
 		static bool IsSetFunctionCall(Expression expression)
 		{
@@ -5983,7 +5984,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (!IsSetOrLambda(argument))
 					continue;
 
-				if (argument is NewArrayExpression && (parameters ??= call.Method.GetParameters())[i].IsDefined(typeof(ParamArrayAttribute), false))
+				if (argument is NewArrayExpression
+					&& (call.Method.DeclaringType == typeof(string) || (parameters ??= call.Method.GetParameters())[i].IsDefined(typeof(ParamArrayAttribute), false)))
 					continue;
 
 				return true;
