@@ -2023,6 +2023,35 @@ namespace Tests.Linq
 			nested.ShouldAllBe(n => n.Inner.X == 1);
 		}
 
+		// An eager-loaded collection's projection that calculates with the parent's missed row reads it as default(T): the
+		// parent's value reaches the detail query through the key subquery.
+		[Test]
+		public void EagerLoadOverMissedLeftJoinReadsDefault([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(MissedJoinEntity.Seed);
+
+			var rows =
+				(from e in table
+				 from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				 select new
+				 {
+					 e.Id,
+					 Kids = table
+						 .Where(k => k.Id == e.Id)
+						 .Select(k => new { S = (j.Value1 + 1) * 10, Sum = k.Value1 + j.Value1, Inner = new { X = j.Value1 + 1 } })
+						 .ToArray(),
+				 })
+				.ToArray();
+
+			rows.Length.ShouldBe(MissedJoinEntity.Seed.Length);
+			rows.ShouldAllBe(r => r.Kids.Length == 1);
+
+			rows.Select(r => r.Kids[0].S).ShouldAllBe(s => s == 10);
+			rows.Select(r => r.Kids[0].Inner.X).ShouldAllBe(x => x == 1);
+			rows.Select(r => r.Kids[0].Sum).ShouldBe(MissedJoinEntity.Seed.Select(s => s.Value1));
+		}
+
 		// An aggregate over an inline array is a set function: SQL's MIN skips the missed row's NULL, which C# would read as 0.
 		[Test]
 		public void InlineArrayAggregateOverMissedLeftJoinKeepsNull([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool preferClient)
