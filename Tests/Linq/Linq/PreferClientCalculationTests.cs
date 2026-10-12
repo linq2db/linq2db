@@ -1365,6 +1365,7 @@ namespace Tests.Linq
 					Bitwise    = j.Value1 | 1,
 					Compare    = j.Value1 < 5 ? "a" : "b",
 					InList     = new[] { 0 }.Contains(j.Value1) ? "y" : "n",
+					ListItem   = new[] { j.Value1, 5 }.Contains(0) ? "y" : "n",
 					Negated    = -j.Value1 + 1,
 					NotFlag    = !j.Flag ? "t" : "f",
 					Logical    = !(j.Flag || e.Id < 0) ? "t" : "f",
