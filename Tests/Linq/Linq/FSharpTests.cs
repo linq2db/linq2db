@@ -186,6 +186,13 @@ namespace Tests.Linq
 			FSharp.OptionMappingPrecedence.VerifyExplicitDataTypePreserved(db);
 		}
 
+		[Test(Description = "an option member without [<Column>] is still a column when the table requires column attributes")]
+		public void OptionMapping_UnattributedOptionIsColumn([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionMappingPrecedence.VerifyUnattributedOptionIsColumn(db);
+		}
+
 		[Test(Description = "Nullable<_> element option must not produce Nullable<Nullable<_>> (#195)")]
 		public void Option_NullableElementRoundtrip([DataSources] string context)
 		{
