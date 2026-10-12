@@ -1342,6 +1342,20 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void FromSql_RawSqlString_TopLevel_QueryReused([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.FromSql<Person>("SELECT * FROM Person WHERE PersonID = {0}", 1).Select(p => p.ID);
+
+			query.ToArray().ShouldBe([1]);
+			var info = query.GetCompiledQueryInfo();
+
+			query.ToArray().ShouldBe([1]);
+			query.GetCompiledQueryInfo().ShouldBeSameAs(info);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
 		public void FromSqlScalar_ArgumentsOutOfFormatOrder([IncludeDataSources(TestProvName.AllAccess, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);

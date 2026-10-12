@@ -1582,14 +1582,12 @@ namespace LinqToDB
 		{
 			ArgumentNullException.ThrowIfNull(dataContext);
 
-			var paramsExpr = GenerateArray(parameters);
-
 			return new ExpressionQueryImpl<TEntity>(
 				dataContext,
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(FromSql<TEntity>, dataContext, sql, parameters),
-					SqlQueryRootExpression.Create(dataContext), Expression.Constant(sql), paramsExpr));
+					Methods.LinqToDB.FromSqlFormattable.MakeGenericMethod(typeof(TEntity)),
+					SqlQueryRootExpression.Create(dataContext), GenerateFormattableString(sql.Format, GenerateArray(parameters))));
 		}
 
 		#endregion
