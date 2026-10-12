@@ -1383,5 +1383,105 @@ namespace Tests.Linq
 			if (skip > 1 || take > 1)
 				db.Parent.GetCacheMissCount().ShouldBe(cacheMissCount);
 		}
+
+		// A TAKE/SKIP that is a constant of the query (First/Single, the Expression<Func<int>> overloads with a
+		// literal) cannot change between executions, so the statement must not be marked parameter dependent:
+		// its command text is then built once and reused instead of being rendered on every execution.
+		[Test]
+		public void ConstantTakeSkipIsNotParameterDependent([DataSources(false)] string context, [Values] bool parameterizeTakeSkip, [Values] bool inlineParameters)
+		{
+			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(parameterizeTakeSkip));
+			db.InlineParameters = inlineParameters;
+
+			var persons  = db.Person.OrderBy(p => p.ID);
+			var expected = Person.OrderBy(p => p.ID).Select(p => p.ID).ToArray();
+
+			persons.GetStatement(q => q.First()).IsParameterDependent.ShouldBeFalse();
+			persons.GetStatement(q => q.FirstOrDefault()).IsParameterDependent.ShouldBeFalse();
+			persons.GetStatement(q => q.Take(() => 1).Single()).IsParameterDependent.ShouldBeFalse();
+			persons.GetStatement(q => q.Take(() => 1).SingleOrDefault()).IsParameterDependent.ShouldBeFalse();
+			persons.Take(() => 2).GetStatement().IsParameterDependent.ShouldBeFalse();
+			persons.Skip(() => 1).Take(() => 2).GetStatement().IsParameterDependent.ShouldBeFalse();
+			persons.GetStatement(q => q.ElementAt(() => 1)).IsParameterDependent.ShouldBeFalse();
+
+			for (var i = 0; i < 2; i++)
+			{
+				persons.First().ID.ShouldBe(expected[0]);
+				persons.FirstOrDefault()!.ID.ShouldBe(expected[0]);
+				persons.Take(() => 1).Single().ID.ShouldBe(expected[0]);
+				persons.Take(() => 1).SingleOrDefault()!.ID.ShouldBe(expected[0]);
+				persons.Take(() => 2).Select(p => p.ID).ToArray().ShouldBe(expected.Take(2));
+				persons.Skip(() => 1).Take(() => 2).Select(p => p.ID).ToArray().ShouldBe(expected.Skip(1).Take(2));
+				persons.ElementAt(() => 1).ID.ShouldBe(expected[1]);
+			}
+
+			// different literals are different queries, not one cached text
+			persons.Take(() => 3).Select(p => p.ID).ToArray().ShouldBe(expected.Take(3));
+			persons.Skip(() => 2).Take(() => 1).Select(p => p.ID).ToArray().ShouldBe(expected.Skip(2).Take(1));
+			persons.ElementAt(() => 2).ID.ShouldBe(expected[2]);
+		}
+
+		// A TAKE/SKIP taken from a variable must render its current value on every execution, whether it is
+		// sent as a parameter or inlined into the SQL text.
+		[Test]
+		public void VariableTakeSkipUsesCurrentValue([DataSources(false)] string context, [Values] bool parameterizeTakeSkip, [Values] bool inlineParameters)
+		{
+			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(parameterizeTakeSkip));
+			db.InlineParameters = inlineParameters;
+
+			var persons  = db.Person.OrderBy(p => p.ID);
+			var expected = Person.OrderBy(p => p.ID).Select(p => p.ID).ToArray();
+			var sqlTexts = new HashSet<string>();
+
+			for (var n = 1; n <= 3; n++)
+			{
+				persons.Take(n).Select(p => p.ID).ToArray().ShouldBe(expected.Take(n));
+
+				if (db is DataConnection dc)
+					sqlTexts.Add(dc.LastQuery!);
+
+				persons.Take(() => n).Select(p => p.ID).ToArray().ShouldBe(expected.Take(n));
+				persons.Skip(n).Take(1).Select(p => p.ID).ToArray().ShouldBe(expected.Skip(n).Take(1));
+				persons.Skip(() => n).Select(p => p.ID).ToArray().ShouldBe(expected.Skip(n));
+				persons.ElementAt(n).ID.ShouldBe(expected[n]);
+				persons.ElementAt(() => n).ID.ShouldBe(expected[n]);
+				persons.Skip(n).First().ID.ShouldBe(expected[n]);
+				persons.Skip(1).Skip(n).Select(p => p.ID).ToArray().ShouldBe(expected.Skip(1 + n));
+				persons.Take(3).Take(n).Select(p => p.ID).ToArray().ShouldBe(expected.Take(n));
+			}
+
+			if (!parameterizeTakeSkip)
+			{
+				// the value is inlined into the SQL text, so the text must be rendered per execution
+				persons.Take(1).GetStatement().IsParameterDependent.ShouldBeTrue();
+
+				if (db is DataConnection)
+					sqlTexts.Count.ShouldBe(3);
+			}
+		}
+
+		[Test]
+		public void ConstantTakeWithHintsIsNotParameterDependent([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] bool parameterizeTakeSkip, [Values] bool inlineParameters)
+		{
+			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(parameterizeTakeSkip));
+			db.InlineParameters = inlineParameters;
+
+			var persons = db.Person.OrderBy(p => p.ID);
+			var count   = Person.Count();
+
+			persons.Take(() => 50, TakeHints.Percent).GetStatement().IsParameterDependent.ShouldBeFalse();
+
+			for (var i = 0; i < 2; i++)
+			{
+				persons.Take(() => 50, TakeHints.Percent).ToArray().Length.ShouldBe((count + 1) / 2);
+				persons.Take(() => 100, TakeHints.Percent).ToArray().Length.ShouldBe(count);
+			}
+
+			foreach (var percent in new[] { 50, 100 })
+			{
+				persons.Take(percent, TakeHints.Percent).ToArray().Length.ShouldBe(percent == 100 ? count : (count + 1) / 2);
+				persons.Take(() => percent, TakeHints.Percent).ToArray().Length.ShouldBe(percent == 100 ? count : (count + 1) / 2);
+			}
+		}
 	}
 }
