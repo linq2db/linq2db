@@ -2064,6 +2064,8 @@ namespace Tests.Linq
 					 Calculated = string.Join(",", new[] { (j.Value1 + 1).ToString(), e.Name }),
 					 Joined     = string.Join(",", new object[] { j.Value1, e.Value1 }),
 					 Concat     = string.Concat(new object[] { "<", j.Value1, ",", e.Value1, ">" }),
+					 Typed      = string.Join(",", new[] { j.Value1, e.Value1 }),
+					 TypedPlus  = string.Join(",", new[] { j.Value1, e.Value1 }) + "!",
 				 })
 				.ToArray();
 
@@ -2071,6 +2073,8 @@ namespace Tests.Linq
 			rows.ShouldAllBe(r => r.Calculated == "1," + r.Name);
 			rows.ShouldAllBe(r => r.Joined     == "0," + r.Value1);
 			rows.ShouldAllBe(r => r.Concat     == "<0," + r.Value1 + ">");
+			rows.ShouldAllBe(r => r.Typed      == "0," + r.Value1);
+			rows.ShouldAllBe(r => r.TypedPlus  == "0," + r.Value1 + "!");
 		}
 
 		// Sql.ToNullable / Sql.AsNullable translate their own argument through ITranslationContext.Translate. The option
