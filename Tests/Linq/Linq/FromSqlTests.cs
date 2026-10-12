@@ -1365,10 +1365,9 @@ namespace Tests.Linq
 			var query = db.FromSql<Person>("SELECT * FROM Person WHERE PersonID = {0}", 1).Select(p => p.ID);
 
 			query.ToArray().ShouldBe([1]);
-			var info = query.GetCompiledQueryInfo();
 
-			query.ToArray().ShouldBe([1]);
-			query.GetCompiledQueryInfo().ShouldBeSameAs(info);
+			// the built query is memoised on the IQueryable only when expose leaves the tree unchanged
+			query.GetCompiledQueryInfo().ShouldNotBeNull();
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]

@@ -135,7 +135,8 @@ namespace Tests
 		}
 
 		/// <summary>
-		/// Returns the built query a compiled query's result carries: two invocations that reused one build return the same instance.
+		/// Returns the built query memoised on a query: two compiled-query invocations that reused one build return the same instance,
+		/// and an executed <see cref="IQueryable{T}"/> carries one only when its built query is reused on the next execution.
 		/// </summary>
 		public static object GetCompiledQueryInfo<T>(this IQueryable<T> query)
 		{
@@ -144,10 +145,10 @@ namespace Tests
 				var field = type.GetField("Info", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
 
 				if (field != null)
-					return field.GetValue(query) ?? throw new InvalidOperationException("Query is not a compiled query result.");
+					return field.GetValue(query) ?? throw new InvalidOperationException("Query carries no memoised built query (Info is null).");
 			}
 
-			throw new InvalidOperationException("Query is not a compiled query result.");
+			throw new InvalidOperationException("Query has no Info field.");
 		}
 
 		public static SqlParameter[] CollectParameters(this SqlStatement statement)
