@@ -1141,7 +1141,8 @@ namespace LinqToDB
 		/// <summary>
 		/// Creates a query source over the record inserted into <paramref name="target"/> table.
 		/// The insert and the consuming query are executed as a single SQL statement when the returned query
-		/// (or a query composed from it) is executed. The insert is executed once per execution of the consuming query.
+		/// (or a query composed from it) is executed. When the consuming query reads the output, the insert is executed
+		/// once per execution of the consuming query.
 		/// </summary>
 		/// <typeparam name="TTarget">Inserted record type.</typeparam>
 		/// <param name="target">Target table.</param>
@@ -1152,8 +1153,12 @@ namespace LinqToDB
 		/// Target table changes are not visible to the rest of the statement: read inserted values through the returned query.
 		/// Project the output with <c>Select</c> in the consuming query; only the columns it reads are returned.
 		/// <para>
-		/// The consuming query must read the output. A query whose SQL does not reference it (e.g. the member reading it
-		/// is not projected) throws <see cref="LinqToDBException"/> when built, as the insert would not be executed.
+		/// The insert runs when, and only when, the final SQL of the consuming query references the output.
+		/// If the query refers to the output but its SQL does not (e.g. the member reading it is not projected),
+		/// <see cref="LinqToDBException"/> is thrown when the query is built. A condition on a captured value
+		/// (e.g. <c>flag ? inserted.Count() : 0</c>) is evaluated before translation and can remove the reference
+		/// without an error; the insert then does not run. Identical <c>InsertWithOutputQuery</c> expressions in one
+		/// query share one CTE and insert once.
 		/// Eager loading over the output loads child records by key from the returned rows (<see cref="EagerLoadingStrategy.KeyedQuery"/>,
 		/// regardless of the configured strategy) and without an implicit transaction; child queries that cannot be keyed
 		/// to the output throw <see cref="LinqToDBException"/>.
@@ -1187,7 +1192,8 @@ namespace LinqToDB
 		/// <summary>
 		/// Creates a query source over the records inserted from <paramref name="source"/> query into <paramref name="target"/> table.
 		/// The insert and the consuming query are executed as a single SQL statement when the returned query
-		/// (or a query composed from it) is executed. The insert is executed once per execution of the consuming query.
+		/// (or a query composed from it) is executed. When the consuming query reads the output, the insert is executed
+		/// once per execution of the consuming query.
 		/// </summary>
 		/// <typeparam name="TSource">Source query record type.</typeparam>
 		/// <typeparam name="TTarget">Target table record type.</typeparam>
@@ -1201,8 +1207,12 @@ namespace LinqToDB
 		/// Target table changes are not visible to the rest of the statement: read inserted values through the returned query.
 		/// Project the output with <c>Select</c> in the consuming query; only the columns it reads are returned.
 		/// <para>
-		/// The consuming query must read the output. A query whose SQL does not reference it (e.g. the member reading it
-		/// is not projected) throws <see cref="LinqToDBException"/> when built, as the insert would not be executed.
+		/// The insert runs when, and only when, the final SQL of the consuming query references the output.
+		/// If the query refers to the output but its SQL does not (e.g. the member reading it is not projected),
+		/// <see cref="LinqToDBException"/> is thrown when the query is built. A condition on a captured value
+		/// (e.g. <c>flag ? inserted.Count() : 0</c>) is evaluated before translation and can remove the reference
+		/// without an error; the insert then does not run. Identical <c>InsertWithOutputQuery</c> expressions in one
+		/// query share one CTE and insert once.
 		/// Eager loading over the output loads child records by key from the returned rows (<see cref="EagerLoadingStrategy.KeyedQuery"/>,
 		/// regardless of the configured strategy) and without an implicit transaction; child queries that cannot be keyed
 		/// to the output throw <see cref="LinqToDBException"/>.

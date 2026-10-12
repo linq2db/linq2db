@@ -281,8 +281,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					Expression.Visit(this, static (builder, e) =>
 					{
-						if (e is MethodCallExpression { Method.Name: nameof(LinqExtensions.InsertWithOutputQuery) } mc && mc.Method.DeclaringType == typeof(LinqExtensions))
-							(builder._insertOutputQueryCalls ??= new(ExpressionEqualityComparer.Instance)).Add(mc);
+						if (IsInsertOutputQueryCall(e))
+							(builder._insertOutputQueryCalls ??= new(ExpressionEqualityComparer.Instance)).Add(e);
 					});
 				}
 
@@ -294,6 +294,12 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// Query contains a data-modifying CTE: its output must not be re-queried by eager loading.
 		/// </summary>
 		public bool HasInsertOutputQuery => InsertOutputQueryCalls != null;
+
+		static bool IsInsertOutputQueryCall(Expression expression)
+		{
+			return expression is MethodCallExpression { Method.Name: nameof(LinqExtensions.InsertWithOutputQuery) } mc
+				&& mc.Method.DeclaringType == typeof(LinqExtensions);
+		}
 
 		/// <summary>
 		/// An insert of <see cref="LinqExtensions.InsertWithOutputQuery{TTarget}(ITable{TTarget}, Expression{Func{TTarget}})"/>

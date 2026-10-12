@@ -411,6 +411,84 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		public void CapturedConditionRemovesOutput([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context, [Values] bool flag)
+		{
+			using var db     = GetDataContext(context);
+			using var source = db.CreateLocalTable(GetSourceData());
+			using var target = db.CreateLocalTable<TargetTable>();
+
+			var inserted = source
+				.Where(s => s.Id <= 3)
+				.InsertWithOutputQuery(target, s => new TargetTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr });
+
+			// a condition on a captured value is evaluated before translation: when it removes the output,
+			// the insert does not run and nothing throws (documented on InsertWithOutputQuery)
+			var result = source
+				.Where(s => s.Id == 2)
+				.Select(s => new { s.Id, C = flag ? inserted.Count() : 0 })
+				.ToArray();
+
+			result.Length.ShouldBe(1);
+			result[0].C.ShouldBe(flag ? 3 : 0);
+
+			target.Count().ShouldBe(flag ? 3 : 0);
+		}
+
+		[Test]
+		public void EagerLoadReadsOutputInParentAndChildThrows([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var source = db.CreateLocalTable(GetSourceData());
+			using var target = db.CreateLocalTable<TargetTable>();
+
+			var inserted = source
+				.Where(s => s.Id <= 3)
+				.InsertWithOutputQuery(target, s => new TargetTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr });
+
+			// the child query would carry its own copy of the data-modifying CTE and insert a second time
+			var query = inserted
+				.Select(p => new
+				{
+					p.Id,
+					Same = inserted.Where(c => c.Value == p.Value).Select(c => c.Id).ToList(),
+				});
+
+			Action act = () => query.ToArray();
+
+			var ex = act.ShouldThrow<LinqToDBException>();
+			ex.Message.ShouldBe(LinqToDB.Internal.Common.ErrorHelper.Error_OutputQuery_EagerLoad);
+
+			target.Count().ShouldBe(0);
+		}
+
+		[Test]
+		public void EagerLoadReadsOutputInChildOnlyThrows([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var source = db.CreateLocalTable(GetSourceData());
+			using var target = db.CreateLocalTable<TargetTable>();
+
+			var inserted = source
+				.Where(s => s.Id <= 3)
+				.InsertWithOutputQuery(target, s => new TargetTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr });
+
+			// the output is read, but only by the eager-loaded child query
+			var query = source
+				.Select(s => new
+				{
+					s.Id,
+					Children = inserted.Where(i => i.Id == s.Id).Select(i => i.Id).ToList(),
+				});
+
+			Action act = () => query.ToArray();
+
+			var ex = act.ShouldThrow<LinqToDBException>();
+			ex.Message.ShouldBe(LinqToDB.Internal.Common.ErrorHelper.Error_OutputQuery_EagerLoad);
+
+			target.Count().ShouldBe(0);
+		}
+
+		[Test]
 		public void OutputInSubqueryPredicate([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db     = GetDataContext(context);

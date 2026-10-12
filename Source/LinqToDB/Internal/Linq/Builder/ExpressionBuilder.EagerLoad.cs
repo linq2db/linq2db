@@ -619,6 +619,10 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (e.NodeType != ExpressionType.Extension || e is not SqlEagerLoadExpression eagerLoad)
 						return e;
 
+					// A child query runs as its own statement: a data-modifying CTE in it would insert again.
+					if (HasInsertOutputQuery && eagerLoad.SequenceExpression.Find(static se => IsInsertOutputQueryCall(se)) != null)
+						throw new LinqToDBException(ErrorHelper.Error_OutputQuery_EagerLoad);
+
 					if (cteUnionCache != null && cteUnionCache.TryGetValue(eagerLoad.SequenceExpression, out var cachedExpression))
 						return cachedExpression;
 
