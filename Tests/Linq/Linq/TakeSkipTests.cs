@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Data;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -1488,9 +1489,35 @@ namespace Tests.Linq
 			public int Count;
 		}
 
+		// Pins a query's cached state after its first run, so later runs can check that they reused it.
+		sealed class CachedQueryState
+		{
+			public CachedQueryState(Func<QueryInfo> getInfo)
+			{
+				_getInfo  = getInfo;
+				_info     = getInfo();
+				_commands = _info.Context;
+			}
+
+			readonly Func<QueryInfo> _getInfo;
+			readonly QueryInfo       _info;
+			readonly object?         _commands;
+
+			// The same compiled query ran, with the same cached commands, or with none when it renders
+			// its SQL text per execution.
+			public void ShouldBeReused()
+			{
+				var info = _getInfo();
+
+				info.ShouldBeSameAs(_info);
+				info.Context.ShouldBeSameAs(_commands);
+			}
+		}
+
 		// The count is read when the query runs: re-running the same query after the value it reads has
-		// changed, including to and from zero, must use the new value.
-		[Test]
+		// changed, including to and from zero, must use the new value. The runs must reuse the query (and its
+		// commands, when they are cached), so a fresh build cannot hide a stale SQL text.
+		[Test, QueryCacheTest]
 		public void TakeSkipFollowChangedValue([DataSources(false)] string context, [Values] bool parameterizeTakeSkip, [Values] bool inlineParameters)
 		{
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(parameterizeTakeSkip));
@@ -1506,6 +1533,8 @@ namespace Tests.Linq
 			var skipTakeField = persons.Skip(() => holder.Count).Take(() => holder.Count + 1).Select(p => p.ID);
 			var takeLocal     = persons.Take(() => count).Select(p => p.ID);
 			var skipLocal     = persons.Skip(() => count).Select(p => p.ID);
+
+			CachedQueryState[]? states = null;
 
 			foreach (var n in new[] { 0, 2, 0, 1, 3, 0 })
 			{
@@ -1524,9 +1553,30 @@ namespace Tests.Linq
 				persons.Skip(n).Take(n + 1).Select(p => p.ID).ToArray().ShouldBe(expected.Skip(n).Take(n + 1));
 				persons.Skip(n).First().ID.ShouldBe(expected[n]);
 				persons.ElementAt(n).ID.ShouldBe(expected[n]);
+
+				if (states == null)
+				{
+					states = new[]
+					{
+						new CachedQueryState(() => takeField.GetQueryInfo()),
+						new CachedQueryState(() => skipField.GetQueryInfo()),
+						new CachedQueryState(() => skipTakeField.GetQueryInfo()),
+						new CachedQueryState(() => takeLocal.GetQueryInfo()),
+						new CachedQueryState(() => skipLocal.GetQueryInfo()),
+						new CachedQueryState(() => persons.GetQueryInfo(q => q.ElementAt(() => holder.Count))),
+					};
+				}
+				else
+				{
+					foreach (var state in states)
+						state.ShouldBeReused();
+				}
 			}
 		}
 
+		// Results only: a compiled query keeps its query in an internal cache keyed on the compiled expression,
+		// which tests cannot reach. It renders its SQL through the same command cache that
+		// ConstantTakeSkipReusesCommand checks for the LINQ form.
 		[Test]
 		public void CompiledTakeSkip([DataSources(false)] string context, [Values] bool parameterizeTakeSkip, [Values] bool inlineParameters)
 		{
