@@ -321,6 +321,21 @@ namespace Tests.Linq
 			query.GetCacheMissCount().ShouldBe(misses);
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void SqlQueryDependent_ObjectsEqual_FormattableString()
+		{
+			var attribute = new SqlQueryDependentAttribute();
+
+			FormattableString value1      = $"SELECT {1}";
+			FormattableString sameValue1  = $"SELECT {1}";
+			FormattableString value2      = $"SELECT {2}";
+			FormattableString otherFormat = $"SELECT {1} + 0";
+
+			attribute.ObjectsEqual(value1, sameValue1) .ShouldBeTrue();
+			attribute.ObjectsEqual(value1, value2)     .ShouldBeFalse();
+			attribute.ObjectsEqual(value1, otherFormat).ShouldBeFalse();
+		}
+
 		public class FreeTextKey<T>
 		{
 			public T   Key = default!;
