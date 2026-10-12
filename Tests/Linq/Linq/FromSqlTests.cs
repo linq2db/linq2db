@@ -1355,7 +1355,6 @@ namespace Tests.Linq
 			query.GetCompiledQueryInfo().ShouldBeSameAs(info);
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
 		static string OutOfFormatOrderSql(string context, bool repeated)
 		{
 			var person   = QuoteTableName("Person",   context);
