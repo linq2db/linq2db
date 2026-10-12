@@ -75,6 +75,55 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					Factory.Add(longType, WholeField(elapsed, "Minute", TimeSpan.TicksPerMinute), seconds)));
 		}
 
+		/// <inheritdoc />
+		/// <remarks>
+		/// Lowered below without going through <c>FinestDateUnit</c>: Oracle adds a native <c>INTERVAL DAY TO
+		/// SECOND</c> to a timestamp directly, built from the tick count through <c>NUMTODSINTERVAL</c>.
+		/// </remarks>
+		public override bool CanLowerIntervalShift => true;
+
+		/// <summary>
+		/// Shifts by the whole days and the seconds left over, each through <c>NUMTODSINTERVAL</c>, added natively.
+		/// </summary>
+		/// <remarks>
+		/// Split in two because <c>NUMTODSINTERVAL</c> refuses an amount of 2<sup>31</sup> or more of its unit, which
+		/// a second count reaches after 68 years; a day count does not reach it at all. Both parts are exact
+		/// <c>NUMBER</c> arithmetic on the tick count and carry its sign, so the seconds keep their fraction down to
+		/// the tick.
+		/// <para>
+		/// A <see cref="DateTime"/> is cast to <c>timestamp(7)</c> first, whatever its mapping declares. The result of
+		/// adding an interval to a <c>date</c> is a <c>date</c>, which has no fraction of a second to keep, and a
+		/// <c>date</c> column mapped as a plain <see cref="DateTime"/> is not declared as one. The cast is mandatory,
+		/// so it is not dropped as a no-op for a value already believed to be a timestamp, and seven digits keep the
+		/// tick of a value that already is one.
+		/// </para>
+		/// </remarks>
+		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
+		{
+			var longType     = Factory.GetDbDataType(typeof(long));
+			var decimalType  = Factory.GetDbDataType(typeof(decimal));
+			var stringType   = Factory.GetDbDataType(typeof(string));
+			var intervalType = Factory.GetDbDataType(typeof(TimeSpan));
+
+			var ticks    = element.IsSubtract ? Factory.Multiply(longType, element.Interval, -1L) : element.Interval;
+			var days     = TruncateDivide(ticks, TimeSpan.TicksPerDay);
+			var seconds  = Factory.Div(decimalType, TruncateRemainder(ticks, TimeSpan.TicksPerDay), Factory.Value(longType, TimeSpan.TicksPerSecond));
+			var interval = Factory.Add(intervalType,
+				Factory.Function(intervalType, "NumToDSInterval", days,    Factory.Value(stringType, "DAY")),
+				Factory.Function(intervalType, "NumToDSInterval", seconds, Factory.Value(stringType, "SECOND")));
+
+			var temporal     = element.Temporal;
+			var temporalType = Factory.GetDbDataType(temporal);
+
+			if (temporalType.SystemType.ToUnderlying() == typeof(DateTime))
+			{
+				temporalType = new DbDataType(temporalType.SystemType, DataType.DateTime2, null, null, 7, null);
+				temporal     = Factory.Cast(temporal, temporalType, true);
+			}
+
+			return Factory.Add(temporalType, temporal, interval);
+		}
+
 		ISqlExpression WholeField(ISqlExpression elapsed, string part, long ticksPerUnit)
 		{
 			var longType = Factory.GetDbDataType(typeof(long));

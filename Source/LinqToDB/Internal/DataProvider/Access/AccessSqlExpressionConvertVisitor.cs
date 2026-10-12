@@ -129,9 +129,80 @@ namespace LinqToDB.Internal.DataProvider.Access
 		/// an anchor past the end turns the remainder negative - a sign the modulo keeps, answering -20 where 40 was
 		/// meant.
 		/// </para>
+		/// <para>
+		/// An operand that can be <see langword="null"/> is replaced by a fixed date before any of this, and the result
+		/// is made <see langword="null"/> from the operands themselves. Access refuses a null that <c>DateAdd</c> or
+		/// <c>DateDiff</c> derived with "Data type mismatch in criteria expression" as soon as it is passed on - to the
+		/// comparison the anchor correction makes, to the next count, even to <c>IS NULL</c> - while a null read from a
+		/// column passes. So no count and no anchor may ever see one, whatever the unit.
+		/// </para>
+		/// <para>
+		/// Whether an operand can be null is asked twice: of the bare operand without the query's own predicates, and
+		/// in the query, which knows what an outer join makes nullable. A filter on <c>.Value</c> marks the operand as
+		/// not null and carries an <c>IS NOT NULL</c> beside the member, but Access evaluates both sides of an
+		/// <c>AND</c>, so the member still meets the null row. For the same
+		/// reason the substitution is written with Access's own <c>IIF</c> and <c>IsNull</c> functions: a condition
+		/// and an <c>IS NULL</c> would be folded back to the bare column on the strength of that predicate.
+		/// </para>
 		/// </remarks>
 		protected override ISqlExpression? LowerIntervalPart(SqlIntervalPartExpression element)
 		{
+			bool MayBeNull(ISqlExpression operand)
+			{
+				return operand.CanBeNullable(NullabilityContext)
+					|| QueryHelper.UnwrapNullablity(operand).CanBeNullable(NullabilityContext.NonQuery);
+			}
+
+			if (QueryHelper.UnwrapNullablity(element.Interval) is SqlIntervalDifferenceExpression nullableDifference)
+			{
+				var startNullable = MayBeNull(nullableDifference.Start);
+				var endNullable   = MayBeNull(nullableDifference.End);
+
+				if (startNullable || endNullable)
+				{
+					var dateType = Factory.GetDbDataType(nullableDifference.Start);
+
+					ISqlPredicate IsNull(ISqlExpression operand)
+					{
+						return Factory.IsNullPredicate(SqlNullabilityExpression.ApplyNullability(QueryHelper.UnwrapNullablity(operand), true));
+					}
+
+					// Any date would do: a result from it is discarded below.
+					ISqlExpression NotNull(ISqlExpression operand, bool nullable)
+					{
+						if (!nullable)
+							return operand;
+
+						// Functions the optimizer leaves alone rather than a condition and an IS NULL: beside the
+						// IS NOT NULL a filter on .Value carries, those are folded back to the bare column.
+						return new SqlFunction(dateType, "IIF", canBeNull: false,
+							new SqlFunction(Factory.GetDbDataType(typeof(bool)), "IsNull", canBeNull: false, operand) { DoNotOptimize = true },
+							Factory.Value(dateType, new DateTime(1899, 12, 30)),
+							operand) { DoNotOptimize = true };
+					}
+
+					var guarded = new SqlIntervalDifferenceExpression(
+						NotNull(nullableDifference.Start, startNullable),
+						NotNull(nullableDifference.End,   endNullable),
+						nullableDifference.Type,
+						nullableDifference.IntervalType);
+
+					var lowered = LowerIntervalPart(new SqlIntervalPartExpression(guarded, element.Unit, element.Kind, element.Type, element.Within));
+					if (lowered == null)
+						return null;
+
+					var eitherNull = new SqlSearchCondition(isOr: true);
+
+					if (startNullable)
+						eitherNull.Add(IsNull(nullableDifference.Start));
+
+					if (endNullable)
+						eitherNull.Add(IsNull(nullableDifference.End));
+
+					return Factory.Condition(eitherNull, new SqlValue(element.Type.WithSystemType(element.Type.SystemType.AsNullable()), null), lowered);
+				}
+			}
+
 			if (element.Kind == SqlIntervalPartKind.Component
 				&& element.Unit is SqlIntervalUnit.Hour or SqlIntervalUnit.Minute or SqlIntervalUnit.Second
 				&& QueryHelper.UnwrapNullablity(element.Interval) is SqlIntervalDifferenceExpression difference)
@@ -192,6 +263,10 @@ namespace LinqToDB.Internal.DataProvider.Access
 		/// <c>CDbl</c> is what keeps the product from overflowing in turn - Access multiplies in 32-bit integers and a
 		/// century of days is past that once scaled to seconds. A cast to a wider integer would not do: Access has none
 		/// to name, and a cast to a floating type renders as nothing here.
+		/// </para>
+		/// <para>
+		/// Neither operand is ever <see langword="null"/> here: <see cref="LowerIntervalPart"/> replaces one that can
+		/// be before counting starts.
 		/// </para>
 		/// <para>
 		/// This provider is the only one that gets here - it is the only override of

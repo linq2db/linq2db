@@ -269,6 +269,15 @@ namespace Tests
 				FirebirdTools.ClearPool(DataConnection.GetConnectionString(configuration.StripRemote()));
 		}
 
+		/// <summary>
+		/// Firebird only (no-op for other providers): closes the context and evicts its connection pool, so a connection
+		/// left broken by a cancelled operation is not handed to the next test (#6012).
+		/// </summary>
+		public static void DiscardFirebirdConnection(IDataContext db)
+		{
+			ClearDataContext(db);
+		}
+
 		public static Version GetSqliteVersion(DataConnection db)
 		{
 			var version = db.Execute<string>("select sqlite_version();");
