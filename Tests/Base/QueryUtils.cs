@@ -76,6 +76,30 @@ namespace Tests
 			return info.GetQueries().Single().Statement;
 		}
 
+		/// <summary>
+		/// Returns the cached query info the query runs with, without executing it. Its <see cref="QueryInfo.Context"/>
+		/// holds the built commands once they are cached for reuse.
+		/// </summary>
+		public static QueryInfo GetQueryInfo<T>(this IQueryable<T> query)
+		{
+			var eq          = (IExpressionQuery)query;
+			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(eq.Expression);
+
+			return Query<T>.GetQuery(eq.DataContext, ref expressions, out _).GetQueries().Single();
+		}
+
+		/// <summary>
+		/// Returns the cached query info <paramref name="executeBody"/> runs with, without executing it. Its
+		/// <see cref="QueryInfo.Context"/> holds the built commands once they are cached for reuse.
+		/// </summary>
+		public static QueryInfo GetQueryInfo<T, TResult>(this IQueryable<T> query, Expression<Func<IQueryable<T>, TResult>> executeBody)
+		{
+			var eq          = (IExpressionQuery)query;
+			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(executeBody.GetBody(query.Expression));
+
+			return Query<T>.GetQuery(eq.DataContext, ref expressions, out _).GetQueries().Single();
+		}
+
 		private static void InitParameters<T>(IExpressionQuery eq, Query<T> info, IQueryExpressions expressions)
 		{
 			eq.DataContext.GetQueryRunner(info, eq.DataContext, 0, expressions, null, null).GetSqlText();
