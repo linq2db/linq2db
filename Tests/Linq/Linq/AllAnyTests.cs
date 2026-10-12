@@ -412,6 +412,46 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6024")]
+		public void Issue6024_CorrelatedAnyNestedOwnIsNotNull([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				orderby p.ParentID
+				select new
+				{
+					p.ParentID,
+					Has = db.GrandChild
+						.Where(g1 => g1.ParentID == p.ParentID)
+						.Any(g1 => db.GrandChild.Any(g2 => g2.GrandChildID == g1.GrandChildID && g2.ChildID != null)),
+				};
+
+			AssertQuery(query);
+		}
+
+		[ThrowsRequiresCorrelatedSubquery]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6024")]
+		public void Issue6024_CorrelatedMaxSelectOwnIsNotNull([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				orderby p.ParentID
+				select new
+				{
+					p.ParentID,
+					Max = db.GrandChild
+						.Where(g => g.ParentID == p.ParentID)
+						.Max(g => g.ChildID != null ? g.GrandChildID : 0),
+				};
+
+			AssertQuery(query);
+		}
+
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6024")]
 		public void Issue6024_CorrelatedCountOwnIsNotNull([DataSources] string context)
