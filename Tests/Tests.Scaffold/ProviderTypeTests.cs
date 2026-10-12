@@ -125,7 +125,7 @@ namespace Tests.Scaffold
 
 			var descriptor = db.MappingSchema.GetEntityDescriptor(entity);
 
-			descriptor.Columns.Single(static c => c.ColumnName == "id").SequenceName.ShouldNotBeNull().SequenceName.ShouldBe("types_id_seq");
+			descriptor.Columns.Single(static c => c.ColumnName == "id").SequenceName.ShouldNotBeNull("SequenceName").SequenceName.ShouldBe("types_id_seq");
 		}
 	}
 }
