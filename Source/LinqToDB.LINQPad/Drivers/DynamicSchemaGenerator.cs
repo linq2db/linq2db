@@ -40,7 +40,7 @@ internal static class DynamicSchemaGenerator
 		options.Schema.UseSafeSchemaLoad           = false;
 		options.Schema.LoadDatabaseName            = false;
 		options.Schema.LoadProceduresSchema        = true;
-		options.Schema.EnableSqlServerReturnValue  = true;
+		options.Schema.EnableSqlServerReturnValue  = settings.Scaffold.SqlServerReturnValue;
 
 		// set data model options
 		if (settings.Scaffold.AsIsNames)
