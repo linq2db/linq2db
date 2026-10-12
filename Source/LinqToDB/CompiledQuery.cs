@@ -17,6 +17,7 @@ using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.Linq.Builder;
+using LinqToDB.Internal.Reflection;
 
 namespace LinqToDB
 {
@@ -111,7 +112,16 @@ namespace LinqToDB
 					if (dependent[i] == null)
 						continue;
 
-					mc.Arguments[i].Visit(context, static (c, a) =>
+					var argument = mc.Arguments[i];
+
+					// interpolation arguments render as parameters, only the format shapes the SQL
+					if (argument is MethodCallExpression { Arguments: [var format, { NodeType: ExpressionType.NewArrayInit }] } create
+						&& create.Method == Methods.System.FormattableStringFactory_Create)
+					{
+						argument = format;
+					}
+
+					argument.Visit(context, static (c, a) =>
 					{
 						if (a is BinaryExpression { NodeType: ExpressionType.ArrayIndex } arrayIndex
 							&& arrayIndex.Left == c.ps
