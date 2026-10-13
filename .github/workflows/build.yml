@@ -258,3 +258,41 @@ jobs:
           name: cli-test-results-${{ matrix.os }}
           path: CliTestResults/*.trx
           if-no-files-found: error
+
+  # Scaffold code generation: predefined schema -> generated C#/F# -> in-process compile -> execution on
+  # in-memory SQLite. No database server, so every PR regenerates and checks generator output.
+  scaffold-tests:
+    name: Scaffold tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            exe: linq2db.Tests.Scaffold
+          - os: windows-2025
+            exe: linq2db.Tests.Scaffold.exe
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.x
+
+      - run: dotnet build Tests/Tests.Scaffold/Tests.Scaffold.csproj --configuration ${{ env.TEST_CONFIGURATION }}
+
+      - name: Run scaffold tests
+        shell: pwsh
+        run: |
+          $exe = Join-Path ".build/bin/Tests.Scaffold/${{ env.TEST_CONFIGURATION }}" '${{ matrix.exe }}'
+          & $exe --filter "TestCategory != SkipCI" --settings .runsettings --report-trx --report-trx-filename "scaffold.trx" --results-directory ScaffoldTestResults --hangdump --hangdump-timeout 10m $env:TEST_RETRY_ARGS.Split(' ')
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: scaffold-test-results-${{ matrix.os }}
+          path: ScaffoldTestResults/*.trx
+          if-no-files-found: error

@@ -11,6 +11,7 @@
 		<Compile Remove="$(MSBuildThisFileDirectory)..\..\Source\Shared\*.cs" />
 
 		<ProjectReference Include="..\..\Source\LinqToDB.CLI\LinqToDB.CLI.csproj" />
+		<ProjectReference Include="..\Tests.Scaffold.Harness\Tests.Scaffold.Harness.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

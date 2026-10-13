@@ -16,7 +16,7 @@ using NUnit.Framework;
 namespace Tests.Scaffold
 {
 	[TestFixture]
-	public sealed class SqlServerDecimalOverflowProtectionTests : TestBase
+	public sealed class SqlServerDecimalOverflowProtectionTests
 	{
 		[Test]
 		public void MarksSqlServerDecimalColumnsOutsideClrLimits()
