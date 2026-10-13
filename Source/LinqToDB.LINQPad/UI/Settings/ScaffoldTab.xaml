@@ -42,6 +42,13 @@
 			Visibility="{Binding ClickHouseVisibility}"
 			Content="[ClickHouse] Use string for FixedString(X) database type"
 			ToolTip="By default byte[] type used in model for columns of FixedString(X) database type." />
+
+		<CheckBox
+			Margin="5"
+			IsChecked="{Binding SqlServerReturnValue}"
+			Visibility="{Binding SqlServerVisibility}"
+			Content="[SQL Server] Expose procedure return value"
+			ToolTip="When option is set, stored procedure methods get trailing out parameter with procedure return code. Enabling it changes procedure method signatures, so existing queries, calling procedures, should be updated." />
 	</StackPanel>
 	</GroupBox>
 </UserControl>
