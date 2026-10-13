@@ -161,8 +161,8 @@ namespace LinqToDB
 	/// server-side evaluation (for example, members or methods mapped with
 	/// <see cref="Sql.ExpressionAttribute.PreferServerSide"/> or <see cref="Sql.ExpressionAttribute.ServerSideOnly"/>)
 	/// are still translated to SQL, as are members with a built-in translation — for example
-	/// <c>Convert.ToString</c>, <c>Guid.ToString</c>, <c>Math.Max</c> / <c>Math.Min</c>, the <c>AddXxx</c> date methods
-	/// and the <see cref="string"/> instance methods — and their arguments.
+	/// <c>Convert.ToString</c>, <c>Guid.ToString</c>, <c>Math.Max</c> / <c>Math.Min</c> and the <see cref="string"/>
+	/// instance methods — and their arguments.
 	/// <para>
 	/// The option changes where a value is calculated, not what it is: over a row a <c>LEFT JOIN</c> did not match,
 	/// a calculation reads a non-nullable column as <c>default(T)</c>, as the client does, whether it runs on the

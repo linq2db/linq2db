@@ -2529,6 +2529,34 @@ namespace Tests.Linq
 			query.GetSelectQuery().Select.Columns.Any(c => c.Expression is not SqlField).ShouldBeTrue();
 		}
 
+		// The members LinqOptions.PreferClientCalculation names as translated to SQL under the option stay there; a date shift
+		// by a constant does not (TranslatorArgumentsStayInSqlUnderOption keeps a shift by a row value in SQL).
+		[Test]
+		public void DocumentedTranslatedMembersStayInSqlUnderOption([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(true));
+			using var table = db.CreateLocalTable(TranslatedMemberEntity.Seed);
+
+			var onClient = new List<string>();
+
+			Check("Convert.ToString", table.Select(e => new { e.Id, X = Convert.ToString(e.Value1)   }));
+			Check("Guid.ToString",    table.Select(e => new { e.Id, X = e.Key.ToString()             }));
+			Check("Math.Max",         table.Select(e => new { e.Id, X = Math.Max(e.Value1, 5)         }));
+			Check("Math.Min",         table.Select(e => new { e.Id, X = Math.Min(e.Value1, 5)         }));
+			Check("AddDays",          table.Select(e => new { e.Id, X = e.Date.AddDays(10)            }));
+			Check("AddMonths",        table.Select(e => new { e.Id, X = e.Date.AddMonths(1)           }));
+
+			onClient.ShouldBe(["AddDays", "AddMonths"]);
+
+			void Check<T>(string member, IQueryable<T> query)
+			{
+				_ = query.ToArray();
+
+				if (!query.GetSelectQuery().Select.Columns.Any(c => c.Expression is not SqlField))
+					onClient.Add(member);
+			}
+		}
+
 		[Test]
 		public void ToNullableOverCteMethodReturnsNull([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
 		{
