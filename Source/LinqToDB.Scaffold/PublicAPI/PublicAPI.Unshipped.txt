@@ -1,1 +1,21 @@
-﻿#nullable enable
+#nullable enable
+LinqToDB.CodeModel.ILanguageProvider.Features.get -> LinqToDB.CodeModel.LanguageFeatures
+LinqToDB.CodeModel.LanguageFeatures
+LinqToDB.CodeModel.LanguageFeatures.ConstructorPropertyInitialization = 64 -> LinqToDB.CodeModel.LanguageFeatures
+LinqToDB.CodeModel.LanguageFeatures.ImplicitDelegateConversion = 32 -> LinqToDB.CodeModel.LanguageFeatures
+LinqToDB.CodeModel.LanguageFeatures.ImplicitInterfaceImplementation = 16 -> LinqToDB.CodeModel.LanguageFeatures
+LinqToDB.CodeModel.LanguageFeatures.ImplicitUpcast = 8 -> LinqToDB.CodeModel.LanguageFeatures
+LinqToDB.CodeModel.LanguageFeatures.LambdaReturnTypeInference = 4 -> LinqToDB.CodeModel.LanguageFeatures
+LinqToDB.CodeModel.LanguageFeatures.MultipleConstructors = 512 -> LinqToDB.CodeModel.LanguageFeatures
+LinqToDB.CodeModel.LanguageFeatures.MultipleFiles = 2048 -> LinqToDB.CodeModel.LanguageFeatures
+LinqToDB.CodeModel.LanguageFeatures.NestedTypes = 1 -> LinqToDB.CodeModel.LanguageFeatures
+LinqToDB.CodeModel.LanguageFeatures.None = 0 -> LinqToDB.CodeModel.LanguageFeatures
+LinqToDB.CodeModel.LanguageFeatures.NullableFlowAnalysis = 2 -> LinqToDB.CodeModel.LanguageFeatures
+LinqToDB.CodeModel.LanguageFeatures.OptionTypes = 8192 -> LinqToDB.CodeModel.LanguageFeatures
+LinqToDB.CodeModel.LanguageFeatures.PartialMethods = 256 -> LinqToDB.CodeModel.LanguageFeatures
+LinqToDB.CodeModel.LanguageFeatures.PartialTypes = 128 -> LinqToDB.CodeModel.LanguageFeatures
+LinqToDB.CodeModel.LanguageFeatures.RecordEntities = 4096 -> LinqToDB.CodeModel.LanguageFeatures
+LinqToDB.CodeModel.LanguageFeatures.TabIndentation = 1024 -> LinqToDB.CodeModel.LanguageFeatures
+LinqToDB.CodeModel.Modifiers.Module = 32768 -> LinqToDB.CodeModel.Modifiers
+LinqToDB.CodeModel.Modifiers.Record = 16384 -> LinqToDB.CodeModel.Modifiers
+static LinqToDB.CodeModel.LanguageProviders.FSharp.get -> LinqToDB.CodeModel.ILanguageProvider!
