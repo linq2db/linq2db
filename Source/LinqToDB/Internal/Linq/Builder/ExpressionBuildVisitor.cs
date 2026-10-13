@@ -2562,7 +2562,32 @@ namespace LinqToDB.Internal.Linq.Builder
 					return CanBeNullAsDeclared(column.Expression, declared, visited);
 
 				default:
-					return expression.CanBeNullable(declared);
+				{
+					// NullabilityContext would answer the columns under a calculation with each branch's joins registered.
+					var columns = new List<SqlColumn>();
+
+					expression.VisitParentFirst(columns, static (list, e) =>
+					{
+						if (e is SqlColumn column)
+						{
+							list.Add(column);
+							return false;
+						}
+
+						return e is not SelectQuery;
+					});
+
+					if (columns.Count == 0)
+						return expression.CanBeNullable(declared);
+
+					var asDeclared = new Dictionary<ISqlExpression, bool>(Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default);
+
+					// Each column from a copy of the walk's visited set: a sibling's visits are not its ancestors.
+					foreach (var column in columns)
+						asDeclared[column] = CanBeNullAsDeclared(column, declared, visited == null ? null : new(visited, Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default));
+
+					return expression.CanBeNullable(new NullabilityContext(declared, asDeclared));
+				}
 			}
 		}
 
