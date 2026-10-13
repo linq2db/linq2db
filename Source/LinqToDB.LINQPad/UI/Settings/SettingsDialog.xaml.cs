@@ -33,7 +33,7 @@ internal sealed partial class SettingsDialog
 		switch (e.PropertyName)
 		{
 			case nameof(Model.DynamicConnection.Database):
-				Model.Scaffold.UpdateClickHouseVisibility();
+				Model.Scaffold.UpdateDatabaseVisibility();
 				break;
 			case nameof(Model.DynamicConnection.Provider):
 				Model.Troubleshoot.UpdateVisibility();
