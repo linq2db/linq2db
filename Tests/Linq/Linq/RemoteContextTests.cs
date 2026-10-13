@@ -21,6 +21,8 @@ using NUnit.Framework;
 
 using Shouldly;
 
+using Tests.Model.Remote.SignalR;
+
 namespace Tests.Linq
 {
 	[TestFixture]
@@ -351,6 +353,73 @@ namespace Tests.Linq
 			new SignalRDataContext(hubConnection).Dispose();
 
 			Assert.ThrowsAsync<ObjectDisposedException>(() => hubConnection.StartAsync());
+		}
+
+		// The SignalR test context leases a pooled hub connection for its lifetime. A client it handed out
+		// must stop working when the context is disposed, rather than reach the connection that the pool
+		// gives to the next context.
+		[Test]
+		public async Task SignalRTestContextClientStopsAtDispose([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			if (!context.IsRemote()) Assert.Ignore("Skip non-remote context");
+
+			ILinqService client;
+			string?      configuration;
+
+			using (var db = (TestSignalRDataContext)GetDataContext(context, transport: RemoteTransport.SignalR))
+			{
+				client        = db.LeasedClient;
+				configuration = db.ConfigurationString;
+
+				_ = await client.GetInfoAsync(configuration);
+			}
+
+			var ex = Assert.ThrowsAsync<ObjectDisposedException>(() => client.GetInfoAsync(configuration));
+
+			// a disposed HubConnection throws the same type; only the lease's refusal names the context
+			Assert.That(ex?.ObjectName, Does.Contain(nameof(TestSignalRDataContext)));
+		}
+
+		[Test]
+		public async Task SignalRTestContextReusesConnectionAfterCleanDispose([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			if (!context.IsRemote()) Assert.Ignore("Skip non-remote context");
+
+			HubConnection connection;
+
+			await using (var db = (TestSignalRDataContext)GetDataContext(context, transport: RemoteTransport.SignalR))
+			{
+				connection = db.HubConnection;
+
+				_ = await db.LeasedClient.GetInfoAsync(db.ConfigurationString);
+			}
+
+			await using (var db = (TestSignalRDataContext)GetDataContext(context, transport: RemoteTransport.SignalR))
+			{
+				Assert.That(db.HubConnection, Is.SameAs(connection));
+			}
+		}
+
+		[Test]
+		public async Task SignalRTestContextDiscardsConnectionAfterFailedCall([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			if (!context.IsRemote()) Assert.Ignore("Skip non-remote context");
+
+			HubConnection connection;
+
+			using (var db = (TestSignalRDataContext)GetDataContext(context, transport: RemoteTransport.SignalR))
+			{
+				connection = db.HubConnection;
+
+				Assert.CatchAsync(() => db.LeasedClient.ExecuteNonQueryAsync(db.ConfigurationString, "not a query"));
+			}
+
+			using (var db = (TestSignalRDataContext)GetDataContext(context, transport: RemoteTransport.SignalR))
+			{
+				Assert.That(db.HubConnection, Is.Not.SameAs(connection));
+			}
+
+			Assert.ThrowsAsync<ObjectDisposedException>(() => connection.StartAsync());
 		}
 
 		// The other constructor takes a client the caller built, so the connection inside it stays the
