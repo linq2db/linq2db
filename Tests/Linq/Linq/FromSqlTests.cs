@@ -1163,7 +1163,10 @@ namespace Tests.Linq
 			{
 				var query = db.Person.Where(p => p.ID.In(db.FromSqlScalar<int>(sql)));
 
-				query.Select(p => p.ID).ToArray().ShouldBe([1]);
+				query
+					.Select(p => p.ID)
+					.ToArray()
+					.ShouldBe([1]);
 			}
 		}
 
@@ -1183,7 +1186,10 @@ namespace Tests.Linq
 			{
 				var query = db.Person.Where(p => p.MiddleName.In(db.FromSqlScalar<string?>(sql)));
 
-				query.Select(p => p.ID).ToArray().ShouldBe([4]);
+				query
+					.Select(p => p.ID)
+					.ToArray()
+					.ShouldBe([4]);
 			}
 		}
 
