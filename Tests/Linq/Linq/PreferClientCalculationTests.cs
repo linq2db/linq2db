@@ -2070,6 +2070,46 @@ namespace Tests.Linq
 			rows.Select(r => r.W).ShouldAllBe(w => w == 1);
 		}
 
+		// The same rule when the set-operation column reaches the calculation through a calculated column of a query over it.
+		// A DISTINCT select list and a group key keep SQL's NULL, so the reader reads P and the key as 0 and the calculation
+		// over them answers 1 in both arms, as it does when the inner query is not a set operation.
+		[Test]
+		public void CalculationOverCalculatedSetColumnOfMissedLeftJoinReadsDefault([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(MissedJoinEntity.Seed);
+
+			var inner =
+				from e in table
+				from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				select new { e.Id, V = j.Value1 };
+
+			var plain =
+				(from y in inner.Select(x => new { x.Id, P = x.V + 1 }).Distinct()
+				 select new { y.Id, Q = y.P + 1 })
+				.ToArray();
+
+			plain.Length.ShouldBe(MissedJoinEntity.Seed.Length);
+			plain.Select(r => r.Q).ShouldAllBe(q => q == 1);
+
+			var distinct =
+				(from y in inner.Concat(inner).Select(x => new { x.Id, P = x.V + 1 }).Distinct()
+				 select new { y.Id, Q = y.P + 1 })
+				.ToArray();
+
+			distinct.Length.ShouldBe(MissedJoinEntity.Seed.Length);
+			distinct.Select(r => r.Q).ShouldAllBe(q => q == 1);
+
+			var grouped =
+				(from x in inner.Concat(inner)
+				 group x by x.V + 1 into g
+				 select new { K = g.Key + 1, N = g.Count() })
+				.ToArray();
+
+			grouped.Length.ShouldBe(1);
+			grouped[0].K.ShouldBe(1);
+		}
+
 		// An eager-loaded collection's projection that calculates with the parent's missed row reads it as default(T): the
 		// parent's value reaches the detail query through the key subquery. Option off only: the option-on arm already
 		// answers C#'s value.
