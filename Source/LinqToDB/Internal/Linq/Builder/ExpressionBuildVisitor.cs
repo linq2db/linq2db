@@ -6045,7 +6045,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (!IsSetOrLambda(argument))
 					continue;
 
-				if (argument is NewArrayExpression
+				if (IsInlineArray(argument)
 					&& (call.Method.DeclaringType == typeof(string) || (parameters ??= call.Method.GetParameters())[i].IsDefined(typeof(ParamArrayAttribute), false)))
 					continue;
 
@@ -6061,6 +6061,18 @@ namespace LinqToDB.Internal.Linq.Builder
 				return typeof(Delegate).IsAssignableFrom(type)
 					|| typeof(LambdaExpression).IsAssignableFrom(type)
 					|| type != typeof(string) && typeof(IEnumerable).IsAssignableFrom(type);
+			}
+
+			// BuildArrayAggregationFunction reads an inline array through these wrappers as the same list of values. Its chain
+			// methods (Where, Select, OrderBy, Distinct) are not followed: their lambdas would be decided too.
+			static bool IsInlineArray(Expression expression)
+			{
+				expression = expression.UnwrapConvert();
+
+				while (expression is MethodCallExpression { IsQueryable: true, Method.Name: nameof(Queryable.AsQueryable) or nameof(Enumerable.AsEnumerable) } wrapper)
+					expression = wrapper.Arguments[0];
+
+				return expression is NewArrayExpression;
 			}
 		}
 
