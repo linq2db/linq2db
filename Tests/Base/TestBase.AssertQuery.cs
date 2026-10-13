@@ -71,8 +71,9 @@ namespace Tests
 				return method.DeclaringType == typeof(Sql) && method.Name is nameof(Sql.ToNullable) or nameof(Sql.AsNullable);
 			}
 
-			// A member read through a conversion to a nullable type, Sql.ToNullable or Sql.AsNullable keeps the NULL of a missing
-			// object, as the database answers it: default(T) belongs only to a member read as a non-nullable value.
+			// A member read through a conversion to a nullable type (Sql.AsNullable included, when it sits under one) or through
+			// Sql.ToNullable keeps the NULL of a missing object, as the database answers it: default(T) belongs only to a member
+			// read as a non-nullable value.
 			bool TryGuardNullableRead(Expression source, Expression read, [NotNullWhen(true)] out Expression? guarded)
 			{
 				while (source is UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked } convert && !convert.Type.IsNullableType)
