@@ -2026,7 +2026,7 @@ namespace Tests.Linq
 		// A calculation over a CTE field that a missed row's NOT NULL column feeds reads it as the reader reads the field:
 		// default(T), not the NULL the body carries. Option off only: the option-on arm already answers C#'s value.
 		[Test]
-		[ActiveIssue(5983, Details = "The COALESCE over a CTE field is decided but does not survive to the statement")]
+		[ActiveIssue(5983, ErrorMessage = "should satisfy the condition", Details = "The COALESCE over a CTE field is decided but does not survive to the statement")]
 		public void CalculationOverCteColumnOfMissedLeftJoinReadsDefault([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(false));
@@ -2114,7 +2114,7 @@ namespace Tests.Linq
 		// parent's value reaches the detail query through the key subquery. Option off only: the option-on arm already
 		// answers C#'s value.
 		[Test]
-		[ActiveIssue(5983, Details = "The parent's value is judged in a frame that does not see the outer join")]
+		[ActiveIssue(5983, ErrorMessage = "should satisfy the condition",Details = "The parent's value is judged in a frame that does not see the outer join")]
 		public void EagerLoadOverMissedLeftJoinReadsDefault([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(false));
