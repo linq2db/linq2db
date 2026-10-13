@@ -49,8 +49,8 @@ type FSharpEntityBindingInterceptor private () =
                 let fields = FSharpType.GetRecordFields(typeAccessor.Type, BindingFlags.Public ||| BindingFlags.NonPublic)
                 let mappings = Dictionary<int, MemberAccessor>()
                 for i in 0 .. fields.Length - 1 do
-                    typeAccessor.Members
-                    |> Seq.tryFind (fun m -> m.MemberInfo.Name = fields[i].Name)
+                    typeAccessor.GetMemberByName(fields[i].Name)
+                    |> Option.ofObj
                     |> Option.iter (fun m -> mappings.Add(i, m))
                 _cache.GetOrAdd(typeAccessor.Type, Some(mappings :> IReadOnlyDictionary<int, MemberAccessor>))
             else None

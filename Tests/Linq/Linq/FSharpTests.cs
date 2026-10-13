@@ -72,6 +72,18 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void RecordProjectionWithStaticLet([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.WhereTest.RecordProjectionWithStaticLet(db);
+
+			if (db is DataConnection dc)
+			{
+				Assert.That(dc.LastQuery, Contains.Substring("WHERE"));
+			}
+		}
+
+		[Test]
 		public void ComplexRecordParametersMapping([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -419,6 +431,13 @@ namespace Tests.Linq
 		{
 			using var db = GetDataConnection(context);
 			FSharp.Issue5598.UpdateNoOpExcludesPrimaryKey(db, false);
+		}
+
+		[Test]
+		public void UpdateWithStaticLet([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.Issue5598.UpdateWithStaticLet(db, true);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
