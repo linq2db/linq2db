@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Interceptors;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
@@ -1425,6 +1427,48 @@ namespace Tests.Linq
 
 			query(db, [1]).ToArray().ShouldBe([1]);
 			query(db, [2]).ToArray().ShouldBe([2]);
+		}
+
+		sealed class LastParameterInterceptor : CommandInterceptor
+		{
+			public object? Value { get; private set; }
+
+			public override DbCommand CommandInitialized(CommandEventData eventData, DbCommand command)
+			{
+				Value = command.Parameters.Count > 0 ? command.Parameters[0].Value : null;
+				return command;
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void FromSql_Compiled_EqualArgumentsBindCurrentValue([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var interceptor = new LastParameterInterceptor();
+			db.AddInterceptor(interceptor);
+
+			var formattable = CompiledQuery.Compile((IDataContext dc, FormattableString fs) =>
+				dc.FromSqlScalar<int>(fs));
+
+			var array = CompiledQuery.Compile((IDataContext dc, object[] args) =>
+				dc.FromSql<Person>("SELECT * FROM Person WHERE {0} IS NOT NULL", args).Select(p => p.ID));
+
+			// equal by Equals, so the second call reuses the first build, but bound with a different offset
+			var d1 = new DateTimeOffset(2020, 1, 1, 12, 0, 0, TimeSpan.FromHours(2));
+			var d2 = d1.ToOffset(TimeSpan.Zero);
+
+			var query1 = formattable(db, $"SELECT 1 AS value WHERE {d1} IS NOT NULL");
+			query1.ToArray().ShouldBe([1]);
+
+			var query2 = formattable(db, $"SELECT 1 AS value WHERE {d2} IS NOT NULL");
+			query2.ToArray().ShouldBe([1]);
+			query2.GetCompiledQueryInfo().ShouldBeSameAs(query1.GetCompiledQueryInfo());
+			interceptor.Value.ShouldBeOfType<DateTimeOffset>().Offset.ShouldBe(TimeSpan.Zero);
+
+			array(db, [d1]).ToArray().ShouldNotBeEmpty();
+			array(db, [d2]).ToArray().ShouldNotBeEmpty();
+			interceptor.Value.ShouldBeOfType<DateTimeOffset>().Offset.ShouldBe(TimeSpan.Zero);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]

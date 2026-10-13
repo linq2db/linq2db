@@ -41,6 +41,7 @@ namespace LinqToDB.Internal.Reflection
 			public static readonly MethodInfo String_ObjectsConcat = MemberHelper.MethodOf(() => string.Concat((object?)null, (object?)null));
 
 			internal static readonly MethodInfo FormattableStringFactory_Create = MemberHelper.MethodOf(() => global::System.Runtime.CompilerServices.FormattableStringFactory.Create(null!, null!));
+			internal static readonly MethodInfo FormattableString_GetArguments  = MemberHelper.MethodOf<FormattableString>(fs => fs.GetArguments());
 
 		}
 

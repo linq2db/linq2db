@@ -74,7 +74,8 @@ namespace LinqToDB.Internal.Linq
 				}
 			}
 
-			return value1.Equals(value2);
+			// a raw SQL argument is read back from the argument array as its build-time type
+			return value1.GetType() == value2.GetType() && value1.Equals(value2);
 		}
 
 		static int ValueHashCode(object? value)

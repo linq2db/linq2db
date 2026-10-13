@@ -292,10 +292,18 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 				if (IsCompilable(resolvedArgument) && EvaluateExpression(resolvedArgument) is FormattableString formattable)
 				{
-					if (!ReferenceEquals(resolvedArgument, argument))
-						RecordMaterializedArgumentSlots(argument);
+					if (ReferenceEquals(resolvedArgument, argument))
+						return DataExtensions.GenerateFormattableString(formattable);
 
-					return DataExtensions.GenerateFormattableString(formattable);
+					RecordMaterializedArgumentSlots(argument);
+
+					// The compiled query reuses this build for any Equals-equal argument values (1.0m and 1.00m, one
+					// instant at two offsets), so the values are read from its arguments rather than baked.
+					var source = argument is MethodCallExpression { Arguments: [_, var array] } call && call.Method == Methods.System.FormattableStringFactory_Create
+						? array
+						: Expression.Call(argument, Methods.System.FormattableString_GetArguments);
+
+					return DataExtensions.GenerateFormattableString(formattable, source);
 				}
 
 				return argument;

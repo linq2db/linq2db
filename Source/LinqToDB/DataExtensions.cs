@@ -1443,15 +1443,18 @@ namespace LinqToDB
 
 		#region FromSql
 
-		static Expression GenerateArray(object?[] arguments)
+		static Expression GenerateArray(object?[] arguments, Expression? source)
 		{
-			var argumentsExpr = Expression.NewArrayInit(typeof(object), arguments.Select(p =>
+			var argumentsExpr = Expression.NewArrayInit(typeof(object), arguments.Select((p, i) =>
 			{
 				if (p == null)
 					return Expression.Constant(null, typeof(object));
-				
+
 				var argumentType    = p.GetType();
-				var valueExpression = SequenceHelper.WrapAsParameter(Expression.Constant(p, argumentType));
+				var value           = source == null || p is ISqlExpression
+					? (Expression)Expression.Constant(p, argumentType)
+					: Expression.Convert(Expression.ArrayIndex(source, ExpressionInstances.Int32(i)), argumentType);
+				var valueExpression = SequenceHelper.WrapAsParameter(value);
 				if (valueExpression.Type != typeof(object))
 					valueExpression = Expression.Convert(valueExpression, typeof(object));
 
@@ -1463,7 +1466,13 @@ namespace LinqToDB
 
 		internal static MethodCallExpression GenerateFormattableString(FormattableString sql)
 		{
-			return GenerateFormattableString(sql.Format, GenerateArray(sql.GetArguments()));
+			return GenerateFormattableString(sql.Format, GenerateArray(sql.GetArguments(), null));
+		}
+
+		/// <param name="arguments">Expression for <paramref name="sql"/>'s arguments, read instead of baking their values.</param>
+		internal static MethodCallExpression GenerateFormattableString(FormattableString sql, Expression arguments)
+		{
+			return GenerateFormattableString(sql.Format, GenerateArray(sql.GetArguments(), arguments));
 		}
 
 		internal static MethodCallExpression GenerateFormattableString(string format, Expression arguments)
@@ -1587,7 +1596,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					Methods.LinqToDB.FromSqlFormattable.MakeGenericMethod(typeof(TEntity)),
-					SqlQueryRootExpression.Create(dataContext), GenerateFormattableString(sql.Format, GenerateArray(parameters))));
+					SqlQueryRootExpression.Create(dataContext), GenerateFormattableString(sql.Format, GenerateArray(parameters, null))));
 		}
 
 		#endregion
