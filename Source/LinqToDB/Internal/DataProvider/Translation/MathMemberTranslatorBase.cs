@@ -325,6 +325,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out var translatedX))
 				return null;
 
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
+
 			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[1], out var translatedY))
 				return null;
 

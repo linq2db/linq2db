@@ -896,6 +896,27 @@ namespace Tests.Linq
 			products.ShouldBe(expectedProducts);
 		}
 
+		sealed class PowScale
+		{
+			[PrimaryKey                       ] public int     Id { get; set; }
+			[Column(Precision = 18, Scale = 4)] public decimal D  { get; set; }
+		}
+
+		// The exponent must not take the type of a column the call is combined with: Decimal(18,4) cuts 0.00005 to 0.
+		[Test]
+		public void PowDecimalExponentScale([DataSources(TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new PowScale { Id = 1, D = 16m } });
+
+			// 16^0.00005 + 16 = 17.000138..., 17.0001 where the result keeps the column's scale; a cut exponent gives 17
+			var result = t
+				.Select(r => Sql.AsSql(Sql.Power(r.D, 0.00005m) + r.D))
+				.Single();
+
+			result!.Value.ShouldBeInRange(17.00009m, 17.00015m);
+		}
+
 		[Test]
 		public void Sign([DataSources(TestProvName.AllYdb)] string context)
 		{
