@@ -271,7 +271,8 @@
 		<PackageVersion Include="System.Runtime.InteropServices.RuntimeInformation"     Version="4.3.0"                        />
 
 		<PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly"           Version="$(Net10Latest)"               />
-		<PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server"    Version="$(Net10Latest)"               />
+		<!--GHSA-g27p-qf6j-c96c, GHSA-qjpx-jqm5-h2c4: back to $(Net10Latest) once it reaches 10.0.13-->
+		<PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server"    Version="10.0.13"                      />
 		<PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="$(Net10Latest)"               />
 	</ItemGroup>
 
