@@ -461,7 +461,14 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(data);
 
-			var result = t.OrderBy(r => r.Id).Select(r => new { Away = Sql.AsSql(Sql.Round(r.D, -1)), Even = Sql.AsSql(Sql.RoundToEven(r.D, -1)) }).ToArray();
+			var result = t
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					Away = Sql.AsSql(Sql.Round(r.D, -1)),
+					Even = Sql.AsSql(Sql.RoundToEven(r.D, -1)),
+				})
+				.ToArray();
 
 			result.Select(r => r.Away).ShouldBe(new decimal?[] { 1230m, 1230m, -1230m, 1230m, -1230m });
 			result.Select(r => r.Even).ShouldBe(new decimal?[] { 1230m, 1230m, -1230m, 1220m, -1220m });
@@ -508,7 +515,14 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(data);
 
-			var result = t.OrderBy(r => r.Id).Select(r => new { Away = Sql.AsSql(Sql.Round(r.D, -3)), Even = Sql.AsSql(Sql.RoundToEven(r.D, -3)) }).ToArray();
+			var result = t
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					Away = Sql.AsSql(Sql.Round(r.D, -3)),
+					Even = Sql.AsSql(Sql.RoundToEven(r.D, -3)),
+				})
+				.ToArray();
 
 			result.Select(r => r.Away).ShouldBe(new decimal?[] { 1000m, 1000m, 3000m, -3000m, 4000m });
 			result.Select(r => r.Even).ShouldBe(new decimal?[] { 1000m, 1000m, 2000m, -2000m, 4000m });
@@ -540,7 +554,14 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(data);
 
-			var result = t.OrderBy(r => r.Id).Select(r => new { Away = Sql.AsSql(Sql.Round(r.D, r.P)), Even = Sql.AsSql(Sql.RoundToEven(r.D, r.P)) }).ToArray();
+			var result = t
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					Away = Sql.AsSql(Sql.Round(r.D, r.P)),
+					Even = Sql.AsSql(Sql.RoundToEven(r.D, r.P)),
+				})
+				.ToArray();
 
 			result.Select(r => r.Away).ShouldBe(new decimal?[] { 1230m, 1200m, 1230m, 1230m, 1000m, -3000m, 0m, 9999.99m });
 			result.Select(r => r.Even).ShouldBe(new decimal?[] { 1230m, 1200m, 1230m, 1220m, 1000m, -2000m, 0m, 9999.99m });
@@ -569,7 +590,14 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(data);
 
-			var result = t.OrderBy(r => r.Id).Select(r => new { Away = Sql.AsSql(Sql.Round(r.D, r.P)), Even = Sql.AsSql(Sql.RoundToEven(r.D, r.P)) }).ToArray();
+			var result = t
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					Away = Sql.AsSql(Sql.Round(r.D, r.P)),
+					Even = Sql.AsSql(Sql.RoundToEven(r.D, r.P)),
+				})
+				.ToArray();
 
 			result.Select(r => r.Away).ShouldBe(new decimal?[] { 0.1234m, 0.125m, 0.13m, -0.124m, 0m });
 			result.Select(r => r.Even).ShouldBe(new decimal?[] { 0.1234m, 0.125m, 0.12m, -0.124m, 0m });
@@ -602,14 +630,28 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(data);
 
-			var result = t.OrderBy(r => r.Id).Select(r => new { Away = Sql.AsSql(Sql.Round(r.D22s9, r.P)), Even = Sql.AsSql(Sql.RoundToEven(r.D22s9, r.P)) }).ToArray();
+			var result = t
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					Away = Sql.AsSql(Sql.Round(r.D22s9, r.P)),
+					Even = Sql.AsSql(Sql.RoundToEven(r.D22s9, r.P)),
+				})
+				.ToArray();
 
 			result.Select(r => r.Away).ShouldBe(new decimal?[] { 100000m, -300000m, 10000000000m, 0m, 1234.57m, 1235m, 12.5m });
 			result.Select(r => r.Even).ShouldBe(new decimal?[] { 100000m, -200000m, 10000000000m, 0m, 1234.56m, 1235m, 12.5m });
 
-			t.Select(r => Sql.AsSql(Sql.Round(r.D22s9, r.Id > 0 ? null : r.P))).ToArray().ShouldAllBe(v => v == null);
+			var nullPrecision = t
+				.Select(r => Sql.AsSql(Sql.Round(r.D22s9, r.Id > 0 ? null : r.P)))
+				.ToArray();
 
-			Action act = () => t.Where(r => r.P < 0).Select(r => Sql.AsSql(Sql.Round(r.D35s2, r.P))).ToArray();
+			nullPrecision.ShouldAllBe(v => v == null);
+
+			Action act = () => t
+				.Where(r => r.P < 0)
+				.Select(r => Sql.AsSql(Sql.Round(r.D35s2, r.P)))
+				.ToArray();
 			act.ShouldThrow<Exception>().Message.ShouldContain("ROUND precision is out of range for Decimal(35,2)");
 		}
 
