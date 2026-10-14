@@ -1,6 +1,7 @@
 <#
 ensure-baselines-branch.ps1 - resolve the per-run baselines branch name, and rebase
-that branch onto baselines master when an earlier run left it behind.
+that branch onto its base when an earlier run left it behind. The base is baselines master,
+or for a stacked PR the parent's baselines branch (baselines-base.ps1).
 
 Called once per run by create_baselines_branch, as:
 
@@ -51,6 +52,10 @@ if ($PrId) {
 }
 Write-Host "Baselines branch name: ${Branch}"
 
+# Runs from the test scripts artifact, where Build/CI/baselines-base.ps1 lands next to this file.
+. "$PSScriptRoot/baselines-base.ps1"
+$base = Get-BaselinesBase -PrId $PrId -BaselinesMaster $BaselinesMaster -RepoUrl $baselinesRepoUrl -Org $orgName
+
 function Get-RemoteHash([string]$ref) {
     # @(...) keeps a single-line answer an array. Without it PowerShell hands back a bare string for
     # one match and a string[] for several, so a length test means "characters" in the first case and
@@ -82,14 +87,14 @@ if (-not $branchHash) {
         # That clone is the whole repository - 343541 files, ~420 Mb - and it sits in the serial
         # prefix every test leg waits on: 2.3 min for the job on build 23050 against 0.25 min on
         # 23068, where no branch existed. "ahead" means there is nothing to rebase onto.
-        $status = gh api /repos/$orgName/$baselinesRepo/compare/${BaselinesMaster}...${Branch} --jq .status
+        $status = gh api /repos/$orgName/$baselinesRepo/compare/${base}...${Branch} --jq .status
         if ($LASTEXITCODE -ne 0) {
-            Write-Host "Compare request for '${BaselinesMaster}...${Branch}' failed with code ${LASTEXITCODE}"
+            Write-Host "Compare request for '${base}...${Branch}' failed with code ${LASTEXITCODE}"
             exit 1
         }
-        Write-Host "Baselines branch is '${status}' relative to ${BaselinesMaster}"
+        Write-Host "Baselines branch is '${status}' relative to ${base}"
         if ($status -eq 'ahead' -or $status -eq 'identical') {
-            Write-Host "Baselines branch already based on ${BaselinesMaster}, no rebase required"
+            Write-Host "Baselines branch already based on ${base}, no rebase required"
         } else {
             Write-Host "Baselines head is ${branchHash} and the branch is '${status}', trying to rebase on current HEAD"
             git clone -c http.proactiveAuth=basic $baselinesRepoUrl baselines
@@ -103,9 +108,9 @@ if (-not $branchHash) {
                 Write-Host "Failed to checkout baselines branch origin/${Branch}. Error code ${LASTEXITCODE}"
                 exit 1
             }
-            git rebase origin/$BaselinesMaster
+            git rebase origin/$base
             if ($LASTEXITCODE -ne 0) {
-                Write-Host "Failed to rebase baselines PR on origin/${BaselinesMaster}. Delete branch and re-run tests. Error code ${LASTEXITCODE}"
+                Write-Host "Failed to rebase baselines PR on origin/${base}. Delete branch and re-run tests. Error code ${LASTEXITCODE}"
                 exit 1
             }
             git push -f origin HEAD:$Branch
@@ -118,6 +123,8 @@ if (-not $branchHash) {
             cd ..
         }
     }
+
+    Update-BaselinesPrBase -Branch $Branch -Base $base -Org $orgName -BaselinesRepo $baselinesRepo
 }
 
 Write-Host "Baselines branch head hash: ${branchHash}"
