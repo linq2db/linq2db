@@ -861,6 +861,26 @@ namespace Tests.Linq
 			years.ShouldAllBe(year => year == MissedRowNativeYear(context));
 		}
 
+		// MySQL reads a literal with an offset in the session's time zone, so a default written with one moves below year 1 in a
+		// session west of UTC.
+		[Test]
+		public void OffsetDefaultIsReadIndependentlyOfSessionTimeZone([IncludeDataSources(TestProvName.AllMySql)] string context, [Values("+00:00", "-05:00")] string zone, [Values] bool preferClient)
+		{
+			using var db    = GetDataConnection(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(MissedMomentEntity.Seed);
+
+			new LinqToDB.Data.CommandInfo(db, $"SET time_zone = '{zone}'").Execute();
+
+			var years =
+				(from e in table
+				 from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				 select j.Moment.Year)
+				.ToArray();
+
+			years.Length.ShouldBe(MissedMomentEntity.Seed.Length);
+			years.ShouldAllBe(year => year == 1);
+		}
+
 		[Table]
 		sealed class MappedMomentEntity
 		{
