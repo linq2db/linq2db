@@ -117,5 +117,8 @@
 		<PackageReference Include="Octonica.ClickHouseClient" />
 		<PackageReference Include="DuckDB.NET.Data.Full" />
 		<PackageReference Include="Ydb.Sdk" />
+
+		<!--transitive vulnerable packages: the tool bundles its dependencies, so consumers can't pin them-->
+		<PackageReference Include="System.Security.Cryptography.Pkcs" />
 	</ItemGroup>
 </Project>
