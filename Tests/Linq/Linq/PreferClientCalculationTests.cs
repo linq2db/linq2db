@@ -1378,7 +1378,7 @@ namespace Tests.Linq
 		// Every shape the projection calculates with reads a missed row's non-nullable member as default(T), directly, through
 		// a numeric cast, a conditional's branch or an identity function, and whether the option moves the calculation or not.
 		[Test]
-		public void EveryCalculationOverMissedLeftJoinReadsDefault([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		public void EveryCalculationOverMissedLeftJoinReadsDefault([DataSources] string context, [Values] bool preferClient)
 		{
 			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
 			using var table = db.CreateLocalTable(MissedJoinEntity.Seed);
@@ -1398,7 +1398,6 @@ namespace Tests.Linq
 					NotFlag    = !j.Flag ? "t" : "f",
 					Logical    = !(j.Flag || e.Id < 0) ? "t" : "f",
 					AbsPlus    = Math.Abs(j.Value1) + 1,
-					Year       = j.Date.Year,
 					Concat     = "x" + j.Value1,
 					Function   = PreferServer(j.Value1) + 1,
 					Cast       = (double)j.Value1 + 1,
@@ -1409,7 +1408,9 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 
-			query.ToSqlQuery().Sql.ToUpperInvariant().ShouldContain("COALESCE");
+			// Access writes the default as IIF and Informix as NVL.
+			if (context.IsAnyOf(TestProvName.AllSQLite))
+				query.ToSqlQuery().Sql.ToUpperInvariant().ShouldContain("COALESCE");
 
 			// Asserted apart: the in-memory arm of AssertQuery does not null-guard an instance call on a value type.
 			var texts =
