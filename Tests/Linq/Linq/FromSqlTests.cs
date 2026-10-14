@@ -1472,9 +1472,6 @@ namespace Tests.Linq
 			var formattable = CompiledQuery.Compile((IDataContext dc, FormattableString fs) =>
 				dc.FromSqlScalar<int>(fs));
 
-			var array = CompiledQuery.Compile((IDataContext dc, object[] args) =>
-				dc.FromSql<Person>("SELECT * FROM Person WHERE {0} IS NOT NULL", args).Select(p => p.ID));
-
 			// equal by Equals, so the second call reuses the first build, but bound with a different offset
 			var d1 = new DateTimeOffset(2020, 1, 1, 12, 0, 0, TimeSpan.FromHours(2));
 			var d2 = d1.ToOffset(TimeSpan.Zero);
@@ -1486,9 +1483,30 @@ namespace Tests.Linq
 			query2.ToArray().ShouldBe([1]);
 			query2.GetCompiledQueryInfo().ShouldBeSameAs(query1.GetCompiledQueryInfo());
 			interceptor.Value.ShouldBeOfType<DateTimeOffset>().Offset.ShouldBe(TimeSpan.Zero);
+		}
 
-			array(db, [d1]).ToArray().ShouldNotBeEmpty();
-			array(db, [d2]).ToArray().ShouldNotBeEmpty();
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void FromSql_Compiled_EqualArgumentArrayBindsCurrentValue([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var interceptor = new LastParameterInterceptor();
+			db.AddInterceptor(interceptor);
+
+			var array = CompiledQuery.Compile((IDataContext dc, object[] args) =>
+				dc.FromSql<Person>("SELECT * FROM Person WHERE {0} IS NOT NULL", args)
+					.Select(p => p.ID));
+
+			// equal by Equals, so the second call reuses the first build, but bound with a different offset
+			var d1 = new DateTimeOffset(2020, 1, 1, 12, 0, 0, TimeSpan.FromHours(2));
+			var d2 = d1.ToOffset(TimeSpan.Zero);
+
+			var query1 = array(db, [d1]);
+			query1.ToArray().ShouldNotBeEmpty();
+
+			var query2 = array(db, [d2]);
+			query2.ToArray().ShouldNotBeEmpty();
+			query2.GetCompiledQueryInfo().ShouldBeSameAs(query1.GetCompiledQueryInfo());
 			interceptor.Value.ShouldBeOfType<DateTimeOffset>().Offset.ShouldBe(TimeSpan.Zero);
 		}
 
