@@ -14,10 +14,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		SqlJoinedTable?               _fakeJoin;
 		SqlProviderFlags              _providerFlags = default!;
 		int?                          _columnSubqueryLevel;
-		int                           _columnExpressionDepth;
-		int                           _columnSubqueryDepth;
+		bool                          _isColumnSubqueryEntry;
 		Stack<ISqlExpression>?        _ignoredExpressions;
-		Stack<ISqlTableSource>?       _currentSources;
+		List<ISqlTableSource>?        _currentSources;
 
 		bool    _isValid;
 		bool    _inExpression;
@@ -45,8 +44,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			_isValid                = true;
 			_inExpression           = false;
 			_columnSubqueryLevel    = default;
-			_columnExpressionDepth  = 0;
-			_columnSubqueryDepth    = 0;
+			_isColumnSubqueryEntry  = false;
 			_errorMessage           = default!;
 			_ignoredExpressions     = null;
 			_currentSources         = null;
@@ -234,9 +232,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 
 				// IsColumnSubqueryShouldNotContainParentIsNotNull is enforced inline in
-				// VisitIsNullPredicate, where _columnExpressionDepth tells us whether the
-				// IS NOT NULL is actually in column position. Doing it here would walk every
-				// nested subquery's tree once per ancestor (O(N^2) on depth).
+				// VisitIsNullPredicate, against the sources tracked in _currentSources. Doing it here
+				// would walk every nested subquery's tree once per ancestor (O(N^2) on depth).
 
 				var shouldCheckNesting = selectQuery.Select.TakeValue != null && !_providerFlags.IsColumnSubqueryWithParentReferenceAndTakeSupported;
 
@@ -363,28 +360,15 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return result;
 		}
 
-		protected internal override IQueryElement VisitSqlTableSource(SqlTableSource element)
-		{
-			(_currentSources ??= new Stack<ISqlTableSource>()).Push(element.Source);
-
-			base.VisitSqlTableSource(element);
-
-			_currentSources.Pop();
-
-			return element;
-		}
-
 		protected internal override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
 		{
 			// The Oracle 11 bug modeled by IsColumnSubqueryShouldNotContainParentIsNotNull is about a
 			// column-list *scalar subquery* whose body contains IS NOT NULL with a parent reference.
 			// IS NOT NULL in WHERE / ON / HAVING positions is unaffected, and CASE-WHEN style IS NOT
 			// NULL directly in a top-level projection (no scalar subquery) is also unaffected — only
-			// flag predicates reached through a SelectQuery descent that itself was reached via a
-			// column expression.
+			// flag predicates inside a column subquery that reference a source outside of it.
 			if (predicate.IsNot
-				&& _columnSubqueryDepth > 0
-				&& _providerFlags.IsColumnSubqueryShouldNotContainParentIsNotNull
+				&& _currentSources != null
 				&& QueryHelper.IsDependsOnOuterSources(predicate, currentSources: _currentSources))
 			{
 				SetInvalid(ErrorHelper.Oracle.Error_ColumnSubqueryShouldNotContainParentIsNotNull);
@@ -410,20 +394,36 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			_parentQuery  = selectQuery;
 			_inExpression = false;
 
-			// Track depth of SelectQuery descents that happen from inside a column expression of an
-			// enclosing query — i.e., column-position scalar subqueries. The IS-NOT-NULL parent-reference
-			// gate in VisitIsNullPredicate fires only when this depth > 0.
-			var inColumnSubquery = _columnExpressionDepth > 0;
-			if (inColumnSubquery)
-				_columnSubqueryDepth++;
+			// A query entered directly from a column expression starts a new column-subquery scope;
+			// every query visited inside it adds its accessible sources, so references to them are not
+			// parent references for the IS-NOT-NULL gate in VisitIsNullPredicate.
+			var isColumnSubqueryEntry = _isColumnSubqueryEntry;
+			var saveSources           = _currentSources;
+			var sourcesCount          = 0;
+
+			_isColumnSubqueryEntry = false;
+
+			if (_providerFlags.IsColumnSubqueryShouldNotContainParentIsNotNull)
+			{
+				if (isColumnSubqueryEntry)
+					_currentSources = new List<ISqlTableSource>();
+
+				if (_currentSources != null)
+				{
+					sourcesCount = _currentSources.Count;
+					_currentSources.AddRange(QueryHelper.EnumerateAccessibleSources(selectQuery));
+				}
+			}
 
 			base.VisitSqlQuery(selectQuery);
 
-			if (inColumnSubquery)
-				_columnSubqueryDepth--;
+			if (_currentSources != null && _currentSources == saveSources)
+				_currentSources.RemoveRange(sourcesCount, _currentSources.Count - sourcesCount);
 
-			_inExpression = saveInExpression;
-			_parentQuery  = saveParent;
+			_currentSources        = saveSources;
+			_isColumnSubqueryEntry = isColumnSubqueryEntry;
+			_inExpression          = saveInExpression;
+			_parentQuery           = saveParent;
 
 			return selectQuery;
 		}
@@ -455,18 +455,19 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (_ignoredExpressions != null && _ignoredExpressions.Contains(expression))
 				return expression;
 
-			var saveLevel        = _columnSubqueryLevel;
-			var saveInExpression = _inExpression;
+			var saveLevel                 = _columnSubqueryLevel;
+			var saveInExpression          = _inExpression;
+			var saveIsColumnSubqueryEntry = _isColumnSubqueryEntry;
 
-			_columnSubqueryLevel = 0;
-			_inExpression        = true;
-			_columnExpressionDepth++;
+			_columnSubqueryLevel   = 0;
+			_inExpression          = true;
+			_isColumnSubqueryEntry = true;
 
 			base.VisitSqlColumnExpression(column, expression);
 
-			_columnExpressionDepth--;
-			_columnSubqueryLevel = saveLevel;
-			_inExpression        = saveInExpression;
+			_isColumnSubqueryEntry = saveIsColumnSubqueryEntry;
+			_columnSubqueryLevel   = saveLevel;
+			_inExpression          = saveInExpression;
 
 			return expression;
 		}
