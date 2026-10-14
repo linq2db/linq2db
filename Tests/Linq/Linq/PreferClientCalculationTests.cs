@@ -2142,7 +2142,7 @@ namespace Tests.Linq
 		// parent's value reaches the detail query through the key subquery. Option off only: the option-on arm already
 		// answers C#'s value.
 		[Test]
-		[ActiveIssue(5983, ErrorMessage = "should satisfy the condition",Details = "The parent's value is judged in a frame that does not see the outer join")]
+		[ActiveIssue(5983, ErrorMessage = "should satisfy the condition", Details = "The parent's value is judged in a frame that does not see the outer join")]
 		public void EagerLoadOverMissedLeftJoinReadsDefault([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(false));
