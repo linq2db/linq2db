@@ -1161,8 +1161,13 @@ namespace Tests.Linq
 				where p.ID.In(db.FromSqlScalar<int>(FormattableStringFactory.Create(sql)))
 				select p.ID;
 
-			Query("SELECT 1 AS value").ToArray().ShouldBe([1]);
-			Query("SELECT 2 AS value").ToArray().ShouldBe([2]);
+			Query("SELECT 1 AS value")
+				.ToArray()
+				.ShouldBe([1]);
+
+			Query("SELECT 2 AS value")
+				.ToArray()
+				.ShouldBe([2]);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000"), QueryCacheTest]
@@ -1213,8 +1218,13 @@ namespace Tests.Linq
 				where p.ID.In(db.FromSqlScalar<int>(sql))
 				select p.ID;
 
-			Query($"SELECT {1} AS value").ToArray().ShouldBe([1]);
-			Query($"SELECT {1} + 1 AS value").ToArray().ShouldBe([2]);
+			Query($"SELECT {1} AS value")
+				.ToArray()
+				.ShouldBe([1]);
+
+			Query($"SELECT {1} + 1 AS value")
+				.ToArray()
+				.ShouldBe([2]);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
@@ -1227,8 +1237,13 @@ namespace Tests.Linq
 				where p.ID.In(db.FromSqlScalar<int>(sql))
 				select p.ID;
 
-			Query($"SELECT {1} AS value").ToArray().ShouldBe([1]);
-			Query($"SELECT {2L} AS value").ToArray().ShouldBe([2]);
+			Query($"SELECT {1} AS value")
+				.ToArray()
+				.ShouldBe([1]);
+
+			Query($"SELECT {2L} AS value")
+				.ToArray()
+				.ShouldBe([2]);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
@@ -1241,9 +1256,17 @@ namespace Tests.Linq
 				where p.ID.In(db.FromSqlScalar<int>(sql))
 				select p.ID;
 
-			Query($"SELECT {new SqlValue(1)} AS value").ToArray().ShouldBe([1]);
-			Query($"SELECT {new SqlValue(2)} AS value").ToArray().ShouldBe([2]);
-			Query($"SELECT {new SqlValue(1)} AS value").ToArray().ShouldBe([1]);
+			Query($"SELECT {new SqlValue(1)} AS value")
+				.ToArray()
+				.ShouldBe([1]);
+
+			Query($"SELECT {new SqlValue(2)} AS value")
+				.ToArray()
+				.ShouldBe([2]);
+
+			Query($"SELECT {new SqlValue(1)} AS value")
+				.ToArray()
+				.ShouldBe([1]);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
@@ -1256,8 +1279,13 @@ namespace Tests.Linq
 				where db.FromSql<Person>(FormattableStringFactory.Create(sql)).Any(s => s.ID == p.ID)
 				select p.ID;
 
-			Query("SELECT * FROM Person WHERE PersonID = 1").ToArray().ShouldBe([1]);
-			Query("SELECT * FROM Person WHERE PersonID = 2").ToArray().ShouldBe([2]);
+			Query("SELECT * FROM Person WHERE PersonID = 1")
+				.ToArray()
+				.ShouldBe([1]);
+
+			Query("SELECT * FROM Person WHERE PersonID = 2")
+				.ToArray()
+				.ShouldBe([2]);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
@@ -1270,8 +1298,13 @@ namespace Tests.Linq
 				where db.FromSql<Person>(sql).Any(s => s.ID == p.ID)
 				select p.ID;
 
-			Query("SELECT * FROM Person WHERE PersonID = 1").ToArray().ShouldBe([1]);
-			Query("SELECT * FROM Person WHERE PersonID = 2").ToArray().ShouldBe([2]);
+			Query("SELECT * FROM Person WHERE PersonID = 1")
+				.ToArray()
+				.ShouldBe([1]);
+
+			Query("SELECT * FROM Person WHERE PersonID = 2")
+				.ToArray()
+				.ShouldBe([2]);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
@@ -1284,9 +1317,17 @@ namespace Tests.Linq
 				where db.FromSql<Person>("SELECT * FROM Person WHERE PersonID = {0}", arguments).Any(s => s.ID == p.ID)
 				select p.ID;
 
-			Query(1).ToArray().ShouldBe([1]);
-			Query(2L).ToArray().ShouldBe([2]);
-			Query(3, 4).ToArray().ShouldBe([3]);
+			Query(1)
+				.ToArray()
+				.ShouldBe([1]);
+
+			Query(2L)
+				.ToArray()
+				.ShouldBe([2]);
+
+			Query(3, 4)
+				.ToArray()
+				.ShouldBe([3]);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
@@ -1295,12 +1336,17 @@ namespace Tests.Linq
 			using var db = GetDataConnection(context);
 
 			var query = CompiledQuery.Compile((IDataContext dc, int id) =>
-				dc.FromSql<Person>($"SELECT * FROM Person WHERE PersonID = {id}").Select(p => p.ID));
+				dc.FromSql<Person>($"SELECT * FROM Person WHERE PersonID = {id}")
+					.Select(p => p.ID));
 
-			query(db, 1).ToArray().ShouldBe([1]);
+			query(db, 1)
+				.ToArray()
+				.ShouldBe([1]);
 			var sql = db.LastQuery;
 
-			query(db, 2).ToArray().ShouldBe([2]);
+			query(db, 2)
+				.ToArray()
+				.ShouldBe([2]);
 			db.LastQuery.ShouldBe(sql);
 		}
 
@@ -1310,12 +1356,18 @@ namespace Tests.Linq
 			using var db = GetDataConnection(context);
 
 			var query = CompiledQuery.Compile((IDataContext dc, int id) =>
-				dc.GetTable<Person>().Where(p => p.ID.In(dc.FromSqlScalar<int>($"SELECT {id} AS value"))).Select(p => p.ID));
+				dc.GetTable<Person>()
+					.Where(p => p.ID.In(dc.FromSqlScalar<int>($"SELECT {id} AS value")))
+					.Select(p => p.ID));
 
-			query(db, 1).ToArray().ShouldBe([1]);
+			query(db, 1)
+				.ToArray()
+				.ShouldBe([1]);
 			var sql = db.LastQuery;
 
-			query(db, 2).ToArray().ShouldBe([2]);
+			query(db, 2)
+				.ToArray()
+				.ShouldBe([2]);
 			db.LastQuery.ShouldBe(sql);
 		}
 
@@ -1325,13 +1377,16 @@ namespace Tests.Linq
 			using var db = GetDataConnection(context);
 
 			var query = CompiledQuery.Compile((IDataContext dc, FormattableString fs) =>
-				dc.FromSql<Person>(fs).Select(p => p.ID));
+				dc.FromSql<Person>(fs)
+					.Select(p => p.ID));
 
 			var query1 = query(db, $"SELECT * FROM Person WHERE PersonID = {1}");
 			query1.ToArray().ShouldBe([1]);
 			var sql = db.LastQuery;
 
-			query(db, $"SELECT * FROM Person WHERE PersonID = {2}").ToArray().ShouldBe([2]);
+			query(db, $"SELECT * FROM Person WHERE PersonID = {2}")
+				.ToArray()
+				.ShouldBe([2]);
 			db.LastQuery.ShouldBe(sql);
 
 			var query3 = query(db, $"SELECT * FROM Person WHERE PersonID = {1}");
@@ -1350,10 +1405,16 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var query = CompiledQuery.Compile((IDataContext dc, RawSqlString sql, int id) =>
-				dc.FromSql<Person>(sql, id).Select(p => p.ID));
+				dc.FromSql<Person>(sql, id)
+					.Select(p => p.ID));
 
-			query(db, "SELECT * FROM Person WHERE PersonID = {0}", 1).ToArray().ShouldBe([1]);
-			query(db, "SELECT * FROM Person WHERE PersonID = {0}", 2).ToArray().ShouldBe([2]);
+			query(db, "SELECT * FROM Person WHERE PersonID = {0}", 1)
+				.ToArray()
+				.ShouldBe([1]);
+
+			query(db, "SELECT * FROM Person WHERE PersonID = {0}", 2)
+				.ToArray()
+				.ShouldBe([2]);
 
 			var ids = query(db, "SELECT * FROM Person WHERE PersonID <> {0}", 1).ToArray();
 			ids.ShouldNotContain(1);
@@ -1379,13 +1440,20 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			db.FromSql<Person>("SELECT * FROM Person WHERE PersonID = ?", new DataParameter("id", 2, DataType.Int32))
-				.Select(p => p.ID).ToArray().ShouldBe([2]);
+				.Select(p => p.ID)
+				.ToArray()
+				.ShouldBe([2]);
 
 			db.FromSql<Person>("SELECT * FROM Person WHERE PersonID = {0} OR PersonID = ?", 1, new DataParameter("id", 2, DataType.Int32))
-				.Select(p => p.ID).OrderBy(id => id).ToArray().ShouldBe([1, 2]);
+				.Select(p => p.ID)
+				.OrderBy(id => id)
+				.ToArray()
+				.ShouldBe([1, 2]);
 
 			db.FromSql<Person>("SELECT * FROM Person WHERE LastName = ? AND PersonID = {1}", new DataParameter("name", "Pupkin", DataType.NVarChar), 1)
-				.Select(p => p.ID).ToArray().ShouldBe([1]);
+				.Select(p => p.ID)
+				.ToArray()
+				.ShouldBe([1]);
 		}
 
 		static string OutOfFormatOrderSql(string context, bool repeated)
@@ -1405,7 +1473,9 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			db.FromSql<Person>(FormattableStringFactory.Create(OutOfFormatOrderSql(context, repeated), "X", 1))
-				.Select(p => p.ID).ToArray().ShouldBe([1]);
+				.Select(p => p.ID)
+				.ToArray()
+				.ShouldBe([1]);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
@@ -1415,7 +1485,11 @@ namespace Tests.Linq
 
 			var sql = FormattableStringFactory.Create(OutOfFormatOrderSql(context, repeated), "X", 1);
 
-			db.Person.Where(p => db.FromSql<Person>(sql).Select(x => x.ID).Contains(p.ID)).Select(p => p.ID).ToArray().ShouldBe([1]);
+			db.Person
+				.Where(p => db.FromSql<Person>(sql).Select(x => x.ID).Contains(p.ID))
+				.Select(p => p.ID)
+				.ToArray()
+				.ShouldBe([1]);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
@@ -1424,10 +1498,16 @@ namespace Tests.Linq
 			using var db = GetDataConnection(context);
 
 			var query = CompiledQuery.Compile((IDataContext dc, object[] args) =>
-				dc.FromSql<Person>("SELECT * FROM Person WHERE PersonID = {0}", args).Select(p => p.ID));
+				dc.FromSql<Person>("SELECT * FROM Person WHERE PersonID = {0}", args)
+					.Select(p => p.ID));
 
-			query(db, [1]).ToArray().ShouldBe([1]);
-			query(db, [2]).ToArray().ShouldBe([2]);
+			query(db, [1])
+				.ToArray()
+				.ShouldBe([1]);
+
+			query(db, [2])
+				.ToArray()
+				.ShouldBe([2]);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
@@ -1441,14 +1521,18 @@ namespace Tests.Linq
 				dc.FromSql<Person>("SELECT * FROM Person WHERE PersonID = {0}", args)
 					.Select(p => p.ID));
 
-			query(db).ToArray().ShouldBe([1]);
+			query(db)
+				.ToArray()
+				.ShouldBe([1]);
 
 			if (reassign)
 				args = [2];
 			else
 				args[0] = 2;
 
-			query(db).ToArray().ShouldBe([2]);
+			query(db)
+				.ToArray()
+				.ShouldBe([2]);
 		}
 
 		sealed class LastParameterInterceptor : CommandInterceptor
@@ -1483,7 +1567,10 @@ namespace Tests.Linq
 			var query2 = formattable(db, $"SELECT 1 AS value WHERE {d2} IS NOT NULL");
 			query2.ToArray().ShouldBe([1]);
 			query2.GetCompiledQueryInfo().ShouldBeSameAs(query1.GetCompiledQueryInfo());
-			interceptor.Value.ShouldBeOfType<DateTimeOffset>().Offset.ShouldBe(TimeSpan.Zero);
+			interceptor.Value
+				.ShouldBeOfType<DateTimeOffset>()
+				.Offset
+				.ShouldBe(TimeSpan.Zero);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
@@ -1508,7 +1595,10 @@ namespace Tests.Linq
 			var query2 = array(db, [d2]);
 			query2.ToArray().ShouldNotBeEmpty();
 			query2.GetCompiledQueryInfo().ShouldBeSameAs(query1.GetCompiledQueryInfo());
-			interceptor.Value.ShouldBeOfType<DateTimeOffset>().Offset.ShouldBe(TimeSpan.Zero);
+			interceptor.Value
+				.ShouldBeOfType<DateTimeOffset>()
+				.Offset
+				.ShouldBe(TimeSpan.Zero);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
@@ -1535,7 +1625,8 @@ namespace Tests.Linq
 			using var db = GetDataConnection(context);
 
 			var query = CompiledQuery.Compile((IDataContext dc, int id) =>
-				dc.FromSql<Person>($"SELECT * FROM Person WHERE PersonID = {id}").Select(p => p.ID));
+				dc.FromSql<Person>($"SELECT * FROM Person WHERE PersonID = {id}")
+					.Select(p => p.ID));
 
 			var query1 = query(db, 1);
 			query1.ToArray().ShouldBe([1]);
@@ -1552,7 +1643,9 @@ namespace Tests.Linq
 			using var db = GetDataConnection(context);
 
 			var query = CompiledQuery.Compile((IDataContext dc, int id) =>
-				dc.GetTable<Person>().Where(p => p.ID.In(dc.FromSqlScalar<int>($"SELECT {id} AS value"))).Select(p => p.ID));
+				dc.GetTable<Person>()
+					.Where(p => p.ID.In(dc.FromSqlScalar<int>($"SELECT {id} AS value")))
+					.Select(p => p.ID));
 
 			var query1 = query(db, 1);
 			query1.ToArray().ShouldBe([1]);
@@ -1573,8 +1666,13 @@ namespace Tests.Linq
 				where p.ID.In(db.FromSqlScalar<int>(FormattableStringFactory.Create(sql)))
 				select p.ID;
 
-			Query("SELECT 1 AS value").ToArray().ShouldBe([1]);
-			Query("SELECT 2 AS value").ToArray().ShouldBe([2]);
+			Query("SELECT 1 AS value")
+				.ToArray()
+				.ShouldBe([1]);
+
+			Query("SELECT 2 AS value")
+				.ToArray()
+				.ShouldBe([2]);
 
 			var query  = Query("SELECT 1 AS value");
 			var misses = query.GetCacheMissCount();
@@ -1593,10 +1691,21 @@ namespace Tests.Linq
 				where db.FromSql<Person>("SELECT * FROM Person WHERE PersonID = {0}", arguments).Any(s => s.ID == p.ID)
 				select p.ID;
 
-			Query(3, 4).ToArray().ShouldBe([3]);
-			Query(4).ToArray().ShouldBe([4]);
-			Query([null]).ToArray().ShouldBeEmpty();
-			Query(1).ToArray().ShouldBe([1]);
+			Query(3, 4)
+				.ToArray()
+				.ShouldBe([3]);
+
+			Query(4)
+				.ToArray()
+				.ShouldBe([4]);
+
+			Query([null])
+				.ToArray()
+				.ShouldBeEmpty();
+
+			Query(1)
+				.ToArray()
+				.ShouldBe([1]);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
@@ -1609,9 +1718,17 @@ namespace Tests.Linq
 				where p.ID.In(db.FromSqlScalar<int>(sql))
 				select p.ID;
 
-			Query($"SELECT {1} AS value").ToArray().ShouldBe([1]);
-			Query($"SELECT {(int?)null} AS value").ToArray().ShouldBeEmpty();
-			Query($"SELECT {2} AS value").ToArray().ShouldBe([2]);
+			Query($"SELECT {1} AS value")
+				.ToArray()
+				.ShouldBe([1]);
+
+			Query($"SELECT {(int?)null} AS value")
+				.ToArray()
+				.ShouldBeEmpty();
+
+			Query($"SELECT {2} AS value")
+				.ToArray()
+				.ShouldBe([2]);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
@@ -1624,8 +1741,13 @@ namespace Tests.Linq
 				where p.ID.In(db.FromSqlScalar<int>(sql))
 				select p.ID;
 
-			Query(FormattableStringFactory.Create("SELECT {0} AS value", 1, 99)).ToArray().ShouldBe([1]);
-			Query(FormattableStringFactory.Create("SELECT {0} AS value", 2)).ToArray().ShouldBe([2]);
+			Query(FormattableStringFactory.Create("SELECT {0} AS value", 1, 99))
+				.ToArray()
+				.ShouldBe([1]);
+
+			Query(FormattableStringFactory.Create("SELECT {0} AS value", 2))
+				.ToArray()
+				.ShouldBe([2]);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/6007")]
