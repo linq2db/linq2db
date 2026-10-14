@@ -80,17 +80,63 @@ if ($LASTEXITCODE -ne 0) {
 # is written into its config, so the fetch in the rebase below authenticates from that.
 $repoUrl = "https://x-access-token:${Env:GITHUB_TOKEN}@github.com/${Org}/${BaselinesRepo}.git"
 $pushed = $false
-$attempts = 10
-while ($attempts -gt 0) {
+# Two separate budgets, because the two failures want different treatment. A rejected push means a
+# concurrent leg got there first: fetch, rebase and push again straight away - the ref moves quickly,
+# and waiting only makes the next attempt more likely to lose. A server-side error or a transport
+# failure says nothing about the ref: the remote is struggling, and every leg that retries without
+# pause adds to the load that made it fail. On 2026-10-07 seven legs pushing to the same baselines
+# branch within minutes of each other all received "Internal Server Error" from GitHub and, with ten
+# attempts one to three seconds apart, ran out of attempts before it recovered. Those wait with an
+# exponential backoff (2, 4, 8 ... capped at 60 s, plus jitter so the legs do not retry in lockstep);
+# ten attempts ride out about five minutes.
+$rejectedAttempts = 10
+$transientAttempts = 10
+$transientWaits = 0
+
+# Matches git's reports of a failure that is not about the ref's state: an HTTP 5xx from the server,
+# or the connection breaking down. A rejected push also ends with "failed to push some refs", so that
+# line cannot be what tells the two apart - check for these first and treat everything else as a
+# rejection, exactly as before.
+function Test-TransientGitFailure([string] $output) {
+    return [bool]($output -match '(?i)HTTP[ /]?5\d\d|returned error: 5\d\d|Internal Server Error|Bad Gateway|Service Unavailable|Gateway Time-?out|RPC failed|remote end hung up|early EOF|Could not resolve host|Failed to connect|Connection (reset|timed out|refused)|Operation timed out|SSL_ERROR|SSL connection')
+}
+
+function Wait-BeforeRetry([int] $waitIndex) {
+    $base = [int][math]::Min(60, 2 * [math]::Pow(2, $waitIndex))
+    $delay = [math]::Min(60, $base + (Get-Random -Minimum 0 -Maximum ([int]($base / 2) + 1)))
+    Write-Host "Waiting ${delay}s before the next attempt"
+    Start-Sleep -Seconds $delay
+}
+
+while ($rejectedAttempts -gt 0 -and $transientAttempts -gt 0) {
     Write-Host "Push baselines to ${Branch}"
     $output = git push $repoUrl HEAD:refs/heads/$Branch 2>&1
     if ($LASTEXITCODE -eq 0) {
         $pushed = $true
         break
     }
+    if (Test-TransientGitFailure "$output") {
+        $transientAttempts = $transientAttempts - 1
+        Write-Host "Push failed on the server side or in transit, not rejected. Output: ${output}"
+        if ($transientAttempts -gt 0) {
+            Wait-BeforeRetry $transientWaits
+            $transientWaits = $transientWaits + 1
+        }
+        continue
+    }
     Write-Host "Push rejected, rebasing onto ${Branch}. Output: ${output}"
     $output = git fetch origin "refs/heads/${Branch}" 2>&1
     if ($LASTEXITCODE -ne 0) {
+        if (Test-TransientGitFailure "$output") {
+            # The fetch hit the same struggling server; go round again and push afresh after the wait.
+            $transientAttempts = $transientAttempts - 1
+            Write-Host "Fetch of ${Branch} failed on the server side or in transit. Output: ${output}"
+            if ($transientAttempts -gt 0) {
+                Wait-BeforeRetry $transientWaits
+                $transientWaits = $transientWaits + 1
+            }
+            continue
+        }
         Write-Host "Failed to fetch ${Branch}. Error code ${LASTEXITCODE}, output: ${output}"
         exit 1
     }
@@ -114,7 +160,7 @@ while ($attempts -gt 0) {
         git diff ORIG_HEAD FETCH_HEAD
         exit 1
     }
-    $attempts = $attempts - 1
+    $rejectedAttempts = $rejectedAttempts - 1
 }
 if (-not $pushed) {
     Write-Host "Failed to push baselines"
@@ -129,8 +175,11 @@ if ($LASTEXITCODE -ne 0) {
     Write-Host "PR search failed. Error code ${LASTEXITCODE}, output: ${output}"
     exit 1
 }
+. "$PSScriptRoot/baselines-base.ps1"
+$base = Get-BaselinesBase -PrId $PrId -BaselinesMaster $BaselinesMaster -RepoUrl $repoUrl -Org $Org -SourceRepo $SourceRepo
 if ($output -match "html_url") {
     Write-Host "Baselines PR already exists"
+    Update-BaselinesPrBase -Branch $Branch -Base $base -Org $Org -BaselinesRepo $BaselinesRepo
     exit 0
 }
 if ($PrId) {
@@ -141,7 +190,7 @@ if ($PrId) {
     $prName = "Baselines"
     $prMessage = "Not associated with any pull request (tests pipeline triggered from admin console?)"
 }
-$output = gh api /repos/$Org/$BaselinesRepo/pulls -F title="${prName}" -F head=$Branch -F base=$BaselinesMaster -F draft=true -F body="${prMessage}" 2>&1
+$output = gh api /repos/$Org/$BaselinesRepo/pulls -F title="${prName}" -F head=$Branch -F base=$base -F draft=true -F body="${prMessage}" 2>&1
 if ($output -match "A pull request already exists") {
     Write-Host "Baselines PR was opened by a concurrent leg"
     exit 0

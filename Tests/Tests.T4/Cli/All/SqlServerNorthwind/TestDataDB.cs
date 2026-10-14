@@ -1139,7 +1139,7 @@ namespace Cli.All.SqlServerNorthwind
 				},
 				new DataParameter("@return", null, DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -1151,7 +1151,7 @@ namespace Cli.All.SqlServerNorthwind
 			return ret;
 		}
 
-		public static async Task<CustOrderHistResults> CustOrderHistAsync(this TestDataDB dataConnection, SqlString? customerId, int @return, CancellationToken cancellationToken = default)
+		public static async Task<CustOrderHistResults> CustOrderHistAsync(this TestDataDB dataConnection, SqlString? customerId, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
@@ -1162,7 +1162,7 @@ namespace Cli.All.SqlServerNorthwind
 				},
 				new DataParameter("@return", null, DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -1201,7 +1201,7 @@ namespace Cli.All.SqlServerNorthwind
 				},
 				new DataParameter("@return", null, DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -1213,7 +1213,7 @@ namespace Cli.All.SqlServerNorthwind
 			return ret;
 		}
 
-		public static async Task<CustOrdersDetailResults> CustOrdersDetailAsync(this TestDataDB dataConnection, SqlInt32? orderId, int @return, CancellationToken cancellationToken = default)
+		public static async Task<CustOrdersDetailResults> CustOrdersDetailAsync(this TestDataDB dataConnection, SqlInt32? orderId, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
@@ -1223,7 +1223,7 @@ namespace Cli.All.SqlServerNorthwind
 				},
 				new DataParameter("@return", null, DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -1266,7 +1266,7 @@ namespace Cli.All.SqlServerNorthwind
 				},
 				new DataParameter("@return", null, DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -1278,7 +1278,7 @@ namespace Cli.All.SqlServerNorthwind
 			return ret;
 		}
 
-		public static async Task<CustOrdersOrdersResults> CustOrdersOrdersAsync(this TestDataDB dataConnection, SqlString? customerId, int @return, CancellationToken cancellationToken = default)
+		public static async Task<CustOrdersOrdersResults> CustOrdersOrdersAsync(this TestDataDB dataConnection, SqlString? customerId, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
@@ -1289,7 +1289,7 @@ namespace Cli.All.SqlServerNorthwind
 				},
 				new DataParameter("@return", null, DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -1334,7 +1334,7 @@ namespace Cli.All.SqlServerNorthwind
 				},
 				new DataParameter("@return", null, DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -1346,7 +1346,7 @@ namespace Cli.All.SqlServerNorthwind
 			return ret;
 		}
 
-		public static async Task<EmployeeSalesByCountryResults> EmployeeSalesByCountryAsync(this TestDataDB dataConnection, SqlDateTime? beginningDate, SqlDateTime? endingDate, int @return, CancellationToken cancellationToken = default)
+		public static async Task<EmployeeSalesByCountryResults> EmployeeSalesByCountryAsync(this TestDataDB dataConnection, SqlDateTime? beginningDate, SqlDateTime? endingDate, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
@@ -1360,7 +1360,7 @@ namespace Cli.All.SqlServerNorthwind
 				},
 				new DataParameter("@return", null, DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -1407,7 +1407,7 @@ namespace Cli.All.SqlServerNorthwind
 				},
 				new DataParameter("@return", null, DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -1419,7 +1419,7 @@ namespace Cli.All.SqlServerNorthwind
 			return ret;
 		}
 
-		public static async Task<SalesByYearResults> SalesByYearAsync(this TestDataDB dataConnection, SqlDateTime? beginningDate, SqlDateTime? endingDate, int @return, CancellationToken cancellationToken = default)
+		public static async Task<SalesByYearResults> SalesByYearAsync(this TestDataDB dataConnection, SqlDateTime? beginningDate, SqlDateTime? endingDate, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
@@ -1433,7 +1433,7 @@ namespace Cli.All.SqlServerNorthwind
 				},
 				new DataParameter("@return", null, DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -1480,7 +1480,7 @@ namespace Cli.All.SqlServerNorthwind
 				},
 				new DataParameter("@return", null, DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -1492,7 +1492,7 @@ namespace Cli.All.SqlServerNorthwind
 			return ret;
 		}
 
-		public static async Task<SalesByCategoryResults> SalesByCategoryAsync(this TestDataDB dataConnection, SqlString? categoryName, SqlString? ordYear, int @return, CancellationToken cancellationToken = default)
+		public static async Task<SalesByCategoryResults> SalesByCategoryAsync(this TestDataDB dataConnection, SqlString? categoryName, SqlString? ordYear, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
@@ -1508,7 +1508,7 @@ namespace Cli.All.SqlServerNorthwind
 				},
 				new DataParameter("@return", null, DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -1543,7 +1543,7 @@ namespace Cli.All.SqlServerNorthwind
 			{
 				new DataParameter("@return", null, DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -1555,13 +1555,13 @@ namespace Cli.All.SqlServerNorthwind
 			return ret;
 		}
 
-		public static async Task<TenMostExpensiveProductsResults> TenMostExpensiveProductsAsync(this TestDataDB dataConnection, int @return, CancellationToken cancellationToken = default)
+		public static async Task<TenMostExpensiveProductsResults> TenMostExpensiveProductsAsync(this TestDataDB dataConnection, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
 				new DataParameter("@return", null, DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
