@@ -365,9 +365,14 @@ namespace Tests.Linq
 		public void Round13([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			AreEqual(
-				from p in    Types where p.MoneyValue != 0 select Math.Round(p.MoneyValue, 5),
-				from p in db.Types where p.MoneyValue != 0 select Sql.AsSql(Math.Round(p.MoneyValue, 5)));
+
+			var query =
+				from p in db.Types
+				where p.MoneyValue != 0
+				orderby p.ID
+				select Sql.AsSql(Math.Round(p.MoneyValue, 5));
+
+			AssertQuery(query);
 		}
 
 		// The widened intermediate must not leak into the result type: YQL arithmetic and IF reject
@@ -376,24 +381,44 @@ namespace Tests.Linq
 		public void Round14([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			AreEqual(
-				from p in    Types where p.MoneyValue != 0 select Math.Round(p.MoneyValue, 5) + p.MoneyValue,
-				from p in db.Types where p.MoneyValue != 0 select Sql.AsSql(Math.Round(p.MoneyValue, 5) + p.MoneyValue));
-			AreEqual(
-				from p in    Types where p.MoneyValue != 0 select p.ID > 2 ? Math.Round(p.MoneyValue, 5) : p.MoneyValue,
-				from p in db.Types where p.MoneyValue != 0 select Sql.AsSql(p.ID > 2 ? Math.Round(p.MoneyValue, 5) : p.MoneyValue));
+
+			var sum =
+				from p in db.Types
+				where p.MoneyValue != 0
+				orderby p.ID
+				select Sql.AsSql(Math.Round(p.MoneyValue, 5) + p.MoneyValue);
+
+			AssertQuery(sum);
+
+			var condition =
+				from p in db.Types
+				where p.MoneyValue != 0
+				orderby p.ID
+				select Sql.AsSql(p.ID > 2 ? Math.Round(p.MoneyValue, 5) : p.MoneyValue);
+
+			AssertQuery(condition);
 		}
 
 		[Test]
 		public void Round15([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			AreEqual(
-				from p in    Types where p.MoneyValue != 0 select Sql.Round(p.MoneyValue, 5) + p.MoneyValue,
-				from p in db.Types where p.MoneyValue != 0 select Sql.AsSql(Sql.Round(p.MoneyValue, 5) + p.MoneyValue));
-			AreEqual(
-				from p in    Types where p.MoneyValue != 0 select Sql.RoundToEven(p.MoneyValue, 5) + p.MoneyValue,
-				from p in db.Types where p.MoneyValue != 0 select Sql.AsSql(Sql.RoundToEven(p.MoneyValue, 5) + p.MoneyValue));
+
+			var away =
+				from p in db.Types
+				where p.MoneyValue != 0
+				orderby p.ID
+				select Sql.AsSql(Sql.Round(p.MoneyValue, 5) + p.MoneyValue);
+
+			AssertQuery(away);
+
+			var even =
+				from p in db.Types
+				where p.MoneyValue != 0
+				orderby p.ID
+				select Sql.AsSql(Sql.RoundToEven(p.MoneyValue, 5) + p.MoneyValue);
+
+			AssertQuery(even);
 		}
 
 		// A non-constant precision must not cost the value its fractional digits.
@@ -402,12 +427,22 @@ namespace Tests.Linq
 		public void Round16([DataSources(TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
-			AreEqual(
-				from p in    Types where p.MoneyValue != 0 select Math.Round(p.MoneyValue, p.ID % 2 + 2),
-				from p in db.Types where p.MoneyValue != 0 select Sql.AsSql(Math.Round(p.MoneyValue, p.ID % 2 + 2)));
-			AreEqual(
-				from p in    Types where p.MoneyValue != 0 select Math.Round(p.MoneyValue, p.ID % 2 + 1),
-				from p in db.Types where p.MoneyValue != 0 select Sql.AsSql(Math.Round(p.MoneyValue, p.ID % 2 + 1)));
+
+			var atOrAboveScale =
+				from p in db.Types
+				where p.MoneyValue != 0
+				orderby p.ID
+				select Sql.AsSql(Math.Round(p.MoneyValue, p.ID % 2 + 2));
+
+			AssertQuery(atOrAboveScale);
+
+			var belowScale =
+				from p in db.Types
+				where p.MoneyValue != 0
+				orderby p.ID
+				select Sql.AsSql(Math.Round(p.MoneyValue, p.ID % 2 + 1));
+
+			AssertQuery(belowScale);
 		}
 
 		sealed class RoundNearLimit
@@ -434,9 +469,19 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(data);
 
-			AreEqual(
-				from r in data orderby r.Id select new { r.Id, R34 = Math.Round(r.D34s2, 2, mp), R35 = Math.Round(r.D35s2, 5, mp), R6 = Math.Round(r.D35s6, 2, mp), R4 = Math.Round(r.D4s4, 2, mp) },
-				from r in t    orderby r.Id select new { r.Id, R34 = Sql.AsSql(Math.Round(r.D34s2, 2, mp)), R35 = Sql.AsSql(Math.Round(r.D35s2, 5, mp)), R6 = Sql.AsSql(Math.Round(r.D35s6, 2, mp)), R4 = Sql.AsSql(Math.Round(r.D4s4, 2, mp)) });
+			var query =
+				from r in t
+				orderby r.Id
+				select new
+				{
+					r.Id,
+					R34 = Sql.AsSql(Math.Round(r.D34s2, 2, mp)),
+					R35 = Sql.AsSql(Math.Round(r.D35s2, 5, mp)),
+					R6  = Sql.AsSql(Math.Round(r.D35s6, 2, mp)),
+					R4  = Sql.AsSql(Math.Round(r.D4s4,  2, mp)),
+				};
+
+			AssertQuery(query);
 		}
 
 		sealed class RoundNegative
@@ -488,9 +533,18 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(data);
 
-			AreEqual(
-				from r in data orderby r.Id select new { r.Id, R = Math.Round(r.D, 1, mp), Sum = Math.Round(r.D, 1, mp) + r.D, Cond = r.Id > 2 ? Math.Round(r.D, 1, mp) : r.D },
-				from r in t    orderby r.Id select new { r.Id, R = Sql.AsSql(Math.Round(r.D, 1, mp)), Sum = Sql.AsSql(Math.Round(r.D, 1, mp) + r.D), Cond = Sql.AsSql(r.Id > 2 ? Math.Round(r.D, 1, mp) : r.D) });
+			var query =
+				from r in t
+				orderby r.Id
+				select new
+				{
+					r.Id,
+					R    = Sql.AsSql(Math.Round(r.D, 1, mp)),
+					Sum  = Sql.AsSql(Math.Round(r.D, 1, mp) + r.D),
+					Cond = Sql.AsSql(r.Id > 2 ? Math.Round(r.D, 1, mp) : r.D),
+				};
+
+			AssertQuery(query);
 		}
 
 		sealed class RoundNegativeNearLimit
