@@ -20,10 +20,10 @@
 		    select between the modern and the legacy surface.-->
 		<!--initial version, referenced from nuspec-->
 		<BandLatestForNuget Condition="'$(TargetFramework)'=='net10.0'">10.0.0</BandLatestForNuget>
-		<BandLatestForNuget Condition="'$(TargetFramework)'=='net11.0'">11.0.0-rc.1.26425.128</BandLatestForNuget>
+		<BandLatestForNuget Condition="'$(TargetFramework)'=='net11.0'">11.0.0-rc.2.26504.105</BandLatestForNuget>
 		<!--latest version (not referenced from nuspec)-->
 		<BandLatest Condition="'$(TargetFramework)'=='net10.0'">10.0.12</BandLatest>
-		<BandLatest Condition="'$(TargetFramework)'=='net11.0'">11.0.0-rc.1.26425.128</BandLatest>
+		<BandLatest Condition="'$(TargetFramework)'=='net11.0'">11.0.0-rc.2.26504.105</BandLatest>
 
 		<!--single version across every TFM, for packages we deliberately do not float per band-->
 		<Net10Latest>10.0.12</Net10Latest>
@@ -230,12 +230,12 @@
 		    There is no EF Core 11 line from either, so the net11 EF tests carry no MySQL provider.-->
 		<PackageVersion Include="Microting.EntityFrameworkCore.MySql"                   Version="10.0.11"                      Condition="'$(TargetFramework)'=='net10.0'" />
 		<!--numbered independently of the runtime band, so these stay explicit rather than reading $(BandLatest).
-		    The net11 row needs the EF11 test project's direct EF pins: Npgsql's 11.0.0-rc.1 hard-pins
-		    Microsoft.EntityFrameworkCore [11.0.0-rc.1.26431.118], a build that was never published
-		    (npgsql/efcore.pg#3913). Drop those pins once Npgsql ships a release that resolves.-->
+		    The net11 row needs the EF11 test project's direct EF pins: Npgsql's 11.0.0-rc.1.1 hard-pins
+		    Microsoft.EntityFrameworkCore [11.0.0-rc.1.26425.128], one release behind $(BandLatest).
+		    Drop those pins once Npgsql ships a release that pins the current band.-->
 		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"        Version="3.1.18"                       Condition="'$(TargetFramework)'=='net462'"  />
 		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"        Version="10.0.3"                       Condition="'$(TargetFramework)'=='net10.0'" />
-		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"        Version="11.0.0-rc.1"                  Condition="'$(TargetFramework)'=='net11.0'" />
+		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"        Version="11.0.0-rc.1.1"                Condition="'$(TargetFramework)'=='net11.0'" />
 		<!--referenced directly only by the EF11 test project, to override the pin above-->
 		<PackageVersion Include="Microsoft.EntityFrameworkCore"                         Version="$(BandLatestForNuget)"        Condition="'$(BandLatestForNuget)'!=''" />
 		<PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite"                  Version="$(EF3Latest)"                 Condition="'$(BandLatest)'==''" />

@@ -43,7 +43,7 @@ env:
   TEST_CONFIGURATION: Azure
   # The .NET 11 SDK is still prerelease, so setup-dotnet needs the exact build global.json pins.
   # Collapse to 11.x once .NET 11 ships.
-  DOTNET_SDK_11: 11.0.100-rc.1.26425.128
+  DOTNET_SDK_11: 11.0.100-rc.2.26504.105
   # Per-test retry for the MTP runner, as build-vars.yml:24.
   TEST_RETRY_ARGS: --retry-failed-tests 2 --retry-failed-tests-max-tests 5
 
