@@ -11,6 +11,7 @@ override LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor
 override LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConvertVisitor.ConvertDefaultValue(LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression! expression) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlExpressionConvertVisitor.CanLowerIntervalShift.get -> bool
 override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.MySql.MySqlSqlExpressionConvertVisitor.ConvertDefaultValue(LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression! expression) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 override LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.CanLowerIntervalShift.get -> bool
 override LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlExpressionConvertVisitor.CanLowerIntervalShift.get -> bool
