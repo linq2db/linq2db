@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
@@ -1508,6 +1509,24 @@ namespace Tests.Linq
 			query2.ToArray().ShouldNotBeEmpty();
 			query2.GetCompiledQueryInfo().ShouldBeSameAs(query1.GetCompiledQueryInfo());
 			interceptor.Value.ShouldBeOfType<DateTimeOffset>().Offset.ShouldBe(TimeSpan.Zero);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void FromSql_Compiled_CollectionArgumentTypeChanges([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var query = CompiledQuery.Compile((IDataContext dc, FormattableString fs) =>
+				dc.FromSqlScalar<int>(fs));
+
+			// equal elements in another collection type, read back as the first build's type
+			query(db, $"SELECT 1 AS value WHERE 1 = ANY({new[] { 1 }})")
+				.ToArray()
+				.ShouldBe([1]);
+
+			query(db, $"SELECT 1 AS value WHERE 1 = ANY({new List<int> { 1 }})")
+				.ToArray()
+				.ShouldBe([1]);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]

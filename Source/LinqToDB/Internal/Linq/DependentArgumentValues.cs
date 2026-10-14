@@ -55,6 +55,10 @@ namespace LinqToDB.Internal.Linq
 			if (value1 == null || value2 == null)
 				return false;
 
+			// a raw SQL argument is read back from the argument array as its build-time type, a collection included
+			if (value1.GetType() != value2.GetType())
+				return false;
+
 			if (value1 is FormattableString fs1 && value2 is FormattableString fs2)
 				return string.Equals(fs1.Format, fs2.Format, StringComparison.Ordinal) && ValuesEqual(fs1.GetArguments(), fs2.GetArguments());
 
@@ -74,8 +78,7 @@ namespace LinqToDB.Internal.Linq
 				}
 			}
 
-			// a raw SQL argument is read back from the argument array as its build-time type
-			return value1.GetType() == value2.GetType() && value1.Equals(value2);
+			return value1.Equals(value2);
 		}
 
 		static int ValueHashCode(object? value)
