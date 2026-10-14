@@ -2233,24 +2233,8 @@ namespace Tests.Linq
 		// Sql.ToNullable / Sql.AsNullable translate their own argument through ITranslationContext.Translate. The option
 		// must not apply to that argument: kept client-side it is not SQL, the widener declines, the whole call is
 		// calculated on the client and the missed LEFT JOIN row reads default(int) instead of null (linq2db#5923).
-		// The arguments are the shapes the option moves client-side: a binary and an attributed function.
-
-		[Test]
-		public void ToNullableOverNestedBinaryReturnsNull([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
-		{
-			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
-			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
-
-			var query =
-				from e in table
-				from j in table.LeftJoin(j => j.Id == e.Id + 1000)
-				select new { e.Id, Joined = Sql.ToNullable(j.Value1 + 1) };
-
-			var results = query.ToArray();
-
-			results.Length.ShouldBe(ClientCalcEntity.Seed.Length);
-			results.ShouldAllBe(r => r.Joined == null);
-		}
+		// The arguments are the shapes the option moves client-side: a binary (NestedNullableOverMissedJoinMatchesAcrossProviders)
+		// and an attributed function.
 
 		[Test]
 		public void ToNullableOverNestedFunctionReturnsNull([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
