@@ -80,7 +80,7 @@ COMPONENTS
    License: MIT  see [5]
    Milosz Krajewski
 
-14. Microsoft.Bcl.Cryptography net10.0: 9.0.13, net10.0-windows7.0: 9.0.13, net11.0: 9.0.13, net462: 8.0.0, net472: 8.0.0
+14. Microsoft.Bcl.Cryptography net10.0: 9.0.13, net10.0-windows7.0: 9.0.13, net11.0: 9.0.13, net462: 8.0.0, net472: 9.0.21
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
@@ -435,7 +435,7 @@ COMPONENTS
    License: MIT  see [14]
    © Microsoft Corporation. All rights reserved.
 
-86. System.Formats.Asn1 8.0.1
+86. System.Formats.Asn1 net462: 8.0.1, net472: 9.0.21
    https://dot.net/
    License: MIT  see [14]
    © Microsoft Corporation. All rights reserved.
@@ -455,7 +455,7 @@ COMPONENTS
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-90. System.Security.Cryptography.Pkcs net10.0: 9.0.21, net11.0: 9.0.21, net462: 8.0.1, net472: 8.0.1
+90. System.Security.Cryptography.Pkcs net10.0: 9.0.21, net11.0: 9.0.21, net462: 8.0.1, net472: 9.0.21
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.

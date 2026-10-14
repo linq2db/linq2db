@@ -623,7 +623,7 @@
         "net10.0-windows7.0": "9.0.13",
         "net11.0": "9.0.13",
         "net462": "8.0.0",
-        "net472": "8.0.0"
+        "net472": "9.0.21"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -2615,7 +2615,7 @@
       "packageId": "System.Formats.Asn1",
       "versions": {
         "net462": "8.0.1",
-        "net472": "8.0.1"
+        "net472": "9.0.21"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -2806,7 +2806,7 @@
         "net10.0": "9.0.21",
         "net11.0": "9.0.21",
         "net462": "8.0.1",
-        "net472": "8.0.1"
+        "net472": "9.0.21"
       },
       "license": "MIT",
       "licenseTexts": [
