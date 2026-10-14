@@ -397,6 +397,7 @@ namespace Tests.Linq
 		}
 
 		// A non-constant precision must not cost the value its fractional digits.
+		// DuckDB rejects ROUND(DECIMAL, INTEGER) with a non-constant precision.
 		[Test]
 		public void Round16([DataSources(TestProvName.AllDuckDB)] string context)
 		{
