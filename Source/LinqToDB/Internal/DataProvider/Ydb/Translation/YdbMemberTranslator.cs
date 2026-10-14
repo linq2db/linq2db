@@ -713,21 +713,20 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				return result;
 			}
 
-			// YQL has no top-level ROUND builtin, and CAST(<Double> AS Decimal) is rejected. Strategy:
-			// scale the value by 10^p in its OWN type first (exact for Decimal, so the rounding boundary
-			// — a half-integer — becomes exactly representable in Double), round to an integer in Double,
-			// cast back (Double->Decimal becomes a string round-trip via YdbSqlExpressionConvertVisitor),
-			// then unscale by /10^p. Rounding the scaled-then-cast value avoids the float-midpoint errors
-			// that a direct CAST(decimal AS Double) would introduce.
-			//   - to-even        : Math::NearbyInt(s, Math::RoundToNearest())
-			//   - away-from-zero : Math::Round is half-toward-+inf, so round the magnitude and reapply sign
+			// YQL has no top-level ROUND builtin. Strategy: scale the value by 10^p, round to an integer, unscale by
+			// /10^p.
+			//   - Decimal: widened first to a type with room for the scaled digits and narrowed back afterwards. The
+			//     value is never rounded through Double, which carries ~15-17 significant digits: a CAST that drops
+			//     the scale rounds half-to-even exactly; away-from-zero corrects the ties to-even took toward zero.
+			//   - Double : to-even is Math::NearbyInt(s, Math::RoundToNearest()); Math::Round rounds half toward
+			//     +inf, so away-from-zero rounds the magnitude and reapplies the sign.
 
 			protected override ISqlExpression? TranslateRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
-				=> RoundScaled(translationContext, value, precision,
+				=> RoundScaled(translationContext, value, precision, false,
 					(f, dt, s) => f.Function(dt, "Math::NearbyInt", s, f.Fragment("Math::RoundToNearest()")));
 
 			protected override ISqlExpression? TranslateRoundAwayFromZero(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
-				=> RoundScaled(translationContext, value, precision, static (f, dt, s) =>
+				=> RoundScaled(translationContext, value, precision, true, static (f, dt, s) =>
 				{
 					// Math::Round rounds half toward +inf, so it equals away-from-zero only for s >= 0.
 					// away(s) = (s >= 0) ? Math::Round(s) : -Math::Round(-s)
@@ -742,11 +741,11 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				ITranslationContext                                                         translationContext,
 				ISqlExpression                                                              value,
 				ISqlExpression?                                                             precision,
+				bool                                                                        awayFromZero,
 				Func<ISqlExpressionFactory, DbDataType, ISqlExpression, ISqlExpression>     roundToInt)
 			{
 				var factory    = translationContext.ExpressionFactory;
 				var valueType  = factory.GetDbDataType(value);
-				var doubleType = factory.GetDbDataType(typeof(double));
 				var isDecimal  = valueType.SystemType.UnwrappedNullableType == typeof(decimal);
 
 				// rounding a Decimal to at least its own scale is a no-op
@@ -789,8 +788,8 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 
 					return factory.Condition(
 						factory.SearchCondition().AddGreaterOrEqual(precision!, factory.Value(precisionType, 0), CompareNulls.LikeSql),
-						RoundScaledAs(factory, value, valueType, positiveType, positive, roundToInt),
-						RoundScaledAs(factory, value, valueType, negativeType, negative, roundToInt));
+						RoundScaledAs(factory, value, valueType, positiveType, positive, awayFromZero, roundToInt),
+						RoundScaledAs(factory, value, valueType, negativeType, negative, awayFromZero, roundToInt));
 				}
 
 				// The scaled value needs p more integer digits than the source declares: Decimal(6,2) holds
@@ -799,7 +798,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				// PreconditionFailed.
 				var scaleType = isDecimal && hasPrecision ? ScaledDecimalType(valueType, constantPrecision!.Value) : valueType;
 
-				return RoundScaledAs(factory, value, valueType, scaleType, hasPrecision ? precision : null, roundToInt);
+				return RoundScaledAs(factory, value, valueType, scaleType, hasPrecision ? precision : null, awayFromZero, roundToInt);
 			}
 
 			static ISqlExpression RoundScaledAs(
@@ -808,9 +807,9 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				DbDataType                                                                  valueType,
 				DbDataType                                                                  scaleType,
 				ISqlExpression?                                                             precision,
+				bool                                                                        awayFromZero,
 				Func<ISqlExpressionFactory, DbDataType, ISqlExpression, ISqlExpression>     roundToInt)
 			{
-				var doubleType = factory.GetDbDataType(typeof(double));
 				var isDecimal  = valueType.SystemType.UnwrappedNullableType == typeof(decimal);
 
 				// scale by 10^p in the widened type (exact for Decimal). YQL's DecimalMul demands both operands
@@ -819,16 +818,81 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				var widened = scaleType.EqualsDbOnly(valueType) ? value : factory.Cast(value, scaleType);
 				var scaled  = precision != null ? factory.Multiply(scaleType, widened, Pow10(factory, scaleType, precision)) : value;
 
-				// round to an integer in Double — the scaled rounding boundary is exactly representable
-				var rounded = roundToInt(factory, doubleType, factory.Cast(scaled, doubleType));
+				ISqlExpression back;
 
-				// back to the scaled type (Double->Decimal becomes the string round-trip)
-				var back = isDecimal || !scaleType.EqualsDbOnly(doubleType) ? factory.Cast(rounded, scaleType) : rounded;
+				if (isDecimal)
+				{
+					// a computed value (SUM, a product) need not have the type inferred for it, and the tie
+					// arithmetic in RoundDecimal demands identical Decimal types
+					if (precision == null)
+						scaled = factory.Cast(value, scaleType, isMandatory: true);
+
+					back = RoundDecimal(factory, scaled, scaleType, awayFromZero);
+				}
+				else
+				{
+					var doubleType = factory.GetDbDataType(typeof(double));
+					var rounded    = roundToInt(factory, doubleType, factory.Cast(scaled, doubleType));
+
+					back = scaleType.EqualsDbOnly(doubleType) ? rounded : factory.Cast(rounded, scaleType);
+				}
 
 				var result = precision != null ? factory.Div(scaleType, back, Pow10(factory, scaleType, precision)) : back;
 
 				// narrow back to the value's type: YQL arithmetic and IF demand identical Decimal types
 				return scaleType.EqualsDbOnly(valueType) ? result : factory.Cast(result, valueType);
+			}
+
+			// The casts are mandatory: the optimizer would otherwise fold CAST(CAST(s AS Decimal(P,0)) AS Decimal(P,S))
+			// back to s. Decimal(P,0) keeps S spare integer digits, so the carry and the +-1 below cannot overflow it.
+			static ISqlExpression RoundDecimal(ISqlExpressionFactory factory, ISqlExpression scaled, DbDataType scaleType, bool awayFromZero)
+			{
+				var scale     = scaleType.Scale     ?? YdbMappingSchema.DEFAULT_DECIMAL_SCALE;
+				var precision = scaleType.Precision ?? YdbMappingSchema.DEFAULT_DECIMAL_PRECISION;
+
+				if (scale == 0)
+					return scaled;
+
+				var intType = new DbDataType(scaleType.SystemType, scaleType.DataType, null, scaleType.Length, precision, 0);
+
+				// YQL refuses a CAST between Decimal(P,P) and Decimal(P,0) either way. With no integer digits
+				// |scaled| < 1, so the result is 0, or +-1, which Decimal(P,P) cannot hold: fail the query.
+				if (precision == scale)
+				{
+					var half     = factory.Value(scaleType,  0.5m);
+					var negHalf  = factory.Value(scaleType, -0.5m);
+					var fitsZero = awayFromZero
+						? factory.SearchCondition().AddLess       (scaled, half, CompareNulls.LikeSql).AddGreater       (scaled, negHalf, CompareNulls.LikeSql)
+						: factory.SearchCondition().AddLessOrEqual(scaled, half, CompareNulls.LikeSql).AddGreaterOrEqual(scaled, negHalf, CompareNulls.LikeSql);
+
+					return factory.Function(scaleType, "Ensure",
+						factory.Sub(scaleType, scaled, scaled),
+						factory.SearchCondition(isOr: true).Add(fitsZero).AddIsNull(scaled),
+						factory.Value(factory.GetDbDataType(typeof(string)), string.Create(CultureInfo.InvariantCulture, $"ROUND result is out of range for Decimal({precision},{scale})")));
+				}
+
+				var evenInt = factory.Cast(scaled, intType, isMandatory: true);
+				var even    = factory.Cast(evenInt, scaleType, isMandatory: true);
+
+				if (!awayFromZero)
+					return even;
+
+				// to-even differs from away-from-zero only on a tie it resolved toward zero
+				var diff = factory.Sub(scaleType, even, scaled);
+				var zero = factory.Value(scaleType, 0m);
+				var one  = factory.Value(intType, 1m);
+
+				return factory.Condition(
+					factory.SearchCondition()
+						.AddEqual(diff, factory.Value(scaleType, -0.5m), CompareNulls.LikeSql)
+						.AddGreater(scaled, zero, CompareNulls.LikeSql),
+					factory.Cast(factory.Add(intType, evenInt, one), scaleType, isMandatory: true),
+					factory.Condition(
+						factory.SearchCondition()
+							.AddEqual(diff, factory.Value(scaleType, 0.5m), CompareNulls.LikeSql)
+							.AddLess(scaled, zero, CompareNulls.LikeSql),
+						factory.Cast(factory.Sub(intType, evenInt, one), scaleType, isMandatory: true),
+						even));
 			}
 
 			// valueType widened by the rounding digits, clamped to what YQL accepts. The source scale is never
@@ -847,7 +911,8 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 
 				intDigits     = Math.Min(intDigits, YdbMappingSchema.MAX_DECIMAL_PRECISION - scale);
 
-				return valueType.WithPrecisionScale(intDigits + scale, scale);
+				// without the DbType, which would otherwise be rendered in place of the computed type
+				return new DbDataType(valueType.SystemType, valueType.DataType, null, valueType.Length, intDigits + scale, scale);
 			}
 
 			// 10^precision rendered in the requested type (decimal or double).

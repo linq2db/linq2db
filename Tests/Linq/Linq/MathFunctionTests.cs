@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
@@ -609,6 +610,290 @@ namespace Tests.Linq
 
 			Action act = () => t.Where(r => r.P < 0).Select(r => Sql.AsSql(Sql.Round(r.D35s2, r.P))).ToArray();
 			act.ShouldThrow<Exception>().Message.ShouldContain("ROUND precision is out of range for Decimal(35,2)");
+		}
+
+		sealed class RoundManyDigits
+		{
+			[PrimaryKey                        ] public int      Id { get; set; }
+			[Column(Precision = 22, Scale =  9)] public decimal  D  { get; set; }
+			[Column(Precision = 22, Scale =  9)] public decimal? N  { get; set; }
+			[Column                            ] public int      P  { get; set; }
+		}
+
+		static decimal RoundTo(decimal value, int precision, MidpointRounding mp)
+		{
+			if (precision >= 0)
+				return Math.Round(value, precision, mp);
+
+			var factor = (decimal)Math.Pow(10, -precision);
+
+			return Math.Round(value / factor, mp) * factor;
+		}
+
+		// A Double carries ~15-17 significant digits, so rounding must not pass a Decimal through one: these values
+		// either scale past 2^53 or carry a residue (.4999999) that a Double turns into a tie.
+		[Test]
+		public void Round24([IncludeDataSources(true, TestProvName.AllYdb)] string context, [Values(MidpointRounding.ToEven, MidpointRounding.AwayFromZero)] MidpointRounding mp)
+		{
+			var data = new[]
+			{
+				new RoundManyDigits { Id =  1, D =    900719925474.09931m,     P =  4 },
+				new RoundManyDigits { Id =  2, D =    123456789012.34567m,     P =  5 },
+				new RoundManyDigits { Id =  3, D =     12345678901.234999999m, P =  2 },
+				new RoundManyDigits { Id =  4, D =     12345678901.225m,       P =  2 },
+				new RoundManyDigits { Id =  5, D =     12345678901.235m,       P =  2 },
+				new RoundManyDigits { Id =  6, D =    -12345678901.225m,       P =  2 },
+				new RoundManyDigits { Id =  7, D =    -12345678901.235m,       P =  2 },
+				new RoundManyDigits { Id =  8, D = 1234567849999.999999999m,   P = -5 },
+				new RoundManyDigits { Id =  9, D = 1234567949999.999999999m,   P = -5 },
+				new RoundManyDigits { Id = 10, D = 1234567890123.499999999m,   P =  0 },
+				new RoundManyDigits { Id = 11, D = 1234567890122.5m,           P =  0 },
+				new RoundManyDigits { Id = 12, D = 0m,                         P =  2 },
+			};
+
+			foreach (var r in data)
+				r.N = r.Id == 12 ? null : r.D;
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var expected = new List<(string, int, decimal?)>();
+			var actual   = new List<(string, int, decimal?)>();
+
+			expected.AddRange(data
+				.Where(r => r.P > 0)
+				.OrderBy(r => r.Id)
+				.Select(r => ("constant", r.Id, (decimal?)Math.Round(r.D, r.P, mp))));
+
+			// literal precisions: a captured variable would be a parameter and take the runtime path
+			var constant = t
+				.Where(r => r.P > 0)
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					r.Id,
+					R4 = Sql.AsSql(Math.Round(r.D, 4, mp)),
+					R5 = Sql.AsSql(Math.Round(r.D, 5, mp)),
+					R2 = Sql.AsSql(Math.Round(r.D, 2, mp)),
+					r.P,
+				})
+				.ToArray();
+
+			actual.AddRange(constant.Select(r => ("constant", r.Id, (decimal?)(r.P == 4 ? r.R4 : r.P == 5 ? r.R5 : r.R2))));
+
+			expected.AddRange(data
+				.Where(r => r.P == 0)
+				.OrderBy(r => r.Id)
+				.Select(r => ("no precision", r.Id, (decimal?)Math.Round(r.D, mp))));
+
+			actual.AddRange(t
+				.Where(r => r.P == 0)
+				.OrderBy(r => r.Id)
+				.Select(r => new { r.Id, R = Sql.AsSql(Math.Round(r.D, mp)) })
+				.AsEnumerable()
+				.Select(r => ("no precision", r.Id, (decimal?)r.R)));
+
+			expected.AddRange(data
+				.Where(r => r.Id != 12)
+				.OrderBy(r => r.Id)
+				.Select(r => ("runtime", r.Id, (decimal?)RoundTo(r.D, r.P, mp))));
+
+			var runtime = t
+				.Where(r => r.Id != 12)
+				.OrderBy(r => r.Id);
+
+			var runtimeRounded = mp == MidpointRounding.AwayFromZero
+				? runtime
+					.Select(r => new { r.Id, R = Sql.AsSql(Sql.Round(r.D, r.P)) })
+					.ToArray()
+				: runtime
+					.Select(r => new { r.Id, R = Sql.AsSql(Sql.RoundToEven(r.D, r.P)) })
+					.ToArray();
+
+			actual.AddRange(runtimeRounded.Select(r => ("runtime", r.Id, r.R)));
+
+			expected.AddRange(data
+				.Where(r => r.P == 2)
+				.OrderBy(r => r.Id)
+				.Select(r => ("nullable", r.Id, r.N == null ? null : (decimal?)Math.Round(r.N.Value, 2, mp))));
+
+			var nullable = t
+				.Where(r => r.P == 2)
+				.OrderBy(r => r.Id);
+
+			var nullableRounded = mp == MidpointRounding.AwayFromZero
+				? nullable
+					.Select(r => new { r.Id, R = Sql.AsSql(Sql.Round(r.N, 2)) })
+					.ToArray()
+				: nullable
+					.Select(r => new { r.Id, R = Sql.AsSql(Sql.RoundToEven(r.N, 2)) })
+					.ToArray();
+
+			actual.AddRange(nullableRounded.Select(r => ("nullable", r.Id, r.R)));
+
+			actual.ShouldBe(expected);
+		}
+
+		sealed class RoundScaffoldedDbType
+		{
+			[PrimaryKey                                                   ] public int     Id { get; set; }
+			[Column(DbType = "Decimal(6, 2)", Precision = 6, Scale = 2)] public decimal D  { get; set; }
+		}
+
+		// The scaffolder emits DbType beside Precision/Scale: the computed CASTs must render their own type, not the DbType.
+		[Test]
+		public void Round25([IncludeDataSources(true, TestProvName.AllYdb)] string context, [Values(MidpointRounding.ToEven, MidpointRounding.AwayFromZero)] MidpointRounding mp)
+		{
+			var data = new[]
+			{
+				new RoundScaffoldedDbType { Id = 1, D =  1234.56m },
+				new RoundScaffoldedDbType { Id = 2, D = -1234.55m },
+				new RoundScaffoldedDbType { Id = 3, D =  1000.05m },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var stored = t
+				.OrderBy(r => r.Id)
+				.Select(r => r.D)
+				.ToArray();
+
+			stored.ShouldBe(data.Select(r => r.D).ToArray(), "round trip");
+
+			var expected = data
+				.OrderBy(r => r.Id)
+				.Select(r => Math.Round(r.D, 1, mp))
+				.ToArray();
+
+			var rounded = t
+				.OrderBy(r => r.Id)
+				.Select(r => Sql.AsSql(Math.Round(r.D, 1, mp)))
+				.ToArray();
+
+			rounded.ShouldBe(expected);
+		}
+
+		// YQL refuses to cast a Decimal with no integer digits to scale 0: such a value rounds to 0 by comparison, and a
+		// result of +-1, which the type cannot hold, fails the query.
+		[Test]
+		public void Round26([IncludeDataSources(true, TestProvName.AllYdb)] string context, [Values(MidpointRounding.ToEven, MidpointRounding.AwayFromZero)] MidpointRounding mp)
+		{
+			var data = new[]
+			{
+				new RoundDynamicNoIntegerDigits { Id = 1, D =  0.1234m, P = -1 },
+				new RoundDynamicNoIntegerDigits { Id = 2, D = -0.4999m, P = -1 },
+				new RoundDynamicNoIntegerDigits { Id = 3, D =  0.5000m, P = -1 },
+				new RoundDynamicNoIntegerDigits { Id = 4, D = -0.5000m, P = -1 },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			// away from zero, +-0.5 rounds to +-1, which Decimal(4,4) cannot hold
+			var maxId = mp == MidpointRounding.ToEven ? 4 : 2;
+
+			var expected = data
+				.Where(r => r.Id <= maxId)
+				.OrderBy(r => r.Id)
+				.Select(r => (r.Id, Math.Round(r.D, mp), 0m))
+				.ToArray();
+
+			var source = t
+				.Where(r => r.Id <= maxId)
+				.OrderBy(r => r.Id);
+
+			var rounded = source
+				.Select(r => Sql.AsSql(Math.Round(r.D, mp)))
+				.ToArray();
+
+			var negative = mp == MidpointRounding.AwayFromZero
+				? source
+					.Select(r => Sql.AsSql(Sql.Round(r.D, -1)))
+					.ToArray()
+				: source
+					.Select(r => Sql.AsSql(Sql.RoundToEven(r.D, -1)))
+					.ToArray();
+
+			rounded.Length.ShouldBe(expected.Length);
+			negative.Length.ShouldBe(expected.Length);
+
+			var actual = expected
+				.Select((r, i) => (r.Id, rounded[i], negative[i]!.Value))
+				.ToArray();
+
+			actual.ShouldBe(expected);
+
+			if (mp == MidpointRounding.AwayFromZero)
+			{
+				foreach (var id in new[] { 3, 4 })
+				{
+					Action act = () => t
+						.Where(r => r.Id == id)
+						.Select(r => Sql.AsSql(Math.Round(r.D, mp)))
+						.ToArray();
+
+					act.ShouldThrow<Exception>().Message.ShouldContain("ROUND result is out of range for Decimal(4,4)");
+				}
+			}
+		}
+
+		sealed class RoundComputed
+		{
+			[PrimaryKey                       ] public int     Id { get; set; }
+			[Column                           ] public int     G  { get; set; }
+			[Column(Precision = 10, Scale = 2)] public decimal D  { get; set; }
+		}
+
+		// A computed Decimal (SUM, AVG, a product) need not carry the type linq2db infers for it, while the tie
+		// arithmetic of away-from-zero demands identical Decimal types.
+		[Test]
+		public void Round27([IncludeDataSources(true, TestProvName.AllYdb)] string context, [Values(MidpointRounding.ToEven, MidpointRounding.AwayFromZero)] MidpointRounding mp)
+		{
+			var data = new[]
+			{
+				new RoundComputed { Id = 1, G = 1, D =  1.25m },
+				new RoundComputed { Id = 2, G = 1, D =  1.25m },
+				new RoundComputed { Id = 3, G = 2, D = -2.25m },
+				new RoundComputed { Id = 4, G = 2, D = -0.25m },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var expectedGroups =
+				from r in data
+				group r by r.G into g
+				orderby g.Key
+				select new
+				{
+					Sum     = Math.Round(g.Sum(x => x.D), mp),
+					Average = Math.Round(g.Average(x => x.D), mp),
+				};
+
+			var groups =
+				from r in t
+				group r by r.G into g
+				orderby g.Key
+				select new
+				{
+					Sum     = Sql.AsSql(Math.Round(g.Sum(x => x.D), mp)),
+					Average = Sql.AsSql(Math.Round(g.Average(x => x.D), mp)),
+				};
+
+			groups.ToArray().ShouldBe(expectedGroups.ToArray());
+
+			var expectedProducts = data
+				.OrderBy(r => r.Id)
+				.Select(r => Math.Round(r.D * r.D, mp))
+				.ToArray();
+
+			var products = t
+				.OrderBy(r => r.Id)
+				.Select(r => Sql.AsSql(Math.Round(r.D * r.D, mp)))
+				.ToArray();
+
+			products.ShouldBe(expectedProducts);
 		}
 
 		[Test]
