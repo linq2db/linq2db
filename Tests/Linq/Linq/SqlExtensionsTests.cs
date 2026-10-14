@@ -238,8 +238,13 @@ namespace Tests.Linq
 				where t.Id == Sql.Expr<int>(FormattableStringFactory.Create(sql))
 				select t.Id;
 
-			Query("1").ToArray().ShouldBe([1]);
-			Query("2").ToArray().ShouldBe([2]);
+			Query("1")
+				.ToArray()
+				.ShouldBe([1]);
+
+			Query("2")
+				.ToArray()
+				.ShouldBe([2]);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
@@ -253,9 +258,17 @@ namespace Tests.Linq
 				where t.Id == Sql.Expr<int>("{0}", arguments)
 				select t.Id;
 
-			Query(1).ToArray().ShouldBe([1]);
-			Query(2L).ToArray().ShouldBe([2]);
-			Query(1, 3).ToArray().ShouldBe([1]);
+			Query(1)
+				.ToArray()
+				.ShouldBe([1]);
+
+			Query(2L)
+				.ToArray()
+				.ShouldBe([2]);
+
+			Query(1, 3)
+				.ToArray()
+				.ShouldBe([1]);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
@@ -264,7 +277,9 @@ namespace Tests.Linq
 			using var db = GetDataConnection(context);
 
 			var query = CompiledQuery.Compile((IDataContext dc, int id) =>
-				dc.GetTable<Model.Person>().Where(p => p.ID == Sql.Expr<int>($"{id}")).Select(p => p.ID));
+				dc.GetTable<Model.Person>()
+					.Where(p => p.ID == Sql.Expr<int>($"{id}"))
+					.Select(p => p.ID));
 
 			var query1 = query(db, 1);
 			query1.ToArray().ShouldBe([1]);
@@ -287,14 +302,18 @@ namespace Tests.Linq
 					.Where(p => p.ID == Sql.Expr<int>("{0}", args))
 					.Select(p => p.ID));
 
-			query(db).ToArray().ShouldBe([1]);
+			query(db)
+				.ToArray()
+				.ShouldBe([1]);
 
 			if (reassign)
 				args = [2];
 			else
 				args[0] = 2;
 
-			query(db).ToArray().ShouldBe([2]);
+			query(db)
+				.ToArray()
+				.ShouldBe([2]);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
@@ -302,11 +321,21 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			db.Person.Where(p => p.ID == Sql.Expr<int>($"{p.ID}")).Select(p => p.ID).OrderBy(id => id).ToArray().ShouldBe([1, 2, 3, 4]);
+			db.Person
+				.Where(p => p.ID == Sql.Expr<int>($"{p.ID}"))
+				.Select(p => p.ID)
+				.OrderBy(id => id)
+				.ToArray()
+				.ShouldBe([1, 2, 3, 4]);
 
 			FormattableString sql = $"{2}";
 
-			db.Person.Where(p => p.ID == Sql.Expr<int>(sql)).Select(p => p.ID).OrderBy(id => id).ToArray().ShouldBe([2]);
+			db.Person
+				.Where(p => p.ID == Sql.Expr<int>(sql))
+				.Select(p => p.ID)
+				.OrderBy(id => id)
+				.ToArray()
+				.ShouldBe([2]);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000"), QueryCacheTest]
@@ -319,7 +348,9 @@ namespace Tests.Linq
 				where p.ID == Sql.Expr<int>(sql)
 				select p.ID;
 
-			Query($"{1}").ToArray().ShouldBe([1]);
+			Query($"{1}")
+				.ToArray()
+				.ShouldBe([1]);
 
 			var query  = Query($"{2}");
 			var misses = query.GetCacheMissCount();
@@ -327,7 +358,9 @@ namespace Tests.Linq
 			query.ToArray().ShouldBe([2]);
 			query.GetCacheMissCount().ShouldBe(misses);
 
-			Query($"{1}").ToArray().ShouldBe([1]);
+			Query($"{1}")
+				.ToArray()
+				.ShouldBe([1]);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5857"), QueryCacheTest]
@@ -336,9 +369,13 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			IQueryable<int> Query(int value) =>
-				db.Person.Where(p => p.ID == 1).Select(_ => Sql.Expr<int>($"{value}"));
+				db.Person
+					.Where(p => p.ID == 1)
+					.Select(_ => Sql.Expr<int>($"{value}"));
 
-			Query(1).ToArray().ShouldBe([1]);
+			Query(1)
+				.ToArray()
+				.ShouldBe([1]);
 
 			var query  = Query(2);
 			var misses = query.GetCacheMissCount();
@@ -379,7 +416,11 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			int[] Query(int value) => db.Person.Where(p => p.ID == 1).Select(_ => InlineFormat($"{value}")).ToArray();
+			int[] Query(int value) =>
+				db.Person
+					.Where(p => p.ID == 1)
+					.Select(_ => InlineFormat($"{value}"))
+					.ToArray();
 
 			Query(1).ShouldBe([1]);
 			Query(2).ShouldBe([2]);
@@ -392,11 +433,21 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var query = CompiledQuery.Compile((IDataContext dc, int value) =>
-				dc.GetTable<Person>().Where(p => p.ID == 1).Select(_ => InlineFormat($"{value}")));
+				dc.GetTable<Person>()
+					.Where(p => p.ID == 1)
+					.Select(_ => InlineFormat($"{value}")));
 
-			query(db, 1).ToArray().ShouldBe([1]);
-			query(db, 2).ToArray().ShouldBe([2]);
-			query(db, 1).ToArray().ShouldBe([1]);
+			query(db, 1)
+				.ToArray()
+				.ShouldBe([1]);
+
+			query(db, 2)
+				.ToArray()
+				.ShouldBe([2]);
+
+			query(db, 1)
+				.ToArray()
+				.ShouldBe([1]);
 		}
 
 		public class FreeTextKey<T>
