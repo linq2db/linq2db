@@ -834,7 +834,7 @@ namespace Tests.Linq
 
 		// Comparisons only against a column of the member's own type, so that no stand-in type's range decides them.
 		[Test]
-		public void OffsetOverMissedLeftJoinReadsDefault([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse, TestProvName.AllYdb, TestProvName.AllOracle, TestProvName.AllDuckDB)] string context, [Values] bool preferClient)
+		public void OffsetOverMissedLeftJoinReadsDefault([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse, TestProvName.AllYdb, TestProvName.AllOracle, TestProvName.AllDuckDB, TestProvName.AllMySql)] string context, [Values] bool preferClient)
 		{
 			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
 			using var table = db.CreateLocalTable(MissedMomentEntity.Seed);
@@ -914,6 +914,40 @@ namespace Tests.Linq
 			{
 				new LinqToDB.Data.CommandInfo(db, "SET TIME ZONE LOCAL").Execute();
 			}
+		}
+
+		[Table]
+		sealed class MissedSpanEntity
+		{
+			[Column, PrimaryKey] public int      Id   { get; set; }
+			[Column]             public TimeSpan Span { get; set; }
+
+			public static readonly MissedSpanEntity[] Seed =
+			[
+				new() { Id = 1, Span = new TimeSpan(1, 30, 0) },
+				new() { Id = 2, Span = new TimeSpan(2,  0, 0) },
+			];
+		}
+
+		// TimeSpan.Zero has a typed literal on some providers and becomes a parameter typed by the column on the rest.
+		// Excluded providers cannot store the table: SQLite Classic and SQL CE fail to bind a TimeSpan, Oracle to create the column.
+		[Test]
+		public void SpanOverMissedLeftJoinReadsDefault([DataSources(TestProvName.AllSQLiteClassic, TestProvName.AllSqlCe, TestProvName.AllOracle)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(MissedSpanEntity.Seed);
+
+			var query =
+				from e in table
+				from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				select new
+				{
+					e.Id,
+					Shorter = j.Span < e.Span        ? "y" : "n",
+					Zero    = j.Span == TimeSpan.Zero ? "y" : "n",
+				};
+
+			AssertQuery(query);
 		}
 
 		[Table]
