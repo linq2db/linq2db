@@ -871,14 +871,22 @@ namespace Tests.Linq
 
 			new LinqToDB.Data.CommandInfo(db, $"SET time_zone = '{zone}'").Execute();
 
-			var years =
-				(from e in table
-				 from j in table.LeftJoin(j => j.Id == e.Id + 1000)
-				 select j.Moment.Year)
-				.ToArray();
+			try
+			{
+				var years =
+					(from e in table
+					 from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+					 select j.Moment.Year)
+					.ToArray();
 
-			years.Length.ShouldBe(MissedMomentEntity.Seed.Length);
-			years.ShouldAllBe(year => year == 1);
+				years.Length.ShouldBe(MissedMomentEntity.Seed.Length);
+				years.ShouldAllBe(year => year == 1);
+			}
+			finally
+			{
+				// MySql.Data does not reset a pooled connection's session, and other tests read NOW() in the server's zone.
+				new LinqToDB.Data.CommandInfo(db, "SET time_zone = DEFAULT").Execute();
+			}
 		}
 
 		[Table]
