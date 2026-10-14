@@ -299,7 +299,6 @@ namespace LinqToDB
 				enableContextSchemaEdit, preferExistsForScalar,
 				PreferClientCalculation: default, UpsertEmulationPolicy: UpsertEmulationPolicy.Allow, OptimizeForSequentialAccess: default)
 		{
-
 		}
 
 		/// <summary>
