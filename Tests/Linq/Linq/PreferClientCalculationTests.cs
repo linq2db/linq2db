@@ -889,6 +889,33 @@ namespace Tests.Linq
 			}
 		}
 
+		// Firebird writes the default without a zone and converts it to TIMESTAMP WITH TIME ZONE in the session's zone. The value
+		// keeps that zone and EXTRACT reads in it, so the year stays 1 in any session.
+		[Test]
+		public void OffsetDefaultIsReadIndependentlyOfFirebirdSessionTimeZone([IncludeDataSources(TestProvName.AllFirebird4Plus)] string context, [Values("+00:00", "+05:00", "-05:00")] string zone, [Values] bool preferClient)
+		{
+			using var db    = GetDataConnection(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(MissedMomentEntity.Seed);
+
+			new LinqToDB.Data.CommandInfo(db, $"SET TIME ZONE '{zone}'").Execute();
+
+			try
+			{
+				var years =
+					(from e in table
+					 from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+					 select j.Moment.Year)
+					.ToArray();
+
+				years.Length.ShouldBe(MissedMomentEntity.Seed.Length);
+				years.ShouldAllBe(year => year == 1);
+			}
+			finally
+			{
+				new LinqToDB.Data.CommandInfo(db, "SET TIME ZONE LOCAL").Execute();
+			}
+		}
+
 		[Table]
 		sealed class MappedMomentEntity
 		{
