@@ -1429,6 +1429,27 @@ namespace Tests.Linq
 			query(db, [2]).ToArray().ShouldBe([2]);
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void FromSql_Compiled_CapturedArgumentArray([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool reassign)
+		{
+			using var db = GetDataConnection(context);
+
+			var args = new object[] { 1 };
+
+			var query = CompiledQuery.Compile((IDataContext dc) =>
+				dc.FromSql<Person>("SELECT * FROM Person WHERE PersonID = {0}", args)
+					.Select(p => p.ID));
+
+			query(db).ToArray().ShouldBe([1]);
+
+			if (reassign)
+				args = [2];
+			else
+				args[0] = 2;
+
+			query(db).ToArray().ShouldBe([2]);
+		}
+
 		sealed class LastParameterInterceptor : CommandInterceptor
 		{
 			public object? Value { get; private set; }
