@@ -183,6 +183,24 @@ namespace Tests.Linq
 			nths.ShouldBe([3600_000d, 0d]);
 		}
 
+		/// <summary>
+		/// The same coercion for an analytic function built from a <see cref="Sql.ExtensionAttribute"/>.
+		/// </summary>
+		[ActiveIssue(6044, Configuration = TestProvName.AllClickHouse, ErrorMessage = "Expected: DateTime64, got: DateTime")]
+		[Test]
+		public void ExtensionAnalyticFunctionOverASecondPrecisionColumnIsCoerced([IncludeDataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarseNullable(db);
+
+			var hours = t
+				.OrderBy(r => r.Id)
+				.Select(r => Sql.AsSql((Sql.Ext.Max(r.StartedOn).Over().ToValue() - r.StartedOn).TotalHours))
+				.ToArray();
+
+			hours.ShouldBe([1d, 0d]);
+		}
+
 		// Spelled out rather than derived from CoarseStart: static initializers in separate partial-class files run in
 		// no defined order.
 		static readonly DateTime CoarseSubSecond = new(2026, 6, 1, 10, 0, 0, 500);
