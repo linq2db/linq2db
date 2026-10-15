@@ -61,9 +61,9 @@
 		</Reference>
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net11.0' ">
-		<!--the managed Access engine; net11.0-only, which is why the Access.LibRed.* test configs are
-		    listed in the NET110 provider list alone-->
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net10.0' or '$(TargetFramework)' == 'net11.0' ">
+		<!--the managed Access engine; no netfx build, which is why the Access.LibRed.* test configs are
+		    never listed for NETFX-->
 		<PackageReference Include="LibRed.Ado" />
 	</ItemGroup>
 

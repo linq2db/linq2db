@@ -227,6 +227,7 @@
       "displayName": "ANTLR 4 Standard Runtime",
       "packageId": "Antlr4.Runtime.Standard",
       "versions": {
+        "net10.0": "4.13.1",
         "net11.0": "4.13.1"
       },
       "license": "BSD-3-Clause",
@@ -582,7 +583,8 @@
       "displayName": "LibRed.Ado",
       "packageId": "LibRed.Ado",
       "versions": {
-        "net11.0": "11.0.0-alpha.3"
+        "net10.0": "11.0.0-alpha.4",
+        "net11.0": "11.0.0-alpha.4"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -603,7 +605,8 @@
       "displayName": "LibRed.Core",
       "packageId": "LibRed.Core",
       "versions": {
-        "net11.0": "11.0.0-alpha.3"
+        "net10.0": "11.0.0-alpha.4",
+        "net11.0": "11.0.0-alpha.4"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -624,7 +627,8 @@
       "displayName": "LibRed.Engine",
       "packageId": "LibRed.Engine",
       "versions": {
-        "net11.0": "11.0.0-alpha.3"
+        "net10.0": "11.0.0-alpha.4",
+        "net11.0": "11.0.0-alpha.4"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -645,7 +649,8 @@
       "displayName": "LibRed.Sql",
       "packageId": "LibRed.Sql",
       "versions": {
-        "net11.0": "11.0.0-alpha.3"
+        "net10.0": "11.0.0-alpha.4",
+        "net11.0": "11.0.0-alpha.4"
       },
       "license": "MIT",
       "licenseTexts": [

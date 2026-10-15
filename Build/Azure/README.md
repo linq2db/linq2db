@@ -117,7 +117,7 @@ Legend:
 |Access><br>ACE 12 OLE DB|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|
 |Access<br>Jet ODBC|:heavy_check_mark:|:x:|:heavy_minus_sign:|
 |Access<br>ACE ODBC|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|
-|Access<br>[LibRed.Ado](https://www.nuget.org/packages/LibRed.Ado/) (managed, net11.0-only)|:heavy_minus_sign:|:x:|:heavy_check_mark:|
+|Access<br>[LibRed.Ado](https://www.nuget.org/packages/LibRed.Ado/) (managed, no netfx)|:heavy_minus_sign:|:x:|:heavy_check_mark:|
 |DB2 LUW 11.5<br>[IBM.Data.DB2](https://www.nuget.org/packages/IBM.Data.DB.Provider/) (netfx)<br>[IBM.Data.DB2.Core](https://www.nuget.org/packages/IBM.Data.DB2.Core/) ([osx](https://www.nuget.org/packages/IBM.Data.DB2.Core-osx/), [lin](https://www.nuget.org/packages/IBM.Data.DB2.Core-lnx/)) (core)|:x:|:x:|:heavy_check_mark:|
 |Informix 14.10<br>[IBM.Data.DB2](https://www.nuget.org/packages/IBM.Data.DB.Provider/) IDS (netfx)<br>[IBM.Data.DB2.Core](https://www.nuget.org/packages/IBM.Data.DB2.Core/) ([osx](https://www.nuget.org/packages/IBM.Data.DB2.Core-osx/), [lin](https://www.nuget.org/packages/IBM.Data.DB2.Core-lnx/)) (core)|:x:|:x:|:heavy_check_mark:|
 |Oracle 11.2g XE<br>[Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) (netfx)<br>[Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/) (core)|:x:|:x:|:heavy_check_mark:|

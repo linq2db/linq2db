@@ -509,8 +509,7 @@ jobs:
           filters: '[all][access.all]'
 
 # The managed Access engine needs no driver install and no container, so it is the only Access leg that
-# can run on Linux - which is the capability it exists to add. net11.0-only, hence no netfx; the config
-# scopes its providers to that TFM, so a full_run's net10.0 pass on this leg resolves none.
+# can run on Linux - which is the capability it exists to add. LibRed.Ado has no netfx build, hence no netfx.
         - name: zz_Access_LibRed
           gh_linux: 'true'
           title: Access LibRed (managed)

@@ -72,7 +72,7 @@
 			"Access.Jet.OleDb.Data"    : {                                      "ConnectionString": "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=Database\\Data\\TestData.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True" },
 			"Access.Jet.Odbc"          : {                                      "ConnectionString": "Driver={Microsoft Access Driver (*.mdb)};Dbq=Database\\TestData.ODBC.mdb;ExtendedAnsiSQL=1;Threads=16;MaxBufferSize=65536;"                                                         },
 			"Access.Jet.Odbc.Data"     : {                                      "ConnectionString": "Driver={Microsoft Access Driver (*.mdb)};Dbq=Database\\TestData.ODBC.mdb;ExtendedAnsiSQL=1;Threads=16;MaxBufferSize=65536;"                                                         },
-			// LibRed is managed and net11.0-only, so these two are listed in the NET110 provider list only.
+			// LibRed is managed and has no netfx build, so these two are never listed for NETFX.
 			// Its connection string takes Data Source and nothing else.
 			"Access.LibRed.Mdb"        : {                                      "ConnectionString": "Data Source=Database/TestData.LibRed.mdb"                                                                                                            },
 			"Access.LibRed.Mdb.Data"   : {                                      "ConnectionString": "Data Source=Database/Data/TestData.LibRed.mdb"                                                                                                       },

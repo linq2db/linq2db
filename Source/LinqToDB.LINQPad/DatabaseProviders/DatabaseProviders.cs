@@ -84,7 +84,7 @@ internal static class DatabaseProviders
 	/// Returns NuGet packages of all known providers, used when the client needed by a connection cannot be
 	/// identified (see <see cref="DriverHelper.OverrideDriverDependencies"/>).
 	/// </summary>
-	public static IEnumerable<(string Id, string Version)> GetAllNuGetPackages(int runtime)
+	public static IEnumerable<(string Id, string Version)> GetAllNuGetPackages()
 	{
 		foreach (var provider in Providers.Values)
 		{
@@ -92,7 +92,7 @@ internal static class DatabaseProviders
 			if (!provider.IsPlatformSupported)
 				continue;
 
-			foreach (var package in GetNuGetPackages(provider, runtime))
+			foreach (var package in GetNuGetPackages(provider))
 				yield return package;
 		}
 	}
@@ -101,25 +101,13 @@ internal static class DatabaseProviders
 	/// Returns NuGet packages of every provider of one database. Which of them a connection will use is not
 	/// always known, and the sets differ only for the databases that have more than one client.
 	/// </summary>
-	public static IEnumerable<(string Id, string Version)> GetNuGetPackages(IDatabaseProvider provider, int runtime)
+	public static IEnumerable<(string Id, string Version)> GetNuGetPackages(IDatabaseProvider provider)
 	{
 		// a hidden provider is either legacy-only or unusable on this host (e.g. Access OLE DB on macOS)
 		foreach (var info in provider.Providers)
 			if (!info.IsHidden)
-				foreach (var package in GetNuGetPackages(provider, info.Name, runtime))
+				foreach (var package in provider.GetNuGetPackages(info.Name))
 					yield return package;
-	}
-
-	/// <summary>
-	/// Returns NuGet packages of one provider, or none when its client cannot run on <paramref name="runtime"/>.
-	/// </summary>
-	public static IEnumerable<(string Id, string Version)> GetNuGetPackages(IDatabaseProvider provider, string providerName, int runtime)
-	{
-		foreach (var info in provider.Providers)
-			if (string.Equals(info.Name, providerName, StringComparison.Ordinal) && info.MinimumRuntime > runtime)
-				return [];
-
-		return provider.GetNuGetPackages(providerName);
 	}
 #endif
 
