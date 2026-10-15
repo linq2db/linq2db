@@ -297,13 +297,13 @@ namespace Tests.Infrastructure
 		{
 			var attr = new ActiveIssueAttribute { RequiresBaselines = true };
 
-			attr.AppliesTo("SQLite.MS", isLinqService: true, baselinesCaptured: true ).ShouldBeTrue();
-			attr.AppliesTo("SQLite.MS", isLinqService: true, baselinesCaptured: false).ShouldBeFalse();
-			attr.AppliesTo(null,        isLinqService: true, baselinesCaptured: false).ShouldBeFalse();
+			attr.AppliesTo("SQLite.MS", isLinqService: true, baselinesEnabled: true ).ShouldBeTrue();
+			attr.AppliesTo("SQLite.MS", isLinqService: true, baselinesEnabled: false).ShouldBeFalse();
+			attr.AppliesTo(null,        isLinqService: true, baselinesEnabled: false).ShouldBeFalse();
 
 			// Control: without the flag the baselines setting is irrelevant.
 			new ActiveIssueAttribute()
-				.AppliesTo("SQLite.MS", isLinqService: true, baselinesCaptured: false).ShouldBeTrue();
+				.AppliesTo("SQLite.MS", isLinqService: true, baselinesEnabled: false).ShouldBeTrue();
 		}
 
 		#endregion
@@ -365,10 +365,10 @@ namespace Tests.Infrastructure
 			var blanket   = new ActiveIssueAttribute(1);
 			var baselines = new ActiveIssueAttribute(2) { RequiresBaselines = true };
 
-			ActiveIssueAttribute.SelectGoverning([blanket, baselines], "SQLite.MS", true, out var ambiguous, baselinesCaptured: true ).ShouldBeSameAs(baselines);
+			ActiveIssueAttribute.SelectGoverning([blanket, baselines], "SQLite.MS", true, out var ambiguous, baselinesEnabled: true ).ShouldBeSameAs(baselines);
 			ambiguous.ShouldBeFalse();
 
-			ActiveIssueAttribute.SelectGoverning([blanket, baselines], "SQLite.MS", true, out ambiguous,     baselinesCaptured: false).ShouldBeSameAs(blanket);
+			ActiveIssueAttribute.SelectGoverning([blanket, baselines], "SQLite.MS", true, out ambiguous,     baselinesEnabled: false).ShouldBeSameAs(blanket);
 			ambiguous.ShouldBeFalse();
 		}
 

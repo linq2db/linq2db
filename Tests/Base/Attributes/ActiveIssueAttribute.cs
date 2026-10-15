@@ -183,17 +183,17 @@ namespace Tests
 		/// Whether this instance governs a test case running against <paramref name="provider"/>. Reproduces
 		/// <see cref="ActiveIssueAttribute"/>'s targeting exactly, including that a test with no data-source
 		/// parameter (<paramref name="provider"/> is <see langword="null"/>) is governed unconditionally.
-		/// <paramref name="baselinesCaptured"/> overrides whether this run writes baselines; <see langword="null"/>
+		/// <paramref name="baselinesEnabled"/> overrides whether this run writes baselines; <see langword="null"/>
 		/// reads it from <see cref="TestConfiguration.BaselinesPath"/>.
 		/// </summary>
-		public bool AppliesTo(string? provider, bool isLinqService, bool? baselinesCaptured = null)
+		public bool AppliesTo(string? provider, bool isLinqService, bool? baselinesEnabled = null)
 		{
 			// Before the provider == null shortcut: the platform and the baselines setting are ambient, so they bound
 			// a gate on a test with no data-source parameter too.
 			if (Platforms != TestPlatform.Any && (Platforms & CurrentPlatform) == 0)
 				return false;
 
-			if (RequiresBaselines && !(baselinesCaptured ?? TestConfiguration.BaselinesPath != null))
+			if (RequiresBaselines && !(baselinesEnabled ?? TestConfiguration.BaselinesPath != null))
 				return false;
 
 			if (provider == null)
@@ -306,13 +306,13 @@ namespace Tests
 		/// Picks the instance that governs this case. An instance that names a provider or transport beats a blanket
 		/// one, so "fails everywhere with A, but on Oracle with B" is expressible. Two equally specific instances
 		/// both matching is an authoring error, reported rather than silently resolved.
-		/// <paramref name="baselinesCaptured"/> is passed to <see cref="AppliesTo"/>.
+		/// <paramref name="baselinesEnabled"/> is passed to <see cref="AppliesTo"/>.
 		/// </summary>
-		public static ActiveIssueAttribute? SelectGoverning(ActiveIssueAttribute[] attributes, string? provider, bool isLinqService, out bool ambiguous, bool? baselinesCaptured = null)
+		public static ActiveIssueAttribute? SelectGoverning(ActiveIssueAttribute[] attributes, string? provider, bool isLinqService, out bool ambiguous, bool? baselinesEnabled = null)
 		{
 			ambiguous = false;
 
-			var applicable = attributes.Where(a => a.AppliesTo(provider, isLinqService, baselinesCaptured)).ToArray();
+			var applicable = attributes.Where(a => a.AppliesTo(provider, isLinqService, baselinesEnabled)).ToArray();
 
 			if (applicable.Length == 0)
 				return null;
