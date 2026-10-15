@@ -17,13 +17,14 @@ using Microsoft.Extensions.Hosting;
 using ProtoBuf.Grpc.Server;
 
 using Tests.Model;
+using Tests.Model.Remote;
 using Tests.Model.Remote.Grpc;
 
 namespace Tests.Remote.ServerContainer
 {
 	internal sealed class GrpcServerContainer : ServerContainerBase<TestGrpcLinqService>
 	{
-		private static string GetServiceUrl(int port) => $"https://localhost:{port}";
+		private static string GetServiceUrl(int port) => $"https://{RemoteHost.Loopback}:{port}";
 
 		// MTP runs tests as a bare executable, so the ASP.NET Core HTTPS development certificate
 		// that `dotnet test` used to provision is unavailable. Bind Kestrel to a throwaway self-signed
@@ -96,8 +97,7 @@ namespace Tests.Remote.ServerContainer
 
 				services.AddGrpc();
 				services.AddCodeFirstGrpc();
-				services.AddSingleton(p => GrpcLinqService);
-
+				services.AddSingleton(GrpcLinqService);
 			}
 
 			public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

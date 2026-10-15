@@ -40,7 +40,68 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			var tenthsType   = Factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(18, 1);
 			var milliseconds = Factory.Function(tenthsType, "DateDiff", Factory.Fragment("millisecond"), element.Start, element.End);
 
-			return Factory.Cast(Factory.Multiply(longType, milliseconds, TimeSpan.TicksPerMillisecond), longType, true);
+			// Taken to a whole number of tenths before it is widened to ticks. Scaled while it is still a decimal, the
+			// count is held with its decimal place as a 64-bit integer, and before 4 that overflows past about 2,900
+			// years. The product is cast back as well: from 4 on a BIGINT product is an INT128.
+			var tenths = Factory.Cast(Factory.Multiply(tenthsType, milliseconds, 10), longType, true);
+
+			return Factory.Cast(Factory.Multiply(longType, tenths, TimeSpan.TicksPerMillisecond / 10), longType, true);
+		}
+
+		/// <inheritdoc />
+		/// <remarks>
+		/// Lowered below without going through <c>FinestDateUnit</c>: <c>DATEADD</c> takes a millisecond amount
+		/// directly.
+		/// </remarks>
+		public override bool CanLowerIntervalShift => true;
+
+		/// <summary>
+		/// Shifts through <c>DATEADD(day, days, date)</c>, then <c>DATEADD(millisecond, rest, ...)</c> by what is left
+		/// of the last day.
+		/// </summary>
+		/// <remarks>
+		/// Split at the day because 2.5 takes a 32-bit amount, which a millisecond count passes after 25 days; a day
+		/// count and the milliseconds of one day both fit it on every version.
+		/// <para>
+		/// From 3 on the remainder keeps a tenth of a millisecond, what a <c>TIMESTAMP</c> stores, as a
+		/// <c>decimal(18,1)</c> - the type <see cref="ElapsedTicks"/> counts in - since an integer division would drop
+		/// the fraction. 2.5 measures whole milliseconds only (<see cref="IntervalResolution"/>), and its remainder is
+		/// divided as an integer.
+		/// </para>
+		/// <para>
+		/// A <see cref="DateTime"/> is cast to <c>TIMESTAMP</c> first, whatever its mapping declares: a <c>DATE</c>
+		/// has no time of day, and shifting it by milliseconds keeps none, while a <c>DATE</c> column mapped as a
+		/// plain <see cref="DateTime"/> is not declared as one. The target is built from the CLR type, so a mapped
+		/// <c>DbType</c> does not render the cast as the type it was meant to leave; over a <c>TIMESTAMP</c> the
+		/// cast changes nothing.
+		/// </para>
+		/// </remarks>
+		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
+		{
+			var longType   = Factory.GetDbDataType(typeof(long));
+			var tenthsType = Factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(18, 1);
+
+			var ticks        = element.IsSubtract ? Factory.Multiply(longType, element.Interval, -1L) : element.Interval;
+			var days         = TruncateDivide(ticks, TimeSpan.TicksPerDay);
+			var rest         = TruncateRemainder(ticks, TimeSpan.TicksPerDay);
+			var milliseconds = IntervalResolution == SqlIntervalUnit.Millisecond
+				? Factory.Div(longType, rest, TimeSpan.TicksPerMillisecond)
+				: Factory.Div(tenthsType,
+					Factory.Cast(Factory.Div(longType, rest, TimeSpan.TicksPerMillisecond / 10), tenthsType, true),
+					10);
+
+			var temporal     = element.Temporal;
+			var temporalType = Factory.GetDbDataType(temporal);
+
+			if (temporalType.SystemType.ToUnderlying() == typeof(DateTime))
+			{
+				temporalType = new DbDataType(temporalType.SystemType, DataType.DateTime);
+				temporal     = Factory.Cast(temporal, temporalType, true);
+			}
+
+			var shifted = Factory.Function(temporalType, "DateAdd", Factory.Fragment("day"), days, temporal);
+
+			return Factory.Function(temporalType, "DateAdd", Factory.Fragment("millisecond"), milliseconds, shifted);
 		}
 
 		/// <summary>

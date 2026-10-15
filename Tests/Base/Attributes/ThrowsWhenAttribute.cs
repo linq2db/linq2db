@@ -30,6 +30,20 @@ namespace Tests
 		public string  ExpectedException { get; }
 		public string? ErrorMessage      { get; set; }
 
+		/// <summary>
+		/// Gets or sets a second parameter that must <i>also</i> match <see cref="AlsoWhenValue"/> for the throw to be
+		/// expected. Unset by default, which keys the attribute on <see cref="ParameterName"/> alone.
+		/// </summary>
+		/// <remarks>
+		/// Stacking two instances does not express this: each wraps the test independently, so a case matching only one
+		/// of them is still rewritten into "expected an exception, none thrown". A provider limitation that only some
+		/// values of a second <c>[Values]</c> parameter reach therefore needs both conditions on one instance.
+		/// </remarks>
+		public string? AlsoWhenParameter { get; set; }
+
+		/// <summary>Gets or sets the value <see cref="AlsoWhenParameter"/> must have. Ignored when that is unset.</summary>
+		public object? AlsoWhenValue { get; set; }
+
 		public virtual void ApplyToTest(Test test)
 		{
 			// Add a property to the test to indicate that it expects an exception
@@ -101,8 +115,8 @@ namespace Tests
 		/// <summary>
 		/// Whether this instance expects the case <paramref name="test"/> is about to run to throw — the same
 		/// question <see cref="ThrowsWhenCommand"/> answers for itself, exposed so another wrapper can see that
-		/// this one owns the outcome. Read-only, and a query rather than an assertion: an unresolvable parameter
-		/// name answers "no" here and is still reported by the command.
+		/// this one owns the outcome. Read-only, and a query rather than an assertion: an unresolvable
+		/// <see cref="ParameterName"/> or <see cref="AlsoWhenParameter"/> answers "no" here and is still reported by the command.
 		/// </summary>
 		internal bool GovernsCurrentCase(ITest test)
 		{
@@ -114,7 +128,27 @@ namespace Tests
 			if (idx < 0 || test.Arguments.Length <= idx)
 				return false;
 
-			return test.Arguments[idx] is { } value && ExpectsException(value);
+			return test.Arguments[idx] is { } value && ExpectsException(value) && AlsoWhenMatches(test);
+		}
+
+		/// <summary>
+		/// Whether the optional <see cref="AlsoWhenParameter"/> condition holds for the case <paramref name="test"/>
+		/// describes. Always <see langword="true"/> when no second parameter is named.
+		/// </summary>
+		internal bool AlsoWhenMatches(ITest test)
+		{
+			if (AlsoWhenParameter is not { Length: > 0 } parameterName)
+				return true;
+
+			if (test.Method == null)
+				return false;
+
+			var idx = GetParameterIndex(test.Method.GetParameters(), parameterName);
+
+			if (idx < 0 || test.Arguments.Length <= idx)
+				return false;
+
+			return Equals(test.Arguments[idx], AlsoWhenValue);
 		}
 
 		public class ThrowsWhenCommand : DelegatingTestCommand
@@ -163,10 +197,13 @@ namespace Tests
 
 					Assert.That(idx, Is.GreaterThanOrEqualTo(0), $"Invalid parameter name '{_attribute.ParameterName}' for '{nameof(ThrowsWhenAttribute)}'.");
 
+					if (_attribute.AlsoWhenParameter is { Length: > 0 } alsoWhen)
+						Assert.That(GetParameterIndex(parameters, alsoWhen), Is.GreaterThanOrEqualTo(0), $"Invalid parameter name '{alsoWhen}' for '{nameof(ThrowsWhenAttribute)}.{nameof(AlsoWhenParameter)}'.");
+
 					var parameterValue = context.CurrentTest.Arguments[idx];
 					if (parameterValue != null)
 					{
-						expectsException = _attribute.ExpectsException(parameterValue);
+						expectsException = _attribute.ExpectsException(parameterValue) && _attribute.AlsoWhenMatches(context.CurrentTest);
 
 						if (expectsException)
 						{

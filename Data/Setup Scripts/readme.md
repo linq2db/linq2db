@@ -49,6 +49,6 @@ Contains database setup scripts for local testing
 Use of Windows-based images is not recommended as they probably will not work due to base image mismatch.
 
 - `sqlserver2005-win.cmd` : Windows script to create or update docker container with SQL Server 2005 instance
-- `sqlserver2016.cmd` : Windows script to create or update docker container with SQL Server 2016 instance
+- `sqlserver2016-win.cmd` : Windows script to create or update docker container with SQL Server 2016 instance
 - `sqlserver2022-win.cmd` : Windows script to create or update docker container with SQL Server 2022 (Windows-based) instance
 - `sqlserver2025-win.cmd` : Windows script to create or update docker container with SQL Server 2025 with FTS (Windows-based) instance

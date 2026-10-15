@@ -333,8 +333,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllDB2],      ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllOracle11], ErrorMessage = ErrorHelper.Oracle.Error_ColumnSubqueryShouldNotContainParentIsNotNull)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllDB2, TestProvName.AllOracle11], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test]
 		public void Concat_OverGrouping_DistinctNullableValues([DataSources] string context)
 		{
