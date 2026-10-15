@@ -306,12 +306,13 @@ namespace Tests
 		/// Picks the instance that governs this case. An instance that names a provider or transport beats a blanket
 		/// one, so "fails everywhere with A, but on Oracle with B" is expressible. Two equally specific instances
 		/// both matching is an authoring error, reported rather than silently resolved.
+		/// <paramref name="baselinesCaptured"/> is passed to <see cref="AppliesTo"/>.
 		/// </summary>
-		public static ActiveIssueAttribute? SelectGoverning(ActiveIssueAttribute[] attributes, string? provider, bool isLinqService, out bool ambiguous)
+		public static ActiveIssueAttribute? SelectGoverning(ActiveIssueAttribute[] attributes, string? provider, bool isLinqService, out bool ambiguous, bool? baselinesCaptured = null)
 		{
 			ambiguous = false;
 
-			var applicable = attributes.Where(a => a.AppliesTo(provider, isLinqService)).ToArray();
+			var applicable = attributes.Where(a => a.AppliesTo(provider, isLinqService, baselinesCaptured)).ToArray();
 
 			if (applicable.Length == 0)
 				return null;

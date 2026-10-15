@@ -360,6 +360,19 @@ namespace Tests.Infrastructure
 		}
 
 		[Test]
+		public void SelectGoverning_BaselinesScopedBeatsBlanket()
+		{
+			var blanket   = new ActiveIssueAttribute(1);
+			var baselines = new ActiveIssueAttribute(2) { RequiresBaselines = true };
+
+			ActiveIssueAttribute.SelectGoverning([blanket, baselines], "SQLite.MS", true, out var ambiguous, baselinesCaptured: true ).ShouldBeSameAs(baselines);
+			ambiguous.ShouldBeFalse();
+
+			ActiveIssueAttribute.SelectGoverning([blanket, baselines], "SQLite.MS", true, out ambiguous,     baselinesCaptured: false).ShouldBeSameAs(blanket);
+			ambiguous.ShouldBeFalse();
+		}
+
+		[Test]
 		public void SelectGoverning_OnlyAttributeIsForAnotherPlatform_NothingGoverns()
 		{
 			// The case TestDoubleRoundTrip needs: on the platform where the test passes, no attribute applies, so
