@@ -5426,6 +5426,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (expr == null)
 				return null;
 
+			// A wrapped inline array that holds row values is the same IN list as the bare one; a wrapped constant one stays a parameter.
+			if (UnwrapInlineArray(arr) is { NodeType: ExpressionType.NewArrayInit } inlineArray && !Builder.CanBeEvaluatedOnClient(arr))
+				arr = inlineArray;
+
 			using (UsingColumnDescriptor(QueryHelper.GetColumnDescriptor(expr)))
 			{
 				switch (arr.NodeType)
@@ -6045,7 +6049,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (!IsSetOrLambda(argument))
 					continue;
 
-				if (IsInlineArray(argument)
+				if (UnwrapInlineArray(argument) != null
 					&& (call.Method.DeclaringType == typeof(string) || (parameters ??= call.Method.GetParameters())[i].IsDefined(typeof(ParamArrayAttribute), false)))
 					continue;
 
@@ -6062,18 +6066,18 @@ namespace LinqToDB.Internal.Linq.Builder
 					|| typeof(LambdaExpression).IsAssignableFrom(type)
 					|| type != typeof(string) && typeof(IEnumerable).IsAssignableFrom(type);
 			}
+		}
 
-			// BuildArrayAggregationFunction reads an inline array through these wrappers as the same list of values. Its chain
-			// methods (Where, Select, OrderBy, Distinct) are not followed: their lambdas would be decided too.
-			static bool IsInlineArray(Expression expression)
-			{
-				expression = expression.UnwrapConvert();
+		// BuildArrayAggregationFunction reads an inline array through these wrappers as the same list of values. Its chain
+		// methods (Where, Select, OrderBy, Distinct) are not followed: their lambdas would be decided too.
+		internal static NewArrayExpression? UnwrapInlineArray(Expression expression)
+		{
+			expression = expression.UnwrapConvert();
 
-				while (expression is MethodCallExpression { IsQueryable: true, Method.Name: nameof(Queryable.AsQueryable) or nameof(Enumerable.AsEnumerable) } wrapper)
-					expression = wrapper.Arguments[0];
+			while (expression is MethodCallExpression { IsQueryable: true, Method.Name: nameof(Queryable.AsQueryable) or nameof(Enumerable.AsEnumerable) } wrapper)
+				expression = wrapper.Arguments[0];
 
-				return expression is NewArrayExpression;
-			}
+			return expression as NewArrayExpression;
 		}
 
 		public SqlPlaceholderExpression MakeColumn(SelectQuery? parentQuery, SqlPlaceholderExpression sqlPlaceholder, bool asNew = false)
