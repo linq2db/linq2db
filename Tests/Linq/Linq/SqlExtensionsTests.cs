@@ -351,6 +351,27 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void Expr_Compiled_CapturedFormattable_Null([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			FormattableString fs = $"COALESCE({(int?)null}, {2})";
+
+			var query = CompiledQuery.Compile((IDataContext dc) =>
+				dc.GetTable<Model.Person>()
+					.Where(p => p.ID == Sql.Expr<int>(fs))
+					.Select(p => p.ID));
+
+			query(db)
+				.ToArray()
+				.ShouldBe([2]);
+
+			query(db)
+				.ToArray()
+				.ShouldBe([2]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
 		public void Expr_Captured_AfterRowReference([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);

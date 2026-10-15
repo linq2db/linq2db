@@ -1566,6 +1566,26 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void FromSql_Compiled_CapturedFormattable_Null([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			FormattableString fs = $"SELECT * FROM Person WHERE {(int?)null} IS NULL AND PersonID = {1}";
+
+			var query = CompiledQuery.Compile((IDataContext dc) =>
+				dc.FromSql<Person>(fs)
+					.Select(p => p.ID));
+
+			query(db)
+				.ToArray()
+				.ShouldBe([1]);
+
+			query(db)
+				.ToArray()
+				.ShouldBe([1]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
 		public void FromSql_Compiled_CapturedArgumentArray([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool reassign)
 		{
 			using var db = GetDataConnection(context);

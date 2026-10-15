@@ -302,15 +302,17 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 					// A compiled query reuses this build for any Equals-equal argument values (1.0m and 1.00m, one
 					// instant at two offsets) and for every value of a captured array it does not key on, so the
 					// values are read from the argument expression rather than baked.
-					var source = argument is MethodCallExpression { Arguments: [_, var array] } call && call.Method == Methods.System.FormattableStringFactory_Create
-						? array
+					var fromArray = argument is MethodCallExpression { Arguments: [_, _] } call && call.Method == Methods.System.FormattableStringFactory_Create;
+					var source    = fromArray
+						? ((MethodCallExpression)argument).Arguments[1]
 						: Expression.Call(argument, Methods.System.FormattableString_GetArguments);
 
-					// A null argument has no type to read it as. Baking it is safe only when the compiled table keys on
-					// the source; for a closure-captured array it is read too, and fails to translate, as on master.
+					// A null argument has no type to read it as. It is read, and fails to translate as on master, only from
+					// a closure-captured array, which master read per call. A keyed source bakes it, and so does a captured
+					// FormattableString, which master baked whole.
 					var keyed = !ReferenceEquals(ResolveCompiledQueryArguments(source), source);
 
-					return DataExtensions.GenerateFormattableString(formattable, source, readNulls: !keyed);
+					return DataExtensions.GenerateFormattableString(formattable, source, readNulls: fromArray && !keyed);
 				}
 
 				return argument;
