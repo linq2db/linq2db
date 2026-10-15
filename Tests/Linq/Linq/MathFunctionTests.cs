@@ -683,6 +683,8 @@ namespace Tests.Linq
 				new RoundNegativeDynamicWide { Id = 5, D22s9 = 1234.565m,          D35s2 = 1234.96m, P =   2 },
 				new RoundNegativeDynamicWide { Id = 6, D22s9 = 1234.565m,          D35s2 = 1234.96m, P =   0 },
 				new RoundNegativeDynamicWide { Id = 7, D22s9 = 12.5m,              D35s2 = 1234.96m, P =  12 },
+				new RoundNegativeDynamicWide { Id = 8, D22s9 = 1000000000000.5m,   D35s2 = 1234.96m, P = -14 },
+				new RoundNegativeDynamicWide { Id = 9, D22s9 = -9999999999999.5m,  D35s2 = 1234.96m, P = -20 },
 			};
 
 			using var db = GetDataContext(context);
@@ -697,8 +699,8 @@ namespace Tests.Linq
 				})
 				.ToArray();
 
-			result.Select(r => r.Away).ShouldBe(new decimal?[] { 100000m, -300000m, 10000000000m, 0m, 1234.57m, 1235m, 12.5m });
-			result.Select(r => r.Even).ShouldBe(new decimal?[] { 100000m, -200000m, 10000000000m, 0m, 1234.56m, 1235m, 12.5m });
+			result.Select(r => r.Away).ShouldBe(new decimal?[] { 100000m, -300000m, 10000000000m, 0m, 1234.57m, 1235m, 12.5m, 0m, 0m });
+			result.Select(r => r.Even).ShouldBe(new decimal?[] { 100000m, -200000m, 10000000000m, 0m, 1234.56m, 1235m, 12.5m, 0m, 0m });
 
 			var nullPrecision = t
 				.Select(r => Sql.AsSql(Sql.Round(r.D22s9, r.Id > 0 ? null : r.P)))
@@ -995,6 +997,45 @@ namespace Tests.Linq
 				.ToArray();
 
 			products.ShouldBe(expectedProducts);
+		}
+
+		// A precision past the integer digits rounds every value of the type to 0, which the widened type that would
+		// carry the extra scale has no room left to compute.
+		[Test]
+		public void Round28([IncludeDataSources(true, TestProvName.AllYdb)] string context)
+		{
+			var data = new[]
+			{
+				new RoundManyDigits { Id = 1, D =              1.5m,             N =  1.5m },
+				new RoundManyDigits { Id = 2, D =  1000000000000.5m,             N = null  },
+				new RoundManyDigits { Id = 3, D =  9999999999999.999999999m,     N = -5000000000000m },
+				new RoundManyDigits { Id = 4, D = -9999999999999.999999999m,     N =  999999999999.5m },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			// literal precisions: a captured variable would be a parameter and take the runtime path
+			var result = t
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					r.Id,
+					Away = Sql.AsSql(Sql.Round(r.D, -14)),
+					Even = Sql.AsSql(Sql.RoundToEven(r.D, -20)),
+					N    = Sql.AsSql(Sql.Round(r.N, -14)),
+				})
+				.ToArray();
+
+			result.ShouldBe(data.Select(r => new { r.Id, Away = (decimal?)0m, Even = (decimal?)0m, N = r.N == null ? null : (decimal?)0m }).ToArray());
+
+			// a computed value can exceed the type inferred for it (Decimal(22,9) for this product): one that does fails
+			using var wide = db.CreateLocalTable(new[] { new RoundNegativeDynamicWide { Id = 1, D35s2 = 100000000000000m } });
+
+			Action act = () => wide
+				.Select(r => Sql.AsSql(Sql.Round(r.D35s2 * r.D35s2, -14)))
+				.ToArray();
+			act.ShouldThrow<Exception>().Message.ShouldContain("ROUND value is out of range for Decimal(22,9)");
 		}
 
 		sealed class PowScale
