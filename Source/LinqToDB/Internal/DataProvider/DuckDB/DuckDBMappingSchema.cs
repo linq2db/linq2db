@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Numerics;
 using System.Text;
 
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Mapping;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -60,9 +61,9 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		{
 			if (double.IsNaN(value))
 				sb.Append("'NaN'::DOUBLE");
-			else if (double.IsPositiveInfinity(value))
+			else if (FloatingPointHelper.IsPositiveInfinity(value))
 				sb.Append("'Infinity'::DOUBLE");
-			else if (double.IsNegativeInfinity(value))
+			else if (FloatingPointHelper.IsNegativeInfinity(value))
 				sb.Append("'-Infinity'::DOUBLE");
 			else
 				sb.AppendFormat(CultureInfo.InvariantCulture, "{0:G17}", value);
@@ -72,9 +73,9 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		{
 			if (float.IsNaN(value))
 				sb.Append("'NaN'::FLOAT");
-			else if (float.IsPositiveInfinity(value))
+			else if (FloatingPointHelper.IsPositiveInfinity(value))
 				sb.Append("'Infinity'::FLOAT");
-			else if (float.IsNegativeInfinity(value))
+			else if (FloatingPointHelper.IsNegativeInfinity(value))
 				sb.Append("'-Infinity'::FLOAT");
 			else
 			{
