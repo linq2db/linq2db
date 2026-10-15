@@ -28,21 +28,33 @@ namespace Tests.Linq
 			using var t  = db.CreateLocalTable<EventRow>();
 
 			// EventRow declares nothing, so ClickHouse stores DateTime64(7) - already what the epoch functions take.
-			_ = t.Select(r => (r.FinishedOn - r.StartedOn).TotalHours).ToList();
+			_ = t
+				.Select(r => (r.FinishedOn - r.StartedOn).TotalHours)
+				.ToList();
+
 			db.LastQuery!.ShouldNotContain("toDateTime64");
 
 			// now() is a whole-second timestamp whatever the mapping schema makes of a CLR DateTime.
-			_ = t.Select(r => (Sql.CurrentTimestamp - r.StartedOn).TotalHours).ToList();
+			_ = t
+				.Select(r => (Sql.CurrentTimestamp - r.StartedOn).TotalHours)
+				.ToList();
+
 			db.LastQuery!.ShouldContain("toDateTime64(now()");
 
 			// makeDateTime answers a whole-second timestamp too.
-			_ = t.Select(r => (r.FinishedOn - Sql.MakeDateTime(2026, 6, 1, 10, 0, 0)!.Value).TotalHours).ToList();
+			_ = t
+				.Select(r => (r.FinishedOn - Sql.MakeDateTime(2026, 6, 1, 10, 0, 0)!.Value).TotalHours)
+				.ToList();
+
 			db.LastQuery!.ShouldContain("toDateTime64(makeDateTime(");
 
 			using var coarse = db.CreateLocalTable<CoarseEventRow>();
 
 			// A declared DataType.DateTime column is a 32-bit whole-second timestamp on the server.
-			_ = coarse.Select(r => (r.FinishedOn - r.StartedOn).TotalHours).ToList();
+			_ = coarse
+				.Select(r => (r.FinishedOn - r.StartedOn).TotalHours)
+				.ToList();
+
 			db.LastQuery!.ShouldContain("toDateTime64(");
 		}
 
@@ -78,11 +90,19 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t  = SeedCoarseNullable(db);
 
-			t.OrderBy(r => r.Id).Select(r => Sql.AsSql((r.FinishedOn ?? r.StartedOn).TimeOfDay)).ToArray()
-				.ShouldBe([CoarseStart.TimeOfDay, CoarseStart.AddHours(3).TimeOfDay]);
+			var timesOfDay = t
+				.OrderBy(r => r.Id)
+				.Select(r => Sql.AsSql((r.FinishedOn ?? r.StartedOn).TimeOfDay))
+				.ToArray();
 
-			t.OrderBy(r => r.Id).Select(r => Sql.AsSql(((r.FinishedOn ?? r.StartedOn) - r.StartedOn).TotalMilliseconds)).ToArray()
-				.ShouldBe([0d, 2 * 3600_000d]);
+			timesOfDay.ShouldBe([CoarseStart.TimeOfDay, CoarseStart.AddHours(3).TimeOfDay]);
+
+			var elapsed = t
+				.OrderBy(r => r.Id)
+				.Select(r => Sql.AsSql(((r.FinishedOn ?? r.StartedOn) - r.StartedOn).TotalMilliseconds))
+				.ToArray();
+
+			elapsed.ShouldBe([0d, 2 * 3600_000d]);
 		}
 
 		[Test]
@@ -91,7 +111,8 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t  = SeedCoarseNullable(db);
 
-			t.Select(r => new
+			var bounds = t
+				.Select(r => new
 				{
 					r.Id,
 					First = Sql.AsSql(Sql.Window.FirstValue(r.StartedOn, w => w.OrderBy(r.Id).RowsBetween.Unbounded.And.Unbounded).TimeOfDay),
@@ -99,10 +120,12 @@ namespace Tests.Linq
 				})
 				.OrderBy(r => r.Id)
 				.Select(r => new { r.First, r.Last })
-				.ToArray()
-				.ShouldAllBe(r => r.First == CoarseStart.TimeOfDay && r.Last == CoarseStart.AddHours(1).TimeOfDay);
+				.ToArray();
 
-			var lags = t.Select(r => new
+			bounds.ShouldAllBe(r => r.First == CoarseStart.TimeOfDay && r.Last == CoarseStart.AddHours(1).TimeOfDay);
+
+			var lags = t
+				.Select(r => new
 				{
 					r.Id,
 					Lag       = Sql.AsSql((r.StartedOn - Sql.Window.Lag(r.StartedOn, w => w.OrderBy(r.Id))).TotalMilliseconds),
@@ -116,9 +139,18 @@ namespace Tests.Linq
 
 			// The first row has no predecessor, and ClickHouse answers its type's default rather than NULL.
 			lags[1].Lag.ShouldBe(3600_000d);
-			lags.Select(r => r.LagOffset).ShouldBe([0d, 3600_000d]);
-			lags.Select(r => r.Lead).ShouldBe([3600_000d, 0d]);
-			lags.Select(r => r.Nth).ShouldBe([3600_000d, 0d]);
+
+			var lagOffsets = lags.Select(r => r.LagOffset);
+
+			lagOffsets.ShouldBe([0d, 3600_000d]);
+
+			var leads = lags.Select(r => r.Lead);
+
+			leads.ShouldBe([3600_000d, 0d]);
+
+			var nths = lags.Select(r => r.Nth);
+
+			nths.ShouldBe([3600_000d, 0d]);
 		}
 
 		// Spelled out rather than derived from CoarseStart: static initializers in separate partial-class files run in
@@ -135,9 +167,17 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t  = SeedCoarseNullable(db);
 
-			t.Count(r => (r.FinishedOn ?? r.StartedOn) <  CoarseSubSecond).ShouldBe(1);
-			t.Count(r => CoarseSubSecond > (r.FinishedOn ?? r.StartedOn)).ShouldBe(1);
-			t.Count(r => (r.FinishedOn ?? r.StartedOn) == CoarseSubSecond).ShouldBe(0);
+			var below = t.Count(r => (r.FinishedOn ?? r.StartedOn) < CoarseSubSecond);
+
+			below.ShouldBe(1);
+
+			var belowReversed = t.Count(r => CoarseSubSecond > (r.FinishedOn ?? r.StartedOn));
+
+			belowReversed.ShouldBe(1);
+
+			var equal = t.Count(r => (r.FinishedOn ?? r.StartedOn) == CoarseSubSecond);
+
+			equal.ShouldBe(0);
 
 			var windowed = t
 				.Select(r => new
@@ -147,8 +187,13 @@ namespace Tests.Linq
 				})
 				.AsSubQuery();
 
-			windowed.Count(r => r.First < CoarseSubSecond).ShouldBe(2);
-			windowed.Count(r => r.Lag   < CoarseSubSecond).ShouldBe(2);
+			var firstBelow = windowed.Count(r => r.First < CoarseSubSecond);
+
+			firstBelow.ShouldBe(2);
+
+			var lagBelow = windowed.Count(r => r.Lag < CoarseSubSecond);
+
+			lagBelow.ShouldBe(2);
 		}
 
 		/// <summary>
@@ -171,7 +216,9 @@ namespace Tests.Linq
 
 			var boundary = CoarseSubSecond;
 
-			windowed.Count(r => r.Lag < boundary).ShouldBe(2);
+			var lagBelow = windowed.Count(r => r.Lag < boundary);
+
+			lagBelow.ShouldBe(2);
 		}
 	}
 }

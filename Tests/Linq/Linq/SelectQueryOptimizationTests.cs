@@ -75,7 +75,9 @@ namespace Tests.Linq
 				var aggregate = new SqlExtendedFunction(declaredType, name, [new SqlFunctionArgument(argument)], [true],
 					isAggregate: true, argumentDomain: SqlArgumentDomains.ForAggregate(name));
 
-				QueryHelper.GetDbDataType(aggregate, MappingSchema.Default).ShouldBe(argumentType);
+				var aggregateType = QueryHelper.GetDbDataType(aggregate, MappingSchema.Default);
+
+				aggregateType.ShouldBe(argumentType);
 			}
 
 			// SUM answers in the argument's terms but can outgrow the width it is declared with, so it keeps its
@@ -83,7 +85,9 @@ namespace Tests.Linq
 			var sum = new SqlExtendedFunction(declaredType, "SUM", [new SqlFunctionArgument(argument)], [true],
 				isAggregate: true, argumentDomain: SqlArgumentDomains.ForAggregate("SUM"));
 
-			QueryHelper.GetDbDataType(sum, MappingSchema.Default).ShouldBe(declaredType);
+			var sumType = QueryHelper.GetDbDataType(sum, MappingSchema.Default);
+
+			sumType.ShouldBe(declaredType);
 		}
 
 		[Test]

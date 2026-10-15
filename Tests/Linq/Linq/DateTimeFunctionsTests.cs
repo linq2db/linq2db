@@ -1007,8 +1007,17 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t  = SeedCoarse(db);
 
-			t.Select(r => Sql.AsSql(Sql.DateAdd(Sql.DateParts.Millisecond, 226, r.Value))).Single().ShouldBe(value.AddMilliseconds(226), new CustomNullableDateTimeComparer());
-			t.Select(r => Sql.AsSql(r.Value.AddMilliseconds(226))).Single().ShouldBe(value.AddMilliseconds(226), new CustomDateTimeComparer());
+			var function = t
+				.Select(r => Sql.AsSql(Sql.DateAdd(Sql.DateParts.Millisecond, 226, r.Value)))
+				.Single();
+
+			function.ShouldBe(value.AddMilliseconds(226), new CustomNullableDateTimeComparer());
+
+			var member = t
+				.Select(r => Sql.AsSql(r.Value.AddMilliseconds(226)))
+				.Single();
+
+			member.ShouldBe(value.AddMilliseconds(226), new CustomDateTimeComparer());
 		}
 
 		/// <summary>
@@ -1026,8 +1035,17 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t  = SeedCoarse(db);
 
-			t.Select(r => Sql.AsSql(Sql.DateAdd(Sql.DateParts.Millisecond, 226, r.Day))).Single().ShouldBe(day.AddMilliseconds(226), new CustomNullableDateTimeComparer());
-			t.Select(r => Sql.AsSql(r.Day.AddMilliseconds(226))).Single().ShouldBe(day.AddMilliseconds(226), new CustomDateTimeComparer());
+			var function = t
+				.Select(r => Sql.AsSql(Sql.DateAdd(Sql.DateParts.Millisecond, 226, r.Day)))
+				.Single();
+
+			function.ShouldBe(day.AddMilliseconds(226), new CustomNullableDateTimeComparer());
+
+			var member = t
+				.Select(r => Sql.AsSql(r.Day.AddMilliseconds(226)))
+				.Single();
+
+			member.ShouldBe(day.AddMilliseconds(226), new CustomDateTimeComparer());
 		}
 
 		[Test]
@@ -1039,8 +1057,17 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t  = SeedCoarse(db);
 
-			t.Select(r => Sql.AsSql(Sql.DatePart(Sql.DateParts.Millisecond, r.Day))).Single().ShouldBe(0);
-			t.Select(r => Sql.AsSql(r.Day.Millisecond)).Single().ShouldBe(0);
+			var function = t
+				.Select(r => Sql.AsSql(Sql.DatePart(Sql.DateParts.Millisecond, r.Day)))
+				.Single();
+
+			function.ShouldBe(0);
+
+			var member = t
+				.Select(r => Sql.AsSql(r.Day.Millisecond))
+				.Single();
+
+			member.ShouldBe(0);
 		}
 
 		/// <summary>
@@ -1060,8 +1087,17 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t  = SeedCoarse(db, wide);
 
-			t.Select(r => Sql.AsSql(Sql.DatePart(Sql.DateParts.Millisecond, r.Wide))).Single().ShouldBe(wide.Millisecond);
-			t.Select(r => Sql.AsSql(r.Wide.Millisecond)).Single().ShouldBe(wide.Millisecond);
+			var function = t
+				.Select(r => Sql.AsSql(Sql.DatePart(Sql.DateParts.Millisecond, r.Wide)))
+				.Single();
+
+			function.ShouldBe(wide.Millisecond);
+
+			var member = t
+				.Select(r => Sql.AsSql(r.Wide.Millisecond))
+				.Single();
+
+			member.ShouldBe(wide.Millisecond);
 		}
 
 		/// <summary>
@@ -1079,8 +1115,17 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t  = SeedCoarse(db);
 
-			t.Select(r => Sql.AsSql(Sql.DatePart(Sql.DateParts.Millisecond, r.Value))).Single().ShouldBe(0);
-			t.Select(r => Sql.AsSql(r.Value.Millisecond)).Single().ShouldBe(0);
+			var function = t
+				.Select(r => Sql.AsSql(Sql.DatePart(Sql.DateParts.Millisecond, r.Value)))
+				.Single();
+
+			function.ShouldBe(0);
+
+			var member = t
+				.Select(r => Sql.AsSql(r.Value.Millisecond))
+				.Single();
+
+			member.ShouldBe(0);
 		}
 
 		/// <summary>
@@ -1096,7 +1141,11 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t  = SeedCoarse(db);
 
-			t.Select(r => Sql.AsSql(Sql.Convert(Sql.Types.DateTime, r.Value.AddMilliseconds(226)))).Single().ShouldBe(CoarseValue);
+			var converted = t
+				.Select(r => Sql.AsSql(Sql.Convert(Sql.Types.DateTime, r.Value.AddMilliseconds(226))))
+				.Single();
+
+			converted.ShouldBe(CoarseValue);
 		}
 
 		[Test]
@@ -1837,9 +1886,17 @@ namespace Tests.Linq
 
 			var total = db.Types.Count();
 
-			db.Types.Count(p => Sql.MakeDateTime(2010, 1, 1, 10, 0, p.ID % 1)!.Value <  SubSecondBoundary).ShouldBe(total);
-			db.Types.Count(p => Sql.MakeDateTime(2010, 1, 1, 10, 0, p.ID % 1)!.Value >= SubSecondBoundary).ShouldBe(0);
-			db.Types.Count(p => Sql.MakeDateTime(2010, 1, 1, 10, 0, p.ID % 1)!.Value == SubSecondBoundary).ShouldBe(0);
+			var below = db.Types.Count(p => Sql.MakeDateTime(2010, 1, 1, 10, 0, p.ID % 1)!.Value < SubSecondBoundary);
+
+			below.ShouldBe(total);
+
+			var notBelow = db.Types.Count(p => Sql.MakeDateTime(2010, 1, 1, 10, 0, p.ID % 1)!.Value >= SubSecondBoundary);
+
+			notBelow.ShouldBe(0);
+
+			var equal = db.Types.Count(p => Sql.MakeDateTime(2010, 1, 1, 10, 0, p.ID % 1)!.Value == SubSecondBoundary);
+
+			equal.ShouldBe(0);
 		}
 
 		static readonly DateTime CoarseSubSecondBoundary = CoarseValue.AddMilliseconds(500);
@@ -1854,9 +1911,17 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t  = SeedCoarse(db, CoarseValue.AddMilliseconds(250));
 
-			t.Count(r => Sql.Convert(Sql.Types.DateTime, r.Wide) <  CoarseSubSecondBoundary).ShouldBe(1);
-			t.Count(r => Sql.Convert(Sql.Types.DateTime, r.Wide) >= CoarseSubSecondBoundary).ShouldBe(0);
-			t.Count(r => Sql.Convert(Sql.Types.DateTime, r.Wide) == CoarseSubSecondBoundary).ShouldBe(0);
+			var below = t.Count(r => Sql.Convert(Sql.Types.DateTime, r.Wide) < CoarseSubSecondBoundary);
+
+			below.ShouldBe(1);
+
+			var notBelow = t.Count(r => Sql.Convert(Sql.Types.DateTime, r.Wide) >= CoarseSubSecondBoundary);
+
+			notBelow.ShouldBe(0);
+
+			var equal = t.Count(r => Sql.Convert(Sql.Types.DateTime, r.Wide) == CoarseSubSecondBoundary);
+
+			equal.ShouldBe(0);
 		}
 
 		/// <summary>
@@ -1869,10 +1934,33 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t  = SeedCoarse(db);
 
-			t.GroupBy(r => r.Id).Where(g => g.Max(r => r.Day) <  CoarseValue).Count().ShouldBe(1);
-			t.GroupBy(r => r.Id).Where(g => g.Min(r => r.Day) >= CoarseValue).Count().ShouldBe(0);
-			t.GroupBy(r => r.Id).Where(g => g.Max(r => r.Value) <  CoarseSubSecondBoundary).Count().ShouldBe(1);
-			t.GroupBy(r => r.Id).Where(g => g.Max(r => r.Value) == CoarseSubSecondBoundary).Count().ShouldBe(0);
+			var maxDayBelow = t
+				.GroupBy(r => r.Id)
+				.Where(g => g.Max(r => r.Day) < CoarseValue)
+				.Count();
+
+			maxDayBelow.ShouldBe(1);
+
+			var minDayNotBelow = t
+				.GroupBy(r => r.Id)
+				.Where(g => g.Min(r => r.Day) >= CoarseValue)
+				.Count();
+
+			minDayNotBelow.ShouldBe(0);
+
+			var maxValueBelow = t
+				.GroupBy(r => r.Id)
+				.Where(g => g.Max(r => r.Value) < CoarseSubSecondBoundary)
+				.Count();
+
+			maxValueBelow.ShouldBe(1);
+
+			var maxValueEqual = t
+				.GroupBy(r => r.Id)
+				.Where(g => g.Max(r => r.Value) == CoarseSubSecondBoundary)
+				.Count();
+
+			maxValueEqual.ShouldBe(0);
 		}
 
 		/// <summary>
@@ -1891,10 +1979,21 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t  = SeedCoarse(db);
 
-			t.GroupBy(r => r.Id).Select(g => g.Max(r => r.Day)).Concat(t.Select(r => CoarseValue)).ToArray()
-				.ShouldContain(CoarseValue);
-			t.GroupBy(r => r.Id).Select(g => g.Max(r => r.Value)).Concat(t.Select(r => CoarseSubSecondBoundary)).ToArray()
-				.ShouldContain(CoarseSubSecondBoundary);
+			var days = t
+				.GroupBy(r => r.Id)
+				.Select(g => g.Max(r => r.Day))
+				.Concat(t.Select(r => CoarseValue))
+				.ToArray();
+
+			days.ShouldContain(CoarseValue);
+
+			var values = t
+				.GroupBy(r => r.Id)
+				.Select(g => g.Max(r => r.Value))
+				.Concat(t.Select(r => CoarseSubSecondBoundary))
+				.ToArray();
+
+			values.ShouldContain(CoarseSubSecondBoundary);
 		}
 
 		static readonly DateTime CoarseMidnight = new(2026, 6, 1);
@@ -1908,9 +2007,17 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t  = SeedCoarse(db);
 
-			t.Count(r => Sql.Convert(Sql.Types.Date, r.Value) == CoarseMidnight).ShouldBe(1);
-			t.Count(r => Sql.Convert(Sql.Types.Date, r.Value) <  CoarseMidnight).ShouldBe(0);
-			t.Count(r => CoarseMidnight == Sql.Convert(Sql.Types.Date, r.Value)).ShouldBe(1);
+			var equal = t.Count(r => Sql.Convert(Sql.Types.Date, r.Value) == CoarseMidnight);
+
+			equal.ShouldBe(1);
+
+			var below = t.Count(r => Sql.Convert(Sql.Types.Date, r.Value) < CoarseMidnight);
+
+			below.ShouldBe(0);
+
+			var equalReversed = t.Count(r => CoarseMidnight == Sql.Convert(Sql.Types.Date, r.Value));
+
+			equalReversed.ShouldBe(1);
 		}
 
 		/// <summary>
@@ -1922,11 +2029,26 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t  = SeedCoarse(db);
 
-			var cte = t.GroupBy(r => r.Id).Select(g => new { Day = g.Max(r => r.Day), Value = g.Max(r => r.Value) }).AsCte();
+			var cte = t
+				.GroupBy(r => r.Id)
+				.Select(g => new
+				{
+					Day   = g.Max(r => r.Day),
+					Value = g.Max(r => r.Value),
+				})
+				.AsCte();
 
-			cte.Count(c => c.Day   <  CoarseValue).ShouldBe(1);
-			cte.Count(c => c.Value <  CoarseSubSecondBoundary).ShouldBe(1);
-			cte.Count(c => c.Value == CoarseSubSecondBoundary).ShouldBe(0);
+			var dayBelow = cte.Count(c => c.Day < CoarseValue);
+
+			dayBelow.ShouldBe(1);
+
+			var valueBelow = cte.Count(c => c.Value < CoarseSubSecondBoundary);
+
+			valueBelow.ShouldBe(1);
+
+			var valueEqual = cte.Count(c => c.Value == CoarseSubSecondBoundary);
+
+			valueEqual.ShouldBe(0);
 		}
 
 		sealed class ShiftHourConverter() : ValueConverter<DateTime, DateTime>(v => v.AddHours(-1), v => v.AddHours(1), false);
@@ -1959,13 +2081,43 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(new[] { new CoarseConvertedRow { Id = 1, Value = value, Day = day } });
 
-			t.Select(r => r.Value).Single().ShouldBe(value);
-			t.Count(r => r.Value == value).ShouldBe(1);
+			var stored = t
+				.Select(r => r.Value)
+				.Single();
 
-			t.GroupBy(r => r.Id).Where(g => g.Max(r => r.Value) == value).Count().ShouldBe(1);
-			t.GroupBy(r => r.Id).Where(g => g.Max(r => r.Value) == CoarseValue).Count().ShouldBe(1);
-			t.GroupBy(r => r.Id).Where(g => g.Min(r => r.Day)   == day).Count().ShouldBe(1);
-			t.GroupBy(r => r.Id).Where(g => g.Min(r => r.Day)   == CoarseConvertedDay).Count().ShouldBe(1);
+			stored.ShouldBe(value);
+
+			var column = t.Count(r => r.Value == value);
+
+			column.ShouldBe(1);
+
+			var maxValueParameter = t
+				.GroupBy(r => r.Id)
+				.Where(g => g.Max(r => r.Value) == value)
+				.Count();
+
+			maxValueParameter.ShouldBe(1);
+
+			var maxValueLiteral = t
+				.GroupBy(r => r.Id)
+				.Where(g => g.Max(r => r.Value) == CoarseValue)
+				.Count();
+
+			maxValueLiteral.ShouldBe(1);
+
+			var minDayParameter = t
+				.GroupBy(r => r.Id)
+				.Where(g => g.Min(r => r.Day) == day)
+				.Count();
+
+			minDayParameter.ShouldBe(1);
+
+			var minDayLiteral = t
+				.GroupBy(r => r.Id)
+				.Where(g => g.Min(r => r.Day) == CoarseConvertedDay)
+				.Count();
+
+			minDayLiteral.ShouldBe(1);
 		}
 
 		[Test]

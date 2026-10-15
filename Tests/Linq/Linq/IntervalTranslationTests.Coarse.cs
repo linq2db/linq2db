@@ -110,7 +110,9 @@ namespace Tests.Linq
 				let dayCount   = (int)(maxStarted - minStarted).TotalDays + 1
 				select new { dayCount };
 
-			query.Single().dayCount.ShouldBe(8);
+			var result = query.Single();
+
+			result.dayCount.ShouldBe(8);
 		}
 
 		[Test]
@@ -124,7 +126,11 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t  = SeedCoarse(db, CoarseStart, finished);
 
-			t.Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).Ticks)).Single().ShouldBe((finished - CoarseStart).Ticks);
+			var ticks = t
+				.Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).Ticks))
+				.Single();
+
+			ticks.ShouldBe((finished - CoarseStart).Ticks);
 		}
 
 		/// <summary>
@@ -145,12 +151,18 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t  = SeedCoarse(db, CoarseStart, finished);
 
-			var stored = t.Select(r => new { r.OpenedOn, r.ClosedOn }).Single();
+			var stored = t
+				.Select(r => new { r.OpenedOn, r.ClosedOn })
+				.Single();
 
 			stored.OpenedOn.ShouldBe(CoarseStart.Date);
 			stored.ClosedOn.ShouldBe(finished.Date);
 
-			t.Select(r => Sql.AsSql((r.ClosedOn - r.OpenedOn).Ticks)).Single().ShouldBe((finished.Date - CoarseStart.Date).Ticks);
+			var ticks = t
+				.Select(r => Sql.AsSql((r.ClosedOn - r.OpenedOn).Ticks))
+				.Single();
+
+			ticks.ShouldBe((finished.Date - CoarseStart.Date).Ticks);
 		}
 
 		[Test]
@@ -163,8 +175,11 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t  = SeedCoarse(db, CoarseStart, finished);
 
-			t.Select(r => Sql.AsSql(CoarseShiftOrigin + (r.FinishedOn - r.StartedOn))).Single()
-				.ShouldBe(CoarseShiftOrigin + (finished - CoarseStart));
+			var shifted = t
+				.Select(r => Sql.AsSql(CoarseShiftOrigin + (r.FinishedOn - r.StartedOn)))
+				.Single();
+
+			shifted.ShouldBe(CoarseShiftOrigin + (finished - CoarseStart));
 		}
 
 		/// <summary>
@@ -185,8 +200,11 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t  = SeedCoarse(db, CoarseStart, finished);
 
-			t.Select(r => Sql.AsSql(CoarseShiftOrigin + (r.ClosedOn - r.OpenedOn))).Single()
-				.ShouldBe(CoarseShiftOrigin + (finished.Date - CoarseStart.Date));
+			var shifted = t
+				.Select(r => Sql.AsSql(CoarseShiftOrigin + (r.ClosedOn - r.OpenedOn)))
+				.Single();
+
+			shifted.ShouldBe(CoarseShiftOrigin + (finished.Date - CoarseStart.Date));
 		}
 
 		/// <summary>
@@ -208,8 +226,11 @@ namespace Tests.Linq
 
 			db.Insert(new EventRow { Id = 1, StartedOn = CoarseStart, FinishedOn = finished });
 
-			t.Select(r => Sql.AsSql((r.FinishedOn - r.FinishedOn.Date).TotalHours)).Single()
-				.ShouldBe((finished - finished.Date).TotalHours);
+			var hours = t
+				.Select(r => Sql.AsSql((r.FinishedOn - r.FinishedOn.Date).TotalHours))
+				.Single();
+
+			hours.ShouldBe((finished - finished.Date).TotalHours);
 		}
 
 		/// <summary>
@@ -233,7 +254,9 @@ namespace Tests.Linq
 
 			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = started });
 
-			t.Count(r => (Sql.CurrentTimestamp - r.StartedOn).TotalDays > 1).ShouldBe(1);
+			var olderThanADay = t.Count(r => (Sql.CurrentTimestamp - r.StartedOn).TotalDays > 1);
+
+			olderThanADay.ShouldBe(1);
 		}
 	}
 }

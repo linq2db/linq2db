@@ -607,8 +607,17 @@ namespace Tests.DataProvider
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable([new DateTime2FractionRow { Id = 1, Value = value }]);
 
-			t.Select(r => r.Value).Single().ShouldBe(value);
-			t.Select(r => Sql.AsSql(Sql.Convert(Sql.Types.DateTime2, r.Value))).Single().ShouldBe(value);
+			var stored = t
+				.Select(r => r.Value)
+				.Single();
+
+			stored.ShouldBe(value);
+
+			var converted = t
+				.Select(r => Sql.AsSql(Sql.Convert(Sql.Types.DateTime2, r.Value)))
+				.Single();
+
+			converted.ShouldBe(value);
 		}
 
 		sealed class DateTime2NoFractionRow
@@ -628,7 +637,11 @@ namespace Tests.DataProvider
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable([new DateTime2NoFractionRow { Id = 1, Value = value.AddTicks(1234500) }]);
 
-			t.Select(r => r.Value).Single().ShouldBe(value);
+			var stored = t
+				.Select(r => r.Value)
+				.Single();
+
+			stored.ShouldBe(value);
 		}
 	}
 }

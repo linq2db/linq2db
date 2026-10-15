@@ -2496,10 +2496,21 @@ DROP TABLE IF EXISTS TemporalTable3History
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<MixedCharsetCoalesceTable>([new() { Id = 1, V = null, N = "Ж" }]);
 
-			tb.Count(r => (r.V ?? r.N) == "Ж").ShouldBe(1);
-			tb.Count(r => (r.V2 ?? r.V ?? r.N) == "Ж").ShouldBe(1);
-			tb.Count(r => (r.V ?? r.N ?? r.V2) == "Ж").ShouldBe(1);
-			tb.Count(r => ((r.V ?? r.N) ?? r.V2) == "Ж").ShouldBe(1);
+			var pair = tb.Count(r => (r.V ?? r.N) == "Ж");
+
+			pair.ShouldBe(1);
+
+			var nvarcharLast = tb.Count(r => (r.V2 ?? r.V ?? r.N) == "Ж");
+
+			nvarcharLast.ShouldBe(1);
+
+			var nvarcharMiddle = tb.Count(r => (r.V ?? r.N ?? r.V2) == "Ж");
+
+			nvarcharMiddle.ShouldBe(1);
+
+			var nested = tb.Count(r => ((r.V ?? r.N) ?? r.V2) == "Ж");
+
+			nested.ShouldBe(1);
 		}
 
 		sealed class DateTimeReadBackTable
@@ -2519,12 +2530,29 @@ DROP TABLE IF EXISTS TemporalTable3History
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<DateTimeReadBackTable>([new() { Id = 1, D = new DateTime(2026, 6, 1, 10, 0, 0, 3) }]);
 
-			var value = tb.Select(r => r.D).Single();
+			var value = tb
+				.Select(r => r.D)
+				.Single();
 
-			tb.Count(r => r.D == value).ShouldBe(1);
-			tb.GroupBy(r => r.Id).Count(g => g.Max(r => r.D) == value).ShouldBe(1);
-			tb.GroupBy(r => r.Id).Count(g => g.Min(r => r.D) == value).ShouldBe(1);
-			tb.Count(r => (r.ND ?? r.D) == value).ShouldBe(1);
+			var column = tb.Count(r => r.D == value);
+
+			column.ShouldBe(1);
+
+			var max = tb
+				.GroupBy(r => r.Id)
+				.Count(g => g.Max(r => r.D) == value);
+
+			max.ShouldBe(1);
+
+			var min = tb
+				.GroupBy(r => r.Id)
+				.Count(g => g.Min(r => r.D) == value);
+
+			min.ShouldBe(1);
+
+			var coalesce = tb.Count(r => (r.ND ?? r.D) == value);
+
+			coalesce.ShouldBe(1);
 		}
 	}
 }
