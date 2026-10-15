@@ -373,11 +373,6 @@ Install the x86 variant of linq2db.cli (see 'dotnet linq2db help' for instructio
 				}
 				case ProviderName.AccessLibRed:
 				{
-#if !NET11_0_OR_GREATER
-					// LibRed.Ado is net11.0-only, so this tool's net10.0 asset does not carry it
-					Console.Error.WriteLine("The LibRed provider requires .NET 11 or later. Run the tool on a .NET 11 runtime.");
-					return null;
-#else
 					// the managed engine reads both file formats through one provider, so there is no
 					// second transport to merge a schema with
 					if (additionalConnectionString != null)
@@ -387,7 +382,6 @@ Install the x86 variant of linq2db.cli (see 'dotnet linq2db help' for instructio
 					}
 
 					break;
-#endif
 				}
 				default:
 					Console.Error.WriteLine($"Unsupported database provider: {provider}");

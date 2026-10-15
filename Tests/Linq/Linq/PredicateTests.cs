@@ -133,7 +133,6 @@ namespace Tests.Linq
 
 		// Supported: ClickHouse, DB2, FB3+, MySQL, PostgreSQL, SQLite
 		[Test(Description = "<PREDICATE> IS [NOT] TRUE")]
-		[ThrowsForProvider("LibRed.Sql.Parsing.SqlParseException", TestProvName.AllAccessLibRed)]
 		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb)]
 		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative)]
 		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, TestProvName.AllAccessOdbc)]
@@ -169,7 +168,6 @@ namespace Tests.Linq
 
 		// Supported: ClickHouse, DB2, FB3+, MySQL, PostgreSQL, SQLite
 		[Test(Description = "<PREDICATE> IS [NOT] FALSE")]
-		[ThrowsForProvider("LibRed.Sql.Parsing.SqlParseException", TestProvName.AllAccessLibRed)]
 		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb)]
 		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative)]
 		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, TestProvName.AllAccessOdbc)]
@@ -486,7 +484,6 @@ namespace Tests.Linq
 		// Supported: DB2, Firebird, PostgreSQL, SQLite, SQLServer2022
 		// ClickHouse: tracked by https://github.com/ClickHouse/ClickHouse/issues/58145
 		[Test(Description = "<A> IS [NOT] DISTICT FROM <B>")]
-		[ThrowsForProvider("LibRed.Sql.Parsing.SqlParseException", TestProvName.AllAccessLibRed)]
 		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb)]
 		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative)]
 		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, TestProvName.AllAccessOdbc)]

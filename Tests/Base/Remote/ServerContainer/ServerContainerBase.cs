@@ -20,8 +20,16 @@ namespace Tests.Remote.ServerContainer
 
 		private readonly ConcurrentDictionary<int, HostEntry> _openHosts = new();
 
+		// Flow-local, not process-wide: provider lanes run in parallel, so a test that turns this off
+		// must not move a concurrent remote test on another lane onto a per-thread host.
+		private readonly AsyncLocal<bool?> _keepSamePortBetweenThreads = new();
+
 		//useful for async tests
-		public bool KeepSamePortBetweenThreads { get; set; } = true;
+		public bool KeepSamePortBetweenThreads
+		{
+			get => _keepSamePortBetweenThreads.Value ?? true;
+			set => _keepSamePortBetweenThreads.Value = value;
+		}
 
 		// Slot key (not a network port): a single shared slot, or one slot per thread.
 		// Raw thread id works as a key - the old "% 1000" only kept the *derived port* in range,

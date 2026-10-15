@@ -330,7 +330,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery]
-		public void LetTest5([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase)] string context)
+		public void LetTest5([DataSources(TestProvName.AllInformix, TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -360,7 +360,7 @@ namespace Tests.Linq
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		public void LetTest6([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix)] string context)
+		public void LetTest6([DataSources(TestProvName.AllInformix)] string context)
 		{
 			//LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true;
 
@@ -403,7 +403,7 @@ namespace Tests.Linq
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		public void LetTest61([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix)] string context)
+		public void LetTest61([DataSources(TestProvName.AllInformix)] string context)
 		{
 			//LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true;
 
@@ -482,7 +482,7 @@ namespace Tests.Linq
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		public void LetTest71([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix)] string context)
+		public void LetTest71([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(

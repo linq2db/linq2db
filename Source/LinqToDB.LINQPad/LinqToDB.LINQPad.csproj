@@ -53,6 +53,9 @@
 		<PackageReference Include="System.Memory" />
 		<PackageReference Include="System.Buffers" />
 
+		<!--transitive vulnerable package (via Microsoft.Data.SqlClient): the lpx bundles its dependencies-->
+		<PackageReference Include="System.Security.Cryptography.Pkcs" />
+
 		<PackageReference Include="Oracle.ManagedDataAccess" VersionOverride="$(OracleManagedLinqPadVersion)" />
 
 		<!--PackageReference + Reference belongs to same nuget-->

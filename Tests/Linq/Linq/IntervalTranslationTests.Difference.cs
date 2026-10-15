@@ -165,9 +165,10 @@ namespace Tests.Linq
 		/// </para>
 		/// </remarks>
 		// Oracle joins SQLite here rather than carrying a gate: it measures to the microsecond, so the nanosecond
-		// member is refused by design and never reaches #5797's zone question at all. The message's placeholders
-		// absorb the two providers' differing resolutions.
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSQLite, TestProvName.AllOracle, ErrorMessage = ErrorHelper.Error_Interval_ComponentBelowResolution)]
+		// member is refused by design and never reaches #5797's zone question at all. SQL Server 2005 counts no finer
+		// than the millisecond, so it refuses the same way. The message's placeholders absorb the differing
+		// resolutions.
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllSqlServer2005, ErrorMessage = ErrorHelper.Error_Interval_ComponentBelowResolution)]
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
 		public void ZonedDifferenceSubMillisecondMembersMatchClr(
@@ -212,6 +213,211 @@ namespace Tests.Linq
 			row.TotalNanoseconds.ShouldBe(expected.TotalNanoseconds, Tolerance(expected.TotalNanoseconds));
 		}
 #endif
+
+		/// <summary>
+		/// A difference measured from <see cref="DateTime.Now"/> - the server's clock where the provider translates it,
+		/// the client's elsewhere.
+		/// </summary>
+		/// <remarks>
+		/// Where <see cref="DateTime.Now"/> translates to a server-side call - <c>now()</c> on ClickHouse, for
+		/// instance - it is a distinct operand shape from a literal or a parameter: some providers give it a coarser or
+		/// otherwise different declared type than the one a mapped column or a client value carries, and the
+		/// elapsed-time lowering has to cope with that mismatch rather than assuming every operand shares one type.
+		/// The providers listed below read it on the client instead. The rows sit years away from the run date on
+		/// both sides, so the sign and rough size of each member stay stable regardless of clock skew between the
+		/// test host and the server.
+		/// </remarks>
+		[ActiveIssue(5955, Configuration = TestProvName.AllClickHouse, ErrorMessage = "toUnixTimestamp64Nano",
+			Details = "now() is a plain DateTime, which toUnixTimestamp64Nano refuses; the difference does not coerce its operands to DateTime64 yet.")]
+		[Test]
+		public void DateDifferenceFromServerNow([DataSources(UnsupportedDifferenceProviders)] string context)
+		{
+			// These providers read DateTime.Now on the client and send it as a parameter or, on Firebird and YDB, as
+			// a literal, so no two runs - and not the direct and the remote one - record the same statement. The
+			// rest call the server's clock and keep their baselines.
+			using var noBaseline = context.IsAnyOf(
+				TestProvName.AllFirebird,
+				TestProvName.AllYdb,
+				TestProvName.AllSqlServer,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllMySql,
+				TestProvName.AllDB2,
+				TestProvName.AllInformix,
+				TestProvName.AllSybase,
+				TestProvName.AllSapHana)
+				? new DisableBaseline("Current datetime parameters used")
+				: null;
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(ClosedPeriods);
+
+			t.Where(r => (DateTime.Now - r.ClosedOn).TotalDays > 300).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.OrderBy(r => (DateTime.Now - r.ClosedOn).TotalDays).Select(r => r.Id).ToList().ShouldBe([2, 1]);
+
+			var row = t
+				.Where(r => r.Id == 1)
+				.Select(r => new
+				{
+					TotalDays = Sql.AsSql((DateTime.Now - r.ClosedOn).TotalDays),
+					Hours     = Sql.AsSql((DateTime.Now - r.ClosedOn).Hours),
+				})
+				.Single();
+
+			row.TotalDays.ShouldBeGreaterThan(300);
+
+			// Both members come from one reading of the clock, so the component has to agree with the total.
+			row.Hours.ShouldBe(TimeSpan.FromDays(row.TotalDays).Hours);
+		}
+
+		/// <summary>
+		/// A difference measured from a fixed date that reaches the query as a parameter - a variable or an
+		/// argument - on either side of the subtraction.
+		/// </summary>
+		/// <remarks>
+		/// A filter and an ordering have nowhere to fall back to, so an operand refused for being a parameter
+		/// fails them outright rather than moving the work to .NET.
+		/// </remarks>
+		[Test]
+		public void DateDifferenceFromParameter([DataSources(UnsupportedDifferenceProviders)] string context)
+		{
+			var asOf = new DateTime(2026, 1, 3, 13, 30, 0);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = new DateTime(2026, 1, 1, 10, 0, 0), FinishedOn = new DateTime(2026, 1, 5,  0, 0, 0) });
+			db.Insert(new EventRow { Id = 2, StartedOn = new DateTime(2026, 1, 3,  0, 0, 0), FinishedOn = new DateTime(2026, 1, 3, 20, 0, 0) });
+
+			t.Where(r => (asOf - r.StartedOn).TotalHours > 24).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.Where(r => (r.FinishedOn - asOf).TotalHours > 24).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.OrderBy(r => (asOf - r.StartedOn).TotalMinutes).Select(r => r.Id).ToList().ShouldBe([2, 1]);
+
+			var row = t
+				.Where(r => r.Id == 1)
+				.Select(r => new
+				{
+					TotalDays = Sql.AsSql((asOf - r.StartedOn).TotalDays),
+					Hours     = Sql.AsSql((asOf - r.StartedOn).Hours),
+				})
+				.Single();
+
+			var expected = asOf - new DateTime(2026, 1, 1, 10, 0, 0);
+
+			row.TotalDays.ShouldBe(expected.TotalDays, Tolerance(expected.TotalDays));
+			row.Hours.ShouldBe(expected.Hours);
+		}
+
+		/// <summary>
+		/// A parameter operand against a column mapped with the default date/time type rather than a tick-precise one.
+		/// </summary>
+		/// <remarks>
+		/// A provider that types a parameter from the call it appears in can settle on something else against a
+		/// coarser column. DuckDB left it undecided against a <c>TIMESTAMP</c> column, where the <c>TIMESTAMP_NS</c>
+		/// column of <see cref="DateDifferenceFromParameter"/> settled it, and the value then reached the server as
+		/// text formatted in the client's culture, which it refused to read as a timestamp.
+		/// </remarks>
+		[Test]
+		public void DateDifferenceFromParameterOverDefaultMapping([DataSources(UnsupportedDifferenceProviders)] string context)
+		{
+			var asOf = new DateTime(2026, 1, 10, 8, 15, 30);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(ClosedPeriods);
+
+			t.Where(r => (asOf - r.ClosedOn).TotalDays > 0).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.Where(r => (r.ClosedOn - asOf).TotalHours > 0).Select(r => r.Id).ToList().ShouldBe([2]);
+			t.OrderBy(r => (asOf - r.ClosedOn).TotalMinutes).Select(r => r.Id).ToList().ShouldBe([2, 1]);
+
+			var totalHours = t
+				.Where(r => r.Id == 1)
+				.Select(r => Sql.AsSql((r.ClosedOn - asOf).TotalHours))
+				.Single();
+
+			var expected = ClosedPeriods[0].ClosedOn - asOf;
+
+			totalHours.ShouldBe(expected.TotalHours, Tolerance(expected.TotalHours));
+		}
+
+		/// <summary>
+		/// A difference with no column in it is computed on the client, exact to the tick, on every provider.
+		/// </summary>
+		/// <remarks>
+		/// The client already has both values. Sent to the database, the difference would be measured again at the
+		/// provider's own resolution - whole milliseconds on several, a microsecond on others - and come back short of
+		/// what .NET answers. A shift by such a difference is a client value as a whole, too, so it needs no provider
+		/// that can shift a date.
+		/// <para>
+		/// The projection combines the member with a column. Projected alone, the difference is read back from the
+		/// database as a <see cref="TimeSpan"/> parameter and the member is taken from what returns, which is limited
+		/// by how each provider stores a time of day rather than by the translation of the difference.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void DateDifferenceOfTwoClientValuesIsExact([DataSources] string context)
+		{
+			var earlier = new DateTime(2026, 1, 3, 13, 30, 0);
+			var later   = earlier.AddTicks(1234);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = earlier, FinishedOn = earlier.AddHours(1) });
+
+			var row = t
+				.Select(r => new
+				{
+					Ticks        = (later - earlier).Ticks + r.Id,
+					// Converted on the server: a CLR cast to double is dropped, and DB2 and SAP HANA then type the
+					// parameter from the integer column and answer 1.
+					Milliseconds = (later - earlier).TotalMilliseconds + Sql.ConvertTo<double>.From(r.Id),
+				})
+				.Single();
+
+			row.Ticks.ShouldBe(1235);
+			row.Milliseconds.ShouldBe(1.1234, 1e-12);
+
+			t.Where(r => (later - earlier).Ticks == 1234).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.Where(r => (later - earlier).TotalMilliseconds > 0.1233).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.Where(r => r.FinishedOn > later + (later - earlier)).Select(r => r.Id).ToList().ShouldBe([1]);
+		}
+
+		[Table]
+		sealed class MeasuredPeriodRow
+		{
+			[PrimaryKey] public int      Id       { get; set; }
+			[Column]     public DateTime ClosedOn { get; set; }
+			[Column]     public double   Elapsed  { get; set; }
+		}
+
+		/// <summary>
+		/// A difference from a parameter, assigned to a number column and compared with one.
+		/// </summary>
+		/// <remarks>
+		/// The column a value is assigned to or compared with types the parameters on the other side. Both operands
+		/// of a difference are dates, though, so a parameter among them has to keep its own type rather than take
+		/// the number's - on either side of the subtraction.
+		/// </remarks>
+		[Test]
+		public void DateDifferenceFromParameterAssignedToANumber([DataSources(UnsupportedDifferenceProviders)] string context)
+		{
+			var asOf     = new DateTime(2026, 1, 10, 8, 15, 30);
+			var closedOn = new DateTime(2026, 1, 1, 3, 0, 0);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable([new MeasuredPeriodRow { Id = 1, ClosedOn = closedOn }]);
+
+			var expected = asOf - closedOn;
+
+			t.Where(r => r.Id == 1).Set(r => r.Elapsed, r => (asOf - r.ClosedOn).TotalDays).Update();
+			t.Single().Elapsed.ShouldBe(expected.TotalDays, Tolerance(expected.TotalDays));
+
+			t.Where(r => r.Elapsed < (asOf - r.ClosedOn).TotalHours).Select(r => r.Id).ToList().ShouldBe([1]);
+
+			t.Where(r => r.Id == 1).Set(r => r.Elapsed, r => (r.ClosedOn - asOf).TotalHours).Update();
+			t.Single().Elapsed.ShouldBe(-expected.TotalHours, Tolerance(expected.TotalHours));
+
+			t.Where(r => r.Elapsed < (r.ClosedOn - asOf).TotalDays).Select(r => r.Id).ToList().ShouldBe([1]);
+		}
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
@@ -810,6 +1016,313 @@ namespace Tests.Linq
 				.Single();
 
 			row.Seconds.ShouldBe(expected.Seconds);
+			row.Milliseconds.ShouldBe(expected.Milliseconds);
+		}
+
+		[Table]
+		sealed class ClosedPeriodRow
+		{
+			[PrimaryKey] public int       Id               { get; set; }
+			[Column]     public DateTime  OpenedOn         { get; set; }
+			[Column]     public DateTime  ClosedOn         { get; set; }
+			[Column]     public DateTime? ClosedOnNullable { get; set; }
+		}
+
+		// One row well in the past and one well in the future, whole hours from any midnight, so the answers below
+		// do not move with the clock, the storage precision or the day the test runs.
+		static readonly ClosedPeriodRow[] ClosedPeriods =
+		[
+			new() { Id = 1, OpenedOn = new DateTime(2019, 12, 20, 15, 30, 0), ClosedOn = new DateTime(2020, 1, 1, 3, 0, 0), ClosedOnNullable = new DateTime(2020, 1, 1, 3, 0, 0) },
+			new() { Id = 2, OpenedOn = new DateTime(2099, 5, 1),              ClosedOn = new DateTime(2099, 6, 1),          ClosedOnNullable = null                            },
+		];
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5777")]
+		public void DateDifferenceFromToday([DataSources(UnsupportedDifferenceProviders)] string context)
+		{
+			// DateTime.Today is read on the client, so the statement carries the run date and changes every day.
+			using var noBaseline = new DisableBaseline("Current datetime parameters used");
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(ClosedPeriods);
+
+			t.Where(r => (DateTime.Today - r.ClosedOn).TotalDays > 0).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.Where(r => (DateTime.Today - r.ClosedOn).TotalHours > 0).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.Where(r => (DateTime.Today - r.ClosedOn).TotalMinutes > 0).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.Where(r => (DateTime.Today - r.ClosedOn).Days > 0).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.Where(r => (DateTime.Today - r.ClosedOnNullable)!.Value.TotalDays > 0).Select(r => r.Id).ToList().ShouldBe([1]);
+
+			t.OrderBy(r => (DateTime.Today - r.ClosedOn).TotalDays).Select(r => r.Id).ToList().ShouldBe([2, 1]);
+
+			// YDB writes a local DateTime - which DateTime.Today is - as the UTC instant it stands for, and an
+			// unspecified one, as every value in the table is, as UTC already, so it measures from today's UTC reading.
+			var today  = context.IsAnyOf(TestProvName.AllYdb) ? DateTime.Today.ToUniversalTime() : DateTime.Today;
+			var totals = t.OrderBy(r => r.Id).Select(r => Sql.AsSql((DateTime.Today - r.ClosedOn).TotalDays)).ToList();
+
+			for (var i = 0; i < ClosedPeriods.Length; i++)
+			{
+				var expected = (today - ClosedPeriods[i].ClosedOn).TotalDays;
+
+				totals[i].ShouldBe(expected, Tolerance(expected));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5777")]
+		public void DateDifferenceBetweenColumns([DataSources(UnsupportedDifferenceProviders)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(ClosedPeriods);
+
+			t.Where(r => (r.ClosedOn - r.OpenedOn).TotalDays < 12).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.OrderBy(r => (r.ClosedOn - r.OpenedOn).TotalHours).Select(r => r.Id).ToList().ShouldBe([1, 2]);
+
+			var row = t
+				.Where(r => r.Id == 1)
+				.Select(r => new
+				{
+					TotalDays    = Sql.AsSql((r.ClosedOn - r.OpenedOn).TotalDays),
+					TotalHours   = Sql.AsSql((r.ClosedOn - r.OpenedOn).TotalHours),
+					TotalMinutes = Sql.AsSql((r.ClosedOn - r.OpenedOn).TotalMinutes),
+					Days         = Sql.AsSql((r.ClosedOn - r.OpenedOn).Days),
+					Hours        = Sql.AsSql((r.ClosedOn - r.OpenedOn).Hours),
+				})
+				.Single();
+
+			var expected = ClosedPeriods[0].ClosedOn - ClosedPeriods[0].OpenedOn;
+
+			row.TotalDays.ShouldBe(expected.TotalDays, Tolerance(expected.TotalDays));
+			row.TotalHours.ShouldBe(expected.TotalHours, Tolerance(expected.TotalHours));
+			row.TotalMinutes.ShouldBe(expected.TotalMinutes, Tolerance(expected.TotalMinutes));
+			row.Days.ShouldBe(expected.Days);
+			row.Hours.ShouldBe(expected.Hours);
+		}
+
+		/// <summary>
+		/// A member of a difference with a nullable operand, read through <c>.Value</c> or a cast back to
+		/// <see cref="TimeSpan"/>, answers wherever the member of a non-nullable difference does.
+		/// </summary>
+		/// <remarks>
+		/// The subtraction is lifted to a nullable <see cref="TimeSpan"/>, so the member is taken from the value
+		/// access rather than from the subtraction itself. Access lowers a member of a difference but not the bare
+		/// difference, so recognising the subtraction under the access is its only route to the member.
+		/// </remarks>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5988")]
+		public void DateDifferenceMemberThroughNullableValue([DataSources(UnsupportedDifferenceProviders)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(ClosedPeriods);
+
+			t.Where(r => (r.ClosedOnNullable - r.OpenedOn)!.Value.TotalDays > 0).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.Where(r => ((TimeSpan)(r.ClosedOnNullable - r.OpenedOn)!).TotalHours > 0).Select(r => r.Id).ToList().ShouldBe([1]);
+			// A fixed date rather than DateTime.Today, which would put the run date into the statement.
+			var asOf = new DateTime(2026, 1, 3, 13, 30, 0);
+
+			t.Where(r => (asOf - r.ClosedOnNullable)!.Value.TotalDays > 0).Select(r => r.Id).ToList().ShouldBe([1]);
+
+			var totalHours = t
+				.Where(r => r.Id == 1)
+				.Select(r => Sql.AsSql((r.ClosedOnNullable - r.OpenedOn)!.Value.TotalHours))
+				.Single();
+
+			var expected = ClosedPeriods[0].ClosedOn - ClosedPeriods[0].OpenedOn;
+
+			totalHours.ShouldBe(expected.TotalHours, Tolerance(expected.TotalHours));
+
+			// A whole-unit component is counted with an anchor compared against the end, so the NULL row reaches
+			// that comparison too - in a filter and in a projection alike.
+			t.Where(r => (r.ClosedOnNullable - r.OpenedOn)!.Value.Days > 0).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.Where(r => (r.ClosedOnNullable - r.OpenedOn)!.Value.Hours > 0).Select(r => r.Id).ToList().ShouldBe([1]);
+
+			var components = t
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					Days  = Sql.AsSql((int?)(r.ClosedOnNullable - r.OpenedOn)!.Value.Days),
+					Hours = Sql.AsSql((int?)(r.ClosedOnNullable - r.OpenedOn)!.Value.Hours),
+				})
+				.ToList();
+
+			components[0].Days.ShouldBe(expected.Days);
+			components[0].Hours.ShouldBe(expected.Hours);
+			components[1].Days.ShouldBeNull();
+			components[1].Hours.ShouldBeNull();
+		}
+
+		/// <summary>
+		/// A member of a difference whose operand an outer join leaves absent on an unmatched row.
+		/// </summary>
+		/// <remarks>
+		/// The column itself cannot be null, but the join makes it so. Access refuses a null that <c>DateAdd</c> or
+		/// <c>DateDiff</c> derived once it is passed on, so the operand has to be recognised as one that can be null.
+		/// </remarks>
+		[Test]
+		public void DateDifferenceAcrossAnOuterJoin([DataSources(UnsupportedDifferenceProviders)] string context)
+		{
+			var started = new DateTime(2026, 1, 1, 10, 0, 0);
+			var amount  = new TimeSpan(2, 3, 15, 0);
+
+			using var db    = GetDataContext(context);
+			using var left  = db.CreateLocalTable("OuterJoinLeft",  [new EventRow { Id = 1, StartedOn = started, FinishedOn = started }, new EventRow { Id = 2, StartedOn = started, FinishedOn = started }]);
+			using var right = db.CreateLocalTable("OuterJoinRight", [new EventRow { Id = 1, StartedOn = started, FinishedOn = started + amount }]);
+
+			var joined =
+				from a in left
+				from b in right.Where(x => x.Id == a.Id).DefaultIfEmpty()
+				select new { a, b };
+
+			// One member per query: Access lowers each member of a difference in full and refuses a statement past a
+			// size it calls "too complex", which a projection of several members reaches.
+			var ordered = joined.OrderBy(x => x.a.Id);
+
+			var totalDays = ordered.Select(x => Sql.AsSql((double?)(x.b!.FinishedOn - x.a.StartedOn).TotalDays)).ToList();
+			totalDays[0]!.Value.ShouldBe(amount.TotalDays, Tolerance(amount.TotalDays));
+			totalDays[1].ShouldBeNull();
+
+			ordered.Select(x => Sql.AsSql((int?)(x.b!.FinishedOn - x.a.StartedOn).Days)).ToList().ShouldBe([amount.Days, null]);
+			ordered.Select(x => Sql.AsSql((int?)(x.b!.FinishedOn - x.a.StartedOn).Hours)).ToList().ShouldBe([amount.Hours, null]);
+			ordered.Select(x => Sql.AsSql((int?)(x.b!.FinishedOn - x.a.StartedOn).Minutes)).ToList().ShouldBe([amount.Minutes, null]);
+			ordered.Select(x => Sql.AsSql((int?)(x.a.StartedOn - x.b!.FinishedOn).Hours)).ToList().ShouldBe([-amount.Hours, null]);
+
+			var reversed = ordered.Select(x => Sql.AsSql((double?)(x.a.StartedOn - x.b!.FinishedOn).TotalHours)).ToList();
+			reversed[0]!.Value.ShouldBe(-amount.TotalHours, Tolerance(amount.TotalHours));
+			reversed[1].ShouldBeNull();
+
+			joined.Where(x => (x.b!.FinishedOn - x.a.StartedOn).TotalDays > 1).Select(x => x.a.Id).ToList().ShouldBe([1]);
+			joined.Where(x => (x.b!.FinishedOn - x.a.StartedOn).Hours == amount.Hours).Select(x => x.a.Id).ToList().ShouldBe([1]);
+			joined.Where(x => (x.b!.FinishedOn - x.a.StartedOn).Minutes == amount.Minutes).Select(x => x.a.Id).ToList().ShouldBe([1]);
+			joined.Where(x => (x.a.StartedOn - x.b!.FinishedOn).TotalHours < -1).Select(x => x.a.Id).ToList().ShouldBe([1]);
+			joined.Where(x => (x.a.StartedOn - x.b!.FinishedOn).Hours == -amount.Hours).Select(x => x.a.Id).ToList().ShouldBe([1]);
+		}
+
+		[Table]
+		sealed class CoarseDateRow
+		{
+			[PrimaryKey]                                           public int      Id      { get; set; }
+			[Column(DataType = DataType.Date)]                     public DateTime OnDate  { get; set; }
+			[Column(DataType = DataType.SmallDateTime)]            public DateTime OnSmall { get; set; }
+			[Column(DataType = DataType.DateTime2, Precision = 7)] public DateTime End     { get; set; }
+		}
+
+		/// <summary>
+		/// SQL Server before 2016 counts the part of a difference below a day in two steps, shifting the start by
+		/// whole seconds in between - which <c>DATEADD</c> refuses on a <c>date</c> and rounds to the minute on a
+		/// <c>smalldatetime</c>. The end has seconds and a sub-second part, so neither can pass by luck.
+		/// </summary>
+		/// <remarks>
+		/// The widening this test pins - <c>date</c> and <c>smalldatetime</c> cast up to <c>datetime2</c> before the
+		/// second shift - is a detail of the pre-2016 three-step decomposition. 2016 and later anchor on whole days too
+		/// but count the rest in a single <c>DATEDIFF_BIG</c>, so they never reach the widening; they run here because
+		/// no other test measures a difference from a <c>date</c> or a <c>smalldatetime</c> on them. 2005 is not
+		/// asked: its <c>datetime</c> cannot hold the end's 100ns part.
+		/// <para>
+		/// The same columns are read through two more mappings, because the widening cannot trust the type a mapping
+		/// declares: a plain <see cref="DateTime"/> - the scaffolder's default - which declares neither, and one that
+		/// declares a <c>DbType</c> as well, which the cast must not take over.
+		/// </para>
+		/// </remarks>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5777")]
+		public void DateDifferenceFromCoarseSqlServerTypes(
+			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			var start = new DateTime(2020, 1, 1, 3, 0, 0);
+			var end   = new DateTime(2026, 9, 29, 10, 20, 30).AddTicks(1234567);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable([new CoarseDateRow { Id = 1, OnDate = start.Date, OnSmall = start, End = end }]);
+
+			var row = t
+				.Select(r => new
+				{
+					FromDate  = Sql.AsSql((r.End - r.OnDate).Ticks),
+					FromSmall = Sql.AsSql((r.End - r.OnSmall).Ticks),
+				})
+				.Single();
+
+			row.FromDate.ShouldBe((end - start.Date).Ticks);
+			row.FromSmall.ShouldBe((end - start).Ticks);
+
+			var plain = db.GetTable<CoarseDateAsDateTimeRow>().TableName(t.TableName)
+				.Select(r => new
+				{
+					FromDate  = Sql.AsSql((r.End - r.OnDate).Ticks),
+					FromSmall = Sql.AsSql((r.End - r.OnSmall).Ticks),
+				})
+				.Single();
+
+			plain.FromDate.ShouldBe((end - start.Date).Ticks);
+			plain.FromSmall.ShouldBe((end - start).Ticks);
+
+			var withDbType = db.GetTable<CoarseDateWithDbTypeRow>().TableName(t.TableName)
+				.Select(r => new
+				{
+					FromDate  = Sql.AsSql((r.End - r.OnDate).Ticks),
+					FromSmall = Sql.AsSql((r.End - r.OnSmall).Ticks),
+				})
+				.Single();
+
+			withDbType.FromDate.ShouldBe((end - start.Date).Ticks);
+			withDbType.FromSmall.ShouldBe((end - start).Ticks);
+		}
+
+		[Table]
+		sealed class CoarseDateAsDateTimeRow
+		{
+			[PrimaryKey]                                           public int      Id      { get; set; }
+			[Column]                                               public DateTime OnDate  { get; set; }
+			[Column]                                               public DateTime OnSmall { get; set; }
+			[Column(DataType = DataType.DateTime2, Precision = 7)] public DateTime End     { get; set; }
+		}
+
+		[Table]
+		sealed class CoarseDateWithDbTypeRow
+		{
+			[PrimaryKey]                                                          public int      Id      { get; set; }
+			[Column(DataType = DataType.Date,          DbType = "date")]          public DateTime OnDate  { get; set; }
+			[Column(DataType = DataType.SmallDateTime, DbType = "smalldatetime")] public DateTime OnSmall { get; set; }
+			[Column(DataType = DataType.DateTime2, Precision = 7)]                public DateTime End     { get; set; }
+		}
+
+		/// <summary>
+		/// A negative difference with a sub-second remainder, on the pre-2016 dialects that decompose it in three
+		/// steps - whole days, then whole seconds within the remainder, then nanoseconds within the last second.
+		/// </summary>
+		/// <remarks>
+		/// 2016 and later count the sub-day remainder in one <c>DATEDIFF_BIG</c> instead and answer the same question.
+		/// <para>
+		/// The end is earlier than the start by a little over an hour and both carry a sub-second part, so the
+		/// difference and its remainder below the second are both negative. Asked once within a day and once across
+		/// midnight, where the whole-day step counts a day boundary backwards and the remainder has to make up for it.
+		/// </para>
+		/// </remarks>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5777")]
+		public void NegativeDifferenceWithSubSecondRemainder(
+			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context,
+			[Values] bool acrossMidnight)
+		{
+			var start = acrossMidnight
+				? new DateTime(2026, 3, 2,  0, 20, 30).AddTicks(1234567)
+				: new DateTime(2026, 3, 1, 10, 20, 30).AddTicks(1234567);
+			var end   = acrossMidnight
+				? new DateTime(2026, 3, 1, 23, 19, 28).AddTicks(7654321)
+				: new DateTime(2026, 3, 1,  9, 19, 28).AddTicks(7654321);
+
+			var expected = end - start;
+
+			expected.ShouldBeLessThan(TimeSpan.Zero);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable([new EventRow { Id = 1, StartedOn = start, FinishedOn = end }]);
+
+			var row = t
+				.Select(r => new
+				{
+					Ticks        = Sql.AsSql((r.FinishedOn - r.StartedOn).Ticks),
+					TotalSeconds = Sql.AsSql((r.FinishedOn - r.StartedOn).TotalSeconds),
+					Milliseconds = Sql.AsSql((r.FinishedOn - r.StartedOn).Milliseconds),
+				})
+				.Single();
+
+			row.Ticks.ShouldBe(expected.Ticks);
+			row.TotalSeconds.ShouldBe(expected.TotalSeconds, Tolerance(expected.TotalSeconds));
 			row.Milliseconds.ShouldBe(expected.Milliseconds);
 		}
 	}

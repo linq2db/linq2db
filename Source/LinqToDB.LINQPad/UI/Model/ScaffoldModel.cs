@@ -8,7 +8,7 @@ internal sealed class ScaffoldModel : OptionalTabModelBase, INotifyPropertyChang
 	public ScaffoldModel(ConnectionSettings settings, bool enabled)
 		: base(settings, enabled)
 	{
-		UpdateClickHouseVisibility();
+		UpdateDatabaseVisibility();
 	}
 
 	public bool Capitalize
@@ -41,13 +41,25 @@ internal sealed class ScaffoldModel : OptionalTabModelBase, INotifyPropertyChang
 		set => Settings.Scaffold.ClickHouseFixedStringAsString = value;
 	}
 
+	public bool SqlServerReturnValue
+	{
+		get => Settings.Scaffold.SqlServerReturnValue;
+		set => Settings.Scaffold.SqlServerReturnValue = value;
+	}
+
 	private static readonly PropertyChangedEventArgs _clickHouseVisibilityChangedEventArgs = new (nameof(ClickHouseVisibility));
 	public Visibility ClickHouseVisibility { get; set; }
 
-	internal void UpdateClickHouseVisibility()
+	private static readonly PropertyChangedEventArgs _sqlServerVisibilityChangedEventArgs = new (nameof(SqlServerVisibility));
+	public Visibility SqlServerVisibility { get; set; }
+
+	internal void UpdateDatabaseVisibility()
 	{
 		ClickHouseVisibility = string.Equals(Settings.Connection.Database, ProviderName.ClickHouse, System.StringComparison.Ordinal) ? Visibility.Visible : Visibility.Collapsed;
 		OnPropertyChanged(_clickHouseVisibilityChangedEventArgs);
+
+		SqlServerVisibility = string.Equals(Settings.Connection.Database, ProviderName.SqlServer, System.StringComparison.Ordinal) ? Visibility.Visible : Visibility.Collapsed;
+		OnPropertyChanged(_sqlServerVisibilityChangedEventArgs);
 	}
 
 	#region INotifyPropertyChanged

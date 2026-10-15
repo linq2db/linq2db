@@ -1,4 +1,6 @@
-#nullable enable
+﻿#nullable enable
+*REMOVED*LinqToDB.Internal.SqlProvider.OptimizationContext.TransformationInfo.get -> LinqToDB.Internal.SqlQuery.Visitors.SqlQueryVisitor.IVisitorTransformationInfo!
+*REMOVED*override LinqToDB.Internal.SqlQuery.Visitors.SqlQueryValidatorVisitor.VisitSqlTableSource(LinqToDB.Internal.SqlQuery.SqlTableSource! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 LinqToDB.DataProvider.Access.AccessProvider.LibRed = 3 -> LinqToDB.DataProvider.Access.AccessProvider
 LinqToDB.Internal.DataProvider.Access.AccessLibRedSchemaProvider
 LinqToDB.Internal.DataProvider.Access.AccessLibRedSchemaProvider.AccessLibRedSchemaProvider() -> void
@@ -83,6 +85,17 @@ override LinqToDB.Internal.DataProvider.Access.Translation.AccessLibRedMemberTra
 override LinqToDB.Internal.DataProvider.Access.Translation.AccessLibRedMemberTranslator.CreateMathMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator!
 override LinqToDB.Internal.DataProvider.Access.Translation.AccessLibRedMemberTranslator.CreateStringMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator!
 override LinqToDB.Internal.DataProvider.Access.Translation.AccessLibRedMemberTranslator.CreateWindowFunctionsMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator?
+override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlExpressionConvertVisitor.CanLowerIntervalShift.get -> bool
+override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.CanLowerIntervalShift.get -> bool
+override LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlExpressionConvertVisitor.CanLowerIntervalShift.get -> bool
+override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.ElapsedTicks(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.IntervalResolution.get -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.CanLowerIntervalShift.get -> bool
+override LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 static LinqToDB.Internal.DataProvider.LibRedProviderAdapter.GetInstance() -> LinqToDB.Internal.DataProvider.LibRedProviderAdapter!
 virtual LinqToDB.Internal.DataProvider.Access.AccessSqlBuilderBase.IsCaseExpressionSupported.get -> bool
 virtual LinqToDB.Internal.DataProvider.Access.AccessSqlBuilderBase.IsCommentSupported.get -> bool

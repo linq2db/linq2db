@@ -51,7 +51,7 @@ COMPONENTS
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-8. Microsoft.Bcl.Cryptography net10.0: 9.0.13, net10.0-windows7.0: 9.0.13, net11.0: 9.0.13, net462: 8.0.0, net472: 8.0.0
+8. Microsoft.Bcl.Cryptography net10.0: 9.0.13, net10.0-windows7.0: 9.0.13, net11.0: 9.0.13, net462: 8.0.0, net472: 9.0.21
    https://dot.net/
    License: MIT  see [7]
    © Microsoft Corporation. All rights reserved.
@@ -116,7 +116,7 @@ COMPONENTS
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-21. Microsoft.Extensions.DependencyInjection net10.0: 10.0.12, net10.0-windows7.0: 10.0.8, net11.0: 11.0.0-rc.1.26425.128, net462: 10.0.0, net472: 10.0.0
+21. Microsoft.Extensions.DependencyInjection net10.0: 10.0.12, net10.0-windows7.0: 10.0.8, net11.0: 11.0.0-rc.2.26504.105, net462: 10.0.0, net472: 10.0.0
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
@@ -131,7 +131,7 @@ COMPONENTS
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-24. Microsoft.Extensions.Logging net10.0: 10.0.12, net10.0-windows7.0: 10.0.8, net11.0: 11.0.0-rc.1.26425.128, net462: 10.0.0, net472: 10.0.0
+24. Microsoft.Extensions.Logging net10.0: 10.0.12, net10.0-windows7.0: 10.0.8, net11.0: 11.0.0-rc.2.26504.105, net462: 10.0.0, net472: 10.0.0
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
@@ -261,7 +261,7 @@ COMPONENTS
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-51. System.Formats.Asn1 8.0.1
+51. System.Formats.Asn1 net462: 8.0.1, net472: 9.0.21
    https://dot.net/
    License: MIT  see [15]
    © Microsoft Corporation. All rights reserved.
@@ -301,7 +301,7 @@ COMPONENTS
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-59. System.Security.Cryptography.Pkcs net10.0: 9.0.13, net11.0: 9.0.13, net462: 8.0.1, net472: 8.0.1
+59. System.Security.Cryptography.Pkcs net10.0: 9.0.21, net11.0: 9.0.21, net462: 8.0.1, net472: 9.0.21
    https://dot.net/
    License: MIT  see [7]
    © Microsoft Corporation. All rights reserved.
