@@ -1522,12 +1522,13 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 
-			// Without the option the membership stays in SQL, as an IN list over the defaulted items, not a VALUES table.
+			// Without the option each membership stays in SQL, as an IN list over the defaulted item, not a VALUES table: one
+			// COALESCE per spelling, so a single spelling falling back to the client is seen.
 			if (!preferClient && context.IsAnyOf(TestProvName.AllSQLite))
 			{
 				var sql = query.ToSqlQuery().Sql.ToUpperInvariant();
 
-				sql.ShouldContain("COALESCE");
+				(sql.Split(new[] { "COALESCE" }, StringSplitOptions.None).Length - 1).ShouldBe(3);
 				sql.ShouldNotContain("VALUES");
 			}
 		}
