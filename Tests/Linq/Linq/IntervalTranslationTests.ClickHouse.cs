@@ -105,6 +105,36 @@ namespace Tests.Linq
 			elapsed.ShouldBe([0d, 2 * 3600_000d]);
 		}
 
+		[Table]
+		sealed class MixedCoarseEventRow
+		{
+			[PrimaryKey]                           public int       Id         { get; set; }
+			[Column(DataType = DataType.DateTime)] public DateTime  StartedOn  { get; set; }
+			[Column(DataType = DataType.DateTime)] public DateTime? FinishedOn { get; set; }
+			[Column(DataType = DataType.Date)]     public DateTime  OpenedOn   { get; set; }
+		}
+
+		/// <summary>
+		/// A COALESCE whose operands disagree on their coarse type reports no type of its own, and is coerced too.
+		/// </summary>
+		[Test]
+		public void CoalesceOfDisagreeingCoarseTypesIsCoerced([IncludeDataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(
+			[
+				new MixedCoarseEventRow { Id = 1, StartedOn = CoarseStart, FinishedOn = null,                    OpenedOn = CoarseStart.Date },
+				new MixedCoarseEventRow { Id = 2, StartedOn = CoarseStart, FinishedOn = CoarseStart.AddHours(3), OpenedOn = CoarseStart.Date },
+			]);
+
+			var elapsed = t
+				.OrderBy(r => r.Id)
+				.Select(r => Sql.AsSql(((r.FinishedOn ?? r.OpenedOn) - r.StartedOn).TotalHours))
+				.ToArray();
+
+			elapsed.ShouldBe([-10d, 3d]);
+		}
+
 		[Test]
 		public void ValueWindowFunctionOverASecondPrecisionColumnIsCoerced([IncludeDataSources(TestProvName.AllClickHouse)] string context)
 		{

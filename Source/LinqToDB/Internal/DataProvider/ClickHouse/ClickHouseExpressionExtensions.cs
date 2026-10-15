@@ -20,7 +20,9 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		/// </remarks>
 		public static ISqlExpression AsDateTime64(this ISqlExpressionFactory factory, ISqlExpression expression)
 		{
-			var type = factory.GetDbDataType(expression);
+			// Without the mapping schema: its default for a CLR DateTime is DateTime64, so an operand of unknown type
+			// (a COALESCE whose operands disagree) would pass as one while the server types it DateTime.
+			var type = QueryHelper.GetDbDataTypeWithoutSchema(expression);
 
 			// Any DateTime64 precision is accepted, so an operand that already is one needs no conversion.
 			if (type.DataType == DataType.DateTime64)
