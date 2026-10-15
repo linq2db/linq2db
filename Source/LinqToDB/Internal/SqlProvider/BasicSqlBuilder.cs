@@ -17,6 +17,7 @@ using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Infrastructure;
+using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -2961,6 +2962,23 @@ namespace LinqToDB.Internal.SqlProvider
 			BuildExpression(GetPrecedence(predicate), predicate.SubQuery);
 		}
 
+		/// <summary>
+		/// The type an IN-list value is written with: the tested expression's, except beside a value computed from a
+		/// coarse date/time column, where it keeps its own - as a literal does in a comparison.
+		/// </summary>
+		internal DbDataType GetInListValueType(ISqlExpression expr1, DbDataType expr1Type, object? value)
+		{
+			if (value != null)
+			{
+				var valueType = MappingSchema.GetDbDataType(value.GetType());
+
+				if (ExpressionBuildVisitor.IsCoarserDateTime(expr1Type.DataType, valueType.DataType) && !ExpressionBuildVisitor.IsStoredColumn(expr1))
+					return valueType;
+			}
+
+			return expr1Type;
+		}
+
 		protected virtual void BuildInListPredicate(SqlPredicate.InList predicate)
 		{
 			var values = predicate.Values;
@@ -3124,7 +3142,7 @@ namespace LinqToDB.Internal.SqlProvider
 					if (value is ISqlExpression expression)
 						BuildExpression(expression);
 					else
-						BuildValue(dbDataType, value);
+						BuildValue(GetInListValueType(predicate.Expr1, dbDataType, value), value);
 
 					StringBuilder.Append(InlineComma);
 				}

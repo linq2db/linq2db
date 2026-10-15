@@ -1999,6 +1999,35 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
+		/// The values of a captured collection, written into the IN list when the SQL is built, keep their sub-second
+		/// part beside an aggregate over a coarse column too.
+		/// </summary>
+		[Test]
+		public void CoarseAggregateCapturedListKeepsValueTime([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarse(db);
+
+			var subSecond = new[] { CoarseSubSecondBoundary };
+
+			var subSecondCount = t
+				.GroupBy(r => r.Id)
+				.Where(g => subSecond.Contains(g.Max(r => r.Value)))
+				.Count();
+
+			subSecondCount.ShouldBe(0);
+
+			var whole = new[] { CoarseValue };
+
+			var wholeCount = t
+				.GroupBy(r => r.Id)
+				.Where(g => whole.Contains(g.Max(r => r.Value)))
+				.Count();
+
+			wholeCount.ShouldBe(1);
+		}
+
+		/// <summary>
 		/// A literal set beside an aggregate over a coarse column in a set operation keeps its time part.
 		/// </summary>
 		[Test]

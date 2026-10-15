@@ -5299,7 +5299,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						if (Builder.CanBeEvaluatedOnClient(arr))
 						{
-							var parameter = Builder.ParametersContext.BuildParameter(BuildContext, arr, CurrentDescriptor, buildParameterType : ParametersContext.BuildParameterType.InPredicate);
+							// The collection is written into the SQL as values, so it takes the terms a constant would.
+							var parameter = Builder.ParametersContext.BuildParameter(BuildContext, arr, ConstantDescriptor, buildParameterType : ParametersContext.BuildParameterType.InPredicate);
 
 							if (parameter != null)
 							{
