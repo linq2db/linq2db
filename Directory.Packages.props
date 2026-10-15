@@ -36,6 +36,11 @@
 		    release is routinely the one an advisory names - and for test-only packages.-->
 		<LegacyNetPackageLatest>10.0.12</LegacyNetPackageLatest>
 
+		<!--FSharp.Core floor for linq2db.FSharp, referenced from nuspec: the FSharp.Core the band's first SDK shipped
+		    with; net462/netstandard2.0 take the lowest supported band's, as $(LegacyNetPackageVersion) does.-->
+		<FSharpCoreForNuget Condition="'$(TargetFramework)'=='net11.0'">11.0.101-rc2.26504.105</FSharpCoreForNuget>
+		<FSharpCoreForNuget Condition="'$(FSharpCoreForNuget)'==''">10.0.100</FSharpCoreForNuget>
+
 		<!--EF 3.1 versions for netfx support-->
 		<EF3LatestNuget>3.1.0</EF3LatestNuget>
 		<EF3Latest>3.1.32</EF3Latest>
@@ -216,7 +221,9 @@
 		<PackageVersion Include="NodaTime"                                              Version="3.3.3"                        />
 		<PackageVersion Include="protobuf-net.Grpc.AspNetCore"                          Version="1.3.14"                       />
 		<PackageVersion Include="System.Linq.Dynamic.Core"                              Version="1.7.4"                        />
-		<PackageVersion Include="FSharp.Core"                                           Version="10.1.401"                     />
+		<!--net11 cannot sit below linq2db.FSharp's net11 floor, $(FSharpCoreForNuget)-->
+		<PackageVersion Include="FSharp.Core"                                           Version="10.1.401"                     Condition="'$(TargetFramework)'!='net11.0'" />
+		<PackageVersion Include="FSharp.Core"                                           Version="11.0.101-rc2.26504.105"       Condition="'$(TargetFramework)'=='net11.0'" />
 		<PackageVersion Include="LinqKit"                                               Version="1.3.11"                       />
 
 		<PackageVersion Include="Microsoft.Extensions.Logging.Console"                  Version="$(LegacyNetPackageLatest)"    Condition="'$(BandLatest)'==''" />
