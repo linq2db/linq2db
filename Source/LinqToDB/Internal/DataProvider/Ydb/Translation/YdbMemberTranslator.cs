@@ -767,13 +767,13 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				if (isDecimal && hasPrecision && constantPrecision == null)
 				{
 					var scale         = valueType.Scale     ?? YdbMappingSchema.DEFAULT_DECIMAL_SCALE;
-					var intDigits     = IntegerDigits(valueType);
+					var intDigits     = (valueType.Precision ?? YdbMappingSchema.DEFAULT_DECIMAL_PRECISION) - scale;
 					var precisionType = factory.GetDbDataType(precision!);
 					var positiveType  = ScaledDecimalType(valueType, scale);
 					var negativeType  = ScaledDecimalType(valueType, intDigits + scale - YdbMappingSchema.MAX_DECIMAL_PRECISION);
 					var maxPrecision  = factory.Value(precisionType, scale);
 					var minPrecision  = factory.Value(precisionType, scale - negativeType.Scale!.Value);
-					var zeroPrecision = factory.Value(precisionType, -intDigits);
+					var zeroPrecision = factory.Value(precisionType, -IntegerDigits(valueType));
 
 					// the runtime twin of the no-op above, which bounds the integer digits positiveType reserves
 					var positive = factory.Condition(
@@ -784,10 +784,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 					// a precision needing more scale than negativeType has would be rounded twice: fail instead
 					var negative = factory.Function(precisionType, "Ensure",
 						precision!,
-						factory.SearchCondition(isOr: true)
-							.AddGreaterOrEqual(precision!, minPrecision, CompareNulls.LikeSql)
-							.AddLess(precision!, zeroPrecision, CompareNulls.LikeSql)
-							.AddIsNull(precision!),
+						factory.SearchCondition(isOr: true).AddGreaterOrEqual(precision!, minPrecision, CompareNulls.LikeSql).AddIsNull(precision!),
 						factory.Value(factory.GetDbDataType(typeof(string)), string.Create(CultureInfo.InvariantCulture, $"ROUND precision is out of range for Decimal({intDigits + scale},{scale})")));
 
 					return factory.Condition(
@@ -902,27 +899,31 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 						even));
 			}
 
+			// a Precision-only mapping (Decimal(5) with the default scale 9) has none, not a negative count
 			static int IntegerDigits(DbDataType valueType)
-				=> (valueType.Precision ?? YdbMappingSchema.DEFAULT_DECIMAL_PRECISION) - (valueType.Scale ?? YdbMappingSchema.DEFAULT_DECIMAL_SCALE);
+				=> Math.Max((valueType.Precision ?? YdbMappingSchema.DEFAULT_DECIMAL_PRECISION) - (valueType.Scale ?? YdbMappingSchema.DEFAULT_DECIMAL_SCALE), 0);
 
 			// Every value of the type is below 10^intDigits, so a precision past its integer digits rounds it to 0. A
 			// computed value can exceed the type inferred for it: one reaching the bound (at most 10^28, the largest
-			// decimal literal) fails rather than becoming 0.
+			// decimal literal) fails rather than becoming 0, and the 0 is cast to the inferred type, as every other
+			// result is, since YQL arithmetic and IF reject Decimals of different types.
 			static ISqlExpression RoundedToZero(ISqlExpressionFactory factory, ISqlExpression value, DbDataType valueType)
 			{
-				var scale     = valueType.Scale ?? YdbMappingSchema.DEFAULT_DECIMAL_SCALE;
-				var intDigits = IntegerDigits(valueType);
+				var precision = valueType.Precision ?? YdbMappingSchema.DEFAULT_DECIMAL_PRECISION;
+				var scale     = valueType.Scale     ?? YdbMappingSchema.DEFAULT_DECIMAL_SCALE;
 				var boundType = new DbDataType(valueType.SystemType, valueType.DataType, null, valueType.Length, YdbMappingSchema.MAX_DECIMAL_PRECISION, 0);
-				var bound     = (decimal)Math.Pow(10, Math.Min(intDigits, 28));
+				var bound     = (decimal)Math.Pow(10, Math.Min(IntegerDigits(valueType), 28));
 
-				return factory.Function(valueType, "Ensure",
+				var zero = factory.Function(valueType, "Ensure",
 					factory.Sub(valueType, value, value),
 					factory.SearchCondition(isOr: true)
 						.Add(factory.SearchCondition()
 							.AddLess   (value, factory.Value(boundType,  bound), CompareNulls.LikeSql)
 							.AddGreater(value, factory.Value(boundType, -bound), CompareNulls.LikeSql))
 						.AddIsNull(value),
-					factory.Value(factory.GetDbDataType(typeof(string)), string.Create(CultureInfo.InvariantCulture, $"ROUND value is out of range for Decimal({intDigits + scale},{scale})")));
+					factory.Value(factory.GetDbDataType(typeof(string)), string.Create(CultureInfo.InvariantCulture, $"ROUND value is out of range for Decimal({precision},{scale})")));
+
+				return factory.Cast(zero, valueType, isMandatory: true);
 			}
 
 			// valueType widened by the rounding digits, clamped to what YQL accepts. The source scale is never

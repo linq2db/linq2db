@@ -125,6 +125,7 @@ namespace Tests.Linq
 					Product  = Sql.AsSql((long)(r.E * r.E)),
 					F        = Sql.AsSql((long)r.F),
 					Sum      = Sql.AsSql((long)(r.H + r.H)),
+					FProduct = Sql.AsSql((long)(r.F * r.F)),
 				};
 
 			AssertQuery(query);

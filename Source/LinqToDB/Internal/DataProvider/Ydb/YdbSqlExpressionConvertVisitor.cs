@@ -383,7 +383,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 						return base.ConvertConversion(cast);
 
 					var truncated = scale < precision && DataOptions.FindOrDefault(YdbOptions.Default).UseParametrizedDecimal
-						? TruncateDecimal(cast.Expression, fromType, scale)
+						? TruncateDecimal(cast.Expression, fromType)
 						: new SqlCastExpression(cast.Expression, MappingSchema.GetDbDataType(typeof(double)), null);
 
 					return base.ConvertConversion(new SqlCastExpression(truncated, cast.ToType, cast.FromType, cast.IsMandatory));
@@ -394,15 +394,18 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		}
 
 		// The scale-dropping CAST rounds half-to-even, so a result it moved away from zero is stepped back by one.
-		// The value is not cast to Decimal(35,S): a computed value can carry more scale than inferred for it, which
-		// that cast would round away, and YQL compares Decimals of different types. The casts are mandatory, or the
+		// The value passes through Decimal(35,1) first, as YQL refuses a CAST from Decimal(P,P), which a computed value
+		// can be, to Decimal(35,0); scale 1 keeps 34 integer digits, more than any Int64. That cast can round, but the
+		// result still lands on one of the value's two neighbouring integers, so comparing it with the value itself
+		// (YQL compares Decimals of different types) still picks the truncation. The casts are mandatory, or the
 		// optimizer folds them, and their types carry no DbType, which would be rendered in their place.
-		ISqlExpression TruncateDecimal(ISqlExpression value, DbDataType fromType, int scale)
+		ISqlExpression TruncateDecimal(ISqlExpression value, DbDataType fromType)
 		{
-			var wideType = new DbDataType(fromType.SystemType, DataType.Decimal, null, fromType.Length, YdbMappingSchema.MAX_DECIMAL_PRECISION, scale);
+			var wideType = new DbDataType(fromType.SystemType, DataType.Decimal, null, fromType.Length, YdbMappingSchema.MAX_DECIMAL_PRECISION, 1);
 			var intType  = new DbDataType(fromType.SystemType, DataType.Decimal, null, fromType.Length, YdbMappingSchema.MAX_DECIMAL_PRECISION, 0);
 
-			var rounded = Factory.Cast(value,   intType,  true);
+			var wide    = Factory.Cast(value,   wideType, true);
+			var rounded = Factory.Cast(wide,    intType,  true);
 			var back    = Factory.Cast(rounded, wideType, true);
 			var zero    = Factory.Value(wideType, 0m);
 			var one     = Factory.Value(intType,  1m);

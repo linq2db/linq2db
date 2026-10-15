@@ -713,6 +713,17 @@ namespace Tests.Linq
 				.Select(r => Sql.AsSql(Sql.Round(r.D35s2, r.P)))
 				.ToArray();
 			act.ShouldThrow<Exception>().Message.ShouldContain("ROUND precision is out of range for Decimal(35,2)");
+
+			// at exactly -(integer digits) the answer is not 0: 5·10^12 rounds to 10^13, which Decimal(22,9) cannot hold
+			using var boundary = db.CreateLocalTable("RoundNegativeDynamicWideBoundary", new[]
+			{
+				new RoundNegativeDynamicWide { Id = 1, D22s9 = 5000000000000m, D35s2 = 0m, P = -13 },
+			});
+
+			Action atDigits = () => boundary
+				.Select(r => Sql.AsSql(Sql.Round(r.D22s9, r.P)))
+				.ToArray();
+			atDigits.ShouldThrow<Exception>();
 		}
 
 		sealed class RoundManyDigits
@@ -1029,13 +1040,62 @@ namespace Tests.Linq
 
 			result.ShouldBe(data.Select(r => new { r.Id, Away = (decimal?)0m, Even = (decimal?)0m, N = r.N == null ? null : (decimal?)0m }).ToArray());
 
-			// a computed value can exceed the type inferred for it (Decimal(22,9) for this product): one that does fails
-			using var wide = db.CreateLocalTable(new[] { new RoundNegativeDynamicWide { Id = 1, D35s2 = 100000000000000m } });
+			// a computed value can carry a type other than the one inferred for it (Decimal(22,9) for this product)
+			using var wide = db.CreateLocalTable(new[]
+			{
+				new RoundNegativeDynamicWide { Id = 1, D22s9 = 1.5m, D35s2 = 1000m,             P = -14 },
+				new RoundNegativeDynamicWide { Id = 2, D22s9 = 2.5m, D35s2 = 1000m,             P =   2 },
+				new RoundNegativeDynamicWide { Id = 3, D22s9 = 0m,   D35s2 = 100000000000000m,  P = -14 },
+			});
 
+			var computed = wide
+				.Where(r => r.Id < 3)
+				.OrderBy(r => r.Id)
+				.Select(r => Sql.AsSql(Sql.Round(r.D35s2 * r.D35s2, -14) + r.D22s9))
+				.ToArray();
+
+			computed.ShouldBe(new decimal?[] { 1.5m, 2.5m });
+
+			// one that exceeds it fails rather than rounding to 0
 			Action act = () => wide
+				.Where(r => r.Id == 3)
 				.Select(r => Sql.AsSql(Sql.Round(r.D35s2 * r.D35s2, -14)))
 				.ToArray();
 			act.ShouldThrow<Exception>().Message.ShouldContain("ROUND value is out of range for Decimal(22,9)");
+		}
+
+		// Rounding a computed value must leave it in its inferred type, on every branch of a runtime precision's CASE and
+		// on the constant path, or YQL rejects the IF and the addition.
+		[ActiveIssue(6055, Configuration = TestProvName.AllYdb, SkipForNonLinqService = true,
+			ErrorTypeName = "Grpc.Core.RpcException", ErrorMessage = "Failed to convert type: Decimal(31,9) to Decimal(22,9)",
+			Details = "LinqServiceSerializer drops SqlBinaryExpression's precision/scale, so the server folds the non-mandatory narrowing casts")]
+		[Test]
+		public void Round29([IncludeDataSources(true, TestProvName.AllYdb)] string context)
+		{
+			var data = new[]
+			{
+				new RoundNegativeDynamicWide { Id = 1, D35s2 = 1000m, P = -14 },
+				new RoundNegativeDynamicWide { Id = 2, D35s2 = 1000m, P =   2 },
+				new RoundNegativeDynamicWide { Id = 3, D35s2 = 1000m, P =  -4 },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var result = t
+				.OrderBy(r => r.Id)
+				.Select(r => Sql.AsSql(Sql.Round(r.D35s2 * r.D35s2, r.P)))
+				.ToArray();
+
+			result.ShouldBe(new decimal?[] { 0m, 1000000m, 1000000m });
+
+			// the constant path narrows the same way, and its result meets a column of the inferred type
+			var constant = t
+				.OrderBy(r => r.Id)
+				.Select(r => Sql.AsSql(Sql.Round(r.D35s2 * r.D35s2, 2) + r.D22s9))
+				.ToArray();
+
+			constant.ShouldBe(new decimal?[] { 1000000m, 1000000m, 1000000m });
 		}
 
 		sealed class PowScale
