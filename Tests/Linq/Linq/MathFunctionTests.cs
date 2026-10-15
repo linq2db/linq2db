@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -359,6 +359,10 @@ namespace Tests.Linq
 				q.GetCacheMissCount().ShouldBe(cacheMissCount);
 		}
 
+		// AssertQuery's default comparer compares a decimal's public members, Scale included, so 2.5 <> 2.50.
+		static readonly IEqualityComparer<decimal>  ByValue         = EqualityComparer<decimal>.Default;
+		static readonly IEqualityComparer<decimal?> ByNullableValue = EqualityComparer<decimal?>.Default;
+
 		// Rounds server-side to more digits than the column's declared scale, a no-op that a provider emulating
 		// ROUND by scaling must not overflow on: MoneyValue is Decimal(6,2) on YDB, and 11.45 * 10^5 does not fit that.
 		[Test]
@@ -372,7 +376,7 @@ namespace Tests.Linq
 				orderby p.ID
 				select Sql.AsSql(Math.Round(p.MoneyValue, 5));
 
-			AssertQuery(query);
+			AssertQuery(query, ByValue);
 		}
 
 		// The widened intermediate must not leak into the result type: YQL arithmetic and IF reject
@@ -388,7 +392,7 @@ namespace Tests.Linq
 				orderby p.ID
 				select Sql.AsSql(Math.Round(p.MoneyValue, 5) + p.MoneyValue);
 
-			AssertQuery(sum);
+			AssertQuery(sum, ByValue);
 
 			var condition =
 				from p in db.Types
@@ -396,7 +400,7 @@ namespace Tests.Linq
 				orderby p.ID
 				select Sql.AsSql(p.ID > 2 ? Math.Round(p.MoneyValue, 5) : p.MoneyValue);
 
-			AssertQuery(condition);
+			AssertQuery(condition, ByValue);
 		}
 
 		[Test]
@@ -410,7 +414,7 @@ namespace Tests.Linq
 				orderby p.ID
 				select Sql.AsSql(Sql.Round(p.MoneyValue, 5) + p.MoneyValue);
 
-			AssertQuery(away);
+			AssertQuery(away, ByNullableValue);
 
 			var even =
 				from p in db.Types
@@ -418,7 +422,7 @@ namespace Tests.Linq
 				orderby p.ID
 				select Sql.AsSql(Sql.RoundToEven(p.MoneyValue, 5) + p.MoneyValue);
 
-			AssertQuery(even);
+			AssertQuery(even, ByNullableValue);
 		}
 
 		// A non-constant precision must not cost the value its fractional digits.
@@ -434,7 +438,7 @@ namespace Tests.Linq
 				orderby p.ID
 				select Sql.AsSql(Math.Round(p.MoneyValue, p.ID % 2 + 2));
 
-			AssertQuery(atOrAboveScale);
+			AssertQuery(atOrAboveScale, ByValue);
 
 			var belowScale =
 				from p in db.Types
@@ -442,7 +446,7 @@ namespace Tests.Linq
 				orderby p.ID
 				select Sql.AsSql(Math.Round(p.MoneyValue, p.ID % 2 + 1));
 
-			AssertQuery(belowScale);
+			AssertQuery(belowScale, ByValue);
 		}
 
 		sealed class RoundNearLimit
