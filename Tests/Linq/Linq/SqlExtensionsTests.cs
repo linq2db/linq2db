@@ -317,6 +317,40 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void Expr_Compiled_CapturedArgumentArray_Null([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var args = new object?[] { null };
+
+			var query = CompiledQuery.Compile((IDataContext dc) =>
+				dc.GetTable<Model.Person>()
+					.Where(p => p.ID == Sql.Expr<int?>("{0}", args!))
+					.Select(p => p.ID));
+
+			// Nothing keys the build on a captured array, so a null element must not be baked into it.
+			// Like master, the first call cannot translate it.
+			var firstCallFailed = false;
+
+			try
+			{
+				query(db).ToArray();
+			}
+			catch (LinqToDBException)
+			{
+				firstCallFailed = true;
+			}
+
+			args[0] = 2;
+
+			query(db)
+				.ToArray()
+				.ShouldBe([2]);
+
+			firstCallFailed.ShouldBeTrue();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
 		public void Expr_Captured_AfterRowReference([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);

@@ -306,7 +306,11 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 						? array
 						: Expression.Call(argument, Methods.System.FormattableString_GetArguments);
 
-					return DataExtensions.GenerateFormattableString(formattable, source);
+					// A null argument has no type to read it as. Baking it is safe only when the compiled table keys on
+					// the source; for a closure-captured array it is read too, and fails to translate, as on master.
+					var keyed = !ReferenceEquals(ResolveCompiledQueryArguments(source), source);
+
+					return DataExtensions.GenerateFormattableString(formattable, source, readNulls: !keyed);
 				}
 
 				return argument;

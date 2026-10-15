@@ -1443,12 +1443,16 @@ namespace LinqToDB
 
 		#region FromSql
 
-		static Expression GenerateArray(object?[] arguments, Expression? source)
+		static Expression GenerateArray(object?[] arguments, Expression? source, bool readNulls = false)
 		{
 			var argumentsExpr = Expression.NewArrayInit(typeof(object), arguments.Select((p, i) =>
 			{
 				if (p == null)
-					return Expression.Constant(null, typeof(object));
+				{
+					return readNulls
+						? Expression.ArrayIndex(source!, ExpressionInstances.Int32(i))
+						: Expression.Constant(null, typeof(object));
+				}
 
 				var argumentType    = p.GetType();
 				var value           = source == null || p is ISqlExpression
@@ -1470,9 +1474,10 @@ namespace LinqToDB
 		}
 
 		/// <param name="arguments">Expression for <paramref name="sql"/>'s arguments, read instead of baking their values.</param>
-		internal static MethodCallExpression GenerateFormattableString(FormattableString sql, Expression arguments)
+		/// <param name="readNulls">Read <see langword="null"/> arguments too, when nothing keys the build on <paramref name="arguments"/>.</param>
+		internal static MethodCallExpression GenerateFormattableString(FormattableString sql, Expression arguments, bool readNulls)
 		{
-			return GenerateFormattableString(sql.Format, GenerateArray(sql.GetArguments(), arguments));
+			return GenerateFormattableString(sql.Format, GenerateArray(sql.GetArguments(), arguments, readNulls));
 		}
 
 		internal static MethodCallExpression GenerateFormattableString(string format, Expression arguments)
