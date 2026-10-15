@@ -20,6 +20,14 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		{
 		}
 
+		// Oracle writes a DateTime mapped to DateTimeOffset through ToUniversalTime, which reads an unspecified kind as local time.
+		public override ISqlExpression ConvertDefaultValue(SqlDefaultValueExpression expression)
+		{
+			return expression.Value is DateTime dateTime && expression.Type.DataType == DataType.DateTimeOffset
+				? new SqlValue(expression.Type, DateTime.SpecifyKind(dateTime, DateTimeKind.Utc))
+				: base.ConvertDefaultValue(expression);
+		}
+
 		/// <summary>
 		/// Oracle's <c>TRUNC</c> already is truncation toward zero, the semantic the base composes <c>FLOOR</c>
 		/// and <c>CEILING</c> to reach - and Oracle spells the second one <c>CEIL</c>, so that composition does

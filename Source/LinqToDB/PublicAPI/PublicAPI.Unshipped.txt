@@ -13,6 +13,7 @@ override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlExpressionConvertVis
 override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.DataProvider.MySql.MySqlSqlExpressionConvertVisitor.ConvertDefaultValue(LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression! expression) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 override LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.CanLowerIntervalShift.get -> bool
+override LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.ConvertDefaultValue(LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression! expression) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 override LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlExpressionConvertVisitor.CanLowerIntervalShift.get -> bool
 override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
