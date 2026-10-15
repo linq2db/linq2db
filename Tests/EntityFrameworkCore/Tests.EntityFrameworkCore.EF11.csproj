@@ -6,8 +6,8 @@
 		<TargetFrameworks>net11.0</TargetFrameworks>
 		<!--EF_MYSQL is absent: see the PackageReference Remove below-->
 		<DefineConstants>EF11;EF10_OR_GREATER;EF_FSHARP;$(DefineConstants)</DefineConstants>
-		<!--NU1605 is the downgrade the two EF pins below deliberately perform-->
-		<NoWarn>$(NoWarn);NU1605</NoWarn>
+		<!--NU1608 is the out-of-constraint resolution the two EF pins below deliberately perform-->
+		<NoWarn>$(NoWarn);NU1608</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -20,10 +20,10 @@
 		    and TestBase builds connection strings with it, so it is referenced directly instead of guarded.-->
 		<PackageReference Remove="Pomelo.EntityFrameworkCore.MySql" />
 		<PackageReference Include="MySqlConnector" />
-		<!--Npgsql's 11.0.0-rc.1 hard-pins an EF build that was never published (npgsql/efcore.pg#3913).
-		    A direct reference outranks the pin - NuGet reports it as a downgrade, not a conflict - so these
-		    two lines and the NoWarn above are what make the PostgreSQL EF tests restore. Remove all three
-		    once Npgsql ships a release pinning a published build.-->
+		<!--Npgsql's 11.0.0-rc.1.1 hard-pins the previous EF release candidate. A direct reference outranks
+		    the pin - NuGet reports it as out of constraint, not a conflict - so these two lines and the NoWarn
+		    above are what make the PostgreSQL EF tests restore. Remove all three once Npgsql ships a release
+		    pinning the current band.-->
 		<PackageReference Include="Microsoft.EntityFrameworkCore" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
 	</ItemGroup>

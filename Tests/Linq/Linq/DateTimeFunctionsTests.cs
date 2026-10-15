@@ -1434,10 +1434,6 @@ namespace Tests.Linq
 
 		#region DateDiff
 
-		// SQL Server before 2016 has no exact measure of elapsed time - DATEDIFF_BIG arrived there - and Sql.AsSql
-		// below asks for the value in SQL, so there is no client-side answer to fall back to. Declared rather than
-		// excluded so it goes red the day the lowering reaches those versions.
-		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)]
 		[Test]
 		public void SubDateDay(
 			[DataSources(TestProvName.AllInformix)]
@@ -1460,7 +1456,6 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Day, t.DateTimeValue, t.DateTimeValue.AddHours(100))));
 		}
 
-		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)]
 		[Test]
 		public void SubDateHour(
 			[DataSources(TestProvName.AllInformix)]
@@ -1484,7 +1479,6 @@ namespace Tests.Linq
 		}
 
 		[ActiveIssue(Configuration = TestProvName.AllOracleDevart, Details = DevartRoundsDown)]
-		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)]
 		[Test]
 		public void SubDateMinute(
 			[DataSources(TestProvName.AllInformix)]
@@ -1509,7 +1503,6 @@ namespace Tests.Linq
 		}
 
 		[ActiveIssue(Configuration = TestProvName.AllOracleDevart, Details = DevartRoundsDown)]
-		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)]
 		[Test]
 		public void SubDateSecond(
 			[DataSources(TestProvName.AllInformix)]
@@ -1541,7 +1534,6 @@ namespace Tests.Linq
 		// Possible reason:
 		// looks like Access runtime modify some C++ runtime options that affect runtime's rounding behavior
 		// used also by SQLite provider's native part
-		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)]
 		[Test]
 		public void SubDateMillisecond(
 			[DataSources(
@@ -2132,7 +2124,7 @@ namespace Tests.Linq
 		/// support - the three tests below read it in opposite directions, so they cannot drift apart.
 		/// </summary>
 		const string ElapsedDifferenceProviders =
-			TestProvName.AllSqlServer2016Plus + "," +
+			TestProvName.AllSqlServer         + "," +
 			TestProvName.AllPostgreSQL        + "," +
 			TestProvName.AllSQLite            + "," +
 			TestProvName.AllMySql             + "," +

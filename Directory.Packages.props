@@ -20,10 +20,10 @@
 		    select between the modern and the legacy surface.-->
 		<!--initial version, referenced from nuspec-->
 		<BandLatestForNuget Condition="'$(TargetFramework)'=='net10.0'">10.0.0</BandLatestForNuget>
-		<BandLatestForNuget Condition="'$(TargetFramework)'=='net11.0'">11.0.0-rc.1.26425.128</BandLatestForNuget>
+		<BandLatestForNuget Condition="'$(TargetFramework)'=='net11.0'">11.0.0-rc.2.26504.105</BandLatestForNuget>
 		<!--latest version (not referenced from nuspec)-->
 		<BandLatest Condition="'$(TargetFramework)'=='net10.0'">10.0.12</BandLatest>
-		<BandLatest Condition="'$(TargetFramework)'=='net11.0'">11.0.0-rc.1.26425.128</BandLatest>
+		<BandLatest Condition="'$(TargetFramework)'=='net11.0'">11.0.0-rc.2.26504.105</BandLatest>
 
 		<!--single version across every TFM, for packages we deliberately do not float per band-->
 		<Net10Latest>10.0.12</Net10Latest>
@@ -35,6 +35,11 @@
 		<!--Same band, newest patch. For pins that must not sit on a known-vulnerable build - the floor
 		    release is routinely the one an advisory names - and for test-only packages.-->
 		<LegacyNetPackageLatest>10.0.12</LegacyNetPackageLatest>
+
+		<!--FSharp.Core floor for linq2db.FSharp, referenced from nuspec: the FSharp.Core the band's first SDK shipped
+		    with; net462/netstandard2.0 take the lowest supported band's, as $(LegacyNetPackageVersion) does.-->
+		<FSharpCoreForNuget Condition="'$(TargetFramework)'=='net11.0'">11.0.101-rc2.26504.105</FSharpCoreForNuget>
+		<FSharpCoreForNuget Condition="'$(FSharpCoreForNuget)'==''">10.0.100</FSharpCoreForNuget>
 
 		<!--EF 3.1 versions for netfx support-->
 		<EF3LatestNuget>3.1.0</EF3LatestNuget>
@@ -217,7 +222,9 @@
 		<PackageVersion Include="NodaTime"                                              Version="3.3.3"                        />
 		<PackageVersion Include="protobuf-net.Grpc.AspNetCore"                          Version="1.3.14"                       />
 		<PackageVersion Include="System.Linq.Dynamic.Core"                              Version="1.7.4"                        />
-		<PackageVersion Include="FSharp.Core"                                           Version="10.1.401"                     />
+		<!--net11 cannot sit below linq2db.FSharp's net11 floor, $(FSharpCoreForNuget)-->
+		<PackageVersion Include="FSharp.Core"                                           Version="10.1.401"                     Condition="'$(TargetFramework)'!='net11.0'" />
+		<PackageVersion Include="FSharp.Core"                                           Version="11.0.101-rc2.26504.105"       Condition="'$(TargetFramework)'=='net11.0'" />
 		<PackageVersion Include="LinqKit"                                               Version="1.3.11"                       />
 
 		<PackageVersion Include="Microsoft.Extensions.Logging.Console"                  Version="$(LegacyNetPackageLatest)"    Condition="'$(BandLatest)'==''" />
@@ -231,12 +238,12 @@
 		    There is no EF Core 11 line from either, so the net11 EF tests carry no MySQL provider.-->
 		<PackageVersion Include="Microting.EntityFrameworkCore.MySql"                   Version="10.0.11"                      Condition="'$(TargetFramework)'=='net10.0'" />
 		<!--numbered independently of the runtime band, so these stay explicit rather than reading $(BandLatest).
-		    The net11 row needs the EF11 test project's direct EF pins: Npgsql's 11.0.0-rc.1 hard-pins
-		    Microsoft.EntityFrameworkCore [11.0.0-rc.1.26431.118], a build that was never published
-		    (npgsql/efcore.pg#3913). Drop those pins once Npgsql ships a release that resolves.-->
+		    The net11 row needs the EF11 test project's direct EF pins: Npgsql's 11.0.0-rc.1.1 hard-pins
+		    Microsoft.EntityFrameworkCore [11.0.0-rc.1.26425.128], one release behind $(BandLatest).
+		    Drop those pins once Npgsql ships a release that pins the current band.-->
 		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"        Version="3.1.18"                       Condition="'$(TargetFramework)'=='net462'"  />
 		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"        Version="10.0.3"                       Condition="'$(TargetFramework)'=='net10.0'" />
-		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"        Version="11.0.0-rc.1"                  Condition="'$(TargetFramework)'=='net11.0'" />
+		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"        Version="11.0.0-rc.1.1"                Condition="'$(TargetFramework)'=='net11.0'" />
 		<!--referenced directly only by the EF11 test project, to override the pin above-->
 		<PackageVersion Include="Microsoft.EntityFrameworkCore"                         Version="$(BandLatestForNuget)"        Condition="'$(BandLatestForNuget)'!=''" />
 		<PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite"                  Version="$(EF3Latest)"                 Condition="'$(BandLatest)'==''" />
@@ -264,7 +271,8 @@
 		<PackageVersion Include="System.Runtime.InteropServices.RuntimeInformation"     Version="4.3.0"                        />
 
 		<PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly"           Version="$(Net10Latest)"               />
-		<PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server"    Version="$(Net10Latest)"               />
+		<!--GHSA-g27p-qf6j-c96c, GHSA-qjpx-jqm5-h2c4: back to $(Net10Latest) once it reaches 10.0.13-->
+		<PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server"    Version="10.0.13"                      />
 		<PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="$(Net10Latest)"               />
 	</ItemGroup>
 
@@ -292,6 +300,11 @@
 		<!--CVE-2025-6965 (SQLite before 3.50.2): EF Core $(EF3Latest) on net462 pulls lib.e_sqlite3 2.1.2
 		    transitively and transitive pinning is off, so this stands until EF3/net462 leaves the matrix.-->
 		<NuGetAuditSuppress Include="https://github.com/advisories/GHSA-2m69-gcr7-jv3q" />
+		<!--GHSA-334f-vvp4-7g6p: patched SignalR.Core 1.2.14 is not published; SignalR.Common is transitive in shipped packages and left to consumers-->
+		<NuGetAuditSuppress Include="https://github.com/advisories/GHSA-334f-vvp4-7g6p" />
+
+		<!--GHSA-2fmv-rv2c-59x7, GHSA-846f-f764-76mx: tests and linq2db.cli resolve 8.0.1-9.0.13 via SqlClient (7.1.1 still pulls 9.0.18), Oracle, EF Core and Roslyn-->
+		<PackageVersion Include="System.Security.Cryptography.Pkcs"                     Version="9.0.21"                       />
 
 		<PackageVersion Include="Microsoft.AspNetCore.Server.Kestrel.Core"              Version="$(AspNetCoreLegacyVersion)"   Condition="'$(TargetFramework)'=='net462'" />
 		<!--not $(LegacyNetPackageVersion): 10.0.0 is the build GHSA-73j8-2gch-69rq names-->

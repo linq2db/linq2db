@@ -110,9 +110,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			// batch size numbers not based on any strong grounds as I didn't found any recommendations for it
 			var batchSize   = Math.Max(10, options.BulkCopyOptions.MaxBatchSize ?? 10000);
 
-			var writer      = _provider.Adapter.BeginBinaryImport(connection, copyCommand);
-
-			ConfigureWriter(writer, dataConnection, options.BulkCopyOptions);
+			var writer      = BeginWriter(connection, copyCommand, dataConnection, options.BulkCopyOptions);
 
 			return ProviderSpecificCopySyncImpl(table.DataContext, dataConnection, options.BulkCopyOptions, source, connection, tableName, columns, columnTypes, npgsqlTypes, dbTypes, copyCommand, batchSize, writer);
 		}
@@ -210,7 +208,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 						writer.Dispose();
 
-						writer = _provider.Adapter.BeginBinaryImport(connection, copyCommand);
+						writer = BeginWriter(connection, copyCommand, dataConnection, options);
 						currentCount = 0;
 					}
 				}
@@ -274,11 +272,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 			var (npgsqlTypes, dbTypes, columnTypes) = BuildTypes(sqlBuilder, columns);
 
-			var writer = _provider.Adapter.BeginBinaryImportAsync != null
-				? await _provider.Adapter.BeginBinaryImportAsync(connection, copyCommand, cancellationToken).ConfigureAwait(false)
-				: _provider.Adapter.BeginBinaryImport(connection, copyCommand);
-
-			ConfigureWriter(writer, dataConnection, options.BulkCopyOptions);
+			var writer = await BeginWriterAsync(connection, copyCommand, dataConnection, options.BulkCopyOptions, cancellationToken).ConfigureAwait(false);
 
 			if (!writer.SupportsAsync)
 			{
@@ -337,9 +331,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 						await writer.DisposeAsync()
 							.ConfigureAwait(false);
 
-						writer = _provider.Adapter.BeginBinaryImportAsync != null
-							? await _provider.Adapter.BeginBinaryImportAsync(connection, copyCommand, cancellationToken).ConfigureAwait(false)
-							: _provider.Adapter.BeginBinaryImport(connection, copyCommand);
+						writer = await BeginWriterAsync(connection, copyCommand, dataConnection, options.BulkCopyOptions, cancellationToken).ConfigureAwait(false);
 						currentCount = 0;
 					}
 				}
@@ -395,11 +387,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 			var (npgsqlTypes, dbTypes, columnTypes) = BuildTypes(sqlBuilder, columns);
 
-			var writer = _provider.Adapter.BeginBinaryImportAsync != null
-				? await _provider.Adapter.BeginBinaryImportAsync(connection, copyCommand, cancellationToken).ConfigureAwait(false)
-				: _provider.Adapter.BeginBinaryImport(connection, copyCommand);
-
-			ConfigureWriter(writer, dataConnection, options.BulkCopyOptions);
+			var writer = await BeginWriterAsync(connection, copyCommand, dataConnection, options.BulkCopyOptions, cancellationToken).ConfigureAwait(false);
 
 			if (!writer.SupportsAsync)
 			{
@@ -461,9 +449,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 						await writer.DisposeAsync()
 							.ConfigureAwait(false);
 
-						writer = _provider.Adapter.BeginBinaryImportAsync != null
-							? await _provider.Adapter.BeginBinaryImportAsync(connection, copyCommand, cancellationToken).ConfigureAwait(false)
-							: _provider.Adapter.BeginBinaryImport(connection, copyCommand);
+						writer = await BeginWriterAsync(connection, copyCommand, dataConnection, options.BulkCopyOptions, cancellationToken).ConfigureAwait(false);
 						currentCount = 0;
 					}
 				}
@@ -492,6 +478,22 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			await CloseConnectionIfNecessaryAsync(table.DataContext).ConfigureAwait(false);
 
 			return rowsCopied;
+		}
+
+		NpgsqlProviderAdapter.NpgsqlBinaryImporter BeginWriter(DbConnection connection, string copyCommand, DataConnection dataConnection, BulkCopyOptions options)
+		{
+			var writer = _provider.Adapter.BeginBinaryImport(connection, copyCommand);
+			ConfigureWriter(writer, dataConnection, options);
+			return writer;
+		}
+
+		async Task<NpgsqlProviderAdapter.NpgsqlBinaryImporter> BeginWriterAsync(DbConnection connection, string copyCommand, DataConnection dataConnection, BulkCopyOptions options, CancellationToken cancellationToken)
+		{
+			var writer = _provider.Adapter.BeginBinaryImportAsync != null
+				? await _provider.Adapter.BeginBinaryImportAsync(connection, copyCommand, cancellationToken).ConfigureAwait(false)
+				: _provider.Adapter.BeginBinaryImport(connection, copyCommand);
+			ConfigureWriter(writer, dataConnection, options);
+			return writer;
 		}
 
 		private static void ConfigureWriter(NpgsqlProviderAdapter.NpgsqlBinaryImporter writer, DataConnection dataConnection, BulkCopyOptions options)
