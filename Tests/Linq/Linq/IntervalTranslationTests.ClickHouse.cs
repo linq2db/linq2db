@@ -258,7 +258,8 @@ namespace Tests.Linq
 			var windowed = t
 				.Select(r => new
 				{
-					Lag = Sql.Window.Lag(r.StartedOn, 1, r.StartedOn, w => w.OrderBy(r.Id)),
+					First = Sql.Window.FirstValue(r.StartedOn, w => w.OrderBy(r.Id).RowsBetween.Unbounded.And.Unbounded),
+					Lag   = Sql.Window.Lag(r.StartedOn, 1, r.StartedOn, w => w.OrderBy(r.Id)),
 				})
 				.AsSubQuery();
 
@@ -267,6 +268,10 @@ namespace Tests.Linq
 			var lagBelow = windowed.Count(r => r.Lag < boundary);
 
 			lagBelow.ShouldBe(2);
+
+			var firstBelow = windowed.Count(r => r.First < boundary);
+
+			firstBelow.ShouldBe(2);
 		}
 	}
 }
