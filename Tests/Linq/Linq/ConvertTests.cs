@@ -83,6 +83,51 @@ namespace Tests.Linq
 				from p in from t in db.Types select Convert.ToInt64(t.MoneyValue) where p > 0 select p);
 		}
 
+		sealed class WideDecimal
+		{
+			[PrimaryKey                                                  ] public int      Id { get; set; }
+			[Column(Precision = 35, Scale = 2)                           ] public decimal  D  { get; set; }
+			[Column(DbType = "Decimal(35, 2)", Precision = 35, Scale = 2)] public decimal  S  { get; set; }
+			[Column(Precision = 35, Scale = 2)                           ] public decimal? N  { get; set; }
+			[Column(Precision = 10, Scale = 2)                           ] public decimal  E  { get; set; }
+			[Column(Precision =  4, Scale = 4)                           ] public decimal  F  { get; set; }
+		}
+
+		// Past 2^53 a Double no longer holds every integer, so a Decimal->integer conversion must not pass through one.
+		[Test]
+		public void DecimalToInt64PastDoublePrecision([IncludeDataSources(true, TestProvName.AllYdb)] string context)
+		{
+			var data = new[]
+			{
+				new WideDecimal { Id = 1, D =  9007199254740993.25m, S =  9007199254740993.25m, N =  9007199254740993.25m, E =  3.50m, F =  0.1234m },
+				new WideDecimal { Id = 2, D =  9007199254740993.75m, S =  9007199254740993.75m, N =  9007199254740993.75m, E =  1.75m, F = -0.5000m },
+				new WideDecimal { Id = 3, D = -9007199254740993.75m, S = -9007199254740993.75m, N = -9007199254740993.75m, E = -2.25m, F =  0.9999m },
+				new WideDecimal { Id = 4, D = 12345678901234567.50m, S = 12345678901234567.50m, N = 12345678901234567.50m, E =  3.10m, F = -0.9999m },
+				new WideDecimal { Id = 5, D =  2.50m,                S =  2.50m,                N = null,                  E =  1.95m, F =  0.5000m },
+				new WideDecimal { Id = 6, D = -2.50m,                S = -2.50m,                N = -2.50m,                E = -0.50m, F =  0m      },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var query =
+				from r in t
+				orderby r.Id
+				select new
+				{
+					r.Id,
+					D        = Sql.AsSql((long)r.D),
+					DRounded = Sql.AsSql(Convert.ToInt64(r.D)),
+					S        = Sql.AsSql((long)r.S),
+					SRounded = Sql.AsSql(Convert.ToInt64(r.S)),
+					N        = Sql.AsSql((long?)r.N),
+					Product  = Sql.AsSql((long)(r.E * r.E)),
+					F        = Sql.AsSql((long)r.F),
+				};
+
+			AssertQuery(query);
+		}
+
 		[Test]
 		public void ToInt([DataSources] string context)
 		{
