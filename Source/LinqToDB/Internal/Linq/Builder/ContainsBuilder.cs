@@ -160,13 +160,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				// the count: an object with a single column also yields one placeholder, but the value searched for
 				// is then the object rather than the column, and the column's terms are not its to take. Those are
 				// taken apart member by member further down.
-				var sequenceDescriptor = sequenceExpr is SqlPlaceholderExpression scalarProjection
-					? QueryHelper.GetColumnDescriptor(scalarProjection.Sql)
-					: null;
-
 				Expression testExpr;
 
-				using (Builder.UsingColumnDescriptor(sequenceDescriptor))
+				using (sequenceExpr is SqlPlaceholderExpression scalarProjection
+					? Builder.UsingColumnDescriptorBeside(QueryHelper.GetColumnDescriptor(scalarProjection.Sql), scalarProjection.Sql)
+					: Builder.UsingColumnDescriptor(null))
 					testExpr = Builder.BuildSqlExpression(placeholderContext, expr, BuildPurpose.Sql, BuildFlags.ForKeys);
 
 				var testPlaceholders = ExpressionBuilder.CollectPlaceholders(testExpr, false);

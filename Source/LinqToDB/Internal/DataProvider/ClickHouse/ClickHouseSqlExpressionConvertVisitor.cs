@@ -95,6 +95,27 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				: Factory.Add(type, temporal, interval);
 		}
 
+		/// <summary>
+		/// Coerces a coarse date/time operand of <c>IN</c> to <c>DateTime64</c> when a value in the list is one.
+		/// </summary>
+		/// <remarks>
+		/// ClickHouse converts the list to the operand's type and refuses a lossy conversion with <c>Type mismatch in
+		/// IN or VALUES section</c>, where a comparison would promote both sides.
+		/// </remarks>
+		protected internal override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
+		{
+			var newElement = base.VisitInListPredicate(predicate);
+
+			if (newElement is SqlPredicate.InList inList
+				&& Factory.GetDbDataType(inList.Expr1).DataType is DataType.DateTime or DataType.Date or DataType.Date32
+				&& inList.Values.Exists(v => Factory.GetDbDataType(v).DataType == DataType.DateTime64))
+			{
+				return new SqlPredicate.InList(Factory.AsDateTime64(inList.Expr1), inList.WithNull, inList.IsNot, inList.Values);
+			}
+
+			return newElement;
+		}
+
 		#region LIKE
 
 		// https://clickhouse.com/docs/en/sql-reference/ansi/#feature-status E061-05

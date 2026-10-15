@@ -242,6 +242,15 @@ namespace LinqToDB.Internal.Linq.Builder
 			return new StateHolder<ColumnDescriptor?>(this, columnDescriptor, static v => v.CurrentDescriptor, static (v, f) => v.CurrentDescriptor = f);
 		}
 
+		/// <summary>
+		/// Lends <paramref name="descriptor"/> to what is built next beside <paramref name="expr"/>, keeping constants on
+		/// their own terms when <paramref name="expr"/> is a value computed from a coarse date/time column.
+		/// </summary>
+		internal IDisposable UsingColumnDescriptorBeside(ColumnDescriptor? descriptor, ISqlExpression expr)
+		{
+			return UsingSuggestedDescriptor(SuggestColumnDescriptor(descriptor, expr));
+		}
+
 		StateHolder<(ColumnDescriptor? Current, SuggestedDescriptor Suggested)> UsingSuggestedDescriptor(SuggestedDescriptor suggested)
 		{
 			return new StateHolder<(ColumnDescriptor? Current, SuggestedDescriptor Suggested)>(this, (suggested.Descriptor, suggested),
@@ -2991,11 +3000,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			// Asked for typing: whatever is written down on the other side of this expression takes its terms from
 			// here, so a column that cannot lend its declared width - one reached through a SUM - is not offered.
-			var descriptor = QueryHelper.GetColumnDescriptorForTyping(placeholderTest.Sql);
+			return SuggestColumnDescriptor(QueryHelper.GetColumnDescriptorForTyping(placeholderTest.Sql), placeholderTest.Sql);
+		}
 
+		SuggestedDescriptor SuggestColumnDescriptor(ColumnDescriptor? descriptor, ISqlExpression expr)
+		{
 			// A value computed from a coarse date/time column is not stored in it, so a constant written beside it keeps
 			// its sub-second or time part. A parameter still takes the column's type: it may carry a value read back from it.
-			if (descriptor is { ValueConverter: null } && !IsStoredValue(placeholderTest.Sql))
+			if (descriptor is { ValueConverter: null } && !IsStoredValue(expr))
 			{
 				var columnType = descriptor.GetDbDataType(true);
 
@@ -5259,7 +5271,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (expr == null)
 				return null;
 
-			using (UsingColumnDescriptor(QueryHelper.GetColumnDescriptor(expr)))
+			using (UsingColumnDescriptorBeside(QueryHelper.GetColumnDescriptor(expr), expr))
 			{
 				switch (arr.NodeType)
 				{

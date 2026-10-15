@@ -1965,6 +1965,40 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
+		/// A literal in an IN list beside an aggregate over a coarse column keeps its sub-second part, as it does
+		/// in a comparison.
+		/// </summary>
+		[Test]
+		[ActiveIssue(5998, Configuration = TestProvName.AllAccessOdbc, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was")]
+		[ActiveIssue(6047, Configuration = TestProvName.AllAccessOleDb, ErrorMessage = "Cannot have aggregate function in WHERE clause")]
+		public void CoarseAggregateInListKeepsLiteralTime([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarse(db);
+
+			var inList = t
+				.GroupBy(r => r.Id)
+				.Where(g => g.Max(r => r.Value).In(CoarseSubSecondBoundary))
+				.Count();
+
+			inList.ShouldBe(0);
+
+			var arrayContains = t
+				.GroupBy(r => r.Id)
+				.Where(g => new[] { CoarseSubSecondBoundary }.Contains(g.Max(r => r.Value)))
+				.Count();
+
+			arrayContains.ShouldBe(0);
+
+			var sequenceContains = t
+				.GroupBy(r => r.Id)
+				.Select(g => g.Max(r => r.Value))
+				.Contains(CoarseSubSecondBoundary);
+
+			sequenceContains.ShouldBeFalse();
+		}
+
+		/// <summary>
 		/// A literal set beside an aggregate over a coarse column in a set operation keeps its time part.
 		/// </summary>
 		[Test]
