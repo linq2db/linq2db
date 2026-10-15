@@ -1050,6 +1050,35 @@ namespace Tests.Linq
 			years.ShouldAllBe(year => year == 1753);
 		}
 
+		// Oracle converts a zone-less literal beside a TIMESTAMP WITH TIME ZONE column in the session's zone, and EXTRACT reads such
+		// a value in UTC, so the default of a DateTime member mapped as an offset type must be written with its offset.
+		[Test]
+		public void DateTimeMappedAsOffsetDefaultIsReadIndependentlyOfOracleSessionTimeZone([IncludeDataSources(TestProvName.AllOracle)] string context, [Values("+00:00", "+05:00", "-05:00")] string zone, [Values] bool preferClient)
+		{
+			using var db    = GetDataConnection(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(MissedMomentEntity.Seed);
+
+			var mapped = db.GetTable<MomentAsDateTimeEntity>();
+
+			new LinqToDB.Data.CommandInfo(db, $"ALTER SESSION SET TIME_ZONE = '{zone}'").Execute();
+
+			try
+			{
+				var rows =
+					(from e in mapped
+					 from j in mapped.LeftJoin(j => j.Id == e.Id + 1000)
+					 select new { j.Moment.Year, j.Moment.Hour })
+					.ToArray();
+
+				rows.Length.ShouldBe(MissedMomentEntity.Seed.Length);
+				rows.ShouldAllBe(row => row.Year == 1 && row.Hour == 0);
+			}
+			finally
+			{
+				new LinqToDB.Data.CommandInfo(db, "ALTER SESSION SET TIME_ZONE = LOCAL").Execute();
+			}
+		}
+
 		[Table]
 		sealed class PhysicalDateEntity
 		{
@@ -1219,17 +1248,22 @@ namespace Tests.Linq
 			sqlServer.ShouldBeOfType<SqlValue>().Value.ShouldBeOfType<DateTime>().ShouldBe(default(DateTime));
 		}
 
-		// Oracle writes a DateTime mapped to DateTimeOffset through ToUniversalTime, which reads an unspecified kind as local
-		// time, so the default must be given as UTC or the literal moves with the process time zone.
+		// Oracle writes a DateTime mapped to DateTimeOffset through ToUniversalTime, which reads an unspecified kind as local time,
+		// and converts a zone-less literal in the session's zone, so the default is given as an offset value at offset zero.
 		[Test]
-		public void DateTimeMappedAsOffsetDefaultIsUtcOnOracle()
+		public void DateTimeMappedAsOffsetDefaultIsZonedOnOracle()
 		{
-			var oracle = LowerDefault(OracleTools.GetDataProvider(OracleVersion.v12, OracleProvider.Managed), typeof(DateTime), DataType.DateTimeOffset);
+			var provider = OracleTools.GetDataProvider(OracleVersion.v12, OracleProvider.Managed);
+			var lowered  = LowerDefault(provider, typeof(DateTime), DataType.DateTimeOffset);
+			var value    = lowered.ShouldBeOfType<SqlValue>().Value.ShouldBeOfType<DateTimeOffset>();
 
-			var value = oracle.ShouldBeOfType<SqlValue>().Value.ShouldBeOfType<DateTime>();
+			value.ShouldBe(new DateTimeOffset(default(DateTime), TimeSpan.Zero));
 
-			value.ShouldBe(default(DateTime));
-			value.Kind.ShouldBe(DateTimeKind.Utc);
+			var sql = new StringBuilder();
+
+			provider.CreateSqlBuilder(provider.MappingSchema, new DataOptions()).BuildExpression(sql, lowered, false);
+
+			sql.ToString().ShouldBe("TIMESTAMP '0001-01-01 00:00:00.000000 +00:00'");
 		}
 
 #if !NETFRAMEWORK
