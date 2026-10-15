@@ -20,11 +20,12 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		{
 		}
 
-		// Oracle writes a DateTime mapped to DateTimeOffset through ToUniversalTime, which reads an unspecified kind as local time.
+		// A zone-less literal beside a TIMESTAMP WITH TIME ZONE column is converted in the session's zone (and a DateTime one is first
+		// moved by ToUniversalTime), so the default of a DateTime mapped to DateTimeOffset is written with its offset.
 		public override ISqlExpression ConvertDefaultValue(SqlDefaultValueExpression expression)
 		{
 			return expression.Value is DateTime dateTime && expression.Type.DataType == DataType.DateTimeOffset
-				? new SqlValue(expression.Type, DateTime.SpecifyKind(dateTime, DateTimeKind.Utc))
+				? new SqlValue(expression.Type.WithSystemType(typeof(DateTimeOffset)), new DateTimeOffset(dateTime.Ticks, TimeSpan.Zero))
 				: base.ConvertDefaultValue(expression);
 		}
 
