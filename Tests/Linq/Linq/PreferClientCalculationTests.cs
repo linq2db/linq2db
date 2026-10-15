@@ -1502,6 +1502,27 @@ namespace Tests.Linq
 			texts.ShouldAllBe(text => text == "0");
 		}
 
+		// An inline array reached through a cast, AsEnumerable or AsQueryable is the same list of row values as the bare one.
+		[Test]
+		public void WrappedInlineArrayContainsOverMissedLeftJoinReadsDefault([DataSources] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(MissedJoinEntity.Seed);
+
+			var query =
+				from e in table
+				from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				select new
+				{
+					e.Id,
+					Enumerable = new[] { j.Value1, 5 }.AsEnumerable().Contains(0)      ? "y" : "n",
+					Queryable  = new[] { j.Value1, 5 }.AsQueryable().Contains(0)       ? "y" : "n",
+					Cast       = ((IEnumerable<int>)new[] { j.Value1, 5 }).Contains(0) ? "y" : "n",
+				};
+
+			AssertQuery(query);
+		}
+
 		// A value projected as it is, not calculated with, keeps the NULL the reader turns into default(T): no COALESCE, and
 		// DISTINCT still tells the missed row from a matched 0.
 		[Test]
