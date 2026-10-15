@@ -1521,6 +1521,28 @@ namespace Tests.Linq
 				};
 
 			AssertQuery(query);
+
+			// Without the option the membership stays in SQL, as an IN list over the defaulted items, not a VALUES table.
+			if (!preferClient && context.IsAnyOf(TestProvName.AllSQLite))
+			{
+				var sql = query.ToSqlQuery().Sql.ToUpperInvariant();
+
+				sql.ShouldContain("COALESCE");
+				sql.ShouldNotContain("VALUES");
+			}
+		}
+
+		// Every spelling of an inline array of row values is an IN list in a predicate as well.
+		[Test]
+		public void WrappedInlineArrayContainsInPredicateIsAnInList([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(MissedJoinEntity.Seed);
+
+			AssertQuery(table.Where(e => new[] { e.Value1, e.Id }.Contains(20)));
+			AssertQuery(table.Where(e => new[] { e.Value1, e.Id }.AsEnumerable().Contains(20)));
+			AssertQuery(table.Where(e => new[] { e.Value1, e.Id }.AsQueryable().Contains(20)));
+			AssertQuery(table.Where(e => ((IEnumerable<int>)new[] { e.Value1, e.Id }).Contains(20)));
 		}
 
 		// A value projected as it is, not calculated with, keeps the NULL the reader turns into default(T): no COALESCE, and
