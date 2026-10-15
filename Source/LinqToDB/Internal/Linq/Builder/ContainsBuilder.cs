@@ -19,7 +19,10 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			return call is { IsQueryable: true, Arguments: [var a0, _] }
 				// Contains over constant works through ConvertPredicate
-				&& !builder.CanBeEvaluatedOnClient(a0);
+				&& !builder.CanBeEvaluatedOnClient(a0)
+				// An inline array is an IN list or a client calculation, as the span overload C# 14 binds on .NET 8+ is:
+				// as a VALUES table its items would escape the missed-row default and Access could not select them.
+				&& a0.NodeType != ExpressionType.NewArrayInit;
 		}
 
 		public static bool CanBuildAsyncMethod(MethodCallExpression call, ExpressionBuilder builder)

@@ -930,10 +930,14 @@ namespace Tests.Linq
 		}
 
 		// TimeSpan.Zero has a typed literal on some providers and becomes a parameter typed by the column on the rest.
-		// Excluded providers cannot store the table: SQLite Classic and SQL CE fail to bind a TimeSpan, Oracle to create the column.
+		// Excluded providers cannot store the table: SQLite Classic and SQL CE fail to bind a TimeSpan, Oracle to create the column;
+		// or read it back: the ClickHouse.Driver and Octonica readers reject an IntervalSecond column.
 		[Test]
-		public void SpanOverMissedLeftJoinReadsDefault([DataSources(TestProvName.AllSQLiteClassic, TestProvName.AllSqlCe, TestProvName.AllOracle)] string context, [Values] bool preferClient)
+		public void SpanOverMissedLeftJoinReadsDefault([DataSources(TestProvName.AllSQLiteClassic, TestProvName.AllSqlCe, TestProvName.AllOracle, ProviderName.ClickHouseDriver, ProviderName.ClickHouseOctonica)] string context, [Values] bool preferClient)
 		{
+			if (context.IsAnyOf(TestProvName.AllSqlServer2005) && context.IsRemote())
+				Assert.Ignore("SQL Server 2005 has no 'time' type for the remote insert's TimeSpan parameter.");
+
 			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
 			using var table = db.CreateLocalTable(MissedSpanEntity.Seed);
 
