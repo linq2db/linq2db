@@ -9,6 +9,7 @@ using LinqToDB;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Access;
 using LinqToDB.DataProvider.ClickHouse;
+using LinqToDB.DataProvider.Oracle;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.DataProvider.Sybase;
 using LinqToDB.DataProvider.Ydb;
@@ -1216,6 +1217,19 @@ namespace Tests.Linq
 			var sqlServer = LowerDefault(SqlServerTools.GetDataProvider(SqlServerVersion.v2019, SqlServerProvider.MicrosoftDataSqlClient), typeof(DateTimeOffset), dataType);
 
 			sqlServer.ShouldBeOfType<SqlValue>().Value.ShouldBeOfType<DateTime>().ShouldBe(default(DateTime));
+		}
+
+		// Oracle writes a DateTime mapped to DateTimeOffset through ToUniversalTime, which reads an unspecified kind as local
+		// time, so the default must be given as UTC or the literal moves with the process time zone.
+		[Test]
+		public void DateTimeMappedAsOffsetDefaultIsUtcOnOracle()
+		{
+			var oracle = LowerDefault(OracleTools.GetDataProvider(OracleVersion.v12, OracleProvider.Managed), typeof(DateTime), DataType.DateTimeOffset);
+
+			var value = oracle.ShouldBeOfType<SqlValue>().Value.ShouldBeOfType<DateTime>();
+
+			value.ShouldBe(default(DateTime));
+			value.Kind.ShouldBe(DateTimeKind.Utc);
 		}
 
 #if !NETFRAMEWORK
