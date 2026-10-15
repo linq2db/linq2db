@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -2136,6 +2137,31 @@ namespace Tests.Linq
 				.Count();
 
 			minDayLiteral.ShouldBe(1);
+		}
+
+		/// <summary>
+		/// LAG over a converted column reads the column's values through its converter, and its default as written.
+		/// </summary>
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_LeadLag)]
+		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Ydb, TestProvName.AllMariaDB, ErrorMessage = ErrorHelper.Error_WindowFunction_LeadLagDefault)]
+		public void LagWithDefaultOverAConvertedColumn([SupportsAnalyticFunctionsContext] string context)
+		{
+			var fallback = CoarseValue.AddDays(-7);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[]
+			{
+				new CoarseConvertedRow { Id = 1, Value = CoarseValue,             Day = CoarseConvertedDay },
+				new CoarseConvertedRow { Id = 2, Value = CoarseValue.AddHours(1), Day = CoarseConvertedDay },
+			});
+
+			var lagged = t
+				.OrderBy(r => r.Id)
+				.Select(r => Sql.Window.Lag(r.Value, 1, fallback, w => w.OrderBy(r.Id)))
+				.ToArray();
+
+			lagged.ShouldBe([fallback, CoarseValue]);
 		}
 
 		[Test]

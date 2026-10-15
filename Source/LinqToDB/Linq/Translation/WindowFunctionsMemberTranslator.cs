@@ -772,6 +772,12 @@ namespace LinqToDB.Linq.Translation
 			{
 				foreach (var argument in information.Arguments)
 				{
+					// LAG / LEAD answer their default in place of the first argument's value, which is read back through
+					// that argument's column, so the default is written in the column's terms.
+					using var defaultScope = arguments.Count == 2 && functionName is "LAG" or "LEAD"
+						? translationContext.UsingColumnDescriptor(QueryHelper.GetColumnDescriptor(arguments[0].Expression))
+						: null;
+
 					var translated = translationContext.Translate(argument.Expr);
 					if (translated is not SqlPlaceholderExpression placeholder)
 						return SqlErrorExpression.EnsureError(translated, methodCall.Type);
