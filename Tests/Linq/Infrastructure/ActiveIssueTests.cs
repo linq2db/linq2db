@@ -292,6 +292,20 @@ namespace Tests.Infrastructure
 				.AppliesTo("SQLite.MS", isLinqService: false).ShouldBeTrue();
 		}
 
+		[Test]
+		public void AppliesTo_RequiresBaselines_GovernsOnlyRunsThatWriteThem()
+		{
+			var attr = new ActiveIssueAttribute { RequiresBaselines = true };
+
+			attr.AppliesTo("SQLite.MS", isLinqService: true, baselinesCaptured: true ).ShouldBeTrue();
+			attr.AppliesTo("SQLite.MS", isLinqService: true, baselinesCaptured: false).ShouldBeFalse();
+			attr.AppliesTo(null,        isLinqService: true, baselinesCaptured: false).ShouldBeFalse();
+
+			// Control: without the flag the baselines setting is irrelevant.
+			new ActiveIssueAttribute()
+				.AppliesTo("SQLite.MS", isLinqService: true, baselinesCaptured: false).ShouldBeTrue();
+		}
+
 		#endregion
 
 		#region SelectGoverning — precedence and overlap
