@@ -91,6 +91,7 @@ namespace Tests.Linq
 			[Column(Precision = 35, Scale = 2)                           ] public decimal? N  { get; set; }
 			[Column(Precision = 10, Scale = 2)                           ] public decimal  E  { get; set; }
 			[Column(Precision =  4, Scale = 4)                           ] public decimal  F  { get; set; }
+			[Column(Precision = 20, Scale = 12)                          ] public decimal  H  { get; set; }
 		}
 
 		// Past 2^53 a Double no longer holds every integer, so a Decimal->integer conversion must not pass through one.
@@ -99,12 +100,12 @@ namespace Tests.Linq
 		{
 			var data = new[]
 			{
-				new WideDecimal { Id = 1, D =  9007199254740993.25m, S =  9007199254740993.25m, N =  9007199254740993.25m, E =  3.50m, F =  0.1234m },
-				new WideDecimal { Id = 2, D =  9007199254740993.75m, S =  9007199254740993.75m, N =  9007199254740993.75m, E =  1.75m, F = -0.5000m },
-				new WideDecimal { Id = 3, D = -9007199254740993.75m, S = -9007199254740993.75m, N = -9007199254740993.75m, E = -2.25m, F =  0.9999m },
-				new WideDecimal { Id = 4, D = 12345678901234567.50m, S = 12345678901234567.50m, N = 12345678901234567.50m, E =  3.10m, F = -0.9999m },
-				new WideDecimal { Id = 5, D =  2.50m,                S =  2.50m,                N = null,                  E =  1.95m, F =  0.5000m },
-				new WideDecimal { Id = 6, D = -2.50m,                S = -2.50m,                N = -2.50m,                E = -0.50m, F =  0m      },
+				new WideDecimal { Id = 1, D =  9007199254740993.25m, S =  9007199254740993.25m, N =  9007199254740993.25m, E =  3.50m, F =  0.1234m, H =  1.499999999999m },
+				new WideDecimal { Id = 2, D =  9007199254740993.75m, S =  9007199254740993.75m, N =  9007199254740993.75m, E =  1.75m, F = -0.5000m, H = -1.499999999999m },
+				new WideDecimal { Id = 3, D = -9007199254740993.75m, S = -9007199254740993.75m, N = -9007199254740993.75m, E = -2.25m, F =  0.9999m, H =  1.5m            },
+				new WideDecimal { Id = 4, D = 12345678901234567.50m, S = 12345678901234567.50m, N = 12345678901234567.50m, E =  3.10m, F = -0.9999m, H =  0.25m           },
+				new WideDecimal { Id = 5, D =  2.50m,                S =  2.50m,                N = null,                  E =  1.95m, F =  0.5000m, H = -0.75m           },
+				new WideDecimal { Id = 6, D = -2.50m,                S = -2.50m,                N = -2.50m,                E = -0.50m, F =  0m,      H =  0m              },
 			};
 
 			using var db = GetDataContext(context);
@@ -123,6 +124,7 @@ namespace Tests.Linq
 					N        = Sql.AsSql((long?)r.N),
 					Product  = Sql.AsSql((long)(r.E * r.E)),
 					F        = Sql.AsSql((long)r.F),
+					Sum      = Sql.AsSql((long)(r.H + r.H)),
 				};
 
 			AssertQuery(query);

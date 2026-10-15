@@ -394,29 +394,28 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		}
 
 		// The scale-dropping CAST rounds half-to-even, so a result it moved away from zero is stepped back by one.
-		// The value is pinned to Decimal(35,S) first: a computed value need not have the type inferred for it, and
-		// the comparisons demand identical Decimal types. The casts are mandatory, or the optimizer folds them, and
-		// their types carry no DbType, which would be rendered in their place.
+		// The value is not cast to Decimal(35,S): a computed value can carry more scale than inferred for it, which
+		// that cast would round away, and YQL compares Decimals of different types. The casts are mandatory, or the
+		// optimizer folds them, and their types carry no DbType, which would be rendered in their place.
 		ISqlExpression TruncateDecimal(ISqlExpression value, DbDataType fromType, int scale)
 		{
 			var wideType = new DbDataType(fromType.SystemType, DataType.Decimal, null, fromType.Length, YdbMappingSchema.MAX_DECIMAL_PRECISION, scale);
 			var intType  = new DbDataType(fromType.SystemType, DataType.Decimal, null, fromType.Length, YdbMappingSchema.MAX_DECIMAL_PRECISION, 0);
 
-			var wide    = Factory.Cast(value,   wideType, true);
-			var rounded = Factory.Cast(wide,    intType,  true);
+			var rounded = Factory.Cast(value,   intType,  true);
 			var back    = Factory.Cast(rounded, wideType, true);
 			var zero    = Factory.Value(wideType, 0m);
 			var one     = Factory.Value(intType,  1m);
 
 			return Factory.Condition(
 				Factory.SearchCondition()
-					.AddGreater(wide, zero, CompareNulls.LikeSql)
-					.AddGreater(back, wide, CompareNulls.LikeSql),
+					.AddGreater(value, zero, CompareNulls.LikeSql)
+					.AddGreater(back, value, CompareNulls.LikeSql),
 				Factory.Sub(intType, rounded, one),
 				Factory.Condition(
 					Factory.SearchCondition()
-						.AddLess(wide, zero, CompareNulls.LikeSql)
-						.AddLess(back, wide, CompareNulls.LikeSql),
+						.AddLess(value, zero, CompareNulls.LikeSql)
+						.AddLess(back, value, CompareNulls.LikeSql),
 					Factory.Add(intType, rounded, one),
 					rounded));
 		}
