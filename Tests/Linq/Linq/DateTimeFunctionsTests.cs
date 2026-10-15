@@ -1999,6 +1999,24 @@ namespace Tests.Linq
 		static readonly DateTime CoarseMidnight = new(2026, 6, 1);
 
 		/// <summary>
+		/// A literal beside a cast to a date in a set operation takes the date type, as before the coarse-value typing:
+		/// the cast reaches no column, and some servers refuse a set operation over DATE and TIMESTAMP.
+		/// </summary>
+		[Test]
+		public void DateCastSetOperationTypesTheLiteralAsDate([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarse(db);
+
+			var days = t
+				.Select(r => r.Value.Date)
+				.Concat(t.Select(r => CoarseMidnight))
+				.ToArray();
+
+			days.ShouldBe([CoarseMidnight, CoarseMidnight]);
+		}
+
+		/// <summary>
 		/// A cast to a date compared with a timestamp at that date's midnight is equal to it.
 		/// </summary>
 		[Test]

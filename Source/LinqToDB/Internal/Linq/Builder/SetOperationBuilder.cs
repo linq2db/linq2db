@@ -602,12 +602,15 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			// A value computed from a coarse date/time column has no stored precision to match, so the value keeps its own
-			// type rather than lose its sub-second or time part. A stored column still lends its type.
+			// type rather than lose its sub-second or time part. A stored column still lends its type, and so does a
+			// coarse value that reaches no column (a cast to a date): some servers refuse a set operation over DATE and TIMESTAMP.
 			DbDataType GetValueTypeBeside(SqlValue value, ISqlExpression other)
 			{
 				var otherType = QueryHelper.GetDbDataType(other, MappingSchema);
 
-				if (ExpressionBuildVisitor.IsCoarserDateTime(otherType.DataType, value.ValueType.DataType) && !ExpressionBuildVisitor.IsStoredColumn(other))
+				if (ExpressionBuildVisitor.IsCoarserDateTime(otherType.DataType, value.ValueType.DataType)
+					&& QueryHelper.GetColumnDescriptorForTyping(other) != null
+					&& !ExpressionBuildVisitor.IsStoredColumn(other))
 					return value.ValueType;
 
 				return otherType;
