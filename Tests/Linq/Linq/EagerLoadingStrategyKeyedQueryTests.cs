@@ -1545,7 +1545,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, ErrorMessage = "non-field expression with LATERAL",
 			AlsoWhenParameter = "strategy", AlsoWhenValue = EagerLoadingStrategy.KeyedQuery)]
 		public void Select_KeyedQuery_DetailTakeIsPerParent(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context,
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context,
 			[Values] EagerLoadingStrategy strategy)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
@@ -1585,7 +1585,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative, ErrorMessage = "non-field expression with LATERAL")]
 		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, ErrorMessage = "non-field expression with LATERAL")]
 		public void Select_KeyedQuery_AssociationDetailSkipTakeIsPerParent(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1626,7 +1626,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative, ErrorMessage = "non-field expression with LATERAL")]
 		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, ErrorMessage = "non-field expression with LATERAL")]
 		public void Select_KeyedQuery_AssociationDetailTakeIsPerParent(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
