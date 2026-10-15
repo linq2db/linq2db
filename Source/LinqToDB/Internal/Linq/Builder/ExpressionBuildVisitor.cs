@@ -4025,7 +4025,8 @@ namespace LinqToDB.Internal.Linq.Builder
 					// static Contains(this src, item) extension methods
 					case { Method: { DeclaringType: { } type, Name: nameof(Enumerable.Contains) } } when (
 						type == typeof(Enumerable) ||
-						(type == typeof(Queryable) && node.Arguments.Count == 2 && Builder.CanBeEvaluatedOnClient(node.Arguments[0]))
+						(type == typeof(Queryable) && node.Arguments.Count == 2
+							&& (Builder.CanBeEvaluatedOnClient(node.Arguments[0]) || UnwrapInlineArray(node.Arguments[0]) is { NodeType: ExpressionType.NewArrayInit }))
 					):
 						predicate = ConvertInPredicate(node.Arguments[1], node.Arguments[0]);
 						break;
