@@ -21,8 +21,5 @@
 
 		<PackageReference Include="Microsoft.Data.Sqlite" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" />
-
-		<!--transitive vulnerable packages-->
-		<PackageReference Include="System.Security.Cryptography.Pkcs" />
 	</ItemGroup>
 </Project>
