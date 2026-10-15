@@ -5159,7 +5159,13 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					visitedCteFields ??= new HashSet<IQueryElement>(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
 
-					return visitedCteFields.Add(cteField) && IsStoredValue(cteColumn, visitedCteFields);
+					// Path-scoped: two branches of a set operation reading the same CTE column are not a recursion.
+					if (!visitedCteFields.Add(cteField))
+						return false;
+
+					var stored = IsStoredValue(cteColumn, visitedCteFields);
+					visitedCteFields.Remove(cteField);
+					return stored;
 				}
 
 				case SqlColumn column:

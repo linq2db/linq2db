@@ -2554,5 +2554,33 @@ DROP TABLE IF EXISTS TemporalTable3History
 
 			coalesce.ShouldBe(1);
 		}
+
+		static readonly DateTime CteSetOperationValue = new(2026, 6, 1, 10, 0, 0, 3);
+
+		/// <summary>
+		/// A <c>datetime</c> column read through both branches of a set operation over one CTE is still a stored column:
+		/// a literal compared with it takes the column's type, so the 1/300 s step matches.
+		/// </summary>
+		[Test]
+		public void CteSetOperationColumnComparedWithLiteral([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<DateTimeReadBackTable>(
+			[
+				new() { Id = 1, D = CteSetOperationValue },
+				new() { Id = 2, D = CteSetOperationValue },
+			]);
+
+			var cte = tb.AsCte();
+
+			var union = cte
+				.Where(r => r.Id == 1)
+				.Concat(cte.Where(r => r.Id == 2))
+				.AsCte();
+
+			var count = union.Count(r => r.D == CteSetOperationValue);
+
+			count.ShouldBe(2);
+		}
 	}
 }
