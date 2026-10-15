@@ -1586,6 +1586,38 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void FromSql_Compiled_MixedArgumentArray_Null([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var captured = new object?[] { null };
+
+			var query = CompiledQuery.Compile((IDataContext dc, object?[]? args) =>
+				dc.FromSql<Person>("SELECT * FROM Person WHERE PersonID = {0}", (args ?? captured)!)
+					.Select(p => p.ID));
+
+			// The build is keyed on args only, so a null taken from the captured array must not be baked into it.
+			var firstCallFailed = false;
+
+			try
+			{
+				query(db, null).ToArray();
+			}
+			catch (LinqToDBException)
+			{
+				firstCallFailed = true;
+			}
+
+			captured[0] = 2;
+
+			query(db, null)
+				.ToArray()
+				.ShouldBe([2]);
+
+			firstCallFailed.ShouldBeTrue();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
 		public void FromSql_Compiled_CapturedArgumentArray([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool reassign)
 		{
 			using var db = GetDataConnection(context);

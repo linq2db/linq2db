@@ -309,8 +309,10 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 					// A null argument has no type to read it as. It is read, and fails to translate as on master, only from
 					// a closure-captured array, which master read per call. A keyed source bakes it, and so does a captured
-					// FormattableString, which master baked whole.
-					var keyed = !ReferenceEquals(ResolveCompiledQueryArguments(source), source);
+					// FormattableString, which master baked whole. A source that also reads a captured value (args ?? captured)
+					// is not keyed on that value.
+					var keyed = !ReferenceEquals(ResolveCompiledQueryArguments(source), source)
+						&& source.Find(static e => e is MemberExpression { Expression: null or ConstantExpression }) == null;
 
 					return DataExtensions.GenerateFormattableString(formattable, source, readNulls: fromArray && !keyed);
 				}
