@@ -1501,13 +1501,25 @@ namespace Tests.Linq
 				dc.FromSql<Person>("SELECT * FROM Person WHERE PersonID = {0}", args)
 					.Select(p => p.ID));
 
-			query(db, [1])
+			var query1 = query(db, [1]);
+
+			query1
 				.ToArray()
 				.ShouldBe([1]);
 
 			query(db, [2])
 				.ToArray()
 				.ShouldBe([2]);
+
+			var query3 = query(db, [1]);
+
+			query3
+				.ToArray()
+				.ShouldBe([1]);
+
+			query3
+				.GetCompiledQueryInfo()
+				.ShouldBeSameAs(query1.GetCompiledQueryInfo());
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
