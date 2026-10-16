@@ -276,11 +276,21 @@ namespace Tests.FpuJit
 			if (resets.Count > 0)
 				Console.WriteLine($"FPU control word was reset while preparing {resets.Count} method(s); first: {resets[0][1]} {resets[0][2]}");
 
+			// methods of a type whose initializer faulted reset on every retry; that fault already fails the sweep
+			var failedInitializers = faults
+				.Where(r => r[2].StartsWith(r[1] + ":cctor:", StringComparison.Ordinal))
+				.Select(r => r[2].Substring(r[1].Length + ":cctor:".Length))
+				.ToList();
+
 			foreach (var unverified in records.Where(r => r[0] == "UNVERIFIED"))
 			{
 				var allowed = AllowedUnverified.FirstOrDefault(a => a.Assembly == unverified[1] && unverified[2].StartsWith(a.MethodPrefix, StringComparison.Ordinal));
+				var failed  = failedInitializers.FirstOrDefault(t => unverified[2].StartsWith(t + "::", StringComparison.Ordinal) || unverified[2].StartsWith(t + "+", StringComparison.Ordinal));
+
 				if (allowed.Reason != null)
 					Console.WriteLine($"unverified (allowed) {unverified[1]} {unverified[2]}");
+				else if (failed != null)
+					Console.WriteLine($"unverified (initializer of {failed} faulted) {unverified[1]} {unverified[2]}");
 				else
 				{
 					Console.WriteLine($"ERROR: unverified {unverified[1]} {unverified[2]} — compiling it resets the FPU control word even in a fresh process");
