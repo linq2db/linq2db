@@ -317,6 +317,41 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void Expr_Compiled_ArgumentArray([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var query = CompiledQuery.Compile((IDataContext dc, object?[] args) =>
+				dc.GetTable<Model.Person>()
+					.Where(p => p.ID == Sql.Expr<int?>("{0}", args!))
+					.Select(p => p.ID));
+
+			var query1 = query(db, [1]);
+
+			query1
+				.ToArray()
+				.ShouldBe([1]);
+
+			query(db, [null])
+				.ToArray()
+				.ShouldBeEmpty();
+
+			query(db, [2])
+				.ToArray()
+				.ShouldBe([2]);
+
+			var query4 = query(db, [1]);
+
+			query4
+				.ToArray()
+				.ShouldBe([1]);
+
+			query4
+				.GetCompiledQueryInfo()
+				.ShouldBeSameAs(query1.GetCompiledQueryInfo());
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
 		public void Expr_Compiled_CapturedArgumentArray_Null([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataConnection(context);
