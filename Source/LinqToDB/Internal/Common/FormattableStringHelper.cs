@@ -160,26 +160,6 @@ namespace LinqToDB.Internal.Common
 		}
 
 		/// <summary>
-		/// Returns, per argument, whether <paramref name="format"/> references it by a format item,
-		/// or <see langword="null"/> when <paramref name="format"/> is not a valid composite format.
-		/// </summary>
-		public static bool[]? GetReferencedArguments(string format, int count)
-		{
-			var items = ParseFormatItems(format);
-
-			if (items == null)
-				return null;
-
-			var referenced = new bool[count];
-
-			foreach (var item in items)
-				if (item.Index < count)
-					referenced[item.Index] = true;
-
-			return referenced;
-		}
-
-		/// <summary>
 		/// Returns a literal segment of composite format string <paramref name="format"/> with <c>{{</c> and <c>}}</c> unescaped.
 		/// </summary>
 		public static string Unescape(string format, int start, int length)

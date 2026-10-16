@@ -28,7 +28,6 @@ static LinqToDB.Internal.Common.FormattableStringHelper.ComputeHashCode(System.F
 static LinqToDB.Internal.Common.FormattableStringHelper.CreateArgumentsExpression(object?[]! arguments) -> System.Linq.Expressions.NewArrayExpression!
 static LinqToDB.Internal.Common.FormattableStringHelper.CreateExpression(System.FormattableString! value) -> System.Linq.Expressions.MethodCallExpression!
 static LinqToDB.Internal.Common.FormattableStringHelper.CreateExpression(string! format, System.Linq.Expressions.Expression! arguments) -> System.Linq.Expressions.MethodCallExpression!
-static LinqToDB.Internal.Common.FormattableStringHelper.GetReferencedArguments(string! format, int count) -> bool[]?
 static LinqToDB.Internal.Common.FormattableStringHelper.ParseFormatItems(string! format) -> System.Collections.Generic.IReadOnlyList<LinqToDB.Internal.Common.FormattableStringHelper.FormatItem>?
 static LinqToDB.Internal.Common.FormattableStringHelper.PrepareRawSqlArguments(System.Linq.Expressions.Expression! formatArg, System.Linq.Expressions.Expression? parametersArg, bool keepUnreferenced, out string! format, out System.Collections.Generic.IReadOnlyList<System.Linq.Expressions.Expression!>! arguments) -> void
 static LinqToDB.Internal.Common.FormattableStringHelper.TrySplit(System.Linq.Expressions.Expression! expression, out System.Linq.Expressions.Expression? format, out System.Linq.Expressions.NewArrayExpression? arguments) -> bool

@@ -104,13 +104,6 @@ namespace Tests.Common
 		}
 
 		[Test]
-		public void GetReferencedArguments()
-		{
-			FormattableStringHelper.GetReferencedArguments("{1} {5}", 3).ShouldBe([false, true, false]);
-			FormattableStringHelper.GetReferencedArguments("{a}",     3).ShouldBeNull();
-		}
-
-		[Test]
 		public void TrySplit()
 		{
 			var arguments = Expression.NewArrayInit(typeof(object), Expression.Constant(1, typeof(object)));
@@ -181,6 +174,14 @@ namespace Tests.Common
 
 			IsDropped(arguments[0]).ShouldBeFalse();
 			IsDropped(arguments[1]).ShouldBeTrue();
+		}
+
+		[Test]
+		public void PrepareRawSqlArguments_OutOfRangeItemIsIgnored()
+		{
+			var arguments = Prepare("{1} {5}", false, Element(1, typeof(int)), Element(2, typeof(int)), Element(99, typeof(int)));
+
+			arguments.Select(IsDropped).ShouldBe([true, false, true]);
 		}
 
 		[Test]
