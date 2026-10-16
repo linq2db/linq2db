@@ -284,13 +284,16 @@ namespace LinqToDB.Internal.Common
 		/// unless it can hold a <see cref="DataParameter"/> (referenced by name or position instead),
 		/// is an <see cref="ISqlExpression"/>, or <paramref name="keepUnreferenced"/> is set.
 		/// </summary>
-		/// <param name="formatArg"><c>FormattableStringFactory.Create(format, new object[] { ... })</c> expression.</param>
+		/// <param name="formatArg"><c>FormattableStringFactory.Create(format, new object[] { ... })</c> expression, or constant <see cref="FormattableString"/>.</param>
 		/// <param name="keepUnreferenced">Keep unreferenced arguments, e.g. when the provider binds parameters by position.</param>
 		/// <param name="format">Composite format of raw SQL.</param>
 		/// <param name="arguments">Argument expressions.</param>
 		public static void PrepareRawSqlArguments(Expression formatArg, bool keepUnreferenced, out string format, out IReadOnlyList<Expression> arguments)
 		{
-			// ExposeExpressionVisitor brings every FromSql / Sql.Expr overload to this shape before the query is built
+			// ExposeExpressionVisitor brings every FromSql / Sql.Expr overload to the Create shape, except a constant it leaves as is
+			if (formatArg is ConstantExpression { Value: FormattableString formattable })
+				formatArg = CreateExpression(formattable);
+
 			if (!TrySplit(formatArg, out var formatExpr, out var argumentsExpr))
 				throw new LinqToDBException($"Unexpected raw SQL expression '{formatArg}'.");
 

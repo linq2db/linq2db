@@ -1899,6 +1899,32 @@ namespace Tests.Linq
 			query.ToSqlQuery().Parameters.ShouldNotContain(p => Equals(p.Value, 99));
 		}
 
+		// a hand-built tree can pass the FormattableString as a constant, which expose leaves as is
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
+		public void FromSql_ConstantFormattableString([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var fs    = FormattableStringFactory.Create($"SELECT * FROM {QuoteTableName("Person", context)} WHERE {QuoteTableName("PersonID", context)} = {{0}}", 2);
+			var call  = (MethodCallExpression)db.FromSql<Person>(fs).Expression;
+			var query = db.Person.Provider.CreateQuery<Person>(call.Update(call.Object, [call.Arguments[0], Expression.Constant(fs, typeof(FormattableString))]));
+
+			query.Select(p => p.ID).ToArray().ShouldBe([2]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
+		public void Expr_ConstantFormattableString([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var fs     = FormattableStringFactory.Create("({0})", 2);
+			var expr   = ((MethodCallExpression)((Expression<Func<int>>)(() => Sql.Expr<int>(fs))).Body).Method;
+			var p      = Expression.Parameter(typeof(Person), "p");
+			var filter = Expression.Lambda<Func<Person, bool>>(Expression.Equal(Expression.PropertyOrField(p, nameof(Model.Person.ID)), Expression.Call(expr, Expression.Constant(fs, typeof(FormattableString)))), p);
+
+			db.Person.Where(filter).Select(p => p.ID).ToArray().ShouldBe([2]);
+		}
+
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
 		public void ArgumentReferencedByNameIsSent([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllSQLite, TestProvName.AllMySql, TestProvName.AllPostgreSQL, TestProvName.AllOracle)] string context)
 		{
