@@ -1,0 +1,210 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+
+using LinqToDB.Expressions;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Reflection;
+using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Mapping;
+
+namespace LinqToDB.Internal.Linq.Builder
+{
+	[BuildsMethodCall(nameof(LinqExtensions.Unpivot), nameof(LinqExtensions.UnpivotMulti))]
+	sealed class UnpivotBuilder : MethodCallBuilder
+	{
+		public static bool CanBuildMethod(MethodCallExpression call)
+			=> call.IsQueryable
+				&& call.Method.DeclaringType == typeof(LinqExtensions)
+				&& (string.Equals(call.Method.Name, nameof(LinqExtensions.UnpivotMulti), StringComparison.Ordinal)
+					? call.Arguments.Count == 4
+					: call.Arguments.Count == 5);
+
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		{
+			if (string.Equals(methodCall.Method.Name, nameof(LinqExtensions.UnpivotMulti), StringComparison.Ordinal))
+				return BuildMultiValue(builder, methodCall, buildInfo);
+
+			var info = UnpivotInfo.Parse(builder, methodCall);
+
+			// Resolve the name column through the source's own mapping schema: build the source ahead of the lowering, and
+			// at the root reuse that build as the first branch so builder-wide state (query tags, hints) is not repeated.
+			// A sub-query re-resolves a context reference through GetContext, which a projected source cannot answer.
+			var sourceResult = builder.TryBuildSequence(new BuildInfo(buildInfo, info.Source, new SelectQuery()));
+
+			if (sourceResult.BuildContext == null)
+				return sourceResult;
+
+			var lowered = BuildLoweredExpression(info, sourceResult.BuildContext.MappingSchema, buildInfo.CreateSubQuery ? null : sourceResult.BuildContext);
+
+			return BuildSequenceResult.FromContext(builder.BuildSequence(new BuildInfo(buildInfo, lowered)));
+		}
+
+		#region Multi-value
+
+		static BuildSequenceResult BuildMultiValue(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		{
+			var genericArgs    = methodCall.Method.GetGenericArguments();
+			var sourceType     = genericArgs[0];
+			var resultType     = genericArgs[2];
+			var sourceExpr     = methodCall.Arguments[0];
+			var resultSelector = methodCall.Arguments[1].UnwrapLambda();
+			// Columns arrive flattened group-major alongside the group names - see BuildMultiValueUnpivot.
+			var names       = methodCall.Arguments[2].EvaluateExpression<string[]>()!;
+			var columnExprs = ((NewArrayExpression)methodCall.Arguments[3]).Expressions;
+			var groupSize   = resultSelector.Parameters.Count - 2;
+
+			var groups = new (string name, LambdaExpression[] columns)[names.Length];
+
+			for (var i = 0; i < names.Length; i++)
+			{
+				var columns = new LambdaExpression[groupSize];
+
+				for (var j = 0; j < groupSize; j++)
+					columns[j] = columnExprs[(i * groupSize) + j].UnwrapLambda();
+
+				groups[i] = (names[i], columns);
+			}
+
+			// UNION ALL: one projected SELECT per group.
+			var selectMethod = Methods.Queryable.Select.MakeGenericMethod(sourceType, resultType);
+			var concatMethod = Methods.Queryable.Concat.MakeGenericMethod(resultType);
+
+			Expression? accumulated = null;
+
+			foreach (var (name, columns) in groups)
+			{
+				var rowParam = Expression.Parameter(sourceType, "row");
+				var args     = new Expression[columns.Length + 2];
+				args[0] = rowParam;
+				args[1] = Expression.Constant(name);
+				for (var i = 0; i < columns.Length; i++)
+					args[i + 2] = columns[i].GetBody(rowParam);
+
+				var branch = Expression.Call(selectMethod, sourceExpr, Expression.Quote(Expression.Lambda(resultSelector.GetBody(args), rowParam)));
+				accumulated = accumulated == null ? branch : Expression.Call(concatMethod, accumulated, branch);
+			}
+
+			return BuildSequenceResult.FromContext(builder.BuildSequence(new BuildInfo(buildInfo, accumulated!)));
+		}
+
+		#endregion
+
+		#region Portable lowering
+
+		static Expression BuildLoweredExpression(UnpivotInfo info, MappingSchema mappingSchema, IBuildContext? builtSourceContext)
+		{
+			var builtSource = builtSourceContext == null
+				? info.Source
+				: new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(info.SourceType), builtSourceContext);
+
+			var selectMethod = Methods.Queryable.Select.MakeGenericMethod(info.SourceType, info.ResultType);
+			var whereMethod  = Methods.Queryable.Where .MakeGenericMethod(info.SourceType);
+			var concatMethod = Methods.Queryable.Concat.MakeGenericMethod(info.ResultType);
+
+			// A non-nullable member still reads NULL from the outer side of a join, so the test is lifted rather
+			// than skipped.
+			var nullableValueType = info.ValueType.IsValueType && Nullable.GetUnderlyingType(info.ValueType) == null
+				? typeof(Nullable<>).MakeGenericType(info.ValueType)
+				: info.ValueType;
+
+			Expression? accumulated = null;
+
+			foreach (var column in info.Columns)
+			{
+				var name     = GetPhysicalColumnName(column, info.SourceType, mappingSchema);
+				var rowParam = Expression.Parameter(info.SourceType, "row");
+
+				var projectionBody   = info.ResultSelector.GetBody(rowParam, Expression.Constant(name), column.GetBody(rowParam));
+				var projectionLambda = Expression.Lambda(projectionBody, rowParam);
+
+				var branchSource = accumulated == null ? builtSource : info.Source;
+
+				if (!info.IncludeNulls)
+				{
+					var whereParam  = Expression.Parameter(info.SourceType, "row");
+					var value       = column.GetBody(whereParam);
+					var whereBody   = Expression.NotEqual(
+						value.Type == nullableValueType ? value : Expression.Convert(value, nullableValueType),
+						Expression.Constant(null, nullableValueType));
+					var whereLambda = Expression.Lambda(whereBody, whereParam);
+
+					branchSource = Expression.Call(whereMethod, branchSource, Expression.Quote(whereLambda));
+				}
+
+				var branch = Expression.Call(selectMethod, branchSource, Expression.Quote(projectionLambda));
+
+				accumulated = accumulated == null ? branch : Expression.Call(concatMethod, accumulated, branch);
+			}
+
+			return accumulated!;
+		}
+
+		#endregion
+
+		// The name column reports the physical column name, so a query reads the same names whether or not the
+		// member was renamed by the mapping.
+		static string GetPhysicalColumnName(LambdaExpression column, Type sourceType, MappingSchema mappingSchema)
+		{
+			var memberName = GetColumnName(column);
+
+			return mappingSchema.GetEntityDescriptor(sourceType)[memberName]?.ColumnName ?? memberName;
+		}
+
+		static string GetColumnName(LambdaExpression column)
+		{
+			var body = column.Body;
+
+			while (body is UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked } unary)
+				body = unary.Operand;
+
+			if (body is not MemberExpression member)
+				throw new LinqToDBException(ErrorHelper.Pivot.Error_UnpivotColumnSelector);
+
+			// A complex column is keyed by its full member path, as the entity descriptor keys it.
+			var path = member.Member.Name;
+
+			while (member.Expression is MemberExpression parent)
+			{
+				member = parent;
+				path   = member.Member.Name + "." + path;
+			}
+
+			return path;
+		}
+
+		sealed class UnpivotInfo
+		{
+			public required Expression                      Source         { get; init; }
+			public required LambdaExpression                ResultSelector { get; init; }
+			public required IReadOnlyList<LambdaExpression> Columns        { get; init; }
+			public required bool                            IncludeNulls   { get; init; }
+			public required Type                            SourceType     { get; init; }
+			public required Type                            ValueType      { get; init; }
+			public required Type                            ResultType     { get; init; }
+
+			// Written inline in a sub-query, the marker arrives as written rather than as the public method builds it:
+			// a selector or the params array can be a captured value.
+			public static UnpivotInfo Parse(ExpressionBuilder builder, MethodCallExpression methodCall)
+			{
+				var genericArgs = methodCall.Method.GetGenericArguments();
+
+				var columns = new List<LambdaExpression> { (LambdaExpression)PivotSugarBuilder.ReadArgument(builder, methodCall.Arguments[3])! };
+				columns.AddRange((IEnumerable<LambdaExpression>)PivotSugarBuilder.ReadArgument(builder, methodCall.Arguments[4])!);
+
+				return new UnpivotInfo
+				{
+					Source         = methodCall.Arguments[0],
+					IncludeNulls   = (UnpivotNulls)PivotSugarBuilder.ReadArgument(builder, methodCall.Arguments[1])! == UnpivotNulls.IncludeNulls,
+					ResultSelector = (LambdaExpression)PivotSugarBuilder.ReadArgument(builder, methodCall.Arguments[2])!,
+					Columns        = columns,
+					SourceType     = genericArgs[0],
+					ValueType      = genericArgs[1],
+					ResultType     = genericArgs[2],
+				};
+			}
+		}
+	}
+}

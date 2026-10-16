@@ -199,6 +199,24 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test]
+		public void PivotOperatorsOverADbSet([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider, false);
+
+			var unpivoted = ctx.Products
+				.Unpivot((p, name, value) => new { p.ProductId, Name = name, Value = value }, p => p.UnitsInStock, p => p.UnitsOnOrder)
+				.Count();
+
+			unpivoted.ShouldBe(ctx.Products.Count(p => p.UnitsInStock != null) + ctx.Products.Count(p => p.UnitsOnOrder != null));
+
+			var pivoted = ctx.Products
+				.Pivot(p => p.SupplierId, p => p.Discontinued, new[] { false, true }, (g, c) => new { g.Key, Cells = c.Cell(rows => rows.Count()) })
+				.ToArray();
+
+			pivoted.Length.ShouldBe(ctx.Products.Select(p => p.SupplierId).Distinct().Count());
+		}
+
+		[Test]
 		public void TestTransformationTable([EFDataSources] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
