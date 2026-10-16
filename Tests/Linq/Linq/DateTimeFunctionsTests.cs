@@ -2130,6 +2130,27 @@ namespace Tests.Linq
 			values.ShouldContain(CoarseValue);
 		}
 
+		/// <summary>
+		/// A literal set beside a conditional over date columns keeps its time part: the conditional is a computed
+		/// value, not a stored column.
+		/// </summary>
+		[Test]
+		public void ConditionalOverDateSetOperationKeepsLiteralTime([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[]
+			{
+				new CoarseDayPairRow { Id = 1, OpenedOn = CoarseMidnight, Value = CoarseValue },
+			});
+
+			var values = t
+				.Select(r => r.Id > 0 ? r.OpenedOn : r.ClosedOn!.Value)
+				.Concat(t.Select(r => CoarseValue))
+				.ToArray();
+
+			values.ShouldContain(CoarseValue);
+		}
+
 		static readonly DateTime CoarseMidnight = new(2026, 6, 1);
 
 		/// <summary>
