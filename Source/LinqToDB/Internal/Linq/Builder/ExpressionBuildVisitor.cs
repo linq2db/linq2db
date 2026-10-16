@@ -3007,11 +3007,11 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			// A value computed from a coarse date/time column is not stored in it, so a constant written beside it keeps
 			// its sub-second or time part. A parameter still takes the column's type: it may carry a value read back from it.
-			if (descriptor is { ValueConverter: null } && !IsStoredValue(expr))
+			if (descriptor is { ValueConverter: null } && !QueryHelper.IsStoredValue(expr))
 			{
 				var columnType = descriptor.GetDbDataType(true);
 
-				if (IsCoarserDateTime(columnType.DataType, MappingSchema.GetDbDataType(columnType.SystemType).DataType))
+				if (QueryHelper.IsCoarserDateTime(columnType.DataType, MappingSchema.GetDbDataType(columnType.SystemType).DataType))
 					return new(descriptor, null);
 			}
 
@@ -5091,7 +5091,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 							// A computed value has no stored precision to match, so narrowing the literal to it would only
 							// drop the literal's sub-second or time part. A stored column still lends its type.
-							if (IsCoarserDateTime(type.DataType, context.DataType) && !IsStoredColumn(expr))
+							if (QueryHelper.IsCoarserDateTime(type.DataType, context.DataType) && !QueryHelper.IsStoredColumn(expr))
 								return true;
 
 							context.DataType  = type.DataType;
@@ -5115,105 +5115,6 @@ namespace LinqToDB.Internal.Linq.Builder
 				ctx.Precision ?? baseType.Precision,
 				ctx.Scale     ?? baseType.Scale
 			);
-		}
-
-		/// <summary>
-		/// How finely a date/time type resolves an instant; <c>-1</c> for a type that is not one.
-		/// </summary>
-		static int DateTimeRank(DataType dataType)
-		{
-			return dataType switch
-			{
-				DataType.Date or DataType.Date32                                     => 0,
-				DataType.SmallDateTime                                               => 1,
-				DataType.DateTime                                                    => 2,
-				DataType.DateTime2 or DataType.DateTime64 or DataType.DateTimeOffset => 3,
-				_                                                                    => -1,
-			};
-		}
-
-		internal static bool IsCoarserDateTime(DataType dataType, DataType than)
-		{
-			var rank = DateTimeRank(dataType);
-			return rank >= 0 && rank < DateTimeRank(than);
-		}
-
-		/// <summary>
-		/// Whether <paramref name="expr"/> is a stored column's value as it is, rather than one computed from it.
-		/// </summary>
-		/// <remarks>
-		/// Narrower than <see cref="QueryHelper.GetColumnDescriptorForTyping"/>, which also finds a column through
-		/// COALESCE, MIN/MAX and the value window functions. A cast is transparent to the structural walk because
-		/// <see cref="QueryHelper.GetColumnDescriptorForTyping"/> already refuses one that changed the database type.
-		/// </remarks>
-		internal static bool IsStoredColumn(ISqlExpression expr)
-		{
-			return QueryHelper.GetColumnDescriptorForTyping(expr) != null && IsStoredValue(expr);
-		}
-
-		static bool IsStoredValue(ISqlExpression expr)
-		{
-			return IsStoredValue(expr, null);
-		}
-
-		static bool IsStoredValue(ISqlExpression expr, HashSet<IQueryElement>? visitedCteFields)
-		{
-			switch (expr)
-			{
-				case SqlField:
-					return true;
-
-				// A CTE column is stored only if what it projects is; a recursive CTE that reaches itself again is not.
-				case SqlCteTableField cteTableField:
-				{
-					if (cteTableField.CteField is not { Column: { } cteColumn } cteField)
-						return true;
-
-					visitedCteFields ??= new HashSet<IQueryElement>(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
-
-					// Path-scoped: two branches of a set operation reading the same CTE column are not a recursion.
-					if (!visitedCteFields.Add(cteField))
-						return false;
-
-					var stored = IsStoredValue(cteColumn, visitedCteFields);
-					visitedCteFields.Remove(cteField);
-					return stored;
-				}
-
-				case SqlColumn column:
-				{
-					if (!IsStoredValue(column.Expression, visitedCteFields))
-						return false;
-
-					if (column.Parent?.HasSetOperators == true)
-					{
-						var idx = column.Parent.Select.Columns.IndexOf(column);
-
-						foreach (var setOperator in column.Parent.SetOperators)
-						{
-							if (idx < 0 || !IsStoredValue(setOperator.SelectQuery.Select.Columns[idx].Expression, visitedCteFields))
-								return false;
-						}
-					}
-
-					return true;
-				}
-
-				case SqlNullabilityExpression nullability:
-					return IsStoredValue(nullability.SqlExpression, visitedCteFields);
-
-				case SqlExpression { Expr: "{0}", Parameters: [var parameter] }:
-					return IsStoredValue(parameter, visitedCteFields);
-
-				case SqlCastExpression cast:
-					return IsStoredValue(cast.Expression, visitedCteFields);
-
-				case SelectQuery { Select.Columns: [var singleColumn] }:
-					return IsStoredValue(singleColumn, visitedCteFields);
-
-				default:
-					return false;
-			}
 		}
 
 		#endregion

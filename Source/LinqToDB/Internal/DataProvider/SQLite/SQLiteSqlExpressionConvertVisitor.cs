@@ -2,7 +2,6 @@
 
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Extensions;
-using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SqlQuery;
@@ -292,7 +291,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			{
 				var type = QueryHelper.GetDbDataType(inList.Expr1, MappingSchema);
 
-				if (IsDateDataType(type, "Date") && IsDateTime(type.SystemType) && !ExpressionBuildVisitor.IsStoredColumn(inList.Expr1))
+				if (IsDateDataType(type, "Date") && IsDateTime(type.SystemType) && !QueryHelper.IsStoredColumn(inList.Expr1))
 					return new SqlPredicate.InList(ToTimestamp(inList.Expr1, type.WithDataType(DataType.DateTime)), inList.WithNull, inList.IsNot, inList.Values);
 			}
 

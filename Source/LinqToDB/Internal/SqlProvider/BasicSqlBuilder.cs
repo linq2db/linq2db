@@ -17,7 +17,6 @@ using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Infrastructure;
-using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -2972,7 +2971,7 @@ namespace LinqToDB.Internal.SqlProvider
 			{
 				var valueType = MappingSchema.GetDbDataType(value.GetType());
 
-				if (ExpressionBuildVisitor.IsCoarserDateTime(expr1Type.DataType, valueType.DataType) && !ExpressionBuildVisitor.IsStoredColumn(expr1))
+				if (QueryHelper.IsCoarserDateTime(expr1Type.DataType, valueType.DataType) && !QueryHelper.IsStoredColumn(expr1))
 					return valueType;
 			}
 

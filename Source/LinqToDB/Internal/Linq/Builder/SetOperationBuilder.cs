@@ -608,9 +608,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				var otherType = QueryHelper.GetDbDataType(other, MappingSchema);
 
-				if (ExpressionBuildVisitor.IsCoarserDateTime(otherType.DataType, value.ValueType.DataType)
+				if (QueryHelper.IsCoarserDateTime(otherType.DataType, value.ValueType.DataType)
 					&& QueryHelper.GetColumnDescriptorForTyping(other) != null
-					&& !ExpressionBuildVisitor.IsStoredColumn(other))
+					&& !QueryHelper.IsStoredColumn(other))
 					return value.ValueType;
 
 				return otherType;
