@@ -2,6 +2,7 @@
 
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SqlQuery;
@@ -261,11 +262,6 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 					&& dateType.DataType != DataType.Time;
 			}
 
-			static ISqlExpression ToTimestamp(ISqlExpression expr, DbDataType dateType)
-			{
-				return new SqlFunction(dateType, "strftime", ParametersNullabilityType.SameAsSecondParameter, new SqlValue("%Y-%m-%d %H:%M:%f"), expr) { DoNotOptimize = true };
-			}
-
 			static ISqlExpression GetActualExpr(ISqlExpression expr)
 			{
 				expr = QueryHelper.UnwrapNullablity(expr);
@@ -277,6 +273,30 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 				return expr;
 			}
+		}
+
+		static ISqlExpression ToTimestamp(ISqlExpression expr, DbDataType dateType)
+		{
+			return new SqlFunction(dateType, "strftime", ParametersNullabilityType.SameAsSecondParameter, new SqlValue("%Y-%m-%d %H:%M:%f"), expr) { DoNotOptimize = true };
+		}
+
+		/// <summary>
+		/// A date computed from a column is brought to the timestamp text form beside an IN list, as in a comparison:
+		/// the values keep their own <see cref="DateTime"/> type there, and SQLite compares the two as text.
+		/// </summary>
+		protected internal override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
+		{
+			var newElement = base.VisitInListPredicate(predicate);
+
+			if (newElement is SqlPredicate.InList inList)
+			{
+				var type = QueryHelper.GetDbDataType(inList.Expr1, MappingSchema);
+
+				if (IsDateDataType(type, "Date") && IsDateTime(type.SystemType) && !ExpressionBuildVisitor.IsStoredColumn(inList.Expr1))
+					return new SqlPredicate.InList(ToTimestamp(inList.Expr1, type.WithDataType(DataType.DateTime)), inList.WithNull, inList.IsNot, inList.Values);
+			}
+
+			return newElement;
 		}
 
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)

@@ -2028,6 +2028,53 @@ namespace Tests.Linq
 			wholeCount.ShouldBe(1);
 		}
 
+		sealed class CoarseDayPairRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Date)] public DateTime? ClosedOn { get; set; }
+			[Column(DataType = DataType.Date)] public DateTime  OpenedOn { get; set; }
+
+			[Column(DataType = DataType.DateTime)] public DateTime Value { get; set; }
+		}
+
+		/// <summary>
+		/// An IN list beside a date computed from date columns, or cast to a date, matches the day at midnight and not
+		/// a time within it, whether its values are written inline or come from a captured collection.
+		/// </summary>
+		[Test]
+		public void ComputedDateInListMatchesMidnight([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[]
+			{
+				new CoarseDayPairRow { Id = 1, ClosedOn = null, OpenedOn = CoarseMidnight, Value = CoarseValue },
+			});
+
+			var midnight = new[] { CoarseMidnight };
+			var withTime = new[] { CoarseValue };
+
+			var coalesceCaptured = t
+				.Count(r => midnight.Contains(r.ClosedOn ?? r.OpenedOn));
+
+			coalesceCaptured.ShouldBe(1);
+
+			var coalesceInline = t
+				.Count(r => (r.ClosedOn ?? r.OpenedOn).In(CoarseMidnight));
+
+			coalesceInline.ShouldBe(1);
+
+			var castCaptured = t
+				.Count(r => midnight.Contains(Sql.Convert(Sql.Types.Date, r.Value)));
+
+			castCaptured.ShouldBe(1);
+
+			var coalesceWithTime = t
+				.Count(r => withTime.Contains(r.ClosedOn ?? r.OpenedOn));
+
+			coalesceWithTime.ShouldBe(0);
+		}
+
 		/// <summary>
 		/// A literal set beside an aggregate over a coarse column in a set operation keeps its time part.
 		/// </summary>
