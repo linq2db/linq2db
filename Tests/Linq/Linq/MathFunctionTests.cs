@@ -1067,7 +1067,7 @@ namespace Tests.Linq
 		// Rounding a computed value must leave it in its inferred type, on every branch of a runtime precision's CASE and
 		// on the constant path, or YQL rejects the IF and the addition.
 		[ActiveIssue(6055, Configuration = TestProvName.AllYdb, SkipForNonLinqService = true,
-			ErrorTypeName = "Grpc.Core.RpcException", ErrorMessage = "Failed to convert type: Decimal(31,9) to Decimal(22,9)",
+			ErrorTypeName = "Grpc.Core.RpcException", ErrorMessage = "Failed to convert type: Decimal(35,13) to Decimal(22,13)",
 			Details = "LinqServiceSerializer drops SqlBinaryExpression's precision/scale, so the server folds the non-mandatory narrowing casts")]
 		[Test]
 		public void Round29([IncludeDataSources(true, TestProvName.AllYdb)] string context)
@@ -1096,6 +1096,134 @@ namespace Tests.Linq
 				.ToArray();
 
 			constant.ShouldBe(new decimal?[] { 1000000m, 1000000m, 1000000m });
+		}
+
+		sealed class RoundComputedScale
+		{
+			[PrimaryKey                        ] public int     Id  { get; set; }
+			[Column                            ] public int     G   { get; set; }
+			[Column(Precision = 20, Scale = 12)] public decimal H   { get; set; }
+			[Column(Precision = 25, Scale = 12)] public decimal H13 { get; set; }
+			[Column(Precision = 35, Scale = 20)] public decimal K   { get; set; }
+			[Column(Precision = 35, Scale = 22)] public decimal W   { get; set; }
+			[Column(Precision = 20, Scale = 13)] public decimal T   { get; set; }
+			[Column                            ] public int     P   { get; set; }
+			[Column                            ] public int     P2  { get; set; }
+		}
+
+		static readonly RoundComputedScale[] _roundComputedScale =
+		{
+			new() { Id = 1, G = 1, H = 1.749999999750m, H13 =  4000000000000.122499999998m, K =  0.06249999999999999998m, W =  1.7499999999999999999998m, T =  0.0624999999998m, P =  0, P2 = 2 },
+			new() { Id = 2, G = 2, H = 1.249999999750m, H13 = -4000000000000.122499999998m, K =  0.06749999999999999998m, W =  1.2499999999999999999998m, T =  0.0674999999998m, P =  0, P2 = 2 },
+			new() { Id = 3, G = 3, H = 0.062499999998m,                                     K = -0.06249999999999999998m, W = -1.7499999999999999999998m, T = -0.0624999999998m, P =  2, P2 = 2 },
+			new() { Id = 4, G = 4, H = 0.067499999998m,                                                                                                                         P =  2, P2 = 2 },
+			new() { Id = 5, G = 5, H = 7.499999999975m,                                                                                                                         P = -1, P2 = 2 },
+			new() { Id = 6, G = 1, H = 1.749999999750m,                                                                                                                         P =  0, P2 = 2 },
+		};
+
+		// A computed Decimal is inferred Decimal(22,9), while YQL computes it in the operands' type (H + H is
+		// Decimal(20,12)), so a work type of the inferred scale would round its extra digits first. K, W and T sit on
+		// the work type's scale for their path, H13 on its integer digits.
+		[ActiveIssue(6055, Configuration = TestProvName.AllYdb, SkipForNonLinqService = true,
+			ErrorTypeName = "Grpc.Core.RpcException", ErrorMessage = "Value does not fit into decimal",
+			Details = "LinqServiceSerializer drops SqlBinaryExpression's precision/scale, so the server folds the narrowing cast and the result keeps the work type")]
+		[Test]
+		public void Round30([IncludeDataSources(true, TestProvName.AllYdb)] string context, [Values(MidpointRounding.ToEven, MidpointRounding.AwayFromZero)] MidpointRounding mp)
+		{
+			var data = _roundComputedScale;
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var ordered = data.OrderBy(r => r.Id).ToArray();
+
+			var result = t
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					None = Sql.AsSql(Math.Round(r.H + r.H, mp)),
+					Zero = Sql.AsSql(Math.Round(r.H + r.H, 0, mp)),
+					Two  = Sql.AsSql(Math.Round(r.H + r.H, 2, mp)),
+					H13  = Sql.AsSql(Math.Round(r.H13 + r.H13, 2, mp)),
+					K    = Sql.AsSql(Math.Round(r.K + r.K, 2, mp)),
+					W    = Sql.AsSql(Math.Round(r.W + r.W, mp)),
+				})
+				.ToArray();
+
+			result.ShouldBe(ordered
+				.Select(r => new
+				{
+					None = Math.Round(r.H + r.H, mp),
+					Zero = Math.Round(r.H + r.H, 0, mp),
+					Two  = Math.Round(r.H + r.H, 2, mp),
+					H13  = Math.Round(r.H13 + r.H13, 2, mp),
+					K    = Math.Round(r.K + r.K, 2, mp),
+					W    = Math.Round(r.W + r.W, mp),
+				})
+				.ToArray());
+
+			// literal precisions: a captured variable would be a parameter and take the runtime path
+			var negative = mp == MidpointRounding.AwayFromZero
+				? t.OrderBy(r => r.Id).Select(r => Sql.AsSql(Sql.Round(r.H + r.H, -1))).ToArray()
+				: t.OrderBy(r => r.Id).Select(r => Sql.AsSql(Sql.RoundToEven(r.H + r.H, -1))).ToArray();
+
+			negative.ShouldBe(ordered.Select(r => (decimal?)RoundTo(r.H + r.H, -1, mp)).ToArray());
+
+			var sums =
+				from r in t
+				group r by r.G into g
+				orderby g.Key
+				select Sql.AsSql(Math.Round(g.Sum(x => x.H), mp));
+
+			sums.ToArray().ShouldBe(
+				data
+					.GroupBy(r => r.G)
+					.OrderBy(g => g.Key)
+					.Select(g => Math.Round(g.Sum(x => x.H), mp))
+					.ToArray());
+		}
+
+		[ActiveIssue(6055, Configuration = TestProvName.AllYdb, SkipForNonLinqService = true,
+			ErrorTypeName = "Grpc.Core.RpcException", ErrorMessage = "Failed to convert type: Decimal(35,13) to Decimal(22,13)",
+			Details = "LinqServiceSerializer drops SqlBinaryExpression's precision/scale, so the server folds the non-mandatory narrowing casts")]
+		[Test]
+		public void Round31([IncludeDataSources(true, TestProvName.AllYdb)] string context, [Values(MidpointRounding.ToEven, MidpointRounding.AwayFromZero)] MidpointRounding mp)
+		{
+			var data = _roundComputedScale;
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var ordered = data.OrderBy(r => r.Id).ToArray();
+
+			var result = mp == MidpointRounding.AwayFromZero
+				? t
+					.OrderBy(r => r.Id)
+					.Select(r => new
+					{
+						H   = Sql.AsSql(Sql.Round(r.H + r.H, r.P)),
+						H13 = Sql.AsSql(Sql.Round(r.H13 + r.H13, r.P2)),
+						T   = Sql.AsSql(Sql.Round(r.T + r.T, r.P2)),
+					})
+					.ToArray()
+				: t
+					.OrderBy(r => r.Id)
+					.Select(r => new
+					{
+						H   = Sql.AsSql(Sql.RoundToEven(r.H + r.H, r.P)),
+						H13 = Sql.AsSql(Sql.RoundToEven(r.H13 + r.H13, r.P2)),
+						T   = Sql.AsSql(Sql.RoundToEven(r.T + r.T, r.P2)),
+					})
+					.ToArray();
+
+			result.ShouldBe(ordered
+				.Select(r => new
+				{
+					H   = (decimal?)RoundTo(r.H + r.H, r.P, mp),
+					H13 = (decimal?)RoundTo(r.H13 + r.H13, r.P2, mp),
+					T   = (decimal?)RoundTo(r.T + r.T, r.P2, mp),
+				})
+				.ToArray());
 		}
 
 		sealed class PowScale

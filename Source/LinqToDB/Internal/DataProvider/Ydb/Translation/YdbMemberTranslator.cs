@@ -744,6 +744,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				var factory    = translationContext.ExpressionFactory;
 				var valueType  = factory.GetDbDataType(value);
 				var isDecimal  = valueType.SystemType.UnwrappedNullableType == typeof(decimal);
+				var isInferred = isDecimal && valueType.Precision == null && valueType.Scale == null;
 
 				// rounding a Decimal to at least its own scale is a no-op
 				if (isDecimal
@@ -769,7 +770,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 					var scale         = valueType.Scale     ?? YdbMappingSchema.DEFAULT_DECIMAL_SCALE;
 					var intDigits     = (valueType.Precision ?? YdbMappingSchema.DEFAULT_DECIMAL_PRECISION) - scale;
 					var precisionType = factory.GetDbDataType(precision!);
-					var positiveType  = ScaledDecimalType(valueType, scale);
+					var positiveType  = isInferred ? InferredScaledDecimalType(valueType, scale) : ScaledDecimalType(valueType, scale);
 					var negativeType  = ScaledDecimalType(valueType, intDigits + scale - YdbMappingSchema.MAX_DECIMAL_PRECISION);
 					var maxPrecision  = factory.Value(precisionType, scale);
 					var minPrecision  = factory.Value(precisionType, scale - negativeType.Scale!.Value);
@@ -800,7 +801,10 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				// 9999.99, so 1234.56 * 10^1 does not fit it. YDB answers an out-of-range Decimal with an empty
 				// optional rather than an error, which the surrounding Unwrap then turns into a query-terminating
 				// PreconditionFailed.
-				var scaleType = isDecimal && hasPrecision ? ScaledDecimalType(valueType, constantPrecision!.Value) : valueType;
+				var scaleType =
+					isInferred                ? InferredScaledDecimalType(valueType, hasPrecision ? constantPrecision!.Value : 0) :
+					isDecimal && hasPrecision ? ScaledDecimalType(valueType, constantPrecision!.Value) :
+					                            valueType;
 
 				return RoundScaledAs(factory, value, valueType, scaleType, hasPrecision ? precision : null, awayFromZero, roundToInt);
 			}
@@ -944,6 +948,16 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 
 				// without the DbType, which would otherwise be rendered in place of the computed type
 				return new DbDataType(valueType.SystemType, valueType.DataType, null, valueType.Length, intDigits + scale, scale);
+			}
+
+			// A computed Decimal declares no precision or scale: linq2db infers Decimal(22,9), while YQL computes it in the
+			// operands' type, which can carry more scale (H + H over Decimal(20,12) is Decimal(20,12)). Keep the inferred
+			// integer digits, plus p, and give every remaining digit to scale, so the work type does not round it first.
+			static DbDataType InferredScaledDecimalType(DbDataType valueType, int p)
+			{
+				var intDigits = YdbMappingSchema.DEFAULT_DECIMAL_PRECISION - YdbMappingSchema.DEFAULT_DECIMAL_SCALE + Math.Max(p, 0);
+
+				return new DbDataType(valueType.SystemType, valueType.DataType, null, valueType.Length, YdbMappingSchema.MAX_DECIMAL_PRECISION, YdbMappingSchema.MAX_DECIMAL_PRECISION - intDigits);
 			}
 
 			// 10^precision rendered in the requested type (decimal or double).
