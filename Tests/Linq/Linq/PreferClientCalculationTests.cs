@@ -1591,6 +1591,38 @@ namespace Tests.Linq
 			AssertQuery(table.Where(e => ((IEnumerable<int>)new[] { e.Value1, e.Id }).Contains(20)));
 		}
 
+		// A wrapped inline array of row values projected as it is is a client array, as the bare one is, not an eager-loaded
+		// collection: one command, and nothing for ImplicitCollectionLoading.Throw to refuse.
+		[Test]
+		public void ProjectedWrappedInlineArrayIsNotEagerLoaded([DataSources] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient).UseImplicitCollectionLoading(ImplicitCollectionLoading.Throw));
+			using var table = db.CreateLocalTable(MissedJoinEntity.Seed);
+
+			var queries = new SaveQueriesInterceptor();
+
+			if (!context.IsRemote())
+				db.AddInterceptor(queries);
+
+			var rows =
+				(from e in table
+				 from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				 orderby e.Id
+				 select new
+				 {
+					 e.Id,
+					 Enumerable = new[] { e.Value1, j.Value1 }.AsEnumerable(),
+					 Queryable  = new[] { e.Value1, j.Value1 }.AsQueryable(),
+				 })
+				.ToArray();
+
+			rows.Select(r => string.Join(",", r.Enumerable)).ShouldBe(["10,0", "20,0"]);
+			rows.Select(r => string.Join(",", r.Queryable)).ShouldBe(["10,0", "20,0"]);
+
+			if (!context.IsRemote())
+				queries.Queries.Count.ShouldBe(1);
+		}
+
 		// A value projected as it is, not calculated with, keeps the NULL the reader turns into default(T): no COALESCE, and
 		// DISTINCT still tells the missed row from a matched 0.
 		[Test]
