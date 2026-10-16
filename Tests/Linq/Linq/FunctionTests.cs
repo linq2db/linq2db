@@ -491,13 +491,11 @@ namespace Tests.Linq
 		[NoBaselines("Non-deterministic UUIDv7 value")]
 		public void NewGuid7_Emulated([DataSources(TestProvName.AllClickHouse, TestProvName.AllDuckDB, TestProvName.AllMariaDB, TestProvName.AllPostgreSQL18Plus)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var guid = (from p in db.Types select Sql.AsSql(Sql.NewGuid7())).First();
+			using var db = GetDataContext(context);
+			var guid = (from p in db.Types select Sql.AsSql(Sql.NewGuid7())).First();
 
-				Assert.That(guid, Is.Not.EqualTo(Guid.Empty));
-				Assert.That(GuidVersion(guid), Is.EqualTo(7));
-			}
+			Assert.That(guid, Is.Not.EqualTo(Guid.Empty));
+			Assert.That(GuidVersion(guid), Is.EqualTo(7));
 		}
 
 #if NET9_0_OR_GREATER
@@ -516,13 +514,11 @@ namespace Tests.Linq
 		[NoBaselines("Non-deterministic UUIDv7 value")]
 		public void CreateVersion7_Emulated([DataSources(TestProvName.AllClickHouse, TestProvName.AllDuckDB, TestProvName.AllMariaDB, TestProvName.AllPostgreSQL18Plus)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var guid = (from p in db.Types select Sql.AsSql(Guid.CreateVersion7())).First();
+			using var db = GetDataContext(context);
+			var guid = (from p in db.Types select Sql.AsSql(Guid.CreateVersion7())).First();
 
-				Assert.That(guid, Is.Not.EqualTo(Guid.Empty));
-				Assert.That(guid.Version, Is.EqualTo(7));
-			}
+			Assert.That(guid, Is.Not.EqualTo(Guid.Empty));
+			Assert.That(guid.Version, Is.EqualTo(7));
 		}
 #endif
 

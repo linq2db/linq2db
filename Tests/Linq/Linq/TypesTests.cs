@@ -139,10 +139,10 @@ namespace Tests.Linq
 		[NoBaselines("Server-side guid generation test")]
 		public void GuidNew([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in    Types where p.GuidValue != Guid.NewGuid() select p.GuidValue,
-					from p in db.Types where p.GuidValue != Guid.NewGuid() select p.GuidValue);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in    Types where p.GuidValue != Guid.NewGuid() select p.GuidValue,
+				from p in db.Types where p.GuidValue != Guid.NewGuid() select p.GuidValue);
 		}
 
 		[Test]

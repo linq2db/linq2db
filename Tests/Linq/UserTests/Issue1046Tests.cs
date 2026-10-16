@@ -49,42 +49,40 @@ namespace Tests.UserTests
 		[Test]
 		public void TestInheritance([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			using (db.CreateLocalTable<TaskTable>())
 			{
-				using (db.CreateLocalTable<TaskTable>())
+				db.Insert(new BdaTask
 				{
-					db.Insert(new BdaTask
+					BdaValue = "Bda value",
+					TargetName = BdaTask.Code,
+					Id = 1
+				});
+
+				var items = db.GetTable<Task>()
+					.OfType<BdaTask>()
+					.Select(p => new SelectAllAndExpand<BdaTask>
 					{
-						BdaValue = "Bda value",
-						TargetName = BdaTask.Code,
-						Id = 1
-					});
+						Instance = p
+					})
+					.ToArray();
 
-					var items = db.GetTable<Task>()
-						.OfType<BdaTask>()
-						.Select(p => new SelectAllAndExpand<BdaTask>
+				Assert.That(items, Has.Length.EqualTo(1));
+				Assert.That(items[0].Instance.BdaValue, Is.EqualTo("Bda value"));
+
+				var items2 = db.GetTable<Task>()
+					.OfType<BdaTask>()
+					.Select(p => new SelectAllAndExpand<BdaTask>
+					{
+						Instance = new BdaTask
 						{
-							Instance = p
-						})
-						.ToArray();
+							BdaValue = p.BdaValue
+						}
+					})
+					.ToArray();
 
-					Assert.That(items, Has.Length.EqualTo(1));
-					Assert.That(items[0].Instance.BdaValue, Is.EqualTo("Bda value"));
-
-					var items2 = db.GetTable<Task>()
-						.OfType<BdaTask>()
-						.Select(p => new SelectAllAndExpand<BdaTask>
-						{
-							Instance = new BdaTask
-							{
-								BdaValue = p.BdaValue
-							}
-						})
-						.ToArray();
-
-					Assert.That(items2, Has.Length.EqualTo(1));
-					Assert.That(items2[0].Instance.BdaValue, Is.EqualTo("Bda value"));
-				}
+				Assert.That(items2, Has.Length.EqualTo(1));
+				Assert.That(items2[0].Instance.BdaValue, Is.EqualTo("Bda value"));
 			}
 		}
 	}

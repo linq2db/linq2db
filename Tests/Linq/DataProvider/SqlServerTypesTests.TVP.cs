@@ -134,13 +134,11 @@ namespace Tests.DataProvider
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context,
 			[ValueSource(nameof(DataParameterFactories))] DataParameterFactoryTestCase testCase)
 		{
-			using (var external = GetDataConnection(context))
-			using (var db = GetDataContext(context))
-			{
-				var result = db.QueryProc<SqlServerTestUtils.TVPRecord>("TableTypeTestProc", testCase.Factory(external));
+			using var external = GetDataConnection(context);
+			using var db = GetDataContext(context);
+			var result = db.QueryProc<SqlServerTestUtils.TVPRecord>("TableTypeTestProc", testCase.Factory(external));
 
-				AreEqualWithComparer(SqlServerTestUtils.TestUDTData, result);
-			}
+			AreEqualWithComparer(SqlServerTestUtils.TestUDTData, result);
 		}
 
 		[Test]
@@ -149,14 +147,12 @@ namespace Tests.DataProvider
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context,
 			[ValueSource(nameof(QueryDataParameterFactories))] DataParameterFactoryTestCase testCase)
 		{
-			using (var external = GetDataConnection(context))
-			using (var db = GetDataContext(context))
-			{
-				var result = from record in db.FromSql<SqlServerTestUtils.TVPRecord>($"{testCase.Factory(external)}")
-							 select new SqlServerTestUtils.TVPRecord() { Id = record.Id, Name = record.Name };
+			using var external = GetDataConnection(context);
+			using var db = GetDataContext(context);
+			var result = from record in db.FromSql<SqlServerTestUtils.TVPRecord>($"{testCase.Factory(external)}")
+						 select new SqlServerTestUtils.TVPRecord() { Id = record.Id, Name = record.Name };
 
-				AreEqualWithComparer(SqlServerTestUtils.TestUDTData, result);
-			}
+			AreEqualWithComparer(SqlServerTestUtils.TestUDTData, result);
 		}
 
 		[Table]
@@ -175,31 +171,29 @@ namespace Tests.DataProvider
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context,
 			[ValueSource(nameof(QueryDataParameterFactories))] DataParameterFactoryTestCase testCase)
 		{
-			using (var external = GetDataConnection(context))
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateTempTable<TestMergeTVPTable>())
-			{
-				var cnt = table
-					.Merge()
-					.Using(db.FromSql<SqlServerTestUtils.TVPRecord>($"{testCase.Factory(external)}").Where(_ => _.Id != null))
-					.On((t, s) => t.Id == s.Id)
-					.InsertWhenNotMatched(s => new TestMergeTVPTable()
-					{
-						Id   = s.Id!.Value,
-						Name = s.Name
-					})
-					.Merge();
-
-				var data = table.OrderBy(_ => _.Id).ToArray();
-				using (Assert.EnterMultipleScope())
+			using var external = GetDataConnection(context);
+			using var db = GetDataContext(context);
+			using var table = db.CreateTempTable<TestMergeTVPTable>();
+			var cnt = table
+				.Merge()
+				.Using(db.FromSql<SqlServerTestUtils.TVPRecord>($"{testCase.Factory(external)}").Where(_ => _.Id != null))
+				.On((t, s) => t.Id == s.Id)
+				.InsertWhenNotMatched(s => new TestMergeTVPTable()
 				{
-					Assert.That(cnt, Is.EqualTo(2));
-					Assert.That(data, Has.Length.EqualTo(2));
-					Assert.That(data[0].Id, Is.EqualTo(1));
-					Assert.That(data[0].Name, Is.EqualTo("Value1"));
-					Assert.That(data[1].Id, Is.EqualTo(2));
-					Assert.That(data[1].Name, Is.EqualTo("Value2"));
-				}
+					Id   = s.Id!.Value,
+					Name = s.Name
+				})
+				.Merge();
+
+			var data = table.OrderBy(_ => _.Id).ToArray();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(cnt, Is.EqualTo(2));
+				Assert.That(data, Has.Length.EqualTo(2));
+				Assert.That(data[0].Id, Is.EqualTo(1));
+				Assert.That(data[0].Name, Is.EqualTo("Value1"));
+				Assert.That(data[1].Id, Is.EqualTo(2));
+				Assert.That(data[1].Name, Is.EqualTo("Value2"));
 			}
 		}
 

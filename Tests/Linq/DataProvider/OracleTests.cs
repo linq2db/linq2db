@@ -615,17 +615,15 @@ namespace Tests.DataProvider
 		[NoBaselines("Server-side guid generation test")]
 		public void TestGuid([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (var conn = GetDataContext(context))
+			using var conn = GetDataContext(context);
+			var guid = conn.Execute<Guid>("SELECT \"guidDataType\" FROM \"AllTypes\" WHERE ID = 2");
+			using (Assert.EnterMultipleScope())
 			{
-				var guid = conn.Execute<Guid>("SELECT \"guidDataType\" FROM \"AllTypes\" WHERE ID = 2");
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(conn.Execute<Guid?>("SELECT \"guidDataType\" FROM \"AllTypes\" WHERE ID = 1"), Is.Null);
-					Assert.That(conn.Execute<Guid?>("SELECT \"guidDataType\" FROM \"AllTypes\" WHERE ID = 2"), Is.EqualTo(guid));
+				Assert.That(conn.Execute<Guid?>("SELECT \"guidDataType\" FROM \"AllTypes\" WHERE ID = 1"), Is.Null);
+				Assert.That(conn.Execute<Guid?>("SELECT \"guidDataType\" FROM \"AllTypes\" WHERE ID = 2"), Is.EqualTo(guid));
 
-					Assert.That(conn.Execute<Guid>(PathThroughSql($"50"), DataParameter.Create("p", guid)), Is.EqualTo(guid));
-					Assert.That(conn.Execute<Guid>(PathThroughSql($"51"), new DataParameter { Name = "p", Value = guid }), Is.EqualTo(guid));
-				}
+				Assert.That(conn.Execute<Guid>(PathThroughSql($"50"), DataParameter.Create("p", guid)), Is.EqualTo(guid));
+				Assert.That(conn.Execute<Guid>(PathThroughSql($"51"), new DataParameter { Name = "p", Value = guid }), Is.EqualTo(guid));
 			}
 		}
 
