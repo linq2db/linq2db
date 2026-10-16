@@ -10,23 +10,21 @@ namespace Tests
 {
 	public sealed class BaselinesWriter
 	{
-		[Flags]
-		enum BaselineType
-		{
-			Direct = 1,
-			Remote = 2,
-			Both = Direct | Remote,
-		}
+		// pairs direct and remote baselines on every run, with or without a baselines path, and detects baseline
+		// overwrites by another test(case)
+		static readonly BaselineComparer _comparer = new();
 
-		// used to detect baseline overwrites by another test(case)
-		// case-insensitive to support windoze file system
-		static readonly Dictionary<string, BaselineType> _baselines = new Dictionary<string, BaselineType>(StringComparer.OrdinalIgnoreCase);
+		// comparison results of cases gated by ActiveIssue(BaselinesMismatch = true), by NUnit test id: the gate reads
+		// them after TearDown, when the per-test context is already released
+		static readonly Dictionary<string, BaselineComparison> _gatedComparisons = new();
 
-		// guards _baselines and the baseline file writes against concurrent
+		static bool _filesWritten;
+
+		// guards the comparer, the maps and the baseline file writes against concurrent
 		// access when tests run in parallel across providers
 		static readonly Lock _sync = new();
 
-		internal static void Write(string baselinesPath, string baseline, bool isRemote, string? providerSuffix)
+		internal static void Write(string? baselinesPath, string baseline, bool isRemote, string? providerSuffix)
 		{
 			var test = TestExecutionContext.CurrentContext.CurrentTest;
 
@@ -35,18 +33,90 @@ namespace Tests
 			if (context == null)
 				return;
 
-			var fixturePath = Path.Combine(baselinesPath, context + providerSuffix, test.ClassName!.Replace('.', Path.DirectorySeparatorChar));
-
 			var fileName = $"{NormalizeFileName(test.FullName)}.sql";
 			if (isRemote)
 				fileName = fileName.StripRemote();
 
-			var fullPath = Path.Combine(fixturePath, fileName);
+			var relativePath = Path.Combine(context + providerSuffix, test.ClassName!.Replace('.', Path.DirectorySeparatorChar), fileName);
 
-			var newType = isRemote ? BaselineType.Remote : BaselineType.Direct;
+			baseline = Normalize(baseline);
 
-			// normalize baselines
-			baseline = baseline
+			var gated = ActiveIssueAttribute.GovernsBaselinesMismatch(test);
+
+			BaselineComparison? comparison;
+
+			// Serialize access to the shared comparer and the per-baseline files: under parallel runs this is hit
+			// from multiple provider threads (direct + remote of one provider stay on a single lane, so the two
+			// writes of one baseline remain ordered).
+			lock (_sync)
+			{
+				comparison = Record(_comparer, baselinesPath, relativePath, isRemote, baseline, writeOther: !gated);
+
+				if (baselinesPath != null && comparison == null)
+					_filesWritten = true;
+
+				if (gated && comparison != null)
+					_gatedComparisons[test.Id] = comparison.Value;
+			}
+
+			if (comparison == BaselineComparison.Mismatched)
+			{
+				throw new InvalidOperationException(
+					$"Baselines for remote context doesn't match direct access baselines. Test: {test.FullName}"
+					+ (baselinesPath == null ? $"\nBaselinesPath is not set, so only this side's SQL is available:\n{baseline}" : null));
+			}
+		}
+
+		/// <summary>
+		/// Compares <paramref name="baseline"/> with the other side of the case and, when <paramref name="baselinesPath"/>
+		/// is set, writes the first side to <c>&lt;path&gt;/&lt;relativePath&gt;</c> and a mismatching second side to
+		/// <c>.other</c> next to it — unless <paramref name="writeOther"/> is <see langword="false"/> because a gate
+		/// already records the mismatch.
+		/// </summary>
+		public static BaselineComparison? Record(BaselineComparer comparer, string? baselinesPath, string relativePath, bool isRemote, string baseline, bool writeOther)
+		{
+			var comparison = comparer.Compare(relativePath, isRemote, baseline);
+
+			if (baselinesPath != null)
+			{
+				var fullPath = Path.Combine(baselinesPath, relativePath);
+
+				if (comparison == null)
+				{
+					Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
+					File.WriteAllText(fullPath, baseline, Encoding.UTF8);
+				}
+				else if (comparison == BaselineComparison.Mismatched && writeOther)
+				{
+					File.WriteAllText(fullPath + ".other", baseline, Encoding.UTF8);
+				}
+			}
+
+			return comparison;
+		}
+
+		/// <summary>
+		/// Returns and forgets the comparison recorded for a case gated by
+		/// <see cref="ActiveIssueAttribute.BaselinesMismatch"/>; <see langword="null"/> when its other side did not run
+		/// in this process.
+		/// </summary>
+		internal static BaselineComparison? TakeGatedComparison(string testId)
+		{
+			lock (_sync)
+			{
+				if (_gatedComparisons.TryGetValue(testId, out var comparison))
+				{
+					_gatedComparisons.Remove(testId);
+					return comparison;
+				}
+
+				return null;
+			}
+		}
+
+		static string Normalize(string baseline)
+		{
+			return baseline
 				.Replace("\r\n", "\n")
 				.Replace(" (asynchronously)", string.Empty)
 				.Replace("BeginTransaction\n", string.Empty)
@@ -64,38 +134,6 @@ namespace Tests
 				.Replace("DisposeTransaction\n", string.Empty)
 				.Replace("DisposeTransactionAsync\n", string.Empty)
 				;
-
-			// Serialize access to the shared overwrite-detection map and the per-baseline
-			// files: under parallel runs this is hit from multiple provider threads
-			// (direct + remote of one provider stay on a single lane, so the two writes
-			// to the same baseline path remain ordered).
-			lock (_sync)
-			{
-				Directory.CreateDirectory(fixturePath);
-
-				if (_baselines.TryGetValue(fullPath, out var type))
-				{
-					if ((type & newType) != 0)
-					{
-						throw new InvalidOperationException($"Baseline already in use: {fullPath} ({newType})");
-					}
-
-					_baselines[fullPath] = type | newType;
-
-					var expected = File.ReadAllText(fullPath);
-
-					if (expected != baseline)
-					{
-						File.WriteAllText(fullPath + ".other", baseline, Encoding.UTF8);
-						throw new InvalidOperationException($"Baselines for remote context doesn't match direct access baselines. Test: {test.FullName}");
-					}
-				}
-				else
-				{
-					_baselines.Add(fullPath, newType);
-					File.WriteAllText(fullPath, baseline, Encoding.UTF8);
-				}
-			}
 		}
 
 		private static string NormalizeFileName(string name)
@@ -151,7 +189,7 @@ namespace Tests
 			// last-writer-wins _context slot used to express.
 			lock (_sync)
 			{
-				if (_baselines.Count == 0)
+				if (!_filesWritten)
 					return;
 			}
 

@@ -96,6 +96,11 @@ namespace Tests
 		}
 	}
 
+	/// <summary>
+	/// Stops SQL baseline capture for the scope: for setup or cleanup SQL inside an otherwise baselined test, for a
+	/// non-deterministic fragment of it, or where the condition depends on a test parameter other than the provider.
+	/// A whole test that cannot produce a stable baseline is marked with <see cref="NoBaselinesAttribute"/> instead.
+	/// </summary>
 	public class DisableBaseline : IDisposable
 	{
 		private readonly CustomTestContext _ctx;
