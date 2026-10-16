@@ -262,7 +262,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				// a format read from a compiled query's arguments is resolved later, with the FormattableString's format
 				arguments.Add(IsCompilable(sql)
 					? FormattableStringHelper.CreateExpression(((RawSqlString)EvaluateExpression(sql)!).Format, node.Arguments[^1])
-					: Expression.Call(null, Methods.System.FormattableStringFactory_Create, Expression.Property(sql, nameof(RawSqlString.Format)), node.Arguments[^1]));
+					: FormattableStringHelper.CreateExpression(Expression.Property(sql, nameof(RawSqlString.Format)), node.Arguments[^1]));
 
 				return Expression.Call(formattableMethod.MakeGenericMethod(node.Method.GetGenericArguments()), arguments);
 			}
@@ -301,10 +301,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 					// A compiled query reuses this build for any Equals-equal argument values (1.0m and 1.00m, one
 					// instant at two offsets) and for every value of a captured array it does not key on, so the
 					// values are read from the argument expression rather than baked.
-					var fromArray = argument is MethodCallExpression { Arguments: [_, _] } call && call.Method == Methods.System.FormattableStringFactory_Create;
-					var source    = fromArray
-						? ((MethodCallExpression)argument).Arguments[1]
-						: Expression.Call(argument, Methods.System.FormattableString_GetArguments);
+					var source = FormattableStringHelper.GetArgumentsExpression(argument, out var fromArray);
 
 					// A null argument has no type to read it as. It is read, and fails to translate as on master, only from
 					// a closure-captured array, which master read per call. A keyed source bakes it, and so does a captured

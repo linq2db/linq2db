@@ -174,7 +174,29 @@ namespace LinqToDB.Internal.Common
 		/// </summary>
 		public static MethodCallExpression CreateExpression(string format, Expression arguments)
 		{
-			return Expression.Call(null, Methods.System.FormattableStringFactory_Create, Expression.Constant(format), arguments);
+			return CreateExpression(Expression.Constant(format), arguments);
+		}
+
+		/// <param name="format">Expression for the format, e.g. read from a <see cref="RawSqlString"/>.</param>
+		/// <param name="arguments">Expression for the arguments array.</param>
+		internal static MethodCallExpression CreateExpression(Expression format, Expression arguments)
+		{
+			return Expression.Call(null, Methods.System.FormattableStringFactory_Create, format, arguments);
+		}
+
+		/// <param name="formattable"><see cref="FormattableString"/> expression.</param>
+		/// <param name="fromCreate"><see langword="true"/> when <paramref name="formattable"/> is a <c>FormattableStringFactory.Create</c> call, with any arguments array expression.</param>
+		/// <returns>The arguments array of the <c>FormattableStringFactory.Create</c> call, or a <see cref="FormattableString.GetArguments"/> call.</returns>
+		internal static Expression GetArgumentsExpression(Expression formattable, out bool fromCreate)
+		{
+			if (formattable is MethodCallExpression { Arguments: [_, var arguments] } create && create.Method == Methods.System.FormattableStringFactory_Create)
+			{
+				fromCreate = true;
+				return arguments;
+			}
+
+			fromCreate = false;
+			return Expression.Call(formattable, Methods.System.FormattableString_GetArguments);
 		}
 
 		/// <summary>
