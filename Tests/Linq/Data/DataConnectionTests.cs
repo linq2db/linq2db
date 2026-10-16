@@ -799,8 +799,6 @@ namespace Tests.Data
 				Assert.Inconclusive("Provider not configured or has issues with TransactionScope or doesn't support DDL in distributed transactions");
 			}
 
-			using var nolog = context.IsAnyOf(TestProvName.AllAccess) ? new DisableBaseline("Access NETFX provider has issues with TS") : null;
-
 			using var scope  = withScope ? new TransactionScope() : null;
 			using var db     = GetDataContext(context);
 			using var tc     = db.CreateLocalTable(Category.Data);

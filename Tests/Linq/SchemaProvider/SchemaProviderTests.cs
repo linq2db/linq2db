@@ -263,7 +263,6 @@ namespace Tests.SchemaProvider
 		[Test]
 		public void IncludeExcludeSchemaTest([DataSources(false)] string context)
 		{
-			using (new DisableBaseline("TODO: exclude schema list is not stable, db2 schema provider needs refactoring", GetProviderName(context, out var _) == ProviderName.DB2))
 			using (var conn = GetDataConnection(context))
 			{
 				var exclude = conn.DataProvider.GetSchemaProvider()
