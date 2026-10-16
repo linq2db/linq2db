@@ -488,9 +488,9 @@ namespace Tests.Linq
 		// Providers without a native generator fall back to client-side generation, embedding a
 		// random literal in the SQL — non-deterministic, so the baseline is disabled.
 		[Test]
+		[NoBaselines("Non-deterministic UUIDv7 value")]
 		public void NewGuid7_Emulated([DataSources(TestProvName.AllClickHouse, TestProvName.AllDuckDB, TestProvName.AllMariaDB, TestProvName.AllPostgreSQL18Plus)] string context)
 		{
-			using (new DisableBaseline("Non-deterministic UUIDv7 value"))
 			using (var db = GetDataContext(context))
 			{
 				var guid = (from p in db.Types select Sql.AsSql(Sql.NewGuid7())).First();
@@ -513,9 +513,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("Non-deterministic UUIDv7 value")]
 		public void CreateVersion7_Emulated([DataSources(TestProvName.AllClickHouse, TestProvName.AllDuckDB, TestProvName.AllMariaDB, TestProvName.AllPostgreSQL18Plus)] string context)
 		{
-			using (new DisableBaseline("Non-deterministic UUIDv7 value"))
 			using (var db = GetDataContext(context))
 			{
 				var guid = (from p in db.Types select Sql.AsSql(Guid.CreateVersion7())).First();

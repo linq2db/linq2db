@@ -1493,9 +1493,9 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Output (datetime format) is culture-/system-dependent")]
 		public void TestCustomType([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
 			using (var db = GetDataContext(context, CreateRangesMapping()))
 			using (var table = db.CreateLocalTable<TableWithDateRanges>())
 			{
@@ -1511,9 +1511,9 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Output (datetime format) is culture-/system-dependent")]
 		public void TestCustomTypeBulkCopy([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
 			using (var db = (DataConnection)GetDataContext(context, CreateRangesMapping()))
 			using (var table = db.CreateLocalTable<TableWithDateRanges>())
 			{
@@ -1537,9 +1537,9 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Output (datetime format) is culture-/system-dependent")]
 		public async Task TestCustomTypeBulkCopyAsync([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
 			using (var db = (DataConnection)GetDataContext(context, CreateRangesMapping()))
 			using (var table = db.CreateLocalTable<TableWithDateRanges>())
 			{
@@ -1947,9 +1947,9 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Output (datetime format) is culture-/system-dependent")]
 		public void TestRange([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<NpgsqlTableWithDateRanges>())
 			{
@@ -1977,9 +1977,9 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Output (datetime format) is culture-/system-dependent")]
 		public void TestRangeBulkCopy([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
 			using (var db    = (DataConnection)GetDataContext(context))
 			using (var table = db.CreateLocalTable<NpgsqlTableWithDateRanges>())
 			{
@@ -2021,9 +2021,9 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Output (datetime format) is culture-/system-dependent")]
 		public async Task TestRangeBulkCopyAsync([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
 			using (var db = (DataConnection)GetDataContext(context))
 			using (var table = db.CreateLocalTable<NpgsqlTableWithDateRanges>())
 			{

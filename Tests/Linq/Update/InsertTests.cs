@@ -25,6 +25,7 @@ namespace Tests.xUpdate
 	public class InsertTests : TestBase
 	{
 		[Test]
+		[NoBaselines("Client-side Guid generation", Configuration = $"{TestProvName.AllSapHana},{TestProvName.AllYdb}")]
 		public void DistinctInsert1(
 			[DataSources(
 				ProviderName.DB2,
@@ -34,7 +35,6 @@ namespace Tests.xUpdate
 				TestProvName.AllAccess)]
 			string context)
 		{
-			using var _ = context.IsAnyOf(TestProvName.AllSapHana, TestProvName.AllYdb) ? new DisableBaseline("Client-side Guid generation") : null;
 			using var db = GetDataContext(context);
 			db.BeginTransaction();
 
@@ -64,6 +64,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[NoBaselines("Client-side Guid generation", Configuration = $"{TestProvName.AllSapHana},{TestProvName.AllYdb}")]
 		public void DistinctInsert2(
 			[DataSources(
 				ProviderName.DB2,
@@ -73,7 +74,6 @@ namespace Tests.xUpdate
 				TestProvName.AllAccess)]
 			string context)
 		{
-			using var _ = context.IsAnyOf(TestProvName.AllSapHana, TestProvName.AllYdb) ? new DisableBaseline("Client-side Guid generation") : null;
 			using var db = GetDataContext(context);
 			try
 			{

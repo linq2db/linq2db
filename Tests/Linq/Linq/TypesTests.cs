@@ -136,9 +136,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("Server-side guid generation test")]
 		public void GuidNew([DataSources] string context)
 		{
-			using (new DisableBaseline("Server-side guid generation test"))
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in    Types where p.GuidValue != Guid.NewGuid() select p.GuidValue,
@@ -199,6 +199,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("Server-side guid generation test")]
 		public void NewGuid(
 			[DataSources(
 				ProviderName.DB2,
@@ -209,7 +210,6 @@ namespace Tests.Linq
 				TestProvName.AllSapHana)]
 			string context)
 		{
-			using (new DisableBaseline("Server-side guid generation test"))
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
 			{

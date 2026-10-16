@@ -31,9 +31,9 @@ namespace Tests.UserTests
 		// Informix disabled due to issue, described here (but it reproduced with client 4.1):
 		// https://www-01.ibm.com/support/docview.wss?uid=swg1IC66046
 		[Test]
+		[NoBaselines("Multi-threading")]
 		public void Test([DataSources(TestProvName.AllInformix)] string context)
 		{
-			using (new DisableBaseline("Multi-threading"))
 			using (var semaphore = new Semaphore(0, 10))
 			{
 				var tasks = new Task[10];

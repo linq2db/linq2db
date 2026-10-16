@@ -548,36 +548,34 @@ namespace Tests.Data
 
 		// informix connection limits interfere with test
 		[Test]
+		[NoBaselines("Multi-threading")]
 		public void MultipleConnectionsTest([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using var psr = new Tests.Remote.ServerContainer.PortStatusRestorer(GetServerContainer(), false);
 
-			using (new DisableBaseline("Multi-threading"))
-			{
-				var exceptions = new ConcurrentStack<Exception>();
+			var exceptions = new ConcurrentStack<Exception>();
 
-				var threads = Enumerable
-					.Range(1, 10)
-					.Select(n => new Thread(() =>
+			var threads = Enumerable
+				.Range(1, 10)
+				.Select(n => new Thread(() =>
+				{
+					try
 					{
-						try
-						{
-							using var db = GetDataContext(context);
-							db.Parent.ToList();
-						}
-						catch (Exception e)
-						{
-							exceptions.Push(e);
-						}
-					}))
-					.ToArray();
+						using var db = GetDataContext(context);
+						db.Parent.ToList();
+					}
+					catch (Exception e)
+					{
+						exceptions.Push(e);
+					}
+				}))
+				.ToArray();
 
-				foreach (var thread in threads) thread.Start();
-				foreach (var thread in threads) thread.Join();
+			foreach (var thread in threads) thread.Start();
+			foreach (var thread in threads) thread.Join();
 
-				if (!exceptions.IsEmpty)
-					throw new AggregateException(exceptions);
-			}
+			if (!exceptions.IsEmpty)
+				throw new AggregateException(exceptions);
 		}
 
 		[Test]

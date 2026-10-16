@@ -129,11 +129,11 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Provider-specific output", Configuration = $"{TestProvName.AllSqlServerMS},{TestProvName.SqlAzureMiMS}")]
 		public void TableValuedParameterProcedureTest(
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context,
 			[ValueSource(nameof(DataParameterFactories))] DataParameterFactoryTestCase testCase)
 		{
-			using (new DisableBaseline("Provider-specific output", IsMsProvider(context)))
 			using (var external = GetDataConnection(context))
 			using (var db = GetDataContext(context))
 			{
@@ -144,11 +144,11 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Provider-specific output", Configuration = $"{TestProvName.AllSqlServerMS},{TestProvName.SqlAzureMiMS}")]
 		public void TableValuedParameterInQueryUsingFromSqlTest(
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context,
 			[ValueSource(nameof(QueryDataParameterFactories))] DataParameterFactoryTestCase testCase)
 		{
-			using (new DisableBaseline("Provider-specific output", IsMsProvider(context)))
 			using (var external = GetDataConnection(context))
 			using (var db = GetDataContext(context))
 			{
@@ -170,11 +170,11 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Provider-specific output", Configuration = $"{TestProvName.AllSqlServerMS},{TestProvName.SqlAzureMiMS}")]
 		public void TableValuedParameterInMergeSource(
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context,
 			[ValueSource(nameof(QueryDataParameterFactories))] DataParameterFactoryTestCase testCase)
 		{
-			using (new DisableBaseline("Provider-specific output", IsMsProvider(context)))
 			using (var external = GetDataConnection(context))
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateTempTable<TestMergeTVPTable>())

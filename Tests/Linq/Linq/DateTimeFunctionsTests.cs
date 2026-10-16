@@ -77,9 +77,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("Server-side date generation test")]
 		public void GetDate([DataSources] string context)
 		{
-			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.ID == 1 select new { Now = Sql.AsSql(Sql.GetDate()) };
@@ -105,9 +105,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("Server-side date generation test")]
 		public void CurrentTimestamp([DataSources] string context, [Values] bool inline)
 		{
-			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
 			{
 				db.InlineParameters = inline;
@@ -135,9 +135,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("Server-side date generation test")]
 		public void CurrentTimestamp2([DataSources] string context, [Values] bool inline)
 		{
-			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
 			{
 				db.InlineParameters = inline;
@@ -176,12 +176,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("Server-side date generation test")]
 		public void CurrentTimestampUtc(
 			[DataSources(TestProvName.AllAccess, TestProvName.AllFirebird, ProviderName.SqlCe,
 				TestProvName.AllSqlServer2005, TestProvName.AllDuckDB)]
 			string context)
 		{
-			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
 			{
 				var dbUtcNow = db.Select(() => Sql.AsSql(Sql.CurrentTimestampUtc));
@@ -202,11 +202,11 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("Server-side date generation test")]
 		public void CurrentTzTimestamp(
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus, TestProvName.AllClickHouse)]
 			string context)
 		{
-			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
 			{
 				var dbTzNow = db.Select(() => Sql.AsSql(Sql.CurrentTzTimestamp));
@@ -220,9 +220,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("Server-side date generation test")]
 		public void DateTimeOffsetNow([DataSources] string context, [Values] bool inline)
 		{
-			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
 			{
 				db.InlineParameters = inline;
@@ -273,9 +273,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("Server-side date generation test")]
 		public void DateTimeOffsetNowUtc([DataSources] string context, [Values] bool inline)
 		{
-			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
 			{
 				db.InlineParameters = inline;
@@ -325,11 +325,11 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("Server-side date generation test")]
 		public void CurrentTimestampUtcClientSideParameter(
 			[IncludeDataSources(true, TestProvName.AllFirebird, ProviderName.SqlCe)]
 			string context)
 		{
-			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
 			{
 				var dbUtcNow = db.Select(() => Sql.AsSql(Sql.CurrentTimestampUtc));
@@ -375,9 +375,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("Server-side date generation test")]
 		public void Now([DataSources] string context, [Values] bool inline)
 		{
-			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
 			{
 				db.InlineParameters = inline;
@@ -408,9 +408,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("Server-side date generation test")]
 		public void UtcNow([DataSources] string context, [Values] bool inline)
 		{
-			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
 			{
 				db.InlineParameters = inline;
@@ -1998,9 +1998,9 @@ namespace Tests.Linq
 		#endregion
 
 		[Test]
+		[NoBaselines("Server-side date generation test")]
 		public void GetDateTest1([DataSources] string context)
 		{
-			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
 			{
 				var dates =

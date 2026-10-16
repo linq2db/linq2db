@@ -99,9 +99,9 @@ namespace Tests.DataProvider
 			}
 
 		[Test]
+		[NoBaselines("Provider-specific output", Configuration = $"{TestProvName.AllSqlServerMS},{TestProvName.SqlAzureMiMS}")]
 		public void TestDataTypes2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (new DisableBaseline("Provider-specific output", IsMsProvider(context)))
 			using (var conn = GetDataConnection(context))
 			{
 				using (Assert.EnterMultipleScope())
