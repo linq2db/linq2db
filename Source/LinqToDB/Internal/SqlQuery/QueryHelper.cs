@@ -723,7 +723,6 @@ namespace LinqToDB.Internal.SqlQuery
 				// excluded: it answers in the argument's terms but can outgrow the width the argument is declared with.
 				SqlExtendedFunction { ArgumentDomain: SqlArgumentDomain.Element, Arguments: [var argument, ..] }
 				                                    => GetDbDataTypeImpl(argument.Expression, visited),
-				SqlExtendedFunction { Type: var t } => t,
 
 				SqlCteField cteField                  => GetCteFieldType(cteField, ref visited),
 				SqlCteTableField { CteField: { } cf } => GetCteFieldType(cf, ref visited),

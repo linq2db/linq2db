@@ -2108,6 +2108,28 @@ namespace Tests.Linq
 			values.ShouldContain(CoarseSubSecondBoundary);
 		}
 
+		/// <summary>
+		/// A literal set beside a percentile ordered by a date column keeps its time part: the percentile reaches no
+		/// column, and is typed with the schema default as before the coarse-value typing.
+		/// </summary>
+		[Test]
+		public void PercentileOverDateSetOperationKeepsLiteralTime([IncludeDataSources(TestProvName.AllPostgreSQL95Plus, TestProvName.AllOracle, TestProvName.AllDB2, TestProvName.AllDuckDB)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[]
+			{
+				new CoarseDayPairRow { Id = 1, OpenedOn = CoarseMidnight, Value = CoarseValue },
+			});
+
+			var values = t
+				.GroupBy(r => r.Id)
+				.Select(g => g.PercentileDisc(0.5, (e, f) => f.OrderBy(e.OpenedOn)))
+				.Concat(t.Select(r => CoarseValue))
+				.ToArray();
+
+			values.ShouldContain(CoarseValue);
+		}
+
 		static readonly DateTime CoarseMidnight = new(2026, 6, 1);
 
 		/// <summary>

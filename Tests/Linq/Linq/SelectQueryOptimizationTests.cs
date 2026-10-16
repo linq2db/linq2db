@@ -80,14 +80,15 @@ namespace Tests.Linq
 				aggregateType.ShouldBe(argumentType);
 			}
 
-			// SUM answers in the argument's terms but can outgrow the width it is declared with, so it keeps its
-			// own type. This half fails for an arm that takes the argument's type for every aggregate.
+			// SUM answers in the argument's terms but can outgrow the width it is declared with, so it keeps the
+			// schema default for its CLR type, as every other extended function does. This half fails for an arm
+			// that takes the argument's type for every aggregate.
 			var sum = new SqlExtendedFunction(declaredType, "SUM", [new SqlFunctionArgument(argument)], [true],
 				isAggregate: true, argumentDomain: SqlArgumentDomains.ForAggregate("SUM"));
 
 			var sumType = QueryHelper.GetDbDataType(sum, MappingSchema.Default);
 
-			sumType.ShouldBe(declaredType);
+			sumType.ShouldBe(MappingSchema.Default.GetDbDataType(typeof(string)));
 		}
 
 		[Test]
