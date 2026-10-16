@@ -24,8 +24,18 @@ namespace LinqToDB.Internal.DataProvider.Access
 			return new AccessLibRedSqlBuilder(this);
 		}
 
-		protected override bool IsCaseExpressionSupported => true;
-		protected override bool IsCommentSupported        => true;
+		protected override bool IsCaseExpressionSupported     => true;
+		protected override bool IsCommentSupported            => true;
+		protected override bool IsValuesSyntaxSupported       => true;
+		protected override bool SupportsColumnAliasesInSource => true;
+
+		// AccessSqlBuilderBase renders the predicate through IIF; LibRed has the standard form
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
+		{
+			BuildExpression(GetPrecedence(expr), expr.Expr1);
+			StringBuilder.Append(expr.IsNot ? " IS NOT DISTINCT FROM " : " IS DISTINCT FROM ");
+			BuildExpression(GetPrecedence(expr), expr.Expr2);
+		}
 
 		#region Skip / Take Support
 

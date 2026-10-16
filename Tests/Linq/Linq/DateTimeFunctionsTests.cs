@@ -173,7 +173,7 @@ namespace Tests.Linq
 		[Test]
 		[NoBaselines("Server-side date generation test")]
 		public void CurrentTimestampUtc(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllFirebird, ProviderName.SqlCe,
+			[DataSources(TestProvName.AllNativeAccess, TestProvName.AllFirebird, ProviderName.SqlCe,
 				TestProvName.AllSqlServer2005, TestProvName.AllDuckDB)]
 			string context)
 		{
