@@ -176,6 +176,16 @@ namespace Tests.Common
 			IsDropped(arguments[1]).ShouldBeTrue();
 		}
 
+		// the shape FromSql / Sql.Expr arguments reach the filter in: Convert(Sql.Parameter<T>(value), object)
+		[Test]
+		public void PrepareRawSqlArguments_ParameterWrappedArguments()
+		{
+			var elements  = FormattableStringHelper.CreateArgumentsExpression([1, 99, new DataParameter("p", 2)]).Expressions.ToArray();
+			var arguments = Prepare("{0}", false, elements);
+
+			arguments.Select(IsDropped).ShouldBe([false, true, false]);
+		}
+
 		[Test]
 		public void PrepareRawSqlArguments_OutOfRangeItemIsIgnored()
 		{
