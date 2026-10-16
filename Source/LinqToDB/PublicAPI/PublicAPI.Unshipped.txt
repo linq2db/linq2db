@@ -29,6 +29,6 @@ static LinqToDB.Internal.Common.FormattableStringHelper.CreateArgumentsExpressio
 static LinqToDB.Internal.Common.FormattableStringHelper.CreateExpression(System.FormattableString! value) -> System.Linq.Expressions.MethodCallExpression!
 static LinqToDB.Internal.Common.FormattableStringHelper.CreateExpression(string! format, System.Linq.Expressions.Expression! arguments) -> System.Linq.Expressions.MethodCallExpression!
 static LinqToDB.Internal.Common.FormattableStringHelper.ParseFormatItems(string! format) -> System.Collections.Generic.IReadOnlyList<LinqToDB.Internal.Common.FormattableStringHelper.FormatItem>?
-static LinqToDB.Internal.Common.FormattableStringHelper.PrepareRawSqlArguments(System.Linq.Expressions.Expression! formatArg, System.Linq.Expressions.Expression? parametersArg, bool keepUnreferenced, out string! format, out System.Collections.Generic.IReadOnlyList<System.Linq.Expressions.Expression!>! arguments) -> void
+static LinqToDB.Internal.Common.FormattableStringHelper.PrepareRawSqlArguments(System.Linq.Expressions.Expression! formatArg, bool keepUnreferenced, out string! format, out System.Collections.Generic.IReadOnlyList<System.Linq.Expressions.Expression!>! arguments) -> void
 static LinqToDB.Internal.Common.FormattableStringHelper.TrySplit(System.Linq.Expressions.Expression! expression, out System.Linq.Expressions.Expression? format, out System.Linq.Expressions.NewArrayExpression? arguments) -> bool
 static LinqToDB.Internal.Common.FormattableStringHelper.Unescape(string! format, int start, int length) -> string!

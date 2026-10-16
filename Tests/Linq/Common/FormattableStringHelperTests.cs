@@ -158,7 +158,7 @@ namespace Tests.Common
 		{
 			var formattable = FormattableStringHelper.CreateExpression(format, Expression.NewArrayInit(typeof(object), elements));
 
-			FormattableStringHelper.PrepareRawSqlArguments(formattable, null, keepUnreferenced, out var resultFormat, out var arguments);
+			FormattableStringHelper.PrepareRawSqlArguments(formattable, keepUnreferenced, out var resultFormat, out var arguments);
 
 			resultFormat.ShouldBe(format);
 

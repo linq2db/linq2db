@@ -284,88 +284,18 @@ namespace LinqToDB.Internal.Common
 		/// unless it can hold a <see cref="DataParameter"/> (referenced by name or position instead),
 		/// is an <see cref="ISqlExpression"/>, or <paramref name="keepUnreferenced"/> is set.
 		/// </summary>
-		/// <param name="formatArg"><see cref="FormattableString"/> or <see cref="RawSqlString"/> expression.</param>
-		/// <param name="parametersArg">Arguments array expression of <see cref="RawSqlString"/> overloads.</param>
+		/// <param name="formatArg"><c>FormattableStringFactory.Create(format, new object[] { ... })</c> expression.</param>
 		/// <param name="keepUnreferenced">Keep unreferenced arguments, e.g. when the provider binds parameters by position.</param>
 		/// <param name="format">Composite format of raw SQL.</param>
 		/// <param name="arguments">Argument expressions.</param>
-		public static void PrepareRawSqlArguments(Expression formatArg, Expression? parametersArg, bool keepUnreferenced, out string format, out IReadOnlyList<Expression> arguments)
+		public static void PrepareRawSqlArguments(Expression formatArg, bool keepUnreferenced, out string format, out IReadOnlyList<Expression> arguments)
 		{
-			// Consider that FormattableString is used
-			if (formatArg.NodeType == ExpressionType.Call)
-			{
-				var mc = (MethodCallExpression)formatArg;
+			// ExposeExpressionVisitor brings every FromSql / Sql.Expr overload to this shape before the query is built
+			if (!TrySplit(formatArg, out var formatExpr, out var argumentsExpr))
+				throw new LinqToDBException($"Unexpected raw SQL expression '{formatArg}'.");
 
-				if (mc.Arguments[1].NodeType != ExpressionType.NewArrayInit)
-				{
-					format    = mc.Arguments[0].EvaluateExpression<string>()!;
-					var args  = new Expression[mc.Arguments.Count - 1];
-
-					for (var i = 0; i < args.Length; i++)
-						args[i] = mc.Arguments[i + 1];
-
-					arguments = args;
-				}
-				else
-				{
-					format    = mc.Arguments[0].EvaluateExpression<string>()!;
-					arguments = ((NewArrayExpression)mc.Arguments[1]).Expressions;
-				}
-			}
-			else
-			{
-				var evaluatedSql = formatArg.EvaluateExpression()!;
-				if (evaluatedSql is FormattableString formattable)
-				{
-					format     = formattable.Format;
-
-					var array = formattable.GetArguments();
-					var args   = new Expression[array.Length];
-
-					for (var i = 0; i < array.Length; i++)
-					{
-						Expression expr = Expression.Constant(array[i], array[i]?.GetType() ?? typeof(object));
-						args[i] = expr;
-					}
-
-					arguments = args;
-				}
-				else
-				{
-					var rawSqlString = (RawSqlString)evaluatedSql;
-
-					format        = rawSqlString.Format;
-					var arrayExpr = parametersArg!;
-
-					if (arrayExpr.NodeType == ExpressionType.NewArrayInit)
-					{
-						arguments = ((NewArrayExpression)arrayExpr).Expressions;
-					}
-					else
-					{
-						var array = arrayExpr.EvaluateExpression<object[]>()!;
-						var args  = new Expression[array.Length];
-						for (var i = 0; i < array.Length; i++)
-						{
-							var type = array[i]?.GetType() ?? typeof(object);
-
-							if (typeof(ISqlExpression).IsAssignableFrom(type))
-							{
-								args[i] = Expression.Constant(array[i]);
-								continue;
-							}
-
-							Expression expr = Expression.ArrayIndex(arrayExpr, ExpressionInstances.Int32(i));
-							if (type != typeof(object))
-								expr = Expression.Convert(expr, type);
-
-							args[i] = expr;
-						}
-
-						arguments = args;
-					}
-				}
-			}
+			format    = formatExpr.EvaluateExpression<string>()!;
+			arguments = argumentsExpr.Expressions;
 
 			if (!keepUnreferenced)
 				arguments = ReplaceUnreferencedArguments(format, arguments);

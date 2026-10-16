@@ -50,7 +50,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			var formatArg = methodCall.Arguments[1];
 
 			FormattableStringHelper.PrepareRawSqlArguments(formatArg,
-				methodCall.Arguments.Count > 2 ? methodCall.Arguments[2] : null,
 				builder.DataContext.SqlProviderFlags.IsParameterOrderDependent,
 				out var format, out var arguments);
 
