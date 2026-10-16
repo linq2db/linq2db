@@ -16,12 +16,13 @@ using NUnit.Framework;
 
 using Shouldly;
 
-namespace Tests.UserTests
+namespace Tests.Mapping
 {
-	// Special floating-point values through the provider code paths rewritten for #6051.
-	// The JIT fault itself is guarded by Tests/Tests.FpuJit; these pin the produced values.
+	// NaN / ±Infinity through the provider literal builders and the ClickHouse MySql string conversions, which build
+	// them from bit patterns (https://github.com/linq2db/linq2db/issues/6051). The JIT fault itself is guarded by
+	// Tests/Tests.FpuJit; these pin the produced values.
 	[TestFixture]
-	public class Issue6051Tests : TestBase
+	public class SpecialFloatingPointValueTests : TestBase
 	{
 		// version-pinned factories: the unversioned ones auto-detect by opening a connection
 		static IDataProvider GetProvider(string provider) => provider switch
@@ -76,7 +77,7 @@ namespace Tests.UserTests
 			Literal(dataProvider, 1.5f).ShouldBe(finite);
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6051")]
 		public void ClickHouseMySqlStringToDouble()
 		{
 			var mappingSchema = ClickHouseTools.GetDataProvider(ClickHouseProvider.MySqlConnector).MappingSchema;
@@ -88,7 +89,7 @@ namespace Tests.UserTests
 			convert("1.5").ShouldBe(1.5d);
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6051")]
 		public void ClickHouseMySqlStringToFloat()
 		{
 			var mappingSchema = ClickHouseTools.GetDataProvider(ClickHouseProvider.MySqlConnector).MappingSchema;
