@@ -1948,6 +1948,18 @@ namespace Tests.Linq
 			db.FromSql<Person>(sql, argument).Select(p => p.ID).ToArray().ShouldBe([2]);
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
+		public void PlainArgumentReferencedByPositionIsSent([IncludeDataSources(true, TestProvName.AllAccess, TestProvName.AllSapHana)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var id    = QuoteTableName("PersonID", context);
+			var query = db.FromSql<Person>($"SELECT * FROM {QuoteTableName("Person", context)} WHERE {id} = {{0}} OR {id} = ?", 1, 2);
+
+			query.ToSqlQuery().Parameters.ShouldContain(p => Equals(p.Value, 2));
+			query.Select(p => p.ID).OrderBy(i => i).ToArray().ShouldBe([1, 2]);
+		}
+
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/6007")]
 		public void NestedScalar_InToExists_SqlExpressionArgument([DataSources(TestProvName.AllAccess)] string context)
 		{
