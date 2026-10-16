@@ -146,7 +146,7 @@ namespace Tests.FpuJit
 					else if (resumeAt && id == resumeId)
 					{
 						var reset = lines[lines.Length - 2].Split('\t');
-						File.AppendAllText(resultsPath, $"UNVERIFIED\t{reset[1]}\t{reset[2]}\n");
+						File.AppendAllText(resultsPath, $"UNVERIFIED\t{reset[1]}\t{reset[2]}\t{id}\n");
 						resumeAt = false;
 					}
 					else
@@ -218,6 +218,8 @@ namespace Tests.FpuJit
 			var unclosed        = Distinct("SKIPGEN");
 			var canaries        = Distinct("CANARY");
 
+			var unverifiedIds = new HashSet<string>(records.Where(r => r[0] == "UNVERIFIED").Select(r => r[3]), StringComparer.Ordinal);
+
 			var exitCode = ExitOk;
 
 			Console.WriteLine("FPU JIT sweep: x86, FP invalid/zero-divide/overflow exceptions unmasked");
@@ -225,7 +227,8 @@ namespace Tests.FpuJit
 
 			foreach (var asm in ExpectedAssemblies)
 			{
-				var ok      = records.Count(r => r[0] == "OK" && r[1] == asm);
+				// distinct methods: a method retried after a control-word reset writes OK twice; unverified ones do not count
+				var ok      = records.Where(r => r[0] == "OK" && r[1] == asm && !unverifiedIds.Contains(r[2])).Select(r => r[2]).Distinct(StringComparer.Ordinal).Count();
 				var failed  = faults.Count(r => r[1] == asm);
 				var skips   = dependencySkips.Where(r => r[1] == asm).ToList();
 				var allowed = skips.Count(r => IsAllowedSkip(asm, r[4]));
@@ -387,7 +390,7 @@ namespace Tests.FpuJit
 						RuntimeHelpers.PrepareMethod(item.Method.MethodHandle);
 					else
 						RuntimeHelpers.PrepareMethod(item.Method.MethodHandle, item.Instantiation);
-					Write($"OK\t{item.Asm}");
+					Write($"OK\t{item.Asm}\t{item.Id}");
 					restart = "at";
 				}
 				catch (Exception ex) when (IsDependencyFailure(ex))
