@@ -211,7 +211,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void TakeHint(
-			[IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context,
+			[IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse, TestProvName.AllAccessLibRed)] string context,
 			[Values(TakeHints.Percent, TakeHints.WithTies, TakeHints.Percent | TakeHints.WithTies)] TakeHints takeHint)
 		{
 			if (takeHint.HasFlag(TakeHints.Percent) && context.IsAnyOf(TestProvName.AllClickHouse))

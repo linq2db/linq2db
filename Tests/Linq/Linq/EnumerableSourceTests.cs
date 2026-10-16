@@ -1031,5 +1031,33 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 #endif
+
+		sealed class NullableRow
+		{
+			public int     Id    { get; set; }
+			public int?    Value { get; set; }
+			public string? Name  { get; set; }
+		}
+
+		// a NULL in the first row is what a VALUES source takes its column type from on some engines
+		[Test]
+		public void NullInFirstRow([DataSources(TestProvName.AllNativeAccess, ProviderName.DB2, TestProvName.AllInformix)] string context)
+		{
+			NullableRow[] rows =
+			[
+				new() { Id = 1, Value = null, Name = "a"  },
+				new() { Id = 2, Value = 2,    Name = null },
+			];
+
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Person
+				join r in rows on p.ID equals r.Id
+				orderby r.Id
+				select new { r.Id, r.Value, r.Name };
+
+			AssertQuery(query);
+		}
 	}
 }

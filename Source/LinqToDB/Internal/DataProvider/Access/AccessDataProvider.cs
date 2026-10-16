@@ -83,6 +83,8 @@ namespace LinqToDB.Internal.DataProvider.Access
 				SqlProviderFlags.IsCrossJoinSupported             = true;
 				SqlProviderFlags.IsSupportsJoinWithoutCondition   = true;
 				SqlProviderFlags.IsDistinctSetOperationsSupported = true;
+				SqlProviderFlags.IsDistinctFromSupported          = true;
+				SqlProviderFlags.TakeHintsSupported               = TakeHints.Percent | TakeHints.WithTies;
 			}
 
 			if (provider == AccessProvider.OleDb)

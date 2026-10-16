@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -60,6 +61,13 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 
 				return factory.Function(factory.GetDbDataType(dateTimeExpression), "DateAdd", factory.Value("ms"), increment, dateTimeExpression);
 			}
+
+			// not SYSUTCDATETIME: LibRed reads that back as DateTimeKind.Utc, unlike every other provider
+			protected override ISqlExpression? TranslateUtcNow(ITranslationContext translationContext, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+				return factory.Function(factory.GetDbDataType(typeof(DateTime)), "GETUTCDATE");
+			}
 		}
 
 		protected class AccessLibRedStringMemberTranslator : AccessStringMemberTranslator
@@ -84,7 +92,8 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 				return factory.Function(factory.GetDbDataType(value), "RTrim", value, trimChars);
 			}
 
-			// aggregate form is STRING_AGG, as SqlServer2017StringMemberTranslator; the item form keeps the Access emulation
+			// aggregate form is STRING_AGG, as SqlServer2017StringMemberTranslator; the item form is CONCAT_WS with a
+			// separator, and keeps the Access concatenation without one
 			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool withoutSeparator)
 			{
 				var builder = new AggregateFunctionBuilder()
@@ -157,14 +166,7 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 				}
 				else
 				{
-					ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>
-					{
-						var intDbType = factory.GetDbDataType(typeof(int));
-
-						return factory.Function(valueType, "Mid",
-							valuesExpr,
-							factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1)));
-					}, withoutSeparator);
+					ConfigureConcatWs(builder, nullValuesAsEmptyString, isNullableResult);
 				}
 
 				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
