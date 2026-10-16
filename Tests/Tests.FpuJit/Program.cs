@@ -1,7 +1,8 @@
 // Regression gate for #6042 / #6051: hosts that unmask x87/SSE floating-point exceptions (C++Builder, Delphi)
 // make the x86 .NET Framework JIT fault while compiling methods that use NaN/Infinity constants.
-// The exe JIT-compiles every non-generic method of every netfx-shipped linq2db assembly with those exceptions
-// unmasked. Not covered: generic instantiations and expression trees compiled at run time.
+// The exe JIT-compiles every method of every netfx-shipped linq2db assembly with those exceptions unmasked, generic
+// ones once with constraint-satisfying arguments. Not covered: value-type instantiations other than the one tried,
+// generic definitions no substitute closes (reported), and expression trees compiled at run time.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -79,9 +80,19 @@ namespace Tests.FpuJit
 			return RunParent();
 		}
 
-		// Positive control: must fault under the unmasked FPU, or the sweep proves nothing.
+		// Positive controls: each must fault under the unmasked FPU, or the sweep proves nothing; the generic ones
+		// prove the instantiation path.
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		static double Canary() => double.NaN;
+
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		static object GenericCanary<T>() => double.NaN;
+
+		static class GenericCanaryType<T>
+		{
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			public static double Canary() => double.NaN;
+		}
 
 		#region Parent
 
@@ -194,12 +205,16 @@ namespace Tests.FpuJit
 				.Where(r => r[0] is "FAIL" or "CRASH")
 				.ToList();
 
-			// enumeration-time skips are re-written by every restarted child
-			var dependencySkips = lines
-				.Where(l => l.StartsWith("SKIPDEP\t", StringComparison.Ordinal))
+			// enumeration-time records are re-written by every restarted child
+			List<string[]> Distinct(string kind) => lines
+				.Where(l => l.StartsWith(kind + "\t", StringComparison.Ordinal))
 				.Distinct(StringComparer.Ordinal)
 				.Select(l => l.Split('\t'))
 				.ToList();
+
+			var dependencySkips = Distinct("SKIPDEP");
+			var unclosed        = Distinct("SKIPGEN");
+			var canaries        = Distinct("CANARY");
 
 			var exitCode = ExitOk;
 
@@ -212,8 +227,9 @@ namespace Tests.FpuJit
 				var failed  = faults.Count(r => r[1] == asm);
 				var skips   = dependencySkips.Where(r => r[1] == asm).ToList();
 				var allowed = skips.Count(r => IsAllowedSkip(asm, r[4]));
+				var generic = unclosed.Count(r => r[1] == asm);
 
-				Console.WriteLine($"  {asm,-34} ok={ok,6} faults={failed,3} dependency-skips={skips.Count,4} (allowed {allowed})");
+				Console.WriteLine($"  {asm,-34} ok={ok,6} faults={failed,3} dependency-skips={skips.Count,4} (allowed {allowed}) generic-not-closable={generic,5}");
 
 				if (ok == 0)
 				{
@@ -230,14 +246,23 @@ namespace Tests.FpuJit
 
 			Console.WriteLine();
 
-			var canary = faults.FirstOrDefault(r => r[1] == CanaryAssembly);
-			if (canary == null)
+			if (canaries.Count == 0)
 			{
-				Console.WriteLine("ERROR: canary did not fault — this environment does not reproduce the FPU JIT fault, so the sweep proves nothing");
-				exitCode = ExitEnvironment;
+				Console.WriteLine("ERROR: no canary was enumerated");
+				exitCode = ExitHarness;
 			}
-			else
-				Console.WriteLine($"canary faulted as expected: {canary[4]}");
+
+			foreach (var canary in canaries)
+			{
+				var fault = faults.FirstOrDefault(r => r[1] == CanaryAssembly && r[2] == canary[1]);
+				if (fault == null)
+				{
+					Console.WriteLine($"ERROR: canary did not fault: {canary[2]} — this environment or instantiation path does not reproduce the FPU JIT fault, so the sweep proves nothing");
+					exitCode = ExitEnvironment;
+				}
+				else
+					Console.WriteLine($"canary faulted as expected: {canary[2]} — {fault[4]}");
+			}
 
 			var resets = records.Where(r => r[0] == "FPURESET").ToList();
 			if (resets.Count > 0)
@@ -278,12 +303,16 @@ namespace Tests.FpuJit
 
 		#region Child
 
-		sealed class Item(string asm, string id, string display, MethodBase method)
+		sealed class Item(string asm, string id, string display, MethodBase method, Type type, RuntimeTypeHandle[]? instantiation)
 		{
-			public string     Asm     { get; } = asm;
-			public string     Id      { get; } = id;
-			public string     Display { get; } = display;
-			public MethodBase Method  { get; } = method;
+			public string               Asm           { get; } = asm;
+			public string               Id            { get; } = id;
+			public string               Display       { get; } = display;
+			public MethodBase           Method        { get; } = method;
+			// the declaring type, closed when generic
+			public Type                 Type          { get; } = type;
+			// type then method arguments of a generic method or a method of a generic type
+			public RuntimeTypeHandle[]? Instantiation { get; } = instantiation;
 		}
 
 		[HandleProcessCorruptedStateExceptions, SecurityCritical]
@@ -327,7 +356,7 @@ namespace Tests.FpuJit
 				if (skipping)
 				{
 					if (warmIds.Contains(item.Id))
-						RunTypeInitializers(item.Method);
+						RunTypeInitializers(item.Type);
 
 					if (item.Id != resumeId)
 						continue;
@@ -352,7 +381,10 @@ namespace Tests.FpuJit
 				string? restart = null;
 				try
 				{
-					RuntimeHelpers.PrepareMethod(item.Method.MethodHandle);
+					if (item.Instantiation == null)
+						RuntimeHelpers.PrepareMethod(item.Method.MethodHandle);
+					else
+						RuntimeHelpers.PrepareMethod(item.Method.MethodHandle, item.Instantiation);
 					Write($"OK\t{item.Asm}");
 					restart = "at";
 				}
@@ -393,8 +425,25 @@ namespace Tests.FpuJit
 
 		static IEnumerable<Item> Enumerate(string baseDir, Action<string> write)
 		{
-			var canary = typeof(Program).GetMethod(nameof(Canary), BindingFlags.NonPublic | BindingFlags.Static)!;
-			yield return new Item(CanaryAssembly, $"{CanaryAssembly}:{canary.MetadataToken:X8}", $"{typeof(Program).FullName}::{canary}", canary);
+			const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
+
+			var canaries = new[]
+			{
+				typeof(Program).GetMethod(nameof(Canary), flags)!,
+				typeof(Program).GetMethod(nameof(GenericCanary), flags)!,
+				typeof(GenericCanaryType<>).GetMethod(nameof(GenericCanaryType<>.Canary), flags)!,
+			};
+
+			var known = new Dictionary<Type, Type[]>();
+
+			foreach (var canary in canaries)
+			{
+				var item = CreateItem(CanaryAssembly, canary.DeclaringType!, canary, known, out var notClosable)
+					?? throw new InvalidOperationException($"canary {canary} not closable: {notClosable}");
+
+				write($"CANARY\t{item.Id}\t{item.Display}");
+				yield return item;
+			}
 
 			foreach (var asmName in ExpectedAssemblies)
 			{
@@ -413,15 +462,17 @@ namespace Tests.FpuJit
 					types = ex.Types.Where(t => t != null).ToArray()!;
 				}
 
-				foreach (var type in types.Where(t => !t.ContainsGenericParameters).OrderBy(t => t.FullName, StringComparer.Ordinal))
-					foreach (var item in MethodsOf(asmName, type, write))
+				CollectInstantiations(types, known);
+
+				foreach (var type in types.OrderBy(t => t.FullName, StringComparer.Ordinal))
+					foreach (var item in MethodsOf(asmName, type, known, write))
 						yield return item;
 			}
 		}
 
 		// Inspecting a method (body, signature text) resolves its parameter types, so a missing dependency
 		// surfaces here rather than in PrepareMethod.
-		static List<Item> MethodsOf(string asmName, Type type, Action<string> write)
+		static List<Item> MethodsOf(string asmName, Type type, Dictionary<Type, Type[]> known, Action<string> write)
 		{
 			const BindingFlags all = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
 
@@ -442,8 +493,14 @@ namespace Tests.FpuJit
 			{
 				try
 				{
-					if (!method.IsAbstract && !method.ContainsGenericParameters && method.GetMethodBody() != null)
-						items.Add(new Item(asmName, $"{asmName}:{method.MetadataToken:X8}", $"{type.FullName}::{method}", method));
+					if (method.IsAbstract || method.GetMethodBody() == null)
+						continue;
+
+					var item = CreateItem(asmName, type, method, known, out var notClosable);
+					if (item != null)
+						items.Add(item);
+					else
+						write($"SKIPGEN\t{asmName}\t{asmName}:{method.MetadataToken:X8}\t{type.FullName}::{method}\t{notClosable}");
 				}
 				catch (Exception ex) when (IsDependencyFailure(ex))
 				{
@@ -454,12 +511,151 @@ namespace Tests.FpuJit
 			return items;
 		}
 
-		static void RunTypeInitializers(MethodBase method)
+		// Generic code is swept once per definition: reference-type arguments share one compiled body, so closing a
+		// parameter with object (or its single class/interface constraint) covers every reference-type instantiation.
+		// Value-type instantiations each get their own body; only int (or an enum) is tried for struct-constrained
+		// parameters. Self-referential constraints fall back to an instantiation the swept assemblies themselves use.
+		static Item? CreateItem(string asmName, Type type, MethodBase method, Dictionary<Type, Type[]> known, out string? notClosable)
+		{
+			notClosable = null;
+
+			var closedType = type;
+			var typeArgs   = Type.EmptyTypes;
+			var closed     = method;
+			var methodArgs = Type.EmptyTypes;
+
+			try
+			{
+				if (type.ContainsGenericParameters)
+				{
+					foreach (var candidate in TypeArgumentCandidates(type, known))
+					{
+						try
+						{
+							closedType = type.MakeGenericType(candidate);
+							typeArgs   = candidate;
+							break;
+						}
+						catch (ArgumentException ex)
+						{
+							notClosable = $"{ex.GetType().Name}: {OneLine(ex.Message)}";
+						}
+					}
+
+					if (typeArgs.Length == 0)
+						return null;
+
+					notClosable = null;
+					closed      = MethodBase.GetMethodFromHandle(method.MethodHandle, closedType.TypeHandle)!;
+				}
+
+				if (method.IsGenericMethodDefinition)
+				{
+					var definition = (MethodInfo)closed;
+					var parameters = method.GetGenericArguments();
+
+					foreach (var candidate in SelfReferenceFallbacks.Select(f => parameters.Select(p => Substitute(p, f)).ToArray()))
+					{
+						try
+						{
+							closed     = definition.MakeGenericMethod(candidate);
+							methodArgs = candidate;
+							break;
+						}
+						catch (ArgumentException ex)
+						{
+							notClosable = $"{ex.GetType().Name}: {OneLine(ex.Message)}";
+						}
+					}
+
+					if (methodArgs.Length == 0)
+						return null;
+
+					notClosable = null;
+				}
+			}
+			catch (ArgumentException ex)
+			{
+				notClosable = $"{ex.GetType().Name}: {OneLine(ex.Message)}";
+				return null;
+			}
+
+			var instantiation = typeArgs.Length + methodArgs.Length == 0
+				? null
+				: typeArgs.Concat(methodArgs).Select(t => t.TypeHandle).ToArray();
+
+			return new Item(asmName, $"{asmName}:{method.MetadataToken:X8}", $"{closedType}::{closed}", method, closedType, instantiation);
+		}
+
+		static IEnumerable<Type[]> TypeArgumentCandidates(Type type, Dictionary<Type, Type[]> known)
+		{
+			var parameters = type.GetGenericArguments();
+
+			foreach (var fallback in SelfReferenceFallbacks)
+				yield return parameters.Select(p => Substitute(p, fallback)).ToArray();
+
+			// a nested type of a generic type (closures, iterators) leads with its outer type's parameters
+			for (var outer = type; outer != null; outer = outer.DeclaringType)
+			{
+				if (outer.IsGenericTypeDefinition && known.TryGetValue(outer, out var args) && args.Length <= parameters.Length)
+					yield return args.Concat(parameters.Skip(args.Length).Select(p => Substitute(p, null))).ToArray();
+			}
+		}
+
+		static void CollectInstantiations(IEnumerable<Type> types, Dictionary<Type, Type[]> known)
+		{
+			void Add(Type? type)
+			{
+				if (type is { IsConstructedGenericType: true, ContainsGenericParameters: false } && !known.ContainsKey(type.GetGenericTypeDefinition()))
+					known.Add(type.GetGenericTypeDefinition(), type.GetGenericArguments());
+			}
+
+			foreach (var type in types.Where(t => !t.ContainsGenericParameters))
+			{
+				try
+				{
+					for (var b = type.BaseType; b != null; b = b.BaseType)
+						Add(b);
+
+					foreach (var i in type.GetInterfaces())
+						Add(i);
+				}
+				catch (Exception ex) when (IsDependencyFailure(ex))
+				{
+					// reported by the method enumeration of the same type
+				}
+			}
+		}
+
+		// substitutes tried, in order, for a parameter constrained by itself (T : IComparable<T>)
+		static readonly Type?[] SelfReferenceFallbacks = [null, typeof(string), typeof(int)];
+
+		static Type Substitute(Type parameter, Type? selfReferenceFallback)
+		{
+			var all         = parameter.GetGenericParameterConstraints();
+			var constraints = all.Where(c => !c.ContainsGenericParameters).ToArray();
+
+			if (constraints.Contains(typeof(Enum)))
+				return typeof(DayOfWeek);
+
+			if (selfReferenceFallback != null && all.Length > constraints.Length)
+				return selfReferenceFallback;
+
+			if (parameter.GenericParameterAttributes.HasFlag(GenericParameterAttributes.NotNullableValueTypeConstraint))
+				return typeof(int);
+
+			return constraints.Length == 1 ? constraints[0] : typeof(object);
+		}
+
+		static void RunTypeInitializers(Type declaringType)
 		{
 			_control87(FpuExceptionMask, FpuExceptionMask);
 
-			for (var type = method.DeclaringType; type != null; type = type.DeclaringType)
+			for (var type = declaringType; type != null; type = type.DeclaringType)
 			{
+				if (type.ContainsGenericParameters)
+					continue;
+
 				try
 				{
 					RuntimeHelpers.RunClassConstructor(type.TypeHandle);
