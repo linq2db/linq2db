@@ -1905,9 +1905,26 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var prefix = context.IsAnyOf(TestProvName.AllOracle, TestProvName.AllPostgreSQL) ? ":" : "@";
-			var sql    = $"SELECT * FROM {QuoteTableName("Person", context)} WHERE {QuoteTableName("PersonID", context)} = {prefix}p";
 
-			db.FromSql<Person>(sql, new DataParameter("p", 2, DataType.Int32)).Select(p => p.ID).ToArray().ShouldBe([2]);
+			AssertArgumentReferencedByName(db, context, prefix);
+		}
+
+		// the mixed format has a {0} item, so the filter runs and must keep the DataParameter no item references
+		static void AssertArgumentReferencedByName(ITestDataContext db, string context, string prefix)
+		{
+			var table = QuoteTableName("Person",   context);
+			var id    = QuoteTableName("PersonID", context);
+
+			db.FromSql<Person>($"SELECT * FROM {table} WHERE {id} = {prefix}p", new DataParameter("p", 2, DataType.Int32))
+				.Select(p => p.ID)
+				.ToArray()
+				.ShouldBe([2]);
+
+			db.FromSql<Person>($"SELECT * FROM {table} WHERE {id} = {{0}} OR {id} = {prefix}byName", 1, new DataParameter("byName", 2, DataType.Int32))
+				.Select(p => p.ID)
+				.OrderBy(i => i)
+				.ToArray()
+				.ShouldBe([1, 2]);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
@@ -1916,9 +1933,8 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var prefix = context.IsAnyOf(TestProvName.AllPostgreSQL) ? "@" : "?";
-			var sql    = $"SELECT * FROM {QuoteTableName("Person", context)} WHERE {QuoteTableName("PersonID", context)} = {prefix}p";
 
-			db.FromSql<Person>(sql, new DataParameter("p", 2, DataType.Int32)).Select(p => p.ID).ToArray().ShouldBe([2]);
+			AssertArgumentReferencedByName(db, context, prefix);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
