@@ -22,21 +22,23 @@ namespace Tests.UserTests
 		[Table]
 		sealed class DecimalTable
 		{
-			[Column, PrimaryKey                                           ] public int     Id { get; set; }
-			[Column(DataType = DataType.Decimal, Precision = 10, Scale = 2)] public decimal A  { get; set; }
-			[Column(DataType = DataType.Decimal, Precision = 10, Scale = 2)] public decimal B  { get; set; }
+			[Column, PrimaryKey               ] public int     Id { get; set; }
+			[Column(Precision = 10, Scale = 2)] public decimal A  { get; set; }
+			[Column(Precision = 10, Scale = 2)] public decimal B  { get; set; }
 		}
 
-		static readonly DbDataType Decimal10_2 = new(typeof(decimal), DataType.Decimal, null, null, 10, 2);
+		// derived from the provider's decimal mapping: ClickHouse has no generic DataType.Decimal type name
+		static DbDataType Decimal10_2(MappingSchema mappingSchema) => mappingSchema.GetDbDataType(typeof(decimal)).WithPrecisionScale(10, 2);
 
 		// typed sum cast to its own type: the cast is redundant and must be folded
 		sealed class SameTypeCastBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
-				var sum = new SqlBinaryExpression(Decimal10_2, builder.GetExpression(0)!, "+", builder.GetExpression(1)!, Precedence.Additive);
+				var type = Decimal10_2(builder.Mapping);
+				var sum  = new SqlBinaryExpression(type, builder.GetExpression(0)!, "+", builder.GetExpression(1)!, Precedence.Additive);
 
-				builder.ResultExpression = new SqlCastExpression(sum, Decimal10_2, null);
+				builder.ResultExpression = new SqlCastExpression(sum, type, null);
 			}
 		}
 
@@ -45,7 +47,7 @@ namespace Tests.UserTests
 		{
 			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
-				var sum = new SqlBinaryExpression(Decimal10_2, builder.GetExpression(0)!, "+", builder.GetExpression(1)!, Precedence.Additive);
+				var sum = new SqlBinaryExpression(Decimal10_2(builder.Mapping), builder.GetExpression(0)!, "+", builder.GetExpression(1)!, Precedence.Additive);
 
 				builder.ResultExpression = new SqlCastExpression(sum, builder.Mapping.GetDbDataType(typeof(decimal)), null);
 			}
