@@ -2582,5 +2582,49 @@ DROP TABLE IF EXISTS TemporalTable3History
 
 			count.ShouldBe(2);
 		}
+
+		sealed class RecursiveDateTimeRow
+		{
+			public int Id    { get; set; }
+			public int Level { get; set; }
+
+			[Column(DataType = DataType.DateTime)] public DateTime D { get; set; }
+		}
+
+		/// <summary>
+		/// A <c>datetime</c> column carried through a recursive CTE is still a stored column: a literal compared with it,
+		/// alone or in an IN list, takes the column's type, so the 1/300 s step matches.
+		/// </summary>
+		[Test]
+		public void RecursiveCteColumnComparedWithLiteral([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<DateTimeReadBackTable>(
+			[
+				new() { Id = 1, D = CteSetOperationValue },
+			]);
+
+			var cte = db.GetCte<RecursiveDateTimeRow>(previous =>
+				tb
+					.Select(r => new RecursiveDateTimeRow { Id = r.Id, Level = 0, D = r.D })
+					.Concat(
+						from p in previous
+						where p.Level < 1
+						select new RecursiveDateTimeRow { Id = p.Id, Level = p.Level + 1, D = p.D }));
+
+			var equal = cte.Count(r => r.D == CteSetOperationValue);
+
+			equal.ShouldBe(2);
+
+			var inList = cte.Count(r => r.D.In(CteSetOperationValue));
+
+			inList.ShouldBe(2);
+
+			var values = new[] { CteSetOperationValue };
+
+			var captured = cte.Count(r => values.Contains(r.D));
+
+			captured.ShouldBe(2);
+		}
 	}
 }

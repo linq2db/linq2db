@@ -312,7 +312,7 @@ namespace LinqToDB.Internal.SqlQuery
 				case SqlField:
 					return true;
 
-				// A CTE column is stored only if what it projects is; a recursive CTE that reaches itself again is not.
+				// A CTE column is stored only if what it projects is.
 				case SqlCteTableField cteTableField:
 				{
 					if (cteTableField.CteField is not { Column: { } cteColumn } cteField)
@@ -320,9 +320,10 @@ namespace LinqToDB.Internal.SqlQuery
 
 					visitedCteFields ??= new HashSet<IQueryElement>(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
 
-					// Path-scoped: two branches of a set operation reading the same CTE column are not a recursion.
+					// Path-scoped: two branches of a set operation reading the same CTE column are not a recursion. A
+					// recursive reference adds no value its other branches do not, so they decide.
 					if (!visitedCteFields.Add(cteField))
-						return false;
+						return true;
 
 					var stored = IsStoredValue(cteColumn, visitedCteFields);
 					visitedCteFields.Remove(cteField);
