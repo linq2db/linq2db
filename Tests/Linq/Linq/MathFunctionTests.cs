@@ -1049,9 +1049,9 @@ namespace Tests.Linq
 			// a computed value can carry a type other than the one inferred for it (Decimal(22,9) for this product)
 			using var wide = db.CreateLocalTable(new[]
 			{
-				new RoundNegativeDynamicWide { Id = 1, D22s9 = 1.5m, D35s2 = 1000m,             P = -14 },
-				new RoundNegativeDynamicWide { Id = 2, D22s9 = 2.5m, D35s2 = 1000m,             P =   2 },
-				new RoundNegativeDynamicWide { Id = 3, D22s9 = 0m,   D35s2 = 100000000000000m,  P = -14 },
+				new RoundNegativeDynamicWide { Id = 1, D22s9 = 1.5m, D35s2 = 1000m             },
+				new RoundNegativeDynamicWide { Id = 2, D22s9 = 2.5m, D35s2 = 1000m             },
+				new RoundNegativeDynamicWide { Id = 3, D22s9 = 0m,   D35s2 = 100000000000000m },
 			});
 
 			var computed = wide
