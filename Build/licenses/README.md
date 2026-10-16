@@ -107,11 +107,12 @@ Notes on the fields that are easy to get wrong:
 
 ## Which packages are asserted to bundle nothing
 
-`verify` also checks the other direction. `linq2db`, `linq2db.Tools`, `linq2db.Scaffold`, `linq2db.Compat`,
-`linq2db.Extensions`, `linq2db.FSharp`, the six `linq2db.Remote.*`, the four `linq2db.EntityFrameworkCore`
-packages, `linq2db.Analyzers` and the `linq2db.LINQPad` **nupkg** must contain no third-party binary at
-all. If one acquires a bundled DLL, that is a change in what we redistribute, and it fails the build rather
-than passing unnoticed.
+`verify` also checks the other direction. Every package that is not a notices-bearing artifact in
+`components.json` must contain no third-party binary at all — `linq2db`, `linq2db.Tools`, the
+`linq2db.Remote.*` and `linq2db.EntityFrameworkCore` packages, `linq2db.Identity` and the `linq2db.LINQPad`
+**nupkg**, for example. The rule is applied by exclusion, not by name, so a new package is covered without
+being listed. If one acquires a bundled DLL, that is a change in what we redistribute, and it fails the build
+rather than passing unnoticed.
 
 The `linq2db.cli` pointer package has its own expectation: it must carry `tools/any/any/DotnetToolSettings.xml`
 and no assemblies whatsoever. Without a per-class rule an artifact the script failed to read would satisfy

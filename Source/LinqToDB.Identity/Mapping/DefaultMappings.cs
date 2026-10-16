@@ -1,0 +1,488 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+#if NET10_0_OR_GREATER
+using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+#endif
+using LinqToDB.Mapping;
+using Microsoft.AspNetCore.Identity;
+
+namespace LinqToDB.Identity
+{
+	internal static class DefaultMappings
+	{
+		// Guid.NewGuid().ToString() as default key/stamp generator
+		private const int STRING_KEY_LENGTH = 36;
+		private const int STAMP_LENGTH      = 36;
+		private const int NAME_LENGTH       = 256;
+		private const int EMAIL_LENGTH      = 256;
+		private const int PROFILE_LENGTH    = 256;
+		// see https://github.com/dotnet/aspnetcore/issues/7568
+		private const int KEYS_LENGTH       = 128;
+
+		// EF Core maps integral keys (int/long) as store-generated identity columns. String/Guid keys must be set by the
+		// caller: EF Core generates Guid keys, these stores do not.
+		private static bool IsAutoIncrementKey<TKey>() => typeof(TKey) == typeof(int) || typeof(TKey) == typeof(long);
+
+		// The string-key width has to be pinned here rather than only in the string-specific overloads below: a
+		// consumer registering IdentityDataConnection<..., string, ...> never reaches those, and an unpinned key
+		// widens to the provider default - which diverges from the EF Core schema everywhere, and overruns
+		// Firebird 2.5's index limit on the AspNetUserRoles composite key.
+		private static bool IsStringKey<TKey>() => typeof(TKey) == typeof(string);
+
+		// LockoutEnd is DateTimeOffset?, which these providers cannot store as one: most cannot render the type in
+		// DDL at all - CreateTable emits the literal token "DateTimeOffset" - and Firebird, which does render it
+		// from 4.0 on, cannot write the value (https://github.com/linq2db/linq2db/issues/5915). DB2 z/OS renders
+		// it, hence the LUW-only pin. MySQL renders it as TIMESTAMP, which ends in 2038, and YDB as Timestamp, which
+		// ends in 2105. Each value is that provider's widest datetime type.
+		private static readonly (string Configuration, DataType DataType)[] _lockoutEndDataTypes =
+		[
+			(ProviderName.MySql,         DataType.DateTime2  ),
+			(ProviderName.Access,        DataType.DateTime   ),
+			(ProviderName.SqlCe,         DataType.DateTime2  ),
+			(ProviderName.SqlServer2005, DataType.DateTime   ),
+			(ProviderName.Sybase,        DataType.DateTime2  ),
+			(ProviderName.SapHana,       DataType.DateTime2  ),
+			(ProviderName.Informix,      DataType.DateTime2  ),
+			(ProviderName.DB2LUW,        DataType.DateTime2  ),
+			(ProviderName.Firebird,      DataType.DateTime2  ),
+			(ProviderName.Ydb,           DataType.Timestamp64),
+		];
+
+		// The DataType pin above only fixes the DDL; the value needs converting too. A column that cannot hold an
+		// offset otherwise round-trips the value through the machine's *local* offset (Firebird returns
+		// 13:52+02:00 for a 13:52Z write), and Sybase and SAP HANA reject the DateTimeOffset parameter outright
+		// ("Specified cast is not valid. From: DateTimeOffset to: DateTime"). Store UTC and read back at zero
+		// offset - the only answer that holds outside a UTC machine. Whole seconds: the pinned types round a finer
+		// fraction, which carries DateTimeOffset.MaxValue - the usual permanent lockout - past their maximum.
+		private static ValueConverterAttribute LockoutEndAsUtc(string configuration) => new ()
+		{
+			Configuration  = configuration,
+			ValueConverter = new ValueConverter<DateTimeOffset?, DateTime?>(
+				v => v == null ? null : new DateTime(v.Value.UtcTicks - v.Value.UtcTicks % TimeSpan.TicksPerSecond, DateTimeKind.Utc),
+				v => v == null ? null : new DateTimeOffset(DateTime.SpecifyKind(v.Value, DateTimeKind.Utc)),
+				handlesNulls: true),
+		};
+
+		// Access caps a text column at 255 characters, so the 256-char name/email columns fail CREATE TABLE
+		// outright ("Size of field 'UserName' is too long"). DbType rather than a scoped ColumnAttribute for
+		// the same reason as the LockoutEnd pins - the latter would replace the unscoped one wholesale.
+		private static DataTypeAttribute AccessTextLimit() => new (DataType.NVarChar, "NVarChar(255)") { Configuration = ProviderName.Access };
+
+		// Informix clamps NVarChar to 255 bytes, fewer than 256 characters in a multi-byte locale; LVarChar is byte-sized too.
+		private static DataTypeAttribute InformixTextLimit() => new (DataType.NVarChar, "LVarChar(1024)") { Configuration = ProviderName.Informix };
+
+		// EF Core leaves ClaimValue and the token Value unbounded; an unmapped string defaults to 255 on these. The
+		// stores filter on ClaimValue with '=', which LOB types reject on most of them, so it gets the widest
+		// comparable varchar instead. Token values (a saved JWT is 1-2 KB) are never filtered on, so they can be LOBs.
+		private static readonly (string Configuration, DataType DataType, string DbType)[] _claimValueTypes =
+		[
+			(ProviderName.MySql,    DataType.NVarChar, "VarChar(2000)"                          ),
+			(ProviderName.Oracle,   DataType.NVarChar, "NVarChar2(2000)"                        ),
+			(ProviderName.Firebird, DataType.NVarChar, "VarChar(2000) CHARACTER SET UNICODE_FSS"),
+			(ProviderName.Access,   DataType.NText,    "LongText"                               ),
+			(ProviderName.DB2,      DataType.NVarChar, "NVarChar(2000)"                         ),
+			(ProviderName.Informix, DataType.NVarChar, "LVarChar(2000)"                         ),
+			(ProviderName.SapHana,  DataType.NVarChar, "NVarChar(2000)"                         ),
+			(ProviderName.Sybase,   DataType.NVarChar, "NVarChar(2000)"                         ),
+			(ProviderName.SqlCe,    DataType.NVarChar, "NVarChar(2000)"                         ),
+		];
+
+		private static readonly (string Configuration, DataType DataType, string DbType)[] _tokenValueTypes =
+		[
+			(ProviderName.MySql,    DataType.NText,    "Text"                                    ),
+			(ProviderName.Oracle,   DataType.NText,    "NClob"                                   ),
+			(ProviderName.Firebird, DataType.NText,    "BLOB SUB_TYPE TEXT CHARACTER SET UNICODE_FSS"),
+			(ProviderName.Access,   DataType.NText,    "LongText"                                ),
+			(ProviderName.DB2,      DataType.NText,    "NClob"                                   ),
+			(ProviderName.Informix, DataType.NVarChar, "LVarChar(8000)"                          ),
+			(ProviderName.SapHana,  DataType.NVarChar, "NVarChar(5000)"                          ),
+			(ProviderName.Sybase,   DataType.NText,    "UniText"                                 ),
+			(ProviderName.SqlCe,    DataType.NText,    "NText"                                   ),
+		];
+
+		public static void SetupIdentityUserClaim<TKey, TUserClaim>(FluentMappingBuilder mappings)
+			where TKey       : IEquatable<TKey>
+			where TUserClaim : IdentityUserClaim<TKey>
+		{
+			mappings.Entity<TUserClaim>().HasTableName("AspNetUserClaims")
+				.Property(e => e.Id)
+					.IsPrimaryKey()
+					.IsIdentity()
+				.Property(e => e.UserId)
+					.IsNullable(false)
+				.Property(e => e.ClaimType)
+				.Property(e => e.ClaimValue)
+				;
+
+			foreach (var (configuration, dataType, dbType) in _claimValueTypes)
+				mappings.Entity<TUserClaim>()
+					.Property(e => e.ClaimValue)
+						.HasAttribute(new DataTypeAttribute(dataType, dbType) { Configuration = configuration });
+
+			// add length
+			if (IsStringKey<TKey>())
+				mappings.Entity<TUserClaim>()
+					.Property(e => e.UserId)
+						.HasLength(STRING_KEY_LENGTH);
+		}
+
+		public static void SetupIdentityUserClaim<TUserClaim>(FluentMappingBuilder mappings)
+			where TUserClaim : IdentityUserClaim<string>
+			=> SetupIdentityUserClaim<string, TUserClaim>(mappings);
+
+		public static void SetupIdentityRoleClaim<TKey, TRoleClaim>(FluentMappingBuilder mappings)
+			where TKey       : IEquatable<TKey>
+			where TRoleClaim : IdentityRoleClaim<TKey>
+		{
+			mappings.Entity<TRoleClaim>().HasTableName("AspNetRoleClaims")
+				.Property(e => e.Id)
+					.IsPrimaryKey()
+					.IsIdentity()
+				.Property(e => e.RoleId)
+					.IsNullable(false)
+				.Property(e => e.ClaimType)
+				.Property(e => e.ClaimValue)
+				;
+
+			foreach (var (configuration, dataType, dbType) in _claimValueTypes)
+				mappings.Entity<TRoleClaim>()
+					.Property(e => e.ClaimValue)
+						.HasAttribute(new DataTypeAttribute(dataType, dbType) { Configuration = configuration });
+
+			// add length
+			if (IsStringKey<TKey>())
+				mappings.Entity<TRoleClaim>()
+					.Property(e => e.RoleId)
+						.HasLength(STRING_KEY_LENGTH);
+		}
+
+		public static void SetupIdentityRoleClaim<TRoleClaim>(FluentMappingBuilder mappings)
+			where TRoleClaim : IdentityRoleClaim<string>
+			=> SetupIdentityRoleClaim<string, TRoleClaim>(mappings);
+
+		public static void SetupIdentityUserRole<TKey, TUserRole>(FluentMappingBuilder mappings)
+			where TKey      : IEquatable<TKey>
+			where TUserRole : IdentityUserRole<TKey>
+		{
+			mappings.Entity<TUserRole>().HasTableName("AspNetUserRoles")
+				.Property(e => e.UserId)
+					.IsPrimaryKey()
+					.IsNullable(false)
+				.Property(e => e.RoleId)
+					.IsPrimaryKey()
+					.IsNullable(false)
+				;
+
+			// add length
+			if (IsStringKey<TKey>())
+				mappings.Entity<TUserRole>()
+					.Property(e => e.UserId)
+						.HasLength(STRING_KEY_LENGTH)
+					.Property(e => e.RoleId)
+						.HasLength(STRING_KEY_LENGTH);
+		}
+
+		public static void SetupIdentityUserRole<TUserRole>(FluentMappingBuilder mappings)
+			where TUserRole : IdentityUserRole<string>
+			=> SetupIdentityUserRole<string, TUserRole>(mappings);
+
+		public static void SetupIdentityRole<TKey, TRole>(FluentMappingBuilder mappings)
+			where TKey  : IEquatable<TKey>
+			where TRole : IdentityRole<TKey>
+		{
+			var id = mappings.Entity<TRole>().HasTableName("AspNetRoles")
+				.Property(e => e.Id)
+					.IsPrimaryKey()
+					.IsNullable(false);
+
+			if (IsAutoIncrementKey<TKey>())
+				id = id.IsIdentity();
+
+			id
+				.Property(e => e.Name)
+					.HasLength(NAME_LENGTH)
+					.HasAttribute(AccessTextLimit())
+					.HasAttribute(InformixTextLimit())
+				.Property(e => e.NormalizedName)
+					.HasLength(NAME_LENGTH)
+					.HasAttribute(AccessTextLimit())
+					.HasAttribute(InformixTextLimit())
+				.Property(e => e.ConcurrencyStamp)
+					.HasLength(STAMP_LENGTH)
+					.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.Guid))
+				;
+
+			// add length
+			if (IsStringKey<TKey>())
+				mappings.Entity<TRole>()
+					.Property(e => e.Id)
+						.HasLength(STRING_KEY_LENGTH);
+		}
+
+		public static void SetupIdentityRole<TRole>(FluentMappingBuilder mappings)
+			where TRole : IdentityRole<string>
+			=> SetupIdentityRole<string, TRole>(mappings);
+
+		public static void SetupIdentityUser<TKey, TUser>(FluentMappingBuilder mappings)
+			where TKey  : IEquatable<TKey>
+			where TUser : IdentityUser<TKey>
+		{
+			var id = mappings.Entity<TUser>().HasTableName("AspNetUsers")
+				.Property(e => e.Id)
+					.IsPrimaryKey()
+					.IsNullable(false);
+
+			if (IsAutoIncrementKey<TKey>())
+				id = id.IsIdentity();
+
+			id
+				.Property(e => e.UserName)
+					.HasLength(NAME_LENGTH)
+					.HasAttribute(AccessTextLimit())
+					.HasAttribute(InformixTextLimit())
+				.Property(e => e.NormalizedUserName)
+					.HasLength(NAME_LENGTH)
+					.HasAttribute(AccessTextLimit())
+					.HasAttribute(InformixTextLimit())
+				.Property(e => e.Email)
+					.HasLength(EMAIL_LENGTH)
+					.HasAttribute(AccessTextLimit())
+					.HasAttribute(InformixTextLimit())
+				.Property(e => e.NormalizedEmail)
+					.HasLength(EMAIL_LENGTH)
+					.HasAttribute(AccessTextLimit())
+					.HasAttribute(InformixTextLimit())
+				.Property(e => e.EmailConfirmed)
+
+				// EF Core leaves these unbounded; never filtered on, so the widest comparable width every provider takes
+				.Property(e => e.PasswordHash)
+					.HasLength(PROFILE_LENGTH)
+					.HasAttribute(AccessTextLimit())
+					.HasAttribute(InformixTextLimit())
+				.Property(e => e.SecurityStamp)
+					.HasLength(PROFILE_LENGTH)
+					.HasAttribute(AccessTextLimit())
+					.HasAttribute(InformixTextLimit())
+				.Property(e => e.PhoneNumber)
+					.HasLength(PROFILE_LENGTH)
+					.HasAttribute(AccessTextLimit())
+					.HasAttribute(InformixTextLimit())
+
+				.Property(e => e.ConcurrencyStamp)
+					.HasLength(STAMP_LENGTH)
+					.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.Guid))
+				.Property(e => e.PhoneNumberConfirmed)
+				.Property(e => e.TwoFactorEnabled)
+				.Property(e => e.LockoutEnd)
+				.Property(e => e.LockoutEnabled)
+				.Property(e => e.AccessFailedCount)
+				;
+
+			// add length
+			if (IsStringKey<TKey>())
+				mappings.Entity<TUser>()
+					.Property(e => e.Id)
+						.HasLength(STRING_KEY_LENGTH);
+
+			// DataTypeAttribute rather than a configuration-scoped ColumnAttribute: the latter replaces the unscoped one wholesale.
+			foreach (var (configuration, dataType) in _lockoutEndDataTypes)
+				mappings.Entity<TUser>()
+					.Property(e => e.LockoutEnd)
+						.HasAttribute(new DataTypeAttribute(dataType) { Configuration = configuration })
+						.HasAttribute(LockoutEndAsUtc(configuration));
+		}
+
+		public static void SetupIdentityUser<TUser>(FluentMappingBuilder mappings)
+			where TUser : IdentityUser<string>
+			=> SetupIdentityUser<string, TUser>(mappings);
+
+		public static void SetupIdentityUserLogin<TKey, TUserLogin>(FluentMappingBuilder mappings)
+			where TKey       : IEquatable<TKey>
+			where TUserLogin : IdentityUserLogin<TKey>
+		{
+			mappings.Entity<TUserLogin>().HasTableName("AspNetUserLogins")
+				.Property(e => e.LoginProvider)
+					.IsPrimaryKey()
+					.IsNullable(false)
+					.HasLength(KEYS_LENGTH)
+				.Property(e => e.ProviderKey)
+					.IsPrimaryKey()
+					.IsNullable(false)
+					.HasLength(KEYS_LENGTH)
+				.Property(e => e.ProviderDisplayName)
+					.HasLength(128) // (un)educated guess...
+				.Property(e => e.UserId)
+					.IsNullable(false)
+				;
+
+			// add length
+			if (IsStringKey<TKey>())
+				mappings.Entity<TUserLogin>()
+					.Property(e => e.UserId)
+						.HasLength(STRING_KEY_LENGTH);
+		}
+
+		public static void SetupIdentityUserLogin<TUserLogin>(FluentMappingBuilder mappings)
+			where TUserLogin : IdentityUserLogin<string>
+			=> SetupIdentityUserLogin<string, TUserLogin>(mappings);
+
+		public static void SetupIdentityUserToken<TKey, TUserToken>(FluentMappingBuilder mappings)
+			where TKey       : IEquatable<TKey>
+			where TUserToken : IdentityUserToken<TKey>
+		{
+			var userIdLength = IsStringKey<TKey>() ? STRING_KEY_LENGTH : (int?)null;
+
+			var userId = mappings.Entity<TUserToken>().HasTableName("AspNetUserTokens")
+				.Property(e => e.UserId)
+					.IsPrimaryKey()
+					.IsNullable(false);
+
+			if (userIdLength != null)
+				userId = userId.HasLength(userIdLength.Value);
+
+			userId
+				.Property(e => e.LoginProvider)
+					.IsPrimaryKey()
+					.IsNullable(false)
+					.HasLength(KEYS_LENGTH)
+				.Property(e => e.Name)
+					.IsPrimaryKey()
+					.IsNullable(false)
+					.HasLength(KEYS_LENGTH)
+				.Property(e => e.Value)
+				;
+
+			foreach (var (configuration, dataType, dbType) in _tokenValueTypes)
+				mappings.Entity<TUserToken>()
+					.Property(e => e.Value)
+						.HasAttribute(new DataTypeAttribute(dataType, dbType) { Configuration = configuration });
+
+			// Firebird 2.5's index key is narrower than this three-column PK (36 + 128 + 128 characters, rendered
+			// CHARACTER SET UNICODE_FSS at 3 bytes each), so CREATE TABLE fails outright with "cannot create index
+			// PK_AspNetUserTokens". A table without the constraint beats a table that cannot be created: a
+			// configuration-scoped ColumnAttribute replaces the unscoped one wholesale, which is what drops the key.
+			// Consequence on that one dialect: no uniqueness and no index on (UserId, LoginProvider, Name) - the
+			// engine cannot index them at any width that fits. SetTokenAsync's find-then-insert still serialises
+			// normal use, and every token read is a predicate query rather than a key lookup.
+			var noKey = mappings.Entity<TUserToken>();
+
+			// IsPrimaryKey = false rather than merely omitted: fluent .IsPrimaryKey() registers a separate
+			// PrimaryKeyAttribute, which ColumnDescriptor consults whenever the column attribute left the flag
+			// unset - so the scoped attribute has to answer the question, not decline it.
+			var userIdColumn = new ColumnAttribute { Configuration = ProviderName.Firebird25, CanBeNull = false, IsPrimaryKey = false };
+
+			if (userIdLength != null)
+				userIdColumn.Length = userIdLength.Value;
+
+			noKey.Property(e => e.UserId)       .HasAttribute(userIdColumn)
+				 .Property(e => e.LoginProvider).HasAttribute(new ColumnAttribute { Configuration = ProviderName.Firebird25, CanBeNull = false, Length = KEYS_LENGTH, IsPrimaryKey = false })
+				 .Property(e => e.Name)         .HasAttribute(new ColumnAttribute { Configuration = ProviderName.Firebird25, CanBeNull = false, Length = KEYS_LENGTH, IsPrimaryKey = false })
+				 ;
+		}
+
+		public static void SetupIdentityUserToken<TUserToken>(FluentMappingBuilder mappings)
+			where TUserToken : IdentityUserToken<string>
+			=> SetupIdentityUserToken<string, TUserToken>(mappings);
+
+#if NET10_0_OR_GREATER
+		// WebAuthn credential ids are variable-length (spec: no longer than 1023 bytes). 1024 matches EF Core's
+		// own AspNetUserPasskeys mapping (b.Property(p => p.CredentialId).HasMaxLength(1024)).
+		// Note: as a SQL Server clustered PK this exceeds the 900-byte index-key limit, so SQL Server warns at
+		// CREATE TABLE and rejects only an inserted key > 900 bytes - identical to EF Core, and real credential
+		// ids are well under 900 bytes.
+		private const int CREDENTIAL_ID_LENGTH = 1024;
+
+		// Access needs the type changed too: VarBinary caps at 255 bytes there, LongBinary is the unbounded one.
+		// Firebird 2.5 (VARCHAR(1024) CHARACTER SET OCTETS) holds the value fine - only the index was ever the
+		// problem. Firebird 3+ indexes a 1024-byte key, so it keeps its PK.
+		private static readonly (string Configuration, string? DbType)[] _passkeyIdWithoutPrimaryKey =
+		[
+			(ProviderName.Access,     "LongBinary"),
+			(ProviderName.Firebird25, null),
+		];
+
+		// A real credential's JSON is ~1 KB, which overruns the width an unbounded NVarChar renders as on these
+		// (MySQL/Firebird/Access/Informix 255, Oracle 2000), and a direct-attestation certificate chain can pass SQL CE's
+		// 4000. A scoped ColumnAttribute, as DataTypeAttribute cannot override the unscoped DataType - and NText also
+		// makes the parameter bind as a CLOB, not only the DDL.
+		private static readonly (string Configuration, DataType DataType, string? DbType)[] _passkeyDataAsText =
+		[
+			(ProviderName.MySql,    DataType.NText,    null                                         ),
+			(ProviderName.Oracle,   DataType.NText,    null                                         ),
+			(ProviderName.Firebird, DataType.NText,    "BLOB SUB_TYPE TEXT CHARACTER SET UNICODE_FSS"),
+			(ProviderName.Access,   DataType.NText,    "LongText"                                   ),
+			(ProviderName.Informix, DataType.NVarChar, "LVarChar(8000)"                             ),
+			(ProviderName.SqlCe,    DataType.NText,    "NText"                                      ),
+		];
+
+		public static void SetupIdentityUserPasskey<TKey, TUserPasskey>(FluentMappingBuilder mappings)
+			where TKey         : IEquatable<TKey>
+			where TUserPasskey : IdentityUserPasskey<TKey>
+		{
+			// IdentityPasskeyData is stored as a single JSON column, matching the EF Core provider's
+			// complex-property mapping so the AspNetUserPasskeys schema stays interchangeable.
+			mappings.Entity<TUserPasskey>().HasTableName("AspNetUserPasskeys")
+				.Property(e => e.CredentialId)
+					.IsPrimaryKey()
+					.IsNullable(false)
+					.HasLength(CREDENTIAL_ID_LENGTH)
+				.Property(e => e.UserId)
+					.IsNullable(false)
+				.Property(e => e.Data)
+					.HasConversionFunc(SerializePasskeyData, DeserializePasskeyData)
+					// The converter targets string; the column's DB type must be stated explicitly for DDL/schema.
+					// Unbounded NVarChar -> nvarchar(max) on SQL Server, matching EF Core's ComplexProperty(Data).ToJson().
+					.HasDataType(DataType.NVarChar)
+				;
+
+			foreach (var (configuration, dataType, dbType) in _passkeyDataAsText)
+				mappings.Entity<TUserPasskey>()
+					.Property(e => e.Data)
+						.HasAttribute(new ColumnAttribute { Configuration = configuration, DataType = dataType, DbType = dbType });
+
+			// add length
+			if (IsStringKey<TKey>())
+				mappings.Entity<TUserPasskey>()
+					.Property(e => e.UserId)
+						.HasLength(STRING_KEY_LENGTH);
+
+			// Access caps a binary column at 255 bytes, so it rejects the column itself ("Size of field
+			// 'CredentialId' is too long"); Firebird 2.5 cannot index the key. On those the table is emitted without
+			// the constraint - which beats not being able to create it at all. Uniqueness then rests on
+			// AddOrUpdatePasskeyAsync's find-then-insert rather than on the database.
+			foreach (var (configuration, dbType) in _passkeyIdWithoutPrimaryKey)
+				mappings.Entity<TUserPasskey>()
+					.Property(e => e.CredentialId)
+						.HasAttribute(new ColumnAttribute { Configuration = configuration, CanBeNull = false, DbType = dbType, Length = CREDENTIAL_ID_LENGTH, IsPrimaryKey = false });
+
+			// Informix holds a 1024-byte id only as BYTE, which it can neither index nor compare, so every passkey
+			// lookup would fail. It stores the id as hex text instead - also too wide for its index, hence no PK.
+			mappings.Entity<TUserPasskey>()
+				.Property(e => e.CredentialId)
+					.HasAttribute(new ColumnAttribute { Configuration = ProviderName.Informix, CanBeNull = false, DataType = DataType.NVarChar, DbType = "LVarChar(2048)", Length = CREDENTIAL_ID_LENGTH * 2, IsPrimaryKey = false })
+					.HasAttribute(new ValueConverterAttribute
+					{
+						Configuration  = ProviderName.Informix,
+						ValueConverter = new ValueConverter<byte[], string>(v => Convert.ToHexString(v), v => Convert.FromHexString(v), handlesNulls: false),
+					});
+		}
+
+		public static void SetupIdentityUserPasskey(FluentMappingBuilder mappings)
+			=> SetupIdentityUserPasskey<string, IdentityUserPasskey<string>>(mappings);
+
+		[UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Passkey data is a flat DTO serialized with reflection-based JSON; passkey storage is not supported in trimmed/AOT apps.")]
+		[UnconditionalSuppressMessage("AOT",      "IL3050", Justification = "See IL2026.")]
+		private static string SerializePasskeyData(IdentityPasskeyData data)
+			=> JsonSerializer.Serialize(data, (JsonSerializerOptions?)null);
+
+		[UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Passkey data is a flat DTO serialized with reflection-based JSON; passkey storage is not supported in trimmed/AOT apps.")]
+		[UnconditionalSuppressMessage("AOT",      "IL3050", Justification = "See IL2026.")]
+		private static IdentityPasskeyData DeserializePasskeyData(string json)
+			=> JsonSerializer.Deserialize<IdentityPasskeyData>(json, (JsonSerializerOptions?)null)!;
+#endif
+	}
+}
