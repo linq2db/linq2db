@@ -56,7 +56,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			NotifyReplaced(newCteClause, element.Cte);
 			NotifyReplaced(newElement,   element);
 
-			var body = Visit(element.Cte.Body);
+			var dataModification = Visit(element.Cte.DataModification);
+			var body             = Visit(element.Cte.Body);
 
 			// correcting references
 			foreach (var cteField in newCteFields)
@@ -69,8 +70,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				tableField.CteField = (SqlCteField?)Visit(tableField.CteField);
 			}
 
-			newCteClause.Body = (SelectQuery?)body;
-			newElement.Cte    = newCteClause;
+			newCteClause.DataModification = (SqlInsertStatement?)dataModification;
+			newCteClause.Body             = (SelectQuery?)body;
+			newElement.Cte                = newCteClause;
 
 			return newElement;
 		}
