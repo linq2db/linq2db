@@ -96,7 +96,8 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		}
 
 		/// <summary>
-		/// Coerces a coarse date/time operand of <c>IN</c> to <c>DateTime64</c> when a value in the list is one.
+		/// Coerces a coarse date/time operand of <c>IN</c> to <c>DateTime64</c> when a value in the list is one, or may
+		/// be one: the values of a captured collection beside a computed operand keep their own type when written.
 		/// </summary>
 		/// <remarks>
 		/// ClickHouse converts the list to the operand's type and refuses a lossy conversion with <c>Type mismatch in
@@ -108,7 +109,8 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 			if (newElement is SqlPredicate.InList inList
 				&& Factory.GetDbDataType(inList.Expr1).DataType is DataType.DateTime or DataType.Date or DataType.Date32
-				&& inList.Values.Exists(v => Factory.GetDbDataType(v).DataType == DataType.DateTime64))
+				&& (inList.Values.Exists(v => Factory.GetDbDataType(v).DataType == DataType.DateTime64)
+					|| (inList.Values is [SqlParameter] && !QueryHelper.IsStoredColumn(inList.Expr1))))
 			{
 				return new SqlPredicate.InList(Factory.AsDateTime64(inList.Expr1), inList.WithNull, inList.IsNot, inList.Values);
 			}
