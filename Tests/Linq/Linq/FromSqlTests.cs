@@ -1960,6 +1960,19 @@ namespace Tests.Linq
 			query.Select(p => p.ID).OrderBy(i => i).ToArray().ShouldBe([1, 2]);
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
+		public void PlainExprArgumentReferencedByPositionIsSent([IncludeDataSources(true, TestProvName.AllAccess, TestProvName.AllSapHana)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var fs = FormattableStringFactory.Create("({0} * 0 + ?)", 1, 2);
+
+			var query = db.Person.Where(p => p.ID == Sql.Expr<int>(fs));
+
+			query.ToSqlQuery().Parameters.ShouldContain(p => Equals(p.Value, 2));
+			query.Select(p => p.ID).ToArray().ShouldBe([2]);
+		}
+
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/6007")]
 		public void NestedScalar_InToExists_SqlExpressionArgument([DataSources(TestProvName.AllAccess)] string context)
 		{
