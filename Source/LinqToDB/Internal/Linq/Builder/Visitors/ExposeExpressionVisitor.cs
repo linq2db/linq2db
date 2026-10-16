@@ -157,6 +157,11 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				return Visit(newNode);
 			}
 
+			if (ConvertRawSqlString(node) is { } formattableCall)
+			{
+				return Visit(formattableCall);
+			}
+
 			var dependentParameters = SqlQueryDependentAttributeHelper.GetQueryDependentAttributes(node.Method);
 
 			if (dependentParameters != null)
@@ -190,7 +195,9 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 						var argument = arguments[i];
 						if (argument.NodeType != ExpressionType.Constant)
 						{
-							var newArgument = attr.PrepareForCache(argument, this);
+							var newArgument = attr is SqlQueryDependentFormatAttribute
+								? PrepareFormattableString(argument)
+								: attr.PrepareForCache(argument, this);
 
 							// A dependent argument taken from a compiled query's own arguments cannot be
 							// evaluated while ps is a free parameter, so it would reach the SQL as a parameter
@@ -198,7 +205,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 							// materialise it here; CompiledTable carries the same values in its cache key.
 							// Resolved against newArgument rather than argument: PrepareForCache rebuilds a
 							// params array when any element folds, and leaves the ps-reading elements in place.
-							if (_parameterValues != null)
+							if (_parameterValues != null && attr is not SqlQueryDependentFormatAttribute)
 							{
 								var resolved = ResolveCompiledQueryArguments(newArgument);
 
@@ -228,6 +235,89 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				}
 
 				return node;
+			}
+
+			// FromSql(sql, parameters) and Sql.Expr(sql, parameters) are their FormattableString overloads over
+			// FormattableStringFactory.Create(sql.Format, parameters), so both overloads reach the cache in one shape.
+			MethodCallExpression? ConvertRawSqlString(MethodCallExpression node)
+			{
+				if (!node.Method.IsGenericMethod)
+					return null;
+
+				var definition = node.Method.GetGenericMethodDefinition();
+
+				MethodInfo formattableMethod;
+
+				if (definition == Methods.LinqToDB.FromSqlRaw)
+					formattableMethod = Methods.LinqToDB.FromSqlFormattable;
+				else if (definition == Methods.LinqToDB.SqlExt.ExprRaw)
+					formattableMethod = Methods.LinqToDB.SqlExt.ExprFormattable;
+				else
+					return null;
+
+				// sql and parameters are the last two arguments of both methods
+				var sql       = node.Arguments[^2];
+				var arguments = node.Arguments.Take(node.Arguments.Count - 2).ToList();
+
+				// a format read from a compiled query's arguments is resolved later, with the FormattableString's format
+				arguments.Add(IsCompilable(sql)
+					? DataExtensions.GenerateFormattableString(((RawSqlString)EvaluateExpression(sql)!).Format, node.Arguments[^1])
+					: Expression.Call(null, Methods.System.FormattableStringFactory_Create, Expression.Property(sql, nameof(RawSqlString.Format)), node.Arguments[^1]));
+
+				return Expression.Call(formattableMethod.MakeGenericMethod(node.Method.GetGenericArguments()), arguments);
+			}
+
+			// Only the format shapes the SQL, so only the format is evaluated; the arguments stay
+			// expressions and become parameters as they would in the outer query.
+			Expression PrepareFormattableString(Expression argument)
+			{
+				if (argument is MethodCallExpression { Arguments: [var format, { NodeType: ExpressionType.NewArrayInit } arguments] } create
+					&& create.Method == Methods.System.FormattableStringFactory_Create)
+				{
+					if (format.NodeType == ExpressionType.Constant)
+						return argument;
+
+					var resolvedFormat = ResolveCompiledQueryArguments(format);
+
+					if (!IsCompilable(resolvedFormat))
+						return argument;
+
+					if (!ReferenceEquals(resolvedFormat, format))
+						RecordMaterializedArgumentSlots(format);
+
+					return create.Update(null, [Expression.Constant(EvaluateExpression(resolvedFormat), typeof(string)), arguments]);
+				}
+
+				var resolvedArgument = ResolveCompiledQueryArguments(argument);
+
+				if (IsCompilable(resolvedArgument) && EvaluateExpression(resolvedArgument) is FormattableString formattable)
+				{
+					// Outside a compiled query expose runs per execution, so the values can be baked.
+					if (_parameterValues == null)
+						return DataExtensions.GenerateFormattableString(formattable);
+
+					if (!ReferenceEquals(resolvedArgument, argument))
+						RecordMaterializedArgumentSlots(argument);
+
+					// A compiled query reuses this build for any Equals-equal argument values (1.0m and 1.00m, one
+					// instant at two offsets) and for every value of a captured array it does not key on, so the
+					// values are read from the argument expression rather than baked.
+					var fromArray = argument is MethodCallExpression { Arguments: [_, _] } call && call.Method == Methods.System.FormattableStringFactory_Create;
+					var source    = fromArray
+						? ((MethodCallExpression)argument).Arguments[1]
+						: Expression.Call(argument, Methods.System.FormattableString_GetArguments);
+
+					// A null argument has no type to read it as. It is read, and fails to translate as on master, only from
+					// a closure-captured array, which master read per call. A keyed source bakes it, and so does a captured
+					// FormattableString, which master baked whole. A source that also reads a captured value (args ?? captured)
+					// is not keyed on that value.
+					var keyed = !ReferenceEquals(ResolveCompiledQueryArguments(source), source)
+						&& source.Find(static e => e is MemberExpression { Expression: null or ConstantExpression }) == null;
+
+					return DataExtensions.GenerateFormattableString(formattable, source, readNulls: fromArray && !keyed);
+				}
+
+				return argument;
 			}
 
 			Expression HandleSqlProperty(MethodCallExpression node)

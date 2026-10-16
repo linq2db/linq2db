@@ -361,5 +361,132 @@ namespace Tests.Linq
 				.GroupBy(x => (x.User, x.Email))
 				.ToList();
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6024")]
+		public void Issue6024_RootAnyOwnIsNotNull([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var expected = Parent
+				.Where(p => p.Value1 != null)
+				.Any(p => p.Value1 > 1);
+
+			db.Parent
+				.Where(p => p.Value1 != null)
+				.Any(p => p.Value1 > 1)
+				.ShouldBe(expected);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6024")]
+		public void Issue6024_RootAllOwnIsNotNull([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var expected = Parent
+				.Where(p => p.Value1 != null)
+				.All(p => p.Value1 > 0);
+
+			db.Parent
+				.Where(p => p.Value1 != null)
+				.All(p => p.Value1 > 0)
+				.ShouldBe(expected);
+		}
+
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6024")]
+		public void Issue6024_CorrelatedAnyOwnIsNotNull([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				orderby p.ParentID
+				select new
+				{
+					p.ParentID,
+					Has = db.GrandChild
+						.Where(g => g.ChildID != null)
+						.Any(g => g.ParentID == p.ParentID),
+				};
+
+			AssertQuery(query);
+		}
+
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6024")]
+		public void Issue6024_CorrelatedAnyNestedOwnIsNotNull([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				orderby p.ParentID
+				select new
+				{
+					p.ParentID,
+					Has = db.GrandChild
+						.Where(g1 => g1.ParentID == p.ParentID)
+						.Any(g1 => db.GrandChild.Any(g2 => g2.GrandChildID == g1.GrandChildID && g2.ChildID != null)),
+				};
+
+			AssertQuery(query);
+		}
+
+		[ThrowsRequiresCorrelatedSubquery]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6024")]
+		public void Issue6024_CorrelatedMaxSelectOwnIsNotNull([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				orderby p.ParentID
+				select new
+				{
+					p.ParentID,
+					Max = db.GrandChild
+						.Where(g => g.ParentID == p.ParentID)
+						.Max(g => g.ChildID != null ? g.GrandChildID : 0),
+				};
+
+			AssertQuery(query);
+		}
+
+		[ThrowsRequiresCorrelatedSubquery]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6024")]
+		public void Issue6024_CorrelatedCountOwnIsNotNull([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				orderby p.ParentID
+				select new
+				{
+					p.ParentID,
+					Cnt = db.GrandChild.Count(g => g.ParentID == p.ParentID && g.ChildID != null),
+				};
+
+			AssertQuery(query);
+		}
+
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllOracle11], ErrorMessage = ErrorHelper.Oracle.Error_ColumnSubqueryShouldNotContainParentIsNotNull)]
+		[ThrowsRequiresCorrelatedSubquery]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6024")]
+		public void Issue6024_CorrelatedParentIsNotNull([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				orderby p.ParentID
+				select new
+				{
+					p.ParentID,
+					Cnt = db.Child.Count(c => c.ParentID == p.ParentID && p.Value1 != null),
+				};
+
+			AssertQuery(query);
+		}
 	}
 }

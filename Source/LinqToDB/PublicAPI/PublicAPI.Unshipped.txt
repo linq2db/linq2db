@@ -1,5 +1,6 @@
 ﻿#nullable enable
 *REMOVED*LinqToDB.Internal.SqlProvider.OptimizationContext.TransformationInfo.get -> LinqToDB.Internal.SqlQuery.Visitors.SqlQueryVisitor.IVisitorTransformationInfo!
+*REMOVED*override LinqToDB.Internal.SqlQuery.Visitors.SqlQueryValidatorVisitor.VisitSqlTableSource(LinqToDB.Internal.SqlQuery.SqlTableSource! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 const LinqToDB.Internal.Common.ErrorHelper.Error_OutputQuery_EagerLoad = "Eager loading over the output of InsertWithOutputQuery requires child records to be matched to the output by simple key comparisons, and child queries cannot read the output themselves. Materialize the output first (e.g. ToList()) and load the children from it." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_OutputQuery_NotRead = "The output of InsertWithOutputQuery is not read by the query, so the insert would not be executed. Read the output in the query, or execute the insert separately." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_OutputQuery_NotSupported = "Provider does not support using the output of a data-modifying statement (INSERT ... RETURNING/OUTPUT) as a query source. Execute the statement with InsertWithOutput and compose the returned records on the client instead." -> string!
