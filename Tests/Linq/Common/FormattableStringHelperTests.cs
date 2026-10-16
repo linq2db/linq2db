@@ -79,6 +79,8 @@ namespace Tests.Common
 		[TestCase("{0,5}",      true )]
 		[TestCase("{0 ,-3:x}",  true )]
 		[TestCase("{0:x,y}",    false)]
+		[TestCase("{0, -5 :x}", true )]
+		[TestCase("{0 }",       false)]
 		public void ParseFormatItems_HasAlignment(string format, bool hasAlignment)
 		{
 			FormattableStringHelper.ParseFormatItems(format).ShouldNotBeNull().Single().HasAlignment.ShouldBe(hasAlignment);
@@ -89,6 +91,13 @@ namespace Tests.Common
 		[TestCase("{")]
 		[TestCase("a}b")]
 		[TestCase("{}")]
+		[TestCase("{0x}")]
+		[TestCase("{0 x}")]
+		[TestCase("{0,}")]
+		[TestCase("{0,a}")]
+		[TestCase("{0,-}")]
+		[TestCase("{0,5x}")]
+		[TestCase("{0{1}")]
 		public void ParseFormatItems_Invalid(string format)
 		{
 			FormattableStringHelper.ParseFormatItems(format).ShouldBeNull();

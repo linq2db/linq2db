@@ -116,20 +116,47 @@ namespace LinqToDB.Internal.Common
 					return null;
 
 				var indexLength = i - indexStart;
-				var end         = format.IndexOf('}', i);
 
-				if (end < 0)
+				SkipSpaces(format, ref i);
+
+				var hasAlignment = i < format.Length && format[i] == ',';
+
+				if (hasAlignment)
+				{
+					i++;
+					SkipSpaces(format, ref i);
+
+					if (i < format.Length && format[i] == '-')
+						i++;
+
+					var alignmentStart = i;
+
+					while (i < format.Length && format[i] is >= '0' and <= '9')
+						i++;
+
+					if (i == alignmentStart)
+						return null;
+
+					SkipSpaces(format, ref i);
+				}
+
+				var end = i < format.Length && format[i] == ':' ? format.IndexOf('}', i) : i;
+
+				if (end < 0 || end >= format.Length || format[end] != '}')
 					return null;
 
-				while (i < end && format[i] == ' ')
-					i++;
-
-				(items ??= new()).Add(new FormatItem(start, end - start + 1, index, indexStart, indexLength, format[i] == ','));
+				(items ??= new()).Add(new FormatItem(start, end - start + 1, index, indexStart, indexLength, hasAlignment));
 
 				i = end;
 			}
 
 			return items ?? (IReadOnlyList<FormatItem>)Array.Empty<FormatItem>();
+		}
+
+		static void SkipSpaces(string format, ref int i)
+		{
+			while (i < format.Length && format[i] == ' ')
+				i++;
 		}
 
 		/// <summary>
