@@ -1,8 +1,0 @@
-{
-	"NET100.Azure": {
-		"Providers": [
-			"YDB",
-			"Sybase.Managed"
-		]
-	}
-}

@@ -38,8 +38,10 @@
 		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" PrivateAssets="contentfiles;build" />
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
-		<PackageReference Include="FSharp.Core" />
+	<ItemGroup>
+		<!--every TFM: under central package management the SDK adds no implicit FSharp.Core, and fsc then
+		    compiles against the copy bundled with the SDK, whose version (and since 11.0 RC2, TFM) we don't control-->
+		<PackageReference Include="FSharp.Core" VersionOverride="$(FSharpCoreForNuget)" />
 	</ItemGroup>
 
 </Project>

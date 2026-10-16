@@ -60,7 +60,7 @@ changes without touching a single line of ours.
   "id":             "npgsql",                      // stable, lowercase; the sort key
   "displayName":    "Npgsql",
   "packageId":      "Npgsql",                      // empty for components with no NuGet package
-  "versions":       { "net8.0": "10.0.3", "net10.0": "10.0.3" },
+  "versions":       { "net10.0": "10.0.3", "net11.0": "10.0.3" },
   "license":        "PostgreSQL",
   "licenseTexts":   [ "npgsql-postgresql.txt" ],   // one or more files under texts/
   "copyright":      "Copyright 2025 © The Npgsql Development Team",

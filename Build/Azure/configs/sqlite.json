@@ -1,0 +1,14 @@
+{
+	"Azure.TestJob": {
+		"Providers": [
+			// not sqlite, but should go somewhere
+			"TestNoopProvider",
+			"SQLite.Classic",
+			"Northwind.SQLite",
+			"SQLite.MS",
+			"Northwind.SQLite.MS",
+			"SQLite.Classic.MPU",
+			"SQLite.Classic.MPM"
+		]
+	}
+}

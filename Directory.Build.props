@@ -1,18 +1,18 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<Import Project="$(MSBuildThisFileDirectory)Build/TargetFrameworks.props" />
+
 	<PropertyGroup>
 		<!-- Update to next after release -->
 		<Version>6.6.0</Version>
 		<EF3Version>3.35.0</EF3Version>
-		<EF8Version>8.9.0</EF8Version>
-		<EF9Version>9.8.0</EF9Version>
 		<EF10Version>10.7.0</EF10Version>
+		<EF11Version>11.0.0</EF11Version>
 
 		<!-- Baselines update on next major release -->
 		<BaselineVersion>6.0.0</BaselineVersion>
 		<EF3BaselineVersion>3.28.0</EF3BaselineVersion>
-		<EF8BaselineVersion>8.2.0</EF8BaselineVersion>
-		<EF9BaselineVersion>9.1.0</EF9BaselineVersion>
 		<EF10BaselineVersion>10.0.0</EF10BaselineVersion>
+		<!--EF11 has no shipped version yet; the project disables package validation until it does-->
 
 		<!--don't remove it! WPF doesn't work with non-4-component versions-->
 		<AssemblyVersion>$(Version).0</AssemblyVersion>
@@ -41,6 +41,13 @@
 		<!--NoWarn, not severity=none: the analyzer still executes at severity=none (measured on 6.4.0 - the
 		    disabled MA0204's analyzer still cost 3.6s), so only NoWarn actually reclaims the build time-->
 		<NoWarn>1573;1591;MA0182;CA1304;CA1307;CA1310;CA1812;CA2301;CA2302;CA3004;CA3075;CA5360;CA5380;CA5381;CA5387;CA5388;CA5399;CA5400;CA5401;CA5402;ASP0017;ASP0018;NUnit1002;MA0003;MA0026;MA0038;MA0041;MA0202;MA0209;MA0210</NoWarn>
+		<!--.NET 11 added StartsWith/EndsWith/IndexOf/LastIndexOf (char, StringComparison) to System.String,
+		    so MA0001 reports our char-overload calls there and nowhere else. The findings are real but not
+		    actionable while the same source also compiles for net462/netstandard2.0/net10.0, where those
+		    overloads do not exist - adding the argument is a compile error on every other TFM. Suppressed
+		    for this TFM only; lift it once Meziantou.Polyfill carries these overloads, which makes the
+		    calls portable, or when net10.0 is dropped.-->
+		<NoWarn Condition="'$(TargetFramework)'=='net11.0'">$(NoWarn);MA0001</NoWarn>
 		<Features>strict</Features>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 
@@ -212,11 +219,11 @@
 	</ItemGroup>
 
 	<PropertyGroup>
-		<TargetFrameworks>net462;netstandard2.0;net8.0;net9.0;net10.0</TargetFrameworks>
+		<TargetFrameworks>$(LibraryTargetFrameworks)</TargetFrameworks>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Testing'">
-		<TargetFrameworks>net10.0</TargetFrameworks>
+		<TargetFrameworks>$(LatestTargetFramework)</TargetFrameworks>
 		<DefineConstants>DEBUG;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
 
