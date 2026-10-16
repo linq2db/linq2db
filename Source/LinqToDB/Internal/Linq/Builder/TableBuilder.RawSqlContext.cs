@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
@@ -50,8 +49,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var formatArg = methodCall.Arguments[1];
 
-			PrepareRawSqlArguments(formatArg,
+			FormattableStringHelper.PrepareRawSqlArguments(formatArg,
 				methodCall.Arguments.Count > 2 ? methodCall.Arguments[2] : null,
+				builder.DataContext.SqlProviderFlags.IsParameterOrderDependent,
 				out var format, out var arguments);
 
 			var sqlArguments = new ISqlExpression[arguments.Count];
@@ -67,85 +67,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			return BuildSequenceResult.FromContext(new RawSqlContext(builder.GetTranslationModifier(), builder, buildInfo, entityType, isScalar.Value, format, sqlArguments));
-		}
-
-		public static void PrepareRawSqlArguments(Expression formatArg, Expression? parametersArg, out string format, out IReadOnlyList<Expression> arguments)
-		{
-			// Consider that FormattableString is used
-			if (formatArg.NodeType == ExpressionType.Call)
-			{
-				var mc = (MethodCallExpression)formatArg;
-
-				if (mc.Arguments[1].NodeType != ExpressionType.NewArrayInit)
-				{
-					format    = mc.Arguments[0].EvaluateExpression<string>()!;
-					var args  = new Expression[mc.Arguments.Count - 1];
-
-					for (var i = 0; i < args.Length; i++)
-						args[i] = mc.Arguments[i + 1];
-
-					arguments = args;
-				}
-				else
-				{
-					format    = mc.Arguments[0].EvaluateExpression<string>()!;
-					arguments = ((NewArrayExpression)mc.Arguments[1]).Expressions;
-				}
-			}
-			else
-			{
-				var evaluatedSql = formatArg.EvaluateExpression()!;
-				if (evaluatedSql is FormattableString formattable)
-				{
-					format     = formattable.Format;
-
-					var array = formattable.GetArguments();
-					var args   = new Expression[array.Length];
-
-					for (var i = 0; i < array.Length; i++)
-					{
-						Expression expr = Expression.Constant(array[i], array[i]?.GetType() ?? typeof(object));
-						args[i] = expr;
-					}
-
-					arguments = args;
-				}
-				else
-				{
-					var rawSqlString = (RawSqlString)evaluatedSql;
-
-					format        = rawSqlString.Format;
-					var arrayExpr = parametersArg!;
-
-					if (arrayExpr.NodeType == ExpressionType.NewArrayInit)
-					{
-						arguments = ((NewArrayExpression)arrayExpr).Expressions;
-					}
-					else
-					{
-						var array = arrayExpr.EvaluateExpression<object[]>()!;
-						var args  = new Expression[array.Length];
-						for (var i = 0; i < array.Length; i++)
-						{
-							var type = array[i]?.GetType() ?? typeof(object);
-
-							if (typeof(ISqlExpression).IsAssignableFrom(type))
-							{
-								args[i] = Expression.Constant(array[i]);
-								continue;
-							}
-
-							Expression expr = Expression.ArrayIndex(arrayExpr, ExpressionInstances.Int32(i));
-							if (type != typeof(object))
-								expr = Expression.Convert(expr, type);
-
-							args[i] = expr;
-						}
-
-						arguments = args;
-					}
-				}
-			}
 		}
 
 		//TODO: We have to separate TableContext in proper hierarchy

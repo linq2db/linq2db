@@ -213,6 +213,18 @@ namespace Tests.Linq
 				db.Child.Select(c => string.Format("{0},{1}", c.ChildID, text)).FirstOrDefault(), Is.EqualTo(Child.Select(c => string.Format("{0},{1}", c.ChildID, text)).FirstOrDefault()));
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
+		public void FunctionWithAlignment([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.Person.Where(p => p.ID == 1).Select(p => string.Format("{0,5}|{1}", p.ID, p.FirstName)).ToArray().ShouldBe(["    1|John"]);
+
+			var act = () => db.Person.Where(p => string.Format("{0,5}", p.ID) == "    1").ToArray();
+
+			act.ShouldThrow<LinqToDBException>();
+		}
+
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
 		public void SubQueryTest([DataSources(TestProvName.AllAccess)]
