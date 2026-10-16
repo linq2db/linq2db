@@ -1077,7 +1077,8 @@ namespace Tests.Linq
 		/// <remarks>
 		/// The part is taken from the epoch, which is negative there, and a truncating <c>%</c> carries the sign
 		/// into the answer. Asked over the wide column because it is the only one of the three that can hold such a
-		/// date - a ClickHouse <c>DateTime</c> starts at 1970.
+		/// date - a ClickHouse <c>DateTime</c> starts at 1970. YDB is left out because its <c>Timestamp</c> starts there
+		/// too and the driver overflows on insert.
 		/// </remarks>
 		[Test]
 		[ActiveIssue(5965, Configuration = TestProvName.AllOracle, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}500{1}but was")]
