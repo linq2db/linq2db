@@ -32,7 +32,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<!-- Console exe reporting via stdout and exit code, not an NUnit project: drop the System.Console ban. -->
+		<!-- Console exe reporting via stdout and exit code, not an NUnit project: opt out of the test-suite banned-API list. -->
 		<AdditionalFiles Remove="..\BannedSymbols.txt" />
 	</ItemGroup>
 
