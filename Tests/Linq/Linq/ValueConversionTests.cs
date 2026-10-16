@@ -1689,6 +1689,48 @@ namespace Tests.Linq
 			rows.Select(r => r.Date).ShouldBe([value, value]);
 		}
 
+		sealed class Issue6052CharConverter : ValueConverter<char?, char>
+		{
+			public Issue6052CharConverter() : base(
+				x => (!x.HasValue || x == default || x == '\0') ? ' ' : x.Value,
+				x => char.IsLetterOrDigit(x) ? x : null,
+				true)
+			{
+			}
+		}
+
+		[Table]
+		sealed class Issue6052RowA
+		{
+			[PrimaryKey                                                 ] public int   Id   { get; set; }
+			[ValueConverter(ConverterType = typeof(Issue6052CharConverter))]
+			[Column(Length = 1)                                         ] public char? Code { get; set; }
+		}
+
+		[Table]
+		sealed class Issue6052RowB
+		{
+			[PrimaryKey                                                 ] public int   Id   { get; set; }
+			[ValueConverter(ConverterType = typeof(Issue6052CharConverter))]
+			[Column(Length = 1)                                         ] public char? Code { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6052")]
+		public void Issue6052_UnionOverSameConverterClass([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var a  = db.CreateLocalTable([new Issue6052RowA { Id = 1, Code = 'A' }, new Issue6052RowA { Id = 2, Code = null }]);
+			using var b  = db.CreateLocalTable([new Issue6052RowB { Id = 3, Code = 'B' }]);
+
+			var rows = a
+				.Select(r => new { r.Id, r.Code })
+				.Union(b.Select(r => new { r.Id, r.Code }))
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			rows.Select(r => r.Code).ShouldBe(['A', null, 'B']);
+		}
+
 		#endregion
 
 		[Table]
