@@ -3058,6 +3058,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (Builder.CanBeEvaluatedOnClient(node))
 				return false;
 
+			// A wrapped inline array of row values is a client value, as the bare one is, not a collection to eager load.
+			if (_buildPurpose is BuildPurpose.Expression && node is not NewArrayExpression && UnwrapInlineArray(node) is { NodeType: ExpressionType.NewArrayInit })
+				return false;
+
 			LogVisit(node);
 
 			var calculatedContext = BuildContext;
