@@ -37,7 +37,7 @@ namespace Tests.Linq
 			TestProvName.AllSqlServer2019Minus + ","
 			+ ProviderName.SqlCe              + ","
 			+ TestProvName.AllSybase          + ","
-			+ TestProvName.AllAccess          + ","
+			+ TestProvName.AllNativeAccess    + ","
 			+ TestProvName.AllFirebird        + ","   // TRIM(LEADING/TRAILING chars FROM val) is substring, not set; no native regex
 			+ TestProvName.AllMySql57;                // no REGEXP_REPLACE (added in MySQL 8.0); same substring-vs-set issue
 
@@ -51,7 +51,8 @@ namespace Tests.Linq
 			+ TestProvName.AllDB2              + ","
 			+ TestProvName.AllInformix         + ","
 			+ TestProvName.AllSqlServer2022Plus + ","
-			+ TestProvName.AllClickHouse;
+			+ TestProvName.AllClickHouse       + ","
+			+ TestProvName.AllAccessLibRed;
 
 		#region Result-equivalence tests with forced translation
 

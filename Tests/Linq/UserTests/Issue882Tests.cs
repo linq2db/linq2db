@@ -74,7 +74,7 @@ namespace Tests.UserTests
 
 		[Test]
 		public void Millisecond([DataSources(
-				TestProvName.AllInformix, TestProvName.AllAccess,
+				TestProvName.AllInformix, TestProvName.AllNativeAccess,
 				TestProvName.AllSapHana, TestProvName.AllMySql)]
 			string context)
 		{

@@ -81,7 +81,7 @@ namespace Tests.UserTests
 
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void OrderByExcept([DataSources(TestProvName.AllSybase, TestProvName.AllSqlServer, TestProvName.AllAccess)] string context)
+		public void OrderByExcept([DataSources(TestProvName.AllSybase, TestProvName.AllSqlServer, TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			var persons = db.Person

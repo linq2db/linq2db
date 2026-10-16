@@ -133,19 +133,28 @@ namespace LinqToDB.Internal.DataProvider.Access
 		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery,
 			SqlUpdateClause                                    updateClause)
 		{
+			var fromPosition = StringBuilder.Length;
 			base.BuildFromClause(statement, selectQuery);
-			StringBuilder.Remove(0, 4).Insert(0, "UPDATE");
+			StringBuilder.Remove(fromPosition, 4).Insert(fromPosition, "UPDATE");
 			base.BuildUpdateSet(selectQuery, updateClause);
 		}
 
+		protected virtual bool IsCaseExpressionSupported => false;
+
 		protected override void BuildSqlCaseExpression(SqlCaseExpression caseExpression)
 		{
-			BuildExpression(ConvertCaseToConditions(caseExpression, 0));
+			if (IsCaseExpressionSupported)
+				base.BuildSqlCaseExpression(caseExpression);
+			else
+				BuildExpression(ConvertCaseToConditions(caseExpression, 0));
 		}
 
 		protected override void BuildSqlConditionExpression(SqlConditionExpression conditionExpression)
 		{
-			BuildSqlConditionExpressionAsFunction("IIF", conditionExpression);
+			if (IsCaseExpressionSupported)
+				base.BuildSqlConditionExpression(conditionExpression);
+			else
+				BuildSqlConditionExpressionAsFunction("IIF", conditionExpression);
 		}
 
 		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
@@ -230,10 +239,12 @@ namespace LinqToDB.Internal.DataProvider.Access
 			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		}
 
+		protected virtual bool IsCommentSupported => false;
+
 		protected override StringBuilder BuildSqlComment(StringBuilder sb, SqlComment comment)
 		{
 			// comments not supported by Access
-			return sb;
+			return IsCommentSupported ? base.BuildSqlComment(sb, comment) : sb;
 		}
 
 		protected override void BuildSubQueryExtensions(SqlStatement statement)

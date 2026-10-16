@@ -396,7 +396,7 @@ namespace Tests.Linq
 					.ToArray();
 
 			// Access has different order in result set
-			if (!context.IsAnyOf(TestProvName.AllAccess))
+			if (!context.IsAnyOf(TestProvName.AllNativeAccess))
 				AreEqual(expected, actual);
 		}
 
@@ -439,14 +439,14 @@ namespace Tests.Linq
 					.ToArray();
 
 			// Access has different order in result set
-			if (!context.IsAnyOf(TestProvName.AllAccess))
+			if (!context.IsAnyOf(TestProvName.AllNativeAccess))
 				AreEqual(expected, actual);
 		}
 
 		// PostgreSQL92 Uses 3 queries and we join results in wrong order. See LetTest71 with explicit sort
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery]
-		public void LetTest7([DataSources(TestProvName.AllInformix, ProviderName.PostgreSQL92, TestProvName.AllSybase, TestProvName.AllAccess)] string context)
+		public void LetTest7([DataSources(TestProvName.AllInformix, ProviderName.PostgreSQL92, TestProvName.AllSybase, TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(

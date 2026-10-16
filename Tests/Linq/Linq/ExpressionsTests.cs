@@ -1139,7 +1139,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "Tests regression introduced in 3.5.2")]
-		public void ComparisonTest2([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void ComparisonTest2([DataSources(TestProvName.AllNativeAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			var left  = GetQuery(db, 0);

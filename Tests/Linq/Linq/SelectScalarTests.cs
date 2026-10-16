@@ -215,7 +215,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
-		public void SubQueryTest([DataSources(TestProvName.AllAccess)]
+		public void SubQueryTest([DataSources(TestProvName.AllNativeAccess)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -226,7 +226,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubQueryAggregate([DataSources(TestProvName.AllAccess)]
+		public void SubQueryAggregate([DataSources(TestProvName.AllNativeAccess)]
 			string context)
 		{
 			using var db = GetDataContext(context);

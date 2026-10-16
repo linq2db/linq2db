@@ -651,7 +651,7 @@ namespace Tests.Linq
 		public void Issue4597Test([DataSources(
 			ProviderName.SqlCe,
 			TestProvName.AllYdb,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			TestProvName.AllSqlServer2016Minus,

@@ -14,7 +14,7 @@ namespace Tests
 		internal static readonly List<string> Unsupported = new List<string>
 		{
 			TestProvName.AllMySql57,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			TestProvName.AllSqlCe,
 			TestProvName.AllSybase,
 			TestProvName.AllFirebirdLess3,

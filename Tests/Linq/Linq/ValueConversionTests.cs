@@ -885,7 +885,18 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConditionNullTest([DataSources(TestProvName.AllAccess)] string context)
+		public void Issue3830OrderByTest([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Issue3830TestTable.TestData);
+
+			var result = table.OrderBy(r => r.Bool1).ThenBy(r => r.Id).Select(r => r.Id).ToArray();
+
+			result.ShouldBe(Issue3830TestTable.TestData.OrderBy(r => r.Bool1).ThenBy(r => r.Id).Select(r => r.Id).ToArray());
+		}
+
+		[Test]
+		public void ConditionNullTest([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 

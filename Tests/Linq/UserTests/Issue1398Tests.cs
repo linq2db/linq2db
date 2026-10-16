@@ -59,7 +59,7 @@ namespace Tests.UserTests
 		// TODO: disabled providers lacks connections
 		// Access: works, but unstable due to lock conflicts in access
 		[Test]
-		public void TestInsert([DataSources(false, TestProvName.AllAccess, TestProvName.AllFirebird, TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllOracle12, TestProvName.AllSQLiteClassic)] string context)
+		public void TestInsert([DataSources(false, TestProvName.AllNativeAccess, TestProvName.AllFirebird, TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllOracle12, TestProvName.AllSQLiteClassic)] string context)
 		{
 			const int recordsCount = 20;
 

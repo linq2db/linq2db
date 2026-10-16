@@ -205,7 +205,7 @@ namespace Tests.Linq
 				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
 				TestProvName.AllSQLite,
-				TestProvName.AllAccess,
+				TestProvName.AllNativeAccess,
 				TestProvName.AllSapHana)]
 			string context)
 		{

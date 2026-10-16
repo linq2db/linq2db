@@ -71,6 +71,7 @@ namespace LinqToDB
 		[Extension(PN.Firebird,   "",              BuilderType = typeof(DateDiffBuilderFirebird))]
 		[Extension(PN.SQLite,     "",              BuilderType = typeof(DateDiffBuilderSQLite))]
 		[Extension(PN.PostgreSQL, "",              BuilderType = typeof(DateDiffBuilderPostgreSql))]
+		[Extension(PN.AccessLibRed, "",            BuilderType = typeof(DateDiffBuilderAccessLibRed))]
 		[Extension(PN.Access,     "",              BuilderType = typeof(DateDiffBuilderAccess))]
 		[Extension(PN.ClickHouse, "",              BuilderType = typeof(DateDiffBuilderClickHouse))]
 		[Extension(PN.Ydb,        "",              BuilderType = typeof(DateDiffBuilderYdb))]
