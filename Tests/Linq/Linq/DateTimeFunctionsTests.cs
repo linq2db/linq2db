@@ -2136,6 +2136,10 @@ namespace Tests.Linq
 		/// value, not a stored column.
 		/// </summary>
 		[Test]
+		[ActiveIssue(Configuration = TestProvName.AllFirebird, ErrorMessage = "Datatypes are not comparable in expression UNION",
+			Details = "no-issue: the server rejects a UNION of DATE and TIMESTAMP; master answered by truncating the literal to 00:00.")]
+		[ActiveIssue(Configuration = TestProvName.AllInformix, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			Details = "no-issue: the server rejects a datetime literal set beside a DATETIME YEAR TO DAY conditional; master fails the same query.")]
 		public void ConditionalOverDateSetOperationKeepsLiteralTime([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
