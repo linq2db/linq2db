@@ -724,6 +724,12 @@ namespace Tests.Linq
 				.Select(r => Sql.AsSql(Sql.Round(r.D22s9, r.P)))
 				.ToArray();
 			atDigits.ShouldThrow<Exception>();
+
+			// the constant path's twin: a literal precision does not take the runtime CASE
+			Action atDigitsConstant = () => boundary
+				.Select(r => Sql.AsSql(Sql.Round(r.D22s9, -13)))
+				.ToArray();
+			atDigitsConstant.ShouldThrow<Exception>();
 		}
 
 		sealed class RoundManyDigits
