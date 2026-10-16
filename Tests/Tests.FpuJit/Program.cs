@@ -37,6 +37,8 @@ namespace Tests.FpuJit
 		};
 
 		// Methods that may be skipped because a dependency does not load: (assembly, message fragment, reason).
+		// A skip does not restart the child, so whatever its prepare compiles after a control-word reset stays
+		// compiled masked and is later counted OK; an entry here accepts that as well.
 		static readonly (string Assembly, string MessagePart, string Reason)[] AllowedDependencySkips = [];
 
 		// Methods that may stay unverified because compiling them resets the FPU control word even in a fresh process:
