@@ -3059,7 +3059,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return false;
 
 			// A wrapped inline array of row values is a client value, as the bare one is, not a collection to eager load.
-			if (_buildPurpose is BuildPurpose.Expression && node is not NewArrayExpression && UnwrapInlineArray(node) is { NodeType: ExpressionType.NewArrayInit })
+			if (_buildPurpose is BuildPurpose.Expression && UnwrapInlineArray(node) is { NodeType: ExpressionType.NewArrayInit })
 				return false;
 
 			LogVisit(node);
