@@ -2003,6 +2003,7 @@ namespace Tests.Linq
 		/// part beside an aggregate over a coarse column too.
 		/// </summary>
 		[Test]
+		[ActiveIssue(5998, Configuration = TestProvName.AllAccessOdbc, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was")]
 		public void CoarseAggregateCapturedListKeepsValueTime([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
