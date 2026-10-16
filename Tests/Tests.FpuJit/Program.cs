@@ -38,6 +38,13 @@ namespace Tests.FpuJit
 		// Methods that may be skipped because a dependency does not load: (assembly, message fragment, reason).
 		static readonly (string Assembly, string MessagePart, string Reason)[] AllowedDependencySkips = [];
 
+		// Methods that may stay unverified because compiling them resets the FPU control word even in a fresh process:
+		// (assembly, method display prefix, reason).
+		static readonly (string Assembly, string MethodPrefix, string Reason)[] AllowedUnverified =
+		[
+			("linq2db", "LinqToDB.Internal.DataProvider.DuckDB.", "DuckDB.NET has no .NET Framework build: the adapter's failed bind in a type initializer resets the control word on every attempt"),
+		];
+
 		const string CanaryAssembly   = "canary";
 		const int    MaxRestarts      = 100;
 		const int    ChildTimeoutMs   = 10 * 60 * 1000;
@@ -47,6 +54,7 @@ namespace Tests.FpuJit
 		const int ExitJitFaults   = 1;
 		const int ExitEnvironment = 2;
 		const int ExitHarness     = 3;
+		const int ExitRestart     = 4;
 
 		[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl), DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
 		static extern uint _control87(uint newValue, uint mask);
@@ -66,7 +74,7 @@ namespace Tests.FpuJit
 			}
 
 			if (args.Length >= 2 && args[0] == "--child")
-				return RunChild(args[1], args.Length >= 4 && args[2] == "--resume-after" ? args[3] : null);
+				return RunChild(args[1], args.Length >= 4 ? args[3] : null, args.Length >= 4 && args[2] == "--resume-at");
 
 			return RunParent();
 		}
@@ -85,7 +93,8 @@ namespace Tests.FpuJit
 			var resultsPath = Path.Combine(dir, "results.txt");
 			File.Delete(resultsPath);
 
-			string? resumeAfter = null;
+			string? resumeId = null;
+			var     resumeAt = false;
 
 			for (var restart = 0; ; restart++)
 			{
@@ -95,7 +104,7 @@ namespace Tests.FpuJit
 					return ExitHarness;
 				}
 
-				var exitCode = SpawnChild(resultsPath, resumeAfter, out var timedOut);
+				var exitCode = SpawnChild(resultsPath, resumeId, resumeAt, out var timedOut);
 				var lines    = File.ReadAllLines(resultsPath);
 
 				var error = lines.FirstOrDefault(l => l.StartsWith("ERROR\t", StringComparison.Ordinal));
@@ -109,6 +118,33 @@ namespace Tests.FpuJit
 					return Report(lines);
 
 				var last = lines.LastOrDefault();
+				if (last != null && last.StartsWith("RESTART\t", StringComparison.Ordinal))
+				{
+					// RESTART <id> at|after: "at" retries the method in a fresh process, its type initializers already run;
+					// if it resets again it cannot be verified.
+					var restartParts = last.Split('\t');
+					var id           = restartParts[1];
+
+					if (restartParts[2] == "after")
+					{
+						resumeId = id;
+						resumeAt = false;
+					}
+					else if (resumeAt && id == resumeId)
+					{
+						var reset = lines[lines.Length - 2].Split('\t');
+						File.AppendAllText(resultsPath, $"UNVERIFIED\t{reset[1]}\t{reset[2]}\n");
+						resumeAt = false;
+					}
+					else
+					{
+						resumeId = id;
+						resumeAt = true;
+					}
+
+					continue;
+				}
+
 				if (last == null || !last.StartsWith("PREP\t", StringComparison.Ordinal))
 				{
 					Console.WriteLine($"ERROR: child exited with 0x{exitCode:X8} outside a method prepare");
@@ -119,15 +155,16 @@ namespace Tests.FpuJit
 				var parts = last.Split('\t');
 				File.AppendAllText(resultsPath, $"CRASH\t{parts[1]}\t{parts[2]}\t{parts[3]}\t{(timedOut ? "timeout" : $"process exit 0x{exitCode:X8}")}\n");
 
-				resumeAfter = parts[2];
+				resumeId = parts[2];
+				resumeAt = false;
 			}
 		}
 
-		static int SpawnChild(string resultsPath, string? resumeAfter, out bool timedOut)
+		static int SpawnChild(string resultsPath, string? resumeId, bool resumeAt, out bool timedOut)
 		{
 			var arguments = $"--child \"{resultsPath}\"";
-			if (resumeAfter != null)
-				arguments += $" --resume-after {resumeAfter}";
+			if (resumeId != null)
+				arguments += $" {(resumeAt ? "--resume-at" : "--resume-after")} {resumeId}";
 
 			var psi = new ProcessStartInfo(typeof(Program).Assembly.Location, arguments)
 			{
@@ -204,7 +241,19 @@ namespace Tests.FpuJit
 
 			var resets = records.Where(r => r[0] == "FPURESET").ToList();
 			if (resets.Count > 0)
-				Console.WriteLine($"FPU control word was reset while preparing {resets.Count} method(s), re-armed before the next; first: {resets[0][1]} {resets[0][2]}");
+				Console.WriteLine($"FPU control word was reset while preparing {resets.Count} method(s); first: {resets[0][1]} {resets[0][2]}");
+
+			foreach (var unverified in records.Where(r => r[0] == "UNVERIFIED"))
+			{
+				var allowed = AllowedUnverified.FirstOrDefault(a => a.Assembly == unverified[1] && unverified[2].StartsWith(a.MethodPrefix, StringComparison.Ordinal));
+				if (allowed.Reason != null)
+					Console.WriteLine($"unverified (allowed) {unverified[1]} {unverified[2]}");
+				else
+				{
+					Console.WriteLine($"ERROR: unverified {unverified[1]} {unverified[2]} — compiling it resets the FPU control word even in a fresh process");
+					exitCode = ExitEnvironment;
+				}
+			}
 
 			var real = faults.Where(r => r[1] != CanaryAssembly).ToList();
 
@@ -239,8 +288,16 @@ namespace Tests.FpuJit
 
 		[HandleProcessCorruptedStateExceptions, SecurityCritical]
 		[SuppressMessage("Security", "CA2153:Do Not Catch Corrupted State Exceptions", Justification = "Catching the JIT's FP fault is the purpose of the sweep")]
-		static int RunChild(string resultsPath, string? resumeAfter)
+		static int RunChild(string resultsPath, string? resumeId, bool resumeAt)
 		{
+			// methods whose compilation reset the control word in an earlier child: their type initializers are run
+			// up front, so this child compiles what follows unmasked
+			var warmIds = new HashSet<string>(
+				File.Exists(resultsPath)
+					? File.ReadAllLines(resultsPath).Where(l => l.StartsWith("RESTART\t", StringComparison.Ordinal)).Select(l => l.Split('\t')[1])
+					: [],
+				StringComparer.Ordinal);
+
 			using var writer = new StreamWriter(resultsPath, append: true) { AutoFlush = true };
 
 			void Write(string line) => writer.Write(line + "\n");
@@ -263,15 +320,21 @@ namespace Tests.FpuJit
 				}
 			}
 
-			var skipping = resumeAfter != null;
+			var skipping = resumeId != null;
 
 			foreach (var item in Enumerate(baseDir, Write))
 			{
 				if (skipping)
 				{
-					if (item.Id == resumeAfter)
-						skipping = false;
-					continue;
+					if (warmIds.Contains(item.Id))
+						RunTypeInitializers(item.Method);
+
+					if (item.Id != resumeId)
+						continue;
+
+					skipping = false;
+					if (!resumeAt)
+						continue;
 				}
 
 				// Code run while preparing (type initializers, native DLL init) can reset the control word,
@@ -286,27 +349,41 @@ namespace Tests.FpuJit
 
 				Write($"PREP\t{item.Asm}\t{item.Id}\t{item.Display}");
 
+				string? restart = null;
 				try
 				{
 					RuntimeHelpers.PrepareMethod(item.Method.MethodHandle);
 					Write($"OK\t{item.Asm}");
+					restart = "at";
 				}
 				catch (Exception ex) when (IsDependencyFailure(ex))
 				{
+					// a failed bind resets the control word itself; any such skip fails the sweep
 					Write($"SKIPDEP\t{item.Asm}\t{item.Id}\t{item.Display}\t{Describe(ex)}");
 				}
 				catch (Exception ex)
 				{
 					Write($"FAIL\t{item.Asm}\t{item.Id}\t{item.Display}\t{ex.GetType().Name}: {OneLine(ex.Message)}");
+					restart = "after";
 				}
 
+				// Whatever compiled after the reset was compiled masked, and a later PrepareMethod on it is a no-op:
+				// continue in a fresh process, retrying this method unless it already faulted.
 				if (!IsUnmasked())
+				{
 					Write($"FPURESET\t{item.Asm}\t{item.Display}");
+
+					if (restart != null)
+					{
+						Write($"RESTART\t{item.Id}\t{restart}");
+						return ExitRestart;
+					}
+				}
 			}
 
 			if (skipping)
 			{
-				Write($"ERROR\tresume point {resumeAfter} not found");
+				Write($"ERROR\tresume point {resumeId} not found");
 				return ExitHarness;
 			}
 
@@ -375,6 +452,22 @@ namespace Tests.FpuJit
 			}
 
 			return items;
+		}
+
+		static void RunTypeInitializers(MethodBase method)
+		{
+			_control87(FpuExceptionMask, FpuExceptionMask);
+
+			for (var type = method.DeclaringType; type != null; type = type.DeclaringType)
+			{
+				try
+				{
+					RuntimeHelpers.RunClassConstructor(type.TypeHandle);
+				}
+				catch (TypeInitializationException)
+				{
+				}
+			}
 		}
 
 		static bool IsUnmasked() => (_control87(0, 0) & FpuExceptionMask) == 0;
