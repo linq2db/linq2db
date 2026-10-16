@@ -1556,6 +1556,17 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 
+			// Each membership is calculated over the row's values, in SQL or on the client: none is eager loaded as a collection.
+			var queries = new SaveQueriesInterceptor();
+
+			if (!context.IsRemote())
+				db.AddInterceptor(queries);
+
+			query.ToArray();
+
+			if (!context.IsRemote())
+				queries.Queries.Count.ShouldBe(1);
+
 			// Without the option each membership stays in SQL, as an IN list over the defaulted item, not a VALUES table: one
 			// COALESCE per spelling, so a single spelling falling back to the client is seen.
 			if (!preferClient && context.IsAnyOf(TestProvName.AllSQLite))
