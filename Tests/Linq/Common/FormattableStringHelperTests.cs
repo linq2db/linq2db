@@ -98,6 +98,9 @@ namespace Tests.Common
 		[TestCase("{0,-}")]
 		[TestCase("{0,5x}")]
 		[TestCase("{0{1}")]
+		[TestCase("{0:x{y}")]
+		// escaped brace in a format section: .NET throws, .NET Framework accepts it
+		[TestCase("{0:a}}b}")]
 		public void ParseFormatItems_Invalid(string format)
 		{
 			FormattableStringHelper.ParseFormatItems(format).ShouldBeNull();

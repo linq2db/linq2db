@@ -142,7 +142,7 @@ namespace LinqToDB.Internal.Common
 
 				var end = i < format.Length && format[i] == ':' ? format.IndexOf('}', i) : i;
 
-				if (end < 0 || end >= format.Length || format[end] != '}')
+				if (end < 0 || end >= format.Length || format[end] != '}' || format.IndexOf('{', i, end - i) >= 0)
 					return null;
 
 				(items ??= new()).Add(new FormatItem(start, end - start + 1, index, indexStart, indexLength, hasAlignment));
