@@ -225,6 +225,20 @@ namespace Tests.Linq
 			act.ShouldThrow<LinqToDBException>();
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
+		public void FunctionWithInvalidFormat([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var format = "{0x}";
+
+			var select = () => db.Person.Where(p => p.ID == 1).Select(p => string.Format(format, p.FirstName)).ToArray();
+			var where  = () => db.Person.Where(p => string.Format(format, p.FirstName) == "John").ToArray();
+
+			select.ShouldThrow<FormatException>();
+			where.ShouldThrow<LinqToDBException>();
+		}
+
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
 		public void SubQueryTest([DataSources(TestProvName.AllAccess)]
