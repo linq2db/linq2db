@@ -203,8 +203,11 @@ namespace Tests.FpuJit
 				.Select(l => l.Split('\t'))
 				.ToList();
 
+			// a type initializer failure is re-written by every child that runs it
 			var faults = records
 				.Where(r => r[0] is "FAIL" or "CRASH")
+				.GroupBy(r => r[2], StringComparer.Ordinal)
+				.Select(g => g.First())
 				.ToList();
 
 			// enumeration-time records are re-written by every restarted child
@@ -325,7 +328,7 @@ namespace Tests.FpuJit
 		static int RunChild(string resultsPath, string? resumeId, bool resumeAt)
 		{
 			// methods whose compilation reset the control word in an earlier child: their type initializers are run
-			// up front, so this child compiles what follows unmasked
+			// up front, unmasked, so this child compiles what follows unmasked
 			var warmIds = new HashSet<string>(
 				File.Exists(resultsPath)
 					? File.ReadAllLines(resultsPath).Where(l => l.StartsWith("RESTART\t", StringComparison.Ordinal)).Select(l => l.Split('\t')[1])
@@ -344,6 +347,10 @@ namespace Tests.FpuJit
 				return ExitEnvironment;
 			}
 
+			// A managed exception resets the control word by its first-chance notification (a failed bind caught in a type
+			// initializer does), so re-arm there: whatever compiles while the exception is handled stays unmasked.
+			AppDomain.CurrentDomain.FirstChanceException += (_, _) => _control87(0, FpuExceptionMask);
+
 			var baseDir = AppDomain.CurrentDomain.BaseDirectory;
 			foreach (var asm in ExpectedAssemblies)
 			{
@@ -361,7 +368,7 @@ namespace Tests.FpuJit
 				if (skipping)
 				{
 					if (warmIds.Contains(item.Id))
-						RunTypeInitializers(item.Type);
+						RunTypeInitializers(item, Write);
 
 					if (item.Id != resumeId)
 						continue;
@@ -652,18 +659,24 @@ namespace Tests.FpuJit
 			return constraints.Length == 1 ? constraints[0] : typeof(object);
 		}
 
-		static void RunTypeInitializers(Type declaringType)
+		// A type initializer the JIT runs while compiling another method swallows a JIT fault in what it compiles,
+		// leaving only the reset; run directly, the fault surfaces as its failure.
+		static void RunTypeInitializers(Item item, Action<string> write)
 		{
-			_control87(FpuExceptionMask, FpuExceptionMask);
-
-			for (var type = declaringType; type != null; type = type.DeclaringType)
+			for (var type = item.Type; type != null; type = type.DeclaringType)
 			{
 				if (type.ContainsGenericParameters)
 					continue;
 
+				_control87(0, FpuExceptionMask);
+
 				try
 				{
 					RuntimeHelpers.RunClassConstructor(type.TypeHandle);
+				}
+				catch (TypeInitializationException ex) when (ex.InnerException is SEHException inner)
+				{
+					write($"FAIL\t{item.Asm}\t{item.Asm}:cctor:{type.FullName}\t{type.FullName}::.cctor()\t{inner.GetType().Name}: {OneLine(inner.Message)}");
 				}
 				catch (TypeInitializationException)
 				{
