@@ -3041,7 +3041,7 @@ namespace Tests.Linq
 
 		[ActiveIssue(1224, Configurations = new[]
 		{
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe

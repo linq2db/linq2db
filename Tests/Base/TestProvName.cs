@@ -192,10 +192,19 @@ namespace Tests
 		#endregion
 
 		#region Access
-		public const string AllAccess      = $"{AllAccessOleDb},{AllAccessOdbc}";
-		public const string AllAccessOleDb = $"{ProviderName.AccessJetOleDb},{ProviderName.AccessAceOleDb}";
-		public const string AllAccessOdbc  = $"{ProviderName.AccessJetOdbc},{ProviderName.AccessAceOdbc}";
-		public const string AllAccessJet   = $"{ProviderName.AccessJetOdbc},{ProviderName.AccessJetOleDb}";
+		// LibRed has one data provider; these two differ only by the database file they open
+		public const string AccessLibRedMdb   = "Access.LibRed.Mdb";
+		public const string AccessLibRedAccdb = "Access.LibRed.Accdb";
+
+		public const string AllAccess       = $"{AllNativeAccess},{AllAccessLibRed}";
+		/// <summary>
+		/// Access through Microsoft's own drivers, as opposed to the managed LibRed engine.
+		/// </summary>
+		public const string AllNativeAccess = $"{AllAccessOleDb},{AllAccessOdbc}";
+		public const string AllAccessOleDb  = $"{ProviderName.AccessJetOleDb},{ProviderName.AccessAceOleDb}";
+		public const string AllAccessOdbc   = $"{ProviderName.AccessJetOdbc},{ProviderName.AccessAceOdbc}";
+		public const string AllAccessJet    = $"{ProviderName.AccessJetOdbc},{ProviderName.AccessJetOleDb}";
+		public const string AllAccessLibRed = $"{AccessLibRedMdb},{AccessLibRedAccdb}";
 		#endregion
 
 		#region SQLCe

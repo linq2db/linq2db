@@ -212,6 +212,10 @@
 			//"Access.Ace.OleDb",
 			//"Access.Jet.Odbc",
 			//"Access.Ace.Odbc",
+			// managed MS Access provider; LibRed.Ado has no netfx build, so these two are not listed
+			// in the NETFX section
+			//"Access.LibRed.Mdb",
+			//"Access.LibRed.Accdb",
 
 			// SAP/Sybase ASE
 			//"Sybase.Managed",
@@ -336,6 +340,10 @@
 			//"Access.Ace.OleDb",
 			//"Access.Jet.Odbc",
 			//"Access.Ace.Odbc",
+			// managed MS Access provider; LibRed.Ado has no netfx build, so these two are not listed
+			// in the NETFX section
+			//"Access.LibRed.Mdb",
+			//"Access.LibRed.Accdb",
 
 			// SAP/Sybase ASE
 			//"Sybase.Managed",
@@ -758,6 +766,18 @@
 			},
 			"Access.Ace.Odbc.Data": {
 				"ConnectionString": "Driver={Microsoft Access Driver (*.mdb, *.accdb)};Dbq=Database\\TestData.ODBC.mdb;ExtendedAnsiSQL=1"
+			},
+			"Access.LibRed.Mdb": {
+				"ConnectionString": "Data Source=Database\\TestData.LibRed.mdb"
+			},
+			"Access.LibRed.Mdb.Data": {
+				"ConnectionString": "Data Source=Database\\Data\\TestData.LibRed.mdb"
+			},
+			"Access.LibRed.Accdb": {
+				"ConnectionString": "Data Source=Database\\TestData.LibRed.accdb"
+			},
+			"Access.LibRed.Accdb.Data": {
+				"ConnectionString": "Data Source=Database\\Data\\TestData.LibRed.accdb"
 			},
 			"SqlCe": {
 				"ConnectionString": "Data Source=Database\\TestData.sdf"

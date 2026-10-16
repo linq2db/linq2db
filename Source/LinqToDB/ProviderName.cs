@@ -59,6 +59,12 @@ namespace LinqToDB
 		public const string AccessAceOdbc    = "Access.Ace.Odbc";
 
 		/// <summary>
+		/// Microsoft Access LibRed managed provider. Reads and writes both MDB and ACCDB files.
+		/// Used as configuration name for Access mapping schema <see cref="AccessMappingSchema"/>.
+		/// </summary>
+		public const string AccessLibRed = "Access.LibRed";
+
+		/// <summary>
 		/// IBM DB2 default provider (DB2 LUW).
 		/// Used as configuration name for both DB2 base mapping schema <see cref="DB2MappingSchema"/>.
 		/// </summary>

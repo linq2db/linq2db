@@ -14,6 +14,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 		static readonly Lazy<IDataProvider> _accessJetODBCDataProvider  = CreateDataProvider<AccessJetODBCDataProvider>();
 		static readonly Lazy<IDataProvider> _accessAceOleDbDataProvider = CreateDataProvider<AccessAceOleDbDataProvider>();
 		static readonly Lazy<IDataProvider> _accessAceODBCDataProvider  = CreateDataProvider<AccessAceODBCDataProvider>();
+		static readonly Lazy<IDataProvider> _accessLibRedDataProvider  = CreateDataProvider<AccessLibRedDataProvider>();
 
 		public override IDataProvider? DetectProvider(ConnectionOptions options)
 		{
@@ -44,6 +45,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 				case ProviderName.AccessAceOdbc : return _accessAceODBCDataProvider.Value;
 				case ProviderName.AccessJetOleDb: return _accessJetOleDbDataProvider.Value;
 				case ProviderName.AccessAceOleDb: return _accessAceOleDbDataProvider.Value;
+				case ProviderName.AccessLibRed  : return _accessLibRedDataProvider.Value;
 			}
 
 			if (options.ConfigurationString?.Contains("Access", StringComparison.Ordinal) == true)
@@ -56,6 +58,10 @@ namespace LinqToDB.Internal.DataProvider.Access
 					version = AccessVersion.Ace;
 
 				var provider = DetectProvider(options, AccessProvider.AutoDetect);
+
+				// LibRed has a single data provider, so there is no version to probe a connection for
+				if (provider == AccessProvider.LibRed)
+					return _accessLibRedDataProvider.Value;
 
 				if (version == AccessVersion.AutoDetect && AutoDetectProvider)
 					version = DetectServerVersion(options, provider) ?? DefaultVersion;
@@ -72,6 +78,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 			return (provider, version) switch
 			{
+				(AccessProvider.LibRed, _                      ) => _accessLibRedDataProvider.Value,
 				(_                   , AccessVersion.AutoDetect) => GetDataProvider(options, provider, DetectServerVersion(options, provider) ?? DefaultVersion),
 				(AccessProvider.ODBC , AccessVersion.Jet       ) => _accessJetODBCDataProvider.Value,
 				(AccessProvider.ODBC , AccessVersion.Ace       ) => _accessAceODBCDataProvider.Value,
@@ -117,15 +124,18 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 		protected override DbConnection CreateConnection(AccessProvider provider, string connectionString)
 		{
-			var adapter = provider == AccessProvider.ODBC
-				? (IDynamicProviderAdapter)OdbcProviderAdapter.GetInstance()
-				: OleDbProviderAdapter.GetInstance();
+			var adapter = provider switch
+			{
+				AccessProvider.ODBC   => (IDynamicProviderAdapter)OdbcProviderAdapter.GetInstance(),
+				AccessProvider.LibRed => LibRedProviderAdapter.GetInstance(),
+				_                     => OleDbProviderAdapter.GetInstance(),
+			};
 			return adapter.CreateConnection(connectionString);
 		}
 
 		protected override AccessProvider DetectProvider(ConnectionOptions options, AccessProvider provider)
 		{
-			if (provider is AccessProvider.ODBC or AccessProvider.OleDb)
+			if (provider is AccessProvider.ODBC or AccessProvider.OleDb or AccessProvider.LibRed)
 				return provider;
 
 			if (options.ConnectionString?.Contains("Microsoft.ACE.OLEDB", StringComparison.Ordinal) == true)
@@ -147,11 +157,16 @@ namespace LinqToDB.Internal.DataProvider.Access
 				case ProviderName.AccessAceOdbc: return AccessProvider.ODBC;
 				case ProviderName.AccessJetOleDb:
 				case ProviderName.AccessAceOleDb: return AccessProvider.OleDb;
+				case ProviderName.AccessLibRed  : return AccessProvider.LibRed;
 			}
 
 			if (options.ConfigurationString?.Contains("Access", StringComparison.Ordinal) == true)
 			{
-				if (options.ConfigurationString.Contains("Access.Odbc", StringComparison.Ordinal))
+				// a LibRed connection string is "Data Source=<file>" and carries no marker of its own,
+				// so the configuration name is the only place the flavour can be read from
+				if (options.ConfigurationString.Contains("LibRed", StringComparison.Ordinal))
+					return AccessProvider.LibRed;
+				else if (options.ConfigurationString.Contains("Access.Odbc", StringComparison.Ordinal))
 					return AccessProvider.ODBC;
 				else if (options.ConfigurationString.Contains("Access.OleDb", StringComparison.Ordinal))
 					return AccessProvider.OleDb;

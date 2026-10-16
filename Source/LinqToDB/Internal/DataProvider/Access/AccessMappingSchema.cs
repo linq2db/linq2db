@@ -124,5 +124,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 		public sealed class JetOdbcDbMappingSchema() : LockedMappingSchema(ProviderName.AccessJetOdbc , Instance);
 		public sealed class AceOleDbMappingSchema () : LockedMappingSchema(ProviderName.AccessAceOleDb, OleDbInstance, Instance);
 		public sealed class AceOdbcDbMappingSchema() : LockedMappingSchema(ProviderName.AccessAceOdbc , Instance);
+
+		public sealed class LibRedMappingSchema   () : LockedMappingSchema(ProviderName.AccessLibRed  , Instance);
 	}
 }

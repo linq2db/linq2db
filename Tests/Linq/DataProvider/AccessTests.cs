@@ -723,7 +723,7 @@ namespace Tests.DataProvider
 			Issue3893TestCore(context, columName);
 		}
 
-		[ActiveIssue(3893, Details = "no-declaration: Access rejects these outright, but not uniformly enough to declare: most give \"'<name>' is not a valid name\" through both drivers, while the control characters produce 'Syntax error in field definition' and one an ODBC 'COUNT field incorrect'.")]
+		[ActiveIssue(3893, Details = "no-declaration: Access rejects these outright, but not uniformly enough to declare: most give \"'<name>' is not a valid name\" through both drivers, while the control characters produce 'Syntax error in field definition' and one an ODBC 'COUNT field incorrect'. LibRed raises an ArgumentException naming the column, except for the brackets, which its lexer refuses outright.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3893")]
 		public void Issue3893Test_Rejected([IncludeDataSources(TestProvName.AllAccess)] string context, [ValueSource(nameof(_identifiersRejected))] string columName)
 		{
@@ -782,7 +782,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestConvertToDate_WithNull([IncludeDataSources(TestProvName.AllAccess)] string context)
+		public void TestConvertToDate_WithNull([IncludeDataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
