@@ -292,6 +292,20 @@ namespace Tests.Infrastructure
 				.AppliesTo("SQLite.MS", isLinqService: false).ShouldBeTrue();
 		}
 
+		[Test]
+		public void AppliesTo_RequiresBaselines_GovernsOnlyRunsThatWriteThem()
+		{
+			var attr = new ActiveIssueAttribute { RequiresBaselines = true };
+
+			attr.AppliesTo("SQLite.MS", isLinqService: true, baselinesEnabled: true ).ShouldBeTrue();
+			attr.AppliesTo("SQLite.MS", isLinqService: true, baselinesEnabled: false).ShouldBeFalse();
+			attr.AppliesTo(null,        isLinqService: true, baselinesEnabled: false).ShouldBeFalse();
+
+			// Control: without the flag the baselines setting is irrelevant.
+			new ActiveIssueAttribute()
+				.AppliesTo("SQLite.MS", isLinqService: true, baselinesEnabled: false).ShouldBeTrue();
+		}
+
 		#endregion
 
 		#region SelectGoverning — precedence and overlap
@@ -342,6 +356,19 @@ namespace Tests.Infrastructure
 			var platform = new ActiveIssueAttribute(2) { Platforms = Other };
 
 			ActiveIssueAttribute.SelectGoverning([blanket, platform], "SQLite.MS", false, out var ambiguous).ShouldBeSameAs(blanket);
+			ambiguous.ShouldBeFalse();
+		}
+
+		[Test]
+		public void SelectGoverning_BaselinesScopedBeatsBlanket()
+		{
+			var blanket   = new ActiveIssueAttribute(1);
+			var baselines = new ActiveIssueAttribute(2) { RequiresBaselines = true };
+
+			ActiveIssueAttribute.SelectGoverning([blanket, baselines], "SQLite.MS", true, out var ambiguous, baselinesEnabled: true ).ShouldBeSameAs(baselines);
+			ambiguous.ShouldBeFalse();
+
+			ActiveIssueAttribute.SelectGoverning([blanket, baselines], "SQLite.MS", true, out ambiguous,     baselinesEnabled: false).ShouldBeSameAs(blanket);
 			ambiguous.ShouldBeFalse();
 		}
 
