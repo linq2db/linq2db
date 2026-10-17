@@ -111,7 +111,13 @@ namespace LinqToDB
 					if (dependent[i] == null)
 						continue;
 
-					mc.Arguments[i].Visit(context, static (c, a) =>
+					var argument = mc.Arguments[i];
+
+					// interpolation arguments render as parameters, only the format shapes the SQL
+					if (dependent[i] is SqlQueryDependentFormatAttribute && SqlQueryDependentFormatAttribute.TrySplit(argument, out var format, out _))
+						argument = format;
+
+					argument.Visit(context, static (c, a) =>
 					{
 						if (a is BinaryExpression { NodeType: ExpressionType.ArrayIndex } arrayIndex
 							&& arrayIndex.Left == c.ps
