@@ -14,7 +14,8 @@ namespace Tests.Model.Remote.SignalR
 	public class TestSignalRDataContext : SignalRDataContext, ITestDataContext
 	{
 		// Started hub connections not leased by any context, per hub URL. Contexts alive at the same time get
-		// separate connections: the test hub runs one invocation per connection at a time.
+		// separate connections: the test hub sets no LinqToDBHubOptions, so it runs the calls of one connection
+		// one at a time and a shared connection would queue one context's calls behind another's.
 		static readonly Dictionary<string, Stack<PooledHubConnection>> _idleConnections = new(StringComparer.Ordinal);
 		static readonly Lock                                           _idleConnectionsLock = new();
 
@@ -117,8 +118,9 @@ namespace Tests.Model.Remote.SignalR
 		}
 
 		// One context's use of a pooled connection. A call after Return is refused, and the connection is
-		// pooled again only if no call is running and none was cancelled or failed: the hub keeps running a
-		// cancelled invocation and runs one invocation per connection at a time.
+		// pooled again only if no call is running and none was cancelled or failed: a cancelled call may still
+		// hold the connection's only call slot on the hub until its operation notices the cancellation, and
+		// discarding the connection after any failure keeps the next test off a connection in an unknown state.
 		sealed class Lease(string hubUrl, PooledHubConnection connection) : ILinqService
 		{
 			readonly Lock _lock = new();
