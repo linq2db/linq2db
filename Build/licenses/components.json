@@ -3182,10 +3182,10 @@
       "displayName": "Ydb.Sdk",
       "packageId": "Ydb.Sdk",
       "versions": {
-        "net10.0": "0.35.0",
-        "net8.0": "0.35.0",
-        "net9.0": "0.35.0",
-        "net8.0-windows7.0": "0.35.0"
+        "net10.0": "0.37.0",
+        "net8.0": "0.37.0",
+        "net9.0": "0.37.0",
+        "net8.0-windows7.0": "0.37.0"
       },
       "license": "Apache-2.0",
       "licenseTexts": [
