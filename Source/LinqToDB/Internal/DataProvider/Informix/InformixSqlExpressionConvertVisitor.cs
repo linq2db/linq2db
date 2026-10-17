@@ -118,17 +118,15 @@ namespace LinqToDB.Internal.DataProvider.Informix
 						if (argument.ElementType == QueryElementType.SqlParameter && argumentType.Equals(toType))
 							break;
 
+						// DataType.Date is DATETIME YEAR TO DAY here, as in DDL and in .Date: Date() would make a DATE, which a
+						// UNION or CASE refuses beside one
 						if (IsDateDataType(toType, "Date"))
 						{
-							if (argument.SystemType == typeof(string))
-							{
-								return new SqlFunction(
-									cast.Type,
-									"Date",
-									new SqlFunction(cast.Type, "To_Date", argument, new SqlValue("%Y-%m-%d")));
-							}
+							var date = argument.SystemType == typeof(string)
+								? new SqlFunction(cast.Type, "To_Date", argument, new SqlValue("%Y-%m-%d"))
+								: argument;
 
-							return new SqlFunction(cast.Type, "Date", argument);
+							return new SqlFunction(cast.Type, "Extend", ParametersNullabilityType.SameAsFirstParameter, date, new SqlFragment("Year to Day"));
 						}
 
 						if ((IsDateTime2Type(cast.ToType, "DateTime2")

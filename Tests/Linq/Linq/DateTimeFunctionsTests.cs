@@ -2177,6 +2177,30 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
+		/// A cast to a date shares a result column with a date column, or with the date part of a timestamp, as the
+		/// same type.
+		/// </summary>
+		[Test]
+		public void DateCastSharesAResultColumnWithADate([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarse(db);
+
+			var union = t
+				.Select(r => Sql.Convert(Sql.Types.Date, r.Value))
+				.Concat(t.Select(r => r.Day))
+				.ToArray();
+
+			union.ShouldBe([CoarseMidnight, CoarseMidnight]);
+
+			var conditional = t
+				.Select(r => r.Id > 0 ? r.Value.Date : Sql.Convert(Sql.Types.Date, r.Value))
+				.ToArray();
+
+			conditional.ShouldBe([CoarseMidnight]);
+		}
+
+		/// <summary>
 		/// A cast to a date compared with a timestamp at that date's midnight is equal to it.
 		/// </summary>
 		[Test]
