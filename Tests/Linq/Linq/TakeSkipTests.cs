@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Data;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -1382,6 +1384,250 @@ namespace Tests.Linq
 			// case to run, and a first execution registers more than one miss.
 			if (skip > 1 || take > 1)
 				db.Parent.GetCacheMissCount().ShouldBe(cacheMissCount);
+		}
+
+		// A TAKE/SKIP that is a constant of the query (First/Single, the Expression<Func<int>> overloads with a
+		// literal) cannot change between executions, so the command text must be built once and then reused
+		// instead of being rendered on every execution.
+		[Test, QueryCacheTest]
+		public void ConstantTakeSkipReusesCommand([DataSources(false)] string context, [Values] bool parameterizeTakeSkip, [Values] bool inlineParameters)
+		{
+			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(parameterizeTakeSkip));
+			db.InlineParameters = inlineParameters;
+
+			var persons  = db.Person.OrderBy(p => p.ID);
+			var expected = Person.OrderBy(p => p.ID).Select(p => p.ID).ToArray();
+
+			ShouldReuseCommand(persons, q => q.First(),                         r => r.ID.ShouldBe(expected[0]));
+			ShouldReuseCommand(persons, q => q.FirstOrDefault(),                r => r.ShouldNotBeNull().ID.ShouldBe(expected[0]));
+			ShouldReuseCommand(persons, q => q.Take(() => 1).Single(),          r => r.ID.ShouldBe(expected[0]));
+			ShouldReuseCommand(persons, q => q.Take(() => 1).SingleOrDefault(), r => r.ShouldNotBeNull().ID.ShouldBe(expected[0]));
+			ShouldReuseCommand(persons, q => q.ElementAt(() => 1),              r => r.ID.ShouldBe(expected[1]));
+
+			ShouldReuseCommand(persons.Take(() => 2).Select(p => p.ID),               r => r.ShouldBe(expected.Take(2)));
+			ShouldReuseCommand(persons.Skip(() => 1).Take(() => 2).Select(p => p.ID), r => r.ShouldBe(expected.Skip(1).Take(2)));
+
+			// different literals are different queries, not one cached text
+			persons.Take(() => 3).Select(p => p.ID).ToArray().ShouldBe(expected.Take(3));
+			persons.Skip(() => 2).Take(() => 1).Select(p => p.ID).ToArray().ShouldBe(expected.Skip(2).Take(1));
+			persons.ElementAt(() => 2).ID.ShouldBe(expected[2]);
+		}
+
+		// Runs the query twice and checks that the second execution reuses the command built by the first.
+		static void ShouldReuseCommand<T, TResult>(IQueryable<T> query, Expression<Func<IQueryable<T>, TResult>> execute, Action<TResult> check)
+		{
+			var run = execute.Compile();
+
+			check(run(query));
+
+			var commands = query.GetQueryInfo(execute).Context;
+			commands.ShouldNotBeNull();
+
+			check(run(query));
+
+			query.GetQueryInfo(execute).Context.ShouldBeSameAs(commands);
+		}
+
+		// Runs the query twice and checks that the second execution reuses the command built by the first.
+		static void ShouldReuseCommand<T>(IQueryable<T> query, Action<T[]> check)
+		{
+			check(query.ToArray());
+
+			var commands = query.GetQueryInfo().Context;
+			commands.ShouldNotBeNull();
+
+			check(query.ToArray());
+
+			query.GetQueryInfo().Context.ShouldBeSameAs(commands);
+		}
+
+		// A TAKE/SKIP taken from a variable must render its current value on every execution, whether it is
+		// sent as a parameter or inlined into the SQL text.
+		[Test, QueryCacheTest]
+		public void VariableTakeSkipUsesCurrentValue([DataSources(false)] string context, [Values] bool parameterizeTakeSkip, [Values] bool inlineParameters)
+		{
+			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(parameterizeTakeSkip));
+			db.InlineParameters = inlineParameters;
+
+			var persons  = db.Person.OrderBy(p => p.ID);
+			var expected = Person.OrderBy(p => p.ID).Select(p => p.ID).ToArray();
+			var sqlTexts = new HashSet<string>();
+
+			for (var n = 1; n <= 3; n++)
+			{
+				persons.Take(n).Select(p => p.ID).ToArray().ShouldBe(expected.Take(n));
+
+				if (db is DataConnection dc)
+					sqlTexts.Add(dc.LastQuery!);
+
+				persons.Take(() => n).Select(p => p.ID).ToArray().ShouldBe(expected.Take(n));
+				persons.Skip(n).Take(1).Select(p => p.ID).ToArray().ShouldBe(expected.Skip(n).Take(1));
+				persons.Skip(() => n).Select(p => p.ID).ToArray().ShouldBe(expected.Skip(n));
+				persons.ElementAt(n).ID.ShouldBe(expected[n]);
+				persons.ElementAt(() => n).ID.ShouldBe(expected[n]);
+				persons.Skip(n).First().ID.ShouldBe(expected[n]);
+				persons.Skip(1).Skip(n).Select(p => p.ID).ToArray().ShouldBe(expected.Skip(1 + n));
+				persons.Take(3).Take(n).Select(p => p.ID).ToArray().ShouldBe(expected.Take(n));
+			}
+
+			if (!parameterizeTakeSkip)
+			{
+				// the value is inlined into the SQL text, so the text must be rendered per execution
+				var query = persons.Take(1);
+
+				query.ToArray().Length.ShouldBe(1);
+				query.GetStatement().IsParameterDependent.ShouldBeTrue();
+				query.GetQueryInfo().Context.ShouldBeNull();
+
+				if (db is DataConnection)
+					sqlTexts.Count.ShouldBe(3);
+			}
+		}
+
+		sealed class CountHolder
+		{
+			public int Count;
+		}
+
+		// Pins a query's cached state after its first run, so later runs can check that they reused it.
+		sealed class CachedQueryState
+		{
+			public CachedQueryState(Func<QueryInfo> getInfo)
+			{
+				_getInfo  = getInfo;
+				_info     = getInfo();
+				_commands = _info.Context;
+			}
+
+			readonly Func<QueryInfo> _getInfo;
+			readonly QueryInfo       _info;
+			readonly object?         _commands;
+
+			// The same compiled query ran, with the same cached commands, or with none when it renders
+			// its SQL text per execution.
+			public void ShouldBeReused()
+			{
+				var info = _getInfo();
+
+				info.ShouldBeSameAs(_info);
+				info.Context.ShouldBeSameAs(_commands);
+			}
+		}
+
+		// The count is read when the query runs: re-running the same query after the value it reads has
+		// changed, including to and from zero, must use the new value. The runs must reuse the query (and its
+		// commands, when they are cached), so a fresh build cannot hide a stale SQL text.
+		[Test, QueryCacheTest]
+		public void TakeSkipFollowChangedValue([DataSources(false)] string context, [Values] bool parameterizeTakeSkip, [Values] bool inlineParameters)
+		{
+			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(parameterizeTakeSkip));
+			db.InlineParameters = inlineParameters;
+
+			var persons  = db.Person.OrderBy(p => p.ID);
+			var expected = Person.OrderBy(p => p.ID).Select(p => p.ID).ToArray();
+			var holder   = new CountHolder();
+			var count    = 0;
+
+			var takeField     = persons.Take(() => holder.Count).Select(p => p.ID);
+			var skipField     = persons.Skip(() => holder.Count).Select(p => p.ID);
+			var skipTakeField = persons.Skip(() => holder.Count).Take(() => holder.Count + 1).Select(p => p.ID);
+			var takeLocal     = persons.Take(() => count).Select(p => p.ID);
+			var skipLocal     = persons.Skip(() => count).Select(p => p.ID);
+
+			CachedQueryState[]? states = null;
+
+			foreach (var n in new[] { 0, 2, 0, 1, 3, 0 })
+			{
+				holder.Count = n;
+				count        = n;
+
+				takeField.ToArray().ShouldBe(expected.Take(n));
+				skipField.ToArray().ShouldBe(expected.Skip(n));
+				skipTakeField.ToArray().ShouldBe(expected.Skip(n).Take(n + 1));
+				takeLocal.ToArray().ShouldBe(expected.Take(n));
+				skipLocal.ToArray().ShouldBe(expected.Skip(n));
+				persons.ElementAt(() => holder.Count).ID.ShouldBe(expected[n]);
+
+				persons.Take(n).Select(p => p.ID).ToArray().ShouldBe(expected.Take(n));
+				persons.Skip(n).Select(p => p.ID).ToArray().ShouldBe(expected.Skip(n));
+				persons.Skip(n).Take(n + 1).Select(p => p.ID).ToArray().ShouldBe(expected.Skip(n).Take(n + 1));
+				persons.Skip(n).First().ID.ShouldBe(expected[n]);
+				persons.ElementAt(n).ID.ShouldBe(expected[n]);
+
+				if (states == null)
+				{
+					states = new[]
+					{
+						new CachedQueryState(() => takeField.GetQueryInfo()),
+						new CachedQueryState(() => skipField.GetQueryInfo()),
+						new CachedQueryState(() => skipTakeField.GetQueryInfo()),
+						new CachedQueryState(() => takeLocal.GetQueryInfo()),
+						new CachedQueryState(() => skipLocal.GetQueryInfo()),
+						new CachedQueryState(() => persons.GetQueryInfo(q => q.ElementAt(() => holder.Count))),
+					};
+				}
+				else
+				{
+					foreach (var state in states)
+						state.ShouldBeReused();
+				}
+			}
+		}
+
+		// Results only: a compiled query keeps its query in an internal cache keyed on the compiled expression,
+		// which tests cannot reach. It renders its SQL through the same command cache that
+		// ConstantTakeSkipReusesCommand checks for the LINQ form.
+		[Test]
+		public void CompiledTakeSkip([DataSources(false)] string context, [Values] bool parameterizeTakeSkip, [Values] bool inlineParameters)
+		{
+			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(parameterizeTakeSkip));
+			db.InlineParameters = inlineParameters;
+
+			var expected = Person.OrderBy(p => p.ID).Select(p => p.ID).ToArray();
+
+			var first      = CompiledQuery.Compile((IDataContext dc) => dc.GetTable<Person>().OrderBy(p => p.ID).First());
+			var single     = CompiledQuery.Compile((IDataContext dc) => dc.GetTable<Person>().OrderBy(p => p.ID).Take(() => 1).Single());
+			var takeConst  = CompiledQuery.Compile((IDataContext dc) => dc.GetTable<Person>().OrderBy(p => p.ID).Take(2).Select(p => p.ID));
+			var takeLambda = CompiledQuery.Compile((IDataContext dc) => dc.GetTable<Person>().OrderBy(p => p.ID).Skip(() => 1).Take(() => 2).Select(p => p.ID));
+			var take       = CompiledQuery.Compile((IDataContext dc, int n) => dc.GetTable<Person>().OrderBy(p => p.ID).Take(n).Select(p => p.ID));
+			var skip       = CompiledQuery.Compile((IDataContext dc, int n) => dc.GetTable<Person>().OrderBy(p => p.ID).Skip(n).Select(p => p.ID));
+			var skipTake   = CompiledQuery.Compile((IDataContext dc, int n) => dc.GetTable<Person>().OrderBy(p => p.ID).Skip(n).Take(n + 1).Select(p => p.ID));
+			var skipFirst  = CompiledQuery.Compile((IDataContext dc, int n) => dc.GetTable<Person>().OrderBy(p => p.ID).Skip(n).First());
+
+			for (var i = 0; i < 2; i++)
+			{
+				first(db).ID.ShouldBe(expected[0]);
+				single(db).ID.ShouldBe(expected[0]);
+				takeConst(db).ToArray().ShouldBe(expected.Take(2));
+				takeLambda(db).ToArray().ShouldBe(expected.Skip(1).Take(2));
+			}
+
+			foreach (var n in new[] { 0, 2, 0, 1, 3, 0 })
+			{
+				take(db, n).ToArray().ShouldBe(expected.Take(n));
+				skip(db, n).ToArray().ShouldBe(expected.Skip(n));
+				skipTake(db, n).ToArray().ShouldBe(expected.Skip(n).Take(n + 1));
+				skipFirst(db, n).ID.ShouldBe(expected[n]);
+			}
+		}
+
+		[Test, QueryCacheTest]
+		public void ConstantTakeWithHintsReusesCommand([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] bool parameterizeTakeSkip, [Values] bool inlineParameters)
+		{
+			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(parameterizeTakeSkip));
+			db.InlineParameters = inlineParameters;
+
+			var persons = db.Person.OrderBy(p => p.ID);
+			var count   = Person.Count();
+
+			ShouldReuseCommand(persons.Take(() => 50, TakeHints.Percent),  r => r.Length.ShouldBe((count + 1) / 2));
+			ShouldReuseCommand(persons.Take(() => 100, TakeHints.Percent), r => r.Length.ShouldBe(count));
+
+			foreach (var percent in new[] { 50, 100 })
+			{
+				persons.Take(percent, TakeHints.Percent).ToArray().Length.ShouldBe(percent == 100 ? count : (count + 1) / 2);
+				persons.Take(() => percent, TakeHints.Percent).ToArray().Length.ShouldBe(percent == 100 ? count : (count + 1) / 2);
+			}
 		}
 	}
 }

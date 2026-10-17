@@ -77,6 +77,44 @@ namespace Tests
 			return info.GetQueries().Single().Statement;
 		}
 
+		/// <summary>
+		/// Returns the cached query info the query ran with, without executing it. Its <see cref="QueryInfo.Context"/>
+		/// holds the built commands once they are cached for reuse. Throws when the query is not in the query cache,
+		/// so a test using it must have executed the query and must keep it from being evicted (<c>[QueryCacheTest]</c>).
+		/// </summary>
+		public static QueryInfo GetQueryInfo<T>(this IQueryable<T> query)
+		{
+			var eq = (IExpressionQuery)query;
+
+			return GetCachedQueryInfo<T>(eq.DataContext, eq.Expression);
+		}
+
+		/// <summary>
+		/// Returns the cached query info <paramref name="executeBody"/> ran with, without executing it. Its
+		/// <see cref="QueryInfo.Context"/> holds the built commands once they are cached for reuse. Throws when the
+		/// query is not in the query cache, so a test using it must have executed the query and must keep it from
+		/// being evicted (<c>[QueryCacheTest]</c>).
+		/// </summary>
+		public static QueryInfo GetQueryInfo<T, TResult>(this IQueryable<T> query, Expression<Func<IQueryable<T>, TResult>> executeBody)
+		{
+			var eq = (IExpressionQuery)query;
+
+			return GetCachedQueryInfo<T>(eq.DataContext, executeBody.GetBody(query.Expression));
+		}
+
+		static QueryInfo GetCachedQueryInfo<T>(IDataContext dataContext, Expression expression)
+		{
+			var missCount   = Query<T>.CacheMissCount;
+			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
+			var info        = Query<T>.GetQuery(dataContext, ref expressions, out _);
+
+			// A miss builds a new query that has never run, so its state says nothing about the executed one.
+			if (Query<T>.CacheMissCount != missCount)
+				throw new InvalidOperationException("The query is not in the query cache: it was not executed or has been evicted.");
+
+			return info.GetQueries().Single();
+		}
+
 		private static void InitParameters<T>(IExpressionQuery eq, Query<T> info, IQueryExpressions expressions)
 		{
 			eq.DataContext.GetQueryRunner(info, eq.DataContext, 0, expressions, null, null).GetSqlText();
