@@ -265,6 +265,7 @@ namespace LinqToDB.Internal.Common
 		/// <summary>
 		/// Compares two <see cref="FormattableString"/> values by format and arguments.
 		/// </summary>
+		/// <param name="argumentsEqual">Compares the two <see cref="FormattableString.GetArguments"/> arrays (called once, with the whole arrays).</param>
 		public static bool AreEqual(FormattableString value1, FormattableString value2, Func<object?, object?, bool> argumentsEqual)
 		{
 			return string.Equals(value1.Format, value2.Format, StringComparison.Ordinal) && argumentsEqual(value1.GetArguments(), value2.GetArguments());
@@ -273,6 +274,7 @@ namespace LinqToDB.Internal.Common
 		/// <summary>
 		/// Returns hash code of <see cref="FormattableString"/> value, consistent with <see cref="AreEqual"/>.
 		/// </summary>
+		/// <param name="argumentsHashCode">Hashes the <see cref="FormattableString.GetArguments"/> array (called once, with the whole array).</param>
 		public static int ComputeHashCode(FormattableString value, Func<object?, int> argumentsHashCode)
 		{
 			return StringComparer.Ordinal.GetHashCode(value.Format) * 397 + argumentsHashCode(value.GetArguments());
