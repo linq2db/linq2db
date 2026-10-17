@@ -1044,7 +1044,11 @@ namespace Tests.Linq
 				})
 				.ToArray();
 
-			result.ShouldBe(data.Select(r => new { r.Id, Away = (decimal?)0m, Even = (decimal?)0m, N = r.N == null ? null : (decimal?)0m }).ToArray());
+			var expected = data
+				.Select(r => new { r.Id, Away = (decimal?)0m, Even = (decimal?)0m, N = r.N == null ? null : (decimal?)0m })
+				.ToArray();
+
+			result.ShouldBe(expected);
 
 			// a computed value can carry a type other than the one inferred for it (Decimal(22,9) for this product)
 			using var wide = db.CreateLocalTable(new[]
@@ -1156,7 +1160,7 @@ namespace Tests.Linq
 				})
 				.ToArray();
 
-			result.ShouldBe(ordered
+			var expected = ordered
 				.Select(r => new
 				{
 					None = Math.Round(r.H + r.H, mp),
@@ -1166,27 +1170,43 @@ namespace Tests.Linq
 					K    = Math.Round(r.K + r.K, 2, mp),
 					W    = Math.Round(r.W + r.W, mp),
 				})
-				.ToArray());
+				.ToArray();
+
+			result.ShouldBe(expected);
 
 			// literal precisions: a captured variable would be a parameter and take the runtime path
 			var negative = mp == MidpointRounding.AwayFromZero
-				? t.OrderBy(r => r.Id).Select(r => Sql.AsSql(Sql.Round(r.H + r.H, -1))).ToArray()
-				: t.OrderBy(r => r.Id).Select(r => Sql.AsSql(Sql.RoundToEven(r.H + r.H, -1))).ToArray();
+				? t
+					.OrderBy(r => r.Id)
+					.Select(r => Sql.AsSql(Sql.Round(r.H + r.H, -1)))
+					.ToArray()
+				: t
+					.OrderBy(r => r.Id)
+					.Select(r => Sql.AsSql(Sql.RoundToEven(r.H + r.H, -1)))
+					.ToArray();
 
-			negative.ShouldBe(ordered.Select(r => (decimal?)RoundTo(r.H + r.H, -1, mp)).ToArray());
+			var expectedNegative = ordered
+				.Select(r => (decimal?)RoundTo(r.H + r.H, -1, mp))
+				.ToArray();
+
+			negative.ShouldBe(expectedNegative);
 
 			var sums =
-				from r in t
-				group r by r.G into g
-				orderby g.Key
-				select Sql.AsSql(Math.Round(g.Sum(x => x.H), mp));
+				(
+					from r in t
+					group r by r.G into g
+					orderby g.Key
+					select Sql.AsSql(Math.Round(g.Sum(x => x.H), mp))
+				)
+				.ToArray();
 
-			sums.ToArray().ShouldBe(
-				data
-					.GroupBy(r => r.G)
-					.OrderBy(g => g.Key)
-					.Select(g => Math.Round(g.Sum(x => x.H), mp))
-					.ToArray());
+			var expectedSums = data
+				.GroupBy(r => r.G)
+				.OrderBy(g => g.Key)
+				.Select(g => Math.Round(g.Sum(x => x.H), mp))
+				.ToArray();
+
+			sums.ShouldBe(expectedSums);
 		}
 
 		[ActiveIssue(6055, Configuration = TestProvName.AllYdb, SkipForNonLinqService = true,
