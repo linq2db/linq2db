@@ -1591,6 +1591,42 @@ namespace Tests.Linq
 			AssertQuery(table.Where(e => ((IEnumerable<int>)new[] { e.Value1, e.Id }).Contains(20)));
 		}
 
+		[Table]
+		sealed class NullableItemEntity
+		{
+			[Column, PrimaryKey] public int  Id     { get; set; }
+			[Column]             public int? Item   { get; set; }
+			[Column]             public int? Tested { get; set; }
+
+			public static readonly NullableItemEntity[] Seed =
+			[
+				new() { Id = 1, Item = null, Tested = null },
+				new() { Id = 2, Item = 7,    Tested = null },
+				new() { Id = 3, Item = null, Tested = 5    },
+				new() { Id = 4, Item = 7,    Tested = 8    },
+			];
+		}
+
+		// Under CompareNulls.LikeClr an item that is NULL in the row equals a NULL tested value, as in C#, in every spelling of
+		// an inline array, and a negated test keeps the rows C# keeps.
+		[Test]
+		public void InlineArrayContainsComparesNullItemsLikeClr([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(NullableItemEntity.Seed);
+
+			AssertQuery(table.Where(e =>  new int?[] { e.Item, 5 }.Contains(e.Tested)));
+			AssertQuery(table.Where(e => !new int?[] { e.Item, 5 }.Contains(e.Tested)));
+			AssertQuery(table.Where(e =>  new int?[] { e.Item, 5 }.AsEnumerable().Contains(e.Tested)));
+			AssertQuery(table.Where(e => !new int?[] { e.Item, 5 }.AsEnumerable().Contains(e.Tested)));
+			AssertQuery(table.Where(e =>  new int?[] { e.Item, 5 }.AsQueryable().Contains(e.Tested)));
+			AssertQuery(table.Where(e => !new int?[] { e.Item, 5 }.AsQueryable().Contains(e.Tested)));
+			AssertQuery(table.Where(e =>  ((IEnumerable<int?>)new int?[] { e.Item, 5 }).Contains(e.Tested)));
+			AssertQuery(table.Where(e => !((IEnumerable<int?>)new int?[] { e.Item, 5 }).Contains(e.Tested)));
+			AssertQuery(table.Where(e =>  new int?[] { e.Item, 5 }.Contains(null)));
+			AssertQuery(table.Where(e => !new int?[] { e.Item, 5 }.Contains(8)));
+		}
+
 		// A wrapped inline array of row values projected as it is is a client array, as the bare one is, not an eager-loaded
 		// collection: one command, and nothing for ImplicitCollectionLoading.Throw to refuse.
 		[Test]
