@@ -281,7 +281,8 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 		/// <summary>
 		/// A date computed from a column is brought to the timestamp text form beside an IN list, as in a comparison:
-		/// the values keep their own <see cref="DateTime"/> type there, and SQLite compares the two as text.
+		/// the values keep their own <see cref="DateTime"/> type there, and SQLite compares the two as text. A value that
+		/// is itself a date, such as a date column, is brought to the same form.
 		/// </summary>
 		protected internal override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
 		{
@@ -292,7 +293,14 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 				var type = QueryHelper.GetDbDataType(inList.Expr1, MappingSchema);
 
 				if (IsDateDataType(type, "Date") && IsDateTime(type.SystemType) && !QueryHelper.IsStoredColumn(inList.Expr1))
-					return new SqlPredicate.InList(ToTimestamp(inList.Expr1, type.WithDataType(DataType.DateTime)), inList.WithNull, inList.IsNot, inList.Values);
+				{
+					var timestampType = type.WithDataType(DataType.DateTime);
+
+					// parameters are bound as timestamp text already, and a captured collection must stay a parameter
+					var values = inList.Values.ConvertAll(v => v is not SqlParameter && IsDateDataType(QueryHelper.GetDbDataType(v, MappingSchema), "Date") ? ToTimestamp(v, timestampType) : v);
+
+					return new SqlPredicate.InList(ToTimestamp(inList.Expr1, timestampType), inList.WithNull, inList.IsNot, values);
+				}
 			}
 
 			return newElement;

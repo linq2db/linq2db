@@ -2078,6 +2078,24 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
+		/// An IN list of date columns beside a date computed from date columns matches the same day.
+		/// </summary>
+		[Test]
+		public void ComputedDateInListOfDateColumns([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[]
+			{
+				new CoarseDayPairRow { Id = 1, ClosedOn = null, OpenedOn = CoarseMidnight, Value = CoarseValue },
+			});
+
+			var count = t
+				.Count(r => (r.ClosedOn ?? r.OpenedOn).In(r.OpenedOn));
+
+			count.ShouldBe(1);
+		}
+
+		/// <summary>
 		/// A literal set beside an aggregate over a coarse column in a set operation keeps its time part.
 		/// </summary>
 		[Test]
