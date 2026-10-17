@@ -145,7 +145,9 @@ namespace Tests.Common
 			var arguments = Expression.NewArrayInit(typeof(object), Expression.Constant(1, typeof(object)));
 			var create    = FormattableStringHelper.CreateExpression("x {0}", arguments);
 
-			FormattableStringHelper.TrySplit(create, out var format, out var split).ShouldBeTrue();
+			FormattableStringHelper
+				.TrySplit(create, out var format, out var split)
+				.ShouldBeTrue();
 
 			format
 				.ShouldBeOfType<ConstantExpression>()
@@ -158,8 +160,13 @@ namespace Tests.Common
 			var notArrayInit = FormattableStringHelper.CreateExpression("x", array);
 			var constant     = Expression.Constant(FormattableStringFactory.Create("x"));
 
-			FormattableStringHelper.TrySplit(notArrayInit, out _, out _).ShouldBeFalse();
-			FormattableStringHelper.TrySplit(constant,     out _, out _).ShouldBeFalse();
+			FormattableStringHelper
+				.TrySplit(notArrayInit, out _, out _)
+				.ShouldBeFalse();
+
+			FormattableStringHelper
+				.TrySplit(constant, out _, out _)
+				.ShouldBeFalse();
 		}
 
 		[Test]
@@ -172,7 +179,9 @@ namespace Tests.Common
 
 			var result = factory();
 
-			FormattableStringHelper.AreEqual(value, result, static (a, b) => ((object?[])a!).SequenceEqual((object?[])b!)).ShouldBeTrue();
+			FormattableStringHelper
+				.AreEqual(value, result, static (a, b) => ((object?[])a!).SequenceEqual((object?[])b!))
+				.ShouldBeTrue();
 		}
 
 		[Test]
@@ -183,13 +192,23 @@ namespace Tests.Common
 
 			var value = FormattableStringFactory.Create("{0}", 1);
 
-			FormattableStringHelper.AreEqual(value, FormattableStringFactory.Create("{0}",   1), ArgumentsEqual).ShouldBeTrue();
-			FormattableStringHelper.AreEqual(value, FormattableStringFactory.Create("{0} ",  1), ArgumentsEqual).ShouldBeFalse();
-			FormattableStringHelper.AreEqual(value, FormattableStringFactory.Create("{0}",   2), ArgumentsEqual).ShouldBeFalse();
+			FormattableStringHelper
+				.AreEqual(value, FormattableStringFactory.Create("{0}", 1), ArgumentsEqual)
+				.ShouldBeTrue();
+
+			FormattableStringHelper
+				.AreEqual(value, FormattableStringFactory.Create("{0} ", 1), ArgumentsEqual)
+				.ShouldBeFalse();
+
+			FormattableStringHelper
+				.AreEqual(value, FormattableStringFactory.Create("{0}", 2), ArgumentsEqual)
+				.ShouldBeFalse();
 
 			var expected = FormattableStringHelper.ComputeHashCode(FormattableStringFactory.Create("{0}", 1), ArgumentsHash);
 
-			FormattableStringHelper.ComputeHashCode(value, ArgumentsHash).ShouldBe(expected);
+			FormattableStringHelper
+				.ComputeHashCode(value, ArgumentsHash)
+				.ShouldBe(expected);
 		}
 
 		sealed class DerivedDataParameter : DataParameter
@@ -221,8 +240,9 @@ namespace Tests.Common
 		{
 			var arguments = Prepare("{0}", false, Element(1, typeof(int)), Element(99, typeof(int)));
 
-			IsDropped(arguments[0]).ShouldBeFalse();
-			IsDropped(arguments[1]).ShouldBeTrue();
+			arguments
+				.Select(IsDropped)
+				.ShouldBe([false, true]);
 		}
 
 		// the shape FromSql / Sql.Expr arguments reach the filter in: Convert(Sql.Parameter<T>(value), object)
