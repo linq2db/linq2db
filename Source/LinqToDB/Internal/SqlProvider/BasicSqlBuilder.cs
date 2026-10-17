@@ -2963,15 +2963,21 @@ namespace LinqToDB.Internal.SqlProvider
 
 		/// <summary>
 		/// The type an IN-list value is written with: the tested expression's, except beside a value computed from a
-		/// coarse date/time column, where it keeps its own - as a literal does in a comparison.
+		/// column - MIN/MAX, COALESCE, a value window function - or computed from a coarse date/time one, where it
+		/// keeps its own, as a literal does in a comparison.
 		/// </summary>
+		/// <remarks>
+		/// A computed value has no stored width or scale to match, so narrowing the value to the column's would only
+		/// lose its sub-second part, its time part or its decimal digits. A column with a value converter still lends
+		/// its type: the values are in its stored terms.
+		/// </remarks>
 		internal DbDataType GetInListValueType(ISqlExpression expr1, DbDataType expr1Type, object? value)
 		{
-			if (value != null)
+			if (value != null && !QueryHelper.IsStoredColumn(expr1))
 			{
 				var valueType = MappingSchema.GetDbDataType(value.GetType());
 
-				if (QueryHelper.IsCoarserDateTime(expr1Type.DataType, valueType.DataType) && !QueryHelper.IsStoredColumn(expr1))
+				if (QueryHelper.IsCoarserDateTime(expr1Type.DataType, valueType.DataType) || QueryHelper.GetColumnDescriptorForTyping(expr1) is { ValueConverter: null })
 					return valueType;
 			}
 
