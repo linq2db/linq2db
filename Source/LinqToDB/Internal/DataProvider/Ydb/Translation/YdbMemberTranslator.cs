@@ -746,7 +746,8 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				var isDecimal  = valueType.SystemType.UnwrappedNullableType == typeof(decimal);
 				var isInferred = isDecimal && valueType.Precision == null && valueType.Scale == null;
 
-				// rounding a Decimal to at least its own scale is a no-op
+				// rounding a Decimal to at least its scale is a no-op; with no declared scale the inferred 9 is used, so a
+				// computed value carrying more scale is returned unrounded
 				if (isDecimal
 					&& precision is SqlValue { Value: int or long } constant
 					&& Convert.ToInt64(constant.Value, CultureInfo.InvariantCulture) >= (valueType.Scale ?? YdbMappingSchema.DEFAULT_DECIMAL_SCALE))
@@ -950,9 +951,10 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				return new DbDataType(valueType.SystemType, valueType.DataType, null, valueType.Length, intDigits + scale, scale);
 			}
 
-			// A computed Decimal declares no precision or scale: linq2db infers Decimal(22,9), while YQL computes it in the
-			// operands' type, which can carry more scale (H + H over Decimal(20,12) is Decimal(20,12)). Keep the inferred
-			// integer digits, plus p, and give every remaining digit to scale, so the work type does not round it first.
+			// A Decimal with neither precision nor scale (a computed value, or a column mapped with neither): linq2db infers
+			// Decimal(22,9), while YQL computes a value in its operands' type, which can carry more scale (H + H over
+			// Decimal(20,12) is Decimal(20,12)). Keep the inferred integer digits, plus a positive p, and give every remaining
+			// digit to scale, so the work type does not round it first.
 			static DbDataType InferredScaledDecimalType(DbDataType valueType, int p)
 			{
 				var intDigits = YdbMappingSchema.DEFAULT_DECIMAL_PRECISION - YdbMappingSchema.DEFAULT_DECIMAL_SCALE + Math.Max(p, 0);
