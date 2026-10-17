@@ -108,7 +108,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			optionsBuilder.ConfigureWarnings(warnings => warnings.Ignore(CoreEventId.ManyServiceProvidersCreatedWarning));
 
-			var options = base.ProviderSetup(provider, connectionString, optionsBuilder).Options;
+			var options = base.ProviderSetup(provider, connectionString, optionsBuilder, useNodaTime: true).Options;
 			using var db = options.CreateLinqToDBConnection();
 		}
 

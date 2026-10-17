@@ -107,6 +107,16 @@ namespace Tests
 		/// </summary>
 		public TestPlatform Platforms { get; set; } = TestPlatform.Any;
 
+		/// <summary>
+		/// Gets or sets a flag if this attribute governs only runs that write baselines
+		/// (<see cref="TestConfiguration.BaselinesPath"/> is set). Default value: <see langword="false"/>.
+		/// <para>
+		/// For a failure raised by the baselines check itself — remote SQL differing from direct SQL. A run without
+		/// baselines never performs that check, so the test passes there.
+		/// </para>
+		/// </summary>
+		public bool RequiresBaselines { get; set; }
+
 		/// <summary>Gets or sets a flag if this attribute should be skipped for a LinqOverWcf test. Default value: <see langword="false"/>.</summary>
 		public bool SkipForLinqService { get; set; }
 
@@ -135,7 +145,7 @@ namespace Tests
 
 		string ExpectedTypeName => ErrorType?.FullName ?? ErrorTypeName ?? string.Empty;
 
-		bool HasExplicitTargeting => (_configurations != null && _configurations.Length > 0) || SkipForLinqService || SkipForNonLinqService || Platforms != TestPlatform.Any;
+		bool HasExplicitTargeting => (_configurations != null && _configurations.Length > 0) || SkipForLinqService || SkipForNonLinqService || Platforms != TestPlatform.Any || RequiresBaselines;
 
 		static TestPlatform CurrentPlatform =>
 			OperatingSystem.IsWindows() ? TestPlatform.Windows :
@@ -173,12 +183,17 @@ namespace Tests
 		/// Whether this instance governs a test case running against <paramref name="provider"/>. Reproduces
 		/// <see cref="ActiveIssueAttribute"/>'s targeting exactly, including that a test with no data-source
 		/// parameter (<paramref name="provider"/> is <see langword="null"/>) is governed unconditionally.
+		/// <paramref name="baselinesEnabled"/> overrides whether this run writes baselines; <see langword="null"/>
+		/// reads it from <see cref="TestConfiguration.BaselinesPath"/>.
 		/// </summary>
-		public bool AppliesTo(string? provider, bool isLinqService)
+		public bool AppliesTo(string? provider, bool isLinqService, bool? baselinesEnabled = null)
 		{
-			// Before the provider == null shortcut: the platform is ambient, so it bounds a gate on a test with no
-			// data-source parameter too.
+			// Before the provider == null shortcut: the platform and the baselines setting are ambient, so they bound
+			// a gate on a test with no data-source parameter too.
 			if (Platforms != TestPlatform.Any && (Platforms & CurrentPlatform) == 0)
+				return false;
+
+			if (RequiresBaselines && !(baselinesEnabled ?? TestConfiguration.BaselinesPath != null))
 				return false;
 
 			if (provider == null)
@@ -291,12 +306,13 @@ namespace Tests
 		/// Picks the instance that governs this case. An instance that names a provider or transport beats a blanket
 		/// one, so "fails everywhere with A, but on Oracle with B" is expressible. Two equally specific instances
 		/// both matching is an authoring error, reported rather than silently resolved.
+		/// <paramref name="baselinesEnabled"/> is passed to <see cref="AppliesTo"/>.
 		/// </summary>
-		public static ActiveIssueAttribute? SelectGoverning(ActiveIssueAttribute[] attributes, string? provider, bool isLinqService, out bool ambiguous)
+		public static ActiveIssueAttribute? SelectGoverning(ActiveIssueAttribute[] attributes, string? provider, bool isLinqService, out bool ambiguous, bool? baselinesEnabled = null)
 		{
 			ambiguous = false;
 
-			var applicable = attributes.Where(a => a.AppliesTo(provider, isLinqService)).ToArray();
+			var applicable = attributes.Where(a => a.AppliesTo(provider, isLinqService, baselinesEnabled)).ToArray();
 
 			if (applicable.Length == 0)
 				return null;
