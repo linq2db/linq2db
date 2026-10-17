@@ -1035,7 +1035,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						{
 							var elem = (SqlBinaryExpression)e;
 
-							Append(elem.SystemType);
+							Append(elem.Type);
 							Append(elem.Expr1);
 							Append(elem.Operation);
 							Append(elem.Expr2);
@@ -1048,7 +1048,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						{
 							var elem = (SqlUnaryExpression)e;
 
-							Append(elem.SystemType);
+							Append(elem.Type);
 							Append(elem.Expr);
 							Append((int)elem.Operation);
 							Append(elem.Precedence);
@@ -2236,25 +2236,25 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 
 					case QueryElementType.SqlBinaryExpression :
 						{
-							var systemType = ReadType()!;
+							var dbType     = ReadDbDataType();
 							var expr1      = Read<ISqlExpression>()!;
 							var operation  = ReadString()!;
 							var expr2      = Read<ISqlExpression>()!;
 							var precedence = ReadInt();
 
-							obj = new SqlBinaryExpression(systemType, expr1, operation, expr2, precedence);
+							obj = new SqlBinaryExpression(dbType, expr1, operation, expr2, precedence);
 
 							break;
 						}
 
 					case QueryElementType.SqlUnaryExpression:
 					{
-						var systemType = ReadType()!;
+						var dbType     = ReadDbDataType();
 						var expr       = Read<ISqlExpression>()!;
 						var operation  = (SqlUnaryOperation)ReadInt()!;
 						var precedence = ReadInt();
 
-						obj = new SqlUnaryExpression(systemType, expr, operation, precedence);
+						obj = new SqlUnaryExpression(dbType, expr, operation, precedence);
 
 						break;
 					}
