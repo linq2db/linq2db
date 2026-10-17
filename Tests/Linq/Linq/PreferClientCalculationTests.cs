@@ -1636,6 +1636,33 @@ namespace Tests.Linq
 			AssertQuery(table.Where(e => !((IEnumerable<int?>)new int?[] { e.Item, 5 }).Contains(e.Tested)));
 			AssertQuery(table.Where(e =>  new int?[] { e.Item, 5 }.Contains(null)));
 			AssertQuery(table.Where(e => !new int?[] { e.Item, 5 }.Contains(8)));
+			AssertQuery(table.Select(e => new { e.Id, B = new int?[] { e.Item, 5 }.Contains(e.Tested), NB = !new int?[] { e.Item, 5 }.Contains(e.Tested) }));
+		}
+
+		[Table]
+		sealed class NestedInListEntity
+		{
+			[Column, PrimaryKey] public int  Id   { get; set; }
+			[Column]             public int? Item { get; set; }
+			[Column]             public bool Flag { get; set; }
+
+			public static readonly NestedInListEntity[] Seed =
+			[
+				new() { Id = 1, Item = null, Flag = false },
+				new() { Id = 2, Item = 7,    Flag = false },
+				new() { Id = 5, Item = null, Flag = true  },
+			];
+		}
+
+		// A membership compared as a value is false, not unknown, when no item matches and one is NULL, as in C#.
+		[Test]
+		public void InlineArrayContainsComparedAsValueIsFalseOverNullItem([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(NestedInListEntity.Seed);
+
+			AssertQuery(table.Where(e => e.Flag == new int?[] { e.Item, 5 }.Contains(e.Id)));
+			AssertQuery(table.Where(e => e.Flag != new int?[] { e.Item, 5 }.Contains(e.Id)));
 		}
 
 		// A wrapped inline array of row values projected as it is is a client array, as the bare one is, not an eager-loaded
