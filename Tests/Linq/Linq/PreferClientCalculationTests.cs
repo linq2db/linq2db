@@ -1585,10 +1585,21 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(MissedJoinEntity.Seed);
 
-			AssertQuery(table.Where(e => new[] { e.Value1, e.Id }.Contains(20)));
-			AssertQuery(table.Where(e => new[] { e.Value1, e.Id }.AsEnumerable().Contains(20)));
-			AssertQuery(table.Where(e => new[] { e.Value1, e.Id }.AsQueryable().Contains(20)));
-			AssertQuery(table.Where(e => ((IEnumerable<int>)new[] { e.Value1, e.Id }).Contains(20)));
+			IQueryable<MissedJoinEntity>[] queries =
+			[
+				table.Where(e => new[] { e.Value1, e.Id }.Contains(20)),
+				table.Where(e => new[] { e.Value1, e.Id }.AsEnumerable().Contains(20)),
+				table.Where(e => new[] { e.Value1, e.Id }.AsQueryable().Contains(20)),
+				table.Where(e => ((IEnumerable<int>)new[] { e.Value1, e.Id }).Contains(20)),
+			];
+
+			foreach (var query in queries)
+			{
+				AssertQuery(query);
+
+				if (context.IsAnyOf(TestProvName.AllSQLite))
+					query.ToSqlQuery().Sql.ToUpperInvariant().ShouldNotContain("VALUES");
+			}
 		}
 
 		[Table]
