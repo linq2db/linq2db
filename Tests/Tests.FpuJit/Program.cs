@@ -42,7 +42,9 @@ namespace Tests.FpuJit
 		static readonly (string Assembly, string MessagePart, string Reason)[] AllowedDependencySkips = [];
 
 		// Methods that may stay unverified because compiling them resets the FPU control word even in a fresh process:
-		// (assembly, method display prefix, reason).
+		// (assembly, method display prefix, reason). A warm-up "<Type>::.cctor()" record does not restart the child, so
+		// whatever that initializer compiles after its reset stays compiled masked and is later counted OK; an entry
+		// matching it accepts that as well.
 		static readonly (string Assembly, string MethodPrefix, string Reason)[] AllowedUnverified = [];
 
 		const string CanaryAssembly   = "canary";
