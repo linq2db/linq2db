@@ -122,7 +122,7 @@ namespace Tests.FpuJit
 				if (restart > MaxRestarts)
 				{
 					Console.WriteLine($"ERROR: more than {MaxRestarts} child restarts");
-					return ExitHarness;
+					return Stop(File.ReadAllLines(resultsPath), ExitHarness);
 				}
 
 				var exitCode = SpawnChild(resultsPath, resumeId, resumeAt, out var timedOut);
@@ -132,7 +132,7 @@ namespace Tests.FpuJit
 				if (error != null)
 				{
 					Console.WriteLine($"ERROR: {error.Substring(6)}");
-					return exitCode == ExitHarness ? ExitHarness : ExitEnvironment;
+					return Stop(lines, exitCode == ExitHarness ? ExitHarness : ExitEnvironment);
 				}
 
 				if (lines.Contains("DONE"))
@@ -169,7 +169,7 @@ namespace Tests.FpuJit
 				if (last == null || !last.StartsWith("PREP\t", StringComparison.Ordinal))
 				{
 					Console.WriteLine($"ERROR: child exited with 0x{exitCode:X8} outside a method prepare");
-					return ExitHarness;
+					return Stop(lines, ExitHarness);
 				}
 
 				// PREP <asm> <id> <display>: the method being compiled when the child died
@@ -211,12 +211,7 @@ namespace Tests.FpuJit
 				.Select(l => l.Split('\t'))
 				.ToList();
 
-			// a type initializer failure is re-written by every child that runs it
-			var faults = records
-				.Where(r => r[0] is "FAIL" or "CRASH")
-				.GroupBy(r => r[2], StringComparer.Ordinal)
-				.Select(g => g.First())
-				.ToList();
+			var faults = Faults(lines);
 
 			// enumeration-time records are re-written by every restarted child
 			List<string[]> Distinct(string kind) => lines
@@ -310,7 +305,7 @@ namespace Tests.FpuJit
 			var real = faults.Where(r => r[1] != CanaryAssembly).ToList();
 
 			foreach (var fault in real)
-				Console.WriteLine($"{fault[0]} {fault[1]} {fault[3]} — {fault[4]}");
+				PrintFault(fault);
 
 			Console.WriteLine();
 			Console.WriteLine($"result: {real.Count} JIT fault(s)");
@@ -320,6 +315,33 @@ namespace Tests.FpuJit
 
 			return exitCode;
 		}
+
+		// A harness stop skips Report; without this a run cut off by the restart cap (one restart per fault on runners
+		// where a fault kills the process) names none of the methods that faulted.
+		static int Stop(string[] lines, int exitCode)
+		{
+			var real = Faults(lines).Where(r => r[1] != CanaryAssembly).ToList();
+
+			if (real.Count > 0)
+			{
+				Console.WriteLine($"{real.Count} JIT fault(s) recorded before the stop:");
+
+				foreach (var fault in real)
+					PrintFault(fault);
+			}
+
+			return exitCode;
+		}
+
+		// a type initializer failure is re-written by every child that runs it
+		static List<string[]> Faults(string[] lines) => lines
+			.Select(l => l.Split('\t'))
+			.Where(r => r[0] is "FAIL" or "CRASH")
+			.GroupBy(r => r[2], StringComparer.Ordinal)
+			.Select(g => g.First())
+			.ToList();
+
+		static void PrintFault(string[] fault) => Console.WriteLine($"{fault[0]} {fault[1]} {fault[3]} — {fault[4]}");
 
 		static bool IsAllowedSkip(string asm, string message)
 		{
