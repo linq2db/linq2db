@@ -18,8 +18,8 @@ using Shouldly;
 
 namespace Tests.Mapping
 {
-	// NaN / ±Infinity through the provider literal builders and the ClickHouse MySql string conversions, which build
-	// them from bit patterns (https://github.com/linq2db/linq2db/issues/6051). The JIT fault itself is guarded by
+	// NaN / ±Infinity through the provider literal builders and the ClickHouse MySql string conversions, which test and
+	// build them from bit patterns (https://github.com/linq2db/linq2db/issues/6051). The JIT fault itself is guarded by
 	// Tests/Tests.FpuJit; these pin the produced values.
 	[TestFixture]
 	public class SpecialFloatingPointValueTests : TestBase
