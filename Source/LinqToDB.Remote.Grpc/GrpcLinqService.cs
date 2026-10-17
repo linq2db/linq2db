@@ -97,8 +97,11 @@ namespace LinqToDB.Remote.Grpc
 		{
 			try
 			{
-				return await _linqService.ExecuteBatchAsync(caq.Configuration, caq.QueryData)
-					.ConfigureAwait(false);
+				return await _linqService.ExecuteBatchAsync(
+					caq.Configuration,
+					caq.QueryData,
+					context.ServerCallContext?.CancellationToken ?? CancellationToken.None
+					).ConfigureAwait(false);
 			}
 			catch (Exception exception) when (_transferInternalExceptionToClient)
 			{
