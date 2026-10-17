@@ -1670,6 +1670,31 @@ namespace Tests.Linq
 				queries.Queries.Count.ShouldBe(1);
 		}
 
+		// AsQueryable(IDataContext) over an inline array is a query of the data context, not a client array: a membership moved
+		// to the client must not run it once per row.
+		[Test]
+		public void DataContextAsQueryableOverInlineArrayIsNotRunPerRow([DataSources] string context)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(true));
+			using var table = db.CreateLocalTable(MissedJoinEntity.Seed);
+
+			var queries = new SaveQueriesInterceptor();
+
+			if (!context.IsRemote())
+				db.AddInterceptor(queries);
+
+			var rows =
+				(from e in table
+				 from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				 select new { e.Id, V = new[] { j.Value1, 5 }.AsQueryable(db).Contains(0) })
+				.ToArray();
+
+			rows.Length.ShouldBe(MissedJoinEntity.Seed.Length);
+
+			if (!context.IsRemote())
+				queries.Queries.Count.ShouldBe(1);
+		}
+
 		// A value projected as it is, not calculated with, keeps the NULL the reader turns into default(T): no COALESCE, and
 		// DISTINCT still tells the missed row from a matched 0.
 		[Test]
