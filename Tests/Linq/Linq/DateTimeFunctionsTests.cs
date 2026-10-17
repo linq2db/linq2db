@@ -2343,6 +2343,15 @@ namespace Tests.Linq
 				.Count();
 
 			minDayLiteral.ShouldBe(1);
+
+			var values = new[] { value };
+
+			var maxValueCaptured = t
+				.GroupBy(r => r.Id)
+				.Where(g => values.Contains(g.Max(r => r.Value)))
+				.Count();
+
+			maxValueCaptured.ShouldBe(1);
 		}
 
 		/// <summary>
