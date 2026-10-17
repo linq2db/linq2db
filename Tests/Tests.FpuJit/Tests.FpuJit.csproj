@@ -15,7 +15,7 @@
 		<IsPackable>false</IsPackable>
 	</PropertyGroup>
 
-	<!-- Every shipped library with a .NET Framework target. Keep in sync with Program.ExpectedAssemblies. -->
+	<!-- Every shipped library with a .NET Framework target except the LINQPad driver (net472). Keep in sync with Program.ExpectedAssemblies. -->
 	<ItemGroup>
 		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
 		<ProjectReference Include="..\..\Source\LinqToDB.Compat\LinqToDB.Compat.csproj" />

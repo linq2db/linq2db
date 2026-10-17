@@ -1,8 +1,8 @@
 // Regression gate for #6042 / #6051: hosts that unmask x87/SSE floating-point exceptions (C++Builder, Delphi)
 // make the x86 .NET Framework JIT fault while compiling methods that use NaN/Infinity constants.
 // The exe JIT-compiles every method of every netfx-shipped linq2db assembly with those exceptions unmasked, generic
-// ones once with constraint-satisfying arguments. Not covered: value-type instantiations other than the one tried,
-// generic definitions no substitute closes (reported), and expression trees compiled at run time.
+// ones once with constraint-satisfying arguments. Not covered: the LINQPad driver, value-type instantiations other
+// than the one tried, generic definitions no substitute closes (reported), and expression trees compiled at run time.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
