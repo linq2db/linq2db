@@ -27,6 +27,14 @@
 		     modern 4.8 line so it restores for net10.0 (avoids NU1701). Matches the analyzer's Roslyn baseline. -->
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
 
+		<!-- ADO.NET clients, loaded only to generate provider SQL without a database (L2DB2001's typed-hint SQL
+		     equivalence test). No connection is ever opened. -->
+		<PackageReference Include="Microsoft.Data.SqlClient" />
+		<PackageReference Include="Microsoft.Data.Sqlite" />
+		<PackageReference Include="MySqlConnector" />
+		<PackageReference Include="Oracle.ManagedDataAccess.Core" />
+		<PackageReference Include="System.Data.Odbc" />
+
 	</ItemGroup>
 
 	<ItemGroup>

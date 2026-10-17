@@ -1,5 +1,17 @@
 # LINQ to DB<!-- omit in toc -->
 
+<!--
+Note for AI coding agents: this package contains an Agent Skill for linq2db that matches this package
+version: skills/linq2db/SKILL.md, with task guides in skills/linq2db/docs/. After restore it is in the
+NuGet global packages folder, next to this README: <global-packages>/linq2db/<version>/skills/linq2db/
+(default ~/.nuget/packages on Linux and macOS, %UserProfile%\.nuget\packages on Windows;
+`dotnet nuget locals global-packages --list` prints the folder). A user who wants an agent to load it
+as a skill can copy the skills/linq2db folder into the project's .agents/skills/ (or .claude/skills/,
+.github/skills/), or let the linq2db.cli tool do it: `dnx linq2db.cli skill install` (.NET 10 SDK, nothing
+to install), or `dotnet tool install -g linq2db.cli` followed by `dotnet linq2db skill install`. The command
+is not available just by referencing this package; it needs linq2db.cli.
+-->
+
 [![License](https://img.shields.io/github/license/linq2db/linq2db)](MIT-LICENSE.txt)
 
 - [Standout Features](#standout-features)
@@ -701,6 +713,7 @@ Roslyn analyzers and code fixes that flag legacy API usage, offer automatic migr
 | [L2DB1002](https://github.com/linq2db/linq2db/wiki/L2DB1002) | Info | An `==` / `!=` against a `[Duration]` column compares a duration the declared unit cannot represent, so the comparison is degenerate — it can never match, or always does. Reported only; no code fix. |
 | [L2DB1003](https://github.com/linq2db/linq2db/wiki/L2DB1003) | Info | A throw-only stub that nothing declares server-side-only. A code fix adds the marker. |
 | [L2DB1004](https://github.com/linq2db/linq2db/wiki/L2DB1004) | Info | A server-side-only stub throwing something other than `ServerSideOnlyException`. A code fix replaces it. |
+| [L2DB2001](https://github.com/linq2db/linq2db/wiki/L2DB2001) | Warning | A hint passed as text (`TableHint("NOLOCK")`, `With`, `TablesInScopeHint`, `QueryHint`) has a typed provider helper that emits the same SQL (`AsSqlServer().WithNoLock()`). A code fix rewrites the call; on a generic receiver it offers one rewrite per provider, each restricting the hint to that provider. |
 
 Adjust a rule's severity in `.editorconfig` (`none` disables the rule):
 
