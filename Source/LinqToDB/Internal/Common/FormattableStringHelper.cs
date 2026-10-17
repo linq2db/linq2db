@@ -329,7 +329,7 @@ namespace LinqToDB.Internal.Common
 				if (referenced[i])
 					continue;
 
-				var type = arguments[i].UnwrapConvert()!.Type;
+				var type = arguments[i].UnwrapConvertToObject()!.Type;
 
 				if (typeof(DataParameter).IsSameOrParentOf(type) || type.IsSameOrParentOf(typeof(DataParameter)) || typeof(ISqlExpression).IsAssignableFrom(type))
 					continue;

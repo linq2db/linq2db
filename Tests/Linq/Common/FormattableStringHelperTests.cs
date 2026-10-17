@@ -241,6 +241,25 @@ namespace Tests.Common
 				.ShouldBe([false, true, false]);
 		}
 
+		// a compiled query reads a lambda parameter as Convert(ps[i], T), so the element is Convert(Convert(ps[i], T), object)
+		[Test]
+		public void PrepareRawSqlArguments_CompiledQueryArguments()
+		{
+			var ps = Expression.Parameter(typeof(object[]), "ps");
+
+			Expression Read(int index, Type type) => Expression.Convert(Expression.Convert(Expression.ArrayIndex(ps, Expression.Constant(index)), type), typeof(object));
+
+			var arguments = Prepare("{0}", false,
+				Read(0, typeof(int)),
+				Read(1, typeof(int)),
+				Read(2, typeof(DataParameter)),
+				Expression.ArrayIndex(ps, Expression.Constant(3)));
+
+			arguments
+				.Select(IsDropped)
+				.ShouldBe([false, true, false, false]);
+		}
+
 		[Test]
 		public void PrepareRawSqlArguments_OutOfRangeItemIsIgnored()
 		{

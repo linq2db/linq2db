@@ -1915,6 +1915,50 @@ namespace Tests.Linq
 				.ShouldNotContain(p => Equals(p.Value, 99));
 		}
 
+		// a compiled query reads lambda parameters as Convert(ps[i], T)
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
+		public void UnreferencedCompiledArgumentIsNotSent([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var interceptor = new SaveCommandInterceptor();
+			db.AddInterceptor(interceptor);
+
+			var fromParams = CompiledQuery.Compile((IDataContext dc, int id, int extra) =>
+				dc.FromSql<Person>("SELECT * FROM Person WHERE PersonID = {0}", id, extra)
+					.Select(p => p.ID));
+
+			var fromCreate = CompiledQuery.Compile((IDataContext dc, int id, int extra) =>
+				dc.FromSql<Person>(FormattableStringFactory.Create("SELECT * FROM Person WHERE PersonID = {0}", id, extra))
+					.Select(p => p.ID));
+
+			var fromExpr = CompiledQuery.Compile((IDataContext dc, int id, int extra) =>
+				dc.GetTable<Person>()
+					.Where(p => p.ID == Sql.Expr<int>(FormattableStringFactory.Create("({0})", id, extra)))
+					.Select(p => p.ID));
+
+			fromParams(db, 1, 99)
+				.ToArray()
+				.ShouldBe([1]);
+
+			interceptor.Parameters
+				.ShouldNotContain(p => Equals(p.Value, 99));
+
+			fromCreate(db, 1, 99)
+				.ToArray()
+				.ShouldBe([1]);
+
+			interceptor.Parameters
+				.ShouldNotContain(p => Equals(p.Value, 99));
+
+			fromExpr(db, 1, 99)
+				.ToArray()
+				.ShouldBe([1]);
+
+			interceptor.Parameters
+				.ShouldNotContain(p => Equals(p.Value, 99));
+		}
+
 		// a hand-built tree can pass the FormattableString as a constant, which expose leaves as is
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
 		public void FromSql_ConstantFormattableString([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
