@@ -723,13 +723,21 @@ namespace Tests.Linq
 			Action atDigits = () => boundary
 				.Select(r => Sql.AsSql(Sql.Round(r.D22s9, r.P)))
 				.ToArray();
-			atDigits.ShouldThrow<Exception>();
+			atDigits.ShouldThrow<Exception>().Message.ShouldContain("Value does not fit into decimal");
 
 			// the constant path's twin: a literal precision does not take the runtime CASE
 			Action atDigitsConstant = () => boundary
 				.Select(r => Sql.AsSql(Sql.Round(r.D22s9, -13)))
 				.ToArray();
-			atDigitsConstant.ShouldThrow<Exception>();
+			atDigitsConstant.ShouldThrow<Exception>().Message.ShouldContain(context.IsRemote() ? "Mapping of column" : "Value does not fit into decimal");
+
+			// below the boundary the same constant path answers 0, so the throw above is the overflow
+			var belowDigitsConstant = t
+				.Where(r => r.Id < 9)
+				.Select(r => Sql.AsSql(Sql.Round(r.D22s9, -13)))
+				.ToArray();
+
+			belowDigitsConstant.ShouldAllBe(v => v == 0m);
 		}
 
 		sealed class RoundManyDigits
