@@ -311,6 +311,8 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			return nanosecond > 854775807;
 		}
 
-		internal static MappingSchema Instance { get; } = new DuckDBMappingSchema();
+		static readonly Lazy<MappingSchema> _instance = new (() => new DuckDBMappingSchema());
+
+		internal static MappingSchema Instance => _instance.Value;
 	}
 }

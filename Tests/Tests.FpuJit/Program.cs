@@ -43,10 +43,7 @@ namespace Tests.FpuJit
 
 		// Methods that may stay unverified because compiling them resets the FPU control word even in a fresh process:
 		// (assembly, method display prefix, reason).
-		static readonly (string Assembly, string MethodPrefix, string Reason)[] AllowedUnverified =
-		[
-			("linq2db", "LinqToDB.Internal.DataProvider.DuckDB.", "DuckDB.NET has no .NET Framework build: the adapter's failed bind in a type initializer resets the control word on every attempt"),
-		];
+		static readonly (string Assembly, string MethodPrefix, string Reason)[] AllowedUnverified = [];
 
 		const string CanaryAssembly   = "canary";
 		const int    MaxRestarts      = 100;
