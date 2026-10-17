@@ -1315,6 +1315,134 @@ namespace Tests.Linq
 			result.ShouldBe(expected);
 		}
 
+		sealed class RoundDeclaredShapeFull
+		{
+			[PrimaryKey                       ] public int     Id { get; set; }
+			[Column(Precision = 30, Scale = 9)] public decimal D  { get; set; }
+			[Column(Precision = 22, Scale = 2)] public decimal S  { get; set; }
+			[Column                           ] public decimal B  { get; set; }
+			[Column                           ] public int     P  { get; set; }
+		}
+
+		sealed class RoundDeclaredShape
+		{
+			[PrimaryKey            ] public int     Id { get; set; }
+			[Column(Precision = 30)] public decimal D  { get; set; }
+			[Column(Scale = 2)     ] public decimal S  { get; set; }
+			[Column                ] public decimal B  { get; set; }
+			[Column                ] public int     P  { get; set; }
+		}
+
+		// A column declaring only one of Precision and Scale keeps its declared sizing, while a column declaring neither
+		// is sized as a computed value is: all must round every digit they hold. The table is written through a fully
+		// declared mapping, as a Precision-only one cannot be written over LinqService.
+		[Test]
+		public void Round33([IncludeDataSources(true, TestProvName.AllYdb)] string context, [Values(MidpointRounding.ToEven, MidpointRounding.AwayFromZero)] MidpointRounding mp)
+		{
+			var data = new[]
+			{
+				new RoundDeclaredShapeFull { Id = 1, D =  123456789012345678.125m, S =  1234567890123456.25m, B =  9999999999999.125m, P = 2 },
+				new RoundDeclaredShapeFull { Id = 2, D = -123456789012345678.135m, S = -1234567890123456.35m, B = -9999999999999.135m, P = 2 },
+				new RoundDeclaredShapeFull { Id = 3, D =  123456789012345678.5m,   S =  1234567890123456.15m, B =  9999999999998.5m,   P = 2 },
+			};
+
+			using var db   = GetDataContext(context);
+			using var full = db.CreateLocalTable(data);
+
+			var t = db.GetTable<RoundDeclaredShape>().TableName(full.TableName);
+
+			var result = t
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					D    = Sql.AsSql(Math.Round(r.D, mp)),
+					DTwo = Sql.AsSql(Math.Round(r.D, 2, mp)),
+					SOne = Sql.AsSql(Math.Round(r.S, 1, mp)),
+					B    = Sql.AsSql(Math.Round(r.B, mp)),
+				})
+				.ToArray();
+
+			var expected = data
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					D    = Math.Round(r.D, mp),
+					DTwo = Math.Round(r.D, 2, mp),
+					SOne = Math.Round(r.S, 1, mp),
+					B    = Math.Round(r.B, mp),
+				})
+				.ToArray();
+
+			result.ShouldBe(expected);
+		}
+
+		[ActiveIssue(6055, Configuration = TestProvName.AllYdb, SkipForNonLinqService = true,
+			ErrorTypeName = "Grpc.Core.RpcException", ErrorMessage = "Failed to convert type: Decimal(35,13) to Decimal(22,13)",
+			Details = "LinqServiceSerializer drops SqlBinaryExpression's precision/scale, so the server folds the non-mandatory narrowing casts")]
+		[Test]
+		public void Round34([IncludeDataSources(true, TestProvName.AllYdb)] string context, [Values(MidpointRounding.ToEven, MidpointRounding.AwayFromZero)] MidpointRounding mp)
+		{
+			var data = new[]
+			{
+				new RoundDeclaredShapeFull { Id = 1, B =  9999999999999.125m, P = 2 },
+				new RoundDeclaredShapeFull { Id = 2, B = -9999999999999.135m, P = 2 },
+				new RoundDeclaredShapeFull { Id = 3, B =  9999999999998.5m,   P = 0 },
+			};
+
+			using var db   = GetDataContext(context);
+			using var full = db.CreateLocalTable(data);
+
+			var t = db.GetTable<RoundDeclaredShape>().TableName(full.TableName);
+
+			var result = mp == MidpointRounding.AwayFromZero
+				? t
+					.OrderBy(r => r.Id)
+					.Select(r => Sql.AsSql(Sql.Round(r.B, r.P)))
+					.ToArray()
+				: t
+					.OrderBy(r => r.Id)
+					.Select(r => Sql.AsSql(Sql.RoundToEven(r.B, r.P)))
+					.ToArray();
+
+			var expected = data
+				.OrderBy(r => r.Id)
+				.Select(r => (decimal?)Math.Round(r.B, r.P, mp))
+				.ToArray();
+
+			result.ShouldBe(expected);
+		}
+
+		[ActiveIssue(6055, Configuration = TestProvName.AllYdb, SkipForNonLinqService = true,
+			ErrorTypeName = "Grpc.Core.RpcException", ErrorMessage = "Value does not fit into decimal",
+			Details = "LinqServiceSerializer drops SqlBinaryExpression's precision/scale, so the server folds the narrowing cast and the result keeps the work type")]
+		[Test]
+		public void Round35([IncludeDataSources(true, TestProvName.AllYdb)] string context, [Values(MidpointRounding.ToEven, MidpointRounding.AwayFromZero)] MidpointRounding mp)
+		{
+			var data = new[]
+			{
+				new RoundDeclaredShapeFull { Id = 1, B =  9999999999999.125m },
+				new RoundDeclaredShapeFull { Id = 2, B = -9999999999999.135m },
+				new RoundDeclaredShapeFull { Id = 3, B =  9999999999998.5m   },
+			};
+
+			using var db   = GetDataContext(context);
+			using var full = db.CreateLocalTable(data);
+
+			var t = db.GetTable<RoundDeclaredShape>().TableName(full.TableName);
+
+			var result = t
+				.OrderBy(r => r.Id)
+				.Select(r => Sql.AsSql(Math.Round(r.B, 2, mp)))
+				.ToArray();
+
+			var expected = data
+				.OrderBy(r => r.Id)
+				.Select(r => Math.Round(r.B, 2, mp))
+				.ToArray();
+
+			result.ShouldBe(expected);
+		}
+
 		sealed class DecimalStoredDouble
 		{
 			[PrimaryKey                         ] public int    Id { get; set; }
