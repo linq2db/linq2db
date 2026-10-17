@@ -360,7 +360,7 @@ jobs:
 
   # Its own job, mirroring Azure's build_x86_job, because -a x86 rebuilds the whole graph for the
   # win-x86 RID and reuses nothing from the x64 build - ~6.8 min there against ~2.1 for the x64
-  # publishes. Only the three Access legs are x86, so the job is skipped for every other surface.
+  # publishes. Only the Access legs are x86, so the job is skipped for every other surface.
   #
   # Unlike Azure this uploads one artifact per TFM rather than one for all four. download-artifact has
   # no itemPattern, so a single artifact would make every leg take all four TFMs at once, losing the
@@ -498,6 +498,16 @@ jobs:
             8.x
             9.x
             10.x
+
+      # Anonymous pulls hit Docker Hub's rate limit (#6008); a failed login falls back to them.
+      # Plain CLI, not docker/login-action: the repo allows GitHub-owned actions only.
+      - name: Docker Hub login
+        if: matrix.script_global != ''
+        continue-on-error: true
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: echo "$DOCKERHUB_TOKEN" | docker login --username "$DOCKERHUB_USERNAME" --password-stdin
 
       - name: Start the database
         if: matrix.script_global != ''

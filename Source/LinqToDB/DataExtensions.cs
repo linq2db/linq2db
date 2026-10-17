@@ -16,6 +16,7 @@ using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.Options;
+using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
@@ -1594,15 +1595,22 @@ namespace LinqToDB
 
 		#region FromSql
 
-		static Expression GenerateArray(object?[] arguments)
+		static Expression GenerateArray(object?[] arguments, Expression? source, bool readNulls = false)
 		{
-			var argumentsExpr = Expression.NewArrayInit(typeof(object), arguments.Select(p =>
+			var argumentsExpr = Expression.NewArrayInit(typeof(object), arguments.Select((p, i) =>
 			{
 				if (p == null)
-					return Expression.Constant(null, typeof(object));
-				
+				{
+					return readNulls
+						? Expression.ArrayIndex(source!, ExpressionInstances.Int32(i))
+						: Expression.Constant(null, typeof(object));
+				}
+
 				var argumentType    = p.GetType();
-				var valueExpression = SequenceHelper.WrapAsParameter(Expression.Constant(p, argumentType));
+				var value           = source == null || p is ISqlExpression
+					? (Expression)Expression.Constant(p, argumentType)
+					: Expression.Convert(Expression.ArrayIndex(source, ExpressionInstances.Int32(i)), argumentType);
+				var valueExpression = SequenceHelper.WrapAsParameter(value);
 				if (valueExpression.Type != typeof(object))
 					valueExpression = Expression.Convert(valueExpression, typeof(object));
 
@@ -1610,6 +1618,23 @@ namespace LinqToDB
 			}));
 
 			return argumentsExpr;
+		}
+
+		internal static MethodCallExpression GenerateFormattableString(FormattableString sql)
+		{
+			return GenerateFormattableString(sql.Format, GenerateArray(sql.GetArguments(), null));
+		}
+
+		/// <param name="arguments">Expression for <paramref name="sql"/>'s arguments, read instead of baking their values.</param>
+		/// <param name="readNulls">Read <see langword="null"/> arguments too, when nothing keys the build on <paramref name="arguments"/>.</param>
+		internal static MethodCallExpression GenerateFormattableString(FormattableString sql, Expression arguments, bool readNulls)
+		{
+			return GenerateFormattableString(sql.Format, GenerateArray(sql.GetArguments(), arguments, readNulls));
+		}
+
+		internal static MethodCallExpression GenerateFormattableString(string format, Expression arguments)
+		{
+			return Expression.Call(null, Methods.System.FormattableStringFactory_Create, Expression.Constant(format), arguments);
 		}
 
 		/// <summary>
@@ -1639,26 +1664,18 @@ namespace LinqToDB
 		/// <returns> An <see cref="IQueryable{T}" /> representing the raw SQL query. </returns>
 		[StringFormatMethod("sql")]
 		public static IQueryable<TEntity> FromSql<TEntity>(
-			this IDataContext dataContext,
-			FormattableString sql)
+			this                      IDataContext      dataContext,
+			[SqlQueryDependentFormat] FormattableString sql)
 		{
 			ArgumentNullException.ThrowIfNull(dataContext);
 			ArgumentNullException.ThrowIfNull(sql);
-
-			var arguments = sql.GetArguments();
-			var methodInfo = MethodHelper.GetMethodInfo(System.Runtime.CompilerServices.FormattableStringFactory.Create,
-				sql.Format, arguments);
-			var argumentsExpr = GenerateArray(arguments);
-
-			var formattableStringExpr =
-				Expression.Call(null, methodInfo, Expression.Constant(sql.Format), argumentsExpr);
 
 			return new ExpressionQueryImpl<TEntity>(
 				dataContext,
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(FromSql<TEntity>, dataContext, sql),
-					SqlQueryRootExpression.Create(dataContext), formattableStringExpr));
+					SqlQueryRootExpression.Create(dataContext), GenerateFormattableString(sql)));
 		}
 
 		/// <summary>
@@ -1694,26 +1711,18 @@ namespace LinqToDB
 		/// <returns> An <see cref="IQueryable{T}" /> representing the raw SQL query. </returns>
 		[StringFormatMethod("sql")]
 		public static IQueryable<TEntity> FromSqlScalar<TEntity>(
-			this                     IDataContext      dataContext,
-			FormattableString sql)
+			this                      IDataContext      dataContext,
+			[SqlQueryDependentFormat] FormattableString sql)
 		{
 			ArgumentNullException.ThrowIfNull(dataContext);
 			ArgumentNullException.ThrowIfNull(sql);
-
-			var arguments = sql.GetArguments();
-			var methodInfo = MethodHelper.GetMethodInfo(System.Runtime.CompilerServices.FormattableStringFactory.Create,
-				sql.Format, arguments);
-			var argumentsExpr = GenerateArray(arguments);
-
-			var formattableStringExpr =
-				Expression.Call(null, methodInfo, Expression.Constant(sql.Format), argumentsExpr);
 
 			return new ExpressionQueryImpl<TEntity>(
 				dataContext,
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(FromSqlScalar<TEntity>, dataContext, sql),
-					SqlQueryRootExpression.Create(dataContext), formattableStringExpr));
+					SqlQueryRootExpression.Create(dataContext), GenerateFormattableString(sql)));
 		}
 
 		/// <summary>
@@ -1754,14 +1763,12 @@ namespace LinqToDB
 		{
 			ArgumentNullException.ThrowIfNull(dataContext);
 
-			var paramsExpr = GenerateArray(parameters);
-
 			return new ExpressionQueryImpl<TEntity>(
 				dataContext,
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(FromSql<TEntity>, dataContext, sql, parameters),
-					SqlQueryRootExpression.Create(dataContext), Expression.Constant(sql), paramsExpr));
+					Methods.LinqToDB.FromSqlFormattable.MakeGenericMethod(typeof(TEntity)),
+					SqlQueryRootExpression.Create(dataContext), GenerateFormattableString(sql.Format, GenerateArray(parameters, null))));
 		}
 
 		#endregion
