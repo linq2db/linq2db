@@ -1755,7 +1755,7 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 
 			// Under CompareNulls.LikeClr (WithNull set) an item NULL in the row must equal a NULL tested value, and a negated test
 			// must keep a row whose item is NULL; IN cannot say either, so such a list is the LikeClr comparisons it stands for.
-			// Constant and parameter items are left to the builder, which handles a NULL value.
+			// Constant and parameter items alone do not call for it: the builder already splits a NULL value out of the list.
 			if (_reducePredicates
 				&& predicate.WithNull != null
 				&& !_nullabilityContext.IsEmpty
