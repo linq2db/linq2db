@@ -2035,7 +2035,8 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			var sql      = $"SELECT * FROM {QuoteTableName("Person", context)} WHERE {QuoteTableName("PersonID", context)} = ?";
+			// own SQL text: FromSql_PositionalPlaceholder_DataParameter's would share its query-cache entry and parameter name
+			var sql      = $"SELECT * FROM {QuoteTableName("Person", context)} WHERE ? = {QuoteTableName("PersonID", context)}";
 			var argument = dataParameter ? new DataParameter("p", 2, DataType.Int32) : (object)2;
 
 			db.FromSql<Person>(sql, argument)
