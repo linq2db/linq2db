@@ -99,27 +99,25 @@ namespace Tests.DataProvider
 			}
 
 		[Test]
+		[NoBaselines("Provider-specific output", Configuration = $"{TestProvName.AllSqlServerMS},{TestProvName.SqlAzureMiMS}")]
 		public void TestDataTypes2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (new DisableBaseline("Provider-specific output", IsMsProvider(context)))
-			using (var conn = GetDataConnection(context))
+			using var conn = GetDataConnection(context);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(TestType<DateTime?>(conn, "dateDataType", DataType.Date, "AllTypes2"), Is.EqualTo(new DateTime(2012, 12, 12)));
+				Assert.That(TestType<DateTimeOffset?>(conn, "datetimeoffsetDataType", DataType.DateTimeOffset, "AllTypes2"), Is.EqualTo(new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan(5, 0, 0))));
+				Assert.That(TestType<DateTime?>(conn, "datetime2DataType", DataType.DateTime2, "AllTypes2"), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
+				Assert.That(TestType<TimeSpan?>(conn, "timeDataType", DataType.Time, "AllTypes2"), Is.EqualTo(new TimeSpan(0, 12, 12, 12, 12)));
+			}
+
+			if (!IsMsProvider(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(TestType<DateTime?>(conn, "dateDataType", DataType.Date, "AllTypes2"), Is.EqualTo(new DateTime(2012, 12, 12)));
-					Assert.That(TestType<DateTimeOffset?>(conn, "datetimeoffsetDataType", DataType.DateTimeOffset, "AllTypes2"), Is.EqualTo(new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan(5, 0, 0))));
-					Assert.That(TestType<DateTime?>(conn, "datetime2DataType", DataType.DateTime2, "AllTypes2"), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
-					Assert.That(TestType<TimeSpan?>(conn, "timeDataType", DataType.Time, "AllTypes2"), Is.EqualTo(new TimeSpan(0, 12, 12, 12, 12)));
-				}
-
-				if (!IsMsProvider(context))
-				{
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(TestType<SqlHierarchyId?>(conn, "hierarchyidDataType", tableName: "AllTypes2"), Is.EqualTo(SqlHierarchyId.Parse("/1/3/")));
-						Assert.That(TestType<SqlGeography>(conn, "geographyDataType", skipPass: true, tableName: "AllTypes2").ToString(), Is.EqualTo("LINESTRING (-122.36 47.656, -122.343 47.656)"));
-						Assert.That(TestType<SqlGeometry>(conn, "geometryDataType", skipPass: true, tableName: "AllTypes2").ToString(), Is.EqualTo("LINESTRING (100 100, 20 180, 180 180)"));
-					}
+					Assert.That(TestType<SqlHierarchyId?>(conn, "hierarchyidDataType", tableName: "AllTypes2"), Is.EqualTo(SqlHierarchyId.Parse("/1/3/")));
+					Assert.That(TestType<SqlGeography>(conn, "geographyDataType", skipPass: true, tableName: "AllTypes2").ToString(), Is.EqualTo("LINESTRING (-122.36 47.656, -122.343 47.656)"));
+					Assert.That(TestType<SqlGeometry>(conn, "geometryDataType", skipPass: true, tableName: "AllTypes2").ToString(), Is.EqualTo("LINESTRING (100 100, 20 180, 180 180)"));
 				}
 			}
 		}
