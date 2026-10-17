@@ -2478,5 +2478,153 @@ DROP TABLE IF EXISTS TemporalTable3History
 			res[1].Text3.ShouldBe("Element тест1 Text3");
 			res[1].Text4.ShouldBe("Element тест2 Text4");
 		}
+
+		sealed class MixedCharsetCoalesceTable
+		{
+			[PrimaryKey]                                         public int     Id { get; set; }
+			[Column(DataType = DataType.VarChar,  Length = 10)]  public string? V  { get; set; }
+			[Column(DataType = DataType.VarChar,  Length = 100)] public string? V2 { get; set; }
+			[Column(DataType = DataType.NVarChar, Length = 100)] public string? N  { get; set; }
+		}
+
+		/// <summary>
+		/// A COALESCE of varchar and nvarchar is nvarchar, so the literal compared with it stays Unicode.
+		/// </summary>
+		[Test]
+		public void MixedCharsetCoalesceComparedWithUnicodeLiteral([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<MixedCharsetCoalesceTable>([new() { Id = 1, V = null, N = "Ж" }]);
+
+			var pair = tb.Count(r => (r.V ?? r.N) == "Ж");
+
+			pair.ShouldBe(1);
+
+			var nvarcharLast = tb.Count(r => (r.V2 ?? r.V ?? r.N) == "Ж");
+
+			nvarcharLast.ShouldBe(1);
+
+			var nvarcharMiddle = tb.Count(r => (r.V ?? r.N ?? r.V2) == "Ж");
+
+			nvarcharMiddle.ShouldBe(1);
+
+			var nested = tb.Count(r => ((r.V ?? r.N) ?? r.V2) == "Ж");
+
+			nested.ShouldBe(1);
+		}
+
+		sealed class DateTimeReadBackTable
+		{
+			[PrimaryKey]                           public int       Id { get; set; }
+			[Column(DataType = DataType.DateTime)] public DateTime  D  { get; set; }
+			[Column(DataType = DataType.DateTime)] public DateTime? ND { get; set; }
+		}
+
+		/// <summary>
+		/// A <c>datetime</c> value read back compares equal to MIN/MAX/COALESCE over its column: the parameter takes the
+		/// column's type, as it does beside the column itself, rather than a <c>datetime2</c> that misses the 1/300 s step.
+		/// </summary>
+		[Test]
+		public void DateTimeReadBackComparedWithComputedValue([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<DateTimeReadBackTable>([new() { Id = 1, D = new DateTime(2026, 6, 1, 10, 0, 0, 3) }]);
+
+			var value = tb
+				.Select(r => r.D)
+				.Single();
+
+			var column = tb.Count(r => r.D == value);
+
+			column.ShouldBe(1);
+
+			var max = tb
+				.GroupBy(r => r.Id)
+				.Count(g => g.Max(r => r.D) == value);
+
+			max.ShouldBe(1);
+
+			var min = tb
+				.GroupBy(r => r.Id)
+				.Count(g => g.Min(r => r.D) == value);
+
+			min.ShouldBe(1);
+
+			var coalesce = tb.Count(r => (r.ND ?? r.D) == value);
+
+			coalesce.ShouldBe(1);
+		}
+
+		static readonly DateTime CteSetOperationValue = new(2026, 6, 1, 10, 0, 0, 3);
+
+		/// <summary>
+		/// A <c>datetime</c> column read through both branches of a set operation over one CTE is still a stored column:
+		/// a literal compared with it takes the column's type, so the 1/300 s step matches.
+		/// </summary>
+		[Test]
+		public void CteSetOperationColumnComparedWithLiteral([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<DateTimeReadBackTable>(
+			[
+				new() { Id = 1, D = CteSetOperationValue },
+				new() { Id = 2, D = CteSetOperationValue },
+			]);
+
+			var cte = tb.AsCte();
+
+			var union = cte
+				.Where(r => r.Id == 1)
+				.Concat(cte.Where(r => r.Id == 2))
+				.AsCte();
+
+			var count = union.Count(r => r.D == CteSetOperationValue);
+
+			count.ShouldBe(2);
+		}
+
+		sealed class RecursiveDateTimeRow
+		{
+			public int Id    { get; set; }
+			public int Level { get; set; }
+
+			[Column(DataType = DataType.DateTime)] public DateTime D { get; set; }
+		}
+
+		/// <summary>
+		/// A <c>datetime</c> column carried through a recursive CTE is still a stored column: a literal compared with it,
+		/// alone or in an IN list, takes the column's type, so the 1/300 s step matches.
+		/// </summary>
+		[Test]
+		public void RecursiveCteColumnComparedWithLiteral([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<DateTimeReadBackTable>(
+			[
+				new() { Id = 1, D = CteSetOperationValue },
+			]);
+
+			var cte = db.GetCte<RecursiveDateTimeRow>(previous =>
+				tb
+					.Select(r => new RecursiveDateTimeRow { Id = r.Id, Level = 0, D = r.D })
+					.Concat(
+						from p in previous
+						where p.Level < 1
+						select new RecursiveDateTimeRow { Id = p.Id, Level = p.Level + 1, D = p.D }));
+
+			var equal = cte.Count(r => r.D == CteSetOperationValue);
+
+			equal.ShouldBe(2);
+
+			var inList = cte.Count(r => r.D.In(CteSetOperationValue));
+
+			inList.ShouldBe(2);
+
+			var values = new[] { CteSetOperationValue };
+
+			var captured = cte.Count(r => values.Contains(r.D));
+
+			captured.ShouldBe(2);
+		}
 	}
 }

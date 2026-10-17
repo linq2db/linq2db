@@ -43,6 +43,11 @@ namespace LinqToDB.Internal.Linq.Builder
 		public string?           Alias             { get; private set; }
 		public ColumnDescriptor? CurrentDescriptor { get; private set; }
 
+		SuggestedDescriptor _suggestedDescriptor;
+
+		ColumnDescriptor? ConstantDescriptor =>
+			ReferenceEquals(CurrentDescriptor, _suggestedDescriptor.Descriptor) ? _suggestedDescriptor.ForConstants : CurrentDescriptor;
+
 		public IBuildContext? BuildContext
 		{
 			get;
@@ -235,6 +240,22 @@ namespace LinqToDB.Internal.Linq.Builder
 		public StateHolder<ColumnDescriptor?> UsingColumnDescriptor(ColumnDescriptor? columnDescriptor)
 		{
 			return new StateHolder<ColumnDescriptor?>(this, columnDescriptor, static v => v.CurrentDescriptor, static (v, f) => v.CurrentDescriptor = f);
+		}
+
+		/// <summary>
+		/// Lends <paramref name="descriptor"/> to what is built next beside <paramref name="expr"/>, keeping constants on
+		/// their own terms when <paramref name="expr"/> is a value computed from a coarse date/time column.
+		/// </summary>
+		internal IDisposable UsingColumnDescriptorBeside(ColumnDescriptor? descriptor, ISqlExpression expr)
+		{
+			return UsingSuggestedDescriptor(SuggestColumnDescriptor(descriptor, expr));
+		}
+
+		StateHolder<(ColumnDescriptor? Current, SuggestedDescriptor Suggested)> UsingSuggestedDescriptor(SuggestedDescriptor suggested)
+		{
+			return new StateHolder<(ColumnDescriptor? Current, SuggestedDescriptor Suggested)>(this, (suggested.Descriptor, suggested),
+				static v => (v.CurrentDescriptor, v._suggestedDescriptor),
+				static (v, f) => (v.CurrentDescriptor, v._suggestedDescriptor) = f);
 		}
 
 		public StateHolder<NewExpression?> UsingDisableNew(NewExpression? disableNew)
@@ -2725,7 +2746,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (CurrentDescriptor?.ValueConverter == null && Builder.CanBeConstant(node) && Builder.CanBeEvaluatedOnClient(node) && !_buildFlags.HasFlag(BuildFlags.ForceParameter))
 				{
-					sql = Builder.BuildConstant(MappingSchema, node, CurrentDescriptor);
+					sql = Builder.BuildConstant(MappingSchema, node, ConstantDescriptor);
 				}
 
 				var needParameter = sql == null;
@@ -2961,7 +2982,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			return base.VisitContextRefExpression(node);
 		}
 
-		public ColumnDescriptor? SuggestColumnDescriptor(Expression expr)
+		readonly record struct SuggestedDescriptor(ColumnDescriptor? Descriptor, ColumnDescriptor? ForConstants);
+
+		SuggestedDescriptor SuggestColumnDescriptor(Expression expr)
 		{
 			expr = expr.Unwrap();
 
@@ -2973,17 +2996,38 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			if (converted is not SqlPlaceholderExpression placeholderTest)
-				return null;
+				return default;
 
 			// Asked for typing: whatever is written down on the other side of this expression takes its terms from
 			// here, so a column that cannot lend its declared width - one reached through a SUM - is not offered.
-			var descriptor = QueryHelper.GetColumnDescriptorForTyping(placeholderTest.Sql);
-			return descriptor;
+			return SuggestColumnDescriptor(QueryHelper.GetColumnDescriptorForTyping(placeholderTest.Sql), placeholderTest.Sql);
 		}
 
-		public ColumnDescriptor? SuggestColumnDescriptor(Expression expr1, Expression expr2)
+		SuggestedDescriptor SuggestColumnDescriptor(ColumnDescriptor? descriptor, ISqlExpression expr)
 		{
-			return SuggestColumnDescriptor(expr1) ?? SuggestColumnDescriptor(expr2);
+			// A value computed from a coarse date/time column is not stored in it, so a constant written beside it keeps
+			// its sub-second or time part. A parameter still takes the column's type: it may carry a value read back from it.
+			if (descriptor is { ValueConverter: null } && !QueryHelper.IsStoredValue(expr))
+			{
+				var columnType = descriptor.GetDbDataType(true);
+
+				if (QueryHelper.IsCoarserDateTime(columnType.DataType, MappingSchema.GetDbDataType(columnType.SystemType).DataType))
+					return new(descriptor, null);
+			}
+
+			return new(descriptor, descriptor);
+		}
+
+		SuggestedDescriptor SuggestColumnDescriptor(Expression expr1, Expression expr2)
+		{
+			var suggested = SuggestColumnDescriptor(expr1);
+
+			if (suggested.ForConstants != null)
+				return suggested;
+
+			var other = SuggestColumnDescriptor(expr2);
+
+			return new(suggested.Descriptor ?? other.Descriptor, other.ForConstants);
 		}
 
 		public SqlPlaceholderExpression CreatePlaceholder(ISqlExpression sqlExpression, Expression path)
@@ -3405,7 +3449,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				right = right.Unwrap();
 			}
 
-			ColumnDescriptor? columnDescriptor = null;
+			SuggestedDescriptor columnDescriptor = default;
 			switch (node.NodeType)
 			{
 				case ExpressionType.Add:
@@ -3429,7 +3473,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				case ExpressionType.LessThan:
 				case ExpressionType.LessThanOrEqual:
 				{
-					columnDescriptor = SuggestColumnDescriptor(left) ?? SuggestColumnDescriptor(right);
+					columnDescriptor = SuggestColumnDescriptor(left, right);
 					break;
 				}
 			}
@@ -3441,13 +3485,13 @@ namespace LinqToDB.Internal.Linq.Builder
 					// do nothing
 				}
 				else if (left.Type.UnwrapNullableType() != right.Type.UnwrapNullableType())
-					columnDescriptor = null;
+					columnDescriptor = default;
 			}
 
 			Expression leftExpr;
 			Expression rightExpr;
 
-			using (UsingColumnDescriptor(columnDescriptor))
+			using (UsingSuggestedDescriptor(columnDescriptor))
 			{
 				leftExpr  = UpdateNesting(Visit(left));
 				rightExpr = UpdateNesting(Visit(right));
@@ -4217,7 +4261,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var nullability = NullabilityContext.GetContext(BuildContext.SelectQuery);
 
 			using var saveFlags      = UsingBuildFlags((_buildFlags | BuildFlags.ForKeys) & ~BuildFlags.ForMemberRoot);
-			using var saveDescriptor = UsingColumnDescriptor(SuggestColumnDescriptor(left, right));
+			using var saveDescriptor = UsingSuggestedDescriptor(SuggestColumnDescriptor(left, right));
 
 			var leftExpr = Visit(left);
 			if (leftExpr is SqlErrorExpression errorLeft)
@@ -4939,7 +4983,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					SqlPlaceholderExpression? leftPlaceholder;
 					SqlPlaceholderExpression? rightPlaceholder;
 
-					using (UsingColumnDescriptor(SuggestColumnDescriptor(operand, value)))
+					using (UsingSuggestedDescriptor(SuggestColumnDescriptor(operand, value)))
 					{
 						leftPlaceholder  = Visit(operand) as SqlPlaceholderExpression;
 						rightPlaceholder = Visit(value) as SqlPlaceholderExpression;
@@ -5044,6 +5088,12 @@ namespace LinqToDB.Internal.Linq.Builder
 						if (e is ISqlExpression expr)
 						{
 							var type = QueryHelper.GetDbDataType(expr, context.MappingSchema);
+
+							// A computed value has no stored precision to match, so narrowing the literal to it would only
+							// drop the literal's sub-second or time part. A stored column still lends its type.
+							if (QueryHelper.IsCoarserDateTime(type.DataType, context.DataType) && !QueryHelper.IsStoredColumn(expr))
+								return true;
+
 							context.DataType  = type.DataType;
 							context.DbType    = type.DbType;
 							context.Length    = type.Length;
@@ -5122,7 +5172,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (expr == null)
 				return null;
 
-			using (UsingColumnDescriptor(QueryHelper.GetColumnDescriptor(expr)))
+			using (UsingColumnDescriptorBeside(QueryHelper.GetColumnDescriptor(expr), expr))
 			{
 				switch (arr.NodeType)
 				{
@@ -5150,7 +5200,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						if (Builder.CanBeEvaluatedOnClient(arr))
 						{
-							var parameter = Builder.ParametersContext.BuildParameter(BuildContext, arr, CurrentDescriptor, buildParameterType : ParametersContext.BuildParameterType.InPredicate);
+							// The collection is written into the SQL as values, so it takes the terms a constant would.
+							var parameter = Builder.ParametersContext.BuildParameter(BuildContext, arr, ConstantDescriptor, buildParameterType : ParametersContext.BuildParameterType.InPredicate);
 
 							if (parameter != null)
 							{
@@ -5182,7 +5233,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			SqlPlaceholderExpression? objExpr;
 			SqlPlaceholderExpression? argExpr;
 
-			using (UsingColumnDescriptor(descriptor))
+			using (UsingSuggestedDescriptor(descriptor))
 			{
 				objExpr = Visit(e.Object) as SqlPlaceholderExpression;
 				argExpr = Visit(e.Arguments[0]) as SqlPlaceholderExpression;

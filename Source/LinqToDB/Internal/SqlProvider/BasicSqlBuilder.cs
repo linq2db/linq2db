@@ -2967,6 +2967,36 @@ namespace LinqToDB.Internal.SqlProvider
 			BuildExpression(GetPrecedence(predicate), predicate.SubQuery);
 		}
 
+		/// <summary>
+		/// The type an IN-list value is written with: the tested expression's, except beside a value computed from a
+		/// coarse date/time column, or from a decimal column without a value converter - MIN/MAX, COALESCE, a value
+		/// window function - where it takes the mapping schema's type for the value.
+		/// </summary>
+		/// <remarks>
+		/// A computed value has no stored width or scale to match, so narrowing the value to the column's would only
+		/// lose its sub-second part, its time part or its decimal digits. The schema's decimal type has a fixed scale,
+		/// so a value finer than that still loses digits (#6064). Any other column type still lends itself, because
+		/// it may name how the value is stored - a <see cref="Guid"/> as text or as binary - and so does a decimal
+		/// column with a value converter: the values are in its stored terms.
+		/// </remarks>
+		internal DbDataType GetInListValueType(ISqlExpression expr1, DbDataType expr1Type, object? value)
+		{
+			if (value != null && !QueryHelper.IsStoredColumn(expr1))
+			{
+				var valueType = MappingSchema.GetDbDataType(value.GetType());
+
+				if (QueryHelper.IsCoarserDateTime(expr1Type.DataType, valueType.DataType))
+					return valueType;
+
+				if (IsDecimal(expr1Type.DataType) && IsDecimal(valueType.DataType) && QueryHelper.GetColumnDescriptorForTyping(expr1) is { ValueConverter: null })
+					return valueType;
+			}
+
+			return expr1Type;
+
+			static bool IsDecimal(DataType dataType) => dataType is DataType.Decimal or DataType.Decimal32 or DataType.Decimal64 or DataType.Decimal128 or DataType.Decimal256;
+		}
+
 		protected virtual void BuildInListPredicate(SqlPredicate.InList predicate)
 		{
 			var values = predicate.Values;
@@ -3130,7 +3160,7 @@ namespace LinqToDB.Internal.SqlProvider
 					if (value is ISqlExpression expression)
 						BuildExpression(expression);
 					else
-						BuildValue(dbDataType, value);
+						BuildValue(GetInListValueType(predicate.Expr1, dbDataType, value), value);
 
 					StringBuilder.Append(InlineComma);
 				}

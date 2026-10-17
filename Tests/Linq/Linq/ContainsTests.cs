@@ -481,5 +481,62 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
+
+		sealed class ScaledDecimalRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Decimal, Precision = 18, Scale = 2)]
+			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Decimal64, Precision = 18, Scale = 2)]
+			public decimal Value { get; set; }
+		}
+
+		/// <summary>
+		/// A captured value finer than an aggregated column's scale is compared as written, not narrowed to the column's
+		/// scale: MAX is a computed value with no stored scale to match.
+		/// </summary>
+		/// <remarks>
+		/// SqlCe is left out because it compares a decimal literal at the other side's scale (#6062).
+		/// </remarks>
+		[Test]
+		public void CapturedListBesideAggregateKeepsValueScale([DataSources(TestProvName.AllSqlCe)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new ScaledDecimalRow { Id = 1, Value = 1.00m } });
+
+			var finer = new[] { 1.004m };
+
+			var count = t
+				.GroupBy(r => r.Id)
+				.Count(g => finer.Contains(g.Max(r => r.Value)));
+
+			count.ShouldBe(0);
+		}
+
+#if SUPPORTS_DATEONLY
+		sealed class DateOnlyRow
+		{
+			[PrimaryKey] public int      Id  { get; set; }
+			[Column]     public DateOnly Day { get; set; }
+		}
+
+		/// <summary>
+		/// A captured <see cref="DateOnly"/> list beside an aggregate over a <see cref="DateOnly"/> column matches the day.
+		/// </summary>
+		[Test]
+		public void CapturedDateOnlyListBesideAggregate([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new DateOnlyRow { Id = 1, Day = new DateOnly(2026, 6, 1) } });
+
+			var days = new[] { new DateOnly(2026, 6, 1) };
+
+			var count = t
+				.GroupBy(r => r.Id)
+				.Count(g => days.Contains(g.Max(r => r.Day)));
+
+			count.ShouldBe(1);
+		}
+#endif
 	}
 }

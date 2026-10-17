@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -944,6 +945,211 @@ namespace Tests.Linq
 						new CustomNullableDateTimeComparer());
 		}
 
+		/// <summary>
+		/// The date shapes the millisecond functions have to answer over besides the one
+		/// <see cref="Model.LinqDataTypes"/> declares.
+		/// </summary>
+		/// <remarks>
+		/// On ClickHouse, <c>toUnixTimestamp64Milli</c> and <c>toUnixTimestamp64Nano</c> take a <c>DateTime64</c> and
+		/// refuse a whole-second <c>DateTime</c> and a <c>Date32</c> by name; <see cref="Model.LinqDataTypes"/>, which
+		/// the tests above run over, declares <c>DateTime64(3)</c> and so meets neither refusal.
+		/// </remarks>
+		[Table]
+		sealed class CoarseDateShapesRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.DateTime)] public DateTime Value { get; set; }
+
+			[Column(DataType = DataType.Date)]
+			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Date32)]
+			public DateTime Day { get; set; }
+
+			// The only one of the three that reaches back before 1970 on ClickHouse, which rejects DateTime2 and
+			// falls back to its DateTime64(7) default.
+			[Column(DataType = DataType.DateTime2, Precision = 3)]
+			[Column(Configuration = ProviderName.ClickHouse)]
+			public DateTime Wide { get; set; }
+		}
+
+		// June, because a whole-second column carries a wall-clock reading the server resolves in its own zone and
+		// no daylight-saving transition falls inside this month in either hemisphere.
+		static readonly DateTime CoarseValue = new(2026, 6, 1, 10, 0, 0);
+
+		static TempTable<CoarseDateShapesRow> SeedCoarse(IDataContext db, DateTime? wide = null)
+		{
+			var t = db.CreateLocalTable<CoarseDateShapesRow>();
+
+			try
+			{
+				db.Insert(new CoarseDateShapesRow
+				{
+					Id    = 1,
+					Value = CoarseValue,
+					Day   = CoarseValue.Date,
+					Wide  = wide ?? CoarseValue,
+				});
+			}
+			catch
+			{
+				t.Dispose();
+				throw;
+			}
+
+			return t;
+		}
+
+		[Test]
+		[ActiveIssue(5965, Configurations = [TestProvName.AllOracle, TestProvName.AllYdb], ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}2026-06-01T10:00:00.2260000{1}but was")]
+		public void DateAddMillisecondOverASecondPrecisionColumn([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
+		{
+			var value = CoarseValue;
+
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarse(db);
+
+			var function = t
+				.Select(r => Sql.AsSql(Sql.DateAdd(Sql.DateParts.Millisecond, 226, r.Value)))
+				.Single();
+
+			function.ShouldBe(value.AddMilliseconds(226), new CustomNullableDateTimeComparer());
+
+			var member = t
+				.Select(r => Sql.AsSql(r.Value.AddMilliseconds(226)))
+				.Single();
+
+			member.ShouldBe(value.AddMilliseconds(226), new CustomDateTimeComparer());
+		}
+
+		/// <summary>
+		/// The same two calls over a column stored as a date, which the functions refuse separately from a
+		/// whole-second timestamp.
+		/// </summary>
+		[Test]
+		[ActiveIssue(5965, Configuration = TestProvName.AllSqlServer2008Plus, ErrorMessage = "is not supported by date function dateadd for data type date")]
+		[ActiveIssue(5965, Configurations = [TestProvName.AllFirebird, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllYdb], ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}2026-06-01T00:00:00.2260000{1}but was")]
+		[ActiveIssue(5965, Configuration = TestProvName.AllDB2, ErrorMessage = "SQL0182N")]
+		public void DateAddMillisecondOverADateColumn([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
+		{
+			var day = CoarseValue.Date;
+
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarse(db);
+
+			var function = t
+				.Select(r => Sql.AsSql(Sql.DateAdd(Sql.DateParts.Millisecond, 226, r.Day)))
+				.Single();
+
+			function.ShouldBe(day.AddMilliseconds(226), new CustomNullableDateTimeComparer());
+
+			var member = t
+				.Select(r => Sql.AsSql(r.Day.AddMilliseconds(226)))
+				.Single();
+
+			member.ShouldBe(day.AddMilliseconds(226), new CustomDateTimeComparer());
+		}
+
+		[Test]
+		[ActiveIssue(5965, Configuration = TestProvName.AllSqlServer2008Plus, ErrorMessage = "is not supported by date function datepart for data type date")]
+		[ActiveIssue(5965, Configuration = TestProvName.AllFirebird, ErrorMessage = "Specified EXTRACT part does not exist in input datatype")]
+		[ActiveIssue(5965, Configuration = TestProvName.AllOracle, ErrorMessage = "ORA-01821")]
+		public void DatePartMillisecondOverADateColumn([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarse(db);
+
+			var function = t
+				.Select(r => Sql.AsSql(Sql.DatePart(Sql.DateParts.Millisecond, r.Day)))
+				.Single();
+
+			function.ShouldBe(0);
+
+			var member = t
+				.Select(r => Sql.AsSql(r.Day.Millisecond))
+				.Single();
+
+			member.ShouldBe(0);
+		}
+
+		/// <summary>
+		/// The millisecond of a timestamp before 1970.
+		/// </summary>
+		/// <remarks>
+		/// The part is taken from the epoch, which is negative there, and a truncating <c>%</c> carries the sign
+		/// into the answer. Asked over the wide column because it is the only one of the three that can hold such a
+		/// date - a ClickHouse <c>DateTime</c> starts at 1970. YDB is left out because its <c>Timestamp</c> starts there
+		/// too and the driver overflows on insert.
+		/// </remarks>
+		[Test]
+		[ActiveIssue(5965, Configuration = TestProvName.AllOracle, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}500{1}but was")]
+		public void DatePartMillisecondBeforeTheEpoch([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql, TestProvName.AllYdb)] string context)
+		{
+			var wide = new DateTime(1969, 1, 1, 0, 0, 0, 500);
+
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarse(db, wide);
+
+			var function = t
+				.Select(r => Sql.AsSql(Sql.DatePart(Sql.DateParts.Millisecond, r.Wide)))
+				.Single();
+
+			function.ShouldBe(wide.Millisecond);
+
+			var member = t
+				.Select(r => Sql.AsSql(r.Wide.Millisecond))
+				.Single();
+
+			member.ShouldBe(wide.Millisecond);
+		}
+
+		/// <summary>
+		/// The millisecond part of a column that cannot hold one.
+		/// </summary>
+		/// <remarks>
+		/// The asserted value carries nothing - a whole-second column has no fractional part, so every wrong
+		/// coercion answers zero as well. What this pins is that the query runs: without one, the server refuses
+		/// <c>toUnixTimestamp64Milli</c> the same way it refuses its nanosecond sibling.
+		/// </remarks>
+		[Test]
+		[ActiveIssue(5965, Configuration = TestProvName.AllOracle, ErrorMessage = "ORA-01821")]
+		public void DatePartMillisecondOverASecondPrecisionColumn([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarse(db);
+
+			var function = t
+				.Select(r => Sql.AsSql(Sql.DatePart(Sql.DateParts.Millisecond, r.Value)))
+				.Single();
+
+			function.ShouldBe(0);
+
+			var member = t
+				.Select(r => Sql.AsSql(r.Value.Millisecond))
+				.Single();
+
+			member.ShouldBe(0);
+		}
+
+		/// <summary>
+		/// An explicit conversion applied to the result of a millisecond <c>DateAdd</c> is carried out.
+		/// </summary>
+		/// <remarks>
+		/// The addition goes through the nanosecond epoch, so the whole-second operand is coerced inside the
+		/// conversion; the conversion itself must still be emitted, or the milliseconds asked to be dropped survive.
+		/// </remarks>
+		[Test]
+		public void ConvertedDateAddMillisecondHonoursTheRequestedType([IncludeDataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarse(db);
+
+			var converted = t
+				.Select(r => Sql.AsSql(Sql.Convert(Sql.Types.DateTime, r.Value.AddMilliseconds(226))))
+				.Single();
+
+			converted.ShouldBe(CoarseValue);
+		}
+
 		[Test]
 		public void AddYears([DataSources] string context)
 		{
@@ -1666,6 +1872,511 @@ namespace Tests.Linq
 				AreEqual(
 				from t in from p in Types select Sql.MakeDateTime(2010, p.ID, 1, 20, 35, 44) where t.Value.Year == 2010 select t,
 					from t in from p in db.Types select Sql.MakeDateTime(2010, p.ID, 1, 20, 35, 44) where t.Value.Year == 2010 select t);
+		}
+
+		static readonly DateTime SubSecondBoundary = new(2010, 1, 1, 10, 0, 0, 500);
+
+		/// <summary>
+		/// A literal compared with a computed date keeps its sub-second part, whatever type the computed side reports.
+		/// </summary>
+		[Test]
+		[ActiveIssue(5998, Configuration = TestProvName.AllAccessOdbc, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}12{1}but was")]
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void MakeDateTimeComparedWithSubSecondLiteral([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var total = db.Types.Count();
+
+			var below = db.Types.Count(p => Sql.MakeDateTime(2010, 1, 1, 10, 0, p.ID % 1)!.Value < SubSecondBoundary);
+
+			below.ShouldBe(total);
+
+			var notBelow = db.Types.Count(p => Sql.MakeDateTime(2010, 1, 1, 10, 0, p.ID % 1)!.Value >= SubSecondBoundary);
+
+			notBelow.ShouldBe(0);
+
+			var equal = db.Types.Count(p => Sql.MakeDateTime(2010, 1, 1, 10, 0, p.ID % 1)!.Value == SubSecondBoundary);
+
+			equal.ShouldBe(0);
+		}
+
+		static readonly DateTime CoarseSubSecondBoundary = CoarseValue.AddMilliseconds(500);
+
+		/// <summary>
+		/// A cast that coarsens a column's type is a computed value too: the literal beside it keeps its sub-second part.
+		/// </summary>
+		[Test]
+		[ActiveIssue(5998, Configuration = TestProvName.AllAccessOdbc, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}1{1}but was")]
+		public void CoarseningCastComparedWithSubSecondLiteral([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarse(db, CoarseValue.AddMilliseconds(250));
+
+			var below = t.Count(r => Sql.Convert(Sql.Types.DateTime, r.Wide) < CoarseSubSecondBoundary);
+
+			below.ShouldBe(1);
+
+			var notBelow = t.Count(r => Sql.Convert(Sql.Types.DateTime, r.Wide) >= CoarseSubSecondBoundary);
+
+			notBelow.ShouldBe(0);
+
+			var equal = t.Count(r => Sql.Convert(Sql.Types.DateTime, r.Wide) == CoarseSubSecondBoundary);
+
+			equal.ShouldBe(0);
+		}
+
+		/// <summary>
+		/// An aggregate over a coarse column is a computed value too: the literal beside it keeps its time part.
+		/// </summary>
+		[Test]
+		[ActiveIssue(5998, Configuration = TestProvName.AllAccessOdbc, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}1{1}but was")]
+		public void CoarseAggregateComparedWithFinerLiteral([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarse(db);
+
+			var maxDayBelow = t
+				.GroupBy(r => r.Id)
+				.Where(g => g.Max(r => r.Day) < CoarseValue)
+				.Count();
+
+			maxDayBelow.ShouldBe(1);
+
+			var minDayNotBelow = t
+				.GroupBy(r => r.Id)
+				.Where(g => g.Min(r => r.Day) >= CoarseValue)
+				.Count();
+
+			minDayNotBelow.ShouldBe(0);
+
+			var maxValueBelow = t
+				.GroupBy(r => r.Id)
+				.Where(g => g.Max(r => r.Value) < CoarseSubSecondBoundary)
+				.Count();
+
+			maxValueBelow.ShouldBe(1);
+
+			var maxValueEqual = t
+				.GroupBy(r => r.Id)
+				.Where(g => g.Max(r => r.Value) == CoarseSubSecondBoundary)
+				.Count();
+
+			maxValueEqual.ShouldBe(0);
+		}
+
+		/// <summary>
+		/// A literal in an IN list beside an aggregate over a coarse column keeps its sub-second part, as it does
+		/// in a comparison.
+		/// </summary>
+		[Test]
+		[ActiveIssue(5998, Configuration = TestProvName.AllAccessOdbc, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was")]
+		[ActiveIssue(6047, Configuration = TestProvName.AllAccessOleDb, ErrorMessage = "Cannot have aggregate function in WHERE clause")]
+		public void CoarseAggregateInListKeepsLiteralTime([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarse(db);
+
+			var inList = t
+				.GroupBy(r => r.Id)
+				.Where(g => g.Max(r => r.Value).In(CoarseSubSecondBoundary))
+				.Count();
+
+			inList.ShouldBe(0);
+
+			var arrayContains = t
+				.GroupBy(r => r.Id)
+				.Where(g => new[] { CoarseSubSecondBoundary }.Contains(g.Max(r => r.Value)))
+				.Count();
+
+			arrayContains.ShouldBe(0);
+
+			var sequenceContains = t
+				.GroupBy(r => r.Id)
+				.Select(g => g.Max(r => r.Value))
+				.Contains(CoarseSubSecondBoundary);
+
+			sequenceContains.ShouldBeFalse();
+		}
+
+		/// <summary>
+		/// The values of a captured collection, written into the IN list when the SQL is built, keep their sub-second
+		/// part beside an aggregate over a coarse column too.
+		/// </summary>
+		[Test]
+		[ActiveIssue(5998, Configuration = TestProvName.AllAccessOdbc, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was")]
+		public void CoarseAggregateCapturedListKeepsValueTime([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarse(db);
+
+			var subSecond = new[] { CoarseSubSecondBoundary };
+
+			var subSecondCount = t
+				.GroupBy(r => r.Id)
+				.Where(g => subSecond.Contains(g.Max(r => r.Value)))
+				.Count();
+
+			subSecondCount.ShouldBe(0);
+
+			var whole = new[] { CoarseValue };
+
+			var wholeCount = t
+				.GroupBy(r => r.Id)
+				.Where(g => whole.Contains(g.Max(r => r.Value)))
+				.Count();
+
+			wholeCount.ShouldBe(1);
+		}
+
+		sealed class CoarseDayPairRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Date)] public DateTime? ClosedOn { get; set; }
+			[Column(DataType = DataType.Date)] public DateTime  OpenedOn { get; set; }
+
+			[Column(DataType = DataType.DateTime)] public DateTime Value { get; set; }
+		}
+
+		/// <summary>
+		/// An IN list beside a date computed from date columns, or cast to a date, matches the day at midnight and not
+		/// a time within it, whether its values are written inline or come from a captured collection.
+		/// </summary>
+		[Test]
+		[ActiveIssue(6050, Configuration = TestProvName.AllSybase, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was")]
+		public void ComputedDateInListMatchesMidnight([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[]
+			{
+				new CoarseDayPairRow { Id = 1, ClosedOn = null, OpenedOn = CoarseMidnight, Value = CoarseValue },
+			});
+
+			var midnight = new[] { CoarseMidnight };
+			var withTime = new[] { CoarseValue };
+
+			var coalesceCaptured = t
+				.Count(r => midnight.Contains(r.ClosedOn ?? r.OpenedOn));
+
+			coalesceCaptured.ShouldBe(1);
+
+			var coalesceInline = t
+				.Count(r => (r.ClosedOn ?? r.OpenedOn).In(CoarseMidnight));
+
+			coalesceInline.ShouldBe(1);
+
+			var castCaptured = t
+				.Count(r => midnight.Contains(Sql.Convert(Sql.Types.Date, r.Value)));
+
+			castCaptured.ShouldBe(1);
+
+			var coalesceWithTime = t
+				.Count(r => withTime.Contains(r.ClosedOn ?? r.OpenedOn));
+
+			coalesceWithTime.ShouldBe(0);
+		}
+
+		/// <summary>
+		/// An IN list of date columns beside a date computed from date columns matches the same day.
+		/// </summary>
+		[Test]
+		public void ComputedDateInListOfDateColumns([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[]
+			{
+				new CoarseDayPairRow { Id = 1, ClosedOn = null, OpenedOn = CoarseMidnight, Value = CoarseValue },
+			});
+
+			var count = t
+				.Count(r => (r.ClosedOn ?? r.OpenedOn).In(r.OpenedOn));
+
+			count.ShouldBe(1);
+		}
+
+		/// <summary>
+		/// A literal set beside an aggregate over a coarse column in a set operation keeps its time part.
+		/// </summary>
+		[Test]
+		[ActiveIssue(Configuration = TestProvName.AllInformix, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			Details = "no-issue: the server rejects a datetime literal set beside a DATETIME YEAR TO DAY aggregate; master fails the same query on To_Date.")]
+		[ActiveIssue(Configuration = TestProvName.AllFirebird, ErrorMessage = "Datatypes are not comparable in expression UNION",
+			Details = "no-issue: the server rejects a UNION of DATE and TIMESTAMP.")]
+		[ActiveIssue(6050, Configuration = TestProvName.AllSybase, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should contain{0}2026-06-01T10:00:00.0000000{1}but")]
+		[ActiveIssue(5998, Configuration = TestProvName.AllAccessOdbc, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should contain{0}2026-06-01T10:00:00.5000000{1}but")]
+		[ActiveIssue(6049, Configuration = TestProvName.AllMySql, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should contain{0}2026-06-01T10:00:00.5000000{1}but")]
+		public void CoarseAggregateSetOperationKeepsLiteralTime([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarse(db);
+
+			var days = t
+				.GroupBy(r => r.Id)
+				.Select(g => g.Max(r => r.Day))
+				.Concat(t.Select(r => CoarseValue))
+				.ToArray();
+
+			days.ShouldContain(CoarseValue);
+
+			var values = t
+				.GroupBy(r => r.Id)
+				.Select(g => g.Max(r => r.Value))
+				.Concat(t.Select(r => CoarseSubSecondBoundary))
+				.ToArray();
+
+			values.ShouldContain(CoarseSubSecondBoundary);
+		}
+
+		/// <summary>
+		/// A literal set beside a percentile ordered by a date column keeps its time part: the percentile reaches no
+		/// column, and is typed with the schema default as before the coarse-value typing.
+		/// </summary>
+		/// <remarks>
+		/// DB2 is left out: it accepts only a numeric sort key for <c>PERCENTILE_DISC</c>.
+		/// </remarks>
+		[Test]
+		public void PercentileOverDateSetOperationKeepsLiteralTime([IncludeDataSources(TestProvName.AllPostgreSQL95Plus, TestProvName.AllOracle, TestProvName.AllDuckDB)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[]
+			{
+				new CoarseDayPairRow { Id = 1, OpenedOn = CoarseMidnight, Value = CoarseValue },
+			});
+
+			var values = t
+				.GroupBy(r => r.Id)
+				.Select(g => g.PercentileDisc(0.5, (e, f) => f.OrderBy(e.OpenedOn)))
+				.Concat(t.Select(r => CoarseValue))
+				.ToArray();
+
+			values.ShouldContain(CoarseValue);
+		}
+
+		/// <summary>
+		/// A literal set beside a conditional over date columns keeps its time part: the conditional is a computed
+		/// value, not a stored column.
+		/// </summary>
+		[Test]
+		[ActiveIssue(Configuration = TestProvName.AllFirebird, ErrorMessage = "Datatypes are not comparable in expression UNION",
+			Details = "no-issue: the server rejects a UNION of DATE and TIMESTAMP; master answered by truncating the literal to 00:00.")]
+		[ActiveIssue(Configuration = TestProvName.AllInformix, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			Details = "no-issue: the server rejects a datetime literal set beside a DATETIME YEAR TO DAY conditional; master fails the same query.")]
+		[ActiveIssue(6050, Configuration = TestProvName.AllSybase, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should contain{0}2026-06-01T10:00:00.0000000{1}but")]
+		public void ConditionalOverDateSetOperationKeepsLiteralTime([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[]
+			{
+				new CoarseDayPairRow { Id = 1, OpenedOn = CoarseMidnight, Value = CoarseValue },
+			});
+
+			var values = t
+				.Select(r => r.Id > 0 ? r.OpenedOn : r.ClosedOn!.Value)
+				.Concat(t.Select(r => CoarseValue))
+				.ToArray();
+
+			values.ShouldContain(CoarseValue);
+		}
+
+		static readonly DateTime CoarseMidnight = new(2026, 6, 1);
+
+		/// <summary>
+		/// A literal beside a cast to a date in a set operation takes the date type, as before the coarse-value typing:
+		/// the cast reaches no column, and some servers refuse a set operation over DATE and TIMESTAMP.
+		/// </summary>
+		[Test]
+		public void DateCastSetOperationTypesTheLiteralAsDate([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarse(db);
+
+			var days = t
+				.Select(r => r.Value.Date)
+				.Concat(t.Select(r => CoarseMidnight))
+				.ToArray();
+
+			days.ShouldBe([CoarseMidnight, CoarseMidnight]);
+		}
+
+		/// <summary>
+		/// A cast to a date shares a result column with a date column, or with the date part of a timestamp, as the
+		/// same type.
+		/// </summary>
+		[Test]
+		public void DateCastSharesAResultColumnWithADate([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarse(db);
+
+			var union = t
+				.Select(r => Sql.Convert(Sql.Types.Date, r.Value))
+				.Concat(t.Select(r => r.Day))
+				.ToArray();
+
+			union.ShouldBe([CoarseMidnight, CoarseMidnight]);
+
+			var conditional = t
+				.Select(r => r.Id > 0 ? r.Value.Date : Sql.Convert(Sql.Types.Date, r.Value))
+				.ToArray();
+
+			conditional.ShouldBe([CoarseMidnight]);
+		}
+
+		/// <summary>
+		/// A cast to a date compared with a timestamp at that date's midnight is equal to it.
+		/// </summary>
+		[Test]
+		public void DateCastComparedWithMidnightTimestamp([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarse(db);
+
+			var equal = t.Count(r => Sql.Convert(Sql.Types.Date, r.Value) == CoarseMidnight);
+
+			equal.ShouldBe(1);
+
+			var below = t.Count(r => Sql.Convert(Sql.Types.Date, r.Value) < CoarseMidnight);
+
+			below.ShouldBe(0);
+
+			var equalReversed = t.Count(r => CoarseMidnight == Sql.Convert(Sql.Types.Date, r.Value));
+
+			equalReversed.ShouldBe(1);
+		}
+
+		/// <summary>
+		/// A CTE column computed from a coarse column is a computed value too: the literal beside it keeps its time part.
+		/// </summary>
+		[Test]
+		public void CoarseAggregateCteColumnComparedWithFinerLiteral([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarse(db);
+
+			var cte = t
+				.GroupBy(r => r.Id)
+				.Select(g => new
+				{
+					Day   = g.Max(r => r.Day),
+					Value = g.Max(r => r.Value),
+				})
+				.AsCte();
+
+			var dayBelow = cte.Count(c => c.Day < CoarseValue);
+
+			dayBelow.ShouldBe(1);
+
+			var valueBelow = cte.Count(c => c.Value < CoarseSubSecondBoundary);
+
+			valueBelow.ShouldBe(1);
+
+			var valueEqual = cte.Count(c => c.Value == CoarseSubSecondBoundary);
+
+			valueEqual.ShouldBe(0);
+		}
+
+		sealed class ShiftHourConverter() : ValueConverter<DateTime, DateTime>(v => v.AddHours(-1), v => v.AddHours(1), false);
+		sealed class ShiftDayConverter () : ValueConverter<DateTime, DateTime>(v => v.AddDays(-1),  v => v.AddDays(1),  false);
+
+		[Table]
+		sealed class CoarseConvertedRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.DateTime), ValueConverter(ConverterType = typeof(ShiftHourConverter))]
+			public DateTime Value { get; set; }
+
+			[Column(DataType = DataType.Date), ValueConverter(ConverterType = typeof(ShiftDayConverter))]
+			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Date32)]
+			public DateTime Day { get; set; }
+		}
+
+		static readonly DateTime CoarseConvertedDay = CoarseValue.Date;
+
+		/// <summary>
+		/// A value compared with an aggregate over a coarse converted column still goes through the column's converter.
+		/// </summary>
+		[Test]
+		public void CoarseConvertedAggregateComparedWithValue([DataSources] string context)
+		{
+			var value = CoarseValue;
+			var day   = CoarseConvertedDay;
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new CoarseConvertedRow { Id = 1, Value = value, Day = day } });
+
+			var stored = t
+				.Select(r => r.Value)
+				.Single();
+
+			stored.ShouldBe(value);
+
+			var column = t.Count(r => r.Value == value);
+
+			column.ShouldBe(1);
+
+			var maxValueParameter = t
+				.GroupBy(r => r.Id)
+				.Where(g => g.Max(r => r.Value) == value)
+				.Count();
+
+			maxValueParameter.ShouldBe(1);
+
+			var maxValueLiteral = t
+				.GroupBy(r => r.Id)
+				.Where(g => g.Max(r => r.Value) == CoarseValue)
+				.Count();
+
+			maxValueLiteral.ShouldBe(1);
+
+			var minDayParameter = t
+				.GroupBy(r => r.Id)
+				.Where(g => g.Min(r => r.Day) == day)
+				.Count();
+
+			minDayParameter.ShouldBe(1);
+
+			var minDayLiteral = t
+				.GroupBy(r => r.Id)
+				.Where(g => g.Min(r => r.Day) == CoarseConvertedDay)
+				.Count();
+
+			minDayLiteral.ShouldBe(1);
+
+			var values = new[] { value };
+
+			var maxValueCaptured = t
+				.GroupBy(r => r.Id)
+				.Where(g => values.Contains(g.Max(r => r.Value)))
+				.Count();
+
+			maxValueCaptured.ShouldBe(1);
+		}
+
+		/// <summary>
+		/// LAG over a converted column reads the column's values through its converter, and its default as written.
+		/// </summary>
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_LeadLag)]
+		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Ydb, TestProvName.AllMariaDB, ErrorMessage = ErrorHelper.Error_WindowFunction_LeadLagDefault)]
+		public void LagWithDefaultOverAConvertedColumn([SupportsAnalyticFunctionsContext] string context)
+		{
+			var fallback = CoarseValue.AddDays(-7);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[]
+			{
+				new CoarseConvertedRow { Id = 1, Value = CoarseValue,             Day = CoarseConvertedDay },
+				new CoarseConvertedRow { Id = 2, Value = CoarseValue.AddHours(1), Day = CoarseConvertedDay },
+			});
+
+			var lagged = t
+				.OrderBy(r => r.Id)
+				.Select(r => Sql.Window.Lag(r.Value, 1, fallback, w => w.OrderBy(r.Id)))
+				.ToArray();
+
+			lagged.ShouldBe([fallback, CoarseValue]);
 		}
 
 		[Test]
