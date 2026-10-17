@@ -59,6 +59,15 @@ namespace Tests.FpuJit
 		[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl), DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
 		static extern uint _control87(uint newValue, uint mask);
 
+		// msvcrt has no __control87_2
+		[DllImport("ucrtbase.dll", CallingConvention = CallingConvention.Cdecl), DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+		static extern int __control87_2(uint newValue, uint mask, out uint x87, out uint sse);
+
+		// set when a managed exception finds the SSE word masked: the exception resets only the x87 word, so a native
+		// reset came first, and the re-arm on that exception hides it from the control-word checks
+		[ThreadStatic]
+		static bool _nativeReset;
+
 		[DllImport("kernel32.dll"), DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
 		static extern uint SetErrorMode(uint mode);
 
@@ -279,7 +288,8 @@ namespace Tests.FpuJit
 				.Select(r => r[2].Substring(r[1].Length + ":cctor:".Length))
 				.ToList();
 
-			foreach (var unverified in records.Where(r => r[0] == "UNVERIFIED"))
+			// a warm-up record is re-written by every child that runs the initializer
+			foreach (var unverified in Distinct("UNVERIFIED"))
 			{
 				var allowed = AllowedUnverified.FirstOrDefault(a => a.Assembly == unverified[1] && unverified[2].StartsWith(a.MethodPrefix, StringComparison.Ordinal));
 				var failed  = failedInitializers.FirstOrDefault(t => unverified[2].StartsWith(t + "::", StringComparison.Ordinal) || unverified[2].StartsWith(t + "+", StringComparison.Ordinal));
@@ -290,7 +300,7 @@ namespace Tests.FpuJit
 					Console.WriteLine($"unverified (initializer of {failed} faulted) {unverified[1]} {unverified[2]}");
 				else
 				{
-					Console.WriteLine($"ERROR: unverified {unverified[1]} {unverified[2]} — compiling it resets the FPU control word even in a fresh process");
+					Console.WriteLine($"ERROR: unverified {unverified[1]} {unverified[2]} — preparing it resets the FPU control word even in a fresh process");
 					exitCode = ExitEnvironment;
 				}
 			}
@@ -356,7 +366,13 @@ namespace Tests.FpuJit
 
 			// A managed exception resets the control word by its first-chance notification (a failed bind caught in a type
 			// initializer does), so re-arm there: whatever compiles while the exception is handled stays unmasked.
-			AppDomain.CurrentDomain.FirstChanceException += (_, _) => _control87(0, FpuExceptionMask);
+			AppDomain.CurrentDomain.FirstChanceException += (_, _) =>
+			{
+				if (!IsSseUnmasked())
+					_nativeReset = true;
+
+				_control87(0, FpuExceptionMask);
+			};
 
 			var baseDir = AppDomain.CurrentDomain.BaseDirectory;
 			foreach (var asm in ExpectedAssemblies)
@@ -388,6 +404,7 @@ namespace Tests.FpuJit
 				// Code run while preparing (type initializers, native DLL init) can reset the control word,
 				// so re-arm before every method rather than trusting the previous state.
 				_control87(0, FpuExceptionMask);
+				_nativeReset = false;
 
 				if (!IsUnmasked())
 				{
@@ -420,7 +437,7 @@ namespace Tests.FpuJit
 
 				// Whatever compiled after the reset was compiled masked, and a later PrepareMethod on it is a no-op:
 				// continue in a fresh process, retrying this method unless it already faulted.
-				if (!IsUnmasked())
+				if (!IsUnmasked() || _nativeReset)
 				{
 					Write($"FPURESET\t{item.Asm}\t{item.Display}");
 
@@ -676,6 +693,7 @@ namespace Tests.FpuJit
 					continue;
 
 				_control87(0, FpuExceptionMask);
+				_nativeReset = false;
 
 				try
 				{
@@ -688,10 +706,20 @@ namespace Tests.FpuJit
 				catch (TypeInitializationException)
 				{
 				}
+
+				// the initializer resets the word itself, so what it compiled after the reset was compiled masked
+				if (!IsUnmasked() || _nativeReset)
+					write($"UNVERIFIED\t{item.Asm}\t{type}::.cctor()\t{item.Asm}:cctor:{type}");
 			}
 		}
 
 		static bool IsUnmasked() => (_control87(0, 0) & FpuExceptionMask) == 0;
+
+		static bool IsSseUnmasked()
+		{
+			__control87_2(0, 0, out _, out var sse);
+			return (sse & FpuExceptionMask) == 0;
+		}
 
 		static bool IsDependencyFailure(Exception ex) =>
 			ex is TypeLoadException or FileNotFoundException or FileLoadException or BadImageFormatException or MissingMemberException;
