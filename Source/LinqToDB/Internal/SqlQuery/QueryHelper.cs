@@ -5,7 +5,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
 
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
@@ -1410,40 +1409,32 @@ namespace LinqToDB.Internal.SqlQuery
 			}
 		}
 
-		private const string ParamsRegexPattern = /* lang=regex */ @"(?<open>{+)(?<key>\w+)(?<format>:[^}]+)?(?<close>}+)";
-#if SUPPORTS_REGEX_GENERATORS
-		[GeneratedRegex(ParamsRegexPattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture)]
-		private static partial Regex ParamsRegex();
-#else
-		static readonly Regex _paramsRegex = new(ParamsRegexPattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture);
-		static Regex ParamsRegex() => _paramsRegex;
-#endif
-
 		public static string TransformExpressionIndexes<TContext>(TContext context, string expression, Func<TContext, int, int> transformFunc)
 		{
 			ArgumentNullException.ThrowIfNull(expression);
 			ArgumentNullException.ThrowIfNull(transformFunc);
 
-			var str = ParamsRegex().Replace(expression, match =>
+			var items = FormattableStringHelper.ParseFormatItems(expression);
+
+			if (items == null || items.Count == 0)
+				return expression;
+
+			using var sb = Pools.StringBuilder.Allocate();
+
+			var last = 0;
+
+			foreach (var item in items)
 			{
-				string open   = match.Groups["open"].Value;
-				string key    = match.Groups["key"].Value;
+				sb.Value
+					.Append(expression, last, item.IndexStart - last)
+					.Append(transformFunc(context, item.Index).ToString(CultureInfo.InvariantCulture));
 
-				//string close  = match.Groups["close"].Value;
-				//string format = match.Groups["format"].Value;
+				last = item.IndexStart + item.IndexLength;
+			}
 
-				if (open.Length % 2 == 0)
-					return match.Value;
+			sb.Value.Append(expression, last, expression.Length - last);
 
-				if (!int.TryParse(key, NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out var idx))
-					return match.Value;
-
-				var newIndex = transformFunc(context, idx);
-
-				return string.Create(CultureInfo.InvariantCulture, $"{{{newIndex}}}");
-			});
-
-			return str;
+			return sb.Value.ToString();
 		}
 
 		public static ISqlExpression ConvertFormatToConcatenation(string format, IReadOnlyList<ISqlExpression> parameters)
@@ -1451,52 +1442,29 @@ namespace LinqToDB.Internal.SqlQuery
 			ArgumentNullException.ThrowIfNull(format);
 			ArgumentNullException.ThrowIfNull(parameters);
 
-			string StripDoubleQuotes(string str)
-			{
-				str = str.Replace("{{", "{", StringComparison.Ordinal);
-				str = str.Replace("}}", "}", StringComparison.Ordinal);
-				return str;
-			}
+			var items = FormattableStringHelper.ParseFormatItems(format);
 
-			var matches = ParamsRegex().Matches(format);
-
-			var parts             = new List<ISqlExpression>();
-			var lastMatchPosition = 0;
-
-			foreach (Match? match in matches)
-			{
-				if (match == null)
-					continue;
-
-				var open = match.Groups["open"].Value;
-				var key  = match.Groups["key"].Value;
-
-				if (open.Length % 2 == 0)
-					continue;
-
-				if (!int.TryParse(key, NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out var idx))
-					continue;
-
-				var brackets = open.Length / 2;
-				if (match.Index > lastMatchPosition)
-				{
-					var value = StripDoubleQuotes(format.Substring(lastMatchPosition, match.Index - lastMatchPosition + brackets));
-					parts.Add(new SqlValue(typeof(string), value));
-				}
-
-				parts.Add(parameters[idx]);
-
-				lastMatchPosition = match.Index + match.Length - brackets;
-			}
-
-			if (parts.Count > 0 && lastMatchPosition < format.Length)
-			{
-				var value = StripDoubleQuotes(format.Substring(lastMatchPosition));
-				parts.Add(new SqlValue(typeof(string), value));
-			}
-
-			if (parts.Count == 0)
+			if (items == null)
 				return new SqlValue(typeof(string), format);
+
+			if (items.Count == 0)
+				return new SqlValue(typeof(string), FormattableStringHelper.Unescape(format, 0, format.Length));
+
+			var parts = new List<ISqlExpression>();
+			var last  = 0;
+
+			foreach (var item in items)
+			{
+				if (item.Start > last)
+					parts.Add(new SqlValue(typeof(string), FormattableStringHelper.Unescape(format, last, item.Start - last)));
+
+				parts.Add(parameters[item.Index]);
+
+				last = item.Start + item.Length;
+			}
+
+			if (last < format.Length)
+				parts.Add(new SqlValue(typeof(string), FormattableStringHelper.Unescape(format, last, format.Length - last)));
 
 			if (parts.Count == 1)
 				return parts[0];
