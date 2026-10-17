@@ -43,6 +43,10 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			return x.WithPrecisionScale(precision, scale);
 		}
 
+		// whether YQL holds the value as Decimal: a decimal mapped to Double or DyNumber has none of Decimal's casts
+		internal static bool IsDecimalStorage(DbDataType type)
+			=> type.DataType is DataType.Decimal or DataType.Money or DataType.SmallMoney;
+
 #if SUPPORTS_COMPOSITE_FORMAT
 		private static readonly CompositeFormat DATE_FORMAT         = CompositeFormat.Parse("Date('{0:yyyy-MM-dd}')");
 		private static readonly CompositeFormat DATE32_FORMAT       = CompositeFormat.Parse("Date32('{0:yyyy-MM-dd}')");

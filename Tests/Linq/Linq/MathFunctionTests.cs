@@ -1260,6 +1260,102 @@ namespace Tests.Linq
 				.ToArray());
 		}
 
+		sealed class RoundDoubleStored
+		{
+			[PrimaryKey                        ] public int     Id { get; set; }
+			[Column(DataType = DataType.Double)] public decimal D  { get; set; }
+			[Column                            ] public int     P  { get; set; }
+		}
+
+		// A decimal stored as Double is not a YQL Decimal: it rounds in Double, not through Decimal casts.
+		[Test]
+		public void Round32([IncludeDataSources(true, TestProvName.AllYdb)] string context, [Values(MidpointRounding.ToEven, MidpointRounding.AwayFromZero)] MidpointRounding mp)
+		{
+			var data = new[]
+			{
+				new RoundDoubleStored { Id = 1, D =  2.5m,  P = 1 },
+				new RoundDoubleStored { Id = 2, D =  3.75m, P = 1 },
+				new RoundDoubleStored { Id = 3, D = -2.5m,  P = 1 },
+				new RoundDoubleStored { Id = 4, D =  1.25m, P = 1 },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var result = mp == MidpointRounding.AwayFromZero
+				? t
+					.OrderBy(r => r.Id)
+					.Select(r => new
+					{
+						None    = Sql.AsSql(Math.Round(r.D, mp)),
+						One     = Sql.AsSql(Math.Round(r.D, 1, mp)),
+						Runtime = Sql.AsSql(Sql.Round(r.D, r.P)),
+					})
+					.ToArray()
+				: t
+					.OrderBy(r => r.Id)
+					.Select(r => new
+					{
+						None    = Sql.AsSql(Math.Round(r.D, mp)),
+						One     = Sql.AsSql(Math.Round(r.D, 1, mp)),
+						Runtime = Sql.AsSql(Sql.RoundToEven(r.D, r.P)),
+					})
+					.ToArray();
+
+			var expected = data
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					None    = Math.Round(r.D, mp),
+					One     = Math.Round(r.D, 1, mp),
+					Runtime = (decimal?)Math.Round(r.D, r.P, mp),
+				})
+				.ToArray();
+
+			result.ShouldBe(expected);
+		}
+
+		sealed class DecimalStoredDouble
+		{
+			[PrimaryKey                         ] public int    Id { get; set; }
+			[Column(DataType = DataType.Decimal)] public double M  { get; set; }
+			[Column                             ] public double F  { get; set; }
+		}
+
+		// A double stored as Decimal meets a floating operand as a Decimal: YQL rejects Decimal * Double.
+		[Test]
+		public void DecimalStoredDoubleArithmetic([IncludeDataSources(true, TestProvName.AllYdb)] string context)
+		{
+			var data = new[]
+			{
+				new DecimalStoredDouble { Id = 1, M =  2,  F = 0.5  },
+				new DecimalStoredDouble { Id = 2, M = -3,  F = 1.25 },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var result = t
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					Product = Sql.AsSql(r.M * 2.5),
+					Sum     = Sql.AsSql(r.M + r.F),
+				})
+				.ToArray();
+
+			var expected = data
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					Product = r.M * 2.5,
+					Sum     = r.M + r.F,
+				})
+				.ToArray();
+
+			result.ShouldBe(expected);
+		}
+
 		sealed class PowScale
 		{
 			[PrimaryKey                       ] public int     Id { get; set; }

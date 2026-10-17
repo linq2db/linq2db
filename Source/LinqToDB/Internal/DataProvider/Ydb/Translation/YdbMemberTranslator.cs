@@ -743,7 +743,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 			{
 				var factory    = translationContext.ExpressionFactory;
 				var valueType  = factory.GetDbDataType(value);
-				var isDecimal  = valueType.SystemType.UnwrappedNullableType == typeof(decimal);
+				var isDecimal  = valueType.SystemType.UnwrappedNullableType == typeof(decimal) && YdbMappingSchema.IsDecimalStorage(valueType);
 				var isInferred = isDecimal && valueType.Precision == null && valueType.Scale == null;
 
 				// rounding a Decimal to at least its scale is a no-op; with no declared scale the inferred 9 is used, so a
@@ -819,7 +819,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				bool                                                                        awayFromZero,
 				Func<ISqlExpressionFactory, DbDataType, ISqlExpression, ISqlExpression>     roundToInt)
 			{
-				var isDecimal  = valueType.SystemType.UnwrappedNullableType == typeof(decimal);
+				var isDecimal  = valueType.SystemType.UnwrappedNullableType == typeof(decimal) && YdbMappingSchema.IsDecimalStorage(valueType);
 
 				// scale by 10^p in the widened type (exact for Decimal). YQL's DecimalMul demands both operands
 				// carry the identical Decimal type - "Cannot calculate with different decimals: Decimal(6,2) !=

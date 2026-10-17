@@ -131,6 +131,40 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		sealed class DoubleStoredDecimal
+		{
+			[PrimaryKey                        ] public int     Id { get; set; }
+			[Column(DataType = DataType.Double)] public decimal D  { get; set; }
+		}
+
+		// A decimal stored as Double is not a YQL Decimal: it truncates in Double, not through Decimal casts.
+		[Test]
+		public void DoubleStoredDecimalToInt64([IncludeDataSources(true, TestProvName.AllYdb)] string context)
+		{
+			var data = new[]
+			{
+				new DoubleStoredDecimal { Id = 1, D =  2.5m  },
+				new DoubleStoredDecimal { Id = 2, D =  3.75m },
+				new DoubleStoredDecimal { Id = 3, D = -2.5m  },
+				new DoubleStoredDecimal { Id = 4, D = -3.75m },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var query =
+				from r in t
+				orderby r.Id
+				select new
+				{
+					r.Id,
+					D        = Sql.AsSql((long)r.D),
+					DRounded = Sql.AsSql(Convert.ToInt64(r.D)),
+				};
+
+			AssertQuery(query);
+		}
+
 		[Test]
 		public void ToInt([DataSources] string context)
 		{

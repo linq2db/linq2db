@@ -237,10 +237,10 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			var t1 = QueryHelper.GetDbDataType(element.Expr1, MappingSchema);
 			var t2 = QueryHelper.GetDbDataType(element.Expr2, MappingSchema);
 
-			static bool IsFloating(DbDataType t) => t.DataType is DataType.Double or DataType.Single
-				|| t.SystemType.UnwrappedNullableType == typeof(double) || t.SystemType.UnwrappedNullableType == typeof(float);
-			static bool IsDecimal(DbDataType t) => t.DataType == DataType.Decimal
-				|| t.SystemType.UnwrappedNullableType == typeof(decimal);
+			// by storage, not CLR type: a decimal stored as Double counted as both would have its cast to Double folded away
+			// and re-enter here forever, and a double stored as Decimal counted as floating would never be cast
+			static bool IsFloating(DbDataType t) => t.DataType is DataType.Double or DataType.Single;
+			static bool IsDecimal (DbDataType t) => YdbMappingSchema.IsDecimalStorage(t);
 
 			var doubleType = MappingSchema.GetDbDataType(typeof(double));
 
@@ -373,7 +373,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			{
 				var fromType = QueryHelper.GetDbDataType(cast.Expression, MappingSchema);
 
-				if (fromType.DataType == DataType.Decimal || fromType.SystemType.UnwrappedNullableType == typeof(decimal))
+				if (YdbMappingSchema.IsDecimalStorage(fromType))
 				{
 					var scale     = fromType.Scale     ?? YdbMappingSchema.DEFAULT_DECIMAL_SCALE;
 					var precision = fromType.Precision ?? YdbMappingSchema.DEFAULT_DECIMAL_PRECISION;
