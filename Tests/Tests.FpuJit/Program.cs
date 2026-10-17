@@ -686,7 +686,7 @@ namespace Tests.FpuJit
 				}
 				catch (TypeInitializationException ex) when (ex.InnerException is SEHException inner)
 				{
-					write($"FAIL\t{item.Asm}\t{item.Asm}:cctor:{type.FullName}\t{type.FullName}::.cctor()\t{inner.GetType().Name}: {OneLine(inner.Message)}");
+					write($"FAIL\t{item.Asm}\t{item.Asm}:cctor:{type}\t{type}::.cctor()\t{inner.GetType().Name}: {OneLine(inner.Message)}");
 				}
 				catch (TypeInitializationException)
 				{
