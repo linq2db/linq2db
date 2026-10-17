@@ -7,6 +7,7 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Access;
 using LinqToDB.DataProvider.Informix;
+using LinqToDB.DataProvider.MySql;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.SchemaProvider;
 
@@ -255,7 +256,8 @@ public class a_CreateData : TestBase
 		{
 			case string when context.IsAnyOf(TestProvName.AllFirebird)    : RunScript(context,          "COMMIT;", "Firebird", FirebirdAction);    break;
 			case string when context.IsAnyOf(TestProvName.AllPostgreSQL)  : RunScript(context,          "\nGO\n",  "PostgreSQL");                  break;
-			case string when context.IsAnyOf(TestProvName.AllMySql)       : RunScript(context,          "\nGO\n",  "MySql");                       break;
+			case string when context.IsAnyOf(TestProvName.AllMySql)       : EnsureMySqlDatabase(context);
+			                                                                RunScript(context,          "\nGO\n",  "MySql");                       break;
 			case string when context.IsAnyOf(TestProvName.AllSqlServer)   : RunScript(context,          "\nGO\n",  "SqlServer");                   break;
 			case string when context.IsAnyOf(TestProvName.AllSQLiteBase)  : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);
 			                                                                RunScript(context+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction);      break;
@@ -285,6 +287,28 @@ public class a_CreateData : TestBase
 
 				throw new InvalidOperationException(context);
 		}
+	}
+
+	// MySql.sql drops the database its own connection names, so an interrupted run would fail every later one at open.
+	// Raw ADO on an explicit provider: resolving the configuration's provider here would cache MariaDB's detection fallback.
+	static void EnsureMySqlDatabase(string context)
+	{
+		var builder = new DbConnectionStringBuilder { ConnectionString = GetConnectionString(context) };
+
+		if (!builder.TryGetValue("Database", out var database) && !builder.TryGetValue("Initial Catalog", out database))
+			return;
+
+		builder.Remove("Database");
+		builder.Remove("Initial Catalog");
+
+		var provider = MySqlTools.GetDataProvider(MySqlVersion.MySql57, context.IsAnyOf(TestProvName.AllMySqlData) ? MySqlProvider.MySqlData : MySqlProvider.MySqlConnector);
+
+		using var cn = provider.CreateConnection(builder.ConnectionString);
+		cn.Open();
+
+		using var cmd = cn.CreateCommand();
+		cmd.CommandText = $"CREATE DATABASE IF NOT EXISTS `{database}`";
+		cmd.ExecuteNonQuery();
 	}
 
 	static void AccessODBCAction(DbConnection connection)
