@@ -14,6 +14,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<!-- The example credentials CLI (a file-based app) and its documentation; the tests run the example. -->
+		<None Include="..\..\Source\LinqToDB.CLI\CredentialsCli\secrethelper.cs" Link="CredentialsCli\secrethelper.cs" CopyToOutputDirectory="PreserveNewest" />
+		<None Include="..\..\Source\LinqToDB.CLI\CREDENTIALS-CLI.md"               Link="CredentialsCli\CREDENTIALS-CLI.md" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="NUnit" />
 		<PackageReference Include="NUnit.Analyzers" />
 		<PackageReference Include="NUnit3TestAdapter" />

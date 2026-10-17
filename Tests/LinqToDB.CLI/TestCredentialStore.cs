@@ -27,9 +27,9 @@ namespace Tests.LinqToDB.CLI
 			return false;
 		}
 
-		public bool TryStore(string profile, string user, string password, out string? error)
+		public bool TryStore(string name, string user, string password, out string? error)
 		{
-			Credentials[$"linq2db/{profile}"] = (user, password);
+			Credentials[$"linq2db/{name}"] = (user, password);
 			error = null;
 			return true;
 		}
@@ -57,9 +57,9 @@ namespace Tests.LinqToDB.CLI
 			return true;
 		}
 
-		public bool TryRemove(string profile, out bool removed, out string? error)
+		public bool TryRemove(string name, out bool removed, out string? error)
 		{
-			removed = Credentials.Remove($"linq2db/{profile}");
+			removed = Credentials.Remove($"linq2db/{name}");
 			error   = null;
 			return true;
 		}
