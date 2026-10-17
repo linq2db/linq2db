@@ -23,7 +23,9 @@ namespace Tests.Common
 		[TestCase("{a}",                "{a}"                 )]
 		public void TransformExpressionIndexes(string format, string expected)
 		{
-			QueryHelper.TransformExpressionIndexes(0, format, static (_, i) => i + 10).ShouldBe(expected);
+			var result = QueryHelper.TransformExpressionIndexes(0, format, static (_, i) => i + 10);
+
+			result.ShouldBe(expected);
 		}
 
 		[Test]
@@ -31,12 +33,23 @@ namespace Tests.Common
 		{
 			var p0 = new SqlValue(typeof(int), 1);
 
-			var result = QueryHelper.ConvertFormatToConcatenation("a{0}b{{c}}", [p0]).ShouldBeOfType<SqlConcatExpression>();
+			var result = QueryHelper
+				.ConvertFormatToConcatenation("a{0}b{{c}}", [p0])
+				.ShouldBeOfType<SqlConcatExpression>();
 
 			result.Expressions.Length.ShouldBe(3);
-			result.Expressions[0].ShouldBeOfType<SqlValue>().Value.ShouldBe("a");
+
+			result.Expressions[0]
+				.ShouldBeOfType<SqlValue>()
+				.Value
+				.ShouldBe("a");
+
 			result.Expressions[1].ShouldBeSameAs(p0);
-			result.Expressions[2].ShouldBeOfType<SqlValue>().Value.ShouldBe("b{c}");
+
+			result.Expressions[2]
+				.ShouldBeOfType<SqlValue>()
+				.Value
+				.ShouldBe("b{c}");
 		}
 
 		[Test]
@@ -44,13 +57,19 @@ namespace Tests.Common
 		{
 			var p0 = new SqlValue(typeof(int), 1);
 
-			QueryHelper.ConvertFormatToConcatenation("{0,5}", [p0]).ShouldBeSameAs(p0);
+			var result = QueryHelper.ConvertFormatToConcatenation("{0,5}", [p0]);
+
+			result.ShouldBeSameAs(p0);
 		}
 
 		[Test]
 		public void ConvertFormatToConcatenation_NoItems()
 		{
-			QueryHelper.ConvertFormatToConcatenation("a{{b}}", []).ShouldBeOfType<SqlValue>().Value.ShouldBe("a{b}");
+			QueryHelper
+				.ConvertFormatToConcatenation("a{{b}}", [])
+				.ShouldBeOfType<SqlValue>()
+				.Value
+				.ShouldBe("a{b}");
 		}
 
 		[TestCase("a {0} b",     new[] { 0 })]
@@ -63,15 +82,22 @@ namespace Tests.Common
 		[TestCase("{12}",        new[] { 12 })]
 		public void ParseFormatItems(string format, int[] indexes)
 		{
-			var items = FormattableStringHelper.ParseFormatItems(format).ShouldNotBeNull();
+			var items = FormattableStringHelper
+				.ParseFormatItems(format)
+				.ShouldNotBeNull();
 
-			items.Select(i => i.Index).ShouldBe(indexes);
+			items
+				.Select(i => i.Index)
+				.ShouldBe(indexes);
 
 			foreach (var item in items)
 			{
 				format[item.Start].ShouldBe('{');
 				format[item.Start + item.Length - 1].ShouldBe('}');
-				format.Substring(item.IndexStart, item.IndexLength).ShouldBe(item.Index.ToString(System.Globalization.CultureInfo.InvariantCulture));
+
+				format
+					.Substring(item.IndexStart, item.IndexLength)
+					.ShouldBe(item.Index.ToString(System.Globalization.CultureInfo.InvariantCulture));
 			}
 		}
 
@@ -83,7 +109,12 @@ namespace Tests.Common
 		[TestCase("{0 }",       false)]
 		public void ParseFormatItems_HasAlignment(string format, bool hasAlignment)
 		{
-			FormattableStringHelper.ParseFormatItems(format).ShouldNotBeNull().Single().HasAlignment.ShouldBe(hasAlignment);
+			FormattableStringHelper
+				.ParseFormatItems(format)
+				.ShouldNotBeNull()
+				.Single()
+				.HasAlignment
+				.ShouldBe(hasAlignment);
 		}
 
 		[TestCase("{a}")]
@@ -103,7 +134,9 @@ namespace Tests.Common
 		[TestCase("{0:a}}b}")]
 		public void ParseFormatItems_Invalid(string format)
 		{
-			FormattableStringHelper.ParseFormatItems(format).ShouldBeNull();
+			var items = FormattableStringHelper.ParseFormatItems(format);
+
+			items.ShouldBeNull();
 		}
 
 		[Test]
@@ -113,19 +146,31 @@ namespace Tests.Common
 			var create    = FormattableStringHelper.CreateExpression("x {0}", arguments);
 
 			FormattableStringHelper.TrySplit(create, out var format, out var split).ShouldBeTrue();
-			format.ShouldBeOfType<ConstantExpression>().Value.ShouldBe("x {0}");
+
+			format
+				.ShouldBeOfType<ConstantExpression>()
+				.Value
+				.ShouldBe("x {0}");
+
 			split.ShouldBeSameAs(arguments);
 
-			var array = Expression.Parameter(typeof(object[]));
-			FormattableStringHelper.TrySplit(FormattableStringHelper.CreateExpression("x", array), out _, out _).ShouldBeFalse();
-			FormattableStringHelper.TrySplit(Expression.Constant(FormattableStringFactory.Create("x")), out _, out _).ShouldBeFalse();
+			var array        = Expression.Parameter(typeof(object[]));
+			var notArrayInit = FormattableStringHelper.CreateExpression("x", array);
+			var constant     = Expression.Constant(FormattableStringFactory.Create("x"));
+
+			FormattableStringHelper.TrySplit(notArrayInit, out _, out _).ShouldBeFalse();
+			FormattableStringHelper.TrySplit(constant,     out _, out _).ShouldBeFalse();
 		}
 
 		[Test]
 		public void CreateExpression_RoundTrip()
 		{
-			var value  = FormattableStringFactory.Create("{0} {1}", 1, "a");
-			var result = Expression.Lambda<Func<FormattableString>>(FormattableStringHelper.CreateExpression(value)).Compile()();
+			var value   = FormattableStringFactory.Create("{0} {1}", 1, "a");
+			var factory = Expression
+				.Lambda<Func<FormattableString>>(FormattableStringHelper.CreateExpression(value))
+				.Compile();
+
+			var result = factory();
 
 			FormattableStringHelper.AreEqual(value, result, static (a, b) => ((object?[])a!).SequenceEqual((object?[])b!)).ShouldBeTrue();
 		}
@@ -142,8 +187,9 @@ namespace Tests.Common
 			FormattableStringHelper.AreEqual(value, FormattableStringFactory.Create("{0} ",  1), ArgumentsEqual).ShouldBeFalse();
 			FormattableStringHelper.AreEqual(value, FormattableStringFactory.Create("{0}",   2), ArgumentsEqual).ShouldBeFalse();
 
-			FormattableStringHelper.ComputeHashCode(value, ArgumentsHash)
-				.ShouldBe(FormattableStringHelper.ComputeHashCode(FormattableStringFactory.Create("{0}", 1), ArgumentsHash));
+			var expected = FormattableStringHelper.ComputeHashCode(FormattableStringFactory.Create("{0}", 1), ArgumentsHash);
+
+			FormattableStringHelper.ComputeHashCode(value, ArgumentsHash).ShouldBe(expected);
 		}
 
 		sealed class DerivedDataParameter : DataParameter
@@ -183,10 +229,16 @@ namespace Tests.Common
 		[Test]
 		public void PrepareRawSqlArguments_ParameterWrappedArguments()
 		{
-			var elements  = FormattableStringHelper.CreateArgumentsExpression([1, 99, new DataParameter("p", 2)]).Expressions.ToArray();
+			var elements = FormattableStringHelper
+				.CreateArgumentsExpression([1, 99, new DataParameter("p", 2)])
+				.Expressions
+				.ToArray();
+
 			var arguments = Prepare("{0}", false, elements);
 
-			arguments.Select(IsDropped).ShouldBe([false, true, false]);
+			arguments
+				.Select(IsDropped)
+				.ShouldBe([false, true, false]);
 		}
 
 		[Test]
@@ -194,7 +246,9 @@ namespace Tests.Common
 		{
 			var arguments = Prepare("{1} {5}", false, Element(1, typeof(int)), Element(2, typeof(int)), Element(99, typeof(int)));
 
-			arguments.Select(IsDropped).ShouldBe([true, false, true]);
+			arguments
+				.Select(IsDropped)
+				.ShouldBe([true, false, true]);
 		}
 
 		[Test]
@@ -210,25 +264,33 @@ namespace Tests.Common
 				Element(99,                         typeof(object)),
 				Element(new SqlValue(typeof(int), 1), typeof(SqlValue)));
 
-			arguments.Skip(1).ShouldAllBe(a => !IsDropped(a));
+			arguments
+				.Skip(1)
+				.ShouldAllBe(a => !IsDropped(a));
 		}
 
 		[Test]
 		public void PrepareRawSqlArguments_KeepUnreferenced()
 		{
-			Prepare("{0}", true, Element(1, typeof(int)), Element(99, typeof(int))).ShouldAllBe(a => !IsDropped(a));
+			var arguments = Prepare("{0}", true, Element(1, typeof(int)), Element(99, typeof(int)));
+
+			arguments.ShouldAllBe(a => !IsDropped(a));
 		}
 
 		[Test]
 		public void PrepareRawSqlArguments_NoFormatItems()
 		{
-			Prepare("x = ?", false, Element(2, typeof(int))).ShouldAllBe(a => !IsDropped(a));
+			var arguments = Prepare("x = ?", false, Element(2, typeof(int)));
+
+			arguments.ShouldAllBe(a => !IsDropped(a));
 		}
 
 		[Test]
 		public void PrepareRawSqlArguments_InvalidFormat()
 		{
-			Prepare("{a}", false, Element(1, typeof(int)), Element(99, typeof(int))).ShouldAllBe(a => !IsDropped(a));
+			var arguments = Prepare("{a}", false, Element(1, typeof(int)), Element(99, typeof(int)));
+
+			arguments.ShouldAllBe(a => !IsDropped(a));
 		}
 	}
 }

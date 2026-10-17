@@ -218,9 +218,15 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			db.Person.Where(p => p.ID == 1).Select(p => string.Format("{0,5}|{1}", p.ID, p.FirstName)).ToArray().ShouldBe(["    1|John"]);
+			db.Person
+				.Where(p => p.ID == 1)
+				.Select(p => string.Format("{0,5}|{1}", p.ID, p.FirstName))
+				.ToArray()
+				.ShouldBe(["    1|John"]);
 
-			var act = () => db.Person.Where(p => string.Format("{0,5}", p.ID) == "    1").ToArray();
+			var act = () => db.Person
+				.Where(p => string.Format("{0,5}", p.ID) == "    1")
+				.ToArray();
 
 			act.ShouldThrow<LinqToDBException>();
 		}
@@ -232,8 +238,14 @@ namespace Tests.Linq
 
 			var format = "{0x}";
 
-			var select = () => db.Person.Where(p => p.ID == 1).Select(p => string.Format(format, p.FirstName)).ToArray();
-			var where  = () => db.Person.Where(p => string.Format(format, p.FirstName) == "John").ToArray();
+			var select = () => db.Person
+				.Where(p => p.ID == 1)
+				.Select(p => string.Format(format, p.FirstName))
+				.ToArray();
+
+			var where = () => db.Person
+				.Where(p => string.Format(format, p.FirstName) == "John")
+				.ToArray();
 
 			select.ShouldThrow<FormatException>();
 			where.ShouldThrow<LinqToDBException>();

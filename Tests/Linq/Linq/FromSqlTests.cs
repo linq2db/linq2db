@@ -1882,8 +1882,16 @@ namespace Tests.Linq
 
 			var query = db.Person.Where(p => p.ID.In(db.FromSqlScalar<int>(fs)));
 
-			query.AsEnumerable().Select(p => p.ID).ToArray().ShouldBe([1]);
-			query.ToSqlQuery().Parameters.ShouldNotContain(p => Equals(p.Value, 99));
+			query
+				.AsEnumerable()
+				.Select(p => p.ID)
+				.ToArray()
+				.ShouldBe([1]);
+
+			query
+				.ToSqlQuery()
+				.Parameters
+				.ShouldNotContain(p => Equals(p.Value, 99));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
@@ -1895,8 +1903,16 @@ namespace Tests.Linq
 
 			var query = db.Person.Where(p => p.ID == Sql.Expr<int>(fs));
 
-			query.AsEnumerable().Select(p => p.ID).ToArray().ShouldBe([1]);
-			query.ToSqlQuery().Parameters.ShouldNotContain(p => Equals(p.Value, 99));
+			query
+				.AsEnumerable()
+				.Select(p => p.ID)
+				.ToArray()
+				.ShouldBe([1]);
+
+			query
+				.ToSqlQuery()
+				.Parameters
+				.ShouldNotContain(p => Equals(p.Value, 99));
 		}
 
 		// a hand-built tree can pass the FormattableString as a constant, which expose leaves as is
@@ -1909,7 +1925,10 @@ namespace Tests.Linq
 			var call  = (MethodCallExpression)db.FromSql<Person>(fs).Expression;
 			var query = db.Person.Provider.CreateQuery<Person>(call.Update(call.Object, [call.Arguments[0], Expression.Constant(fs, typeof(FormattableString))]));
 
-			query.Select(p => p.ID).ToArray().ShouldBe([2]);
+			query
+				.Select(p => p.ID)
+				.ToArray()
+				.ShouldBe([2]);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
@@ -1922,7 +1941,11 @@ namespace Tests.Linq
 			var p      = Expression.Parameter(typeof(Person), "p");
 			var filter = Expression.Lambda<Func<Person, bool>>(Expression.Equal(Expression.PropertyOrField(p, nameof(Model.Person.ID)), Expression.Call(expr, Expression.Constant(fs, typeof(FormattableString)))), p);
 
-			db.Person.Where(filter).Select(p => p.ID).ToArray().ShouldBe([2]);
+			db.Person
+				.Where(filter)
+				.Select(p => p.ID)
+				.ToArray()
+				.ShouldBe([2]);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
@@ -1971,7 +1994,10 @@ namespace Tests.Linq
 			var sql      = $"SELECT * FROM {QuoteTableName("Person", context)} WHERE {QuoteTableName("PersonID", context)} = ?";
 			var argument = dataParameter ? new DataParameter("p", 2, DataType.Int32) : (object)2;
 
-			db.FromSql<Person>(sql, argument).Select(p => p.ID).ToArray().ShouldBe([2]);
+			db.FromSql<Person>(sql, argument)
+				.Select(p => p.ID)
+				.ToArray()
+				.ShouldBe([2]);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
@@ -1982,8 +2008,16 @@ namespace Tests.Linq
 			var id    = QuoteTableName("PersonID", context);
 			var query = db.FromSql<Person>($"SELECT * FROM {QuoteTableName("Person", context)} WHERE {id} = {{0}} OR {id} = ?", 1, 2);
 
-			query.ToSqlQuery().Parameters.ShouldContain(p => Equals(p.Value, 2));
-			query.Select(p => p.ID).OrderBy(i => i).ToArray().ShouldBe([1, 2]);
+			query
+				.ToSqlQuery()
+				.Parameters
+				.ShouldContain(p => Equals(p.Value, 2));
+
+			query
+				.Select(p => p.ID)
+				.OrderBy(i => i)
+				.ToArray()
+				.ShouldBe([1, 2]);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
@@ -1995,8 +2029,15 @@ namespace Tests.Linq
 
 			var query = db.Person.Where(p => p.ID == Sql.Expr<int>(fs));
 
-			query.ToSqlQuery().Parameters.ShouldContain(p => Equals(p.Value, 2));
-			query.Select(p => p.ID).ToArray().ShouldBe([2]);
+			query
+				.ToSqlQuery()
+				.Parameters
+				.ShouldContain(p => Equals(p.Value, 2));
+
+			query
+				.Select(p => p.ID)
+				.ToArray()
+				.ShouldBe([2]);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/6007")]
