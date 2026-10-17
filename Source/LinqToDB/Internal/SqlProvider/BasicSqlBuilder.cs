@@ -2969,13 +2969,14 @@ namespace LinqToDB.Internal.SqlProvider
 
 		/// <summary>
 		/// The type an IN-list value is written with: the tested expression's, except beside a value computed from a
-		/// column - MIN/MAX, COALESCE, a value window function - or computed from a coarse date/time one, where it
+		/// coarse date/time column, or from a decimal column - MIN/MAX, COALESCE, a value window function - where it
 		/// keeps its own, as a literal does in a comparison.
 		/// </summary>
 		/// <remarks>
 		/// A computed value has no stored width or scale to match, so narrowing the value to the column's would only
-		/// lose its sub-second part, its time part or its decimal digits. A column with a value converter still lends
-		/// its type: the values are in its stored terms.
+		/// lose its sub-second part, its time part or its decimal digits. Any other column type still lends itself,
+		/// because it may name how the value is stored - a <see cref="Guid"/> as text or as binary - and so does a
+		/// column with a value converter: the values are in its stored terms.
 		/// </remarks>
 		internal DbDataType GetInListValueType(ISqlExpression expr1, DbDataType expr1Type, object? value)
 		{
@@ -2983,11 +2984,16 @@ namespace LinqToDB.Internal.SqlProvider
 			{
 				var valueType = MappingSchema.GetDbDataType(value.GetType());
 
-				if (QueryHelper.IsCoarserDateTime(expr1Type.DataType, valueType.DataType) || QueryHelper.GetColumnDescriptorForTyping(expr1) is { ValueConverter: null })
+				if (QueryHelper.IsCoarserDateTime(expr1Type.DataType, valueType.DataType))
+					return valueType;
+
+				if (IsDecimal(expr1Type.DataType) && IsDecimal(valueType.DataType) && QueryHelper.GetColumnDescriptorForTyping(expr1) is { ValueConverter: null })
 					return valueType;
 			}
 
 			return expr1Type;
+
+			static bool IsDecimal(DataType dataType) => dataType is DataType.Decimal or DataType.Decimal32 or DataType.Decimal64 or DataType.Decimal128 or DataType.Decimal256;
 		}
 
 		protected virtual void BuildInListPredicate(SqlPredicate.InList predicate)
