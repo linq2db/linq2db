@@ -6074,12 +6074,13 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		// BuildArrayAggregationFunction reads an inline array through these wrappers as the same list of values. Its chain
-		// methods (Where, Select, OrderBy, Distinct) are not followed: their lambdas would be decided too.
+		// methods (Where, Select, OrderBy, Distinct) are not followed: their lambdas would be decided too. Only the BCL wrappers
+		// are the array itself: LinqExtensions.AsQueryable(IDataContext) is a query of the data context, so it keeps its own path.
 		internal static NewArrayExpression? UnwrapInlineArray(Expression expression)
 		{
 			expression = expression.UnwrapConvert();
 
-			while (expression is MethodCallExpression { IsQueryable: true, Method.Name: nameof(Queryable.AsQueryable) or nameof(Enumerable.AsEnumerable) } wrapper)
+			while (expression is MethodCallExpression wrapper && wrapper.IsSameGenericMethod(Methods.Queryable.AsQueryable, Methods.Enumerable.AsEnumerable))
 				expression = wrapper.Arguments[0];
 
 			return expression as NewArrayExpression;
