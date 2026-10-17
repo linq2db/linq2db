@@ -364,11 +364,13 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			}
 		}
 
+		readonly ICliEnvironment        _environment;
 		readonly QueryExecutionSettings _settings;
 
-		internal QueryExecutionExecutor(QueryExecutionSettings settings)
+		internal QueryExecutionExecutor(ICliEnvironment environment, QueryExecutionSettings settings)
 		{
-			_settings = settings;
+			_environment = environment;
+			_settings    = settings;
 		}
 
 		internal async ValueTask<QueryExecutionResult> Execute(TextWriter outputWriter, CancellationToken cancellationToken)
@@ -379,27 +381,35 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 			try
 			{
-				var result = await ConnectionExecution.RunAsync(
-					new ConnectionSettings(
-						_settings.Profile,
-						_settings.Provider,
-						_settings.ProviderLocation,
-						_settings.User,
-						_settings.Password,
-						_settings.ConnectionString,
-						_settings.CommandTimeout,
-						_settings.LockTimeout,
-						null,
-						_settings.Impersonate,
-						_settings.ImpersonateMode,
-						null),
-					(dataOptions, dataProvider, token) => ExecuteValidatedDatabaseLoop(dataOptions, dataProvider, sql, outputWriter, token),
-					cancellationToken);
+				var connectionSettings = new ConnectionSettings(
+					_settings.Profile,
+					_settings.Provider,
+					_settings.ProviderLocation,
+					_settings.User,
+					_settings.Password,
+					_settings.ConnectionString,
+					_settings.CommandTimeout,
+					_settings.LockTimeout,
+					null,
+					_settings.Impersonate,
+					_settings.ImpersonateMode,
+					null);
 
-				if (result.Error != null)
-					return new QueryExecutionResult(result.StatusCode, result.Error, false);
+				var connection = await ConnectionExecution.OpenAsync(_environment, connectionSettings, cancellationToken);
 
-				return result.Value!;
+				if (connection.Error != null)
+					return new QueryExecutionResult(connection.StatusCode, connection.Error, false);
+
+				using var scope = connection.Value!;
+
+				// SQL validation loads parsers from local files, so it runs outside the optional impersonation scope.
+				//
+				var validationError = await ValidateSql(scope.DataProvider, sql);
+
+				if (validationError != null)
+					return validationError;
+
+				return await scope.RunAsync(() => ExecuteDatabaseLoop(scope.DataOptions, scope.DataProvider, sql, outputWriter, cancellationToken));
 			}
 			catch (OperationCanceledException)
 			{
@@ -411,7 +421,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			}
 		}
 
-		async Task<QueryExecutionResult> ExecuteValidatedDatabaseLoop(DataOptions dataOptions, IDataProvider dataProvider, string sql, TextWriter outputWriter, CancellationToken cancellationToken)
+		async Task<QueryExecutionResult?> ValidateSql(IDataProvider dataProvider, string sql)
 		{
 			var singleStatementResult = ReadOnlySqlGuard.ValidateSingleStatement(dataProvider, sql);
 
@@ -433,7 +443,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 						$"Executing write-capable SQL because profile '{_settings.Profile}' has enableExecute=true. Provider: {_settings.Provider}."));
 			}
 
-			return await ExecuteDatabaseLoop(dataOptions, dataProvider, sql, outputWriter, cancellationToken);
+			return null;
 		}
 
 		async Task<QueryExecutionResult> ExecuteDatabaseLoop(DataOptions dataOptions, IDataProvider dataProvider, string sql, TextWriter outputWriter, CancellationToken cancellationToken)
