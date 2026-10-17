@@ -282,14 +282,15 @@ namespace LinqToDB.Internal.Common
 
 		/// <summary>
 		/// Splits raw SQL argument of <c>FromSql</c> / <c>Sql.Expr</c> into the format and argument expressions.
-		/// When the format has format items, an argument none of them references is replaced with <see langword="null"/>,
+		/// When the format is a valid composite format with format items, an argument none of them references is replaced with <see langword="null"/>,
 		/// unless it can hold a <see cref="DataParameter"/> (referenced by name or position instead),
-		/// is an <see cref="ISqlExpression"/>, or <paramref name="keepUnreferenced"/> is set.
+		/// is an <see cref="ISqlExpression"/>, or <paramref name="keepUnreferenced"/> is set. A format that is not a valid composite format keeps every argument.
 		/// </summary>
 		/// <param name="formatArg"><c>FormattableStringFactory.Create(format, new object[] { ... })</c> expression, or constant <see cref="FormattableString"/>.</param>
 		/// <param name="keepUnreferenced">Keep unreferenced arguments, e.g. when the provider binds parameters by position.</param>
 		/// <param name="format">Composite format of raw SQL.</param>
 		/// <param name="arguments">Argument expressions.</param>
+		/// <exception cref="LinqToDBException"><paramref name="formatArg"/> has neither of the shapes above.</exception>
 		public static void PrepareRawSqlArguments(Expression formatArg, bool keepUnreferenced, out string format, out IReadOnlyList<Expression> arguments)
 		{
 			// ExposeExpressionVisitor brings every FromSql / Sql.Expr overload to the Create shape, except a constant it leaves as is

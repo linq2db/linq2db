@@ -1535,6 +1535,9 @@ namespace LinqToDB
 		///         attack. You can include parameter place holders in the SQL query string and then supply parameter values as additional
 		///         arguments. Any parameter values you supply will automatically be converted to a DbParameter -
 		///         <code>context.FromSql&lt;Blogs&gt;("SELECT * FROM [dbo].[SearchBlogs]({0})", userSuppliedSearchTerm);</code>
+		///         When the SQL contains <c>{n}</c> placeholders, a value none of them references is not sent, unless it is a
+		///         <see cref="DataParameter"/> (bound by its name or position) or the provider binds parameters by position
+		///         (Access, SAP HANA, Informix IFX).
 		///     </para>
 		///     <para>
 		///         This overload also accepts DbParameter instances as parameter values.
