@@ -2044,6 +2044,7 @@ namespace Tests.Linq
 		/// a time within it, whether its values are written inline or come from a captured collection.
 		/// </summary>
 		[Test]
+		[ActiveIssue(6050, Configuration = TestProvName.AllSybase, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "1{0}should be{1}0{2}but was not")]
 		public void ComputedDateInListMatchesMidnight([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -2113,8 +2114,11 @@ namespace Tests.Linq
 		/// A literal set beside a percentile ordered by a date column keeps its time part: the percentile reaches no
 		/// column, and is typed with the schema default as before the coarse-value typing.
 		/// </summary>
+		/// <remarks>
+		/// DB2 is left out: it accepts only a numeric sort key for <c>PERCENTILE_DISC</c>.
+		/// </remarks>
 		[Test]
-		public void PercentileOverDateSetOperationKeepsLiteralTime([IncludeDataSources(TestProvName.AllPostgreSQL95Plus, TestProvName.AllOracle, TestProvName.AllDB2, TestProvName.AllDuckDB)] string context)
+		public void PercentileOverDateSetOperationKeepsLiteralTime([IncludeDataSources(TestProvName.AllPostgreSQL95Plus, TestProvName.AllOracle, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(new[]
@@ -2140,6 +2144,7 @@ namespace Tests.Linq
 			Details = "no-issue: the server rejects a UNION of DATE and TIMESTAMP; master answered by truncating the literal to 00:00.")]
 		[ActiveIssue(Configuration = TestProvName.AllInformix, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
 			Details = "no-issue: the server rejects a datetime literal set beside a DATETIME YEAR TO DAY conditional; master fails the same query.")]
+		[ActiveIssue(6050, Configuration = TestProvName.AllSybase, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should contain{0}2026-06-01T10:00:00.0000000{1}but")]
 		public void ConditionalOverDateSetOperationKeepsLiteralTime([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
