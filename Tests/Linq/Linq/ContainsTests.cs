@@ -512,5 +512,31 @@ namespace Tests.Linq
 
 			count.ShouldBe(0);
 		}
+
+#if SUPPORTS_DATEONLY
+		sealed class DateOnlyRow
+		{
+			[PrimaryKey] public int      Id  { get; set; }
+			[Column]     public DateOnly Day { get; set; }
+		}
+
+		/// <summary>
+		/// A captured <see cref="DateOnly"/> list beside an aggregate over a <see cref="DateOnly"/> column matches the day.
+		/// </summary>
+		[Test]
+		public void CapturedDateOnlyListBesideAggregate([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new DateOnlyRow { Id = 1, Day = new DateOnly(2026, 6, 1) } });
+
+			var days = new[] { new DateOnly(2026, 6, 1) };
+
+			var count = t
+				.GroupBy(r => r.Id)
+				.Count(g => days.Contains(g.Max(r => r.Day)));
+
+			count.ShouldBe(1);
+		}
+#endif
 	}
 }
