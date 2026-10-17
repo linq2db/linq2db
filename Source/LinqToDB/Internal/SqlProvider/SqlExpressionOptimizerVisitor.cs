@@ -1761,7 +1761,7 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 				&& !_nullabilityContext.IsEmpty
 				&& predicate.Expr1.ElementType != QueryElementType.SqlRow
 				&& (predicate.IsNot || predicate.Expr1.CanBeNullableOrUnknown(_nullabilityContext, false))
-				&& predicate.Values.Any(v => v is not (SqlValue or SqlParameter) && v.CanBeNullableOrUnknown(_nullabilityContext, false)))
+				&& predicate.Values.Exists(v => v is not (SqlValue or SqlParameter) && v.CanBeNullableOrUnknown(_nullabilityContext, false)))
 			{
 				var search = new SqlSearchCondition(true);
 
