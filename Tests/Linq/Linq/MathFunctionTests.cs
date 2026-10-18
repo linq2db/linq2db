@@ -729,7 +729,10 @@ namespace Tests.Linq
 			Action atDigitsConstant = () => boundary
 				.Select(r => Sql.AsSql(Sql.Round(r.D22s9, -13)))
 				.ToArray();
-			atDigitsConstant.ShouldThrow<Exception>().Message.ShouldContain(context.IsRemote() ? "Mapping of column" : "Value does not fit into decimal");
+			atDigitsConstant
+				.ShouldThrow<Exception>()
+				.Message
+				.ShouldContain("Value does not fit into decimal");
 
 			// below the boundary the same constant path answers 0, so the throw above is the overflow
 			var belowDigitsConstant = t
