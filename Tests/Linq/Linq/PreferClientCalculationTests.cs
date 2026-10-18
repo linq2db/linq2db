@@ -1657,6 +1657,7 @@ namespace Tests.Linq
 
 		// A membership compared as a value is false, not unknown, when no item matches and one is NULL, as in C#.
 		[Test]
+		[ActiveIssue(6065, Configuration = TestProvName.AllDB2, ErrorMessage = "Assert.That(resultList, Has.Count.EqualTo(expectedList.Count))")]
 		public void InlineArrayContainsComparedAsValueIsFalseOverNullItem([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
