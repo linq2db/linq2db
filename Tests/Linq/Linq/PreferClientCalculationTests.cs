@@ -1651,6 +1651,7 @@ namespace Tests.Linq
 				new() { Id = 1, Item = null, Flag = false },
 				new() { Id = 2, Item = 7,    Flag = false },
 				new() { Id = 5, Item = null, Flag = true  },
+				new() { Id = 6, Item = null, Flag = true  },
 			];
 		}
 
