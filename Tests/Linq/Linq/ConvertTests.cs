@@ -165,6 +165,41 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		sealed class DecimalStoredDouble
+		{
+			[PrimaryKey                                                    ] public int    Id { get; set; }
+			[Column(DataType = DataType.Decimal)                           ] public double A  { get; set; }
+			[Column(DataType = DataType.Decimal, Precision = 22, Scale = 9)] public double L  { get; set; }
+		}
+
+		// A double stored as Decimal truncates exactly in Decimal, cast directly rather than through Text.
+		[Test]
+		public void DecimalStoredDoubleToInt64([IncludeDataSources(true, TestProvName.AllYdb)] string context)
+		{
+			var data = new[]
+			{
+				new DecimalStoredDouble { Id = 1, A =  3.75, L =  3.75 },
+				new DecimalStoredDouble { Id = 2, A = -3.75, L = -3.75 },
+				new DecimalStoredDouble { Id = 3, A =  2.5,  L =  2.5  },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var query =
+				from r in t
+				orderby r.Id
+				select new
+				{
+					r.Id,
+					A        = Sql.AsSql((long)r.A),
+					ARounded = Sql.AsSql(Convert.ToInt64(r.A)),
+					L        = Sql.AsSql((int)r.L),
+				};
+
+			AssertQuery(query);
+		}
+
 		[Test]
 		public void ToInt([DataSources] string context)
 		{

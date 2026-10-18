@@ -1445,43 +1445,43 @@ namespace Tests.Linq
 
 		sealed class DecimalStoredDouble
 		{
-			[PrimaryKey                         ] public int    Id { get; set; }
-			[Column(DataType = DataType.Decimal)] public double M  { get; set; }
-			[Column                             ] public double F  { get; set; }
+			[PrimaryKey                                                    ] public int    Id { get; set; }
+			[Column(DataType = DataType.Decimal)                           ] public double A  { get; set; }
+			[Column(DataType = DataType.Decimal)                           ] public double B  { get; set; }
+			[Column(DataType = DataType.Decimal, Precision = 10, Scale = 2)] public double C  { get; set; }
+			[Column(DataType = DataType.Decimal, Precision = 22, Scale = 9)] public double L  { get; set; }
+			[Column                                                        ] public double F  { get; set; }
 		}
 
-		// A double stored as Decimal meets a floating operand as a Decimal: YQL rejects Decimal * Double.
+		// A double stored as Decimal computes in Double, as the C# expression does: beside a floating operand (APlusF) its
+		// Decimal side is cast; beside another Decimal operand, a column or a literal typed by one, both sides are.
 		[Test]
 		public void DecimalStoredDoubleArithmetic([IncludeDataSources(true, TestProvName.AllYdb)] string context)
 		{
 			var data = new[]
 			{
-				new DecimalStoredDouble { Id = 1, M =  2,  F = 0.5  },
-				new DecimalStoredDouble { Id = 2, M = -3,  F = 1.25 },
+				new DecimalStoredDouble { Id = 1, A =  1,    B = 3, C = 1.25, L = 12345678.5, F = 0.5  },
+				new DecimalStoredDouble { Id = 2, A = -2.25, B = 7, C = 2.5,  L = -3.25,      F = 1.25 },
 			};
 
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(data);
 
-			var result = t
+			var query = t
 				.OrderBy(r => r.Id)
 				.Select(r => new
 				{
-					Product = Sql.AsSql(r.M * 2.5),
-					Sum     = Sql.AsSql(r.M + r.F),
-				})
-				.ToArray();
+					APlusC   = Sql.AsSql(r.A + r.C),
+					CDivB    = Sql.AsSql(r.C / r.B),
+					ADiv3    = Sql.AsSql(r.A / 3.0),
+					CTimesC  = Sql.AsSql(r.C * r.C),
+					LTimesL  = Sql.AsSql(r.L * r.L),
+					ATimes25 = Sql.AsSql(r.A * 2.5),
+					APlusF   = Sql.AsSql(r.A + r.F),
+					ARounded = Sql.AsSql(Math.Round(r.A, 1)),
+				});
 
-			var expected = data
-				.OrderBy(r => r.Id)
-				.Select(r => new
-				{
-					Product = r.M * 2.5,
-					Sum     = r.M + r.F,
-				})
-				.ToArray();
-
-			result.ShouldBe(expected);
+			AssertQuery(query);
 		}
 
 		sealed class PowScale
