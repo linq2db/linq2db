@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -207,6 +208,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (translationFlags.HasFlag(TranslationFlags.Expression) && methodCall.Arguments.Skip(1).All(translationContext.CanBeEvaluatedOnClient))
 				return null;
 
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
+
 			ISqlExpression? precision = null;
 
 			if (methodCall.Arguments.Count > 1)
@@ -258,6 +261,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (translationFlags.HasFlag(TranslationFlags.Expression) && methodCall.Arguments.Skip(1).All(translationContext.CanBeEvaluatedOnClient))
 				return null;
 
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
+
 			ISqlExpression? precision = null;
 
 			if (methodCall.Arguments.Count > 1)
@@ -290,6 +295,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (translationFlags.HasFlag(TranslationFlags.Expression) && methodCall.Arguments.Skip(1).All(translationContext.CanBeEvaluatedOnClient))
 				return null;
 
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
+
 			ISqlExpression? precision = null;
 
 			if (methodCall.Arguments.Count > 1)
@@ -319,6 +326,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out var translatedX))
 				return null;
 
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
+
 			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[1], out var translatedY))
 				return null;
 
@@ -335,6 +344,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			var factory = translationContext.ExpressionFactory;
 
 			var valueType = factory.GetDbDataType(value);
+
+			value = UncutDecimalLiteral(factory, value);
 
 			ISqlExpression? result = null;
 
@@ -397,6 +408,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			var factory = translationContext.ExpressionFactory;
 
 			var valueType  = factory.GetDbDataType(value);
+
+			value = UncutDecimalLiteral(factory, value);
+
 			var result = precision != null
 				? factory.Function(valueType, "ROUND", value, precision)
 				: factory.Function(valueType, "ROUND", value);
@@ -410,6 +424,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			var xType      = factory.GetDbDataType(xValue);
 			var resultType = xType;
+
+			xValue = UncutDecimalLiteral(factory, xValue);
 
 			if (xType.SystemType == typeof(decimal))
 			{
@@ -434,5 +450,22 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return result;
 		}
 
+		// A decimal literal combined with a column takes the column's type, so the providers that render a literal's scale
+		// (ClickHouse, YDB) cut it. The literal keeps its own scale here; the call keeps its declared type.
+		internal static ISqlExpression UncutDecimalLiteral(ISqlExpressionFactory factory, ISqlExpression value)
+		{
+			// a decimal carries at most 28 places, so a larger scale cannot cut it
+			if (value is SqlValue { Value: decimal literal } sqlValue
+				&& sqlValue.ValueType.Scale is int scale and < 28
+				&& decimal.Round(literal, scale) != literal)
+			{
+				var literalScale  = (decimal.GetBits(literal)[3] >> 16) & 0xFF;
+				var integerDigits = Math.Abs(literal) < 1 ? 0 : decimal.Truncate(Math.Abs(literal)).ToString(CultureInfo.InvariantCulture).Length;
+
+				return factory.Value(sqlValue.ValueType.WithPrecisionScale(integerDigits + literalScale, literalScale), literal);
+			}
+
+			return value;
+		}
 	}
 }

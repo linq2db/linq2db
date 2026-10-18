@@ -1,5 +1,6 @@
 ﻿using System;
 
+using LinqToDB.DataProvider.Ydb;
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
@@ -230,16 +231,16 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		}
 
 		// Cast a Decimal operand to Double when the other operand is floating-point, so YQL accepts the
-		// mixed-type arithmetic. (Decimal/Decimal and floating/floating pairs are left untouched.)
+		// mixed-type arithmetic. (Floating/floating pairs, and Decimal/Decimal pairs with a decimal result, are left untouched.)
 		SqlBinaryExpression AlignFloatingDecimal(SqlBinaryExpression element)
 		{
 			var t1 = QueryHelper.GetDbDataType(element.Expr1, MappingSchema);
 			var t2 = QueryHelper.GetDbDataType(element.Expr2, MappingSchema);
 
-			static bool IsFloating(DbDataType t) => t.DataType is DataType.Double or DataType.Single
-				|| t.SystemType.UnwrappedNullableType == typeof(double) || t.SystemType.UnwrappedNullableType == typeof(float);
-			static bool IsDecimal(DbDataType t) => t.DataType == DataType.Decimal
-				|| t.SystemType.UnwrappedNullableType == typeof(decimal);
+			// by storage, not CLR type: a decimal stored as Double counted as both would have its cast to Double folded away
+			// and re-enter here forever, and a double stored as Decimal counted as floating would never be cast
+			static bool IsFloating(DbDataType t) => t.DataType is DataType.Double or DataType.Single;
+			static bool IsDecimal (DbDataType t) => YdbMappingSchema.IsDecimalStorage(t);
 
 			var doubleType = MappingSchema.GetDbDataType(typeof(double));
 
@@ -248,6 +249,11 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 			if (IsDecimal(t1) && IsFloating(t2))
 				return new SqlBinaryExpression(element.SystemType, new SqlCastExpression(element.Expr1, doubleType, null), element.Operation, element.Expr2, element.Precedence);
+
+			// a double stored as Decimal beside another Decimal operand (a column, or a literal typed by one): the C# expression
+			// computes in Double, while YQL Decimal arithmetic keeps the operands' scale and refuses differing Decimal types
+			if (IsDecimal(t1) && IsDecimal(t2) && element.SystemType.UnwrappedNullableType is var type && (type == typeof(double) || type == typeof(float)))
+				return new SqlBinaryExpression(element.SystemType, new SqlCastExpression(element.Expr1, doubleType, null), element.Operation, new SqlCastExpression(element.Expr2, doubleType, null), element.Precedence);
 
 			return element;
 		}
@@ -354,8 +360,9 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				var fromType = QueryHelper.GetDbDataType(cast.Expression, MappingSchema);
 				var fromSys  = fromType.SystemType.UnwrappedNullableType;
 
-				if (fromType.DataType is DataType.Double or DataType.Single
+				if ((fromType.DataType is DataType.Double or DataType.Single
 					|| fromSys == typeof(double) || fromSys == typeof(float))
+					&& !YdbMappingSchema.IsDecimalStorage(fromType))
 				{
 					var stringType = MappingSchema.GetDbDataType(typeof(string)).WithDataType(DataType.NVarChar);
 					var viaString  = new SqlCastExpression(cast.Expression, stringType, null);
@@ -364,22 +371,63 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				}
 			}
 
-			// YQL CAST(<Decimal> AS <integer>) rounds, but C# (int)decimal truncates toward zero.
-			// CAST(<Double> AS <integer>) truncates, so route Decimal->integer casts through Double.
+			// YQL CAST(<Decimal> AS <integer>) rounds half-to-even, but C# (int)decimal truncates toward zero.
+			// The value is truncated in Decimal first: a Double holds every integer only up to 2^53. A Decimal with
+			// no integer digits truncates to 0, which Double gets exactly, and without parametrized Decimal types
+			// the Decimal casts below cannot be expressed, so both keep the Double route.
 			if (cast.ToType.SystemType.UnwrappedNullableType.IsIntegerType)
 			{
 				var fromType = QueryHelper.GetDbDataType(cast.Expression, MappingSchema);
 
-				if (fromType.DataType == DataType.Decimal || fromType.SystemType.UnwrappedNullableType == typeof(decimal))
+				if (YdbMappingSchema.IsDecimalStorage(fromType))
 				{
-					var doubleType = MappingSchema.GetDbDataType(typeof(double));
-					var viaDouble  = new SqlCastExpression(cast.Expression, doubleType, null);
+					var scale     = fromType.Scale     ?? YdbMappingSchema.DEFAULT_DECIMAL_SCALE;
+					var precision = fromType.Precision ?? YdbMappingSchema.DEFAULT_DECIMAL_PRECISION;
 
-					return base.ConvertConversion(new SqlCastExpression(viaDouble, cast.ToType, cast.FromType, cast.IsMandatory));
+					// already integral, and what a truncated value re-enters this visitor as
+					if (scale == 0)
+						return base.ConvertConversion(cast);
+
+					var truncated = scale < precision && DataOptions.FindOrDefault(YdbOptions.Default).UseParametrizedDecimal
+						? TruncateDecimal(cast.Expression, fromType)
+						: new SqlCastExpression(cast.Expression, MappingSchema.GetDbDataType(typeof(double)), null);
+
+					return base.ConvertConversion(new SqlCastExpression(truncated, cast.ToType, cast.FromType, cast.IsMandatory));
 				}
 			}
 
 			return base.ConvertConversion(cast);
+		}
+
+		// The scale-dropping CAST rounds half-to-even, so a result it moved away from zero is stepped back by one.
+		// The value passes through Decimal(35,1) first, as YQL refuses a CAST from Decimal(P,P), which a computed value
+		// can be, to Decimal(35,0); scale 1 keeps 34 integer digits, more than any Int64. That cast can round, but the
+		// result still lands on one of the value's two neighbouring integers, so comparing it with the value itself
+		// (YQL compares Decimals of different types) still picks the truncation. The casts are mandatory, or the
+		// optimizer folds them, and their types carry no DbType, which would be rendered in their place. They are typed decimal
+		// even for a double stored as Decimal, whose CLR type would send them through Text and their arithmetic to Double.
+		ISqlExpression TruncateDecimal(ISqlExpression value, DbDataType fromType)
+		{
+			var wideType = new DbDataType(typeof(decimal), DataType.Decimal, null, fromType.Length, YdbMappingSchema.MAX_DECIMAL_PRECISION, 1);
+			var intType  = new DbDataType(typeof(decimal), DataType.Decimal, null, fromType.Length, YdbMappingSchema.MAX_DECIMAL_PRECISION, 0);
+
+			var wide    = Factory.Cast(value,   wideType, true);
+			var rounded = Factory.Cast(wide,    intType,  true);
+			var back    = Factory.Cast(rounded, wideType, true);
+			var zero    = Factory.Value(wideType, 0m);
+			var one     = Factory.Value(intType,  1m);
+
+			return Factory.Condition(
+				Factory.SearchCondition()
+					.AddGreater(value, zero, CompareNulls.LikeSql)
+					.AddGreater(back, value, CompareNulls.LikeSql),
+				Factory.Sub(intType, rounded, one),
+				Factory.Condition(
+					Factory.SearchCondition()
+						.AddLess(value, zero, CompareNulls.LikeSql)
+						.AddLess(back, value, CompareNulls.LikeSql),
+					Factory.Add(intType, rounded, one),
+					rounded));
 		}
 
 		protected override ISqlExpression ConvertSqlCaseExpression(SqlCaseExpression element)

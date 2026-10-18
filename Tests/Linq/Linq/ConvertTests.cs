@@ -83,6 +83,123 @@ namespace Tests.Linq
 				from p in from t in db.Types select Convert.ToInt64(t.MoneyValue) where p > 0 select p);
 		}
 
+		sealed class WideDecimal
+		{
+			[PrimaryKey                                                  ] public int      Id { get; set; }
+			[Column(Precision = 35, Scale = 2)                           ] public decimal  D  { get; set; }
+			[Column(DbType = "Decimal(35, 2)", Precision = 35, Scale = 2)] public decimal  S  { get; set; }
+			[Column(Precision = 35, Scale = 2)                           ] public decimal? N  { get; set; }
+			[Column(Precision = 10, Scale = 2)                           ] public decimal  E  { get; set; }
+			[Column(Precision =  4, Scale = 4)                           ] public decimal  F  { get; set; }
+			[Column(Precision = 20, Scale = 12)                          ] public decimal  H  { get; set; }
+		}
+
+		// Past 2^53 a Double no longer holds every integer, so a Decimal->integer conversion must not pass through one.
+		[Test]
+		public void DecimalToInt64PastDoublePrecision([IncludeDataSources(true, TestProvName.AllYdb)] string context)
+		{
+			var data = new[]
+			{
+				new WideDecimal { Id = 1, D =  9007199254740993.25m, S =  9007199254740993.25m, N =  9007199254740993.25m, E =  3.50m, F =  0.1234m, H =  1.499999999999m },
+				new WideDecimal { Id = 2, D =  9007199254740993.75m, S =  9007199254740993.75m, N =  9007199254740993.75m, E =  1.75m, F = -0.5000m, H = -1.499999999999m },
+				new WideDecimal { Id = 3, D = -9007199254740993.75m, S = -9007199254740993.75m, N = -9007199254740993.75m, E = -2.25m, F =  0.9999m, H =  1.5m            },
+				new WideDecimal { Id = 4, D = 12345678901234567.50m, S = 12345678901234567.50m, N = 12345678901234567.50m, E =  3.10m, F = -0.9999m, H =  0.25m           },
+				new WideDecimal { Id = 5, D =  2.50m,                S =  2.50m,                N = null,                  E =  1.95m, F =  0.5000m, H = -0.75m           },
+				new WideDecimal { Id = 6, D = -2.50m,                S = -2.50m,                N = -2.50m,                E = -0.50m, F =  0m,      H =  0m              },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var query =
+				from r in t
+				orderby r.Id
+				select new
+				{
+					r.Id,
+					D        = Sql.AsSql((long)r.D),
+					DRounded = Sql.AsSql(Convert.ToInt64(r.D)),
+					S        = Sql.AsSql((long)r.S),
+					SRounded = Sql.AsSql(Convert.ToInt64(r.S)),
+					N        = Sql.AsSql((long?)r.N),
+					Product  = Sql.AsSql((long)(r.E * r.E)),
+					F        = Sql.AsSql((long)r.F),
+					Sum      = Sql.AsSql((long)(r.H + r.H)),
+					FProduct = Sql.AsSql((long)(r.F * r.F)),
+				};
+
+			AssertQuery(query);
+		}
+
+		sealed class DoubleStoredDecimal
+		{
+			[PrimaryKey                        ] public int     Id { get; set; }
+			[Column(DataType = DataType.Double)] public decimal D  { get; set; }
+		}
+
+		// A decimal stored as Double is not a YQL Decimal: it truncates in Double, not through Decimal casts.
+		[Test]
+		public void DoubleStoredDecimalToInt64([IncludeDataSources(true, TestProvName.AllYdb)] string context)
+		{
+			var data = new[]
+			{
+				new DoubleStoredDecimal { Id = 1, D =  2.5m  },
+				new DoubleStoredDecimal { Id = 2, D =  3.75m },
+				new DoubleStoredDecimal { Id = 3, D = -2.5m  },
+				new DoubleStoredDecimal { Id = 4, D = -3.75m },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var query =
+				from r in t
+				orderby r.Id
+				select new
+				{
+					r.Id,
+					D        = Sql.AsSql((long)r.D),
+					DRounded = Sql.AsSql(Convert.ToInt64(r.D)),
+				};
+
+			AssertQuery(query);
+		}
+
+		sealed class DecimalStoredDouble
+		{
+			[PrimaryKey                                                    ] public int    Id { get; set; }
+			[Column(DataType = DataType.Decimal)                           ] public double A  { get; set; }
+			[Column(DataType = DataType.Decimal, Precision = 22, Scale = 9)] public double L  { get; set; }
+		}
+
+		// A double stored as Decimal truncates exactly in Decimal, cast directly rather than through Text.
+		[Test]
+		public void DecimalStoredDoubleToInt64([IncludeDataSources(true, TestProvName.AllYdb)] string context)
+		{
+			var data = new[]
+			{
+				new DecimalStoredDouble { Id = 1, A =  3.75, L =  3.75 },
+				new DecimalStoredDouble { Id = 2, A = -3.75, L = -3.75 },
+				new DecimalStoredDouble { Id = 3, A =  2.5,  L =  2.5  },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var query =
+				from r in t
+				orderby r.Id
+				select new
+				{
+					r.Id,
+					A        = Sql.AsSql((long)r.A),
+					ARounded = Sql.AsSql(Convert.ToInt64(r.A)),
+					L        = Sql.AsSql((int)r.L),
+				};
+
+			AssertQuery(query);
+		}
+
 		[Test]
 		public void ToInt([DataSources] string context)
 		{
