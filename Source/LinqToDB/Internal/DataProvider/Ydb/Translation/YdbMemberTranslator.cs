@@ -687,6 +687,8 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				var xType      = factory.GetDbDataType(xValue);
 				var resultType = xType;
 
+				xValue = UncutDecimalLiteral(factory, xValue);
+
 				if (xType.DataType is not (DataType.Double or DataType.Single))
 				{
 					xType = factory.GetDbDataType(typeof(double));
@@ -735,6 +737,24 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				});
 
 			static ISqlExpression RoundScaled(
+				ITranslationContext                                                         translationContext,
+				ISqlExpression                                                              value,
+				ISqlExpression?                                                             precision,
+				bool                                                                        awayFromZero,
+				Func<ISqlExpressionFactory, DbDataType, ISqlExpression, ISqlExpression>     roundToInt)
+			{
+				var factory = translationContext.ExpressionFactory;
+				var uncut   = UncutDecimalLiteral(factory, value);
+
+				if (ReferenceEquals(uncut, value))
+					return RoundScaledValue(translationContext, value, precision, awayFromZero, roundToInt);
+
+				// the literal is rounded at its own scale; the result keeps the type of the column it is combined with, which
+				// YQL arithmetic beside that column demands
+				return factory.Cast(RoundScaledValue(translationContext, uncut, precision, awayFromZero, roundToInt), factory.GetDbDataType(value));
+			}
+
+			static ISqlExpression RoundScaledValue(
 				ITranslationContext                                                         translationContext,
 				ISqlExpression                                                              value,
 				ISqlExpression?                                                             precision,

@@ -1518,6 +1518,103 @@ namespace Tests.Linq
 			result!.Value.ShouldBeInRange(17.00009m, 17.00015m);
 		}
 
+		sealed class PowBaseScale
+		{
+			[PrimaryKey                       ] public int     Id { get; set; }
+			[Column(Precision = 18, Scale = 4)] public decimal D  { get; set; }
+			[Column(Precision = 18, Scale = 4)] public decimal E  { get; set; }
+		}
+
+		// Sybase: https://stackoverflow.com/questions/25281843
+		// The base must not take the scale of a column the call is combined with: Decimal(18,4) cuts 1.00005.
+		[Test]
+		public void PowDecimalBaseScale([DataSources(TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new PowBaseScale { Id = 1, D = 16m, E = 2m } });
+
+			// 1.00005^2 + 16 = 17.0001000025, 17.0001 where the result keeps the column's scale; a cut base gives 17.0000 or 17.0002
+			var result = t
+				.Select(r => Sql.AsSql(Sql.Power(1.00005m, r.E) + r.D))
+				.Single();
+
+			result!.Value.ShouldBeInRange(17.00009m, 17.00011m);
+		}
+
+		sealed class RoundValueScale
+		{
+			[PrimaryKey                        ] public int     Id { get; set; }
+			[Column(Precision = 18, Scale = 4) ] public decimal D  { get; set; }
+			[Column(Precision = 18, Scale = 4) ] public decimal E  { get; set; }
+			[Column                            ] public int     P  { get; set; }
+			[Column                            ] public int     P3 { get; set; }
+		}
+
+		sealed class RoundValueScaleWide
+		{
+			[PrimaryKey                        ] public int     Id { get; set; }
+			[Column(Precision = 35, Scale = 30)] public decimal W  { get; set; }
+			[Column                            ] public int     P  { get; set; }
+		}
+
+		// A literal value or base keeps its own scale beside a column on the providers that render a literal's scale.
+		[Test]
+		public void Round36([IncludeDataSources(true, TestProvName.AllYdb)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new RoundValueScale { Id = 1, D = 16m, E = 2m, P = 4, P3 = 3 } });
+
+			var result = t
+				.Select(r => new
+				{
+					Pow      = Sql.AsSql(Sql.Power(1.00005m, r.E) + r.D),
+					PowTiny  = Sql.AsSql(Sql.Power(0.00005m, r.E) + r.D),
+					Away     = Sql.AsSql(Sql.Round(1.00005m, r.P) + r.D),
+					Even     = Sql.AsSql(Sql.RoundToEven(1.00051m, r.P3) + r.D),
+					AwayTiny = Sql.AsSql(Sql.Round(0.00005m, r.P) + r.D),
+				})
+				.Single();
+
+			result.Pow.ShouldBe(17.0001m);
+			result.PowTiny.ShouldBe(16m);
+			result.Away.ShouldBe(17.0001m);
+			result.Even.ShouldBe(17.001m);
+			result.AwayTiny.ShouldBe(16.0001m);
+		}
+
+		// A scale of 28 or more cannot cut a decimal literal; such a value cannot be read back or written remotely either.
+		[Test]
+		public void Round37([IncludeDataSources(TestProvName.AllYdb)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new RoundValueScaleWide { Id = 1, W = 16m, P = 4 } });
+
+			var result = t
+				.Select(r => Sql.AsSql(Sql.Round(1.00005m, r.P) + r.W == 17.0001m))
+				.Single();
+
+			result.ShouldBeTrue();
+		}
+
+		// ClickHouse needs a constant rounding scale, and a constant one would be evaluated on the client unless wrapped.
+		[Test]
+		public void RoundDecimalValueScale([IncludeDataSources(true, TestProvName.AllYdb, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new RoundValueScale { Id = 1, D = 16m, E = 2m, P = 4, P3 = 3 } });
+
+			var result = t
+				.Select(r => new
+				{
+					Away = Sql.AsSql(Sql.Round(1.00005m, Sql.AsSql(4)) + r.D),
+					Even = Sql.AsSql(Sql.RoundToEven(1.00051m, Sql.AsSql(3)) + r.D),
+				})
+				.Single();
+
+			result.Away.ShouldBe(17.0001m);
+			result.Even.ShouldBe(17.001m);
+		}
+
 		[Test]
 		public void Sign([DataSources(TestProvName.AllYdb)] string context)
 		{
