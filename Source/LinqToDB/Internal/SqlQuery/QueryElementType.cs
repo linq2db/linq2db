@@ -136,5 +136,9 @@
 		SqlIntervalDifference,
 		SqlIntervalPart,
 		SqlTemporalArithmetic,
+
+		// TODO: appended here because QueryElementType is public API - inserting mid-enum renumbers every
+		// later member and trips ApiCompat CP0011. In v7 move next to SqlValue where it belongs logically.
+		SqlDefaultValueExpression,
 	}
 }

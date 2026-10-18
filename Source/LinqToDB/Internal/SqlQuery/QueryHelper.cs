@@ -700,6 +700,7 @@ namespace LinqToDB.Internal.SqlQuery
 			{
 				null => DbDataType.Undefined,
 				SqlValue { ValueType: var vt } => vt,
+				SqlDefaultValueExpression { Type: var t } => t,
 
 				SqlParameter        { Type: var t } => t,
 				SqlField            { Type: var t } => t,
@@ -941,6 +942,7 @@ namespace LinqToDB.Internal.SqlQuery
 				case QueryElementType.SqlValue:
 				case QueryElementType.SqlParameter:
 				case QueryElementType.SqlParameterCast:
+				case QueryElementType.SqlDefaultValueExpression:
 					return true;
 
 				case QueryElementType.SqlCast:
