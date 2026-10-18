@@ -1325,7 +1325,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(data);
 
-			var result = mp == MidpointRounding.AwayFromZero
+			var query = mp == MidpointRounding.AwayFromZero
 				? t
 					.OrderBy(r => r.Id)
 					.Select(r => new
@@ -1334,7 +1334,6 @@ namespace Tests.Linq
 						One     = Sql.AsSql(Math.Round(r.D, 1, mp)),
 						Runtime = Sql.AsSql(Sql.Round(r.D, r.P)),
 					})
-					.ToArray()
 				: t
 					.OrderBy(r => r.Id)
 					.Select(r => new
@@ -1342,20 +1341,9 @@ namespace Tests.Linq
 						None    = Sql.AsSql(Math.Round(r.D, mp)),
 						One     = Sql.AsSql(Math.Round(r.D, 1, mp)),
 						Runtime = Sql.AsSql(Sql.RoundToEven(r.D, r.P)),
-					})
-					.ToArray();
+					});
 
-			var expected = data
-				.OrderBy(r => r.Id)
-				.Select(r => new
-				{
-					None    = Math.Round(r.D, mp),
-					One     = Math.Round(r.D, 1, mp),
-					Runtime = (decimal?)Math.Round(r.D, r.P, mp),
-				})
-				.ToArray();
-
-			result.ShouldBe(expected);
+			AssertQuery(query);
 		}
 
 		sealed class RoundDeclaredShapeFull
@@ -1392,9 +1380,11 @@ namespace Tests.Linq
 			using var db   = GetDataContext(context);
 			using var full = db.CreateLocalTable(data);
 
-			var t = db.GetTable<RoundDeclaredShape>().TableName(full.TableName);
+			var t = db
+				.GetTable<RoundDeclaredShape>()
+				.TableName(full.TableName);
 
-			var result = t
+			var query = t
 				.OrderBy(r => r.Id)
 				.Select(r => new
 				{
@@ -1402,21 +1392,9 @@ namespace Tests.Linq
 					DTwo = Sql.AsSql(Math.Round(r.D, 2, mp)),
 					SOne = Sql.AsSql(Math.Round(r.S, 1, mp)),
 					B    = Sql.AsSql(Math.Round(r.B, mp)),
-				})
-				.ToArray();
+				});
 
-			var expected = data
-				.OrderBy(r => r.Id)
-				.Select(r => new
-				{
-					D    = Math.Round(r.D, mp),
-					DTwo = Math.Round(r.D, 2, mp),
-					SOne = Math.Round(r.S, 1, mp),
-					B    = Math.Round(r.B, mp),
-				})
-				.ToArray();
-
-			result.ShouldBe(expected);
+			AssertQuery(query);
 		}
 
 		[ActiveIssue(6055, Configuration = TestProvName.AllYdb, SkipForNonLinqService = true,
@@ -1435,24 +1413,19 @@ namespace Tests.Linq
 			using var db   = GetDataContext(context);
 			using var full = db.CreateLocalTable(data);
 
-			var t = db.GetTable<RoundDeclaredShape>().TableName(full.TableName);
+			var t = db
+				.GetTable<RoundDeclaredShape>()
+				.TableName(full.TableName);
 
-			var result = mp == MidpointRounding.AwayFromZero
+			var query = mp == MidpointRounding.AwayFromZero
 				? t
 					.OrderBy(r => r.Id)
 					.Select(r => Sql.AsSql(Sql.Round(r.B, r.P)))
-					.ToArray()
 				: t
 					.OrderBy(r => r.Id)
-					.Select(r => Sql.AsSql(Sql.RoundToEven(r.B, r.P)))
-					.ToArray();
+					.Select(r => Sql.AsSql(Sql.RoundToEven(r.B, r.P)));
 
-			var expected = data
-				.OrderBy(r => r.Id)
-				.Select(r => (decimal?)Math.Round(r.B, r.P, mp))
-				.ToArray();
-
-			result.ShouldBe(expected);
+			AssertQuery(query, ByNullableValue);
 		}
 
 		[ActiveIssue(6055, Configuration = TestProvName.AllYdb, SkipForNonLinqService = true,
@@ -1471,19 +1444,15 @@ namespace Tests.Linq
 			using var db   = GetDataContext(context);
 			using var full = db.CreateLocalTable(data);
 
-			var t = db.GetTable<RoundDeclaredShape>().TableName(full.TableName);
+			var t = db
+				.GetTable<RoundDeclaredShape>()
+				.TableName(full.TableName);
 
-			var result = t
+			var query = t
 				.OrderBy(r => r.Id)
-				.Select(r => Sql.AsSql(Math.Round(r.B, 2, mp)))
-				.ToArray();
+				.Select(r => Sql.AsSql(Math.Round(r.B, 2, mp)));
 
-			var expected = data
-				.OrderBy(r => r.Id)
-				.Select(r => Math.Round(r.B, 2, mp))
-				.ToArray();
-
-			result.ShouldBe(expected);
+			AssertQuery(query, ByValue);
 		}
 
 		sealed class DecimalStoredDouble
