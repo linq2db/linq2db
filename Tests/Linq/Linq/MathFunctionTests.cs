@@ -519,8 +519,12 @@ namespace Tests.Linq
 				})
 				.ToArray();
 
-			result.Select(r => r.Away).ShouldBe(new decimal?[] { 1230m, 1230m, -1230m, 1230m, -1230m });
-			result.Select(r => r.Even).ShouldBe(new decimal?[] { 1230m, 1230m, -1230m, 1220m, -1220m });
+			result
+				.Select(r => r.Away)
+				.ShouldBe(new decimal?[] { 1230m, 1230m, -1230m, 1230m, -1230m });
+			result
+				.Select(r => r.Even)
+				.ShouldBe(new decimal?[] { 1230m, 1230m, -1230m, 1220m, -1220m });
 		}
 
 		// A precision below the scale still needs a digit more than the type has: 1234.56 * 10^1 does not fit Decimal(6,2).
@@ -582,8 +586,12 @@ namespace Tests.Linq
 				})
 				.ToArray();
 
-			result.Select(r => r.Away).ShouldBe(new decimal?[] { 1000m, 1000m, 3000m, -3000m, 4000m });
-			result.Select(r => r.Even).ShouldBe(new decimal?[] { 1000m, 1000m, 2000m, -2000m, 4000m });
+			result
+				.Select(r => r.Away)
+				.ShouldBe(new decimal?[] { 1000m, 1000m, 3000m, -3000m, 4000m });
+			result
+				.Select(r => r.Even)
+				.ShouldBe(new decimal?[] { 1000m, 1000m, 2000m, -2000m, 4000m });
 		}
 
 		sealed class RoundNegativeDynamic
@@ -621,8 +629,12 @@ namespace Tests.Linq
 				})
 				.ToArray();
 
-			result.Select(r => r.Away).ShouldBe(new decimal?[] { 1230m, 1200m, 1230m, 1230m, 1000m, -3000m, 0m, 9999.99m });
-			result.Select(r => r.Even).ShouldBe(new decimal?[] { 1230m, 1200m, 1230m, 1220m, 1000m, -2000m, 0m, 9999.99m });
+			result
+				.Select(r => r.Away)
+				.ShouldBe(new decimal?[] { 1230m, 1200m, 1230m, 1230m, 1000m, -3000m, 0m, 9999.99m });
+			result
+				.Select(r => r.Even)
+				.ShouldBe(new decimal?[] { 1230m, 1200m, 1230m, 1220m, 1000m, -2000m, 0m, 9999.99m });
 		}
 
 		sealed class RoundDynamicNoIntegerDigits
@@ -657,8 +669,12 @@ namespace Tests.Linq
 				})
 				.ToArray();
 
-			result.Select(r => r.Away).ShouldBe(new decimal?[] { 0.1234m, 0.125m, 0.13m, -0.124m, 0m });
-			result.Select(r => r.Even).ShouldBe(new decimal?[] { 0.1234m, 0.125m, 0.12m, -0.124m, 0m });
+			result
+				.Select(r => r.Away)
+				.ShouldBe(new decimal?[] { 0.1234m, 0.125m, 0.13m, -0.124m, 0m });
+			result
+				.Select(r => r.Even)
+				.ShouldBe(new decimal?[] { 0.1234m, 0.125m, 0.12m, -0.124m, 0m });
 		}
 
 		sealed class RoundNegativeDynamicWide
@@ -699,8 +715,12 @@ namespace Tests.Linq
 				})
 				.ToArray();
 
-			result.Select(r => r.Away).ShouldBe(new decimal?[] { 100000m, -300000m, 10000000000m, 0m, 1234.57m, 1235m, 12.5m, 0m, 0m });
-			result.Select(r => r.Even).ShouldBe(new decimal?[] { 100000m, -200000m, 10000000000m, 0m, 1234.56m, 1235m, 12.5m, 0m, 0m });
+			result
+				.Select(r => r.Away)
+				.ShouldBe(new decimal?[] { 100000m, -300000m, 10000000000m, 0m, 1234.57m, 1235m, 12.5m, 0m, 0m });
+			result
+				.Select(r => r.Even)
+				.ShouldBe(new decimal?[] { 100000m, -200000m, 10000000000m, 0m, 1234.56m, 1235m, 12.5m, 0m, 0m });
 
 			var nullPrecision = t
 				.Select(r => Sql.AsSql(Sql.Round(r.D22s9, r.Id > 0 ? null : r.P)))
@@ -712,7 +732,10 @@ namespace Tests.Linq
 				.Where(r => r.P < 0)
 				.Select(r => Sql.AsSql(Sql.Round(r.D35s2, r.P)))
 				.ToArray();
-			act.ShouldThrow<Exception>().Message.ShouldContain("ROUND precision is out of range for Decimal(35,2)");
+			act
+				.ShouldThrow<Exception>()
+				.Message
+				.ShouldContain("ROUND precision is out of range for Decimal(35,2)");
 
 			// at exactly -(integer digits) the answer is not 0: 5·10^12 rounds to 10^13, which Decimal(22,9) cannot hold
 			using var boundary = db.CreateLocalTable("RoundNegativeDynamicWideBoundary", new[]
@@ -723,7 +746,10 @@ namespace Tests.Linq
 			Action atDigits = () => boundary
 				.Select(r => Sql.AsSql(Sql.Round(r.D22s9, r.P)))
 				.ToArray();
-			atDigits.ShouldThrow<Exception>().Message.ShouldContain("Value does not fit into decimal");
+			atDigits
+				.ShouldThrow<Exception>()
+				.Message
+				.ShouldContain("Value does not fit into decimal");
 
 			// the constant path's twin: a literal precision does not take the runtime CASE
 			Action atDigitsConstant = () => boundary
@@ -964,7 +990,10 @@ namespace Tests.Linq
 						.Select(r => Sql.AsSql(Math.Round(r.D, mp)))
 						.ToArray();
 
-					act.ShouldThrow<Exception>().Message.ShouldContain("ROUND result is out of range for Decimal(4,4)");
+					act
+						.ShouldThrow<Exception>()
+						.Message
+						.ShouldContain("ROUND result is out of range for Decimal(4,4)");
 				}
 			}
 		}
@@ -1012,7 +1041,9 @@ namespace Tests.Linq
 					Average = Sql.AsSql(Math.Round(g.Average(x => x.D), mp)),
 				};
 
-			groups.ToArray().ShouldBe(expectedGroups.ToArray());
+			groups
+				.ToArray()
+				.ShouldBe(expectedGroups.ToArray());
 
 			var expectedProducts = data
 				.OrderBy(r => r.Id)
@@ -1082,7 +1113,10 @@ namespace Tests.Linq
 				.Where(r => r.Id == 3)
 				.Select(r => Sql.AsSql(Sql.Round(r.D35s2 * r.D35s2, -14)))
 				.ToArray();
-			act.ShouldThrow<Exception>().Message.ShouldContain("ROUND value is out of range for Decimal(22,9)");
+			act
+				.ShouldThrow<Exception>()
+				.Message
+				.ShouldContain("ROUND value is out of range for Decimal(22,9)");
 		}
 
 		// Rounding a computed value must leave it in its inferred type, on every branch of a runtime precision's CASE and
@@ -1156,7 +1190,9 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(data);
 
-			var ordered = data.OrderBy(r => r.Id).ToArray();
+			var ordered = data
+				.OrderBy(r => r.Id)
+				.ToArray();
 
 			var result = t
 				.OrderBy(r => r.Id)
@@ -1231,7 +1267,9 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(data);
 
-			var ordered = data.OrderBy(r => r.Id).ToArray();
+			var ordered = data
+				.OrderBy(r => r.Id)
+				.ToArray();
 
 			var result = mp == MidpointRounding.AwayFromZero
 				? t
@@ -1253,14 +1291,16 @@ namespace Tests.Linq
 					})
 					.ToArray();
 
-			result.ShouldBe(ordered
+			var expected = ordered
 				.Select(r => new
 				{
 					H   = (decimal?)RoundTo(r.H + r.H, r.P, mp),
 					H13 = (decimal?)RoundTo(r.H13 + r.H13, r.P2, mp),
 					T   = (decimal?)RoundTo(r.T + r.T, r.P2, mp),
 				})
-				.ToArray());
+				.ToArray();
+
+			result.ShouldBe(expected);
 		}
 
 		sealed class RoundDoubleStored
@@ -1493,6 +1533,7 @@ namespace Tests.Linq
 			[Column(Precision = 18, Scale = 4)] public decimal D  { get; set; }
 		}
 
+		// Sybase: https://stackoverflow.com/questions/25281843
 		// The exponent must not take the type of a column the call is combined with: Decimal(18,4) cuts 0.00005 to 0.
 		[Test]
 		public void PowDecimalExponentScale([DataSources(TestProvName.AllSybase)] string context)
