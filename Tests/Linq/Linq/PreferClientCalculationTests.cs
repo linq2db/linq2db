@@ -1698,8 +1698,16 @@ namespace Tests.Linq
 		}
 
 		// AsQueryable(IDataContext) over an inline array is a query of the data context, not a client array: a membership moved
-		// to the client must not run it once per row.
+		// to the client must not run it once per row. The providers below cannot reference an outer column in its VALUES table.
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException",                  TestProvName.AllAccessOdbc)]
+		[ThrowsForProvider("System.Data.OleDb.OleDbException",                TestProvName.AllAccessOleDb)]
+		[ThrowsForProvider("MySql.Data.MySqlClient.MySqlException",           ProviderName.MySql57)]
+		[ThrowsForProvider("MySqlConnector.MySqlException",                   TestProvName.MySql57Connector, TestProvName.AllMariaDB)]
+		[ThrowsForProvider("Oracle.ManagedDataAccess.Client.OracleException", ProviderName.Oracle11Managed)]
+		[ThrowsForProvider("IBM.Data.Db2.DB2Exception",                       ProviderName.DB2)]
+		[ThrowsForProvider("AdoNetCore.AseClient.AseException",               ProviderName.SybaseManaged)]
 		public void DataContextAsQueryableOverInlineArrayIsNotRunPerRow([DataSources] string context)
 		{
 			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(true));
