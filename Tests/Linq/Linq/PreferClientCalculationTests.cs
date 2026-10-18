@@ -1700,7 +1700,7 @@ namespace Tests.Linq
 		}
 
 		// AsQueryable(IDataContext) over an inline array is a query of the data context, not a client array: a membership moved
-		// to the client must not run it once per row. The providers below cannot reference an outer column in its VALUES table.
+		// to the client must not run it once per row. The providers below cannot run the correlated VALUES table it becomes.
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery]
 		[ThrowsForProvider("System.Data.Odbc.OdbcException",                  TestProvName.AllAccessOdbc)]
