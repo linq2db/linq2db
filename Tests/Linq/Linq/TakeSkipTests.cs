@@ -1413,6 +1413,12 @@ namespace Tests.Linq
 			persons.ElementAt(() => 2).ID.ShouldBe(expected[2]);
 		}
 
+		// Access and Informix cannot render a zero TOP/FIRST
+		static int[] GetCounts(string context)
+		{
+			return context.IsAnyOf(TestProvName.AllAccess, TestProvName.AllInformix) ? new[] { 2, 1, 3, 2 } : new[] { 0, 2, 0, 1, 3, 0 };
+		}
+
 		// Runs the query twice and checks that the second execution reuses the command built by the first.
 		static void ShouldReuseCommand<T, TResult>(IQueryable<T> query, Expression<Func<IQueryable<T>, TResult>> execute, Action<TResult> check)
 		{
@@ -1536,7 +1542,7 @@ namespace Tests.Linq
 
 			CachedQueryState[]? states = null;
 
-			foreach (var n in new[] { 0, 2, 0, 1, 3, 0 })
+			foreach (var n in GetCounts(context))
 			{
 				holder.Count = n;
 				count        = n;
@@ -1602,7 +1608,7 @@ namespace Tests.Linq
 				takeLambda(db).ToArray().ShouldBe(expected.Skip(1).Take(2));
 			}
 
-			foreach (var n in new[] { 0, 2, 0, 1, 3, 0 })
+			foreach (var n in GetCounts(context))
 			{
 				take(db, n).ToArray().ShouldBe(expected.Take(n));
 				skip(db, n).ToArray().ShouldBe(expected.Skip(n));

@@ -444,7 +444,11 @@ namespace LinqToDB.Internal.Linq
 				var newTakeValue = select.SkipValue;
 				if (select.TakeValue != null)
 				{
-					newTakeValue = new SqlBinaryExpression(typeof(int), newTakeValue, "+", select.TakeValue);
+					// constants add up to a constant, so the query stays cacheable: a binary expression is rendered per execution
+					if (newTakeValue is SqlValue { Value: int skipCount } && select.TakeValue is SqlValue { Value: int takeCount } && (long)skipCount + takeCount <= int.MaxValue)
+						newTakeValue = new SqlValue(typeof(int), skipCount + takeCount);
+					else
+						newTakeValue = new SqlBinaryExpression(typeof(int), newTakeValue, "+", select.TakeValue);
 				}
 				else
 				{
