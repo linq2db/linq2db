@@ -16,5 +16,6 @@ override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertV
 override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.IntervalResolution.get -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
 override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.DataProvider.Sybase.SybaseSqlExpressionConvertVisitor.ConvertExprExprPredicate(LinqToDB.Internal.SqlQuery.SqlPredicate.ExprExpr! predicate) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+override LinqToDB.Internal.DataProvider.Sybase.SybaseSqlExpressionConvertVisitor.VisitInListPredicate(LinqToDB.Internal.SqlQuery.SqlPredicate.InList! predicate) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.CanLowerIntervalShift.get -> bool
 override LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?

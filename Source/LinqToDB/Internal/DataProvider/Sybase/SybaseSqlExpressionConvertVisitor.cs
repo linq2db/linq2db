@@ -1,4 +1,6 @@
-﻿using LinqToDB.Internal.DataProvider.Translation;
+﻿using System;
+
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
@@ -98,11 +100,31 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 				predicate = new SqlPredicate.ExprExpr(predicate.Expr1, predicate.Operator, PseudoFunctions.MakeMandatoryCast(predicate.Expr2, new DbDataType(rightType.SystemType, DataType.DateTime), null), predicate.UnknownAsValue);
 
 			return base.ConvertExprExprPredicate(predicate);
+		}
 
-			static bool IsTimestamp(DbDataType type)
+		/// <summary>
+		/// The <c>IN</c> twin of <see cref="ConvertExprExprPredicate"/>: a date operand is cast to <c>datetime</c> when a value
+		/// in the list is a timestamp, or may be one - the values of a captured collection beside a computed operand keep
+		/// their own type when written.
+		/// </summary>
+		protected internal override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
+		{
+			var newElement = base.VisitInListPredicate(predicate);
+
+			if (newElement is SqlPredicate.InList inList
+				&& QueryHelper.GetDbDataType(inList.Expr1, MappingSchema) is { DataType: DataType.Date } operandType
+				&& (inList.Values.Exists(v => IsTimestamp(QueryHelper.GetDbDataType(v, MappingSchema)))
+					|| (inList.Values is [SqlParameter] && inList.Expr1.SystemType?.ToUnderlying() == typeof(DateTime) && !QueryHelper.IsStoredColumn(inList.Expr1))))
 			{
-				return type.DataType is DataType.DateTime or DataType.DateTime2 or DataType.SmallDateTime;
+				return new SqlPredicate.InList(PseudoFunctions.MakeMandatoryCast(inList.Expr1, new DbDataType(operandType.SystemType, DataType.DateTime), null), inList.WithNull, inList.IsNot, inList.Values);
 			}
+
+			return newElement;
+		}
+
+		static bool IsTimestamp(DbDataType type)
+		{
+			return type.DataType is DataType.DateTime or DataType.DateTime2 or DataType.SmallDateTime;
 		}
 
 		protected internal override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)

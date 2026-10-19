@@ -2044,7 +2044,6 @@ namespace Tests.Linq
 		/// a time within it, whether its values are written inline or come from a captured collection.
 		/// </summary>
 		[Test]
-		[ActiveIssue(6050, Configuration = TestProvName.AllSybase, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was")]
 		public void ComputedDateInListMatchesMidnight([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
