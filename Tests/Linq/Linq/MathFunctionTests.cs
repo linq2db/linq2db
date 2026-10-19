@@ -1606,10 +1606,10 @@ namespace Tests.Linq
 			[Column                            ] public int     P  { get; set; }
 		}
 
-		// A literal value or base keeps its own scale beside a column on YDB. ClickHouse, which also renders a literal's scale,
-		// needs a constant rounding scale: RoundDecimalValueScale covers it.
+		// A literal value or base keeps its own scale beside a column on YDB and ClickHouse, the providers whose literals render a
+		// scale. ClickHouse's Power keeps the exact result, so the Pow cells are ranged.
 		[Test]
-		public void Round36([IncludeDataSources(true, TestProvName.AllYdb)] string context)
+		public void Round36([IncludeDataSources(true, TestProvName.AllYdb, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(new[] { new RoundValueScale { Id = 1, D = 16m, E = 2m, P = 4, P3 = 3 } });
@@ -1625,8 +1625,9 @@ namespace Tests.Linq
 				})
 				.Single();
 
-			result.Pow.ShouldBe(17.0001m);
-			result.PowTiny.ShouldBe(16m);
+			// 1.00005^2 + 16 = 17.0001000025 and 0.00005^2 + 16 = 16.0000000025; a cut base gives 17.0000 and 16
+			result.Pow!.Value.ShouldBeInRange(17.00009m, 17.00011m);
+			result.PowTiny!.Value.ShouldBeInRange(16m, 16.00001m);
 			result.Away.ShouldBe(17.0001m);
 			result.Even.ShouldBe(17.001m);
 			result.AwayTiny.ShouldBe(16.0001m);
@@ -1646,8 +1647,8 @@ namespace Tests.Linq
 			result.ShouldBeTrue();
 		}
 
-		// Only YDB and ClickHouse render a decimal literal's scale, so only they can cut the value. ClickHouse needs a constant
-		// rounding scale, and a constant one would be evaluated on the client unless wrapped.
+		// Only YDB and ClickHouse render a decimal literal's scale, so only they can cut the value. A constant rounding scale
+		// would be evaluated on the client unless wrapped.
 		[Test]
 		public void RoundDecimalValueScale([IncludeDataSources(true, TestProvName.AllYdb, TestProvName.AllClickHouse)] string context)
 		{

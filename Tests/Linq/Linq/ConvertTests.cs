@@ -207,7 +207,10 @@ namespace Tests.Linq
 					L = Sql.AsSql((int)r.L),
 				});
 
-			truncation.ToSqlQuery().Sql.ShouldNotContain("AS Text");
+			truncation
+				.ToSqlQuery()
+				.Sql
+				.ShouldNotContain("AS Text");
 		}
 
 		[Test]
