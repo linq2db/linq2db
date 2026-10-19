@@ -6,6 +6,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 using LinqToDB.CommandLine;
@@ -749,6 +750,211 @@ namespace Tests.LinqToDB.CLI
 				result.ExitCode.ShouldBe(0, result.Error);
 				result.Output.  ShouldContain("NuGet package linq2db 5.0.0");
 			}
+		}
+
+		// The content checks below run on the files `skill install` writes when the package carries no skill, i.e. on the
+		// copy embedded in the tool. Skill loaders reject a skill whose frontmatter is invalid, and the skill is read both
+		// from the restored package and from a copy in the consumer's repository, so every link has to stay inside the
+		// skill folder.
+
+		private static readonly Regex _linkRegex    = new(@"\[[^\]]*\]\((?<target>[^)\s]+)\)", RegexOptions.Compiled);
+		private static readonly Regex _headingRegex = new(@"^#{1,6}\s+(?<text>.+?)\s*$", RegexOptions.Compiled | RegexOptions.Multiline);
+		private static readonly Regex _fenceRegex   = new(@"^```.*?^```", RegexOptions.Compiled | RegexOptions.Multiline | RegexOptions.Singleline);
+		private static readonly Regex _nameRegex    = new(@"^[a-z0-9]+(-[a-z0-9]+)*$", RegexOptions.Compiled);
+
+		[Test]
+		public async Task InstalledSkillFrontmatterIsValid()
+		{
+			var root   = await InstallEmbeddedSkill();
+			var lines  = File.ReadAllLines(Path.Combine(root, "SKILL.md"));
+
+			lines.Length.ShouldBeGreaterThan(2);
+			lines[0].ShouldBe("---", "SKILL.md must start with YAML frontmatter");
+
+			var end = Array.IndexOf(lines, "---", 1);
+			end.ShouldBeGreaterThan(1, "SKILL.md frontmatter is not closed with '---'");
+
+			var fields = new Dictionary<string, string>(StringComparer.Ordinal);
+
+			for (var i = 1; i < end; i++)
+			{
+				var separator = lines[i].IndexOf(':');
+				separator.ShouldBeGreaterThan(0, $"Frontmatter line {i + 1} is not a 'key: value' pair: {lines[i]}");
+
+				fields.Add(lines[i].Substring(0, separator), lines[i].Substring(separator + 1).Trim());
+			}
+
+			fields.ShouldContainKey("name");
+			fields.ShouldContainKey("description");
+
+			var name        = fields["name"];
+			var description = fields["description"];
+
+			name.ShouldBe("linq2db", "Frontmatter 'name' must equal the skill folder name");
+			name.Length.ShouldBeLessThanOrEqualTo(64);
+			_nameRegex.IsMatch(name).ShouldBeTrue("Frontmatter 'name' must be lower-case words joined by hyphens");
+
+			description.ShouldNotBeNullOrWhiteSpace();
+			description.Length.ShouldBeLessThanOrEqualTo(1024, "Frontmatter 'description' exceeds 1024 characters");
+
+			// The value is a plain YAML scalar: these sequences would end or reinterpret it.
+			description.ShouldNotContain(": ");
+			description.ShouldNotContain(" #");
+			description.ShouldNotStartWith("\"");
+			description.ShouldNotStartWith("'");
+		}
+
+		[Test]
+		public async Task InstalledSkillRelativeLinksResolveInsideSkill()
+		{
+			var root     = await InstallEmbeddedSkill();
+			var failures = new List<string>();
+
+			foreach (var file in GetSkillFiles(root))
+			{
+				var text = StripCodeFences(File.ReadAllText(file));
+
+				foreach (Match match in _linkRegex.Matches(text))
+				{
+					var target = match.Groups["target"].Value;
+
+					if (target.StartsWith("http://", StringComparison.Ordinal)
+						|| target.StartsWith("https://", StringComparison.Ordinal)
+						|| target.StartsWith("mailto:", StringComparison.Ordinal))
+					{
+						continue;
+					}
+
+					var hash     = target.IndexOf('#');
+					var pathPart = hash < 0 ? target : target.Substring(0, hash);
+					var anchor   = hash < 0 ? null   : target.Substring(hash + 1);
+					var source   = Path.GetRelativePath(root, file).Replace('\\', '/');
+
+					var targetFile = pathPart.Length == 0
+						? file
+						: Path.GetFullPath(Path.Combine(Path.GetDirectoryName(file)!, pathPart.Replace('/', Path.DirectorySeparatorChar)));
+
+					if (!targetFile.StartsWith(root.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar, StringComparison.Ordinal))
+					{
+						failures.Add($"{source}: link '{target}' leaves the skill folder");
+						continue;
+					}
+
+					if (!File.Exists(targetFile))
+					{
+						failures.Add($"{source}: link '{target}' points to a missing file");
+						continue;
+					}
+
+					if (anchor != null && targetFile.EndsWith(".md", StringComparison.OrdinalIgnoreCase)
+						&& !GetAnchors(targetFile).Contains(anchor))
+					{
+						failures.Add($"{source}: link '{target}' points to a missing heading");
+					}
+				}
+			}
+
+			failures.ShouldBeEmpty();
+		}
+
+		[Test]
+		public async Task InstalledSkillGuidesUseCopySafePaths()
+		{
+			var root     = await InstallEmbeddedSkill();
+			var failures = new List<string>();
+
+			foreach (var file in GetSkillFiles(root))
+			{
+				// SKILL.md explains where the package's linq2db.xml lies; guides name the file only, because a
+				// package-root path such as lib/<tfm>/... does not exist next to a copy of the skill.
+				if (string.Equals(Path.GetFileName(file), "SKILL.md", StringComparison.Ordinal))
+					continue;
+
+				var text   = File.ReadAllText(file);
+				var source = Path.GetRelativePath(root, file).Replace('\\', '/');
+
+				if (text.Contains("lib/<"))
+					failures.Add($"{source}: package-root path 'lib/<...>'");
+
+				if (text.Contains("Source/LinqToDB"))
+					failures.Add($"{source}: repository source path 'Source/LinqToDB'");
+			}
+
+			failures.ShouldBeEmpty();
+		}
+
+		[Test]
+		public async Task InstalledSkillFilesHaveNoBom()
+		{
+			var root = await InstallEmbeddedSkill();
+
+			foreach (var file in GetSkillFiles(root))
+			{
+				var bytes = File.ReadAllBytes(file);
+				var bom   = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
+
+				bom.ShouldBeFalse($"{Path.GetRelativePath(root, file)} starts with a UTF-8 BOM");
+			}
+		}
+
+		/// <summary>
+		/// Installs the <c>linq2db</c> skill embedded in the tool (the package of the fake repository has none) and returns
+		/// the folder it was written to.
+		/// </summary>
+		private async Task<string> InstallEmbeddedSkill()
+		{
+			var repo   = CreateRepository("5.0.0", withSkill: false);
+			var result = await RunCli("skill", "install", "--project", repo.Project);
+
+			result.ExitCode.ShouldBe(0, result.Error);
+
+			return Path.Combine(repo.Root, ".agents", "skills", "linq2db");
+		}
+
+		private static List<string> GetSkillFiles(string root)
+		{
+			var files = Directory.GetFiles(root, "*.md", SearchOption.AllDirectories).OrderBy(f => f, StringComparer.Ordinal).ToList();
+
+			files.ShouldNotBeEmpty();
+
+			return files;
+		}
+
+		private static string StripCodeFences(string text)
+		{
+			return _fenceRegex.Replace(text, string.Empty);
+		}
+
+		/// <summary>
+		/// GitHub-style heading anchors: lower case, HTML comments and punctuation dropped, spaces turned into hyphens,
+		/// repeated headings numbered.
+		/// </summary>
+		private static HashSet<string> GetAnchors(string file)
+		{
+			var anchors = new HashSet<string>(StringComparer.Ordinal);
+			var text    = StripCodeFences(File.ReadAllText(file));
+
+			foreach (Match match in _headingRegex.Matches(text))
+			{
+				var heading = Regex.Replace(match.Groups["text"].Value, "<!--.*?-->", string.Empty).Trim();
+				var slug    = new StringBuilder();
+
+				foreach (var c in heading.ToLowerInvariant())
+				{
+					if (char.IsLetterOrDigit(c) || c == '-' || c == '_')
+						slug.Append(c);
+					else if (c == ' ')
+						slug.Append('-');
+				}
+
+				var anchor = slug.ToString();
+				var unique = anchor;
+
+				for (var i = 1; !anchors.Add(unique); i++)
+					unique = anchor + "-" + i;
+			}
+
+			return anchors;
 		}
 
 		private Repository CreateRepository(string version, Repository? existing = null, bool withSkill = true, bool moveIntermediateOutput = false, string projectName = "App")
