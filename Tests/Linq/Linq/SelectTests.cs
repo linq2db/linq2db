@@ -2212,5 +2212,32 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
+
+		readonly record struct ParentChildren(int Id, List<int> Children);
+
+		[Test]
+		public void StructWithEagerLoadFromSubqueryReferencedTwice([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var result = db.Parent
+				.Select(p => new { p.ParentID, Info = new ParentChildren(p.ParentID, p.Children.OrderBy(c => c.ChildID).Select(c => c.ChildID).ToList()) })
+				.Select(m => new { First = m.Info, Second = m.Info })
+				.ToList();
+
+			var expected = Child.OrderBy(c => c.ChildID).ToLookup(c => c.ParentID, c => c.ChildID);
+
+			Assert.That(result.Select(r => r.First.Id), Is.EquivalentTo(Parent.Select(p => p.ParentID)));
+
+			using (Assert.EnterMultipleScope())
+			{
+				foreach (var r in result)
+				{
+					Assert.That(r.Second.Id,       Is.EqualTo(r.First.Id));
+					Assert.That(r.First.Children,  Is.EqualTo(expected[r.First.Id]));
+					Assert.That(r.Second.Children, Is.EqualTo(expected[r.First.Id]));
+				}
+			}
+		}
 	}
 }
