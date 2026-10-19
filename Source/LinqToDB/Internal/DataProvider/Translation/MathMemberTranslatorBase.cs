@@ -456,22 +456,29 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		{
 			// a decimal carries at most 28 places, so a larger scale cannot cut it
 			if (value is SqlValue { Value: decimal literal } sqlValue
-				&& sqlValue.ValueType.Scale is int scale and < 28
-				&& decimal.Round(literal, scale) != literal)
+				&& sqlValue.ValueType.Scale is int scale and < 28)
 			{
 				var literalScale  = (decimal.GetBits(literal)[3] >> 16) & 0xFF;
 				var integerDigits = Math.Abs(literal) < 1 ? 0 : decimal.Truncate(Math.Abs(literal)).ToString(CultureInfo.InvariantCulture).Length;
-				var precision     = integerDigits + literalScale;
 
-				// ClickHouse's Decimal32 / Decimal64 hold 9 / 18 digits; a literal outgrowing its column's family takes Decimal128
-				var dataType = sqlValue.ValueType.DataType switch
+				// ClickHouse's Decimal32 / Decimal64 hold 9 / 18 digits in total: a literal with more scale than its column takes
+				// integer digits from the column in the sum, and one with more digits cannot be read, so both take Decimal128
+				int? familyDigits = sqlValue.ValueType.DataType switch
 				{
-					DataType.Decimal32 when precision > 9  => DataType.Decimal128,
-					DataType.Decimal64 when precision > 18 => DataType.Decimal128,
-					var dt                                 => dt,
+					DataType.Decimal32 => 9,
+					DataType.Decimal64 => 18,
+					_                  => null,
 				};
 
-				return factory.Value(sqlValue.ValueType.WithDataType(dataType).WithPrecisionScale(precision, literalScale), literal);
+				if (decimal.Round(literal, scale) != literal)
+				{
+					var dataType = familyDigits == null ? sqlValue.ValueType.DataType : DataType.Decimal128;
+
+					return factory.Value(sqlValue.ValueType.WithDataType(dataType).WithPrecisionScale(integerDigits + literalScale, literalScale), literal);
+				}
+
+				if (familyDigits is int digits && integerDigits + Math.Max(literalScale, scale) > digits)
+					return factory.Value(sqlValue.ValueType.WithDataType(DataType.Decimal128), literal);
 			}
 
 			return value;

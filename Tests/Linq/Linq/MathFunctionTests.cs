@@ -1673,23 +1673,42 @@ namespace Tests.Linq
 			[Column(DataType = DataType.Decimal64, Precision = 18, Scale = 2)] public decimal D64 { get; set; }
 		}
 
-		// A literal value keeps its own scale beside a narrow ClickHouse Decimal column without outgrowing that family.
+		// A literal value keeps its own scale beside a narrow ClickHouse Decimal column: it takes Decimal128, so neither its
+		// digits nor the column's integer digits are cut.
 		[Test]
 		public void RoundDecimalValueNarrowFamily([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
 		{
+			var data = new[]
+			{
+				new RoundValueNarrowFamily { Id = 1, D32 = 0m,       D64 = 0m                },
+				new RoundValueNarrowFamily { Id = 2, D32 = 5000000m, D64 = 9000000000000000m },
+			};
+
 			using var db = GetDataContext(context);
-			using var t  = db.CreateLocalTable(new[] { new RoundValueNarrowFamily { Id = 1, D32 = 0m, D64 = 0m } });
+			using var t  = db.CreateLocalTable(data);
 
 			var query = t
+				.OrderBy(r => r.Id)
 				.Select(r => new
 				{
 					Away32  = Sql.AsSql(Sql.Round(1234567.125m, Sql.AsSql(1)) + r.D32),
 					Even32  = Sql.AsSql(Sql.RoundToEven(1234567.125m, Sql.AsSql(2)) + r.D32),
 					Scale32 = Sql.AsSql(Sql.Round(1.0000000005m, Sql.AsSql(9)) + r.D32),
+					Small32 = Sql.AsSql(Sql.Round(1.125m, Sql.AsSql(1)) + r.D32),
 					Away64  = Sql.AsSql(Sql.Round(1234567890123456.125m, Sql.AsSql(1)) + r.D64),
+					Small64 = Sql.AsSql(Sql.Round(1.125m, Sql.AsSql(1)) + r.D64),
 				});
 
 			AssertQuery(query);
+
+			var wide = t
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					Wide32 = Sql.AsSql(Sql.Round(123456789.5m, Sql.AsSql(0)) + r.D32),
+				});
+
+			AssertQuery(wide);
 		}
 
 		[Test]
