@@ -2127,7 +2127,8 @@ namespace Tests.Linq
 		/// A literal set beside an aggregate over a coarse column in a set operation keeps its time part.
 		/// </summary>
 		[Test]
-		[ActiveIssue(Configuration = TestProvName.AllInformix, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+		[ActiveIssue(Configuration = TestProvName.AllInformix, Platforms = TestPlatform.Linux, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			ErrorMessage = "corresponding column data types must be compatible",
 			Details = "no-issue: the server rejects a datetime literal set beside a DATETIME YEAR TO DAY aggregate; master fails the same query on To_Date.")]
 		[ActiveIssue(Configuration = TestProvName.AllFirebird, ErrorMessage = "Datatypes are not comparable in expression UNION",
 			Details = "no-issue: the server rejects a UNION of DATE and TIMESTAMP.")]
@@ -2188,7 +2189,8 @@ namespace Tests.Linq
 		[Test]
 		[ActiveIssue(Configuration = TestProvName.AllFirebird, ErrorMessage = "Datatypes are not comparable in expression UNION",
 			Details = "no-issue: the server rejects a UNION of DATE and TIMESTAMP; master answered by truncating the literal to 00:00.")]
-		[ActiveIssue(Configuration = TestProvName.AllInformix, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+		[ActiveIssue(Configuration = TestProvName.AllInformix, Platforms = TestPlatform.Linux, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			ErrorMessage = "corresponding column data types must be compatible",
 			Details = "no-issue: the server rejects a datetime literal set beside a DATETIME YEAR TO DAY conditional; master fails the same query.")]
 		[ActiveIssue(6050, Configuration = TestProvName.AllSybase, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should contain{0}2026-06-01T10:00:00.0000000{1}but")]
 		public void ConditionalOverDateSetOperationKeepsLiteralTime([DataSources] string context)
