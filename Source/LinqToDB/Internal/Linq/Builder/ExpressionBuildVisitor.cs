@@ -5021,6 +5021,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			public int?     Length;
 			public int?     Precision;
 			public int?     Scale;
+			public bool     SchemaDefault;
 
 			public MappingSchema MappingSchema { get; }
 		}
@@ -5094,6 +5095,14 @@ namespace LinqToDB.Internal.Linq.Builder
 							if (QueryHelper.IsCoarserDateTime(type.DataType, context.DataType) && !QueryHelper.IsStoredColumn(expr))
 								return true;
 
+							// Nor a stored scale: a decimal literal beside a computed decimal takes the schema's own decimal
+							// type rather than the column's scale, which it may be finer than, converter or not.
+							if (QueryHelper.IsDecimal(type.DataType) && QueryHelper.IsDecimal(context.DataType) && !QueryHelper.IsStoredColumn(expr))
+							{
+								context.SchemaDefault = true;
+								return true;
+							}
+
 							context.DataType  = type.DataType;
 							context.DbType    = type.DbType;
 							context.Length    = type.Length;
@@ -5106,6 +5115,9 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 				}
 			});
+
+			if (ctx.SchemaDefault)
+				return mappingSchema.GetDbDataType(baseType.SystemType);
 
 			return new DbDataType(
 				baseType.SystemType,

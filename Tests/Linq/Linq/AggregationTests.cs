@@ -333,5 +333,56 @@ namespace Tests.Linq
 			// accident. What is asserted is that the addend keeps its own scale, which is per-value.
 			shifted.ShouldBe(sums.Select(s => s + 0.00005m), ignoreOrder: true);
 		}
+
+		sealed class DecimalIdentityConverter() : ValueConverter<decimal, decimal>(v => v, v => v, false);
+
+		sealed class ScaledDecimalRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Decimal, Precision = 18, Scale = 2)]
+			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Decimal64, Precision = 18, Scale = 2)]
+			public decimal Value { get; set; }
+
+			[Column(DataType = DataType.Decimal, Precision = 18, Scale = 2), ValueConverter(ConverterType = typeof(DecimalIdentityConverter))]
+			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Decimal64, Precision = 18, Scale = 2)]
+			public decimal Converted { get; set; }
+		}
+
+		/// <summary>
+		/// A literal finer than an aggregated column's scale keeps its digits when compared with the aggregate, and so does
+		/// a captured list beside an aggregate over a column with a value converter: MAX is a computed value with no stored
+		/// scale to match.
+		/// </summary>
+		/// <remarks>
+		/// A literal compared with an aggregate over the converted column is not asserted: it is written in the column's
+		/// terms, and ClickHouse narrows it while YDB refuses it, on master too.
+		/// </remarks>
+		[Test]
+		public void LiteralComparedWithAggregateKeepsItsOwnScale([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new ScaledDecimalRow { Id = 1, Value = 1.00m, Converted = 1.00m } });
+
+			var finer = new[] { 1.004m };
+
+			var equal = t
+				.GroupBy(r => r.Id)
+				.Count(g => g.Max(r => r.Value) == 1.004m);
+
+			equal.ShouldBe(0);
+
+			var below = t
+				.GroupBy(r => r.Id)
+				.Count(g => g.Max(r => r.Value) < 1.004m);
+
+			below.ShouldBe(1);
+
+			var convertedCaptured = t
+				.GroupBy(r => r.Id)
+				.Count(g => finer.Contains(g.Max(r => r.Converted)));
+
+			convertedCaptured.ShouldBe(0);
+		}
 	}
 }

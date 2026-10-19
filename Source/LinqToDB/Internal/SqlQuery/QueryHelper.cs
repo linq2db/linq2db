@@ -287,6 +287,11 @@ namespace LinqToDB.Internal.SqlQuery
 			return rank >= 0 && rank < DateTimeRank(than);
 		}
 
+		internal static bool IsDecimal(DataType dataType)
+		{
+			return dataType is DataType.Decimal or DataType.Decimal32 or DataType.Decimal64 or DataType.Decimal128 or DataType.Decimal256;
+		}
+
 		/// <summary>
 		/// Whether <paramref name="expr"/> is a stored column's value as it is, rather than one computed from it.
 		/// </summary>
