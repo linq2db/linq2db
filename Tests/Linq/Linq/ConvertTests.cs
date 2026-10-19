@@ -249,8 +249,9 @@ namespace Tests.Linq
 
 		sealed class FoldPairRow
 		{
-			[PrimaryKey] public int   Id { get; set; }
-			[Column    ] public float S  { get; set; }
+			[PrimaryKey] public int      Id { get; set; }
+			[Column    ] public float    S  { get; set; }
+			[Column    ] public DateTime D  { get; set; }
 		}
 
 		// A pair of casts folds only when the inner one loses nothing. The assertions read CAST text, which SQLite renders for
@@ -284,6 +285,12 @@ namespace Tests.Linq
 				.ToSqlQuery()
 				.Sql
 				.ShouldContain("CAST(");
+
+			t
+				.Select(r => Sql.AsSql(DateTime.Parse(Sql.ConvertTo<string>.From(r.D))))
+				.ToSqlQuery()
+				.Sql
+				.ShouldNotContain("CAST(");
 		}
 
 		[Test]

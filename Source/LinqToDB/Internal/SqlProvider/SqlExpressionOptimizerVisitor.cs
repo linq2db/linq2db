@@ -1429,6 +1429,10 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 					&& (!IsUnicode(from.DataType) || IsUnicode(to.DataType));
 			}
 
+			// The text length is the one the engine sized for the temporal value, so the text holds it whole.
+			if (IsTemporal(from.DataType) && to.DataType.IsTextType())
+				return true;
+
 			return false;
 
 			static int IntegerWidth(DataType type) => type switch
@@ -1458,6 +1462,11 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 				or DataType.Decimal32 or DataType.Decimal64 or DataType.Decimal128 or DataType.Decimal256;
 
 			static bool IsUnicode(DataType type) => type is DataType.NChar or DataType.NVarChar or DataType.NText;
+
+			static bool IsTemporal(DataType type) => type is DataType.Date or DataType.DateTz or DataType.Date32
+				or DataType.Time or DataType.TimeTZ or DataType.DateTime or DataType.DateTime2 or DataType.DateTimeTz
+				or DataType.DateTime2Tz or DataType.SmallDateTime or DataType.DateTimeOffset or DataType.DateTime64
+				or DataType.Timestamp64;
 		}
 
 		protected internal override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
