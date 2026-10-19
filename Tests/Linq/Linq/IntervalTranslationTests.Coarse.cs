@@ -258,5 +258,97 @@ namespace Tests.Linq
 
 			olderThanADay.ShouldBe(1);
 		}
+
+		[Table]
+		sealed class CoarseNullableEventRow
+		{
+			[PrimaryKey]                           public int       Id         { get; set; }
+			[Column(DataType = DataType.DateTime)] public DateTime  StartedOn  { get; set; }
+			[Column(DataType = DataType.DateTime)] public DateTime? FinishedOn { get; set; }
+		}
+
+		static TempTable<CoarseNullableEventRow> SeedCoarseNullable(IDataContext db)
+		{
+			var t = db.CreateLocalTable<CoarseNullableEventRow>();
+
+			try
+			{
+				db.Insert(new CoarseNullableEventRow { Id = 1, StartedOn = CoarseStart,              FinishedOn = null                         });
+				db.Insert(new CoarseNullableEventRow { Id = 2, StartedOn = CoarseStart.AddHours(1), FinishedOn = CoarseStart.AddHours(3) });
+			}
+			catch
+			{
+				t.Dispose();
+				throw;
+			}
+
+			return t;
+		}
+
+		// Spelled out rather than derived from CoarseStart: static initializers in separate partial-class files run in
+		// no defined order.
+		static readonly DateTime CoarseSubSecond = new(2026, 6, 1, 10, 0, 0, 500);
+
+		/// <summary>
+		/// A coalesce over a whole-second column is a computed value: the literal beside it keeps its sub-second part.
+		/// </summary>
+		[Test]
+		public void CoalesceOverASecondPrecisionColumnComparedWithSubSecondLiteral([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarseNullable(db);
+
+			var below = t.Count(r => (r.FinishedOn ?? r.StartedOn) < CoarseSubSecond);
+
+			below.ShouldBe(1);
+
+			var belowReversed = t.Count(r => CoarseSubSecond > (r.FinishedOn ?? r.StartedOn));
+
+			belowReversed.ShouldBe(1);
+
+			var equal = t.Count(r => (r.FinishedOn ?? r.StartedOn) == CoarseSubSecond);
+
+			equal.ShouldBe(0);
+		}
+
+		// The providers without FIRST_VALUE / LAG-with-default are excluded rather than asserted with ThrowsForProvider:
+		// under a filter over a subquery the specific message is lost to a generic "could not be converted to SQL"
+		// (pre-existing). The throws themselves are pinned by FirstValueBasic and LagWithDefaultOverAConvertedColumn.
+
+		/// <summary>
+		/// FIRST_VALUE over a whole-second column is a computed value: the literal beside it keeps its sub-second part.
+		/// </summary>
+		[Test]
+		public void FirstValueOverASecondPrecisionColumnComparedWithSubSecondLiteral([SupportsAnalyticFunctionsContext(TestProvName.AllSqlServer2008Minus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarseNullable(db);
+
+			var windowed = t
+				.Select(r => new { First = Sql.Window.FirstValue(r.StartedOn, w => w.OrderBy(r.Id).RowsBetween.Unbounded.And.Unbounded) })
+				.AsSubQuery();
+
+			var firstBelow = windowed.Count(r => r.First < CoarseSubSecond);
+
+			firstBelow.ShouldBe(2);
+		}
+
+		/// <summary>
+		/// LAG over a whole-second column is a computed value: the literal beside it keeps its sub-second part.
+		/// </summary>
+		[Test]
+		public void LagOverASecondPrecisionColumnComparedWithSubSecondLiteral([SupportsAnalyticFunctionsContext(TestProvName.AllSqlServer2008Minus, TestProvName.AllYdb, TestProvName.AllMariaDB)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarseNullable(db);
+
+			var windowed = t
+				.Select(r => new { Lag = Sql.Window.Lag(r.StartedOn, 1, r.StartedOn, w => w.OrderBy(r.Id)) })
+				.AsSubQuery();
+
+			var lagBelow = windowed.Count(r => r.Lag < CoarseSubSecond);
+
+			lagBelow.ShouldBe(2);
+		}
 	}
 }

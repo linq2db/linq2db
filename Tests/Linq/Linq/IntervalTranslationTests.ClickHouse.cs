@@ -58,32 +58,6 @@ namespace Tests.Linq
 			db.LastQuery!.ShouldContain("toDateTime64(");
 		}
 
-		[Table]
-		sealed class CoarseNullableEventRow
-		{
-			[PrimaryKey]                           public int       Id         { get; set; }
-			[Column(DataType = DataType.DateTime)] public DateTime  StartedOn  { get; set; }
-			[Column(DataType = DataType.DateTime)] public DateTime? FinishedOn { get; set; }
-		}
-
-		static TempTable<CoarseNullableEventRow> SeedCoarseNullable(IDataContext db)
-		{
-			var t = db.CreateLocalTable<CoarseNullableEventRow>();
-
-			try
-			{
-				db.Insert(new CoarseNullableEventRow { Id = 1, StartedOn = CoarseStart,              FinishedOn = null                         });
-				db.Insert(new CoarseNullableEventRow { Id = 2, StartedOn = CoarseStart.AddHours(1), FinishedOn = CoarseStart.AddHours(3) });
-			}
-			catch
-			{
-				t.Dispose();
-				throw;
-			}
-
-			return t;
-		}
-
 		[Test]
 		public void CoalesceOverASecondPrecisionColumnIsCoerced([IncludeDataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -199,49 +173,6 @@ namespace Tests.Linq
 				.ToArray();
 
 			hours.ShouldBe([1d, 0d]);
-		}
-
-		// Spelled out rather than derived from CoarseStart: static initializers in separate partial-class files run in
-		// no defined order.
-		static readonly DateTime CoarseSubSecond = new(2026, 6, 1, 10, 0, 0, 500);
-
-		/// <summary>
-		/// A coalesce or a value window function over a whole-second column is a computed value: the literal beside it
-		/// keeps its sub-second part.
-		/// </summary>
-		[Test]
-		public void ComputedSecondPrecisionValueComparedWithSubSecondLiteral([IncludeDataSources(TestProvName.AllClickHouse)] string context)
-		{
-			using var db = GetDataContext(context);
-			using var t  = SeedCoarseNullable(db);
-
-			var below = t.Count(r => (r.FinishedOn ?? r.StartedOn) < CoarseSubSecond);
-
-			below.ShouldBe(1);
-
-			var belowReversed = t.Count(r => CoarseSubSecond > (r.FinishedOn ?? r.StartedOn));
-
-			belowReversed.ShouldBe(1);
-
-			var equal = t.Count(r => (r.FinishedOn ?? r.StartedOn) == CoarseSubSecond);
-
-			equal.ShouldBe(0);
-
-			var windowed = t
-				.Select(r => new
-				{
-					First = Sql.Window.FirstValue(r.StartedOn, w => w.OrderBy(r.Id).RowsBetween.Unbounded.And.Unbounded),
-					Lag   = Sql.Window.Lag(r.StartedOn, 1, r.StartedOn, w => w.OrderBy(r.Id)),
-				})
-				.AsSubQuery();
-
-			var firstBelow = windowed.Count(r => r.First < CoarseSubSecond);
-
-			firstBelow.ShouldBe(2);
-
-			var lagBelow = windowed.Count(r => r.Lag < CoarseSubSecond);
-
-			lagBelow.ShouldBe(2);
 		}
 
 		/// <summary>
