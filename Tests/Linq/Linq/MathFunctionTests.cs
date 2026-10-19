@@ -916,7 +916,11 @@ namespace Tests.Linq
 				.Select(r => r.D)
 				.ToArray();
 
-			stored.ShouldBe(data.Select(r => r.D).ToArray(), "round trip");
+			var expectedStored = data
+				.Select(r => r.D)
+				.ToArray();
+
+			stored.ShouldBe(expectedStored, "round trip");
 
 			var expected = data
 				.OrderBy(r => r.Id)
@@ -1602,7 +1606,8 @@ namespace Tests.Linq
 			[Column                            ] public int     P  { get; set; }
 		}
 
-		// A literal value or base keeps its own scale beside a column on the providers that render a literal's scale.
+		// A literal value or base keeps its own scale beside a column on YDB. ClickHouse, which also renders a literal's scale,
+		// needs a constant rounding scale: RoundDecimalValueScale covers it.
 		[Test]
 		public void Round36([IncludeDataSources(true, TestProvName.AllYdb)] string context)
 		{
@@ -1641,7 +1646,8 @@ namespace Tests.Linq
 			result.ShouldBeTrue();
 		}
 
-		// ClickHouse needs a constant rounding scale, and a constant one would be evaluated on the client unless wrapped.
+		// Only YDB and ClickHouse render a decimal literal's scale, so only they can cut the value. ClickHouse needs a constant
+		// rounding scale, and a constant one would be evaluated on the client unless wrapped.
 		[Test]
 		public void RoundDecimalValueScale([IncludeDataSources(true, TestProvName.AllYdb, TestProvName.AllClickHouse)] string context)
 		{

@@ -172,7 +172,8 @@ namespace Tests.Linq
 			[Column(DataType = DataType.Decimal, Precision = 22, Scale = 9)] public double L  { get; set; }
 		}
 
-		// A double stored as Decimal truncates exactly in Decimal, cast directly rather than through Text.
+		// A double stored as Decimal truncates exactly in Decimal: (long) and (int) cast it directly rather than through Text,
+		// while Convert.ToInt64 rounds in Double first and narrows that result through Text.
 		[Test]
 		public void DecimalStoredDoubleToInt64([IncludeDataSources(true, TestProvName.AllYdb)] string context)
 		{
@@ -198,6 +199,15 @@ namespace Tests.Linq
 				};
 
 			AssertQuery(query);
+
+			var truncation = t
+				.Select(r => new
+				{
+					A = Sql.AsSql((long)r.A),
+					L = Sql.AsSql((int)r.L),
+				});
+
+			truncation.ToSqlQuery().Sql.ShouldNotContain("AS Text");
 		}
 
 		[Test]
