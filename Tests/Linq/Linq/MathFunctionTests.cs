@@ -133,6 +133,35 @@ namespace Tests.Linq
 				from t in from p in db.Types select Sql.Degrees((int)p.MoneyValue)!.Value where t != 0.1 select t);
 		}
 
+		sealed class DegreesValue
+		{
+			[PrimaryKey] public int     Id { get; set; }
+			[Column    ] public decimal M  { get; set; }
+		}
+
+		// Sql.Degrees(int) returns int, so widened back to double it has no fraction. The bound is not integral: an integral
+		// constant lets the comparison drop the widening before SQL is built (#6070).
+		// Only these providers emulate Degrees inside an integer cast pair; elsewhere DEGREES keeps the fraction (#6072).
+		[Test]
+		public void DegreesOfIntTruncates([IncludeDataSources(true, TestProvName.AllFirebird, TestProvName.AllOracle, TestProvName.AllSapHana, TestProvName.AllInformix, TestProvName.AllSybase)] string context)
+		{
+			var data = new[]
+			{
+				new DegreesValue { Id = 1, M = 1.5m },
+				new DegreesValue { Id = 2, M = 2.5m },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var query =
+				from d in from r in t select Sql.Degrees((int)r.M)!.Value
+				where d < 57.1
+				select d;
+
+			AssertQuery(query);
+		}
+
 		[Test]
 		public void Exp([DataSources] string context)
 		{

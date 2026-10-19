@@ -1388,8 +1388,8 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 			}
 		}
 
-		// A cast pair folds back to its operand only when the inner cast keeps every value: (double)(int)x truncates. Unknown
-		// pairs are not lossless, which leaves a redundant cast in the SQL, never a wrong value.
+		// A cast pair folds back to its operand only when the inner cast keeps every value: (double)(int)x truncates. An unknown
+		// pair keeps both casts, and the provider's casts then decide its value.
 		static bool IsLosslessConversion(DbDataType from, DbDataType to)
 		{
 			if (from.EqualsDbOnly(to))
@@ -1429,8 +1429,9 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 					&& (!IsUnicode(from.DataType) || IsUnicode(to.DataType));
 			}
 
-			// The text length is the one the engine sized for the temporal value, so the text holds it whole.
-			if (IsTemporal(from.DataType) && to.DataType.IsTextType())
+			// A temporal value's round trip through text is the identity, whatever the text's declared length: several providers
+			// cannot cast that text back (#6071).
+			if (IsTemporal(from) && to.DataType.IsTextType())
 				return true;
 
 			return false;
@@ -1463,10 +1464,12 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 
 			static bool IsUnicode(DataType type) => type is DataType.NChar or DataType.NVarChar or DataType.NText;
 
-			static bool IsTemporal(DataType type) => type is DataType.Date or DataType.DateTz or DataType.Date32
+			// Timestamp is a date/time type on DB2, SAP HANA, PostgreSQL and Firebird, and rowversion elsewhere.
+			static bool IsTemporal(DbDataType type) => type.DataType is DataType.Date or DataType.DateTz or DataType.Date32
 				or DataType.Time or DataType.TimeTZ or DataType.DateTime or DataType.DateTime2 or DataType.DateTimeTz
 				or DataType.DateTime2Tz or DataType.SmallDateTime or DataType.DateTimeOffset or DataType.DateTime64
-				or DataType.Timestamp64;
+				or DataType.Timestamp64
+				|| (type.DataType == DataType.Timestamp && type.SystemType != typeof(byte[]));
 		}
 
 		protected internal override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
