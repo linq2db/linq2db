@@ -2759,6 +2759,13 @@ namespace Tests.Linq
 				.ToArray();
 
 			values.ShouldBe([1.00m, 1.004m], ignoreOrder: true);
+
+			var conditional = t
+				.Select(r => r.Id > 0 ? r.Value : r.Value + 1)
+				.Concat(t.Select(r => 1.004m))
+				.ToArray();
+
+			conditional.ShouldBe([1.00m, 1.004m], ignoreOrder: true);
 		}
 	}
 }

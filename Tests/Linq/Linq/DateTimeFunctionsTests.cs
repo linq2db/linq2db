@@ -2094,6 +2094,35 @@ namespace Tests.Linq
 			count.ShouldBe(1);
 		}
 
+		sealed class IdentityDateConverter() : ValueConverter<DateTime, DateTime>(v => v, v => v, false);
+
+		[Table]
+		sealed class ConvertedDayPairRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Date), ValueConverter(ConverterType = typeof(IdentityDateConverter))]
+			public DateTime? ClosedOn { get; set; }
+
+			[Column(DataType = DataType.Date), ValueConverter(ConverterType = typeof(IdentityDateConverter))]
+			public DateTime OpenedOn { get; set; }
+		}
+
+		/// <summary>
+		/// An IN list beside a date computed from date columns with a value converter matches the day at midnight.
+		/// </summary>
+		[Test]
+		public void ConvertedComputedDateInListMatchesMidnight([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new ConvertedDayPairRow { Id = 1, ClosedOn = null, OpenedOn = CoarseMidnight } });
+
+			var count = t
+				.Count(r => (r.ClosedOn ?? r.OpenedOn).In(CoarseMidnight));
+
+			count.ShouldBe(1);
+		}
+
 		/// <summary>
 		/// A literal set beside an aggregate over a coarse column in a set operation keeps its time part.
 		/// </summary>

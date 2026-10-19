@@ -538,5 +538,77 @@ namespace Tests.Linq
 			count.ShouldBe(1);
 		}
 #endif
+
+		sealed class DayRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Date)]
+			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Date32)]
+			public DateTime Day { get; set; }
+		}
+
+		/// <summary>
+		/// A captured list beside an aggregate over a date column matches the day at midnight and not a time within it.
+		/// </summary>
+		[Test]
+		public void CapturedListBesideAggregateOfADateColumn([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new DayRow { Id = 1, Day = new DateTime(2026, 6, 1) } });
+
+			var midnight = new[] { new DateTime(2026, 6, 1) };
+			var withTime = new[] { new DateTime(2026, 6, 1, 10, 0, 0) };
+
+			var atMidnight = t
+				.GroupBy(r => r.Id)
+				.Count(g => midnight.Contains(g.Max(r => r.Day)));
+
+			atMidnight.ShouldBe(1);
+
+			var atTime = t
+				.GroupBy(r => r.Id)
+				.Count(g => withTime.Contains(g.Max(r => r.Day)));
+
+			atTime.ShouldBe(0);
+		}
+
+		sealed class OffsetRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.DateTime)]
+			public DateTimeOffset Value { get; set; }
+		}
+
+		/// <summary>
+		/// A captured <see cref="DateTimeOffset"/> list beside an aggregate over a whole-second column matches a whole-second
+		/// value and not a sub-second one.
+		/// </summary>
+		/// <remarks>
+		/// ClickHouse only: it is where the operand is widened to <c>DateTime64</c> for the list, which refused these shapes
+		/// with <c>Type mismatch in IN or VALUES section</c> before.
+		/// </remarks>
+		[Test]
+		public void CapturedDateTimeOffsetListBesideAggregate([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new OffsetRow { Id = 1, Value = new DateTimeOffset(2026, 6, 1, 10, 0, 0, TimeSpan.Zero) } });
+
+			var whole = new[] { new DateTimeOffset(2026, 6, 1, 10, 0, 0, TimeSpan.Zero) };
+			var half  = new[] { new DateTimeOffset(2026, 6, 1, 10, 0, 0, 500, TimeSpan.Zero) };
+
+			var atWhole = t
+				.GroupBy(r => r.Id)
+				.Count(g => whole.Contains(g.Max(r => r.Value)));
+
+			atWhole.ShouldBe(1);
+
+			var atHalf = t
+				.GroupBy(r => r.Id)
+				.Count(g => half.Contains(g.Max(r => r.Value)));
+
+			atHalf.ShouldBe(0);
+		}
 	}
 }
