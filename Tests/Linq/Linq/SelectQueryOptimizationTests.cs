@@ -59,7 +59,8 @@ namespace Tests.Linq
 		[Test]
 		public void MinMaxReportTheirArgumentsTypeRatherThanTheirOwn()
 		{
-			// MIN and MAX return a row's value unchanged, so the argument's column describes the result - the
+			// MIN, MAX and the value window functions (LAG, LEAD, FIRST_VALUE, LAST_VALUE, NTH_VALUE) return a row's
+			// value unchanged, so the argument's column describes the result - the
 			// relation SqlArgumentDomain.Element states and GetColumnDescriptor already reads. Without the arm
 			// the node matched no case in GetDbDataTypeImpl and fell to the CLR-type catch-all, which the
 			// mapping-schema fallback then answered with the default for the system type: a MAX over a column
