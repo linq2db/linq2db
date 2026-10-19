@@ -1615,6 +1615,32 @@ namespace Tests.Linq
 			result.Even.ShouldBe(17.001m);
 		}
 
+		sealed class RoundValueNarrowFamily
+		{
+			[PrimaryKey                                                       ] public int     Id  { get; set; }
+			[Column(DataType = DataType.Decimal32, Precision = 9,  Scale = 2)] public decimal D32 { get; set; }
+			[Column(DataType = DataType.Decimal64, Precision = 18, Scale = 2)] public decimal D64 { get; set; }
+		}
+
+		// A literal value keeps its own scale beside a narrow ClickHouse Decimal column without outgrowing that family.
+		[Test]
+		public void RoundDecimalValueNarrowFamily([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new RoundValueNarrowFamily { Id = 1, D32 = 0m, D64 = 0m } });
+
+			var query = t
+				.Select(r => new
+				{
+					Away32  = Sql.AsSql(Sql.Round(1234567.125m, Sql.AsSql(1)) + r.D32),
+					Even32  = Sql.AsSql(Sql.RoundToEven(1234567.125m, Sql.AsSql(2)) + r.D32),
+					Scale32 = Sql.AsSql(Sql.Round(1.0000000005m, Sql.AsSql(9)) + r.D32),
+					Away64  = Sql.AsSql(Sql.Round(1234567890123456.125m, Sql.AsSql(1)) + r.D64),
+				});
+
+			AssertQuery(query);
+		}
+
 		[Test]
 		public void Sign([DataSources(TestProvName.AllYdb)] string context)
 		{

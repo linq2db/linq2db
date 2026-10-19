@@ -461,8 +461,17 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			{
 				var literalScale  = (decimal.GetBits(literal)[3] >> 16) & 0xFF;
 				var integerDigits = Math.Abs(literal) < 1 ? 0 : decimal.Truncate(Math.Abs(literal)).ToString(CultureInfo.InvariantCulture).Length;
+				var precision     = integerDigits + literalScale;
 
-				return factory.Value(sqlValue.ValueType.WithPrecisionScale(integerDigits + literalScale, literalScale), literal);
+				// ClickHouse's Decimal32 / Decimal64 hold 9 / 18 digits; a literal outgrowing its column's family takes Decimal128
+				var dataType = sqlValue.ValueType.DataType switch
+				{
+					DataType.Decimal32 when precision > 9  => DataType.Decimal128,
+					DataType.Decimal64 when precision > 18 => DataType.Decimal128,
+					var dt                                 => dt,
+				};
+
+				return factory.Value(sqlValue.ValueType.WithDataType(dataType).WithPrecisionScale(precision, literalScale), literal);
 			}
 
 			return value;
