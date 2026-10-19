@@ -1496,6 +1496,51 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		sealed class RoundDecimalStoredDouble
+		{
+			[PrimaryKey                                                    ] public int    Id { get; set; }
+			[Column(DataType = DataType.Decimal)                           ] public double A  { get; set; }
+			[Column(DataType = DataType.Decimal, Precision = 10, Scale = 2)] public double C  { get; set; }
+			[Column(DataType = DataType.Decimal, Precision = 22, Scale = 9)] public double L  { get; set; }
+			[Column(DataType = DataType.Decimal, Precision = 5,  Scale = 3)] public double N  { get; set; }
+			[Column                                                        ] public double F  { get; set; }
+		}
+
+		// A double stored as Decimal rounds in Double: neither 10^p nor the scaled value need fit the column, and the
+		// result stays a Double beside a floating column or in arithmetic with another Decimal-stored double. With no
+		// precision the result keeps the column's type, so it still compares with the column.
+		[Test]
+		public void Round38([IncludeDataSources(true, TestProvName.AllYdb)] string context, [Values(MidpointRounding.ToEven, MidpointRounding.AwayFromZero)] MidpointRounding mp)
+		{
+			var data = new[]
+			{
+				new RoundDecimalStoredDouble { Id = 1, A =  1000000000000.25, C =  99999999.25, L =  10000000000.0625, N =  1.125,  F = 1 },
+				new RoundDecimalStoredDouble { Id = 2, A = -1000000000000.25, C = -99999999.25, L = -10000000000.0625, N = -1.125,  F = 1 },
+				new RoundDecimalStoredDouble { Id = 3, A =  2.5,              C =  2.5,          L =  2.5,              N =  2.5,    F = 1 },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var query = t
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					A           = Sql.AsSql(Math.Round(r.A, 1, mp)),
+					C           = Sql.AsSql(Math.Round(r.C, 1, mp)),
+					L           = Sql.AsSql(Math.Round(r.L, 3, mp)),
+					N           = Sql.AsSql(Math.Round(r.N, 2, mp)),
+					RuntimeAway = Sql.AsSql(Sql.Round(r.A, (int)r.F)),
+					RuntimeEven = Sql.AsSql(Sql.RoundToEven(r.A, (int)r.F)),
+					None        = Sql.AsSql(Math.Round(r.A * 10, mp)),
+					NoneSame    = Sql.AsSql(Math.Round(r.C, mp) == r.C),
+					GreaterF    = Sql.AsSql(Math.Round(r.A, 1, mp) > r.F),
+					PlusL       = Sql.AsSql(Math.Round(r.C, 1, mp) + r.L),
+				});
+
+			AssertQuery(query);
+		}
+
 		sealed class PowScale
 		{
 			[PrimaryKey                       ] public int     Id { get; set; }

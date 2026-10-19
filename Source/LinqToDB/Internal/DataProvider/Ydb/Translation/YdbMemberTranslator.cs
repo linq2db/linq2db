@@ -840,12 +840,18 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				Func<ISqlExpressionFactory, DbDataType, ISqlExpression, ISqlExpression>     roundToInt)
 			{
 				var isDecimal  = valueType.SystemType.UnwrappedNullableType == typeof(decimal) && YdbMappingSchema.IsDecimalStorage(valueType);
+				var doubleType = factory.GetDbDataType(typeof(double));
+
+				// A double stored as Decimal rounds in Double: neither 10^p nor the scaled value need fit the column
+				// (Decimal-typed, either becomes inf), and the result stays the Double it was before.
+				var inDouble   = !isDecimal && precision != null && YdbMappingSchema.IsDecimalStorage(scaleType);
+				var arithType  = inDouble ? doubleType : scaleType;
 
 				// scale by 10^p in the widened type (exact for Decimal). YQL's DecimalMul demands both operands
 				// carry the identical Decimal type - "Cannot calculate with different decimals: Decimal(6,2) !=
 				// Decimal(7,2)" - so the value is widened first rather than multiplied by a wider literal.
 				var widened = scaleType.EqualsDbOnly(valueType) ? value : factory.Cast(value, scaleType);
-				var scaled  = precision != null ? factory.Multiply(scaleType, widened, Pow10(factory, scaleType, precision)) : value;
+				var scaled  = precision != null ? factory.Multiply(arithType, widened, Pow10(factory, arithType, precision)) : value;
 
 				ISqlExpression back;
 
@@ -860,13 +866,12 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				}
 				else
 				{
-					var doubleType = factory.GetDbDataType(typeof(double));
-					var rounded    = roundToInt(factory, doubleType, factory.Cast(scaled, doubleType));
+					var rounded = roundToInt(factory, doubleType, factory.Cast(scaled, doubleType));
 
-					back = scaleType.EqualsDbOnly(doubleType) ? rounded : factory.Cast(rounded, scaleType);
+					back = inDouble || scaleType.EqualsDbOnly(doubleType) ? rounded : factory.Cast(rounded, scaleType);
 				}
 
-				var result = precision != null ? factory.Div(scaleType, back, Pow10(factory, scaleType, precision)) : back;
+				var result = precision != null ? factory.Div(arithType, back, Pow10(factory, arithType, precision)) : back;
 
 				// narrow back to the value's type: YQL arithmetic and IF demand identical Decimal types
 				return scaleType.EqualsDbOnly(valueType) ? result : factory.Cast(result, valueType);
