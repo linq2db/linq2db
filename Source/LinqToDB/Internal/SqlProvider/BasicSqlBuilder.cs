@@ -2981,7 +2981,9 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </remarks>
 		internal DbDataType GetInListValueType(ISqlExpression expr1, DbDataType expr1Type, object? value)
 		{
-			if (value != null && !QueryHelper.IsStoredColumn(expr1))
+			if (value != null
+				&& (QueryHelper.IsCoarserDateTime(expr1Type.DataType, DataType.DateTime2) || IsDecimal(expr1Type.DataType))
+				&& !QueryHelper.IsStoredColumn(expr1))
 			{
 				var valueType = MappingSchema.GetDbDataType(value.GetType());
 
