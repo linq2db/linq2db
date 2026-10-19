@@ -7,4 +7,4 @@ This example demonstrates how to configure **linq2db** using `app.config`.
 
 # Compatibility
 
-This project contains versions for **.NET Framework 4.6.2** and **.NET 9**.
+This project contains versions for **.NET Framework 4.6.2** and the latest supported .NET.

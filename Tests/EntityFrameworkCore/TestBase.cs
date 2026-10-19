@@ -87,12 +87,10 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			// as EF generates SQL differently, we cannot share baselines
 #if NETFRAMEWORK
 			BaselinesManager.Dump(false, ".EF31");
-#elif NET8_0
-			BaselinesManager.Dump(false, ".EF8");
-#elif NET9_0
-			BaselinesManager.Dump(false, ".EF9");
 #elif NET10_0
 			BaselinesManager.Dump(false, ".EF10");
+#elif NET11_0
+			BaselinesManager.Dump(false, ".EF11");
 #else
 #error Unknown framework
 #endif
@@ -165,12 +163,10 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		// use TFM-specific suffix to avoid database conflicts on parallel runs
 #if NETFRAMEWORK
 		private const string DB_SUFFIX = "ef31";
-#elif NET8_0
-		private const string DB_SUFFIX = "ef8";
-#elif NET9_0
-		private const string DB_SUFFIX = "ef9";
 #elif NET10_0
 		private const string DB_SUFFIX = "ef10";
+#elif NET11_0
+		private const string DB_SUFFIX = "ef11";
 #else
 #error Unknown framework
 #endif

@@ -50,8 +50,17 @@ namespace Tests.DataProvider
 			if (sqlJsonSupported)
 			{
 				// JsonDocument supported only by MDS with SqlJson support
-				await TestType<JsonDocument, JsonDocument?>(context, new(typeof(JsonDocument), DataType.Json), JsonDocument.Parse("{ }"), default, filterByValue: false, isExpectedValue: v => v.RootElement.GetRawText() == JsonDocument.Parse(expectedEmpty).RootElement.GetRawText());
-				await TestType<JsonDocument, JsonDocument?>(context, new(typeof(JsonDocument), DataType.Json), JsonDocument.Parse(json1), JsonDocument.Parse(json2), filterByValue: false, filterByNullableValue: false, isExpectedValue: v => v.RootElement.GetRawText() == JsonDocument.Parse(expected1).RootElement.GetRawText(), isExpectedNullableValue: v => v!.RootElement.GetRawText() == JsonDocument.Parse(expected2).RootElement.GetRawText());
+				await TestType<JsonDocument, JsonDocument?>(context, new(typeof(JsonDocument), DataType.Json), JsonDocument.Parse("{ }"), default, filterByValue: false, isExpectedValue: v => v.RootElement.GetRawText() == RawText(expectedEmpty));
+				await TestType<JsonDocument, JsonDocument?>(context, new(typeof(JsonDocument), DataType.Json), JsonDocument.Parse(json1), JsonDocument.Parse(json2), filterByValue: false, filterByNullableValue: false, isExpectedValue: v => v.RootElement.GetRawText() == RawText(expected1), isExpectedNullableValue: v => v!.RootElement.GetRawText() == RawText(expected2));
+
+				// JsonDocument owns a pooled buffer, so reading RootElement off an undisposed one leaks it
+				// (CA2026). JsonElement.Parse is the one-liner, but it is .NET 11 only and this fixture also
+				// builds for net462 and net10.0.
+				static string RawText(string json)
+				{
+					using var doc = JsonDocument.Parse(json);
+					return doc.RootElement.GetRawText();
+				}
 
 				await TestType<SqlJson, SqlJson?>(context, new(typeof(SqlJson)), new("{ }"), default, filterByValue: false, isExpectedValue: v => v.Value == expectedEmpty, isExpectedNullableValue: v => v?.IsNull == true);
 				await TestType<SqlJson, SqlJson?>(context, new(typeof(SqlJson)), new("{ }"), SqlJson.Null, filterByValue: false, filterByNullableValue: false, isExpectedValue: v => v.Value == expectedEmpty, isExpectedNullableValue: v => v?.IsNull == true);

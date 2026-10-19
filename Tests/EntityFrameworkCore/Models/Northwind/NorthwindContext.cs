@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Extensions;
@@ -31,8 +31,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.Northwind
 		{
 			base.OnModelCreating(modelBuilder);
 
-#if EF10
-			// EF10 supports keyed filters; use named filters for both constraints
+#if EF10_OR_GREATER
+			// EF10+ supports keyed filters; use named filters for both constraints
 			modelBuilder.Entity<Product>()
 				.HasQueryFilter("ProductIdFilter", e => !IsFilterProducts || e.ProductId > 2)
 				.HasQueryFilter("NotDiscontinued", e => !IsFilterProducts || !e.Discontinued);
@@ -68,8 +68,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.Northwind
 			// null and never assigned, so EF had to translate a member access on a null constant and threw
 			// UnreachableException from RelationalSqlTranslatingExpressionVisitor - and the context property
 			// CreateContext(provider, enableFilter) sets was never actually read by the filter.
-#if EF10
-			// EF10: use named filter for soft-delete constraint to coexist with other named filters
+#if EF10_OR_GREATER
+			// EF10+: use named filter for soft-delete constraint to coexist with other named filters
 #if !NETFRAMEWORK
 			builder.Entity<TEntity>().HasQueryFilter("SoftDeleteFilter", e => !IsSoftDeleteFilterEnabled || !e.IsDeleted || !EF.Property<bool>(e, "IsDeleted"));
 #else
