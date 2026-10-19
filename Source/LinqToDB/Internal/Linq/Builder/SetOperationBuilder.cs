@@ -601,19 +601,26 @@ namespace LinqToDB.Internal.Linq.Builder
 				return false;
 			}
 
-			// A value computed from a coarse date/time column has no stored precision to match, so the value keeps its own
-			// type rather than lose its sub-second or time part. A stored column still lends its type, and so does a
+			// A value computed from a coarse date/time column, or from a decimal column without a value converter, has no
+			// stored precision or scale to match, so the value keeps its own type rather than lose its sub-second part, its
+			// time part or its decimal digits - as an IN-list value does. A stored column still lends its type, and so does a
 			// coarse value that reaches no column (a cast to a date): some servers refuse a set operation over DATE and TIMESTAMP.
 			DbDataType GetValueTypeBeside(SqlValue value, ISqlExpression other)
 			{
 				var otherType = QueryHelper.GetDbDataType(other, MappingSchema);
 
-				if (QueryHelper.IsCoarserDateTime(otherType.DataType, value.ValueType.DataType)
-					&& QueryHelper.GetColumnDescriptorForTyping(other) != null
-					&& !QueryHelper.IsStoredColumn(other))
+				var coarser = QueryHelper.IsCoarserDateTime(otherType.DataType, value.ValueType.DataType);
+				var decimals = IsDecimal(otherType.DataType) && IsDecimal(value.ValueType.DataType);
+
+				if ((coarser || decimals)
+					&& QueryHelper.GetColumnDescriptorForTyping(other) is { } descriptor
+					&& !QueryHelper.IsStoredColumn(other)
+					&& (coarser || descriptor.ValueConverter == null))
 					return value.ValueType;
 
 				return otherType;
+
+				static bool IsDecimal(DataType dataType) => dataType is DataType.Decimal or DataType.Decimal32 or DataType.Decimal64 or DataType.Decimal128 or DataType.Decimal256;
 			}
 
 			bool InitializeProjections([NotNullWhen(false)] out SqlErrorExpression? error)

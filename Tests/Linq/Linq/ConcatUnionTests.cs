@@ -2729,5 +2729,36 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		sealed class ScaledDecimalRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Decimal, Precision = 18, Scale = 2)]
+			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Decimal64, Precision = 18, Scale = 2)]
+			public decimal Value { get; set; }
+		}
+
+		/// <summary>
+		/// A literal branch finer than an aggregated column's scale keeps its digits: MAX is a computed value with no
+		/// stored scale to match.
+		/// </summary>
+		/// <remarks>
+		/// YDB refuses to union <c>Decimal(18,2)</c> with the literal's <c>Decimal(23,9)</c>, on master too.
+		/// </remarks>
+		[Test]
+		public void LiteralBesideAggregateKeepsValueScale([DataSources(TestProvName.AllYdb)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new ScaledDecimalRow { Id = 1, Value = 1.00m } });
+
+			var values = t
+				.GroupBy(r => r.Id)
+				.Select(g => g.Max(r => r.Value))
+				.Concat(t.Select(r => 1.004m))
+				.ToArray();
+
+			values.OrderBy(v => v).ShouldBe([1.00m, 1.004m]);
+		}
 	}
 }
