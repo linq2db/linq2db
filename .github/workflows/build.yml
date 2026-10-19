@@ -215,6 +215,25 @@ jobs:
 
       - run: .build/publish/singlefile/linq2db.Tests.SingleFile.exe
 
+  # Regression guard for #6042 / #6051: JIT-compiles every netfx-shipped assembly in an x86 process with
+  # FP exceptions unmasked, as C++Builder / Delphi hosts run them. Release, not Azure: it checks the
+  # binaries that ship and reads no test configuration.
+  fpu-jit-sweep:
+    name: x86 FPU-unmasked JIT sweep
+    runs-on: windows-2025
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.x
+
+      - run: dotnet build Tests/Tests.FpuJit/Tests.FpuJit.csproj --configuration ${{ env.RELEASE_CONFIGURATION }} -p:RunAnalyzersDuringBuild=false -p:RunApiAnalyzersDuringBuild=false
+
+      - run: .build/bin/Tests.FpuJit/${{ env.RELEASE_CONFIGURATION }}/net462/linq2db.Tests.FpuJit.exe
+
   # Port of templates/test-cli.yml. No database, so it belongs here rather than in the provider matrix.
   cli-tests:
     name: CLI tests (${{ matrix.os }})
