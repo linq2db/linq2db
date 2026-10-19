@@ -1512,7 +1512,8 @@ namespace Tests.Linq
 
 		// A double stored as Decimal rounds in Double: neither 10^p nor the scaled value need fit the column, and the
 		// result stays a Double beside a floating column or in arithmetic with another Decimal-stored double. With no
-		// precision the result keeps the column's type, so it still compares with the column.
+		// precision the result keeps the column's type, so it still compares with the column. A runtime precision
+		// truncates a fractional value first (row 5).
 		[Test]
 		public void Round38([IncludeDataSources(true, TestProvName.AllYdb)] string context, [Values(MidpointRounding.ToEven, MidpointRounding.AwayFromZero)] MidpointRounding mp)
 		{
@@ -1521,6 +1522,8 @@ namespace Tests.Linq
 				new RoundDecimalStoredDouble { Id = 1, A =  1000000000000.25, C =  99999999.25, L =  10000000000.0625, N =  1.125,  F = 1 },
 				new RoundDecimalStoredDouble { Id = 2, A = -1000000000000.25, C = -99999999.25, L = -10000000000.0625, N = -1.125,  F = 1 },
 				new RoundDecimalStoredDouble { Id = 3, A =  2.5,              C =  2.5,          L =  2.5,              N =  2.5,    F = 1 },
+				new RoundDecimalStoredDouble { Id = 4, A =  3,                C =  3,            L =  3,                N =  3,      F = 1 },
+				new RoundDecimalStoredDouble { Id = 5, A =  2.25,             C =  2.25,         L =  2.25,             N =  2.25,   F = 1.25 },
 			};
 
 			using var db = GetDataContext(context);

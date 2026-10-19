@@ -213,6 +213,79 @@ namespace Tests.Linq
 				.ShouldNotContain("AS Text");
 		}
 
+		sealed class DoubleValue
+		{
+			[PrimaryKey] public int    Id { get; set; }
+			[Column    ] public double F  { get; set; }
+		}
+
+		// An integer cast between two floating values truncates, so the pair of casts cannot fold away. The rows stay positive:
+		// several providers floor a negative fraction.
+		// Access drops every numeric cast, so the value comes back untruncated.
+		[ActiveIssue(6070, Configuration = TestProvName.AllAccess, ErrorMessage = "Truncated = 1 } <> { Id = 1, Truncated = 1.25 }")]
+		[Test]
+		public void DoubleThroughIntToDouble([DataSources] string context)
+		{
+			var data = new[]
+			{
+				new DoubleValue { Id = 1, F = 1.25 },
+				new DoubleValue { Id = 2, F = 2.25 },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var query =
+				from r in t
+				orderby r.Id
+				select new
+				{
+					r.Id,
+					Truncated = Sql.AsSql((double)(int)r.F),
+				};
+
+			AssertQuery(query);
+		}
+
+		sealed class FoldPairRow
+		{
+			[PrimaryKey] public int   Id { get; set; }
+			[Column    ] public float S  { get; set; }
+		}
+
+		// A pair of casts folds only when the inner one loses nothing. The assertions read CAST text, which SQLite renders for
+		// every cast (PostgreSQL writes ::, ClickHouse toInt32).
+		[Test]
+		public void CastPairFoldsOnlyWhenLossless([IncludeDataSources(ProviderName.SQLiteMS)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<FoldPairRow>();
+
+			t
+				.Select(r => Sql.AsSql((int)(long)r.Id))
+				.ToSqlQuery()
+				.Sql
+				.ShouldNotContain("CAST(");
+
+			t
+				.Select(r => Sql.AsSql((float)(double)r.S))
+				.ToSqlQuery()
+				.Sql
+				.ShouldNotContain("CAST(");
+
+			t
+				.Select(r => Sql.AsSql((int)(short)r.Id))
+				.ToSqlQuery()
+				.Sql
+				.ShouldContain("CAST(");
+
+			t
+				.Select(r => Sql.AsSql((int)(uint)r.Id))
+				.ToSqlQuery()
+				.Sql
+				.ShouldContain("CAST(");
+		}
+
 		[Test]
 		public void ToInt([DataSources] string context)
 		{

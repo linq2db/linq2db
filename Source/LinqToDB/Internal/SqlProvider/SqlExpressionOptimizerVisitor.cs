@@ -1358,8 +1358,8 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 
 				if (element.Expression is SqlCastExpression { IsMandatory: false } castOther)
 				{
-					var dbType = QueryHelper.GetDbDataType(castOther.Expression, MappingSchema);
-					if (element.Type.EqualsDbOnly(dbType))
+					var dbType = castOther.FromType?.Type ?? QueryHelper.GetDbDataType(castOther.Expression, MappingSchema);
+					if (element.Type.EqualsDbOnly(dbType) && IsLosslessConversion(dbType, castOther.Type))
 						return castOther.Expression;
 				}
 			}
@@ -1386,6 +1386,78 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 
 				return query;
 			}
+		}
+
+		// A cast pair folds back to its operand only when the inner cast keeps every value: (double)(int)x truncates. Unknown
+		// pairs are not lossless, which leaves a redundant cast in the SQL, never a wrong value.
+		static bool IsLosslessConversion(DbDataType from, DbDataType to)
+		{
+			if (from.EqualsDbOnly(to))
+				return true;
+
+			if (IntegerDigits(from.DataType) is int fromDigits)
+			{
+				if (IntegerDigits(to.DataType) != null)
+				{
+					return from.DataType.IsSignedType() == to.DataType.IsSignedType()
+						? IntegerWidth(to.DataType) >= IntegerWidth(from.DataType)
+						: to.DataType.IsSignedType() && IntegerWidth(to.DataType) > IntegerWidth(from.DataType);
+				}
+
+				if (to.DataType == DataType.Double)
+					return IntegerWidth(from.DataType) <= 32;
+
+				if (to.DataType == DataType.Single)
+					return IntegerWidth(from.DataType) <= 16;
+
+				return IsDecimal(to.DataType) && to.Precision is int precision && precision - (to.Scale ?? 0) >= fromDigits;
+			}
+
+			if (from.DataType == DataType.Single)
+				return to.DataType == DataType.Double;
+
+			if (IsDecimal(from.DataType) && IsDecimal(to.DataType))
+			{
+				return from.Precision is int fromPrecision && from.Scale is int fromScale
+					&& to.Precision   is int toPrecision   && to.Scale   is int toScale
+					&& toScale >= fromScale && toPrecision - toScale >= fromPrecision - fromScale;
+			}
+
+			if (from.DataType.IsTextType() && to.DataType.IsTextType())
+			{
+				return (to.Length == null || from.Length is int fromLength && to.Length >= fromLength)
+					&& (!IsUnicode(from.DataType) || IsUnicode(to.DataType));
+			}
+
+			return false;
+
+			static int IntegerWidth(DataType type) => type switch
+			{
+				DataType.SByte  or DataType.Byte    => 8,
+				DataType.Int16  or DataType.UInt16  => 16,
+				DataType.Int32  or DataType.UInt32  => 32,
+				DataType.Int64  or DataType.UInt64  => 64,
+				DataType.Int128 or DataType.UInt128 => 128,
+				_                                   => 256,
+			};
+
+			static int? IntegerDigits(DataType type) => type switch
+			{
+				DataType.SByte   or DataType.Byte    => 3,
+				DataType.Int16   or DataType.UInt16  => 5,
+				DataType.Int32   or DataType.UInt32  => 10,
+				DataType.Int64                       => 19,
+				DataType.UInt64                      => 20,
+				DataType.Int128  or DataType.UInt128 => 39,
+				DataType.Int256                      => 77,
+				DataType.UInt256                     => 78,
+				_                                    => null,
+			};
+
+			static bool IsDecimal(DataType type) => type is DataType.Decimal or DataType.Money or DataType.SmallMoney
+				or DataType.Decimal32 or DataType.Decimal64 or DataType.Decimal128 or DataType.Decimal256;
+
+			static bool IsUnicode(DataType type) => type is DataType.NChar or DataType.NVarChar or DataType.NText;
 		}
 
 		protected internal override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
