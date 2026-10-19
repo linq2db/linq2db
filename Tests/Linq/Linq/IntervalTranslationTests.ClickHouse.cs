@@ -32,6 +32,7 @@ namespace Tests.Linq
 				.Select(r => (r.FinishedOn - r.StartedOn).TotalHours)
 				.ToList();
 
+			db.LastQuery!.ShouldContain("toUnixTimestamp64Nano(r.FinishedOn)");
 			db.LastQuery!.ShouldNotContain("toDateTime64");
 
 			// now() is a whole-second timestamp whatever the mapping schema makes of a CLR DateTime.
