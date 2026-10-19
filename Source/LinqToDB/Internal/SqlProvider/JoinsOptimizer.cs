@@ -64,7 +64,7 @@ namespace LinqToDB.Internal.SqlProvider
 							if (!childJoins.TrueForAll(join => join.JoinType is JoinType.Inner or JoinType.Left or JoinType.CrossApply or JoinType.OuterApply))
 								continue;
 
-							for (var cj = childJoins.Count - 1; cj >= 0; cj--)
+							nextChildJoin: for (var cj = childJoins.Count - 1; cj >= 0; cj--)
 							{
 								var child = childJoins[cj];
 
@@ -111,18 +111,11 @@ namespace LinqToDB.Internal.SqlProvider
 								}
 
 								// check if any remaining (not moved) sibling depends on this child's sources
-								var hasDependentSibling = false;
 								for (var k = cj + 1; k < childJoins.Count; k++)
 								{
 									if (QueryHelper.IsDependsOnSources(childJoins[k], currentJoinSources))
-									{
-										hasDependentSibling = true;
-										break;
-									}
+										continue nextChildJoin;
 								}
-
-								if (hasDependentSibling)
-									continue;
 
 								if (parent.JoinType == JoinType.Left)
 								{
