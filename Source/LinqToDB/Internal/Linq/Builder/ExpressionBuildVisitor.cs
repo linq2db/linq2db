@@ -2653,7 +2653,13 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (string.Equals(node.Method.Name, "Format", StringComparison.Ordinal))
 				{
 					var format = node.Arguments[0].EvaluateExpression<string>();
-					if (format == null)
+					if (format == null || FormattableStringHelper.ParseFormatItems(format) is not { } items)
+						return false;
+
+					var formatAsExpression = _buildFlags.HasFlag(BuildFlags.FormatAsExpression);
+
+					// AppendFormat renders alignment of a SQL expression format, concatenation would drop it
+					if (!formatAsExpression && items.Any(static i => i.HasAlignment))
 						return false;
 
 					var (inputArguments, startIndex) = node.Arguments switch
@@ -2670,8 +2676,6 @@ namespace LinqToDB.Internal.Linq.Builder
 						stringType = CurrentDescriptor.GetDbDataType(true);
 					else
 						stringType = MappingSchema.GetDbDataType(typeof(string));
-
-					var formatAsExpression = _buildFlags.HasFlag(BuildFlags.FormatAsExpression);
 
 					for (var i = startIndex; i < inputArguments.Count; i++)
 					{
