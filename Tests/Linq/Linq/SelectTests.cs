@@ -2198,5 +2198,19 @@ namespace Tests.Linq
 
 			AreEqual(parentsQry, parents);
 		}
+
+		readonly record struct ParentValue(int Id, int? Value);
+
+		[Test]
+		public void StructFromSubqueryReferencedTwice([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Select(p => new { p.ParentID, Info = new ParentValue(p.ParentID, p.Value1) })
+				.Select(m => new { First = m.Info, Second = m.Info });
+
+			AssertQuery(query);
+		}
 	}
 }
