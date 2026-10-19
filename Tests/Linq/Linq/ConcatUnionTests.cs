@@ -2758,7 +2758,7 @@ namespace Tests.Linq
 				.Concat(t.Select(r => 1.004m))
 				.ToArray();
 
-			values.OrderBy(v => v).ShouldBe([1.00m, 1.004m]);
+			values.ShouldBe([1.00m, 1.004m], ignoreOrder: true);
 		}
 	}
 }
