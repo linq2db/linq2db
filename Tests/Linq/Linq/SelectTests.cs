@@ -2128,7 +2128,7 @@ namespace Tests.Linq
 		#region Nullable struct from an inner projection
 		readonly record struct ParentPoint(int Id, int? Value);
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
 		public void NullableStructFromSubquery([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -2140,7 +2140,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
 		public void NullableStructOrNullFromSubquery([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -2152,7 +2152,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
 		public void NullableStructFromConcat([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -2166,7 +2166,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
 		public void NullableStructFromLeftJoin([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -2182,7 +2182,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
 		public void NullableStructFromScalarSubquery([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -2202,7 +2202,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
 		public void NullableStructFromDistinct([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -2215,7 +2215,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
 		public void NullableStructFromOrderByTake([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -2229,7 +2229,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
 		public void NullableStructFromUnion([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -2243,7 +2243,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
 		public void NullableStructGroupByKey([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
