@@ -1395,6 +1395,17 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 			if (from.EqualsDbOnly(to))
 				return true;
 
+			if (to.DataType.IsTextType())
+			{
+				// A value's round trip through text is the identity, whatever the text's declared length: a provider's casts need
+				// not read their own text back (#6071), and SQL Server writes a float with 6 digits.
+				if (!from.DataType.IsTextType())
+					return true;
+
+				return (to.Length == null || from.Length is int fromLength && to.Length >= fromLength)
+					&& (!IsUnicode(from.DataType) || IsUnicode(to.DataType));
+			}
+
 			if (IntegerDigits(from.DataType) is int fromDigits)
 			{
 				if (IntegerDigits(to.DataType) != null)
@@ -1410,8 +1421,15 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 				if (to.DataType == DataType.Single)
 					return IntegerWidth(from.DataType) <= 16;
 
-				return IsDecimal(to.DataType) && to.Precision is int precision && precision - (to.Scale ?? 0) >= fromDigits;
+				// A C# conversion to decimal is typed with the mapping's default (Decimal(18,10) on SQL Server), which says nothing
+				// about the value: a decimal holds any integer of up to 28 digits.
+				return IsDecimal(to.DataType) && (fromDigits <= 28 || to.Precision is int precision && precision - (to.Scale ?? 0) >= fromDigits);
 			}
+
+			// As for an integer, (decimal) of a floating value is typed with the mapping's default; folding answers the value
+			// itself, as master did, where C# would round it to 15 / 7 significant digits.
+			if (from.DataType is DataType.Double or DataType.Single && IsDecimal(to.DataType))
+				return true;
 
 			if (from.DataType == DataType.Single)
 				return to.DataType == DataType.Double;
@@ -1422,17 +1440,6 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 					&& to.Precision   is int toPrecision   && to.Scale   is int toScale
 					&& toScale >= fromScale && toPrecision - toScale >= fromPrecision - fromScale;
 			}
-
-			if (from.DataType.IsTextType() && to.DataType.IsTextType())
-			{
-				return (to.Length == null || from.Length is int fromLength && to.Length >= fromLength)
-					&& (!IsUnicode(from.DataType) || IsUnicode(to.DataType));
-			}
-
-			// A temporal value's round trip through text is the identity, whatever the text's declared length: several providers
-			// cannot cast that text back (#6071).
-			if (IsTemporal(from) && to.DataType.IsTextType())
-				return true;
 
 			return false;
 
@@ -1463,13 +1470,6 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 				or DataType.Decimal32 or DataType.Decimal64 or DataType.Decimal128 or DataType.Decimal256;
 
 			static bool IsUnicode(DataType type) => type is DataType.NChar or DataType.NVarChar or DataType.NText;
-
-			// Timestamp is a date/time type on DB2, SAP HANA, PostgreSQL and Firebird, and rowversion elsewhere.
-			static bool IsTemporal(DbDataType type) => type.DataType is DataType.Date or DataType.DateTz or DataType.Date32
-				or DataType.Time or DataType.TimeTZ or DataType.DateTime or DataType.DateTime2 or DataType.DateTimeTz
-				or DataType.DateTime2Tz or DataType.SmallDateTime or DataType.DateTimeOffset or DataType.DateTime64
-				or DataType.Timestamp64
-				|| (type.DataType == DataType.Timestamp && type.SystemType != typeof(byte[]));
 		}
 
 		protected internal override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)

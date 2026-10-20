@@ -247,10 +247,94 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		sealed class NumberValue
+		{
+			[PrimaryKey] public int    Id { get; set; }
+			[Column    ] public int    I  { get; set; }
+			[Column    ] public long   L  { get; set; }
+			[Column    ] public double F  { get; set; }
+			[Column    ] public float  S  { get; set; }
+		}
+
+		// (decimal) is typed with the mapping's default decimal, which can hold fewer integer digits than the value: Decimal(18,10)
+		// on SQL Server and Sybase, Decimal(22,9) on YDB. F and S have at most 15 / 7 significant digits, where C#'s (decimal) is
+		// exact.
+		[Test]
+		public void NumberThroughDecimal([DataSources] string context)
+		{
+			var data = new[]
+			{
+				new NumberValue { Id = 1, I = 7,         L = 7,                 F = 123456789.25, S = 1e8f },
+				new NumberValue { Id = 2, I = 123456789, L = 12345678901234567, F = 987654321.75, S = 2e8f },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var query =
+				from r in t
+				orderby r.Id
+				select new
+				{
+					r.Id,
+					I = Sql.AsSql((int)(decimal)r.I),
+					L = Sql.AsSql((long)(decimal)r.L),
+					F = Sql.AsSql((double)(decimal)r.F),
+					S = Sql.AsSql((float)(decimal)r.S),
+				};
+
+			AssertQuery(query);
+		}
+
+		sealed class TextRoundTripValue
+		{
+			[PrimaryKey] public int    Id { get; set; }
+			[Column    ] public double F  { get; set; }
+			[Column    ] public float  S  { get; set; }
+			[Column    ] public bool   B  { get; set; }
+			[Column    ] public long   L  { get; set; }
+		}
+
+		// SQL Server writes a float or real as text with 6 digits.
+		[Test]
+		public void ScalarThroughText([DataSources] string context)
+		{
+			var data = new[]
+			{
+				new TextRoundTripValue { Id = 1, F = 1.23456789, S = 1.234568f, B = true,  L = 7                 },
+				new TextRoundTripValue { Id = 2, F = 9.87654321, S = 9.876543f, B = false, L = 12345678901234567 },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var query =
+				from r in t
+				orderby r.Id
+				select new
+				{
+					r.Id,
+					F = Sql.AsSql(double.Parse(Sql.ConvertTo<string>.From(r.F))),
+					S = Sql.AsSql(float.Parse(Sql.ConvertTo<string>.From(r.S))),
+					B = Sql.AsSql(bool.Parse(Sql.ConvertTo<string>.From(r.B))),
+					L = Sql.AsSql(long.Parse(Sql.ConvertTo<string>.From(r.L))),
+				};
+
+			AssertQuery(query);
+
+			var same =
+				from r in t
+				where double.Parse(Sql.ConvertTo<string>.From(r.F)) == r.F
+				select r.Id;
+
+			AssertQuery(same);
+		}
+
 		sealed class FoldPairRow
 		{
 			[PrimaryKey] public int      Id { get; set; }
 			[Column    ] public float    S  { get; set; }
+			[Column    ] public double   F  { get; set; }
 			[Column    ] public DateTime D  { get; set; }
 		}
 
@@ -288,6 +372,36 @@ namespace Tests.Linq
 
 			t
 				.Select(r => Sql.AsSql(DateTime.Parse(Sql.ConvertTo<string>.From(r.D))))
+				.ToSqlQuery()
+				.Sql
+				.ShouldNotContain("CAST(");
+
+			t
+				.Select(r => Sql.AsSql(double.Parse(Sql.ConvertTo<string>.From(r.F))))
+				.ToSqlQuery()
+				.Sql
+				.ShouldNotContain("CAST(");
+
+			t
+				.Select(r => Sql.AsSql(float.Parse(Sql.ConvertTo<string>.From(r.S))))
+				.ToSqlQuery()
+				.Sql
+				.ShouldNotContain("CAST(");
+
+			t
+				.Select(r => Sql.AsSql(int.Parse(Sql.ConvertTo<string>.From(r.Id))))
+				.ToSqlQuery()
+				.Sql
+				.ShouldNotContain("CAST(");
+
+			t
+				.Select(r => Sql.AsSql((int)(decimal)r.Id))
+				.ToSqlQuery()
+				.Sql
+				.ShouldNotContain("CAST(");
+
+			t
+				.Select(r => Sql.AsSql((float)(decimal)r.S))
 				.ToSqlQuery()
 				.Sql
 				.ShouldNotContain("CAST(");
