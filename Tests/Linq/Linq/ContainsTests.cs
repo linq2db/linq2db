@@ -463,27 +463,37 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6067")]
-		public void Issue6067Test([DataSources] string context)
+		public void ArrayContainsValueType([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
 			var ids = new[] { 1, 2, 3 };
 
-			var items = db.Person.Where(p => ids.Contains(p.ID)).Select(p => p.ID).ToList();
+			var items = db.Person
+				.Where(p => ids.Contains(p.ID))
+				.Select(p => p.ID)
+				.ToList();
 
-			items.OrderBy(i => i).ShouldBe([1, 2, 3]);
+			items
+				.OrderBy(i => i)
+				.ShouldBe([1, 2, 3]);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6067")]
-		public void Issue6067StringTest([DataSources] string context)
+		public void ArrayContainsReferenceType([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
 			var names = new[] { "John", "Jane" };
 
-			var items = db.Person.Where(p => names.Contains(p.FirstName)).Select(p => p.FirstName).ToList();
+			var items = db.Person
+				.Where(p => names.Contains(p.FirstName))
+				.Select(p => p.FirstName)
+				.ToList();
 
-			items.OrderBy(i => i).ShouldBe(["Jane", "John"]);
+			items
+				.OrderBy(i => i)
+				.ShouldBe(["Jane", "John"]);
 		}
 
 		[Test]
