@@ -3149,8 +3149,8 @@ namespace Tests.Linq
 			query.GetSelectQuery().Select.Columns.Any(c => c.Expression is not SqlField).ShouldBeTrue();
 		}
 
-		// The members LinqOptions.PreferClientCalculation names as translated to SQL under the option stay there; a date shift
-		// by a constant does not (TranslatorArgumentsStayInSqlUnderOption keeps a shift by a row value in SQL).
+		// Members with a built-in translation stay in SQL under the option; a date shift by a constant does not
+		// (TranslatorArgumentsStayInSqlUnderOption keeps a shift by a row value in SQL).
 		[Test]
 		public void DocumentedTranslatedMembersStayInSqlUnderOption([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
