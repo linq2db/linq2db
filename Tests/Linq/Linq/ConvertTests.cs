@@ -251,7 +251,6 @@ namespace Tests.Linq
 		{
 			[PrimaryKey] public int    Id { get; set; }
 			[Column    ] public int    I  { get; set; }
-			[Column    ] public long   L  { get; set; }
 			[Column    ] public double F  { get; set; }
 			[Column    ] public float  S  { get; set; }
 		}
@@ -264,8 +263,8 @@ namespace Tests.Linq
 		{
 			var data = new[]
 			{
-				new NumberValue { Id = 1, I = 7,         L = 7,                 F = 123456789.25, S = 1e8f },
-				new NumberValue { Id = 2, I = 123456789, L = 12345678901234567, F = 987654321.75, S = 2e8f },
+				new NumberValue { Id = 1, I = 7,         F = 123456789.25, S = 1e8f },
+				new NumberValue { Id = 2, I = 123456789, F = 987654321.75, S = 2e8f },
 			};
 
 			using var db = GetDataContext(context);
@@ -278,7 +277,6 @@ namespace Tests.Linq
 				{
 					r.Id,
 					I = Sql.AsSql((int)(decimal)r.I),
-					L = Sql.AsSql((long)(decimal)r.L),
 					F = Sql.AsSql((double)(decimal)r.F),
 					S = Sql.AsSql((float)(decimal)r.S),
 				};
@@ -292,7 +290,6 @@ namespace Tests.Linq
 			[Column    ] public double F  { get; set; }
 			[Column    ] public float  S  { get; set; }
 			[Column    ] public bool   B  { get; set; }
-			[Column    ] public long   L  { get; set; }
 		}
 
 		// SQL Server writes a float or real as text with 6 digits.
@@ -301,8 +298,8 @@ namespace Tests.Linq
 		{
 			var data = new[]
 			{
-				new TextRoundTripValue { Id = 1, F = 1.23456789, S = 1.234568f, B = true,  L = 7                 },
-				new TextRoundTripValue { Id = 2, F = 9.87654321, S = 9.876543f, B = false, L = 12345678901234567 },
+				new TextRoundTripValue { Id = 1, F = 1.23456789, S = 1.234568f, B = true  },
+				new TextRoundTripValue { Id = 2, F = 9.87654321, S = 9.876543f, B = false },
 			};
 
 			using var db = GetDataContext(context);
@@ -317,7 +314,6 @@ namespace Tests.Linq
 					F = Sql.AsSql(double.Parse(Sql.ConvertTo<string>.From(r.F))),
 					S = Sql.AsSql(float.Parse(Sql.ConvertTo<string>.From(r.S))),
 					B = Sql.AsSql(bool.Parse(Sql.ConvertTo<string>.From(r.B))),
-					L = Sql.AsSql(long.Parse(Sql.ConvertTo<string>.From(r.L))),
 				};
 
 			AssertQuery(query);
@@ -328,6 +324,40 @@ namespace Tests.Linq
 				select r.Id;
 
 			AssertQuery(same);
+		}
+
+		sealed class Int64Value
+		{
+			[PrimaryKey] public int  Id { get; set; }
+			[Column    ] public long L  { get; set; }
+		}
+
+		// The Int64 cells of NumberThroughDecimal and ScalarThroughText: 17 digits outgrow YDB's Decimal(22,9), DuckDB's
+		// DECIMAL(18,3) and Informix's 16-digit DECIMAL.
+		// Access has no 64-bit integer type: CREATE TABLE fails with "Syntax error in field definition".
+		[Test]
+		public void Int64ThroughDecimalAndText([DataSources(TestProvName.AllAccess)] string context)
+		{
+			var data = new[]
+			{
+				new Int64Value { Id = 1, L = 7                 },
+				new Int64Value { Id = 2, L = 12345678901234567 },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var query =
+				from r in t
+				orderby r.Id
+				select new
+				{
+					r.Id,
+					Decimal = Sql.AsSql((long)(decimal)r.L),
+					Text    = Sql.AsSql(long.Parse(Sql.ConvertTo<string>.From(r.L))),
+				};
+
+			AssertQuery(query);
 		}
 
 		sealed class FoldPairRow
