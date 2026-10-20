@@ -13,6 +13,7 @@ using LinqToDB.DataProvider.Oracle;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.DataProvider.Sybase;
 using LinqToDB.DataProvider.Ydb;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
@@ -786,8 +787,9 @@ namespace Tests.Linq
 
 #if !NETFRAMEWORK
 		// A zero interval is outside the ratio's domain, as a zero divisor is. Option off only: with the option on the client
-		// divides by TimeSpan.Zero and answers Infinity.
+		// divides by TimeSpan.Zero and answers Infinity. Access keeps a duration as money and refuses its tick total.
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_Interval_Member)]
 		public void IntervalRatioOverMissedLeftJoinKeepsNull([DataSources] string context)
 		{
 			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(false));
@@ -803,8 +805,11 @@ namespace Tests.Linq
 
 			var rows = query.ToArray();
 
+			// Informix does not translate the ratio, so the client divides by the missed row's TimeSpan.Zero.
+			var expected = context.IsAnyOf(TestProvName.AllInformix) ? double.PositiveInfinity : 0;
+
 			rows.Length.ShouldBe(MissedDivisorEntity.Seed.Length);
-			rows.ShouldAllBe(r => r.Ratio == 0);
+			rows.ShouldAllBe(r => r.Ratio == expected);
 		}
 #endif
 
@@ -836,7 +841,12 @@ namespace Tests.Linq
 		// The year, month and day of a date built from parts are not defaulted: 0 is outside their domain. The hour accepts it,
 		// so a date built from the outer row's year and a missed row's hour is C#'s.
 		// Sybase builds the date by concatenating its parts, reads a NULL part as empty and fails to convert '--' (master alike, #6088).
+		// Oracle and Access concatenate the parts too and fail the same way; PostgreSQL before 9.4 has no make_timestamp.
 		[Test]
+		[ThrowsForProvider("Oracle.ManagedDataAccess.Client.OracleException", TestProvName.AllOracleManaged,     ErrorMessage = "ORA-01858")]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException",                  TestProvName.AllAccessOdbc,        ErrorMessage = "Data type mismatch")]
+		[ThrowsForProvider("System.InvalidOperationException",                TestProvName.AllAccessOleDb)]
+		[ThrowsForProvider("Npgsql.PostgresException",                        TestProvName.AllPostgreSQL93Minus, ErrorMessage = "make_timestamp")]
 		public void DateFromPartsOverMissedLeftJoinKeepsNull([DataSources(TestProvName.AllSybase)] string context, [Values] bool preferClient)
 		{
 			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
@@ -861,8 +871,11 @@ namespace Tests.Linq
 		}
 
 #if SUPPORTS_DATEONLY
-		// Sybase: as DateFromPartsOverMissedLeftJoinKeepsNull.
+		// Sybase, Oracle, Access and PostgreSQL before 9.4: as DateFromPartsOverMissedLeftJoinKeepsNull.
 		[Test]
+		[ThrowsForProvider("Oracle.ManagedDataAccess.Client.OracleException", TestProvName.AllOracleManaged,     ErrorMessage = "ORA-01858")]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException",                  TestProvName.AllAccessOdbc,        ErrorMessage = "Data type mismatch")]
+		[ThrowsForProvider("Npgsql.PostgresException",                        TestProvName.AllPostgreSQL93Minus, ErrorMessage = "make_timestamp")]
 		public void DateOnlyFromPartsOverMissedLeftJoinKeepsNull([DataSources(TestProvName.AllSybase)] string context, [Values] bool preferClient)
 		{
 			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
