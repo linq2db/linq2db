@@ -2125,6 +2125,84 @@ namespace Tests.Linq
 		}
 		#endregion
 
+		#region Nullable struct from an inner projection
+		readonly record struct ParentPoint(int Id, int? Value);
+
+		[Test]
+		public void NullableStructFromSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Select(p => new { p.ParentID, Info = (ParentPoint?)new ParentPoint(p.ParentID, p.Value1) })
+				.Select(m => new { m.ParentID, A = m.Info });
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void NullableStructOrNullFromSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Select(p => new { p.ParentID, Info = p.Value1 == null ? null : (ParentPoint?)new ParentPoint(p.ParentID, p.Value1) })
+				.Select(m => new { m.ParentID, A = m.Info });
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void NullableStructFromConcat([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent.Where(p => p.ParentID < 4)
+				.Select(p => new { p.ParentID, Info = (ParentPoint?)new ParentPoint(p.ParentID, p.Value1) })
+				.Concat(db.Parent.Where(p => p.ParentID >= 4)
+					.Select(p => new { p.ParentID, Info = (ParentPoint?)new ParentPoint(p.ParentID, p.Value1) }))
+				.Select(m => new { m.ParentID, A = m.Info });
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void NullableStructFromLeftJoin([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				from c in db.Child
+					.Where(c => c.ParentID == p.ParentID)
+					.Select(c => new { Info = (ParentPoint?)new ParentPoint(c.ChildID, c.ParentID) })
+					.DefaultIfEmpty()
+				select new { p.ParentID, A = c == null ? null : c.Info };
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void NullableStructFromScalarSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Select(p => new
+				{
+					p.ParentID,
+					Info = db.Child
+						.Where(c => c.ParentID == p.ParentID)
+						.OrderBy(c => c.ChildID)
+						.Select(c => (ParentPoint?)new ParentPoint(c.ChildID, c.ParentID))
+						.FirstOrDefault(),
+				})
+				.Select(m => new { m.ParentID, A = m.Info });
+
+			AssertQuery(query);
+		}
+		#endregion
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3181")]
 		public void Issue3181Test1([DataSources] string context)
 		{
