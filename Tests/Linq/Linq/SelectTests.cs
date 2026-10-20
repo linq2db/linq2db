@@ -2257,6 +2257,98 @@ namespace Tests.Linq
 		}
 		#endregion
 
+		#region Upcast value from an inner projection
+		interface IHasId
+		{
+			int Id { get; }
+		}
+
+		sealed record IdRecord(int Id, int? Value) : IHasId;
+
+		readonly record struct IdPoint(int Id, int? Value) : IHasId;
+
+		record BaseRecord(int Id);
+
+		sealed record DerivedRecord(int Id, int? Value) : BaseRecord(Id);
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void InterfaceFromSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Select(p => new { p.ParentID, Info = (IHasId)new IdRecord(p.ParentID, p.Value1) })
+				.Select(m => new { m.ParentID, A = m.Info });
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void InterfaceMemberFromSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Select(p => new { p.ParentID, Info = (IHasId)new IdRecord(p.ParentID, p.Value1) })
+				.Where(m => m.Info.Id > 2)
+				.Select(m => new { m.ParentID, m.Info.Id });
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void BoxedStructFromSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Select(p => new { p.ParentID, Info = (IHasId)new IdPoint(p.ParentID, p.Value1) })
+				.Select(m => new { m.ParentID, A = m.Info });
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void BaseClassFromSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Select(p => new { p.ParentID, Info = (BaseRecord)new DerivedRecord(p.ParentID, p.Value1) })
+				.Select(m => new { m.ParentID, A = m.Info });
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void InterfaceFromConcat([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent.Where(p => p.ParentID < 4)
+				.Select(p => new { p.ParentID, Info = (IHasId)new IdRecord(p.ParentID, p.Value1) })
+				.Concat(db.Parent.Where(p => p.ParentID >= 4)
+					.Select(p => new { p.ParentID, Info = (IHasId)new IdRecord(p.ParentID, p.Value1) }))
+				.Select(m => new { m.ParentID, A = m.Info });
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void BaseClassFromConcat([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent.Where(p => p.ParentID < 4)
+				.Select(p => new { p.ParentID, Info = (BaseRecord)new DerivedRecord(p.ParentID, p.Value1) })
+				.Concat(db.Parent.Where(p => p.ParentID >= 4)
+					.Select(p => new { p.ParentID, Info = (BaseRecord)new DerivedRecord(p.ParentID, p.Value1) }))
+				.Select(m => new { m.ParentID, A = m.Info });
+
+			AssertQuery(query);
+		}
+		#endregion
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3181")]
 		public void Issue3181Test1([DataSources] string context)
 		{

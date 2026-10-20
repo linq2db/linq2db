@@ -289,7 +289,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (expression == null)
 				return null;
 
-			if (toPath is not (ContextRefExpression or MemberExpression))
+			if (toPath.UnwrapConvert() is not (ContextRefExpression or MemberExpression))
 				return expression;
 
 			switch (expression)
@@ -298,11 +298,6 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					List<SqlGenericConstructorExpression.Assignment>? assignments = null;
 					List<SqlGenericConstructorExpression.Parameter>?  parameters  = null;
-
-					// A struct constructor lifted to Nullable<T>, as in `(T?)new T(...)`, is reached through a T? path,
-					// while its members are declared on T.
-					if (toPath.Type.IsNullableType && toPath.Type.UnwrapNullableType() == generic.Type)
-						toPath = ExpressionHelper.Property(toPath, nameof(Nullable<>.Value));
 
 					var contextRef = toPath as ContextRefExpression;
 
@@ -453,7 +448,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				case UnaryExpression unary:
 				{
-					return unary.Update(CorrectTrackingPath(builder, unary.Operand, toPath));
+					return unary.Update(CorrectTrackingPath(builder, unary.Operand, ConvertBack(toPath, unary)));
 				}
 
 				/*
@@ -466,6 +461,37 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			return expression;
+		}
+
+		/// <summary>
+		/// Turns a <paramref name="path"/> to the result of <paramref name="conversion"/> into a path to its operand.
+		/// </summary>
+		/// <remarks>
+		/// The operand's members are declared on the operand's type, so they can only be read from a path of that type:
+		/// <c>T?</c> is read back as <c>path.Value</c>, and an interface or base class as <c>(Derived)path</c>. Any other
+		/// conversion leaves the path as it is.
+		/// </remarks>
+		static Expression ConvertBack(Expression path, UnaryExpression conversion)
+		{
+			if (conversion.NodeType is not (ExpressionType.Convert or ExpressionType.ConvertChecked))
+				return path;
+
+			// Only a path typed as the conversion's result can be converted back.
+			if (path.Type != conversion.Type)
+				return path;
+
+			var from = conversion.Operand.Type;
+			var to   = conversion.Type;
+
+			// T to T?
+			if (to.IsNullableType && to.UnwrapNullableType() == from)
+				return ExpressionHelper.Property(path, nameof(Nullable<>.Value));
+
+			// Derived to a base class or an interface, a boxed struct included
+			if (to != from && to.IsAssignableFrom(from))
+				return EnsureType(path, from);
+
+			return path;
 		}
 
 		public static Expression ReplacePlaceholdersPathByTrackingPath(Expression expression)
