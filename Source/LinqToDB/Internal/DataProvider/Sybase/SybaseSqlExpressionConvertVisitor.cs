@@ -105,18 +105,31 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 		/// <summary>
 		/// The <c>IN</c> twin of <see cref="ConvertExprExprPredicate"/>: a date operand is cast to <c>datetime</c> when a value
 		/// in the list is a timestamp, or may be one - the values of a captured collection beside a computed operand keep
-		/// their own type when written.
+		/// their own type when written; beside a timestamp operand, each date value is cast to <c>datetime</c>.
 		/// </summary>
 		protected internal override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
 		{
 			var newElement = base.VisitInListPredicate(predicate);
 
-			if (newElement is SqlPredicate.InList inList
-				&& QueryHelper.GetDbDataType(inList.Expr1, MappingSchema) is { DataType: DataType.Date } operandType
+			if (newElement is not SqlPredicate.InList inList)
+				return newElement;
+
+			var operandType = QueryHelper.GetDbDataType(inList.Expr1, MappingSchema);
+
+			if (operandType.DataType == DataType.Date
 				&& (inList.Values.Exists(v => IsTimestamp(QueryHelper.GetDbDataType(v, MappingSchema)))
 					|| (inList.Values is [SqlParameter] && inList.Expr1.SystemType?.ToUnderlying() == typeof(DateTime) && !QueryHelper.IsStoredColumn(inList.Expr1))))
 			{
 				return new SqlPredicate.InList(PseudoFunctions.MakeMandatoryCast(inList.Expr1, new DbDataType(operandType.SystemType, DataType.DateTime), null), inList.WithNull, inList.IsNot, inList.Values);
+			}
+
+			if (IsTimestamp(operandType) && inList.Values.Exists(v => QueryHelper.GetDbDataType(v, MappingSchema).DataType == DataType.Date))
+			{
+				var values = inList.Values.ConvertAll(v => QueryHelper.GetDbDataType(v, MappingSchema) is { DataType: DataType.Date } valueType
+					? PseudoFunctions.MakeMandatoryCast(v, new DbDataType(valueType.SystemType, DataType.DateTime), null)
+					: v);
+
+				return new SqlPredicate.InList(inList.Expr1, inList.WithNull, inList.IsNot, values);
 			}
 
 			return newElement;

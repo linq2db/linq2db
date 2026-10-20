@@ -2077,6 +2077,30 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
+		/// A timestamp tested against date columns in an IN list is compared with its time part, as it is with <c>==</c>.
+		/// </summary>
+		/// <remarks>
+		/// Sybase only: ASE compares a date with a datetime as a date, and the provider compensates on either side.
+		/// </remarks>
+		[Test]
+		public void DateTimeColumnInDateColumnsKeepsTime([IncludeDataSources(TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[]
+			{
+				new CoarseDayPairRow { Id = 1, ClosedOn = CoarseMidnight, OpenedOn = CoarseMidnight, Value = CoarseValue },
+			});
+
+			var equal = t.Count(r => r.Value == r.OpenedOn);
+
+			equal.ShouldBe(0);
+
+			var inList = t.Count(r => r.Value.In(r.OpenedOn, r.ClosedOn!.Value));
+
+			inList.ShouldBe(0);
+		}
+
+		/// <summary>
 		/// An IN list of date columns beside a date computed from date columns matches the same day.
 		/// </summary>
 		[Test]
