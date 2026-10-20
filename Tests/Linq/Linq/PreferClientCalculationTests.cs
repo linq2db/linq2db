@@ -2376,8 +2376,8 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		// A wrapper's column that cannot be NULL, although its calculation reads a missed row: a predicate reads the column first,
-		// and the projection's calculation still reads the missed row's default rather than the predicate's column.
+		// A wrapper's column calculated over a missed row is read by each reader on its own terms, as without AsSubQuery(): the
+		// filter keeps SQL's value (2), as master does, and the projection's calculation reads C#'s (1).
 		[Test]
 		public void CalculationOverNonNullableWrapperColumnOverMissedLeftJoin([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool preferClient)
 		{
@@ -2392,7 +2392,7 @@ namespace Tests.Linq
 
 			var values =
 				(from y in inner
-				 where y.X > 0
+				 where y.X == 2
 				 orderby y.Id
 				 select y.X + 1)
 				.ToArray();
