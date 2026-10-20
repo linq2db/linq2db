@@ -141,7 +141,8 @@ namespace Tests.Linq
 
 		// Sql.Degrees(int) returns int, so widened back to double it has no fraction. The bound is not integral: an integral
 		// constant lets the comparison drop the widening before SQL is built (#6070).
-		// Only these providers emulate Degrees inside an integer cast pair; elsewhere DEGREES keeps the fraction (#6072).
+		// These providers emulate Degrees inside an integer cast pair; Access emulates it too but drops the casts (#6070).
+		// Elsewhere the engine's DEGREES decides: SQLite and DuckDB keep the fraction (#6072), SQL Server returns int.
 		[Test]
 		public void DegreesOfIntTruncates([IncludeDataSources(true, TestProvName.AllFirebird, TestProvName.AllOracle, TestProvName.AllSapHana, TestProvName.AllInformix, TestProvName.AllSybase)] string context)
 		{
@@ -155,11 +156,19 @@ namespace Tests.Linq
 			using var t  = db.CreateLocalTable(data);
 
 			var query =
-				from d in from r in t select Sql.Degrees((int)r.M)!.Value
+				from d in t.Select(r => Sql.Degrees((int)r.M)!.Value)
 				where d < 57.1
 				select d;
 
 			AssertQuery(query);
+
+			// 114.59 truncates to 114 but rounds to 115
+			var past =
+				from d in t.Select(r => Sql.Degrees((int)r.M)!.Value)
+				where d < 114.5
+				select d;
+
+			AssertQuery(past);
 		}
 
 		[Test]
@@ -1657,9 +1666,15 @@ namespace Tests.Linq
 				})
 				.Single();
 
-			// 1.00005^2 + 16 = 17.0001000025 and 0.00005^2 + 16 = 16.0000000025; a cut base gives 17.0000 and 16
+			// 1.00005^2 + 16 = 17.0001000025 and 0.00005^2 + 16 = 16.0000000025; a cut base gives 17.0000 and 16. YDB keeps the
+			// column's scale, so there PowTiny reads 16 either way and only proves the query runs.
 			result.Pow!.Value.ShouldBeInRange(17.00009m, 17.00011m);
-			result.PowTiny!.Value.ShouldBeInRange(16m, 16.00001m);
+
+			if (context.IsAnyOf(TestProvName.AllClickHouse))
+				result.PowTiny!.Value.ShouldBeInRange(16.000000002m, 16.000000003m);
+			else
+				result.PowTiny.ShouldBe(16m);
+
 			result.Away.ShouldBe(17.0001m);
 			result.Even.ShouldBe(17.001m);
 			result.AwayTiny.ShouldBe(16.0001m);
@@ -1739,6 +1754,8 @@ namespace Tests.Linq
 				.Select(r => new
 				{
 					Wide32 = Sql.AsSql(Sql.Round(123456789.5m, Sql.AsSql(0)) + r.D32),
+					Edge32 = Sql.AsSql(Sql.Round(12345678.5m, Sql.AsSql(0)) + r.D32),
+					Wide64 = Sql.AsSql(Sql.Round(12345678901234567.5m, Sql.AsSql(0)) + r.D64),
 				});
 
 			AssertQuery(wide);
