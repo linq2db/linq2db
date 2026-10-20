@@ -2736,7 +2736,7 @@ namespace Tests.Linq
 		sealed record LowHolder(ParentValue Info) : ValueHolder(Info);
 		sealed record HighHolder(ParentValue Info) : ValueHolder(Info);
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6068")]
 		public void ConcatStructReferencedTwice([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -2750,7 +2750,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6068")]
 		public void ConcatStructInBothConditionalBranches([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

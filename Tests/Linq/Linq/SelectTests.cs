@@ -2201,7 +2201,7 @@ namespace Tests.Linq
 
 		readonly record struct ParentValue(int Id, int? Value);
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6068")]
 		public void StructFromSubqueryReferencedTwice([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -2215,7 +2215,7 @@ namespace Tests.Linq
 
 		readonly record struct ParentChildren(int Id, List<int> Children);
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6068")]
 		public void StructWithEagerLoadFromSubqueryReferencedTwice([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
