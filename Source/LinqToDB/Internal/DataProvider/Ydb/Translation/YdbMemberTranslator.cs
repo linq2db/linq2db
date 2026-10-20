@@ -636,8 +636,8 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 
 				// .Date drops the time-of-day, keeping a DateTime at midnight. Use the function chain
 				// Split -> StartOfDay -> MakeTimestamp (as the ShiftYears path does) rather than a
-				// CAST(Timestamp AS Date AS Timestamp) round-trip, which the optimizer collapses to the original
-				// value unless both casts are mandatory.
+				// CAST(Timestamp AS Date AS Timestamp) round-trip, whose truncation would rest on the optimizer
+				// counting Timestamp -> Date as a narrowing cast pair.
 				var split   = f.Function(dateType, "DateTime::Split", dateExpression);
 				var startOf = f.Function(dateType, "DateTime::StartOfDay", split);
 
@@ -877,8 +877,9 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				return scaleType.EqualsDbOnly(valueType) ? result : factory.Cast(result, valueType);
 			}
 
-			// The casts are mandatory: the optimizer would otherwise fold CAST(CAST(s AS Decimal(P,0)) AS Decimal(P,S))
-			// back to s. Decimal(P,0) keeps S spare integer digits, so the carry and the +-1 below cannot overflow it.
+			// The casts are the rounding itself, so they are mandatory: no cast-pair fold may reduce
+			// CAST(CAST(s AS Decimal(P,0)) AS Decimal(P,S)) to s. Decimal(P,0) keeps S spare integer digits, so the carry
+			// and the +-1 below cannot overflow it.
 			static ISqlExpression RoundDecimal(ISqlExpressionFactory factory, ISqlExpression scaled, DbDataType scaleType, bool awayFromZero)
 			{
 				var scale     = scaleType.Scale     ?? YdbMappingSchema.DEFAULT_DECIMAL_SCALE;

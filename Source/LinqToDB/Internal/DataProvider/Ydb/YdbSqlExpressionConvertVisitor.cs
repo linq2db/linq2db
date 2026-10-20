@@ -403,8 +403,8 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		// The value passes through Decimal(35,1) first, as YQL refuses a CAST from Decimal(P,P), which a computed value
 		// can be, to Decimal(35,0); scale 1 keeps 34 integer digits, more than any Int64. That cast can round, but the
 		// result still lands on one of the value's two neighbouring integers, so comparing it with the value itself
-		// (YQL compares Decimals of different types) still picks the truncation. The casts are mandatory, or the
-		// optimizer folds them, and their types carry no DbType, which would be rendered in their place. They are typed decimal
+		// (YQL compares Decimals of different types) still picks the truncation. The casts are mandatory, since they are
+		// the truncation itself, and their types carry no DbType, which would be rendered in their place. They are typed decimal
 		// even for a double stored as Decimal, whose CLR type would send them through Text and their arithmetic to Double.
 		ISqlExpression TruncateDecimal(ISqlExpression value, DbDataType fromType)
 		{
