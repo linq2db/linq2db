@@ -2767,5 +2767,86 @@ namespace Tests.Linq
 
 			conditional.ShouldBe([1.00m, 1.004m], ignoreOrder: true);
 		}
+
+		sealed class FineDecimalRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Decimal, Precision = 18, Scale = 12)]
+			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Decimal64, Precision = 18, Scale = 12)]
+			public decimal Value { get; set; }
+		}
+
+		/// <summary>
+		/// A literal branch beside a computed decimal finer than the provider's default decimal keeps both branches'
+		/// digits.
+		/// </summary>
+		[Test]
+		public void LiteralBesideComputedDecimalKeepsOperandScale([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new FineDecimalRow { Id = 1, Value = 1.000000000005m } });
+
+			var values = t
+				.Select(r => Math.Abs(r.Value))
+				.Concat(t.Select(r => 1.000000000005m))
+				.ToArray();
+
+			values.ShouldBe([1.000000000005m, 1.000000000005m]);
+		}
+
+		sealed class WideDecimalRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Decimal, Precision = 18, Scale = 2)]
+			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Decimal64, Precision = 18, Scale = 2)]
+			public decimal Value { get; set; }
+		}
+
+		/// <summary>
+		/// A finer literal branch beside a computed decimal with many integer digits keeps both branches' values, in either
+		/// branch order, whether the two fit one decimal type or not.
+		/// </summary>
+		/// <remarks>
+		/// The providers here render a literal's precision in the set operation's cast. The second literal needs more digits
+		/// than any of them allows beside the column's integer part, so it is written with its own; the result type is then
+		/// the server's. SqlCe, which also renders it, is left out: it types the column by the first branch alone, so a
+		/// computed <c>Decimal(18,2)</c> first narrows the literal whatever it is cast to.
+		/// </remarks>
+		[Test]
+		public void FinerLiteralBesideWideComputedDecimalKeepsBothValues([IncludeDataSources(TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllDuckDB, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new WideDecimalRow { Id = 1, Value = 12345678901234.50m } });
+
+			var fitting = t
+				.Select(r => Math.Abs(r.Value))
+				.Concat(t.Select(r => 1.0000000000005m))
+				.ToArray();
+
+			fitting.ShouldBe([12345678901234.50m, 1.0000000000005m], ignoreOrder: true);
+
+			var fittingLiteralFirst = t
+				.Select(r => 1.0000000000005m)
+				.Concat(t.Select(r => Math.Abs(r.Value)))
+				.ToArray();
+
+			fittingLiteralFirst.ShouldBe([12345678901234.50m, 1.0000000000005m], ignoreOrder: true);
+
+			var ownFacets = t
+				.Select(r => Math.Abs(r.Value))
+				.Concat(t.Select(r => 1.00000000000000005m))
+				.ToArray();
+
+			ownFacets.ShouldBe([12345678901234.50m, 1.00000000000000005m], ignoreOrder: true);
+
+			var ownFacetsLiteralFirst = t
+				.Select(r => 1.00000000000000005m)
+				.Concat(t.Select(r => Math.Abs(r.Value)))
+				.ToArray();
+
+			ownFacetsLiteralFirst.ShouldBe([12345678901234.50m, 1.00000000000000005m], ignoreOrder: true);
+		}
 	}
 }

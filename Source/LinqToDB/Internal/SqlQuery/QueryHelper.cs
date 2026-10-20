@@ -292,6 +292,49 @@ namespace LinqToDB.Internal.SqlQuery
 		}
 
 		/// <summary>
+		/// The type a decimal value takes beside a computed decimal operand: the operand's own type when it holds the
+		/// value, otherwise one with the integer digits and the scale of both.
+		/// </summary>
+		/// <remarks>
+		/// A computed value has no stored scale to narrow the value to, and the provider's default decimal type can be
+		/// narrower than the operand in either direction. Precision is capped at DB2's 31, the smallest maximum among the
+		/// providers that render it; past the cap the value keeps its own facets, at most 29 digits. ClickHouse decimals
+		/// move up a family instead, because a comparison is computed in the wider operand's family and overflows it.
+		/// </remarks>
+		internal static DbDataType GetDecimalTypeForValue(DbDataType operandType, decimal value)
+		{
+			if (operandType.Precision is not { } precision || operandType.Scale is not { } scale)
+				return operandType;
+
+			// Dividing by 1.000… drops trailing zeros, which would otherwise count as scale.
+			var (valuePrecision, valueScale) = DecimalHelper.GetFacets(value / 1.0000000000000000000000000000m);
+
+			var integerDigits = Math.Max(precision - scale, valuePrecision - valueScale);
+			var newScale      = Math.Max(scale, valueScale);
+
+			if (integerDigits == precision - scale && newScale == scale)
+				return operandType;
+
+			var newPrecision = integerDigits + newScale;
+
+			if (newPrecision > (operandType.DataType == DataType.Decimal ? 31 : 76))
+			{
+				newPrecision = valuePrecision;
+				newScale     = valueScale;
+			}
+
+			var dataType = operandType.DataType switch
+			{
+				DataType.Decimal32  when newPrecision > 9  => newPrecision > 38 ? DataType.Decimal256 : newPrecision > 18 ? DataType.Decimal128 : DataType.Decimal64,
+				DataType.Decimal64  when newPrecision > 18 => newPrecision > 38 ? DataType.Decimal256 : DataType.Decimal128,
+				DataType.Decimal128 when newPrecision > 38 => DataType.Decimal256,
+				var other                                  => other,
+			};
+
+			return new DbDataType(operandType.SystemType, dataType, null, operandType.Length, newPrecision, newScale);
+		}
+
+		/// <summary>
 		/// Whether <paramref name="expr"/> is a stored column's value as it is, rather than one computed from it.
 		/// </summary>
 		/// <remarks>

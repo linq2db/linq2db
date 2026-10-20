@@ -604,15 +604,21 @@ namespace LinqToDB.Internal.Linq.Builder
 			// A value computed from a coarse date/time or a decimal column has no stored precision or scale to match, so the
 			// value keeps its own type rather than lose its sub-second part, its time part or its decimal digits - as an IN-list
 			// value does. A stored column still lends its type, and so does a coarse value that reaches no column (a cast to a
-			// date): some servers refuse a set operation over DATE and TIMESTAMP.
+			// date): some servers refuse a set operation over DATE and TIMESTAMP. A decimal value is widened from the
+			// computed value's type rather than the schema default, which can be narrower than it either way.
 			DbDataType GetValueTypeBeside(SqlValue value, ISqlExpression other)
 			{
 				var otherType = QueryHelper.GetDbDataType(other, MappingSchema);
 
-				if ((QueryHelper.IsCoarserDateTime(otherType.DataType, value.ValueType.DataType) || QueryHelper.IsDecimal(otherType.DataType) && QueryHelper.IsDecimal(value.ValueType.DataType))
+				if (QueryHelper.IsCoarserDateTime(otherType.DataType, value.ValueType.DataType)
 					&& QueryHelper.GetColumnDescriptorForTyping(other) != null
 					&& !QueryHelper.IsStoredColumn(other))
 					return value.ValueType;
+
+				if (QueryHelper.IsDecimal(otherType.DataType) && QueryHelper.IsDecimal(value.ValueType.DataType)
+					&& value.Value is decimal decimalValue
+					&& !QueryHelper.IsStoredColumn(other))
+					return QueryHelper.GetDecimalTypeForValue(otherType, decimalValue);
 
 				return otherType;
 			}

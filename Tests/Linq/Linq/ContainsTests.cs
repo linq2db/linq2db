@@ -513,6 +513,67 @@ namespace Tests.Linq
 			count.ShouldBe(0);
 		}
 
+		sealed class ComputedDecimalRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Decimal, Precision = 18, Scale = 12)]
+			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Decimal64, Precision = 18, Scale = 12)]
+			public decimal Fine { get; set; }
+
+			[Column(DataType = DataType.Decimal, Precision = 18, Scale = 2)]
+			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Decimal64, Precision = 18, Scale = 2)]
+			public decimal Wide { get; set; }
+		}
+
+		/// <summary>
+		/// A list beside a computed decimal - captured or written inline - keeps the digits the computed value's own type
+		/// holds, and agrees with <c>==</c>.
+		/// </summary>
+		/// <remarks>
+		/// The rounded arm asserts agreement rather than a count, because the rounded value's type is the provider's.
+		/// SqlCe is left out because it compares a decimal literal at the other side's scale (#6062).
+		/// </remarks>
+		[Test]
+		public void ListBesideComputedDecimalKeepsDigits([DataSources(TestProvName.AllSqlCe)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new ComputedDecimalRow { Id = 1, Fine = 1.000000000005m, Wide = 12345678901234.50m } });
+
+			var fine = new[] { 1.000000000005m };
+			var wide = new[] { 12345678901234.50m };
+
+			var fineCaptured = t.Count(r => fine.Contains(Math.Abs(r.Fine)));
+
+			fineCaptured.ShouldBe(1);
+
+			var fineInline = t
+				.Count(r => Math.Abs(r.Fine).In(1.000000000005m));
+
+			fineInline.ShouldBe(1);
+
+			var wideCaptured = t.Count(r => wide.Contains(Math.Abs(r.Wide)));
+
+			wideCaptured.ShouldBe(1);
+
+			var wideInline = t
+				.Count(r => Math.Abs(r.Wide).In(12345678901234.50m));
+
+			wideInline.ShouldBe(1);
+
+			var finer = new[] { 1.004m };
+
+			var roundedEqual = t.Count(r => Math.Round(r.Fine, 2) == 1.004m);
+
+			var roundedCaptured = t.Count(r => finer.Contains(Math.Round(r.Fine, 2)));
+
+			var roundedInline = t
+				.Count(r => Math.Round(r.Fine, 2).In(1.004m));
+
+			roundedCaptured.ShouldBe(roundedEqual);
+			roundedInline.ShouldBe(roundedEqual);
+		}
+
 #if SUPPORTS_DATEONLY
 		sealed class DateOnlyRow
 		{

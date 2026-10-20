@@ -4429,10 +4429,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			r = QueryHelper.UnwrapExpression(r, checkNullability: true);
 
 			if (l is SqlValue lValue)
-				lValue.ValueType = GetDataType(r, lValue.ValueType, MappingSchema);
+				lValue.ValueType = GetDataType(r, lValue, MappingSchema);
 
 			if (r is SqlValue rValue)
-				rValue.ValueType = GetDataType(l, rValue.ValueType, MappingSchema);
+				rValue.ValueType = GetDataType(l, rValue, MappingSchema);
 
 			/*switch (nodeType)
 			{
@@ -5025,12 +5025,21 @@ namespace LinqToDB.Internal.Linq.Builder
 			public int?     Length;
 			public int?     Precision;
 			public int?     Scale;
-			public bool     SchemaDefault;
+			public bool     ComputedDecimal;
 
 			public MappingSchema MappingSchema { get; }
 		}
 
-		static DbDataType GetDataType(ISqlExpression expr, DbDataType baseType, MappingSchema mappingSchema)
+		static DbDataType GetDataType(ISqlExpression expr, SqlValue literal, MappingSchema mappingSchema)
+		{
+			var type = GetDataType(expr, literal.ValueType, mappingSchema, out var computedDecimal);
+
+			return computedDecimal && literal.Value is decimal value
+				? QueryHelper.GetDecimalTypeForValue(type, value)
+				: type;
+		}
+
+		static DbDataType GetDataType(ISqlExpression expr, DbDataType baseType, MappingSchema mappingSchema, out bool computedDecimal)
 		{
 			var ctx = new GetDataTypeContext(baseType, mappingSchema);
 
@@ -5099,13 +5108,9 @@ namespace LinqToDB.Internal.Linq.Builder
 							if (QueryHelper.IsCoarserDateTime(type.DataType, context.DataType) && !QueryHelper.IsStoredColumn(expr))
 								return true;
 
-							// Nor a stored scale: a decimal literal beside a computed decimal takes the schema's own decimal
-							// type rather than the column's scale, which it may be finer than, converter or not.
-							if (QueryHelper.IsDecimal(type.DataType) && QueryHelper.IsDecimal(context.DataType) && !QueryHelper.IsStoredColumn(expr))
-							{
-								context.SchemaDefault = true;
-								return true;
-							}
+							// Nor a stored scale: a decimal literal beside a computed decimal is widened from its value by the
+							// caller. A converted column's constant is a parameter and keeps the column's terms.
+							context.ComputedDecimal = QueryHelper.IsDecimal(type.DataType) && QueryHelper.IsDecimal(context.DataType) && !QueryHelper.IsStoredColumn(expr);
 
 							context.DataType  = type.DataType;
 							context.DbType    = type.DbType;
@@ -5120,8 +5125,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			});
 
-			if (ctx.SchemaDefault)
-				return mappingSchema.GetDbDataType(baseType.SystemType);
+			computedDecimal = ctx.ComputedDecimal;
 
 			return new DbDataType(
 				baseType.SystemType,
@@ -5201,12 +5205,21 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						var exprs  = new ISqlExpression[newArr.Expressions.Count];
 
+						var exprType        = QueryHelper.GetDbDataType(expr, MappingSchema);
+						var computedDecimal = QueryHelper.IsDecimal(exprType.DataType) && !QueryHelper.IsStoredColumn(expr);
+
 						for (var i = 0; i < newArr.Expressions.Count; i++)
 						{
 							if (Visit(newArr.Expressions[i]) is not SqlPlaceholderExpression exprPlaceholder)
 								return null;
 
 							exprs[i] = exprPlaceholder.Sql;
+
+							// As a literal beside it in a comparison: a computed decimal has no stored scale to narrow to.
+							if (computedDecimal
+								&& QueryHelper.UnwrapExpression(exprs[i], checkNullability: true) is SqlValue { Value: decimal itemValue } item
+								&& QueryHelper.IsDecimal(item.ValueType.DataType))
+								item.ValueType = QueryHelper.GetDecimalTypeForValue(exprType, itemValue);
 						}
 
 						return new SqlPredicate.InList(expr, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false, exprs);
