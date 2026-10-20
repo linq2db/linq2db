@@ -357,9 +357,12 @@ namespace Tests.Linq
 		/// <remarks>
 		/// A literal compared with an aggregate over the converted column is not asserted: it is written in the column's
 		/// terms, and ClickHouse narrows it while YDB refuses it, on master too.
+		/// <para>
+		/// SqlCe is left out because it compares a decimal literal at the other side's scale (#6062).
+		/// </para>
 		/// </remarks>
 		[Test]
-		public void LiteralComparedWithAggregateKeepsItsOwnScale([DataSources] string context)
+		public void LiteralComparedWithAggregateKeepsItsOwnScale([DataSources(TestProvName.AllSqlCe)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(new[] { new ScaledDecimalRow { Id = 1, Value = 1.00m, Converted = 1.00m } });

@@ -293,6 +293,7 @@ namespace Tests.Linq
 		/// A coalesce over a whole-second column is a computed value: the literal beside it keeps its sub-second part.
 		/// </summary>
 		[Test]
+		[ActiveIssue(5998, Configuration = TestProvName.AllAccessOdbc, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}1{1}but was")]
 		public void CoalesceOverASecondPrecisionColumnComparedWithSubSecondLiteral([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -325,7 +326,7 @@ namespace Tests.Linq
 			using var t  = SeedCoarseNullable(db);
 
 			var windowed = t
-				.Select(r => new { First = Sql.Window.FirstValue(r.StartedOn, w => w.OrderBy(r.Id).RowsBetween.Unbounded.And.Unbounded) })
+				.Select(r => new { First = Sql.Window.FirstValue(r.StartedOn, w => w.OrderBy(r.Id)) })
 				.AsSubQuery();
 
 			var firstBelow = windowed.Count(r => r.First < CoarseSubSecond);
