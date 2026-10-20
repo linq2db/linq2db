@@ -784,6 +784,7 @@ namespace Tests.Linq
 			rows.ShouldAllBe(r => r == 0);
 		}
 
+#if !NETFRAMEWORK
 		// A zero interval is outside the ratio's domain, as a zero divisor is. Option off only: with the option on the client
 		// divides by TimeSpan.Zero and answers Infinity.
 		[Test]
@@ -805,6 +806,7 @@ namespace Tests.Linq
 			rows.Length.ShouldBe(MissedDivisorEntity.Seed.Length);
 			rows.ShouldAllBe(r => r.Ratio == 0);
 		}
+#endif
 
 		// A date shift's operand is not defaulted: its default is the type's least value, and a negative shift of it underflows
 		// on the server. Over a missed row the shift keeps SQL's NULL and reads the reader's default. Informix cannot put a row
