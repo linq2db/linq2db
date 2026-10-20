@@ -1257,9 +1257,14 @@ namespace LinqToDB.Internal.Linq.Builder
 			// converted, so every chain is taken for a function of a set.
 			var isSetFunction = attr is Sql.ExtensionAttribute || attr.IsAggregate || attr.IsWindowFunction;
 
-			using var saveFlags = UsingBuildFlags(isSetFunction ? _buildFlags & ~BuildFlags.ValueOfProjection : _buildFlags);
+			// A server-side-only call stays in SQL whatever the option, so its arguments keep SQL's NULL for its own NULL
+			// handling. A pass-through has none: its argument is the projection's own value.
+			var isPassThrough = IsIdentityTemplate(attr) || IsPassThroughCall(attr, expr);
+			var keepsSqlNull  = (isSetFunction || isServerSideOnly) && !isPassThrough;
 
-			var argumentsAreOperands = !isSetFunction && !IsIdentityTemplate(attr);
+			using var saveFlags = UsingBuildFlags(keepsSqlNull ? _buildFlags & ~BuildFlags.ValueOfProjection : _buildFlags);
+
+			var argumentsAreOperands = !keepsSqlNull && !isPassThrough;
 
 			var rootContext     = context;
 			var rootSelectQuery = context.SelectQuery;
@@ -2595,6 +2600,12 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			return attribute is not (Sql.FunctionAttribute or Sql.PropertyAttribute or Sql.ExtensionAttribute)
 				&& string.Equals(attribute.Expression, "{0}", StringComparison.Ordinal);
+		}
+
+		static bool IsPassThroughCall(Sql.ExpressionAttribute attribute, Expression expression)
+		{
+			return attribute is Sql.FunctionAttribute { Name: PseudoFunctions.REMOVE_CONVERT }
+				|| expression is MethodCallExpression { Method: { Name: nameof(Sql.NoConvert) } method } && method.DeclaringType == typeof(Sql);
 		}
 
 		// The operand positions where a missed row's default lies outside the operator's domain: the divisor of a division or

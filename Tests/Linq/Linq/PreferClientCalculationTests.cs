@@ -883,6 +883,85 @@ namespace Tests.Linq
 		}
 #endif
 
+		// SqlFn maps SQL Server's functions. A server-side-only function stays in SQL whatever the option, so its arguments keep
+		// SQL's NULL and the function answers by its own NULL handling.
+		[Test]
+		public void ServerSideOnlyFunctionArgumentOverMissedLeftJoinKeepsNull([IncludeDataSources(true, TestProvName.AllSqlServer)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(MissedJoinEntity.Seed);
+
+			var query =
+				from e in table
+				from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				select new
+				{
+					Bare       = SqlFn.IsNull(j.Value1, -1),
+					Calculated = SqlFn.IsNull(j.Value1 + 1, -1),
+				};
+
+			var rows = query.ToArray();
+
+			rows.Length.ShouldBe(MissedJoinEntity.Seed.Length);
+			rows.ShouldAllBe(r => r.Bare == -1 && r.Calculated == -1);
+		}
+
+		// A pass-through has no NULL handling of its own: a calculation inside it reads the missed row as the reader does.
+		[Test]
+		public void PassThroughOverMissedLeftJoinReadsDefault([DataSources] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(MissedJoinEntity.Seed);
+
+			var query =
+				from e in table
+				from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				select new
+				{
+					InSql        = Sql.AsSql(j.Value1 + 1),
+					NotConverted = Sql.NoConvert(j.Value1 + 1),
+				};
+
+			var rows = query.ToArray();
+
+			rows.Length.ShouldBe(MissedJoinEntity.Seed.Length);
+			rows.ShouldAllBe(r => r.InSql == 1 && r.NotConverted == 1);
+		}
+
+		// A pass-through is not a consumer: a bare value inside it is not defaulted, and DISTINCT still tells the missed row
+		// from a matched 0 (the SQL is asserted, so SQLite alone).
+		[Test]
+		public void PassThroughBareValueOverMissedLeftJoinIsNotDefaulted([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db      = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table   = db.CreateLocalTable(MissedJoinEntity.Seed);
+			using var partial = db.CreateLocalTable(PartialJoinEntity.Seed);
+
+			var query =
+				from e in table
+				from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				select new
+				{
+					V = Sql.NoConvert(j.Value1),
+					W = Sql.NoConvert((long)j.Value1),
+				};
+
+			query
+				.ToSqlQuery()
+				.Sql
+				.ToUpperInvariant()
+				.ShouldNotContain("COALESCE");
+
+			var distinct =
+				(from e in partial
+				 from j in partial.LeftJoin(j => j.Id == e.Id + 1)
+				 select Sql.NoConvert(j.Value1))
+				.Distinct()
+				.ToArray();
+
+			distinct.Length.ShouldBe(3);
+		}
+
 		// DateOnly and DateTimeOffset: of the providers that create them, only ClickHouse and YDB map them to a type without
 		// 0001-01-01.
 		static int MissedRowNativeYear(string context)
