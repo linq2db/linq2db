@@ -3152,7 +3152,7 @@ namespace Tests.Linq
 		// Members with a built-in translation stay in SQL under the option; a date shift by a constant does not
 		// (TranslatorArgumentsStayInSqlUnderOption keeps a shift by a row value in SQL).
 		[Test]
-		public void DocumentedTranslatedMembersStayInSqlUnderOption([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void BuiltInTranslationsStayInSqlUnderOption([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(true));
 			using var table = db.CreateLocalTable(TranslatedMemberEntity.Seed);
