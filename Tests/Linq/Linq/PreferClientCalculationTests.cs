@@ -962,6 +962,29 @@ namespace Tests.Linq
 			distinct.Length.ShouldBe(3);
 		}
 
+		[Sql.Extension("{value} + 1", ServerSideOnly = false)]
+		static int PlusOneExtension([ExprParameter] int value) => value + 1;
+
+		// A scalar [Sql.Extension] that is neither an aggregate, a window function nor server-side-only: only its being an
+		// extension keeps its argument set-wise. Option off only: with the option on, a non-server-side-only extension inside a
+		// moved calculation keeps today's divergence.
+		[Test]
+		public void ExtensionScalarArgumentOverMissedLeftJoinKeepsNull([DataSources] string context)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(false));
+			using var table = db.CreateLocalTable(MissedJoinEntity.Seed);
+
+			var query =
+				from e in table
+				from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				select PlusOneExtension(j.Value1);
+
+			var rows = query.ToArray();
+
+			rows.Length.ShouldBe(MissedJoinEntity.Seed.Length);
+			rows.ShouldAllBe(r => r == 0);
+		}
+
 		// DateOnly and DateTimeOffset: of the providers that create them, only ClickHouse and YDB map them to a type without
 		// 0001-01-01.
 		static int MissedRowNativeYear(string context)
