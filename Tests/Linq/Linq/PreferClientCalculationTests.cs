@@ -766,7 +766,7 @@ namespace Tests.Linq
 		}
 
 		// ClickHouse: the decimal quotient is computed through Float64 over the joined column's stored default, and casting its
-		// infinity to Decimal raises "Decimal convert overflow" (master alike).
+		// infinity to Decimal raises "Decimal convert overflow" (master alike, #6089).
 		[Test]
 		public void DecimalDivisorOverMissedLeftJoinKeepsNull([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -833,7 +833,7 @@ namespace Tests.Linq
 
 		// The year, month and day of a date built from parts are not defaulted: 0 is outside their domain. The hour accepts it,
 		// so a date built from the outer row's year and a missed row's hour is C#'s.
-		// Sybase builds the date by concatenating its parts, reads a NULL part as empty and fails to convert '--' (master alike).
+		// Sybase builds the date by concatenating its parts, reads a NULL part as empty and fails to convert '--' (master alike, #6088).
 		[Test]
 		public void DateFromPartsOverMissedLeftJoinKeepsNull([DataSources(TestProvName.AllSybase)] string context, [Values] bool preferClient)
 		{
