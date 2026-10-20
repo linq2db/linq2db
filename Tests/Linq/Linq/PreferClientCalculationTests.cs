@@ -875,6 +875,7 @@ namespace Tests.Linq
 		[Test]
 		[ThrowsForProvider("Oracle.ManagedDataAccess.Client.OracleException", TestProvName.AllOracleManaged,     ErrorMessage = "ORA-01858")]
 		[ThrowsForProvider("System.Data.Odbc.OdbcException",                  TestProvName.AllAccessOdbc,        ErrorMessage = "Data type mismatch")]
+		[ThrowsForProvider("System.Data.OleDb.OleDbException",                TestProvName.AllAccessOleDb,       ErrorMessage = "Multiple-step OLE DB operation")]
 		[ThrowsForProvider("Npgsql.PostgresException",                        TestProvName.AllPostgreSQL93Minus, ErrorMessage = "make_timestamp")]
 		public void DateOnlyFromPartsOverMissedLeftJoinKeepsNull([DataSources(TestProvName.AllSybase)] string context, [Values] bool preferClient)
 		{
