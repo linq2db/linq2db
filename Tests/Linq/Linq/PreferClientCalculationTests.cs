@@ -669,13 +669,11 @@ namespace Tests.Linq
 			rows.ShouldAllBe(r => r.Boxed == "0!");
 			rows.ShouldAllBe(r => r.Name  == emptyOnNull + "!");
 
-			// The shifted date is the one written for the missed row: the least date the engine has where it has no 0001-01-01.
-			rows.ShouldAllBe(r => r.Year == MissedRowYear(context) && r.Day == 11);
+			// A shift's date is not defaulted (DateShiftOverMissedLeftJoinKeepsNull): the shift is NULL and reads the reader's
+			// default, its parts 0.
+			var missed = (DateTime)db.MappingSchema.GetDefaultValue(typeof(DateTime))!;
 
-			// Access reads a date before 1900 back into .NET shifted (0100-01-01 arrives as 0098-11-26), so there only the parts
-			// it calculates itself are compared.
-			if (!context.IsAnyOf(TestProvName.AllAccess))
-				rows.ShouldAllBe(r => r.Shifted == new DateTime(MissedRowYear(context), 1, 11));
+			rows.ShouldAllBe(r => r.Shifted == missed && r.Year == 0 && r.Day == 0);
 		}
 
 		// A shift by a row value, which Informix cannot put inside an INTERVAL.
@@ -697,11 +695,10 @@ namespace Tests.Linq
 				 })
 				.ToArray();
 
-			rows.Length.ShouldBe(TranslatedMemberEntity.Seed.Length);
-			rows.ShouldAllBe(r => r.Year == MissedRowYear(context) && r.Day == 1 + r.Value1);
+			var missed = (DateTime)db.MappingSchema.GetDefaultValue(typeof(DateTime))!;
 
-			if (!context.IsAnyOf(TestProvName.AllAccess))
-				rows.ShouldAllBe(r => r.Shifted == new DateTime(MissedRowYear(context), 1, 1).AddDays(r.Value1));
+			rows.Length.ShouldBe(TranslatedMemberEntity.Seed.Length);
+			rows.ShouldAllBe(r => r.Shifted == missed && r.Year == 0 && r.Day == 0);
 		}
 
 		// The group-join form reaches the missed row through DefaultIfEmpty rather than LeftJoin, and reads it alike.
@@ -724,6 +721,167 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
+
+		[Table]
+		sealed class MissedDivisorEntity
+		{
+			[Column, PrimaryKey] public int      Id     { get; set; }
+			[Column]             public int      Value1 { get; set; }
+			[Column]             public decimal  Dec    { get; set; }
+			[Column]             public double   Dbl    { get; set; }
+			[Column]             public DateTime Date   { get; set; }
+			[Column]             public DateTime Date2  { get; set; }
+
+			public static readonly MissedDivisorEntity[] Seed =
+			[
+				new() { Id = 1, Value1 = 10, Dec = 10, Dbl = 10, Date = new DateTime(2020, 1, 15), Date2 = new DateTime(2020, 1, 17) },
+				new() { Id = 2, Value1 = 20, Dec = 20, Dbl = 20, Date = new DateTime(2021, 2, 16), Date2 = new DateTime(2021, 2, 20) },
+			];
+		}
+
+		// A divisor's default, 0, is outside the division's domain, so over a missed row the divisor keeps SQL's NULL and
+		// the quotient reads 0, where a defaulted divisor raises a division by zero on most servers. Option off only: with
+		// the option on, C# throws DivideByZeroException for an int or decimal divisor on the client.
+		[Test]
+		public void DivisorOverMissedLeftJoinKeepsNull([DataSources] string context)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(false));
+			using var table = db.CreateLocalTable(MissedDivisorEntity.Seed);
+
+			var query =
+				from e in table
+				from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				select new
+				{
+					IntDiv = e.Value1 / j.Value1,
+					IntMod = e.Value1 % j.Value1,
+					DblDiv = e.Dbl / j.Dbl,
+					Nested = e.Value1 / (j.Value1 * 2),
+				};
+
+			var rows = query.ToArray();
+
+			rows.Length.ShouldBe(MissedDivisorEntity.Seed.Length);
+			rows.ShouldAllBe(r => r.IntDiv == 0 && r.IntMod == 0 && r.DblDiv == 0 && r.Nested == 0);
+		}
+
+		// ClickHouse: the decimal quotient is computed through Float64 over the joined column's stored default, and casting its
+		// infinity to Decimal raises "Decimal convert overflow" (master alike).
+		[Test]
+		public void DecimalDivisorOverMissedLeftJoinKeepsNull([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(false));
+			using var table = db.CreateLocalTable(MissedDivisorEntity.Seed);
+
+			var query =
+				from e in table
+				from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				select e.Dec / j.Dec;
+
+			var rows = query.ToArray();
+
+			rows.Length.ShouldBe(MissedDivisorEntity.Seed.Length);
+			rows.ShouldAllBe(r => r == 0);
+		}
+
+		// A zero interval is outside the ratio's domain, as a zero divisor is. Option off only: with the option on the client
+		// divides by TimeSpan.Zero and answers Infinity.
+		[Test]
+		public void IntervalRatioOverMissedLeftJoinKeepsNull([DataSources] string context)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(false));
+			using var table = db.CreateLocalTable(MissedDivisorEntity.Seed);
+
+			var query =
+				from e in table
+				from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				select new
+				{
+					Ratio = (e.Date2 - e.Date) / (j.Date2 - j.Date),
+				};
+
+			var rows = query.ToArray();
+
+			rows.Length.ShouldBe(MissedDivisorEntity.Seed.Length);
+			rows.ShouldAllBe(r => r.Ratio == 0);
+		}
+
+		// A date shift's operand is not defaulted: its default is the type's least value, and a negative shift of it underflows
+		// on the server. Over a missed row the shift keeps SQL's NULL and reads the reader's default. Informix cannot put a row
+		// value inside an INTERVAL.
+		[Test]
+		public void DateShiftOverMissedLeftJoinKeepsNull([DataSources(TestProvName.AllInformix)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(TranslatedMemberEntity.Seed);
+
+			var query =
+				from e in table
+				from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				select new
+				{
+					ByColumn = j.Date.AddDays(-e.Value1),
+					InSql    = Sql.AsSql(j.Date.AddDays(-1)),
+				};
+
+			var rows   = query.ToArray();
+			var missed = (DateTime)db.MappingSchema.GetDefaultValue(typeof(DateTime))!;
+
+			rows.Length.ShouldBe(TranslatedMemberEntity.Seed.Length);
+			rows.ShouldAllBe(r => r.ByColumn == missed && r.InSql == missed);
+		}
+
+		// The year, month and day of a date built from parts are not defaulted: 0 is outside their domain. The hour accepts it,
+		// so a date built from the outer row's year and a missed row's hour is C#'s.
+		// Sybase builds the date by concatenating its parts, reads a NULL part as empty and fails to convert '--' (master alike).
+		[Test]
+		public void DateFromPartsOverMissedLeftJoinKeepsNull([DataSources(TestProvName.AllSybase)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(TranslatedMemberEntity.Seed);
+
+			var query =
+				from e in table
+				from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				select new
+				{
+					e.Date,
+					Constructed = new DateTime(j.Value1, j.Value1, j.Value1),
+					Made        = Sql.MakeDateTime(j.Value1, j.Value1, j.Value1),
+					Mixed       = new DateTime(e.Date.Year, 1, 1, j.Value1, 0, 0),
+				};
+
+			var rows   = query.ToArray();
+			var missed = (DateTime)db.MappingSchema.GetDefaultValue(typeof(DateTime))!;
+
+			rows.Length.ShouldBe(TranslatedMemberEntity.Seed.Length);
+			rows.ShouldAllBe(r => r.Constructed == missed && r.Made == null && r.Mixed == new DateTime(r.Date.Year, 1, 1));
+		}
+
+#if SUPPORTS_DATEONLY
+		// Sybase: as DateFromPartsOverMissedLeftJoinKeepsNull.
+		[Test]
+		public void DateOnlyFromPartsOverMissedLeftJoinKeepsNull([DataSources(TestProvName.AllSybase)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(TranslatedMemberEntity.Seed);
+
+			var query =
+				from e in table
+				from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				select new
+				{
+					Constructed = new DateOnly(j.Value1, j.Value1, j.Value1),
+					Made        = Sql.MakeDateOnly(j.Value1, j.Value1, j.Value1),
+				};
+
+			var rows   = query.ToArray();
+			var missed = (DateOnly)db.MappingSchema.GetDefaultValue(typeof(DateOnly))!;
+
+			rows.Length.ShouldBe(TranslatedMemberEntity.Seed.Length);
+			rows.ShouldAllBe(r => r.Constructed == missed && r.Made == null);
+		}
+#endif
 
 		// DateOnly and DateTimeOffset: of the providers that create them, only ClickHouse and YDB map them to a type without
 		// 0001-01-01.

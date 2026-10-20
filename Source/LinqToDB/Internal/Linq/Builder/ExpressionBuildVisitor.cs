@@ -2597,6 +2597,45 @@ namespace LinqToDB.Internal.Linq.Builder
 				&& string.Equals(attribute.Expression, "{0}", StringComparison.Ordinal);
 		}
 
+		// The operand positions where a missed row's default lies outside the operator's domain: the divisor of a division or
+		// a modulo (0), the date a shift moves (the type's least value), and the year, month and day of a date built from parts.
+		static bool IsOperandOutsideDefaultDomain(Expression member, Expression operand)
+		{
+			if (member is BinaryExpression { NodeType: ExpressionType.Divide or ExpressionType.Modulo } division)
+				return division.Right.Find(operand) != null;
+
+			var dateType = member.Type.UnwrapNullableType();
+			if (dateType != typeof(DateTime) && dateType != typeof(DateTimeOffset)
+#if SUPPORTS_DATEONLY
+				&& dateType != typeof(DateOnly)
+#endif
+				)
+				return false;
+
+			IReadOnlyList<Expression> operands = member switch
+			{
+				MethodCallExpression call => call.Object == null ? call.Arguments : [call.Object, .. call.Arguments],
+				NewExpression        ctor => ctor.Arguments,
+				BinaryExpression     bin  => [bin.Left, bin.Right],
+				_                         => [],
+			};
+
+			var target = operand.UnwrapConvert();
+
+			if (operands.Any(o => o.UnwrapConvert().Type.UnwrapNullableType() == dateType))
+			{
+				// A shift: besides the date, an increment (a number or a TimeSpan), not only a date part.
+				var isShift = operands.Any(o => o.UnwrapConvert().Type.UnwrapNullableType() is var t && t != dateType && !t.IsEnum);
+				return isShift && target.Type.UnwrapNullableType() == dateType;
+			}
+
+			for (var i = 0; i < operands.Count && i < 3; i++)
+				if (operands[i].UnwrapConvert() == target)
+					return true;
+
+			return false;
+		}
+
 		static bool IsSqlNullabilityMarker(MethodInfo method)
 		{
 			return method.DeclaringType == typeof(Sql) && method.Name is nameof(Sql.ToNullable) or nameof(Sql.AsNullable);
@@ -3316,7 +3355,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			using var translationContext = _translationContexts.Allocate();
 
-			translationContext.Value.Init(this, BuildContext, Alias);
+			translationContext.Value.Init(this, BuildContext, Alias, node);
 
 			return Builder._memberTranslator.Translate(translationContext.Value, node, TranslationFlags.Expression) == null;
 		}
@@ -3734,10 +3773,16 @@ namespace LinqToDB.Internal.Linq.Builder
 			Expression leftExpr;
 			Expression rightExpr;
 
+			var leftKeepsNull  = IsOperandOutsideDefaultDomain(node, node.Left);
+			var rightKeepsNull = IsOperandOutsideDefaultDomain(node, node.Right);
+
 			using (UsingColumnDescriptor(columnDescriptor))
 			{
-				leftExpr  = UpdateNesting(Visit(left));
-				rightExpr = UpdateNesting(Visit(right));
+				using (UsingBuildFlags(leftKeepsNull ? _buildFlags & ~BuildFlags.ValueOfProjection : _buildFlags))
+					leftExpr = UpdateNesting(Visit(left));
+
+				using (UsingBuildFlags(rightKeepsNull ? _buildFlags & ~BuildFlags.ValueOfProjection : _buildFlags))
+					rightExpr = UpdateNesting(Visit(right));
 			}
 
 			if (leftExpr is not SqlPlaceholderExpression leftPlaceholder || rightExpr is not SqlPlaceholderExpression rightPlaceholder)
@@ -3762,8 +3807,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				return true;
 			}
 
-			l = ReadAsTheReaderReads(node.Left,  leftPlaceholder).Sql;
-			r = ReadAsTheReaderReads(node.Right, rightPlaceholder).Sql;
+			if (!leftKeepsNull)
+				l = ReadAsTheReaderReads(node.Left,  leftPlaceholder).Sql;
+
+			if (!rightKeepsNull)
+				r = ReadAsTheReaderReads(node.Right, rightPlaceholder).Sql;
 
 			switch (node.NodeType)
 			{
@@ -5733,11 +5781,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				public DbDataType  GetDbDataType(Type           type)       => _translationContext.MappingSchema.GetDbDataType(type);
 			}
 
-			public void Init(ExpressionBuildVisitor visitor, IBuildContext? currentContext, string? currentAlias)
+			public void Init(ExpressionBuildVisitor visitor, IBuildContext? currentContext, string? currentAlias, Expression member)
 			{
 				Visitor        = visitor;
 				CurrentContext = currentContext;
 				CurrentAlias   = currentAlias;
+				Member         = member;
 			}
 
 			public void Cleanup()
@@ -5745,7 +5794,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				Visitor        = default!;
 				CurrentContext = default!;
 				CurrentAlias   = default!;
+				Member         = default!;
 			}
+
+			// The member being translated, whose operands Translate is asked for.
+			Expression Member { get; set; } = default!;
 
 			public TranslationContext()
 			{
@@ -5792,6 +5845,10 @@ namespace LinqToDB.Internal.Linq.Builder
 				var buildPurpose = GetBuildPurpose(translationFlags);
 				if (CurrentContext == null)
 					throw new InvalidOperationException("CurrentContext not initialized");
+
+				using var saveFlags = Visitor.UsingBuildFlags(IsOperandOutsideDefaultDomain(Member, expression)
+					? Visitor._buildFlags & ~BuildFlags.ValueOfProjection
+					: Visitor._buildFlags);
 
 				// A translator translating its own arguments: PreferClientCalculation must not leave them client-side.
 				var translated = Builder.BuildSqlExpression(CurrentContext, expression, buildPurpose, BuildFlags.InsideTranslation, alias: CurrentAlias);
@@ -6014,7 +6071,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				using var translationContext = _translationContexts.Allocate();
 
-				translationContext.Value.Init(this, context, Alias);
+				translationContext.Value.Init(this, context, Alias, memberExpression);
 
 				translated = Builder._memberTranslator.Translate(translationContext.Value, memberExpression, GetTranslationFlags());
 
