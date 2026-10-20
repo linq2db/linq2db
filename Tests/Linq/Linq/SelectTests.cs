@@ -2201,6 +2201,60 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
+
+		[Test]
+		public void NullableStructFromDistinct([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Select(p => new { Info = (ParentPoint?)new ParentPoint(p.ParentID, p.Value1) })
+				.Distinct()
+				.Select(m => new { A = m.Info });
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void NullableStructFromOrderByTake([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Select(p => new { p.ParentID, Info = (ParentPoint?)new ParentPoint(p.ParentID, p.Value1) })
+				.OrderBy(m => m.ParentID)
+				.Take(3)
+				.Select(m => new { m.ParentID, A = m.Info });
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void NullableStructFromUnion([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent.Where(p => p.ParentID < 4)
+				.Select(p => new { p.ParentID, Info = (ParentPoint?)new ParentPoint(p.ParentID, p.Value1) })
+				.Union(db.Parent.Where(p => p.ParentID >= 2)
+					.Select(p => new { p.ParentID, Info = (ParentPoint?)new ParentPoint(p.ParentID, p.Value1) }))
+				.Select(m => new { m.ParentID, A = m.Info });
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void NullableStructGroupByKey([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Select(p => new { p.ParentID, Info = (ParentPoint?)new ParentPoint(p.ParentID, p.Value1) })
+				.GroupBy(m => m.Info)
+				.Select(g => new { g.Key, Count = g.Count() });
+
+			AssertQuery(query);
+		}
 		#endregion
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3181")]

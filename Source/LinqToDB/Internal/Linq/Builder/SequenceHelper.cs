@@ -301,7 +301,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					// A struct constructor lifted to Nullable<T>, as in `(T?)new T(...)`, is reached through a T? path,
 					// while its members are declared on T.
-					if (toPath.Type != generic.Type && toPath.Type.IsNullableType && toPath.Type.UnwrapNullableType() == generic.Type)
+					if (toPath.Type.IsNullableType && toPath.Type.UnwrapNullableType() == generic.Type)
 						toPath = ExpressionHelper.Property(toPath, nameof(Nullable<>.Value));
 
 					var contextRef = toPath as ContextRefExpression;
