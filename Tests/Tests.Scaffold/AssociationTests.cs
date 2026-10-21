@@ -45,7 +45,6 @@ namespace Tests.Scaffold
 		}
 
 		[Test]
-		[ActiveIssue(5707, Arguments = "FSharp", Details = "Association over option FK", ErrorMessage = "value converters do not agree")]
 		public void NullableForeignKey([Values] ScaffoldLanguage language)
 		{
 			Run(nameof(NullableForeignKey), language, ParentChild(true)).Associations.ShouldBe(2);

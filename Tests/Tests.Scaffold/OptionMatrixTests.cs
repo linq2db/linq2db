@@ -83,10 +83,6 @@ namespace Tests.Scaffold
 		}
 
 		[TestCaseSource(nameof(Combinations))]
-		[ActiveIssue(5707, Arguments = "FSharp,C1", Details = "Association over option FK", ErrorMessage = "value converters do not agree")]
-		[ActiveIssue(5707, Arguments = "FSharp,C2", Details = "Association over option FK", ErrorMessage = "value converters do not agree")]
-		[ActiveIssue(5707, Arguments = "FSharp,C3", Details = "Association over option FK", ErrorMessage = "value converters do not agree")]
-		[ActiveIssue(5707, Arguments = "FSharp,C4", Details = "Association over option FK", ErrorMessage = "value converters do not agree")]
 		public void Combination(ScaffoldLanguage language, OptionSet combination)
 		{
 			var model = ScaffoldHarness.Build(

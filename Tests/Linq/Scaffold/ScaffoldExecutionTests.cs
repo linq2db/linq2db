@@ -108,8 +108,7 @@ namespace Tests.Scaffold
 					[Param("@value", "int", nullable: false)],
 					new ScalarResult(null, new DatabaseType("int", null, null, null), true)));
 
-				// FS3262 for string output parameters: compile-time defect pinned in ProviderCallableTests (#5707)
-				return ScaffoldHarness.Build($"{nameof(ScaffoldExecutionTests)}_SqlServer", language, ProviderProfile.SqlServer, schema, Configure, allowedWarnings: ["FS3262"]);
+				return ScaffoldHarness.Build($"{nameof(ScaffoldExecutionTests)}_SqlServer", language, ProviderProfile.SqlServer, schema, Configure);
 			});
 
 		static ResultColumn[] PersonColumns() =>

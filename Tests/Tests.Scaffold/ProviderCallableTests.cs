@@ -61,7 +61,6 @@ namespace Tests.Scaffold
 			new ScalarResult("@return", new DatabaseType("int", null, null, null), false));
 
 		[Test]
-		[ActiveIssue(5707, Arguments = "FSharp", Details = "Option.ofObj over non-nullable string output parameter", ErrorMessage = "FS3262")]
 		public void ProcedureParameterDirections([Values] ScaffoldLanguage language)
 		{
 			var schema = ProviderProfile.SqlServer.CreateSchema();
@@ -127,9 +126,9 @@ namespace Tests.Scaffold
 			null,
 			new VoidResult());
 
-		// error generation is intended to stop compilation of generated code
+		// error generation is intended to stop compilation of generated code; F# has no error directive, so the option is
+		// reset and procedure is generated without result set
 		[Test]
-		[ActiveIssue(5707, Arguments = "FSharp", Details = "F# has no #error directive: option must be rejected", ErrorMessage = "pragma Error not implemented")]
 		public void ProcedureSchemaErrorGenerated([Values] ScaffoldLanguage language)
 		{
 			var schema = ProviderProfile.SqlServer.CreateSchema();
@@ -149,8 +148,16 @@ namespace Tests.Scaffold
 
 			var result = ScaffoldHarness.TryCompile(source);
 
-			result.Success.ShouldBeFalse();
-			result.Failures.ShouldContain(static d => d.Id == "CS1029" && d.Message.Contains("schema load failed"));
+			if (language == ScaffoldLanguage.CSharp)
+			{
+				result.Success.ShouldBeFalse();
+				result.Failures.ShouldContain(static d => d.Id == "CS1029" && d.Message.Contains("schema load failed"));
+			}
+			else
+			{
+				result.Success.ShouldBeTrue(string.Join("\n", result.Failures.Select(static d => d.Message)));
+				source.Code.ShouldNotContain("schema load failed");
+			}
 		}
 
 		[Test]
@@ -174,7 +181,6 @@ namespace Tests.Scaffold
 		}
 
 		[Test]
-		[ActiveIssue(5707, Arguments = "FSharp,True", Details = "Option.ofObj over non-nullable string output parameter", ErrorMessage = "FS3262")]
 		public void ProcedureSyncAsync([Values] ScaffoldLanguage language, [Values] bool sync, [Values] bool async)
 		{
 			var schema = ProviderProfile.SqlServer.CreateSchema();
