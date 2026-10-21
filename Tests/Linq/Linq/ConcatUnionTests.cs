@@ -2744,7 +2744,7 @@ namespace Tests.Linq
 		/// stored scale to match.
 		/// </summary>
 		/// <remarks>
-		/// YDB refuses to union <c>Decimal(18,2)</c> with the literal's <c>Decimal(23,9)</c>, on master too.
+		/// YDB refuses to union <c>Decimal(18,2)</c> with the different decimal type the literal is written with, on master too.
 		/// </remarks>
 		[Test]
 		public void LiteralBesideAggregateKeepsValueScale([DataSources(TestProvName.AllYdb)] string context)
@@ -2806,16 +2806,15 @@ namespace Tests.Linq
 
 		/// <summary>
 		/// A finer literal branch beside a computed decimal with many integer digits keeps both branches' values, in either
-		/// branch order, whether the two fit one decimal type or not.
+		/// branch order, when the two fit one decimal type.
 		/// </summary>
 		/// <remarks>
-		/// The providers here render a literal's precision in the set operation's cast. The second literal needs more digits
-		/// than any of them allows beside the column's integer part, so it is written with its own; the result type is then
-		/// the server's. SqlCe, which also renders it, is left out: it types the column by the first branch alone, so a
-		/// computed <c>Decimal(18,2)</c> first narrows the literal whatever it is cast to.
+		/// SqlCe is left out: it types the column by the first branch alone, so a computed <c>Decimal(18,2)</c> narrows the
+		/// literal whatever it is cast to. YDB refuses to union two different decimal types.
 		/// </remarks>
 		[Test]
-		public void FinerLiteralBesideWideComputedDecimalKeepsBothValues([IncludeDataSources(TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllDuckDB, TestProvName.AllClickHouse)] string context)
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb, ErrorMessage = "Mismatch type of sequences being extended")]
+		public void FinerLiteralBesideWideComputedDecimalKeepsBothValues([IncludeDataSources(TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllDuckDB, TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(new[] { new WideDecimalRow { Id = 1, Value = 12345678901234.50m } });
@@ -2833,11 +2832,27 @@ namespace Tests.Linq
 				.ToArray();
 
 			fittingLiteralFirst.ShouldBe([12345678901234.50m, 1.0000000000005m], ignoreOrder: true);
+		}
 
-			// ClickHouse.Driver up to 1.5.0 reads Decimal(38,17) as System.Decimal without dropping trailing zeros and
-			// overflows; fixed on clickhouse-cs main after 1.5.0.
-			if (context.IsAnyOf(ProviderName.ClickHouseDriver))
-				return;
+		/// <summary>
+		/// A literal branch too fine to share a decimal type with a computed decimal with many integer digits keeps both
+		/// branches' values.
+		/// </summary>
+		/// <remarks>
+		/// The providers here other than ClickHouse render a literal's precision in the set operation's cast. The literal
+		/// needs more digits than any of them allows beside the column's integer part, so it is written with its own; the
+		/// result type is then the server's. ClickHouse renders only the decimal family and scale, and moves the literal up
+		/// to <c>Decimal128</c> instead. ClickHouse.Driver up to 1.5.0 reads that <c>Decimal128</c> without dropping its
+		/// trailing zeros first, and overflows <see cref="decimal"/> (clickhouse-cs #647). YDB refuses to union two different
+		/// decimal types, as in <see cref="FinerLiteralBesideWideComputedDecimalKeepsBothValues"/>.
+		/// </remarks>
+		[Test]
+		[ThrowsForProvider(typeof(OverflowException), ProviderName.ClickHouseDriver, ErrorMessage = "Value cannot be represented as System.Decimal")]
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb, ErrorMessage = "Mismatch type of sequences being extended")]
+		public void TooFineLiteralBesideWideComputedDecimalKeepsBothValues([IncludeDataSources(TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllDuckDB, TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new WideDecimalRow { Id = 1, Value = 12345678901234.50m } });
 
 			var ownFacets = t
 				.Select(r => Math.Abs(r.Value))
@@ -2845,6 +2860,16 @@ namespace Tests.Linq
 				.ToArray();
 
 			ownFacets.ShouldBe([12345678901234.50m, 1.00000000000000005m], ignoreOrder: true);
+		}
+
+		/// <inheritdoc cref="TooFineLiteralBesideWideComputedDecimalKeepsBothValues"/>
+		[Test]
+		[ThrowsForProvider(typeof(OverflowException), ProviderName.ClickHouseDriver, ErrorMessage = "Value cannot be represented as System.Decimal")]
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb, ErrorMessage = "Mismatch type of sequences being extended")]
+		public void TooFineLiteralFirstBesideWideComputedDecimalKeepsBothValues([IncludeDataSources(TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllDuckDB, TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new WideDecimalRow { Id = 1, Value = 12345678901234.50m } });
 
 			var ownFacetsLiteralFirst = t
 				.Select(r => 1.00000000000000005m)

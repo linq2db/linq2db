@@ -479,6 +479,31 @@ namespace Tests.Linq
 			wideMaxFinerLiteral.ShouldBe(0);
 		}
 
+		sealed class ClickHouseDecimal32Row
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Decimal32, Precision = 9, Scale = 2)]
+			public decimal Value { get; set; }
+		}
+
+		/// <summary>
+		/// A literal finer than a nearly full computed ClickHouse <c>Decimal32</c> compares without overflowing, as one
+		/// beside a <c>Decimal64</c> does.
+		/// </summary>
+		[Test]
+		public void FinerLiteralBesideNearFullClickHouseDecimal32([IncludeDataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new ClickHouseDecimal32Row { Id = 1, Value = 9999999.99m } });
+
+			var maxFinerLiteral = t
+				.GroupBy(r => r.Id)
+				.Count(g => g.Max(r => r.Value) == 1.004m);
+
+			maxFinerLiteral.ShouldBe(0);
+		}
+
 		sealed class YdbWideDecimalRow
 		{
 			[PrimaryKey] public int Id { get; set; }
