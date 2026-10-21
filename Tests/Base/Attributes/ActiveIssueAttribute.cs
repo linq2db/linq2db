@@ -83,7 +83,7 @@ namespace Tests
 		public string[] Configurations
 		{
 			get => _configurations;
-			set => _configurations = value.SelectMany(p => p.Split(',').Select(_ => _.Trim())).ToArray();
+			set => _configurations = ConfigurationNames.Split(value);
 		}
 
 		/// <summary>
@@ -92,8 +92,8 @@ namespace Tests
 		/// </summary>
 		public string Configuration
 		{
-			get => _configurations != null ? string.JoinStrings(',', _configurations) : string.Empty;
-			set => _configurations = value.Split(',').Select(_ => _.Trim()).ToArray();
+			get => ConfigurationNames.Join(_configurations);
+			set => _configurations = ConfigurationNames.Split(value);
 		}
 
 		/// <summary>
@@ -108,14 +108,18 @@ namespace Tests
 		public TestPlatform Platforms { get; set; } = TestPlatform.Any;
 
 		/// <summary>
-		/// Gets or sets a flag if this attribute governs only runs that write baselines
-		/// (<see cref="TestConfiguration.BaselinesPath"/> is set). Default value: <see langword="false"/>.
+		/// Gets or sets a flag if the known issue is the remote (<c>.LinqService</c>) context generating different SQL
+		/// than the direct one. Default value: <see langword="false"/>.
 		/// <para>
-		/// For a failure raised by the baselines check itself — remote SQL differing from direct SQL. A run without
-		/// baselines never performs that check, so the test passes there.
+		/// The verdict comes from the direct-vs-remote baseline comparison rather than from the failure message: a
+		/// recorded mismatch is <see cref="ResultState.Inconclusive"/>, a recorded match is
+		/// <see cref="ResultState.Failure"/> (the issue is fixed), and a case whose other side did not run in the same
+		/// process — a filtered run, a retried case — is left alone. Either side of the pair can be the one that
+		/// compares, so do not combine it with <see cref="SkipForNonLinqService"/>. A gated mismatch writes no
+		/// <c>.sql.other</c> baseline.
 		/// </para>
 		/// </summary>
-		public bool RequiresBaselines { get; set; }
+		public bool BaselinesMismatch { get; set; }
 
 		/// <summary>Gets or sets a flag if this attribute should be skipped for a LinqOverWcf test. Default value: <see langword="false"/>.</summary>
 		public bool SkipForLinqService { get; set; }
@@ -146,7 +150,7 @@ namespace Tests
 
 		string ExpectedTypeName => ErrorType?.FullName ?? ErrorTypeName ?? string.Empty;
 
-		bool HasExplicitTargeting => (_configurations != null && _configurations.Length > 0) || SkipForLinqService || SkipForNonLinqService || Platforms != TestPlatform.Any || RequiresBaselines;
+		bool HasExplicitTargeting => (_configurations != null && _configurations.Length > 0) || SkipForLinqService || SkipForNonLinqService || Platforms != TestPlatform.Any || BaselinesMismatch;
 
 		static TestPlatform CurrentPlatform =>
 			OperatingSystem.IsWindows() ? TestPlatform.Windows :
@@ -184,23 +188,18 @@ namespace Tests
 		/// Whether this instance governs a test case running against <paramref name="provider"/>. Reproduces
 		/// <see cref="ActiveIssueAttribute"/>'s targeting exactly, including that a test with no data-source
 		/// parameter (<paramref name="provider"/> is <see langword="null"/>) is governed unconditionally.
-		/// <paramref name="baselinesEnabled"/> overrides whether this run writes baselines; <see langword="null"/>
-		/// reads it from <see cref="TestConfiguration.BaselinesPath"/>.
 		/// </summary>
-		public bool AppliesTo(string? provider, bool isLinqService, bool? baselinesEnabled = null)
+		public bool AppliesTo(string? provider, bool isLinqService)
 		{
-			// Before the provider == null shortcut: the platform and the baselines setting are ambient, so they bound
-			// a gate on a test with no data-source parameter too.
+			// Before the provider == null shortcut: the platform is ambient, so it bounds a gate on a test with no
+			// data-source parameter too.
 			if (Platforms != TestPlatform.Any && (Platforms & CurrentPlatform) == 0)
-				return false;
-
-			if (RequiresBaselines && !(baselinesEnabled ?? TestConfiguration.BaselinesPath != null))
 				return false;
 
 			if (provider == null)
 				return true;
 
-			if (_configurations != null && _configurations.Length > 0 && !_configurations.Contains(provider))
+			if (!ConfigurationNames.Matches(_configurations, provider))
 				return false;
 
 			if (isLinqService && SkipForLinqService)
@@ -243,8 +242,10 @@ namespace Tests
 		/// <summary>
 		/// The whole outcome policy, as a pure function of the inner result — which is what makes it testable without
 		/// standing up a nested NUnit run. Returns <see langword="null"/> when the result must be left alone.
+		/// <paramref name="comparison"/> is the direct-vs-remote baseline comparison of the case, used when
+		/// <see cref="BaselinesMismatch"/> is set; <see langword="null"/> when the other side did not run.
 		/// </summary>
-		public static (ResultState State, string Message)? Decide(ActiveIssueAttribute attribute, ResultState innerState, string? innerMessage, bool isRemote, bool throwsGoverns = false)
+		public static (ResultState State, string Message)? Decide(ActiveIssueAttribute attribute, ResultState innerState, string? innerMessage, bool isRemote, bool throwsGoverns = false, BaselineComparison? comparison = null)
 		{
 			// A Throws* attribute on the same method makes a different, more specific claim: this provider is
 			// *expected* to reject this query, and it has already rewritten the result to say so. Both families
@@ -253,6 +254,26 @@ namespace Tests
 			// marked". Deferring is order-independent, which is what makes NUnit's unspecified nesting harmless.
 			if (throwsGoverns)
 				return null;
+
+			if (attribute.BaselinesMismatch)
+			{
+				return comparison switch
+				{
+					BaselineComparison.Mismatched => (ResultState.Inconclusive,
+						$"{Marker}Known issue ({attribute.Reference}), remote SQL still differs from direct SQL:\n\n{innerMessage}"),
+
+					BaselineComparison.Matched => (ResultState.Failure,
+						$"{Marker}Remote SQL matches direct SQL but the test is marked with [ActiveIssue(BaselinesMismatch = true)] ({attribute.Reference}). "
+						+ "If the issue is fixed, remove the attribute; if it only matches for some providers, narrow Configuration."
+						+ (innerState.Status == TestStatus.Failed ? $"\n\n{innerMessage}" : null)),
+
+					// The other side did not run here, so there is no evidence about the mismatch either way; a failure
+					// is still a failure.
+					_ => innerState.Status == TestStatus.Failed
+						? (ResultState.Failure, $"{Marker}Expected only a direct-vs-remote baseline mismatch for {attribute.Reference}, but found:\n\n{innerMessage}")
+						: null,
+				};
+			}
 
 			return innerState.Status switch
 			{
@@ -307,13 +328,12 @@ namespace Tests
 		/// Picks the instance that governs this case. An instance that names a provider or transport beats a blanket
 		/// one, so "fails everywhere with A, but on Oracle with B" is expressible. Two equally specific instances
 		/// both matching is an authoring error, reported rather than silently resolved.
-		/// <paramref name="baselinesEnabled"/> is passed to <see cref="AppliesTo"/>.
 		/// </summary>
-		public static ActiveIssueAttribute? SelectGoverning(ActiveIssueAttribute[] attributes, string? provider, bool isLinqService, out bool ambiguous, bool? baselinesEnabled = null)
+		public static ActiveIssueAttribute? SelectGoverning(ActiveIssueAttribute[] attributes, string? provider, bool isLinqService, out bool ambiguous)
 		{
 			ambiguous = false;
 
-			var applicable = attributes.Where(a => a.AppliesTo(provider, isLinqService, baselinesEnabled)).ToArray();
+			var applicable = attributes.Where(a => a.AppliesTo(provider, isLinqService)).ToArray();
 
 			if (applicable.Length == 0)
 				return null;
@@ -324,6 +344,19 @@ namespace Tests
 			ambiguous = pool.Length > 1;
 
 			return pool[0];
+		}
+
+		/// <summary>
+		/// Whether the case <paramref name="test"/> is decided by an instance with <see cref="BaselinesMismatch"/> set.
+		/// The baselines writer and the command both ask this, so they cannot disagree on which mismatches are gated;
+		/// an ambiguous selection is not gated, because the command fails that case.
+		/// </summary>
+		public static bool GovernsBaselinesMismatch(ITest test)
+		{
+			var (provider, isLinqService) = NUnitUtils.GetContext(test);
+			var governing                 = SelectGoverning(GetAttributes(test), provider, isLinqService, out var ambiguous);
+
+			return governing is { BaselinesMismatch: true } && !ambiguous && !ThrowsFamilyGoverns(test);
 		}
 
 		sealed class ActiveIssueCommand : DelegatingTestCommand
@@ -381,7 +414,8 @@ namespace Tests
 					return testResult;
 				}
 
-				var decision = Decide(governing, testResult.ResultState, testResult.Message, isLinqService, ThrowsFamilyGoverns(test));
+				var comparison = BaselinesWriter.TakeGatedComparison(test.Id);
+				var decision   = Decide(governing, testResult.ResultState, testResult.Message, isLinqService, ThrowsFamilyGoverns(test), comparison);
 
 				if (decision != null)
 					testResult.SetResult(decision.Value.State, decision.Value.Message);
