@@ -1,4 +1,6 @@
 ﻿#nullable enable
+LinqToDB.DataProvider.SQLite.SQLiteOptions.UseInvariantDateTimeOffsetFormat.get -> bool
+LinqToDB.DataProvider.SQLite.SQLiteOptions.UseInvariantDateTimeOffsetFormat.init -> void
 *REMOVED*LinqToDB.Internal.SqlProvider.OptimizationContext.TransformationInfo.get -> LinqToDB.Internal.SqlQuery.Visitors.SqlQueryVisitor.IVisitorTransformationInfo!
 *REMOVED*override LinqToDB.Internal.SqlQuery.Visitors.SqlQueryValidatorVisitor.VisitSqlTableSource(LinqToDB.Internal.SqlQuery.SqlTableSource! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 LinqToDB.Internal.Common.FormattableStringHelper
