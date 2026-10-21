@@ -686,6 +686,15 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 						await environment.Error.WriteLineAsync(warning);
 				}
 
+				// A kept script is not rewritten owner-only, so the file itself is checked (Windows has no script stores).
+				if (kept && error == null && !OperatingSystem.IsWindows())
+				{
+					if (!CredentialsDirectory.CheckRetainedScript(scriptPath!, out var retainedWarning, out var retainedError))
+						error = retainedError;
+					else if (retainedWarning != null)
+						await environment.Error.WriteLineAsync(retainedWarning);
+				}
+
 				if (!kept)
 					error ??= TryWriteTemporaryScript(scriptPath!, CredentialsCliTemplates.Get(store)!, out temporaryScript);
 

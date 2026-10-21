@@ -293,6 +293,58 @@ namespace Tests.LinqToDB.CLI
 			RecordedValue(environment, "cfg.json").ShouldBe("@gpg");
 		}
 
+		// A kept script is not rewritten owner-only, so it gets the file checks instead.
+		[TestCase("group-writable", TestName = "KeptScriptMustNotBeGroupWritable")]
+		[TestCase("other-writable-link", TestName = "KeptScriptLinkTargetMustNotBeOtherWritable")]
+		[TestCase("not-executable", TestName = "KeptScriptMustBeExecutable")]
+		[TestCase("foreign-owner", TestName = "KeptScriptMustBeOwnedByTheUser")]
+		public async Task UnsafeExistingScriptIsNotRecorded(string unsafeCase)
+		{
+			RequirePosix();
+
+			var script   = Path.Combine(_root, "helper.sh");
+			var expected = "writable by other users";
+
+			switch (unsafeCase)
+			{
+				case "group-writable":
+					File.WriteAllText(script, "#!/bin/sh\n");
+					File.SetUnixFileMode(script, Owner700 | UnixFileMode.GroupWrite);
+					break;
+
+				case "other-writable-link":
+					var target = Path.Combine(_root, "shared", "helper.sh");
+					Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+					File.WriteAllText(target, "#!/bin/sh\n");
+					File.SetUnixFileMode(target, Owner700 | UnixFileMode.OtherWrite);
+					File.CreateSymbolicLink(script, target);
+					break;
+
+				case "not-executable":
+					File.WriteAllText(script, "notes\n");
+					File.SetUnixFileMode(script, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+					expected = "is not executable";
+					break;
+
+				default:
+					// /bin/sh is owned by root; only root may change its mode.
+					if (string.Equals(Environment.UserName, "root", StringComparison.Ordinal))
+						Assert.Ignore("Root may change the mode of any file.");
+
+					File.CreateSymbolicLink(script, "/bin/sh");
+					expected = "is owned by another user";
+					break;
+			}
+
+			var environment = CreateEnvironment();
+
+			var (exitCode, _, error) = await RunCli(environment, "credentials", "cli", "init", "--store", "gpg", "-o", script, "--config", "cfg.json");
+
+			exitCode.ShouldBe(-3);
+			error.ShouldContain(expected);
+			environment.Files.ShouldNotContainKey("cfg.json");
+		}
+
 		[Test]
 		public async Task DifferentConfiguredStoreIsReplacedOnlyWithForce()
 		{

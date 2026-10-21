@@ -251,6 +251,68 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		}
 
 		/// <summary>
+		/// Checks an existing script that <c>credentials cli init --config</c> records without writing it: it gets the
+		/// guarantees a newly written script has. Its real file (symbolic links resolved) must be a regular file owned by
+		/// the current user, not writable by group or other users, and executable by its owner; the directories of the
+		/// real file get the rule of <see cref="CheckScriptDirectory"/>. The directories of the path as written are
+		/// checked by the caller, as for a new script.
+		/// </summary>
+		[UnsupportedOSPlatform("windows")]
+		public static bool CheckRetainedScript(string script, out string? warning, out string? error)
+		{
+			warning = null;
+
+			try
+			{
+				var real = GetRealPath(script);
+				var file = new FileInfo(real);
+
+				if (!file.Exists)
+				{
+					error = $"Cannot record '{script}': its real path '{real}' is not a regular file.";
+					return false;
+				}
+
+				var mode = file.UnixFileMode;
+
+				// Only the owner (or root) may change a file's mode: setting the mode it already has tells whether the
+				// current user owns it, without reading the owner's id.
+				try
+				{
+					File.SetUnixFileMode(real, mode);
+				}
+				catch (UnauthorizedAccessException)
+				{
+					error = $"Cannot record '{script}': '{real}' is owned by another user, who could change it and receive the passwords given to it. Use '--force' to replace it with the template, or choose another --output.";
+					return false;
+				}
+
+				if ((mode & (UnixFileMode.GroupWrite | UnixFileMode.OtherWrite)) != 0)
+				{
+					error = $"Cannot record '{script}': '{real}' is writable by other users, who could change it and receive the passwords given to it. Run: chmod go-w '{real}'";
+					return false;
+				}
+
+				if (!mode.HasFlag(UnixFileMode.UserExecute))
+				{
+					error = $"Cannot record '{script}': '{real}' is not executable. Run: chmod u+x '{real}'";
+					return false;
+				}
+
+				if (!string.Equals(real, Path.GetFullPath(script), StringComparison.Ordinal))
+					return CheckScriptDirectory(real, out warning, out error);
+
+				error = null;
+				return true;
+			}
+			catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+			{
+				error = $"Cannot check '{script}': {ex.Message}{AccessHint(ex)}";
+				return false;
+			}
+		}
+
+		/// <summary>
 		/// Resolves symbolic links in every component of a Unix path the way the kernel does (like realpath): component by
 		/// component, a link's target is resolved in turn, and <c>..</c> goes to the parent of the prefix resolved so far,
 		/// never of the path as written. Components that do not exist are kept as written. Gives up after 40 links, as the
