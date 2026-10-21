@@ -123,7 +123,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 				return new SqlPredicate.InList(PseudoFunctions.MakeMandatoryCast(inList.Expr1, new DbDataType(operandType.SystemType, DataType.DateTime), null), inList.WithNull, inList.IsNot, inList.Values);
 			}
 
-			if (IsTimestamp(operandType) && inList.Values.Exists(v => QueryHelper.GetDbDataType(v, MappingSchema).DataType == DataType.Date))
+			if (IsTimestamp(operandType) && inList.Values is not [SqlParameter] && inList.Values.Exists(v => QueryHelper.GetDbDataType(v, MappingSchema).DataType == DataType.Date))
 			{
 				var values = inList.Values.ConvertAll(v => QueryHelper.GetDbDataType(v, MappingSchema) is { DataType: DataType.Date } valueType
 					? PseudoFunctions.MakeMandatoryCast(v, new DbDataType(valueType.SystemType, DataType.DateTime), null)
