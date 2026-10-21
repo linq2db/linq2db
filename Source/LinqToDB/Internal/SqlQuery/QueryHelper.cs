@@ -953,14 +953,14 @@ namespace LinqToDB.Internal.SqlQuery
 					: new DbDataType(coalesce.SystemType ?? typeof(object));
 			}
 
-			// a ?? b ?? c is built as nested COALESCE nodes, so a disagreement inside a nested one must reach the outer one
+			// a ?? b ?? c is built as nested COALESCE nodes, and a subquery column can hold one, so a disagreement inside a
+			// nested one must reach the outer one
 			static bool AgreeOnOperandType(SqlCoalesceExpression coalesce, ref DbDataType? result, HashSet<IQueryElement>? visited)
 			{
 				foreach (var expression in coalesce.Expressions)
 				{
-					if (expression is SqlCoalesceExpression or SqlNullabilityExpression { SqlExpression: SqlCoalesceExpression })
+					if (UnwrapToCoalesce(expression) is { } nested)
 					{
-						var nested = (SqlCoalesceExpression)(expression is SqlNullabilityExpression nullability ? nullability.SqlExpression : expression);
 						if (!AgreeOnOperandType(nested, ref result, visited))
 							return false;
 
@@ -978,6 +978,20 @@ namespace LinqToDB.Internal.SqlQuery
 				}
 
 				return true;
+			}
+
+			static SqlCoalesceExpression? UnwrapToCoalesce(ISqlExpression expression)
+			{
+				while (true)
+				{
+					switch (expression)
+					{
+						case SqlCoalesceExpression coalesce                    : return coalesce;
+						case SqlNullabilityExpression { SqlExpression: var e } : expression = e; break;
+						case SqlColumn { Expression: var e }                   : expression = e; break;
+						default                                                : return null;
+					}
+				}
 			}
 		}
 

@@ -2511,6 +2511,13 @@ DROP TABLE IF EXISTS TemporalTable3History
 			var nested = tb.Count(r => ((r.V ?? r.N) ?? r.V2) == "Ж");
 
 			nested.ShouldBe(1);
+
+			var throughSubQuery = tb
+				.Select(r => new { X = r.V ?? r.N, r.V2 })
+				.AsSubQuery()
+				.Count(x => (x.X ?? x.V2) == "Ж");
+
+			throughSubQuery.ShouldBe(1);
 		}
 
 		sealed class DateTimeReadBackTable
