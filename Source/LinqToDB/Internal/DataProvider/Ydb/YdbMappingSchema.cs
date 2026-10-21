@@ -608,9 +608,9 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		private static void BuildFloatLiteral(StringBuilder sb, float value)
 		{
-			if (float.IsNegativeInfinity(value))
+			if (FloatingPointHelper.IsNegativeInfinity(value))
 				sb.Append("Float('-inf')");
-			else if (float.IsPositiveInfinity(value))
+			else if (FloatingPointHelper.IsPositiveInfinity(value))
 				sb.Append("Float('inf')");
 			else
 				sb.AppendFormat(CultureInfo.InvariantCulture, FLOAT_FORMAT, value);
@@ -618,9 +618,9 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		private static void BuildDoubleLiteral(StringBuilder sb, double value)
 		{
-			if (double.IsNegativeInfinity(value))
+			if (FloatingPointHelper.IsNegativeInfinity(value))
 				sb.Append("Double('-inf')");
-			else if (double.IsPositiveInfinity(value))
+			else if (FloatingPointHelper.IsPositiveInfinity(value))
 				sb.Append("Double('inf')");
 			else
 				sb.AppendFormat(CultureInfo.InvariantCulture, DOUBLE_FORMAT, value);

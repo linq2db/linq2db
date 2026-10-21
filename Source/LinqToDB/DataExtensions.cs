@@ -11,6 +11,7 @@ using JetBrains.Annotations;
 using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.Expressions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq;
@@ -1443,48 +1444,6 @@ namespace LinqToDB
 
 		#region FromSql
 
-		static Expression GenerateArray(object?[] arguments, Expression? source, bool readNulls = false)
-		{
-			var argumentsExpr = Expression.NewArrayInit(typeof(object), arguments.Select((p, i) =>
-			{
-				if (p == null)
-				{
-					return readNulls
-						? Expression.ArrayIndex(source!, ExpressionInstances.Int32(i))
-						: Expression.Constant(null, typeof(object));
-				}
-
-				var argumentType    = p.GetType();
-				var value           = source == null || p is ISqlExpression
-					? (Expression)Expression.Constant(p, argumentType)
-					: Expression.Convert(Expression.ArrayIndex(source, ExpressionInstances.Int32(i)), argumentType);
-				var valueExpression = SequenceHelper.WrapAsParameter(value);
-				if (valueExpression.Type != typeof(object))
-					valueExpression = Expression.Convert(valueExpression, typeof(object));
-
-				return valueExpression;
-			}));
-
-			return argumentsExpr;
-		}
-
-		internal static MethodCallExpression GenerateFormattableString(FormattableString sql)
-		{
-			return GenerateFormattableString(sql.Format, GenerateArray(sql.GetArguments(), null));
-		}
-
-		/// <param name="arguments">Expression for <paramref name="sql"/>'s arguments, read instead of baking their values.</param>
-		/// <param name="readNulls">Read <see langword="null"/> arguments too, when nothing keys the build on <paramref name="arguments"/>.</param>
-		internal static MethodCallExpression GenerateFormattableString(FormattableString sql, Expression arguments, bool readNulls)
-		{
-			return GenerateFormattableString(sql.Format, GenerateArray(sql.GetArguments(), arguments, readNulls));
-		}
-
-		internal static MethodCallExpression GenerateFormattableString(string format, Expression arguments)
-		{
-			return Expression.Call(null, Methods.System.FormattableStringFactory_Create, Expression.Constant(format), arguments);
-		}
-
 		/// <summary>
 		///     <para>
 		///         Creates a LINQ query based on an interpolated string representing a SQL query.
@@ -1518,7 +1477,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(FromSql<TEntity>, dataContext, sql),
-					SqlQueryRootExpression.Create(dataContext), GenerateFormattableString(sql)));
+					SqlQueryRootExpression.Create(dataContext), FormattableStringHelper.CreateExpression(sql)));
 		}
 
 		/// <summary>
@@ -1560,7 +1519,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(FromSqlScalar<TEntity>, dataContext, sql),
-					SqlQueryRootExpression.Create(dataContext), GenerateFormattableString(sql)));
+					SqlQueryRootExpression.Create(dataContext), FormattableStringHelper.CreateExpression(sql)));
 		}
 
 		/// <summary>
@@ -1576,6 +1535,9 @@ namespace LinqToDB
 		///         attack. You can include parameter place holders in the SQL query string and then supply parameter values as additional
 		///         arguments. Any parameter values you supply will automatically be converted to a DbParameter -
 		///         <code>context.FromSql&lt;Blogs&gt;("SELECT * FROM [dbo].[SearchBlogs]({0})", userSuppliedSearchTerm);</code>
+		///         When the SQL contains <c>{n}</c> placeholders, a value none of them references is not sent, unless it is a
+		///         <see cref="DataParameter"/> (bound by its name or position) or the provider binds parameters by position
+		///         (Access, SAP HANA, Informix IFX).
 		///     </para>
 		///     <para>
 		///         This overload also accepts DbParameter instances as parameter values.
@@ -1601,7 +1563,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					Methods.LinqToDB.FromSqlFormattable.MakeGenericMethod(typeof(TEntity)),
-					SqlQueryRootExpression.Create(dataContext), GenerateFormattableString(sql.Format, GenerateArray(parameters, null))));
+					SqlQueryRootExpression.Create(dataContext), FormattableStringHelper.CreateExpression(sql.Format, FormattableStringHelper.CreateArgumentsExpression(parameters))));
 		}
 
 		#endregion
