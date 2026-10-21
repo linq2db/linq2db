@@ -66,7 +66,8 @@ namespace LinqToDB.Internal.Linq.Builder
 					return false;
 				}
 
-				sql = placeholder.Sql;
+				// A plain-mode item is an operand of the function; an aggregate's input is built with the scope cleared.
+				sql = builder.ReadAsTheReaderReads(expression, placeholder).Sql;
 
 				if (sql is SqlSearchCondition)
 				{

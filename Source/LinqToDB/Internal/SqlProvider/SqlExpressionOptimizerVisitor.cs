@@ -1835,6 +1835,25 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 			if (!ReferenceEquals(newElement, predicate))
 				return Visit(newElement);
 
+			// Under CompareNulls.LikeClr (WithNull set) an item NULL in the row must equal a NULL tested value, and a negated test
+			// must keep a row whose item is NULL; IN cannot say either, so such a list is the LikeClr comparisons it stands for.
+			// Inside another predicate a missed NULL item makes IN unknown where C# answers false, so it is rewritten there too.
+			// Constant and parameter items alone do not call for it: the builder already splits a NULL value out of the list.
+			if (_reducePredicates
+				&& predicate.WithNull != null
+				&& !_nullabilityContext.IsEmpty
+				&& predicate.Expr1.ElementType != QueryElementType.SqlRow
+				&& (predicate.IsNot || _isInsidePredicate || predicate.Expr1.CanBeNullableOrUnknown(_nullabilityContext, false))
+				&& predicate.Values.Exists(v => v is not (SqlValue or SqlParameter) && v.CanBeNullableOrUnknown(_nullabilityContext, false)))
+			{
+				var search = new SqlSearchCondition(true);
+
+				foreach (var value in predicate.Values)
+					search.Add(new SqlPredicate.ExprExpr(predicate.Expr1, SqlPredicate.Operator.Equal, value, true));
+
+				return Visit(search.MakeNot(predicate.IsNot));
+			}
+
 			if (EvaluationContext.ParameterValues == null)
 			{
 				return predicate;
