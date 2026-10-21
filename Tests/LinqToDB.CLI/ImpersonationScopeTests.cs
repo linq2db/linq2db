@@ -744,9 +744,9 @@ namespace Tests.LinqToDB.CLI
 					result.ExitCode.ShouldBe(0, result.Error);
 
 					// A warm-up that hit its bound ends after the command stopped waiting for it; the next command starts
-					// a new one only once it has.
+					// a new one only once it has ended and removed its entry.
 					//
-					await provider.WaitForWarmUpsEnded();
+					await ImpersonationPreload.WhenWarmUpsEnded(FailingWarmUpProvider.ConnectionType);
 				}
 
 				provider.OpensOutsideSession.ShouldBe(2);
@@ -765,23 +765,12 @@ namespace Tests.LinqToDB.CLI
 		sealed class FailingWarmUpProvider(string name, bool hang) : SQLiteDataProvider(name, SQLiteProvider.Microsoft)
 		{
 			int _opensOutsideSession;
-			int _warmUpsRunning;
+
+			public static Type ConnectionType => typeof(FailingConnection);
 
 			public bool Hang { get; } = hang;
 
 			public int OpensOutsideSession => Volatile.Read(ref _opensOutsideSession);
-
-			public async Task WaitForWarmUpsEnded()
-			{
-				var stopwatch = Stopwatch.StartNew();
-
-				while (Volatile.Read(ref _warmUpsRunning) != 0 && stopwatch.Elapsed < TimeSpan.FromSeconds(30))
-					await Task.Delay(10);
-
-				// The entry is removed after the open has failed.
-				//
-				await Task.Delay(100);
-			}
 
 			protected override DbConnection CreateConnectionInternal(string connectionString)
 			{
@@ -799,19 +788,11 @@ namespace Tests.LinqToDB.CLI
 					}
 
 					Interlocked.Increment(ref provider._opensOutsideSession);
-					Interlocked.Increment(ref provider._warmUpsRunning);
 
-					try
-					{
-						if (provider.Hang)
-							await Task.Delay(Timeout.Infinite, cancellationToken);
+					if (provider.Hang)
+						await Task.Delay(Timeout.Infinite, cancellationToken);
 
-						throw new InvalidOperationException("The warm-up cannot connect.");
-					}
-					finally
-					{
-						Interlocked.Decrement(ref provider._warmUpsRunning);
-					}
+					throw new InvalidOperationException("The warm-up cannot connect.");
 				}
 			}
 		}
@@ -851,6 +832,50 @@ namespace Tests.LinqToDB.CLI
 			finally
 			{
 				provider.Release();
+				File.Delete(database);
+			}
+		}
+
+		[Test]
+		public async Task CancelledCommandLeavesTheSharedWarmUpRunning()
+		{
+			// The command that started a warm-up is cancelled; another command still waits for that warm-up, which goes on.
+			//
+			var database = CreateSqliteDatabase();
+			var provider = new GatedWarmUpProvider();
+			var previous = ImpersonationPreload.WarmUpTimeout;
+
+			DataConnection.AddDataProvider(provider);
+			ImpersonationPreload.WarmUpTimeout = TimeSpan.FromMinutes(1);
+
+			try
+			{
+				var settings = new ConnectionSettings(
+					"default", provider.Name, null, "user", "secret", $"Data Source={database};Pooling=False",
+					null, null, null, true, default, null);
+
+				using var cancellation = new CancellationTokenSource();
+
+				var first  = ImpersonationPreload.RunAsync(settings, cancellation.Token);
+				var second = ImpersonationPreload.RunAsync(settings, CancellationToken.None);
+
+				await cancellation.CancelAsync();
+
+				await Should.ThrowAsync<OperationCanceledException>(first);
+
+				second.IsCompleted.ShouldBeFalse();
+
+				provider.Release();
+
+				await second;
+				await ImpersonationPreload.RunAsync(settings, CancellationToken.None);
+
+				provider.OpensOutsideSession.ShouldBe(1);
+			}
+			finally
+			{
+				provider.Release();
+				ImpersonationPreload.WarmUpTimeout = previous;
 				File.Delete(database);
 			}
 		}

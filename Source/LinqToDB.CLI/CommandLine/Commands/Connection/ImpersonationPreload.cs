@@ -220,6 +220,18 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		}
 
 		/// <summary>
+		/// Returns a task that completes when every warm-up of <paramref name="connectionType"/> that is running now has
+		/// ended and, if it failed, removed its entry (for tests).
+		/// </summary>
+		internal static Task WhenWarmUpsEnded(Type connectionType)
+		{
+			lock (_lock)
+			{
+				return Task.WhenAll(_warmUps.Where(entry => string.Equals(entry.Key.Item1, connectionType.FullName, StringComparison.Ordinal)).Select(static entry => entry.Value).ToArray());
+			}
+		}
+
+		/// <summary>
 		/// Runs the warm-up for <paramref name="key"/> and, unless it opened its connection, removes its entry, so that the
 		/// next command tries again.
 		/// </summary>
