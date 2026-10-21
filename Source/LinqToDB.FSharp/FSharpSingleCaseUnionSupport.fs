@@ -9,8 +9,15 @@ open Microsoft.FSharp.Reflection
 
 open LinqToDB.Internal.Common
 open LinqToDB.Internal.Extensions
+open LinqToDB.Internal.Mapping
 open LinqToDB.Mapping
 open LinqToDB.Metadata
+
+/// Value converter of an F# option or single-case union column: the stored value is the payload itself, so the
+/// query builder may combine such a column with an unconverted one.
+type internal StorageTransparentConverter<'TModel, 'TProvider>(toProvider: Expression<Func<'TModel, 'TProvider>>, fromProvider: Expression<Func<'TProvider, 'TModel>>, handlesNulls: bool) =
+    inherit ValueConverter<'TModel, 'TProvider>(toProvider, fromProvider, handlesNulls)
+    interface IStorageTransparentConverter
 
 /// Automatic mapping support for an F# single-case discriminated union over a scalar - e.g.
 /// <c>type UserId = UserId of int</c>. A metadata reader supplies a <see cref="ValueConverterAttribute"/>
@@ -35,7 +42,7 @@ type internal FSharpSingleCaseUnionSupport =
         let pParam       = Expression.Parameter(providerType, "p")
         let fromProvider = Expression.Lambda(Expression.Call(ctor, pParam), pParam)
 
-        let converterType = typedefof<ValueConverter<_, _>>.MakeGenericType(unionType, providerType)
+        let converterType = typedefof<StorageTransparentConverter<_, _>>.MakeGenericType(unionType, providerType)
         ActivatorExt.CreateInstance<IValueConverter>(converterType, [| box toProvider; box fromProvider; box false |])
 
     /// <c>true</c> when <paramref name="t"/> is a single-case union with exactly one field (excludes
