@@ -65,6 +65,9 @@ namespace LinqToDB.Scaffold
 
 			if (features.HasFlag(LanguageFeatures.RecordEntities))
 				options.DataModel.GenerateAssociationExtensions = false;
+
+			if (!features.HasFlag(LanguageFeatures.ErrorDirective))
+				options.DataModel.GenerateProceduresSchemaError = false;
 		}
 
 		/// <summary>

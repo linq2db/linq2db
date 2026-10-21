@@ -910,7 +910,8 @@ static class CustomFluentExtensions
 					null,
 					null,
 					_defaultOptions.DataModel.GenerateProceduresSchemaError,
-					_t4ModeOptions.DataModel.GenerateProceduresSchemaError);
+					_t4ModeOptions.DataModel.GenerateProceduresSchemaError)
+					{ Languages = TargetLanguages.CSharp };
 
 			/// <summary>
 			/// Skip mapping generation for stored procedure with schema load error option.

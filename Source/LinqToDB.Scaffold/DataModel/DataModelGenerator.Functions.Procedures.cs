@@ -669,7 +669,9 @@ namespace LinqToDB.DataModel
 				false,
 				args);
 
-			return method == null ? convert : CallFSharpOption(context, method, type, convert);
+			// explicit element type argument: under F# nullness checks Converter.ChangeTypeTo<string> returns non-nullable
+			// string, which inferred Option.ofObj reports with FS3262
+			return method == null ? convert : CallFSharpOption(context, method, type, convert, type.WithNullability(false));
 		}
 
 		/// <summary>
@@ -689,12 +691,14 @@ namespace LinqToDB.DataModel
 				: null;
 		}
 
-		private static ICodeExpression CallFSharpOption(IDataModelGenerationContext context, string method, IType returnType, ICodeExpression value)
+		private static ICodeExpression CallFSharpOption(IDataModelGenerationContext context, string method, IType returnType, ICodeExpression value, IType? elementType = null)
 		{
 			return context.AST.Call(
 				new CodeTypeReference(context.LanguageProvider.TypeParser.Parse("Microsoft.FSharp.Core.Option", false)),
 				context.AST.Name(method),
 				returnType,
+				elementType == null ? [] : [elementType],
+				false,
 				value);
 		}
 	}

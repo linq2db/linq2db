@@ -25,7 +25,8 @@ namespace LinqToDB.CodeModel
 			| LanguageFeatures.PartialMethods
 			| LanguageFeatures.MultipleConstructors
 			| LanguageFeatures.TabIndentation
-			| LanguageFeatures.MultipleFiles;
+			| LanguageFeatures.MultipleFiles
+			| LanguageFeatures.ErrorDirective;
 
 		private readonly IReadOnlyDictionary<IType, string> _aliasedTypes;
 		private readonly CodeIdentifierComparer             _identifierComparer;

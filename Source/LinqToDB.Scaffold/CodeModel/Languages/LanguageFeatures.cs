@@ -83,5 +83,10 @@ namespace LinqToDB.CodeModel
 		/// Nullable scalar values are represented by option type and converted at parameter and mapping boundaries.
 		/// </summary>
 		OptionTypes                       = 0x2000,
+		/// <summary>
+		/// Language has directive to produce compilation error (<see cref="PragmaType.Error"/>). Without it,
+		/// <see cref="Scaffold.DataModelOptions.GenerateProceduresSchemaError"/> option is disabled.
+		/// </summary>
+		ErrorDirective                    = 0x4000,
 	}
 }

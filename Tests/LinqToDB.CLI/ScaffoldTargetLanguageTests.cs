@@ -13,15 +13,16 @@ namespace Tests.LinqToDB.CLI
 	[TestFixture]
 	public sealed class ScaffoldTargetLanguageTests
 	{
-		[Test]
-		public async Task FSharpRejectsCSharpOnlyOption()
+		[TestCase("--add-init-context")]
+		[TestCase("--emit-schema-errors")]
+		public async Task FSharpRejectsCSharpOnlyOption(string option)
 		{
-			var result = await RunCli("scaffold", "-p", "SQLite", "-c", "Data Source=:memory:", "--target-language", "f#", "--add-init-context", "true");
+			var result = await RunCli("scaffold", "-p", "SQLite", "-c", "Data Source=:memory:", "--target-language", "f#", option, "true");
 
 			using (Assert.EnterMultipleScope())
 			{
 				result.ExitCode.ShouldBe(-1);
-				result.Error.   ShouldContain("Option '--add-init-context' is not supported for target language F#.");
+				result.Error.   ShouldContain($"Option '{option}' is not supported for target language F#.");
 			}
 		}
 
