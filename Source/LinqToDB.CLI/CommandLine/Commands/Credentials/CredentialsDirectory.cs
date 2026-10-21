@@ -26,7 +26,47 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		/// Unix: <c>$LINQ2DB_CREDENTIALS_DIR</c>, else <c>$XDG_CONFIG_HOME/linq2db</c>, else <c>$HOME/.config/linq2db</c>.
 		/// Windows: <c>%LINQ2DB_CREDENTIALS_DIR%</c>, else <c>%LOCALAPPDATA%\linq2db</c>. A relative value is ignored.
 		/// </summary>
+		/// <remarks>
+		/// On Unix the result has no <c>.</c> or <c>..</c> components. .NET file APIs remove them as text, while the
+		/// kernel (running a script) and the checks here resolve <c>..</c> after the links before it, so with
+		/// <c>/a/link/../b</c> files would be written to one directory, checked in another and run from a third.
+		/// </remarks>
 		public static bool TryResolve(bool isWindows, Func<string, string?> getVariable, out string directory, out string? error)
+		{
+			if (!TryResolveVariables(isWindows, getVariable, out directory, out error))
+				return false;
+
+			if (!isWindows)
+				directory = RemoveDotSegments(directory);
+
+			return true;
+		}
+
+		/// <summary>Removes <c>.</c> and <c>..</c> components of an absolute Unix path as text, as Path.GetFullPath does.</summary>
+		static string RemoveDotSegments(string path)
+		{
+			var parts = new List<string>();
+
+			foreach (var part in path.Split('/', StringSplitOptions.RemoveEmptyEntries))
+			{
+				if (string.Equals(part, ".", StringComparison.Ordinal))
+					continue;
+
+				if (string.Equals(part, "..", StringComparison.Ordinal))
+				{
+					if (parts.Count > 0)
+						parts.RemoveAt(parts.Count - 1);
+
+					continue;
+				}
+
+				parts.Add(part);
+			}
+
+			return "/" + string.Join('/', parts.ToArray());
+		}
+
+		static bool TryResolveVariables(bool isWindows, Func<string, string?> getVariable, out string directory, out string? error)
 		{
 			directory = string.Empty;
 
@@ -246,68 +286,6 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 			catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
 			{
 				error = $"Cannot check the directory of '{script}': {ex.Message}{AccessHint(ex)}";
-				return false;
-			}
-		}
-
-		/// <summary>
-		/// Checks an existing script that <c>credentials cli init --config</c> records without writing it: it gets the
-		/// guarantees a newly written script has. Its real file (symbolic links resolved) must be a regular file owned by
-		/// the current user, not writable by group or other users, and executable by its owner; the directories of the
-		/// real file get the rule of <see cref="CheckScriptDirectory"/>. The directories of the path as written are
-		/// checked by the caller, as for a new script.
-		/// </summary>
-		[UnsupportedOSPlatform("windows")]
-		public static bool CheckRetainedScript(string script, out string? warning, out string? error)
-		{
-			warning = null;
-
-			try
-			{
-				var real = GetRealPath(script);
-				var file = new FileInfo(real);
-
-				if (!file.Exists)
-				{
-					error = $"Cannot record '{script}': its real path '{real}' is not a regular file.";
-					return false;
-				}
-
-				var mode = file.UnixFileMode;
-
-				// Only the owner (or root) may change a file's mode: setting the mode it already has tells whether the
-				// current user owns it, without reading the owner's id.
-				try
-				{
-					File.SetUnixFileMode(real, mode);
-				}
-				catch (UnauthorizedAccessException)
-				{
-					error = $"Cannot record '{script}': '{real}' is owned by another user, who could change it and receive the passwords given to it. Use '--force' to replace it with the template, or choose another --output.";
-					return false;
-				}
-
-				if ((mode & (UnixFileMode.GroupWrite | UnixFileMode.OtherWrite)) != 0)
-				{
-					error = $"Cannot record '{script}': '{real}' is writable by other users, who could change it and receive the passwords given to it. Run: chmod go-w '{real}'";
-					return false;
-				}
-
-				if (!mode.HasFlag(UnixFileMode.UserExecute))
-				{
-					error = $"Cannot record '{script}': '{real}' is not executable. Run: chmod u+x '{real}'";
-					return false;
-				}
-
-				if (!string.Equals(real, Path.GetFullPath(script), StringComparison.Ordinal))
-					return CheckScriptDirectory(real, out warning, out error);
-
-				error = null;
-				return true;
-			}
-			catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-			{
-				error = $"Cannot check '{script}': {ex.Message}{AccessHint(ex)}";
 				return false;
 			}
 		}

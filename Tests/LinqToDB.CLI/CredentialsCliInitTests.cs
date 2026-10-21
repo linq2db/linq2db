@@ -206,6 +206,77 @@ namespace Tests.LinqToDB.CLI
 			File.Exists(Path.Combine(shared, "private", "h.sh")).ShouldBeFalse();
 		}
 
+		[Test]
+		public async Task OutputThroughALinkChainIsCheckedAtEveryHop()
+		{
+			// safe/link -> shared/hop -> safe/real: the real directory is the user's own, but the chain goes through shared,
+			// where any user can point hop elsewhere later.
+			RequirePosix();
+
+			var safe   = Directory.CreateDirectory(Path.Combine(_root, "safe")).FullName;
+			var shared = Directory.CreateDirectory(Path.Combine(_root, "shared")).FullName;
+			var real   = Directory.CreateDirectory(Path.Combine(safe, "real")).FullName;
+
+			Directory.CreateSymbolicLink(Path.Combine(shared, "hop"), real);
+			Directory.CreateSymbolicLink(Path.Combine(safe, "link"), Path.Combine(shared, "hop"));
+			File.SetUnixFileMode(shared, Owner700 | UnixFileMode.GroupRead | UnixFileMode.GroupWrite | UnixFileMode.GroupExecute | UnixFileMode.OtherRead | UnixFileMode.OtherWrite | UnixFileMode.OtherExecute);
+
+			var (exitCode, _, error) = await RunCli(CreateEnvironment(), "credentials", "cli", "init", "--store", "gpg", "-o", Path.Combine(safe, "link", "h.sh"));
+
+			exitCode.ShouldBe(-3);
+			error.ShouldContain($"its path goes through '{shared}', which every user can write to without the sticky bit");
+			File.Exists(Path.Combine(real, "h.sh")).ShouldBeFalse();
+		}
+
+		[Test]
+		public async Task OutputWithDotDotIsWrittenCheckedAndRecordedAtOnePath()
+		{
+			// The path is made absolute as text first, so the file is written, checked and recorded at safe/h.sh, not in
+			// shared, where the kernel would resolve safe/jump/.. to.
+			RequirePosix();
+
+			var safe   = Directory.CreateDirectory(Path.Combine(_root, "safe")).FullName;
+			var shared = Directory.CreateDirectory(Path.Combine(_root, "shared")).FullName;
+
+			Directory.CreateDirectory(Path.Combine(shared, "sub"));
+			Directory.CreateSymbolicLink(Path.Combine(safe, "jump"), Path.Combine(shared, "sub"));
+
+			var environment = CreateEnvironment();
+
+			var (exitCode, _, error) = await RunCli(environment, "credentials", "cli", "init", "--store", "gpg", "-o", safe + "/jump/../h.sh", "--config", "cfg.json");
+
+			exitCode.ShouldBe(0, error);
+			File.Exists(Path.Combine(safe, "h.sh")).ShouldBeTrue();
+			File.Exists(Path.Combine(shared, "h.sh")).ShouldBeFalse();
+			RecordedValue(environment, "cfg.json").ShouldBe(Path.Combine(safe, "h.sh"));
+		}
+
+		[Test]
+		public async Task CredentialsDirectoryWithDotDotIsUsedAtOnePath()
+		{
+			// LINQ2DB_CREDENTIALS_DIR=safe/jump/../creds with safe/jump -> other/sub: file APIs would use safe/creds, while
+			// running the script and the checks would resolve it to other/creds. The directory is normalized as text first.
+			RequirePosix();
+
+			var safe  = Directory.CreateDirectory(Path.Combine(_root, "safe")).FullName;
+			var other = Directory.CreateDirectory(Path.Combine(_root, "other")).FullName;
+
+			Directory.CreateDirectory(Path.Combine(other, "sub"));
+			Directory.CreateSymbolicLink(Path.Combine(safe, "jump"), Path.Combine(other, "sub"));
+
+			var environment = CreateEnvironment();
+			environment.EnvironmentVariables[CredentialsDirectory.Variable] = safe + "/jump/../creds";
+
+			var (exitCode, output, error) = await RunCli(environment, "credentials", "cli", "init", "--store", "gpg");
+
+			var script = Path.Combine(safe, "creds", "credentials-gpg.sh");
+
+			exitCode.ShouldBe(0, error);
+			output.ShouldContain($"Created '{script}'");
+			File.Exists(script).ShouldBeTrue();
+			Directory.Exists(Path.Combine(other, "creds")).ShouldBeFalse();
+		}
+
 		[TestCase(UnixFileMode.GroupWrite, true,  TestName = "OutputInGroupWritableDirectoryWarns")]
 		[TestCase(UnixFileMode.StickyBit | UnixFileMode.GroupWrite | UnixFileMode.OtherWrite, false, TestName = "OutputInStickyDirectoryIsAccepted")]
 		public async Task OutputInDirectoryOthersCanWriteTo(UnixFileMode extra, bool warns)
@@ -259,7 +330,7 @@ namespace Tests.LinqToDB.CLI
 
 			(exitCode, _, error) = await RunCli(CreateEnvironment(), "credentials", "cli", "init", "--store", "gpg");
 			exitCode.ShouldBe(-3);
-			error.ShouldContain($"'{script}' already exists. Use '--force' to replace it with the template; edits to it are lost.");
+			error.ShouldContain($"'{script}' already exists. Use '--force' to replace it with the template (edits to it are lost). To use the existing script as it is, name it yourself: --credentials-cli '{script}'");
 			File.ReadAllText(script).ShouldBe("edited");
 
 			string output;
@@ -271,8 +342,9 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
-		public async Task ExistingScriptIsKeptWhenRecordedInAConfiguration()
+		public async Task ExistingScriptIsNotRecordedWithoutForce()
 		{
+			// init records only a script it wrote; an existing file is not vouched for, also with --config.
 			RequirePosix();
 
 			var script = Path.Combine(_directory, "credentials-gpg.sh");
@@ -282,67 +354,17 @@ namespace Tests.LinqToDB.CLI
 
 			File.WriteAllText(script, "edited");
 
-			var environment = CreateEnvironment();
-
-			string output;
-			(exitCode, output, error) = await RunCli(environment, "credentials", "cli", "init", "--store", "gpg", "--config", "cfg.json");
-
-			exitCode.ShouldBe(0, error);
-			output.ShouldContain($"Kept the existing '{script}'");
-			File.ReadAllText(script).ShouldBe("edited");
-			RecordedValue(environment, "cfg.json").ShouldBe("@gpg");
-		}
-
-		// A kept script is not rewritten owner-only, so it gets the file checks instead.
-		[TestCase("group-writable", TestName = "KeptScriptMustNotBeGroupWritable")]
-		[TestCase("other-writable-link", TestName = "KeptScriptLinkTargetMustNotBeOtherWritable")]
-		[TestCase("not-executable", TestName = "KeptScriptMustBeExecutable")]
-		[TestCase("foreign-owner", TestName = "KeptScriptMustBeOwnedByTheUser")]
-		public async Task UnsafeExistingScriptIsNotRecorded(string unsafeCase)
-		{
-			RequirePosix();
-
-			var script   = Path.Combine(_root, "helper.sh");
-			var expected = "writable by other users";
-
-			switch (unsafeCase)
-			{
-				case "group-writable":
-					File.WriteAllText(script, "#!/bin/sh\n");
-					File.SetUnixFileMode(script, Owner700 | UnixFileMode.GroupWrite);
-					break;
-
-				case "other-writable-link":
-					var target = Path.Combine(_root, "shared", "helper.sh");
-					Directory.CreateDirectory(Path.GetDirectoryName(target)!);
-					File.WriteAllText(target, "#!/bin/sh\n");
-					File.SetUnixFileMode(target, Owner700 | UnixFileMode.OtherWrite);
-					File.CreateSymbolicLink(script, target);
-					break;
-
-				case "not-executable":
-					File.WriteAllText(script, "notes\n");
-					File.SetUnixFileMode(script, UnixFileMode.UserRead | UnixFileMode.UserWrite);
-					expected = "is not executable";
-					break;
-
-				default:
-					// /bin/sh is owned by root; only root may change its mode.
-					if (string.Equals(Environment.UserName, "root", StringComparison.Ordinal))
-						Assert.Ignore("Root may change the mode of any file.");
-
-					File.CreateSymbolicLink(script, "/bin/sh");
-					expected = "is owned by another user";
-					break;
-			}
+			const string Config = """{ "default": { "provider": "SQLite" } }""";
 
 			var environment = CreateEnvironment();
+			environment.Files.Add("cfg.json", Config);
 
-			var (exitCode, _, error) = await RunCli(environment, "credentials", "cli", "init", "--store", "gpg", "-o", script, "--config", "cfg.json");
+			(exitCode, _, error) = await RunCli(environment, "credentials", "cli", "init", "--store", "gpg", "--config", "cfg.json");
 
 			exitCode.ShouldBe(-3);
-			error.ShouldContain(expected);
-			environment.Files.ShouldNotContainKey("cfg.json");
+			error.ShouldContain($"'{script}' already exists. Use '--force' to replace it");
+			File.ReadAllText(script).ShouldBe("edited");
+			environment.Files["cfg.json"].ShouldBe(Config);
 		}
 
 		[Test]

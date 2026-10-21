@@ -630,7 +630,6 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 
 			string? temporaryScript = null;
 			var     replaced        = false;
-			var     kept            = false;
 
 			if (store is "local")
 			{
@@ -659,15 +658,9 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 
 				if (replaced && !force)
 				{
-					// Recording an existing script in a configuration needs no new script: keep it, with any edits.
-					if (configFile == null)
-					{
-						await environment.Error.WriteLineAsync($"'{scriptPath}' already exists. Use '--force' to replace it with the template; edits to it are lost.");
-						return StatusCodes.EXPECTED_ERROR;
-					}
-
-					kept     = true;
-					replaced = false;
+					// The tool records only a script it wrote itself; an existing file is the user's to vouch for.
+					await environment.Error.WriteLineAsync($"'{scriptPath}' already exists. Use '--force' to replace it with the template (edits to it are lost). To use the existing script as it is, name it yourself: --credentials-cli '{scriptPath}', or \"credentialsCli\" in a configuration profile.");
+					return StatusCodes.EXPECTED_ERROR;
 				}
 
 				string? error = null;
@@ -686,17 +679,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 						await environment.Error.WriteLineAsync(warning);
 				}
 
-				// A kept script is not rewritten owner-only, so the file itself is checked (Windows has no script stores).
-				if (kept && error == null && !OperatingSystem.IsWindows())
-				{
-					if (!CredentialsDirectory.CheckRetainedScript(scriptPath!, out var retainedWarning, out var retainedError))
-						error = retainedError;
-					else if (retainedWarning != null)
-						await environment.Error.WriteLineAsync(retainedWarning);
-				}
-
-				if (!kept)
-					error ??= TryWriteTemporaryScript(scriptPath!, CredentialsCliTemplates.Get(store)!, out temporaryScript);
+				error ??= TryWriteTemporaryScript(scriptPath!, CredentialsCliTemplates.Get(store)!, out temporaryScript);
 
 				if (error != null)
 				{
@@ -744,11 +727,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 					File.Delete(temporaryScript);
 			}
 
-			if (kept)
-			{
-				await environment.Out.WriteLineAsync($"Kept the existing '{scriptPath}'; '--force' replaces it with the template.");
-			}
-			else if (store is not "local")
+			if (store is not "local")
 			{
 				var keeps = store switch
 				{

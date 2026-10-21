@@ -125,6 +125,7 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[TestCase(false, "/srv/creds",   "/srv/creds",   TestName = "DirectoryFromVariableUnix")]
+		[TestCase(false, "/srv/a/../creds/./", "/srv/creds", TestName = "DirectoryFromVariableUnixWithoutDotSegments")]
 		[TestCase(true,  @"D:\creds\",   @"D:\creds",    TestName = "DirectoryFromVariableWindows")]
 		public void DirectoryVariableWins(bool isWindows, string value, string expected)
 		{
