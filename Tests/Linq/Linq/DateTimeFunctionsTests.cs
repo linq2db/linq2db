@@ -1943,6 +1943,49 @@ namespace Tests.Linq
 
 		static readonly DateTime CoarseSubSecondBoundary = CoarseValue.AddMilliseconds(500);
 
+		sealed class YdbDateTime64Row
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.DateTime64)] public DateTime Value { get; set; }
+		}
+
+		/// <summary>
+		/// A literal beside an aggregate over a YDB <c>Datetime64</c> column keeps its sub-second part in a comparison, an
+		/// IN list and a set operation.
+		/// </summary>
+		/// <remarks>
+		/// YDB only: its <c>Datetime64</c> holds whole seconds, while ClickHouse's <c>DateTime64</c> is sub-second.
+		/// </remarks>
+		[Test]
+		public void YdbDateTime64AggregateKeepsLiteralTime([IncludeDataSources(TestProvName.AllYdb)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new YdbDateTime64Row { Id = 1, Value = CoarseValue } });
+
+			var below = t
+				.GroupBy(r => r.Id)
+				.Count(g => g.Max(r => r.Value) < CoarseSubSecondBoundary);
+
+			below.ShouldBe(1);
+
+			var subSecond = new[] { CoarseSubSecondBoundary };
+
+			var inList = t
+				.GroupBy(r => r.Id)
+				.Count(g => subSecond.Contains(g.Max(r => r.Value)));
+
+			inList.ShouldBe(0);
+
+			var union = t
+				.GroupBy(r => r.Id)
+				.Select(g => g.Max(r => r.Value))
+				.Concat(t.Select(r => CoarseSubSecondBoundary))
+				.ToArray();
+
+			union.ShouldBe([CoarseValue, CoarseSubSecondBoundary], ignoreOrder: true);
+		}
+
 		/// <summary>
 		/// A cast that coarsens a column's type is a computed value too: the literal beside it keeps its sub-second part.
 		/// </summary>

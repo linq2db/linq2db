@@ -2981,7 +2981,7 @@ namespace LinqToDB.Internal.SqlProvider
 		internal DbDataType GetInListValueType(ISqlExpression expr1, DbDataType expr1Type, object? value)
 		{
 			if (value != null
-				&& (QueryHelper.IsCoarserDateTime(expr1Type.DataType, DataType.DateTime2) || QueryHelper.IsDecimal(expr1Type.DataType))
+				&& (QueryHelper.IsCoarserDateTime(expr1Type, new DbDataType(typeof(DateTime), DataType.DateTime2)) || QueryHelper.IsDecimal(expr1Type.DataType))
 				&& !QueryHelper.IsStoredColumn(expr1))
 			{
 				if (value is decimal decimalValue && QueryHelper.IsDecimal(expr1Type.DataType))
@@ -2989,7 +2989,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 				var valueType = MappingSchema.GetDbDataType(value.GetType());
 
-				if (QueryHelper.IsCoarserDateTime(expr1Type.DataType, valueType.DataType))
+				if (QueryHelper.IsCoarserDateTime(expr1Type, valueType))
 					return valueType;
 			}
 

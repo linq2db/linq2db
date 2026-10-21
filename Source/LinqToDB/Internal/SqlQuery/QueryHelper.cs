@@ -268,22 +268,28 @@ namespace LinqToDB.Internal.SqlQuery
 		/// <summary>
 		/// How finely a date/time type resolves an instant; <c>-1</c> for a type that is not one.
 		/// </summary>
-		static int DateTimeRank(DataType dataType)
+		/// <remarks>
+		/// A <c>DateTime64</c> without a precision may hold whole seconds (YDB's <c>Datetime64</c>) or fractions (ClickHouse's
+		/// default), so it takes <paramref name="unknownDateTime64Rank"/>: <see cref="IsCoarserDateTime"/> picks whichever
+		/// answers "coarser", which only lets a value beside it keep its own type.
+		/// </remarks>
+		static int DateTimeRank(DbDataType type, int unknownDateTime64Rank)
 		{
-			return dataType switch
+			return type.DataType switch
 			{
-				DataType.Date or DataType.Date32                                     => 0,
-				DataType.SmallDateTime                                               => 1,
-				DataType.DateTime                                                    => 2,
-				DataType.DateTime2 or DataType.DateTime64 or DataType.DateTimeOffset => 3,
-				_                                                                    => -1,
+				DataType.Date or DataType.Date32                                      => 0,
+				DataType.SmallDateTime                                                => 1,
+				DataType.DateTime                                                     => 2,
+				DataType.DateTime64                                                   => type.Precision switch { null => unknownDateTime64Rank, > 0 => 3, _ => 2 },
+				DataType.DateTime2 or DataType.Timestamp64 or DataType.DateTimeOffset => 3,
+				_                                                                     => -1,
 			};
 		}
 
-		internal static bool IsCoarserDateTime(DataType dataType, DataType than)
+		internal static bool IsCoarserDateTime(DbDataType type, DbDataType than)
 		{
-			var rank = DateTimeRank(dataType);
-			return rank >= 0 && rank < DateTimeRank(than);
+			var rank = DateTimeRank(type, 2);
+			return rank >= 0 && rank < DateTimeRank(than, 3);
 		}
 
 		internal static bool IsDecimal(DataType dataType)

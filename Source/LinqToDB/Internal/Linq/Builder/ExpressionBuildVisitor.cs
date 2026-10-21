@@ -3015,7 +3015,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				var columnType = descriptor.GetDbDataType(true);
 
-				if (QueryHelper.IsCoarserDateTime(columnType.DataType, MappingSchema.GetDbDataType(columnType.SystemType).DataType))
+				if (QueryHelper.IsCoarserDateTime(columnType, MappingSchema.GetDbDataType(columnType.SystemType)))
 					return new(descriptor, null);
 			}
 
@@ -5105,7 +5105,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 							// A computed value has no stored precision to match, so narrowing the literal to it would only
 							// drop the literal's sub-second or time part. A stored column still lends its type.
-							if (QueryHelper.IsCoarserDateTime(type.DataType, context.DataType) && !QueryHelper.IsStoredColumn(expr))
+							if (QueryHelper.IsCoarserDateTime(type, new DbDataType(type.SystemType, context.DataType, context.DbType, context.Length, context.Precision, context.Scale)) && !QueryHelper.IsStoredColumn(expr))
 								return true;
 
 							// Nor a stored scale: a decimal literal beside a computed decimal is widened from its value by the
