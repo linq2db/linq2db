@@ -1,6 +1,7 @@
 ﻿#nullable enable
 *REMOVED*LinqToDB.Internal.SqlProvider.OptimizationContext.TransformationInfo.get -> LinqToDB.Internal.SqlQuery.Visitors.SqlQueryVisitor.IVisitorTransformationInfo!
 *REMOVED*override LinqToDB.Internal.SqlQuery.Visitors.SqlQueryValidatorVisitor.VisitSqlTableSource(LinqToDB.Internal.SqlQuery.SqlTableSource! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+LinqToDB.Internal.Mapping.IStorageTransparentConverter
 LinqToDB.Internal.Common.FormattableStringHelper
 LinqToDB.Internal.Common.FormattableStringHelper.FormatItem
 LinqToDB.Internal.Common.FormattableStringHelper.FormatItem.FormatItem() -> void
