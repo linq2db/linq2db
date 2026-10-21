@@ -330,7 +330,7 @@ namespace Tests.LinqToDB.CLI
 
 			(exitCode, _, error) = await RunCli(CreateEnvironment(), "credentials", "cli", "init", "--store", "gpg");
 			exitCode.ShouldBe(-3);
-			error.ShouldContain($"'{script}' already exists. Use '--force' to replace it with the template (edits to it are lost). To use the existing script as it is, name it yourself: --credentials-cli '{script}'");
+			error.ShouldContain($"'{script}' already exists. Use '--force' to replace it with the template (edits to it are lost). To use the existing script as it is, name it yourself: --credentials-cli {script}, or");
 			File.ReadAllText(script).ShouldBe("edited");
 
 			string output;
@@ -339,6 +339,23 @@ namespace Tests.LinqToDB.CLI
 			output.ShouldContain($"Replaced '{script}'");
 			File.ReadAllText(script).ShouldBe(CredentialsCliTemplates.Get("gpg"));
 			File.GetUnixFileMode(script).ShouldBe(Owner700);
+		}
+
+		[Test]
+		public async Task ExistingScriptHintQuotesAPathWithSpaces()
+		{
+			// The hint must survive the shell and the credentials CLI command line parser: the path is quoted for both.
+			RequirePosix();
+
+			var directory = Directory.CreateDirectory(Path.Combine(_root, "my tools")).FullName;
+			var script    = Path.Combine(directory, "helper.sh");
+
+			File.WriteAllText(script, "edited");
+
+			var (exitCode, _, error) = await RunCli(CreateEnvironment(), "credentials", "cli", "init", "--store", "gpg", "-o", script);
+
+			exitCode.ShouldBe(-3);
+			error.ShouldContain($"--credentials-cli '\"{script}\"', or");
 		}
 
 		[Test]
