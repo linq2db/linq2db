@@ -160,7 +160,7 @@ namespace Tests.Linq
 				where d < 57.1
 				select d;
 
-			AssertQuery(query);
+			AssertQuery(query, EqualityComparer<int>.Default);
 
 			// 114.59 truncates to 114 but rounds to 115
 			var past =
@@ -168,7 +168,7 @@ namespace Tests.Linq
 				where d < 114.5
 				select d;
 
-			AssertQuery(past);
+			AssertQuery(past, EqualityComparer<int>.Default);
 		}
 
 		[Test]
