@@ -82,14 +82,38 @@ namespace Tests.LinqToDB.CLI
 			cat "$FAKE_STATE/aws/$id"; echo
 			""";
 
+		// bw looks a term that is not an id up as a search: every item whose name contains it, ignoring case (bw also
+		// searches other fields, which the items here leave empty); get answers the one match, and more than one is an error.
 		const string FakeBw = """
 			#!/bin/sh
 			set -u
 			for a in "$@"; do printf '%s\n' "$a" >> "$FAKE_STATE/argv.log"; done
-			[ "$1 $2" = '--nointeraction get' ] || exit 2
+			[ "$1" = --nointeraction ] || exit 2
 			[ ! -e "$FAKE_STATE/fail" ] || { echo 'Vault is locked.' >&2; exit 1; }
-			[ -d "$FAKE_STATE/bw/$4" ] || { echo 'Not found.' >&2; exit 1; }
-			cat "$FAKE_STATE/bw/$4/$3"
+			search() {
+				term=$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')
+				for item in "$FAKE_STATE"/bw/*.json; do
+					[ -f "$item" ] || continue
+					case $(jq -r '.name | ascii_downcase' "$item") in
+						*"$term"*) printf '%s\n' "$item" ;;
+					esac
+				done
+			}
+			case "$2 $3" in
+				'list items')
+					[ "$4" = --search ] || exit 2
+					printf '['; sep=''
+					search "$5" | { while IFS= read -r item; do printf '%s' "$sep"; cat "$item"; sep=','; done; }
+					printf ']'
+					;;
+				'get password'|'get username')
+					found=$(search "$4")
+					[ -n "$found" ] || { echo 'Not found.' >&2; exit 1; }
+					[ "$(printf '%s\n' "$found" | wc -l)" -eq 1 ] || { echo 'More than one result was found. Try getting a specific object by `id` instead. The following objects were found:' >&2; exit 1; }
+					jq -j ".login.$3 // \"\"" "$found"
+					;;
+				*) exit 2 ;;
+			esac
 			""";
 
 		const string FakeKeePassXC = """
@@ -216,9 +240,9 @@ namespace Tests.LinqToDB.CLI
 
 				case "Bitwarden":
 				{
-					var item = Directory.CreateDirectory(Path.Combine(_state, "bw", "linq2db", name)).FullName;
-					File.WriteAllText(Path.Combine(item, "password"), password);
-					File.WriteAllText(Path.Combine(item, "username"), user ?? string.Empty);
+					var directory = Directory.CreateDirectory(Path.Combine(_state, "bw")).FullName;
+					var id        = Guid.NewGuid().ToString();
+					File.WriteAllText(Path.Combine(directory, id + ".json"), JsonSerializer.Serialize(new { id, type = 1, name = "linq2db/" + name, login = new { username = user, password } }));
 					break;
 				}
 
@@ -243,7 +267,7 @@ namespace Tests.LinqToDB.CLI
 
 		static void RequireTools(string store)
 		{
-			if (string.Equals(store, "AWS Secrets Manager", StringComparison.Ordinal) && FindOnPath("jq") == null)
+			if ((string.Equals(store, "AWS Secrets Manager", StringComparison.Ordinal) || string.Equals(store, "Bitwarden", StringComparison.Ordinal)) && FindOnPath("jq") == null)
 				Assert.Ignore("jq is not installed.");
 		}
 
@@ -300,10 +324,47 @@ namespace Tests.LinqToDB.CLI
 			error.ShouldNotBeNull().ShouldContain("was not found by credentials CLI");
 		}
 
+		[Test]
+		public void BitwardenIgnoresAnItemWhoseNameOnlyContainsTheTarget()
+		{
+			RequireTools("Bitwarden");
+
+			Seed("Bitwarden", "project-a/prod-replica", "replica", "replica-password");
+
+			CreateStore("Bitwarden").TryRead("linq2db/project-a/prod", out _, out _, out var error).ShouldBeFalse();
+			error.ShouldNotBeNull().ShouldContain("was not found by credentials CLI");
+		}
+
+		[Test]
+		public void BitwardenReadsTheItemNamedExactlyBesideOnesThatContainItsName()
+		{
+			RequireTools("Bitwarden");
+
+			Seed("Bitwarden", "project-a/prod",         "app",     "prod-password");
+			Seed("Bitwarden", "project-a/prod-replica", "replica", "replica-password");
+			Seed("Bitwarden", "PROJECT-A/PROD-2",       "other",   "other-password");
+
+			CreateStore("Bitwarden").TryRead("linq2db/project-a/prod", out var user, out var password, out var error).ShouldBeTrue(error);
+			user.    ShouldBe("app");
+			password.ShouldBe("prod-password");
+		}
+
+		[Test]
+		public void BitwardenRefusesTwoItemsWithTheSameName()
+		{
+			RequireTools("Bitwarden");
+
+			Seed("Bitwarden", "project-a/prod", "a", "first-password");
+			Seed("Bitwarden", "project-a/prod", "b", "second-password");
+
+			CreateStore("Bitwarden").TryRead("linq2db/project-a/prod", out _, out _, out var error).ShouldBeFalse();
+			error.ShouldNotBeNull().ShouldContain("more than one login item is named linq2db/project-a/prod");
+		}
+
 		[TestCase("Azure Key Vault",     "az keyvault secret show failed: ERROR: Please run 'az login'")]
 		[TestCase("1Password",           "op read failed: [ERROR] 2026/10/10 12:00:00 You are not currently signed in.")]
 		[TestCase("AWS Secrets Manager", "aws secretsmanager get-secret-value failed: An error occurred (ExpiredTokenException)")]
-		[TestCase("Bitwarden",           "bw get password failed: Vault is locked.")]
+		[TestCase("Bitwarden",           "bw list items failed: Vault is locked.")]
 		[TestCase("KeePassXC",           "keepassxc-cli show failed: Error while reading the database: Invalid credentials")]
 		public void StoreFailureIsAnErrorWithTheReason(string store, string message)
 		{

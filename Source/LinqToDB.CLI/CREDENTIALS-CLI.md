@@ -394,11 +394,16 @@ dotnet linq2db credentials cli init --store local --config .agents/linq2db-query
   server and the token as usual (`VAULT_ADDR`; `VAULT_TOKEN` or the token helper of `vault login`). One KV secret per
   record at the record's target, `linq2db/<name>`, with the fields `username` and `password`, in the KV mount
   `$LINQ2DB_VAULT_MOUNT` (default `secret`; KV version 1 or 2). `get` needs read access to the secret, `store` write
-  access, `erase` delete access to its metadata (KV version 2: every version is removed), and `list` list access under
-  `linq2db/`. The data goes to `vault kv put` on standard input, never in its arguments. A secret written by other
-  tooling may leave out `username`; its path must be in lower case, as `linq2db/` targets are (section 8). A record
-  whose latest version was deleted (`vault kv delete`) is listed without a user, is not found by `get`, and is removed
-  with all its versions by `erase`. A user name or key with a control character makes `get` or `list` fail.
+  access, `erase` read and delete access to its metadata (KV version 2: every version is removed; KV version 1: read and
+  delete access to the secret), and `list` list access under `linq2db/` plus read access to every secret there (for its
+  `username`); `credentials clear` needs what `list` and `erase` need. The data goes to `vault kv put` on standard
+  input, never in its arguments. A secret written by other tooling may leave out `username`; its path must be in lower
+  case, as `linq2db/` targets are (section 8). A record whose latest version was deleted (`vault kv delete`) is listed
+  without a user, is not found by `get`, and is removed with all its versions by `erase`. A user name or key with a
+  control character makes `get` or `list` fail. On KV version 2, `store` over an existing record adds a version, so the
+  replaced password stays readable to whoever can read the secret's versions (up to the mount's `max_versions`, 10 by
+  default) until `erase`; after replacing a leaked password, destroy the older versions (`vault kv destroy
+  -versions=<n>`). Lowering `max_versions` removes old versions only at the next write.
 - `--store local`: the built-in store of section 4; `init` creates the directory and the key at once, so problems show
   up now. It never replaces an existing key.
 - The script is written to `credentials-<store>.sh` in the credentials directory unless `--output`/`-o` names another
@@ -600,21 +605,34 @@ fetch() {
 
 ### Bitwarden
 
-The login item named like the target (`linq2db/<name>`). Unlock the vault first and export the session for the
-programs started from that shell: `export BW_SESSION="$(bw unlock --raw)"`.
+The login item named exactly like the target (`linq2db/<name>`). `bw get` would not do: it looks a name up as a
+search, which also matches every item whose name contains it (`linq2db/project-a/prod-replica` for
+`linq2db/project-a/prod`), so the program lists the matches and picks the one with that name. Needs `jq`. Unlock the
+vault first and export the session for the programs started from that shell: `export BW_SESSION="$(bw unlock --raw)"`.
 
 ```sh
-# fetch: Bitwarden (bw)
+# fetch: Bitwarden (bw, jq)
 fetch() {
-    if ! secret=$(bw --nointeraction get password "$target" 2>"$errors"); then
-        if LC_ALL=C grep -q '^Not found' "$errors"; then
-            return 1
-        fi
-        reason 'bw get password failed'
+    if ! items=$(bw --nointeraction list items --search "$target" 2>"$errors"); then
+        reason 'bw list items failed'
         return 2
     fi
-    if ! user=$(bw --nointeraction get username "$target" 2>"$errors"); then
-        reason 'bw get username failed'
+    # The login items named exactly like the target.
+    if ! items=$(printf '%s' "$items" | jq -c --arg name "$target" '[.[] | select(.type == 1 and .name == $name)]' 2>"$errors"); then
+        reason 'bw list items returned output that is not a JSON array of items'
+        return 2
+    fi
+    case $(printf '%s' "$items" | jq 'length') in
+        0) return 1 ;;
+        1) ;;
+        *)
+            printf 'more than one login item is named %s\n' "$target" >&2
+            return 2
+            ;;
+    esac
+    if ! user=$(printf '%s' "$items" | jq -r '.[0].login.username // ""' 2>"$errors") \
+        || ! secret=$(printf '%s' "$items" | jq -er '.[0].login.password' 2>"$errors"); then
+        printf 'the login item %s has no password\n' "$target" >&2
         return 2
     fi
 }
