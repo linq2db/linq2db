@@ -960,17 +960,11 @@ namespace Tests.Linq
 
 			stored.ShouldBe(expectedStored, "round trip");
 
-			var expected = data
-				.OrderBy(r => r.Id)
-				.Select(r => Math.Round(r.D, 1, mp))
-				.ToArray();
-
 			var rounded = t
 				.OrderBy(r => r.Id)
-				.Select(r => Sql.AsSql(Math.Round(r.D, 1, mp)))
-				.ToArray();
+				.Select(r => Sql.AsSql(Math.Round(r.D, 1, mp)));
 
-			rounded.ShouldBe(expected);
+			AssertQuery(rounded, ByValue);
 		}
 
 		// YQL refuses to cast a Decimal with no integer digits to scale 0: such a value rounds to 0 by comparison, and a
@@ -1063,16 +1057,6 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(data);
 
-			var expectedGroups =
-				from r in data
-				group r by r.G into g
-				orderby g.Key
-				select new
-				{
-					Sum     = Math.Round(g.Sum(x => x.D), mp),
-					Average = Math.Round(g.Average(x => x.D), mp),
-				};
-
 			var groups =
 				from r in t
 				group r by r.G into g
@@ -1083,21 +1067,13 @@ namespace Tests.Linq
 					Average = Sql.AsSql(Math.Round(g.Average(x => x.D), mp)),
 				};
 
-			groups
-				.ToArray()
-				.ShouldBe(expectedGroups.ToArray());
-
-			var expectedProducts = data
-				.OrderBy(r => r.Id)
-				.Select(r => Math.Round(r.D * r.D, mp))
-				.ToArray();
+			AssertQuery(groups);
 
 			var products = t
 				.OrderBy(r => r.Id)
-				.Select(r => Sql.AsSql(Math.Round(r.D * r.D, mp)))
-				.ToArray();
+				.Select(r => Sql.AsSql(Math.Round(r.D * r.D, mp)));
 
-			products.ShouldBe(expectedProducts);
+			AssertQuery(products, ByValue);
 		}
 
 		// A precision past the integer digits rounds every value of the type to 0, which the widened type that would
