@@ -426,6 +426,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				return sql;
 			}
 
+			// A setter's value is written, not read into .NET.
+			using var outside = builder.UsingOutsideProjectionValue();
+
 			SqlSetExpression  setExpression;
 			ColumnDescriptor? columnDescriptor = null;
 
