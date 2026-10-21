@@ -398,7 +398,7 @@ namespace Tests.Linq
 				.Select(r => Sql.AsSql((int)(uint)r.Id))
 				.ToSqlQuery()
 				.Sql
-				.ShouldContain("CAST(");
+				.ShouldNotContain("CAST(");
 
 			t
 				.Select(r => Sql.AsSql(DateTime.Parse(Sql.ConvertTo<string>.From(r.D))))

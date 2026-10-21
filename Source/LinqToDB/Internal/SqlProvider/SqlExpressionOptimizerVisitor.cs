@@ -1388,7 +1388,7 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 			}
 		}
 
-		// A cast pair folds back to its operand only when the inner cast keeps every value: (double)(int)x truncates. An unknown
+		// A cast pair folds back to its operand only when the round trip keeps every value: (double)(int)x truncates. An unknown
 		// pair keeps both casts, and the provider's casts then decide its value.
 		static bool IsLosslessConversion(DbDataType from, DbDataType to)
 		{
@@ -1408,12 +1408,10 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 
 			if (IntegerDigits(from.DataType) is int fromDigits)
 			{
+				// An unchecked C# conversion keeps the low-order bits, so a round trip through an integer as wide is the identity
+				// whatever the signs: (int)(uint)x == x.
 				if (IntegerDigits(to.DataType) != null)
-				{
-					return from.DataType.IsSignedType() == to.DataType.IsSignedType()
-						? IntegerWidth(to.DataType) >= IntegerWidth(from.DataType)
-						: to.DataType.IsSignedType() && IntegerWidth(to.DataType) > IntegerWidth(from.DataType);
-				}
+					return IntegerWidth(to.DataType) >= IntegerWidth(from.DataType);
 
 				if (to.DataType == DataType.Double)
 					return IntegerWidth(from.DataType) <= 32;
