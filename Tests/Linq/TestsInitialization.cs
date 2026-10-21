@@ -495,6 +495,28 @@ public class TestsInitialization
 	}
 #endif
 
+	// Pooled IBM connections left until process exit race the driver's exit handler against its pool timer (SIGSEGV, exit 139).
+	// InternalOperation1 is the driver's pool purge; reflection keeps legs without the driver from loading it.
+	static void PurgeDB2ConnectionPool()
+	{
+		var driver = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(static a => a.GetName().Name == "IBM.Data.Db2");
+		var purge  = driver?.GetType("IBM.Data.Db2.DB2ConnPool")?.GetMethod("InternalOperation1", BindingFlags.Public | BindingFlags.Static, Type.EmptyTypes);
+
+		if (purge == null)
+			return;
+
+		try
+		{
+			purge.Invoke(null, null);
+			TestContext.Progress.WriteLine("[db2] connection pool purged");
+		}
+		catch (Exception ex)
+		{
+			// Best effort: a purge failure must not fail a run whose tests have all completed.
+			TestContext.Progress.WriteLine($"[db2] connection pool purge failed: {ex.InnerException?.Message ?? ex.Message}");
+		}
+	}
+
 	[OneTimeTearDown]
 	public void TestAssemblyTeardown()
 	{
@@ -503,6 +525,8 @@ public class TestsInitialization
 		_dispatcher?.Shutdown(m => TestContext.Progress.WriteLine(m), TimeSpan.FromSeconds(10));
 
 		TestInMemoryDatabases.DisposeAll();
+
+		PurgeDB2ConnectionPool();
 
 		if (_doMetrics)
 		{

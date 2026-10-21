@@ -297,6 +297,16 @@ namespace LinqToDB.Internal.SqlProvider
 			return element;
 		}
 
+		protected internal override IQueryElement VisitSqlDefaultValueExpression(SqlDefaultValueExpression element)
+		{
+			var newElement = ConvertDefaultValue(element);
+
+			if (!ReferenceEquals(newElement, element))
+				return Visit(Optimize(newElement));
+
+			return element;
+		}
+
 		protected IQueryElement Optimize(IQueryElement element)
 		{
 			return OptimizationContext.OptimizerVisitor.Optimize(EvaluationContext, NullabilityContext, OptimizationContext.TransformationInfoConvert, DataOptions, OptimizationContext.MappingSchema, element, VisitQueries, reducePredicates: false);
@@ -2043,6 +2053,37 @@ namespace LinqToDB.Internal.SqlProvider
 			return func;
 		}
 
+		/// <summary>
+		/// Writes the default a reader substitutes for a NULL: as its value here, and as the least value of the column's type where a
+		/// provider's type cannot hold it.
+		/// </summary>
+		/// <param name="expression">The default to write.</param>
+		/// <returns>The expression the default is written as.</returns>
+		public virtual ISqlExpression ConvertDefaultValue(SqlDefaultValueExpression expression)
+		{
+			// TODO: #5999 - once the mapping schema holds a default per database type, take it from there and drop the provider overrides.
+			return new SqlValue(expression.Type, expression.Value);
+		}
+
+		/// <summary>
+		/// The default's value raised to <paramref name="least"/> when it is an earlier date, otherwise <see langword="null"/>.
+		/// </summary>
+		private protected static SqlValue? RaiseDefaultDate(SqlDefaultValueExpression expression, DateTime least)
+		{
+			// At offset zero a DateTimeOffset reads the same through DateTime and UtcDateTime, whichever one a provider writes.
+			object? raised = expression.Value switch
+			{
+				DateTime       dateTime       when dateTime                < least => least,
+				DateTimeOffset dateTimeOffset when dateTimeOffset.DateTime < least => new DateTimeOffset(least, TimeSpan.Zero),
+#if SUPPORTS_DATEONLY
+				DateOnly       dateOnly       when dateOnly < DateOnly.FromDateTime(least) => DateOnly.FromDateTime(least),
+#endif
+				_ => null,
+			};
+
+			return raised == null ? null : new SqlValue(expression.Type, raised);
+		}
+
 		public virtual ISqlPredicate ConvertLikePredicate(SqlPredicate.Like predicate)
 		{
 			return predicate;
@@ -2122,8 +2163,9 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </para>
 		/// <para>
 		/// The sub-query is cloned before its column is rewritten unless this visitor owns it outright, the same
-		/// condition <see cref="ConvertToExists"/> applies for the same reason - it may be shared, and a statement
-		/// reached through the query cache must not be edited in place.
+		/// query-level check <see cref="ConvertToExists"/> applies for the same reason - it may be shared, and a
+		/// statement reached through the query cache must not be edited in place. Only the query is checked here:
+		/// a transformed query always has its own columns.
 		/// </para>
 		/// </remarks>
 		ISqlPredicate? ReconcileDurationUnits(SqlPredicate.InSubQuery predicate)
@@ -2197,11 +2239,9 @@ namespace LinqToDB.Internal.SqlProvider
 			if (inPredicate.SubQuery.Where.SearchCondition.IsOr)
 				throw new InvalidOperationException("Not expected root SearchCondition.");
 
-			if (GetVisitMode(subQuery) == VisitMode.Transform || subQuery.Where.SearchCondition.IsOr)
-			{
+			// a replaced query owns its WHERE clause but can still share the original's search condition
+			if (GetVisitMode(subQuery) == VisitMode.Transform || GetVisitMode(subQuery.Where.SearchCondition) == VisitMode.Transform)
 				subQuery = subQuery.CloneQuery();
-				subQuery.Where.EnsureConjunction();
-			}
 
 			subQuery = WrapIfNeeded(subQuery);
 

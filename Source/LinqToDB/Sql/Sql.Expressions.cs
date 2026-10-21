@@ -534,8 +534,8 @@ namespace LinqToDB
 		{
 			public void Build(ISqlExtensionBuilder builder)
 			{
-				Internal.Linq.Builder.TableBuilder.PrepareRawSqlArguments(builder.Arguments[0],
-					builder.Arguments.Length > 1 ? builder.Arguments[1] : null,
+				Internal.Common.FormattableStringHelper.PrepareRawSqlArguments(builder.Arguments[0],
+					builder.DataContext.SqlProviderFlags.IsParameterOrderDependent,
 					out var format, out var arguments);
 
 				var memberType = builder.Member.GetMemberType();
@@ -560,7 +560,7 @@ namespace LinqToDB
 
 		[Extension("", BuilderType = typeof(ExprBuilder), ServerSideOnly = true)]
 		[StringFormatMethod("sql")]
-		public static T Expr<T>(FormattableString sql)
+		public static T Expr<T>([SqlQueryDependentFormat] FormattableString sql)
 			=> throw new ServerSideOnlyException(nameof(Expr));
 
 		[Extension("", BuilderType = typeof(ExprBuilder), ServerSideOnly = true)]

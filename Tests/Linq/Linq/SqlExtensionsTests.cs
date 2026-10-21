@@ -1,11 +1,19 @@
-﻿using System.Linq;
+﻿using System;
+using System.Globalization;
+using System.Linq;
+using System.Runtime.CompilerServices;
 
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
+using Tests.Model;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Linq
 {
@@ -217,6 +225,319 @@ namespace Tests.Linq
 						select t;
 
 			Assert.That(query.Count(), Is.EqualTo(1));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void Expr_FormatChanges([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<SampleClass>("sample_table_temp", new[] { new SampleClass { Id = 1 }, new SampleClass { Id = 2 } });
+
+			IQueryable<int> Query(string sql) =>
+				from t in table
+				where t.Id == Sql.Expr<int>(FormattableStringFactory.Create(sql))
+				select t.Id;
+
+			Query("1")
+				.ToArray()
+				.ShouldBe([1]);
+
+			Query("2")
+				.ToArray()
+				.ShouldBe([2]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void Expr_RawSqlString_ArgumentsChange([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<SampleClass>("sample_table_temp", new[] { new SampleClass { Id = 1 }, new SampleClass { Id = 2 } });
+
+			IQueryable<int> Query(params object[] arguments) =>
+				from t in table
+				where t.Id == Sql.Expr<int>("{0}", arguments)
+				select t.Id;
+
+			Query(1)
+				.ToArray()
+				.ShouldBe([1]);
+
+			Query(2L)
+				.ToArray()
+				.ShouldBe([2]);
+
+			Query(1, 3)
+				.ToArray()
+				.ShouldBe([1]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void Expr_Compiled_Interpolated_BuildsOnce([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var query = CompiledQuery.Compile((IDataContext dc, int id) =>
+				dc.GetTable<Model.Person>()
+					.Where(p => p.ID == Sql.Expr<int>($"{id}"))
+					.Select(p => p.ID));
+
+			var query1 = query(db, 1);
+			query1.ToArray().ShouldBe([1]);
+
+			var query2 = query(db, 2);
+			query2.ToArray().ShouldBe([2]);
+
+			query2.GetCompiledQueryInfo().ShouldBeSameAs(query1.GetCompiledQueryInfo());
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void Expr_Compiled_CapturedArgumentArray([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool reassign)
+		{
+			using var db = GetDataConnection(context);
+
+			var args = new object[] { 1 };
+
+			var query = CompiledQuery.Compile((IDataContext dc) =>
+				dc.GetTable<Model.Person>()
+					.Where(p => p.ID == Sql.Expr<int>("{0}", args))
+					.Select(p => p.ID));
+
+			query(db)
+				.ToArray()
+				.ShouldBe([1]);
+
+			if (reassign)
+				args = [2];
+			else
+				args[0] = 2;
+
+			query(db)
+				.ToArray()
+				.ShouldBe([2]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void Expr_Compiled_ArgumentArray([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var query = CompiledQuery.Compile((IDataContext dc, object?[] args) =>
+				dc.GetTable<Model.Person>()
+					.Where(p => p.ID == Sql.Expr<int?>("{0}", args!))
+					.Select(p => p.ID));
+
+			var query1 = query(db, [1]);
+
+			query1
+				.ToArray()
+				.ShouldBe([1]);
+
+			query(db, [null])
+				.ToArray()
+				.ShouldBeEmpty();
+
+			query(db, [2])
+				.ToArray()
+				.ShouldBe([2]);
+
+			var query4 = query(db, [1]);
+
+			query4
+				.ToArray()
+				.ShouldBe([1]);
+
+			query4
+				.GetCompiledQueryInfo()
+				.ShouldBeSameAs(query1.GetCompiledQueryInfo());
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void Expr_Compiled_CapturedArgumentArray_Null([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var args = new object?[] { null };
+
+			var query = CompiledQuery.Compile((IDataContext dc) =>
+				dc.GetTable<Model.Person>()
+					.Where(p => p.ID == Sql.Expr<int?>("{0}", args!))
+					.Select(p => p.ID));
+
+			// Nothing keys the build on a captured array, so a null element must not be baked into it.
+			// Like master, the first call cannot translate it.
+			var firstCallFailed = false;
+
+			try
+			{
+				query(db).ToArray();
+			}
+			catch (LinqToDBException)
+			{
+				firstCallFailed = true;
+			}
+
+			args[0] = 2;
+
+			query(db)
+				.ToArray()
+				.ShouldBe([2]);
+
+			firstCallFailed.ShouldBeTrue();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void Expr_Compiled_CapturedFormattable_Null([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			FormattableString fs = $"COALESCE({(int?)null}, {2})";
+
+			var query = CompiledQuery.Compile((IDataContext dc) =>
+				dc.GetTable<Model.Person>()
+					.Where(p => p.ID == Sql.Expr<int>(fs))
+					.Select(p => p.ID));
+
+			query(db)
+				.ToArray()
+				.ShouldBe([2]);
+
+			query(db)
+				.ToArray()
+				.ShouldBe([2]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void Expr_Captured_AfterRowReference([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.Person
+				.Where(p => p.ID == Sql.Expr<int>($"{p.ID}"))
+				.Select(p => p.ID)
+				.OrderBy(id => id)
+				.ToArray()
+				.ShouldBe([1, 2, 3, 4]);
+
+			FormattableString sql = $"{2}";
+
+			db.Person
+				.Where(p => p.ID == Sql.Expr<int>(sql))
+				.Select(p => p.ID)
+				.OrderBy(id => id)
+				.ToArray()
+				.ShouldBe([2]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000"), QueryCacheTest]
+		public void Expr_Captured_ArgumentChanges([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query(FormattableString sql) =>
+				from p in db.Person
+				where p.ID == Sql.Expr<int>(sql)
+				select p.ID;
+
+			Query($"{1}")
+				.ToArray()
+				.ShouldBe([1]);
+
+			var query  = Query($"{2}");
+			var misses = query.GetCacheMissCount();
+
+			query.ToArray().ShouldBe([2]);
+			query.GetCacheMissCount().ShouldBe(misses);
+
+			Query($"{1}")
+				.ToArray()
+				.ShouldBe([1]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5857"), QueryCacheTest]
+		public void Expr_Interpolated_ArgumentChanges_Cached([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query(int value) =>
+				db.Person
+					.Where(p => p.ID == 1)
+					.Select(_ => Sql.Expr<int>($"{value}"));
+
+			Query(1)
+				.ToArray()
+				.ShouldBe([1]);
+
+			var query  = Query(2);
+			var misses = query.GetCacheMissCount();
+
+			query.ToArray().ShouldBe([2]);
+			query.GetCacheMissCount().ShouldBe(misses);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void SqlQueryDependent_ObjectsEqual_FormattableString()
+		{
+			var attribute = new SqlQueryDependentAttribute();
+
+			FormattableString value1      = $"SELECT {1}";
+			FormattableString sameValue1  = $"SELECT {1}";
+			FormattableString value2      = $"SELECT {2}";
+			FormattableString otherFormat = $"SELECT {1} + 0";
+
+			attribute.ObjectsEqual(value1, sameValue1) .ShouldBeTrue();
+			attribute.ObjectsEqual(value1, value2)     .ShouldBeFalse();
+			attribute.ObjectsEqual(value1, otherFormat).ShouldBeFalse();
+		}
+
+		sealed class InlineFormatBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqlExtensionBuilder builder)
+			{
+				var sql = builder.GetValue<FormattableString>("sql");
+				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(int)), sql.ToString(CultureInfo.InvariantCulture), Precedence.Primary);
+			}
+		}
+
+		[Sql.Extension("", BuilderType = typeof(InlineFormatBuilder), ServerSideOnly = true)]
+		static int InlineFormat([SqlQueryDependent] FormattableString sql) => throw new ServerSideOnlyException(nameof(InlineFormat));
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void CustomExtension_DependentFormattableString_ArgumentChanges([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			int[] Query(int value) =>
+				db.Person
+					.Where(p => p.ID == 1)
+					.Select(_ => InlineFormat($"{value}"))
+					.ToArray();
+
+			Query(1).ShouldBe([1]);
+			Query(2).ShouldBe([2]);
+			Query(1).ShouldBe([1]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void CustomExtension_DependentFormattableString_Compiled([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = CompiledQuery.Compile((IDataContext dc, int value) =>
+				dc.GetTable<Person>()
+					.Where(p => p.ID == 1)
+					.Select(_ => InlineFormat($"{value}")));
+
+			query(db, 1)
+				.ToArray()
+				.ShouldBe([1]);
+
+			query(db, 2)
+				.ToArray()
+				.ShouldBe([2]);
+
+			query(db, 1)
+				.ToArray()
+				.ShouldBe([1]);
 		}
 
 		public class FreeTextKey<T>

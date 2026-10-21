@@ -159,6 +159,12 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 				|| (type.DataType != DataType.Undefined && SqlDataType.GetDataType(type.DataType).Type.SystemType.IsIntegerType);
 		}
 
+		// Every date type is written as datetime, from 1753-01-01.
+		public override ISqlExpression ConvertDefaultValue(SqlDefaultValueExpression expression)
+		{
+			return RaiseDefaultDate(expression, new DateTime(1753, 1, 1)) ?? base.ConvertDefaultValue(expression);
+		}
+
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
 			switch (func.Name)
