@@ -9,6 +9,8 @@ using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Runtime.InteropServices;
 using System.Runtime.Loader;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -66,6 +68,17 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		};
 
 		/// <summary>
+		/// Connection string settings, by connection type, that keep a file-based client from creating a database file
+		/// that does not exist: the warm-up only loads code, and a database the command creates is created by the
+		/// impersonated user. A missing file then fails the warm-up, which is ignored; opening it still loads the client.
+		/// </summary>
+		static readonly Dictionary<string, (string Keyword, string Value)> _noCreateSettings = new(StringComparer.Ordinal)
+		{
+			["Microsoft.Data.Sqlite.SqliteConnection"] = ("Mode",          "ReadOnly"),
+			["System.Data.SQLite.SQLiteConnection"]    = ("FailIfMissing", "True"),
+		};
+
+		/// <summary>
 		/// Static methods by which a connection type that is not in <see cref="_poolingKeywords"/> shows that its client
 		/// pools connections (System.Data.Odbc, System.Data.OleDb, Ydb).
 		/// </summary>
@@ -94,6 +107,13 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		static readonly HashSet<(Assembly, string)> _satellitesLoaded     = new();
 
 		/// <summary>
+		/// Warm-ups that ended, by connection type and a hash of the warm-up connection string (the string holds
+		/// credentials, which are not kept): a repeat has nothing left to load, so a long-lived process (the MCP server)
+		/// connects as the process account once per client and connection string, not once per request.
+		/// </summary>
+		static readonly HashSet<(string, string)>   _warmUpsEnded         = new();
+
+		/// <summary>
 		/// Loads everything the command described by <paramref name="settings"/> needs.
 		/// </summary>
 		public static async Task RunAsync(ConnectionSettings settings, CancellationToken cancellationToken)
@@ -115,16 +135,27 @@ namespace LinqToDB.CommandLine.Commands.Connection
 				lock (_lock)
 					LoadClientNativeLibraries(connectionType);
 			}
-			else if (dataProvider != null && connectionType != null)
+			else if (dataProvider != null && connectionType != null
+				&& TryGetWarmUpConnectionString(connectionType, settings.ConnectionString) is { } warmUpConnectionString)
 			{
-				// The warm-up runs on its own task, as the process account. If it is still running when the bound
-				// expires, the command goes on without it, and it finishes, disposing its connection, in the background.
-				//
-				await Task.WhenAny(
-					Task.Run(() => WarmUpConnectionAsync(dataProvider, connectionType, settings.ConnectionString, cancellationToken), CancellationToken.None),
-					Task.Delay(WarmUpTimeout, cancellationToken));
+				var key = (connectionType.FullName!, Hash(warmUpConnectionString));
+				bool ended;
 
-				cancellationToken.ThrowIfCancellationRequested();
+				lock (_lock)
+					ended = _warmUpsEnded.Contains(key);
+
+				if (!ended)
+				{
+					// The warm-up runs on its own task, as the process account. If it is still running when the bound
+					// expires, the command goes on without it, and it finishes, disposing its connection, in the
+					// background; it counts as ended only then, so one that never ends is tried again.
+					//
+					await Task.WhenAny(
+						Task.Run(() => WarmUpConnectionAsync(dataProvider, warmUpConnectionString, key, cancellationToken), CancellationToken.None),
+						Task.Delay(WarmUpTimeout, cancellationToken));
+
+					cancellationToken.ThrowIfCancellationRequested();
+				}
 			}
 
 			lock (_lock)
@@ -191,17 +222,18 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		/// a connection opened as the process account: a client that pools gets its pooling keyword turned off, and a
 		/// client that pools by other means is not warmed up.
 		/// </remarks>
-		static async Task WarmUpConnectionAsync(IDataProvider dataProvider, Type connectionType, string connectionString, CancellationToken cancellationToken)
+		static async Task WarmUpConnectionAsync(IDataProvider dataProvider, string warmUpConnectionString, (string, string) key, CancellationToken cancellationToken)
 		{
-			using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+			// Cancelled by the command, not by its own bound: it may have stopped before loading anything.
+			var cancelledByCommand = false;
+
+			using var registration = cancellationToken.Register(() => Volatile.Write(ref cancelledByCommand, true));
+			using var timeout      = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
 			timeout.CancelAfter(WarmUpTimeout);
 
 			try
 			{
-				if (GetUnpooledConnectionString(connectionType, connectionString) is not { } warmUpConnectionString)
-					return;
-
 				await using var db = new DataConnection(new DataOptions().UseConnectionString(dataProvider, warmUpConnectionString));
 
 				await db.OpenDbConnectionAsync(timeout.Token);
@@ -210,29 +242,52 @@ namespace LinqToDB.CommandLine.Commands.Connection
 			{
 				// Expected when the process account cannot connect; see remarks.
 			}
+
+			if (Volatile.Read(ref cancelledByCommand))
+				return;
+
+			lock (_lock)
+				_warmUpsEnded.Add(key);
 		}
 
 		/// <summary>
-		/// Returns <paramref name="connectionString"/> with the client's pooling turned off, the string itself for a
-		/// client that does not pool, or <see langword="null"/> for a client that pools by means this does not know.
+		/// Returns the connection string for the warm-up: <paramref name="connectionString"/> with the client's pooling
+		/// turned off (the string itself for a client that does not pool) and, for a file-based client, without creating a
+		/// missing database file. Returns <see langword="null"/> for a client that pools by means this does not know, or
+		/// for a connection string the client's keywords cannot be set in (the command then fails the same way).
 		/// </summary>
-		static string? GetUnpooledConnectionString(Type type, string connectionString)
+		static string? TryGetWarmUpConnectionString(Type type, string connectionString)
 		{
-			if (_poolingKeywords.TryGetValue(type.FullName!, out var keyword))
+			var hasPoolingKeyword = _poolingKeywords.TryGetValue(type.FullName!, out var poolingKeyword);
+			var hasNoCreate       = _noCreateSettings.TryGetValue(type.FullName!, out var noCreate);
+
+			if (!hasPoolingKeyword && Array.Exists(type.GetMethods(BindingFlags.Public | BindingFlags.Static), method => _poolMethods.Contains(method.Name, StringComparer.Ordinal)))
+				return null;
+
+			if (!hasPoolingKeyword && !hasNoCreate)
+				return connectionString;
+
+			try
 			{
 				var builder = new DbConnectionStringBuilder { ConnectionString = connectionString };
 
-				builder[keyword] = "false";
+				if (hasPoolingKeyword)
+					builder[poolingKeyword!] = "false";
+
+				if (hasNoCreate)
+					builder[noCreate.Keyword] = noCreate.Value;
 
 				return builder.ConnectionString;
 			}
-
-			var methods = type.GetMethods(BindingFlags.Public | BindingFlags.Static);
-
-			if (Array.Exists(methods, method => _poolMethods.Contains(method.Name, StringComparer.Ordinal)))
+			catch (ArgumentException)
+			{
 				return null;
+			}
+		}
 
-			return connectionString;
+		static string Hash(string value)
+		{
+			return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value)));
 		}
 
 		/// <summary>

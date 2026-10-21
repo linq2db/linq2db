@@ -16,9 +16,9 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		public IDataProvider DataProvider { get; } = dataProvider;
 
 		/// <summary>
-		/// Runs database work, as the impersonated identity when impersonation is enabled.
-		/// Only connection opening and SQL execution belong in <paramref name="action"/>: SQL validation and anything
-		/// that reads local files runs before, under the original process account.
+		/// Runs database work, as the impersonated identity when impersonation is enabled: connection opening, session
+		/// setup, execution, reading and formatting results into an already-open output, and closing. SQL validation and
+		/// anything that reads local files runs before, under the original process account.
 		/// </summary>
 		public Task<T> RunAsync<T>(Func<Task<T>> action)
 		{

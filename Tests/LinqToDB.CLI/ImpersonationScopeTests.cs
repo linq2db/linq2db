@@ -154,9 +154,11 @@ namespace Tests.LinqToDB.CLI
 
 			using var opens = new SqlClientOpenRecorder();
 
-			// An unversioned provider name makes linq2db connect to detect the server version.
+			// An unversioned provider name makes linq2db connect to detect the server version. The connection string is
+			// new to this process, so it is warmed up (a warm-up runs once per connection string).
 			//
-			var result = await RunCli(environment, "query", "--provider", "SqlServer", "--connection-string", UnreachableSqlServer, "--user", "DOMAIN\\user", "--password", "secret", "--impersonate", "--sql", "select 1 as Value");
+			var connectionString = $"{UnreachableSqlServer};Application Name=linq2db-{Guid.NewGuid():N}";
+			var result           = await RunCli(environment, "query", "--provider", "SqlServer", "--connection-string", connectionString, "--user", "DOMAIN\\user", "--password", "secret", "--impersonate", "--sql", "select 1 as Value");
 
 			var session = environment.ImpersonationSessions.ShouldHaveSingleItem();
 
@@ -635,6 +637,88 @@ namespace Tests.LinqToDB.CLI
 			finally
 			{
 				Directory.Delete(directory, true);
+			}
+		}
+
+		[Test]
+		public async Task WarmUpDoesNotCreateSqliteDatabase()
+		{
+			// The warm-up only loads code: a database the command creates is created by the impersonated user, who then
+			// owns it.
+			//
+			var database = Path.Combine(TestContext.CurrentContext.WorkDirectory, $"impersonation-new-{Guid.NewGuid():N}.db");
+
+			try
+			{
+				bool? existedAtEntry = null;
+
+				var environment = new TestCliEnvironment { ImpersonatedRunStarting = () => existedAtEntry ??= File.Exists(database) };
+
+				var result = await RunCli(environment, "query", "--provider", "SQLite", "--connection-string", $"Data Source={database};Pooling=False", "--user", "user", "--password", "secret", "--impersonate", "--sql", "select 1 as Value");
+
+				using (Assert.EnterMultipleScope())
+				{
+					result.ExitCode.ShouldBe(0, result.Error);
+					existedAtEntry. ShouldBe(false);
+				}
+			}
+			finally
+			{
+				File.Delete(database);
+			}
+		}
+
+		[Test]
+		public async Task WarmUpRunsOncePerConnectionString()
+		{
+			// A long-lived process (the MCP server) runs many commands; after the first warm-up there is nothing left to
+			// load, so later commands with the same client and connection string do not connect as the process account.
+			//
+			var database = CreateSqliteDatabase();
+			var provider = new CountingWarmUpProvider();
+
+			DataConnection.AddDataProvider(provider);
+
+			try
+			{
+				for (var i = 0; i < 2; i++)
+				{
+					var result = await RunCli(new TestCliEnvironment(), "query", "--provider", provider.Name, "--connection-string", $"Data Source={database};Pooling=False", "--user", "user", "--password", "secret", "--impersonate", "--sql", "select Id from Person");
+
+					result.ExitCode.ShouldBe(0, result.Error);
+				}
+
+				provider.OpensOutsideSession.ShouldBe(1);
+			}
+			finally
+			{
+				File.Delete(database);
+			}
+		}
+
+		/// <summary>
+		/// SQLite provider that counts the connections opened outside an impersonation session (the warm-ups).
+		/// </summary>
+		sealed class CountingWarmUpProvider() : SQLiteDataProvider("CountingWarmUpTest", SQLiteProvider.Microsoft)
+		{
+			int _opensOutsideSession;
+
+			public int OpensOutsideSession => Volatile.Read(ref _opensOutsideSession);
+
+			protected override DbConnection CreateConnectionInternal(string connectionString)
+			{
+				return new CountingConnection(this, connectionString);
+			}
+
+			sealed class CountingConnection(CountingWarmUpProvider provider, string connectionString) : Microsoft.Data.Sqlite.SqliteConnection(connectionString)
+			{
+				public override void Open()
+				{
+					if (RecordingImpersonationSession.Current == null)
+						Interlocked.Increment(ref provider._opensOutsideSession);
+
+					base.Open();
+				}
 			}
 		}
 

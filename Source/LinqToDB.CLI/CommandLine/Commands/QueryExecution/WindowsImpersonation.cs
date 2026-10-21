@@ -11,7 +11,8 @@ using Microsoft.Win32.SafeHandles;
 namespace LinqToDB.CommandLine.Commands.QueryExecution
 {
 	/// <summary>
-	/// Executes operations under a Windows user identity.
+	/// Logs on as a Windows user and resolves logon options; the returned <see cref="WindowsImpersonationSession"/> runs
+	/// operations under that identity.
 	/// </summary>
 	public static partial class WindowsImpersonation
 	{
