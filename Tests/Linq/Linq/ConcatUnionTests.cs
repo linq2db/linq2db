@@ -2834,6 +2834,11 @@ namespace Tests.Linq
 
 			fittingLiteralFirst.ShouldBe([12345678901234.50m, 1.0000000000005m], ignoreOrder: true);
 
+			// ClickHouse.Driver up to 1.5.0 reads Decimal(38,17) as System.Decimal without dropping trailing zeros and
+			// overflows; fixed on clickhouse-cs main after 1.5.0.
+			if (context.IsAnyOf(ProviderName.ClickHouseDriver))
+				return;
+
 			var ownFacets = t
 				.Select(r => Math.Abs(r.Value))
 				.Concat(t.Select(r => 1.00000000000000005m))
