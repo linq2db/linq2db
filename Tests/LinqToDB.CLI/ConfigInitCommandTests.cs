@@ -110,8 +110,10 @@ namespace Tests.LinqToDB.CLI
 			json.RootElement.GetProperty("default").GetProperty("credentials").GetString().ShouldBe("linq2db/project-a/production-read");
 		}
 
-		[Test]
-		public async Task ConfigInitWritesCredentialsCli()
+		// A program that does not exist on this machine is accepted: a configuration can be shared across machines.
+		[TestCase("@gpg",                               TestName = "ConfigInitWritesCredentialsCli")]
+		[TestCase("\"/opt/no such dir/helper\" --flag", TestName = "ConfigInitWritesCredentialsCliCommandLine")]
+		public async Task ConfigInitWritesCredentialsCli(string value)
 		{
 			var environment = new TestCliEnvironment();
 
@@ -125,16 +127,19 @@ namespace Tests.LinqToDB.CLI
 				"--credentials",
 				"linq2db/project-a/read",
 				"--credentials-cli",
-				"@gpg");
+				value);
 
-			result.ExitCode.ShouldBe(0);
+			result.ExitCode.ShouldBe(0, result.Error);
 
 			using var json = JsonDocument.Parse(environment.Files[".agents/linq2db-query.json"]);
-			json.RootElement.GetProperty("default").GetProperty("credentialsCli").GetString().ShouldBe("@gpg");
+			json.RootElement.GetProperty("default").GetProperty("credentialsCli").GetString().ShouldBe(value);
 		}
 
-		[TestCase("",     TestName = "ConfigInitRejectsEmptyCredentialsCli")]
-		[TestCase("@gpq", TestName = "ConfigInitRejectsUnknownReservedCredentialsCli")]
+		[TestCase("",               TestName = "ConfigInitRejectsEmptyCredentialsCli")]
+		[TestCase("@gpq",           TestName = "ConfigInitRejectsUnknownReservedCredentialsCli")]
+		[TestCase("\"/opt/h --x",   TestName = "ConfigInitRejectsCredentialsCliWithUnterminatedQuote")]
+		[TestCase("\"\" --x",       TestName = "ConfigInitRejectsCredentialsCliWithoutProgram")]
+		[TestCase("\"/opt/h\"--x",  TestName = "ConfigInitRejectsCredentialsCliWithoutSpaceAfterQuotedProgram")]
 		public async Task ConfigInitRejectsCredentialsCliTheProfileCannotLoad(string value)
 		{
 			// config-init must not write a profile that every later query/execute/schema/mcp --config refuses to use.

@@ -48,9 +48,11 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		}
 
 		/// <summary>
-		/// Checks a <c>credentialsCli</c> value before it is written to a configuration: it must not be blank, and a value
-		/// starting with '@' must be a reserved one. A value reserved for another OS is accepted, since a configuration can
-		/// be shared across machines; selecting it on the wrong OS reports that.
+		/// Checks a <c>credentialsCli</c> value before it is written to a configuration: it must not be blank, a value
+		/// starting with '@' must be a reserved one, and any other value must parse as a command line (no unterminated quote,
+		/// a program). Only what does not depend on the machine is checked, since a configuration can be shared across
+		/// machines: a value reserved for another OS, or a program that is not on this machine, is accepted, and selecting
+		/// it there reports that.
 		/// </summary>
 		public static bool ValidateValue(string value, out string? error)
 		{
@@ -65,6 +67,9 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 				error = $"Unknown credential store '{value}'. Expected {Local}, {CredentialManager}, {Keyring}, {Gpg}, {Vault}, or a command line; write a program whose name starts with '@' with a path, for example ./@name.";
 				return false;
 			}
+
+			if (!value.TrimStart(' ', '\t').StartsWith('@') && !CredentialsCliCommandResolver.TryParseCommandLine(value, out _, out _, out error))
+				return false;
 
 			error = null;
 			return true;
