@@ -368,7 +368,7 @@ namespace Tests.Linq
 			[Column    ] public DateTime D  { get; set; }
 		}
 
-		// A pair of casts folds only when the inner one loses nothing. The assertions read CAST text, which SQLite renders for
+		// A pair of casts folds only when the round trip loses nothing. The assertions read CAST text, which SQLite renders for
 		// every cast (PostgreSQL writes ::, ClickHouse toInt32).
 		[Test]
 		public void CastPairFoldsOnlyWhenLossless([IncludeDataSources(ProviderName.SQLiteMS)] string context)
