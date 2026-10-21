@@ -194,6 +194,29 @@ namespace Tests.Infrastructure
 		}
 
 		[Test]
+		public void SetTotalAssignsAndCarriesUpperBound()
+		{
+			var state = new TestProgressState();
+
+			state.SetTotal(10, isUpperBound: true);
+
+			state.Total
+				.ShouldBe(10);
+
+			state.TotalIsUpperBound
+				.ShouldBeTrue();
+
+			// The exact count replaces a larger upper bound.
+			state.SetTotal(3);
+
+			state.Total
+				.ShouldBe(3);
+
+			state.TotalIsUpperBound
+				.ShouldBeFalse();
+		}
+
+		[Test]
 		public void ConcurrentUnitsKeepTheTallyConsistent()
 		{
 			const int units = 500;
