@@ -59,6 +59,9 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// </remarks>
 		public static bool ConvertTheSameWay(IValueConverter? converter1, IValueConverter? converter2)
 		{
+			converter1 = StoredConversion(converter1);
+			converter2 = StoredConversion(converter2);
+
 			// Covers both being absent, and the far more common case of one descriptor reached along two paths.
 			if (ReferenceEquals(converter1, converter2))
 				return true;
@@ -69,6 +72,15 @@ namespace LinqToDB.Internal.Linq.Builder
 			return converter1.HandlesNulls == converter2.HandlesNulls
 				&& ConversionsMatch(converter1.FromProviderExpression, converter2.FromProviderExpression)
 				&& ConversionsMatch(converter1.ToProviderExpression,   converter2.ToProviderExpression);
+		}
+
+		/// <summary>
+		/// The converter that defines the stored form of a value, or <see langword="null"/> when the value is stored
+		/// as is (no converter or <see cref="IStorageTransparentConverter"/>).
+		/// </summary>
+		public static IValueConverter? StoredConversion(IValueConverter? converter)
+		{
+			return converter is IStorageTransparentConverter ? null : converter;
 		}
 
 		/// <summary>
