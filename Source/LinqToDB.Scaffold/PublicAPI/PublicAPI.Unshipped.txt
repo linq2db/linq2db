@@ -2,6 +2,7 @@
 LinqToDB.CodeModel.ILanguageProvider.Features.get -> LinqToDB.CodeModel.LanguageFeatures
 LinqToDB.CodeModel.LanguageFeatures
 LinqToDB.CodeModel.LanguageFeatures.ConstructorPropertyInitialization = 64 -> LinqToDB.CodeModel.LanguageFeatures
+LinqToDB.CodeModel.LanguageFeatures.ErrorDirective = 16384 -> LinqToDB.CodeModel.LanguageFeatures
 LinqToDB.CodeModel.LanguageFeatures.ImplicitDelegateConversion = 32 -> LinqToDB.CodeModel.LanguageFeatures
 LinqToDB.CodeModel.LanguageFeatures.ImplicitInterfaceImplementation = 16 -> LinqToDB.CodeModel.LanguageFeatures
 LinqToDB.CodeModel.LanguageFeatures.ImplicitUpcast = 8 -> LinqToDB.CodeModel.LanguageFeatures

@@ -449,7 +449,8 @@ namespace Tests.Scaffold
 					| LanguageFeatures.PartialMethods
 					| LanguageFeatures.MultipleConstructors
 					| LanguageFeatures.TabIndentation
-					| LanguageFeatures.MultipleFiles));
+					| LanguageFeatures.MultipleFiles
+					| LanguageFeatures.ErrorDirective));
 			}
 		}
 
