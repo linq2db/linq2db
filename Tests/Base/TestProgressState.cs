@@ -44,6 +44,7 @@ namespace Tests
 		readonly Action<bool>?                       _publish;
 
 		long    _total;
+		bool    _totalIsUpperBound;
 		long    _started;
 		long    _completed;
 		long    _passed;
@@ -63,8 +64,13 @@ namespace Tests
 			_publish = publish;
 		}
 
-		/// <summary>Discovered test-case count of the run (the largest suite count wins).</summary>
+		/// <summary>Number of tests the run will execute, or an upper bound of it (see <see cref="TotalIsUpperBound"/>).</summary>
 		public long Total     { get { lock (_sync) return _total;     } }
+		/// <summary>
+		/// Whether <see cref="Total"/> is only the discovered test-case count — used when the filtered count could not
+		/// be resolved, and too large under a <c>--filter</c>.
+		/// </summary>
+		public bool TotalIsUpperBound { get { lock (_sync) return _totalIsUpperBound; } }
 		/// <summary>Tests that have entered execution.</summary>
 		public long Started   { get { lock (_sync) return _started;   } }
 		/// <summary>Tests booked with a final verdict.</summary>
@@ -94,13 +100,13 @@ namespace Tests
 			get { lock (_sync) return _failures.ToArray(); }
 		}
 
-		/// <summary>Raises the run total to <paramref name="testCaseCount"/> if it is larger than the current one.</summary>
-		public void SetTotal(long testCaseCount)
+		/// <summary>Sets the run total; <paramref name="isUpperBound"/> marks it as an upper bound rather than exact.</summary>
+		public void SetTotal(long testCaseCount, bool isUpperBound = false)
 		{
 			lock (_sync)
 			{
-				if (testCaseCount > _total)
-					_total = testCaseCount;
+				_total             = testCaseCount;
+				_totalIsUpperBound = isUpperBound;
 			}
 		}
 
@@ -241,15 +247,8 @@ namespace Tests
 				default: break;
 			}
 
-			// For unfiltered runs total is exact, so completed reaching it marks the run done even if the
-			// root-suite teardown ordering surprises us.
-			if (!_done && _total > 0 && _completed >= _total)
-			{
-				_done    = true;
-				_current = null;
-				force    = true;
-			}
-
+			// Completed reaching the total does not mark the run done: fixture and assembly teardowns still run after the
+			// last test, and only MarkDone (root-suite teardown) knows they have finished.
 			Publish(force);
 		}
 

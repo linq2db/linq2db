@@ -21,6 +21,7 @@ using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Mapping;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -39,6 +40,9 @@ namespace LinqToDB.Internal.Linq.Builder
 		NewExpression?             _disableNew;
 		bool                       _preferClientSide;
 		NullabilityContext?        _nullabilityContext;
+		bool                       _madeDefault;
+		HashSet<SqlColumn>?        _decidedColumns;
+		ReadAsDefaultVisitor?      _readAsDefaultVisitor;
 
 		public string?           Alias             { get; private set; }
 		public ColumnDescriptor? CurrentDescriptor { get; private set; }
@@ -88,7 +92,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						new ExprCacheKey(
 							cloningContext.CorrectExpression(p.Key.Expression),
 							cloningContext.CorrectContext(p.Key.Context), p.Key.ColumnDescriptor,
-							cloningContext.CorrectElement(p.Key.SelectQuery), p.Key.Flags),
+							cloningContext.CorrectElement(p.Key.SelectQuery), p.Key.Flags, p.Key.ReadsAsTheReader),
 					p => cloningContext.CorrectExpression(p.Value),
 					ExprCacheKey.SqlCacheKeyComparer
 				);
@@ -101,7 +105,8 @@ namespace LinqToDB.Internal.Linq.Builder
 							cloningContext.CorrectExpression(p.Key.Expression),
 							p.Key.ResultType,
 							cloningContext.CorrectElement(p.Key.SelectQuery),
-							cloningContext.CorrectElement(p.Key.ParentQuery)),
+							cloningContext.CorrectElement(p.Key.ParentQuery),
+							p.Key.CarriesDefault),
 					p => cloningContext.CorrectExpression(p.Value),
 					ColumnCacheKey.ColumnCacheKeyComparer
 				);
@@ -113,7 +118,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						new ExprCacheKey(
 							cloningContext.CorrectExpression(p.Key.Expression),
 							cloningContext.CorrectContext(p.Key.Context), p.Key.ColumnDescriptor,
-							cloningContext.CorrectElement(p.Key.SelectQuery), p.Key.Flags),
+							cloningContext.CorrectElement(p.Key.SelectQuery), p.Key.Flags, p.Key.ReadsAsTheReader),
 
 					p => cloningContext.CorrectExpression(p.Value),
 					ExprCacheKey.SqlCacheKeyComparer
@@ -131,6 +136,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			newVisitor._translationCache = new(translationCache);
 			newVisitor._columnCache      = new(columnCache);
 			newVisitor._cteContexts      = cteContexts;
+			newVisitor._madeDefault      = _madeDefault;
+			newVisitor._decidedColumns   = _decidedColumns == null ? null : new(_decidedColumns.Select(c => cloningContext.CorrectElement(c)!));
 
 			return newVisitor;
 		}
@@ -246,6 +253,22 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			return new StateHolder<bool>(this, preferClientSide, static v => v._preferClientSide, static (v, f) => v._preferClientSide = f);
 		}
+
+		/// <summary>
+		/// What is built within is query structure rather than a value of the projection (<see cref="BuildFlags.ValueOfProjection"/>).
+		/// </summary>
+		public StateHolder<BuildFlags> UsingOutsideProjectionValue()
+		{
+			return UsingBuildFlags(_buildFlags & ~BuildFlags.ValueOfProjection);
+		}
+
+		// The build reads a value of the projection as the reader reads it: the scope holds, and neither a conversion to a
+		// nullable type nor a set operation asks for the NULL. The translation caches key by the same state.
+		bool BuildReadsAsTheReader =>
+			_buildFlags.HasFlag(BuildFlags.ValueOfProjection)
+			&& !_buildFlags.HasFlag(BuildFlags.InsideNullableCast)
+			&& !_buildFlags.HasFlag(BuildFlags.ForSetProjection)
+			&& _buildPurpose is BuildPurpose.Sql or BuildPurpose.Expression;
 
 		static BuildFlags CombineFlags(BuildFlags currentFlags, BuildFlags additional)
 		{
@@ -460,7 +483,9 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			var flags = GetProjectFlags();
 
-			var cacheKey = new ExprCacheKey(expression, context, null, null, flags);
+			// A value of the projection is built apart from the same path read by a predicate or a key: a context may hand it
+			// through from its inner projection, where it is read as the reader reads it.
+			var cacheKey = new ExprCacheKey(expression, context, null, null, flags, BuildReadsAsTheReader);
 
 			if (GetAlreadyTranslated(cacheKey, out var translated))
 			{
@@ -593,7 +618,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		ExprCacheKey GetSqlCacheKey(Expression path, SelectQuery selectQuery)
 		{
-			return new ExprCacheKey(path, null, CurrentDescriptor, selectQuery, ProjectFlags.SQL);
+			return new ExprCacheKey(path, null, CurrentDescriptor, selectQuery, ProjectFlags.SQL, BuildReadsAsTheReader);
 		}
 
 		Expression RegisterTranslatedSql(Expression translated, Expression path)
@@ -641,7 +666,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		bool GetAlreadyTranslated(ExprCacheKey cacheKey, [NotNullWhen(true)] out Expression? translated)
 		{
-			if (!_translationCache.TryGetValue(cacheKey, out translated))
+			if (!_translationCache.TryGetValue(cacheKey, out translated) && !TryGetBuiltAcrossTheReader(cacheKey, out translated))
 				return false;
 
 			if (cacheKey.Flags == ProjectFlags.SQL && _buildPurpose is BuildPurpose.Expression && SequenceHelper.HasError(translated))
@@ -764,6 +789,15 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		protected override Expression VisitMethodCall(MethodCallExpression node)
 		{
+			// The argument of Sql.ToNullable / Sql.AsNullable asks for the NULL (BuildFlags.InsideNullableCast).
+			if (IsSqlNullabilityMarker(node.Method) && !_buildFlags.HasFlag(BuildFlags.InsideNullableCast))
+			{
+				using (CombineBuildFlags(BuildFlags.InsideNullableCast))
+				{
+					return VisitMethodCall(node);
+				}
+			}
+
 			LogVisit(node);
 
 			if (_buildPurpose is BuildPurpose.Traverse)
@@ -898,7 +932,9 @@ namespace LinqToDB.Internal.Linq.Builder
 					return Visit(translated);
 				}
 
-				if (HandleStringFormat(node, out var translatedFormat))
+				// An interpolated string reaches here as string.Format, which is translated inline rather than by a member
+				// translator, so the option is applied at the call site.
+				if (!PreferClientCalculation(node) && HandleStringFormat(node, out var translatedFormat))
 					return Visit(translatedFormat);
 
 				if (node.Type == typeof(bool) && TryConvertPredicate(node, out var translatedPredicate))
@@ -1217,6 +1253,19 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public Expression ConvertExtension(Sql.ExpressionAttribute attr, IBuildContext context, Expression expr, bool isServerSideOnly)
 		{
+			// An extension chain learns whether it is an aggregate or a window function only once its arguments are
+			// converted, so every chain is taken for a function of a set.
+			var isSetFunction = attr is Sql.ExtensionAttribute || attr.IsAggregate || attr.IsWindowFunction;
+
+			// A server-side-only call stays in SQL whatever the option, so its arguments keep SQL's NULL for its own NULL
+			// handling. A pass-through has none: its argument is the projection's own value.
+			var isPassThrough = IsIdentityTemplate(attr) || IsPassThroughCall(attr, expr);
+			var keepsSqlNull  = (isSetFunction || isServerSideOnly) && !isPassThrough;
+
+			using var saveFlags = UsingBuildFlags(keepsSqlNull ? _buildFlags & ~BuildFlags.ValueOfProjection : _buildFlags);
+
+			var argumentsAreOperands = !keepsSqlNull && !isPassThrough;
+
 			var rootContext     = context;
 			var rootSelectQuery = context.SelectQuery;
 
@@ -1285,7 +1334,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				translatedToSql = new HashSet<Expression>(Utils.ObjectReferenceEqualityComparer<Expression>.Default);
 
-				transformed = attr.GetExpression((buildVisitor: this, context: rootContext, translatedToSql),
+				transformed = attr.GetExpression((buildVisitor: this, context: rootContext, translatedToSql, argumentsAreOperands),
 					Builder.DataContext,
 					Builder,
 					rootSelectQuery,
@@ -1294,8 +1343,13 @@ namespace LinqToDB.Internal.Linq.Builder
 					{
 						var result = context.buildVisitor.ConvertToExtensionSql(context.context, e, descriptor, inline);
 
-						if (result is SqlPlaceholderExpression)
+						if (result is SqlPlaceholderExpression placeholder)
+						{
 							context.translatedToSql.Add(e);
+
+							if (context.argumentsAreOperands)
+								result = context.buildVisitor.ReadAsTheReaderReads(e, placeholder);
+						}
 
 						return result;
 					});
@@ -1650,7 +1704,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			Expression? HandleMember(MemberExpression node, ContextRefExpression? context)
 			{
 				var rootContext = context?.BuildContext ?? BuildContext!;
-				var cacheKey    = new ExprCacheKey(node, null, CurrentDescriptor, rootContext.SelectQuery, ProjectFlags.SQL);
+				var cacheKey    = new ExprCacheKey(node, null, CurrentDescriptor, rootContext.SelectQuery, ProjectFlags.SQL, BuildReadsAsTheReader);
 
 				if (GetAlreadyTranslated(cacheKey, out var translatedLocal))
 					return translatedLocal;
@@ -2278,13 +2332,22 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// <summary>
 		/// When <see cref="LinqOptions.PreferClientCalculation"/> is enabled, computed expressions in the final
 		/// projection are left client-side instead of being forced into SQL columns. Anything that prefers or
-		/// requires server-side evaluation (per <c>Builder.PreferServerSide</c>) and set projections
-		/// (<see cref="BuildFlags.ForSetProjection"/>) still go to SQL.
+		/// requires server-side evaluation (per <c>Builder.PreferServerSide</c>), set projections
+		/// (<see cref="BuildFlags.ForSetProjection"/>), the arguments a member translator translates for itself
+		/// (<see cref="BuildFlags.InsideTranslation"/>) and the operand of a conversion to a nullable type
+		/// (<see cref="BuildFlags.InsideNullableCast"/>) still go to SQL.
 		/// </summary>
+		/// <remarks>
+		/// A running translator has already claimed its node. Were one of its arguments left client-side, the translator
+		/// would receive a non-SQL argument and decline, and the whole call would be calculated on the client.
+		/// A conversion to a nullable type asks for the NULL, which a calculation left client-side reads as default(T).
+		/// </remarks>
 		bool PreferClientCalculation(Expression node)
 		{
 			return _buildPurpose is BuildPurpose.Expression
 				&& !_buildFlags.HasFlag(BuildFlags.ForSetProjection)
+				&& !_buildFlags.HasFlag(BuildFlags.InsideTranslation)
+				&& !_buildFlags.HasFlag(BuildFlags.InsideNullableCast)
 				&& BuildContext != null
 				&& DataOptions.LinqOptions.PreferClientCalculation
 				&& !Builder.PreferServerSide(node, false)
@@ -2341,8 +2404,273 @@ namespace LinqToDB.Internal.Linq.Builder
 			return node;
 		}
 
+		/// <summary>
+		/// Reads an operand of a calculation of the projection the way the reader reads a value into .NET: a non-nullable
+		/// column that is NULL only because the query can leave its row unmatched is read as its default.
+		/// </summary>
+		public SqlPlaceholderExpression ReadAsTheReaderReads(Expression written, SqlPlaceholderExpression operand)
+		{
+			return ReadsAsTheReaderReads(written) ? ReadAsTheReaderReads(operand) : operand;
+		}
+
+		/// <summary>
+		/// <see cref="ReadAsTheReaderReads(Expression, SqlPlaceholderExpression)"/> for a consumer that builds from an operand
+		/// it has not brought to its own query: the operand is read in the query the consumer builds in.
+		/// </summary>
+		SqlPlaceholderExpression ReadAsTheReaderReadsNested(Expression written, SqlPlaceholderExpression operand)
+		{
+			if (!ReadsAsTheReaderReads(written))
+				return operand;
+
+			var nested  = UpdateNesting(operand);
+			var decided = ReadAsTheReaderReads(nested);
+
+			return ReferenceEquals(decided, nested) ? operand : decided;
+		}
+
+		bool ReadsAsTheReaderReads(Expression written)
+		{
+			if (!BuildReadsAsTheReader)
+				return false;
+
+			// The type as written: an operand written as a nullable type asks for the NULL.
+			var type = written.UnwrapConvertToObject().Type;
+
+			return type.IsValueType && !type.IsNullableType && !type.IsEnum && MappingSchema.IsScalarType(type);
+		}
+
+		SqlPlaceholderExpression ReadAsTheReaderReads(SqlPlaceholderExpression operand)
+		{
+			var sql = ReadAsTheReaderReads(operand.Sql, GetNullabilityContext(operand.SelectQuery), NullabilityContext.NonQuery);
+
+			return ReferenceEquals(sql, operand.Sql) ? operand : operand.WithSql(sql);
+		}
+
+		// Walks the positions whose value is the operand's value, rebuilding what it changes: the SQL is shared with the
+		// translation cache.
+		ISqlExpression ReadAsTheReaderReads(ISqlExpression sql, NullabilityContext nullability, NullabilityContext declared)
+		{
+			switch (sql)
+			{
+				case SqlFieldBase or SqlColumn:
+					return ReadAsDefault(sql, nullability, declared);
+
+				case SqlCastExpression cast when !cast.ToType.SystemType.IsNullableType:
+				{
+					var expression = ReadAsTheReaderReads(cast.Expression, nullability, declared);
+
+					return ReferenceEquals(expression, cast.Expression)
+						? cast
+						: new SqlCastExpression(expression, cast.ToType, cast.FromType, cast.IsMandatory);
+				}
+
+				case SqlConditionExpression condition:
+				{
+					var trueValue  = ReadAsTheReaderReads(condition.TrueValue,  nullability, declared);
+					var falseValue = ReadAsTheReaderReads(condition.FalseValue, nullability, declared);
+
+					return ReferenceEquals(trueValue, condition.TrueValue) && ReferenceEquals(falseValue, condition.FalseValue)
+						? condition
+						: new SqlConditionExpression(condition.Condition, trueValue, falseValue);
+				}
+
+				case SqlCaseExpression caseExpression:
+				{
+					var changed = false;
+					var cases   = new List<SqlCaseExpression.CaseItem>(caseExpression.Cases.Count);
+
+					foreach (var item in caseExpression.Cases)
+					{
+						var result = ReadAsTheReaderReads(item.ResultExpression, nullability, declared);
+
+						changed |= !ReferenceEquals(result, item.ResultExpression);
+						cases.Add(item.Update(item.Condition, result));
+					}
+
+					var elseExpression = caseExpression.ElseExpression == null
+						? null
+						: ReadAsTheReaderReads(caseExpression.ElseExpression, nullability, declared);
+
+					changed |= !ReferenceEquals(elseExpression, caseExpression.ElseExpression);
+
+					return changed ? new SqlCaseExpression(caseExpression.Type, cases, elseExpression) : caseExpression;
+				}
+			}
+
+			return sql;
+		}
+
+		ISqlExpression ReadAsDefault(ISqlExpression column, NullabilityContext nullability, NullabilityContext declared)
+		{
+			if (!IsReadAsDefault(column, nullability, declared, out var dbDataType, out var defaultValue))
+				return column;
+
+			_madeDefault = true;
+
+			return new SqlCoalesceExpression(column, new SqlDefaultValueExpression(dbDataType, defaultValue));
+		}
+
+		bool IsReadAsDefault(ISqlExpression column, NullabilityContext nullability, NullabilityContext declared, out DbDataType dbDataType, out object? defaultValue)
+		{
+			dbDataType   = default;
+			defaultValue = null;
+
+			if (!column.CanBeNullable(nullability) || CanBeNullAsDeclared(column, declared, null))
+				return false;
+
+			dbDataType = QueryHelper.GetDbDataType(column, MappingSchema);
+
+			var type = dbDataType.SystemType;
+
+			// A converted or duration-typed column has no default the database holds on its own terms, and a char's is a NUL no
+			// PostgreSQL string holds.
+			if (!type.IsValueType || type.IsNullableType || type.IsEnum || type == typeof(char) || !MappingSchema.IsScalarType(type)
+				|| QueryHelper.GetColumnDescriptor(column) is { ValueConverter: not null } or { DurationUnit: not null })
+			{
+				return false;
+			}
+
+			defaultValue = MappingSchema.GetDefaultValue(type);
+
+			return !defaultValue.IsNullValue;
+		}
+
+		// The nullability a column has as declared, through set-operation branches: the NULL of a join inside a branch is not a
+		// declared one.
+		static bool CanBeNullAsDeclared(ISqlExpression expression, NullabilityContext declared, HashSet<ISqlExpression>? visited)
+		{
+			switch (expression)
+			{
+				case SqlColumn when !(visited ??= new(Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default)).Add(expression):
+					return expression.SystemType?.IsNullableOrReferenceType != false;
+
+				case SqlColumn { Parent.HasSetOperators: true } column:
+				{
+					var index = column.Parent.Select.Columns.IndexOf(column);
+
+					if (index < 0 || CanBeNullAsDeclared(column.Expression, declared, visited))
+						return true;
+
+					foreach (var set in column.Parent.SetOperators)
+					{
+						if (set.Operation is not (SetOperation.Union or SetOperation.UnionAll))
+							continue;
+
+						if (index >= set.SelectQuery.Select.Columns.Count || CanBeNullAsDeclared(set.SelectQuery.Select.Columns[index], declared, visited))
+							return true;
+					}
+
+					return false;
+				}
+
+				case SqlColumn column:
+					return CanBeNullAsDeclared(column.Expression, declared, visited);
+
+				default:
+				{
+					// NullabilityContext would answer the columns under a calculation with each branch's joins registered.
+					var columns = new List<SqlColumn>();
+
+					expression.VisitParentFirst(columns, static (list, e) =>
+					{
+						if (e is SqlColumn column)
+						{
+							list.Add(column);
+							return false;
+						}
+
+						return e is not SelectQuery;
+					});
+
+					if (columns.Count == 0)
+						return expression.CanBeNullable(declared);
+
+					var asDeclared = new Dictionary<ISqlExpression, bool>(Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default);
+
+					// Each column from a copy of the walk's visited set: a sibling's visits are not its ancestors.
+					foreach (var column in columns)
+						asDeclared[column] = CanBeNullAsDeclared(column, declared, visited == null ? null : new(visited, Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default));
+
+					return expression.CanBeNullable(new NullabilityContext(declared, asDeclared));
+				}
+			}
+		}
+
+		static bool IsIdentityTemplate(Sql.ExpressionAttribute attribute)
+		{
+			return attribute is not (Sql.FunctionAttribute or Sql.PropertyAttribute or Sql.ExtensionAttribute)
+				&& string.Equals(attribute.Expression, "{0}", StringComparison.Ordinal);
+		}
+
+		static bool IsPassThroughCall(Sql.ExpressionAttribute attribute, Expression expression)
+		{
+			return attribute is Sql.FunctionAttribute { Name: PseudoFunctions.REMOVE_CONVERT }
+				|| expression is MethodCallExpression { Method: { Name: nameof(Sql.NoConvert) } method } && method.DeclaringType == typeof(Sql);
+		}
+
+		// The operand positions where a missed row's default lies outside the operator's domain: the divisor of a division or
+		// a modulo (0), the date a shift moves (the type's least value), and the year, month and day of a date built from parts.
+		static bool IsOperandOutsideDefaultDomain(Expression member, Expression operand)
+		{
+			if (member is BinaryExpression { NodeType: ExpressionType.Divide or ExpressionType.Modulo } division)
+				return division.Right.Find(operand) != null;
+
+			var dateType = member.Type.UnwrapNullableType();
+			if (dateType != typeof(DateTime) && dateType != typeof(DateTimeOffset)
+#if SUPPORTS_DATEONLY
+				&& dateType != typeof(DateOnly)
+#endif
+				)
+				return false;
+
+			IReadOnlyList<Expression> operands = member switch
+			{
+				MethodCallExpression call => call.Object == null ? call.Arguments : [call.Object, .. call.Arguments],
+				NewExpression        ctor => ctor.Arguments,
+				BinaryExpression     bin  => [bin.Left, bin.Right],
+				_                         => [],
+			};
+
+			var target = operand.UnwrapConvert();
+
+			if (operands.Any(o => o.UnwrapConvert().Type.UnwrapNullableType() == dateType))
+			{
+				// A shift: besides the date, an increment (a number or a TimeSpan), not only a date part.
+				var isShift = operands.Any(o => o.UnwrapConvert().Type.UnwrapNullableType() is var t && t != dateType && !t.IsEnum);
+				return isShift && target.Type.UnwrapNullableType() == dateType;
+			}
+
+			for (var i = 0; i < operands.Count && i < 3; i++)
+				if (operands[i].UnwrapConvert() == target)
+					return true;
+
+			return false;
+		}
+
+		static bool IsSqlNullabilityMarker(MethodInfo method)
+		{
+			return method.DeclaringType == typeof(Sql) && method.Name is nameof(Sql.ToNullable) or nameof(Sql.AsNullable);
+		}
+
+		static bool IsConversionToNullable(UnaryExpression node)
+		{
+			return node.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked
+				&& node.Type.IsNullableType
+				&& !node.Operand.Type.IsNullableOrReferenceType;
+		}
+
 		protected override Expression VisitUnary(UnaryExpression node)
 		{
+			// A conversion to a nullable type asks for the NULL: its operand is neither calculated on the client under the
+			// option nor read as default(T) (BuildFlags.InsideNullableCast).
+			if (IsConversionToNullable(node) && !_buildFlags.HasFlag(BuildFlags.InsideNullableCast))
+			{
+				using (CombineBuildFlags(BuildFlags.InsideNullableCast))
+				{
+					return VisitUnary(node);
+				}
+			}
+
 			if (PreferClientCalculation(node))
 				return base.VisitUnary(node);
 
@@ -2387,6 +2715,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 							if (predicateExpr is SqlPlaceholderExpression placeholder)
 							{
+								placeholder = ReadAsTheReaderReadsNested(node.Operand, placeholder);
+
 								if (placeholder.Sql is not ISqlPredicate predicate)
 								{
 									var withNull = !node.Operand.Type.IsNullableType;
@@ -2418,6 +2748,9 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (translated is SqlPlaceholderExpression placeholder)
 					{
 						placeholder = UpdateNesting(placeholder);
+
+						if (node.NodeType is not ExpressionType.UnaryPlus)
+							placeholder = ReadAsTheReaderReads(node.Operand, placeholder);
 
 						var t = node.Type;
 
@@ -2653,7 +2986,13 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (string.Equals(node.Method.Name, "Format", StringComparison.Ordinal))
 				{
 					var format = node.Arguments[0].EvaluateExpression<string>();
-					if (format == null)
+					if (format == null || FormattableStringHelper.ParseFormatItems(format) is not { } items)
+						return false;
+
+					var formatAsExpression = _buildFlags.HasFlag(BuildFlags.FormatAsExpression);
+
+					// AppendFormat renders alignment of a SQL expression format, concatenation would drop it
+					if (!formatAsExpression && items.Any(static i => i.HasAlignment))
 						return false;
 
 					var (inputArguments, startIndex) = node.Arguments switch
@@ -2671,15 +3010,13 @@ namespace LinqToDB.Internal.Linq.Builder
 					else
 						stringType = MappingSchema.GetDbDataType(typeof(string));
 
-					var formatAsExpression = _buildFlags.HasFlag(BuildFlags.FormatAsExpression);
-
 					for (var i = startIndex; i < inputArguments.Count; i++)
 					{
 						var expr = BuildSqlExpression(inputArguments[i]);
 						if (expr is not SqlPlaceholderExpression sqlPlaceholder)
 							return false;
 
-						var sql = sqlPlaceholder.Sql;
+						var sql = ReadAsTheReaderReads(inputArguments[i], sqlPlaceholder).Sql;
 
 						if (!formatAsExpression)
 						{
@@ -2773,6 +3110,10 @@ namespace LinqToDB.Internal.Linq.Builder
 				return false;
 
 			if (Builder.CanBeEvaluatedOnClient(node))
+				return false;
+
+			// A wrapped inline array of row values is a client value, as the bare one is, not a collection to eager load.
+			if (_buildPurpose is BuildPurpose.Expression && UnwrapInlineArray(node) is { NodeType: ExpressionType.NewArrayInit })
 				return false;
 
 			LogVisit(node);
@@ -3029,7 +3370,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			using var translationContext = _translationContexts.Allocate();
 
-			translationContext.Value.Init(this, BuildContext, Alias);
+			translationContext.Value.Init(this, BuildContext, Alias, node);
 
 			return Builder._memberTranslator.Translate(translationContext.Value, node, TranslationFlags.Expression) == null;
 		}
@@ -3312,7 +3653,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (translatedPredicate is SqlPlaceholderExpression placeholder)
 				{
-					predicateSql = ConvertExpressionToPredicate(placeholder.Sql);
+					predicateSql = ConvertExpressionToPredicate(ReadAsTheReaderReadsNested(predicateExpr, placeholder).Sql);
 				}
 
 				if (predicateSql is null)
@@ -3447,10 +3788,16 @@ namespace LinqToDB.Internal.Linq.Builder
 			Expression leftExpr;
 			Expression rightExpr;
 
+			var leftKeepsNull  = IsOperandOutsideDefaultDomain(node, node.Left);
+			var rightKeepsNull = IsOperandOutsideDefaultDomain(node, node.Right);
+
 			using (UsingColumnDescriptor(columnDescriptor))
 			{
-				leftExpr  = UpdateNesting(Visit(left));
-				rightExpr = UpdateNesting(Visit(right));
+				using (UsingBuildFlags(leftKeepsNull ? _buildFlags & ~BuildFlags.ValueOfProjection : _buildFlags))
+					leftExpr = UpdateNesting(Visit(left));
+
+				using (UsingBuildFlags(rightKeepsNull ? _buildFlags & ~BuildFlags.ValueOfProjection : _buildFlags))
+					rightExpr = UpdateNesting(Visit(right));
 			}
 
 			if (leftExpr is not SqlPlaceholderExpression leftPlaceholder || rightExpr is not SqlPlaceholderExpression rightPlaceholder)
@@ -3474,6 +3821,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				translated = new SqlErrorExpression(node, divergent, node.Type);
 				return true;
 			}
+
+			if (!leftKeepsNull)
+				l = ReadAsTheReaderReads(node.Left,  leftPlaceholder).Sql;
+
+			if (!rightKeepsNull)
+				r = ReadAsTheReaderReads(node.Right, rightPlaceholder).Sql;
 
 			switch (node.NodeType)
 			{
@@ -3645,6 +3998,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			using (UsingBuildContext(context ?? BuildContext))
 			using (UsingBuildPurpose(BuildPurpose.Sql))
+			using (UsingOutsideProjectionValue())
 			{
 				var result = Visit(expression);
 
@@ -3738,7 +4092,8 @@ namespace LinqToDB.Internal.Linq.Builder
 					// static Contains(this src, item) extension methods
 					case { Method: { DeclaringType: { } type, Name: nameof(Enumerable.Contains) } } when (
 						type == typeof(Enumerable) ||
-						(type == typeof(Queryable) && node.Arguments.Count == 2 && Builder.CanBeEvaluatedOnClient(node.Arguments[0]))
+						(type == typeof(Queryable) && node.Arguments.Count == 2
+							&& (Builder.CanBeEvaluatedOnClient(node.Arguments[0]) || UnwrapInlineArray(node.Arguments[0]) is { NodeType: ExpressionType.NewArrayInit }))
 					):
 						predicate = ConvertInPredicate(node.Arguments[1], node.Arguments[0]);
 						break;
@@ -3964,6 +4319,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			Expression GenerateNullComparison(Expression placeholdersExpression, bool isNot)
 			{
+				// Object comparisons compare identities, not values of the projection.
+				using var outside = UsingOutsideProjectionValue();
+
 				var condition = CollectNullCompareExpressionExpression(placeholdersExpression);
 
 				if (condition == null)
@@ -4011,6 +4369,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			Expression GeneratePathComparison(Expression leftOriginal, Expression leftParsed, Expression rightOriginal, Expression rightParsed)
 			{
+				using var outside = UsingOutsideProjectionValue();
+
 				var predicateExpr = GeneratePredicate(leftOriginal, leftParsed, rightOriginal, rightParsed);
 				if (predicateExpr == null)
 					return GetOriginalExpression();
@@ -4101,6 +4461,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			Expression GenerateConstructorComparison(SqlGenericConstructorExpression leftConstructor, SqlGenericConstructorExpression rightConstructor)
 			{
+				using var outside = UsingOutsideProjectionValue();
+
 				var strict = (leftConstructor.ConstructType, rightConstructor.ConstructType) is
 					(SqlGenericConstructorExpression.CreateType.Full, SqlGenericConstructorExpression.CreateType.Full)
 					or (SqlGenericConstructorExpression.CreateType.New, SqlGenericConstructorExpression.CreateType.New)
@@ -4202,6 +4564,10 @@ namespace LinqToDB.Internal.Linq.Builder
 				return CreatePlaceholder(searchCondition, GetOriginalExpression());
 			}
 
+			// The operands as written: once restored and collapsed, (T?)x reads as x.
+			var leftWritten  = left;
+			var rightWritten = right;
+
 			if (!RestoreCompare(ref left, ref right))
 				RestoreCompare(ref right, ref left);
 
@@ -4266,6 +4632,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				&& CombinesDivergentStorage(leftPlaceholder.Sql, rightPlaceholder.Sql, out var divergent))
 			{
 				return new SqlErrorExpression(GetOriginalExpression(), divergent, typeof(bool));
+			}
+
+			if (leftPlaceholder != null && rightPlaceholder != null && !IsNullExpression(left) && !IsNullExpression(right))
+			{
+				leftPlaceholder  = ReadAsTheReaderReads(leftWritten,  leftPlaceholder);
+				rightPlaceholder = ReadAsTheReaderReads(rightWritten, rightPlaceholder);
 			}
 
 			switch (nodeType)
@@ -5106,7 +5478,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (builtExpr is SqlPlaceholderExpression placeholder)
 			{
-				expr = placeholder.Sql;
+				expr = ReadAsTheReaderReadsNested(value, placeholder).Sql;
 			}
 			else if (SequenceHelper.UnwrapDefaultIfEmpty(builtExpr) is SqlGenericConstructorExpression constructor)
 			{
@@ -5121,6 +5493,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (expr == null)
 				return null;
+
+			// A wrapped inline array that holds row values is the same IN list as the bare one; a wrapped constant one stays a parameter.
+			if (UnwrapInlineArray(arr) is { NodeType: ExpressionType.NewArrayInit } inlineArray && !Builder.CanBeEvaluatedOnClient(arr))
+				arr = inlineArray;
 
 			using (UsingColumnDescriptor(QueryHelper.GetColumnDescriptor(expr)))
 			{
@@ -5140,7 +5516,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							if (Visit(newArr.Expressions[i]) is not SqlPlaceholderExpression exprPlaceholder)
 								return null;
 
-							exprs[i] = exprPlaceholder.Sql;
+							exprs[i] = ReadAsTheReaderReadsNested(newArr.Expressions[i], exprPlaceholder).Sql;
 						}
 
 						return new SqlPredicate.InList(expr, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false, exprs);
@@ -5420,11 +5796,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				public DbDataType  GetDbDataType(Type           type)       => _translationContext.MappingSchema.GetDbDataType(type);
 			}
 
-			public void Init(ExpressionBuildVisitor visitor, IBuildContext? currentContext, string? currentAlias)
+			public void Init(ExpressionBuildVisitor visitor, IBuildContext? currentContext, string? currentAlias, Expression member)
 			{
 				Visitor        = visitor;
 				CurrentContext = currentContext;
 				CurrentAlias   = currentAlias;
+				Member         = member;
 			}
 
 			public void Cleanup()
@@ -5432,7 +5809,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				Visitor        = default!;
 				CurrentContext = default!;
 				CurrentAlias   = default!;
+				Member         = default!;
 			}
+
+			// The member being translated, whose operands Translate is asked for.
+			Expression Member { get; set; } = default!;
 
 			public TranslationContext()
 			{
@@ -5480,7 +5861,16 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (CurrentContext == null)
 					throw new InvalidOperationException("CurrentContext not initialized");
 
-				return Builder.BuildSqlExpression(CurrentContext, expression, buildPurpose, BuildFlags.None, alias: CurrentAlias);
+				using var saveFlags = Visitor.UsingBuildFlags(IsOperandOutsideDefaultDomain(Member, expression)
+					? Visitor._buildFlags & ~BuildFlags.ValueOfProjection
+					: Visitor._buildFlags);
+
+				// A translator translating its own arguments: PreferClientCalculation must not leave them client-side.
+				var translated = Builder.BuildSqlExpression(CurrentContext, expression, buildPurpose, BuildFlags.InsideTranslation, alias: CurrentAlias);
+
+				return translated is SqlPlaceholderExpression placeholder
+					? Visitor.ReadAsTheReaderReads(expression, placeholder)
+					: translated;
 			}
 
 			public bool TranslateExpression(Expression expression, [NotNullWhen(true)] out ISqlExpression? sql, [NotNullWhen(false)] out SqlErrorExpression? error)
@@ -5683,6 +6073,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			    or UnaryExpression
 			    or BinaryExpression)
 			{
+				// A function of a set is given its values as the rows have them: NULL is how it learns that a row has none.
+				using var saveFlags = UsingBuildFlags(_buildFlags.HasFlag(BuildFlags.ValueOfProjection) && IsSetFunctionCall(memberExpression)
+					? _buildFlags & ~BuildFlags.ValueOfProjection
+					: _buildFlags);
+
 				if (context?.SelectQuery != null)
 				{
 					if (GetAlreadyTranslated(context.SelectQuery, memberExpression, out translated))
@@ -5691,7 +6086,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				using var translationContext = _translationContexts.Allocate();
 
-				translationContext.Value.Init(this, context, Alias);
+				translationContext.Value.Init(this, context, Alias, memberExpression);
 
 				translated = Builder._memberTranslator.Translate(translationContext.Value, memberExpression, GetTranslationFlags());
 
@@ -5709,6 +6104,60 @@ namespace LinqToDB.Internal.Linq.Builder
 			return false;
 		}
 
+		/// <summary>
+		/// A call that takes a sequence or a per-element lambda is a function of a set (an aggregate, a window function).
+		/// An inline array passed to a <see langword="params"/> parameter, or to a <see cref="string"/> method, is a list of
+		/// values, not a set.
+		/// </summary>
+		static bool IsSetFunctionCall(Expression expression)
+		{
+			if (expression is not MethodCallExpression call)
+				return false;
+
+			if (call.Object != null && IsSetOrLambda(call.Object))
+				return true;
+
+			ParameterInfo[]? parameters = null;
+
+			for (var i = 0; i < call.Arguments.Count; i++)
+			{
+				var argument = call.Arguments[i];
+
+				if (!IsSetOrLambda(argument))
+					continue;
+
+				if (UnwrapInlineArray(argument) != null
+					&& (call.Method.DeclaringType == typeof(string) || (parameters ??= call.Method.GetParameters())[i].IsDefined(typeof(ParamArrayAttribute), false)))
+					continue;
+
+				return true;
+			}
+
+			return false;
+
+			static bool IsSetOrLambda(Expression expression)
+			{
+				var type = expression.Type;
+
+				return typeof(Delegate).IsAssignableFrom(type)
+					|| typeof(LambdaExpression).IsAssignableFrom(type)
+					|| type != typeof(string) && typeof(IEnumerable).IsAssignableFrom(type);
+			}
+		}
+
+		// BuildArrayAggregationFunction reads an inline array through these wrappers as the same list of values. Its chain
+		// methods (Where, Select, OrderBy, Distinct) are not followed: their lambdas would be decided too. Only the BCL wrappers
+		// are the array itself: LinqExtensions.AsQueryable(IDataContext) is a query of the data context, so it keeps its own path.
+		internal static NewArrayExpression? UnwrapInlineArray(Expression expression)
+		{
+			expression = expression.UnwrapConvert();
+
+			while (expression is MethodCallExpression wrapper && wrapper.IsSameGenericMethod(Methods.Queryable.AsQueryable, Methods.Enumerable.AsEnumerable))
+				expression = wrapper.Arguments[0];
+
+			return expression as NewArrayExpression;
+		}
+
 		public SqlPlaceholderExpression MakeColumn(SelectQuery? parentQuery, SqlPlaceholderExpression sqlPlaceholder, bool asNew = false)
 		{
 			if (parentQuery == sqlPlaceholder.SelectQuery)
@@ -5721,7 +6170,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (sqlPlaceholder.SelectQuery == null)
 				throw new InvalidOperationException($"Placeholder with path '{sqlPlaceholder.Path}' and SQL '{sqlPlaceholder.Sql}' has no SelectQuery defined.");
 
-			var key = new ColumnCacheKey(sqlPlaceholder.Path, placeholderType, sqlPlaceholder.SelectQuery, parentQuery);
+			// A select list that defines the query's structure holds its columns already, and a column added to it would change
+			// what it defines: the value is read from the column there, as the option reads it.
+			var carriesDefault = CarriesDefault(sqlPlaceholder.Sql) && !DefinesStructure(sqlPlaceholder.SelectQuery);
+			var key            = new ColumnCacheKey(sqlPlaceholder.Path, placeholderType, sqlPlaceholder.SelectQuery, parentQuery, carriesDefault);
 
 			if (!asNew && _columnCache.TryGetValue(key, out var placeholder))
 			{
@@ -5770,6 +6222,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				column.RawAlias = alias;
 			}
 
+			if (carriesDefault)
+				(_decidedColumns ??= new()).Add(column);
+
 			placeholder = ExpressionBuilder.CreatePlaceholder(parentQuery, column, sqlPlaceholder.Path, sqlPlaceholder.ConvertType, alias, idx, trackingPath: sqlPlaceholder.TrackingPath);
 
 #if DEBUG
@@ -5782,27 +6237,233 @@ namespace LinqToDB.Internal.Linq.Builder
 			return placeholder;
 		}
 
+		// A value of the projection read as the reader reads it and the same path read by a predicate or a key are different
+		// columns; only a query that has made a default is searched for one.
+		bool CarriesDefault(ISqlExpression sql)
+		{
+			return _madeDefault && (_readAsDefaultVisitor ??= new(this)).CarriesDefault(sql);
+		}
+
+		// An entry built on the other side of the reader's rule serves this side too wherever the rule cannot change it: the side
+		// that reads as the reader takes an entry reaching no leaf the rule defaults, the other side an entry it changed nowhere.
+		bool TryGetBuiltAcrossTheReader(ExprCacheKey cacheKey, [NotNullWhen(true)] out Expression? translated)
+		{
+			if (!_translationCache.TryGetValue(cacheKey.WithReadsAsTheReader(!cacheKey.ReadsAsTheReader), out translated))
+				return false;
+
+			if (cacheKey.ReadsAsTheReader ? ReachesReadAsDefault(translated) : CarriesDefault(translated))
+			{
+				translated = null;
+				return false;
+			}
+
+			return true;
+		}
+
+		bool CarriesDefault(Expression expression)
+		{
+			if (!_madeDefault)
+				return false;
+
+			foreach (var placeholder in ExpressionBuilder.CollectPlaceholders(expression, true))
+			{
+				if (CarriesDefault(placeholder.Sql))
+					return true;
+			}
+
+			return false;
+		}
+
+		bool ReachesReadAsDefault(Expression expression)
+		{
+			return (_readAsDefaultVisitor ??= new(this)).ReachesReadAsDefault(ExpressionBuilder.CollectPlaceholders(expression, true));
+		}
+
+		static bool DefinesStructure(SelectQuery selectQuery)
+		{
+			return selectQuery.Select.IsDistinct || selectQuery.Select.IsDistinctOn || !selectQuery.GroupBy.IsEmpty || selectQuery.HasSetOperators;
+		}
+
 		NullabilityContext GetNullabilityContext()
 		{
 			_nullabilityContext ??= NullabilityContext.GetContext(BuildContext?.SelectQuery);
 			return _nullabilityContext;
 		}
 
-		[DebuggerDisplay("S: {SelectQuery?.SourceID}, E: {Expression}")]
-		readonly struct ColumnCacheKey
+		NullabilityContext GetNullabilityContext(SelectQuery? selectQuery)
 		{
-			public ColumnCacheKey(Expression? expression, Type resultType, SelectQuery selectQuery, SelectQuery? parentQuery)
+			return selectQuery == null || ReferenceEquals(selectQuery, BuildContext?.SelectQuery)
+				? GetNullabilityContext()
+				: NullabilityContext.GetContext(selectQuery);
+		}
+
+		// Searches cached SQL in the positions the reader's rule reads: a nested query through its projection alone, its structure
+		// being built outside the projection's scope, and a column read from a wrapper in the query that calculated it. A column
+		// made of a default is known by identity (_decidedColumns).
+		sealed class ReadAsDefaultVisitor : QueryElementVisitor
+		{
+			readonly ExpressionBuildVisitor _visitor;
+			readonly HashSet<IQueryElement> _visited = new(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
+
+			bool               _decisions;
+			NullabilityContext _nullability = null!;
+			bool               _found;
+
+			public ReadAsDefaultVisitor(ExpressionBuildVisitor visitor) : base(VisitMode.ReadOnly)
 			{
-				Expression  = expression;
-				ResultType  = resultType;
-				SelectQuery = selectQuery;
-				ParentQuery = parentQuery;
+				_visitor = visitor;
 			}
 
-			public Expression?  Expression  { get; }
-			public Type         ResultType  { get; }
-			public SelectQuery  SelectQuery { get; }
-			public SelectQuery? ParentQuery { get; }
+			public bool CarriesDefault(ISqlExpression sql)
+			{
+				_decisions = true;
+
+				try
+				{
+					Visit(sql);
+
+					return _found;
+				}
+				finally
+				{
+					Cleanup();
+				}
+			}
+
+			public bool ReachesReadAsDefault(List<SqlPlaceholderExpression> placeholders)
+			{
+				_decisions = false;
+
+				try
+				{
+					foreach (var placeholder in placeholders)
+					{
+						_nullability = _visitor.GetNullabilityContext(placeholder.SelectQuery);
+
+						Visit(placeholder.Sql);
+
+						if (_found)
+							return true;
+					}
+
+					return false;
+				}
+				finally
+				{
+					Cleanup();
+				}
+			}
+
+			public override void Cleanup()
+			{
+				_visited.Clear();
+
+				_nullability = null!;
+				_found       = false;
+
+				base.Cleanup();
+			}
+
+			[return: NotNullIfNotNull(nameof(element))]
+			public override IQueryElement? Visit(IQueryElement? element)
+			{
+				return _found ? element : base.Visit(element);
+			}
+
+			protected internal override IQueryElement VisitSqlDefaultValueExpression(SqlDefaultValueExpression element)
+			{
+				_found = _decisions;
+				return element;
+			}
+
+			protected internal override IQueryElement VisitSqlFieldReference(SqlField element)
+			{
+				_found = !_decisions && IsReadAsDefault(element);
+				return element;
+			}
+
+			protected internal override IQueryElement VisitSqlCteTableField(SqlCteTableField element)
+			{
+				_found = !_decisions && IsReadAsDefault(element);
+				return element;
+			}
+
+			protected internal override IQueryElement VisitSqlColumnReference(SqlColumn element)
+			{
+				if (_decisions)
+				{
+					_found = _visitor._decidedColumns?.Contains(element) == true;
+				}
+				else if (IsReadAsDefault(element))
+				{
+					_found = true;
+				}
+				else if (_visited.Add(element))
+				{
+					var nullability = Enter(element.Parent);
+
+					Visit(element.Expression);
+
+					_nullability = nullability;
+				}
+
+				return element;
+			}
+
+			protected internal override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
+			{
+				if (_visited.Add(selectQuery))
+				{
+					var nullability = Enter(selectQuery);
+
+					foreach (var column in selectQuery.Select.Columns)
+					{
+						Visit(column.Expression);
+
+						if (_found)
+							break;
+					}
+
+					_nullability = nullability;
+				}
+
+				return selectQuery;
+			}
+
+			// Moves the search into the query a value belongs to; returns the context to restore.
+			NullabilityContext Enter(SelectQuery? frame)
+			{
+				var nullability = _nullability;
+
+				if (!_decisions)
+					_nullability = _visitor.GetNullabilityContext(frame);
+
+				return nullability;
+			}
+
+			bool IsReadAsDefault(ISqlExpression leaf)
+			{
+				return _visitor.IsReadAsDefault(leaf, _nullability, NullabilityContext.NonQuery, out _, out _);
+			}
+		}
+
+		[DebuggerDisplay("S: {SelectQuery?.SourceID}, E: {Expression}, D: {CarriesDefault}")]
+		readonly struct ColumnCacheKey
+		{
+			public ColumnCacheKey(Expression? expression, Type resultType, SelectQuery selectQuery, SelectQuery? parentQuery, bool carriesDefault)
+			{
+				Expression     = expression;
+				ResultType     = resultType;
+				SelectQuery    = selectQuery;
+				ParentQuery    = parentQuery;
+				CarriesDefault = carriesDefault;
+			}
+
+			public Expression?  Expression     { get; }
+			public Type         ResultType     { get; }
+			public SelectQuery  SelectQuery    { get; }
+			public SelectQuery? ParentQuery    { get; }
+			public bool         CarriesDefault { get; }
 
 			private sealed class ColumnCacheKeyEqualityComparer : IEqualityComparer<ColumnCacheKey>
 			{
@@ -5811,7 +6472,8 @@ namespace LinqToDB.Internal.Linq.Builder
 					return x.ResultType == y.ResultType                                           &&
 					       ExpressionEqualityComparer.Instance.Equals(x.Expression, y.Expression) &&
 					       ReferenceEquals(x.SelectQuery, y.SelectQuery)                          &&
-					       ReferenceEquals(x.ParentQuery, y.ParentQuery);
+					       ReferenceEquals(x.ParentQuery, y.ParentQuery)                          &&
+					       x.CarriesDefault == y.CarriesDefault;
 				}
 
 				public int GetHashCode(ColumnCacheKey obj)
@@ -5820,7 +6482,8 @@ namespace LinqToDB.Internal.Linq.Builder
 						obj.ResultType,
 						ExpressionEqualityComparer.Instance.GetHashCode(obj.Expression),
 						obj.SelectQuery,
-						obj.ParentQuery
+						obj.ParentQuery,
+						obj.CarriesDefault
 					);
 				}
 			}
@@ -5828,16 +6491,17 @@ namespace LinqToDB.Internal.Linq.Builder
 			public static IEqualityComparer<ColumnCacheKey> ColumnCacheKeyComparer { get; } = new ColumnCacheKeyEqualityComparer();
 		}
 
-		[DebuggerDisplay("S: {SelectQuery?.SourceID} F: {Flags}, E: {Expression}, C: {Context}, CD: {ColumnDescriptor}")]
+		[DebuggerDisplay("S: {SelectQuery?.SourceID} F: {Flags}, E: {Expression}, C: {Context}, CD: {ColumnDescriptor}, R: {ReadsAsTheReader}")]
 		readonly struct ExprCacheKey
 		{
-			public ExprCacheKey(Expression expression, IBuildContext? context, ColumnDescriptor? columnDescriptor, SelectQuery? selectQuery, ProjectFlags flags)
+			public ExprCacheKey(Expression expression, IBuildContext? context, ColumnDescriptor? columnDescriptor, SelectQuery? selectQuery, ProjectFlags flags, bool readsAsTheReader = false)
 			{
 				Expression       = expression;
 				Context          = context;
 				ColumnDescriptor = columnDescriptor;
 				SelectQuery      = selectQuery;
 				Flags            = flags;
+				ReadsAsTheReader = readsAsTheReader;
 			}
 
 			public Expression        Expression       { get; }
@@ -5845,6 +6509,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			public ColumnDescriptor? ColumnDescriptor { get; }
 			public SelectQuery?      SelectQuery      { get; }
 			public ProjectFlags      Flags            { get; }
+			public bool              ReadsAsTheReader { get; }
+
+			public ExprCacheKey WithReadsAsTheReader(bool readsAsTheReader)
+			{
+				return new ExprCacheKey(Expression, Context, ColumnDescriptor, SelectQuery, Flags, readsAsTheReader);
+			}
 
 			sealed class ExprCacheKeyEqualityComparer : IEqualityComparer<ExprCacheKey>
 			{
@@ -5854,7 +6524,8 @@ namespace LinqToDB.Internal.Linq.Builder
 					       Equals(x.Context,          y.Context)                                  &&
 					       Equals(x.SelectQuery,      y.SelectQuery)                              &&
 					       Equals(x.ColumnDescriptor, y.ColumnDescriptor)                         &&
-					       x.Flags == y.Flags;
+					       x.Flags            == y.Flags                                          &&
+					       x.ReadsAsTheReader == y.ReadsAsTheReader;
 				}
 
 				public int GetHashCode(ExprCacheKey obj)
@@ -5864,7 +6535,8 @@ namespace LinqToDB.Internal.Linq.Builder
 						obj.Context,
 						obj.SelectQuery,
 						obj.ColumnDescriptor,
-						obj.Flags
+						obj.Flags,
+						obj.ReadsAsTheReader
 					);
 				}
 			}
