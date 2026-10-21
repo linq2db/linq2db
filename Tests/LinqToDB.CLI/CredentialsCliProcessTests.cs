@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Security.Cryptography;
 using System.Text;
 
 using LinqToDB.CommandLine.Commands.Credentials;
@@ -107,24 +108,31 @@ namespace Tests.LinqToDB.CLI
 
 		static readonly System.Threading.Lock _argumentEchoLock = new();
 
+		const string ArgumentEchoSource = "#:property PublishAot=false\nforeach (var argument in args)\n\tSystem.Console.Out.Write(\"[\" + argument + \"]\\n\");\n";
+
 		/// <summary>
-		/// Builds (once per test run; later runs reuse the build in the shared test root) a small program that prints each of
-		/// its arguments as <c>[argument]</c> on a line.
+		/// Builds (once per source text; later runs reuse the build in the shared test root) a small program that prints
+		/// each of its arguments as <c>[argument]</c> on a line. The directory is keyed by the source, so an edited source
+		/// gets a new build, and a file lock keeps test processes of other target frameworks from building it at once.
 		/// </summary>
 		static string BuildArgumentEchoProgram()
 		{
-			var directory  = Path.Combine(CredentialsCliTestSupport.Root, "argecho-v1");
+			var hash       = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(ArgumentEchoSource))).Substring(0, 16).ToLowerInvariant();
+			var directory  = Path.Combine(CredentialsCliTestSupport.Root, $"argecho-{hash}");
 			var source     = Path.Combine(directory, "argecho.cs");
 			var output     = Path.Combine(directory, "bin");
 			var executable = Path.Combine(output, OperatingSystem.IsWindows() ? "argecho.exe" : "argecho");
 
 			lock (_argumentEchoLock)
 			{
+				Directory.CreateDirectory(directory);
+
+				using var buildLock = CredentialsCliTestSupport.AcquireFileLock(Path.Combine(directory, "build.lock"));
+
 				if (File.Exists(executable))
 					return executable;
 
-				Directory.CreateDirectory(directory);
-				File.WriteAllText(source, "#:property PublishAot=false\nforeach (var argument in args)\n\tSystem.Console.Out.Write(\"[\" + argument + \"]\\n\");\n");
+				File.WriteAllText(source, ArgumentEchoSource);
 
 				var build = new ProcessStartInfo(CredentialsCliTestSupport.DotnetCommand)
 				{

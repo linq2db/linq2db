@@ -15,7 +15,8 @@ namespace Tests.LinqToDB.CLI
 	/// <summary>
 	/// The example credentials CLI (<c>secrethelper.cs</c>, run as <c>dotnet run --file secrethelper.cs -- &lt;verb&gt;</c>)
 	/// through the real client: credentials management, every command that resolves <c>credentials</c> targets (query,
-	/// execute, schema, the MCP query and execute tools), configuration parsing, and the default store on Linux and macOS.
+	/// execute, schema, the MCP query, execute and schema tools), configuration parsing, and the default store on Linux and
+	/// macOS.
 	/// </summary>
 	[TestFixture]
 	public sealed class CredentialsCliEndToEndTests : McpTestBase
@@ -435,6 +436,30 @@ namespace Tests.LinqToDB.CLI
 			var query = ReadToolResult<McpTestJsonTableResult>(await server.CallTool("linq2db_query", new JsonObject { ["sql"] = "select 1 as Value" }));
 
 			query.Rows.ShouldBe([["1"]]);
+
+			// The schema tool builds its connection options apart from the query and execute tools.
+			var schema = await server.CallTool("linq2db_schema", new JsonObject { ["detailLevel"] = "names" });
+
+			ReadResponseResult<McpTestCallToolResult>(schema).IsError.ShouldNotBe(true, ReadToolText(schema));
+		}
+
+		[Test]
+		public async Task McpServerReportsAFailingStore()
+		{
+			var helper = CredentialsCliTestSupport.WriteScript(
+				_directory,
+				"locked-helper",
+				"cat > /dev/null\nprintf 'the store is locked\\n' >&2\nexit 1\n",
+				"@echo off\r\nmore > nul\r\n1>&2 echo the store is locked\r\nexit /b 1\r\n");
+
+			await using var server = await McpServerProcess.Start(
+				"--provider", "SQLite", "--connection-string", "Data Source={0}", "--credentials", "linq2db/memory", "--credentials-cli", helper);
+
+			await server.Initialize();
+
+			var response = await server.CallTool("linq2db_query", new JsonObject { ["sql"] = "select 1 as Value" });
+
+			ReadToolErrorText(response).ShouldContain("failed with exit code 1: the store is locked");
 		}
 	}
 }

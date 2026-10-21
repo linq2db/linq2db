@@ -259,7 +259,7 @@ namespace Tests.LinqToDB.CLI
 
 			(exitCode, _, error) = await RunCli(CreateEnvironment(), "credentials", "cli", "init", "--store", "gpg");
 			exitCode.ShouldBe(-3);
-			error.ShouldContain($"'{script}' already exists. Use '--force' to replace it.");
+			error.ShouldContain($"'{script}' already exists. Use '--force' to replace it with the template; edits to it are lost.");
 			File.ReadAllText(script).ShouldBe("edited");
 
 			string output;
@@ -268,6 +268,29 @@ namespace Tests.LinqToDB.CLI
 			output.ShouldContain($"Replaced '{script}'");
 			File.ReadAllText(script).ShouldBe(CredentialsCliTemplates.Get("gpg"));
 			File.GetUnixFileMode(script).ShouldBe(Owner700);
+		}
+
+		[Test]
+		public async Task ExistingScriptIsKeptWhenRecordedInAConfiguration()
+		{
+			RequirePosix();
+
+			var script = Path.Combine(_directory, "credentials-gpg.sh");
+
+			var (exitCode, _, error) = await RunCli(CreateEnvironment(), "credentials", "cli", "init", "--store", "gpg");
+			exitCode.ShouldBe(0, error);
+
+			File.WriteAllText(script, "edited");
+
+			var environment = CreateEnvironment();
+
+			string output;
+			(exitCode, output, error) = await RunCli(environment, "credentials", "cli", "init", "--store", "gpg", "--config", "cfg.json");
+
+			exitCode.ShouldBe(0, error);
+			output.ShouldContain($"Kept the existing '{script}'");
+			File.ReadAllText(script).ShouldBe("edited");
+			RecordedValue(environment, "cfg.json").ShouldBe("@gpg");
 		}
 
 		[Test]

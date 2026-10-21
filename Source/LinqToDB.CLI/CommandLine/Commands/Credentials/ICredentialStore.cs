@@ -27,6 +27,8 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		/// <param name="error">Error message when the store failed.</param>
 		bool TryRemove(string name, out bool removed, out string? error);
 		/// <summary>Removes all linq2db credential records.</summary>
+		/// <param name="removedCount">Number of records removed, also when the store failed partway.</param>
+		/// <param name="error">Error message when the store failed.</param>
 		bool TryClear(out int removedCount, out string? error);
 	}
 }

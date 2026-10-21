@@ -349,8 +349,8 @@ you; securing the program (where it lives and who can change it) is your respons
 ## 14. The credentials command
 
 ```text
-credentials set    [--config <file> [--profile <p>] | --credentials linq2db/<name>] --user <user> [--credentials-cli "<value>"]
-credentials remove [--config <file> [--profile <p>] | --credentials linq2db/<name>]               [--credentials-cli "<value>"]
+credentials set    [--config <file> [--profile <p>]] [--credentials linq2db/<name>] --user <user> [--credentials-cli "<value>"]
+credentials remove [--config <file> [--profile <p>]] [--credentials linq2db/<name>]               [--credentials-cli "<value>"]
 credentials list   [--config <file> [--profile <p>]]                                             [--credentials-cli "<value>"]
 credentials clear  [--config <file> [--profile <p>]] [--force]                                   [--credentials-cli "<value>"]
 credentials cli init --store <keyring|gpg|vault|local> [--output <file>] [--config <file>] [--force]
@@ -362,7 +362,9 @@ credentials cli init --store <keyring|gpg|vault|local> [--output <file>] [--conf
 - `list` and `clear` work on one store; `clear` asks for confirmation unless `--force` is given.
 - Before version 6.6 `--profile` named the record (`--profile prod` meant `linq2db/prod`); use
   `--credentials linq2db/<name>` for that now. `list` printed the name without the `linq2db/` prefix in a `PROFILE`
-  column; it now prints the full record name in a `RECORD` column.
+  column; it now prints the full record name in a `RECORD` column. Every command now prints the store it uses on
+  `stderr` (`Using <store> (<source>).`), also when it succeeds; a script that treats any `stderr` output as a failure
+  (for example a pipeline step with `failOnStderr`) has to stop doing so for them.
 
 ```sh
 dotnet linq2db credentials set --credentials linq2db/project-a/production --user app_reader
@@ -407,7 +409,9 @@ dotnet linq2db credentials cli init --store local --config .agents/linq2db-query
 - `--store local`: the built-in store of section 4; `init` creates the directory and the key at once, so problems show
   up now. It never replaces an existing key.
 - The script is written to `credentials-<store>.sh` in the credentials directory unless `--output`/`-o` names another
-  path, owner-only (`0700`). An existing script is replaced only with `--force`. Whoever can replace the script receives
+  path, owner-only (`0700`). An existing script is replaced with the template, losing any edits, only with `--force`;
+  without it, `init --config` keeps the script as it is and only records it, and `init` without `--config` refuses.
+  Whoever can replace the script receives
   the passwords given to it, so an `--output` path inside a directory that every user can write to without the sticky
   bit (the script's directory, an ancestor of its real path, or a directory holding a symbolic link on the way) is refused, and a group-writable script directory gives a
   warning.

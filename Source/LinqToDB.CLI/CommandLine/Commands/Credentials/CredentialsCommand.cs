@@ -371,6 +371,10 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 
 					if (!credentialStore.TryClear(out var removedCount, out var clearError))
 					{
+						// A store that erases record by record can fail partway; say what is already gone.
+						if (removedCount > 0)
+							await environment.Error.WriteLineAsync($"Removed {removedCount.ToString(CultureInfo.InvariantCulture)} linq2db credential record(s) from {storeText} before the failure.");
+
 						await environment.Error.WriteLineAsync(clearError);
 						return StatusCodes.EXPECTED_ERROR;
 					}
@@ -626,6 +630,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 
 			string? temporaryScript = null;
 			var     replaced        = false;
+			var     kept            = false;
 
 			if (store is "local")
 			{
@@ -654,8 +659,15 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 
 				if (replaced && !force)
 				{
-					await environment.Error.WriteLineAsync($"'{scriptPath}' already exists. Use '--force' to replace it.");
-					return StatusCodes.EXPECTED_ERROR;
+					// Recording an existing script in a configuration needs no new script: keep it, with any edits.
+					if (configFile == null)
+					{
+						await environment.Error.WriteLineAsync($"'{scriptPath}' already exists. Use '--force' to replace it with the template; edits to it are lost.");
+						return StatusCodes.EXPECTED_ERROR;
+					}
+
+					kept     = true;
+					replaced = false;
 				}
 
 				string? error = null;
@@ -674,7 +686,8 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 						await environment.Error.WriteLineAsync(warning);
 				}
 
-				error ??= TryWriteTemporaryScript(scriptPath!, CredentialsCliTemplates.Get(store)!, out temporaryScript);
+				if (!kept)
+					error ??= TryWriteTemporaryScript(scriptPath!, CredentialsCliTemplates.Get(store)!, out temporaryScript);
 
 				if (error != null)
 				{
@@ -722,7 +735,11 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 					File.Delete(temporaryScript);
 			}
 
-			if (store is not "local")
+			if (kept)
+			{
+				await environment.Out.WriteLineAsync($"Kept the existing '{scriptPath}'; '--force' replaces it with the template.");
+			}
+			else if (store is not "local")
 			{
 				var keeps = store switch
 				{

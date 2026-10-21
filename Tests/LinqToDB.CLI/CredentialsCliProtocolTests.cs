@@ -420,6 +420,20 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public void ClearCountsRecordsErasedBeforeAFailure()
+		{
+			var runner = new FakeRunner()
+				.Answer(Ok + "\ntarget=linq2db/a\nusername=u\n\ntarget=linq2db/b\nusername=v\n")
+				.Answer(Ok)
+				.Fail("timed out");
+
+			Store(runner).TryClear(out var count, out var error).ShouldBeFalse();
+
+			count.ShouldBe(1);
+			error.ShouldNotBeNull();
+		}
+
+		[Test]
 		public void InvalidRecordNamesAreNeitherListedNorErased()
 		{
 			// A user name with line breaks, stored in a shared store by someone else, can forge records; a store may resolve

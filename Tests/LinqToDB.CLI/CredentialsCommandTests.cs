@@ -251,6 +251,26 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task CredentialsClearReportsPartialRemoval()
+		{
+			var environment = new TestCliEnvironment();
+			environment.Credentials.Add("linq2db/a", ("Reader", "secret"));
+			environment.Credentials.Add("linq2db/b", ("Writer", "secret"));
+			((TestCredentialStore)environment.CredentialStore).ClearFailsAfter = 1;
+
+			var (exitCode, output, error) = await RunCli(environment, "credentials", "clear", "--force");
+
+			using (Assert.EnterMultipleScope())
+			{
+				exitCode.ShouldBe(-3);
+				output.  ShouldNotContain("Removed");
+				error.   ShouldContain($"Removed 1 linq2db credential record(s) from {DefaultStoreName} before the failure.");
+				error.   ShouldContain("Cannot remove credential target 'linq2db/b'.");
+				environment.Credentials.ShouldContainKey("linq2db/b");
+			}
+		}
+
+		[Test]
 		public async Task ProfilesSelectTheirOwnStores()
 		{
 			// One configuration, two profiles, two stores: the real local store and the in-memory Windows Credential Manager

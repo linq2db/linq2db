@@ -200,7 +200,7 @@ namespace Tests.LinqToDB.CLI
 				$"@echo off\r\nset \"SECRETHELPER_FILE={storeFile}\"\r\n{DotnetCommand} run --file \"{source}\" -- %*\r\nexit /b %ERRORLEVEL%\r\n");
 		}
 
-		static FileStream AcquireFileLock(string path)
+		internal static FileStream AcquireFileLock(string path)
 		{
 			for (var attempt = 0; ; attempt++)
 			{
