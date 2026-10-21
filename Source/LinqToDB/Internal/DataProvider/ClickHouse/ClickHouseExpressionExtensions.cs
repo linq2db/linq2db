@@ -25,7 +25,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			var type = QueryHelper.GetDbDataTypeWithoutSchema(expression);
 
 			// Any DateTime64 precision is accepted, so an operand that already is one needs no conversion.
-			if (type.DataType == DataType.DateTime64)
+			if (IsDateTime64(type))
 				return expression;
 
 			// Built from the system type alone: a DbType carried over from the operand names the operand's own
@@ -34,6 +34,16 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				.WithPrecision(ClickHouseMappingSchema.DEFAULT_DATETIME64_PRECISION);
 
 			return factory.Cast(expression, resultType);
+		}
+
+		/// <summary>
+		/// Whether the server sees a <c>DateTime64</c>. A column declared through its <c>DbType</c> alone is typed
+		/// <c>DateTime64</c> by the schema default whatever ClickHouse type the <c>DbType</c> names.
+		/// </summary>
+		public static bool IsDateTime64(DbDataType type)
+		{
+			return type.DataType == DataType.DateTime64
+				&& (type.DbType == null || type.DbType.Contains("DateTime64", StringComparison.OrdinalIgnoreCase));
 		}
 
 		/// <summary>

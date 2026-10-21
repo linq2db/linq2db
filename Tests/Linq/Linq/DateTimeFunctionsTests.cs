@@ -1150,6 +1150,46 @@ namespace Tests.Linq
 			converted.ShouldBe(CoarseValue);
 		}
 
+		/// <summary>
+		/// ClickHouse columns declared through their <c>DbType</c> alone, which the mapping schema types
+		/// <c>DateTime64</c> whatever server type the <c>DbType</c> names.
+		/// </summary>
+		[Table]
+		sealed class DbTypeOnlyDateRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DbType = "DateTime")]        public DateTime Value { get; set; }
+			[Column(DbType = "DateTime('UTC')")] public DateTime Zoned { get; set; }
+		}
+
+		/// <summary>
+		/// The epoch functions and an IN list beside a sub-second literal answer over a whole-second column declared
+		/// through its <c>DbType</c> alone.
+		/// </summary>
+		[Test]
+		public void DbTypeOnlyDateTimeColumnIsCoerced([IncludeDataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new DbTypeOnlyDateRow { Id = 1, Value = CoarseValue, Zoned = CoarseValue } });
+
+			t.Select(r => Sql.AsSql(r.Value.TimeOfDay)).Single().ShouldBe(CoarseValue.TimeOfDay);
+			t.Select(r => Sql.AsSql(r.Zoned.TimeOfDay)).Single().ShouldBe(CoarseValue.TimeOfDay);
+
+			var difference = t
+				.Select(r => Sql.AsSql(Sql.DateDiff(Sql.DateParts.Millisecond, r.Value, r.Value.AddMilliseconds(226))))
+				.Single();
+
+			difference.ShouldBe(226);
+
+			var inList = t
+				.GroupBy(r => r.Id)
+				.Where(g => g.Max(r => r.Value).In(CoarseSubSecondBoundary))
+				.Count();
+
+			inList.ShouldBe(0);
+		}
+
 		[Test]
 		public void AddYears([DataSources] string context)
 		{

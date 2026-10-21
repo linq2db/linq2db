@@ -110,7 +110,8 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			var newElement = base.VisitInListPredicate(predicate);
 
 			if (newElement is SqlPredicate.InList inList
-				&& Factory.GetDbDataType(inList.Expr1).DataType is DataType.DateTime or DataType.Date or DataType.Date32
+				&& Factory.GetDbDataType(inList.Expr1) is { DataType: DataType.DateTime or DataType.Date or DataType.Date32 or DataType.DateTime64 } operandType
+				&& !ClickHouseExpressionExtensions.IsDateTime64(operandType)
 				&& (inList.Values.Exists(v => Factory.GetDbDataType(v).DataType == DataType.DateTime64)
 					|| (inList.Values is [SqlParameter] && CanCarryTime(inList.Expr1) && !QueryHelper.IsStoredColumn(inList.Expr1))))
 			{
