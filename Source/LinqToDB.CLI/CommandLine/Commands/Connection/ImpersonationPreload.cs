@@ -107,11 +107,14 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		static readonly HashSet<(Assembly, string)> _satellitesLoaded     = new();
 
 		/// <summary>
-		/// Warm-ups that ended, by connection type and a hash of the warm-up connection string (the string holds
-		/// credentials, which are not kept): a repeat has nothing left to load, so a long-lived process (the MCP server)
-		/// connects as the process account once per client and connection string, not once per request.
+		/// Warm-ups that are running or have opened their connection, by connection type and a hash of the warm-up
+		/// connection string (the string holds credentials, which are not kept). A warm-up that opened has loaded
+		/// everything connecting needs, so a long-lived process (the MCP server) connects as the process account once per
+		/// client and connection string, not once per request. Concurrent commands share a running warm-up instead of
+		/// starting their own. A warm-up that failed or hit its bound may have stopped before loading everything; it
+		/// removes itself when it ends, and the next command tries again.
 		/// </summary>
-		static readonly HashSet<(string, string)>   _warmUpsEnded         = new();
+		static readonly Dictionary<(string, string), Task> _warmUps = new();
 
 		/// <summary>
 		/// Loads everything the command described by <paramref name="settings"/> needs.
@@ -139,20 +142,28 @@ namespace LinqToDB.CommandLine.Commands.Connection
 				&& TryGetWarmUpConnectionString(connectionType, settings.ConnectionString) is { } warmUpConnectionString)
 			{
 				var key = (connectionType.FullName!, Hash(warmUpConnectionString));
-				bool ended;
+				Task? warmUp;
 
 				lock (_lock)
-					ended = _warmUpsEnded.Contains(key);
-
-				if (!ended)
 				{
-					// The warm-up runs on its own task, as the process account. If it is still running when the bound
-					// expires, the command goes on without it, and it finishes, disposing its connection, in the
-					// background; it counts as ended only then, so one that never ends is tried again.
+					if (!_warmUps.TryGetValue(key, out warmUp))
+					{
+						// The warm-up runs on its own task, as the process account, and is not tied to this command:
+						// other commands may be waiting for it too. It removes its entry under the same lock, so it
+						// cannot do that before the entry is added.
+						//
+						warmUp = Task.Run(() => WarmUpAsync(dataProvider, warmUpConnectionString, key), CancellationToken.None);
+
+						_warmUps.Add(key, warmUp);
+					}
+				}
+
+				if (!warmUp.IsCompleted)
+				{
+					// If the warm-up is still running when the bound expires, the command goes on without it, and it
+					// finishes, disposing its connection, in the background.
 					//
-					await Task.WhenAny(
-						Task.Run(() => WarmUpConnectionAsync(dataProvider, warmUpConnectionString, key, cancellationToken), CancellationToken.None),
-						Task.Delay(WarmUpTimeout, cancellationToken));
+					await Task.WhenAny(warmUp, Task.Delay(WarmUpTimeout, cancellationToken));
 
 					cancellationToken.ThrowIfCancellationRequested();
 				}
@@ -209,45 +220,50 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		}
 
 		/// <summary>
+		/// Runs the warm-up for <paramref name="key"/> and, unless it opened its connection, removes its entry, so that the
+		/// next command tries again.
+		/// </summary>
+		static async Task WarmUpAsync(IDataProvider dataProvider, string warmUpConnectionString, (string, string) key)
+		{
+			if (!await WarmUpConnectionAsync(dataProvider, warmUpConnectionString))
+			{
+				lock (_lock)
+					_warmUps.Remove(key);
+			}
+		}
+
+		/// <summary>
 		/// Opens and closes a connection with the command's client and connection string as the process account. Opening
 		/// runs the client's connection code up to where it fails or succeeds, which loads what that code needs: the
 		/// client's assemblies, native libraries (the SQL Server network interface, native SQLite, the TLS
 		/// and GSSAPI shims of the .NET runtime), configuration files, and, on failure, message resources and whatever
 		/// the client's error path loads (e.g. the runtime's native symbol reader for a stack trace of a client without
-		/// a portable PDB).
+		/// a portable PDB). Returns whether the connection opened.
 		/// </summary>
 		/// <remarks>
 		/// Failing is expected: the process account may have no access to the database. The error is not reported, so
 		/// nothing from the connection string reaches the output. The connection is never pooled, so no request can get
 		/// a connection opened as the process account: a client that pools gets its pooling keyword turned off, and a
-		/// client that pools by other means is not warmed up.
+		/// client that pools by other means is not warmed up. A warm-up that failed is tried again by the next command,
+		/// so while the process account cannot connect, every command makes one failed attempt as that account.
 		/// </remarks>
-		static async Task WarmUpConnectionAsync(IDataProvider dataProvider, string warmUpConnectionString, (string, string) key, CancellationToken cancellationToken)
+		static async Task<bool> WarmUpConnectionAsync(IDataProvider dataProvider, string warmUpConnectionString)
 		{
-			// Cancelled by the command, not by its own bound: it may have stopped before loading anything.
-			var cancelledByCommand = false;
-
-			using var registration = cancellationToken.Register(() => Volatile.Write(ref cancelledByCommand, true));
-			using var timeout      = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-
-			timeout.CancelAfter(WarmUpTimeout);
+			using var timeout = new CancellationTokenSource(WarmUpTimeout);
 
 			try
 			{
 				await using var db = new DataConnection(new DataOptions().UseConnectionString(dataProvider, warmUpConnectionString));
 
 				await db.OpenDbConnectionAsync(timeout.Token);
+
+				return true;
 			}
 			catch (Exception)
 			{
 				// Expected when the process account cannot connect; see remarks.
+				return false;
 			}
-
-			if (Volatile.Read(ref cancelledByCommand))
-				return;
-
-			lock (_lock)
-				_warmUpsEnded.Add(key);
 		}
 
 		/// <summary>

@@ -722,6 +722,177 @@ namespace Tests.LinqToDB.CLI
 			}
 		}
 
+		[TestCase(false, TestName = "WarmUpIsRetriedAfterFailure")]
+		[TestCase(true,  TestName = "WarmUpIsRetriedAfterItsBound")]
+		public async Task WarmUpIsRetriedUnlessItOpened(bool hang)
+		{
+			// A warm-up that failed or hit its bound may have stopped before loading everything connecting needs.
+			//
+			var database = CreateSqliteDatabase();
+			var provider = new FailingWarmUpProvider(hang ? "HangingWarmUpTest" : "FailingWarmUpTest", hang);
+			var previous = ImpersonationPreload.WarmUpTimeout;
+
+			DataConnection.AddDataProvider(provider);
+			ImpersonationPreload.WarmUpTimeout = TimeSpan.FromMilliseconds(300);
+
+			try
+			{
+				for (var i = 0; i < 2; i++)
+				{
+					var result = await RunCli(new TestCliEnvironment(), "query", "--provider", provider.Name, "--connection-string", $"Data Source={database};Pooling=False", "--user", "user", "--password", "secret", "--impersonate", "--sql", "select Id from Person");
+
+					result.ExitCode.ShouldBe(0, result.Error);
+
+					// A warm-up that hit its bound ends after the command stopped waiting for it; the next command starts
+					// a new one only once it has.
+					//
+					await provider.WaitForWarmUpsEnded();
+				}
+
+				provider.OpensOutsideSession.ShouldBe(2);
+			}
+			finally
+			{
+				ImpersonationPreload.WarmUpTimeout = previous;
+				File.Delete(database);
+			}
+		}
+
+		/// <summary>
+		/// SQLite provider whose connections fail to open outside an impersonation session (the warm-ups), at once or
+		/// once cancelled.
+		/// </summary>
+		sealed class FailingWarmUpProvider(string name, bool hang) : SQLiteDataProvider(name, SQLiteProvider.Microsoft)
+		{
+			int _opensOutsideSession;
+			int _warmUpsRunning;
+
+			public bool Hang { get; } = hang;
+
+			public int OpensOutsideSession => Volatile.Read(ref _opensOutsideSession);
+
+			public async Task WaitForWarmUpsEnded()
+			{
+				var stopwatch = Stopwatch.StartNew();
+
+				while (Volatile.Read(ref _warmUpsRunning) != 0 && stopwatch.Elapsed < TimeSpan.FromSeconds(30))
+					await Task.Delay(10);
+
+				// The entry is removed after the open has failed.
+				//
+				await Task.Delay(100);
+			}
+
+			protected override DbConnection CreateConnectionInternal(string connectionString)
+			{
+				return new FailingConnection(this, connectionString);
+			}
+
+			sealed class FailingConnection(FailingWarmUpProvider provider, string connectionString) : Microsoft.Data.Sqlite.SqliteConnection(connectionString)
+			{
+				public override async Task OpenAsync(CancellationToken cancellationToken)
+				{
+					if (RecordingImpersonationSession.Current != null)
+					{
+						await base.OpenAsync(cancellationToken);
+						return;
+					}
+
+					Interlocked.Increment(ref provider._opensOutsideSession);
+					Interlocked.Increment(ref provider._warmUpsRunning);
+
+					try
+					{
+						if (provider.Hang)
+							await Task.Delay(Timeout.Infinite, cancellationToken);
+
+						throw new InvalidOperationException("The warm-up cannot connect.");
+					}
+					finally
+					{
+						Interlocked.Decrement(ref provider._warmUpsRunning);
+					}
+				}
+			}
+		}
+
+		[Test]
+		public async Task ConcurrentCommandsShareOneWarmUp()
+		{
+			// Commands of a long-lived process (the MCP server) can run at once; they wait for the same warm-up instead
+			// of each connecting as the process account.
+			//
+			var database = CreateSqliteDatabase();
+			var provider = new GatedWarmUpProvider();
+
+			DataConnection.AddDataProvider(provider);
+
+			try
+			{
+				var settings = new ConnectionSettings(
+					"default", provider.Name, null, "user", "secret", $"Data Source={database};Pooling=False",
+					null, null, null, true, default, null);
+
+				// Each call runs up to its wait for the warm-up before it returns its task.
+				//
+				var first  = ImpersonationPreload.RunAsync(settings, CancellationToken.None);
+				var second = ImpersonationPreload.RunAsync(settings, CancellationToken.None);
+
+				provider.Release();
+
+				await Task.WhenAll(first, second);
+
+				// The warm-up opened: a later command has nothing left to load.
+				//
+				await ImpersonationPreload.RunAsync(settings, CancellationToken.None);
+
+				provider.OpensOutsideSession.ShouldBe(1);
+			}
+			finally
+			{
+				provider.Release();
+				File.Delete(database);
+			}
+		}
+
+		/// <summary>
+		/// SQLite provider whose connections opened outside an impersonation session (the warm-ups) wait for
+		/// <see cref="Release"/> before they open.
+		/// </summary>
+		sealed class GatedWarmUpProvider() : SQLiteDataProvider("GatedWarmUpTest", SQLiteProvider.Microsoft)
+		{
+			readonly TaskCompletionSource _release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+			int _opensOutsideSession;
+
+			public int OpensOutsideSession => Volatile.Read(ref _opensOutsideSession);
+
+			public void Release()
+			{
+				_release.TrySetResult();
+			}
+
+			protected override DbConnection CreateConnectionInternal(string connectionString)
+			{
+				return new GatedConnection(this, connectionString);
+			}
+
+			sealed class GatedConnection(GatedWarmUpProvider provider, string connectionString) : Microsoft.Data.Sqlite.SqliteConnection(connectionString)
+			{
+				public override async Task OpenAsync(CancellationToken cancellationToken)
+				{
+					if (RecordingImpersonationSession.Current == null)
+					{
+						Interlocked.Increment(ref provider._opensOutsideSession);
+
+						await provider._release.Task.WaitAsync(cancellationToken);
+					}
+
+					await base.OpenAsync(cancellationToken);
+				}
+			}
+		}
+
 		[Test]
 		public async Task WarmUpStopsWaitingAtItsBound()
 		{
