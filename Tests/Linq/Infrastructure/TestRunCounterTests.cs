@@ -1,5 +1,3 @@
-using System.Linq;
-
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using NUnit.Framework.Internal;
@@ -96,6 +94,11 @@ namespace Tests.Infrastructure
 		{
 			var root = BuildTree();
 
+			// A dispatcher without a top-level work item field at all.
+			TestRunCounter
+				.FindWorkItemFields(typeof(MainThreadWorkItemDispatcher))
+				.ShouldBeEmpty();
+
 			TestRunCounter
 				.TryResolveRootWorkItem(new MainThreadWorkItemDispatcher(), root)
 				.ShouldBeNull();
@@ -117,10 +120,8 @@ namespace Tests.Infrastructure
 			var item       = WorkItemBuilder.CreateWorkItem(root, TestFilter.Empty, recursive: true)!;
 			var dispatcher = new SimpleWorkItemDispatcher();
 
-			TestRunCounter
-				.FindWorkItemFields(typeof(SimpleWorkItemDispatcher))
-				.Single()
-				.SetValue(dispatcher, item);
+			foreach (var field in TestRunCounter.FindWorkItemFields(typeof(SimpleWorkItemDispatcher)))
+				field.SetValue(dispatcher, item);
 
 			TestRunCounter
 				.TryResolveRootWorkItem(dispatcher, root)

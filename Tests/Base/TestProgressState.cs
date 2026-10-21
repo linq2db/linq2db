@@ -247,15 +247,8 @@ namespace Tests
 				default: break;
 			}
 
-			// Total is the number of tests that run (or an upper bound of it), so completed reaching it marks the run
-			// done even if the root-suite teardown ordering surprises us.
-			if (!_done && _total > 0 && _completed >= _total)
-			{
-				_done    = true;
-				_current = null;
-				force    = true;
-			}
-
+			// Completed reaching the total does not mark the run done: fixture and assembly teardowns still run after the
+			// last test, and only MarkDone (root-suite teardown) knows they have finished.
 			Publish(force);
 		}
 
