@@ -180,7 +180,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		/// <summary>
 		/// Opens and closes a connection with the command's client and connection string as the process account. Opening
 		/// runs the client's connection code up to where it fails or succeeds, which loads what that code needs: the
-		/// client's assemblies, native libraries (the SQL Server network interface, native SQLite or DuckDB, the TLS
+		/// client's assemblies, native libraries (the SQL Server network interface, native SQLite, the TLS
 		/// and GSSAPI shims of the .NET runtime), configuration files, and, on failure, message resources and whatever
 		/// the client's error path loads (e.g. the runtime's native symbol reader for a stack trace of a client without
 		/// a portable PDB).

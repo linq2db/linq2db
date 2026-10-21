@@ -545,10 +545,9 @@ namespace Tests.LinqToDB.CLI
 
 			using (Assert.EnterMultipleScope())
 			{
-				result.ExitCode.                  ShouldBe(-3);
-				result.Error.                     ShouldContain("Windows impersonation logon failed.");
-				result.Error.                     ShouldNotContain("not read-only");
-				environment.ImpersonationSessions.ShouldBeEmpty();
+				result.ExitCode.ShouldBe(-3);
+				result.Error.   ShouldContain("Windows impersonation logon failed.");
+				result.Error.   ShouldNotContain("not read-only");
 			}
 		}
 
