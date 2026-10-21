@@ -2183,6 +2183,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		[ThrowsRequiredOuterJoins(TestProvName.AllSybase)]
 		public void NullableStructFromScalarSubquery([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
