@@ -670,6 +670,32 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public void VaultRecognisesAMissingRecordWithAPosixGrep()
+		{
+			// The script is POSIX sh: telling a missing record from a failure must not need a grep extension such as \|
+			// alternation in a basic regular expression.
+			var grep = FindOnPath("grep").ShouldNotBeNull();
+
+			WriteExecutable(Path.Combine(_bin, "grep"), $$"""
+				#!/bin/sh
+				for a in "$@"; do
+					case $a in
+						*'\|'*) echo 'grep: \| is not POSIX' >&2; exit 2 ;;
+					esac
+				done
+				exec '{{grep}}' "$@"
+				""");
+
+			var cli = CreateStore("vault");
+
+			cli.TryRead("linq2db/missing", out _, out _, out var error).ShouldBeFalse();
+			error.ShouldNotBeNull().ShouldContain("was not found by credentials CLI");
+
+			cli.TryRemove("missing", out var removed, out error).ShouldBeTrue(error);
+			removed.ShouldBeFalse();
+		}
+
+		[Test]
 		public void VaultErrorIsShownOnOneLine()
 		{
 			File.WriteAllText(Path.Combine(_state, "fail"), string.Empty);

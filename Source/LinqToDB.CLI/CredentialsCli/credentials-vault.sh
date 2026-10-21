@@ -64,7 +64,7 @@ v_put() {
 # Whether the last vault command failed because the path holds no secret ("No data found": KV version 2 keeps the
 # metadata of a deleted or destroyed latest version).
 missing() {
-	LC_ALL=C grep -q '^No value found at \|^No data found at ' "$errors"
+	LC_ALL=C grep -q -e '^No value found at ' -e '^No data found at ' "$errors"
 }
 
 # Fails when a value holds a control character: the answer is line-based, and a line break in a user name stored by
