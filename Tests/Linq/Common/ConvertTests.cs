@@ -9,6 +9,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 // ReSharper disable UnusedMember.Local
 // ReSharper disable InconsistentNaming
 
@@ -144,6 +146,24 @@ namespace Tests.Common
 				Assert.That(ConvertTo<DateTime>.From("2012-1-1"), Is.EqualTo(new DateTime(2012, 1, 1)));
 			}
 		}
+
+#if NET8_0_OR_GREATER
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6077")]
+		public void DateOnlyToDateTime()
+		{
+			ConvertTo<DateTime>
+				.From(new DateOnly(2012, 12, 12))
+				.ShouldBe(new DateTime(2012, 12, 12));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6077")]
+		public void DateOnlyToString()
+		{
+			ConvertTo<string>
+				.From(new DateOnly(2012, 12, 12))
+				.ShouldBe("2012-12-12");
+		}
+#endif
 
 		[Test]
 		public void ParseChar()
