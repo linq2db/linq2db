@@ -601,6 +601,28 @@ namespace LinqToDB.Internal.Linq.Builder
 				return false;
 			}
 
+			// A value computed from a coarse date/time or a decimal column has no stored precision or scale to match, so the
+			// value keeps its own type rather than lose its sub-second part, its time part or its decimal digits - as an IN-list
+			// value does. A stored column still lends its type, and so does a coarse value that reaches no column (a cast to a
+			// date): some servers refuse a set operation over DATE and TIMESTAMP. A decimal value is widened from the
+			// computed value's type rather than the schema default, which can be narrower than it either way.
+			DbDataType GetValueTypeBeside(SqlValue value, ISqlExpression other)
+			{
+				var otherType = QueryHelper.GetDbDataType(other, MappingSchema);
+
+				if (QueryHelper.IsCoarserDateTime(otherType, value.ValueType)
+					&& QueryHelper.GetColumnDescriptorForTyping(other) != null
+					&& !QueryHelper.IsStoredColumn(other))
+					return value.ValueType;
+
+				if (QueryHelper.IsDecimal(otherType.DataType) && QueryHelper.IsDecimal(value.ValueType.DataType)
+					&& value.Value is decimal decimalValue
+					&& !QueryHelper.IsStoredColumn(other))
+					return QueryHelper.GetDecimalTypeForValue(otherType, decimalValue);
+
+				return otherType;
+			}
+
 			bool InitializeProjections([NotNullWhen(false)] out SqlErrorExpression? error)
 			{
 				error = null;
@@ -681,11 +703,11 @@ namespace LinqToDB.Internal.Linq.Builder
 					else
 					{
 						if (ExtractValue(placeholder1, out var sqlValue1) && !ExtractValue(placeholder2, out _))
-							sqlValue1.ValueType = QueryHelper.GetDbDataType(placeholder2.Sql, MappingSchema);
+							sqlValue1.ValueType = GetValueTypeBeside(sqlValue1, placeholder2.Sql);
 						else
 						{
 							if (ExtractValue(placeholder2, out var sqlValue2) && !ExtractValue(placeholder1, out _))
-								sqlValue2.ValueType = QueryHelper.GetDbDataType(placeholder1.Sql, MappingSchema);
+								sqlValue2.ValueType = GetValueTypeBeside(sqlValue2, placeholder1.Sql);
 						}
 
 						placeholder2 = Builder.UpdateNesting(_sequence2, placeholder2);
