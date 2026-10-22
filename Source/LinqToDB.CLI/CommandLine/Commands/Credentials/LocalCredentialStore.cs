@@ -636,14 +636,14 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		}
 
 		/// <summary>
-		/// Reads a whole file while letting a writer replace it: a read can run without the lock (when no lock file exists
-		/// yet). <see cref="FileShare.Delete"/> is there for Windows, which lets a rename replace a file only when every
-		/// handle open on it shares delete access: without it a writer's <see cref="ReplaceFile"/> fails for as long as the
-		/// read holds the file, even after its retries.
+		/// Reads a whole file; a read can run without the lock (when no lock file exists yet). On Unix a writer's rename
+		/// replaces the file while it is open. On Windows the open handle makes the writer's rename fail, whatever share
+		/// mode it has (.NET renames without POSIX semantics), so the writer retries it (<see cref="ReplaceFile"/>) until
+		/// the read is done.
 		/// </summary>
-		internal static byte[] ReadAllBytesShared(string path, Action? opened)
+		static byte[] ReadAllBytesShared(string path, Action? opened)
 		{
-			using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete);
+			using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
 
 			opened?.Invoke();
 
@@ -658,7 +658,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		/// is retried a few times.
 		/// </summary>
 		/// <param name="failed">Runs after each failed attempt that is retried.</param>
-		internal static void ReplaceFile(string source, string destination, Action? failed)
+		static void ReplaceFile(string source, string destination, Action? failed)
 		{
 			for (var attempt = 1; ; attempt++)
 			{

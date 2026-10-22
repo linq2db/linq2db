@@ -48,60 +48,6 @@ namespace Tests.LinqToDB.CLI
 		string DataPath => Path.Combine(_directory, "credentials.dat");
 		string LockPath => Path.Combine(_directory, "credentials.lock");
 
-		[TestCase("credentials.dat", TestName = "DataFileCanBeReplacedWhileBeingRead")]
-		[TestCase("credentials.key", TestName = "KeyFileCanBeReplacedWhileBeingRead")]
-		public void FileCanBeReplacedWhileBeingRead(string fileName)
-		{
-			// Windows lets a rename replace a file only when every open handle shares delete access. The shared read keeps
-			// its handle open while the writer replaces the file (no timing: the replace runs inside the read), and the
-			// reader still gets the contents it opened.
-			if (!OperatingSystem.IsWindows())
-				Assert.Ignore("Windows sharing rules; Unix renames over open files.");
-
-			var (path, replacement) = CreateFileAndReplacement(fileName);
-
-			var read = LocalCredentialStore.ReadAllBytesShared(path, () => LocalCredentialStore.ReplaceFile(replacement, path, null));
-
-			read.ShouldBe("old"u8.ToArray());
-			File.ReadAllBytes(path).ShouldBe("new"u8.ToArray());
-		}
-
-		[Test]
-		public void FileOpenWithoutShareDeleteCannotBeReplaced()
-		{
-			// Why the shared read passes FileShare.Delete: a reader that shares only read access blocks the replace for as
-			// long as it holds the file, through every retry.
-			if (!OperatingSystem.IsWindows())
-				Assert.Ignore("Windows sharing rules; Unix renames over open files.");
-
-			var (path, replacement) = CreateFileAndReplacement("credentials.dat");
-			var retries             = 0;
-
-			using (new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
-			{
-				var exception = Should.Throw<Exception>(() => LocalCredentialStore.ReplaceFile(replacement, path, () => retries++));
-
-				// A sharing violation or access denied, depending on the Windows version.
-				(exception is IOException or UnauthorizedAccessException).ShouldBeTrue(exception.ToString());
-			}
-
-			retries.ShouldBe(4);
-			File.ReadAllBytes(path).ShouldBe("old"u8.ToArray());
-		}
-
-		(string Path, string Replacement) CreateFileAndReplacement(string fileName)
-		{
-			Directory.CreateDirectory(_directory);
-
-			var path        = Path.Combine(_directory, fileName);
-			var replacement = Path.Combine(_directory, fileName + ".new.tmp");
-
-			File.WriteAllBytes(path, "old"u8.ToArray());
-			File.WriteAllBytes(replacement, "new"u8.ToArray());
-
-			return (path, replacement);
-		}
-
 		[Test]
 		public void KeyReplacedWhileBeingCreatedFailsBeforeAnythingIsStored()
 		{
