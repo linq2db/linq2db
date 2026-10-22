@@ -1813,12 +1813,13 @@ namespace Tests.Linq
 		[Test]
 		public void Issue3806Test([DataSources(false)] string context)
 		{
-			// Combining runs the association query in the main query's command, so the count passes without #3806 being fixed.
-			if (combinedCommands)
-				Assert.Ignore("The command count is not #3806's subject when commands are combined.");
-
 			var queries = new SaveQueriesInterceptor();
 			using var db = GetDataContext(context);
+
+			// Combining runs the association query in the main query's command, so the count passes without #3806 being fixed.
+			if (db.UsesCombinedEagerLoading())
+				Assert.Ignore("The command count is not #3806's subject when eager loading is combined.");
+
 			db.AddInterceptor(queries);
 
 			using var table = db.CreateLocalTable<Issue3806Table>();
