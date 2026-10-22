@@ -726,35 +726,58 @@ namespace Tests.LinqToDB.CLI
 		[TestCase(true,  TestName = "WarmUpIsRetriedAfterItsBound")]
 		public async Task WarmUpIsRetriedUnlessItOpened(bool hang)
 		{
-			// A warm-up that failed or hit its bound may have stopped before loading everything connecting needs.
+			// A warm-up that failed or hit its bound may have stopped before loading everything connecting needs. It is
+			// not tried again for a while, so a process account that cannot connect does not try on every command.
 			//
-			var database = CreateSqliteDatabase();
-			var provider = new FailingWarmUpProvider(hang ? "HangingWarmUpTest" : "FailingWarmUpTest", hang);
-			var previous = ImpersonationPreload.WarmUpTimeout;
+			var database        = CreateSqliteDatabase();
+			var provider        = new FailingWarmUpProvider(hang ? "HangingWarmUpTest" : "FailingWarmUpTest", hang);
+			var clock           = new ManualTimeProvider();
+			var previousTimeout = ImpersonationPreload.WarmUpTimeout;
+			var previousClock   = ImpersonationPreload.TimeProvider;
 
 			DataConnection.AddDataProvider(provider);
 			ImpersonationPreload.WarmUpTimeout = TimeSpan.FromMilliseconds(300);
+			ImpersonationPreload.TimeProvider  = clock;
 
 			try
 			{
-				for (var i = 0; i < 2; i++)
+				var opens = new List<int>();
+
+				foreach (var advance in new[] { TimeSpan.Zero, ImpersonationPreload.RetryDelay - TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1) })
 				{
+					clock.Now += advance;
+
 					var result = await RunCli(new TestCliEnvironment(), "query", "--provider", provider.Name, "--connection-string", $"Data Source={database};Pooling=False", "--user", "user", "--password", "secret", "--impersonate", "--sql", "select Id from Person");
 
 					result.ExitCode.ShouldBe(0, result.Error);
 
-					// A warm-up that hit its bound ends after the command stopped waiting for it; the next command starts
-					// a new one only once it has ended and removed its entry.
+					// A warm-up that hit its bound ends after the command stopped waiting for it; its retry time is set
+					// only once it has ended and removed its entry.
 					//
 					await ImpersonationPreload.WhenWarmUpsEnded(FailingWarmUpProvider.ConnectionType);
+
+					opens.Add(provider.OpensOutsideSession);
 				}
 
-				provider.OpensOutsideSession.ShouldBe(2);
+				// Tried, skipped a second before the retry delay ends, tried again once it has.
+				//
+				opens.ShouldBe([1, 1, 2]);
 			}
 			finally
 			{
-				ImpersonationPreload.WarmUpTimeout = previous;
+				ImpersonationPreload.WarmUpTimeout = previousTimeout;
+				ImpersonationPreload.TimeProvider  = previousClock;
 				File.Delete(database);
+			}
+		}
+
+		sealed class ManualTimeProvider : TimeProvider
+		{
+			public DateTimeOffset Now { get; set; } = new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
+
+			public override DateTimeOffset GetUtcNow()
+			{
+				return Now;
 			}
 		}
 

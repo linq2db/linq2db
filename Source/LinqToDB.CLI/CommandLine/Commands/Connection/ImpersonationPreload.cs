@@ -44,6 +44,16 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		internal static TimeSpan WarmUpTimeout { get; set; } = TimeSpan.FromSeconds(5);
 
 		/// <summary>
+		/// How long a warm-up that failed is not tried again for the same client and connection string. While the process
+		/// account cannot connect, a long-lived process (the MCP server) then makes one failed attempt as that account per
+		/// minute, not one per request, and still retries after a transient failure.
+		/// </summary>
+		internal static TimeSpan RetryDelay { get; set; } = TimeSpan.FromMinutes(1);
+
+		/// <summary>The clock for <see cref="RetryDelay"/> (replaced by tests).</summary>
+		internal static TimeProvider TimeProvider { get; set; } = TimeProvider.System;
+
+		/// <summary>
 		/// Pooling keywords of the connection string, by connection type, for clients that pool connections.
 		/// </summary>
 		static readonly Dictionary<string, string> _poolingKeywords = new(StringComparer.Ordinal)
@@ -112,9 +122,15 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		/// everything connecting needs, so a long-lived process (the MCP server) connects as the process account once per
 		/// client and connection string, not once per request. Concurrent commands share a running warm-up instead of
 		/// starting their own. A warm-up that failed or hit its bound may have stopped before loading everything; it
-		/// removes itself when it ends, and the next command tries again.
+		/// removes itself when it ends, and a command after <see cref="RetryDelay"/> tries again.
 		/// </summary>
 		static readonly Dictionary<(string, string), Task> _warmUps = new();
+
+		/// <summary>
+		/// When warm-ups that failed may be tried again, by the key of <see cref="_warmUps"/>. Holds only failures of the
+		/// last <see cref="RetryDelay"/>: expired entries are removed when a failure is added.
+		/// </summary>
+		static readonly Dictionary<(string, string), DateTimeOffset> _retryAfter = new();
 
 		/// <summary>
 		/// Loads everything the command described by <paramref name="settings"/> needs.
@@ -146,7 +162,8 @@ namespace LinqToDB.CommandLine.Commands.Connection
 
 				lock (_lock)
 				{
-					if (!_warmUps.TryGetValue(key, out warmUp))
+					if (!_warmUps.TryGetValue(key, out warmUp)
+						&& (!_retryAfter.TryGetValue(key, out var retryAfter) || TimeProvider.GetUtcNow() >= retryAfter))
 					{
 						// The warm-up runs on its own task, as the process account, and is not tied to this command:
 						// other commands may be waiting for it too. It removes its entry under the same lock, so it
@@ -158,7 +175,9 @@ namespace LinqToDB.CommandLine.Commands.Connection
 					}
 				}
 
-				if (!warmUp.IsCompleted)
+				// No warm-up while a failed one waits for its retry: the command goes on without it.
+				//
+				if (warmUp is { IsCompleted: false })
 				{
 					// If the warm-up is still running when the bound expires, the command goes on without it, and it
 					// finishes, disposing its connection, in the background.
@@ -232,15 +251,28 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		}
 
 		/// <summary>
-		/// Runs the warm-up for <paramref name="key"/> and, unless it opened its connection, removes its entry, so that the
-		/// next command tries again.
+		/// Runs the warm-up for <paramref name="key"/> and, unless it opened its connection, removes its entry, so that a
+		/// command after <see cref="RetryDelay"/> tries again.
 		/// </summary>
 		static async Task WarmUpAsync(IDataProvider dataProvider, string warmUpConnectionString, (string, string) key)
 		{
-			if (!await WarmUpConnectionAsync(dataProvider, warmUpConnectionString))
+			var opened = await WarmUpConnectionAsync(dataProvider, warmUpConnectionString);
+
+			lock (_lock)
 			{
-				lock (_lock)
-					_warmUps.Remove(key);
+				if (opened)
+				{
+					_retryAfter.Remove(key);
+					return;
+				}
+
+				var now = TimeProvider.GetUtcNow();
+
+				foreach (var expired in _retryAfter.Where(entry => entry.Value <= now).Select(static entry => entry.Key).ToList())
+					_retryAfter.Remove(expired);
+
+				_warmUps.Remove(key);
+				_retryAfter[key] = now + RetryDelay;
 			}
 		}
 
@@ -256,8 +288,9 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		/// Failing is expected: the process account may have no access to the database. The error is not reported, so
 		/// nothing from the connection string reaches the output. The connection is never pooled, so no request can get
 		/// a connection opened as the process account: a client that pools gets its pooling keyword turned off, and a
-		/// client that pools by other means is not warmed up. A warm-up that failed is tried again by the next command,
-		/// so while the process account cannot connect, every command makes one failed attempt as that account.
+		/// client that pools by other means is not warmed up. A warm-up that failed is tried again by the first command
+		/// after <see cref="RetryDelay"/>, so while the process account cannot connect, it makes one failed attempt as that
+		/// account per <see cref="RetryDelay"/>.
 		/// </remarks>
 		static async Task<bool> WarmUpConnectionAsync(IDataProvider dataProvider, string warmUpConnectionString)
 		{
