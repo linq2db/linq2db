@@ -228,7 +228,13 @@ identity columns either, so int / long keys must be assigned by the caller. Read
 deletes work.
 
 Providers without a date/time-with-offset type — MySQL, Access, SQL CE, SQL Server 2005, Sybase, SAP HANA, Informix,
-DB2 LUW, Firebird and YDB — store `LockoutEnd` as UTC, truncated to whole seconds, and read it back at a zero offset.
+DB2 LUW and YDB — and Firebird, whose 4.0+ `TIMESTAMP WITH TIME ZONE` FirebirdClient cannot write yet
+([#5915](https://github.com/linq2db/linq2db/issues/5915)), store `LockoutEnd` as UTC, truncated to whole seconds, and
+read it back at a zero offset.
+
+Some columns are narrower than EF Core's: on **Access** the 256-character user and role name, email, phone,
+password-hash and security-stamp columns hold 255, and `ClaimValue` holds at most 2000 characters on MySQL, Oracle, Firebird, DB2, Informix (2000
+bytes), SAP HANA, Sybase and SQL CE. A longer value is rejected on insert or update.
 
 On **SAP HANA** a passkey's `Data` column holds at most 5000 characters, the widest `NVARCHAR` it binds: enough for
 the default `none` attestation, possibly not for a direct-attestation certificate chain.
@@ -275,8 +281,11 @@ The package id stays **`linq2db.Identity`** and now follows linq2db's own versio
 standalone 6.0.0, but the API is **breaking**: don't let a `6.*` range or an automated minor update pick it up
 unreviewed. Existing `AspNet*` tables keep working with **no DB migration**; tables the standalone package created
 need their names mapped or renamed — see *Database* below. Tables created by this version's `CreateTable` differ on some providers: wider claim, token and passkey
-data columns, and a `DATETIME` `LockoutEnd` on MySQL. Widening an existing table to match is optional; values that
-did not fit the old columns never could be stored. On the providers that store `LockoutEnd` as UTC (see *Provider
+data columns, and `LockoutEnd` as `DATETIME` on MySQL, `TIMESTAMP` on Firebird 4+ and `Timestamp64` on YDB. Widening
+an existing table to match is optional; values that did not fit the old columns never could be stored. An EF
+Core-created Firebird 4+ `TIMESTAMP WITH TIME ZONE` `LockoutEnd` round-trips when the session time zone is UTC; the
+server converts the written UTC value with that zone, and other session zones have not been checked. Neither has YDB
+against an EF Core-created table. On the providers that store `LockoutEnd` as UTC (see *Provider
 support*), a value an earlier version stored in server-local time reads back shifted by that offset until it is next
 written.
 
@@ -322,7 +331,7 @@ has tables named after the CLR types: `ApplicationUser`, `IdentityRole`, ``Ident
 rename those tables to the `AspNet*` names, or map the old names in a `ConfigureMappings` override:
 
 ```csharp
-public class AppDataConnection(DataOptions options) : IdentityDataConnection<ApplicationUser>(options)
+public class AppDataConnection(DataOptions options) : IdentityDataConnection<ApplicationUser, IdentityRole, string>(options)
 {
     protected override void ConfigureMappings(MappingSchema ms)
     {
