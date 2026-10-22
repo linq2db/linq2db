@@ -2159,7 +2159,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var declared = descriptor1 ?? descriptor2;
 
 			// Neither side says how it is stored, so there is no conversion for the other to be read through.
-			if (declared == null || (declared.DurationUnit == null && declared.ValueConverter == null))
+			if (declared == null || (declared.DurationUnit == null && SequenceHelper.StoredConversion(declared.ValueConverter) == null))
 				return true;
 
 			// One side is stored on terms of its own. A literal or a parameter is written through the other's
