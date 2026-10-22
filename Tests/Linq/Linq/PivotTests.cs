@@ -358,6 +358,10 @@ namespace Tests.Linq
 
 			cols = new System.Linq.Expressions.Expression<System.Func<QuarterlySales, decimal?>>[] { x => x.Q2 };
 			Regions().ShouldBe(new[] { "EU" });
+
+			// The same array, mutated in place: compared by the contents it had when the query was built.
+			cols[0] = x => x.Q3;
+			Regions().ShouldBeEmpty();
 		}
 
 		[Test]
