@@ -35,7 +35,8 @@ namespace Tests.Identity
 			(await store.GetClaimsAsync(user)).Count.ShouldBe(1);
 
 			await store.AddLoginAsync(user, new UserLoginInfo("p", "k", "P"));
-			(await store.FindByLoginAsync("p", "k")).ShouldNotBeNull();
+			var byLogin = await store.FindByLoginAsync("p", "k");
+			byLogin.ShouldNotBeNull();
 
 			(await store.DeleteAsync(user)).Succeeded.ShouldBeTrue();
 		}
@@ -53,7 +54,10 @@ namespace Tests.Identity
 			var user  = NewUser("dctx");
 
 			(await store.CreateAsync(user)).Succeeded.ShouldBeTrue();
-			(await store.FindByIdAsync(user.Id)).ShouldNotBeNull();
+
+			var found = await store.FindByIdAsync(user.Id);
+			found.ShouldNotBeNull();
+
 			(await store.DeleteAsync(user)).Succeeded.ShouldBeTrue();
 		}
 
@@ -73,10 +77,16 @@ namespace Tests.Identity
 			(await users.CreateAsync(user)).Succeeded.ShouldBeTrue();
 			(await roles.CreateAsync(role)).Succeeded.ShouldBeTrue();
 
-			(await users.FindByIdAsync(user.Id.ToString())).ShouldNotBeNull().UserName.ShouldBe("gail");
+			var found = await users.FindByIdAsync(user.Id.ToString());
+			found
+				.ShouldNotBeNull()
+				.UserName
+				.ShouldBe("gail");
 
 			await users.AddToRoleAsync(user, "GADMIN");
-			(await users.IsInRoleAsync(user, "GADMIN")).ShouldBeTrue();
+
+			var inRole = await users.IsInRoleAsync(user, "GADMIN");
+			inRole.ShouldBeTrue();
 
 			(await users.DeleteAsync(user)).Succeeded.ShouldBeTrue();
 		}
@@ -96,14 +106,19 @@ namespace Tests.Identity
 			(await users.CreateAsync(user)).Succeeded.ShouldBeTrue();
 			user.Id.ShouldBeGreaterThan(0); // DB-generated identity key read back
 
-			(await users.FindByIdAsync(user.Id.ToString())).ShouldNotBeNull().UserName.ShouldBe("ivan");
+			var found = await users.FindByIdAsync(user.Id.ToString());
+			found
+				.ShouldNotBeNull()
+				.UserName
+				.ShouldBe("ivan");
 
 			var role = new IdentityRole<int> { Name = "iadmin", NormalizedName = "IADMIN" };
 			await roles.CreateAsync(role);
 			role.Id.ShouldBeGreaterThan(0);
 
 			await users.AddToRoleAsync(user, "IADMIN");
-			(await users.IsInRoleAsync(user, "IADMIN")).ShouldBeTrue();
+			var inRole = await users.IsInRoleAsync(user, "IADMIN");
+			inRole.ShouldBeTrue();
 
 			(await users.DeleteAsync(user)).Succeeded.ShouldBeTrue();
 		}
@@ -142,10 +157,13 @@ namespace Tests.Identity
 			var created = await users.CreateAsync(new IdentityUser("di-user"), "P@ssw0rd1!");
 			created.Succeeded.ShouldBeTrue();
 
-			var found = (await users.FindByNameAsync("di-user")).ShouldNotBeNull();
+			var found = await users.FindByNameAsync("di-user");
+			found.ShouldNotBeNull();
 
 			(await users.AddToRoleAsync(found, "manager")).Succeeded.ShouldBeTrue();
-			(await users.IsInRoleAsync(found, "manager")).ShouldBeTrue();
+
+			var inRole = await users.IsInRoleAsync(found, "manager");
+			inRole.ShouldBeTrue();
 		}
 
 		// Regression for LinqToDB.Identity#21: a UserManager over an int-keyed user works end to end, and the
@@ -171,11 +189,16 @@ namespace Tests.Identity
 
 			(await users.CreateAsync(new IdentityUser<int> { UserName = "int-di" }, "P@ssw0rd1!")).Succeeded.ShouldBeTrue();
 
-			var byName = (await users.FindByNameAsync("int-di")).ShouldNotBeNull();
+			var byName = await users.FindByNameAsync("int-di");
+			byName.ShouldNotBeNull();
 			byName.Id.ShouldBeGreaterThan(0);
 
 			// UserManager.FindByIdAsync takes a string; the store converts it to the int key (issue #21).
-			(await users.FindByIdAsync(byName.Id.ToString())).ShouldNotBeNull().Id.ShouldBe(byName.Id);
+			var byId = await users.FindByIdAsync(byName.Id.ToString());
+			byId
+				.ShouldNotBeNull()
+				.Id
+				.ShouldBe(byName.Id);
 		}
 
 		// AddLinqToDBStores without an identity context: the stores fall back to the stock satellite types, and the
@@ -207,12 +230,15 @@ namespace Tests.Identity
 			else
 			{
 				sp.GetRequiredService<IUserStore<IdentityUser>>().ShouldBeOfType<UserOnlyStore<IdentityUser, DataConnection, string>>();
-				sp.GetService<IRoleStore<IdentityRole>>().ShouldBeNull();
+				var roleStore = sp.GetService<IRoleStore<IdentityRole>>();
+				roleStore.ShouldBeNull();
 			}
 
 			var users = sp.GetRequiredService<UserManager<IdentityUser>>();
 			(await users.CreateAsync(new IdentityUser("plain-di"), "P@ssw0rd1!")).Succeeded.ShouldBeTrue();
-			(await users.FindByNameAsync("plain-di")).ShouldNotBeNull();
+
+			var found = await users.FindByNameAsync("plain-di");
+			found.ShouldNotBeNull();
 		}
 
 		// The documented minimal setup has no AddRoles, so it takes the user-only path - which has to find the
@@ -242,8 +268,15 @@ namespace Tests.Identity
 				IdentityCustomizationTests.AppUserClaim, IdentityCustomizationTests.AppUserLogin, IdentityCustomizationTests.AppUserToken>>();
 
 			var users = sp.GetRequiredService<UserManager<IdentityCustomizationTests.AppUser>>();
-			(await users.CreateAsync(new IdentityCustomizationTests.AppUser { Id = Guid.NewGuid().ToString(), UserName = "solo-di", Tenant = "acme" }, "P@ssw0rd1!")).Succeeded.ShouldBeTrue();
-			(await users.FindByNameAsync("solo-di")).ShouldNotBeNull().Tenant.ShouldBe("acme");
+			var solo    = new IdentityCustomizationTests.AppUser { Id = Guid.NewGuid().ToString(), UserName = "solo-di", Tenant = "acme" };
+			var created = await users.CreateAsync(solo, "P@ssw0rd1!");
+			created.Succeeded.ShouldBeTrue();
+
+			var found = await users.FindByNameAsync("solo-di");
+			found
+				.ShouldNotBeNull()
+				.Tenant
+				.ShouldBe("acme");
 		}
 
 		// A full context registered without AddRoles takes the user-only path, and must still find the

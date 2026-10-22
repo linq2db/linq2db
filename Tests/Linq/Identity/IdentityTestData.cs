@@ -30,7 +30,9 @@ namespace Tests.Identity
 		public override void OnBeforeTest()
 		{
 			base.OnBeforeTest();
-			CustomTestContext.Get().Set(CustomTestContext.BASELINE_DISABLED, true);
+			CustomTestContext
+				.Get()
+				.Set(CustomTestContext.BASELINE_DISABLED, true);
 		}
 
 		// Creates the default string-key AspNet* schema and drops it on dispose. CreateLocalTable is

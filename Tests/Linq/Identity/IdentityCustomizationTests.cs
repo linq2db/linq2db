@@ -98,7 +98,9 @@ namespace Tests.Identity
 			// The defaults are registered against the consumer's type, so they reach its inherited members,
 			// and its own members are mapped alongside them.
 			user.Columns.Single(c => c.MemberName == nameof(AppUser.Email)).Length.ShouldBe(256);
-			user.Columns.Select(c => c.MemberName).ShouldContain(nameof(AppUser.Tenant));
+			user.Columns
+				.Select(c => c.MemberName)
+				.ShouldContain(nameof(AppUser.Tenant));
 
 			// The string-key width has to reach the generic entry points as well: unpinned, these widen to the
 			// provider default, which diverges from the EF Core schema everywhere and overruns Firebird 2.5's
@@ -131,10 +133,15 @@ namespace Tests.Identity
 
 			// every satellite below is the consumer's type, not the stock one
 			await users.AddClaimsAsync(user, [new Claim("tenant", "acme")]);
-			(await users.GetClaimsAsync(user)).Single().Type.ShouldBe("tenant");
+			var userClaims = await users.GetClaimsAsync(user);
+			userClaims
+				.Single()
+				.Type
+				.ShouldBe("tenant");
 
 			await users.AddToRoleAsync(user, "CUSTOM");
-			(await users.IsInRoleAsync(user, "CUSTOM")).ShouldBeTrue();
+			var inRole = await users.IsInRoleAsync(user, "CUSTOM");
+			inRole.ShouldBeTrue();
 
 			await users.AddLoginAsync(user, new UserLoginInfo("prov", "key", "disp"));
 			var byLogin = await users.FindByLoginAsync("prov", "key");
@@ -142,7 +149,8 @@ namespace Tests.Identity
 			byLogin.Id.ShouldBe(user.Id);
 
 			await users.SetTokenAsync(user, "prov", "tok", "value", default);
-			(await users.GetTokenAsync(user, "prov", "tok", default)).ShouldBe("value");
+			var token = await users.GetTokenAsync(user, "prov", "tok", default);
+			token.ShouldBe("value");
 
 			(await users.DeleteAsync(user)).Succeeded.ShouldBeTrue();
 		}
@@ -167,11 +175,47 @@ namespace Tests.Identity
 			await roles.AddClaimAsync(role, new Claim("perm", "all"));
 
 			// the navigations return the stock types - which the custom-model context maps to the same tables
-			(await ctx.GetTable<AppUser>().Where(u => u.Id == user.Id).SelectMany(u => u.Roles ()).Select(r => r.Name)         .ToListAsync()).ShouldBe(["nav-role"]);
-			(await ctx.GetTable<AppUser>().Where(u => u.Id == user.Id).SelectMany(u => u.Claims()).Select(c => c.ClaimValue)   .ToListAsync()).ShouldBe(["read"]);
-			(await ctx.GetTable<AppUser>().Where(u => u.Id == user.Id).SelectMany(u => u.Logins()).Select(l => l.LoginProvider).ToListAsync()).ShouldBe(["google"]);
-			(await ctx.GetTable<AppRole>().Where(r => r.Id == role.Id).SelectMany(r => r.Users ()).Select(u => u.UserName)     .ToListAsync()).ShouldBe(["nav"]);
-			(await ctx.GetTable<AppRole>().Where(r => r.Id == role.Id).SelectMany(r => r.Claims()).Select(c => c.ClaimValue)   .ToListAsync()).ShouldBe(["all"]);
+			var roleNames =
+				from u in ctx.GetTable<AppUser>()
+				where u.Id == user.Id
+				from r in u.Roles()
+				select r.Name;
+
+			var userClaimValues =
+				from u in ctx.GetTable<AppUser>()
+				where u.Id == user.Id
+				from c in u.Claims()
+				select c.ClaimValue;
+
+			var loginProviders =
+				from u in ctx.GetTable<AppUser>()
+				where u.Id == user.Id
+				from l in u.Logins()
+				select l.LoginProvider;
+
+			var userNames =
+				from r in ctx.GetTable<AppRole>()
+				where r.Id == role.Id
+				from u in r.Users()
+				select u.UserName;
+
+			var roleClaimValues =
+				from r in ctx.GetTable<AppRole>()
+				where r.Id == role.Id
+				from c in r.Claims()
+				select c.ClaimValue;
+
+			var roleNameList       = await roleNames.ToListAsync();
+			var userClaimValueList = await userClaimValues.ToListAsync();
+			var loginProviderList  = await loginProviders.ToListAsync();
+			var userNameList       = await userNames.ToListAsync();
+			var roleClaimValueList = await roleClaimValues.ToListAsync();
+
+			roleNameList      .ShouldBe(["nav-role"]);
+			userClaimValueList.ShouldBe(["read"]);
+			loginProviderList .ShouldBe(["google"]);
+			userNameList      .ShouldBe(["nav"]);
+			roleClaimValueList.ShouldBe(["all"]);
 		}
 
 		[Test]
@@ -199,7 +243,9 @@ namespace Tests.Identity
 
 			user.Name.Name.ShouldBe("AspNetUsers");
 			user.Columns.Single(c => c.MemberName == nameof(IdentityUser.Id)).Length.ShouldBe(36);
-			user.Columns.Select(c => c.MemberName).ShouldContain(nameof(AppUser.Tenant));
+			user.Columns
+				.Select(c => c.MemberName)
+				.ShouldContain(nameof(AppUser.Tenant));
 
 			ms.GetEntityDescriptor(typeof(TUserClaim)).Name.Name.ShouldBe("AspNetUserClaims");
 			ms.GetEntityDescriptor(typeof(TUserLogin)).Name.Name.ShouldBe("AspNetUserLogins");
@@ -229,21 +275,40 @@ namespace Tests.Identity
 			var user  = new AppUser { Id = Guid.NewGuid().ToString(), UserName = "solo", NormalizedUserName = "SOLO", Tenant = "acme" };
 
 			(await store.CreateAsync(user)).Succeeded.ShouldBeTrue();
-			(await store.FindByNameAsync("SOLO")).ShouldNotBeNull().Tenant.ShouldBe("acme");
+			var solo = await store.FindByNameAsync("SOLO");
+			solo
+				.ShouldNotBeNull()
+				.Tenant
+				.ShouldBe("acme");
 
 			await store.AddClaimsAsync(user, [new Claim("tenant", "acme")]);
-			(await store.GetClaimsAsync(user)).Single().Type.ShouldBe("tenant");
+			var userClaims = await store.GetClaimsAsync(user);
+			userClaims
+				.Single()
+				.Type
+				.ShouldBe("tenant");
 
 			await store.AddLoginAsync(user, new UserLoginInfo("prov", "key", "disp"));
-			(await store.FindByLoginAsync("prov", "key")).ShouldNotBeNull().Id.ShouldBe(user.Id);
+			var byLogin = await store.FindByLoginAsync("prov", "key");
+			byLogin
+				.ShouldNotBeNull()
+				.Id
+				.ShouldBe(user.Id);
 
 			await store.SetTokenAsync(user, "prov", "tok", "value", default);
-			(await store.GetTokenAsync(user, "prov", "tok", default)).ShouldBe("value");
+			var token = await store.GetTokenAsync(user, "prov", "tok", default);
+			token.ShouldBe("value");
 
 			(await store.DeleteAsync(user)).Succeeded.ShouldBeTrue();
-			ctx.GetTable<AppUserClaim>().Count(r => r.UserId == user.Id).ShouldBe(0);
-			ctx.GetTable<AppUserLogin>().Count(r => r.UserId == user.Id).ShouldBe(0);
-			ctx.GetTable<AppUserToken>().Count(r => r.UserId == user.Id).ShouldBe(0);
+			ctx.GetTable<AppUserClaim>()
+				.Count(r => r.UserId == user.Id)
+				.ShouldBe(0);
+			ctx.GetTable<AppUserLogin>()
+				.Count(r => r.UserId == user.Id)
+				.ShouldBe(0);
+			ctx.GetTable<AppUserToken>()
+				.Count(r => r.UserId == user.Id)
+				.ShouldBe(0);
 		}
 
 #if NET10_0_OR_GREATER
@@ -267,7 +332,9 @@ namespace Tests.Identity
 				passkey.Name.Name.ShouldBe("AspNetUserPasskeys");
 				passkey.Columns.Single(c => c.MemberName == nameof(AppUserPasskey.CredentialId)).Length.ShouldBe(credentialIdLength);
 				passkey.Columns.Single(c => c.MemberName == nameof(AppUserPasskey.UserId))      .Length.ShouldBe(36);
-				passkey.Columns.Select(c => c.MemberName).ShouldContain(nameof(AppUserPasskey.Device));
+				passkey.Columns
+						.Select(c => c.MemberName)
+						.ShouldContain(nameof(AppUserPasskey.Device));
 
 				// no passkey navigation exists, so the stock type is not mapped alongside the custom one
 				ms.GetEntityDescriptor(typeof(IdentityUserPasskey<string>)).Name.Name.ShouldNotBe("AspNetUserPasskeys");
@@ -291,18 +358,33 @@ namespace Tests.Identity
 			await store.AddOrUpdatePasskeyAsync(user, laptop, default);
 			await store.AddOrUpdatePasskeyAsync(user, phone,  default);
 
-			ctx.GetTable<AppUserPasskey>().Where(p => p.UserId == user.Id).Select(p => p.Device).ToList().ShouldBe(["laptop", "phone"], ignoreOrder: true);
-			(await store.FindByPasskeyIdAsync(laptop.CredentialId, default)).ShouldNotBeNull().Id.ShouldBe(user.Id);
+			ctx.GetTable<AppUserPasskey>()
+				.Where(p => p.UserId == user.Id)
+				.Select(p => p.Device)
+				.ToList()
+				.ShouldBe(["laptop", "phone"], ignoreOrder: true);
+
+			var byPasskeyId = await store.FindByPasskeyIdAsync(laptop.CredentialId, default);
+			byPasskeyId
+				.ShouldNotBeNull()
+				.Id
+				.ShouldBe(user.Id);
 
 			laptop.SignCount = 7;
 			await store.AddOrUpdatePasskeyAsync(user, laptop, default);
-			(await store.FindPasskeyAsync(user, laptop.CredentialId, default)).ShouldNotBeNull().SignCount.ShouldBe(7u);
+			var passkey = await store.FindPasskeyAsync(user, laptop.CredentialId, default);
+			passkey
+				.ShouldNotBeNull()
+				.SignCount
+				.ShouldBe(7u);
 
 			await store.RemovePasskeyAsync(user, phone.CredentialId, default);
 			(await store.GetPasskeysAsync(user, default)).Count.ShouldBe(1);
 
 			(await store.DeleteAsync(user)).Succeeded.ShouldBeTrue();
-			ctx.GetTable<AppUserPasskey>().Count(p => p.UserId == user.Id).ShouldBe(0);
+			ctx.GetTable<AppUserPasskey>()
+				.Count(p => p.UserId == user.Id)
+				.ShouldBe(0);
 
 			static UserPasskeyInfo NewPasskey(byte[] credentialId, string name)
 				=> new(credentialId, [9, 9], DateTimeOffset.UtcNow, signCount: 1, transports: ["internal"], isUserVerified: true,
@@ -373,7 +455,11 @@ namespace Tests.Identity
 			found.UserName.ShouldBe("rena");
 
 			// an independent mapping pins the physical names, which DDL and DML sharing one schema cannot
-			(await ctx.GetTable<RenamedUserRow>().Where(r => r.Id == user.Id).Select(r => r.Email).SingleAsync()).ShouldBe(user.Email);
+			var rawEmail = await ctx.GetTable<RenamedUserRow>()
+				.Where(r => r.Id == user.Id)
+				.Select(r => r.Email)
+				.SingleAsync();
+			rawEmail.ShouldBe(user.Email);
 
 			(await store.DeleteAsync(user)).Succeeded.ShouldBeTrue();
 		}

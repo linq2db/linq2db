@@ -85,8 +85,14 @@ namespace Tests.Identity
 			// Corrupt the stored ConcurrencyStamp out-of-band so the optimistic filter no longer matches. Through
 			// ctx, not the setup connection: Access does not show one connection the rows another just inserted,
 			// so the same statement there matches 0 rows and the test's premise silently evaporates.
-			await ctx.GetTable<IdentityUser>().Where(u => u.Id == user.Id).Set(u => u.ConcurrencyStamp, "stale").UpdateAsync();
-			await ctx.GetTable<IdentityRole>().Where(r => r.Id == role.Id).Set(r => r.ConcurrencyStamp, "stale").UpdateAsync();
+			await ctx.GetTable<IdentityUser>()
+				.Where(u => u.Id == user.Id)
+				.Set(u => u.ConcurrencyStamp, "stale")
+				.UpdateAsync();
+			await ctx.GetTable<IdentityRole>()
+				.Where(r => r.Id == role.Id)
+				.Set(r => r.ConcurrencyStamp, "stale")
+				.UpdateAsync();
 
 			(await users.UpdateAsync(user)).Succeeded.ShouldBeFalse();
 			(await roles.UpdateAsync(role)).Succeeded.ShouldBeFalse();
@@ -112,8 +118,14 @@ namespace Tests.Identity
 			(await users.DeleteAsync(fresh)).Succeeded.ShouldBeTrue();
 
 			// see ConcurrencyFailureOnUpdate for why this goes through ctx
-			await ctx.GetTable<IdentityUser>().Where(u => u.Id == user.Id).Set(u => u.ConcurrencyStamp, "stale").UpdateAsync();
-			await ctx.GetTable<IdentityRole>().Where(r => r.Id == role.Id).Set(r => r.ConcurrencyStamp, "stale").UpdateAsync();
+			await ctx.GetTable<IdentityUser>()
+				.Where(u => u.Id == user.Id)
+				.Set(u => u.ConcurrencyStamp, "stale")
+				.UpdateAsync();
+			await ctx.GetTable<IdentityRole>()
+				.Where(r => r.Id == role.Id)
+				.Set(r => r.ConcurrencyStamp, "stale")
+				.UpdateAsync();
 
 			(await users.DeleteAsync(user)).Succeeded.ShouldBeFalse();
 			(await roles.DeleteAsync(role)).Succeeded.ShouldBeFalse();
@@ -143,12 +155,19 @@ namespace Tests.Identity
 			var users = new UserStore<IdentityUser>(ctx);
 			var roles = new RoleStore<IdentityRole>(ctx);
 
-			(await users.FindByIdAsync(Guid.NewGuid().ToString())).ShouldBeNull();
-			(await users.FindByNameAsync("NOSUCH"))               .ShouldBeNull();
-			(await users.FindByEmailAsync("NOSUCH@TEST.COM"))     .ShouldBeNull();
-			(await users.FindByLoginAsync("p", "k"))              .ShouldBeNull();
-			(await roles.FindByIdAsync(Guid.NewGuid().ToString())).ShouldBeNull();
-			(await roles.FindByNameAsync("NOSUCH"))               .ShouldBeNull();
+			var userById    = await users.FindByIdAsync(Guid.NewGuid().ToString());
+			var userByName  = await users.FindByNameAsync("NOSUCH");
+			var userByEmail = await users.FindByEmailAsync("NOSUCH@TEST.COM");
+			var userByLogin = await users.FindByLoginAsync("p", "k");
+			var roleById    = await roles.FindByIdAsync(Guid.NewGuid().ToString());
+			var roleByName  = await roles.FindByNameAsync("NOSUCH");
+
+			userById   .ShouldBeNull();
+			userByName .ShouldBeNull();
+			userByEmail.ShouldBeNull();
+			userByLogin.ShouldBeNull();
+			roleById   .ShouldBeNull();
+			roleByName .ShouldBeNull();
 		}
 
 		[Test]
