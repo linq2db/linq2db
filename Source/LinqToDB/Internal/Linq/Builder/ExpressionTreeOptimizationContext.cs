@@ -193,7 +193,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (!CanBeEvaluated)
 					return node;
 
-				if (node.IsSameGenericMethod(Methods.LinqToDB.Select))
+				if (node.IsSameGenericMethod(Methods.LinqToDB.Select, Methods.LinqToDB.QueryBatch))
 				{
 					CanBeEvaluated = false;
 					return node;

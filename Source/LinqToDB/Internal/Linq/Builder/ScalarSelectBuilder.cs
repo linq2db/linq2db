@@ -8,20 +8,34 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
-	[BuildsMethodCall("Select")]
+	[BuildsMethodCall("Select", nameof(LinqExtensions.QueryBatch))]
 	sealed class ScalarSelectBuilder : MethodCallBuilder
 	{
 
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsSameGenericMethod(Methods.LinqToDB.Select);
+			=> call.IsSameGenericMethod(Methods.LinqToDB.Select, Methods.LinqToDB.QueryBatch);
 
 		public override bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo) => true;
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var selectQuery = buildInfo.SelectQuery;
+			var body        = methodCall.Arguments[1].UnwrapLambda().Body;
 
-			return BuildSequenceResult.FromContext(new ScalarSelectContext(builder.GetTranslationModifier(), builder, methodCall.Arguments[1].UnwrapLambda().Body, selectQuery));
+			if (buildInfo.IsSubQuery || !methodCall.IsSameGenericMethod(Methods.LinqToDB.QueryBatch))
+				return BuildSequenceResult.FromContext(new ScalarSelectContext(builder.GetTranslationModifier(), builder, body, selectQuery));
+
+			// The Default strategy is the one that combines, so it is pushed build-wide (not temporary): nested
+			// collections resolve their strategy from the builder, and a configured default or an inner With*LoadStrategy
+			// marker would otherwise split them back out of the batch.
+			builder.CombinedCommandsRequested = true;
+			builder.PushTranslationModifier(builder.GetTranslationModifier().WithEagerLoadingStrategy(EagerLoadingStrategy.Default), false);
+
+			var context = new ScalarSelectContext(builder.GetTranslationModifier(), builder, body, selectQuery);
+
+			builder.PopTranslationModifier();
+
+			return BuildSequenceResult.FromContext(context);
 		}
 
 		[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
