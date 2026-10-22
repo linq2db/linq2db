@@ -837,149 +837,131 @@ namespace Tests.Linq
 
 		#endregion
 
-		#region Issue 4773
+		#region Interface implemented through members of a base class that doesn't implement it
 
-		[Table]
-		public class Issue4773Contract
+		public interface IChildWithParent
 		{
-			[PrimaryKey] public int Id { get; set; }
+			int     ParentID { get; set; }
+			int     ChildID  { get; set; }
+			Parent? Parent   { get; set; }
 		}
 
-		public interface IIssue4773Client
+		public class ChildWithParentBase
 		{
-			int               Id         { get; set; }
-			int               ContractId { get; set; }
-			Issue4773Contract Contract   { get; set; }
+			[Column] public int ParentID { get; set; }
+			[Column] public int ChildID  { get; set; }
+
+			[Association(ThisKey = nameof(ParentID), OtherKey = nameof(Model.Parent.ParentID))]
+			public Parent? Parent { get; set; }
 		}
 
-		public class Issue4773ClientBase
+		[Table("Child")]
+		public class ChildImplementingInterfaceViaBase : ChildWithParentBase, IChildWithParent;
+
+		static IQueryable<T> FilterByParentValue<T>(IQueryable<T> source, int value)
+			where T : IChildWithParent
 		{
-			[PrimaryKey] public int Id         { get; set; }
-			[Column    ] public int ContractId { get; set; }
-
-			[Association(ThisKey = nameof(ContractId), OtherKey = nameof(Issue4773Contract.Id))]
-			public Issue4773Contract Contract { get; set; } = null!;
-		}
-
-		// the interface is implemented by the derived class only, through members of a base class that doesn't implement it
-		[Table]
-		public class Issue4773Client : Issue4773ClientBase, IIssue4773Client;
-
-		static IQueryable<TClient> Issue4773FilterByContract<TClient>(IQueryable<TClient> clients, int id)
-			where TClient : IIssue4773Client
-		{
-			return clients.Where(e => e.Contract.Id == id);
+			return source.Where(c => c.Parent!.Value1 == value);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4773")]
-		public void Issue4773_CastToInterface([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void AssociationViaBaseClass_FilterThroughInterfaceCast([DataSources] string context)
 		{
-			using var db        = GetDataContext(context);
-			using var contracts = db.CreateLocalTable(new[] { new Issue4773Contract { Id = 5 }, new Issue4773Contract { Id = 6 } });
-			using var clients   = db.CreateLocalTable(new[]
-			{
-				new Issue4773Client { Id = 1, ContractId = 5 },
-				new Issue4773Client { Id = 2, ContractId = 6 },
-			});
+			using var db = GetDataContext(context);
 
-			var source = clients as IQueryable<IIssue4773Client>;
+			var source = db.GetTable<ChildImplementingInterfaceViaBase>() as IQueryable<IChildWithParent>;
 
 			var result = source
-				.Where (e => e.Contract.Id == 5)
-				.Select(e => new { e.Id })
+				.Where (c => c.Parent!.Value1 == 1)
+				.Select(c => new { c.ParentID, c.ChildID })
 				.ToList();
 
-			result.Select(r => r.Id).ShouldBe(new[] { 1 });
+			var expected = Child
+				.Where (c => c.Parent!.Value1 == 1)
+				.Select(c => new { c.ParentID, c.ChildID });
+
+			result.ShouldBe(expected, ignoreOrder: true);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4773")]
-		public void Issue4773_GenericConstraint([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void AssociationViaBaseClass_FilterThroughGenericConstraint([DataSources] string context)
 		{
-			using var db        = GetDataContext(context);
-			using var contracts = db.CreateLocalTable(new[] { new Issue4773Contract { Id = 5 }, new Issue4773Contract { Id = 6 } });
-			using var clients   = db.CreateLocalTable(new[]
-			{
-				new Issue4773Client { Id = 1, ContractId = 5 },
-				new Issue4773Client { Id = 2, ContractId = 6 },
-			});
+			using var db = GetDataContext(context);
 
-			var result = Issue4773FilterByContract(clients, 5)
-				.Select(e => new { e.Id })
+			var result = FilterByParentValue(db.GetTable<ChildImplementingInterfaceViaBase>(), 1)
+				.Select(c => new { c.ParentID, c.ChildID })
 				.ToList();
 
-			result.Select(r => r.Id).ShouldBe(new[] { 1 });
+			var expected = Child
+				.Where (c => c.Parent!.Value1 == 1)
+				.Select(c => new { c.ParentID, c.ChildID });
+
+			result.ShouldBe(expected, ignoreOrder: true);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4773")]
-		public void Issue4773_SelectAssociation([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void AssociationViaBaseClass_ProjectThroughInterfaceCast([DataSources] string context)
 		{
-			using var db        = GetDataContext(context);
-			using var contracts = db.CreateLocalTable(new[] { new Issue4773Contract { Id = 5 }, new Issue4773Contract { Id = 6 } });
-			using var clients   = db.CreateLocalTable(new[]
-			{
-				new Issue4773Client { Id = 1, ContractId = 5 },
-				new Issue4773Client { Id = 2, ContractId = 6 },
-			});
+			using var db = GetDataContext(context);
 
-			var source = clients as IQueryable<IIssue4773Client>;
+			var source = db.GetTable<ChildImplementingInterfaceViaBase>() as IQueryable<IChildWithParent>;
 
 			var result = source
-				.OrderBy(e => e.Id)
-				.Select (e => new { e.Id, e.Contract })
-				.ToList();
+				.Select(c => new { c.ParentID, c.ChildID, c.Parent })
+				.ToList()
+				.Select(r => (r.ParentID, r.ChildID, r.Parent?.Value1));
 
-			result.Select(r => r.Contract.Id).ShouldBe(new[] { 5, 6 });
+			var expected = Child
+				.Select(c => (c.ParentID, c.ChildID, c.Parent!.Value1));
+
+			result.ShouldBe(expected, ignoreOrder: true);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4773")]
-		public void Issue4773_LoadWith([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void AssociationViaBaseClass_LoadWithThroughInterfaceCast([DataSources] string context)
 		{
-			using var db        = GetDataContext(context);
-			using var contracts = db.CreateLocalTable(new[] { new Issue4773Contract { Id = 5 }, new Issue4773Contract { Id = 6 } });
-			using var clients   = db.CreateLocalTable(new[]
-			{
-				new Issue4773Client { Id = 1, ContractId = 5 },
-				new Issue4773Client { Id = 2, ContractId = 6 },
-			});
+			using var db = GetDataContext(context);
 
-			var source = clients as IQueryable<IIssue4773Client>;
+			var source = db.GetTable<ChildImplementingInterfaceViaBase>() as IQueryable<IChildWithParent>;
 
 			var result = source
-				.LoadWith(e => e.Contract)
-				.OrderBy (e => e.Id)
-				.ToList();
+				.LoadWith(c => c.Parent)
+				.ToList()
+				.Select(c => (c.ParentID, c.ChildID, c.Parent?.ParentID));
 
-			result.Select(r => r.Contract?.Id).ShouldBe(new int?[] { 5, 6 });
+			var expected = Child
+				.Select(c => (c.ParentID, c.ChildID, (int?)c.Parent!.ParentID));
+
+			result.ShouldBe(expected, ignoreOrder: true);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4773")]
-		public void Issue4773_LoadWithFilter([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void AssociationViaBaseClass_FilteredLoadWithThroughInterfaceCast([DataSources] string context)
 		{
-			using var db        = GetDataContext(context);
-			using var contracts = db.CreateLocalTable(new[] { new Issue4773Contract { Id = 5 }, new Issue4773Contract { Id = 6 } });
-			using var clients   = db.CreateLocalTable(new[]
-			{
-				new Issue4773Client { Id = 1, ContractId = 5 },
-				new Issue4773Client { Id = 2, ContractId = 6 },
-			});
+			using var db = GetDataContext(context);
 
-			var source = clients as IQueryable<IIssue4773Client>;
+			var source = db.GetTable<ChildImplementingInterfaceViaBase>() as IQueryable<IChildWithParent>;
 
 			var result = source
-				.LoadWith(e => e.Contract, q => q.Where(c => c.Id != 5))
-				.OrderBy (e => e.Id)
-				.ToList();
+				.LoadWith(c => c.Parent, q => q.Where(p => p.Value1 == 1))
+				.ToList()
+				.Select(c => (c.ParentID, c.ChildID, c.Parent?.ParentID));
 
-			result.Select(r => r.Contract?.Id).ShouldBe(new int?[] { null, 6 });
+			var expected = Child
+				.Select(c => (c.ParentID, c.ChildID, c.Parent!.Value1 == 1 ? c.Parent.ParentID : (int?)null));
+
+			result.ShouldBe(expected, ignoreOrder: true);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4773")]
-		public void Issue4773_FindAssociationDescriptor()
+		public void AssociationViaBaseClass_FindAssociationDescriptorByInterfaceMember()
 		{
-			var ms         = new MappingSchema();
-			var descriptor = ms.GetEntityDescriptor(typeof(Issue4773Client));
+			var descriptor = new MappingSchema().GetEntityDescriptor(typeof(ChildImplementingInterfaceViaBase));
+			var member     = typeof(IChildWithParent).GetProperty(nameof(IChildWithParent.Parent))!;
 
-			descriptor.FindAssociationDescriptor(typeof(IIssue4773Client).GetProperty(nameof(IIssue4773Client.Contract))!).ShouldNotBeNull();
+			descriptor
+				.FindAssociationDescriptor(member)
+				.ShouldNotBeNull();
 		}
 
 		#endregion
