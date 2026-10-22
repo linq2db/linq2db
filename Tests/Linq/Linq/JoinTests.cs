@@ -3471,7 +3471,8 @@ namespace Tests.Linq
 
 		// Captured selectors cannot be written in query syntax.
 		[Test]
-		public void JoinWithCapturedExpressionsInCorrelatedSubquery([DataSources] string context)
+		[ThrowsRequiresCorrelatedSubquery]
+		public void JoinWithCapturedExpressionsInCorrelatedSubquery([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
