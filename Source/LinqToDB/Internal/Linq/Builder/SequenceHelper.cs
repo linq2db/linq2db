@@ -419,15 +419,15 @@ namespace LinqToDB.Internal.Linq.Builder
 					return placeholder.WithTrackingPath(toPath);
 				}
 
+				// Only what can become the value at toPath is relabelled: an outer-joined value, the branches of a
+				// conditional, either side of a coalesce and the operand of a conversion. The not-null columns that tell
+				// whether an outer-joined row was found, a conditional's test and the operands of any other operation are
+				// values of their own.
 				case SqlDefaultIfEmptyExpression defaultIfEmptyExpression:
 				{
-					var newExpr = defaultIfEmptyExpression.Update(
+					return defaultIfEmptyExpression.Update(
 						CorrectTrackingPath(builder, defaultIfEmptyExpression.InnerExpression, toPath),
-						defaultIfEmptyExpression.NotNullExpressions.Select(n => CorrectTrackingPath(builder, n, toPath))
-							.ToList().AsReadOnly()
-					);
-
-					return newExpr;
+						defaultIfEmptyExpression.NotNullExpressions);
 				}
 
 				case ConstantExpression:
@@ -436,19 +436,19 @@ namespace LinqToDB.Internal.Linq.Builder
 				case ConditionalExpression conditional:
 				{
 					return conditional.Update(
-						CorrectTrackingPath(builder, conditional.Test, toPath),
+						conditional.Test,
 						CorrectTrackingPath(builder, conditional.IfTrue, toPath),
 						CorrectTrackingPath(builder, conditional.IfFalse, toPath));
 				}
 
-				case BinaryExpression binary:
+				case BinaryExpression { NodeType: ExpressionType.Coalesce } coalesce:
 				{
-					return binary.Update(CorrectTrackingPath(builder, binary.Left, toPath), binary.Conversion, CorrectTrackingPath(builder, binary.Right, toPath));
+					return coalesce.Update(CorrectTrackingPath(builder, coalesce.Left, toPath), coalesce.Conversion, CorrectTrackingPath(builder, coalesce.Right, toPath));
 				}
 
-				case UnaryExpression unary:
+				case UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked or ExpressionType.TypeAs } conversion:
 				{
-					return unary.Update(CorrectTrackingPath(builder, unary.Operand, ConvertBack(toPath, unary)));
+					return conversion.Update(CorrectTrackingPath(builder, conversion.Operand, ConvertBack(toPath, conversion)));
 				}
 
 				/*
@@ -476,10 +476,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var from = conversion.Operand.Type;
 			var to   = conversion.Type;
 
-			var widens = conversion.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked or ExpressionType.TypeAs
-				&& path.Type == to
-				&& to != from
-				&& to.IsAssignableFrom(from);
+			var widens = path.Type == to && to != from && to.IsAssignableFrom(from);
 
 			return widens ? EnsureType(path, from) : path;
 		}
