@@ -2,102 +2,35 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Dynamic;
 using System.Globalization;
-using System.Linq.Expressions;
-
-using JetBrains.Annotations;
 
 using LinqToDB.Internal.Common;
-using LinqToDB.Internal.Extensions;
 using LinqToDB.Mapping;
 
 namespace LinqToDB
 {
 	/// <summary>
-	/// The cells of a dynamic pivot, in both of its roles. While the query is built it collects cell templates -
-	/// each an aggregate over the source rows carrying one pivoted value, crossed with every pivoted value to
-	/// produce one generated column per (template, value) pair. Once the query has run, the same type carries
-	/// those generated cells, addressed by the name each was given.
+	/// The cells of one group of a pivot, as <see cref="PivotBuilder{TSource,TFor}.AsDictionary"/> and
+	/// <see cref="PivotBuilder{TSource,TFor}.AsDynamic"/> return them, addressed by the name each was given.
 	/// </summary>
-	/// <typeparam name="TSource">Source record type.</typeparam>
-	/// <typeparam name="TFor">Type of the pivoted (<c>FOR</c>) column.</typeparam>
 	/// <remarks>
-	/// It is handed to the cell lambda of the <see cref="LinqExtensions"/> <c>Pivot</c> overloads, by which point
-	/// both type arguments are already inferred from the query - so a pivot over a join projected into an anonymous
-	/// type works, where naming <typeparamref name="TSource"/> would be impossible. A result type that cannot name
-	/// it either can declare the member as <see cref="IReadOnlyDictionary{TKey,TValue}"/> instead. That view follows
-	/// the dictionary contract: its indexer throws <see cref="KeyNotFoundException"/> for a name no cell carries,
-	/// where <c>cells[name]</c> on this type returns <see langword="null"/>.
+	/// A result type can declare the member as <see cref="IReadOnlyDictionary{TKey,TValue}"/>. That view follows the
+	/// dictionary contract: its indexer throws <see cref="KeyNotFoundException"/> for a name no cell carries, where
+	/// <c>cells[name]</c> on this type returns <see langword="null"/>. Read as <see langword="dynamic"/>, a name no cell
+	/// carries throws the runtime binder's exception. In a query, a cell is a column:
+	/// <c>Sql.Property&lt;decimal?&gt;(row.Cells, "Y2010")</c> filters or orders on it.
 	/// </remarks>
 	[SuppressMessage("Naming", "CA1710:Identifiers should have correct suffix", Justification = "named for its pivot role; the dictionary view is secondary")]
-	public sealed class PivotCells<TSource, TFor> : IReadOnlyDictionary<string, object?>
+	public sealed class PivotCells : DynamicObject, IReadOnlyDictionary<string, object?>
 	{
-		internal sealed class Template
-		{
-			public Template(LambdaExpression aggregate, bool liftResult, Func<TFor, string>? name)
-			{
-				Aggregate  = aggregate;
-				LiftResult = liftResult;
-				Name       = name;
-			}
-
-			// Func<IEnumerable<TSource>, TCell>, applied to the rows matching one pivoted value.
-			public LambdaExpression    Aggregate  { get; }
-			public bool                LiftResult { get; }
-			public Func<TFor, string>? Name       { get; }
-		}
-
-		internal static readonly PivotCells<TSource, TFor> Empty = new();
-
-		readonly Template[] _templates;
-
 		internal PivotCells()
 		{
-			_templates = [];
-		}
-
-		PivotCells(Template[] templates)
-		{
-			_templates = templates;
-		}
-
-		internal Template[] Templates => _templates;
-
-		/// <summary>
-		/// Adds a cell computed by an aggregate over the source rows carrying the pivoted value - <c>SUM</c>,
-		/// <c>MAX</c>, a distinct count, or anything else the provider can translate over a grouping. A cell no row
-		/// matches reads what the aggregate yields over no rows: <see langword="null"/> rather than
-		/// <c>default(TCell)</c> for <c>SUM</c>, <c>MIN</c>, <c>MAX</c> and <c>AVG</c>, but <c>0</c> for a count.
-		/// </summary>
-		/// <typeparam name="TCell">Aggregate result type.</typeparam>
-		/// <param name="aggregate">Aggregate over the matching rows.</param>
-		/// <param name="name">
-		/// Names the generated column for a pivoted value; defaults to the value's invariant string form. Required
-		/// when a pivot declares more than one cell. Written in a sub-query, the factory's own state takes part in the
-		/// query cache key: every value it reads is evaluated when the query is built and again at each cache lookup,
-		/// whether or not the factory reaches it, and a captured delegate or object counts as unchanged while it is the
-		/// same instance, so replace it rather than mutating it.
-		/// </param>
-		/// <returns>The cell set with <paramref name="aggregate"/> added.</returns>
-		[Pure]
-		public PivotCells<TSource, TFor> Cell<TCell>(Expression<Func<IEnumerable<TSource>, TCell>> aggregate, Func<TFor, string>? name = null)
-		{
-			ArgumentNullException.ThrowIfNull(aggregate);
-
-			var templates = new Template[_templates.Length + 1];
-
-			Array.Copy(_templates, templates, _templates.Length);
-
-			// A cell no row matches must read null rather than default(TCell), which is what a non-nullable
-			// result type would otherwise materialize.
-			templates[_templates.Length] = new Template(aggregate, !typeof(TCell).IsNullableOrReferenceType, name);
-
-			return new PivotCells<TSource, TFor>(templates);
 		}
 
 		IDictionary<string, object?>? _values;
 
-		/// <summary>The generated cells, keyed by the name each pivoted value was given; empty when there are none.</summary>
+		/// <summary>The cells, keyed by the name each pivoted value was given; empty when there are none.</summary>
 		[DynamicColumnsStore]
 		public IDictionary<string, object?> Store
 		{
@@ -113,6 +46,21 @@ namespace LinqToDB
 		/// <typeparam name="T">Expected cell type.</typeparam>
 		/// <param name="name">Cell name.</param>
 		public T? Get<T>(string name) => this[name] is T value ? value : default;
+
+		#region DynamicObject
+
+		/// <inheritdoc/>
+		public override bool TryGetMember(GetMemberBinder binder, out object? result)
+		{
+			ArgumentNullException.ThrowIfNull(binder);
+
+			return Store.TryGetValue(binder.Name, out result);
+		}
+
+		/// <inheritdoc/>
+		public override IEnumerable<string> GetDynamicMemberNames() => Store.Keys;
+
+		#endregion
 
 		#region IReadOnlyDictionary
 

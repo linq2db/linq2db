@@ -191,14 +191,14 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				var genericArgs = methodCall.Method.GetGenericArguments();
 
-				var columns = new List<LambdaExpression> { (LambdaExpression)PivotSugarBuilder.ReadArgument(builder, methodCall.Arguments[3])! };
-				columns.AddRange((IEnumerable<LambdaExpression>)PivotSugarBuilder.ReadArgument(builder, methodCall.Arguments[4])!);
+				var columns = new List<LambdaExpression> { (LambdaExpression)BuildTimeArgumentReader.ReadArgument(builder, methodCall.Arguments[3])! };
+				columns.AddRange((IEnumerable<LambdaExpression>)BuildTimeArgumentReader.ReadArgument(builder, methodCall.Arguments[4])!);
 
 				return new UnpivotInfo
 				{
 					Source         = methodCall.Arguments[0],
-					IncludeNulls   = (UnpivotNulls)PivotSugarBuilder.ReadArgument(builder, methodCall.Arguments[1])! == UnpivotNulls.IncludeNulls,
-					ResultSelector = (LambdaExpression)PivotSugarBuilder.ReadArgument(builder, methodCall.Arguments[2])!,
+					IncludeNulls   = (UnpivotNulls)BuildTimeArgumentReader.ReadArgument(builder, methodCall.Arguments[1])! == UnpivotNulls.IncludeNulls,
+					ResultSelector = (LambdaExpression)BuildTimeArgumentReader.ReadArgument(builder, methodCall.Arguments[2])!,
 					Columns        = columns,
 					SourceType     = genericArgs[0],
 					ValueType      = genericArgs[1],

@@ -209,11 +209,31 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			unpivoted.ShouldBe(ctx.Products.Count(p => p.UnitsInStock != null) + ctx.Products.Count(p => p.UnitsOnOrder != null));
 
-			var pivoted = ctx.Products
-				.Pivot(p => p.SupplierId, p => p.Discontinued, new[] { false, true }, (g, c) => new { g.Key, Cells = c.Cell(rows => rows.Count()) })
+			var pivotQuery = ctx.Products
+				.GroupBy(p => p.SupplierId)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(p => p.Discontinued, new[] { false, true })
+						.Cell(rows => rows.Count())
+						.AsDictionary(),
+				});
+
+			// The pivot lives inside a projection EF executes itself, so linq2db has to take the query over.
+			var pivoted = pivotQuery
+				.ToLinqToDB()
 				.ToArray();
 
 			pivoted.Length.ShouldBe(ctx.Products.Select(p => p.SupplierId).Distinct().Count());
+			pivoted.ShouldAllBe(r => r.Cells.Store.Count == 2);
+
+			Action withoutLinqToDB = () => pivotQuery.ToArray();
+
+			withoutLinqToDB
+				.ShouldThrow<InvalidOperationException>()
+				.Message
+				.ShouldContain(nameof(LinqExtensions.Pivot));
 		}
 
 		[Test]
