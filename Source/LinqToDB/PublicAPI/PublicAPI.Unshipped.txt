@@ -170,8 +170,8 @@ LinqToDB.Internal.SqlProvider.SqlStepKind.NonQuery = 0 -> LinqToDB.Internal.SqlP
 LinqToDB.Internal.SqlProvider.SqlStepKind.Reader = 2 -> LinqToDB.Internal.SqlProvider.SqlStepKind
 LinqToDB.Internal.SqlProvider.SqlStepKind.Scalar = 1 -> LinqToDB.Internal.SqlProvider.SqlStepKind
 LinqToDB.Internal.SqlProvider.SqlStepKind.SelfExecuting = 3 -> LinqToDB.Internal.SqlProvider.SqlStepKind
-LinqToDB.Internal.SqlQuery.QueryElementType.SqlFragmentStatement = 90 -> LinqToDB.Internal.SqlQuery.QueryElementType
-LinqToDB.Internal.SqlQuery.QueryElementType.SqlObjectNameExpression = 89 -> LinqToDB.Internal.SqlQuery.QueryElementType
+LinqToDB.Internal.SqlQuery.QueryElementType.SqlFragmentStatement = 91 -> LinqToDB.Internal.SqlQuery.QueryElementType
+LinqToDB.Internal.SqlQuery.QueryElementType.SqlObjectNameExpression = 90 -> LinqToDB.Internal.SqlQuery.QueryElementType
 LinqToDB.Internal.SqlQuery.QueryType.Fragment = 10 -> LinqToDB.Internal.SqlQuery.QueryType
 LinqToDB.Internal.SqlQuery.SqlFragmentStatement
 LinqToDB.Internal.SqlQuery.SqlFragmentStatement.Expression.get -> LinqToDB.Internal.SqlQuery.ISqlExpression!
