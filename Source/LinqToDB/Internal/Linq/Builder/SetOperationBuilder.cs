@@ -684,7 +684,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				foreach (var (placeholder, path) in placeholders1)
 				{
 					var placeholderPath = new SqlPathExpression(path, placeholder.Type);
-					var alias           = GenerateColumnAlias(placeholderPath);
+					var alias           = GenerateColumnAlias(placeholderPath) ?? AliasHint(placeholder);
 
 					var placeholder1 = placeholder;
 
@@ -743,7 +743,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						placeholder2 = (SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder2, _sequence2.SelectQuery);
 
 						var placeholderPath = new SqlPathExpression(mappedPath, placeholder2.Type);
-						var alias           = GenerateColumnAlias(placeholderPath);
+						var alias           = GenerateColumnAlias(placeholderPath) ?? AliasHint(placeholder2);
 
 						placeholder2 = placeholder2.WithAlias(alias);
 
@@ -820,6 +820,20 @@ namespace LinqToDB.Internal.Linq.Builder
 				});
 
 				return result;
+			}
+
+			// A column named by its tracking path or its source keeps that name; a computed one without (a predicate that
+			// feeds a member) keeps the name it was given for that member.
+			static string? AliasHint(SqlPlaceholderExpression placeholder)
+			{
+				if (placeholder.TrackingPath is MemberExpression)
+					return null;
+
+				var sql = placeholder.Sql;
+				while (sql is SqlColumn column)
+					sql = column.Expression;
+
+				return sql is SqlField ? null : placeholder.Alias;
 			}
 
 			static string? GenerateColumnAlias(Expression expr)

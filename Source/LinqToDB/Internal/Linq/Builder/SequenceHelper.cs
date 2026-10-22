@@ -425,7 +425,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					return defaultIfEmptyExpression.Update(
 						CorrectTrackingPath(builder, defaultIfEmptyExpression.InnerExpression, toPath),
-						defaultIfEmptyExpression.NotNullExpressions);
+						defaultIfEmptyExpression.NotNullExpressions.Select(n => NameAfterPath(n, toPath)).ToList().AsReadOnly());
 				}
 
 				case ConstantExpression:
@@ -434,7 +434,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				case ConditionalExpression conditional:
 				{
 					return conditional.Update(
-						conditional.Test,
+						NameAfterPath(conditional.Test, toPath),
 						CorrectTrackingPath(builder, conditional.IfTrue, toPath),
 						CorrectTrackingPath(builder, conditional.IfFalse, toPath));
 				}
@@ -449,6 +449,9 @@ namespace LinqToDB.Internal.Linq.Builder
 					return conversion.Update(CorrectTrackingPath(builder, conversion.Operand, ConvertBack(toPath, conversion)));
 				}
 
+				case BinaryExpression or UnaryExpression:
+					return NameAfterPath(expression, toPath);
+
 				/*
 				if (expression is MemberExpression eme && eme.Expression is ContextRefExpression && toPath is MemberExpression && expression.Type == toPath.Type)
 					return toPath;
@@ -459,6 +462,21 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			return expression;
+		}
+
+		/// <summary>
+		/// Names the columns of a value that only feeds the one at <paramref name="toPath"/> (a conditional's test, an operand)
+		/// after the member at <paramref name="toPath"/>, when they have no name of their own. Their tracking paths are left alone.
+		/// </summary>
+		static Expression NameAfterPath(Expression expression, Expression toPath)
+		{
+			if (toPath.UnwrapConvert() is not MemberExpression { Member.Name: var name })
+				return expression;
+
+			return expression.Transform(name, static (name, e) =>
+				e is SqlPlaceholderExpression { TrackingPath: not MemberExpression, Path: not MemberExpression } placeholder && string.IsNullOrEmpty(placeholder.Alias)
+					? placeholder.WithAlias(name)
+					: e);
 		}
 
 		/// <summary>
