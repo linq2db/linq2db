@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 
+using LinqToDB.Internal.Common;
+
 namespace LinqToDB.Internal.Linq
 {
 	/// <summary>
@@ -42,7 +44,7 @@ namespace LinqToDB.Internal.Linq
 			var hash = _values.Length;
 
 			foreach (var value in _values)
-				hash = unchecked(hash * 397 + ValueHashCode(value));
+				hash = hash * 397 + ValueHashCode(value);
 
 			return hash;
 		}
@@ -54,6 +56,13 @@ namespace LinqToDB.Internal.Linq
 
 			if (value1 == null || value2 == null)
 				return false;
+
+			// a raw SQL argument is read back from the argument array as its build-time type, a collection included
+			if (value1.GetType() != value2.GetType())
+				return false;
+
+			if (value1 is FormattableString fs1 && value2 is FormattableString fs2)
+				return FormattableStringHelper.AreEqual(fs1, fs2, ValuesEqual);
 
 			if (value1 is not string and IEnumerable list1 && value2 is not string and IEnumerable list2)
 			{
@@ -76,12 +85,15 @@ namespace LinqToDB.Internal.Linq
 
 		static int ValueHashCode(object? value)
 		{
+			if (value is FormattableString fs)
+				return FormattableStringHelper.ComputeHashCode(fs, ValueHashCode);
+
 			if (value is not string and IEnumerable list)
 			{
 				var hash = 17;
 
 				foreach (var item in list)
-					hash = unchecked(hash * 397 + ValueHashCode(item));
+					hash = hash * 397 + ValueHashCode(item);
 
 				return hash;
 			}

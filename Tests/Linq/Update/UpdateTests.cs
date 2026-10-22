@@ -1958,6 +1958,27 @@ namespace Tests.xUpdate
 			}
 		}
 
+		sealed class AlignedSetData
+		{
+			[Column]              public int     Id    { get; set; }
+			[Column(Length = 50)] public string? Value { get; set; }
+		}
+
+		[Test]
+		public void TestSetValueExprWithAlignment([IncludeDataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new AlignedSetData { Id = 1, Value = "T1" } });
+
+			var str = "zz";
+
+			table
+				.Set(x => $"{x.Value,30} = {str}")
+				.Update();
+
+			table.Single().Value.ShouldBe(str);
+		}
+
 		[Test]
 		public void TestSetValueExpr2(
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context, [Values("zz", "yy")] string str)

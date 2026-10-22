@@ -19,7 +19,10 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			return call is { IsQueryable: true, Arguments: [var a0, _] }
 				// Contains over constant works through ConvertPredicate
-				&& !builder.CanBeEvaluatedOnClient(a0);
+				&& !builder.CanBeEvaluatedOnClient(a0)
+				// An inline array, bare or wrapped, is an IN list or a client calculation, as the span overload C# 14 binds on .NET 8+ is:
+				// as a VALUES table its items would escape the missed-row default and Access could not select them.
+				&& ExpressionBuildVisitor.UnwrapInlineArray(a0)?.NodeType != ExpressionType.NewArrayInit;
 		}
 
 		public static bool CanBuildAsyncMethod(MethodCallExpression call, ExpressionBuilder builder)
@@ -104,12 +107,28 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			SqlPlaceholderExpression? _cachedPlaceholder;
+			Expression?               _testExpression;
+			SqlPlaceholderExpression? _testPlaceholder;
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
 				var placeholder = TryCreatePlaceholder();
 				if (placeholder == null)
 					return path;
+
+				// The membership is built with the sequence; a projection that calculates with it reads the tested value as the
+				// reader reads it.
+				if (_testExpression != null && _testPlaceholder != null)
+				{
+					var tested = Builder.ReadAsTheReaderReads(_testExpression, _testPlaceholder);
+
+					if (!ReferenceEquals(tested, _testPlaceholder))
+					{
+						var predicate = new SqlPredicate.InSubQuery(tested.Sql, false, InnerSequence.SelectQuery, false);
+
+						return ExpressionBuilder.CreatePlaceholder(placeholder.SelectQuery, new SqlSearchCondition(false, canBeUnknown: null, predicate), _methodCall, convertType: typeof(bool));
+					}
+				}
 
 				return placeholder;
 			}
@@ -119,6 +138,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				var result = new ContainsContext(TranslationModifier, null, _methodCall, context.CloneElement(OuterQuery), context.CloneContext(InnerSequence));
 				if (_cachedPlaceholder != null)
 					result._cachedPlaceholder = context.CloneExpression(_cachedPlaceholder);
+				if (_testPlaceholder != null)
+				{
+					result._testExpression  = _testExpression;
+					result._testPlaceholder = context.CloneExpression(_testPlaceholder);
+				}
+
 				return result;
 			}
 
@@ -215,6 +240,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					var testPlaceholder = testPlaceholders[0];
 					testPlaceholder = Builder.UpdateNesting(placeholderContext, testPlaceholder);
+
+					_testExpression  = expr;
+					_testPlaceholder = testPlaceholder;
 
 					var inExpr = testPlaceholder.Sql;
 

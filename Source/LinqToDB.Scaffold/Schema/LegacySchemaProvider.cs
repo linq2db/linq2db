@@ -257,12 +257,12 @@ namespace LinqToDB.Schema
 			}
 
 			// https://github.com/linq2db/linq2db/issues/1897
-			if (_isSqlServer && !proc.IsFunction && _options.EnableSqlServerReturnValue)
+			if (_isSqlServer && !proc.IsFunction && _options.EnableSqlServerReturnValue && result is VoidResult)
 			{
 				// https://docs.microsoft.com/en-us/sql/t-sql/language-elements/return-transact-sql
 				var type            = new DatabaseType("INT", 0, 0, 0);
 				_typeMappings[type] = new TypeMapping(WellKnownTypes.System.Int32, DataType.Int32);
-				parameters.Add(new Parameter("@return", null, type, false, ParameterDirection.Output));
+				result              = new ScalarResult("@return", type, false);
 			}
 
 			return (parameters, result);
