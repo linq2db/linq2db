@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 using LinqToDB;
 using LinqToDB.Expressions;
@@ -299,30 +300,17 @@ namespace LinqToDB.Internal.Linq.Builder
 					List<SqlGenericConstructorExpression.Assignment>? assignments = null;
 					List<SqlGenericConstructorExpression.Parameter>?  parameters  = null;
 
-					var contextRef = toPath as ContextRefExpression;
-
 					for (int i = 0; i < generic.Assignments.Count; i++)
 					{
 						var assignment = generic.Assignments[i];
 
-						var currentPath = toPath;
-
-						var applicable = true;
-						if (assignment.MemberInfo.DeclaringType != null)
-						{
-							applicable = assignment.MemberInfo.DeclaringType.IsAssignableFrom(currentPath.Type);
-							if (applicable)
-								currentPath = EnsureType(currentPath, assignment.MemberInfo.DeclaringType);
-						}
-
-						if (!applicable)
+						if (assignment.MemberInfo.DeclaringType?.IsAssignableFrom(toPath.Type) == false)
 						{
 							assignments?.Add(assignment);
 							continue;
 						}
 
-						var memberTrackingPath = Expression.MakeMemberAccess(currentPath, assignment.MemberInfo);
-						var newExpression = CorrectTrackingPath(builder, assignment.Expression, memberTrackingPath);
+						var newExpression = CorrectTrackingPath(builder, assignment.Expression, MemberPath(toPath, assignment.MemberInfo));
 
 						if (!ReferenceEquals(assignment.Expression, newExpression))
 						{
@@ -349,13 +337,11 @@ namespace LinqToDB.Internal.Linq.Builder
 					for (var i = 0; i < generic.Parameters.Count; i++)
 					{
 						var parameter     = generic.Parameters[i];
-						var currentPath   = toPath;
 						var newExpression = parameter.Expression;
 
 						if (parameter.MemberInfo != null)
 						{
-							var memberTrackingPath = Expression.MakeMemberAccess(currentPath, parameter.MemberInfo);
-							newExpression = CorrectTrackingPath(builder, parameter.Expression, memberTrackingPath);
+							newExpression = CorrectTrackingPath(builder, parameter.Expression, MemberPath(toPath, parameter.MemberInfo));
 						}
 
 						if (!ReferenceEquals(parameter.Expression, newExpression))
@@ -471,7 +457,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// A conversion that widens the operand, to <c>T?</c>, a base class or an interface, is read back with a cast to
 		/// the operand's type. Any other conversion leaves the path as it is.
 		/// </remarks>
-		static Expression ConvertBack(Expression path, UnaryExpression conversion)
+		internal static Expression ConvertBack(Expression path, UnaryExpression conversion)
 		{
 			var from = conversion.Operand.Type;
 			var to   = conversion.Type;
@@ -479,6 +465,22 @@ namespace LinqToDB.Internal.Linq.Builder
 			var widens = path.Type == to && to != from && to.IsAssignableFrom(from);
 
 			return widens ? EnsureType(path, from) : path;
+		}
+
+		/// <summary>
+		/// The tracking path of <paramref name="member"/> of the value at <paramref name="path"/>.
+		/// </summary>
+		/// <remarks>
+		/// The member is read through a path of the type that declares it, so it gets one path however the value was
+		/// typed on the way: a member declared on <c>Base</c> reads as <c>Ref&lt;Base&gt;.M</c> from
+		/// <c>Ref&lt;Derived&gt;</c> too. Tracking paths are matched as keys, by a CTE's recursive fields among others.
+		/// </remarks>
+		internal static MemberExpression MemberPath(Expression path, MemberInfo member)
+		{
+			if (member.DeclaringType != null)
+				path = EnsureType(path, member.DeclaringType);
+
+			return Expression.MakeMemberAccess(path, member);
 		}
 
 		public static Expression ReplacePlaceholdersPathByTrackingPath(Expression expression)

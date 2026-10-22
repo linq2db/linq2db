@@ -2531,6 +2531,62 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void NullableStructFromCte([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var cte = db.Parent
+				.Select(p => new { p.ParentID, Info = (ParentPoint?)new ParentPoint(p.ParentID, p.Value1) })
+				.AsCte();
+
+			var result = cte.Select(m => new { m.ParentID, A = m.Info }).ToList();
+
+			var expected = Parent
+				.Select(p => new { p.ParentID, A = (ParentPoint?)new ParentPoint(p.ParentID, p.Value1) })
+				.ToList();
+
+			AreEqual(expected, result);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void InterfaceFromCte([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var cte = db.Parent
+				.Select(p => new { p.ParentID, Info = (IHasId)new IdRecord(p.ParentID, p.Value1) })
+				.AsCte();
+
+			var result = cte.Where(m => m.Info.Id > 2).Select(m => new { m.ParentID, A = m.Info }).ToList();
+
+			var expected = Parent
+				.Where(p => p.ParentID > 2)
+				.Select(p => new { p.ParentID, A = (IHasId)new IdRecord(p.ParentID, p.Value1) })
+				.ToList();
+
+			AreEqual(expected, result);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void TypeAsInterfaceFromCte([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var cte = db.Parent
+				.Select(p => new { p.ParentID, Info = new IdRecord(p.ParentID, p.Value1) as IHasId })
+				.AsCte();
+
+			var result = cte.Where(m => m.Info!.Id > 2).Select(m => new { m.ParentID, A = m.Info }).ToList();
+
+			var expected = Parent
+				.Where(p => p.ParentID > 2)
+				.Select(p => new { p.ParentID, A = new IdRecord(p.ParentID, p.Value1) as IHasId })
+				.ToList();
+
+			AreEqual(expected, result);
+		}
 		#endregion
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3181")]
