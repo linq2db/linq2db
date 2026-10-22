@@ -2858,6 +2858,16 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 
 					break;
+
+				case ExpressionType.ArrayLength:
+				{
+					if (HandleValue(node, out var translatedValue))
+					{
+						return Visit(translatedValue);
+					}
+
+					break;
+				}
 			}
 
 			return base.VisitUnary(node);
