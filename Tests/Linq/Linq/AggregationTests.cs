@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 
 using LinqToDB;
@@ -63,6 +64,19 @@ namespace Tests.Linq
 				new() { Id = 5, ItemId = 2, ValueName = "Value5", Value = null },   // null value
 				new() { Id = 6, ItemId = 3, ValueName = "Value6", Value = "100" },
 			};
+		}
+
+		// Unmapped element type, as in the reported shape: a Count sent to SQL has no column to materialise it from.
+		sealed class Payload;
+
+		sealed class PayloadCollection : Collection<Payload>;
+
+		[Table]
+		sealed class CountTarget
+		{
+			[PrimaryKey] public int Id         { get; set; }
+			[Column]     public int EmptyCount { get; set; }
+			[Column]     public int ItemsCount { get; set; }
 		}
 
 		#endregion
@@ -234,6 +248,53 @@ namespace Tests.Linq
 
 			db.LastQuery!.ShouldNotContain("AVG(");
 			rows.ShouldBeEmpty();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5557")]
+		public void ClosureCollectionCountInInsertSetter([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<CountTarget>();
+
+			var empty = new PayloadCollection();
+			var items = new PayloadCollection { new Payload(), new Payload() };
+
+			table.Insert(() => new CountTarget
+			{
+				Id         = 1,
+				EmptyCount = empty.Count,
+				ItemsCount = items.Count,
+			});
+
+			LastQuery!.ShouldNotContain("COUNT(", Case.Insensitive);
+
+			var record = table.Single();
+
+			record.EmptyCount.ShouldBe(0);
+			record.ItemsCount.ShouldBe(2);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5557")]
+		public void ClosureCollectionCountInWhere([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[]
+			{
+				new CountTarget { Id = 1, EmptyCount = 0, ItemsCount = 2 },
+				new CountTarget { Id = 2, EmptyCount = 1, ItemsCount = 2 },
+			});
+
+			var empty = new PayloadCollection();
+			var items = new PayloadCollection { new Payload(), new Payload() };
+
+			var ids = table
+				.Where(t => t.ItemsCount == items.Count && t.EmptyCount == empty.Count)
+				.Select(t => t.Id)
+				.ToArray();
+
+			LastQuery!.ShouldNotContain("COUNT(", Case.Insensitive);
+
+			ids.ShouldBe(new[] { 1 });
 		}
 
 		// MIN/MAX over a boolean is folded to 1/0 and the function retyped, because MAX(bit) / max(boolean) is
