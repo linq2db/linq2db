@@ -248,8 +248,8 @@ namespace LinqToDB.Internal.Linq.Builder
 							break;
 
 						var mexpr         = (MemberExpression)expression;
-						var member        = lastMember = mexpr.Member;
-						var isAssociation = builder.IsAssociation(expression, out _);
+						lastMember        = mexpr.Member;
+						var isAssociation = builder.IsAssociation(expression, out var associationMember);
 
 						if (!isAssociation)
 						{
@@ -260,7 +260,8 @@ namespace LinqToDB.Internal.Linq.Builder
 							break;
 						}
 
-						members.Add(member);
+						// store the realized member: an interface member doesn't match the mapped association member
+						members.Add(associationMember!);
 
 						expression = mexpr.Expression!;
 
