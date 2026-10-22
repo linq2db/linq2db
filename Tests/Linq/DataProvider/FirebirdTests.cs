@@ -1227,6 +1227,42 @@ namespace Tests.DataProvider
 
 			Assert.That(tb.Where(s => s.LastModified.Date == TestData.DateTime.Date).Count(), Is.EqualTo(1));
 		}
+
+		sealed class QuoteLiteralTable
+		{
+			[Column] public int     Id  { get; set; }
+			[Column] public char    Ch  { get; set; }
+			[Column] public string? Str { get; set; }
+
+			public static readonly QuoteLiteralTable[] Data =
+			[
+				new() { Id = 1, Ch = '\'', Str = "'" },
+				new() { Id = 2, Ch = 'a',  Str = "a" },
+			];
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6101")]
+		public void TestQuoteInCharAndStringLiterals([IncludeDataSources(false, TestProvName.AllFirebird)] string context, [Values] bool inline)
+		{
+			using var db = new TestDataConnection(context);
+			using var t  = db.CreateLocalTable(QuoteLiteralTable.Data);
+			db.InlineParameters = inline;
+
+			var ch  = '\'';
+			var str = "'";
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(t.Where(r => r.Ch == '\'').Select(r => r.Id).ToArray(), Is.EqualTo(new[] { 1 }));
+				Assert.That(db.LastQuery!, Does.Contain("= ''''"));
+
+				Assert.That(t.Where(r => r.Ch == ch).Select(r => r.Id).ToArray(), Is.EqualTo(new[] { 1 }));
+				Assert.That(db.LastQuery!, Does.Contain(inline ? "= ''''" : "@"));
+
+				Assert.That(t.Where(r => r.Str == str).Select(r => r.Id).ToArray(), Is.EqualTo(new[] { 1 }));
+				Assert.That(db.LastQuery!, Does.Contain(inline ? "= ''''" : "@"));
+			}
+		}
 	}
 
 	#region Extensions
