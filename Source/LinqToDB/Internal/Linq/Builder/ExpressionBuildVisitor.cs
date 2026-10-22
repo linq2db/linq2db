@@ -1053,6 +1053,18 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		protected override Expression VisitMemberInit(MemberInitExpression node)
 		{
+			if (HasDynamicColumnBinding(node))
+			{
+				// Construction would otherwise drop the dynamic assignments silently.
+				if (MappingSchema.GetEntityDescriptor(node.Type).DynamicColumnSetter == null)
+					throw new LinqToDBException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_NoDynamicColumnsStore, node.Type.Name));
+
+				// A dynamic column has no real setter, so the raw MemberInit compiles to invalid IL; the generic
+				// constructor writes it through the type's dynamic-columns store.
+				if (_buildPurpose is BuildPurpose.Expression)
+					return Visit(new SqlGenericConstructorExpression(node).WithMappingSchema(MappingSchema));
+			}
+
 			if (_buildPurpose is BuildPurpose.Sql)
 			{
 				if (HandleValue(node, out var translated))
@@ -1082,6 +1094,17 @@ namespace LinqToDB.Internal.Linq.Builder
 				return Visit(newExpression);
 
 			return newExpression;
+		}
+
+		static bool HasDynamicColumnBinding(MemberInitExpression node)
+		{
+			foreach (var binding in node.Bindings)
+			{
+				if (binding.Member.IsDynamicColumnProperty)
+					return true;
+			}
+
+			return false;
 		}
 
 		protected override Expression VisitSwitch(SwitchExpression node)

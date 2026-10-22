@@ -1,17 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.Json;
 
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.DataProvider.Firebird;
+using LinqToDB.Expressions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Mapping;
 using LinqToDB.Mapping;
 using LinqToDB.Metadata;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -383,6 +389,134 @@ namespace Tests.Linq
 				Assert.That(result[0].Sum, Is.EqualTo(10));
 			}
 		}
+
+		#region Projection binding a DynamicColumnInfo
+
+		static Expression<Func<IGrouping<string, Person>, TResult>> GroupProjection<TResult>(Func<ParameterExpression, Expression> body)
+		{
+			var g = Expression.Parameter(typeof(IGrouping<string, Person>), "g");
+
+			return Expression.Lambda<Func<IGrouping<string, Person>, TResult>>(body(g), g);
+		}
+
+		// new TStore { [Name] = g.Key, [Count] = g.Count() }, each binding a dynamic column
+		static MemberInitExpression StoreInit<TStore>(ParameterExpression g, bool withCells = true)
+		{
+			Expression<Func<IGrouping<string, Person>, string>> name  = x => x.Key;
+			Expression<Func<IGrouping<string, Person>, int>>    count = x => x.Count();
+
+			return Expression.MemberInit(
+				Expression.New(typeof(TStore)),
+				withCells
+					? new MemberBinding[]
+					{
+						Expression.Bind(new DynamicColumnInfo(typeof(TStore), typeof(string), "Name"),  name.GetBody(g)),
+						Expression.Bind(new DynamicColumnInfo(typeof(TStore), typeof(int),    "Count"), count.GetBody(g)),
+					}
+					: Array.Empty<MemberBinding>());
+		}
+
+		static (string Name, int Count) ReadStore(PersonWithDynamicStore store)
+			=> ((string)store.ExtendedProperties["Name"], (int)store.ExtendedProperties["Count"]);
+
+		List<(string Name, int Count)> ExpectedNameCounts()
+			=> Person.GroupBy(p => p.FirstName).Select(g => (g.Key, g.Count())).OrderBy(r => r.Key, StringComparer.Ordinal).ToList();
+
+		[Test]
+		public void ProjectionBindingDynamicColumnsMaterializesIntoTheStore([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var result = db.Person
+				.GroupBy(p => p.FirstName)
+				.Select(GroupProjection<PersonWithDynamicStore>(g => StoreInit<PersonWithDynamicStore>(g)))
+				.ToList()
+				.Select(ReadStore)
+				.OrderBy(r => r.Name, StringComparer.Ordinal)
+				.ToList();
+
+			result.ShouldBe(ExpectedNameCounts());
+		}
+
+		[Test]
+		public void ProjectionBindingDynamicColumnsAsAConstructorArgument([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var constructor = typeof(KeyValuePair<string, PersonWithDynamicStore>).GetConstructor([typeof(string), typeof(PersonWithDynamicStore)])!;
+
+			var result = db.Person
+				.GroupBy(p => p.FirstName)
+				.Select(GroupProjection<KeyValuePair<string, PersonWithDynamicStore>>(g => Expression.New(constructor, Expression.Property(g, nameof(IGrouping<,>.Key)), StoreInit<PersonWithDynamicStore>(g))))
+				.ToList();
+
+			result.ShouldAllBe(r => r.Key == (string)r.Value.ExtendedProperties["Name"]);
+			result.Select(r => ReadStore(r.Value)).OrderBy(r => r.Name, StringComparer.Ordinal).ToList().ShouldBe(ExpectedNameCounts());
+		}
+
+		[Test]
+		public void ProjectionBindingDynamicColumnsWithoutAStoreThrows([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.GroupBy(p => p.FirstName)
+				.Select(GroupProjection<PersonWithoutDynamicStore>(g => StoreInit<PersonWithoutDynamicStore>(g)));
+
+			Action act = () => query.ToList();
+
+			act.ShouldThrow<LinqToDBException>()
+				.Message.ShouldBe(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_NoDynamicColumnsStore, nameof(PersonWithoutDynamicStore)));
+		}
+
+		[Test]
+		public void ProjectionWithoutDynamicBindingsCreatesAStorePerRow([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var result = db.Person
+				.GroupBy(p => p.FirstName)
+				.Select(GroupProjection<PersonWithDynamicStore>(g => StoreInit<PersonWithDynamicStore>(g, withCells: false)))
+				.ToList();
+
+			result.Count.ShouldBe(ExpectedNameCounts().Count);
+			new HashSet<PersonWithDynamicStore>(result).Count.ShouldBe(result.Count);
+		}
+
+		[Test]
+		public void ProjectionBindingDynamicColumnsUnderConcat([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var projection = GroupProjection<PersonWithDynamicStore>(g => StoreInit<PersonWithDynamicStore>(g));
+
+			var result = db.Person.GroupBy(p => p.FirstName).Select(projection)
+				.Concat(db.Person.GroupBy(p => p.FirstName).Select(projection))
+				.ToList()
+				.Select(ReadStore)
+				.OrderBy(r => r.Name, StringComparer.Ordinal)
+				.ToList();
+
+			result.ShouldBe(ExpectedNameCounts().SelectMany(r => new[] { r, r }));
+		}
+
+		[Test]
+		public void ProjectionBindingDynamicColumnsComposes([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var result = db.Person
+				.GroupBy(p => p.FirstName)
+				.Select(GroupProjection<PersonWithDynamicStore>(g => StoreInit<PersonWithDynamicStore>(g)))
+				.Where(r => Sql.Property<string>(r, "Name") == "John")
+				.ToList()
+				.Select(ReadStore)
+				.ToList();
+
+			result.ShouldBe(ExpectedNameCounts().Where(r => r.Name == "John"));
+		}
+
+		#endregion
 
 		private MappingSchema ConfigureDynamicClass()
 		{
