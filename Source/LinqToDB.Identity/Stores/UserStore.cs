@@ -294,13 +294,13 @@ namespace LinqToDB.Identity
 		}
 
 		/// <summary>
-		/// Returns a flag indicating if the specified user is a member of the give <paramref name="normalizedRoleName"/>.
+		/// Returns a flag indicating if the specified user is a member of the given <paramref name="normalizedRoleName"/>.
 		/// </summary>
 		/// <param name="user">The user whose role membership should be checked.</param>
-		/// <param name="normalizedRoleName">The role to check membership of</param>
+		/// <param name="normalizedRoleName">The role to check membership of.</param>
 		/// <param name="cancellationToken">The <see cref="CancellationToken"/> used to propagate notifications that the operation should be canceled.</param>
-		/// <returns>A <see cref="Task{TResult}"/> containing a flag indicating if the specified user is a member of the given group. If the
-		/// user is a member of the group the returned value with be true, otherwise it will be false.</returns>
+		/// <returns>A <see cref="Task{TResult}"/> containing a flag indicating if the specified user is a member of the given role. If the
+		/// user is a member of the role the returned value will be true, otherwise it will be false.</returns>
 		public virtual Task<bool> IsInRoleAsync(TUser user, string normalizedRoleName, CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();

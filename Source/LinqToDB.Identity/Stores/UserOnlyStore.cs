@@ -517,7 +517,7 @@ namespace LinqToDB.Identity
 			{
 				UpdateFromUserPasskeyInfo(existing, passkey);
 
-				// Keyed on the predicate rather than on the mapped PK: Access and Informix cannot index a
+				// Keyed on the predicate rather than on the mapped PK: Access, Informix and Firebird 2.5 cannot index a
 				// 1024-byte CredentialId, so the column is not a key there and Context.UpdateAsync would have no
 				// fields left to set. Data is the only column UpdateFromUserPasskeyInfo can change.
 				await UserPasskeys

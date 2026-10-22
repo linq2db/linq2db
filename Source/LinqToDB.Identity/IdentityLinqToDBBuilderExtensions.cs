@@ -12,7 +12,7 @@ namespace Microsoft.Extensions.DependencyInjection
 	public static class IdentityLinqToDBBuilderExtensions
 	{
 		/// <summary>
-		/// Adds an LinqToDB implementation of identity information stores.
+		/// Adds a LinqToDB implementation of identity information stores.
 		/// </summary>
 		/// <typeparam name="TContext">The LinqToDB database context to use.</typeparam>
 		/// <param name="builder">The <see cref="IdentityBuilder"/> instance this method extends.</param>
