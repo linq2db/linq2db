@@ -381,11 +381,8 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 							var evaluated = EvaluateExpression(argument);
 							if (evaluated is Expression evaluatedExpr)
 							{
-								if (evaluatedArgs == null)
-								{
-									evaluatedArgs ??= node.Arguments.ToArray();
-									evaluatedArgs[i] = evaluatedExpr;
-								}
+								evaluatedArgs ??= node.Arguments.ToArray();
+								evaluatedArgs[i] = evaluatedExpr;
 							}
 						}
 					}
