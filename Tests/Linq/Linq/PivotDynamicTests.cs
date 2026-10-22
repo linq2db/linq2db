@@ -2081,6 +2081,7 @@ namespace Tests.Linq
 			CellVOfA(capture1)
 				.ShouldBe(10m);
 
+			// The capture is not part of the compiled query's key, so the first build is reused: #6045. A fix flips this arm.
 			captured[0] = 2010;
 
 			var capture2 = byCapture(db);

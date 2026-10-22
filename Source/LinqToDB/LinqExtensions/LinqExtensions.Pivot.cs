@@ -23,7 +23,9 @@ namespace LinqToDB
 		/// <param name="forColumn">The column whose values become cells. Written inline.</param>
 		/// <param name="values">
 		/// The pivoted values, read when the query is built: each execution reads the current set, and a different set is
-		/// a different query. It may not read the group or another query parameter.
+		/// a different query. It may not read the group or another query parameter. In a compiled query, pass it as an
+		/// argument of the compiled delegate: a set the delegate captures is read when the query is first built and not
+		/// again.
 		/// </param>
 		/// <returns>
 		/// A builder to add cells to with <see cref="PivotBuilder{TSource,TFor}.Cell{TCell}"/> or
