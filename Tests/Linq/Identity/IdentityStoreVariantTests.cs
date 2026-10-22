@@ -284,7 +284,7 @@ namespace Tests.Identity
 			{
 				services.AddScoped(_ => new IdentityCustomizationTests.AppPasskeyConnection(new DataOptions().UseConfiguration(context.StripRemote())));
 				services
-					.AddIdentityCore<IdentityCustomizationTests.AppUser>()
+					.AddIdentityCore<IdentityCustomizationTests.AppUser>(o => o.Stores.SchemaVersion = IdentitySchemaVersions.Version3)
 					.AddRoles<IdentityCustomizationTests.AppRole>()
 					.AddLinqToDBStores<IdentityCustomizationTests.AppPasskeyConnection>();
 			}
@@ -292,7 +292,7 @@ namespace Tests.Identity
 			{
 				services.AddScoped(_ => new IdentityCustomizationTests.AppUserOnlyPasskeyConnection(new DataOptions().UseConfiguration(context.StripRemote())));
 				services
-					.AddIdentityCore<IdentityCustomizationTests.AppUser>()
+					.AddIdentityCore<IdentityCustomizationTests.AppUser>(o => o.Stores.SchemaVersion = IdentitySchemaVersions.Version3)
 					.AddLinqToDBStores<IdentityCustomizationTests.AppUserOnlyPasskeyConnection>();
 			}
 

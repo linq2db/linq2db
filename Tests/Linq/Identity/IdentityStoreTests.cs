@@ -412,7 +412,7 @@ namespace Tests.Identity
 			using var schema = new Schema(setup);
 			using var ctx    = GetDataContext(context, setup.MappingSchema);
 
-			var store = new UserStore<IdentityUser>(ctx);
+			var store = new UserStore<IdentityUser>(ctx, options: SchemaVersion3);
 			var user  = NewUser("heidi");
 			await store.CreateAsync(user);
 
@@ -469,10 +469,10 @@ namespace Tests.Identity
 			using var schema = new Schema(setup);
 			using var ctx    = GetDataContext(context, setup.MappingSchema);
 
-			// without Version3 the store must not touch AspNetUserPasskeys - the table doesn't exist in older schemas
-			var options = schemaV3 ? Options.Create(new IdentityOptions { Stores = { SchemaVersion = IdentitySchemaVersions.Version3 } }) : null;
-			var store   = new UserStore<IdentityUser>(ctx, options: options);
-			var user    = NewUser("ivan");
+			// below Version3 the store must not touch AspNetUserPasskeys - the table doesn't exist in older schemas -
+			// so it refuses passkeys rather than store rows DeleteAsync would leave behind
+			var store = new UserStore<IdentityUser>(ctx, options: schemaV3 ? SchemaVersion3 : null);
+			var user  = NewUser("ivan");
 			await store.CreateAsync(user);
 
 			var passkey = new UserPasskeyInfo(
@@ -480,17 +480,39 @@ namespace Tests.Identity
 				transports: ["internal"], isUserVerified: true, isBackupEligible: false,
 				isBackedUp: false, attestationObject: [5], clientDataJson: [6]);
 
-			await store.AddOrUpdatePasskeyAsync(user, passkey, default);
+			if (schemaV3)
+			{
+				await store.AddOrUpdatePasskeyAsync(user, passkey, default);
+			}
+			else
+			{
+				var error = await Shouldly.Should.ThrowAsync<InvalidOperationException>(() => store.AddOrUpdatePasskeyAsync(user, passkey, default));
 
-			(await store.DeleteAsync(user)).Succeeded.ShouldBeTrue();
+				error
+					.Message
+					.ShouldContain(nameof(IdentitySchemaVersions.Version3));
+			}
 
-			ctx.GetTable<IdentityUserPasskey<string>>().Count(r => r.UserId == user.Id).ShouldBe(schemaV3 ? 0 : 1);
+			var deleted = await store.DeleteAsync(user);
+
+			deleted
+				.Succeeded
+				.ShouldBeTrue();
+
+			var remaining = ctx
+				.GetTable<IdentityUserPasskey<string>>()
+				.Count(r => r.UserId == user.Id);
+
+			remaining.ShouldBe(0);
 		}
+
+		static readonly IOptions<IdentityOptions> SchemaVersion3 =
+			Options.Create(new IdentityOptions { Stores = { SchemaVersion = IdentitySchemaVersions.Version3 } });
 
 		// The passkey members now live on the passkey-generic base; an override written against the
 		// six-argument store keeps the signature it always had.
 		sealed class CountingPasskeyStore(IDataContext context)
-			: UserOnlyStore<IdentityUser, IDataContext, string, IdentityUserClaim<string>, IdentityUserLogin<string>, IdentityUserToken<string>>(context)
+			: UserOnlyStore<IdentityUser, IDataContext, string, IdentityUserClaim<string>, IdentityUserLogin<string>, IdentityUserToken<string>>(context, options: SchemaVersion3)
 		{
 			public int Created { get; private set; }
 

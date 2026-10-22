@@ -494,10 +494,19 @@ namespace LinqToDB.Identity
 		/// </summary>
 		protected virtual IQueryable<TUserPasskey> UserPasskeys => Context.GetTable<TUserPasskey>();
 
+		// Below Version3 DeleteAsync leaves the passkey table alone, so a stored passkey would outlive its user.
+		// EF Core drops the entity from its model there; refuse the same way.
+		void ThrowIfPasskeysUnsupported()
+		{
+			if (SchemaVersion < IdentitySchemaVersions.Version3)
+				throw new InvalidOperationException(Resources.PasskeysRequireVersion3);
+		}
+
 		/// <inheritdoc/>
 		public virtual async Task AddOrUpdatePasskeyAsync(TUser user, UserPasskeyInfo passkey, CancellationToken cancellationToken)
 		{
 			ThrowIfDisposed();
+			ThrowIfPasskeysUnsupported();
 
 			ArgumentNullException.ThrowIfNull(user);
 			ArgumentNullException.ThrowIfNull(passkey);
@@ -527,6 +536,7 @@ namespace LinqToDB.Identity
 		public virtual async Task<IList<UserPasskeyInfo>> GetPasskeysAsync(TUser user, CancellationToken cancellationToken)
 		{
 			ThrowIfDisposed();
+			ThrowIfPasskeysUnsupported();
 
 			ArgumentNullException.ThrowIfNull(user);
 
@@ -542,6 +552,7 @@ namespace LinqToDB.Identity
 		public virtual async Task<TUser?> FindByPasskeyIdAsync(byte[] credentialId, CancellationToken cancellationToken)
 		{
 			ThrowIfDisposed();
+			ThrowIfPasskeysUnsupported();
 
 			ArgumentNullException.ThrowIfNull(credentialId);
 
@@ -554,6 +565,7 @@ namespace LinqToDB.Identity
 		public virtual async Task<UserPasskeyInfo?> FindPasskeyAsync(TUser user, byte[] credentialId, CancellationToken cancellationToken)
 		{
 			ThrowIfDisposed();
+			ThrowIfPasskeysUnsupported();
 
 			ArgumentNullException.ThrowIfNull(user);
 			ArgumentNullException.ThrowIfNull(credentialId);
@@ -567,6 +579,7 @@ namespace LinqToDB.Identity
 		public virtual async Task RemovePasskeyAsync(TUser user, byte[] credentialId, CancellationToken cancellationToken)
 		{
 			ThrowIfDisposed();
+			ThrowIfPasskeysUnsupported();
 
 			ArgumentNullException.ThrowIfNull(user);
 			ArgumentNullException.ThrowIfNull(credentialId);

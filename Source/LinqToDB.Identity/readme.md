@@ -71,9 +71,11 @@ memberships (and a deleted role's memberships and claims) itself, where EF Core 
 ### Identity options
 
 The stores read **only** `IdentityOptions.Stores.SchemaVersion` (injected as `IOptions<IdentityOptions>`; pass it to
-the store constructor when creating a store by hand). It decides whether `DeleteAsync` also removes the user's
-passkeys: only at `IdentitySchemaVersions.Version3`, the first schema version with the `AspNetUserPasskeys` table —
-the same rule EF Core applies. Without options the stores behave as `Version1`.
+the store constructor when creating a store by hand). Passkeys need `IdentitySchemaVersions.Version3`, the first
+schema version with the `AspNetUserPasskeys` table: below it the passkey members throw `InvalidOperationException`
+and `DeleteAsync` leaves that table alone, matching EF Core, whose model has no passkey entity there. Without options
+the stores behave as `Version1`; the `StoreOptions` default (`IdentitySchemaVersions.Default`) is below `Version3`
+too, so set the version explicitly to use passkeys.
 
 No other option is applied — `Stores.MaxLengthForKeys` included. If you need one, please open a
 [feature request](https://github.com/linq2db/linq2db/issues/new/choose).
