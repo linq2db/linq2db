@@ -29,6 +29,7 @@
       "Tests\\FSharp\\Tests.FSharp.fsproj",
       "Tests\\Linq\\Tests.csproj",
       "Tests\\Model\\Tests.Model.csproj",
+      "Tests\\Tests.Scaffold.Harness\\Tests.Scaffold.Harness.csproj",
       "Tests\\VisualBasic\\Tests.VisualBasic.vbproj"
     ]
   }

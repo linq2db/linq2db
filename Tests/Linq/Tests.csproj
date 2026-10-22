@@ -5,6 +5,7 @@
 		<AssemblyName>linq2db.Tests</AssemblyName>
 
 		<MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3277</MSBuildWarningsAsMessages>
+		<SatelliteResourceLanguages>en</SatelliteResourceLanguages>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -19,6 +20,8 @@
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net462' ">
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+
+		<ProjectReference Include="..\Tests.Scaffold.Harness\Tests.Scaffold.Harness.csproj" />
 	</ItemGroup>
 
 	<!-- Sap.Data.Hana.Net.v8.0 is x64-only; referencing it in an x86 build makes the test
