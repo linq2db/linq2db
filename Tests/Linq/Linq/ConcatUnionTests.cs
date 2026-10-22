@@ -2878,5 +2878,39 @@ namespace Tests.Linq
 
 			ownFacetsLiteralFirst.ShouldBe([12345678901234.50m, 1.00000000000000005m], ignoreOrder: true);
 		}
+
+		readonly record struct ParentValue(int Id, int? Value);
+
+		abstract record ValueHolder(ParentValue Info);
+		sealed record LowHolder(ParentValue Info) : ValueHolder(Info);
+		sealed record HighHolder(ParentValue Info) : ValueHolder(Info);
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6068")]
+		public void ConcatStructReferencedTwice([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent.Where(p => p.ParentID < 4)
+				.Select(p => new { p.ParentID, Info = new ParentValue(p.ParentID, p.Value1) })
+				.Concat(db.Parent.Where(p => p.ParentID >= 4)
+					.Select(p => new { p.ParentID, Info = new ParentValue(p.ParentID, p.Value1) }))
+				.Select(m => new { First = m.Info, Second = m.Info });
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6068")]
+		public void ConcatStructInBothConditionalBranches([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent.Where(p => p.ParentID < 4)
+				.Select(p => new { p.ParentID, Info = new ParentValue(p.ParentID, p.Value1) })
+				.Concat(db.Parent.Where(p => p.ParentID >= 4)
+					.Select(p => new { p.ParentID, Info = new ParentValue(p.ParentID, p.Value1) }))
+				.Select(m => m.ParentID < 4 ? new LowHolder(m.Info) : (ValueHolder)new HighHolder(m.Info));
+
+			AssertQuery(query);
+		}
 	}
 }
