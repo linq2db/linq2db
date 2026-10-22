@@ -2214,6 +2214,44 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void NullableStructHasValueGuardFromLeftJoinProjected([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				from c in db.Child
+					.Where(c => c.ParentID == p.ParentID)
+					.Select(c => new { Info = (ParentPoint?)new ParentPoint(c.ChildID, c.ParentID) })
+					.DefaultIfEmpty()
+				select new { p.ParentID, Id = c.Info.HasValue ? c.Info.Value.Id : -1 };
+
+			var expected = Parent
+				.SelectMany(p => Child.Where(c => c.ParentID == p.ParentID).Select(c => c.ChildID).DefaultIfEmpty(-1));
+
+			query.Select(x => x.Id).ToList().OrderBy(x => x).ShouldBe(expected.OrderBy(x => x));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void NullableStructWithHasValueFromLeftJoin([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				from c in db.Child
+					.Where(c => c.ParentID == p.ParentID)
+					.Select(c => new { Info = (ParentPoint?)new ParentPoint(c.ChildID, c.ParentID) })
+					.DefaultIfEmpty()
+				select new { p.ParentID, A = c.Info, Has = c.Info.HasValue };
+
+			var rows = query.ToList();
+
+			rows.ShouldAllBe(x => x.Has == (x.A != null));
+			rows.ShouldContain(x => x.ParentID == 5 && !x.Has);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
 		public void NullableStructHasValueFromSubquery([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
