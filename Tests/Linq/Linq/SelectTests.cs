@@ -2264,7 +2264,9 @@ namespace Tests.Linq
 
 			var query =
 				from p in db.Parent
-				from p2 in db.Parent.Where(x => x.ParentID == p.ParentID + 100).DefaultIfEmpty(new Parent { Value1 = 5 })
+				from p2 in db.Parent
+					.Where(x => x.ParentID == p.ParentID + 100)
+					.DefaultIfEmpty(new Parent { Value1 = 5 })
 				select new { p.ParentID, Has = p2.Value1.HasValue, V = p2.Value1.HasValue ? p2.Value1.Value : -1, Raw = p2.Value1 };
 
 			var rows = query.ToList();
