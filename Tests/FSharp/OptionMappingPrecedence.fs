@@ -28,3 +28,12 @@ let VerifyExplicitDataTypePreserved (db : IDataContext) =
     let ed  = db.MappingSchema.GetEntityDescriptor(typeof<PrecedenceRow>)
     let col = ed.Columns |> Seq.find (fun c -> c.MemberName = "Note")
     Assert.That(col.DataType, Is.EqualTo DataType.VarChar)
+
+[<Table("OptionRequiredColumnTable")>]
+type RequiredColumnRow =
+    { [<PrimaryKey; Column>] Id   : int
+      Note : string option }
+
+let VerifyUnattributedOptionIsColumn (db : IDataContext) =
+    let ed = db.MappingSchema.GetEntityDescriptor(typeof<RequiredColumnRow>)
+    Assert.That(ed.Columns |> Seq.exists (fun c -> c.MemberName = "Note"), Is.True)
