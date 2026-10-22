@@ -1499,6 +1499,13 @@ namespace LinqToDB.Internal.Linq.Builder
 					return node;
 			}
 
+			if (node.Expression != null && _buildPurpose is BuildPurpose.Expression or BuildPurpose.Sql && node.Member.IsNullableHasValueMember())
+			{
+				result = HandleLiftedHasValue(node);
+				if (result != null)
+					return result;
+			}
+
 			FoundRoot = null;
 			if (node.Expression != null)
 			{
@@ -1615,6 +1622,30 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 
 				return null;
+			}
+
+			// A struct lifted to T?, as in `(T?)new T(...)`, has no column to test, and HasValue of the constructed
+			// value is always true. Its comparison with null follows the row's null state, so a missing outer-joined
+			// row reads as having no value. Must run before HandleRoot: resolving the operand as a root moves it
+			// past the context that knows the row can be missing.
+			Expression? HandleLiftedHasValue(MemberExpression node)
+			{
+				var saveRoot = FoundRoot;
+				var operand  = Visit(node.Expression!);
+				FoundRoot = saveRoot;
+
+				if (operand is SqlDefaultIfEmptyExpression defaultIfEmpty)
+					operand = defaultIfEmpty.InnerExpression;
+
+				var isLiftedConstructor = operand is UnaryExpression { NodeType: ExpressionType.Convert } lift
+					&& lift.Type.IsNullableType
+					&& lift.Operand.Type == lift.Type.UnwrapNullableType()
+					&& lift.Operand is NewExpression or MemberInitExpression or SqlGenericConstructorExpression;
+
+				if (!isLiftedConstructor)
+					return null;
+
+				return Visit(Expression.NotEqual(node.Expression!, Expression.Constant(null, node.Expression!.Type)));
 			}
 
 			Expression? HandleAssociation(MemberExpression node, ContextRefExpression context)

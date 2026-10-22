@@ -2180,6 +2180,52 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void NullableStructHasValueFromLeftJoin([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				from c in db.Child
+					.Where(c => c.ParentID == p.ParentID)
+					.Select(c => new { Info = (ParentPoint?)new ParentPoint(c.ChildID, c.ParentID) })
+					.DefaultIfEmpty()
+				where p.ParentID == 5
+				select new { p.ParentID, Has = c.Info.HasValue };
+
+			query.ToList().ShouldAllBe(x => !x.Has);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void NullableStructHasValueGuardFromLeftJoin([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				from c in db.Child
+					.Where(c => c.ParentID == p.ParentID)
+					.Select(c => new { Info = (ParentPoint?)new ParentPoint(c.ChildID, c.ParentID) })
+					.DefaultIfEmpty()
+				where p.ParentID == 5
+				select new { p.ParentID, Id = c.Info.HasValue ? c.Info.Value.Id : -1 };
+
+			query.ToList().ShouldAllBe(x => x.Id == -1);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void NullableStructHasValueFromSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Select(p => new { p.ParentID, Info = (ParentPoint?)new ParentPoint(p.ParentID, p.Value1) })
+				.Select(m => new { m.ParentID, Has = m.Info.HasValue });
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
 		[ThrowsRequiredOuterJoins(TestProvName.AllSybase)]
 		public void NullableStructFromScalarSubquery([DataSources] string context)
 		{
