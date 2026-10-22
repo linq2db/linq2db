@@ -394,5 +394,216 @@ namespace Tests.Linq
 			// accident. What is asserted is that the addend keeps its own scale, which is per-value.
 			shifted.ShouldBe(sums.Select(s => s + 0.00005m), ignoreOrder: true);
 		}
+
+		sealed class DecimalIdentityConverter() : ValueConverter<decimal, decimal>(v => v, v => v, false);
+
+		sealed class ScaledDecimalRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Decimal, Precision = 18, Scale = 2)]
+			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Decimal64, Precision = 18, Scale = 2)]
+			public decimal Value { get; set; }
+
+			[Column(DataType = DataType.Decimal, Precision = 18, Scale = 2), ValueConverter(ConverterType = typeof(DecimalIdentityConverter))]
+			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Decimal64, Precision = 18, Scale = 2)]
+			public decimal Converted { get; set; }
+		}
+
+		/// <summary>
+		/// A literal finer than an aggregated column's scale keeps its digits when compared with the aggregate, and so does
+		/// a captured list beside an aggregate over a column with a value converter: MAX is a computed value with no stored
+		/// scale to match.
+		/// </summary>
+		/// <remarks>
+		/// A literal compared with an aggregate over the converted column is not asserted: it is written in the column's
+		/// terms, and ClickHouse narrows it while YDB refuses it, on master too.
+		/// <para>
+		/// SqlCe is left out because it compares a decimal literal at the other side's scale (#6062).
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void LiteralComparedWithAggregateKeepsItsOwnScale([DataSources(TestProvName.AllSqlCe)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new ScaledDecimalRow { Id = 1, Value = 1.00m, Converted = 1.00m } });
+
+			var finer = new[] { 1.004m };
+
+			var equal = t
+				.GroupBy(r => r.Id)
+				.Count(g => g.Max(r => r.Value) == 1.004m);
+
+			equal.ShouldBe(0);
+
+			var below = t
+				.GroupBy(r => r.Id)
+				.Count(g => g.Max(r => r.Value) < 1.004m);
+
+			below.ShouldBe(1);
+
+			var convertedCaptured = t
+				.GroupBy(r => r.Id)
+				.Count(g => finer.Contains(g.Max(r => r.Converted)));
+
+			convertedCaptured.ShouldBe(0);
+		}
+
+		sealed class ComputedDecimalRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Decimal, Precision = 18, Scale = 12)]
+			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Decimal64, Precision = 18, Scale = 12)]
+			public decimal Fine { get; set; }
+
+			[Column(DataType = DataType.Decimal, Precision = 18, Scale = 2)]
+			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Decimal64, Precision = 18, Scale = 2)]
+			public decimal Wide { get; set; }
+
+			[Column(DataType = DataType.Decimal, Precision = 18, Scale = 0)]
+			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Decimal64, Precision = 18, Scale = 0)]
+			public decimal Whole { get; set; }
+
+			public static readonly ComputedDecimalRow[] Data =
+			[
+				new() { Id = 1, Fine = 1.000000000005m, Wide = 12345678901234.50m, Whole = 5m },
+			];
+		}
+
+		/// <summary>
+		/// A literal compared with a computed decimal - a function, a conditional, an aggregate - keeps its digits when
+		/// the computed value's own type holds them, whether that type is finer or wider than the provider's default
+		/// decimal.
+		/// </summary>
+		/// <remarks>
+		/// <c>Fine</c> has more fraction digits than ClickHouse's and YDB's default decimal, <c>Wide</c> more integer
+		/// digits than YDB's. The last arm is an edge of the widening: a literal's trailing zeros must not widen it.
+		/// </remarks>
+		[Test]
+		public void ComputedDecimalComparedWithLiteralKeepsItsDigits([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(ComputedDecimalRow.Data);
+
+			var fineAbs = t.Count(r => Math.Abs(r.Fine) == 1.000000000005m);
+
+			fineAbs.ShouldBe(1);
+
+			var fineConditional = t.Count(r => (r.Id > 0 ? r.Fine : -r.Fine) == 1.000000000005m);
+
+			fineConditional.ShouldBe(1);
+
+			var fineMax = t
+				.GroupBy(r => r.Id)
+				.Count(g => g.Max(r => r.Fine) == 1.000000000005m);
+
+			fineMax.ShouldBe(1);
+
+			var wideAbs = t.Count(r => Math.Abs(r.Wide) == 12345678901234.50m);
+
+			wideAbs.ShouldBe(1);
+
+			var wideConditional = t.Count(r => (r.Id > 0 ? r.Wide : -r.Wide) == 12345678901234.50m);
+
+			wideConditional.ShouldBe(1);
+
+			var wideMax = t
+				.GroupBy(r => r.Id)
+				.Count(g => g.Max(r => r.Wide) == 12345678901234.50m);
+
+			wideMax.ShouldBe(1);
+
+			var wholeTrailingZeros = t.Count(r => Math.Abs(r.Whole) == 5.00m);
+
+			wholeTrailingZeros.ShouldBe(1);
+		}
+
+		/// <summary>
+		/// A literal finer than a computed decimal that is nearly full compares without overflowing.
+		/// </summary>
+		/// <remarks>
+		/// On ClickHouse the literal must not stay in the operand's <c>Decimal64</c> family once its scale is raised.
+		/// Firebird is left out: it overflows aligning a nearly full <c>DECIMAL(18,2)</c> to a finer scale, on master too
+		/// ("numeric value is out of range", measured on Firebird 3 and 5).
+		/// </remarks>
+		[Test]
+		public void FinerLiteralBesideNearFullDecimalDoesNotOverflow([DataSources(TestProvName.AllFirebird)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(ComputedDecimalRow.Data);
+
+			var wideMaxFinerLiteral = t
+				.GroupBy(r => r.Id)
+				.Count(g => g.Max(r => r.Wide) == 1.000001m);
+
+			wideMaxFinerLiteral.ShouldBe(0);
+		}
+
+		sealed class ClickHouseDecimal32Row
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Decimal32, Precision = 9, Scale = 2)]
+			public decimal Value { get; set; }
+		}
+
+		/// <summary>
+		/// A literal finer than a nearly full computed ClickHouse <c>Decimal32</c> compares without overflowing, as one
+		/// beside a <c>Decimal64</c> does.
+		/// </summary>
+		[Test]
+		public void FinerLiteralBesideNearFullClickHouseDecimal32([IncludeDataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new ClickHouseDecimal32Row { Id = 1, Value = 9999999.99m } });
+
+			var maxFinerLiteral = t
+				.GroupBy(r => r.Id)
+				.Count(g => g.Max(r => r.Value) == 1.004m);
+
+			maxFinerLiteral.ShouldBe(0);
+		}
+
+		sealed class YdbWideDecimalRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Decimal, Precision = 35, Scale = 2)]
+			public decimal Value { get; set; }
+		}
+
+		/// <summary>
+		/// A literal finer than a computed decimal at YDB's precision limit is compared rather than refused.
+		/// </summary>
+		/// <remarks>
+		/// YDB only: YQL refuses a decimal type above 35 digits, so widening a <c>Decimal(35,2)</c> operand for the
+		/// literal's third fraction digit must stop at the limit.
+		/// </remarks>
+		[Test]
+		public void ComputedDecimalAtTheYdbPrecisionLimit([IncludeDataSources(TestProvName.AllYdb)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[]
+			{
+				new YdbWideDecimalRow { Id = 1, Value = 1.00m              },
+				new YdbWideDecimalRow { Id = 2, Value = 12345678901234.50m },
+			});
+
+			var finer = t.Count(r => Math.Abs(r.Value) == 1.004m);
+
+			finer.ShouldBe(0);
+
+			// The literal is typed narrower than the column here; the wide row must still compare as itself.
+			var notFiner = t.Count(r => Math.Abs(r.Value) != 1.004m);
+
+			notFiner.ShouldBe(2);
+
+			var finerCaptured = new[] { 1.004m };
+
+			var finerInList = t.Count(r => finerCaptured.Contains(Math.Abs(r.Value)));
+
+			finerInList.ShouldBe(0);
+		}
 	}
 }
