@@ -78,6 +78,24 @@ let OptionValueProjection (db: IDataContext) =
     db.GetTable<DuOptRow>().Where(fun x -> x.Key.IsSome).OrderBy(fun x -> x.Id).Select(fun x -> x.Key.Value).ToArray()
     |> Array.map (fun (UserId v) -> v)
 
+[<Table(IsColumnAttributeRequired = false)>]
+type DuPairRow =
+    { [<PrimaryKey>] Id: int
+      Key:                UserId
+      OptKey:             UserId option }
+
+// `UserId option` .Value compared with a `UserId` column: both converters store the wrapped int unchanged, so
+// the columns are commensurable (row 1 only: row 2 differs, row 3 is None)
+let OptionValueComparedToUnionColumn (db: IDataContext) =
+    use _t = db.CreateLocalTable<DuPairRow>()
+    db.Insert({ DuPairRow.Id = 1; Key = UserId 10; OptKey = Some (UserId 10) }) |> ignore
+    db.Insert({ DuPairRow.Id = 2; Key = UserId 20; OptKey = Some (UserId 21) }) |> ignore
+    db.Insert({ DuPairRow.Id = 3; Key = UserId 30; OptKey = None })             |> ignore
+    db.GetTable<DuPairRow>()
+        .Where(fun x -> x.OptKey.Value = x.Key)
+        .Select(fun x -> x.Id)
+        .ToArray()
+
 // A *struct* single-case union is auto-mapped the same way, but being a value type it cannot hold null:
 // a NULL read yields default(StructUserId) - the union wrapping 0 - exactly as a plain `int` member reads
 // NULL as 0. `StructUserId option` is the way to express a nullable column of this type.
