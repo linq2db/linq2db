@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -19,18 +20,20 @@ namespace LinqToDB
 	{
 		/// <summary>
 		/// Runs several reads in one round trip and returns their results. Every sequence the selector reads
-		/// (<c>ToList()</c>, <c>ToArray()</c>) becomes a statement of its own, every scalar it reads becomes part of the first
+		/// (<c>ToList()</c>, <c>ToArray()</c>) becomes a statement of its own, every scalar it reads becomes part of one shared
 		/// statement, and all statements are sent to the database as one command.
 		/// </summary>
 		/// <remarks>
 		/// <para>
-		/// The statements are combined whatever <see cref="LinqOptions.UseCombinedCommands"/> is set to. When the context or
-		/// the provider cannot send them as one command, they run one after another and the results are the same.
+		/// The statements are combined whatever <see cref="LinqOptions.UseCombinedCommands"/> is set to;
+		/// <see cref="LinqOptions.UseDbBatch"/> chooses how they are sent. When the context or the provider cannot send them as
+		/// one command, they run one after another and the results are the same.
 		/// </para>
 		/// <para>
-		/// Collections in the selector are loaded with <see cref="EagerLoadingStrategy.Default"/>, which overrides
-		/// <see cref="LinqOptions.DefaultEagerLoadingStrategy"/> and any <c>With*LoadStrategy()</c> call inside the selector,
-		/// and they are explicit loads for <see cref="LinqOptions.ImplicitCollectionLoading"/>.
+		/// Where the statements are combined, collections in the selector are loaded with
+		/// <see cref="EagerLoadingStrategy.Default"/>, which overrides <see cref="LinqOptions.DefaultEagerLoadingStrategy"/>
+		/// and any <c>With*LoadStrategy()</c> call inside the selector; elsewhere the configured strategy applies. Either way
+		/// they are explicit loads for <see cref="LinqOptions.ImplicitCollectionLoading"/>.
 		/// </para>
 		/// </remarks>
 		/// <example>
@@ -101,6 +104,8 @@ namespace LinqToDB
 		/// <summary>
 		/// Runs two reads in one round trip. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
 		/// </summary>
+		/// <typeparam name="T1">Type of the first result.</typeparam>
+		/// <typeparam name="T2">Type of the second result.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="result1">First result to read.</param>
 		/// <param name="result2">Second result to read.</param>
@@ -117,6 +122,9 @@ namespace LinqToDB
 		/// <summary>
 		/// Runs three reads in one round trip. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
 		/// </summary>
+		/// <typeparam name="T1">Type of the first result.</typeparam>
+		/// <typeparam name="T2">Type of the second result.</typeparam>
+		/// <typeparam name="T3">Type of the third result.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="result1">First result to read.</param>
 		/// <param name="result2">Second result to read.</param>
@@ -135,6 +143,10 @@ namespace LinqToDB
 		/// <summary>
 		/// Runs four reads in one round trip. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
 		/// </summary>
+		/// <typeparam name="T1">Type of the first result.</typeparam>
+		/// <typeparam name="T2">Type of the second result.</typeparam>
+		/// <typeparam name="T3">Type of the third result.</typeparam>
+		/// <typeparam name="T4">Type of the fourth result.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="result1">First result to read.</param>
 		/// <param name="result2">Second result to read.</param>
@@ -155,6 +167,11 @@ namespace LinqToDB
 		/// <summary>
 		/// Runs five reads in one round trip. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
 		/// </summary>
+		/// <typeparam name="T1">Type of the first result.</typeparam>
+		/// <typeparam name="T2">Type of the second result.</typeparam>
+		/// <typeparam name="T3">Type of the third result.</typeparam>
+		/// <typeparam name="T4">Type of the fourth result.</typeparam>
+		/// <typeparam name="T5">Type of the fifth result.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="result1">First result to read.</param>
 		/// <param name="result2">Second result to read.</param>
@@ -177,6 +194,12 @@ namespace LinqToDB
 		/// <summary>
 		/// Runs six reads in one round trip. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
 		/// </summary>
+		/// <typeparam name="T1">Type of the first result.</typeparam>
+		/// <typeparam name="T2">Type of the second result.</typeparam>
+		/// <typeparam name="T3">Type of the third result.</typeparam>
+		/// <typeparam name="T4">Type of the fourth result.</typeparam>
+		/// <typeparam name="T5">Type of the fifth result.</typeparam>
+		/// <typeparam name="T6">Type of the sixth result.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="result1">First result to read.</param>
 		/// <param name="result2">Second result to read.</param>
@@ -201,6 +224,13 @@ namespace LinqToDB
 		/// <summary>
 		/// Runs seven reads in one round trip. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
 		/// </summary>
+		/// <typeparam name="T1">Type of the first result.</typeparam>
+		/// <typeparam name="T2">Type of the second result.</typeparam>
+		/// <typeparam name="T3">Type of the third result.</typeparam>
+		/// <typeparam name="T4">Type of the fourth result.</typeparam>
+		/// <typeparam name="T5">Type of the fifth result.</typeparam>
+		/// <typeparam name="T6">Type of the sixth result.</typeparam>
+		/// <typeparam name="T7">Type of the seventh result.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="result1">First result to read.</param>
 		/// <param name="result2">Second result to read.</param>
@@ -227,6 +257,8 @@ namespace LinqToDB
 		/// <summary>
 		/// Runs two reads in one round trip asynchronously. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
 		/// </summary>
+		/// <typeparam name="T1">Type of the first result.</typeparam>
+		/// <typeparam name="T2">Type of the second result.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="result1">First result to read.</param>
 		/// <param name="result2">Second result to read.</param>
@@ -245,6 +277,9 @@ namespace LinqToDB
 		/// <summary>
 		/// Runs three reads in one round trip asynchronously. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
 		/// </summary>
+		/// <typeparam name="T1">Type of the first result.</typeparam>
+		/// <typeparam name="T2">Type of the second result.</typeparam>
+		/// <typeparam name="T3">Type of the third result.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="result1">First result to read.</param>
 		/// <param name="result2">Second result to read.</param>
@@ -265,6 +300,10 @@ namespace LinqToDB
 		/// <summary>
 		/// Runs four reads in one round trip asynchronously. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
 		/// </summary>
+		/// <typeparam name="T1">Type of the first result.</typeparam>
+		/// <typeparam name="T2">Type of the second result.</typeparam>
+		/// <typeparam name="T3">Type of the third result.</typeparam>
+		/// <typeparam name="T4">Type of the fourth result.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="result1">First result to read.</param>
 		/// <param name="result2">Second result to read.</param>
@@ -287,6 +326,11 @@ namespace LinqToDB
 		/// <summary>
 		/// Runs five reads in one round trip asynchronously. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
 		/// </summary>
+		/// <typeparam name="T1">Type of the first result.</typeparam>
+		/// <typeparam name="T2">Type of the second result.</typeparam>
+		/// <typeparam name="T3">Type of the third result.</typeparam>
+		/// <typeparam name="T4">Type of the fourth result.</typeparam>
+		/// <typeparam name="T5">Type of the fifth result.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="result1">First result to read.</param>
 		/// <param name="result2">Second result to read.</param>
@@ -311,6 +355,12 @@ namespace LinqToDB
 		/// <summary>
 		/// Runs six reads in one round trip asynchronously. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
 		/// </summary>
+		/// <typeparam name="T1">Type of the first result.</typeparam>
+		/// <typeparam name="T2">Type of the second result.</typeparam>
+		/// <typeparam name="T3">Type of the third result.</typeparam>
+		/// <typeparam name="T4">Type of the fourth result.</typeparam>
+		/// <typeparam name="T5">Type of the fifth result.</typeparam>
+		/// <typeparam name="T6">Type of the sixth result.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="result1">First result to read.</param>
 		/// <param name="result2">Second result to read.</param>
@@ -337,6 +387,13 @@ namespace LinqToDB
 		/// <summary>
 		/// Runs seven reads in one round trip asynchronously. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
 		/// </summary>
+		/// <typeparam name="T1">Type of the first result.</typeparam>
+		/// <typeparam name="T2">Type of the second result.</typeparam>
+		/// <typeparam name="T3">Type of the third result.</typeparam>
+		/// <typeparam name="T4">Type of the fourth result.</typeparam>
+		/// <typeparam name="T5">Type of the fifth result.</typeparam>
+		/// <typeparam name="T6">Type of the sixth result.</typeparam>
+		/// <typeparam name="T7">Type of the seventh result.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="result1">First result to read.</param>
 		/// <param name="result2">Second result to read.</param>
@@ -370,28 +427,28 @@ namespace LinqToDB
 				SqlQueryRootExpression.Create(dataContext), Expression.Quote(selector));
 		}
 
-		// A tuple literal is not allowed in an expression tree (CS8143), so the tuple is built here: one selector whose
-		// body constructs the ValueTuple from the result bodies, bound to its Item fields like any projection.
 		static Expression<Func<TTuple>> Combine<TTuple>(params LambdaExpression[] results)
 		{
-			var tupleType   = typeof(TTuple);
-			var itemTypes   = tupleType.GetGenericArguments();
-			var constructor = tupleType.GetConstructor(itemTypes)!;
-			var members     = new MemberInfo[results.Length];
-
 			for (var i = 0; i < results.Length; i++)
 			{
-				var position = (i + 1).ToString(CultureInfo.InvariantCulture);
-
 				if (results[i] == null)
-					throw new ArgumentNullException("result" + position);
-
-				members[i] = tupleType.GetField("Item" + position)!;
+					throw new ArgumentNullException("result" + (i + 1).ToString(CultureInfo.InvariantCulture));
 			}
 
-			var body = Expression.New(constructor, results.Select(static r => r.Body), members);
+			return Expression.Lambda<Func<TTuple>>(NewQueryBatchTuple(typeof(TTuple), results.Select(static r => r.Body)));
+		}
 
-			return Expression.Lambda<Func<TTuple>>(body);
+		// A tuple literal is not allowed in an expression tree (CS8143), so the tuple is built here: one body that
+		// constructs the ValueTuple from the result bodies, bound to its Item fields like any projection.
+		internal static NewExpression NewQueryBatchTuple(Type tupleType, IEnumerable<Expression> bodies)
+		{
+			var itemTypes = tupleType.GetGenericArguments();
+			var members   = new MemberInfo[itemTypes.Length];
+
+			for (var i = 0; i < members.Length; i++)
+				members[i] = tupleType.GetField("Item" + (i + 1).ToString(CultureInfo.InvariantCulture))!;
+
+			return Expression.New(tupleType.GetConstructor(itemTypes)!, bodies, members);
 		}
 	}
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using System.Transactions;
 
@@ -21,6 +22,10 @@ namespace Tests.Linq
 	[TestFixture]
 	public class QueryBatchTests : TestBase
 	{
+		// Access refuses a FROM-less SELECT holding a subquery ("Query input must contain at least one table or query"),
+		// which a batch with a scalar read over a table builds; SelectScalarTests.SubQueryAggregate excludes it likewise.
+		const string NoFromlessSubquery = TestProvName.AllAccess;
+
 		[Table]
 		sealed class BatchItem
 		{
@@ -124,7 +129,7 @@ namespace Tests.Linq
 		// Traced keeps this test out of the SQL baselines: a remote context runs the batch as separate commands, so its
 		// baseline differs from the direct one by design and the harness would reject the pair.
 		[Test]
-		public void ReturnsTheValuesOfEachPart([DataSources] string context)
+		public void ReturnsTheValuesOfEachPart([DataSources(NoFromlessSubquery)] string context)
 		{
 			using var db    = GetDataContext(context, Traced(new CommandTrace()));
 			using var items = db.CreateLocalTable(BatchItem.Seed);
@@ -142,7 +147,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SendsOneCommandWhateverTheOption([DataSources(false)] string context, [Values] bool useCombinedCommands)
+		public void SendsOneCommandWhateverTheOption([DataSources(false, NoFromlessSubquery)] string context, [Values] bool useCombinedCommands)
 		{
 			var trace = new CommandTrace();
 
@@ -164,8 +169,31 @@ namespace Tests.Linq
 			trace.Readers.ShouldBe(db.UsesCombinedQueryBatch() ? 1 : 2);
 		}
 
+		// SQLite renders no Skip without a Take, so the reader skips the rows; the combined command's reader does too.
 		[Test]
-		public void SelectOfTheSameShapeIsUnchanged([DataSources(false)] string context)
+		public void SkipWithoutTake([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var trace = new CommandTrace();
+
+			using var db    = GetDataContext(context, Traced(trace));
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			trace.Reset();
+
+			var (total, rest) = db.QueryBatch(
+				() => items.Count(),
+				() => items
+					.OrderBy(i => i.Id)
+					.Skip(2)
+					.ToList());
+
+			total.ShouldBe(BatchItem.Seed.Length);
+			Ids(rest).ShouldBe(PageIds(2, BatchItem.Seed.Length));
+			trace.Readers.ShouldBe(db.UsesCombinedQueryBatch() ? 1 : 2);
+		}
+
+		[Test]
+		public void SelectOfTheSameShapeIsUnchanged([DataSources(false, NoFromlessSubquery)] string context)
 		{
 			var trace = new CommandTrace();
 
@@ -316,7 +344,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void EveryTerminalReadsItsValue([DataSources] string context, [Values] Terminal terminal)
+		public void EveryTerminalReadsItsValue([DataSources(NoFromlessSubquery)] string context, [Values] Terminal terminal)
 		{
 			var trace = new CommandTrace();
 
@@ -591,6 +619,26 @@ namespace Tests.Linq
 				trace.Readers.ShouldBe(collections == 0 || db.UsesCombinedQueryBatch() ? 1 : 1 + collections);
 		}
 
+		// The results the arity tests take a prefix of, so the sync and async overloads read the same expressions.
+		sealed class TupleResults(ITable<BatchItem> items)
+		{
+			public readonly Expression<Func<int>>             Count     = () => items.Count();
+			public readonly Expression<Func<string?>>         Name      = () => items
+				.Where(i => i.Id == 3)
+				.Select(i => i.Name)
+				.First();
+			public readonly Expression<Func<List<BatchItem>>> Rows      = () => items
+				.OrderBy(i => i.Id)
+				.Take(2)
+				.ToList();
+			public readonly Expression<Func<long>>            LongCount = () => items
+				.Where(i => i.Id > 5)
+				.LongCount();
+			public readonly Expression<Func<bool>>            AnyNull   = () => items.Any(i => i.Value == null);
+			public readonly Expression<Func<int?>>            Max       = () => items.Max(i => i.Value);
+			public readonly Expression<Func<double?>>         Average   = () => items.Average(i => (double?)i.Value);
+		}
+
 		// Tuple positions are assembled before translation, so one provider shows them; distinct types make a swap fail.
 		[Test]
 		public void TupleArity2([IncludeDataSources(TestProvName.AllSQLite)] string context)
@@ -610,21 +658,16 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TupleArity3([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public async Task TupleArity3([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool async)
 		{
 			using var db    = GetDataContext(context);
 			using var items = db.CreateLocalTable(BatchItem.Seed);
 
-			var (count, name, rows) = db.QueryBatch(
-				() => items.Count(),
-				() => items
-					.Where(i => i.Id == 3)
-					.Select(i => i.Name)
-					.First(),
-				() => items
-					.OrderBy(i => i.Id)
-					.Take(2)
-					.ToList());
+			var r = new TupleResults(items);
+
+			var (count, name, rows) = async
+				? await db.QueryBatchAsync(r.Count, r.Name, r.Rows)
+				: db.QueryBatch(r.Count, r.Name, r.Rows);
 
 			count.ShouldBe(10);
 			name.ShouldBe("N3");
@@ -632,24 +675,16 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TupleArity4([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public async Task TupleArity4([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool async)
 		{
 			using var db    = GetDataContext(context);
 			using var items = db.CreateLocalTable(BatchItem.Seed);
 
-			var (count, name, rows, longCount) = db.QueryBatch(
-				() => items.Count(),
-				() => items
-					.Where(i => i.Id == 3)
-					.Select(i => i.Name)
-					.First(),
-				() => items
-					.OrderBy(i => i.Id)
-					.Take(2)
-					.ToList(),
-				() => items
-					.Where(i => i.Id > 5)
-					.LongCount());
+			var r = new TupleResults(items);
+
+			var (count, name, rows, longCount) = async
+				? await db.QueryBatchAsync(r.Count, r.Name, r.Rows, r.LongCount)
+				: db.QueryBatch(r.Count, r.Name, r.Rows, r.LongCount);
 
 			count.ShouldBe(10);
 			name.ShouldBe("N3");
@@ -658,25 +693,16 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TupleArity5([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public async Task TupleArity5([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool async)
 		{
 			using var db    = GetDataContext(context);
 			using var items = db.CreateLocalTable(BatchItem.Seed);
 
-			var (count, name, rows, longCount, anyNull) = db.QueryBatch(
-				() => items.Count(),
-				() => items
-					.Where(i => i.Id == 3)
-					.Select(i => i.Name)
-					.First(),
-				() => items
-					.OrderBy(i => i.Id)
-					.Take(2)
-					.ToList(),
-				() => items
-					.Where(i => i.Id > 5)
-					.LongCount(),
-				() => items.Any(i => i.Value == null));
+			var r = new TupleResults(items);
+
+			var (count, name, rows, longCount, anyNull) = async
+				? await db.QueryBatchAsync(r.Count, r.Name, r.Rows, r.LongCount, r.AnyNull)
+				: db.QueryBatch(r.Count, r.Name, r.Rows, r.LongCount, r.AnyNull);
 
 			count.ShouldBe(10);
 			name.ShouldBe("N3");
@@ -686,26 +712,16 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TupleArity6([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public async Task TupleArity6([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool async)
 		{
 			using var db    = GetDataContext(context);
 			using var items = db.CreateLocalTable(BatchItem.Seed);
 
-			var (count, name, rows, longCount, anyNull, max) = db.QueryBatch(
-				() => items.Count(),
-				() => items
-					.Where(i => i.Id == 3)
-					.Select(i => i.Name)
-					.First(),
-				() => items
-					.OrderBy(i => i.Id)
-					.Take(2)
-					.ToList(),
-				() => items
-					.Where(i => i.Id > 5)
-					.LongCount(),
-				() => items.Any(i => i.Value == null),
-				() => items.Max(i => i.Value));
+			var r = new TupleResults(items);
+
+			var (count, name, rows, longCount, anyNull, max) = async
+				? await db.QueryBatchAsync(r.Count, r.Name, r.Rows, r.LongCount, r.AnyNull, r.Max)
+				: db.QueryBatch(r.Count, r.Name, r.Rows, r.LongCount, r.AnyNull, r.Max);
 
 			count.ShouldBe(10);
 			name.ShouldBe("N3");
@@ -716,27 +732,16 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TupleArity7([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public async Task TupleArity7([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool async)
 		{
 			using var db    = GetDataContext(context);
 			using var items = db.CreateLocalTable(BatchItem.Seed);
 
-			var (count, name, rows, longCount, anyNull, max, average) = db.QueryBatch(
-				() => items.Count(),
-				() => items
-					.Where(i => i.Id == 3)
-					.Select(i => i.Name)
-					.First(),
-				() => items
-					.OrderBy(i => i.Id)
-					.Take(2)
-					.ToList(),
-				() => items
-					.Where(i => i.Id > 5)
-					.LongCount(),
-				() => items.Any(i => i.Value == null),
-				() => items.Max(i => i.Value),
-				() => items.Average(i => (double?)i.Value));
+			var r = new TupleResults(items);
+
+			var (count, name, rows, longCount, anyNull, max, average) = async
+				? await db.QueryBatchAsync(r.Count, r.Name, r.Rows, r.LongCount, r.AnyNull, r.Max, r.Average)
+				: db.QueryBatch(r.Count, r.Name, r.Rows, r.LongCount, r.AnyNull, r.Max, r.Average);
 
 			var expectedAverage = BatchItem.Seed.Average(i => (double?)i.Value)!.Value;
 
@@ -750,7 +755,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async Task AsyncMatchesSync([DataSources(false)] string context)
+		public async Task AsyncMatchesSync([DataSources(false, NoFromlessSubquery)] string context)
 		{
 			var trace = new CommandTrace();
 
@@ -789,7 +794,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CollectionsAreExplicitLoads([DataSources(false)] string context)
+		public void CollectionsAreExplicitLoads([DataSources(false, NoFromlessSubquery)] string context)
 		{
 			using var db    = GetDataContext(context, o => o.UseImplicitCollectionLoading(ImplicitCollectionLoading.Throw));
 			using var items = db.CreateLocalTable(BatchItem.Seed);
@@ -853,7 +858,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ReadsInOneTransaction([DataSources(false)] string context)
+		public void ReadsInOneTransaction([DataSources(false, NoFromlessSubquery)] string context)
 		{
 			var trace = new CommandTrace();
 
@@ -869,7 +874,8 @@ namespace Tests.Linq
 					.Take(3)
 					.ToList());
 
-			trace.Begins.ShouldBe(1);
+			// The load transaction is skipped where the provider has none.
+			trace.Begins.ShouldBe(((DataConnection)db).DataProvider.TransactionsSupported ? 1 : 0);
 		}
 
 		// Whether a TransactionScope suppresses the load transaction is decided before any provider is involved.
@@ -900,7 +906,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NoTransactionInsideAnExplicitOne([DataSources(false)] string context)
+		public void NoTransactionInsideAnExplicitOne([DataSources(false, NoFromlessSubquery)] string context)
 		{
 			var trace = new CommandTrace();
 
@@ -922,7 +928,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ScalarsOnlyIsOneStatementWithoutTransaction([DataSources(false)] string context)
+		public void ScalarsOnlyIsOneStatementWithoutTransaction([DataSources(false, NoFromlessSubquery)] string context)
 		{
 			var trace = new CommandTrace();
 
@@ -997,11 +1003,149 @@ namespace Tests.Linq
 			selectTexts.Length.ShouldBe(2);
 		}
 
-		// The batch loads with the Default strategy whatever the configured one. KeyedQuery shows the override in the
-		// command count; CteUnion sends one statement either way, so its arm pins the values and the count only.
+		// A nested batch is a scalar subquery of the enclosing row, in both forms; the binding is the builder's, so one
+		// provider shows it.
+		[Test]
+		public void NestedQueryBatchReturnsItsValue([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var trace = new CommandTrace();
+
+			using var db     = GetDataContext(context, Traced(trace));
+			using var items  = db.CreateLocalTable(BatchItem.Seed);
+			using var groups = db.CreateLocalTable(BatchGroup.Seed);
+
+			trace.Reset();
+
+			var result = groups
+				.OrderBy(g => g.Id)
+				.Select(g => new
+				{
+					g.Id,
+					Single = db.QueryBatch(() => items.Count()),
+					Tuple  = db.QueryBatch(
+						() => items.Count(i => i.GroupId == g.Id),
+						() => items.Max(i => i.Id)),
+				})
+				.ToList();
+
+			var actual = result
+				.Select(r => $"{r.Id}:{r.Single}:{r.Tuple.Item1}:{r.Tuple.Item2}")
+				.ToArray();
+
+			var expected = BatchGroup.Seed
+				.OrderBy(g => g.Id)
+				.Select(g => $"{g.Id}:{BatchItem.Seed.Length}:{BatchItem.Seed.Count(i => i.GroupId == g.Id)}:{BatchItem.Seed.Max(i => i.Id)}")
+				.ToArray();
+
+			actual.ShouldBe(expected);
+			trace.Readers.ShouldBe(1);
+		}
+
+		// A compiled query runs its element through its own path; both forms are compiled once and run.
+		[Test]
+		public void CompiledQueryBatch([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var single = CompiledQuery.Compile((IDataContext db, int take) => db.QueryBatch(() => new
+			{
+				Total = db.GetTable<BatchItem>().Count(),
+				Page  = db.GetTable<BatchItem>()
+					.OrderBy(i => i.Id)
+					.Take(take)
+					.ToList(),
+			}));
+
+			var tuple = CompiledQuery.Compile((IDataContext db, int take) => db.QueryBatch(
+				() => db.GetTable<BatchItem>().Count(),
+				() => db.GetTable<BatchItem>()
+					.OrderBy(i => i.Id)
+					.Take(take)
+					.ToList()));
+
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var named      = single(db, 2);
+			var positional = tuple(db, 3);
+
+			named.Total.ShouldBe(BatchItem.Seed.Length);
+			Ids(named.Page).ShouldBe(PageIds(0, 2));
+			positional.Item1.ShouldBe(BatchItem.Seed.Length);
+			Ids(positional.Item2).ShouldBe(PageIds(0, 3));
+		}
+
+		// Where the statements cannot be combined, forcing Default only adds round trips: a configured CteUnion already reads
+		// the nested collection in one statement. A DataContext never combines; the DataConnection arm is the control that
+		// does, and the providers that cannot are covered by NestedCollectionCombinesWhateverTheDefaultStrategy.
+		[Test]
+		public void ConfiguredStrategyStaysWhereNothingCombines(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context,
+			[Values] bool dataContext)
+		{
+			using var db     = GetDataContext(context);
+			using var items  = db.CreateLocalTable(BatchItem.Seed);
+			using var groups = db.CreateLocalTable(BatchGroup.Seed);
+
+			var trace   = new CommandTrace();
+			var options = Traced(trace)(new DataOptions().UseConfiguration(context))
+				.UseDefaultEagerLoadingStrategy(EagerLoadingStrategy.CteUnion);
+
+			using IDataContext target = dataContext ? new DataContext(options) : new DataConnection(options);
+
+			var itemTable  = target.GetTable<BatchItem>();
+			var groupTable = target.GetTable<BatchGroup>();
+
+			trace.Reset();
+
+			var selected = target.Select(() => new
+			{
+				Total = groupTable.Count(),
+				Page  = groupTable
+					.OrderBy(g => g.Id)
+					.Select(g => new
+					{
+						g.Id,
+						Items = itemTable
+							.Where(i => i.GroupId == g.Id)
+							.OrderBy(i => i.Id)
+							.ToList(),
+					})
+					.ToList(),
+			});
+
+			var selectReaders = trace.Readers;
+
+			trace.Reset();
+
+			var (total, page) = target.QueryBatch(
+				() => groupTable.Count(),
+				() => groupTable
+					.OrderBy(g => g.Id)
+					.Select(g => new
+					{
+						g.Id,
+						Items = itemTable
+							.Where(i => i.GroupId == g.Id)
+							.OrderBy(i => i.Id)
+							.ToList(),
+					})
+					.ToList());
+
+			var batchReaders = trace.Readers;
+
+			var selectedIds = GroupedIds(selected.Page.Select(g => (g.Id, (IEnumerable<BatchItem>)g.Items)));
+			var batchIds    = GroupedIds(page.Select(g => (g.Id, (IEnumerable<BatchItem>)g.Items)));
+
+			total.ShouldBe(selected.Total);
+			batchIds.ShouldBe(selectedIds);
+			batchIds.ShouldBe(ExpectedGroupedIds());
+			batchReaders.ShouldBe(target.UsesCombinedQueryBatch() ? 1 : selectReaders);
+		}
+
+		// Where the batch combines, it loads with the Default strategy whatever the configured one, and KeyedQuery shows the
+		// override in the command count. Elsewhere the configured strategy stays, so the batch reads what db.Select reads.
 		[Test]
 		public void NestedCollectionCombinesWhateverTheDefaultStrategy(
-			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllPostgreSQL)] string context,
+			[DataSources(false, NoFromlessSubquery)] string context,
 			[Values(EagerLoadingStrategy.KeyedQuery, EagerLoadingStrategy.CteUnion)] EagerLoadingStrategy strategy)
 		{
 			var trace = new CommandTrace();
@@ -1011,6 +1155,26 @@ namespace Tests.Linq
 
 			using var items  = db.CreateLocalTable(BatchItem.Seed);
 			using var groups = db.CreateLocalTable(BatchGroup.Seed);
+
+			trace.Reset();
+
+			db.Select(() => new
+			{
+				Total = groups.Count(),
+				Page  = groups
+					.OrderBy(g => g.Id)
+					.Select(g => new
+					{
+						g.Id,
+						Items = items
+							.Where(i => i.GroupId == g.Id)
+							.OrderBy(i => i.Id)
+							.ToList(),
+					})
+					.ToList(),
+			});
+
+			var selectReaders = trace.Readers;
 
 			trace.Reset();
 
@@ -1032,17 +1196,39 @@ namespace Tests.Linq
 
 			total.ShouldBe(BatchGroup.Seed.Length);
 			actual.ShouldBe(ExpectedGroupedIds());
-			trace.Readers.ShouldBe(db.UsesCombinedQueryBatch() ? 1 : 3);
+			trace.Readers.ShouldBe(db.UsesCombinedQueryBatch() ? 1 : selectReaders);
 		}
 
+		// The marker yields to the Default strategy only where the batch combines.
 		[Test]
-		public void InnerLoadStrategyIsOverridden([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllPostgreSQL)] string context)
+		public void InnerLoadStrategyIsOverridden([DataSources(false, NoFromlessSubquery)] string context)
 		{
 			var trace = new CommandTrace();
 
 			using var db     = GetDataContext(context, Traced(trace));
 			using var items  = db.CreateLocalTable(BatchItem.Seed);
 			using var groups = db.CreateLocalTable(BatchGroup.Seed);
+
+			trace.Reset();
+
+			db.Select(() => new
+			{
+				Total = groups.Count(),
+				Page  = groups
+					.WithKeyedLoadStrategy()
+					.OrderBy(g => g.Id)
+					.Select(g => new
+					{
+						g.Id,
+						Items = items
+							.Where(i => i.GroupId == g.Id)
+							.OrderBy(i => i.Id)
+							.ToList(),
+					})
+					.ToList(),
+			});
+
+			var selectReaders = trace.Readers;
 
 			trace.Reset();
 
@@ -1065,7 +1251,7 @@ namespace Tests.Linq
 
 			total.ShouldBe(BatchGroup.Seed.Length);
 			actual.ShouldBe(ExpectedGroupedIds());
-			trace.Readers.ShouldBe(db.UsesCombinedQueryBatch() ? 1 : 3);
+			trace.Readers.ShouldBe(db.UsesCombinedQueryBatch() ? 1 : selectReaders);
 		}
 
 		// Npgsql implements DbBatch on every TFM linq2db batches on; SQL Server's sequential-access contexts register an
@@ -1108,8 +1294,9 @@ namespace Tests.Linq
 			}
 		}
 
+		// The providers that combine; an interceptor turns DbBatch off, so each sends one concatenated command.
 		[Test]
-		public void ConcatRunsWithAnInterceptor([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllPostgreSQL)] string context)
+		public void ConcatRunsWithAnInterceptor([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySql)] string context)
 		{
 			var trace       = new CommandTrace();
 			var interceptor = new CountingInterceptor();

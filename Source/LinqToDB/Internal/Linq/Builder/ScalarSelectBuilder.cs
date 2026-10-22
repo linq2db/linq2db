@@ -14,22 +14,39 @@ namespace LinqToDB.Internal.Linq.Builder
 	{
 
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsSameGenericMethod(Methods.LinqToDB.Select, Methods.LinqToDB.QueryBatch);
+			=> call.IsSameGenericMethod(Methods.LinqToDB.Select) || IsQueryBatch(call);
+
+		// Every arity: the tuple overloads reach the builder as written when nested in a query or compiled.
+		internal static bool IsQueryBatch(MethodCallExpression call)
+			=> call.Method.DeclaringType == typeof(LinqExtensions) && call.Method.Name is nameof(LinqExtensions.QueryBatch);
 
 		public override bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo) => true;
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var selectQuery = buildInfo.SelectQuery;
-			var body        = methodCall.Arguments[1].UnwrapLambda().Body;
+			var body        = methodCall.Arguments.Count == 2
+				? methodCall.Arguments[1].UnwrapLambda().Body
+				: LinqExtensions.NewQueryBatchTuple(methodCall.Type, methodCall.Arguments.Skip(1).Select(static a => a.UnwrapLambda().Body));
 
-			if (buildInfo.IsSubQuery || !methodCall.IsSameGenericMethod(Methods.LinqToDB.QueryBatch))
+			if (buildInfo.IsSubQuery || !IsQueryBatch(methodCall))
 				return BuildSequenceResult.FromContext(new ScalarSelectContext(builder.GetTranslationModifier(), builder, buildInfo.Parent, body, selectQuery));
+
+			builder.CombinedCommandsRequested = true;
+
+			// Where nothing is combined, the configured strategy stays: it may read the collections in fewer statements. It is
+			// set on the root context alone, which makes the collections explicit loads without overriding inner markers.
+			if (!QueryRunner.CanCombineCommands(builder.DataContext, out _))
+			{
+				var modifier   = builder.GetTranslationModifier();
+				var configured = modifier.EagerLoadingStrategy ?? builder.DataContext.Options.LinqOptions.DefaultEagerLoadingStrategy;
+
+				return BuildSequenceResult.FromContext(new ScalarSelectContext(modifier.WithEagerLoadingStrategy(configured), builder, null, body, selectQuery));
+			}
 
 			// The Default strategy is the one that combines, so it is pushed build-wide (not temporary): nested
 			// collections resolve their strategy from the builder, and a configured default or an inner With*LoadStrategy
 			// marker would otherwise split them back out of the batch.
-			builder.CombinedCommandsRequested = true;
 			builder.PushTranslationModifier(builder.GetTranslationModifier().WithEagerLoadingStrategy(EagerLoadingStrategy.Default), false);
 
 			var context = new ScalarSelectContext(builder.GetTranslationModifier(), builder, null, body, selectQuery);
