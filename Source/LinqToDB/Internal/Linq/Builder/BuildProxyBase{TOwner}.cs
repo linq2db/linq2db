@@ -214,7 +214,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				case { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked }:
 				{
 					var unary = (UnaryExpression)expression;
-					var processed = ProcessTranslated(unary.Operand, toPath == null ? null : SequenceHelper.ConvertBack(toPath, unary));
+					var processed = ProcessTranslated(unary.Operand, toPath);
 					return unary.Update(processed);
 				}
 

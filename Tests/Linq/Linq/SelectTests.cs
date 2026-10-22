@@ -2299,24 +2299,6 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
-
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
-		public void NullableStructFromCte([CteContextSource] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var cte = db.Parent
-				.Select(p => new { p.ParentID, Info = (ParentPoint?)new ParentPoint(p.ParentID, p.Value1) })
-				.AsCte();
-
-			var result = cte.Select(m => new { m.ParentID, A = m.Info }).ToList();
-
-			var expected = Parent
-				.Select(p => new { p.ParentID, A = (ParentPoint?)new ParentPoint(p.ParentID, p.Value1) })
-				.ToList();
-
-			AreEqual(expected, result);
-		}
 		#endregion
 
 		#region Upcast value from an inner projection

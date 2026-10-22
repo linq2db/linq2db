@@ -471,7 +471,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// <c>T?</c> is read back as <c>path.Value</c>, and an interface or base class as <c>(Derived)path</c>. Any other
 		/// conversion leaves the path as it is.
 		/// </remarks>
-		internal static Expression ConvertBack(Expression path, UnaryExpression conversion)
+		static Expression ConvertBack(Expression path, UnaryExpression conversion)
 		{
 			if (conversion.NodeType is not (ExpressionType.Convert or ExpressionType.ConvertChecked or ExpressionType.TypeAs))
 				return path;
