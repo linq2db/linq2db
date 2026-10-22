@@ -88,8 +88,11 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// </remarks>
 		static bool ConversionsMatch(LambdaExpression lambda1, LambdaExpression lambda2)
 		{
+			if (ExpressionEqualityComparer.Instance.Equals(lambda1, lambda2))
+				return true;
+
 			if (lambda1.Parameters.Count != 1 || lambda2.Parameters.Count != 1)
-				return ExpressionEqualityComparer.Instance.Equals(lambda1, lambda2);
+				return false;
 
 			var parameter1 = lambda1.Parameters[0];
 			var parameter2 = lambda2.Parameters[0];
@@ -110,8 +113,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (!TryCanonicalize(lambda1.Body, parameter1, common, out var body1)
 				|| !TryCanonicalize(lambda2.Body, parameter2, common, out var body2))
 			{
-				body1 = Canonicalize(lambda1.Body, parameter1, AsWrittenIn(parameter1, common));
-				body2 = Canonicalize(lambda2.Body, parameter2, AsWrittenIn(parameter2, common));
+				// stripping a nullability cast can still leave a node whose operands no longer agree
+				if (!TryCanonicalize(lambda1.Body, parameter1, AsWrittenIn(parameter1, common), out body1)
+					|| !TryCanonicalize(lambda2.Body, parameter2, AsWrittenIn(parameter2, common), out body2))
+				{
+					return false;
+				}
 			}
 
 			return ExpressionEqualityComparer.Instance.Equals(body1, body2);
@@ -131,10 +138,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				result = Canonicalize(body, parameter, replacement);
 				return true;
 			}
-			catch (ArgumentException)
+			catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
 			{
 				// Rebuilding an access against a type that does not have it - Property 'Int64 Value' is not
-				// defined for type 'System.Int64' - says this body is written in terms of its own nullability.
+				// defined for type 'System.Int64' - or a lifted operator around an operand that is no longer
+				// nullable says this body is written in terms of its own nullability.
 				result = null;
 				return false;
 			}
@@ -468,381 +476,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			});
 
 			return transformed;
-		}
-
-		[return: NotNullIfNotNull(nameof(expression))]
-		public static Expression? RemapToNewPathSimple(ExpressionBuilder builder, Expression? expression, Expression toPath, ProjectFlags flags)
-		{
-			if (expression == null)
-				return null;
-
-			if (toPath is not (ContextRefExpression or MemberExpression or SqlGenericParamAccessExpression))
-				return expression;
-
-			if (expression is SqlGenericConstructorExpression generic)
-			{
-				List<SqlGenericConstructorExpression.Assignment>? assignments = null;
-				List<SqlGenericConstructorExpression.Parameter>?  parameters  = null;
-
-				var contextRef = toPath as ContextRefExpression;
-
-				for (int i = 0; i < generic.Assignments.Count; i++)
-				{
-					var assignment = generic.Assignments[i];
-
-					var currentPath = toPath;
-					if (contextRef != null 
-						&& assignment.MemberInfo.DeclaringType != null 
-						&& !assignment.MemberInfo.DeclaringType.IsAssignableFrom(contextRef.Type))
-					{
-						currentPath = contextRef.WithType(assignment.MemberInfo.DeclaringType);
-					}
-
-					var memberPath = Expression.MakeMemberAccess(currentPath, assignment.MemberInfo);
-					var parsed     = builder.ParseGenericConstructor(assignment.Expression, flags, null);
-
-					Expression newExpression = memberPath;
-					if (parsed is SqlGenericConstructorExpression { Assignments.Count: > 0 } genericParsed)
-					{
-						newExpression = RemapToNewPathSimple(builder, assignment.Expression, memberPath, flags);
-					}
-					else if (parsed is SqlErrorExpression)
-					{
-						newExpression = assignment.Expression;
-					}
-
-					if (!ReferenceEquals(assignment.Expression, newExpression))
-					{
-						if (assignments == null)
-						{
-							assignments = new();
-							for (int j = 0; j < i; j++)
-							{
-								assignments.Add(generic.Assignments[j]);
-							}
-						}
-
-						assignments.Add(assignment.WithExpression(newExpression));
-					}
-					else
-						assignments?.Add(assignment);
-				}
-
-				for (int i = 0; i < generic.Parameters.Count; i++)
-				{
-					var parameter = generic.Parameters[i];
-
-					var currentPath = toPath;
-					if (contextRef != null
-						&& parameter.MemberInfo?.DeclaringType != null
-						&& !parameter.MemberInfo.DeclaringType.IsAssignableFrom(contextRef.Type))
-					{
-						currentPath = contextRef.WithType(parameter.MemberInfo.DeclaringType);
-					}
-
-					Expression newExpression;
-
-					if (parameter.Expression is SqlErrorExpression)
-					{
-						newExpression = parameter.Expression;
-					}
-					else if (parameter.MemberInfo != null)
-					{
-						newExpression = Expression.MakeMemberAccess(currentPath, parameter.MemberInfo);
-					}
-					else
-					{
-						var paramAccess = new SqlGenericParamAccessExpression(currentPath, parameter.ParameterInfo);
-
-						newExpression = paramAccess;
-					}
-
-					if (!ReferenceEquals(parameter.Expression, newExpression))
-					{
-						if (parameters == null)
-						{
-							parameters = new();
-							for (int j = 0; j < i; j++)
-							{
-								parameters.Add(generic.Parameters[j]);
-							}
-						}
-
-						parameters.Add(parameter.WithExpression(newExpression));
-					}
-					else
-						parameters?.Add(parameter);
-				}
-
-				if (assignments != null)
-				{
-					generic = generic.ReplaceAssignments(assignments.AsReadOnly());
-				}
-
-				if (parameters != null)
-				{
-					generic = generic.ReplaceParameters(parameters.AsReadOnly());
-				}
-
-				generic = generic.WithConstructionRoot(toPath);
-
-				return generic;
-			}
-
-			if (expression is NewExpression or MemberInitExpression)
-			{
-				var parsed = builder.ParseGenericConstructor(expression, ProjectFlags.SQL, null);
-				if (parsed is SqlGenericConstructorExpression { Assignments.Count: > 0 } genericParsed)
-					return RemapToNewPathSimple(builder, parsed, toPath, flags);
-			}
-
-			/*
-			if (expression is MemberExpression && toPath is MemberExpression && expression.Type == toPath.Type)
-				return toPath;
-
-			if (expression is ContextRefExpression && toPath is ContextRefExpression && expression.Type == toPath.Type)
-				return toPath;
-				*/
-
-			return expression;
-		}
-
-		[return: NotNullIfNotNull(nameof(expression))]
-		public static Expression? RemapToNewPath(ExpressionBuilder builder, Expression? expression, Expression toPath, ProjectFlags flags)
-		{
-			if (expression == null)
-				return null;
-
-			if (toPath is not (ContextRefExpression or MemberExpression or SqlGenericParamAccessExpression))
-				return expression;
-
-			switch (expression)
-			{
-				case SqlGenericConstructorExpression generic:
-				{
-					List<SqlGenericConstructorExpression.Assignment>? assignments = null;
-					List<SqlGenericConstructorExpression.Parameter>?  parameters  = null;
-
-					var contextRef = toPath as ContextRefExpression;
-
-					for (int i = 0; i < generic.Assignments.Count; i++)
-					{
-						var assignment = generic.Assignments[i];
-
-						var currentPath = toPath;
-						if (contextRef != null
-							&& assignment.MemberInfo.DeclaringType != null
-							&& !assignment.MemberInfo.DeclaringType.IsAssignableFrom(contextRef.Type))
-						{
-							currentPath = contextRef.WithType(assignment.MemberInfo.DeclaringType);
-						}
-
-						var newExpression = RemapToNewPath(
-							builder,
-							assignment.Expression,
-							Expression.MakeMemberAccess(currentPath, assignment.MemberInfo), flags
-						);
-
-						if (!ReferenceEquals(assignment.Expression, newExpression))
-						{
-							if (assignments == null)
-							{
-								assignments = new();
-								for (int j = 0; j < i; j++)
-								{
-									assignments.Add(generic.Assignments[j]);
-								}
-							}
-
-							assignments.Add(assignment.WithExpression(newExpression));
-						}
-						else
-							assignments?.Add(assignment);
-					}
-
-					for (int i = 0; i < generic.Parameters.Count; i++)
-					{
-						var parameter = generic.Parameters[i];
-
-						var currentPath = toPath;
-						if (contextRef != null
-							&& parameter.MemberInfo?.DeclaringType != null
-							&& !parameter.MemberInfo.DeclaringType.IsAssignableFrom(contextRef.Type))
-						{
-							currentPath = contextRef.WithType(parameter.MemberInfo.DeclaringType);
-						}
-
-						var paramAccess = new SqlGenericParamAccessExpression(currentPath, parameter.ParameterInfo);
-
-						var newExpression = RemapToNewPath(builder, parameter.Expression, paramAccess, flags);
-
-						if (!ReferenceEquals(parameter.Expression, newExpression))
-						{
-							if (parameters == null)
-							{
-								parameters = new();
-								for (int j = 0; j < i; j++)
-								{
-									parameters.Add(generic.Parameters[j]);
-								}
-							}
-
-							parameters.Add(parameter.WithExpression(newExpression));
-						}
-						else
-							parameters?.Add(parameter);
-					}
-
-					if (assignments != null)
-					{
-						generic = generic.ReplaceAssignments(assignments.AsReadOnly());
-					}
-
-					if (parameters != null)
-					{
-						generic = generic.ReplaceParameters(parameters.AsReadOnly());
-					}
-
-					generic = generic.WithConstructionRoot(toPath);
-
-					return generic;
-				}
-
-				case NewExpression or MemberInitExpression:
-				{
-					return RemapToNewPath(builder, builder.ParseGenericConstructor(expression, ProjectFlags.SQL, null), toPath, flags);
-				}
-
-				case SqlPlaceholderExpression placeholder:
-				{
-					if (placeholder.Sql.IsNullValue)
-						return Expression.Default(placeholder.Type);
-
-					if (placeholder.Type == toPath.Type)
-					{
-						return toPath;
-					}
-
-					if (IsSpecialProperty(expression, out var propType, out var propName))
-					{
-						Expression newExpr = CreateSpecialProperty(toPath, propType, propName);
-						if (placeholder.Type != newExpr.Type)
-						{
-							newExpr = Expression.Convert(newExpr, placeholder.Type);
-						}
-
-						return newExpr;
-					}
-
-					if (placeholder.Path is MemberExpression me && me.Expression?.Type == toPath.Type)
-					{
-						var newExpr = (Expression)Expression.MakeMemberAccess(toPath, me.Member);
-						if (placeholder.Type != newExpr.Type)
-						{
-							newExpr = Expression.Convert(newExpr, placeholder.Type);
-						}
-
-						return newExpr;
-					}
-
-					return RemapToNewPath(builder, placeholder.TrackingPath, toPath, flags)!;
-				}
-
-				case BinaryExpression binary when toPath.Type != binary.Type:
-				{
-					var left  = binary.Left;
-					var right = binary.Right;
-
-					if (left is SqlPlaceholderExpression)
-					{
-						left = RemapToNewPath(builder, left, toPath, flags);
-					}
-
-					if (right is SqlPlaceholderExpression)
-					{
-						right = RemapToNewPath(builder, right, toPath, flags);
-					}
-
-					if (left.Type != right.Type)
-					{
-						var newLeft  = left.UnwrapConvert();
-						var newRight = right.UnwrapConvert();
-
-						if (newLeft.Type != newRight.Type)
-						{
-							if (!ReferenceEquals(left, newLeft))
-								newLeft = Expression.Convert(newLeft, newRight.Type);
-							else
-								newRight = Expression.Convert(newRight, newLeft.Type);
-						}
-
-						left = newLeft;
-						right = newRight;
-					}
-
-					return binary.Update(left, binary.Conversion, right);
-				}
-
-				case ConditionalExpression conditional:
-				{
-					var newTest  = RemapToNewPath(builder, conditional.Test,    toPath, flags);
-					var newTrue  = RemapToNewPath(builder, conditional.IfTrue,  toPath, flags);
-					var newFalse = RemapToNewPath(builder, conditional.IfFalse, toPath, flags);
-
-					if (newTrue.Type != expression.Type)
-						newTrue = Expression.Convert(newTrue, expression.Type);
-
-					if (newFalse.Type != expression.Type)
-						newFalse = Expression.Convert(newFalse, expression.Type);
-
-					return conditional.Update(newTest, newTrue, newFalse);
-				}
-
-				case { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked }:
-				{
-					var unary = (UnaryExpression)expression;
-					return unary.Update(RemapToNewPath(builder, unary.Operand, toPath, flags));
-				}
-
-				case MethodCallExpression mc:
-				{
-					return mc.Update(mc.Object, mc.Arguments.Select(a => RemapToNewPath(builder, a, toPath, flags)));
-				}
-
-				case SqlAdjustTypeExpression adjust:
-				{
-					return adjust.Update(RemapToNewPath(builder, adjust.Expression, toPath, flags));
-				}
-
-				case SqlEagerLoadExpression eager:
-					return eager;
-
-				case DefaultExpression or DefaultValueExpression:
-					return expression;
-			}
-
-			if (flags.IsExpression())
-			{
-				if (expression is DefaultValueExpression)
-				{
-					return expression;
-				}
-
-				if (!expression.Type.IsValueType)
-				{
-					if (expression is DefaultExpression)
-					{
-						return expression;
-					}
-
-					if (expression is ConstantExpression constant && constant.Value == null)
-					{
-						return expression;
-					}
-				}
-			}
-
-			return toPath;
 		}
 
 		#region ReplaceContext

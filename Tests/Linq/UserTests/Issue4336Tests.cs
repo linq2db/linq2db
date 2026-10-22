@@ -14,26 +14,28 @@ using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.UserTests
 {
 	[TestFixture]
 	public class Issue4336Tests : TestBase
 	{
-		[ActiveIssue(5590, Configuration = TestProvName.AllYdb, Details = "YDB lacks correlated subquery / OUTER APPLY support")]
 		[Test]
 		public void Issue4336Test([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var t1 = db.CreateLocalTable<Product>();
-			using var t2 = db.CreateLocalTable<ProductCategory>();
+			using var t1 = db.CreateLocalTable(new[] {new Product {Id = 1, Name = "p", CategoryId = 1}});
+			using var t2 = db.CreateLocalTable(new[] {new ProductCategory {Id = 1, Name = "c", PeriodOrderLimit = 5}});
 			using var t3 = db.CreateLocalTable<OrderHeader>();
 			using var t4 = db.CreateLocalTable<OrderItem>();
-			using var t5 = db.CreateLocalTable<OrderPeriod>();
-			using var t6 = db.CreateLocalTable<ProductsPerOrderPeriod>();
+			using var t5 = db.CreateLocalTable(new[] {new OrderPeriod {Id = 1}});
+			using var t6 = db.CreateLocalTable(new[] {new ProductsPerOrderPeriod {Id = 1, OrderPeriodId = 1, ProductId = 1}});
 
 			var q = (from r in ViewCapacityAndOrderedByPeriod(db) select r).Take(10);
 			var l = q.ToList();
-			var c = l.Count();
+
+			l.ShouldBe(new[] {new ViewCapacityAndOrderedByPeriodRow(1, 1, 1, 5, 0, 5, 5, 0, 5)});
 		}
 
 		[Table]

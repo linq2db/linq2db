@@ -843,7 +843,7 @@
 
 			"ClickHouse.Octonica": {
 				"Provider": "Octonica.ClickHouseClient",
-				"ConnectionString": "Host=localhost;Port=9000;Database=testdb1;User=testuser;Password=testuser"
+				"ConnectionString": "Host=localhost;Port=9000;Database=testdb1;User=testuser;Password=testuser;BusyConnectionMode=Throw"
 			},
 			"ClickHouse.Driver": {
 				"Provider": "ClickHouse.Driver",

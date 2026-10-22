@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 
 using LinqToDB;
@@ -245,9 +245,6 @@ namespace Tests.Linq
 				q);
 		}
 
-#if AZURE
-		[ActiveIssue("Fails on CI", Configuration = ProviderName.DB2)]
-#endif
 		[Test]
 		public void Round4([DataSources] string context)
 		{
@@ -257,7 +254,8 @@ namespace Tests.Linq
 				from t in from p in db.Types select Math.Round((double)p.MoneyValue, 1) where t != 0 select Math.Round(t, 5));
 		}
 
-		[ActiveIssue("Wrong DB2 implementation", Configuration = TestProvName.AllDB2)]
+		[ActiveIssue(Configuration = TestProvName.AllDB2, ErrorMessage = "Assert.That(exceptExpected, Is.Zero)",
+			Details = "no-issue: DB2's ROUND on a Float is not exact - ROUND(CAST(6.6 AS Float), 5) returns 6.6000000000000005, one ulp above .NET's. Two of the twelve rows differ that way. Not linq2db's banker's-rounding emulation: its midpoint branch is never taken for these values, so the emitted CASE reduces to a plain ROUND.")]
 		[Test]
 		public void Round4Sql([DataSources] string context)
 		{
@@ -327,9 +325,6 @@ namespace Tests.Linq
 				q);
 		}
 
-#if AZURE
-		[ActiveIssue("Fails on CI", Configuration = ProviderName.DB2)]
-#endif
 		[Test]
 		public void Round11([DataSources] string context)
 		{

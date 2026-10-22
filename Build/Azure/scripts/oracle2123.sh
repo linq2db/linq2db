@@ -1,7 +1,7 @@
 #!/bin/bash
 
 . "$(dirname "$0")/ci-setvar.sh"
-. "$(dirname "$0")/oracle-tune.sh"
+. "$(dirname "$0")/docker-liveness.sh"
 ci_setvar TZ CET
 
 # Oracle 21c (host port 1521) and 23c (host port 1522) run as concurrent lanes in one job.
@@ -17,6 +17,7 @@ until docker logs oracle21 | grep -q 'DATABASE IS READY TO USE!'; do
     sleep 10
     retries=`expr $retries + 1`
     echo waiting for oracle21 to start
+    require_running oracle21
     # 300 retries, as oracle image is really slow to start
     if [ $retries -gt 300 ]; then
         echo oracle21 not started or takes too long to start
@@ -25,7 +26,6 @@ until docker logs oracle21 | grep -q 'DATABASE IS READY TO USE!'; do
     fi;
 done
 docker cp bfile.txt oracle21:/home/oracle/bfile.txt
-oracle_tune oracle21
 
 # --- Oracle 23c ---
 retries=0
@@ -33,6 +33,7 @@ until docker logs oracle23 | grep -q 'DATABASE IS READY TO USE!'; do
     sleep 10
     retries=`expr $retries + 1`
     echo waiting for oracle23 to start
+    require_running oracle23
     # 300 retries, as oracle image is really slow to start
     if [ $retries -gt 300 ]; then
         echo oracle23 not started or takes too long to start
@@ -41,7 +42,10 @@ until docker logs oracle23 | grep -q 'DATABASE IS READY TO USE!'; do
     fi;
 done
 docker cp bfile.txt oracle23:/home/oracle/bfile.txt
-oracle_tune oracle23
+
+# Both are ready, but the first can have died while the second was starting.
+require_running oracle21
+require_running oracle23
 
 docker logs oracle21
 docker logs oracle23

@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -21,7 +21,9 @@ namespace Tests.Linq
 			[Column] public int Value { get; set; }
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllInformix, Details = "Informix interval cannot be created from non-literal value")]
+		[ActiveIssue(Configuration = TestProvName.AllInformix, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			ErrorMessage = "Non-numeric character in datetime or interval.",
+			Details = "no-issue: Informix interval cannot be created from non-literal value")]
 		[Test]
 		public void UnionTest([DataSources(TestProvName.AllAccess)] string context)
 		{
@@ -47,7 +49,9 @@ namespace Tests.Linq
 			var result2 = query.Select(v => v.Value2).ToArray();
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllInformix, Details = "Informix interval cannot be created from non-literal value")]
+		[ActiveIssue(Configuration = TestProvName.AllInformix, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			ErrorMessage = "Non-numeric character in datetime or interval.",
+			Details = "no-issue: Informix interval cannot be created from non-literal value")]
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
 		public void SubQueryTest([DataSources(TestProvName.AllAccess)] string context)
@@ -265,7 +269,21 @@ namespace Tests.Linq
 			Assert.That(res[0], Is.EqualTo(1));
 		}
 
-		[ActiveIssue]
+		// FromSql<int>("SELECT 1") emits SELECT [t1].[value] FROM (SELECT 1) [t1], naming a column the inner
+		// constant never had. Servers that reject it do so at their own stage, so the gate is grouped by that.
+		// DuckDB, SqlServer.2022 and PostgreSQL.16 accept it and are deliberately not gated.
+		[ActiveIssue(2779, Configuration = TestProvName.AllSQLite, ErrorMessage = "no such column: t1.value",
+			Details = "One fragment covers both drivers: System.Data.SQLite reports 'SQL logic error' with this on the next line, Microsoft.Data.Sqlite as 'SQLite Error 1'. Verified on Classic, MS, MPU and MPM.")]
+		[ActiveIssue(2779, Configuration = ProviderName.SqlCe,
+			ErrorMessage = "Column names must be specified for constants, expressions or aggregate functions when they occur in a FROM sub query.")]
+		[ActiveIssue(2779, Configuration = TestProvName.AllClickHouse,
+			ErrorMessage = "Identifier 't1.value' cannot be resolved from subquery with name t1",
+			Details = "All three drivers surface the same server text under three different exception types, so the message alone is the portable declaration.")]
+		[ActiveIssue(2779, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException",
+			ErrorMessage = "Column value is not in source column set")]
+		[ActiveIssue(2779, Configurations = [TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllOracle,
+			TestProvName.AllFirebird, TestProvName.AllMySql57, ProviderName.DB2],
+			Details = "no-declaration: these still fail. Sybase, Informix and the 8.0/MariaDB MySQL servers were dropped once CI exercised them - only 5.7 is left of the MySQL family.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2779")]
 		public void Issue2779Test2([DataSources(false)] string context)
 		{

@@ -20,9 +20,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			return new ConvertorContext(options);
 		}
 
-		protected override DbContextOptionsBuilder<ConvertorContext> ProviderSetup(string provider, string connectionString, DbContextOptionsBuilder<ConvertorContext> optionsBuilder)
+		protected override DbContextOptionsBuilder<ConvertorContext> ProviderSetup(string provider, string connectionString, DbContextOptionsBuilder<ConvertorContext> optionsBuilder, bool useNodaTime)
 		{
-			return base.ProviderSetup(provider, connectionString, optionsBuilder)
+			return base.ProviderSetup(provider, connectionString, optionsBuilder, useNodaTime)
 				.ReplaceService<IValueConverterSelector, IdValueConverterSelector>();
 		}
 

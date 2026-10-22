@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data.Common;
 using System.Globalization;
 using System.IO;
@@ -210,7 +210,6 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssue("https://system.data.sqlite.org/index.html/tktview/fb9e4b30874d83042e09c2f791d6065fc5e73a4b")]
 		[Test]
 		public void TestDoubleRoundTrip([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -621,13 +620,41 @@ namespace Tests.DataProvider
 			return ms;
 		}
 
-		[ActiveIssue]
+		// Split on two axes, both of them measured rather than assumed. columnType: the TEXT column round-trips
+		// where REAL and INTEGER do not. kind: even on TEXT, a Utc value comes back without the local conversion
+		// the test expects. What is left - TEXT with a local or unspecified kind - passes and is not gated.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2107")]
 		public void DateTimeRoundtrip_Insert(
+			[IncludeDataSources(TestProvName.AllSQLite)] string                              context,
+			[Values]                                     bool                                inline,
+			[Values(DateTimeKind.Local, DateTimeKind.Unspecified)] DateTimeKind               kind)
+		{
+			DateTimeRoundtrip_InsertCore(context, inline, kind, "TEXT");
+		}
+
+		[ActiveIssue(2107, ErrorMessage = "Assert.That(result.DateTime.Kind, Is.EqualTo(DateTimeKind.Local))",
+			Details = "Issue number taken from the test's own Description. A Utc value stored in a TEXT column comes back with the wrong Kind; the value itself round-trips, so only that half of #2107 is left.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2107")]
+		public void DateTimeRoundtrip_InsertUtc(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context,
+			[Values]                                     bool   inline)
+		{
+			DateTimeRoundtrip_InsertCore(context, inline, DateTimeKind.Utc, "TEXT");
+		}
+
+		[ActiveIssue(2107,
+			Details = "no-declaration: Issue number taken from the test's own Description. Which of four failures a case produces depends on inline and kind - a wrong Kind, a wrong value, a wrong local-time value, or a conversion refusal - and no fragment is common to all of them.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2107")]
+		public void DateTimeRoundtrip_InsertNumeric(
 			[IncludeDataSources(TestProvName.AllSQLite)] string       context,
 			[Values]                                     bool         inline,
 			[Values]                                     DateTimeKind kind,
-			[Values("TEXT", "REAL", "INTEGER")]          string       columnType)
+			[Values("REAL", "INTEGER")]                  string       columnType)
+		{
+			DateTimeRoundtrip_InsertCore(context, inline, kind, columnType);
+		}
+
+		void DateTimeRoundtrip_InsertCore(string context, bool inline, DateTimeKind kind, string columnType)
 		{
 			// TODO: retest in V3 with newer provider version
 			// in v108 it:
@@ -674,14 +701,41 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2107")]
 		public void DateTimeRoundtrip_BulkCopy(
+			[IncludeDataSources(TestProvName.AllSQLite)] string                                context,
+			[Values]                                     bool                                  inline,
+			[Values(DateTimeKind.Local, DateTimeKind.Unspecified)] DateTimeKind                 kind,
+			[Values]                                     BulkCopyType                          copyType)
+		{
+			DateTimeRoundtrip_BulkCopyCore(context, inline, kind, copyType, "TEXT");
+		}
+
+		[ActiveIssue(2107, ErrorMessage = "Assert.That(result.DateTime.Kind, Is.EqualTo(DateTimeKind.Local))",
+			Details = "as DateTimeRoundtrip_InsertUtc.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2107")]
+		public void DateTimeRoundtrip_BulkCopyUtc(
+			[IncludeDataSources(TestProvName.AllSQLite)] string       context,
+			[Values]                                     bool         inline,
+			[Values]                                     BulkCopyType copyType)
+		{
+			DateTimeRoundtrip_BulkCopyCore(context, inline, DateTimeKind.Utc, copyType, "TEXT");
+		}
+
+		[ActiveIssue(2107,
+			Details = "no-declaration: as DateTimeRoundtrip_InsertNumeric.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2107")]
+		public void DateTimeRoundtrip_BulkCopyNumeric(
 			[IncludeDataSources(TestProvName.AllSQLite)] string       context,
 			[Values]                                     bool         inline,
 			[Values]                                     DateTimeKind kind,
 			[Values]                                     BulkCopyType copyType,
-			[Values("TEXT", "REAL", "INTEGER")]          string       columnType)
+			[Values("REAL", "INTEGER")]                  string       columnType)
+		{
+			DateTimeRoundtrip_BulkCopyCore(context, inline, kind, copyType, columnType);
+		}
+
+		void DateTimeRoundtrip_BulkCopyCore(string context, bool inline, DateTimeKind kind, BulkCopyType copyType, string columnType)
 		{
 			if (context.Contains("Classic") && columnType != "TEXT")
 				Assert.Inconclusive("System.Data.SQLite doesn't supports only ISO8601 dates as of v1.0.108");
@@ -756,7 +810,8 @@ namespace Tests.DataProvider
 			TestDbVersion(context);
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(3899, ErrorTypeName = "System.OverflowException", ErrorMessage = "Value was either too large or too small for a UInt64.",
+			Details = "One declaration covers both transports: direct throws the OverflowException bare, while LinqService wraps it in Grpc.Core.RpcException whose detail still spells out the same type and text.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3899")]
 		public void Issue3899Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
@@ -795,9 +850,23 @@ namespace Tests.DataProvider
 			db.InsertOrReplace(record);
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllSQLiteClassic)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3766")]
-		public void Issue3766Test2([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool inline)
+		public void Issue3766Test2Inlined([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			Issue3766Test2(context, inline: true);
+		}
+
+		// Split from the inlined case: only the parameterized path fails, and the gate can target a provider but
+		// not one value of a [Values] axis - marking the whole method would report its passing half as "test
+		// passed but is marked".
+		[ActiveIssue(3766, Configuration = TestProvName.AllSQLiteClassic, ErrorMessage = "Assert.That(cnt, Is.EqualTo(1))")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3766")]
+		public void Issue3766Test2([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			Issue3766Test2(context, inline: false);
+		}
+
+		void Issue3766Test2(string context, bool inline)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue3766Table>();
@@ -817,9 +886,25 @@ namespace Tests.DataProvider
 			[Column] public int Value { get; set; }
 		}
 
-		[ActiveIssue]
+		// Only the parameterised form fails; with inline parameters the same mapping works, so the inline arm
+		// stays ungated. Message-only, and it collapses what looked like three causes into one: the MS driver says
+		// "SQLite Error 20: 'datatype mismatch'", the Classic driver says "datatype mismatch", and the remote
+		// transport wraps the Classic text - all three contain the same phrase.
+		[ActiveIssue(2432, ErrorMessage = "datatype mismatch",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. Mapping DateTime to Int64 produces a column the parameterised insert cannot write.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2432")]
-		public void Issue2432Test1([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool inline)
+		public void Issue2432Test1([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			Issue2432Test1Core(context, inline: false);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2432")]
+		public void Issue2432Test1Inline([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			Issue2432Test1Core(context, inline: true);
+		}
+
+		void Issue2432Test1Core(string context, bool inline)
 		{
 			var ms = new MappingSchema();
 
@@ -851,9 +936,21 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(2432, ErrorMessage = "datatype mismatch",
+			Details = "as Issue2432Test1.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2432")]
-		public void Issue2432Test2([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool inline)
+		public void Issue2432Test2([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			Issue2432Test2Core(context, inline: false);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2432")]
+		public void Issue2432Test2Inline([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			Issue2432Test2Core(context, inline: true);
+		}
+
+		void Issue2432Test2Core(string context, bool inline)
 		{
 			var ms = new MappingSchema();
 
@@ -1066,7 +1163,10 @@ DROP TABLE SecondTable;
 			[Column] public string Name { get; set; } = null!;
 		}
 
-		[ActiveIssue]
+		// Stays a gate rather than joining a ThrowsForProvider: the refusal is a capability gap the discussion asks
+		// us to close, not a limitation that is correct to declare.
+		[ActiveIssue("https://github.com/linq2db/linq2db/discussions/4985", ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "Provider does not support CROSS/OUTER/LATERAL joins.",
+			Details = "no-issue: joining a table-valued function needs APPLY semantics, which SQLite's provider flags refuse.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/discussions/4985")]
 		public void CrossApplyJoin([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{

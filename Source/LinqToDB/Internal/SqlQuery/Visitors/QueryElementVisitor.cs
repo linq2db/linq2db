@@ -3092,6 +3092,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		protected internal virtual IQueryElement VisitSqlValue(SqlValue element) => element;
 
+		protected internal virtual IQueryElement VisitSqlDefaultValueExpression(SqlDefaultValueExpression element) => element;
+
 		protected internal virtual IQueryElement VisitSqlBinaryExpression(SqlBinaryExpression element)
 		{
 			switch (GetVisitMode(element))

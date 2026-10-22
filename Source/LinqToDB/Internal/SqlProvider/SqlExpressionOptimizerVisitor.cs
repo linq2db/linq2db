@@ -1853,6 +1853,14 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 			if (!ReferenceEquals(newElement, predicate))
 				return Visit(newElement);
 
+			if (_reducePredicates)
+			{
+				var reduced = ReduceInListPredicate(predicate);
+
+				if (!ReferenceEquals(reduced, predicate))
+					return Visit(reduced);
+			}
+
 			if (EvaluationContext.ParameterValues == null)
 			{
 				return predicate;
@@ -2250,6 +2258,32 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 		protected ISqlPredicate ReduceIsTruePredicate(SqlPredicate.IsTrue isTrue)
 		{
 			return isTrue.Reduce(NullabilityContext, IsInsidePredicate);
+		}
+
+		/// <summary>
+		/// The CompareNulls null-item rewrite for an IN list. See <see cref="ReduceExprExprPredicate"/>.
+		/// </summary>
+		protected ISqlPredicate ReduceInListPredicate(SqlPredicate.InList predicate)
+		{
+			// Under CompareNulls.LikeClr (WithNull set) an item NULL in the row must equal a NULL tested value, and a negated test
+			// must keep a row whose item is NULL; IN cannot say either, so such a list is the LikeClr comparisons it stands for.
+			// Inside another predicate a missed NULL item makes IN unknown where C# answers false, so it is rewritten there too.
+			// Constant and parameter items alone do not call for it: the builder already splits a NULL value out of the list.
+			if (predicate.WithNull != null
+				&& !NullabilityContext.IsEmpty
+				&& predicate.Expr1.ElementType != QueryElementType.SqlRow
+				&& (predicate.IsNot || IsInsidePredicate || predicate.Expr1.CanBeNullableOrUnknown(NullabilityContext, false))
+				&& predicate.Values.Exists(v => v is not (SqlValue or SqlParameter) && v.CanBeNullableOrUnknown(NullabilityContext, false)))
+			{
+				var search = new SqlSearchCondition(true);
+
+				foreach (var value in predicate.Values)
+					search.Add(new SqlPredicate.ExprExpr(predicate.Expr1, SqlPredicate.Operator.Equal, value, true));
+
+				return search.MakeNot(predicate.IsNot);
+			}
+
+			return predicate;
 		}
 
 		ISqlPredicate OptimizeExpExprPredicate(SqlPredicate.ExprExpr exprExpr)

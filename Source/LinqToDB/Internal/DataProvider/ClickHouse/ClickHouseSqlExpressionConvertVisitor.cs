@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 using LinqToDB.DataProvider.ClickHouse;
 using LinqToDB.Internal.DataProvider.Translation;
@@ -328,6 +329,18 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			}
 
 			return base.ConvertSqlExtendedFunction(func);
+		}
+
+		// Date and DateTime start at 1970-01-01; the mapping schema writes a date mapped to any other type as Date32 or DateTime64,
+		// from 1900-01-01, or refuses it.
+		static DateTime LeastDate(DataType dataType)
+		{
+			return dataType is DataType.Date or DataType.DateTime ? new DateTime(1970, 1, 1) : new DateTime(1900, 1, 1);
+		}
+
+		public override ISqlExpression ConvertDefaultValue(SqlDefaultValueExpression expression)
+		{
+			return RaiseDefaultDate(expression, LeastDate(expression.Type.DataType)) ?? base.ConvertDefaultValue(expression);
 		}
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)

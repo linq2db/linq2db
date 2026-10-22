@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -2006,32 +2006,34 @@ namespace Tests.Linq
 		}
 
 		#region 4199
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4199")]
 		public void Issue4199Test1([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
-			var q = db.GetTable<IUserAccount>().Select(a => new
+			IQueryable<IUserAccount> table = db.GetTable<UserAccountImplicit>();
+
+			var q = table.Select(a => new
 			{
 				Account = (UserAccountImplicit)a
 			}).Where(cwa => cwa.Account.ID == 1);
 
-			var r = q.Count();
+			q.Count().ShouldBe(1);
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4199")]
 		public void Issue4199Test2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
-			var q = db.GetTable<IUserAccount>().Select(a => new
+			IQueryable<IUserAccount> table = db.GetTable<UserAccountExplicit>();
+
+			var q = table.Select(a => new
 			{
 				Account = (UserAccountExplicit)a
 			}).Where(cwa => cwa.Account.ID == 1);
 
-			var r = q.Count();
+			q.Count().ShouldBe(1);
 		}
 
 		[Table("Person")]

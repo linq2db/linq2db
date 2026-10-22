@@ -7,6 +7,7 @@ using System.Threading;
 
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
+using NUnit.Framework.Internal;
 
 namespace Tests
 {
@@ -69,9 +70,18 @@ namespace Tests
 
 				if (test.IsSuite)
 				{
-					// The assembly (root) suite has the largest case count → that is the run total.
-					// Note: under a --filter this is the discovered (pre-filter) count, so it over-counts.
-					_state.SetTotal(test.TestCaseCount);
+					// The root suite's work item holds the run's filtered tree. When it cannot be resolved, fall back to
+					// the discovered count, which over-counts under a --filter.
+					if (test.Parent == null)
+					{
+						var count = TestRunCounter.TryCount(TestExecutionContext.CurrentContext.Dispatcher, test);
+
+						if (count != null)
+							_state.SetTotal(count.Value);
+						else
+							_state.SetTotal(test.TestCaseCount, isUpperBound: true);
+					}
+
 					return;
 				}
 
@@ -246,12 +256,13 @@ namespace Tests
 
 			// Read under the state's lock (Write is invoked from inside it), so the snapshot is coherent.
 			var total      = _state.Total;
+			var upperBound = _state.TotalIsUpperBound;
 			var completed  = _state.Completed;
 			var failures   = _state.RecentFailures;
 
 			var elapsedSec = _clock.Elapsed.TotalSeconds;
 			var rate       = elapsedSec > 0 ? completed / elapsedSec : 0d;
-			var eta        = rate > 0 && total > completed ? (total - completed) / rate : (double?)null;
+			var eta        = !upperBound && rate > 0 && total > completed ? (total - completed) / rate : (double?)null;
 
 			var sb = new StringBuilder(512);
 
@@ -262,11 +273,13 @@ namespace Tests
 			sb.Append("\"updatedUtc\":") .Append(JsonString(Iso(DateTime.UtcNow)))      .Append(',');
 			sb.Append("\"done\":")       .Append(_state.Done ? "true" : "false")        .Append(',');
 			sb.Append("\"total\":")      .Append(Long(total))                           .Append(',');
+			sb.Append("\"totalIsUpperBound\":").Append(upperBound ? "true" : "false")   .Append(',');
 			sb.Append("\"completed\":")  .Append(Long(completed))                       .Append(',');
 			sb.Append("\"started\":")    .Append(Long(_state.Started))                  .Append(',');
 			sb.Append("\"passed\":")     .Append(Long(_state.Passed))                   .Append(',');
 			sb.Append("\"failed\":")     .Append(Long(_state.Failed))                   .Append(',');
 			sb.Append("\"skipped\":")    .Append(Long(_state.Skipped))                  .Append(',');
+			sb.Append("\"inconclusive\":").Append(Long(_state.Inconclusive))            .Append(',');
 			sb.Append("\"currentTest\":").Append(JsonString(_state.Current))            .Append(',');
 			sb.Append("\"elapsedSec\":") .Append(Num(elapsedSec))                       .Append(',');
 			sb.Append("\"testsPerSec\":").Append(Num(rate))                             .Append(',');
