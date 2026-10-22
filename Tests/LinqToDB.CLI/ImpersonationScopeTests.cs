@@ -743,25 +743,37 @@ namespace Tests.LinqToDB.CLI
 			{
 				var opens = new List<int>();
 
-				foreach (var advance in new[] { TimeSpan.Zero, ImpersonationPreload.RetryDelay - TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1) })
+				// Each step moves the system clock and the monotonic clock separately: the delay follows only the latter.
+				//
+				var steps = new (TimeSpan Utc, TimeSpan Elapsed)[]
 				{
-					clock.Now += advance;
+					(TimeSpan.Zero,           TimeSpan.Zero),
+					(TimeSpan.FromHours(1),   TimeSpan.Zero),
+					(TimeSpan.FromHours(-2),  ImpersonationPreload.RetryDelay - TimeSpan.FromSeconds(1)),
+					(TimeSpan.Zero,           TimeSpan.FromSeconds(1)),
+				};
+
+				foreach (var (utc, elapsed) in steps)
+				{
+					clock.Now     += utc;
+					clock.Elapsed += elapsed;
 
 					var result = await RunCli(new TestCliEnvironment(), "query", "--provider", provider.Name, "--connection-string", $"Data Source={database};Pooling=False", "--user", "user", "--password", "secret", "--impersonate", "--sql", "select Id from Person");
 
 					result.ExitCode.ShouldBe(0, result.Error);
 
-					// A warm-up that hit its bound ends after the command stopped waiting for it; its retry time is set
-					// only once it has ended and removed its entry.
+					// A warm-up that hit its bound ends after the command stopped waiting for it; its failure time is
+					// set only once it has ended and removed its entry.
 					//
 					await ImpersonationPreload.WhenWarmUpsEnded(FailingWarmUpProvider.ConnectionType);
 
 					opens.Add(provider.OpensOutsideSession);
 				}
 
-				// Tried, skipped a second before the retry delay ends, tried again once it has.
+				// Tried; skipped after the system clock jumped forward; skipped a second before the delay ends although
+				// the system clock jumped back; tried again once it has.
 				//
-				opens.ShouldBe([1, 1, 2]);
+				opens.ShouldBe([1, 1, 1, 2]);
 			}
 			finally
 			{
@@ -771,13 +783,22 @@ namespace Tests.LinqToDB.CLI
 			}
 		}
 
+		/// <summary>A clock whose system time and monotonic time are set apart.</summary>
 		sealed class ManualTimeProvider : TimeProvider
 		{
-			public DateTimeOffset Now { get; set; } = new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
+			public DateTimeOffset Now     { get; set; } = new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
+			public TimeSpan       Elapsed { get; set; } = TimeSpan.FromDays(1);
+
+			public override long TimestampFrequency => TimeSpan.TicksPerSecond;
 
 			public override DateTimeOffset GetUtcNow()
 			{
 				return Now;
+			}
+
+			public override long GetTimestamp()
+			{
+				return Elapsed.Ticks;
 			}
 		}
 

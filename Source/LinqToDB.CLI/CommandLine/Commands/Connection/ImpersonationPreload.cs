@@ -50,7 +50,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		/// </summary>
 		internal static TimeSpan RetryDelay { get; set; } = TimeSpan.FromMinutes(1);
 
-		/// <summary>The clock for <see cref="RetryDelay"/> (replaced by tests).</summary>
+		/// <summary>The clock for <see cref="RetryDelay"/>; only its monotonic timestamps are used (replaced by tests).</summary>
 		internal static TimeProvider TimeProvider { get; set; } = TimeProvider.System;
 
 		/// <summary>
@@ -127,10 +127,11 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		static readonly Dictionary<(string, string), Task> _warmUps = new();
 
 		/// <summary>
-		/// When warm-ups that failed may be tried again, by the key of <see cref="_warmUps"/>. Holds only failures of the
+		/// When warm-ups that failed ended, as monotonic timestamps of <see cref="TimeProvider"/> (a change of the system
+		/// clock neither ends nor prolongs the delay), by the key of <see cref="_warmUps"/>. Holds only failures of the
 		/// last <see cref="RetryDelay"/>: expired entries are removed when a failure is added.
 		/// </summary>
-		static readonly Dictionary<(string, string), DateTimeOffset> _retryAfter = new();
+		static readonly Dictionary<(string, string), long> _failedAt = new();
 
 		/// <summary>
 		/// Loads everything the command described by <paramref name="settings"/> needs.
@@ -163,7 +164,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 				lock (_lock)
 				{
 					if (!_warmUps.TryGetValue(key, out warmUp)
-						&& (!_retryAfter.TryGetValue(key, out var retryAfter) || TimeProvider.GetUtcNow() >= retryAfter))
+						&& (!_failedAt.TryGetValue(key, out var failedAt) || TimeProvider.GetElapsedTime(failedAt) >= RetryDelay))
 					{
 						// The warm-up runs on its own task, as the process account, and is not tied to this command:
 						// other commands may be waiting for it too. It removes its entry under the same lock, so it
@@ -262,17 +263,15 @@ namespace LinqToDB.CommandLine.Commands.Connection
 			{
 				if (opened)
 				{
-					_retryAfter.Remove(key);
+					_failedAt.Remove(key);
 					return;
 				}
 
-				var now = TimeProvider.GetUtcNow();
-
-				foreach (var expired in _retryAfter.Where(entry => entry.Value <= now).Select(static entry => entry.Key).ToList())
-					_retryAfter.Remove(expired);
+				foreach (var expired in _failedAt.Where(static entry => TimeProvider.GetElapsedTime(entry.Value) >= RetryDelay).Select(static entry => entry.Key).ToList())
+					_failedAt.Remove(expired);
 
 				_warmUps.Remove(key);
-				_retryAfter[key] = now + RetryDelay;
+				_failedAt[key] = TimeProvider.GetTimestamp();
 			}
 		}
 
