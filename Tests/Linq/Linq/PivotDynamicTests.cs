@@ -15,6 +15,8 @@ using NUnit.Framework;
 
 using Shouldly;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
 	[TestFixture]
@@ -695,71 +697,66 @@ namespace Tests.Linq
 			result[1].Cells["NOTE_Y2000"].ShouldBe("b0");
 		}
 
-		[Table]
-		sealed class Staff
+		static readonly int[] _pivotedParents = { 2, 3 };
+
+		// The children of the pivoted parents. Each child belongs to one parent, so a cell read from the wrong group shows.
+		int[] ChildIdsOfPivotedParents()
+			=> Child
+				.Where(c => _pivotedParents.Contains(c.ParentID))
+				.Select(c => c.ChildID)
+				.Distinct()
+				.OrderBy(id => id)
+				.ToArray();
+
+		// What a SUM cell reads: null when the parent has no such child.
+		int? ExpectedChildSum(int parentId, int childId)
 		{
-			[PrimaryKey(Configuration = ProviderName.Ydb)]
-			[Column] public int    Id   { get; set; }
-			[Column] public string Dept { get; set; } = null!;
+			var rows = Child
+				.Where(c => c.ParentID == parentId && c.ChildID == childId)
+				.ToList();
 
-			public static readonly Staff[] Data = { new() { Id = 1, Dept = "D1" }, new() { Id = 2, Dept = "D2" } };
-		}
-
-		[Table]
-		sealed class Shift
-		{
-			[PrimaryKey(Configuration = ProviderName.Ydb)]
-			[Column] public int    Id      { get; set; }
-			[Column] public int    StaffId { get; set; }
-			[Column] public string Kind    { get; set; } = null!;
-			[Column] public int    Hours   { get; set; }
-
-			// The two departments work disjoint kinds, so a cell read from the wrong group shows.
-			public static readonly Shift[] Data =
-			{
-				new() { Id = 1, StaffId = 1, Kind = "Day",   Hours = 8 },
-				new() { Id = 2, StaffId = 1, Kind = "Day",   Hours = 4 },
-				new() { Id = 3, StaffId = 2, Kind = "Night", Hours = 6 },
-			};
+			return rows.Count == 0 ? null : rows.Sum(c => c.ChildID);
 		}
 
 		/// <summary>The pivot in query syntax, over a join whose grouped row is anonymous.</summary>
 		[Test]
 		public void PivotsInQuerySyntaxOverAJoin([DataSources] string context)
 		{
-			using var db     = GetDataContext(context);
-			using var staff  = db.CreateLocalTable(Staff.Data);
-			using var shifts = db.CreateLocalTable(Shift.Data);
+			using var db = GetDataContext(context);
 
-			var kinds = new[] { "Day", "Night" };
+			var childIds = ChildIdsOfPivotedParents();
 
 			var query =
-				from s in staff
-				join w in shifts on s.Id equals w.StaffId
-				group new { s, w } by s.Dept into g
+				from p in db.Parent
+				join c in db.Child on p.ParentID equals c.ParentID
+				where p.ParentID == 2 || p.ParentID == 3
+				group new { p, c } by p.ParentID into g
 				select new
 				{
-					Dept  = g.Key,
-					Hours = g
-						.Pivot(x => x.w.Kind, kinds)
-						.Cell(rows => rows.Sum(x => x.w.Hours))
+					ParentID = g.Key,
+					Cells    = g
+						.Pivot(x => x.c.ChildID, childIds)
+						.Cell(rows => rows.Sum(x => x.c.ChildID))
 						.AsDictionary(),
 				};
 
 			var result = query
 				.ToList()
-				.OrderBy(r => r.Dept, StringComparer.Ordinal)
+				.OrderBy(r => r.ParentID)
 				.ToList();
 
-			result.Count.ShouldBe(2);
+			result
+				.Select(r => r.ParentID)
+				.ShouldBe(_pivotedParents);
 
-			result[0].Dept.ShouldBe("D1");
-			result[0].Hours["Day"].ShouldBe(12);
-			result[0].Hours["Night"].ShouldBeNull();
-
-			result[1].Dept.ShouldBe("D2");
-			result[1].Hours["Day"].ShouldBeNull();
-			result[1].Hours["Night"].ShouldBe(6);
+			foreach (var row in result)
+			{
+				foreach (var childId in childIds)
+				{
+					row.Cells[childId.ToString(CultureInfo.InvariantCulture)]
+						.ShouldBe(ExpectedChildSum(row.ParentID, childId));
+				}
+			}
 		}
 
 		// Call-site guard: throws while the query is built, before any SQL.
@@ -1795,51 +1792,48 @@ namespace Tests.Linq
 			result[1].Cells["Y2010"].ShouldBe(15m);
 		}
 
-		[Table]
-		sealed class PivotCategory
-		{
-			[PrimaryKey(Configuration = ProviderName.Ydb)]
-			[Column] public string Name { get; set; } = null!;
-
-			public static readonly PivotCategory[] Data = { new() { Name = "A" }, new() { Name = "B" } };
-		}
-
 		[Test]
 		public void PivotsInAnEagerLoadedCollection([DataSources] string context)
 		{
-			using var db   = GetDataContext(context);
-			using var t    = db.CreateLocalTable(Sales.Data);
-			using var cats = db.CreateLocalTable(PivotCategory.Data);
+			using var db = GetDataContext(context);
+
+			var childIds = ChildIdsOfPivotedParents();
 
 			var query =
-				from c in cats
+				from p in db.Parent
+				where p.ParentID == 2 || p.ParentID == 3
 				select new
 				{
-					c.Name,
-					Cells = t
-						.Where(x => x.Category == c.Name)
-						.GroupBy(x => x.Category)
+					p.ParentID,
+					Cells = db.Child
+						.Where(c => c.ParentID == p.ParentID)
+						.GroupBy(c => c.ParentID)
 						.Select(g => g
-							.Pivot(x => x.Year, new[] { 2000, 2010 })
-							.Cell(rows => rows.Sum(x => x.Amount), Year)
+							.Pivot(x => x.ChildID, childIds)
+							.Cell(rows => rows.Sum(x => x.ChildID))
 							.AsDictionary())
 						.ToList(),
 				};
 
 			var result = query
 				.ToList()
-				.OrderBy(r => r.Name, StringComparer.Ordinal)
+				.OrderBy(r => r.ParentID)
 				.ToList();
 
-			result.Count.ShouldBe(2);
+			result
+				.Select(r => r.ParentID)
+				.ShouldBe(_pivotedParents);
 
-			result[0].Cells.Count.ShouldBe(1);
-			result[0].Cells[0]["Y2000"].ShouldBe(10m);
-			result[0].Cells[0]["Y2010"].ShouldBe(20m);
+			foreach (var row in result)
+			{
+				row.Cells.Count.ShouldBe(1);
 
-			result[1].Cells.Count.ShouldBe(1);
-			result[1].Cells[0]["Y2000"].ShouldBe(5m);
-			result[1].Cells[0]["Y2010"].ShouldBe(15m);
+				foreach (var childId in childIds)
+				{
+					row.Cells[0][childId.ToString(CultureInfo.InvariantCulture)]
+						.ShouldBe(ExpectedChildSum(row.ParentID, childId));
+				}
+			}
 		}
 
 		/// <summary>
