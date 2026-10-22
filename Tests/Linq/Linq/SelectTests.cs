@@ -2193,7 +2193,10 @@ namespace Tests.Linq
 				where p.ParentID == 5
 				select new { p.ParentID, Has = c.Info.HasValue };
 
-			query.ToList().ShouldAllBe(x => !x.Has);
+			var rows = query.ToList();
+
+			rows.ShouldNotBeEmpty();
+			rows.ShouldAllBe(x => !x.Has);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
@@ -2210,7 +2213,10 @@ namespace Tests.Linq
 				where p.ParentID == 5
 				select new { p.ParentID, Id = c.Info.HasValue ? c.Info.Value.Id : -1 };
 
-			query.ToList().ShouldAllBe(x => x.Id == -1);
+			var rows = query.ToList();
+
+			rows.ShouldNotBeEmpty();
+			rows.ShouldAllBe(x => x.Id == -1);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
@@ -2249,6 +2255,22 @@ namespace Tests.Linq
 
 			rows.ShouldAllBe(x => x.Has == (x.A != null));
 			rows.ShouldContain(x => x.ParentID == 5 && !x.Has);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void NullableColumnHasValueFromDefaultIfEmptyWithDefault([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				from p2 in db.Parent.Where(x => x.ParentID == p.ParentID + 100).DefaultIfEmpty(new Parent { Value1 = 5 })
+				select new { p.ParentID, Has = p2.Value1.HasValue, V = p2.Value1.HasValue ? p2.Value1.Value : -1, Raw = p2.Value1 };
+
+			var rows = query.ToList();
+
+			rows.Count.ShouldBe(db.Parent.Count());
+			rows.ShouldAllBe(x => x.Raw == 5 && x.Has && x.V == 5);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
