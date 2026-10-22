@@ -17,7 +17,8 @@
 		<!--
 			First monorepo release of linq2db.Identity supersedes the standalone package (6.0.0) with a
 			deliberately breaking API (Microsoft.Extensions.Identity base types, IConnectionFactory removed),
-			so there is no compatible package-validation baseline yet. Clear it; a baseline is set next release.
+			so the repo-wide BaselineVersion (6.0.0) is not a compatible baseline. Validation stays off until the next
+			major release resets BaselineVersion, as for the other packages first shipped after it.
 		-->
 		<PackageValidationBaselineVersion></PackageValidationBaselineVersion>
 		<EnablePackageValidation>false</EnablePackageValidation>
