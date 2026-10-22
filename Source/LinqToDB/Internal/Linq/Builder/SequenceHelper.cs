@@ -467,31 +467,21 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// Turns a <paramref name="path"/> to the result of <paramref name="conversion"/> into a path to its operand.
 		/// </summary>
 		/// <remarks>
-		/// The operand's members are declared on the operand's type, so they can only be read from a path of that type:
-		/// <c>T?</c> is read back as <c>path.Value</c>, and an interface or base class as <c>(Derived)path</c>. Any other
-		/// conversion leaves the path as it is.
+		/// The operand's members are declared on the operand's type, so they can only be read from a path of that type.
+		/// A conversion that widens the operand, to <c>T?</c>, a base class or an interface, is read back with a cast to
+		/// the operand's type. Any other conversion leaves the path as it is.
 		/// </remarks>
 		static Expression ConvertBack(Expression path, UnaryExpression conversion)
 		{
-			if (conversion.NodeType is not (ExpressionType.Convert or ExpressionType.ConvertChecked or ExpressionType.TypeAs))
-				return path;
-
-			// Only a path typed as the conversion's result can be converted back.
-			if (path.Type != conversion.Type)
-				return path;
-
 			var from = conversion.Operand.Type;
 			var to   = conversion.Type;
 
-			// T to T?
-			if (to.IsNullableType && to.UnwrapNullableType() == from)
-				return ExpressionHelper.Property(path, nameof(Nullable<>.Value));
+			var widens = conversion.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked or ExpressionType.TypeAs
+				&& path.Type == to
+				&& to != from
+				&& to.IsAssignableFrom(from);
 
-			// Derived to a base class or an interface, a boxed struct included
-			if (to != from && to.IsAssignableFrom(from))
-				return EnsureType(path, from);
-
-			return path;
+			return widens ? EnsureType(path, from) : path;
 		}
 
 		public static Expression ReplacePlaceholdersPathByTrackingPath(Expression expression)
