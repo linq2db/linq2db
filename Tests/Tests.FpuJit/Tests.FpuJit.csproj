@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<!-- Plural on purpose: ArtifactsPivots is expanded before this file, so a singular -->
+		<!-- TargetFramework drops the net462 segment from the output path. -->
+		<TargetFrameworks>net462</TargetFrameworks>
+		<PlatformTarget>x86</PlatformTarget>
+
+		<OutputType>Exe</OutputType>
+		<RootNamespace>Tests.FpuJit</RootNamespace>
+		<AssemblyName>linq2db.Tests.FpuJit</AssemblyName>
+
+		<GenerateDocumentationFile>false</GenerateDocumentationFile>
+		<ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+		<IsPackable>false</IsPackable>
+	</PropertyGroup>
+
+	<!-- Every shipped library with a .NET Framework target except the LINQPad driver (net472). Keep in sync with Program.ExpectedAssemblies. -->
+	<ItemGroup>
+		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB.Compat\LinqToDB.Compat.csproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB.EntityFrameworkCore\LinqToDB.EntityFrameworkCore.EF3.csproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB.Extensions\LinqToDB.Extensions.csproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB.FSharp\LinqToDB.FSharp.fsproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB.Remote.Grpc\LinqToDB.Remote.Grpc.csproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB.Remote.HttpClient.Client\LinqToDB.Remote.HttpClient.Client.csproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB.Remote.SignalR.Client\LinqToDB.Remote.SignalR.Client.csproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB.Remote.SignalR.Server\LinqToDB.Remote.SignalR.Server.csproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB.Remote.Wcf\LinqToDB.Remote.Wcf.csproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB.Scaffold\LinqToDB.Scaffold.csproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB.Tools\LinqToDB.Tools.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Console exe reporting via stdout and exit code, not an NUnit project: opt out of the test-suite banned-API list. -->
+		<AdditionalFiles Remove="..\BannedSymbols.txt" />
+	</ItemGroup>
+
+</Project>
