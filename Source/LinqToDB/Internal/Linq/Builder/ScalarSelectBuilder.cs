@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB.Internal.Expressions;
@@ -23,7 +24,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var body        = methodCall.Arguments[1].UnwrapLambda().Body;
 
 			if (buildInfo.IsSubQuery || !methodCall.IsSameGenericMethod(Methods.LinqToDB.QueryBatch))
-				return BuildSequenceResult.FromContext(new ScalarSelectContext(builder.GetTranslationModifier(), builder, body, selectQuery));
+				return BuildSequenceResult.FromContext(new ScalarSelectContext(builder.GetTranslationModifier(), builder, buildInfo.Parent, body, selectQuery));
 
 			// The Default strategy is the one that combines, so it is pushed build-wide (not temporary): nested
 			// collections resolve their strategy from the builder, and a configured default or an inner With*LoadStrategy
@@ -31,7 +32,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			builder.CombinedCommandsRequested = true;
 			builder.PushTranslationModifier(builder.GetTranslationModifier().WithEagerLoadingStrategy(EagerLoadingStrategy.Default), false);
 
-			var context = new ScalarSelectContext(builder.GetTranslationModifier(), builder, body, selectQuery);
+			var context = new ScalarSelectContext(builder.GetTranslationModifier(), builder, null, body, selectQuery);
 
 			builder.PopTranslationModifier();
 
@@ -50,10 +51,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public Expression Body { get; }
 
-			public ScalarSelectContext(TranslationModifier translationModifier, ExpressionBuilder builder, Expression body, SelectQuery selectQuery) 
+			public ScalarSelectContext(TranslationModifier translationModifier, ExpressionBuilder builder, IBuildContext? parent, Expression body, SelectQuery selectQuery)
 				: base(translationModifier, builder, body.Type, selectQuery)
 			{
-				Body = body;
+				Parent = parent;
+				Body   = body;
 
 				// Keep the wrapping SELECT: once MakeExpression materializes the body as (SELECT body), the optimizer
 				// would otherwise inline a no-FROM scalar subquery back to a bare constant — invalid as a window ORDER BY
@@ -81,6 +83,11 @@ namespace LinqToDB.Internal.Linq.Builder
 						}
 					}
 
+					// Nested, the body is a value of the enclosing row: built here, its subqueries would hang off this
+					// SelectQuery, which is never embedded, and read the enclosing query's columns instead.
+					if (Parent != null && flags.IsExpression())
+						return Builder.BuildExpression(Parent, expression);
+
 					return expression;
 				}
 
@@ -89,7 +96,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new ScalarSelectContext(TranslationModifier, Builder, context.CloneExpression(Body), context.CloneElement(SelectQuery));
+				return new ScalarSelectContext(TranslationModifier, Builder, context.CloneContext(Parent), context.CloneExpression(Body), context.CloneElement(SelectQuery));
 			}
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
@@ -97,6 +104,18 @@ namespace LinqToDB.Internal.Linq.Builder
 				var mapper = Builder.BuildMapper<T>(SelectQuery, expr);
 
 				QueryRunner.SetRunQuery(query, mapper);
+
+				SetElementSelection(query);
+			}
+
+			// One row by construction; a compiled query reads it as an element.
+			public override void SetElementSelection<T>(Query<T> query)
+			{
+				query.GetElement = (db, expr, preambles) =>
+					query.GetResultEnumerable(db, expr, preambles).First();
+
+				query.GetElementAsync = async (db, expr, preambles, token) =>
+					await query.GetResultEnumerable(db, expr, preambles).FirstAsync(token).ConfigureAwait(false);
 			}
 
 			public override SqlStatement GetResultStatement()

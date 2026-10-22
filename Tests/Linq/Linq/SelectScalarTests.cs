@@ -263,6 +263,35 @@ namespace Tests.Linq
 			});
 		}
 
+		// The nested select is a value of the enclosing row, filtered on and projected; the binding is the builder's, so one
+		// provider shows it.
+		[Test]
+		public void NestedInQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var result = db.Parent
+				.Where(p => db.Select(() => db.Child.Count(c => c.ParentID == p.ParentID)) > 1)
+				.OrderBy(p => p.ParentID)
+				.Select(p => new
+				{
+					p.ParentID,
+					Total    = db.Select(() => db.Child.Count()),
+					Children = db.Select(() => db.Child.Count(c => c.ParentID == p.ParentID)),
+				})
+				.ToList()
+				.Select(r => $"{r.ParentID}:{r.Total}:{r.Children}")
+				.ToArray();
+
+			var expected = Parent
+				.Where(p => Child.Count(c => c.ParentID == p.ParentID) > 1)
+				.OrderBy(p => p.ParentID)
+				.Select(p => $"{p.ParentID}:{Child.Count()}:{Child.Count(c => c.ParentID == p.ParentID)}")
+				.ToArray();
+
+			result.ShouldBe(expected);
+		}
+
 		[Test]
 		public void SubQueryAggregate([DataSources(TestProvName.AllAccess)]
 			string context)
