@@ -237,6 +237,42 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		}
 
 		/// <summary>
+		/// Returns a warning when the parent of the credentials directory's real path is writable by its group or by other
+		/// users without the sticky bit: they could rename the credentials directory and put their own in its place, with
+		/// their own scripts or key. <see cref="CheckUnix"/> accepts group write on ancestors (with private user groups
+		/// <c>~/.config</c> is often <c>0775</c>), so this is a warning, as for a group-writable <c>--output</c> directory.
+		/// </summary>
+		[UnsupportedOSPlatform("windows")]
+		public static string? GetParentWarning(string directory)
+		{
+			try
+			{
+				var parent = Path.GetDirectoryName(GetRealPath(directory));
+
+				if (parent == null)
+					return null;
+
+				var info = new DirectoryInfo(parent);
+
+				if (!info.Exists)
+					return null;
+
+				var mode = info.UnixFileMode;
+
+				if ((mode & (UnixFileMode.GroupWrite | UnixFileMode.OtherWrite)) == 0 || mode.HasFlag(UnixFileMode.StickyBit))
+					return null;
+
+				var who = mode.HasFlag(UnixFileMode.OtherWrite) ? "other users" : "its group";
+
+				return $"Warning: '{parent}' is writable by {who}; they could rename the credentials directory '{directory}' and put their own in its place, with their own scripts or key. Run: chmod go-w '{parent}', or set {Variable}.";
+			}
+			catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+			{
+				return null;
+			}
+		}
+
+		/// <summary>
 		/// Checks the directory of a script written to a path the user chose (<c>credentials cli init --output</c>): another
 		/// user who can replace the script receives the passwords it is given. Refuses a directory whose real path, or an
 		/// ancestor of it, every user can write to without the sticky bit, as for the credentials directory's ancestors.

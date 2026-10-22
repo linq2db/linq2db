@@ -490,6 +490,12 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		/// </summary>
 		static async ValueTask WriteStoreNotes(ICliEnvironment environment, CredentialStoreChoice choice)
 		{
+			// The local store and the generated scripts live in the credentials directory.
+			var credentialsDirectory = choice.Kind == CredentialStoreKind.Local ? choice.Directory : choice.Script == null ? null : Path.GetDirectoryName(choice.Script);
+
+			if (credentialsDirectory != null && !OperatingSystem.IsWindows() && CredentialsDirectory.GetParentWarning(credentialsDirectory) is { } parentWarning)
+				await environment.Error.WriteLineAsync(parentWarning);
+
 			if (choice.Kind != CredentialStoreKind.Local || choice.Directory == null)
 				return;
 
@@ -758,6 +764,9 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 					? $"Check it: {CommandName} list"
 					: $"Check it: {CommandName} list --credentials-cli {ShellQuote(recorded, isWindows)}");
 			}
+
+			if (!isWindows && (store is "local" || output == null) && CredentialsDirectory.GetParentWarning(directory) is { } parentWarning)
+				await environment.Error.WriteLineAsync(parentWarning);
 
 			if (store is not "local")
 			{

@@ -81,7 +81,9 @@ script. So is a directory whose real path (symbolic links resolved) has an ances
 without the sticky bit (`/tmp` has the sticky bit): another user could rename the whole directory and put their own in
 its place. The same holds for a directory that holds a symbolic link on the way: another user could point the link
 elsewhere. Group write on an ancestor is accepted, since with private user groups (umask `002`) `~/.config` is often
-`0775`. The error names that ancestor. linq2db-cli warns when the directory is inside a git working tree.
+`0775`; with a shared primary group, though, a member could rename the directory and put their own in its place, so the
+`credentials` commands warn when the directory's parent is writable by its group. The error names that ancestor.
+linq2db-cli warns when the directory is inside a git working tree.
 
 Ownership is not checked: the directory, its files and the generated scripts must be created by you. A predictable path
 in a shared location (for example under `/tmp`) can be created first by another user, who then owns what you use; keep
@@ -345,6 +347,14 @@ The program:
 The configured credentials CLI is a trusted executable: a configuration that sets `credentialsCli` runs that program
 as you, like git's `credential.helper`. Treat write access to a configuration file as the ability to run programs as
 you; securing the program (where it lives and who can change it) is your responsibility.
+
+A query configuration committed to a repository (for example `.agents/linq2db-query.json`) is therefore code, not
+data, which git's own `credential.helper` never is: git does not read helper settings from cloned content. A
+`credentialsCli` value there, including a relative path, which resolves against the configuration file's directory
+and so can name a script shipped in the same repository, runs as whoever uses that configuration, and an MCP host that
+approved `linq2db-cli mcp --config <file>` once is not asked again when the file changes. Review changes to
+`credentialsCli` like changes to a script, keep it to the reserved `@` stores or absolute paths you control in a
+shared configuration, and do not use a configuration from a repository you do not trust.
 
 ## 14. The credentials command
 

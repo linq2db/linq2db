@@ -480,8 +480,14 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		/// <summary>
 		/// Reads the key, or creates it when <paramref name="create"/> is set and neither key nor data exists. The key is
 		/// written to a temporary file, flushed to disk and moved into place without overwriting, so a partial key file never
-		/// exists and a concurrent creator's key wins.
+		/// exists. Concurrent creators are kept apart by the credentials lock: on Unix a move without overwriting is not
+		/// guaranteed to be atomic (the file system may not support the link it needs), and .NET skips the lock where file
+		/// locking is unsupported or disabled. So the key is read back after the move, and a key that is not the one written
+		/// fails the operation before anything is encrypted with either.
 		/// </summary>
+		/// <summary>Called right after a new key is moved into place, before it is read back (for tests).</summary>
+		internal Action? KeyInstalled { get; set; }
+
 		bool TryGetKey(bool create, out byte[] key, out string? error)
 		{
 			key = [];
@@ -528,6 +534,22 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 					catch (IOException) when (File.Exists(KeyPath))
 					{
 						// Another process created the key first: use it.
+					}
+
+					if (KeyCreated)
+					{
+						KeyInstalled?.Invoke();
+
+						var installed = ReadAllBytesShared(KeyPath, null);
+						var same      = CryptographicOperations.FixedTimeEquals(installed, stored);
+
+						CryptographicOperations.ZeroMemory(installed);
+
+						if (!same)
+						{
+							error = $"'{KeyPath}' was replaced by another process while it was being created, so file locking does not keep concurrent linq2db-cli processes apart in '{_directory}' (a file system without locking, or DOTNET_SYSTEM_IO_DISABLEFILELOCKING set). Nothing was stored; run one linq2db-cli process at a time there, or choose another {CredentialsDirectory.Variable}.";
+							return false;
+						}
 					}
 				}
 				finally
@@ -615,10 +637,11 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 
 		/// <summary>
 		/// Reads a whole file while letting a writer replace it: a read can run without the lock (when no lock file exists
-		/// yet). On Windows the writer's replacing move still fails while this handle is open, so the writer retries it
-		/// (see <see cref="ReplaceFile"/>) until the read is done.
+		/// yet). <see cref="FileShare.Delete"/> is there for Windows, which lets a rename replace a file only when every
+		/// handle open on it shares delete access: without it a writer's <see cref="ReplaceFile"/> fails for as long as the
+		/// read holds the file, even after its retries.
 		/// </summary>
-		static byte[] ReadAllBytesShared(string path, Action? opened)
+		internal static byte[] ReadAllBytesShared(string path, Action? opened)
 		{
 			using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete);
 
@@ -635,7 +658,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		/// is retried a few times.
 		/// </summary>
 		/// <param name="failed">Runs after each failed attempt that is retried.</param>
-		static void ReplaceFile(string source, string destination, Action? failed)
+		internal static void ReplaceFile(string source, string destination, Action? failed)
 		{
 			for (var attempt = 1; ; attempt++)
 			{

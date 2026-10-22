@@ -341,6 +341,38 @@ namespace Tests.LinqToDB.CLI
 			File.GetUnixFileMode(script).ShouldBe(Owner700);
 		}
 
+		[TestCase(true,  TestName = "GroupWritableParentOfTheCredentialsDirectoryWarns")]
+		[TestCase(false, TestName = "PrivateParentOfTheCredentialsDirectoryDoesNotWarn")]
+		public async Task ParentOfTheCredentialsDirectoryIsChecked(bool groupWritable)
+		{
+			// A member of the group could rename the credentials directory and put their own in its place.
+			if (OperatingSystem.IsWindows())
+				Assert.Ignore("Unix file modes.");
+
+			File.SetUnixFileMode(_root, groupWritable ? Owner700 | UnixFileMode.GroupRead | UnixFileMode.GroupWrite | UnixFileMode.GroupExecute : Owner700);
+
+			var warning = $"Warning: '{CredentialsDirectory.GetRealPath(_root)}' is writable by its group";
+
+			var (exitCode, _, error) = await RunCli(CreateEnvironment(), "credentials", "cli", "init", "--store", "local");
+
+			exitCode.ShouldBe(0, error);
+
+			var (listExitCode, _, listError) = await RunCli(CreateEnvironment(), "credentials", "list");
+
+			listExitCode.ShouldBe(0, listError);
+
+			if (groupWritable)
+			{
+				error.    ShouldContain(warning);
+				listError.ShouldContain(warning);
+			}
+			else
+			{
+				error.    ShouldNotContain("Warning:");
+				listError.ShouldNotContain("Warning:");
+			}
+		}
+
 		[Test]
 		public async Task ExistingScriptHintQuotesAPathWithSpaces()
 		{
