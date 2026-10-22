@@ -52,6 +52,7 @@ namespace LinqToDB.Internal.DataProvider
 				MaxInListValuesCount                 = int.MaxValue,
 				MaxCombinedCommandLength             = 60_000,
 				MaxStatementsPerCombinedGroup        = 32,
+				MaxCombinedCommandParameters         = int.MaxValue,
 				IsCrossJoinSupported                 = true,
 				IsDistinctSetOperationsSupported     = true,
 				AcceptsOuterExpressionInAggregate    = true,

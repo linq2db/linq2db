@@ -3998,6 +3998,57 @@ namespace Tests.Linq
 			}
 		}
 
+		static FormattableString DetachedInList(string tableName, IEnumerable<int> values)
+		{
+			var arguments = values
+				.Cast<object>()
+				.ToArray();
+
+			var placeholders = Enumerable
+				.Range(0, arguments.Length)
+				.Select(k => "{" + k + "}");
+
+			var format = $"SELECT * FROM [{tableName}] WHERE [Id] IN ({string.Join(",", placeholders)})";
+
+			return System.Runtime.CompilerServices.FormattableStringFactory.Create(format, arguments);
+		}
+
+		// SQL Server rejects a request with more than 2100 parameters, and semicolon-joined statements share one request,
+		// so children whose parameters add up past that have to go in separate commands. The interceptor forces the joined
+		// command; each child alone stays under the limit.
+		[Test]
+		public void CombinedChildrenStayUnderTheParameterLimit([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var (_, _, detached) = GenerateMixedEagerData();
+
+			using var db        = GetDataContext(context);
+			using var tDetached = db.CreateLocalTable(detached);
+
+			db.AddInterceptor(new CombinedCommandCounter());
+
+			var first  = DetachedInList(tDetached.TableName, new[] { 1, 2 }.Concat(Enumerable.Range(10_001, 1_098)));
+			var second = DetachedInList(tDetached.TableName, new[] { 3, 4 }.Concat(Enumerable.Range(20_001, 1_098)));
+
+			var result = db.Select(() => new
+			{
+				First  = db.FromSql<MixedDetachedChild>(first).ToList(),
+				Second = db.FromSql<MixedDetachedChild>(second).ToList(),
+			});
+
+			var firstIds = result.First
+				.Select(d => d.Id)
+				.OrderBy(id => id)
+				.ToArray();
+
+			var secondIds = result.Second
+				.Select(d => d.Id)
+				.OrderBy(id => id)
+				.ToArray();
+
+			firstIds.ShouldBe(new[] { 1, 2 });
+			secondIds.ShouldBe(new[] { 3, 4 });
+		}
+
 		// The main query of a combined command is read through the same reader path as its children, so its emulated Skip
 		// has to survive too. Only a detached child here: a correlated one reads the main query as a subquery, and SQLite
 		// refuses a Skip without Take there whatever the execution path.
