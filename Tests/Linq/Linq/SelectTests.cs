@@ -2662,5 +2662,46 @@ namespace Tests.Linq
 
 			AreEqual(parentsQry, parents);
 		}
+
+		readonly record struct ParentValue(int Id, int? Value);
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6068")]
+		public void StructFromSubqueryReferencedTwice([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Select(p => new { p.ParentID, Info = new ParentValue(p.ParentID, p.Value1) })
+				.Select(m => new { First = m.Info, Second = m.Info });
+
+			AssertQuery(query);
+		}
+
+		readonly record struct ParentChildren(int Id, List<int> Children);
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6068")]
+		public void StructWithEagerLoadFromSubqueryReferencedTwice([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var result = db.Parent
+				.Select(p => new { p.ParentID, Info = new ParentChildren(p.ParentID, p.Children.OrderBy(c => c.ChildID).Select(c => c.ChildID).ToList()) })
+				.Select(m => new { First = m.Info, Second = m.Info })
+				.ToList();
+
+			var expected = Child.OrderBy(c => c.ChildID).ToLookup(c => c.ParentID, c => c.ChildID);
+
+			Assert.That(result.Select(r => r.First.Id), Is.EquivalentTo(Parent.Select(p => p.ParentID)));
+
+			using (Assert.EnterMultipleScope())
+			{
+				foreach (var r in result)
+				{
+					Assert.That(r.Second.Id,       Is.EqualTo(r.First.Id));
+					Assert.That(r.First.Children,  Is.EqualTo(expected[r.First.Id]));
+					Assert.That(r.Second.Children, Is.EqualTo(expected[r.First.Id]));
+				}
+			}
+		}
 	}
 }
