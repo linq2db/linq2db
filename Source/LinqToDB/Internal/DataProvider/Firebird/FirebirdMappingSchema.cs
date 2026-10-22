@@ -189,7 +189,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			else
 				stringBuilder
 					.Append('\'')
-					.Append(value == '\'' ? '\'' : value)
+					.Append(value == '\'' ? "''" : value.ToString())
 					.Append('\'');
 		}
 
