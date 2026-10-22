@@ -433,9 +433,12 @@ namespace LinqToDB.Internal.Linq
 
 		static Func<Query,IDataContext,Mapper<T>, IQueryExpressions, SqlCommandExecutionContext?,int, IResultEnumerable<T>> GetExecuteQuery<T>(
 				Query                                                                                                  query,
-				Func<Query,IDataContext,Mapper<T>, IQueryExpressions, SqlCommandExecutionContext?,int, IResultEnumerable<T>> queryFunc)
+				Func<Query,IDataContext,Mapper<T>, IQueryExpressions, SqlCommandExecutionContext?,int, IResultEnumerable<T>> queryFunc,
+				out ISqlExpression?                                                                                    emulatedSkip)
 		{
 			FinalizeQuery(query);
+
+			emulatedSkip = null;
 
 			var selectQuery = query.QueryInfo.Statement.SelectQuery!;
 			var select      = selectQuery.Select;
@@ -454,6 +457,7 @@ namespace LinqToDB.Internal.Linq
 
 				var skipValue = select.SkipValue;
 
+				emulatedSkip     = skipValue;
 				select.TakeValue = newTakeValue;
 				select.SkipValue = null;
 
@@ -1131,7 +1135,7 @@ namespace LinqToDB.Internal.Linq
 			Query<T> query,
 			Expression<Func<IQueryRunner, DbDataReader, T>> expression)
 		{
-			var executeQuery = GetExecuteQuery<T>(query, ExecuteQuery);
+			var executeQuery = GetExecuteQuery<T>(query, ExecuteQuery, out var emulatedSkip);
 
 			var mapper   = new Mapper<T>(expression);
 
@@ -1141,8 +1145,20 @@ namespace LinqToDB.Internal.Linq
 				return executeQuery(query, db, mapper, expr, harvesters, 0);
 			};
 
-			query.GetResultFromReader = (db, expr, harvesters, reader) =>
-				new ExternalReaderResultEnumerable<T>(db, expr, query, harvesters, 0, mapper, reader);
+			// A Skip the provider cannot render is applied while reading, on a combined command's reader as on its own.
+			if (emulatedSkip == null)
+			{
+				query.GetResultFromReader = (db, expr, harvesters, reader) =>
+					new ExternalReaderResultEnumerable<T>(db, expr, query, harvesters, 0, mapper, reader);
+			}
+			else
+			{
+				query.GetResultFromReader = (db, expr, harvesters, reader) =>
+					new LimitResultEnumerable<T>(
+						new ExternalReaderResultEnumerable<T>(db, expr, query, harvesters, 0, mapper, reader),
+						EvaluateTakeSkipValue(query, expr, db, harvesters?.Parameters, emulatedSkip),
+						null);
+			}
 		}
 
 		static readonly PropertyInfo _dataContextInfo = MemberHelper.PropertyOf<IQueryRunner>(p => p.DataContext);
