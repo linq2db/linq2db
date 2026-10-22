@@ -694,7 +694,7 @@ namespace LinqToDB
 		/// Selects the backend used for combined multi-statement execution: the ADO.NET <c>DbBatch</c> API when the
 		/// provider supports it, or a single semicolon-concatenated command otherwise.
 		/// <para>
-		/// Has no effect unless <see cref="LinqOptions.UseCombinedCommands"/> is enabled. Disabling it forces the
+		/// Has no effect where statements are not combined. Disabling it forces the
 		/// concatenated command even on a batch-capable provider — see <see cref="LinqOptions.UseDbBatch"/> for the
 		/// conditions under which the fallback is taken anyway.
 		/// </para>

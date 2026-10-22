@@ -219,7 +219,7 @@ namespace LinqToDB
 	/// Still bounded by provider capability — a provider that does not report
 	/// <see cref="LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsMultiStatementBatchSupported"/> and
 	/// <see cref="LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsMultipleResultSetsSupported"/> stays sequential
-	/// regardless of this option, and <see cref="UseDbBatch"/> only selects the backend once this is enabled.
+	/// regardless of this option. <see cref="UseDbBatch"/> selects the backend wherever statements are combined.
 	/// </para>
 	/// <para>
 	/// An eager load also stays sequential when the context carries pending query hints, or when its type overrides
