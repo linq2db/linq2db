@@ -431,6 +431,7 @@ namespace LinqToDB.Data
 				// statement appended, and a single statement is never split; a group past it splits across round-trips
 				// (statement COUNT is separately bounded by PlanScenario's MaxStatementsPerCombinedGroup).
 				var maxCommandLength = dataConnection.DataProvider.SqlProviderFlags.MaxCombinedCommandLength;
+				var maxParameters    = dataConnection.DataProvider.SqlProviderFlags.MaxCombinedCommandParameters;
 
 				var result = new List<(string, IReadOnlyList<SqlParameter>, int)>();
 
@@ -465,6 +466,15 @@ namespace LinqToDB.Data
 						// Always convert upfront (parameter-dependent statements too) so the builder never re-converts per element.
 						statement = optimizationContext.OptimizeAndConvertAll(statement, NullabilityContext.GetContext(statement.SelectQuery));
 
+						// Unlike the length cap, the parameter limit is hard: the provider rejects a command past it, so the
+						// statement that would cross it starts the next command instead.
+						if (count > 0
+							&& maxParameters != int.MaxValue
+							&& optimizationContext.GetParameters().Count + CountQueryParameters(statement) > maxParameters)
+						{
+							break;
+						}
+
 						var aliases = ScenarioCommandRenderer.PrepareStepAliases(serviceProvider, statement);
 
 						ScenarioCommandRenderer.AppendConcatenatedStatement(sb.Value, sqlBuilder, optimizationContext, statement, aliases, count == 0, 0);
@@ -477,6 +487,20 @@ namespace LinqToDB.Data
 				}
 
 				return result;
+			}
+
+			// An upper bound: the render may still merge equal parameters.
+			static int CountQueryParameters(SqlStatement statement)
+			{
+				var parameters = new HashSet<SqlParameter>();
+
+				statement.VisitAll(parameters, static (set, element) =>
+				{
+					if (element is SqlParameter { IsQueryParameter: true } parameter)
+						set.Add(parameter);
+				});
+
+				return parameters.Count;
 			}
 
 			// The single execution seam for one combined-eager command. A single (pre-merged / concatenated) statement runs

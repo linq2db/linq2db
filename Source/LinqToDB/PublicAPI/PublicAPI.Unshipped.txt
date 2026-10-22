@@ -151,6 +151,8 @@ LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsMultiStatementBatchSupported.ge
 LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsMultiStatementBatchSupported.set -> void
 LinqToDB.Internal.SqlProvider.SqlProviderFlags.MaxCombinedCommandLength.get -> int
 LinqToDB.Internal.SqlProvider.SqlProviderFlags.MaxCombinedCommandLength.set -> void
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.MaxCombinedCommandParameters.get -> int
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.MaxCombinedCommandParameters.set -> void
 LinqToDB.Internal.SqlProvider.SqlProviderFlags.MaxStatementsPerCombinedGroup.get -> int
 LinqToDB.Internal.SqlProvider.SqlProviderFlags.MaxStatementsPerCombinedGroup.set -> void
 LinqToDB.Internal.SqlProvider.SqlStepCondition

@@ -794,6 +794,15 @@ namespace LinqToDB.Internal.SqlProvider
 		[DataMember(Order = 82)]
 		public int MaxStatementsPerCombinedGroup { get; set; }
 
+		/// <summary>
+		/// Maximum number of parameters one semicolon-concatenated combined command may carry. The combined eager-loading
+		/// render starts a new command before a statement whose parameters would take the command past this; a single
+		/// statement is never split. A <c>DbBatch</c> command gives each statement its own parameters and is not bounded
+		/// by it. Default (set by <see cref="DataProviderBase"/>): <see cref="int.MaxValue"/>.
+		/// </summary>
+		[DataMember(Order = 84)]
+		public int MaxCombinedCommandParameters { get; set; }
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || (AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null);
@@ -899,6 +908,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsMultipleResultSetsSupported                        .GetHashCode()
 				^ MaxCombinedCommandLength                             .GetHashCode()
 				^ MaxStatementsPerCombinedGroup                        .GetHashCode()
+				^ MaxCombinedCommandParameters                         .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
 	}
 
@@ -986,6 +996,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsMultipleResultSetsSupported                         == other.IsMultipleResultSetsSupported
 				&& MaxCombinedCommandLength                              == other.MaxCombinedCommandLength
 				&& MaxStatementsPerCombinedGroup                         == other.MaxStatementsPerCombinedGroup
+				&& MaxCombinedCommandParameters                          == other.MaxCombinedCommandParameters
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
 		#endregion

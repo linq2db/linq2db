@@ -3939,6 +3939,154 @@ namespace Tests.Linq
 			if (!context.IsRemote()) counter.Count.ShouldBe(1);
 		}
 
+		// SQLite cannot render OFFSET without LIMIT, so a Skip without Take is applied while the rows are read; a child read
+		// from the combined command has to apply it as well.
+		[Test]
+		public void ChildrenSkipWithoutTake([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masters, correlated, detached) = GenerateMixedEagerData();
+
+			using var db          = GetDataContext(context);
+			using var tMaster     = db.CreateLocalTable(masters);
+			using var tCorrelated = db.CreateLocalTable(correlated);
+			using var tDetached   = db.CreateLocalTable(detached);
+
+			var result = tMaster
+				.OrderBy(m => m.Id)
+				.Select(m => new
+				{
+					m.Id,
+					Correlated = tCorrelated
+						.Where(c => c.MasterId == m.Id)
+						.OrderBy(c => c.Id)
+						.Skip(1)
+						.ToList(),
+					Detached = tDetached
+						.OrderBy(d => d.Id)
+						.Skip(2)
+						.ToList(),
+				})
+				.ToList();
+
+			var expectedDetached = detached
+				.OrderBy(d => d.Id)
+				.Skip(2)
+				.Select(d => d.Id)
+				.ToArray();
+
+			result.Count.ShouldBe(masters.Length);
+
+			foreach (var m in result)
+			{
+				var expectedCorrelated = correlated
+					.Where(c => c.MasterId == m.Id)
+					.OrderBy(c => c.Id)
+					.Skip(1)
+					.Select(c => c.Id)
+					.ToArray();
+
+				var correlatedIds = m.Correlated
+					.Select(c => c.Id)
+					.ToArray();
+
+				var detachedIds = m.Detached
+					.Select(d => d.Id)
+					.ToArray();
+
+				correlatedIds.ShouldBe(expectedCorrelated);
+				detachedIds.ShouldBe(expectedDetached);
+			}
+		}
+
+		static FormattableString DetachedInList(string tableName, IEnumerable<int> values)
+		{
+			var arguments = values
+				.Cast<object>()
+				.ToArray();
+
+			var placeholders = Enumerable
+				.Range(0, arguments.Length)
+				.Select(k => "{" + k + "}");
+
+			var format = $"SELECT * FROM [{tableName}] WHERE [Id] IN ({string.Join(",", placeholders)})";
+
+			return System.Runtime.CompilerServices.FormattableStringFactory.Create(format, arguments);
+		}
+
+		// SQL Server rejects a request with more than 2100 parameters, and semicolon-joined statements share one request,
+		// so children whose parameters add up past that have to go in separate commands. The interceptor forces the joined
+		// command; each child alone stays under the limit.
+		[Test]
+		public void CombinedChildrenStayUnderTheParameterLimit([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var (_, _, detached) = GenerateMixedEagerData();
+
+			using var db        = GetDataContext(context);
+			using var tDetached = db.CreateLocalTable(detached);
+
+			db.AddInterceptor(new CombinedCommandCounter());
+
+			var first  = DetachedInList(tDetached.TableName, new[] { 1, 2 }.Concat(Enumerable.Range(10_001, 1_098)));
+			var second = DetachedInList(tDetached.TableName, new[] { 3, 4 }.Concat(Enumerable.Range(20_001, 1_098)));
+
+			var result = db.Select(() => new
+			{
+				First  = db.FromSql<MixedDetachedChild>(first).ToList(),
+				Second = db.FromSql<MixedDetachedChild>(second).ToList(),
+			});
+
+			var firstIds = result.First
+				.Select(d => d.Id)
+				.OrderBy(id => id)
+				.ToArray();
+
+			var secondIds = result.Second
+				.Select(d => d.Id)
+				.OrderBy(id => id)
+				.ToArray();
+
+			firstIds.ShouldBe(new[] { 1, 2 });
+			secondIds.ShouldBe(new[] { 3, 4 });
+		}
+
+		// The main query of a combined command is read through the same reader path as its children, so its emulated Skip
+		// has to survive too. Only a detached child here: a correlated one reads the main query as a subquery, and SQLite
+		// refuses a Skip without Take there whatever the execution path.
+		[Test]
+		public void MainQuerySkipWithoutTake([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masters, _, detached) = GenerateMixedEagerData();
+
+			using var db        = GetDataContext(context);
+			using var tMaster   = db.CreateLocalTable(masters);
+			using var tDetached = db.CreateLocalTable(detached);
+
+			var result = tMaster
+				.OrderBy(m => m.Id)
+				.Skip(1)
+				.Select(m => new
+				{
+					m.Id,
+					Detached = tDetached
+						.OrderBy(d => d.Id)
+						.ToList(),
+				})
+				.ToList();
+
+			var expectedMasters = masters
+				.OrderBy(m => m.Id)
+				.Skip(1)
+				.Select(m => m.Id)
+				.ToArray();
+
+			var masterIds = result
+				.Select(m => m.Id)
+				.ToArray();
+
+			masterIds.ShouldBe(expectedMasters);
+			result[0].Detached.Count.ShouldBe(detached.Length);
+		}
+
 		// Runs the same combined eager load down BOTH execution backends: the ADO.NET DbBatch (UseDbBatch on, the
 		// default) and the semicolon-concatenated single command it falls back to. Providers here are the batch-capable
 		// ones on net8.0+, so the axis is a real fork rather than two identical runs.
