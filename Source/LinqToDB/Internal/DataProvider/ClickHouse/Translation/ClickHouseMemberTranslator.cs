@@ -274,6 +274,8 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 
 				var valueType = factory.GetDbDataType(value);
 
+				value = UncutDecimalLiteral(factory, value);
+
 				ISqlExpression result;
 
 				if (precision != null)
