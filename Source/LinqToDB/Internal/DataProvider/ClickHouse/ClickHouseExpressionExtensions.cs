@@ -20,6 +20,10 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		/// </remarks>
 		public static ISqlExpression AsDateTime64(this ISqlExpressionFactory factory, ISqlExpression expression)
 		{
+			// A cast is what the server sees, and the IN-list visitor revisits its own output on every convert pass.
+			if (expression is SqlCastExpression { IsMandatory: true, ToType.DataType: DataType.DateTime64 })
+				return expression;
+
 			var type = QueryHelper.GetDbDataTypeWithoutSchema(expression);
 
 			var precision = type is { DataType: DataType.DateTime64, Precision: > ClickHouseMappingSchema.DEFAULT_DATETIME64_PRECISION }

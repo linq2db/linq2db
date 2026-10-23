@@ -179,6 +179,7 @@ namespace Tests.Linq
 						var matched = t.Count(r => values.Contains(r.At));
 
 						matched.ShouldBe(1);
+						db.LastQuery!.ShouldNotContain("toDateTime64(toDateTime64(");
 						break;
 					}
 
