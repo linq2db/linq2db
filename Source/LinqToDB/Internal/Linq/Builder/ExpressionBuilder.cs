@@ -439,6 +439,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				builtValues     = usedValues.ToList();
 			}
 
+			ParametersContext.CacheManager.RegisterCteConstantsPattern();
+
 			var (compareInfo, parameterAccessors, expressions) = ParametersContext.CacheManager.BuildQueryCacheCompareInfo(this, DataContext, ParametersContext.ParametersExpression, builtParameters, builtValues);
 			
 			query.ParameterAccessors = parameterAccessors;

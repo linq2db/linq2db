@@ -673,6 +673,23 @@ namespace LinqToDB.Internal.Linq
 			_nonQueryParameters.Add(parameter);
 		}
 
+		bool _cteConstantsPatternRegistered;
+
+		/// <summary>
+		/// Registers the constants pattern of CTE-defining calls (see <see cref="CteConstantsPattern"/>) once: the cache
+		/// manager outlives a builder retry and is finalized more than once per build.
+		/// </summary>
+		public void RegisterCteConstantsPattern()
+		{
+			if (_cteConstantsPatternRegistered)
+				return;
+
+			_cteConstantsPatternRegistered = true;
+
+			if (CteConstantsPattern.TryCreate(MainExpression, Expression.PropertyOrField(RootPath, nameof(IQueryExpressions.MainExpression)), out var accessor, out var pattern))
+				MarkAsValue(accessor, pattern);
+		}
+
 		/// <summary>
 		/// Registers expression as value. It will be replaced with constant placeholder during cache comparison.
 		/// </summary>
