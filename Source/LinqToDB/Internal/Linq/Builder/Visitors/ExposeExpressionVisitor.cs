@@ -261,8 +261,8 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 				// a format read from a compiled query's arguments is resolved later, with the FormattableString's format
 				arguments.Add(IsCompilable(sql)
-					? DataExtensions.GenerateFormattableString(((RawSqlString)EvaluateExpression(sql)!).Format, node.Arguments[^1])
-					: Expression.Call(null, Methods.System.FormattableStringFactory_Create, Expression.Property(sql, nameof(RawSqlString.Format)), node.Arguments[^1]));
+					? FormattableStringHelper.CreateExpression(((RawSqlString)EvaluateExpression(sql)!).Format, node.Arguments[^1])
+					: FormattableStringHelper.CreateExpression(Expression.Property(sql, nameof(RawSqlString.Format)), node.Arguments[^1]));
 
 				return Expression.Call(formattableMethod.MakeGenericMethod(node.Method.GetGenericArguments()), arguments);
 			}
@@ -271,8 +271,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			// expressions and become parameters as they would in the outer query.
 			Expression PrepareFormattableString(Expression argument)
 			{
-				if (argument is MethodCallExpression { Arguments: [var format, { NodeType: ExpressionType.NewArrayInit } arguments] } create
-					&& create.Method == Methods.System.FormattableStringFactory_Create)
+				if (FormattableStringHelper.TrySplit(argument, out var format, out var arguments))
 				{
 					if (format.NodeType == ExpressionType.Constant)
 						return argument;
@@ -285,7 +284,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 					if (!ReferenceEquals(resolvedFormat, format))
 						RecordMaterializedArgumentSlots(format);
 
-					return create.Update(null, [Expression.Constant(EvaluateExpression(resolvedFormat), typeof(string)), arguments]);
+					return FormattableStringHelper.CreateExpression((string)EvaluateExpression(resolvedFormat)!, arguments);
 				}
 
 				var resolvedArgument = ResolveCompiledQueryArguments(argument);
@@ -294,7 +293,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				{
 					// Outside a compiled query expose runs per execution, so the values can be baked.
 					if (_parameterValues == null)
-						return DataExtensions.GenerateFormattableString(formattable);
+						return FormattableStringHelper.CreateExpression(formattable);
 
 					if (!ReferenceEquals(resolvedArgument, argument))
 						RecordMaterializedArgumentSlots(argument);
@@ -302,10 +301,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 					// A compiled query reuses this build for any Equals-equal argument values (1.0m and 1.00m, one
 					// instant at two offsets) and for every value of a captured array it does not key on, so the
 					// values are read from the argument expression rather than baked.
-					var fromArray = argument is MethodCallExpression { Arguments: [_, _] } call && call.Method == Methods.System.FormattableStringFactory_Create;
-					var source    = fromArray
-						? ((MethodCallExpression)argument).Arguments[1]
-						: Expression.Call(argument, Methods.System.FormattableString_GetArguments);
+					var source = FormattableStringHelper.GetArgumentsExpression(argument, out var fromArray);
 
 					// A null argument has no type to read it as. It is read, and fails to translate as on master, only from
 					// a closure-captured array, which master read per call. A keyed source bakes it, and so does a captured
@@ -314,7 +310,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 					var keyed = !ReferenceEquals(ResolveCompiledQueryArguments(source), source)
 						&& source.Find(static e => e is MemberExpression { Expression: null or ConstantExpression }) == null;
 
-					return DataExtensions.GenerateFormattableString(formattable, source, readNulls: fromArray && !keyed);
+					return FormattableStringHelper.CreateExpression(formattable, source, readNulls: fromArray && !keyed);
 				}
 
 				return argument;
@@ -385,11 +381,8 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 							var evaluated = EvaluateExpression(argument);
 							if (evaluated is Expression evaluatedExpr)
 							{
-								if (evaluatedArgs == null)
-								{
-									evaluatedArgs ??= node.Arguments.ToArray();
-									evaluatedArgs[i] = evaluatedExpr;
-								}
+								evaluatedArgs ??= node.Arguments.ToArray();
+								evaluatedArgs[i] = evaluatedExpr;
 							}
 						}
 					}

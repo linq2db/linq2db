@@ -410,6 +410,11 @@
     <Project Path="Tests/Tests.Benchmarks/linq2db.Benchmarks.csproj">
       <Build Solution="Testing|*" Project="false" />
     </Project>
+    <Project Path="Tests/Tests.FpuJit/Tests.FpuJit.csproj">
+      <Build Solution="Azure|*" Project="false" />
+      <Build Solution="Release|*" Project="false" />
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
     <Project Path="Tests/Tests.Playground/Tests.Playground.csproj">
       <Build Solution="Azure|*" Project="false" />
       <Build Solution="Release|*" Project="false" />

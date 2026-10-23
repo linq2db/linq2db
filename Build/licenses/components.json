@@ -574,8 +574,8 @@
       "displayName": "linq2db4iSeries",
       "packageId": "linq2db4iSeries",
       "versions": {
-        "net472": "6.3.0",
-        "net8.0-windows7.0": "6.3.0"
+        "net472": "6.5.0",
+        "net8.0-windows7.0": "6.5.0"
       },
       "license": "MIT",
       "licenseTexts": [
