@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.Linq.Builder
@@ -172,6 +173,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				var newPath = SequenceHelper.CorrectExpression(path, this, Sequence);
 
 				if (ExpressionEqualityComparer.Instance.Equals(newPath, path))
+					return path;
+
+				// A Nullable<T> member stays rooted here, so what is read from it (HasValue, Value) still passes the
+				// not-null guard below and sees that the row can be missing.
+				if (flags.IsMemberRoot() && !IsNullValidationDisabled && path is MemberExpression && path.Type.IsNullableType)
 					return path;
 
 				if (flags.IsRoot() || flags.IsTable() || flags.IsExtractProjection() || flags.IsAggregationRoot())
