@@ -35,6 +35,11 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 		bool                              _isSingleConvert;
 		List<int>?                        _materializedArgumentSlots;
 
+		// Where a pivot terminal may stand: its cells need an object to land in, so it must be a member value, a
+		// constructor argument or a lambda body, possibly through a conversion.
+		Expression?                       _terminalSlot;
+		ReadOnlyCollection<Expression>?   _terminalSlots;
+
 		public IDataContext  DataContext   => _dataContext;
 		public MappingSchema MappingSchema => _dataContext.MappingSchema;
 
@@ -79,6 +84,8 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 			_materializedArgumentSlots = null;
 			_parameterValues           = null;
+			_terminalSlot              = null;
+			_terminalSlots             = null;
 
 			_allowedParameters?.Clear();
 
@@ -116,6 +123,18 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			if (node.Method.IsSqlPropertyMethod)
 			{
 				return HandleSqlProperty(node);
+			}
+
+			// The terminal is reached first, top-down, and consumes its chain; any other pivot call reached here has none.
+			if (PivotExpander.IsPivotCall(node))
+			{
+				if (!PivotExpander.IsTerminal(node))
+					throw new LinqToDBException(ErrorHelper.Pivot.Error_PivotNoTerminal);
+
+				if (!_isSingleConvert && !IsTerminalSlot(node))
+					throw new LinqToDBException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_PivotTerminalNotAMember, node.Method.Name));
+
+				return Visit(PivotExpander.Expand(node, this));
 			}
 
 			if (string.Equals(node.Method.Name, "Compile", StringComparison.Ordinal) &&
@@ -441,7 +460,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			return null;
 		}
 
-		void RecordMaterializedArgumentSlots(Expression materialized)
+		internal void RecordMaterializedArgumentSlots(Expression materialized)
 		{
 			materialized.Visit(this, static (visitor, e) =>
 			{
@@ -459,7 +478,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 		// Substitutes the compiled query's argument array with its values, so an expression reading them can be
 		// evaluated. Returns the expression unchanged when it reads nothing from the array.
-		Expression ResolveCompiledQueryArguments(Expression expression)
+		internal Expression ResolveCompiledQueryArguments(Expression expression)
 		{
 			if (_parameterValues == null)
 				return expression;
@@ -491,7 +510,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			return null;
 		}
 
-		object? EvaluateExpression(Expression? expression)
+		internal object? EvaluateExpression(Expression? expression)
 		{
 			if (expression == null)
 				return null;
@@ -926,12 +945,32 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 			_allowedParameters.Push(node.Parameters);
 
+			var saveSlot  = _terminalSlot;
+			_terminalSlot = node.Body;
+
 			var newNode = base.VisitLambda(node);
+
+			_terminalSlot = saveSlot;
 
 			_allowedParameters.Pop();
 
 			return newNode;
 		}
+
+		protected override MemberAssignment VisitMemberAssignment(MemberAssignment node)
+		{
+			var saveSlot  = _terminalSlot;
+			_terminalSlot = node.Expression;
+
+			var newNode = base.VisitMemberAssignment(node);
+
+			_terminalSlot = saveSlot;
+
+			return newNode;
+		}
+
+		bool IsTerminalSlot(Expression node)
+			=> ReferenceEquals(node, _terminalSlot) || _terminalSlots?.Contains(node) == true;
 
 		protected override Expression VisitConstant(ConstantExpression node)
 		{
@@ -968,6 +1007,18 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 					converted = Visit(converted);
 					return AliasCall(converted, alias);
 				}
+			}
+
+			if (node.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked or ExpressionType.TypeAs && IsTerminalSlot(node))
+			{
+				var saveSlot  = _terminalSlot;
+				_terminalSlot = node.Operand;
+
+				var newNode = base.VisitUnary(node);
+
+				_terminalSlot = saveSlot;
+
+				return newNode;
 			}
 
 			switch (node.NodeType)
@@ -1060,7 +1111,14 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			if (newNode != null)
 				return Visit(newNode);
 
-			return base.VisitNew(node);
+			var saveSlots  = _terminalSlots;
+			_terminalSlots = node.Arguments;
+
+			var result = base.VisitNew(node);
+
+			_terminalSlots = saveSlots;
+
+			return result;
 		}
 
 		Expression? ConvertNew(NewExpression pi)

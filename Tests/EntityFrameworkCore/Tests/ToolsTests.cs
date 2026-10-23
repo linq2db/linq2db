@@ -199,6 +199,44 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test]
+		public void PivotOperatorsOverADbSet([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider, false);
+
+			var unpivoted = ctx.Products
+				.Unpivot((p, name, value) => new { p.ProductId, Name = name, Value = value }, p => p.UnitsInStock, p => p.UnitsOnOrder)
+				.Count();
+
+			unpivoted.ShouldBe(ctx.Products.Count(p => p.UnitsInStock != null) + ctx.Products.Count(p => p.UnitsOnOrder != null));
+
+			var pivotQuery = ctx.Products
+				.GroupBy(p => p.SupplierId)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(p => p.Discontinued, new[] { false, true })
+						.Cell(rows => rows.Count())
+						.AsDictionary(),
+				});
+
+			// The pivot lives inside a projection EF executes itself, so linq2db has to take the query over.
+			var pivoted = pivotQuery
+				.ToLinqToDB()
+				.ToArray();
+
+			pivoted.Length.ShouldBe(ctx.Products.Select(p => p.SupplierId).Distinct().Count());
+			pivoted.ShouldAllBe(r => r.Cells.Store.Count == 2);
+
+			Action withoutLinqToDB = () => pivotQuery.ToArray();
+
+			withoutLinqToDB
+				.ShouldThrow<InvalidOperationException>()
+				.Message
+				.ShouldContain(nameof(LinqExtensions.Pivot));
+		}
+
+		[Test]
 		public void TestTransformationTable([EFDataSources] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
