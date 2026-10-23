@@ -207,7 +207,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 						return sb.Append(value);
 
 					// https://github.com/linq2db/linq2db/issues/1064
-					if (convertType == ConvertType.NameToQueryField && Name.Length > 0 && value[0] == '#')
+					if (convertType == ConvertType.NameToQueryField && value.Length > 0 && value[0] == '#')
 						return sb.Append(value);
 
 					return sb.Append('[').Append(value).Append(']');
