@@ -751,5 +751,55 @@ namespace Tests.Linq
 			AssertQuery(tb.Where(r => r.BooleanN ?? False));
 			AssertQuery(tb.Where(r => r.BooleanN ?? (r.Id % 2 == 1)));
 		}
+
+		[Test]
+		public void NegatedNullableComparisonFromSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			AreEqual(
+				from x in    Parent.Select(p => new { IsOne = p.Value1 == 1, p.ParentID }) where !x.IsOne select x.ParentID,
+				from x in db.Parent.Select(p => new { IsOne = p.Value1 == 1, p.ParentID }) where !x.IsOne select x.ParentID);
+
+			AreEqual(
+				from x in    Parent.Select(p => new { IsOne = p.Value1 == 1, p.ParentID }) where x.IsOne == false select x.ParentID,
+				from x in db.Parent.Select(p => new { IsOne = p.Value1 == 1, p.ParentID }) where x.IsOne == false select x.ParentID);
+
+			AreEqual(
+				from x in    Parent.Select(p => new { IsOne = p.Value1 == 1, p.ParentID }) where x.IsOne != true select x.ParentID,
+				from x in db.Parent.Select(p => new { IsOne = p.Value1 == 1, p.ParentID }) where x.IsOne != true select x.ParentID);
+		}
+
+		[Test]
+		public void NegatedNullableAggregateComparisonFromSubquery([DataSources(TestProvName.AllYdb, ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			AreEqual(
+				from x in    Parent.Select(p => new { IsLast = p.Children.Max(c => (int?)c.ChildID) == 11, p.ParentID }) where !x.IsLast select x.ParentID,
+				from x in db.Parent.Select(p => new { IsLast = p.Children.Max(c => (int?)c.ChildID) == 11, p.ParentID }) where !x.IsLast select x.ParentID);
+		}
+
+		[Test]
+		public void NegatedNullableComparisonInApply([IncludeDataSources(TestProvName.WithApplyJoin)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			AreEqual(
+				from p in Parent
+				from c in Parent.Select(q => new { q.ParentID, IsOne = q.Value1 == 1 }).Where(x => x.ParentID == p.ParentID && !x.IsOne).Take(1)
+				select new { p.ParentID, c.IsOne },
+				from p in db.Parent
+				from c in db.Parent.Select(q => new { q.ParentID, IsOne = q.Value1 == 1 }).Where(x => x.ParentID == p.ParentID && !x.IsOne).Take(1)
+				select new { p.ParentID, c.IsOne });
+
+			AreEqual(
+				from p in Parent
+				from c in Parent.Select(q => new { q.ParentID, IsOk = q.Value1 == 1 || q.ParentID == 3 }).Where(x => x.ParentID == p.ParentID && !x.IsOk).Take(1)
+				select p.ParentID,
+				from p in db.Parent
+				from c in db.Parent.Select(q => new { q.ParentID, IsOk = q.Value1 == 1 || q.ParentID == 3 }).Where(x => x.ParentID == p.ParentID && !x.IsOk).Take(1)
+				select p.ParentID);
+		}
 	}
 }
