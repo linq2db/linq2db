@@ -10,6 +10,7 @@ using System.Transactions;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Interceptors;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;
 
@@ -492,7 +493,7 @@ namespace Tests.Linq
 
 				case Terminal.FirstMember:
 				{
-					var r = db.QueryBatch(() => new
+					var run = () => db.QueryBatch(() => new
 					{
 						X    = items
 							.OrderBy(i => i.Id)
@@ -504,6 +505,18 @@ namespace Tests.Linq
 							.ToList(),
 					});
 
+					// Sybase takes no ordered First as a subquery of a FROM-less SELECT.
+					if (context.IsAnyOf(TestProvName.AllSybase))
+					{
+						run
+							.ShouldThrow<LinqToDBException>()
+							.Message
+							.ShouldContain(ErrorHelper.Error_Correlated_Subqueries);
+						return;
+					}
+
+					var r = run();
+
 					r.X.ShouldBe(1);
 					rows = r.Rows;
 					break;
@@ -511,7 +524,7 @@ namespace Tests.Linq
 
 				case Terminal.FirstEntity:
 				{
-					var r = db.QueryBatch(() => new
+					var run = () => db.QueryBatch(() => new
 					{
 						X    = items
 							.OrderBy(i => i.Id)
@@ -522,6 +535,17 @@ namespace Tests.Linq
 							.ToList(),
 					});
 
+					if (context.IsAnyOf(TestProvName.AllSybase))
+					{
+						run
+							.ShouldThrow<LinqToDBException>()
+							.Message
+							.ShouldContain(ErrorHelper.Error_Correlated_Subqueries);
+						return;
+					}
+
+					var r = run();
+
 					r.X.Id.ShouldBe(1);
 					rows = r.Rows;
 					break;
@@ -529,7 +553,7 @@ namespace Tests.Linq
 
 				case Terminal.FirstOrDefaultEmpty:
 				{
-					var r = db.QueryBatch(() => new
+					var run = () => db.QueryBatch(() => new
 					{
 						X    = items
 							.Where(i => i.Id > 100)
@@ -539,6 +563,18 @@ namespace Tests.Linq
 							.Take(2)
 							.ToList(),
 					});
+
+					// The same refusal SelectScalarTests.SubQueryTest declares for a FirstOrDefault in db.Select.
+					if (context.IsAnyOf(TestProvName.AllSybase))
+					{
+						run
+							.ShouldThrow<LinqToDBException>()
+							.Message
+							.ShouldContain(ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid);
+						return;
+					}
+
+					var r = run();
 
 					r.X.ShouldBeNull();
 					rows = r.Rows;
