@@ -16,7 +16,8 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		/// <remarks>
 		/// The coercion is unconditional: a reported <c>DateTime64</c> is as often the mapping schema's default for a
 		/// CLR <see cref="DateTime"/> - a column that declares no type, or a translation that copies its operand's type -
-		/// as what the server sees (#6115). A <c>DateTime64</c> finer than the default keeps its precision.
+		/// as what the server sees (#6115). A <c>DateTime64</c> finer than the default keeps its precision. A literal or
+		/// parameter typed <c>DateTime64</c> is left as is: it is written as one.
 		/// </remarks>
 		/// <param name="factory">The expression factory.</param>
 		/// <param name="expression">The date/time operand.</param>
@@ -28,6 +29,11 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		{
 			// A cast is what the server sees, and the IN-list visitor revisits its own output on every convert pass.
 			if (expression is SqlCastExpression { IsMandatory: true, ToType.DataType: DataType.DateTime64 })
+				return expression;
+
+			// ClickHouse inlines every parameter, so it is written as a literal too; a nullable one may be NULL.
+			if (expression is SqlValue { Value: not null, ValueType.DataType: DataType.DateTime64 }
+				|| expression is SqlParameter { Type: { DataType: DataType.DateTime64, SystemType.IsValueType: true } paramType } && Nullable.GetUnderlyingType(paramType.SystemType) == null)
 				return expression;
 
 			var type = QueryHelper.GetDbDataTypeWithoutSchema(expression);

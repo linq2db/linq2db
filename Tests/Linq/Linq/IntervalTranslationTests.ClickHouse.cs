@@ -14,7 +14,7 @@ namespace Tests.Linq
 	public partial class IntervalTranslationTests
 	{
 		/// <summary>
-		/// The coercion is emitted whatever type the operand reports.
+		/// The coercion is emitted whatever type the operand reports, except over a literal.
 		/// </summary>
 		/// <remarks>
 		/// A reported <c>DateTime64</c> is no evidence: <see cref="UndeclaredColumnOverServerDateTimeIsCoerced"/> is a
@@ -32,6 +32,16 @@ namespace Tests.Linq
 				.ToList();
 
 			db.LastQuery!.ShouldContain("toUnixTimestamp64Nano(toDateTime64(r.FinishedOn, 7))");
+
+			// A literal is the exception: it is written as toDateTime64('...', 7) already.
+			var from = new DateTime(2026, 6, 1, 10, 0, 0);
+
+			_ = t
+				.Select(r => (r.FinishedOn - from).TotalHours)
+				.ToList();
+
+			db.LastQuery!.ShouldContain("toUnixTimestamp64Nano(toDateTime64('");
+			db.LastQuery!.ShouldNotContain("toDateTime64(toDateTime64(");
 
 			// now() is a whole-second timestamp whatever the mapping schema makes of a CLR DateTime.
 			_ = t
