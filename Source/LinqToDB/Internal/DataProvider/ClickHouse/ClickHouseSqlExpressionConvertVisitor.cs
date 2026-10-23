@@ -114,7 +114,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				&& (inList.Values.Exists(v => Factory.GetDbDataType(v).DataType == DataType.DateTime64)
 					|| (inList.Values is [SqlParameter] && CanCarryTime(inList.Expr1) && !QueryHelper.IsStoredColumn(inList.Expr1))))
 			{
-				return new SqlPredicate.InList(Factory.AsDateTime64(inList.Expr1, keepPrecision: true), inList.WithNull, inList.IsNot, inList.Values);
+				return new SqlPredicate.InList(Factory.AsDateTime64(inList.Expr1, keepPrecision: QueryHelper.IsStoredColumn(inList.Expr1)), inList.WithNull, inList.IsNot, inList.Values);
 			}
 
 			return newElement;
