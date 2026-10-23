@@ -14,36 +14,23 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		/// refused by name.
 		/// </summary>
 		/// <remarks>
-		/// The operand's reported type has to be the one the server sees, which is why the
-		/// <see cref="DateTime"/>-producing translations name the type their SQL actually produces rather
-		/// than the one the mapping schema gives a CLR <see cref="DateTime"/>.
+		/// The coercion is unconditional: a reported <c>DateTime64</c> is as often the mapping schema's default for a
+		/// CLR <see cref="DateTime"/> - a column that declares no type, or a translation that copies its operand's type -
+		/// as what the server sees (#6115). A <c>DateTime64</c> finer than the default keeps its precision.
 		/// </remarks>
 		public static ISqlExpression AsDateTime64(this ISqlExpressionFactory factory, ISqlExpression expression)
 		{
-			// Without the mapping schema: its default for a CLR DateTime is DateTime64, so an operand of unknown type
-			// (a COALESCE whose operands disagree) would pass as one while the server types it DateTime.
 			var type = QueryHelper.GetDbDataTypeWithoutSchema(expression);
 
-			// Any DateTime64 precision is accepted, so an operand that already is one needs no conversion.
-			if (IsDateTime64(type))
-				return expression;
+			var precision = type is { DataType: DataType.DateTime64, Precision: > ClickHouseMappingSchema.DEFAULT_DATETIME64_PRECISION }
+				? type.Precision.Value
+				: ClickHouseMappingSchema.DEFAULT_DATETIME64_PRECISION;
 
 			// Built from the system type alone: a DbType carried over from the operand names the operand's own
 			// ClickHouse type and would be rendered in preference to the DataType set here.
-			var resultType = new DbDataType(type.SystemType, DataType.DateTime64)
-				.WithPrecision(ClickHouseMappingSchema.DEFAULT_DATETIME64_PRECISION);
+			var resultType = new DbDataType(type.SystemType, DataType.DateTime64).WithPrecision(precision);
 
-			return factory.Cast(expression, resultType);
-		}
-
-		/// <summary>
-		/// Whether the server sees a <c>DateTime64</c>. A column declared through its <c>DbType</c> alone is typed
-		/// <c>DateTime64</c> by the schema default whatever ClickHouse type the <c>DbType</c> names.
-		/// </summary>
-		public static bool IsDateTime64(DbDataType type)
-		{
-			return type.DataType == DataType.DateTime64
-				&& (type.DbType == null || type.DbType.Contains("DateTime64", StringComparison.OrdinalIgnoreCase));
+			return factory.Cast(expression, resultType, true);
 		}
 
 		/// <summary>
@@ -84,8 +71,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		/// <summary>
 		/// Type of a <c>now(…)</c> or <c>makeDateTime(…)</c> result. The server answers a <c>DateTime</c> whatever
-		/// the mapping schema makes of the CLR type, and an operand that claims <c>DateTime64</c> is one the epoch
-		/// functions then refuse.
+		/// the mapping schema makes of the CLR type, and a value written beside it takes its type from this one.
 		/// </summary>
 		public static DbDataType DateTimeType(DbDataType type)
 		{
