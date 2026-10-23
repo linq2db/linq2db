@@ -241,6 +241,39 @@ namespace Tests.Linq
 			t.Count(r => values.Contains(r.At)).ShouldBe(1);
 		}
 
+		/// <summary>
+		/// A value computed from a declared <c>DateTime64(3)</c> column keeps the precision the server gives it in a list:
+		/// the shift reports the column's type, while ClickHouse answers it as <c>DateTime64(9)</c>.
+		/// </summary>
+		[Test]
+		public void ComputedValueBesideAMillisecondColumnKeepsItsPrecisionInAList([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			var stored  = new DateTime(2026, 6, 1, 10, 0, 0, 100);
+			var shifted = stored.AddMilliseconds(0.4);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable([new MillisecondRow { Id = 1, At = stored }]);
+
+			var storedValues  = new[] { stored };
+			var shiftedValues = new[] { shifted };
+
+			t
+				.Count(r => new[] { stored }.Contains(r.At.AddMilliseconds(0.4)))
+				.ShouldBe(0);
+
+			t
+				.Count(r => storedValues.Contains(r.At.AddMilliseconds(0.4)))
+				.ShouldBe(0);
+
+			t
+				.Count(r => new[] { shifted }.Contains(r.At.AddMilliseconds(0.4)))
+				.ShouldBe(1);
+
+			t
+				.Count(r => shiftedValues.Contains(r.At.AddMilliseconds(0.4)))
+				.ShouldBe(1);
+		}
+
 		[Test]
 		public void CoalesceOverASecondPrecisionColumnIsCoerced([IncludeDataSources(TestProvName.AllClickHouse)] string context)
 		{
