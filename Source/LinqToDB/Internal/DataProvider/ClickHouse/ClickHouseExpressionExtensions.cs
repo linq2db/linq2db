@@ -44,7 +44,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				: ClickHouseMappingSchema.DEFAULT_DATETIME64_PRECISION;
 
 			// Built from the system type alone: a DbType carried over from the operand names the operand's own
-			// ClickHouse type and would be rendered in preference to the DataType set here.
+			// ClickHouse type, which a type reporting DateTime64 must not carry.
 			var resultType = new DbDataType(type.SystemType, DataType.DateTime64).WithPrecision(precision);
 
 			return factory.Cast(expression, resultType, true);
