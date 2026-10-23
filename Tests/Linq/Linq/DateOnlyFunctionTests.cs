@@ -9,6 +9,8 @@ using LinqToDB.Tools;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Linq
 {
 	[TestFixture]
@@ -284,12 +286,6 @@ namespace Tests.Linq
 
 		#region DateDiff
 
-		// SQL Server before 2016 has no exact measure of elapsed time - DATEDIFF_BIG arrived there - and Sql.AsSql
-		// below asks for the value in SQL, so there is no client-side answer to fall back to. This used to be
-		// answered from DATEDIFF, which counts boundary crossings rather than elapsed time and was therefore wrong
-		// for unaligned inputs. Declared rather than excluded so it goes red the day the lowering reaches those
-		// versions.
-		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)]
 		[Test]
 		public void SubDateDay(
 			[DataSources(TestProvName.AllInformix, DateOnlySkipProviders)]
@@ -363,6 +359,32 @@ namespace Tests.Linq
 		}
 
 #endregion
+
+		sealed class DateOnlyAsDateTimeRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.DateTime)] public DateOnly Day { get; set; }
+		}
+
+		/// <summary>
+		/// A captured collection of dates beside a computed timestamp is still expanded into the IN list.
+		/// </summary>
+		/// <remarks>
+		/// Sybase only: ASE compares a date with a datetime as a date, and the provider casts the date side to compensate.
+		/// </remarks>
+		[Test]
+		public void CapturedDatesBesideComputedTimestamp([IncludeDataSources(TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new DateOnlyAsDateTimeRow { Id = 1, Day = new DateOnly(2026, 5, 31) } });
+
+			var dates = new[] { new DateOnly(2026, 6, 1), new DateOnly(2026, 6, 2) };
+
+			var count = t.Count(r => dates.Contains(r.Day.AddDays(1)));
+
+			count.ShouldBe(1);
+		}
 	}
 }
 #endif

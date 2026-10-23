@@ -574,8 +574,8 @@
       "displayName": "linq2db4iSeries",
       "packageId": "linq2db4iSeries",
       "versions": {
-        "net472": "6.3.0",
-        "net8.0-windows7.0": "6.3.0"
+        "net472": "6.5.0",
+        "net8.0-windows7.0": "6.5.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -633,7 +633,7 @@
       "packageId": "Microsoft.Bcl.Cryptography",
       "versions": {
         "net10.0": "9.0.13",
-        "net8.0": "8.0.0",
+        "net8.0": "9.0.21",
         "net9.0": "9.0.13",
         "net462": "8.0.0",
         "net472": "8.0.0",
@@ -2160,10 +2160,10 @@
       "displayName": "Octonica.ClickHouseClient",
       "packageId": "Octonica.ClickHouseClient",
       "versions": {
-        "net10.0": "4.1.4",
-        "net8.0": "4.1.4",
-        "net9.0": "4.1.4",
-        "net8.0-windows7.0": "4.1.4"
+        "net10.0": "4.1.6",
+        "net8.0": "4.1.6",
+        "net9.0": "4.1.6",
+        "net8.0-windows7.0": "4.1.6"
       },
       "license": "Apache-2.0",
       "licenseTexts": [
@@ -2713,6 +2713,7 @@
       "displayName": "System.Formats.Asn1",
       "packageId": "System.Formats.Asn1",
       "versions": {
+        "net8.0": "9.0.21",
         "net462": "8.0.1",
         "net472": "8.0.1",
         "net8.0-windows7.0": "8.0.1"
@@ -2728,6 +2729,7 @@
         "System.Formats.Asn1.dll"
       ],
       "artifacts": [
+        "linq2db.cli",
         "linq2db.LINQPad.lpx"
       ]
     },
@@ -2932,9 +2934,9 @@
       "displayName": "System.Security.Cryptography.Pkcs",
       "packageId": "System.Security.Cryptography.Pkcs",
       "versions": {
-        "net10.0": "9.0.13",
-        "net8.0": "8.0.1",
-        "net9.0": "9.0.13",
+        "net10.0": "9.0.21",
+        "net8.0": "9.0.21",
+        "net9.0": "9.0.21",
         "net462": "8.0.1",
         "net472": "8.0.1",
         "net8.0-windows7.0": "8.0.1"

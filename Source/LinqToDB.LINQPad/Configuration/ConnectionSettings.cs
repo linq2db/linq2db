@@ -285,6 +285,9 @@ internal sealed class ConnectionSettings
 			// https://github.com/linq2db/linq2db.LINQPad/issues/89
 			settings.Scaffold.AsIsNames = !isNew;
 
+			// enabled for new connections only to not break existing queries
+			settings.Scaffold.SqlServerReturnValue = isNew;
+
 			// ignored options:
 			// useCustomFormatter - removed in v5
 			// normalizeNames - not used in pre-v5 and v5 (never used?)
@@ -516,6 +519,11 @@ internal sealed class ConnectionSettings
 		/// Map FixedString(X) to <see cref="string"/> for ClickHouse.
 		/// </summary>
 		public bool ClickHouseFixedStringAsString { get; set; }
+
+		/// <summary>
+		/// Expose SQL Server procedure return value as trailing <c>out</c> parameter.
+		/// </summary>
+		public bool SqlServerReturnValue { get; set; }
 
 		/// <summary>
 		/// Enables pluralization context table property name and collection-type association property name.

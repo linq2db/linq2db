@@ -51,6 +51,52 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			return Factory.Multiply(longType, Factory.Cast(milliseconds, longType, true), TimeSpan.TicksPerMillisecond);
 		}
 
+		/// <inheritdoc />
+		/// <remarks>
+		/// Lowered below without going through <c>FinestDateUnit</c>: the shift spends the same Julian-day
+		/// arithmetic as <see cref="ElapsedTicks"/>, in reverse, so it needs no day/second/sub-second
+		/// decomposition of its own.
+		/// </remarks>
+		public override bool CanLowerIntervalShift => true;
+
+		/// <summary>
+		/// Shifts through <c>julianday</c> arithmetic at millisecond resolution, then back through <c>strftime</c>
+		/// in the same text format this provider writes a <see cref="DateTime"/> literal in.
+		/// </summary>
+		/// <remarks>
+		/// <paramref name="element"/>'s interval is either an already-known tick count or a still-unlowered
+		/// difference/part node - either way it is spent as a number of ticks here, and the recursive <c>Visit</c>
+		/// this method's result goes through lowers whatever of that remains, exactly as <see cref="ElapsedTicks"/>
+		/// does for the read direction.
+		/// <para>
+		/// A <see cref="DateTimeOffset"/> is not shifted. <c>julianday</c> reads it as UTC and <c>strftime</c> writes
+		/// the result back with no offset, which one SQLite provider reads as local time and the other cannot read
+		/// at all, so it is left to be refused by name.
+		/// </para>
+		/// </remarks>
+		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
+		{
+			if (Factory.GetDbDataType(element.Temporal).SystemType.ToUnderlying() == typeof(DateTimeOffset))
+				return null;
+
+			var doubleType = Factory.GetDbDataType(typeof(double));
+			var longType   = Factory.GetDbDataType(typeof(long));
+			var stringType = Factory.GetDbDataType(typeof(string));
+
+			var ticks         = element.IsSubtract ? Factory.Multiply(longType, element.Interval, -1L) : element.Interval;
+			var milliseconds  = Factory.Function(doubleType, "Round",
+				Factory.Multiply(doubleType, Factory.Cast(ticks, doubleType, true), 1.0 / TimeSpan.TicksPerMillisecond));
+			var days          = Factory.Multiply(doubleType, milliseconds, 1.0 / 86_400_000.0);
+			var shiftedJulian = Factory.Add(doubleType, JulianDay(element.Temporal), days);
+
+			// The result carries a time of day even when the date it started from did not, so it is not typed as a
+			// date: a comparison would read both sides through Date() and drop the time the shift added. Built from
+			// the CLR type, because a mapped DbType of Date marks it as a date just as well.
+			var resultType = new DbDataType(Factory.GetDbDataType(element.Temporal).SystemType, DataType.DateTime);
+
+			return Factory.Function(resultType, "Strftime", Factory.Value(stringType, "%Y-%m-%d %H:%M:%f"), shiftedJulian);
+		}
+
 		ISqlExpression JulianDay(ISqlExpression date)
 		{
 			return Factory.Function(Factory.GetDbDataType(typeof(double)), "JulianDay", date);
@@ -176,12 +222,20 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 			if (IsDateTime(leftType) || IsDateTime(rightType))
 			{
-				var dateType = IsDateTime(leftType) ? leftType : rightType;
+				// A date compared with a timestamp is compared as a timestamp whichever side it is on, so the time part
+				// is not dropped.
+				var dateType = IsDateTime(leftType) && !(IsDateDataType(leftType, "Date") && IsDateTime(rightType) && rightType.DataType != DataType.Time)
+					? leftType
+					: rightType;
 				var expr1 = GetActualExpr(predicate.Expr1);
 				if (expr1 is not (SqlCastExpression or SqlFunction { DoNotOptimize: true }))
 				{
 					var left = PseudoFunctions.MakeMandatoryCast(predicate.Expr1, dateType, null);
 					predicate = new SqlPredicate.ExprExpr(left, predicate.Operator, predicate.Expr2, predicate.UnknownAsValue);
+				}
+				else if (IsDateComparedAsTimestamp(leftType, dateType))
+				{
+					predicate = new SqlPredicate.ExprExpr(ToTimestamp(predicate.Expr1, dateType), predicate.Operator, predicate.Expr2, predicate.UnknownAsValue);
 				}
 
 				var expr2 = GetActualExpr(predicate.Expr2);
@@ -190,9 +244,22 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 					var right = PseudoFunctions.MakeMandatoryCast(predicate.Expr2, dateType, null);
 					predicate = new SqlPredicate.ExprExpr(predicate.Expr1, predicate.Operator, right, predicate.UnknownAsValue);
 				}
+				else if (IsDateComparedAsTimestamp(rightType, dateType))
+				{
+					predicate = new SqlPredicate.ExprExpr(predicate.Expr1, predicate.Operator, ToTimestamp(predicate.Expr2, dateType), predicate.UnknownAsValue);
+				}
 			}
 
 			return base.ConvertExprExprPredicate(predicate);
+
+			// A side already rendered as Date(...) is not cast again, so it is brought to the timestamp text form here.
+			static bool IsDateComparedAsTimestamp(DbDataType exprType, DbDataType dateType)
+			{
+				return IsDateDataType(exprType, "Date")
+					&& IsDateTime(dateType)
+					&& !IsDateDataType(dateType, "Date")
+					&& dateType.DataType != DataType.Time;
+			}
 
 			static ISqlExpression GetActualExpr(ISqlExpression expr)
 			{
@@ -205,6 +272,38 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 				return expr;
 			}
+		}
+
+		static ISqlExpression ToTimestamp(ISqlExpression expr, DbDataType dateType)
+		{
+			return new SqlFunction(dateType, "strftime", ParametersNullabilityType.SameAsSecondParameter, new SqlValue("%Y-%m-%d %H:%M:%f"), expr) { DoNotOptimize = true };
+		}
+
+		/// <summary>
+		/// A date computed from a column is brought to the timestamp text form beside an IN list, as in a comparison:
+		/// the values keep their own <see cref="DateTime"/> type there, and SQLite compares the two as text. A value that
+		/// is itself a date, such as a date column, is brought to the same form.
+		/// </summary>
+		protected internal override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
+		{
+			var newElement = base.VisitInListPredicate(predicate);
+
+			if (newElement is SqlPredicate.InList inList)
+			{
+				var type = QueryHelper.GetDbDataType(inList.Expr1, MappingSchema);
+
+				if (IsDateDataType(type, "Date") && IsDateTime(type.SystemType) && !QueryHelper.IsStoredColumn(inList.Expr1))
+				{
+					var timestampType = type.WithDataType(DataType.DateTime);
+
+					// parameters are bound as timestamp text already, and a captured collection must stay a parameter
+					var values = inList.Values.ConvertAll(v => v is not SqlParameter && IsDateDataType(QueryHelper.GetDbDataType(v, MappingSchema), "Date") ? ToTimestamp(v, timestampType) : v);
+
+					return new SqlPredicate.InList(ToTimestamp(inList.Expr1, timestampType), inList.WithNull, inList.IsNot, values);
+				}
+			}
+
+			return newElement;
 		}
 
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -81,6 +81,360 @@ namespace Tests.Linq
 			AreEqual(
 				from p in from t in Types select Convert.ToInt64(t.MoneyValue) where p > 0 select p,
 				from p in from t in db.Types select Convert.ToInt64(t.MoneyValue) where p > 0 select p);
+		}
+
+		sealed class WideDecimal
+		{
+			[PrimaryKey                                                  ] public int      Id { get; set; }
+			[Column(Precision = 35, Scale = 2)                           ] public decimal  D  { get; set; }
+			[Column(DbType = "Decimal(35, 2)", Precision = 35, Scale = 2)] public decimal  S  { get; set; }
+			[Column(Precision = 35, Scale = 2)                           ] public decimal? N  { get; set; }
+			[Column(Precision = 10, Scale = 2)                           ] public decimal  E  { get; set; }
+			[Column(Precision =  4, Scale = 4)                           ] public decimal  F  { get; set; }
+			[Column(Precision = 20, Scale = 12)                          ] public decimal  H  { get; set; }
+		}
+
+		// Past 2^53 a Double no longer holds every integer, so a Decimal->integer conversion must not pass through one.
+		[Test]
+		public void DecimalToInt64PastDoublePrecision([IncludeDataSources(true, TestProvName.AllYdb)] string context)
+		{
+			var data = new[]
+			{
+				new WideDecimal { Id = 1, D =  9007199254740993.25m, S =  9007199254740993.25m, N =  9007199254740993.25m, E =  3.50m, F =  0.1234m, H =  1.499999999999m },
+				new WideDecimal { Id = 2, D =  9007199254740993.75m, S =  9007199254740993.75m, N =  9007199254740993.75m, E =  1.75m, F = -0.5000m, H = -1.499999999999m },
+				new WideDecimal { Id = 3, D = -9007199254740993.75m, S = -9007199254740993.75m, N = -9007199254740993.75m, E = -2.25m, F =  0.9999m, H =  1.5m            },
+				new WideDecimal { Id = 4, D = 12345678901234567.50m, S = 12345678901234567.50m, N = 12345678901234567.50m, E =  3.10m, F = -0.9999m, H =  0.25m           },
+				new WideDecimal { Id = 5, D =  2.50m,                S =  2.50m,                N = null,                  E =  1.95m, F =  0.5000m, H = -0.75m           },
+				new WideDecimal { Id = 6, D = -2.50m,                S = -2.50m,                N = -2.50m,                E = -0.50m, F =  0m,      H =  0m              },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var query =
+				from r in t
+				orderby r.Id
+				select new
+				{
+					r.Id,
+					D        = Sql.AsSql((long)r.D),
+					DRounded = Sql.AsSql(Convert.ToInt64(r.D)),
+					S        = Sql.AsSql((long)r.S),
+					SRounded = Sql.AsSql(Convert.ToInt64(r.S)),
+					N        = Sql.AsSql((long?)r.N),
+					Product  = Sql.AsSql((long)(r.E * r.E)),
+					F        = Sql.AsSql((long)r.F),
+					Sum      = Sql.AsSql((long)(r.H + r.H)),
+					FProduct = Sql.AsSql((long)(r.F * r.F)),
+				};
+
+			AssertQuery(query);
+		}
+
+		sealed class DoubleStoredDecimal
+		{
+			[PrimaryKey                        ] public int     Id { get; set; }
+			[Column(DataType = DataType.Double)] public decimal D  { get; set; }
+		}
+
+		// A decimal stored as Double is not a YQL Decimal: it truncates in Double, not through Decimal casts.
+		[Test]
+		public void DoubleStoredDecimalToInt64([IncludeDataSources(true, TestProvName.AllYdb)] string context)
+		{
+			var data = new[]
+			{
+				new DoubleStoredDecimal { Id = 1, D =  2.5m  },
+				new DoubleStoredDecimal { Id = 2, D =  3.75m },
+				new DoubleStoredDecimal { Id = 3, D = -2.5m  },
+				new DoubleStoredDecimal { Id = 4, D = -3.75m },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var query =
+				from r in t
+				orderby r.Id
+				select new
+				{
+					r.Id,
+					D        = Sql.AsSql((long)r.D),
+					DRounded = Sql.AsSql(Convert.ToInt64(r.D)),
+				};
+
+			AssertQuery(query);
+		}
+
+		sealed class DecimalStoredDouble
+		{
+			[PrimaryKey                                                    ] public int    Id { get; set; }
+			[Column(DataType = DataType.Decimal)                           ] public double A  { get; set; }
+			[Column(DataType = DataType.Decimal, Precision = 22, Scale = 9)] public double L  { get; set; }
+		}
+
+		// A double stored as Decimal truncates exactly in Decimal: (long) and (int) cast it directly rather than through Text,
+		// while Convert.ToInt64 rounds in Double first and narrows that result through Text.
+		[Test]
+		public void DecimalStoredDoubleToInt64([IncludeDataSources(true, TestProvName.AllYdb)] string context)
+		{
+			var data = new[]
+			{
+				new DecimalStoredDouble { Id = 1, A =  3.75, L =  3.75 },
+				new DecimalStoredDouble { Id = 2, A = -3.75, L = -3.75 },
+				new DecimalStoredDouble { Id = 3, A =  2.5,  L =  2.5  },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var query =
+				from r in t
+				orderby r.Id
+				select new
+				{
+					r.Id,
+					A        = Sql.AsSql((long)r.A),
+					ARounded = Sql.AsSql(Convert.ToInt64(r.A)),
+					L        = Sql.AsSql((int)r.L),
+				};
+
+			AssertQuery(query);
+
+			var truncation = t
+				.Select(r => new
+				{
+					A = Sql.AsSql((long)r.A),
+					L = Sql.AsSql((int)r.L),
+				});
+
+			truncation
+				.ToSqlQuery()
+				.Sql
+				.ShouldNotContain("AS Text");
+		}
+
+		sealed class DoubleValue
+		{
+			[PrimaryKey] public int    Id { get; set; }
+			[Column    ] public double F  { get; set; }
+		}
+
+		// An integer cast between two floating values truncates, so the pair of casts cannot fold away. The rows stay positive:
+		// several providers floor a negative fraction.
+		// Access drops every numeric cast, so the value comes back untruncated.
+		[ActiveIssue(6070, Configuration = TestProvName.AllAccess, ErrorMessage = "Truncated = 1 } <> { Id = 1, Truncated = 1.25 }")]
+		[Test]
+		public void DoubleThroughIntToDouble([DataSources] string context)
+		{
+			var data = new[]
+			{
+				new DoubleValue { Id = 1, F = 1.25 },
+				new DoubleValue { Id = 2, F = 2.25 },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var query =
+				from r in t
+				orderby r.Id
+				select new
+				{
+					r.Id,
+					Truncated = Sql.AsSql((double)(int)r.F),
+				};
+
+			AssertQuery(query);
+		}
+
+		sealed class NumberValue
+		{
+			[PrimaryKey] public int    Id { get; set; }
+			[Column    ] public int    I  { get; set; }
+			[Column    ] public double F  { get; set; }
+			[Column    ] public float  S  { get; set; }
+		}
+
+		// (decimal) is typed with the mapping's default decimal, which can hold fewer integer digits than the value: Decimal(18,10)
+		// on SQL Server and Sybase, Decimal(22,9) on YDB. F and S have at most 15 / 7 significant digits, where C#'s (decimal) is
+		// exact.
+		[Test]
+		public void NumberThroughDecimal([DataSources] string context)
+		{
+			var data = new[]
+			{
+				new NumberValue { Id = 1, I = 7,         F = 123456789.25, S = 1e8f },
+				new NumberValue { Id = 2, I = 123456789, F = 987654321.75, S = 2e8f },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var query =
+				from r in t
+				orderby r.Id
+				select new
+				{
+					r.Id,
+					I = Sql.AsSql((int)(decimal)r.I),
+					F = Sql.AsSql((double)(decimal)r.F),
+					S = Sql.AsSql((float)(decimal)r.S),
+				};
+
+			AssertQuery(query);
+		}
+
+		sealed class TextRoundTripValue
+		{
+			[PrimaryKey] public int    Id { get; set; }
+			[Column    ] public double F  { get; set; }
+			[Column    ] public float  S  { get; set; }
+			[Column    ] public bool   B  { get; set; }
+		}
+
+		// SQL Server writes a float or real as text with 6 digits.
+		[Test]
+		public void ScalarThroughText([DataSources] string context)
+		{
+			var data = new[]
+			{
+				new TextRoundTripValue { Id = 1, F = 1.23456789, S = 1.234568f, B = true  },
+				new TextRoundTripValue { Id = 2, F = 9.87654321, S = 9.876543f, B = false },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var query =
+				from r in t
+				orderby r.Id
+				select new
+				{
+					r.Id,
+					F = Sql.AsSql(double.Parse(Sql.ConvertTo<string>.From(r.F))),
+					S = Sql.AsSql(float.Parse(Sql.ConvertTo<string>.From(r.S))),
+					B = Sql.AsSql(bool.Parse(Sql.ConvertTo<string>.From(r.B))),
+				};
+
+			AssertQuery(query);
+
+			var same =
+				from r in t
+				where double.Parse(Sql.ConvertTo<string>.From(r.F)) == r.F
+				select r.Id;
+
+			AssertQuery(same);
+		}
+
+		sealed class Int64Value
+		{
+			[PrimaryKey] public int  Id { get; set; }
+			[Column    ] public long L  { get; set; }
+		}
+
+		// The Int64 cells of NumberThroughDecimal and ScalarThroughText: 17 digits outgrow YDB's Decimal(22,9), DuckDB's
+		// DECIMAL(18,3) and Informix's 16-digit DECIMAL.
+		// Access has no 64-bit integer type: CREATE TABLE fails with "Syntax error in field definition".
+		[Test]
+		public void Int64ThroughDecimalAndText([DataSources(TestProvName.AllAccess)] string context)
+		{
+			var data = new[]
+			{
+				new Int64Value { Id = 1, L = 7                 },
+				new Int64Value { Id = 2, L = 12345678901234567 },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var query =
+				from r in t
+				orderby r.Id
+				select new
+				{
+					r.Id,
+					Decimal = Sql.AsSql((long)(decimal)r.L),
+					Text    = Sql.AsSql(long.Parse(Sql.ConvertTo<string>.From(r.L))),
+				};
+
+			AssertQuery(query);
+		}
+
+		sealed class FoldPairRow
+		{
+			[PrimaryKey] public int      Id { get; set; }
+			[Column    ] public float    S  { get; set; }
+			[Column    ] public double   F  { get; set; }
+			[Column    ] public DateTime D  { get; set; }
+		}
+
+		// A pair of casts folds only when the round trip loses nothing. The assertions read CAST text, which SQLite renders for
+		// every cast (PostgreSQL writes ::, ClickHouse toInt32).
+		[Test]
+		public void CastPairFoldsOnlyWhenLossless([IncludeDataSources(ProviderName.SQLiteMS)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<FoldPairRow>();
+
+			t
+				.Select(r => Sql.AsSql((int)(long)r.Id))
+				.ToSqlQuery()
+				.Sql
+				.ShouldNotContain("CAST(");
+
+			t
+				.Select(r => Sql.AsSql((float)(double)r.S))
+				.ToSqlQuery()
+				.Sql
+				.ShouldNotContain("CAST(");
+
+			t
+				.Select(r => Sql.AsSql((int)(short)r.Id))
+				.ToSqlQuery()
+				.Sql
+				.ShouldContain("CAST(");
+
+			t
+				.Select(r => Sql.AsSql((int)(uint)r.Id))
+				.ToSqlQuery()
+				.Sql
+				.ShouldNotContain("CAST(");
+
+			t
+				.Select(r => Sql.AsSql(DateTime.Parse(Sql.ConvertTo<string>.From(r.D))))
+				.ToSqlQuery()
+				.Sql
+				.ShouldNotContain("CAST(");
+
+			t
+				.Select(r => Sql.AsSql(double.Parse(Sql.ConvertTo<string>.From(r.F))))
+				.ToSqlQuery()
+				.Sql
+				.ShouldNotContain("CAST(");
+
+			t
+				.Select(r => Sql.AsSql(float.Parse(Sql.ConvertTo<string>.From(r.S))))
+				.ToSqlQuery()
+				.Sql
+				.ShouldNotContain("CAST(");
+
+			t
+				.Select(r => Sql.AsSql(int.Parse(Sql.ConvertTo<string>.From(r.Id))))
+				.ToSqlQuery()
+				.Sql
+				.ShouldNotContain("CAST(");
+
+			t
+				.Select(r => Sql.AsSql((int)(decimal)r.Id))
+				.ToSqlQuery()
+				.Sql
+				.ShouldNotContain("CAST(");
+
+			t
+				.Select(r => Sql.AsSql((float)(decimal)r.S))
+				.ToSqlQuery()
+				.Sql
+				.ShouldNotContain("CAST(");
 		}
 
 		[Test]
@@ -262,7 +616,8 @@ namespace Tests.Linq
 
 		#region Floats
 
-		[ActiveIssue(5592, Configuration = TestProvName.AllYdb, Details = "Ydb.Sdk UnpackDecimal throws OverflowException reading a computed Decimal result (client-side scale handling).")]
+		[ActiveIssue(5592, Configuration = TestProvName.AllYdb, ErrorTypeName = "System.OverflowException", ErrorMessage = "Value does not fit into decimal",
+			Details = "Ydb.Sdk UnpackDecimal throws OverflowException reading a computed Decimal result (client-side scale handling).")]
 		[Test]
 		public void ToDefaultDecimal([DataSources] string context)
 		{
@@ -272,7 +627,8 @@ namespace Tests.Linq
 				from t in db.Types select Sql.Convert(Sql.Types.DefaultDecimal, t.MoneyValue * 1000));
 		}
 
-		[ActiveIssue(5592, Configuration = TestProvName.AllYdb, Details = "Ydb.Sdk UnpackDecimal throws OverflowException reading a computed Decimal result (client-side scale handling).")]
+		[ActiveIssue(5592, Configuration = TestProvName.AllYdb, ErrorTypeName = "System.OverflowException", ErrorMessage = "Value does not fit into decimal",
+			Details = "Ydb.Sdk UnpackDecimal throws OverflowException reading a computed Decimal result (client-side scale handling).")]
 		[Test]
 		public void ToDecimal1([DataSources] string context)
 		{
@@ -645,7 +1001,9 @@ namespace Tests.Linq
 
 		#endregion
 
-		[ActiveIssue("CI: SQL0245N  The invocation of routine DECIMAL is ambiguous. The argument in position 1 does not have a best fit", Configuration = ProviderName.DB2)]
+		[ActiveIssue(Configuration = ProviderName.DB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			ErrorMessage = "SQL0245N{0}The invocation of routine \"DECIMAL\" is ambiguous",
+			Details = "no-issue: CI: SQL0245N  The invocation of routine DECIMAL is ambiguous. The argument in position 1 does not have a best fit. Nothing on the tracker covers it. The placeholder spans the two spaces DB2 pads after the code.")]
 		[Test]
 		public void ConvertFromOneToAnother([DataSources] string context)
 		{
@@ -1780,7 +2138,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Details = "Not supported case as we cannot connect .ctor parameter to column")]
 		[Test]
 		public void TextExecuteColumnConverterWithCtor([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
@@ -1830,7 +2187,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Details = "Not supported case as we cannot connect .ctor parameter to column")]
 		[Test]
 		public void TextExecuteScalarEntityColumnConverterWithCtor([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{

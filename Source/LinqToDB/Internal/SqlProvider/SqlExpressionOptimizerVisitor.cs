@@ -341,8 +341,13 @@ namespace LinqToDB.Internal.SqlProvider
 			var saveAllowToOptimize = _allowOptimizeList;
 			_allowOptimizeList = element.Predicates;
 
+			// Null folding is deferred to a second traversal only so OptimizeSimilarFlat sees unfolded
+			// siblings; with a single predicate it is a no-op, so fold in the first traversal instead.
+			var singlePredicate = element.Predicates.Count <= 1;
+
 			var saveDoNotOptimizeNulls = _doNotOptimizeNulls;
-			_doNotOptimizeNulls = true;
+			if (!singlePredicate)
+				_doNotOptimizeNulls = true;
 
 			var newElement = base.VisitSqlSearchCondition(element);
 
@@ -355,7 +360,7 @@ namespace LinqToDB.Internal.SqlProvider
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
 
-			if (!_doNotOptimizeNulls && !_nullabilityContext.IsEmpty)
+			if (!singlePredicate && !_doNotOptimizeNulls && !_nullabilityContext.IsEmpty)
 			{
 				// run again to optimize possible new IS [NOT] NULL predicates with nullability context updated with previous optimizations
 				newElement = base.VisitSqlSearchCondition(element);
@@ -1353,8 +1358,8 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 
 				if (element.Expression is SqlCastExpression { IsMandatory: false } castOther)
 				{
-					var dbType = QueryHelper.GetDbDataType(castOther.Expression, MappingSchema);
-					if (element.Type.EqualsDbOnly(dbType))
+					var dbType = castOther.FromType?.Type ?? QueryHelper.GetDbDataType(castOther.Expression, MappingSchema);
+					if (element.Type.EqualsDbOnly(dbType) && IsLosslessConversion(dbType, castOther.Type))
 						return castOther.Expression;
 				}
 			}
@@ -1381,6 +1386,88 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 
 				return query;
 			}
+		}
+
+		// A cast pair folds back to its operand only when the round trip keeps every value: (double)(int)x truncates. An unknown
+		// pair keeps both casts, and the provider's casts then decide its value.
+		static bool IsLosslessConversion(DbDataType from, DbDataType to)
+		{
+			if (from.EqualsDbOnly(to))
+				return true;
+
+			if (to.DataType.IsTextType())
+			{
+				// A value's round trip through text is the identity, whatever the text's declared length: a provider's casts need
+				// not read their own text back (#6071), and SQL Server writes a float with 6 digits.
+				if (!from.DataType.IsTextType())
+					return true;
+
+				return (to.Length == null || from.Length is int fromLength && to.Length >= fromLength)
+					&& (!IsUnicode(from.DataType) || IsUnicode(to.DataType));
+			}
+
+			if (IntegerDigits(from.DataType) is int fromDigits)
+			{
+				// An unchecked C# conversion keeps the low-order bits, so a round trip through an integer as wide is the identity
+				// whatever the signs: (int)(uint)x == x.
+				if (IntegerDigits(to.DataType) != null)
+					return IntegerWidth(to.DataType) >= IntegerWidth(from.DataType);
+
+				if (to.DataType == DataType.Double)
+					return IntegerWidth(from.DataType) <= 32;
+
+				if (to.DataType == DataType.Single)
+					return IntegerWidth(from.DataType) <= 16;
+
+				// A C# conversion to decimal is typed with the mapping's default (Decimal(18,10) on SQL Server), which says nothing
+				// about the value: a decimal holds any integer of up to 28 digits.
+				return IsDecimal(to.DataType) && (fromDigits <= 28 || to.Precision is int precision && precision - (to.Scale ?? 0) >= fromDigits);
+			}
+
+			// As for an integer, (decimal) of a floating value is typed with the mapping's default; folding answers the value
+			// itself, as master did, where C# would round it to 15 / 7 significant digits.
+			if (from.DataType is DataType.Double or DataType.Single && IsDecimal(to.DataType))
+				return true;
+
+			if (from.DataType == DataType.Single)
+				return to.DataType == DataType.Double;
+
+			if (IsDecimal(from.DataType) && IsDecimal(to.DataType))
+			{
+				return from.Precision is int fromPrecision && from.Scale is int fromScale
+					&& to.Precision   is int toPrecision   && to.Scale   is int toScale
+					&& toScale >= fromScale && toPrecision - toScale >= fromPrecision - fromScale;
+			}
+
+			return false;
+
+			static int IntegerWidth(DataType type) => type switch
+			{
+				DataType.SByte  or DataType.Byte    => 8,
+				DataType.Int16  or DataType.UInt16  => 16,
+				DataType.Int32  or DataType.UInt32  => 32,
+				DataType.Int64  or DataType.UInt64  => 64,
+				DataType.Int128 or DataType.UInt128 => 128,
+				_                                   => 256,
+			};
+
+			static int? IntegerDigits(DataType type) => type switch
+			{
+				DataType.SByte   or DataType.Byte    => 3,
+				DataType.Int16   or DataType.UInt16  => 5,
+				DataType.Int32   or DataType.UInt32  => 10,
+				DataType.Int64                       => 19,
+				DataType.UInt64                      => 20,
+				DataType.Int128  or DataType.UInt128 => 39,
+				DataType.Int256                      => 77,
+				DataType.UInt256                     => 78,
+				_                                    => null,
+			};
+
+			static bool IsDecimal(DataType type) => type is DataType.Decimal or DataType.Money or DataType.SmallMoney
+				or DataType.Decimal32 or DataType.Decimal64 or DataType.Decimal128 or DataType.Decimal256;
+
+			static bool IsUnicode(DataType type) => type is DataType.NChar or DataType.NVarChar or DataType.NText;
 		}
 
 		protected internal override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
@@ -1747,6 +1834,25 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 
 			if (!ReferenceEquals(newElement, predicate))
 				return Visit(newElement);
+
+			// Under CompareNulls.LikeClr (WithNull set) an item NULL in the row must equal a NULL tested value, and a negated test
+			// must keep a row whose item is NULL; IN cannot say either, so such a list is the LikeClr comparisons it stands for.
+			// Inside another predicate a missed NULL item makes IN unknown where C# answers false, so it is rewritten there too.
+			// Constant and parameter items alone do not call for it: the builder already splits a NULL value out of the list.
+			if (_reducePredicates
+				&& predicate.WithNull != null
+				&& !_nullabilityContext.IsEmpty
+				&& predicate.Expr1.ElementType != QueryElementType.SqlRow
+				&& (predicate.IsNot || _isInsidePredicate || predicate.Expr1.CanBeNullableOrUnknown(_nullabilityContext, false))
+				&& predicate.Values.Exists(v => v is not (SqlValue or SqlParameter) && v.CanBeNullableOrUnknown(_nullabilityContext, false)))
+			{
+				var search = new SqlSearchCondition(true);
+
+				foreach (var value in predicate.Values)
+					search.Add(new SqlPredicate.ExprExpr(predicate.Expr1, SqlPredicate.Operator.Equal, value, true));
+
+				return Visit(search.MakeNot(predicate.IsNot));
+			}
 
 			if (EvaluationContext.ParameterValues == null)
 			{

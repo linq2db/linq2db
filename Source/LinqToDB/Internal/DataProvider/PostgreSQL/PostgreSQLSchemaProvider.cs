@@ -859,6 +859,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 								LEFT JOIN (SELECT SPECIFIC_SCHEMA, SPECIFIC_NAME, COUNT(*) as cnt FROM INFORMATION_SCHEMA.parameters WHERE parameter_mode IN('OUT', 'INOUT') GROUP BY SPECIFIC_SCHEMA, SPECIFIC_NAME) as outp
 									ON r.SPECIFIC_SCHEMA = outp.SPECIFIC_SCHEMA AND r.SPECIFIC_NAME = outp.SPECIFIC_NAME
 								WHERE {GenerateSchemaFilter(dataConnection, "n.nspname")}
+								ORDER BY r.SPECIFIC_SCHEMA, r.ROUTINE_NAME, r.SPECIFIC_NAME
 						"""
 					)
 					.ToList(),
@@ -910,6 +911,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 								LEFT JOIN (SELECT SPECIFIC_SCHEMA, SPECIFIC_NAME, COUNT(*)as cnt FROM INFORMATION_SCHEMA.parameters WHERE parameter_mode IN('OUT', 'INOUT') GROUP BY SPECIFIC_SCHEMA, SPECIFIC_NAME) as outp
 									ON r.SPECIFIC_SCHEMA = outp.SPECIFIC_SCHEMA AND r.SPECIFIC_NAME = outp.SPECIFIC_NAME
 								WHERE {GenerateSchemaFilter(dataConnection, "n.nspname")}
+								ORDER BY r.SPECIFIC_SCHEMA, r.ROUTINE_NAME, r.SPECIFIC_NAME
 						"""
 					)
 					.ToList(),

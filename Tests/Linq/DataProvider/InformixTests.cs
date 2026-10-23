@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Data.Linq;
 using System.Threading.Tasks;
@@ -13,6 +13,8 @@ using IBM.Data.Informix;
 
 #endif
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -448,28 +450,34 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssue("Used docker image needs locale configuration")]
+		[ActiveIssue(ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "Code-set conversion function failed due to illegal sequence or invalid value.",
+			Details = "no-issue: the Informix image needs locale configuration. Confirmed on CI, where the server reports the same IX000 code-set conversion failure, so this is not local to one machine.")]
 		[Test]
 		public void BulkCopyAllTypesMultipleRows([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
 			BulkCopyAllTypes(context, BulkCopyType.MultipleRows);
 		}
 
-		[ActiveIssue("Used docker image needs locale configuration")]
+		// Provider-specific bulk copy fails one step earlier than the MultipleRows pair above: the client refuses the
+		// conversion itself rather than the server refusing the code set.
+		[ActiveIssue(ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0102E",
+			Details = "no-issue: the Informix image needs locale configuration. Locally this presented as silent row loss, which was briefly read as a product defect and withdrawn; CI shows the client reporting an invalid conversion, which is the same root and not a defect of ours.")]
 		[Test]
 		public void BulkCopyAllTypesProviderSpecific([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
 			BulkCopyAllTypes(context, BulkCopyType.ProviderSpecific);
 		}
 
-		[ActiveIssue("Used docker image needs locale configuration")]
+		[ActiveIssue(ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "Code-set conversion function failed due to illegal sequence or invalid value.",
+			Details = "no-issue: the Informix image needs locale configuration. Confirmed on CI, where the server reports the same IX000 code-set conversion failure, so this is not local to one machine.")]
 		[Test]
 		public async Task BulkCopyAllTypesMultipleRowsAsync([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
 			await BulkCopyAllTypesAsync(context, BulkCopyType.MultipleRows);
 		}
 
-		[ActiveIssue("Used docker image needs locale configuration")]
+		[ActiveIssue(ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0102E",
+			Details = "no-issue: as BulkCopyAllTypesProviderSpecific - the client refuses the conversion rather than the server refusing the code set.")]
 		[Test]
 		public async Task BulkCopyAllTypesProviderSpecificAsync([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
@@ -504,5 +512,136 @@ namespace Tests.DataProvider
 			db.DropTable<AllType>();
 		}
 		#endregion
+
+		[Table]
+		sealed class DateParameterInCaseRow
+		{
+			[PrimaryKey] public int       Id    { get; set; }
+			[Column]     public DateTime  Plain { get; set; }
+			[Column]     public DateTime? Date  { get; set; }
+		}
+
+		static readonly DateTime DateParameterInCaseStored = new(2020, 1, 1, 10, 0, 0);
+		static readonly DateTime DateParameterInCaseValue  = new(2026, 6, 6, 1, 1, 1);
+
+		static DateParameterInCaseRow[] DateParameterInCaseData =>
+		[
+			new() { Id = 1, Plain = DateParameterInCaseStored, Date = DateParameterInCaseStored },
+			new() { Id = 2, Plain = DateParameterInCaseStored },
+		];
+
+		[Test]
+		public void DateParameterNextToColumnInCaseSelect([IncludeDataSources(true, TestProvName.AllInformix)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(DateParameterInCaseData);
+
+			var value = DateParameterInCaseValue;
+
+			t.OrderBy(x => x.Id).Select(x => x.Date != null ? value : x.Plain).ToArray()
+				.ShouldBe([DateParameterInCaseValue, DateParameterInCaseStored]);
+
+			value = DateParameterInCaseValue.AddDays(1);
+
+			t.OrderBy(x => x.Id).Select(x => x.Date != null ? value : x.Plain).ToArray()
+				.ShouldBe([DateParameterInCaseValue.AddDays(1), DateParameterInCaseStored]);
+		}
+
+		[Test]
+		public void DateParameterNextToNonTemporalParameterInCase([IncludeDataSources(TestProvName.AllInformix)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var t  = db.CreateLocalTable(DateParameterInCaseData);
+
+			var value = DateParameterInCaseValue;
+			var text  = "2021-02-03 04:05:06";
+
+			t.OrderBy(x => x.Id).Select(x => x.Date != null ? value : Sql.Convert(Sql.Types.DateTime, text)).ToArray()
+				.ShouldBe([DateParameterInCaseValue, new DateTime(2021, 2, 3, 4, 5, 6)]);
+
+			db.LastQuery!.ShouldNotContain(text);
+		}
+
+		[Test]
+		public void DateParameterInCaseStaysBoundElsewhere([IncludeDataSources(TestProvName.AllInformix)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var t  = db.CreateLocalTable(DateParameterInCaseData);
+
+			var value = DateParameterInCaseValue;
+
+			t.Where(x => x.Plain != value).OrderBy(x => x.Id).Select(x => x.Date != null ? value : x.Plain).ToArray()
+				.ShouldBe([DateParameterInCaseValue, DateParameterInCaseStored]);
+
+			db.LastQuery!.ShouldContain("@value");
+		}
+
+		[Test]
+		public void DateParameterNextToColumnInCaseUpdate([IncludeDataSources(true, TestProvName.AllInformix)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(DateParameterInCaseData);
+
+			var value = DateParameterInCaseValue;
+
+			t.Update(x => new DateParameterInCaseRow { Date = x.Date != null ? value : Sql.DateAdd(Sql.DateParts.Day, 1, x.Plain) });
+
+			t.OrderBy(x => x.Id).Select(x => x.Date).ToArray()
+				.ShouldBe([DateParameterInCaseValue, DateParameterInCaseStored.AddDays(1)]);
+		}
+
+		sealed class DateTime2FractionRow
+		{
+			[PrimaryKey]                            public int      Id    { get; set; }
+			[Column(DataType = DataType.DateTime2)] public DateTime Value { get; set; }
+		}
+
+		/// <summary>
+		/// A DateTime2 column and a cast to DateTime2 keep the five fraction digits Informix can hold.
+		/// </summary>
+		[Test]
+		public void DateTime2KeepsFiveFractionDigits([IncludeDataSources(true, TestProvName.AllInformix)] string context)
+		{
+			var value = new DateTime(2026, 6, 1, 10, 0, 0).AddTicks(1234500);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable([new DateTime2FractionRow { Id = 1, Value = value }]);
+
+			var stored = t
+				.Select(r => r.Value)
+				.Single();
+
+			stored.ShouldBe(value);
+
+			var converted = t
+				.Select(r => Sql.AsSql(Sql.Convert(Sql.Types.DateTime2, r.Value)))
+				.Single();
+
+			converted.ShouldBe(value);
+		}
+
+		sealed class DateTime2NoFractionRow
+		{
+			[PrimaryKey]                                           public int      Id    { get; set; }
+			[Column(DataType = DataType.DateTime2, Precision = 0)] public DateTime Value { get; set; }
+		}
+
+		/// <summary>
+		/// A DateTime2 column with no fractional seconds is a whole-second datetime, not FRACTION(1).
+		/// </summary>
+		[Test]
+		public void DateTime2WithZeroPrecisionKeepsWholeSeconds([IncludeDataSources(true, TestProvName.AllInformix)] string context)
+		{
+			var value = new DateTime(2026, 6, 1, 10, 0, 0);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable([new DateTime2NoFractionRow { Id = 1, Value = value.AddTicks(1234500) }]);
+
+			var stored = t
+				.Select(r => r.Value)
+				.Single();
+
+			stored.ShouldBe(value);
+		}
 	}
 }

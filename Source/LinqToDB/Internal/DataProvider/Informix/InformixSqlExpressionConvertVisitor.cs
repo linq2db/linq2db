@@ -118,17 +118,15 @@ namespace LinqToDB.Internal.DataProvider.Informix
 						if (argument.ElementType == QueryElementType.SqlParameter && argumentType.Equals(toType))
 							break;
 
+						// DataType.Date is DATETIME YEAR TO DAY here, as in DDL and in .Date: Date() would make a DATE, which a
+						// UNION or CASE refuses beside one
 						if (IsDateDataType(toType, "Date"))
 						{
-							if (argument.SystemType == typeof(string))
-							{
-								return new SqlFunction(
-									cast.Type,
-									"Date",
-									new SqlFunction(cast.Type, "To_Date", argument, new SqlValue("%Y-%m-%d")));
-							}
+							var date = argument.SystemType == typeof(string)
+								? new SqlFunction(cast.Type, "To_Date", argument, new SqlValue("%Y-%m-%d"))
+								: argument;
 
-							return new SqlFunction(cast.Type, "Date", argument);
+							return new SqlFunction(cast.Type, "Extend", ParametersNullabilityType.SameAsFirstParameter, date, new SqlFragment("Year to Day"));
 						}
 
 						if ((IsDateTime2Type(cast.ToType, "DateTime2")
@@ -143,6 +141,10 @@ namespace LinqToDB.Internal.DataProvider.Informix
 						{
 							return new SqlCastExpression(new SqlExpression(QueryHelper.GetDbDataType(cast.Expression, MappingSchema), "Extend({0}, Hour to Second)", Precedence.Primary, argument), new DbDataType(typeof(string), DataType.Char, null, 8), null, true);
 						}
+
+						// To_Date over a value that already is a date/time cannot pick an overload
+						if (argument.SystemType?.ToUnderlying() is var argSystemType && (argSystemType == typeof(DateTime) || argSystemType == typeof(DateTimeOffset)))
+							break;
 
 						return new SqlFunction(cast.Type, "To_Date", argument);
 
@@ -162,8 +164,78 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			return base.ConvertConversion(cast);
 		}
 
+		// IFX rejects a temporal parameter, cast or not, next to a non-parameter value in CASE results
+		static bool IsTemporalParameter(ISqlExpression? result, out bool isOtherValue)
+		{
+			isOtherValue = false;
+
+			if (result == null)
+				return false;
+
+			var expr = QueryHelper.UnwrapNullablity(result);
+
+			if (expr is SqlValue { Value: null })
+				return false;
+
+			var parameter = expr switch
+			{
+				SqlParameter               p                              => p,
+				SqlParameterCastExpression { Parameter : var p }          => p,
+				SqlCastExpression          { Expression: SqlParameter p } => p,
+				_                                                         => null,
+			};
+
+			if (parameter is { IsQueryParameter: true } && IsTemporal(parameter.Type.SystemType))
+				return true;
+
+			isOtherValue = true;
+			return false;
+
+			static bool IsTemporal(Type? type)
+			{
+				type = type?.ToUnderlying();
+
+				if (type == typeof(DateTime) || type == typeof(DateTimeOffset))
+					return true;
+
+#if SUPPORTS_DATEONLY
+				if (type == typeof(DateOnly))
+					return true;
+#endif
+
+				return false;
+			}
+		}
+
+		// the parameter is shared by every usage, so inline a copy at this position only
+		static ISqlExpression InlineTemporalParameter(ISqlExpression result)
+		{
+			return IsTemporalParameter(result, out _) ? QueryHelper.MarkAsNonQueryParameters(result) : result;
+		}
+
 		protected override ISqlExpression ConvertSqlCaseExpression(SqlCaseExpression element)
 		{
+			var hasTemporalParameter = IsTemporalParameter(element.ElseExpression, out var hasOtherValue);
+
+			for (var i = 0; i < element.Cases.Count; i++)
+			{
+				hasTemporalParameter |= IsTemporalParameter(element.Cases[i].ResultExpression, out var isOtherValue);
+				hasOtherValue        |= isOtherValue;
+			}
+
+			if (hasTemporalParameter && hasOtherValue)
+			{
+				var cases = new SqlCaseExpression.CaseItem[element.Cases.Count];
+
+				for (var i = 0; i < cases.Length; i++)
+					cases[i] = new SqlCaseExpression.CaseItem(element.Cases[i].Condition, InlineTemporalParameter(element.Cases[i].ResultExpression));
+
+				element = new SqlCaseExpression(
+					element.Type,
+					cases,
+					element.ElseExpression == null ? null : InlineTemporalParameter(element.ElseExpression));
+			}
+
 			if (element.ElseExpression != null)
 			{
 				var elseExpression = WrapBooleanExpression(element.ElseExpression, includeFields : true, forceConvert: true);
@@ -191,8 +263,14 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 		protected override ISqlExpression ConvertSqlCondition(SqlConditionExpression element)
 		{
-			var trueValue  = WrapBooleanExpression(element.TrueValue, includeFields : false, forceConvert: true);
-			var falseValue = WrapBooleanExpression(element.FalseValue, includeFields : false, forceConvert: true);
+			var isTrueParameter  = IsTemporalParameter(element.TrueValue,  out var trueIsOtherValue);
+			var isFalseParameter = IsTemporalParameter(element.FalseValue, out var falseIsOtherValue);
+
+			var trueValue  = isTrueParameter  && falseIsOtherValue ? QueryHelper.MarkAsNonQueryParameters(element.TrueValue)  : element.TrueValue;
+			var falseValue = isFalseParameter && trueIsOtherValue  ? QueryHelper.MarkAsNonQueryParameters(element.FalseValue) : element.FalseValue;
+
+			trueValue  = WrapBooleanExpression(trueValue,  includeFields : false, forceConvert: true);
+			falseValue = WrapBooleanExpression(falseValue, includeFields : false, forceConvert: true);
 
 			if (!ReferenceEquals(trueValue, element.TrueValue) || !ReferenceEquals(falseValue, element.FalseValue))
 			{
