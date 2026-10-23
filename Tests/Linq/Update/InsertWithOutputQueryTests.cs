@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.Mapping;
@@ -79,6 +81,49 @@ namespace Tests.xUpdate
 		sealed class ProbeTable
 		{
 			[Column("id"), PrimaryKey] public int Id { get; set; }
+		}
+
+		[Table("InsertOutputQueryIdentity")]
+		sealed class IdentityTarget
+		{
+			[PrimaryKey, Identity] public int Id    { get; set; }
+			[Column]               public int Value { get; set; }
+		}
+
+		[Table("InsertOutputQueryTph")]
+		[InheritanceMapping(Code = 1, Type = typeof(TphBase), IsDefault = true)]
+		[InheritanceMapping(Code = 2, Type = typeof(TphDerived))]
+		class TphBase
+		{
+			[PrimaryKey]                     public int Id    { get; set; }
+			[Column(IsDiscriminator = true)] public int Kind  { get; set; }
+			[Column]                         public int Value { get; set; }
+		}
+
+		sealed class TphDerived : TphBase
+		{
+		}
+
+		[Table("InsertOutputQueryAssociated")]
+		sealed class AssociatedTarget
+		{
+			[PrimaryKey] public int Id       { get; set; }
+			[Column]     public int ParentId { get; set; }
+
+			[Association(ThisKey = nameof(ParentId), OtherKey = nameof(SourceTable.Id))]
+			public SourceTable? Parent { get; set; }
+		}
+
+		public enum EagerLoadExecution
+		{
+			Enumerate,
+			EnumerateAsync,
+			CompiledElement,
+		}
+
+		static IQueryable<IdentityTarget> InsertValue(ITable<IdentityTarget> target, int value)
+		{
+			return target.InsertWithOutputQuery(() => new IdentityTarget { Value = value });
 		}
 
 		static SourceTable[] GetSourceData()
@@ -533,7 +578,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UnreadOutputThrows([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void UnreadOutputStillInserts([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db     = GetDataContext(context);
 			using var source = db.CreateLocalTable(GetSourceData());
@@ -543,18 +588,347 @@ namespace Tests.xUpdate
 				.Where(s => s.Id <= 3)
 				.InsertWithOutputQuery(target, s => new TargetTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr });
 
-			// the output is referenced by the query but the column reading it is not projected:
-			// the insert would be dropped with it, so the query is rejected instead of running without it
-			var query = source
+			// the member reading the output is not projected: the insert is part of the query, so it still runs once
+			var ids = source
 				.Select(s => new { s.Id, Inserted = inserted.Count() })
-				.Select(x => x.Id);
+				.Select(x => x.Id)
+				.OrderBy(id => id)
+				.ToArray();
+
+			ids.ShouldBe(Enumerable.Range(1, 10));
+			target.Count().ShouldBe(3);
+		}
+
+		[Test]
+		public void OutputCountOnly([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var source = db.CreateLocalTable(GetSourceData());
+			using var target = db.CreateLocalTable<TargetTable>();
+
+			var count = source
+				.Where(s => s.Id <= 3)
+				.InsertWithOutputQuery(target, s => new TargetTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr })
+				.Count();
+
+			count.ShouldBe(3);
+			target.Count().ShouldBe(3);
+		}
+
+		[Test]
+		public void OneQueryableTwiceThenTwoCalls([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var target = db.CreateLocalTable<IdentityTarget>();
+
+			// both queries have the same shape, so the second one meets the first one's cache entry
+			var once = InsertValue(target, 11);
+
+			var onceValues = once
+				.Select(t => t.Value)
+				.Concat(once.Select(t => t.Value))
+				.ToArray();
+
+			onceValues.ShouldBe(new[] { 11, 11 });
+			target.Count().ShouldBe(1);
+
+			var twiceValues = InsertValue(target, 12)
+				.Select(t => t.Value)
+				.Concat(InsertValue(target, 13).Select(t => t.Value))
+				.ToArray();
+
+			twiceValues.OrderBy(v => v).ShouldBe(new[] { 12, 13 });
+			target.Count().ShouldBe(3);
+		}
+
+		[Test]
+		public void TwoCallsThenOneQueryableTwice([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var target = db.CreateLocalTable<IdentityTarget>();
+
+			// both queries have the same shape, so the second one meets the first one's cache entry
+			var twiceValues = InsertValue(target, 22)
+				.Select(t => new { t.Value })
+				.Concat(InsertValue(target, 23).Select(t => new { t.Value }))
+				.ToArray();
+
+			twiceValues.Select(v => v.Value).OrderBy(v => v).ShouldBe(new[] { 22, 23 });
+			target.Count().ShouldBe(2);
+
+			var once = InsertValue(target, 21);
+
+			var onceValues = once
+				.Select(t => new { t.Value })
+				.Concat(once.Select(t => new { t.Value }))
+				.ToArray();
+
+			onceValues.Select(v => v.Value).ShouldBe(new[] { 21, 21 });
+			target.Count().ShouldBe(3);
+		}
+
+		[Test]
+		public void TwoIdenticalCallsInsertTwice([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var target = db.CreateLocalTable<IdentityTarget>();
+
+			var value  = 5;
+			var first  = target.InsertWithOutputQuery(() => new IdentityTarget { Value = value });
+			var second = target.InsertWithOutputQuery(() => new IdentityTarget { Value = value });
+
+			var ids = first
+				.Select(t => t.Id)
+				.Concat(second.Select(t => t.Id))
+				.ToArray();
+
+			ids.Distinct().Count().ShouldBe(2);
+			target.Count().ShouldBe(2);
+		}
+
+		[Test]
+		public void OutputQueryIsCached([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var target = db.CreateLocalTable<IdentityTarget>();
+
+			InsertValue(target, 1)
+				.Select(t => new { t.Value })
+				.ToArray();
+
+			var query = InsertValue(target, 2).Select(t => new { t.Value });
+			var miss  = query.GetCacheMissCount();
+
+			query.ToArray();
+
+			query.GetCacheMissCount().ShouldBe(miss);
+			target.Count().ShouldBe(2);
+		}
+
+		[Test]
+		public void CompiledQueryInsertsPerInvocation([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var target = db.CreateLocalTable<IdentityTarget>();
+
+			var query = CompiledQuery.Compile((IDataContext dc, int value) =>
+				dc.GetTable<IdentityTarget>()
+					.InsertWithOutputQuery(() => new IdentityTarget { Value = value })
+					.Select(t => t.Value)
+					.Sum());
+
+			query(db, 4).ShouldBe(4);
+			query(db, 5).ShouldBe(5);
+
+			target
+				.OrderBy(t => t.Value)
+				.Select(t => t.Value)
+				.ToArray()
+				.ShouldBe(new[] { 4, 5 });
+		}
+
+		[Test]
+		public void CompiledQueryTwoIdenticalCalls([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var target = db.CreateLocalTable<IdentityTarget>();
+
+			var query = CompiledQuery.Compile((IDataContext dc, int value) =>
+				dc.GetTable<IdentityTarget>()
+					.InsertWithOutputQuery(() => new IdentityTarget { Value = value })
+					.Select(t => t.Value)
+					.Concat(dc.GetTable<IdentityTarget>()
+						.InsertWithOutputQuery(() => new IdentityTarget { Value = value })
+						.Select(t => t.Value))
+					.Count());
+
+			query(db, 7).ShouldBe(2);
+			target.Count().ShouldBe(2);
+		}
+
+		[Test]
+		public void CompiledConditionKeepsInsert([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var source = db.CreateLocalTable(GetSourceData());
+			using var target = db.CreateLocalTable<IdentityTarget>();
+
+			// a compiled argument is not evaluated before translation: the call stays in the query for both values
+			var query = CompiledQuery.Compile((IDataContext dc, bool flag) =>
+				dc.GetTable<SourceTable>()
+					.Where(s => s.Id == 2)
+					.Select(s => flag ? dc.GetTable<IdentityTarget>().InsertWithOutputQuery(() => new IdentityTarget { Value = 1 }).Count() : 0)
+					.First());
+
+			query(db, true).ShouldBe(1);
+			query(db, false).ShouldBe(0);
+
+			target.Count().ShouldBe(2);
+		}
+
+		[Test]
+		public void InlineCallInQueryLambda([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var source = db.CreateLocalTable(GetSourceData());
+			using var target = db.CreateLocalTable<TargetTable>();
+
+			var result = source
+				.Where(s => s.Id == 2)
+				.Select(s => new
+				{
+					s.Id,
+					Inserted = target.InsertWithOutputQuery(() => new TargetTable { Id = 42, Value = 1, ValueStr = "inline" }).Count(),
+				})
+				.ToArray();
+
+			result.Single().Inserted.ShouldBe(1);
+			target.Count().ShouldBe(1);
+		}
+
+		[Test]
+		public void ChainedOutputQueries([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var source = db.CreateLocalTable(GetSourceData());
+			using var target = db.CreateLocalTable<TargetTable>();
+			using var audit  = db.CreateLocalTable<AuditTable>();
+
+			var audited = source
+				.Where(s => s.Id <= 3)
+				.InsertWithOutputQuery(target, s => new TargetTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr })
+				.InsertWithOutputQuery(audit, t => new AuditTable { TargetId = t.Id, Text = t.ValueStr })
+				.Select(a => a.TargetId)
+				.OrderBy(id => id)
+				.ToArray();
+
+			audited.ShouldBe(new[] { 1, 2, 3 });
+			target.Count().ShouldBe(3);
+			audit.Count().ShouldBe(3);
+		}
+
+		[Test]
+		public void DerivedTypeTarget([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<TphBase>();
+
+			var output = db.GetTable<TphDerived>()
+				.InsertWithOutputQuery(() => new TphDerived { Id = 1, Kind = 2, Value = 5 })
+				.ToArray();
+
+			output.Length.ShouldBe(1);
+			output[0].ShouldBeOfType<TphDerived>();
+			output[0].Value.ShouldBe(5);
+
+			table.Count().ShouldBe(1);
+		}
+
+		[Test]
+		public void AssociationOverOutput([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var source = db.CreateLocalTable(GetSourceData());
+			using var target = db.CreateLocalTable<AssociatedTarget>();
+
+			var names = source
+				.Where(s => s.Id <= 3)
+				.InsertWithOutputQuery(target, s => new AssociatedTarget { Id = s.Id, ParentId = s.Id })
+				.Select(t => t.Parent!.ValueStr)
+				.ToArray();
+
+			names.OrderBy(n => n).ShouldBe(new[] { "Str1", "Str2", "Str3" });
+			target.Count().ShouldBe(3);
+		}
+
+		[Test]
+		public void CorrelatedCallThrows([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var source = db.CreateLocalTable(GetSourceData());
+			using var target = db.CreateLocalTable<TargetTable>();
+
+			var query = source
+				.Where(s => s.Id <= 2)
+				.Select(s => new
+				{
+					s.Id,
+					Inserted = target.InsertWithOutputQuery(() => new TargetTable { Id = s.Id + 100, Value = s.Value, ValueStr = s.ValueStr }).Count(),
+				});
 
 			Action act = () => query.ToArray();
 
 			var ex = act.ShouldThrow<LinqToDBException>();
-			ex.Message.ShouldBe(LinqToDB.Internal.Common.ErrorHelper.Error_OutputQuery_NotRead);
+			ex.Message.ShouldBe(LinqToDB.Internal.Common.ErrorHelper.Error_OutputQuery_Correlated);
 
 			target.Count().ShouldBe(0);
+		}
+
+		[Test]
+		public async Task EagerLoadOverOutputCommitsLoadTransaction([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] EagerLoadExecution execution)
+		{
+			var begun     = 0;
+			var committed = 0;
+
+			using var db = GetDataConnection(context, o => o.UseTracing(e =>
+			{
+				if (e.TraceInfoStep != TraceInfoStep.BeforeExecute)
+					return;
+
+				if (e.Operation == TraceOperation.BeginTransaction)
+					begun++;
+				else if (e.Operation == TraceOperation.CommitTransaction)
+					committed++;
+			}));
+
+			using var input  = db.CreateLocalTable(new[]
+			{
+				new EventInput { PersistenceId = "actor-abc", SequenceNumber = 1, Tag = "auth" },
+				new EventInput { PersistenceId = "actor-abc", SequenceNumber = 2, Tag = "profile" },
+				new EventInput { PersistenceId = "actor-xyz", SequenceNumber = 1, Tag = "ping" },
+			});
+			using var events = db.CreateLocalTable<EventRecord>();
+			using var lookup = db.CreateLocalTable(GetSourceData());
+
+			begun     = 0;
+			committed = 0;
+
+			var query = input
+				.InsertWithOutputQuery(events, i => new EventRecord { PersistenceId = i.PersistenceId, SequenceNumber = i.SequenceNumber })
+				.Select(e => new
+				{
+					e.Id,
+					Children = lookup.Where(s => s.Id == e.Id).Select(s => s.Id).ToList(),
+				});
+
+			switch (execution)
+			{
+				case EagerLoadExecution.Enumerate:
+					query.ToList().Count.ShouldBe(3);
+					break;
+
+				case EagerLoadExecution.EnumerateAsync:
+					(await query.ToListAsync()).Count.ShouldBe(3);
+					break;
+
+				case EagerLoadExecution.CompiledElement:
+					var compiled = CompiledQuery.Compile((DataConnection dc) =>
+						dc.GetTable<EventInput>()
+							.InsertWithOutputQuery(dc.GetTable<EventRecord>(), i => new EventRecord { PersistenceId = i.PersistenceId, SequenceNumber = i.SequenceNumber })
+							.Select(e => new
+							{
+								e.Id,
+								Children = dc.GetTable<SourceTable>().Where(s => s.Id == e.Id).Select(s => s.Id).ToList(),
+							})
+							.First());
+
+					compiled(db).Children.Count.ShouldBe(1);
+					break;
+			}
+
+			events.Count().ShouldBe(3);
+			begun.ShouldBe(1);
+			committed.ShouldBe(1);
 		}
 
 		// Guard test: keep SqlProviderFlags.IsInsertOutputQuerySupported honest. It probes whether the provider accepts the
