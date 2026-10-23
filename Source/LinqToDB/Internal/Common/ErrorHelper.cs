@@ -165,5 +165,15 @@
 		{
 			public const string Error_SkipInUpdate = "Feature not supported by database: Skip in UPDATE.";
 		}
+
+		public static class SelectDynamic
+		{
+			public const string Error_QueryMarkerInvoked          = "{0} is a query marker and must not be invoked directly.";
+			public const string Error_DynamicColumnEmptyName      = "Key at index {0} produced an empty dynamic column name.";
+			public const string Error_DynamicColumnDuplicateName  = "Duplicate dynamic column name '{0}'.";
+			public const string Error_DynamicColumnShadowsMember  = "Dynamic column name '{0}' collides with a member of '{1}', which would be resolved instead of the generated column.";
+			public const string Error_NoDynamicColumnsStore       = "Type '{0}' has no member marked with DynamicColumnsStoreAttribute, so the generated columns would have nowhere to go.";
+			public const string Error_StaticProjectionNotAnObject = "The static projection must construct an object (new T { ... }).";
+		}
 	}
 }
