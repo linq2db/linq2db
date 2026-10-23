@@ -18,7 +18,13 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		/// CLR <see cref="DateTime"/> - a column that declares no type, or a translation that copies its operand's type -
 		/// as what the server sees (#6115). A <c>DateTime64</c> finer than the default keeps its precision.
 		/// </remarks>
-		public static ISqlExpression AsDateTime64(this ISqlExpressionFactory factory, ISqlExpression expression)
+		/// <param name="factory">The expression factory.</param>
+		/// <param name="expression">The date/time operand.</param>
+		/// <param name="keepPrecision">
+		/// Keeps a declared <c>DateTime64</c> precision below the default too: values compared with the operand are
+		/// written at its precision, as they are beside the bare column.
+		/// </param>
+		public static ISqlExpression AsDateTime64(this ISqlExpressionFactory factory, ISqlExpression expression, bool keepPrecision = false)
 		{
 			// A cast is what the server sees, and the IN-list visitor revisits its own output on every convert pass.
 			if (expression is SqlCastExpression { IsMandatory: true, ToType.DataType: DataType.DateTime64 })
@@ -26,8 +32,9 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 			var type = QueryHelper.GetDbDataTypeWithoutSchema(expression);
 
-			var precision = type is { DataType: DataType.DateTime64, Precision: > ClickHouseMappingSchema.DEFAULT_DATETIME64_PRECISION }
-				? type.Precision.Value
+			var precision = type is { DataType: DataType.DateTime64, Precision: { } declared }
+				&& (keepPrecision || declared > ClickHouseMappingSchema.DEFAULT_DATETIME64_PRECISION)
+				? declared
 				: ClickHouseMappingSchema.DEFAULT_DATETIME64_PRECISION;
 
 			// Built from the system type alone: a DbType carried over from the operand names the operand's own

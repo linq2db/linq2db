@@ -204,6 +204,33 @@ namespace Tests.Linq
 			}
 		}
 
+		[Table]
+		sealed class MillisecondRow
+		{
+			[Column]                                                public int      Id { get; set; }
+			[Column(DataType = DataType.DateTime64, Precision = 3)] public DateTime At { get; set; }
+		}
+
+		/// <summary>
+		/// A value finer than a declared <c>DateTime64(3)</c> column is compared at the column's precision, in a list as
+		/// with <c>==</c>.
+		/// </summary>
+		[Test]
+		public void FinerValueBesideAMillisecondColumnMatchesInEveryForm([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			var stored = new DateTime(2026, 6, 1, 10, 0, 0, 100);
+			var finer  = stored.AddTicks(4000);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable([new MillisecondRow { Id = 1, At = stored }]);
+
+			var values = new[] { finer };
+
+			t.Count(r => r.At == finer).ShouldBe(1);
+			t.Count(r => new[] { finer, finer.AddHours(1) }.Contains(r.At)).ShouldBe(1);
+			t.Count(r => values.Contains(r.At)).ShouldBe(1);
+		}
+
 		[Test]
 		public void CoalesceOverASecondPrecisionColumnIsCoerced([IncludeDataSources(TestProvName.AllClickHouse)] string context)
 		{
