@@ -59,7 +59,7 @@ namespace Tests.Analyzers.Internal
 					public MappingSchema     MappingSchema     => DataContext.MappingSchema;
 					public ColumnDescriptor? CurrentDescriptor => null;
 
-					public MappingSchema? TryGetRootMappingSchema(object expression) => null;
+					public static MappingSchema? TryGetRootMappingSchema(object expression) => null;
 				}
 
 				sealed partial class ParametersContext
@@ -369,8 +369,8 @@ namespace Tests.Analyzers.Internal
 				}
 			""");
 
-		// TO-15: Parent and a parameter named parent are the outer context, not a source; nor is the context's own
-		// MappingSchema, which R-def judges.
+		// TO-15: Parent and a parameter named parent are the outer context, not a source; nor is a root's own
+		// MappingSchema, which is the live schema.
 		[Test]
 		public Task ParentIsNotASource() => Verify("""
 				static class Helper
@@ -382,9 +382,63 @@ namespace Tests.Analyzers.Internal
 				{
 					public ChildContext(ExpressionBuilder builder) : base(builder) { }
 
-					public override MappingSchema MappingSchema => throw new System.NotSupportedException();
+					public override MappingSchema MappingSchema => Builder.MappingSchema;
 
 					public object Read(ExpressionBuilder builder) => Parent != null ? builder.MappingSchema : builder.MappingSchema;
+				}
+			""");
+
+		// A-1: a root's own MappingSchema, expression- or statement-bodied, is no source; any other context's is.
+		[Test]
+		public Task OwnSchemaIsASourceUnlessRoot() => AnalyzerVerifier<BuildContextMappingSchemaAnalyzer>.VerifyAsync(
+			Code("""
+				sealed class RootContext : BuildContextBase
+				{
+					public RootContext(ExpressionBuilder builder) : base(builder) { }
+
+					public override MappingSchema MappingSchema
+					{
+						get { return Builder.MappingSchema; }
+					}
+
+					public object Read(ExpressionBuilder builder) => builder.MappingSchema;
+				}
+
+				sealed class SnapshotContext : BuildContextBase
+				{
+					public SnapshotContext(ExpressionBuilder builder, MappingSchema mappingSchema) : base(builder) { MappingSchema = mappingSchema; }
+
+					public override MappingSchema MappingSchema { get; }
+
+					public object Read(ExpressionBuilder builder) => {|#0:builder.MappingSchema|};
+				}
+			"""),
+			new DiagnosticResult("LINQ2DB0007", DiagnosticSeverity.Warning)
+				.WithLocation(0)
+				.WithArguments("'MappingSchema' is in scope: read 'MappingSchema' instead of the data context's MappingSchema"));
+
+		// A foreach variable is a carrier in its body, not in its own collection expression.
+		[Test]
+		public Task ForEachVariablePosition() => Verify("""
+				static class Helper
+				{
+					public static object? Body(ExpressionBuilder builder, object o)
+					{
+						foreach (var column in (ColumnDescriptor[])o)
+							return {|LINQ2DB0007:builder.MappingSchema|};
+
+						return null;
+					}
+
+					public static object? Collection(ExpressionBuilder builder)
+					{
+						foreach (var column in Columns(builder.MappingSchema))
+							return column;
+
+						return null;
+					}
+
+					static ColumnDescriptor[] Columns(MappingSchema mappingSchema) => new ColumnDescriptor[0];
 				}
 			""");
 
@@ -432,7 +486,7 @@ namespace Tests.Analyzers.Internal
 				sealed class RootBuilder : MethodCallBuilder
 				{
 					protected override object BuildMethodCall(ExpressionBuilder builder, object methodCall)
-						=> builder.TryGetRootMappingSchema(methodCall) ?? builder.MappingSchema;
+						=> ExpressionBuilder.TryGetRootMappingSchema(methodCall) ?? builder.MappingSchema;
 				}
 
 				sealed class InnerContext : BuildContextBase
@@ -497,5 +551,15 @@ namespace Tests.Analyzers.Internal
 				}
 			}
 			""");
+
+		// TO-21: ExpressionBuilder.MappingSchema no longer alias-shaped disables the rule, reported on ExpressionBuilder.
+		[Test]
+		public Task AliasDriftIsReported() => AnalyzerVerifier<BuildContextMappingSchemaAnalyzer>.VerifyAsync(
+			Model
+				.Replace("sealed partial class ExpressionBuilder", "sealed partial class {|#0:ExpressionBuilder|}")
+				.Replace("MappingSchema     => DataContext.MappingSchema;", "MappingSchema     { get; } = null!;"),
+			new DiagnosticResult("LINQ2DB0007", DiagnosticSeverity.Warning)
+				.WithLocation(0)
+				.WithArguments("The LINQ2DB0007 model could not be read: 'LinqToDB.Internal.Linq.Builder.ExpressionBuilder.MappingSchema' is no longer an expression-bodied '=> <IDataContext member>.MappingSchema' getter. The rule is disabled for the whole compilation until the analyzer is updated."));
 	}
 }

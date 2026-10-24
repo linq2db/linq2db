@@ -124,7 +124,7 @@ namespace CodeGenerators
 			if (member == null || !InBuilderNamespace(member.ContainingType))
 				return;
 
-			if (!model.IsLiveRead(op, member))
+			if (!model.IsLiveRead(op))
 				return;
 
 			var read = Climb(op);
@@ -159,7 +159,7 @@ namespace CodeGenerators
 			}
 
 			if (model.IsBuildMethodCall(member) && !IsLiveLookupArgument(read))
-				Report(context, op, "Inside BuildMethodCall the source is methodCall.Arguments[0]: read its snapshot via 'builder.TryGetRootMappingSchema(...) ?? builder.MappingSchema' instead of the data context's MappingSchema");
+				Report(context, op, "Inside BuildMethodCall the source is methodCall.Arguments[0]: read its snapshot via 'ExpressionBuilder.TryGetRootMappingSchema(...) ?? builder.MappingSchema' instead of the data context's MappingSchema");
 		}
 
 		static void Report(OperationAnalysisContext context, IOperation op, string message)
@@ -334,9 +334,9 @@ namespace CodeGenerators
 						type = field.Type;
 						break;
 
-					// The context's own MappingSchema is what R-def judges; counting it here would report every live
-					// read in every context, roots included.
-					case IPropertySymbol property when instanceAllowed && !property.IsStatic && property.Name is not ("Parent" or SchemaProperty) && IsOwnMember(property, enclosingType):
+					// A root's own MappingSchema returns the live schema, so it is no source; any other context's is.
+					case IPropertySymbol property when instanceAllowed && !property.IsStatic && property.Name != "Parent" && IsOwnMember(property, enclosingType)
+						&& !(property.Name == SchemaProperty && model.HasRootSchemaGetter(enclosingType)):
 						type = property.Type;
 						break;
 
@@ -383,20 +383,21 @@ namespace CodeGenerators
 		}
 
 		/// <summary>
-		/// Declared earlier than the read, and not the local whose own initializer holds it - <c>var ms = builder.MappingSchema;</c>
-		/// is not a source for itself.
+		/// Named earlier than the read, and not the local whose own initializer holds it - <c>var ms = builder.MappingSchema;</c>
+		/// is not a source for itself. The name, not the declaring node: a <c>foreach</c> variable's node spans its body.
 		/// </summary>
 		static bool DeclaredBefore(ILocalSymbol local, SyntaxNode read)
 		{
-			if (local.DeclaringSyntaxReferences.Length == 0)
+			if (local.Locations.Length == 0 || local.DeclaringSyntaxReferences.Length == 0)
 				return false;
 
-			var declaration = local.DeclaringSyntaxReferences[0];
+			var name = local.Locations[0];
 
-			if (declaration.SyntaxTree != read.SyntaxTree || declaration.Span.Start >= read.SpanStart)
+			if (name.SourceTree != read.SyntaxTree || name.SourceSpan.Start >= read.SpanStart)
 				return false;
 
-			return !declaration.Span.Contains(read.Span);
+			return local.DeclaringSyntaxReferences[0].GetSyntax() is not VariableDeclaratorSyntax declarator
+				|| !declarator.Span.Contains(read.Span);
 		}
 
 		static bool InStaticFunction(SyntaxNode node)
@@ -463,7 +464,8 @@ namespace CodeGenerators
 			readonly INamedTypeSymbol   _dataContext;
 			readonly INamedTypeSymbol[] _descriptors;
 
-			readonly ConcurrentDictionary<IPropertySymbol, bool> _aliases = new(SymbolEqualityComparer.Default);
+			readonly ConcurrentDictionary<IPropertySymbol, bool>   _aliases = new(SymbolEqualityComparer.Default);
+			readonly ConcurrentDictionary<INamedTypeSymbol, bool> _roots   = new(SymbolEqualityComparer.Default);
 
 			public static Model? Create(IAssemblySymbol assembly, INamedTypeSymbol expressionBuilder, out string? drift)
 			{
@@ -545,12 +547,9 @@ namespace CodeGenerators
 				return false;
 			}
 
-			/// <summary>An alias read, outside the alias's own getter, or <c>IDataContext.MappingSchema</c> reached through an <c>ExpressionBuilder</c>.</summary>
-			public bool IsLiveRead(IPropertyReferenceOperation op, IMethodSymbol member)
+			/// <summary>An alias read, or <c>IDataContext.MappingSchema</c> reached through an <c>ExpressionBuilder</c>.</summary>
+			public bool IsLiveRead(IPropertyReferenceOperation op)
 			{
-				if (member is { MethodKind: MethodKind.PropertyGet, AssociatedSymbol: IPropertySymbol owner } && IsAlias(owner))
-					return false;
-
 				if (IsAlias(op.Property))
 					return true;
 
@@ -605,6 +604,67 @@ namespace CodeGenerators
 
 				return false;
 			}
+
+			/// <summary>The type's effective <c>MappingSchema</c> getter returns <c>&lt;ExpressionBuilder member&gt;.MappingSchema</c>.</summary>
+			public bool HasRootSchemaGetter(INamedTypeSymbol type)
+				=> _roots.GetOrAdd(type, ComputeRoot);
+
+			bool ComputeRoot(INamedTypeSymbol type)
+			{
+				for (var current = type; current != null; current = current.BaseType)
+				{
+					foreach (var candidate in current.GetMembers(SchemaProperty))
+					{
+						if (candidate is not IPropertySymbol { IsAbstract: false } property)
+							continue;
+
+						foreach (var reference in property.DeclaringSyntaxReferences)
+						{
+							if (GetterExpression(reference.GetSyntax()) is MemberAccessExpressionSyntax { Expression: IdentifierNameSyntax receiver } access
+								&& access.Name.Identifier.ValueText == SchemaProperty)
+							{
+								for (var owner = type; owner != null; owner = owner.BaseType)
+									foreach (var member in owner.GetMembers(receiver.Identifier.ValueText))
+										if (SymbolEqualityComparer.Default.Equals(MemberType(member), _expressionBuilder))
+											return true;
+							}
+						}
+
+						return false;
+					}
+				}
+
+				return false;
+			}
+
+			static ExpressionSyntax? GetterExpression(SyntaxNode node)
+			{
+				if (node is not PropertyDeclarationSyntax declaration)
+					return null;
+
+				if (declaration.ExpressionBody != null)
+					return declaration.ExpressionBody.Expression;
+
+				foreach (var accessor in declaration.AccessorList?.Accessors ?? default)
+				{
+					if (!accessor.IsKind(SyntaxKind.GetAccessorDeclaration))
+						continue;
+
+					if (accessor.ExpressionBody != null)
+						return accessor.ExpressionBody.Expression;
+
+					return accessor.Body is { Statements: { Count: 1 } statements } && statements[0] is ReturnStatementSyntax { Expression: { } returned } ? returned : null;
+				}
+
+				return null;
+			}
+
+			static ITypeSymbol? MemberType(ISymbol member) => member switch
+			{
+				IFieldSymbol    field => field.Type,
+				IPropertySymbol prop  => prop.Type,
+				_                     => null,
+			};
 
 			bool IsDataContext(ITypeSymbol? type)
 			{
