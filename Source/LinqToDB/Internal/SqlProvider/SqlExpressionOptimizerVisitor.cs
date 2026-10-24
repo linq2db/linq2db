@@ -137,8 +137,8 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected internal override IQueryElement VisitIsTruePredicate(SqlPredicate.IsTrue predicate)
 		{
-			// Unwrapped before the operand is visited: its comparisons must be reduced knowing whether they sit under a NOT.
-			if (_reducePredicates && predicate.Expr1 is SqlSearchCondition searchCondition)
+			// Unwrapped before the operand is visited: its comparisons must be handled knowing whether they sit under a NOT.
+			if (predicate.Expr1 is SqlSearchCondition searchCondition)
 				return Visit(searchCondition.MakeNot(predicate.IsNot));
 
 			var newElement = base.VisitIsTruePredicate(predicate);
