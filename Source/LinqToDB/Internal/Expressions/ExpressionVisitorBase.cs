@@ -116,11 +116,6 @@ namespace LinqToDB.Internal.Expressions
 			return node.Update(Visit(node.InnerExpression));
 		}
 
-		public virtual Expression VisitTagExpression(TagExpression node)
-		{
-			return node.Update(Visit(node.InnerExpression), node.Tag);
-		}
-
 		public virtual Expression VisitSqlDefaultIfEmptyExpression(SqlDefaultIfEmptyExpression node)
 		{
 			return node.Update(Visit(node.InnerExpression), VisitAndConvert(node.NotNullExpressions, nameof(VisitSqlDefaultIfEmptyExpression)));
