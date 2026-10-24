@@ -1054,6 +1054,25 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			return newNode;
 		}
 
+		// The compiler never emits IndexExpression; rewriting it into the shape the compiler emits for the same source
+		// (ArrayIndex, Array.Get or the indexer getter call) leaves nothing downstream that has to handle it separately.
+		protected override Expression VisitIndex(IndexExpression node)
+		{
+			if (node.Indexer == null)
+			{
+				if (node.Arguments.Count == 1)
+					return Visit(Expression.ArrayIndex(node.Object!, node.Arguments[0]));
+
+				return Visit(Expression.ArrayIndex(node.Object!, node.Arguments));
+			}
+
+			var getter = node.Indexer.GetGetMethod(true);
+			if (getter != null)
+				return Visit(Expression.Call(node.Object, getter, node.Arguments));
+
+			return base.VisitIndex(node);
+		}
+
 		protected override Expression VisitNew(NewExpression node)
 		{
 			var newNode = ConvertNew(node);

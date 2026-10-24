@@ -119,8 +119,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue(5879, ErrorTypeName = "System.NotSupportedException", ErrorMessage = "Unhandled expression type: Index",
-			Details = "PathVisitor has no ExpressionType.Index case, so GetExpressionAccessors throws before the parameter name is ever suggested. Un-gate once a tree carrying an IndexExpression can be translated.")]
 		public void ParameterName_FromHandBuiltIndexExpression([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataContext(context);

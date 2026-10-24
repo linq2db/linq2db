@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -525,5 +526,264 @@ namespace Tests.Linq
 
 			Assert.That(record.Value, Is.EqualTo(addMask | WarehouseTableDto.SomeEnum.FifthValue));
 		}
+
+		#region Hand-built IndexExpression
+
+		// The C# compiler never emits IndexExpression: values[0] lowers to BinaryExpression{ArrayIndex}, list[0] to
+		// a get_Item call and grid[i, j] to an Array.Get call. Each test builds the IndexExpression by hand and runs
+		// the compiler's shape for the same source beside it, so a difference is attributable to the node itself.
+
+		static readonly PropertyInfo _listItem = typeof(List<int>).GetProperty("Item")!;
+
+		static Expression<Func<Model.Person, bool>> IdEquals(Expression value)
+		{
+			var p = Expression.Parameter(typeof(Model.Person), "p");
+
+			return Expression.Lambda<Func<Model.Person, bool>>(
+				Expression.Equal(Expression.Field(p, nameof(Model.Person.ID)), value),
+				p);
+		}
+
+		static void ShouldReadEachValue<TArg, TResult>(Func<TArg, IQueryable<TResult>> build, TArg first, TResult expectedFirst, TArg second, TResult expectedSecond)
+		{
+			build(first)
+				.ToArray()
+				.ShouldBe([expectedFirst]);
+
+			build(second)
+				.ToArray()
+				.ShouldBe([expectedSecond]);
+		}
+
+		static void ShouldHitCacheOnRebuild<TArg>(Func<TArg, IQueryable<int>> build, TArg first, int expectedFirst, TArg second, int expectedSecond)
+		{
+			var query = build(first);
+
+			query
+				.ToArray()
+				.ShouldBe([expectedFirst]);
+
+			var missCount = query.GetCacheMissCount();
+
+			build(second)
+				.ToArray()
+				.ShouldBe([expectedSecond]);
+
+			query
+				.GetCacheMissCount()
+				.ShouldBe(missCount);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5879")]
+		public void HandBuiltArrayAccess([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var ids = new[] { 2, 3 };
+
+			Expression<Func<int[]>> captured = () => ids;
+
+			db.Person
+				.Where(IdEquals(Expression.ArrayAccess(captured.Body, Expression.Constant(0))))
+				.Select(p => p.ID)
+				.ToArray()
+				.ShouldBe([2]);
+
+			db.Person
+				.Where(p => p.ID == ids[0])
+				.Select(p => p.ID)
+				.ToArray()
+				.ShouldBe([2]);
+		}
+
+		// Query-cache test: the cache key does not depend on the provider, so one provider family is enough.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5879")]
+		[QueryCacheTest]
+		public void HandBuiltArrayAccess_RebuiltTreeHitsCache([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> HandBuilt(int[] ids)
+			{
+				Expression<Func<int[]>> captured = () => ids;
+
+				return db.Person
+					.Where(IdEquals(Expression.ArrayAccess(captured.Body, Expression.Constant(0))))
+					.Select(p => p.ID);
+			}
+
+			IQueryable<int> CompilerBuilt(int[] ids)
+			{
+				return db.Person
+					.Where(p => p.ID == ids[0])
+					.Select(p => p.ID);
+			}
+
+			ShouldHitCacheOnRebuild(CompilerBuilt, new[] { 2, 3 }, 2, new[] { 3, 4 }, 3);
+			ShouldHitCacheOnRebuild(HandBuilt,     new[] { 2, 3 }, 2, new[] { 3, 4 }, 3);
+		}
+
+		// Query-cache test: the cache key does not depend on the provider, so one provider family is enough.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5879")]
+		[QueryCacheTest]
+		public void HandBuiltIndexerProperty([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> HandBuilt(List<int> ids)
+			{
+				Expression<Func<List<int>>> captured = () => ids;
+
+				return db.Person
+					.Where(IdEquals(Expression.MakeIndex(captured.Body, _listItem, [Expression.Constant(0)])))
+					.Select(p => p.ID);
+			}
+
+			IQueryable<int> CompilerBuilt(List<int> ids)
+			{
+				return db.Person
+					.Where(p => p.ID == ids[0])
+					.Select(p => p.ID);
+			}
+
+			ShouldHitCacheOnRebuild(CompilerBuilt, new List<int> { 2 }, 2, new List<int> { 3 }, 3);
+			ShouldHitCacheOnRebuild(HandBuilt,     new List<int> { 2 }, 2, new List<int> { 3 }, 3);
+		}
+
+		// A collection held directly in a ConstantExpression must not be inlined into a cached query as a literal.
+		// The compiler never builds this shape either, so its controls are the hand-built ArrayIndex and get_Item
+		// forms the IndexExpression is equivalent to. Cache reuse does not depend on the provider, hence one family.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5879")]
+		public void HandBuiltIndexOverConstantCollection([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> IndexOverList(List<int> ids)
+			{
+				return db.Person
+					.Where(IdEquals(Expression.MakeIndex(Expression.Constant(ids), _listItem, [Expression.Constant(0)])))
+					.Select(p => p.ID);
+			}
+
+			IQueryable<int> GetItemOverList(List<int> ids)
+			{
+				return db.Person
+					.Where(IdEquals(Expression.Call(Expression.Constant(ids), _listItem.GetGetMethod()!, Expression.Constant(0))))
+					.Select(p => p.ID);
+			}
+
+			IQueryable<int> IndexOverArray(int[] ids)
+			{
+				return db.Person
+					.Where(IdEquals(Expression.ArrayAccess(Expression.Constant(ids), Expression.Constant(0))))
+					.Select(p => p.ID);
+			}
+
+			IQueryable<int> ArrayIndexOverArray(int[] ids)
+			{
+				return db.Person
+					.Where(IdEquals(Expression.ArrayIndex(Expression.Constant(ids), Expression.Constant(0))))
+					.Select(p => p.ID);
+			}
+
+			ShouldReadEachValue(GetItemOverList,     new List<int> { 2 }, 2, new List<int> { 3 }, 3);
+			ShouldReadEachValue(IndexOverList,       new List<int> { 2 }, 2, new List<int> { 3 }, 3);
+			ShouldReadEachValue(ArrayIndexOverArray, new[] { 2 },         2, new[] { 3 },         3);
+			ShouldReadEachValue(IndexOverArray,      new[] { 2 },         2, new[] { 3 },         3);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5879")]
+		public void HandBuiltArrayAccessInProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<string> HandBuilt(string[] values)
+			{
+				Expression<Func<string[]>> captured = () => values;
+
+				var person = Expression.Parameter(typeof(Model.Person), "p");
+
+				var selector = Expression.Lambda<Func<Model.Person, string>>(
+					Expression.ArrayAccess(captured.Body, Expression.Constant(0)),
+					person);
+
+				return db.Person
+					.Where(p => p.ID == 1)
+					.Select(selector);
+			}
+
+			IQueryable<string> CompilerBuilt(string[] values)
+			{
+				return db.Person
+					.Where(p => p.ID == 1)
+					.Select(p => values[0]);
+			}
+
+			ShouldReadEachValue(CompilerBuilt, new[] { "a" }, "a", new[] { "b" }, "b");
+			ShouldReadEachValue(HandBuilt,     new[] { "a" }, "a", new[] { "b" }, "b");
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5879")]
+		public void HandBuiltMultiDimArrayAccess([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var grid = new[,] { { 1, 2 }, { 3, 4 } };
+
+			Expression<Func<int[,]>> captured = () => grid;
+
+			db.Person
+				.Where(IdEquals(Expression.ArrayAccess(captured.Body, Expression.Constant(1), Expression.Constant(0))))
+				.Select(p => p.ID)
+				.ToArray()
+				.ShouldBe([3]);
+
+			db.Person
+				.Where(p => p.ID == grid[1, 0])
+				.Select(p => p.ID)
+				.ToArray()
+				.ShouldBe([3]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5879")]
+		public void HandBuiltArrayAccessCompiledQuery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var ids = new[] { 2, 3 };
+
+			Expression<Func<Model.ITestDataContext, IQueryable<int>>> compilerBuilt = dc => dc.Person
+				.Where(p => p.ID == ids[0])
+				.Select(p => p.ID);
+
+			var handBuilt = (Expression<Func<Model.ITestDataContext, IQueryable<int>>>)new ArrayIndexToArrayAccess().Visit(compilerBuilt);
+
+			foreach (var query in new[] { CompiledQuery.Compile(compilerBuilt), CompiledQuery.Compile(handBuilt) })
+			{
+				ids[0] = 2;
+
+				query(db)
+					.ToArray()
+					.ShouldBe([2]);
+
+				ids[0] = 3;
+
+				query(db)
+					.ToArray()
+					.ShouldBe([3]);
+			}
+		}
+
+		sealed class ArrayIndexToArrayAccess : ExpressionVisitor
+		{
+			protected override Expression VisitBinary(BinaryExpression node)
+			{
+				return node.NodeType == ExpressionType.ArrayIndex
+					? Expression.ArrayAccess(Visit(node.Left), Visit(node.Right))
+					: base.VisitBinary(node);
+			}
+		}
+
+		#endregion
 	}
 }
