@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 
 using LinqToDB.CommandLine.Commands.QueryExecution;
 
@@ -41,6 +42,31 @@ namespace Tests.LinqToDB.CLI
 				logonType.    ShouldBe(expectedLogonType);
 				logonProvider.ShouldBe(expectedLogonProvider);
 			}
+		}
+
+		[Test]
+		public void LogonWithUnknownUserFails()
+		{
+			if (!OperatingSystem.IsWindows())
+				Assert.Ignore("Logs on through Windows LogonUser.");
+
+			// Not NewCredentials, which does not check the credentials; no domain, so no domain controller is asked.
+			var exception = Should.Throw<Win32Exception>(() => WindowsImpersonation.Logon("linq2db-no-such-user", "x", WindowsImpersonationMode.NetworkCleartext));
+
+			using (Assert.EnterMultipleScope())
+			{
+				exception.NativeErrorCode.ShouldBe(1326);
+				exception.Message.        ShouldBe("Windows impersonation logon failed.");
+			}
+		}
+
+		[Test]
+		public void LogonIsNotSupportedOutsideWindows()
+		{
+			if (OperatingSystem.IsWindows())
+				Assert.Ignore("Checks the platform guard of other systems.");
+
+			Should.Throw<PlatformNotSupportedException>(() => WindowsImpersonation.Logon("user", "x", WindowsImpersonationMode.NetworkCleartext));
 		}
 	}
 }
