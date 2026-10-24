@@ -100,9 +100,7 @@ namespace Tests.xUpdate
 			[Column]                         public int Value { get; set; }
 		}
 
-		sealed class TphDerived : TphBase
-		{
-		}
+		sealed class TphDerived : TphBase;
 
 		[Table("InsertOutputQueryAssociated")]
 		sealed class AssociatedTarget
