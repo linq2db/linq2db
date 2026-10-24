@@ -40,9 +40,9 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		/// Elapsed ticks from the nanosecond timestamps, divided by a hundred.
 		/// </summary>
 		/// <remarks>
-		/// An operand that is not already a <c>DateTime64</c> is coerced to <c>DateTime64(7)</c>, which is a tick
-		/// exactly, so its nanosecond value is a whole multiple of a hundred and the division is exact. A
-		/// <c>DateTime64</c> keeps its own precision, so one finer than a tick is truncated to whole ticks.
+		/// An operand is coerced to <c>DateTime64(7)</c>, which is a tick exactly, so its nanosecond value is a whole
+		/// multiple of a hundred and the division is exact. A <c>DateTime64</c> finer than a tick keeps its own
+		/// precision, so it is truncated to whole ticks.
 		/// <c>date_diff</c> is not used because its finest unit is the second.
 		/// <para>
 		/// Nanoseconds in an <see cref="long"/> reach from 1678 to 2262, narrower than what a
@@ -97,7 +97,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		}
 
 		/// <summary>
-		/// Coerces a coarse date/time operand of <c>IN</c> to <c>DateTime64</c> when a value in the list is one, or may
+		/// Coerces a date/time operand of <c>IN</c> to <c>DateTime64</c> when a value in the list is one, or may
 		/// be one: the values of a captured collection beside a computed operand keep their own type when written. A
 		/// <c>DateOnly</c> operand is left as is: its values have no time part and are written as dates.
 		/// </summary>
@@ -110,12 +110,11 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			var newElement = base.VisitInListPredicate(predicate);
 
 			if (newElement is SqlPredicate.InList inList
-				&& Factory.GetDbDataType(inList.Expr1) is { DataType: DataType.DateTime or DataType.Date or DataType.Date32 or DataType.DateTime64 } operandType
-				&& !ClickHouseExpressionExtensions.IsDateTime64(operandType)
+				&& Factory.GetDbDataType(inList.Expr1) is { DataType: DataType.DateTime or DataType.Date or DataType.Date32 or DataType.DateTime64 }
 				&& (inList.Values.Exists(v => Factory.GetDbDataType(v).DataType == DataType.DateTime64)
 					|| (inList.Values is [SqlParameter] && CanCarryTime(inList.Expr1) && !QueryHelper.IsStoredColumn(inList.Expr1))))
 			{
-				return new SqlPredicate.InList(Factory.AsDateTime64(inList.Expr1), inList.WithNull, inList.IsNot, inList.Values);
+				return new SqlPredicate.InList(Factory.AsDateTime64(inList.Expr1, keepPrecision: QueryHelper.IsStoredColumn(inList.Expr1)), inList.WithNull, inList.IsNot, inList.Values);
 			}
 
 			return newElement;
