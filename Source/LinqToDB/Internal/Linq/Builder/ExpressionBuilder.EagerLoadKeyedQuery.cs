@@ -964,6 +964,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				foreach (var query in _query.Queries)
 					QueryHelper.CollectParametersAndValues(query.Statement, parameters, values);
 			}
+
+			public override IEnumerable<SqlStatement> GetStatements()
+			{
+				return _query.Queries.Select(q => q.Statement);
+			}
 		}
 
 		sealed class KeyedQueryChildPreamble<TKey, T> : Preamble
@@ -1034,6 +1039,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				foreach (var query in _query.Queries)
 					QueryHelper.CollectParametersAndValues(query.Statement, parameters, values);
+			}
+
+			public override IEnumerable<SqlStatement> GetStatements()
+			{
+				return _query.Queries.Select(q => q.Statement);
 			}
 		}
 
@@ -1413,6 +1423,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles) => null!;
 			public override Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles, CancellationToken cancellationToken) => Task.FromResult<object>(null!);
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values) { }
+
+			public override IEnumerable<SqlStatement> GetStatements() => [];
 		}
 
 		sealed class BufferMaterializePreamble<TBuffer> : Preamble
@@ -1454,6 +1466,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				foreach (var q in _bufferQuery.Queries)
 					QueryHelper.CollectParametersAndValues(q.Statement, parameters, values);
+			}
+
+			public override IEnumerable<SqlStatement> GetStatements()
+			{
+				return _bufferQuery.Queries.Select(q => q.Statement);
 			}
 		}
 

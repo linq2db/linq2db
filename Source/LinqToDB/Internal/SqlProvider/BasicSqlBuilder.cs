@@ -568,17 +568,50 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual void BuildCteBody(SelectQuery selectQuery)
 		{
+			if (selectQuery.From.Tables is [{ Source: SqlDataModificationTable dataModification }])
+			{
+				BuildDataModificationCteBody(selectQuery, dataModification);
+				return;
+			}
+
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
 			sqlBuilder.BuildSql(0, new SqlSelectStatement(selectQuery), StringBuilder, OptimizationContext, Indent, AliasMode, NullabilityContext);
 			MergeSqlBuilderData(sqlBuilder);
 		}
 
-		// Renders the data-modifying statement of a CTE (CteClause.DataModification). Its output clause is filled by
-		// BasicSqlOptimizer from the CTE body columns, so the statement renders like any INSERT ... RETURNING/OUTPUT.
-		void BuildDataModificationCteBody(SqlInsertStatement statement)
+		SqlOutputClause? _dataModificationOutput;
+
+		// A CTE body over a data-modifying table renders as that statement, returning the body columns. The output list is
+		// built here from the body, which is the only representation of it, so the cached statement is left unchanged.
+		void BuildDataModificationCteBody(SelectQuery body, SqlDataModificationTable table)
 		{
+			var target  = table.Statement switch
+			{
+				SqlInsertStatement insert => insert.Insert.Into!,
+				_                         => throw new LinqToDBException(ErrorHelper.Error_OutputQuery_NotSupported),
+			};
+
+			var context = (table, target, special: SqlProviderFlags.OutputInsertUseSpecialTable);
+			var columns = body.Select.Columns.Select(column => column.Expression.Convert(context, static (visitor, e) =>
+			{
+				if (e is SqlField field && field.Table == visitor.Context.table)
+				{
+					var targetField = visitor.Context.target.Fields.Find(f => string.Equals(f.Name, field.Name, StringComparison.Ordinal))
+						?? throw new InvalidOperationException($"Field '{field.Name}' not found in table '{visitor.Context.target}'.");
+
+					return visitor.Context.special
+						? new SqlAnchor(targetField, SqlAnchor.AnchorKindEnum.Inserted)
+						: targetField;
+				}
+
+				return e;
+			})).ToList();
+
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
-			sqlBuilder.BuildSql(0, statement, StringBuilder, OptimizationContext, Indent, AliasMode, NullabilityContext);
+
+			sqlBuilder._dataModificationOutput = new SqlOutputClause { OutputColumns = columns.Count > 0 ? columns : null };
+			sqlBuilder.BuildSql(0, table.Statement, StringBuilder, OptimizationContext, Indent, AliasMode, NullabilityContext);
+
 			MergeSqlBuilderData(sqlBuilder);
 		}
 
@@ -611,7 +644,7 @@ namespace LinqToDB.Internal.SqlProvider
 			else
 			{
 				BuildStep = Step.Output;
-				BuildOutputSubclause(statement.OutputClause);
+				BuildOutputSubclause(_dataModificationOutput ?? statement.OutputClause);
 			}
 		}
 
@@ -637,7 +670,7 @@ namespace LinqToDB.Internal.SqlProvider
 			if (insertClause.WithIdentity)
 				BuildGetIdentity(insertClause);
 			else
-				BuildOutputSubclause(statement.OutputClause);
+				BuildOutputSubclause(_dataModificationOutput ?? statement.OutputClause);
 		}
 
 		protected virtual void BuildMultiInsertQuery(SqlMultiInsertStatement statement)
@@ -833,10 +866,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 				Indent++;
 
-				if (cte.DataModification != null)
-					BuildDataModificationCteBody(cte.DataModification);
-				else
-					BuildCteBody(cte.Body!);
+				BuildCteBody(cte.Body!);
 
 				Indent--;
 
@@ -2050,6 +2080,9 @@ namespace LinqToDB.Internal.SqlProvider
 					StringBuilder.Append(GetPhysicalTableName(table, alias));
 					break;
 				}
+
+				case QueryElementType.SqlDataModificationTable:
+					throw new LinqToDBException(ErrorHelper.Error_OutputQuery_NotSupported);
 
 				case QueryElementType.SqlRawSqlTable:
 				{
@@ -4893,6 +4926,9 @@ namespace LinqToDB.Internal.SqlProvider
 
 				case QueryElementType.SqlRawSqlTable:
 					return BuildObjectName(new(), ((SqlTable)table).TableName, ConvertType.NameToCteName, true, TableOptions.NotSet, withoutSuffix: withoutSuffix).ToString();
+
+				case QueryElementType.SqlDataModificationTable:
+					throw new LinqToDBException(ErrorHelper.Error_OutputQuery_NotSupported);
 
 				case QueryElementType.SqlTableLikeSource:
 					return ConvertInline(((SqlTableLikeSource)table).Name, ConvertType.NameToQueryTable);

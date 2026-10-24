@@ -260,7 +260,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (_query.ErrorExpression == null)
 			{
-				CheckInsertOutputQueriesRendered();
+				CheckDataModificationSources(preambles);
 
 				foreach (var q in _query.Queries)
 				{
@@ -283,36 +283,32 @@ namespace LinqToDB.Internal.Linq.Builder
 			return (Query<T>)_query;
 		}
 
-		bool                 _insertOutputQueryCallsCollected;
-		HashSet<Expression>? _insertOutputQueryCalls;
+		bool                                                        _dataModificationCallsCollected;
+		Dictionary<DataModificationIdentity, MethodCallExpression>? _dataModificationCalls;
+		Dictionary<DataModificationIdentity, CteContext>?           _dataModificationCtes;
+		Dictionary<MethodCallExpression, MethodCallExpression>?     _identifiedDataModificationCalls;
 
 		/// <summary>
-		/// Distinct <see cref="LinqExtensions.InsertWithOutputQuery{TTarget}(ITable{TTarget}, Expression{Func{TTarget}})"/>
-		/// calls of the query expression, or <see langword="null"/> when there are none.
+		/// The <c>InsertWithOutputQuery</c> calls of the query expression by identity, or <see langword="null"/> when there are none.
 		/// </summary>
-		HashSet<Expression>? InsertOutputQueryCalls
+		Dictionary<DataModificationIdentity, MethodCallExpression>? DataModificationCalls
 		{
 			get
 			{
-				if (!_insertOutputQueryCallsCollected)
+				if (!_dataModificationCallsCollected)
 				{
-					_insertOutputQueryCallsCollected = true;
-
-					Expression.Visit(this, static (builder, e) =>
-					{
-						if (IsInsertOutputQueryCall(e))
-							(builder._insertOutputQueryCalls ??= new(ExpressionEqualityComparer.Instance)).Add(e);
-					});
+					_dataModificationCallsCollected = true;
+					_dataModificationCalls          = CollectDataModificationCalls();
 				}
 
-				return _insertOutputQueryCalls;
+				return _dataModificationCalls;
 			}
 		}
 
 		/// <summary>
 		/// Query contains a data-modifying CTE: its output must not be re-queried by eager loading.
 		/// </summary>
-		public bool HasInsertOutputQuery => InsertOutputQueryCalls != null;
+		public bool HasInsertOutputQuery => DataModificationCalls != null;
 
 		static bool IsInsertOutputQueryCall(Expression expression)
 		{
@@ -320,28 +316,154 @@ namespace LinqToDB.Internal.Linq.Builder
 				&& mc.Method.DeclaringType == typeof(LinqExtensions);
 		}
 
-		/// <summary>
-		/// An insert of <see cref="LinqExtensions.InsertWithOutputQuery{TTarget}(ITable{TTarget}, Expression{Func{TTarget}})"/>
-		/// runs only as a data-modifying CTE of the final SQL. A query that does not read its output never translates it
-		/// (or drops it during optimization), so the insert would silently not run: reject such queries instead.
-		/// </summary>
-		void CheckInsertOutputQueriesRendered()
+		Dictionary<DataModificationIdentity, MethodCallExpression>? CollectDataModificationCalls()
 		{
-			if (InsertOutputQueryCalls is not { } calls)
+			var calls            = new List<MethodCallExpression>();
+			var lambdaParameters = new HashSet<ParameterExpression>();
+
+			Expression.Visit((calls, lambdaParameters), static (ctx, e) =>
+			{
+				if (IsInsertOutputQueryCall(e))
+					ctx.calls.Add((MethodCallExpression)e);
+				else if (e is LambdaExpression lambda)
+					ctx.lambdaParameters.UnionWith(lambda.Parameters);
+			});
+
+			if (calls.Count == 0)
+				return null;
+
+			var result = new Dictionary<DataModificationIdentity, MethodCallExpression>();
+
+			foreach (var call in calls)
+			{
+				if (IsCorrelated(call, lambdaParameters))
+					throw new LinqToDBException(ErrorHelper.Error_OutputQuery_Correlated);
+
+				var identified = IdentifyDataModificationCall(call);
+
+				result.TryAdd(LinqExtensions.GetDataModificationIdentity(identified)!, identified);
+			}
+
+			return result;
+		}
+
+		// A parameter used inside the call but declared by a lambda outside it belongs to an enclosing query.
+		static bool IsCorrelated(MethodCallExpression call, HashSet<ParameterExpression> lambdaParameters)
+		{
+			var used     = new HashSet<ParameterExpression>();
+			var declared = new HashSet<ParameterExpression>();
+
+			call.Visit((used, declared), static (ctx, e) =>
+			{
+				if (e is ParameterExpression parameter)
+					ctx.used.Add(parameter);
+				else if (e is LambdaExpression lambda)
+					ctx.declared.UnionWith(lambda.Parameters);
+			});
+
+			used.ExceptWith(declared);
+
+			return used.Overlaps(lambdaParameters);
+		}
+
+		/// <summary>
+		/// Returns the identified form of an <c>InsertWithOutputQuery</c> call. Expose identifies every call; a call that
+		/// reached the builder another way gets one identity per call node.
+		/// </summary>
+		internal MethodCallExpression IdentifyDataModificationCall(MethodCallExpression call)
+		{
+			if (LinqExtensions.GetDataModificationIdentity(call) != null)
+				return call;
+
+			_identifiedDataModificationCalls ??= new(Utils.ObjectReferenceEqualityComparer<MethodCallExpression>.Default);
+
+			if (!_identifiedDataModificationCalls.TryGetValue(call, out var identified))
+			{
+				identified = LinqExtensions.IdentifyDataModificationCall(call, new DataModificationIdentity());
+				_identifiedDataModificationCalls.Add(call, identified);
+			}
+
+			return identified;
+		}
+
+		internal void RegisterDataModificationCte(DataModificationIdentity identity, CteContext cteContext)
+		{
+			(_dataModificationCtes ??= new()).Add(identity, cteContext);
+		}
+
+		/// <summary>
+		/// Builds the CTE of every call the query did not translate (an unread output, a pruned member) and puts every
+		/// data-modifying CTE into the WITH clause of the statement: each call runs once, whether or not it is read.
+		/// </summary>
+		void EnsureDataModificationSources(Query query)
+		{
+			if (DataModificationCalls is not { } calls)
+				return;
+
+			foreach (var pair in calls)
+			{
+				if (_dataModificationCtes == null || !_dataModificationCtes.ContainsKey(pair.Key))
+					BuildSequence(new BuildInfo((IBuildContext?)null, pair.Value, new SelectQuery()));
+			}
+
+			if (_dataModificationCtes == null || query.Queries is not [{ Statement: SqlStatementWithQueryBase statement }, ..])
+				return;
+
+			foreach (var cteContext in _dataModificationCtes.Values)
+			{
+				cteContext.InitQuery();
+
+				statement.With ??= new SqlWithClause();
+
+				if (!statement.With.Clauses.Contains(cteContext.CteClause))
+					statement.With.Clauses.Add(cteContext.CteClause);
+			}
+		}
+
+		/// <summary>
+		/// Every call must have exactly one data-modifying source across the statements the query executes, including
+		/// preambles: none would skip the insert and two would run it twice.
+		/// </summary>
+		void CheckDataModificationSources(List<Preamble>? preambles)
+		{
+			if (DataModificationCalls is not { } calls)
 				return;
 
 			_query.HasDataModification = true;
 
-			var rendered = 0;
+			var statements = new HashSet<SqlStatement>(Utils.ObjectReferenceEqualityComparer<SqlStatement>.Default);
 
 			foreach (var queryInfo in _query.Queries)
+				statements.Add(queryInfo.Statement);
+
+			if (preambles != null)
 			{
-				if (queryInfo.Statement is SqlStatementWithQueryBase { With: { } with })
-					rendered += with.Clauses.Count(static c => c.DataModification != null);
+				foreach (var preamble in preambles)
+					statements.UnionWith(preamble.GetStatements());
 			}
 
-			if (rendered < calls.Count)
-				throw new LinqToDBException(ErrorHelper.Error_OutputQuery_NotRead);
+			var counts = new Dictionary<object, int>();
+
+			foreach (var statement in statements)
+			{
+				statement.VisitAll(counts, static (counts, e) =>
+				{
+					if (e is SqlDataModificationTable { Identity: { } identity })
+						counts[identity] = counts.TryGetValue(identity, out var count) ? count + 1 : 1;
+				});
+			}
+
+			foreach (var pair in counts)
+			{
+				if (pair.Value > 1 || pair.Key is not DataModificationIdentity known || !calls.ContainsKey(known))
+					throw new LinqToDBException(ErrorHelper.Error_OutputQuery_Duplicated);
+			}
+
+			foreach (var identity in calls.Keys)
+			{
+				if (!counts.ContainsKey(identity))
+					throw new InvalidOperationException("An InsertWithOutputQuery call was not translated.");
+			}
 		}
 
 		bool BuildQuery<T>(
@@ -365,6 +487,10 @@ namespace LinqToDB.Internal.Linq.Builder
 				query.ErrorExpression = error;
 				return false;
 			}
+
+			// eager-load child, key and union queries re-enter BuildQuery with their own query: only the main one owns the inserts
+			if (ReferenceEquals(query, _query))
+				EnsureDataModificationSources(query);
 
 			using (ActivityService.Start(ActivityID.FinalizeQuery))
 			{

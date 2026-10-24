@@ -26,7 +26,7 @@ namespace LinqToDB.Internal.Linq
 			var method = call.Method;
 
 			if (method.DeclaringType == typeof(LinqExtensions))
-				return method.Name is nameof(LinqExtensions.AsCte) or nameof(LinqExtensions.AsCteInternal);
+				return method.Name is nameof(LinqExtensions.AsCte) or nameof(LinqExtensions.AsCteInternal) or nameof(LinqExtensions.InsertWithOutputQuery);
 
 			if (method.DeclaringType == typeof(DataExtensions))
 				return string.Equals(method.Name, nameof(DataExtensions.GetCte), StringComparison.Ordinal);

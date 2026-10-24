@@ -14,6 +14,11 @@ namespace LinqToDB.Internal.Linq
 		public abstract void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values);
 
 		/// <summary>
+		/// The statements this preamble executes, for checks over every statement a query runs.
+		/// </summary>
+		public abstract IEnumerable<SqlStatement> GetStatements();
+
+		/// <summary>
 		/// When <see langword="true"/>, this preamble does not execute a separate query and should not
 		/// trigger an implicit transaction. Used by CteUnion single-query mode where the
 		/// preamble is a placeholder that resolves data from the main query's result set.

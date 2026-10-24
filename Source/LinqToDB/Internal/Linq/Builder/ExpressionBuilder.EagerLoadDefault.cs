@@ -163,6 +163,11 @@ namespace LinqToDB.Internal.Linq.Builder
 					QueryHelper.CollectParametersAndValues(q.Statement, parameters, values);
 				}
 			}
+
+			public override IEnumerable<SqlStatement> GetStatements()
+			{
+				return query.Queries.Select(q => q.Statement);
+			}
 		}
 
 		sealed class Preamble<TKey, T>(Query<KeyDetailEnvelope<TKey, T>> query) : Preamble
@@ -204,6 +209,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					QueryHelper.CollectParametersAndValues(q.Statement, parameters, values);
 				}
+			}
+
+			public override IEnumerable<SqlStatement> GetStatements()
+			{
+				return query.Queries.Select(q => q.Statement);
 			}
 		}
 	}

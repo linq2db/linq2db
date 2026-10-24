@@ -72,12 +72,13 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 
 			statement = FinalizeInsert(statement);
-			FinalizeDataModificationCtes(statement);
 			statement = FinalizeSelect(statement);
 			statement = FixSetOperationValues(mappingSchema, statement);
 
 			// provider specific query correction
 			statement = FinalizeStatement(statement, evaluationContext, dataOptions, mappingSchema);
+
+			FinalizeDataModificationSources(statement);
 
 			return statement;
 		}
@@ -85,32 +86,35 @@ namespace LinqToDB.Internal.SqlProvider
 		#endregion
 
 		/// <summary>
-		/// Applies statement-level finalization to data-modifying statements nested in CTEs
-		/// (<see cref="CteClause.DataModification"/>), which are not reached by the top-level finalization,
-		/// and sets their output clause to the CTE body columns that remain after column optimization.
+		/// Finalizes the statements of data-modifying table sources (<see cref="SqlDataModificationTable"/>), which the
+		/// statement-level steps above do not reach. Their CTE body must stay a plain projection: it renders as the
+		/// statement returning the body columns.
 		/// </summary>
-		void FinalizeDataModificationCtes(SqlStatement statement)
+		void FinalizeDataModificationSources(SqlStatement statement)
 		{
 			if (statement is not SqlStatementWithQueryBase { With.Clauses: { Count: > 0 } clauses })
 				return;
 
 			foreach (var cte in clauses)
 			{
-				if (cte.DataModification == null)
+				if (cte.Body is not { From.Tables: [{ Source: SqlDataModificationTable table } tableSource] } body)
 					continue;
 
-				var insertStatement = (SqlInsertStatement)FinalizeInsert(cte.DataModification);
+				if (tableSource.Joins.Count > 0
+					|| !body.Where.IsEmpty
+					|| !body.GroupBy.IsEmpty
+					|| !body.Having.IsEmpty
+					|| !body.OrderBy.IsEmpty
+					|| body.Select.IsDistinct
+					|| body.HasSetOperators
+					|| body.Select.TakeValue != null
+					|| body.Select.SkipValue != null)
+				{
+					throw new LinqToDBException(ErrorHelper.Error_OutputQuery_Projection);
+				}
 
-				// CTE body columns are the output expressions over the Inserted anchor: they become the RETURNING/OUTPUT list.
-				// Column optimization keeps at least one body column, so the output clause is never empty.
-				insertStatement.Output          = new SqlOutputClause { OutputColumns = cte.Body!.Select.Columns.Select(static c => c.Expression).ToList() };
-				insertStatement.ParentStatement = statement;
-
-				// TransformStatement corrects output tables of the top-level statement only:
-				// without a special output table (PostgreSQL < 18) the Inserted anchors become target table fields.
-				CorrectOutputTables(insertStatement);
-
-				cte.DataModification = insertStatement;
+				table.Statement                 = (SqlStatementWithQueryBase)FinalizeInsert(table.Statement);
+				table.Statement.ParentStatement = statement;
 			}
 		}
 
@@ -701,11 +705,18 @@ namespace LinqToDB.Internal.SqlProvider
 			{
 			}
 
-			public IDictionary<CteClause, CteDependencyHolder>? FindCtes(SqlStatement statement)
+			public IDictionary<CteClause, CteDependencyHolder>? FindCtes(SqlStatement statement, List<CteClause>? requiredCtes)
 			{
 				_foundCtes       = null;
 				_currentCteStack = null;
 				Visit(statement);
+
+				if (requiredCtes != null)
+				{
+					foreach (var cte in requiredCtes)
+						VisitCteDefinition(cte);
+				}
+
 				return _foundCtes;
 			}
 
@@ -724,8 +735,13 @@ namespace LinqToDB.Internal.SqlProvider
 
 			protected internal override IQueryElement VisitSqlCteTable(SqlCteTable element)
 			{
-				var cteClause = element.Cte;
+				VisitCteDefinition(element.Cte);
 
+				return element;
+			}
+
+			void VisitCteDefinition(CteClause? cteClause)
+			{
 				CteDependencyHolder? holder    = null;
 
 				if (cteClause != null)
@@ -746,20 +762,22 @@ namespace LinqToDB.Internal.SqlProvider
 					{
 						// recursion found
 						if (!h.AddDependency(holder.CteClause))
-							return element;
+							return;
 					}
 
 					_currentCteStack.Push(holder);
 				}
 
-				Visit(cteClause?.DataModification);
 				Visit(cteClause?.Body);
 
 				if (holder != null)
 					_currentCteStack.Pop();
-
-				return element;
 			}
+		}
+
+		static bool IsDataModificationCte(CteClause cte)
+		{
+			return cte.Body?.From.Tables is [{ Source: SqlDataModificationTable }];
 		}
 
 		protected void FinalizeCte(SqlStatement statement)
@@ -769,9 +787,12 @@ namespace LinqToDB.Internal.SqlProvider
 
 			IDictionary<CteClause, CteCollectorVisitor.CteDependencyHolder>? foundCtes;
 
+			// A data-modifying CTE runs whether or not it is referenced, so it is kept with its dependencies.
+			var requiredCtes = select.With?.Clauses.Where(IsDataModificationCte).ToList();
+
 			using (var cteCollector = _cteCollectorVisitorPool.Allocate())
 			{
-				foundCtes = cteCollector.Value.FindCtes(statement);
+				foundCtes = cteCollector.Value.FindCtes(statement, requiredCtes);
 			}
 
 			if (foundCtes == null)
@@ -781,9 +802,6 @@ namespace LinqToDB.Internal.SqlProvider
 			else
 			{
 				// TODO: Ideally if there is no recursive CTEs we can convert them to SubQueries
-				if (!SqlProviderFlags.IsInsertOutputQuerySupported && foundCtes.Keys.Any(static c => c.DataModification != null))
-					throw new LinqToDBException(ErrorHelper.Error_OutputQuery_NotSupported);
-
 				if (!SqlProviderFlags.IsCommonTableExpressionsSupported)
 					throw new LinqToDBException("DataProvider do not supports Common Table Expressions.");
 

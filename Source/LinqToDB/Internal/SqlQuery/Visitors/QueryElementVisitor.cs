@@ -172,7 +172,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				case VisitMode.ReadOnly:
 				{
-					Visit(element.DataModification);
 					Visit(element.Body);
 					// TODO: currently needed for linq serializer and should be removed after serializer refactoring
 					VisitElements(element.Fields, VisitMode.ReadOnly);
@@ -181,28 +180,23 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				case VisitMode.Modify:
 				{
-					element.DataModification = (SqlInsertStatement?)Visit(element.DataModification);
-					element.Body             = (SelectQuery?)Visit(element.Body);
+					element.Body = (SelectQuery?)Visit(element.Body);
 					break;
 				}
 
 				case VisitMode.Transform:
 				{
-					var dataModification = (SqlInsertStatement?)Visit(element.DataModification);
-					var body             = (SelectQuery?)Visit(element.Body);
-					var newFields        = VisitElements(element.Fields, VisitMode.Transform);
+					var body      = (SelectQuery?)Visit(element.Body);
+					var newFields = VisitElements(element.Fields, VisitMode.Transform);
 
-					if (ShouldReplace(element) || !ReferenceEquals(element.Body, body) || !ReferenceEquals(element.Fields, newFields) || !ReferenceEquals(element.DataModification, dataModification))
+					if (ShouldReplace(element) || !ReferenceEquals(element.Body, body) || !ReferenceEquals(element.Fields, newFields))
 					{
 						var newCte = new CteClause(
 							body,
 							newFields,
 							element.ObjectType,
 							element.IsRecursive,
-							element.Name)
-						{
-							DataModification = dataModification,
-						};
+							element.Name);
 
 						foreach (var ann in element.Annotations.GetAnnotations())
 							newCte.Annotations.SetAnnotation(ann.Name, ann.Value);
@@ -1556,6 +1550,66 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 
 			return element;
+		}
+
+		protected internal virtual IQueryElement VisitSqlDataModificationTable(SqlDataModificationTable element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					VisitNestedStatement(element.Statement);
+					VisitElements(element.SqlQueryExtensions, VisitMode.ReadOnly);
+
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					element.Statement = (SqlStatementWithQueryBase)VisitNestedStatement(element.Statement);
+					VisitElements(element.SqlQueryExtensions, VisitMode.Modify);
+
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var statement = (SqlStatementWithQueryBase)VisitNestedStatement(element.Statement);
+					var ext       = VisitElements(element.SqlQueryExtensions, VisitMode.Transform);
+
+					if (ShouldReplace(element)                         ||
+					    !ReferenceEquals(element.Statement, statement) ||
+					    element.SqlQueryExtensions != ext)
+					{
+						var newTable = new SqlDataModificationTable(element, statement)
+						{
+							SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList(),
+						};
+
+						NotifyReplaced(newTable.All, element.All);
+
+						for (var index = 0; index < newTable.Fields.Count; index++)
+						{
+							NotifyReplaced(newTable.Fields[index], element.Fields[index]);
+						}
+
+						return NotifyReplaced(newTable, element);
+					}
+
+					break;
+				}
+				default:
+					return ThrowInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
+		/// <summary>
+		/// Visits a statement nested inside another statement's tree (<see cref="SqlDataModificationTable.Statement"/>).
+		/// A visitor that keeps per-query context overrides it to visit the statement as an isolated root.
+		/// </summary>
+		protected virtual IQueryElement VisitNestedStatement(SqlStatement statement)
+		{
+			return Visit(statement)!;
 		}
 
 		protected internal virtual IQueryElement VisitSqlCteTable(SqlCteTable element)

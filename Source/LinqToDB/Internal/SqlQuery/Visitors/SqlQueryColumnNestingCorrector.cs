@@ -329,6 +329,19 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return newQuery;
 		}
 
+		protected override IQueryElement VisitNestedStatement(SqlStatement statement)
+		{
+			// A nested statement is corrected as a root: its queries are not subqueries of the query that reads its table.
+			var saveQueryNesting = _parentQueryNesting;
+			_parentQueryNesting = null;
+
+			var newElement = base.VisitNestedStatement(statement);
+
+			_parentQueryNesting = saveQueryNesting;
+
+			return newElement;
+		}
+
 		protected internal override IQueryElement VisitSqlTableSource(SqlTableSource element)
 		{
 			_ = new QueryNesting(_parentQueryNesting, element.Source);

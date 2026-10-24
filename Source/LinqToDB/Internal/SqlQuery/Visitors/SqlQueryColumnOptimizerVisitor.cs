@@ -69,15 +69,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		protected internal override IQueryElement VisitCteClause(CteClause element)
 		{
 			var prevInExpression = _inExpression;
-
-			if (element.DataModification != null)
-			{
-				// The data-modifying statement is visited as a statement root: INSERT ... SELECT maps select columns
-				// to target columns by position, so none of them may be removed (e.g. a sequence identity column).
-				_inExpression = true;
-				element.DataModification = (SqlInsertStatement)Visit(element.DataModification);
-			}
-
 			_inExpression = false;
 
 			List<SqlColumn>? originalColumns = null;
@@ -96,6 +87,20 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				SynchronizeCteFields(result, originalColumns, result.Body.Select.Columns);
 			}
+
+			_inExpression = prevInExpression;
+
+			return result;
+		}
+
+		protected override IQueryElement VisitNestedStatement(SqlStatement statement)
+		{
+			// Visited as a statement root: INSERT ... SELECT maps select columns to target columns by position,
+			// so none of them may be removed.
+			var prevInExpression = _inExpression;
+			_inExpression = true;
+
+			var result = base.VisitNestedStatement(statement);
 
 			_inExpression = prevInExpression;
 

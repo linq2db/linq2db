@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 using LinqToDB;
 using LinqToDB.Internal.Common;
@@ -17,7 +18,8 @@ namespace LinqToDB.Internal.Linq.Builder
 		nameof(LinqExtensions.InsertWithIdentity), 
 		nameof(LinqExtensions.InsertWithOutput), 
 		nameof(LinqExtensions.InsertWithOutputInto),
-		nameof(LinqExtensions.InsertWithOutputQuery))]
+		nameof(LinqExtensions.InsertWithOutputQuery),
+		nameof(LinqExtensions.DataModificationSource))]
 	sealed class InsertBuilder : MethodCallBuilder
 	{
 		#region InsertBuilder
@@ -53,6 +55,13 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
+			// Registered before the source is built, so that it is built once: for the CTE body, not for the reference.
+			if (string.Equals(methodCall.Method.Name, nameof(LinqExtensions.InsertWithOutputQuery), StringComparison.Ordinal))
+				return BuildDataModificationReference(builder, methodCall, buildInfo);
+
+			if (string.Equals(methodCall.Method.Name, nameof(LinqExtensions.DataModificationSource), StringComparison.Ordinal))
+				methodCall = (MethodCallExpression)methodCall.Arguments[0];
+
 			var shouldDisableFilters = typeof(ITable<>).IsSameOrParentOf(methodCall.Method.GetParameters()[0].ParameterType);
 			var buildResult          = TryBuildSequenceWithFilter(builder, new BuildInfo(buildInfo, methodCall.Arguments[0]), shouldDisableFilters);
 
@@ -195,14 +204,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						insertContext.SetExpressions);
 				}
 
-				if (insertType is InsertContext.InsertTypeEnum.InsertOutputQuery)
-				{
-					// Output rows are consumed as a query source (data-modifying CTE): the output clause is set by the optimizer
-					// from the CTE body columns that remain (see CteClause.DataModification).
-					// The output is the whole inserted record: consumers project it with Select.
-					outputExpression = BuildDefaultOutputExpression(genericArguments[^1]);
-				}
-				else if (insertType is InsertContext.InsertTypeEnum.InsertOutput or InsertContext.InsertTypeEnum.InsertOutputInto)
+				if (insertType is InsertContext.InsertTypeEnum.InsertOutput or InsertContext.InsertTypeEnum.InsertOutputInto)
 				{
 					outputExpression =
 						methodCall.GetArgumentByName("outputExpression")?.UnwrapLambda()
@@ -263,16 +265,47 @@ namespace LinqToDB.Internal.Linq.Builder
 				var insertedTable = (insertContext.Into == null ? null : SequenceHelper.GetTableContext(insertContext.Into)?.SqlTable)
 					?? throw new InvalidOperationException("Cannot find target table for INSERT statement");
 
-				// Inserted rows, as for InsertWithOutput: output expressions are target table fields under the Inserted anchor.
-				// They become the CTE body columns; the optimizer copies the remaining ones into the RETURNING/OUTPUT list.
-				var outputTableContext = new TableBuilder.TableContext(builder.GetTranslationModifier(), builder, sequence.MappingSchema, new SelectQuery(), insertedTable, false);
-				var outputAnchor       = new AnchorContext(buildInfo.Parent, outputTableContext, SqlAnchor.AnchorKindEnum.Inserted);
-				var outputContext      = new SelectContext(buildInfo.Parent, outputExpression!, false, outputAnchor);
+				// The output rows of the insert, built as the body of the CTE that DataModificationReference registered.
+				// The inheritance predicate is a read filter: the output is exactly the inserted rows.
+				var table        = new SqlDataModificationTable(insertedTable, insertStatement, LinqExtensions.GetDataModificationIdentity(methodCall));
+				var tableContext = new TableBuilder.TableContext(builder.GetTranslationModifier(), builder, sequence.MappingSchema, new SelectQuery(), table, false, applyInheritanceFilter: false);
 
-				return BuildSequenceResult.FromContext(new DataModificationOutputContext(outputContext, insertStatement));
+				return BuildSequenceResult.FromContext(tableContext);
 			}
 
 			return BuildSequenceResult.FromContext(insertContext);
+		}
+
+		static readonly MethodInfo _dataModificationSourceMethod =
+			typeof(LinqExtensions).GetMethod(nameof(LinqExtensions.DataModificationSource), BindingFlags.Static | BindingFlags.NonPublic)!;
+
+		/// <summary>
+		/// A reference to the output of an <c>InsertWithOutputQuery</c> call: an ordinary CTE, registered once per call
+		/// identity, whose body is built from <c>DataModificationSource(call)</c>.
+		/// </summary>
+		static BuildSequenceResult BuildDataModificationReference(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		{
+			if (!builder.DataContext.SqlProviderFlags.IsInsertOutputQuerySupported)
+				throw new LinqToDBException(ErrorHelper.Error_OutputQuery_NotSupported);
+
+			var call        = builder.IdentifyDataModificationCall(methodCall);
+			var elementType = call.Method.GetGenericArguments()[^1];
+			var cteContext  = builder.FindRegisteredCteContext(call);
+
+			if (cteContext == null)
+			{
+				var cteClause = new CteClause(null, elementType, true, null);
+
+				cteContext = new CteContext(builder.GetTranslationModifier(), builder, null, cteClause, null!)
+				{
+					CteExpression = Expression.Call(_dataModificationSourceMethod.MakeGenericMethod(elementType), call),
+				};
+
+				builder.RegisterCteContext(cteContext, call);
+				builder.RegisterDataModificationCte(LinqExtensions.GetDataModificationIdentity(call)!, cteContext);
+			}
+
+			return BuildSequenceResult.FromContext(new CteTableContext(cteContext.TranslationModifier, builder, buildInfo.Parent, elementType, buildInfo.SelectQuery, cteContext));
 		}
 
 		#endregion
@@ -438,36 +471,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			public override IBuildContext Clone(CloningContext context)
 			{
 				return new InsertContext(context.CloneContext(QuerySequence), InsertType, context.CloneElement(InsertStatement), context.CloneExpression(OutputExpression));
-			}
-		}
-
-		#endregion
-
-		#region DataModificationOutputContext
-
-		/// <summary>
-		/// Output rows of an INSERT statement used as a query source.
-		/// Built only as a CTE body (see <see cref="LinqExtensions.InsertWithOutputQuery{TTarget}(ITable{TTarget}, Expression{Func{TTarget}})"/>);
-		/// <see cref="CteContext"/> attaches <see cref="Statement"/> to <see cref="CteClause.DataModification"/>.
-		/// </summary>
-		internal sealed class DataModificationOutputContext : PassThroughContext
-		{
-			public DataModificationOutputContext(IBuildContext outputContext, SqlInsertStatement statement)
-				: base(outputContext)
-			{
-				Statement = statement;
-			}
-
-			public SqlInsertStatement Statement { get; }
-
-			public override void SetRunQuery<T>(Query<T> query, Expression expr)
-			{
-				throw new InvalidOperationException("Output of a data-modifying statement can be executed only as a CTE source.");
-			}
-
-			public override IBuildContext Clone(CloningContext context)
-			{
-				return new DataModificationOutputContext(context.CloneContext(Context), context.CloneElement(Statement));
 			}
 		}
 

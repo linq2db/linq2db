@@ -79,13 +79,6 @@ namespace LinqToDB.Internal.SqlQuery
 
 						using (writer.IndentScope())
 						{
-							if (cte.DataModification != null)
-							{
-								writer.AppendElement(cte.DataModification);
-								writer.AppendLine();
-								writer.AppendLine("-- output projection:");
-							}
-
 							writer.AppendElement(cte.Body!);
 						}
 

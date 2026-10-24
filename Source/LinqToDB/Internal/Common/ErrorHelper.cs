@@ -28,7 +28,6 @@
 		public const string Error_LinqToDBQueryExpected            = "Linq To DB query expected";
 		public const string Error_EnumerationNotStarted            = "Enumeration not started.";
 		public const string Error_OutputQuery_EagerLoad            = "Eager loading over the output of InsertWithOutputQuery requires child records to be matched to the output by simple key comparisons, and child queries cannot read the output themselves. Materialize the output first (e.g. ToList()) and load the children from it.";
-		public const string Error_OutputQuery_NotRead              = "The output of InsertWithOutputQuery is not read by the query, so the insert would not be executed. Read the output in the query, or execute the insert separately.";
 		public const string Error_OutputQuery_NotSupported         = "Provider does not support using the output of a data-modifying statement (INSERT ... RETURNING/OUTPUT) as a query source. Execute the statement with InsertWithOutput and compose the returned records on the client instead.";
 		public const string Error_OutputQuery_Projection           = "The output of InsertWithOutputQuery was shaped beyond a plain projection inside the data-modifying statement (a join, filter, grouping or ordering), which the database cannot express. This is an internal error, please report it.";
 		public const string Error_OutputQuery_Correlated           = "InsertWithOutputQuery cannot depend on the rows of the enclosing query: the insert runs once per statement, not once per row. Build the insert from a source query instead.";

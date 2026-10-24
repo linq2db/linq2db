@@ -14,5 +14,9 @@ namespace LinqToDB.Internal.SqlQuery
 		RawSql,
 		MergeSource,
 		Values,
+		/// <summary>
+		/// Rows returned by a data-modifying statement (<c>INSERT ... RETURNING/OUTPUT</c>), see <see cref="SqlDataModificationTable"/>.
+		/// </summary>
+		DataModification,
 	}
 }
