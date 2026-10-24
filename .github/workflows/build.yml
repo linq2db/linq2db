@@ -169,7 +169,7 @@ jobs:
             9.x
             10.x
 
-      - run: dotnet build Examples/Examples.slnx --configuration Debug
+      - run: dotnet build Examples/Examples.slnx --configuration ${{ env.RELEASE_CONFIGURATION }}
 
   # Roslyn analyzer/code-fix unit tests, both the shipped (L2DB1xxx) and the repo-internal (LINQ2DB0xxx) sets.
   # DB-free and single-TFM, so Linux is fine. Two projects because they host different Roslyn versions: the
