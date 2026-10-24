@@ -3155,12 +3155,16 @@ namespace Tests.Linq
 
 		static IQueryable<Child> ChildrenAbove(IDataContext db, int id)
 		{
-			return db.GetTable<Child>().Where(c => c.ChildID > id).AsCte();
+			return db.GetTable<Child>()
+				.Where(c => c.ChildID > id)
+				.AsCte();
 		}
 
 		static IQueryable<Child> ChildrenFrom(IDataContext db, int id)
 		{
-			return db.GetTable<Child>().Where(c => c.ChildID >= id).AsCte();
+			return db.GetTable<Child>()
+				.Where(c => c.ChildID >= id)
+				.AsCte();
 		}
 
 		// The two queries of each cache test below have the same shape, so the second one meets the first one's cache
@@ -3213,16 +3217,24 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			var cte = db.GetTable<Child>().Where(c => c.ParentID > 2).AsCte();
+			var cte = db.GetTable<Child>()
+				.Where(c => c.ParentID > 2)
+				.AsCte();
 
 			var shared = cte
 				.Select(c => c.ParentID)
 				.Concat(cte.Select(c => c.ParentID))
 				.Count();
 
-			var distinct = db.GetTable<Child>().Where(c => c.ParentID > 2).AsCte()
+			var distinct = db.GetTable<Child>()
+				.Where(c => c.ParentID > 2)
+				.AsCte()
 				.Select(c => c.ParentID)
-				.Concat(db.GetTable<Child>().Where(c => c.ParentID > 4).AsCte().Select(c => c.ParentID))
+				.Concat(
+					db.GetTable<Child>()
+						.Where(c => c.ParentID > 4)
+						.AsCte()
+						.Select(c => c.ParentID))
 				.Count();
 
 			shared.ShouldBe(Child.Count(c => c.ParentID > 2) * 2);
@@ -3234,12 +3246,20 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			var distinct = db.GetTable<Child>().Where(c => c.ParentID >= 2).AsCte()
+			var distinct = db.GetTable<Child>()
+				.Where(c => c.ParentID >= 2)
+				.AsCte()
 				.Select(c => c.ParentID)
-				.Concat(db.GetTable<Child>().Where(c => c.ParentID >= 4).AsCte().Select(c => c.ParentID))
+				.Concat(
+					db.GetTable<Child>()
+						.Where(c => c.ParentID >= 4)
+						.AsCte()
+						.Select(c => c.ParentID))
 				.Count();
 
-			var cte = db.GetTable<Child>().Where(c => c.ParentID >= 2).AsCte();
+			var cte = db.GetTable<Child>()
+				.Where(c => c.ParentID >= 2)
+				.AsCte();
 
 			var shared = cte
 				.Select(c => c.ParentID)
@@ -3255,14 +3275,26 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			var merged = db.GetTable<Child>().Where(c => c.ChildID < 40).AsCte()
+			var merged = db.GetTable<Child>()
+				.Where(c => c.ChildID < 40)
+				.AsCte()
 				.Select(c => c.ChildID)
-				.Concat(db.GetTable<Child>().Where(c => c.ChildID < 40).AsCte().Select(c => c.ChildID))
+				.Concat(
+					db.GetTable<Child>()
+						.Where(c => c.ChildID < 40)
+						.AsCte()
+						.Select(c => c.ChildID))
 				.Count();
 
-			var distinct = db.GetTable<Child>().Where(c => c.ChildID < 40).AsCte()
+			var distinct = db.GetTable<Child>()
+				.Where(c => c.ChildID < 40)
+				.AsCte()
 				.Select(c => c.ChildID)
-				.Concat(db.GetTable<Child>().Where(c => c.ChildID < 30).AsCte().Select(c => c.ChildID))
+				.Concat(
+					db.GetTable<Child>()
+						.Where(c => c.ChildID < 30)
+						.AsCte()
+						.Select(c => c.ChildID))
 				.Count();
 
 			merged.ShouldBe(Child.Count(c => c.ChildID < 40) * 2);
@@ -3274,14 +3306,26 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			var distinct = db.GetTable<Child>().Where(c => c.ChildID <= 40).AsCte()
+			var distinct = db.GetTable<Child>()
+				.Where(c => c.ChildID <= 40)
+				.AsCte()
 				.Select(c => c.ChildID)
-				.Concat(db.GetTable<Child>().Where(c => c.ChildID <= 30).AsCte().Select(c => c.ChildID))
+				.Concat(
+					db.GetTable<Child>()
+						.Where(c => c.ChildID <= 30)
+						.AsCte()
+						.Select(c => c.ChildID))
 				.Count();
 
-			var merged = db.GetTable<Child>().Where(c => c.ChildID <= 40).AsCte()
+			var merged = db.GetTable<Child>()
+				.Where(c => c.ChildID <= 40)
+				.AsCte()
 				.Select(c => c.ChildID)
-				.Concat(db.GetTable<Child>().Where(c => c.ChildID <= 40).AsCte().Select(c => c.ChildID))
+				.Concat(
+					db.GetTable<Child>()
+						.Where(c => c.ChildID <= 40)
+						.AsCte()
+						.Select(c => c.ChildID))
 				.Count();
 
 			distinct.ShouldBe(Child.Count(c => c.ChildID <= 40) + Child.Count(c => c.ChildID <= 30));

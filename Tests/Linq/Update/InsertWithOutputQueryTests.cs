@@ -153,12 +153,24 @@ namespace Tests.xUpdate
 				.OrderBy(t => t.Id)
 				.ToArray();
 
+			var expectedIds = Enumerable
+				.Range(4, 7)
+				.Select(i => i + param)
+				.ToArray();
+
 			output.Length.ShouldBe(7);
-			output.Select(o => o.Id).ShouldBe(Enumerable.Range(4, 7).Select(i => i + param));
+			output
+				.Select(o => o.Id)
+				.ShouldBe(expectedIds);
 			output[0].Value.ShouldBe(-4 + param);
 			output[0].ValueStr.ShouldBe("Str4_new");
 
-			target.OrderBy(t => t.Id).Select(t => t.Id).ToArray().ShouldBe(output.Select(o => o.Id));
+			var targetIds = target
+				.OrderBy(t => t.Id)
+				.Select(t => t.Id)
+				.ToArray();
+
+			targetIds.ShouldBe(expectedIds);
 		}
 
 		[Test]
@@ -173,10 +185,14 @@ namespace Tests.xUpdate
 				.Select(t => new { t.Id, Doubled = t.Value * 2 });
 
 			// filter and aggregate apply to the output rows; the insert itself is not filtered
-			var count = inserted.Where(o => o.Doubled > 10).Count();
+			var count = inserted
+				.Where(o => o.Doubled > 10)
+				.Count();
 
 			count.ShouldBe(5);
-			target.Count().ShouldBe(10);
+			target
+				.Count()
+				.ShouldBe(10);
 		}
 
 		[Test]
@@ -213,9 +229,19 @@ namespace Tests.xUpdate
 
 			affected.ShouldBe(4);
 
-			target.OrderBy(t => t.Id).Select(t => t.Id).ToArray().ShouldBe(new[] { 11, 12, 13, 14 });
+			var targetIds = target
+				.OrderBy(t => t.Id)
+				.Select(t => t.Id)
+				.ToArray();
 
-			audit.OrderBy(a => a.TargetId).Select(a => a.TargetId).ToArray().ShouldBe(new[] { 11, 12, 13, 14 });
+			targetIds.ShouldBe(new[] { 11, 12, 13, 14 });
+
+			var auditIds = audit
+				.OrderBy(a => a.TargetId)
+				.Select(a => a.TargetId)
+				.ToArray();
+
+			auditIds.ShouldBe(new[] { 11, 12, 13, 14 });
 			audit.Single(a => a.TargetId == 11).Text.ShouldBe("inserted Str1");
 		}
 
@@ -239,13 +265,12 @@ namespace Tests.xUpdate
 				.Select(e => new { e.Id, e.PersistenceId, e.SequenceNumber });
 
 			// join generated identity values back to the input rows by domain key and insert dependent rows
-			var affected = insertedEvents
-				.Join(
-					inputCte,
-					e => new { e.PersistenceId, e.SequenceNumber },
-					i => new { i.PersistenceId, i.SequenceNumber },
-					(e, i) => new { EventId = e.Id, i.Tag })
-				.Insert(tags, x => new EventTag { EventId = x.EventId, Tag = x.Tag });
+			var joined =
+				from e in insertedEvents
+				join i in inputCte on new { e.PersistenceId, e.SequenceNumber } equals new { i.PersistenceId, i.SequenceNumber }
+				select new { EventId = e.Id, i.Tag };
+
+			var affected = joined.Insert(tags, x => new EventTag { EventId = x.EventId, Tag = x.Tag });
 
 			affected.ShouldBe(3);
 
@@ -275,10 +300,15 @@ namespace Tests.xUpdate
 				.Where(s => s.Id <= 3)
 				.InsertWithOutputQuery(target, s => new TargetTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr });
 
-			var count = inserted.Select(t => t.Id).Concat(inserted.Select(t => t.Id)).Count();
+			var count = inserted
+				.Select(t => t.Id)
+				.Concat(inserted.Select(t => t.Id))
+				.Count();
 
 			count.ShouldBe(6);
-			target.Count().ShouldBe(3);
+			target
+				.Count()
+				.ShouldBe(3);
 		}
 
 		[Test]
@@ -342,8 +372,14 @@ namespace Tests.xUpdate
 				.ToArray();
 
 			output.Length.ShouldBe(3);
-			output.Select(o => o.Id).Distinct().Count().ShouldBe(3);
-			target.Count().ShouldBe(3);
+			output
+				.Select(o => o.Id)
+				.Distinct()
+				.Count()
+				.ShouldBe(3);
+			target
+				.Count()
+				.ShouldBe(3);
 		}
 
 		[Test]
@@ -354,8 +390,12 @@ namespace Tests.xUpdate
 			var provider = PostgreSQLTools.GetDataProvider(PostgreSQLVersion.v15);
 			var cs       = DataConnection.GetConnectionString(context);
 
-			using var cn     = new NpgsqlConnection(cs);
-			using var db     = new DataConnection(new DataOptions().UseConnection(provider, cn));
+			using var cn = new NpgsqlConnection(cs);
+
+			var options = new DataOptions()
+				.UseConnection(provider, cn);
+
+			using var db     = new DataConnection(options);
 			using var source = db.CreateLocalTable(GetSourceData());
 			using var target = db.CreateLocalTable<TargetTable>();
 
@@ -367,8 +407,12 @@ namespace Tests.xUpdate
 
 			query.ToSqlQuery().Sql.ShouldNotContain("NEW.");
 
-			query.ToArray().ShouldBe(new[] { 1, 2, 3 });
-			target.Count().ShouldBe(3);
+			query
+				.ToArray()
+				.ShouldBe(new[] { 1, 2, 3 });
+			target
+				.Count()
+				.ShouldBe(3);
 		}
 
 		[Test]
@@ -392,11 +436,16 @@ namespace Tests.xUpdate
 				.Select(e => new
 				{
 					e.Id,
-					Children = lookup.Where(s => s.Id == e.Id).Select(s => s.Id).ToList(),
+					Children = lookup
+						.Where(s => s.Id == e.Id)
+						.Select(s => s.Id)
+						.ToList(),
 				})
 				.ToArray();
 
-			events.Count().ShouldBe(3);
+			events
+				.Count()
+				.ShouldBe(3);
 			result.Length.ShouldBe(3);
 			result.ShouldAllBe(r => r.Children.Count == 1 && r.Children[0] == r.Id);
 		}
@@ -421,12 +470,17 @@ namespace Tests.xUpdate
 				.Select(e => new
 				{
 					e.Id,
-					Children = lookup.Where(s => s.Id == e.Id).Select(s => s.Id).ToList(),
+					Children = lookup
+						.Where(s => s.Id == e.Id)
+						.Select(s => s.Id)
+						.ToList(),
 				})
 				.WithUnionLoadStrategy()
 				.ToArray();
 
-			events.Count().ShouldBe(3);
+			events
+				.Count()
+				.ShouldBe(3);
 			result.Length.ShouldBe(3);
 			result.ShouldAllBe(r => r.Children.Count == 1 && r.Children[0] == r.Id);
 		}
@@ -446,7 +500,9 @@ namespace Tests.xUpdate
 				.Select(t => new
 				{
 					t.Id,
-					Children = lookup.Select(s => s.Id + t.Id).ToList(),
+					Children = lookup
+						.Select(s => s.Id + t.Id)
+						.ToList(),
 				});
 
 			Action act = () => query.ToArray();
@@ -454,7 +510,9 @@ namespace Tests.xUpdate
 			var ex = act.ShouldThrow<LinqToDBException>();
 			ex.Message.ShouldBe(LinqToDB.Internal.Common.ErrorHelper.Error_OutputQuery_EagerLoad);
 
-			target.Count().ShouldBe(0);
+			target
+				.Count()
+				.ShouldBe(0);
 		}
 
 		[Test]
@@ -478,7 +536,9 @@ namespace Tests.xUpdate
 			result.Length.ShouldBe(1);
 			result[0].C.ShouldBe(flag ? 3 : 0);
 
-			target.Count().ShouldBe(flag ? 3 : 0);
+			target
+				.Count()
+				.ShouldBe(flag ? 3 : 0);
 		}
 
 		[Test]
@@ -497,7 +557,10 @@ namespace Tests.xUpdate
 				.Select(p => new
 				{
 					p.Id,
-					Same = inserted.Where(c => c.Value == p.Value).Select(c => c.Id).ToList(),
+					Same = inserted
+						.Where(c => c.Value == p.Value)
+						.Select(c => c.Id)
+						.ToList(),
 				});
 
 			Action act = () => query.ToArray();
@@ -505,7 +568,9 @@ namespace Tests.xUpdate
 			var ex = act.ShouldThrow<LinqToDBException>();
 			ex.Message.ShouldBe(LinqToDB.Internal.Common.ErrorHelper.Error_OutputQuery_EagerLoad);
 
-			target.Count().ShouldBe(0);
+			target
+				.Count()
+				.ShouldBe(0);
 		}
 
 		[Test]
@@ -524,7 +589,10 @@ namespace Tests.xUpdate
 				.Select(s => new
 				{
 					s.Id,
-					Children = inserted.Where(i => i.Id == s.Id).Select(i => i.Id).ToList(),
+					Children = inserted
+						.Where(i => i.Id == s.Id)
+						.Select(i => i.Id)
+						.ToList(),
 				});
 
 			Action act = () => query.ToArray();
@@ -532,7 +600,9 @@ namespace Tests.xUpdate
 			var ex = act.ShouldThrow<LinqToDBException>();
 			ex.Message.ShouldBe(LinqToDB.Internal.Common.ErrorHelper.Error_OutputQuery_EagerLoad);
 
-			target.Count().ShouldBe(0);
+			target
+				.Count()
+				.ShouldBe(0);
 		}
 
 		[Test]
@@ -554,7 +624,9 @@ namespace Tests.xUpdate
 				.ToArray();
 
 			ids.ShouldBe(new[] { 1, 2, 3 });
-			target.Count().ShouldBe(3);
+			target
+				.Count()
+				.ShouldBe(3);
 		}
 
 		[Test]
@@ -575,8 +647,12 @@ namespace Tests.xUpdate
 				.Update();
 
 			affected.ShouldBe(3);
-			target.Count().ShouldBe(3);
-			source.Count(s => s.ValueStr == "copied").ShouldBe(3);
+			target
+				.Count()
+				.ShouldBe(3);
+			source
+				.Count(s => s.ValueStr == "copied")
+				.ShouldBe(3);
 		}
 
 		[Test]
@@ -598,7 +674,9 @@ namespace Tests.xUpdate
 				.ToArray();
 
 			ids.ShouldBe(Enumerable.Range(1, 10));
-			target.Count().ShouldBe(3);
+			target
+				.Count()
+				.ShouldBe(3);
 		}
 
 		[Test]
@@ -614,7 +692,9 @@ namespace Tests.xUpdate
 				.Count();
 
 			count.ShouldBe(3);
-			target.Count().ShouldBe(3);
+			target
+				.Count()
+				.ShouldBe(3);
 		}
 
 		[Test]
@@ -632,15 +712,21 @@ namespace Tests.xUpdate
 				.ToArray();
 
 			onceValues.ShouldBe(new[] { 11, 11 });
-			target.Count().ShouldBe(1);
+			target
+				.Count()
+				.ShouldBe(1);
 
 			var twiceValues = InsertValue(target, 12)
 				.Select(t => t.Value)
 				.Concat(InsertValue(target, 13).Select(t => t.Value))
 				.ToArray();
 
-			twiceValues.OrderBy(v => v).ShouldBe(new[] { 12, 13 });
-			target.Count().ShouldBe(3);
+			twiceValues
+				.OrderBy(v => v)
+				.ShouldBe(new[] { 12, 13 });
+			target
+				.Count()
+				.ShouldBe(3);
 		}
 
 		[Test]
@@ -655,8 +741,13 @@ namespace Tests.xUpdate
 				.Concat(InsertValue(target, 23).Select(t => new { t.Value }))
 				.ToArray();
 
-			twiceValues.Select(v => v.Value).OrderBy(v => v).ShouldBe(new[] { 22, 23 });
-			target.Count().ShouldBe(2);
+			twiceValues
+				.Select(v => v.Value)
+				.OrderBy(v => v)
+				.ShouldBe(new[] { 22, 23 });
+			target
+				.Count()
+				.ShouldBe(2);
 
 			var once = InsertValue(target, 21);
 
@@ -665,8 +756,12 @@ namespace Tests.xUpdate
 				.Concat(once.Select(t => new { t.Value }))
 				.ToArray();
 
-			onceValues.Select(v => v.Value).ShouldBe(new[] { 21, 21 });
-			target.Count().ShouldBe(3);
+			onceValues
+				.Select(v => v.Value)
+				.ShouldBe(new[] { 21, 21 });
+			target
+				.Count()
+				.ShouldBe(3);
 		}
 
 		[Test]
@@ -684,8 +779,13 @@ namespace Tests.xUpdate
 				.Concat(second.Select(t => t.Id))
 				.ToArray();
 
-			ids.Distinct().Count().ShouldBe(2);
-			target.Count().ShouldBe(2);
+			ids
+				.Distinct()
+				.Count()
+				.ShouldBe(2);
+			target
+				.Count()
+				.ShouldBe(2);
 		}
 
 		[Test]
@@ -698,13 +798,18 @@ namespace Tests.xUpdate
 				.Select(t => new { t.Value })
 				.ToArray();
 
-			var query = InsertValue(target, 2).Select(t => new { t.Value });
+			var query = InsertValue(target, 2)
+				.Select(t => new { t.Value });
 			var miss  = query.GetCacheMissCount();
 
 			query.ToArray();
 
-			query.GetCacheMissCount().ShouldBe(miss);
-			target.Count().ShouldBe(2);
+			query
+				.GetCacheMissCount()
+				.ShouldBe(miss);
+			target
+				.Count()
+				.ShouldBe(2);
 		}
 
 		[Test]
@@ -719,8 +824,10 @@ namespace Tests.xUpdate
 					.Select(t => t.Value)
 					.Sum());
 
-			query(db, 4).ShouldBe(4);
-			query(db, 5).ShouldBe(5);
+			query(db, 4)
+				.ShouldBe(4);
+			query(db, 5)
+				.ShouldBe(5);
 
 			target
 				.OrderBy(t => t.Value)
@@ -744,8 +851,11 @@ namespace Tests.xUpdate
 						.Select(t => t.Value))
 					.Count());
 
-			query(db, 7).ShouldBe(2);
-			target.Count().ShouldBe(2);
+			query(db, 7)
+				.ShouldBe(2);
+			target
+				.Count()
+				.ShouldBe(2);
 		}
 
 		[Test]
@@ -759,13 +869,21 @@ namespace Tests.xUpdate
 			var query = CompiledQuery.Compile((IDataContext dc, bool flag) =>
 				dc.GetTable<SourceTable>()
 					.Where(s => s.Id == 2)
-					.Select(s => flag ? dc.GetTable<IdentityTarget>().InsertWithOutputQuery(() => new IdentityTarget { Value = 1 }).Count() : 0)
+					.Select(s => flag
+						? dc.GetTable<IdentityTarget>()
+							.InsertWithOutputQuery(() => new IdentityTarget { Value = 1 })
+							.Count()
+						: 0)
 					.First());
 
-			query(db, true).ShouldBe(1);
-			query(db, false).ShouldBe(0);
+			query(db, true)
+				.ShouldBe(1);
+			query(db, false)
+				.ShouldBe(0);
 
-			target.Count().ShouldBe(2);
+			target
+				.Count()
+				.ShouldBe(2);
 		}
 
 		[Test]
@@ -780,12 +898,16 @@ namespace Tests.xUpdate
 				.Select(s => new
 				{
 					s.Id,
-					Inserted = target.InsertWithOutputQuery(() => new TargetTable { Id = 42, Value = 1, ValueStr = "inline" }).Count(),
+					Inserted = target
+						.InsertWithOutputQuery(() => new TargetTable { Id = 42, Value = 1, ValueStr = "inline" })
+						.Count(),
 				})
 				.ToArray();
 
 			result.Single().Inserted.ShouldBe(1);
-			target.Count().ShouldBe(1);
+			target
+				.Count()
+				.ShouldBe(1);
 		}
 
 		[Test]
@@ -805,8 +927,12 @@ namespace Tests.xUpdate
 				.ToArray();
 
 			audited.ShouldBe(new[] { 1, 2, 3 });
-			target.Count().ShouldBe(3);
-			audit.Count().ShouldBe(3);
+			target
+				.Count()
+				.ShouldBe(3);
+			audit
+				.Count()
+				.ShouldBe(3);
 		}
 
 		[Test]
@@ -823,7 +949,9 @@ namespace Tests.xUpdate
 			output[0].ShouldBeOfType<TphDerived>();
 			output[0].Value.ShouldBe(5);
 
-			table.Count().ShouldBe(1);
+			table
+				.Count()
+				.ShouldBe(1);
 		}
 
 		[Test]
@@ -839,8 +967,12 @@ namespace Tests.xUpdate
 				.Select(t => t.Parent!.ValueStr)
 				.ToArray();
 
-			names.OrderBy(n => n).ShouldBe(new[] { "Str1", "Str2", "Str3" });
-			target.Count().ShouldBe(3);
+			names
+				.OrderBy(n => n)
+				.ShouldBe(new[] { "Str1", "Str2", "Str3" });
+			target
+				.Count()
+				.ShouldBe(3);
 		}
 
 		[Test]
@@ -855,7 +987,9 @@ namespace Tests.xUpdate
 				.Select(s => new
 				{
 					s.Id,
-					Inserted = target.InsertWithOutputQuery(() => new TargetTable { Id = s.Id + 100, Value = s.Value, ValueStr = s.ValueStr }).Count(),
+					Inserted = target
+						.InsertWithOutputQuery(() => new TargetTable { Id = s.Id + 100, Value = s.Value, ValueStr = s.ValueStr })
+						.Count(),
 				});
 
 			Action act = () => query.ToArray();
@@ -863,7 +997,9 @@ namespace Tests.xUpdate
 			var ex = act.ShouldThrow<LinqToDBException>();
 			ex.Message.ShouldBe(LinqToDB.Internal.Common.ErrorHelper.Error_OutputQuery_Correlated);
 
-			target.Count().ShouldBe(0);
+			target
+				.Count()
+				.ShouldBe(0);
 		}
 
 		[Test]
@@ -900,7 +1036,10 @@ namespace Tests.xUpdate
 				.Select(e => new
 				{
 					e.Id,
-					Children = lookup.Where(s => s.Id == e.Id).Select(s => s.Id).ToList(),
+					Children = lookup
+						.Where(s => s.Id == e.Id)
+						.Select(s => s.Id)
+						.ToList(),
 				});
 
 			switch (execution)
@@ -920,7 +1059,10 @@ namespace Tests.xUpdate
 							.Select(e => new
 							{
 								e.Id,
-								Children = dc.GetTable<SourceTable>().Where(s => s.Id == e.Id).Select(s => s.Id).ToList(),
+								Children = dc.GetTable<SourceTable>()
+									.Where(s => s.Id == e.Id)
+									.Select(s => s.Id)
+									.ToList(),
 							})
 							.First());
 
@@ -928,7 +1070,9 @@ namespace Tests.xUpdate
 					break;
 			}
 
-			events.Count().ShouldBe(3);
+			events
+				.Count()
+				.ShouldBe(3);
 			begun.ShouldBe(1);
 			committed.ShouldBe(1);
 		}
@@ -955,13 +1099,16 @@ namespace Tests.xUpdate
 			// swallowed into a "not supported" verdict, which would make the guard pass vacuously
 			using var t = db.CreateLocalTable<ProbeTable>();
 
-			var sb    = ((IDataContext)db).CreateSqlBuilder();
-			var table = sb.ConvertInline("oas_probe", LinqToDB.Internal.SqlProvider.ConvertType.NameToQueryTable);
-			var id    = sb.ConvertInline("id",        LinqToDB.Internal.SqlProvider.ConvertType.NameToQueryField);
+			var dataContext = (IDataContext)db;
+			var sb          = dataContext.CreateSqlBuilder();
+			var table       = sb.ConvertInline("oas_probe", LinqToDB.Internal.SqlProvider.ConvertType.NameToQueryTable);
+			var id          = sb.ConvertInline("id",        LinqToDB.Internal.SqlProvider.ConvertType.NameToQueryField);
 
 			try
 			{
-				var ids = db.Query<int>($"WITH t AS (INSERT INTO {table} ({id}) VALUES (1) RETURNING {id}) SELECT {id} FROM t").ToList();
+				var ids = db
+					.Query<int>($"WITH t AS (INSERT INTO {table} ({id}) VALUES (1) RETURNING {id}) SELECT {id} FROM t")
+					.ToList();
 
 				return ids.Count == 1 && ids[0] == 1 && t.Count() == 1;
 			}
