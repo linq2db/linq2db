@@ -266,9 +266,8 @@ namespace LinqToDB.Internal.Linq.Builder
 					?? throw new InvalidOperationException("Cannot find target table for INSERT statement");
 
 				// The output rows of the insert, built as the body of the CTE that DataModificationReference registered.
-				// The inheritance predicate is a read filter: the output is exactly the inserted rows.
 				var table        = new SqlDataModificationTable(insertedTable, insertStatement, LinqExtensions.GetDataModificationIdentity(methodCall));
-				var tableContext = new TableBuilder.TableContext(builder.GetTranslationModifier(), builder, sequence.MappingSchema, new SelectQuery(), table, false, applyInheritanceFilter: false);
+				var tableContext = new TableBuilder.TableContext(builder.GetTranslationModifier(), builder, sequence.MappingSchema, new SelectQuery(), table, false);
 
 				return BuildSequenceResult.FromContext(tableContext);
 			}

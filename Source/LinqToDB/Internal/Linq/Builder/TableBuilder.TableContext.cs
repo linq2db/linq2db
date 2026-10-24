@@ -93,7 +93,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				Init(true);
 			}
 
-			internal TableContext(TranslationModifier translationModifier, ExpressionBuilder builder, MappingSchema mappingSchema, SelectQuery selectQuery, SqlTable table, bool isOptional, bool applyInheritanceFilter = true)
+			internal TableContext(TranslationModifier translationModifier, ExpressionBuilder builder, MappingSchema mappingSchema, SelectQuery selectQuery, SqlTable table, bool isOptional) 
 				: base(translationModifier, builder, table.ObjectType, selectQuery)
 			{
 				Parent         = null;
@@ -110,10 +110,10 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (SqlTable.SqlTableType != SqlTableType.SystemTable)
 					SelectQuery.From.Table(SqlTable);
 
-				Init(applyInheritanceFilter);
+				Init(true);
 			}
 
-			public TableContext(TranslationModifier translationModifier, ExpressionBuilder builder, MappingSchema mappingSchema, BuildInfo buildInfo)
+			public TableContext(TranslationModifier translationModifier, ExpressionBuilder builder, MappingSchema mappingSchema, BuildInfo buildInfo) 
 				: base (translationModifier, builder, typeof(object), buildInfo.SelectQuery)
 			{
 				Parent         = buildInfo.Parent;
