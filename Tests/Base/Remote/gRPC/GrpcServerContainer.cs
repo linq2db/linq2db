@@ -2,6 +2,7 @@
 using System;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -68,7 +69,15 @@ namespace Tests.Remote.ServerContainer
 				webBuilder =>
 				{
 					webBuilder.UseStartup<Startup>();
-					webBuilder.ConfigureKestrel(o => o.ConfigureHttpsDefaults(h => h.ServerCertificate = _certificate));
+					webBuilder.ConfigureKestrel(o =>
+					{
+						o.ConfigureHttpsDefaults(h => h.ServerCertificate = _certificate);
+						o.ConfigureEndpointDefaults(l => l.Use(next => connection =>
+						{
+							GrpcServerConnections.OnAccepted();
+							return next(connection);
+						}));
+					});
 					webBuilder.UseUrls(GetServiceUrl(port));
 				}).Build();
 
@@ -111,6 +120,25 @@ namespace Tests.Remote.ServerContainer
 					endpoints.MapGrpcService<TestGrpcLinqService>();
 				});
 			}
+		}
+	}
+
+	/// <summary>
+	/// Counts the TCP connections the gRPC test host has accepted, so tests can check how many connections
+	/// a client opens.
+	/// </summary>
+	public static class GrpcServerConnections
+	{
+		static int _accepted;
+
+		/// <summary>
+		/// Connections accepted since the process started, by every gRPC test host.
+		/// </summary>
+		public static int Accepted => Volatile.Read(ref _accepted);
+
+		internal static void OnAccepted()
+		{
+			Interlocked.Increment(ref _accepted);
 		}
 	}
 }
