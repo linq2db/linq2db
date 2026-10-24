@@ -1370,6 +1370,68 @@ namespace Tests.xUpdate
 				.Count()
 				.ShouldBe(3);
 		}
+		[Test]
+		public void QueryBatchWithOutputCount([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			var committed = 0;
+
+			using var db = GetDataConnection(context, o => o.UseTracing(e =>
+			{
+				if (e.TraceInfoStep == TraceInfoStep.BeforeExecute && e.Operation == TraceOperation.CommitTransaction)
+					committed++;
+			}));
+
+			using var source = db.CreateLocalTable(GetSourceData());
+			using var target = db.CreateLocalTable<TargetTable>();
+
+			committed = 0;
+
+			// the scalar over the output runs once beside an independent collection of the same batch
+			var result = db.QueryBatch(() => new
+			{
+				Inserted = source
+					.Where(s => s.Id <= 3)
+					.InsertWithOutputQuery(target, s => new TargetTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr })
+					.Count(),
+				Ids = source
+					.OrderBy(s => s.Id)
+					.Select(s => s.Id)
+					.ToList(),
+			});
+
+			result.Inserted.ShouldBe(3);
+			result.Ids.Count.ShouldBe(10);
+			committed.ShouldBe(1);
+			db.Transaction.ShouldBeNull();
+			target
+				.Count()
+				.ShouldBe(3);
+		}
+
+		[Test]
+		public void QueryBatchWithOutputCollectionThrows([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db     = GetDataConnection(context);
+			using var source = db.CreateLocalTable(GetSourceData());
+			using var target = db.CreateLocalTable<TargetTable>();
+
+			// a collection over the output would be loaded as a child query that reads the output itself
+			Action act = () => db.QueryBatch(() => new
+			{
+				Rows = source
+					.Where(s => s.Id <= 3)
+					.InsertWithOutputQuery(target, s => new TargetTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr })
+					.ToList(),
+				Total = source.Count(),
+			});
+
+			var ex = act.ShouldThrow<LinqToDBException>();
+			ex.Message.ShouldBe(LinqToDB.Internal.Common.ErrorHelper.Error_OutputQuery_EagerLoad);
+
+			target
+				.Count()
+				.ShouldBe(0);
+		}
 		// Guard test: keep SqlProviderFlags.IsInsertOutputQuerySupported honest. It probes whether the provider accepts the
 		// data-modifying CTE that BasicSqlBuilder.BuildDataModificationCteBody renders and fails when reality diverges
 		// from the declared flag, signalling that the provider's flag (set in its DataProvider) needs updating.
