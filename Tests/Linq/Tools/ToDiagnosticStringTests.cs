@@ -4,6 +4,8 @@ using LinqToDB.Tools;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Tools
 {
 	[TestFixture]
@@ -52,6 +54,28 @@ namespace Tests.Tools
 | 2016-11-22 12:00:00 |        111.3 | dakasdlkjjkasd  djkadlskdj  |
 | 2016-10-23 12:00:00 |      1111111 | dkjdkdjkl102398 3 1231233   |
 +---------------------+--------------+-----------------------------+".Replace("\r", "").Replace("\n", ""), Is.EqualTo(str.Replace("\r", "").Replace("\n", "")));
+		}
+
+		sealed class NoMembers(string text)
+		{
+			public override string ToString() => text;
+		}
+
+		[Test]
+		public void TestDiagnosticStringNoMembers()
+		{
+			var str = new[] { new NoMembers("one"), new NoMembers("three") }
+				.ToDiagnosticString()
+				.Replace("\r", "")
+				.Replace("\n", "");
+
+			str.ShouldBe(@"Count : 2
++-----------+
+| NoMembers |
++-----------+
+| one       |
+| three     |
++-----------+".Replace("\r", "").Replace("\n", ""));
 		}
 	}
 }

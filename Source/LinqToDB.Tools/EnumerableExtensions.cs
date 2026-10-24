@@ -97,8 +97,8 @@ namespace LinqToDB.Tools
 
 				for (var i = 0; i < lens.Length; i++)
 				{
-					var member = ta.Members[i];
-					stringBuilder.Append("| ").Append(member.Name).Append(' ', lens[i] - member.Name.Length).Append(' ');
+					var name = ta.Members.Count > 0 ? ta.Members[i].Name : ta.Type.Name;
+					stringBuilder.Append("| ").Append(name).Append(' ', lens[i] - name.Length).Append(' ');
 				}
 
 				stringBuilder.Append('|').AppendLine();
@@ -112,7 +112,7 @@ namespace LinqToDB.Tools
 				{
 					stringBuilder.Append("| ");
 
-					var type  = ta.Members[i].Type.UnwrapNullableType();
+					var type  = ta.Members.Count > 0 ? ta.Members[i].Type.UnwrapNullableType() : ta.Type;
 					var right = false;
 
 					switch (Type.GetTypeCode(type))
