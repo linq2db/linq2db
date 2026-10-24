@@ -428,6 +428,22 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return selectQuery;
 		}
 
+		// Companion to the joined-side rule in VisitSqlJoinedTable: the provider applies a limited derived
+		// table's TOP to the whole multi-source result, so the FROM side and a comma-separated FROM break
+		// exactly the way a JOIN to one does.
+		static bool HasJoinedLimitedDerivedTable(SqlFromClause element)
+		{
+			var hasSiblingSource = element.Tables.Count > 1;
+
+			foreach (var table in element.Tables)
+			{
+				if ((hasSiblingSource || table.Joins.Count > 0) && table.Source is SelectQuery source && source.IsLimited)
+					return true;
+			}
+
+			return false;
+		}
+
 		protected internal override IQueryElement VisitSqlFromClause(SqlFromClause element)
 		{
 			var appendLevel = _providerFlags.CalculateSupportedCorrelatedLevelWithAggregateQueries || !QueryHelper.IsAggregationQuery(element.SelectQuery);
@@ -446,6 +462,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (_columnSubqueryLevel != null && appendLevel)
 				_columnSubqueryLevel -= 1;
+
+			// After the descent, so a source that is already refused for its own reason - an unsupported
+			// APPLY, ORDER BY in a derived table - keeps reporting that reason instead of this one.
+			if (IsValid && _providerFlags.IsJoinDerivedTableWithTakeInvalid && HasJoinedLimitedDerivedTable(element))
+				SetInvalid(ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid);
 
 			return element;
 		}

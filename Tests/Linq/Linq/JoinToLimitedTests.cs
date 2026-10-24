@@ -347,5 +347,49 @@ namespace Tests.Linq
 
 			AreEqual(exp, act);
 		}
+
+		#region Issue 5865 - a limited derived table on the FROM side
+
+		// Both tests below put the limited query on the FROM side and read more rows than its own limit,
+		// so a provider that escalates the TOP to the whole joined result returns one row instead of two.
+		// The count assertion on the expected side is what keeps them sensitive: with a single child the
+		// two outcomes coincide and the tests would pass against the defect.
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5865")]
+		public void JoinFromLimited([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var exp = from p in Parent.Where(p => p.ParentID == 2).Take(1)
+					  from c in Child.Where(c => c.ParentID == p.ParentID)
+					  select new { p.ParentID, c.ChildID };
+
+			var act = from p in db.Parent.Where(p => p.ParentID == 2).Take(1)
+					  from c in db.Child.Where(c => c.ParentID == p.ParentID)
+					  select new { p.ParentID, c.ChildID };
+
+			Assert.That(exp.Count(), Is.EqualTo(2));
+			AreEqual(exp, act);
+		}
+
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5865")]
+		public void CrossJoinFromLimited([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var exp = from p in Parent.Where(p => p.ParentID == 2).Take(1)
+					  from c in Child.Where(c => c.ParentID == 2)
+					  select new { p.ParentID, c.ChildID };
+
+			var act = from p in db.Parent.Where(p => p.ParentID == 2).Take(1)
+					  from c in db.Child.Where(c => c.ParentID == 2)
+					  select new { p.ParentID, c.ChildID };
+
+			Assert.That(exp.Count(), Is.EqualTo(2));
+			AreEqual(exp, act);
+		}
+
+		#endregion
 	}
 }
