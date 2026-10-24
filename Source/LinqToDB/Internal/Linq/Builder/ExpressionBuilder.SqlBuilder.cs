@@ -325,7 +325,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return true;
 			}
 
-			var converter = MappingSchema.GetConvertExpression(expression.Type, typeof(DataParameter), false, false);
+			var converter = (columnDescriptor?.MappingSchema ?? MappingSchema).GetConvertExpression(expression.Type, typeof(DataParameter), false, false);
 			if (converter != null)
 			{
 				return true;
@@ -699,7 +699,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			foreach (var value in discriminators)
 			{
-				values[idx] = MappingSchema.GetSqlValue(m.Discriminator.MemberType, value, dbType);
+				values[idx] = m.Discriminator.MappingSchema.GetSqlValue(m.Discriminator.MemberType, value, dbType);
 				idx++;
 			}
 
@@ -804,7 +804,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (code == null)
 					code = left.Type.GetDefaultValue();
 				else if (left.Type != code.GetType())
-					code = Converter.ChangeType(code, left.Type, MappingSchema);
+					code = Converter.ChangeType(code, left.Type, table.MappingSchema);
 
 				Expression right = Expression.Constant(code, left.Type);
 
@@ -919,180 +919,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			return expr;
-		}
-
-		public bool ProcessProjection(MappingSchema mappingSchema, Dictionary<MemberInfo,Expression> members, Expression expression)
-		{
-			void CollectParameters(Type forType, MethodBase method, ReadOnlyCollection<Expression> arguments)
-			{
-				var pms = method.GetParameters();
-
-				var typeMembers = TypeAccessor.GetAccessor(forType).Members;
-
-				for (var i = 0; i < pms.Length; i++)
-				{
-					var param = pms[i];
-					MemberAccessor? foundMember = null;
-					foreach (var tm in typeMembers)
-					{
-						if (string.Equals(tm.Name, param.Name, StringComparison.Ordinal))
-						{
-							foundMember = tm;
-							break;
-						}
-					}
-
-					if (foundMember == null)
-					{
-						foreach (var tm in typeMembers)
-						{
-							if (tm.Name.Equals(param.Name, StringComparison.OrdinalIgnoreCase))
-							{
-								foundMember = tm;
-								break;
-							}
-						}
-					}
-
-					if (foundMember == null)
-						continue;
-
-					if (members.ContainsKey(foundMember.MemberInfo))
-						continue;
-
-					var converted = arguments[i];
-
-					members.Add(foundMember.MemberInfo, converted);
-				}
-			}
-
-			expression = RemoveNullPropagationTransformation(expression, false);
-
-			switch (expression.NodeType)
-			{
-				case ExpressionType.Extension:
-				{
-					if (expression is SqlGenericConstructorExpression generic)
-					{
-						foreach (var argument in generic.Assignments)
-						{
-							members.Add(argument.MemberInfo, argument.Expression);
-						}
-					}
-
-					return true;
-				}
-
-				case ExpressionType.Conditional:
-				{
-					var dicTrue = new Dictionary<MemberInfo, Expression>();
-					var dicFalse = new Dictionary<MemberInfo, Expression>();
-
-					var cond = (ConditionalExpression)expression;
-
-					ProcessProjection(mappingSchema, dicTrue, cond.IfFalse);
-					ProcessProjection(mappingSchema, dicFalse, cond.IfTrue);
-
-					foreach (var kv in dicTrue)
-					{
-						if (!members.ContainsKey(kv.Key))
-						{
-							dicFalse.TryGetValue(kv.Key, out var falseExpr);
-
-							var expr = Expression.Condition(cond.Test, kv.Value, falseExpr ?? new DefaultValueExpression(mappingSchema, kv.Key.GetMemberType(), isNull : true));
-							members.Add(kv.Key, expr);
-						}
-					}
-
-					foreach (var kv in dicFalse)
-					{
-						if (!members.ContainsKey(kv.Key))
-						{
-							dicTrue.TryGetValue(kv.Key, out var trueExpr);
-							var expr = Expression.Condition(cond.Test, trueExpr ?? new DefaultValueExpression(mappingSchema, kv.Key.GetMemberType(), isNull : true), kv.Value);
-							members.Add(kv.Key, expr);
-						}
-					}
-
-					return true;
-				}
-
-				// new { ... }
-				//
-				case ExpressionType.New        :
-					{
-						var expr = (NewExpression)expression;
-
-						if (expr.Members != null)
-						{
-							for (var i = 0; i < expr.Members.Count; i++)
-							{
-								var member = expr.Members[i];
-
-								var converted = expr.Arguments[i];
-								members.Add(member, converted);
-
-								if (member is MethodInfo info)
-									members.Add(info.GetPropertyInfo(), converted);
-							}
-						}
-
-						var isScalar = MappingSchema.IsScalarType(expr.Type);
-						if (!isScalar)
-							CollectParameters(expr.Type, expr.Constructor!, expr.Arguments);
-
-						return members.Count > 0 || !isScalar;
-					}
-
-				// new MyObject { ... }
-				//
-				case ExpressionType.MemberInit :
-					{
-						var expr        = (MemberInitExpression)expression;
-						var typeMembers = TypeAccessor.GetAccessor(expr.Type).Members;
-
-						var dic  = typeMembers
-							.Select(static (m,i) => new { m, i })
-							.ToDictionary(static _ => _.m.MemberInfo.Name, static _ => _.i, StringComparer.Ordinal);
-
-						var assignments = new List<(MemberAssignment ma, int order)>();
-						foreach (var ma in expr.Bindings.Cast<MemberAssignment>())
-							assignments.Add((ma, dic.TryGetValue(ma.Member.Name, out var idx) ? idx : 1000000));
-
-						foreach (var (binding, _) in assignments.OrderBy(static a => a.order))
-						{
-							var converted = binding.Expression;
-							members.Add(binding.Member, converted);
-
-							if (binding.Member is MethodInfo info)
-								members.Add(info.GetPropertyInfo(), converted);
-						}
-
-						return true;
-					}
-
-				case ExpressionType.Call:
-					{
-						var mc = (MethodCallExpression)expression;
-
-						// process fabric methods
-
-						if (!MappingSchema.IsScalarType(mc.Type))
-							CollectParameters(mc.Type, mc.Method, mc.Arguments);
-
-						return members.Count > 0;
-					}
-
-				case ExpressionType.NewArrayInit:
-				case ExpressionType.ListInit:
-					{
-						return true;
-					}
-				// .Select(p => everything else)
-				//
-				default                        :
-					return false;
-			}
 		}
 
 		#endregion
@@ -1310,7 +1136,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var testCondition = defaultIfEmpty.NotNullExpressions.Select(SequenceHelper.MakeNotNullCondition).Aggregate(Expression.AndAlso);
 
-				var result = Expression.Condition(testCondition, inner, new DefaultValueExpression(MappingSchema, next.Type));
+				var result = Expression.Condition(testCondition, inner, new DefaultValueExpression(context.MappingSchema, next.Type));
 				return result;
 			}
 
@@ -1367,7 +1193,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						if (body.IsNullValue)
 						{
-							return new DefaultValueExpression(MappingSchema, member.GetMemberType(), true);
+							return new DefaultValueExpression(context.MappingSchema, member.GetMemberType(), true);
 						}
 
 						if (body is SqlAdjustTypeExpression adjustType)
@@ -1707,9 +1533,9 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (trueExpr.Type != falseExpr.Type)
 					{
 						if (trueExpr.IsNullValue)
-							trueExpr = new DefaultValueExpression(MappingSchema, falseExpr.Type, true);
+							trueExpr = new DefaultValueExpression(context.MappingSchema, falseExpr.Type, true);
 						else if (falseExpr.IsNullValue)
-							falseExpr = new DefaultValueExpression(MappingSchema, trueExpr.Type, true);
+							falseExpr = new DefaultValueExpression(context.MappingSchema, trueExpr.Type, true);
 					}
 
 					var newExpr = (Expression)Expression.Condition(cond.Test, trueExpr, falseExpr);
@@ -1755,7 +1581,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					{
 						var expr = (path ?? next)!;
 
-						return new DefaultValueExpression(MappingSchema, expr.Type, true);
+						return new DefaultValueExpression(context.MappingSchema, expr.Type, true);
 					}
 
 					break;
@@ -1766,7 +1592,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					var expr = (path ?? next)!;
 
-					return new DefaultValueExpression(MappingSchema, expr.Type, false);
+					return new DefaultValueExpression(context.MappingSchema, expr.Type, false);
 				}
 
 				case ExpressionType.Call:
@@ -1823,7 +1649,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							return next == null ? SequenceHelper.EnsureType(truePath, unary.Type) : truePath;
 						}
 
-						return new DefaultValueExpression(MappingSchema, truePath.Type, true);
+						return new DefaultValueExpression(context.MappingSchema, truePath.Type, true);
 					}
 
 					var falsePath = Expression.Constant(null, truePath.Type);
@@ -1873,7 +1699,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (createExpression.Type.IsNullableType)
 				return createExpression;
 
-			if (MappingSchema.IsScalarType(createExpression.Type))
+			if ((columnDescriptor?.MappingSchema ?? MappingSchema).IsScalarType(createExpression.Type))
 				return createExpression;
 
 			if (typeof(FormattableString).IsSameOrParentOf(createExpression.Type))

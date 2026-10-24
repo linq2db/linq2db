@@ -23,7 +23,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		List<(Expression path, ColumnDescriptor? descriptor, SqlPlaceholderExpression placeholder)> _fieldsMap         = new();
 
 		public override Expression?    Expression    { get; }
-		public override MappingSchema  MappingSchema => Builder.MappingSchema;
+		public override MappingSchema  MappingSchema => ValuesContext?.MappingSchema ?? Builder.MappingSchema;
 		public          SqlValuesTable Table         { get; }
 		public          IBuildContext? ValuesContext { get; }
 

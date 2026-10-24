@@ -79,7 +79,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var path = SequenceHelper.PrepareBody(selector, sequence);
 
-				var extractResult = ExtractAssociations(builder, table, path, null);
+				var extractResult = ExtractAssociations(builder, sequence.MappingSchema, table, path, null);
 
 				if (extractResult == null)
 					throw new LinqToDBException($"Unable to retrieve properties path for LoadWith/ThenLoad. Path: '{selector}'");
@@ -140,7 +140,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return BuildSequenceResult.FromContext(loadWithSequence);
 		}
 
-		static (ILoadWithContext? context, LoadWithMember[] info)? ExtractAssociations(ExpressionBuilder builder, ILoadWithContext? parentContext, Expression expression, Expression? stopExpression)
+		static (ILoadWithContext? context, LoadWithMember[] info)? ExtractAssociations(ExpressionBuilder builder, MappingSchema mappingSchema, ILoadWithContext? parentContext, Expression expression, Expression? stopExpression)
 		{
 			var currentExpression = expression;
 
@@ -164,7 +164,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				filterExpression = lambda;
 			}
 
-			var (context, members) = GetAssociations(builder, parentContext, currentExpression, stopExpression);
+			var (context, members) = GetAssociations(builder, mappingSchema, parentContext, currentExpression, stopExpression);
 			if (context == null)
 				return default;
 
@@ -175,7 +175,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return (context, loadWithInfos);
 		}
 
-		static (ILoadWithContext? context, List<MemberInfo> members) GetAssociations(ExpressionBuilder builder, ILoadWithContext? parentContext, Expression expression, Expression? stopExpression)
+		static (ILoadWithContext? context, List<MemberInfo> members) GetAssociations(ExpressionBuilder builder, MappingSchema mappingSchema, ILoadWithContext? parentContext, Expression expression, Expression? stopExpression)
 		{
 			ILoadWithContext? context    = parentContext;
 			MemberInfo?       lastMember = null;
@@ -249,7 +249,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						var mexpr         = (MemberExpression)expression;
 						lastMember        = mexpr.Member;
-						var isAssociation = builder.IsAssociation(expression, out var associationMember);
+						var isAssociation = ExpressionBuilder.IsAssociation(mappingSchema, expression, out var associationMember);
 
 						if (!isAssociation)
 						{

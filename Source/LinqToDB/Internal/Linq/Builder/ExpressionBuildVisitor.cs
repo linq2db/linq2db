@@ -77,6 +77,9 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		public MappingSchema MappingSchema => BuildContext?.MappingSchema ?? Builder.MappingSchema;
+
+		MappingSchema ReceiverMappingSchema(Expression? receiver)
+			=> (receiver as ContextRefExpression)?.BuildContext.MappingSchema ?? MappingSchema;
 		public DataOptions DataOptions => Builder.DataOptions;
 		public TranslationProviderFlags ProviderFlags => Builder.TranslationProviderFlags;
 
@@ -867,7 +870,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
-			if (Builder.IsAssociation(node, out _))
+			if (ExpressionBuilder.IsAssociation(ReceiverMappingSchema(node.Object ?? (node.Arguments.Count > 0 ? node.Arguments[0] : null)), node, out _))
 			{
 				Expression? root;
 
@@ -1578,7 +1581,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (_buildPurpose is BuildPurpose.Traverse)
 					return node;
 
-				if (Builder.IsAssociation(node, out _))
+				if (ExpressionBuilder.IsAssociation(ReceiverMappingSchema(node.Expression), node, out _))
 				{
 					result = HandleAssociation(node, context);
 					if (result != null)
@@ -1807,7 +1810,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public Expression TryCreateAssociation(Expression expression, ContextRefExpression rootContext, IBuildContext? forContext)
 		{
-			var associationDescriptor = Builder.GetAssociationDescriptor(expression, out var memberInfo);
+			var associationDescriptor = ExpressionBuilder.GetAssociationDescriptor(rootContext.BuildContext.MappingSchema, expression, out var memberInfo);
 
 			if (associationDescriptor == null || memberInfo == null)
 				return expression;
@@ -5720,7 +5723,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (code == null)
 					code = left.Type.GetDefaultValue();
 				else if (left.Type != code.GetType())
-					code = Converter.ChangeType(code, left.Type, MappingSchema);
+					code = Converter.ChangeType(code, left.Type, tableContext.MappingSchema);
 
 				Expression right = Expression.Constant(code, left.Type);
 

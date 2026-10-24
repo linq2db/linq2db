@@ -145,7 +145,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			Expression ConstructObject(SqlGenericConstructorExpression node)
 			{
-				return _context.Builder.Construct(_context.Builder.MappingSchema, node, ProjectFlags.Expression);
+				return _context.Builder.Construct(_context.MappingSchema, node, ProjectFlags.Expression);
 			}
 
 			public Expression Finalize(Expression expression, IBuildContext context, ExpressionGenerator generator)
@@ -657,7 +657,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						throw new InvalidOperationException();
 
 					var columnDescriptor = QueryHelper.GetColumnDescriptor(placeholder.Sql);
-					var sqlType          = QueryHelper.GetDbDataType(placeholder.Sql, MappingSchema);
+					var sqlType          = QueryHelper.GetDbDataType(placeholder.Sql, columnDescriptor?.MappingSchema ?? MappingSchema);
 
 					var valueType = sqlType.SystemType;
 
@@ -679,7 +679,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (placeholder.Type != readerExpression.Type)
 					{
-						var convertExpression = MappingSchema.GetConvertExpression(readerExpression.Type, placeholder.Type, checkNull: canBeNull, true, ConversionType.FromDatabase);
+						var convertExpression = (columnDescriptor?.MappingSchema ?? MappingSchema).GetConvertExpression(readerExpression.Type, placeholder.Type, checkNull: canBeNull, true, ConversionType.FromDatabase);
 
 						if (convertExpression is null)
 							throw new InvalidOperationException($"No conversions defined from {readerExpression.Type} to {placeholder.Type}");
