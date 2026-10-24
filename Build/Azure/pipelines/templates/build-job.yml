@@ -58,7 +58,7 @@ jobs:
     inputs:
       command: build
       projects: 'Examples/Examples.slnx'
-      arguments: '--configuration Debug'
+      arguments: '--configuration $(release_configuration)'
     displayName: Build Examples (verify)
     condition: and(succeeded(), ${{ parameters.with_examples }})
 
