@@ -32,5 +32,9 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		QueryExecutionMode Mode,
 		string?            Sql,
 		string?            SqlFile,
-		string             DefaultOutput);
+		string             DefaultOutput)
+	{
+		/// <summary>Credential store or credentials CLI from the command line; overrides the profile's <c>credentialsCli</c>.</summary>
+		public string? CredentialsCli { get; init; }
+	}
 }
