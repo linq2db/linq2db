@@ -374,6 +374,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void EagerLoadOverOutputInsertsOnce([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
+			using var _      = context.IsRemote() ? new DisableBaseline("Only direct access commits the implicit load transaction") : null;
 			using var db     = GetDataContext(context);
 			using var input  = db.CreateLocalTable(new[]
 			{
@@ -403,6 +404,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void EagerLoadOverOutput_UnionStrategyMarker([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
+			using var _      = context.IsRemote() ? new DisableBaseline("Only direct access commits the implicit load transaction") : null;
 			using var db     = GetDataContext(context);
 			using var input  = db.CreateLocalTable(new[]
 			{

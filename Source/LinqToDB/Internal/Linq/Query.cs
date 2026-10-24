@@ -200,7 +200,7 @@ namespace LinqToDB.Internal.Linq
 			return preambles;
 		}
 
-		internal IDisposable? StartLoadTransaction(IDataContext dataContext)
+		internal LoadTransaction? StartLoadTransaction(IDataContext dataContext)
 		{
 			var dc = GetTransactionOwner(dataContext);
 
@@ -208,12 +208,12 @@ namespace LinqToDB.Internal.Linq
 				return null;
 
 			if (dataContext is DataContext ctx)
-				return ctx.BeginTransaction(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel);
+				return new LoadTransaction(ctx.BeginTransaction(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel), HasDataModification);
 
-			return dc.BeginTransaction(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel);
+			return new LoadTransaction(dc.BeginTransaction(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel), HasDataModification);
 		}
 
-		internal async Task<IAsyncDisposable?> StartLoadTransactionAsync(IDataContext dataContext, CancellationToken cancellationToken)
+		internal async Task<LoadTransaction?> StartLoadTransactionAsync(IDataContext dataContext, CancellationToken cancellationToken)
 		{
 			var dc = GetTransactionOwner(dataContext);
 
@@ -221,11 +221,70 @@ namespace LinqToDB.Internal.Linq
 				return null;
 
 			if (dataContext is DataContext ctx)
-				return await ctx.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken)
-					.ConfigureAwait(false);
+				return new LoadTransaction(
+					await ctx.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken)
+						.ConfigureAwait(false),
+					HasDataModification);
 
-			return await dc.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken)
-				.ConfigureAwait(false);
+			return new LoadTransaction(
+				await dc.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken)
+					.ConfigureAwait(false),
+				HasDataModification);
+		}
+
+		/// <summary>
+		/// The implicit transaction around the preambles of an eager-loading query. Disposing it without
+		/// <see cref="Complete"/> rolls it back. A data-modifying query commits it once the preambles ran,
+		/// so the insert and the child queries persist together.
+		/// </summary>
+		internal sealed class LoadTransaction : IDisposable, IAsyncDisposable
+		{
+			readonly object _transaction;
+			readonly bool   _commit;
+
+			public LoadTransaction(DataContextTransaction transaction, bool commit)
+			{
+				_transaction = transaction;
+				_commit      = commit;
+			}
+
+			public LoadTransaction(DataConnectionTransaction transaction, bool commit)
+			{
+				_transaction = transaction;
+				_commit      = commit;
+			}
+
+			public void Complete()
+			{
+				if (!_commit)
+					return;
+
+				if (_transaction is DataContextTransaction contextTransaction)
+					contextTransaction.CommitTransaction();
+				else
+					((DataConnectionTransaction)_transaction).Commit();
+			}
+
+			public async Task CompleteAsync(CancellationToken cancellationToken)
+			{
+				if (!_commit)
+					return;
+
+				if (_transaction is DataContextTransaction contextTransaction)
+					await contextTransaction.CommitTransactionAsync(cancellationToken).ConfigureAwait(false);
+				else
+					await ((DataConnectionTransaction)_transaction).CommitAsync(cancellationToken).ConfigureAwait(false);
+			}
+
+			public void Dispose()
+			{
+				((IDisposable)_transaction).Dispose();
+			}
+
+			public ValueTask DisposeAsync()
+			{
+				return ((IAsyncDisposable)_transaction).DisposeAsync();
+			}
 		}
 
 		DataConnection? GetTransactionOwner(IDataContext dataContext)
@@ -233,12 +292,6 @@ namespace LinqToDB.Internal.Linq
 			// Do not start implicit transaction if there is no preambles
 			//
 			if (!IsAnyPreambles())
-				return null;
-
-			// The implicit transaction is disposed without commit: it would roll back
-			// the insert of a data-modifying CTE (InsertWithOutputQuery).
-			//
-			if (HasDataModification)
 				return null;
 
 			var dc = dataContext switch

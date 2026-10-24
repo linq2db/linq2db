@@ -181,12 +181,13 @@ namespace LinqToDB.Internal.Linq
 			var query       = GetInfo(db, parameters);
 			var expressions = query.CompiledExpressions!;
 
-			using (query.StartLoadTransaction(db))
-			{
-				var preambles = query.InitPreambles(db, expressions, parameters);
+			using var transaction = query.StartLoadTransaction(db);
 
-				return (T)query.GetElement(db, expressions, parameters, preambles)!;
-			}
+			var preambles = query.InitPreambles(db, expressions, parameters);
+
+			transaction?.Complete();
+
+			return (T)query.GetElement(db, expressions, parameters, preambles)!;
 		}
 
 		public async Task<T> ExecuteAsync(object[] parameters, CancellationToken cancellationToken)
@@ -199,6 +200,9 @@ namespace LinqToDB.Internal.Linq
 			await using var tr = (transaction ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
 
 			var preambles = await query.InitPreamblesAsync(db, expressions, parameters, cancellationToken).ConfigureAwait(false);
+
+			if (transaction != null)
+				await transaction.CompleteAsync(cancellationToken).ConfigureAwait(false);
 
 			return (T)(await query.GetElementAsync(db, expressions, parameters, preambles, cancellationToken).ConfigureAwait(false))!;
 		}

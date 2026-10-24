@@ -121,18 +121,21 @@ namespace LinqToDB.Internal.Linq
 			Preambles = await query.InitPreamblesAsync(DataContext, expressions, Parameters, cancellationToken)
 				.ConfigureAwait(false);
 
+			if (transaction != null)
+				await transaction.CompleteAsync(cancellationToken).ConfigureAwait(false);
+
 			var value = await query.GetElementAsync(DataContext, expressions, Parameters, Preambles, cancellationToken)
 				.ConfigureAwait(false);
 
 			return (TResult)value!;
 		}
 
-		IDisposable? StartLoadTransaction(Query query)
+		Query.LoadTransaction? StartLoadTransaction(Query query)
 		{
 			return query.StartLoadTransaction(DataContext);
 		}
 
-		Task<IAsyncDisposable?> StartLoadTransactionAsync(Query query, CancellationToken cancellationToken)
+		Task<Query.LoadTransaction?> StartLoadTransactionAsync(Query query, CancellationToken cancellationToken)
 		{
 			return query.StartLoadTransactionAsync(DataContext, cancellationToken);
 		}
@@ -147,6 +150,9 @@ namespace LinqToDB.Internal.Linq
 
 			Preambles = await query.InitPreamblesAsync(DataContext, expressions, Parameters, cancellationToken)
 				.ConfigureAwait(false);
+
+			if (transaction != null)
+				await transaction.CompleteAsync(cancellationToken).ConfigureAwait(false);
 
 			return Query<TResult>.GetQuery(DataContext, ref expressions, out _)
 				.GetResultEnumerable(DataContext, expressions, Parameters, Preambles);
@@ -177,6 +183,9 @@ namespace LinqToDB.Internal.Linq
 			Preambles = await query.InitPreamblesAsync(DataContext, expressions, Parameters, cancellationToken)
 				.ConfigureAwait(false);
 
+			if (transaction != null)
+				await transaction.CompleteAsync(cancellationToken).ConfigureAwait(false);
+
 			var enumerable = (IAsyncEnumerable<T>)query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles);
 
 			var enumerator = enumerable.GetAsyncEnumerator(cancellationToken);
@@ -206,9 +215,13 @@ namespace LinqToDB.Internal.Linq
 				{
 					Preambles = await query.InitPreamblesAsync(DataContext, expressions, Parameters, cancellationToken)
 						.ConfigureAwait(false);
+
+					if (tr != null)
+						await tr.CompleteAsync(cancellationToken).ConfigureAwait(false);
+
 					return Tuple.Create(
 						query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles)
-						.GetAsyncEnumerator(cancellationToken), tr);
+						.GetAsyncEnumerator(cancellationToken), (IAsyncDisposable?)tr);
 				}
 				catch
 				{
@@ -263,15 +276,16 @@ namespace LinqToDB.Internal.Linq
 			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
 			var query       = GetQuery(ref expressions, false, out _);
 
-			using (StartLoadTransaction(query))
-			{
-				Preambles = query.InitPreambles(DataContext, expressions, Parameters);
+			using var transaction = StartLoadTransaction(query);
 
-				var getElement = query.GetElement;
-				if (getElement == null)
-					throw new LinqToDBException("GetElement is not assigned by the context.");
-				return (TResult)getElement(DataContext, expressions, Parameters, Preambles)!;
-			}
+			Preambles = query.InitPreambles(DataContext, expressions, Parameters);
+
+			transaction?.Complete();
+
+			var getElement = query.GetElement;
+			if (getElement == null)
+				throw new LinqToDBException("GetElement is not assigned by the context.");
+			return (TResult)getElement(DataContext, expressions, Parameters, Preambles)!;
 		}
 
 		object? IQueryProvider.Execute(Expression expression)
@@ -281,15 +295,16 @@ namespace LinqToDB.Internal.Linq
 			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
 			var query       = GetQuery(ref expressions, false, out _);
 
-			using (StartLoadTransaction(query))
-			{
-				Preambles = query.InitPreambles(DataContext, expressions, Parameters);
+			using var transaction = StartLoadTransaction(query);
 
-				var getElement = query.GetElement;
-				if (getElement == null)
-					throw new LinqToDBException("GetElement is not assigned by the context.");
-				return getElement(DataContext, expressions, Parameters, Preambles);
-			}
+			Preambles = query.InitPreambles(DataContext, expressions, Parameters);
+
+			transaction?.Complete();
+
+			var getElement = query.GetElement;
+			if (getElement == null)
+				throw new LinqToDBException("GetElement is not assigned by the context.");
+			return getElement(DataContext, expressions, Parameters, Preambles);
 		}
 
 		#endregion
@@ -307,12 +322,13 @@ namespace LinqToDB.Internal.Linq
 			if (!dependsOnParameters)
 				Expression = expressions.MainExpression;
 
-			using (StartLoadTransaction(query))
-			{
-				Preambles = query.InitPreambles(DataContext, expressions, Parameters);
+			using var transaction = StartLoadTransaction(query);
 
-				return query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles).GetEnumerator();
-			}
+			Preambles = query.InitPreambles(DataContext, expressions, Parameters);
+
+			transaction?.Complete();
+
+			return query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles).GetEnumerator();
 		}
 
 		IEnumerator IEnumerable.GetEnumerator()
@@ -326,12 +342,13 @@ namespace LinqToDB.Internal.Linq
 			if (!dependsOnParameters)
 				Expression = expressions.MainExpression;
 
-			using (StartLoadTransaction(query))
-			{
-				Preambles = query.InitPreambles(DataContext, expressions, Parameters);
+			using var transaction = StartLoadTransaction(query);
 
-				return query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles).GetEnumerator();
-			}
+			Preambles = query.InitPreambles(DataContext, expressions, Parameters);
+
+			transaction?.Complete();
+
+			return query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles).GetEnumerator();
 		}
 
 		#endregion
