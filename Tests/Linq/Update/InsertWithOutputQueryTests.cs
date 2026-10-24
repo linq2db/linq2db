@@ -121,6 +121,12 @@ namespace Tests.xUpdate
 			CompiledElement,
 		}
 
+		public enum AsyncEnumeration
+		{
+			AwaitForeach,
+			ForEachAsync,
+		}
+
 		static IQueryable<IdentityTarget> InsertValue(ITable<IdentityTarget> target, int value)
 		{
 			return target.InsertWithOutputQuery(() => new IdentityTarget { Value = value });
@@ -210,7 +216,9 @@ namespace Tests.xUpdate
 			output[0].Id.ShouldBe(42);
 			output[0].ValueStr.ShouldBe("single");
 
-			target.Single().Value.ShouldBe(7);
+			var row = target.Single();
+
+			row.Value.ShouldBe(7);
 		}
 
 		[Test]
@@ -242,7 +250,10 @@ namespace Tests.xUpdate
 				.ToArray();
 
 			auditIds.ShouldBe(new[] { 11, 12, 13, 14 });
-			audit.Single(a => a.TargetId == 11).Text.ShouldBe("inserted Str1");
+
+			var first = audit.Single(a => a.TargetId == 11);
+
+			first.Text.ShouldBe("inserted Str1");
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/discussions/5679")]
@@ -355,7 +366,9 @@ namespace Tests.xUpdate
 			output[0].Value.ShouldBe(7);
 			output[0].ValueStr.ShouldBe("single");
 
-			target.Single().Id.ShouldBe(42);
+			var row = target.Single();
+
+			row.Id.ShouldBe(42);
 		}
 
 		[Test]
@@ -405,7 +418,9 @@ namespace Tests.xUpdate
 				.OrderBy(t => t.Id)
 				.Select(t => t.Id);
 
-			query.ToSqlQuery().Sql.ShouldNotContain("NEW.");
+			var sql = query.ToSqlQuery().Sql;
+
+			sql.ShouldNotContain("NEW.");
 
 			query
 				.ToArray()
@@ -697,7 +712,7 @@ namespace Tests.xUpdate
 				.ShouldBe(3);
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void OneQueryableTwiceThenTwoCalls([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db     = GetDataContext(context);
@@ -718,7 +733,9 @@ namespace Tests.xUpdate
 
 			var twiceValues = InsertValue(target, 12)
 				.Select(t => t.Value)
-				.Concat(InsertValue(target, 13).Select(t => t.Value))
+				.Concat(
+					InsertValue(target, 13)
+						.Select(t => t.Value))
 				.ToArray();
 
 			twiceValues
@@ -729,7 +746,7 @@ namespace Tests.xUpdate
 				.ShouldBe(3);
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void TwoCallsThenOneQueryableTwice([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db     = GetDataContext(context);
@@ -738,7 +755,9 @@ namespace Tests.xUpdate
 			// both queries have the same shape, so the second one meets the first one's cache entry
 			var twiceValues = InsertValue(target, 22)
 				.Select(t => new { t.Value })
-				.Concat(InsertValue(target, 23).Select(t => new { t.Value }))
+				.Concat(
+					InsertValue(target, 23)
+						.Select(t => new { t.Value }))
 				.ToArray();
 
 			twiceValues
@@ -788,7 +807,7 @@ namespace Tests.xUpdate
 				.ShouldBe(2);
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void OutputQueryIsCached([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db     = GetDataContext(context);
@@ -810,6 +829,41 @@ namespace Tests.xUpdate
 			target
 				.Count()
 				.ShouldBe(2);
+		}
+
+		[Test, QueryCacheTest]
+		public void TwoOutputQueriesAreCached([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var target = db.CreateLocalTable<IdentityTarget>();
+
+			// two calls in one query record the constants pattern in the cache key, which must still match
+			InsertValue(target, 1)
+				.Select(t => new { t.Value })
+				.Concat(
+					InsertValue(target, 2)
+						.Select(t => new { t.Value }))
+				.ToArray();
+
+			var query = InsertValue(target, 3)
+				.Select(t => new { t.Value })
+				.Concat(
+					InsertValue(target, 4)
+						.Select(t => new { t.Value }));
+			var miss  = query.GetCacheMissCount();
+
+			var values = query.ToArray();
+
+			query
+				.GetCacheMissCount()
+				.ShouldBe(miss);
+			values
+				.Select(v => v.Value)
+				.OrderBy(v => v)
+				.ShouldBe(new[] { 3, 4 });
+			target
+				.Count()
+				.ShouldBe(4);
 		}
 
 		[Test]
@@ -904,7 +958,9 @@ namespace Tests.xUpdate
 				})
 				.ToArray();
 
-			result.Single().Inserted.ShouldBe(1);
+			var row = result.Single();
+
+			row.Inserted.ShouldBe(1);
 			target
 				.Count()
 				.ShouldBe(1);
@@ -1045,11 +1101,15 @@ namespace Tests.xUpdate
 			switch (execution)
 			{
 				case EagerLoadExecution.Enumerate:
-					query.ToList().Count.ShouldBe(3);
+					var list = query.ToList();
+
+					list.Count.ShouldBe(3);
 					break;
 
 				case EagerLoadExecution.EnumerateAsync:
-					(await query.ToListAsync()).Count.ShouldBe(3);
+					var asyncList = await query.ToListAsync();
+
+					asyncList.Count.ShouldBe(3);
 					break;
 
 				case EagerLoadExecution.CompiledElement:
@@ -1066,7 +1126,9 @@ namespace Tests.xUpdate
 							})
 							.First());
 
-					compiled(db).Children.Count.ShouldBe(1);
+					var element = compiled(db);
+
+					element.Children.Count.ShouldBe(1);
 					break;
 			}
 
@@ -1075,6 +1137,63 @@ namespace Tests.xUpdate
 				.ShouldBe(3);
 			begun.ShouldBe(1);
 			committed.ShouldBe(1);
+		}
+
+		[Test]
+		public async Task EagerLoadOverOutputKeepsTransactionStartedWhileEnumerating([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] AsyncEnumeration enumeration)
+		{
+			using var db     = GetDataConnection(context);
+			using var input  = db.CreateLocalTable(new[]
+			{
+				new EventInput { PersistenceId = "actor-abc", SequenceNumber = 1, Tag = "auth" },
+				new EventInput { PersistenceId = "actor-abc", SequenceNumber = 2, Tag = "profile" },
+				new EventInput { PersistenceId = "actor-xyz", SequenceNumber = 1, Tag = "ping" },
+			});
+			using var events = db.CreateLocalTable<EventRecord>();
+			using var lookup = db.CreateLocalTable(GetSourceData());
+			using var audit  = db.CreateLocalTable<AuditTable>();
+
+			var query = input
+				.InsertWithOutputQuery(events, i => new EventRecord { PersistenceId = i.PersistenceId, SequenceNumber = i.SequenceNumber })
+				.Select(e => new
+				{
+					e.Id,
+					Children = lookup
+						.Where(s => s.Id == e.Id)
+						.Select(s => s.Id)
+						.ToList(),
+				});
+
+			// the load transaction commits before the rows reach user code: a transaction started while
+			// enumerating is the user's, and the end of the enumeration must not dispose it
+			DataConnectionTransaction? transaction = null;
+
+			switch (enumeration)
+			{
+				case AsyncEnumeration.AwaitForeach:
+					await foreach (var row in query.AsAsyncEnumerable())
+					{
+						transaction ??= db.BeginTransaction();
+						db.Insert(new AuditTable { TargetId = row.Id, Text = "audit" });
+					}
+
+					break;
+
+				case AsyncEnumeration.ForEachAsync:
+					await query.ForEachAsync(row =>
+					{
+						transaction ??= db.BeginTransaction();
+						db.Insert(new AuditTable { TargetId = row.Id, Text = "audit" });
+					});
+
+					break;
+			}
+
+			transaction!.Commit();
+
+			audit
+				.Count()
+				.ShouldBe(3);
 		}
 
 		// Guard test: keep SqlProviderFlags.IsInsertOutputQuerySupported honest. It probes whether the provider accepts the

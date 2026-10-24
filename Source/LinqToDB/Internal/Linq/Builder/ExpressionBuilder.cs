@@ -318,19 +318,24 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		Dictionary<DataModificationIdentity, MethodCallExpression>? CollectDataModificationCalls()
 		{
-			var calls            = new List<MethodCallExpression>();
-			var lambdaParameters = new HashSet<ParameterExpression>();
+			var calls = new List<MethodCallExpression>();
 
-			Expression.Visit((calls, lambdaParameters), static (ctx, e) =>
+			Expression.Visit(calls, static (calls, e) =>
 			{
 				if (IsInsertOutputQueryCall(e))
-					ctx.calls.Add((MethodCallExpression)e);
-				else if (e is LambdaExpression lambda)
-					ctx.lambdaParameters.UnionWith(lambda.Parameters);
+					calls.Add((MethodCallExpression)e);
 			});
 
 			if (calls.Count == 0)
 				return null;
+
+			var lambdaParameters = new HashSet<ParameterExpression>();
+
+			Expression.Visit(lambdaParameters, static (lambdaParameters, e) =>
+			{
+				if (e is LambdaExpression lambda)
+					lambdaParameters.UnionWith(lambda.Parameters);
+			});
 
 			var result = new Dictionary<DataModificationIdentity, MethodCallExpression>();
 
@@ -388,7 +393,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		internal void RegisterDataModificationCte(DataModificationIdentity identity, CteContext cteContext)
 		{
-			(_dataModificationCtes ??= new()).Add(identity, cteContext);
+			if (!(_dataModificationCtes ??= new()).TryAdd(identity, cteContext))
+				throw new LinqToDBException(ErrorHelper.Error_OutputQuery_Duplicated);
 		}
 
 		/// <summary>
@@ -462,7 +468,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			foreach (var identity in calls.Keys)
 			{
 				if (!counts.ContainsKey(identity))
-					throw new InvalidOperationException("An InsertWithOutputQuery call was not translated.");
+					throw new LinqToDBException(ErrorHelper.Error_OutputQuery_NotTranslated);
 			}
 		}
 

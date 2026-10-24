@@ -3170,7 +3170,7 @@ namespace Tests.Linq
 		// The two queries of each cache test below have the same shape, so the second one meets the first one's cache
 		// entry: one CTE referenced twice must not be confused with two CTEs that differ only in a value.
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void CacheSharedCteThenTwoCapturedCtes([CteContextSource] string context)
 		{
 			using var db = GetDataContext(context);
@@ -3184,21 +3184,25 @@ namespace Tests.Linq
 
 			var distinct = ChildrenAbove(db, 30)
 				.Select(c => c.ChildID)
-				.Concat(ChildrenAbove(db, 40).Select(c => c.ChildID))
+				.Concat(
+					ChildrenAbove(db, 40)
+						.Select(c => c.ChildID))
 				.Count();
 
 			shared.ShouldBe(Child.Count(c => c.ChildID > 30) * 2);
 			distinct.ShouldBe(Child.Count(c => c.ChildID > 30) + Child.Count(c => c.ChildID > 40));
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void CacheTwoCapturedCtesThenSharedCte([CteContextSource] string context)
 		{
 			using var db = GetDataContext(context);
 
 			var distinct = ChildrenFrom(db, 30)
 				.Select(c => c.ChildID)
-				.Concat(ChildrenFrom(db, 40).Select(c => c.ChildID))
+				.Concat(
+					ChildrenFrom(db, 40)
+						.Select(c => c.ChildID))
 				.Count();
 
 			var cte = ChildrenFrom(db, 30);
@@ -3212,7 +3216,7 @@ namespace Tests.Linq
 			shared.ShouldBe(Child.Count(c => c.ChildID >= 30) * 2);
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void CacheSharedCteThenTwoLiteralCtes([CteContextSource] string context)
 		{
 			using var db = GetDataContext(context);
@@ -3241,7 +3245,7 @@ namespace Tests.Linq
 			distinct.ShouldBe(Child.Count(c => c.ParentID > 2) + Child.Count(c => c.ParentID > 4));
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void CacheTwoLiteralCtesThenSharedCte([CteContextSource] string context)
 		{
 			using var db = GetDataContext(context);
@@ -3270,7 +3274,7 @@ namespace Tests.Linq
 			shared.ShouldBe(Child.Count(c => c.ParentID >= 2) * 2);
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void CacheValueEqualCtesThenTwoLiteralCtes([CteContextSource] string context)
 		{
 			using var db = GetDataContext(context);
@@ -3301,7 +3305,7 @@ namespace Tests.Linq
 			distinct.ShouldBe(Child.Count(c => c.ChildID < 40) + Child.Count(c => c.ChildID < 30));
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void CacheTwoLiteralCtesThenValueEqualCtes([CteContextSource] string context)
 		{
 			using var db = GetDataContext(context);
@@ -3330,6 +3334,34 @@ namespace Tests.Linq
 
 			distinct.ShouldBe(Child.Count(c => c.ChildID <= 40) + Child.Count(c => c.ChildID <= 30));
 			merged.ShouldBe(Child.Count(c => c.ChildID <= 40) * 2);
+		}
+
+		[Test, QueryCacheTest]
+		public void CacheTwoCapturedCtesHit([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// two CTE calls in one query record the constants pattern in the cache key, which must still match
+			ChildrenAbove(db, 30)
+				.Select(c => c.ChildID)
+				.Concat(
+					ChildrenAbove(db, 40)
+						.Select(c => c.ChildID))
+				.ToArray();
+
+			var query = ChildrenAbove(db, 20)
+				.Select(c => c.ChildID)
+				.Concat(
+					ChildrenAbove(db, 50)
+						.Select(c => c.ChildID));
+			var miss  = query.GetCacheMissCount();
+
+			var ids = query.ToArray();
+
+			query
+				.GetCacheMissCount()
+				.ShouldBe(miss);
+			ids.Length.ShouldBe(Child.Count(c => c.ChildID > 20) + Child.Count(c => c.ChildID > 50));
 		}
 	}
 }

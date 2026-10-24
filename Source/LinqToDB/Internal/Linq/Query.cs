@@ -242,6 +242,10 @@ namespace LinqToDB.Internal.Linq
 			readonly object _transaction;
 			readonly bool   _commit;
 
+			// Once committed, the connection's current transaction may be one the user started while
+			// enumerating, and disposing ours would dispose it.
+			bool _committed;
+
 			public LoadTransaction(DataContextTransaction transaction, bool commit)
 			{
 				_transaction = transaction;
@@ -263,6 +267,8 @@ namespace LinqToDB.Internal.Linq
 					contextTransaction.CommitTransaction();
 				else
 					((DataConnectionTransaction)_transaction).Commit();
+
+				_committed = true;
 			}
 
 			public async Task CompleteAsync(CancellationToken cancellationToken)
@@ -274,16 +280,19 @@ namespace LinqToDB.Internal.Linq
 					await contextTransaction.CommitTransactionAsync(cancellationToken).ConfigureAwait(false);
 				else
 					await ((DataConnectionTransaction)_transaction).CommitAsync(cancellationToken).ConfigureAwait(false);
+
+				_committed = true;
 			}
 
 			public void Dispose()
 			{
-				((IDisposable)_transaction).Dispose();
+				if (!_committed)
+					((IDisposable)_transaction).Dispose();
 			}
 
 			public ValueTask DisposeAsync()
 			{
-				return ((IAsyncDisposable)_transaction).DisposeAsync();
+				return _committed ? default : ((IAsyncDisposable)_transaction).DisposeAsync();
 			}
 		}
 

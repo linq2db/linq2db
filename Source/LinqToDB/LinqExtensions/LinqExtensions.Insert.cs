@@ -1159,7 +1159,7 @@ namespace LinqToDB
 		/// does not insert; a condition on a compiled query parameter is translated and keeps the call.
 		/// The call cannot depend on the rows of an enclosing query.
 		/// Eager loading over the output loads child records by key from the returned rows (<see cref="EagerLoadingStrategy.KeyedQuery"/>,
-		/// regardless of the configured strategy), in one transaction with the insert; child queries that cannot be keyed
+		/// regardless of the configured strategy); child queries that cannot be keyed
 		/// to the output, or that read the output themselves, throw <see cref="LinqToDBException"/>.
 		/// </para>
 		/// Database support:
@@ -1203,7 +1203,7 @@ namespace LinqToDB
 		/// does not insert; a condition on a compiled query parameter is translated and keeps the call.
 		/// The call cannot depend on the rows of an enclosing query.
 		/// Eager loading over the output loads child records by key from the returned rows (<see cref="EagerLoadingStrategy.KeyedQuery"/>,
-		/// regardless of the configured strategy), in one transaction with the insert; child queries that cannot be keyed
+		/// regardless of the configured strategy); child queries that cannot be keyed
 		/// to the output, or that read the output themselves, throw <see cref="LinqToDBException"/>.
 		/// </para>
 		/// Database support:

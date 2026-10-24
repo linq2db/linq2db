@@ -3630,6 +3630,9 @@ namespace LinqToDB.Internal.SqlProvider
 					break;
 				}
 
+				case QueryElementType.SqlDataModificationTable:
+					throw new LinqToDBException(ErrorHelper.Error_OutputQuery_NotSupported);
+
 				case QueryElementType.GroupingSet:
 				{
 					var groupingSet = (SqlGroupingSet) expr;
@@ -4850,6 +4853,9 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 				case QueryElementType.SqlTableLikeSource:
 					return null;
+
+				case QueryElementType.SqlDataModificationTable:
+					throw new LinqToDBException(ErrorHelper.Error_OutputQuery_NotSupported);
 
 				default:
 					throw new InvalidOperationException($"Unexpected table type {table.ElementType}");

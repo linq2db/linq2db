@@ -32,6 +32,7 @@
 		public const string Error_OutputQuery_Projection           = "The output of InsertWithOutputQuery was shaped beyond a plain projection inside the data-modifying statement (a join, filter, grouping or ordering), which the database cannot express. This is an internal error, please report it.";
 		public const string Error_OutputQuery_Correlated           = "InsertWithOutputQuery cannot depend on the rows of the enclosing query: the insert runs once per statement, not once per row. Build the insert from a source query instead.";
 		public const string Error_OutputQuery_Duplicated           = "InsertWithOutputQuery produced more than one data-modifying statement for one call, which would run the insert more than once. This is an internal error, please report it.";
+		public const string Error_OutputQuery_NotTranslated        = "InsertWithOutputQuery produced no data-modifying statement for one call, so the insert would not run. This is an internal error, please report it.";
 
 		public const string Error_WindowFunctionsInSearchCondition                = "Window functions cannot be used in search condition.";
 		public const string Error_WindowFunction_PercentRank                      = "PERCENT_RANK is not supported by current provider.";
