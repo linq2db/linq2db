@@ -221,6 +221,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		/// Returns the ordered primary-key column names per table, read from the open connection's gRPC table
 		/// description. The driver is resolved once for the whole batch. Used by <see cref="YdbSchemaProvider"/>
 		/// (YDB exposes no PK metadata via SQL or the ADO schema collections).
+		/// A table that no longer exists when it is described is left out of the result.
 		/// </summary>
 		internal IReadOnlyDictionary<string, IReadOnlyList<string>> GetPrimaryKeys(DbConnection connection, IEnumerable<string> tableNames)
 		{
@@ -228,9 +229,28 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			var result = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
 
 			foreach (var tableName in tableNames)
-				result[tableName] = _describePrimaryKey(driver, tableName, _defaultDescribeSettings);
+			{
+				try
+				{
+					result[tableName] = _describePrimaryKey(driver, tableName, _defaultDescribeSettings);
+				}
+				catch (Exception ex) when (IsSchemeError(ex))
+				{
+					// The names come from an earlier directory listing, and the listing and the describe calls
+					// are not atomic: a table dropped by another connection in between fails here with
+					// SchemeError. Treat it as dropped before the listing, as Ydb.Sdk's own
+					// GetSchema("Columns") does since 0.37.0.
+				}
+			}
 
 			return result;
+		}
+
+		static bool IsSchemeError(Exception ex)
+		{
+			return YdbTransientExceptionDetector.TryGetYdbException(ex, out var ydbEx)
+				&& YdbTransientExceptionDetector.TryGetCodeAndTransient(ydbEx, out var code, out _)
+				&& string.Equals(code, "SchemeError", StringComparison.Ordinal);
 		}
 
 		#region wrappers
