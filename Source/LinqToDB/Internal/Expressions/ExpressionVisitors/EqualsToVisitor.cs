@@ -361,16 +361,6 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 
 		static bool DefaultCompareArguments(Expression arg1, Expression arg2)
 		{
-			if (typeof(Sql.IQueryableContainer).IsSameOrParentOf(arg1.Type))
-			{
-				if (arg1.NodeType == ExpressionType.Constant && arg2.NodeType == ExpressionType.Constant)
-				{
-					var query1 = (arg1.EvaluateExpression<Sql.IQueryableContainer>()!).Query;
-					var query2 = (arg2.EvaluateExpression<Sql.IQueryableContainer>()!).Query;
-					return EqualsTo(query1.Expression, query2.Expression);
-				}
-			}
-
 			return arg1.EqualsTo(arg2);
 		}
 	}
