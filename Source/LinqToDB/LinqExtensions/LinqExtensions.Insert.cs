@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -1133,6 +1134,184 @@ namespace LinqToDB
 			return currentSource.CreateQuery<TOutput>(expr).AsAsyncEnumerable().FirstAsync(token);
 		}
 		#endregion
+
+		#endregion
+
+		#region InsertWithOutputQuery
+
+		/// <summary>
+		/// Creates a query source over the record inserted into <paramref name="target"/> table.
+		/// The insert and the consuming query are executed as a single SQL statement when the returned query
+		/// (or a query composed from it) is executed.
+		/// </summary>
+		/// <typeparam name="TTarget">Inserted record type.</typeparam>
+		/// <param name="target">Target table.</param>
+		/// <param name="setter">Insert expression. Expression supports only target table record new expression with field initializers.</param>
+		/// <returns>Composable query over the inserted record.</returns>
+		/// <remarks>
+		/// Rendered as a data-modifying common table expression, e.g. <c>WITH t AS (INSERT ... RETURNING ...) SELECT ... FROM t</c>.
+		/// Target table changes are not visible to the rest of the statement: read inserted values through the returned query.
+		/// Project the output with <c>Select</c> in the consuming query; only the columns it reads are returned.
+		/// <para>
+		/// Each call inserts once per execution of a query that contains it, however many times that query references the
+		/// returned query and whether or not it reads its rows. Separate calls insert separately, even when they are identical.
+		/// A condition on a captured value is evaluated before translation and can leave the call out of the query, so that it
+		/// does not insert; a condition on a compiled query parameter is translated and keeps the call.
+		/// The call cannot depend on the rows of an enclosing query.
+		/// Eager loading over the output loads child records by key from the returned rows (<see cref="EagerLoadingStrategy.KeyedQuery"/>,
+		/// regardless of the configured strategy); child queries that cannot be keyed
+		/// to the output, or that read the output themselves, throw <see cref="LinqToDBException"/>.
+		/// </para>
+		/// Database support:
+		/// <list type="bullet">
+		/// <item>PostgreSQL</item>
+		/// </list>
+		/// Other databases throw <see cref="LinqToDBException"/> when the query is built.
+		/// </remarks>
+		[Pure]
+		public static IQueryable<TTarget> InsertWithOutputQuery<TTarget>(
+			this ITable<TTarget>      target,
+			Expression<Func<TTarget>> setter)
+			where TTarget : notnull
+		{
+			ArgumentNullException.ThrowIfNull(target);
+			ArgumentNullException.ThrowIfNull(setter);
+
+			return InsertWithOutputQuery(target, setter, new DataModificationIdentity());
+		}
+
+		/// <summary>
+		/// Creates a query source over the records inserted from <paramref name="source"/> query into <paramref name="target"/> table.
+		/// The insert and the consuming query are executed as a single SQL statement when the returned query
+		/// (or a query composed from it) is executed.
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <typeparam name="TTarget">Target table record type.</typeparam>
+		/// <param name="source">Source query, that returns data for insert operation.</param>
+		/// <param name="target">Target table.</param>
+		/// <param name="setter">Inserted record constructor expression.
+		/// Expression supports only target table record new expression with field initializers.</param>
+		/// <returns>Composable query over the inserted records.</returns>
+		/// <remarks>
+		/// Rendered as a data-modifying common table expression, e.g. <c>WITH t AS (INSERT ... RETURNING ...) SELECT ... FROM t</c>.
+		/// Target table changes are not visible to the rest of the statement: read inserted values through the returned query.
+		/// Project the output with <c>Select</c> in the consuming query; only the columns it reads are returned.
+		/// <para>
+		/// Each call inserts once per execution of a query that contains it, however many times that query references the
+		/// returned query and whether or not it reads its rows. Separate calls insert separately, even when they are identical.
+		/// A condition on a captured value is evaluated before translation and can leave the call out of the query, so that it
+		/// does not insert; a condition on a compiled query parameter is translated and keeps the call.
+		/// The call cannot depend on the rows of an enclosing query.
+		/// Eager loading over the output loads child records by key from the returned rows (<see cref="EagerLoadingStrategy.KeyedQuery"/>,
+		/// regardless of the configured strategy); child queries that cannot be keyed
+		/// to the output, or that read the output themselves, throw <see cref="LinqToDBException"/>.
+		/// </para>
+		/// Database support:
+		/// <list type="bullet">
+		/// <item>PostgreSQL</item>
+		/// </list>
+		/// Other databases throw <see cref="LinqToDBException"/> when the query is built.
+		/// </remarks>
+		[Pure]
+		public static IQueryable<TTarget> InsertWithOutputQuery<TSource,TTarget>(
+			this IQueryable<TSource>          source,
+			ITable<TTarget>                   target,
+			Expression<Func<TSource,TTarget>> setter)
+			where TTarget : notnull
+		{
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(target);
+			ArgumentNullException.ThrowIfNull(setter);
+
+			return InsertWithOutputQuery(source, target, setter, new DataModificationIdentity());
+		}
+
+		// The identified forms carry the identity of one call as a constant, so references to that call share it and
+		// separate calls do not. When expose evaluates one, it returns the same call with the same identity.
+
+		internal static IQueryable<TTarget> InsertWithOutputQuery<TTarget>(
+			this ITable<TTarget>      target,
+			Expression<Func<TTarget>> setter,
+			DataModificationIdentity  identity)
+			where TTarget : notnull
+		{
+			var query = target.GetLinqToDBSource();
+
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(InsertWithOutputQuery, target, setter, identity),
+				query.Expression,
+				Expression.Quote(setter),
+				Expression.Constant(identity));
+
+			return query.CreateQuery<TTarget>(expr);
+		}
+
+		internal static IQueryable<TTarget> InsertWithOutputQuery<TSource,TTarget>(
+			this IQueryable<TSource>          source,
+			ITable<TTarget>                   target,
+			Expression<Func<TSource,TTarget>> setter,
+			DataModificationIdentity          identity)
+			where TTarget : notnull
+		{
+			var currentSource = source.GetLinqToDBSource();
+
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(InsertWithOutputQuery, source, target, setter, identity),
+				currentSource.Expression,
+				((IQueryable<TTarget>)target).Expression,
+				Expression.Quote(setter),
+				Expression.Constant(identity));
+
+			return currentSource.CreateQuery<TTarget>(expr);
+		}
+
+		/// <summary>
+		/// Body of the CTE that an <c>InsertWithOutputQuery</c> call is translated to: the rows the insert returns.
+		/// Created by the query builder only.
+		/// </summary>
+		internal static IQueryable<TTarget> DataModificationSource<TTarget>(this IQueryable<TTarget> insertWithOutputQuery)
+		{
+			var query = insertWithOutputQuery.GetLinqToDBSource();
+
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(DataModificationSource, insertWithOutputQuery),
+				query.Expression);
+
+			return query.CreateQuery<TTarget>(expr);
+		}
+
+		static readonly MethodInfo _insertWithOutputQueryTable           = MethodHelper.GetMethodInfo(InsertWithOutputQuery, (ITable<object>)null!, (Expression<Func<object>>)null!).GetGenericMethodDefinition();
+		static readonly MethodInfo _insertWithOutputQueryTableIdentified = MethodHelper.GetMethodInfo(InsertWithOutputQuery, (ITable<object>)null!, (Expression<Func<object>>)null!, (DataModificationIdentity)null!).GetGenericMethodDefinition();
+		static readonly MethodInfo _insertWithOutputQuerySource           = MethodHelper.GetMethodInfo(InsertWithOutputQuery, (IQueryable<object>)null!, (ITable<object>)null!, (Expression<Func<object,object>>)null!).GetGenericMethodDefinition();
+		static readonly MethodInfo _insertWithOutputQuerySourceIdentified = MethodHelper.GetMethodInfo(InsertWithOutputQuery, (IQueryable<object>)null!, (ITable<object>)null!, (Expression<Func<object,object>>)null!, (DataModificationIdentity)null!).GetGenericMethodDefinition();
+
+		internal static DataModificationIdentity? GetDataModificationIdentity(MethodCallExpression call)
+		{
+			return call.Arguments[^1] is ConstantExpression { Value: DataModificationIdentity identity } ? identity : null;
+		}
+
+		/// <summary>
+		/// Rewrites a call of a public <c>InsertWithOutputQuery</c> overload, which carries no identity, into the identified form.
+		/// </summary>
+		internal static MethodCallExpression IdentifyDataModificationCall(MethodCallExpression call, DataModificationIdentity identity)
+		{
+			if (GetDataModificationIdentity(call) != null)
+				return call;
+
+			var definition = call.Method.GetGenericMethodDefinition();
+			var identified =
+				definition == _insertWithOutputQueryTable  ? _insertWithOutputQueryTableIdentified  :
+				definition == _insertWithOutputQuerySource ? _insertWithOutputQuerySourceIdentified :
+				throw new InvalidOperationException($"Unexpected method '{call.Method}'.");
+
+			return Expression.Call(
+				null,
+				identified.MakeGenericMethod(call.Method.GetGenericArguments()),
+				[.. call.Arguments, Expression.Constant(identity)]);
+		}
 
 		#endregion
 

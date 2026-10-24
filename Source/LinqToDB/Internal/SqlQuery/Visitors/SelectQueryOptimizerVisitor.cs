@@ -3905,6 +3905,19 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 		}
 
+		protected override IQueryElement VisitNestedStatement(SqlStatement statement)
+		{
+			// The statement of a data-modifying table source is a root of its own, not a subquery of the CTE body that reads it.
+			var saveParent = _parentSelect;
+			_parentSelect = null;
+
+			var newElement = base.VisitNestedStatement(statement);
+
+			_parentSelect = saveParent;
+
+			return newElement;
+		}
+
 		protected internal override IQueryElement VisitCteClause(CteClause element)
 		{
 			var saveRecursiveCte     = _recursiveCteClause;

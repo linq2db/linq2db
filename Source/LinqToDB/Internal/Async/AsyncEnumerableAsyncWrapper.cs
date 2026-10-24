@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Internal.Linq;
+
 namespace LinqToDB.Internal.Async
 {
 	// Transfers ownership of a resource acquired before enumeration (the read-consistency transaction opened by
@@ -15,19 +17,19 @@ namespace LinqToDB.Internal.Async
 	// so re-enumerating the sequence afterwards runs outside it.
 	internal sealed class AsyncEnumerableAsyncWrapper<T> : IAsyncEnumerable<T>
 	{
-		readonly IAsyncEnumerable<T> _enumerable;
-		readonly IAsyncDisposable    _disposable;
+		readonly IAsyncEnumerable<T>   _enumerable;
+		readonly Query.LoadTransaction _transaction;
 
-		public AsyncEnumerableAsyncWrapper(IAsyncEnumerable<T> enumerable, IAsyncDisposable disposable)
+		public AsyncEnumerableAsyncWrapper(IAsyncEnumerable<T> enumerable, Query.LoadTransaction transaction)
 		{
-			_enumerable = enumerable;
-			_disposable = disposable;
+			_enumerable  = enumerable;
+			_transaction = transaction;
 		}
 
 		public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
 		{
 			return new AsyncEnumeratorAsyncWrapper<T>(
-				() => Task.FromResult(Tuple.Create(_enumerable.GetAsyncEnumerator(cancellationToken), (IAsyncDisposable?)_disposable)));
+				() => Task.FromResult(Tuple.Create(_enumerable.GetAsyncEnumerator(cancellationToken), (Query.LoadTransaction?)_transaction)));
 		}
 	}
 }
