@@ -397,7 +397,9 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		protected override void BuildOffsetLimit(SelectQuery selectQuery)
 		{
-			SqlOptimizer.ConvertSkipTake(NullabilityContext, MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
+			// TAKE/SKIP resolved during render-prep (see SqlExpressionConvertVisitor.ResolveSkipTakeValues).
+			var takeExpr = selectQuery.Select.TakeValue;
+			var skipExpr = selectQuery.Select.SkipValue;
 
 			if (takeExpr != null || skipExpr != null)
 			{
@@ -436,7 +438,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		protected override void BuildCteBody(SelectQuery selectQuery)
 		{
 			var sqlBuilder = (ClickHouseSqlBuilder)CreateSqlBuilder();
-			sqlBuilder.BuildSql(0, new SqlSelectStatement(selectQuery), StringBuilder, OptimizationContext, Indent, ColumnAliasMode.None, null);
+			sqlBuilder.BuildSql(new SqlSelectStatement(selectQuery), StringBuilder, RenderContext, Indent, ColumnAliasMode.None, null);
 		}
 
 		protected override void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)

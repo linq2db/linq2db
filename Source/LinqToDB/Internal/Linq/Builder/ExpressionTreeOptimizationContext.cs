@@ -156,7 +156,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			protected override Expression VisitParameter(ParameterExpression node)
 			{
-				if (node == ExpressionBuilder.ParametersParam || node == ExpressionBuilder.QueryExpressionContainerParam)
+				if (node == ExpressionBuilder.ParametersParam || node == ExpressionBuilder.QueryExpressionContainerParam || node == ExpressionBuilder.ExecutionContextParam)
 					return node;
 
 				if (node == ExpressionConstants.DataContextParam)
@@ -482,7 +482,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			protected override Expression VisitParameter(ParameterExpression node)
 			{
-				if (node == ExpressionBuilder.ParametersParam || node == ExpressionBuilder.QueryExpressionContainerParam)
+				if (node == ExpressionBuilder.ParametersParam || node == ExpressionBuilder.QueryExpressionContainerParam || node == ExpressionBuilder.ExecutionContextParam)
 				{
 					IsImmutable = false;
 					return node;

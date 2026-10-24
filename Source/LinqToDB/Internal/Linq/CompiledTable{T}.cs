@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using LinqToDB.Internal.Cache;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Linq.Builder;
+using LinqToDB.Internal.SqlProvider;
 
 namespace LinqToDB.Internal.Linq
 {
@@ -183,9 +184,11 @@ namespace LinqToDB.Internal.Linq
 
 			using (query.StartLoadTransaction(db))
 			{
-				var preambles = query.InitPreambles(db, expressions, parameters);
+				// A compiled query always carries its argument array, so InitHarvesters returns a context even when the
+				// query has no eager-load harvesters - the mapper and parameter accessors read the compiled args from it.
+				var context = query.InitHarvesters(db, expressions, parameters);
 
-				return (T)query.GetElement(db, expressions, parameters, preambles)!;
+				return (T)query.GetElement(db, expressions, context)!;
 			}
 		}
 
@@ -198,9 +201,9 @@ namespace LinqToDB.Internal.Linq
 			var transaction = await query.StartLoadTransactionAsync(db, cancellationToken).ConfigureAwait(false);
 			await using var tr = (transaction ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
 
-			var preambles = await query.InitPreamblesAsync(db, expressions, parameters, cancellationToken).ConfigureAwait(false);
+			var context = await query.InitHarvestersAsync(db, expressions, parameters, cancellationToken).ConfigureAwait(false);
 
-			return (T)(await query.GetElementAsync(db, expressions, parameters, preambles, cancellationToken).ConfigureAwait(false))!;
+			return (T)(await query.GetElementAsync(db, expressions, context, cancellationToken).ConfigureAwait(false))!;
 		}
 	}
 }

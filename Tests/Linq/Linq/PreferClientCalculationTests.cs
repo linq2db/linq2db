@@ -1584,9 +1584,8 @@ namespace Tests.Linq
 				sqlOptimizer.CreateOptimizerVisitor(false),
 				sqlOptimizer.CreateConvertVisitor(false),
 				sqlOptimizer.CreateSqlExpressionFactory(dataProvider.MappingSchema, dataOptions),
-				isParameterOrderDepended      : false,
-				isAlreadyOptimizedAndConverted: false,
-				parametersNormalizerFactory   : static () => NoopQueryParametersNormalizer.Instance);
+				isParameterOrderDepended   : false,
+				parametersNormalizerFactory: static () => NoopQueryParametersNormalizer.Instance);
 
 			var defaultValue = new SqlDefaultValueExpression(new DbDataType(systemType, dataType), Activator.CreateInstance(systemType)!);
 
