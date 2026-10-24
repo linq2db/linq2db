@@ -58,5 +58,19 @@ namespace Tests
 			// reach it from here. So this helper over-reports for such a context. Nothing in-tree overrides ProcessQuery
 			// on a context that eager-loads; a test that does has to count commands itself rather than ask this.
 		}
+
+		/// <summary>
+		/// Whether a <see cref="LinqExtensions.QueryBatch{T}(IDataContext, System.Linq.Expressions.Expression{System.Func{T}})"/>
+		/// with at least one collection runs as one command on this context: <see cref="UsesCombinedEagerLoading"/> without
+		/// the option, which <c>QueryBatch</c> does not consult.
+		/// </summary>
+		public static bool UsesCombinedQueryBatch(this IDataContext db)
+		{
+			return db is DataConnection
+				&& db.SqlProviderFlags.IsMultiStatementBatchSupported
+				&& db.SqlProviderFlags.IsMultipleResultSetsSupported
+				&& db.QueryHints.Count == 0
+				&& db.NextQueryHints.Count == 0;
+		}
 	}
 }
