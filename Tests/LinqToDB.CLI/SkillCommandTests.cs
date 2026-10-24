@@ -31,6 +31,18 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task SkillPrintsMarkdownWithoutFrontmatter()
+		{
+			var result = await RunCli("skill");
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.Output.ShouldNotStartWith("---");
+				result.Output.ShouldNotContain("name: linq2db-cli");
+			}
+		}
+
+		[Test]
 		public async Task SkillRejectsArguments()
 		{
 			var result = await RunCli("skill", "query");
@@ -39,6 +51,30 @@ namespace Tests.LinqToDB.CLI
 			{
 				result.ExitCode.ShouldBe(-1);
 				result.Error.   ShouldContain("Command 'skill' doesn't accept arguments.");
+			}
+		}
+
+		[Test]
+		public async Task SkillRejectsOptionsWithoutInstall()
+		{
+			var result = await RunCli("skill", "--check");
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.ExitCode.ShouldBe(-1);
+				result.Error.   ShouldContain("supported only with 'install'");
+			}
+		}
+
+		[Test]
+		public async Task SkillInstallRejectsExtraArguments()
+		{
+			var result = await RunCli("skill", "install", "query");
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.ExitCode.ShouldBe(-1);
+				result.Error.   ShouldContain("doesn't accept arguments");
 			}
 		}
 

@@ -160,6 +160,14 @@ namespace LinqToDB.DataProvider.Oracle
 
 		#region OracleSpecific Hints
 
+		/// <summary>
+		/// Adds an Oracle <c>OPT_PARAM</c> query hint.
+		/// </summary>
+		/// <remarks>
+		/// Oracle defines the optimizer parameter names and values accepted by <c>OPT_PARAM</c>.
+		/// LinqToDB exposes <c>OptParamHint</c> as the provider-specific family API for that
+		/// Oracle hint instead of enumerating every possible optimizer parameter value.
+		/// </remarks>
 		[ExpressionMethod(nameof(OptParamHintImpl))]
 		public static IOracleSpecificQueryable<TSource> OptParamHint<TSource>(this IOracleSpecificQueryable<TSource> query, params string[] parameters)
 			where TSource : notnull
@@ -172,6 +180,9 @@ namespace LinqToDB.DataProvider.Oracle
 			return (query, parameters) => QueryHint(query, Hint.OptParam, parameters);
 		}
 
+		/// <summary>
+		/// Adds an Oracle query hint.
+		/// </summary>
 		[ExpressionMethod(nameof(ContainersHintImpl))]
 		public static IOracleSpecificQueryable<TSource> ContainersHint<TSource>(this IOracleSpecificQueryable<TSource> query, string hint)
 			where TSource : notnull
@@ -184,6 +195,9 @@ namespace LinqToDB.DataProvider.Oracle
 			return (query, hint) => QueryHint(query, Hint.Containers(hint));
 		}
 
+		/// <summary>
+		/// Adds an Oracle query hint.
+		/// </summary>
 		[ExpressionMethod(nameof(ParallelDefaultHintImpl))]
 		public static IOracleSpecificQueryable<TSource> ParallelDefaultHint<TSource>(this IOracleSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -196,6 +210,9 @@ namespace LinqToDB.DataProvider.Oracle
 			return query => QueryHint(query, $"{Hint.Parallel}(DEFAULT)");
 		}
 
+		/// <summary>
+		/// Adds an Oracle query hint.
+		/// </summary>
 		[ExpressionMethod(nameof(ParallelAutoHintImpl))]
 		public static IOracleSpecificQueryable<TSource> ParallelAutoHint<TSource>(this IOracleSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -208,6 +225,9 @@ namespace LinqToDB.DataProvider.Oracle
 			return query => QueryHint(query, $"{Hint.Parallel}(AUTO)");
 		}
 
+		/// <summary>
+		/// Adds an Oracle query hint.
+		/// </summary>
 		[ExpressionMethod(nameof(ParallelManualHintImpl))]
 		public static IOracleSpecificQueryable<TSource> ParallelManualHint<TSource>(this IOracleSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -220,6 +240,9 @@ namespace LinqToDB.DataProvider.Oracle
 			return query => QueryHint(query, $"{Hint.Parallel}(MANUAL)");
 		}
 
+		/// <summary>
+		/// Adds an Oracle query hint.
+		/// </summary>
 		[ExpressionMethod(nameof(ParallelHintImpl2))]
 		public static IOracleSpecificQueryable<TSource> ParallelHint<TSource>(this IOracleSpecificQueryable<TSource> query, int value)
 			where TSource : notnull
@@ -273,6 +296,9 @@ namespace LinqToDB.DataProvider.Oracle
 			return new OracleSpecificTable<TSource>(newTable);
 		}
 
+		/// <summary>
+		/// Adds an Oracle table hint.
+		/// </summary>
 		[ExpressionMethod(nameof(ParallelHintImpl3))]
 		public static IOracleSpecificTable<TSource> ParallelHint<TSource>(this IOracleSpecificTable<TSource> table, int value)
 			where TSource : notnull
@@ -285,6 +311,9 @@ namespace LinqToDB.DataProvider.Oracle
 			return (table, value) => TableHintWithComma(table, Hint.Parallel, value);
 		}
 
+		/// <summary>
+		/// Adds an Oracle table hint.
+		/// </summary>
 		[ExpressionMethod(nameof(ParallelDefaultHintImpl3))]
 		public static IOracleSpecificTable<TSource> ParallelDefaultHint<TSource>(this IOracleSpecificTable<TSource> table)
 			where TSource : notnull
@@ -317,6 +346,9 @@ namespace LinqToDB.DataProvider.Oracle
 			return new OracleSpecificTable<TSource>(newTable);
 		}
 
+		/// <summary>
+		/// Adds an Oracle table hint.
+		/// </summary>
 		[ExpressionMethod(nameof(PQDistributeHintImpl))]
 		public static IOracleSpecificTable<TSource> PQDistributeHint<TSource>(this IOracleSpecificTable<TSource> table, string outerDistribution, string innerDistribution)
 			where TSource : notnull
@@ -329,6 +361,9 @@ namespace LinqToDB.DataProvider.Oracle
 			return (table, outerDistribution, innerDistribution) => TableHintWithComma2(table, Hint.PQDistribute, outerDistribution, innerDistribution);
 		}
 
+		/// <summary>
+		/// Adds an Oracle index hint.
+		/// </summary>
 		[ExpressionMethod(nameof(ParallelIndexHintImpl))]
 		public static IOracleSpecificTable<TSource> ParallelIndexHint<TSource>(this IOracleSpecificTable<TSource> table, params object[] values)
 			where TSource : notnull
@@ -341,6 +376,9 @@ namespace LinqToDB.DataProvider.Oracle
 			return (table, values) => TableHintWithComma(table, Hint.ParallelIndex, values);
 		}
 
+		/// <summary>
+		/// Adds an Oracle index hint.
+		/// </summary>
 		[ExpressionMethod(nameof(NoParallelIndexHintImpl))]
 		public static IOracleSpecificTable<TSource> NoParallelIndexHint<TSource>(this IOracleSpecificTable<TSource> table, params object[] values)
 			where TSource : notnull
@@ -353,6 +391,9 @@ namespace LinqToDB.DataProvider.Oracle
 			return (table, values) => TableHintWithComma(table, Hint.NoParallelIndex, values);
 		}
 
+		/// <summary>
+		/// Adds an Oracle table hint.
+		/// </summary>
 		[ExpressionMethod(nameof(DynamicSamplingHintImpl))]
 		public static IOracleSpecificTable<TSource> DynamicSamplingHint<TSource>(this IOracleSpecificTable<TSource> table, int value)
 			where TSource : notnull

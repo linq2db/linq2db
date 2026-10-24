@@ -180,6 +180,9 @@ namespace LinqToDB.DataProvider.MySql
 					Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p))))));
 		}
 
+		/// <summary>
+		/// Adds a MySQL <c>SEMIJOIN</c> join hint.
+		/// </summary>
 		[ExpressionMethod(nameof(SemiJoinHintWithQueryBlockImpl))]
 		public static IMySqlSpecificQueryable<TSource> SemiJoinHintWithQueryBlock<TSource>(this IMySqlSpecificQueryable<TSource> query, params string[] values)
 			where TSource : notnull
@@ -192,6 +195,9 @@ namespace LinqToDB.DataProvider.MySql
 			return (query, values) => QueryBlockHint(query, Query.SemiJoin, values);
 		}
 
+		/// <summary>
+		/// Adds a MySQL <c>NO_SEMIJOIN</c> join hint.
+		/// </summary>
 		[ExpressionMethod(nameof(NoSemiJoinHintWithQueryBlockImpl))]
 		public static IMySqlSpecificQueryable<TSource> NoSemiJoinHintWithQueryBlock<TSource>(this IMySqlSpecificQueryable<TSource> query, params string[] values)
 			where TSource : notnull
@@ -659,13 +665,18 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds subquery hint to a generated query.
+		/// Adds a MySQL subquery row-locking hint to a generated query.
 		/// </summary>
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <param name="source">Query source.</param>
-		/// <param name="hint">SQL text, added to join in generated query.</param>
-		/// <param name="tableIDs">Table IDs.</param>
-		/// <returns>Query source with join hints.</returns>
+		/// <param name="hint">MySQL row-locking hint, e.g. <c>FOR UPDATE</c> or <c>FOR SHARE</c>.</param>
+		/// <param name="tableIDs">Optional table identifiers for the <c>OF</c> clause.</param>
+		/// <returns>Query source with subquery hint.</returns>
+		/// <remarks>
+		/// The <c>tableIDs</c> values are created with <c>Sql.TableAlias</c>, <c>Sql.TableName</c>, or
+		/// <c>Sql.TableSpec</c> for table sources marked with <c>TableID</c>. They resolve to the
+		/// generated SQL identifiers for the selected table sources.
+		/// </remarks>
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.SubQueryHint, typeof(SubQueryTableHintExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
@@ -687,14 +698,19 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds subquery hint to a generated query.
+		/// Adds a MySQL subquery row-locking hint to a generated query.
 		/// </summary>
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <param name="source">Query source.</param>
-		/// <param name="hint">SQL text, added to join in generated query.</param>
+		/// <param name="hint">MySQL row-locking hint, e.g. <c>FOR UPDATE</c> or <c>FOR SHARE</c>.</param>
 		/// <param name="hint2">NOWAIT | SKIP LOCKED</param>
-		/// <param name="tableIDs">Table IDs.</param>
-		/// <returns>Query source with join hints.</returns>
+		/// <param name="tableIDs">Optional table identifiers for the <c>OF</c> clause.</param>
+		/// <returns>Query source with subquery hint.</returns>
+		/// <remarks>
+		/// The <c>tableIDs</c> values are created with <c>Sql.TableAlias</c>, <c>Sql.TableName</c>, or
+		/// <c>Sql.TableSpec</c> for table sources marked with <c>TableID</c>. They resolve to the
+		/// generated SQL identifiers for the selected table sources.
+		/// </remarks>
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.SubQueryHint, typeof(SubQueryTableHintExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
@@ -718,13 +734,18 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds subquery hint to a generated query.
+		/// Adds a MySQL subquery row-locking hint to a generated query.
 		/// </summary>
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <param name="table">Table-like query source.</param>
-		/// <param name="hint">SQL text, added to join in generated query.</param>
-		/// <param name="tableIDs">Table IDs.</param>
-		/// <returns>Query source with join hints.</returns>
+		/// <param name="hint">MySQL row-locking hint, e.g. <c>FOR UPDATE</c> or <c>FOR SHARE</c>.</param>
+		/// <param name="tableIDs">Optional table identifiers for the <c>OF</c> clause.</param>
+		/// <returns>Table-like query source with subquery hint.</returns>
+		/// <remarks>
+		/// The <c>tableIDs</c> values are created with <c>Sql.TableAlias</c>, <c>Sql.TableName</c>, or
+		/// <c>Sql.TableSpec</c> for table sources marked with <c>TableID</c>. They resolve to the
+		/// generated SQL identifiers for the selected table sources.
+		/// </remarks>
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.SubQueryHint, typeof(SubQueryTableHintExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
@@ -747,14 +768,19 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds subquery hint to a generated query.
+		/// Adds a MySQL subquery row-locking hint to a generated query.
 		/// </summary>
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <param name="table">Table-like query source.</param>
-		/// <param name="hint">SQL text, added to join in generated query.</param>
+		/// <param name="hint">MySQL row-locking hint, e.g. <c>FOR UPDATE</c> or <c>FOR SHARE</c>.</param>
 		/// <param name="hint2">NOWAIT | SKIP LOCKED</param>
-		/// <param name="tableIDs">Table IDs.</param>
-		/// <returns>Query source with join hints.</returns>
+		/// <param name="tableIDs">Optional table identifiers for the <c>OF</c> clause.</param>
+		/// <returns>Table-like query source with subquery hint.</returns>
+		/// <remarks>
+		/// The <c>tableIDs</c> values are created with <c>Sql.TableAlias</c>, <c>Sql.TableName</c>, or
+		/// <c>Sql.TableSpec</c> for table sources marked with <c>TableID</c>. They resolve to the
+		/// generated SQL identifiers for the selected table sources.
+		/// </remarks>
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.SubQueryHint, typeof(SubQueryTableHintExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
@@ -778,6 +804,9 @@ namespace LinqToDB.DataProvider.MySql
 			return new MySqlSpecificTable<TSource>(newTable);
 		}
 
+		/// <summary>
+		/// Adds a MySQL subquery hint.
+		/// </summary>
 		[ExpressionMethod(nameof(LockInShareModeHintImpl))]
 		public static IMySqlSpecificQueryable<TSource> LockInShareModeHint<TSource>(
 			this   IMySqlSpecificQueryable<TSource> query)
