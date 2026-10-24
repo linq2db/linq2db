@@ -21,7 +21,6 @@ namespace LinqToDB.Internal.SqlProvider
 				convertVisitor : optimizer.CreateConvertVisitor(false),
 				factory : factory,
 				isParameterOrderDepended : false,
-				isAlreadyOptimizedAndConverted : false,
 				parametersNormalizerFactory : static () => NoopQueryParametersNormalizer.Instance);
 
 			var nullability = NullabilityContext.GetContext(statement.SelectQuery);

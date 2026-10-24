@@ -121,11 +121,16 @@ namespace Tests.xUpdate
 			CompiledElement,
 		}
 
-		public enum AsyncEnumeration
+		public enum EnumerationEnd
 		{
-			AwaitForeach,
+			Completed,
+			Break,
+			AsyncCompleted,
+			AsyncBreak,
 			ForEachAsync,
 		}
+
+		static int FailOnSecond(int id) => id == 2 ? throw new InvalidOperationException("Materialization failed.") : id;
 
 		static IQueryable<IdentityTarget> InsertValue(ITable<IdentityTarget> target, int value)
 		{
@@ -1140,7 +1145,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task EagerLoadOverOutputKeepsTransactionStartedWhileEnumerating([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] AsyncEnumeration enumeration)
+		public async Task EagerLoadOverOutputCommitsWhenEnumerationEnds([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] EnumerationEnd end)
 		{
 			using var db     = GetDataConnection(context);
 			using var input  = db.CreateLocalTable(new[]
@@ -1151,7 +1156,6 @@ namespace Tests.xUpdate
 			});
 			using var events = db.CreateLocalTable<EventRecord>();
 			using var lookup = db.CreateLocalTable(GetSourceData());
-			using var audit  = db.CreateLocalTable<AuditTable>();
 
 			var query = input
 				.InsertWithOutputQuery(events, i => new EventRecord { PersistenceId = i.PersistenceId, SequenceNumber = i.SequenceNumber })
@@ -1164,38 +1168,131 @@ namespace Tests.xUpdate
 						.ToList(),
 				});
 
-			// the load transaction commits before the rows reach user code: a transaction started while
-			// enumerating is the user's, and the end of the enumeration must not dispose it
-			DataConnectionTransaction? transaction = null;
-
-			switch (enumeration)
+			// the load transaction spans the enumeration and commits when it ends, early or not
+			switch (end)
 			{
-				case AsyncEnumeration.AwaitForeach:
+				case EnumerationEnd.Completed:
+				{
+					var rows = query.ToList();
+
+					rows.Count.ShouldBe(3);
+					break;
+				}
+
+				case EnumerationEnd.Break:
+				{
+					using var enumerator = query.GetEnumerator();
+
+					var moved = enumerator.MoveNext();
+
+					moved.ShouldBeTrue();
+					break;
+				}
+
+				case EnumerationEnd.AsyncCompleted:
+				{
+					var count = 0;
+
 					await foreach (var row in query.AsAsyncEnumerable())
 					{
-						transaction ??= db.BeginTransaction();
-						db.Insert(new AuditTable { TargetId = row.Id, Text = "audit" });
+						count++;
 					}
 
+					count.ShouldBe(3);
 					break;
+				}
 
-				case AsyncEnumeration.ForEachAsync:
-					await query.ForEachAsync(row =>
-					{
-						transaction ??= db.BeginTransaction();
-						db.Insert(new AuditTable { TargetId = row.Id, Text = "audit" });
-					});
+				case EnumerationEnd.AsyncBreak:
+				{
+					await using var enumerator = query
+						.AsAsyncEnumerable()
+						.GetAsyncEnumerator();
 
+					var moved = await enumerator.MoveNextAsync();
+
+					moved.ShouldBeTrue();
 					break;
+				}
+
+				case EnumerationEnd.ForEachAsync:
+				{
+					var count = 0;
+
+					await query.ForEachAsync(_ => count++);
+
+					count.ShouldBe(3);
+					break;
+				}
 			}
 
-			transaction!.Commit();
-
-			audit
+			db.Transaction.ShouldBeNull();
+			events
 				.Count()
 				.ShouldBe(3);
 		}
 
+		[Test]
+		public async Task EagerLoadOverOutputRollsBackOnFailure([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values(EnumerationEnd.Completed, EnumerationEnd.AsyncCompleted, EnumerationEnd.ForEachAsync)] EnumerationEnd end)
+		{
+			using var db     = GetDataConnection(context);
+			using var input  = db.CreateLocalTable(new[]
+			{
+				new EventInput { PersistenceId = "actor-abc", SequenceNumber = 1, Tag = "auth" },
+				new EventInput { PersistenceId = "actor-abc", SequenceNumber = 2, Tag = "profile" },
+				new EventInput { PersistenceId = "actor-xyz", SequenceNumber = 1, Tag = "ping" },
+			});
+			using var events = db.CreateLocalTable<EventRecord>();
+			using var lookup = db.CreateLocalTable(GetSourceData());
+
+			// the insert and the child queries succeed; materializing the second row fails on the client
+			var query = input
+				.InsertWithOutputQuery(events, i => new EventRecord { PersistenceId = i.PersistenceId, SequenceNumber = i.SequenceNumber })
+				.Select(e => new
+				{
+					Id       = FailOnSecond(e.Id),
+					Children = lookup
+						.Where(s => s.Id == e.Id)
+						.Select(s => s.Id)
+						.ToList(),
+				});
+
+			switch (end)
+			{
+				case EnumerationEnd.Completed:
+				{
+					Action act = () => query.ToList();
+
+					act.ShouldThrow<InvalidOperationException>();
+					break;
+				}
+
+				case EnumerationEnd.AsyncCompleted:
+				{
+					Func<Task> act = async () =>
+					{
+						await foreach (var row in query.AsAsyncEnumerable())
+						{
+						}
+					};
+
+					await act.ShouldThrowAsync<InvalidOperationException>();
+					break;
+				}
+
+				case EnumerationEnd.ForEachAsync:
+				{
+					Func<Task> act = () => query.ForEachAsync(_ => { });
+
+					await act.ShouldThrowAsync<InvalidOperationException>();
+					break;
+				}
+			}
+
+			db.Transaction.ShouldBeNull();
+			events
+				.Count()
+				.ShouldBe(0);
+		}
 		// Guard test: keep SqlProviderFlags.IsInsertOutputQuerySupported honest. It probes whether the provider accepts the
 		// data-modifying CTE that BasicSqlBuilder.BuildDataModificationCteBody renders and fails when reality diverges
 		// from the declared flag, signalling that the provider's flag (set in its DataProvider) needs updating.
