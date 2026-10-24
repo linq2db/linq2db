@@ -1262,7 +1262,8 @@ namespace Tests.xUpdate
 				{
 					Action act = () => query.ToList();
 
-					act.ShouldThrow<InvalidOperationException>();
+					var ex = act.ShouldThrow<InvalidOperationException>();
+					ex.Message.ShouldBe("Materialization failed.");
 					break;
 				}
 
@@ -1275,7 +1276,8 @@ namespace Tests.xUpdate
 						}
 					};
 
-					await act.ShouldThrowAsync<InvalidOperationException>();
+					var ex = await act.ShouldThrowAsync<InvalidOperationException>();
+					ex.Message.ShouldBe("Materialization failed.");
 					break;
 				}
 
@@ -1283,7 +1285,8 @@ namespace Tests.xUpdate
 				{
 					Func<Task> act = () => query.ForEachAsync(_ => { });
 
-					await act.ShouldThrowAsync<InvalidOperationException>();
+					var ex = await act.ShouldThrowAsync<InvalidOperationException>();
+					ex.Message.ShouldBe("Materialization failed.");
 					break;
 				}
 			}
@@ -1292,6 +1295,80 @@ namespace Tests.xUpdate
 			events
 				.Count()
 				.ShouldBe(0);
+		}
+		[Test]
+		public async Task EagerLoadOverOutputWithDetachedChildCommitsAfterReader([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] bool combined, [Values(EnumerationEnd.Completed, EnumerationEnd.Break, EnumerationEnd.AsyncBreak)] EnumerationEnd end)
+		{
+			var committed = 0;
+
+			using var db = GetDataConnection(context, o => o
+				.UseCombinedCommands(combined)
+				.UseTracing(e =>
+				{
+					if (e.TraceInfoStep == TraceInfoStep.BeforeExecute && e.Operation == TraceOperation.CommitTransaction)
+						committed++;
+				}));
+
+			using var input  = db.CreateLocalTable(new[]
+			{
+				new EventInput { PersistenceId = "actor-abc", SequenceNumber = 1, Tag = "auth" },
+				new EventInput { PersistenceId = "actor-abc", SequenceNumber = 2, Tag = "profile" },
+				new EventInput { PersistenceId = "actor-xyz", SequenceNumber = 1, Tag = "ping" },
+			});
+			using var events = db.CreateLocalTable<EventRecord>();
+			using var lookup = db.CreateLocalTable(GetSourceData());
+
+			committed = 0;
+
+			// the child does not read the output, so it is detached: the main query streams the insert with its reader open
+			var query = input
+				.InsertWithOutputQuery(events, i => new EventRecord { PersistenceId = i.PersistenceId, SequenceNumber = i.SequenceNumber })
+				.Select(e => new
+				{
+					e.Id,
+					Lookup = lookup
+						.Select(s => s.Id)
+						.ToList(),
+				});
+
+			switch (end)
+			{
+				case EnumerationEnd.Completed:
+				{
+					var rows = query.ToList();
+
+					rows.Count.ShouldBe(3);
+					break;
+				}
+
+				case EnumerationEnd.Break:
+				{
+					using var enumerator = query.GetEnumerator();
+
+					var moved = enumerator.MoveNext();
+
+					moved.ShouldBeTrue();
+					break;
+				}
+
+				case EnumerationEnd.AsyncBreak:
+				{
+					await using var enumerator = query
+						.AsAsyncEnumerable()
+						.GetAsyncEnumerator();
+
+					var moved = await enumerator.MoveNextAsync();
+
+					moved.ShouldBeTrue();
+					break;
+				}
+			}
+
+			committed.ShouldBe(1);
+			db.Transaction.ShouldBeNull();
+			events
+				.Count()
+				.ShouldBe(3);
 		}
 		// Guard test: keep SqlProviderFlags.IsInsertOutputQuerySupported honest. It probes whether the provider accepts the
 		// data-modifying CTE that BasicSqlBuilder.BuildDataModificationCteBody renders and fails when reality diverges
