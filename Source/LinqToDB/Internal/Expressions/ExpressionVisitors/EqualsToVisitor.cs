@@ -73,6 +73,7 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 				ExpressionType.Call         => EqualsToX((MethodCallExpression)expr1, (MethodCallExpression)expr2),
 				ExpressionType.Constant     => EqualsToX((ConstantExpression)expr1, (ConstantExpression)expr2),
 				ExpressionType.Invoke       => EqualsToX((InvocationExpression)expr1, (InvocationExpression)expr2),
+				ExpressionType.Index        => EqualsToX((IndexExpression)expr1, (IndexExpression)expr2),
 				ExpressionType.Lambda       => EqualsToX((LambdaExpression)expr1, (LambdaExpression)expr2),
 				ExpressionType.ListInit     => EqualsToX((ListInitExpression)expr1, (ListInitExpression)expr2),
 				ExpressionType.MemberAccess => EqualsToX((MemberExpression)expr1, (MemberExpression)expr2),
@@ -281,6 +282,18 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 		static bool EqualsToX(InvocationExpression expr1, InvocationExpression expr2)
 		{
 			if (expr1.Arguments.Count != expr2.Arguments.Count || !expr1.Expression.EqualsTo(expr2.Expression))
+				return false;
+
+			for (var i = 0; i < expr1.Arguments.Count; i++)
+				if (!expr1.Arguments[i].EqualsTo(expr2.Arguments[i]))
+					return false;
+
+			return true;
+		}
+
+		static bool EqualsToX(IndexExpression expr1, IndexExpression expr2)
+		{
+			if (expr1.Indexer != expr2.Indexer || expr1.Arguments.Count != expr2.Arguments.Count || !expr1.Object.EqualsTo(expr2.Object))
 				return false;
 
 			for (var i = 0; i < expr1.Arguments.Count; i++)

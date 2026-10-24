@@ -596,7 +596,7 @@ namespace Tests.Linq
 				.ShouldBe([2]);
 		}
 
-		// Query-cache test: the cache key does not depend on the provider, so one provider family is enough.
+		// Query-cache test: provider-independent.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5879")]
 		[QueryCacheTest]
 		public void HandBuiltArrayAccess_RebuiltTreeHitsCache([IncludeDataSources(TestProvName.AllSQLite)] string context)
@@ -623,7 +623,7 @@ namespace Tests.Linq
 			ShouldHitCacheOnRebuild(HandBuilt,     new[] { 2, 3 }, 2, new[] { 3, 4 }, 3);
 		}
 
-		// Query-cache test: the cache key does not depend on the provider, so one provider family is enough.
+		// Query-cache test: provider-independent.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5879")]
 		[QueryCacheTest]
 		public void HandBuiltIndexerProperty([IncludeDataSources(TestProvName.AllSQLite)] string context)
@@ -650,10 +650,12 @@ namespace Tests.Linq
 			ShouldHitCacheOnRebuild(HandBuilt,     new List<int> { 2 }, 2, new List<int> { 3 }, 3);
 		}
 
-		// A collection held directly in a ConstantExpression must not be inlined into a cached query as a literal.
-		// The compiler never builds this shape either, so its controls are the hand-built ArrayIndex and get_Item
-		// forms the IndexExpression is equivalent to. Cache reuse does not depend on the provider, hence one family.
+		// A collection held directly in a ConstantExpression has no compiler shape either, so the controls are the
+		// hand-built get_Item and ArrayIndex forms. A list leaves the cache key and is read on reuse; an array stays in
+		// the key and its element is inlined, so mutating it must invalidate the cached query.
+		// Query-cache test: provider-independent.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5879")]
+		[QueryCacheTest]
 		public void HandBuiltIndexOverConstantCollection([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -686,10 +688,33 @@ namespace Tests.Linq
 					.Select(p => p.ID);
 			}
 
-			ShouldReadEachValue(GetItemOverList,     new List<int> { 2 }, 2, new List<int> { 3 }, 3);
-			ShouldReadEachValue(IndexOverList,       new List<int> { 2 }, 2, new List<int> { 3 }, 3);
-			ShouldReadEachValue(ArrayIndexOverArray, new[] { 2 },         2, new[] { 3 },         3);
-			ShouldReadEachValue(IndexOverArray,      new[] { 2 },         2, new[] { 3 },         3);
+			ShouldHitCacheOnRebuild(GetItemOverList, new List<int> { 2 }, 2, new List<int> { 3 }, 3);
+			ShouldHitCacheOnRebuild(IndexOverList,   new List<int> { 2 }, 2, new List<int> { 3 }, 3);
+
+			ShouldRebuildOnMutation(ArrayIndexOverArray);
+			ShouldRebuildOnMutation(IndexOverArray);
+		}
+
+		static void ShouldRebuildOnMutation(Func<int[], IQueryable<int>> build)
+		{
+			var ids   = new[] { 2 };
+			var query = build(ids);
+
+			query
+				.ToArray()
+				.ShouldBe([2]);
+
+			var missCount = query.GetCacheMissCount();
+
+			ids[0] = 3;
+
+			build(ids)
+				.ToArray()
+				.ShouldBe([3]);
+
+			query
+				.GetCacheMissCount()
+				.ShouldBe(missCount + 1);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5879")]
@@ -771,6 +796,145 @@ namespace Tests.Linq
 				query(db)
 					.ToArray()
 					.ShouldBe([3]);
+			}
+		}
+
+		// The branches of a client-evaluable conditional whose test becomes a subquery are not exposed (#6138), so the
+		// IndexExpression reaches the cache manager and the cache compare unrewritten.
+		// The gap is in expression processing ahead of any provider code, so one provider family is enough.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6138")]
+		public void HandBuiltArrayAccessInUnvisitedConditionalBranch([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var closureQuery = db.Person;
+
+			IQueryable<string> HandBuilt(string[] values)
+			{
+				Expression<Func<string[]>> captured = () => values;
+				Expression<Func<bool>>     test     = () => closureQuery.Any();
+
+				var person = Expression.Parameter(typeof(Model.Person), "p");
+
+				var selector = Expression.Lambda<Func<Model.Person, string>>(
+					Expression.Condition(test.Body, Expression.ArrayAccess(captured.Body, Expression.Constant(0)), Expression.Constant("x")),
+					person);
+
+				return db.Person
+					.Where(p => p.ID == 1)
+					.Select(selector);
+			}
+
+			IQueryable<string> CompilerBuilt(string[] values)
+			{
+				return db.Person
+					.Where(p => p.ID == 1)
+					.Select(p => closureQuery.Any() ? values[0] : "x");
+			}
+
+			ShouldReadEachValue(CompilerBuilt, new[] { "a" }, "a", new[] { "b" }, "b");
+			ShouldReadEachValue(HandBuilt,     new[] { "a" }, "a", new[] { "b" }, "b");
+		}
+
+		// The gap is in expression processing ahead of any provider code, so one provider family is enough.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6138")]
+		public void HandBuiltArrayAccessInUnvisitedConditionalBranch_Where([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var closureQuery = db.Person;
+
+			IQueryable<int> HandBuilt(int[] ids)
+			{
+				Expression<Func<int[]>> captured = () => ids;
+				Expression<Func<bool>>  test     = () => closureQuery.Any();
+
+				var value = Expression.Condition(test.Body, Expression.ArrayAccess(captured.Body, Expression.Constant(0)), Expression.Constant(0));
+
+				return db.Person
+					.Where(IdEquals(value))
+					.Select(p => p.ID);
+			}
+
+			IQueryable<int> CompilerBuilt(int[] ids)
+			{
+				return db.Person
+					.Where(p => p.ID == (closureQuery.Any() ? ids[0] : 0))
+					.Select(p => p.ID);
+			}
+
+			ShouldReadEachValue(CompilerBuilt, new[] { 2 }, 2, new[] { 3 }, 3);
+			ShouldReadEachValue(HandBuilt,     new[] { 2 }, 2, new[] { 3 }, 3);
+
+			HandBuilt(new[] { 2 })
+				.ToSqlQuery()
+				.Parameters
+				.Select(p => p.Name)
+				.ShouldBe(["ids"]);
+		}
+
+		// Parity with the compiler's get_Item call over an association, which may itself be untranslatable: whatever
+		// the compiler-built form does, the hand-built one must do the same.
+		// Eager-load path over Children; Access is excluded as for LoadWith12.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5879")]
+		public void HandBuiltIndexerOverAssociation([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var parent       = Expression.Parameter(typeof(Model.Parent), "p");
+			var firstChildId = Expression.Property(
+				Expression.MakeIndex(
+					Expression.Property(parent, nameof(Model.Parent.Children)),
+					typeof(List<Model.Child>).GetProperty("Item"),
+					[Expression.Constant(0)]),
+				nameof(Model.Child.ChildID));
+
+			ShouldBehaveTheSame(
+				db.Parent
+					.Where(p => p.ParentID == 1)
+					.Select(Expression.Lambda<Func<Model.Parent, int>>(firstChildId, parent)),
+				db.Parent
+					.Where(p => p.ParentID == 1)
+					.Select(p => p.Children[0].ChildID));
+
+			ShouldBehaveTheSame(
+				db.Parent
+					.Where(Expression.Lambda<Func<Model.Parent, bool>>(Expression.Equal(firstChildId, Expression.Constant(11)), parent))
+					.Select(p => p.ParentID),
+				db.Parent
+					.Where(p => p.Children[0].ChildID == 11)
+					.Select(p => p.ParentID));
+		}
+
+		static void ShouldBehaveTheSame<T>(IQueryable<T> handBuilt, IQueryable<T> compilerBuilt)
+		{
+			T[]?       expected      = null;
+			Exception? expectedError = null;
+
+			try
+			{
+				expected = compilerBuilt.ToArray();
+			}
+			catch (Exception ex)
+			{
+				expectedError = ex;
+			}
+
+			if (expectedError == null)
+			{
+				handBuilt
+					.ToArray()
+					.ShouldBe(expected!, ignoreOrder: true);
+			}
+			else
+			{
+				var error = Shouldly.Should.Throw<Exception>(() => handBuilt.ToArray());
+
+				error
+					.GetType()
+					.ShouldBe(expectedError.GetType());
+
+				error.Message.ShouldBe(expectedError.Message);
 			}
 		}
 
