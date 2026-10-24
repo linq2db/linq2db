@@ -30,6 +30,10 @@ namespace LinqToDB
 		/// one command, they run one after another and the results are the same.
 		/// </para>
 		/// <para>
+		/// The collection statements run before the shared statement that reads the scalars, whatever order the selector
+		/// lists them in.
+		/// </para>
+		/// <para>
 		/// Where the statements are combined, collections in the selector are loaded with
 		/// <see cref="EagerLoadingStrategy.Default"/>, which overrides <see cref="LinqOptions.DefaultEagerLoadingStrategy"/>
 		/// and any <c>With*LoadStrategy()</c> call inside the selector; elsewhere the configured strategy applies. Either way
