@@ -1,8 +1,10 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 
 using JetBrains.Annotations;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -235,6 +237,7 @@ namespace Tests.Mapping
 				children = db.GetTable<ChildWithoutAssociation>();
 			}
 
+			// Not AssertQuery: its in-memory side would read c.Parent, which only the handle's schema maps.
 			var expected = Child
 				.Select(c => new { c.ChildID, Parent.Single(p => p.ParentID == c.ParentID).Value1 })
 				.OrderBy(r => r.ChildID)
@@ -267,6 +270,7 @@ namespace Tests.Mapping
 				children = db.GetTable<ChildWithoutAssociation>();
 			}
 
+			// Not AssertQuery: its in-memory side would read c.Parent, which only the handle's schema maps.
 			var expected =
 				from p in Parent
 				join c in Child on p.ParentID equals c.ParentID
@@ -480,26 +484,61 @@ namespace Tests.Mapping
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
 		public void ParameterConversionFollowsHandleSchema([DataSources] string context)
 		{
-			using var db  = GetDataContext(context);
-			using var tmp = db.CreateLocalTable(ShapeRows);
+			using var db = GetDataContext(context);
 
 			var schema = new MappingSchema();
 			schema.SetConvertExpression<long, int>(value => (int)value + 1);
 
-			ITable<ShapeRow> rows;
+			ITable<Model.Parent> parents;
 
 			using (db.UseMappingSchema(schema))
 			{
-				rows = db.GetTable<ShapeRow>();
+				parents = db.GetTable<Model.Parent>();
 			}
 
 			var id = 1L;
 
-			rows
-				.Where(r => r.Id == id)
-				.Select(r => r.Id)
+			parents
+				.Where(p => p.ParentID == id)
+				.Select(p => p.ParentID)
 				.ToList()
 				.ShouldBe([2]);
+		}
+
+		public sealed class Token
+		{
+			public string Text { get; set; } = null!;
+		}
+
+		// A value with no column to take its conversion from is bound by the handle's schema. The base schema reads it
+		// back on both arms; only the binding conversion differs between the base and the scope.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
+		public void UnboundParameterFollowsHandleSchema([DataSources] string context)
+		{
+			var baseSchema = new MappingSchema();
+			baseSchema.SetConvertExpression<Token, DataParameter>(t => new DataParameter { Value = "A" + t.Text, DataType = DataType.NVarChar });
+			baseSchema.SetConvertExpression<string, Token>(s => new Token { Text = s });
+
+			var scopeSchema = new MappingSchema();
+			scopeSchema.SetConvertExpression<Token, DataParameter>(t => new DataParameter { Value = "B" + t.Text, DataType = DataType.NVarChar });
+
+			using var db = GetDataContext(context, o => o.UseMappingSchema(baseSchema));
+
+			ITable<Model.Parent> parents;
+
+			using (db.UseMappingSchema(scopeSchema))
+			{
+				parents = db.GetTable<Model.Parent>();
+			}
+
+			var token = new Token { Text = "x" };
+
+			parents
+				.Where(p => p.ParentID == 1)
+				.Select(p => Sql.AsSql(token))
+				.ToList()
+				.Select(t => t.Text)
+				.ShouldBe(["Bx"]);
 		}
 
 		// FromSql text is provider SQL: unquoted identifiers resolve only where the table name is case-insensitive.
@@ -518,6 +557,72 @@ namespace Tests.Mapping
 					.Value
 					.ShouldBe(5);
 			}
+		}
+
+		// FromSql text is provider SQL (see above). Its arguments convert under the same schema as its columns.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
+		public void FromSqlArgumentFollowsHandleSchema([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer, ProviderName.DuckDB)] string context)
+		{
+			using var db  = GetDataContext(context);
+			using var tmp = db.CreateLocalTable(new[] { new ShapeCodeRow { Id = 1, Kind = 101 }, new ShapeCodeRow { Id = 2, Kind = 102 } });
+
+			var schema = new MappingSchema();
+			schema.SetConvertExpression<ShapeKind, int>(kind => (int)kind + 101);
+
+			IQueryable<ShapeCodeRow> query;
+
+			using (db.UseMappingSchema(schema))
+			{
+				query = db.FromSql<ShapeCodeRow>($"SELECT Id, Kind FROM SourceSchemaShape WHERE Kind = {ShapeKind.Circle}");
+			}
+
+			query
+				.Select(r => r.Id)
+				.ToList()
+				.ShouldBe([1]);
+		}
+
+		// CreateTempTable with setTable swaps the data context's schema while the temp table lives, so a handle
+		// created before it keeps its own key.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
+		public void EntityUpdateFollowsHandleSchemaUnderTempTable([DataSources(false)] string context)
+		{
+			using var db  = GetDataContext(context);
+			using var tmp = db.CreateLocalTable(new[] { new SourceSchemaRow { Id = 1, Value = 5, Name = "a" } });
+
+			using (db.CreateTempTable(Array.Empty<SourceSchemaRow>(), e => e.Property(p => p.Value).IsPrimaryKey(), tableName: "SourceSchemaRowTemp"))
+			{
+				tmp
+					.Update(new SourceSchemaRow { Id = 1, Value = 6, Name = "b" }, b => b)
+					.ShouldBe(1);
+			}
+
+			tmp
+				.Single()
+				.Value
+				.ShouldBe(6);
+		}
+
+		// A reference member projected through an as-cast tests the type through the discriminator conversion.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
+		public void TypeAsFollowsHandleSchema([DataSources] string context)
+		{
+			using var db  = GetDataContext(context);
+			using var tmp = db.CreateLocalTable(ShapeRows);
+
+			ITable<Shape> shapes;
+
+			using (db.UseMappingSchema(ShapeCodes()))
+			{
+				shapes = db.GetTable<Shape>();
+			}
+
+			shapes
+				.OrderBy(s => s.Id)
+				.Select(s => s as ShapeCircle)
+				.Select(c => (string?)c!.Kind)
+				.ToList()
+				.ShouldBe(["C1", null]);
 		}
 	}
 }

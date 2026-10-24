@@ -123,7 +123,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
-			var context = new SelectContext(sequence.TranslationModifier, buildInfo.Parent, builder, sequence.MappingSchema, resultSelector == null ? collection : null, resultExpression, sequence.SelectQuery, buildInfo.IsSubQuery);
+			var context = new SelectContext(sequence.TranslationModifier, buildInfo.Parent, builder, resultSelector == null ? collection.MappingSchema : sequence.MappingSchema, resultSelector == null ? collection : null, resultExpression, sequence.SelectQuery, buildInfo.IsSubQuery);
 			context.SetAlias(collectionSelector.Parameters[0].Name);
 
 			string? collectionAlias = null;

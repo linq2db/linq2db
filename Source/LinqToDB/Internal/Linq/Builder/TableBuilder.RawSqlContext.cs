@@ -12,12 +12,13 @@ namespace LinqToDB.Internal.Linq.Builder
 	{
 		sealed class SimpleSelectContext : BuildContextBase
 		{
-			public SimpleSelectContext(TranslationModifier translationModifier, ExpressionBuilder builder, Type elementType, SelectQuery selectQuery) 
+			public SimpleSelectContext(TranslationModifier translationModifier, ExpressionBuilder builder, MappingSchema mappingSchema, Type elementType, SelectQuery selectQuery) 
 				: base(translationModifier, builder, elementType, selectQuery)
 			{
+				MappingSchema = mappingSchema;
 			}
 
-			public override MappingSchema MappingSchema => Builder.MappingSchema;
+			public override MappingSchema MappingSchema { get; }
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
@@ -57,7 +58,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var sqlArguments = new ISqlExpression[arguments.Count];
 
-			var context = buildInfo.Parent ?? new SimpleSelectContext(builder.GetTranslationModifier(), builder, typeof(object), buildInfo.SelectQuery);
+			var context = buildInfo.Parent ?? new SimpleSelectContext(builder.GetTranslationModifier(), builder, mappingSchema, typeof(object), buildInfo.SelectQuery);
 
 			for (var i = 0; i < arguments.Count; i++)
 			{
