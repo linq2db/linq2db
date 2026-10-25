@@ -991,6 +991,11 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 		protected override Expression VisitBinary(BinaryExpression node)
 		{
+			// An assignment target must stay writeable, so VisitIndex's getter rewrite cannot apply to it
+			// (the dynamic-column setter built in EntityDescriptor assigns through the storage indexer).
+			if (node.NodeType == ExpressionType.Assign && node.Left is IndexExpression index)
+				return node.Update(base.VisitIndex(index), node.Conversion, Visit(node.Right));
+
 			if (node.Method != null)
 			{
 				var convertedMember = _memberConverter.Convert(node, _convertContext, out var handled);
