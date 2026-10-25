@@ -16,7 +16,18 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 		protected override IMemberTranslator  CreateSqlTypesTranslator()             => new SqlTypesTranslation();
 		protected override IMemberTranslator  CreateDateMemberTranslator()           => new DateFunctionsTranslator();
 		protected override IMemberTranslator  CreateStringMemberTranslator()         => new StringMemberTranslator();
+		protected override IMemberTranslator  CreateMathMemberTranslator()           => new DuckDBMathMemberTranslator();
 		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator() => new DuckDBWindowFunctionsMemberTranslator();
+
+		protected class DuckDBMathMemberTranslator : MathMemberTranslatorBase
+		{
+			protected override ISqlExpression? TranslateTruncate(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value)
+			{
+				var factory = translationContext.ExpressionFactory;
+
+				return factory.Function(factory.GetDbDataType(methodCall.Type), "Trunc", value);
+			}
+		}
 
 		protected class DuckDBWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
 		{

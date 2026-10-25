@@ -348,6 +348,37 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 
 				return result;
 			}
+
+			// Sql.Round(double, precision) rounds through numeric, as Math.Round does not.
+			protected override ISqlExpression? TranslateSqlRoundAwayFromZero(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
+			{
+				if (methodCall.Arguments.Count < 2 || methodCall.Arguments[0].Type == typeof(decimal?))
+					return base.TranslateSqlRoundAwayFromZero(translationContext, methodCall, value, precision);
+
+				var factory   = translationContext.ExpressionFactory;
+				var valueType = factory.GetDbDataType(value);
+
+				var result = TranslateRoundAwayFromZero(translationContext, methodCall, factory.Cast(value, factory.GetDbDataType(typeof(decimal))), precision);
+
+				return result == null ? null : factory.Cast(result, valueType);
+			}
+
+			// trunc(double precision, int) does not exist, so a double truncates through numeric.
+			protected override ISqlExpression? TranslateTruncate(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value)
+			{
+				var factory     = translationContext.ExpressionFactory;
+				var resultType  = factory.GetDbDataType(methodCall.Type);
+				var decimalType = factory.GetDbDataType(typeof(decimal));
+
+				if (methodCall.Type != typeof(decimal?))
+				{
+					var truncated = factory.Function(decimalType, "Trunc", factory.Cast(value, decimalType), factory.Value(0));
+
+					return factory.Cast(truncated, resultType);
+				}
+
+				return factory.Function(resultType, "Trunc", value, factory.Value(0));
+			}
 		}
 
 		protected class GuidMemberTranslator : GuidMemberTranslatorBase
@@ -372,6 +403,11 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 
 		protected class StringMemberTranslator : StringMemberTranslatorBase
 		{
+			public override ISqlExpression? TranslateRight(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression length)
+			{
+				return TranslateRightAsSubstring(translationContext, methodCall, clampStart: false);
+			}
+
 			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool withoutSeparator)
 			{
 				var builder = new AggregateFunctionBuilder()

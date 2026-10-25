@@ -36,6 +36,19 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 			return new GuidMemberTranslator();
 		}
 
+		protected override IMemberTranslator CreateMathMemberTranslator()
+		{
+			return new SQLiteMathMemberTranslator();
+		}
+
+		protected class SQLiteMathMemberTranslator : MathMemberTranslatorBase
+		{
+			protected override ISqlExpression? TranslateTruncate(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value)
+			{
+				return TranslateTruncateAsFloorOrCeiling(translationContext, methodCall);
+			}
+		}
+
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
 			const string StrFTimeFuncName = "strftime";
@@ -250,6 +263,18 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 
 		protected class StringMemberTranslator : StringMemberTranslatorBase
 		{
+			public override ISqlExpression? TranslateRight(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression length)
+			{
+				// SUBSTRING(value, LENGTH(value) - length + 1)
+
+				var factory = translationContext.ExpressionFactory;
+				var intType = factory.GetDbDataType(typeof(int));
+
+				var start = factory.Add(intType, factory.Sub(intType, factory.Function(intType, "LENGTH", value), length), factory.Value(1));
+
+				return factory.Function(factory.GetDbDataType(methodCall.Type), "SUBSTRING", value, start);
+			}
+
 			public override ISqlExpression? TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
 			{
 				/*

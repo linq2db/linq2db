@@ -40,6 +40,20 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 
 		protected class StringMemberTranslator : StringMemberTranslatorBase
 		{
+			public override ISqlExpression? TranslateRight(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression length)
+			{
+				var factory = translationContext.ExpressionFactory;
+
+				return new SqlExpression(
+					factory.GetDbDataType(methodCall.Type),
+					"Unicode::Substring({0}, CAST(Unicode::GetLength({0}) - {1} AS UInt32), {1})",
+					Precedence.Primary,
+					SqlFlags.IsPure,
+					ParametersNullabilityType.IfAnyParameterNullable,
+					value,
+					length);
+			}
+
 			public override ISqlExpression? TranslatePadLeft(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression? paddingChar)
 			{
 				var factory = translationContext.ExpressionFactory;
@@ -647,6 +661,13 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 
 		protected class MathMemberTranslator : MathMemberTranslatorBase
 		{
+			protected override ISqlExpression? TranslateTruncate(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value)
+			{
+				var factory = translationContext.ExpressionFactory;
+
+				return factory.Function(factory.GetDbDataType(methodCall.Type), "Math::Trunc", value);
+			}
+
 			protected override ISqlExpression? TranslateMaxMethod(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression xValue, ISqlExpression yValue)
 				=> TranslateMinMax(translationContext, "MAX_OF", xValue, yValue);
 
