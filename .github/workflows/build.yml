@@ -97,7 +97,6 @@ jobs:
         run: |
           $common = @(
             '--configuration', '${{ env.RELEASE_CONFIGURATION }}'
-            '-p:RunAnalyzersDuringBuild=false'
             '-p:RunApiAnalyzersDuringBuild=false'
           ) + ('${{ env.VERSION_ARGS }}' -split ' ' | Where-Object { $_ })
 
@@ -111,13 +110,12 @@ jobs:
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
 
-      # Analyzers stay off, matching build.yml's `with_analyzers: false` until dotnet/roslyn#80621
-      # ships. The API analyzers are a release-prep gate (/release-publicapi), not a per-PR one.
+      # The API analyzers are a release-prep gate (/release-publicapi), not a per-PR one.
       - name: Build solution
-        run: dotnet build ${{ env.SOLUTION }} --configuration ${{ env.RELEASE_CONFIGURATION }} -p:RunAnalyzersDuringBuild=false -p:RunApiAnalyzersDuringBuild=false ${{ env.VERSION_ARGS }}
+        run: dotnet build ${{ env.SOLUTION }} --configuration ${{ env.RELEASE_CONFIGURATION }} -p:RunApiAnalyzersDuringBuild=false ${{ env.VERSION_ARGS }}
 
       - name: Pack solution
-        run: dotnet pack ${{ env.SOLUTION }} --configuration ${{ env.RELEASE_CONFIGURATION }} -p:RunAnalyzersDuringBuild=false -p:RunApiAnalyzersDuringBuild=false ${{ env.VERSION_ARGS }}
+        run: dotnet pack ${{ env.SOLUTION }} --configuration ${{ env.RELEASE_CONFIGURATION }} -p:RunApiAnalyzersDuringBuild=false ${{ env.VERSION_ARGS }}
 
       # Both scripts already carry -NoAzdoLogs and signal through their exit code, so they need no
       # porting - only the switch. nuget-job.yml runs these before publishing; on a PR they are the
@@ -173,7 +171,7 @@ jobs:
             10.x
             ${{ env.DOTNET_SDK_11 }}
 
-      - run: dotnet build Examples/Examples.slnx --configuration Debug
+      - run: dotnet build Examples/Examples.slnx --configuration ${{ env.RELEASE_CONFIGURATION }}
 
   # Roslyn analyzer/code-fix unit tests, both the shipped (L2DB1xxx) and the repo-internal (LINQ2DB0xxx) sets.
   # DB-free and single-TFM, so Linux is fine. Two projects because they host different Roslyn versions: the
@@ -216,6 +214,25 @@ jobs:
       - run: dotnet publish Tests/Tests.SingleFile/Tests.SingleFile.csproj -c Release -f net11.0 -r win-x64 --self-contained true -p:PublishSingleFile=true -o .build/publish/singlefile
 
       - run: .build/publish/singlefile/linq2db.Tests.SingleFile.exe
+
+  # Regression guard for #6042 / #6051: JIT-compiles every netfx-shipped assembly in an x86 process with
+  # FP exceptions unmasked, as C++Builder / Delphi hosts run them. Release, not Azure: it checks the
+  # binaries that ship and reads no test configuration.
+  fpu-jit-sweep:
+    name: x86 FPU-unmasked JIT sweep
+    runs-on: windows-2025
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.x
+
+      - run: dotnet build Tests/Tests.FpuJit/Tests.FpuJit.csproj --configuration ${{ env.RELEASE_CONFIGURATION }} -p:RunApiAnalyzersDuringBuild=false
+
+      - run: .build/bin/Tests.FpuJit/${{ env.RELEASE_CONFIGURATION }}/net462/linq2db.Tests.FpuJit.exe
 
   # Port of templates/test-cli.yml. No database, so it belongs here rather than in the provider matrix.
   cli-tests:

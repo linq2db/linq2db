@@ -89,9 +89,9 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				var f = (float)v;
 				if (float.IsNaN(f))
 					sb.Append("BINARY_FLOAT_NAN");
-				else if (float.IsNegativeInfinity(f))
+				else if (FloatingPointHelper.IsNegativeInfinity(f))
 					sb.Append("-BINARY_FLOAT_INFINITY");
-				else if (float.IsPositiveInfinity(f))
+				else if (FloatingPointHelper.IsPositiveInfinity(f))
 					sb.Append("BINARY_FLOAT_INFINITY");
 				else
 					sb.AppendFormat(CultureInfo.InvariantCulture, "{0:G9}", f);
@@ -101,9 +101,9 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				var d = (double)v;
 				if (double.IsNaN(d))
 					sb.Append("BINARY_DOUBLE_NAN");
-				else if (double.IsNegativeInfinity(d))
+				else if (FloatingPointHelper.IsNegativeInfinity(d))
 					sb.Append("-BINARY_DOUBLE_INFINITY");
-				else if (double.IsPositiveInfinity(d))
+				else if (FloatingPointHelper.IsPositiveInfinity(d))
 					sb.Append("BINARY_DOUBLE_INFINITY");
 				else
 					sb.AppendFormat(CultureInfo.InvariantCulture, "{0:G17}D", d);

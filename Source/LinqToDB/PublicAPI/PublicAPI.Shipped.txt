@@ -1824,6 +1824,16 @@ LinqToDB.Internal.Common.ErrorHelper.ClickHouse
 LinqToDB.Internal.Common.ErrorHelper.MySql
 LinqToDB.Internal.Common.ErrorHelper.Oracle
 LinqToDB.Internal.Common.ErrorHelper.Sybase
+LinqToDB.Internal.Common.FormattableStringHelper
+LinqToDB.Internal.Common.FormattableStringHelper.FormatItem
+LinqToDB.Internal.Common.FormattableStringHelper.FormatItem.FormatItem() -> void
+LinqToDB.Internal.Common.FormattableStringHelper.FormatItem.FormatItem(int start, int length, int index, int indexStart, int indexLength, bool hasAlignment) -> void
+LinqToDB.Internal.Common.FormattableStringHelper.FormatItem.HasAlignment.get -> bool
+LinqToDB.Internal.Common.FormattableStringHelper.FormatItem.Index.get -> int
+LinqToDB.Internal.Common.FormattableStringHelper.FormatItem.IndexLength.get -> int
+LinqToDB.Internal.Common.FormattableStringHelper.FormatItem.IndexStart.get -> int
+LinqToDB.Internal.Common.FormattableStringHelper.FormatItem.Length.get -> int
+LinqToDB.Internal.Common.FormattableStringHelper.FormatItem.Start.get -> int
 LinqToDB.Internal.Common.IConfigurationID
 LinqToDB.Internal.Common.IConfigurationID.ConfigurationID.get -> int
 LinqToDB.Internal.Common.IdentifierBuilder
@@ -4481,6 +4491,7 @@ LinqToDB.Internal.Mapping.ColumnDescriptorExtensions
 LinqToDB.Internal.Mapping.DynamicColumnInfo
 LinqToDB.Internal.Mapping.DynamicColumnInfo.DynamicColumnInfo(System.Type! declaringType, System.Type! columnType, string! memberName) -> void
 LinqToDB.Internal.Mapping.DynamicColumnInfo.Equals(LinqToDB.Internal.Mapping.DynamicColumnInfo? other) -> bool
+LinqToDB.Internal.Mapping.IStorageTransparentConverter
 LinqToDB.Internal.Mapping.LockedMappingSchema
 LinqToDB.Internal.Mapping.LockedMappingSchema.LockedMappingSchema(string! configuration, params LinqToDB.Mapping.MappingSchema![]! schemas) -> void
 LinqToDB.Internal.Mapping.Nullability
@@ -4795,7 +4806,6 @@ LinqToDB.Internal.SqlProvider.OptimizationContext.OptimizeAndConvertAll<T>(T! el
 LinqToDB.Internal.SqlProvider.OptimizationContext.OptimizerVisitor.get -> LinqToDB.Internal.SqlProvider.SqlExpressionOptimizerVisitor!
 LinqToDB.Internal.SqlProvider.OptimizationContext.SqlProviderFlags.get -> LinqToDB.Internal.SqlProvider.SqlProviderFlags!
 LinqToDB.Internal.SqlProvider.OptimizationContext.SuggestDynamicParameter(LinqToDB.DbDataType dbDataType, object? value) -> LinqToDB.Internal.SqlQuery.SqlParameter!
-LinqToDB.Internal.SqlProvider.OptimizationContext.TransformationInfo.get -> LinqToDB.Internal.SqlQuery.Visitors.SqlQueryVisitor.IVisitorTransformationInfo!
 LinqToDB.Internal.SqlProvider.OptimizationContext.TransformationInfoConvert.get -> LinqToDB.Internal.SqlQuery.Visitors.SqlQueryVisitor.IVisitorTransformationInfo!
 LinqToDB.Internal.SqlProvider.RowFeature
 LinqToDB.Internal.SqlProvider.RowFeature.Between = 16 -> LinqToDB.Internal.SqlProvider.RowFeature
@@ -5263,6 +5273,7 @@ LinqToDB.Internal.SqlQuery.QueryElementType.SqlCteField = 81 -> LinqToDB.Interna
 LinqToDB.Internal.SqlQuery.QueryElementType.SqlCteTable = 46 -> LinqToDB.Internal.SqlQuery.QueryElementType
 LinqToDB.Internal.SqlQuery.QueryElementType.SqlCteTableField = 82 -> LinqToDB.Internal.SqlQuery.QueryElementType
 LinqToDB.Internal.SqlQuery.QueryElementType.SqlDataType = 10 -> LinqToDB.Internal.SqlQuery.QueryElementType
+LinqToDB.Internal.SqlQuery.QueryElementType.SqlDefaultValueExpression = 89 -> LinqToDB.Internal.SqlQuery.QueryElementType
 LinqToDB.Internal.SqlQuery.QueryElementType.SqlExpression = 3 -> LinqToDB.Internal.SqlQuery.QueryElementType
 LinqToDB.Internal.SqlQuery.QueryElementType.SqlExtendedFunction = 76 -> LinqToDB.Internal.SqlQuery.QueryElementType
 LinqToDB.Internal.SqlQuery.QueryElementType.SqlExtension = 65 -> LinqToDB.Internal.SqlQuery.QueryElementType
@@ -5528,6 +5539,10 @@ LinqToDB.Internal.SqlQuery.SqlCteTableField.SqlCteTableField(LinqToDB.Internal.S
 LinqToDB.Internal.SqlQuery.SqlCteTableField.SqlCteTableField(LinqToDB.Internal.SqlQuery.SqlCteTableField! field) -> void
 LinqToDB.Internal.SqlQuery.SqlCteTableField.Table.get -> LinqToDB.Internal.SqlQuery.ISqlTableSource?
 LinqToDB.Internal.SqlQuery.SqlCteTableField.Table.set -> void
+LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression
+LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression.SqlDefaultValueExpression(LinqToDB.DbDataType type, object? value) -> void
+LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression.Type.get -> LinqToDB.DbDataType
+LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression.Value.get -> object?
 LinqToDB.Internal.SqlQuery.SqlDeleteStatement
 LinqToDB.Internal.SqlQuery.SqlDeleteStatement.Output.get -> LinqToDB.Internal.SqlQuery.SqlOutputClause?
 LinqToDB.Internal.SqlQuery.SqlDeleteStatement.Output.set -> void
@@ -8821,6 +8836,7 @@ const LinqToDB.Internal.Common.ErrorHelper.Error_Upsert_MergeWithPredicate_NotSu
 const LinqToDB.Internal.Common.ErrorHelper.Error_Upsert_SkipInsert_With_Insert = "Upsert configuration is contradictory: SkipInsert() cannot be combined with Insert(...)." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_Upsert_SkipUpdate_With_Update = "Upsert configuration is contradictory: SkipUpdate() cannot be combined with Update(...)." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_Upsert_UpdateBranch_DoNothing_With_Ops = "Update branch configuration is contradictory: DoNothing() cannot be combined with Set/Ignore/When." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_ValueConverter_DivergentOperands = "Cannot combine '{0}' and '{1}' in the database: their value converters do not agree on what a stored value counts, so the two stored values are not commensurable and the result would be read through one of the conversions only. Combine them in .NET, or give both columns the same conversion." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_WindowFunction_AggregateDistinct = "DISTINCT is not supported in window aggregate functions by current provider." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_WindowFunction_AggregateWindowFunctions = "Aggregate window functions are not supported by current provider." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_WindowFunction_Correlation = "COVAR/CORR is not supported by current provider." -> string!
@@ -9201,6 +9217,7 @@ override LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor
 override LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.CanMeasureDifferenceInTicks.get -> bool
 override LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.ConvertCoalesce(LinqToDB.Internal.SqlQuery.SqlCoalesceExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 override LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.ConvertConversion(LinqToDB.Internal.SqlQuery.SqlCastExpression! cast) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+override LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.ConvertDefaultValue(LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression! expression) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 override LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.ConvertLikePredicate(LinqToDB.Internal.SqlQuery.SqlPredicate.Like! predicate) -> LinqToDB.Internal.SqlQuery.ISqlPredicate!
 override LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.ConvertSearchStringPredicate(LinqToDB.Internal.SqlQuery.SqlPredicate.SearchString! predicate) -> LinqToDB.Internal.SqlQuery.ISqlPredicate!
 override LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.ConvertSqlBinaryExpression(LinqToDB.Internal.SqlQuery.SqlBinaryExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
@@ -9385,6 +9402,7 @@ override LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlBuilder.WindowFu
 override LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
 override LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConvertVisitor.CanLowerIntervalShift.get -> bool
 override LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConvertVisitor.ConcatRequiresExplicitStringCast.get -> bool
+override LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConvertVisitor.ConvertDefaultValue(LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression! expression) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 override LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConvertVisitor.ConvertLikePredicate(LinqToDB.Internal.SqlQuery.SqlPredicate.Like! predicate) -> LinqToDB.Internal.SqlQuery.ISqlPredicate!
 override LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConvertVisitor.ConvertSearchStringPredicate(LinqToDB.Internal.SqlQuery.SqlPredicate.SearchString! predicate) -> LinqToDB.Internal.SqlQuery.ISqlPredicate!
 override LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConvertVisitor.ConvertSqlBinaryExpression(LinqToDB.Internal.SqlQuery.SqlBinaryExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
@@ -9399,6 +9417,7 @@ override LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConver
 override LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConvertVisitor.SupportsNullInColumn.get -> bool
 override LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConvertVisitor.TruncateDivide(LinqToDB.Internal.SqlQuery.ISqlExpression! value, long divisor) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+override LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConvertVisitor.VisitInListPredicate(LinqToDB.Internal.SqlQuery.SqlPredicate.InList! predicate) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConvertVisitor.WrapColumnExpression(LinqToDB.Internal.SqlQuery.ISqlExpression! expr) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 override LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlOptimizer.CreateConvertVisitor(bool allowModify) -> LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor!
 override LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlOptimizer.FinalizeStatement(LinqToDB.Internal.SqlQuery.SqlStatement! statement, LinqToDB.Internal.SqlQuery.EvaluationContext! context, LinqToDB.DataOptions! dataOptions, LinqToDB.Mapping.MappingSchema! mappingSchema) -> LinqToDB.Internal.SqlQuery.SqlStatement!
@@ -9780,6 +9799,7 @@ override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlBuilder.IsValuesSynt
 override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlBuilder.SkipFirst.get -> bool
 override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlBuilder.SkipFormat.get -> string!
 override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
+override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlExpressionConvertVisitor.CanLowerIntervalShift.get -> bool
 override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlExpressionConvertVisitor.ConcatRequiresExplicitStringCast.get -> bool
 override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlExpressionConvertVisitor.ConvertConversion(LinqToDB.Internal.SqlQuery.SqlCastExpression! cast) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlExpressionConvertVisitor.ConvertSearchStringPredicate(LinqToDB.Internal.SqlQuery.SqlPredicate.SearchString! predicate) -> LinqToDB.Internal.SqlQuery.ISqlPredicate!
@@ -9790,6 +9810,7 @@ override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlExpressionConvertVis
 override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlExpressionConvertVisitor.IntervalResolution.get -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
 override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlExpressionConvertVisitor.LikeCharactersToEscape.get -> string![]!
 override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlExpressionConvertVisitor.LikeValueParameterSupport.get -> bool
+override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlExpressionConvertVisitor.VisitExprPredicate(LinqToDB.Internal.SqlQuery.SqlPredicate.Expr! predicate) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlExpressionConvertVisitor.WrapColumnExpression(LinqToDB.Internal.SqlQuery.ISqlExpression! expr) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlOptimizer.CreateConvertVisitor(bool allowModify) -> LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor!
@@ -10062,6 +10083,7 @@ override LinqToDB.Internal.DataProvider.MySql.MySqlSqlExpressionConvertVisitor.C
 override LinqToDB.Internal.DataProvider.MySql.MySqlSqlExpressionConvertVisitor.CanLowerIntervalShift.get -> bool
 override LinqToDB.Internal.DataProvider.MySql.MySqlSqlExpressionConvertVisitor.ConcatRequiresExplicitStringCast.get -> bool
 override LinqToDB.Internal.DataProvider.MySql.MySqlSqlExpressionConvertVisitor.ConvertConversion(LinqToDB.Internal.SqlQuery.SqlCastExpression! cast) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+override LinqToDB.Internal.DataProvider.MySql.MySqlSqlExpressionConvertVisitor.ConvertDefaultValue(LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression! expression) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 override LinqToDB.Internal.DataProvider.MySql.MySqlSqlExpressionConvertVisitor.ConvertSearchStringPredicate(LinqToDB.Internal.SqlQuery.SqlPredicate.SearchString! predicate) -> LinqToDB.Internal.SqlQuery.ISqlPredicate!
 override LinqToDB.Internal.DataProvider.MySql.MySqlSqlExpressionConvertVisitor.ConvertSqlBinaryExpression(LinqToDB.Internal.SqlQuery.SqlBinaryExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.Internal.DataProvider.MySql.MySqlSqlExpressionConvertVisitor.ConvertSqlFunction(LinqToDB.Internal.SqlQuery.SqlFunction! func) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
@@ -10230,10 +10252,12 @@ override LinqToDB.Internal.DataProvider.Oracle.OracleSqlBuilderBase.StartStateme
 override LinqToDB.Internal.DataProvider.Oracle.OracleSqlBuilderBase.SupportsColumnAliasesInSource.get -> bool
 override LinqToDB.Internal.DataProvider.Oracle.OracleSqlBuilderBase.TryConvertParameterToSql(LinqToDB.Internal.SqlQuery.SqlParameterValue! paramValue) -> bool
 override LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
+override LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.CanLowerIntervalShift.get -> bool
 override LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.ConcatRequiresExplicitStringCast.get -> bool
 override LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.ConvertCoalesce(LinqToDB.Internal.SqlQuery.SqlCoalesceExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 override LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.ConvertConcat(LinqToDB.Internal.SqlQuery.SqlConcatExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 override LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.ConvertConversion(LinqToDB.Internal.SqlQuery.SqlCastExpression! cast) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+override LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.ConvertDefaultValue(LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression! expression) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 override LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.ConvertExprExprPredicate(LinqToDB.Internal.SqlQuery.SqlPredicate.ExprExpr! predicate) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.ConvertSqlBinaryExpression(LinqToDB.Internal.SqlQuery.SqlBinaryExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.ConvertSqlCaseExpression(LinqToDB.Internal.SqlQuery.SqlCaseExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
@@ -10245,6 +10269,7 @@ override LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor
 override LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.IntervalResolution.get -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
 override LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.IsWindowOrderByRequired(LinqToDB.Internal.SqlQuery.SqlExtendedFunction! func) -> bool
 override LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.LikeCharactersToEscape.get -> string![]!
+override LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.TruncateDivide(LinqToDB.Internal.SqlQuery.ISqlExpression! value, long divisor) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 override LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.VisitSqlValuesTable(LinqToDB.Internal.SqlQuery.SqlValuesTable! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.Internal.DataProvider.Oracle.Translation.OracleMemberTranslator.CreateDateMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator!
@@ -10484,6 +10509,7 @@ override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlBuilder.OffsetFormat(Lin
 override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlBuilder.SupportsColumnAliasesInSource.get -> bool
 override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlBuilder.SupportsMaterializedCteHint.get -> bool
 override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
+override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlExpressionConvertVisitor.CanLowerIntervalShift.get -> bool
 override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlExpressionConvertVisitor.ConcatRequiresExplicitStringCast.get -> bool
 override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlExpressionConvertVisitor.ConvertConversion(LinqToDB.Internal.SqlQuery.SqlCastExpression! cast) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlExpressionConvertVisitor.ConvertExprExprPredicate(LinqToDB.Internal.SqlQuery.SqlPredicate.ExprExpr! predicate) -> LinqToDB.Internal.SqlQuery.IQueryElement!
@@ -10491,6 +10517,8 @@ override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlExpressionConvertVisitor
 override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlExpressionConvertVisitor.ConvertSqlBinaryExpression(LinqToDB.Internal.SqlQuery.SqlBinaryExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlExpressionConvertVisitor.ElapsedTicks(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlExpressionConvertVisitor.IntervalResolution.get -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlExpressionConvertVisitor.VisitInListPredicate(LinqToDB.Internal.SqlQuery.SqlPredicate.InList! predicate) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlOptimizer.CreateConvertVisitor(bool allowModify) -> LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor!
 override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlOptimizer.RequiresCastingParametersForSetOperations.get -> bool
 override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlOptimizer.TransformStatement(LinqToDB.Internal.SqlQuery.SqlStatement! statement, LinqToDB.DataOptions! dataOptions, LinqToDB.Mapping.MappingSchema! mappingSchema) -> LinqToDB.Internal.SqlQuery.SqlStatement!
@@ -10677,6 +10705,7 @@ override LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlBuilder.RequiresUniqueRoot
 override LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlBuilder.SupportsColumnAliasesInSource.get -> bool
 override LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
 override LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlExpressionConvertVisitor.ConvertConversion(LinqToDB.Internal.SqlQuery.SqlCastExpression! cast) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+override LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlExpressionConvertVisitor.ConvertDefaultValue(LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression! expression) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 override LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlExpressionConvertVisitor.ConvertSearchStringPredicate(LinqToDB.Internal.SqlQuery.SqlPredicate.SearchString! predicate) -> LinqToDB.Internal.SqlQuery.ISqlPredicate!
 override LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlExpressionConvertVisitor.ConvertSqlBinaryExpression(LinqToDB.Internal.SqlQuery.SqlBinaryExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlExpressionConvertVisitor.ConvertSqlFunction(LinqToDB.Internal.SqlQuery.SqlFunction! func) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
@@ -10718,7 +10747,6 @@ override LinqToDB.Internal.DataProvider.SqlCe.Translation.SqlCeMemberTranslator.
 override LinqToDB.Internal.DataProvider.SqlCe.Translation.SqlCeMemberTranslator.SqlCeStringMemberTranslator.TranslateTrimEnd(LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.MethodCallExpression! methodCall, LinqToDB.Linq.Translation.TranslationFlags translationFlags, LinqToDB.Internal.SqlQuery.ISqlExpression! value, LinqToDB.Internal.SqlQuery.ISqlExpression? trimChars) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.DataProvider.SqlCe.Translation.SqlCeMemberTranslator.SqlCeStringMemberTranslator.TranslateTrimStart(LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.MethodCallExpression! methodCall, LinqToDB.Linq.Translation.TranslationFlags translationFlags, LinqToDB.Internal.SqlQuery.ISqlExpression! value, LinqToDB.Internal.SqlQuery.ISqlExpression? trimChars) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.DataProvider.SqlCe.Translation.SqlCeMemberTranslator.SqlCeWindowFunctionsMemberTranslator.IsWindowFunctionsSupported.get -> bool
-override LinqToDB.Internal.DataProvider.SqlCe.Translation.SqlCeMemberTranslator.SqlTypesTranslation.ConvertDate(LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.MemberExpression! memberExpression, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> System.Linq.Expressions.Expression?
 override LinqToDB.Internal.DataProvider.SqlCe.Translation.SqlCeMemberTranslator.SqlTypesTranslation.ConvertDateTime2(LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.MemberExpression! memberExpression, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> System.Linq.Expressions.Expression?
 override LinqToDB.Internal.DataProvider.SqlCe.Translation.SqlCeMemberTranslator.SqlTypesTranslation.ConvertDateTimeOffset(LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.MemberExpression! memberExpression, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> System.Linq.Expressions.Expression?
 override LinqToDB.Internal.DataProvider.SqlCe.Translation.SqlCeMemberTranslator.SqlTypesTranslation.ConvertSmallDateTime(LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.MemberExpression! memberExpression, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> System.Linq.Expressions.Expression?
@@ -10865,12 +10893,16 @@ override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlBuilder.PrintParam
 override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
 override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.ConvertConcat(LinqToDB.Internal.SqlQuery.SqlConcatExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.ConvertConversion(LinqToDB.Internal.SqlQuery.SqlCastExpression! cast) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.ConvertDefaultValue(LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression! expression) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.ConvertSearchStringPredicate(LinqToDB.Internal.SqlQuery.SqlPredicate.SearchString! predicate) -> LinqToDB.Internal.SqlQuery.ISqlPredicate!
 override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.ConvertSqlBinaryExpression(LinqToDB.Internal.SqlQuery.SqlBinaryExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.ConvertSqlFunction(LinqToDB.Internal.SqlQuery.SqlFunction! func) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.CountDateBoundaries(LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, LinqToDB.Internal.SqlQuery.ISqlExpression! start, LinqToDB.Internal.SqlQuery.ISqlExpression! end) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.ElapsedTicks(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.FinestDateUnit.get -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit?
+override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.IntervalResolution.get -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
 override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.IsWindowOrderByRequired(LinqToDB.Internal.SqlQuery.SqlExtendedFunction! func) -> bool
+override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.ShiftDate(LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, LinqToDB.Internal.SqlQuery.ISqlExpression! amount, LinqToDB.Internal.SqlQuery.ISqlExpression! date) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.SupportsDistinctAsExistsIntersect.get -> bool
 override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.WrapColumnExpression(LinqToDB.Internal.SqlQuery.ISqlExpression! expr) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
@@ -10880,7 +10912,6 @@ override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSystem2025SqlOptimize
 override LinqToDB.Internal.DataProvider.SqlServer.Translation.SqlServer2005MemberTranslator.CreateDateMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator!
 override LinqToDB.Internal.DataProvider.SqlServer.Translation.SqlServer2005MemberTranslator.CreateSqlTypesTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator!
 override LinqToDB.Internal.DataProvider.SqlServer.Translation.SqlServer2005MemberTranslator.SqlServer2005DateFunctionsTranslator.TranslateDateTimeTruncationToDate(LinqToDB.Linq.Translation.ITranslationContext! translationContext, LinqToDB.Internal.SqlQuery.ISqlExpression! dateExpression, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
-override LinqToDB.Internal.DataProvider.SqlServer.Translation.SqlServer2005MemberTranslator.SqlTypes2005Translation.ConvertDate(LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.MemberExpression! memberExpression, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> System.Linq.Expressions.Expression?
 override LinqToDB.Internal.DataProvider.SqlServer.Translation.SqlServer2008MemberTranslator.CreateDateMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator!
 override LinqToDB.Internal.DataProvider.SqlServer.Translation.SqlServer2008MemberTranslator.CreateSqlTypesTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator!
 override LinqToDB.Internal.DataProvider.SqlServer.Translation.SqlServer2008MemberTranslator.SqlServer2008DateFunctionsTranslator.TranslateDateTimeTruncationToDate(LinqToDB.Linq.Translation.ITranslationContext! translationContext, LinqToDB.Internal.SqlQuery.ISqlExpression! dateExpression, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
@@ -11023,6 +11054,8 @@ override LinqToDB.Internal.DataProvider.Sybase.SybaseSqlBuilder.IsSqlValuesTable
 override LinqToDB.Internal.DataProvider.Sybase.SybaseSqlBuilder.IsValuesSyntaxSupported.get -> bool
 override LinqToDB.Internal.DataProvider.Sybase.SybaseSqlBuilder.SupportsColumnAliasesInSource.get -> bool
 override LinqToDB.Internal.DataProvider.Sybase.SybaseSqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
+override LinqToDB.Internal.DataProvider.Sybase.SybaseSqlExpressionConvertVisitor.ConvertDefaultValue(LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression! expression) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+override LinqToDB.Internal.DataProvider.Sybase.SybaseSqlExpressionConvertVisitor.ConvertExprExprPredicate(LinqToDB.Internal.SqlQuery.SqlPredicate.ExprExpr! predicate) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.Internal.DataProvider.Sybase.SybaseSqlExpressionConvertVisitor.ConvertSqlFunction(LinqToDB.Internal.SqlQuery.SqlFunction! func) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 override LinqToDB.Internal.DataProvider.Sybase.SybaseSqlExpressionConvertVisitor.CountDateBoundaries(LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, LinqToDB.Internal.SqlQuery.ISqlExpression! start, LinqToDB.Internal.SqlQuery.ISqlExpression! end) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.DataProvider.Sybase.SybaseSqlExpressionConvertVisitor.FinestDateUnit.get -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit?
@@ -11030,6 +11063,7 @@ override LinqToDB.Internal.DataProvider.Sybase.SybaseSqlExpressionConvertVisitor
 override LinqToDB.Internal.DataProvider.Sybase.SybaseSqlExpressionConvertVisitor.LikeCharactersToEscape.get -> string![]!
 override LinqToDB.Internal.DataProvider.Sybase.SybaseSqlExpressionConvertVisitor.ShiftDate(LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, LinqToDB.Internal.SqlQuery.ISqlExpression! amount, LinqToDB.Internal.SqlQuery.ISqlExpression! date) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.DataProvider.Sybase.SybaseSqlExpressionConvertVisitor.VisitExistsPredicate(LinqToDB.Internal.SqlQuery.SqlPredicate.Exists! predicate) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+override LinqToDB.Internal.DataProvider.Sybase.SybaseSqlExpressionConvertVisitor.VisitInListPredicate(LinqToDB.Internal.SqlQuery.SqlPredicate.InList! predicate) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.Internal.DataProvider.Sybase.SybaseSqlExpressionConvertVisitor.WrapColumnExpression(LinqToDB.Internal.SqlQuery.ISqlExpression! expr) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 override LinqToDB.Internal.DataProvider.Sybase.SybaseSqlOptimizer.CreateConvertVisitor(bool allowModify) -> LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor!
 override LinqToDB.Internal.DataProvider.Sybase.SybaseSqlOptimizer.FinalizeUpdate(LinqToDB.Internal.SqlQuery.SqlStatement! statement, LinqToDB.DataOptions! dataOptions, LinqToDB.Mapping.MappingSchema! mappingSchema) -> LinqToDB.Internal.SqlQuery.SqlStatement!
@@ -11189,8 +11223,10 @@ override LinqToDB.Internal.DataProvider.Ydb.YdbSqlBuilder.OffsetFormat(LinqToDB.
 override LinqToDB.Internal.DataProvider.Ydb.YdbSqlBuilder.PrintParameterName(System.Text.StringBuilder! sb, System.Data.Common.DbParameter! parameter) -> void
 override LinqToDB.Internal.DataProvider.Ydb.YdbSqlBuilder.SupportsColumnAliasesInScalarSource.get -> bool
 override LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
+override LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.CanLowerIntervalShift.get -> bool
 override LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.ConcatRequiresExplicitStringCast.get -> bool
 override LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.ConvertConversion(LinqToDB.Internal.SqlQuery.SqlCastExpression! cast) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+override LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.ConvertDefaultValue(LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression! expression) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 override LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.ConvertSearchStringPredicate(LinqToDB.Internal.SqlQuery.SqlPredicate.SearchString! predicate) -> LinqToDB.Internal.SqlQuery.ISqlPredicate!
 override LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.ConvertSqlBinaryExpression(LinqToDB.Internal.SqlQuery.SqlBinaryExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.ConvertSqlCaseExpression(LinqToDB.Internal.SqlQuery.SqlCaseExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
@@ -11199,6 +11235,7 @@ override LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.Conve
 override LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.CreateLikeEscapeCharacter() -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 override LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.ElapsedTicks(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.LikeCharactersToEscape.get -> string![]!
+override LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.SupportsNullIf.get -> bool
 override LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.SupportsNullInColumn.get -> bool
 override LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.VisitInSubQueryPredicate(LinqToDB.Internal.SqlQuery.SqlPredicate.InSubQuery! predicate) -> LinqToDB.Internal.SqlQuery.IQueryElement!
@@ -11342,6 +11379,7 @@ override LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.VisitSqlColum
 override LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.VisitSqlCompareToExpression(LinqToDB.Internal.SqlQuery.SqlCompareToExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.VisitSqlConcatExpression(LinqToDB.Internal.SqlQuery.SqlConcatExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.VisitSqlConditionExpression(LinqToDB.Internal.SqlQuery.SqlConditionExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+override LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.VisitSqlDefaultValueExpression(LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.VisitSqlExpression(LinqToDB.Internal.SqlQuery.SqlExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.VisitSqlExtendedFunction(LinqToDB.Internal.SqlQuery.SqlExtendedFunction! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.VisitSqlExtendedFunctionPartition(LinqToDB.Internal.SqlQuery.SqlExtendedFunction! function, LinqToDB.Internal.SqlQuery.ISqlExpression! partition) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
@@ -11536,6 +11574,15 @@ override LinqToDB.Internal.SqlQuery.SqlCteTableField.NamedTable.get -> LinqToDB.
 override LinqToDB.Internal.SqlQuery.SqlCteTableField.ToString(LinqToDB.Internal.SqlQuery.QueryElementTextWriter! writer) -> LinqToDB.Internal.SqlQuery.QueryElementTextWriter!
 override LinqToDB.Internal.SqlQuery.SqlCteTableField.Type.get -> LinqToDB.DbDataType
 override LinqToDB.Internal.SqlQuery.SqlCteTableField.Type.set -> void
+override LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression.Accept(LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor! visitor) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+override LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression.CanBeNullable(LinqToDB.Internal.SqlQuery.NullabilityContext! nullability) -> bool
+override LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression.ElementType.get -> LinqToDB.Internal.SqlQuery.QueryElementType
+override LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression.Equals(LinqToDB.Internal.SqlQuery.ISqlExpression! other, System.Func<LinqToDB.Internal.SqlQuery.ISqlExpression!, LinqToDB.Internal.SqlQuery.ISqlExpression!, bool>! comparer) -> bool
+override LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression.GetElementHashCode() -> int
+override LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression.GetHashCode() -> int
+override LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression.Precedence.get -> int
+override LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression.SystemType.get -> System.Type?
+override LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression.ToString(LinqToDB.Internal.SqlQuery.QueryElementTextWriter! writer) -> LinqToDB.Internal.SqlQuery.QueryElementTextWriter!
 override LinqToDB.Internal.SqlQuery.SqlDeleteStatement.Accept(LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor! visitor) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.Internal.SqlQuery.SqlDeleteStatement.ElementType.get -> LinqToDB.Internal.SqlQuery.QueryElementType
 override LinqToDB.Internal.SqlQuery.SqlDeleteStatement.GetElementHashCode() -> int
@@ -12033,7 +12080,6 @@ override LinqToDB.Internal.SqlQuery.Visitors.SqlQueryValidatorVisitor.VisitSqlIn
 override LinqToDB.Internal.SqlQuery.Visitors.SqlQueryValidatorVisitor.VisitSqlJoinedTable(LinqToDB.Internal.SqlQuery.SqlJoinedTable! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.Internal.SqlQuery.Visitors.SqlQueryValidatorVisitor.VisitSqlQuery(LinqToDB.Internal.SqlQuery.SelectQuery! selectQuery) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.Internal.SqlQuery.Visitors.SqlQueryValidatorVisitor.VisitSqlSearchCondition(LinqToDB.Internal.SqlQuery.SqlSearchCondition! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
-override LinqToDB.Internal.SqlQuery.Visitors.SqlQueryValidatorVisitor.VisitSqlTableSource(LinqToDB.Internal.SqlQuery.SqlTableSource! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.Internal.SqlQuery.Visitors.SqlQueryValidatorVisitor.VisitSqlUpdateStatement(LinqToDB.Internal.SqlQuery.SqlUpdateStatement! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.Internal.SqlQuery.Visitors.SqlQueryVisitor.Cleanup() -> void
 override LinqToDB.Internal.SqlQuery.Visitors.SqlQueryVisitor.GetVisitMode(LinqToDB.Internal.SqlQuery.IQueryElement! element) -> LinqToDB.Internal.SqlQuery.Visitors.VisitMode
@@ -14343,6 +14389,15 @@ static LinqToDB.Internal.Common.BuildExpressionUtils.UnwrapEnumerableCasting(Sys
 static LinqToDB.Internal.Common.DecimalHelper.GetFacets(decimal value) -> (int precision, int scale)
 static LinqToDB.Internal.Common.EnumerableHelper.Batch<T>(System.Collections.Generic.IAsyncEnumerable<T>! source, int batchSize) -> System.Collections.Generic.IAsyncEnumerable<System.Collections.Generic.IAsyncEnumerable<T>!>!
 static LinqToDB.Internal.Common.EnumerableHelper.Batch<T>(System.Collections.Generic.IEnumerable<T>! source, int batchSize) -> System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<T>!>!
+static LinqToDB.Internal.Common.FormattableStringHelper.AreEqual(System.FormattableString! value1, System.FormattableString! value2, System.Func<object?, object?, bool>! argumentsEqual) -> bool
+static LinqToDB.Internal.Common.FormattableStringHelper.ComputeHashCode(System.FormattableString! value, System.Func<object?, int>! argumentsHashCode) -> int
+static LinqToDB.Internal.Common.FormattableStringHelper.CreateArgumentsExpression(object?[]! arguments) -> System.Linq.Expressions.NewArrayExpression!
+static LinqToDB.Internal.Common.FormattableStringHelper.CreateExpression(System.FormattableString! value) -> System.Linq.Expressions.MethodCallExpression!
+static LinqToDB.Internal.Common.FormattableStringHelper.CreateExpression(string! format, System.Linq.Expressions.Expression! arguments) -> System.Linq.Expressions.MethodCallExpression!
+static LinqToDB.Internal.Common.FormattableStringHelper.ParseFormatItems(string! format) -> System.Collections.Generic.IReadOnlyList<LinqToDB.Internal.Common.FormattableStringHelper.FormatItem>?
+static LinqToDB.Internal.Common.FormattableStringHelper.PrepareRawSqlArguments(System.Linq.Expressions.Expression! formatArg, bool keepUnreferenced, out string! format, out System.Collections.Generic.IReadOnlyList<System.Linq.Expressions.Expression!>! arguments) -> void
+static LinqToDB.Internal.Common.FormattableStringHelper.TrySplit(System.Linq.Expressions.Expression! expression, out System.Linq.Expressions.Expression? format, out System.Linq.Expressions.NewArrayExpression? arguments) -> bool
+static LinqToDB.Internal.Common.FormattableStringHelper.Unescape(string! format, int start, int length) -> string!
 static LinqToDB.Internal.Common.IdentifierBuilder.CreateNextID() -> int
 static LinqToDB.Internal.Common.IdentifierBuilder.GetObjectID(System.Linq.Expressions.Expression? ex) -> int
 static LinqToDB.Internal.Common.IdentifierBuilder.GetObjectID(System.Reflection.MethodInfo? m) -> string!
@@ -16629,6 +16684,7 @@ virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ConvertCastToP
 virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ConvertCoalesce(LinqToDB.Internal.SqlQuery.SqlCoalesceExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ConvertConcat(LinqToDB.Internal.SqlQuery.SqlConcatExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ConvertConversion(LinqToDB.Internal.SqlQuery.SqlCastExpression! cast) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ConvertDefaultValue(LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression! expression) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ConvertExprExprPredicate(LinqToDB.Internal.SqlQuery.SqlPredicate.ExprExpr! predicate) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ConvertIsDistinctPredicateAsIntersect(LinqToDB.Internal.SqlQuery.SqlPredicate.IsDistinct! predicate) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ConvertLikePredicate(LinqToDB.Internal.SqlQuery.SqlPredicate.Like! predicate) -> LinqToDB.Internal.SqlQuery.ISqlPredicate!
@@ -16731,6 +16787,7 @@ virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlCteField
 virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlCteTable(LinqToDB.Internal.SqlQuery.SqlCteTable! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlCteTableField(LinqToDB.Internal.SqlQuery.SqlCteTableField! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlDataType(LinqToDB.SqlQuery.SqlDataType! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlDefaultValueExpression(LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlDeleteStatement(LinqToDB.Internal.SqlQuery.SqlDeleteStatement! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlDropTableStatement(LinqToDB.Internal.SqlQuery.SqlDropTableStatement! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlExpression(LinqToDB.Internal.SqlQuery.SqlExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
