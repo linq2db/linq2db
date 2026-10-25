@@ -150,6 +150,7 @@ namespace Tests.DataProvider
 			await TestType<float[],          float[]?>         (context, type, asArray3,   asArray2,              filterByValue: false, filterByNullableValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v, asArray3), isExpectedNullableValue: v => v != null && Enumerable.SequenceEqual(v, asArray2));
 		}
 
+#if !NETFRAMEWORK
 		[ActiveIssue(Configuration = TestProvName.SqlServer2025MS, ErrorTypeName = "System.NotSupportedException", ErrorMessage = "Unsupported Vector type 'System.Half'.",
 			Details = "no-issue: Waiting for SqlClient support - the refusal comes from the driver, not from linq2db, so only the Microsoft.Data.SqlClient half is gated. The closest upstream items are dotnet/SqlClient#3444 (an umbrella for vector enhancements, which does not list Half) and #3834 (float16 returned as a string, closed); neither is this refusal.")]
 		[Test]
@@ -177,11 +178,9 @@ namespace Tests.DataProvider
 			//var asString2Expected = msClient ? /*lang=json,strict*/ "[2.1,-3.2]" : /*lang=json,strict*/ "[2.1, -3.2]";
 			//var asBinary1 = BitConverter.GetBytes(1.1f).Concat(BitConverter.GetBytes(-1.2f)).ToArray();
 			//var asBinary2 = BitConverter.GetBytes(-7.1f).Concat(BitConverter.GetBytes(-4.2f)).ToArray();
-#if !NETFRAMEWORK
 			var asArray1 = new Half[] { (Half)1.2f, (Half)(-1.1f) };
 			var asArray2 = new Half[] { (Half)5.2f, (Half)(-3.1f) };
 			var asArray3 = new Half[] { (Half)11.2f, (Half)(-4.1f) };
-#endif
 
 			// string
 			//await TestType<string, string?>(context, new(typeof(string), dt, null, length: 2), asString1, default, filterByValue: false, getExpectedValue: _ => asString1Expected);
@@ -197,7 +196,6 @@ namespace Tests.DataProvider
 
 			if (msClient)
 			{
-#if !NETFRAMEWORK
 				var type = new DbDataType(typeof(SqlVector<Half>)).WithLength(2);
 				var sqlVector1 = new SqlVector<Half>(asArray1.AsMemory());
 				var sqlVector2 = new SqlVector<Half>(asArray2.AsMemory());
@@ -208,9 +206,8 @@ namespace Tests.DataProvider
 				await TestType<SqlVector<Half>, SqlVector<Half>?>(context, type, sqlVector2, SqlVector<Half>.Null, filterByValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v.Memory.ToArray(), sqlVector2.Memory.ToArray()));
 
 				await TestType<SqlVector<Half>, SqlVector<Half>?>(context, type, sqlVector3, sqlVector2, filterByValue: false, filterByNullableValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v.Memory.ToArray(), sqlVector3.Memory.ToArray()), isExpectedNullableValue: v => v != null && Enumerable.SequenceEqual(v.Value.Memory.ToArray(), sqlVector2.Memory.ToArray()));
-#endif
-				await Task.CompletedTask;
 			}
 		}
+#endif
 	}
 }
