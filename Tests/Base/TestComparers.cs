@@ -14,7 +14,7 @@ namespace Tests
 	public static class TestComparers
 	{
 		/// <summary>
-		/// Returns the default comparer for <typeparamref name="T"/>: value equality for a scalar
+		/// Returns the default comparer for <typeparamref name="T"/>: <see cref="EqualityComparer{T}.Default"/> (scale-insensitive for <see cref="decimal"/>) for a scalar
 		/// (<see cref="string"/>, <see cref="decimal"/>, <see cref="Guid"/>, a type with no public instance members, or a <see cref="Nullable{T}"/> of one),
 		/// ordered element-wise comparison for an <see cref="IEnumerable{T}"/>, and <see cref="ComparerBuilder"/>'s
 		/// member comparison otherwise.
