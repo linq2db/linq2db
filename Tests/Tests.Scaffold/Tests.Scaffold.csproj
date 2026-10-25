@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<AssemblyName>linq2db.Tests.Scaffold</AssemblyName>
+		<RootNamespace>Tests.Scaffold</RootNamespace>
+		<TargetFramework>net10.0</TargetFramework>
+		<TargetFrameworks></TargetFrameworks>
+		<OutputType>Exe</OutputType>
+		<EnableNUnitRunner>true</EnableNUnitRunner>
+		<SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Tests.Scaffold.Harness\Tests.Scaffold.Harness.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Data.SqlClient" />
+		<!-- dependency of Microsoft.SqlServer.Types (dotMorten build) -->
+		<PackageReference Include="System.Data.SqlClient" />
+		<PackageReference Include="Npgsql" />
+
+		<Reference Include="Microsoft.SqlServer.Types">
+			<HintPath>..\..\Redist\dotMorten.Microsoft.SqlServer.Types\Microsoft.SqlServer.Types.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="NUnit" />
+		<PackageReference Include="NUnit.Analyzers" />
+		<PackageReference Include="NUnit3TestAdapter" />
+		<PackageReference Include="Shouldly" />
+		<PackageReference Include="Microsoft.Testing.Platform.MSBuild" />
+		<PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
+		<PackageReference Include="Microsoft.Testing.Extensions.HangDump" />
+		<PackageReference Include="Microsoft.Testing.Extensions.Retry" />
+	</ItemGroup>
+</Project>
