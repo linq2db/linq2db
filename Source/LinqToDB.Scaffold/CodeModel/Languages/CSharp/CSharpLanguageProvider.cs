@@ -13,6 +13,21 @@ namespace LinqToDB.CodeModel
 		// 1591: Missing XML comment for publicly visible type or member https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/compiler-messages/cs1591
 		private static readonly string[] _xmlDocWarnings = new [] { "1573", "1591" };
 
+		private const LanguageFeatures _features =
+			  LanguageFeatures.NestedTypes
+			| LanguageFeatures.NullableFlowAnalysis
+			| LanguageFeatures.LambdaReturnTypeInference
+			| LanguageFeatures.ImplicitUpcast
+			| LanguageFeatures.ImplicitInterfaceImplementation
+			| LanguageFeatures.ImplicitDelegateConversion
+			| LanguageFeatures.ConstructorPropertyInitialization
+			| LanguageFeatures.PartialTypes
+			| LanguageFeatures.PartialMethods
+			| LanguageFeatures.MultipleConstructors
+			| LanguageFeatures.TabIndentation
+			| LanguageFeatures.MultipleFiles
+			| LanguageFeatures.ErrorDirective;
+
 		private readonly IReadOnlyDictionary<IType, string> _aliasedTypes;
 		private readonly CodeIdentifierComparer             _identifierComparer;
 		private readonly IEqualityComparer<IType>           _typeEqualityComparerWithoutNRT;
@@ -64,6 +79,7 @@ namespace LinqToDB.CodeModel
 		IEqualityComparer<IType>                       ILanguageProvider.TypeEqualityComparerWithoutNRT    => _typeEqualityComparerWithoutNRT;
 		ITypeParser                                    ILanguageProvider.TypeParser                        => _typeParser;
 		bool                                           ILanguageProvider.NRTSupported                      => true;
+		LanguageFeatures                               ILanguageProvider.Features                          => _features;
 		string[]                                       ILanguageProvider.MissingXmlCommentWarnCodes        => _xmlDocWarnings;
 		string                                         ILanguageProvider.FileExtension                     => "cs";
 		CodeBuilder                                    ILanguageProvider.ASTBuilder                        => _builder;

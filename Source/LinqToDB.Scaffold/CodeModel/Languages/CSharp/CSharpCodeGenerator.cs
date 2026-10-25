@@ -628,6 +628,9 @@ namespace LinqToDB.CodeModel
 
 		protected override void Visit(CodeClass @class)
 		{
+			if (@class.Attributes.HasFlag(Modifiers.Record) || @class.Attributes.HasFlag(Modifiers.Module))
+				throw new NotSupportedException($"Class '{@class.Name.Name}' is marked as {(@class.Attributes.HasFlag(Modifiers.Record) ? "record" : "module")}, which is not supported by C# code generator");
+
 			if (@class.XmlDoc != null)
 				Visit(@class.XmlDoc);
 

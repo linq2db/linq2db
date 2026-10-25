@@ -51,6 +51,11 @@ namespace LinqToDB.CodeModel
 		bool                                           NRTSupported                   { get; }
 
 		/// <summary>
+		/// Features of language and its code generator.
+		/// </summary>
+		LanguageFeatures                               Features                       { get; }
+
+		/// <summary>
 		/// Warning codes for missing XML-doc comments warnings (if supported by language).
 		/// </summary>
 		string[]                                       MissingXmlCommentWarnCodes     { get; }
