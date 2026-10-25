@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB.Expressions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 
 namespace LinqToDB.Mapping
@@ -18,6 +19,7 @@ namespace LinqToDB.Mapping
 	{
 		/// <summary>
 		/// Compares two objects during expression tree comparison. Handles sequences also.
+		/// Two <see cref="FormattableString"/> values are compared by format and arguments.
 		/// Has to be overriden if specific comparison required.
 		/// </summary>
 		/// <param name="obj1"></param>
@@ -34,6 +36,9 @@ namespace LinqToDB.Mapping
 
 			if (obj1 is RawSqlString str1 && obj2 is RawSqlString str2)
 				return string.Equals(str1.Format, str2.Format, StringComparison.Ordinal);
+
+			if (obj1 is FormattableString fs1 && obj2 is FormattableString fs2)
+				return FormattableStringHelper.AreEqual(fs1, fs2, ObjectsEqual);
 
 			if (obj1 is not string and IEnumerable list1 && obj2 is IEnumerable list2)
 			{

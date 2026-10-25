@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
 namespace HttpClientClient
 {
-	internal class Program
+	static class Program
 	{
 		static async Task Main(string[] args)
 		{

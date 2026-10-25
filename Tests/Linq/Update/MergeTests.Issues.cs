@@ -1096,20 +1096,11 @@ namespace Tests.xUpdate
 			];
 		}
 
-		// Current Sybase version cannot handle such queries and crash with generic error.
-		// The provider name used to sit in the positional argument, which binds the (string issue) constructor, so
-		// the gate applied to every provider rather than to Sybase. Measured: everything else passes.
-		// Two attributes because the crash surfaces differently per transport - the client reports a broken
-		// connection directly, while over the remote transport the server side dies mid-token and only the Grpc
-		// wrapper is stable; the socket error inside it is not.
-		[ActiveIssue(Configuration = TestProvName.AllSybase, SkipForLinqService = true,
-			ErrorTypeName = "AdoNetCore.AseClient.AseException", ErrorMessage = "Connection entered broken state",
-			Details = "no-issue: ASE is terminating this process")]
-		[ActiveIssue(Configuration = TestProvName.AllSybase, SkipForNonLinqService = true,
-			ErrorTypeName = "Grpc.Core.RpcException",
-			Details = "no-issue: ASE is terminating this process")]
+		// Sybase excluded, not gated: this MERGE segfaults the ASE session ("Internal error: SIGSEGV happened"), and
+		// the dead connection goes back to the pool and fails whichever test draws it next. Last checked on
+		// ASE 16.1 SP00 PL01 (EBF 31157); re-test when the CI image moves to a newer ASE.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5181")]
-		public void UnusedSource_Query([MergeDataContextSource] string context)
+		public void UnusedSource_Query([MergeDataContextSource(TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(UnusedSourceTable.Data);
