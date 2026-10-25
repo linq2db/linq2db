@@ -2122,6 +2122,497 @@ namespace Tests.Linq
 		}
 		#endregion
 
+		#region Nullable struct from an inner projection
+		readonly record struct ParentPoint(int Id, int? Value);
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void NullableStructFromSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Select(p => new { p.ParentID, Info = (ParentPoint?)new ParentPoint(p.ParentID, p.Value1) })
+				.Select(m => new { m.ParentID, A = m.Info });
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void NullableStructOrNullFromSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Select(p => new { p.ParentID, Info = p.Value1 == null ? null : (ParentPoint?)new ParentPoint(p.ParentID, p.Value1) })
+				.Select(m => new { m.ParentID, A = m.Info });
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void NullableStructFromConcat([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent.Where(p => p.ParentID < 4)
+				.Select(p => new { p.ParentID, Info = (ParentPoint?)new ParentPoint(p.ParentID, p.Value1) })
+				.Concat(db.Parent.Where(p => p.ParentID >= 4)
+					.Select(p => new { p.ParentID, Info = (ParentPoint?)new ParentPoint(p.ParentID, p.Value1) }))
+				.Select(m => new { m.ParentID, A = m.Info });
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void NullableStructFromLeftJoin([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				from c in db.Child
+					.Where(c => c.ParentID == p.ParentID)
+					.Select(c => new { Info = (ParentPoint?)new ParentPoint(c.ChildID, c.ParentID) })
+					.DefaultIfEmpty()
+				select new { p.ParentID, A = c == null ? null : c.Info };
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void NullableStructHasValueFromLeftJoin([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				from c in db.Child
+					.Where(c => c.ParentID == p.ParentID)
+					.Select(c => new { Info = (ParentPoint?)new ParentPoint(c.ChildID, c.ParentID) })
+					.DefaultIfEmpty()
+				where p.ParentID == 5
+				select new { p.ParentID, Has = c.Info.HasValue };
+
+			var rows = query.ToList();
+
+			rows.ShouldNotBeEmpty();
+			rows.ShouldAllBe(x => !x.Has);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void NullableStructHasValueGuardFromLeftJoin([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				from c in db.Child
+					.Where(c => c.ParentID == p.ParentID)
+					.Select(c => new { Info = (ParentPoint?)new ParentPoint(c.ChildID, c.ParentID) })
+					.DefaultIfEmpty()
+				where p.ParentID == 5
+				select new { p.ParentID, Id = c.Info.HasValue ? c.Info.Value.Id : -1 };
+
+			var rows = query.ToList();
+
+			rows.ShouldNotBeEmpty();
+			rows.ShouldAllBe(x => x.Id == -1);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void NullableStructHasValueGuardFromLeftJoinProjected([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				from c in db.Child
+					.Where(c => c.ParentID == p.ParentID)
+					.Select(c => new { Info = (ParentPoint?)new ParentPoint(c.ChildID, c.ParentID) })
+					.DefaultIfEmpty()
+				select new { p.ParentID, Id = c.Info.HasValue ? c.Info.Value.Id : -1 };
+
+			var expected = Parent
+				.SelectMany(p => Child.Where(c => c.ParentID == p.ParentID).Select(c => c.ChildID).DefaultIfEmpty(-1));
+
+			query.Select(x => x.Id).ToList().OrderBy(x => x).ShouldBe(expected.OrderBy(x => x));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void NullableStructWithHasValueFromLeftJoin([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				from c in db.Child
+					.Where(c => c.ParentID == p.ParentID)
+					.Select(c => new { Info = (ParentPoint?)new ParentPoint(c.ChildID, c.ParentID) })
+					.DefaultIfEmpty()
+				select new { p.ParentID, A = c.Info, Has = c.Info.HasValue };
+
+			var rows = query.ToList();
+
+			rows.ShouldAllBe(x => x.Has == (x.A != null));
+			rows.ShouldContain(x => x.ParentID == 5 && !x.Has);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void NullableColumnHasValueFromDefaultIfEmptyWithDefault([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				from p2 in db.Parent
+					.Where(x => x.ParentID == p.ParentID + 100)
+					.DefaultIfEmpty(new Parent { Value1 = 5 })
+				select new { p.ParentID, Has = p2.Value1.HasValue, V = p2.Value1.HasValue ? p2.Value1.Value : -1, Raw = p2.Value1 };
+
+			var rows = query.ToList();
+
+			rows.Count.ShouldBe(db.Parent.Count());
+			rows.ShouldAllBe(x => x.Raw == 5 && x.Has && x.V == 5);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void NullableStructNotNullGuardFromLeftJoinProjected([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				from c in db.Child
+					.Where(c => c.ParentID == p.ParentID)
+					.Select(c => new { Info = (ParentPoint?)new ParentPoint(c.ChildID, c.ParentID) })
+					.DefaultIfEmpty()
+				select new { p.ParentID, Id = c.Info != null ? c.Info.Value.Id : -1 };
+
+			var expected = Parent
+				.SelectMany(p => Child.Where(c => c.ParentID == p.ParentID).Select(c => c.ChildID).DefaultIfEmpty(-1));
+
+			query.Select(x => x.Id).ToList().OrderBy(x => x).ShouldBe(expected.OrderBy(x => x));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void NullableStructNotNullFromLeftJoinProjected([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				from c in db.Child
+					.Where(c => c.ParentID == p.ParentID)
+					.Select(c => new { Info = (ParentPoint?)new ParentPoint(c.ChildID, c.ParentID) })
+					.DefaultIfEmpty()
+				select new { p.ParentID, Has = c.Info != null };
+
+			var expected = Parent
+				.SelectMany(p => Child.Where(c => c.ParentID == p.ParentID).Select(c => true).DefaultIfEmpty(false));
+
+			query.Select(x => x.Has).ToList().OrderBy(x => x).ShouldBe(expected.OrderBy(x => x));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void NullableStructHasValueFromSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Select(p => new { p.ParentID, Info = (ParentPoint?)new ParentPoint(p.ParentID, p.Value1) })
+				.Select(m => new { m.ParentID, Has = m.Info.HasValue });
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		[ThrowsRequiredOuterJoins(TestProvName.AllSybase)]
+		public void NullableStructFromScalarSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Select(p => new
+				{
+					p.ParentID,
+					Info = db.Child
+						.Where(c => c.ParentID == p.ParentID)
+						.OrderBy(c => c.ChildID)
+						.Select(c => (ParentPoint?)new ParentPoint(c.ChildID, c.ParentID))
+						.FirstOrDefault(),
+				})
+				.Select(m => new { m.ParentID, A = m.Info });
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void NullableStructFromDistinct([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Select(p => new { Info = (ParentPoint?)new ParentPoint(p.ParentID, p.Value1) })
+				.Distinct()
+				.Select(m => new { A = m.Info });
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void NullableStructFromOrderByTake([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Select(p => new { p.ParentID, Info = (ParentPoint?)new ParentPoint(p.ParentID, p.Value1) })
+				.OrderBy(m => m.ParentID)
+				.Take(3)
+				.Select(m => new { m.ParentID, A = m.Info });
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void NullableStructFromUnion([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent.Where(p => p.ParentID < 4)
+				.Select(p => new { p.ParentID, Info = (ParentPoint?)new ParentPoint(p.ParentID, p.Value1) })
+				.Union(db.Parent.Where(p => p.ParentID >= 2)
+					.Select(p => new { p.ParentID, Info = (ParentPoint?)new ParentPoint(p.ParentID, p.Value1) }))
+				.Select(m => new { m.ParentID, A = m.Info });
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void NullableStructGroupByKey([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Select(p => new { p.ParentID, Info = (ParentPoint?)new ParentPoint(p.ParentID, p.Value1) })
+				.GroupBy(m => m.Info)
+				.Select(g => new { g.Key, Count = g.Count() });
+
+			AssertQuery(query);
+		}
+		#endregion
+
+		#region Upcast value from an inner projection
+		interface IHasId
+		{
+			int Id { get; }
+		}
+
+		sealed record IdRecord(int Id, int? Value) : IHasId;
+
+		readonly record struct IdPoint(int Id, int? Value) : IHasId;
+
+		record BaseRecord(int Id);
+
+		sealed record DerivedRecord(int Id, int? Value) : BaseRecord(Id);
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void InterfaceFromSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Select(p => new { p.ParentID, Info = (IHasId)new IdRecord(p.ParentID, p.Value1) })
+				.Select(m => new { m.ParentID, A = m.Info });
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void InterfaceMemberFromSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Select(p => new { p.ParentID, Info = (IHasId)new IdRecord(p.ParentID, p.Value1) })
+				.Where(m => m.Info.Id > 2)
+				.Select(m => new { m.ParentID, m.Info.Id });
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void BoxedStructFromSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Select(p => new { p.ParentID, Info = (IHasId)new IdPoint(p.ParentID, p.Value1) })
+				.Select(m => new { m.ParentID, A = m.Info });
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void BaseClassFromSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Select(p => new { p.ParentID, Info = (BaseRecord)new DerivedRecord(p.ParentID, p.Value1) })
+				.Select(m => new { m.ParentID, A = m.Info });
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void InterfaceFromConcat([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent.Where(p => p.ParentID < 4)
+				.Select(p => new { p.ParentID, Info = (IHasId)new IdRecord(p.ParentID, p.Value1) })
+				.Concat(db.Parent.Where(p => p.ParentID >= 4)
+					.Select(p => new { p.ParentID, Info = (IHasId)new IdRecord(p.ParentID, p.Value1) }))
+				.Select(m => new { m.ParentID, A = m.Info });
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void BaseClassFromConcat([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent.Where(p => p.ParentID < 4)
+				.Select(p => new { p.ParentID, Info = (BaseRecord)new DerivedRecord(p.ParentID, p.Value1) })
+				.Concat(db.Parent.Where(p => p.ParentID >= 4)
+					.Select(p => new { p.ParentID, Info = (BaseRecord)new DerivedRecord(p.ParentID, p.Value1) }))
+				.Select(m => new { m.ParentID, A = m.Info });
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void TypeAsInterfaceFromSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Select(p => new { p.ParentID, Info = new IdRecord(p.ParentID, p.Value1) as IHasId })
+				.Select(m => new { m.ParentID, A = m.Info });
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void TypeAsInterfaceMemberFromSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Select(p => new { p.ParentID, Info = new IdRecord(p.ParentID, p.Value1) as IHasId })
+				.Where(m => m.Info!.Id > 2)
+				.Select(m => new { m.ParentID, m.Info!.Id });
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void BoxedStructToObjectFromSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Select(p => new { p.ParentID, Info = (object)new IdPoint(p.ParentID, p.Value1) })
+				.Select(m => new { m.ParentID, A = m.Info });
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void DoubleCastFromSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Select(p => new { p.ParentID, Info = (object)(IHasId)new IdRecord(p.ParentID, p.Value1) })
+				.Select(m => new { m.ParentID, A = m.Info });
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void InterfaceMemberFromConcat([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent.Where(p => p.ParentID < 4)
+				.Select(p => new { p.ParentID, Info = (IHasId)new IdRecord(p.ParentID, p.Value1) })
+				.Concat(db.Parent.Where(p => p.ParentID >= 4)
+					.Select(p => new { p.ParentID, Info = (IHasId)new IdRecord(p.ParentID, p.Value1) }))
+				.Where(m => m.Info.Id > 2)
+				.Select(m => new { m.ParentID, m.Info.Id });
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void NullableStructFromCte([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var cte = db.Parent
+				.Select(p => new { p.ParentID, Info = (ParentPoint?)new ParentPoint(p.ParentID, p.Value1) })
+				.AsCte();
+
+			var result = cte.Select(m => new { m.ParentID, A = m.Info }).ToList();
+
+			var expected = Parent
+				.Select(p => new { p.ParentID, A = (ParentPoint?)new ParentPoint(p.ParentID, p.Value1) })
+				.ToList();
+
+			AreEqual(expected, result);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void InterfaceFromCte([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var cte = db.Parent
+				.Select(p => new { p.ParentID, Info = (IHasId)new IdRecord(p.ParentID, p.Value1) })
+				.AsCte();
+
+			var result = cte.Where(m => m.Info.Id > 2).Select(m => new { m.ParentID, A = m.Info }).ToList();
+
+			var expected = Parent
+				.Where(p => p.ParentID > 2)
+				.Select(p => new { p.ParentID, A = (IHasId)new IdRecord(p.ParentID, p.Value1) })
+				.ToList();
+
+			AreEqual(expected, result);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6090")]
+		public void TypeAsInterfaceFromCte([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var cte = db.Parent
+				.Select(p => new { p.ParentID, Info = new IdRecord(p.ParentID, p.Value1) as IHasId })
+				.AsCte();
+
+			var result = cte.Where(m => m.Info!.Id > 2).Select(m => new { m.ParentID, A = m.Info }).ToList();
+
+			var expected = Parent
+				.Where(p => p.ParentID > 2)
+				.Select(p => new { p.ParentID, A = new IdRecord(p.ParentID, p.Value1) as IHasId })
+				.ToList();
+
+			AreEqual(expected, result);
+		}
+		#endregion
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3181")]
 		public void Issue3181Test1([DataSources] string context)
 		{
@@ -2194,6 +2685,47 @@ namespace Tests.Linq
 					select parent;
 
 			AreEqual(parentsQry, parents);
+		}
+
+		readonly record struct ParentValue(int Id, int? Value);
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6068")]
+		public void StructFromSubqueryReferencedTwice([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Select(p => new { p.ParentID, Info = new ParentValue(p.ParentID, p.Value1) })
+				.Select(m => new { First = m.Info, Second = m.Info });
+
+			AssertQuery(query);
+		}
+
+		readonly record struct ParentChildren(int Id, List<int> Children);
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6068")]
+		public void StructWithEagerLoadFromSubqueryReferencedTwice([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var result = db.Parent
+				.Select(p => new { p.ParentID, Info = new ParentChildren(p.ParentID, p.Children.OrderBy(c => c.ChildID).Select(c => c.ChildID).ToList()) })
+				.Select(m => new { First = m.Info, Second = m.Info })
+				.ToList();
+
+			var expected = Child.OrderBy(c => c.ChildID).ToLookup(c => c.ParentID, c => c.ChildID);
+
+			Assert.That(result.Select(r => r.First.Id), Is.EquivalentTo(Parent.Select(p => p.ParentID)));
+
+			using (Assert.EnterMultipleScope())
+			{
+				foreach (var r in result)
+				{
+					Assert.That(r.Second.Id,       Is.EqualTo(r.First.Id));
+					Assert.That(r.First.Children,  Is.EqualTo(expected[r.First.Id]));
+					Assert.That(r.Second.Children, Is.EqualTo(expected[r.First.Id]));
+				}
+			}
 		}
 	}
 }

@@ -633,7 +633,7 @@ namespace LinqToDB.Mapping
 		/// <returns></returns>
 		public AssociationDescriptor? FindAssociationDescriptor(MemberInfo memberInfo)
 		{
-			return Associations.FirstOrDefault(a => a.MemberInfo.EqualsTo(memberInfo));
+			return Associations.FirstOrDefault(a => a.MemberInfo.EqualsTo(memberInfo, ObjectType));
 		}
 
 		#region Dynamic Columns

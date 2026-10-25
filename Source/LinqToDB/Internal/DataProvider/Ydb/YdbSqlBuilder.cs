@@ -505,7 +505,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				var within = 1;
 				for (var j = i; j < Math.Min(i + max, items.Count); j++, within++)
 				{
-					var p = new SqlParameter(dbDataType, string.Create(CultureInfo.InvariantCulture, $"Ids{bucketIndex}_{within}"), items[j]);
+					var p = new SqlParameter(GetInListValueType(predicate.Expr1, dbDataType, items[j]), string.Create(CultureInfo.InvariantCulture, $"Ids{bucketIndex}_{within}"), items[j]);
 					BuildParameter(p);
 					StringBuilder.Append(InlineComma);
 				}
