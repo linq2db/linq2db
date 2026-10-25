@@ -254,6 +254,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				if (!_isColumnsOptimized)
 				{
 #if BUGCHECK
+					// Re-checks the guard's flag on purpose: with the guard removed, later-iteration passes land here.
 					if (_isColumnsOptimized)
 						LaterIterationPassesExecuted++;
 					else
