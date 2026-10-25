@@ -1,1 +1,2 @@
 ﻿#nullable enable
+override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlBuilder.BuildSqlConcatExpression(LinqToDB.Internal.SqlQuery.SqlConcatExpression! element) -> void
