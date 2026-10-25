@@ -396,13 +396,14 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		/// <summary>
 		/// Rounds half away from zero as <c>sign(v) * floor(abs(v) * power(10, p) + 0.5) / power(10, p)</c>, for an engine whose
-		/// own <c>ROUND</c> rounds a midpoint some other way.
+		/// own <c>ROUND</c> rounds a midpoint some other way. <paramref name="ten"/> must be typed so that <c>power</c> returns a
+		/// floating-point value: an integer power overflows at ten digits and is zero for a negative precision.
 		/// </summary>
-		protected static ISqlExpression RoundAwayFromZeroByMagnitude(ISqlExpressionFactory factory, ISqlExpression value, ISqlExpression? precision)
+		protected static ISqlExpression RoundAwayFromZeroByMagnitude(ISqlExpressionFactory factory, ISqlExpression value, ISqlExpression? precision, ISqlExpression ten)
 		{
 			var valueType = factory.GetDbDataType(value);
 
-			var power     = precision == null ? null : factory.Function(valueType, "power", factory.Value(valueType, 10.0), precision);
+			var power     = precision == null ? null : factory.Function(valueType, "power", ten, precision);
 			var magnitude = factory.Function(valueType, "abs", value);
 			var scaled    = power == null ? magnitude : factory.Multiply(valueType, magnitude, power);
 			var rounded   = factory.Function(valueType, "floor", factory.Add(valueType, scaled, factory.Value(valueType, 0.5)));
@@ -447,12 +448,13 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				/*
 					CASE
 						WHEN value - FLOOR(value) = 0.5
-						THEN ROUND(value / 2, 0) * 2
+						THEN ROUND(value * 0.5, 0) * 2
 						ELSE ROUND(value, 0)
 					END
 
 					Half a midpoint is never itself a midpoint, so rounding it lands on the even neighbour whichever way the
-					engine breaks ties, and for either sign.
+					engine breaks ties, and for either sign. A multiplication keeps a decimal exact where a division may not
+					(DuckDB divides a DECIMAL into a DOUBLE).
 				 */
 
 				var valueFloor = factory.Function(valueType, "FLOOR", value);
@@ -462,7 +464,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 				var evenNeighbour = factory.Multiply(
 					valueType,
-					factory.Function(valueType, "ROUND", ParametersNullabilityType.SameAsFirstParameter, factory.Div(valueType, value, factory.Value(2)), factory.Value(0)),
+					factory.Function(valueType, "ROUND", ParametersNullabilityType.SameAsFirstParameter, factory.Multiply(valueType, value, factory.Value(valueType, 0.5)), factory.Value(0)),
 					factory.Value(2));
 
 				var falseValue = factory.Function(valueType, "ROUND", ParametersNullabilityType.SameAsFirstParameter, value, factory.Value(0));

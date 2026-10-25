@@ -316,15 +316,16 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 				return factory.Function(factory.GetDbDataType(methodCall.Type), "Truncate", value, factory.Value(0));
 			}
 
-			// ROUND() on a DOUBLE rounds a midpoint to even.
+			// ROUND() on a DOUBLE rounds a midpoint to even. POWER over two integers is an integer.
 			protected override ISqlExpression? TranslateRoundAwayFromZero(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
 			{
 				var factory = translationContext.ExpressionFactory;
+				var type    = factory.GetDbDataType(value);
 
-				if (factory.GetDbDataType(value).SystemType.UnwrapNullableType() == typeof(decimal))
+				if (type.SystemType.UnwrapNullableType() == typeof(decimal))
 					return base.TranslateRoundAwayFromZero(translationContext, methodCall, value, precision);
 
-				return RoundAwayFromZeroByMagnitude(factory, value, precision);
+				return RoundAwayFromZeroByMagnitude(factory, value, precision, factory.Cast(factory.Value(10), type));
 			}
 		}
 

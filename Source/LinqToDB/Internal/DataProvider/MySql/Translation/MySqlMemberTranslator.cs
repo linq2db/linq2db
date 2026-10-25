@@ -420,11 +420,12 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 			protected override ISqlExpression? TranslateRoundAwayFromZero(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
 			{
 				var factory = translationContext.ExpressionFactory;
+				var type    = factory.GetDbDataType(value);
 
-				if (factory.GetDbDataType(value).SystemType.UnwrapNullableType() == typeof(decimal))
+				if (type.SystemType.UnwrapNullableType() == typeof(decimal))
 					return base.TranslateRoundAwayFromZero(translationContext, methodCall, value, precision);
 
-				return RoundAwayFromZeroByMagnitude(factory, value, precision);
+				return RoundAwayFromZeroByMagnitude(factory, value, precision, factory.Value(type, 10.0));
 			}
 
 			protected override ISqlExpression? TranslateTruncate(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value)

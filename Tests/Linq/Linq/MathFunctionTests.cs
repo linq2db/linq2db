@@ -314,9 +314,8 @@ namespace Tests.Linq
 				from t in from p in db.Types select Math.Round(p.MoneyValue, MidpointRounding.AwayFromZero) where t != 0 select t);
 		}
 
-		// ClickHouse: AwayFromZero rounding supported only for decimals. Double use bankers rounding (Round5 test)
 		[Test]
-		public void Round6([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Round6([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1975,6 +1974,41 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		sealed class HeadroomValues
+		{
+			[PrimaryKey                       ] public int     Id { get; set; }
+			[Column(Precision = 18, Scale = 1)] public decimal D  { get; set; }
+		}
+
+		// Above 2^53 a double cannot hold these values, so a decimal rounding emulation that routes any arm through a
+		// double loses the last digits. SQLite stores such a decimal as REAL in the first place, and Access's Round and Int
+		// return a Double.
+		[Test]
+		public void MathRoundDecimalHeadroom([DataSources(TestProvName.AllSQLite, TestProvName.AllAccess)] string context)
+		{
+			var data = new[]
+			{
+				new HeadroomValues { Id = 1, D = 12345678901234567.3m },
+				new HeadroomValues { Id = 2, D = 12345678901234565.5m },
+				new HeadroomValues { Id = 3, D = 12345678901234566.5m },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var query = t
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					r.Id,
+					ToEven    = Sql.AsSql(Math.Round(r.D)),
+					SqlToEven = Sql.AsSql(Sql.RoundToEven(r.D)),
+					Away      = Sql.AsSql(Math.Round(r.D, MidpointRounding.AwayFromZero)),
+				});
+
+			AssertQuery(query);
+		}
+
 		sealed class ResidueValues
 		{
 			[PrimaryKey] public int    Id { get; set; }
@@ -1984,9 +2018,10 @@ namespace Tests.Linq
 
 		// 1.15 is stored as 1.1499999..., so C# rounds it away from zero to 1.1 at one digit, while the same value cast
 		// to numeric is an exact tie and rounds to 1.2. Math.Round must keep the double route on PostgreSQL even though
-		// Sql.Round(double?, int?) takes the numeric one there.
+		// Sql.Round(double?, int?) takes the numeric one there; MySQL, ClickHouse and DB2 scale the double by a power of ten,
+		// where the scaled residue must not become a tie either.
 		[Test]
-		public void MathRoundResidueDoubleKeepsDoubleRoute([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void MathRoundResidueDoubleKeepsDoubleRoute([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllMySql, TestProvName.AllClickHouse, TestProvName.AllDB2)] string context)
 		{
 			var data = new[]
 			{
@@ -2006,6 +2041,28 @@ namespace Tests.Linq
 				});
 
 			AssertQuery(query);
+		}
+
+		// The power of ten that scales a double must stay a double: an integer power overflows at ten digits and is zero for
+		// a negative precision. The client cannot round to a negative precision, so the results are stated.
+		[Test]
+		public void SqlRoundDoubleWidePrecision([IncludeDataSources(true, TestProvName.AllMySql, TestProvName.AllClickHouse, TestProvName.AllDB2)] string context)
+		{
+			var data = new[]
+			{
+				new ResidueValues { Id = 1, F = 1234.5678, P = -1 },
+				new ResidueValues { Id = 2, F = 1234.5678, P = 10 },
+				new ResidueValues { Id = 3, F = 0.5,       P = 12 },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			t
+				.OrderBy(r => r.Id)
+				.Select(r => Sql.AsSql(Sql.Round(r.F, r.P)))
+				.ToList()
+				.ShouldBe([1230, 1234.5678, 0.5]);
 		}
 
 		sealed class TruncateValues
