@@ -77,5 +77,40 @@ namespace Tests.Tools
 | three     |
 +-----------+".Replace("\r", "").Replace("\n", ""));
 		}
+
+		sealed class Row
+		{
+			public int ID { get; set; }
+		}
+
+		[Test]
+		public void TestDiagnosticStringWithoutHeader()
+		{
+			var str = new[] { new Row { ID = 1 }, new Row { ID = 12345 } }
+				.ToDiagnosticString(addTableHeader: false)
+				.Replace("\r", "")
+				.Replace("\n", "");
+
+			str.ShouldBe(@"Count : 2
++-------+
+|     1 |
+| 12345 |
++-------+".Replace("\r", "").Replace("\n", ""));
+		}
+
+		[Test]
+		public void TestDiagnosticStringScalarWithoutHeader()
+		{
+			var str = new[] { 1, 222 }
+				.ToDiagnosticString(addTableHeader: false)
+				.Replace("\r", "")
+				.Replace("\n", "");
+
+			str.ShouldBe(@"Count : 2
++-------+
+|     1 |
+|   222 |
++-------+".Replace("\r", "").Replace("\n", ""));
+		}
 	}
 }
