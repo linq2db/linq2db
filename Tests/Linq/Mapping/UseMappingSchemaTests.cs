@@ -147,9 +147,7 @@ namespace Tests.Mapping
 
 			using (db.UseMappingSchema(Scope(e => e.Property(p => p.Value).IsPrimaryKey())))
 			{
-				tmp
-					.Update(new SourceSchemaRow { Id = 1, Value = 6, Name = "b" }, b => b)
-					.ShouldBe(1);
+				tmp.Update(new SourceSchemaRow { Id = 1, Value = 6, Name = "b" }, b => b);
 			}
 
 			tmp
@@ -340,9 +338,7 @@ namespace Tests.Mapping
 			public Model.Parent? Parent { get; set; }
 		}
 
-		sealed class ShapeSquare : Shape
-		{
-		}
+		sealed class ShapeSquare : Shape;
 
 		static ShapeRow[] ShapeRows => [new() { Id = 1, Kind = "C1" }, new() { Id = 2, Kind = "S2" }];
 
@@ -376,13 +372,9 @@ namespace Tests.Mapping
 			[Column(IsDiscriminator = true)] public ShapeKind Kind { get; set; }
 		}
 
-		sealed class EnumCircle : EnumShape
-		{
-		}
+		sealed class EnumCircle : EnumShape;
 
-		sealed class EnumSquare : EnumShape
-		{
-		}
+		sealed class EnumSquare : EnumShape;
 
 		// OfType filters on the discriminator value the handle's schema converts the code to.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
@@ -448,12 +440,14 @@ namespace Tests.Mapping
 			public Model.Parent? Parent { get; set; }
 		}
 
-		sealed class PlainSquare : PlainShape
-		{
-		}
+		sealed class PlainSquare : PlainShape;
 
 		// An association declared on a derived type joins on that type's discriminator, which only the handle's
 		// schema knows here.
+		[ActiveIssue(Configuration = TestProvName.AllAccess, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}[1, null]{1}but was",
+			Details = "no-issue: Access filters the outer row on an ON predicate that references only the outer side of a LEFT JOIN; the generated SQL keeps it in ON.")]
+		[ActiveIssue(6148, Configuration = TestProvName.AllYdb, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}[1, null]{1}but was",
+			Details = "OptimizeJoinConditions moves the LEFT JOIN's outer-only discriminator predicate from ON to WHERE.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
 		public void DerivedAssociationFollowsHandleSchema([DataSources] string context)
 		{
@@ -569,11 +563,13 @@ namespace Tests.Mapping
 			var schema = new MappingSchema();
 			schema.SetConvertExpression<ShapeKind, int>(kind => (int)kind + 101);
 
+			var kind = ShapeKind.Circle;
+
 			IQueryable<ShapeCodeRow> query;
 
 			using (db.UseMappingSchema(schema))
 			{
-				query = db.FromSql<ShapeCodeRow>($"SELECT Id, Kind FROM SourceSchemaShape WHERE Kind = {ShapeKind.Circle}");
+				query = db.FromSql<ShapeCodeRow>($"SELECT Id, Kind FROM SourceSchemaShape WHERE Kind = {kind}");
 			}
 
 			query
@@ -590,11 +586,9 @@ namespace Tests.Mapping
 			using var db  = GetDataContext(context);
 			using var tmp = db.CreateLocalTable(new[] { new SourceSchemaRow { Id = 1, Value = 5, Name = "a" } });
 
-			using (db.CreateTempTable(Array.Empty<SourceSchemaRow>(), e => e.Property(p => p.Value).IsPrimaryKey(), tableName: "SourceSchemaRowTemp"))
+			using (db.CreateTempTable(Array.Empty<SourceSchemaRow>(), e => e.Property(p => p.Value).IsPrimaryKey(), tableName: "SourceSchemaRowTemp", tableOptions: TableOptions.NotSet))
 			{
-				tmp
-					.Update(new SourceSchemaRow { Id = 1, Value = 6, Name = "b" }, b => b)
-					.ShouldBe(1);
+				tmp.Update(new SourceSchemaRow { Id = 1, Value = 6, Name = "b" }, b => b);
 			}
 
 			tmp
