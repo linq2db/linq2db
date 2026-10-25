@@ -1,8 +1,6 @@
 using System;
 using System.Linq.Expressions;
 
-using LinqToDB.Internal.Extensions;
-
 namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 {
 	static class EqualsToVisitor

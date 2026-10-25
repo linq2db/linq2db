@@ -1059,8 +1059,9 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			return newNode;
 		}
 
-		// The compiler never emits IndexExpression; rewriting it into the shape the compiler emits for the same source
-		// (ArrayIndex, Array.Get or the indexer getter call) leaves nothing downstream that has to handle it separately.
+		// The compiler never emits IndexExpression, so it is rewritten into the compiler's shape for the same source
+		// (ArrayIndex, Array.Get or the indexer getter call). It survives only as an Assign target (VisitBinary) and in
+		// branches expose leaves unvisited (#6138), which is what PathVisitor's and EqualsToVisitor's Index arms are for.
 		protected override Expression VisitIndex(IndexExpression node)
 		{
 			if (node.Indexer == null)
