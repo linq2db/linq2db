@@ -4013,21 +4013,28 @@ namespace Tests.Linq
 			return System.Runtime.CompilerServices.FormattableStringFactory.Create(format, arguments);
 		}
 
-		// SQL Server rejects a request with more than 2100 parameters, and semicolon-joined statements share one request,
-		// so children whose parameters add up past that have to go in separate commands. The interceptor forces the joined
-		// command; each child alone stays under the limit.
+		// SQL Server rejects a request with more than 2100 parameters, sp_executesql spends two of them on the statement and
+		// its parameter list, and semicolon-joined statements share one request - so children whose parameters add up past
+		// 2098 have to go in separate commands. The interceptor forces the joined command; each child alone stays under the
+		// limit.
 		[Test]
-		public void CombinedChildrenStayUnderTheParameterLimit([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void CombinedChildrenStayUnderTheParameterLimit(
+			[IncludeDataSources(TestProvName.AllSqlServer)] string context,
+			[Values(2098, 2099, 2100, 2101)]                int    total)
 		{
 			var (_, _, detached) = GenerateMixedEagerData();
 
 			using var db        = GetDataContext(context);
 			using var tDetached = db.CreateLocalTable(detached);
 
-			db.AddInterceptor(new CombinedCommandCounter());
+			var counter = new CombinedCommandCounter();
+			db.AddInterceptor(counter);
 
-			var first  = DetachedInList(tDetached.TableName, new[] { 1, 2 }.Concat(Enumerable.Range(10_001, 1_098)));
-			var second = DetachedInList(tDetached.TableName, new[] { 3, 4 }.Concat(Enumerable.Range(20_001, 1_098)));
+			var firstCount  = total / 2;
+			var secondCount = total - firstCount;
+
+			var first  = DetachedInList(tDetached.TableName, new[] { 1, 2 }.Concat(Enumerable.Range(10_001, firstCount  - 2)));
+			var second = DetachedInList(tDetached.TableName, new[] { 3, 4 }.Concat(Enumerable.Range(20_001, secondCount - 2)));
 
 			var result = db.Select(() => new
 			{
@@ -4047,6 +4054,9 @@ namespace Tests.Linq
 
 			firstIds.ShouldBe(new[] { 1, 2 });
 			secondIds.ShouldBe(new[] { 3, 4 });
+
+			if (combinedCommands && !context.IsRemote())
+				counter.Count.ShouldBe(total <= 2098 ? 1 : 2);
 		}
 
 		// The main query of a combined command is read through the same reader path as its children, so its emulated Skip
