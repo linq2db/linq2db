@@ -111,14 +111,18 @@ parameters:
 # - win_efcore_only (true/false string, optional) : windows-only, run just the EF.Core suite on non-release
 #   runs and leave the main suite to the linux legs. Since netfx runs only on windows, that also makes the
 #   entry's netfx main suite release-run only. Release runs (full_run) run the main suite for every TFM.
+# - win_full_run_only (true/false string, optional) : windows-only, the entry's windows leg runs on
+#   release runs (full_run) only. Plain data rather than a template conditional around
+#   enable_os_windows, which a stock YAML parser cannot see into - so tests.yml reads it the same way.
 # - gh_linux   (true/false string, optional) : the entry's linux leg runs on GitHub Actions instead of
-#   Azure. It takes effect only when the caller passes offload_linux_to_github - test-jobs.yml then skips
-#   the entry and .github/workflows/tests.yml selects exactly the entries carrying the flag. Without the
-#   caller's opt-in the entry runs on Azure as before, which is what keeps the release run (default.yml)
-#   whole on one CI rather than silently shrinking it when a leg moves.
+#   Azure for development runs. It takes effect only when the caller passes offload_linux_to_github -
+#   test-jobs.yml then skips the entry and .github/workflows/tests.yml selects exactly the entries
+#   carrying the flag. Without the caller's opt-in the entry runs on Azure as before. The release run
+#   ignores the flag: .github/workflows/tests-release.yml takes every leg (all_legs), and default.yml
+#   runs its matrix only when queued with run_tests.
 # - gh_windows (true/false string, optional) : the same split for the windows leg, driven by
-#   offload_windows_to_github. Set only on legs that need no docker container - a windows container image
-#   is multiple GB per leg, so the win-mssql entries stay on Azure (see D-2 in the migration plan).
+#   offload_windows_to_github. Set only on legs that need no docker container, so the win-mssql entries
+#   stay on Azure for development runs and the load is split across both CIs.
 
 jobs:
   - template: test-jobs.yml
@@ -528,10 +532,8 @@ jobs:
           config_linux: db2informixduckdb
           script_linux_global: db2informixduckdb.sh
           script_linux_local: db2.provider.sh
-          ${{ if eq(parameters.full_run, true) }}:
-            enable_os_windows: true
-          ${{ if not(eq(parameters.full_run, true)) }}:
-            enable_os_windows: false
+          enable_os_windows: true
+          win_full_run_only: true
           enable_os_ubuntu: true
           enable_fw_netfx: false
           enable_fw_net80: true
