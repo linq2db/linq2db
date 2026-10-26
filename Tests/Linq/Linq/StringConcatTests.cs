@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB;
@@ -923,6 +924,109 @@ namespace Tests.Linq
 					.Select(e => new { id = "p_" + e.Id.ToString("N"), name = e.Name, parent = (string?)null })
 				.Concat(table.Where(e => e.ParentId != null)
 					.Select(e => new { id = e.Id.ToString("N"), name = e.Name, parent = (string?)("p_" + e.ParentId!.Value.ToString("N")) }));
+
+			AssertQuery(query);
+		}
+
+		#endregion
+
+		#region Operator precedence of concat operands
+
+		// Some dialects bind the concat operator tighter than arithmetic or bitwise operators (Firebird ranks `||`
+		// above every arithmetic operator, unary minus included; SQLite above every binary one; DB2 with `*` and
+		// `/`; Oracle with binary `+` and `-`), so an operand such as `x + 1` must be parenthesized there, or the
+		// server evaluates `'a' || x + 1` as `('a' || x) + 1`. Each shape is checked as the first, a middle and
+		// the last operand of the chain.
+		public enum ConcatOperandShape
+		{
+			Add,
+			Subtract,
+			Multiply,
+			MultiplyAdd,
+			Negate,
+			NegateSum,
+			BitwiseAnd,
+			BitwiseOr,
+			BitwiseXor,
+		}
+
+		sealed class ConcatOperandResult
+		{
+			public int     Id     { get; set; }
+			public string? First  { get; set; }
+			public string? Middle { get; set; }
+			public string? Last   { get; set; }
+		}
+
+		static Expression<Func<ConcatTestEntity, ConcatOperandResult>> OperandInEveryPosition(ConcatOperandShape shape)
+		{
+			return shape switch
+			{
+				ConcatOperandShape.Add         => e => new ConcatOperandResult { Id = e.Id, First = (e.Num + 1)     + "|" + e.StrReq, Middle = e.StrReq + "|" + (e.Num + 1)     + "|" + e.StrReq, Last = e.StrReq + "|" + (e.Num + 1)     },
+				ConcatOperandShape.Subtract    => e => new ConcatOperandResult { Id = e.Id, First = (e.Num - 3)     + "|" + e.StrReq, Middle = e.StrReq + "|" + (e.Num - 3)     + "|" + e.StrReq, Last = e.StrReq + "|" + (e.Num - 3)     },
+				ConcatOperandShape.Multiply    => e => new ConcatOperandResult { Id = e.Id, First = (e.Num * 2)     + "|" + e.StrReq, Middle = e.StrReq + "|" + (e.Num * 2)     + "|" + e.StrReq, Last = e.StrReq + "|" + (e.Num * 2)     },
+				ConcatOperandShape.MultiplyAdd => e => new ConcatOperandResult { Id = e.Id, First = (e.Num * 2 + 1) + "|" + e.StrReq, Middle = e.StrReq + "|" + (e.Num * 2 + 1) + "|" + e.StrReq, Last = e.StrReq + "|" + (e.Num * 2 + 1) },
+				ConcatOperandShape.Negate      => e => new ConcatOperandResult { Id = e.Id, First = -e.Num          + "|" + e.StrReq, Middle = e.StrReq + "|" + -e.Num          + "|" + e.StrReq, Last = e.StrReq + "|" + -e.Num          },
+				ConcatOperandShape.NegateSum   => e => new ConcatOperandResult { Id = e.Id, First = -(e.Num + 1)    + "|" + e.StrReq, Middle = e.StrReq + "|" + -(e.Num + 1)    + "|" + e.StrReq, Last = e.StrReq + "|" + -(e.Num + 1)    },
+				ConcatOperandShape.BitwiseAnd  => e => new ConcatOperandResult { Id = e.Id, First = (e.Num & 7)     + "|" + e.StrReq, Middle = e.StrReq + "|" + (e.Num & 7)     + "|" + e.StrReq, Last = e.StrReq + "|" + (e.Num & 7)     },
+				ConcatOperandShape.BitwiseOr   => e => new ConcatOperandResult { Id = e.Id, First = (e.Num | 1)     + "|" + e.StrReq, Middle = e.StrReq + "|" + (e.Num | 1)     + "|" + e.StrReq, Last = e.StrReq + "|" + (e.Num | 1)     },
+				ConcatOperandShape.BitwiseXor  => e => new ConcatOperandResult { Id = e.Id, First = (e.Num ^ 3)     + "|" + e.StrReq, Middle = e.StrReq + "|" + (e.Num ^ 3)     + "|" + e.StrReq, Last = e.StrReq + "|" + (e.Num ^ 3)     },
+				_                              => throw new ArgumentOutOfRangeException(nameof(shape), shape, null),
+			};
+		}
+
+		[Test]
+		public void Concat_OperatorOperand_EveryPosition([DataSources] string context, [Values] ConcatOperandShape shape)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(TestData);
+
+			var projection = OperandInEveryPosition(shape);
+
+			var actual   = table.Select(projection).OrderBy(r => r.Id).ToArray().Select(r => (r.First, r.Middle, r.Last));
+			var expected = TestData.Select(projection.Compile()).OrderBy(r => r.Id).Select(r => (r.First, r.Middle, r.Last));
+
+			actual.ShouldBe(expected);
+		}
+
+		// string.Join renders a chain with a separator between the items on `||` dialects; `CONCAT_WS` dialects never
+		// reach the operator. The first-item case runs only on the `||` dialects: the `CONCAT_WS` ones read the result
+		// as the type of its first item and fail to materialize an `int`-first join as a string. YDB is excluded from
+		// both cases: its concat does not accept the uncast `Int32` items string.Join passes it.
+		[Test]
+		public void StringJoin_OperatorItemFirst([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllFirebird, TestProvName.AllOracle, TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllSapHana)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(TestData);
+
+			var query =
+				from e in table
+				orderby e.Id
+				select new
+				{
+					Negated = string.Join(",", new object[] { -(e.Num + 1), e.Id }),
+					Sum     = string.Join(",", new object[] { e.Num + 1, e.Id }),
+				};
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void StringJoin_OperatorItemMiddleAndLast([DataSources(ProviderName.Ydb)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(TestData);
+
+			var query =
+				from e in table
+				orderby e.Id
+				select new
+				{
+					Middle     = string.Join(",", new object[] { e.StrReq, e.Num - 3, e.StrReq }),
+					MiddleAnd  = string.Join(",", new object[] { e.StrReq, e.Num & 7, e.StrReq }),
+					Last       = string.Join(",", new object[] { e.StrReq, e.Num * 2 + 1 }),
+					LastNegate = string.Join(",", new object[] { e.StrReq, -(e.Num + 1) }),
+				};
 
 			AssertQuery(query);
 		}
