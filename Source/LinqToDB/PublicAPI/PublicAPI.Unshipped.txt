@@ -1,1 +1,10 @@
 ﻿#nullable enable
+override LinqToDB.Internal.DataProvider.DB2.DB2SqlBuilderBase.ConcatOperandPrecedence.get -> int
+override LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlBuilder.ConcatOperandPrecedence.get -> int
+override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlBuilder.ConcatOperandPrecedence.get -> int
+override LinqToDB.Internal.DataProvider.Oracle.OracleSqlBuilderBase.ConcatOperandPrecedence.get -> int
+override LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSqlBuilder.ConcatOperandPrecedence.get -> int
+override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlBuilder.ConcatOperandPrecedence.get -> int
+override LinqToDB.Internal.DataProvider.SqlServer.SqlServer2025SqlBuilder.ConcatOperandPrecedence.get -> int
+override LinqToDB.Internal.DataProvider.Ydb.YdbSqlBuilder.ConcatOperandPrecedence.get -> int
+virtual LinqToDB.Internal.SqlProvider.BasicSqlBuilder.ConcatOperandPrecedence.get -> int

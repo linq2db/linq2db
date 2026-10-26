@@ -34,6 +34,10 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 
 		protected override ConcatBuildStyle ConcatStyle       => ConcatBuildStyle.Pipes;
 
+		// `||` binds looser than `+` and `-` but ranks with the bitwise operators, left to right: `'a' || x & 7`
+		// means `('a' || x) & 7`.
+		protected override int ConcatOperandPrecedence => Precedence.Additive;
+
 		protected override string LimitFormat (SelectQuery selectQuery) => "LIMIT {0}";
 		protected override string OffsetFormat(SelectQuery selectQuery) => "OFFSET {0} ";
 

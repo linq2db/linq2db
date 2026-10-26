@@ -48,6 +48,10 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		protected override ConcatBuildStyle ConcatStyle => ConcatBuildStyle.Pipes;
 
+		// YQL binds `||` tighter than every binary operator and looser than unary ones:
+		// `x + 1 || 'a'` means `x + (1 || 'a')`.
+		protected override int ConcatOperandPrecedence => Precedence.Unary;
+
 		// YQL allows a derived column list only on VALUES, not on a scalar/raw-SQL subquery source
 		// (SupportsColumnAliasesInSource stays true so VALUES columns keep their names).
 		protected override bool SupportsColumnAliasesInScalarSource => false;

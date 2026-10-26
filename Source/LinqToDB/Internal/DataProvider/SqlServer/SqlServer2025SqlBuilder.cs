@@ -2,6 +2,7 @@
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.SqlServer
 {
@@ -27,6 +28,10 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		// auto-coerce). Pre-2025 versions inherit the default `+` form.
 		// https://learn.microsoft.com/en-us/sql/t-sql/language-elements/string-concatenation-pipes-transact-sql
 		protected override ConcatBuildStyle ConcatStyle => ConcatBuildStyle.Pipes;
+
+		// `||` ranks with binary `+`, `-` and the bitwise operators, left to right: `'a' || x + 1` means
+		// `('a' || x) + 1`, which fails to convert `'a...'` to a number.
+		protected override int ConcatOperandPrecedence => Precedence.Subtraction;
 
 		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{

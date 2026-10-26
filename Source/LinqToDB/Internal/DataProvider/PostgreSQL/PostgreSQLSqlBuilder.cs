@@ -42,6 +42,10 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 		protected override ConcatBuildStyle ConcatStyle       => ConcatBuildStyle.Pipes;
 
+		// `||` binds looser than `+` and `-` but ranks with the bitwise operators, left to right: `'a' || x & 7`
+		// means `('a' || x) & 7`.
+		protected override int ConcatOperandPrecedence => Precedence.Additive;
+
 		protected override void BuildDistinctModifier(SelectQuery selectQuery)
 		{
 			StringBuilder.Append(" DISTINCT");

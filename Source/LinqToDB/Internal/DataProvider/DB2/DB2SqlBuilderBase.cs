@@ -23,6 +23,10 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 		protected override ConcatBuildStyle ConcatStyle => ConcatBuildStyle.Pipes;
 
+		// DB2 ranks `||` with `*`, `/` and `%`, left to right, above binary `+` and `-`: `x + 1 || ','` means
+		// `x + (1 || ',')` and `',' || x * 2` means `(',' || x) * 2`.
+		protected override int ConcatOperandPrecedence => Precedence.Multiplicative;
+
 		// DB2 null-treatment placement is per function:
 		//  - FIRST_VALUE/LAST_VALUE/LAG/LEAD take it as a quoted string argument: FUNC(.., 'IGNORE NULLS').
 		//    (LAG/LEAD require offset + default to precede it — see BuildSqlExtendedFunction below.)
