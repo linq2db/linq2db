@@ -111,7 +111,6 @@
 		<None Include="$(ToolsPath)/NodaTime.dll"                                  Pack="true" PackagePath="tools"                           Visible="false" />
 		<None Include="$(ToolsPath)/Npgsql.dll"                                    Pack="true" PackagePath="tools"                           Visible="false" />
 		<None Include="$(ToolsPath)/Oracle.ManagedDataAccess.dll"                  Pack="true" PackagePath="tools"                           Visible="false" />
-		<None Include="$(ToolsPath)/Sap.Data.Hana.v4.5.dll" 					   Pack="true" PackagePath="tools"                           Visible="false" />
 		<None Include="$(ToolsPath)/runtimes/win-arm64/native/e_sqlite3.dll"       Pack="true" PackagePath="tools\runtimes\win-arm64\native" Visible="false" />
 		<None Include="$(ToolsPath)/runtimes/win-x64/native/e_sqlite3.dll"         Pack="true" PackagePath="tools\runtimes\win-x64\native"   Visible="false" />
 		<None Include="$(ToolsPath)/runtimes/win-x86/native/e_sqlite3.dll"         Pack="true" PackagePath="tools\runtimes\win-x86\native"   Visible="false" />

@@ -8,7 +8,7 @@ artifact we publish:
 | Artifact | How the binaries get in |
 |---|---|
 | `linq2db.cli` (pointer + 7 RID sub-packages) | `PackAsTool` publishes the entire dependency closure into `tools/<tfm>/<rid>/` — around 90 NuGet packages and 158 assemblies per RID, against 22 `PackageReference` lines |
-| the 14 T4 packages | each `NuGet/*/linq2db.*.csproj` copies named provider assemblies into `tools/`, including SQL CE and the SAP HANA client out of `Redist/`, and IBM's 223-file `clidriver` tree |
+| the 14 T4 packages | each `NuGet/*/linq2db.*.csproj` copies named provider assemblies into `tools/`, including SQL CE out of `Redist/`, and IBM's 223-file `clidriver` tree |
 | `linq2db.LINQPad.lpx` | `Source/LinqToDB.LINQPad/Nuget/Pack.cmd` archives the whole `net472` output directory |
 
 All of them declare `PackageLicenseExpression=MIT`. That is correct for linq2db's own code and says
@@ -94,8 +94,8 @@ Notes on the fields that are easy to get wrong:
 - **`redistribution: "unresolved"`** is a deliberate, shipping state for components whose vendor terms have
   not yet been adjudicated. It changes nothing about what is packed; it marks the entry for the audit.
 - **A component with no `licenseTexts` is not automatically a defect.** Public-domain software has no text
-  to reproduce. It *is* a defect when the terms exist and we simply do not carry them — currently SQL CE
-  and the SAP HANA client, both `Redist/` binaries with no license file in this repository.
+  to reproduce. It *is* a defect when the terms exist and we simply do not carry them — currently SQL CE,
+  a `Redist/` binary with no license file in this repository.
 - **`revisit` is an optional marker for a decision taken on a condition that will change** — an upstream
   package we are waiting on, a question raised with a vendor. `-Action harvest` prints every one of them,
   so they resurface on each release-prep run instead of resting in a file nobody re-reads. Clear the field

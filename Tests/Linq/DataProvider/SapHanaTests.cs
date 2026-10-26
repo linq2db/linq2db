@@ -14,6 +14,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests.Model;
 
 namespace Tests.DataProvider
@@ -801,6 +803,17 @@ namespace Tests.DataProvider
 					Assert.That(SapHanaModuleFunctions.TestTableFunctionP2(db, 1).Select(r => r.O).First(), Is.EqualTo(3));
 				}
 			}
+		}
+
+		[Test]
+		public void ClientProviderNameResolvesToNativeProvider(
+			[IncludeDataSources(ProviderName.SapHanaNative)] string context,
+			[Values("Sap.Data.Hana.Net.v8.0", "Sap.Data.Hana.Net.v10.0")] string providerName)
+		{
+			var provider = DataConnection.GetDataProvider(providerName, GetConnectionString(context));
+
+			provider.ShouldNotBeNull();
+			provider.Name.ShouldBe(ProviderName.SapHanaNative);
 		}
 
 		static class SapHanaModuleFunctions

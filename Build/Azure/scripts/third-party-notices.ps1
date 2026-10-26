@@ -10,8 +10,7 @@ Three artifact families are different, because the foreign binary is *inside* th
                         dependency closure into tools/<tfm>/<rid>/. That closure is 90 NuGet packages
                         and 158 assemblies per RID, against the 22 PackageReference lines in the csproj.
   * the 14 T4 packages- NuGet/*/linq2db.*.csproj hand-list provider clients into tools/, including the
-                        SQL CE runtime and the SAP HANA client out of Redist/, and IBM's 223-file
-                        clidriver tree.
+                        SQL CE runtime out of Redist/, and IBM's 223-file clidriver tree.
   * linq2db.LINQPad.lpx - Pack.cmd archives the entire net472 output directory (7z -r a "%OUTDIR%*.*"),
                         so every driver and native asset in that folder ships in the LINQPad 5 plugin.
 
