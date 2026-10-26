@@ -679,6 +679,7 @@ namespace Tests.Linq
 
 		[ThrowsCannotBeConverted(TestProvName.AllOracle11, TestProvName.AllMySql57, TestProvName.AllMariaDB, TestProvName.AllDB2)]
 		[ThrowsRequiresCorrelatedSubquery]
+		[ActiveIssue(6173, Configuration = TestProvName.AllPostgreSQL93Minus, ErrorMessage = "syntax error at or near")]
 		[Test]
 		public void DistinctStringJoinAfterWhereInCorrelatedSubquery([DataSources] string context)
 		{
