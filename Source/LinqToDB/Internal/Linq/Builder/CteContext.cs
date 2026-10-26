@@ -20,7 +20,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		public Expression CteExpression { get; set; }
 
 		public override Expression?   Expression    => CteExpression;
-		public override MappingSchema MappingSchema => CteInnerQueryContext?.MappingSchema ?? Builder.MappingSchema;
+		public override MappingSchema MappingSchema => CteInnerQueryContext?.MappingSchema ?? ExpressionBuilder.TryGetRootMappingSchema(CteExpression) ?? Builder.MappingSchema;
 
 		public IBuildContext?   CteInnerQueryContext { get; private set; }
 		public SubQueryContext? SubQueryContext      { get; private set; }

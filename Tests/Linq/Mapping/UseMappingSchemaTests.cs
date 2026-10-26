@@ -762,5 +762,70 @@ namespace Tests.Mapping
 				.ToList()
 				.ShouldBe([1]);
 		}
+
+		// A recursive CTE's self-reference keeps the handle's association while the CTE body is still being built.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
+		public void RecursiveCteAssociationFollowsHandleSchema([RecursiveCteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+
+			ITable<ChildWithoutAssociation> children;
+
+			using (db.UseMappingSchema(new FluentMappingBuilder(new())
+				.Entity<ChildWithoutAssociation>()
+					.Association(c => c.Parent, c => c.ParentID, p => p!.ParentID)
+				.Build()
+				.MappingSchema))
+			{
+				children = db.GetTable<ChildWithoutAssociation>();
+			}
+
+			var ids      = Child.Select(c => c.ChildID).ToHashSet();
+			var expected = Enumerable.Range(1, 9).Select(n => n * 10 + 1).TakeWhile(ids.Contains).ToList();
+
+			var cte = db.GetCte<ChildWithoutAssociation>(prev =>
+				children
+					.Where(c => c.ChildID == 11)
+					.Concat(
+						from p in prev
+						join c in children on p.ChildID + 10 equals c.ChildID
+						where p.Parent!.ParentID > 0
+						select c));
+
+			cte
+				.Select(c => c.ChildID)
+				.OrderBy(id => id)
+				.ToList()
+				.ShouldBe(expected);
+		}
+
+		// A table from another data context keeps that context's association.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
+		public void SecondContextAssociationFollowsHandleSchema([DataSources] string context)
+		{
+			using var db  = GetDataContext(context);
+			using var db2 = GetDataContext(context, o => o.UseMappingSchema(new FluentMappingBuilder(new())
+				.Entity<ChildWithoutAssociation>()
+					.Association(c => c.Parent, c => c.ParentID, p => p!.ParentID)
+				.Build()
+				.MappingSchema));
+
+			var children = db2.GetTable<ChildWithoutAssociation>();
+
+			var expected = Child
+				.Where(c => c.ParentID == 1)
+				.Select(c => Parent.Single(p => p.ParentID == c.ParentID).Value1)
+				.ToList();
+
+			var actual =
+				from p in db.Parent
+				where p.ParentID == 1
+				from c in children.Where(c => c.ParentID == p.ParentID)
+				select c.Parent!.Value1;
+
+			actual
+				.ToList()
+				.ShouldBe(expected);
+		}
 	}
 }
