@@ -650,7 +650,14 @@ namespace LinqToDB.Internal.Linq.Builder
 							var orderByCount = chain.Take(i).Count(m => m is { IsQueryable: true, IsOrderByMethodName: true });
 
 							if (i != orderByCount)
-								return null;
+							{
+								// A group still has the eager-load fallback, which works where the provider refuses the correlated sub-query.
+								if (contextRef.BuildContext is GroupByBuilder.GroupByContext)
+									return null;
+
+								buildRoot = method;
+								break;
+							}
 						}
 
 						isDistinct = true;
