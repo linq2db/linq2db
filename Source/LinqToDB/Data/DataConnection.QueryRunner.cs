@@ -15,6 +15,7 @@ using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
@@ -229,11 +230,19 @@ namespace LinqToDB.Data
 						statement.IsParameterDependent = true;
 					}
 
+					// An emulated InsertOrUpdate runs UPDATE / INSERT / SELECT steps built after the call above. Each used to be a
+					// query of its own and went through ProcessQuery, so route them through it too, re-preparing on every run.
+					var processSteps = dataConnection.IsProcessQueryOverridden
+						&& statement is SqlInsertOrUpdateStatement insertOrUpdate
+						&& UpsertBuilder.WillEmulateInsertOrUpdate(insertOrUpdate, flags);
+
+					var processStep = processSteps ? CreateStepProcessor(dataConnection, preprocessContext) : null;
+
 					if (!continuousRun)
 					{
 						if (!statement.IsParameterDependent)
 						{
-							if (sqlOptimizer.IsParameterDependent(NullabilityContext.NonQuery, dataConnection.MappingSchema, statement, options))
+							if (processSteps || sqlOptimizer.IsParameterDependent(NullabilityContext.NonQuery, dataConnection.MappingSchema, statement, options))
 								statement.IsParameterDependent = true;
 						}
 					}
@@ -278,7 +287,7 @@ namespace LinqToDB.Data
 							flags.IsParameterOrderDependent,
 							parametersNormalizerFactory : dataConnection.DataProvider.GetQueryParameterNormalizer);
 
-						structure = ScenarioCommandRenderer.PrepareStructure(dataConnection, options, statement, structureContext);
+						structure = ScenarioCommandRenderer.PrepareStructure(dataConnection, options, statement, structureContext, processStep);
 
 						// Phase-R render context: null EvaluationContext, no build-time re-convert (structure is already
 						// fully converted). Its own parameter normalizer collects this command's parameters during BuildSql.
@@ -304,7 +313,7 @@ namespace LinqToDB.Data
 							flags.IsParameterOrderDependent,
 							parametersNormalizerFactory : dataConnection.DataProvider.GetQueryParameterNormalizer);
 
-						structure     = ScenarioCommandRenderer.PrepareStructure(dataConnection, options, statement, singleContext);
+						structure     = ScenarioCommandRenderer.PrepareStructure(dataConnection, options, statement, singleContext, processStep);
 						renderContext = singleContext;
 					}
 
@@ -359,6 +368,11 @@ namespace LinqToDB.Data
 					if (aquiredLock)
 						Monitor.Exit(query);
 				}
+			}
+
+			static Func<SqlStatement, SqlStatement> CreateStepProcessor(DataConnection dataConnection, EvaluationContext context)
+			{
+				return step => dataConnection.ProcessQuery(step, context);
 			}
 
 			// Adds an output parameter to the current command for a step that produces its value via an OUT parameter
