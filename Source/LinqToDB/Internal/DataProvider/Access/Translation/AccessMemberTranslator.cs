@@ -213,104 +213,52 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 
 		protected class MathMemberTranslator : MathMemberTranslatorBase
 		{
+			// Access's own Round already rounds a midpoint to even.
 			protected override ISqlExpression? TranslateRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
 			{
-				var factory   = translationContext.ExpressionFactory;
-				var valueType = factory.GetDbDataType(value);
-				var intType   = factory.GetDbDataType(typeof(int));
-
 				if (precision is null or SqlValue { Value: 0 })
 				{
-					/*
-					 IIf(Abs([Value] * 10 Mod 10) = 5 And Int([Value]) Mod 2 = 0,
-						Int([Value]),
-						Round([Value]))
-					*/
+					var factory = translationContext.ExpressionFactory;
 
-					var value10 = factory.Multiply(valueType, value, factory.Value(10));
-					var mod10   = factory.Mod(value10, factory.Value(10));
-
-					var absMod10 = factory.Function(factory.GetDbDataType(typeof(int)), "ABS", mod10);
-					var intCast  = factory.Cast(value, intType);
-
-					var is5    = factory.Equal(absMod10,                               factory.Value(5));
-					var isEven = factory.Equal(factory.Mod(intCast, factory.Value(2)), factory.Value(2));
-
-					var condition = factory.SearchCondition()
-						.Add(is5)
-						.Add(isEven);
-
-					var trueValue  = intCast;
-					var falseValue = factory.Function(valueType, "ROUND", value);
-
-					return factory.Condition(condition, trueValue, falseValue);
+					return factory.Function(factory.GetDbDataType(value), "ROUND", value);
 				}
-				else
-				{
-					return base.TranslateRoundToEven(translationContext, methodCall, value, precision);
-				}
+
+				return base.TranslateRoundToEven(translationContext, methodCall, value, precision);
+			}
+
+			protected override ISqlExpression? TranslateSqlRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
+			{
+				var factory = translationContext.ExpressionFactory;
+
+				return factory.Function(factory.GetDbDataType(value), "Round", value, precision ?? factory.Value(0));
 			}
 
 			protected override ISqlExpression? TranslateRoundAwayFromZero(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
 			{
 				var factory   = translationContext.ExpressionFactory;
 				var valueType = factory.GetDbDataType(value);
-				var intType   = factory.GetDbDataType(typeof(int));
 
-				ISqlExpression result;
+				/*
+					Sgn([Value]) * Int(Abs([Value]) * (10 ^ [Precision]) + 0.5) / (10 ^ [Precision])
 
-				if (precision is null or SqlValue { Value: 0 })
-				{
-					/*
-					IIf([Value] >= 0, Int([Value] + 0.5), Int([Value] - 0.5))
-					 */
+					Int is a floor, so it is applied to the magnitude only.
+				*/
 
-					// Create condition: [Value] >= 0
-					var isPositive = factory.GreaterOrEqual(value, factory.Value(valueType, 0));
+				ISqlExpression? power = precision is null or SqlValue { Value: 0 }
+					? null
+					: factory.Binary(valueType, factory.Value(valueType, 10), "^", precision);
 
-					// True branch: Int([Value] + 0.5)
-					var addHalf        = factory.Add(valueType, value, factory.Value(valueType, 0.5));
-					var positiveResult = factory.Function(intType, "Int", addHalf);
+				var magnitude = factory.Function(valueType, "Abs", value);
+				var scaled    = power == null ? magnitude : factory.Multiply(valueType, magnitude, power);
+				var rounded   = factory.Function(valueType, "Int", factory.Add(valueType, scaled, factory.Value(valueType, 0.5)));
+				var unscaled  = power == null ? rounded : factory.Div(valueType, rounded, power);
 
-					// False branch: Int([Value] - 0.5)
-					var subtractHalf   = factory.Sub(valueType, value, factory.Value(valueType, 0.5));
-					var negativeResult = factory.Function(intType, "Int", subtractHalf);
+				return factory.Multiply(valueType, factory.Function(valueType, "Sgn", value), unscaled);
+			}
 
-					// IIf condition
-					var condition = factory.SearchCondition().Add(isPositive);
-					result = factory.Condition(condition, positiveResult, negativeResult);
-				}
-				else
-				{
-					/*
-					Int([Value] * (10 ^ [Precision]) + IIf([Value] >= 0, 0.5, -0.5)) / (10 ^ [Precision])
-					 */
-
-					// Calculate 10 ^ [Precision]
-					var ten   = factory.Value(valueType, 10);
-					var power = factory.Binary(valueType, ten, "^", precision);
-
-					// [Value] * (10 ^ [Precision])
-					var scaled = factory.Multiply(valueType, value, power);
-
-					// IIf([Value] >= 0, 0.5, -0.5)
-					var isPositive = factory.GreaterOrEqual(value, factory.Value(valueType, 0));
-					var condition  = factory.SearchCondition().Add(isPositive);
-					var adjustment = factory.Condition(condition,
-						factory.Value(valueType, 0.5),
-						factory.Value(valueType, -0.5));
-
-					// [Value] * (10 ^ [Precision]) + IIf([Value] >= 0, 0.5, -0.5)
-					var adjusted = factory.Add(valueType, scaled, adjustment);
-
-					// Int(...)
-					var truncated = factory.Function(valueType, "Int", adjusted);
-
-					// Int(...) / (10 ^ [Precision])
-					result = factory.Div(valueType, truncated, power);
-				}
-
-				return result;
+			protected override ISqlExpression? TranslateTruncate(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value)
+			{
+				return TranslateTruncateAsFloorOrCeiling(translationContext, methodCall);
 			}
 
 			protected override ISqlExpression? TranslatePow(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression xValue, ISqlExpression yValue)

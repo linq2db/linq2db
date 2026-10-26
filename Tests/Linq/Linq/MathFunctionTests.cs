@@ -314,9 +314,8 @@ namespace Tests.Linq
 				from t in from p in db.Types select Math.Round(p.MoneyValue, MidpointRounding.AwayFromZero) where t != 0 select t);
 		}
 
-		// ClickHouse: AwayFromZero rounding supported only for decimals. Double use bankers rounding (Round5 test)
 		[Test]
-		public void Round6([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Round6([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1833,6 +1832,309 @@ namespace Tests.Linq
 			AreEqual(
 				from t in from p in Types select Math.Truncate((double)-p.MoneyValue) where t != 0.1 select t,
 				from t in from p in db.Types select Math.Truncate((double)-p.MoneyValue) where t != 0.1 select t);
+		}
+
+		sealed class RoundValues
+		{
+			[PrimaryKey] public int      Id { get; set; }
+			[Column    ] public decimal? D  { get; set; }
+			[Column    ] public double?  F  { get; set; }
+			[Column    ] public int?     P  { get; set; }
+		}
+
+		// Binary-exact midpoints only, so a double and a decimal round-trip must agree with the client body on every
+		// provider. The null precision is a column cell: a literal null is folded to no precision before translation.
+		static readonly RoundValues[] RoundValuesData =
+		[
+			new() { Id =  1, D =  2.5m,   F =  2.5,   P = 0    },
+			new() { Id =  2, D =  3.5m,   F =  3.5,   P = 0    },
+			new() { Id =  3, D = -2.5m,   F = -2.5,   P = 0    },
+			new() { Id =  4, D = -3.5m,   F = -3.5,   P = 0    },
+			new() { Id =  5, D = -0.5m,   F = -0.5,   P = 0    },
+			new() { Id =  6, D =  2.4m,   F =  2.4,   P = 0    },
+			new() { Id =  7, D = -2.4m,   F = -2.4,   P = 0    },
+			new() { Id =  8, D =  0.125m, F =  0.125, P = 2    },
+			new() { Id =  9, D = -0.375m, F = -0.375, P = 2    },
+			new() { Id = 10, D =  null,   F =  null,  P = 1    },
+			new() { Id = 11, D =  2.5m,   F =  2.5,   P = null },
+		];
+
+		// Access cannot type a function result whose argument is NULL ("could not determine the Double value" over OleDb,
+		// "data type mismatch" over ODBC), so its null rows are left out.
+		static RoundValues[] RoundValuesFor(string context)
+		{
+			return context.IsAnyOf(TestProvName.AllAccess)
+				? RoundValuesData.Where(r => r.D != null && r.P != null).ToArray()
+				: RoundValuesData;
+		}
+
+		// DuckDB cannot round a DECIMAL to a precision taken from a column.
+		[ThrowsForProvider("DuckDB.NET.Data.DuckDBException", TestProvName.AllDuckDB, ErrorMessage = "with non-constant precision is not supported")]
+		[Test]
+		public void SqlRoundDecimalOverloads([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(RoundValuesFor(context));
+
+			var query = t
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					r.Id,
+					Round           = Sql.AsSql(Sql.Round(r.D)),
+					RoundPrecision  = Sql.AsSql(Sql.Round(r.D, r.P)),
+					ToEven          = Sql.AsSql(Sql.RoundToEven(r.D)),
+					ToEvenPrecision = Sql.AsSql(Sql.RoundToEven(r.D, r.P)),
+				});
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void SqlRoundDoubleOverloads([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(RoundValuesFor(context));
+
+			var query = t
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					r.Id,
+					Round           = Sql.AsSql(Sql.Round(r.F)),
+					RoundPrecision  = Sql.AsSql(Sql.Round(r.F, r.P)),
+					ToEven          = Sql.AsSql(Sql.RoundToEven(r.F)),
+					ToEvenPrecision = Sql.AsSql(Sql.RoundToEven(r.F, r.P)),
+				});
+
+			AssertQuery(query);
+		}
+
+		// Without Sql.AsSql a projected call over columns may be left to the client, and the client must then run the
+		// method's own null-safe body - not a provider expansion that dereferences the nullable argument.
+		[Test]
+		public void SqlRoundDoubleOverloadsOnClient([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(RoundValuesFor(context));
+
+			var query = t
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					r.Id,
+					RoundPrecision  = Sql.Round(r.F, r.P),
+					ToEven          = Sql.RoundToEven(r.F),
+					ToEvenPrecision = Sql.RoundToEven(r.F, r.P),
+				});
+
+			AssertQuery(query);
+		}
+
+		sealed class MidpointValues
+		{
+			[PrimaryKey] public int     Id { get; set; }
+			[Column    ] public decimal D  { get; set; }
+			[Column    ] public double  F  { get; set; }
+		}
+
+		// Negative midpoints with an odd floor (-2.5, -0.5) are the ones a ToEven emulation built on FLOOR plus a
+		// half-away ROUND gets wrong; -2.4 and -2.0 catch an away-from-zero emulation that floors a negative value.
+		[Test]
+		public void MathRoundNegativeMidpoints([DataSources] string context)
+		{
+			var data = new[]
+			{
+				new MidpointValues { Id = 1, D = -2.5m, F = -2.5 },
+				new MidpointValues { Id = 2, D = -0.5m, F = -0.5 },
+				new MidpointValues { Id = 3, D = -3.5m, F = -3.5 },
+				new MidpointValues { Id = 4, D = -1.5m, F = -1.5 },
+				new MidpointValues { Id = 5, D = -2.4m, F = -2.4 },
+				new MidpointValues { Id = 6, D = -2.0m, F = -2.0 },
+				new MidpointValues { Id = 7, D =  2.5m, F =  2.5 },
+				new MidpointValues { Id = 8, D =  3.5m, F =  3.5 },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var query = t
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					r.Id,
+					DecimalDefault = Sql.AsSql(Math.Round(r.D)),
+					DecimalToEven  = Sql.AsSql(Math.Round(r.D, MidpointRounding.ToEven)),
+					DecimalAway    = Sql.AsSql(Math.Round(r.D, MidpointRounding.AwayFromZero)),
+					DoubleDefault  = Sql.AsSql(Math.Round(r.F)),
+					DoubleToEven   = Sql.AsSql(Math.Round(r.F, MidpointRounding.ToEven)),
+					DoubleAway     = Sql.AsSql(Math.Round(r.F, MidpointRounding.AwayFromZero)),
+				});
+
+			AssertQuery(query);
+		}
+
+		sealed class HeadroomValues
+		{
+			[PrimaryKey                       ] public int     Id { get; set; }
+			[Column(Precision = 18, Scale = 1)] public decimal D  { get; set; }
+		}
+
+		// Above 2^53 a double cannot hold these values, so a decimal rounding emulation that routes any arm through a
+		// double loses the last digits. SQLite stores such a decimal as REAL in the first place, and Access's Round and Int
+		// return a Double.
+		[Test]
+		public void MathRoundDecimalHeadroom([DataSources(TestProvName.AllSQLite, TestProvName.AllAccess)] string context)
+		{
+			var data = new[]
+			{
+				new HeadroomValues { Id = 1, D = 12345678901234567.3m },
+				new HeadroomValues { Id = 2, D = 12345678901234565.5m },
+				new HeadroomValues { Id = 3, D = 12345678901234566.5m },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var query = t
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					r.Id,
+					ToEven    = Sql.AsSql(Math.Round(r.D)),
+					SqlToEven = Sql.AsSql(Sql.RoundToEven(r.D)),
+					Away      = Sql.AsSql(Math.Round(r.D, MidpointRounding.AwayFromZero)),
+				});
+
+			AssertQuery(query);
+		}
+
+		sealed class ResidueValues
+		{
+			[PrimaryKey] public int    Id { get; set; }
+			[Column    ] public double F  { get; set; }
+			[Column    ] public int    P  { get; set; }
+		}
+
+		// 1.15 is stored as 1.1499999..., so C# rounds it away from zero to 1.1 at one digit, while the same value cast
+		// to numeric is an exact tie and rounds to 1.2. Math.Round must keep the double route on PostgreSQL even though
+		// Sql.Round(double?, int?) takes the numeric one there; MySQL, ClickHouse and DB2 scale the double by a power of ten,
+		// where the scaled residue must not become a tie either.
+		[Test]
+		public void MathRoundResidueDoubleKeepsDoubleRoute([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllMySql, TestProvName.AllClickHouse, TestProvName.AllDB2)] string context)
+		{
+			var data = new[]
+			{
+				new ResidueValues { Id = 1, F = 1.15,  P = 1 },
+				new ResidueValues { Id = 2, F = 2.675, P = 2 },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var query = t
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					r.Id,
+					Away = Sql.AsSql(Math.Round(r.F, r.P, MidpointRounding.AwayFromZero)),
+				});
+
+			AssertQuery(query);
+		}
+
+		// The power of ten that scales a double must stay a double: an integer power overflows at ten digits and is zero for
+		// a negative precision. The client cannot round to a negative precision, so the results are stated. Adding 0.5 to
+		// the scaled magnitude would itself round: the largest double below 0.5 and an odd integer above 2^52 would move.
+		[Test]
+		public void SqlRoundDoubleWidePrecision([IncludeDataSources(true, TestProvName.AllMySql, TestProvName.AllClickHouse, TestProvName.AllDB2)] string context)
+		{
+			var data = new[]
+			{
+				new ResidueValues { Id = 1, F = 1234.5678,           P = -1 },
+				new ResidueValues { Id = 2, F = 1234.5678,           P = 10 },
+				new ResidueValues { Id = 3, F = 0.5,                 P = 12 },
+				new ResidueValues { Id = 4, F = 0.49999999999999994, P = 0  },
+				new ResidueValues { Id = 5, F = 4503599627370497,    P = 0  },
+				new ResidueValues { Id = 6, F = -2.5,                P = 0  },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			t
+				.OrderBy(r => r.Id)
+				.Select(r => Sql.AsSql(Sql.Round(r.F, r.P)))
+				.ToList()
+				.ShouldBe([1230, 1234.5678, 0.5, 0, 4503599627370497, -3]);
+		}
+
+		sealed class TruncateValues
+		{
+			[PrimaryKey] public int      Id { get; set; }
+			[Column    ] public decimal? D  { get; set; }
+			[Column    ] public double?  F  { get; set; }
+			[Column    ] public decimal  N  { get; set; }
+			[Column    ] public double   G  { get; set; }
+		}
+
+		[Test]
+		public void SqlTruncateOverloads([DataSources] string context)
+		{
+			var data = new[]
+			{
+				new TruncateValues { Id = 1, D =  2.7m, F =  2.7, N =  2.7m, G =  2.7 },
+				new TruncateValues { Id = 2, D = -2.7m, F = -2.7, N = -2.7m, G = -2.7 },
+				new TruncateValues { Id = 3, D =  0.5m, F =  0.5, N =  0.5m, G =  0.5 },
+				new TruncateValues { Id = 4, D = -0.5m, F = -0.5, N = -0.5m, G = -0.5 },
+				new TruncateValues { Id = 5, D =  null, F =  null, N = 0m,    G = 0    },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var query = t
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					r.Id,
+					SqlDecimal         = Sql.AsSql(Sql.Truncate(r.D)),
+					SqlDouble          = Sql.AsSql(Sql.Truncate(r.F)),
+					MathDecimal        = Sql.AsSql(Math.Truncate(r.N)),
+					MathDouble         = Sql.AsSql(Math.Truncate(r.G)),
+					SqlDecimalOnClient = Sql.Truncate(r.D),
+					SqlDoubleOnClient  = Sql.Truncate(r.F),
+				});
+
+			AssertQuery(query);
+		}
+
+		// A Sql.Truncate call over constants is evaluated on the client, in a projection and in a predicate alike: it
+		// never reaches SQL as a function call.
+		[Test]
+		public void SqlTruncateConstantArgumentIsClientSide([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var projection = db.Person
+				.Where(p => p.ID == 1)
+				.Select(p => Sql.Truncate(2.7m));
+
+			projection
+				.ToList()
+				.ShouldBe([2m]);
+
+			projection
+				.ToSqlQuery()
+				.Sql
+				.ShouldNotContain("2.7");
+
+			var predicate = db.Person
+				.Where(p => p.ID == 1 && Sql.Truncate(2.7m) == 2m);
+
+			predicate
+				.Count()
+				.ShouldBe(1);
 		}
 	}
 }

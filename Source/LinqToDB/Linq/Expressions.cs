@@ -623,8 +623,6 @@ namespace LinqToDB.Linq
 			{ M(() => Math.Log          (0,0)),  N(() => L<double,double,double>((m,n) => Sql.Log    (n, m)!.Value )) },
 			{ M(() => Math.Log10          (0)),  N(() => L<double,double>       (p     => Sql.Log10  (p)!   .Value )) },
 
-			{ M(() => Math.Pow        (0,0) ), N(() => L<double,double,double>    ((x,y) => Sql.Power(x, y)!.Value )) },
-
 			{ M(() => Math.Sign  ((decimal)0)), N(() => L<decimal,int>(p => Sql.Sign(p)!.Value )) },
 			{ M(() => Math.Sign  ((double) 0)), N(() => L<double, int>(p => Sql.Sign(p)!.Value )) },
 			{ M(() => Math.Sign  ((short)  0)), N(() => L<short,  int>(p => Sql.Sign(p)!.Value )) },
@@ -686,7 +684,6 @@ namespace LinqToDB.Linq
 
 				{ ProviderName.SqlCe, new Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo> {
 					{ M(() => Sql.Left    ("",0)    ), N(() => L<string?,int?,string?>    ((p0,p1)    => Sql.Substring(p0, 1, p1))) },
-					{ M(() => Sql.Right   ("",0)    ), N(() => L<string?,int?,string?>    ((p0,p1)    => Sql.Substring(p0, p0!.Length - p1 + 1, p1))) },
 					{ M(() => Sql.PadRight("",0,' ')), N(() => L<string,int?,char?,string>((p0,p1,p2) => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length))) },
 					{ M(() => Sql.PadLeft ("",0,' ')), N(() => L<string,int?,char?,string>((p0,p1,p2) => p0.Length > p1 ? p0 : Replicate(p2, p1 - p0.Length) + p0)) },
 					{ M(() => Sql.Trim    ("")      ), N(() => L<string?,string?>      (p0            => Sql.TrimLeft(Sql.TrimRight(p0)))) },
@@ -720,7 +717,6 @@ namespace LinqToDB.Linq
 
 				{ ProviderName.Informix, new Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo> {
 					{ M(() => Sql.Left ("",0)     ), N(() => L<string?,int?,string?>             ((p0,p1)       => Sql.Substring(p0,  1, p1)))                   },
-					{ M(() => Sql.Right("",0)     ), N(() => L<string?,int?,string?>             ((p0,p1)       => Sql.Substring(p0,  p0!.Length - p1 + 1, p1))) },
 					{ M(() => Sql.Stuff("",0,0,"")), N(() => L<string?,int?,int?,string?,string?>((p0,p1,p2,p3) =>     AltStuff (p0,  p1, p2, p3)))              },
 					{ M(() => Sql.Space(0)        ), N(() => L<int?,string?>                     (p0            => Sql.PadRight (" ", p0, ' ')))                 },
 
@@ -756,7 +752,6 @@ namespace LinqToDB.Linq
 
 				{ ProviderName.Oracle, new Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo> {
 					{ M(() => Sql.Left ("",0)     ), N(() => L<string?,int?,string?>             ((p0,p1)       => Sql.Substring(p0, 1, p1))) },
-					{ M(() => Sql.Right("",0)     ), N(() => L<string?,int?,string?>             ((p0,p1)       => Sql.Substring(p0, p0!.Length - p1 + 1, p1))) },
 					{ M(() => Sql.Stuff("",0,0,"")), N(() => L<string?,int?,int?,string?,string?>((p0,p1,p2,p3) => AltStuff(p0, p1, p2, p3))) },
 					{ M(() => Sql.Space(0)        ), N(() => L<int?,string?>                     (p0            => Sql.PadRight(" ", p0, ' '))) },
 
@@ -787,9 +782,6 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.Degrees((long?)   0)), N(() => L<long?,   long?>   (v => (long?)   (v!.Value * (180 / Math.PI)))) },
 					{ M(() => Sql.Degrees((sbyte?)  0)), N(() => L<sbyte?,  sbyte?>  (v => (sbyte?)  (v!.Value * (180 / Math.PI)))) },
 					{ M(() => Sql.Degrees((float?)  0)), N(() => L<float?,  float?>  (v => (float?)  (v!.Value * (180 / Math.PI)))) },
-
-					{ M(() => Sql.RoundToEven(0.0)  ), N(() => L<double?,double?>     (v     => (double?)Sql.RoundToEven((decimal)v!)))    },
-					{ M(() => Sql.RoundToEven(0.0,0)), N(() => L<double?,int?,double?>((v,p) => (double?)Sql.RoundToEven((decimal)v!, p))) },
 				}},
 
 				#endregion
@@ -810,20 +802,14 @@ namespace LinqToDB.Linq
 
 				{ ProviderName.PostgreSQL, new Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo> {
 					{ M(() => Sql.Left ("",0)     ), N(() => L<string?,int?,string?>             ((p0,p1)       => Sql.Substring(p0, 1, p1))) },
-					{ M(() => Sql.Right("",0)     ), N(() => L<string?,int?,string?>             ((p0,p1)       => Sql.Substring(p0, p0!.Length - p1 + 1, p1))) },
 					{ M(() => Sql.Stuff("",0,0,"")), N(() => L<string?,int?,int?,string?,string?>((p0,p1,p2,p3) => AltStuff(p0, p1, p2, p3))) },
 					{ M(() => Sql.Space(0)        ), N(() => L<int?,string?>                     (p0            => Replicate(" ", p0))) },
 
 					{ M(() => Sql.Cosh(0)           ), N(() => L<double?,double?>     (v     => (Sql.Exp(v) + Sql.Exp(-v)) / 2 )) },
-					{ M(() => Sql.Round      (0.0,0)), N(() => L<double?,int?,double?>((v,p) => (double?)Sql.Round      ((decimal)v!, p))) },
-					{ M(() => Sql.RoundToEven(0.0)  ), N(() => L<double?,double?>     (v     => (double?)Sql.RoundToEven((decimal)v!)))    },
-					{ M(() => Sql.RoundToEven(0.0,0)), N(() => L<double?,int?,double?>((v,p) => (double?)Sql.RoundToEven((decimal)v!, p))) },
 
 					{ M(() => Sql.Log  ((double)0,0)), N(() => L<double?,double?,double?>((m,n) => (double?)Sql.Log((decimal)m!,(decimal)n!)!.Value)) },
 					{ M(() => Sql.Sinh (0)          ), N(() => L<double?,double?>        (v     => (Sql.Exp(v) - Sql.Exp(-v)) / 2)) },
 					{ M(() => Sql.Tanh (0)          ), N(() => L<double?,double?>        (v     => (Sql.Exp(v) - Sql.Exp(-v)) / (Sql.Exp(v) + Sql.Exp(-v)))) },
-
-					{ M(() => Sql.Truncate(0.0)     ), N(() => L<double?,double?>(v => (double?)Sql.Truncate((decimal)v!))) },
 				}},
 
 				#endregion
@@ -837,9 +823,6 @@ namespace LinqToDB.Linq
 
 					{ M(() => Sql.Log (0m, 0)), N(() => L<decimal?,decimal?,decimal?>((m,n) => Sql.Log(n) / Sql.Log(m))) },
 					{ M(() => Sql.Log (0.0,0)), N(() => L<double?,double?,double?>   ((m,n) => Sql.Log(n) / Sql.Log(m))) },
-
-					{ M(() => Sql.Truncate(0m)),  N(() => L<decimal?,decimal?>(v => v >= 0 ? Sql.Floor(v) : Sql.Ceiling(v))) },
-					{ M(() => Sql.Truncate(0.0)), N(() => L<double?,double?>  (v => v >= 0 ? Sql.Floor(v) : Sql.Ceiling(v))) },
 				}},
 
 				{ ProviderName.SQLiteMS, new Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo> {
@@ -870,9 +853,6 @@ namespace LinqToDB.Linq
 
 					{ M(() => Sql.Sinh(0)), N(() => L<double?,double?>(v => (Sql.Exp(v) - Sql.Exp(-v)) / 2)) },
 					{ M(() => Sql.Tanh(0)), N(() => L<double?,double?>(v => (Sql.Exp(v) - Sql.Exp(-v)) / (Sql.Exp(v) + Sql.Exp(-v)))) },
-
-					{ M(() => Sql.Truncate(0m)),  N(() => L<decimal?,decimal?>(v => v >= 0 ? Sql.Floor(v) : Sql.Ceiling(v))) },
-					{ M(() => Sql.Truncate(0.0)), N(() => L<double?,double?>  (v => v >= 0 ? Sql.Floor(v) : Sql.Ceiling(v))) },
 				}},
 
 				#endregion
@@ -901,32 +881,8 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.Degrees((sbyte?)  0)), N(() => L<sbyte?,  sbyte?>  (v => (sbyte?)  AccessInt(AccessInt(v!.Value) * (180 / Math.PI)))) },
 					{ M(() => Sql.Degrees((float?)  0)), N(() => L<float?,  float?>  (v => (float?)           (          v!.Value  * (180 / Math.PI)))) },
 
-					{ M(() => Sql.Round      (0m)   ), N(() => L<decimal?,decimal?>  (d => d - Sql.Floor(d) == 0.5m && Sql.Floor(d) % 2 == 0? Sql.Ceiling(d) : AccessRound(d, 0))) },
-					{ M(() => Sql.Round      (0.0)  ), N(() => L<double?, double?>   (d => d - Sql.Floor(d) == 0.5  && Sql.Floor(d) % 2 == 0? Sql.Ceiling(d) : AccessRound(d, 0))) },
-					{ M(() => Sql.Round      (0m, 0)), N(() => L<decimal?,int?,decimal?>((v,p)=> (decimal?)(
-						p == 1 ? Sql.Round(v * 10) / 10 :
-						p == 2 ? Sql.Round(v * 100) / 100 :
-						p == 3 ? Sql.Round(v * 1_000) / 1_000 :
-						p == 4 ? Sql.Round(v * 10_000) / 10_000 :
-						p == 5 ? Sql.Round(v * 100_000) / 100_000 :
-								 Sql.Round(v * 1_000_000) / 1_000_000))) },
-					{ M(() => Sql.Round      (0.0,0)), N(() => L<double?,int?,double?>((v,p) => (double?)(
-						p == 1 ? Sql.Round(v * 10) / 10 :
-						p == 2 ? Sql.Round(v * 100) / 100 :
-						p == 3 ? Sql.Round(v * 1_000) / 1_000 :
-						p == 4 ? Sql.Round(v * 10_000) / 10_000 :
-						p == 5 ? Sql.Round(v * 100_000) / 100_000 :
-								 Sql.Round(v * 1_000_000) / 1_000_000))) },
-					{ M(() => Sql.RoundToEven(0m)   ), N(() => L<decimal?,decimal?>     ( v   => AccessRound(v, 0))) },
-					{ M(() => Sql.RoundToEven(0.0)  ), N(() => L<double?, double?>      ( v   => AccessRound(v, 0))) },
-					{ M(() => Sql.RoundToEven(0m, 0)), N(() => L<decimal?,int?,decimal?>((v,p)=> AccessRound(v, p))) },
-					{ M(() => Sql.RoundToEven(0.0,0)), N(() => L<double?, int?,double?> ((v,p)=> AccessRound(v, p))) },
-
 					{ M(() => Sql.Sinh(0)), N(() => L<double?,double?>( v => (Sql.Exp(v) - Sql.Exp(-v)) / 2)) },
 					{ M(() => Sql.Tanh(0)), N(() => L<double?,double?>( v => (Sql.Exp(v) - Sql.Exp(-v)) / (Sql.Exp(v) + Sql.Exp(-v)))) },
-
-					{ M(() => Sql.Truncate(0m)),  N(() => L<decimal?,decimal?>(v => v >= 0 ? Sql.Floor(v) : Sql.Ceiling(v))) },
-					{ M(() => Sql.Truncate(0.0)), N(() => L<double?,double?>  (v => v >= 0 ? Sql.Floor(v) : Sql.Ceiling(v))) },
 				}},
 
 				#endregion
@@ -941,8 +897,6 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.Degrees((long?)   0)), N(() => L<long?,   long?>   (v => (long?)    (v!.Value * (180 / Math.PI)))) },
 					{ M(() => Sql.Degrees((sbyte?)  0)), N(() => L<sbyte?,  sbyte?>  (v => (sbyte?)   (v!.Value * (180 / Math.PI)))) },
 					{ M(() => Sql.Degrees((float?)  0)), N(() => L<float?,  float?>  (v => (float?)   (v!.Value * (180 / Math.PI)))) },
-					{ M(() => Sql.RoundToEven(0.0)  ),   N(() => L<double?,double?>       (v => (double?)Sql.RoundToEven((decimal)v!)))    },
-					{ M(() => Sql.RoundToEven(0.0,0)),   N(() => L<double?,int?,double?>((v,p) => (double?)Sql.RoundToEven((decimal)v!, p))) },
 					{ M(() => Sql.Stuff("",0,0,"")),     N(() => L<string?,int?,int?,string?,string?>((p0,p1,p2,p3) => AltStuff (p0,  p1, p2, p3))) },
 				}},
 
@@ -1080,7 +1034,6 @@ namespace LinqToDB.Linq
 		//
 		// TODO: Made private or remove in v7
 		[Obsolete("This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		[Sql.Function(IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
 		public static string? AltStuff(string? str, int? startLocation, int? length, string? value)
 		{
 			return Sql.Stuff(str, startLocation, length, value);

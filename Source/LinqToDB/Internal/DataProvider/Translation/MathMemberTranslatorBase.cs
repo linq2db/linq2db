@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Expressions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 
@@ -18,6 +19,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			RegisterAbs();
 			RegisterRound();
 			RgisterPow();
+			RegisterTruncate();
 		}
 
 		void RegisterMax()
@@ -104,6 +106,12 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterMethod((double  x, double  y) => Math.Pow(x, y), TranslatePow);
 			Registration.RegisterMethod((double  x, double  y) => Sql.Power(x, y), TranslatePow);
 			Registration.RegisterMethod((decimal x, decimal y) => Sql.Power(x, y), TranslatePow);
+		}
+
+		void RegisterTruncate()
+		{
+			Registration.RegisterMethod((decimal? v) => Sql.Truncate(v), TranslateTruncateMethod);
+			Registration.RegisterMethod((double?  v) => Sql.Truncate(v), TranslateTruncateMethod);
 		}
 
 		Expression? TranslateMaxMethod(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
@@ -276,7 +284,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (precision is SqlValue sqlValue && sqlValue.Value is null or 0) 
 				precision = null;
 
-			var translated = TranslateRoundToEven(translationContext, methodCall, translatedValue, precision);
+			var translated = TranslateSqlRoundToEven(translationContext, methodCall, translatedValue, precision);
 
 			if (translated == null)
 				return null;
@@ -310,7 +318,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (precision is SqlValue sqlValue && sqlValue.Value is null or 0)
 				precision = null;
 
-			var translated = TranslateRoundAwayFromZero(translationContext, methodCall, translatedValue, precision);
+			var translated = TranslateSqlRoundAwayFromZero(translationContext, methodCall, translatedValue, precision);
 
 			if (translated == null)
 				return null;
@@ -339,6 +347,114 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, translated, methodCall);
 		}
 
+		Expression? TranslateTruncateMethod(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			// Unconditional, unlike the Round handlers: Sql.Truncate's attributes did not prefer the server, so a call the client
+			// can evaluate stayed on the client in every translation mode.
+			if (translationContext.CanBeEvaluatedOnClient(methodCall))
+				return null;
+
+			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out var translatedValue))
+				return null;
+
+			var translated = TranslateTruncate(translationContext, methodCall, translatedValue);
+
+			if (translated == null)
+				return null;
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, translated, methodCall);
+		}
+
+		/// <summary>
+		/// Translates <c>Sql.RoundToEven</c>, which carries database rounding semantics. <c>Math.Round</c> goes through
+		/// <see cref="TranslateRoundToEven"/> directly, so a provider overrides this one to change only the <c>Sql</c> form.
+		/// </summary>
+		protected virtual ISqlExpression? TranslateSqlRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
+		{
+			return TranslateRoundToEven(translationContext, methodCall, value, precision);
+		}
+
+		/// <summary>
+		/// Translates <c>Sql.Round</c>, which carries database rounding semantics. <c>Math.Round</c> goes through
+		/// <see cref="TranslateRoundAwayFromZero(ITranslationContext, MethodCallExpression, ISqlExpression, ISqlExpression?)"/>
+		/// directly, so a provider overrides this one to change only the <c>Sql</c> form.
+		/// </summary>
+		protected virtual ISqlExpression? TranslateSqlRoundAwayFromZero(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
+		{
+			return TranslateRoundAwayFromZero(translationContext, methodCall, value, precision);
+		}
+
+		/// <summary>
+		/// Translates <c>Sql.Truncate</c>.
+		/// </summary>
+		protected virtual ISqlExpression? TranslateTruncate(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value)
+		{
+			var factory = translationContext.ExpressionFactory;
+
+			return factory.Function(factory.GetDbDataType(methodCall.Type), "Truncate", value);
+		}
+
+		/// <summary>
+		/// Rounds half away from zero on the magnitude <c>m = abs(v) * power(10, p)</c>: an exact midpoint becomes
+		/// <c>floor(m) + 1</c>, anything else the engine's own <c>round(m, 0)</c>. The result is
+		/// <c>sign(v) * rounded / power(10, p)</c>. This is for an engine whose <c>ROUND</c> rounds a midpoint some other way.
+		/// <paramref name="ten"/> must be typed so that <c>power</c> returns a floating-point value: an integer power
+		/// overflows at ten digits and is zero for a negative precision.
+		/// </summary>
+		protected static ISqlExpression RoundAwayFromZeroByMagnitude(ISqlExpressionFactory factory, ISqlExpression value, ISqlExpression? precision, ISqlExpression ten)
+		{
+			var valueType = factory.GetDbDataType(value);
+
+			var power     = precision == null ? null : factory.Function(valueType, "power", ten, precision);
+			var magnitude = factory.Function(valueType, "abs", value);
+			var scaled    = power == null ? magnitude : factory.Multiply(valueType, magnitude, power);
+			var floor     = factory.Function(valueType, "floor", scaled);
+			// floor(m + 0.5) is wrong for doubles: the addition itself rounds (0.49999999999999994 + 0.5 is 1.0, and above
+			// 2^52 the sum lands on an even neighbour). The fraction m - floor(m) is exact, so only the midpoint test uses it.
+			var rounded   = factory.Condition(
+				factory.Equal(factory.Sub(valueType, scaled, floor), factory.Value(valueType, 0.5)),
+				factory.Add(valueType, floor, factory.Value(valueType, 1.0)),
+				factory.Function(valueType, "round", scaled, factory.Value(0)));
+			var unscaled  = power == null ? rounded : factory.Div(valueType, rounded, power);
+
+			return factory.Multiply(valueType, factory.Function(valueType, "sign", value), unscaled);
+		}
+
+		/// <summary>
+		/// Applies <paramref name="round"/> to <paramref name="value"/> cast to decimal and casts the result back to the
+		/// value's type, for an engine whose decimal rounding gives the <c>Sql</c> semantics its floating-point rounding lacks.
+		/// </summary>
+		protected static ISqlExpression? RoundThroughDecimal(ITranslationContext translationContext, ISqlExpression value, Func<ISqlExpression, ISqlExpression?> round)
+		{
+			var factory   = translationContext.ExpressionFactory;
+			var valueType = factory.GetDbDataType(value);
+
+			var result = round(factory.Cast(value, factory.GetDbDataType(typeof(decimal))));
+
+			return result == null ? null : factory.Cast(result, valueType);
+		}
+
+		/// <summary>
+		/// Translates <c>Sql.Truncate(v)</c> as <c>v &gt;= 0 ? Sql.Floor(v) : Sql.Ceiling(v)</c>, for a provider without a
+		/// truncating function.
+		/// </summary>
+		protected static ISqlExpression? TranslateTruncateAsFloorOrCeiling(ITranslationContext translationContext, MethodCallExpression methodCall)
+		{
+			var value     = methodCall.Arguments[0];
+			var isDecimal = value.Type == typeof(decimal?);
+
+			var zero    = isDecimal ? Expression.Constant(0m, typeof(decimal?)) : Expression.Constant(0.0, typeof(double?));
+			var floor   = isDecimal ? MemberHelper.MethodOf(() => Sql.Floor  ((decimal?)null)) : MemberHelper.MethodOf(() => Sql.Floor  ((double?)null));
+			var ceiling = isDecimal ? MemberHelper.MethodOf(() => Sql.Ceiling((decimal?)null)) : MemberHelper.MethodOf(() => Sql.Ceiling((double?)null));
+
+			var emulation = Expression.Condition(
+				Expression.GreaterThanOrEqual(value, zero),
+				Expression.Call(floor,   value),
+				Expression.Call(ceiling, value));
+
+			return translationContext.TranslateToSqlExpression(emulation, out var translated) ? translated : null;
+		}
+
 		protected virtual ISqlExpression? TranslateRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
 		{
 			var factory = translationContext.ExpressionFactory;
@@ -353,25 +469,29 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			{
 				/*
 					CASE
-						WHEN ABS(value - FLOOR(value)) = 0.5
-							AND FLOOR(value) % 2 != 0
-						THEN FLOOR(value)
+						WHEN value - FLOOR(value) = 0.5
+						THEN ROUND(value * 0.5, 0) * 2
 						ELSE ROUND(value, 0)
 					END
+
+					Half a midpoint is never itself a midpoint, so rounding it lands on the even neighbour whichever way the
+					engine breaks ties, and for either sign. A multiplication keeps a decimal exact where a division may not
+					(DuckDB divides a DECIMAL into a DOUBLE).
 				 */
 
 				var valueFloor = factory.Function(valueType, "FLOOR", value);
 				var valueSub   = factory.Sub(valueType, value, valueFloor);
 
-				var condition = factory.SearchCondition(false)
-					.Add(factory.Equal(valueSub, factory.Value(valueType, 0.5)))
-					.Add(factory.Equal(factory.Mod(valueFloor, factory.Value(2)), factory.Value(0)));
+				var isMidpoint = factory.Equal(valueSub, factory.Value(valueType, 0.5));
 
-				var trueValue = factory.Function(valueType, "FLOOR", value);
+				var evenNeighbour = factory.Multiply(
+					valueType,
+					factory.Function(valueType, "ROUND", ParametersNullabilityType.SameAsFirstParameter, factory.Multiply(valueType, value, factory.Value(valueType, 0.5)), factory.Value(0)),
+					factory.Value(2));
 
 				var falseValue = factory.Function(valueType, "ROUND", ParametersNullabilityType.SameAsFirstParameter, value, factory.Value(0));
 
-				result = factory.Condition(condition, trueValue, falseValue);
+				result = factory.Condition(isMidpoint, evenNeighbour, falseValue);
 			}
 			else
 			{

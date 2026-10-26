@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 #if NETFRAMEWORK
 using System.Data.Linq.SqlClient;
 #else
@@ -982,6 +983,115 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			var q = from p in db.Person where p.ID == 1 select Sql.Right(p.FirstName, 3);
 			Assert.That(q.ToList().First(), Is.EqualTo("ohn"));
+		}
+
+		sealed class RightValues
+		{
+			[PrimaryKey          ] public int     Id { get; set; }
+			[Column(Length = 10) ] public string? S  { get; set; }
+			[Column              ] public int?    N  { get; set; }
+		}
+
+		// In-range lengths and nulls, where every provider must answer as the client does. Trailing blanks catch a length
+		// taken with a function that ignores them. Oracle, Sybase and Informix return NULL for an empty string, so their
+		// zero-length row is left out; Access cannot type a function result over a NULL argument, so its null rows are.
+		[Test]
+		public void RightInRange([DataSources] string context)
+		{
+			var data = new List<RightValues>
+			{
+				new() { Id = 2, S = "John", N = 3 },
+				new() { Id = 3, S = "John", N = 4 },
+				new() { Id = 4, S = "ab  ", N = 2 },
+			};
+
+			if (!context.IsAnyOf(TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllInformix))
+				data.Add(new() { Id = 1, S = "John", N = 0 });
+
+			if (!context.IsAnyOf(TestProvName.AllAccess))
+			{
+				data.Add(new() { Id = 5, S = null,   N = 2    });
+				data.Add(new() { Id = 6, S = "John", N = null });
+			}
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var projection = t
+				.OrderBy(r => r.Id)
+				.Select(r => new { r.Id, Right = Sql.Right(r.S, r.N) });
+
+			AssertQuery(projection);
+
+			var predicate = t
+				.Where(r => Sql.Right(r.S, r.N) == "ohn");
+
+			AssertQuery(predicate);
+		}
+
+		// Oracle counts a negative substr start from the right, so a length beyond the string length must be clamped to
+		// the first character rather than land inside the string.
+		[Test]
+		public void RightLongerThanString([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			var data = new[]
+			{
+				new RightValues { Id = 1, S = "John", N = 5 },
+				new RightValues { Id = 2, S = "John", N = 6 },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var query = t
+				.OrderBy(r => r.Id)
+				.Select(r => new { r.Id, Right = Sql.Right(r.S, r.N) });
+
+			AssertQuery(query);
+		}
+
+		static string AppendMark(string? s) => s + "!";
+		static int    PlusOne(int n)        => n + 1;
+
+		// An argument the server cannot evaluate leaves a projected Sql.Right to the client.
+		[Test]
+		public void RightUntranslatableArgumentIsClientSide([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.Person
+				.Where(p => p.ID == 1)
+				.Select(p => Sql.Right(AppendMark(p.FirstName), 2))
+				.ToList()
+				.ShouldBe(["n!"]);
+
+			db.Person
+				.Where(p => p.ID == 1)
+				.Select(p => Sql.Right(p.FirstName, PlusOne(p.ID)))
+				.ToList()
+				.ShouldBe(["hn"]);
+		}
+
+		// Sql.Right prefers the server: with constant arguments it still becomes SQL rather than a client call.
+		[Test]
+		public void RightConstantArgumentIsServerSide([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.Where(p => p.ID == 1)
+				.Select(p => Sql.Right("John", 3));
+
+			query
+				.ToList()
+				.ShouldBe(["ohn"]);
+
+			var sql = query
+				.ToSqlQuery()
+				.Sql;
+
+			(sql.Contains("right", StringComparison.OrdinalIgnoreCase) || sql.Contains("substr", StringComparison.OrdinalIgnoreCase))
+				.ShouldBeTrue(sql);
 		}
 
 		[Test]

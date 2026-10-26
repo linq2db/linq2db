@@ -30,6 +30,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 #endif
 			Registration.RegisterMethod(() => Sql.Replace("", "", ""), TranslateSqlReplace);
 			Registration.RegisterMethod(() => Sql.Replace("", (char?)null, null), TranslateSqlReplace);
+			Registration.RegisterMethod(() => Sql.Right("", 0), TranslateSqlRight);
 			Registration.RegisterMember(() => "".Length, TranslateLength);
 
 			Registration.RegisterMethod(() => "".CompareTo(""), TranslateCompareTo);
@@ -320,6 +321,28 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				return translationContext.CreateErrorExpression(methodCall.Arguments[1], type: methodCall.Type);
 
 			var resultSql = TranslateReplace(translationContext, methodCall, translationFlags, translatedField, translatedOldValue, translatedNevValue);
+
+			if (resultSql == null)
+				return null;
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, resultSql, methodCall);
+		}
+
+		Expression? TranslateSqlRight(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			// No client-evaluation guard: Sql.Right's attributes preferred the server, so even a call over constants goes to SQL.
+			// An untranslatable argument returns null rather than an error, keeping the attributes' client fallback.
+			using var disposable = translationContext.UsingTypeFromExpression(methodCall.Arguments[0]);
+
+			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out var translatedValue))
+				return null;
+
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
+
+			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[1], out var translatedLength))
+				return null;
+
+			var resultSql = TranslateRight(translationContext, methodCall, translationFlags, translatedValue, translatedLength);
 
 			if (resultSql == null)
 				return null;
@@ -981,6 +1004,43 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		{
 			var factory = translationContext.ExpressionFactory;
 			return factory.Length(value);
+		}
+
+		/// <summary>
+		/// Translates <c>Sql.Right</c>: the rightmost <paramref name="length"/> characters of <paramref name="value"/>.
+		/// </summary>
+		public virtual ISqlExpression? TranslateRight(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression length)
+		{
+			var factory = translationContext.ExpressionFactory;
+
+			return factory.Function(factory.GetDbDataType(methodCall.Type), "RIGHT", value, length);
+		}
+
+		/// <summary>
+		/// Translates <c>Sql.Right(s, n)</c> as <c>Sql.Substring(s, s.Length - n + 1, n)</c>, for a provider without <c>RIGHT</c>.
+		/// With <paramref name="clampStart"/> the start is kept at 1 or above, for an engine that counts a non-positive start
+		/// from the end of the string.
+		/// </summary>
+		protected static ISqlExpression? TranslateRightAsSubstring(ITranslationContext translationContext, MethodCallExpression methodCall, bool clampStart)
+		{
+			var str    = methodCall.Arguments[0];
+			var length = methodCall.Arguments[1];
+
+			Expression start = Expression.Add(
+				Expression.Subtract(Expression.Convert(Expression.Property(str, nameof(string.Length)), typeof(int?)), length),
+				Expression.Constant(1, typeof(int?)));
+
+			if (clampStart)
+			{
+				start = Expression.Condition(
+					Expression.GreaterThan(start, Expression.Constant(0, typeof(int?))),
+					start,
+					Expression.Constant(1, typeof(int?)));
+			}
+
+			var substring = Expression.Call(MemberHelper.MethodOf(() => Sql.Substring(null, null, null)), str, start, length);
+
+			return translationContext.TranslateToSqlExpression(substring, out var translated) ? translated : null;
 		}
 
 		public virtual ISqlExpression? TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)

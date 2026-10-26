@@ -589,55 +589,6 @@ namespace LinqToDB
 			return str.Substring(0, length.Value);
 		}
 
-		sealed class OracleRightBuilder : IExtensionCallBuilder
-		{
-			public void Build(ISqlExtensionBuilder builder)
-			{
-				var stringExpr = builder.GetExpression(0);
-				var lengthExpr = builder.GetExpression(1);
-
-				if (stringExpr == null || lengthExpr == null)
-				{
-					builder.IsConvertible = false;
-					return;
-				}
-
-				lengthExpr = builder.Negate(lengthExpr, lengthExpr.SystemType!);
-
-				builder.ResultExpression = new SqlFunction(QueryHelper.GetDbDataType(stringExpr, builder.Mapping), "substr", canBeNull: true, stringExpr, lengthExpr);
-			}
-		}
-
-		sealed class SqlCeRightBuilder : IExtensionCallBuilder
-		{
-			public void Build(ISqlExtensionBuilder builder)
-			{
-				var stringExpr = builder.GetExpression(0);
-				var lengthExpr = builder.GetExpression(1);
-
-				if (stringExpr == null || lengthExpr == null)
-				{
-					builder.IsConvertible = false;
-					return;
-				}
-
-				// SUBSTRING(someStr, LEN(someStr) - (len - 1), len)
-
-				var startExpr = new SqlBinaryExpression(lengthExpr.SystemType!,
-					new SqlFunction(QueryHelper.GetDbDataType(lengthExpr, builder.Mapping), "LEN", stringExpr), "-",
-					new SqlBinaryExpression(lengthExpr.SystemType!, lengthExpr, "-", new SqlValue(1), Precedence.Subtraction),
-					Precedence.Subtraction);
-
-				builder.ResultExpression = new SqlFunction(QueryHelper.GetDbDataType(stringExpr, builder.Mapping), "SUBSTRING", canBeNull: true, stringExpr, startExpr, lengthExpr);
-			}
-		}
-
-		[Function("RIGHT",                    PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Expression(PN.SQLite,   "SUBSTRING({0}, LENGTH({0}) - {1} + 1)", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.ClickHouse, "rightUTF8", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Extension(PN.Oracle,    "",          PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable, BuilderType = typeof(OracleRightBuilder))]
-		[Extension(PN.SqlCe,     "",          PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable, BuilderType = typeof(SqlCeRightBuilder))]
-		[Expression(PN.Ydb, "Unicode::Substring({0}, CAST(Unicode::GetLength({0}) - {1} AS UInt32), {1})", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Right(string? str, int? length)
 		{
 			if (length == null || str == null) return null;
@@ -1196,35 +1147,11 @@ namespace LinqToDB
 		[Function(PN.Ydb, "Math::Tanh", IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static double?  Tanh    (double?  value) => value == null ? null : Math.Tanh(value.Value);
 
-		[Function  (PN.Ydb,        "Math::Trunc",               IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Expression(PN.SqlServer,  "Round({0}, 0, 1)",          IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Expression(PN.DB2,        "Truncate({0}, 0)",          IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Expression(PN.Informix,   "Trunc({0}, 0)",             IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Expression(PN.Oracle,     "Trunc({0}, 0)",             IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Expression(PN.Firebird,   "Trunc({0}, 0)",             IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Expression(PN.PostgreSQL, "Trunc({0}, 0)",             IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Expression(PN.DuckDB,     "Trunc({0})",                IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Expression(PN.MySql,      "Truncate({0}, 0)",          IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Expression(PN.SqlCe,      "Round({0}, 0, 1)",          IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Expression(PN.SapHana,    "Round({0}, 0, ROUND_DOWN)", IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(                                              IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static decimal? Truncate(decimal? value)
 		{
 			return value == null ? null : decimal.Truncate(value.Value);
 		}
 
-		[Function  (PN.Ydb,        "Math::Trunc",               IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Expression(PN.SqlServer,  "Round({0}, 0, 1)",          IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Expression(PN.DB2,        "Truncate({0}, 0)",          IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Expression(PN.Informix,   "Trunc({0}, 0)",             IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Expression(PN.Oracle,     "Trunc({0}, 0)",             IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Expression(PN.Firebird,   "Trunc({0}, 0)",             IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Expression(PN.PostgreSQL, "Trunc({0}, 0)",             IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Expression(PN.DuckDB,     "Trunc({0})",                IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Expression(PN.MySql,      "Truncate({0}, 0)",          IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Expression(PN.SqlCe,      "Round({0}, 0, 1)",          IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Expression(PN.SapHana,    "Round({0}, 0, ROUND_DOWN)", IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(                                              IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static double? Truncate(double? value)
 		{
 			return value == null ? null : Math.Truncate(value.Value);
