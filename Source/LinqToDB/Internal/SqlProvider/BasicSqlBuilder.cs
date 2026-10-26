@@ -4450,6 +4450,19 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </summary>
 		protected virtual string ConcatFunctionName => "CONCAT";
 
+		/// <summary>
+		/// Parent precedence under which each operand of a <c>+</c> / <c>||</c> concat chain is built: an operand
+		/// that binds looser gets parentheses. The default, <see cref="Precedence.Concatenate"/>, parenthesizes only
+		/// operands of unknown precedence, which is right for dialects whose concat operator binds looser than every
+		/// arithmetic and bitwise operator (or whose non-string operands are always cast). A dialect whose concat
+		/// operator binds tighter than some of them overrides this with the precedence of the operator position an
+		/// operand is in: <see cref="Precedence.Subtraction"/> when it ranks with binary <c>+</c> and <c>-</c>,
+		/// <see cref="Precedence.Multiplicative"/> when it ranks with <c>*</c> and <c>/</c>, <see cref="Precedence.Unary"/>
+		/// when it binds tighter than every binary operator, <see cref="Precedence.Primary"/> when even a unary minus
+		/// operand needs parentheses. A nested concat operand is never parenthesized: the chain is associative.
+		/// </summary>
+		protected virtual int ConcatOperandPrecedence => Precedence.Concatenate;
+
 		protected virtual void BuildSqlConcatExpression(SqlConcatExpression element)
 		{
 			switch (ConcatStyle)
@@ -4470,12 +4483,14 @@ namespace LinqToDB.Internal.SqlProvider
 
 		void BuildSqlConcatOperatorChain(SqlConcatExpression element, string op)
 		{
-			var precedence = GetPrecedence(element);
+			var operandPrecedence = ConcatOperandPrecedence;
 			for (var i = 0; i < element.Expressions.Length; i++)
 			{
 				if (i > 0)
 					StringBuilder.Append(' ').Append(op).Append(' ');
-				BuildExpression(precedence, element.Expressions[i]);
+
+				var expr = element.Expressions[i];
+				BuildExpression(GetPrecedence(expr) == Precedence.Concatenate ? Precedence.Concatenate : operandPrecedence, expr);
 			}
 		}
 

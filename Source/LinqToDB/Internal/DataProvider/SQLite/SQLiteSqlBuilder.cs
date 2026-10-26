@@ -33,6 +33,10 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 		protected override ConcatBuildStyle ConcatStyle       => ConcatBuildStyle.Pipes;
 
+		// SQLite binds `||` tighter than every binary operator and looser than unary ones
+		// (https://www.sqlite.org/lang_expr.html#operators): `x + 1 || ','` means `x + (1 || ',')`.
+		protected override int ConcatOperandPrecedence => Precedence.Unary;
+
 		public override int CommandCount(SqlStatement statement)
 		{
 			return statement switch

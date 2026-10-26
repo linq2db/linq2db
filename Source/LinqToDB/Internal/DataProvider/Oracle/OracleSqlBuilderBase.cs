@@ -20,6 +20,9 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		protected override ConcatBuildStyle ConcatStyle => ConcatBuildStyle.Pipes;
 
+		// Oracle ranks `||` with binary `+` and `-`, left to right: `',' || x + 1` means `(',' || x) + 1`.
+		protected override int ConcatOperandPrecedence => Precedence.Subtraction;
+
 		protected OracleSqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{

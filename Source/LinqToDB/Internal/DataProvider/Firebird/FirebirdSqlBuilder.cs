@@ -25,6 +25,10 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		protected override ConcatBuildStyle ConcatStyle => ConcatBuildStyle.Pipes;
 
+		// Firebird binds `||` tighter than every arithmetic operator, unary minus included: `-x || 'a'` means
+		// `-(x || 'a')` and `'a' || x + 1` means `('a' || x) + 1`. Operands other than primaries need parentheses.
+		protected override int ConcatOperandPrecedence => Precedence.Primary;
+
 		public FirebirdSqlBuilder(IDataProvider provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
@@ -669,7 +673,12 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				if (typeRequired)
 					StringBuilder.Append("CAST(");
 
-				BuildExpression(value);
+				// Without its CAST the operand loses the grouping the cast gave it: `x + 1` dropped bare into
+				// `'a' || x + 1` would bind as `('a' || x) + 1`, so keep it as tight as the cast it replaces.
+				if (typeRequired)
+					BuildExpression(value);
+				else
+					BuildExpression(Precedence.Primary, value);
 
 				if (typeRequired)
 				{
