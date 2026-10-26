@@ -1,6 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 	<PropertyGroup>
-		<TargetFrameworks>net10.0</TargetFrameworks>
+		<TargetFrameworks>$(LatestTargetFramework)</TargetFrameworks>
 		<ImplicitUsings>enable</ImplicitUsings>
 	</PropertyGroup>
 

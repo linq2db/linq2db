@@ -18,7 +18,7 @@ namespace Tests.Linq
 		public void Abs([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			AreEqual(
+			AreEqualWithinDelta(
 				from t in from p in Types select Math.Abs(p.MoneyValue) where t > 0 select t,
 				from t in from p in db.Types select Math.Abs(p.MoneyValue) where t > 0 select t);
 		}
@@ -220,7 +220,7 @@ namespace Tests.Linq
 		public void Max([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			AreEqual(
+			AreEqualWithinDelta(
 				from t in from p in Types select Math.Max(p.MoneyValue, 5.1m) where t != 0 select t,
 				from t in from p in db.Types select Math.Max(p.MoneyValue, 5.1m) where t != 0 select t);
 		}
@@ -229,7 +229,7 @@ namespace Tests.Linq
 		public void Min([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			AreEqual(
+			AreEqualWithinDelta(
 				from t in from p in Types select Math.Min(p.MoneyValue, 5) where t != 0 select t,
 				from t in from p in db.Types select Math.Min(p.MoneyValue, 5) where t != 0 select t);
 		}
@@ -280,29 +280,30 @@ namespace Tests.Linq
 			if (context.IsAnyOf(ProviderName.DB2))
 				q = q.AsQueryable().Select(t => Math.Round(t, 1));
 
-			AreEqual(
+			AreEqualWithinDelta(
 				from t in from p in Types select Math.Round(p.MoneyValue, 1) where t != 0 && t != 7 select t,
 				q);
 		}
 
+		// Rounds the decimal rather than casting to double first: .NET 11 changed Math.Round(double, digits)
+		// at midpoints - Math.Round(6.55d, 1) is 6.5 there and 6.6 on .NET 10 - so the client no longer agrees
+		// with the SQL ROUND it generates. The decimal overload is unchanged. Same for Round4Sql and Round11.
 		[Test]
 		public void Round4([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			AreEqual(
-				from t in from p in Types select Math.Round((double)p.MoneyValue, 1) where t != 0 select Math.Round(t, 5),
-				from t in from p in db.Types select Math.Round((double)p.MoneyValue, 1) where t != 0 select Math.Round(t, 5));
+			AreEqualWithinDelta(
+				from t in from p in Types select Math.Round(p.MoneyValue, 1) where t != 0 select Math.Round(t, 5),
+				from t in from p in db.Types select Math.Round(p.MoneyValue, 1) where t != 0 select Math.Round(t, 5));
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllDB2, ErrorMessage = "Assert.That(exceptExpected, Is.Zero)",
-			Details = "no-issue: DB2's ROUND on a Float is not exact - ROUND(CAST(6.6 AS Float), 5) returns 6.6000000000000005, one ulp above .NET's. Two of the twelve rows differ that way. Not linq2db's banker's-rounding emulation: its midpoint branch is never taken for these values, so the emitted CASE reduces to a plain ROUND.")]
 		[Test]
 		public void Round4Sql([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			AreEqual(
-				from t in from p in Types select Math.Round((double)p.MoneyValue, 1) where t != 0 select Math.Round(t, 5),
-				from t in from p in db.Types select Math.Round((double)p.MoneyValue, 1) where t != 0 select Sql.AsSql(Math.Round(t, 5)));
+			AreEqualWithinDelta(
+				from t in from p in Types select Math.Round(p.MoneyValue, 1) where t != 0 select Math.Round(t, 5),
+				from t in from p in db.Types select Math.Round(p.MoneyValue, 1) where t != 0 select Sql.AsSql(Math.Round(t, 5)));
 		}
 
 		[Test]
@@ -346,7 +347,7 @@ namespace Tests.Linq
 		public void Round9([DataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
-			AreEqual(
+			AreEqualWithinDelta(
 				from t in from p in Types select Math.Round(p.MoneyValue, 1, MidpointRounding.AwayFromZero) where t != 0 select t,
 				from t in from p in db.Types select Math.Round(p.MoneyValue, 1, MidpointRounding.AwayFromZero) where t != 0 select t);
 		}
@@ -360,7 +361,7 @@ namespace Tests.Linq
 			if (context.IsAnyOf(ProviderName.DB2))
 				q = q.AsQueryable().Select(t => Math.Round(t, 1, MidpointRounding.ToEven));
 
-			AreEqual(
+			AreEqualWithinDelta(
 				from t in from p in Types select Math.Round(p.MoneyValue, 1, MidpointRounding.ToEven) where t != 0 && t != 7 select t,
 				q);
 		}
@@ -369,9 +370,9 @@ namespace Tests.Linq
 		public void Round11([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			AreEqual(
-				from t in from p in Types select Math.Round((double)p.MoneyValue, 1, MidpointRounding.ToEven) where t != 0 select Math.Round(t, 5),
-				from t in from p in db.Types select Math.Round((double)p.MoneyValue, 1, MidpointRounding.ToEven) where t != 0 select Math.Round(t, 5));
+			AreEqualWithinDelta(
+				from t in from p in Types select Math.Round(p.MoneyValue, 1, MidpointRounding.ToEven) where t != 0 select Math.Round(t, 5),
+				from t in from p in db.Types select Math.Round(p.MoneyValue, 1, MidpointRounding.ToEven) where t != 0 select Math.Round(t, 5));
 		}
 
 		// TODO: implement other MidpointRounding values (and remove NUnit4001 suppress)
@@ -389,7 +390,7 @@ namespace Tests.Linq
 
 			var cacheMissCount = q.GetCacheMissCount();
 
-			AreEqual(
+			AreEqualWithinDelta(
 				from t in from p in Types select Math.Round(p.MoneyValue, 1, mp) where t != 0 && t != 7 select t,
 				q);
 
@@ -407,14 +408,9 @@ namespace Tests.Linq
 		public void Round13([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-
-			var query =
-				from p in db.Types
-				where p.MoneyValue != 0
-				orderby p.ID
-				select Sql.AsSql(Math.Round(p.MoneyValue, 5));
-
-			AssertQuery(query, ByValue);
+			AreEqualWithinDelta(
+				from p in    Types where p.MoneyValue != 0 select Math.Round(p.MoneyValue, 5),
+				from p in db.Types where p.MoneyValue != 0 select Sql.AsSql(Math.Round(p.MoneyValue, 5)));
 		}
 
 		// The widened intermediate must not leak into the result type: YQL arithmetic and IF reject

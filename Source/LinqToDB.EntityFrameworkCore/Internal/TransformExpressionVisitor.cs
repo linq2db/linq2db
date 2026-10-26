@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -185,7 +185,7 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 						return newMethod;
 					}
 
-#if EF10
+#if EF10_OR_GREATER
 					if (generic == ReflectionMethods.IgnoreQueryFiltersByKeyMethodInfo)
 					{
 						// EF: IgnoreQueryFilters(IReadOnlyCollection<string>) → linq2db: IgnoreFilters(IEnumerable<string>, params Type[]).
