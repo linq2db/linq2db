@@ -182,14 +182,17 @@ namespace LinqToDB.Internal.Linq
 			var query       = GetInfo(db, parameters);
 			var expressions = query.CompiledExpressions!;
 
-			using (query.StartLoadTransaction(db))
-			{
-				// A compiled query always carries its argument array, so InitHarvesters returns a context even when the
-				// query has no eager-load harvesters - the mapper and parameter accessors read the compiled args from it.
-				var context = query.InitHarvesters(db, expressions, parameters);
+			using var transaction = query.StartLoadTransaction(db);
 
-				return (T)query.GetElement(db, expressions, context)!;
-			}
+			// A compiled query always carries its argument array, so InitHarvesters returns a context even when the
+			// query has no eager-load harvesters - the mapper and parameter accessors read the compiled args from it.
+			var context = query.InitHarvesters(db, expressions, parameters);
+
+			var value = (T)query.GetElement(db, expressions, context)!;
+
+			transaction?.Complete();
+
+			return value;
 		}
 
 		public async Task<T> ExecuteAsync(object[] parameters, CancellationToken cancellationToken)
@@ -203,7 +206,12 @@ namespace LinqToDB.Internal.Linq
 
 			var context = await query.InitHarvestersAsync(db, expressions, parameters, cancellationToken).ConfigureAwait(false);
 
-			return (T)(await query.GetElementAsync(db, expressions, context, cancellationToken).ConfigureAwait(false))!;
+			var value = (T)(await query.GetElementAsync(db, expressions, context, cancellationToken).ConfigureAwait(false))!;
+
+			if (transaction != null)
+				await transaction.CompleteAsync(cancellationToken).ConfigureAwait(false);
+
+			return value;
 		}
 	}
 }

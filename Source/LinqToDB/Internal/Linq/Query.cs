@@ -212,7 +212,7 @@ namespace LinqToDB.Internal.Linq
 			return context;
 		}
 
-		internal IDisposable? StartLoadTransaction(IDataContext dataContext)
+		internal LoadTransaction? StartLoadTransaction(IDataContext dataContext)
 		{
 			var dc = GetTransactionOwner(dataContext);
 
@@ -220,12 +220,12 @@ namespace LinqToDB.Internal.Linq
 				return null;
 
 			if (dataContext is DataContext ctx)
-				return ctx.BeginTransaction(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel);
+				return new LoadTransaction(ctx.BeginTransaction(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel));
 
-			return dc.BeginTransaction(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel);
+			return new LoadTransaction(dc.BeginTransaction(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel));
 		}
 
-		internal async Task<IAsyncDisposable?> StartLoadTransactionAsync(IDataContext dataContext, CancellationToken cancellationToken)
+		internal async Task<LoadTransaction?> StartLoadTransactionAsync(IDataContext dataContext, CancellationToken cancellationToken)
 		{
 			var dc = GetTransactionOwner(dataContext);
 
@@ -233,11 +233,81 @@ namespace LinqToDB.Internal.Linq
 				return null;
 
 			if (dataContext is DataContext ctx)
-				return await ctx.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken)
-					.ConfigureAwait(false);
+				return new LoadTransaction(
+					await ctx.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken)
+						.ConfigureAwait(false));
 
-			return await dc.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken)
-				.ConfigureAwait(false);
+			return new LoadTransaction(
+				await dc.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken)
+					.ConfigureAwait(false));
+		}
+
+		/// <summary>
+		/// The implicit transaction that keeps the reads of an eager-loading query consistent. Its owner - the element call
+		/// or the enumeration - commits it with <see cref="Complete"/> unless the load itself failed: the caller may write on
+		/// the same connection while enumerating, and those writes are enlisted in it. Disposing it uncommitted rolls it back.
+		/// </summary>
+		internal sealed class LoadTransaction : IDisposable, IAsyncDisposable
+		{
+			readonly object _transaction;
+
+			// Once committed or disposed, the connection's current transaction may be another one, and disposing ours
+			// again would dispose it.
+			bool _released;
+
+			public LoadTransaction(DataContextTransaction transaction)
+			{
+				_transaction = transaction;
+			}
+
+			public LoadTransaction(DataConnectionTransaction transaction)
+			{
+				_transaction = transaction;
+			}
+
+			public void Complete()
+			{
+				if (_released)
+					return;
+
+				if (_transaction is DataContextTransaction contextTransaction)
+					contextTransaction.CommitTransaction();
+				else
+					((DataConnectionTransaction)_transaction).Commit();
+
+				_released = true;
+			}
+
+			public async Task CompleteAsync(CancellationToken cancellationToken)
+			{
+				if (_released)
+					return;
+
+				if (_transaction is DataContextTransaction contextTransaction)
+					await contextTransaction.CommitTransactionAsync(cancellationToken).ConfigureAwait(false);
+				else
+					await ((DataConnectionTransaction)_transaction).CommitAsync(cancellationToken).ConfigureAwait(false);
+
+				_released = true;
+			}
+
+			public void Dispose()
+			{
+				if (_released)
+					return;
+
+				_released = true;
+				((IDisposable)_transaction).Dispose();
+			}
+
+			public ValueTask DisposeAsync()
+			{
+				if (_released)
+					return default;
+
+				_released = true;
+				return ((IAsyncDisposable)_transaction).DisposeAsync();
+			}
 		}
 
 		DataConnection? GetTransactionOwner(IDataContext dataContext)

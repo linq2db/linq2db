@@ -124,6 +124,9 @@ namespace LinqToDB.Internal.Linq
 				var eagerValue = await query.GetEagerElementAsync(DataContext, expressions, Parameters, cancellationToken)
 					.ConfigureAwait(false);
 
+				if (transaction != null)
+					await transaction.CompleteAsync(cancellationToken).ConfigureAwait(false);
+
 				return (TResult)eagerValue!;
 			}
 
@@ -133,15 +136,18 @@ namespace LinqToDB.Internal.Linq
 			var value = await query.GetElementAsync(DataContext, expressions, Preambles, cancellationToken)
 				.ConfigureAwait(false);
 
+			if (transaction != null)
+				await transaction.CompleteAsync(cancellationToken).ConfigureAwait(false);
+
 			return (TResult)value!;
 		}
 
-		IDisposable? StartLoadTransaction(Query query)
+		Query.LoadTransaction? StartLoadTransaction(Query query)
 		{
 			return query.StartLoadTransaction(DataContext);
 		}
 
-		Task<IAsyncDisposable?> StartLoadTransactionAsync(Query query, CancellationToken cancellationToken)
+		Task<Query.LoadTransaction?> StartLoadTransactionAsync(Query query, CancellationToken cancellationToken)
 		{
 			return query.StartLoadTransactionAsync(DataContext, cancellationToken);
 		}
@@ -205,14 +211,37 @@ namespace LinqToDB.Internal.Linq
 			if (!combined)
 				Preambles = harvesters;
 
+			// As for the enumerator wrappers: only a failure of the load rolls the transaction back. An exception of the
+			// callback does not, just as one thrown in a foreach body does not.
+			var faulted    = false;
 			var enumerator = enumerable.GetAsyncEnumerator(cancellationToken);
-			await using (enumerator.ConfigureAwait(false))
+
+			try
 			{
-				while (await enumerator.MoveNextAsync().ConfigureAwait(false))
+				while (true)
 				{
-					if (!func(enumerator.Current))
+					bool hasNext;
+
+					try
+					{
+						hasNext = await enumerator.MoveNextAsync().ConfigureAwait(false);
+					}
+					catch
+					{
+						faulted = true;
+						throw;
+					}
+
+					if (!hasNext || !func(enumerator.Current))
 						break;
 				}
+			}
+			finally
+			{
+				await enumerator.DisposeAsync().ConfigureAwait(false);
+
+				if (!faulted && transaction != null)
+					await transaction.CompleteAsync(cancellationToken).ConfigureAwait(false);
 			}
 		}
 
@@ -290,18 +319,28 @@ namespace LinqToDB.Internal.Linq
 			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
 			var query       = GetQuery(ref expressions, false, out _);
 
-			using (StartLoadTransaction(query))
+			using var transaction = StartLoadTransaction(query);
+
+			if (query.GetEagerElement != null)
 			{
-				if (query.GetEagerElement != null)
-					return (TResult)query.GetEagerElement(DataContext, expressions, Parameters)!;
+				var eagerValue = query.GetEagerElement(DataContext, expressions, Parameters);
 
-				Preambles = query.InitHarvesters(DataContext, expressions, Parameters);
+				transaction?.Complete();
 
-				var getElement = query.GetElement;
-				if (getElement == null)
-					throw new LinqToDBException("GetElement is not assigned by the context.");
-				return (TResult)getElement(DataContext, expressions, Preambles)!;
+				return (TResult)eagerValue!;
 			}
+
+			Preambles = query.InitHarvesters(DataContext, expressions, Parameters);
+
+			var getElement = query.GetElement;
+			if (getElement == null)
+				throw new LinqToDBException("GetElement is not assigned by the context.");
+
+			var value = getElement(DataContext, expressions, Preambles);
+
+			transaction?.Complete();
+
+			return (TResult)value!;
 		}
 
 		object? IQueryProvider.Execute(Expression expression)
@@ -311,18 +350,28 @@ namespace LinqToDB.Internal.Linq
 			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
 			var query       = GetQuery(ref expressions, false, out _);
 
-			using (StartLoadTransaction(query))
+			using var transaction = StartLoadTransaction(query);
+
+			if (query.GetEagerElement != null)
 			{
-				if (query.GetEagerElement != null)
-					return query.GetEagerElement(DataContext, expressions, Parameters);
+				var eagerValue = query.GetEagerElement(DataContext, expressions, Parameters);
 
-				Preambles = query.InitHarvesters(DataContext, expressions, Parameters);
+				transaction?.Complete();
 
-				var getElement = query.GetElement;
-				if (getElement == null)
-					throw new LinqToDBException("GetElement is not assigned by the context.");
-				return getElement(DataContext, expressions, Preambles);
+				return eagerValue;
 			}
+
+			Preambles = query.InitHarvesters(DataContext, expressions, Parameters);
+
+			var getElement = query.GetElement;
+			if (getElement == null)
+				throw new LinqToDBException("GetElement is not assigned by the context.");
+
+			var value = getElement(DataContext, expressions, Preambles);
+
+			transaction?.Complete();
+
+			return value;
 		}
 
 		#endregion

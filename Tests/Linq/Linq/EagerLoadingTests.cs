@@ -4149,5 +4149,87 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		#region Writes during an eager load
+
+		[Table]
+		sealed class ExportInvoice
+		{
+			[PrimaryKey] public int  Id       { get; set; }
+			[Column    ] public bool Exported { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(ExportInvoiceLine.InvoiceId))]
+			public List<ExportInvoiceLine> Lines { get; set; } = null!;
+		}
+
+		[Table]
+		sealed class ExportInvoiceLine
+		{
+			[PrimaryKey] public int Id        { get; set; }
+			[Column    ] public int InvoiceId { get; set; }
+		}
+
+		static readonly ExportInvoice[] ExportInvoices =
+		{
+			new() { Id = 1 },
+			new() { Id = 2 },
+		};
+
+		static readonly ExportInvoiceLine[] ExportInvoiceLines =
+		{
+			new() { Id = 10, InvoiceId = 1 },
+			new() { Id = 20, InvoiceId = 2 },
+		};
+
+		// Each invoice is marked exported on the same connection while its eager load is still being enumerated. The load's
+		// implicit read-consistency transaction is still open then, and the writes it takes in must persist with it.
+		[Test]
+		public void WritesDuringEagerLoadEnumerationPersist([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var invoices = db.CreateLocalTable(ExportInvoices);
+			using var lines    = db.CreateLocalTable(ExportInvoiceLines);
+
+			var withLines = invoices
+				.LoadWith(i => i.Lines);
+
+			foreach (var invoice in withLines)
+			{
+				invoices
+					.Where(i => i.Id == invoice.Id)
+					.Set(i => i.Exported, true)
+					.Update();
+			}
+
+			invoices
+				.Count(i => i.Exported)
+				.ShouldBe(ExportInvoices.Length);
+		}
+
+		[Test]
+		public async Task WritesDuringEagerLoadEnumerationPersistAsync([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var invoices = db.CreateLocalTable(ExportInvoices);
+			using var lines    = db.CreateLocalTable(ExportInvoiceLines);
+
+			var withLines = invoices
+				.LoadWith(i => i.Lines)
+				.AsAsyncEnumerable();
+
+			await foreach (var invoice in withLines)
+			{
+				await invoices
+					.Where(i => i.Id == invoice.Id)
+					.Set(i => i.Exported, true)
+					.UpdateAsync();
+			}
+
+			var exported = await invoices.CountAsync(i => i.Exported);
+
+			exported.ShouldBe(ExportInvoices.Length);
+		}
+
+		#endregion
 	}
 }
