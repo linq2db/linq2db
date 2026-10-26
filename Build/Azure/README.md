@@ -77,10 +77,10 @@ Legend:
 | Database (version): provider \ Target framework (OS) | netfx :door: | netcore :door: | netcore :penguin: |
 |:---|:---:|:---:|:---:|
 |TestNoopProvider<sup>[1](#notes)</sup>|:heavy_check_mark:|:arrow_right:|:heavy_check_mark:|
-|SQLite [3.53.4](https://www.sqlite.org/releaselog/3_53_4.html)<br>[Microsoft.Data.SQLite](https://www.nuget.org/packages/Microsoft.Data.SQLite/)<br>with NorthwindDB Tests|:new_moon:|:arrow_right:|:heavy_check_mark:|
-|SQLite [3.53.4](https://www.sqlite.org/releaselog/3_53_4.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite/)<br>with NorthwindDB Tests|:new_moon:|:arrow_right:|:heavy_check_mark:|
-|SQLite [3.53.4](https://www.sqlite.org/releaselog/3_53_4.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite/)<br>with [MiniProfiler](https://www.nuget.org/packages/MiniProfiler.Shared/)<br>without mappings to underlying provider|:new_moon:|:arrow_right:|:heavy_check_mark:|
-|SQLite [3.53.4](https://www.sqlite.org/releaselog/3_53_4.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite/)<br>with [MiniProfiler](https://www.nuget.org/packages/MiniProfiler.Shared/)<br>with mappings to underlying provider|:new_moon:|:arrow_right:|:heavy_check_mark:|
+|SQLite [3.53.3](https://www.sqlite.org/releaselog/3_53_3.html)<br>[Microsoft.Data.SQLite](https://www.nuget.org/packages/Microsoft.Data.SQLite/)<br>with NorthwindDB Tests|:new_moon:|:arrow_right:|:heavy_check_mark:|
+|SQLite [3.53.3](https://www.sqlite.org/releaselog/3_53_3.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite/)<br>with NorthwindDB Tests|:new_moon:|:arrow_right:|:heavy_check_mark:|
+|SQLite [3.53.3](https://www.sqlite.org/releaselog/3_53_3.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite/)<br>with [MiniProfiler](https://www.nuget.org/packages/MiniProfiler.Shared/)<br>without mappings to underlying provider|:new_moon:|:arrow_right:|:heavy_check_mark:|
+|SQLite [3.53.3](https://www.sqlite.org/releaselog/3_53_3.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite/)<br>with [MiniProfiler](https://www.nuget.org/packages/MiniProfiler.Shared/)<br>with mappings to underlying provider|:new_moon:|:arrow_right:|:heavy_check_mark:|
 |MySQL 5.7<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/)|:x:|:x:|:heavy_check_mark:|
 |MySQL 5.7<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/)|:x:|:x:|:heavy_check_mark:|
 |MySQL 8.0<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/)|:x:|:x:|:heavy_check_mark:|
