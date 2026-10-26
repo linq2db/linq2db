@@ -331,15 +331,16 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		Expression? TranslateSqlRight(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
 			// No client-evaluation guard: Sql.Right's attributes preferred the server, so even a call over constants goes to SQL.
+			// An untranslatable argument returns null rather than an error, keeping the attributes' client fallback.
 			using var disposable = translationContext.UsingTypeFromExpression(methodCall.Arguments[0]);
 
 			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out var translatedValue))
-				return translationContext.CreateErrorExpression(methodCall.Arguments[0], type: methodCall.Type);
+				return null;
 
 			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
 
 			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[1], out var translatedLength))
-				return translationContext.CreateErrorExpression(methodCall.Arguments[1], type: methodCall.Type);
+				return null;
 
 			var resultSql = TranslateRight(translationContext, methodCall, translationFlags, translatedValue, translatedLength);
 

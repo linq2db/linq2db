@@ -1050,6 +1050,28 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		static string AppendMark(string? s) => s + "!";
+		static int    PlusOne(int n)        => n + 1;
+
+		// An argument the server cannot evaluate leaves a projected Sql.Right to the client.
+		[Test]
+		public void RightUntranslatableArgumentIsClientSide([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.Person
+				.Where(p => p.ID == 1)
+				.Select(p => Sql.Right(AppendMark(p.FirstName), 2))
+				.ToList()
+				.ShouldBe(["n!"]);
+
+			db.Person
+				.Where(p => p.ID == 1)
+				.Select(p => Sql.Right(p.FirstName, PlusOne(p.ID)))
+				.ToList()
+				.ShouldBe(["hn"]);
+		}
+
 		// Sql.Right prefers the server: with constant arguments it still becomes SQL rather than a client call.
 		[Test]
 		public void RightConstantArgumentIsServerSide([DataSources] string context)
