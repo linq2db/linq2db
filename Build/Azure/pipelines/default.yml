@@ -1,3 +1,12 @@
+# The release PR's provider matrix runs on GitHub Actions (.github/workflows/tests-release.yml). This
+# is the fallback for when GitHub cannot run it: queue this pipeline by hand on master - never on
+# release, which also publishes - with run_tests set. Its baselines then land on baselines/default.
+parameters:
+- name: run_tests
+  displayName: Run the full provider test matrix
+  type: boolean
+  default: false
+
 variables:
   - template: templates/build-vars.yml
 
@@ -7,7 +16,7 @@ trigger:
   - release
 # don't trigger pr builds by default, users should trigger them manually using /azp bot commands to avoid situations
 # when we have multiple test runs waiting for free job, when nobody needs them
-# we only want to trigger it for pr to release branch
+# we only want to trigger it for pr to release branch (build and nugets - its tests run on GitHub, see above)
 pr:
   - release
 
@@ -23,7 +32,7 @@ stages:
     parameters:
       with_nugets: true
       with_examples: true
-      with_tests: eq(variables['System.PullRequest.TargetBranch'], variables['release_branch'])
+      with_tests: ${{ parameters.run_tests }}
       with_analyzer_tests: true
       with_singlefile_smoke: true
       ${{ if eq(variables['System.PullRequest.TargetBranch'], variables['release_branch']) }}:
@@ -41,7 +50,7 @@ stages:
 #############
   - template: templates/test-matrix.yml
     parameters:
-      enabled: and(eq(variables['System.PullRequest.TargetBranch'], variables['release_branch']), succeeded())
+      enabled: and(${{ parameters.run_tests }}, succeeded())
       with_baselines: true
       full_run: true
       db_filter: '[all]'
