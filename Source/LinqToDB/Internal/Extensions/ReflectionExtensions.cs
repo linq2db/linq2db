@@ -209,19 +209,183 @@ namespace LinqToDB.Internal.Extensions
 			return null;
 		}
 
+		/// <summary>
+		/// Gets public or non-public, instance or static method by name and parameter types.
+		/// Only matches a method that <see cref="System.Linq.Expressions.Expression"/> can call with arguments of <paramref name="types"/>
+		/// without conversion: each parameter type is identical to the requested type or is a reference type assignable from it.
+		/// </summary>
 		public static MethodInfo? GetMethodEx(this Type type, string name, params Type[] types)
 		{
-			return type.GetMethod(name, BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic, null, types, null);
+			return type.GetMethodEx(name, BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic, types);
 		}
 
+		/// <summary>
+		/// Gets method by name, binding flags and parameter types.
+		/// Only matches a method that <see cref="System.Linq.Expressions.Expression"/> can call with arguments of <paramref name="types"/>
+		/// without conversion: each parameter type is identical to the requested type or is a reference type assignable from it.
+		/// </summary>
+		public static MethodInfo? GetMethodEx(this Type type, string name, BindingFlags bindingFlags, params Type[] types)
+		{
+#pragma warning disable RS0030 // Do not used banned APIs
+			var method = type.GetMethod(name, bindingFlags, null, types, null);
+#pragma warning restore RS0030 // Do not used banned APIs
+
+			return method != null && IsExpressionCompatible(method.GetParameters(), types) ? method : null;
+		}
+
+		/// <summary>
+		/// Gets method by name, generic parameters count, binding flags and parameter types.
+		/// <paramref name="genericParametersCount"/> = 0 matches only non-generic methods.
+		/// Parameter types follow the rules of <see cref="GetMethodEx(Type, string, BindingFlags, Type[])"/>; parameters of generic parameter types match any requested type.
+		/// Unlike <see cref="GetMethodEx(Type, string, int, Type[])"/>, which returns the first exact match of a generic method,
+		/// an identical match wins over a reference-assignable one and remaining ties throw <see cref="AmbiguousMatchException"/>.
+		/// </summary>
+		public static MethodInfo? GetMethodEx(this Type type, string name, int genericParametersCount, BindingFlags bindingFlags, params Type[] types)
+		{
+			MethodInfo? identical  = null;
+			MethodInfo? compatible = null;
+			var         ambiguousIdentical  = false;
+			var         ambiguousCompatible = false;
+
+			foreach (var method in type.GetMethods(bindingFlags))
+			{
+				if (!string.Equals(method.Name, name, StringComparison.Ordinal))
+					continue;
+
+				if (genericParametersCount == 0
+					? method.IsGenericMethodDefinition
+					: !method.IsGenericMethodDefinition || method.GetGenericArguments().Length != genericParametersCount)
+					continue;
+
+				var parameters = method.GetParameters();
+
+				if (!IsExpressionCompatible(parameters, types))
+					continue;
+
+				if (IsIdentical(parameters, types))
+					Select(ref identical, ref ambiguousIdentical, method);
+				else
+					Select(ref compatible, ref ambiguousCompatible, method);
+			}
+
+			if (identical != null ? ambiguousIdentical : ambiguousCompatible)
+				throw new AmbiguousMatchException($"Ambiguous match found for {type.FullName}.{name}.");
+
+			return identical ?? compatible;
+
+			// a method hidden by a more derived one with the same signature is not a competing candidate
+			static void Select(ref MethodInfo? current, ref bool ambiguous, MethodInfo method)
+			{
+				if (current == null)
+					current = method;
+				else if (!HasSameParameters(current, method))
+					ambiguous = true;
+				else if (method.DeclaringType!.IsSubclassOf(current.DeclaringType!))
+					current = method;
+				else if (!current.DeclaringType!.IsSubclassOf(method.DeclaringType!))
+					ambiguous = true;
+			}
+
+			static bool HasSameParameters(MethodInfo x, MethodInfo y)
+			{
+				var px = x.GetParameters();
+				var py = y.GetParameters();
+
+				for (var i = 0; i < px.Length; i++)
+					if (px[i].ParameterType != py[i].ParameterType)
+						return false;
+
+				return true;
+			}
+		}
+
+		/// <summary>
+		/// Gets public instance method by name and parameter types.
+		/// Parameter types follow the rules of <see cref="GetMethodEx(Type, string, BindingFlags, Type[])"/>.
+		/// </summary>
 		public static MethodInfo? GetPublicInstanceMethodEx(this Type type, string name, params Type[] types)
 		{
-			return type.GetMethod(name, BindingFlags.Instance | BindingFlags.Public, null, types, null);
+			return type.GetMethodEx(name, BindingFlags.Instance | BindingFlags.Public, types);
+		}
+
+		/// <summary>
+		/// Gets method by name and parameter types using <see cref="Type.DefaultBinder"/> rules, which also match parameters
+		/// that need a value conversion (e.g. <see cref="byte"/> to <see cref="int"/>, <c>T</c> to <see cref="Nullable{T}"/>).
+		/// The caller must convert arguments to the returned method's parameter types before building an expression.
+		/// </summary>
+		public static MethodInfo? GetMethodCoercing(this Type type, string name, params Type[] types)
+		{
+#pragma warning disable RS0030 // Do not used banned APIs
+			return type.GetMethod(name, BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic, null, types, null);
+#pragma warning restore RS0030 // Do not used banned APIs
+		}
+
+		/// <summary>
+		/// Gets public instance constructor by parameter types.
+		/// Parameter types follow the rules of <see cref="GetMethodEx(Type, string, BindingFlags, Type[])"/>.
+		/// </summary>
+		public static ConstructorInfo? GetConstructorEx(this Type type, params Type[] types)
+		{
+			return type.GetConstructorEx(BindingFlags.Instance | BindingFlags.Public, types);
+		}
+
+		/// <summary>
+		/// Gets constructor by binding flags and parameter types.
+		/// Parameter types follow the rules of <see cref="GetMethodEx(Type, string, BindingFlags, Type[])"/>.
+		/// </summary>
+		public static ConstructorInfo? GetConstructorEx(this Type type, BindingFlags bindingFlags, params Type[] types)
+		{
+#pragma warning disable RS0030 // Do not used banned APIs
+			var ctor = type.GetConstructor(bindingFlags, null, types, null);
+#pragma warning restore RS0030 // Do not used banned APIs
+
+			return ctor != null && IsExpressionCompatible(ctor.GetParameters(), types) ? ctor : null;
+		}
+
+		/// <summary>
+		/// Gets public instance constructor by parameter types using <see cref="Type.DefaultBinder"/> rules, which also match parameters
+		/// that need a value conversion (e.g. <see cref="byte"/> to <see cref="int"/>, <c>T</c> to <see cref="Nullable{T}"/>).
+		/// The caller must convert arguments to the returned constructor's parameter types before building an expression.
+		/// </summary>
+		public static ConstructorInfo? GetConstructorCoercing(this Type type, params Type[] types)
+		{
+#pragma warning disable RS0030 // Do not used banned APIs
+			return type.GetConstructor(BindingFlags.Instance | BindingFlags.Public, null, types, null);
+#pragma warning restore RS0030 // Do not used banned APIs
+		}
+
+		// matches what Expression.New/Call accept without an explicit Convert
+		static bool IsExpressionCompatible(ParameterInfo[] parameters, Type[] types)
+		{
+			if (parameters.Length != types.Length)
+				return false;
+
+			for (var i = 0; i < types.Length; i++)
+			{
+				var parameterType = parameters[i].ParameterType;
+
+				if (parameterType == types[i] || parameterType.ContainsGenericParameters)
+					continue;
+
+				if (parameterType.IsValueType || types[i].IsValueType || !parameterType.IsAssignableFrom(types[i]))
+					return false;
+			}
+
+			return true;
+		}
+
+		static bool IsIdentical(ParameterInfo[] parameters, Type[] types)
+		{
+			for (var i = 0; i < types.Length; i++)
+				if (parameters[i].ParameterType != types[i] && !parameters[i].ParameterType.ContainsGenericParameters)
+					return false;
+
+			return true;
 		}
 
 		public static ConstructorInfo? GetDefaultConstructorEx(this Type type)
 		{
-			return type.GetConstructor(
+			return type.GetConstructorEx(
 				BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public,
 				Type.EmptyTypes);
 		}

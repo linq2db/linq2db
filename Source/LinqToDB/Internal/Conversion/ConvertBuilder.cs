@@ -33,7 +33,7 @@ namespace LinqToDB.Internal.Conversion
 
 		static Expression? GetCtor(Type from, Type to, Expression p)
 		{
-			var ctor = to.GetConstructor(new[] { from });
+			var ctor = to.GetConstructorCoercing(from);
 
 			if (ctor == null)
 				return null;
@@ -51,7 +51,7 @@ namespace LinqToDB.Internal.Conversion
 			if (!from.IsNullableType || to != from.UnwrapNullableType())
 				return null;
 
-			var mi = from.GetMethod("GetValueOrDefault", BindingFlags.Instance | BindingFlags.Public, null, [], null);
+			var mi = from.GetMethodEx("GetValueOrDefault", BindingFlags.Instance | BindingFlags.Public);
 
 			if (mi == null)
 				return null;
@@ -79,8 +79,8 @@ namespace LinqToDB.Internal.Conversion
 		static Expression? GetOperator(Type from, Type to, Expression p)
 		{
 			var op =
-				to.GetMethodEx("op_Implicit", from) ??
-				to.GetMethodEx("op_Explicit", from);
+				to.GetMethodCoercing("op_Implicit", from) ??
+				to.GetMethodCoercing("op_Explicit", from);
 
 			if (op != null)
 			{

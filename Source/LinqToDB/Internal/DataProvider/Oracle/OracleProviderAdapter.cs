@@ -15,6 +15,7 @@ using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.Types;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Mapping;
 using LinqToDB.Mapping;
 
@@ -833,7 +834,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		private static void TryAddTypeReader<TType>(Type dataReaderType, List<(Type Type, string ReaderMethodName)> customReaders, string methodName)
 		{
-			if (dataReaderType.GetMethod(methodName, IndexParams) != null)
+			if (dataReaderType.GetPublicInstanceMethodEx(methodName, IndexParams) != null)
 				customReaders.Add((typeof(TType), methodName));
 		}
 

@@ -485,7 +485,7 @@ namespace LinqToDB.Remote
 					{
 						return Expression.Lambda<Func<ISqlBuilder>>(
 							Expression.New(
-								key.SqlProviderType.GetConstructor(new[]
+								key.SqlProviderType.GetConstructorEx(new[]
 								{
 									typeof(IDataProvider),
 									typeof(MappingSchema),
@@ -521,7 +521,7 @@ namespace LinqToDB.Remote
 					static key =>
 					{
 						var p = Expression.Parameter(typeof(DataOptions));
-						var c = key.SqlOptimizerType.GetConstructor(new[] {typeof(SqlProviderFlags)});
+						var c = key.SqlOptimizerType.GetConstructorEx(new[] {typeof(SqlProviderFlags)});
 
 						if (c != null)
 							return Expression
@@ -534,7 +534,7 @@ namespace LinqToDB.Remote
 						return Expression
 							.Lambda<Func<DataOptions, ISqlOptimizer>>(
 								Expression.New(
-									key.SqlOptimizerType.GetConstructor(new[] {typeof(SqlProviderFlags), typeof(DataOptions)}) 
+									key.SqlOptimizerType.GetConstructorEx(new[] {typeof(SqlProviderFlags), typeof(DataOptions)}) 
 										?? throw new InvalidOperationException($"Constructor for type '{key.SqlOptimizerType.Name}' not found."),
 									Expression.Constant(key.SqlProviderFlags),
 									p

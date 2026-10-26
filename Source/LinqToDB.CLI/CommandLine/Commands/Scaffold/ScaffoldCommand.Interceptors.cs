@@ -10,6 +10,7 @@ using System.Runtime.Loader;
 using LinqToDB.CommandLine;
 using LinqToDB.CommandLine.Options;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Scaffold;
 using LinqToDB.Tools;
 
@@ -194,11 +195,11 @@ namespace LinqToDB.CommandLine.Commands.Scaffold
 
 			// try options constructor first
 			object[]? args = null;
-			var ctor = interceptorsType.GetConstructor(new[] { typeof(ScaffoldOptions) });
+			var ctor = interceptorsType.GetConstructorEx(new[] { typeof(ScaffoldOptions) });
 			if (ctor == null)
 			{
 				// try default constructor
-				ctor = interceptorsType.GetConstructor(Array.Empty<Type>());
+				ctor = interceptorsType.GetConstructorEx(Array.Empty<Type>());
 			}
 			else
 			{

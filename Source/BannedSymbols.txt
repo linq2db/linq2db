@@ -234,6 +234,27 @@ M:System.Convert.ChangeType(System.Object,System.TypeCode); use overload with IF
 # GetInterfaceMap => GetInterfaceMapEx
 M:System.Type.GetInterfaceMap(System.Type); use GetInterfaceMapEx extension
 
+// https://github.com/linq2db/linq2db/issues/4314
+// default binder coerces argument types (byte -> int, T -> T?) that Expression.New/Call reject
+M:System.Type.GetConstructor(System.Type[]); use GetConstructorEx extension (or GetConstructorCoercing when the caller converts arguments)
+M:System.Type.GetConstructor(System.Reflection.BindingFlags,System.Type[]); use GetConstructorEx extension
+M:System.Type.GetConstructor(System.Reflection.BindingFlags,System.Reflection.Binder,System.Type[],System.Reflection.ParameterModifier[]); use GetConstructorEx extension
+M:System.Type.GetConstructor(System.Reflection.BindingFlags,System.Reflection.Binder,System.Reflection.CallingConventions,System.Type[],System.Reflection.ParameterModifier[]); use GetConstructorEx extension
+M:System.Type.GetMethod(System.String,System.Type[]); use GetMethodEx extension (or GetMethodCoercing when the caller converts arguments)
+M:System.Type.GetMethod(System.String,System.Type[],System.Reflection.ParameterModifier[]); use GetMethodEx extension
+M:System.Type.GetMethod(System.String,System.Reflection.BindingFlags,System.Type[]); use GetMethodEx extension
+M:System.Type.GetMethod(System.String,System.Reflection.BindingFlags,System.Reflection.Binder,System.Type[],System.Reflection.ParameterModifier[]); use GetMethodEx extension
+M:System.Type.GetMethod(System.String,System.Reflection.BindingFlags,System.Reflection.Binder,System.Reflection.CallingConventions,System.Type[],System.Reflection.ParameterModifier[]); use GetMethodEx extension
+M:System.Type.GetMethod(System.String,System.Int32,System.Type[]); use GetMethodEx extension
+M:System.Type.GetMethod(System.String,System.Int32,System.Type[],System.Reflection.ParameterModifier[]); use GetMethodEx extension
+M:System.Type.GetMethod(System.String,System.Int32,System.Reflection.BindingFlags,System.Type[]); use GetMethodEx extension
+M:System.Type.GetMethod(System.String,System.Int32,System.Reflection.BindingFlags,System.Reflection.Binder,System.Type[],System.Reflection.ParameterModifier[]); use GetMethodEx extension
+M:System.Type.GetMethod(System.String,System.Int32,System.Reflection.BindingFlags,System.Reflection.Binder,System.Reflection.CallingConventions,System.Type[],System.Reflection.ParameterModifier[]); use GetMethodEx extension
+M:System.Type.GetProperty(System.String,System.Type[]); use GetProperty(name) or GetMethodEx on the accessor
+M:System.Type.GetProperty(System.String,System.Type,System.Type[]); use GetProperty(name) or GetMethodEx on the accessor
+M:System.Type.GetProperty(System.String,System.Type,System.Type[],System.Reflection.ParameterModifier[]); use GetProperty(name) or GetMethodEx on the accessor
+M:System.Type.GetProperty(System.String,System.Reflection.BindingFlags,System.Reflection.Binder,System.Type,System.Type[],System.Reflection.ParameterModifier[]); use GetProperty(name) or GetMethodEx on the accessor
+
 # Expression Compile
 M:System.Linq.Expressions.Expression`1.Compile; use CompileExpression extension
 M:System.Linq.Expressions.Expression`1.Compile(System.Boolean); are u sure you need it?
