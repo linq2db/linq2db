@@ -105,11 +105,10 @@ namespace Tests.Linq
 				// SQL Server doesn't support AVG(time)
 				//"AVG",
 				"COUNT"
-			)] string funcName,
-			[Values(
-				"timeDataType"
-			)] string fieldName)
+			)] string funcName)
 		{
+			const string fieldName = "timeDataType";
+
 			using var db = GetDataContext(context);
 			var query =
 					from t in db
