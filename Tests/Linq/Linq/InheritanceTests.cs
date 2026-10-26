@@ -11,6 +11,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests.Model;
 
 namespace Tests.Linq
@@ -1675,6 +1677,37 @@ namespace Tests.Linq
 				() => db.GetTable<BaseClass>().Insert(() => new UnmappedChild { Id = 1, Code = 1, UnmappedField = 5 }));
 
 			Assert.That(db.GetTable<BaseClass>().Count(), Is.Zero);
+		}
+
+		[Table("InheritanceShape")]
+		[InheritanceMapping(Code = "C1", Type = typeof(ShapeCircle))]
+		[InheritanceMapping(Code = "S2", Type = typeof(ShapeSquare))]
+		abstract class ShapeBase
+		{
+			[PrimaryKey]                     public int    Id   { get; set; }
+			[Column(IsDiscriminator = true)] public string Kind { get; set; } = null!;
+		}
+
+		sealed class ShapeCircle : ShapeBase
+		{
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(Model.Parent.ParentID))]
+			public Parent? Parent { get; set; }
+		}
+
+		sealed class ShapeSquare : ShapeBase;
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6148")]
+		public void DerivedAssociationKeepsOtherDerivedRows([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable(new ShapeBase[] { new ShapeCircle { Id = 1, Kind = "C1" }, new ShapeSquare { Id = 2, Kind = "S2" } });
+
+			var result = db.GetTable<ShapeBase>()
+				.OrderBy(s => s.Id)
+				.Select(s => (int?)((ShapeCircle)s).Parent!.ParentID)
+				.ToList();
+
+			result.ShouldBe([1, null]);
 		}
 
 		#endregion

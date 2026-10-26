@@ -434,8 +434,6 @@ namespace Tests.Linq
 			FSharp.Issue1813.Issue1813Test7(db);
 		}
 
-		// YDB rejects the constant carried into the join ON clause ("each equality predicate argument must depend on exactly one JOIN input").
-		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
 		public void Issue1813Test8([DataSources] string context)
 		{
