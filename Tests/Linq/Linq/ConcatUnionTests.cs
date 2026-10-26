@@ -2990,7 +2990,7 @@ namespace Tests.Linq
 
 			// AssertQuery's expected side does not navigate associations, so the expected rows are written out.
 			var expectedObjects = Person
-				.Select(p => new { p.ID, Patient = Patient.FirstOrDefault(t => t.PersonID == p.ID) })
+				.Select(p => new { p.ID, Patient = (Patient?)Patient.FirstOrDefault(t => t.PersonID == p.ID) })
 				.AsQueryable();
 
 			var expectedNulls = Person
@@ -3016,7 +3016,7 @@ namespace Tests.Linq
 
 			// AssertQuery's expected side does not navigate associations, so the expected rows are written out.
 			var expectedObjects = Person
-				.Select(p => new { p.ID, Patient = Patient.FirstOrDefault(t => t.PersonID == p.ID) })
+				.Select(p => new { p.ID, Patient = (Patient?)Patient.FirstOrDefault(t => t.PersonID == p.ID) })
 				.AsQueryable();
 
 			var expectedNulls = Person
@@ -3038,7 +3038,7 @@ namespace Tests.Linq
 				.Select(p => new
 				{
 					p.ParentID,
-					Child = db.Child
+					Child = (Child?)db.Child
 						.Where(c => c.ParentID == p.ParentID)
 						.OrderBy(c => c.ChildID)
 						.FirstOrDefault(),
@@ -3061,7 +3061,7 @@ namespace Tests.Linq
 				.Select(p => new
 				{
 					p.ParentID,
-					Child = db.Child
+					Child = (Child?)db.Child
 						.Where(c => c.ParentID == p.ParentID)
 						.OrderBy(c => c.ChildID)
 						.FirstOrDefault(),
