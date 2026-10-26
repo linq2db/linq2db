@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\linq2db.TestProjects.props" />
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<TargetFrameworks></TargetFrameworks>
+
+		<AssemblyName>linq2db.Tests.Wasm</AssemblyName>
+		<RootNamespace>Tests.Wasm</RootNamespace>
+
+		<MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3277</MSBuildWarningsAsMessages>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+
+		<ProjectReference Include="..\..\Source\LinqToDB.Remote.HttpClient.Server\LinqToDB.Remote.HttpClient.Server.csproj" />
+
+		<!-- The WASM bundles are published by publish-wasm-bundles.ps1; only the entity mapping is shared. -->
+		<Compile Include="..\Tests.Wasm.App\WasmPerson.cs" Link="WasmPerson.cs" />
+	</ItemGroup>
+</Project>

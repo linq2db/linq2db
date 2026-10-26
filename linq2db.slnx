@@ -430,6 +430,11 @@
       <BuildDependency Project="Tests/Linq/Tests.csproj" />
       <Build Solution="Testing|*" Project="false" />
     </Project>
+    <Project Path="Tests/Tests.Wasm/Tests.Wasm.csproj">
+      <Build Solution="Azure|*" Project="false" />
+      <Build Solution="Release|*" Project="false" />
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
     <Project Path="Tests/VisualBasic/Tests.VisualBasic.vbproj" />
   </Folder>
 </Solution>
