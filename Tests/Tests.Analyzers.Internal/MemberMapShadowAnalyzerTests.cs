@@ -125,6 +125,11 @@ namespace Tests.Analyzers.Internal
 					public static void RegisterMember<TResult>(this TranslationRegistration registration, Expression<Func<TResult>> memberAccessPattern, TranslationRegistration.TranslateFunc func) { }
 					public static void RegisterMember<T,TResult>(this TranslationRegistration registration, Expression<Func<T,TResult>> memberAccessPattern, TranslationRegistration.TranslateFunc func) { }
 					public static void RegisterConstructor<T,TResult>(this TranslationRegistration registration, Expression<Func<T,TResult>> constructorAccessPattern, TranslationRegistration.TranslateFunc func) { }
+					public static void RegisterReplacement<T1,T2,TResult>(this TranslationRegistration registration, Expression<Func<T1,T2,TResult>> pattern, Expression<Func<T1,T2,TResult>> replacement) { }
+
+					// A helper forwarding its caller's pattern: not a registration of its own, so not drift.
+					public static void RegisterGenericMethod<T,TResult>(this TranslationRegistration registration, Expression<Func<T,TResult>> methodCallPattern, TranslationRegistration.TranslateFunc func)
+						=> registration.RegisterMethod(methodCallPattern, func, isGenericTypeMatch: true);
 				}
 
 				public abstract class MemberTranslatorBase
@@ -240,6 +245,13 @@ namespace Tests.Analyzers.Internal
 			Source(
 				common:  "{ {|LINQ2DB0007:M(() => new DateTime(0L))|}, N(() => null) },",
 				baseReg: "Registration.RegisterConstructor((long ticks) => new DateTime(ticks), H);"));
+
+		// A replacement registration is shadowed the same way: the map entry is applied before it is looked up.
+		[Test]
+		public Task RegisteredReplacementIsReported() => Verify(
+			Source(
+				common:  "{ {|LINQ2DB0007:M(() => Math.Pow(0, 0))|}, N(() => null) },",
+				baseReg: "Registration.RegisterReplacement((double x, double y) => Math.Pow(x, y), (double x, double y) => Math.Exp(y * Math.Log(x)));"));
 
 		// A generic-match registration covers every instantiation of the method, as TranslationRegistration stores
 		// the generic definition.
@@ -397,6 +409,15 @@ namespace Tests.Analyzers.Internal
 		public Task EmptyModelIsDrift() => Verify(
 			Source(sentinel: false)
 				.Replace("public static class Expressions", "public static class {|LINQ2DB0009:Expressions|}", System.StringComparison.Ordinal));
+
+		// A pattern held in a variable hides the registered member, so a shadow of it would go unreported. The
+		// forwarding helper in the extensions class is the one exemption, and every fixture compiles it.
+		[Test]
+		public Task NonLambdaRegistrationPatternIsDrift() => Verify(
+			Source(baseReg: """
+				Expression<Func<double, double>> pattern = v => Math.Floor(v);
+				{|LINQ2DB0009:Registration.RegisterMethod(pattern, H)|};
+				"""));
 
 		#endregion
 

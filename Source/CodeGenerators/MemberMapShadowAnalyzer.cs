@@ -109,11 +109,11 @@ namespace CodeGenerators
 					{
 						CollectEntry(invocation, entries, failures);
 					}
-					else if (method.Name is "RegisterMethod" or "RegisterMember" or "RegisterConstructor"
+					else if (method.Name is "RegisterMethod" or "RegisterMember" or "RegisterConstructor" or "RegisterReplacement"
 						&& extensionsType != null
 						&& SymbolEqualityComparer.Default.Equals(method.ContainingType, extensionsType))
 					{
-						CollectRegistration(invocation, operationContext.ContainingSymbol, registrations);
+						CollectRegistration(invocation, operationContext.ContainingSymbol, extensionsType, registrations, failures);
 					}
 					else if (method.Name == "Add"
 						&& SymbolEqualityComparer.Default.Equals(operationContext.ContainingSymbol.ContainingType, expressionsType))
@@ -153,7 +153,12 @@ namespace CodeGenerators
 			entries.Add(new MapEntry(key, section, location));
 		}
 
-		static void CollectRegistration(IInvocationOperation invocation, ISymbol containingSymbol, ConcurrentBag<Registration> registrations)
+		static void CollectRegistration(
+			IInvocationOperation              invocation,
+			ISymbol                           containingSymbol,
+			INamedTypeSymbol                  extensionsType,
+			ConcurrentBag<Registration>       registrations,
+			ConcurrentBag<(Location, string)> failures)
 		{
 			IOperation? pattern            = null;
 			var         isGenericTypeMatch = false;
@@ -170,12 +175,21 @@ namespace CodeGenerators
 					isGenericTypeMatch = true;
 			}
 
-			if (pattern == null || GetLambda(pattern) is not { } lambda || ResolveMember(lambda) is not { } key)
+			if (pattern == null)
 				return;
 
 			var registeringType = containingSymbol.ContainingType;
 
-			if (registeringType == null)
+			if (GetLambda(pattern) is not { } lambda)
+			{
+				// The extension overloads forward their caller's pattern; anywhere else the member is unknowable here.
+				if (!SymbolEqualityComparer.Default.Equals(registeringType, extensionsType))
+					failures.Add((invocation.Syntax.GetLocation(), $"a {invocation.TargetMethod.Name} pattern is not a lambda written in place, so the member it registers is unknown"));
+
+				return;
+			}
+
+			if (ResolveMember(lambda) is not { } key || registeringType == null)
 				return;
 
 			registrations.Add(new Registration(key, isGenericTypeMatch, registeringType, ProviderOf(registeringType.ContainingNamespace)));
