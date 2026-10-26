@@ -191,10 +191,10 @@ Legend:
 |`TestProvName.SqlServer2022MS`|SQL Server 2022 using Microsoft.Data.SqlClient||
 |`ProviderName.SqlServer2025`|SQL Server 2025 using System.Data.SqlClient||
 |`TestProvName.SqlServer2025MS`|SQL Server 2025 using Microsoft.Data.SqlClient||
-|`TestProvName.SqlServerSA`|SQL Server latest (2019) in SequentialAccess mode using System.Data.SqlClient||
-|`TestProvName.SqlServerSAMS`|SQL Server latest (2019) in SequentialAccess mode using Microsoft.Data.SqlClient||
-|`TestProvName.SqlServerContained`|SQL Server latest (2019) in contained database mode using System.Data.SqlClient||
-|`TestProvName.SqlServerContainedMS`|SQL Server latest (2019) in contained database mode using Microsoft.Data.SqlClient||
+|`TestProvName.SqlServerCaseSensitive`|SQL Server 2025 with case-sensitive database and catalog collation in SequentialAccess mode using System.Data.SqlClient||
+|`TestProvName.SqlServerCaseSensitiveMS`|SQL Server 2025 with case-sensitive database and catalog collation in SequentialAccess mode using Microsoft.Data.SqlClient||
+|`TestProvName.SqlServerContained`|SQL Server 2025 in contained database mode with case-sensitive database collation using System.Data.SqlClient||
+|`TestProvName.SqlServerContainedMS`|SQL Server 2025 in contained database mode with case-sensitive database collation using Microsoft.Data.SqlClient||
 |`TestProvName.SqlServerAzure`|SQL Server Azure (latest) using System.Data.SqlClient||
 |`TestProvName.SqlServerAzureMS`|SQL Server Azure (latest) using Microsoft.Data.SqlClient||
 |`TestProvName.SqlServerNorthwind`|SQL Server latest (2019) Northwind database with FTS using System.Data.SqlClient||

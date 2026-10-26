@@ -147,27 +147,40 @@ namespace Tests
 		public const string SqlServer2022MS              = "SqlServer.2022.MS";
 		public const string SqlServer2025MS              = "SqlServer.2025.MS";
 
-		public const string SqlServerSequentialAccess    = "SqlServer.SA";
-		public const string SqlServerSequentialAccessMS  = "SqlServer.SA.MS";
-		public const string AllSqlServerSequentialAccess = $"{SqlServerSequentialAccess},{SqlServerSequentialAccessMS}";
+		/// <summary>
+		/// SQL Server 2025 database with case-sensitive data and catalog collation, tested in sequential access mode.
+		/// </summary>
+		public const string SqlServerCaseSensitive       = "SqlServer.CS";
+		public const string SqlServerCaseSensitiveMS     = "SqlServer.CS.MS";
+		public const string AllSqlServerCaseSensitiveCatalog = $"{SqlServerCaseSensitive},{SqlServerCaseSensitiveMS}";
 
+		/// <summary>
+		/// Sequential access mode is tested by the <see cref="SqlServerCaseSensitive"/> configuration.
+		/// </summary>
+		public const string SqlServerSequentialAccess    = SqlServerCaseSensitive;
+		public const string SqlServerSequentialAccessMS  = SqlServerCaseSensitiveMS;
+		public const string AllSqlServerSequentialAccess = AllSqlServerCaseSensitiveCatalog;
+
+		/// <summary>
+		/// SQL Server 2025 contained database with case-sensitive data collation (contained database catalog collation is always case-insensitive).
+		/// </summary>
 		public const string SqlServerContained           = "SqlServer.Contained";
 		public const string SqlServerContainedMS         = "SqlServer.Contained.MS";
 		public const string AllSqlServerContained        = $"{SqlServerContained},{SqlServerContainedMS}";
 
 		/// <summary>
-		/// Case-sensitive database.
+		/// Databases with case-sensitive data collation.
 		/// </summary>
-		public const string AllSqlServerCS               = $"{ProviderName.SqlServer2019},{SqlServer2019MS}";
+		public const string AllSqlServerCaseSensitiveData = $"{AllSqlServerCaseSensitiveCatalog},{AllSqlServerContained}";
 		public const string AllSqlServer2005             = $"{ProviderName.SqlServer2005},{SqlServer2005MS}";
 		public const string AllSqlServer2008             = $"{ProviderName.SqlServer2008},{SqlServer2008MS}";
 		public const string AllSqlServer2012             = $"{ProviderName.SqlServer2012},{SqlServer2012MS}";
 		public const string AllSqlServer2014             = $"{ProviderName.SqlServer2014},{SqlServer2014MS}";
 		public const string AllSqlServer2016             = $"{ProviderName.SqlServer2016},{SqlServer2016MS}";
 		public const string AllSqlServer2017             = $"{ProviderName.SqlServer2017},{SqlServer2017MS}";
-		public const string AllSqlServer2019             = $"{ProviderName.SqlServer2019},{SqlServer2019MS},{AllSqlServerSequentialAccess},{AllSqlServerContained}";
+		public const string AllSqlServer2019             = $"{ProviderName.SqlServer2019},{SqlServer2019MS}";
 		public const string AllSqlServer2022             = $"{ProviderName.SqlServer2022},{SqlServer2022MS}";
-		public const string AllSqlServer2025             = $"{ProviderName.SqlServer2025},{SqlServer2025MS}";
+		public const string AllSqlServer2025             = $"{ProviderName.SqlServer2025},{SqlServer2025MS},{AllSqlServerCaseSensitiveCatalog},{AllSqlServerContained}";
 		public const string AllSqlServer2008Minus        = $"{AllSqlServer2005},{AllSqlServer2008}";
 		public const string AllSqlServer2014Minus        = $"{AllSqlServer2008Minus},{AllSqlServer2012},{AllSqlServer2014}";
 		public const string AllSqlServer2016Minus        = $"{AllSqlServer2014Minus},{AllSqlServer2016}";
@@ -183,12 +196,12 @@ namespace Tests
 		public const string AllSqlServer2012PlusNoAzure  = $"{AllSqlServer2012},{AllSqlServer2014},{AllSqlServer2016},{AllSqlServer2017},{AllSqlServer2019},{AllSqlServer2022},{AllSqlServer2025}";
 		public const string AllSqlServerNoAzure          = $"{AllSqlServer2005},{AllSqlServer2008},{AllSqlServer2012PlusNoAzure}";
 		public const string AllSqlServer                 = $"{AllSqlServerNoAzure},{AllSqlAzure},{AllSqlAzureMi}";
-		public const string AllSqlServerSystem           = $"{ProviderName.SqlServer2005},{ProviderName.SqlServer2008},{ProviderName.SqlServer2012},{ProviderName.SqlServer2014},{ProviderName.SqlServer2016},{ProviderName.SqlServer2017},{ProviderName.SqlServer2019},{ProviderName.SqlServer2022},{ProviderName.SqlServer2025},{SqlServerSequentialAccess},{SqlServerContained},{SqlAzure}";
-		public const string AllSqlServerMS               = $"{SqlServer2005MS},{SqlServer2008MS},{SqlServer2012MS},{SqlServer2014MS},{SqlServer2016MS},{SqlServer2017MS},{SqlServer2019MS},{SqlServer2022MS},{SqlServer2025MS},{SqlServerSequentialAccessMS},{SqlServerContainedMS},{SqlAzureMS}";
-		public const string AllSqlServer2016PlusMS       = $"{SqlServer2016MS},{SqlServer2017MS},{SqlServer2019MS},{SqlServer2022MS},{SqlServer2025MS},{SqlServerSequentialAccessMS},{SqlServerContainedMS},{SqlAzureMS}";
-		public const string AllSqlServer2019MinusSystem  = $"{ProviderName.SqlServer2005},{ProviderName.SqlServer2008},{ProviderName.SqlServer2012},{ProviderName.SqlServer2014},{ProviderName.SqlServer2016},{ProviderName.SqlServer2017},{ProviderName.SqlServer2019},{SqlServerSequentialAccess},{SqlServerContained},{SqlAzure}";
-		public const string AllSqlServer2019MinusMS      = $"{SqlServer2005MS},{SqlServer2008MS},{SqlServer2012MS},{SqlServer2014MS},{SqlServer2016MS},{SqlServer2017MS},{SqlServer2019MS},{SqlServerSequentialAccessMS},{SqlServerContainedMS},{SqlAzureMS}";
-		public const string AllSqlServer2025PlusMS       = $"{SqlServer2025MS},{SqlAzureMiMS},{SqlAzureMS}";
+		public const string AllSqlServerSystem           = $"{ProviderName.SqlServer2005},{ProviderName.SqlServer2008},{ProviderName.SqlServer2012},{ProviderName.SqlServer2014},{ProviderName.SqlServer2016},{ProviderName.SqlServer2017},{ProviderName.SqlServer2019},{ProviderName.SqlServer2022},{ProviderName.SqlServer2025},{SqlServerCaseSensitive},{SqlServerContained},{SqlAzure}";
+		public const string AllSqlServerMS               = $"{SqlServer2005MS},{SqlServer2008MS},{SqlServer2012MS},{SqlServer2014MS},{SqlServer2016MS},{SqlServer2017MS},{SqlServer2019MS},{SqlServer2022MS},{SqlServer2025MS},{SqlServerCaseSensitiveMS},{SqlServerContainedMS},{SqlAzureMS}";
+		public const string AllSqlServer2016PlusMS       = $"{SqlServer2016MS},{SqlServer2017MS},{SqlServer2019MS},{SqlServer2022MS},{SqlServer2025MS},{SqlServerCaseSensitiveMS},{SqlServerContainedMS},{SqlAzureMS}";
+		public const string AllSqlServer2019MinusSystem  = $"{ProviderName.SqlServer2005},{ProviderName.SqlServer2008},{ProviderName.SqlServer2012},{ProviderName.SqlServer2014},{ProviderName.SqlServer2016},{ProviderName.SqlServer2017},{ProviderName.SqlServer2019},{SqlAzure}";
+		public const string AllSqlServer2019MinusMS      = $"{SqlServer2005MS},{SqlServer2008MS},{SqlServer2012MS},{SqlServer2014MS},{SqlServer2016MS},{SqlServer2017MS},{SqlServer2019MS},{SqlAzureMS}";
+		public const string AllSqlServer2025PlusMS       = $"{SqlServer2025MS},{SqlServerCaseSensitiveMS},{SqlServerContainedMS},{SqlAzureMiMS},{SqlAzureMS}";
 		#endregion
 
 		#region Access

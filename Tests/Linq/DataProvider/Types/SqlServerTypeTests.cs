@@ -151,7 +151,7 @@ namespace Tests.DataProvider
 		}
 
 #if !NETFRAMEWORK
-		[ActiveIssue(Configuration = TestProvName.SqlServer2025MS, ErrorTypeName = "System.NotSupportedException", ErrorMessage = "Unsupported Vector type 'System.Half'.",
+		[ActiveIssue(Configuration = $"{TestProvName.SqlServer2025MS},{TestProvName.SqlServerCaseSensitiveMS},{TestProvName.SqlServerContainedMS}", ErrorTypeName = "System.NotSupportedException", ErrorMessage = "Unsupported Vector type 'System.Half'.",
 			Details = "no-issue: Waiting for SqlClient support - the refusal comes from the driver, not from linq2db, so only the Microsoft.Data.SqlClient half is gated. The closest upstream items are dotnet/SqlClient#3444 (an umbrella for vector enhancements, which does not list Half) and #3834 (float16 returned as a string, closed); neither is this refusal.")]
 		[Test]
 		public async ValueTask TestHalfVectorType([IncludeDataSources(TestProvName.AllSqlServer2025Plus)] string context)

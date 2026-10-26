@@ -60,13 +60,11 @@ wait_or_recreate mssql2019 1419 linq2db/linq2db:mssql-2019-fts || exit 1
 docker exec mssql2017 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q 'CREATE DATABASE TestData;'
 docker exec mssql2017 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q 'CREATE DATABASE TestDataMS;'
 
-# The 2019 databases are case-sensitive: this leg is what covers CS collation, so the two servers
-# are deliberately not configured identically.
-docker exec mssql2019 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q 'CREATE DATABASE TestData COLLATE Latin1_General_CS_AS WITH CATALOG_COLLATION = SQL_Latin1_General_CP1_CI_AS;'
-docker exec mssql2019 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q 'CREATE DATABASE TestDataMS COLLATE Latin1_General_CS_AS WITH CATALOG_COLLATION = SQL_Latin1_General_CP1_CI_AS;'
+docker exec mssql2019 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q 'CREATE DATABASE TestData;'
+docker exec mssql2019 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q 'CREATE DATABASE TestDataMS;'
 
-# Northwind rides the 2019 server (SqlServer.Northwind/.MS point at port 1419). The SA and Contained
-# databases deliberately do not live here - the SQL Server EXTRAS job owns those providers.
+# Northwind rides the 2019 server (SqlServer.Northwind/.MS point at port 1419). Case-sensitive and
+# contained databases live in the SQL Server EXTRAS job.
 docker exec mssql2019 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q 'CREATE DATABASE Northwind;'
 docker exec mssql2019 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q 'CREATE DATABASE NorthwindMS;'
 docker cp northwind.sql mssql2019:/northwind.sql

@@ -601,7 +601,7 @@ namespace Tests.xUpdate
 		[ActiveIssue(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Creating temporary table is not supported.",
 			Details = "no-issue: YDB does not implement CREATE TEMPORARY TABLE (feature under development upstream)")]
 		[Test]
-		public async Task CreateTableEnumerableWithNameAndDescriptionAsyncTest([DataSources(false, TestProvName.AllSqlServerCS)] string context)
+		public async Task CreateTableEnumerableWithNameAndDescriptionAsyncTest([DataSources(false, TestProvName.AllSqlServerCaseSensitiveCatalog)] string context)
 		{
 			await using var db = GetDataContext(context);
 
