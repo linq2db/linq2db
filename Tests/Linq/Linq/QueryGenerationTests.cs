@@ -137,7 +137,7 @@ namespace Tests.Linq
 		[Test]
 		public void ToSqlQuery_WithParametersDeduplication([DataSources] string context, [Values] bool inlineParameters)
 		{
-			using var _ = context.IsAnyOf(TestProvName.AllAccessOleDb, ProviderName.SapHanaNative) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
+			using var _ = context.IsAnyOf(TestProvName.AllAccessOleDb) || (context.IsAnyOf(ProviderName.SapHanaNative) && !inlineParameters) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
 
 			using var db = GetDataContext(context);
 
