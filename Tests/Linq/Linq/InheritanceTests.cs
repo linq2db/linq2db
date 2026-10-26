@@ -1679,35 +1679,38 @@ namespace Tests.Linq
 			Assert.That(db.GetTable<BaseClass>().Count(), Is.Zero);
 		}
 
-		[Table("InheritanceShape")]
-		[InheritanceMapping(Code = "C1", Type = typeof(ShapeCircle))]
-		[InheritanceMapping(Code = "S2", Type = typeof(ShapeSquare))]
-		abstract class ShapeBase
+		// The shared InheritanceChild hierarchy declares its association on the base type; this one declares it on a
+		// derived type only, so the discriminator lands in the association's ON clause.
+		[Table("InheritanceChild")]
+		[InheritanceMapping(Code = null, Type = typeof(DerivedAssociationChildBase), IsDefault = true)]
+		[InheritanceMapping(Code = 1,    Type = typeof(DerivedAssociationChild1))]
+		[InheritanceMapping(Code = 2,    Type = typeof(DerivedAssociationChild2))]
+		class DerivedAssociationChildBase
 		{
-			[PrimaryKey]                     public int    Id   { get; set; }
-			[Column(IsDiscriminator = true)] public string Kind { get; set; } = null!;
+			[PrimaryKey]                     public int  InheritanceChildId  { get; set; }
+			[Column(IsDiscriminator = true)] public int? TypeDiscriminator   { get; set; }
+			[Column]                         public int  InheritanceParentId { get; set; }
 		}
 
-		sealed class ShapeCircle : ShapeBase
+		sealed class DerivedAssociationChild1 : DerivedAssociationChildBase
 		{
-			[Association(ThisKey = nameof(Id), OtherKey = nameof(Model.Parent.ParentID))]
-			public Parent? Parent { get; set; }
+			[Association(ThisKey = nameof(InheritanceParentId), OtherKey = nameof(InheritanceParentBase.InheritanceParentId))]
+			public InheritanceParentBase? Parent { get; set; }
 		}
 
-		sealed class ShapeSquare : ShapeBase;
+		sealed class DerivedAssociationChild2 : DerivedAssociationChildBase;
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6148")]
 		public void DerivedAssociationKeepsOtherDerivedRows([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			using var _  = db.CreateLocalTable(new ShapeBase[] { new ShapeCircle { Id = 1, Kind = "C1" }, new ShapeSquare { Id = 2, Kind = "S2" } });
 
-			var result = db.GetTable<ShapeBase>()
-				.OrderBy(s => s.Id)
-				.Select(s => (int?)((ShapeCircle)s).Parent!.ParentID)
+			var result = db.GetTable<DerivedAssociationChildBase>()
+				.OrderBy(c => c.InheritanceChildId)
+				.Select(c => (int?)((DerivedAssociationChild1)c).Parent!.InheritanceParentId)
 				.ToList();
 
-			result.ShouldBe([1, null]);
+			result.ShouldBe([null, 2, null]);
 		}
 
 		#endregion

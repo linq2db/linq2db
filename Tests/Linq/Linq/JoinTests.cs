@@ -978,8 +978,8 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		// The parameter decides the outer-only predicate, so it cannot be folded into the join key and stays in ON.
-		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb)]
+		// A false parameter makes the folded join key `NULL = key`, which YDB rejects.
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb, AlsoWhenParameter = "flag", AlsoWhenValue = false, ErrorMessage = "each equality predicate argument must depend on exactly one JOIN input")]
 		[Test]
 		public void LeftJoinOuterOnlyPredicateWithParameter([DataSources] string context, [Values] bool flag)
 		{
@@ -989,6 +989,35 @@ namespace Tests.Linq
 				from c in db.Child
 				from p in db.Parent.Where(p => p.Value1 == c.ParentID && ((c.ChildID != 11 && flag) || (c.ChildID == 21 && flag))).DefaultIfEmpty()
 				select new { c.ChildID, ParentID = (int?)p.ParentID };
+
+			AssertQuery(query);
+		}
+
+		// A null parameter makes the folded join key `NULL = key`, which YDB rejects.
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb, AlsoWhenParameter = "name", AlsoWhenValue = null, ErrorMessage = "each equality predicate argument must depend on exactly one JOIN input")]
+		[Test]
+		public void LeftJoinOuterOnlyPredicateWithStringParameter([DataSources] string context, [Values("John", null)] string? name)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Person
+				from d in db.Doctor.Where(d => d.PersonID == p.ID && p.FirstName == name).DefaultIfEmpty()
+				select new { p.ID, Taxonomy = d.Taxonomy };
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void LeftJoinOuterOnlyPredicatesOnSeveralKeys([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p  in db.Parent
+				from ch in db.Child.Where(c => p.ParentID == c.ParentID)
+				from gc in db.GrandChild.Where(g => p.ParentID == g.ParentID && ch.ChildID == g.ChildID && p.Value1 != 1 && ch.ChildID != 21).DefaultIfEmpty()
+				select new { p.ParentID, ch.ChildID, GrandChildID = (int?)gc.GrandChildID };
 
 			AssertQuery(query);
 		}
@@ -1006,8 +1035,8 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		// A nullable parameter can decide the outer-only predicate, so it cannot be folded into the join key and stays in ON.
-		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb)]
+		// A null parameter makes the folded join key `NULL = key`, which YDB rejects.
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb, AlsoWhenParameter = "id", AlsoWhenValue = null, ErrorMessage = "each equality predicate argument must depend on exactly one JOIN input")]
 		[Test]
 		public void LeftJoinOuterOnlyPredicateWithNullableParameter([DataSources] string context, [Values(null, 11)] int? id, [Values] bool equality)
 		{
