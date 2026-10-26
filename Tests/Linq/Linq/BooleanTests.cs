@@ -752,7 +752,7 @@ namespace Tests.Linq
 			AssertQuery(tb.Where(r => r.BooleanN ?? (r.Id % 2 == 1)));
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6120")]
 		public void NegatedNullableComparisonFromSubquery([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -775,7 +775,7 @@ namespace Tests.Linq
 				select new { x.ParentID });
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6120")]
 		public void NegatedNullableAggregateComparisonFromSubquery([DataSources(TestProvName.AllYdb, ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -794,7 +794,7 @@ namespace Tests.Linq
 			AreEqual(expected, query);
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6120")]
 		public void NegatedNullableComparisonFromSubqueryOutsideFilter([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -831,7 +831,48 @@ namespace Tests.Linq
 				select new { x.ParentID });
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6120")]
+		public void NegatedNullableComparisonInHaving([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var source = db.Parent.Select(p => new { IsOne = p.Value1 == 1, p.ParentID });
+
+			AssertQuery(
+				from x in source
+				group x by x.ParentID % 3 into g
+				where g.Any(x => !x.IsOne)
+				select new { g.Key });
+
+			AssertQuery(
+				from x in source
+				group x by x.ParentID % 2 into g
+				where g.Count(x => x.IsOne == false) > 1
+				select new { g.Key, Count = g.Count(x => x.IsOne == false) });
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6120")]
+		public void NegatedComparisonOfTwoNullableColumns([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var source =
+				from p in db.Parent
+				from q in db.Parent
+				select new { Same = p.Value1 == q.Value1, A = p.ParentID, B = q.ParentID };
+
+			AssertQuery(
+				from x in source
+				where !x.Same
+				select new { x.A, x.B });
+
+			AssertQuery(
+				from x in source
+				where x.Same == false
+				select new { x.A, x.B });
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6120")]
 		public void NegatedNullableComparisonInApply([IncludeDataSources(TestProvName.WithApplyJoin)] string context)
 		{
 			using var db = GetDataContext(context);
