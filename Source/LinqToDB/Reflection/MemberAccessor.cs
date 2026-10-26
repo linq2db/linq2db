@@ -17,7 +17,7 @@ namespace LinqToDB.Reflection
 	[DebuggerDisplay("{Name}: {Type.Name}")]
 	public class MemberAccessor
 	{
-		static readonly ConstructorInfo ArgumentExceptionConstructorInfo = typeof(ArgumentException).GetConstructor(new[] {typeof(string)})!;
+		static readonly ConstructorInfo ArgumentExceptionConstructorInfo = typeof(ArgumentException).GetConstructorEx(new[] {typeof(string)})!;
 
 		internal MemberAccessor(TypeAccessor typeAccessor, string memberName, EntityDescriptor? ed)
 		{

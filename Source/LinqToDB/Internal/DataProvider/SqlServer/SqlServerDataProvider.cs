@@ -205,7 +205,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					ReaderExpressions[new ReaderInfo { ToType = typeof(float[]), ProviderFieldType = typeof(SqlString) }]
 						= Expression.Lambda(
 							Expression.Call(
-								jsonSerializerType.GetMethod("Deserialize", [typeof(string), jsonSerializerOptionsType]).MakeGenericMethod(typeof(float[])),
+								jsonSerializerType.GetMethodEx("Deserialize", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static, typeof(string), jsonSerializerOptionsType)!.MakeGenericMethod(typeof(float[])),
 								Expression.Call(dataReaderParameter, "GetString", null, indexParameter),
 								Expression.Constant(null, jsonSerializerOptionsType)),
 							dataReaderParameter,

@@ -331,11 +331,11 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 					{
 						// v8 switched from int to byte for NpgsqlInet.Netmask
 						var netmaskType = typeof(byte);
-						var ctor = npgsqlInetType.GetConstructor(BindingFlags.ExactBinding | BindingFlags.Public | BindingFlags.Instance, new[] { typeof(IPAddress), netmaskType });
+						var ctor = npgsqlInetType.GetConstructorEx(BindingFlags.ExactBinding | BindingFlags.Public | BindingFlags.Instance, new[] { typeof(IPAddress), netmaskType });
 						if (ctor == null)
 						{
 							netmaskType = typeof(int);
-							ctor = npgsqlInetType.GetConstructor(new[] { typeof(IPAddress), netmaskType })
+							ctor = npgsqlInetType.GetConstructorEx(new[] { typeof(IPAddress), netmaskType })
 								?? throw new InvalidOperationException("Cannot find NpgsqlInet constructor");
 						}
 
@@ -365,7 +365,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 					var valueTypeType = Type.GetType("System.ValueTuple`2", false);
 					if (valueTypeType != null)
 					{
-						var ctor = npgsqlCidrType.GetConstructor(new[] { typeof(IPAddress), typeof(byte) })
+						var ctor = npgsqlCidrType.GetConstructorEx(new[] { typeof(IPAddress), typeof(byte) })
 							?? throw new InvalidOperationException("Cannot find NpgsqlCidr constructor");
 
 						var cidrTupleType = valueTypeType.MakeGenericType(typeof(IPAddress), typeof(int));

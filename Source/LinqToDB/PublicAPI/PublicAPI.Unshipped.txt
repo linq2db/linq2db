@@ -1,1 +1,7 @@
 ﻿#nullable enable
+static LinqToDB.Internal.Extensions.ReflectionExtensions.GetConstructorCoercing(this System.Type! type, params System.Type![]! types) -> System.Reflection.ConstructorInfo?
+static LinqToDB.Internal.Extensions.ReflectionExtensions.GetConstructorEx(this System.Type! type, params System.Type![]! types) -> System.Reflection.ConstructorInfo?
+static LinqToDB.Internal.Extensions.ReflectionExtensions.GetConstructorEx(this System.Type! type, System.Reflection.BindingFlags bindingFlags, params System.Type![]! types) -> System.Reflection.ConstructorInfo?
+static LinqToDB.Internal.Extensions.ReflectionExtensions.GetMethodCoercing(this System.Type! type, string! name, params System.Type![]! types) -> System.Reflection.MethodInfo?
+static LinqToDB.Internal.Extensions.ReflectionExtensions.GetMethodEx(this System.Type! type, string! name, int genericParametersCount, System.Reflection.BindingFlags bindingFlags, params System.Type![]! types) -> System.Reflection.MethodInfo?
+static LinqToDB.Internal.Extensions.ReflectionExtensions.GetMethodEx(this System.Type! type, string! name, System.Reflection.BindingFlags bindingFlags, params System.Type![]! types) -> System.Reflection.MethodInfo?
