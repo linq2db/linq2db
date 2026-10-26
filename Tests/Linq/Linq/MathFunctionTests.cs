@@ -2044,15 +2044,19 @@ namespace Tests.Linq
 		}
 
 		// The power of ten that scales a double must stay a double: an integer power overflows at ten digits and is zero for
-		// a negative precision. The client cannot round to a negative precision, so the results are stated.
+		// a negative precision. The client cannot round to a negative precision, so the results are stated. Adding 0.5 to
+		// the scaled magnitude would itself round: the largest double below 0.5 and an odd integer above 2^52 would move.
 		[Test]
 		public void SqlRoundDoubleWidePrecision([IncludeDataSources(true, TestProvName.AllMySql, TestProvName.AllClickHouse, TestProvName.AllDB2)] string context)
 		{
 			var data = new[]
 			{
-				new ResidueValues { Id = 1, F = 1234.5678, P = -1 },
-				new ResidueValues { Id = 2, F = 1234.5678, P = 10 },
-				new ResidueValues { Id = 3, F = 0.5,       P = 12 },
+				new ResidueValues { Id = 1, F = 1234.5678,           P = -1 },
+				new ResidueValues { Id = 2, F = 1234.5678,           P = 10 },
+				new ResidueValues { Id = 3, F = 0.5,                 P = 12 },
+				new ResidueValues { Id = 4, F = 0.49999999999999994, P = 0  },
+				new ResidueValues { Id = 5, F = 4503599627370497,    P = 0  },
+				new ResidueValues { Id = 6, F = -2.5,                P = 0  },
 			};
 
 			using var db = GetDataContext(context);
@@ -2062,7 +2066,7 @@ namespace Tests.Linq
 				.OrderBy(r => r.Id)
 				.Select(r => Sql.AsSql(Sql.Round(r.F, r.P)))
 				.ToList()
-				.ShouldBe([1230, 1234.5678, 0.5]);
+				.ShouldBe([1230, 1234.5678, 0.5, 0, 4503599627370497, -3]);
 		}
 
 		sealed class TruncateValues

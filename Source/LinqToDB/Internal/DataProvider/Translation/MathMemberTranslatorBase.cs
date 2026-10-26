@@ -395,9 +395,11 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		}
 
 		/// <summary>
-		/// Rounds half away from zero as <c>sign(v) * floor(abs(v) * power(10, p) + 0.5) / power(10, p)</c>, for an engine whose
-		/// own <c>ROUND</c> rounds a midpoint some other way. <paramref name="ten"/> must be typed so that <c>power</c> returns a
-		/// floating-point value: an integer power overflows at ten digits and is zero for a negative precision.
+		/// Rounds half away from zero on the magnitude <c>m = abs(v) * power(10, p)</c>: an exact midpoint becomes
+		/// <c>floor(m) + 1</c>, anything else the engine's own <c>round(m, 0)</c>. The result is
+		/// <c>sign(v) * rounded / power(10, p)</c>. This is for an engine whose <c>ROUND</c> rounds a midpoint some other way.
+		/// <paramref name="ten"/> must be typed so that <c>power</c> returns a floating-point value: an integer power
+		/// overflows at ten digits and is zero for a negative precision.
 		/// </summary>
 		protected static ISqlExpression RoundAwayFromZeroByMagnitude(ISqlExpressionFactory factory, ISqlExpression value, ISqlExpression? precision, ISqlExpression ten)
 		{
@@ -406,7 +408,13 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			var power     = precision == null ? null : factory.Function(valueType, "power", ten, precision);
 			var magnitude = factory.Function(valueType, "abs", value);
 			var scaled    = power == null ? magnitude : factory.Multiply(valueType, magnitude, power);
-			var rounded   = factory.Function(valueType, "floor", factory.Add(valueType, scaled, factory.Value(valueType, 0.5)));
+			var floor     = factory.Function(valueType, "floor", scaled);
+			// floor(m + 0.5) is wrong for doubles: the addition itself rounds (0.49999999999999994 + 0.5 is 1.0, and above
+			// 2^52 the sum lands on an even neighbour). The fraction m - floor(m) is exact, so only the midpoint test uses it.
+			var rounded   = factory.Condition(
+				factory.Equal(factory.Sub(valueType, scaled, floor), factory.Value(valueType, 0.5)),
+				factory.Add(valueType, floor, factory.Value(valueType, 1.0)),
+				factory.Function(valueType, "round", scaled, factory.Value(0)));
 			var unscaled  = power == null ? rounded : factory.Div(valueType, rounded, power);
 
 			return factory.Multiply(valueType, factory.Function(valueType, "sign", value), unscaled);
