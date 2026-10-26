@@ -17,7 +17,7 @@ Following databases supported:
 * **MySql**
 * **Oracle**
 * **PostgreSQL**
-* **SAP HANA** *(client software must be installed, supports both Native and ODBC providers)*
+* **SAP HANA**: both Native and ODBC providers *(ODBC needs the SAP HANA ODBC driver installed; with the LINQPad 5 `.lpx`, Native needs the SAP HANA client installed)*
 * **SAP/Sybase ASE**
 * **SQLite**
 * **YDB**
@@ -50,7 +50,7 @@ component and reproduces its terms.
 
 ## macOS
 
-Databases that need Windows-only components — Microsoft Access and SQL Server Compact — are not offered on macOS. Everything else uses the macOS build of its client, including IBM DB2 and Informix. SQL Server spatial values (`geometry`, `geography`, `hierarchyid`) are handled by the managed [dotMorten.Microsoft.SqlServer.Types](https://www.nuget.org/packages/dotMorten.Microsoft.SqlServer.Types) implementation, as Microsoft's package ships its native spatial library for Windows only.
+Databases that need Windows-only components — Microsoft Access and SQL Server Compact — are not offered on macOS. Everything else uses the macOS build of its client, including IBM DB2, Informix and the SAP HANA native client. SQL Server spatial values (`geometry`, `geography`, `hierarchyid`) are handled by the managed [dotMorten.Microsoft.SqlServer.Types](https://www.nuget.org/packages/dotMorten.Microsoft.SqlServer.Types) implementation, as Microsoft's package ships its native spatial library for Windows only.
 
 ## Troubleshooting
 

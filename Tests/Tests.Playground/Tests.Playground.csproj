@@ -27,7 +27,7 @@
 		</None>
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(X86STUBS)' != 'True'">
+	<ItemGroup>
 		<PackageReference Include="Sap.Data.Hana.Net.v8.0"  Condition="'$(TargetFramework)' == 'net8.0' or '$(TargetFramework)' == 'net9.0'" />
 		<PackageReference Include="Sap.Data.Hana.Net.v10.0" Condition="'$(TargetFramework)' == 'net10.0'" />
 	</ItemGroup>
