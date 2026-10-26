@@ -12,7 +12,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	{
 		sealed class SimpleSelectContext : BuildContextBase
 		{
-			public SimpleSelectContext(TranslationModifier translationModifier, ExpressionBuilder builder, MappingSchema mappingSchema, Type elementType, SelectQuery selectQuery) 
+			public SimpleSelectContext(TranslationModifier translationModifier, ExpressionBuilder builder, MappingSchema mappingSchema, Type elementType, SelectQuery selectQuery)
 				: base(translationModifier, builder, elementType, selectQuery)
 			{
 				MappingSchema = mappingSchema;

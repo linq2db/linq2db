@@ -215,8 +215,8 @@ namespace Tests.Mapping
 			[NotColumn] public int Code     { get; set; }
 		}
 
-		// The handles below are created inside the scope and queried after it: the snapshot then carries a facet the
-		// data context's schema no longer has, so a step that reads the live schema loses it.
+		// Unless a cell says otherwise, the handles below are created inside the scope and queried after it: the snapshot
+		// then carries a facet the data context's schema no longer has, so a step that reads the live schema loses it.
 
 		// An association declared only in the handle's schema is detected and resolved through it.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
@@ -328,7 +328,7 @@ namespace Tests.Mapping
 		[InheritanceMapping(Code = 2, Type = typeof(ShapeSquare))]
 		abstract class Shape
 		{
-			[PrimaryKey]                    public int    Id   { get; set; }
+			[PrimaryKey]                     public int    Id   { get; set; }
 			[Column(IsDiscriminator = true)] public string Kind { get; set; } = null!;
 		}
 
@@ -535,7 +535,8 @@ namespace Tests.Mapping
 				.ShouldBe(["Bx"]);
 		}
 
-		// FromSql text is provider SQL: unquoted identifiers resolve only where the table name is case-insensitive.
+		// Composed before the scope and run inside it. FromSql text is provider SQL: the set is a sample of providers whose
+		// unquoted identifiers resolve to the names CreateLocalTable created.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
 		public void FromSqlFollowsHandleSchema([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer, ProviderName.DuckDB)] string context)
 		{
@@ -586,7 +587,11 @@ namespace Tests.Mapping
 			using var db  = GetDataContext(context);
 			using var tmp = db.CreateLocalTable(new[] { new SourceSchemaRow { Id = 1, Value = 5, Name = "a" } });
 
-			using (db.CreateTempTable(Array.Empty<SourceSchemaRow>(), e => e.Property(p => p.Value).IsPrimaryKey(), tableName: "SourceSchemaRowTemp", tableOptions: TableOptions.NotSet))
+			using (db.CreateTempTable(
+				Array.Empty<SourceSchemaRow>(),
+				e => e.Property(p => p.Value).IsPrimaryKey(),
+				tableName: "SourceSchemaRowTemp",
+				tableOptions: TableOptions.NotSet))
 			{
 				tmp.Update(new SourceSchemaRow { Id = 1, Value = 6, Name = "b" }, b => b);
 			}
@@ -617,6 +622,145 @@ namespace Tests.Mapping
 				.Select(c => (string?)c!.Kind)
 				.ToList()
 				.ShouldBe(["C1", null]);
+		}
+
+		[Table("Child")]
+		sealed class ChildWithAssociationMethod
+		{
+			[Column] public int ParentID { get; set; }
+			[Column] public int ChildID  { get; set; }
+
+			public Model.Parent? GetParent() => throw new NotSupportedException();
+		}
+
+		// The method form of an association on the second handle, declared only in its schema.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
+		public void AssociationMethodOnSecondHandleFollowsItsSchema([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var parents = db.Parent;
+
+			var builder = new FluentMappingBuilder(new());
+			builder.HasAttribute(
+				typeof(ChildWithAssociationMethod).GetMethod(nameof(ChildWithAssociationMethod.GetParent))!,
+				new AssociationAttribute { ThisKey = nameof(ChildWithAssociationMethod.ParentID), OtherKey = nameof(Model.Parent.ParentID) });
+
+			ITable<ChildWithAssociationMethod> children;
+
+			using (db.UseMappingSchema(builder.Build().MappingSchema))
+			{
+				children = db.GetTable<ChildWithAssociationMethod>();
+			}
+
+			// Not AssertQuery: its in-memory side would call GetParent, which only the handle's schema maps.
+			var expected =
+				from p in Parent
+				join c in Child on p.ParentID equals c.ParentID
+				orderby c.ChildID
+				select new { c.ChildID, p.Value1 };
+
+			var query =
+				from p in parents
+				join c in children on p.ParentID equals c.ParentID
+				orderby c.ChildID
+				select new
+				{
+					c.ChildID,
+					c.GetParent()!.Value1,
+				};
+
+			query
+				.ToList()
+				.ShouldBe(expected.ToList());
+		}
+
+		// A CTE over the handle keeps the handle's association.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
+		public void CteAssociationFollowsHandleSchema([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+
+			ITable<ChildWithoutAssociation> children;
+
+			using (db.UseMappingSchema(new FluentMappingBuilder(new())
+				.Entity<ChildWithoutAssociation>()
+					.Association(c => c.Parent, c => c.ParentID, p => p!.ParentID)
+				.Build()
+				.MappingSchema))
+			{
+				children = db.GetTable<ChildWithoutAssociation>();
+			}
+
+			// Not AssertQuery: its in-memory side would read c.Parent, which only the handle's schema maps.
+			var expected = Child
+				.Select(c => new { c.ChildID, Parent.Single(p => p.ParentID == c.ParentID).Value1 })
+				.OrderBy(r => r.ChildID)
+				.ToList();
+
+			var actual = children
+				.AsCte()
+				.Select(c => new { c.ChildID, c.Parent!.Value1 })
+				.OrderBy(r => r.ChildID)
+				.ToList();
+
+			actual.ShouldBe(expected);
+		}
+
+		// FromSql text is provider SQL (see above). Whether the element is scalar follows the handle's schema. Direct
+		// contexts only: a remote context returns a custom scalar through its ToString() (#6153).
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
+		public void FromSqlScalarFollowsHandleSchema([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, ProviderName.DuckDB)] string context)
+		{
+			var baseSchema = new MappingSchema();
+			baseSchema.SetConvertExpression<string, Token>(s => new Token { Text = "R" + s });
+
+			using var db = GetDataContext(context, o => o.UseMappingSchema(baseSchema));
+
+			var scopeSchema = new MappingSchema();
+			scopeSchema.AddScalarType(typeof(Token));
+
+			IQueryable<Token> query;
+
+			using (db.UseMappingSchema(scopeSchema))
+			{
+				query = db.FromSql<Token>("SELECT 'x' AS value, 'y' AS Text");
+			}
+
+			query
+				.ToList()
+				.Select(t => t.Text)
+				.ShouldBe(["Rx"]);
+		}
+
+		// FromSql text is provider SQL (see above). A FromSql handle used inside another query converts its arguments
+		// in the outer query's context.
+		[ActiveIssue(6154, ErrorTypeName = "Shouldly.ShouldAssertException")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
+		public void NestedFromSqlArgumentFollowsHandleSchema([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer, ProviderName.DuckDB)] string context)
+		{
+			using var db  = GetDataContext(context);
+			using var tmp = db.CreateLocalTable(new[] { new ShapeCodeRow { Id = 1, Kind = 101 }, new ShapeCodeRow { Id = 2, Kind = 102 } });
+
+			var parents = db.Parent;
+
+			var schema = new MappingSchema();
+			schema.SetConvertExpression<ShapeKind, int>(kind => (int)kind + 101);
+
+			var kind = ShapeKind.Circle;
+
+			IQueryable<ShapeCodeRow> rows;
+
+			using (db.UseMappingSchema(schema))
+			{
+				rows = db.FromSql<ShapeCodeRow>($"SELECT Id, Kind FROM SourceSchemaShape WHERE Kind = {kind}");
+			}
+
+			parents
+				.Where(p => p.ParentID == 1)
+				.Select(p => rows.Count())
+				.ToList()
+				.ShouldBe([1]);
 		}
 	}
 }
