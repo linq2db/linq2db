@@ -67,7 +67,7 @@ env:
   BASELINES_MASTER: master
   # The .NET 11 SDK is still prerelease, so setup-dotnet needs the exact build global.json pins.
   # Collapse to 11.x once .NET 11 ships.
-  DOTNET_SDK_11: 11.0.100-rc.2.26504.105
+  DOTNET_SDK_11: 11.0.100-rc.3.26522.148
 
 jobs:
   # Reads the same test-matrix.yml Azure compiles, which is the point of expressing entry selection as

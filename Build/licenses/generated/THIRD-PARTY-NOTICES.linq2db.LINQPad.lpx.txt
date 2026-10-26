@@ -116,7 +116,7 @@ COMPONENTS
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-21. Microsoft.Extensions.DependencyInjection net10.0: 10.0.12, net10.0-windows7.0: 10.0.8, net11.0: 11.0.0-rc.2.26504.105, net462: 10.0.0, net472: 10.0.0
+21. Microsoft.Extensions.DependencyInjection net10.0: 10.0.12, net10.0-windows7.0: 10.0.8, net11.0: 11.0.0-rc.3.26522.148, net462: 10.0.0, net472: 10.0.0
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
@@ -131,7 +131,7 @@ COMPONENTS
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-24. Microsoft.Extensions.Logging net10.0: 10.0.12, net10.0-windows7.0: 10.0.8, net11.0: 11.0.0-rc.2.26504.105, net462: 10.0.0, net472: 10.0.0
+24. Microsoft.Extensions.Logging net10.0: 10.0.12, net10.0-windows7.0: 10.0.8, net11.0: 11.0.0-rc.3.26522.148, net462: 10.0.0, net472: 10.0.0
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
