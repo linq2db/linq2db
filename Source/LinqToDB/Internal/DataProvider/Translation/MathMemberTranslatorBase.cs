@@ -421,6 +421,20 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		}
 
 		/// <summary>
+		/// Applies <paramref name="round"/> to <paramref name="value"/> cast to decimal and casts the result back to the
+		/// value's type, for an engine whose decimal rounding gives the <c>Sql</c> semantics its floating-point rounding lacks.
+		/// </summary>
+		protected static ISqlExpression? RoundThroughDecimal(ITranslationContext translationContext, ISqlExpression value, Func<ISqlExpression, ISqlExpression?> round)
+		{
+			var factory   = translationContext.ExpressionFactory;
+			var valueType = factory.GetDbDataType(value);
+
+			var result = round(factory.Cast(value, factory.GetDbDataType(typeof(decimal))));
+
+			return result == null ? null : factory.Cast(result, valueType);
+		}
+
+		/// <summary>
 		/// Translates <c>Sql.Truncate(v)</c> as <c>v &gt;= 0 ? Sql.Floor(v) : Sql.Ceiling(v)</c>, for a provider without a
 		/// truncating function.
 		/// </summary>

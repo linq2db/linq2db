@@ -355,12 +355,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 				if (methodCall.Arguments.Count < 2 || methodCall.Arguments[0].Type == typeof(decimal?))
 					return base.TranslateSqlRoundAwayFromZero(translationContext, methodCall, value, precision);
 
-				var factory   = translationContext.ExpressionFactory;
-				var valueType = factory.GetDbDataType(value);
-
-				var result = TranslateRoundAwayFromZero(translationContext, methodCall, factory.Cast(value, factory.GetDbDataType(typeof(decimal))), precision);
-
-				return result == null ? null : factory.Cast(result, valueType);
+				return RoundThroughDecimal(translationContext, value, v => TranslateRoundAwayFromZero(translationContext, methodCall, v, precision));
 			}
 
 			// trunc(double precision, int) does not exist, so a double truncates through numeric.

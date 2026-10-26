@@ -46,12 +46,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 				if (methodCall.Arguments[0].Type == typeof(decimal?))
 					return base.TranslateSqlRoundToEven(translationContext, methodCall, value, precision);
 
-				var factory   = translationContext.ExpressionFactory;
-				var valueType = factory.GetDbDataType(value);
-
-				var result = base.TranslateSqlRoundToEven(translationContext, methodCall, factory.Cast(value, factory.GetDbDataType(typeof(decimal))), precision);
-
-				return result == null ? null : factory.Cast(result, valueType);
+				return RoundThroughDecimal(translationContext, value, v => base.TranslateSqlRoundToEven(translationContext, methodCall, v, precision));
 			}
 
 			protected override ISqlExpression? TranslateTruncate(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value)
