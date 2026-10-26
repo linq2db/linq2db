@@ -600,6 +600,7 @@ namespace Tests.xUpdate
 
 		[ActiveIssue(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Creating temporary table is not supported.",
 			Details = "no-issue: YDB does not implement CREATE TEMPORARY TABLE (feature under development upstream)")]
+		// SqlServer.CS: tempdb uses the server's case-insensitive collation, so the join to Person fails with a collation conflict
 		[Test]
 		public async Task CreateTableEnumerableWithNameAndDescriptionAsyncTest([DataSources(false, TestProvName.AllSqlServerCaseSensitiveCatalog)] string context)
 		{

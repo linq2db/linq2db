@@ -112,7 +112,9 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 			var query =
-					from t in db.GetTable<ALLTYPE>().TableName("AllTypes")
+					from t in db
+						.GetTable<ALLTYPE>()
+						.TableName("AllTypes")
 					from c in db.GetTable<Child>()
 					select new
 					{

@@ -2640,6 +2640,7 @@ DROP TABLE IF EXISTS TemporalTable3History
 			[Column("PersonID")] public int ID { get; set; }
 		}
 
+		// Guards the SqlServer.CS test database setup: case-sensitive data and catalog, sequential access mode.
 		[Test]
 		public void CaseSensitiveCatalogConfiguration([IncludeDataSources(false, TestProvName.AllSqlServerCaseSensitiveCatalog)] string context)
 		{
@@ -2649,18 +2650,21 @@ DROP TABLE IF EXISTS TemporalTable3History
 			db.Options.LinqOptions.OptimizeForSequentialAccess.ShouldBeTrue();
 
 			db.Execute<string>("SELECT collation_name FROM sys.databases WHERE database_id = DB_ID()")
-				.ShouldContain("_CS_");
+				.ShouldContain("_CS_", Case.Sensitive);
 			db.Execute<string>("SELECT catalog_collation_type_desc FROM sys.databases WHERE database_id = DB_ID()")
 				.ShouldBe("DATABASE_DEFAULT");
 			db.Execute<string>("SELECT containment_desc FROM sys.databases WHERE database_id = DB_ID()")
 				.ShouldBe("NONE");
 
-			var act = () => db.GetTable<LowerCasePerson>().ToList();
+			var act = () => db
+				.GetTable<LowerCasePerson>()
+				.ToList();
 
 			act.ShouldThrow<Exception>()
 				.Message.ShouldContain("Invalid object name");
 		}
 
+		// Guards the SqlServer.Contained test database setup: contained database with case-sensitive data.
 		[Test]
 		public void ContainedConfiguration([IncludeDataSources(false, TestProvName.AllSqlServerContained)] string context)
 		{
@@ -2670,7 +2674,7 @@ DROP TABLE IF EXISTS TemporalTable3History
 			db.Options.LinqOptions.OptimizeForSequentialAccess.ShouldBeFalse();
 
 			db.Execute<string>("SELECT collation_name FROM sys.databases WHERE database_id = DB_ID()")
-				.ShouldContain("_CS_");
+				.ShouldContain("_CS_", Case.Sensitive);
 			db.Execute<string>("SELECT containment_desc FROM sys.databases WHERE database_id = DB_ID()")
 				.ShouldBe("PARTIAL");
 		}
