@@ -1,6 +1,7 @@
 # The release run: every PR into `release` gets the whole provider matrix - every leg, with the main
-# suite on every TFM the leg covers (full_run) - with no comment needed. Azure's `default` pipeline used to run it; it now skips its test
-# jobs unless queued with run_tests (Build/Azure/pipelines/default.yml).
+# suite on every TFM the leg covers (full_run) - with no comment needed. Azure's `default` pipeline
+# used to run it; it now skips its test jobs unless queued with run_tests
+# (Build/Azure/pipelines/default.yml).
 #
 # pull_request runs this file from the PR's merge ref, so a change here is live on the next release
 # PR as soon as it reaches master - the release PR's head.
