@@ -707,8 +707,9 @@ namespace Tests.Mapping
 			actual.ShouldBe(expected);
 		}
 
-		// FromSql text is provider SQL (see above). Whether the element is scalar follows the handle's schema. Direct
-		// contexts only: a remote context returns a custom scalar through its ToString() (#6153).
+		// FromSql text is provider SQL: one column without FROM, so the set is a sample of providers that accept that and
+		// SQL Server's column list on a scalar source fits it. Whether the element is scalar follows the handle's schema.
+		// Direct contexts only: a remote context returns a custom scalar through its ToString() (#6153).
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
 		public void FromSqlScalarFollowsHandleSchema([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, ProviderName.DuckDB)] string context)
 		{
@@ -724,7 +725,7 @@ namespace Tests.Mapping
 
 			using (db.UseMappingSchema(scopeSchema))
 			{
-				query = db.FromSql<Token>("SELECT 'x' AS value, 'y' AS Text");
+				query = db.FromSql<Token>("SELECT 'x' AS value");
 			}
 
 			query
@@ -734,7 +735,7 @@ namespace Tests.Mapping
 		}
 
 		// FromSql text is provider SQL (see above). A FromSql handle used inside another query converts its arguments
-		// in the outer query's context.
+		// under the handle's schema; today they convert in the outer query's context (#6154).
 		[ActiveIssue(6154, ErrorTypeName = "Shouldly.ShouldAssertException")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
 		public void NestedFromSqlArgumentFollowsHandleSchema([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer, ProviderName.DuckDB)] string context)
