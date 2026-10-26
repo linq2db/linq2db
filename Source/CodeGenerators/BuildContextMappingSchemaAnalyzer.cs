@@ -17,13 +17,13 @@ namespace CodeGenerators
 	/// snapshot (<c>SqlQueryRootExpression</c>), while <c>ExpressionBuilder.MappingSchema</c> reads the context live.
 	/// A step that holds the source but reads the live schema resolves one facet of an entity through each.
 	/// <para>
-	/// A <i>live read</i> is a read of a property in <c>LinqToDB.Internal.Linq.Builder</c> whose getter is
-	/// <c>=&gt; &lt;IDataContext member&gt;.MappingSchema</c> (derived, not listed), or of <c>IDataContext.MappingSchema</c>
+	/// A <i>live read</i> is a read of a property in <c>LinqToDB.Internal.Linq.Builder</c> whose getter returns
+	/// <c>&lt;IDataContext member&gt;.MappingSchema</c> (derived, not listed), or of <c>IDataContext.MappingSchema</c>
 	/// through an <c>ExpressionBuilder</c>. It is reported when one of these holds:
 	/// </para>
 	/// <list type="bullet">
-	/// <item>a context's own <c>MappingSchema</c> getter, or the constructor assignment of its backing field, reads it
-	/// while the type holds a source context other than <c>Parent</c>;</item>
+	/// <item>a context's own <c>MappingSchema</c> getter, or the constructor assignment of its backing field or of the
+	/// property itself, reads it while the type holds a source context other than <c>Parent</c>;</item>
 	/// <item>a source carrier is in scope - a <c>MappingSchema</c>, an <c>EntityDescriptor</c> / <c>ColumnDescriptor</c> /
 	/// <c>AssociationDescriptor</c>, an <c>IBuildContext</c> or a <c>ContextRefExpression</c>;</item>
 	/// <item>it is read through a context's <c>Builder</c>;</item>
@@ -144,7 +144,7 @@ namespace CodeGenerators
 				return;
 			}
 
-			var carrier = FindCarrier(op, member, enclosingType, model);
+			var carrier = FindCarrier(op, read, member, enclosingType, model);
 			if (carrier != null)
 			{
 				Report(context, op, $"'{carrier.Value.Name}' is in scope: read '{carrier.Value.Suggestion}' instead of the data context's MappingSchema");
@@ -220,8 +220,8 @@ namespace CodeGenerators
 
 			return Unwrap(coalesce.Value) switch
 			{
-				IConditionalAccessOperation { WhenNotNull: IPropertyReferenceOperation { Property.Name: SchemaProperty } } access
-					=> model.IsSourceCarrier(access.Operation.Type) && !IsParent(access.Operation),
+				IConditionalAccessOperation { WhenNotNull: IPropertyReferenceOperation { Property.Name: SchemaProperty, Instance: { } receiver } } access
+					=> model.IsSourceCarrier(access.Operation.Type) && !IsParent(access.Operation) && !IsParent(receiver),
 				IPropertyReferenceOperation { Property.Name: SchemaProperty, Instance: { } instance }
 					=> model.IsSourceCarrier(instance.Type) && !IsParent(instance),
 				IInvocationOperation invocation
@@ -248,9 +248,13 @@ namespace CodeGenerators
 				return true;
 
 			return member.MethodKind == MethodKind.Constructor
-				&& read.Parent is ISimpleAssignmentOperation { Target: IFieldReferenceOperation field }
-				&& SymbolEqualityComparer.Default.Equals(field.Field.ContainingType, type)
-				&& model.IsSchema(field.Field.Type);
+				&& read.Parent is ISimpleAssignmentOperation { Target: var target }
+				&& target switch
+				{
+					IFieldReferenceOperation    field    => SymbolEqualityComparer.Default.Equals(field.Field.ContainingType, type) && model.IsSchema(field.Field.Type),
+					IPropertyReferenceOperation property => property.Property.Name == SchemaProperty && property.Instance is IInstanceReferenceOperation,
+					_                                    => false,
+				};
 		}
 
 		static bool IsLiveLookupArgument(IOperation read)
@@ -281,7 +285,8 @@ namespace CodeGenerators
 			{
 				if (reference is IPropertyReferenceOperation { Property.Name: "Builder" } builder
 					&& builder.Instance is { } owner
-					&& model.IsContext(owner.Type))
+					&& model.IsContext(owner.Type)
+					&& !IsParent(owner))
 				{
 					return owner is IInstanceReferenceOperation ? "this" : owner.Syntax.ToString();
 				}
@@ -300,7 +305,7 @@ namespace CodeGenerators
 			public string Suggestion { get; } = suggestion;
 		}
 
-		static Carrier? FindCarrier(IPropertyReferenceOperation op, IMethodSymbol member, INamedTypeSymbol enclosingType, Model model)
+		static Carrier? FindCarrier(IPropertyReferenceOperation op, IOperation read, IMethodSymbol member, INamedTypeSymbol enclosingType, Model model)
 		{
 			var semanticModel = op.SemanticModel;
 			if (semanticModel == null)
@@ -309,11 +314,19 @@ namespace CodeGenerators
 			var position        = op.Syntax.SpanStart;
 			var instanceAllowed = !member.IsStatic && !InStaticFunction(op.Syntax) && !InConstructorInitializer(op.Syntax) && model.IsContext(enclosingType);
 
+			// The variable the read is assigned to does not hold a source yet.
+			var assigned = read.Parent is IAssignmentOperation assignment && ReferenceEquals(assignment.Value, read)
+				? AssignedSymbol(assignment.Target)
+				: null;
+
 			Carrier? best     = null;
 			var      bestRank = int.MaxValue;
 
 			foreach (var symbol in semanticModel.LookupSymbols(position))
 			{
+				if (SymbolEqualityComparer.Default.Equals(symbol, assigned))
+					continue;
+
 				ITypeSymbol? type;
 
 				switch (symbol)
@@ -325,7 +338,7 @@ namespace CodeGenerators
 						break;
 
 					case ILocalSymbol local:
-						if (!DeclaredBefore(local, op.Syntax))
+						if (!DeclaredBefore(local, op.Syntax) || !AssignedAt(local, op.Syntax, semanticModel))
 							continue;
 						type = local.Type;
 						break;
@@ -344,7 +357,7 @@ namespace CodeGenerators
 						continue;
 				}
 
-				var (rank, suggestion) = Classify(symbol.Name, type, model);
+				var (rank, suggestion) = Classify(symbol.Name, type, op.Syntax.ToString(), model);
 
 				if (rank < bestRank)
 				{
@@ -356,21 +369,37 @@ namespace CodeGenerators
 			return best;
 		}
 
-		static (int Rank, string? Suggestion) Classify(string name, ITypeSymbol? type, Model model)
+		static ISymbol? AssignedSymbol(IOperation target) => Unwrap(target) switch
 		{
+			ILocalReferenceOperation     local     => local.Local,
+			IParameterReferenceOperation parameter => parameter.Parameter,
+			IFieldReferenceOperation     field     => field.Field,
+			IPropertyReferenceOperation  property  => property.Property,
+			_                                      => null,
+		};
+
+		/// <summary>A nullable carrier is suggested as the fallback, which compiles where it may be null.</summary>
+		static (int Rank, string? Suggestion) Classify(string name, ITypeSymbol? type, string read, Model model)
+		{
+			var nullable = type?.NullableAnnotation == NullableAnnotation.Annotated;
+
 			if (model.IsSchema(type))
-				return (0, name);
+				return (0, nullable ? $"{name} ?? {read}" : name);
+
+			var access = nullable ? "?." : ".";
 
 			if (model.IsDescriptor(type))
-				return (1, name + ".MappingSchema");
+				return (1, Fallback(name + access + "MappingSchema"));
 
 			if (model.IsContextRef(type))
-				return (2, name + ".BuildContext.MappingSchema");
+				return (2, Fallback(name + access + "BuildContext.MappingSchema"));
 
 			if (model.IsContext(type))
-				return (2, name + ".MappingSchema");
+				return (2, Fallback(name + access + "MappingSchema"));
 
 			return (int.MaxValue, null);
+
+			string Fallback(string source) => nullable ? $"{source} ?? {read}" : source;
 		}
 
 		static bool IsOwnMember(ISymbol member, INamedTypeSymbol enclosingType)
@@ -398,6 +427,26 @@ namespace CodeGenerators
 
 			return local.DeclaringSyntaxReferences[0].GetSyntax() is not VariableDeclaratorSyntax declarator
 				|| !declarator.Span.Contains(read.Span);
+		}
+
+		/// <summary>
+		/// A pattern or <c>out</c> variable is scoped to the enclosing block but assigned only on the path that matched,
+		/// so it is a source only where definite assignment holds.
+		/// </summary>
+		static bool AssignedAt(ILocalSymbol local, SyntaxNode read, SemanticModel semanticModel)
+		{
+			if (local.DeclaringSyntaxReferences[0].GetSyntax() is not SingleVariableDesignationSyntax || read is not ExpressionSyntax expression)
+				return true;
+
+			var flow = semanticModel.AnalyzeDataFlow(expression);
+			if (flow is not { Succeeded: true })
+				return true;
+
+			foreach (var symbol in flow.DefinitelyAssignedOnEntry)
+				if (SymbolEqualityComparer.Default.Equals(symbol, local))
+					return true;
+
+			return false;
 		}
 
 		static bool InStaticFunction(SyntaxNode node)
@@ -500,12 +549,34 @@ namespace CodeGenerators
 
 				if (!anchor)
 				{
-					drift = $"'{ExpressionBuilderName}.{SchemaProperty}' is no longer an expression-bodied '=> <IDataContext member>.{SchemaProperty}' getter";
+					drift = $"'{ExpressionBuilderName}.{SchemaProperty}' is no longer a '<IDataContext member>.{SchemaProperty}' getter";
+					return null;
+				}
+
+				// Members the triggers match by name: a rename would switch a trigger off without a diagnostic.
+				if (!HasMember(types[0], "Builder", SymbolKind.Property))
+				{
+					drift = $"'{BuildContextName}.Builder' was not found in the assembly that declares '{ExpressionBuilderName}'";
+					return null;
+				}
+
+				if (!HasMember(types[1], "BuildMethodCall", SymbolKind.Method))
+				{
+					drift = $"'{MethodCallBuilderName}.BuildMethodCall' was not found in the assembly that declares '{ExpressionBuilderName}'";
 					return null;
 				}
 
 				drift = null;
 				return model;
+			}
+
+			static bool HasMember(INamedTypeSymbol type, string name, SymbolKind kind)
+			{
+				foreach (var member in type.GetMembers(name))
+					if (member.Kind == kind)
+						return true;
+
+				return false;
 			}
 
 			public bool IsSchema(ITypeSymbol? type) => DerivesFrom(type, _mappingSchema);
@@ -578,7 +649,7 @@ namespace CodeGenerators
 
 				foreach (var reference in property.DeclaringSyntaxReferences)
 				{
-					if (reference.GetSyntax() is not PropertyDeclarationSyntax { ExpressionBody.Expression: MemberAccessExpressionSyntax access }
+					if (GetterExpression(reference.GetSyntax()) is not MemberAccessExpressionSyntax access
 						|| access.Name.Identifier.ValueText != SchemaProperty
 						|| access.Expression is not IdentifierNameSyntax receiver)
 					{
@@ -681,7 +752,7 @@ namespace CodeGenerators
 				return false;
 			}
 
-			/// <summary>An instance context member of the type, declared or inherited, other than <c>Parent</c>.</summary>
+			/// <summary>An instance context or context-reference member of the type, declared or inherited, other than <c>Parent</c>.</summary>
 			public ISymbol? FindSourceMember(INamedTypeSymbol type)
 			{
 				for (var current = type; current != null; current = current.BaseType)
@@ -698,7 +769,7 @@ namespace CodeGenerators
 							_                     => null,
 						};
 
-						if (IsContext(candidateType))
+						if (IsContext(candidateType) || IsContextRef(candidateType))
 							return candidate;
 					}
 				}
