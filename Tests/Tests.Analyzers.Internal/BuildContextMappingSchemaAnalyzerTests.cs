@@ -226,6 +226,26 @@ namespace Tests.Analyzers.Internal
 				.WithLocation(0)
 				.WithArguments("'SelectContext' holds the source context 'InnerContext': return its MappingSchema instead of the data context's"));
 
+		// The GroupJoinInnerContext shape - a ctor handed the source's schema that captures the live one instead.
+		[Test]
+		public Task CtorCapturingLiveSchemaWithSourceParameterReports() => AnalyzerVerifier<BuildContextMappingSchemaAnalyzer>.VerifyAsync(
+			Code("""
+				sealed class InnerContext : BuildContextBase
+				{
+					readonly MappingSchema _mappingSchema;
+
+					public InnerContext(ExpressionBuilder builder, MappingSchema mappingSchema) : base(builder)
+					{
+						_mappingSchema = {|#0:builder.MappingSchema|};
+					}
+
+					public override MappingSchema MappingSchema => _mappingSchema;
+				}
+			"""),
+			new DiagnosticResult("LINQ2DB0007", DiagnosticSeverity.Warning)
+				.WithLocation(0)
+				.WithArguments("'mappingSchema' is in scope: read 'mappingSchema' instead of the data context's MappingSchema"));
+
 		// The variable a live read is assigned to is not a source for that read.
 		[Test]
 		public Task AssignmentTargetIsNoCarrier() => Verify("""
@@ -244,6 +264,54 @@ namespace Tests.Analyzers.Internal
 
 						return mappingSchema;
 					}
+				}
+
+				sealed class FieldCachingContext : BuildContextBase
+				{
+					MappingSchema? _schema;
+
+					public FieldCachingContext(ExpressionBuilder builder) : base(builder) { }
+
+					public override MappingSchema MappingSchema => Builder.MappingSchema;
+
+					public void Capture(ExpressionBuilder builder) { _schema = builder.MappingSchema; }
+				}
+
+				sealed class PropertyCachingContext : BuildContextBase
+				{
+					public PropertyCachingContext(ExpressionBuilder builder) : base(builder) { }
+
+					MappingSchema? Cached { get; set; }
+
+					public override MappingSchema MappingSchema => Builder.MappingSchema;
+
+					public void Capture(ExpressionBuilder builder) { Cached = builder.MappingSchema; }
+				}
+			""");
+
+		// A variable not yet assigned where the read sits is no source, however deep the read is in its assignment.
+		[Test]
+		public Task UnassignedVariableIsNoCarrier() => Verify("""
+				static class Helper
+				{
+					public static bool Out(ExpressionBuilder builder, System.Type type, out EntityDescriptor? descriptor)
+					{
+						descriptor = Describe(builder.MappingSchema, type);
+						return descriptor != null;
+					}
+
+					public static object Split(ExpressionBuilder builder)
+					{
+						IBuildContext context;
+
+						context = Make(builder.MappingSchema);
+
+						return context;
+					}
+
+					static EntityDescriptor? Describe(MappingSchema mappingSchema, System.Type type) => null;
+
+					static IBuildContext Make(MappingSchema mappingSchema) => null!;
 				}
 			""");
 
@@ -436,6 +504,58 @@ namespace Tests.Analyzers.Internal
 				.WithLocation(0)
 				.WithArguments("'context' is in scope: read 'context?.MappingSchema ?? builder.MappingSchema' instead of the data context's MappingSchema"));
 
+		// A var local is nullable by declaration; its initializer decides which form is suggested.
+		[Test]
+		public Task VarCarrierSuggestionFollowsInitializer() => AnalyzerVerifier<BuildContextMappingSchemaAnalyzer>.VerifyAsync(
+			Code("""
+				static class Helper
+				{
+					public static object Cast(ExpressionBuilder builder, object o)
+					{
+						var descriptor = (EntityDescriptor)o;
+						return {|#0:builder.MappingSchema|};
+					}
+
+					public static object? Loop(ExpressionBuilder builder, EntityDescriptor[] descriptors)
+					{
+						foreach (var descriptor in descriptors)
+							return {|#1:builder.MappingSchema|};
+
+						return null;
+					}
+
+					public static object As(ExpressionBuilder builder, object o)
+					{
+						var descriptor = o as EntityDescriptor;
+						return {|#2:builder.MappingSchema|};
+					}
+				}
+			"""),
+			new DiagnosticResult("LINQ2DB0007", DiagnosticSeverity.Warning)
+				.WithLocation(0)
+				.WithArguments("'descriptor' is in scope: read 'descriptor.MappingSchema' instead of the data context's MappingSchema"),
+			new DiagnosticResult("LINQ2DB0007", DiagnosticSeverity.Warning)
+				.WithLocation(1)
+				.WithArguments("'descriptor' is in scope: read 'descriptor.MappingSchema' instead of the data context's MappingSchema"),
+			new DiagnosticResult("LINQ2DB0007", DiagnosticSeverity.Warning)
+				.WithLocation(2)
+				.WithArguments("'descriptor' is in scope: read 'descriptor?.MappingSchema ?? builder.MappingSchema' instead of the data context's MappingSchema"));
+
+		// The fallback form over a nullable schema property, which the carrier search suggests for one, is silent.
+		[Test]
+		public Task SchemaPropertyFallbackIsSilent() => Verify("""
+				sealed class SchemaPropertyContext : BuildContextBase
+				{
+					public SchemaPropertyContext(ExpressionBuilder builder) : base(builder) { }
+
+					public MappingSchema? Schema { get; set; }
+
+					public override MappingSchema MappingSchema => Builder.MappingSchema;
+
+					public MappingSchema M(ExpressionBuilder builder) => Schema ?? builder.MappingSchema;
+				}
+			""");
+
 		// An instance context field counts in a non-static member of a context type, not in a static one,
 		// and the alias owner's own CurrentDescriptor never counts.
 		[Test]
@@ -477,6 +597,24 @@ namespace Tests.Analyzers.Internal
 						static object Local(ExpressionBuilder builder) => builder.MappingSchema;
 
 						return lambda(Builder) ?? Local(Builder);
+					}
+				}
+			""");
+
+		// Nor are the outer member's parameters and locals: a static function cannot capture them.
+		[Test]
+		public Task StaticFunctionIgnoresOuterVariables() => Verify("""
+				static class Helper
+				{
+					public static object M(ExpressionBuilder builder, IBuildContext context)
+					{
+						var descriptor = (EntityDescriptor)(object)context;
+
+						System.Func<ExpressionBuilder, object> lambda = static b => b.MappingSchema;
+
+						static object Local(ExpressionBuilder b) => b.MappingSchema;
+
+						return lambda(builder) ?? Local(builder);
 					}
 				}
 			""");

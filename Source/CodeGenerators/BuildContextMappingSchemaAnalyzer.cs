@@ -23,7 +23,8 @@ namespace CodeGenerators
 	/// </para>
 	/// <list type="bullet">
 	/// <item>a context's own <c>MappingSchema</c> getter, or the constructor assignment of its backing field or of the
-	/// property itself, reads it while the type holds a source context other than <c>Parent</c>;</item>
+	/// property itself, reads it while the type holds a source context other than <c>Parent</c>, or while such a
+	/// constructor has a source carrier among its parameters;</item>
 	/// <item>a source carrier is in scope - a <c>MappingSchema</c>, an <c>EntityDescriptor</c> / <c>ColumnDescriptor</c> /
 	/// <c>AssociationDescriptor</c>, an <c>IBuildContext</c> or a <c>ContextRefExpression</c>;</item>
 	/// <item>it is read through a context's <c>Builder</c>;</item>
@@ -34,7 +35,8 @@ namespace CodeGenerators
 	/// </summary>
 	/// <remarks>
 	/// Not visible to the rule: a source reachable only through an unbuilt <c>Expression</c> outside
-	/// <c>BuildMethodCall</c>, and an alias written as an auto-property assigned in a constructor. Method-attribute
+	/// <c>BuildMethodCall</c>, an alias written as an auto-property assigned in a constructor, and a root context's own
+	/// <c>MappingSchema</c> (<c>=&gt; Builder.MappingSchema</c>), the live schema one hop further. Method-attribute
 	/// lookups stay on the live schema on purpose: no source exists before the sequence is built, and whether
 	/// extensions should follow the snapshot is undecided (#5951).
 	/// </remarks>
@@ -134,22 +136,31 @@ namespace CodeGenerators
 
 			var enclosingType = member.ContainingType;
 
-			// Definition site: the context decides its own schema here, so only the type's members can make it wrong.
-			if (IsDefinitionSite(read, member, enclosingType, model))
+			// Definition site: the context decides its own schema here, so the type's members can make it wrong, and a
+			// constructor's parameters too. Its own members are no carriers there - the read is what defines them.
+			var definitionSite = IsDefinitionSite(read, member, enclosingType, model);
+			if (definitionSite)
 			{
 				var source = model.FindSourceMember(enclosingType);
 				if (source != null)
+				{
 					Report(context, op, $"'{enclosingType.Name}' holds the source context '{source.Name}': return its MappingSchema instead of the data context's");
+					return;
+				}
 
-				return;
+				if (member.MethodKind != MethodKind.Constructor)
+					return;
 			}
 
-			var carrier = FindCarrier(op, read, member, enclosingType, model);
+			var carrier = FindCarrier(op, read, member, enclosingType, model, membersAllowed: !definitionSite);
 			if (carrier != null)
 			{
 				Report(context, op, $"'{carrier.Value.Name}' is in scope: read '{carrier.Value.Suggestion}' instead of the data context's MappingSchema");
 				return;
 			}
+
+			if (definitionSite)
+				return;
 
 			var throughContext = FindContextBuilder(op, model);
 			if (throughContext != null)
@@ -226,7 +237,7 @@ namespace CodeGenerators
 					=> model.IsSourceCarrier(instance.Type) && !IsParent(instance),
 				IInvocationOperation invocation
 					=> invocation.TargetMethod.Name == "TryGetRootMappingSchema",
-				ILocalReferenceOperation or IParameterReferenceOperation or IFieldReferenceOperation
+				ILocalReferenceOperation or IParameterReferenceOperation or IFieldReferenceOperation or IPropertyReferenceOperation
 					=> model.IsSchema(coalesce.Value.Type),
 				_   => false,
 			};
@@ -305,22 +316,24 @@ namespace CodeGenerators
 			public string Suggestion { get; } = suggestion;
 		}
 
-		static Carrier? FindCarrier(IPropertyReferenceOperation op, IOperation read, IMethodSymbol member, INamedTypeSymbol enclosingType, Model model)
+		static Carrier? FindCarrier(IPropertyReferenceOperation op, IOperation read, IMethodSymbol member, INamedTypeSymbol enclosingType, Model model, bool membersAllowed)
 		{
 			var semanticModel = op.SemanticModel;
 			if (semanticModel == null)
 				return null;
 
 			var position        = op.Syntax.SpanStart;
-			var instanceAllowed = !member.IsStatic && !InStaticFunction(op.Syntax) && !InConstructorInitializer(op.Syntax) && model.IsContext(enclosingType);
+			var staticFunction  = StaticFunction(op.Syntax);
+			var instanceAllowed = membersAllowed && !member.IsStatic && staticFunction == null && !InConstructorInitializer(op.Syntax) && model.IsContext(enclosingType);
 
 			// The variable the read is assigned to does not hold a source yet.
 			var assigned = read.Parent is IAssignmentOperation assignment && ReferenceEquals(assignment.Value, read)
 				? AssignedSymbol(assignment.Target)
 				: null;
 
-			Carrier? best     = null;
-			var      bestRank = int.MaxValue;
+			Carrier?           best     = null;
+			var                bestRank = int.MaxValue;
+			DataFlowAnalysis?  flow     = null;
 
 			foreach (var symbol in semanticModel.LookupSymbols(position))
 			{
@@ -328,19 +341,24 @@ namespace CodeGenerators
 					continue;
 
 				ITypeSymbol? type;
+				bool?        nullable = null;
 
+				// The type gate goes first: the flow and nullability checks below are the expensive part.
 				switch (symbol)
 				{
 					case IParameterSymbol parameter:
-						if (parameter.Name == "parent")
+						if (parameter.Name == "parent" || !model.IsSourceCarrier(parameter.Type) || !Captured(parameter, staticFunction)
+							|| !AssignedAt(parameter, op.Syntax, semanticModel, ref flow))
 							continue;
 						type = parameter.Type;
 						break;
 
 					case ILocalSymbol local:
-						if (!DeclaredBefore(local, op.Syntax) || !AssignedAt(local, op.Syntax, semanticModel))
+						if (!model.IsSourceCarrier(local.Type) || !DeclaredBefore(local, op.Syntax) || !Captured(local, staticFunction)
+							|| !AssignedAt(local, op.Syntax, semanticModel, ref flow))
 							continue;
-						type = local.Type;
+						type     = local.Type;
+						nullable = VarNullability(local, semanticModel);
 						break;
 
 					case IFieldSymbol field when instanceAllowed && !field.IsStatic && !field.IsImplicitlyDeclared && IsOwnMember(field, enclosingType):
@@ -357,7 +375,7 @@ namespace CodeGenerators
 						continue;
 				}
 
-				var (rank, suggestion) = Classify(symbol.Name, type, op.Syntax.ToString(), model);
+				var (rank, suggestion) = Classify(symbol.Name, type, nullable ?? type?.NullableAnnotation == NullableAnnotation.Annotated, op.Syntax.ToString(), model);
 
 				if (rank < bestRank)
 				{
@@ -379,10 +397,8 @@ namespace CodeGenerators
 		};
 
 		/// <summary>A nullable carrier is suggested as the fallback, which compiles where it may be null.</summary>
-		static (int Rank, string? Suggestion) Classify(string name, ITypeSymbol? type, string read, Model model)
+		static (int Rank, string? Suggestion) Classify(string name, ITypeSymbol? type, bool nullable, string read, Model model)
 		{
-			var nullable = type?.NullableAnnotation == NullableAnnotation.Annotated;
-
 			if (model.IsSchema(type))
 				return (0, nullable ? $"{name} ?? {read}" : name);
 
@@ -430,42 +446,76 @@ namespace CodeGenerators
 		}
 
 		/// <summary>
-		/// A pattern or <c>out</c> variable is scoped to the enclosing block but assigned only on the path that matched,
-		/// so it is a source only where definite assignment holds.
+		/// A pattern or <c>out</c> variable, a local declared without an initializer and an <c>out</c> parameter can be
+		/// unassigned where the read sits, so they are a source only where definite assignment holds.
 		/// </summary>
-		static bool AssignedAt(ILocalSymbol local, SyntaxNode read, SemanticModel semanticModel)
+		static bool AssignedAt(ISymbol variable, SyntaxNode read, SemanticModel semanticModel, ref DataFlowAnalysis? flow)
 		{
-			if (local.DeclaringSyntaxReferences[0].GetSyntax() is not SingleVariableDesignationSyntax || read is not ExpressionSyntax expression)
+			var mayBeUnassigned = variable switch
+			{
+				IParameterSymbol parameter => parameter.RefKind == RefKind.Out,
+				ILocalSymbol     local     => local.DeclaringSyntaxReferences[0].GetSyntax() is SingleVariableDesignationSyntax or VariableDeclaratorSyntax { Initializer: null },
+				_                          => false,
+			};
+
+			if (!mayBeUnassigned || read is not ExpressionSyntax expression)
 				return true;
 
-			var flow = semanticModel.AnalyzeDataFlow(expression);
+			flow ??= semanticModel.AnalyzeDataFlow(expression);
 			if (flow is not { Succeeded: true })
 				return true;
 
 			foreach (var symbol in flow.DefinitelyAssignedOnEntry)
-				if (SymbolEqualityComparer.Default.Equals(symbol, local))
+				if (SymbolEqualityComparer.Default.Equals(symbol, variable))
 					return true;
 
 			return false;
 		}
 
-		static bool InStaticFunction(SyntaxNode node)
+		/// <summary>The innermost <c>static</c> lambda or local function holding <paramref name="node"/>.</summary>
+		static SyntaxNode? StaticFunction(SyntaxNode node)
 		{
 			foreach (var ancestor in node.Ancestors())
 			{
 				switch (ancestor)
 				{
 					case AnonymousFunctionExpressionSyntax lambda when lambda.Modifiers.Any(SyntaxKind.StaticKeyword):
-						return true;
+						return lambda;
 					case LocalFunctionStatementSyntax function when function.Modifiers.Any(SyntaxKind.StaticKeyword):
-						return true;
+						return function;
 					case MemberDeclarationSyntax:
-						return false;
+						return null;
 				}
 			}
 
+			return null;
+		}
+
+		/// <summary>A static function captures nothing: only variables declared inside it are usable there.</summary>
+		static bool Captured(ISymbol variable, SyntaxNode? staticFunction)
+		{
+			if (staticFunction == null)
+				return true;
+
+			foreach (var reference in variable.DeclaringSyntaxReferences)
+				if (reference.SyntaxTree == staticFunction.SyntaxTree && staticFunction.Span.Contains(reference.Span))
+					return true;
+
 			return false;
 		}
+
+		/// <summary>
+		/// A <c>var</c> local is nullable by declaration whatever it holds, so its initializer's flow state (or a
+		/// <c>foreach</c> element's annotation) decides. <see langword="null"/> for an explicitly typed local.
+		/// </summary>
+		static bool? VarNullability(ILocalSymbol local, SemanticModel semanticModel) => local.DeclaringSyntaxReferences[0].GetSyntax() switch
+		{
+			VariableDeclaratorSyntax { Initializer.Value: var value, Parent: VariableDeclarationSyntax { Type.IsVar: true } }
+				=> semanticModel.GetTypeInfo(value).Nullability.FlowState == NullableFlowState.MaybeNull,
+			ForEachStatementSyntax { Type.IsVar: true } loop
+				=> semanticModel.GetForEachStatementInfo(loop).ElementType?.NullableAnnotation == NullableAnnotation.Annotated,
+			_   => null,
+		};
 
 		static bool InConstructorInitializer(SyntaxNode node)
 		{
