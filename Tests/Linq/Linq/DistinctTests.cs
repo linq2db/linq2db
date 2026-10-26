@@ -602,6 +602,7 @@ namespace Tests.Linq
 		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllOracle11, TestProvName.AllMySql57, TestProvName.AllMariaDB, TestProvName.AllDB2)]
 		[ThrowsRequiresCorrelatedSubquery]
 		[ActiveIssue(6166, Configuration = TestProvName.AllSybase, ErrorMessage = "does not match with a table name or alias name")]
+		[ActiveIssue(6175, Configuration = TestProvName.AllOracle12, ErrorMessage = "<> { Key = 1, Anonymous = 8, Entity = 22 }")]
 		[Test]
 		public void DistinctCountOfAnonymousInGroup([DataSources] string context)
 		{
@@ -629,6 +630,7 @@ namespace Tests.Linq
 		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllOracle11, TestProvName.AllMySql57, TestProvName.AllMariaDB, TestProvName.AllDB2)]
 		[ThrowsRequiresCorrelatedSubquery]
 		[ActiveIssue(6166, Configuration = TestProvName.AllSybase, ErrorMessage = "does not match with a table name or alias name")]
+		[ActiveIssue(6175, Configuration = TestProvName.AllOracle12, ErrorMessage = "Expected: property Count equal to 3")]
 		[Test]
 		public void DistinctCountOfAnonymousInHaving([DataSources] string context)
 		{
