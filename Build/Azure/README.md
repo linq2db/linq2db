@@ -14,7 +14,7 @@ This directory contains test configs and setup scripts for test jobs on Azure Pi
 
 Performs default maintenance actions. Automatically runs for:
 
-- PR to `release` branch: runs all tests for each commit to `master` branch
+- PR to `release` branch: builds and generates nugets for each commit to `master` branch. The provider tests for it run on GitHub Actions (`.github/workflows/tests-release.yml`): every leg, as a full run. Queue `default` manually on `master` with `run_tests` to run them here instead; that run's baselines land on `baselines/default`, not `baselines/pr_<n>`
 - commit to `master`: publish preview nugets to [Azure Artifacts feed](https://dev.azure.com/linq2db/linq2db/_packaging?_a=feed&feed=linq2db)
 - commit to `release`: publish release nugets to [Nuget.org](https://www.nuget.org/profiles/LinqToDB)
 
@@ -66,7 +66,7 @@ Legend:
 
 - :heavy_minus_sign: - test configuration not supported (e.g. db/provider not available for target OS/Framework)
 - :heavy_check_mark: - test job implemented
-- :new_moon: - test job implemented, but the main test suite runs on release runs (`full_run`) only, with PR runs covered by the Linux legs. Two mechanisms in `templates/test-matrix.yml` produce it: `win_efcore_only`, where the Windows legs still run the EF.Core suite on every run but the main suite only on release runs, and a `full_run`-conditional `enable_os_windows`, where there is no Windows leg at all on a PR run. Note the first also makes the `netfx` main suite release-run only, since `netfx` runs nowhere but Windows
+- :new_moon: - test job implemented, but the main test suite runs on release runs (`full_run`) only, with PR runs covered by the Linux legs. Two mechanisms in `templates/test-matrix.yml` produce it: `win_efcore_only`, where the Windows legs still run the EF.Core suite on every run but the main suite only on release runs, and `win_full_run_only`, where there is no Windows leg at all on a PR run. Note the first also makes the `netfx` main suite release-run only, since `netfx` runs nowhere but Windows
 - :arrow_right: - no Windows job for this target framework: the leg also has a Linux job, which already runs net8+ for it, so `templates/test-jobs.yml` leaves `net80`/`net90`/`net100` out of the Windows matrix. `netfx` is unaffected - it runs nowhere but Windows
 - :x: - test job not implemented yet
 - `netfx`: .NET Framework (4.6.2)
