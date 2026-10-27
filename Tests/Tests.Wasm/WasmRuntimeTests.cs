@@ -183,7 +183,12 @@ namespace Tests.Wasm
 			var row = ProviderMatrix.Find(configuration)!;
 
 			if (_preflight[configuration] is { } serverError)
-				throw new ShouldAssertException($"'{configuration}' cannot be constructed server-side on this runner; list it as unavailable or fix the environment:\n{serverError}");
+			{
+				// Printed, not thrown: a server-side "Cannot load assembly" would otherwise match the #6167 gate.
+				await TestContext.Out.WriteLineAsync(serverError);
+
+				throw new ShouldAssertException($"'{configuration}' cannot be constructed server-side on this runner; list it as unavailable or fix the environment (server error in the test output).");
+			}
 
 			var run = await GetRunAsync(mode);
 
