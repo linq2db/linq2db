@@ -17,7 +17,7 @@ Following databases supported:
 * **MySql**
 * **Oracle**
 * **PostgreSQL**
-* **SAP HANA**: both Native and ODBC providers *(ODBC needs the SAP HANA ODBC driver installed; with the LINQPad 5 `.lpx`, Native needs the SAP HANA client installed)*
+* **SAP HANA**: both Native and ODBC providers *(ODBC needs the SAP HANA ODBC driver installed; with the LINQPad 5 `.lpx`, Native needs the SAP HANA client installed; not available in an ARM64 LINQPad on Windows, as SAP ships no Windows ARM64 client)*
 * **SAP/Sybase ASE**
 * **SQLite**
 * **YDB**

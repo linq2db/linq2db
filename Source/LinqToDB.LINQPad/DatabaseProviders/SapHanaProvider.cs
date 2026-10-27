@@ -5,6 +5,7 @@ using System.Data.Odbc;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 using LinqToDB.Data;
 using LinqToDB.Internal.Common;
@@ -12,7 +13,6 @@ using LinqToDB.Internal.DataProvider.SapHana;
 
 #if !NETFRAMEWORK
 using System.IO;
-using System.Runtime.InteropServices;
 #endif
 
 namespace LinqToDB.LINQPad;
@@ -36,6 +36,9 @@ internal sealed class SapHanaProvider : DatabaseProviderBase
 #endif
 	}
 
+	// SAP publishes no Windows ARM64 client (native or ODBC); an x64 LINQPad under emulation keeps it
+	public override bool IsPlatformSupported => !(Platform.IsWindows && RuntimeInformation.ProcessArchitecture == Architecture.Arm64);
+
 #if !NETFRAMEWORK
 	private const string NativeClientPackage = "Sap.Data.Hana.Net.v8.0";
 
@@ -54,19 +57,19 @@ internal sealed class SapHanaProvider : DatabaseProviderBase
 	// installation sets machine-wide to its own native - rejected by the client's exact version check. The
 	// provisioned package keeps its natives in runtimes/ two levels up, so the process value is pointed there
 	// before HanaConnection's type initializer runs that search; a failed one is sticky for the process.
+	// true only once the variable is set: a copy without package natives (an installed client's dll referenced
+	// by a static context) must not end the subscription before the provisioned copy loads
 	private static bool PointToPackageNatives(Assembly assembly)
 	{
-		if (assembly.FullName?.StartsWith(NativeClientPackage + ",", StringComparison.Ordinal) != true)
+		if (assembly.FullName?.StartsWith(NativeClientPackage + ",", StringComparison.Ordinal) != true || string.IsNullOrEmpty(assembly.Location))
 			return false;
 
-		if (!string.IsNullOrEmpty(assembly.Location))
-		{
-			var nativePath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(assembly.Location)!, "..", "..", "runtimes", RuntimeInformation.RuntimeIdentifier, "native"));
+		var nativePath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(assembly.Location)!, "..", "..", "runtimes", RuntimeInformation.RuntimeIdentifier, "native"));
 
-			if (Directory.Exists(nativePath))
-				Environment.SetEnvironmentVariable("HDBDOTNETCORE", nativePath);
-		}
+		if (!Directory.Exists(nativePath))
+			return false;
 
+		Environment.SetEnvironmentVariable("HDBDOTNETCORE", nativePath);
 		return true;
 	}
 
