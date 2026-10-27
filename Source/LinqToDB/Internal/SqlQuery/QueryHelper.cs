@@ -642,13 +642,20 @@ namespace LinqToDB.Internal.SqlQuery
 					return GetColumnDescriptor(condition.TrueValue, alreadyVisitedElements, forTyping) ??
 					       GetColumnDescriptor(condition.FalseValue, alreadyVisitedElements, forTyping);
 
+				// A concatenation is Unicode whenever any operand is, which a non-Unicode column among them does not say: a
+				// value typed beside it from that column would be sent as non-Unicode. Only a Unicode column types it.
 				case SqlConcatExpression concat:
 				{
 					foreach (var expression in concat.Expressions)
 					{
 						var descriptor = GetColumnDescriptor(expression, alreadyVisitedElements, forTyping);
-						if (descriptor != null)
-							return descriptor;
+						if (descriptor == null)
+							continue;
+
+						if (forTyping && descriptor.GetDbDataType(true).DataType is not (DataType.NChar or DataType.NVarChar or DataType.NText))
+							continue;
+
+						return descriptor;
 					}
 
 					return null;

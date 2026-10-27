@@ -231,7 +231,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			var fragments = new ISqlExpression[arguments.Length];
 
-			using var disposable = translationContext.UsingTypeFromExpression(arguments);
+			using var disposable = UsingUnicodeTypeFromOperand(translationContext, arguments);
 
 			for (var i = 0; i < arguments.Length; i++)
 			{
@@ -253,6 +253,25 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			var concat = factory.Concat(preserveNull: !nullValuesAsEmptyString, fragments);
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, concat, methodCall);
+		}
+
+		// A fragment takes a neighbouring column's type only when that type is Unicode. A non-Unicode one would send a
+		// parameter or literal beside it as non-Unicode, losing every character outside the column's code page, so the
+		// fragment keeps the type of where the concatenation is used instead.
+		static IDisposable? UsingUnicodeTypeFromOperand(ITranslationContext translationContext, Expression[] arguments)
+		{
+			foreach (var argument in arguments)
+			{
+				if (translationContext.Translate(argument, TranslationFlags.Sql) is not SqlPlaceholderExpression placeholder)
+					continue;
+
+				var descriptor = QueryHelper.GetColumnDescriptorForTyping(placeholder.Sql);
+
+				if (descriptor?.GetDbDataType(true).DataType is DataType.NChar or DataType.NVarChar or DataType.NText)
+					return translationContext.UsingColumnDescriptor(descriptor);
+			}
+
+			return null;
 		}
 
 		protected virtual Expression? TranslateLike(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)

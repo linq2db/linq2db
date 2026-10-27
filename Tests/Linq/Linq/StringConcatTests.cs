@@ -839,6 +839,185 @@ namespace Tests.Linq
 			res[1].Text14.ShouldBe("Element тест4 Text14");
 		}
 
+		#region Concat fragments beside a VarChar column
+
+		[Table]
+		sealed class ConcatProduct
+		{
+			[PrimaryKey]                                                           public int    Id    { get; set; }
+			[Column(DataType = DataType.VarChar,  Length = 20, CanBeNull = false)] public string Sku   { get; set; } = default!;
+			[Column(DataType = DataType.NVarChar, Length = 40, CanBeNull = false)] public string Title { get; set; } = default!;
+		}
+
+		static readonly ConcatProduct[] ConcatProductData =
+		[
+			new() { Id = 1, Sku = "A-100",   Title = "A-100Жук" },
+			new() { Id = 2, Sku = "B-200",   Title = "B-200"    },
+			new() { Id = 3, Sku = "A-100-X", Title = "A-100-X"  },
+		];
+
+		// Informix.DB2: the CI container's code page rejects the Cyrillic seed values at insert time.
+		[Test]
+		public void ConcatParameterBesideVarCharKeepsUnicode([DataSources(TestProvName.AllInformix)] string context)
+		{
+			var suffix = "Жук";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(ConcatProductData);
+
+			var query = table
+				.Select(p => new
+				{
+					p.Id,
+					Tail   = Sql.AsSql(p.Sku + suffix),
+					Framed = Sql.AsSql(suffix + p.Sku + suffix),
+					Call   = Sql.AsSql(string.Concat(p.Sku, suffix)),
+				});
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void ConcatLiteralBesideVarCharKeepsUnicode([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(ConcatProductData);
+
+			var query = table
+				.Select(p => new
+				{
+					p.Id,
+					Caption = Sql.AsSql("Артикул " + p.Sku),
+				});
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void ConcatParameterBesideNVarCharKeepsColumnType([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var suffix = "Жук";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(ConcatProductData);
+
+			var query = table
+				.Select(p => new
+				{
+					p.Id,
+					Tail = Sql.AsSql(p.Title + suffix),
+				});
+
+			AssertQuery(query);
+
+			GetCurrentBaselines().ShouldContain("DECLARE @suffix NVarChar(40)");
+		}
+
+		[Test]
+		public void ConcatParameterBesideLaterNVarCharKeepsColumnType([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var suffix = "Жук";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(ConcatProductData);
+
+			var query = table
+				.Select(p => new
+				{
+					p.Id,
+					Label = Sql.AsSql(string.Concat(p.Sku, suffix, p.Title)),
+				});
+
+			AssertQuery(query);
+
+			GetCurrentBaselines().ShouldContain("DECLARE @suffix NVarChar(40)");
+		}
+
+		[Test]
+		public void ConcatWithNVarCharTypesComparedParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var key = "A-100A-100Жук";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(ConcatProductData);
+
+			var query = table
+				.Where(p => p.Sku + p.Title == key)
+				.Select(p => p.Id);
+
+			AssertQuery(query);
+
+			GetCurrentBaselines().ShouldContain("DECLARE @key NVarChar(40)");
+		}
+
+		[Test]
+		public void ConcatParameterTakesComparedColumnType([DataSources(TestProvName.AllInformix)] string context)
+		{
+			var suffix = "Жук";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(ConcatProductData);
+
+			var query = table
+				.Where(p => p.Title == p.Sku + suffix)
+				.Select(p => p.Id);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void ConcatOnLeftParameterTakesComparedColumnType([DataSources(TestProvName.AllInformix)] string context)
+		{
+			var suffix = "Жук";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(ConcatProductData);
+
+			var query = table
+				.Where(p => p.Sku + suffix == p.Title)
+				.Select(p => p.Id);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void ConcatInListKeepsUnicode([DataSources(TestProvName.AllInformix)] string context)
+		{
+			var suffix = "Жук";
+			var titles = new[] { "A-100Щит", "B-200Жук" };
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(ConcatProductData);
+
+			var query = table
+				.Where(p => titles.Contains(p.Sku + suffix))
+				.Select(p => p.Id);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void ConcatParameterInJoinKeepsComparedColumnType([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var keySuffix = "-X";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(ConcatProductData);
+
+			var query =
+				from a in table
+				from b in table
+				where b.Sku == a.Sku + keySuffix
+				select new { A = a.Id, B = b.Id };
+
+			AssertQuery(query);
+
+			// An nvarchar parameter would turn the key comparison into nvarchar and convert the indexed column.
+			GetCurrentBaselines().ShouldContain("DECLARE @keySuffix VarChar");
+		}
+
+		#endregion
+
 		#region Concat inside a set-operation operand's projection
 
 		[Table]
