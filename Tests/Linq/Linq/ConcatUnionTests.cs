@@ -3001,17 +3001,36 @@ namespace Tests.Linq
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6156")]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		public void NestedSetAgainstNullBranchCompared([DataSources] string context, [Values] bool joined, [Values] bool innerUnion, [Values] bool innerNullFirst, [Values(ComparingSetOperation.Intersect, ComparingSetOperation.Except)] ComparingSetOperation operation)
+		public void NestedSetAgainstNullBranchCompared([DataSources] string context, [Values] bool innerUnion, [Values] bool innerNullFirst, [Values(ComparingSetOperation.Intersect, ComparingSetOperation.Except)] ComparingSetOperation operation)
 		{
 			using var db = GetDataContext(context);
 
-			var objects = joined
-				? from p in db.Parent
-				  from c in db.Child
-					  .Where(c => c.ParentID == p.ParentID)
-					  .DefaultIfEmpty()
-				  select new { p.ParentID, Child = (Child?)c }
-				: db.Parent.Select(p => new { p.ParentID, Child = (Child?)new Child { ParentID = p.ParentID, ChildID = p.ParentID + 100 } });
+			var objects =
+				from p in db.Parent
+				from c in db.Child
+					.Where(c => c.ParentID == p.ParentID)
+					.DefaultIfEmpty()
+				select new { p.ParentID, Child = (Child?)c };
+
+			var nulls =
+				from p in db.Parent
+				select new { p.ParentID, Child = (Child?)null };
+
+			var inner = UnionOrConcat(objects, nulls, innerUnion, innerNullFirst);
+
+			AssertQuery(Compare(inner, nulls, operation));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6156")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		// Informix fails when EXCEPT compares a NULL constant with a NOT NULL column read through a set-operation derived table.
+		[ThrowsForProvider("IBM.Data.Db2.DB2Exception", TestProvName.AllInformix, ErrorMessage = "unexpected null pointer encountered",
+			AlsoWhenParameter = "operation", AlsoWhenValue = ComparingSetOperation.Except)]
+		public void NestedSetOfNewObjectsAgainstNullBranchCompared([DataSources] string context, [Values] bool innerUnion, [Values] bool innerNullFirst, [Values(ComparingSetOperation.Intersect, ComparingSetOperation.Except)] ComparingSetOperation operation)
+		{
+			using var db = GetDataContext(context);
+
+			var objects = db.Parent.Select(p => new { p.ParentID, Child = (Child?)new Child { ParentID = p.ParentID, ChildID = p.ParentID + 100 } });
 
 			var nulls =
 				from p in db.Parent
