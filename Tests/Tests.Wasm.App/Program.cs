@@ -171,7 +171,7 @@ namespace Tests.Wasm
 			}
 		}
 
-		// Utf8JsonWriter, not JsonSerializer: two of the bundles run with reflection-based serialization disabled.
+		// Utf8JsonWriter, not JsonSerializer: NoReflectionJson disables reflection-based serialization and TrimFull trims the metadata it needs.
 		static string WriteReport(string configuration, List<Operation> operations, List<string> resolveAttempts)
 		{
 			using var stream = new MemoryStream();

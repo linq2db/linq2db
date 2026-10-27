@@ -102,6 +102,7 @@ namespace Tests.Wasm
 		[TestCaseSource(nameof(ClientLoadsProviderAssemblyCases))]
 		public Task ClientLoadsProviderAssembly(string mode, string configuration) => AssertClientAsync(mode, configuration);
 
+		// A #6168 fix exposes #6167 on the LoadsProviderAssembly rows: split these cases by it, as for the working modes.
 		[ActiveIssue(6168, ErrorMessage = "DeserializeNoConstructor")]
 		[TestCaseSource(nameof(FullTrimmingCases))]
 		public Task ClientFailsUnderFullTrimming(string mode, string configuration) => AssertClientAsync(mode, configuration);
