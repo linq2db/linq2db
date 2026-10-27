@@ -183,6 +183,7 @@
     <File Path="Build/Azure/scripts/firebird.sh" />
     <File Path="Build/Azure/scripts/hana2.sh" />
     <File Path="Build/Azure/scripts/hana2.tests.sh" />
+    <File Path="Build/Azure/scripts/mssql-wait.sh" />
     <File Path="Build/Azure/scripts/mysql.sh" />
     <File Path="Build/Azure/scripts/oracle1112.sh" />
     <File Path="Build/Azure/scripts/oracle1819.sh" />
