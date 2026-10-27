@@ -24,7 +24,7 @@ namespace Tests.Wasm
 		public const string TrimFull         = nameof(TrimFull);
 		public const string NoReflectionJson = nameof(NoReflectionJson);
 
-		public static readonly TimeSpan Timeout = TimeSpan.FromMinutes(5);
+		public static readonly TimeSpan Timeout = TimeSpan.FromMinutes(2);
 
 		// A harness that cannot find its bundles must say so, not look somewhere else.
 		public static string RepoRoot { get; } = TestUtils.TryFindRepoRoot()

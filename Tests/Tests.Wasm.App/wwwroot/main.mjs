@@ -12,4 +12,9 @@ globalThis.Request = class extends NodeRequest {
 
 const { runMain } = await dotnet.create();
 
-process.exit(await runMain('linq2db.Tests.Wasm.App', process.argv.slice(2)));
+const exitCode = await runMain('linq2db.Tests.Wasm.App', process.argv.slice(2));
+
+// Pipes are asynchronous on POSIX: process.exit would drop report lines still queued for stdout.
+await new Promise(resolve => process.stdout.write('', resolve));
+
+process.exit(exitCode);
