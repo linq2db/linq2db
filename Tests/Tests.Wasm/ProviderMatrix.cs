@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Access;
 using LinqToDB.DataProvider.ClickHouse;
@@ -22,26 +23,27 @@ using LinqToDB.DataProvider.Ydb;
 
 namespace Tests.Wasm
 {
-	public enum MergeOutcome
+	enum MergeOutcome
 	{
 		Generates,
 		Throws,
 	}
 
 	[Flags]
-	public enum RunnerOS
+	enum RunnerOS
 	{
 		None    = 0,
 		Windows = 1,
 		Linux   = 2,
-		Any     = Windows | Linux,
+		MacOS   = 4,
+		Any     = Windows | Linux | MacOS,
 	}
 
 	/// <summary>
 	/// One remote configuration the WASM client is run against. <see cref="Configuration"/> is what the client sends;
 	/// the server maps it to <see cref="CreateProvider"/> explicitly, so no provider detection (and no connection) is involved.
 	/// </summary>
-	public sealed record MatrixRow(
+	sealed record MatrixRow(
 		string              Configuration,
 		string              ProviderName,
 		Func<IDataProvider> CreateProvider,
@@ -55,7 +57,7 @@ namespace Tests.Wasm
 		public override string ToString() => Configuration;
 	}
 
-	public static class ProviderMatrix
+	static class ProviderMatrix
 	{
 		public const string RoundTripConfiguration = ProviderName.SQLiteMS;
 
@@ -67,12 +69,17 @@ namespace Tests.Wasm
 		public static RunnerOS CurrentOS =>
 			OperatingSystem.IsWindows() ? RunnerOS.Windows :
 			OperatingSystem.IsLinux()   ? RunnerOS.Linux   :
+			OperatingSystem.IsMacOS()   ? RunnerOS.MacOS   :
 			RunnerOS.None;
 
 		// The builders of these families throw "doesn't support SQL MERGE statement" while generating SQL client-side:
 		// AccessSqlBuilderBase, ClickHouseSqlBuilder, MySqlSqlBuilder, SQLiteSqlBuilder, SqlCeSqlBuilder, YdbSqlBuilder.
 		const MergeOutcome Refused = MergeOutcome.Throws;
 		const MergeOutcome Built   = MergeOutcome.Generates;
+
+		// SybaseTools.GetDataProvider(SybaseProvider.Unmanaged) returns the managed provider when the native assembly is
+		// absent (#6177); the provider name still selects the native one.
+		const string SybaseNative = "Sybase.Native";
 
 		const string NotOnNet   = "assembly is referenced for net462 only (Redist), so the provider cannot be constructed on .NET";
 		const string NotShipped = "assembly is not referenced by any test project, so the provider cannot be constructed";
@@ -85,7 +92,7 @@ namespace Tests.Wasm
 			new(ProviderName.AccessAceOdbc,           ProviderName.AccessAceOdbc,           () => AccessTools.GetDataProvider(AccessVersion.Ace, AccessProvider.ODBC),  Refused),
 
 			new(ProviderName.DB2LUW,                  ProviderName.DB2LUW,                  () => DB2Tools.GetDataProvider(DB2Version.LUW), Built, LoadsProviderAssembly: true),
-			// The client puts the configuration name into the request path unescaped, so the row is keyed without '/'.
+			// The client puts the configuration name into the request path unescaped (#6176), so the row is keyed without '/'.
 			new("DB2.zOS",                            ProviderName.DB2zOS,                  () => DB2Tools.GetDataProvider(DB2Version.zOS), Built, LoadsProviderAssembly: true),
 
 			new(ProviderName.Firebird25,              ProviderName.Firebird25,              () => FirebirdTools.GetDataProvider(FirebirdVersion.v25), Built),
@@ -144,7 +151,7 @@ namespace Tests.Wasm
 			new(ProviderName.SQLiteClassic,           ProviderName.SQLiteClassic,           () => SQLiteTools.GetDataProvider(SQLiteProvider.System),    Refused),
 			new(ProviderName.SQLiteMS,                ProviderName.SQLiteMS,                () => SQLiteTools.GetDataProvider(SQLiteProvider.Microsoft), Refused),
 
-			new(ProviderName.Sybase,                  ProviderName.Sybase,                  () => SybaseTools.GetDataProvider(SybaseProvider.Unmanaged),  Built, UnavailableOn: RunnerOS.Any, UnavailableReason: "Sybase.AdoNet45.AseClient " + NotShipped),
+			new(ProviderName.Sybase,                  ProviderName.Sybase,                  () => DataConnection.GetDataProvider(SybaseNative, DummyConnectionString)!, Built, UnavailableOn: RunnerOS.Any, UnavailableReason: "Sybase.AdoNet45.AseClient " + NotShipped),
 			new(ProviderName.SybaseManaged,           ProviderName.SybaseManaged,           () => SybaseTools.GetDataProvider(SybaseProvider.DataAction), Built),
 
 			new(ProviderName.SapHanaNative,           ProviderName.SapHanaNative,           () => SapHanaTools.GetDataProvider(SapHanaProvider.Unmanaged), Built, UnavailableOn: RunnerOS.Any, UnavailableReason: "Sap.Data.Hana is a Redist assembly referenced by Tests/Linq only"),

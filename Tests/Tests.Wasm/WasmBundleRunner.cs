@@ -10,25 +10,25 @@ using System.Threading.Tasks;
 
 namespace Tests.Wasm
 {
-	public sealed record OperationResult(string Name, string? Result, string? ErrorType, string? ErrorMessage, string? Error);
+	sealed record OperationResult(string Name, string? Result, string? ErrorType, string? ErrorMessage, string? Error);
 
-	public sealed record ConfigurationReport(string Configuration, IReadOnlyList<OperationResult> Operations, IReadOnlyList<string> ResolveAttempts);
+	sealed record ConfigurationReport(string Configuration, IReadOnlyList<OperationResult> Operations, IReadOnlyList<string> ResolveAttempts);
 
-	public sealed record ModeRun(string Mode, IReadOnlyDictionary<string, ConfigurationReport> Reports, int ExitCode, string Output);
+	sealed record ModeRun(string Mode, IReadOnlyDictionary<string, ConfigurationReport> Reports, int ExitCode, bool TimedOut, string Output);
 
 	/// <summary>Runs a published Tests.Wasm.App bundle under Node and collects its per-configuration reports.</summary>
-	public static class WasmBundleRunner
+	static class WasmBundleRunner
 	{
 		public const string Debug            = nameof(Debug);
 		public const string TrimPartial      = nameof(TrimPartial);
 		public const string TrimFull         = nameof(TrimFull);
 		public const string NoReflectionJson = nameof(NoReflectionJson);
 
-		const string ReportPrefix = "L2DB-WASM-REPORT ";
+		public static readonly TimeSpan Timeout = TimeSpan.FromMinutes(5);
 
-		static readonly TimeSpan _timeout = TimeSpan.FromMinutes(5);
-
-		public static string RepoRoot { get; } = FindRepoRoot();
+		// A harness that cannot find its bundles must say so, not look somewhere else.
+		public static string RepoRoot { get; } = TestUtils.TryFindRepoRoot()
+			?? throw new InvalidOperationException($"linq2db.slnx not found above {AppContext.BaseDirectory}.");
 
 		public static string GetBundleEntry(string mode) => Path.Combine(RepoRoot, ".build", "wasm", mode, "wwwroot", "main.mjs");
 
@@ -61,7 +61,9 @@ namespace Tests.Wasm
 			var stdout = process.StandardOutput.ReadToEndAsync();
 			var stderr = process.StandardError.ReadToEndAsync();
 
-			using (var cts = new CancellationTokenSource(_timeout))
+			var timedOut = false;
+
+			using (var cts = new CancellationTokenSource(Timeout))
 			{
 				try
 				{
@@ -69,6 +71,8 @@ namespace Tests.Wasm
 				}
 				catch (OperationCanceledException)
 				{
+					timedOut = true;
+
 					process.Kill(entireProcessTree: true);
 					await process.WaitForExitAsync().ConfigureAwait(false);
 				}
@@ -79,23 +83,23 @@ namespace Tests.Wasm
 
 			foreach (var line in output.Split('\n'))
 			{
-				if (!line.StartsWith(ReportPrefix, StringComparison.Ordinal))
+				if (!line.StartsWith(WasmReport.Prefix, StringComparison.Ordinal))
 					continue;
 
-				var report = Parse(line.Substring(ReportPrefix.Length));
+				var report = Parse(line.Substring(WasmReport.Prefix.Length));
 
 				reports[report.Configuration] = report;
 			}
 
 			var log = new StringBuilder()
-				.AppendLine($"node exit code: {process.ExitCode}")
+				.AppendLine(timedOut ? $"node timed out after {Timeout} and was killed" : $"node exit code: {process.ExitCode}")
 				.AppendLine("--- stdout (without report lines) ---")
-				.AppendLine(string.Join("\n", output.Split('\n').Where(l => !l.StartsWith(ReportPrefix, StringComparison.Ordinal))))
+				.AppendLine(string.Join("\n", output.Split('\n').Where(l => !l.StartsWith(WasmReport.Prefix, StringComparison.Ordinal))))
 				.AppendLine("--- stderr ---")
 				.AppendLine(await stderr.ConfigureAwait(false))
 				.ToString();
 
-			return new ModeRun(mode, reports, process.ExitCode, log);
+			return new ModeRun(mode, reports, process.ExitCode, timedOut, log);
 		}
 
 		static ConfigurationReport Parse(string json)
@@ -126,14 +130,5 @@ namespace Tests.Wasm
 
 		static string? GetString(JsonElement element, string name) =>
 			element.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String ? value.GetString() : null;
-
-		static string FindRepoRoot()
-		{
-			for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir != null; dir = dir.Parent)
-				if (File.Exists(Path.Combine(dir.FullName, "linq2db.slnx")))
-					return dir.FullName;
-
-			throw new InvalidOperationException($"linq2db.slnx not found above {AppContext.BaseDirectory}.");
-		}
 	}
 }

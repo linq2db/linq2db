@@ -13,11 +13,9 @@ using LinqToDB.Remote.HttpClient.Client;
 namespace Tests.Wasm
 {
 	// Runs inside the browser-wasm runtime under Node. Arguments: <server url> <round-trip configuration> <configuration>...
-	// Writes one `L2DB-WASM-REPORT {json}` line per configuration to stdout; the Tests.Wasm host decides what is red.
+	// Writes one WasmReport.Prefix line per configuration to stdout; the Tests.Wasm host decides what is red.
 	static class Program
 	{
-		const string ReportPrefix = "L2DB-WASM-REPORT ";
-
 		static List<string>? _resolveAttempts;
 
 		static async Task<int> Main(string[] args)
@@ -44,9 +42,17 @@ namespace Tests.Wasm
 
 				_resolveAttempts = new List<string>();
 
-				await RunConfigurationAsync(serverUrl, configuration, configuration == roundTripConfiguration, operations).ConfigureAwait(false);
+				// One configuration's failure must not cost the rest of the mode their reports.
+				try
+				{
+					await RunConfigurationAsync(serverUrl, configuration, configuration == roundTripConfiguration, operations).ConfigureAwait(false);
+				}
+				catch (Exception ex)
+				{
+					operations.Add(new Operation(WasmReport.Unexpected, null, ex));
+				}
 
-				Console.WriteLine(ReportPrefix + WriteReport(configuration, operations, _resolveAttempts));
+				Console.WriteLine(WasmReport.Prefix + WriteReport(configuration, operations, _resolveAttempts));
 
 				_resolveAttempts = null;
 			}
@@ -56,39 +62,65 @@ namespace Tests.Wasm
 
 		static async Task RunConfigurationAsync(Uri serverUrl, string configuration, bool roundTrip, List<Operation> operations)
 		{
-			var db = new HttpClientDataContext(serverUrl, "api/linq2db", o => o.UseConfiguration(configuration));
+			HttpClientDataContext? db = null;
 
-			await using var _ = db.ConfigureAwait(false);
-
-			// Sync APIs block on a single-threaded runtime, so the configuration must be fetched asynchronously first.
-			if (!await RunAsync(operations, "Init", async () =>
+			try
 			{
-				await db.InitHttpClientAsync().ConfigureAwait(false);
-				return null;
-			}).ConfigureAwait(false))
-				return;
+				// Sync APIs block on a single-threaded runtime, so the configuration must be fetched asynchronously first.
+				if (!await RunAsync(operations, WasmReport.Init, async () =>
+				{
+					db = new HttpClientDataContext(serverUrl, "api/linq2db", o => o.UseConfiguration(configuration));
 
+					await db.InitHttpClientAsync().ConfigureAwait(false);
+					return null;
+				}).ConfigureAwait(false))
+					return;
+
+				RunOperations(db!, operations);
+
+				if (roundTrip)
+				{
+					await RunAsync(operations, WasmReport.RoundTrip, async () =>
+					{
+						var rows = await db!.GetTable<WasmPerson>()
+							.OrderBy(p => p.Id)
+							.ToListAsync()
+							.ConfigureAwait(false);
+
+						return string.Join(",", rows.Select(p => p.Id));
+					}).ConfigureAwait(false);
+				}
+			}
+			finally
+			{
+				if (db != null)
+					await db.DisposeAsync().ConfigureAwait(false);
+			}
+		}
+
+		static void RunOperations(HttpClientDataContext db, List<Operation> operations)
+		{
 			var persons = db.GetTable<WasmPerson>();
 			var name    = "John";
 
-			Run(operations, "Select", () => persons
+			Run(operations, WasmReport.Select, () => persons
 				.Where(p => p.Name.StartsWith("J") && p.BirthDate > new DateTime(2000, 1, 1))
 				.Select(p => new { p.Id, Upper = p.Name.ToUpper(), p.Name.Length })
 				.ToSqlQuery()
 				.Sql);
 
-			Run(operations, "SelectParameterized", () => persons
+			Run(operations, WasmReport.SelectParameterized, () => persons
 				.Where(p => p.Name == name)
 				.ToSqlQuery()
 				.Sql);
 
-			Run(operations, "Update", () => persons
+			Run(operations, WasmReport.Update, () => persons
 				.Where(p => p.Id == 1)
 				.Set(p => p.Name, "Jack")
 				.ToSqlQuery()
 				.Sql);
 
-			Run(operations, "Insert", () => persons
+			Run(operations, WasmReport.Insert, () => persons
 				.Value(p => p.Id, 3)
 				.Value(p => p.Name, "Jim")
 				.Value(p => p.BirthDate, new DateTime(2001, 2, 3))
@@ -97,7 +129,7 @@ namespace Tests.Wasm
 
 			// Non-empty source and Update/Insert only: the delete and by-source operations and an empty source have refusal
 			// paths of their own, and the expectation per configuration is about the builder's MERGE support alone.
-			Run(operations, "Merge", () => persons
+			Run(operations, WasmReport.Merge, () => persons
 				.Merge()
 				.Using(new[]
 				{
@@ -109,19 +141,6 @@ namespace Tests.Wasm
 				.InsertWhenNotMatched()
 				.ToSqlQuery()
 				.Sql);
-
-			if (roundTrip)
-			{
-				await RunAsync(operations, "RoundTrip", async () =>
-				{
-					var rows = await persons
-						.OrderBy(p => p.Id)
-						.ToListAsync()
-						.ConfigureAwait(false);
-
-					return string.Join(",", rows.Select(p => p.Id));
-				}).ConfigureAwait(false);
-			}
 		}
 
 		static void Run(List<Operation> operations, string name, Func<string?> action)

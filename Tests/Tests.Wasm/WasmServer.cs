@@ -22,7 +22,7 @@ namespace Tests.Wasm
 	/// The remote server the WASM client talks to: Kestrel on loopback, one controller, and a <see cref="LinqService"/>
 	/// that maps each configuration name to its matrix row's provider instead of the global configuration registry.
 	/// </summary>
-	public sealed class WasmServer : IAsyncDisposable
+	sealed class WasmServer : IAsyncDisposable
 	{
 		public const string Route = "api/linq2db";
 
@@ -113,6 +113,7 @@ namespace Tests.Wasm
 		}
 	}
 
+	/// <summary>The remote endpoint of <see cref="WasmServer"/>; public because ASP.NET Core discovers public controllers only.</summary>
 	[Route(WasmServer.Route)]
 	public sealed class WasmLinqController(ILinqService linqService) : LinqToDBController
 	{

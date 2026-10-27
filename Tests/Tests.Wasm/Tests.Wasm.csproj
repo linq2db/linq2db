@@ -7,8 +7,6 @@
 
 		<AssemblyName>linq2db.Tests.Wasm</AssemblyName>
 		<RootNamespace>Tests.Wasm</RootNamespace>
-
-		<MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3277</MSBuildWarningsAsMessages>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -16,7 +14,8 @@
 
 		<ProjectReference Include="..\..\Source\LinqToDB.Remote.HttpClient.Server\LinqToDB.Remote.HttpClient.Server.csproj" />
 
-		<!-- The WASM bundles are published by publish-wasm-bundles.ps1; only the entity mapping is shared. -->
+		<!-- The WASM bundles are published by publish-wasm-bundles.ps1; only the entity mapping and the report contract are shared. -->
 		<Compile Include="..\Tests.Wasm.App\WasmPerson.cs" Link="WasmPerson.cs" />
+		<Compile Include="..\Tests.Wasm.App\WasmReport.cs" Link="WasmReport.cs" />
 	</ItemGroup>
 </Project>

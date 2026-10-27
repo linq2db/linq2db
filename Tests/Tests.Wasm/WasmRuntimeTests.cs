@@ -14,19 +14,29 @@ namespace Tests.Wasm
 {
 	/// <summary>
 	/// Runs the remote client inside the browser-wasm runtime (under Node) against every provider configuration.
-	/// Bundles come from <c>Tests/Tests.Wasm/publish-wasm-bundles.ps1</c>; see <see cref="WasmBundleRunner"/>.
+	/// Bundles come from <c>Tests/Tests.Wasm/publish-wasm-bundles.ps1</c>.
 	/// </summary>
 	[TestFixture]
 	[Description("https://github.com/linq2db/linq2db/issues/5159")]
 	public sealed class WasmRuntimeTests
 	{
+		static readonly string[] _allModes     = [WasmBundleRunner.Debug, WasmBundleRunner.TrimPartial, WasmBundleRunner.TrimFull, WasmBundleRunner.NoReflectionJson];
 		static readonly string[] _workingModes = [WasmBundleRunner.Debug, WasmBundleRunner.TrimPartial];
 
-		static readonly string[] _expectedOperations = ["Init", "Select", "SelectParameterized", "Update", "Insert", "Merge"];
+		static readonly string[] _expectedOperations =
+		[
+			WasmReport.Init,
+			WasmReport.Select,
+			WasmReport.SelectParameterized,
+			WasmReport.Update,
+			WasmReport.Insert,
+			WasmReport.Merge,
+		];
 
 		WasmServer?                                _server;
-		readonly Dictionary<string, string?>       _preflight = new(StringComparer.Ordinal);
-		readonly Dictionary<string, Task<ModeRun>> _runs      = new(StringComparer.Ordinal);
+		readonly Dictionary<string, string?>       _preflight     = new(StringComparer.Ordinal);
+		readonly Dictionary<string, string>        _providerNames = new(StringComparer.Ordinal);
+		readonly Dictionary<string, Task<ModeRun>> _runs          = new(StringComparer.Ordinal);
 
 		[OneTimeSetUp]
 		public async Task StartServer()
@@ -34,13 +44,13 @@ namespace Tests.Wasm
 			_server = await WasmServer.StartAsync();
 
 			// Server-side construction is decided here, in-process, so a provider that cannot load on the runner is never
-			// reported as a client failure.
+			// reported as a client failure. Which provider a row constructs is checked separately.
 			foreach (var row in ProviderMatrix.Rows)
 			{
 				try
 				{
 					using (var db = WasmServer.CreateDataConnection(row))
-						db.DataProvider.Name.ShouldBe(row.ProviderName, $"matrix row '{row.Configuration}' constructs the wrong provider");
+						_providerNames[row.Configuration] = db.DataProvider.Name;
 
 					await _server.Service.GetInfoAsync(row.Configuration);
 
@@ -120,6 +130,26 @@ namespace Tests.Wasm
 			attempts.ShouldContain(a => a.StartsWith("Microsoft.SqlServer.Types", StringComparison.Ordinal), run.Output);
 		}
 
+		// Every per-configuration error is caught inside the app, so a bundle that exits non-zero or hangs has a problem no
+		// case report can show.
+		[TestCaseSource(nameof(_allModes))]
+		public async Task BundleExitsCleanly(string mode)
+		{
+			var run = await GetRunAsync(mode);
+
+			run.TimedOut.ShouldBeFalse(run.Output);
+			run.ExitCode.ShouldBe(0, run.Output);
+		}
+
+		[Test]
+		public void MatrixRowsConstructTheirProvider()
+		{
+			ProviderMatrix.Rows
+				.Where(r => _providerNames.TryGetValue(r.Configuration, out var name) && name != r.ProviderName)
+				.Select(r => $"{r.Configuration}: constructs '{_providerNames[r.Configuration]}', expected '{r.ProviderName}'")
+				.ShouldBeEmpty("matrix rows whose factory constructs another provider");
+		}
+
 		[Test]
 		public void ProviderNamesAreCovered()
 		{
@@ -158,14 +188,18 @@ namespace Tests.Wasm
 			var run = await GetRunAsync(mode);
 
 			if (!run.Reports.TryGetValue(configuration, out var report))
-				throw new ShouldAssertException($"The '{mode}' bundle reported nothing for '{configuration}'.\n{run.Output}");
+			{
+				var reason = run.TimedOut ? $"timed out after {WasmBundleRunner.Timeout}" : $"exited with {run.ExitCode}";
+
+				throw new ShouldAssertException($"The '{mode}' bundle reported nothing for '{configuration}' (node {reason}).\n{run.Output}");
+			}
 
 			if (report.ResolveAttempts.Count > 0)
 				await TestContext.Out.WriteLineAsync($"Resolve attempts: {string.Join(", ", report.ResolveAttempts)}");
 
 			foreach (var operation in report.Operations)
 			{
-				if (operation.Name == "Merge" && row.Merge == MergeOutcome.Throws)
+				if (operation.Name == WasmReport.Merge && row.Merge == MergeOutcome.Throws)
 				{
 					(operation.ErrorMessage ?? "")
 						.ShouldContain(
@@ -179,7 +213,7 @@ namespace Tests.Wasm
 			}
 
 			string[] expected = configuration == ProviderMatrix.RoundTripConfiguration
-				? [.. _expectedOperations, "RoundTrip"]
+				? [.. _expectedOperations, WasmReport.RoundTrip]
 				: _expectedOperations;
 
 			report.Operations
@@ -189,7 +223,7 @@ namespace Tests.Wasm
 			if (configuration == ProviderMatrix.RoundTripConfiguration)
 			{
 				report.Operations
-					.Single(o => o.Name == "RoundTrip")
+					.Single(o => o.Name == WasmReport.RoundTrip)
 					.Result
 					.ShouldBe("1,2");
 			}
