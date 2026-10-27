@@ -717,6 +717,328 @@ namespace Tests.Linq
 				.ShouldBe(missCount + 1);
 		}
 
+		// A client-side condition evaluated while the query is built and then folded out of the SQL
+		// (`true AND p.ID = 2` -> `p.ID = 2`) still decides the SQL, so the cache must compare its value.
+		static readonly int[]          _foldedElements = [2];
+		static readonly List<int>      _foldedList     = [1];
+		static readonly FoldedSettings _foldedSettings = new() { Enabled = true };
+
+		sealed class FoldedSettings
+		{
+			public bool Enabled;
+		}
+
+		sealed class FoldedHolder
+		{
+			public int Value { get; init; }
+		}
+
+		static Expression<Func<Model.Person, bool>> IdIsTwoWhen(Expression condition)
+		{
+			var p = Expression.Parameter(typeof(Model.Person), "p");
+
+			return Expression.Lambda<Func<Model.Person, bool>>(
+				Expression.AndAlso(
+					condition,
+					Expression.Equal(Expression.Field(p, nameof(Model.Person.ID)), Expression.Constant(2))),
+				p);
+		}
+
+		// Query-cache test: provider-independent.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5843")]
+		[QueryCacheTest]
+		public void FoldedStaticArrayElementSeesMutation([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query()
+			{
+				return db.Person
+					.Where(p => _foldedElements[0] > 0 && p.ID == 2)
+					.Select(p => p.ID);
+			}
+
+			try
+			{
+				Query()
+					.ToArray()
+					.ShouldBe([2]);
+
+				_foldedElements[0] = 0;
+
+				Query()
+					.ToArray()
+					.ShouldBeEmpty();
+			}
+			finally
+			{
+				_foldedElements[0] = 2;
+			}
+		}
+
+		// Query-cache test: provider-independent.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5843")]
+		[QueryCacheTest]
+		public void FoldedStaticFieldSeesMutation([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query()
+			{
+				return db.Person
+					.Where(p => _foldedSettings.Enabled && p.ID == 2)
+					.Select(p => p.ID);
+			}
+
+			try
+			{
+				Query()
+					.ToArray()
+					.ShouldBe([2]);
+
+				_foldedSettings.Enabled = false;
+
+				Query()
+					.ToArray()
+					.ShouldBeEmpty();
+			}
+			finally
+			{
+				_foldedSettings.Enabled = true;
+			}
+		}
+
+		// Query-cache test: provider-independent.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5843")]
+		[QueryCacheTest]
+		public void FoldedStaticListCountSeesMutation([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query()
+			{
+				return db.Person
+					.Where(p => _foldedList.Count > 0 && p.ID == 2)
+					.Select(p => p.ID);
+			}
+
+			try
+			{
+				Query()
+					.ToArray()
+					.ShouldBe([2]);
+
+				_foldedList.Clear();
+
+				Query()
+					.ToArray()
+					.ShouldBeEmpty();
+			}
+			finally
+			{
+				_foldedList.Clear();
+				_foldedList.Add(1);
+			}
+		}
+
+		// Query-cache test: provider-independent.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5843")]
+		[QueryCacheTest]
+		public void FoldedConstantMemberSeesNewInstance([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query(FoldedHolder holder)
+			{
+				var condition = Expression.GreaterThan(
+					Expression.Property(Expression.Constant(holder), nameof(FoldedHolder.Value)),
+					Expression.Constant(0));
+
+				return db.Person
+					.Where(IdIsTwoWhen(condition))
+					.Select(p => p.ID);
+			}
+
+			Query(new FoldedHolder { Value = 1 })
+				.ToArray()
+				.ShouldBe([2]);
+
+			Query(new FoldedHolder { Value = 0 })
+				.ToArray()
+				.ShouldBeEmpty();
+		}
+
+		static IQueryable<int> FoldedElementQuery(Model.ITestDataContext db, int[] ids)
+		{
+			var condition = Expression.GreaterThan(
+				Expression.ArrayIndex(Expression.Constant(ids), Expression.Constant(0)),
+				Expression.Constant(0));
+
+			return db.Person
+				.Where(IdIsTwoWhen(condition))
+				.Select(p => p.ID);
+		}
+
+		// Query-cache test: provider-independent.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5843")]
+		[QueryCacheTest]
+		public void FoldedConstantArrayElementSeesMutation([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var ids   = new[] { 2 };
+			var query = FoldedElementQuery(db, ids);
+
+			query
+				.ToArray()
+				.ShouldBe([2]);
+
+			var missCount = query.GetCacheMissCount();
+
+			ids[0] = 0;
+
+			FoldedElementQuery(db, ids)
+				.ToArray()
+				.ShouldBeEmpty();
+
+			query
+				.GetCacheMissCount()
+				.ShouldBe(missCount + 1);
+		}
+
+		// Query-cache test: provider-independent.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5843")]
+		[QueryCacheTest]
+		public void FoldedConstantArrayElementHitsOnEqualArray([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			ShouldHitCacheOnRebuild(ids => FoldedElementQuery(db, ids), new[] { 2 }, 2, new[] { 2 }, 2);
+		}
+
+		// Query-cache test: provider-independent.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5843")]
+		[QueryCacheTest]
+		public void FoldedConstantArrayNullCheckHitsOnEqualArray([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query(int[]? ids)
+			{
+				var condition = Expression.NotEqual(
+					Expression.Constant(ids, typeof(int[])),
+					Expression.Constant(null, typeof(int[])));
+
+				return db.Person
+					.Where(IdIsTwoWhen(condition))
+					.Select(p => p.ID);
+			}
+
+			ShouldHitCacheOnRebuild(Query, new[] { 1, 2 }, 2, new[] { 1, 2 }, 2);
+
+			Query(null)
+				.ToArray()
+				.ShouldBeEmpty();
+		}
+
+		// Query-cache test: provider-independent.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5843")]
+		[QueryCacheTest]
+		public void FoldedConstantArrayLength([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query(int[] ids)
+			{
+				var condition = Expression.GreaterThan(
+					Expression.ArrayLength(Expression.Constant(ids)),
+					Expression.Constant(0));
+
+				return db.Person
+					.Where(IdIsTwoWhen(condition))
+					.Select(p => p.ID);
+			}
+
+			ShouldHitCacheOnRebuild(Query, new[] { 1, 2 }, 2, new[] { 1, 2 }, 2);
+
+			Query([])
+				.ToArray()
+				.ShouldBeEmpty();
+		}
+
+		// Query-cache test: provider-independent.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5843")]
+		[QueryCacheTest]
+		public void FoldedScalarConstant([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query(int value)
+			{
+				var condition = Expression.GreaterThan(Expression.Constant(value), Expression.Constant(0));
+
+				return db.Person
+					.Where(IdIsTwoWhen(condition))
+					.Select(p => p.ID);
+			}
+
+			var query = Query(5);
+
+			query
+				.ToArray()
+				.ShouldBe([2]);
+
+			var missCount = query.GetCacheMissCount();
+
+			Query(-1)
+				.ToArray()
+				.ShouldBeEmpty();
+
+			query
+				.GetCacheMissCount()
+				.ShouldBe(missCount + 1);
+		}
+
+		// Query-cache test: provider-independent.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5843")]
+		[QueryCacheTest]
+		public void FoldedScalarListElement([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var ms = new MappingSchema();
+			ms.SetScalarType(typeof(List<int>));
+
+			using var db = GetDataContext(context, ms);
+
+			db.MappingSchema
+				.IsScalarType(typeof(List<int>))
+				.ShouldBeTrue();
+
+			IQueryable<int> Query(List<int> ids)
+			{
+				var condition = Expression.GreaterThan(
+					Expression.MakeIndex(Expression.Constant(ids), _listItem, [Expression.Constant(0)]),
+					Expression.Constant(0));
+
+				return db.Person
+					.Where(IdIsTwoWhen(condition))
+					.Select(p => p.ID);
+			}
+
+			ShouldHitCacheOnRebuild(Query, new List<int> { 2 }, 2, new List<int> { 2 }, 2);
+
+			var ids = new List<int> { 2 };
+
+			Query(ids)
+				.ToArray()
+				.ShouldBe([2]);
+
+			ids[0] = 0;
+
+			Query(ids)
+				.ToArray()
+				.ShouldBeEmpty();
+		}
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5879")]
 		public void HandBuiltArrayAccessInProjection([DataSources] string context)
 		{

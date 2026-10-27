@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -633,11 +634,23 @@ namespace LinqToDB.Internal.Linq
 				}
 			}
 
-			if (_bySqlValueCompare != null && sqlValues is { Count: > 0})
+			if (_bySqlValueCompare != null)
 			{
+				List<Expression>? usedAccessors = null;
+
+				if (sqlValues != null)
+				{
+					foreach (var (value, accessor) in _bySqlValueCompare)
+					{
+						if (sqlValues.Contains(value))
+							(usedAccessors ??= []).Add(accessor);
+					}
+				}
+
 				foreach (var (value, accessor) in _bySqlValueCompare)
 				{
-					if (!sqlValues.Contains(value))
+					// A value the optimizer folded out of the SQL still decided its shape.
+					if (sqlValues?.Contains(value) != true && IsCoveredByCacheKey(accessor, usedAccessors, dc.MappingSchema))
 						continue;
 
 					var mainValueExpr = Expression.Constant(evaluator.Evaluate(accessor)).EnsureType<object>();
@@ -661,6 +674,25 @@ namespace LinqToDB.Internal.Linq
 			var compareInfo    = new QueryCacheCompareInfo(mainExpression, dynamicAccessors, comparisionFunctions);
 
 			return (compareInfo, parameterAccessors, parameterExpressions);
+		}
+
+		static bool IsCoveredByCacheKey(Expression accessor, List<Expression>? usedAccessors, MappingSchema mappingSchema)
+		{
+			if (usedAccessors != null)
+			{
+				foreach (var used in usedAccessors)
+				{
+					if (ExpressionEqualityComparer.Instance.Equals(used, accessor))
+						return true;
+				}
+			}
+
+			return accessor.Unwrap() switch
+			{
+				DefaultExpression           => true,
+				ConstantExpression constant => !ExpressionCacheHelpers.ShouldRemoveConstantFromCache(constant, mappingSchema) && constant.Value is string or not IEnumerable,
+				_                           => false,
+			};
 		}
 
 		/// <summary>
