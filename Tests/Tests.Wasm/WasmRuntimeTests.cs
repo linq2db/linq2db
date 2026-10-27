@@ -120,9 +120,11 @@ namespace Tests.Wasm
 			error.ShouldNotBeNull(
 				$"'{configuration}' is listed as unavailable ({row.UnavailableReason}) but its provider constructs on this runner: remove the exclusion.");
 
-			error.ShouldContain(
-				"Cannot load assembly",
-				customMessage: $"'{configuration}' fails to construct, but not for its listed reason ({row.UnavailableReason}):\n{error}");
+			var reasonMessage = $"'{configuration}' fails to construct, but not for its listed reason ({row.UnavailableReason}):\n{error}";
+
+			// Two checks: SapHanaProviderAdapter words it "Cannot load assembly by name(s) <list>".
+			error.ShouldContain("Cannot load assembly", customMessage: reasonMessage);
+			error.ShouldContain(row.UnavailableAssembly!, Case.Sensitive, reasonMessage);
 		}
 
 		// The SqlServer mapping schema probes optional assemblies once per process, so the capture is checked per mode.
@@ -194,6 +196,11 @@ namespace Tests.Wasm
 				.Where(g => g.Count() > 1)
 				.Select(g => g.Key)
 				.ShouldBeEmpty("duplicate matrix configurations");
+
+			ProviderMatrix.Rows
+				.Where(r => r.UnavailableOn != RunnerOS.None && r.UnavailableAssembly == null)
+				.Select(r => r.Configuration)
+				.ShouldBeEmpty("unavailable rows that do not name the assembly they miss");
 		}
 
 		async Task AssertClientAsync(string mode, string configuration)

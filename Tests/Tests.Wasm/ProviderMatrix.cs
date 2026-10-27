@@ -20,6 +20,11 @@ using LinqToDB.DataProvider.SQLite;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.DataProvider.Sybase;
 using LinqToDB.DataProvider.Ydb;
+using LinqToDB.Internal.DataProvider.Informix;
+using LinqToDB.Internal.DataProvider.Oracle;
+using LinqToDB.Internal.DataProvider.SapHana;
+using LinqToDB.Internal.DataProvider.SqlCe;
+using LinqToDB.Internal.DataProvider.Sybase;
 
 namespace Tests.Wasm
 {
@@ -50,6 +55,7 @@ namespace Tests.Wasm
 		MergeOutcome        Merge,
 		bool                LoadsProviderAssembly = false,
 		RunnerOS            UnavailableOn         = RunnerOS.None,
+		string?             UnavailableAssembly   = null,
 		string?             UnavailableReason     = null)
 	{
 		public bool IsAvailable => (UnavailableOn & ProviderMatrix.CurrentOS) == 0;
@@ -100,7 +106,7 @@ namespace Tests.Wasm
 			new(ProviderName.Firebird4,               ProviderName.Firebird4,               () => FirebirdTools.GetDataProvider(FirebirdVersion.v4),  Built),
 			new(ProviderName.Firebird5,               ProviderName.Firebird5,               () => FirebirdTools.GetDataProvider(FirebirdVersion.v5),  Built),
 
-			new(ProviderName.Informix,                ProviderName.Informix,                () => InformixTools.GetDataProvider(InformixProvider.Informix), Built, UnavailableOn: RunnerOS.Any, UnavailableReason: "IBM.Data.Informix " + NotOnNet),
+			new(ProviderName.Informix,                ProviderName.Informix,                () => InformixTools.GetDataProvider(InformixProvider.Informix), Built, UnavailableOn: RunnerOS.Any, UnavailableAssembly: InformixProviderAdapter.IfxAssemblyName, UnavailableReason: "IBM.Data.Informix " + NotOnNet),
 			new(ProviderName.InformixDB2,             ProviderName.InformixDB2,             () => InformixTools.GetDataProvider(InformixProvider.DB2),      Built, LoadsProviderAssembly: true),
 
 			new(ProviderName.SqlServer2005,           ProviderName.SqlServer2005,           () => SqlServerTools.GetDataProvider(SqlServerVersion.v2005, SqlServerProvider.SystemDataSqlClient),    Built),
@@ -129,10 +135,10 @@ namespace Tests.Wasm
 			new(ProviderName.MariaDB10MySqlData,      ProviderName.MariaDB10MySqlData,      () => MySqlTools.GetDataProvider(MySqlVersion.MariaDB10, MySqlProvider.MySqlData),      Refused, LoadsProviderAssembly: true),
 			new(ProviderName.MariaDB10MySqlConnector, ProviderName.MariaDB10MySqlConnector, () => MySqlTools.GetDataProvider(MySqlVersion.MariaDB10, MySqlProvider.MySqlConnector), Refused, LoadsProviderAssembly: true),
 
-			new(ProviderName.Oracle11Native,          ProviderName.Oracle11Native,          () => OracleTools.GetDataProvider(OracleVersion.v11, OracleProvider.Native),  Built, UnavailableOn: RunnerOS.Any, UnavailableReason: "Oracle.DataAccess " + NotOnNet),
+			new(ProviderName.Oracle11Native,          ProviderName.Oracle11Native,          () => OracleTools.GetDataProvider(OracleVersion.v11, OracleProvider.Native),  Built, UnavailableOn: RunnerOS.Any, UnavailableAssembly: OracleProviderAdapter.NativeAssemblyName, UnavailableReason: "Oracle.DataAccess " + NotOnNet),
 			new(ProviderName.Oracle11Managed,         ProviderName.Oracle11Managed,         () => OracleTools.GetDataProvider(OracleVersion.v11, OracleProvider.Managed), Built),
 			new(ProviderName.Oracle11Devart,          ProviderName.Oracle11Devart,          () => OracleTools.GetDataProvider(OracleVersion.v11, OracleProvider.Devart),  Built),
-			new(ProviderName.OracleNative,            ProviderName.OracleNative,            () => OracleTools.GetDataProvider(OracleVersion.v12, OracleProvider.Native),  Built, UnavailableOn: RunnerOS.Any, UnavailableReason: "Oracle.DataAccess " + NotOnNet),
+			new(ProviderName.OracleNative,            ProviderName.OracleNative,            () => OracleTools.GetDataProvider(OracleVersion.v12, OracleProvider.Native),  Built, UnavailableOn: RunnerOS.Any, UnavailableAssembly: OracleProviderAdapter.NativeAssemblyName, UnavailableReason: "Oracle.DataAccess " + NotOnNet),
 			new(ProviderName.OracleManaged,           ProviderName.OracleManaged,           () => OracleTools.GetDataProvider(OracleVersion.v12, OracleProvider.Managed), Built),
 			new(ProviderName.OracleDevart,            ProviderName.OracleDevart,            () => OracleTools.GetDataProvider(OracleVersion.v12, OracleProvider.Devart),  Built),
 
@@ -146,15 +152,15 @@ namespace Tests.Wasm
 			new(ProviderName.PostgreSQL18,            ProviderName.PostgreSQL18,            () => PostgreSQLTools.GetDataProvider(PostgreSQLVersion.v18), Built, LoadsProviderAssembly: true),
 			new(ProviderName.PostgreSQL19,            ProviderName.PostgreSQL19,            () => PostgreSQLTools.GetDataProvider(PostgreSQLVersion.v19), Built, LoadsProviderAssembly: true),
 
-			new(ProviderName.SqlCe,                   ProviderName.SqlCe,                   SqlCeTools.GetDataProvider,         Refused, UnavailableOn: RunnerOS.Any, UnavailableReason: "System.Data.SqlServerCe is not a package; the tests register it from a local install"),
+			new(ProviderName.SqlCe,                   ProviderName.SqlCe,                   SqlCeTools.GetDataProvider,         Refused, UnavailableOn: RunnerOS.Any, UnavailableAssembly: SqlCeProviderAdapter.AssemblyName, UnavailableReason: "System.Data.SqlServerCe is not a package; the tests register it from a local install"),
 
 			new(ProviderName.SQLiteClassic,           ProviderName.SQLiteClassic,           () => SQLiteTools.GetDataProvider(SQLiteProvider.System),    Refused),
 			new(ProviderName.SQLiteMS,                ProviderName.SQLiteMS,                () => SQLiteTools.GetDataProvider(SQLiteProvider.Microsoft), Refused),
 
-			new(ProviderName.Sybase,                  ProviderName.Sybase,                  () => DataConnection.GetDataProvider(SybaseNative, DummyConnectionString)!, Built, UnavailableOn: RunnerOS.Any, UnavailableReason: "Sybase.AdoNet45.AseClient " + NotShipped),
+			new(ProviderName.Sybase,                  ProviderName.Sybase,                  () => DataConnection.GetDataProvider(SybaseNative, DummyConnectionString)!, Built, UnavailableOn: RunnerOS.Any, UnavailableAssembly: SybaseProviderAdapter.NativeAssemblyName, UnavailableReason: "Sybase.AdoNet45.AseClient " + NotShipped),
 			new(ProviderName.SybaseManaged,           ProviderName.SybaseManaged,           () => SybaseTools.GetDataProvider(SybaseProvider.DataAction), Built),
 
-			new(ProviderName.SapHanaNative,           ProviderName.SapHanaNative,           () => SapHanaTools.GetDataProvider(SapHanaProvider.Unmanaged), Built, UnavailableOn: RunnerOS.Any, UnavailableReason: "Sap.Data.Hana is a Redist assembly referenced by Tests/Linq only"),
+			new(ProviderName.SapHanaNative,           ProviderName.SapHanaNative,           () => SapHanaTools.GetDataProvider(SapHanaProvider.Unmanaged), Built, UnavailableOn: RunnerOS.Any, UnavailableAssembly: SapHanaProviderAdapter.UnmanagedAssemblyNames.First(), UnavailableReason: "Sap.Data.Hana is a Redist assembly referenced by Tests/Linq only"),
 			new(ProviderName.SapHanaOdbc,             ProviderName.SapHanaOdbc,             () => SapHanaTools.GetDataProvider(SapHanaProvider.ODBC),      Built),
 
 			new(ProviderName.ClickHouseOctonica,      ProviderName.ClickHouseOctonica,      () => ClickHouseTools.GetDataProvider(ClickHouseProvider.Octonica),         Refused),
