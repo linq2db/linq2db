@@ -198,9 +198,11 @@ namespace Tests.Wasm
 				.ShouldBeEmpty("duplicate matrix configurations");
 
 			ProviderMatrix.Rows
-				.Where(r => r.UnavailableOn != RunnerOS.None && r.UnavailableAssembly == null)
+				.Where(r => r.UnavailableOn != RunnerOS.None
+					? r.UnavailableAssembly == null || r.UnavailableReason == null
+					: r.UnavailableAssembly != null || r.UnavailableReason != null)
 				.Select(r => r.Configuration)
-				.ShouldBeEmpty("unavailable rows that do not name the assembly they miss");
+				.ShouldBeEmpty("rows whose UnavailableAssembly / UnavailableReason disagree with UnavailableOn: an unavailable row names the assembly it misses and why, an available row neither");
 		}
 
 		async Task AssertClientAsync(string mode, string configuration)
