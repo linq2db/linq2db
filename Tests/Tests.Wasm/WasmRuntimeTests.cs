@@ -5,6 +5,9 @@ using System.Reflection;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.DataProvider;
+using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Internal.DataProvider.SqlServer;
 
 using NUnit.Framework;
 
@@ -35,7 +38,7 @@ namespace Tests.Wasm
 
 		WasmServer?                                _server;
 		readonly Dictionary<string, string?>       _preflight     = new(StringComparer.Ordinal);
-		readonly Dictionary<string, string>        _providerNames = new(StringComparer.Ordinal);
+		readonly Dictionary<string, string>        _constructed   = new(StringComparer.Ordinal);
 		readonly Dictionary<string, Task<ModeRun>> _runs          = new(StringComparer.Ordinal);
 
 		[OneTimeSetUp]
@@ -50,7 +53,7 @@ namespace Tests.Wasm
 				try
 				{
 					using (var db = WasmServer.CreateDataConnection(row))
-						_providerNames[row.Configuration] = db.DataProvider.Name;
+						_constructed[row.Configuration] = Describe(db.DataProvider);
 
 					await _server.Service.GetInfoAsync(row.Configuration);
 
@@ -110,10 +113,15 @@ namespace Tests.Wasm
 		[TestCaseSource(nameof(UnavailableCases))]
 		public void UnavailableOnRunner(string configuration)
 		{
-			var row = ProviderMatrix.Find(configuration)!;
+			var row   = ProviderMatrix.Find(configuration)!;
+			var error = _preflight[configuration];
 
-			_preflight[configuration].ShouldNotBeNull(
+			error.ShouldNotBeNull(
 				$"'{configuration}' is listed as unavailable ({row.UnavailableReason}) but its provider constructs on this runner: remove the exclusion.");
+
+			error.ShouldContain(
+				"Cannot load assembly",
+				customMessage: $"'{configuration}' fails to construct, but not for its listed reason ({row.UnavailableReason}):\n{error}");
 		}
 
 		// The SqlServer mapping schema probes optional assemblies once per process, so the capture is checked per mode.
@@ -145,10 +153,19 @@ namespace Tests.Wasm
 		public void MatrixRowsConstructTheirProvider()
 		{
 			ProviderMatrix.Rows
-				.Where(r => _providerNames.TryGetValue(r.Configuration, out var name) && name != r.ProviderName)
-				.Select(r => $"{r.Configuration}: constructs '{_providerNames[r.Configuration]}', expected '{r.ProviderName}'")
+				.Where(r => _constructed.TryGetValue(r.Configuration, out var constructed) && constructed != Expected(r))
+				.Select(r => $"{r.Configuration}: constructs '{_constructed[r.Configuration]}', expected '{Expected(r)}'")
 				.ShouldBeEmpty("matrix rows whose factory constructs another provider");
 		}
+
+		static string Describe(IDataProvider provider) =>
+			provider is SqlServerDataProvider sqlServer ? $"{provider.Name} / {sqlServer.Provider}" : provider.Name;
+
+		// Both SqlServer rows of a version construct the same provider name; the ".MS" suffix names the client library.
+		static string Expected(MatrixRow row) =>
+			!row.ProviderName.StartsWith(ProviderName.SqlServer, StringComparison.Ordinal) ? row.ProviderName                                                           :
+			row.Configuration.EndsWith(".MS", StringComparison.Ordinal)                     ? $"{row.ProviderName} / {nameof(SqlServerProvider.MicrosoftDataSqlClient)}" :
+			                                                                                  $"{row.ProviderName} / {nameof(SqlServerProvider.SystemDataSqlClient)}";
 
 		[Test]
 		public void ProviderNamesAreCovered()
@@ -215,6 +232,9 @@ namespace Tests.Wasm
 				}
 
 				operation.Error.ShouldBeNull($"{operation.Name} failed for '{configuration}' in '{mode}': {operation.ErrorType}: {operation.ErrorMessage}");
+
+				if (operation.Name is not (WasmReport.Init or WasmReport.RoundTrip))
+					operation.Result.ShouldNotBeNullOrWhiteSpace($"{operation.Name} generated no SQL for '{configuration}' in '{mode}'");
 			}
 
 			string[] expected = configuration == ProviderMatrix.RoundTripConfiguration
