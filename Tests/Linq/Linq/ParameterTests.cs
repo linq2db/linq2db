@@ -200,10 +200,13 @@ namespace Tests.Linq
 
 		sealed class AllTypes
 		{
+			[Column("decimalDataType")]
 			public decimal DecimalDataType;
+			[Column("binaryDataType")]
 			public byte[]? BinaryDataType;
+			[Column("varbinaryDataType")]
 			public byte[]? VarBinaryDataType;
-			[Column(DataType = DataType.VarChar)]
+			[Column("varcharDataType", DataType = DataType.VarChar)]
 			public string? VarcharDataType;
 		}
 
