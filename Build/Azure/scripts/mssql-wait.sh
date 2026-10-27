@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Sourced by the sqlserver.*.sh setup scripts.
 #
 # Wait until $name accepts connections. The mssql images intermittently fail to come up on the CI
