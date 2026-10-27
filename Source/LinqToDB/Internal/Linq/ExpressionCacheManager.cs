@@ -490,7 +490,7 @@ namespace LinqToDB.Internal.Linq
 		/// <param name="sqlValues"></param>
 		/// <returns></returns>
 		public (QueryCacheCompareInfo compareInfo, List<ParameterAccessor>? parameterAccessors, IQueryExpressions expressions) BuildQueryCacheCompareInfo(IExpressionEvaluator evaluator, IDataContext dc,
-			IQueryExpressions parameterExpressions, List<SqlParameter>? parameters, List<SqlValue>? sqlValues)
+			IQueryExpressions parameterExpressions, List<SqlParameter>? parameters, HashSet<SqlValue>? sqlValues)
 		{
 			List<SqlParameter>? knownParameters = null;
 			if (parameters != null)
@@ -636,21 +636,21 @@ namespace LinqToDB.Internal.Linq
 
 			if (_bySqlValueCompare != null)
 			{
-				List<Expression>? usedAccessors = null;
+				sqlValues ??= [];
 
-				if (sqlValues != null)
+				var                  mapped    = new HashSet<Expression>();
+				HashSet<Expression>? usedPaths = null;
+
+				foreach (var (value, accessor) in _bySqlValueCompare)
 				{
-					foreach (var (value, accessor) in _bySqlValueCompare)
-					{
-						if (sqlValues.Contains(value))
-							(usedAccessors ??= []).Add(accessor);
-					}
+					if (sqlValues.Contains(value))
+						(usedPaths ??= new(ExpressionEqualityComparer.Instance)).Add(ApplyAccessors(accessor, mapped));
 				}
 
 				foreach (var (value, accessor) in _bySqlValueCompare)
 				{
 					// A value the optimizer folded out of the SQL still decided its shape.
-					if (sqlValues?.Contains(value) != true && IsCoveredByCacheKey(accessor, usedAccessors, dc.MappingSchema))
+					if (!sqlValues.Contains(value) && IsCoveredByCacheKey(accessor, usedPaths, mapped, dc.MappingSchema))
 						continue;
 
 					var mainValueExpr = Expression.Constant(evaluator.Evaluate(accessor)).EnsureType<object>();
@@ -676,16 +676,11 @@ namespace LinqToDB.Internal.Linq
 			return (compareInfo, parameterAccessors, parameterExpressions);
 		}
 
-		static bool IsCoveredByCacheKey(Expression accessor, List<Expression>? usedAccessors, MappingSchema mappingSchema)
+		bool IsCoveredByCacheKey(Expression accessor, HashSet<Expression>? usedPaths, HashSet<Expression> mapped, MappingSchema mappingSchema)
 		{
-			if (usedAccessors != null)
-			{
-				foreach (var used in usedAccessors)
-				{
-					if (ExpressionEqualityComparer.Instance.Equals(used, accessor))
-						return true;
-				}
-			}
+			// Match key paths, not nodes: the comparer matches constants by content, so two equal arrays would pass for one.
+			if (usedPaths?.Contains(ApplyAccessors(accessor, mapped)) == true)
+				return true;
 
 			return accessor.Unwrap() switch
 			{

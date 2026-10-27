@@ -919,6 +919,91 @@ namespace Tests.Linq
 		// Query-cache test: provider-independent.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5843")]
 		[QueryCacheTest]
+		public void FoldedConstantArrayElementBesideEqualArray([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// Sql.AsSql keeps `folded[0] > 0` from being evaluated whole, so only the element reaches the SQL and is folded there.
+			IQueryable<int> Query(int[] folded, int[] used)
+			{
+				var p = Expression.Parameter(typeof(Model.Person), "p");
+
+				var predicate = Expression.Lambda<Func<Model.Person, bool>>(
+					Expression.AndAlso(
+						Expression.GreaterThan(
+							Expression.Call(
+								typeof(Sql).GetMethod(nameof(Sql.AsSql))!.MakeGenericMethod(typeof(int)),
+								Expression.ArrayIndex(Expression.Constant(folded), Expression.Constant(0))),
+							Expression.Constant(0)),
+						Expression.Equal(
+							Expression.Field(p, nameof(Model.Person.ID)),
+							Expression.ArrayIndex(Expression.Constant(used), Expression.Constant(0)))),
+					p);
+
+				return db.Person
+					.Where(predicate)
+					.Select(p => p.ID);
+			}
+
+			var folded = new[] { 2 };
+			var used   = new[] { 2 };
+
+			Query(folded, used)
+				.ToArray()
+				.ShouldBe([2]);
+
+			folded[0] = 0;
+
+			Query(folded, used)
+				.ToArray()
+				.ShouldBeEmpty();
+		}
+
+		// A value pruned with its column did not decide the SQL, so changing it keeps the cached query.
+		// Query-cache test: provider-independent.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5843")]
+		[QueryCacheTest]
+		public void PrunedStaticFieldKeepsCachedQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query()
+			{
+				return db.Person
+					.Select(p => new { p.ID, Flag = _foldedSettings.Enabled })
+					.Select(x => x.ID)
+					.Where(id => id == 2);
+			}
+
+			try
+			{
+				var query = Query();
+
+				query
+					.ToArray()
+					.ShouldBe([2]);
+
+				var missCount = query.GetCacheMissCount();
+
+				_foldedSettings.Enabled = false;
+
+				Query()
+					.ToArray()
+					.ShouldBe([2]);
+
+				query
+					.GetCacheMissCount()
+					.ShouldBe(missCount);
+			}
+			finally
+			{
+				_foldedSettings.Enabled = true;
+			}
+		}
+
+		// Query-cache test: provider-independent.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5843")]
+		[QueryCacheTest]
 		public void FoldedConstantArrayNullCheckHitsOnEqualArray([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
