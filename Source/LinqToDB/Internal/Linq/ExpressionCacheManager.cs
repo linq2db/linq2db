@@ -649,7 +649,8 @@ namespace LinqToDB.Internal.Linq
 
 				foreach (var (value, accessor) in _bySqlValueCompare)
 				{
-					// A value the optimizer folded out of the SQL still decided its shape.
+					// A value the optimizer folded out of the SQL still decided its shape. For now every absent value is
+					// compared unless the key covers it; linq2db#6184 tracks recording the values the optimizer consumes.
 					if (!sqlValues.Contains(value) && IsCoveredByCacheKey(accessor, usedPaths, mapped, dc.MappingSchema))
 						continue;
 
