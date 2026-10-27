@@ -986,35 +986,29 @@ namespace Tests.Linq
 			AssertQuery(tb.Where(r => (r.Value5 <= r.Value4) != Null));
 		}
 
-		// A predicate compared against a boolean PARAMETER is deliberately not folded: folding needs the value, and
-		// baking a value into the memoized structure would make a re-run with the other value reuse it. The fold is
-		// also refused for a second reason recorded at SqlExpressionOptimizerVisitor.VisitExprExprPredicate —
-		// restructuring the parameter into a predicate lowers `(A = B) = @p` to an inverted comparison on engines with
-		// no boolean type, which silently returns wrong rows on Firebird 2.5.
-		//
-		// So the property worth pinning is the opposite of a fold: the rendered SQL must be IDENTICAL for either value,
-		// with the value carried by the parameter. That is what makes the render safe to cache, and it is what breaks
-		// if value-baking is ever reintroduced. (With inlined parameters the operand is a literal, not a parameter, and
-		// the fold does run — Test_PredicateWithBoolean covers that side.)
+		// The same query run with each value of the parameter: it folds to the predicate or its negation, so the value
+		// must reach the SQL on every run rather than be kept from the first one.
 		[Test]
-		public void Test_PredicateWithBooleanParameterIsValueIndependent([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void Test_PredicateWithBooleanParameterFoldsPerValue([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(BooleanTable.Data);
 
-			var flag    = true;
-			var whenTrue = tb.Where(r => (r.Value1 == r.Value2) == flag).ToSqlQuery();
+			var flag  = true;
+			var query = tb.Where(r => (r.Value1 == r.Value2) == flag);
+
+			AssertQuery(query);
+			var whenTrue = query.ToSqlQuery();
 
 			flag = false;
-			var whenFalse = tb.Where(r => (r.Value1 == r.Value2) == flag).ToSqlQuery();
 
-			whenFalse.Sql.ShouldBe(whenTrue.Sql);
+			AssertQuery(query);
+			var whenFalse = query.ToSqlQuery();
 
-			whenTrue .Parameters.Count.ShouldBe(1);
-			whenFalse.Parameters.Count.ShouldBe(1);
+			whenTrue .Parameters.ShouldBeEmpty();
+			whenFalse.Parameters.ShouldBeEmpty();
 
-			whenTrue .Parameters[0].Value.ShouldBe(true);
-			whenFalse.Parameters[0].Value.ShouldBe(false);
+			whenFalse.Sql.ShouldNotBe(whenTrue.Sql);
 		}
 
 		[Test]

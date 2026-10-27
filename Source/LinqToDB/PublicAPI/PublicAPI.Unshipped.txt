@@ -133,7 +133,6 @@ LinqToDB.Internal.SqlProvider.SqlCommandStep.RunIf.init -> void
 LinqToDB.Internal.SqlProvider.SqlCommandStep.SqlCommandStep() -> void
 LinqToDB.Internal.SqlProvider.SqlCommandStep.Statement.get -> LinqToDB.Internal.SqlQuery.SqlStatement?
 LinqToDB.Internal.SqlProvider.SqlCommandStep.Statement.init -> void
-LinqToDB.Internal.SqlProvider.SqlExpressionOptimizerVisitor.GetBoolValueNoQueryParameters(LinqToDB.Internal.SqlQuery.ISqlExpression! expr) -> bool?
 LinqToDB.Internal.SqlProvider.SqlExpressionOptimizerVisitor.InitState(LinqToDB.Internal.SqlQuery.EvaluationContext! evaluationContext, LinqToDB.Internal.SqlQuery.NullabilityContext! nullabilityContext, LinqToDB.Internal.SqlQuery.Visitors.SqlQueryVisitor.IVisitorTransformationInfo? transformationInfo, LinqToDB.DataOptions! dataOptions, LinqToDB.Mapping.MappingSchema! mappingSchema, bool visitQueries) -> void
 LinqToDB.Internal.SqlProvider.SqlExpressionOptimizerVisitor.IsInsidePredicate.get -> bool
 LinqToDB.Internal.SqlProvider.SqlExpressionOptimizerVisitor.IsInsidePredicate.set -> void
