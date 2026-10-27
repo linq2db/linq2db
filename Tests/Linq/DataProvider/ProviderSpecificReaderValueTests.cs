@@ -74,7 +74,7 @@ namespace Tests.DataProvider
 
 				if (context.IsAnyOf(TestProvName.AllSqlServerMS))
 				{
-					// TODO: Recheck with the official Microsoft.SqlServer.Types package: https://github.com/linq2db/linq2db/issues/5730
+					// net8+ tests reference the System.Data.SqlClient-bound Microsoft.SqlServer.Types, whose UDT attributes MDS doesn't recognise: https://github.com/linq2db/linq2db/issues/5730
 					AssertBothReadsFail(conn, "Cast('/1/3/' as hierarchyid)", "Microsoft.SqlServer.Server.InvalidUdtException");
 				}
 				else
@@ -100,7 +100,7 @@ namespace Tests.DataProvider
 		{
 			if (context.IsAnyOf(TestProvName.AllSqlServerMS))
 			{
-				// TODO: Recheck with the official Microsoft.SqlServer.Types package: https://github.com/linq2db/linq2db/issues/5730
+				// net8+ tests reference the System.Data.SqlClient-bound Microsoft.SqlServer.Types, whose UDT attributes MDS doesn't recognise: https://github.com/linq2db/linq2db/issues/5730
 				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
 			}
 

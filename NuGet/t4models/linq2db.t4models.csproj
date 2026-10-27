@@ -95,11 +95,10 @@
 		<None Include="$(ToolsPath)/Humanizer.dll"								   Pack="true" PackagePath="tools"                           Visible="false" />
 		<None Include="$(ToolsPath)/Microsoft.Bcl.AsyncInterfaces.dll"			   Pack="true" PackagePath="tools"                           Visible="false" />
 		<None Include="$(ToolsPath)/AdoNetCore.AseClient.dll"                      Pack="true" PackagePath="tools"                           Visible="false" />
-		<None Include="$(ToolsPath)/amd64/**"                                      Pack="true" PackagePath="tools\amd64"                     Visible="false" />
-		<None Include="$(ToolsPath)/x64/**"                                        Pack="true" PackagePath="tools\x64"                       Visible="false" />
+		<!-- amd64 and x64 shipped via a Target at file end — see IncludeToolsFoldersInPack -->
 		<None Include="$(ToolsPath)/arm64\SqlServerSpatial170.dll"                 Pack="true" PackagePath="tools\arm64"                     Visible="false" />
 		<None Include="$(ToolsPath)/ClickHouse.Driver.dll"                         Pack="true" PackagePath="tools"                           Visible="false" />
-		<!-- clidriver shipped via a Target at file end — see IncludeClidriverInPack -->
+		<!-- clidriver shipped via a Target at file end — see IncludeToolsFoldersInPack -->
 		<None Include="$(ToolsPath)/FirebirdSql.Data.FirebirdClient.dll"           Pack="true" PackagePath="tools"                           Visible="false" />
 		<None Include="$(ToolsPath)/IBM.Data.DB2.DLL"                              Pack="true" PackagePath="tools"                           Visible="false" />
 		<None Include="$(ToolsPath)/Microsoft.Bcl.HashCode.dll"                    Pack="true" PackagePath="tools"                           Visible="false" />
@@ -137,15 +136,17 @@
 		<ProjectReference Include="../NuGet.csproj" />
 	</ItemGroup>
 
-	<!-- The clidriver/ folder is populated by IBM.Data.DB.Provider during build of NuGet.csproj, which
-	     runs *after* this csproj's static <None Include> globs are evaluated. Inject items into Pack's
-	     internal `_PackageFiles` collection via a Target so the glob is expanded at pack-time. -->
-	<Target Name="IncludeClidriverInPack" BeforeTargets="_GetPackageFiles">
+	<!-- The clidriver/ (IBM.Data.DB.Provider), amd64/ (SQL CE) and x64/ (SqlServerSpatial170, copied by
+	     CopySQLServerTypes) folders are populated during build of NuGet.csproj, which runs *after* this
+	     csproj's static globs are evaluated, so the globs are declared in a Target to expand them at pack-time. -->
+	<Target Name="IncludeToolsFoldersInPack" BeforeTargets="_GetPackageFiles">
+		<Error Condition="!Exists('$(ToolsPath)/clidriver/bin/db2cli.dll')"      Text="'$(ToolsPath)/clidriver' holds no IBM clidriver - build NuGet/NuGet.csproj first." />
+		<Error Condition="!Exists('$(ToolsPath)/amd64/sqlceme40.dll')"           Text="'$(ToolsPath)/amd64' holds no SQL CE natives - build NuGet/NuGet.csproj first." />
+		<Error Condition="!Exists('$(ToolsPath)/x64/SqlServerSpatial170.dll')"   Text="'$(ToolsPath)/x64' holds no SqlServerSpatial170.dll - build NuGet/NuGet.csproj first." />
 		<ItemGroup>
-			<_PackageFiles Include="$(ToolsPath)\clidriver\**\*">
-				<BuildAction>None</BuildAction>
-				<PackagePath>tools\clidriver\%(RecursiveDir)%(Filename)%(Extension)</PackagePath>
-			</_PackageFiles>
+			<None Include="$(ToolsPath)/clidriver/**" Pack="true" PackagePath="tools\clidriver" Visible="false" />
+			<None Include="$(ToolsPath)/amd64/**"     Pack="true" PackagePath="tools\amd64"     Visible="false" />
+			<None Include="$(ToolsPath)/x64/**"       Pack="true" PackagePath="tools\x64"       Visible="false" />
 		</ItemGroup>
 	</Target>
 
