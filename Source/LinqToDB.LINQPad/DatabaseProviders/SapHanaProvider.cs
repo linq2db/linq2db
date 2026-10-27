@@ -29,10 +29,10 @@ internal sealed class SapHanaProvider : DatabaseProviderBase
 		: base(ProviderName.SapHana, "SAP HANA", _providers)
 	{
 #if !NETFRAMEWORK
-		AppDomain.CurrentDomain.AssemblyLoad += static (_, args) => PointToPackageNatives(args.LoadedAssembly);
+		AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
 
-		foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-			PointToPackageNatives(assembly);
+		if (AppDomain.CurrentDomain.GetAssemblies().Any(PointToPackageNatives))
+			AppDomain.CurrentDomain.AssemblyLoad -= OnAssemblyLoad;
 #endif
 	}
 
@@ -54,22 +54,26 @@ internal sealed class SapHanaProvider : DatabaseProviderBase
 	// installation sets machine-wide to its own native - rejected by the client's exact version check. The
 	// provisioned package keeps its natives in runtimes/ two levels up, so the process value is pointed there
 	// before HanaConnection's type initializer runs that search; a failed one is sticky for the process.
-	private static void PointToPackageNatives(Assembly assembly)
+	private static bool PointToPackageNatives(Assembly assembly)
 	{
-		if (!string.Equals(assembly.GetName().Name, NativeClientPackage, StringComparison.Ordinal) || string.IsNullOrEmpty(assembly.Location))
-			return;
+		if (assembly.FullName?.StartsWith(NativeClientPackage + ",", StringComparison.Ordinal) != true)
+			return false;
 
-		var rid = (Platform.IsWindows ? "win" : Platform.IsMacOS ? "osx" : "linux") + RuntimeInformation.ProcessArchitecture switch
+		if (!string.IsNullOrEmpty(assembly.Location))
 		{
-			Architecture.X86   => "-x86",
-			Architecture.Arm64 => "-arm64",
-			_                  => "-x64",
-		};
+			var nativePath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(assembly.Location)!, "..", "..", "runtimes", RuntimeInformation.RuntimeIdentifier, "native"));
 
-		var nativePath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(assembly.Location)!, "..", "..", "runtimes", rid, "native"));
+			if (Directory.Exists(nativePath))
+				Environment.SetEnvironmentVariable("HDBDOTNETCORE", nativePath);
+		}
 
-		if (Directory.Exists(nativePath))
-			Environment.SetEnvironmentVariable("HDBDOTNETCORE", nativePath);
+		return true;
+	}
+
+	private static void OnAssemblyLoad(object? sender, AssemblyLoadEventArgs args)
+	{
+		if (PointToPackageNatives(args.LoadedAssembly))
+			AppDomain.CurrentDomain.AssemblyLoad -= OnAssemblyLoad;
 	}
 #endif
 
