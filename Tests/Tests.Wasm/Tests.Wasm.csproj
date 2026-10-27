@@ -14,7 +14,7 @@
 
 		<ProjectReference Include="..\..\Source\LinqToDB.Remote.HttpClient.Server\LinqToDB.Remote.HttpClient.Server.csproj" />
 
-		<!-- The WASM bundles are published by publish-wasm-bundles.ps1; only the entity mapping and the report contract are shared. -->
+		<!-- The WASM bundles are published by publish-wasm-bundles.ps1; only the entity mapping and the app/host contract (server route, report) are shared. -->
 		<Compile Include="..\Tests.Wasm.App\WasmPerson.cs" Link="WasmPerson.cs" />
 		<Compile Include="..\Tests.Wasm.App\WasmReport.cs" Link="WasmReport.cs" />
 	</ItemGroup>
