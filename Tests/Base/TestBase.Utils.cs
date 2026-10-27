@@ -81,14 +81,11 @@ namespace Tests
 
 		protected bool IsCaseSensitiveDB(string context)
 		{
-			// we intentionally configure Sql Server 2019 test database to be case-sensitive to test
-			// linq2db support for this configuration
-			// on CI we test two configurations:
-			// linux/mac: db is case sensitive, catalog is case insensitive
-			// windows: both db and catalog are case sensitive
+			// SqlServer.CS (case-sensitive data and catalog) and SqlServer.Contained (case-sensitive data,
+			// case-insensitive catalog) test databases are intentionally created with case-sensitive collation
 			var provider = GetProviderName(context, out var _);
 
-			return provider.IsAnyOf(TestProvName.AllSqlServerCS)
+			return provider.IsAnyOf(TestProvName.AllSqlServerCaseSensitiveData)
 				|| CustomizationSupport.Interceptor.IsCaseSensitiveDB(provider)
 				;
 		}
@@ -101,12 +98,8 @@ namespace Tests
 		{
 			var provider = GetProviderName(context, out var _);
 
-			// we intentionally configure Sql Server 2019 test database to be case-sensitive to test
-			// linq2db support for this configuration
-			// on CI we test two configurations:
-			// linux/mac: db is case sensitive, catalog is case insensitive
-			// windows: both db and catalog are case sensitive
-			return provider.IsAnyOf(TestProvName.AllSqlServerCS)
+			// see IsCaseSensitiveDB for SQL Server
+			return provider.IsAnyOf(TestProvName.AllSqlServerCaseSensitiveData)
 				|| provider.IsAnyOf(ProviderName.DB2)
 				|| provider.IsAnyOf(TestProvName.AllClickHouse)
 				|| provider.IsAnyOf(TestProvName.AllFirebird)
