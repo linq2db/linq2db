@@ -1652,6 +1652,256 @@ namespace Tests.Linq
 			rows[1].Date.ShouldNotBeNull();
 		}
 
+		/// <summary>
+		/// A column converted on a plain member and one converted on a nullable member compare when the two
+		/// conversions are one conversion, spelled once for each.
+		/// </summary>
+		/// <remarks>
+		/// The nullable spelling guards the conversion with <c>v != null ? … : null</c>. A converter that does not
+		/// handle nulls is never handed one, so the guard is not part of what it does to a stored value, and the
+		/// two spellings must not be refused as divergent.
+		/// </remarks>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void PlainAndNullableSpellingsOfOneConversionCompare([DataSources] string context)
+		{
+			var value = new DateTime(2020, 1, 1, 10, 0, 0);
+
+			using var db = GetDataContext(context, Issue5975MappingSchema());
+			using var t  = db.CreateLocalTable(
+			[
+				new Issue5975Row { Id = 1, Plain = value, Date = value             },
+				new Issue5975Row { Id = 2, Plain = value, Date = value.AddDays(1) },
+				new Issue5975Row { Id = 3, Plain = value, Date = null              },
+			]);
+
+			t
+				.Where(r => r.Plain == r.Date)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([1]);
+
+			t
+				.Where(r => r.Plain < r.Date)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([2]);
+		}
+
+		public enum NullableConversionSpelling
+		{
+			NullOnTheLeft,
+			HasValue,
+			EqualsNull,
+			NotHasValue,
+			DefaultForNull,
+			NewForNull,
+			GetValueOrDefault,
+			UnguardedValue,
+		}
+
+		static MappingSchema NullableSpellingMappingSchema(
+			Expression<Func<DateTime?, DateTime?>> toStore,
+			Expression<Func<DateTime?, DateTime?>> fromStore)
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<Issue5975Row>()
+					.Property(e => e.Plain)
+						.HasConversion(v => Issue5975ToStore(v), v => Issue5975FromStore(v))
+					.Property(e => e.Date)
+						.HasConversion(toStore, fromStore)
+				.Build();
+
+			return ms;
+		}
+
+		static MappingSchema NullableSpellingMappingSchema(NullableConversionSpelling spelling)
+		{
+			return spelling switch
+			{
+				NullableConversionSpelling.NullOnTheLeft => NullableSpellingMappingSchema(
+					v => null != v ? (DateTime?)Issue5975ToStore(v.Value)   : null,
+					v => null != v ? (DateTime?)Issue5975FromStore(v.Value) : null),
+
+				NullableConversionSpelling.HasValue => NullableSpellingMappingSchema(
+					v => v.HasValue ? (DateTime?)Issue5975ToStore(v.Value)   : null,
+					v => v.HasValue ? (DateTime?)Issue5975FromStore(v.Value) : null),
+
+				NullableConversionSpelling.EqualsNull => NullableSpellingMappingSchema(
+					v => v == null ? null : (DateTime?)Issue5975ToStore(v.Value),
+					v => v == null ? null : (DateTime?)Issue5975FromStore(v.Value)),
+
+				NullableConversionSpelling.NotHasValue => NullableSpellingMappingSchema(
+					v => !v.HasValue ? null : (DateTime?)Issue5975ToStore(v.Value),
+					v => !v.HasValue ? null : (DateTime?)Issue5975FromStore(v.Value)),
+
+				NullableConversionSpelling.DefaultForNull => NullableSpellingMappingSchema(
+					v => v != null ? Issue5975ToStore(v.Value)   : default(DateTime?),
+					v => v != null ? Issue5975FromStore(v.Value) : default(DateTime?)),
+
+				NullableConversionSpelling.NewForNull => NullableSpellingMappingSchema(
+					v => v != null ? Issue5975ToStore(v.Value)   : new DateTime?(),
+					v => v != null ? Issue5975FromStore(v.Value) : new DateTime?()),
+
+				NullableConversionSpelling.GetValueOrDefault => NullableSpellingMappingSchema(
+					v => Issue5975ToStore(v.GetValueOrDefault()),
+					v => Issue5975FromStore(v.GetValueOrDefault())),
+
+				NullableConversionSpelling.UnguardedValue => NullableSpellingMappingSchema(
+					v => Issue5975ToStore(v!.Value),
+					v => Issue5975FromStore(v!.Value)),
+
+				_ => throw new ArgumentOutOfRangeException(nameof(spelling)),
+			};
+		}
+
+		/// <summary>
+		/// Every way of writing the conversion against a nullable member that only sets a null aside is the
+		/// conversion its plain-member twin performs.
+		/// </summary>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void NullableSpellingsOfOneConversionCompare([DataSources] string context, [Values] NullableConversionSpelling spelling)
+		{
+			var value = new DateTime(2020, 1, 1, 10, 0, 0);
+
+			using var db = GetDataContext(context, NullableSpellingMappingSchema(spelling));
+			using var t  = db.CreateLocalTable(
+			[
+				new Issue5975Row { Id = 1, Plain = value, Date = value             },
+				new Issue5975Row { Id = 2, Plain = value, Date = value.AddDays(1) },
+				new Issue5975Row { Id = 3, Plain = value, Date = null              },
+			]);
+
+			t
+				.Where(r => r.Plain == r.Date)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([1]);
+		}
+
+		/// <summary>
+		/// A conditional choosing between the plain and the nullable spelling of one conversion is one SQL value read
+		/// through one of them, and a NULL from the nullable branch stays NULL.
+		/// </summary>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void ConditionalOverPlainAndNullableSpellingsReadsNull([DataSources] string context)
+		{
+			var value  = new DateTime(2020, 1, 1, 10, 0, 0);
+			var value2 = value.AddDays(1);
+
+			using var db = GetDataContext(context, Issue5975MappingSchema());
+			using var t  = db.CreateLocalTable(
+			[
+				new Issue5975Row { Id = 1, Plain = value, Date = value2 },
+				new Issue5975Row { Id = 2, Plain = value, Date = null   },
+				new Issue5975Row { Id = 3, Plain = value, Date = value2 },
+			]);
+
+			t
+				.OrderBy(r => r.Id)
+				.Select(r => Sql.AsSql(r.Id == 1 ? (DateTime?)r.Plain : r.Date))
+				.ToArray()
+				.ShouldBe([value, null, value2]);
+		}
+
+		[Table]
+		sealed class ReferenceConversionRow
+		{
+			[PrimaryKey] public int     Id      { get; set; }
+			[Column]     public string  Plain   { get; set; } = null!;
+			[Column]     public string? Guarded { get; set; }
+		}
+
+		/// <summary>
+		/// The null guard of a reference-typed conversion is set aside just as a nullable one's is.
+		/// </summary>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void ReferenceSpellingsOfOneConversionCompare([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<ReferenceConversionRow>()
+					.Property(e => e.Plain)
+						.HasConversion(v => "#" + v, v => v.Substring(1))
+					.Property(e => e.Guarded)
+						.HasConversion(v => v != null ? "#" + v : null, v => v != null ? v.Substring(1) : null)
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var t  = db.CreateLocalTable(
+			[
+				new ReferenceConversionRow { Id = 1, Plain = "a", Guarded = "a"  },
+				new ReferenceConversionRow { Id = 2, Plain = "a", Guarded = "b"  },
+				new ReferenceConversionRow { Id = 3, Plain = "a", Guarded = null },
+			]);
+
+			t
+				.Where(r => r.Plain == r.Guarded)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([1]);
+		}
+
+		static readonly Func<DateTime, DateTime> DelegateToStore   = Issue5975ToStore;
+		static readonly Func<DateTime, DateTime> DelegateFromStore = Issue5975FromStore;
+		static readonly Func<DateTime, DateTime> OtherToStore      = v => v.AddHours(2);
+		static readonly Func<DateTime, DateTime> OtherFromStore    = v => v.AddHours(-2);
+
+		static Expression<Func<DateTime, DateTime>> PlainInvoking(Func<DateTime, DateTime> convert)
+			=> v => convert(v);
+
+		static Expression<Func<DateTime?, DateTime?>> GuardedInvoking(Func<DateTime, DateTime> convert)
+			=> v => v != null ? (DateTime?)convert(v.Value) : null;
+
+		static MappingSchema DelegateMappingSchema(Func<DateTime, DateTime> toStore, Func<DateTime, DateTime> fromStore)
+			=> DelegateMappingSchema(DelegateToStore, DelegateFromStore, toStore, fromStore);
+
+		static MappingSchema DelegateMappingSchema(
+			Func<DateTime, DateTime> plainToStore,
+			Func<DateTime, DateTime> plainFromStore,
+			Func<DateTime, DateTime> guardedToStore,
+			Func<DateTime, DateTime> guardedFromStore)
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<Issue5975Row>()
+					.Property(e => e.Plain)
+						.HasConversion(PlainInvoking(plainToStore), PlainInvoking(plainFromStore))
+					.Property(e => e.Date)
+						.HasConversion(GuardedInvoking(guardedToStore), GuardedInvoking(guardedFromStore))
+				.Build();
+
+			return ms;
+		}
+
+		static Func<DateTime, DateTime> AddingHours(int hours) => v => v.AddHours(hours);
+
+		/// <summary>
+		/// Two conversions invoking one captured delegate are one conversion, though each holds it in a closure of its
+		/// own.
+		/// </summary>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void ConversionsInvokingOneDelegateCompare([DataSources] string context)
+		{
+			var value = new DateTime(2020, 1, 1, 10, 0, 0);
+
+			using var db = GetDataContext(context, DelegateMappingSchema(DelegateToStore, DelegateFromStore));
+			using var t  = db.CreateLocalTable(
+			[
+				new Issue5975Row { Id = 1, Plain = value, Date = value             },
+				new Issue5975Row { Id = 2, Plain = value, Date = value.AddDays(1) },
+			]);
+
+			t
+				.Where(r => r.Plain == r.Date)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([1]);
+		}
+
 		static MappingSchema CapturedHoursMappingSchema(int hours)
 		{
 			var ms = new MappingSchema();
@@ -1730,6 +1980,60 @@ namespace Tests.Linq
 				.Single()
 				.Value
 				.ShouldBe(value.AddHours(-1));
+		}
+
+		public enum DivergentNullableConversion
+		{
+			OtherConversion,
+			ReversedGuard,
+			OtherDelegate,
+			OneLambdaTwoClosures,
+		}
+
+		/// <summary>
+		/// A null guard is set aside only when what is left is the plain member's conversion: a guard around
+		/// another conversion, or one that answers null for a value, is still refused.
+		/// </summary>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void NullableSpellingOfAnotherConversionIsRefused([DataSources] string context, [Values] DivergentNullableConversion divergence)
+		{
+			var ms = divergence switch
+			{
+				DivergentNullableConversion.OtherConversion => NullableSpellingMappingSchema(
+					v => v != null ? (DateTime?)v.Value.AddHours(2)  : null,
+					v => v != null ? (DateTime?)v.Value.AddHours(-2) : null),
+
+				DivergentNullableConversion.ReversedGuard => NullableSpellingMappingSchema(
+					v => v != null ? null : (DateTime?)Issue5975ToStore(v.GetValueOrDefault()),
+					v => v != null ? null : (DateTime?)Issue5975FromStore(v.GetValueOrDefault())),
+
+				DivergentNullableConversion.OtherDelegate => DelegateMappingSchema(OtherToStore, OtherFromStore),
+
+				// one lambda, so one method, but two delegates: which closure each reads is not known to be the same
+				DivergentNullableConversion.OneLambdaTwoClosures => DelegateMappingSchema(
+					AddingHours(1), AddingHours(-1),
+					AddingHours(1), AddingHours(-1)),
+
+				_ => throw new ArgumentOutOfRangeException(nameof(divergence)),
+			};
+
+			using var db = GetDataContext(context, ms);
+			using var t  = db.CreateLocalTable<Issue5975Row>();
+
+			var compared = () => t
+				.Where(r => r.Plain == r.Date)
+				.ToArray();
+
+			var refusal = string.Format(
+				CultureInfo.InvariantCulture,
+				ErrorHelper.Error_ValueConverter_DivergentOperands,
+				nameof(Issue5975Row.Plain),
+				nameof(Issue5975Row.Date));
+
+			compared
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain(refusal);
 		}
 
 		[Table]
@@ -1815,6 +2119,46 @@ namespace Tests.Linq
 
 			rows.Count.ShouldBe(2);
 			rows.Select(r => r.Date).ShouldBe([value, value]);
+		}
+
+		/// <summary>
+		/// The plain-member branch first, so the set operation's column is read through the plain conversion, and a
+		/// NULL in the nullable branch that this reading has to leave alone.
+		/// </summary>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void SetOperationOverPlainAndNullableConversionsReadsNull([DataSources] string context)
+		{
+			var value = new DateTime(2020, 1, 1, 10, 0, 0);
+			var ms    = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<Issue5976RowA>()
+					.Property(e => e.Date)
+						.HasConversion(
+							v => v != null ? (DateTime?)Issue5975ToStore(v.Value) : null,
+							v => v != null ? (DateTime?)Issue5975FromStore(v.Value) : null)
+				.Entity<Issue5976RowC>()
+					.Property(e => e.Date)
+						.HasConversion(v => Issue5975ToStore(v), v => Issue5975FromStore(v))
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var c  = db.CreateLocalTable([new Issue5976RowC { Id = 1, Date = value }]);
+			using var a  = db.CreateLocalTable(
+			[
+				new Issue5976RowA { Id = 2, Date = value },
+				new Issue5976RowA { Id = 3, Date = null  },
+			]);
+
+			var rows = c
+				.Select(r => new { r.Id, Date = (DateTime?)r.Date })
+				.Concat(a.Select(r => new { r.Id, r.Date }))
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			rows
+				.Select(r => r.Date)
+				.ShouldBe([value, value, null]);
 		}
 
 		#endregion

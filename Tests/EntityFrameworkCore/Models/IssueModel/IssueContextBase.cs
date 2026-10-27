@@ -69,6 +69,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		public DbSet<Issue5975TableOne> Issue5975TableOnes { get; set; } = null!;
 		public DbSet<Issue5975TableTwo> Issue5975TableTwos { get; set; } = null!;
 
+		public DbSet<Issue6181TableOne> Issue6181TableOnes { get; set; } = null!;
+		public DbSet<Issue6181TableTwo> Issue6181TableTwos { get; set; } = null!;
+
 		public DbSet<Issue5355LicenseProfile> Issue5355LicenseProfiles { get; set; } = null!;
 		public DbSet<Issue5355Customer>       Issue5355Customers       { get; set; } = null!;
 
@@ -388,6 +391,69 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 					.HasForeignKey(e => e.TableOneId);
 			});
 
+			// delegates the same way, to a conversion that stores differently
+			var issue6181OtherConverter = new ValueConverter<DateTime, DateTime>(
+				v => v.AddHours(2),
+				v => v.AddHours(-2));
+			var issue6181OtherNullableConverter = new ValueConverter<DateTime?, DateTime?>(
+				v => v != null ? (DateTime?)issue6181OtherConverter.ConvertToProvider(v.Value) : (DateTime?)null,
+				v => v != null ? (DateTime?)issue6181OtherConverter.ConvertFromProvider(v.Value) : (DateTime?)null);
+
+			// delegates through a holder that is not set while the model is mapped
+			Issue6181ConverterHolder? issue6181Holder = null;
+			var issue6181HeldConverter = new ValueConverter<DateTime?, DateTime?>(
+				v => v != null ? (DateTime?)issue6181Holder!.Converter.ConvertToProvider(v.Value) : (DateTime?)null,
+				v => v != null ? (DateTime?)issue6181Holder!.Converter.ConvertFromProvider(v.Value) : (DateTime?)null);
+
+			// delegates to a converter whose delegates are its own, not compiled from its expressions
+			var issue6181Overriding = new Issue6181OverridingConverter();
+			var issue6181OverriddenConverter = new ValueConverter<DateTime?, DateTime?>(
+				v => v != null ? (DateTime?)issue6181Overriding.ConvertToProvider(v.Value) : (DateTime?)null,
+				v => v != null ? (DateTime?)issue6181Overriding.ConvertFromProvider(v.Value) : (DateTime?)null);
+
+#if !NETFRAMEWORK
+			// the same, overriding the typed delegate the untyped one is built from (absent in EF Core 3.1)
+			var issue6181TypedOverriding = new Issue6181TypedOverridingConverter();
+			var issue6181TypedOverriddenConverter = new ValueConverter<DateTime?, DateTime?>(
+				v => v != null ? (DateTime?)issue6181TypedOverriding.ConvertToProvider(v.Value) : (DateTime?)null,
+				v => v != null ? (DateTime?)issue6181TypedOverriding.ConvertFromProvider(v.Value) : (DateTime?)null);
+#endif
+
+			// one delegate call nested in another: issue5975Converter, then issue6181OtherConverter
+			var issue6181ChainedNullableConverter = new ValueConverter<DateTime?, DateTime?>(
+				v => v != null ? (DateTime?)issue6181OtherConverter.ConvertToProvider((DateTime)issue5975Converter.ConvertToProvider(v.Value)!) : (DateTime?)null,
+				v => v != null ? (DateTime?)issue5975Converter.ConvertFromProvider((DateTime)issue6181OtherConverter.ConvertFromProvider(v.Value)!) : (DateTime?)null);
+			var issue6181ChainedConverter = new ValueConverter<DateTime, DateTime>(
+				v => Issue5975ToStore(v).AddHours(2),
+				v => Issue5975FromStore(v.AddHours(-2)));
+
+			modelBuilder.Entity<Issue6181TableOne>(b =>
+			{
+				b.Property(e => e.Id).ValueGeneratedNever();
+				b.Property(e => e.CreatedOn).HasConversion(issue5975Converter);
+				b.Property(e => e.ChainedOn).HasConversion(issue6181ChainedConverter);
+				b.Property(e => e.FromDate).HasConversion(issue5975NullableConverter);
+				b.Property(e => e.ToDate).HasConversion(issue5975NullableConverter);
+			});
+
+			modelBuilder.Entity<Issue6181TableTwo>(b =>
+			{
+				b.Property(e => e.Id).ValueGeneratedNever();
+				b.Property(e => e.FromDate).HasConversion(issue5975NullableConverter);
+				b.Property(e => e.ToDate).HasConversion(issue5975NullableConverter);
+				b.Property(e => e.OtherDate).HasConversion(issue6181OtherNullableConverter);
+				b.Property(e => e.HeldDate).HasConversion(issue6181HeldConverter);
+				b.Property(e => e.OverriddenDate).HasConversion(issue6181OverriddenConverter);
+#if !NETFRAMEWORK
+				b.Property(e => e.TypedOverriddenDate).HasConversion(issue6181TypedOverriddenConverter);
+#endif
+				b.Property(e => e.ChainedDate).HasConversion(issue6181ChainedNullableConverter);
+
+				b.HasOne(e => e.TableOne)
+					.WithMany()
+					.HasForeignKey(e => e.TableOneId);
+			});
+
 			modelBuilder.Entity<Issue5388Task>().Property(x => x.IsArchived)
 				.IsRequired()
 				.HasConversion<short>(); // bool stored as smallint in database
@@ -473,5 +539,32 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 
 		static DateTime Issue5975ToStore  (DateTime v) => v.AddHours(1);
 		static DateTime Issue5975FromStore(DateTime v) => v.AddHours(-1);
+
+		sealed class Issue6181ConverterHolder
+		{
+			public ValueConverter<DateTime, DateTime> Converter = new(v => v, v => v);
+		}
+
+		sealed class Issue6181OverridingConverter : ValueConverter<DateTime, DateTime>
+		{
+			public Issue6181OverridingConverter() : base(v => Issue5975ToStore(v), v => Issue5975FromStore(v))
+			{
+			}
+
+			public override Func<object?, object?> ConvertToProvider   => base.ConvertToProvider;
+			public override Func<object?, object?> ConvertFromProvider => base.ConvertFromProvider;
+		}
+
+#if !NETFRAMEWORK
+		sealed class Issue6181TypedOverridingConverter : ValueConverter<DateTime, DateTime>
+		{
+			public Issue6181TypedOverridingConverter() : base(v => Issue5975ToStore(v), v => Issue5975FromStore(v))
+			{
+			}
+
+			public override Func<DateTime, DateTime> ConvertToProviderTyped   => base.ConvertToProviderTyped;
+			public override Func<DateTime, DateTime> ConvertFromProviderTyped => base.ConvertFromProviderTyped;
+		}
+#endif
 	}
 }
