@@ -262,7 +262,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return true;
 
 			return projection is ConditionalExpression { Test: BinaryExpression { NodeType: ExpressionType.Equal or ExpressionType.NotEqual } test } conditional
-				&& ((test.Left is SqlPathExpression && test.Right.IsNullValue) || (test.Right is SqlPathExpression && test.Left.IsNullValue))
+				&& test.Left is SqlPathExpression && test.Right.IsNullValue
 				&& IsNullValueOrSqlNull(test.NodeType == ExpressionType.Equal ? conditional.IfTrue : conditional.IfFalse);
 		}
 
