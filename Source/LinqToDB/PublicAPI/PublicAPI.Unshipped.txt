@@ -4,4 +4,5 @@ LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQLMemberTranslator
 LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQLMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator() -> void
 override LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQL95MemberTranslator.CreateAggregateFunctionsMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator!
 override LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQLMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator.IsFilterSupported.get -> bool
+static LinqToDB.Internal.Expressions.ExpressionEvaluator.TryEvaluateCapturedValue(this System.Linq.Expressions.Expression! expr, out object? value) -> bool
 

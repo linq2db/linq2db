@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Internal.Common;
@@ -1649,6 +1650,86 @@ namespace Tests.Linq
 
 			rows[0].Date.ShouldBe(test);
 			rows[1].Date.ShouldNotBeNull();
+		}
+
+		static MappingSchema CapturedHoursMappingSchema(int hours)
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<SchemaScopedConversionRow>()
+					.Property(e => e.Value)
+						.HasConversion(v => v.AddHours(hours), v => v.AddHours(-hours))
+				.Build();
+
+			return ms;
+		}
+
+		/// <summary>
+		/// Two schemas whose conversions differ only in a captured value each keep their own conversion.
+		/// </summary>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void SchemasConvertingOneMemberThroughACapturedValueStayApart([DataSources] string context)
+		{
+			var value = new DateTime(2020, 1, 1, 10, 0, 0);
+
+			using var writer = GetDataContext(context, CapturedHoursMappingSchema(3));
+			using var t      = writer.CreateLocalTable([new SchemaScopedConversionRow { Id = 1, Value = value }]);
+
+			using var reader = GetDataContext(context, CapturedHoursMappingSchema(4));
+
+			reader
+				.GetTable<SchemaScopedConversionRow>()
+				.Single()
+				.Value
+				.ShouldBe(value.AddHours(-1));
+		}
+
+		[Table]
+		sealed class SchemaScopedConversionRow
+		{
+			[PrimaryKey] public int      Id    { get; set; }
+			[Column]     public DateTime Value { get; set; }
+		}
+
+		static MappingSchema SchemaScopedConversionMappingSchema(
+			Expression<Func<DateTime, DateTime>> toStore,
+			Expression<Func<DateTime, DateTime>> fromStore)
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<SchemaScopedConversionRow>()
+					.Property(e => e.Value)
+						.HasConversion(toStore, fromStore)
+				.Build();
+
+			return ms;
+		}
+
+		/// <summary>
+		/// Two schemas converting one member differently each keep their own conversion.
+		/// </summary>
+		/// <remarks>
+		/// A schema's identity is built from its mapping attributes, so an attribute that does not say which
+		/// conversion it carries gives both schemas one identity, and whichever reaches the mapping caches first
+		/// converts for both.
+		/// </remarks>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void SchemasConvertingOneMemberDifferentlyStayApart([DataSources] string context)
+		{
+			var value = new DateTime(2020, 1, 1, 10, 0, 0);
+
+			using var writer = GetDataContext(context, SchemaScopedConversionMappingSchema(v => v.AddHours(1), v => v.AddHours(-1)));
+			using var t      = writer.CreateLocalTable([new SchemaScopedConversionRow { Id = 1, Value = value }]);
+
+			using var reader = GetDataContext(context, SchemaScopedConversionMappingSchema(v => v.AddHours(2), v => v.AddHours(-2)));
+
+			reader
+				.GetTable<SchemaScopedConversionRow>()
+				.Single()
+				.Value
+				.ShouldBe(value.AddHours(-1));
 		}
 
 		[Table]
