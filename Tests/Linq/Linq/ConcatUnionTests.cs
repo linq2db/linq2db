@@ -2978,6 +2978,25 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6156")]
+		public void JoinedEntityNullTestAfterConcat([DataSources] string context, [Values] bool nullFirst)
+		{
+			using var db = GetDataContext(context);
+
+			var objects =
+				from p in db.Parent
+				from c in db.Child
+					.Where(c => c.ParentID == p.ParentID)
+					.DefaultIfEmpty()
+				select new { p.ParentID, Child = c };
+
+			var nulls =
+				from p in db.Parent
+				select new { p.ParentID, Child = (Child?)null };
+
+			AssertQuery(UnionOrConcat(objects, nulls, false, nullFirst).Where(x => x.Child == null).Select(x => x.ParentID));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6156")]
 		public void AssociationAgainstNullBranch([DataSources] string context, [Values] bool union, [Values] bool nullFirst)
 		{
 			using var db = GetDataContext(context);
