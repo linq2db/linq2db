@@ -214,7 +214,10 @@ namespace Tests.Wasm
 			{
 				var reason = run.TimedOut ? $"timed out after {WasmBundleRunner.Timeout}" : $"exited with {run.ExitCode}";
 
-				throw new ShouldAssertException($"The '{mode}' bundle reported nothing for '{configuration}' (node {reason}).\n{run.Output}");
+				// Printed, not thrown, for the same reason as the server error: Node's output can carry a gate's phrase.
+				await TestContext.Out.WriteLineAsync(run.Output);
+
+				throw new ShouldAssertException($"The '{mode}' bundle reported nothing for '{configuration}' (node {reason}; its output is in the test output).");
 			}
 
 			if (report.ResolveAttempts.Count > 0)
