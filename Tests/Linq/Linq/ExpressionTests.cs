@@ -7,6 +7,7 @@ using System.Reflection;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -1082,6 +1083,118 @@ namespace Tests.Linq
 			query
 				.GetCacheMissCount()
 				.ShouldBe(missCount + 1);
+		}
+
+		// Query-cache test: provider-independent.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5843")]
+		[QueryCacheTest]
+		public void FoldedScalarNullCheckKeepsConstantInKey([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query(bool flag)
+			{
+				var p     = Expression.Parameter(typeof(Model.Person), "p");
+				var c     = Expression.Constant(flag, typeof(bool?));
+				var isOne = Expression.Equal(Expression.PropertyOrField(p, nameof(Model.Person.ID)), Expression.Constant(1));
+
+				var body = Expression.OrElse(
+					Expression.OrElse(
+						Expression.Equal(c, Expression.Constant(null, typeof(bool?))),
+						Expression.AndAlso(Expression.Property(c, nameof(Nullable<>.Value)), isOne)),
+					Expression.AndAlso(Expression.Not(Expression.Property(c, nameof(Nullable<>.Value))), Expression.Not(isOne)));
+
+				return db.Person
+					.Where(Expression.Lambda<Func<Model.Person, bool>>(body, p))
+					.Select(p => p.ID);
+			}
+
+			Query(false)
+				.ToArray()
+				.ShouldNotContain(1);
+
+			Query(true)
+				.ToArray()
+				.ShouldBe([1]);
+		}
+
+		// Query-cache test: provider-independent.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5843")]
+		[QueryCacheTest]
+		public void FoldedScalarBesideSurvivingValueKeepsConstantInKey([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query(int? value)
+			{
+				var p  = Expression.Parameter(typeof(Model.Person), "p");
+				var c  = Expression.Constant(value, typeof(int?));
+				var id = Expression.PropertyOrField(p, nameof(Model.Person.ID));
+
+				var body = Expression.OrElse(
+					Expression.Equal(id, Expression.Coalesce(c, Expression.Constant(2))),
+					Expression.AndAlso(Expression.Property(c, nameof(Nullable<>.HasValue)), Expression.Equal(id, Expression.Constant(3))));
+
+				return db.Person
+					.Where(Expression.Lambda<Func<Model.Person, bool>>(body, p))
+					.Select(p => p.ID);
+			}
+
+			Query(2)
+				.OrderBy(id => id)
+				.ToArray()
+				.ShouldBe([2, 3]);
+
+			Query(null)
+				.OrderBy(id => id)
+				.ToArray()
+				.ShouldBe([2]);
+		}
+
+		sealed class BoolLiteralBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqlExtensionBuilder builder)
+			{
+				builder.ResultExpression = new SqlValue(builder.GetValue<bool>(0));
+			}
+		}
+
+		[Sql.Extension("", BuilderType = typeof(BoolLiteralBuilder), ServerSideOnly = true)]
+		static bool BoolLiteral(bool value) => value;
+
+		static readonly MethodInfo _boolLiteral = typeof(ExpressionTests).GetMethod(nameof(BoolLiteral), BindingFlags.NonPublic | BindingFlags.Static)!;
+
+		// Query-cache test: provider-independent.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5843")]
+		[QueryCacheTest]
+		public void FoldedScalarBesideExtensionArgumentKeepsCompare([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query(bool flag)
+			{
+				var p     = Expression.Parameter(typeof(Model.Person), "p");
+				var c     = Expression.Constant(flag, typeof(bool?));
+				var isOne = Expression.Equal(Expression.PropertyOrField(p, nameof(Model.Person.ID)), Expression.Constant(1));
+
+				var body = Expression.AndAlso(
+					Expression.Not(Expression.Call(_boolLiteral, Expression.Equal(c, Expression.Constant(null, typeof(bool?))))),
+					Expression.OrElse(
+						Expression.AndAlso(Expression.Property(c, nameof(Nullable<>.Value)), isOne),
+						Expression.AndAlso(Expression.Not(Expression.Property(c, nameof(Nullable<>.Value))), Expression.Not(isOne))));
+
+				return db.Person
+					.Where(Expression.Lambda<Func<Model.Person, bool>>(body, p))
+					.Select(p => p.ID);
+			}
+
+			Query(false)
+				.ToArray()
+				.ShouldNotContain(1);
+
+			Query(true)
+				.ToArray()
+				.ShouldBe([1]);
 		}
 
 		// Query-cache test: provider-independent.

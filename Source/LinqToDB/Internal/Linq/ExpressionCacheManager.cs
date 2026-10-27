@@ -619,7 +619,7 @@ namespace LinqToDB.Internal.Linq
 				foreach (var (value, accessor) in _byValueCompare)
 				{
 					var mainValueExpr  = Expression.Constant(value).EnsureType<object>();
-					var otherValueExpr = PrepareExpressionAccessors(dc, accessor, nonComparable).EnsureType<object>();
+					var otherValueExpr = PrepareComparedAccessor(dc, accessor, nonComparable).EnsureType<object>();
 
 					var mainFunc = Expression.Lambda<ValueAccessorFunc>(mainValueExpr, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
 							ExpressionBuilder.ParametersParam)
@@ -656,7 +656,7 @@ namespace LinqToDB.Internal.Linq
 
 					var mainValueExpr = Expression.Constant(evaluator.Evaluate(accessor)).EnsureType<object>();
 
-					var otherValueExpr = PrepareExpressionAccessors(dc, accessor, nonComparable).EnsureType<object>();
+					var otherValueExpr = PrepareComparedAccessor(dc, accessor, nonComparable).EnsureType<object>();
 
 					var mainFunc = Expression.Lambda<ValueAccessorFunc>(mainValueExpr, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
 							ExpressionBuilder.ParametersParam)
@@ -677,6 +677,25 @@ namespace LinqToDB.Internal.Linq
 			return (compareInfo, parameterAccessors, parameterExpressions);
 		}
 
+		/// <summary>
+		/// Prepares the accessor of a by-value compare. Only constants the key would not compare by value leave the key: a
+		/// derived value such as <c>c == null</c> can be equal for constants that shaped the SQL differently, and the key
+		/// matches an equal scalar by value anyway.
+		/// </summary>
+		Expression PrepareComparedAccessor(IDataContext dc, Expression accessor, HashSet<Expression> nonComparable)
+		{
+			var replaced = new HashSet<Expression>();
+			var prepared = PrepareExpressionAccessors(dc, accessor, replaced);
+
+			foreach (var e in replaced)
+			{
+				if (!IsComparedByValueInKey((ConstantExpression)e, dc.MappingSchema))
+					nonComparable.Add(e);
+			}
+
+			return prepared;
+		}
+
 		bool IsCoveredByCacheKey(Expression accessor, HashSet<Expression>? usedPaths, HashSet<Expression> mapped, MappingSchema mappingSchema)
 		{
 			// Match key paths, not nodes: the comparer matches constants by content, so two equal arrays would pass for one.
@@ -686,9 +705,14 @@ namespace LinqToDB.Internal.Linq
 			return accessor.Unwrap() switch
 			{
 				DefaultExpression           => true,
-				ConstantExpression constant => !ExpressionCacheHelpers.ShouldRemoveConstantFromCache(constant, mappingSchema) && constant.Value is string or not IEnumerable,
+				ConstantExpression constant => IsComparedByValueInKey(constant, mappingSchema),
 				_                           => false,
 			};
+		}
+
+		static bool IsComparedByValueInKey(ConstantExpression constant, MappingSchema mappingSchema)
+		{
+			return !ExpressionCacheHelpers.ShouldRemoveConstantFromCache(constant, mappingSchema) && constant.Value is string or not IEnumerable;
 		}
 
 		/// <summary>
