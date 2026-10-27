@@ -1456,6 +1456,29 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
+		public void SelectWithIndexerAfterGroupJoin([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// The ordering is placed before the GroupJoin; the index must still be numbered by it.
+			var groupJoin =
+				from p in db.Parent.OrderByDescending(x => x.ParentID)
+				join c in db.Child on p.ParentID equals c.ParentID into cs
+				select new
+				{
+					p.ParentID,
+					Cnt = cs.Count(),
+				};
+
+			var query = groupJoin
+				.Select((x, idx) => new { x.ParentID, Index = idx })
+				.Where(x => x.Index >= 0);
+
+			AssertQuery(query);
+		}
+
 		public class Table1788
 		{
 			[PrimaryKey]
