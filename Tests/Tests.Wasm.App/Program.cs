@@ -69,7 +69,7 @@ namespace Tests.Wasm
 				// Sync APIs block on a single-threaded runtime, so the configuration must be fetched asynchronously first.
 				if (!await RunAsync(operations, WasmReport.Init, async () =>
 				{
-					db = new HttpClientDataContext(serverUrl, "api/linq2db", o => o.UseConfiguration(configuration));
+					db = new HttpClientDataContext(serverUrl, WasmReport.Route, o => o.UseConfiguration(configuration));
 
 					await db.InitHttpClientAsync().ConfigureAwait(false);
 					return null;
@@ -179,24 +179,24 @@ namespace Tests.Wasm
 			using (var writer = new Utf8JsonWriter(stream))
 			{
 				writer.WriteStartObject();
-				writer.WriteString("configuration", configuration);
+				writer.WriteString(WasmReport.Property.Configuration, configuration);
 
-				writer.WriteStartArray("operations");
+				writer.WriteStartArray(WasmReport.Property.Operations);
 
 				foreach (var operation in operations)
 				{
 					writer.WriteStartObject();
-					writer.WriteString("name", operation.Name);
+					writer.WriteString(WasmReport.Property.Name, operation.Name);
 
 					if (operation.Error == null)
 					{
-						writer.WriteString("result", operation.Result);
+						writer.WriteString(WasmReport.Property.Result, operation.Result);
 					}
 					else
 					{
-						writer.WriteString("errorType",    operation.Error.GetType().FullName);
-						writer.WriteString("errorMessage", operation.Error.Message);
-						writer.WriteString("error",        operation.Error.ToString());
+						writer.WriteString(WasmReport.Property.ErrorType,    operation.Error.GetType().FullName);
+						writer.WriteString(WasmReport.Property.ErrorMessage, operation.Error.Message);
+						writer.WriteString(WasmReport.Property.Error,        operation.Error.ToString());
 					}
 
 					writer.WriteEndObject();
@@ -204,7 +204,7 @@ namespace Tests.Wasm
 
 				writer.WriteEndArray();
 
-				writer.WriteStartArray("resolveAttempts");
+				writer.WriteStartArray(WasmReport.Property.ResolveAttempts);
 
 				foreach (var attempt in resolveAttempts)
 					writer.WriteStringValue(attempt);

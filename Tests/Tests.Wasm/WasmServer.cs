@@ -24,8 +24,6 @@ namespace Tests.Wasm
 	/// </summary>
 	sealed class WasmServer : IAsyncDisposable
 	{
-		public const string Route = "api/linq2db";
-
 		readonly WebApplication _app;
 		readonly DataConnection _sqlite;
 
@@ -114,7 +112,7 @@ namespace Tests.Wasm
 	}
 
 	/// <summary>The remote endpoint of <see cref="WasmServer"/>; public because ASP.NET Core discovers public controllers only.</summary>
-	[Route(WasmServer.Route)]
+	[Route(WasmReport.Route)]
 	public sealed class WasmLinqController(ILinqService linqService) : LinqToDBController
 	{
 		protected override ILinqService CreateLinqService() => linqService;

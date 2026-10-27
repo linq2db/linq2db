@@ -109,23 +109,23 @@ namespace Tests.Wasm
 			var root = document.RootElement;
 
 			var operations = root
-				.GetProperty("operations")
+				.GetProperty(WasmReport.Property.Operations)
 				.EnumerateArray()
 				.Select(o => new OperationResult(
-					GetString(o, "name")!,
-					GetString(o, "result"),
-					GetString(o, "errorType"),
-					GetString(o, "errorMessage"),
-					GetString(o, "error")))
+					GetString(o, WasmReport.Property.Name)!,
+					GetString(o, WasmReport.Property.Result),
+					GetString(o, WasmReport.Property.ErrorType),
+					GetString(o, WasmReport.Property.ErrorMessage),
+					GetString(o, WasmReport.Property.Error)))
 				.ToList();
 
 			var resolveAttempts = root
-				.GetProperty("resolveAttempts")
+				.GetProperty(WasmReport.Property.ResolveAttempts)
 				.EnumerateArray()
 				.Select(a => a.GetString()!)
 				.ToList();
 
-			return new ConfigurationReport(GetString(root, "configuration")!, operations, resolveAttempts);
+			return new ConfigurationReport(GetString(root, WasmReport.Property.Configuration)!, operations, resolveAttempts);
 		}
 
 		static string? GetString(JsonElement element, string name) =>
