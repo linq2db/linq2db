@@ -2978,6 +2978,71 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6156")]
+		public void NestedSetAgainstNullBranch([DataSources] string context, [Values] bool joined, [Values] bool innerUnion, [Values] bool innerNullFirst, [Values] bool outerNullFirst)
+		{
+			using var db = GetDataContext(context);
+
+			var objects = joined
+				? from p in db.Parent
+				  from c in db.Child
+					  .Where(c => c.ParentID == p.ParentID)
+					  .DefaultIfEmpty()
+				  select new { p.ParentID, Child = (Child?)c }
+				: db.Parent.Select(p => new { p.ParentID, Child = (Child?)new Child { ParentID = p.ParentID, ChildID = p.ParentID + 100 } });
+
+			var nulls =
+				from p in db.Parent
+				select new { p.ParentID, Child = (Child?)null };
+
+			var inner = UnionOrConcat(objects, nulls, innerUnion, innerNullFirst);
+
+			AssertQuery(UnionOrConcat(inner, nulls, union: true, outerNullFirst));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6156")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		public void NestedSetAgainstNullBranchCompared([DataSources] string context, [Values] bool joined, [Values] bool innerUnion, [Values] bool innerNullFirst, [Values(ComparingSetOperation.Intersect, ComparingSetOperation.Except)] ComparingSetOperation operation)
+		{
+			using var db = GetDataContext(context);
+
+			var objects = joined
+				? from p in db.Parent
+				  from c in db.Child
+					  .Where(c => c.ParentID == p.ParentID)
+					  .DefaultIfEmpty()
+				  select new { p.ParentID, Child = (Child?)c }
+				: db.Parent.Select(p => new { p.ParentID, Child = (Child?)new Child { ParentID = p.ParentID, ChildID = p.ParentID + 100 } });
+
+			var nulls =
+				from p in db.Parent
+				select new { p.ParentID, Child = (Child?)null };
+
+			var inner = UnionOrConcat(objects, nulls, innerUnion, innerNullFirst);
+
+			AssertQuery(Compare(inner, nulls, operation));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6156")]
+		public void JoinedEntityMemberAfterConcat([DataSources] string context, [Values] bool nullFirst)
+		{
+			using var db = GetDataContext(context);
+
+			var objects =
+				from p in db.Parent
+				from c in db.Child
+					.Where(c => c.ParentID == p.ParentID)
+					.DefaultIfEmpty()
+				select new { p.ParentID, Child = c };
+
+			var nulls =
+				from p in db.Parent
+				select new { p.ParentID, Child = (Child?)null };
+
+			AssertQuery(UnionOrConcat(objects, nulls, union: false, nullFirst)
+				.Select(x => new { x.ParentID, Id = x.Child == null ? -1 : x.Child.ChildID }));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6156")]
 		public void JoinedEntityNullTestAfterConcat([DataSources] string context, [Values] bool nullFirst)
 		{
 			using var db = GetDataContext(context);
