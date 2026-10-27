@@ -28,16 +28,13 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 
-		<Reference Include="System.Data.SqlServerCe">
-			<HintPath>$(MSBuildThisFileDirectory)..\Redist\SqlCe\System.Data.SqlServerCe.dll</HintPath>
-			<Private>true</Private>
-		</Reference>
-		<SqlCeNativeLibs64 Include="$(MSBuildThisFileDirectory)..\Redist\SqlCe\amd64\**" Condition=" $(PlatformTarget) != 'x86' " />
+		<PackageReference Include="Microsoft.SqlServer.Compact" GeneratePathProperty="true" />
+		<SqlCeNativeLibs64 Include="$(PkgMicrosoft_SqlServer_Compact)\NativeBinaries\amd64\**" Condition=" $(PlatformTarget) != 'x86' " />
 		<None Include="@(SqlCeNativeLibs64)" Condition=" $(PlatformTarget) != 'x86' ">
 			<Link>amd64\%(RecursiveDir)%(FileName)%(Extension)</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<SqlCeNativeLibs86 Include="$(MSBuildThisFileDirectory)..\Redist\SqlCe\x86\**" Condition=" $(PlatformTarget) == 'x86' " />
+		<SqlCeNativeLibs86 Include="$(PkgMicrosoft_SqlServer_Compact)\NativeBinaries\x86\**" Condition=" $(PlatformTarget) == 'x86' " />
 		<None Include="@(SqlCeNativeLibs86)" Condition=" $(PlatformTarget) == 'x86' ">
 			<Link>x86\%(RecursiveDir)%(FileName)%(Extension)</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -62,6 +59,12 @@
 		<Copy SourceFiles="$(PkgMicrosoft_SqlServer_Types)\runtimes\win-x86\native\SqlServerSpatial170.dll"   DestinationFiles="$(TargetDir)\x86\SqlServerSpatial170.dll" />
 		<Copy SourceFiles="$(PkgMicrosoft_SqlServer_Types)\runtimes\win-x64\native\SqlServerSpatial170.dll"   DestinationFiles="$(TargetDir)\x64\SqlServerSpatial170.dll" />
 		<Copy SourceFiles="$(PkgMicrosoft_SqlServer_Types)\runtimes\win-arm64\native\SqlServerSpatial170.dll" DestinationFiles="$(TargetDir)\arm64\SqlServerSpatial170.dll" />
+	</Target>
+
+	<!-- An unrestored $(PkgMicrosoft_SqlServer_Compact) leaves the native globs empty without any diagnostic. -->
+	<Target Name="CheckSqlCeNatives" BeforeTargets="CopyFilesToOutputDirectory">
+		<Error Condition=" $(PlatformTarget) != 'x86' and '@(SqlCeNativeLibs64)' == '' " Text="SQL CE native binaries not found under '$(PkgMicrosoft_SqlServer_Compact)\NativeBinaries\amd64' - restore Microsoft.SqlServer.Compact." />
+		<Error Condition=" $(PlatformTarget) == 'x86' and '@(SqlCeNativeLibs86)' == '' " Text="SQL CE native binaries not found under '$(PkgMicrosoft_SqlServer_Compact)\NativeBinaries\x86' - restore Microsoft.SqlServer.Compact." />
 	</Target>
 
 	<Import Project="$(MSBuildThisFileDirectory)\..\SQLite.Runtime.props" />
