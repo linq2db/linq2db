@@ -1337,6 +1337,8 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 			return element;
 		}
 
+		static readonly DbDataType PlainStringType = new(typeof(string));
+
 		protected internal override IQueryElement VisitSqlConcatExpression(SqlConcatExpression element)
 		{
 			var newElement = base.VisitSqlConcatExpression(element);
@@ -1399,9 +1401,10 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 
 						EnsureFolded(i);
 						// Two constants collapsing into one is a real fold. So is turning a non-SqlValue operand
-						// (an evaluable parameter / computed expression) into a literal: only an operand that is
-						// ALREADY the equal SqlValue re-mints an identical node and must not count as a change.
-						if (pending != null || operand is not SqlValue)
+						// (an evaluable parameter / computed expression) into a literal, and so is re-typing a literal that
+						// took the type of a neighbouring column (a VarChar one loses SQL Server's N prefix) as a plain
+						// string: only an operand that is ALREADY the equal plain-string SqlValue must not count as a change.
+						if (pending != null || operand is not SqlValue { ValueType: var literalType } || !literalType.Equals(PlainStringType))
 							changed = true;
 						pending = pending == null ? s : pending + s;
 						continue;
