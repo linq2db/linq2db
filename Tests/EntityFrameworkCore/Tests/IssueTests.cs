@@ -1455,9 +1455,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		public void Issue6181_WindowFunctionOrderedByDateComparison(
 #if NET8_0
 			// EF8 registers the NodaTime plugin process-wide, so useNodaTime: false cannot keep #5981 out
-			[EFDataSources(TestProvName.AllPostgreSQL)] string provider)
+			[EFDataSources(TestProvName.AllPostgreSQL, TestProvName.AllMySql57)] string provider)
 #else
-			[EFDataSources] string provider)
+			[EFDataSources(TestProvName.AllMySql57)] string provider)
 #endif
 		{
 			using var ctx = CreateContext(provider, useNodaTime: false);

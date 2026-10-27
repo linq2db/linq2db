@@ -18,6 +18,8 @@ using NUnit.Framework;
 
 using Shouldly;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
 	[TestFixture]
@@ -1924,7 +1926,7 @@ namespace Tests.Linq
 			var value = new DateTime(2020, 1, 1, 10, 0, 0);
 
 			using var writer = GetDataContext(context, CapturedHoursMappingSchema(3));
-			using var t      = writer.CreateLocalTable([new SchemaScopedConversionRow { Id = 1, Value = value }]);
+			using var t      = CreateCommittedTable(writer, value);
 
 			using var reader = GetDataContext(context, CapturedHoursMappingSchema(4));
 
@@ -1940,6 +1942,20 @@ namespace Tests.Linq
 		{
 			[PrimaryKey] public int      Id    { get; set; }
 			[Column]     public DateTime Value { get; set; }
+		}
+
+		// Access commits an implicit transaction asynchronously, so a second connection could read the table before the row lands
+		static TempTable<SchemaScopedConversionRow> CreateCommittedTable(ITestDataContext writer, DateTime value)
+		{
+			var table = writer.CreateLocalTable<SchemaScopedConversionRow>();
+
+			using (var tr = writer.BeginTransaction())
+			{
+				writer.Insert(new SchemaScopedConversionRow { Id = 1, Value = value });
+				tr?.Commit();
+			}
+
+			return table;
 		}
 
 		static MappingSchema SchemaScopedConversionMappingSchema(
@@ -1971,7 +1987,7 @@ namespace Tests.Linq
 			var value = new DateTime(2020, 1, 1, 10, 0, 0);
 
 			using var writer = GetDataContext(context, SchemaScopedConversionMappingSchema(v => v.AddHours(1), v => v.AddHours(-1)));
-			using var t      = writer.CreateLocalTable([new SchemaScopedConversionRow { Id = 1, Value = value }]);
+			using var t      = CreateCommittedTable(writer, value);
 
 			using var reader = GetDataContext(context, SchemaScopedConversionMappingSchema(v => v.AddHours(2), v => v.AddHours(-2)));
 
