@@ -149,6 +149,7 @@
 		<PackageVersion Include="IBM.Data.DB.Provider"                                  Version="11.5.9000.4"                  />
 		<PackageVersion Include="Microsoft.Data.SqlClient"                              Version="7.0.2"                        />
 		<PackageVersion Include="Microsoft.Data.Sqlite"                                 Version="$(Net10Latest)"               />
+		<PackageVersion Include="Microsoft.SqlServer.Compact"                           Version="4.0.8876.1"                   />
 		<PackageVersion Include="Microsoft.SqlServer.TransactSql.ScriptDom"             Version="180.102.0"                    />
 		<PackageVersion Include="Microsoft.SqlServer.Types"                             Version="170.1000.7"                   />
 		<PackageVersion Include="MySqlConnector"                                        Version="2.6.2"                        />
@@ -166,6 +167,9 @@
 		<PackageVersion Include="Octonica.ClickHouseClient"                             Version="4.1.6"                        />
 		<PackageVersion Include="Oracle.ManagedDataAccess"                              Version="21.23.0"                      />
 		<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="23.26.301"                    />
+		<!--SAP publishes no v9.0 package: net9.0 consumes the v8.0 one-->
+		<PackageVersion Include="Sap.Data.Hana.Net.v8.0"                                Version="2.30.27"                      Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
+		<PackageVersion Include="Sap.Data.Hana.Net.v10.0"                               Version="2.30.27"                      Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
 		<PackageVersion Include="System.Data.Odbc"                                      Version="$(Net10Latest)"               />
 		<!--tests override this via VersionOverride, see $(OleDbTestsVersion) above-->
 		<PackageVersion Include="System.Data.OleDb"                                     Version="$(Net10Latest)"               />

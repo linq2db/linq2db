@@ -196,7 +196,7 @@ namespace Tests
 				}
 			}
 
-			// SequentialAccess for the SqlServer.SA provider is now a per-context option set in the
+			// SequentialAccess for the SqlServer.CS provider is a per-context option set in the
 			// GetDataConnection/GetDataContext factory, so parallel lanes don't share a process-global toggle.
 		}
 
