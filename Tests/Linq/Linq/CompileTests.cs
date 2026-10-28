@@ -135,127 +135,119 @@ namespace Tests.Linq
 		}
 
 		[Test, Order(100)]
+		[NoBaselines("Multi-threading")]
 		public void ConcurrentTest1([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (new DisableBaseline("Multi-threading"))
+			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
+			db.GetTable<Parent>().Where(p => p.ParentID == n).First().ParentID);
+
+			const int count = 100;
+
+			var threads = new Task[count];
+			var results = new int [count, 2];
+
+			for (var i = 0; i < count; i++)
 			{
-				var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
-				db.GetTable<Parent>().Where(p => p.ParentID == n).First().ParentID);
+				var n = i;
 
-				const int count = 100;
-
-				var threads = new Task[count];
-				var results = new int [count, 2];
-
-				for (var i = 0; i < count; i++)
+				threads[i] = Task.Run(() =>
 				{
-					var n = i;
-
-					threads[i] = Task.Run(() =>
-					{
-						using var db = GetDataContext(context);
-						var id = (n % 6) + 1;
-						results[n, 0] = id;
-						results[n, 1] = query(db, id);
-					});
-				}
-
-				Task.WaitAll(threads);
-
-				for (var i = 0; i < count; i++)
-					Assert.That(results[i, 1], Is.EqualTo(results[i, 0]));
+					using var db = GetDataContext(context);
+					var id = (n % 6) + 1;
+					results[n, 0] = id;
+					results[n, 1] = query(db, id);
+				});
 			}
+
+			Task.WaitAll(threads);
+
+			for (var i = 0; i < count; i++)
+				Assert.That(results[i, 1], Is.EqualTo(results[i, 0]));
 		}
 
 		[Test, Order(100)]
+		[NoBaselines("Multi-threading")]
 		public void ConcurrentTestWithOptmization([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (new DisableBaseline("Multi-threading"))
+			var query = CompiledQuery.Compile((ITestDataContext db, int n, int n2) =>
+				db.GetTable<Parent>().Where(p => p.ParentID == n && n == n2).First().ParentID);
+
+			const int count = 100;
+
+			var threads = new Task[count];
+			var results = new int [count, 2];
+
+			for (var i = 0; i < count; i++)
 			{
-				var query = CompiledQuery.Compile((ITestDataContext db, int n, int n2) =>
-					db.GetTable<Parent>().Where(p => p.ParentID == n && n == n2).First().ParentID);
+				var n = i;
 
-				const int count = 100;
-
-				var threads = new Task[count];
-				var results = new int [count, 2];
-
-				for (var i = 0; i < count; i++)
+				threads[i] = Task.Run(() =>
 				{
-					var n = i;
-
-					threads[i] = Task.Run(() =>
-					{
-						using var db = GetDataContext(context);
-						var id = (n % 6) + 1;
-						results[n, 0] = id;
-						results[n, 1] = query(db, id, id);
-					});
-				}
-
-				Task.WaitAll(threads);
-
-				for (var i = 0; i < count; i++)
-					Assert.That(results[i, 1], Is.EqualTo(results[i, 0]));
+					using var db = GetDataContext(context);
+					var id = (n % 6) + 1;
+					results[n, 0] = id;
+					results[n, 1] = query(db, id, id);
+				});
 			}
+
+			Task.WaitAll(threads);
+
+			for (var i = 0; i < count; i++)
+				Assert.That(results[i, 1], Is.EqualTo(results[i, 0]));
 		}
 
 		[Test]
+		[NoBaselines("Multi-threading")]
 		public void ConcurrentTest2([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (new DisableBaseline("Multi-threading"))
+			var threads = new Task[100];
+			var results = new int [100,2];
+
+			for (var i = 0; i < 100; i++)
 			{
-				var threads = new Task[100];
-				var results = new int [100,2];
+				var n = i;
 
-				for (var i = 0; i < 100; i++)
+				threads[i] = Task.Run(() =>
 				{
-					var n = i;
-
-					threads[i] = Task.Run(() =>
-					{
-						using var db = GetDataContext(context);
-						var id = (n % 6) + 1;
-						results[n, 0] = id;
-						results[n, 1] = db.Parent.Where(p => p.ParentID == id).First().ParentID;
-					});
-				}
-
-				Task.WaitAll(threads);
-
-				for (var i = 0; i < 100; i++)
-					Assert.That(results[i, 1], Is.EqualTo(results[i, 0]));
+					using var db = GetDataContext(context);
+					var id = (n % 6) + 1;
+					results[n, 0] = id;
+					results[n, 1] = db.Parent.Where(p => p.ParentID == id).First().ParentID;
+				});
 			}
+
+			Task.WaitAll(threads);
+
+			for (var i = 0; i < 100; i++)
+				Assert.That(results[i, 1], Is.EqualTo(results[i, 0]));
 		}
 
 		[Test]
+		[NoBaselines("Multi-threading")]
 		public void ConcurrentTest3([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (new DisableBaseline("Multi-threading"))
+			var threadCount = 100;
+
+			var threads = new Task[threadCount];
+			var results = new int [threadCount,2];
+
+			for (var i = 0; i < threadCount; i++)
 			{
-				var threadCount = 100;
+				var n = i;
 
-				var threads = new Task[threadCount];
-				var results = new int [threadCount,2];
-
-				for (var i = 0; i < threadCount; i++)
+				threads[i] = Task.Run(() =>
 				{
-					var n = i;
-
-					threads[i] = Task.Run(() =>
-					{
-						using var db = GetDataContext(context);
-						var id = (n % 6) + 1;
-						results[n, 0] = id;
-						results[n, 1] = db.Parent.Where(p => p.ParentID == id && id >= 0).First().ParentID;
-					});
-				}
-
-				Task.WaitAll(threads);
-
-				for (var i = 0; i < threadCount; i++)
-					Assert.That(results[i, 1], Is.EqualTo(results[i, 0]));
+					using var db = GetDataContext(context);
+					var id = (n % 6) + 1;
+					results[n, 0] = id;
+					results[n, 1] = db.Parent.Where(p => p.ParentID == id && id >= 0).First().ParentID;
+				});
 			}
+
+			Task.WaitAll(threads);
+
+			for (var i = 0; i < threadCount; i++)
+				Assert.That(results[i, 1], Is.EqualTo(results[i, 0]));
 		}
 
 		[Test]

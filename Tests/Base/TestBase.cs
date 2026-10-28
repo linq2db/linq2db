@@ -179,6 +179,9 @@ namespace Tests
 			// establish a fresh per-test context before anything in setup/test can log
 			CustomTestContext.Begin(isRemote, provider);
 
+			if (NoBaselinesAttribute.AppliesTo(test))
+				CustomTestContext.Get().Set(CustomTestContext.BASELINE_DISABLED, true);
+
 			// Under parallel execution, wait until this provider's database has been created
 			// (CreateDatabase runs off-lane and signals readiness). A serial run skips this; providers
 			// that get no CreateDatabase case are pre-marked ready in TestsInitialization, so only
