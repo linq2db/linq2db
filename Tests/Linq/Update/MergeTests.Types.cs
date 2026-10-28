@@ -649,10 +649,9 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ActiveIssue(5169, Configuration = TestProvName.AllPostgreSQL, BaselinesMismatch = true, Details = "remote MERGE-source parameter dedup/naming differs (value_2/value_3 vs value/value_2)")]
 		public void TestTypesInsertByMerge([MergeDataContextSource(TestProvName.AllInformix, TestProvName.AllSybase)] string context)
 		{
-			using var _ = context.IsAnyOf(TestProvName.AllPostgreSQL) ? new DisableBaseline("https://github.com/linq2db/linq2db/issues/5169 - PostgreSQL remote/direct MERGE-source parameter dedup/naming divergence (value_2/value_3 vs value/value_2)") : null;
-
 			var isIDS = IsIDSProvider(context);
 
 			using var db = GetDataContext(context);
