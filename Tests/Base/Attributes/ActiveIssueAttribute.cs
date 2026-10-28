@@ -115,7 +115,7 @@ namespace Tests
 		/// recorded mismatch is <see cref="ResultState.Inconclusive"/>, a recorded match is
 		/// <see cref="ResultState.Failure"/> (the issue is fixed), and a case whose other side did not run in the same
 		/// process — a filtered run, a retried case — is left alone. Either side of the pair can be the one that
-		/// compares, so do not combine it with <see cref="SkipForNonLinqService"/>. A gated mismatch writes no
+		/// compares, so do not combine it with <see cref="SkipForLinqService"/> or <see cref="SkipForNonLinqService"/>. A gated mismatch writes no
 		/// <c>.sql.other</c> baseline.
 		/// </para>
 		/// </summary>
