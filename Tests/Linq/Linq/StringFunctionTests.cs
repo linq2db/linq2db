@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 #if NETFRAMEWORK
 using System.Data.Linq.SqlClient;
 #else
@@ -790,6 +791,240 @@ namespace Tests.Linq
 
 			result.ToList().Count.ShouldBe(1);
 		}
+
+		#region String-function arguments beside a VarChar column
+
+		static readonly StringTypesTable[] UnicodeArgumentData =
+		[
+			new() { Id = 1, CharColumn = "A-100", NCharColumn = "A-100", VarCharColumn = "A-100", NVarCharColumn = "A-100Жук" },
+			new() { Id = 2, CharColumn = "B?200", NCharColumn = "B?200", VarCharColumn = "B?200", NVarCharColumn = "B?200"    },
+			new() { Id = 3, CharColumn = "B-200", NCharColumn = "B-200", VarCharColumn = "B-200", NVarCharColumn = "B-200"    },
+		];
+
+		// Informix.DB2: the CI container's code page rejects the Cyrillic seed values at insert time.
+		[Test]
+		[ThrowsCannotBeConverted(TestProvName.AllAccessJet)]
+		public void ComputedArgumentBesideVarCharKeepsUnicode([DataSources(TestProvName.AllInformix)] string context)
+		{
+			var suffix = "Жук";
+			var search = "Ж";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(UnicodeArgumentData);
+
+			var query = table
+				.Select(t => new
+				{
+					t.Id,
+					Replaced = Sql.AsSql(t.VarCharColumn.Replace("A", suffix)),
+					Function = Sql.AsSql(Sql.Replace(t.VarCharColumn, "A", suffix)),
+					Searched = Sql.AsSql(t.VarCharColumn.Replace(search, "-")),
+				});
+
+			AssertQuery(query);
+		}
+
+		// Cyrillic literals stay in the command text, so the test is scoped to providers whose command text carries them.
+		[Test]
+		public void ComputedLiteralBesideVarCharKeepsUnicode([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(UnicodeArgumentData);
+
+			var query = table
+				.Select(t => new
+				{
+					t.Id,
+					Chars         = Sql.AsSql(t.VarCharColumn.Replace('A', 'Ж')),
+					FunctionChars = Sql.AsSql(Sql.Replace(t.VarCharColumn, 'A', 'Ж')),
+					Padded        = Sql.AsSql(t.VarCharColumn.PadLeft(8, 'Ж')),
+				});
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void ComputedArgumentBesideCharKeepsUnicode([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllSQLite)] string context)
+		{
+			var suffix = "Жук";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(UnicodeArgumentData);
+
+			var query = table
+				.Select(t => new
+				{
+					t.Id,
+					Replaced = Sql.AsSql(t.CharColumn.Replace("A", suffix).TrimEnd()),
+					Chars    = Sql.AsSql(t.CharColumn.Replace('A', 'Ж').TrimEnd()),
+				});
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void ComputedArgumentBesideVarCharKeepsLength([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL)] string context)
+		{
+			var suffix = new string('Ж', 60);
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(UnicodeArgumentData);
+
+			var query = table
+				.Select(t => new
+				{
+					t.Id,
+					Replaced = Sql.AsSql(t.VarCharColumn.Replace("A", suffix)),
+				});
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void ComputedArgumentInComparisonKeepsComparedColumnType([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var dash = "-";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(UnicodeArgumentData);
+
+			var query =
+				from a in table
+				from b in table
+				where b.VarCharColumn == a.VarCharColumn.Replace("?", dash)
+					&& b.VarCharColumn == a.VarCharColumn.PadLeft(5, '0')
+				select new { A = a.Id, B = b.Id };
+
+			AssertQuery(query);
+
+			// An nvarchar value would turn the comparison into nvarchar and convert the compared column.
+			var baselines = GetCurrentBaselines();
+
+			baselines.ShouldContain("DECLARE @dash VarChar");
+			baselines.ShouldContain("REPLICATE('0'");
+		}
+
+		[Test]
+		public void ComputedArgumentBesideCharInComparisonIsNotPadded([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var dash = "-";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(UnicodeArgumentData);
+
+			var query =
+				from a in table
+				from b in table
+				where b.VarCharColumn == a.CharColumn.Replace("?", dash)
+				select new { A = a.Id, B = b.Id };
+
+			AssertQuery(query);
+
+			// A cast to the Char column's type would pad the search value and the replacement to its length.
+			GetCurrentBaselines().ShouldNotContain("AS Char(");
+		}
+
+		[Test]
+		[ActiveIssue(6193, Configuration = TestProvName.AllAccess, ErrorType = typeof(InsufficientExecutionStackException))]
+		public void ComparedConcatBesideVarCharKeepsUnicode([DataSources(TestProvName.AllInformix)] string context)
+		{
+			var suffix = "Жук";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(UnicodeArgumentData);
+
+			var query = table
+				.Select(t => new
+				{
+					t.Id,
+					Compared = Sql.AsSql((t.VarCharColumn + suffix).CompareTo(t.NVarCharColumn)),
+					Trimmed  = Sql.AsSql((t.VarCharColumn + suffix).TrimEnd()),
+				});
+
+			AssertQuery(query);
+
+			var liked = table
+				.Where(t => Sql.Like(t.VarCharColumn + suffix, t.NVarCharColumn))
+				.Select(t => t.Id)
+				.ToArray();
+
+			liked.ShouldBe([1]);
+		}
+
+		[Test]
+		public void ComparedCastBesideVarCharKeepsUnicode([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var pattern = "%Ж%";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(UnicodeArgumentData);
+
+			var liked = table
+				.Where(t => Sql.Like(Sql.Convert(Sql.Types.NVarChar(50), t.VarCharColumn), pattern))
+				.Select(t => t.Id)
+				.ToArray();
+
+			liked.ShouldBeEmpty();
+		}
+
+		[Test]
+		public void ComputedArgumentBesideNVarCharKeepsColumnType([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var suffix = "Жук";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(UnicodeArgumentData);
+
+			var query = table
+				.Select(t => new
+				{
+					t.Id,
+					Replaced = Sql.AsSql(t.NVarCharColumn.Replace("A", suffix)),
+				});
+
+			AssertQuery(query);
+
+			GetCurrentBaselines().ShouldContain("DECLARE @suffix NVarChar(50)");
+		}
+
+		[Test]
+		public void ComputedArgumentBesideNCharKeepsColumnType([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var suffix = "Жук";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(UnicodeArgumentData);
+
+			var query = table
+				.Select(t => new
+				{
+					t.Id,
+					Replaced = Sql.AsSql(t.NCharColumn.Replace("A", suffix).TrimEnd()),
+				});
+
+			AssertQuery(query);
+
+			GetCurrentBaselines().ShouldContain("DECLARE @suffix NChar(");
+		}
+
+		[Test]
+		public void ComparedArgumentBesideVarCharKeepsColumnType([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var bound = "A";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(UnicodeArgumentData);
+
+			var query = table
+				.Where(t => t.VarCharColumn.CompareTo(bound) > 0)
+				.Select(t => t.Id);
+
+			AssertQuery(query, EqualityComparer<int>.Default);
+
+			GetCurrentBaselines().ShouldContain("DECLARE @bound VarChar");
+		}
+
+		#endregion
 
 		[Test]
 		public void EndsWithWithCase([DataSources] string context)

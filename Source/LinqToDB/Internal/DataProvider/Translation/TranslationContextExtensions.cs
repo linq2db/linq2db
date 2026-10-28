@@ -90,7 +90,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (fromExpression is null)
 				return null;
 
-			var columnDescriptor = QueryHelper.GetColumnDescriptor(fromExpression);
+			var columnDescriptor = QueryHelper.GetColumnDescriptorForTyping(fromExpression);
 
 			if (columnDescriptor == null)
 				return null;
