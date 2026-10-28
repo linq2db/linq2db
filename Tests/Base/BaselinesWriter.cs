@@ -24,7 +24,7 @@ namespace Tests
 		// access when tests run in parallel across providers
 		static readonly Lock _sync = new();
 
-		internal static void Write(string? baselinesPath, string baseline, bool isRemote, string? providerSuffix)
+		public static void Write(string? baselinesPath, string baseline, bool isRemote, string? providerSuffix)
 		{
 			var test = TestExecutionContext.CurrentContext.CurrentTest;
 

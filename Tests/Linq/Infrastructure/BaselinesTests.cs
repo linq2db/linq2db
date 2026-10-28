@@ -150,6 +150,19 @@ namespace Tests.Infrastructure
 			BaselinesWriter.Record(comparer, null, Path.Combine("ctx", "Test.sql"), isRemote: true,  "SELECT 2", writeOther: true).ShouldBe(BaselineComparison.Mismatched);
 		}
 
+		// Write itself, on the process-wide comparer: the provider suffix keeps the key apart from real baselines, and no
+		// path means no file is written even on CI.
+		[Test]
+		public void Write_UngatedMismatch_Throws([IncludeDataSources(ProviderName.SQLiteMS)] string context)
+		{
+			BaselinesWriter.Write(null, "SELECT 1", isRemote: false, ".UngatedProbe");
+
+			Action act = () => BaselinesWriter.Write(null, "SELECT 2", isRemote: true, ".UngatedProbe");
+
+			act.ShouldThrow<InvalidOperationException>()
+				.Message.ShouldStartWith("Baselines for remote context doesn't match direct access baselines.");
+		}
+
 		// The direct and the remote case deliberately run different queries, so their baselines differ on every run;
 		// the gate turns the side that compares Inconclusive and leaves the other one passing.
 		[Test]
