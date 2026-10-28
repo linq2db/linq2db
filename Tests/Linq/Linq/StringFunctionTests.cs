@@ -926,6 +926,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ActiveIssue(6193, Configuration = TestProvName.AllAccess, ErrorType = typeof(InsufficientExecutionStackException))]
+		[ActiveIssue(6195, Configuration = TestProvName.AllDB2,    ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
 		public void ComparedConcatBesideVarCharKeepsUnicode([DataSources(TestProvName.AllInformix)] string context)
 		{
 			var suffix = "Жук";
