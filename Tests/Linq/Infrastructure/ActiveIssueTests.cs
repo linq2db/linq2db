@@ -409,7 +409,8 @@ namespace Tests.Infrastructure
 			var blanket   = new ActiveIssueAttribute(1);
 			var baselines = new ActiveIssueAttribute(2) { BaselinesMismatch = true };
 
-			ActiveIssueAttribute.SelectGoverning([blanket, baselines], "SQLite.MS", true, out var ambiguous).ShouldBeSameAs(baselines);
+			ActiveIssueAttribute.SelectGoverning([blanket, baselines], "SQLite.MS", true, out var ambiguous)
+				.ShouldBeSameAs(baselines);
 			ambiguous.ShouldBeFalse();
 		}
 

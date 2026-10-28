@@ -47,6 +47,8 @@ namespace Tests.Infrastructure
 					.ShouldContain("SELECT");
 		}
 
+		// One provider is enough: the scope and the attribute set one flag on the per-test context, whatever the provider;
+		// the remote case checks that the server side sees the same flag.
 		[Test, NoBaselines("test: a scope whose condition is false keeps capture suppressed")]
 		public void NoBaselinesSurvivesFalseScope([IncludeDataSources(true, ProviderName.SQLiteMS)] string context)
 		{
