@@ -4013,21 +4013,28 @@ namespace Tests.Linq
 			return System.Runtime.CompilerServices.FormattableStringFactory.Create(format, arguments);
 		}
 
-		// SQL Server rejects a request with more than 2100 parameters, and semicolon-joined statements share one request,
-		// so children whose parameters add up past that have to go in separate commands. The interceptor forces the joined
-		// command; each child alone stays under the limit.
+		// SQL Server rejects a request with more than 2100 parameters, sp_executesql spends two of them on the statement and
+		// its parameter list, and semicolon-joined statements share one request - so children whose parameters add up past
+		// 2098 have to go in separate commands. The interceptor forces the joined command; each child alone stays under the
+		// limit.
 		[Test]
-		public void CombinedChildrenStayUnderTheParameterLimit([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void CombinedChildrenStayUnderTheParameterLimit(
+			[IncludeDataSources(TestProvName.AllSqlServer)] string context,
+			[Values(2098, 2099, 2100, 2101)]                int    total)
 		{
 			var (_, _, detached) = GenerateMixedEagerData();
 
 			using var db        = GetDataContext(context);
 			using var tDetached = db.CreateLocalTable(detached);
 
-			db.AddInterceptor(new CombinedCommandCounter());
+			var counter = new CombinedCommandCounter();
+			db.AddInterceptor(counter);
 
-			var first  = DetachedInList(tDetached.TableName, new[] { 1, 2 }.Concat(Enumerable.Range(10_001, 1_098)));
-			var second = DetachedInList(tDetached.TableName, new[] { 3, 4 }.Concat(Enumerable.Range(20_001, 1_098)));
+			var firstCount  = total / 2;
+			var secondCount = total - firstCount;
+
+			var first  = DetachedInList(tDetached.TableName, new[] { 1, 2 }.Concat(Enumerable.Range(10_001, firstCount  - 2)));
+			var second = DetachedInList(tDetached.TableName, new[] { 3, 4 }.Concat(Enumerable.Range(20_001, secondCount - 2)));
 
 			var result = db.Select(() => new
 			{
@@ -4047,6 +4054,9 @@ namespace Tests.Linq
 
 			firstIds.ShouldBe(new[] { 1, 2 });
 			secondIds.ShouldBe(new[] { 3, 4 });
+
+			if (combinedCommands && !context.IsRemote())
+				counter.Count.ShouldBe(total <= 2098 ? 1 : 2);
 		}
 
 		// The main query of a combined command is read through the same reader path as its children, so its emulated Skip
@@ -4136,6 +4146,88 @@ namespace Tests.Linq
 				m.Correlated.Select(c => c.Id).ShouldBe(correlated.Where(c => c.MasterId == m.Id).Select(c => c.Id).OrderBy(id => id).ToList());
 				m.Detached  .Select(d => d.Id).ShouldBe(detached.Select(d => d.Id).OrderBy(id => id).ToList());
 			}
+		}
+
+		#endregion
+
+		#region Writes during an eager load
+
+		[Table]
+		sealed class ExportInvoice
+		{
+			[PrimaryKey] public int  Id       { get; set; }
+			[Column    ] public bool Exported { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(ExportInvoiceLine.InvoiceId))]
+			public List<ExportInvoiceLine> Lines { get; set; } = null!;
+		}
+
+		[Table]
+		sealed class ExportInvoiceLine
+		{
+			[PrimaryKey] public int Id        { get; set; }
+			[Column    ] public int InvoiceId { get; set; }
+		}
+
+		static readonly ExportInvoice[] ExportInvoices =
+		{
+			new() { Id = 1 },
+			new() { Id = 2 },
+		};
+
+		static readonly ExportInvoiceLine[] ExportInvoiceLines =
+		{
+			new() { Id = 10, InvoiceId = 1 },
+			new() { Id = 20, InvoiceId = 2 },
+		};
+
+		// Each invoice is marked exported on the same connection while its eager load is still being enumerated. The load's
+		// implicit read-consistency transaction is still open then, and the writes it takes in must persist with it.
+		[Test]
+		public void WritesDuringEagerLoadEnumerationPersist([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var invoices = db.CreateLocalTable(ExportInvoices);
+			using var lines    = db.CreateLocalTable(ExportInvoiceLines);
+
+			var withLines = invoices
+				.LoadWith(i => i.Lines);
+
+			foreach (var invoice in withLines)
+			{
+				invoices
+					.Where(i => i.Id == invoice.Id)
+					.Set(i => i.Exported, true)
+					.Update();
+			}
+
+			invoices
+				.Count(i => i.Exported)
+				.ShouldBe(ExportInvoices.Length);
+		}
+
+		[Test]
+		public async Task WritesDuringEagerLoadEnumerationPersistAsync([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var invoices = db.CreateLocalTable(ExportInvoices);
+			using var lines    = db.CreateLocalTable(ExportInvoiceLines);
+
+			var withLines = invoices
+				.LoadWith(i => i.Lines)
+				.AsAsyncEnumerable();
+
+			await foreach (var invoice in withLines)
+			{
+				await invoices
+					.Where(i => i.Id == invoice.Id)
+					.Set(i => i.Exported, true)
+					.UpdateAsync();
+			}
+
+			var exported = await invoices.CountAsync(i => i.Exported);
+
+			exported.ShouldBe(ExportInvoices.Length);
 		}
 
 		#endregion

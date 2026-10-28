@@ -2185,6 +2185,13 @@ namespace LinqToDB.Internal.SqlProvider
 					if (isMutable2 && exprExpr.Expr2.ShouldCheckForNull(nullability))
 						return true;
 
+					// A predicate compared with a parameter folds to the predicate or its negation once the value is read,
+					// which only a per-run render can do (SqlExpressionOptimizerVisitor.VisitExprExprPredicate).
+					if (exprExpr is { Operator: SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual, UnknownAsValue: null }
+						&& (exprExpr.Expr1 is ISqlPredicate && exprExpr.Expr2 is not ISqlPredicate && isMutable2
+							|| exprExpr.Expr2 is ISqlPredicate && exprExpr.Expr1 is not ISqlPredicate && isMutable1))
+						return true;
+
 					return false;
 				}
 				case QueryElementType.IsDistinctPredicate:

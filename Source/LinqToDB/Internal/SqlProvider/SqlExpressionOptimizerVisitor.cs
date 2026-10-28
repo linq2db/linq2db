@@ -158,20 +158,6 @@ namespace LinqToDB.Internal.SqlProvider
 			return false;
 		}
 
-		/// <summary>
-		/// The boolean value of <paramref name="expr"/> for rules that RESTRUCTURE the predicate, which must not depend on a
-		/// query parameter's value: the rendered structure is cached and replayed for later runs with different values.
-		/// <para>
-		/// It also has to answer the same way in every pass. Plain <see cref="QueryHelper.GetBoolValue"/> does not: it reads
-		/// the value whenever one happens to be bound, so the memoized structural prepare (no parameter values) folds nothing
-		/// while the remote path (values bound) folds — and the two render different SQL for the same query.
-		/// </para>
-		/// </summary>
-		protected bool? GetBoolValueNoQueryParameters(ISqlExpression expr)
-		{
-			return expr.HasQueryParameter() ? null : QueryHelper.GetBoolValue(expr, EvaluationContext);
-		}
-
 		#endregion
 
 		protected internal override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
@@ -773,7 +759,6 @@ namespace LinqToDB.Internal.SqlProvider
 		// 3. A AND B AND A => A AND B
 		// 4. A AND !A => false
 		// 4. A OR !A => true
-		// 5. !A AND !B => !(A OR B), !A OR !B => !(A AND B)
 		IQueryElement OptimizeSimilarFlat(SqlSearchCondition element)
 		{
 			if (element.Predicates.Count <= 1)
@@ -1337,6 +1322,8 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 			return element;
 		}
 
+		static readonly DbDataType PlainStringType = new(typeof(string));
+
 		protected internal override IQueryElement VisitSqlConcatExpression(SqlConcatExpression element)
 		{
 			var newElement = base.VisitSqlConcatExpression(element);
@@ -1399,9 +1386,10 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 
 						EnsureFolded(i);
 						// Two constants collapsing into one is a real fold. So is turning a non-SqlValue operand
-						// (an evaluable parameter / computed expression) into a literal: only an operand that is
-						// ALREADY the equal SqlValue re-mints an identical node and must not count as a change.
-						if (pending != null || operand is not SqlValue)
+						// (an evaluable parameter / computed expression) into a literal, and so is re-typing a literal that
+						// took the type of a neighbouring column (a VarChar one loses SQL Server's N prefix) as a plain
+						// string: only an operand that is ALREADY the equal plain-string SqlValue must not count as a change.
+						if (pending != null || operand is not SqlValue { ValueType: var literalType } || !literalType.Equals(PlainStringType))
 							changed = true;
 						pending = pending == null ? s : pending + s;
 						continue;
@@ -1808,20 +1796,15 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 
 			if (expr.Operator is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
 			{
-				// Both `is not SqlParameter` guards below: GetBoolValue returns null for a parameter because its value is
-				// WITHHELD, not because the operand is non-boolean. The memoized structural prepare runs with no parameter
-				// values precisely so this run's value cannot be baked into the cached structure, so the fold must not fire —
-				// but restructuring the parameter into a predicate instead sends the pair down the predicate-vs-predicate
-				// path, which lowers `(A = B) = @p` to an INVERTED comparison where there is no boolean type (Firebird 2.5:
-				// silently wrong rows). Left alone, ConvertExprExprPredicate emits the value-independent
-				// `CASE WHEN A = B THEN 1 ELSE 0 END = @p`, correct for either value and safe to memoize.
-				// HasQueryParameter() is NOT the test here: it asks "must this value never be baked" and is false for an
-				// inlinable parameter, while the question at this point is "could the value be read just now".
+				// A parameter's value is bound only on a per-run render, which BasicSqlOptimizer.IsParameterDependedElement
+				// selects for this comparison, so the fold reads it there. Where it is not bound, the `is not SqlParameter`
+				// guards keep the parameter out of a predicate: that would lower `(A = B) = @p` to an inverted comparison on
+				// engines with no boolean type (Firebird 2.5).
 				if (expr.UnknownAsValue == null)
 				{
 					if (expr.Expr2 is ISqlPredicate expr2Predicate)
 					{
-						var boolValue1 = GetBoolValueNoQueryParameters(expr.Expr1);
+						var boolValue1 = QueryHelper.GetBoolValue(expr.Expr1, EvaluationContext);
 						if (boolValue1 != null)
 						{
 							var isNot       = boolValue1.Value != (expr.Operator == SqlPredicate.Operator.Equal);
@@ -1837,7 +1820,7 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 
 					if (expr.Expr1 is ISqlPredicate expr1Predicate)
 					{
-						var boolValue2 = GetBoolValueNoQueryParameters(expr.Expr2);
+						var boolValue2 = QueryHelper.GetBoolValue(expr.Expr2, EvaluationContext);
 						if (boolValue2 != null)
 						{
 							var isNot       = boolValue2.Value != (expr.Operator == SqlPredicate.Operator.Equal);

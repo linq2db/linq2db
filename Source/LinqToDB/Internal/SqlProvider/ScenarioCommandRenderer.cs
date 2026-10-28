@@ -161,8 +161,10 @@ namespace LinqToDB.Internal.SqlProvider
 		/// the builder is a pure renderer (it no longer optimizes per element), they must get it here. Finalization runs
 		/// first (per-provider transforms, e.g. SqlCe rewrites its UPDATE into the alias-free form it accepts), matching
 		/// the order the main statement went through. Steps reusing the already-prepared main statement are skipped.
+		/// <paramref name="processStep"/>, when given, runs on each step before finalization, as ProcessQuery runs on the
+		/// main statement before its own.
 		/// </summary>
-		public static SqlCommandScenario FinalizeScenarioSteps(SqlCommandScenario scenario, SqlStatement mainStatement, ISqlOptimizer sqlOptimizer, DataOptions options, MappingSchema mappingSchema, OptimizationContext optimizationContext)
+		public static SqlCommandScenario FinalizeScenarioSteps(SqlCommandScenario scenario, SqlStatement mainStatement, ISqlOptimizer sqlOptimizer, DataOptions options, MappingSchema mappingSchema, OptimizationContext optimizationContext, Func<SqlStatement, SqlStatement>? processStep = null)
 		{
 			SqlCommandStep[]? finalized = null;
 
@@ -177,7 +179,7 @@ namespace LinqToDB.Internal.SqlProvider
 				if (ReferenceEquals(statement, mainStatement))
 					continue;
 
-				var finalStatement = sqlOptimizer.Finalize(mappingSchema, statement, options);
+				var finalStatement = sqlOptimizer.Finalize(mappingSchema, processStep?.Invoke(statement) ?? statement, options);
 
 				// The pass the main statement got in PrepareStructure. Without it the emulation's key comparison against a
 				// NULL parameter value stays `x = @p` instead of reducing to `x IS NULL`, so the UPDATE matches no rows and
@@ -231,10 +233,11 @@ namespace LinqToDB.Internal.SqlProvider
 		/// query the per-run whole-query convert (with values) applies them instead.
 		/// </summary>
 		public static QueryStructure PrepareStructure(
-			DataConnection      dataConnection,
-			DataOptions         options,
-			SqlStatement        statement,
-			OptimizationContext optimizationContext)
+			DataConnection                    dataConnection,
+			DataOptions                       options,
+			SqlStatement                      statement,
+			OptimizationContext               optimizationContext,
+			Func<SqlStatement, SqlStatement>? processStep = null)
 		{
 			var sqlOptimizer    = dataConnection.DataProvider.GetSqlOptimizer(options);
 			var serviceProvider = ((IInfrastructure<IServiceProvider>)dataConnection.DataProvider).Instance;
@@ -257,7 +260,7 @@ namespace LinqToDB.Internal.SqlProvider
 			// UPDATE/INSERT/SELECT emulation) after the main statement was finalized AND optimized+converted above, so
 			// they miss both — run finalization and the whole-query optimize+convert on them now. Steps reusing the
 			// already-prepared main statement are skipped.
-			scenario = FinalizeScenarioSteps(scenario, statement, sqlOptimizer, options, dataConnection.MappingSchema, optimizationContext);
+			scenario = FinalizeScenarioSteps(scenario, statement, sqlOptimizer, options, dataConnection.MappingSchema, optimizationContext, processStep);
 
 			// Plan: group the scenario's steps into physical commands (round-trips), size-aware. The master switch is
 			// checked here rather than inside the provider's PlanScenario, because that method answers "what can this

@@ -94,8 +94,8 @@ namespace LinqToDB.Internal.SqlQuery
 		/// <summary>
 		/// Whether <paramref name="exprExpr"/> compares against the NULL literal. That is a null check - Reduce rewrites
 		/// it to IS NULL - so it evaluates as CLR equality. An operand that merely evaluates to null makes it a real
-		/// comparison, whose result is UNKNOWN and is surfaced per UnknownAsValue (null preserves UNKNOWN) - the
-		/// contract IsTrue.WithNull documents and CanBeUnknown reports against.
+		/// comparison: without an UnknownAsValue (SQL semantics) its result is UNKNOWN - the contract IsTrue.WithNull
+		/// documents and CanBeUnknown reports against; with one (CompareNulls.LikeClr) it keeps CLR equality.
 		/// <para>
 		/// Only called once an operand is known to be null, so the common path does no unwrapping.
 		/// </para>
@@ -178,9 +178,9 @@ namespace LinqToDB.Internal.SqlQuery
 							{
 								result = true;
 							}
-							else if ((value1 == null || value2 == null) && !ComparedToNullLiteral(exprExpr))
+							else if ((value1 == null || value2 == null) && exprExpr.UnknownAsValue == null && !ComparedToNullLiteral(exprExpr))
 							{
-								result = exprExpr.UnknownAsValue;
+								result = null;
 							}
 							else
 							{
@@ -195,9 +195,9 @@ namespace LinqToDB.Internal.SqlQuery
 							{
 								result = false;
 							}
-							else if ((value1 == null || value2 == null) && !ComparedToNullLiteral(exprExpr))
+							else if ((value1 == null || value2 == null) && exprExpr.UnknownAsValue == null && !ComparedToNullLiteral(exprExpr))
 							{
-								result = exprExpr.UnknownAsValue;
+								result = null;
 							}
 							else
 							{

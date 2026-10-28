@@ -3,17 +3,19 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Linq;
 
 namespace LinqToDB.Internal.Async
 {
 	internal sealed class AsyncEnumeratorAsyncWrapper<T> : IAsyncEnumerator<T>
 	{
 		private IAsyncEnumerator<T>? _enumerator;
-		private readonly Func<Task<Tuple<IAsyncEnumerator<T>, IAsyncDisposable?>>> _init;
-		private IAsyncDisposable? _disposable;
+		private readonly Func<Task<Tuple<IAsyncEnumerator<T>, Query.LoadTransaction?>>> _init;
+		private Query.LoadTransaction? _transaction;
 		private bool _disposed;
+		private bool _faulted;
 
-		public AsyncEnumeratorAsyncWrapper(Func<Task<Tuple<IAsyncEnumerator<T>, IAsyncDisposable?>>> init)
+		public AsyncEnumeratorAsyncWrapper(Func<Task<Tuple<IAsyncEnumerator<T>, Query.LoadTransaction?>>> init)
 		{
 			_init = init;
 		}
@@ -39,15 +41,19 @@ namespace LinqToDB.Internal.Async
 			// The second resource is the read-consistency transaction this wrapper exists to hold open for the whole
 			// enumeration, so its release must not be conditional on the inner enumerator disposing cleanly - that one
 			// owns a DbDataReader and a DbCommand, either of which can throw on a broken connection.
+			// The transaction commits after the reader is closed, unless the load failed.
 			try
 			{
 				if (_enumerator != null)
 					await _enumerator.DisposeAsync().ConfigureAwait(false);
+
+				if (!_faulted && _transaction != null)
+					await _transaction.CompleteAsync(default).ConfigureAwait(false);
 			}
 			finally
 			{
-				if (_disposable != null)
-					await _disposable.DisposeAsync().ConfigureAwait(false);
+				if (_transaction != null)
+					await _transaction.DisposeAsync().ConfigureAwait(false);
 			}
 		}
 
@@ -60,12 +66,20 @@ namespace LinqToDB.Internal.Async
 
 			if (_enumerator == null)
 			{
-				var tuple   = await _init().ConfigureAwait(false);
-				_enumerator = tuple.Item1;
-				_disposable = tuple.Item2;
+				var tuple    = await _init().ConfigureAwait(false);
+				_enumerator  = tuple.Item1;
+				_transaction = tuple.Item2;
 			}
 
-			return await _enumerator.MoveNextAsync().ConfigureAwait(false);
+			try
+			{
+				return await _enumerator.MoveNextAsync().ConfigureAwait(false);
+			}
+			catch
+			{
+				_faulted = true;
+				throw;
+			}
 		}
 	}
 }
