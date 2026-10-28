@@ -924,10 +924,11 @@ namespace Tests.Linq
 			GetCurrentBaselines().ShouldNotContain("AS Char(");
 		}
 
+		// Access: the concatenation loops (#6193) and grows the expression past a gigabyte, enough to run the 32-bit test
+		// host out of memory, so it is not run there rather than gated.
 		[Test]
-		[ActiveIssue(6193, Configuration = TestProvName.AllAccess, ErrorType = typeof(InsufficientExecutionStackException))]
-		[ActiveIssue(6195, Configuration = TestProvName.AllDB2,    ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
-		public void ComparedConcatBesideVarCharKeepsUnicode([DataSources(TestProvName.AllInformix)] string context)
+		[ActiveIssue(6195, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
+		public void ComparedConcatBesideVarCharKeepsUnicode([DataSources(TestProvName.AllInformix, TestProvName.AllAccess)] string context)
 		{
 			var suffix = "Жук";
 
@@ -944,12 +945,14 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 
-			var liked = table
-				.Where(t => Sql.Like(t.VarCharColumn + suffix, t.NVarCharColumn))
+			// A suffix sent as non-Unicode arrives as '???', so every row would then contain '?'.
+			var unliked = table
+				.Where(t => !Sql.Like(t.VarCharColumn + suffix, "%?%"))
 				.Select(t => t.Id)
+				.OrderBy(id => id)
 				.ToArray();
 
-			liked.ShouldBe([1]);
+			unliked.ShouldBe([1, 3]);
 		}
 
 		[Test]
