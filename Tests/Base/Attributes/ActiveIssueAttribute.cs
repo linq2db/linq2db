@@ -348,8 +348,8 @@ namespace Tests
 
 		/// <summary>
 		/// Whether the case <paramref name="test"/> is decided by an instance with <see cref="BaselinesMismatch"/> set.
-		/// The baselines writer and the command both ask this, so they cannot disagree on which mismatches are gated;
-		/// an ambiguous selection is not gated, because the command fails that case.
+		/// The baselines writer asks this; the command makes the same selection inline (SelectGoverning, ambiguity,
+		/// Throws* deference), so keep the two in step. An ambiguous selection is not gated, because the command fails that case.
 		/// </summary>
 		public static bool GovernsBaselinesMismatch(ITest test)
 		{
