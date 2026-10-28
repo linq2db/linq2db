@@ -9,7 +9,6 @@ using LinqToDB.Data;
 using LinqToDB.EntityFrameworkCore.Tests.Logging;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
-using LinqToDB.Tools.Comparers;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -106,7 +105,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 		protected void AreEqualWithComparer<T>(IEnumerable<T> expected, IEnumerable<T> result)
 		{
-			AreEqual(t => t, expected, result, ComparerBuilder.GetEqualityComparer<T>());
+			AreEqual(t => t, expected, result, TestComparers.GetDefault<T>());
 		}
 
 		protected void AreEqual<T>(Func<T, T> fixSelector, IEnumerable<T> expected, IEnumerable<T> result, IEqualityComparer<T> comparer, bool allowEmpty = false)
