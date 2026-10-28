@@ -133,7 +133,6 @@ LinqToDB.Internal.SqlProvider.SqlCommandStep.RunIf.init -> void
 LinqToDB.Internal.SqlProvider.SqlCommandStep.SqlCommandStep() -> void
 LinqToDB.Internal.SqlProvider.SqlCommandStep.Statement.get -> LinqToDB.Internal.SqlQuery.SqlStatement?
 LinqToDB.Internal.SqlProvider.SqlCommandStep.Statement.init -> void
-LinqToDB.Internal.SqlProvider.SqlExpressionOptimizerVisitor.GetBoolValueNoQueryParameters(LinqToDB.Internal.SqlQuery.ISqlExpression! expr) -> bool?
 LinqToDB.Internal.SqlProvider.SqlExpressionOptimizerVisitor.InitState(LinqToDB.Internal.SqlQuery.EvaluationContext! evaluationContext, LinqToDB.Internal.SqlQuery.NullabilityContext! nullabilityContext, LinqToDB.Internal.SqlQuery.Visitors.SqlQueryVisitor.IVisitorTransformationInfo? transformationInfo, LinqToDB.DataOptions! dataOptions, LinqToDB.Mapping.MappingSchema! mappingSchema, bool visitQueries) -> void
 LinqToDB.Internal.SqlProvider.SqlExpressionOptimizerVisitor.IsInsidePredicate.get -> bool
 LinqToDB.Internal.SqlProvider.SqlExpressionOptimizerVisitor.IsInsidePredicate.set -> void
@@ -323,3 +322,8 @@ static LinqToDB.LinqExtensions.InsertWithOutputQuery<TSource, TTarget>(this Syst
 static LinqToDB.LinqExtensions.InsertWithOutputQuery<TTarget>(this LinqToDB.ITable<TTarget>! target, System.Linq.Expressions.Expression<System.Func<TTarget>!>! setter) -> System.Linq.IQueryable<TTarget>!
 virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitNestedStatement(LinqToDB.Internal.SqlQuery.SqlStatement! statement) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlDataModificationTable(LinqToDB.Internal.SqlQuery.SqlDataModificationTable! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+const LinqToDB.Internal.Common.ErrorHelper.Error_DynamicColumns_NoSetter = "Type '{0}' is materialized with dynamic column(s) {1}, but has no dynamic column setter. Add a member marked with DynamicColumnsStoreAttribute, or configure a setter through DynamicColumnAccessorAttribute or DynamicPropertyAccessors." -> string!
+LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQLMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator
+LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQLMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator() -> void
+override LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQL95MemberTranslator.CreateAggregateFunctionsMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator!
+override LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQLMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator.IsFilterSupported.get -> bool

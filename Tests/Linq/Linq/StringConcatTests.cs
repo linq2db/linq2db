@@ -928,5 +928,52 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		#region Unicode literal with a non-Unicode column
+
+		[Table("ConcatCatalogItem")]
+		sealed class ConcatCatalogItem
+		{
+			[PrimaryKey]                                        public int    Id    { get; set; }
+			[Column(DataType = DataType.VarChar,  Length = 20)] public string Sku   { get; set; } = string.Empty;
+			[Column(DataType = DataType.NVarChar, Length = 50)] public string Label { get; set; } = string.Empty;
+		}
+
+		static readonly ConcatCatalogItem[] CatalogItems =
+		{
+			new() { Id = 1, Sku = "A-100", Label = "" },
+		};
+
+		// SQL Server marks a Unicode literal with the N prefix, which follows the literal's own type. A literal joined to a
+		// VarChar column must keep it, or the server converts the literal to the code page and non-Latin text becomes '?'.
+		[Test]
+		public void Concat_UnicodeLiteralWithVarCharColumn_Select([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(CatalogItems);
+
+			table
+				.Select(x => Sql.AsSql("Артикул " + x.Sku))
+				.Single()
+				.ShouldBe("Артикул A-100");
+		}
+
+		[Test]
+		public void Concat_UnicodeLiteralWithVarCharColumn_Update([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(CatalogItems);
+
+			table
+				.Set(x => x.Label, x => "Артикул " + x.Sku)
+				.Update();
+
+			table
+				.Single()
+				.Label
+				.ShouldBe("Артикул A-100");
+		}
+
+		#endregion
 	}
 }

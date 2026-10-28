@@ -40,11 +40,6 @@ namespace LinqToDB.Internal.Linq
 
 		public IReadOnlyCollection<QueryInfo> GetQueries()    => new[] { QueryInfo };
 		public bool                           IsFinalized     { get; internal set; }
-
-		/// <summary>
-		/// Query contains a data-modifying CTE (<see cref="LinqExtensions.InsertWithOutputQuery{TTarget}(ITable{TTarget}, System.Linq.Expressions.Expression{Func{TTarget}})"/>).
-		/// </summary>
-		internal bool HasDataModification { get; set; }
 		public SqlErrorExpression?            ErrorExpression { get; internal set; }
 
 		internal abstract void Init(IBuildContext parseContext);
@@ -229,9 +224,9 @@ namespace LinqToDB.Internal.Linq
 				return null;
 
 			if (dataContext is DataContext ctx)
-				return new LoadTransaction(ctx.BeginTransaction(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel), HasDataModification);
+				return new LoadTransaction(ctx.BeginTransaction(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel));
 
-			return new LoadTransaction(dc.BeginTransaction(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel), HasDataModification);
+			return new LoadTransaction(dc.BeginTransaction(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel));
 		}
 
 		internal async Task<LoadTransaction?> StartLoadTransactionAsync(IDataContext dataContext, CancellationToken cancellationToken)
@@ -244,44 +239,39 @@ namespace LinqToDB.Internal.Linq
 			if (dataContext is DataContext ctx)
 				return new LoadTransaction(
 					await ctx.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken)
-						.ConfigureAwait(false),
-					HasDataModification);
+						.ConfigureAwait(false));
 
 			return new LoadTransaction(
 				await dc.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken)
-					.ConfigureAwait(false),
-				HasDataModification);
+					.ConfigureAwait(false));
 		}
 
 		/// <summary>
-		/// The implicit transaction that keeps the reads of an eager-loading query consistent. Disposing it without
-		/// <see cref="Complete"/> rolls it back. A data-modifying query commits it once its owner - the element call or
-		/// the enumeration - finished without an exception, so the insert and the child queries persist together.
+		/// The implicit transaction that keeps the reads of an eager-loading query consistent. Its owner - the element call
+		/// or the enumeration - commits it with <see cref="Complete"/> unless the load itself failed: the caller may write on
+		/// the same connection while enumerating, and those writes are enlisted in it. Disposing it uncommitted rolls it back.
 		/// </summary>
 		internal sealed class LoadTransaction : IDisposable, IAsyncDisposable
 		{
 			readonly object _transaction;
-			readonly bool   _commit;
 
 			// Once committed or disposed, the connection's current transaction may be another one, and disposing ours
 			// again would dispose it.
 			bool _released;
 
-			public LoadTransaction(DataContextTransaction transaction, bool commit)
+			public LoadTransaction(DataContextTransaction transaction)
 			{
 				_transaction = transaction;
-				_commit      = commit;
 			}
 
-			public LoadTransaction(DataConnectionTransaction transaction, bool commit)
+			public LoadTransaction(DataConnectionTransaction transaction)
 			{
 				_transaction = transaction;
-				_commit      = commit;
 			}
 
 			public void Complete()
 			{
-				if (!_commit || _released)
+				if (_released)
 					return;
 
 				if (_transaction is DataContextTransaction contextTransaction)
@@ -294,7 +284,7 @@ namespace LinqToDB.Internal.Linq
 
 			public async Task CompleteAsync(CancellationToken cancellationToken)
 			{
-				if (!_commit || _released)
+				if (_released)
 					return;
 
 				if (_transaction is DataContextTransaction contextTransaction)

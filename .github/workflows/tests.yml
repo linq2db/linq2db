@@ -1,5 +1,6 @@
-# Provider tests on GitHub Actions - the Linux legs, and the Windows legs that need no docker
-# container (the win-mssql ones stay on Azure).
+# Provider tests on GitHub Actions. By default the Linux legs and the Windows legs that need no docker
+# container - the win-mssql ones stay on Azure, so development runs split load across both CIs.
+# all_legs drops that split and takes every leg; tests-release.yml passes it for the release run.
 #
 # Normally started by tests-comment.yml, when someone comments `/azp run test-<db>` on a PR. That path
 # calls this workflow rather than dispatching it, so `ref` can be refs/pull/<n>/merge - which
@@ -21,12 +22,20 @@ on:
         description: "Run every TFM's main suite, not just net10 (release-run behaviour)"
         type: boolean
         default: false
+      all_legs:
+        description: 'Run every leg, including the ones the development split leaves on Azure (release-run behaviour)'
+        type: boolean
+        default: false
       ref:
         description: 'Ref to test. Defaults to the branch this workflow was dispatched on.'
         required: false
       baselines_branch:
         description: 'Baselines branch to push to, e.g. baselines/pr_5848. Empty = do not capture baselines.'
         required: false
+      rebase_baselines:
+        description: 'Rebase an existing baselines branch onto baselines master before the legs start'
+        type: boolean
+        default: false
       pr:
         description: 'Source PR number, for the courtesy comment on the baselines PR.'
         required: false
@@ -41,12 +50,18 @@ on:
       full_run:
         type: boolean
         default: false
+      all_legs:
+        type: boolean
+        default: false
       ref:
         type: string
         required: false
       baselines_branch:
         type: string
         required: false
+      rebase_baselines:
+        type: boolean
+        default: false
       pr:
         type: string
         required: false
@@ -56,7 +71,8 @@ permissions:
 
 concurrency:
   # Per surface, so two concurrent single-provider runs coexist the way separate Azure definitions do.
-  group: tests-${{ inputs.ref || github.ref }}-${{ inputs.surface }}
+  # A full run is keyed apart, so a `/azp run test-all` comment on the release PR cannot cancel it.
+  group: tests-${{ inputs.ref || github.ref }}-${{ inputs.surface }}${{ inputs.full_run && '-full' || '' }}
   cancel-in-progress: true
 
 env:
@@ -106,6 +122,8 @@ jobs:
           python3 - <<'PY' >> "$GITHUB_OUTPUT"
           import json, os, sys, yaml
           surface = os.environ['SURFACE']
+          all_legs = os.environ.get('ALL_LEGS') == 'true'
+          full_run = os.environ.get('FULL_RUN') == 'true'
           # Selection is a substring test, and '' is a substring of everything - an empty surface
           # would silently select every leg. workflow_dispatch cannot produce one (the input is
           # required and defaulted), but any other trigger leaves inputs.* empty, so guard it here
@@ -126,20 +144,20 @@ jobs:
               if surface not in e['filters']:
                   continue
 
-              # w_DB2InformixDuckDB sets enable_os_windows inside an Azure template conditional, so a
-              # stock parser sees a key whose whole name is that conditional and e.get(...) is None -
-              # the entry drops out silently. That is the right answer for it today (its windows leg is
-              # release-run only, and release runs stay on Azure), but the next entry to grow one of
-              # these must not be dropped without a word.
+              # An Azure template conditional is a key whose whole name is the conditional to a stock
+              # parser, so the selectors inside it read as None and the entry drops out silently. Selectors
+              # are plain data for that reason (win_full_run_only replaced the last one). Only legs this
+              # run would take are refused: a stacked PR's merge ref can predate that change, and its
+              # comment runs should not start failing over a leg they never selected.
               #
               # The prefix is assembled rather than written out because GitHub evaluates its own
               # expression syntax ANYWHERE in this file - script bodies and comments included - and a
               # literal one here fails the whole workflow at dispatch with "Unrecognized named-value".
               azure_expr = '$' + '{{'
-              if e.get('gh_windows') == 'true' and any(str(k).startswith(azure_expr) for k in e):
-                  print(f"::error::{e['name']} is marked gh_windows but carries an Azure template "
-                        "conditional key - a stock YAML parser cannot see the selectors inside it, so "
-                        "the leg would be silently dropped here", file=sys.stderr)
+              if (all_legs or e.get('gh_windows') == 'true') and any(str(k).startswith(azure_expr) for k in e):
+                  print(f"::error::{e['name']} carries an Azure template conditional key - a stock YAML "
+                        "parser cannot see the selectors inside it, so the leg would be silently dropped "
+                        "here", file=sys.stderr)
                   raise SystemExit(1)
 
               if e.get('enable_os_ubuntu') is True:
@@ -147,7 +165,7 @@ jobs:
                   # The other half of the split in test-jobs.yml: Azure skips entries marked gh_linux,
                   # so only those run here. An entry without it stays on Azure - today every ubuntu entry
                   # carries the flag, so the branch exists for a future entry that has to stay behind.
-                  if e.get('gh_linux') == 'true':
+                  if all_legs or e.get('gh_linux') == 'true':
                       linux.append({
                           'name':          e['name'],
                           'title':         e['title'],
@@ -160,9 +178,9 @@ jobs:
                           'net100':        e.get('enable_fw_net100') is True,
                       })
 
-              if e.get('enable_os_windows') is True:
+              if e.get('enable_os_windows') is True and (full_run or e.get('win_full_run_only') is not True):
                   matched += 1
-                  if e.get('gh_windows') == 'true':
+                  if all_legs or e.get('gh_windows') == 'true':
                       # test-jobs.yml's rule, restated: windows runs a non-netfx TFM only for a leg
                       # linux cannot cover, unless win_tfms_always opts out. netfx is windows-only, so
                       # it always follows the entry's own switch.
@@ -217,6 +235,8 @@ jobs:
           PY
         env:
           SURFACE: ${{ inputs.surface }}
+          ALL_LEGS: ${{ inputs.all_legs }}
+          FULL_RUN: ${{ inputs.full_run }}
 
       # A surface that matches no entry at all is the failure that looks like success - build 23192 on
       # the Azure side went green having run nothing. A surface whose legs all stay on Azure is a
@@ -297,11 +317,13 @@ jobs:
         run: |
           $cfg = '${{ env.TEST_CONFIGURATION }}'
 
-          dotnet publish Tests/Linq/Tests.csproj -f net462 -c $cfg -o ".build/publish/Tests/$cfg/net462_x64"
+          # -a x64 for both net462 suites: the SDK defaults a .NET Framework exe with no RID to win-x86,
+          # so the main suite ran 32-bit and its NUnit result string ran out of address space on full
+          # runs. The EF3 suite also needs the RID for the x64 e_sqlite3, which the net4x native target
+          # omits.
+          dotnet publish Tests/Linq/Tests.csproj -f net462 -c $cfg -a x64 -o ".build/publish/Tests/$cfg/net462_x64"
           if ($LASTEXITCODE) { throw 'publish Tests net462 failed' }
 
-          # -a x64: net462 is AnyCPU and runs as x64; without an explicit RID the SQLitePCLRaw net4x
-          # native target ships only the x86 e_sqlite3, which the x64 EF test process cannot load.
           dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF3.csproj -f net462 -c $cfg -a x64 -o ".build/publish/EFTests/$cfg/net462_x64"
           if ($LASTEXITCODE) { throw 'publish EF3 net462 failed' }
 
@@ -444,16 +466,52 @@ jobs:
           if-no-files-found: error
           include-hidden-files: true
 
+  # Azure's create_baselines_branch, for a caller with no Azure half to run it: a baselines branch left
+  # by an earlier run is rebased onto baselines master once, before any leg clones it. The comment path
+  # leaves it off - Azure still runs that job there, and two force-pushers on one branch race.
+  baselines_init:
+    name: Rebase test baselines branch
+    needs: build
+    if: inputs.rebase_baselines
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: test_scripts
+          path: scripts
+
+      # GITHUB_TOKEN carries the baselines PAT for both git and gh. GH_TOKEN stays unset, because gh
+      # prefers it. -EmitOutputs is left off: it writes an Azure variable, and the branch name is
+      # already the caller's baselines_branch input.
+      - name: Rebase test baselines
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.BASELINES_GH_PAT }}
+          EMAIL: actions@linq2db.com
+          GIT_AUTHOR_NAME: GitHub Actions Bot
+          GIT_COMMITTER_NAME: GitHub Actions Bot
+          PR_ID: ${{ inputs.pr }}
+        run: |
+          ./scripts/ensure-baselines-branch.ps1 -PrId "$Env:PR_ID" -BaselinesMaster "$Env:BASELINES_MASTER" -Rebase
+          exit $LASTEXITCODE
+
   linux-tests:
     name: Lin ${{ matrix.name }}
-    needs: [prepare, build]
+    needs: [prepare, build, baselines_init]
     # An empty matrix is not "no jobs" - it fails the RUN, with no failed job to point at and no
     # annotation on any check run, so `gh run view` shows every job green under a red run. Surfaces
     # whose linux legs all stay on Azure - every windows-only surface - hit it, so the job is skipped
-    # explicitly rather than instantiated with nothing in it.
-    if: needs.prepare.outputs.any == 'true'
+    # explicitly rather than instantiated with nothing in it. baselines_init is skipped unless the
+    # caller asks for it, and a skipped dependency skips the dependent by default, hence the spelled
+    # out gate.
+    if: >
+      !cancelled()
+      && needs.prepare.outputs.any == 'true'
+      && needs.build.result == 'success'
+      && (needs.baselines_init.result == 'success' || needs.baselines_init.result == 'skipped')
     runs-on: ubuntu-24.04
-    timeout-minutes: 180
+    timeout-minutes: ${{ inputs.full_run && 300 || 180 }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.prepare.outputs.linux) }}
@@ -610,24 +668,25 @@ jobs:
             -BaselinesMaster "$Env:BASELINES_MASTER" -PrId "$Env:PR_ID" -GitHubAnnotations
           exit $LASTEXITCODE
 
-  # The windows legs that need no docker container. Same shape as linux-tests, with three differences
-  # forced by the platform: netfx is in the TFM list, the suites are apphost .exe rather than
-  # `dotnet <dll>`, and a leg may be x86 - which changes both the SDK installed and the artifact half
-  # it downloads.
+  # The windows legs - the docker-free ones, plus the win-mssql ones under all_legs. Same shape as
+  # linux-tests, with three differences forced by the platform: netfx is in the TFM list, the suites
+  # are apphost .exe rather than `dotnet <dll>`, and a leg may be x86 - which changes both the SDK
+  # installed and the artifact half it downloads.
   windows-tests:
     name: Win ${{ matrix.name }}
     # build_x86 is skipped for a surface with no x86 leg, and a skipped dependency skips the dependent
     # by default - so the gate is spelled out rather than left to `needs`. !cancelled() rather than
     # always(), so a cancelled run does not start legs. windows_any for the same reason linux-tests
     # tests `any`: an empty matrix fails the run rather than producing no jobs.
-    needs: [prepare, build, build_x86]
+    needs: [prepare, build, build_x86, baselines_init]
     if: >
       !cancelled()
       && needs.prepare.outputs.windows_any == 'true'
       && needs.build.result == 'success'
       && (needs.build_x86.result == 'success' || needs.build_x86.result == 'skipped')
+      && (needs.baselines_init.result == 'success' || needs.baselines_init.result == 'skipped')
     runs-on: windows-2025
-    timeout-minutes: 180
+    timeout-minutes: ${{ inputs.full_run && 300 || 180 }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.prepare.outputs.windows) }}
@@ -672,6 +731,20 @@ jobs:
             8.x
             9.x
             10.x
+
+      # The win-mssql legs pull multi-GB images; anonymous pulls hit Docker Hub's rate limit (#6008).
+      # Every windows script_global is a SQL Server container script, as every linux one is a container
+      # script; a failed login falls back to anonymous pulls.
+      - name: Docker Hub login
+        if: matrix.script_global != ''
+        continue-on-error: true
+        shell: pwsh
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          $Env:DOCKERHUB_TOKEN | docker login --username "$Env:DOCKERHUB_USERNAME" --password-stdin
+          exit $LASTEXITCODE
 
       - name: Execute global setup script
         if: matrix.script_global != ''

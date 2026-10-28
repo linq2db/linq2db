@@ -88,8 +88,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			SqlProviderFlags.IsMultipleResultSetsSupported      = true;
 			// Batch limit is 65536 x network packet size (>= 32 MB even at the 512 B minimum packet); 8 MB is a safe cap.
 			SqlProviderFlags.MaxCombinedCommandLength           = 8_000_000;
-			// A request carries at most 2100 parameters.
-			SqlProviderFlags.MaxCombinedCommandParameters       = 2100;
+			// A request carries at most 2100 parameters, and sp_executesql takes two of them for the statement and its parameter list.
+			SqlProviderFlags.MaxCombinedCommandParameters       = 2098;
 
 			// SqlServer 2005 emits InsertOrUpdate as UPDATE + IF @@ROWCOUNT=0 INSERT (single statement);
 			// it can't carry an extra predicate on the UPDATE branch. 2008+ go through MERGE which can.

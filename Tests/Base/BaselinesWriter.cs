@@ -61,6 +61,8 @@ namespace Tests
 				.Replace("BeginTransactionAsync(ReadCommitted)\n", string.Empty)
 				.Replace("BeginTransactionAsync(Snapshot)\n", string.Empty)
 				.Replace("BeforeExecute\n", string.Empty)
+				.Replace("CommitTransaction\n", string.Empty)
+				.Replace("CommitTransactionAsync\n", string.Empty)
 				.Replace("DisposeTransaction\n", string.Empty)
 				.Replace("DisposeTransactionAsync\n", string.Empty)
 				;

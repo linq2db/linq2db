@@ -437,9 +437,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (DataModificationCalls is not { } calls)
 				return;
 
-			_query.HasDataModification = true;
-
-			var statements = new HashSet<SqlStatement>(Utils.ObjectReferenceEqualityComparer<SqlStatement>.Default);
+			var statements =new HashSet<SqlStatement>(Utils.ObjectReferenceEqualityComparer<SqlStatement>.Default);
 
 			statements.Add(_query.QueryInfo.Statement);
 

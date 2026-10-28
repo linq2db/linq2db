@@ -41,7 +41,7 @@ namespace LinqToDB.Internal.Async
 			// The second resource is the read-consistency transaction this wrapper exists to hold open for the whole
 			// enumeration, so its release must not be conditional on the inner enumerator disposing cleanly - that one
 			// owns a DbDataReader and a DbCommand, either of which can throw on a broken connection.
-			// A data-modifying query commits after the reader is closed, unless the enumeration failed.
+			// The transaction commits after the reader is closed, unless the load failed.
 			try
 			{
 				if (_enumerator != null)

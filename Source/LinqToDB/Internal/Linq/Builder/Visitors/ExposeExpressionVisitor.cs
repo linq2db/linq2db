@@ -1000,6 +1000,11 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 		protected override Expression VisitBinary(BinaryExpression node)
 		{
+			// An assignment target must stay writeable, so VisitIndex's getter rewrite cannot apply to it
+			// (the dynamic-column setter built in EntityDescriptor assigns through the storage indexer).
+			if (node.NodeType == ExpressionType.Assign && node.Left is IndexExpression index)
+				return node.Update(base.VisitIndex(index), node.Conversion, Visit(node.Right));
+
 			if (node.Method != null)
 			{
 				var convertedMember = _memberConverter.Convert(node, _convertContext, out var handled);
@@ -1061,6 +1066,26 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			_compactBinary = save;
 
 			return newNode;
+		}
+
+		// The compiler never emits IndexExpression, so it is rewritten into the compiler's shape for the same source
+		// (ArrayIndex, Array.Get or the indexer getter call). It survives only as an Assign target (VisitBinary) and in
+		// branches expose leaves unvisited (#6138), which is what PathVisitor's and EqualsToVisitor's Index arms are for.
+		protected override Expression VisitIndex(IndexExpression node)
+		{
+			if (node.Indexer == null)
+			{
+				if (node.Arguments.Count == 1)
+					return Visit(Expression.ArrayIndex(node.Object!, node.Arguments[0]));
+
+				return Visit(Expression.ArrayIndex(node.Object!, node.Arguments));
+			}
+
+			var getter = node.Indexer.GetGetMethod(true);
+			if (getter != null)
+				return Visit(Expression.Call(node.Object, getter, node.Arguments));
+
+			return base.VisitIndex(node);
 		}
 
 		protected override Expression VisitNew(NewExpression node)

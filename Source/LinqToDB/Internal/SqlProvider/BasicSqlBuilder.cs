@@ -2731,6 +2731,11 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual void BuildWhereSearchCondition(SelectQuery selectQuery, SqlSearchCondition condition)
 		{
+			// The optimizer keeps a top-level OR wrapped in a one-predicate AND; a nested condition never breaks lines,
+			// so render the OR itself as the top-level condition.
+			while (condition.Predicates is [SqlSearchCondition inner])
+				condition = inner;
+
 			BuildSearchCondition(Precedence.Unknown, condition, wrapCondition: true);
 		}
 

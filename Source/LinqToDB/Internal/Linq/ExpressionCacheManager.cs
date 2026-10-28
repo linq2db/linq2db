@@ -316,9 +316,6 @@ namespace LinqToDB.Internal.Linq
 				MethodCallExpression { Object: { } target } call when IsValuePreservingCall(call) =>
 					SuggestParameterDisplayName(target),
 
-				IndexExpression { Object: { } target } =>
-					SuggestParameterDisplayName(target),
-
 				_ => null,
 			};
 
@@ -328,8 +325,11 @@ namespace LinqToDB.Internal.Linq
 
 				// An indexer read hands back an element the container already holds. Matching the shape - a
 				// special-name getter taking at least one argument - rather than the name get_Item keeps
-				// [IndexerName]-renamed indexers in, string's Chars above all, and plain getters out.
-				if (method.IsSpecialName && method.Name.StartsWith("get_", StringComparison.Ordinal) && call.Arguments.Count > 0)
+				// [IndexerName]-renamed indexers in, string's Chars above all, and plain getters out. An explicit
+				// interface implementation's getter carries the interface name in front: "...IList<T>.get_Item".
+				if (method.IsSpecialName
+					&& (method.Name.StartsWith("get_", StringComparison.Ordinal) || method.Name.Contains(".get_", StringComparison.Ordinal))
+					&& call.Arguments.Count > 0)
 					return true;
 
 				// Nullable<T>.GetValueOrDefault() returns the target's own value - but the overload taking a

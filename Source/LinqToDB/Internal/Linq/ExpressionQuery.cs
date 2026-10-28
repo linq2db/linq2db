@@ -211,18 +211,38 @@ namespace LinqToDB.Internal.Linq
 			if (!combined)
 				Preambles = harvesters;
 
+			// As for the enumerator wrappers: only a failure of the load rolls the transaction back. An exception of the
+			// callback does not, just as one thrown in a foreach body does not.
+			var faulted    = false;
 			var enumerator = enumerable.GetAsyncEnumerator(cancellationToken);
-			await using (enumerator.ConfigureAwait(false))
+
+			try
 			{
-				while (await enumerator.MoveNextAsync().ConfigureAwait(false))
+				while (true)
 				{
-					if (!func(enumerator.Current))
+					bool hasNext;
+
+					try
+					{
+						hasNext = await enumerator.MoveNextAsync().ConfigureAwait(false);
+					}
+					catch
+					{
+						faulted = true;
+						throw;
+					}
+
+					if (!hasNext || !func(enumerator.Current))
 						break;
 				}
 			}
+			finally
+			{
+				await enumerator.DisposeAsync().ConfigureAwait(false);
 
-			if (transaction != null)
-				await transaction.CompleteAsync(cancellationToken).ConfigureAwait(false);
+				if (!faulted && transaction != null)
+					await transaction.CompleteAsync(cancellationToken).ConfigureAwait(false);
+			}
 		}
 
 		public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
