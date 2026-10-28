@@ -22,9 +22,12 @@ namespace Tests.Infrastructure
 		{
 			using var db = GetDataContext(context);
 
-			db.Person.Where(p => p.ID == 1).ToList();
+			db.Person
+				.Where(p => p.ID == 1)
+				.ToList();
 
-			GetCurrentBaselines().ShouldBeEmpty();
+			GetCurrentBaselines()
+				.ShouldBeEmpty();
 		}
 
 		[Test, NoBaselines("test: capture is suppressed for one configuration", Configuration = ProviderName.SQLiteMS)]
@@ -32,12 +35,16 @@ namespace Tests.Infrastructure
 		{
 			using var db = GetDataContext(context);
 
-			db.Person.Where(p => p.ID == 1).ToList();
+			db.Person
+				.Where(p => p.ID == 1)
+				.ToList();
 
 			if (context.IsAnyOf(ProviderName.SQLiteMS))
-				GetCurrentBaselines().ShouldBeEmpty();
+				GetCurrentBaselines()
+					.ShouldBeEmpty();
 			else
-				GetCurrentBaselines().ShouldContain("SELECT");
+				GetCurrentBaselines()
+					.ShouldContain("SELECT");
 		}
 
 		[Test, NoBaselines("test: a scope whose condition is false keeps capture suppressed")]
@@ -46,9 +53,12 @@ namespace Tests.Infrastructure
 			using var db = GetDataContext(context);
 
 			using (new DisableBaseline("test", disable: false))
-				db.Person.Where(p => p.ID == 1).ToList();
+				db.Person
+					.Where(p => p.ID == 1)
+					.ToList();
 
-			GetCurrentBaselines().ShouldBeEmpty();
+			GetCurrentBaselines()
+				.ShouldBeEmpty();
 		}
 
 		[Test]
@@ -56,8 +66,10 @@ namespace Tests.Infrastructure
 		{
 			var comparer = new BaselineComparer();
 
-			comparer.Compare("ctx/Test.sql", isRemote: false, "SELECT 1").ShouldBeNull();
-			comparer.Compare("ctx/Test.sql", isRemote: true,  "SELECT 1").ShouldBe(BaselineComparison.Matched);
+			comparer.Compare("ctx/Test.sql", isRemote: false, "SELECT 1")
+				.ShouldBeNull();
+			comparer.Compare("ctx/Test.sql", isRemote: true,  "SELECT 1")
+				.ShouldBe(BaselineComparison.Matched);
 		}
 
 		[Test]
@@ -65,8 +77,10 @@ namespace Tests.Infrastructure
 		{
 			var comparer = new BaselineComparer();
 
-			comparer.Compare("ctx/Test.sql", isRemote: false, "SELECT 1").ShouldBeNull();
-			comparer.Compare("ctx/Test.sql", isRemote: true,  "SELECT 2").ShouldBe(BaselineComparison.Mismatched);
+			comparer.Compare("ctx/Test.sql", isRemote: false, "SELECT 1")
+				.ShouldBeNull();
+			comparer.Compare("ctx/Test.sql", isRemote: true,  "SELECT 2")
+				.ShouldBe(BaselineComparison.Mismatched);
 		}
 
 		[Test]
@@ -74,8 +88,10 @@ namespace Tests.Infrastructure
 		{
 			var comparer = new BaselineComparer();
 
-			comparer.Compare("ctx/Test.sql", isRemote: true,  "SELECT 2").ShouldBeNull();
-			comparer.Compare("ctx/Test.sql", isRemote: false, "SELECT 1").ShouldBe(BaselineComparison.Mismatched);
+			comparer.Compare("ctx/Test.sql", isRemote: true,  "SELECT 2")
+				.ShouldBeNull();
+			comparer.Compare("ctx/Test.sql", isRemote: false, "SELECT 1")
+				.ShouldBe(BaselineComparison.Mismatched);
 		}
 
 		[Test]
@@ -83,8 +99,10 @@ namespace Tests.Infrastructure
 		{
 			var comparer = new BaselineComparer();
 
-			comparer.Compare("ctx/Test.sql",  isRemote: false, "SELECT 1").ShouldBeNull();
-			comparer.Compare("ctx/Other.sql", isRemote: true,  "SELECT 1").ShouldBeNull();
+			comparer.Compare("ctx/Test.sql",  isRemote: false, "SELECT 1")
+				.ShouldBeNull();
+			comparer.Compare("ctx/Other.sql", isRemote: true,  "SELECT 1")
+				.ShouldBeNull();
 		}
 
 		[Test]
@@ -118,8 +136,10 @@ namespace Tests.Infrastructure
 		{
 			var comparer = new BaselineComparer();
 
-			comparer.Compare("SQLite.MS/Test.sql",      isRemote: false, "SELECT 1").ShouldBeNull();
-			comparer.Compare("SQLite.MS.EF10/Test.sql", isRemote: false, "SELECT 2").ShouldBeNull();
+			comparer.Compare("SQLite.MS/Test.sql",      isRemote: false, "SELECT 1")
+				.ShouldBeNull();
+			comparer.Compare("SQLite.MS.EF10/Test.sql", isRemote: false, "SELECT 2")
+				.ShouldBeNull();
 		}
 
 		[Test]
@@ -129,11 +149,15 @@ namespace Tests.Infrastructure
 			{
 				var comparer = new BaselineComparer();
 
-				BaselinesWriter.Record(comparer, path, Path.Combine("ctx", "Test.sql"), isRemote: false, "SELECT 1", writeOther: true).ShouldBeNull();
-				BaselinesWriter.Record(comparer, path, Path.Combine("ctx", "Test.sql"), isRemote: true,  "SELECT 2", writeOther: true).ShouldBe(BaselineComparison.Mismatched);
+				BaselinesWriter.Record(comparer, path, Path.Combine("ctx", "Test.sql"), isRemote: false, "SELECT 1", writeOther: true)
+					.ShouldBeNull();
+				BaselinesWriter.Record(comparer, path, Path.Combine("ctx", "Test.sql"), isRemote: true,  "SELECT 2", writeOther: true)
+					.ShouldBe(BaselineComparison.Mismatched);
 
-				File.ReadAllText(Path.Combine(path, "ctx", "Test.sql"      )).ShouldBe("SELECT 1");
-				File.ReadAllText(Path.Combine(path, "ctx", "Test.sql.other")).ShouldBe("SELECT 2");
+				File.ReadAllText(Path.Combine(path, "ctx", "Test.sql"      ))
+					.ShouldBe("SELECT 1");
+				File.ReadAllText(Path.Combine(path, "ctx", "Test.sql.other"))
+					.ShouldBe("SELECT 2");
 			});
 		}
 
@@ -145,10 +169,13 @@ namespace Tests.Infrastructure
 				var comparer = new BaselineComparer();
 
 				BaselinesWriter.Record(comparer, path, Path.Combine("ctx", "Test.sql"), isRemote: false, "SELECT 1", writeOther: false);
-				BaselinesWriter.Record(comparer, path, Path.Combine("ctx", "Test.sql"), isRemote: true,  "SELECT 2", writeOther: false).ShouldBe(BaselineComparison.Mismatched);
+				BaselinesWriter.Record(comparer, path, Path.Combine("ctx", "Test.sql"), isRemote: true,  "SELECT 2", writeOther: false)
+					.ShouldBe(BaselineComparison.Mismatched);
 
-				File.Exists(Path.Combine(path, "ctx", "Test.sql"      )).ShouldBeTrue();
-				File.Exists(Path.Combine(path, "ctx", "Test.sql.other")).ShouldBeFalse();
+				File.Exists(Path.Combine(path, "ctx", "Test.sql"      ))
+					.ShouldBeTrue();
+				File.Exists(Path.Combine(path, "ctx", "Test.sql.other"))
+					.ShouldBeFalse();
 			});
 		}
 
@@ -157,8 +184,10 @@ namespace Tests.Infrastructure
 		{
 			var comparer = new BaselineComparer();
 
-			BaselinesWriter.Record(comparer, null, Path.Combine("ctx", "Test.sql"), isRemote: false, "SELECT 1", writeOther: true).ShouldBeNull();
-			BaselinesWriter.Record(comparer, null, Path.Combine("ctx", "Test.sql"), isRemote: true,  "SELECT 2", writeOther: true).ShouldBe(BaselineComparison.Mismatched);
+			BaselinesWriter.Record(comparer, null, Path.Combine("ctx", "Test.sql"), isRemote: false, "SELECT 1", writeOther: true)
+				.ShouldBeNull();
+			BaselinesWriter.Record(comparer, null, Path.Combine("ctx", "Test.sql"), isRemote: true,  "SELECT 2", writeOther: true)
+				.ShouldBe(BaselineComparison.Mismatched);
 		}
 
 		// Write itself, on the process-wide comparer: the provider suffix keeps the key apart from real baselines, and no
@@ -183,9 +212,14 @@ namespace Tests.Infrastructure
 			using var db = GetDataContext(context);
 
 			if (context.IsRemote())
-				db.Person.Count().ShouldBeGreaterThan(0);
+				db.Person
+					.Count()
+					.ShouldBeGreaterThan(0);
 			else
-				db.Person.Select(p => p.ID).ToList().ShouldNotBeEmpty();
+				db.Person
+					.Select(p => p.ID)
+					.ToList()
+					.ShouldNotBeEmpty();
 		}
 
 		static void InScratchDirectory(Action<string> action)
