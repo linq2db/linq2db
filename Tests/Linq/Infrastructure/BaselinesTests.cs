@@ -172,8 +172,8 @@ namespace Tests.Infrastructure
 				BaselinesWriter.Record(comparer, path, Path.Combine("ctx", "Test.sql"), isRemote: true,  "SELECT 2", gated: true)
 					.ShouldBe(BaselineComparison.Mismatched);
 
-				File.Exists(Path.Combine(path, "ctx", "Test.sql"      ))
-					.ShouldBeTrue();
+				File.ReadAllText(Path.Combine(path, "ctx", "Test.sql"))
+					.ShouldBe("SELECT 1");
 				File.Exists(Path.Combine(path, "ctx", "Test.sql.other"))
 					.ShouldBeFalse();
 			});
