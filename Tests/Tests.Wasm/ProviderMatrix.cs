@@ -160,7 +160,7 @@ namespace Tests.Wasm
 			new(ProviderName.Sybase,                  ProviderName.Sybase,                  () => DataConnection.GetDataProvider(SybaseNative, DummyConnectionString)!, Built, UnavailableOn: RunnerOS.Any, UnavailableAssembly: SybaseProviderAdapter.NativeAssemblyName, UnavailableReason: "Sybase.AdoNet45.AseClient " + NotShipped),
 			new(ProviderName.SybaseManaged,           ProviderName.SybaseManaged,           () => SybaseTools.GetDataProvider(SybaseProvider.DataAction), Built),
 
-			new(ProviderName.SapHanaNative,           ProviderName.SapHanaNative,           () => SapHanaTools.GetDataProvider(SapHanaProvider.Unmanaged), Built, UnavailableOn: RunnerOS.Any, UnavailableAssembly: SapHanaProviderAdapter.UnmanagedAssemblyNames.First(), UnavailableReason: "Sap.Data.Hana is a Redist assembly referenced by Tests/Linq only"),
+			new(ProviderName.SapHanaNative,           ProviderName.SapHanaNative,           () => SapHanaTools.GetDataProvider(SapHanaProvider.Unmanaged), Built, UnavailableOn: RunnerOS.Any, UnavailableAssembly: SapHanaProviderAdapter.UnmanagedAssemblyNames.First(), UnavailableReason: "Sap.Data.Hana comes from SAP's NuGet packages, which Tests.Wasm does not reference"),
 			new(ProviderName.SapHanaOdbc,             ProviderName.SapHanaOdbc,             () => SapHanaTools.GetDataProvider(SapHanaProvider.ODBC),      Built),
 
 			new(ProviderName.ClickHouseOctonica,      ProviderName.ClickHouseOctonica,      () => ClickHouseTools.GetDataProvider(ClickHouseProvider.Octonica),         Refused),

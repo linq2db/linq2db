@@ -2673,7 +2673,7 @@ namespace Tests.Linq
 			ErrorMessage = "SQL0402N{0}The data type of an operand of an arithmetic function or operation", Details = "no-issue: the server rejects the addition.")]
 		[ActiveIssue(Configuration = TestProvName.AllInformix, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
 			ErrorMessage = "Intervals or datetimes are incompatible for the operation.", Details = "no-issue: the server rejects the addition.")]
-		[ActiveIssue(Configuration = TestProvName.AllSapHana, ErrorMessage = "[SAP AG][LIBODBCHDB SO][HDBODBC]",
+		[ActiveIssue(Configuration = TestProvName.AllSapHana, ErrorMessage = "TIMESTAMP and PARAMETER are invalid for addition operator",
 			Details = "no-issue: the server rejects the addition. Type-less because the ODBC and native drivers raise their own.")]
 		[ActiveIssue(Configuration = ProviderName.SqlCe, ErrorTypeName = "System.ArgumentException",
 			ErrorMessage = "No mapping exists from DbType Time to a known", Details = "no-issue: SqlCe has no Time parameter type.")]
@@ -2704,7 +2704,7 @@ namespace Tests.Linq
 			ErrorMessage = "SQL0402N{0}The data type of an operand of an arithmetic function or operation", Details = "no-issue: as the non-null arm.")]
 		[ActiveIssue(Configuration = TestProvName.AllInformix, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
 			ErrorMessage = "A syntax error has occurred.", Details = "no-issue: Informix words the null case differently from the non-null one.")]
-		[ActiveIssue(Configuration = TestProvName.AllSapHana, ErrorMessage = "[SAP AG][LIBODBCHDB SO][HDBODBC]",
+		[ActiveIssue(Configuration = TestProvName.AllSapHana, ErrorMessage = "TIMESTAMP and PARAMETER are invalid for addition operator",
 			Details = "no-issue: as the non-null arm.")]
 		[ActiveIssue(Configuration = ProviderName.SqlCe, ErrorTypeName = "System.ArgumentException",
 			ErrorMessage = "No mapping exists from DbType Time to a known", Details = "no-issue: as the non-null arm.")]
