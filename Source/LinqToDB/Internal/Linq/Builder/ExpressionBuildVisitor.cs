@@ -4162,10 +4162,9 @@ namespace LinqToDB.Internal.Linq.Builder
 						predicate = ConvertInPredicate(node.Arguments[0], node.Object!);
 						break;
 
-#if NET8_0_OR_GREATER
 					case
 					{
-						Method: { DeclaringType.IsMemoryExtensionsType: true, Name: nameof(MemoryExtensions.Contains) },
+						Method: { DeclaringType.IsMemoryExtensionsType: true, Name: "Contains" },
 						Arguments:
 						[
 							MethodCallExpression
@@ -4180,7 +4179,6 @@ namespace LinqToDB.Internal.Linq.Builder
 					}:
 						predicate = ConvertInPredicate(value, spanSource!.UnwrapConvertToSelf());
 						break;
-#endif
 
 					case { Method: { DeclaringType: { } type, Name: nameof(Dictionary<,>.ContainsValue) } } when (
 						typeof(Dictionary<,>).IsSameOrParentOf(type)
