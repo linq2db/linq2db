@@ -633,6 +633,292 @@ namespace Tests.Linq
 			// optimizer collapsed the two nested DISTINCT ONs into one.
 			Assert.That(query.ToSqlQuery().Sql.Split("DISTINCT ON").Length - 1, Is.EqualTo(2));
 		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterTake([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.OrderByDescending(p => p.ParentID)
+				.Take(3)
+				.DistinctBy(p => p.Value1);
+
+			AssertQuery(query);
+		}
+
+		// The wrap of a limited sequence and the SQL assertion belong to the DISTINCT ON lowering; Skip without Take in a
+		// subquery is refused on SQLite.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterSkip([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.OrderByDescending(p => p.ParentID)
+				.Skip(2)
+				.DistinctBy(p => p.Value1);
+
+			AssertQuery(query);
+
+			var sql = query.ToSqlQuery().Sql;
+
+			sql.ShouldContain("DISTINCT ON");
+			sql.ShouldNotContain("ROW_NUMBER");
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterTakeAndProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.OrderByDescending(p => p.ParentID)
+				.Take(7)
+				.Select(p => new { p.ParentID, p.Value1 })
+				.DistinctBy(x => x.Value1);
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterTakeSubQueryAndProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.OrderByDescending(p => p.ParentID)
+				.Take(7)
+				.AsSubQuery()
+				.Select(p => new { p.ParentID, p.Value1 })
+				.DistinctBy(x => x.Value1);
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterTakeWithComputedOrdering([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.OrderBy(p => p.Value1 ?? 0)
+				.ThenByDescending(p => p.ParentID)
+				.Take(4)
+				.DistinctBy(p => p.Value1);
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterTakeKeepsNullsPosition([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.OrderBy(p => p.Value1, Sql.NullsPosition.First)
+				.ThenBy(p => p.ParentID)
+				.Take(7)
+				.Select(p => new { p.ParentID, p.Value1 })
+				.DistinctBy(x => x.ParentID % 2);
+
+			AssertQuery(query);
+		}
+
+		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_DistinctByRequiresOrderBy)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterGroupByRequiresOrderBy([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// ParentID is not a grouping key, so its ordering does not survive the grouping.
+			var query = db.Parent
+				.OrderByDescending(p => p.ParentID)
+				.GroupBy(p => p.Value1)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.DistinctBy(x => x.Count);
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterGroupByKeepsKeyOrdering([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.OrderBy(p => p.ParentID % 3)
+				.GroupBy(p => p.ParentID % 3)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.DistinctBy(x => x.Count);
+
+			AssertQuery(query);
+		}
+
+		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_DistinctByRequiresOrderBy)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterGroupByLeadingNonKeyOrderingRequiresOrderBy([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// The groups are ordered by Value1 first, which has no SQL form above the grouping, so the key that follows
+			// cannot order them either.
+			var query = db.Parent
+				.OrderBy(p => p.Value1)
+				.ThenBy(p => p.ParentID % 3)
+				.GroupBy(p => p.ParentID % 3)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.DistinctBy(x => x.Count);
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterGroupByKeepsLeadingKeyOrdering([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.OrderBy(p => p.ParentID % 3)
+				.ThenByDescending(p => p.Value1)
+				.GroupBy(p => p.ParentID % 3)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.DistinctBy(x => x.Count);
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterGroupByThenOrderBy([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.GroupBy(p => p.ParentID % 3)
+				.Select(g => new { g.Key })
+				.OrderByDescending(x => x.Key)
+				.DistinctBy(x => x.Key % 2);
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterJoinWithOrderedInner([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var joined =
+				from p in db.Parent.OrderByDescending(p => p.ParentID)
+				join c in db.Child.OrderBy(c => c.ChildID) on p.ParentID equals c.ParentID
+				select new { p.ParentID, p.Value1, c.ChildID };
+
+			var query = joined.DistinctBy(x => x.Value1);
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterSelectManyWithOrderedCollection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var joined =
+				from p in db.Parent.OrderByDescending(p => p.ParentID)
+				from c in db.Child
+					.Where(c => c.ParentID == p.ParentID)
+					.OrderBy(c => c.ChildID)
+				select new { p.ParentID, p.Value1, c.ChildID };
+
+			var query = joined.DistinctBy(x => x.Value1);
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterInnerJoinWithOrderedInner([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.OrderByDescending(p => p.ParentID)
+				.InnerJoin(
+					db.Child.OrderBy(c => c.ChildID),
+					(p, c) => p.ParentID == c.ParentID,
+					(p, c) => new { p.ParentID, p.Value1, c.ChildID })
+				.DistinctBy(x => x.Value1);
+
+			// AssertQuery cannot run the InnerJoin extension over the in-memory tables.
+			var joined =
+				from p in Parent.OrderByDescending(p => p.ParentID)
+				join c in Child.OrderBy(c => c.ChildID) on p.ParentID equals c.ParentID
+				select new { p.ParentID, p.Value1, c.ChildID };
+
+			var expected = joined
+				.DistinctBy(x => x.Value1)
+				.ToList();
+
+			query
+				.ToList()
+				.ShouldBe(expected, ignoreOrder: true);
+		}
+
+#if NET10_0_OR_GREATER
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterRightJoinKeepsInnerOrderFirst([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// RightJoin enumerates the inner sequence, so the inner ordering ranks first.
+			var query = db.Parent
+				.OrderByDescending(p => p.ParentID)
+				.RightJoin(
+					db.Child.OrderBy(c => c.ChildID),
+					p => p.ParentID,
+					c => c.ParentID,
+					(p, c) => new { ParentID = (int?)p!.ParentID, Value1 = p!.Value1, c.ChildID })
+				.DistinctBy(x => x.Value1);
+
+			AssertQuery(query);
+		}
+#endif
+
+		// Skipping an ordering entry the DISTINCT ON query cannot reach belongs to that lowering; the ROW_NUMBER path
+		// fails this shape on master (an ordering anchored inside the CTE body).
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterCteKeepsValidSql([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.OrderByDescending(p => p.ParentID)
+				.AsCte()
+				.Where(p => p.ParentID > 0)
+				.DistinctBy(p => p.Value1)
+				.Select(p => p.Value1);
+
+			// AssertQuery cannot run AsCte over the in-memory tables.
+			var expected = Parent
+				.Where(p => p.ParentID > 0)
+				.DistinctBy(p => p.Value1)
+				.Select(p => p.Value1)
+				.ToList();
+
+			query
+				.ToList()
+				.ShouldBe(expected, ignoreOrder: true);
+		}
 	}
 }
 

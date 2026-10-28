@@ -3734,6 +3734,122 @@ namespace Tests.Linq
 			result.Select(r => r.Name).ShouldBe(new[] { "A", "B", "C" });
 		}
 
+		// CteUnion needs a CTE and ROW_NUMBER(): Access has neither, Firebird < 3 has no ROW_NUMBER().
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void Confirm_Union_RootOrderAfterJoinWithOrderedInner(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
+		{
+			// The joined rows are ordered by company Name first, then by department Id descending; the inner ordering alone
+			// would put company 3's departments (301..305) first.
+			var companies = new[]
+			{
+				new Company { Id = 1, Name = "C" },
+				new Company { Id = 2, Name = "A" },
+				new Company { Id = 3, Name = "B" },
+			};
+			var (_, departments, employees, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+
+			var query =
+				from c in tCo.OrderBy(c => c.Name)
+				join d in tDep.OrderByDescending(d => d.Id) on c.Id equals d.CompanyId
+				select new
+				{
+					c.Name,
+					DepartmentId = d.Id,
+					Employees = tEmp
+						.Where(e => e.DepartmentId == d.Id)
+						.ToList(),
+				};
+
+			var result = query
+				.WithUnionLoadStrategy()
+				.ToList();
+
+			var expected = (
+				from c in companies.OrderBy(c => c.Name)
+				join d in departments.OrderByDescending(d => d.Id) on c.Id equals d.CompanyId
+				select (c.Name, DepartmentId: d.Id, EmployeeCount: employees.Count(e => e.DepartmentId == d.Id))
+			).ToList();
+
+			var actual = result
+				.Select(r => (r.Name, r.DepartmentId, EmployeeCount: r.Employees.Count))
+				.ToList();
+
+			actual.ShouldBe(expected);
+		}
+
+		// CteUnion needs a CTE and ROW_NUMBER(): Access has neither, Firebird < 3 has no ROW_NUMBER().
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void Confirm_Union_RootOrderAfterGroupByKeepsKeyOrdering(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
+		{
+			// An ordering by the grouping key survives the grouping, so the groups come back as 3, 2, 1; falling back to
+			// key order would give 1, 2, 3.
+			var (companies, departments, _, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			var query =
+				from c in tCo.OrderByDescending(c => c.Id)
+				group c by c.Id into g
+				select new
+				{
+					g.Key,
+					Departments = tDep
+						.Where(d => d.CompanyId == g.Key)
+						.ToList(),
+				};
+
+			var result = query
+				.WithUnionLoadStrategy()
+				.ToList();
+
+			result
+				.Select(r => (r.Key, r.Departments.Count))
+				.ToList()
+				.ShouldBe(new[] { (3, 5), (2, 4), (1, 3) });
+		}
+
+		// CteUnion needs a CTE and ROW_NUMBER(): Access has neither, Firebird < 3 has no ROW_NUMBER().
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void Confirm_Union_RootAfterGroupByDropsNonKeyOrdering(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
+		{
+			// Name is not a grouping key, so its ordering does not reach the root row number, which falls back to the keys.
+			var (companies, departments, _, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			var query =
+				from c in tCo.OrderBy(c => c.Name)
+				group c by c.Id into g
+				select new
+				{
+					g.Key,
+					Departments = tDep
+						.Where(d => d.CompanyId == g.Key)
+						.ToList(),
+				};
+
+			var result = query
+				.WithUnionLoadStrategy()
+				.ToList();
+
+			result
+				.Select(r => (r.Key, r.Departments.Count))
+				.ToList()
+				.ShouldBe(new[] { (1, 3), (2, 4), (3, 5) }, ignoreOrder: true);
+		}
+
 		#endregion
 
 		#region IOrderedEnumerable child projection — PassThroughOrderedCollection adapter

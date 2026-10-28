@@ -138,13 +138,56 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// <summary>
 		/// Save the current OrderBy state and clear it so an independent sub-sequence build (subquery,
 		/// set-operation side, join inner, SelectMany collection) cannot pollute the outer state.
-		/// Caller disposes the returned scope to restore.
+		/// Caller disposes the returned scope to restore; a joined sequence then adds its own ordering
+		/// through <see cref="AppendJoinedOrderBy"/>.
 		/// </summary>
 		internal IDisposable IsolateOrderBy()
 		{
 			var saved       = _currentOrderBy;
 			_currentOrderBy = null;
 			return new IsolateOrderByScope(this, saved);
+		}
+
+		/// <summary>
+		/// Builds a sequence joined to the current one (a join inner side, a SelectMany collection) under
+		/// <see cref="IsolateOrderBy"/>, returning the OrderBy state it captured for <see cref="AppendJoinedOrderBy"/>.
+		/// </summary>
+		internal BuildSequenceResult TryBuildJoinedSequence(BuildInfo buildInfo, out IReadOnlyList<(Expression expr, bool descending, Sql.NullsPosition nulls)>? orderBy)
+		{
+			using (IsolateOrderBy())
+			{
+				var result = TryBuildSequence(buildInfo);
+				orderBy = _currentOrderBy;
+				return result;
+			}
+		}
+
+		/// <inheritdoc cref="TryBuildJoinedSequence"/>
+		internal IBuildContext BuildJoinedSequence(BuildInfo buildInfo, out IReadOnlyList<(Expression expr, bool descending, Sql.NullsPosition nulls)>? orderBy)
+		{
+			using (IsolateOrderBy())
+			{
+				var context = BuildSequence(buildInfo);
+				orderBy = _currentOrderBy;
+				return context;
+			}
+		}
+
+		/// <summary>
+		/// Adds the OrderBy state captured while building a sequence joined to the current one (a join inner side,
+		/// a SelectMany collection) under <see cref="IsolateOrderBy"/>. Joined rows are ordered by the current sequence
+		/// first, or by the joined one first when <paramref name="joinedFirst"/> is set, as a right join enumerates it.
+		/// </summary>
+		internal void AppendJoinedOrderBy(IReadOnlyList<(Expression expr, bool descending, Sql.NullsPosition nulls)>? joined, bool joinedFirst)
+		{
+			if (joined is not { Count: > 0 })
+				return;
+
+			_currentOrderBy = _currentOrderBy is not { Count: > 0 } current
+				? [.. joined]
+				: joinedFirst
+					? [.. joined, .. current]
+					: [.. current, .. joined];
 		}
 
 		sealed class IsolateOrderByScope : IDisposable
