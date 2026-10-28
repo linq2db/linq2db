@@ -364,6 +364,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					if (Body.Type != path.Type && flags.IsSql())
 					{
+						using var outside = Builder.UsingOutsideProjectionValue();
+
 						var resultExpr = Builder.BuildSqlExpression(this, Body);
 						return resultExpr;
 					}
@@ -388,7 +390,9 @@ namespace LinqToDB.Internal.Linq.Builder
 						? BuildPurpose.Expand
 						: BuildPurpose.Sql;
 
-					result = Builder.BuildSqlExpression(this, result, keyPurpose, !flags.IsExpression() ? BuildFlags.ForKeys : BuildFlags.None);
+					// The key is the GROUP BY's: a value of the projection reads it, it is not calculated for it.
+					using (Builder.UsingOutsideProjectionValue())
+						result = Builder.BuildSqlExpression(this, result, keyPurpose, !flags.IsExpression() ? BuildFlags.ForKeys : BuildFlags.None);
 
 					if (result is SqlErrorExpression)
 						return SqlErrorExpression.EnsureError(result, path.Type);

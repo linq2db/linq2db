@@ -227,8 +227,6 @@ namespace Tests.Linq
 		/// both sides, so the sign and rough size of each member stay stable regardless of clock skew between the
 		/// test host and the server.
 		/// </remarks>
-		[ActiveIssue(5955, Configuration = TestProvName.AllClickHouse, ErrorMessage = "toUnixTimestamp64Nano",
-			Details = "now() is a plain DateTime, which toUnixTimestamp64Nano refuses; the difference does not coerce its operands to DateTime64 yet.")]
 		// These providers read DateTime.Now on the client and send it as a parameter or, on Firebird and YDB, as
 		// a literal, so no two runs - and not the direct and the remote one - record the same statement. The
 		// rest call the server's clock and keep their baselines.

@@ -490,7 +490,7 @@ namespace Tests.Linq
 
 		class StringSplitTable
 		{
-			public string Value { get; set; } = default!;
+			[Column("value")] public string Value { get; set; } = default!;
 		}
 
 		[Test, QueryCacheTest]
@@ -1865,6 +1865,222 @@ namespace Tests.Linq
 				.ShouldBe([1]);
 
 			Query(FormattableStringFactory.Create("SELECT {0} AS value", 2))
+				.ToArray()
+				.ShouldBe([2]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
+		public void UnreferencedArgumentIsNotSent([DataSources(TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.Informix)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var table = QuoteTableName("Person",   context);
+			var id    = QuoteTableName("PersonID", context);
+			var alias = context.IsAnyOf(TestProvName.AllYdb) ? "`value`" : "\"value\"";
+
+			var fs = FormattableStringFactory.Create($"SELECT {id} AS {alias} FROM {table} WHERE {id} = {{0}}", 1, 99);
+
+			var query = db.Person.Where(p => p.ID.In(db.FromSqlScalar<int>(fs)));
+
+			query
+				.AsEnumerable()
+				.Select(p => p.ID)
+				.ToArray()
+				.ShouldBe([1]);
+
+			query
+				.ToSqlQuery()
+				.Parameters
+				.ShouldNotContain(p => Equals(p.Value, 99));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
+		public void UnreferencedExprArgumentIsNotSent([DataSources(TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.Informix)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var fs = FormattableStringFactory.Create("({0})", 1, 99);
+
+			var query = db.Person.Where(p => p.ID == Sql.Expr<int>(fs));
+
+			query
+				.AsEnumerable()
+				.Select(p => p.ID)
+				.ToArray()
+				.ShouldBe([1]);
+
+			query
+				.ToSqlQuery()
+				.Parameters
+				.ShouldNotContain(p => Equals(p.Value, 99));
+		}
+
+		// a compiled query reads lambda parameters as Convert(ps[i], T)
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
+		public void UnreferencedCompiledArgumentIsNotSent([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var interceptor = new SaveCommandInterceptor();
+			db.AddInterceptor(interceptor);
+
+			var fromParams = CompiledQuery.Compile((IDataContext dc, int id, int extra) =>
+				dc.FromSql<Person>("SELECT * FROM Person WHERE PersonID = {0}", id, extra)
+					.Select(p => p.ID));
+
+			var fromCreate = CompiledQuery.Compile((IDataContext dc, int id, int extra) =>
+				dc.FromSql<Person>(FormattableStringFactory.Create("SELECT * FROM Person WHERE PersonID = {0}", id, extra))
+					.Select(p => p.ID));
+
+			var fromExpr = CompiledQuery.Compile((IDataContext dc, int id, int extra) =>
+				dc.GetTable<Person>()
+					.Where(p => p.ID == Sql.Expr<int>(FormattableStringFactory.Create("({0})", id, extra)))
+					.Select(p => p.ID));
+
+			fromParams(db, 1, 99)
+				.ToArray()
+				.ShouldBe([1]);
+
+			interceptor.Parameters
+				.ShouldNotContain(p => Equals(p.Value, 99));
+
+			fromCreate(db, 1, 99)
+				.ToArray()
+				.ShouldBe([1]);
+
+			interceptor.Parameters
+				.ShouldNotContain(p => Equals(p.Value, 99));
+
+			fromExpr(db, 1, 99)
+				.ToArray()
+				.ShouldBe([1]);
+
+			interceptor.Parameters
+				.ShouldNotContain(p => Equals(p.Value, 99));
+		}
+
+		// a hand-built tree can pass the FormattableString as a constant, which expose leaves as is
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
+		public void FromSql_ConstantFormattableString([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var fs    = FormattableStringFactory.Create($"SELECT * FROM {QuoteTableName("Person", context)} WHERE {QuoteTableName("PersonID", context)} = {{0}}", 2);
+			var call  = (MethodCallExpression)db.FromSql<Person>(fs).Expression;
+			var query = db.Person.Provider.CreateQuery<Person>(call.Update(call.Object, [call.Arguments[0], Expression.Constant(fs, typeof(FormattableString))]));
+
+			query
+				.Select(p => p.ID)
+				.ToArray()
+				.ShouldBe([2]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
+		public void Expr_ConstantFormattableString([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var fs     = FormattableStringFactory.Create("({0})", 2);
+			var expr   = ((MethodCallExpression)((Expression<Func<int>>)(() => Sql.Expr<int>(fs))).Body).Method;
+			var p      = Expression.Parameter(typeof(Person), "p");
+			var filter = Expression.Lambda<Func<Person, bool>>(Expression.Equal(Expression.PropertyOrField(p, nameof(Model.Person.ID)), Expression.Call(expr, Expression.Constant(fs, typeof(FormattableString)))), p);
+
+			db.Person
+				.Where(filter)
+				.Select(p => p.ID)
+				.ToArray()
+				.ShouldBe([2]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
+		public void ArgumentReferencedByNameIsSent([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllSQLite, TestProvName.AllMySql, TestProvName.AllPostgreSQL, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var prefix = context.IsAnyOf(TestProvName.AllOracle, TestProvName.AllPostgreSQL) ? ":" : "@";
+
+			AssertArgumentReferencedByName(db, context, prefix);
+		}
+
+		// the mixed format has a {0} item, so the filter runs and must keep the DataParameter no item references
+		static void AssertArgumentReferencedByName(ITestDataContext db, string context, string prefix)
+		{
+			var table = QuoteTableName("Person",   context);
+			var id    = QuoteTableName("PersonID", context);
+
+			db.FromSql<Person>($"SELECT * FROM {table} WHERE {id} = {prefix}p", new DataParameter("p", 2, DataType.Int32))
+				.Select(p => p.ID)
+				.ToArray()
+				.ShouldBe([2]);
+
+			db.FromSql<Person>($"SELECT * FROM {table} WHERE {id} = {{0}} OR {id} = {prefix}byName", 1, new DataParameter("byName", 2, DataType.Int32))
+				.Select(p => p.ID)
+				.OrderBy(i => i)
+				.ToArray()
+				.ShouldBe([1, 2]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
+		public void ArgumentReferencedByAlternateNameIsSent([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllMySql)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var prefix = context.IsAnyOf(TestProvName.AllPostgreSQL) ? "@" : "?";
+
+			AssertArgumentReferencedByName(db, context, prefix);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
+		public void ArgumentReferencedByPositionIsSent([IncludeDataSources(true, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllSQLiteClassic, TestProvName.AllMySql)] string context, [Values] bool dataParameter)
+		{
+			using var db = GetDataContext(context);
+
+			// own SQL text: FromSql_PositionalPlaceholder_DataParameter's would share its query-cache entry and parameter name
+			var sql      = $"SELECT * FROM {QuoteTableName("Person", context)} WHERE ? = {QuoteTableName("PersonID", context)}";
+			var argument = dataParameter ? new DataParameter("p", 2, DataType.Int32) : (object)2;
+
+			db.FromSql<Person>(sql, argument)
+				.Select(p => p.ID)
+				.ToArray()
+				.ShouldBe([2]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
+		public void PlainArgumentReferencedByPositionIsSent([IncludeDataSources(true, TestProvName.AllAccess, TestProvName.AllSapHana)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var id    = QuoteTableName("PersonID", context);
+			var query = db.FromSql<Person>($"SELECT * FROM {QuoteTableName("Person", context)} WHERE {id} = {{0}} OR {id} = ?", 1, 2);
+
+			query
+				.ToSqlQuery()
+				.Parameters
+				.ShouldContain(p => Equals(p.Value, 2));
+
+			query
+				.Select(p => p.ID)
+				.OrderBy(i => i)
+				.ToArray()
+				.ShouldBe([1, 2]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
+		public void PlainExprArgumentReferencedByPositionIsSent([IncludeDataSources(true, TestProvName.AllAccess, TestProvName.AllSapHana)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var fs = FormattableStringFactory.Create("({0} * 0 + ?)", 1, 2);
+
+			var query = db.Person.Where(p => p.ID == Sql.Expr<int>(fs));
+
+			query
+				.ToSqlQuery()
+				.Parameters
+				.ShouldContain(p => Equals(p.Value, 2));
+
+			query
+				.Select(p => p.ID)
 				.ToArray()
 				.ShouldBe([2]);
 		}

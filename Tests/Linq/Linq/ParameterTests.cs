@@ -200,10 +200,13 @@ namespace Tests.Linq
 
 		sealed class AllTypes
 		{
+			[Column("decimalDataType")]
 			public decimal DecimalDataType;
+			[Column("binaryDataType")]
 			public byte[]? BinaryDataType;
+			[Column("varbinaryDataType")]
 			public byte[]? VarBinaryDataType;
-			[Column(DataType = DataType.VarChar)]
+			[Column("varcharDataType", DataType = DataType.VarChar)]
 			public string? VarcharDataType;
 		}
 
@@ -2013,6 +2016,142 @@ namespace Tests.Linq
 
 			byString.Length.ShouldBe(1);
 			byNumber.Length.ShouldBe(1);
+		}
+
+		[Table]
+		sealed class ArrayLengthTable
+		{
+			[PrimaryKey] public int Id    { get; set; }
+			[Column]     public int Value { get; set; }
+		}
+
+		[Test]
+		public void ArrayLengthInWhere([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var arr = new[] { 0 };
+
+			var query = db.Person
+				.Where(p => p.ID == arr.Length);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void ArrayLengthInInsertSetter([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<ArrayLengthTable>();
+
+			var arr = new[] { 0, 0, 0 };
+
+			table.Insert(() => new ArrayLengthTable
+			{
+				Id    = 1,
+				Value = arr.Length,
+			});
+
+			table
+				.Single()
+				.Value
+				.ShouldBe(3);
+		}
+
+		[Test, QueryCacheTest]
+		public void ArrayLengthIsReadPerExecution([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[]
+			{
+				new ArrayLengthTable { Id = 1, Value = 10 },
+				new ArrayLengthTable { Id = 2, Value = 20 },
+			});
+
+			var arr = new[] { 0 };
+
+			var query = table
+				.Where(t => t.Id == arr.Length);
+
+			query
+				.Single()
+				.Value
+				.ShouldBe(10);
+
+			var cacheMissCount = query.GetCacheMissCount();
+
+			arr = new[] { 0, 0 };
+
+			query
+				.Single()
+				.Value
+				.ShouldBe(20);
+
+			query
+				.GetCacheMissCount()
+				.ShouldBe(cacheMissCount);
+		}
+
+		[Test]
+		public void ArrayLengthInCompiledQuery([DataSources] string context)
+		{
+			var query = CompiledQuery.Compile((ITestDataContext db, int[] arr) =>
+				db.Person
+					.Where(p => p.ID == arr.Length)
+					.Select(p => p.ID));
+
+			using var db = GetDataContext(context);
+
+			query(db, new[] { 0 })
+				.Single()
+				.ShouldBe(1);
+
+			query(db, new[] { 0, 0 })
+				.Single()
+				.ShouldBe(2);
+		}
+
+		[Test]
+		public void ArrayLengthInSetProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var arr = new[] { 0, 0 };
+
+			var query = db.Person
+				.Where(p => p.ID == 1)
+				.Select(p => new { p.ID, L = arr.Length })
+				.Concat(db.Person
+					.Where(p => p.ID == 2)
+					.Select(p => new { p.ID, L = 0 }));
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void ArrayLengthInProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var arr = new[] { 0, 0 };
+
+			var query =
+				from p in db.Person
+				where p.ID == 1
+				select new
+				{
+					p.ID,
+					L = arr.Length,
+				};
+
+			query
+				.GetSelectQuery()
+				.Select
+				.Columns
+				.Count
+				.ShouldBe(1);
+
+			AssertQuery(query);
 		}
 	}
 }
