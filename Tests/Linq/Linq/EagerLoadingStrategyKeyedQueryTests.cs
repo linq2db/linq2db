@@ -1899,10 +1899,10 @@ namespace Tests.Linq
 		// execution via the harvester-results array, so this must stay green under concurrency.
 		// Scoped to providers whose CreateLocalTable tables are visible across connections.
 		[Test]
+		[NoBaselines("Multi-threading")]
 		public async Task KeyedQuery_ConcurrentExecutions_DoNotShareKeyState(
 			[IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllPostgreSQL)] string context)
 		{
-			using var d1 = new DisableBaseline("Multi-threading");
 			using var d2 = new DisableLogging();
 
 			var (companies, departments, _, _, _) = GenerateHierarchy();
