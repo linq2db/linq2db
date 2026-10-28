@@ -387,10 +387,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("Multithreading")]
 		public void Issue3017([IncludeDataSources(/*TestProvName.AllSqlServer, */TestProvName.AllClickHouse)] string context)
 		{
-			using var scope = new DisableBaseline("Multithreading");
-
 			var tasks = new List<Task>();
 
 			for (var i = 0; i < 30; i++)

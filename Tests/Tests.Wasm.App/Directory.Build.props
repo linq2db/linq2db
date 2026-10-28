@@ -1,0 +1,11 @@
+<Project>
+	<Import Project="$(MSBuildThisFileDirectory)\..\Directory.Build.props" />
+
+	<PropertyGroup>
+		<WasmBundleMode Condition="'$(WasmBundleMode)' == ''">Debug</WasmBundleMode>
+
+		<!-- One obj/bin per bundle mode, so a publish never reuses another mode's trimmed output. -->
+		<!-- Must be set before the SDK derives BaseIntermediateOutputPath, hence here and not in the project. -->
+		<ArtifactsProjectName>$(MSBuildProjectName)_$(WasmBundleMode)</ArtifactsProjectName>
+	</PropertyGroup>
+</Project>

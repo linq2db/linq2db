@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.Linq;
 using System.Linq;
 
@@ -35,42 +36,43 @@ namespace Tests.UserTests
 			[Column]                             public short    SmallIntValue;
 		}
 
-		static Action<ITestDataContext,byte[],int>[] TestActions => new Action<ITestDataContext,byte[],int>[]
+		// keyed by name: a delegate value gives every case the same test name, so their baselines collide
+		static readonly Dictionary<string, Action<ITestDataContext,byte[],int>> _testActions = new()
 		{
-			Unused,
-			SelectWhere,
-			SelectSelect,
-			SelectOrderBy,
+			[nameof(Unused)]        = Unused,
+			[nameof(SelectWhere)]   = SelectWhere,
+			[nameof(SelectSelect)]  = SelectSelect,
+			[nameof(SelectOrderBy)] = SelectOrderBy,
 
-			UpdateWhere,
-			UpdateSet,
-			UpdateUpdate,
+			[nameof(UpdateWhere)]   = UpdateWhere,
+			[nameof(UpdateSet)]     = UpdateSet,
+			[nameof(UpdateUpdate)]  = UpdateUpdate,
 
-			InsertInsert,
+			[nameof(InsertInsert)]  = InsertInsert,
 
-			DeleteWhere,
+			[nameof(DeleteWhere)]   = DeleteWhere,
 
-			NonLinqInsert,
-			NonLinqUpdate,
-			NonLinqDelete,
+			[nameof(NonLinqInsert)] = NonLinqInsert,
+			[nameof(NonLinqUpdate)] = NonLinqUpdate,
+			[nameof(NonLinqDelete)] = NonLinqDelete,
 		};
+
+		static string[] TestActions => _testActions.Keys.ToArray();
 
 		[Test(Description = "Demonstrates memory leak when fails")]
 		public void SimpleTest(
-			[IncludeDataSources(TestProvName.AllSQLite)] string                              context,
-			[ValueSource(nameof(TestActions))]           Action<ITestDataContext,byte[],int> action)
+			[IncludeDataSources(TestProvName.AllSQLite)] string context,
+			[ValueSource(nameof(TestActions))]           string action)
 		{
-			using var _ = new DisableBaseline("test name conflicts");
-			Test(context, action, 1);
+			Test(context, _testActions[action], 1);
 		}
 
 		[Test(Description = "Demonstrates memory leak when fails")]
 		public void RetryTest(
-			[IncludeDataSources(TestProvName.AllSQLite)] string                              context,
-			[ValueSource(nameof(TestActions))]           Action<ITestDataContext,byte[],int> action)
+			[IncludeDataSources(TestProvName.AllSQLite)] string context,
+			[ValueSource(nameof(TestActions))]           string action)
 		{
-			using var _ = new DisableBaseline("test name conflicts");
-			Test(context, action, 3);
+			Test(context, _testActions[action], 3);
 		}
 
 		private void Test(string context, Action<ITestDataContext, byte[], int> testAction, int calls)

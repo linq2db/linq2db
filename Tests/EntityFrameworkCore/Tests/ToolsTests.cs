@@ -842,10 +842,10 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 #if !NETFRAMEWORK
 		[Test]
+		[NoBaselines("Use of DateTime.UtcNow")]
 		public void TestTemporalTables([EFDataSources] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
-			using var _ = new DisableBaseline("Use of DateTime.UtcNow");
 
 			var query1 = ctx.Products.TemporalAsOf(DateTime.UtcNow);
 			var query2 = ctx.Products.TemporalFromTo(DateTime.UtcNow.AddDays(-1), DateTime.UtcNow);
