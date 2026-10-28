@@ -110,7 +110,7 @@ namespace Tests
 		{
 			_ctx = CustomTestContext.Get();
 			_oldState = _ctx.Get<bool>(CustomTestContext.BASELINE_DISABLED);
-			_ctx.Set(CustomTestContext.BASELINE_DISABLED, disable);
+			_ctx.Set(CustomTestContext.BASELINE_DISABLED, _oldState || disable);
 		}
 
 		public void Dispose()

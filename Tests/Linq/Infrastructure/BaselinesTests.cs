@@ -40,6 +40,17 @@ namespace Tests.Infrastructure
 				GetCurrentBaselines().ShouldContain("SELECT");
 		}
 
+		[Test, NoBaselines("test: a scope whose condition is false keeps capture suppressed")]
+		public void NoBaselinesSurvivesFalseScope([IncludeDataSources(true, ProviderName.SQLiteMS)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using (new DisableBaseline("test", disable: false))
+				db.Person.Where(p => p.ID == 1).ToList();
+
+			GetCurrentBaselines().ShouldBeEmpty();
+		}
+
 		[Test]
 		public void Comparer_SameSql_Matched()
 		{
