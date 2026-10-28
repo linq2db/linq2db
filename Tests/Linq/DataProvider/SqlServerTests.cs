@@ -99,7 +99,7 @@ namespace Tests.DataProvider
 			}
 
 		[Test]
-		[NoBaselines("Provider-specific output", Configurations = [TestProvName.AllSqlServerMS, TestProvName.SqlAzureMiMS])]
+		[NoBaselines("Provider-specific output", Configuration = TestProvName.AllSqlServerMS)]
 		public void TestDataTypes2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using var conn = GetDataConnection(context);

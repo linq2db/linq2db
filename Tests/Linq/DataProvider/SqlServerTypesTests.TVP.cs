@@ -129,7 +129,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		[NoBaselines("Provider-specific output", Configurations = [TestProvName.AllSqlServerMS, TestProvName.SqlAzureMiMS])]
+		[NoBaselines("Provider-specific output", Configuration = TestProvName.AllSqlServerMS)]
 		public void TableValuedParameterProcedureTest(
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context,
 			[ValueSource(nameof(DataParameterFactories))] DataParameterFactoryTestCase testCase)
@@ -142,7 +142,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		[NoBaselines("Provider-specific output", Configurations = [TestProvName.AllSqlServerMS, TestProvName.SqlAzureMiMS])]
+		[NoBaselines("Provider-specific output", Configuration = TestProvName.AllSqlServerMS)]
 		public void TableValuedParameterInQueryUsingFromSqlTest(
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context,
 			[ValueSource(nameof(QueryDataParameterFactories))] DataParameterFactoryTestCase testCase)
@@ -166,7 +166,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		[NoBaselines("Provider-specific output", Configurations = [TestProvName.AllSqlServerMS, TestProvName.SqlAzureMiMS])]
+		[NoBaselines("Provider-specific output", Configuration = TestProvName.AllSqlServerMS)]
 		public void TableValuedParameterInMergeSource(
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context,
 			[ValueSource(nameof(QueryDataParameterFactories))] DataParameterFactoryTestCase testCase)
