@@ -50,9 +50,9 @@ namespace Tests
 			// writes of one baseline remain ordered).
 			lock (_sync)
 			{
-				comparison = Record(_comparer, baselinesPath, relativePath, isRemote, baseline, writeOther: !gated);
+				comparison = Record(_comparer, baselinesPath, relativePath, isRemote, baseline, gated);
 
-				if (baselinesPath != null && comparison == null)
+				if (baselinesPath != null && WritesBaseline(gated, isRemote, comparison))
 					_filesWritten = true;
 
 				if (gated && comparison != null)
@@ -70,10 +70,10 @@ namespace Tests
 		/// <summary>
 		/// Compares <paramref name="baseline"/> with the other side of the case and, when <paramref name="baselinesPath"/>
 		/// is set, writes the first side to <c>&lt;path&gt;/&lt;relativePath&gt;</c> and a mismatching second side to
-		/// <c>.other</c> next to it — unless <paramref name="writeOther"/> is <see langword="false"/> because a gate
-		/// already records the mismatch.
+		/// <c>.other</c> next to it. When <paramref name="gated"/> is <see langword="true"/> (a gate already records the
+		/// mismatch), no <c>.other</c> is written and the file holds the direct side, whichever side runs first.
 		/// </summary>
-		public static BaselineComparison? Record(BaselineComparer comparer, string? baselinesPath, string relativePath, bool isRemote, string baseline, bool writeOther)
+		public static BaselineComparison? Record(BaselineComparer comparer, string? baselinesPath, string relativePath, bool isRemote, string baseline, bool gated)
 		{
 			var comparison = comparer.Compare(relativePath, isRemote, baseline);
 
@@ -81,18 +81,24 @@ namespace Tests
 			{
 				var fullPath = Path.Combine(baselinesPath, relativePath);
 
-				if (comparison == null)
+				if (WritesBaseline(gated, isRemote, comparison))
 				{
 					Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
 					File.WriteAllText(fullPath, baseline, Encoding.UTF8);
 				}
-				else if (comparison == BaselineComparison.Mismatched && writeOther)
+				else if (comparison == BaselineComparison.Mismatched && !gated)
 				{
 					File.WriteAllText(fullPath + ".other", baseline, Encoding.UTF8);
 				}
 			}
 
 			return comparison;
+		}
+
+		// a gated pair differs, so writing whichever side runs first would make the file depend on the run order
+		static bool WritesBaseline(bool gated, bool isRemote, BaselineComparison? comparison)
+		{
+			return gated ? !isRemote : comparison == null;
 		}
 
 		/// <summary>

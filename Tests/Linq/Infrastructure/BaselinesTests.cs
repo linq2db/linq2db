@@ -149,9 +149,9 @@ namespace Tests.Infrastructure
 			{
 				var comparer = new BaselineComparer();
 
-				BaselinesWriter.Record(comparer, path, Path.Combine("ctx", "Test.sql"), isRemote: false, "SELECT 1", writeOther: true)
+				BaselinesWriter.Record(comparer, path, Path.Combine("ctx", "Test.sql"), isRemote: false, "SELECT 1", gated: false)
 					.ShouldBeNull();
-				BaselinesWriter.Record(comparer, path, Path.Combine("ctx", "Test.sql"), isRemote: true,  "SELECT 2", writeOther: true)
+				BaselinesWriter.Record(comparer, path, Path.Combine("ctx", "Test.sql"), isRemote: true,  "SELECT 2", gated: false)
 					.ShouldBe(BaselineComparison.Mismatched);
 
 				File.ReadAllText(Path.Combine(path, "ctx", "Test.sql"      ))
@@ -168,8 +168,8 @@ namespace Tests.Infrastructure
 			{
 				var comparer = new BaselineComparer();
 
-				BaselinesWriter.Record(comparer, path, Path.Combine("ctx", "Test.sql"), isRemote: false, "SELECT 1", writeOther: false);
-				BaselinesWriter.Record(comparer, path, Path.Combine("ctx", "Test.sql"), isRemote: true,  "SELECT 2", writeOther: false)
+				BaselinesWriter.Record(comparer, path, Path.Combine("ctx", "Test.sql"), isRemote: false, "SELECT 1", gated: true);
+				BaselinesWriter.Record(comparer, path, Path.Combine("ctx", "Test.sql"), isRemote: true,  "SELECT 2", gated: true)
 					.ShouldBe(BaselineComparison.Mismatched);
 
 				File.Exists(Path.Combine(path, "ctx", "Test.sql"      ))
@@ -180,13 +180,30 @@ namespace Tests.Infrastructure
 		}
 
 		[Test]
+		public void Record_GatedRemoteFirst_WritesDirectSide()
+		{
+			InScratchDirectory(path =>
+			{
+				var comparer = new BaselineComparer();
+
+				BaselinesWriter.Record(comparer, path, Path.Combine("ctx", "Test.sql"), isRemote: true,  "SELECT 2", gated: true)
+					.ShouldBeNull();
+				BaselinesWriter.Record(comparer, path, Path.Combine("ctx", "Test.sql"), isRemote: false, "SELECT 1", gated: true)
+					.ShouldBe(BaselineComparison.Mismatched);
+
+				File.ReadAllText(Path.Combine(path, "ctx", "Test.sql"))
+					.ShouldBe("SELECT 1");
+			});
+		}
+
+		[Test]
 		public void Record_NoPath_WritesNothing()
 		{
 			var comparer = new BaselineComparer();
 
-			BaselinesWriter.Record(comparer, null, Path.Combine("ctx", "Test.sql"), isRemote: false, "SELECT 1", writeOther: true)
+			BaselinesWriter.Record(comparer, null, Path.Combine("ctx", "Test.sql"), isRemote: false, "SELECT 1", gated: false)
 				.ShouldBeNull();
-			BaselinesWriter.Record(comparer, null, Path.Combine("ctx", "Test.sql"), isRemote: true,  "SELECT 2", writeOther: true)
+			BaselinesWriter.Record(comparer, null, Path.Combine("ctx", "Test.sql"), isRemote: true,  "SELECT 2", gated: false)
 				.ShouldBe(BaselineComparison.Mismatched);
 		}
 
