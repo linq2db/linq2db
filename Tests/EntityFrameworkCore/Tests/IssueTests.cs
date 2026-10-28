@@ -1092,6 +1092,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5364")]
+		[NoBaselines("connection-leak stress: 300 identical commands")]
 		public void TestImplicitConnectionManagement([EFDataSources] string provider, [Values] ImplicitLeakPath path)
 		{
 			// Reproduces #5364 for every implicit ToLinqToDB() entry point that creates a linq2db
@@ -1100,7 +1101,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			// (default 100) the next command throws. After the fix each path sets CloseAfterUse, so the
 			// connection is released per command.
 			// Baseline capture is disabled: the loop emits 300 identical statements with no diagnostic value.
-			using var noBaseline = new DisableBaseline("connection-leak stress: 300 identical commands");
 
 			var contexts = new List<IssueContextBase>();
 
