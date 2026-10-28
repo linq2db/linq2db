@@ -2231,30 +2231,6 @@
       ]
     },
     {
-      "id": "sap-hana-client",
-      "displayName": "SAP HANA .NET Data Provider",
-      "packageId": "",
-      "versions": {
-        "net462": "v4.5"
-      },
-      "license": "SAP Developer License Agreement 3.2 (see notes - provenance is not certain for this build)",
-      "licenseTexts": [
-      "sap-developer-license-3.2.txt"
-    ],
-      "copyright": "Copyright (c) SAP SE",
-      "projectUrl": "https://help.sap.com/docs/SAP_HANA_CLIENT",
-      "redistribution": "unresolved",
-      "notes": "Sap.Data.Hana.v4.5.dll is checked into Redist/SapHana and copied into the T4 tools folder; no licence accompanied that copy in this repository. The text reproduced here is the SAP Developer License Agreement 3.2, which SAP attaches to the HANA .NET providers it publishes on nuget.org (Sap.Data.Hana.Net.v6.0/v8.0/v10.0) - it is the best available statement of SAP terms for this provider, but it is not necessarily the agreement under which the .NET Framework copy here was obtained, which came from a HANA client installation. Read it before relying on this component: section 1 grants a non-transferable, non-sublicensable licence and section 2(a) states the software may not be provided or made available to any third party. Note also that only the managed assembly is packed, not the native libadonetHDB it calls into, so it cannot connect unless the SAP HANA client is already installed.",
-      "revisit": "Redistribution of Sap.Data.Hana.v4.5.dll is unresolved and needs a decision: either establish terms that permit it, or stop packing it from linq2db.SapHana and linq2db.t4models. Tracked on issue #5862.",
-      "files": [
-        "Sap.Data.Hana.v4.5.dll"
-      ],
-      "artifacts": [
-        "linq2db.SapHana",
-        "linq2db.t4models"
-      ]
-    },
-    {
       "id": "sqlce-runtime",
       "displayName": "Microsoft SQL Server Compact 4.0",
       "packageId": "Microsoft.SqlServer.Compact",
