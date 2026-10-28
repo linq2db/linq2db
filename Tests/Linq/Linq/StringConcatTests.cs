@@ -857,10 +857,11 @@ namespace Tests.Linq
 		];
 
 		// Informix.DB2: the CI container's code page rejects the Cyrillic seed values at insert time.
+		// Access: the concatenation loops (#6193) and grows the expression past a gigabyte, enough to run the 32-bit test
+		// host out of memory, so it is not run there rather than gated.
 		[Test]
-		[ActiveIssue(6193, Configuration = TestProvName.AllAccess, ErrorType = typeof(InsufficientExecutionStackException))]
-		[ActiveIssue(6195, Configuration = TestProvName.AllDB2,    ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
-		public void ConcatParameterBesideVarCharKeepsUnicode([DataSources(TestProvName.AllInformix)] string context)
+		[ActiveIssue(6195, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
+		public void ConcatParameterBesideVarCharKeepsUnicode([DataSources(TestProvName.AllInformix, TestProvName.AllAccess)] string context)
 		{
 			var suffix = "Жук";
 
@@ -953,9 +954,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue(6193, Configuration = TestProvName.AllAccess, ErrorType = typeof(InsufficientExecutionStackException))]
-		[ActiveIssue(6195, Configuration = TestProvName.AllDB2,    ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
-		public void ConcatParameterTakesComparedColumnType([DataSources(TestProvName.AllInformix)] string context)
+		[ActiveIssue(6195, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
+		public void ConcatParameterTakesComparedColumnType([DataSources(TestProvName.AllInformix, TestProvName.AllAccess)] string context)
 		{
 			var suffix = "Жук";
 
@@ -970,9 +970,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue(6193, Configuration = TestProvName.AllAccess, ErrorType = typeof(InsufficientExecutionStackException))]
-		[ActiveIssue(6195, Configuration = TestProvName.AllDB2,    ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
-		public void ConcatOnLeftParameterTakesComparedColumnType([DataSources(TestProvName.AllInformix)] string context)
+		[ActiveIssue(6195, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
+		public void ConcatOnLeftParameterTakesComparedColumnType([DataSources(TestProvName.AllInformix, TestProvName.AllAccess)] string context)
 		{
 			var suffix = "Жук";
 
@@ -987,9 +986,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue(6193, Configuration = TestProvName.AllAccess, ErrorType = typeof(InsufficientExecutionStackException))]
-		[ActiveIssue(6195, Configuration = TestProvName.AllDB2,    ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
-		public void ConcatInListKeepsUnicode([DataSources(TestProvName.AllInformix)] string context)
+		[ActiveIssue(6195, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
+		public void ConcatInListKeepsUnicode([DataSources(TestProvName.AllInformix, TestProvName.AllAccess)] string context)
 		{
 			var suffix = "Жук";
 			var titles = new[] { "A-100Щит", "B-200Жук" };
