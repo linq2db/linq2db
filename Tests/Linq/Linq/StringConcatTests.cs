@@ -858,6 +858,8 @@ namespace Tests.Linq
 
 		// Informix.DB2: the CI container's code page rejects the Cyrillic seed values at insert time.
 		[Test]
+		[ActiveIssue(6193, Configuration = TestProvName.AllAccess, ErrorType = typeof(InsufficientExecutionStackException))]
+		[ActiveIssue(6195, Configuration = TestProvName.AllDB2,    ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
 		public void ConcatParameterBesideVarCharKeepsUnicode([DataSources(TestProvName.AllInformix)] string context)
 		{
 			var suffix = "Жук";
@@ -951,6 +953,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ActiveIssue(6193, Configuration = TestProvName.AllAccess, ErrorType = typeof(InsufficientExecutionStackException))]
+		[ActiveIssue(6195, Configuration = TestProvName.AllDB2,    ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
 		public void ConcatParameterTakesComparedColumnType([DataSources(TestProvName.AllInformix)] string context)
 		{
 			var suffix = "Жук";
@@ -966,6 +970,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ActiveIssue(6193, Configuration = TestProvName.AllAccess, ErrorType = typeof(InsufficientExecutionStackException))]
+		[ActiveIssue(6195, Configuration = TestProvName.AllDB2,    ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
 		public void ConcatOnLeftParameterTakesComparedColumnType([DataSources(TestProvName.AllInformix)] string context)
 		{
 			var suffix = "Жук";
@@ -981,6 +987,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ActiveIssue(6193, Configuration = TestProvName.AllAccess, ErrorType = typeof(InsufficientExecutionStackException))]
+		[ActiveIssue(6195, Configuration = TestProvName.AllDB2,    ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
 		public void ConcatInListKeepsUnicode([DataSources(TestProvName.AllInformix)] string context)
 		{
 			var suffix = "Жук";
