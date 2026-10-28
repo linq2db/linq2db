@@ -389,9 +389,7 @@
     <File Path="UserDataProviders.json" />
     <File Path="UserDataProviders.json.template" />
     <Project Path="Tests/Base/Tests.Base.csproj" />
-    <Project Path="Tests/EntityFrameworkCore.FSharp/Tests.EntityFrameworkCore.FSharp.fsproj">
-      <Build Solution="Testing|*" Project="false" />
-    </Project>
+    <Project Path="Tests/EntityFrameworkCore.FSharp/Tests.EntityFrameworkCore.FSharp.fsproj" />
     <Project Path="Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF10.csproj" />
     <Project Path="Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF3.csproj">
       <Build Solution="Testing|*" Project="false" />

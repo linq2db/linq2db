@@ -232,7 +232,7 @@
 		<PackageVersion Include="Microsoft.Extensions.Logging.Console"                  Version="8.0.1"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))" />
 		<PackageVersion Include="Microsoft.Extensions.Logging.Console"                  Version="$(Net9Latest)"                Condition="'$(TargetFramework)'=='net9.0'" />
 		<PackageVersion Include="Microsoft.Extensions.Logging.Console"                  Version="$(Net10Latest)"               Condition="'$(TargetFramework)'=='net10.0'" />
-		<PackageVersion Include="EntityFrameworkCore.FSharp"                            Version="6.0.7"                        />
+		<PackageVersion Include="EntityFrameworkCore.FSharp"                            Version="10.0.0"                       />
 
 		<PackageVersion Include="Pomelo.EntityFrameworkCore.MySql"                      Version="3.2.7"                        Condition="'$(TargetFramework)'=='net462'"  />
 		<PackageVersion Include="Pomelo.EntityFrameworkCore.MySql"                      Version="8.0.3"                        Condition="'$(TargetFramework)'=='net8.0'"  />
