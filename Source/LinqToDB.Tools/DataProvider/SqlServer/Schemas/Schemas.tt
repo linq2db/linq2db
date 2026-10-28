@@ -174,7 +174,17 @@
 	void SetConfiguration(string tableName, string columnName, string configuration)
 	{
 		var col = GetColumn(tableName, columnName);
-		actions.Add(() => col.Attributes.First(a => a.Name == "Column").Parameters.Add($"Configuration={configuration}"));
+		actions.Add(() =>
+		{
+			var ca = col.Attributes.First(a => a.Name == "Column");
+
+			ca.Parameters.Add($"Configuration={configuration}");
+
+			if (col.Attributes.RemoveAll(a => a.Name.Trim() == "NotNull") > 0)
+				ca.Parameters.Add("CanBeNull=false");
+			else if (col.Attributes.RemoveAll(a => a.Name.Trim() == "Nullable") > 0)
+				ca.Parameters.Add("CanBeNull=true");
+		});
 	}
 
 	var bgm = BeforeGenerateModel;
