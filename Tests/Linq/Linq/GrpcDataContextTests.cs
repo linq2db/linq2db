@@ -90,6 +90,29 @@ namespace Tests.Linq
 			(GrpcServerConnections.Accepted - before).ShouldBe(ContextCount);
 		}
 
+		// Disposing a context built from an address disposes its channel, and with it a handler the options hand
+		// over to the channel: the context's connection closes with the context.
+		[Test]
+		public async Task DisposedContextClosesItsConnection([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			if (!context.IsRemote()) Assert.Ignore("Skip non-remote context");
+
+			var address = GetServerAddress(context);
+			var before  = GrpcServerConnections.Accepted;
+
+			for (var i = 0; i < ContextCount; i++)
+			{
+				var options = new GrpcChannelOptions { HttpHandler = CreateHandler(), DisposeHttpClient = true };
+
+				await using (var db = new GrpcDataContext(address, options, o => o.UseConfiguration(context.StripRemote())))
+					await RunQueries(db);
+
+				await WaitForClosed(before, i + 1);
+
+				GrpcServerConnections.ClosedSince(before).ShouldBe(i + 1);
+			}
+		}
+
 		// Cancelling the caller's token while the server runs the query ends the call with the
 		// OperationCanceledException every other async API throws, and cancels the query on the server.
 		[Test]
@@ -286,6 +309,15 @@ namespace Tests.Linq
 				_ = await db.GetTable<Person>().CountAsync();
 				_ = db.GetTable<Person>().ToList();
 			}
+		}
+
+		// The server sees a client's close asynchronously, so give it until Wait to arrive.
+		static async Task WaitForClosed(int acceptedBefore, int expected)
+		{
+			var deadline = DateTime.UtcNow + Wait;
+
+			while (GrpcServerConnections.ClosedSince(acceptedBefore) < expected && DateTime.UtcNow < deadline)
+				await Task.Delay(10);
 		}
 
 		// Sets up the test host for this test's provider and returns its address.
