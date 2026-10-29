@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Buffers;
-#if NET9_0_OR_GREATER
+#if NET8_0_OR_GREATER
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 #endif
@@ -48,22 +48,23 @@ namespace LinqToDB.Remote.SignalR
 			return size > limit ? size : null;
 		}
 
-#if NET9_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		// "headers":{"traceparent":"00-<trace id>-<span id>-<flags>"} of an invocation activity without a parent, with
 		// room for the id of a child activity being longer than its parent's (hierarchical ids).
 		const int TraceHeadersOverhead = 128;
 #endif
 
 		/// <summary>
-		/// The .NET 9+ client starts an activity for every invocation when its activity source is listened to
+		/// The Signal/R 9+ client starts an activity for every invocation when its activity source is listened to
 		/// (OpenTelemetry, for example), and puts the activity's trace context into the message headers: traceparent,
 		/// tracestate and baggage, which the invocation activity inherits from <c>Activity.Current</c>. The
 		/// server counts them against its message size limit. Returns no less than they take, without knowing whether
-		/// the client will add them at all.
+		/// the client will add them at all. Counted on .NET 8 too: a .NET 8 application can reference the 9+ client,
+		/// whose .NET Standard 2.1 build adds them.
 		/// </summary>
 		static long EstimateHeaders()
 		{
-#if NET9_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			var size = new StrongBox<long>(TraceHeadersOverhead);
 
 			if (Activity.Current is { } parent)
