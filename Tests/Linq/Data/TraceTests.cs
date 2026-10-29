@@ -904,7 +904,10 @@ namespace Tests.Data
 		{
 			var traces = new List<string>();
 
-			using var db = GetDataConnection(context, o => o
+			// Explicit options: the (context, builder) overload adds SqlServer.CS's sequential-access interceptor, and any
+			// command interceptor turns DbBatch off (DataConnection.CanRunDbBatch).
+			using var db = GetDataConnection(new DataOptions()
+				.UseConfiguration(context)
 				.UseCombinedCommands(true)
 				.UseDbBatch(true)
 				.UseTracing(info =>
