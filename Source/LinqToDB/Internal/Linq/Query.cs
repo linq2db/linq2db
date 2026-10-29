@@ -243,9 +243,9 @@ namespace LinqToDB.Internal.Linq
 		}
 
 		/// <summary>
-		/// The implicit transaction that keeps the reads of an eager-loading query consistent. Its owner - the element call
-		/// or the enumeration - commits it with <see cref="Complete"/> unless the load itself failed: the caller may write on
-		/// the same connection while enumerating, and those writes are enlisted in it. Disposing it uncommitted rolls it back.
+		/// The implicit transaction that keeps the reads of an eager-loading query consistent. It covers the reads only: an
+		/// enumeration buffers the main rows and commits it with <see cref="Complete"/> before returning the first one, so the
+		/// caller's code never runs inside a transaction it did not open. Disposing it uncommitted rolls it back.
 		/// </summary>
 		internal sealed class LoadTransaction : IDisposable, IAsyncDisposable
 		{

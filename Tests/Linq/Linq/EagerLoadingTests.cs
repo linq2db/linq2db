@@ -4182,7 +4182,7 @@ namespace Tests.Linq
 		};
 
 		// Each invoice is marked exported on the same connection while its eager load is still being enumerated. The load's
-		// implicit read-consistency transaction is still open then, and the writes it takes in must persist with it.
+		// implicit read-consistency transaction must not take these writes in.
 		[Test]
 		public void WritesDuringEagerLoadEnumerationPersist([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
@@ -4224,6 +4224,257 @@ namespace Tests.Linq
 					.Set(i => i.Exported, true)
 					.UpdateAsync();
 			}
+
+			var exported = await invoices.CountAsync(i => i.Exported);
+
+			exported.ShouldBe(ExportInvoices.Length);
+		}
+
+		static int FailOnSecondInvoice(int id)
+		{
+			if (id == 2)
+				throw new InvalidOperationException("second invoice");
+
+			return id;
+		}
+
+		// The main rows are read to the end before the implicit transaction commits, so a failure of the projection surfaces
+		// before the loop body sees a row, and nothing the caller does can be enlisted in that transaction.
+		[Test]
+		public void EagerLoadProjectionFailureSurfacesBeforeTheFirstRow([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var invoices = db.CreateLocalTable(ExportInvoices);
+			using var lines    = db.CreateLocalTable(ExportInvoiceLines);
+
+			var withLines = invoices
+				.OrderBy(i => i.Id)
+				.Select(i => new { i.Id, Check = FailOnSecondInvoice(i.Id), Lines = i.Lines.ToList() });
+
+			var seen = 0;
+
+			Shouldly.Should.Throw<InvalidOperationException>(() =>
+			{
+				foreach (var _ in withLines)
+					seen++;
+			});
+
+			seen.ShouldBe(0);
+		}
+
+		[Test]
+		public async Task EagerLoadProjectionFailureSurfacesBeforeTheFirstRowAsync([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var invoices = db.CreateLocalTable(ExportInvoices);
+			using var lines    = db.CreateLocalTable(ExportInvoiceLines);
+
+			var withLines = invoices
+				.OrderBy(i => i.Id)
+				.Select(i => new { i.Id, Check = FailOnSecondInvoice(i.Id), Lines = i.Lines.ToList() })
+				.AsAsyncEnumerable();
+
+			var seen = 0;
+
+			await Shouldly.Should.ThrowAsync<InvalidOperationException>(async () =>
+			{
+				await foreach (var _ in withLines)
+					seen++;
+			});
+
+			seen.ShouldBe(0);
+		}
+
+		[Test]
+		public void WritesBeforeEagerLoadLoopFailurePersist([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var invoices = db.CreateLocalTable(ExportInvoices);
+			using var lines    = db.CreateLocalTable(ExportInvoiceLines);
+
+			var withLines = invoices
+				.LoadWith(i => i.Lines)
+				.OrderBy(i => i.Id);
+
+			Shouldly.Should.Throw<InvalidOperationException>(() =>
+			{
+				foreach (var invoice in withLines)
+				{
+					FailOnSecondInvoice(invoice.Id);
+
+					invoices
+						.Where(i => i.Id == invoice.Id)
+						.Set(i => i.Exported, true)
+						.Update();
+				}
+			});
+
+			invoices
+				.Count(i => i.Exported)
+				.ShouldBe(1);
+		}
+
+		[Test]
+		public async Task WritesBeforeEagerLoadLoopFailurePersistAsync([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var invoices = db.CreateLocalTable(ExportInvoices);
+			using var lines    = db.CreateLocalTable(ExportInvoiceLines);
+
+			var withLines = invoices
+				.LoadWith(i => i.Lines)
+				.OrderBy(i => i.Id)
+				.AsAsyncEnumerable();
+
+			await Shouldly.Should.ThrowAsync<InvalidOperationException>(async () =>
+			{
+				await foreach (var invoice in withLines)
+				{
+					FailOnSecondInvoice(invoice.Id);
+
+					await invoices
+						.Where(i => i.Id == invoice.Id)
+						.Set(i => i.Exported, true)
+						.UpdateAsync();
+				}
+			});
+
+			var exported = await invoices.CountAsync(i => i.Exported);
+
+			exported.ShouldBe(1);
+		}
+
+		[Test]
+		public void TransactionPerItemDuringEagerLoadEnumeration([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db       = GetDataConnection(context, o => o.UseCombinedCommands(combinedCommands));
+			using var invoices = db.CreateLocalTable(ExportInvoices);
+			using var lines    = db.CreateLocalTable(ExportInvoiceLines);
+
+			var withLines = invoices
+				.LoadWith(i => i.Lines);
+
+			foreach (var invoice in withLines)
+			{
+				using var tr = db.BeginTransaction();
+
+				invoices
+					.Where(i => i.Id == invoice.Id)
+					.Set(i => i.Exported, true)
+					.Update();
+
+				tr.Commit();
+			}
+
+			invoices
+				.Count(i => i.Exported)
+				.ShouldBe(ExportInvoices.Length);
+		}
+
+		[Test]
+		public void WritesDuringEagerLoadEnumerationAreVisibleToAnotherConnection([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var invoices = db.CreateLocalTable(ExportInvoices);
+			using var lines    = db.CreateLocalTable(ExportInvoiceLines);
+
+			var withLines = invoices
+				.LoadWith(i => i.Lines);
+
+			var seen = new List<bool>();
+
+			foreach (var invoice in withLines)
+			{
+				invoices
+					.Where(i => i.Id == invoice.Id)
+					.Set(i => i.Exported, true)
+					.Update();
+
+				using var other = GetDataConnection(context);
+
+				seen.Add(other
+					.GetTable<ExportInvoice>()
+					.Where(i => i.Id == invoice.Id)
+					.Select(i => i.Exported)
+					.Single());
+			}
+
+			seen.ShouldBe(new[] { true, true });
+		}
+
+		[Test]
+		public async Task TransactionPerItemDuringEagerLoadEnumerationAsync([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db       = GetDataConnection(context, o => o.UseCombinedCommands(combinedCommands));
+			using var invoices = db.CreateLocalTable(ExportInvoices);
+			using var lines    = db.CreateLocalTable(ExportInvoiceLines);
+
+			var withLines = invoices
+				.LoadWith(i => i.Lines)
+				.AsAsyncEnumerable();
+
+			await foreach (var invoice in withLines)
+			{
+				await using var tr = await db.BeginTransactionAsync();
+
+				await invoices
+					.Where(i => i.Id == invoice.Id)
+					.Set(i => i.Exported, true)
+					.UpdateAsync();
+
+				await tr.CommitAsync();
+			}
+
+			var exported = await invoices.CountAsync(i => i.Exported);
+
+			exported.ShouldBe(ExportInvoices.Length);
+		}
+
+		[Test]
+		public async Task WritesDuringEagerLoadEnumerationAreVisibleToAnotherConnectionAsync([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var invoices = db.CreateLocalTable(ExportInvoices);
+			using var lines    = db.CreateLocalTable(ExportInvoiceLines);
+
+			var withLines = invoices
+				.LoadWith(i => i.Lines)
+				.AsAsyncEnumerable();
+
+			var seen = new List<bool>();
+
+			await foreach (var invoice in withLines)
+			{
+				await invoices
+					.Where(i => i.Id == invoice.Id)
+					.Set(i => i.Exported, true)
+					.UpdateAsync();
+
+				using var other = GetDataConnection(context);
+
+				seen.Add(other
+					.GetTable<ExportInvoice>()
+					.Where(i => i.Id == invoice.Id)
+					.Select(i => i.Exported)
+					.Single());
+			}
+
+			seen.ShouldBe(new[] { true, true });
+		}
+
+		[Test]
+		public async Task WritesDuringEagerLoadForEachAsyncPersist([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var invoices = db.CreateLocalTable(ExportInvoices);
+			using var lines    = db.CreateLocalTable(ExportInvoiceLines);
+
+			await invoices
+				.LoadWith(i => i.Lines)
+				.ForEachAsync(invoice => invoices
+					.Where(i => i.Id == invoice.Id)
+					.Set(i => i.Exported, true)
+					.Update());
 
 			var exported = await invoices.CountAsync(i => i.Exported);
 
