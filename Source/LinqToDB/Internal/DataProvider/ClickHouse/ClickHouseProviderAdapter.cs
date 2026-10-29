@@ -234,6 +234,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			typeMapper.RegisterTypeWrapper<DriverWrappers.ClickHouseConnectionStringBuilder>(connectionStringBuilderType);
 			typeMapper.RegisterTypeWrapper<DriverWrappers.ClickHouseBulkCopy>(bulkCopyType);
 			typeMapper.RegisterTypeWrapper<DriverWrappers.ClickHouseDecimal>(decimalType);
+			typeMapper.RegisterTypeWrapper<DriverWrappers.ClickHouseDbParameter>(parameterType);
 
 			if (clientType != null)
 			{
@@ -251,7 +252,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			var connectionFactory = typeMapper.BuildTypedFactory<string, DriverWrappers.ClickHouseConnection, DbConnection>(connectionString => new DriverWrappers.ClickHouseConnection(connectionString));
 
 			// "{name:type}", the type resolved from ClickHouseType or the value: the client ignores DbType
-			var queryFormGetter = BuildParameterPropertyGetter(parameterType, "QueryForm");
+			var queryFormGetter = typeMapper.Type<DriverWrappers.ClickHouseDbParameter>().Member(p => p.QueryForm).BuildGetter<DbParameter>();
 
 			return new ClickHouseProviderAdapter(
 				connectionType,
@@ -285,28 +286,15 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				insertOptionsType == null ? null : typeMapper.BuildWrappedFactory(() => new DriverWrappers.InsertOptions())
 				)
 			{
-				GetParameterTypeName = queryFormGetter == null ? null : p =>
+				GetParameterTypeName = p =>
 				{
 					var prefix = "{" + p.ParameterName + ":";
 
-					return queryFormGetter(p) is string queryForm && queryForm.StartsWith(prefix, StringComparison.Ordinal) && queryForm.EndsWith('}')
+					return queryFormGetter(p) is { } queryForm && queryForm.StartsWith(prefix, StringComparison.Ordinal) && queryForm.EndsWith('}')
 						? queryForm.Substring(prefix.Length, queryForm.Length - prefix.Length - 1)
 						: null;
 				},
 			};
-		}
-
-		static Func<DbParameter, object?>? BuildParameterPropertyGetter(Type parameterType, string propertyName)
-		{
-			if (parameterType.GetProperty(propertyName) is not { } property)
-				return null;
-
-			var p = Expression.Parameter(typeof(DbParameter));
-
-			return Expression.Lambda<Func<DbParameter, object?>>(
-					Expression.Convert(Expression.Property(Expression.Convert(p, parameterType), property), typeof(object)),
-					p)
-				.CompileExpression();
 		}
 
 		private static ClickHouseProviderAdapter CreateOctonicaAdapter()
@@ -328,6 +316,8 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			typeMapper.RegisterTypeWrapper<OctonicaWrappers.ClickHouseConnection    >(connectionType);
 			typeMapper.RegisterTypeWrapper<OctonicaWrappers.ClickHouseColumnWriter  >(bulkCopyType);
 			typeMapper.RegisterTypeWrapper<OctonicaWrappers.ClickHouseColumnSettings>(columnSettingsType);
+			typeMapper.RegisterTypeWrapper<OctonicaWrappers.ClickHouseParameter     >(parameterType);
+			typeMapper.RegisterTypeWrapper<OctonicaWrappers.ClickHouseDbType        >(assembly.GetType($"{OctonicaClientNamespace}.ClickHouseDbType", true)!);
 			typeMapper.FinalizeMappings();
 
 			var pConnection = Expression.Parameter(typeof(DbConnection));
@@ -348,7 +338,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 			var connectionFactory = typeMapper.BuildTypedFactory<string, OctonicaWrappers.ClickHouseConnection, DbConnection>(connectionString => new OctonicaWrappers.ClickHouseConnection(connectionString));
 
-			var clickHouseDbTypeGetter = BuildParameterPropertyGetter(parameterType, "ClickHouseDbType");
+			var clickHouseDbTypeGetter = typeMapper.Type<OctonicaWrappers.ClickHouseParameter>().Member(p => p.ClickHouseDbType).BuildGetter<DbParameter>();
 
 			return new ClickHouseProviderAdapter(
 				connectionType,
@@ -380,7 +370,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				null,
 				null)
 			{
-				GetParameterTypeName = clickHouseDbTypeGetter == null ? null : p => Convert.ToString(clickHouseDbTypeGetter(p), CultureInfo.InvariantCulture),
+				GetParameterTypeName = p => clickHouseDbTypeGetter(p).ToString(),
 			};
 
 			IEnumerable<int> exceptionErrorsGettter(Exception ex) => new[] { typeMapper.Wrap<OctonicaWrappers.ClickHouseException>(ex).ErrorCode };
@@ -431,6 +421,12 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			internal sealed class ClickHouseDecimal
 			{
 				public string ToString(IFormatProvider provider) => throw new NotSupportedException();
+			}
+
+			[Wrapper]
+			internal sealed class ClickHouseDbParameter
+			{
+				public string QueryForm => throw new NotSupportedException();
 			}
 
 			[Wrapper]
@@ -606,6 +602,59 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		/// </summary>
 		public static class OctonicaWrappers
 		{
+			[Wrapper]
+			internal sealed class ClickHouseParameter
+			{
+				public ClickHouseDbType ClickHouseDbType { get; set; }
+			}
+
+			[Wrapper]
+			internal enum ClickHouseDbType
+			{
+				AnsiString                          = 0,
+				Binary                              = 1,
+				Byte                                = 2,
+				Boolean                             = 3,
+				Currency                            = 4,
+				Date                                = 5,
+				DateTime                            = 6,
+				Decimal                             = 7,
+				Double                              = 8,
+				Guid                                = 9,
+				Int16                               = 10,
+				Int32                               = 11,
+				Int64                               = 12,
+				Object                              = 13,
+				SByte                               = 14,
+				Single                              = 15,
+				String                              = 16,
+				Time                                = 17,
+				UInt16                              = 18,
+				UInt32                              = 19,
+				UInt64                              = 20,
+				VarNumeric                          = 21,
+				AnsiStringFixedLength               = 22,
+				StringFixedLength                   = 23,
+				Xml                                 = 25,
+				DateTime2                           = 26,
+				DateTimeOffset                      = 27,
+				ClickHouseSpecificTypeDelimiterCode = 16383,
+				IpV4                                = 16384,
+				IpV6                                = 16385,
+				Array                               = 16386,
+				Tuple                               = 16387,
+				Nothing                             = 16388,
+				Enum                                = 16389,
+				DateTime64                          = 16390,
+				Map                                 = 16391,
+				Int128                              = 16392,
+				UInt128                             = 16393,
+				Int256                              = 16394,
+				UInt256                             = 16395,
+				Date32                              = 16396,
+				Variant                             = 16397,
+			}
+
 			[Wrapper]
 			internal sealed class ClickHouseConnection
 			{

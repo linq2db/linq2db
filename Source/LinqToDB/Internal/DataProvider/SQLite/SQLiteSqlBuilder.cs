@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.Globalization;
 using System.Text;
 
 using LinqToDB.DataProvider;
@@ -126,7 +125,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 				try
 				{
-					return System.Convert.ToString(getSqliteType(param), CultureInfo.InvariantCulture);
+					return getSqliteType(param).ToString();
 				}
 				catch (Exception)
 				{

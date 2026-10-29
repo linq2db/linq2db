@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Data.Common;
-using System.Linq.Expressions;
 using System.Threading;
 
-using LinqToDB.Common;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Internal.Expressions.Types;
 
@@ -24,15 +22,15 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 		public const string MicrosoftDataSQLiteClientNamespace = "Microsoft.Data.Sqlite";
 
 		private SQLiteProviderAdapter(
-			Type                       connectionType,
-			Type                       dataReaderType,
-			Type                       parameterType,
-			Type                       commandType,
-			Type                       transactionType,
-			Func<string, DbConnection> connectionFactory,
-			bool                       supportsDateOnly,
-			Action?                    clearAllPulls,
-			Func<DbParameter, object>? sqliteTypeGetter)
+			Type                           connectionType,
+			Type                           dataReaderType,
+			Type                           parameterType,
+			Type                           commandType,
+			Type                           transactionType,
+			Func<string, DbConnection>     connectionFactory,
+			bool                           supportsDateOnly,
+			Action?                        clearAllPulls,
+			Func<DbParameter, SqliteType>? sqliteTypeGetter)
 		{
 			ConnectionType     = connectionType;
 			DataReaderType     = dataReaderType;
@@ -68,7 +66,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 		/// <summary>
 		/// Microsoft.Data.Sqlite only: reads <c>SqliteParameter.SqliteType</c>, the storage class the driver binds the parameter value with.
 		/// </summary>
-		internal Func<DbParameter, object>? GetSqliteType { get; }
+		internal Func<DbParameter, SqliteType>? GetSqliteType { get; }
 
 		private static SQLiteProviderAdapter CreateAdapter(string assemblyName, string clientNamespace, string prefix)
 		{
@@ -88,6 +86,8 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			if (string.Equals(clientNamespace, MicrosoftDataSQLiteClientNamespace, StringComparison.Ordinal))
 			{
 				typeMapper.RegisterTypeWrapper<SqliteConnection>(connectionType);
+				typeMapper.RegisterTypeWrapper<SqliteParameter>(parameterType);
+				typeMapper.RegisterTypeWrapper<SqliteType>(assembly.GetType($"{clientNamespace}.SqliteType", true)!);
 			}
 			else
 			{
@@ -112,21 +112,13 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 			var supportsDateOnly   = string.Equals(clientNamespace, MicrosoftDataSQLiteClientNamespace, StringComparison.Ordinal) && assembly.GetName().Version >= MinDateOnlyAssemblyVersionMDS;
 
-			Func<DbParameter, object>? sqliteTypeGetter = null;
-			if (string.Equals(clientNamespace, MicrosoftDataSQLiteClientNamespace, StringComparison.Ordinal) && parameterType.GetProperty("SqliteType") is { } sqliteTypeProperty)
-			{
-				var p = Expression.Parameter(typeof(DbParameter));
-
-				sqliteTypeGetter = Expression.Lambda<Func<DbParameter, object>>(
-						Expression.Convert(Expression.Property(Expression.Convert(p, parameterType), sqliteTypeProperty), typeof(object)),
-						p)
-					.CompileExpression();
-			}
+			Func<DbParameter, SqliteType>? sqliteTypeGetter = null;
 
 			Func<string, DbConnection> connectionFactory;
 			if (string.Equals(clientNamespace, MicrosoftDataSQLiteClientNamespace, StringComparison.Ordinal))
 			{
 				connectionFactory = typeMapper.BuildTypedFactory<string, SqliteConnection, DbConnection>(connectionString => new SqliteConnection(connectionString));
+				sqliteTypeGetter  = typeMapper.Type<SqliteParameter>().Member(p => p.SqliteType).BuildGetter<DbParameter>();
 			}
 			else
 			{
@@ -188,6 +180,21 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			public SqliteConnection(string connectionString) => throw new NotSupportedException();
 
 			public static void ClearAllPools() => throw new NotSupportedException();
+		}
+
+		[Wrapper]
+		private sealed class SqliteParameter
+		{
+			public SqliteType SqliteType { get; set; }
+		}
+
+		[Wrapper]
+		internal enum SqliteType
+		{
+			Integer = 1,
+			Real    = 2,
+			Text    = 3,
+			Blob    = 4,
 		}
 
 		[Wrapper]
