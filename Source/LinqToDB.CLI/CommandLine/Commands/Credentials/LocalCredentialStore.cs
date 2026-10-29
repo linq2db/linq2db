@@ -477,6 +477,9 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 			return $"'{KeyPath}' is missing; the stored entries cannot be decrypted. Delete '{DataPath}' and re-enter them.";
 		}
 
+		/// <summary>Called right after a new key is moved into place, before it is read back (for tests).</summary>
+		internal Action? KeyInstalled { get; set; }
+
 		/// <summary>
 		/// Reads the key, or creates it when <paramref name="create"/> is set and neither key nor data exists. The key is
 		/// written to a temporary file, flushed to disk and moved into place without overwriting, so a partial key file never
@@ -485,9 +488,6 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		/// locking is unsupported or disabled. So the key is read back after the move, and a key that is not the one written
 		/// fails the operation before anything is encrypted with either.
 		/// </summary>
-		/// <summary>Called right after a new key is moved into place, before it is read back (for tests).</summary>
-		internal Action? KeyInstalled { get; set; }
-
 		bool TryGetKey(bool create, out byte[] key, out string? error)
 		{
 			key = [];
