@@ -1089,6 +1089,44 @@ namespace Tests.Remote
 		}
 #endif
 
+#if NETFRAMEWORK
+		// The legacy client clears its connection state as soon as the connection is lost, but raises Closed only
+		// after it has disposed the transport. A call in between fails before anything is sent; it restarts the
+		// connection and is sent once more. A Closed of the lost connection arriving after the restart does no harm.
+		[Test]
+		public async Task LegacyCallFindingTheConnectionNotActiveRestartsIt()
+		{
+			using var database = new SqliteDatabase();
+			using var host     = TestHost.Start<SqliteHub>(services => services.AddSingleton(database));
+
+			await using var provider = BuildClientServices(host.Port);
+
+			var connection = provider.GetRequiredService<LinqToDBSignalRConnection>();
+
+			await connection.EnsureConnectedAsync();
+
+			const BindingFlags Flags = BindingFlags.Instance | BindingFlags.NonPublic;
+
+			var onClosed = (Func<Exception, Task>)Delegate.CreateDelegate(
+				typeof(Func<Exception, Task>),
+				connection,
+				typeof(LinqToDBSignalRConnection).GetMethod("OnClosed", Flags)!);
+
+			// Lose the connection with Closed not raised yet.
+			connection.HubConnection.Closed -= onClosed;
+			await connection.HubConnection.StopAsync();
+
+			await using (var scope = provider.CreateAsyncScope())
+				(await WithinLimit(CountItemsAsync(scope.ServiceProvider))).ShouldBe(0);
+
+			connection.HubConnection.Closed += onClosed;
+			await onClosed(null!);
+
+			await using (var scope = provider.CreateAsyncScope())
+				(await WithinLimit(CountItemsAsync(scope.ServiceProvider))).ShouldBe(0);
+		}
+#endif
+
 		// ConnectTimeout takes InfiniteTimeSpan, or a positive value the timers enforcing it can take.
 		[Test]
 		public void ConnectTimeoutIsValidated()
