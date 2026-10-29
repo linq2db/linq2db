@@ -99,27 +99,25 @@ namespace Tests.DataProvider
 			}
 
 		[Test]
+		[NoBaselines("Provider-specific output", Configuration = TestProvName.AllSqlServerMS)]
 		public void TestDataTypes2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (new DisableBaseline("Provider-specific output", IsMsProvider(context)))
-			using (var conn = GetDataConnection(context))
+			using var conn = GetDataConnection(context);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(TestType<DateTime?>(conn, "dateDataType", DataType.Date, "AllTypes2"), Is.EqualTo(new DateTime(2012, 12, 12)));
+				Assert.That(TestType<DateTimeOffset?>(conn, "datetimeoffsetDataType", DataType.DateTimeOffset, "AllTypes2"), Is.EqualTo(new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan(5, 0, 0))));
+				Assert.That(TestType<DateTime?>(conn, "datetime2DataType", DataType.DateTime2, "AllTypes2"), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
+				Assert.That(TestType<TimeSpan?>(conn, "timeDataType", DataType.Time, "AllTypes2"), Is.EqualTo(new TimeSpan(0, 12, 12, 12, 12)));
+			}
+
+			if (!IsMsProvider(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(TestType<DateTime?>(conn, "dateDataType", DataType.Date, "AllTypes2"), Is.EqualTo(new DateTime(2012, 12, 12)));
-					Assert.That(TestType<DateTimeOffset?>(conn, "datetimeoffsetDataType", DataType.DateTimeOffset, "AllTypes2"), Is.EqualTo(new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan(5, 0, 0))));
-					Assert.That(TestType<DateTime?>(conn, "datetime2DataType", DataType.DateTime2, "AllTypes2"), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
-					Assert.That(TestType<TimeSpan?>(conn, "timeDataType", DataType.Time, "AllTypes2"), Is.EqualTo(new TimeSpan(0, 12, 12, 12, 12)));
-				}
-
-				if (!IsMsProvider(context))
-				{
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(TestType<SqlHierarchyId?>(conn, "hierarchyidDataType", tableName: "AllTypes2"), Is.EqualTo(SqlHierarchyId.Parse("/1/3/")));
-						Assert.That(TestType<SqlGeography>(conn, "geographyDataType", skipPass: true, tableName: "AllTypes2").ToString(), Is.EqualTo("LINESTRING (-122.36 47.656, -122.343 47.656)"));
-						Assert.That(TestType<SqlGeometry>(conn, "geometryDataType", skipPass: true, tableName: "AllTypes2").ToString(), Is.EqualTo("LINESTRING (100 100, 20 180, 180 180)"));
-					}
+					Assert.That(TestType<SqlHierarchyId?>(conn, "hierarchyidDataType", tableName: "AllTypes2"), Is.EqualTo(SqlHierarchyId.Parse("/1/3/")));
+					Assert.That(TestType<SqlGeography>(conn, "geographyDataType", skipPass: true, tableName: "AllTypes2").ToString(), Is.EqualTo("LINESTRING (-122.36 47.656, -122.343 47.656)"));
+					Assert.That(TestType<SqlGeometry>(conn, "geometryDataType", skipPass: true, tableName: "AllTypes2").ToString(), Is.EqualTo("LINESTRING (100 100, 20 180, 180 180)"));
 				}
 			}
 		}
@@ -2632,6 +2630,51 @@ DROP TABLE IF EXISTS TemporalTable3History
 			var captured = cte.Count(r => values.Contains(r.D));
 
 			captured.ShouldBe(2);
+		}
+
+		[Table("person")]
+		sealed class LowerCasePerson
+		{
+			[Column("PersonID")] public int ID { get; set; }
+		}
+
+		// Guards the SqlServer.CS test database setup: case-sensitive data and catalog, sequential access mode.
+		[Test]
+		public void CaseSensitiveCatalogConfiguration([IncludeDataSources(false, TestProvName.AllSqlServerCaseSensitiveCatalog)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			db.DataProvider.Name.ShouldBe(ProviderName.SqlServer2025);
+			db.Options.LinqOptions.OptimizeForSequentialAccess.ShouldBeTrue();
+
+			db.Execute<string>("SELECT collation_name FROM sys.databases WHERE database_id = DB_ID()")
+				.ShouldContain("_CS_", Case.Sensitive);
+			db.Execute<string>("SELECT catalog_collation_type_desc FROM sys.databases WHERE database_id = DB_ID()")
+				.ShouldBe("DATABASE_DEFAULT");
+			db.Execute<string>("SELECT containment_desc FROM sys.databases WHERE database_id = DB_ID()")
+				.ShouldBe("NONE");
+
+			var act = () => db
+				.GetTable<LowerCasePerson>()
+				.ToList();
+
+			act.ShouldThrow<Exception>()
+				.Message.ShouldContain("Invalid object name");
+		}
+
+		// Guards the SqlServer.Contained test database setup: contained database with case-sensitive data.
+		[Test]
+		public void ContainedConfiguration([IncludeDataSources(false, TestProvName.AllSqlServerContained)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			db.DataProvider.Name.ShouldBe(ProviderName.SqlServer2025);
+			db.Options.LinqOptions.OptimizeForSequentialAccess.ShouldBeFalse();
+
+			db.Execute<string>("SELECT collation_name FROM sys.databases WHERE database_id = DB_ID()")
+				.ShouldContain("_CS_", Case.Sensitive);
+			db.Execute<string>("SELECT containment_desc FROM sys.databases WHERE database_id = DB_ID()")
+				.ShouldBe("PARTIAL");
 		}
 	}
 }
