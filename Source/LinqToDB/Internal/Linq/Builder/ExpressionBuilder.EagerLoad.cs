@@ -545,6 +545,11 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// </summary>
 		EagerLoadingStrategy ResolveStrategy(IBuildContext buildContext)
 		{
+			// Default and CteUnion re-query the main query, which would run its data-modifying CTE again.
+			// KeyedQuery matches children to the buffered main rows instead.
+			if (HasInsertOutputQuery)
+				return EagerLoadingStrategy.KeyedQuery;
+
 			var strategy = buildContext.TranslationModifier.EagerLoadingStrategy
 			            ?? DataContext.Options.LinqOptions.DefaultEagerLoadingStrategy;
 
@@ -615,6 +620,10 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (e.NodeType != ExpressionType.Extension || e is not SqlEagerLoadExpression eagerLoad)
 						return e;
 
+					// A child query runs as its own statement: a data-modifying CTE in it would insert again.
+					if (HasInsertOutputQuery && eagerLoad.SequenceExpression.Find(static se => IsInsertOutputQueryCall(se)) != null)
+						throw new LinqToDBException(ErrorHelper.Error_OutputQuery_EagerLoad);
+
 					if (cteUnionCache != null && cteUnionCache.TryGetValue(eagerLoad.SequenceExpression, out var cachedExpression))
 						return cachedExpression;
 
@@ -676,6 +685,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				(fallbackChain ??= new()).Add((strategy, attempt.FallbackReason));
 
 				localHarvesters.RemoveRange(harvesterSnapshot, localHarvesters.Count - harvesterSnapshot);
+
+				if (HasInsertOutputQuery)
+					throw new LinqToDBException(ErrorHelper.Error_OutputQuery_EagerLoad);
 
 				strategy = strategy switch
 				{

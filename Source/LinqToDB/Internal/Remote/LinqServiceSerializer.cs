@@ -729,6 +729,13 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 					return base.VisitSqlRawSqlTable(element);
 				}
 
+				protected internal override IQueryElement VisitSqlDataModificationTable(SqlDataModificationTable element)
+				{
+					RegisterInSerializer(element.All);
+					VisitElements(element.Fields, VisitMode.ReadOnly);
+					return base.VisitSqlDataModificationTable(element);
+				}
+
 				protected internal override IQueryElement VisitSqlTableLikeSource(SqlTableLikeSource element)
 				{
 					VisitElements(element.SourceFields, VisitMode.ReadOnly);
@@ -899,6 +906,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 					case QueryElementType.SqlCteTable              : GetType(((SqlCteTable)             e).ObjectType)          ; break;
 					case QueryElementType.CteClause                : GetType(((CteClause)               e).ObjectType)          ; break;
 					case QueryElementType.SqlRawSqlTable           : GetType(((SqlRawSqlTable)          e).ObjectType)          ; break;
+					case QueryElementType.SqlDataModificationTable : GetType(((SqlDataModificationTable)e).ObjectType)          ; break;
 				}
 
 				ObjectIndices.Add(e, ++Index);
@@ -1197,6 +1205,26 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 									Append(ObjectIndices[expr]);
 							}
 
+							Append(elem.SqlQueryExtensions);
+
+							break;
+						}
+
+					case QueryElementType.SqlDataModificationTable :
+						{
+							var elem = (SqlDataModificationTable)e;
+
+							Append(elem.SourceID);
+							Append(elem.Alias);
+							Append(elem.ObjectType);
+
+							Append(ObjectIndices[elem.All]);
+							Append(elem.Fields.Count);
+
+							foreach (var field in elem.Fields)
+								Append(ObjectIndices[field]);
+
+							Append(elem.Statement);
 							Append(elem.SqlQueryExtensions);
 
 							break;
@@ -2414,6 +2442,30 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							var extensions = ReadList<SqlQueryExtension>();
 
 							obj = new SqlRawSqlTable(sourceID, alias, objectType, flds, sql, isScalar, parameters)
+							{
+								SqlQueryExtensions = extensions,
+							};
+
+							break;
+						}
+
+					case QueryElementType.SqlDataModificationTable :
+						{
+							var sourceID   = ReadInt();
+							var alias      = ReadString()!;
+							var objectType = ReadType()!;
+
+							var all    = Read<SqlField>()!;
+							var fields = ReadArray<SqlField>()!;
+							var flds   = new SqlField[fields.Length + 1];
+
+							flds[0] = all;
+							Array.Copy(fields, 0, flds, 1, fields.Length);
+
+							var statement  = Read<SqlStatementWithQueryBase>()!;
+							var extensions = ReadList<SqlQueryExtension>();
+
+							obj = new SqlDataModificationTable(sourceID, alias, objectType, new(string.Empty), flds, statement)
 							{
 								SqlQueryExtensions = extensions,
 							};
