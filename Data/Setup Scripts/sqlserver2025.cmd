@@ -14,3 +14,13 @@ REM create test databases
 docker exec sql2025 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData;"
 docker exec sql2025 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestDataMS;"
 
+REM SqlServer.CS: case-sensitive data and catalog
+docker exec sql2025 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestDataCS COLLATE Latin1_General_CS_AS;"
+docker exec sql2025 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestDataMSCS COLLATE Latin1_General_CS_AS;"
+
+REM SqlServer.Contained: case-sensitive data, case-insensitive catalog
+docker exec sql2025 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q "sp_configure 'contained database authentication', 1;"
+docker exec sql2025 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q "RECONFIGURE;"
+docker exec sql2025 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestDataContained CONTAINMENT = PARTIAL COLLATE Latin1_General_CS_AS;"
+docker exec sql2025 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestDataMSContained CONTAINMENT = PARTIAL COLLATE Latin1_General_CS_AS;"
+

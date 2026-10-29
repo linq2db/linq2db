@@ -20,11 +20,6 @@ internal sealed class SQLiteProvider : DatabaseProviderBase
 #if NETFRAMEWORK
 	static SQLiteProvider()
 	{
-		// Both SQLite clients are SQLitePCLRaw-based and now share one native package, so both load
-		// e_sqlite3 from the standard runtimes/ folder. Set explicitly rather than left to default
-		// probing because LINQPad 5 does not run the driver from its own base directory.
-		Environment.SetEnvironmentVariable("PreLoadSQLite_BaseDirectory", AppDomain.CurrentDomain.BaseDirectory);
-
 		// data adapter not implemented by MS provider
 		// https://github.com/dotnet/efcore/issues/13838
 		// but needed for linqpad 5 to run sql
