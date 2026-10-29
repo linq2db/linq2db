@@ -50,8 +50,8 @@ namespace Tests.LinqToDB.CLI
 			if (!OperatingSystem.IsWindows())
 				Assert.Ignore("Logs on through Windows LogonUser.");
 
-			// Not NewCredentials, which does not check the credentials; no domain, so no domain controller is asked.
-			var exception = Should.Throw<Win32Exception>(() => WindowsImpersonation.Logon("linq2db-no-such-user", "x", WindowsImpersonationMode.NetworkCleartext));
+			// Not NewCredentials, which does not check the credentials; domain ".", so only the local account database is asked.
+			var exception = Should.Throw<Win32Exception>(() => WindowsImpersonation.Logon(".\\linq2db-no-such-user", "x", WindowsImpersonationMode.NetworkCleartext));
 
 			using (Assert.EnterMultipleScope())
 			{
