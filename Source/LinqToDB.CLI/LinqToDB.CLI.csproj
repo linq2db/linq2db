@@ -88,6 +88,8 @@
 
 		<EmbeddedResource Include="Template.tt" LogicalName="LinqToDB.CLI.Template.tt" />
 		<EmbeddedResource Include="SKILL.md"     LogicalName="LinqToDB.CLI.SKILL.md"   />
+		<!-- The library skill is shipped in the linq2db package; the tool carries a copy of its own version for projects whose package lacks one. -->
+		<EmbeddedResource Include="..\Skills\linq2db\**\*.md" LogicalName="LinqToDB.CLI.skill-linq2db/%(RecursiveDir)%(Filename)%(Extension)" />
 
 		<ProjectReference Include="..\LinqToDB.Scaffold\LinqToDB.Scaffold.csproj" />
 

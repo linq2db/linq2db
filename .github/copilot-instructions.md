@@ -36,3 +36,21 @@ When performing a code review, **comment on formatting only when it is clearly p
 ## Testing
 
 - Use Shouldly for assertions in tests instead of NUnit Assert.
+
+## AI Documentation Consistency
+
+The `Source/Skills/linq2db/docs/` directory contains machine-readable references consumed by AI agents. When reviewing a pull request, flag any of the following mismatches as a comment. Do not flag these if the PR already includes a matching update to the relevant document.
+
+**Provider setup and capabilities**
+
+- **`ProviderName.cs` changed** (constant added, removed, or renamed): verify `Source/Skills/linq2db/docs/provider-setup.md` `ProviderName` constants tables are up to date.
+
+- **`DataOptionsExtensions.Provider.cs` changed** (new or modified `UseXxx` method or parameter): verify `Source/Skills/linq2db/docs/provider-setup.md` method signatures and enum tables reflect the change.
+
+- **Any `*Version.cs` or `*Provider.cs` enum file changed** (value added or removed): verify the corresponding enum table in `Source/Skills/linq2db/docs/provider-setup.md` is up to date.
+
+- **`SqlProviderFlags` changed**, or a provider's SQL builder gained or lost a feature (MERGE, CTE, window functions, APPLY/LATERAL, OUTPUT/RETURNING, bulk copy, upsert): verify `Source/Skills/linq2db/docs/provider-capabilities.md` matrix row for that provider is correct.
+
+- **A translator registration changed** in `StringMemberTranslatorBase`, `MathMemberTranslatorBase`, `DateFunctionsTranslatorBase`, `ConvertMemberTranslatorDefault`, or any `*MemberTranslator*.cs` (method added, removed, or renamed): verify `Source/Skills/linq2db/docs/translatable-methods.md` reflects the change (table row added, removed, or updated).
+
+- **`DataOptionsExtensions.cs` changed** — a `UseXxx` method added, removed, or its behavior changed (connection, tracing, retry, interceptors, member translators): verify `Source/Skills/linq2db/docs/configuration.md` reflects the change.

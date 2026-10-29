@@ -232,7 +232,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 		#endregion
 
 		/// <summary>
-		/// Adds <b>FINAL</b> modifier to FROM Clause.
+		/// Adds <c>FINAL</c> modifier to FROM Clause of this table source.
+		/// For all tables already present in the current query scope, use <c>FinalInScopeHint</c> on <c>IClickHouseSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		[ExpressionMethod(ProviderName.ClickHouse, nameof(FinalHintImpl))]
 		public static IClickHouseSpecificTable<TSource> FinalHint<TSource>(this IClickHouseSpecificTable<TSource> table)
@@ -247,7 +248,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		/// <summary>
-		/// Adds <b>FINAL</b> modifier to FROM Clause.
+		/// Adds <c>FINAL</c> modifier to FROM Clause of this table source.
+		/// For all tables already present in the current query scope, use <c>FinalInScopeHint</c> on <c>IClickHouseSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <typeparam name="TSource"></typeparam>
 		/// <param name="table"></param>
@@ -265,7 +267,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		/// <summary>
-		/// Adds <b>FINAL</b> modifier to FROM Clause of all the tables in the method scope.
+		/// Adds <c>FINAL</c> modifier to FROM Clause of all tables already present in the query scope
+		/// this method is applied to. Tables added later by outer query composition are not affected.
 		/// </summary>
 		[ExpressionMethod(ProviderName.ClickHouse, nameof(FinalInScopeHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> FinalInScopeHint<TSource>(this IClickHouseSpecificQueryable<TSource> table)
@@ -279,6 +282,22 @@ namespace LinqToDB.DataProvider.ClickHouse
 			return table => TablesInScopeHint(table, Table.Final);
 		}
 
+		/// <summary>
+		/// Adds a ClickHouse <c>SETTINGS</c> clause using provider-specific setting text.
+		/// </summary>
+		/// <remarks>
+		/// ClickHouse exposes a large and evolving set of query-level settings through the
+		/// <c>SETTINGS</c> clause. LinqToDB intentionally exposes <c>SettingsHint</c>
+		/// as the general settings API instead of providing typed helpers for every ClickHouse
+		/// setting. Use typed ClickHouse hint helpers when they exist for a concrete SQL feature;
+		/// use this method for ClickHouse settings that do not have a dedicated typed helper.
+		/// <para>
+		/// The <c>hintParameters</c> argument can include <c>Sql.TableAlias</c>, <c>Sql.TableName</c>,
+		/// or <c>Sql.TableSpec</c> values for table sources marked with <c>TableID</c>. This lets settings
+		/// that refer to tables use the exact identifiers emitted by the SQL builder.
+		/// </para>
+		///
+		/// </remarks>
 		[ExpressionMethod(ProviderName.ClickHouse, nameof(SettingsHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> SettingsHint<TSource>(this IClickHouseSpecificQueryable<TSource> query, string hintFormat, params object?[] hintParameters)
 			where TSource : notnull
