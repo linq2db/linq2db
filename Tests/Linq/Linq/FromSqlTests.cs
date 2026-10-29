@@ -490,7 +490,7 @@ namespace Tests.Linq
 
 		class StringSplitTable
 		{
-			public string Value { get; set; } = default!;
+			[Column("value")] public string Value { get; set; } = default!;
 		}
 
 		[Test, QueryCacheTest]
