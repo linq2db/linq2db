@@ -22,7 +22,7 @@ namespace LinqToDB.Remote.SignalR
 	/// </summary>
 	sealed class OperationChannelReader<T> : ChannelReader<T>
 	{
-		readonly Func<CancellationToken,Task<IReadOnlyList<T>>> _operation;
+		readonly Func<CancellationToken,Task<IReadOnlyList<T>>>  _operation;
 		readonly Lock                                            _sync       = new();
 		readonly TaskCompletionSource<bool>                      _completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
