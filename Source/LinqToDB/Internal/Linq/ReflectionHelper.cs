@@ -77,6 +77,12 @@ namespace LinqToDB.Internal.Linq
 			public static PropertyInfo Arguments  = PropertyOf(e => e.Arguments);
 		}
 
+		public sealed class IndexExpr : Expressor<IndexExpression>
+		{
+			public static PropertyInfo Object    = PropertyOf(e => e.Object);
+			public static PropertyInfo Arguments = PropertyOf(e => e.Arguments);
+		}
+
 		public sealed class ListInit : Expressor<ListInitExpression>
 		{
 			public static PropertyInfo NewExpression = PropertyOf(e => e.NewExpression);

@@ -13,14 +13,14 @@ namespace DataModels
 			new GrpcChannelOptions()
 			{
 #pragma warning disable CA2000 // Dispose objects before losing scope
-#pragma warning disable MA0039 // Do not write your own certificate validation method
 				// Lives as long as the channel. Accepts the example server's development certificate:
 				// do not do this in production.
 				HttpHandler = new HttpClientHandler()
 				{
+#pragma warning disable MA0039 // Do not write your own certificate validation method
 					ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-				}
 #pragma warning restore MA0039 // Do not write your own certificate validation method
+				}
 #pragma warning restore CA2000 // Dispose objects before losing scope
 			});
 

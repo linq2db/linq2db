@@ -140,10 +140,10 @@
 		<Copy SourceFiles="$(PkgIBM_Data_DB_Provider)\build\net451\x86\IBM.Data.DB2.dll" DestinationFiles="$(TargetDir)\IBM.Data.DB2.DLL_provider\x86\IBM.Data.DB2.dll" />
 
 		<!-- LINQPad 5 runs x86/x64 only, so ship just those natives. One folder now: both SQLite providers
-		     load the same e_sqlite3 from runtimes/, which is Microsoft.Data.Sqlite's default probing path
-		     and, since System.Data.SQLite is SQLitePCLRaw-based, System.Data.SQLite's too. These copies live
-		     here, before Pack.cmd, because targets hooked on AfterTargets="PostBuildEvent" have no guaranteed
-		     order relative to this one and could otherwise land after the archive was written. -->
+		     load the same e_sqlite3 from runtimes/, which is Microsoft.Data.Sqlite's default probing path and
+		     a path System.Data.SQLite's native pre-loader searches too. These copies live here, before
+		     Pack.cmd, because targets hooked on AfterTargets="PostBuildEvent" have no guaranteed order
+		     relative to this one and could otherwise land after the archive was written. -->
 		<Copy SourceFiles="$(PkgSQLitePCLRaw_lib_e_sqlite3)\runtimes\win-x86\native\e_sqlite3.dll" DestinationFiles="$(TargetDir)\runtimes\win-x86\native\e_sqlite3.dll" />
 		<Copy SourceFiles="$(PkgSQLitePCLRaw_lib_e_sqlite3)\runtimes\win-x64\native\e_sqlite3.dll" DestinationFiles="$(TargetDir)\runtimes\win-x64\native\e_sqlite3.dll" />
 
@@ -203,6 +203,7 @@ internal static class NuGetPackageVersions
 	public const string Npgsql                              = "@(PackageVersion->WithMetadataValue('Identity', 'Npgsql')->'%(Version)')"%3B
 	public const string Octonica_ClickHouseClient           = "@(PackageVersion->WithMetadataValue('Identity', 'Octonica.ClickHouseClient')->'%(Version)')"%3B
 	public const string Oracle_ManagedDataAccess_Core       = "@(PackageVersion->WithMetadataValue('Identity', 'Oracle.ManagedDataAccess.Core')->'%(Version)')"%3B
+	public const string Sap_Data_Hana_Net_v8_0              = "@(PackageVersion->WithMetadataValue('Identity', 'Sap.Data.Hana.Net.v8.0')->'%(Version)')"%3B
 	public const string SQLitePCLRaw_lib_e_sqlite3          = "@(PackageVersion->WithMetadataValue('Identity', 'SQLitePCLRaw.lib.e_sqlite3')->'%(Version)')"%3B
 	public const string System_Data_Odbc                    = "@(PackageVersion->WithMetadataValue('Identity', 'System.Data.Odbc')->'%(Version)')"%3B
 	public const string System_Data_OleDb                   = "@(PackageVersion->WithMetadataValue('Identity', 'System.Data.OleDb')->'%(Version)')"%3B

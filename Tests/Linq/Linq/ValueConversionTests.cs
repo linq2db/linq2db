@@ -6,6 +6,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
@@ -1839,6 +1840,49 @@ namespace Tests.Linq
 			row.PlainValue.ShouldBe(15);
 
 			t.Count(r => r.Doubled == 10).ShouldBe(1);
+		}
+
+		sealed class StorageTransparentConverter : ValueConverter<int, int>, IStorageTransparentConverter
+		{
+			public StorageTransparentConverter() : base(v => v, p => p, false)
+			{
+			}
+		}
+
+		[Table]
+		sealed class StorageTransparentRow
+		{
+			[PrimaryKey] public int Id     { get; set; }
+			[Column, ValueConverter(ConverterType = typeof(StorageTransparentConverter))]
+			             public int Marked { get; set; }
+			[Column    ] public int Plain  { get; set; }
+		}
+
+		/// <summary>
+		/// A converter marked as storing the value unchanged is not refused against a column without conversion.
+		/// </summary>
+		[Test]
+		public void StorageTransparentConversionCombines([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<StorageTransparentRow>();
+
+			db.Insert(new StorageTransparentRow { Id = 1, Marked = 5, Plain = 5 });
+			db.Insert(new StorageTransparentRow { Id = 2, Marked = 6, Plain = 7 });
+
+			var ids = t
+				.Where(r => r.Marked == r.Plain)
+				.Select(r => r.Id)
+				.ToArray();
+
+			ids.ShouldBe([1]);
+
+			var sums = t
+				.OrderBy(r => r.Id)
+				.Select(r => Sql.AsSql(r.Marked + r.Plain))
+				.ToArray();
+
+			sums.ShouldBe([10, 13]);
 		}
 
 		sealed class ScaledValueRow
