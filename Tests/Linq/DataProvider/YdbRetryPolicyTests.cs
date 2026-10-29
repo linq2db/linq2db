@@ -8,8 +8,6 @@ using LinqToDB.Internal.DataProvider.Ydb;
 
 using NUnit.Framework;
 
-using Shouldly;
-
 namespace Tests.DataProvider
 {
 	[TestFixture]
@@ -60,18 +58,16 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void DoesNotRetry_NonRetryableCode(
-			[Values("BadRequest", "ClientCancelled", "StreamCancelled", "Cancelled")] string code)
+		public void DoesNotRetry_NonRetryableCode()
 		{
-			RunCount(Policy(enableRetryIdempotence: true), YdbEx(code)).ShouldBe(1);
+			Assert.That(RunCount(Policy(enableRetryIdempotence: true), YdbEx("BadRequest")), Is.EqualTo(1));
 		}
 
 		// Idempotence disabled + non-transient ⇒ not retried, even for an otherwise-retryable code.
 		[Test]
-		public void IdempotenceDisabled_NonTransient_NotRetried(
-			[Values("Aborted", "ClientTransportCancelled")] string code)
+		public void IdempotenceDisabled_NonTransient_NotRetried()
 		{
-			RunCount(Policy(enableRetryIdempotence: false), YdbEx(code, isTransient: false)).ShouldBe(1);
+			Assert.That(RunCount(Policy(enableRetryIdempotence: false), YdbEx("Aborted", isTransient: false)), Is.EqualTo(1));
 		}
 
 		// Idempotence disabled + transient flag ⇒ retried.

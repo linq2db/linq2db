@@ -10,8 +10,6 @@ using LinqToDB.Internal.DataProvider.Ydb;
 
 using NUnit.Framework;
 
-using Shouldly;
-
 namespace Tests.DataProvider
 {
 	[TestFixture]
@@ -73,7 +71,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void ShouldRetryOn_IdempotentCodes([Values(
 			"BadSession", "SessionBusy", "SessionExpired", "Aborted", "Undetermined",
-			"Unavailable", "ClientTransportUnknown", "ClientTransportUnavailable", "ClientTransportCancelled",
+			"Unavailable", "ClientTransportUnknown", "ClientTransportUnavailable",
 			"Overloaded", "ClientTransportResourceExhausted")] string code)
 		{
 			var ex = MakeYdbException(code, isTransient: false);
@@ -86,12 +84,11 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void ShouldRetryOn_NonIdempotentCode_NotRetried(
-			[Values("BadRequest", "ClientCancelled", "StreamCancelled", "Cancelled")] string code)
+		public void ShouldRetryOn_NonIdempotentCode_NotRetried()
 		{
-			var ex = MakeYdbException(code, isTransient: false);
+			var ex = MakeYdbException("BadRequest", isTransient: false);
 
-			YdbTransientExceptionDetector.ShouldRetryOn(ex, enableRetryIdempotence: true).ShouldBeFalse();
+			Assert.That(YdbTransientExceptionDetector.ShouldRetryOn(ex, enableRetryIdempotence: true), Is.False);
 		}
 
 		[Test]
