@@ -182,6 +182,10 @@ namespace LinqToDB.Internal.Linq
 		// eager-load children can be assembled into one multi-result-set command.
 		internal Harvester[]? HarvestersArray => _harvesters;
 
+		// Set for a QueryBatch query: the call itself is the opt-in that LinqOptions.UseCombinedCommands otherwise
+		// stands for, so the combined gate does not consult the option for it.
+		internal bool CombinedCommandsRequested { get; set; }
+
 		internal SqlCommandExecutionContext? InitHarvesters(IDataContext dc, IQueryExpressions expressions, object?[]? ps)
 		{
 			// A query with no harvesters still needs a context when it carries compiled-query parameters (ps != null), so the

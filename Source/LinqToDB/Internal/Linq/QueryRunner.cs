@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -1082,13 +1083,12 @@ namespace LinqToDB.Internal.Linq
 				return null;
 
 			// Master switch (off by default in 6.x): combining is observable, not merely faster — it changes the emitted SQL
-			// and the ADO.NET path it travels. Provider capability is checked on top of it, never instead of it.
-			if (!dataContext.Options.LinqOptions.UseCombinedCommands)
+			// and the ADO.NET path it travels. Provider capability is checked on top of it, never instead of it. A QueryBatch
+			// query is the per-call opt-in, so it stands in for the switch.
+			if (!dataContext.Options.LinqOptions.UseCombinedCommands && !query.CombinedCommandsRequested)
 				return null;
 
-			if (dataContext is not DataConnection dataConnection
-				|| !dataConnection.DataProvider.SqlProviderFlags.IsMultiStatementBatchSupported
-				|| !dataConnection.DataProvider.SqlProviderFlags.IsMultipleResultSetsSupported)
+			if (!CanCombineCommands(dataContext, out var dataConnection))
 				return null;
 
 			// Query hints (context QueryHints / one-shot NextQueryHints) are applied AND cleared by the sequential
@@ -1116,6 +1116,17 @@ namespace LinqToDB.Internal.Linq
 				return null;
 
 			return new EagerResultEnumerable<T>(dataContext, expressions, query, parameters, harvesters);
+		}
+
+		// The part of the combined gate that the context type and the provider decide. The query cache bucket pins both,
+		// so a build may rely on it.
+		internal static bool CanCombineCommands(IDataContext dataContext, [NotNullWhen(true)] out DataConnection? dataConnection)
+		{
+			dataConnection = dataContext as DataConnection;
+
+			return dataConnection != null
+				&& dataConnection.DataProvider.SqlProviderFlags.IsMultiStatementBatchSupported
+				&& dataConnection.DataProvider.SqlProviderFlags.IsMultipleResultSetsSupported;
 		}
 
 		static IResultEnumerable<T> ExecuteQuery<T>(
