@@ -29,14 +29,16 @@ namespace LinqToDB.Remote.SignalR
 		/// <see cref="TimeoutException"/>. The default is 30 seconds; <see cref="Timeout.InfiniteTimeSpan"/> waits
 		/// without a limit.
 		/// </summary>
-		/// <exception cref="ArgumentOutOfRangeException">The value is neither positive nor <see cref="Timeout.InfiniteTimeSpan"/>.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">The value is neither <see cref="Timeout.InfiniteTimeSpan"/> nor positive and at most <see cref="int.MaxValue"/> milliseconds.</exception>
 		public TimeSpan ConnectTimeout
 		{
 			get;
 			set
 			{
-				if (value <= TimeSpan.Zero && value != Timeout.InfiniteTimeSpan)
-					throw new ArgumentOutOfRangeException(nameof(value), value, "The value must be positive or Timeout.InfiniteTimeSpan.");
+				// The timers that enforce it (CancellationTokenSource, Task.WaitAsync) reject longer delays; int.MaxValue
+				// milliseconds is the .NET Framework limit and the smaller one.
+				if (value != Timeout.InfiniteTimeSpan && (value <= TimeSpan.Zero || value.TotalMilliseconds > int.MaxValue))
+					throw new ArgumentOutOfRangeException(nameof(value), value, "The value must be positive and at most Int32.MaxValue milliseconds, or Timeout.InfiniteTimeSpan.");
 
 				field = value;
 			}

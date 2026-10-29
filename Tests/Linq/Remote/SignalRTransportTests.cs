@@ -474,6 +474,21 @@ namespace Tests.Remote
 			service.Calls.ShouldBe(2);
 		}
 
+		[Test]
+		public void HubOptionLimitsAreValidated()
+		{
+			var options = new LinqToDBHubOptions();
+
+			Action perConnection = () => options.MaxConcurrentCallsPerConnection = 0;
+			Action global        = () => options.MaxConcurrentCalls              = -1;
+
+			perConnection.ShouldThrow<ArgumentOutOfRangeException>();
+			global.ShouldThrow<ArgumentOutOfRangeException>();
+
+			options.MaxConcurrentCallsPerConnection = null;
+			options.MaxConcurrentCalls              = null;
+		}
+
 		// A call finishing after its connection is gone releases its permit: with a global limit of one call, the
 		// hub serves the next connection only if the late call gave its permit back.
 		[Test]
@@ -1073,6 +1088,37 @@ namespace Tests.Remote
 			sw.Elapsed.ShouldBeLessThan(Prompt);
 		}
 #endif
+
+		// ConnectTimeout takes InfiniteTimeSpan, or a positive value the timers enforcing it can take.
+		[Test]
+		public void ConnectTimeoutIsValidated()
+		{
+			var options = new LinqToDBSignalRClientOptions();
+
+			foreach (var invalid in new[] { TimeSpan.Zero, TimeSpan.FromSeconds(-1), TimeSpan.FromMilliseconds(int.MaxValue + 1d), TimeSpan.MaxValue })
+			{
+				Action set = () => options.ConnectTimeout = invalid;
+
+				set.ShouldThrow<ArgumentOutOfRangeException>();
+			}
+
+			options.ConnectTimeout = Timeout.InfiniteTimeSpan;
+			options.ConnectTimeout = TimeSpan.FromMilliseconds(int.MaxValue);
+		}
+
+		// The longest timeout the setter accepts still starts a connection.
+		[Test]
+		public async Task LongestConnectTimeoutStartsTheConnection()
+		{
+			using var database = new SqliteDatabase();
+			using var host     = TestHost.Start<SqliteHub>(services => services.AddSingleton(database));
+
+			await using var connection = new LinqToDBSignalRConnection(
+				new Uri(host.HubUrl),
+				new LinqToDBSignalRClientOptions { ConnectTimeout = TimeSpan.FromMilliseconds(int.MaxValue) });
+
+			await WithinLimit(connection.EnsureConnectedAsync());
+		}
 
 		[Test]
 		public async Task DIContainerDisposesTheConnection()
