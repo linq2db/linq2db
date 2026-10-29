@@ -204,7 +204,8 @@ namespace Tests.Linq
 			(await interceptor.Released.WaitAsync(Wait)).ShouldBeTrue("the server query was not cancelled");
 		}
 
-		// A batch committed with a token cancelled while the server runs it is rolled back on the server.
+		// A batch committed with a token cancelled while the server runs it is rolled back on the server: the first
+		// insert has already run when the second one is held.
 		[Test]
 		public async Task CancelledBatchIsNotCommitted([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
@@ -220,8 +221,9 @@ namespace Tests.Linq
 
 			remote.BeginBatch();
 			db.Insert(new BatchRow { Id = 1 });
+			db.Insert(new BatchRow { Id = 2 });
 
-			interceptor.Arm();
+			interceptor.Arm(skip: 1);
 
 			var commit = remote.CommitBatchAsync(cts.Token);
 
@@ -243,13 +245,15 @@ namespace Tests.Linq
 
 		static readonly TimeSpan Wait = TimeSpan.FromSeconds(30);
 
-		// Holds the next command the server runs, once armed, until the server's cancellation token fires or
-		// BlockFor elapses, so a test can cancel a call while the server is inside it.
+		// Holds the next command the server runs, once armed and after skipping the given number of commands, until
+		// the server's cancellation token fires or BlockFor elapses, so a test can cancel a call while the server is
+		// inside it.
 		sealed class BlockingInterceptor : CommandInterceptor
 		{
 			static readonly TimeSpan BlockFor = TimeSpan.FromSeconds(10);
 
 			int _armed;
+			int _skip;
 
 			readonly TaskCompletionSource       _entered  = new(TaskCreationOptions.RunContinuationsAsynchronously);
 			readonly TaskCompletionSource<bool> _released = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -258,13 +262,17 @@ namespace Tests.Linq
 			// true when the server's token ended the wait
 			public Task<bool> Released => _released.Task;
 
-			public void Arm()
+			public void Arm(int skip = 0)
 			{
+				Volatile.Write(ref _skip,  skip);
 				Volatile.Write(ref _armed, 1);
 			}
 
 			async Task Block(CancellationToken cancellationToken)
 			{
+				if (Volatile.Read(ref _armed) == 0 || Interlocked.Decrement(ref _skip) >= 0)
+					return;
+
 				if (Interlocked.Exchange(ref _armed, 0) == 0)
 					return;
 
