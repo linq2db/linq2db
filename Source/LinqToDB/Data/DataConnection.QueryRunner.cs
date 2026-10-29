@@ -332,7 +332,7 @@ namespace LinqToDB.Data
 					// and never needs the statement at execution.
 					// Skipped outright when the master switch is off: the plan is then all-singleton, so every group would be
 					// rejected by the <= 1 step test inside and we would allocate an array of nulls per prepare for nothing.
-					if (options.LinqOptions.UseCombinedCommands && dataConnection.CanUseDbBatch)
+					if (options.LinqOptions.UseCombinedCommands && options.LinqOptions.UseDbBatch && dataConnection.CanRunDbBatch)
 						batchCommands = RenderBatchTemplates(dataConnection, structure.Scenario, structure.Plan, parameterValues);
 #endif
 
@@ -790,7 +790,7 @@ namespace LinqToDB.Data
 				// means a batch-eligible multi-statement group rendered at build), the connection can batch, and no command-0
 				// query hints apply (those can't ride a DbBatch). Else fall back to the always-present concat command.
 				if (command.Batch != null
-					&& dataConnection.CanUseDbBatch
+					&& dataConnection.CanRunDbBatch
 					&& !(commandIndex == 0 && pq.QueryHints != null))
 				{
 					var templates = command.Batch;

@@ -744,9 +744,11 @@ namespace LinqToDB.Internal.SqlProvider
 		public bool IsAffectedRowsCountSupported { get; set; } = true;
 
 		/// <summary>
-		/// Indicates that the provider can execute several statements sent as a single command and return their
-		/// result sets in order, enabling multiple scenario steps to run in one round-trip. Enabled conservatively
-		/// per provider. Default: <see langword="false"/>.
+		/// Indicates that the provider accepts several statements in one command — a <c>DbBatch</c>, or one command text
+		/// with the statements separated by <c>;</c> — and executes them in order, so contiguous scenario steps can share one
+		/// round-trip. On its own it allows at most one result-producing statement per combined command (e.g. an identity
+		/// INSERT followed by its identity SELECT); reading several result sets from one command additionally requires
+		/// <see cref="IsMultipleResultSetsSupported"/>. Enabled conservatively per provider. Default: <see langword="false"/>.
 		/// </summary>
 		// Out of sequence on purpose: 79 went to master's SupportsPredicateInFunctionValuePosition while this branch was
 		// open, and both sides picked "the next free number" from the same base. Order must be unique across the contract
@@ -756,11 +758,11 @@ namespace LinqToDB.Internal.SqlProvider
 		public bool IsMultiStatementBatchSupported { get; set; }
 
 		/// <summary>
-		/// Indicates that the provider can return multiple result sets from a single command (walked via
-		/// <c>NextResult</c>), so several result-producing scenario steps can be harvested from one combined command.
-		/// Without it a combined group may hold at most one result-producing step (identity's INSERT + identity SELECT
-		/// is one result set); with it, many readers combine into one round-trip (eager loading). Enabled conservatively
-		/// per provider. Default: <see langword="false"/>.
+		/// Indicates that a combined command returns one result set per result-producing statement, in statement order
+		/// (walked via <c>NextResult</c>), so several result-producing scenario steps can be harvested from one command —
+		/// e.g. eager loading's main query and its child collections in one round-trip. Has no effect unless
+		/// <see cref="IsMultiStatementBatchSupported"/> is also set. Enabled conservatively per provider.
+		/// Default: <see langword="false"/>.
 		/// </summary>
 		[DataMember(Order = 80)]
 		public bool IsMultipleResultSetsSupported { get; set; }

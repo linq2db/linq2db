@@ -2,8 +2,11 @@
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
+using System.Threading.Tasks;
+using System.Transactions;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Data;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.SqlQuery;
@@ -131,6 +134,59 @@ namespace Tests.Linq
 			loaded[0].Children.Count.ShouldBe(2);
 
 			return db.ProcessQueryCount;
+		}
+
+		// A DataContext runs the combined eager load on the connection it holds. Inside a TransactionScope no implicit load
+		// transaction holds that connection, so the enumeration has to: the nested runners of the harvesters and of the
+		// main query would otherwise release it while the shared reader is still being read.
+		[Test]
+		public void DataContextCombinedEagerLoad_KeepsItsConnection([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var setup    = new DataConnection(context);
+			using var parents  = setup.CreateLocalTable<CeParent>();
+			using var children = setup.CreateLocalTable<CeChild>();
+
+			Seed(setup);
+
+			var counter = new SelectCounter();
+
+			using var db = new DataContext(new DataOptions()
+				.UseConfiguration(context)
+				.UseCombinedCommands(true)
+				.UseInterceptor(counter));
+
+			List<CeParent> loaded;
+
+			using (new TransactionScope())
+				loaded = db.GetTable<CeParent>().LoadWith(p => p.Children).ToList();
+
+			loaded.ShouldHaveSingleItem().Children.Count.ShouldBe(2);
+			counter.Count.ShouldBe(1);
+		}
+
+		[Test]
+		public async Task DataContextCombinedEagerLoad_KeepsItsConnectionAsync([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var setup    = new DataConnection(context);
+			using var parents  = setup.CreateLocalTable<CeParent>();
+			using var children = setup.CreateLocalTable<CeChild>();
+
+			Seed(setup);
+
+			var counter = new SelectCounter();
+
+			await using var db = new DataContext(new DataOptions()
+				.UseConfiguration(context)
+				.UseCombinedCommands(true)
+				.UseInterceptor(counter));
+
+			List<CeParent> loaded;
+
+			using (new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+				loaded = await db.GetTable<CeParent>().LoadWith(p => p.Children).ToListAsync();
+
+			loaded.ShouldHaveSingleItem().Children.Count.ShouldBe(2);
+			counter.Count.ShouldBe(1);
 		}
 
 		static void Seed(DataConnection db)

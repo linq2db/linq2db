@@ -791,6 +791,11 @@ namespace LinqToDB.Internal.Linq
 			static bool IsCombinable(Harvester harvester)
 				=> harvester is IStepMaterializer { CanCombine: true } materializer && materializer.GetCombinableStatement() != null;
 
+			// A DataContext runs the load on the connection it holds; the enumeration keeps it locked, so the nested runners
+			// of the harvesters and the main query do not release it while the shared reader is open.
+			internal static DataConnection GetDataConnection(IDataContext dataContext)
+				=> dataContext as DataConnection ?? ((DataContext)dataContext).GetDataConnection();
+
 			// Whether any harvester is reader-combinable — the single definition of the combinable predicate, shared by the
 			// ctor's partition and TryGetCombinedEagerEnumerable's gate.
 			internal static bool HasCombinable(Harvester[] harvesters)
@@ -935,7 +940,7 @@ namespace LinqToDB.Internal.Linq
 			// its DbParameters and the per-group command array. A COLD execution builds the scenario once, renders, and stores
 			// all three. commandByGroup aligns with the groups: null for a self-executing singleton group, the bound command
 			// for a combined group.
-			(ExecutionStep[] Steps, SqlCommandGroup[] Groups, CombinedCommand?[] CommandByGroup) BuildPlan(SqlCommandExecutionContext context)
+			(ExecutionStep[] Steps, SqlCommandGroup[] Groups, CombinedCommand?[] CommandByGroup) BuildPlan(DataConnection dataConnection, SqlCommandExecutionContext context)
 			{
 				// Held on the same object DataConnection.QueryRunner.GetCommand locks, and for the same reason: that
 				// monitor is what licenses GetCommand's Modify-mode (in-place mutating) visitors over
@@ -946,7 +951,6 @@ namespace LinqToDB.Internal.Linq
 				// render and both publish.
 				lock (_query.QueryInfo)
 				{
-					var dataConnection = (DataConnection)_dataContext;
 					var useBatch       = dataConnection.CanUseDbBatch;   // false on frameworks without the DbBatch API
 					var values         = CollectParameterValues(context);
 
@@ -979,17 +983,19 @@ namespace LinqToDB.Internal.Linq
 			{
 				using var _ = ActivityService.Start(ActivityID.GetIEnumerable);
 
+				using var connectionLock = _dataContext is DataContext dataContext ? (IDisposable)dataContext.AcquireLock() : null;
+
 				var context        = new SqlCommandExecutionContext(_harvesters.Length, _parameters);
-				var dataConnection = (DataConnection)_dataContext;
-				var (steps, groups, commandByGroup) = BuildPlan(context);
+				var dataConnection = GetDataConnection(_dataContext);
+				var (steps, groups, commandByGroup) = BuildPlan(dataConnection, context);
 
 				// The combined command's single reader is walked across multiple harvest steps, and each step (plus the main
 				// stream below) materializes through a nested query runner. When CloseAfterUse is set - e.g. the EF Core bridge
 				// borrows an external connection and closes it after each use - that nested runner's dispose would Close() the
 				// context and dispose the shared reader mid-walk (NextResult on a closed reader). Suppress it until the reader
 				// is fully consumed, and restore it before the final dispose so the connection is still closed as requested.
-				var closeAfterUse = _dataContext.CloseAfterUse;
-				_dataContext.CloseAfterUse = false;
+				var closeAfterUse = ((IDataContext)dataConnection).CloseAfterUse;
+				((IDataContext)dataConnection).CloseAfterUse = false;
 
 				DataReaderWrapper? mainReader = null;
 
@@ -1011,7 +1017,7 @@ namespace LinqToDB.Internal.Linq
 				}
 				finally
 				{
-					_dataContext.CloseAfterUse = closeAfterUse;
+					((IDataContext)dataConnection).CloseAfterUse = closeAfterUse;
 					mainReader?.Dispose();
 				}
 			}
@@ -1025,15 +1031,17 @@ namespace LinqToDB.Internal.Linq
 				// activity span too (there is no eager-specific async ActivityID; the sync eager path uses GetIEnumerable).
 				await using (ActivityService.StartAndConfigureAwait(ActivityID.GetIEnumerable))
 				{
+					await using var connectionLock = (_dataContext is DataContext dataContext ? dataContext.AcquireLock() : EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
+
 					var context        = new SqlCommandExecutionContext(_harvesters.Length, _parameters);
-					var dataConnection = (DataConnection)_dataContext;
-					var (steps, groups, commandByGroup) = BuildPlan(context);
+					var dataConnection = GetDataConnection(_dataContext);
+					var (steps, groups, commandByGroup) = BuildPlan(dataConnection, context);
 
 					// See the sync GetEnumerator: suppress CloseAfterUse while the shared combined reader is walked (each
 					// harvest / the main stream materializes through a nested runner whose dispose would otherwise Close() the
 					// context mid-walk on an external connection), and restore it before the final dispose.
-					var closeAfterUse = _dataContext.CloseAfterUse;
-					_dataContext.CloseAfterUse = false;
+					var closeAfterUse = ((IDataContext)dataConnection).CloseAfterUse;
+					((IDataContext)dataConnection).CloseAfterUse = false;
 
 					DataReaderWrapper? mainReader = null;
 
@@ -1054,7 +1062,7 @@ namespace LinqToDB.Internal.Linq
 					}
 					finally
 					{
-						_dataContext.CloseAfterUse = closeAfterUse;
+						((IDataContext)dataConnection).CloseAfterUse = closeAfterUse;
 
 						if (mainReader != null)
 							await mainReader.DisposeAsync().ConfigureAwait(false);
@@ -1086,9 +1094,9 @@ namespace LinqToDB.Internal.Linq
 			if (!dataContext.Options.LinqOptions.UseCombinedCommands)
 				return null;
 
-			if (dataContext is not DataConnection dataConnection
-				|| !dataConnection.DataProvider.SqlProviderFlags.IsMultiStatementBatchSupported
-				|| !dataConnection.DataProvider.SqlProviderFlags.IsMultipleResultSetsSupported)
+			if (dataContext is not (DataConnection or DataContext)
+				|| !dataContext.SqlProviderFlags.IsMultiStatementBatchSupported
+				|| !dataContext.SqlProviderFlags.IsMultipleResultSetsSupported)
 				return null;
 
 			// Query hints (context QueryHints / one-shot NextQueryHints) are applied AND cleared by the sequential
@@ -1103,7 +1111,7 @@ namespace LinqToDB.Internal.Linq
 			// renders the main query's statement and each combinable child's directly, so a subclass's rewrite would keep
 			// applying to the non-combinable children and silently stop applying to everything else. Combining steps aside
 			// for such a subclass rather than apply the rewrite to part of the load.
-			if (dataConnection.IsProcessQueryOverridden)
+			if (EagerResultEnumerable<T>.GetDataConnection(dataContext).IsProcessQueryOverridden)
 				return null;
 
 			if (!EagerResultEnumerable<T>.HasCombinable(harvesters))

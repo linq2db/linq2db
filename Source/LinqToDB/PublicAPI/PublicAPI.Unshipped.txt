@@ -249,10 +249,14 @@ override LinqToDB.Internal.SqlQuery.SqlObjectNameExpression.Precedence.get -> in
 override LinqToDB.Internal.SqlQuery.SqlObjectNameExpression.SystemType.get -> System.Type?
 override LinqToDB.Internal.SqlQuery.SqlObjectNameExpression.ToString() -> string!
 override LinqToDB.Internal.SqlQuery.SqlObjectNameExpression.ToString(LinqToDB.Internal.SqlQuery.QueryElementTextWriter! writer) -> LinqToDB.Internal.SqlQuery.QueryElementTextWriter!
-static LinqToDB.Common.Configuration.UseCombinedCommands.get -> bool
-static LinqToDB.Common.Configuration.UseCombinedCommands.set -> void
+static LinqToDB.Common.Configuration.Linq.UseCombinedCommands.get -> bool
+static LinqToDB.Common.Configuration.Linq.UseCombinedCommands.set -> void
+static LinqToDB.Common.Configuration.Linq.UseDbBatch.get -> bool
+static LinqToDB.Common.Configuration.Linq.UseDbBatch.set -> void
 static LinqToDB.DataOptionsExtensions.UseCombinedCommands(this LinqToDB.DataOptions! options, bool useCombinedCommands) -> LinqToDB.DataOptions!
 static LinqToDB.DataOptionsExtensions.UseDbBatch(this LinqToDB.DataOptions! options, bool useDbBatch) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.WithCombinedCommands(this LinqToDB.LinqOptions! options, bool useCombinedCommands) -> LinqToDB.LinqOptions!
+static LinqToDB.DataOptionsExtensions.WithDbBatch(this LinqToDB.LinqOptions! options, bool useDbBatch) -> LinqToDB.LinqOptions!
 static LinqToDB.Internal.DataProvider.DmlServiceBase.BuildInsertOrUpdateScenario(LinqToDB.Internal.SqlQuery.SqlInsertOrUpdateStatement! statement, LinqToDB.Internal.SqlProvider.SqlProviderFlags! flags, LinqToDB.Linq.Translation.ISqlExpressionFactory! factory) -> LinqToDB.Internal.SqlProvider.SqlCommandScenario?
 static LinqToDB.Internal.DataProvider.DmlServiceBase.DefaultScenario(LinqToDB.Internal.SqlQuery.SqlStatement! statement) -> LinqToDB.Internal.SqlProvider.SqlCommandScenario!
 static LinqToDB.Internal.DataProvider.DmlServiceBase.IdentitySelectScenario(LinqToDB.Internal.SqlQuery.SqlStatement! insert, LinqToDB.Internal.SqlQuery.ISqlExpression! identity) -> LinqToDB.Internal.SqlProvider.SqlCommandScenario!

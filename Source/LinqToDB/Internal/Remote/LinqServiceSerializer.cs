@@ -758,6 +758,8 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 				Append(options.LinqOptions.PreferExistsForScalar);
 				Append(options.SqlOptions.EnableConstantExpressionInOrderBy);
 				Append(options.SqlOptions.GenerateFinalAliases);
+				Append(options.LinqOptions.UseCombinedCommands);
+				Append(options.LinqOptions.UseDbBatch);
 			}
 
 			public string Serialize(
@@ -2043,9 +2045,14 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 				var preferExistsForScalar         = ReadBool();
 				var enableConstantExprInOrderBy   = ReadBool();
 				var generateFinalAliases          = ReadBool();
+				var useCombinedCommands           = ReadBool();
+				var useDbBatch                    = ReadBool();
 
 				options = options
-					.WithOptions<LinqOptions>(lo => lo.WithPreferExistsForScalar(preferExistsForScalar))
+					.WithOptions<LinqOptions>(lo => lo
+						.WithPreferExistsForScalar(preferExistsForScalar)
+						.WithCombinedCommands(useCombinedCommands)
+						.WithDbBatch(useDbBatch))
 					.WithOptions<SqlOptions>(so =>
 						so.WithEnableConstantExpressionInOrderBy(enableConstantExprInOrderBy)
 							.WithGenerateFinalAliases(generateFinalAliases)

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -307,6 +309,54 @@ namespace Tests.Linq
 					// best-effort: a temp file left behind is not worth failing the test over
 				}
 			}
+		}
+
+		[Table]
+		sealed class CombinedOptionRow
+		{
+			[PrimaryKey, Identity] public int     Id    { get; set; }
+			[Column              ] public string? Value { get; set; }
+		}
+
+		// The server's connection keeps the default options; the client sets both switches, and the server must run the
+		// insert the way the client asked.
+		[Test]
+		[UsesRemoteContext]
+		public void CombinedCommandOptionsReachTheServer(
+			[IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllMySqlConnector)] string context,
+			[Values] bool combined,
+			[Values] bool useDbBatch)
+		{
+			var executed = new List<string>();
+
+			using var db = GetServerContainer().CreateContext(
+				(_, o) => o.UseConfiguration(context).UseCombinedCommands(combined).UseDbBatch(useDbBatch),
+				(configuration, _) => new DataConnection(new DataOptions()
+					.UseConfiguration(configuration)
+					.UseTracing(TraceLevel.Info, info =>
+					{
+						if (info.TraceInfoStep == TraceInfoStep.BeforeExecute
+							&& info.Operation is TraceOperation.ExecuteNonQuery or TraceOperation.ExecuteScalar or TraceOperation.ExecuteReader)
+							executed.Add(info.SqlText);
+					})));
+
+			using var table = db.CreateLocalTable<CombinedOptionRow>();
+
+			executed.Clear();
+
+			var id       = db.InsertWithInt32Identity(new CombinedOptionRow { Value = "a" });
+			var commands = executed.ToList();
+
+			table.Single(r => r.Id == id).Value.ShouldBe("a");
+
+#if SUPPORTS_DBBATCH
+			var batch = combined && useDbBatch && context.IsAnyOf(TestProvName.AllMySqlConnector);
+#else
+			var batch = false;
+#endif
+
+			commands.Count.ShouldBe(combined ? 1 : 2);
+			commands.Any(c => c.Contains("-- Command 1", StringComparison.Ordinal)).ShouldBe(batch);
 		}
 
 		[Table]

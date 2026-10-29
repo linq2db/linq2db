@@ -10,10 +10,13 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Data;
+using LinqToDB.Mapping;
 
 using MySqlData::MySql.Data.MySqlClient;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -876,5 +879,60 @@ namespace Tests.Data
 				_ = trace.SqlText;
 			}
 		}
+
+#if SUPPORTS_DBBATCH
+		[Table]
+		sealed class BatchTraceParent
+		{
+			[PrimaryKey] public int     Id   { get; set; }
+			[Column    ] public string? Name { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(BatchTraceChild.ParentId))]
+			public List<BatchTraceChild> Children { get; set; } = null!;
+		}
+
+		[Table]
+		sealed class BatchTraceChild
+		{
+			[PrimaryKey] public int Id       { get; set; }
+			[Column    ] public int ParentId { get; set; }
+		}
+
+		[Test]
+		public void DbBatchTraceTruncatesLongParameters(
+			[IncludeDataSources(false, TestProvName.AllSqlServerMS, TestProvName.AllPostgreSQL, TestProvName.AllMySqlConnector)] string context)
+		{
+			var traces = new List<string>();
+
+			using var db = GetDataConnection(context, o => o
+				.UseCombinedCommands(true)
+				.UseDbBatch(true)
+				.UseTracing(info =>
+				{
+					if (info.TraceInfoStep == TraceInfoStep.BeforeExecute)
+						traces.Add(info.SqlText);
+				}));
+
+			using var parents  = db.CreateLocalTable(new[] { new BatchTraceParent { Id = 1, Name = "a" } });
+			using var children = db.CreateLocalTable(new[] { new BatchTraceChild { Id = 1, ParentId = 1 } });
+
+			var longName = new string('x', LinqToDB.Common.Configuration.MaxStringParameterLengthLogging + 10);
+
+			traces.Clear();
+
+			parents
+				.LoadWith(p => p.Children)
+				.Where(p => p.Name != longName)
+				.ToList()
+				.ShouldHaveSingleItem();
+
+			var batch = traces
+				.Where(t => t.Contains("-- Command 1", StringComparison.Ordinal))
+				.ShouldHaveSingleItem();
+
+			batch.ShouldContain("-- value above truncated for logging");
+			batch.ShouldNotContain(longName);
+		}
+#endif
 	}
 }
