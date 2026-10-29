@@ -756,7 +756,7 @@ namespace Tests.Linq
 				.OrderBy(p => p.ParentID % 3)
 				.GroupBy(p => p.ParentID % 3)
 				.Select(g => new { g.Key, Count = g.Count() })
-				.DistinctBy(x => x.Count);
+				.DistinctBy(x => x.Key % 2);
 
 			AssertQuery(query);
 		}
@@ -790,7 +790,7 @@ namespace Tests.Linq
 				.ThenByDescending(p => p.Value1)
 				.GroupBy(p => p.ParentID % 3)
 				.Select(g => new { g.Key, Count = g.Count() })
-				.DistinctBy(x => x.Count);
+				.DistinctBy(x => x.Key % 2);
 
 			AssertQuery(query);
 		}
