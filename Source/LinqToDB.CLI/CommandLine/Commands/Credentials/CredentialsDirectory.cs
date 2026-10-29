@@ -262,9 +262,9 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 				if ((mode & (UnixFileMode.GroupWrite | UnixFileMode.OtherWrite)) == 0 || mode.HasFlag(UnixFileMode.StickyBit))
 					return null;
 
-				var who = mode.HasFlag(UnixFileMode.OtherWrite) ? "other users" : "its group";
+				var who = mode.HasFlag(UnixFileMode.OtherWrite) ? "other users; they" : "its group; if the group has members other than you, they";
 
-				return $"Warning: '{parent}' is writable by {who}; they could rename the credentials directory '{directory}' and put their own in its place, with their own scripts or key. Run: chmod go-w '{parent}', or set {Variable}.";
+				return $"Warning: '{parent}' is writable by {who} could rename the credentials directory '{directory}' and put their own in its place, with their own scripts or key. Run: chmod go-w '{parent}', or set {Variable}.";
 			}
 			catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
 			{

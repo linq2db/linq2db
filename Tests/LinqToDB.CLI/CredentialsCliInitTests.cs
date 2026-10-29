@@ -365,6 +365,7 @@ namespace Tests.LinqToDB.CLI
 			{
 				error.    ShouldContain(warning);
 				listError.ShouldContain(warning);
+				error.    ShouldContain("if the group has members other than you, they could rename the credentials directory");
 			}
 			else
 			{
