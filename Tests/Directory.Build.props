@@ -4,7 +4,7 @@
 	<PropertyGroup>
 		<TargetFrameworks>net462;net8.0;net9.0;net10.0</TargetFrameworks>
 		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">net10.0</TargetFrameworks>
-		<DefineConstants Condition=" $(X86STUBS) == 'True' ">$(DefineConstants);DB2STUBS;HANASTUBS</DefineConstants>
+		<DefineConstants Condition=" $(X86STUBS) == 'True' ">$(DefineConstants);DB2STUBS</DefineConstants>
 		<IsPackable>false</IsPackable>
 	</PropertyGroup>
 
@@ -30,6 +30,7 @@
 
 	<ItemGroup Label="Pin transitive vulnerable packages">
 		<PackageReference Include="Microsoft.Bcl.Memory" />
+		<PackageReference Include="System.Security.Cryptography.Pkcs" />
 	</ItemGroup>
 
 </Project>

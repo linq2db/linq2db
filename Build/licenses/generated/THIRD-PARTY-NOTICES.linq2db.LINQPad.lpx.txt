@@ -42,7 +42,7 @@ COMPONENTS
    Copyright IBM Corporation
    IBM grants redistribution of the Redistributables in object-code form only as part of a value-added application developed using the Program. linq2db satisfies all three limbs: the client is bundled inside linq2db scaffolding packages and the LINQPad driver rather than offered standalone, those packages are our own application built using the client, and only compiled assemblies and native libraries are shipped - no IBM source. Note on scope: IBM ships its own enumeration at clidriver/license/odbc_REDIST.txt, reproduced below. Of the 86 distinct clidriver binaries shipped here, 34 do not appear on that list - 30 GSKit crypto libraries (gsk8*.dll), 2 ICC crypto libraries (icclib084/085.dll) and Microsoft Visual C++ 12.0 runtime (msvcp120.dll, msvcr120.dll). All of them are delivered inside IBM own NuGet package as runtime dependencies of the driver (GSKit provides its TLS support), so the list reads as incomplete rather than exclusive.
 
-6. linq2db4iSeries 6.3.0
+6. linq2db4iSeries 6.5.0
    https://github.com/LinqToDB4iSeries/Linq2DB4iSeries
    License: MIT  see [5]
 
@@ -51,7 +51,7 @@ COMPONENTS
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-8. Microsoft.Bcl.Cryptography net10.0: 9.0.13, net462: 8.0.0, net472: 8.0.0, net8.0: 8.0.0, net8.0-windows7.0: 8.0.0, net9.0: 9.0.13
+8. Microsoft.Bcl.Cryptography net10.0: 9.0.13, net462: 8.0.0, net472: 8.0.0, net8.0: 9.0.21, net8.0-windows7.0: 8.0.0, net9.0: 9.0.13
    https://dot.net/
    License: MIT  see [7]
    © Microsoft Corporation. All rights reserved.
@@ -261,7 +261,7 @@ COMPONENTS
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-51. System.Formats.Asn1 8.0.1
+51. System.Formats.Asn1 net462: 8.0.1, net472: 8.0.1, net8.0: 9.0.21, net8.0-windows7.0: 8.0.1
    https://dot.net/
    License: MIT  see [15]
    © Microsoft Corporation. All rights reserved.
@@ -301,7 +301,7 @@ COMPONENTS
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-59. System.Security.Cryptography.Pkcs net10.0: 9.0.13, net462: 8.0.1, net472: 8.0.1, net8.0: 8.0.1, net8.0-windows7.0: 8.0.1, net9.0: 9.0.13
+59. System.Security.Cryptography.Pkcs net10.0: 9.0.21, net462: 8.0.1, net472: 8.0.1, net8.0: 9.0.21, net8.0-windows7.0: 8.0.1, net9.0: 9.0.21
    https://dot.net/
    License: MIT  see [7]
    © Microsoft Corporation. All rights reserved.

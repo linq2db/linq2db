@@ -14,7 +14,7 @@ This directory contains test configs and setup scripts for test jobs on Azure Pi
 
 Performs default maintenance actions. Automatically runs for:
 
-- PR to `release` branch: runs all tests for each commit to `master` branch
+- PR to `release` branch: builds and generates nugets for each commit to `master` branch. The provider tests for it run on GitHub Actions (`.github/workflows/tests-release.yml`): every leg, as a full run. Queue `default` manually on `master` with `run_tests` to run them here instead; that run's baselines land on `baselines/default`, not `baselines/pr_<n>`
 - commit to `master`: publish preview nugets to [Azure Artifacts feed](https://dev.azure.com/linq2db/linq2db/_packaging?_a=feed&feed=linq2db)
 - commit to `release`: publish release nugets to [Nuget.org](https://www.nuget.org/profiles/LinqToDB)
 
@@ -66,7 +66,7 @@ Legend:
 
 - :heavy_minus_sign: - test configuration not supported (e.g. db/provider not available for target OS/Framework)
 - :heavy_check_mark: - test job implemented
-- :new_moon: - test job implemented, but the main test suite runs on release runs (`full_run`) only, with PR runs covered by the Linux legs. Two mechanisms in `templates/test-matrix.yml` produce it: `win_efcore_only`, where the Windows legs still run the EF.Core suite on every run but the main suite only on release runs, and a `full_run`-conditional `enable_os_windows`, where there is no Windows leg at all on a PR run. Note the first also makes the `netfx` main suite release-run only, since `netfx` runs nowhere but Windows
+- :new_moon: - test job implemented, but the main test suite runs on release runs (`full_run`) only, with PR runs covered by the Linux legs. Two mechanisms in `templates/test-matrix.yml` produce it: `win_efcore_only`, where the Windows legs still run the EF.Core suite on every run but the main suite only on release runs, and `win_full_run_only`, where there is no Windows leg at all on a PR run. Note the first also makes the `netfx` main suite release-run only, since `netfx` runs nowhere but Windows
 - :arrow_right: - no Windows job for this target framework: the leg also has a Linux job, which already runs net8+ for it, so `templates/test-jobs.yml` leaves `net80`/`net90`/`net100` out of the Windows matrix. `netfx` is unaffected - it runs nowhere but Windows
 - :x: - test job not implemented yet
 - `netfx`: .NET Framework (4.6.2)
@@ -77,10 +77,10 @@ Legend:
 | Database (version): provider \ Target framework (OS) | netfx :door: | netcore :door: | netcore :penguin: |
 |:---|:---:|:---:|:---:|
 |TestNoopProvider<sup>[1](#notes)</sup>|:heavy_check_mark:|:arrow_right:|:heavy_check_mark:|
-|SQLite [3.53.4](https://www.sqlite.org/releaselog/3_53_4.html)<br>[Microsoft.Data.SQLite](https://www.nuget.org/packages/Microsoft.Data.SQLite/)<br>with NorthwindDB Tests|:new_moon:|:arrow_right:|:heavy_check_mark:|
-|SQLite [3.53.4](https://www.sqlite.org/releaselog/3_53_4.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite/)<br>with NorthwindDB Tests|:new_moon:|:arrow_right:|:heavy_check_mark:|
-|SQLite [3.53.4](https://www.sqlite.org/releaselog/3_53_4.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite/)<br>with [MiniProfiler](https://www.nuget.org/packages/MiniProfiler.Shared/)<br>without mappings to underlying provider|:new_moon:|:arrow_right:|:heavy_check_mark:|
-|SQLite [3.53.4](https://www.sqlite.org/releaselog/3_53_4.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite/)<br>with [MiniProfiler](https://www.nuget.org/packages/MiniProfiler.Shared/)<br>with mappings to underlying provider|:new_moon:|:arrow_right:|:heavy_check_mark:|
+|SQLite [3.53.3](https://www.sqlite.org/releaselog/3_53_3.html)<br>[Microsoft.Data.SQLite](https://www.nuget.org/packages/Microsoft.Data.SQLite/)<br>with NorthwindDB Tests|:new_moon:|:arrow_right:|:heavy_check_mark:|
+|SQLite [3.53.3](https://www.sqlite.org/releaselog/3_53_3.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite/)<br>with NorthwindDB Tests|:new_moon:|:arrow_right:|:heavy_check_mark:|
+|SQLite [3.53.3](https://www.sqlite.org/releaselog/3_53_3.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite/)<br>with [MiniProfiler](https://www.nuget.org/packages/MiniProfiler.Shared/)<br>without mappings to underlying provider|:new_moon:|:arrow_right:|:heavy_check_mark:|
+|SQLite [3.53.3](https://www.sqlite.org/releaselog/3_53_3.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite/)<br>with [MiniProfiler](https://www.nuget.org/packages/MiniProfiler.Shared/)<br>with mappings to underlying provider|:new_moon:|:arrow_right:|:heavy_check_mark:|
 |MySQL 5.7<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/)|:x:|:x:|:heavy_check_mark:|
 |MySQL 5.7<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/)|:x:|:x:|:heavy_check_mark:|
 |MySQL 8.0<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/)|:x:|:x:|:heavy_check_mark:|
@@ -191,10 +191,10 @@ Legend:
 |`TestProvName.SqlServer2022MS`|SQL Server 2022 using Microsoft.Data.SqlClient||
 |`ProviderName.SqlServer2025`|SQL Server 2025 using System.Data.SqlClient||
 |`TestProvName.SqlServer2025MS`|SQL Server 2025 using Microsoft.Data.SqlClient||
-|`TestProvName.SqlServerSA`|SQL Server latest (2019) in SequentialAccess mode using System.Data.SqlClient||
-|`TestProvName.SqlServerSAMS`|SQL Server latest (2019) in SequentialAccess mode using Microsoft.Data.SqlClient||
-|`TestProvName.SqlServerContained`|SQL Server latest (2019) in contained database mode using System.Data.SqlClient||
-|`TestProvName.SqlServerContainedMS`|SQL Server latest (2019) in contained database mode using Microsoft.Data.SqlClient||
+|`TestProvName.SqlServerCaseSensitive`|SQL Server 2025 with case-sensitive database and catalog collation in SequentialAccess mode using System.Data.SqlClient||
+|`TestProvName.SqlServerCaseSensitiveMS`|SQL Server 2025 with case-sensitive database and catalog collation in SequentialAccess mode using Microsoft.Data.SqlClient||
+|`TestProvName.SqlServerContained`|SQL Server 2025 in contained database mode with case-sensitive database collation using System.Data.SqlClient||
+|`TestProvName.SqlServerContainedMS`|SQL Server 2025 in contained database mode with case-sensitive database collation using Microsoft.Data.SqlClient||
 |`TestProvName.SqlServerAzure`|SQL Server Azure (latest) using System.Data.SqlClient||
 |`TestProvName.SqlServerAzureMS`|SQL Server Azure (latest) using Microsoft.Data.SqlClient||
 |`TestProvName.SqlServerNorthwind`|SQL Server latest (2019) Northwind database with FTS using System.Data.SqlClient||

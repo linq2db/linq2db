@@ -574,8 +574,8 @@
       "displayName": "linq2db4iSeries",
       "packageId": "linq2db4iSeries",
       "versions": {
-        "net472": "6.3.0",
-        "net8.0-windows7.0": "6.3.0"
+        "net472": "6.5.0",
+        "net8.0-windows7.0": "6.5.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -633,7 +633,7 @@
       "packageId": "Microsoft.Bcl.Cryptography",
       "versions": {
         "net10.0": "9.0.13",
-        "net8.0": "8.0.0",
+        "net8.0": "9.0.21",
         "net9.0": "9.0.13",
         "net462": "8.0.0",
         "net472": "8.0.0",
@@ -2030,7 +2030,7 @@
       "copyright": "Copyright (c) Microsoft Corporation",
       "projectUrl": "https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist",
       "redistribution": "permitted",
-      "notes": "Shipped inside the SQL CE native folder. Its own README_ENU.txt states these are not SQL Server Compact files and refers to section 1b of the SQL Server Compact 4.0 licence terms, which is the document reproduced for the SQL CE component.",
+      "notes": "Shipped inside the native folders of the Microsoft.SqlServer.Compact package. Its own README_ENU.txt states these are not SQL Server Compact files and refers to section 1b of the SQL Server Compact 4.0 licence terms, which is the document reproduced for the SQL CE component.",
       "files": [
         "amd64/Microsoft.VC90.CRT/*",
         "tools/amd64/Microsoft.VC90.CRT/*",
@@ -2231,44 +2231,20 @@
       ]
     },
     {
-      "id": "sap-hana-client",
-      "displayName": "SAP HANA .NET Data Provider",
-      "packageId": "",
-      "versions": {
-        "net462": "v4.5"
-      },
-      "license": "SAP Developer License Agreement 3.2 (see notes - provenance is not certain for this build)",
-      "licenseTexts": [
-      "sap-developer-license-3.2.txt"
-    ],
-      "copyright": "Copyright (c) SAP SE",
-      "projectUrl": "https://help.sap.com/docs/SAP_HANA_CLIENT",
-      "redistribution": "unresolved",
-      "notes": "Sap.Data.Hana.v4.5.dll is checked into Redist/SapHana and copied into the T4 tools folder; no licence accompanied that copy in this repository. The text reproduced here is the SAP Developer License Agreement 3.2, which SAP attaches to the HANA .NET providers it publishes on nuget.org (Sap.Data.Hana.Net.v6.0/v8.0/v10.0) - it is the best available statement of SAP terms for this provider, but it is not necessarily the agreement under which the .NET Framework copy here was obtained, which came from a HANA client installation. Read it before relying on this component: section 1 grants a non-transferable, non-sublicensable licence and section 2(a) states the software may not be provided or made available to any third party. Note also that only the managed assembly is packed, not the native libadonetHDB it calls into, so it cannot connect unless the SAP HANA client is already installed.",
-      "revisit": "Redistribution of Sap.Data.Hana.v4.5.dll is unresolved and needs a decision: either establish terms that permit it, or stop packing it from linq2db.SapHana and linq2db.t4models. Tracked on issue #5862.",
-      "files": [
-        "Sap.Data.Hana.v4.5.dll"
-      ],
-      "artifacts": [
-        "linq2db.SapHana",
-        "linq2db.t4models"
-      ]
-    },
-    {
       "id": "sqlce-runtime",
       "displayName": "Microsoft SQL Server Compact 4.0",
-      "packageId": "",
+      "packageId": "Microsoft.SqlServer.Compact",
       "versions": {
-        "net462": "4.0"
+        "net462": "4.0.8876.1"
       },
       "license": "Microsoft Software License Terms - Microsoft SQL Server Compact 4.0 SP1",
       "licenseTexts": [
       "microsoft-sqlserver-compact-4.0-eula.txt"
     ],
       "copyright": "Copyright (c) Microsoft Corporation",
-      "projectUrl": "https://www.microsoft.com/en-us/download/details.aspx?id=30709",
+      "projectUrl": "https://www.nuget.org/packages/Microsoft.SqlServer.Compact",
       "redistribution": "permitted",
-      "notes": "Terms sourced from SQLCE_EULA_ENU.rtf as shipped in the Microsoft.SqlServer.Compact 4.0.8876.1 package; the copy here is a plain-text rendering of that RTF, which is also published at http://www.microsoft.com/web/webpi/eula/SQLCE_SP1_EULA_ENU.rtf. Section 2a grants Distributable Code rights - \"you are permitted to distribute in programs you develop\", \"You may copy and distribute the object code form of code listed in REDIST.TXT files\" and \"Third Party Distribution\" - subject to adding significant primary functionality, which linq2db scaffolding does. The binaries in Redist/SqlCe are byte-identical to that package's contents (verified by SHA-256 on System.Data.SqlServerCe.dll, sqlceca40.dll x86 and amd64, sqlcese40.dll and msvcr90.dll); sourcing them from the package instead is tracked on issue #5861.",
+      "notes": "Terms sourced from SQLCE_EULA_ENU.rtf as shipped in the package; the copy here is a plain-text rendering of that RTF, which is also published at http://www.microsoft.com/web/webpi/eula/SQLCE_SP1_EULA_ENU.rtf. Section 2a grants Distributable Code rights - \"you are permitted to distribute in programs you develop\", \"You may copy and distribute the object code form of code listed in REDIST.TXT files\" and \"Third Party Distribution\" - subject to adding significant primary functionality, which linq2db scaffolding does.",
       "files": [
         "System.Data.SqlServerCe.dll",
         "amd64/sqlce*.dll",
@@ -2713,6 +2689,7 @@
       "displayName": "System.Formats.Asn1",
       "packageId": "System.Formats.Asn1",
       "versions": {
+        "net8.0": "9.0.21",
         "net462": "8.0.1",
         "net472": "8.0.1",
         "net8.0-windows7.0": "8.0.1"
@@ -2728,6 +2705,7 @@
         "System.Formats.Asn1.dll"
       ],
       "artifacts": [
+        "linq2db.cli",
         "linq2db.LINQPad.lpx"
       ]
     },
@@ -2932,9 +2910,9 @@
       "displayName": "System.Security.Cryptography.Pkcs",
       "packageId": "System.Security.Cryptography.Pkcs",
       "versions": {
-        "net10.0": "9.0.13",
-        "net8.0": "8.0.1",
-        "net9.0": "9.0.13",
+        "net10.0": "9.0.21",
+        "net8.0": "9.0.21",
+        "net9.0": "9.0.21",
         "net462": "8.0.1",
         "net472": "8.0.1",
         "net8.0-windows7.0": "8.0.1"

@@ -8,7 +8,7 @@ using SignalRClient.DataModel;
 
 namespace SignalRClient
 {
-	internal class Program
+	static class Program
 	{
 		static async Task Main(string[] args)
 		{

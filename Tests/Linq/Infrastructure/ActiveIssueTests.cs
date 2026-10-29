@@ -294,6 +294,64 @@ namespace Tests.Infrastructure
 
 		#endregion
 
+		#region Decide — BaselinesMismatch
+
+		const string MismatchError = "TearDown : System.InvalidOperationException : Baselines for remote context doesn't match direct access baselines. Test: X";
+
+		[Test]
+		public void Decide_BaselinesMismatch_RecordedMismatch_IsInconclusive()
+		{
+			var decision = ActiveIssueAttribute.Decide(new ActiveIssueAttribute(1234) { BaselinesMismatch = true }, ResultState.Error, MismatchError, isRemote: true, comparison: BaselineComparison.Mismatched);
+
+			decision.ShouldNotBeNull();
+			decision!.Value.State.Status.ShouldBe(TestStatus.Inconclusive);
+			decision.Value.Message.ShouldContain("remote SQL still differs");
+		}
+
+		[Test]
+		public void Decide_BaselinesMismatch_RecordedMatch_IsFailure()
+		{
+			var decision = ActiveIssueAttribute.Decide(new ActiveIssueAttribute(1234) { BaselinesMismatch = true }, ResultState.Success, null, isRemote: false, comparison: BaselineComparison.Matched);
+
+			decision.ShouldNotBeNull();
+			decision!.Value.State.Status.ShouldBe(TestStatus.Failed);
+			decision.Value.Message.ShouldContain("Remote SQL matches direct SQL");
+			decision.Value.Message.ShouldContain("1234");
+		}
+
+		[Test]
+		public void Decide_BaselinesMismatch_NotCompared_PassingTestIsLeftAlone()
+		{
+			// The first side of the pair, or a case whose other side did not run in this process (a filtered run,
+			// a retried case): no evidence either way.
+			ActiveIssueAttribute.Decide(new ActiveIssueAttribute(1234) { BaselinesMismatch = true }, ResultState.Success, null, isRemote: true, comparison: null)
+				.ShouldBeNull();
+		}
+
+		[Test]
+		public void Decide_BaselinesMismatch_NotCompared_OtherFailureIsFailure()
+		{
+			var decision = ActiveIssueAttribute.Decide(new ActiveIssueAttribute(1234) { BaselinesMismatch = true }, ResultState.Error, OtherError, isRemote: true, comparison: null);
+
+			decision.ShouldNotBeNull();
+			decision!.Value.State.Status.ShouldBe(TestStatus.Failed);
+			decision.Value.Message.ShouldContain(OtherError);
+		}
+
+		[Test]
+		public void Decide_BaselinesMismatch_IgnoresTheMessage()
+		{
+			// Control: the same mismatch failure under a message-matching gate is decided by the message, while the
+			// BaselinesMismatch gate is decided by the comparison only.
+			ActiveIssueAttribute.Decide(Expecting(message: "Baselines for remote context"), ResultState.Error, MismatchError, isRemote: true)!
+				.Value.State.Status.ShouldBe(TestStatus.Inconclusive);
+
+			ActiveIssueAttribute.Decide(new ActiveIssueAttribute(1234) { BaselinesMismatch = true }, ResultState.Error, MismatchError, isRemote: true, comparison: null)!
+				.Value.State.Status.ShouldBe(TestStatus.Failed);
+		}
+
+		#endregion
+
 		#region SelectGoverning — precedence and overlap
 
 		[Test]
@@ -342,6 +400,17 @@ namespace Tests.Infrastructure
 			var platform = new ActiveIssueAttribute(2) { Platforms = Other };
 
 			ActiveIssueAttribute.SelectGoverning([blanket, platform], "SQLite.MS", false, out var ambiguous).ShouldBeSameAs(blanket);
+			ambiguous.ShouldBeFalse();
+		}
+
+		[Test]
+		public void SelectGoverning_BaselinesMismatchBeatsBlanket()
+		{
+			var blanket   = new ActiveIssueAttribute(1);
+			var baselines = new ActiveIssueAttribute(2) { BaselinesMismatch = true };
+
+			ActiveIssueAttribute.SelectGoverning([blanket, baselines], "SQLite.MS", true, out var ambiguous)
+				.ShouldBeSameAs(baselines);
 			ambiguous.ShouldBeFalse();
 		}
 
