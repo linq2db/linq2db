@@ -106,7 +106,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				return isTransient || code is
 					"BadSession" or "SessionBusy" or "SessionExpired" or
 					"Aborted" or "Undetermined" or
-					"Unavailable" or "ClientTransportUnknown" or "ClientTransportUnavailable" or
+					"Unavailable" or "ClientTransportUnknown" or "ClientTransportUnavailable" or "ClientTransportCancelled" or
 					"Overloaded" or "ClientTransportResourceExhausted";
 			}
 

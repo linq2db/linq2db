@@ -103,7 +103,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				"Aborted" or "Undetermined"
 					=> FullJitter(_fastBackoffBaseMs, _fastCapBackoffMs, _fastCeiling, attempt),
 
-				"Unavailable" or "ClientTransportUnknown" or "ClientTransportUnavailable"
+				"Unavailable" or "ClientTransportUnknown" or "ClientTransportUnavailable" or "ClientTransportCancelled"
 					=> EqualJitter(_fastBackoffBaseMs, _fastCapBackoffMs, _fastCeiling, attempt),
 
 				"Overloaded" or "ClientTransportResourceExhausted"
