@@ -71,7 +71,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void ShouldRetryOn_IdempotentCodes([Values(
 			"BadSession", "SessionBusy", "SessionExpired", "Aborted", "Undetermined",
-			"Unavailable", "ClientTransportUnknown", "ClientTransportUnavailable",
+			"Unavailable", "ClientTransportUnknown", "ClientTransportUnavailable", "ClientTransportCancelled",
 			"Overloaded", "ClientTransportResourceExhausted")] string code)
 		{
 			var ex = MakeYdbException(code, isTransient: false);
