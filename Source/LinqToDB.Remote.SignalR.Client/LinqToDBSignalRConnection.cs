@@ -355,7 +355,9 @@ namespace LinqToDB.Remote.SignalR
 #endif
 
 		/// <summary>
-		/// Stops and disposes the hub connection. Blocks until the connection is stopped.
+		/// Stops and disposes the hub connection. Blocks until the connection is stopped, except on .NET Framework /
+		/// .NET Standard while a start is still in progress: there the connection is disposed when the start ends
+		/// (see <see cref="DisposeAsync"/>).
 		/// </summary>
 		public void Dispose()
 		{
