@@ -831,6 +831,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6120")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void NegatedNullableComparisonInHaving([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
