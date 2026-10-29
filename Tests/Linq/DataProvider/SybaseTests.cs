@@ -1113,7 +1113,10 @@ namespace Tests.DataProvider
 		{
 			using var db = GetDataContext(context);
 
-			var sql = db.GetTable<EmptyColumnNameTable>().Select(x => x.Value).ToSqlQuery().Sql;
+			var sql = db.GetTable<EmptyColumnNameTable>()
+				.Select(x => x.Value)
+				.ToSqlQuery()
+				.Sql;
 
 			sql.ShouldContain(".[]");
 		}
