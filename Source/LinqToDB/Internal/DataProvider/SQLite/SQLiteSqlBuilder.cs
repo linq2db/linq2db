@@ -139,7 +139,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 				: GetStorageClass(param.DbType);
 		}
 
-		// mirrors System.Data.SQLite SQLiteStatement.BindParameter with default connection flags
+		// mirrors System.Data.SQLite SQLiteStatement.BindParameter with default connection settings (BinaryGUID, DateTimeFormat, no Bind*AsText flags)
 		static string GetStorageClass(DbType dbType)
 		{
 			return dbType switch
