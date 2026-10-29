@@ -1395,22 +1395,72 @@ namespace Tests.Linq
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(parameterizeTakeSkip));
 			db.InlineParameters = inlineParameters;
 
-			var persons  = db.Person.OrderBy(p => p.ID);
-			var expected = Person.OrderBy(p => p.ID).Select(p => p.ID).ToArray();
+			var persons = db.Person.OrderBy(p => p.ID);
 
-			ShouldReuseCommand(persons, q => q.First(),                         r => r.ID.ShouldBe(expected[0]));
-			ShouldReuseCommand(persons, q => q.FirstOrDefault(),                r => r.ShouldNotBeNull().ID.ShouldBe(expected[0]));
-			ShouldReuseCommand(persons, q => q.Take(() => 1).Single(),          r => r.ID.ShouldBe(expected[0]));
-			ShouldReuseCommand(persons, q => q.Take(() => 1).SingleOrDefault(), r => r.ShouldNotBeNull().ID.ShouldBe(expected[0]));
-			ShouldReuseCommand(persons, q => q.ElementAt(() => 1),              r => r.ID.ShouldBe(expected[1]));
+			var expected = Person
+				.OrderBy(p => p.ID)
+				.Select(p => p.ID)
+				.ToArray();
 
-			ShouldReuseCommand(persons.Take(() => 2).Select(p => p.ID),               r => r.ShouldBe(expected.Take(2)));
-			ShouldReuseCommand(persons.Skip(() => 1).Take(() => 2).Select(p => p.ID), r => r.ShouldBe(expected.Skip(1).Take(2)));
+			ShouldReuseCommand(persons, q => q.First(),            r => r.ID.ShouldBe(expected[0]));
+			ShouldReuseCommand(persons, q => q.ElementAt(() => 1), r => r.ID.ShouldBe(expected[1]));
+
+			ShouldReuseCommand(
+				persons,
+				q => q.FirstOrDefault(),
+				r => r
+					.ShouldNotBeNull()
+					.ID
+					.ShouldBe(expected[0]));
+
+			ShouldReuseCommand(
+				persons,
+				q => q
+					.Take(() => 1)
+					.Single(),
+				r => r.ID.ShouldBe(expected[0]));
+
+			ShouldReuseCommand(
+				persons,
+				q => q
+					.Take(() => 1)
+					.SingleOrDefault(),
+				r => r
+					.ShouldNotBeNull()
+					.ID
+					.ShouldBe(expected[0]));
+
+			ShouldReuseCommand(
+				persons
+					.Take(() => 2)
+					.Select(p => p.ID),
+				r => r.ShouldBe(expected.Take(2)));
+
+			ShouldReuseCommand(
+				persons
+					.Skip(() => 1)
+					.Take(() => 2)
+					.Select(p => p.ID),
+				r => r.ShouldBe(expected.Skip(1).Take(2)));
 
 			// different literals are different queries, not one cached text
-			persons.Take(() => 3).Select(p => p.ID).ToArray().ShouldBe(expected.Take(3));
-			persons.Skip(() => 2).Take(() => 1).Select(p => p.ID).ToArray().ShouldBe(expected.Skip(2).Take(1));
-			persons.ElementAt(() => 2).ID.ShouldBe(expected[2]);
+			persons
+				.Take(() => 3)
+				.Select(p => p.ID)
+				.ToArray()
+				.ShouldBe(expected.Take(3));
+
+			persons
+				.Skip(() => 2)
+				.Take(() => 1)
+				.Select(p => p.ID)
+				.ToArray()
+				.ShouldBe(expected.Skip(2).Take(1));
+
+			persons
+				.ElementAt(() => 2)
+				.ID
+				.ShouldBe(expected[2]);
 		}
 
 		// Access and Informix cannot render a zero TOP/FIRST
@@ -1431,7 +1481,10 @@ namespace Tests.Linq
 
 			check(run(query));
 
-			query.GetQueryInfo(execute).Context.ShouldBeSameAs(commands);
+			query
+				.GetQueryInfo(execute)
+				.Context
+				.ShouldBeSameAs(commands);
 		}
 
 		// Runs the query twice and checks that the second execution reuses the command built by the first.
@@ -1444,7 +1497,10 @@ namespace Tests.Linq
 
 			check(query.ToArray());
 
-			query.GetQueryInfo().Context.ShouldBeSameAs(commands);
+			query
+				.GetQueryInfo()
+				.Context
+				.ShouldBeSameAs(commands);
 		}
 
 		// A TAKE/SKIP taken from a variable must render its current value on every execution, whether it is
@@ -1456,24 +1512,72 @@ namespace Tests.Linq
 			db.InlineParameters = inlineParameters;
 
 			var persons  = db.Person.OrderBy(p => p.ID);
-			var expected = Person.OrderBy(p => p.ID).Select(p => p.ID).ToArray();
 			var sqlTexts = new HashSet<string>();
+
+			var expected = Person
+				.OrderBy(p => p.ID)
+				.Select(p => p.ID)
+				.ToArray();
 
 			for (var n = 1; n <= 3; n++)
 			{
-				persons.Take(n).Select(p => p.ID).ToArray().ShouldBe(expected.Take(n));
+				persons
+					.Take(n)
+					.Select(p => p.ID)
+					.ToArray()
+					.ShouldBe(expected.Take(n));
 
 				if (db is DataConnection dc)
 					sqlTexts.Add(dc.LastQuery!);
 
-				persons.Take(() => n).Select(p => p.ID).ToArray().ShouldBe(expected.Take(n));
-				persons.Skip(n).Take(1).Select(p => p.ID).ToArray().ShouldBe(expected.Skip(n).Take(1));
-				persons.Skip(() => n).Select(p => p.ID).ToArray().ShouldBe(expected.Skip(n));
-				persons.ElementAt(n).ID.ShouldBe(expected[n]);
-				persons.ElementAt(() => n).ID.ShouldBe(expected[n]);
-				persons.Skip(n).First().ID.ShouldBe(expected[n]);
-				persons.Skip(1).Skip(n).Select(p => p.ID).ToArray().ShouldBe(expected.Skip(1 + n));
-				persons.Take(3).Take(n).Select(p => p.ID).ToArray().ShouldBe(expected.Take(n));
+				persons
+					.Take(() => n)
+					.Select(p => p.ID)
+					.ToArray()
+					.ShouldBe(expected.Take(n));
+
+				persons
+					.Skip(n)
+					.Take(1)
+					.Select(p => p.ID)
+					.ToArray()
+					.ShouldBe(expected.Skip(n).Take(1));
+
+				persons
+					.Skip(() => n)
+					.Select(p => p.ID)
+					.ToArray()
+					.ShouldBe(expected.Skip(n));
+
+				persons
+					.ElementAt(n)
+					.ID
+					.ShouldBe(expected[n]);
+
+				persons
+					.ElementAt(() => n)
+					.ID
+					.ShouldBe(expected[n]);
+
+				persons
+					.Skip(n)
+					.First()
+					.ID
+					.ShouldBe(expected[n]);
+
+				persons
+					.Skip(1)
+					.Skip(n)
+					.Select(p => p.ID)
+					.ToArray()
+					.ShouldBe(expected.Skip(1 + n));
+
+				persons
+					.Take(3)
+					.Take(n)
+					.Select(p => p.ID)
+					.ToArray()
+					.ShouldBe(expected.Take(n));
 			}
 
 			if (!parameterizeTakeSkip)
@@ -1481,13 +1585,24 @@ namespace Tests.Linq
 				// the value is inlined into the SQL text, so the text must be rendered per execution
 				var query = persons.Take(1);
 
-				query.ToArray().Length.ShouldBe(1);
+				query
+					.ToArray()
+					.Length
+					.ShouldBe(1);
 
 				// a remote context marks the statement on the server, not the client's copy
 				if (db is DataConnection)
 				{
-					query.GetStatement().IsParameterDependent.ShouldBeTrue();
-					query.GetQueryInfo().Context.ShouldBeNull();
+					query
+						.GetStatement()
+						.IsParameterDependent
+						.ShouldBeTrue();
+
+					query
+						.GetQueryInfo()
+						.Context
+						.ShouldBeNull();
+
 					sqlTexts.Count.ShouldBe(3);
 				}
 			}
@@ -1532,16 +1647,35 @@ namespace Tests.Linq
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(parameterizeTakeSkip));
 			db.InlineParameters = inlineParameters;
 
-			var persons  = db.Person.OrderBy(p => p.ID);
-			var expected = Person.OrderBy(p => p.ID).Select(p => p.ID).ToArray();
-			var holder   = new CountHolder();
-			var count    = 0;
+			var persons = db.Person.OrderBy(p => p.ID);
+			var holder  = new CountHolder();
+			var count   = 0;
 
-			var takeField     = persons.Take(() => holder.Count).Select(p => p.ID);
-			var skipField     = persons.Skip(() => holder.Count).Select(p => p.ID);
-			var skipTakeField = persons.Skip(() => holder.Count).Take(() => holder.Count + 1).Select(p => p.ID);
-			var takeLocal     = persons.Take(() => count).Select(p => p.ID);
-			var skipLocal     = persons.Skip(() => count).Select(p => p.ID);
+			var expected = Person
+				.OrderBy(p => p.ID)
+				.Select(p => p.ID)
+				.ToArray();
+
+			var takeField = persons
+				.Take(() => holder.Count)
+				.Select(p => p.ID);
+
+			var skipField = persons
+				.Skip(() => holder.Count)
+				.Select(p => p.ID);
+
+			var skipTakeField = persons
+				.Skip(() => holder.Count)
+				.Take(() => holder.Count + 1)
+				.Select(p => p.ID);
+
+			var takeLocal = persons
+				.Take(() => count)
+				.Select(p => p.ID);
+
+			var skipLocal = persons
+				.Skip(() => count)
+				.Select(p => p.ID);
 
 			CachedQueryState[]? states = null;
 
@@ -1550,18 +1684,60 @@ namespace Tests.Linq
 				holder.Count = n;
 				count        = n;
 
-				takeField.ToArray().ShouldBe(expected.Take(n));
-				skipField.ToArray().ShouldBe(expected.Skip(n));
-				skipTakeField.ToArray().ShouldBe(expected.Skip(n).Take(n + 1));
-				takeLocal.ToArray().ShouldBe(expected.Take(n));
-				skipLocal.ToArray().ShouldBe(expected.Skip(n));
-				persons.ElementAt(() => holder.Count).ID.ShouldBe(expected[n]);
+				takeField
+					.ToArray()
+					.ShouldBe(expected.Take(n));
 
-				persons.Take(n).Select(p => p.ID).ToArray().ShouldBe(expected.Take(n));
-				persons.Skip(n).Select(p => p.ID).ToArray().ShouldBe(expected.Skip(n));
-				persons.Skip(n).Take(n + 1).Select(p => p.ID).ToArray().ShouldBe(expected.Skip(n).Take(n + 1));
-				persons.Skip(n).First().ID.ShouldBe(expected[n]);
-				persons.ElementAt(n).ID.ShouldBe(expected[n]);
+				skipField
+					.ToArray()
+					.ShouldBe(expected.Skip(n));
+
+				skipTakeField
+					.ToArray()
+					.ShouldBe(expected.Skip(n).Take(n + 1));
+
+				takeLocal
+					.ToArray()
+					.ShouldBe(expected.Take(n));
+
+				skipLocal
+					.ToArray()
+					.ShouldBe(expected.Skip(n));
+
+				persons
+					.ElementAt(() => holder.Count)
+					.ID
+					.ShouldBe(expected[n]);
+
+				persons
+					.Take(n)
+					.Select(p => p.ID)
+					.ToArray()
+					.ShouldBe(expected.Take(n));
+
+				persons
+					.Skip(n)
+					.Select(p => p.ID)
+					.ToArray()
+					.ShouldBe(expected.Skip(n));
+
+				persons
+					.Skip(n)
+					.Take(n + 1)
+					.Select(p => p.ID)
+					.ToArray()
+					.ShouldBe(expected.Skip(n).Take(n + 1));
+
+				persons
+					.Skip(n)
+					.First()
+					.ID
+					.ShouldBe(expected[n]);
+
+				persons
+					.ElementAt(n)
+					.ID
+					.ShouldBe(expected[n]);
 
 				if (states == null)
 				{
@@ -1592,31 +1768,96 @@ namespace Tests.Linq
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(parameterizeTakeSkip));
 			db.InlineParameters = inlineParameters;
 
-			var expected = Person.OrderBy(p => p.ID).Select(p => p.ID).ToArray();
+			var expected = Person
+				.OrderBy(p => p.ID)
+				.Select(p => p.ID)
+				.ToArray();
 
-			var first      = CompiledQuery.Compile((IDataContext dc) => dc.GetTable<Person>().OrderBy(p => p.ID).First());
-			var single     = CompiledQuery.Compile((IDataContext dc) => dc.GetTable<Person>().OrderBy(p => p.ID).Take(() => 1).Single());
-			var takeConst  = CompiledQuery.Compile((IDataContext dc) => dc.GetTable<Person>().OrderBy(p => p.ID).Take(2).Select(p => p.ID));
-			var takeLambda = CompiledQuery.Compile((IDataContext dc) => dc.GetTable<Person>().OrderBy(p => p.ID).Skip(() => 1).Take(() => 2).Select(p => p.ID));
-			var take       = CompiledQuery.Compile((IDataContext dc, int n) => dc.GetTable<Person>().OrderBy(p => p.ID).Take(n).Select(p => p.ID));
-			var skip       = CompiledQuery.Compile((IDataContext dc, int n) => dc.GetTable<Person>().OrderBy(p => p.ID).Skip(n).Select(p => p.ID));
-			var skipTake   = CompiledQuery.Compile((IDataContext dc, int n) => dc.GetTable<Person>().OrderBy(p => p.ID).Skip(n).Take(n + 1).Select(p => p.ID));
-			var skipFirst  = CompiledQuery.Compile((IDataContext dc, int n) => dc.GetTable<Person>().OrderBy(p => p.ID).Skip(n).First());
+			var first = CompiledQuery.Compile((IDataContext dc) => dc
+				.GetTable<Person>()
+				.OrderBy(p => p.ID)
+				.First());
+
+			var single = CompiledQuery.Compile((IDataContext dc) => dc
+				.GetTable<Person>()
+				.OrderBy(p => p.ID)
+				.Take(() => 1)
+				.Single());
+
+			var takeConst = CompiledQuery.Compile((IDataContext dc) => dc
+				.GetTable<Person>()
+				.OrderBy(p => p.ID)
+				.Take(2)
+				.Select(p => p.ID));
+
+			var takeLambda = CompiledQuery.Compile((IDataContext dc) => dc
+				.GetTable<Person>()
+				.OrderBy(p => p.ID)
+				.Skip(() => 1)
+				.Take(() => 2)
+				.Select(p => p.ID));
+
+			var take = CompiledQuery.Compile((IDataContext dc, int n) => dc
+				.GetTable<Person>()
+				.OrderBy(p => p.ID)
+				.Take(n)
+				.Select(p => p.ID));
+
+			var skip = CompiledQuery.Compile((IDataContext dc, int n) => dc
+				.GetTable<Person>()
+				.OrderBy(p => p.ID)
+				.Skip(n)
+				.Select(p => p.ID));
+
+			var skipTake = CompiledQuery.Compile((IDataContext dc, int n) => dc
+				.GetTable<Person>()
+				.OrderBy(p => p.ID)
+				.Skip(n)
+				.Take(n + 1)
+				.Select(p => p.ID));
+
+			var skipFirst = CompiledQuery.Compile((IDataContext dc, int n) => dc
+				.GetTable<Person>()
+				.OrderBy(p => p.ID)
+				.Skip(n)
+				.First());
 
 			for (var i = 0; i < 2; i++)
 			{
-				first(db).ID.ShouldBe(expected[0]);
-				single(db).ID.ShouldBe(expected[0]);
-				takeConst(db).ToArray().ShouldBe(expected.Take(2));
-				takeLambda(db).ToArray().ShouldBe(expected.Skip(1).Take(2));
+				first(db)
+					.ID
+					.ShouldBe(expected[0]);
+
+				single(db)
+					.ID
+					.ShouldBe(expected[0]);
+
+				takeConst(db)
+					.ToArray()
+					.ShouldBe(expected.Take(2));
+
+				takeLambda(db)
+					.ToArray()
+					.ShouldBe(expected.Skip(1).Take(2));
 			}
 
 			foreach (var n in GetCounts(context))
 			{
-				take(db, n).ToArray().ShouldBe(expected.Take(n));
-				skip(db, n).ToArray().ShouldBe(expected.Skip(n));
-				skipTake(db, n).ToArray().ShouldBe(expected.Skip(n).Take(n + 1));
-				skipFirst(db, n).ID.ShouldBe(expected[n]);
+				take(db, n)
+					.ToArray()
+					.ShouldBe(expected.Take(n));
+
+				skip(db, n)
+					.ToArray()
+					.ShouldBe(expected.Skip(n));
+
+				skipTake(db, n)
+					.ToArray()
+					.ShouldBe(expected.Skip(n).Take(n + 1));
+
+				skipFirst(db, n)
+					.ID
+					.ShouldBe(expected[n]);
 			}
 		}
 
@@ -1634,8 +1875,19 @@ namespace Tests.Linq
 
 			foreach (var percent in new[] { 50, 100 })
 			{
-				persons.Take(percent, TakeHints.Percent).ToArray().Length.ShouldBe(percent == 100 ? count : (count + 1) / 2);
-				persons.Take(() => percent, TakeHints.Percent).ToArray().Length.ShouldBe(percent == 100 ? count : (count + 1) / 2);
+				var expected = percent == 100 ? count : (count + 1) / 2;
+
+				persons
+					.Take(percent, TakeHints.Percent)
+					.ToArray()
+					.Length
+					.ShouldBe(expected);
+
+				persons
+					.Take(() => percent, TakeHints.Percent)
+					.ToArray()
+					.Length
+					.ShouldBe(expected);
 			}
 		}
 	}
