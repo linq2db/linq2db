@@ -1,4 +1,4 @@
-#if EF8
+#if EF10
 using System;
 using System.Linq;
 
@@ -52,15 +52,13 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			public int? ValueN { get; set; }
 		}
 
-		// No declared expectation: this whole file is behind #if EF8, and EF8 is defined only in
-		// Source/LinqToDB.EntityFrameworkCore.EF8.csproj - DefineConstants do not cross a ProjectReference, so it
-		// compiles into no test assembly and has never been observed running. Any failure counts until it can be.
-		[ActiveIssue(4646, Details = "no-declaration: dead behind #if EF8, never observed running")]
 		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/260")]
 		public void Issue4646TestLinqToDB([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 			using var db = ctx.CreateLinqToDBConnection();
+
+			db.GetTable<Issue4646Table>().Delete();
 
 			FSharpTestMethods.Issue4646TestLinqToDB(ctx);
 
@@ -77,6 +75,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		{
 			using var ctx = CreateContext(provider);
 			using var db = ctx.CreateLinqToDBConnection();
+
+			db.GetTable<Issue4646Table>().Delete();
 
 			FSharpTestMethods.Issue4646TestEF(ctx);
 			ctx.SaveChanges();

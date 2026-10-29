@@ -4,10 +4,13 @@
 	<!--
 	Native SQLite deployment for .NET Framework.
 
-	Both SQLite clients are SQLitePCLRaw-based - System.Data.SQLite 2.x DllImports e_sqlite3 and honours
-	PreLoadSQLite_BaseDirectory just as Microsoft.Data.Sqlite does - so they share one native package,
-	SQLitePCLRaw.lib.e_sqlite3, and one deployment path. (Until 6.5.0 System.Data.SQLite was fed a second
-	native package, SourceGear.sqlite3, and this file relocated one of the two because both place
+	Both SQLite clients use the e_sqlite3 from runtimes/<rid>/native - Microsoft.Data.Sqlite through
+	SQLitePCLRaw, System.Data.SQLite 2.x through its own native pre-loader, which searches that path next
+	to its assembly and under the app base, and leaves loading to DllImport when a flat e_sqlite3.dll sits
+	in the folder it found (the net462 test output has one). The in-repo T4 run names the folder through
+	PreLoadSQLite_BaseDirectory, see Tests/Tests.T4/Shared.ttinclude. So they share one native package,
+	SQLitePCLRaw.lib.e_sqlite3, and one deployment path. (Until 6.5.0 System.Data.SQLite was fed a
+	second native package, SourceGear.sqlite3, and this file relocated one of the two because both place
 	e_sqlite3 at the same relative path.)
 
 	What is left here is a .NET Framework gap, not a conflict: the package's lowest netfx asset group is
