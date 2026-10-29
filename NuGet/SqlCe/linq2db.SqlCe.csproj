@@ -34,11 +34,20 @@
 		<None Include="$(ToolsPath)/Humanizer.dll"								   Pack="true" PackagePath="tools"       Visible="false" />
 		<None Include="$(ToolsPath)/Microsoft.Bcl.AsyncInterfaces.dll"			   Pack="true" PackagePath="tools"       Visible="false" />
 		<None Include="$(ToolsPath)/System.Data.SqlServerCe.dll"                   Pack="true" PackagePath="tools"       Visible="false" />
-		<None Include="$(ToolsPath)/amd64/**"                                      Pack="true" PackagePath="tools/amd64" Visible="false" />
+		<!-- amd64 natives shipped via a Target below — see IncludeNativesInPack -->
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="../NuGet.csproj" />
 	</ItemGroup>
+
+	<!-- The amd64/ folder is populated during build of NuGet.csproj, which runs *after* this csproj's
+	     static globs are evaluated, so the glob is declared in a Target to expand it at pack-time. -->
+	<Target Name="IncludeNativesInPack" BeforeTargets="_GetPackageFiles">
+		<Error Condition="!Exists('$(ToolsPath)/amd64/sqlceme40.dll')" Text="'$(ToolsPath)/amd64' holds no SQL CE natives - build NuGet/NuGet.csproj first." />
+		<ItemGroup>
+			<None Include="$(ToolsPath)/amd64/**" Pack="true" PackagePath="tools/amd64" Visible="false" />
+		</ItemGroup>
+	</Target>
 
 </Project>

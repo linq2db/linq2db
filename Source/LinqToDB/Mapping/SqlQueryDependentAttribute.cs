@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB.Expressions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 
 namespace LinqToDB.Mapping
@@ -37,7 +38,7 @@ namespace LinqToDB.Mapping
 				return string.Equals(str1.Format, str2.Format, StringComparison.Ordinal);
 
 			if (obj1 is FormattableString fs1 && obj2 is FormattableString fs2)
-				return string.Equals(fs1.Format, fs2.Format, StringComparison.Ordinal) && ObjectsEqual(fs1.GetArguments(), fs2.GetArguments());
+				return FormattableStringHelper.AreEqual(fs1, fs2, ObjectsEqual);
 
 			if (obj1 is not string and IEnumerable list1 && obj2 is IEnumerable list2)
 			{

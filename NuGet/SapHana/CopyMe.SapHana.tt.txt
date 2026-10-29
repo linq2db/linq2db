@@ -7,7 +7,7 @@
 	// Install linq2db nuget package.
 	// Install one of the following packages:
 	// https://www.nuget.org/packages/System.Data.Odbc for System.Data.Odbc provider
-	// also native ADO.NET provider could be used (Windows-only)
+	// also native ADO.NET provider could be used (Windows-only, needs the SAP HANA client installed)
 	// See LinqToDB.Templates/README.md for more details.
 
 	// Configuring schema load process

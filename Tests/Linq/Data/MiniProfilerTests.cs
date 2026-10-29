@@ -702,7 +702,6 @@ namespace Tests.Data
 
 			var trace = string.Empty;
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-			using (new DisableBaseline("TODO: debug reason for inconsistent bulk copy sql"))
 #if NETFRAMEWORK
 			using (var db = CreateDataConnection(new SqlServerTests.TestSqlServerDataProvider(providerName, version, SqlServerProvider.SystemDataSqlClient), context, type, typeof(SqlConnection), onTrace: ti =>
 			{
@@ -893,7 +892,6 @@ namespace Tests.Data
 			// hit the fallback — trace contains multi-row INSERTs instead of "INSERT BULK".
 			var bulkCopyDowngraded = context.IsAnyOf(TestProvName.AllSqlServer2005);
 			var trace = string.Empty;
-			using (new DisableBaseline("TODO: debug reason for inconsistent bulk copy sql"))
 			using (var db = CreateDataConnection(new SqlServerTests.TestSqlServerDataProvider(providerName, version, SqlServerProvider.MicrosoftDataSqlClient), context, type, "Microsoft.Data.SqlClient.SqlConnection, Microsoft.Data.SqlClient", onTrace: ti =>
 			{
 				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
