@@ -4,4 +4,7 @@ LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQLMemberTranslator
 LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQLMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator() -> void
 override LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQL95MemberTranslator.CreateAggregateFunctionsMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator!
 override LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQLMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator.IsFilterSupported.get -> bool
+override LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlBuilder.PrintParameterType(LinqToDB.IDataContext! dataContext, System.Text.StringBuilder! sb, System.Data.Common.DbParameter! parameter) -> void
+override LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlBuilder.GetProviderTypeName(LinqToDB.IDataContext! dataContext, System.Data.Common.DbParameter! parameter) -> string?
+override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlBuilder.GetProviderTypeName(LinqToDB.IDataContext! dataContext, System.Data.Common.DbParameter! parameter) -> string?
 

@@ -114,6 +114,8 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			GetMySqlDecimalReaderMethod = mySqlProviderAdapter.GetMySqlDecimalMethodName;
 
 			_connectionFactory          = mySqlProviderAdapter.CreateConnection;
+
+			GetParameterTypeName        = p => Convert.ToString(mySqlProviderAdapter.GetDbType(p), CultureInfo.InvariantCulture);
 		}
 
 #region IDynamicProviderAdapter
@@ -133,6 +135,11 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		public Func<object, string>? DriverDecimalToStringConverter { get; }
 
 		public MappingSchema? MappingSchema { get; }
+
+		/// <summary>
+		/// Returns the ClickHouse type the client sends a parameter as.
+		/// </summary>
+		internal Func<DbParameter, string?>? GetParameterTypeName { get; private init; }
 
 		// BulkCopy
 		internal bool SupportsBulkCopy => DriverBulkCopyCreator != null || OctonicaCreateWriter != null || OctonicaCreateWriterAsync != null;
@@ -243,6 +250,9 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 			var connectionFactory = typeMapper.BuildTypedFactory<string, DriverWrappers.ClickHouseConnection, DbConnection>(connectionString => new DriverWrappers.ClickHouseConnection(connectionString));
 
+			// "{name:type}", the type resolved from ClickHouseType or the value: the client ignores DbType
+			var queryFormGetter = BuildParameterPropertyGetter(parameterType, "QueryForm");
+
 			return new ClickHouseProviderAdapter(
 				connectionType,
 				dataReaderType,
@@ -273,7 +283,30 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 				clientType        == null ? null : typeMapper.BuildWrappedFactory((string connectionString) => new DriverWrappers.ClickHouseClient(connectionString)),
 				insertOptionsType == null ? null : typeMapper.BuildWrappedFactory(() => new DriverWrappers.InsertOptions())
-				);
+				)
+			{
+				GetParameterTypeName = queryFormGetter == null ? null : p =>
+				{
+					var prefix = "{" + p.ParameterName + ":";
+
+					return queryFormGetter(p) is string queryForm && queryForm.StartsWith(prefix, StringComparison.Ordinal) && queryForm.EndsWith('}')
+						? queryForm.Substring(prefix.Length, queryForm.Length - prefix.Length - 1)
+						: null;
+				},
+			};
+		}
+
+		static Func<DbParameter, object?>? BuildParameterPropertyGetter(Type parameterType, string propertyName)
+		{
+			if (parameterType.GetProperty(propertyName) is not { } property)
+				return null;
+
+			var p = Expression.Parameter(typeof(DbParameter));
+
+			return Expression.Lambda<Func<DbParameter, object?>>(
+					Expression.Convert(Expression.Property(Expression.Convert(p, parameterType), property), typeof(object)),
+					p)
+				.CompileExpression();
 		}
 
 		private static ClickHouseProviderAdapter CreateOctonicaAdapter()
@@ -315,6 +348,8 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 			var connectionFactory = typeMapper.BuildTypedFactory<string, OctonicaWrappers.ClickHouseConnection, DbConnection>(connectionString => new OctonicaWrappers.ClickHouseConnection(connectionString));
 
+			var clickHouseDbTypeGetter = BuildParameterPropertyGetter(parameterType, "ClickHouseDbType");
+
 			return new ClickHouseProviderAdapter(
 				connectionType,
 				dataReaderType,
@@ -343,7 +378,10 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				null,
 
 				null,
-				null);
+				null)
+			{
+				GetParameterTypeName = clickHouseDbTypeGetter == null ? null : p => Convert.ToString(clickHouseDbTypeGetter(p), CultureInfo.InvariantCulture),
+			};
 
 			IEnumerable<int> exceptionErrorsGettter(Exception ex) => new[] { typeMapper.Wrap<OctonicaWrappers.ClickHouseException>(ex).ErrorCode };
 		}

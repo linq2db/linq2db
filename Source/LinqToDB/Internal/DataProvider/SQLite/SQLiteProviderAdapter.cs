@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Data.Common;
+using System.Linq.Expressions;
 using System.Threading;
 
+using LinqToDB.Common;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Internal.Expressions.Types;
 
@@ -29,7 +31,8 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			Type                       transactionType,
 			Func<string, DbConnection> connectionFactory,
 			bool                       supportsDateOnly,
-			Action?                    clearAllPulls)
+			Action?                    clearAllPulls,
+			Func<DbParameter, object>? sqliteTypeGetter)
 		{
 			ConnectionType     = connectionType;
 			DataReaderType     = dataReaderType;
@@ -41,6 +44,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			SupportsDateOnly      = supportsDateOnly;
 
 			ClearAllPools      = clearAllPulls;
+			GetSqliteType      = sqliteTypeGetter;
 		}
 
 #region IDynamicProviderAdapter
@@ -60,6 +64,11 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 		internal bool SupportsDateOnly { get; }
 
 		public Action? ClearAllPools { get; }
+
+		/// <summary>
+		/// Microsoft.Data.Sqlite only: reads <c>SqliteParameter.SqliteType</c>, the storage class the driver binds the parameter value with.
+		/// </summary>
+		internal Func<DbParameter, object>? GetSqliteType { get; }
 
 		private static SQLiteProviderAdapter CreateAdapter(string assemblyName, string clientNamespace, string prefix)
 		{
@@ -103,6 +112,17 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 			var supportsDateOnly   = string.Equals(clientNamespace, MicrosoftDataSQLiteClientNamespace, StringComparison.Ordinal) && assembly.GetName().Version >= MinDateOnlyAssemblyVersionMDS;
 
+			Func<DbParameter, object>? sqliteTypeGetter = null;
+			if (string.Equals(clientNamespace, MicrosoftDataSQLiteClientNamespace, StringComparison.Ordinal) && parameterType.GetProperty("SqliteType") is { } sqliteTypeProperty)
+			{
+				var p = Expression.Parameter(typeof(DbParameter));
+
+				sqliteTypeGetter = Expression.Lambda<Func<DbParameter, object>>(
+						Expression.Convert(Expression.Property(Expression.Convert(p, parameterType), sqliteTypeProperty), typeof(object)),
+						p)
+					.CompileExpression();
+			}
+
 			Func<string, DbConnection> connectionFactory;
 			if (string.Equals(clientNamespace, MicrosoftDataSQLiteClientNamespace, StringComparison.Ordinal))
 			{
@@ -121,7 +141,8 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 				transactionType,
 				connectionFactory,
 				supportsDateOnly,
-				clearAllPools);
+				clearAllPools,
+				sqliteTypeGetter);
 		}
 
 		private static readonly Version ClearPoolsMinVersionMDS       = new (6, 0, 0);
