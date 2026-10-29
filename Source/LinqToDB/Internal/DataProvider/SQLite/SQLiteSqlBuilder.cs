@@ -33,6 +33,24 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 		protected override ConcatBuildStyle ConcatStyle       => ConcatBuildStyle.Pipes;
 
+		// SQLite binds `||` tighter than every binary operator (https://www.sqlite.org/lang_expr.html#operators),
+		// so a bare arithmetic operand is evaluated wrongly: `a + 1 || ','` means `a + (1 || ',')`.
+		// Build each operand as if under a unary operator: operands that bind looser than unary (arithmetic,
+		// comparison, logical) get parentheses, primary ones (columns, literals, parameters, functions, CAST, CASE)
+		// stay bare. A nested concat keeps the default precedence, as `||` is associative.
+		protected override void BuildSqlConcatExpression(SqlConcatExpression element)
+		{
+			for (var i = 0; i < element.Expressions.Length; i++)
+			{
+				if (i > 0)
+					StringBuilder.Append(" || ");
+
+				var expr = element.Expressions[i];
+
+				BuildExpression(expr.Precedence == Precedence.Concatenate ? Precedence.Concatenate : Precedence.Unary, expr);
+			}
+		}
+
 		public override int CommandCount(SqlStatement statement)
 		{
 			return statement switch

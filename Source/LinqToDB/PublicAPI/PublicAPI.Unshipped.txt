@@ -1,4 +1,5 @@
 ﻿#nullable enable
+override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlBuilder.BuildSqlConcatExpression(LinqToDB.Internal.SqlQuery.SqlConcatExpression! element) -> void
 const LinqToDB.Internal.Common.ErrorHelper.Error_DynamicColumns_NoSetter = "Type '{0}' is materialized with dynamic column(s) {1}, but has no dynamic column setter. Add a member marked with DynamicColumnsStoreAttribute, or configure a setter through DynamicColumnAccessorAttribute or DynamicPropertyAccessors." -> string!
 LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQLMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator
 LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQLMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator() -> void
