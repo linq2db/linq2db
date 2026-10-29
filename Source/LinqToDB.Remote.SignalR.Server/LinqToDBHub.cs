@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -13,8 +14,6 @@ using Microsoft.Extensions.Options;
 
 #if NET8_0_OR_GREATER
 using Microsoft.AspNetCore.Http;
-#else
-using System.Reflection;
 #endif
 
 namespace LinqToDB.Remote.SignalR
@@ -30,7 +29,9 @@ namespace LinqToDB.Remote.SignalR
 	/// To validate or authorize calls, decorate the <see cref="ILinqService"/> the hub uses
 	/// (<see cref="CreateLinqService"/>, or <c>ILinqService&lt;T&gt;</c> registered in DI for
 	/// <see cref="LinqToDBHub{T}"/>): the decorator sees every call together with its cancellation token.
-	/// Class-level <c>[Authorize]</c> on a derived hub applies to all hub methods.
+	/// Class-level <c>[Authorize]</c> on a derived hub applies to all hub methods. Overrides of the obsolete methods
+	/// that serve clients older than 6.6.0 do not see the calls of newer clients: such a hub refuses those calls
+	/// (see <see cref="GetInfoAsync"/>).
 	/// </para>
 	/// </summary>
 	public class LinqToDBHub : Hub
@@ -47,6 +48,18 @@ namespace LinqToDB.Remote.SignalR
 		// for every call and a hub may create its options itself. Never disposed: without AvailableWaitHandle a
 		// SemaphoreSlim holds no unmanaged resources, and an operation finishing late may still release it.
 		static readonly ConcurrentDictionary<(Type HubType, int MaxConcurrentCalls),SemaphoreSlim> _globalLimiters = new();
+
+		// The obsolete methods only clients older than 6.6.0 call, and per hub type the ones it overrides (null: none).
+		static readonly (string Name, Type[] Parameters)[] _legacyMethods =
+		[
+			("GetInfoAsync",         [typeof(string)]),
+			("ExecuteNonQueryAsync", [typeof(string), typeof(string)]),
+			("ExecuteScalarAsync",   [typeof(string), typeof(string)]),
+			("ExecuteReaderAsync",   [typeof(string), typeof(string)]),
+			("ExecuteBatchAsync",    [typeof(string), typeof(string)]),
+		];
+
+		static readonly ConcurrentDictionary<Type,string?> _legacyOverrides = new();
 
 		readonly LinqToDBHubOptions? _options;
 
@@ -138,8 +151,14 @@ namespace LinqToDB.Remote.SignalR
 		/// <summary>
 		/// Returns the server's configuration information to a client older than 6.6.0, which calls it as a plain
 		/// invocation. Such a call honours the hub's concurrency limits, and only a lost connection cancels it.
+		/// <para>
+		/// 6.6.0 and later clients never call this method or the other obsolete ones. A hub that overrides any of them
+		/// refuses the calls of those clients with a <see cref="HubException"/>, so that the override is not bypassed:
+		/// move its logic into an <see cref="ILinqService"/> decorator (<see cref="CreateLinqService"/>, or
+		/// <c>ILinqService&lt;T&gt;</c> in DI) or a class-level <c>[Authorize]</c>, which apply to the calls of every client.
+		/// </para>
 		/// </summary>
-		[Obsolete("Serves clients older than 6.6.0, which call it as a plain invocation; 6.6.0 and later clients call GetInfoStream. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
+		[Obsolete("Serves clients older than 6.6.0 only. 6.6.0 and later clients call GetInfoStream, which a hub that overrides this method refuses: move the override's logic into an ILinqService decorator. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public virtual Task<LinqServiceInfo> GetInfoAsync(string? configuration)
 		{
 			return InvokeOperation((service, cancellationToken) => service.GetInfoAsync(configuration, cancellationToken));
@@ -148,7 +167,7 @@ namespace LinqToDB.Remote.SignalR
 		/// <summary>
 		/// Executes a non-query command for a client older than 6.6.0 (see <see cref="GetInfoAsync"/>).
 		/// </summary>
-		[Obsolete("Serves clients older than 6.6.0, which call it as a plain invocation; 6.6.0 and later clients call ExecuteNonQueryStream. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
+		[Obsolete("Serves clients older than 6.6.0 only. 6.6.0 and later clients call ExecuteNonQueryStream, which a hub that overrides this method refuses: move the override's logic into an ILinqService decorator. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public virtual Task<int> ExecuteNonQueryAsync(string? configuration, string queryData)
 		{
 			return InvokeOperation((service, cancellationToken) => service.ExecuteNonQueryAsync(configuration, queryData, cancellationToken));
@@ -157,7 +176,7 @@ namespace LinqToDB.Remote.SignalR
 		/// <summary>
 		/// Executes a scalar query for a client older than 6.6.0 (see <see cref="GetInfoAsync"/>).
 		/// </summary>
-		[Obsolete("Serves clients older than 6.6.0, which call it as a plain invocation; 6.6.0 and later clients call ExecuteScalarStream. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
+		[Obsolete("Serves clients older than 6.6.0 only. 6.6.0 and later clients call ExecuteScalarStream, which a hub that overrides this method refuses: move the override's logic into an ILinqService decorator. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public virtual Task<string?> ExecuteScalarAsync(string? configuration, string queryData)
 		{
 			return InvokeOperation((service, cancellationToken) => service.ExecuteScalarAsync(configuration, queryData, cancellationToken));
@@ -167,7 +186,7 @@ namespace LinqToDB.Remote.SignalR
 		/// Executes a query for a client older than 6.6.0 (see <see cref="GetInfoAsync"/>). The result is sent as one
 		/// message.
 		/// </summary>
-		[Obsolete("Serves clients older than 6.6.0, which call it as a plain invocation; 6.6.0 and later clients call ExecuteReaderStream. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
+		[Obsolete("Serves clients older than 6.6.0 only. 6.6.0 and later clients call ExecuteReaderStream, which a hub that overrides this method refuses: move the override's logic into an ILinqService decorator. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public virtual Task<string> ExecuteReaderAsync(string? configuration, string queryData)
 		{
 			return InvokeOperation((service, cancellationToken) => service.ExecuteReaderAsync(configuration, queryData, cancellationToken));
@@ -176,7 +195,7 @@ namespace LinqToDB.Remote.SignalR
 		/// <summary>
 		/// Executes a batch of commands in a transaction for a client older than 6.6.0 (see <see cref="GetInfoAsync"/>).
 		/// </summary>
-		[Obsolete("Serves clients older than 6.6.0, which call it as a plain invocation; 6.6.0 and later clients call ExecuteBatchStream. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
+		[Obsolete("Serves clients older than 6.6.0 only. 6.6.0 and later clients call ExecuteBatchStream, which a hub that overrides this method refuses: move the override's logic into an ILinqService decorator. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public virtual Task<int> ExecuteBatchAsync(string? configuration, string queryData)
 		{
 			return InvokeOperation((service, cancellationToken) => service.ExecuteBatchAsync(configuration, queryData, cancellationToken));
@@ -211,7 +230,33 @@ namespace LinqToDB.Remote.SignalR
 
 		ChannelReader<T> StartOperation<T>(Func<ILinqService,CancellationToken,Task<IReadOnlyList<T>>> operation)
 		{
+			// A 6.6.0 or later client never calls the obsolete methods, so an override of them (validation, authorization)
+			// would be bypassed without a trace: refuse the call instead.
+			if (_legacyOverrides.GetOrAdd(GetType(), FindLegacyOverrides) is { } overrides)
+				throw new HubException(
+					$"{GetType().Name} overrides {overrides}, which only clients older than 6.6.0 call. The call is refused so that "
+					+ "the override is not bypassed: move its logic into an ILinqService decorator (CreateLinqService() or "
+					+ "ILinqService<T> in DI) or a class-level [Authorize], and remove the override.");
+
 			return new OperationChannelReader<T>(PrepareOperation(operation), Context.ConnectionAborted);
+		}
+
+#if NET8_0_OR_GREATER
+		[UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "MapHub<THub> keeps the public methods of the hub type: Signal/R dispatches calls to them by reflection.")]
+#endif
+		static string? FindLegacyOverrides(Type hubType)
+		{
+			List<string>? names = null;
+
+			foreach (var (name, parameters) in _legacyMethods)
+			{
+				var method = hubType.GetMethod(name, BindingFlags.Public | BindingFlags.Instance, null, parameters, null);
+
+				if (method != null && method.DeclaringType != typeof(LinqToDBHub))
+					(names ??= []).Add(name);
+			}
+
+			return names == null ? null : string.Join(", ", names);
 		}
 
 		// A plain invocation of a client older than 6.6.0 carries no cancellation of its own: only a lost connection

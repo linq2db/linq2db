@@ -58,6 +58,13 @@ The hub protocol changed in 6.6.0. The hub still serves older clients through it
 `Execute*Async` methods, with the same concurrency limits, but their calls are cancelled only by a lost connection and
 their results are sent as one message; update clients to 6.6.0 or later to get cancellation and chunked results.
 
+A 6.6.0 or later client never calls those methods, so an override of them in a derived hub (validation, authorization,
+a method-level `[Authorize]`) would not apply to its calls. Such a hub refuses the calls of 6.6.0 and later clients
+with a `HubException` that names the overriding methods (the legacy server sends its text to the client only with
+`HubOptions.EnableDetailedErrors`), and keeps serving older clients through the overrides. Move that logic into an
+`ILinqService` decorator (`CreateLinqService()` or `ILinqService<T>` in DI) or a class-level `[Authorize]`, which
+apply to the calls of every client, and remove the overrides before updating the clients.
+
 ## Other Transports
 
 We provide

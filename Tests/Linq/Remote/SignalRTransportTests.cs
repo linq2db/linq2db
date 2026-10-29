@@ -963,6 +963,68 @@ namespace Tests.Remote
 			}
 		}
 
+		// A 6.6.0 client never reaches an override of an obsolete method, so the hub refuses its calls instead of bypassing
+		// the override; an old client still goes through the override.
+		[Test]
+		public async Task HubOverridingAnObsoleteMethodRefusesNewClients()
+		{
+			var service   = new ScriptedLinqService { Behavior = ScriptedLinqService.Delay(0) };
+			var overrides = new OverrideCalls();
+			using var host = TestHost.Start<ObsoleteOverrideHub>(services =>
+			{
+				services.AddSingleton<ILinqService>(service);
+				services.AddSingleton(overrides);
+			});
+
+			var hubConnection = await host.ConnectAsync();
+			await using var owner = Own(hubConnection);
+
+			var client = (ILinqService)new SignalRLinqServiceClient(hubConnection);
+
+			// Every call is refused, not only the one whose obsolete counterpart is overridden.
+			var nonQueryError = await WithinLimit(CatchAsync(() => client.ExecuteNonQueryAsync(Configuration, "query")));
+			var readerError   = await WithinLimit(CatchAsync(() => client.ExecuteReaderAsync(Configuration, "query")));
+
+			nonQueryError.ShouldBeOfType<HubException>();
+			readerError.ShouldBeOfType<HubException>();
+#if !NETFRAMEWORK
+			// The legacy server drops the text of every error unless HubOptions.EnableDetailedErrors is set.
+			nonQueryError.Message.ShouldContain("ObsoleteOverrideHub overrides ExecuteNonQueryAsync");
+#endif
+
+			service.Calls.ShouldBe(0);
+			overrides.Count.ShouldBe(0);
+
+			(await WithinLimit(hubConnection.InvokeAsync<int>("ExecuteNonQueryAsync", Configuration, "query"))).ShouldBe(5);
+
+			overrides.Count.ShouldBe(1);
+			service.Calls.ShouldBe(1);
+		}
+
+		sealed class OverrideCalls
+		{
+			public int Count;
+		}
+
+		sealed class ObsoleteOverrideHub(ILinqService service, OverrideCalls calls, IOptions<LinqToDBHubOptions> options) : LinqToDBHub(options)
+		{
+			protected override ILinqService CreateLinqService()
+			{
+				return service;
+			}
+
+			// CS0672: the override of an obsolete member is the case under test.
+#pragma warning disable CS0672
+			public override Task<int> ExecuteNonQueryAsync(string? configuration, string queryData)
+#pragma warning restore CS0672
+			{
+				Interlocked.Increment(ref calls.Count);
+#pragma warning disable CS0618 // see CS0672 above
+				return base.ExecuteNonQueryAsync(configuration, queryData);
+#pragma warning restore CS0618
+			}
+		}
+
 		// A hub type of its own: the global limit is shared by all hubs of one type in the process.
 		sealed class OldClientHub(ILinqService service, IOptions<LinqToDBHubOptions> options) : LinqToDBHub(options)
 		{
