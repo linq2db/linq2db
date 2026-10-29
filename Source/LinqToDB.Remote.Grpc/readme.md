@@ -31,8 +31,9 @@ Things to watch in `GrpcChannelOptions`:
 
 - `HttpHandler = new SocketsHttpHandler()` does **not** share connections between channels, even when the same handler
   instance is passed to all of them: Grpc.Net.Client takes a `SocketsHttpHandler` over for its client-side load
-  balancing and every channel opens its own connections through it. Connections are shared between channels only
-  through a shared `HttpClient`, or a shared handler of another type (for example `HttpClientHandler`).
+  balancing and every channel opens its own connections through it, which stay open in the handler's pool after the
+  channel is disposed. Connections are shared between channels only through a shared `HttpClient`, or a shared
+  handler of another type (for example `HttpClientHandler`).
 - `HttpClient.Timeout` limits every remote query made through that client, including long-running ones; its default
   is 100 seconds. To run longer queries, set it to `Timeout.InfiniteTimeSpan` and use cancellation tokens instead. A
   query ended by the timeout fails with `RpcException` (`StatusCode.Cancelled`), while a query cancelled through its
