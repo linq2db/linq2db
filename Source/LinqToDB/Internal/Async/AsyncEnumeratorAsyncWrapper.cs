@@ -9,11 +9,10 @@ namespace LinqToDB.Internal.Async
 	internal sealed class AsyncEnumeratorAsyncWrapper<T> : IAsyncEnumerator<T>
 	{
 		private IAsyncEnumerator<T>? _enumerator;
-		private readonly Func<Task<Tuple<IAsyncEnumerator<T>, IAsyncDisposable?>>> _init;
-		private IAsyncDisposable? _disposable;
+		private readonly Func<Task<IAsyncEnumerator<T>>> _init;
 		private bool _disposed;
 
-		public AsyncEnumeratorAsyncWrapper(Func<Task<Tuple<IAsyncEnumerator<T>, IAsyncDisposable?>>> init)
+		public AsyncEnumeratorAsyncWrapper(Func<Task<IAsyncEnumerator<T>>> init)
 		{
 			_init = init;
 		}
@@ -36,31 +35,18 @@ namespace LinqToDB.Internal.Async
 
 			_disposed = true;
 
-			try
-			{
-				if (_enumerator != null)
-					await _enumerator.DisposeAsync().ConfigureAwait(false);
-			}
-			finally
-			{
-				if (_disposable != null)
-					await _disposable.DisposeAsync().ConfigureAwait(false);
-			}
+			if (_enumerator != null)
+				await _enumerator.DisposeAsync().ConfigureAwait(false);
 		}
 
 		async ValueTask<bool> IAsyncEnumerator<T>.MoveNextAsync()
 		{
-			// without this the disposed instance re-runs _init, and the enumerator and load
-			// transaction it opens are unreachable from DisposeAsync, which returns at the flag
+			// without this the disposed instance re-runs _init, and the enumerator it opens is unreachable from
+			// DisposeAsync, which returns at the flag
 			if (_disposed)
 				return false;
 
-			if (_enumerator == null)
-			{
-				var tuple   = await _init().ConfigureAwait(false);
-				_enumerator = tuple.Item1;
-				_disposable = tuple.Item2;
-			}
+			_enumerator ??= await _init().ConfigureAwait(false);
 
 			return await _enumerator.MoveNextAsync().ConfigureAwait(false);
 		}

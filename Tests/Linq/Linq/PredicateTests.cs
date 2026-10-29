@@ -8,6 +8,8 @@ using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Linq
 {
 	public class PredicateTests : TestBase
@@ -982,6 +984,31 @@ namespace Tests.Linq
 			AssertQuery(tb.Where(r => (r.Value5 <= r.Value4) != False));
 			AssertQuery(tb.Where(r => (r.Value5 <= r.Value4) != FalseN));
 			AssertQuery(tb.Where(r => (r.Value5 <= r.Value4) != Null));
+		}
+
+		// The same query run with each value of the parameter: it folds to the predicate or its negation, so the value
+		// must reach the SQL on every run rather than be kept from the first one.
+		[Test]
+		public void Test_PredicateWithBooleanParameterFoldsPerValue([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(BooleanTable.Data);
+
+			var flag  = true;
+			var query = tb.Where(r => (r.Value1 == r.Value2) == flag);
+
+			AssertQuery(query);
+			var whenTrue = query.ToSqlQuery();
+
+			flag = false;
+
+			AssertQuery(query);
+			var whenFalse = query.ToSqlQuery();
+
+			whenTrue .Parameters.ShouldBeEmpty();
+			whenFalse.Parameters.ShouldBeEmpty();
+
+			whenFalse.Sql.ShouldNotBe(whenTrue.Sql);
 		}
 
 		[Test]

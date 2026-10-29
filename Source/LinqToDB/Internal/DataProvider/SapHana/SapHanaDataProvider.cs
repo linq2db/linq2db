@@ -83,6 +83,11 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			return new SapHanaMemberTranslator();
 		}
 
+		protected override IDmlService CreateDmlService()
+		{
+			return new SapHanaDmlService();
+		}
+
 		public override ISchemaProvider GetSchemaProvider()
 		{
 			return Provider == SapHanaProvider.Unmanaged ? new SapHanaSchemaProvider() : new SapHanaOdbcSchemaProvider();
