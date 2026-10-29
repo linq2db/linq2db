@@ -15,6 +15,8 @@ using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests.Model;
 
 namespace Tests.DataProvider
@@ -1100,5 +1102,20 @@ namespace Tests.DataProvider
 		}
 
 		#endregion
+
+		sealed class EmptyColumnNameTable
+		{
+			[Column("")] public int Value { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6023")]
+		public void EmptyColumnNameIsQuoted([IncludeDataSources(TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var sql = db.GetTable<EmptyColumnNameTable>().Select(x => x.Value).ToSqlQuery().Sql;
+
+			sql.ShouldContain(".[]");
+		}
 	}
 }
