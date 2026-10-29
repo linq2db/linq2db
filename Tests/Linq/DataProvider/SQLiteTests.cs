@@ -782,7 +782,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDbVersion([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			// Both arms resolve to the same engine because both clients are SQLitePCLRaw-based and share one
+			// Both arms resolve to the same engine because both clients load e_sqlite3 from one
 			// native package (SQLitePCLRaw.lib.e_sqlite3). They separate again if MDS moves to its own
 			// runtimes nuget — see this test's [Explicit] reason.
 			var expectedVersion = context switch

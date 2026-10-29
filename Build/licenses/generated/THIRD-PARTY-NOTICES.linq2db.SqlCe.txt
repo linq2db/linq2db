@@ -31,13 +31,14 @@ COMPONENTS
    https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist
    License: Microsoft Software License Terms - Microsoft SQL Server Compact 4.0 SP1 (section 1b)  see [3] [4]
    Copyright (c) Microsoft Corporation
-   Shipped inside the SQL CE native folder. Its own README_ENU.txt states these are not SQL Server Compact files and refers to section 1b of the SQL Server Compact 4.0 licence terms, which is the document reproduced for the SQL CE component.
+   Shipped inside the native folders of the Microsoft.SqlServer.Compact package. Its own README_ENU.txt states these are not SQL Server Compact files and refers to section 1b of the SQL Server Compact 4.0 licence terms, which is the document reproduced for the SQL CE component.
 
-4. Microsoft SQL Server Compact 4.0 4.0
-   https://www.microsoft.com/en-us/download/details.aspx?id=30709
+4. Microsoft SQL Server Compact 4.0 4.0.8876.1
+   NuGet package: Microsoft.SqlServer.Compact
+   https://www.nuget.org/packages/Microsoft.SqlServer.Compact
    License: Microsoft Software License Terms - Microsoft SQL Server Compact 4.0 SP1  see [4]
    Copyright (c) Microsoft Corporation
-   Terms sourced from SQLCE_EULA_ENU.rtf as shipped in the Microsoft.SqlServer.Compact 4.0.8876.1 package; the copy here is a plain-text rendering of that RTF, which is also published at http://www.microsoft.com/web/webpi/eula/SQLCE_SP1_EULA_ENU.rtf. Section 2a grants Distributable Code rights - "you are permitted to distribute in programs you develop", "You may copy and distribute the object code form of code listed in REDIST.TXT files" and "Third Party Distribution" - subject to adding significant primary functionality, which linq2db scaffolding does. The binaries in Redist/SqlCe are byte-identical to that package's contents (verified by SHA-256 on System.Data.SqlServerCe.dll, sqlceca40.dll x86 and amd64, sqlcese40.dll and msvcr90.dll); sourcing them from the package instead is tracked on issue #5861.
+   Terms sourced from SQLCE_EULA_ENU.rtf as shipped in the package; the copy here is a plain-text rendering of that RTF, which is also published at http://www.microsoft.com/web/webpi/eula/SQLCE_SP1_EULA_ENU.rtf. Section 2a grants Distributable Code rights - "you are permitted to distribute in programs you develop", "You may copy and distribute the object code form of code listed in REDIST.TXT files" and "Third Party Distribution" - subject to adding significant primary functionality, which linq2db scaffolding does.
 
 --------------------------------------------------------------------------------------------------
 LICENSE AND NOTICE TEXTS
