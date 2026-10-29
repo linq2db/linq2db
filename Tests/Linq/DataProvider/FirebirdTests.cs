@@ -1251,17 +1251,35 @@ namespace Tests.DataProvider
 			var ch  = '\'';
 			var str = "'";
 
-			using (Assert.EnterMultipleScope())
-			{
-				Assert.That(t.Where(r => r.Ch == '\'').Select(r => r.Id).ToArray(), Is.EqualTo(new[] { 1 }));
-				Assert.That(db.LastQuery!, Does.Contain("= ''''"));
+			var byConstant = t
+				.Where(r => r.Ch == '\'')
+				.Select(r => r.Id)
+				.ToArray();
 
-				Assert.That(t.Where(r => r.Ch == ch).Select(r => r.Id).ToArray(), Is.EqualTo(new[] { 1 }));
-				Assert.That(db.LastQuery!, Does.Contain(inline ? "= ''''" : "@"));
+			byConstant.ShouldBe([1]);
+			db.LastQuery
+				.ShouldNotBeNull()
+				.ShouldContain("= ''''");
 
-				Assert.That(t.Where(r => r.Str == str).Select(r => r.Id).ToArray(), Is.EqualTo(new[] { 1 }));
-				Assert.That(db.LastQuery!, Does.Contain(inline ? "= ''''" : "@"));
-			}
+			var byCapturedChar = t
+				.Where(r => r.Ch == ch)
+				.Select(r => r.Id)
+				.ToArray();
+
+			byCapturedChar.ShouldBe([1]);
+			db.LastQuery
+				.ShouldNotBeNull()
+				.ShouldContain(inline ? "= ''''" : "@");
+
+			var byCapturedString = t
+				.Where(r => r.Str == str)
+				.Select(r => r.Id)
+				.ToArray();
+
+			byCapturedString.ShouldBe([1]);
+			db.LastQuery
+				.ShouldNotBeNull()
+				.ShouldContain(inline ? "= ''''" : "@");
 		}
 	}
 
