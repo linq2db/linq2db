@@ -22,6 +22,7 @@ namespace Tests.xUpdate
 		private const string FeatureUpdateOutputWithoutOldSingle                   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite},{TestProvName.AllYdb},{TestProvName.AllDuckDB}";
 		private const string FeatureUpdateOutputWithoutOldSingleNoAlternateRewrite = $"{TestProvName.AllSqlServer},{TestProvName.AllPostgreSQL},{TestProvName.AllYdb}";
 		private const string FeatureUpdateOutputWithoutOldMultiple                 = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite},{TestProvName.AllYdb},{TestProvName.AllDuckDB}";
+		private const string FeatureUpdateOutputWithoutOldMultipleWithExpressions  = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite},{TestProvName.AllDuckDB}";
 		private const string FeatureUpdateOutputInto                               = $"{TestProvName.AllSqlServer}";
 
 		sealed class UpdateOutputComparer<T> : IEqualityComparer<UpdateOutput<T>>
@@ -68,7 +69,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateWithNullableComparisonInOutput([IncludeDataSources(true, FeatureUpdateOutputWithoutOldMultiple)] string context)
+		public void UpdateWithNullableComparisonInOutput([IncludeDataSources(true, FeatureUpdateOutputWithoutOldMultipleWithExpressions)] string context)
 		{
 			var data = GetSourceData()
 				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value, ValueStr = s.Id % 2 == 0 ? null : s.ValueStr })

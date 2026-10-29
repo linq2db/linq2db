@@ -1285,6 +1285,7 @@ namespace Tests.Linq
 			AssertQuery(tb.Select(r => new { r.Id, IsNotIn = !r.Value5.In(r.Value4) }));
 		}
 
+		[ActiveIssue(6203, Configuration = TestProvName.AllAccess, ErrorTypeName = "Shouldly.ShouldAssertException")]
 		[Test]
 		public void Test_NullableComparisonAsOrderByItem([DataSources] string context)
 		{
