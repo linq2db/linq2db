@@ -1199,7 +1199,7 @@ namespace Tests.Remote
 			var services = new ServiceCollection();
 
 			services.AddLinqToDBSignalRDataContext(
-				new Uri($"http://localhost:{port}{HubPath}"),
+				new Uri($"http://127.0.0.1:{port}{HubPath}"),
 				client => new ClientContext(client),
 				options =>
 				{
