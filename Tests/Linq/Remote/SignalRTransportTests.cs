@@ -1442,7 +1442,42 @@ namespace Tests.Remote
 				.CountAsync();
 		}
 
+		// Two context types registered for two hubs each talk to their own hub, not both to the last registered one.
+		[Test]
+		public async Task DIContextTypesUseTheirOwnHubs()
+		{
+			using var firstDatabase  = new SqliteDatabase();
+			using var secondDatabase = new SqliteDatabase();
+			using var firstHost      = TestHost.Start<SqliteHub>(services => services.AddSingleton(firstDatabase));
+			using var secondHost     = TestHost.Start<SqliteHub>(services => services.AddSingleton(secondDatabase));
+
+			var services = new ServiceCollection();
+
+			services.AddLinqToDBSignalRDataContext(
+				new Uri($"http://127.0.0.1:{firstHost.Port}{HubPath}"),
+				client => new ClientContext(client),
+				options => options.ConnectTimeout = TimeSpan.FromSeconds(10));
+
+			services.AddLinqToDBSignalRDataContext(
+				new Uri($"http://127.0.0.1:{secondHost.Port}{HubPath}"),
+				client => new SecondClientContext(client),
+				options => options.ConnectTimeout = TimeSpan.FromSeconds(10));
+
+			await using var provider = services.BuildServiceProvider();
+			await using var scope    = provider.CreateAsyncScope();
+
+			var first  = scope.ServiceProvider.GetRequiredService<ClientContext>();
+			var second = scope.ServiceProvider.GetRequiredService<SecondClientContext>();
+
+			(await WithinLimit(first.InsertAsync(new Item { Id = 1, Value = "one" }))).ShouldBe(1);
+
+			(await WithinLimit(first.GetTable<Item>().CountAsync())).ShouldBe(1);
+			(await WithinLimit(second.GetTable<Item>().CountAsync())).ShouldBe(0);
+		}
+
 		sealed class ClientContext(SignalRLinqServiceClient client) : SignalRDataContext(client, o => o.UseConfiguration(Configuration));
+
+		sealed class SecondClientContext(SignalRLinqServiceClient client) : SignalRDataContext(client, o => o.UseConfiguration(Configuration));
 
 		#endregion
 

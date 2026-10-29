@@ -50,9 +50,14 @@ namespace LinqToDB.Remote.SignalR
 		/// <summary>
 		///     Registers <typeparamref name="TContext"/> as a service in the <see cref="IServiceCollection" />, together
 		///     with a singleton <see cref="LinqToDBSignalRConnection"/> to the hub at <paramref name="hubUrl"/> shared
-		///     by all contexts. The connection starts with the first query, and a query after the connection was lost
-		///     starts it again.
+		///     by all <typeparamref name="TContext"/> contexts. The connection starts with the first query, and a query
+		///     after the connection was lost starts it again.
 		/// </summary>
+		/// <remarks>
+		///     Each context type registered this way has a connection of its own, so contexts of two types can use two
+		///     hubs. <see cref="LinqToDBSignalRConnection"/> and <see cref="SignalRLinqServiceClient"/> resolved from the
+		///     container directly are those of the last registration.
+		/// </remarks>
 		/// <example>
 		///     <code>
 		///           services.AddLinqToDBSignalRDataContext&lt;IMyContext&gt;(
@@ -81,18 +86,23 @@ namespace LinqToDB.Remote.SignalR
 			ArgumentNullException.ThrowIfNull(hubUrl);
 			ArgumentNullException.ThrowIfNull(getContext);
 
+			// The context resolves its own connection and client, so that registrations for two hubs (or two context
+			// types) do not share the last registered connection.
 			services.AddSingleton(provider =>
 			{
 				var options = new LinqToDBSignalRClientOptions();
 				configure?.Invoke(options);
-				return new LinqToDBSignalRConnection(hubUrl, options);
+				return new ContextConnection<TContext>(new LinqToDBSignalRConnection(hubUrl, options));
 			});
 
-			services.AddScoped(provider => new SignalRLinqServiceClient(provider.GetRequiredService<LinqToDBSignalRConnection>()));
+			services.AddScoped(provider => new ContextClient<TContext>(provider.GetRequiredService<ContextConnection<TContext>>().Connection));
+
+			services.AddSingleton(provider => provider.GetRequiredService<ContextConnection<TContext>>().Connection);
+			services.AddScoped   (provider => provider.GetRequiredService<ContextClient<TContext>>().Client);
 
 			services.AddTransient(provider =>
 			{
-				var client = provider.GetRequiredService<SignalRLinqServiceClient>();
+				var client = provider.GetRequiredService<ContextClient<TContext>>().Client;
 				return getContext(client);
 			});
 
@@ -100,7 +110,7 @@ namespace LinqToDB.Remote.SignalR
 			{
 				return new DataContextFactory<TContext>(_ =>
 				{
-					var client = provider.GetRequiredService<SignalRLinqServiceClient>();
+					var client = provider.GetRequiredService<ContextClient<TContext>>().Client;
 					return getContext(client);
 				});
 			});
@@ -156,9 +166,9 @@ namespace LinqToDB.Remote.SignalR
 		}
 
 		/// <summary>
-		/// Starts the registered <see cref="LinqToDBSignalRConnection"/> unless it is connected already, and loads the
-		/// configuration information of <typeparamref name="T"/> context. Calling it is optional: the first query
-		/// does the same. Safe to call more than once.
+		/// Starts the <see cref="LinqToDBSignalRConnection"/> registered for <typeparamref name="T"/> unless it is
+		/// connected already, and loads the configuration information of <typeparamref name="T"/> context. Calling it
+		/// is optional: the first query does the same. Safe to call more than once.
 		/// </summary>
 		/// <typeparam name="T">IDataContext type.</typeparam>
 		/// <param name="serviceProvider">The <see cref="IServiceProvider"/> to get services from.</param>
@@ -166,8 +176,32 @@ namespace LinqToDB.Remote.SignalR
 		public static async Task InitSignalRAsync<T>(this IServiceProvider serviceProvider)
 			where T : IDataContext
 		{
-			await serviceProvider.GetRequiredService<LinqToDBSignalRConnection>().EnsureConnectedAsync().ConfigureAwait(false);
+			var connection = serviceProvider.GetService<ContextConnection<T>>()?.Connection ?? serviceProvider.GetRequiredService<LinqToDBSignalRConnection>();
+
+			await connection.EnsureConnectedAsync().ConfigureAwait(false);
 			await serviceProvider.GetRequiredService<T>().InitSignalRAsync().ConfigureAwait(false);
+		}
+
+		// The connection of one context type; the container disposes it with the holder.
+		sealed class ContextConnection<TContext>(LinqToDBSignalRConnection connection) : IAsyncDisposable, IDisposable
+		{
+			public LinqToDBSignalRConnection Connection { get; } = connection;
+
+			public ValueTask DisposeAsync()
+			{
+				return Connection.DisposeAsync();
+			}
+
+			public void Dispose()
+			{
+				Connection.Dispose();
+			}
+		}
+
+		// The scoped client of one context type.
+		sealed class ContextClient<TContext>(LinqToDBSignalRConnection connection)
+		{
+			public SignalRLinqServiceClient Client { get; } = new(connection);
 		}
 	}
 }

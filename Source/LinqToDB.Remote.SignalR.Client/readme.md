@@ -19,7 +19,8 @@ builder.Services.AddLinqToDBSignalRDataContext<IMyDataContext>(
     options => options.ConfigureHttpConnection = http => http.AccessTokenProvider = GetAccessTokenAsync);
 ```
 
-All contexts share one `LinqToDBSignalRConnection`. The first query starts it; a query after the connection was lost
+All contexts of one registration share one `LinqToDBSignalRConnection`; each registered context type has a connection
+of its own, so two context types can use two hubs. The first query starts it; a query after the connection was lost
 (a failed start, reconnect attempts exhausted, or a dropped connection on .NET Framework / .NET Standard, whose client
 does not reconnect) starts it again. `InitSignalRAsync<T>()` does the same up front and is optional.
 
