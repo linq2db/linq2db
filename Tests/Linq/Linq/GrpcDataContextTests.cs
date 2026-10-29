@@ -59,7 +59,10 @@ namespace Tests.Linq
 
 			// the contexts are gone and the channel still works
 			using (var db = new GrpcDataContext(channel, o => o.UseConfiguration(context.StripRemote())))
-				_ = db.GetTable<Person>().Count();
+			{
+				_ = db.GetTable<Person>()
+					.Count();
+			}
 
 			(GrpcServerConnections.Accepted - before).ShouldBe(1);
 		}
@@ -84,7 +87,8 @@ namespace Tests.Linq
 				await using (db)
 					await RunQueries(db);
 
-				Shouldly.Should.Throw<ObjectDisposedException>(() => db.GetTable<Person>().ToList());
+				Shouldly.Should.Throw<ObjectDisposedException>(() => db.GetTable<Person>()
+					.ToList());
 			}
 
 			(GrpcServerConnections.Accepted - before).ShouldBe(ContextCount);
@@ -109,7 +113,9 @@ namespace Tests.Linq
 
 				await WaitForClosed(before, i + 1);
 
-				GrpcServerConnections.ClosedSince(before).ShouldBe(i + 1);
+				var closed = GrpcServerConnections.ClosedSince(before);
+
+				closed.ShouldBe(i + 1);
 			}
 		}
 
@@ -136,9 +142,14 @@ namespace Tests.Linq
 
 			exception.ShouldBeOfType<OperationCanceledException>();
 			((OperationCanceledException)exception).CancellationToken.ShouldBe(cts.Token);
-			exception.InnerException.ShouldBeOfType<RpcException>().StatusCode.ShouldBe(StatusCode.Cancelled);
+			exception.InnerException
+				.ShouldBeOfType<RpcException>()
+				.StatusCode
+				.ShouldBe(StatusCode.Cancelled);
 
-			(await interceptor.Released.WaitAsync(Wait)).ShouldBeTrue("the server query was not cancelled");
+			var released = await interceptor.Released.WaitAsync(Wait);
+
+			released.ShouldBeTrue("the server query was not cancelled");
 		}
 
 		// Every call made with a token that is already cancelled fails the same way, without reaching the server -
@@ -197,11 +208,17 @@ namespace Tests.Linq
 
 			interceptor.Arm();
 
-			var exception = Assert.CatchAsync(() => db.GetTable<Person>().ToListAsync());
+			var exception = Assert.CatchAsync(() => db.GetTable<Person>()
+				.ToListAsync());
 
-			exception.ShouldBeOfType<RpcException>().StatusCode.ShouldBe(StatusCode.Cancelled);
+			exception
+				.ShouldBeOfType<RpcException>()
+				.StatusCode
+				.ShouldBe(StatusCode.Cancelled);
 
-			(await interceptor.Released.WaitAsync(Wait)).ShouldBeTrue("the server query was not cancelled");
+			var released = await interceptor.Released.WaitAsync(Wait);
+
+			released.ShouldBeTrue("the server query was not cancelled");
 		}
 
 		// A batch committed with a token cancelled while the server runs it is rolled back on the server: the first
@@ -230,11 +247,17 @@ namespace Tests.Linq
 			await interceptor.Entered.WaitAsync(Wait);
 			cts.Cancel();
 
-			Assert.CatchAsync(() => commit).ShouldBeOfType<OperationCanceledException>();
+			var exception = Assert.CatchAsync(() => commit);
 
-			(await interceptor.Released.WaitAsync(Wait)).ShouldBeTrue("the server batch was not cancelled");
+			exception.ShouldBeOfType<OperationCanceledException>();
 
-			table.Count().ShouldBe(0);
+			var released = await interceptor.Released.WaitAsync(Wait);
+
+			released.ShouldBeTrue("the server batch was not cancelled");
+
+			var count = table.Count();
+
+			count.ShouldBe(0);
 		}
 
 		[Table]
@@ -314,8 +337,11 @@ namespace Tests.Linq
 		{
 			for (var i = 0; i < QueriesPerContext; i++)
 			{
-				_ = await db.GetTable<Person>().CountAsync();
-				_ = db.GetTable<Person>().ToList();
+				_ = await db.GetTable<Person>()
+					.CountAsync();
+
+				_ = db.GetTable<Person>()
+					.ToList();
 			}
 		}
 
