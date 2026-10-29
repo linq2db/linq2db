@@ -166,8 +166,9 @@ namespace Tests.Linq
 
 			ms.SetDefaultFromEnumType(typeof(AnimalType2), typeof(string));
 
-			var animalsTableName = "Animals" + cnt;
-			var eyeTableName     = "Eyes"    + cnt;
+			// fixed names: a per-call suffix differs between the direct and the remote case, so their baselines never match
+			var animalsTableName = "ComplexAnimals";
+			var eyeTableName     = "ComplexEyes";
 
 			var mappingBuilder = new FluentMappingBuilder(ms);
 
@@ -221,7 +222,6 @@ namespace Tests.Linq
 		{
 			var ms = SetMappings();
 
-			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<Animal>())
 			using (db.CreateLocalTable<Eye>())
@@ -238,7 +238,6 @@ namespace Tests.Linq
 		{
 			var ms = SetMappings();
 
-			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
 			using (var db = GetDataContext(context, o => o.UseMappingSchema(ms)))
 			using (db.CreateLocalTable<Animal>())
 			using (db.CreateLocalTable<Eye>())
@@ -255,7 +254,6 @@ namespace Tests.Linq
 		{
 			var ms = SetMappings();
 
-			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
 			using (var db = GetDataContext(context, o => o.UseMappingSchema(ms)))
 			using (db.CreateLocalTable<Animal>())
 			using (db.CreateLocalTable<Eye>())
@@ -281,7 +279,6 @@ namespace Tests.Linq
 		{
 			var ms = SetMappings();
 
-			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<Animal>())
 			using (db.CreateLocalTable<Eye>())
@@ -302,7 +299,6 @@ namespace Tests.Linq
 		{
 			var ms = SetMappings();
 
-			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
 			using (var db = GetDataContext(context, o => o.UseMappingSchema(ms)))
 			using (db.CreateLocalTable<Animal>())
 			using (db.CreateLocalTable<Eye>())
@@ -330,7 +326,6 @@ namespace Tests.Linq
 		{
 			var ms = SetMappings();
 
-			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<Animal>())
 			using (db.CreateLocalTable<Eye>())
@@ -408,7 +403,6 @@ namespace Tests.Linq
 		{
 			var ms = SetMappings();
 
-			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<Animal>())
 			using (db.CreateLocalTable<Eye>())
@@ -456,7 +450,6 @@ namespace Tests.Linq
 		{
 			var ms = SetMappings();
 
-			using (new DisableBaseline("TODO: debug reason for inconsistent column order"))
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<Animal>())
 			using (db.CreateLocalTable<Eye>())

@@ -52,6 +52,7 @@ steps:
       inputs:
         packageType: sdk
         version: ${{ tfm.sdk }}
+      condition: and(variables.title, eq(variables['${{ tfm.flag }}'], 'true'), succeeded())
 
 # Diagnostic: list the heaviest resident processes so we can spot agent background services worth
 # killing to free RAM for the test process (some jobs run near the memory ceiling).
@@ -67,7 +68,7 @@ steps:
         Select-Object -First 50 Id, @{ n = 'WS(MB)'; e = { [math]::Round($_.WorkingSet64 / 1MB, 1) } }, ProcessName |
         Format-Table -AutoSize | Out-String -Width 200 | Write-Host
   displayName: Probe memory (top processes)
-  condition: succeeded()
+  condition: and(variables.title, succeeded())
 
 # Free the image's idle desktop/telemetry processes before the test run. Measured over the 14 Windows
 # jobs of build 22810: ~2.4 GB resident in probed processes per job, and this list accounts for 637 MB
@@ -128,7 +129,7 @@ steps:
       Write-Host (">>> Reclaimed {0} MB; free memory now {1} MB" -f [math]::Round($freed, 0),
         [math]::Round((Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory / 1KB, 0))
   displayName: Free idle agent memory
-  condition: succeeded()
+  condition: and(variables.title, succeeded())
   continueOnError: true
 
 - task: DownloadPipelineArtifact@2
