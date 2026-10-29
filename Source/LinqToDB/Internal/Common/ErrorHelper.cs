@@ -85,6 +85,9 @@
 		/// </summary>
 		public const string Error_ValueConverter_DivergentOperands                = "Cannot combine '{0}' and '{1}' in the database: their value converters do not agree on what a stored value counts, so the two stored values are not commensurable and the result would be read through one of the conversions only. Combine them in .NET, or give both columns the same conversion.";
 
+		/// <summary><c>{0}</c> - the entity type name, <c>{1}</c> - the dynamic column names.</summary>
+		public const string Error_DynamicColumns_NoSetter                         = "Type '{0}' is materialized with dynamic column(s) {1}, but has no dynamic column setter. Add a member marked with DynamicColumnsStoreAttribute, or configure a setter through DynamicColumnAccessorAttribute or DynamicPropertyAccessors.";
+
 		public const string Error_Upsert_MergeLowering_NotSupported =
 			"Upsert configuration requires MERGE lowering (bulk source, non-PK match, conditional Insert, or SkipInsert), "
 			+ "but the current provider does not support the two-branch MERGE shape. "

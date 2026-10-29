@@ -343,6 +343,7 @@ namespace Tests.xUpdate
 		//                where the first row of each batch renders differently from the rest
 		// Oracle has its own coverage in OracleTests.BulkCopyMultipleRowsCrossesSqlLengthLimit.
 		[Test]
+		[NoBaselines("generated statement volume is the subject of the test")]
 		public void MaxSqlLengthForBatchSplitsStatements(
 			[IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllPostgreSQL95Plus, TestProvName.AllFirebird)] string context,
 			[Values]                                                                                                 bool   useParameters,
@@ -352,7 +353,6 @@ namespace Tests.xUpdate
 			const int rowCount     = 1000;
 			const int valueLength  = 200;
 
-			using var _ = new DisableBaseline("generated statement volume is the subject of the test");
 			var       queries = new SaveQueriesInterceptor();
 
 			// the limit is reachable both per-call and connection-wide; cover both entry points
@@ -431,11 +431,11 @@ namespace Tests.xUpdate
 		// without the option 1000 rows x 2 columns close a batch every 499 rows, and raising it packs them into
 		// one statement of 2000 parameters.
 		[Test]
+		[NoBaselines("generated statement volume is the subject of the test")]
 		public void MaxParametersForBatchRaisesProviderLimit([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
 			const int rowCount = 1000;
 
-			using var _  = new DisableBaseline("generated statement volume is the subject of the test");
 			using var db = GetDataConnection(context);
 
 			var queries = new SaveQueriesInterceptor();

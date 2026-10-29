@@ -1,0 +1,41 @@
+# The release run: every PR into `release` gets the whole provider matrix - every leg, with the main
+# suite on every TFM the leg covers (full_run) - with no comment needed. Azure's `default` pipeline
+# used to run it; it now skips its test jobs unless queued with run_tests
+# (Build/Azure/pipelines/default.yml).
+#
+# pull_request runs this file from the PR's merge ref, so a change here is live on the next release
+# PR as soon as it reaches master - the release PR's head.
+name: tests (release)
+
+on:
+  pull_request:
+    branches: [release]
+
+permissions:
+  contents: read
+
+# Its own group rather than relying on tests.yml's, so a push to the release PR cancels the previous
+# release run whichever way a called workflow's concurrency is applied.
+concurrency:
+  group: tests-release-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  # `tests` keeps the job-log prefix ci-test-verdicts.ps1 strips from leg names.
+  tests:
+    # A fork PR gets no secrets, so it could neither clone nor push baselines - and a fork has no
+    # business starting 30 legs.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    uses: ./.github/workflows/tests.yml
+    with:
+      surface: '[all]'
+      full_run: true
+      all_legs: true
+      ref: ${{ github.ref }}
+      # Same branch Azure's ensure-baselines-branch.ps1 derives, which the release skill merges.
+      baselines_branch: baselines/pr_${{ github.event.pull_request.number }}
+      # A branch left by an earlier run of this PR is rebased when baselines master has since moved
+      # forward, as Azure's create_baselines_branch did for this run.
+      rebase_baselines: true
+      pr: ${{ github.event.pull_request.number }}
+    secrets: inherit

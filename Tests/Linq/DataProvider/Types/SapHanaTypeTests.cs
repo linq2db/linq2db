@@ -161,8 +161,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssue(ErrorTypeName = "System.Data.Odbc.OdbcException", ErrorMessage = "incorrect syntax near \"REAL_VECTOR\"",
-			Details = "no-issue: REAL_VECTOR exists only on SAP HANA Cloud and needs a column table, so the on-prem server CI runs does not parse the type at all. A platform limitation, not a defect - the sibling Description link is SAP's documentation rather than a tracker entry.")]
+		[ActiveIssue(ErrorMessage = "incorrect syntax near \"REAL_VECTOR\"",
+			Details = "no-issue: REAL_VECTOR exists only on SAP HANA Cloud and needs a column table, so the on-prem server CI runs does not parse the type at all. A platform limitation, not a defect - the sibling Description link is SAP's documentation rather than a tracker entry. Type-less because the ODBC and native drivers raise their own.")]
 		[Test(Description = "https://help.sap.com/docs/hana-cloud-database/sap-hana-cloud-sap-hana-database-vector-engine-guide/real-vector-data-type")]
 		public async ValueTask TestRealVector([SapHanaDataSources(false)] string context)
 		{
