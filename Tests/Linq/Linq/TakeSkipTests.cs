@@ -1631,8 +1631,11 @@ namespace Tests.Linq
 			// its SQL text per execution.
 			public void ShouldBeReused()
 			{
-				var info = _getInfo();
+				ShouldBeReused(_getInfo());
+			}
 
+			public void ShouldBeReused(QueryInfo info)
+			{
 				info.ShouldBeSameAs(_info);
 				info.Context.ShouldBeSameAs(_commands);
 			}
@@ -1759,9 +1762,10 @@ namespace Tests.Linq
 			}
 		}
 
-		// Results only: a compiled query keeps its query in an internal cache keyed on the compiled expression,
-		// which tests cannot reach. It renders its SQL through the same command cache that
-		// ConstantTakeSkipReusesCommand checks for the LINQ form.
+		// A compiled query returns the built query memoised on its IQueryable, so for the queries returning a
+		// sequence the second invocation must return the same built query with the same cached commands, as
+		// ConstantTakeSkipReusesCommand checks for the LINQ form (none when the count is rendered per
+		// execution). The queries returning an element check results only.
 		[Test]
 		public void CompiledTakeSkip([DataSources] string context, [Values] bool parameterizeTakeSkip, [Values] bool inlineParameters)
 		{
@@ -1822,6 +1826,8 @@ namespace Tests.Linq
 				.Skip(n)
 				.First());
 
+			CachedQueryState[]? states = null;
+
 			for (var i = 0; i < 2; i++)
 			{
 				first(db)
@@ -1832,33 +1838,92 @@ namespace Tests.Linq
 					.ID
 					.ShouldBe(expected[0]);
 
-				takeConst(db)
+				var takeConstQuery = takeConst(db);
+
+				takeConstQuery
 					.ToArray()
 					.ShouldBe(expected.Take(2));
 
-				takeLambda(db)
+				var takeLambdaQuery = takeLambda(db);
+
+				takeLambdaQuery
 					.ToArray()
 					.ShouldBe(expected.Skip(1).Take(2));
+
+				// a remote context marks the statement on the server, not the client's copy
+				if (db is DataConnection)
+				{
+					if (i == 0)
+					{
+						// the count is a constant of the query, so its command is always cached
+						GetCompiledCommands(takeLambdaQuery)
+							.Context
+							.ShouldNotBeNull();
+
+						states = new[]
+						{
+							new CachedQueryState(() => GetCompiledCommands(takeConstQuery)),
+							new CachedQueryState(() => GetCompiledCommands(takeLambdaQuery)),
+						};
+					}
+					else
+					{
+						states![0].ShouldBeReused(GetCompiledCommands(takeConstQuery));
+						states![1].ShouldBeReused(GetCompiledCommands(takeLambdaQuery));
+					}
+				}
 			}
+
+			CachedQueryState[]? countStates = null;
 
 			foreach (var n in GetCounts(context))
 			{
-				take(db, n)
+				var takeQuery     = take(db, n);
+				var skipQuery     = skip(db, n);
+				var skipTakeQuery = skipTake(db, n);
+
+				takeQuery
 					.ToArray()
 					.ShouldBe(expected.Take(n));
 
-				skip(db, n)
+				skipQuery
 					.ToArray()
 					.ShouldBe(expected.Skip(n));
 
-				skipTake(db, n)
+				skipTakeQuery
 					.ToArray()
 					.ShouldBe(expected.Skip(n).Take(n + 1));
 
 				skipFirst(db, n)
 					.ID
 					.ShouldBe(expected[n]);
+
+				if (db is DataConnection)
+				{
+					if (countStates == null)
+					{
+						countStates = new[]
+						{
+							new CachedQueryState(() => GetCompiledCommands(takeQuery)),
+							new CachedQueryState(() => GetCompiledCommands(skipQuery)),
+							new CachedQueryState(() => GetCompiledCommands(skipTakeQuery)),
+						};
+					}
+					else
+					{
+						countStates[0].ShouldBeReused(GetCompiledCommands(takeQuery));
+						countStates[1].ShouldBeReused(GetCompiledCommands(skipQuery));
+						countStates[2].ShouldBeReused(GetCompiledCommands(skipTakeQuery));
+					}
+				}
 			}
+		}
+
+		static QueryInfo GetCompiledCommands<T>(IQueryable<T> query)
+		{
+			return ((Query)query.GetCompiledQueryInfo())
+				.GetQueries()
+				.Single();
 		}
 
 		[Test, QueryCacheTest]
