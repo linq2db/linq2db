@@ -23,11 +23,9 @@ namespace Tests.UserTests
 		}
 
 		[Test]
+		[ActiveIssue(6202, Configuration = TestProvName.AllYdb, BaselinesMismatch = true)]
 		public void TestBinary([DataSources] string context, [Values] bool inlineParameters)
 		{
-			// a remote context prepares the statement with the parameter values, a cached direct query keeps the NULL check of the Binary comparison
-			using var _ = context.IsAnyOf(TestProvName.AllYdb) ? new DisableBaseline("Remote/direct divergence of the NULL check in the Binary comparison") : null;
-
 			using var db = GetDataContext(context);
 			using var tbl = db.CreateLocalTable<Issue1303>();
 			// Informix: apply inlining to insert to test binary parameters
