@@ -56,9 +56,10 @@ namespace LinqToDB.Remote.Grpc
 		/// </summary>
 		/// <param name="address">Server address.</param>
 		/// <param name="channelOptions">
-		/// Optional client channel settings. When they carry an <see cref="GrpcChannelOptions.HttpClient"/> shared with
-		/// other contexts, leave <see cref="GrpcChannelOptions.DisposeHttpClient"/> unset: the context's channel would
-		/// dispose that client when the context is disposed.
+		/// Optional client channel settings. When they carry an <see cref="GrpcChannelOptions.HttpClient"/> or
+		/// <see cref="GrpcChannelOptions.HttpHandler"/> shared with other contexts, leave
+		/// <see cref="GrpcChannelOptions.DisposeHttpClient"/> unset: the context's channel would dispose it when the
+		/// context is disposed.
 		/// </param>
 		public GrpcDataContext(string address, GrpcChannelOptions? channelOptions, Func<DataOptions,DataOptions>? optionBuilder = null)
 			: this(address, optionBuilder)

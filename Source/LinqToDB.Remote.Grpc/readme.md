@@ -38,7 +38,7 @@ Things to watch in `GrpcChannelOptions`:
   query ended by the timeout fails with `RpcException` (`StatusCode.Cancelled`), while a query cancelled through its
   own cancellation token throws `OperationCanceledException`.
 - Do not set `DisposeHttpClient = true` in options used by several contexts: the first context to be disposed would
-  dispose the shared `HttpClient` for all of them.
+  dispose the shared `HttpClient` or `HttpHandler` for all of them.
 
 ## Other Transports
 
