@@ -474,6 +474,46 @@ namespace Tests.Remote
 			service.Calls.ShouldBe(2);
 		}
 
+		// A queued call cancelled just as the slot holder gives its slot back never runs: SemaphoreSlim completes a
+		// cancelled wait asynchronously, and a release landing in between grants the slot anyway.
+		[Test]
+		public async Task QueuedCallCancelledAsTheSlotIsReleasedNeverRuns()
+		{
+			const int Rounds = 50;
+
+			var service = new ScriptedLinqService();
+			using var host = TestHost.Start<ScriptedHub>(services => services.AddSingleton<ILinqService>(service));
+
+			var hubConnection = await host.ConnectAsync();
+			await using var owner = Own(hubConnection);
+
+			var client = (ILinqService)new SignalRLinqServiceClient(hubConnection);
+
+			for (var i = 0; i < Rounds; i++)
+			{
+				var calls = service.Calls;
+
+				using var holderCts = new CancellationTokenSource();
+				using var queuedCts = new CancellationTokenSource();
+
+				var holder = client.ExecuteReaderAsync(Configuration, "holder", holderCts.Token);
+				(await WaitForAsync(() => service.Calls > calls, WaitLimit)).ShouldBeTrue("the slot holder did not start");
+
+				var queued = client.ExecuteReaderAsync(Configuration, "queued", queuedCts.Token);
+				await Task.Delay(20);
+
+				// The queued call's cancellation goes out first, so the server has it before the holder's release, which
+				// then races the queued wait's cancelled completion.
+				queuedCts.Cancel();
+				holderCts.Cancel();
+
+				await WithinLimit(CatchAsync(() => holder));
+				await WithinLimit(CatchAsync(() => queued));
+			}
+
+			service.Calls.ShouldBe(Rounds, "a queued call ran after its cancellation");
+		}
+
 		[Test]
 		public void HubOptionLimitsAreValidated()
 		{
