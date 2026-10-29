@@ -1949,6 +1949,8 @@ namespace Tests.Linq
 		{
 			var table = writer.CreateLocalTable<SchemaScopedConversionRow>();
 
+			// a remote context has no transaction, so a traced commit would make the direct and remote baselines differ
+			using (new DisableBaseline("test setup"))
 			using (var tr = writer.BeginTransaction())
 			{
 				writer.Insert(new SchemaScopedConversionRow { Id = 1, Value = value });
