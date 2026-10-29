@@ -924,5 +924,62 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		[Test]
+		public void OrderByBooleanColumn([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var expected = Types
+				.OrderBy(t => t.BoolValue)
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray();
+
+			db.Types
+				.OrderBy(t => t.BoolValue)
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
+		[Test]
+		public void OrderByBooleanColumnDescending([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var expected = Types
+				.OrderByDescending(t => t.BoolValue)
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray();
+
+			db.Types
+				.OrderByDescending(t => t.BoolValue)
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
+		[Test]
+		public void OrderByBooleanPredicate([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var expected = Types
+				.OrderBy(t => t.ID > 5)
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray();
+
+			db.Types
+				.OrderBy(t => t.ID > 5)
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray()
+				.ShouldBe(expected);
+		}
 	}
 }

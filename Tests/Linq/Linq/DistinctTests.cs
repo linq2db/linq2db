@@ -174,6 +174,101 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void DistinctOrderByBoolean([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Types
+				.Select(t => new { t.ID, t.BoolValue })
+				.Distinct()
+				.OrderBy(t => t.BoolValue)
+				.ThenBy(t => t.ID);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void DistinctOrderByNullableBoolean([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Types2
+				.Select(t => new { t.ID, t.BoolValue })
+				.Distinct()
+				.OrderBy(t => t.BoolValue)
+				.ThenBy(t => t.ID);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void GroupByNullableBooleanOrderByKey([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Types2
+				.GroupBy(t => t.BoolValue)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.OrderBy(g => g.Key);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void ConcatOrderByBoolean([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Types
+				.Select(t => new { t.ID, t.BoolValue })
+				.Concat(db.Types.Where(t => t.ID > 5).Select(t => new { t.ID, t.BoolValue }))
+				.OrderBy(t => t.BoolValue)
+				.ThenBy(t => t.ID);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void GroupByBooleanOrderByKey([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Types
+				.GroupBy(t => t.BoolValue)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.OrderBy(g => g.Key);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void DistinctOrderByBooleanSequence([DataSources] string context, [Values] bool descending)
+		{
+			using var db = GetDataContext(context);
+
+			var source = Types
+				.Select(t => new { t.ID, t.BoolValue })
+				.Distinct();
+
+			var query = db.Types
+				.Select(t => new { t.ID, t.BoolValue })
+				.Distinct();
+
+			var expected = (descending ? source.OrderByDescending(t => t.BoolValue) : source.OrderBy(t => t.BoolValue))
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray();
+
+			var ordered = descending ? query.OrderByDescending(t => t.BoolValue) : query.OrderBy(t => t.BoolValue);
+
+			ordered
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
+		[Test]
 		public void OrderByExpressionDistinct([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
