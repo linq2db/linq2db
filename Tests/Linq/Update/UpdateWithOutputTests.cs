@@ -9,6 +9,8 @@ using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.xUpdate
 {
 	[TestFixture]
@@ -63,6 +65,31 @@ namespace Tests.xUpdate
 			return Enumerable.Range(1, 9).Select(i =>
 					new TableWithData { Id = i, Value = -i, ValueStr = "Str" + i.ToString() })
 				.ToArray();
+		}
+
+		[Test]
+		public void UpdateWithNullableComparisonInOutput([IncludeDataSources(true, FeatureUpdateOutputWithoutOldMultiple)] string context)
+		{
+			var data = GetSourceData()
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value, ValueStr = s.Id % 2 == 0 ? null : s.ValueStr })
+				.ToArray();
+
+			using var db     = GetDataContext(context);
+			using var target = db.CreateLocalTable(data);
+
+			// C# reads NULL != "Str1" as true, so the output must not be NULL for the rows with no ValueStr
+			var expected = data
+				.Select(t => new { t.Id, IsOther = t.ValueStr != "Str1" })
+				.ToArray();
+
+			var output = target
+				.UpdateWithOutput(
+					t => new DestinationTable { Id = t.Id, Value = t.Value + 1, ValueStr = t.ValueStr },
+					(deleted, inserted) => new { inserted.Id, IsOther = inserted.ValueStr != "Str1" })
+				.OrderBy(r => r.Id)
+				.ToArray();
+
+			output.ShouldBe(expected);
 		}
 
 		#region Update against ITable<T> target

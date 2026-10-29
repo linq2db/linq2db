@@ -35,7 +35,13 @@ namespace LinqToDB.Internal.SqlProvider
 		protected bool               VisitQueries       { get; set; }
 		protected bool               IsInsidePredicate  { get; set; }
 
-		protected DataOptions       DataOptions       { get; private set; } = default!;
+		/// <summary>
+		/// Set while a value slot visits its value. A predicate found there is not reduced yet: the slot decides first whether
+		/// to fold it into a CASE, where it is reduced as a condition, and otherwise reduces it in place.
+		/// </summary>
+		protected bool               DeferPredicateReduce { get; set; }
+
+		protected DataOptions      DataOptions       { get; private set; } = default!;
 		protected EvaluationContext EvaluationContext { get; private set; } = default!;
 		protected MappingSchema     MappingSchema     { get; private set; } = default!;
 
@@ -94,6 +100,7 @@ namespace LinqToDB.Internal.SqlProvider
 			base.Cleanup();
 			VisitQueries        = default;
 			IsInsidePredicate   = default;
+			DeferPredicateReduce = default;
 			_reducePredicates   = default;
 			EvaluationContext   = default!;
 			NullabilityContext  = default!;
@@ -113,16 +120,19 @@ namespace LinqToDB.Internal.SqlProvider
 			if (element == null)
 				return element;
 
-			var saveIsInsidePredicate = IsInsidePredicate;
+			var saveIsInsidePredicate    = IsInsidePredicate;
+			var saveDeferPredicateReduce = DeferPredicateReduce;
 
 			if (element is not SqlNullabilityExpression and not ISqlPredicate)
 			{
-				IsInsidePredicate = false;
+				IsInsidePredicate    = false;
+				DeferPredicateReduce = false;
 			}
 
 			var newElement = base.Visit(element);
 
-			IsInsidePredicate = saveIsInsidePredicate;
+			IsInsidePredicate    = saveIsInsidePredicate;
+			DeferPredicateReduce = saveDeferPredicateReduce;
 
 			return newElement;
 		}
@@ -1031,6 +1041,24 @@ namespace LinqToDB.Internal.SqlProvider
 				return element;
 
 			return base.VisitSqlTableSource(element);
+		}
+
+		/// <summary>
+		/// Visits the operand of <paramref name="predicate"/> the way <see cref="VisitNotPredicate"/> does: nested in a
+		/// predicate, and allowed to be optimized into a different predicate kind.
+		/// </summary>
+		protected ISqlPredicate VisitNotOperand(SqlPredicate.Not predicate)
+		{
+			var saveInsidePredicate = IsInsidePredicate;
+			var saveAllow           = _allowOptimize;
+
+			IsInsidePredicate = true;
+			_allowOptimize    = predicate.Predicate;
+			var newInner      = (ISqlPredicate)Visit(predicate.Predicate);
+			IsInsidePredicate = saveInsidePredicate;
+			_allowOptimize    = saveAllow;
+
+			return newInner;
 		}
 
 		protected internal override IQueryElement VisitNotPredicate(SqlPredicate.Not predicate)

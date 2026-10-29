@@ -1255,6 +1255,110 @@ namespace Tests.Linq
 			AssertQuery(tb.Where(r => TruePredicate() == ((Add(r.Value2, cnt) < Add(tb.Where(r => r.Value1 == 1).Count(), r.Value5)))));
 		}
 
+		[Test]
+		public void Test_NestedComparisonBesideNullablePredicate([DataSources] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(BooleanTable.Data);
+
+			db.InlineParameters = inline;
+
+			// a row with Value4 = NULL and Value2 <> Value5: C# keeps it (false == false), so the nested comparison must read FALSE, not UNKNOWN
+			var query = tb
+				.Where(r => (r.Value4 > r.Value5) == Equal(r.Value2, r.Value5));
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void Test_NegatedInWithNullableColumnValue([DataSources] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(BooleanTable.Data);
+
+			db.InlineParameters = inline;
+
+			AssertQuery(tb.Where(r => !r.Value5.In(r.Value4)));
+			AssertQuery(tb.Where(r => !r.Value5.In(r.Value4, r.Value1)));
+
+			// the same NOT IN as a value: reduced while its slot is finished, it must still get the WHERE form
+			AssertQuery(tb.Select(r => new { r.Id, IsNotIn = !r.Value5.In(r.Value4) }));
+		}
+
+		[Test]
+		public void Test_NullableComparisonAsOrderByItem([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(BooleanTable.Data);
+
+			var expected = BooleanTable.Data
+				.OrderBy(r => r.Value1 != r.Value4)
+				.ThenBy(r => r.Id)
+				.Select(r => r.Id)
+				.ToArray();
+
+			tb
+				.OrderBy(r => r.Value1 != r.Value4)
+				.ThenBy(r => r.Id)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
+		[Test]
+		public void Test_NullableComparisonAsWindowItems(
+			[IncludeDataSources(
+				true,
+				TestProvName.AllSQLite,
+				TestProvName.AllDuckDB,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSqlServer2012Plus)]
+			string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(BooleanTable.Data);
+
+			var expected = BooleanTable.Data
+				.Select(r => new
+				{
+					r.Id,
+					ByPartition = BooleanTable.Data
+						.Where(o => (o.Value1 != o.Value4) == (r.Value1 != r.Value4))
+						.Count(o => o.Id <= r.Id),
+					ByOrder = BooleanTable.Data
+						.Count(o => (o.Value1 != o.Value4, o.Id).CompareTo((r.Value1 != r.Value4, r.Id)) <= 0),
+				})
+				.OrderBy(r => r.Id)
+				.ToArray();
+
+			var query =
+				from r in tb
+				orderby r.Id
+				select new
+				{
+					r.Id,
+					ByPartition = Sql.Ext
+						.RowNumber()
+						.Over()
+						.PartitionBy(r.Value1 != r.Value4)
+						.OrderBy(r.Id)
+						.ToValue(),
+					ByOrder = Sql.Ext
+						.RowNumber()
+						.Over()
+						.OrderBy(r.Value1 != r.Value4)
+						.ThenBy(r.Id)
+						.ToValue(),
+				};
+
+			var result = query
+				.ToArray()
+				.Select(r => new { r.Id, ByPartition = (int)r.ByPartition, ByOrder = (int)r.ByOrder })
+				.ToArray();
+
+			result.ShouldBe(expected);
+		}
+
 		// tests optimization of IIF(cond, A, B) op X where X and A or/and B are evaluable
 		[Test]
 		public void Test_ConditionOptimization([DataSources] string context, [Values] bool inline)
