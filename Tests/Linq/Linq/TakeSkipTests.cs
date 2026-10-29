@@ -1450,7 +1450,7 @@ namespace Tests.Linq
 		// A TAKE/SKIP taken from a variable must render its current value on every execution, whether it is
 		// sent as a parameter or inlined into the SQL text.
 		[Test, QueryCacheTest]
-		public void VariableTakeSkipUsesCurrentValue([DataSources(false)] string context, [Values] bool parameterizeTakeSkip, [Values] bool inlineParameters)
+		public void VariableTakeSkipUsesCurrentValue([DataSources] string context, [Values] bool parameterizeTakeSkip, [Values] bool inlineParameters)
 		{
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(parameterizeTakeSkip));
 			db.InlineParameters = inlineParameters;
@@ -1482,11 +1482,14 @@ namespace Tests.Linq
 				var query = persons.Take(1);
 
 				query.ToArray().Length.ShouldBe(1);
-				query.GetStatement().IsParameterDependent.ShouldBeTrue();
-				query.GetQueryInfo().Context.ShouldBeNull();
 
+				// a remote context marks the statement on the server, not the client's copy
 				if (db is DataConnection)
+				{
+					query.GetStatement().IsParameterDependent.ShouldBeTrue();
+					query.GetQueryInfo().Context.ShouldBeNull();
 					sqlTexts.Count.ShouldBe(3);
+				}
 			}
 		}
 
@@ -1524,7 +1527,7 @@ namespace Tests.Linq
 		// changed, including to and from zero, must use the new value. The runs must reuse the query (and its
 		// commands, when they are cached), so a fresh build cannot hide a stale SQL text.
 		[Test, QueryCacheTest]
-		public void TakeSkipFollowChangedValue([DataSources(false)] string context, [Values] bool parameterizeTakeSkip, [Values] bool inlineParameters)
+		public void TakeSkipFollowChangedValue([DataSources] string context, [Values] bool parameterizeTakeSkip, [Values] bool inlineParameters)
 		{
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(parameterizeTakeSkip));
 			db.InlineParameters = inlineParameters;
@@ -1584,7 +1587,7 @@ namespace Tests.Linq
 		// which tests cannot reach. It renders its SQL through the same command cache that
 		// ConstantTakeSkipReusesCommand checks for the LINQ form.
 		[Test]
-		public void CompiledTakeSkip([DataSources(false)] string context, [Values] bool parameterizeTakeSkip, [Values] bool inlineParameters)
+		public void CompiledTakeSkip([DataSources] string context, [Values] bool parameterizeTakeSkip, [Values] bool inlineParameters)
 		{
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(parameterizeTakeSkip));
 			db.InlineParameters = inlineParameters;
