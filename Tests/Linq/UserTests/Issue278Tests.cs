@@ -17,6 +17,7 @@ using Tests.Model;
 namespace Tests.UserTests
 {
 	[TestFixture]
+	[NoBaselines("Multi-threading")]
 	public class Issue278Tests : TestBase
 	{
 		const int TOTAL_QUERIES_PER_RUN = 1000;
@@ -158,7 +159,6 @@ namespace Tests.UserTests
 
 			var start = DateTimeOffset.Now;
 
-			using (new DisableBaseline("Multi-threading"))
 			using (new DisableLogging())
 				Parallel.ForEach(Enumerable.Range(1, threadCount), _ =>
 				{

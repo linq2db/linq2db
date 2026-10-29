@@ -34,6 +34,7 @@ namespace Tests.DataProvider
 			// - parameter type SqlDbType.Json supported by this provider only
 			// (older MDS and SDC versions could be used with JSON type in inline parameters mode)
 			var sqlJsonSupported = context.IsAnyOf(TestProvName.AllSqlServerMS);
+			var jsonDocumentSupported = sqlJsonSupported && !context.IsAnyOf(TestProvName.SqlAzureMiMS);
 
 			const string json1 = /*lang=json,strict*/ "{ \"prop1\": 123 }";
 			const string json2 = /*lang=json,strict*/ "{ \"prop1\": 321 }";
@@ -47,12 +48,15 @@ namespace Tests.DataProvider
 			await TestType<string, string?>(context, new(typeof(string), DataType.Json), "{ }", default, filterByValue: false, getExpectedValue: _ => expectedEmpty);
 			await TestType<string, string?>(context, new(typeof(string), DataType.Json), json1, json2, filterByValue: false, filterByNullableValue: false, getExpectedValue: _ => expected1, getExpectedNullableValue: _ => expected2);
 
-			if (sqlJsonSupported)
+			if (jsonDocumentSupported)
 			{
 				// JsonDocument supported only by MDS with SqlJson support
 				await TestType<JsonDocument, JsonDocument?>(context, new(typeof(JsonDocument), DataType.Json), JsonDocument.Parse("{ }"), default, filterByValue: false, isExpectedValue: v => v.RootElement.GetRawText() == JsonDocument.Parse(expectedEmpty).RootElement.GetRawText());
 				await TestType<JsonDocument, JsonDocument?>(context, new(typeof(JsonDocument), DataType.Json), JsonDocument.Parse(json1), JsonDocument.Parse(json2), filterByValue: false, filterByNullableValue: false, isExpectedValue: v => v.RootElement.GetRawText() == JsonDocument.Parse(expected1).RootElement.GetRawText(), isExpectedNullableValue: v => v!.RootElement.GetRawText() == JsonDocument.Parse(expected2).RootElement.GetRawText());
+			}
 
+			if (sqlJsonSupported)
+			{
 				await TestType<SqlJson, SqlJson?>(context, new(typeof(SqlJson)), new("{ }"), default, filterByValue: false, isExpectedValue: v => v.Value == expectedEmpty, isExpectedNullableValue: v => v?.IsNull == true);
 				await TestType<SqlJson, SqlJson?>(context, new(typeof(SqlJson)), new("{ }"), SqlJson.Null, filterByValue: false, filterByNullableValue: false, isExpectedValue: v => v.Value == expectedEmpty, isExpectedNullableValue: v => v?.IsNull == true);
 				await TestType<SqlJson, SqlJson?>(context, new(typeof(SqlJson)), new(json1), new(json2), filterByValue: false, filterByNullableValue: false, isExpectedValue: v => v.Value == expected1, isExpectedNullableValue: v => v?.Value == expected2);
@@ -151,7 +155,7 @@ namespace Tests.DataProvider
 		}
 
 #if !NETFRAMEWORK
-		[ActiveIssue(Configuration = TestProvName.SqlServer2025MS, ErrorTypeName = "System.NotSupportedException", ErrorMessage = "Unsupported Vector type 'System.Half'.",
+		[ActiveIssue(Configuration = TestProvName.AllSqlServer2025PlusMS, ErrorTypeName = "System.NotSupportedException", ErrorMessage = "Unsupported Vector type 'System.Half'.",
 			Details = "no-issue: Waiting for SqlClient support - the refusal comes from the driver, not from linq2db, so only the Microsoft.Data.SqlClient half is gated. The closest upstream items are dotnet/SqlClient#3444 (an umbrella for vector enhancements, which does not list Half) and #3834 (float16 returned as a string, closed); neither is this refusal.")]
 		[Test]
 		public async ValueTask TestHalfVectorType([IncludeDataSources(TestProvName.AllSqlServer2025Plus)] string context)
