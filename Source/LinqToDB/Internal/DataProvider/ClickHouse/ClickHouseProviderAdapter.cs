@@ -137,7 +137,8 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		public MappingSchema? MappingSchema { get; }
 
 		/// <summary>
-		/// Returns the ClickHouse type the client sends a parameter as.
+		/// Returns the parameter type name the client reports: a ClickHouse type for Octonica and ClickHouse.Driver,
+		/// the <c>MySqlDbType</c> name for MySqlConnector.
 		/// </summary>
 		internal Func<DbParameter, string?>? GetParameterTypeName { get; private init; }
 
