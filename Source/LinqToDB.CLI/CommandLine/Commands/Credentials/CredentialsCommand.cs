@@ -664,11 +664,10 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 
 				if (replaced && !force)
 				{
-					// The tool records only a script it wrote itself; an existing file is the user's to vouch for. The hint is a
-					// credentials CLI command line (a path with spaces quoted), quoted for the shell.
-					var commandLine = scriptPath!.IndexOfAny([' ', '\t']) >= 0 ? $"\"{scriptPath}\"" : scriptPath;
-
-					await environment.Error.WriteLineAsync($"'{scriptPath}' already exists. Use '--force' to replace it with the template (edits to it are lost). To use the existing script as it is, name it yourself: --credentials-cli {ShellQuote(commandLine, isWindows)}, or \"credentialsCli\" in a configuration profile.");
+					// The tool records only a script it wrote itself; an existing file is the user's to vouch for. The hint is the value
+					// init would record (@<store> for the default location, checked at every use; else the path as a credentials CLI
+					// command line, a path with spaces quoted), quoted for the shell.
+					await environment.Error.WriteLineAsync($"'{scriptPath}' already exists. Use '--force' to replace it with the template (edits to it are lost). To use the existing script as it is, name it yourself: --credentials-cli {ShellQuote(recorded, isWindows)}, or \"credentialsCli\" in a configuration profile.");
 					return StatusCodes.EXPECTED_ERROR;
 				}
 

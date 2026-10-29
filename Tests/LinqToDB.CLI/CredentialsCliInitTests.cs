@@ -330,7 +330,7 @@ namespace Tests.LinqToDB.CLI
 
 			(exitCode, _, error) = await RunCli(CreateEnvironment(), "credentials", "cli", "init", "--store", "gpg");
 			exitCode.ShouldBe(-3);
-			error.ShouldContain($"'{script}' already exists. Use '--force' to replace it with the template (edits to it are lost). To use the existing script as it is, name it yourself: --credentials-cli {script}, or");
+			error.ShouldContain($"'{script}' already exists. Use '--force' to replace it with the template (edits to it are lost). To use the existing script as it is, name it yourself: --credentials-cli @gpg, or");
 			File.ReadAllText(script).ShouldBe("edited");
 
 			string output;

@@ -421,7 +421,7 @@ dotnet linq2db credentials cli init --store local --config .agents/linq2db-query
 - The script is written to `credentials-<store>.sh` in the credentials directory unless `--output`/`-o` names another
   path, owner-only (`0700`). An existing script is replaced with the template, losing any edits, only with `--force`;
   without it `init` refuses, also with `--config`: `init` records only a script it wrote. To use an existing script you
-  trust, name it yourself with `--credentials-cli` or `credentialsCli` (section 6). Whoever can replace the script receives
+  trust, name it yourself with `--credentials-cli` or `credentialsCli` (section 6); a script in the default location is named `@<store>` (for example `@gpg`), which checks it at every use. Whoever can replace the script receives
   the passwords given to it, so an `--output` path inside a directory that every user can write to without the sticky
   bit (the script's directory, an ancestor of its real path, or a directory holding a symbolic link on the way) is refused, and a group-writable script directory gives a
   warning.
