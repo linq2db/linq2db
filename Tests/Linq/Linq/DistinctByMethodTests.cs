@@ -919,6 +919,176 @@ namespace Tests.Linq
 				.ToList()
 				.ShouldBe(expected, ignoreOrder: true);
 		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByThenTakeKeepsSourceOrder([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.OrderByDescending(p => p.ParentID)
+				.DistinctBy(p => p.Value1)
+				.Take(2);
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByKeepsSourceOrder([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.OrderByDescending(p => p.ParentID)
+				.DistinctBy(p => p.Value1)
+				.Select(p => p.ParentID);
+
+			var expected = Parent
+				.OrderByDescending(p => p.ParentID)
+				.DistinctBy(p => p.Value1)
+				.Select(p => p.ParentID)
+				.ToList();
+
+			// In order: AssertQuery ignores the order of the rows.
+			query
+				.ToList()
+				.ShouldBe(expected);
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByKeepsNullsFirstOrder([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.OrderBy(p => p.Value1, Sql.NullsPosition.First)
+				.DistinctBy(p => p.ParentID % 2)
+				.Select(p => p.Value1);
+
+			// In order, AssertQuery ignores it: the even group keeps a null Value1, the odd one 1, and NULLS FIRST puts the
+			// null first.
+			query
+				.ToList()
+				.ShouldBe(new int?[] { null, 1 });
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByThenFirstKeepsSourceOrder([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var expected = Parent
+				.OrderBy(p => p.ParentID)
+				.DistinctBy(p => -p.ParentID)
+				.First();
+
+			db.Parent
+				.OrderBy(p => p.ParentID)
+				.DistinctBy(p => -p.ParentID)
+				.First()
+				.ShouldBe(expected);
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterProjectionKeepsSourceOrder([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.OrderByDescending(p => p.ParentID)
+				.Select(p => new { p.Value1 })
+				.DistinctBy(x => x.Value1)
+				.Select(x => x.Value1);
+
+			var expected = Parent
+				.OrderByDescending(p => p.ParentID)
+				.Select(p => new { p.Value1 })
+				.DistinctBy(x => x.Value1)
+				.Select(x => x.Value1)
+				.ToList();
+
+			// In order: AssertQuery ignores the order of the rows.
+			query
+				.ToList()
+				.ShouldBe(expected);
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterDistinctByKeepsOrdering([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.OrderByDescending(p => p.ParentID)
+				.DistinctBy(p => p.Value1)
+				.DistinctBy(p => p.ParentID % 2);
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterDistinctByOnLeadingKeyKeepsOrdering([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.OrderBy(p => p.ParentID % 3)
+				.ThenByDescending(p => p.ParentID)
+				.DistinctBy(p => p.ParentID % 3)
+				.DistinctBy(p => p.ParentID % 2);
+
+			AssertQuery(query);
+
+			if (context.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllDuckDB))
+			{
+				query
+					.ToSqlQuery()
+					.Sql
+					.Split("DISTINCT ON")
+					.Length
+					.ShouldBe(3);
+			}
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByOnLeadingKeyThenTake([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.OrderBy(p => p.ParentID % 3)
+				.ThenByDescending(p => p.ParentID)
+				.DistinctBy(p => p.ParentID % 3)
+				.Take(2);
+
+			AssertQuery(query);
+		}
+
+		// Inside Contains the ordering is ignored (IgnoreOrderBy), and the Take keeps a captured ordering below it; the SQL this
+		// pins (no ordered wrapper above DISTINCT ON inside IN) exists only on the DISTINCT ON lowering.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterTakeInContains([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Where(p => db.Parent
+					.OrderByDescending(c => c.ParentID)
+					.Take(4)
+					.DistinctBy(c => c.Value1)
+					.Select(c => c.ParentID)
+					.Contains(p.ParentID));
+
+			AssertQuery(query);
+		}
 	}
 }
 
