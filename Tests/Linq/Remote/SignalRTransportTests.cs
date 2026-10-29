@@ -78,7 +78,15 @@ namespace Tests.Remote
 			{
 				(await db.InsertAsync(new Item { Id = 1, Value = "one" })).ShouldBe(1);                     // ExecuteNonQuery
 				(await db.GetTable<Item>().CountAsync()).ShouldBe(1);                                         // ExecuteScalar
-				(await db.GetTable<Item>().ToListAsync()).Single().Value.ShouldBe("one");                     // ExecuteReader
+
+				// ExecuteReader
+				var items = await db.GetTable<Item>()
+					.ToListAsync();
+
+				items
+					.Single()
+					.Value
+					.ShouldBe("one");
 
 				db.BeginBatch();
 				await db.InsertAsync(new Item { Id = 2, Value = "two" });
@@ -86,7 +94,13 @@ namespace Tests.Remote
 				await db.CommitBatchAsync();                                                                  // ExecuteBatch
 
 				(await db.GetTable<Item>().CountAsync()).ShouldBe(3);
-				(await db.GetTable<Item>().Where(i => i.Id == -1).Select(i => i.Value).FirstOrDefaultAsync()).ShouldBeNull();
+
+				var missing = await db.GetTable<Item>()
+					.Where(i => i.Id == -1)
+					.Select(i => i.Value)
+					.FirstOrDefaultAsync();
+
+				missing.ShouldBeNull();
 			}
 		}
 
@@ -329,7 +343,10 @@ namespace Tests.Remote
 
 				var reader = (ChannelReader<string>)Activator.CreateInstance(readerType, operation, CancellationToken.None)!;
 
-				CatchAsync(async () => await reader.WaitToReadAsync()).GetAwaiter().GetResult().ShouldBeOfType<InvalidOperationException>();
+				CatchAsync(async () => await reader.WaitToReadAsync())
+					.GetAwaiter()
+					.GetResult()
+					.ShouldBeOfType<InvalidOperationException>();
 			}
 		}
 
@@ -572,7 +589,10 @@ namespace Tests.Remote
 			{
 				var error = await CatchAsync(() => db.InsertAsync(new Item { Id = 1, Value = new string('v', 5000) }));
 
-				error.ShouldBeOfType<LinqToDBException>().Message.ShouldContain("4096");
+				error
+					.ShouldBeOfType<LinqToDBException>()
+					.Message
+					.ShouldContain("4096");
 
 				hubConnection.State.ShouldBe(HubConnectionState.Connected);
 				(await db.GetTable<Item>().CountAsync()).ShouldBe(0);
@@ -743,7 +763,11 @@ namespace Tests.Remote
 
 			var error = await CallAsync(host);
 
-			error.ShouldBeOfType<HubException>().Message.ShouldNotContain("secret detail");
+			error
+				.ShouldBeOfType<HubException>()
+				.Message
+				.ShouldNotContain("secret detail");
+
 			service.Calls.ShouldBe(1);
 		}
 
@@ -761,9 +785,15 @@ namespace Tests.Remote
 
 #if NETFRAMEWORK
 			// The legacy server drops the text of every error unless HubOptions.EnableDetailedErrors is set.
-			error.ShouldBeOfType<HubException>().Message.ShouldNotContain("secret detail");
+			error
+				.ShouldBeOfType<HubException>()
+				.Message
+				.ShouldNotContain("secret detail");
 #else
-			error.ShouldBeOfType<HubException>().Message.ShouldContain("secret detail");
+			error
+				.ShouldBeOfType<HubException>()
+				.Message
+				.ShouldContain("secret detail");
 #endif
 		}
 
@@ -797,7 +827,15 @@ namespace Tests.Remote
 
 				(await db.InsertAsync(new Item { Id = 1, Value = "one" })).ShouldBe(1);                     // ExecuteNonQuery
 				(await db.GetTable<Item>().CountAsync()).ShouldBe(1);                                         // ExecuteScalar
-				(await db.GetTable<Item>().ToListAsync()).Single().Value.ShouldBe("one");                     // ExecuteReader
+
+				// ExecuteReader
+				var items = await db.GetTable<Item>()
+					.ToListAsync();
+
+				items
+					.Single()
+					.Value
+					.ShouldBe("one");
 
 				db.BeginBatch();
 				await db.InsertAsync(new Item { Id = 2, Value = "two" });
@@ -933,13 +971,13 @@ namespace Tests.Remote
 
 			// Nothing listens yet: the first query fails to connect.
 			await using (var scope = provider.CreateAsyncScope())
-				(await CatchAsync(() => scope.ServiceProvider.GetRequiredService<ClientContext>().GetTable<Item>().CountAsync())).ShouldNotBeNull();
+				(await CatchAsync(() => CountItemsAsync(scope.ServiceProvider))).ShouldNotBeNull();
 
 			using var database = new SqliteDatabase();
 			using var host     = TestHost.Start<SqliteHub>(services => services.AddSingleton(database), port: port);
 
 			await using (var scope = provider.CreateAsyncScope())
-				(await scope.ServiceProvider.GetRequiredService<ClientContext>().GetTable<Item>().CountAsync()).ShouldBe(0);
+				(await CountItemsAsync(scope.ServiceProvider)).ShouldBe(0);
 
 			// Idempotent.
 			await provider.InitSignalRAsync<ClientContext>();
@@ -975,7 +1013,7 @@ namespace Tests.Remote
 			using (TestHost.Start<SqliteHub>(services => services.AddSingleton(database), port: port))
 			{
 				await using var scope = provider.CreateAsyncScope();
-				(await scope.ServiceProvider.GetRequiredService<ClientContext>().GetTable<Item>().CountAsync()).ShouldBe(0);
+				(await CountItemsAsync(scope.ServiceProvider)).ShouldBe(0);
 			}
 
 			(await WaitAsync(lost.Task, WaitLimit)).ShouldBeTrue("the client did not notice the server going away");
@@ -985,7 +1023,7 @@ namespace Tests.Remote
 			// The next query brings the connection back: on .NET 8+ it waits for the automatic reconnect, or starts
 			// the connection again once the reconnect attempts are exhausted; on the legacy client it always starts it again.
 			await using (var scope = provider.CreateAsyncScope())
-				(await scope.ServiceProvider.GetRequiredService<ClientContext>().GetTable<Item>().CountAsync()).ShouldBe(0);
+				(await CountItemsAsync(scope.ServiceProvider)).ShouldBe(0);
 		}
 
 		[Test]
@@ -1001,7 +1039,7 @@ namespace Tests.Remote
 			await Task.WhenAll(Enumerable.Range(0, 8).Select(async _ =>
 			{
 				await using var scope = provider.CreateAsyncScope();
-				(await scope.ServiceProvider.GetRequiredService<ClientContext>().GetTable<Item>().CountAsync()).ShouldBe(0);
+				(await CountItemsAsync(scope.ServiceProvider)).ShouldBe(0);
 			}));
 
 			ConnectionCountingHub.Connections.ShouldBe(1);
@@ -1030,7 +1068,7 @@ namespace Tests.Remote
 			var sw = Stopwatch.StartNew();
 
 			await using (var scope = provider.CreateAsyncScope())
-				(await scope.ServiceProvider.GetRequiredService<ClientContext>().GetTable<Item>().CountAsync()).ShouldBe(0);
+				(await CountItemsAsync(scope.ServiceProvider)).ShouldBe(0);
 
 			sw.Elapsed.ShouldBeLessThan(Prompt);
 		}
@@ -1090,7 +1128,7 @@ namespace Tests.Remote
 				options.ConfigureConnection = builder => builder.ConfigureLogging(logging => logging.AddProvider(log).SetMinimumLevel(LogLevel.Trace)));
 
 			await using (var scope = provider.CreateAsyncScope())
-				(await scope.ServiceProvider.GetRequiredService<ClientContext>().GetTable<Item>().CountAsync()).ShouldBe(0);
+				(await CountItemsAsync(scope.ServiceProvider)).ShouldBe(0);
 
 			log.Count.ShouldBeGreaterThan(0, "the logger set by ConfigureConnection saw nothing");
 		}
@@ -1111,7 +1149,7 @@ namespace Tests.Remote
 			using (host)
 			{
 				await using var scope = provider.CreateAsyncScope();
-				(await scope.ServiceProvider.GetRequiredService<ClientContext>().GetTable<Item>().CountAsync()).ShouldBe(0);
+				(await CountItemsAsync(scope.ServiceProvider)).ShouldBe(0);
 			}
 
 			(await WaitAsync(policy.Called.Task, WaitLimit)).ShouldBeTrue("the connection did not use the reconnect policy");
@@ -1185,7 +1223,7 @@ namespace Tests.Remote
 
 			await using var scope = provider.CreateAsyncScope();
 
-			var count = scope.ServiceProvider.GetRequiredService<ClientContext>().GetTable<Item>().CountAsync();
+			var count = CountItemsAsync(scope.ServiceProvider);
 
 			if (withToken)
 				(await count).ShouldBe(0);
@@ -1208,6 +1246,14 @@ namespace Tests.Remote
 				});
 
 			return services.BuildServiceProvider();
+		}
+
+		static Task<int> CountItemsAsync(IServiceProvider services)
+		{
+			return services
+				.GetRequiredService<ClientContext>()
+				.GetTable<Item>()
+				.CountAsync();
 		}
 
 		sealed class ClientContext(SignalRLinqServiceClient client) : SignalRDataContext(client, o => o.UseConfiguration(Configuration));
@@ -1250,8 +1296,16 @@ namespace Tests.Remote
 				(await WaitForAsync(() => admin.Execute<int>(SleepingQuery) == 0, Prompt)).ShouldBeTrue("the query kept running in the database");
 
 				sw.Restart();
-				(await db.FromSql<SleepRow>("SELECT 2 AS \"Value\"").ToListAsync()).Single().Value.ShouldBe(2);
+
+				var rows = await db.FromSql<SleepRow>("SELECT 2 AS \"Value\"")
+					.ToListAsync();
+
 				sw.Elapsed.ShouldBeLessThan(Prompt);
+
+				rows
+					.Single()
+					.Value
+					.ShouldBe(2);
 			}
 		}
 
