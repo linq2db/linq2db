@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 using LinqToDB;
 
@@ -119,17 +120,14 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue(5879, ErrorTypeName = "System.NotSupportedException", ErrorMessage = "Unhandled expression type: Index",
-			Details = "PathVisitor has no ExpressionType.Index case, so GetExpressionAccessors throws before the parameter name is ever suggested. Un-gate once a tree carrying an IndexExpression can be translated.")]
 		public void ParameterName_FromHandBuiltIndexExpression([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataContext(context);
 
 			var values = new[] { "str", "str1" };
 
-			// The C# compiler never emits IndexExpression - values[0] lowers to BinaryExpression{ArrayIndex}
-			// and list[0] to a get_Item call - so the arm reading through one is reachable only from a tree
-			// built by hand, which is what this constructs.
+			// The C# compiler never emits IndexExpression, only a hand-built tree carries one. It is rewritten into
+			// the compiler's values[0] shape before naming, so it must be named after the array exactly as that is.
 			Expression<Func<string[]>> captured = () => values;
 
 			var entity    = Expression.Parameter(typeof(ParameterDeduplication), "t");
@@ -144,6 +142,38 @@ namespace Tests.Linq
 				.ToSqlQuery();
 
 			sql.Parameters.Select(p => p.Name).ShouldBe(["values"]);
+		}
+
+		// Naming happens before any provider code; the providers match the fixture's other naming tests.
+		[Test]
+		public void ParameterName_FromExplicitInterfaceIndexer([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var segment = new ArraySegment<int>([1, 2]);
+
+			// ArraySegment<T> implements IList<T>'s indexer explicitly, so the getter a hand-built index over it reads
+			// through is named "System.Collections.Generic.IList<T>.get_Item" rather than "get_Item".
+			var indexer = typeof(ArraySegment<int>)
+				.GetProperties(BindingFlags.NonPublic | BindingFlags.Instance)
+				.Single(p => p.Name.StartsWith("System.Collections.Generic.IList<", StringComparison.Ordinal));
+
+			Expression<Func<ArraySegment<int>>> captured = () => segment;
+
+			var entity    = Expression.Parameter(typeof(ParameterDeduplication), "t");
+			var predicate = Expression.Lambda<Func<ParameterDeduplication, bool>>(
+				Expression.Equal(
+					Expression.Property(entity, nameof(ParameterDeduplication.Int1)),
+					Expression.MakeIndex(captured.Body, indexer, [Expression.Constant(0)])),
+				entity);
+
+			var sql = db.GetTable<ParameterDeduplication>()
+				.Where(predicate)
+				.ToSqlQuery();
+
+			sql.Parameters
+				.Select(p => p.Name)
+				.ShouldBe(["segment"]);
 		}
 	}
 }

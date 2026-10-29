@@ -169,6 +169,9 @@ namespace LinqToDB.CommandLine.Commands.Scaffold
 
 		private static readonly IEnumerable<string> SapHanaProbePathes =
 		[
+#if NET10_0_OR_GREATER
+			@"v10.0\Sap.Data.Hana.Net.v10.0.dll",
+#endif
 #if NET8_0_OR_GREATER
 			@"v8.0\Sap.Data.Hana.Net.v8.0.dll",
 #endif
@@ -284,7 +287,7 @@ Probed locations: {string.Join(", ", clientRoots)}.
 Possible reasons:
 1. HDB client not installed => install HDB client for .net core
 2. HDB architecture doesn't match process architecture => install the matching x86 or x64 variant of linq2db.cli (see 'dotnet linq2db help' for instructions)
-3. HDB client installed at custom location => specify path to Sap.Data.Hana.Net.v8.0.dll, Sap.Data.Hana.Net.v6.0.dll or Sap.Data.Hana.Core.v2.1.dll using '--provider-location <path_to_assembly>' option");
+3. HDB client installed at custom location => specify path to Sap.Data.Hana.Net.v10.0.dll (.NET 10+), Sap.Data.Hana.Net.v8.0.dll, Sap.Data.Hana.Net.v6.0.dll or Sap.Data.Hana.Core.v2.1.dll using '--provider-location <path_to_assembly>' option");
 							return null;
 						}
 					}

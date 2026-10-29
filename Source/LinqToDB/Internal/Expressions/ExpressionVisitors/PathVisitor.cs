@@ -150,6 +150,17 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 						break;
 					}
 
+				case ExpressionType.Index:
+					{
+						path = ConvertPathTo(typeof(IndexExpression));
+
+						Path(((IndexExpression)expr).Object,    ReflectionHelper.IndexExpr.Object);
+						_path = path;
+						Path(((IndexExpression)expr).Arguments, ReflectionHelper.IndexExpr.Arguments);
+
+						break;
+					}
+
 				case ExpressionType.Lambda:
 					{
 						path = ConvertPathTo(typeof(LambdaExpression));
