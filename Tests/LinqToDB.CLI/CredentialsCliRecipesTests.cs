@@ -350,6 +350,18 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public void BitwardenMatchesTheItemNameIgnoringCase()
+		{
+			RequireTools("Bitwarden");
+
+			Seed("Bitwarden", "Project-A/Prod", "app", "prod-password");
+
+			CreateStore("Bitwarden").TryRead("linq2db/project-a/prod", out var user, out var password, out var error).ShouldBeTrue(error);
+			user.    ShouldBe("app");
+			password.ShouldBe("prod-password");
+		}
+
+		[Test]
 		public void BitwardenRefusesTwoItemsWithTheSameName()
 		{
 			RequireTools("Bitwarden");

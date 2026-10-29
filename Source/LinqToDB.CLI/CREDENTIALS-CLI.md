@@ -619,7 +619,7 @@ fetch() {
 
 ### Bitwarden
 
-The login item named exactly like the target (`linq2db/<name>`). `bw get` would not do: it looks a name up as a
+The login item named like the target (`linq2db/<name>`), ignoring case as Bitwarden's own search does. `bw get` would not do: it looks a name up as a
 search, which also matches every item whose name contains it (`linq2db/project-a/prod-replica` for
 `linq2db/project-a/prod`), so the program lists the matches and picks the one with that name. Needs `jq`. Unlock the
 vault first and export the session for the programs started from that shell: `export BW_SESSION="$(bw unlock --raw)"`.
@@ -631,8 +631,8 @@ fetch() {
         reason 'bw list items failed'
         return 2
     fi
-    # The login items named exactly like the target.
-    if ! items=$(printf '%s' "$items" | jq -c --arg name "$target" '[.[] | select(.type == 1 and .name == $name)]' 2>"$errors"); then
+    # The login items named like the target, ignoring case as Bitwarden's own search does.
+    if ! items=$(printf '%s' "$items" | jq -c --arg name "$target" '[.[] | select(.type == 1 and (.name | ascii_downcase) == ($name | ascii_downcase))]' 2>"$errors"); then
         reason 'bw list items returned output that is not a JSON array of items'
         return 2
     fi
