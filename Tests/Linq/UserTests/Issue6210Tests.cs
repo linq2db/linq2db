@@ -30,7 +30,7 @@ namespace Tests.UserTests
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6210")]
 		public async Task SumClampedValues(
-			[DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context,
+			[DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb, ProviderName.SqlCe)] string context,
 			[Values] bool useSelector)
 		{
 			using var db      = GetDataContext(context);
@@ -68,7 +68,7 @@ namespace Tests.UserTests
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6210")]
 		public async Task SumClampedValuesPreservesOuterOperators(
-			[DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context,
+			[DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb, ProviderName.SqlCe)] string context,
 			[Values] bool applyFilter)
 		{
 			using var db      = GetDataContext(context);
