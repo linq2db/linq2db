@@ -71,6 +71,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		/// <summary>Whole-tree expression passes actually run at the top of a root or CTE-body query in a later fixpoint iteration.</summary>
 		public int LaterIterationPassesExecuted { get; private set; }
+
+		/// <summary>Reference-correction walks run.</summary>
+		public int CorrectionWalks { get; private set; }
+
+		/// <summary>Reference-correction walks that skipped the parts pulled up into the looping query.</summary>
+		public int ScopedCorrectionWalks { get; private set; }
 #endif
 
 		public IQueryElement Optimize(
@@ -111,6 +117,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			LaterIterationPassesReached  = 0;
 			FirstIterationPassesExecuted = 0;
 			LaterIterationPassesExecuted = 0;
+			CorrectionWalks              = 0;
+			ScopedCorrectionWalks        = 0;
 #endif
 
 			// OUTER APPLY Queries usually may have wrong nesting in WHERE clause.
@@ -318,7 +326,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				var savePulledUp    = _pulledUp;
 
 				_loopQuery   = selectQuery;
-				_loopSources = CollectLoopSources(selectQuery);
+				_loopSources = _hasAncestorReferences ? null : CollectLoopSources(selectQuery);
 				_pulledUp    = null;
 
 				do
@@ -1235,6 +1243,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			var scoped = CanScopeCorrection(selectQuery);
 
+#if BUGCHECK
+			CorrectionWalks++;
+			if (scoped)
+				ScopedCorrectionWalks++;
+#endif
+
 			_correcting       = selectQuery;
 			_skipInCorrection = scoped ? _pulledUp : null;
 
@@ -1321,7 +1335,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				RemoveLoopSources(join.Table);
 		}
 
-		// Only a query with a FROM subquery can pull parts up; anything else keeps every walk full.
+		// Scoping needs a FROM subquery at loop start; without one the set stays null and every walk is full, even if a wrap adds one later.
 		static HashSet<ISqlTableSource>? CollectLoopSources(SelectQuery selectQuery)
 		{
 			HashSet<ISqlTableSource>? sources = null;
