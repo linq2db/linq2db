@@ -3823,7 +3823,14 @@ namespace Tests.Linq
 			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
 		{
 			// Name is not a grouping key, so its ordering does not reach the root row number, which falls back to the keys.
-			var (companies, departments, _, _, _, _) = GenerateHierarchy();
+			// Names out of key order make a leaked Name ordering observable (2, 3, 1 instead of 1, 2, 3).
+			var companies = new[]
+			{
+				new Company { Id = 1, Name = "C" },
+				new Company { Id = 2, Name = "A" },
+				new Company { Id = 3, Name = "B" },
+			};
+			var (_, departments, _, _, _, _) = GenerateHierarchy();
 
 			using var db   = GetDataContext(context);
 			using var tCo  = db.CreateLocalTable(companies);
@@ -3847,7 +3854,7 @@ namespace Tests.Linq
 			result
 				.Select(r => (r.Key, r.Departments.Count))
 				.ToList()
-				.ShouldBe(new[] { (1, 3), (2, 4), (3, 5) }, ignoreOrder: true);
+				.ShouldBe(new[] { (1, 3), (2, 4), (3, 5) });
 		}
 
 #if NET5_0_OR_GREATER
