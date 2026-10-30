@@ -68,7 +68,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				_sequence = sequence;
 			}
 
-			public override MappingSchema MappingSchema => Builder.MappingSchema;
+			public override MappingSchema MappingSchema => _sequence.MappingSchema;
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{

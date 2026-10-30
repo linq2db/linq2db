@@ -16,6 +16,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				builder.GetTranslationModifier(),
 				buildInfo.Parent,
 				builder,
+				ExpressionBuilder.TryGetRootMappingSchema(methodCall.Arguments[0]) ?? builder.MappingSchema,
 				null,
 				methodCall.Arguments[1].UnwrapLambda().Body,
 				buildInfo.SelectQuery, 

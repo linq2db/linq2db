@@ -46,7 +46,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			var entityParameter      = Expression.Parameter(entityType, "x");
 			var cfg             = EntityBuilderParser.Parse(configureLambda, entityParameter);
 
-			var entityDescriptor = builder.MappingSchema.GetEntityDescriptor(
+			var mappingSchema    = ExpressionBuilder.TryGetRootMappingSchema(tableArg) ?? builder.MappingSchema;
+			var entityDescriptor = mappingSchema.GetEntityDescriptor(
 				entityType, builder.DataContext.Options.ConnectionOptions.OnEntityDescriptorCreated);
 
 			var pkColumns = entityDescriptor.Columns.Where(c => c.IsPrimaryKey).ToList();

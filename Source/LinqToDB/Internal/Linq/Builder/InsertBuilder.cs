@@ -173,6 +173,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						builder.GetTranslationModifier(),
 						buildInfo.Parent,
 						builder,
+						sequence.MappingSchema,
 						innerContext: null,
 						setterExpr,
 						new SelectQuery(), buildInfo.IsSubQuery);

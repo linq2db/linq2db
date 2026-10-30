@@ -40,10 +40,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			FromSqlScalarMethod,
 		}
 
-		static BuildContextType FindBuildContext(ExpressionBuilder builder, BuildInfo buildInfo, out IBuildContext? parentContext)
+		static BuildContextType FindBuildContext(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			parentContext = null;
-
 			var expression = buildInfo.Expression;
 
 			switch (expression.NodeType)
@@ -257,7 +255,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public BuildSequenceResult BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			var type = FindBuildContext(builder, buildInfo, out var parentContext);
+			var type = FindBuildContext(builder, buildInfo);
 
 			switch (type)
 			{
@@ -273,14 +271,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				case BuildContextType.TableFunctionAttribute :
 				{
-					var mappingSchema = builder.MappingSchema;
+					var mappingSchema = ExpressionBuilder.TryGetRootMappingSchema(buildInfo.Expression) ?? builder.MappingSchema;
 
 					return BuildSequenceResult.FromContext(new TableContext(builder.GetTranslationModifier(), builder, mappingSchema, buildInfo));
 				}
 
 				case BuildContextType.TableFromExpression    :
 				{
-					var mappingSchema = builder.MappingSchema;
+					var mappingSchema = ExpressionBuilder.TryGetRootMappingSchema(buildInfo.Expression) ?? builder.MappingSchema;
 
 					var mc = (MethodCallExpression)buildInfo.Expression;
 

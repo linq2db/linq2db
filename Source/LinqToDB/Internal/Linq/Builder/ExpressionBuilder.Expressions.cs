@@ -123,7 +123,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (expression is not MemberExpression memberExpression)
 				return false;
 
-			var ed = MappingSchema.GetEntityDescriptor(memberExpression.Expression!.Type);
+			var mappingSchema = (memberExpression.Expression as ContextRefExpression)?.BuildContext.MappingSchema ?? context.MappingSchema;
+			var ed            = mappingSchema.GetEntityDescriptor(memberExpression.Expression!.Type);
 
 			if (ed.Aliases == null)
 				return false;

@@ -54,7 +54,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var cfg = ParseConfigure(configureLambda, entityParameter);
 
-			var entityDescriptor = builder.MappingSchema.GetEntityDescriptor(
+			var mappingSchema    = ExpressionBuilder.TryGetRootMappingSchema(tableArg) ?? builder.MappingSchema;
+			var entityDescriptor = mappingSchema.GetEntityDescriptor(
 				entityType, builder.DataContext.Options.ConnectionOptions.OnEntityDescriptorCreated);
 
 			// Parse match columns (if any) early — feeds both the native-path PK check
@@ -773,7 +774,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 
 				if (willEmulate)
-					QueryRunner.MakeAlternativeInsertOrUpdate(Builder.DataContext.MappingSchema, query);
+					QueryRunner.MakeAlternativeInsertOrUpdate(MappingSchema, query);
 				else
 					QueryRunner.SetNonQueryQuery(query);
 			}

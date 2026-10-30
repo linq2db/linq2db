@@ -215,7 +215,40 @@ namespace LinqToDB.Internal.Linq.Builder
 		public static readonly ParameterExpression QueryExpressionContainerParam = Expression.Parameter(typeof(IQueryExpressions), "container");
 		public static readonly ParameterExpression RowCounterParam               = Expression.Parameter(typeof(int),          "counter");
 
+		// The data context's live schema. A step with a source in reach reads the source's instead (LINQ2DB0007):
+		// a handle created before UseMappingSchema keeps the schema it was created under.
 		public MappingSchema MappingSchema => DataContext.MappingSchema;
+
+		/// <summary>
+		/// The schema snapshot of the source <paramref name="expression"/> was built from: walks the source argument
+		/// chain down to its <see cref="SqlQueryRootExpression"/>. <see langword="null"/> when there is no root.
+		/// </summary>
+		public static MappingSchema? TryGetRootMappingSchema(Expression? expression)
+		{
+			while (true)
+			{
+				switch (expression)
+				{
+					case SqlQueryRootExpression root:
+						return root.MappingSchema;
+
+					case MethodCallExpression mc:
+						expression = mc.Object ?? (mc.Arguments.Count > 0 ? mc.Arguments[0] : null);
+						break;
+
+					case NewExpression { Arguments.Count: > 0 } ne:
+						expression = ne.Arguments[0];
+						break;
+
+					case UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked or ExpressionType.Quote } unary:
+						expression = unary.Operand;
+						break;
+
+					default:
+						return null;
+				}
+			}
+		}
 
 		TranslationProviderFlags? _translationProviderFlags;
 		// Cached per query so member translators don't allocate a TranslationProviderFlags on each ProviderFlags access.

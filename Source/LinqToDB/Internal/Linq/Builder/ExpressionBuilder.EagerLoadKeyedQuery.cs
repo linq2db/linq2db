@@ -362,7 +362,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (resultExpression is SqlErrorExpression errorExpression)
 				return errorExpression.WithType(eagerLoad.Type);
 
-			resultExpression = SqlAdjustTypeExpression.AdjustType(resultExpression, eagerLoad.Type, MappingSchema);
+			resultExpression = SqlAdjustTypeExpression.AdjustType(resultExpression, eagerLoad.Type, buildContext.MappingSchema);
 			return resultExpression;
 		}
 
