@@ -470,7 +470,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				sqlValue.ValueType = dbType;
 			}
 
-			ParametersContext.RegisterSqlValue(expr, sqlValue);
+			ParametersContext.RegisterSqlValue(expr, sqlValue, key.expr);
 			_constants.Add(key, sqlValue);
 
 			return sqlValue;

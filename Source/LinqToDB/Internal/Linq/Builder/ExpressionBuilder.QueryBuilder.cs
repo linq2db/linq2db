@@ -422,10 +422,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (IsTranslatedToSql(expr) || !CanBeEvaluatedOnClient(expr))
 					return;
 
-				// A constant the cache key keeps is already compared there, structurally and for free. Registering it
-				// would replace it with a placeholder and move that comparison onto a compiled accessor instead.
+				// A constant the cache key compares by value is already compared there, structurally and for free. Registering
+				// it would replace it with a placeholder and move that comparison onto a compiled accessor instead. A collection
+				// is compared by reference there, and a sibling compare may placeholder it, so it gets its own compare.
 				//
-				if (expr is ConstantExpression constant && !ExpressionCacheHelpers.ShouldRemoveConstantFromCache(constant, MappingSchema))
+				if (expr is ConstantExpression constant && ExpressionCacheHelpers.IsComparedByValueInKey(constant, MappingSchema))
 					return;
 
 				var value = EvaluateExpression(expr);
