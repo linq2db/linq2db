@@ -956,5 +956,127 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		[Test]
+		public void OrderByBooleanColumn([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var expected = Types
+				.OrderBy(t => t.BoolValue)
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray();
+
+			db.Types
+				.OrderBy(t => t.BoolValue)
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
+		[Test]
+		public void OrderByBooleanColumnDescending([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var expected = Types
+				.OrderByDescending(t => t.BoolValue)
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray();
+
+			db.Types
+				.OrderByDescending(t => t.BoolValue)
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
+		[Test]
+		public void OrderByNullableBooleanColumn([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var expected = Types2
+				.OrderBy(t => t.BoolValue)
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray();
+
+			db.Types2
+				.OrderBy(t => t.BoolValue)
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
+		[Test]
+		public void OrderByNullableBooleanColumnDescending([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var expected = Types2
+				.OrderByDescending(t => t.BoolValue)
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray();
+
+			db.Types2
+				.OrderByDescending(t => t.BoolValue)
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
+		// Access-only: the other providers place NULL by their own DefaultNullsOrdering.
+		[Test]
+		public void OrderByOuterJoinedBooleanKey([IncludeDataSources(true, TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var expectedQuery =
+				from p in Parent
+				join t in Types2 on p.ParentID + 8 equals t.ID into g
+				from t in g.DefaultIfEmpty()
+				orderby t?.BoolValue, p.ParentID
+				select p.ParentID;
+
+			var query =
+				from p in db.Parent
+				join t in db.Types2 on p.ParentID + 8 equals t.ID into g
+				from t in g.DefaultIfEmpty()
+				orderby t!.BoolValue, p.ParentID
+				select p.ParentID;
+
+			var expected = expectedQuery.ToArray();
+
+			query
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
+		[Test]
+		public void OrderByBooleanPredicate([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var expected = Types
+				.OrderBy(t => t.ID > 5)
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray();
+
+			db.Types
+				.OrderBy(t => t.ID > 5)
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray()
+				.ShouldBe(expected);
+		}
 	}
 }
