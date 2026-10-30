@@ -1741,8 +1741,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			// whose result set is bucketed off the shared reader instead of a separate round-trip.
 			public bool CanCombine => _query.GetResultFromReader != null;
 
-			public SqlStatement? GetCombinableStatement()
-				=> _query.QueryInfo.Statement;
+			public QueryInfo? GetCombinableQueryInfo()
+				=> _query.QueryInfo;
 
 			public void AddCombinableParameterValues(SqlParameterValues values, IQueryExpressions expressions, IDataContext dataContext, object?[]? parameters, SqlCommandExecutionContext context)
 			{
