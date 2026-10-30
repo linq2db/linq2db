@@ -1073,6 +1073,33 @@ namespace Tests.Linq
 			value.Length.ShouldBe(6001);
 		}
 
+		sealed class PrefixConverter() : ValueConverter<string, string>(v => "x:" + v, v => v.Substring(2), false);
+
+		[Table]
+		sealed class ConvertedConcatRow
+		{
+			[PrimaryKey]                                                                public int    Id   { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 20, CanBeNull = false)]
+			[ValueConverter(ConverterType = typeof(PrefixConverter))]                   public string Conv { get; set; } = default!;
+		}
+
+		// A fragment beside a non-Unicode converted column is not sent through the column's converter.
+		[Test]
+		[ActiveIssue(6195, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
+		public void ConcatFragmentBesideConvertedVarCharIsNotConverted([DataSources(TestProvName.AllAccess)] string context)
+		{
+			var dash = "-";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new ConvertedConcatRow { Id = 1, Conv = "c1" } });
+
+			var value = table
+				.Select(p => Sql.AsSql(p.Conv + "|" + dash))
+				.Single();
+
+			value.ShouldBe("c1|-");
+		}
+
 		#endregion
 
 		#region Concat inside a set-operation operand's projection
