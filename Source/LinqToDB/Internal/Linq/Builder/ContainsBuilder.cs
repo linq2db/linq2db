@@ -188,7 +188,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				Expression testExpr;
 
 				using (sequenceExpr is SqlPlaceholderExpression scalarProjection
-					? Builder.UsingColumnDescriptorBeside(QueryHelper.GetColumnDescriptor(scalarProjection.Sql), scalarProjection.Sql)
+					? Builder.UsingColumnDescriptorBeside(QueryHelper.GetColumnDescriptorForTyping(scalarProjection.Sql), scalarProjection.Sql)
 					: Builder.UsingColumnDescriptor(null))
 					testExpr = Builder.BuildSqlExpression(placeholderContext, expr, BuildPurpose.Sql, BuildFlags.ForKeys);
 

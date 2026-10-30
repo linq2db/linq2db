@@ -297,6 +297,11 @@ namespace LinqToDB.Internal.SqlQuery
 			return dataType is DataType.Decimal or DataType.Decimal32 or DataType.Decimal64 or DataType.Decimal128 or DataType.Decimal256;
 		}
 
+		internal static bool IsUnicode(DataType dataType)
+		{
+			return dataType is DataType.NChar or DataType.NVarChar or DataType.NText;
+		}
+
 		/// <summary>
 		/// The type a decimal value takes beside a computed decimal operand: the operand's own type when it holds the
 		/// value, otherwise one with the integer digits and the scale of both.
@@ -652,7 +657,7 @@ namespace LinqToDB.Internal.SqlQuery
 						if (descriptor == null)
 							continue;
 
-						if (forTyping && descriptor.GetDbDataType(true).DataType is not (DataType.NChar or DataType.NVarChar or DataType.NText))
+						if (forTyping && !IsUnicode(descriptor.GetDbDataType(true).DataType))
 							continue;
 
 						return descriptor;

@@ -267,7 +267,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 				var descriptor = QueryHelper.GetColumnDescriptorForTyping(placeholder.Sql);
 
-				if (descriptor?.GetDbDataType(true).DataType is DataType.NChar or DataType.NVarChar or DataType.NText)
+				if (descriptor != null && QueryHelper.IsUnicode(descriptor.GetDbDataType(true).DataType))
 					return translationContext.UsingColumnDescriptor(descriptor);
 			}
 
