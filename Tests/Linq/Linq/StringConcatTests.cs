@@ -1022,6 +1022,30 @@ namespace Tests.Linq
 			GetCurrentBaselines().ShouldContain("DECLARE @keySuffix VarChar");
 		}
 
+		// SQL Server + SQLite: the searched value is written into the command text as a literal, and Cyrillic
+		// literals run on these two only, as in ConcatLiteralBesideVarCharKeepsUnicode.
+		[Test]
+		public void ConcatProjectionContainsKeepsUnicode([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllSQLite)] string context)
+		{
+			var suffix = "Жук";
+			var hit    = "A-100Жук";
+			var miss   = "A-100Щит";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(ConcatProductData);
+
+			var concatenated = table
+				.Select(p => p.Sku + suffix);
+
+			concatenated
+				.Contains(hit)
+				.ShouldBeTrue();
+
+			concatenated
+				.Contains(miss)
+				.ShouldBeFalse();
+		}
+
 		#endregion
 
 		#region Concat inside a set-operation operand's projection
