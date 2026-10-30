@@ -15,6 +15,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests.Model;
 
 namespace Tests.DataProvider
@@ -791,5 +793,60 @@ namespace Tests.DataProvider
 		}
 
 		#endregion
+
+		[Table]
+		sealed class LongTextTable
+		{
+			[PrimaryKey                       ] public int     Id    { get; set; }
+			[Column(DataType = DataType.NText)] public string? Value { get; set; }
+		}
+
+		[Table]
+		sealed class LongAnsiTextTable
+		{
+			[PrimaryKey                      ] public int     Id    { get; set; }
+			[Column(DataType = DataType.Text)] public string? Value { get; set; }
+		}
+
+		// past the 255 characters a Text parameter can carry
+		[Test]
+		public void LongTextParameter([IncludeDataSources(true, TestProvName.AllAccess)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<LongTextTable>();
+
+			var value = new string('x', 1000);
+
+			db.Insert(new LongTextTable { Id = 1, Value = value });
+
+			table
+				.Single()
+				.Value
+				.ShouldBe(value);
+
+			table
+				.Count(r => r.Value == value)
+				.ShouldBe(1);
+		}
+
+		[Test]
+		public void LongAnsiTextParameter([IncludeDataSources(true, TestProvName.AllAccess)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<LongAnsiTextTable>();
+
+			var value = new string('x', 1000);
+
+			db.Insert(new LongAnsiTextTable { Id = 1, Value = value });
+
+			table
+				.Single()
+				.Value
+				.ShouldBe(value);
+
+			table
+				.Count(r => r.Value == value)
+				.ShouldBe(1);
+		}
 	}
 }

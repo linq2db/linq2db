@@ -214,6 +214,8 @@ namespace LinqToDB.Internal.DataProvider.Access
 				switch (dataType.DataType)
 				{
 					case DataType.Variant: type = OdbcType.Binary; break;
+					case DataType.Text   : type = OdbcType.Text;   break;
+					case DataType.NText  : type = OdbcType.NText;  break;
 				}
 
 				if (type != null)
