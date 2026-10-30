@@ -38,6 +38,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		bool             _isColumnsOptimized;
 
 		// Correction-walk scoping for the query whose fixpoint loop is running (#5738).
+		bool                                                        _hasAncestorReferences;
 		SelectQuery?                                                _loopQuery;
 		SelectQuery?                                                _columnsParent;
 		HashSet<ISqlTableSource>?                                   _loopSources;
@@ -164,6 +165,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 			_columnNestingCorrector.CorrectColumnNesting(_root);
 
+			_hasAncestorReferences = _columnNestingCorrector.HasAncestorReference;
+
 			return _columnNestingCorrector.HasSelectQuery;
 		}
 
@@ -187,12 +190,15 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			_updateQuery        = default;
 			_updateTable        = default;
 			_isColumnsOptimized = false;
+			_correcting         = null;
+			_currentSetOperator = null;
 			_loopQuery          = null;
 			_columnsParent      = null;
 			_loopSources        = null;
 			_pulledUp           = null;
 			_skipInCorrection   = null;
 
+			_hasAncestorReferences = false;
 			_pendingReplacements.Clear();
 
 			_columnNestingCorrector.Cleanup();
@@ -1243,9 +1249,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		// A walk may skip the parts MoveSubQueryUp pulled into the looping query: they are a merged child's internals, so
 		// they reference only sources that came with them. That holds while every pending replacement is owned by the
 		// query itself (its references live above) or by a source the query had when its loop started and still has.
+		// A reference to an enclosing query's own column (an OUTER APPLY body) breaks that premise for the whole tree.
 		bool CanScopeCorrection(SelectQuery selectQuery)
 		{
-			if (_pulledUp == null || _loopSources == null || !ReferenceEquals(selectQuery, _loopQuery))
+			if (_hasAncestorReferences || _pulledUp == null || _loopSources == null || !ReferenceEquals(selectQuery, _loopQuery))
 				return false;
 
 			foreach (var (owner, level) in _pendingReplacements)

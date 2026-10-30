@@ -144,7 +144,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		QueryNesting? _parentQueryNesting;
 
+		readonly HashSet<SelectQuery> _enclosingQueries = new(Utils.ObjectReferenceEqualityComparer<SelectQuery>.Default);
+
 		public bool HasSelectQuery { get; private set; }
+
+		/// <summary>
+		/// Set when the last <see cref="CorrectColumnNesting"/> walk met a column of a query that encloses the reference.
+		/// </summary>
+		public bool HasAncestorReference { get; private set; }
 
 		public SqlQueryColumnNestingCorrector() : base(VisitMode.Modify)
 		{
@@ -205,13 +212,16 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 			_parentQueryNesting = null;
 
+			_enclosingQueries.Clear();
+
 			base.Cleanup();
 		}
 
 		public IQueryElement CorrectColumnNesting(IQueryElement element)
 		{
 			Cleanup();
-			HasSelectQuery = false;
+			HasSelectQuery       = false;
+			HasAncestorReference = false;
 
 			#if DEBUG
 			var beforeText = element.ToDebugString();
@@ -308,6 +318,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (element.Parent != null)
 			{
+				if (_enclosingQueries.Contains(element.Parent))
+					HasAncestorReference = true;
+
 				newElement = ProcessNesting(element.Parent, element);
 			}
 
@@ -322,7 +335,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			_parentQueryNesting = new QueryNesting(saveQueryNesting, selectQuery);
 
+			var entered = _enclosingQueries.Add(selectQuery);
+
 			var newQuery = base.VisitSqlQuery(selectQuery);
+
+			if (entered)
+				_enclosingQueries.Remove(selectQuery);
 
 			_parentQueryNesting = saveQueryNesting;
 
