@@ -323,6 +323,66 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Table]
+		sealed class TimeColumnTable
+		{
+			[PrimaryKey]                 public int      Id   { get; set; }
+			[Column(DbType = "time")]    public TimeSpan Time { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6077")]
+		public void ReadTimeAsTimeSpanScalar([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db
+				.Execute<TimeSpan>("SELECT Cast('12:12:12' as time)")
+				.ShouldBe(new TimeSpan(12, 12, 12));
+
+			db
+				.Execute<TimeSpan?>("SELECT Cast('12:12:12' as time)")
+				.ShouldBe(new TimeSpan(12, 12, 12));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6077")]
+		public void ReadTimeAsTimeSpanEntity([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable([new TimeColumnTable { Id = 1, Time = new TimeSpan(12, 12, 12) }]);
+
+			table
+				.Single()
+				.Time
+				.ShouldBe(new TimeSpan(12, 12, 12));
+		}
+
+#if NET8_0_OR_GREATER
+		// net462 tests run Npgsql 8, which returns DateTime for date, so the string carries a time part there.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6077")]
+		public void ReadDateAsString([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db
+				.Execute<string>("SELECT Cast('2012-12-12' as date)")
+				.ShouldBe("2012-12-12");
+		}
+#endif
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6077")]
+		public void ReadTimeAsDateTime([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db
+				.Execute<DateTime>("SELECT Cast('12:12:12' as time)")
+				.ShouldBe(new DateTime(1, 1, 1, 12, 12, 12));
+
+			db
+				.Execute<DateTime?>("SELECT Cast('12:12:12' as time)")
+				.ShouldBe(new DateTime(1, 1, 1, 12, 12, 12));
+		}
+
 		/// <summary>
 		/// Ensure we can pass data as Json parameter type and get
 		/// same value back out equivalent in value

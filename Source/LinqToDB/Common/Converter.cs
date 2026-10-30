@@ -55,11 +55,12 @@ namespace LinqToDB.Common
 
 #if SUPPORTS_DATEONLY
 			SetConverter<DateTime,       DateOnly>      (v => DateOnly.FromDateTime(v));
-			SetConverter<DateOnly,       DateTime>      (v => v.ToDateTime(TimeOnly.MinValue));
 
 			// use DateTime.Parse() because db processing may return strings that are full date/time.
 			SetConverter<string,         DateOnly>      (v => DateOnly.FromDateTime(DateTime.Parse(v, CultureInfo.InvariantCulture, DateTimeStyles.None)));
 #endif
+
+			SetDateOnlyToDateTimeConverter();
 
 			SetConverter<byte  , BitArray>(v => new BitArray(new byte[] { v }));
 			SetConverter<sbyte , BitArray>(v => new BitArray(new byte[] { unchecked((byte)v) }));
@@ -69,6 +70,21 @@ namespace LinqToDB.Common
 			SetConverter<uint  , BitArray>(v => new BitArray(BitConverter.GetBytes(v)));
 			SetConverter<long  , BitArray>(v => new BitArray(BitConverter.GetBytes(v)));
 			SetConverter<ulong , BitArray>(v => new BitArray(BitConverter.GetBytes(v)));
+		}
+
+		// Resolved at runtime: drivers return DateOnly for date columns, and modern runtimes also load the
+		// netstandard2.0 build, which can't name the type (#6077). Same lambda shape as `v => v.ToDateTime(TimeOnly.MinValue)`.
+		static void SetDateOnlyToDateTimeConverter()
+		{
+			if (Type.GetType("System.DateOnly")                is not { } dateOnly
+				|| Type.GetType("System.TimeOnly")             is not { } timeOnly
+				|| dateOnly.GetMethod("ToDateTime", [timeOnly]) is not { } toDateTime
+				|| timeOnly.GetProperty("MinValue")             is not { } minValue)
+				return;
+
+			var v = Expression.Parameter(dateOnly, "v");
+
+			_expressions[(dateOnly, typeof(DateTime))] = Expression.Lambda(Expression.Call(v, toDateTime, Expression.Property(null, minValue)), v);
 		}
 
 		static bool ToBoolean(char ch)

@@ -1485,11 +1485,32 @@ namespace LinqToDB.Mapping
 
 				// explicitly specify old ToString client-side conversions for some types after we added support for ToString(InvariantCulture) to conversion generators
 				SetConverter<DateTime, string>(static v => v.ToString("yyyy-MM-dd hh:mm:ss", DateTimeFormatInfo.InvariantInfo));
-#if SUPPORTS_DATEONLY
-				SetConverter<DateOnly, string>(static v => v.ToString("yyyy-MM-dd", DateTimeFormatInfo.InvariantInfo));
-#endif
+				SetDateOnlyToStringConverter();
 
 				ValueToSqlConverter.SetDefaults();
+			}
+
+			// Resolved at runtime: modern runtimes also load the netstandard2.0 build, which can't name DateOnly (#6077).
+			// Stored exactly as SetConverter<DateOnly, string> stores it - an invoked delegate, so it stays client-side.
+			void SetDateOnlyToStringConverter()
+			{
+				if (Type.GetType("System.DateOnly") is not { } dateOnly
+					|| dateOnly.GetMethod(nameof(ToString), [typeof(string), typeof(IFormatProvider)]) is not { } toString
+					|| typeof(DateTimeFormatInfo).GetProperty(nameof(DateTimeFormatInfo.InvariantInfo)) is not { } invariantInfo)
+					return;
+
+				var v    = Expression.Parameter(dateOnly, "v");
+				var func = Expression.Lambda(Expression.Call(v, toString, Expression.Constant("yyyy-MM-dd"), Expression.Property(null, invariantInfo)), v).CompileExpression();
+				var p    = Expression.Parameter(dateOnly, "p");
+				var ex   = Expression.Lambda(Expression.Invoke(Expression.Constant(func), p), p);
+
+				lock (_syncRoot)
+				{
+					Schemas[0].SetConvertInfo(dateOnly, typeof(string), ConversionType.Common, new (ex, null, func, false));
+					ResetID();
+				}
+
+				SetNullableConversion(new(dateOnly), new(typeof(string)), ex, ConversionType.Common);
 			}
 
 			protected internal override int GenerateID() => 0;

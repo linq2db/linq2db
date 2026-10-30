@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data.Linq;
 using System.Globalization;
+using System.Linq.Expressions;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Numerics;
@@ -69,12 +70,18 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			AddScalarType(typeof(string),    DataType.Text);
 			AddScalarType(typeof(TimeSpan),  DataType.Interval);
 
+			// backward compat: npgsql 10 returns TimeOnly instead of DateTime as before. Resolved at runtime because modern
+			// runtimes also load the netstandard2.0 build (#6077); built from Ticks as DateTime(DateOnly, TimeOnly) is .NET 8+.
+			if (Type.GetType("System.TimeOnly") is { } timeOnly
+				&& timeOnly.GetProperty("Ticks") is { } ticks
+				&& typeof(DateTime).GetConstructor([typeof(long)]) is { } dateTimeCtor)
+			{
+				var value = Expression.Parameter(timeOnly, "value");
+				SetConvertExpression(timeOnly, typeof(DateTime), Expression.Lambda(Expression.New(dateTimeCtor, Expression.Property(value, ticks)), value), conversionType: ConversionType.FromDatabase);
+			}
+
 #if SUPPORTS_DATEONLY
 			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,_,v) => BuildDate(sb, dt, (DateOnly)v));
-
-			// backward compat:
-			// npgsql 10 returns TimeOnly instead of DateTime as before
-			SetConvertExpression<TimeOnly, DateTime>(value => new DateTime(default, value), conversionType: ConversionType.FromDatabase);
 
 			AddScalarType(typeof(IPNetwork), new SqlDataType(new DbDataType(typeof(IPNetwork), DataType.Undefined, "cidr")));
 			AddScalarType(typeof(IPNetwork[]), new SqlDataType(new DbDataType(typeof(IPNetwork[]), DataType.Array, "cidr[]")));
