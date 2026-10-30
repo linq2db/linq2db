@@ -171,6 +171,38 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery]
+		public void OrderByConcatenatedThroughGroupJoin([DataSources] string context)
+		{
+			using var db = GetDataContext(context, o => o.UseConcatenateOrderBy(true));
+
+			var expected =
+					from ch in Child
+					orderby ch.ParentID, ch.ChildID descending
+					select new
+					{
+						ch.ParentID,
+						ch.ChildID,
+						Cnt = Parent.Count(p => p.ParentID == ch.ParentID),
+					};
+
+			// The first ordering is placed before the GroupJoin; the later one must be appended to it.
+			var qry =
+					from ch in db.Child.OrderBy(x => x.ParentID)
+					join p in db.Parent on ch.ParentID equals p.ParentID into ps
+					select new
+					{
+						ch.ParentID,
+						ch.ChildID,
+						Cnt = ps.Count(),
+					};
+
+			var result = qry.OrderByDescending(x => x.ChildID);
+
+			AreSame(expected, result);
+		}
+
+		[Test]
 		public void OrderBy8([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
