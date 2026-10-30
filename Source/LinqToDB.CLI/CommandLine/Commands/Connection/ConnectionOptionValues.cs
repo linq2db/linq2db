@@ -20,5 +20,9 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		bool?   Impersonate,
 		string? ImpersonateMode,
 		string? CommandTimeout,
-		string? LockTimeout);
+		string? LockTimeout)
+	{
+		/// <summary>Credential store or credentials CLI from the command line; overrides the profile's <c>credentialsCli</c>.</summary>
+		public string? CredentialsCli { get; init; }
+	}
 }

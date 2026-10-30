@@ -24,5 +24,9 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 		string? MaxRows,
 		string? Output,
 		int     MaxResponseBytes,
-		bool    EnableExecuteTool);
+		bool    EnableExecuteTool)
+	{
+		/// <summary>Credential store or credentials CLI from the server arguments; overrides the profile's <c>credentialsCli</c>.</summary>
+		public string? CredentialsCli { get; init; }
+	}
 }
