@@ -696,5 +696,42 @@ namespace Tests.Linq
 			selectQuery.OrderBy.IsEmpty.ShouldBeTrue();
 		}
 
+#if BUGCHECK
+		[Test]
+		public void WholeTreeExpressionPassRunsOnlyInFirstIteration()
+		{
+			using var db = GetDataConnection();
+
+			var cte = db.Child
+				.Where(c => c.ChildID > 10)
+				.AsCte();
+
+			var query =
+				from c in cte
+				select new { c.ChildID };
+
+			// A clone, because the statement belongs to the query cache.
+			var statement = query
+				.GetStatement()
+				.Clone();
+
+			var visitor = new LinqToDB.Internal.SqlQuery.Visitors.SelectQueryOptimizerVisitor();
+
+			visitor.Optimize(
+				statement,
+				statement,
+				db.DataProvider.SqlProviderFlags,
+				removeWeakJoins: true,
+				db.Options,
+				db.MappingSchema,
+				new EvaluationContext());
+
+			// Root and CTE body are each reached in both fixpoint iterations; the pass runs only in the first.
+			visitor.FirstIterationPassesReached.ShouldBeGreaterThanOrEqualTo(2);
+			visitor.LaterIterationPassesReached.ShouldBeGreaterThanOrEqualTo(2);
+			visitor.FirstIterationPassesExecuted.ShouldBe(visitor.FirstIterationPassesReached);
+			visitor.LaterIterationPassesExecuted.ShouldBe(0);
+		}
+#endif
 	}
 }

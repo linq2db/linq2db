@@ -233,21 +233,7 @@ namespace Tests
 			|| value.Equals("enable",  StringComparison.OrdinalIgnoreCase)
 			|| value.Equals("enabled", StringComparison.OrdinalIgnoreCase);
 
-		static string FindRepoRoot()
-		{
-			try
-			{
-				for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir != null; dir = dir.Parent)
-					if (File.Exists(Path.Combine(dir.FullName, "linq2db.slnx")))
-						return dir.FullName;
-			}
-			catch
-			{
-				// fall through to base directory
-			}
-
-			return AppContext.BaseDirectory;
-		}
+		static string FindRepoRoot() => TestUtils.TryFindRepoRoot() ?? AppContext.BaseDirectory;
 
 		static void Write(bool force)
 		{

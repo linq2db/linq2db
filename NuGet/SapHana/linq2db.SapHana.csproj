@@ -34,7 +34,6 @@
 		<None Include="$(ToolsPath)/Humanizer.dll"								   Pack="true" PackagePath="tools" Visible="false" />
 		<None Include="$(ToolsPath)/Microsoft.Bcl.AsyncInterfaces.dll"			   Pack="true" PackagePath="tools" Visible="false" />
 		<None Include="$(ToolsPath)/System.Data.Odbc.dll"   					   Pack="true" PackagePath="tools" Visible="false" />
-		<None Include="$(ToolsPath)/Sap.Data.Hana.v4.5.dll" 					   Pack="true" PackagePath="tools" Visible="false" />
 	</ItemGroup>
 
 	<ItemGroup>
