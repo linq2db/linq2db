@@ -174,6 +174,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				return BuildSequenceResult.Error(groupingKeys);
 			}
 
+			KeepOrderByOfGroupingKeys(builder, dataSequence, groupingKeys);
+
 #if DEBUG
 			System.Diagnostics.Debug.WriteLine("BuildMethodCall GroupBy:\n" + groupBy.SelectQuery);
 #endif
@@ -192,6 +194,42 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			return BuildSequenceResult.FromContext(groupBy);
+		}
+
+		// Groups are ordered by the source's ordering only as far as it orders by grouping keys: those leading entries are
+		// replaced by the keys themselves, which stay valid above the GROUP BY, and the first entry that is not a key ends
+		// the ordering the captured state's consumers (e.g. DistinctBy) can read.
+		static void KeepOrderByOfGroupingKeys(ExpressionBuilder builder, IBuildContext dataSequence, Expression groupingKeys)
+		{
+			if (builder.CurrentOrderBy is not { Count: > 0 } captured)
+				return;
+
+			var keys = ExpressionBuilder.CollectDistinctPlaceholders(groupingKeys, false);
+			var kept = new List<(Expression expr, bool descending, Sql.NullsPosition nulls)>();
+
+			foreach (var (expr, descending, nulls) in captured)
+			{
+				var orderSql     = builder.BuildSqlExpression(dataSequence, expr, BuildPurpose.Sql, BuildFlags.ForKeys);
+				var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(orderSql, false);
+				var orderKeys    = placeholders.ConvertAll<SqlPlaceholderExpression?>(p => keys.Find(k => Underlying(k.Sql).Equals(Underlying(p.Sql))));
+
+				if (orderKeys.Count == 0 || orderKeys.Contains(null))
+					break;
+
+				foreach (var key in orderKeys)
+				{
+					kept.Add((key!, descending, nulls));
+				}
+			}
+
+			builder.RemoveOrderByEntries(static _ => true);
+
+			foreach (var (expr, descending, nulls) in kept)
+			{
+				builder.RegisterOrderBy(expr, descending, nulls, reset: false);
+			}
+
+			static ISqlExpression Underlying(ISqlExpression sql) => sql is SqlColumn column ? column.UnderlyingExpression() : sql;
 		}
 
 		/// <summary>
