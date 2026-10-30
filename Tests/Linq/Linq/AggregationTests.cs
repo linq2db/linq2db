@@ -90,8 +90,9 @@ namespace Tests.Linq
 		[Table]
 		sealed class Row
 		{
-			[Column] public int     ParentId { get; set; }
-			[Column] public decimal Value    { get; set; }
+			[Column, PrimaryKey] public int     Id       { get; set; }
+			[Column]             public int     ParentId { get; set; }
+			[Column]             public decimal Value    { get; set; }
 		}
 
 		#endregion
@@ -118,9 +119,11 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[Test]
+		// SqlCe: seeding the decimal rows overflows in BulkCopy (#4438).
+		[ThrowsRequiresCorrelatedSubquery]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6210")]
 		public async Task SumClampedValues(
-			[DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb, ProviderName.SqlCe)] string context,
+			[DataSources(ProviderName.SqlCe)] string context,
 			[Values] bool useSelector)
 		{
 			using var db      = GetDataContext(context);
@@ -132,11 +135,11 @@ namespace Tests.Linq
 			});
 			using var rows = db.CreateLocalTable(new[]
 			{
-				new Row { ParentId = 1, Value =    5.5m  },
-				new Row { ParentId = 1, Value = -100m    },
-				new Row { ParentId = 1, Value =    2.25m },
-				new Row { ParentId = 1, Value =    0m    },
-				new Row { ParentId = 2, Value =   -4m    },
+				new Row { Id = 1, ParentId = 1, Value =    5.5m  },
+				new Row { Id = 2, ParentId = 1, Value = -100m    },
+				new Row { Id = 3, ParentId = 1, Value =    2.25m },
+				new Row { Id = 4, ParentId = 1, Value =    0m    },
+				new Row { Id = 5, ParentId = 2, Value =   -4m    },
 			});
 
 			var query = useSelector
@@ -156,9 +159,11 @@ namespace Tests.Linq
 			totals.ShouldBe([7.75m, 0m, 0m]);
 		}
 
-		[Test]
+		// SqlCe: seeding the decimal rows overflows in BulkCopy (#4438).
+		[ThrowsRequiresCorrelatedSubquery]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6210")]
 		public async Task SumClampedValuesPreservesOuterOperators(
-			[DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb, ProviderName.SqlCe)] string context,
+			[DataSources(ProviderName.SqlCe)] string context,
 			[Values] bool applyFilter)
 		{
 			using var db      = GetDataContext(context);
@@ -170,11 +175,11 @@ namespace Tests.Linq
 			});
 			using var rows = db.CreateLocalTable(new[]
 			{
-				new Row { ParentId = 1, Value =    5.5m  },
-				new Row { ParentId = 1, Value = -100m    },
-				new Row { ParentId = 1, Value =    2.25m },
-				new Row { ParentId = 1, Value =    0m    },
-				new Row { ParentId = 2, Value =   -4m    },
+				new Row { Id = 1, ParentId = 1, Value =    5.5m  },
+				new Row { Id = 2, ParentId = 1, Value = -100m    },
+				new Row { Id = 3, ParentId = 1, Value =    2.25m },
+				new Row { Id = 4, ParentId = 1, Value =    0m    },
+				new Row { Id = 5, ParentId = 2, Value =   -4m    },
 			});
 
 			var query = applyFilter
