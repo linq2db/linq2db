@@ -1072,6 +1072,24 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByCompositeKeyPermutedAgainstOrderingKeepsOrder([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// Every key member is in the ordering, but in another order: DISTINCT ON orders by ParentID, Value1, so only the
+			// ordered wrapper above it restores the Value1, ParentID order. AssertQuery ignores order, so it is compared here.
+			var result = db.Parent
+				.OrderBy(p => p.Value1, Sql.NullsPosition.First)
+				.ThenBy(p => p.ParentID)
+				.DistinctBy(p => new { p.ParentID, p.Value1 })
+				.Select(p => p.ParentID)
+				.ToList();
+
+			result.ShouldBe(new[] { 2, 4, 1, 7, 3, 5, 6 });
+		}
+
 		// Inside Contains the ordering is ignored (IgnoreOrderBy), and the Take keeps a captured ordering below it; the SQL this
 		// pins (no ordered wrapper above DISTINCT ON inside IN) exists only on the DISTINCT ON lowering.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
