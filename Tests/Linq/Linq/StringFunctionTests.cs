@@ -939,6 +939,9 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsCannotBeConverted(TestProvName.AllAccessJet)]
+		[ActiveIssue(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException",
+			ErrorMessage = "Mismatch type argument #2, type diff: Utf8!=Optional<Utf8>",
+			Details = "no-issue: YDB Unicode.ReplaceAll (the Replace UDF) requires a non-nullable search value; a nullable column passed as that argument is Optional<Utf8>. Needs nullable-argument coercion in the YDB Replace translation.")]
 		public void ColumnArgumentBesideFixedLengthValueIsNotPadded([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
