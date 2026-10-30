@@ -1,8 +1,10 @@
 ﻿#if BUGCHECK
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Interceptors;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
 
@@ -35,6 +37,17 @@ namespace Tests.Linq
 			[Column    ] public string? Name     { get; set; }
 		}
 
+		sealed class CommandCounter : CommandInterceptor
+		{
+			public int Count { get; set; }
+
+			public override DbCommand CommandInitialized(CommandEventData eventData, DbCommand command)
+			{
+				Count++;
+				return command;
+			}
+		}
+
 		static void Seed(IDataContext db)
 		{
 			db.Insert(new RcParent { Id = 1 });
@@ -55,21 +68,33 @@ namespace Tests.Linq
 		public void ParameterDependentDetailReRenders([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
 			// Forced on: this fixture's whole subject is the COMBINED per-command render cache. With the policy switch off
-			// (the 6.x default) the eager load runs sequentially and every assertion below still holds for unrelated
-			// reasons — the test would pass while testing nothing.
+			// (the 6.x default) the eager load runs sequentially and the render-count assertions still hold for unrelated
+			// reasons, so Run() also checks that each load went out as one command.
 			using var db       = GetDataContext(context, o => o.UseCombinedCommands(true));
 			using var parents  = db.CreateLocalTable<RcParent>();
 			using var children = db.CreateLocalTable<RcChild>();
 
 			Seed(db);
 
+			var counter = new CommandCounter();
+			db.AddInterceptor(counter);
+
 			var pattern = "al";
 
 			// pattern is a captured variable => a SqlParameter, so Contains lowers to a parameter-dependent SearchString
 			// (BasicSqlOptimizer treats a SearchString as parameter-dependent unless its argument is a literal SqlValue).
-			List<RcParent> Run() => parents
-				.LoadWith(p => p.Children, c => c.Where(x => x.Name!.Contains(pattern)))
-				.ToList();
+			List<RcParent> Run()
+			{
+				counter.Count = 0;
+
+				var result = parents
+					.LoadWith(p => p.Children, c => c.Where(x => x.Name!.Contains(pattern)))
+					.ToList();
+
+				counter.Count.ShouldBe(1);
+
+				return result;
+			}
 
 			var missStart = parents.GetCacheMissCount();
 			var baseline  = RenderDiagnostics.BuildSqlCount;
@@ -98,15 +123,29 @@ namespace Tests.Linq
 		public void StableEagerLoadFullyCached([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
 			// Forced on: this fixture's whole subject is the COMBINED per-command render cache. With the policy switch off
-			// (the 6.x default) the eager load runs sequentially and every assertion below still holds for unrelated
-			// reasons — the test would pass while testing nothing.
+			// (the 6.x default) the eager load runs sequentially and the render-count assertions still hold for unrelated
+			// reasons, so Run() also checks that each load went out as one command.
 			using var db       = GetDataContext(context, o => o.UseCombinedCommands(true));
 			using var parents  = db.CreateLocalTable<RcParent>();
 			using var children = db.CreateLocalTable<RcChild>();
 
 			Seed(db);
 
-			List<RcParent> Run() => parents.LoadWith(p => p.Children).ToList();
+			var counter = new CommandCounter();
+			db.AddInterceptor(counter);
+
+			List<RcParent> Run()
+			{
+				counter.Count = 0;
+
+				var result = parents
+					.LoadWith(p => p.Children)
+					.ToList();
+
+				counter.Count.ShouldBe(1);
+
+				return result;
+			}
 
 			Run();                                                                    // warm-up: render + cache
 
