@@ -64,6 +64,8 @@ namespace Tests.UserTests
 			throw new ServerSideOnlyException(nameof(UtilsGreatestnotnull3));
 		}
 
+		[ActiveIssue(6216, Configuration = TestProvName.AllAccess, ErrorMessage = "Assert.That(sourcesCount, Is.LessThanOrEqualTo(",
+			Details = "Access wraps joined-side LEFT JOIN ON predicates into derived tables: 4 sources where 2 are allowed.")]
 		[Test]
 		public void TestIssue2832([DataSources] string context)
 		{

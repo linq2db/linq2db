@@ -924,6 +924,8 @@ namespace Tests.Linq
 
 		// The outer-only predicate reads a table the join key does not, so it cannot be folded into the key and stays in ON.
 		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb)]
+		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb, ErrorMessage = "JOIN expression not supported")]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException",   TestProvName.AllAccessOdbc,  ErrorMessage = "JOIN expression not supported")]
 		[Test]
 		public void LeftJoinOuterOnlyPredicateOnPrecedingJoin([DataSources] string context)
 		{
@@ -978,8 +980,6 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		// A false parameter makes the folded join key `NULL = key`, which YDB rejects.
-		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb, AlsoWhenParameter = "flag", AlsoWhenValue = false, ErrorMessage = "each equality predicate argument must depend on exactly one JOIN input")]
 		[Test]
 		public void LeftJoinOuterOnlyPredicateWithParameter([DataSources] string context, [Values] bool flag)
 		{
@@ -993,8 +993,6 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		// A null parameter makes the folded join key `NULL = key`, which YDB rejects.
-		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb, AlsoWhenParameter = "name", AlsoWhenValue = null, ErrorMessage = "each equality predicate argument must depend on exactly one JOIN input")]
 		[Test]
 		public void LeftJoinOuterOnlyPredicateWithStringParameter([DataSources] string context, [Values("John", null)] string? name)
 		{
@@ -1008,6 +1006,9 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		// Access rejects this ON, folded or not: its keys read two different outer tables.
+		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb, ErrorMessage = "JOIN expression not supported")]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException",   TestProvName.AllAccessOdbc,  ErrorMessage = "JOIN expression not supported")]
 		[Test]
 		public void LeftJoinOuterOnlyPredicatesOnSeveralKeys([DataSources] string context)
 		{
@@ -1035,8 +1036,6 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		// A null parameter makes the folded join key `NULL = key`, which YDB rejects.
-		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb, AlsoWhenParameter = "id", AlsoWhenValue = null, ErrorMessage = "each equality predicate argument must depend on exactly one JOIN input")]
 		[Test]
 		public void LeftJoinOuterOnlyPredicateWithNullableParameter([DataSources] string context, [Values(null, 11)] int? id, [Values] bool equality)
 		{
@@ -1055,6 +1054,8 @@ namespace Tests.Linq
 
 		// Both key sides are nullable, so the key is null-aware and cannot carry the outer-only predicate.
 		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb, ErrorMessage = "JOIN ON expression must be a conjunction of equality predicates")]
+		[ActiveIssue(6215, Configuration = TestProvName.AllAccess, ErrorMessage = "Assert.That(resultList, Has.Count.EqualTo(expectedList.Count))",
+			Details = "Access applies an outer-only LEFT JOIN ON predicate as a filter and drops the outer row; the null-aware key cannot carry it.")]
 		[Test]
 		public void LeftJoinOuterOnlyPredicateNullAwareKey([DataSources] string context)
 		{

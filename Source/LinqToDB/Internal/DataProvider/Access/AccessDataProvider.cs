@@ -65,6 +65,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 			SqlProviderFlags.IsSimpleCoalesceSupported                             = false;
 			SqlProviderFlags.IsSubqueryExpressionInsidePredicateSupported          = false;
 			SqlProviderFlags.IsSubqueryJoinOnOuterReferenceSupported               = false;
+			SqlProviderFlags.IsComplexJoinConditionSupported                       = false;
 
 			if (provider == AccessProvider.OleDb)
 			{

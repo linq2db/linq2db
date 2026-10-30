@@ -3088,12 +3088,22 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					var outerKey = outerFirst ? key.Expr1 : key.Expr2;
 					var keyType  = QueryHelper.GetDbDataType(outerKey, _mappingSchema);
 
-					// ELSE is raw SQL so the optimizer cannot evaluate it: when parameters decide the condition is false,
-					// the key renders as `NULL = innerKey` (matches nothing) instead of being reduced to `innerKey IS NULL`.
+					// ELSE is raw SQL so the optimizer cannot reduce the key to `innerKey IS NULL`. When parameters can decide
+					// the condition, the CASE may collapse to its ELSE at execution, so the ELSE keeps reading the outer key:
+					// YDB and Access reject `NULL = innerKey`, and Access cannot type an IIF whose branches are both NULL.
+					// The forced nullability stops the optimizer folding IS NULL to false on a non-nullable key.
+					var rawNull  = new SqlExpression(keyType, "NULL", Precedence.Primary, SqlFlags.None, canBeNull: true);
+					var elseExpr = covered.Exists(p => p.predicate.HasParameter())
+						? new SqlConditionExpression(
+							new SqlPredicate.IsNull(SqlNullabilityExpression.ApplyNullability(outerKey, true), false),
+							outerKey,
+							rawNull)
+						: (ISqlExpression)rawNull;
+
 					var caseKey = new SqlCaseExpression(
 						keyType,
 						[new SqlCaseExpression.CaseItem(new SqlSearchCondition(false, null, covered.Select(p => p.predicate)), outerKey)],
-						new SqlExpression(keyType, "NULL", Precedence.Primary, SqlFlags.None, canBeNull: true));
+						elseExpr);
 
 					// The picked key never matched NULL before the rewrite, so the CASE side must not be null-aware.
 					join.Condition.Predicates[i] = outerFirst
