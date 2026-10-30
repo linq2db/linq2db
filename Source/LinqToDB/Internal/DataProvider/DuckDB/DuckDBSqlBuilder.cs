@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.Common;
 using System.Globalization;
 using System.Linq;
@@ -345,6 +346,34 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			if (!parameter.ParameterName.StartsWith('$'))
 				sb.Append('$');
 			sb.Append(parameter.ParameterName);
+		}
+
+		// DuckDB.NET exposes no parameter type of its own: it binds to the type the statement expects
+		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
+		{
+			return base.GetProviderTypeName(dataContext, parameter) ?? parameter.DbType switch
+			{
+				DbType.Boolean        => "BOOLEAN",
+				DbType.SByte          => "TINYINT",
+				DbType.Byte           => "UTINYINT",
+				DbType.Int16          => "SMALLINT",
+				DbType.UInt16         => "USMALLINT",
+				DbType.Int32          => "INTEGER",
+				DbType.UInt32         => "UINTEGER",
+				DbType.Int64          => "BIGINT",
+				DbType.UInt64         => "UBIGINT",
+				DbType.Single         => "FLOAT",
+				DbType.Double         => "DOUBLE",
+				DbType.Currency       => "DECIMAL",
+				DbType.VarNumeric     => "BIGNUM",
+				DbType.Date           => "DATE",
+				DbType.Time           => "TIME",
+				DbType.DateTime
+					or DbType.DateTime2 => "TIMESTAMP",
+				DbType.DateTimeOffset => "TIMESTAMPTZ",
+				DbType.Guid           => "UUID",
+				_                     => null,
+			};
 		}
 
 		protected override void BuildCreateTablePrimaryKey(SqlCreateTableStatement createTable, string pkName, IEnumerable<string> fieldNames)

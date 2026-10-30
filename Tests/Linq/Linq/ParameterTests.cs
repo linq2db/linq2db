@@ -1,12 +1,21 @@
+extern alias MySqlConnector;
+
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text;
 using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Data;
+using LinqToDB.DataProvider;
+using LinqToDB.DataProvider.ClickHouse;
+using LinqToDB.DataProvider.DuckDB;
+using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
@@ -2153,5 +2162,205 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
+
+		#region Parameter type names in the trace DECLARE block
+
+		static string PrintParameterDeclaration(IDataProvider provider, DbParameter parameter, DbDataType? dataType = null, object? value = null)
+		{
+			// the connection is never opened: SetParameter and PrintParameters only touch the parameter
+			var options = new DataOptions()
+				.UseConnectionString(provider, "Data Source=:memory:");
+
+			using var db = new DataConnection(options);
+
+			if (dataType != null)
+				provider.SetParameter(db, parameter, "p", dataType.Value, value);
+			else
+				parameter.ParameterName = "p";
+
+			var sb = new StringBuilder();
+
+			provider
+				.CreateSqlBuilder(db.MappingSchema, db.Options)
+				.PrintParameters(db, sb, [parameter]);
+
+			return sb
+				.ToString()
+				.Split('\n')[0]
+				.TrimEnd('\r');
+		}
+
+		static TestCaseData ParameterTypeCase(object?[] arguments, params string[] displayNames)
+		{
+			var testCase = new TestCaseData(arguments);
+
+			testCase.SetArgDisplayNames(displayNames);
+
+			return testCase;
+		}
+
+		static TestCaseData ParameterTypeCase(string name, DbDataType dataType, object? value, string expected)
+		{
+			return ParameterTypeCase([dataType, value, expected], name);
+		}
+
+		static IEnumerable<TestCaseData> SQLiteMSParameterTypeCases()
+		{
+			yield return ParameterTypeCase("Int32"     , new DbDataType(typeof(int)     , DataType.Int32)       , 1                , "DECLARE @p Integer -- Int32"     );
+			yield return ParameterTypeCase("DateTime"  , new DbDataType(typeof(DateTime), DataType.DateTime)    , TestData.DateTime, "DECLARE @p Text(23) -- DateTime" );
+			yield return ParameterTypeCase("Guid"      , new DbDataType(typeof(Guid)    , DataType.Guid)        , TestData.Guid1   , "DECLARE @p Blob(16) -- Guid"     );
+			yield return ParameterTypeCase("GuidAsText", new DbDataType(typeof(Guid)    , DataType.Guid, "TEXT"), TestData.Guid1   , "DECLARE @p Text(36) -- Guid"     );
+			yield return ParameterTypeCase("Boolean"   , new DbDataType(typeof(bool)    , DataType.Boolean)     , true             , "DECLARE @p Integer -- Boolean"   );
+			yield return ParameterTypeCase("Double"    , new DbDataType(typeof(double)  , DataType.Double)      , 1.5              , "DECLARE @p Real -- Double"       );
+			yield return ParameterTypeCase("NullInt32" , new DbDataType(typeof(int?)    , DataType.Int32)       , null             , "DECLARE @p Integer -- Int32"     );
+			yield return ParameterTypeCase("String"    , new DbDataType(typeof(string)  , DataType.NVarChar)    , "abc"            , "DECLARE @p NVarChar(3) -- String");
+			yield return ParameterTypeCase("Binary"    , new DbDataType(typeof(byte[])  , DataType.Binary)      , new byte[3]      , "DECLARE @p Binary(3)"            );
+			yield return ParameterTypeCase("Decimal"   , new DbDataType(typeof(decimal) , DataType.Decimal)     , 1.5m             , "DECLARE @p Decimal(2, 1)"        );
+		}
+
+		[TestCaseSource(nameof(SQLiteMSParameterTypeCases))]
+		public void ParameterTypeNameSQLiteMS(DbDataType dataType, object? value, string expected)
+		{
+			PrintParameterDeclaration(SQLiteTools.GetDataProvider(SQLiteProvider.Microsoft), new Microsoft.Data.Sqlite.SqliteParameter(), dataType, value)
+				.ShouldBe(expected);
+		}
+
+		[Test]
+		public void ParameterTypeNameSQLiteMSObject()
+		{
+			var parameter = new Microsoft.Data.Sqlite.SqliteParameter
+			{
+				DbType = DbType.Object,
+				Value  = 1,
+			};
+
+			PrintParameterDeclaration(SQLiteTools.GetDataProvider(SQLiteProvider.Microsoft), parameter)
+				.ShouldBe("DECLARE @p Integer -- Object");
+		}
+
+		[Test]
+		public void ParameterTypeNameSQLiteMSUnmappedValue()
+		{
+			// Microsoft.Data.Sqlite throws for a CLR type it cannot bind; the trace must still be written
+			var parameter = new Microsoft.Data.Sqlite.SqliteParameter
+			{
+				DbType = DbType.Object,
+				Value  = new object(),
+			};
+
+			PrintParameterDeclaration(SQLiteTools.GetDataProvider(SQLiteProvider.Microsoft), parameter)
+				.ShouldBe("DECLARE @p  -- Object");
+		}
+
+		static IEnumerable<TestCaseData> SQLiteClassicParameterTypeCases()
+		{
+			yield return ParameterTypeCase("Int32"   , new DbDataType(typeof(int)     , DataType.Int32)   , 1                , "DECLARE @p Integer -- Int32"         );
+			yield return ParameterTypeCase("Boolean" , new DbDataType(typeof(bool)    , DataType.Boolean) , true             , "DECLARE @p Integer -- Boolean"       );
+			yield return ParameterTypeCase("Guid"    , new DbDataType(typeof(Guid)    , DataType.Guid)    , TestData.Guid1   , "DECLARE @p Blob -- Guid"             );
+			yield return ParameterTypeCase("Double"  , new DbDataType(typeof(double)  , DataType.Double)  , 1.5              , "DECLARE @p Real -- Double"           );
+			yield return ParameterTypeCase("DateTime", new DbDataType(typeof(DateTime), DataType.DateTime), TestData.DateTime, "DECLARE @p VarChar(23) -- AnsiString");
+			yield return ParameterTypeCase("String"  , new DbDataType(typeof(string)  , DataType.NVarChar), "abc"            , "DECLARE @p NVarChar(3) -- String"    );
+			yield return ParameterTypeCase("Binary"  , new DbDataType(typeof(byte[])  , DataType.Binary)  , new byte[3]      , "DECLARE @p Binary(3)"                );
+			yield return ParameterTypeCase("Decimal" , new DbDataType(typeof(decimal) , DataType.Decimal) , 1.5m             , "DECLARE @p Decimal(2, 1)"            );
+		}
+
+		[TestCaseSource(nameof(SQLiteClassicParameterTypeCases))]
+		public void ParameterTypeNameSQLiteClassic(DbDataType dataType, object? value, string expected)
+		{
+			PrintParameterDeclaration(SQLiteTools.GetDataProvider(SQLiteProvider.System), new System.Data.SQLite.SQLiteParameter(), dataType, value)
+				.ShouldBe(expected);
+		}
+
+		[Test]
+		public void ParameterTypeNameSQLiteClassicObject()
+		{
+			// System.Data.SQLite binds a DbType.Object parameter by the type of its value
+			var parameter = new System.Data.SQLite.SQLiteParameter
+			{
+				DbType = DbType.Object,
+				Value  = 1,
+			};
+
+			PrintParameterDeclaration(SQLiteTools.GetDataProvider(SQLiteProvider.System), parameter)
+				.ShouldBe("DECLARE @p Integer -- Object");
+		}
+
+#if !NETFRAMEWORK
+		static IEnumerable<TestCaseData> DuckDBParameterTypeCases()
+		{
+			yield return ParameterTypeCase("Int32"     , new DbDataType(typeof(int)       , DataType.Int32)    , 1             , "DECLARE $p INTEGER -- Int32"     );
+			yield return ParameterTypeCase("Boolean"   , new DbDataType(typeof(bool)      , DataType.Boolean)  , true          , "DECLARE $p BOOLEAN -- Boolean"   );
+			yield return ParameterTypeCase("BigInteger", new DbDataType(typeof(System.Numerics.BigInteger), DataType.Undefined), System.Numerics.BigInteger.One, "DECLARE $p BIGNUM -- VarNumeric");
+			yield return ParameterTypeCase("String"    , new DbDataType(typeof(string)    , DataType.NVarChar) , "abc"         , "DECLARE $p NVarChar(3) -- String");
+			yield return ParameterTypeCase("Binary"    , new DbDataType(typeof(byte[])    , DataType.Binary)   , new byte[3]   , "DECLARE $p Binary(3)"            );
+			yield return ParameterTypeCase("Decimal"   , new DbDataType(typeof(decimal)   , DataType.Decimal)  , 1.5m          , "DECLARE $p Decimal(2, 1)"        );
+		}
+
+		[TestCaseSource(nameof(DuckDBParameterTypeCases))]
+		public void ParameterTypeNameDuckDB(DbDataType dataType, object? value, string expected)
+		{
+			PrintParameterDeclaration(DuckDBTools.GetDataProvider(), new DuckDB.NET.Data.DuckDBParameter(), dataType, value)
+				.ShouldBe(expected);
+		}
+
+		[Test]
+		public void ParameterTypeNameDuckDBObject()
+		{
+			// no value: DuckDBParameter.Value's setter would re-derive DbType from it
+			var parameter = new DuckDB.NET.Data.DuckDBParameter
+			{
+				DbType = DbType.Object,
+			};
+
+			PrintParameterDeclaration(DuckDBTools.GetDataProvider(), parameter)
+				.ShouldBe("DECLARE $p  -- Object");
+		}
+#endif
+
+		static IEnumerable<TestCaseData> ClickHouseParameterTypeCases()
+		{
+#if !NETFRAMEWORK
+			yield return ParameterTypeCase([ClickHouseProvider.Octonica        , 1L  , "DECLARE @p Int64"                    ], "Octonica"      , "Value");
+			yield return ParameterTypeCase([ClickHouseProvider.Octonica        , null, "DECLARE @p Int64"                    ], "Octonica"      , "Null" );
+#endif
+			yield return ParameterTypeCase([ClickHouseProvider.ClickHouseDriver, 1L  , "DECLARE @p Int64"                    ], "Driver"        , "Value");
+			yield return ParameterTypeCase([ClickHouseProvider.ClickHouseDriver, null, "DECLARE @p Nullable(Nothing) -- Int64"], "Driver"        , "Null" );
+			yield return ParameterTypeCase([ClickHouseProvider.MySqlConnector  , 1L  , "DECLARE @p Int64"                    ], "MySqlConnector", "Value");
+			yield return ParameterTypeCase([ClickHouseProvider.MySqlConnector  , null, "DECLARE @p Int64"                    ], "MySqlConnector", "Null" );
+		}
+
+		[TestCaseSource(nameof(ClickHouseParameterTypeCases))]
+		public void ParameterTypeNameClickHouse(ClickHouseProvider clickHouseProvider, long? value, string expected)
+		{
+			DbParameter parameter = clickHouseProvider switch
+			{
+#if !NETFRAMEWORK
+				ClickHouseProvider.Octonica       => new Octonica.ClickHouseClient.ClickHouseParameter(),
+#endif
+				ClickHouseProvider.MySqlConnector => new MySqlConnector::MySqlConnector.MySqlParameter(),
+				_                                 => new ClickHouse.Driver.ADO.Parameters.ClickHouseDbParameter(),
+			};
+
+			PrintParameterDeclaration(ClickHouseTools.GetDataProvider(clickHouseProvider), parameter, new DbDataType(typeof(long?), DataType.Int64), value)
+				.ShouldBe(expected);
+		}
+
+		// the providers this naming covers that take LINQ parameters (ClickHouse inlines them)
+		[Test]
+		public void ParameterTypeNameInTrace([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var id = 1;
+
+			db.Person
+				.Where(p => p.ID == id)
+				.ToList();
+
+			GetCurrentBaselines()
+				.ShouldContain(context.IsAnyOf(ProviderName.DuckDB) ? "DECLARE $id INTEGER -- Int32" : "DECLARE @id Integer -- Int32");
+		}
+
+		#endregion
 	}
 }
