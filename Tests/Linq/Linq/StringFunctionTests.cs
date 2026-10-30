@@ -926,6 +926,36 @@ namespace Tests.Linq
 				.ShouldNotContain("AS Char(");
 		}
 
+		[Test]
+		public void ColumnArgumentBesideFixedLengthValueIsNotPadded([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(UnicodeArgumentData);
+
+			var result = table
+				.OrderBy(t => t.Id)
+				.Select(t => new
+				{
+					NChar = Sql.AsSql(t.NCharColumn.Replace(Sql.Convert(Sql.Types.VarChar(1), t.VarCharColumn), "x").TrimEnd()),
+					Char  = Sql.AsSql(t.CharColumn.Replace(Sql.Convert(Sql.Types.VarChar(1), t.VarCharColumn), "x").TrimEnd()),
+				})
+				.ToArray();
+
+			result
+				.Select(r => r.NChar)
+				.ShouldBe(["x-100", "x?200", "x-200"]);
+
+			result
+				.Select(r => r.Char)
+				.ShouldBe(["x-100", "x?200", "x-200"]);
+
+			// A cast to the fixed-length value's type would pad the one-character search value to that length.
+			var baselines = GetCurrentBaselines();
+
+			baselines.ShouldNotContain("AS NChar(");
+			baselines.ShouldNotContain("AS Char(");
+		}
+
 		// Access: the concatenation loops (#6193) and grows the expression past a gigabyte, enough to run the 32-bit test
 		// host out of memory, so it is not run there rather than gated. Informix: excluded for the Cyrillic seed values.
 		[Test]
