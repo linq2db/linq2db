@@ -37,6 +37,15 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		ISqlTableSource? _updateTable;
 		bool             _isColumnsOptimized;
 
+		// Correction-walk scoping for the query whose fixpoint loop is running (#5738).
+		bool                                                        _hasAncestorReferences;
+		SelectQuery?                                                _loopQuery;
+		SelectQuery?                                                _columnsParent;
+		HashSet<ISqlTableSource>?                                   _loopSources;
+		HashSet<IQueryElement>?                                     _pulledUp;
+		HashSet<IQueryElement>?                                     _skipInCorrection;
+		readonly List<(ISqlTableSource? Owner, SelectQuery? Level)> _pendingReplacements = new();
+
 		readonly SqlQueryColumnNestingCorrector _columnNestingCorrector      = new();
 		readonly SqlQueryOrderByOptimizer       _orderByOptimizer            = new();
 		readonly MovingComplexityVisitor        _movingComplexityVisitor     = new();
@@ -62,6 +71,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		/// <summary>Whole-tree expression passes actually run at the top of a root or CTE-body query in a later fixpoint iteration.</summary>
 		public int LaterIterationPassesExecuted { get; private set; }
+
+		/// <summary>Reference-correction walks run.</summary>
+		public int CorrectionWalks { get; private set; }
+
+		/// <summary>Reference-correction walks that skipped the parts pulled up into the looping query.</summary>
+		public int ScopedCorrectionWalks { get; private set; }
 #endif
 
 		public IQueryElement Optimize(
@@ -102,6 +117,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			LaterIterationPassesReached  = 0;
 			FirstIterationPassesExecuted = 0;
 			LaterIterationPassesExecuted = 0;
+			CorrectionWalks              = 0;
+			ScopedCorrectionWalks        = 0;
 #endif
 
 			// OUTER APPLY Queries usually may have wrong nesting in WHERE clause.
@@ -156,6 +173,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 			_columnNestingCorrector.CorrectColumnNesting(_root);
 
+			_hasAncestorReferences = _columnNestingCorrector.HasAncestorReference;
+
 			return _columnNestingCorrector.HasSelectQuery;
 		}
 
@@ -179,6 +198,16 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			_updateQuery        = default;
 			_updateTable        = default;
 			_isColumnsOptimized = false;
+			_correcting         = null;
+			_currentSetOperator = null;
+			_loopQuery          = null;
+			_columnsParent      = null;
+			_loopSources        = null;
+			_pulledUp           = null;
+			_skipInCorrection   = null;
+
+			_hasAncestorReferences = false;
+			_pendingReplacements.Clear();
 
 			_columnNestingCorrector.Cleanup();
 			_orderByOptimizer.Cleanup();
@@ -190,12 +219,24 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		public override IQueryElement NotifyReplaced(IQueryElement newElement, IQueryElement oldElement)
 		{
+			var owner = oldElement switch
+			{
+				SqlColumn column => column.Parent,
+				SqlField  field  => field.Table,
+				_                => null,
+			};
+
+			_pendingReplacements.Add((owner, _columnsParent ?? _loopQuery));
+
 			++_version;
 			return base.NotifyReplaced(newElement, oldElement);
 		}
 
 		protected internal override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
 		{
+			if (IsSkippedInCorrection(element))
+				return element;
+
 			var saveQuery = _applySelect;
 
 			_applySelect = element.JoinType switch
@@ -272,10 +313,21 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				if (saveParent != null)
 				{
+					// the replaced columns belong to this query, so their references live in the parent
+					_columnsParent = saveParent;
 					OptimizeColumns(selectQuery);
+					_columnsParent = null;
 				}
 
 				List<SelectQuery>? doNotRemoveQueries = null;
+
+				var saveLoopQuery   = _loopQuery;
+				var saveLoopSources = _loopSources;
+				var savePulledUp    = _pulledUp;
+
+				_loopQuery   = selectQuery;
+				_loopSources = _hasAncestorReferences ? null : CollectLoopSources(selectQuery);
+				_pulledUp    = null;
 
 				do
 				{
@@ -344,6 +396,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				} while (true);
 
+				_loopQuery   = saveLoopQuery;
+				_loopSources = saveLoopSources;
+				_pulledUp    = savePulledUp;
+
 				if (saveParent == null)
 				{
 					// do expression optimization again
@@ -395,6 +451,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		protected internal override IQueryElement VisitSqlTableSource(SqlTableSource element)
 		{
+			if (IsSkippedInCorrection(element))
+				return element;
+
 			var saveCurrent      = _currentSetOperator;
 			var saveIsExpression = _isExpression;
 
@@ -1182,11 +1241,129 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (_correcting != null)
 				throw new InvalidOperationException();
 
-			_correcting = selectQuery;
+			var scoped = CanScopeCorrection(selectQuery);
+
+#if BUGCHECK
+			CorrectionWalks++;
+			if (scoped)
+				ScopedCorrectionWalks++;
+#endif
+
+			_correcting       = selectQuery;
+			_skipInCorrection = scoped ? _pulledUp : null;
 
 			Visit(selectQuery);
 
-			_correcting = null;
+			_correcting       = null;
+			_skipInCorrection = null;
+
+			PrunePendingReplacements(selectQuery, scoped);
+		}
+
+		// A walk may skip the parts MoveSubQueryUp pulled into the looping query: they are a merged child's internals, so
+		// they reference only sources that came with them. That holds while every pending replacement is owned by the
+		// query itself (its references live above) or by a source the query had when its loop started and still has.
+		// A reference to an enclosing query's own column (an OUTER APPLY body) breaks that premise for the whole tree.
+		bool CanScopeCorrection(SelectQuery selectQuery)
+		{
+			if (_hasAncestorReferences || _pulledUp == null || _loopSources == null || !ReferenceEquals(selectQuery, _loopQuery))
+				return false;
+
+			foreach (var (owner, level) in _pendingReplacements)
+			{
+				if (ReferenceEquals(owner, selectQuery))
+					continue;
+
+				if (owner == null || !ReferenceEquals(level, selectQuery) || !_loopSources.Contains(owner))
+					return false;
+			}
+
+			return true;
+		}
+
+		void PrunePendingReplacements(SelectQuery selectQuery, bool scoped)
+		{
+			var kept = 0;
+
+			for (var i = 0; i < _pendingReplacements.Count; i++)
+			{
+				var item = _pendingReplacements[i];
+
+				var corrected = scoped
+					? ReferenceEquals(item.Level, selectQuery)
+					: !ReferenceEquals(item.Owner, selectQuery);
+
+				if (!corrected)
+					_pendingReplacements[kept++] = item;
+			}
+
+			_pendingReplacements.RemoveRange(kept, _pendingReplacements.Count - kept);
+		}
+
+		bool IsSkippedInCorrection(IQueryElement element)
+		{
+			if (_skipInCorrection?.Contains(element) != true)
+				return false;
+
+#if BUGCHECK
+			var stale = element.Find(this, static (visitor, e) => visitor.GetReplacement(e, out _));
+			if (stale != null)
+				throw new InvalidOperationException($"Reference correction skipped a pulled-up part that references a replaced element: {stale}");
+#endif
+
+			return true;
+		}
+
+		void AddPulledUp(SelectQuery parentQuery, IQueryElement part, SqlTableSource partTable)
+		{
+			if (!ReferenceEquals(parentQuery, _loopQuery))
+				return;
+
+			(_pulledUp ??= new(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default)).Add(part);
+
+			RemoveLoopSources(partTable);
+		}
+
+		void RemoveLoopSources(SqlTableSource table)
+		{
+			if (_loopSources == null)
+				return;
+
+			_loopSources.Remove(table.Source);
+
+			foreach (var join in table.Joins)
+				RemoveLoopSources(join.Table);
+		}
+
+		// Scoping needs a FROM subquery at loop start; without one the set stays null and every walk is full, even if a wrap adds one later.
+		static HashSet<ISqlTableSource>? CollectLoopSources(SelectQuery selectQuery)
+		{
+			HashSet<ISqlTableSource>? sources = null;
+
+			foreach (var table in selectQuery.From.Tables)
+			{
+				if (table.Source is SelectQuery)
+				{
+					sources = new(Utils.ObjectReferenceEqualityComparer<ISqlTableSource>.Default);
+					break;
+				}
+			}
+
+			if (sources != null)
+			{
+				foreach (var table in selectQuery.From.Tables)
+					Add(sources, table);
+			}
+
+			return sources;
+
+			static void Add(HashSet<ISqlTableSource> sources, SqlTableSource table)
+			{
+				sources.Add(table.Source);
+
+				foreach (var join in table.Joins)
+					Add(sources, join.Table);
+			}
 		}
 
 		bool IsRemovableJoin(SqlJoinedTable join)
@@ -2009,9 +2186,15 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				NotifyReplaced(subQueryTableSource.All, subQuery.All);
 
 				if (subQueryTableSource.Joins.Count > 0)
+				{
+					foreach (var join in subQueryTableSource.Joins)
+						AddPulledUp(parentQuery, join, join.Table);
+
 					tableSource.Joins.InsertRange(0, subQueryTableSource.Joins);
+				}
 
 				tableSource.Source = subQueryTableSource.Source;
+				_loopSources?.Remove(subQueryTableSource.Source);
 
 				if (subQueryTableSource.HasUniqueKeys)
 				{
@@ -2030,6 +2213,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				for (var i = subQuery.From.Tables.Count - 1; i >= 1; i--)
 				{
 					var subQueryTableSource = subQuery.From.Tables[i];
+					AddPulledUp(parentQuery, subQueryTableSource, subQueryTableSource);
 					parentQuery.From.Tables.Insert(idx + 1, subQueryTableSource);
 				}
 			}
