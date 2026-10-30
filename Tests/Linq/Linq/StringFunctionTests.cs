@@ -905,8 +905,10 @@ namespace Tests.Linq
 			baselines.ShouldContain("REPLICATE('0'");
 		}
 
+		// Informix: excluded for the Cyrillic seed values.
 		[Test]
-		public void ComputedArgumentBesideCharInComparisonIsNotPadded([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		[ThrowsCannotBeConverted(TestProvName.AllAccessJet)]
+		public void ComputedArgumentBesideCharInComparisonIsNotPadded([DataSources(TestProvName.AllInformix)] string context)
 		{
 			var dash = "-";
 
@@ -916,44 +918,57 @@ namespace Tests.Linq
 			var query =
 				from a in table
 				from b in table
-				where b.VarCharColumn == a.CharColumn.Replace("?", dash)
+				where b.VarCharColumn == a.CharColumn.Replace("?", dash).TrimEnd()
 				select new { A = a.Id, B = b.Id };
 
 			AssertQuery(query);
 
 			// A cast to the Char column's type would pad the search value and the replacement to its length.
-			GetCurrentBaselines()
-				.ShouldNotContain("AS Char(");
+			if (context.IsAnyOf(TestProvName.AllSqlServer))
+			{
+				GetCurrentBaselines()
+					.ShouldNotContain("AS Char(");
+			}
 		}
 
+		static readonly StringTypesTable[] FixedLengthSearchData =
+		[
+			new() { Id = 1, CharColumn = "A-100", NCharColumn = "A-100", VarCharColumn = "-", NVarCharColumn = "A-100" },
+			new() { Id = 2, CharColumn = "B?200", NCharColumn = "B?200", VarCharColumn = "?", NVarCharColumn = "B?200" },
+		];
+
 		[Test]
-		public void ColumnArgumentBesideFixedLengthValueIsNotPadded([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		[ThrowsCannotBeConverted(TestProvName.AllAccessJet)]
+		public void ColumnArgumentBesideFixedLengthValueIsNotPadded([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
-			using var table = db.CreateLocalTable(UnicodeArgumentData);
+			using var table = db.CreateLocalTable(FixedLengthSearchData);
 
 			var result = table
 				.OrderBy(t => t.Id)
 				.Select(t => new
 				{
-					NChar = Sql.AsSql(t.NCharColumn.Replace(Sql.Convert(Sql.Types.VarChar(1), t.VarCharColumn), "x").TrimEnd()),
-					Char  = Sql.AsSql(t.CharColumn.Replace(Sql.Convert(Sql.Types.VarChar(1), t.VarCharColumn), "x").TrimEnd()),
+					NChar = Sql.AsSql(t.NCharColumn.Replace(t.VarCharColumn, "x").TrimEnd()),
+					Char  = Sql.AsSql(t.CharColumn.Replace(t.VarCharColumn, "x").TrimEnd()),
 				})
 				.ToArray();
 
 			result
 				.Select(r => r.NChar)
-				.ShouldBe(["x-100", "x?200", "x-200"]);
+				.ShouldBe(["Ax100", "Bx200"]);
 
 			result
 				.Select(r => r.Char)
-				.ShouldBe(["x-100", "x?200", "x-200"]);
+				.ShouldBe(["Ax100", "Bx200"]);
 
 			// A cast to the fixed-length value's type would pad the one-character search value to that length.
-			var baselines = GetCurrentBaselines();
+			if (context.IsAnyOf(TestProvName.AllSqlServer))
+			{
+				var baselines = GetCurrentBaselines();
 
-			baselines.ShouldNotContain("AS NChar(");
-			baselines.ShouldNotContain("AS Char(");
+				baselines.ShouldNotContain("AS NChar(");
+				baselines.ShouldNotContain("AS Char(");
+			}
 		}
 
 		// Access: the concatenation loops (#6193) and grows the expression past a gigabyte, enough to run the 32-bit test
