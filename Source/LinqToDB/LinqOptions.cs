@@ -222,9 +222,10 @@ namespace LinqToDB
 	/// regardless of this option. <see cref="UseDbBatch"/> selects the backend wherever statements are combined.
 	/// </para>
 	/// <para>
-	/// An eager load also stays sequential when the context carries pending query hints, or when its type overrides
-	/// <c>DataConnection.ProcessQuery</c>: both are applied by the per-command path the combined executor replaces, so
-	/// combining would drop them from part of the load rather than all of it. Eager loads are combined only when the query
+	/// A query that runs while the context carries pending query hints stays sequential, eager load and multi-step DML
+	/// alike: a hint applies to one command. An eager load also stays sequential when the context's type overrides
+	/// <c>DataConnection.ProcessQuery</c>, which is applied by the per-command path the combined executor replaces, so
+	/// combining would drop it from part of the load rather than all of it. Eager loads are combined only when the query
 	/// runs on a <see cref="LinqToDB.Data.DataConnection"/> or a <see cref="LinqToDB.DataContext"/> (a remote context
 	/// loads them sequentially), and never for a compiled query that returns a single element; children loaded by the
 	/// KeyedQuery strategy always run as separate commands. Multi-step DML is combined on every context, a remote one
