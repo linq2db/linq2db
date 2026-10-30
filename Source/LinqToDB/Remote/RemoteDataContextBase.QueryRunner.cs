@@ -93,9 +93,11 @@ namespace LinqToDB.Remote
 
 				scenario = ScenarioCommandRenderer.FinalizeScenarioSteps(scenario, statement, sqlOptimizer, DataContext.Options, DataContext.MappingSchema, optimizationContext);
 
-				// Same master-switch gate as the direct runner (ScenarioCommandRenderer.PrepareStructure), so the SQL text
-				// this reports matches what the server will actually execute for these options.
-				var plan     = DataContext.Options.LinqOptions.UseCombinedCommands
+				var queryHints = DataContext.GetNextCommandHints(false);
+
+				// Same gates as the direct runner (the master switch, and no combining for a run that carries query hints), so
+				// the SQL text this reports matches what the server will actually execute for these options.
+				var plan     = DataContext.Options.LinqOptions.UseCombinedCommands && queryHints == null
 					? dmlService.PlanScenario(scenario, flags)
 					: SqlCommandGroupPlan.Sequential(scenario.Steps.Count);
 				var commands = ScenarioCommandRenderer.RenderScenarioGroups(scenario, plan, statement, aliases, sqlBuilder, optimizationContext, serviceProvider, sqlStringBuilder.Value, 0);
@@ -107,12 +109,8 @@ namespace LinqToDB.Remote
 					var command = commands[i];
 					var sql     = command.Command;
 
-					if (i == 0)
-					{
-						var queryHints = DataContext.GetNextCommandHints(false);
-						if (queryHints != null)
-							sql = sqlBuilder.ApplyQueryHints(sql, queryHints);
-					}
+					if (i == 0 && queryHints != null)
+						sql = sqlBuilder.ApplyQueryHints(sql, queryHints);
 
 					DataParameter[]? parameters = null;
 

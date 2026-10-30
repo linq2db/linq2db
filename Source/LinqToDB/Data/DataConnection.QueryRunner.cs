@@ -199,7 +199,14 @@ namespace LinqToDB.Data
 					var statement = query.Statement;
 					var options   = query.DataOptions ?? dataConnection.Options;
 
-					if (query is QueryInfo { Prepared: { } cachedPrepared })
+					// Query hints apply to one command, so a run that carries them keeps the steps separate, as an eager load
+					// does, and renders that plan for this run only.
+					var hinted = options.LinqOptions.UseCombinedCommands
+						&& (dataConnection.QueryHints.Count > 0 || dataConnection.NextQueryHints.Count > 0);
+
+					if (hinted)
+						options = options.WithOptions<LinqOptions>(o => o with { UseCombinedCommands = false });
+					else if (query is QueryInfo { Prepared: { } cachedPrepared })
 					{
 						return new RenderedQuery(cachedPrepared, dataConnection.GetNextCommandHints(!forGetSqlText));
 					}
@@ -252,7 +259,7 @@ namespace LinqToDB.Data
 					// safe. !IsParameterDependent: the SQL cannot depend on this run's values, so the structure can be memoized
 					// - which is also why those values must be withheld from the contexts below (baking them into the cached
 					// structure would make a re-run reuse them).
-					var prepareOnce = !continuousRun && !statement.IsParameterDependent;
+					var prepareOnce = !continuousRun && !statement.IsParameterDependent && !hinted;
 
 					// ── Phase S — structural prepare (parameter-independent) ──────────────────────────────────────
 					// The whole-query optimize+convert runs before aliasing (a conversion that restructures the AST,
@@ -359,7 +366,8 @@ namespace LinqToDB.Data
 					if (prepareOnce && query is QueryInfo queryInfo)
 						queryInfo.Prepared = prepared;
 
-					query.IsContinuousRun = true;
+					if (!hinted)
+						query.IsContinuousRun = true;
 
 					return new RenderedQuery(prepared, dataConnection.GetNextCommandHints(!forGetSqlText));
 				}

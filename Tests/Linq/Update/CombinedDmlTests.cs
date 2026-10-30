@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.Common;
+using System.Diagnostics;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Interceptors;
 
 using NUnit.Framework;
@@ -83,6 +86,106 @@ namespace Tests.xUpdate
 			var on  = InsertOrReplaceRoundTrips(context, combinedCommands: true,  out var combining);
 
 			AssertCollapsed(off, on, combining);
+		}
+
+		// Query hints apply to one command, so a run that carries one executes the INSERT and the identity SELECT separately,
+		// with the hint on the INSERT as the sequential path puts it; runs without hints keep combining.
+		[Test]
+		public void InsertWithIdentity_QueryHintRunsSequentially([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllMySqlConnector)] string context)
+		{
+			var commands = new List<string>();
+
+			using var db = GetDataContext(context, o => o
+				.UseCombinedCommands(true)
+				.UseTracing(TraceLevel.Info, info =>
+				{
+					if (info.TraceInfoStep == TraceInfoStep.BeforeExecute
+						&& info.Operation is TraceOperation.ExecuteNonQuery or TraceOperation.ExecuteScalar or TraceOperation.ExecuteReader)
+						commands.Add(info.SqlText);
+				}));
+			using var cleanup = new DeletePerson(db);
+
+			for (var run = 0; run < 3; run++)
+			{
+				var hinted = run == 1;
+
+				if (hinted)
+					db.NextQueryHints.Add("-- hinted insert");
+
+				commands.Clear();
+
+				var id = db.Person.InsertWithIdentity(() => new Person
+				{
+					FirstName = "John",
+					LastName  = "Shepard",
+					Gender    = Gender.Male
+				});
+
+				if (hinted)
+				{
+					commands.Count.ShouldBe(2);
+					commands[0].ShouldContain("INSERT");
+					commands[0].ShouldContain("-- hinted insert");
+					commands[1].ShouldNotContain("-- hinted insert");
+				}
+				else
+				{
+					commands.Count.ShouldBe(1);
+				}
+
+				db.Person
+					.Single(p => p.ID == Convert.ToInt32(id))
+					.LastName
+					.ShouldBe("Shepard");
+			}
+		}
+
+		// Multi-step DML reaches the DbBatch backend only where an identity insert is two statements and the connector can
+		// batch: MySqlConnector, as INSERT + SELECT LAST_INSERT_ID(). SQL Server and PostgreSQL return the identity from the
+		// INSERT itself, so they have nothing to combine. Commands are counted by tracing, because a command interceptor
+		// would force the concatenated backend.
+		[Test]
+		public void InsertWithIdentity_CombinedBackend(
+			[IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllMySqlConnector)] string context,
+			[Values] bool useDbBatch)
+		{
+			var commands = new List<string>();
+
+			using var db = GetDataContext(context, o => o
+				.UseCombinedCommands(true)
+				.UseDbBatch(useDbBatch)
+				.UseTracing(TraceLevel.Info, info =>
+				{
+					if (info.TraceInfoStep == TraceInfoStep.BeforeExecute
+						&& info.Operation is TraceOperation.ExecuteNonQuery or TraceOperation.ExecuteScalar or TraceOperation.ExecuteReader)
+						commands.Add(info.SqlText);
+				}));
+			using var cleanup = new DeletePerson(db);
+
+			commands.Clear();
+
+			var id = db.Person.InsertWithIdentity(() => new Person
+			{
+				FirstName = "John",
+				LastName  = "Shepard",
+				Gender    = Gender.Male
+			});
+
+#if SUPPORTS_DBBATCH
+			var batch = useDbBatch && context.IsAnyOf(TestProvName.AllMySqlConnector);
+#else
+			var batch = false;
+#endif
+
+			commands
+				.ShouldHaveSingleItem()
+				.Contains("-- Command 1", StringComparison.Ordinal)
+				.ShouldBe(batch);
+
+			db.Person
+				.Single(p => p.ID == Convert.ToInt32(id))
+				.LastName
+				.ShouldBe("Shepard");
 		}
 
 		// Registering the counter forces the concatenated backend: CanUseDbBatch requires no command interceptor, and a

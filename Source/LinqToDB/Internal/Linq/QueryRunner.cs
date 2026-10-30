@@ -789,7 +789,30 @@ namespace LinqToDB.Internal.Linq
 			}
 
 			static bool IsCombinable(Harvester harvester)
-				=> harvester is IStepMaterializer { CanCombine: true } materializer && materializer.GetCombinableStatement() != null;
+				=> harvester is IStepMaterializer { CanCombine: true } materializer && materializer.GetCombinableQueryInfo() != null;
+
+			readonly struct CombinableMonitors : IDisposable
+			{
+				readonly Harvester[] _harvesters;
+				readonly int[]       _indexes;
+
+				public CombinableMonitors(Harvester[] harvesters, int[] indexes)
+				{
+					_harvesters = harvesters;
+					_indexes    = indexes;
+
+					foreach (var i in indexes)
+						Monitor.Enter(GetQueryInfo(i));
+				}
+
+				QueryInfo GetQueryInfo(int index) => ((IStepMaterializer)_harvesters[index]).GetCombinableQueryInfo()!;
+
+				public void Dispose()
+				{
+					for (var k = _indexes.Length - 1; k >= 0; k--)
+						Monitor.Exit(GetQueryInfo(_indexes[k]));
+				}
+			}
 
 			// A DataContext runs the load on the connection it holds; the enumeration keeps it locked, so the nested runners
 			// of the harvesters and the main query do not release it while the shared reader is open.
@@ -886,7 +909,7 @@ namespace LinqToDB.Internal.Linq
 			SqlStatement GetStepStatement(int stepIndex)
 				=> stepIndex == _harvesters.Length
 					? _query.QueryInfo.Statement
-					: ((IStepMaterializer)_harvesters[stepIndex]).GetCombinableStatement()!;
+					: ((IStepMaterializer)_harvesters[stepIndex]).GetCombinableQueryInfo()!.Statement;
 
 			// The batch's participants: the combinable children (in build order) followed by the main query, each paired with
 			// the context slot its result lands in. Self-executing harvesters are NOT here — they run as their own commands
@@ -951,6 +974,10 @@ namespace LinqToDB.Internal.Linq
 				// render and both publish.
 				lock (_query.QueryInfo)
 				{
+					// The children's statements are read here too, and GetCommand prepares each of them in place under its own
+					// monitor. Taken main first, then children in index order; no other site holds two QueryInfo monitors.
+					using var childMonitors = new CombinableMonitors(_harvesters, _combinableIndexes);
+
 					var useBatch       = dataConnection.CanUseDbBatch;   // false on frameworks without the DbBatch API
 					var values         = CollectParameterValues(context);
 

@@ -57,11 +57,12 @@ namespace LinqToDB.Internal.Linq
 		bool CanCombine { get; }
 
 		/// <summary>
-		/// Returns this harvester's single statement for merging, or <see langword="null"/> if it cannot be combined (e.g. it
-		/// renders more than one command). The statement is dialect-converted by the combined-command builder through a
-		/// shared parameter normalizer; its parameter values come from <see cref="AddCombinableParameterValues"/>.
+		/// Returns the query whose single statement is merged, or <see langword="null"/> if it cannot be combined (e.g. it
+		/// renders more than one command). The combined-command builder holds this query's monitor while it reads the
+		/// statement and dialect-converts it through a shared parameter normalizer; its parameter values come from
+		/// <see cref="AddCombinableParameterValues"/>.
 		/// </summary>
-		SqlStatement? GetCombinableStatement();
+		QueryInfo? GetCombinableQueryInfo();
 
 		/// <summary>
 		/// Adds this harvester query's parameter values (keyed by their <see cref="SqlParameter"/> AST nodes) to the shared
