@@ -156,6 +156,50 @@ namespace Tests.Linq
 			(probe.GetCacheMissCount() - start).ShouldBe(2, "a set mutated in place must not reuse it");
 		}
 
+		/// <summary>
+		/// Branches of a set operation with different key sets: each row carries the union of the sets, and a cell its
+		/// branch did not select reads as <c>default(TCell)</c>.
+		/// </summary>
+		[Test]
+		public void ConcatOfDifferentColumnSetsMaterializesTheUnion([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_data);
+
+			var rows = t.Where(x => x.Id == 1)
+					.SelectDynamic(x => new AmountsDto { Id = x.Id }, new[] { "Usd" }, (x, n) => Sql.Property<decimal>(x, n))
+				.Concat(t.Where(x => x.Id == 2)
+					.SelectDynamic(x => new AmountsDto { Id = x.Id }, new[] { "Eur" }, (x, n) => Sql.Property<decimal>(x, n)))
+				.ToList()
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			rows[0].Values!["Usd"].ShouldBe(10.5m);
+			rows[0].Values!["Eur"].ShouldBe(0m);
+			rows[1].Values!["Usd"].ShouldBe(0m);
+			rows[1].Values!["Eur"].ShouldBe(40m);
+		}
+
+		[Test]
+		public void ConcatOfDifferentColumnSetsWithNullableCells([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_data);
+
+			var rows = t.Where(x => x.Id == 1)
+					.SelectDynamic(x => new AmountsDto { Id = x.Id }, new[] { 1 }, (x, k) => (decimal?)(x.Usd * k))
+				.Concat(t.Where(x => x.Id == 2)
+					.SelectDynamic(x => new AmountsDto { Id = x.Id }, new[] { 2 }, (x, k) => (decimal?)(x.Usd * k)))
+				.ToList()
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			rows[0].Values!["1"].ShouldBe(10.5m);
+			rows[0].Values!["2"].ShouldBeNull();
+			rows[1].Values!["1"].ShouldBeNull();
+			rows[1].Values!["2"].ShouldBe(60m);
+		}
+
 		/// <summary>Keys passed as a compiled query's parameter: each call gets its own column set.</summary>
 		[Test]
 		public void SelectDynamicInCompiledQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
