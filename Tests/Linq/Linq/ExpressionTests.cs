@@ -917,6 +917,57 @@ namespace Tests.Linq
 			ShouldHitCacheOnRebuild(ids => FoldedElementQuery(db, ids), new[] { 2 }, 2, new[] { 2 }, 2);
 		}
 
+		static IQueryable<int> FoldedElementsQuery(Model.ITestDataContext db, int[] ids)
+		{
+			var c = Expression.Constant(ids);
+
+			// Two client items: the builder merges them into one condition that is not in the query tree.
+			var condition = Expression.AndAlso(
+				Expression.GreaterThan(Expression.ArrayIndex(c, Expression.Constant(0)), Expression.Constant(0)),
+				Expression.GreaterThan(Expression.ArrayIndex(c, Expression.Constant(1)), Expression.Constant(0)));
+
+			return db.Person
+				.Where(IdIsTwoWhen(condition))
+				.Select(p => p.ID);
+		}
+
+		// Query-cache test: provider-independent.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5843")]
+		[QueryCacheTest]
+		public void FoldedConstantArrayElementsSeeMutation([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var ids   = new[] { 1, 2 };
+			var query = FoldedElementsQuery(db, ids);
+
+			query
+				.ToArray()
+				.ShouldBe([2]);
+
+			var missCount = query.GetCacheMissCount();
+
+			ids[1] = 0;
+
+			FoldedElementsQuery(db, ids)
+				.ToArray()
+				.ShouldBeEmpty();
+
+			query
+				.GetCacheMissCount()
+				.ShouldBe(missCount + 1);
+		}
+
+		// Query-cache test: provider-independent.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5843")]
+		[QueryCacheTest]
+		public void FoldedConstantArrayElementsHitOnEqualArray([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			ShouldHitCacheOnRebuild(ids => FoldedElementsQuery(db, ids), new[] { 1, 2 }, 2, new[] { 1, 2 }, 2);
+		}
+
 		// Query-cache test: provider-independent.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5843")]
 		[QueryCacheTest]

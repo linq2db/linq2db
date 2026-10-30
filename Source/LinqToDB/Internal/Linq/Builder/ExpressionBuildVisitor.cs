@@ -3679,6 +3679,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				var clientCondition = clientItems.Aggregate(node.NodeType == ExpressionType.AndAlso ? Expression.AndAlso : Expression.OrElse);
 
+				Builder.ParametersContext.RegisterComposedSource(clientCondition, clientItems);
+
 				if (HandleValue(clientCondition, out var translatedValue))
 				{
 					translatedValue = Visit(translatedValue);

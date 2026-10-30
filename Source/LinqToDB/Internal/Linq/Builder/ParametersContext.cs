@@ -620,5 +620,10 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			CacheManager.RegisterSqlValue(constantExpr, value, source);
 		}
+
+		public void RegisterComposedSource(Expression composed, List<Expression> parts)
+		{
+			CacheManager.RegisterComposedSource(composed, parts);
+		}
 	}
 }

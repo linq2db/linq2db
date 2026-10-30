@@ -33,6 +33,7 @@ namespace LinqToDB.Internal.Linq
 		List<(SqlValue value, Expression accessor, Expression source)>? _bySqlValueCompare;
 		Dictionary<int, (Expression main, Expression other)>?           _duplicateParametersCheck;
 		Dictionary<int, (Expression param, ParameterCacheEntry entry)>? _parameterEntries;
+		Dictionary<Expression, List<Expression>>?                       _composedSources;
 
 		List<SqlParameter>? _nonQueryParameters;
 
@@ -655,6 +656,10 @@ namespace LinqToDB.Internal.Linq
 				{
 					compared.Roots.Add(accessor);
 					compared.Roots.Add(source);
+
+					// A source the builder composed (merged client conditions) is not in the query tree; its parts are.
+					if (_composedSources != null && _composedSources.TryGetValue(source, out var parts))
+						compared.Roots.UnionWith(parts);
 				}
 			}
 
@@ -799,6 +804,12 @@ namespace LinqToDB.Internal.Linq
 		{
 			_bySqlValueCompare ??= new();
 			_bySqlValueCompare.Add((value, constantExpr, source));
+		}
+
+		public void RegisterComposedSource(Expression composed, List<Expression> parts)
+		{
+			_composedSources ??= new();
+			_composedSources[composed] = parts;
 		}
 
 	}
