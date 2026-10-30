@@ -1090,8 +1090,8 @@ namespace Tests.Linq
 			result.ShouldBe(new[] { 2, 4, 1, 7, 3, 5, 6 });
 		}
 
-		// Inside Contains the ordering is ignored (IgnoreOrderBy), and the Take keeps a captured ordering below it; the SQL this
-		// pins (no ordered wrapper above DISTINCT ON inside IN) exists only on the DISTINCT ON lowering.
+		// Inside Contains the ordering is ignored (IgnoreOrderBy), and the Take keeps a captured ordering below it; the rows are
+		// compared here, while the SQL shape (no ordered wrapper above DISTINCT ON inside IN) is recorded by the baseline only.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
 		public void DistinctByAfterTakeInContains([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
 		{
