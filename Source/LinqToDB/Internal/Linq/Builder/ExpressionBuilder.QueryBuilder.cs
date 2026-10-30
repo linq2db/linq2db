@@ -77,21 +77,30 @@ namespace LinqToDB.Internal.Linq.Builder
 					_constructedAssignments ??= new(ExpressionEqualityComparer.Instance);
 					if (!_constructedAssignments.TryGetValue(node, out var assignmentPair))
 					{
-						var variable = _generator.AssignToVariable(Expression.Default(node.Type));
+						// A non-nullable struct is memoized through Nullable<T>, so the variable can still read as unassigned.
+						var variableType = node.Type.MakeNullable();
+						var lifted       = variableType != node.Type;
+						var variable     = _generator.AssignToVariable(Expression.Default(variableType));
 						Expression assign;
 
 						if (SequenceHelper.HasContextRef(constructed))
 						{
 							// Keep unresolved context references visible to subsequent builder passes.
-							assign = Expression.Assign(variable, Expression.Coalesce(variable, constructed));
+							assign = Expression.Assign(variable, Expression.Coalesce(variable, Lift(constructed)));
 						}
 						else
 						{
 							// Keep a single copy of a potentially large constructor tree while preserving lazy,
 							// branch-specific construction at each use site.
 							var factory = _generator.AssignToVariable(Expression.Lambda(constructed));
-							assign = Expression.Assign(variable, Expression.Coalesce(variable, Expression.Invoke(factory)));
+							assign = Expression.Assign(variable, Expression.Coalesce(variable, Lift(Expression.Invoke(factory))));
 						}
+
+						if (lifted)
+							assign = Expression.Convert(assign, node.Type);
+
+						Expression Lift(Expression value) =>
+							lifted ? Expression.Convert(value, variableType) : value;
 
 						assignmentPair = (variable, assign);
 

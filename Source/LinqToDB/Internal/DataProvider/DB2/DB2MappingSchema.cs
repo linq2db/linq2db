@@ -103,13 +103,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			stringBuilder.Append(CultureInfo.InvariantCulture, $"'{time:hh\\:mm\\:ss}'");
 		}
 
-		static
-#if SUPPORTS_COMPOSITE_FORMAT
-			CompositeFormat
-#else
-			string
-#endif
-		GetTimestampFormat(SqlDataType type)
+		static int GetTimestampPrecision(SqlDataType type)
 		{
 			var precision = type.Type.Precision;
 
@@ -123,7 +117,17 @@ namespace LinqToDB.Internal.DataProvider.DB2
 				}
 			}
 
-			precision = precision is null or < 0 ? 6 : (precision > 7 ? 7 : precision);
+			return precision is null or < 0 ? 6 : (precision > 7 ? 7 : precision.Value);
+		}
+
+		static
+#if SUPPORTS_COMPOSITE_FORMAT
+			CompositeFormat
+#else
+			string
+#endif
+		GetTimestampFormat(int precision)
+		{
 			return precision switch
 			{
 				0    => TIMESTAMP0_FORMAT,
@@ -165,12 +169,21 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 		static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType type, DateTime value)
 		{
-			stringBuilder.Append('\'');
 			if (type.Type.DataType == DataType.Date || "date".Equals(type.Type.DbType, StringComparison.OrdinalIgnoreCase))
+			{
+				stringBuilder.Append('\'');
 				stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIME_FORMAT, value);
+				stringBuilder.Append('\'');
+			}
 			else
-				stringBuilder.AppendFormat(CultureInfo.InvariantCulture, GetTimestampFormat(type), value);
-			stringBuilder.Append('\'');
+			{
+				// an untyped literal takes the type of a DATE comparand and loses its time part
+				var precision = GetTimestampPrecision(type);
+
+				stringBuilder.Append("CAST('");
+				stringBuilder.AppendFormat(CultureInfo.InvariantCulture, GetTimestampFormat(precision), value);
+				stringBuilder.Append(CultureInfo.InvariantCulture, $"' AS TIMESTAMP({precision}))");
+			}
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)

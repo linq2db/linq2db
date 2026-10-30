@@ -36,8 +36,9 @@ done
 
 docker logs hana2
 
-# create test schema
+# create test schemas: SapHana.Odbc and SapHana.Native run in parallel, so each gets its own
 ~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd CREATE SCHEMA TESTDB
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd CREATE SCHEMA TESTDBNATIVE
 # clear memory limits
 ~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd ALTER USER SYSTEM CLEAR PARAMETER STATEMENT MEMORY LIMIT
 # create linked server for FQN names testing
@@ -87,19 +88,22 @@ cat <<-EOJSON > HanaDataProviders.json
     "NET80.Azure": {
         "BasedOn": "BASE.Azure",
         "Providers": [
-            "SapHana.Odbc"
+            "SapHana.Odbc",
+            "SapHana.Native"
         ]
     },
     "NET90.Azure": {
         "BasedOn": "BASE.Azure",
         "Providers": [
-            "SapHana.Odbc"
+            "SapHana.Odbc",
+            "SapHana.Native"
         ]
     },
     "NET100.Azure": {
         "BasedOn": "BASE.Azure",
         "Providers": [
-            "SapHana.Odbc"
+            "SapHana.Odbc",
+            "SapHana.Native"
         ]
     }
 }

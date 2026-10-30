@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Linq;
+using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -3466,6 +3467,30 @@ namespace Tests.Linq
 
 			if (db is DataConnection { DataProvider: FirebirdDataProvider } dc && dc.TryGetDbConnection() is { } cn)
 				FirebirdTools.ClearPool(cn);
+		}
+
+		// Captured selectors cannot be written in query syntax.
+		[Test]
+		[ThrowsRequiresCorrelatedSubquery]
+		public void JoinWithCapturedExpressionsInCorrelatedSubquery([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			Expression<Func<Patient, int>>         patientKey = pa => pa.PersonID;
+			Expression<Func<Person, int>>          personKey  = pe => pe.ID;
+			Expression<Func<Patient, Person, int>> result     = (pa, pe) => pe.ID;
+
+			var query = db.Person
+				.Select(p => new
+				{
+					p.ID,
+					Count = db.Patient
+						.Where(pa => pa.PersonID == p.ID)
+						.Join(db.Person, patientKey, personKey, result)
+						.Count(),
+				});
+
+			AssertQuery(query);
 		}
 	}
 }

@@ -48,6 +48,22 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 		}
 
+#if BUGCHECK
+		// ---- Test diagnostics — Release builds don't see these. ----
+
+		/// <summary>Whole-tree expression passes reached at the top of a root or CTE-body query in the first fixpoint iteration.</summary>
+		public int FirstIterationPassesReached { get; private set; }
+
+		/// <summary>Whole-tree expression passes reached at the top of a root or CTE-body query in a later fixpoint iteration.</summary>
+		public int LaterIterationPassesReached { get; private set; }
+
+		/// <summary>Whole-tree expression passes actually run at the top of a root or CTE-body query in the first fixpoint iteration.</summary>
+		public int FirstIterationPassesExecuted { get; private set; }
+
+		/// <summary>Whole-tree expression passes actually run at the top of a root or CTE-body query in a later fixpoint iteration.</summary>
+		public int LaterIterationPassesExecuted { get; private set; }
+#endif
+
 		public IQueryElement Optimize(
 			IQueryElement          root,
 			IQueryElement          rootElement,
@@ -80,6 +96,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			_updateTable        = default!;
 			_isExpression       = false;
 			_isColumnsOptimized = false;
+
+#if BUGCHECK
+			FirstIterationPassesReached  = 0;
+			LaterIterationPassesReached  = 0;
+			FirstIterationPassesExecuted = 0;
+			LaterIterationPassesExecuted = 0;
+#endif
 
 			// OUTER APPLY Queries usually may have wrong nesting in WHERE clause.
 			// Making it consistent in LINQ Translator is bad for performance and it is hard to implement task.
@@ -219,8 +242,26 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 #if DEBUG
 				var before = selectQuery.ToDebugString();
 #endif
-				// only once
-				_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), null, _dataOptions, _mappingSchema, selectQuery, visitQueries: true, reducePredicates: false);
+#if BUGCHECK
+				if (_isColumnsOptimized)
+					LaterIterationPassesReached++;
+				else
+					FirstIterationPassesReached++;
+#endif
+				// Only in the first fixpoint iteration: a later one starts from a tree the previous closing pass optimized,
+				// and the rewrites since (columns, joins, ORDER BY, set-operator re-entry) were measured to leave this pass
+				// nothing to change (#5911).
+				if (!_isColumnsOptimized)
+				{
+#if BUGCHECK
+					// Re-checks the guard's flag on purpose: with the guard removed, later-iteration passes land here.
+					if (_isColumnsOptimized)
+						LaterIterationPassesExecuted++;
+					else
+						FirstIterationPassesExecuted++;
+#endif
+					_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), null, _dataOptions, _mappingSchema, selectQuery, visitQueries: true, reducePredicates: false);
+				}
 			}
 
 			var newQuery = (SelectQuery)base.VisitSqlQuery(selectQuery);

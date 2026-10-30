@@ -127,9 +127,8 @@ namespace LinqToDB.Internal.Linq.Builder
 						var assignment = generic.Assignments[i];
 
 						var newExpression = ProcessTranslated(
-						assignment.Expression,
-							toPath == null ? toPath : Expression.MakeMemberAccess(toPath, assignment.MemberInfo)
-						);
+							assignment.Expression,
+							toPath == null ? null : SequenceHelper.MemberPath(toPath, assignment.MemberInfo));
 
 						if (!ReferenceEquals(assignment.Expression, newExpression))
 						{
@@ -158,7 +157,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						{
 							if (parameter.MemberInfo != null)
 							{
-								paramAccess = Expression.MakeMemberAccess(toPath, parameter.MemberInfo);
+								paramAccess = SequenceHelper.MemberPath(toPath, parameter.MemberInfo);
 							}
 							else
 							{
@@ -211,11 +210,10 @@ namespace LinqToDB.Internal.Linq.Builder
 					return HandleTranslated(toPath, placeholder);
 				}
 
-				case { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked }:
+				case UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked or ExpressionType.TypeAs } conversion:
 				{
-					var unary = (UnaryExpression)expression;
-					var processed = ProcessTranslated(unary.Operand, toPath);
-					return unary.Update(processed);
+					var processed = ProcessTranslated(conversion.Operand, toPath == null ? null : SequenceHelper.ConvertBack(toPath, conversion));
+					return conversion.Update(processed);
 				}
 
 				case SqlAdjustTypeExpression adjust:
@@ -242,9 +240,9 @@ namespace LinqToDB.Internal.Linq.Builder
 					// resolves against the owner's fields. Restricted to constructor branches so scalar /
 					// DefaultIfEmpty conditionals (e.g. in eager-load key queries) are left to the generic
 					// visitor. A branch may be Convert-wrapped when the two projections have differing but
-					// assignable types (SetOperationBuilder.MakeCondition unifies them) - the Convert case
-					// above passes toPath through and rebuilds the conversion. The test is a predicate, not
-					// a projected value. See issues #5457 and #5683.
+					// assignable types (SetOperationBuilder.MakeCondition unifies them) - the conversion case
+					// above reads toPath back as the operand's type and rebuilds the conversion. The test is a
+					// predicate, not a projected value. See issues #5457 and #5683.
 					var test    = ProcessTranslated(conditional.Test, null);
 					var ifTrue  = ProcessTranslated(conditional.IfTrue, toPath);
 					var ifFalse = ProcessTranslated(conditional.IfFalse, toPath);

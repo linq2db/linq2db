@@ -23,7 +23,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (outerContextResult.BuildContext == null)
 				return outerContextResult;
 
-			var outerContext = outerContextResult.BuildContext;
+			var outerContext = (IBuildContext)new SubQueryContext(outerContextResult.BuildContext) { IsSelectWrapper = true };
 
 			var innerExpression = methodCall.Arguments[1].Unwrap();
 

@@ -499,7 +499,9 @@ namespace Tests.Linq
 		// Near the 35-digit limit the widened intermediate must not cost the value its fractional digits,
 		// and a type with no integer digits still needs one for 10^p.
 		[Test]
+#pragma warning disable NUnit4001
 		public void Round17([IncludeDataSources(true, TestProvName.AllYdb)] string context, [Values(MidpointRounding.ToEven, MidpointRounding.AwayFromZero)] MidpointRounding mp)
+#pragma warning restore NUnit4001
 		{
 			var data = new[]
 			{
@@ -567,7 +569,9 @@ namespace Tests.Linq
 
 		// A precision below the scale still needs a digit more than the type has: 1234.56 * 10^1 does not fit Decimal(6,2).
 		[Test]
+#pragma warning disable NUnit4001
 		public void Round21([IncludeDataSources(true, TestProvName.AllYdb)] string context, [Values(MidpointRounding.ToEven, MidpointRounding.AwayFromZero)] MidpointRounding mp)
+#pragma warning restore NUnit4001
 		{
 			var data = new[]
 			{
@@ -828,7 +832,9 @@ namespace Tests.Linq
 		// A Double carries ~15-17 significant digits, so rounding must not pass a Decimal through one: these values
 		// either scale past 2^53 or carry a residue (.4999999) that a Double turns into a tie.
 		[Test]
+#pragma warning disable NUnit4001
 		public void Round24([IncludeDataSources(true, TestProvName.AllYdb)] string context, [Values(MidpointRounding.ToEven, MidpointRounding.AwayFromZero)] MidpointRounding mp)
+#pragma warning restore NUnit4001
 		{
 			var data = new[]
 			{
@@ -937,7 +943,9 @@ namespace Tests.Linq
 
 		// The scaffolder emits DbType beside Precision/Scale: the computed CASTs must render their own type, not the DbType.
 		[Test]
+#pragma warning disable NUnit4001
 		public void Round25([IncludeDataSources(true, TestProvName.AllYdb)] string context, [Values(MidpointRounding.ToEven, MidpointRounding.AwayFromZero)] MidpointRounding mp)
+#pragma warning restore NUnit4001
 		{
 			var data = new[]
 			{
@@ -970,7 +978,9 @@ namespace Tests.Linq
 		// YQL refuses to cast a Decimal with no integer digits to scale 0: such a value rounds to 0 by comparison, and a
 		// result of +-1, which the type cannot hold, fails the query.
 		[Test]
+#pragma warning disable NUnit4001
 		public void Round26([IncludeDataSources(true, TestProvName.AllYdb)] string context, [Values(MidpointRounding.ToEven, MidpointRounding.AwayFromZero)] MidpointRounding mp)
+#pragma warning restore NUnit4001
 		{
 			var data = new[]
 			{
@@ -1044,7 +1054,9 @@ namespace Tests.Linq
 		// A computed Decimal (SUM, AVG, a product) need not carry the type linq2db infers for it, while the tie
 		// arithmetic of away-from-zero demands identical Decimal types.
 		[Test]
+#pragma warning disable NUnit4001
 		public void Round27([IncludeDataSources(true, TestProvName.AllYdb)] string context, [Values(MidpointRounding.ToEven, MidpointRounding.AwayFromZero)] MidpointRounding mp)
+#pragma warning restore NUnit4001
 		{
 			var data = new[]
 			{
@@ -1201,7 +1213,9 @@ namespace Tests.Linq
 			ErrorTypeName = "Grpc.Core.RpcException", ErrorMessage = "Value does not fit into decimal",
 			Details = "LinqServiceSerializer drops SqlBinaryExpression's precision/scale, so the server folds the narrowing cast and the result keeps the work type")]
 		[Test]
+#pragma warning disable NUnit4001
 		public void Round30([IncludeDataSources(true, TestProvName.AllYdb)] string context, [Values(MidpointRounding.ToEven, MidpointRounding.AwayFromZero)] MidpointRounding mp)
+#pragma warning restore NUnit4001
 		{
 			var data = _roundComputedScale;
 
@@ -1278,7 +1292,9 @@ namespace Tests.Linq
 			ErrorTypeName = "Grpc.Core.RpcException", ErrorMessage = "Failed to convert type: Decimal(35,13) to Decimal(22,13)",
 			Details = "LinqServiceSerializer drops SqlBinaryExpression's precision/scale, so the server folds the non-mandatory narrowing casts")]
 		[Test]
+#pragma warning disable NUnit4001
 		public void Round31([IncludeDataSources(true, TestProvName.AllYdb)] string context, [Values(MidpointRounding.ToEven, MidpointRounding.AwayFromZero)] MidpointRounding mp)
+#pragma warning restore NUnit4001
 		{
 			var data = _roundComputedScale;
 
@@ -1330,7 +1346,9 @@ namespace Tests.Linq
 
 		// A decimal stored as Double is not a YQL Decimal: it rounds in Double, not through Decimal casts.
 		[Test]
+#pragma warning disable NUnit4001
 		public void Round32([IncludeDataSources(true, TestProvName.AllYdb)] string context, [Values(MidpointRounding.ToEven, MidpointRounding.AwayFromZero)] MidpointRounding mp)
+#pragma warning restore NUnit4001
 		{
 			var data = new[]
 			{
@@ -1386,7 +1404,9 @@ namespace Tests.Linq
 		// is sized as a computed value is: all must round every digit they hold. The table is written through a fully
 		// declared mapping, as a Precision-only one cannot be written over LinqService.
 		[Test]
+#pragma warning disable NUnit4001
 		public void Round33([IncludeDataSources(true, TestProvName.AllYdb)] string context, [Values(MidpointRounding.ToEven, MidpointRounding.AwayFromZero)] MidpointRounding mp)
+#pragma warning restore NUnit4001
 		{
 			var data = new[]
 			{
@@ -1419,7 +1439,9 @@ namespace Tests.Linq
 			ErrorTypeName = "Grpc.Core.RpcException", ErrorMessage = "Failed to convert type: Decimal(35,13) to Decimal(22,13)",
 			Details = "LinqServiceSerializer drops SqlBinaryExpression's precision/scale, so the server folds the non-mandatory narrowing casts")]
 		[Test]
+#pragma warning disable NUnit4001
 		public void Round34([IncludeDataSources(true, TestProvName.AllYdb)] string context, [Values(MidpointRounding.ToEven, MidpointRounding.AwayFromZero)] MidpointRounding mp)
+#pragma warning restore NUnit4001
 		{
 			var data = new[]
 			{
@@ -1450,7 +1472,9 @@ namespace Tests.Linq
 			ErrorTypeName = "Grpc.Core.RpcException", ErrorMessage = "Value does not fit into decimal",
 			Details = "LinqServiceSerializer drops SqlBinaryExpression's precision/scale, so the server folds the narrowing cast and the result keeps the work type")]
 		[Test]
+#pragma warning disable NUnit4001
 		public void Round35([IncludeDataSources(true, TestProvName.AllYdb)] string context, [Values(MidpointRounding.ToEven, MidpointRounding.AwayFromZero)] MidpointRounding mp)
+#pragma warning restore NUnit4001
 		{
 			var data = new[]
 			{
@@ -1529,7 +1553,9 @@ namespace Tests.Linq
 		// precision the result keeps the column's type, so it still compares with the column. A runtime precision
 		// truncates a fractional value first (row 5).
 		[Test]
+#pragma warning disable NUnit4001
 		public void Round38([IncludeDataSources(true, TestProvName.AllYdb)] string context, [Values(MidpointRounding.ToEven, MidpointRounding.AwayFromZero)] MidpointRounding mp)
+#pragma warning restore NUnit4001
 		{
 			var data = new[]
 			{

@@ -57,6 +57,7 @@ namespace Tests
 		static bool    _enabled;
 		static string? _file;
 		static int     _pid;
+		static string? _sessionId;
 
 		static DateTime _startedUtc;
 		static long     _lastWriteMs = -WriteThrottleMs;
@@ -173,6 +174,8 @@ namespace Tests
 #endif
 				_file       = ResolvePath(cfg.Trim());
 				_startedUtc = DateTime.UtcNow;
+				// Lets a per-session observer (an agent's status line) tell its own runs from those of other sessions.
+				_sessionId  = Environment.GetEnvironmentVariable("CLAUDE_CODE_SESSION_ID");
 
 				var dir = Path.GetDirectoryName(_file);
 				if (!string.IsNullOrEmpty(dir))
@@ -230,21 +233,7 @@ namespace Tests
 			|| value.Equals("enable",  StringComparison.OrdinalIgnoreCase)
 			|| value.Equals("enabled", StringComparison.OrdinalIgnoreCase);
 
-		static string FindRepoRoot()
-		{
-			try
-			{
-				for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir != null; dir = dir.Parent)
-					if (File.Exists(Path.Combine(dir.FullName, "linq2db.slnx")))
-						return dir.FullName;
-			}
-			catch
-			{
-				// fall through to base directory
-			}
-
-			return AppContext.BaseDirectory;
-		}
+		static string FindRepoRoot() => TestUtils.TryFindRepoRoot() ?? AppContext.BaseDirectory;
 
 		static void Write(bool force)
 		{
@@ -269,6 +258,7 @@ namespace Tests
 			sb.Append('{');
 			sb.Append("\"tfm\":")        .Append(JsonString(Tfm))                       .Append(',');
 			sb.Append("\"pid\":")        .Append(Int(_pid))                             .Append(',');
+			sb.Append("\"sessionId\":")  .Append(JsonString(_sessionId))                .Append(',');
 			sb.Append("\"startedUtc\":") .Append(JsonString(Iso(_startedUtc)))          .Append(',');
 			sb.Append("\"updatedUtc\":") .Append(JsonString(Iso(DateTime.UtcNow)))      .Append(',');
 			sb.Append("\"done\":")       .Append(_state.Done ? "true" : "false")        .Append(',');

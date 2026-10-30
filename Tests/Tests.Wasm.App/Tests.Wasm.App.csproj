@@ -1,0 +1,59 @@
+<Project Sdk="Microsoft.NET.Sdk.WebAssembly">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<TargetFrameworks></TargetFrameworks>
+		<RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
+
+		<OutputType>Exe</OutputType>
+		<RootNamespace>Tests.Wasm</RootNamespace>
+		<AssemblyName>linq2db.Tests.Wasm.App</AssemblyName>
+
+		<GenerateDocumentationFile>false</GenerateDocumentationFile>
+		<ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+		<IsPackable>false</IsPackable>
+
+		<!-- Built only by Tests/Tests.Wasm/publish-wasm-bundles.ps1, one publish per WasmBundleMode. -->
+		<PublishDir>$(MSBuildThisFileDirectory)..\..\.build\wasm\$(WasmBundleMode)\</PublishDir>
+
+		<!-- The harness measures runtime behaviour; trim-analysis cleanliness of linq2db is #6168 / AOT work. -->
+		<SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
+	</PropertyGroup>
+
+	<!-- The WebAssembly SDK trims every publish, Debug included, unless PublishTrimmed is set explicitly. -->
+	<PropertyGroup Condition="'$(WasmBundleMode)' == 'Debug'">
+		<PublishTrimmed>false</PublishTrimmed>
+		<JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(WasmBundleMode)' == 'TrimPartial'">
+		<PublishTrimmed>true</PublishTrimmed>
+		<TrimMode>partial</TrimMode>
+		<JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(WasmBundleMode)' == 'TrimFull'">
+		<PublishTrimmed>true</PublishTrimmed>
+		<TrimMode>full</TrimMode>
+		<JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(WasmBundleMode)' == 'NoReflectionJson'">
+		<PublishTrimmed>false</PublishTrimmed>
+		<JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Source\LinqToDB.Remote.HttpClient.Client\LinqToDB.Remote.HttpClient.Client.csproj" GlobalPropertiesToRemove="WasmBundleMode" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Reports through stdout, so the Tests-wide ban on System.Console (RS0030) does not apply. -->
+		<AdditionalFiles Remove="..\BannedSymbols.txt" />
+	</ItemGroup>
+
+	<Target Name="CheckWasmBundleMode" BeforeTargets="Build" Condition="'$(WasmBundleMode)' != 'Debug' and '$(WasmBundleMode)' != 'TrimPartial' and '$(WasmBundleMode)' != 'TrimFull' and '$(WasmBundleMode)' != 'NoReflectionJson'">
+		<Error Text="Unknown WasmBundleMode '$(WasmBundleMode)'. Expected Debug, TrimPartial, TrimFull or NoReflectionJson." />
+	</Target>
+
+</Project>

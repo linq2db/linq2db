@@ -18,6 +18,7 @@ using Tests.Model;
 namespace Tests.Linq
 {
 	[TestFixture]
+	[NoBaselines("Current datetime parameters used")]
 	public class TemporalTableTests : TestBase
 	{
 		public class TemporalTest
@@ -74,7 +75,6 @@ namespace Tests.Linq
 		[Test]
 		public void AsOfTest([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context, [Values] bool inlinParameters)
 		{
-			using var _  = new DisableBaseline("Current datetime parameters used");
 			using var db = GetDataContext(context);
 
 			var data = CreateTestTable(db);
@@ -95,7 +95,6 @@ namespace Tests.Linq
 		[Test]
 		public void AsOfTest2([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context, [Values] bool inlinParameters)
 		{
-			using var _  = new DisableBaseline("Current datetime parameters used");
 			using var db = GetDataContext(context);
 
 			var data = CreateTestTable(db);
@@ -121,7 +120,6 @@ namespace Tests.Linq
 			[IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context,
 			[Values] bool inlinParameters)
 		{
-			using var _  = new DisableBaseline("Current datetime parameters used");
 			using var db = GetDataContext(context);
 
 			var data = CreateTestTable(db);
@@ -145,7 +143,6 @@ namespace Tests.Linq
 			[IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context,
 			[Values] bool inlinParameters)
 		{
-			using var _  = new DisableBaseline("Current datetime parameters used");
 			using var db = GetDataContext(context);
 
 			var data = CreateTestTable(db);
@@ -169,7 +166,6 @@ namespace Tests.Linq
 			[IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context,
 			[Values] bool inlinParameters)
 		{
-			using var _  = new DisableBaseline("Current datetime parameters used");
 			using var db = GetDataContext(context);
 
 			var data = CreateTestTable(db);
@@ -191,7 +187,6 @@ namespace Tests.Linq
 		[Test]
 		public void FromToTest([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context)
 		{
-			using var _  = new DisableBaseline("Current datetime parameters used");
 			using var db = GetDataContext(context);
 
 			var data = CreateTestTable(db);
@@ -211,7 +206,6 @@ namespace Tests.Linq
 		[Test]
 		public void BetweenTest([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context)
 		{
-			using var _  = new DisableBaseline("Current datetime parameters used");
 			using var db = GetDataContext(context);
 
 			var data = CreateTestTable(db);
@@ -236,7 +230,6 @@ namespace Tests.Linq
 		[Test]
 		public void ContainedInTest([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context)
 		{
-			using var _  = new DisableBaseline("Current datetime parameters used");
 			using var db = GetDataContext(context);
 
 			var data = CreateTestTable(db);
