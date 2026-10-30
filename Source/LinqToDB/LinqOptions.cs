@@ -262,6 +262,7 @@ namespace LinqToDB
 		ImplicitCollectionLoading ImplicitCollectionLoading   = ImplicitCollectionLoading.Allow,
 		bool                      OptimizeForSequentialAccess = false,
 		bool                      UseDbBatch                  = true,
+		// TODO: Default to true in v7 (#6214)
 		bool                      UseCombinedCommands         = false
 		// If you add another parameter here, don't forget to update
 		// LinqOptions copy constructor and IConfigurationID.ConfigurationID.
