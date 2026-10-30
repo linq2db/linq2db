@@ -403,7 +403,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			var argumentType = factory.GetDbDataType(argument);
 
 			var losesCharacters = valueType.DataType is DataType.Char or DataType.VarChar or DataType.Text
-				&& argumentType.DataType is DataType.NChar or DataType.NVarChar or DataType.NText;
+				&& QueryHelper.IsUnicode(argumentType.DataType);
 
 			var losesTail = valueType.Length != null && (argumentType.Length == null || argumentType.Length > valueType.Length);
 
