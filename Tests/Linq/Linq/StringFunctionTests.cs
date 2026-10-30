@@ -792,8 +792,6 @@ namespace Tests.Linq
 			result.ToList().Count.ShouldBe(1);
 		}
 
-		#region String-function arguments beside a VarChar column
-
 		static readonly StringTypesTable[] UnicodeArgumentData =
 		[
 			new() { Id = 1, CharColumn = "A-100", NCharColumn = "A-100", VarCharColumn = "A-100", NVarCharColumn = "A-100Жук" },
@@ -801,7 +799,8 @@ namespace Tests.Linq
 			new() { Id = 3, CharColumn = "B-200", NCharColumn = "B-200", VarCharColumn = "B-200", NVarCharColumn = "B-200"    },
 		];
 
-		// Informix.DB2: the CI container's code page rejects the Cyrillic seed values at insert time.
+		// Informix: excluded for the Cyrillic seed values, as in StringConcatTests.TestStringConcatenation (the Informix.DB2
+		// CI container's code page rejects them at insert time).
 		[Test]
 		[ThrowsCannotBeConverted(TestProvName.AllAccessJet)]
 		public void ComputedArgumentBesideVarCharKeepsUnicode([DataSources(TestProvName.AllInformix)] string context)
@@ -824,7 +823,8 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		// Cyrillic literals stay in the command text, so the test is scoped to providers whose command text carries them.
+		// Cyrillic literals stay in the command text, so the test is not shipped to the whole matrix: SQL Server separates a
+		// Unicode literal from a non-Unicode one, SQLite runs as a control.
 		[Test]
 		public void ComputedLiteralBesideVarCharKeepsUnicode([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllSQLite)] string context)
 		{
@@ -843,6 +843,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		// The Chars arm puts a Cyrillic literal in the command text; scoped as ComputedLiteralBesideVarCharKeepsUnicode.
 		[Test]
 		public void ComputedArgumentBesideCharKeepsUnicode([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllSQLite)] string context)
 		{
@@ -921,11 +922,12 @@ namespace Tests.Linq
 			AssertQuery(query);
 
 			// A cast to the Char column's type would pad the search value and the replacement to its length.
-			GetCurrentBaselines().ShouldNotContain("AS Char(");
+			GetCurrentBaselines()
+				.ShouldNotContain("AS Char(");
 		}
 
 		// Access: the concatenation loops (#6193) and grows the expression past a gigabyte, enough to run the 32-bit test
-		// host out of memory, so it is not run there rather than gated.
+		// host out of memory, so it is not run there rather than gated. Informix: excluded for the Cyrillic seed values.
 		[Test]
 		[ActiveIssue(6195, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
 		public void ComparedConcatBesideVarCharKeepsUnicode([DataSources(TestProvName.AllInformix, TestProvName.AllAccess)] string context)
@@ -955,6 +957,7 @@ namespace Tests.Linq
 			unliked.ShouldBe([1, 3]);
 		}
 
+		// SQL Server: the provider whose VarChar-typed pattern turns 'Ж' into '?', the case the cast must not lend to.
 		[Test]
 		public void ComparedCastBesideVarCharKeepsUnicode([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
@@ -988,7 +991,8 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 
-			GetCurrentBaselines().ShouldContain("DECLARE @suffix NVarChar(50)");
+			GetCurrentBaselines()
+				.ShouldContain("DECLARE @suffix NVarChar(50)");
 		}
 
 		[Test]
@@ -1008,7 +1012,8 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 
-			GetCurrentBaselines().ShouldContain("DECLARE @suffix NChar(");
+			GetCurrentBaselines()
+				.ShouldContain("DECLARE @suffix NChar(");
 		}
 
 		[Test]
@@ -1025,10 +1030,9 @@ namespace Tests.Linq
 
 			AssertQuery(query, EqualityComparer<int>.Default);
 
-			GetCurrentBaselines().ShouldContain("DECLARE @bound VarChar");
+			GetCurrentBaselines()
+				.ShouldContain("DECLARE @bound VarChar");
 		}
-
-		#endregion
 
 		[Test]
 		public void EndsWithWithCase([DataSources] string context)
