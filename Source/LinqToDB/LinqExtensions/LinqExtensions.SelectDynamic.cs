@@ -46,6 +46,7 @@ namespace LinqToDB
 		public static IQueryable<TResult> SelectDynamic<TSource, TKey, TCell, TResult>(
 			this            IQueryable<TSource>                    source,
 			[InstantHandle] Expression<Func<TSource, TResult>>     staticSelector,
+			[CompiledQueryDependent]
 			[InstantHandle] IEnumerable<TKey>                      keys,
 			[InstantHandle] Expression<Func<TSource, TKey, TCell>> valueTemplate,
 			[InstantHandle] Func<TKey, string>?                    nameSelector = null)
@@ -119,6 +120,18 @@ namespace LinqToDB
 				Expression.NewArrayInit(typeof(LambdaExpression), cells));
 
 			return source.Provider.CreateQuery<TResult>(expr);
+		}
+
+		// Lets a compiled query materialise keys read from its arguments, which CompiledTable then keys its cache on.
+		// Elsewhere the argument is left as written and compared structurally: evaluating it would cache the sequence by
+		// reference, and the builder already compares a snapshot of it by value.
+		[AttributeUsage(AttributeTargets.Parameter)]
+		sealed class CompiledQueryDependentAttribute : SqlQueryDependentAttribute
+		{
+			public override Expression PrepareForCache(Expression expression, IExpressionEvaluator evaluator) => expression;
+
+			public override bool ExpressionsEqual<TContext>(TContext context, Expression expr1, Expression expr2, Func<TContext, Expression, Expression, bool> comparer)
+				=> comparer(context, expr1, expr2);
 		}
 
 		static readonly MethodInfo _selectDynamicCoreMethodInfo =

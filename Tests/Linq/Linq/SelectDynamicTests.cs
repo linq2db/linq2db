@@ -156,6 +156,42 @@ namespace Tests.Linq
 			(probe.GetCacheMissCount() - start).ShouldBe(2, "a set mutated in place must not reuse it");
 		}
 
+		/// <summary>Keys passed as a compiled query's parameter: each call gets its own column set.</summary>
+		[Test]
+		public void SelectDynamicInCompiledQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_data);
+
+			var query = CompiledQuery.Compile((IDataContext dc, int[] factors) =>
+				dc.GetTable<Amounts>().SelectDynamic(x => new AmountsDto { Id = x.Id }, factors, (x, k) => x.Usd * k));
+
+			var first = query(db, new[] { 1 }).ToList().OrderBy(r => r.Id).ToList();
+			first[0].Values!.Keys.ShouldBe(new[] { "1" });
+
+			var second = query(db, new[] { 2, 3 }).ToList().OrderBy(r => r.Id).ToList();
+			second[0].Values!.Keys.OrderBy(k => k).ShouldBe(new[] { "2", "3" });
+			second[0].Values!["3"].ShouldBe(31.5m);
+
+			query(db, new[] { 1 }).ToList().OrderBy(r => r.Id).First().Values!.Keys.ShouldBe(new[] { "1" });
+		}
+
+		[Test]
+		public void SelectDynamicInCompiledQueryWithListKeys([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_data);
+
+			var query = CompiledQuery.Compile((IDataContext dc, List<string> names) =>
+				dc.GetTable<Amounts>().SelectDynamic(x => new AmountsDto { Id = x.Id }, names, (x, n) => n == "Usd" ? x.Usd : x.Eur));
+
+			query(db, new List<string> { "Usd" }).ToList().OrderBy(r => r.Id).First().Values!["Usd"].ShouldBe(10.5m);
+
+			var both = query(db, new List<string> { "Usd", "Eur" }).ToList().OrderBy(r => r.Id).First();
+			both.Values!.Keys.OrderBy(k => k).ShouldBe(new[] { "Eur", "Usd" });
+			both.Values!["Eur"].ShouldBe(20.25m);
+		}
+
 		/// <summary>
 		/// The name selector's reads are compared at every cache lookup, including a lazy read it never reaches: one that
 		/// would throw must not escape the lookup.
