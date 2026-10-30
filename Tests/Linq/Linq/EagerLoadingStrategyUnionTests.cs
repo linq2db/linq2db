@@ -3894,6 +3894,48 @@ namespace Tests.Linq
 				.ShouldBe(new[] { (3, 5), (2, 4), (1, 3) });
 		}
 
+		// CteUnion needs a CTE and ROW_NUMBER(): Access has neither, Firebird < 3 has no ROW_NUMBER(). DistinctBy cannot be
+		// converted on the rest of DistinctByMethodTests' gate.
+		[ThrowsCannotBeConverted([ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void Confirm_Union_RootOrderAfterDistinctByOnLeadingKey(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
+		{
+			// The ordering already leads with the DistinctBy key, so DISTINCT ON keeps its ORDER BY and only publishes the
+			// ordering: Name ascending gives 2, 3, 1, where falling back to the key columns gives 1, 2, 3.
+			var companies = new[]
+			{
+				new Company { Id = 1, Name = "C" },
+				new Company { Id = 2, Name = "A" },
+				new Company { Id = 3, Name = "B" },
+			};
+			var (_, departments, _, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			var query = tCo
+				.OrderBy(c => c.Name)
+				.DistinctBy(c => c.Name)
+				.Select(c => new
+				{
+					c.Id,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.ToList(),
+				});
+
+			var result = query
+				.WithUnionLoadStrategy()
+				.ToList();
+
+			result
+				.Select(r => (r.Id, r.Departments.Count))
+				.ToList()
+				.ShouldBe(new[] { (2, 4), (3, 5), (1, 3) });
+		}
+
 		// An ordering anchored inside the CTE body cannot reach the DISTINCT ON query, so it is neither re-applied nor handed to
 		// the root row number; only the DISTINCT ON lowering (PostgreSQL, DuckDB) reaches that filter.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
