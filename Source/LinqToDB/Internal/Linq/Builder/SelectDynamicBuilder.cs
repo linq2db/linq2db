@@ -38,7 +38,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var entityDescriptor = sequence.MappingSchema.GetEntityDescriptor(resultType);
 
 			if (entityDescriptor.DynamicColumnSetter == null)
-				throw new LinqToDBException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.SelectDynamic.Error_NoDynamicColumnsStore, resultType.Name));
+				throw new LinqToDBException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.SelectDynamic.Error_NoDynamicColumnSetter, resultType.Name));
 
 			var generic = staticBody switch
 			{

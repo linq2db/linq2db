@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
@@ -102,12 +103,15 @@ namespace LinqToDB.Internal.Linq.Builder
 				value = _threw;
 			}
 
+			// Snapshotted inside the guard too: a lazy sequence compared raw would be enumerated outside it.
 			var guarded = Expression.TryCatch(
-				Expression.Convert(expression, typeof(object)),
+				Expression.Call(_snapshotMethod, Expression.Convert(expression, typeof(object))),
 				Expression.Catch(typeof(Exception), Expression.Field(null, typeof(BuildTimeArgumentReader), nameof(_threw))));
 
 			builder.ParametersContext.MarkAsValue(guarded, value);
 		}
+
+		static readonly MethodInfo _snapshotMethod = typeof(BuildTimeArgumentReader).GetMethod(nameof(Snapshot), BindingFlags.Static | BindingFlags.NonPublic)!;
 
 		// A sequence is compared element by element, and the one the call read may be mutated in place afterwards.
 		static object? Snapshot(object? value)

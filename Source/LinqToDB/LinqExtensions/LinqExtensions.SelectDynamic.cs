@@ -18,8 +18,7 @@ namespace LinqToDB
 	{
 		/// <summary>
 		/// Projects <paramref name="staticSelector"/> and, in addition, one column per entry of
-		/// <paramref name="keys"/> into <typeparamref name="TResult"/>'s
-		/// <see cref="DynamicColumnsStoreAttribute"/> member. The column set is therefore decided when the query
+		/// <paramref name="keys"/> into <typeparamref name="TResult"/>'s dynamic column store. The column set is therefore decided when the query
 		/// is built rather than at compile time, while every expression stays statically typed:
 		/// <paramref name="valueTemplate"/> is instantiated once per key, with its key parameter replaced by that
 		/// key's value.
@@ -27,7 +26,10 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <typeparam name="TKey">Type of the runtime keys driving the column set.</typeparam>
 		/// <typeparam name="TCell">Type of a generated column's value.</typeparam>
-		/// <typeparam name="TResult">Result record type; must expose a <see cref="DynamicColumnsStoreAttribute"/> member.</typeparam>
+		/// <typeparam name="TResult">
+		/// Result record type; must have a dynamic column setter: a <see cref="DynamicColumnsStoreAttribute"/> member, or a setter
+		/// configured through <see cref="DynamicColumnAccessorAttribute"/> or the fluent <c>DynamicPropertyAccessors</c> mapping.
+		/// </typeparam>
 		/// <param name="source">Source query.</param>
 		/// <param name="staticSelector">Projection for the statically known members of <typeparamref name="TResult"/>.</param>
 		/// <param name="keys">The runtime key set. One output column is generated per key.</param>
@@ -53,6 +55,10 @@ namespace LinqToDB
 			ArgumentNullException.ThrowIfNull(keys);
 			ArgumentNullException.ThrowIfNull(valueTemplate);
 
+			// The builder repeats this check for a call it reaches unevaluated; here a misdeclared result type fails at the call.
+			if (Internals.GetDataContext(source) is { } dataContext && dataContext.MappingSchema.GetEntityDescriptor(typeof(TResult)).DynamicColumnSetter == null)
+				throw new LinqToDBException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.SelectDynamic.Error_NoDynamicColumnSetter, typeof(TResult).Name));
+
 			// Materialize once: the key set may be a lazy query, and it is read by index below.
 			var keyArray = keys as TKey[] ?? keys.ToArray();
 
@@ -70,10 +76,10 @@ namespace LinqToDB
 					: Convert.ToString(key, CultureInfo.InvariantCulture);
 
 				if (string.IsNullOrEmpty(name))
-					throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.SelectDynamic.Error_DynamicColumnEmptyName, i), nameof(keys));
+					throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.SelectDynamic.Error_DynamicColumnEmptyName, i), nameSelector != null ? nameof(nameSelector) : nameof(keys));
 
 				if (!seen.Add(name!))
-					throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.SelectDynamic.Error_DynamicColumnDuplicateName, name), nameof(keys));
+					throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.SelectDynamic.Error_DynamicColumnDuplicateName, name), nameSelector != null ? nameof(nameSelector) : nameof(keys));
 
 				names[i] = name;
 				cells[i] = Expression.Quote(

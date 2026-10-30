@@ -1,9 +1,10 @@
 ﻿#nullable enable
 const LinqToDB.Internal.Common.ErrorHelper.Error_DynamicColumns_NoSetter = "Type '{0}' is materialized with dynamic column(s) {1}, but has no dynamic column setter. Add a member marked with DynamicColumnsStoreAttribute, or configure a setter through DynamicColumnAccessorAttribute or DynamicPropertyAccessors." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.SelectDynamic.Error_ArgumentDependsOnQuery = "The '{0}' argument of SelectDynamic must not depend on the query's range variables: the column set is decided when the query is built, not per row." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.SelectDynamic.Error_DynamicColumnDuplicateName = "Duplicate dynamic column name '{0}'." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.SelectDynamic.Error_DynamicColumnEmptyName = "Key at index {0} produced an empty dynamic column name." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.SelectDynamic.Error_DynamicColumnShadowsMember = "Dynamic column name '{0}' collides with a member of '{1}', which would be resolved instead of the generated column." -> string!
-const LinqToDB.Internal.Common.ErrorHelper.SelectDynamic.Error_NoDynamicColumnsStore = "Type '{0}' has no member marked with DynamicColumnsStoreAttribute, so the generated columns would have nowhere to go." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.SelectDynamic.Error_NoDynamicColumnSetter = "Type '{0}' has no dynamic column setter, so the generated columns would have nowhere to go. Add a member marked with DynamicColumnsStoreAttribute, or configure a setter through DynamicColumnAccessorAttribute or DynamicPropertyAccessors." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.SelectDynamic.Error_QueryMarkerInvoked = "{0} is a query marker and must not be invoked directly." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.SelectDynamic.Error_StaticProjectionNotAnObject = "The static projection must construct an object (new T { ... })." -> string!
 LinqToDB.Internal.Common.ErrorHelper.SelectDynamic

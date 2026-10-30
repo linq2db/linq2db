@@ -125,6 +125,102 @@ namespace Tests.Linq
 			Ids().ShouldBeEmpty();
 		}
 
+		/// <summary>Written inline in a sub-query, the same key set reuses the query and a set mutated in place does not.</summary>
+		[Test, QueryCacheTest]
+		public void InlineSelectDynamicCachesByKeySet([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_data);
+
+			var factors = new[] { 1, 2 };
+
+			IQueryable<int> Build() =>
+				from a in t
+				where t.Where(x => x.Id > 0)
+					.SelectDynamic(x => new AmountsDto { Id = x.Id }, factors, (x, k) => x.Usd * k, k => "W" + k)
+					.Any(r => r.Id == a.Id && Sql.Property<decimal>(r, "W2") > 50)
+				select a.Id;
+
+			var probe = Build();
+			probe.ClearCache();
+			var start = probe.GetCacheMissCount();
+
+			for (var i = 0; i < 4; i++)
+				Build().ToArray().ShouldBe(new[] { 2 });
+
+			(probe.GetCacheMissCount() - start).ShouldBe(1, "the same key set must reuse the query");
+
+			factors[0] = 2;
+			factors[1] = 1;
+			Build().ToArray().ShouldBe(new[] { 2 });
+			(probe.GetCacheMissCount() - start).ShouldBe(2, "a set mutated in place must not reuse it");
+		}
+
+		/// <summary>
+		/// The name selector's reads are compared at every cache lookup, including a lazy read it never reaches: one that
+		/// would throw must not escape the lookup.
+		/// </summary>
+		[Test]
+		public void InlineNameSelectorUnreachedLazyReadDoesNotThrowOnLookup([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_data);
+
+			var factors = new[] { 1, 2 };
+			var src     = new List<int> { 1, 2 };
+			var lazy    = src.Where(x => 10 / x > 1);
+
+			int[] Ids() =>
+				(from a in t
+				 where t.Where(x => x.Id > 0)
+					.SelectDynamic(x => new AmountsDto { Id = x.Id }, factors, (x, k) => x.Usd * k, k => k < 0 && lazy.Contains(k) ? "X" : "W" + k)
+					.Any(r => r.Id == a.Id && Sql.Property<decimal>(r, "W2") > 50)
+				 select a.Id).ToArray();
+
+			Ids().ShouldBe(new[] { 2 });
+
+			// The selector never reaches the lazy read (every key is >= 0), so making that read throw must not matter.
+			src.Add(0);
+			Ids().ShouldBe(new[] { 2 });
+		}
+
+		/// <summary>The column set is decided once per query, so keys read from an outer row are rejected with a diagnostic.</summary>
+		[Test]
+		public void InlineKeysFromOuterRangeVariableThrow([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_data);
+
+			var query =
+				from a in t
+				from r in t.Where(x => x.Id == a.Id)
+					.SelectDynamic(x => new AmountsDto { Id = x.Id }, new[] { a.Id }, (x, k) => x.Usd * k)
+				select r.Id;
+
+			var act = () => query.ToArray();
+
+			act.ShouldThrow<LinqToDBException>().Message.ShouldContain("'keys' argument of SelectDynamic must not depend on the query's range variables");
+		}
+
+		[Test]
+		public void InlineNameSelectorFromOuterRangeVariableThrows([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_data);
+
+			var factors = new[] { 1, 2 };
+
+			var query =
+				from a in t
+				from r in t.Where(x => x.Id == a.Id)
+					.SelectDynamic(x => new AmountsDto { Id = x.Id }, factors, (x, k) => x.Usd * k, k => a.Id + "_" + k)
+				select r.Id;
+
+			var act = () => query.ToArray();
+
+			act.ShouldThrow<LinqToDBException>().Message.ShouldContain("'nameSelector' argument of SelectDynamic must not depend on the query's range variables");
+		}
+
 		[Test]
 		[ActiveIssue(5953, ErrorType = typeof(InvalidOperationException), ErrorMessage = "variable 'n' of type 'System.String' referenced from scope '', but it is not defined")]
 		public void SelectDynamicOverACorrelatedSource([DataSources] string context)
@@ -176,14 +272,14 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(_data);
 
+			// Fails at the call, before the query is enumerated.
 			Action act = () => t
 				.SelectDynamic(
 					x => new NoStoreDto { Id = x.Id },
 					new[] { "Usd" },
-					(x, n) => Sql.Property<decimal>(x, n))
-				.ToList();
+					(x, n) => Sql.Property<decimal>(x, n));
 
-			act.ShouldThrow<LinqToDBException>().Message.ShouldContain("has no member marked with DynamicColumnsStoreAttribute");
+			act.ShouldThrow<LinqToDBException>().Message.ShouldContain("has no dynamic column setter");
 		}
 
 		/// <summary>
@@ -328,7 +424,7 @@ namespace Tests.Linq
 					_ => nameof(AmountsDto.Id))
 				.ToList();
 
-			act.ShouldThrow<ArgumentException>();
+			act.ShouldThrow<ArgumentException>().Message.ShouldContain("collides with a member");
 		}
 
 		#region The cases this operator was justified by
