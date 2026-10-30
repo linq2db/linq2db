@@ -913,7 +913,8 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 
-			GetCurrentBaselines().ShouldContain("DECLARE @suffix NVarChar(40)");
+			GetCurrentBaselines()
+				.ShouldContain("DECLARE @suffix NVarChar(40)");
 		}
 
 		[Test]
@@ -933,7 +934,8 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 
-			GetCurrentBaselines().ShouldContain("DECLARE @suffix NVarChar(40)");
+			GetCurrentBaselines()
+				.ShouldContain("DECLARE @suffix NVarChar(40)");
 		}
 
 		[Test]
@@ -950,7 +952,8 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 
-			GetCurrentBaselines().ShouldContain("DECLARE @key NVarChar(40)");
+			GetCurrentBaselines()
+				.ShouldContain("DECLARE @key NVarChar(40)");
 		}
 
 		[Test]
@@ -1019,7 +1022,8 @@ namespace Tests.Linq
 			AssertQuery(query);
 
 			// An nvarchar parameter would turn the key comparison into nvarchar and convert the indexed column.
-			GetCurrentBaselines().ShouldContain("DECLARE @keySuffix VarChar");
+			GetCurrentBaselines()
+				.ShouldContain("DECLARE @keySuffix VarChar");
 		}
 
 		// SQL Server + SQLite: the searched value is written into the command text as a literal, and Cyrillic
