@@ -548,36 +548,34 @@ namespace Tests.Data
 
 		// informix connection limits interfere with test
 		[Test]
+		[NoBaselines("Multi-threading")]
 		public void MultipleConnectionsTest([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using var psr = new Tests.Remote.ServerContainer.PortStatusRestorer(GetServerContainer(), false);
 
-			using (new DisableBaseline("Multi-threading"))
-			{
-				var exceptions = new ConcurrentStack<Exception>();
+			var exceptions = new ConcurrentStack<Exception>();
 
-				var threads = Enumerable
-					.Range(1, 10)
-					.Select(n => new Thread(() =>
+			var threads = Enumerable
+				.Range(1, 10)
+				.Select(n => new Thread(() =>
+				{
+					try
 					{
-						try
-						{
-							using var db = GetDataContext(context);
-							db.Parent.ToList();
-						}
-						catch (Exception e)
-						{
-							exceptions.Push(e);
-						}
-					}))
-					.ToArray();
+						using var db = GetDataContext(context);
+						db.Parent.ToList();
+					}
+					catch (Exception e)
+					{
+						exceptions.Push(e);
+					}
+				}))
+				.ToArray();
 
-				foreach (var thread in threads) thread.Start();
-				foreach (var thread in threads) thread.Join();
+			foreach (var thread in threads) thread.Start();
+			foreach (var thread in threads) thread.Join();
 
-				if (!exceptions.IsEmpty)
-					throw new AggregateException(exceptions);
-			}
+			if (!exceptions.IsEmpty)
+				throw new AggregateException(exceptions);
 		}
 
 		[Test]
@@ -800,8 +798,6 @@ namespace Tests.Data
 				// ClickHouse doesn't support transactions
 				Assert.Inconclusive("Provider not configured or has issues with TransactionScope or doesn't support DDL in distributed transactions");
 			}
-
-			using var nolog = context.IsAnyOf(TestProvName.AllAccess) ? new DisableBaseline("Access NETFX provider has issues with TS") : null;
 
 			using var scope  = withScope ? new TransactionScope() : null;
 			using var db     = GetDataContext(context);

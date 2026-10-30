@@ -24,8 +24,9 @@
 		SameKind,
 
 		/// <summary>
-		/// The result is one of the argument's own values - <c>MIN</c> and <c>MAX</c> return a row's value
-		/// unchanged - so the argument's column describes it completely, width included.
+		/// The result is one of the argument's own values - <c>MIN</c>, <c>MAX</c> and the value window functions
+		/// such as <c>LAG</c> return a row's value unchanged - so the argument's column describes it completely,
+		/// width included. Where the function takes more than one argument, the first is the value.
 		/// </summary>
 		Element,
 	}

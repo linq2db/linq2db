@@ -39,10 +39,6 @@ public class TestsInitialization
 	[OneTimeSetUp]
 	public void TestAssemblySetup()
 	{
-		// both SQLite clients are SQLitePCLRaw-based and share one native package, so both resolve
-		// e_sqlite3 under runtimes/ here; see SQLite.Runtime.props for the netfx deployment gap
-		Environment.SetEnvironmentVariable("PreLoadSQLite_BaseDirectory", AppDomain.CurrentDomain.BaseDirectory);
-
 #if NET8_0_OR_GREATER
 		// this API is not available in NETFX, but for some reason it works if SDS test run first (which is true now)
 		IntPtr? handle = null;
@@ -495,6 +491,28 @@ public class TestsInitialization
 	}
 #endif
 
+	// Pooled IBM connections left until process exit race the driver's exit handler against its pool timer (SIGSEGV, exit 139).
+	// InternalOperation1 is the driver's pool purge; reflection keeps legs without the driver from loading it.
+	static void PurgeDB2ConnectionPool()
+	{
+		var driver = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(static a => a.GetName().Name == "IBM.Data.Db2");
+		var purge  = driver?.GetType("IBM.Data.Db2.DB2ConnPool")?.GetMethod("InternalOperation1", BindingFlags.Public | BindingFlags.Static, Type.EmptyTypes);
+
+		if (purge == null)
+			return;
+
+		try
+		{
+			purge.Invoke(null, null);
+			TestContext.Progress.WriteLine("[db2] connection pool purged");
+		}
+		catch (Exception ex)
+		{
+			// Best effort: a purge failure must not fail a run whose tests have all completed.
+			TestContext.Progress.WriteLine($"[db2] connection pool purge failed: {ex.InnerException?.Message ?? ex.Message}");
+		}
+	}
+
 	[OneTimeTearDown]
 	public void TestAssemblyTeardown()
 	{
@@ -503,6 +521,8 @@ public class TestsInitialization
 		_dispatcher?.Shutdown(m => TestContext.Progress.WriteLine(m), TimeSpan.FromSeconds(10));
 
 		TestInMemoryDatabases.DisposeAll();
+
+		PurgeDB2ConnectionPool();
 
 		if (_doMetrics)
 		{

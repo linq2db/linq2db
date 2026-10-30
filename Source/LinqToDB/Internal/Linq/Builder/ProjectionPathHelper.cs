@@ -45,24 +45,13 @@ namespace LinqToDB.Internal.Linq.Builder
 					{
 						var assignment = generic.Assignments[i];
 
-						var currentPath = root;
-
-						var applicable = true;
-						if (assignment.MemberInfo.DeclaringType != null)
-						{
-							applicable = assignment.MemberInfo.DeclaringType.IsAssignableFrom(currentPath.Type);
-							if (applicable)
-								currentPath = currentPath.EnsureType(assignment.MemberInfo.DeclaringType);
-						}
-
-						if (!applicable)
+						if (assignment.MemberInfo.DeclaringType?.IsAssignableFrom(root.Type) == false)
 						{
 							assignments?.Add(assignment);
 							continue;
 						}
 
-						var memberTrackingPath = Expression.MakeMemberAccess(currentPath, assignment.MemberInfo);
-						var newExpression      = AnalyseExpression(assignment.Expression, memberTrackingPath);
+						var newExpression = AnalyseExpression(assignment.Expression, SequenceHelper.MemberPath(root, assignment.MemberInfo));
 
 						if (!ReferenceEquals(assignment.Expression, newExpression))
 						{
@@ -89,13 +78,11 @@ namespace LinqToDB.Internal.Linq.Builder
 					for (var i = 0; i < generic.Parameters.Count; i++)
 					{
 						var parameter     = generic.Parameters[i];
-						var currentPath   = root;
 						var newExpression = parameter.Expression;
 
 						if (parameter.MemberInfo != null)
 						{
-							var memberTrackingPath = Expression.MakeMemberAccess(currentPath, parameter.MemberInfo);
-							newExpression = AnalyseExpression(parameter.Expression, memberTrackingPath);
+							newExpression = AnalyseExpression(parameter.Expression, SequenceHelper.MemberPath(root, parameter.MemberInfo));
 						}
 
 						if (!ReferenceEquals(parameter.Expression, newExpression))

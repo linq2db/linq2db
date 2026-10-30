@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -30,7 +31,7 @@ namespace Client
 				.Set(c => c.CategoryName, c => c.CategoryName + "!")
 				.UpdateAsync();
 
-			Console.WriteLine("Category updated: Identity = " + categoryId);
+			Console.WriteLine("Category updated: Identity = " + categoryId.ToString(CultureInfo.InvariantCulture));
 		}
 
 		private static async Task<decimal> InsertNewCategoryAsync()
@@ -38,14 +39,14 @@ namespace Client
 			using var db = new ExampleDataContext();
 			var cat = new Category
 			{
-				CategoryName = "MyCat " + DateTime.Now.ToString("HH:mm:ss"),
+				CategoryName = "MyCat " + DateTime.Now.ToString("HH:mm:ss", CultureInfo.InvariantCulture),
 				Description = "MyCat Description",
 				Picture = null
 			};
 
 			var identity = (decimal) await db.InsertWithIdentityAsync(cat);
 
-			Console.WriteLine("Category added: " + cat.CategoryName + ", Identity = " + identity);
+			Console.WriteLine("Category added: " + cat.CategoryName + ", Identity = " + identity.ToString(CultureInfo.InvariantCulture));
 
 			return identity;
 		}
@@ -63,7 +64,7 @@ namespace Client
 					};
 
 			var row = await q.FirstAsync();
-			Console.WriteLine("Category read: " + row.Id + " : " + row.Name);
+			Console.WriteLine("Category read: " + row.Id.ToString(CultureInfo.InvariantCulture) + " : " + row.Name);
 		}
 
 		private static async Task ReadCollectionAsync()

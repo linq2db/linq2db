@@ -179,18 +179,52 @@ namespace Tests.Infrastructure
 		}
 
 		[Test]
-		public void DoneLatchesWhenCompletedReachesTotal()
+		public void DoneWaitsForTheRootSuiteWhenCompletedReachesTotal()
 		{
 			var state = new TestProgressState();
 
 			state.SetTotal(2);
 
 			Complete(state, Unit,  TestStatus.Passed, null);
-			state.Done.ShouldBeFalse();
-
 			Complete(state, Other, TestStatus.Passed, null);
-			state.Done   .ShouldBeTrue();
-			state.Current.ShouldBeNull();
+
+			// Teardowns still run after the last test, so reaching the total does not finish the run.
+			state.Done
+				.ShouldBeFalse();
+
+			state.Current
+				.ShouldBe(Other);
+
+			state.MarkDone();
+
+			state.Done
+				.ShouldBeTrue();
+
+			state.Current
+				.ShouldBeNull();
+		}
+
+		[Test]
+		public void SetTotalAssignsAndCarriesUpperBound()
+		{
+			var state = new TestProgressState();
+
+			state.SetTotal(10, isUpperBound: true);
+
+			state.Total
+				.ShouldBe(10);
+
+			state.TotalIsUpperBound
+				.ShouldBeTrue();
+
+			// The exact count replaces a larger upper bound.
+			state.SetTotal(3);
+
+			state.Total
+				.ShouldBe(3);
+
+			state.TotalIsUpperBound
+				.ShouldBeFalse();
 		}
 
 		[Test]

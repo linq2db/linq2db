@@ -7,6 +7,7 @@ using System.Threading;
 
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
+using NUnit.Framework.Internal;
 
 namespace Tests
 {
@@ -56,6 +57,7 @@ namespace Tests
 		static bool    _enabled;
 		static string? _file;
 		static int     _pid;
+		static string? _sessionId;
 
 		static DateTime _startedUtc;
 		static long     _lastWriteMs = -WriteThrottleMs;
@@ -69,9 +71,18 @@ namespace Tests
 
 				if (test.IsSuite)
 				{
-					// The assembly (root) suite has the largest case count → that is the run total.
-					// Note: under a --filter this is the discovered (pre-filter) count, so it over-counts.
-					_state.SetTotal(test.TestCaseCount);
+					// The root suite's work item holds the run's filtered tree. When it cannot be resolved, fall back to
+					// the discovered count, which over-counts under a --filter.
+					if (test.Parent == null)
+					{
+						var count = TestRunCounter.TryCount(TestExecutionContext.CurrentContext.Dispatcher, test);
+
+						if (count != null)
+							_state.SetTotal(count.Value);
+						else
+							_state.SetTotal(test.TestCaseCount, isUpperBound: true);
+					}
+
 					return;
 				}
 
@@ -163,6 +174,8 @@ namespace Tests
 #endif
 				_file       = ResolvePath(cfg.Trim());
 				_startedUtc = DateTime.UtcNow;
+				// Lets a per-session observer (an agent's status line) tell its own runs from those of other sessions.
+				_sessionId  = Environment.GetEnvironmentVariable("CLAUDE_CODE_SESSION_ID");
 
 				var dir = Path.GetDirectoryName(_file);
 				if (!string.IsNullOrEmpty(dir))
@@ -220,21 +233,7 @@ namespace Tests
 			|| value.Equals("enable",  StringComparison.OrdinalIgnoreCase)
 			|| value.Equals("enabled", StringComparison.OrdinalIgnoreCase);
 
-		static string FindRepoRoot()
-		{
-			try
-			{
-				for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir != null; dir = dir.Parent)
-					if (File.Exists(Path.Combine(dir.FullName, "linq2db.slnx")))
-						return dir.FullName;
-			}
-			catch
-			{
-				// fall through to base directory
-			}
-
-			return AppContext.BaseDirectory;
-		}
+		static string FindRepoRoot() => TestUtils.TryFindRepoRoot() ?? AppContext.BaseDirectory;
 
 		static void Write(bool force)
 		{
@@ -246,22 +245,25 @@ namespace Tests
 
 			// Read under the state's lock (Write is invoked from inside it), so the snapshot is coherent.
 			var total      = _state.Total;
+			var upperBound = _state.TotalIsUpperBound;
 			var completed  = _state.Completed;
 			var failures   = _state.RecentFailures;
 
 			var elapsedSec = _clock.Elapsed.TotalSeconds;
 			var rate       = elapsedSec > 0 ? completed / elapsedSec : 0d;
-			var eta        = rate > 0 && total > completed ? (total - completed) / rate : (double?)null;
+			var eta        = !upperBound && rate > 0 && total > completed ? (total - completed) / rate : (double?)null;
 
 			var sb = new StringBuilder(512);
 
 			sb.Append('{');
 			sb.Append("\"tfm\":")        .Append(JsonString(Tfm))                       .Append(',');
 			sb.Append("\"pid\":")        .Append(Int(_pid))                             .Append(',');
+			sb.Append("\"sessionId\":")  .Append(JsonString(_sessionId))                .Append(',');
 			sb.Append("\"startedUtc\":") .Append(JsonString(Iso(_startedUtc)))          .Append(',');
 			sb.Append("\"updatedUtc\":") .Append(JsonString(Iso(DateTime.UtcNow)))      .Append(',');
 			sb.Append("\"done\":")       .Append(_state.Done ? "true" : "false")        .Append(',');
 			sb.Append("\"total\":")      .Append(Long(total))                           .Append(',');
+			sb.Append("\"totalIsUpperBound\":").Append(upperBound ? "true" : "false")   .Append(',');
 			sb.Append("\"completed\":")  .Append(Long(completed))                       .Append(',');
 			sb.Append("\"started\":")    .Append(Long(_state.Started))                  .Append(',');
 			sb.Append("\"passed\":")     .Append(Long(_state.Passed))                   .Append(',');

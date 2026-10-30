@@ -877,6 +877,16 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							break;
 						}
 
+					case QueryElementType.SqlDefaultValueExpression :
+						{
+							var defaultValue = (SqlDefaultValueExpression)e;
+
+							GetType(defaultValue.Type.SystemType);
+							GetType(defaultValue.Value?.GetType());
+
+							break;
+						}
+
 					case QueryElementType.SqlFunction              : GetType(((SqlFunction)             e).SystemType)          ; break;
 					case QueryElementType.SqlExpression            : GetType(((SqlExpression)           e).SystemType)          ; break;
 					case QueryElementType.SqlNullabilityExpression : GetType(((SqlNullabilityExpression)e).SystemType)          ; break;
@@ -1062,6 +1072,17 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 
 							Append(elem.ValueType);
 							var type  = elem.Value?.GetType() ?? elem.ValueType.SystemType;
+							Append(type, elem.Value);
+
+							break;
+						}
+
+					case QueryElementType.SqlDefaultValueExpression :
+						{
+							var elem = (SqlDefaultValueExpression)e;
+
+							Append(elem.Type);
+							var type  = elem.Value?.GetType() ?? elem.Type.SystemType;
 							Append(type, elem.Value);
 
 							break;
@@ -2265,6 +2286,16 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							var value         = ReadValue(ReadType()!);
 
 							obj = new SqlValue(dbDataType, value);
+
+							break;
+						}
+
+					case QueryElementType.SqlDefaultValueExpression :
+						{
+							var dbDataType    = ReadDbDataType();
+							var value         = ReadValue(ReadType()!);
+
+							obj = new SqlDefaultValueExpression(dbDataType, value);
 
 							break;
 						}

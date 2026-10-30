@@ -12,6 +12,7 @@ using Shouldly;
 namespace Tests.Linq
 {
 	[TestFixture]
+	[NoBaselines("Multi-threading")]
 	public class MultiThreadingTests : TestBase
 	{
 		[Table]
@@ -35,7 +36,6 @@ namespace Tests.Linq
 		[Test]
 		public void StartsWithTests([DataSources(false, TestProvName.AllSybase)] string context)
 		{
-			using var d1 = new DisableBaseline("Multi-threading");
 			using var d2 = new DisableLogging();
 
 			var testData = MultiThreadedData.TestData();
@@ -65,7 +65,6 @@ namespace Tests.Linq
 		{
 			var skipTrim = context.IsAnyOf(TestProvName.AllClickHouse);
 
-			using var d1 = new DisableBaseline("Multi-threading");
 			using var d2 = new DisableLogging();
 
 			var testData = MultiThreadedData.TestData();
@@ -93,7 +92,6 @@ namespace Tests.Linq
 		[Test]
 		public void ParamOptimization([DataSources(false, TestProvName.AllSybase)] string context)
 		{
-			using var d1 = new DisableBaseline("Multi-threading");
 			using var d2 = new DisableLogging();
 
 			var testData = MultiThreadedData.TestData();
@@ -119,7 +117,6 @@ namespace Tests.Linq
 		[Test]
 		public void MergeInsert([MergeDataContextSource(false, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
 		{
-			using var d1 = new DisableBaseline("Multi-threading");
 			using var d2 = new DisableLogging();
 
 			var testData = MultiThreadedData.TestData();
@@ -148,7 +145,6 @@ namespace Tests.Linq
 		[Test]
 		public void EagerLoadMultiLevel([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using var d1 = new DisableBaseline("Multi-threading");
 			using var d2 = new DisableLogging();
 
 			var testData = MultiThreadedData.TestData();

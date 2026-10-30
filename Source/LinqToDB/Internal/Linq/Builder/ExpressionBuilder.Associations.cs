@@ -199,7 +199,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				foreach (var ed in entityDescriptor.Associations)
 				{
-					if (ed.MemberInfo.EqualsTo(memberInfo))
+					if (ed.MemberInfo.EqualsTo(memberInfo, entityDescriptor.ObjectType))
 						return ed;
 				}
 
@@ -207,7 +207,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					foreach (var ed in MappingSchema.GetEntityDescriptor(m.Type).Associations)
 					{
-						if (ed.MemberInfo.EqualsTo(memberInfo))
+						if (ed.MemberInfo.EqualsTo(memberInfo, m.Type))
 							return ed;
 					}
 				}

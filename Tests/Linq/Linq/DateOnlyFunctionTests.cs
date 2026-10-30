@@ -9,6 +9,8 @@ using LinqToDB.Tools;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Linq
 {
 	[TestFixture]
@@ -357,6 +359,32 @@ namespace Tests.Linq
 		}
 
 #endregion
+
+		sealed class DateOnlyAsDateTimeRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.DateTime)] public DateOnly Day { get; set; }
+		}
+
+		/// <summary>
+		/// A captured collection of dates beside a computed timestamp is still expanded into the IN list.
+		/// </summary>
+		/// <remarks>
+		/// Sybase only: ASE compares a date with a datetime as a date, and the provider casts the date side to compensate.
+		/// </remarks>
+		[Test]
+		public void CapturedDatesBesideComputedTimestamp([IncludeDataSources(TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new DateOnlyAsDateTimeRow { Id = 1, Day = new DateOnly(2026, 5, 31) } });
+
+			var dates = new[] { new DateOnly(2026, 6, 1), new DateOnly(2026, 6, 2) };
+
+			var count = t.Count(r => dates.Contains(r.Day.AddDays(1)));
+
+			count.ShouldBe(1);
+		}
 	}
 }
 #endif

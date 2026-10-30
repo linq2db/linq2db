@@ -105,6 +105,8 @@ namespace Tests.UserTests
 			var cnt    = query.Count();
 
 			Assert.That(cnt, Is.EqualTo(result.Length));
+
+			AssertQuery(query);
 		}
 
 		[Test]
