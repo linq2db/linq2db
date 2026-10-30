@@ -1050,6 +1050,29 @@ namespace Tests.Linq
 				.ShouldBeFalse();
 		}
 
+		[Table]
+		sealed class LongVarCharRow
+		{
+			[PrimaryKey]                                                            public int    Id    { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 8000, CanBeNull = false)] public string Notes { get; set; } = default!;
+		}
+
+		// varchar(8000) + nvarchar(4000) is nvarchar(4000) on SQL Server, so a default-typed parameter would cut the value.
+		[Test]
+		public void ConcatParameterBesideLongVarCharKeepsLength([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			var suffix = "x";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new LongVarCharRow { Id = 1, Notes = new string('a', 6000) } });
+
+			var value = table
+				.Select(t => Sql.AsSql(t.Notes + suffix))
+				.Single();
+
+			value.Length.ShouldBe(6001);
+		}
+
 		#endregion
 
 		#region Concat inside a set-operation operand's projection
