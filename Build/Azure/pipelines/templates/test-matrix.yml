@@ -47,7 +47,8 @@ parameters:
 # - '[sqlite.all]' - SQLite targets supported
 # - '[sqlserver.all]' - SQL Server targets supported
 # - '[sqlserver.2019]' - SQL Server 2017 + 2019 targets supported (one job covers both versions)
-# - '[sqlserver.2022]' - SQL Server 2022 + 2025 targets supported (one job covers both versions)
+# - '[sqlserver.2022]' - SQL Server 2022 + 2025 targets supported (one job covers both versions), plus the
+#   SQL Server EXTRAS job (case-sensitive and contained databases on SQL Server 2025)
 # - '[sybase.ase.all]' - SAP/Sybase ASE targets supported
 # - '[duckdb.all]' - DuckDB targets supported
 # - '[clickhouse.all]' - Yandex ClickHouse targets supported
@@ -368,7 +369,9 @@ jobs:
           win_efcore_only: true
           filters: '[all][sqlserver.all][sqlserver.2022]'
 
-# additional test runner as SqlServer2019 already takes a lot of time
+# SQL Server 2025 in special database modes (SqlServer.CS, SqlServer.Contained) - a separate job, as
+# merged into m_SqlServer2022_2025 it would take twice as long as any other SQL Server job.
+# The key keeps its historical name: job names are keyed on it.
         - name: n_SqlServer2019Extras
           gh_linux: 'true'
           title: SQL Server EXTRAS
@@ -384,7 +387,7 @@ jobs:
           enable_fw_net100: true
           # extras counts as 2017+ for the EF.Core-only-on-Windows-for-non-release rule
           win_efcore_only: true
-          filters: '[all][sqlserver.all][sqlserver.2019]'
+          filters: '[all][sqlserver.all][sqlserver.2022]'
 
         - name: o_SqlServer2005
           title: SQL Server 2005

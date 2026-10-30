@@ -14,6 +14,7 @@ namespace Tests.UserTests
 {
 	// disabled providers cannot handle concurrent queries well
 	[TestFixture]
+	[NoBaselines("Multi-threading")]
 	public class Issue1398Tests : TestBase
 	{
 		[Table("Animals")]
@@ -66,7 +67,6 @@ namespace Tests.UserTests
 			// sqlite connection pooling is not compatible with tested template
 			SQLiteTools.ClearAllPools(provider: null);
 
-			using (new DisableBaseline("Multi-threading"))
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<InsertTable>())
 			{
@@ -102,7 +102,6 @@ namespace Tests.UserTests
 			var mammals  = new[] { "Elephant", "Cat" };
 			var reptiles = new[] { "Snake", "Lizard" };
 
-			using (new DisableBaseline("Multi-threading"))
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Animal>())
 			using (db.CreateLocalTable<AnimalUpdate>())

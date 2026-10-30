@@ -8,7 +8,7 @@
 	NamespaceName        = "SapHana.ODBC";
 	GenerateSchemaAsType = true;
 
-	LoadSapHanaMetadata(GetConnectionString("SapHana.Odbc"));
+	LoadSapHanaMetadata(GetConnectionString("SapHana.Odbc"), LinqToDB.DataProvider.SapHana.SapHanaProvider.ODBC);
 
 	GenerateModel();
 #>

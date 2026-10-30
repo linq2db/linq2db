@@ -263,24 +263,21 @@ namespace Tests.SchemaProvider
 		[Test]
 		public void IncludeExcludeSchemaTest([DataSources(false)] string context)
 		{
-			using (new DisableBaseline("TODO: exclude schema list is not stable, db2 schema provider needs refactoring", GetProviderName(context, out var _) == ProviderName.DB2))
-			using (var conn = GetDataConnection(context))
-			{
-				var exclude = conn.DataProvider.GetSchemaProvider()
-					.GetSchema(conn, new GetSchemaOptions {ExcludedSchemas = new string?[] { null }})
-					.Tables.Select(_ => _.SchemaName)
-					.Distinct()
-					.ToList();
-				exclude.Add(null);
-				exclude.Add("");
+			using var conn = GetDataConnection(context);
+			var exclude = conn.DataProvider.GetSchemaProvider()
+				.GetSchema(conn, new GetSchemaOptions {ExcludedSchemas = new string?[] { null }})
+				.Tables.Select(_ => _.SchemaName)
+				.Distinct()
+				.ToList();
+			exclude.Add(null);
+			exclude.Add("");
 
-				var schema1 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, new GetSchemaOptions {ExcludedSchemas = exclude.ToArray()});
-				var schema2 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, new GetSchemaOptions {IncludedSchemas = new []{ "IncludeExcludeSchemaTest" } });
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(schema1.Tables, Is.Empty);
-					Assert.That(schema2.Tables, Is.Empty);
-				}
+			var schema1 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, new GetSchemaOptions {ExcludedSchemas = exclude.ToArray()});
+			var schema2 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, new GetSchemaOptions {IncludedSchemas = new []{ "IncludeExcludeSchemaTest" } });
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(schema1.Tables, Is.Empty);
+				Assert.That(schema2.Tables, Is.Empty);
 			}
 		}
 

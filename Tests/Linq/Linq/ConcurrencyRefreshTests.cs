@@ -87,9 +87,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("guid used")]
 		public void UpdateRefreshesVersion([DataSources] string context)
 		{
-			using var _  = new DisableBaseline("guid used");
 			using var db = GetDataContext(context, GuidSchema("ConcurrencyRefreshGuid"));
 
 			SkipIfRefreshUnsupported(db);
@@ -115,9 +115,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("guid used")]
 		public async Task UpdateRefreshesVersionAsync([DataSources] string context)
 		{
-			using var _  = new DisableBaseline("guid used");
 			using var db = GetDataContext(context, GuidSchema("ConcurrencyRefreshGuid"));
 
 			SkipIfRefreshUnsupported(db);
@@ -140,9 +140,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("guid used")]
 		public void UpdateViaQueryRefreshesVersion([DataSources] string context)
 		{
-			using var _  = new DisableBaseline("guid used");
 			using var db = GetDataContext(context, GuidSchema("ConcurrencyRefreshGuid"));
 
 			SkipIfRefreshUnsupported(db);
@@ -164,9 +164,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("guid used")]
 		public async Task UpdateViaQueryRefreshesVersionAsync([DataSources] string context)
 		{
-			using var _  = new DisableBaseline("guid used");
 			using var db = GetDataContext(context, GuidSchema("ConcurrencyRefreshGuid"));
 
 			SkipIfRefreshUnsupported(db);
@@ -188,6 +188,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("guid used")]
 		public void UpdateViaQueryHonorsSourceTableName([DataSources] string context)
 		{
 			using var db = GetDataContext(context, GuidSchema("ConcurrencyRefreshGuid"));
@@ -197,7 +198,6 @@ namespace Tests.Linq
 			if (db.SqlProviderFlags.IsUpdateOutputRowsSupported || !db.SqlProviderFlags.IsAffectedRowsCountSupported)
 				Assert.Ignore("Exercises the SELECT-fallback read-back path only.");
 
-			using var _        = new DisableBaseline("guid used");
 			// the entity's default-mapped table carries a row with the same PK but a different value ...
 			using var _default = db.CreateLocalTable<RefreshTable<Guid>>();
 			// ... while the data the caller updates lives in a renamed table it targets via source.TableName(...)
@@ -220,6 +220,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("guid used")]
 		public void UpdateViaQueryWithFilterOnUpdatedColumn([DataSources] string context)
 		{
 			using var db = GetDataContext(context, GuidSchema("ConcurrencyRefreshGuid"));
@@ -228,7 +229,6 @@ namespace Tests.Linq
 			if (db.SqlProviderFlags.IsUpdateOutputRowsSupported || !db.SqlProviderFlags.IsAffectedRowsCountSupported)
 				Assert.Ignore("Exercises the SELECT-fallback read-back path only.");
 
-			using var _ = new DisableBaseline("guid used");
 			using var t = db.CreateLocalTable<RefreshTable<Guid>>();
 
 			var record = new RefreshTable<Guid> { Id = 1, Stamp = default, Value = "initial" };
@@ -247,6 +247,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("guid used")]
 		public void UpdateViaQueryWithFilterUnderLinqToDBOperator([DataSources] string context)
 		{
 			using var db = GetDataContext(context, GuidSchema("ConcurrencyRefreshGuid"));
@@ -255,7 +256,6 @@ namespace Tests.Linq
 			if (db.SqlProviderFlags.IsUpdateOutputRowsSupported || !db.SqlProviderFlags.IsAffectedRowsCountSupported)
 				Assert.Ignore("Exercises the SELECT-fallback read-back path only.");
 
-			using var _ = new DisableBaseline("guid used");
 			using var t = db.CreateLocalTable<RefreshTable<Guid>>();
 
 			var record = new RefreshTable<Guid> { Id = 1, Stamp = default, Value = "initial" };
@@ -274,6 +274,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("guid used")]
 		public void UpdateViaQueryWithIgnoreFilters([DataSources] string context)
 		{
 			var ms = new MappingSchema();
@@ -291,7 +292,6 @@ namespace Tests.Linq
 			if (db.SqlProviderFlags.IsUpdateOutputRowsSupported || !db.SqlProviderFlags.IsAffectedRowsCountSupported)
 				Assert.Ignore("Exercises the SELECT-fallback read-back path only.");
 
-			using var _ = new DisableBaseline("guid used");
 			using var t = db.CreateLocalTable<RefreshTable<Guid>>();
 
 			var record = new RefreshTable<Guid> { Id = 1, Stamp = default, Value = "initial" };
@@ -310,6 +310,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("guid used")]
 		public void UpdateViaQueryWithIgnoreFiltersAboveWhere([DataSources] string context)
 		{
 			var ms = new MappingSchema();
@@ -327,7 +328,6 @@ namespace Tests.Linq
 			if (db.SqlProviderFlags.IsUpdateOutputRowsSupported || !db.SqlProviderFlags.IsAffectedRowsCountSupported)
 				Assert.Ignore("Exercises the SELECT-fallback read-back path only.");
 
-			using var _ = new DisableBaseline("guid used");
 			using var t = db.CreateLocalTable<RefreshTable<Guid>>();
 
 			var record = new RefreshTable<Guid> { Id = 1, Stamp = default, Value = "initial" };
@@ -348,6 +348,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("guid used")]
 		public void UpdateThroughUnsupportedSourceShapeThrows([DataSources] string context)
 		{
 			var ms = new MappingSchema();
@@ -369,7 +370,6 @@ namespace Tests.Linq
 			if (db.SqlProviderFlags.IsUpdateOutputRowsSupported || !db.SqlProviderFlags.IsAffectedRowsCountSupported)
 				Assert.Ignore("Exercises the SELECT-fallback read-back path only.");
 
-			using var _     = new DisableBaseline("guid used");
 			using var outer = db.CreateLocalTable<RefreshTable<int>>();
 			using var t     = db.CreateLocalTable<RefreshTable<Guid>>();
 
@@ -393,6 +393,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("guid used")]
 		public void UpdateOnReadOnlyLockMemberThrows([DataSources] string context)
 		{
 			var ms = new MappingSchema();
@@ -403,7 +404,6 @@ namespace Tests.Linq
 						.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.Guid))
 				.Build();
 
-			using var _  = new DisableBaseline("guid used");
 			using var db = GetDataContext(context, ms);
 
 			SkipIfRefreshUnsupported(db);
@@ -422,6 +422,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("guid used")]
 		public void UpdateRefreshesEntityWithoutDefaultConstructor([DataSources] string context)
 		{
 			var ms = new MappingSchema();
@@ -432,7 +433,6 @@ namespace Tests.Linq
 						.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.Guid))
 				.Build();
 
-			using var _  = new DisableBaseline("guid used");
 			using var db = GetDataContext(context, ms);
 
 			SkipIfRefreshUnsupported(db);
@@ -482,6 +482,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("guid used")]
 		public void UpdateRefreshesMultipleLockColumns([DataSources] string context)
 		{
 			var ms = new MappingSchema();
@@ -494,7 +495,6 @@ namespace Tests.Linq
 						.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.AutoIncrement))
 				.Build();
 
-			using var _  = new DisableBaseline("guid used");
 			using var db = GetDataContext(context, ms);
 
 			SkipIfRefreshUnsupported(db);
@@ -530,6 +530,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("timestamp used")]
 		public void UpdateRefreshesDatabaseGenerated([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
 			var ms = new MappingSchema();
@@ -542,7 +543,6 @@ namespace Tests.Linq
 						.HasDataType(DataType.Timestamp)
 				.Build();
 
-			using var _  = new DisableBaseline("timestamp used");
 			using var db = GetDataContext(context, ms);
 			using var t  = db.CreateLocalTable<RefreshTable<byte[]>>();
 
@@ -566,9 +566,9 @@ namespace Tests.Linq
 		// where the plain UpdateOptimistic would have succeeded. Asserts only that it throws - the error text is
 		// localized and the exception type differs between the SqlClient flavours.
 		[Test]
+		[NoBaselines("guid used")]
 		public void UpdateOnTriggeredTableThrowsOnSqlServer([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
-			using var _  = new DisableBaseline("guid used");
 			using var db = GetDataContext(context, GuidSchema("ConcurrencyRefreshTriggered"));
 			using var t  = db.CreateLocalTable<RefreshTable<Guid>>();
 
@@ -588,9 +588,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("guid used")]
 		public void UpdateConcurrencyFailureLeavesEntityUnchanged([DataSources] string context)
 		{
-			using var _  = new DisableBaseline("guid used");
 			using var db = GetDataContext(context, GuidSchema("ConcurrencyRefreshGuid"));
 
 			SkipIfRefreshUnsupported(db);
@@ -612,9 +612,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("guid used")]
 		public async Task UpdateConcurrencyFailureLeavesEntityUnchangedAsync([DataSources] string context)
 		{
-			using var _  = new DisableBaseline("guid used");
 			using var db = GetDataContext(context, GuidSchema("ConcurrencyRefreshGuid"));
 
 			SkipIfRefreshUnsupported(db);
@@ -691,9 +691,9 @@ namespace Tests.Linq
 		// (YDB reaches the API via its OUTPUT/RETURNING path and is unaffected.) Gated by capability flags, not
 		// a provider name, so any future no-OUTPUT + no-rowcount provider is covered automatically.
 		[Test]
+		[NoBaselines("guid used")]
 		public void UpdateOnUnsupportedProviderThrows([DataSources] string context)
 		{
-			using var _  = new DisableBaseline("guid used");
 			using var db = GetDataContext(context, GuidSchema("ConcurrencyRefreshGuid"));
 
 			if (db.SqlProviderFlags.IsUpdateOutputRowsSupported || db.SqlProviderFlags.IsAffectedRowsCountSupported)
@@ -712,9 +712,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("guid used")]
 		public async Task UpdateOnUnsupportedProviderThrowsAsync([DataSources] string context)
 		{
-			using var _  = new DisableBaseline("guid used");
 			using var db = GetDataContext(context, GuidSchema("ConcurrencyRefreshGuid"));
 
 			if (db.SqlProviderFlags.IsUpdateOutputRowsSupported || db.SqlProviderFlags.IsAffectedRowsCountSupported)
@@ -739,9 +739,9 @@ namespace Tests.Linq
 		// OUTPUT support and fails when reality diverges from the declared flag, signalling that the provider's flag
 		// (set in its DataProvider) needs updating.
 		[Test]
+		[NoBaselines("probes provider capability")]
 		public void OutputSupportSurface([DataSources] string context)
 		{
-			using var _  = new DisableBaseline("probes provider capability");
 			using var db = GetDataContext(context);
 
 			var actual = ProbeUpdateOutput(db);
@@ -783,9 +783,9 @@ namespace Tests.Linq
 		// the number of rows affected by an UPDATE and fails when reality diverges from the declared flag, signalling
 		// that the provider's flag (set in its DataProvider) needs updating.
 		[Test]
+		[NoBaselines("probes provider capability")]
 		public void AffectedRowsCountSurface([DataSources] string context)
 		{
-			using var _  = new DisableBaseline("probes provider capability");
 			using var db = GetDataContext(context);
 
 			var actual = ProbeAffectedRows(db);
