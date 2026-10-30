@@ -12,6 +12,7 @@ using System.Linq.Dynamic.Core;
 using Shouldly;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Mapping;
 using LinqToDB.Internal.SqlQuery;
 
@@ -1023,6 +1024,32 @@ namespace Tests.Linq
 				.ToArray();
 
 			liked.ShouldBeEmpty();
+		}
+
+		sealed class PrefixConverter() : ValueConverter<string?, string?>(v => v == null ? null : "x:" + v, v => v == null ? null : v.Substring(2), true);
+
+		[Table]
+		sealed class PrefixedCodeTable
+		{
+			[PrimaryKey]                                                                                                 public int     Id   { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 20), ValueConverter(ConverterType = typeof(PrefixConverter))] public string? Code { get; set; }
+		}
+
+		[Test]
+		public void ComparedCastOfConvertedColumnKeepsConverter([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllSQLite)] string context)
+		{
+			var bound = "A";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new PrefixedCodeTable { Id = 1, Code = "A" } });
+
+			table
+				.Count(t => Sql.Like(Sql.Convert(Sql.Types.NVarChar(40), t.Code), "A"))
+				.ShouldBe(1);
+
+			table
+				.Count(t => Sql.Convert(Sql.Types.NVarChar(40), t.Code)!.CompareTo(bound) == 0)
+				.ShouldBe(1);
 		}
 
 		[Test]

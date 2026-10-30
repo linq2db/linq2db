@@ -90,7 +90,10 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (fromExpression is null)
 				return null;
 
-			var columnDescriptor = QueryHelper.GetColumnDescriptorForTyping(fromExpression);
+			// A column the typing lookup refuses still lends its converter: without it the value would reach the database
+			// in its .NET form and be compared with the stored one.
+			var columnDescriptor = QueryHelper.GetColumnDescriptorForTyping(fromExpression)
+				?? (QueryHelper.GetColumnDescriptor(fromExpression) is { ValueConverter: not null } converted ? converted : null);
 
 			if (columnDescriptor == null)
 				return null;
