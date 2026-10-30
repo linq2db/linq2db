@@ -964,6 +964,44 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void OrderByNullableBooleanColumn([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var expected = Types2
+				.OrderBy(t => t.BoolValue)
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray();
+
+			db.Types2
+				.OrderBy(t => t.BoolValue)
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
+		[Test]
+		public void OrderByNullableBooleanColumnDescending([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var expected = Types2
+				.OrderByDescending(t => t.BoolValue)
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray();
+
+			db.Types2
+				.OrderByDescending(t => t.BoolValue)
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
+		[Test]
 		public void OrderByBooleanPredicate([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
