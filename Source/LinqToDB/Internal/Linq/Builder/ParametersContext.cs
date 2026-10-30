@@ -616,9 +616,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			CacheManager.MarkAsValue(expression, value);
 		}
 
-		public void RegisterSqlValue(Expression constantExpr, SqlValue value)
+		public void RegisterSqlValue(Expression constantExpr, SqlValue value, Expression source)
 		{
-			CacheManager.RegisterSqlValue(constantExpr, value);
+			CacheManager.RegisterSqlValue(constantExpr, value, source);
 		}
 	}
 }

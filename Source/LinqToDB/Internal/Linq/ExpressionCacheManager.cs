@@ -30,7 +30,7 @@ namespace LinqToDB.Internal.Linq
 		public HashSet<Expression>                                 NonComparableExpressions { get; } = [];
 
 		List<(object? value, Expression accessor)>?                     _byValueCompare;
-		List<(SqlValue value, Expression accessor)>?                    _bySqlValueCompare;
+		List<(SqlValue value, Expression accessor, Expression source)>? _bySqlValueCompare;
 		Dictionary<int, (Expression main, Expression other)>?           _duplicateParametersCheck;
 		Dictionary<int, (Expression param, ParameterCacheEntry entry)>? _parameterEntries;
 
@@ -614,12 +614,56 @@ namespace LinqToDB.Internal.Linq
 				}
 			}
 
+			List<(SqlValue value, Expression accessor, Expression source)>? sqlValueCompares = null;
+
+			if (_bySqlValueCompare != null)
+			{
+				sqlValues ??= [];
+
+				var                  mapped    = new HashSet<Expression>();
+				HashSet<Expression>? usedPaths = null;
+
+				foreach (var (value, accessor, _) in _bySqlValueCompare)
+				{
+					if (sqlValues.Contains(value))
+						(usedPaths ??= new(ExpressionEqualityComparer.Instance)).Add(ApplyAccessors(accessor, mapped));
+				}
+
+				foreach (var entry in _bySqlValueCompare)
+				{
+					// A value the optimizer folded out of the SQL still decided its shape. For now every absent value is
+					// compared unless the key covers it; linq2db#6184 tracks recording the values the optimizer consumes.
+					if (!sqlValues.Contains(entry.value) && IsCoveredByCacheKey(entry.accessor, usedPaths, mapped, dc.MappingSchema))
+						continue;
+
+					(sqlValueCompares ??= []).Add(entry);
+				}
+			}
+
+			var compared = new ComparedAccessors(MainExpression);
+
+			if (_byValueCompare != null)
+			{
+				foreach (var (_, accessor) in _byValueCompare)
+					compared.Roots.Add(accessor);
+			}
+
+			if (sqlValueCompares != null)
+			{
+				// The accessor carries the column's conversions, so the query tree holds its source node instead.
+				foreach (var (_, accessor, source) in sqlValueCompares)
+				{
+					compared.Roots.Add(accessor);
+					compared.Roots.Add(source);
+				}
+			}
+
 			if (_byValueCompare != null)
 			{
 				foreach (var (value, accessor) in _byValueCompare)
 				{
 					var mainValueExpr  = Expression.Constant(value).EnsureType<object>();
-					var otherValueExpr = PrepareComparedAccessor(dc, accessor, nonComparable).EnsureType<object>();
+					var otherValueExpr = PrepareComparedAccessor(dc, accessor, nonComparable, compared).EnsureType<object>();
 
 					var mainFunc = Expression.Lambda<ValueAccessorFunc>(mainValueExpr, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
 							ExpressionBuilder.ParametersParam)
@@ -634,29 +678,13 @@ namespace LinqToDB.Internal.Linq
 				}
 			}
 
-			if (_bySqlValueCompare != null)
+			if (sqlValueCompares != null)
 			{
-				sqlValues ??= [];
-
-				var                  mapped    = new HashSet<Expression>();
-				HashSet<Expression>? usedPaths = null;
-
-				foreach (var (value, accessor) in _bySqlValueCompare)
+				foreach (var (_, accessor, _) in sqlValueCompares)
 				{
-					if (sqlValues.Contains(value))
-						(usedPaths ??= new(ExpressionEqualityComparer.Instance)).Add(ApplyAccessors(accessor, mapped));
-				}
-
-				foreach (var (value, accessor) in _bySqlValueCompare)
-				{
-					// A value the optimizer folded out of the SQL still decided its shape. For now every absent value is
-					// compared unless the key covers it; linq2db#6184 tracks recording the values the optimizer consumes.
-					if (!sqlValues.Contains(value) && IsCoveredByCacheKey(accessor, usedPaths, mapped, dc.MappingSchema))
-						continue;
-
 					var mainValueExpr = Expression.Constant(evaluator.Evaluate(accessor)).EnsureType<object>();
 
-					var otherValueExpr = PrepareComparedAccessor(dc, accessor, nonComparable).EnsureType<object>();
+					var otherValueExpr = PrepareComparedAccessor(dc, accessor, nonComparable, compared).EnsureType<object>();
 
 					var mainFunc = Expression.Lambda<ValueAccessorFunc>(mainValueExpr, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
 							ExpressionBuilder.ParametersParam)
@@ -682,18 +710,55 @@ namespace LinqToDB.Internal.Linq
 		/// derived value such as <c>c == null</c> can be equal for constants that shaped the SQL differently, and the key
 		/// matches an equal scalar by value anyway.
 		/// </summary>
-		Expression PrepareComparedAccessor(IDataContext dc, Expression accessor, HashSet<Expression> nonComparable)
+		Expression PrepareComparedAccessor(IDataContext dc, Expression accessor, HashSet<Expression> nonComparable, ComparedAccessors compared)
 		{
 			var replaced = new HashSet<Expression>();
 			var prepared = PrepareExpressionAccessors(dc, accessor, replaced);
 
 			foreach (var e in replaced)
 			{
-				if (!IsComparedByValueInKey((ConstantExpression)e, dc.MappingSchema))
-					nonComparable.Add(e);
+				var constant = (ConstantExpression)e;
+
+				if (ExpressionCacheHelpers.IsComparedByValueInKey(constant, dc.MappingSchema))
+					continue;
+
+				// A kept collection is compared by reference in the key. A use outside every compare (a dependent or
+				// extension argument, a LINQ-level fold) relies on that, so it stays in the key: at worst a miss.
+				if (!ExpressionCacheHelpers.ShouldRemoveConstantFromCache(constant, dc.MappingSchema) && compared.IsUsedOutside(e))
+					continue;
+
+				nonComparable.Add(e);
 			}
 
 			return prepared;
+		}
+
+		sealed class ComparedAccessors(Expression mainExpression)
+		{
+			public readonly HashSet<Expression> Roots = [];
+
+			HashSet<Expression>? _usedOutside;
+
+			public bool IsUsedOutside(Expression constant)
+			{
+				if (_usedOutside == null)
+				{
+					_usedOutside = [];
+
+					mainExpression.Visit((roots: Roots, usedOutside: _usedOutside), static (ctx, e) =>
+					{
+						if (ctx.roots.Contains(e))
+							return false;
+
+						if (e is ConstantExpression { Value: IEnumerable and not string })
+							ctx.usedOutside.Add(e);
+
+						return true;
+					});
+				}
+
+				return _usedOutside.Contains(constant);
+			}
 		}
 
 		bool IsCoveredByCacheKey(Expression accessor, HashSet<Expression>? usedPaths, HashSet<Expression> mapped, MappingSchema mappingSchema)
@@ -705,14 +770,9 @@ namespace LinqToDB.Internal.Linq
 			return accessor.Unwrap() switch
 			{
 				DefaultExpression           => true,
-				ConstantExpression constant => IsComparedByValueInKey(constant, mappingSchema),
+				ConstantExpression constant => ExpressionCacheHelpers.IsComparedByValueInKey(constant, mappingSchema),
 				_                           => false,
 			};
-		}
-
-		static bool IsComparedByValueInKey(ConstantExpression constant, MappingSchema mappingSchema)
-		{
-			return !ExpressionCacheHelpers.ShouldRemoveConstantFromCache(constant, mappingSchema) && constant.Value is string or not IEnumerable;
 		}
 
 		/// <summary>
@@ -735,10 +795,10 @@ namespace LinqToDB.Internal.Linq
 			_byValueCompare.Add((currentValue, expression));
 		}
 
-		public void RegisterSqlValue(Expression constantExpr, SqlValue value)
+		public void RegisterSqlValue(Expression constantExpr, SqlValue value, Expression source)
 		{
 			_bySqlValueCompare ??= new();
-			_bySqlValueCompare.Add((value, constantExpr));
+			_bySqlValueCompare.Add((value, constantExpr, source));
 		}
 
 	}

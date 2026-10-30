@@ -1197,6 +1197,147 @@ namespace Tests.Linq
 				.ShouldBe([1]);
 		}
 
+		sealed class MaxLiteralBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqlExtensionBuilder builder)
+			{
+				builder.ResultExpression = new SqlValue(builder.GetValue<int[]>(0).Max());
+			}
+		}
+
+		[Sql.Extension("", BuilderType = typeof(MaxLiteralBuilder), ServerSideOnly = true)]
+		static int MaxLiteral(int[] values) => values.Max();
+
+		static readonly MethodInfo _maxLiteral = typeof(ExpressionTests).GetMethod(nameof(MaxLiteral), BindingFlags.NonPublic | BindingFlags.Static)!;
+
+		// Query-cache test: provider-independent.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5843")]
+		[QueryCacheTest]
+		public void ConstantArrayElementBesideExtensionArgument([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool elementInSql)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query(int[] ids)
+			{
+				var p  = Expression.Parameter(typeof(Model.Person), "p");
+				var c  = Expression.Constant(ids);
+				var id = Expression.PropertyOrField(p, nameof(Model.Person.ID));
+
+				var element = elementInSql
+					? Expression.GreaterThanOrEqual(id, Expression.ArrayIndex(c, Expression.Constant(0)))
+					: Expression.GreaterThan(Expression.ArrayIndex(c, Expression.Constant(0)), Expression.Constant(0));
+
+				var body = Expression.AndAlso(element, Expression.Equal(id, Expression.Call(_maxLiteral, c)));
+
+				return db.Person
+					.Where(Expression.Lambda<Func<Model.Person, bool>>(body, p))
+					.Select(p => p.ID);
+			}
+
+			ShouldHitCacheOnRebuild(Query, new[] { 1, 3 }, 3, new[] { 1, 3 }, 3);
+
+			Query([1, 2])
+				.ToArray()
+				.ShouldBe([2]);
+		}
+
+		[Sql.Extension("", BuilderType = typeof(MaxLiteralBuilder), ServerSideOnly = true)]
+		static int DependentMaxLiteral([SqlQueryDependent] int[] values) => values.Max();
+
+		static readonly MethodInfo _dependentMaxLiteral = typeof(ExpressionTests).GetMethod(nameof(DependentMaxLiteral), BindingFlags.NonPublic | BindingFlags.Static)!;
+
+		// Query-cache test: provider-independent.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5843")]
+		[QueryCacheTest]
+		public void ConstantArrayElementBesideDependentArgument([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool elementInSql)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query(int[] ids)
+			{
+				var p  = Expression.Parameter(typeof(Model.Person), "p");
+				var c  = Expression.Constant(ids);
+				var id = Expression.PropertyOrField(p, nameof(Model.Person.ID));
+
+				var element = elementInSql
+					? Expression.GreaterThanOrEqual(id, Expression.ArrayIndex(c, Expression.Constant(0)))
+					: Expression.GreaterThan(Expression.ArrayIndex(c, Expression.Constant(0)), Expression.Constant(0));
+
+				var body = Expression.AndAlso(element, Expression.Equal(id, Expression.Call(_dependentMaxLiteral, c)));
+
+				return db.Person
+					.Where(Expression.Lambda<Func<Model.Person, bool>>(body, p))
+					.Select(p => p.ID);
+			}
+
+			Query([1, 3])
+				.ToArray()
+				.ShouldBe([3]);
+
+			Query([1, 2])
+				.ToArray()
+				.ShouldBe([2]);
+		}
+
+		// Query-cache test: provider-independent.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5843")]
+		[QueryCacheTest]
+		public void ConstantArrayElementBesideConvertedColumnHitsOnEqualArray([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query(Model.Gender[] genders)
+			{
+				var p = Expression.Parameter(typeof(Model.Person), "p");
+
+				var body = Expression.AndAlso(
+					Expression.Equal(
+						Expression.PropertyOrField(p, nameof(Model.Person.Gender)),
+						Expression.ArrayIndex(Expression.Constant(genders), Expression.Constant(0))),
+					Expression.Equal(Expression.PropertyOrField(p, nameof(Model.Person.ID)), Expression.Constant(1)));
+
+				return db.Person
+					.Where(Expression.Lambda<Func<Model.Person, bool>>(body, p))
+					.Select(p => p.ID);
+			}
+
+			ShouldHitCacheOnRebuild(Query, new[] { Model.Gender.Male }, 1, new[] { Model.Gender.Male }, 1);
+		}
+
+		// Query-cache test: provider-independent.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5843")]
+		[QueryCacheTest]
+		public void ExtensionArgumentsOverEqualArrays([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query(int[] a, int[] b)
+			{
+				var p  = Expression.Parameter(typeof(Model.Person), "p");
+				var c1 = Expression.Constant(a);
+				var c2 = Expression.Constant(b);
+				var id = Expression.PropertyOrField(p, nameof(Model.Person.ID));
+
+				var body = Expression.AndAlso(
+					Expression.AndAlso(
+						Expression.Equal(id, Expression.Call(_maxLiteral, c1)),
+						Expression.Equal(id, Expression.Call(_maxLiteral, c2))),
+					Expression.GreaterThan(Expression.ArrayIndex(c2, Expression.Constant(0)), Expression.Constant(0)));
+
+				return db.Person
+					.Where(Expression.Lambda<Func<Model.Person, bool>>(body, p))
+					.Select(p => p.ID);
+			}
+
+			Query([1, 3], [1, 3])
+				.ToArray()
+				.ShouldBe([3]);
+
+			Query([1, 3], [1, 2])
+				.ToArray()
+				.ShouldBeEmpty();
+		}
+
 		// Query-cache test: provider-independent.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5843")]
 		[QueryCacheTest]
