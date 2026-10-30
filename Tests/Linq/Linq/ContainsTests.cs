@@ -671,5 +671,65 @@ namespace Tests.Linq
 
 			atHalf.ShouldBe(0);
 		}
+
+		sealed class TimesHundredConverter() : ValueConverter<int, int>(v => v * 100, v => v / 100, false);
+
+		[Table]
+		sealed class ConvertedAmount
+		{
+			[PrimaryKey]                                                             public int Id    { get; set; }
+			[Column]                                                                 public int Group { get; set; }
+			[Column, ValueConverter(ConverterType = typeof(TimesHundredConverter))] public int Cents { get; set; }
+		}
+
+		/// <summary>
+		/// A value searched in a projected <c>SUM</c> over a converted column goes through the column's converter.
+		/// </summary>
+		[Test]
+		public void SequenceContainsSumOfConvertedColumn([DataSources] string context)
+		{
+			var total = 7;
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new ConvertedAmount[]
+			{
+				new() { Id = 1, Group = 1, Cents = 3 },
+				new() { Id = 2, Group = 1, Cents = 4 },
+				new() { Id = 3, Group = 2, Cents = 5 },
+			});
+
+			var count = table
+				.Count(t => table
+					.GroupBy(x => x.Group)
+					.Select(g => g.Sum(x => x.Cents))
+					.Contains(total));
+
+			count.ShouldBe(3);
+		}
+
+		sealed class PrefixConverter() : ValueConverter<string?, string?>(v => v == null ? null : "x:" + v, v => v == null ? null : v.Substring(2), true);
+
+		[Table]
+		sealed class PrefixedCode
+		{
+			[PrimaryKey]                                                                                                 public int     Id   { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 20), ValueConverter(ConverterType = typeof(PrefixConverter))] public string? Code { get; set; }
+		}
+
+		/// <summary>
+		/// A value searched in a projected cast of a converted column goes through the column's converter, also when the
+		/// cast changes the database type.
+		/// </summary>
+		[Test]
+		public void SequenceContainsCastOfConvertedColumn([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new PrefixedCode { Id = 1, Code = "A" } });
+
+			table
+				.Select(t => Sql.Convert(Sql.Types.NVarChar(40), t.Code))
+				.Contains("A")
+				.ShouldBeTrue();
+		}
 	}
 }

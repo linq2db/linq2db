@@ -185,10 +185,16 @@ namespace LinqToDB.Internal.Linq.Builder
 				// the count: an object with a single column also yields one placeholder, but the value searched for
 				// is then the object rather than the column, and the column's terms are not its to take. Those are
 				// taken apart member by member further down.
+				//
+				// The typing lookup refuses a non-Unicode column's type to a concatenation, and also a SUM or a type-changing
+				// cast. The converter or unit those still carry is what makes the value comparable, so it is kept.
 				Expression testExpr;
 
 				using (sequenceExpr is SqlPlaceholderExpression scalarProjection
-					? Builder.UsingColumnDescriptorBeside(QueryHelper.GetColumnDescriptorForTyping(scalarProjection.Sql), scalarProjection.Sql)
+					? Builder.UsingColumnDescriptorBeside(
+						QueryHelper.GetColumnDescriptorForTyping(scalarProjection.Sql)
+							?? (QueryHelper.GetColumnDescriptor(scalarProjection.Sql) is { } read && (read.ValueConverter != null || read.DurationUnit != null) ? read : null),
+						scalarProjection.Sql)
 					: Builder.UsingColumnDescriptor(null))
 					testExpr = Builder.BuildSqlExpression(placeholderContext, expr, BuildPurpose.Sql, BuildFlags.ForKeys);
 
