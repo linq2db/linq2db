@@ -3677,7 +3677,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (clientItems?.Count > 1)
 			{
-				var clientCondition = clientItems.Aggregate(node.NodeType == ExpressionType.AndAlso ? Expression.AndAlso : Expression.OrElse);
+				var clientCondition = clientItems.Aggregate(node.NodeType is ExpressionType.OrElse or ExpressionType.Or ? Expression.OrElse : Expression.AndAlso);
 
 				Builder.ParametersContext.RegisterComposedSource(clientCondition, clientItems);
 
