@@ -91,7 +91,9 @@ namespace Tests.Linq
 					.Any(r => r.Id == a.Id && Sql.Property<decimal>(r, "Eur") > 30)
 				select a.Id;
 
-			ids.ToArray().ShouldBe(new[] { 2 });
+			ids
+				.ToArray()
+				.ShouldBe(new[] { 2 });
 		}
 
 		static readonly System.Collections.Concurrent.ConcurrentDictionary<string, int> _currentKeys = new();
@@ -102,6 +104,7 @@ namespace Tests.Linq
 		/// Written inline in a sub-query, the projection is built after the query cache key was taken, so what the name
 		/// selector reads has to take part in the query's identity.
 		/// </summary>
+		// SQLite only: this pins how the query cache compares the name selector's reads, which no provider affects.
 		[Test]
 		public void InlineSelectDynamicRereadsWhatTheNameSelectorReads([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -112,20 +115,29 @@ namespace Tests.Linq
 
 			_currentKeys[context] = 2;
 
-			int[] Ids() =>
-				(from a in t
-				 where t.Where(x => x.Id > 0)
-					.SelectDynamic(x => new AmountsDto { Id = x.Id }, factors, (x, k) => x.Usd * k, k => k == CurrentKey(context) ? "V" : "W" + k)
-					.Any(r => r.Id == a.Id && Sql.Property<decimal>(r, "V") > 50)
-				 select a.Id).ToArray();
+			int[] Ids()
+			{
+				var query =
+					from a in t
+					where t.Where(x => x.Id > 0)
+						.SelectDynamic(x => new AmountsDto { Id = x.Id }, factors, (x, k) => x.Usd * k, k => k == CurrentKey(context) ? "V" : "W" + k)
+						.Any(r => r.Id == a.Id && Sql.Property<decimal>(r, "V") > 50)
+					select a.Id;
 
-			Ids().ShouldBe(new[] { 2 });
+				return query.ToArray();
+			}
+
+			Ids()
+				.ShouldBe(new[] { 2 });
 
 			_currentKeys[context] = 1;
-			Ids().ShouldBeEmpty();
+
+			Ids()
+				.ShouldBeEmpty();
 		}
 
 		/// <summary>Written inline in a sub-query, the same key set reuses the query and a set mutated in place does not.</summary>
+		// SQLite only: a query-cache test.
 		[Test, QueryCacheTest]
 		public void InlineSelectDynamicCachesByKeySet([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -146,14 +158,24 @@ namespace Tests.Linq
 			var start = probe.GetCacheMissCount();
 
 			for (var i = 0; i < 4; i++)
-				Build().ToArray().ShouldBe(new[] { 2 });
+			{
+				Build()
+					.ToArray()
+					.ShouldBe(new[] { 2 });
+			}
 
-			(probe.GetCacheMissCount() - start).ShouldBe(1, "the same key set must reuse the query");
+			var misses = probe.GetCacheMissCount() - start;
+			misses.ShouldBe(1, "the same key set must reuse the query");
 
 			factors[0] = 2;
 			factors[1] = 1;
-			Build().ToArray().ShouldBe(new[] { 2 });
-			(probe.GetCacheMissCount() - start).ShouldBe(2, "a set mutated in place must not reuse it");
+
+			Build()
+				.ToArray()
+				.ShouldBe(new[] { 2 });
+
+			misses = probe.GetCacheMissCount() - start;
+			misses.ShouldBe(2, "a set mutated in place must not reuse it");
 		}
 
 		/// <summary>
@@ -161,7 +183,7 @@ namespace Tests.Linq
 		/// branch did not select reads as <c>default(TCell)</c>.
 		/// </summary>
 		[Test]
-		public void ConcatOfDifferentColumnSetsMaterializesTheUnion([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void ConcatOfDifferentColumnSetsMaterializesTheUnion([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(_data);
@@ -181,7 +203,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConcatOfDifferentColumnSetsWithNullableCells([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void ConcatOfDifferentColumnSetsWithNullableCells([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(_data);
@@ -201,38 +223,72 @@ namespace Tests.Linq
 		}
 
 		/// <summary>Keys passed as a compiled query's parameter: each call gets its own column set.</summary>
+		// SQLite only: the SQL is the plain projection ProjectsRuntimeColumnSetIntoStore runs everywhere; this pins how
+		// CompiledTable keys the column set.
 		[Test]
 		public void SelectDynamicInCompiledQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(_data);
 
-			var query = CompiledQuery.Compile((IDataContext dc, int[] factors) =>
-				dc.GetTable<Amounts>().SelectDynamic(x => new AmountsDto { Id = x.Id }, factors, (x, k) => x.Usd * k));
+			var query = CompiledQuery.Compile((IDataContext dc, int[] factors) => dc
+				.GetTable<Amounts>()
+				.SelectDynamic(x => new AmountsDto { Id = x.Id }, factors, (x, k) => x.Usd * k));
 
-			var first = query(db, new[] { 1 }).ToList().OrderBy(r => r.Id).ToList();
+			var first = query(db, new[] { 1 })
+				.ToList()
+				.OrderBy(r => r.Id)
+				.ToList();
+
 			first[0].Values!.Keys.ShouldBe(new[] { "1" });
 
-			var second = query(db, new[] { 2, 3 }).ToList().OrderBy(r => r.Id).ToList();
-			second[0].Values!.Keys.OrderBy(k => k).ShouldBe(new[] { "2", "3" });
+			var second = query(db, new[] { 2, 3 })
+				.ToList()
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			second[0].Values!.Keys
+				.OrderBy(k => k)
+				.ShouldBe(new[] { "2", "3" });
+
 			second[0].Values!["3"].ShouldBe(31.5m);
 
-			query(db, new[] { 1 }).ToList().OrderBy(r => r.Id).First().Values!.Keys.ShouldBe(new[] { "1" });
+			var third = query(db, new[] { 1 })
+				.ToList()
+				.OrderBy(r => r.Id)
+				.First();
+
+			third.Values!.Keys.ShouldBe(new[] { "1" });
 		}
 
+		// SQLite only: the SQL is the plain projection ProjectsRuntimeColumnSetIntoStore runs everywhere; this pins how
+		// CompiledTable keys the column set.
 		[Test]
 		public void SelectDynamicInCompiledQueryWithListKeys([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(_data);
 
-			var query = CompiledQuery.Compile((IDataContext dc, List<string> names) =>
-				dc.GetTable<Amounts>().SelectDynamic(x => new AmountsDto { Id = x.Id }, names, (x, n) => n == "Usd" ? x.Usd : x.Eur));
+			var query = CompiledQuery.Compile((IDataContext dc, List<string> names) => dc
+				.GetTable<Amounts>()
+				.SelectDynamic(x => new AmountsDto { Id = x.Id }, names, (x, n) => n == "Usd" ? x.Usd : x.Eur));
 
-			query(db, new List<string> { "Usd" }).ToList().OrderBy(r => r.Id).First().Values!["Usd"].ShouldBe(10.5m);
+			var usd = query(db, new List<string> { "Usd" })
+				.ToList()
+				.OrderBy(r => r.Id)
+				.First();
 
-			var both = query(db, new List<string> { "Usd", "Eur" }).ToList().OrderBy(r => r.Id).First();
-			both.Values!.Keys.OrderBy(k => k).ShouldBe(new[] { "Eur", "Usd" });
+			usd.Values!["Usd"].ShouldBe(10.5m);
+
+			var both = query(db, new List<string> { "Usd", "Eur" })
+				.ToList()
+				.OrderBy(r => r.Id)
+				.First();
+
+			both.Values!.Keys
+				.OrderBy(k => k)
+				.ShouldBe(new[] { "Eur", "Usd" });
+
 			both.Values!["Eur"].ShouldBe(20.25m);
 		}
 
@@ -240,6 +296,7 @@ namespace Tests.Linq
 		/// The name selector's reads are compared at every cache lookup, including a lazy read it never reaches: one that
 		/// would throw must not escape the lookup.
 		/// </summary>
+		// SQLite only: this pins the query cache's lookup, which no provider affects.
 		[Test]
 		public void InlineNameSelectorUnreachedLazyReadDoesNotThrowOnLookup([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -250,21 +307,30 @@ namespace Tests.Linq
 			var src     = new List<int> { 1, 2 };
 			var lazy    = src.Where(x => 10 / x > 1);
 
-			int[] Ids() =>
-				(from a in t
-				 where t.Where(x => x.Id > 0)
-					.SelectDynamic(x => new AmountsDto { Id = x.Id }, factors, (x, k) => x.Usd * k, k => k < 0 && lazy.Contains(k) ? "X" : "W" + k)
-					.Any(r => r.Id == a.Id && Sql.Property<decimal>(r, "W2") > 50)
-				 select a.Id).ToArray();
+			int[] Ids()
+			{
+				var query =
+					from a in t
+					where t.Where(x => x.Id > 0)
+						.SelectDynamic(x => new AmountsDto { Id = x.Id }, factors, (x, k) => x.Usd * k, k => k < 0 && lazy.Contains(k) ? "X" : "W" + k)
+						.Any(r => r.Id == a.Id && Sql.Property<decimal>(r, "W2") > 50)
+					select a.Id;
 
-			Ids().ShouldBe(new[] { 2 });
+				return query.ToArray();
+			}
+
+			Ids()
+				.ShouldBe(new[] { 2 });
 
 			// The selector never reaches the lazy read (every key is >= 0), so making that read throw must not matter.
 			src.Add(0);
-			Ids().ShouldBe(new[] { 2 });
+
+			Ids()
+				.ShouldBe(new[] { 2 });
 		}
 
 		/// <summary>The column set is decided once per query, so keys read from an outer row are rejected with a diagnostic.</summary>
+		// SQLite only: the builder throws before any SQL is built.
 		[Test]
 		public void InlineKeysFromOuterRangeVariableThrow([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -282,6 +348,7 @@ namespace Tests.Linq
 			act.ShouldThrow<LinqToDBException>().Message.ShouldContain("'keys' argument of SelectDynamic must not depend on the query's range variables");
 		}
 
+		// SQLite only: the builder throws before any SQL is built.
 		[Test]
 		public void InlineNameSelectorFromOuterRangeVariableThrows([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -316,7 +383,10 @@ namespace Tests.Linq
 					.SelectDynamic(x => new AmountsDto { Id = x.Id }, names, (x, n) => Sql.Property<decimal>(x, n))
 				select new { a.Id, Eur = Sql.Property<decimal>(r, "Eur") };
 
-			correlated.ToArray().OrderBy(r => r.Id).Select(r => (r.Id, r.Eur))
+			correlated
+				.ToArray()
+				.OrderBy(r => r.Id)
+				.Select(r => (r.Id, r.Eur))
 				.ShouldBe(new (int, decimal)[] { (1, 20.25m), (2, 40m) });
 		}
 
@@ -346,6 +416,7 @@ namespace Tests.Linq
 			result[1].Values!["Us D"].ShouldBe(40m);
 		}
 
+		// SQLite only: the call throws before any SQL is built.
 		[Test]
 		public void ResultWithoutStoreThrows([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -368,6 +439,7 @@ namespace Tests.Linq
 		/// dropped from the query cache key, after which the <c>SqlQueryDependent</c> comparison is skipped
 		/// entirely - so if the operator ever stops materializing the keys to an array, the last leg collides.
 		/// </summary>
+		// SQLite only: a query-cache test.
 		[Test, QueryCacheTest]
 		public void RuntimeColumnSetDiscriminatesQueryCache([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -383,18 +455,31 @@ namespace Tests.Linq
 			probe.ClearCache();
 			var start = probe.GetCacheMissCount();
 
-			_ = Build(new[] { "Usd" }).ToSqlQuery();
-			_ = Build(new[] { "Usd" }).ToSqlQuery();
-			(probe.GetCacheMissCount() - start).ShouldBe(1, "the same column set must reuse the compiled query");
+			_ = Build(new[] { "Usd" })
+				.ToSqlQuery();
+			_ = Build(new[] { "Usd" })
+				.ToSqlQuery();
 
-			_ = Build(new[] { "Usd", "Eur" }).ToSqlQuery();
-			(probe.GetCacheMissCount() - start).ShouldBe(2, "a different column set must not reuse it");
+			var misses = probe.GetCacheMissCount() - start;
+			misses.ShouldBe(1, "the same column set must reuse the compiled query");
 
-			_ = Build(new List<string> { "Usd" }).ToSqlQuery();
-			(probe.GetCacheMissCount() - start).ShouldBe(2, "a List with the same content must still hit");
+			_ = Build(new[] { "Usd", "Eur" })
+				.ToSqlQuery();
 
-			_ = Build(new List<string> { "Eur" }).ToSqlQuery();
-			(probe.GetCacheMissCount() - start).ShouldBe(3, "a List with different content must not collide");
+			misses = probe.GetCacheMissCount() - start;
+			misses.ShouldBe(2, "a different column set must not reuse it");
+
+			_ = Build(new List<string> { "Usd" })
+				.ToSqlQuery();
+
+			misses = probe.GetCacheMissCount() - start;
+			misses.ShouldBe(2, "a List with the same content must still hit");
+
+			_ = Build(new List<string> { "Eur" })
+				.ToSqlQuery();
+
+			misses = probe.GetCacheMissCount() - start;
+			misses.ShouldBe(3, "a List with different content must not collide");
 		}
 
 		/// <summary>
@@ -402,6 +487,7 @@ namespace Tests.Linq
 		/// be identical. They must still take part in the cache key, or a second query materializes into the
 		/// first one's store keys.
 		/// </summary>
+		// SQLite only: a query-cache test.
 		[Test, QueryCacheTest]
 		public void ColumnNamesDiscriminateQueryCache([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -418,10 +504,13 @@ namespace Tests.Linq
 			probe.ClearCache();
 			var start = probe.GetCacheMissCount();
 
-			var plain    = Build(n => n).ToList();
-			var prefixed = Build(n => "c_" + n).ToList();
+			var plain = Build(n => n)
+				.ToList();
+			var prefixed = Build(n => "c_" + n)
+				.ToList();
 
-			(probe.GetCacheMissCount() - start).ShouldBe(2);
+			var misses = probe.GetCacheMissCount() - start;
+			misses.ShouldBe(2);
 
 			plain[0].Values!.ShouldContainKey("Usd");
 			prefixed[0].Values!.ShouldContainKey("c_Usd");
@@ -429,6 +518,7 @@ namespace Tests.Linq
 		}
 
 		/// <summary>Same keys, different per-column expression - the template must take part in the cache key.</summary>
+		// SQLite only: a query-cache test.
 		[Test, QueryCacheTest]
 		public void ValueTemplateDiscriminatesQueryCache([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -443,19 +533,25 @@ namespace Tests.Linq
 			probe.ClearCache();
 			var start = probe.GetCacheMissCount();
 
-			_ = t.SelectDynamic(
-				x => new AmountsDto { Id = x.Id },
-				new[] { "Usd" },
-				(x, n) => Sql.Property<decimal>(x, n)).ToSqlQuery();
+			_ = t
+				.SelectDynamic(
+					x => new AmountsDto { Id = x.Id },
+					new[] { "Usd" },
+					(x, n) => Sql.Property<decimal>(x, n))
+				.ToSqlQuery();
 
-			_ = t.SelectDynamic(
-				x => new AmountsDto { Id = x.Id },
-				new[] { "Usd" },
-				(x, n) => Sql.Property<decimal>(x, n) * 2).ToSqlQuery();
+			_ = t
+				.SelectDynamic(
+					x => new AmountsDto { Id = x.Id },
+					new[] { "Usd" },
+					(x, n) => Sql.Property<decimal>(x, n) * 2)
+				.ToSqlQuery();
 
-			(probe.GetCacheMissCount() - start).ShouldBe(2);
+			var misses = probe.GetCacheMissCount() - start;
+			misses.ShouldBe(2);
 		}
 
+		// SQLite only: the call throws before any SQL is built.
 		[Test]
 		public void DuplicateNameThrows([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -472,6 +568,7 @@ namespace Tests.Linq
 			act.ShouldThrow<ArgumentException>().Message.ShouldContain("Duplicate dynamic column name");
 		}
 
+		// SQLite only: the call throws before any SQL is built.
 		[Test]
 		public void EmptyNameThrows([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -490,6 +587,7 @@ namespace Tests.Linq
 		}
 
 		/// <summary>A generated column named after a real member would be shadowed by it, silently.</summary>
+		// SQLite only: the call throws before any SQL is built.
 		[Test]
 		public void NameCollidingWithAMemberThrows([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -549,7 +647,9 @@ namespace Tests.Linq
 
 		// Currency1Amount != null || Currency2Amount != null || ... over whatever the runtime set holds.
 		static Expression<Func<BalanceDto, bool>> AnyAmountSet(IEnumerable<int> currencyIds)
-			=> currencyIds.Select(AmountSet).Aggregate(Or);
+			=> currencyIds
+				.Select(AmountSet)
+				.Aggregate(Or);
 
 		static Expression<Func<T, bool>> Or<T>(Expression<Func<T, bool>> left, Expression<Func<T, bool>> right)
 			=> Expression.Lambda<Func<T, bool>>(
@@ -581,7 +681,9 @@ namespace Tests.Linq
 				.ToList();
 
 			// Id 3 has nothing set, and id 4 only has a currency outside the runtime set.
-			rows.Select(r => r.Id).ShouldBe(new[] { 1, 2 });
+			rows
+				.Select(r => r.Id)
+				.ShouldBe(new[] { 1, 2 });
 
 			rows[0].Amounts!.Keys.OrderBy(k => k, StringComparer.Ordinal)
 				.ShouldBe(new[] { "Currency1Amount", "Currency2Amount" });
@@ -597,6 +699,7 @@ namespace Tests.Linq
 		/// <c>Any</c> over the set throws, because <c>Sql.Property</c> is rewritten while the name is still a
 		/// bound lambda parameter.
 		/// </summary>
+		// SQLite only: a query-cache test.
 		[Test, QueryCacheTest]
 		public void RuntimeCurrencySetDiscriminatesQueryCache([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -615,21 +718,36 @@ namespace Tests.Linq
 			probe.ClearCache();
 			var start = probe.GetCacheMissCount();
 
-			_ = Build(new[] { 1, 2 }).ToSqlQuery();
-			_ = Build(new[] { 1, 2 }).ToSqlQuery();
-			(probe.GetCacheMissCount() - start).ShouldBe(1, "the same currency set must reuse the compiled query");
+			_ = Build(new[] { 1, 2 })
+				.ToSqlQuery();
+			_ = Build(new[] { 1, 2 })
+				.ToSqlQuery();
 
-			_ = Build(new[] { 1, 3 }).ToSqlQuery();
-			(probe.GetCacheMissCount() - start).ShouldBe(2, "a different currency set must not reuse it");
+			var misses = probe.GetCacheMissCount() - start;
+			misses.ShouldBe(1, "the same currency set must reuse the compiled query");
 
-			_ = Build(new[] { 1, 2, 3 }).ToSqlQuery();
-			(probe.GetCacheMissCount() - start).ShouldBe(3, "a wider currency set must not reuse it either");
+			_ = Build(new[] { 1, 3 })
+				.ToSqlQuery();
 
-			_ = Build(new[] { 1, 2 }).ToSqlQuery();
-			(probe.GetCacheMissCount() - start).ShouldBe(3, "the first set's entry must survive the other two");
+			misses = probe.GetCacheMissCount() - start;
+			misses.ShouldBe(2, "a different currency set must not reuse it");
+
+			_ = Build(new[] { 1, 2, 3 })
+				.ToSqlQuery();
+
+			misses = probe.GetCacheMissCount() - start;
+			misses.ShouldBe(3, "a wider currency set must not reuse it either");
+
+			_ = Build(new[] { 1, 2 })
+				.ToSqlQuery();
+
+			misses = probe.GetCacheMissCount() - start;
+			misses.ShouldBe(3, "the first set's entry must survive the other two");
 
 			// Both halves track the set - the projected columns and the predicate.
-			var sql = Build(new[] { 1, 3 }).ToSqlQuery().Sql;
+			var sql = Build(new[] { 1, 3 })
+				.ToSqlQuery()
+				.Sql;
 
 			sql.ShouldContain("Currency3Amount");
 			sql.ShouldNotContain("Currency2Amount");
@@ -721,6 +839,7 @@ namespace Tests.Linq
 		/// <c>FromSql</c> query is built into selects only the mapped columns, so the store stays
 		/// <see langword="null"/>. Naming the wanted columns fills it.
 		/// </summary>
+		// SQLite only: the test embeds literal FromSql text.
 		[Test]
 		public void SelectsDynamicColumnsOverFromSql([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
