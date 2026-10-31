@@ -31,6 +31,7 @@ using LinqToDB.Metadata;
 
 using EfExpressionPrinter = Microsoft.EntityFrameworkCore.Query.ExpressionPrinter;
 using EfSqlExpression = Microsoft.EntityFrameworkCore.Query.SqlExpressions.SqlExpression;
+using EfValueConverter = Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter;
 
 using LinqToDB.SqlQuery;
 using LinqToDB.Expressions;
@@ -454,7 +455,10 @@ namespace LinqToDB.EntityFrameworkCore
 					{
 						var valueConverterAttribute = new ValueConverterAttribute()
 						{
-							ValueConverter = new ValueConverter(converter.ConvertToProviderExpression, converter.ConvertFromProviderExpression, false),
+							ValueConverter = new ValueConverter(
+								InlineConverterCalls(converter.ConvertToProviderExpression),
+								InlineConverterCalls(converter.ConvertFromProviderExpression),
+								false),
 						};
 
 						result.Add(valueConverterAttribute);
@@ -575,6 +579,104 @@ namespace LinqToDB.EntityFrameworkCore
 			}
 
 			return result == null ? [] : result.ToArray();
+		}
+
+		/// <summary>
+		/// Replaces a call to another EF Core converter's compiled delegate with that converter's own expression.
+		/// </summary>
+		/// <remarks>
+		/// A converter for <c>T?</c> is commonly written by delegating to the one for <c>T</c>:
+		/// <c>v =&gt; v != null ? (T?)plain.ConvertToProvider(v.Value) : null</c>. The delegate is opaque, so two columns
+		/// carrying the one conversion could not be recognised as stored the same way and are refused in SQL. Only a
+		/// non-nullable value-type argument is inlined: there the delegate and the expression agree on every input.
+		/// </remarks>
+		static LambdaExpression InlineConverterCalls(LambdaExpression lambda)
+		{
+			return InlineConverterCalls(lambda, new HashSet<EfValueConverter>());
+		}
+
+		static LambdaExpression InlineConverterCalls(LambdaExpression lambda, HashSet<EfValueConverter> inlining)
+		{
+			var body = InlineConverterCalls(lambda.Body, inlining);
+
+			return ReferenceEquals(body, lambda.Body) ? lambda : Expression.Lambda(lambda.Type, body, lambda.Parameters);
+		}
+
+		static Expression InlineConverterCalls(Expression expression, HashSet<EfValueConverter> inlining)
+		{
+			return expression.Transform(inlining, static (visiting, e) =>
+			{
+				// the converter is read from the closure without running anything: a holder not set yet, or a
+				// getter, leaves the call as written
+				if (e is not UnaryExpression { NodeType: ExpressionType.Convert, Operand: InvocationExpression { Expression: MemberExpression { Expression: { } instance } member } invocation }
+					|| member.Member.DeclaringType != typeof(EfValueConverter)
+					|| invocation.Arguments.Count != 1
+					|| invocation.Arguments[0] is not UnaryExpression { NodeType: ExpressionType.Convert, Type: var boxedType, Operand: var argument }
+					|| boxedType != typeof(object)
+					|| argument.Type is not { IsValueType: true, IsNullableType: false }
+					|| !LinqToDB.Internal.Expressions.ExpressionEvaluator.TryEvaluateCapturedValue(instance, out var instanceValue)
+					|| instanceValue is not EfValueConverter target
+					|| !DelegatesCompileTheirExpressions(target))
+				{
+					return e;
+				}
+
+				var targetLambda = member.Member.Name switch
+				{
+					nameof(EfValueConverter.ConvertToProvider)   => target.ConvertToProviderExpression,
+					nameof(EfValueConverter.ConvertFromProvider) => target.ConvertFromProviderExpression,
+					_                                            => null,
+				};
+
+				if (targetLambda is not { Parameters.Count: 1 }
+					|| targetLambda.Parameters[0].Type != argument.Type
+					|| targetLambda.ReturnType.UnwrapNullableType() != e.Type.UnwrapNullableType())
+				{
+					return e;
+				}
+
+				argument = InlineConverterCalls(argument, visiting);
+
+				// converters reaching each other would otherwise be inlined forever
+				if (!visiting.Add(target))
+					return e;
+
+				try
+				{
+					var inlined = InlineConverterCalls(targetLambda, visiting).GetBody(argument);
+
+					return inlined.Type == e.Type ? inlined : Expression.Convert(inlined, e.Type);
+				}
+				finally
+				{
+					visiting.Remove(target);
+				}
+			});
+		}
+
+		// EF Core stores values through the delegates, which its own converters compile from the expressions; a
+		// subclass overriding any step of that chain may not. The typed delegates do not exist in EF Core 3.1.
+		static bool DelegatesCompileTheirExpressions(EfValueConverter converter)
+		{
+			foreach (var property in converter.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
+			{
+				if (property.Name is nameof(EfValueConverter.ConvertToProvider)
+						or nameof(EfValueConverter.ConvertFromProvider)
+						or "ConvertToProviderTyped"
+						or "ConvertFromProviderTyped"
+						or nameof(EfValueConverter.ConvertToProviderExpression)
+						or nameof(EfValueConverter.ConvertFromProviderExpression)
+					&& !IsEfCoreConverter(property.DeclaringType))
+				{
+					return false;
+				}
+			}
+
+			return true;
+
+			static bool IsEfCoreConverter(Type? type)
+				=> type == typeof(EfValueConverter)
+				|| type is { IsGenericType: true } && type.GetGenericTypeDefinition() == typeof(Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<,>);
 		}
 
 		sealed class ValueConverter : IValueConverter
