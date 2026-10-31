@@ -266,6 +266,23 @@ namespace LinqToDB.Internal.SqlQuery
 		}
 
 		/// <summary>
+		/// The column a value compared with <paramref name="expr"/> is typed by: the one <paramref name="expr"/> is
+		/// read through when it carries a value converter or a duration unit, because the value must take the same
+		/// form to be comparable, otherwise the typing lookup's.
+		/// </summary>
+		/// <remarks>
+		/// Both lookups can name a different column for one expression: for a concatenation the typing lookup
+		/// skips a non-Unicode column that the read path returns.
+		/// </remarks>
+		internal static ColumnDescriptor? GetColumnDescriptorForComparedValue(ISqlExpression? expr)
+		{
+			if (GetColumnDescriptor(expr) is { } read && (read.ValueConverter != null || read.DurationUnit != null))
+				return read;
+
+			return GetColumnDescriptorForTyping(expr);
+		}
+
+		/// <summary>
 		/// How finely a date/time type resolves an instant; <c>-1</c> for a type that is not one.
 		/// </summary>
 		/// <remarks>
@@ -295,6 +312,11 @@ namespace LinqToDB.Internal.SqlQuery
 		internal static bool IsDecimal(DataType dataType)
 		{
 			return dataType is DataType.Decimal or DataType.Decimal32 or DataType.Decimal64 or DataType.Decimal128 or DataType.Decimal256;
+		}
+
+		internal static bool IsUnicode(DataType dataType)
+		{
+			return dataType is DataType.NChar or DataType.NVarChar or DataType.NText;
 		}
 
 		/// <summary>
@@ -642,13 +664,20 @@ namespace LinqToDB.Internal.SqlQuery
 					return GetColumnDescriptor(condition.TrueValue, alreadyVisitedElements, forTyping) ??
 					       GetColumnDescriptor(condition.FalseValue, alreadyVisitedElements, forTyping);
 
+				// A concatenation is Unicode whenever any operand is, which a non-Unicode column among them does not say: a
+				// value typed beside it from that column would be sent as non-Unicode. Only a Unicode column types it.
 				case SqlConcatExpression concat:
 				{
 					foreach (var expression in concat.Expressions)
 					{
 						var descriptor = GetColumnDescriptor(expression, alreadyVisitedElements, forTyping);
-						if (descriptor != null)
-							return descriptor;
+						if (descriptor == null)
+							continue;
+
+						if (forTyping && !IsUnicode(descriptor.GetDbDataType(true).DataType))
+							continue;
+
+						return descriptor;
 					}
 
 					return null;
