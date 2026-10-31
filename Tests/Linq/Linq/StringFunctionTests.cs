@@ -1069,6 +1069,59 @@ namespace Tests.Linq
 				.ShouldBe(7000);
 		}
 
+		[Table]
+		sealed class ShortVarCharRow
+		{
+			[PrimaryKey]                                                            public int    Id  { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 4000, CanBeNull = false)] public string V4  { get; set; } = default!;
+			[Column(DataType = DataType.VarChar, Length = 50,   CanBeNull = false)] public string V50 { get; set; } = default!;
+		}
+
+		// SQL Server: a non-MAX nvarchar result stops at 4000 characters, a varchar one at 8000; SQLite runs as a control.
+		[Test]
+		public void ReplaceLiteralGrowingPast4000BesideVarChar([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new ShortVarCharRow { Id = 1, V4 = new string('a', 4000), V50 = "abc" } });
+
+			table
+				.Select(t => Sql.AsSql(t.V4.Replace("a", "bb")))
+				.Single()
+				.Length
+				.ShouldBe(8000);
+		}
+
+		// SQL Server: scoped as ReplaceLiteralGrowingPast4000BesideVarChar.
+		[Test]
+		[ActiveIssue(6212, Configuration = TestProvName.AllSqlServer, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}8000{1}but was")]
+		public void ReplaceParameterGrowingPast4000BesideVarChar([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllSQLite)] string context)
+		{
+			var replacement = "bb";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new ShortVarCharRow { Id = 1, V4 = new string('a', 4000), V50 = "abc" } });
+
+			table
+				.Select(t => Sql.AsSql(t.V4.Replace("a", replacement)))
+				.Single()
+				.Length
+				.ShouldBe(8000);
+		}
+
+		// SQL Server: scoped as ReplaceLiteralGrowingPast4000BesideVarChar.
+		[Test]
+		public void PadLeftPast4000BesideVarChar([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new ShortVarCharRow { Id = 1, V4 = "", V50 = "abc" } });
+
+			table
+				.Select(t => Sql.AsSql(t.V50.PadLeft(6000, 'b')))
+				.Single()
+				.Length
+				.ShouldBe(6000);
+		}
+
 		sealed class PrefixConverter() : ValueConverter<string?, string?>(v => v == null ? null : "x:" + v, v => v == null ? null : v.Substring(2), true);
 
 		[Table]

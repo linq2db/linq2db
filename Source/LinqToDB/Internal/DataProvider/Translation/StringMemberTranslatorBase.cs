@@ -398,6 +398,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			{
 				if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[1], out translatedPaddingChar))
 					return translationContext.CreateErrorExpression(methodCall.Arguments[1], type: methodCall.Type);
+
+				translatedPaddingChar = SqlExpressionFactoryExtensions.AsNonUnicodeAsciiLiteral(translatedPaddingChar, translationContext.ExpressionFactory.GetDbDataType(translatedField))
+					?? translatedPaddingChar;
 			}
 
 			var resultSql = TranslatePadLeft(translationContext, methodCall, translationFlags, translatedField, translatedPadding, translatedPaddingChar);
