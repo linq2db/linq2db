@@ -3,6 +3,7 @@ using System.IO;
 
 using LinqToDB.CommandLine;
 using LinqToDB.CommandLine.Commands.Credentials;
+using LinqToDB.CommandLine.Commands.QueryExecution;
 
 namespace LinqToDB.CommandLine.Commands.Mcp
 {
@@ -72,6 +73,11 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 		public string? ReadLine()
 		{
 			throw new NotSupportedException("MCP query execution does not support interactive input.");
+		}
+
+		public IImpersonationSession StartImpersonation(string user, string password, WindowsImpersonationMode mode)
+		{
+			return _inner.StartImpersonation(user, password, mode);
 		}
 	}
 }

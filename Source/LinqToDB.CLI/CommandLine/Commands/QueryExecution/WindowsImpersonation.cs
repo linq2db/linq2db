@@ -2,8 +2,6 @@ using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
-using System.Security.Principal;
-using System.Threading.Tasks;
 
 using LinqToDB.CommandLine;
 using LinqToDB.CommandLine.Options;
@@ -13,7 +11,8 @@ using Microsoft.Win32.SafeHandles;
 namespace LinqToDB.CommandLine.Commands.QueryExecution
 {
 	/// <summary>
-	/// Executes operations under a Windows user identity.
+	/// Logs on as a Windows user and resolves logon options; the returned <see cref="WindowsImpersonationSession"/> runs
+	/// operations under that identity.
 	/// </summary>
 	public static partial class WindowsImpersonation
 	{
@@ -25,27 +24,31 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		const int Logon32ProviderWinnt50       = 3;
 
 		/// <summary>
-		/// Executes an asynchronous operation under the specified Windows user identity.
+		/// Logs on as the specified Windows user and returns a session that runs operations under that identity.
 		/// </summary>
-		public static Task<T> RunAsync<T>(string user, string password, WindowsImpersonationMode mode, Func<Task<T>> action)
+		public static WindowsImpersonationSession Logon(string user, string password, WindowsImpersonationMode mode)
 		{
 			if (!OperatingSystem.IsWindows())
 				throw new PlatformNotSupportedException("Windows impersonation is supported only on Windows.");
 
-			return RunWindowsAsync(user, password, mode, action);
+			return LogonWindows(user, password, mode);
 		}
 
 		[SupportedOSPlatform("windows")]
-		static async Task<T> RunWindowsAsync<T>(string user, string password, WindowsImpersonationMode mode, Func<Task<T>> action)
+		static WindowsImpersonationSession LogonWindows(string user, string password, WindowsImpersonationMode mode)
 		{
 			var (domain, userName)         = SplitUserName  (user);
 			var (logonType, logonProvider) = GetLogonOptions(mode);
 
 			if (!LogonUser(userName, domain, password, logonType, logonProvider, out var token))
-				throw new Win32Exception(Marshal.GetLastWin32Error(), "Windows impersonation logon failed.");
+			{
+				var lastError = Marshal.GetLastWin32Error();
 
-			using (token)
-				return await WindowsIdentity.RunImpersonatedAsync(token, action);
+				token.Dispose();
+				throw new Win32Exception(lastError, "Windows impersonation logon failed.");
+			}
+
+			return new WindowsImpersonationSession(token);
 		}
 
 		/// <summary>

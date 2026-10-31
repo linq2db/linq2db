@@ -89,6 +89,9 @@
 		<EmbeddedResource Include="Template.tt" LogicalName="LinqToDB.CLI.Template.tt" />
 		<EmbeddedResource Include="SKILL.md"     LogicalName="LinqToDB.CLI.SKILL.md"   />
 
+		<!-- Tests shorten the impersonation warm-up bound to check that it is honoured. -->
+		<InternalsVisibleTo Include="linq2db.CLI.Tests" />
+
 		<ProjectReference Include="..\LinqToDB.Scaffold\LinqToDB.Scaffold.csproj" />
 
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
