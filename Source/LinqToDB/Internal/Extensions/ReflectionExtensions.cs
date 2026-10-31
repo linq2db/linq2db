@@ -212,7 +212,8 @@ namespace LinqToDB.Internal.Extensions
 		/// <summary>
 		/// Gets public or non-public, instance or static method by name and parameter types.
 		/// Only matches a method that <see cref="System.Linq.Expressions.Expression"/> can call with arguments of <paramref name="types"/>
-		/// without conversion: each parameter type is identical to the requested type or is a reference type assignable from it.
+		/// without conversion: each parameter type is identical to the requested type, or both are reference types and the parameter type is assignable from it
+		/// (boxing, numeric widening and <see cref="Nullable{T}"/> wrapping are rejected).
 		/// </summary>
 		public static MethodInfo? GetMethodEx(this Type type, string name, params Type[] types)
 		{
@@ -222,7 +223,8 @@ namespace LinqToDB.Internal.Extensions
 		/// <summary>
 		/// Gets method by name, binding flags and parameter types.
 		/// Only matches a method that <see cref="System.Linq.Expressions.Expression"/> can call with arguments of <paramref name="types"/>
-		/// without conversion: each parameter type is identical to the requested type or is a reference type assignable from it.
+		/// without conversion: each parameter type is identical to the requested type, or both are reference types and the parameter type is assignable from it
+		/// (boxing, numeric widening and <see cref="Nullable{T}"/> wrapping are rejected).
 		/// </summary>
 		public static MethodInfo? GetMethodEx(this Type type, string name, BindingFlags bindingFlags, params Type[] types)
 		{
@@ -236,9 +238,11 @@ namespace LinqToDB.Internal.Extensions
 		/// <summary>
 		/// Gets method by name, generic parameters count, binding flags and parameter types.
 		/// <paramref name="genericParametersCount"/> = 0 matches only non-generic methods.
-		/// Parameter types follow the rules of <see cref="GetMethodEx(Type, string, BindingFlags, Type[])"/>; parameters of generic parameter types match any requested type.
+		/// Parameter types follow the rules of <see cref="GetMethodEx(Type, string, BindingFlags, Type[])"/>; a parameter whose type contains generic parameters
+		/// (<c>T</c>, <c>T[]</c>, <c>IEnumerable&lt;T&gt;</c>) matches any requested type and counts as identical.
 		/// Unlike <see cref="GetMethodEx(Type, string, int, Type[])"/>, which returns the first exact match of a generic method,
-		/// an identical match wins over a reference-assignable one and remaining ties throw <see cref="AmbiguousMatchException"/>.
+		/// an identical match wins over a reference-assignable one, a method hidden by a more derived method with the same parameter types is skipped,
+		/// and remaining ties throw <see cref="AmbiguousMatchException"/>.
 		/// </summary>
 		public static MethodInfo? GetMethodEx(this Type type, string name, int genericParametersCount, BindingFlags bindingFlags, params Type[] types)
 		{

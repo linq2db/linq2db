@@ -224,6 +224,35 @@ namespace Tests.Linq
 			AreEqual(Parent.Select(p => Count3(p, n)), db.Parent.Select(p => Count3(p, n)));
 		}
 
+		class MapMemberBaseCalculator
+		{
+			protected readonly int Offset = 100;
+
+			public long Calc(long value) => value + Offset;
+		}
+
+		sealed class MapMemberDerivedCalculator : MapMemberBaseCalculator
+		{
+			public int Calc(int value) => value + Offset;
+		}
+
+		[Test]
+		public void MapMemberOnBaseOverloadWithWiderParameter([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			Expressions.MapMember<MapMemberBaseCalculator,long,long>(nameof(MapMemberOnBaseOverloadWithWiderParameter), (c, v) => c.Calc(v), (c, v) => v + 100);
+
+			var calculator = new MapMemberDerivedCalculator();
+
+			using var db = GetDataContext(context, new MappingSchema(nameof(MapMemberOnBaseOverloadWithWiderParameter)));
+
+			var ids = db.Parent
+				.Where(p => calculator.Calc(p.ParentID) == 101)
+				.Select(p => p.ParentID)
+				.ToArray();
+
+			ids.ShouldBe([1]);
+		}
+
 		[ExpressionMethod(nameof(Count4Expression))]
 		static int Count4(Parent p, int id, int n)
 		{

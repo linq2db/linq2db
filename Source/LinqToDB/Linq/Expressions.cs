@@ -362,7 +362,7 @@ namespace LinqToDB.Linq
 					    method.ReflectedType.BaseType is not null)
 					{
 						var baseType = method.ReflectedType.BaseType;
-						var newMi    = baseType.GetMemberEx(mi);
+						var newMi    = GetBaseTypeMethod(baseType, method);
 
 						if (newMi != null && newMi.ReflectedType != mi.ReflectedType)
 						{
@@ -382,6 +382,16 @@ namespace LinqToDB.Linq
 			}
 
 			return expr?.GetExpression(mappingSchema);
+		}
+
+		static readonly ConcurrentDictionary<(Type BaseType, MethodInfo Method), MethodInfo?> _baseTypeMethods = new();
+
+		// A base-type mapping also covers a derived overload whose arguments convert to the base parameters (Derived.M(int) -> Base.M(long)):
+		// ExposeExpressionVisitor.ConvertMethod converts the arguments, so this lookup keeps default-binder matching.
+		static MethodInfo? GetBaseTypeMethod(Type baseType, MethodInfo method)
+		{
+			return _baseTypeMethods.GetOrAdd((baseType, method), static key =>
+				key.BaseType.GetMethodCoercing(key.Method.Name, key.Method.GetParameters().Select(static p => p.ParameterType).ToArray()));
 		}
 
 		/// <summary>
