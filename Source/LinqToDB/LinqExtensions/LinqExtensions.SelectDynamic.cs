@@ -32,14 +32,21 @@ namespace LinqToDB
 		/// </typeparam>
 		/// <param name="source">Source query.</param>
 		/// <param name="staticSelector">Projection for the statically known members of <typeparamref name="TResult"/>.</param>
-		/// <param name="keys">The runtime key set. One output column is generated per key.</param>
+		/// <param name="keys">
+		/// The runtime key set. One output column is generated per key.
+		/// In a compiled query, pass the key collection itself as a parameter: keys read through a member of a parameter
+		/// (<c>s.Keys</c>) are matched on that parameter's instance, so a member reassigned on the same instance reuses the
+		/// first call's column set.
+		/// </param>
 		/// <param name="valueTemplate">Per-column value expression, parameterized by the key.</param>
 		/// <param name="nameSelector">
 		/// Maps a key to the store key of the generated column. Defaults to the invariant string form of the key.
-		/// Evaluated once per key while the query is built; the resulting names take part in the query cache key.
+		/// Evaluated once per key each time the call runs; the resulting names take part in the query cache key.
 		/// Written in a sub-query, the selector's own state is compared instead: every value it reads is evaluated when
 		/// the query is built and again at each cache lookup, whether or not the selector reaches it, and a captured
 		/// delegate or object counts as unchanged while it is the same instance, so replace it rather than mutating it.
+		/// In a compiled query the names are computed when the query is first built for a key set, and state the
+		/// selector captures is not re-read afterwards; a compiled-query parameter it reads is matched like <paramref name="keys"/>.
 		/// </param>
 		/// <returns>Query producing <typeparamref name="TResult"/> with one dynamic column per key.</returns>
 		/// <remarks>
