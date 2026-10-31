@@ -109,9 +109,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 								return;
 							}
 
-							if (!composer.Translator.TranslateExpression(info.ValueExpression, out var value, out var error))
+							if (!composer.Translator.TranslateExpression(info.ValueExpression, out var value, out _))
 							{
-								composer.SetError(error);
+								composer.SetFallback(c => c.AllowDistinct(false));
 								return;
 							}
 
