@@ -101,7 +101,10 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 				QueryExecutionMode.Execute,
 				sql,
 				null,
-				"json-table");
+				"json-table")
+			{
+				CredentialsCli = _startupOptions.CredentialsCli,
+			};
 		}
 
 		static bool IsMcpOutputFormat(string output)

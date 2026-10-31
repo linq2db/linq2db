@@ -68,6 +68,18 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		public string? Credentials { get; private set; }
 
 		/// <summary>
+		/// Credential store for <see cref="Credentials"/> targets and the <c>credentials</c> command: a reserved store name
+		/// (<c>@local</c>, <c>@credential-manager</c>, <c>@keyring</c>, <c>@gpg</c>, <c>@vault</c>) or a credentials CLI command line. Never
+		/// expanded.
+		/// </summary>
+		public string? CredentialsCli { get; private set; }
+
+		/// <summary>
+		/// The profile that set <see cref="CredentialsCli"/> (the selected profile, or <c>default</c> when inherited).
+		/// </summary>
+		public string? CredentialsCliProfile { get; private set; }
+
+		/// <summary>
 		/// Run database access operations under resolved Windows <see cref="User"/>/<see cref="Password"/> credentials.
 		/// </summary>
 		public bool?   Impersonate      { get; private set; }
@@ -322,6 +334,24 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 							return false;
 
 						Credentials = value;
+						break;
+					case "credentialsCli":
+						if (property.Value.ValueKind != JsonValueKind.String)
+						{
+							error = $"Configuration file '{fileName}' profile '{profileName}' property '{property.Name}' is invalid: credentialsCli is a string: the program and its arguments.";
+							return false;
+						}
+
+						var credentialsCli = property.Value.GetString()!;
+
+						if (string.IsNullOrWhiteSpace(credentialsCli))
+						{
+							error = $"Configuration file '{fileName}' profile '{profileName}' property '{property.Name}' is empty: it names a store (@local, @credential-manager, @keyring, @gpg, @vault) or a program and its arguments.";
+							return false;
+						}
+
+						CredentialsCli        = credentialsCli;
+						CredentialsCliProfile = profileName;
 						break;
 					case "impersonate":
 						if (!TryParseBoolean(fileName, profileName, property, out var booleanValue, out error))

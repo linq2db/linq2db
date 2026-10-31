@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
@@ -56,7 +57,13 @@ namespace Tests.LinqToDB.CLI
 			return fileName;
 		}
 
-		protected static async Task<CliProcessResult> RunCliProcess(params string[] arguments)
+		protected static Task<CliProcessResult> RunCliProcess(params string[] arguments)
+		{
+			return RunCliProcess(null, arguments);
+		}
+
+		/// <summary>Runs the CLI in a new process with extra environment variables (<see langword="null"/> removes one).</summary>
+		protected static async Task<CliProcessResult> RunCliProcess(IReadOnlyDictionary<string, string?>? environment, params string[] arguments)
 		{
 			var cliAssembly = Path.Combine(AppContext.BaseDirectory, "dotnet-linq2db.dll");
 
@@ -74,6 +81,10 @@ namespace Tests.LinqToDB.CLI
 
 			foreach (var argument in arguments)
 				startInfo.ArgumentList.Add(argument);
+
+			if (environment != null)
+				foreach (var variable in environment)
+					startInfo.Environment[variable.Key] = variable.Value;
 
 			using var process = Process.Start(startInfo) ?? throw new InvalidOperationException("Cannot start CLI process.");
 
