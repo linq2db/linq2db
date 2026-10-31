@@ -910,6 +910,166 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void LeftJoinOuterOnlyPredicate([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				from ch in db.Child.Where(c => p.ParentID == c.ParentID && p.ParentID != 2).DefaultIfEmpty()
+				select new { p.ParentID, ChildID = (int?)ch.ChildID };
+
+			AssertQuery(query);
+		}
+
+		// The outer-only predicate reads a table the join key does not, so it cannot be folded into the key and stays in ON.
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb)]
+		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb, ErrorMessage = "expression not supported")]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException",   TestProvName.AllAccessOdbc,  ErrorMessage = "expression not supported")]
+		[Test]
+		public void LeftJoinOuterOnlyPredicateOnPrecedingJoin([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p  in db.Parent
+				from ch in db.Child.Where(c => p.ParentID == c.ParentID)
+				from gc in db.GrandChild.Where(g => ch.ChildID == g.ChildID && p.ParentID != 2).DefaultIfEmpty()
+				select new { p.ParentID, ch.ChildID, GrandChildID = (int?)gc.GrandChildID };
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void LeftJoinOuterOnlyPredicateOnKeyTable([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p  in db.Parent
+				from ch in db.Child.Where(c => p.ParentID == c.ParentID)
+				from gc in db.GrandChild.Where(g => ch.ChildID == g.ChildID && ch.ParentID != 2).DefaultIfEmpty()
+				select new { p.ParentID, ch.ChildID, GrandChildID = (int?)gc.GrandChildID };
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void LeftJoinParameterOnlyPredicate([DataSources] string context, [Values] bool flag)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				from ch in db.Child.Where(c => p.ParentID == c.ParentID && flag).DefaultIfEmpty()
+				select new { p.ParentID, ChildID = (int?)ch.ChildID };
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void LeftJoinOuterOnlyPredicateNullableKey([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from c in db.Child
+				from p in db.Parent.Where(p => p.Value1 == c.ParentID && c.ChildID != 11).DefaultIfEmpty()
+				select new { c.ChildID, ParentID = (int?)p.ParentID };
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void LeftJoinOuterOnlyPredicateWithParameter([DataSources] string context, [Values] bool flag)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from c in db.Child
+				from p in db.Parent.Where(p => p.Value1 == c.ParentID && ((c.ChildID != 11 && flag) || (c.ChildID == 21 && flag))).DefaultIfEmpty()
+				select new { c.ChildID, ParentID = (int?)p.ParentID };
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void LeftJoinOuterOnlyPredicateWithStringParameter([DataSources] string context, [Values("John", null)] string? name)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Person
+				from d in db.Doctor.Where(d => d.PersonID == p.ID && p.FirstName == name).DefaultIfEmpty()
+				select new { p.ID, Taxonomy = d.Taxonomy };
+
+			AssertQuery(query);
+		}
+
+		// Access rejects this ON, folded or not: its keys read two different outer tables.
+		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb, ErrorMessage = "expression not supported")]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException",   TestProvName.AllAccessOdbc,  ErrorMessage = "expression not supported")]
+		[Test]
+		public void LeftJoinOuterOnlyPredicatesOnSeveralKeys([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p  in db.Parent
+				from ch in db.Child.Where(c => p.ParentID == c.ParentID)
+				from gc in db.GrandChild.Where(g => p.ParentID == g.ParentID && ch.ChildID == g.ChildID && p.Value1 != 1 && ch.ChildID != 21).DefaultIfEmpty()
+				select new { p.ParentID, ch.ChildID, GrandChildID = (int?)gc.GrandChildID };
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void LeftJoinOuterOnlyPredicateWithParameterComparison([DataSources] string context, [Values(11, 21)] int id)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from c in db.Child
+				from p in db.Parent.Where(p => p.Value1 == c.ParentID && c.ChildID != id).DefaultIfEmpty()
+				select new { c.ChildID, ParentID = (int?)p.ParentID };
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void LeftJoinOuterOnlyPredicateWithNullableParameter([DataSources] string context, [Values(null, 11)] int? id, [Values] bool equality)
+		{
+			using var db = GetDataContext(context);
+
+			var query = equality
+				? from c in db.Child
+				  from p in db.Parent.Where(p => p.Value1 == c.ParentID && c.ChildID == id).DefaultIfEmpty()
+				  select new { c.ChildID, ParentID = (int?)p.ParentID }
+				: from c in db.Child
+				  from p in db.Parent.Where(p => p.Value1 == c.ParentID && c.ChildID > id).DefaultIfEmpty()
+				  select new { c.ChildID, ParentID = (int?)p.ParentID };
+
+			AssertQuery(query);
+		}
+
+		// Both key sides are nullable, so the key is null-aware and cannot carry the outer-only predicate.
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb, ErrorMessage = "JOIN ON expression must be a conjunction of equality predicates")]
+		[ActiveIssue(6215, Configuration = TestProvName.AllAccess, ErrorMessage = "Assert.That(resultList, Has.Count.EqualTo(expectedList.Count))",
+			Details = "Access applies an outer-only LEFT JOIN ON predicate as a filter and drops the outer row; the null-aware key cannot carry it.")]
+		[Test]
+		public void LeftJoinOuterOnlyPredicateNullAwareKey([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				from g in db.GrandChild.Where(g => p.Value1 == g.ParentID && p.ParentID != 2).DefaultIfEmpty()
+				select new { p.ParentID, GrandChildID = (int?)g.GrandChildID };
+
+			AssertQuery(query);
+		}
+
+		[Test]
 		public void MultipleLeftJoin([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

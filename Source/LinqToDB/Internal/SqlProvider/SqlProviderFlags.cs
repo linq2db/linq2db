@@ -565,11 +565,14 @@ namespace LinqToDB.Internal.SqlProvider
 		public bool IsOrderBySubQuerySupported { get; set; } = true;
 
 		/// <summary>
-		/// When disabled, an AND-joined ON clause has each predicate that is not a plain equality of two non-literal
-		/// expressions moved out of ON: for an INNER JOIN it goes to WHERE; for a LEFT JOIN one depending only on the
-		/// outer side goes to WHERE, one depending only on the joined subtree is pushed into a wrapped derived table,
-		/// and one referencing both join inputs has to stay in ON. An ON clause that is itself a disjunction is left
-		/// untouched.
+		/// When disabled, predicates of an AND-joined ON clause are moved out of ON where that preserves the join's
+		/// result; anything else stays in ON, where the provider may reject it. For an INNER JOIN, each predicate that
+		/// is not a plain equality of two non-literal expressions goes to WHERE. For a LEFT JOIN, a predicate that does
+		/// not depend on the outer side is pushed into a derived table wrapping the joined table or subquery (not when it
+		/// reads a nested join's table, or the joined source is another kind of source); a predicate depending only on
+		/// the outer side is folded into a plain equality key whose outer side reads the same tables, as
+		/// <c>CASE WHEN predicate THEN outerKey ELSE NULL END = innerKey</c>. An ON clause that is itself a disjunction
+		/// is left untouched.
 		/// <code>
 		/// FROM T1 INNER JOIN T2 ON t1.field1 == t2.field1 AND t1.field2 == t2.field2 AND t1.field3 > 10
 		/// -- with flag:

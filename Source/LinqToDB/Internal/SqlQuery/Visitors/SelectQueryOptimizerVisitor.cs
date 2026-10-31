@@ -2685,6 +2685,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							}
 						}
 
+						// The WHERE would land in ON beside nested joins, where OptimizeJoinConditions cannot push
+						// it back into a derived table (see Issue2832Tests).
+						if (!_providerFlags.IsComplexJoinConditionSupported && subQuery.From.Tables[0].Joins.Count > 0)
+							return false;
+
 						moveConditionToQuery = false;
 					}
 					else
@@ -2934,81 +2939,101 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				var isLeft                     = join.JoinType == JoinType.Left;
 				List<ISqlTableSource>? sources = null;
 
-				SqlSearchCondition? whereCond       = null;
-				SqlSearchCondition? nestedWhereCond = null;
+				SqlSearchCondition?    whereCond         = null;
+				SqlSearchCondition?    nestedWhereCond   = null;
+				List<ISqlTableSource>? nestedJoinSources = null;
+
+				List<(ISqlPredicate predicate, HashSet<ISqlTableSource> usedSources)>? outerOnly = null;
 
 				for (var i = 0; i < join.Condition.Predicates.Count; i++)
 				{
 					var predicate = join.Condition.Predicates[i];
 
-					var move = predicate is not SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } exprExpr
-						|| exprExpr.Reduce(nullabilityContext.WithJoinSource(join.Table.Source), _evaluationContext, false, _dataOptions.LinqOptions) is not SqlPredicate.ExprExpr
-						|| exprExpr.Expr1 is SqlValue || exprExpr.Expr2 is SqlValue;
-
-					if (move && isLeft)
+					if (isLeft)
 					{
 						sources ??= QueryHelper.EnumerateAccessibleSources(join.Table).ToList();
-						move = !QueryHelper.IsDependsOnSources(predicate, sources);
 
-						// Push into the right derived table only when the predicate depends solely on the join's
-						// own subtree (sources); a predicate that also references the outer side is a genuine
-						// cross-input condition and must stay in ON.
-						if (!move && !QueryHelper.IsDependsOnOuterSources(predicate, currentSources: sources))
+						// Moving a LEFT JOIN predicate to WHERE filters the outer rows the join must preserve.
+						// Outer-only predicates are folded into a key below; cross-input ones stay in ON.
+						if (QueryHelper.IsDependsOnOuterSources(predicate, currentSources: sources))
 						{
-							if (nestedWhereCond == null)
+							if (!QueryHelper.IsDependsOnSources(predicate, sources))
+								(outerOnly ??= new()).Add((predicate, CollectUsedSources(predicate)));
+
+							continue;
+						}
+
+						// The derived table wraps the joined source only, so a predicate reading a nested join's table stays in ON.
+						if (join.Table.Joins.Count > 0)
+						{
+							nestedJoinSources ??= join.Table.Joins.SelectMany(j => QueryHelper.EnumerateAccessibleSources(j.Table)).ToList();
+
+							if (QueryHelper.IsDependsOnSources(predicate, nestedJoinSources))
+								continue;
+						}
+
+						// A predicate independent of the outer side filters only the joined rows: push it into
+						// the right derived table.
+						if (nestedWhereCond == null)
+						{
+							if (join.Table.Source is SelectQuery sq)
 							{
-								if (join.Table.Source is SelectQuery sq)
-								{
-									QueryHelper.WrapQuery(root, sq, true, doNotRemove: true);
-									nestedWhereCond = ((SelectQuery)join.Table.Source).Where.EnsureConjunction();
-									moved = true;
-								}
-								else if (join.Table.Source is SqlTable t)
-								{
-									var subQuery      = new SelectQuery() { DoNotRemove = true };
-									join.Table.Source = subQuery;
-									nestedWhereCond = subQuery.Where.EnsureConjunction();
-									subQuery.From.Table(t);
-
-									var tableSources = new HashSet<ISqlTableSource>() { t };
-									var foundFields  = new HashSet<ISqlExpression>();
-
-									QueryHelper.CollectDependencies(_rootElement, tableSources, foundFields, ignore: join.Table.Joins);
-
-									if (foundFields.Count > 0)
-									{
-										var toReplace = new Dictionary<IQueryElement, IQueryElement>(foundFields.Count);
-										foreach (var expr in foundFields)
-											toReplace.Add(expr, subQuery.Select.AddColumn(expr));
-
-										_rootElement.Replace(toReplace, subQuery.Select);
-									}
-
-									moved = true;
-								}
+								QueryHelper.WrapQuery(root, sq, true, doNotRemove: true);
+								nestedWhereCond = ((SelectQuery)join.Table.Source).Where.EnsureConjunction();
+								moved   = true;
+								sources = null;
 							}
-
-							if (nestedWhereCond != null)
+							else if (join.Table.Source is SqlTable t)
 							{
-								// update references
-								var foundFields = new HashSet<ISqlExpression>();
-								QueryHelper.CollectDependencies(predicate, [join.Table.Source], foundFields);
+								var subQuery      = new SelectQuery() { DoNotRemove = true };
+								join.Table.Source = subQuery;
+								nestedWhereCond = subQuery.Where.EnsureConjunction();
+								subQuery.From.Table(t);
+
+								var tableSources = new HashSet<ISqlTableSource>() { t };
+								var foundFields  = new HashSet<ISqlExpression>();
+
+								QueryHelper.CollectDependencies(_rootElement, tableSources, foundFields, ignore: join.Table.Joins);
 
 								if (foundFields.Count > 0)
 								{
 									var toReplace = new Dictionary<IQueryElement, IQueryElement>(foundFields.Count);
 									foreach (var expr in foundFields)
-										toReplace.Add(expr, ((SqlColumn)expr).Expression);
-									predicate.Replace(toReplace);
+										toReplace.Add(expr, subQuery.Select.AddColumn(expr));
+
+									_rootElement.Replace(toReplace, subQuery.Select);
 								}
 
-								nestedWhereCond.Predicates.Add(predicate);
-								join.Condition.Predicates.RemoveAt(i);
-								i--;
-								continue;
+								moved   = true;
+								sources = null;
 							}
 						}
+
+						if (nestedWhereCond != null)
+						{
+							// update references
+							var foundFields = new HashSet<ISqlExpression>();
+							QueryHelper.CollectDependencies(predicate, [join.Table.Source], foundFields);
+
+							if (foundFields.Count > 0)
+							{
+								var toReplace = new Dictionary<IQueryElement, IQueryElement>(foundFields.Count);
+								foreach (var expr in foundFields)
+									toReplace.Add(expr, ((SqlColumn)expr).Expression);
+								predicate.Replace(toReplace);
+							}
+
+							nestedWhereCond.Predicates.Add(predicate);
+							join.Condition.Predicates.RemoveAt(i);
+							i--;
+						}
+
+						continue;
 					}
+
+					var move = predicate is not SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } exprExpr
+						|| exprExpr.Reduce(nullabilityContext.WithJoinSource(join.Table.Source), _evaluationContext, false, _dataOptions.LinqOptions) is not SqlPredicate.ExprExpr
+						|| exprExpr.Expr1 is SqlValue || exprExpr.Expr2 is SqlValue;
 
 					if (move)
 					{
@@ -3018,8 +3043,99 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					}
 				}
 
+				if (outerOnly != null && FoldIntoJoinKeys(join, outerOnly, sources ?? QueryHelper.EnumerateAccessibleSources(join.Table).ToList(), nullabilityContext))
+					moved = true;
+
 				// this could result in empty condition, but it is fine - user created unsupported query
 				return moved;
+			}
+
+			// LEFT JOIN t ON k AND P, with P depending only on the outer row, is rewritten to
+			// LEFT JOIN t ON CASE WHEN P THEN outerKey ELSE NULL END = innerKey: a failing outer row gets a NULL key and
+			// matches nothing. Each predicate goes to the first plain (non null-aware) equality key whose outer side reads
+			// every table the predicate reads; a predicate no key covers stays in ON.
+			bool FoldIntoJoinKeys(
+				SqlJoinedTable                                                        join,
+				List<(ISqlPredicate predicate, HashSet<ISqlTableSource> usedSources)> outerOnly,
+				List<ISqlTableSource>                                                 sources,
+				NullabilityContext                                                    nullabilityContext)
+			{
+				var joinNullability = nullabilityContext.WithJoinSource(join.Table.Source);
+				var innerSources    = new HashSet<ISqlTableSource>(sources, QueryElement.ReferenceComparer);
+
+				HashSet<ISqlPredicate>? folded = null;
+
+				for (var i = 0; i < join.Condition.Predicates.Count && outerOnly.Count > 0; i++)
+				{
+					if (join.Condition.Predicates[i] is not SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } key
+						|| key.Expr1 is SqlValue || key.Expr2 is SqlValue
+						|| key.Reduce(joinNullability, _evaluationContext, false, _dataOptions.LinqOptions) is not SqlPredicate.ExprExpr)
+						continue;
+
+					var sources1 = CollectUsedSources(key.Expr1);
+					var sources2 = CollectUsedSources(key.Expr2);
+
+					var outerFirst = IsOuter(sources1) && IsInner(sources2);
+
+					if (!outerFirst && !(IsOuter(sources2) && IsInner(sources1)))
+						continue;
+
+					// The CASE must not widen the key's dependencies: YDB requires each equality argument to depend
+					// on exactly one join input.
+					var keySources = outerFirst ? sources1 : sources2;
+					var covered    = outerOnly.FindAll(p => p.usedSources.IsSubsetOf(keySources));
+
+					if (covered.Count == 0)
+						continue;
+
+					outerOnly.RemoveAll(p => covered.Exists(c => ReferenceEquals(c.predicate, p.predicate)));
+
+					var outerKey = outerFirst ? key.Expr1 : key.Expr2;
+					var keyType  = QueryHelper.GetDbDataType(outerKey, _mappingSchema);
+
+					// ELSE is raw SQL so the optimizer cannot reduce the key to `innerKey IS NULL`. When parameters can decide
+					// the condition, the CASE may collapse to its ELSE at execution, so the ELSE keeps reading the outer key:
+					// YDB and Access reject `NULL = innerKey`, and Access cannot type an IIF whose branches are both NULL.
+					// The forced nullability stops the optimizer folding IS NULL to false on a non-nullable key.
+					var rawNull  = new SqlExpression(keyType, "NULL", Precedence.Primary, SqlFlags.None, canBeNull: true);
+					var elseExpr = covered.Exists(p => p.predicate.HasParameter())
+						? new SqlConditionExpression(
+							new SqlPredicate.IsNull(SqlNullabilityExpression.ApplyNullability(outerKey, true), false),
+							outerKey,
+							rawNull)
+						: (ISqlExpression)rawNull;
+
+					var caseKey = new SqlCaseExpression(
+						keyType,
+						[new SqlCaseExpression.CaseItem(new SqlSearchCondition(false, null, covered.Select(p => p.predicate)), outerKey)],
+						elseExpr);
+
+					// The picked key never matched NULL before the rewrite, so the CASE side must not be null-aware.
+					join.Condition.Predicates[i] = outerFirst
+						? new SqlPredicate.ExprExpr(caseKey,   SqlPredicate.Operator.Equal, key.Expr2, unknownAsValue: null)
+						: new SqlPredicate.ExprExpr(key.Expr1, SqlPredicate.Operator.Equal, caseKey,   unknownAsValue: null);
+
+					folded ??= new(QueryElement.ReferenceComparer);
+					foreach (var (predicate, _) in covered)
+						folded.Add(predicate);
+				}
+
+				if (folded == null)
+					return false;
+
+				join.Condition.Predicates.RemoveAll(folded.Contains);
+
+				return true;
+
+				bool IsOuter(HashSet<ISqlTableSource> used) => used.Count > 0 && !used.Overlaps(innerSources);
+				bool IsInner(HashSet<ISqlTableSource> used) => used.Count > 0 && used.IsSubsetOf(innerSources);
+			}
+
+			static HashSet<ISqlTableSource> CollectUsedSources(IQueryElement element)
+			{
+				var used = new HashSet<ISqlTableSource>(QueryElement.ReferenceComparer);
+				QueryHelper.CollectUsedSources(element, used);
+				return used;
 			}
 		}
 

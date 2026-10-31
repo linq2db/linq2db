@@ -7,6 +7,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.UserTests
 {
 	[TestFixture]
@@ -64,6 +66,8 @@ namespace Tests.UserTests
 			throw new ServerSideOnlyException(nameof(UtilsGreatestnotnull3));
 		}
 
+		[ActiveIssue(6216, Configuration = TestProvName.AllAccess, ErrorMessage = "Assert.That(sourcesCount, Is.LessThanOrEqualTo(",
+			Details = "Access wraps joined-side LEFT JOIN ON predicates into derived tables: 4 sources where 2 are allowed.")]
 		[Test]
 		public void TestIssue2832([DataSources] string context)
 		{
@@ -100,6 +104,10 @@ namespace Tests.UserTests
 					select new {spt.Id};
 
 			BaselinesManager.LogQuery(query.ToSqlQuery().Sql);
+
+			// Without complex join conditions the subquery's WHERE must stay in the derived table, not land in the LEFT JOIN ON.
+			if (context.IsAnyOf(TestProvName.AllYdb, TestProvName.AllAccess))
+				query.GetSelectQuery().From.Tables[0].Joins[0].Condition.Predicates.Count.ShouldBe(1);
 
 			var sourcesCount = QueryHelper.EnumerateAccessibleSources(query.GetSelectQuery()).Count(s => s.ElementType == QueryElementType.SqlQuery);
 
