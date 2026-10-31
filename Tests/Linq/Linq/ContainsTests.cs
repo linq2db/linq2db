@@ -731,5 +731,35 @@ namespace Tests.Linq
 				.Contains("A")
 				.ShouldBeTrue();
 		}
+
+		[Table]
+		sealed class PrefixedCodeWithTitle
+		{
+			[PrimaryKey]                                                                                                public int     Id    { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 20), ValueConverter(ConverterType = typeof(PrefixConverter))] public string? Code  { get; set; }
+			[Column(DataType = DataType.NVarChar, Length = 20)]                                                         public string? Title { get; set; }
+		}
+
+		/// <summary>
+		/// A value searched in a projected concatenation of a converted non-Unicode column and a Unicode one goes
+		/// through the converter the projection is read through.
+		/// </summary>
+		[Test]
+		public void SequenceContainsConcatOfConvertedAndUnicodeColumn([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new PrefixedCodeWithTitle { Id = 1, Code = "A", Title = "T" } });
+
+			var concatenated = table
+				.Select(t => t.Code + t.Title);
+
+			concatenated
+				.Single()
+				.ShouldBe("AT");
+
+			concatenated
+				.Contains("AT")
+				.ShouldBeTrue();
+		}
 	}
 }
