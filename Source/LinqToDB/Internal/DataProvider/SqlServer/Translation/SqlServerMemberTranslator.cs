@@ -229,9 +229,18 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 					return null;
 
 				var symbolsToAdd = factory.Sub(valueTypeInt, padding, lengthValue);
-				var stringToAdd  = factory.Function(valueTypeString, "REPLICATE", paddingChar, symbolsToAdd);
+				var stringToAdd  = factory.Function(GetReplicateType(factory, valueTypeString, paddingChar), "REPLICATE", paddingChar, symbolsToAdd);
 
 				return factory.Concat(stringToAdd, value);
+			}
+
+			// REPLICATE returns its string argument's type. Declared with the value's non-Unicode type, a Unicode padding char
+			// would hide from the concatenation that it turns Unicode, so a long VarChar value would not be widened beside it.
+			private protected static DbDataType GetReplicateType(ISqlExpressionFactory factory, DbDataType valueType, ISqlExpression paddingChar)
+			{
+				return QueryHelper.IsUnicode(factory.GetDbDataType(paddingChar).DataType) && !QueryHelper.IsUnicode(valueType.DataType)
+					? new DbDataType(typeof(string), DataType.NVarChar)
+					: valueType;
 			}
 
 			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool withoutSeparator)

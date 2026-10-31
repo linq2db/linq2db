@@ -1026,6 +1026,47 @@ namespace Tests.Linq
 			liked.ShouldBeEmpty();
 		}
 
+		[Table]
+		sealed class LongVarCharRow
+		{
+			[PrimaryKey]                                                            public int    Id    { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 8000, CanBeNull = false)] public string Notes { get; set; } = default!;
+		}
+
+		[Test]
+		public void ReplaceBesideLongVarCharKeepsLength([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			var replacement = "b";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new LongVarCharRow { Id = 1, Notes = new string('a', 6000) } });
+
+			var result = table
+				.Select(t => new
+				{
+					Literal   = Sql.AsSql(t.Notes.Replace("a", "b")),
+					Parameter = Sql.AsSql(t.Notes.Replace("a", replacement)),
+				})
+				.Single();
+
+			new[] { result.Literal.Length, result.Parameter.Length }
+				.ShouldBe([6000, 6000]);
+		}
+
+		[Test]
+		public void PadLeftBesideLongVarCharKeepsLength([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new LongVarCharRow { Id = 1, Notes = new string('a', 6000) } });
+
+			var result = table
+				.Select(t => Sql.AsSql(t.Notes.PadLeft(7000, 'b')))
+				.Single();
+
+			result.Length
+				.ShouldBe(7000);
+		}
+
 		sealed class PrefixConverter() : ValueConverter<string?, string?>(v => v == null ? null : "x:" + v, v => v == null ? null : v.Substring(2), true);
 
 		[Table]
