@@ -1123,6 +1123,30 @@ namespace Tests.Linq
 			value.ShouldBe("c1|-");
 		}
 
+		[Table]
+		sealed class ConvertedConcatTitleRow
+		{
+			[PrimaryKey]                                                                public int    Id    { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 20, CanBeNull = false)]
+			[ValueConverter(ConverterType = typeof(PrefixConverter))]                   public string Conv  { get; set; } = default!;
+			[Column(DataType = DataType.NVarChar, Length = 20, CanBeNull = false)]      public string Title { get; set; } = default!;
+		}
+
+		// The typing lookup names the Unicode Title, but the concatenation is read through Conv's converter, so a value
+		// compared with it must go through that converter too.
+		[Test]
+		public void ComparedConcatOfConvertedAndUnicodeColumnKeepsConverter([DataSources] string context)
+		{
+			var bound = "c1T";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new ConvertedConcatTitleRow { Id = 1, Conv = "c1", Title = "T" } });
+
+			table
+				.Count(p => p.Conv + p.Title == bound)
+				.ShouldBe(1);
+		}
+
 		#endregion
 
 		#region Concat inside a set-operation operand's projection

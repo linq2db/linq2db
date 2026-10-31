@@ -3350,8 +3350,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				return default;
 
 			// Asked for typing: whatever is written down on the other side of this expression takes its terms from
-			// here, so a column that cannot lend its declared width - one reached through a SUM - is not offered.
-			return SuggestColumnDescriptor(QueryHelper.GetColumnDescriptorForTyping(placeholderTest.Sql), placeholderTest.Sql);
+			// here, so a column that cannot lend its declared width - one reached through a SUM - is not offered,
+			// unless it carries a converter or unit the value must go through to be comparable.
+			return SuggestColumnDescriptor(QueryHelper.GetColumnDescriptorForComparedValue(placeholderTest.Sql), placeholderTest.Sql);
 		}
 
 		SuggestedDescriptor SuggestColumnDescriptor(ColumnDescriptor? descriptor, ISqlExpression expr)
