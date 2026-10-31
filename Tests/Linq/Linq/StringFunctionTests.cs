@@ -1033,6 +1033,7 @@ namespace Tests.Linq
 			[Column(DataType = DataType.VarChar, Length = 8000, CanBeNull = false)] public string Notes { get; set; } = default!;
 		}
 
+		// SQL Server: the nvarchar(4000) conversion that cuts a long varchar value is SQL Server's.
 		[Test]
 		public void ReplaceBesideLongVarCharKeepsLength([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
@@ -1053,6 +1054,7 @@ namespace Tests.Linq
 				.ShouldBe([6000, 6000]);
 		}
 
+		// SQL Server: as ReplaceBesideLongVarCharKeepsLength.
 		[Test]
 		public void PadLeftBesideLongVarCharKeepsLength([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
@@ -1077,7 +1079,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ComparedCastOfConvertedColumnKeepsConverter([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllSQLite)] string context)
+		public void ComparedCastOfConvertedColumnKeepsConverter([DataSources] string context)
 		{
 			var bound = "A";
 
@@ -1104,7 +1106,7 @@ namespace Tests.Linq
 		// The typing lookup skips the non-Unicode Code and names Title, but the concatenation is read through Code's
 		// converter, so the compared value must go through it too.
 		[Test]
-		public void ComparedConcatOfConvertedAndUnicodeColumnKeepsConverter([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllSQLite)] string context)
+		public void ComparedConcatOfConvertedAndUnicodeColumnKeepsConverter([DataSources] string context)
 		{
 			var bound = "AT";
 
@@ -1117,6 +1119,10 @@ namespace Tests.Linq
 
 			table
 				.Count(t => (t.Code + t.Title).CompareTo(bound) == 0)
+				.ShouldBe(1);
+
+			table
+				.Count(t => t.Code + t.Title == bound)
 				.ShouldBe(1);
 		}
 
