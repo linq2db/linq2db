@@ -34,7 +34,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				var newMember = elementType.GetMemberEx(member);
 				if (newMember != null)
 				{
-					if (InternalExtensions.IsAssociation(newMember, MappingSchema))
+					if (InternalExtensions.IsAssociation(newMember, contextRef.BuildContext.MappingSchema))
 					{
 						return Expression.MakeMemberAccess(
 							contextRef.WithType(elementType),
@@ -46,9 +46,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			return associationExpression;
 		}
 
-		bool IsAssociationInRealization(Expression? expression, MemberInfo member, [NotNullWhen(true)] out MemberInfo? associationMember)
+		static bool IsAssociationInRealization(MappingSchema mappingSchema, Expression? expression, MemberInfo member, [NotNullWhen(true)] out MemberInfo? associationMember)
 		{
-			if (InternalExtensions.IsAssociation(member, MappingSchema))
+			if (InternalExtensions.IsAssociation(member, mappingSchema))
 			{
 				associationMember = member;
 				return true;
@@ -61,7 +61,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					var newMember = contextRef.BuildContext.ElementType.GetMemberEx(member);
 					if (newMember != null)
 					{
-						if (InternalExtensions.IsAssociation(newMember, MappingSchema))
+						if (InternalExtensions.IsAssociation(newMember, mappingSchema))
 						{
 							associationMember = newMember;
 							return true;
@@ -82,13 +82,13 @@ namespace LinqToDB.Internal.Linq.Builder
 					// Select(x => x.Customer) the member's ReflectedType may already match
 					// expression.Type while its DeclaringType still points at the unregistered
 					// base — covered by the second arm of the guard.
-					if (MappingSchema.GetAttribute<AssociationAttribute>(expression.Type, newMember) != null)
+					if (mappingSchema.GetAttribute<AssociationAttribute>(expression.Type, newMember) != null)
 					{
 						associationMember = newMember;
 						return true;
 					}
 
-					return IsAssociationInRealization(null, newMember, out associationMember);
+					return IsAssociationInRealization(mappingSchema, null, newMember, out associationMember);
 				}
 			}
 
@@ -96,15 +96,15 @@ namespace LinqToDB.Internal.Linq.Builder
 			return false;
 		}
 
-		public bool IsAssociation(Expression expression, [NotNullWhen(true)] out MemberInfo? associationMember)
+		public static bool IsAssociation(MappingSchema mappingSchema, Expression expression, [NotNullWhen(true)] out MemberInfo? associationMember)
 		{
 			switch (expression)
 			{
 				case MemberExpression memberExpression:
-					return IsAssociationInRealization(memberExpression.Expression, memberExpression.Member, out associationMember);
+					return IsAssociationInRealization(mappingSchema, memberExpression.Expression, memberExpression.Member, out associationMember);
 
 				case MethodCallExpression methodCall:
-					return IsAssociationInRealization(methodCall.Object, methodCall.Method, out associationMember);
+					return IsAssociationInRealization(mappingSchema, methodCall.Object, methodCall.Method, out associationMember);
 
 				default:
 					associationMember = null;
@@ -112,14 +112,14 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 		}
 
-		public AssociationDescriptor? GetAssociationDescriptor(Expression expression, out AccessorMember? memberInfo, bool onlyCurrent = true)
+		public static AssociationDescriptor? GetAssociationDescriptor(MappingSchema mappingSchema, Expression expression, out AccessorMember? memberInfo, bool onlyCurrent = true)
 		{
 			memberInfo = null;
 
 			Type objectType;
 			if (expression is MemberExpression memberExpression)
 			{
-				if (!IsAssociationInRealization(memberExpression.Expression, memberExpression.Member,
+				if (!IsAssociationInRealization(mappingSchema, memberExpression.Expression, memberExpression.Member,
 					    out var associationMember))
 					return null;
 
@@ -130,7 +130,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 			else if (expression is MethodCallExpression methodCall)
 			{
-				if (!IsAssociationInRealization(methodCall.Object, methodCall.Method, out var associationMember))
+				if (!IsAssociationInRealization(mappingSchema, methodCall.Object, methodCall.Method, out var associationMember))
 					return null;
 
 				var type = methodCall.Method.IsStatic ? methodCall.Arguments[0].Type : associationMember.DeclaringType;
@@ -147,31 +147,32 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (memberInfo == null)
 				return null;
 
-			var entityDescriptor = MappingSchema.GetEntityDescriptor(objectType);
+			var entityDescriptor = mappingSchema.GetEntityDescriptor(objectType);
 
 			var descriptor = GetAssociationDescriptor(memberInfo, entityDescriptor);
 			if (descriptor == null && !onlyCurrent && memberInfo.MemberInfo.DeclaringType != entityDescriptor.ObjectType)
-				descriptor = GetAssociationDescriptor(memberInfo, MappingSchema.GetEntityDescriptor(memberInfo.MemberInfo.DeclaringType!));
+				descriptor = GetAssociationDescriptor(memberInfo, mappingSchema.GetEntityDescriptor(memberInfo.MemberInfo.DeclaringType!));
 
 			return descriptor;
 		}
 
-		AssociationDescriptor? GetAssociationDescriptor(AccessorMember accessorMember, EntityDescriptor entityDescriptor)
+		static AssociationDescriptor? GetAssociationDescriptor(AccessorMember accessorMember, EntityDescriptor entityDescriptor)
 		{
 			AssociationDescriptor? descriptor = null;
 
-			var memberInfo = accessorMember.MemberInfo;
+			var memberInfo    = accessorMember.MemberInfo;
+			var mappingSchema = entityDescriptor.MappingSchema;
 
 			if (memberInfo is { MemberType: MemberTypes.Method, DeclaringType: not null })
 			{
-				var attribute = MappingSchema.GetAttribute<AssociationAttribute>(memberInfo.DeclaringType!, memberInfo);
+				var attribute = mappingSchema.GetAttribute<AssociationAttribute>(memberInfo.DeclaringType!, memberInfo);
 
 				if (attribute == null && memberInfo.DeclaringType?.IsInterface == true && !entityDescriptor.ObjectType.IsInterface)
 				{
 					var newInfo = entityDescriptor.ObjectType.GetImplementation(memberInfo);
 					if (newInfo != null)
 					{
-						attribute = MappingSchema.GetAttribute<AssociationAttribute>(newInfo.DeclaringType!, newInfo);
+						attribute = mappingSchema.GetAttribute<AssociationAttribute>(newInfo.DeclaringType!, newInfo);
 						memberInfo = newInfo;
 					}
 				}
@@ -179,7 +180,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (attribute != null)
 					descriptor = new AssociationDescriptor
 					(
-						MappingSchema,
+						mappingSchema,
 						entityDescriptor.ObjectType,
 						memberInfo,
 						attribute.GetThisKeys(),
@@ -205,7 +206,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				foreach (var m in entityDescriptor.InheritanceMapping)
 				{
-					foreach (var ed in MappingSchema.GetEntityDescriptor(m.Type).Associations)
+					foreach (var ed in mappingSchema.GetEntityDescriptor(m.Type).Associations)
 					{
 						if (ed.MemberInfo.EqualsTo(memberInfo, m.Type))
 							return ed;

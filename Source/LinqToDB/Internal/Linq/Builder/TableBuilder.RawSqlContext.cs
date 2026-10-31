@@ -12,12 +12,13 @@ namespace LinqToDB.Internal.Linq.Builder
 	{
 		sealed class SimpleSelectContext : BuildContextBase
 		{
-			public SimpleSelectContext(TranslationModifier translationModifier, ExpressionBuilder builder, Type elementType, SelectQuery selectQuery) 
+			public SimpleSelectContext(TranslationModifier translationModifier, ExpressionBuilder builder, MappingSchema mappingSchema, Type elementType, SelectQuery selectQuery)
 				: base(translationModifier, builder, elementType, selectQuery)
 			{
+				MappingSchema = mappingSchema;
 			}
 
-			public override MappingSchema MappingSchema => Builder.MappingSchema;
+			public override MappingSchema MappingSchema { get; }
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
@@ -45,7 +46,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			var methodCall = (MethodCallExpression)buildInfo.Expression;
 			var entityType = methodCall.Method.GetGenericArguments()[0];
 
-			isScalar ??= builder.MappingSchema.IsScalarType(entityType);
+			var mappingSchema = ExpressionBuilder.TryGetRootMappingSchema(methodCall.Arguments[0]) ?? builder.MappingSchema;
+
+			isScalar ??= mappingSchema.IsScalarType(entityType);
 
 			var formatArg = methodCall.Arguments[1];
 
@@ -55,7 +58,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var sqlArguments = new ISqlExpression[arguments.Count];
 
-			var context = buildInfo.Parent ?? new SimpleSelectContext(builder.GetTranslationModifier(), builder, typeof(object), buildInfo.SelectQuery);
+			var context = buildInfo.Parent ?? new SimpleSelectContext(builder.GetTranslationModifier(), builder, mappingSchema, typeof(object), buildInfo.SelectQuery);
 
 			for (var i = 0; i < arguments.Count; i++)
 			{
@@ -65,7 +68,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				sqlArguments[i] = arg;
 			}
 
-			return BuildSequenceResult.FromContext(new RawSqlContext(builder.GetTranslationModifier(), builder, buildInfo, entityType, isScalar.Value, format, sqlArguments));
+			return BuildSequenceResult.FromContext(new RawSqlContext(builder.GetTranslationModifier(), builder, mappingSchema, buildInfo, entityType, isScalar.Value, format, sqlArguments));
 		}
 
 		//TODO: We have to separate TableContext in proper hierarchy
@@ -73,8 +76,8 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			public bool IsScalar { get; }
 
-			public RawSqlContext(TranslationModifier translationModifier, ExpressionBuilder builder, BuildInfo buildInfo, Type originalType, bool isScalar, string sql, ISqlExpression[] parameters)
-				: base(translationModifier, builder, builder.MappingSchema, buildInfo, new SqlRawSqlTable(builder.MappingSchema.GetEntityDescriptor(originalType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated), sql, isScalar, parameters))
+			public RawSqlContext(TranslationModifier translationModifier, ExpressionBuilder builder, MappingSchema mappingSchema, BuildInfo buildInfo, Type originalType, bool isScalar, string sql, ISqlExpression[] parameters)
+				: base(translationModifier, builder, mappingSchema, buildInfo, new SqlRawSqlTable(mappingSchema.GetEntityDescriptor(originalType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated), sql, isScalar, parameters))
 			{
 				IsScalar = isScalar;
 
