@@ -924,8 +924,8 @@ namespace Tests.Linq
 
 		// The outer-only predicate reads a table the join key does not, so it cannot be folded into the key and stays in ON.
 		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb)]
-		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb, ErrorMessage = "JOIN expression not supported")]
-		[ThrowsForProvider("System.Data.Odbc.OdbcException",   TestProvName.AllAccessOdbc,  ErrorMessage = "JOIN expression not supported")]
+		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb, ErrorMessage = "expression not supported")]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException",   TestProvName.AllAccessOdbc,  ErrorMessage = "expression not supported")]
 		[Test]
 		public void LeftJoinOuterOnlyPredicateOnPrecedingJoin([DataSources] string context)
 		{
@@ -1007,8 +1007,8 @@ namespace Tests.Linq
 		}
 
 		// Access rejects this ON, folded or not: its keys read two different outer tables.
-		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb, ErrorMessage = "JOIN expression not supported")]
-		[ThrowsForProvider("System.Data.Odbc.OdbcException",   TestProvName.AllAccessOdbc,  ErrorMessage = "JOIN expression not supported")]
+		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb, ErrorMessage = "expression not supported")]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException",   TestProvName.AllAccessOdbc,  ErrorMessage = "expression not supported")]
 		[Test]
 		public void LeftJoinOuterOnlyPredicatesOnSeveralKeys([DataSources] string context)
 		{

@@ -2685,6 +2685,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							}
 						}
 
+						// The WHERE would land in ON beside nested joins, where OptimizeJoinConditions cannot push
+						// it back into a derived table (see Issue2832Tests).
+						if (!_providerFlags.IsComplexJoinConditionSupported && subQuery.From.Tables[0].Joins.Count > 0)
+							return false;
+
 						moveConditionToQuery = false;
 					}
 					else
