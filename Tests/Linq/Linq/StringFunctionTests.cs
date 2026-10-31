@@ -1086,8 +1086,9 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(new[] { new PrefixedCodeTable { Id = 1, Code = "A" } });
 
+			// DB2 casts to a blank-padded CHAR(40), which only a trailing % matches.
 			table
-				.Count(t => Sql.Like(Sql.Convert(Sql.Types.NVarChar(40), t.Code), "A"))
+				.Count(t => Sql.Like(Sql.Convert(Sql.Types.NVarChar(40), t.Code), "A%"))
 				.ShouldBe(1);
 
 			table
