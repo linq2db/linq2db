@@ -5574,7 +5574,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (UnwrapInlineArray(arr) is { NodeType: ExpressionType.NewArrayInit } inlineArray && !Builder.CanBeEvaluatedOnClient(arr))
 				arr = inlineArray;
 
-			using (UsingColumnDescriptorBeside(QueryHelper.GetColumnDescriptor(expr), expr))
+			using (UsingColumnDescriptorBeside(QueryHelper.GetColumnDescriptorForComparedValue(expr), expr))
 			{
 				switch (arr.NodeType)
 				{

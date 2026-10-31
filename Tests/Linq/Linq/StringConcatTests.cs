@@ -1050,6 +1050,29 @@ namespace Tests.Linq
 				.ShouldBeFalse();
 		}
 
+		// SQL Server + SQLite: the inline items are written into the command text as literals, and Cyrillic
+		// literals run on these two only, as in ConcatLiteralBesideVarCharKeepsUnicode.
+		[Test]
+		public void ConcatInlineInListKeepsUnicode([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllSQLite)] string context)
+		{
+			var suffix = "Жук";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(ConcatProductData);
+
+			var literals = table
+				.Where(p => new[] { "A-100Жук", "B-200Щит" }.Contains(p.Sku + suffix))
+				.Select(p => p.Id);
+
+			AssertQuery(literals);
+
+			var withColumn = table
+				.Where(p => new[] { p.Title, "B-200Жук" }.Contains(p.Sku + suffix))
+				.Select(p => p.Id);
+
+			AssertQuery(withColumn);
+		}
+
 		[Table]
 		sealed class LongVarCharRow
 		{
