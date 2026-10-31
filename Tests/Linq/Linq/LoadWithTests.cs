@@ -1170,6 +1170,16 @@ namespace Tests.Linq
 				.ToList();
 		}
 
+		List<(int ChildID, int? LinkedParentID)> LinkedParentByOuterKeyExpected()
+		{
+			return Child
+				.Select(c => (
+					c.ChildID,
+					GrandChild.Any(g => g.ChildID == c.ChildID) ? c.ParentID : (int?)null))
+				.OrderBy(c => c.ChildID)
+				.ToList();
+		}
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6208")]
 		public void ThenLoadNullableJoinedAssociationKeepsUnmatchedRows([DataSources] string context)
 		{
@@ -1254,7 +1264,7 @@ namespace Tests.Linq
 				.Select(c => (c.ChildID, LinkedParentID: c.LinkedParentByOuterKey?.ParentID))
 				.OrderBy(c => c.ChildID)
 				.ToList()
-				.ShouldBe(LinkedParentExpected());
+				.ShouldBe(LinkedParentByOuterKeyExpected());
 		}
 	}
 }

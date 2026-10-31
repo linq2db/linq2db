@@ -2653,6 +2653,15 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (joinTable.JoinType != JoinType.Inner)
 			{
+				// #6208: joins lifted under an APPLY render flat after it (no ON to group them) or as LATERAL ((...)),
+				// which changes rows or is invalid SQL - they must stay inside the APPLY subquery.
+				if (joinTable.JoinType is JoinType.OuterApply or JoinType.CrossApply
+					&& _providerFlags.IsApplyJoinSupported
+					&& subQuery.From.Tables[0].Joins.Count > 0)
+				{
+					return false;
+				}
+
 				if (subQuery.HasWhere)
 				{
 					if (joinTable.JoinType == JoinType.OuterApply)
@@ -2699,15 +2708,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					//
 					if (QueryHelper.EnumerateJoins(subQuery).Any(j => j.JoinType == JoinType.Inner))
 						return false;
-				}
-
-				// #6208: joins lifted under an APPLY render flat after it (no ON to group them) or as LATERAL ((...)),
-				// which changes rows or is invalid SQL - they must stay inside the APPLY subquery.
-				if (joinTable.JoinType is JoinType.OuterApply or JoinType.CrossApply
-					&& _providerFlags.IsApplyJoinSupported
-					&& subQuery.From.Tables[0].Joins.Count > 0)
-				{
-					return false;
 				}
 
 				// Check that all columns in sub-query are allowed to move up
