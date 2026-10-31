@@ -200,10 +200,13 @@ namespace Tests.Linq
 
 		sealed class AllTypes
 		{
+			[Column("decimalDataType")]
 			public decimal DecimalDataType;
+			[Column("binaryDataType")]
 			public byte[]? BinaryDataType;
+			[Column("varbinaryDataType")]
 			public byte[]? VarBinaryDataType;
-			[Column(DataType = DataType.VarChar)]
+			[Column("varcharDataType", DataType = DataType.VarChar)]
 			public string? VarcharDataType;
 		}
 
@@ -1502,10 +1505,9 @@ namespace Tests.Linq
 		// on SqlServer.2017.MS.LinqService (build 22779) and was killed by --hangdump-timeout 5m on
 		// SqlServer.Contained.LinqService (22810), starving unrelated tests meanwhile. Awaiting frees
 		// the thread for the duration of the round-trip, so the burst no longer exhausts the pool.
+		[NoBaselines("multi-threading")]
 		public async Task TestIQueryableParameterEvaluationMultiThreaded([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
-			using var _ = new DisableBaseline("multi-threading");
-
 			// per-invocation state: a shared instance field is clobbered when parallel execution runs
 			// this test concurrently for several SqlServer contexts (thread index collides across them).
 			var paramValues = new int[30];
