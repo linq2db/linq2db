@@ -222,6 +222,46 @@ namespace Tests.Linq
 			rows[1].Values!["2"].ShouldBe(60m);
 		}
 
+		/// <summary>
+		/// Branches of <c>Concat</c> putting values of different types under one name: each row reads its own branch's
+		/// value, rather than both reading one shared column as either type.
+		/// </summary>
+		[Test]
+		public void ConcatOfOneNameWithDifferentCellTypes([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_data);
+
+			var rows = t.Where(x => x.Id == 1)
+					.SelectDynamic(x => new AmountsDto { Id = x.Id }, new[] { "A" }, (x, n) => x.Usd)
+				.Concat(t.Where(x => x.Id == 2)
+					.SelectDynamic(x => new AmountsDto { Id = x.Id }, new[] { "A" }, (x, n) => x.Id))
+				.ToList()
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			rows[0].Values!["A"].ShouldBe(10.5m);
+			rows[1].Values!["A"].ShouldBe(2);
+		}
+
+		/// <summary>A set operation that compares rows cannot compare values of different types under one name.</summary>
+		// SQLite only: the builder throws before any SQL is built.
+		[Test]
+		public void UnionOfOneNameWithDifferentCellTypesThrows([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_data);
+
+			var query = t.Where(x => x.Id == 1)
+					.SelectDynamic(x => new AmountsDto { Id = x.Id }, new[] { "A" }, (x, n) => x.Usd)
+				.Union(t.Where(x => x.Id == 2)
+					.SelectDynamic(x => new AmountsDto { Id = x.Id }, new[] { "A" }, (x, n) => x.Id));
+
+			var act = () => query.ToList();
+
+			act.ShouldThrow<LinqToDBException>().Message.ShouldContain("store 'A' in different terms");
+		}
+
 		/// <summary>Keys passed as a compiled query's parameter: each call gets its own column set.</summary>
 		// SQLite only: the SQL is the plain projection ProjectsRuntimeColumnSetIntoStore runs everywhere; this pins how
 		// CompiledTable keys the column set.
