@@ -77,7 +77,9 @@ namespace LinqToDB.Internal.Linq.Builder
 						table = lw.RegisterContext as ILoadWithContext;
 				}
 
-				var path = SequenceHelper.PrepareBody(selector, sequence);
+				// ThenLoad's parameter is the previously loaded entity, not the sequence element: rooting it at the
+				// sequence lets a projection rebind its member by name onto the element type (#6207).
+				var path = SequenceHelper.PrepareBody(selector, (IBuildContext?)table ?? sequence);
 
 				var extractResult = ExtractAssociations(builder, table, path, null);
 
