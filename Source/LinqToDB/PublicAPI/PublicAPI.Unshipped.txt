@@ -1,5 +1,6 @@
 ﻿#nullable enable
 *REMOVED*LinqToDB.Internal.Linq.IQueryRunner.Parameters.get -> object?[]?
+*REMOVED*override LinqToDB.Internal.DataProvider.Informix.InformixSqlExpressionConvertVisitor.VisitSqlSetExpression(LinqToDB.Internal.SqlQuery.SqlSetExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 *REMOVED*LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSql(int commandNumber, LinqToDB.Internal.SqlQuery.SqlStatement! statement, System.Text.StringBuilder! sb, LinqToDB.Internal.SqlProvider.OptimizationContext! optimizationContext, LinqToDB.Internal.SqlQuery.AliasesContext! aliases, LinqToDB.Internal.SqlQuery.NullabilityContext? nullabilityContext, int startIndent = 0) -> void
 *REMOVED*LinqToDB.Internal.SqlProvider.BasicSqlBuilder.ConvertElement<T>(T? element) -> T?
 *REMOVED*LinqToDB.Internal.SqlProvider.BasicSqlBuilder.OptimizationContext.get -> LinqToDB.Internal.SqlProvider.OptimizationContext!
@@ -133,6 +134,11 @@ LinqToDB.Internal.SqlProvider.SqlCommandStep.RunIf.init -> void
 LinqToDB.Internal.SqlProvider.SqlCommandStep.SqlCommandStep() -> void
 LinqToDB.Internal.SqlProvider.SqlCommandStep.Statement.get -> LinqToDB.Internal.SqlQuery.SqlStatement?
 LinqToDB.Internal.SqlProvider.SqlCommandStep.Statement.init -> void
+LinqToDB.Internal.SqlProvider.SqlExpressionOptimizerVisitor.DeferPredicateReduce.get -> bool
+LinqToDB.Internal.SqlProvider.SqlExpressionOptimizerVisitor.DeferPredicateReduce.set -> void
+LinqToDB.Internal.SqlProvider.SqlExpressionOptimizerVisitor.VisitNotOperand(LinqToDB.Internal.SqlQuery.SqlPredicate.Not! predicate) -> LinqToDB.Internal.SqlQuery.ISqlPredicate!
+virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ForceConvertSetValue.get -> bool
+override LinqToDB.Internal.DataProvider.Informix.InformixSqlExpressionConvertVisitor.ForceConvertSetValue.get -> bool
 LinqToDB.Internal.SqlProvider.SqlExpressionOptimizerVisitor.InitState(LinqToDB.Internal.SqlQuery.EvaluationContext! evaluationContext, LinqToDB.Internal.SqlQuery.NullabilityContext! nullabilityContext, LinqToDB.Internal.SqlQuery.Visitors.SqlQueryVisitor.IVisitorTransformationInfo? transformationInfo, LinqToDB.DataOptions! dataOptions, LinqToDB.Mapping.MappingSchema! mappingSchema, bool visitQueries) -> void
 LinqToDB.Internal.SqlProvider.SqlExpressionOptimizerVisitor.IsInsidePredicate.get -> bool
 LinqToDB.Internal.SqlProvider.SqlExpressionOptimizerVisitor.IsInsidePredicate.set -> void

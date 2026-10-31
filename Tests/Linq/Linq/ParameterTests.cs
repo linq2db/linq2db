@@ -1871,6 +1871,58 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void NullableComparisonAsSetValue([DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var data = new[]
+			{
+				new TestBool { Id = 1, Value = null  },
+				new TestBool { Id = 2, Value = false },
+				new TestBool { Id = 3, Value = true  },
+			};
+
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(data);
+
+			// C# reads NULL != true as true, so the stored value must not be NULL
+			tb.Update(r => new TestBool()
+			{
+				Value = r.Value != true
+			});
+
+			tb
+				.OrderBy(r => r.Id)
+				.Select(r => r.Value)
+				.ToArray()
+				.ShouldBe(new bool?[] { true, true, false });
+		}
+
+		[Test]
+		public void NullableComparisonAsConditionalSetValue([DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var data = new[]
+			{
+				new TestBool { Id = 1, Value = null  },
+				new TestBool { Id = 2, Value = false },
+				new TestBool { Id = 3, Value = true  },
+			};
+
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(data);
+
+			// the comparison is a result of the conditional, so it is folded there, not by the SET slot
+			tb.Update(r => new TestBool()
+			{
+				Value = r.Id > 0 ? r.Value != true : null
+			});
+
+			tb
+				.OrderBy(r => r.Id)
+				.Select(r => r.Value)
+				.ToArray()
+				.ShouldBe(new bool?[] { true, true, false });
+		}
+
 		[ActiveIssue(ErrorTypeName = "System.NullReferenceException", ErrorMessage = "Object reference not set to an instance of an object.",
 			Details = "no-issue: a null first argument to Sql.PadLeft throws while the accessor is built, before any SQL is produced. #4799 is the only PadLeft issue on the tracker and reports trimming, which is a different defect.")]
 		[Test]
