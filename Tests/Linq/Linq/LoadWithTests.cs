@@ -1101,5 +1101,160 @@ namespace Tests.Linq
 					.ToList();
 			}
 		}
+
+		[Table("Parent")]
+		sealed class ParentWithLinkedChildren
+		{
+			[Column] public int  ParentID { get; set; }
+			[Column] public int? Value1   { get; set; }
+
+			[Association(QueryExpressionMethod = nameof(ChildrenExpression), CanBeNull = true)]
+			public IEnumerable<ChildWithLinkedParent> Children { get; set; } = null!;
+
+			public static Expression<Func<ParentWithLinkedChildren, IDataContext, IQueryable<ChildWithLinkedParent>>> ChildrenExpression()
+			{
+				return (p, db) => db.GetTable<ChildWithLinkedParent>()
+					.Where(c => c.ParentID == p.ParentID)
+					.OrderBy(c => c.ChildID);
+			}
+		}
+
+		[Table("Child")]
+		sealed class ChildWithLinkedParent
+		{
+			[Column] public int ParentID { get; set; }
+			[Column] public int ChildID  { get; set; }
+
+			[Association(QueryExpressionMethod = nameof(LinkedParentExpression), CanBeNull = true)]
+			public Parent? LinkedParent { get; set; }
+
+			[Association(QueryExpressionMethod = nameof(LinkedParentExpression), CanBeNull = false)]
+			public Parent LinkedParentRequired { get; set; } = null!;
+
+			[Association(QueryExpressionMethod = nameof(LinkedParentByOuterKeyExpression), CanBeNull = true)]
+			public Parent? LinkedParentByOuterKey { get; set; }
+
+			public static Expression<Func<ChildWithLinkedParent, IDataContext, IQueryable<Parent>>> LinkedParentExpression()
+			{
+				return (c, db) =>
+					from g in db.GetTable<GrandChild>()
+						.Where(g => g.ChildID == c.ChildID)
+						.Take(1)
+					join p in db.GetTable<Parent>() on g.ParentID equals (int?)p.ParentID
+					select p;
+			}
+
+			public static Expression<Func<ChildWithLinkedParent, IDataContext, IQueryable<Parent>>> LinkedParentByOuterKeyExpression()
+			{
+				return (c, db) =>
+					from g in db.GetTable<GrandChild>()
+						.Where(g => g.ChildID == c.ChildID)
+						.Take(1)
+					from p in db.GetTable<Parent>()
+						.Where(p => p.ParentID == c.ParentID)
+						.DefaultIfEmpty()
+					select p;
+			}
+		}
+
+		List<(int ChildID, int? LinkedParentID)> LinkedParentExpected()
+		{
+			return Child
+				.Select(c => (
+					c.ChildID,
+					GrandChild
+						.Where(g => g.ChildID == c.ChildID)
+						.Select(g => g.ParentID)
+						.FirstOrDefault()))
+				.OrderBy(c => c.ChildID)
+				.ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6208")]
+		public void ThenLoadNullableJoinedAssociationKeepsUnmatchedRows([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var parents = db.GetTable<ParentWithLinkedChildren>()
+				.LoadWith(p => p.Children)
+				.ThenLoad(c => c.LinkedParent)
+				.ToList();
+
+			parents
+				.SelectMany(p => p.Children)
+				.Select(c => (c.ChildID, LinkedParentID: c.LinkedParent?.ParentID))
+				.OrderBy(c => c.ChildID)
+				.ToList()
+				.ShouldBe(LinkedParentExpected());
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6208")]
+		public void SelectNullableJoinedAssociationKeepsUnmatchedRows([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from c in db.GetTable<ChildWithLinkedParent>()
+				select new
+				{
+					c.ChildID,
+					c.LinkedParent,
+				};
+
+			query
+				.ToList()
+				.Select(c => (c.ChildID, LinkedParentID: c.LinkedParent?.ParentID))
+				.OrderBy(c => c.ChildID)
+				.ToList()
+				.ShouldBe(LinkedParentExpected());
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6208")]
+		public void SelectRequiredJoinedAssociationKeepsOnlyMatchedRows([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from c in db.GetTable<ChildWithLinkedParent>()
+				select new
+				{
+					c.ChildID,
+					c.LinkedParentRequired,
+				};
+
+			var expected = LinkedParentExpected()
+				.Where(c => c.LinkedParentID != null)
+				.ToList();
+
+			query
+				.ToList()
+				.Select(c => (c.ChildID, LinkedParentID: (int?)c.LinkedParentRequired.ParentID))
+				.OrderBy(c => c.ChildID)
+				.ToList()
+				.ShouldBe(expected);
+		}
+
+		[ThrowsForProvider("DuckDB.NET.Data.DuckDBException", TestProvName.AllDuckDB, ErrorMessage = "Not implemented Error: Non-inner join on correlated columns not supported")]
+		[ActiveIssue(6224, Configurations = [TestProvName.AllSQLite], ErrorMessage = "no such column: c_1.ParentID")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6208")]
+		public void SelectNullableLeftJoinedAssociationKeepsNulls([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from c in db.GetTable<ChildWithLinkedParent>()
+				select new
+				{
+					c.ChildID,
+					c.LinkedParentByOuterKey,
+				};
+
+			query
+				.ToList()
+				.Select(c => (c.ChildID, LinkedParentID: c.LinkedParentByOuterKey?.ParentID))
+				.OrderBy(c => c.ChildID)
+				.ToList()
+				.ShouldBe(LinkedParentExpected());
+		}
 	}
 }

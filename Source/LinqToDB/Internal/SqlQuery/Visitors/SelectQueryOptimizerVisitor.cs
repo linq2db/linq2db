@@ -2701,6 +2701,15 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						return false;
 				}
 
+				// #6208: joins lifted under an APPLY render flat after it (no ON to group them) or as LATERAL ((...)),
+				// which changes rows or is invalid SQL - they must stay inside the APPLY subquery.
+				if (joinTable.JoinType is JoinType.OuterApply or JoinType.CrossApply
+					&& _providerFlags.IsApplyJoinSupported
+					&& subQuery.From.Tables[0].Joins.Count > 0)
+				{
+					return false;
+				}
+
 				// Check that all columns in sub-query are allowed to move up
 				NullabilityContext? nullabilityContext = null;
 				foreach (var c in subQuery.Select.Columns)
@@ -2723,6 +2732,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			// #5413: only flatten a subquery-expression apply when its source is a single table whose joins
 			// are each limited to one record - otherwise flattening could lose the apply one-row bound.
+			// With APPLY support such joins are already refused above (#6208).
 			if (joinTable.IsSubqueryExpression && !(subQuery.From.Tables is [{ Joins: var joins }] && joins.TrueForAll(QueryHelper.IsLimitedToOneRecord)))
 				return false;
 
