@@ -292,6 +292,76 @@ namespace Tests.Linq
 			both.Values!["Eur"].ShouldBe(20.25m);
 		}
 
+		/// <summary>A name selector reading a compiled query's parameter: each value gets its own names.</summary>
+		// SQLite only: the SQL is the plain projection ProjectsRuntimeColumnSetIntoStore runs everywhere; this pins how
+		// CompiledTable keys the names.
+		[Test]
+		public void SelectDynamicInCompiledQueryWithNameSelectorParameter([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_data);
+
+			var factors = new[] { 1, 2 };
+
+			var query = CompiledQuery.Compile((IDataContext dc, string prefix) => dc
+				.GetTable<Amounts>()
+				.SelectDynamic(x => new AmountsDto { Id = x.Id }, factors, (x, k) => x.Usd * k, k => prefix + k));
+
+			var a = query(db, "a_")
+				.ToList()
+				.OrderBy(r => r.Id)
+				.First();
+
+			a.Values!.Keys
+				.OrderBy(k => k)
+				.ShouldBe(new[] { "a_1", "a_2" });
+
+			var b = query(db, "b_")
+				.ToList()
+				.OrderBy(r => r.Id)
+				.First();
+
+			b.Values!.Keys
+				.OrderBy(k => k)
+				.ShouldBe(new[] { "b_1", "b_2" });
+
+			b.Values!["b_2"].ShouldBe(21m);
+		}
+
+		/// <summary>A name selector passed as a compiled query's parameter: each delegate gets its own names.</summary>
+		// SQLite only: the SQL is the plain projection ProjectsRuntimeColumnSetIntoStore runs everywhere; this pins how
+		// CompiledTable keys the names.
+		[Test]
+		public void SelectDynamicInCompiledQueryWithNameSelectorDelegate([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_data);
+
+			var factors = new[] { 1, 2 };
+
+			var query = CompiledQuery.Compile((IDataContext dc, Func<int, string> nameSelector) => dc
+				.GetTable<Amounts>()
+				.SelectDynamic(x => new AmountsDto { Id = x.Id }, factors, (x, k) => x.Usd * k, nameSelector));
+
+			var first = query(db, k => "x" + k)
+				.ToList()
+				.OrderBy(r => r.Id)
+				.First();
+
+			first.Values!.Keys
+				.OrderBy(k => k)
+				.ShouldBe(new[] { "x1", "x2" });
+
+			var second = query(db, k => "y" + k)
+				.ToList()
+				.OrderBy(r => r.Id)
+				.First();
+
+			second.Values!.Keys
+				.OrderBy(k => k)
+				.ShouldBe(new[] { "y1", "y2" });
+		}
+
 		/// <summary>
 		/// The name selector's reads are compared at every cache lookup, including a lazy read it never reaches: one that
 		/// would throw must not escape the lookup.

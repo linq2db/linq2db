@@ -55,6 +55,7 @@ namespace LinqToDB
 			[CompiledQueryDependent]
 			[InstantHandle] IEnumerable<TKey>                      keys,
 			[InstantHandle] Expression<Func<TSource, TKey, TCell>> valueTemplate,
+			[CompiledQueryDependent]
 			[InstantHandle] Func<TKey, string>?                    nameSelector = null)
 		{
 			ArgumentNullException.ThrowIfNull(source);
@@ -128,7 +129,8 @@ namespace LinqToDB
 			return source.Provider.CreateQuery<TResult>(expr);
 		}
 
-		// Lets a compiled query materialise keys read from its arguments, which CompiledTable then keys its cache on.
+		// Lets a compiled query materialise keys or a name selector read from its arguments, which CompiledTable then keys
+		// its cache on.
 		// Elsewhere the argument is left as written and compared structurally: evaluating it would cache the sequence by
 		// reference, and the builder already compares a snapshot of it by value.
 		[AttributeUsage(AttributeTargets.Parameter)]

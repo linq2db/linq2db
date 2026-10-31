@@ -209,7 +209,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 							{
 								var resolved = ResolveCompiledQueryArguments(newArgument);
 
-								if (!ReferenceEquals(resolved, newArgument) && IsCompilable(resolved))
+								if (!ReferenceEquals(resolved, newArgument) && IsCompilableArgument(resolved))
 								{
 									RecordMaterializedArgumentSlots(newArgument);
 
@@ -857,6 +857,13 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			using var visitor = _isCompilableVisitorPool.Allocate();
 			return visitor.Value.CanBeEvaluatedOnClient(expression, _optimizationContext);
 		}
+
+		// A delegate argument evaluates to the delegate, so only what its body reads besides its own parameters has to be
+		// client-side.
+		bool IsCompilableArgument(Expression expression)
+			=> expression is LambdaExpression lambda
+				? IsCompilable(lambda.Parameters.Aggregate(lambda.Body, static (body, p) => body.Replace(p, Expression.Default(p.Type))))
+				: IsCompilable(expression);
 
 		interface IConvertHelper
 		{
