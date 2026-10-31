@@ -4,30 +4,39 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Data;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.Linq
 {
 	abstract class QueryRunnerBase : IQueryRunner
 	{
-		protected QueryRunnerBase(Query query, int queryNumber, IDataContext dataContext, IDataContext parametersContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
+		protected QueryRunnerBase(Query query, int queryNumber, IDataContext dataContext, IDataContext parametersContext, IQueryExpressions expressions, object?[]? parameters, object?[]? harvesters)
 		{
 			Query             = query;
 			DataContext       = dataContext;
 			ParametersContext = parametersContext;
 			Expressions       = expressions;
 			QueryNumber       = queryNumber;
-			Parameters        = parameters;
-			Preambles         = preambles;
+			// Re-wrap the transport arrays (compiled-query parameters + legacy harvester results) into one execution context.
+			// Behavior-neutral: the context adopts the same array references, so Preambles/Parameters surface them unchanged
+			// and the mapper reads the same values. Allocate only when there is something to carry — regular queries pass both
+			// null (compiled-query parameters are null there), so they stay context-free on the hot path.
+			_executionContext =
+				harvesters is not null ? new SqlCommandExecutionContext(harvesters, parameters) :
+				parameters is not null ? new SqlCommandExecutionContext(0, parameters)          :
+				null;
 		}
 
 		protected readonly Query    Query;
 
+		readonly SqlCommandExecutionContext? _executionContext;
+
 		public          IDataContext      DataContext       { get; }
 		public          IDataContext      ParametersContext { get; }
 		public          IQueryExpressions Expressions       { get; }
-		public          object?[]?        Parameters        { get; }
-		public          object?[]?        Preambles         { get; }
+		public          object?[]?        Preambles         => _executionContext?.Results;
+		public          SqlCommandExecutionContext? ExecutionContext => _executionContext;
 		public abstract Expression?       MapperExpression  { get; set; }
 
 		public abstract int                    ExecuteNonQuery();
@@ -58,7 +67,7 @@ namespace LinqToDB.Internal.Linq
 		{
 			var parameterValues = new SqlParameterValues();
 
-			QueryRunner.SetParameters(Query, Expressions, ParametersContext, Parameters, parameterValues);
+			QueryRunner.SetParameters(Query, Expressions, ParametersContext, parameterValues, ExecutionContext);
 
 			SetQuery(parameterValues, forGetSqlText);
 		}

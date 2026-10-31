@@ -194,6 +194,45 @@ namespace LinqToDB
 	/// queries, so this optimization could be used for <see cref="System.Data.CommandBehavior.Default"/> too.
 	/// Default value: <see langword="false"/>.
 	/// </param>
+	/// <param name="UseDbBatch">
+	/// When enabled and the provider supports the ADO.NET batching API (<c>DbConnection.CanCreateBatch</c>),
+	/// combined multi-statement execution (for example eager loading run as one round-trip) is sent as a
+	/// <c>DbBatch</c> — each statement carrying its own parameters — instead of one
+	/// semicolon-concatenated command. Falls back to the concatenated command when the provider cannot batch, on target
+	/// frameworks without the API (net462/netstandard2.0), or when an <see cref="LinqToDB.Interceptors.ICommandInterceptor"/>
+	/// is registered (batched commands bypass command interceptors).
+	/// Default value: <see langword="true"/>.
+	/// </param>
+	/// <param name="UseCombinedCommands">
+	/// Master switch for combined multi-statement execution: sending several statements of one logical operation as a
+	/// single database round-trip and reading their result sets in order. It drives both consumers — eager loading
+	/// (a main query plus its child collections collapse from N+1 round-trips to 1) and multi-step DML.
+	/// <para>
+	/// Off by default in 6.x because enabling it is observable, not merely faster: the emitted SQL changes shape
+	/// (statements joined by <c>;</c>, sharing one parameter scope with deduplicated names), and with
+	/// <see cref="UseDbBatch"/> the command travels a different ADO.NET path, which changes traced output. The implicit
+	/// read-consistency transaction (<see cref="LinqToDB.Internal.SqlProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel"/>)
+	/// is unchanged: a sequential eager load already opens one whenever the query has harvesters. Planned to default to
+	/// <see langword="true"/> in version 7.
+	/// </para>
+	/// <para>
+	/// Still bounded by provider capability — a provider that does not report
+	/// <see cref="LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsMultiStatementBatchSupported"/> and
+	/// <see cref="LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsMultipleResultSetsSupported"/> stays sequential
+	/// regardless of this option. <see cref="UseDbBatch"/> selects the backend wherever statements are combined.
+	/// </para>
+	/// <para>
+	/// A query that runs while the context carries pending query hints stays sequential, eager load and multi-step DML
+	/// alike: a hint applies to one command. An eager load also stays sequential when the context's type overrides
+	/// <c>DataConnection.ProcessQuery</c>, which is applied by the per-command path the combined executor replaces, so
+	/// combining would drop it from part of the load rather than all of it. Eager loads are combined only when the query
+	/// runs on a <see cref="LinqToDB.Data.DataConnection"/> or a <see cref="LinqToDB.DataContext"/> (a remote context
+	/// loads them sequentially), and never for a compiled query that returns a single element; children loaded by the
+	/// KeyedQuery strategy always run as separate commands. Multi-step DML is combined on every context, a remote one
+	/// included.
+	/// </para>
+	/// Default value: <see langword="false"/>.
+	/// </param>
 	public sealed record LinqOptions
 	(
 		// TODO: Remove in v7
@@ -221,7 +260,10 @@ namespace LinqToDB
 		UpsertEmulationPolicy     UpsertEmulationPolicy       = UpsertEmulationPolicy.Allow,
 		EagerLoadingStrategy      DefaultEagerLoadingStrategy = EagerLoadingStrategy.Default,
 		ImplicitCollectionLoading ImplicitCollectionLoading   = ImplicitCollectionLoading.Allow,
-		bool                      OptimizeForSequentialAccess = false
+		bool                      OptimizeForSequentialAccess = false,
+		bool                      UseDbBatch                  = true,
+		// TODO: Default to true in v7 (#6214)
+		bool                      UseCombinedCommands         = false
 		// If you add another parameter here, don't forget to update
 		// LinqOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
@@ -254,6 +296,8 @@ namespace LinqToDB
 			DefaultEagerLoadingStrategy = original.DefaultEagerLoadingStrategy;
 			ImplicitCollectionLoading   = original.ImplicitCollectionLoading;
 			OptimizeForSequentialAccess = original.OptimizeForSequentialAccess;
+			UseDbBatch                  = original.UseDbBatch;
+			UseCombinedCommands         = original.UseCombinedCommands;
 		}
 
 		/// <summary>
@@ -316,7 +360,7 @@ namespace LinqToDB
 				out concatenateOrderBy, out optimizeJoins, out compareNulls, out guardGrouping, out disableQueryCache,
 				out cacheSlidingExpiration, out preferApply, out keepDistinctOrdered, out parameterizeTakeSkip,
 				out enableContextSchemaEdit, out preferExistsForScalar,
-				out _, out _, out _, out _, out _);
+				out _, out _, out _, out _, out _, out _, out _);
 		}
 
 		int? _configurationID;
@@ -345,6 +389,8 @@ namespace LinqToDB
 						.Add((int)DefaultEagerLoadingStrategy)
 						.Add((int)ImplicitCollectionLoading)
 						.Add(OptimizeForSequentialAccess)
+						.Add(UseDbBatch)
+						.Add(UseCombinedCommands)
 						.CreateID();
 				}
 

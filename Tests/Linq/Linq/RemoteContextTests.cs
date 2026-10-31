@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -203,15 +205,15 @@ namespace Tests.Linq
 			}
 		}
 
-		// InsertOrReplace is the shape that exposes this: it builds a two-query plan and
-		// QueryRunner.NonQueryQuery2 runs both on the *same* IQueryRunner (UPDATE, then INSERT when the
-		// update matched nothing), while the runner is disposed once at the end. The remote runner used to
-		// assign _client = GetClient() unconditionally on every execute, so the second one overwrote the
-		// first and the first was never disposed - one leaked client (and, for a real transport, its
-		// connection) per InsertOrReplace. Counting creates against disposes catches that without depending
-		// on any particular transport's internals.
+		// The remote runner obtains its client lazily and must dispose it, once per runner. It used to assign
+		// _client = GetClient() unconditionally on every execute, so a runner that executed twice overwrote -
+		// and leaked - the first client; InsertOrReplace's two-query plan was the shape that drove it.
+		// That plan is gone: the UPDATE-then-INSERT emulation is now rebuilt server-side from the scenario
+		// (DmlServiceBase.BuildInsertOrUpdateScenario), so one operation is one execute and no product path
+		// puts two executes on one runner. Counting creates against disposes over two operations still catches
+		// a runner that fails to dispose, but it can no longer tell `=` from `??=`.
 		[Test]
-		public async Task RemoteRunnerDoesNotLeakClientAcrossTwoQueryPlan()
+		public async Task RemoteRunnerDisposesEveryClientItObtained()
 		{
 			// A file, not ":memory:": linq2db opens and closes a connection per query, and an unshared
 			// in-memory SQLite database dies with the connection that created it, taking the table with it.
@@ -219,10 +221,9 @@ namespace Tests.Linq
 
 			try
 			{
-				// SQLite has a native upsert, and with it InsertOrReplace compiles to a single statement -
-				// which never reaches the two-execute path this is about. Turning the flag off selects
-				// MakeAlternativeInsertOrUpdate's UPDATE-then-INSERT plan instead, which is the shape every
-				// provider without native support (Access among them) really uses.
+				// SQLite has a native upsert, and with it InsertOrReplace compiles to a single statement.
+				// Turning the flag off selects the UPDATE-then-INSERT emulation instead, which is the shape
+				// every provider without native support (Access among them) really uses.
 				var provider = new NoNativeUpsertSqliteProvider();
 
 				await using var backend = new DataConnection(new DataOptions()
@@ -233,12 +234,16 @@ namespace Tests.Linq
 
 				await using var context = new CountingRemoteDataContext(backend);
 
-				await context.InsertOrReplaceAsync(new ClientLifetimeEntity { Id = 1, Value = "first" });
+				// Two operations, so more than one runner obtains a client: the insert branch, then the
+				// update branch against the row it just wrote.
+				await context.InsertOrReplaceAsync(new ClientLifetimeEntity { Id = 1, Value = "first"  });
+				await context.InsertOrReplaceAsync(new ClientLifetimeEntity { Id = 1, Value = "second" });
 
 				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(context.NonQueryExecutions, Is.EqualTo(2), "the two-query InsertOrReplace plan did not run - the test no longer exercises the path it was written for");
-					Assert.That(context.ClientsDisposed, Is.EqualTo(context.ClientsCreated), "every client the runner obtained must be disposed");
+					Assert.That(context.NonQueryExecutions, Is.EqualTo(2),                    "both InsertOrReplace operations must reach the backend - the test no longer exercises the path it was written for");
+					Assert.That(context.ClientsCreated,     Is.GreaterThanOrEqualTo(2),       "each runner obtains its own client - with fewer there is nothing to leak and nothing to assert");
+					Assert.That(context.ClientsDisposed,    Is.EqualTo(context.ClientsCreated), "every client the runner obtained must be disposed");
 				}
 			}
 			finally
@@ -283,7 +288,7 @@ namespace Tests.Linq
 
 				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(context.NonQueryExecutions, Is.EqualTo(2), "the two-query InsertOrReplace plan did not run - the test no longer exercises the path it was written for");
+					Assert.That(context.NonQueryExecutions, Is.EqualTo(1), "the InsertOrReplace did not reach the backend - the test no longer exercises the path it was written for");
 					Assert.That(context.ClientsCreated,     Is.EqualTo(1), "the one shared client must be handed to every caller");
 					Assert.That(context.ClientsDisposed,    Is.Zero,       "a client the context owns must outlive the runner that used it");
 				}
@@ -304,6 +309,54 @@ namespace Tests.Linq
 					// best-effort: a temp file left behind is not worth failing the test over
 				}
 			}
+		}
+
+		[Table]
+		sealed class CombinedOptionRow
+		{
+			[PrimaryKey, Identity] public int     Id    { get; set; }
+			[Column              ] public string? Value { get; set; }
+		}
+
+		// The server's connection keeps the default options; the client sets both switches, and the server must run the
+		// insert the way the client asked.
+		[Test]
+		[UsesRemoteContext]
+		public void CombinedCommandOptionsReachTheServer(
+			[IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllMySqlConnector)] string context,
+			[Values] bool combined,
+			[Values] bool useDbBatch)
+		{
+			var executed = new List<string>();
+
+			using var db = GetServerContainer().CreateContext(
+				(_, o) => o.UseConfiguration(context).UseCombinedCommands(combined).UseDbBatch(useDbBatch),
+				(configuration, _) => new DataConnection(new DataOptions()
+					.UseConfiguration(configuration)
+					.UseTracing(TraceLevel.Info, info =>
+					{
+						if (info.TraceInfoStep == TraceInfoStep.BeforeExecute
+							&& info.Operation is TraceOperation.ExecuteNonQuery or TraceOperation.ExecuteScalar or TraceOperation.ExecuteReader)
+							executed.Add(info.SqlText);
+					})));
+
+			using var table = db.CreateLocalTable<CombinedOptionRow>();
+
+			executed.Clear();
+
+			var id       = db.InsertWithInt32Identity(new CombinedOptionRow { Value = "a" });
+			var commands = executed.ToList();
+
+			table.Single(r => r.Id == id).Value.ShouldBe("a");
+
+#if SUPPORTS_DBBATCH
+			var batch = combined && useDbBatch && context.IsAnyOf(TestProvName.AllMySqlConnector);
+#else
+			var batch = false;
+#endif
+
+			commands.Count.ShouldBe(combined ? 1 : 2);
+			commands.Any(c => c.Contains("-- Command 1", StringComparison.Ordinal)).ShouldBe(batch);
 		}
 
 		[Table]
