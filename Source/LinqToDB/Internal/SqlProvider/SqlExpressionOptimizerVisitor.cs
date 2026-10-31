@@ -41,7 +41,7 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </summary>
 		protected bool               DeferPredicateReduce { get; set; }
 
-		protected DataOptions      DataOptions       { get; private set; } = default!;
+		protected DataOptions       DataOptions       { get; private set; } = default!;
 		protected EvaluationContext EvaluationContext { get; private set; } = default!;
 		protected MappingSchema     MappingSchema     { get; private set; } = default!;
 

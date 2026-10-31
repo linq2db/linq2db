@@ -34,7 +34,7 @@ namespace Tests.Linq
 		// existing behaviour.
 		protected ITestDataContext GetDataContext(string configuration)
 		{
-			// Combining is a DataConnection-only path, so with it on the remote context runs the same eager load as
+			// Eager loads do not combine on a remote context, so with it on the remote context runs the same eager load as
 			// separate commands. Same SQL, different physical grouping — which would make the remote baseline differ from
 			// the direct one for every test in this fixture, for a reason that is not a SQL divergence. Suppressing the
 			// baseline for that leg keeps the direct-vs-remote gate STRICT for the whole suite instead of loosening the

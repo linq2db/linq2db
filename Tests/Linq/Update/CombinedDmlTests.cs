@@ -34,8 +34,8 @@ namespace Tests.xUpdate
 	/// multi-step in the first place, so the expectation is derived from the real gate instead of from a provider list.
 	/// </para>
 	/// <para>
-	/// Remote contexts are excluded on purpose: combining is a DataConnection-only path, so a remote leg would re-test
-	/// the sequential shape while producing a differently-grouped baseline than the direct one.
+	/// Remote contexts are excluded on purpose: the round-trip counter is a client-side interceptor, while a remote
+	/// query's DML is planned and executed on the server, so a remote leg would not observe the commands it counts.
 	/// </para>
 	/// </remarks>
 	[TestFixture]
