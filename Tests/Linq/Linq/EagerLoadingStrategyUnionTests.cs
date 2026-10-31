@@ -3819,6 +3819,40 @@ namespace Tests.Linq
 
 		// CteUnion needs a CTE and ROW_NUMBER(): Access has neither, Firebird < 3 has no ROW_NUMBER().
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void Confirm_Union_RootOrderAfterGroupByKeepsKeyFunctionOrdering(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
+		{
+			// An ordering computed from the grouping key survives the grouping, so the groups come back as 3, 2, 1; falling
+			// back to key order would give 1, 2, 3.
+			var (companies, departments, _, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			var query =
+				from c in tCo.OrderBy(c => -c.Id)
+				group c by c.Id into g
+				select new
+				{
+					g.Key,
+					Departments = tDep
+						.Where(d => d.CompanyId == g.Key)
+						.ToList(),
+				};
+
+			var result = query
+				.WithUnionLoadStrategy()
+				.ToList();
+
+			result
+				.Select(r => (r.Key, r.Departments.Count))
+				.ToList()
+				.ShouldBe(new[] { (3, 5), (2, 4), (1, 3) });
+		}
+
+		// CteUnion needs a CTE and ROW_NUMBER(): Access has neither, Firebird < 3 has no ROW_NUMBER().
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
 		public void Confirm_Union_RootAfterGroupByDropsNonKeyOrdering(
 			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
 		{
@@ -3936,10 +3970,11 @@ namespace Tests.Linq
 				.ShouldBe(new[] { (2, 4), (3, 5), (1, 3) });
 		}
 
-		// An ordering anchored inside the CTE body cannot reach the DISTINCT ON query, so it is neither re-applied nor handed to
-		// the root row number; only the DISTINCT ON lowering (PostgreSQL, DuckDB) reaches that filter.
+		// An ordering anchored inside the CTE body cannot reach the DISTINCT ON query, which would keep an arbitrary row per key;
+		// only the DISTINCT ON lowering (PostgreSQL, DuckDB) reaches that check.
+		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_DistinctByRequiresOrderBy)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
-		public void Confirm_Union_RootAfterCteDistinctBy(
+		public void Confirm_Union_RootAfterCteDistinctByRequiresOrderBy(
 			[IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
@@ -3961,14 +3996,9 @@ namespace Tests.Linq
 						.ToList(),
 				});
 
-			var result = query
+			query
 				.WithUnionLoadStrategy()
 				.ToList();
-
-			result
-				.Select(r => (r.Id, r.Departments.Count))
-				.ToList()
-				.ShouldBe(new[] { (1, 3), (2, 4), (3, 5) }, ignoreOrder: true);
 		}
 #endif
 

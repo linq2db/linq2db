@@ -144,8 +144,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						// The ordering that picks the surviving row then sits below this query (on the limited query, or on a
 						// query the sequence wraps), so it is re-translated here from the captured ordering.
-						if (distinctOnContext.SelectQuery.OrderBy.IsEmpty)
-							AddCapturedOrdering(builder, distinctOnContext, captured);
+						if (distinctOnContext.SelectQuery.OrderBy.IsEmpty && !AddCapturedOrdering(builder, distinctOnContext, captured))
+							return BuildSequenceResult.Error(sequenceExpression, ErrorHelper.Error_DistinctByRequiresOrderBy);
 
 						var reordered = ApplyDistinctOn(distinctOnContext.SelectQuery, onExpressions);
 
@@ -295,11 +295,13 @@ namespace LinqToDB.Internal.Linq.Builder
 				.ToList();
 		}
 
-		// An entry that cannot be lifted into the DISTINCT ON query (an ordering anchored inside a CTE body) is skipped,
-		// leaving that tie-break to the database.
-		static void AddCapturedOrdering(ExpressionBuilder builder, IBuildContext context, (Expression expr, bool descending, Sql.NullsPosition nulls)[] captured)
+		// An entry anchored above the DISTINCT ON query (an outer-correlated key) is constant per row and skipped. One anchored
+		// below it (inside a CTE body) cannot be lifted, and without it the surviving row is arbitrary, so it is reported:
+		// returns false when such an entry was met.
+		static bool AddCapturedOrdering(ExpressionBuilder builder, IBuildContext context, (Expression expr, bool descending, Sql.NullsPosition nulls)[] captured)
 		{
 			var orderBy = context.SelectQuery.OrderBy;
+			var below   = default(GroupByBuilder.QuerySources);
 
 			foreach (var (expr, descending, nulls) in captured)
 			{
@@ -307,10 +309,23 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				foreach (var placeholder in ExpressionBuilder.CollectDistinctPlaceholders(orderSql, false))
 				{
-					if (placeholder.SelectQuery == context.SelectQuery && !QueryHelper.IsConstant(placeholder.Sql))
+					if (QueryHelper.IsConstant(placeholder.Sql))
+						continue;
+
+					if (placeholder.SelectQuery == context.SelectQuery)
+					{
 						orderBy.Expr(placeholder.Sql, descending, false, nulls);
+						continue;
+					}
+
+					below ??= new GroupByBuilder.QuerySources(context.SelectQuery);
+
+					if (placeholder.SelectQuery != null && below.Queries.Contains(placeholder.SelectQuery))
+						return false;
 				}
 			}
+
+			return true;
 		}
 
 		// The same reach as AddCapturedOrdering, for a whole entry: an ordering the DISTINCT ON query cannot reach is not

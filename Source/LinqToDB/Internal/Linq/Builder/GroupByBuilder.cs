@@ -17,6 +17,7 @@ using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Linq.Builder
@@ -174,7 +175,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return BuildSequenceResult.Error(groupingKeys);
 			}
 
-			KeepOrderByOfGroupingKeys(builder, dataSequence, groupingKeys);
+			KeepOrderByOfGroupingKeys(builder, dataSequence, groupingKeys, groupingKind);
 
 #if DEBUG
 			System.Diagnostics.Debug.WriteLine("BuildMethodCall GroupBy:\n" + groupBy.SelectQuery);
@@ -196,31 +197,81 @@ namespace LinqToDB.Internal.Linq.Builder
 			return BuildSequenceResult.FromContext(groupBy);
 		}
 
-		// Groups are ordered by the source's ordering only as far as it orders by grouping keys: those leading entries are
-		// replaced by the keys themselves, which stay valid above the GROUP BY, and the first entry that is not a key ends
-		// the ordering the captured state's consumers (e.g. DistinctBy) can read.
-		static void KeepOrderByOfGroupingKeys(ExpressionBuilder builder, IBuildContext dataSequence, Expression groupingKeys)
+		// Groups are ordered by the source's ordering as far as that ordering reads only grouping keys. An entry that is a key
+		// is replaced by the key, one computed from keys is rebuilt over them (both stay valid above the GROUP BY), and an
+		// outer-correlated entry is constant per row and dropped. At the first other entry the ordering is kept only when the
+		// key entries before it cover every grouping key; otherwise it does not order the groups and is dropped as a whole.
+		static void KeepOrderByOfGroupingKeys(ExpressionBuilder builder, IBuildContext dataSequence, Expression groupingKeys, GroupingType groupingKind)
 		{
 			if (builder.CurrentOrderBy is not { Count: > 0 } captured)
 				return;
 
-			var keys = ExpressionBuilder.CollectDistinctPlaceholders(groupingKeys, false);
-			var kept = new List<(Expression expr, bool descending, Sql.NullsPosition nulls)>();
+			var keys = ExpressionBuilder.CollectDistinctPlaceholders(groupingKeys, false)
+				.FindAll(static k => !QueryHelper.IsConstant(k.Sql));
+
+			var keyChains = keys.ConvertAll(static k => CollectColumnChain(k.Sql));
+			var within    = new QuerySources(dataSequence.SelectQuery);
+			var kept      = new List<(Expression expr, bool descending, Sql.NullsPosition nulls)>();
+			var covered   = new HashSet<SqlPlaceholderExpression>();
+			var cut       = false;
 
 			foreach (var (expr, descending, nulls) in captured)
 			{
-				var orderSql     = builder.BuildSqlExpression(dataSequence, expr, BuildPurpose.Sql, BuildFlags.ForKeys);
-				var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(orderSql, false);
-				var orderKeys    = placeholders.ConvertAll<SqlPlaceholderExpression?>(p => keys.Find(k => Underlying(k.Sql).Equals(Underlying(p.Sql))));
+				var orderSql = builder.BuildSqlExpression(dataSequence, expr, BuildPurpose.Sql, BuildFlags.ForKeys);
 
-				if (orderKeys.Count == 0 || orderKeys.Contains(null))
+				if (!SequenceHelper.IsSqlReady(orderSql))
+				{
+					cut = true;
+					break;
+				}
+
+				var entry = new List<(SqlPlaceholderExpression placeholder, bool isKey)>();
+
+				foreach (var placeholder in ExpressionBuilder.CollectDistinctPlaceholders(orderSql, false))
+				{
+					if (QueryHelper.IsConstant(placeholder.Sql))
+						continue;
+
+					if (placeholder.SelectQuery == null)
+					{
+						cut = true;
+						break;
+					}
+
+					if (!within.Queries.Contains(placeholder.SelectQuery))
+						continue;
+
+					var rewritten = RewriteOverKeys(placeholder.Sql, keys, keyChains);
+
+					if (keys.Find(k => ReferenceEquals(k.Sql, rewritten)) is { } key)
+					{
+						entry.Add((key, true));
+					}
+					else if (groupingKind == GroupingType.Default && keys.Count > 0 && IsBuiltFromKeys(rewritten, keys, within))
+					{
+						entry.Add((ExpressionBuilder.CreatePlaceholder(keys[0].SelectQuery, rewritten, placeholder.Path, trackingPath: placeholder.TrackingPath), false));
+					}
+					else
+					{
+						cut = true;
+						break;
+					}
+				}
+
+				if (cut)
 					break;
 
-				foreach (var key in orderKeys)
+				foreach (var (placeholder, isKey) in entry)
 				{
-					kept.Add((key!, descending, nulls));
+					kept.Add((placeholder, descending, nulls));
+
+					if (isKey)
+						covered.Add(placeholder);
 				}
 			}
+
+			if (cut && !keys.TrueForAll(covered.Contains))
+				kept.Clear();
 
 			builder.RemoveOrderByEntries(static _ => true);
 
@@ -228,8 +279,223 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				builder.RegisterOrderBy(expr, descending, nulls, reset: false);
 			}
+		}
 
-			static ISqlExpression Underlying(ISqlExpression sql) => sql is SqlColumn column ? column.UnderlyingExpression() : sql;
+		// A column re-exposes its expression per row, so two expressions whose column chains share an element are the same
+		// value. A set-operation column takes its value from every leg, so the chain stops there.
+		static List<ISqlExpression> CollectColumnChain(ISqlExpression sql)
+		{
+			var chain   = new List<ISqlExpression>();
+			var current = Unwrap(sql);
+
+			chain.Add(current);
+
+			while (current is SqlColumn { Parent: not { HasSetOperators: true } } column)
+			{
+				current = Unwrap(column.Expression);
+				chain.Add(current);
+			}
+
+			return chain;
+
+			static ISqlExpression Unwrap(ISqlExpression expr)
+			{
+				expr = QueryHelper.UnwrapExpression(expr, true);
+				return expr is SqlNullabilityExpression nullability ? Unwrap(nullability.SqlExpression) : expr;
+			}
+		}
+
+		static SqlPlaceholderExpression? FindKey(ISqlExpression sql, List<SqlPlaceholderExpression> keys, List<List<ISqlExpression>> keyChains)
+		{
+			var chain = CollectColumnChain(sql);
+
+			for (var i = 0; i < keys.Count; i++)
+			{
+				var keyChain = keyChains[i];
+
+				if (chain.Exists(e => keyChain.Exists(k => k.Equals(e))))
+					return keys[i];
+			}
+
+			return null;
+		}
+
+		// Replaces every sub-expression that is a grouping key with the key's SQL. A second pass also expands a column of a
+		// single-source query without set operators into its expression, so that a key function projected below the GroupBy
+		// is seen; it runs after the first because Convert is post-order, and an expanded child would hide a key its parent is.
+		static ISqlExpression RewriteOverKeys(ISqlExpression sql, List<SqlPlaceholderExpression> keys, List<List<ISqlExpression>> keyChains)
+		{
+			var matched = sql.Convert((keys, keyChains), static (visitor, element) =>
+				IsOperand(visitor, element) && element is ISqlExpression expr && FindKey(expr, visitor.Context.keys, visitor.Context.keyChains) is { } key
+					? key.Sql
+					: element,
+				withStack: true);
+
+			if (keys.Exists(k => ReferenceEquals(k.Sql, matched)))
+				return matched;
+
+			return matched.Convert((keys, keyChains), static (visitor, element) =>
+			{
+				if (!IsOperand(visitor, element) || element is not ISqlExpression expr)
+					return element;
+
+				if (FindKey(expr, visitor.Context.keys, visitor.Context.keyChains) is { } key)
+					return key.Sql;
+
+				if (expr is SqlColumn { Parent: { HasSetOperators: false } parent } column && !QueryHelper.EnumerateLevelSources(parent).Skip(1).Any())
+					return QueryHelper.UnwrapExpression(column.Expression, true);
+
+				return element;
+			},
+			withStack: true);
+		}
+
+		// Only a node that is the root or an operand of an expression is replaced: the visitor also reaches nodes in structural
+		// positions (the column of a CTE field, a predicate slot), which must keep their type.
+		static bool IsOperand(SqlQueryConvertVisitorBase visitor, IQueryElement element)
+		{
+			if (visitor.ParentElement is null)
+				return true;
+
+			return element is not ISqlPredicate && visitor.ParentElement
+				is SqlBinaryExpression
+				or SqlUnaryExpression
+				or SqlNullabilityExpression
+				or SqlCastExpression
+				or SqlCoalesceExpression
+				or SqlParameterizedExpressionBase
+				or SqlConditionExpression
+				or SqlCaseExpression
+				or ISqlPredicate;
+		}
+
+		// A closed test: every node must be a key, a constant, a value of an outer row, or one of the composite kinds below
+		// over such nodes. Aggregate and window functions would change meaning above the GROUP BY, as in QueryHelper.IsConstant.
+		static bool IsBuiltFromKeys(ISqlExpression sql, List<SqlPlaceholderExpression> keys, QuerySources within)
+		{
+			var context = new BuiltFromKeysContext(keys, within);
+
+			sql.VisitParentFirst(context, static (ctx, element) =>
+			{
+				if (!ctx.Result)
+					return false;
+
+				if (element is ISqlExpression expr && ctx.Keys.Exists(k => ReferenceEquals(k.Sql, expr)))
+					return false;
+
+				switch (element)
+				{
+					case SqlField field:
+						ctx.Result = field.Table != null && !ctx.Within.Sources.Contains(field.Table);
+						return false;
+					case SqlCteTableField cteField:
+						ctx.Result = cteField.Table != null && !ctx.Within.Sources.Contains(cteField.Table);
+						return false;
+					case SqlColumn column:
+						ctx.Result = column.Parent != null && !ctx.Within.Queries.Contains(column.Parent) || QueryHelper.IsConstant(column);
+						return false;
+					case SqlParameterizedExpressionBase parameterized:
+						ctx.Result = parameterized.IsPure && (parameterized.Flags & (SqlFlags.IsAggregate | SqlFlags.IsWindowFunction)) == 0;
+						return ctx.Result;
+				}
+
+				switch (element.ElementType)
+				{
+					case QueryElementType.SqlValue:
+					case QueryElementType.SqlParameter:
+					case QueryElementType.SqlParameterCast:
+					case QueryElementType.SqlDefaultValueExpression:
+					case QueryElementType.SqlDataType:
+					case QueryElementType.TruePredicate:
+					case QueryElementType.FalsePredicate:
+						return false;
+					case QueryElementType.SqlBinaryExpression:
+					case QueryElementType.SqlUnaryExpression:
+					case QueryElementType.SqlNullabilityExpression:
+					case QueryElementType.SqlCast:
+					case QueryElementType.SqlCoalesce:
+					case QueryElementType.SqlCondition:
+					case QueryElementType.SqlCase:
+					case QueryElementType.SearchCondition:
+					case QueryElementType.NotPredicate:
+					case QueryElementType.ExprPredicate:
+					case QueryElementType.ExprExprPredicate:
+					case QueryElementType.IsNullPredicate:
+					case QueryElementType.IsTruePredicate:
+					case QueryElementType.IsDistinctPredicate:
+					case QueryElementType.BetweenPredicate:
+					case QueryElementType.InListPredicate:
+						return true;
+				}
+
+				ctx.Result = false;
+				return false;
+			});
+
+			return context.Result;
+		}
+
+		sealed class BuiltFromKeysContext(List<SqlPlaceholderExpression> keys, QuerySources within)
+		{
+			public List<SqlPlaceholderExpression> Keys   { get; } = keys;
+			public QuerySources                   Within { get; } = within;
+			public bool                           Result { get; set; } = true;
+		}
+
+		/// <summary>
+		/// The queries and table sources reachable from a query through its FROM and JOIN sources, entering subqueries and
+		/// CTE bodies — what a placeholder anchored at or below that query can reference.
+		/// </summary>
+		internal sealed class QuerySources
+		{
+			public HashSet<SelectQuery>     Queries { get; } = new();
+			public HashSet<ISqlTableSource> Sources { get; } = new();
+
+			public QuerySources(SelectQuery root)
+			{
+				var pending = new Stack<SelectQuery>();
+
+				pending.Push(root);
+
+				while (pending.Count > 0)
+				{
+					var query = pending.Pop();
+
+					if (!Queries.Add(query))
+						continue;
+
+					Sources.Add(query);
+
+					foreach (var table in query.From.Tables)
+						Add(table, pending);
+
+					if (query.HasSetOperators)
+					{
+						foreach (var setOperator in query.SetOperators)
+							pending.Push(setOperator.SelectQuery);
+					}
+				}
+			}
+
+			void Add(SqlTableSource tableSource, Stack<SelectQuery> pending)
+			{
+				var source = tableSource.Source;
+
+				Sources.Add(source);
+
+				switch (source)
+				{
+					case SelectQuery subQuery:
+						pending.Push(subQuery);
+						break;
+					case SqlCteTable { Cte.Body: { } body }:
+						pending.Push(body);
+						break;
+				}
+
+				foreach (var join in tableSource.Joins)
+					Add(join.Table, pending);
+			}
 		}
 
 		/// <summary>
