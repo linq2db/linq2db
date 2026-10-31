@@ -28,6 +28,9 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		#region SqlCeSpecific Hints
 
+		/// <summary>
+		/// Adds a SQL CE index hint.
+		/// </summary>
 		[ExpressionMethod(nameof(WithIndexImpl))]
 		public static ISqlCeSpecificTable<TSource> WithIndex<TSource>(this ISqlCeSpecificTable<TSource> table, string indexName)
 			where TSource : notnull
@@ -41,6 +44,9 @@ namespace LinqToDB.DataProvider.SqlCe
 			return (table, indexName) => table.TableHint(Table.Index, indexName);
 		}
 
+		/// <summary>
+		/// Adds a SQL CE index hint.
+		/// </summary>
 		[ExpressionMethod(nameof(WithIndex2Impl))]
 		public static ISqlCeSpecificTable<TSource> WithIndex<TSource>(this ISqlCeSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
