@@ -1093,6 +1093,33 @@ namespace Tests.Linq
 				.ShouldBe(1);
 		}
 
+		[Table]
+		sealed class PrefixedCodeWithTitleTable
+		{
+			[PrimaryKey]                                                                                                public int     Id    { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 20), ValueConverter(ConverterType = typeof(PrefixConverter))] public string? Code  { get; set; }
+			[Column(DataType = DataType.NVarChar, Length = 20)]                                                         public string? Title { get; set; }
+		}
+
+		// The typing lookup skips the non-Unicode Code and names Title, but the concatenation is read through Code's
+		// converter, so the compared value must go through it too.
+		[Test]
+		public void ComparedConcatOfConvertedAndUnicodeColumnKeepsConverter([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllSQLite)] string context)
+		{
+			var bound = "AT";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new PrefixedCodeWithTitleTable { Id = 1, Code = "A", Title = "T" } });
+
+			table
+				.Count(t => Sql.Like(t.Code + t.Title, "AT"))
+				.ShouldBe(1);
+
+			table
+				.Count(t => (t.Code + t.Title).CompareTo(bound) == 0)
+				.ShouldBe(1);
+		}
+
 		[Test]
 		public void ComputedArgumentBesideNVarCharKeepsColumnType([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
