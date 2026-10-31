@@ -1429,6 +1429,131 @@ namespace Tests.Linq
 				.ShouldBeEmpty();
 		}
 
+		// Query-cache test: provider-independent.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5843")]
+		[QueryCacheTest]
+		public void QueryFilterFoldedElementBesideDependentArgument([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			var ids = new[] { 1, 3 };
+
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<Model.Person>()
+					.HasQueryFilter((q, _) =>
+					{
+						var p    = Expression.Parameter(typeof(Model.Person), "p");
+						var c    = Expression.Constant(ids);
+						var body = Expression.AndAlso(
+							Expression.GreaterThan(Expression.ArrayIndex(c, Expression.Constant(0)), Expression.Constant(0)),
+							Expression.Equal(
+								Expression.PropertyOrField(p, nameof(Model.Person.ID)),
+								Expression.Call(_dependentMaxLiteral, c)));
+
+						return q.Where(Expression.Lambda<Func<Model.Person, bool>>(body, p));
+					})
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+
+			db.Person
+				.Select(p => p.ID)
+				.ToArray()
+				.ShouldBe([3]);
+
+			ids = [1, 2];
+
+			db.Person
+				.Select(p => p.ID)
+				.ToArray()
+				.ShouldBe([2]);
+		}
+
+		// Query-cache test: provider-independent.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5843")]
+		[QueryCacheTest]
+		public void FoldedConstantArrayElementsOverSharedNode([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			static Expression Positive(Expression ids)
+			{
+				return Expression.GreaterThan(Expression.ArrayIndex(ids, Expression.Constant(0)), Expression.Constant(0));
+			}
+
+			IQueryable<int> Query(Expression first, Expression second)
+			{
+				return db.Person
+					.Where(IdIsTwoWhen(Expression.AndAlso(Positive(first), Positive(second))))
+					.Select(p => p.ID);
+			}
+
+			var shared = Expression.Constant(new[] { 2 });
+
+			Query(shared, shared)
+				.ToArray()
+				.ShouldBe([2]);
+
+			Query(Expression.Constant(new[] { 2 }), Expression.Constant(new[] { 0 }))
+				.ToArray()
+				.ShouldBeEmpty();
+		}
+
+		// Query-cache test: provider-independent.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5843")]
+		[QueryCacheTest]
+		public void ConstantArrayElementsOverSharedNode([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query(Expression first, Expression second)
+			{
+				var p    = Expression.Parameter(typeof(Model.Person), "p");
+				var id   = Expression.Field(p, nameof(Model.Person.ID));
+				var body = Expression.OrElse(
+					Expression.Equal(id, Expression.ArrayIndex(first,  Expression.Constant(0))),
+					Expression.Equal(id, Expression.ArrayIndex(second, Expression.Constant(0))));
+
+				return db.Person
+					.Where(Expression.Lambda<Func<Model.Person, bool>>(body, p))
+					.Select(p => p.ID)
+					.OrderBy(id => id);
+			}
+
+			var shared = Expression.Constant(new[] { 2 });
+
+			Query(shared, shared)
+				.ToArray()
+				.ShouldBe([2]);
+
+			Query(Expression.Constant(new[] { 2 }), Expression.Constant(new[] { 3 }))
+				.ToArray()
+				.ShouldBe([2, 3]);
+		}
+
+		// Query-cache test: provider-independent.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5843")]
+		[QueryCacheTest]
+		public void TrimOverEqualConstantCharArraysHitsCache([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool start)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query(char[] chars)
+			{
+				var p    = Expression.Parameter(typeof(Model.Person), "p");
+				var trim = typeof(string).GetMethod(start ? nameof(string.TrimStart) : nameof(string.TrimEnd), [typeof(char[])])!;
+				var body = Expression.Equal(
+					Expression.Call(Expression.PropertyOrField(p, nameof(Model.Person.FirstName)), trim, Expression.Constant(chars)),
+					Expression.Constant("John"));
+
+				return db.Person
+					.Where(Expression.Lambda<Func<Model.Person, bool>>(body, p))
+					.Select(p => p.ID);
+			}
+
+			ShouldHitCacheOnRebuild(Query, new[] { 'x', 'y' }, 1, new[] { 'x', 'y' }, 1);
+		}
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5879")]
 		public void HandBuiltArrayAccessInProjection([DataSources] string context)
 		{

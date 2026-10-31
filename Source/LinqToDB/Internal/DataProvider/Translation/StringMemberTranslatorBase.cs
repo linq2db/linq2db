@@ -505,7 +505,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				if (trimCharsArg.Type == typeof(char[]))
 					translationContext.MarkAsNonParameter(
 						Expression.Call(_buildCharsCacheKeyMethod, trimCharsArg),
-						BuildCharsCacheKey(trimCharsArray));
+						BuildCharsCacheKey(trimCharsArray),
+						trimCharsArg);
 				else
 					translationContext.MarkAsNonParameter(trimCharsArg, trimCharsSingle);
 			}

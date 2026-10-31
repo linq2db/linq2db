@@ -6091,6 +6091,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				Builder.ParametersContext.MarkAsValue(expression, currentValue);
 			}
 
+			public void MarkAsNonParameter(Expression expression, object? currentValue, Expression source)
+			{
+				Builder.ParametersContext.MarkAsValue(expression, currentValue, source);
+			}
+
 			public IDisposable UsingColumnDescriptor(ColumnDescriptor? columnDescriptor)
 			{
 				return Visitor.UsingColumnDescriptor(columnDescriptor);
