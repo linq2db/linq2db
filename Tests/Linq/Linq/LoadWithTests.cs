@@ -1101,5 +1101,137 @@ namespace Tests.Linq
 					.ToList();
 			}
 		}
+
+		[Table]
+		sealed class ClashOrg
+		{
+			[PrimaryKey] public int Id { get; set; }
+		}
+
+		[Table]
+		sealed class ClashOrgSystem
+		{
+			[PrimaryKey] public int Id             { get; set; }
+			[Column    ] public int SystemId       { get; set; }
+			[Column    ] public int OrganisationId { get; set; }
+		}
+
+		[Table]
+		sealed class ClashProductOrg
+		{
+			[PrimaryKey] public int Id             { get; set; }
+			[Column    ] public int ProductId      { get; set; }
+			[Column    ] public int OrganisationId { get; set; }
+		}
+
+		[Table]
+		sealed class ClashProduct
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(ClashProductOrg.ProductId))]
+			public List<ClashProductOrg> Organisations { get; set; } = null!;
+		}
+
+		[Table]
+		sealed class ClashStage
+		{
+			[PrimaryKey] public int Id        { get; set; }
+			[Column    ] public int SystemId  { get; set; }
+			[Column    ] public int ProductId { get; set; }
+
+			[Association(ThisKey = nameof(ProductId), OtherKey = nameof(ClashProduct.Id))]
+			public ClashProduct Product { get; set; } = null!;
+		}
+
+		[Table]
+		sealed class ClashSystem
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			// same name as ClashProduct.Organisations, different element type
+			[Association(QueryExpressionMethod = nameof(GetOrganisations), CanBeNull = true)]
+			public List<ClashOrg> Organisations { get; set; } = null!;
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(ClashStage.SystemId))]
+			public List<ClashStage> Stages { get; set; } = null!;
+
+			static Expression<Func<ClashSystem, IDataContext, IQueryable<ClashOrg>>> GetOrganisations()
+				=> (s, db) =>
+					from a in db.GetTable<ClashOrgSystem>().Where(x => x.SystemId == s.Id)
+					join o in db.GetTable<ClashOrg>() on a.OrganisationId equals o.Id
+					select o;
+		}
+
+		[Test]
+		public void ThenLoadOnSelectManySourceWithRootMemberNameClash([DataSources] string context, [Values] bool filtered)
+		{
+			using var db         = GetDataContext(context);
+			using var orgs       = db.CreateLocalTable(
+				Enumerable
+					.Range(1, 5)
+					.Select(i => new ClashOrg { Id = i }));
+			using var orgSystems = db.CreateLocalTable(new[]
+			{
+				new ClashOrgSystem { Id = 1, SystemId = 10, OrganisationId = 5 },
+				new ClashOrgSystem { Id = 2, SystemId = 20, OrganisationId = 5 },
+				new ClashOrgSystem { Id = 3, SystemId = 30, OrganisationId = 4 },
+			});
+			using var systems    = db.CreateLocalTable(new[] { new ClashSystem { Id = 10 }, new ClashSystem { Id = 20 }, new ClashSystem { Id = 30 } });
+			using var stages     = db.CreateLocalTable(new[]
+			{
+				new ClashStage { Id = 100, SystemId = 10, ProductId = 1000 },
+				new ClashStage { Id = 200, SystemId = 20, ProductId = 2000 },
+			});
+			using var products   = db.CreateLocalTable(new[] { new ClashProduct { Id = 1000 }, new ClashProduct { Id = 2000 } });
+			using var prodOrgs   = db.CreateLocalTable(new[]
+			{
+				new ClashProductOrg { Id = 1, ProductId = 1000, OrganisationId = 1 },
+				new ClashProductOrg { Id = 2, ProductId = 1000, OrganisationId = 3 },
+				new ClashProductOrg { Id = 3, ProductId = 2000, OrganisationId = 2 },
+				new ClashProductOrg { Id = 4, ProductId = 2000, OrganisationId = 4 },
+			});
+
+			var orgIds = new List<int> { 1, 2 };
+
+			var query =
+				from o in db.GetTable<ClashOrg>()
+				where o.Id == 5
+				from a in db.GetTable<ClashOrgSystem>()
+				where a.OrganisationId == o.Id
+				join s in db.GetTable<ClashSystem>() on a.SystemId equals s.Id
+				select s;
+
+			var withProduct = query
+				.LoadWith(x => x.Stages)
+					.ThenLoad(x => x.Product);
+
+			IQueryable<ClashSystem> loaded = filtered
+				? withProduct.ThenLoad(x => x.Organisations, x => x.Where(y => orgIds.Contains(y.OrganisationId)))
+				: withProduct.ThenLoad(x => x.Organisations);
+
+			var result = loaded
+				.ToList()
+				.OrderBy(s => s.Id)
+				.ToList();
+
+			result
+				.Select(s => s.Id)
+				.ShouldBe(new[] { 10, 20 });
+
+			result[0].Stages
+				.Single()
+				.Product.Organisations
+				.Select(po => po.Id)
+				.OrderBy(id => id)
+				.ShouldBe(filtered ? new[] { 1 } : new[] { 1, 2 });
+
+			result[1].Stages
+				.Single()
+				.Product.Organisations
+				.Select(po => po.Id)
+				.OrderBy(id => id)
+				.ShouldBe(filtered ? new[] { 3 } : new[] { 3, 4 });
+		}
 	}
 }
