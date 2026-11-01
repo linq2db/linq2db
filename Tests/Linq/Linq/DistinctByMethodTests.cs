@@ -1433,7 +1433,11 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[ThrowsCannotBeConverted([TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllMariaDB, TestProvName.AllOracle11, TestProvName.AllYdb])]
+		[ActiveIssue(5787, Configuration = ProviderName.SqlCe, ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "There is no method 'AggregateExecute'")]
+		[ActiveIssue(5787, Configurations = [TestProvName.AllAccess, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3], ErrorTypeName = "System.IndexOutOfRangeException")]
+		[ActiveIssue(5787, Configuration = TestProvName.AllSybase, SkipForLinqService = true, ErrorTypeName = "AdoNetCore.AseClient.AseException")]
+		[ActiveIssue(5787, Configuration = TestProvName.AllSybase, SkipForNonLinqService = true, ErrorTypeName = "System.IndexOutOfRangeException")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
 		public void DistinctByInSubQueryAfterGroupByWithOuterOrderingKey([DataSources] string context)
 		{
@@ -1452,7 +1456,10 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[ThrowsCannotBeConverted([TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllMariaDB, TestProvName.AllOracle11, TestProvName.AllYdb])]
+		[ActiveIssue(5787, Configurations = [TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3], ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "There is no method 'AggregateExecute'")]
+		[ActiveIssue(6234, Configurations = [TestProvName.AllSqlServer, ProviderName.SqlCe], ErrorMessage = "Each GROUP BY expression must contain at least one column that is not an outer reference")]
+		[ActiveIssue(6234, Configuration = TestProvName.AllFirebird3Plus, ErrorTypeName = "FirebirdSql.Data.FirebirdClient.FbException", ErrorMessage = "Cannot use an aggregate or window function in a GROUP BY clause")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
 		public void DistinctByInSubQueryAfterGroupByOuterAndInnerKeyOrderedByFunctionOfKey([DataSources] string context)
 		{
