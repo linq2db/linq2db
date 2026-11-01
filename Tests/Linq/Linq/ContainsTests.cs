@@ -683,6 +683,30 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
+		/// A value compared with a <c>SUM</c> over a converted column goes through the column's converter.
+		/// </summary>
+		[Test]
+		public void SumOfConvertedColumnComparedWithValue([DataSources] string context)
+		{
+			var total = 7;
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new ConvertedAmount[]
+			{
+				new() { Id = 1, Group = 1, Cents = 3 },
+				new() { Id = 2, Group = 1, Cents = 4 },
+				new() { Id = 3, Group = 2, Cents = 5 },
+			});
+
+			var count = table
+				.GroupBy(x => x.Group)
+				.Where(g => g.Sum(x => x.Cents) == total)
+				.Count();
+
+			count.ShouldBe(1);
+		}
+
+		/// <summary>
 		/// A value searched in a projected <c>SUM</c> over a converted column goes through the column's converter.
 		/// </summary>
 		[Test]
