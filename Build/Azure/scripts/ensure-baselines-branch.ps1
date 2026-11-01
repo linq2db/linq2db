@@ -103,20 +103,44 @@ if (-not $branchHash) {
                 exit 1
             }
             cd baselines
-            git checkout origin/$Branch
-            if ($LASTEXITCODE -ne 0) {
-                Write-Host "Failed to checkout baselines branch origin/${Branch}. Error code ${LASTEXITCODE}"
-                exit 1
-            }
-            git rebase origin/$base
-            if ($LASTEXITCODE -ne 0) {
-                Write-Host "Failed to rebase baselines PR on origin/${base}. Delete branch and re-run tests. Error code ${LASTEXITCODE}"
-                exit 1
-            }
-            git push -f origin HEAD:$Branch
-            if ($LASTEXITCODE -ne 0) {
-                Write-Host "Failed to push rebased baselines. Error code ${LASTEXITCODE}"
-                exit 1
+            # GitHub legs started by the same `/azp run` push here while this job clones and rebases; a
+            # plain -f deleted what they landed in that window (#5673). So the push is leased on the
+            # tip this attempt rebased, and a moved tip is fetched and rebased again.
+            $attempts = 5
+            for ($attempt = 1; ; $attempt++) {
+                git checkout -q --detach origin/$Branch
+                if ($LASTEXITCODE -ne 0) {
+                    Write-Host "Failed to checkout baselines branch origin/${Branch}. Error code ${LASTEXITCODE}"
+                    exit 1
+                }
+                $leased = git rev-parse HEAD
+                git rebase origin/$base
+                if ($LASTEXITCODE -ne 0) {
+                    Write-Host "Failed to rebase baselines PR on origin/${base}. Delete branch and re-run tests. Error code ${LASTEXITCODE}"
+                    exit 1
+                }
+                $output = git push --force-with-lease=refs/heads/${Branch}:${leased} origin HEAD:refs/heads/$Branch 2>&1
+                if ($LASTEXITCODE -eq 0) {
+                    break
+                }
+                if ($attempt -ge $attempts) {
+                    # Not "delete the branch": that discards every provider's baselines on the PR.
+                    Write-Host "Failed to push rebased baselines after ${attempts} attempts - the branch kept moving or the push kept failing. Re-run this job. Last output: ${output}"
+                    exit 1
+                }
+                if ("$output" -match '\[rejected\]|stale info') {
+                    Write-Host "Baselines branch moved since ${leased}, fetching and rebasing again. Output: ${output}"
+                } else {
+                    # a server or transport failure: back off rather than add load, as push-baselines.ps1 does
+                    $delay = [int][math]::Pow(2, $attempt)
+                    Write-Host "Push failed, retrying in ${delay}s. Output: ${output}"
+                    Start-Sleep -Seconds $delay
+                }
+                $output = git fetch origin $Branch $base 2>&1
+                if ($LASTEXITCODE -ne 0) {
+                    Write-Host "Failed to fetch ${Branch} and ${base}. Error code ${LASTEXITCODE}, output: ${output}"
+                    exit 1
+                }
             }
             Write-Host "Baselines PR was rebased on HEAD"
             $branchHash = git rev-parse HEAD

@@ -268,18 +268,19 @@ namespace LinqToDB.Internal.SqlQuery
 		/// <summary>
 		/// The column a value compared with <paramref name="expr"/> is typed by: the one <paramref name="expr"/> is
 		/// read through when it carries a value converter or a duration unit, because the value must take the same
-		/// form to be comparable, otherwise the typing lookup's.
+		/// form to be comparable, otherwise the typing lookup's when it carries neither.
 		/// </summary>
 		/// <remarks>
 		/// Both lookups can name a different column for one expression: for a concatenation the typing lookup
-		/// skips a non-Unicode column that the read path returns.
+		/// skips a non-Unicode column that the read path returns. A converter or unit of the typing lookup's column
+		/// would then convert a value the read leaves as it is, so no column is offered.
 		/// </remarks>
 		internal static ColumnDescriptor? GetColumnDescriptorForComparedValue(ISqlExpression? expr)
 		{
 			if (GetColumnDescriptor(expr) is { } read && (read.ValueConverter != null || read.DurationUnit != null))
 				return read;
 
-			return GetColumnDescriptorForTyping(expr);
+			return GetColumnDescriptorForTyping(expr) is { ValueConverter: null, DurationUnit: null } typing ? typing : null;
 		}
 
 		/// <summary>
