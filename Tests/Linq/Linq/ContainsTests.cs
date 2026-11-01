@@ -721,7 +721,7 @@ namespace Tests.Linq
 		/// cast changes the database type.
 		/// </summary>
 		[Test]
-		public void SequenceContainsCastOfConvertedColumn([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void SequenceContainsCastOfConvertedColumn([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(new[] { new PrefixedCode { Id = 1, Code = "A" } });
@@ -745,7 +745,7 @@ namespace Tests.Linq
 		/// through the converter the projection is read through.
 		/// </summary>
 		[Test]
-		public void SequenceContainsConcatOfConvertedAndUnicodeColumn([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllSQLite)] string context)
+		public void SequenceContainsConcatOfConvertedAndUnicodeColumn([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(new[] { new PrefixedCodeWithTitle { Id = 1, Code = "A", Title = "T" } });

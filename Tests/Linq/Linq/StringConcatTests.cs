@@ -881,7 +881,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConcatLiteralBesideVarCharKeepsUnicode([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllSQLite)] string context)
+		[ActiveIssue(6195, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
+		public void ConcatLiteralBesideVarCharKeepsUnicode([DataSources(TestProvName.AllInformix, TestProvName.AllAccess)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(ConcatProductData);
@@ -1026,10 +1027,9 @@ namespace Tests.Linq
 				.ShouldContain("DECLARE @keySuffix VarChar");
 		}
 
-		// SQL Server + SQLite: the searched value is written into the command text as a literal, and Cyrillic
-		// literals run on these two only, as in ConcatLiteralBesideVarCharKeepsUnicode.
 		[Test]
-		public void ConcatProjectionContainsKeepsUnicode([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllSQLite)] string context)
+		[ActiveIssue(6195, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
+		public void ConcatProjectionContainsKeepsUnicode([DataSources(TestProvName.AllInformix, TestProvName.AllAccess)] string context)
 		{
 			var suffix = "Жук";
 			var hit    = "A-100Жук";
@@ -1050,10 +1050,9 @@ namespace Tests.Linq
 				.ShouldBeFalse();
 		}
 
-		// SQL Server + SQLite: the inline items are written into the command text as literals, and Cyrillic
-		// literals run on these two only, as in ConcatLiteralBesideVarCharKeepsUnicode.
 		[Test]
-		public void ConcatInlineInListKeepsUnicode([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllSQLite)] string context)
+		[ActiveIssue(6195, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
+		public void ConcatInlineInListKeepsUnicode([DataSources(TestProvName.AllInformix, TestProvName.AllAccess)] string context)
 		{
 			var suffix = "Жук";
 
