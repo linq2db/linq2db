@@ -544,7 +544,9 @@ namespace LinqToDB.Data
 				}
 
 #if SUPPORTS_DBBATCH
-				if (dataConnection.CanUseDbBatch)
+				// CanRunDbBatch, not CanUseDbBatch: a remote DML query was rendered as a batch under the client's UseDbBatch,
+				// which the server connection's own option must not override.
+				if (dataConnection.CanRunDbBatch)
 				{
 					var batch = dataConnection.CreateBatch(statements);
 
@@ -591,7 +593,7 @@ namespace LinqToDB.Data
 				}
 
 #if SUPPORTS_DBBATCH
-				if (dataConnection.CanUseDbBatch)
+				if (dataConnection.CanRunDbBatch)
 				{
 					var batch = dataConnection.CreateBatch(statements);
 
