@@ -1147,6 +1147,36 @@ namespace Tests.Linq
 				.ShouldBe(1);
 		}
 
+		[Table]
+		sealed class PlainAndConvertedUnicodeRow
+		{
+			[PrimaryKey]                                                                public int    Id    { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 20, CanBeNull = false)]       public string Plain { get; set; } = default!;
+			[Column(DataType = DataType.NVarChar, Length = 20, CanBeNull = false)]
+			[ValueConverter(ConverterType = typeof(PrefixConverter))]                   public string Conv  { get; set; } = default!;
+		}
+
+		// The typing lookup names the converted Conv, but the concatenation is read through the plain Plain, so a value
+		// compared with it must not go through Conv's converter.
+		[Test]
+		public void ComparedConcatOfPlainAndConvertedUnicodeColumnKeepsReadPath([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[]
+			{
+				new PlainAndConvertedUnicodeRow { Id = 1, Plain = "A-", Conv = "n1" },
+				new PlainAndConvertedUnicodeRow { Id = 2, Plain = "zz", Conv = "yy" },
+			});
+
+			var read  = table.OrderBy(r => r.Id).Select(r => r.Plain + r.Conv).First();
+			var array = new[] { read };
+
+			table.Count(r => r.Plain + r.Conv == read).ShouldBe(1);
+			table.Count(r => r.Plain + r.Conv != read).ShouldBe(1);
+			table.Select(r => r.Plain + r.Conv).Contains(read).ShouldBeTrue();
+			table.Count(r => array.Contains(r.Plain + r.Conv)).ShouldBe(1);
+		}
+
 		#endregion
 
 		#region Concat inside a set-operation operand's projection
