@@ -29,7 +29,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var outerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-			var innerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
+			var innerContext = builder.BuildJoinedSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()), out var innerOrderBy);
 
 			List<SqlQueryExtension>? extensions = null;
 
@@ -63,6 +63,8 @@ namespace LinqToDB.Internal.Linq.Builder
 					};
 					break;
 			}
+
+			builder.AppendJoinedOrderBy(innerOrderBy, joinedFirst: joinType is JoinType.Right);
 
 			if (joinType is JoinType.Right or JoinType.Full)
 			{
