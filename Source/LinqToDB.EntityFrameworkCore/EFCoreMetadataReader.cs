@@ -663,11 +663,11 @@ namespace LinqToDB.EntityFrameworkCore
 				}
 			});
 
+			// a field read is not duplicable: the target may change the field before it reads its parameter
 			static bool IsDuplicable(Expression expression)
 				=> expression switch
 				{
 					ParameterExpression or ConstantExpression                                                                     => true,
-					MemberExpression { Member: FieldInfo, Expression: var instance }                                              => instance == null || IsDuplicable(instance),
 					MemberExpression { Member.Name: nameof(Nullable<>.Value), Expression: { Type.IsNullableType: true } instance } => IsDuplicable(instance),
 					UnaryExpression { NodeType: ExpressionType.Convert, Method: null, Operand: var operand }                     => IsDuplicable(operand),
 					_                                                                                                            => false,

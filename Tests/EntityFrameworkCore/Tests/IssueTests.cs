@@ -1745,6 +1745,25 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				.ShouldBe(Issue5975Stored);
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void Issue6181_DelegatedFieldArgumentIsReadBeforeTheTarget(
+#if NET8_0
+			// EF8 registers the NodaTime plugin process-wide, so useNodaTime: false cannot keep #5981 out
+			[EFDataSources(TestProvName.AllPostgreSQL)] string provider)
+#else
+			[EFDataSources] string provider)
+#endif
+		{
+			using var ctx = CreateContext(provider, useNodaTime: false);
+			Issue6181Seed(ctx);
+
+			IssueContextBase.Issue6181WithClock(() => Issue6181ShouldEvaluateArgumentOncePerConversion(() => ctx.Issue6181TableTwos
+				.ToLinqToDBTable()
+				.Where(r => r.Id == 1)
+				.Set(r => r.ClockDate, (DateTime?)Issue5975Stored)
+				.Update()));
+		}
+
 		static void Issue6181ShouldEvaluateArgumentOncePerConversion(Action write)
 		{
 			var counts = new IssueContextBase.Issue6181Counts();

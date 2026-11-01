@@ -449,6 +449,14 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 				v => v != null ? (DateTime?)issue6181GatedTarget.ConvertToProvider(Issue6181Counted(v.Value)) : (DateTime?)null,
 				v => v != null ? (DateTime?)issue6181GatedTarget.ConvertFromProvider(v.Value) : (DateTime?)null);
 
+			// the argument reads a field the target advances before it reads its parameter
+			var issue6181ClockTarget = new ValueConverter<DateTime, DateTime>(
+				v => Issue6181ReadAfter(Issue6181AdvanceClock(), v),
+				v => v);
+			var issue6181ClockConverter = new ValueConverter<DateTime?, DateTime?>(
+				v => v != null ? (DateTime?)issue6181ClockTarget.ConvertToProvider(Issue6181TheClock.Now) : (DateTime?)null,
+				v => v != null ? (DateTime?)issue6181ClockTarget.ConvertFromProvider(v.Value) : (DateTime?)null);
+
 			modelBuilder.Entity<Issue6181TableOne>(b =>
 			{
 				b.Property(e => e.Id).ValueGeneratedNever();
@@ -473,6 +481,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 				b.Property(e => e.CountedDate).HasConversion(issue6181CountedConverter);
 				b.Property(e => e.GatedDate).HasConversion(issue6181GatedConverter);
 				b.Property(e => e.CastDate).HasConversion(issue6181CastConverter);
+				b.Property(e => e.ClockDate).HasConversion(issue6181ClockConverter);
 
 				b.HasOne(e => e.TableOne)
 					.WithMany()
@@ -605,6 +614,41 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		{
 			Issue6181CountConversion();
 			return v;
+		}
+
+		sealed class Issue6181Clock
+		{
+			public DateTime Now;
+			public DateTime Before;
+		}
+
+		static readonly Issue6181Clock Issue6181TheClock = new();
+
+		static readonly Lock Issue6181ClockLock = new();
+
+		// serializes the test runs on different providers, which share the clock
+		public static void Issue6181WithClock(Action action)
+		{
+			lock (Issue6181ClockLock)
+				action();
+		}
+
+		static DateTime Issue6181AdvanceClock()
+		{
+			Issue6181TheClock.Before = Issue6181TheClock.Now;
+			Issue6181TheClock.Now    = Issue6181TheClock.Now.AddHours(1);
+			return default;
+		}
+
+		// counts an argument read before the target advanced the clock
+		static DateTime Issue6181ReadAfter(DateTime ignored, DateTime value)
+		{
+			Issue6181CountConversion();
+
+			if (value == Issue6181TheClock.Before)
+				Issue6181CountArgument();
+
+			return value;
 		}
 
 		sealed class Issue6181ConverterHolder
