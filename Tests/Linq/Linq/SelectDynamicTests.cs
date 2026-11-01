@@ -244,6 +244,43 @@ namespace Tests.Linq
 			rows[1].Values!["A"].ShouldBe(2);
 		}
 
+		[Test]
+		public void ConcatOfOneNameWithNullableAndNonNullableCells([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_data);
+
+			var rows = t.Where(x => x.Id == 1)
+					.SelectDynamic(x => new AmountsDto { Id = x.Id }, new[] { "A" }, (x, n) => x.Usd)
+				.Concat(t.Where(x => x.Id == 2)
+					.SelectDynamic(x => new AmountsDto { Id = x.Id }, new[] { "A" }, (x, n) => x.Id == 2 ? (decimal?)null : x.Usd))
+				.ToList()
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			rows[0].Values!["A"].ShouldBe(10.5m);
+			rows[1].Values!["A"].ShouldBeNull();
+		}
+
+		[Test]
+		public void UnionOfOneNameWithNullableAndNonNullableCells([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_data);
+
+			var rows = t.Where(x => x.Id == 1)
+					.SelectDynamic(x => new AmountsDto { Id = x.Id }, new[] { "A" }, (x, n) => x.Usd)
+				.Union(t.Where(x => x.Id == 2)
+					.SelectDynamic(x => new AmountsDto { Id = x.Id }, new[] { "A" }, (x, n) => x.Id == 2 ? (decimal?)null : x.Usd))
+				.ToList()
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			rows.Count.ShouldBe(2);
+			rows[0].Values!["A"].ShouldBe(10.5m);
+			rows[1].Values!["A"].ShouldBeNull();
+		}
+
 		/// <summary>A set operation that compares rows cannot compare values of different types under one name.</summary>
 		// SQLite only: the builder throws before any SQL is built.
 		[Test]

@@ -54,6 +54,9 @@ namespace LinqToDB
 		/// carries the union of the sets: a cell its branch did not select is materialized as <c>default(TCell)</c>, not left
 		/// out of the store. Use a nullable <typeparamref name="TCell"/> to tell such a cell (<see langword="null"/>) from a
 		/// selected value.
+		/// Branches that put cells of different types under one name are read a branch at a time by <c>Concat</c>, and
+		/// refused by <c>Union</c>, <c>Except</c> and <c>Intersect</c>, which compare rows. A type and its nullable form
+		/// are not different types here: the branches share one nullable column.
 		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IQueryable<TResult> SelectDynamic<TSource, TKey, TCell, TResult>(
