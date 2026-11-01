@@ -32,7 +32,7 @@ namespace LinqToDB.Scaffold
 
 			var dataContextClass = new ClassModel(className, className)
 			{
-				Modifiers = (_options.DataModel.ContextClassModifier ?? Modifiers.Public) | Modifiers.Partial,
+				Modifiers = (_options.DataModel.ContextClassModifier ?? Modifiers.Public) | PartialModifier,
 				Namespace = _options.CodeGeneration.Namespace,
 			};
 

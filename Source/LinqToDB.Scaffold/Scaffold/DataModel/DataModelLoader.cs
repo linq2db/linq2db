@@ -56,6 +56,8 @@ namespace LinqToDB.Scaffold
 			_interceptors   = interceptors ?? NoOpScaffoldInterceptors.Instance;
 		}
 
+		private Modifiers PartialModifier => _languageProvider.Features.HasFlag(LanguageFeatures.PartialTypes) ? Modifiers.Partial : Modifiers.None;
+
 		/// <summary>
 		/// Loads database schema into <see cref="DatabaseModel"/> object.
 		/// </summary>
