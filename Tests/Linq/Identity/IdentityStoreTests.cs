@@ -71,6 +71,45 @@ namespace Tests.Identity
 			deleted.ShouldBeNull();
 		}
 
+		// the name and email columns are 256 characters wide, not 256 bytes (Access caps text at 255)
+		[Test]
+		public async Task FullWidthNonAsciiNames([DataSources] string context)
+		{
+			using var setup  = GetSetup(context);
+			using var schema = new Schema(setup);
+			using var ctx    = GetDataContext(context, setup.MappingSchema);
+
+			var users = new UserStore<IdentityUser>(ctx);
+			var roles = new RoleStore<IdentityRole>(ctx);
+
+			var width = context.IsAnyOf(TestProvName.AllAccess) ? 255 : 256;
+			var name  = new string('ü', width);
+			var email = new string('é', width);
+
+			var user = new IdentityUser(name) { NormalizedUserName = name.ToUpperInvariant(), Email = email, NormalizedEmail = email.ToUpperInvariant() };
+			var role = new IdentityRole(name) { NormalizedName = name.ToUpperInvariant() };
+			(await users.CreateAsync(user)).Succeeded.ShouldBeTrue();
+			(await roles.CreateAsync(role)).Succeeded.ShouldBeTrue();
+
+			var byName = await users.FindByNameAsync(name.ToUpperInvariant());
+			byName
+				.ShouldNotBeNull()
+				.UserName
+				.ShouldBe(name);
+
+			var byEmail = await users.FindByEmailAsync(email.ToUpperInvariant());
+			byEmail
+				.ShouldNotBeNull()
+				.Email
+				.ShouldBe(email);
+
+			var roleByName = await roles.FindByNameAsync(name.ToUpperInvariant());
+			roleByName
+				.ShouldNotBeNull()
+				.Name
+				.ShouldBe(name);
+		}
+
 		// CreateTable emits no foreign keys, so nothing cascades: the store itself has to remove the dependents
 		[Test]
 		public async Task UserDeleteRemovesDependents([DataSources] string context)

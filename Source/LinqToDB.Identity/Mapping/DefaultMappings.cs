@@ -75,6 +75,10 @@ namespace LinqToDB.Identity
 		// Informix clamps NVarChar to 255 bytes, fewer than 256 characters in a multi-byte locale; LVarChar is byte-sized too.
 		private static DataTypeAttribute InformixTextLimit() => new (DataType.NVarChar, "LVarChar(1024)") { Configuration = ProviderName.Informix };
 
+		// Oracle maps string to VARCHAR2, whose length counts bytes under the default NLS_LENGTH_SEMANTICS, so a
+		// 256-character non-ASCII name overruns it; EF Core's Oracle schema uses NVARCHAR2, which counts characters.
+		private static DataTypeAttribute OracleUnicodeText() => new (DataType.NVarChar) { Configuration = ProviderName.Oracle };
+
 		// EF Core leaves ClaimValue and the token Value unbounded; an unmapped string defaults to 255 on these. The
 		// stores filter on ClaimValue with '=', which LOB types reject on most of them, so it gets the widest
 		// comparable varchar instead. Token values (a saved JWT is 1-2 KB) are never filtered on, so they can be LOBs.
@@ -207,10 +211,12 @@ namespace LinqToDB.Identity
 					.HasLength(NAME_LENGTH)
 					.HasAttribute(AccessTextLimit())
 					.HasAttribute(InformixTextLimit())
+					.HasAttribute(OracleUnicodeText())
 				.Property(e => e.NormalizedName)
 					.HasLength(NAME_LENGTH)
 					.HasAttribute(AccessTextLimit())
 					.HasAttribute(InformixTextLimit())
+					.HasAttribute(OracleUnicodeText())
 				.Property(e => e.ConcurrencyStamp)
 					.HasLength(STAMP_LENGTH)
 					.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.Guid))
@@ -244,18 +250,22 @@ namespace LinqToDB.Identity
 					.HasLength(NAME_LENGTH)
 					.HasAttribute(AccessTextLimit())
 					.HasAttribute(InformixTextLimit())
+					.HasAttribute(OracleUnicodeText())
 				.Property(e => e.NormalizedUserName)
 					.HasLength(NAME_LENGTH)
 					.HasAttribute(AccessTextLimit())
 					.HasAttribute(InformixTextLimit())
+					.HasAttribute(OracleUnicodeText())
 				.Property(e => e.Email)
 					.HasLength(EMAIL_LENGTH)
 					.HasAttribute(AccessTextLimit())
 					.HasAttribute(InformixTextLimit())
+					.HasAttribute(OracleUnicodeText())
 				.Property(e => e.NormalizedEmail)
 					.HasLength(EMAIL_LENGTH)
 					.HasAttribute(AccessTextLimit())
 					.HasAttribute(InformixTextLimit())
+					.HasAttribute(OracleUnicodeText())
 				.Property(e => e.EmailConfirmed)
 
 				// EF Core leaves these unbounded; never filtered on, so the widest comparable width every provider takes
@@ -263,14 +273,17 @@ namespace LinqToDB.Identity
 					.HasLength(PROFILE_LENGTH)
 					.HasAttribute(AccessTextLimit())
 					.HasAttribute(InformixTextLimit())
+					.HasAttribute(OracleUnicodeText())
 				.Property(e => e.SecurityStamp)
 					.HasLength(PROFILE_LENGTH)
 					.HasAttribute(AccessTextLimit())
 					.HasAttribute(InformixTextLimit())
+					.HasAttribute(OracleUnicodeText())
 				.Property(e => e.PhoneNumber)
 					.HasLength(PROFILE_LENGTH)
 					.HasAttribute(AccessTextLimit())
 					.HasAttribute(InformixTextLimit())
+					.HasAttribute(OracleUnicodeText())
 
 				.Property(e => e.ConcurrencyStamp)
 					.HasLength(STAMP_LENGTH)
@@ -315,6 +328,7 @@ namespace LinqToDB.Identity
 					.HasLength(KEYS_LENGTH)
 				.Property(e => e.ProviderDisplayName)
 					.HasLength(128) // (un)educated guess...
+					.HasAttribute(OracleUnicodeText())
 				.Property(e => e.UserId)
 					.IsNullable(false)
 				;

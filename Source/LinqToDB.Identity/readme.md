@@ -150,7 +150,8 @@ constructor, after the options have been applied, so the defaults outrank anythi
   `ClaimValue` on both claim tables and `AspNetUserTokens.Value` on MySQL, Oracle, Firebird, Access, DB2, Informix,
   SAP HANA, Sybase and SQL CE, and the 256-character name, email, phone, password-hash and security-stamp columns on
   Access and Informix, are typed for those providers by the defaults. An unscoped `HasDataType` or `HasLength` on
-  them is ignored by `CreateTable` there; set `HasDbType` to override.
+  them is ignored by `CreateTable` there; set `HasDbType` to override. On Oracle the same name, email and profile
+  columns and `ProviderDisplayName` are pinned to `NVarChar` (`NVARCHAR2`), which outranks an unscoped `HasDataType`.
 * **String keys are 36 characters wide**, the length of the GUID string `IdentityUser` / `IdentityRole` generate
   (EF Core uses 450 on SQL Server). Ids you assign yourself — an external subject id, an email — need a wider key:
   `HasLength` on `Id` and on every `UserId` / `RoleId` column in a `ConfigureMappings` override. Mind the index
