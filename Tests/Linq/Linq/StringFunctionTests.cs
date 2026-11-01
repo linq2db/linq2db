@@ -1180,6 +1180,38 @@ namespace Tests.Linq
 				.ShouldBe(1);
 		}
 
+		[Table]
+		sealed class PlainAndConvertedUnicodeTable
+		{
+			[PrimaryKey]                                                                public int    Id    { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 20, CanBeNull = false)]       public string Plain { get; set; } = default!;
+			[Column(DataType = DataType.NVarChar, Length = 20, CanBeNull = false)]
+			[ValueConverter(ConverterType = typeof(PrefixConverter))]                   public string Conv  { get; set; } = default!;
+		}
+
+		// The typing lookup names the converted Conv, but the concatenation is read through the plain Plain, so the
+		// compared value must not go through Conv's converter.
+		[Test]
+		public void LikeAndCompareToOverConcatWithConvertedColumn([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[]
+			{
+				new PlainAndConvertedUnicodeTable { Id = 1, Plain = "A-", Conv = "n1" },
+				new PlainAndConvertedUnicodeTable { Id = 2, Plain = "zz", Conv = "yy" },
+			});
+
+			var read = table.OrderBy(r => r.Id).Select(r => r.Plain + r.Conv).First();
+
+			table
+				.Count(r => Sql.Like(r.Plain + r.Conv, read))
+				.ShouldBe(1);
+
+			table
+				.Count(r => (r.Plain + r.Conv).CompareTo(read) == 0)
+				.ShouldBe(1);
+		}
+
 		[Test]
 		public void ComputedArgumentBesideNVarCharKeepsColumnType([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
