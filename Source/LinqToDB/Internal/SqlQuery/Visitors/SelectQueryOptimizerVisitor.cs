@@ -2653,6 +2653,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (joinTable.JoinType != JoinType.Inner)
 			{
+				// Flattened, the subquery's joins would nest under the LEFT join and its WHERE, or an ON predicate over
+				// their tables, would sit in ON where OptimizeJoinConditions cannot push it into a derived table
+				// (see Issue2832Tests, JoinTests.LeftJoinPredicateOverNestedJoinColumn).
+				if (joinTable.JoinType == JoinType.Left && !_providerFlags.IsComplexJoinConditionSupported && subQuery.From.Tables[0].Joins.Count > 0)
+					return false;
+
 				if (subQuery.HasWhere)
 				{
 					if (joinTable.JoinType == JoinType.OuterApply)
@@ -2684,11 +2690,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 								return false;
 							}
 						}
-
-						// The WHERE would land in ON beside nested joins, where OptimizeJoinConditions cannot push
-						// it back into a derived table (see Issue2832Tests).
-						if (!_providerFlags.IsComplexJoinConditionSupported && subQuery.From.Tables[0].Joins.Count > 0)
-							return false;
 
 						moveConditionToQuery = false;
 					}
@@ -2976,43 +2977,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						// the right derived table.
 						if (nestedWhereCond == null)
 						{
-							// A RIGHT or FULL nested join keeps rows the joined source does not, so filtering the source
-							// alone would let them through: the derived table must wrap the whole joined subtree.
-							if (join.Table.Joins.Exists(j => j.JoinType is JoinType.Right or JoinType.RightApply or JoinType.Full or JoinType.FullApply))
-							{
-								var subtreeSources = QueryHelper.EnumerateAccessibleSources(join.Table).ToList();
-								var subQuery       = new SelectQuery() { DoNotRemove = true };
-
-								subQuery.From.Tables.Add(new SqlTableSource(
-									join.Table.Source,
-									join.Table.Alias,
-									join.Table.Joins,
-									join.Table.HasUniqueKeys ? join.Table.UniqueKeys : null));
-
-								join.Table.Source = subQuery;
-								join.Table.Alias  = null;
-								join.Table.Joins.Clear();
-								if (join.Table.HasUniqueKeys)
-									join.Table.UniqueKeys.Clear();
-
-								nestedWhereCond = subQuery.Where.EnsureConjunction();
-
-								var foundFields = new HashSet<ISqlExpression>();
-								QueryHelper.CollectDependencies(_rootElement, subtreeSources, foundFields, ignore: [subQuery]);
-
-								if (foundFields.Count > 0)
-								{
-									var toReplace = new Dictionary<IQueryElement, IQueryElement>(foundFields.Count);
-									foreach (var expr in foundFields)
-										toReplace.Add(expr, subQuery.Select.AddColumn(expr));
-
-									_rootElement.Replace(toReplace, subQuery);
-								}
-
-								moved   = true;
-								sources = null;
-							}
-							else if (join.Table.Source is SelectQuery sq)
+							if (join.Table.Source is SelectQuery sq)
 							{
 								QueryHelper.WrapQuery(root, sq, true, doNotRemove: true);
 								nestedWhereCond = ((SelectQuery)join.Table.Source).Where.EnsureConjunction();

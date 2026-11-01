@@ -1155,6 +1155,45 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void LeftJoinPredicateOverNestedJoinColumn([DataSources] string context, [Values] bool inner)
+		{
+			using var db = GetDataContext(context);
+
+			var nested = inner
+				? from c in db.Child
+				  from g in db.GrandChild.InnerJoin(g => g.ChildID == c.ChildID)
+				  select new { c, g }
+				: from c in db.Child
+				  from g in db.GrandChild.LeftJoin(g => g.ChildID == c.ChildID)
+				  select new { c, g };
+
+			var query = db.Parent.LeftJoin(
+				nested,
+				(p, x) => p.ParentID == x.c.ParentID && x.g.GrandChildID > 300,
+				(p, x) => new { p.ParentID, ChildID = (int?)x.c.ChildID, GrandChildID = (int?)x.g.GrandChildID });
+
+			var actual = query
+				.ToList()
+				.Select(r => (r.ParentID, r.ChildID, r.GrandChildID));
+
+			var nestedRows = Child
+				.SelectMany(c => GrandChild
+					.Where(g => g.ChildID == c.ChildID)
+					.Select(g => (c, g: (Model.GrandChild?)g))
+					.DefaultIfEmpty((c, g: null))
+					.Where(x => !inner || x.g != null))
+				.ToList();
+
+			var expected = Parent
+				.SelectMany(p => nestedRows
+					.Where(x => p.ParentID == x.c.ParentID && x.g?.GrandChildID > 300)
+					.Select(x => (p.ParentID, (int?)x.c.ChildID, x.g?.GrandChildID))
+					.DefaultIfEmpty((p.ParentID, null, null)));
+
+			actual.ShouldBe(expected, ignoreOrder: true);
+		}
+
+		[Test]
 		public void MultipleLeftJoin([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

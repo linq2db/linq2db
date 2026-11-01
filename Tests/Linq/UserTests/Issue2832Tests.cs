@@ -105,11 +105,16 @@ namespace Tests.UserTests
 
 			BaselinesManager.LogQuery(query.ToSqlQuery().Sql);
 
-			// Without complex join conditions the subquery's WHERE must stay in the derived table, not land in the LEFT JOIN ON.
-			if (context.IsAnyOf(TestProvName.AllYdb, TestProvName.AllAccess))
+			// Without complex join conditions the subquery's WHERE must stay in the derived table, not land in the LEFT JOIN ON
+			// or the outer WHERE. Access never flattens this subquery (IsOuterJoinSupportsInnerJoin), so only YDB discriminates.
+			if (context.IsAnyOf(TestProvName.AllYdb))
 			{
-				var leftJoinPredicates = query.GetSelectQuery().From.Tables[0].Joins[0].Condition.Predicates;
-				leftJoinPredicates.Count.ShouldBe(1);
+				var selectQuery = query.GetSelectQuery();
+				var leftJoin    = selectQuery.From.Tables[0].Joins[0];
+
+				leftJoin.Condition.Predicates.Count.ShouldBe(1);
+				leftJoin.Table.Source.ShouldBeOfType<SelectQuery>().HasWhere.ShouldBeTrue();
+				selectQuery.Where.SearchCondition.Predicates.ShouldBeEmpty();
 			}
 
 			var sourcesCount = QueryHelper.EnumerateAccessibleSources(query.GetSelectQuery()).Count(s => s.ElementType == QueryElementType.SqlQuery);
