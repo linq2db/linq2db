@@ -8,6 +8,7 @@ using System.Transactions;
 
 using LinqToDB;
 using LinqToDB.Async;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -1180,6 +1181,7 @@ namespace Tests.Linq
 				.ToList();
 		}
 
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllAccess, TestProvName.AllFirebirdLess3, TestProvName.AllMySql57, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6208")]
 		public void ThenLoadNullableJoinedAssociationKeepsUnmatchedRows([DataSources] string context)
 		{
@@ -1198,6 +1200,7 @@ namespace Tests.Linq
 				.ShouldBe(LinkedParentExpected());
 		}
 
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllAccess, TestProvName.AllFirebirdLess3, TestProvName.AllMySql57, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6208")]
 		public void SelectNullableJoinedAssociationKeepsUnmatchedRows([DataSources] string context)
 		{
@@ -1219,6 +1222,7 @@ namespace Tests.Linq
 				.ShouldBe(LinkedParentExpected());
 		}
 
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllAccess, TestProvName.AllFirebirdLess3, TestProvName.AllMySql57, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6208")]
 		public void SelectRequiredJoinedAssociationKeepsOnlyMatchedRows([DataSources] string context)
 		{
@@ -1245,7 +1249,15 @@ namespace Tests.Linq
 		}
 
 		[ThrowsForProvider("DuckDB.NET.Data.DuckDBException", TestProvName.AllDuckDB, ErrorMessage = "Not implemented Error: Non-inner join on correlated columns not supported")]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllAccess, TestProvName.AllFirebirdLess3, TestProvName.AllMySql57, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[ActiveIssue(6224, Configurations = [TestProvName.AllSQLite], ErrorMessage = "no such column: c_1.ParentID")]
+		[ActiveIssue(6224, Configurations = [TestProvName.AllDB2, TestProvName.AllInformix], ErrorMessage = "An ON clause")]
+		[ActiveIssue(6224, Configurations = [TestProvName.AllMariaDB], ErrorMessage = "Unknown column 'c_1.ParentID' in 'ON'")]
+		[ActiveIssue(6224, Configurations = [TestProvName.AllOracle11], ErrorMessage = "ORA-00904")]
+		[ActiveIssue(6224, Configurations = [ProviderName.PostgreSQL92], ErrorMessage = "invalid reference to FROM-clause entry for table \"c_1\"")]
+		[ActiveIssue(6224, Configurations = [ProviderName.Firebird3], ErrorMessage = "Column unknown")]
+		[ActiveIssue(6224, Configurations = [TestProvName.AllClickHouse], ErrorMessage = "Correlated subqueries are not supported in JOINs")]
+		[ActiveIssue(6224, Configurations = [TestProvName.AllYdb], ErrorMessage = "unknown corellation name: c_1")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6208")]
 		public void SelectNullableLeftJoinedAssociationKeepsNulls([DataSources] string context)
 		{
