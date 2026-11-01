@@ -121,14 +121,21 @@ namespace Tests.Identity
 			var users = new UserStore<IdentityUser>(ctx);
 			var roles = new RoleStore<IdentityRole>(ctx);
 
-			var user = NewUser("gone");
-			var role = NewRole("gone-role");
+			var user     = NewUser("gone");
+			var survivor = NewUser("survivor");
+			var role     = NewRole("gone-role");
 			await users.CreateAsync(user);
+			await users.CreateAsync(survivor);
 			await roles.CreateAsync(role);
-			await users.AddToRoleAsync(user, "GONE-ROLE");
-			await users.AddClaimsAsync(user, [new Claim("scope", "read")]);
-			await users.AddLoginAsync(user, new UserLoginInfo("google", "key-gone", "Google"));
-			await users.SetTokenAsync(user, "google", "refresh", "tok", default);
+
+			// the survivor holds the same dependents, so a delete that loses its user filter cannot pass
+			foreach (var (owner, key) in new[] { (user, "key-gone"), (survivor, "key-kept") })
+			{
+				await users.AddToRoleAsync(owner, "GONE-ROLE");
+				await users.AddClaimsAsync(owner, [new Claim("scope", "read")]);
+				await users.AddLoginAsync(owner, new UserLoginInfo("google", key, "Google"));
+				await users.SetTokenAsync(owner, "google", "refresh", "tok", default);
+			}
 
 			(await users.DeleteAsync(user)).Succeeded.ShouldBeTrue();
 
@@ -144,6 +151,19 @@ namespace Tests.Identity
 			ctx.GetTable<IdentityUserRole<string>>()
 				.Count(r => r.UserId == user.Id)
 				.ShouldBe(0);
+
+			ctx.GetTable<IdentityUserClaim<string>>()
+				.Count(r => r.UserId == survivor.Id)
+				.ShouldBe(1);
+			ctx.GetTable<IdentityUserLogin<string>>()
+				.Count(r => r.UserId == survivor.Id)
+				.ShouldBe(1);
+			ctx.GetTable<IdentityUserToken<string>>()
+				.Count(r => r.UserId == survivor.Id)
+				.ShouldBe(1);
+			ctx.GetTable<IdentityUserRole<string>>()
+				.Count(r => r.UserId == survivor.Id)
+				.ShouldBe(1);
 
 			// the same external account can sign up again
 			var again = NewUser("again");
@@ -166,12 +186,18 @@ namespace Tests.Identity
 			var users = new UserStore<IdentityUser>(ctx);
 			var roles = new RoleStore<IdentityRole>(ctx);
 
-			var user = NewUser("member");
-			var role = NewRole("doomed");
+			var user     = NewUser("member");
+			var role     = NewRole("doomed");
+			var survivor = NewRole("kept");
 			await users.CreateAsync(user);
 			await roles.CreateAsync(role);
+			await roles.CreateAsync(survivor);
+
+			// the surviving role holds the same dependents, so a delete that loses its role filter cannot pass
 			await users.AddToRoleAsync(user, "DOOMED");
-			await roles.AddClaimAsync(role, new Claim("perm", "all"));
+			await users.AddToRoleAsync(user, "KEPT");
+			await roles.AddClaimAsync(role,     new Claim("perm", "all"));
+			await roles.AddClaimAsync(survivor, new Claim("perm", "all"));
 
 			(await roles.DeleteAsync(role)).Succeeded.ShouldBeTrue();
 
@@ -181,6 +207,13 @@ namespace Tests.Identity
 			ctx.GetTable<IdentityRoleClaim<string>>()
 				.Count(r => r.RoleId == role.Id)
 				.ShouldBe(0);
+
+			ctx.GetTable<IdentityUserRole<string>>()
+				.Count(r => r.RoleId == survivor.Id)
+				.ShouldBe(1);
+			ctx.GetTable<IdentityRoleClaim<string>>()
+				.Count(r => r.RoleId == survivor.Id)
+				.ShouldBe(1);
 		}
 
 		// a delete that loses the optimistic check must not have removed the dependents either
@@ -406,6 +439,60 @@ namespace Tests.Identity
 				.ShouldBe(["write"]);
 		}
 
+		// both owners hold the same claims, so each store filter has a row of the other owner's to exclude
+		[Test]
+		public async Task ClaimsStayWithTheirOwner([DataSources] string context)
+		{
+			using var setup  = GetSetup(context);
+			using var schema = new Schema(setup);
+			using var ctx    = GetDataContext(context, setup.MappingSchema);
+
+			var users = new UserStore<IdentityUser>(ctx);
+			var roles = new RoleStore<IdentityRole>(ctx);
+
+			var user  = NewUser("owner");
+			var other = NewUser("bystander");
+			await users.CreateAsync(user);
+			await users.CreateAsync(other);
+
+			Claim[] claims = [new Claim("scope", "read"), new Claim("scope", "write")];
+			await users.AddClaimsAsync(user,  claims);
+			await users.AddClaimsAsync(other, claims);
+
+			await users.ReplaceClaimAsync(user, new Claim("scope", "read"), new Claim("scope", "admin"));
+
+			var otherAfterReplace = await users.GetClaimsAsync(other);
+			otherAfterReplace
+				.Select(c => c.Value)
+				.ShouldBe(["read", "write"], ignoreOrder: true);
+
+			// several claims in one call
+			await users.RemoveClaimsAsync(user, [new Claim("scope", "admin"), new Claim("scope", "write")]);
+
+			var userClaims  = await users.GetClaimsAsync(user);
+			var otherClaims = await users.GetClaimsAsync(other);
+			userClaims.ShouldBeEmpty();
+			otherClaims
+				.Select(c => c.Value)
+				.ShouldBe(["read", "write"], ignoreOrder: true);
+
+			var role      = NewRole("owner-role");
+			var otherRole = NewRole("bystander-role");
+			await roles.CreateAsync(role);
+			await roles.CreateAsync(otherRole);
+			await roles.AddClaimAsync(role,      new Claim("perm", "all"));
+			await roles.AddClaimAsync(otherRole, new Claim("perm", "all"));
+
+			await roles.RemoveClaimAsync(role, new Claim("perm", "all"));
+
+			var roleClaims      = await roles.GetClaimsAsync(role);
+			var otherRoleClaims = await roles.GetClaimsAsync(otherRole);
+			roleClaims.ShouldBeEmpty();
+			otherRoleClaims
+				.Select(c => c.Value)
+				.ShouldBe(["all"]);
+		}
+
 		[Test]
 		public async Task UserRoles([DataSources] string context)
 		{
@@ -416,21 +503,29 @@ namespace Tests.Identity
 			var users = new UserStore<IdentityUser>(ctx);
 			var roles = new RoleStore<IdentityRole>(ctx);
 
-			var user = NewUser("bob");
-			var role = NewRole("editor");
+			var user   = NewUser("bob");
+			var other  = NewUser("bob-other");
+			var role   = NewRole("editor");
+			var viewer = NewRole("viewer");
 			await users.CreateAsync(user);
+			await users.CreateAsync(other);
 			await roles.CreateAsync(role);
+			await roles.CreateAsync(viewer);
 
-			await users.AddToRoleAsync(user, "EDITOR");
+			// a second user in a second role, so the role-name and user filters each have a row to exclude
+			await users.AddToRoleAsync(user,  "EDITOR");
+			await users.AddToRoleAsync(other, "VIEWER");
 			var inRole      = await users.IsInRoleAsync(user, "EDITOR");
+			var inViewer    = await users.IsInRoleAsync(user, "VIEWER");
 			var roleNames   = await users.GetRolesAsync(user);
 			var editorUsers = await users.GetUsersInRoleAsync("EDITOR");
 
-			inRole.ShouldBeTrue();
-			roleNames.ShouldContain("editor");
+			inRole  .ShouldBeTrue();
+			inViewer.ShouldBeFalse();
+			roleNames.ShouldBe(["editor"]);
 			editorUsers
 				.Select(u => u.Id)
-				.ShouldContain(user.Id);
+				.ShouldBe([user.Id]);
 
 			// re-adding an existing role is an idempotent no-op (find-then-insert), not a PK violation
 			await users.AddToRoleAsync(user, "EDITOR");
@@ -667,6 +762,38 @@ namespace Tests.Identity
 
 			var removed = await store.FindPasskeyAsync(user, credId, default);
 			removed.ShouldBeNull();
+		}
+
+		// A direct-attestation certificate chain takes the stored JSON past 5000 characters. SAP HANA's widest
+		// NVarChar is 5000 and its NText parameter binds as DbType.Xml, so the readme documents the cap there instead.
+		[Test]
+		public async Task LargePasskeyData([DataSources(TestProvName.AllSapHana)] string context)
+		{
+			using var setup  = GetSetup(context);
+			using var schema = new Schema(setup);
+			using var ctx    = GetDataContext(context, setup.MappingSchema);
+
+			var store = new UserStore<IdentityUser>(ctx, options: SchemaVersion3);
+			var user  = NewUser("judy");
+			await store.CreateAsync(user);
+
+			// about 6200 characters of JSON: past SQL CE's 4000-character NVarChar, inside DB2's 8168
+			var attestation = Enumerable
+				.Range(0, 4500)
+				.Select(i => (byte)(i * 13 + 5))
+				.ToArray();
+			var passkey = new UserPasskeyInfo(
+				[4, 5, 6], [9, 9], DateTimeOffset.UtcNow, signCount: 1,
+				transports: ["usb"], isUserVerified: true, isBackupEligible: false,
+				isBackedUp: false, attestationObject: attestation, clientDataJson: [6]);
+
+			await store.AddOrUpdatePasskeyAsync(user, passkey, default);
+
+			var found = await store.FindPasskeyAsync(user, passkey.CredentialId, default);
+			found
+				.ShouldNotBeNull()
+				.AttestationObject
+				.ShouldBe(attestation);
 		}
 
 		[Test]

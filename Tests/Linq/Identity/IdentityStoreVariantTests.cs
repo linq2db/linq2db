@@ -146,8 +146,9 @@ namespace Tests.Identity
 
 			var userStore = sp.GetRequiredService<IUserStore<IdentityUser>>();
 			var roleStore = sp.GetRequiredService<IRoleStore<IdentityRole>>();
-			userStore.GetType().FullName!.ShouldStartWith("LinqToDB.Identity.UserStore");
-			roleStore.GetType().FullName!.ShouldStartWith("LinqToDB.Identity.RoleStore");
+			// the context's own satellite types, not the fallback store AddLinqToDBStores picks when it finds no identity context
+			userStore.ShouldBeOfType<UserStore<IdentityUser, IdentityRole, IdentityDataConnection, string, IdentityUserClaim<string>, IdentityUserRole<string>, IdentityUserLogin<string>, IdentityUserToken<string>, IdentityRoleClaim<string>>>();
+			roleStore.ShouldBeOfType<RoleStore<IdentityRole, IdentityDataConnection, string, IdentityUserRole<string>, IdentityRoleClaim<string>>>();
 
 			var users = sp.GetRequiredService<UserManager<IdentityUser>>();
 			var roles = sp.GetRequiredService<RoleManager<IdentityRole>>();
@@ -297,6 +298,63 @@ namespace Tests.Identity
 			scope.ServiceProvider.GetRequiredService<IUserStore<IdentityCustomizationTests.AppUser>>().ShouldBeOfType<UserOnlyStore<
 				IdentityCustomizationTests.AppUser, IdentityCustomizationTests.AppIdentityConnection, string,
 				IdentityCustomizationTests.AppUserClaim, IdentityCustomizationTests.AppUserLogin, IdentityCustomizationTests.AppUserToken>>();
+		}
+
+		// The role path of AddLinqToDBStores, on every TFM: a DataContext-based identity context and a custom model each
+		// resolve the stores typed by the context's satellite types. A missed context base falls back to the stock types.
+		[Test]
+		public void DependencyInjection_RoleStoresFollowTheContext([DataSources(false)] string context)
+		{
+			var options = new DataOptions().UseConfiguration(context.StripRemote());
+
+			var services = new ServiceCollection();
+			services.AddLogging();
+			services.AddScoped(_ => new IdentityDataContext(options));
+			services.AddScoped(_ => new IdentityCustomizationTests.AppIdentityConnection(options));
+			services
+				.AddIdentityCore<IdentityUser>()
+				.AddRoles<IdentityRole>()
+				.AddLinqToDBStores<IdentityDataContext>();
+			services
+				.AddIdentityCore<IdentityCustomizationTests.AppUser>()
+				.AddRoles<IdentityCustomizationTests.AppRole>()
+				.AddLinqToDBStores<IdentityCustomizationTests.AppIdentityConnection>();
+
+			using var provider = services.BuildServiceProvider();
+			using var scope    = provider.CreateScope();
+			var sp = scope.ServiceProvider;
+
+			sp.GetRequiredService<IUserStore<IdentityUser>>().ShouldBeOfType<UserStore<
+				IdentityUser, IdentityRole, IdentityDataContext, string,
+				IdentityUserClaim<string>, IdentityUserRole<string>, IdentityUserLogin<string>, IdentityUserToken<string>, IdentityRoleClaim<string>>>();
+			sp.GetRequiredService<IRoleStore<IdentityRole>>().ShouldBeOfType<RoleStore<
+				IdentityRole, IdentityDataContext, string, IdentityUserRole<string>, IdentityRoleClaim<string>>>();
+
+			sp.GetRequiredService<IUserStore<IdentityCustomizationTests.AppUser>>().ShouldBeOfType<UserStore<
+				IdentityCustomizationTests.AppUser, IdentityCustomizationTests.AppRole, IdentityCustomizationTests.AppIdentityConnection, string,
+				IdentityCustomizationTests.AppUserClaim, IdentityCustomizationTests.AppUserRole, IdentityCustomizationTests.AppUserLogin,
+				IdentityCustomizationTests.AppUserToken, IdentityCustomizationTests.AppRoleClaim>>();
+			sp.GetRequiredService<IRoleStore<IdentityCustomizationTests.AppRole>>().ShouldBeOfType<RoleStore<
+				IdentityCustomizationTests.AppRole, IdentityCustomizationTests.AppIdentityConnection, string,
+				IdentityCustomizationTests.AppUserRole, IdentityCustomizationTests.AppRoleClaim>>();
+		}
+
+		// the user-only path over a DataContext-based identity context
+		[Test]
+		public void DependencyInjection_UserOnly_DataContext([DataSources(false)] string context)
+		{
+			var services = new ServiceCollection();
+			services.AddLogging();
+			services.AddScoped(_ => new IdentityDataContext(new DataOptions().UseConfiguration(context.StripRemote())));
+			services
+				.AddIdentityCore<IdentityUser>()
+				.AddLinqToDBStores<IdentityDataContext>();
+
+			using var provider = services.BuildServiceProvider();
+			using var scope    = provider.CreateScope();
+
+			scope.ServiceProvider.GetRequiredService<IUserStore<IdentityUser>>().ShouldBeOfType<UserOnlyStore<
+				IdentityUser, IdentityDataContext, string, IdentityUserClaim<string>, IdentityUserLogin<string>, IdentityUserToken<string>>>();
 		}
 
 #if NET10_0_OR_GREATER
