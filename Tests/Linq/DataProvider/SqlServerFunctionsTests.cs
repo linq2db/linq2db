@@ -179,6 +179,22 @@ namespace Tests.DataProvider
 			Assert.That(result, Is.EqualTo("123"));
 		}
 
+		[Test]
+		public void CastToTypeFromCompiledQueryParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+
+			var query = CompiledQuery.Compile((SystemDB dc, int len) => dc.Select(() => SqlFn.Cast<string?>("abcdef", () => SqlType.NVarChar(len))));
+
+			query(db, 2).ShouldBe("ab");
+			var sql2 = db.LastQuery;
+
+			query(db, 4).ShouldBe("abcd");
+			var sql4 = db.LastQuery;
+
+			sql4.ShouldNotBe(sql2);
+		}
+
 		// NonParallelizable, with ConvertTest3 and ConvertTest4: under #5810 the three share one query-cache entry
 		// and whichever executes first defines the CONVERT target type for all of them. Serialising pins the winner
 		// here, so the two gates below declare a stable failure instead of racing against it.
