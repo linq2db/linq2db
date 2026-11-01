@@ -534,7 +534,7 @@ namespace LinqToDB.Remote
 						return Expression
 							.Lambda<Func<DataOptions, ISqlOptimizer>>(
 								Expression.New(
-									key.SqlOptimizerType.GetConstructorEx(new[] {typeof(SqlProviderFlags), typeof(DataOptions)}) 
+									key.SqlOptimizerType.GetConstructorEx(new[] {typeof(SqlProviderFlags), typeof(DataOptions)})
 										?? throw new InvalidOperationException($"Constructor for type '{key.SqlOptimizerType.Name}' not found."),
 									Expression.Constant(key.SqlProviderFlags),
 									p

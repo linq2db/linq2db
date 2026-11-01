@@ -95,7 +95,11 @@ namespace LinqToDB.Internal.Extensions
 		/// Returns <see cref="MemberInfo"/> of <paramref name="type"/> described by <paramref name="memberInfo"/>
 		/// It us useful when member's declared and reflected types are not the same.
 		/// </summary>
-		/// <remarks>This method searches only properties, fields and methods</remarks>
+		/// <remarks>
+		/// This method searches only properties, fields and methods.
+		/// A method is matched like <see cref="GetMethodCoercing"/>: a base or interface overload whose parameters the arguments convert to
+		/// (<c>Derived.M(int)</c> → <c>Base.M(long)</c>) is found, so its mapping attributes and <see cref="LinqToDB.Linq.Expressions"/> registrations apply.
+		/// </remarks>
 		/// <param name="type"><see cref="Type"/> to find member info</param>
 		/// <param name="memberInfo"><see cref="MemberInfo"/> </param>
 		/// <returns><see cref="MemberInfo"/> or null</returns>
@@ -133,7 +137,7 @@ namespace LinqToDB.Internal.Extensions
 						type.GetField(memberInfo.Name),
 
 					MemberTypes.Method =>
-						type.GetMethodEx(memberInfo.Name, ((MethodInfo)memberInfo).GetParameters().Select(_ => _.ParameterType).ToArray()),
+						type.GetMethodCoercing(memberInfo.Name, ((MethodInfo)memberInfo).GetParameters().Select(_ => _.ParameterType).ToArray()),
 
 					_ => null,
 				};
