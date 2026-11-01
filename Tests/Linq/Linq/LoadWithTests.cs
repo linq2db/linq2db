@@ -1167,7 +1167,10 @@ namespace Tests.Linq
 		public void ThenLoadOnSelectManySourceWithRootMemberNameClash([DataSources] string context, [Values] bool filtered)
 		{
 			using var db         = GetDataContext(context);
-			using var orgs       = db.CreateLocalTable(Enumerable.Range(1, 5).Select(i => new ClashOrg { Id = i }));
+			using var orgs       = db.CreateLocalTable(
+				Enumerable
+					.Range(1, 5)
+					.Select(i => new ClashOrg { Id = i }));
 			using var orgSystems = db.CreateLocalTable(new[]
 			{
 				new ClashOrgSystem { Id = 1, SystemId = 10, OrganisationId = 5 },
@@ -1192,8 +1195,10 @@ namespace Tests.Linq
 			var orgIds = new List<int> { 1, 2 };
 
 			var query =
-				from o in db.GetTable<ClashOrg>().Where(x => x.Id == 5)
-				from a in db.GetTable<ClashOrgSystem>().Where(x => x.OrganisationId == o.Id)
+				from o in db.GetTable<ClashOrg>()
+				where o.Id == 5
+				from a in db.GetTable<ClashOrgSystem>()
+				where a.OrganisationId == o.Id
 				join s in db.GetTable<ClashSystem>() on a.SystemId equals s.Id
 				select s;
 
@@ -1210,10 +1215,23 @@ namespace Tests.Linq
 				.OrderBy(s => s.Id)
 				.ToList();
 
-			result.Select(s => s.Id).ShouldBe(new[] { 10, 20 });
+			result
+				.Select(s => s.Id)
+				.ShouldBe(new[] { 10, 20 });
 
-			result[0].Stages.Single().Product.Organisations.Select(po => po.Id).OrderBy(id => id).ShouldBe(filtered ? new[] { 1 } : new[] { 1, 2 });
-			result[1].Stages.Single().Product.Organisations.Select(po => po.Id).OrderBy(id => id).ShouldBe(filtered ? new[] { 3 } : new[] { 3, 4 });
+			result[0].Stages
+				.Single()
+				.Product.Organisations
+				.Select(po => po.Id)
+				.OrderBy(id => id)
+				.ShouldBe(filtered ? new[] { 1 } : new[] { 1, 2 });
+
+			result[1].Stages
+				.Single()
+				.Product.Organisations
+				.Select(po => po.Id)
+				.OrderBy(id => id)
+				.ShouldBe(filtered ? new[] { 3 } : new[] { 3, 4 });
 		}
 	}
 }
