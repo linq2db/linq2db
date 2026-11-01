@@ -881,7 +881,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue(6195, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
 		public void ConcatLiteralBesideVarCharKeepsUnicode([DataSources(TestProvName.AllInformix, TestProvName.AllAccess)] string context)
 		{
 			using var db    = GetDataContext(context);
