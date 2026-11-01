@@ -74,7 +74,7 @@ namespace Tests.DataProvider
 
 				if (context.IsAnyOf(TestProvName.AllSqlServerMS))
 				{
-					// TODO: Recheck with the official Microsoft.SqlServer.Types package: https://github.com/linq2db/linq2db/issues/5730
+					// net8+ tests reference the System.Data.SqlClient-bound Microsoft.SqlServer.Types, whose UDT attributes MDS doesn't recognise: https://github.com/linq2db/linq2db/issues/5730
 					AssertBothReadsFail(conn, "Cast('/1/3/' as hierarchyid)", "Microsoft.SqlServer.Server.InvalidUdtException");
 				}
 				else
@@ -100,7 +100,7 @@ namespace Tests.DataProvider
 		{
 			if (context.IsAnyOf(TestProvName.AllSqlServerMS))
 			{
-				// TODO: Recheck with the official Microsoft.SqlServer.Types package: https://github.com/linq2db/linq2db/issues/5730
+				// net8+ tests reference the System.Data.SqlClient-bound Microsoft.SqlServer.Types, whose UDT attributes MDS doesn't recognise: https://github.com/linq2db/linq2db/issues/5730
 				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
 			}
 
@@ -221,11 +221,14 @@ namespace Tests.DataProvider
 		{
 			using var conn = GetDataConnection(context);
 
+			// the native client returns HanaDecimal unless the connection sets "return hanadecimal=false"
+			var decimalType = context.IsAnyOf(ProviderName.SapHanaNative) ? typeof(Sap.Data.Hana.HanaDecimal) : typeof(decimal);
+
 			using (Assert.EnterMultipleScope())
 			{
 				AssertReadMatrix(conn, "CAST(123 AS INTEGER) FROM dummy"                                , typeof(int)     , typeof(int)     , "123");
 				AssertReadMatrix(conn, "CAST(1234567890123 AS BIGINT) FROM dummy"                      , typeof(long)    , typeof(long)    , "1234567890123");
-				AssertReadMatrix(conn, "CAST(123.45 AS DECIMAL(10,2)) FROM dummy"                      , typeof(decimal) , typeof(decimal) , "123.45");
+				AssertReadMatrix(conn, "CAST(123.45 AS DECIMAL(10,2)) FROM dummy"                      , decimalType     , decimalType     , "123.45");
 				AssertReadMatrix(conn, "CAST(1.25 AS REAL) FROM dummy"                                 , typeof(float)   , typeof(float)   , "1.25");
 				AssertReadMatrix(conn, "CAST(1.25 AS DOUBLE) FROM dummy"                               , typeof(double)  , typeof(double)  , "1.25");
 				AssertReadMatrix(conn, "CAST('text' AS VARCHAR(10)) FROM dummy"                        , typeof(string)  , typeof(string)  , "text");

@@ -1,8 +1,8 @@
 ﻿{
 	"NET80.Azure": {
 		"Providers": [
-			"SqlServer.SA",
-			"SqlServer.SA.MS",
+			"SqlServer.CS",
+			"SqlServer.CS.MS",
 			"SqlServer.Contained",
 			"SqlServer.Contained.MS"
 		]

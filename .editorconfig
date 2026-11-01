@@ -764,6 +764,7 @@ dotnet_diagnostic.MA0004.severity = none # MA0004: Use Task.ConfigureAwait
 dotnet_diagnostic.MA0005.severity = none # MA0005: Use Array.Empty<T>()
 dotnet_diagnostic.MA0006.severity = none # MA0006: Use String.Equals instead of equality operator
 dotnet_diagnostic.MA0007.severity = suggestion # MA0007: Add a comma after the last value
+dotnet_diagnostic.MA0008.severity = none # MA0008: Add StructLayoutAttribute — test structs never cross interop
 dotnet_diagnostic.MA0009.severity = none # MA0009: Add regex evaluation timeout
 dotnet_diagnostic.MA0011.severity = none # MA0011: IFormatProvider is missing
 dotnet_diagnostic.MA0020.severity = none # MA0020: Use direct methods instead of LINQ methods

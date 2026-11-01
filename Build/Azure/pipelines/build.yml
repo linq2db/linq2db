@@ -24,5 +24,5 @@ stages:
       with_tests: false
       with_analyzer_tests: true
       with_singlefile_smoke: true
-      with_analyzers: false # true disabled till https://github.com/dotnet/roslyn/pull/80621 shipped
+      with_analyzers: true
       with_release: false

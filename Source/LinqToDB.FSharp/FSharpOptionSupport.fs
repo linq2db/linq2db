@@ -81,7 +81,7 @@ type internal FSharpOptionSupport =
         let fromProvider =
             Expression.Lambda(Expression.Condition(hasValue, Expression.Call(someFactory, element), noneExpr), pParam)
 
-        let converterType = typedefof<ValueConverter<_, _>>.MakeGenericType(optionType, providerType)
+        let converterType = typedefof<StorageTransparentConverter<_, _>>.MakeGenericType(optionType, providerType)
         ActivatorExt.CreateInstance<IValueConverter>(converterType, [| box toProvider; box fromProvider; box true |])
 
     /// Returns <c>true</c> when <paramref name="t"/> is <c>FSharpOption&lt;_&gt;</c> or <c>FSharpValueOption&lt;_&gt;</c>.

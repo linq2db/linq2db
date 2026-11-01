@@ -266,6 +266,160 @@ namespace LinqToDB.Internal.SqlQuery
 		}
 
 		/// <summary>
+		/// How finely a date/time type resolves an instant; <c>-1</c> for a type that is not one.
+		/// </summary>
+		/// <remarks>
+		/// A <c>DateTime64</c> without a precision may hold whole seconds (YDB's <c>Datetime64</c>) or fractions (ClickHouse's
+		/// default), so it takes <paramref name="unknownDateTime64Rank"/>: <see cref="IsCoarserDateTime"/> picks whichever
+		/// answers "coarser", which only lets a value beside it keep its own type.
+		/// </remarks>
+		static int DateTimeRank(DbDataType type, int unknownDateTime64Rank)
+		{
+			return type.DataType switch
+			{
+				DataType.Date or DataType.Date32                                      => 0,
+				DataType.SmallDateTime                                                => 1,
+				DataType.DateTime                                                     => 2,
+				DataType.DateTime64                                                   => type.Precision switch { null => unknownDateTime64Rank, > 0 => 3, _ => 2 },
+				DataType.DateTime2 or DataType.Timestamp64 or DataType.DateTimeOffset => 3,
+				_                                                                     => -1,
+			};
+		}
+
+		internal static bool IsCoarserDateTime(DbDataType type, DbDataType than)
+		{
+			var rank = DateTimeRank(type, 2);
+			return rank >= 0 && rank < DateTimeRank(than, 3);
+		}
+
+		internal static bool IsDecimal(DataType dataType)
+		{
+			return dataType is DataType.Decimal or DataType.Decimal32 or DataType.Decimal64 or DataType.Decimal128 or DataType.Decimal256;
+		}
+
+		/// <summary>
+		/// The type a decimal value takes beside a computed decimal operand: the operand's own type when it holds the
+		/// value, otherwise one with the integer digits and the scale of both.
+		/// </summary>
+		/// <remarks>
+		/// A computed value has no stored scale to narrow the value to, and the provider's default decimal type can be
+		/// narrower than the operand in either direction. Precision is capped at DB2's 31, the smallest maximum among the
+		/// providers that render it; past the cap the value keeps its own facets, at most 29 digits. ClickHouse decimals
+		/// move up a family instead, because a comparison is computed in the wider operand's family and overflows it.
+		/// </remarks>
+		internal static DbDataType GetDecimalTypeForValue(DbDataType operandType, decimal value)
+		{
+			if (operandType.Precision is not { } precision || operandType.Scale is not { } scale)
+				return operandType;
+
+			// Dividing by 1.000… drops trailing zeros, which would otherwise count as scale.
+			var (valuePrecision, valueScale) = DecimalHelper.GetFacets(value / 1.0000000000000000000000000000m);
+
+			var integerDigits = Math.Max(precision - scale, valuePrecision - valueScale);
+			var newScale      = Math.Max(scale, valueScale);
+
+			if (integerDigits == precision - scale && newScale == scale)
+				return operandType;
+
+			var newPrecision = integerDigits + newScale;
+
+			if (newPrecision > (operandType.DataType == DataType.Decimal ? 31 : 76))
+			{
+				newPrecision = valuePrecision;
+				newScale     = valueScale;
+			}
+
+			var dataType = operandType.DataType switch
+			{
+				DataType.Decimal32  when newPrecision > 9  => newPrecision > 38 ? DataType.Decimal256 : newPrecision > 18 ? DataType.Decimal128 : DataType.Decimal64,
+				DataType.Decimal64  when newPrecision > 18 => newPrecision > 38 ? DataType.Decimal256 : DataType.Decimal128,
+				DataType.Decimal128 when newPrecision > 38 => DataType.Decimal256,
+				var other                                  => other,
+			};
+
+			return new DbDataType(operandType.SystemType, dataType, null, operandType.Length, newPrecision, newScale);
+		}
+
+		/// <summary>
+		/// Whether <paramref name="expr"/> is a stored column's value as it is, rather than one computed from it.
+		/// </summary>
+		/// <remarks>
+		/// Narrower than <see cref="GetColumnDescriptorForTyping"/>, which also finds a column through
+		/// COALESCE, MIN/MAX and the value window functions. A cast is transparent to the structural walk because
+		/// <see cref="GetColumnDescriptorForTyping"/> already refuses one that changed the database type.
+		/// </remarks>
+		internal static bool IsStoredColumn(ISqlExpression expr)
+		{
+			return GetColumnDescriptorForTyping(expr) != null && IsStoredValue(expr);
+		}
+
+		internal static bool IsStoredValue(ISqlExpression expr)
+		{
+			return IsStoredValue(expr, null);
+		}
+
+		static bool IsStoredValue(ISqlExpression expr, HashSet<IQueryElement>? visitedCteFields)
+		{
+			switch (expr)
+			{
+				case SqlField:
+					return true;
+
+				// A CTE column is stored only if what it projects is.
+				case SqlCteTableField cteTableField:
+				{
+					if (cteTableField.CteField is not { Column: { } cteColumn } cteField)
+						return true;
+
+					visitedCteFields ??= new HashSet<IQueryElement>(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
+
+					// Path-scoped: two branches of a set operation reading the same CTE column are not a recursion. A
+					// recursive reference adds no value its other branches do not, so they decide.
+					if (!visitedCteFields.Add(cteField))
+						return true;
+
+					var stored = IsStoredValue(cteColumn, visitedCteFields);
+					visitedCteFields.Remove(cteField);
+					return stored;
+				}
+
+				case SqlColumn column:
+				{
+					if (!IsStoredValue(column.Expression, visitedCteFields))
+						return false;
+
+					if (column.Parent?.HasSetOperators == true)
+					{
+						var idx = column.Parent.Select.Columns.IndexOf(column);
+
+						foreach (var setOperator in column.Parent.SetOperators)
+						{
+							if (idx < 0 || !IsStoredValue(setOperator.SelectQuery.Select.Columns[idx].Expression, visitedCteFields))
+								return false;
+						}
+					}
+
+					return true;
+				}
+
+				case SqlNullabilityExpression nullability:
+					return IsStoredValue(nullability.SqlExpression, visitedCteFields);
+
+				case SqlExpression { Expr: "{0}", Parameters: [var parameter] }:
+					return IsStoredValue(parameter, visitedCteFields);
+
+				case SqlCastExpression cast:
+					return IsStoredValue(cast.Expression, visitedCteFields);
+
+				case SelectQuery { Select.Columns: [var singleColumn] }:
+					return IsStoredValue(singleColumn, visitedCteFields);
+
+				default:
+					return false;
+			}
+		}
+
+		/// <summary>
 		/// Returns <see cref="ColumnDescriptor"/> for <paramref name="expr"/>.
 		/// </summary>
 		/// <param name="expr">Tested SQL Expression.</param>
@@ -456,11 +610,11 @@ namespace LinqToDB.Internal.SqlQuery
 				// COUNT and AVG stop here either way. The type guard below cannot do this on its own: it separates
 				// them only while the result type and the column's member type differ, which over an int column
 				// counted into an int they do not.
-				case SqlExtendedFunction { Arguments: [var singleArgument] } extendedFunction
+				case SqlExtendedFunction { Arguments: [var argument, ..] } extendedFunction
 					when extendedFunction.ArgumentDomain == SqlArgumentDomain.Element
 						|| (extendedFunction.ArgumentDomain == SqlArgumentDomain.SameKind && !forTyping):
 				{
-					var found = GetColumnDescriptor(singleArgument.Expression, alreadyVisitedElements, forTyping);
+					var found = GetColumnDescriptor(argument.Expression, alreadyVisitedElements, forTyping);
 					if (found?.GetDbDataType(true).SystemType != extendedFunction.SystemType)
 						return null;
 					return found;
@@ -718,6 +872,12 @@ namespace LinqToDB.Internal.SqlQuery
 
 				SqlParameterizedExpressionBase { Type: var t } => t,
 
+				// MIN, MAX and the value window functions return a row's value unchanged, so the argument's column
+				// describes the result completely - the same relation GetColumnDescriptor reads off this node. SUM is
+				// excluded: it answers in the argument's terms but can outgrow the width the argument is declared with.
+				SqlExtendedFunction { ArgumentDomain: SqlArgumentDomain.Element, Arguments: [var argument, ..] }
+				                                    => GetDbDataTypeImpl(argument.Expression, visited),
+
 				SqlCteField cteField                  => GetCteFieldType(cteField, ref visited),
 				SqlCteTableField { CteField: { } cf } => GetCteFieldType(cf, ref visited),
 				SqlCteTableField                      => DbDataType.Undefined,
@@ -730,6 +890,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 				SqlCaseExpression caseExpression           => GetCaseExpressionType(caseExpression, visited),
 				SqlConditionExpression conditionExpression => GetConditionExpressionType(conditionExpression, visited),
+				SqlCoalesceExpression coalesceExpression   => GetCoalesceExpressionType(coalesceExpression, visited),
 
 				{ SystemType: null }  => DbDataType.Undefined,
 				{ SystemType: var t } => new(t),
@@ -781,6 +942,57 @@ namespace LinqToDB.Internal.SqlQuery
 					return trueType;
 
 				return GetDbDataTypeImpl(sqlCondition.FalseValue, visited);
+			}
+
+			static DbDataType GetCoalesceExpressionType(SqlCoalesceExpression coalesce, HashSet<IQueryElement>? visited)
+			{
+				// TODO: v7 - type COALESCE by each database's own result-type rule (the new type mapping system), not by operand agreement
+				DbDataType? result = null;
+
+				return AgreeOnOperandType(coalesce, ref result, visited) && result != null
+					? result.Value
+					: new DbDataType(coalesce.SystemType ?? typeof(object));
+			}
+
+			// a ?? b ?? c is built as nested COALESCE nodes, and a subquery column can hold one, so a disagreement inside a
+			// nested one must reach the outer one
+			static bool AgreeOnOperandType(SqlCoalesceExpression coalesce, ref DbDataType? result, HashSet<IQueryElement>? visited)
+			{
+				foreach (var expression in coalesce.Expressions)
+				{
+					if (UnwrapToCoalesce(expression) is { } nested)
+					{
+						if (!AgreeOnOperandType(nested, ref result, visited))
+							return false;
+
+						continue;
+					}
+
+					var type = GetDbDataTypeImpl(expression, visited);
+					if (type.DataType == DataType.Undefined)
+						continue;
+
+					if (result == null)
+						result = type;
+					else if (result.Value.DataType != type.DataType || !string.Equals(result.Value.DbType, type.DbType, StringComparison.Ordinal))
+						return false;
+				}
+
+				return true;
+			}
+
+			static SqlCoalesceExpression? UnwrapToCoalesce(ISqlExpression expression)
+			{
+				while (true)
+				{
+					switch (expression)
+					{
+						case SqlCoalesceExpression coalesce                    : return coalesce;
+						case SqlNullabilityExpression { SqlExpression: var e } : expression = e; break;
+						case SqlColumn { Expression: var e }                   : expression = e; break;
+						default                                                : return null;
+					}
+				}
 			}
 		}
 
