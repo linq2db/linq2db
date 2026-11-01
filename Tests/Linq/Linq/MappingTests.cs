@@ -280,9 +280,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MyType3()
+		public void MyType3([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using var db = (TestDataConnection)new TestDataConnection();
+			using var db = GetDataConnection(context);
 			db.AddMappingSchema(_myMappingSchema);
 			try
 			{
@@ -295,9 +295,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MyType4()
+		public void MyType4([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using var db = (TestDataConnection)new TestDataConnection();
+			using var db = GetDataConnection(context);
 			db.AddMappingSchema(_myMappingSchema);
 			try
 			{
@@ -311,9 +311,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MyType5()
+		public void MyType5([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using var db = (TestDataConnection)new TestDataConnection();
+			using var db = GetDataConnection(context);
 			db.AddMappingSchema(_myMappingSchema);
 			try
 			{

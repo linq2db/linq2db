@@ -189,14 +189,7 @@ namespace Tests
 			if (ParallelExecutionEnabled && provider != null)
 			{
 				if (!NUnitUtils.IsCreateDatabase(test))
-				{
-					var signaled = CustomTestContext.AwaitDatabaseReady(provider);
-
-					// Backstop: if the wait timed out (no CreateDatabase ever signalled it), release the
-					// other waiters so they don't each pay the full timeout — one wait per provider, not per test.
-					if (!signaled)
-						CustomTestContext.MarkDatabaseReady(provider);
-				}
+					CustomTestContext.EnsureDatabaseReady(provider);
 			}
 
 			// SequentialAccess for the SqlServer.CS provider is a per-context option set in the

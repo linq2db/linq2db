@@ -287,6 +287,8 @@ public class a_CreateData : TestBase
 
 				throw new InvalidOperationException(context);
 		}
+
+		CaptureReferenceData(context);
 	}
 
 	// MySql.sql drops the database its own connection names, so an interrupted run would fail every later one at open.
