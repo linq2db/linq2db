@@ -1070,6 +1070,31 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void LeftJoinOuterOnlyPredicateRowKey([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				from c in db.Child
+					.Where(c => Sql.Row(c.ParentID, c.ChildID) == Sql.Row(p.ParentID, p.ParentID * 10 + 1) && p.ParentID != 2)
+					.DefaultIfEmpty()
+				select new { p.ParentID, ChildID = (int?)c.ChildID };
+
+			var actual = query
+				.ToList()
+				.Select(r => (r.ParentID, r.ChildID));
+
+			var expected = Parent
+				.SelectMany(p => Child
+					.Where(c => c.ParentID == p.ParentID && c.ChildID == p.ParentID * 10 + 1 && p.ParentID != 2)
+					.Select(c => (p.ParentID, (int?)c.ChildID))
+					.DefaultIfEmpty((p.ParentID, null)));
+
+			actual.ShouldBe(expected, ignoreOrder: true);
+		}
+
+		[Test]
 		public void MultipleLeftJoin([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

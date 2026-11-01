@@ -3082,15 +3082,34 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 					// The CASE must not widen the key's dependencies: YDB requires each equality argument to depend
 					// on exactly one join input.
-					var keySources = outerFirst ? sources1 : sources2;
-					var covered    = outerOnly.FindAll(p => p.usedSources.IsSubsetOf(keySources));
+					var outerSide = outerFirst ? key.Expr1 : key.Expr2;
+					var outerRow  = QueryHelper.UnwrapNullablity(outerSide) as SqlRowExpression;
+
+					// A row cannot sit inside CASE, so a row key folds into one of its columns: a NULL column matches nothing.
+					var component = -1;
+					var covered   = new List<(ISqlPredicate predicate, HashSet<ISqlTableSource> usedSources)>();
+
+					if (outerRow == null)
+					{
+						var keySources = outerFirst ? sources1 : sources2;
+						covered = outerOnly.FindAll(p => p.usedSources.IsSubsetOf(keySources));
+					}
+					else
+					{
+						for (var j = 0; j < outerRow.Values.Length && covered.Count == 0; j++)
+						{
+							var componentSources = CollectUsedSources(outerRow.Values[j]);
+							covered   = outerOnly.FindAll(p => p.usedSources.IsSubsetOf(componentSources));
+							component = j;
+						}
+					}
 
 					if (covered.Count == 0)
 						continue;
 
 					outerOnly.RemoveAll(p => covered.Exists(c => ReferenceEquals(c.predicate, p.predicate)));
 
-					var outerKey = outerFirst ? key.Expr1 : key.Expr2;
+					var outerKey = outerRow == null ? outerSide : outerRow.Values[component];
 					var keyType  = QueryHelper.GetDbDataType(outerKey, _mappingSchema);
 
 					// ELSE is raw SQL so the optimizer cannot reduce the key to `innerKey IS NULL`. When parameters can decide
@@ -3105,10 +3124,17 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							rawNull)
 						: (ISqlExpression)rawNull;
 
-					var caseKey = new SqlCaseExpression(
+					ISqlExpression caseKey = new SqlCaseExpression(
 						keyType,
 						[new SqlCaseExpression.CaseItem(new SqlSearchCondition(false, null, covered.Select(p => p.predicate)), outerKey)],
 						elseExpr);
+
+					if (outerRow != null)
+					{
+						var values = (ISqlExpression[])outerRow.Values.Clone();
+						values[component] = caseKey;
+						caseKey = new SqlRowExpression(values);
+					}
 
 					// The picked key never matched NULL before the rewrite, so the CASE side must not be null-aware.
 					join.Condition.Predicates[i] = outerFirst
