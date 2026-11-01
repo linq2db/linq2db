@@ -11,6 +11,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests.Model;
 
 namespace Tests.Linq
@@ -1675,6 +1677,40 @@ namespace Tests.Linq
 				() => db.GetTable<BaseClass>().Insert(() => new UnmappedChild { Id = 1, Code = 1, UnmappedField = 5 }));
 
 			Assert.That(db.GetTable<BaseClass>().Count(), Is.Zero);
+		}
+
+		// The shared InheritanceChild hierarchy declares its association on the base type; this one declares it on a
+		// derived type only, so the discriminator lands in the association's ON clause.
+		[Table("InheritanceChild")]
+		[InheritanceMapping(Code = null, Type = typeof(DerivedAssociationChildBase), IsDefault = true)]
+		[InheritanceMapping(Code = 1,    Type = typeof(DerivedAssociationChild1))]
+		[InheritanceMapping(Code = 2,    Type = typeof(DerivedAssociationChild2))]
+		class DerivedAssociationChildBase
+		{
+			[PrimaryKey]                     public int  InheritanceChildId  { get; set; }
+			[Column(IsDiscriminator = true)] public int? TypeDiscriminator   { get; set; }
+			[Column]                         public int  InheritanceParentId { get; set; }
+		}
+
+		sealed class DerivedAssociationChild1 : DerivedAssociationChildBase
+		{
+			[Association(ThisKey = nameof(InheritanceParentId), OtherKey = nameof(InheritanceParentBase.InheritanceParentId))]
+			public InheritanceParentBase? Parent { get; set; }
+		}
+
+		sealed class DerivedAssociationChild2 : DerivedAssociationChildBase;
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6148")]
+		public void DerivedAssociationKeepsOtherDerivedRows([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var result = db.GetTable<DerivedAssociationChildBase>()
+				.OrderBy(c => c.InheritanceChildId)
+				.Select(c => (int?)((DerivedAssociationChild1)c).Parent!.InheritanceParentId)
+				.ToList();
+
+			result.ShouldBe([null, 2, null]);
 		}
 
 		#endregion
