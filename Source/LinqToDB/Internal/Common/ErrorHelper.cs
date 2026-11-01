@@ -168,5 +168,17 @@
 		{
 			public const string Error_SkipInUpdate = "Feature not supported by database: Skip in UPDATE.";
 		}
+
+		public static class SelectDynamic
+		{
+			public const string Error_QueryMarkerInvoked          = "{0} is a query marker and must not be invoked directly.";
+			public const string Error_DynamicColumnEmptyName      = "Key at index {0} produced an empty dynamic column name.";
+			public const string Error_DynamicColumnDuplicateName  = "Duplicate dynamic column name '{0}'.";
+			public const string Error_DynamicColumnShadowsMember  = "Dynamic column name '{0}' collides with a member of '{1}', which would be resolved instead of the generated column.";
+			public const string Error_NoDynamicColumnSetter       = "Type '{0}' has no dynamic column setter, so the generated columns would have nowhere to go. Add a member marked with DynamicColumnsStoreAttribute, or configure a setter through DynamicColumnAccessorAttribute or DynamicPropertyAccessors.";
+			public const string Error_StaticProjectionNotAnObject = "The static projection must construct an object (new T { ... }).";
+			public const string Error_ArgumentDependsOnQuery      = "The '{0}' argument of SelectDynamic must not depend on the query's range variables: the column set is decided when the query is built, not per row.";
+			public const string Error_ArgumentIsAQuery            = "The '{0}' argument of SelectDynamic is a query, which cannot run while a sub-query or a compiled query is built. Materialize it (ToArray, ToList) and pass the collection.";
+		}
 	}
 }
