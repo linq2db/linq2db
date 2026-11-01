@@ -176,19 +176,19 @@ LinqToDB.Internal.SqlProvider.SqlStepKind.NonQuery = 0 -> LinqToDB.Internal.SqlP
 LinqToDB.Internal.SqlProvider.SqlStepKind.Reader = 2 -> LinqToDB.Internal.SqlProvider.SqlStepKind
 LinqToDB.Internal.SqlProvider.SqlStepKind.Scalar = 1 -> LinqToDB.Internal.SqlProvider.SqlStepKind
 LinqToDB.Internal.SqlProvider.SqlStepKind.SelfExecuting = 3 -> LinqToDB.Internal.SqlProvider.SqlStepKind
-LinqToDB.Internal.SqlQuery.QueryElementType.SqlFragmentStatement = 91 -> LinqToDB.Internal.SqlQuery.QueryElementType
 LinqToDB.Internal.SqlQuery.QueryElementType.SqlObjectNameExpression = 90 -> LinqToDB.Internal.SqlQuery.QueryElementType
-LinqToDB.Internal.SqlQuery.QueryType.Fragment = 10 -> LinqToDB.Internal.SqlQuery.QueryType
-LinqToDB.Internal.SqlQuery.SqlFragmentStatement
-LinqToDB.Internal.SqlQuery.SqlFragmentStatement.Expression.get -> LinqToDB.Internal.SqlQuery.ISqlExpression!
-LinqToDB.Internal.SqlQuery.SqlFragmentStatement.Expression.set -> void
-LinqToDB.Internal.SqlQuery.SqlFragmentStatement.SqlFragmentStatement(LinqToDB.Internal.SqlQuery.ISqlExpression! expression) -> void
+LinqToDB.Internal.SqlQuery.QueryElementType.SqlRawStatement = 91 -> LinqToDB.Internal.SqlQuery.QueryElementType
+LinqToDB.Internal.SqlQuery.QueryType.Raw = 10 -> LinqToDB.Internal.SqlQuery.QueryType
 LinqToDB.Internal.SqlQuery.SqlObjectNameExpression
 LinqToDB.Internal.SqlQuery.SqlObjectNameExpression.ConvertType.get -> LinqToDB.Internal.SqlProvider.ConvertType
 LinqToDB.Internal.SqlQuery.SqlObjectNameExpression.InsideStringLiteral.get -> bool
 LinqToDB.Internal.SqlQuery.SqlObjectNameExpression.Name.get -> LinqToDB.SqlQuery.SqlObjectName
 LinqToDB.Internal.SqlQuery.SqlObjectNameExpression.SqlObjectNameExpression(LinqToDB.SqlQuery.SqlObjectName name, LinqToDB.Internal.SqlProvider.ConvertType convertType, LinqToDB.TableOptions tableOptions = LinqToDB.TableOptions.NotSet, bool insideStringLiteral = false) -> void
 LinqToDB.Internal.SqlQuery.SqlObjectNameExpression.TableOptions.get -> LinqToDB.TableOptions
+LinqToDB.Internal.SqlQuery.SqlRawStatement
+LinqToDB.Internal.SqlQuery.SqlRawStatement.Expression.get -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+LinqToDB.Internal.SqlQuery.SqlRawStatement.Expression.set -> void
+LinqToDB.Internal.SqlQuery.SqlRawStatement.SqlRawStatement(LinqToDB.Internal.SqlQuery.ISqlExpression! expression) -> void
 LinqToDB.LinqOptions.Deconstruct(out bool PreloadGroups, out bool IgnoreEmptyUpdate, out bool GenerateExpressionTest, out bool TraceMapperExpression, out bool ConcatenateOrderBy, out bool OptimizeJoins, out LinqToDB.CompareNulls CompareNulls, out bool GuardGrouping, out bool DisableQueryCache, out System.TimeSpan? CacheSlidingExpiration, out bool PreferApply, out bool KeepDistinctOrdered, out bool ParameterizeTakeSkip, out bool EnableContextSchemaEdit, out bool PreferExistsForScalar, out bool PreferClientCalculation, out LinqToDB.UpsertEmulationPolicy UpsertEmulationPolicy, out LinqToDB.EagerLoadingStrategy DefaultEagerLoadingStrategy, out LinqToDB.ImplicitCollectionLoading ImplicitCollectionLoading, out bool OptimizeForSequentialAccess, out bool UseDbBatch, out bool UseCombinedCommands) -> void
 LinqToDB.LinqOptions.LinqOptions(bool PreloadGroups = false, bool IgnoreEmptyUpdate = false, bool GenerateExpressionTest = false, bool TraceMapperExpression = false, bool ConcatenateOrderBy = false, bool OptimizeJoins = true, LinqToDB.CompareNulls CompareNulls = LinqToDB.CompareNulls.LikeClr, bool GuardGrouping = true, bool DisableQueryCache = false, System.TimeSpan? CacheSlidingExpiration = null, bool PreferApply = true, bool KeepDistinctOrdered = true, bool ParameterizeTakeSkip = true, bool EnableContextSchemaEdit = false, bool PreferExistsForScalar = false, bool PreferClientCalculation = false, LinqToDB.UpsertEmulationPolicy UpsertEmulationPolicy = LinqToDB.UpsertEmulationPolicy.Allow, LinqToDB.EagerLoadingStrategy DefaultEagerLoadingStrategy = LinqToDB.EagerLoadingStrategy.Default, LinqToDB.ImplicitCollectionLoading ImplicitCollectionLoading = LinqToDB.ImplicitCollectionLoading.Allow, bool OptimizeForSequentialAccess = false, bool UseDbBatch = true, bool UseCombinedCommands = false) -> void
 LinqToDB.LinqOptions.UseCombinedCommands.get -> bool
@@ -236,16 +236,6 @@ override LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.VisitSqlValue
 override LinqToDB.Internal.SqlProvider.SqlStepCondition.Equals(object? obj) -> bool
 override LinqToDB.Internal.SqlProvider.SqlStepCondition.GetHashCode() -> int
 override LinqToDB.Internal.SqlProvider.SqlStepCondition.ToString() -> string!
-override LinqToDB.Internal.SqlQuery.SqlFragmentStatement.Accept(LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor! visitor) -> LinqToDB.Internal.SqlQuery.IQueryElement!
-override LinqToDB.Internal.SqlQuery.SqlFragmentStatement.ElementType.get -> LinqToDB.Internal.SqlQuery.QueryElementType
-override LinqToDB.Internal.SqlQuery.SqlFragmentStatement.GetElementHashCode() -> int
-override LinqToDB.Internal.SqlQuery.SqlFragmentStatement.GetTableSource(LinqToDB.Internal.SqlQuery.ISqlTableSource! table, out bool noAlias) -> LinqToDB.Internal.SqlQuery.ISqlTableSource?
-override LinqToDB.Internal.SqlQuery.SqlFragmentStatement.IsParameterDependent.get -> bool
-override LinqToDB.Internal.SqlQuery.SqlFragmentStatement.IsParameterDependent.set -> void
-override LinqToDB.Internal.SqlQuery.SqlFragmentStatement.QueryType.get -> LinqToDB.Internal.SqlQuery.QueryType
-override LinqToDB.Internal.SqlQuery.SqlFragmentStatement.SelectQuery.get -> LinqToDB.Internal.SqlQuery.SelectQuery?
-override LinqToDB.Internal.SqlQuery.SqlFragmentStatement.SelectQuery.set -> void
-override LinqToDB.Internal.SqlQuery.SqlFragmentStatement.ToString(LinqToDB.Internal.SqlQuery.QueryElementTextWriter! writer) -> LinqToDB.Internal.SqlQuery.QueryElementTextWriter!
 override LinqToDB.Internal.SqlQuery.SqlObjectNameExpression.Accept(LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor! visitor) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.Internal.SqlQuery.SqlObjectNameExpression.CanBeNullable(LinqToDB.Internal.SqlQuery.NullabilityContext! nullability) -> bool
 override LinqToDB.Internal.SqlQuery.SqlObjectNameExpression.ElementType.get -> LinqToDB.Internal.SqlQuery.QueryElementType
@@ -255,6 +245,16 @@ override LinqToDB.Internal.SqlQuery.SqlObjectNameExpression.Precedence.get -> in
 override LinqToDB.Internal.SqlQuery.SqlObjectNameExpression.SystemType.get -> System.Type?
 override LinqToDB.Internal.SqlQuery.SqlObjectNameExpression.ToString() -> string!
 override LinqToDB.Internal.SqlQuery.SqlObjectNameExpression.ToString(LinqToDB.Internal.SqlQuery.QueryElementTextWriter! writer) -> LinqToDB.Internal.SqlQuery.QueryElementTextWriter!
+override LinqToDB.Internal.SqlQuery.SqlRawStatement.Accept(LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor! visitor) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+override LinqToDB.Internal.SqlQuery.SqlRawStatement.ElementType.get -> LinqToDB.Internal.SqlQuery.QueryElementType
+override LinqToDB.Internal.SqlQuery.SqlRawStatement.GetElementHashCode() -> int
+override LinqToDB.Internal.SqlQuery.SqlRawStatement.GetTableSource(LinqToDB.Internal.SqlQuery.ISqlTableSource! table, out bool noAlias) -> LinqToDB.Internal.SqlQuery.ISqlTableSource?
+override LinqToDB.Internal.SqlQuery.SqlRawStatement.IsParameterDependent.get -> bool
+override LinqToDB.Internal.SqlQuery.SqlRawStatement.IsParameterDependent.set -> void
+override LinqToDB.Internal.SqlQuery.SqlRawStatement.QueryType.get -> LinqToDB.Internal.SqlQuery.QueryType
+override LinqToDB.Internal.SqlQuery.SqlRawStatement.SelectQuery.get -> LinqToDB.Internal.SqlQuery.SelectQuery?
+override LinqToDB.Internal.SqlQuery.SqlRawStatement.SelectQuery.set -> void
+override LinqToDB.Internal.SqlQuery.SqlRawStatement.ToString(LinqToDB.Internal.SqlQuery.QueryElementTextWriter! writer) -> LinqToDB.Internal.SqlQuery.QueryElementTextWriter!
 static LinqToDB.Common.Configuration.Linq.UseCombinedCommands.get -> bool
 static LinqToDB.Common.Configuration.Linq.UseCombinedCommands.set -> void
 static LinqToDB.Common.Configuration.Linq.UseDbBatch.get -> bool
@@ -281,13 +281,13 @@ static LinqToDB.Internal.SqlProvider.SqlStepCondition.operator ==(LinqToDB.Inter
 virtual LinqToDB.Internal.DataProvider.DataProviderBase.CreateDmlService() -> LinqToDB.Internal.DataProvider.IDmlService!
 virtual LinqToDB.Internal.DataProvider.DmlServiceBase.BuildCommandScenario(LinqToDB.Internal.SqlQuery.SqlStatement! statement, LinqToDB.Internal.SqlProvider.SqlProviderFlags! flags, LinqToDB.Linq.Translation.ISqlExpressionFactory! factory) -> LinqToDB.Internal.SqlProvider.SqlCommandScenario?
 virtual LinqToDB.Internal.DataProvider.DmlServiceBase.PlanScenario(LinqToDB.Internal.SqlProvider.SqlCommandScenario! scenario, LinqToDB.Internal.SqlProvider.SqlProviderFlags! flags) -> LinqToDB.Internal.SqlProvider.SqlCommandGroupPlan!
-virtual LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildFragmentStatement(LinqToDB.Internal.SqlQuery.SqlFragmentStatement! statement) -> void
+virtual LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildRawStatement(LinqToDB.Internal.SqlQuery.SqlRawStatement! statement) -> void
 virtual LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSql(LinqToDB.Internal.SqlQuery.SqlStatement! statement, System.Text.StringBuilder! sb, LinqToDB.Internal.SqlProvider.ISqlBuilderRenderContext! renderContext, int indent, LinqToDB.Internal.SqlProvider.BasicSqlBuilder.ColumnAliasMode aliasMode, LinqToDB.Internal.SqlQuery.NullabilityContext? nullabilityContext) -> void
 virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.Convert(LinqToDB.Internal.SqlProvider.OptimizationContext! optimizationContext, LinqToDB.Internal.SqlQuery.NullabilityContext! nullabilityContext, LinqToDB.Internal.SqlQuery.IQueryElement! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 virtual LinqToDB.Internal.SqlProvider.SqlExpressionOptimizerVisitor.Optimize(LinqToDB.Internal.SqlQuery.EvaluationContext! evaluationContext, LinqToDB.Internal.SqlQuery.NullabilityContext! nullabilityContext, LinqToDB.DataOptions! dataOptions, LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.Internal.SqlQuery.IQueryElement! element, bool visitQueries, bool reducePredicates = false) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.IsReplaceable(LinqToDB.Internal.SqlQuery.IQueryElement! element) -> bool
-virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlFragmentStatement(LinqToDB.Internal.SqlQuery.SqlFragmentStatement! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlObjectNameExpression(LinqToDB.Internal.SqlQuery.SqlObjectNameExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlRawStatement(LinqToDB.Internal.SqlQuery.SqlRawStatement! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 *REMOVED*LinqToDB.Internal.SqlProvider.OptimizationContext.TransformationInfo.get -> LinqToDB.Internal.SqlQuery.Visitors.SqlQueryVisitor.IVisitorTransformationInfo!
 *REMOVED*override LinqToDB.Internal.DataProvider.SqlCe.Translation.SqlCeMemberTranslator.SqlTypesTranslation.ConvertDate(LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.MemberExpression! memberExpression, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> System.Linq.Expressions.Expression?
 *REMOVED*override LinqToDB.Internal.DataProvider.SqlServer.Translation.SqlServer2005MemberTranslator.SqlTypes2005Translation.ConvertDate(LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.MemberExpression! memberExpression, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> System.Linq.Expressions.Expression?

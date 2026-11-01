@@ -1981,7 +1981,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 					}
 
 					case QueryElementType.SqlObjectNameExpression:
-					case QueryElementType.SqlFragmentStatement:
+					case QueryElementType.SqlRawStatement:
 						// Produced server-side during scenario render; never present in a client-serialized statement.
 						// Make that explicit instead of falling through to the generic "not implemented" message.
 						throw new InvalidOperationException($"{e.ElementType} is produced during server-side render and is not remote-serializable.");
@@ -3335,7 +3335,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 					}
 
 					case QueryElementType.SqlObjectNameExpression:
-					case QueryElementType.SqlFragmentStatement:
+					case QueryElementType.SqlRawStatement:
 						throw new InvalidOperationException($"{(QueryElementType)type} is produced during server-side render and is not remote-serializable.");
 
 					default:

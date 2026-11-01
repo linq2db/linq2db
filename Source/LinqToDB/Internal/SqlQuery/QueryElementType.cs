@@ -144,6 +144,6 @@
 		// Appended for the SqlCommandScenario refactor — enum ordinals are wire-serialized, so new members must stay
 		// at the end. Ordered AFTER master's additions so master's already-published ordinals do not shift.
 		SqlObjectNameExpression,
-		SqlFragmentStatement,
+		SqlRawStatement,
 	}
 }

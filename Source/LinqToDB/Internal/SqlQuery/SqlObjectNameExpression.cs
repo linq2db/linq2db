@@ -9,7 +9,7 @@ namespace LinqToDB.Internal.SqlQuery
 {
 	/// <summary>
 	/// A database object name (table / sequence / trigger / field) that renders with a specific
-	/// <see cref="ConvertType"/>. Lets a <see cref="SqlFragment"/> — and thus a <see cref="SqlFragmentStatement"/> —
+	/// <see cref="ConvertType"/>. Lets a <see cref="SqlFragment"/> — and thus a <see cref="SqlRawStatement"/> —
 	/// carry a correctly-quoted derived name (e.g. an identity sequence <c>SIDENTITY_&lt;table&gt;</c>) whose quoting
 	/// is only available in the SQL builder.
 	/// </summary>

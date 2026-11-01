@@ -134,7 +134,7 @@ namespace Tests.xUpdate
 			table.Insert(() => new TestIdTrun { Field1 = 1m });
 			table.Truncate();
 
-			// The sqlite_sequence reset carries the table name as an inline SqlValue inside a SqlFragmentStatement
+			// The sqlite_sequence reset carries the table name as an inline SqlValue inside a SqlRawStatement
 			// (IsParameterDependent is false), so the whole-query parameterization pass leaves it inline. Guard that:
 			// the reset must render WHERE NAME='TestIdTrun', never a parameter.
 			Assert.That(capture.ResetSql, Is.Not.Null);

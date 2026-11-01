@@ -16,7 +16,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 	/// <c>SELECT &lt;id&gt; FROM NEW TABLE (INSERT …)</c> (one scalar command, emitted by the builder), or — when no
 	/// identity field is detected — falls back to the insert plus <c>SELECT identity_val_local()</c>; z/OS appends
 	/// <c>; SELECT IDENTITY_VAL_LOCAL() FROM SYSIBM.SYSDUMMY1</c> to the insert (builder <c>BuildGetIdentity</c>).
-	/// A truncate-with-reset becomes the truncate plus one <see cref="SqlFragmentStatement"/> per
+	/// A truncate-with-reset becomes the truncate plus one <see cref="SqlRawStatement"/> per
 	/// identity column (<c>ALTER TABLE … ALTER … RESTART WITH 1</c>). Everything else uses the base scenario.
 	/// </summary>
 	public abstract class DB2DmlService : DmlServiceBase
@@ -35,7 +35,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			{
 				var table = truncate.Table!;
 
-				return PerFieldResetScenario(truncate, field => new SqlFragmentStatement(factory.Fragment(
+				return PerFieldResetScenario(truncate, field => new SqlRawStatement(factory.Fragment(
 					"ALTER TABLE {0} ALTER {1} RESTART WITH 1",
 					new SqlObjectNameExpression(table.TableName, ConvertType.NameToQueryTable, table.TableOptions),
 					new SqlObjectNameExpression(new SqlObjectName(field.PhysicalName), ConvertType.NameToQueryField))));

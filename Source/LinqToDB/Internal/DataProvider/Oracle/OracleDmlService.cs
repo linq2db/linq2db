@@ -13,7 +13,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 	/// a trailing <c>RETURNING … INTO :IDENTITY_PARAMETER</c>). A create-table-with-identity emits the table plus a
 	/// <c>CREATE SEQUENCE</c> and a <c>CREATE OR REPLACE TRIGGER</c>; a truncate-with-identity-reset emits the truncate
 	/// plus a PL/SQL block that walks the identity sequence back to zero. The auxiliary commands are rendered as
-	/// <see cref="SqlFragmentStatement"/>s (identity names carried as <see cref="SqlObjectNameExpression"/>s so the
+	/// <see cref="SqlRawStatement"/>s (identity names carried as <see cref="SqlObjectNameExpression"/>s so the
 	/// builder quotes them). Everything else uses the base scenario.
 	/// </summary>
 	public sealed class OracleDmlService : DmlServiceBase
@@ -37,7 +37,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					// in the BuildCommand this replaced did. Without it a table name carrying an apostrophe (from mapping
 					// or from .TableName(...) at runtime) closes the literal and the rest is parsed as PL/SQL.
 					var seq   = new SqlObjectNameExpression(new SqlObjectName(SequenceName(truncate.Table.TableName.Name)), ConvertType.SequenceName, insideStringLiteral: true);
-					var reset = new SqlFragmentStatement(factory.Fragment(
+					var reset = new SqlRawStatement(factory.Fragment(
 						  "DECLARE\n\tl_value number;\nBEGIN\n"
 						+ "\tEXECUTE IMMEDIATE 'SELECT {0}.NEXTVAL FROM dual' INTO l_value;\n"
 						+ "\tEXECUTE IMMEDIATE 'ALTER SEQUENCE {0} INCREMENT BY -' || l_value || ' MINVALUE 0';\n"
@@ -63,11 +63,11 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					var field  = table.IdentityFields[0];
 					var schema = table.TableName.Schema;
 
-					var sequence = new SqlFragmentStatement(factory.Fragment(
+					var sequence = new SqlRawStatement(factory.Fragment(
 						"CREATE SEQUENCE {0}",
 						new SqlObjectNameExpression(new SqlObjectName(SequenceName(table.TableName.Name), Schema: schema), ConvertType.SequenceName)));
 
-					var trigger = new SqlFragmentStatement(factory.Fragment(
+					var trigger = new SqlRawStatement(factory.Fragment(
 						  "CREATE OR REPLACE TRIGGER {0}\nBEFORE INSERT ON {1} FOR EACH ROW\nBEGIN\n"
 						+ "\tSELECT {2}.NEXTVAL INTO :NEW.{3} FROM dual;\nEND;",
 						new SqlObjectNameExpression(new SqlObjectName(TriggerName(table.TableName.Name), Schema: schema),  ConvertType.TriggerName),
