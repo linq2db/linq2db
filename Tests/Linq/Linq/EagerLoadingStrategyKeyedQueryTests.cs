@@ -646,14 +646,10 @@ namespace Tests.Linq
 		// sibling's not-yet-populated slot, a child collection would come back empty and AreEqual below would catch it.
 		[Test]
 		public void MixedCombinableAndNonCombinable_NestedKeyedUnderCombinable(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
-			// Eager loads do not combine on a remote context, so it would run the same eager load as separate
-			// commands and produce a differently-grouped baseline than the direct leg — a physical difference, not a SQL
-			// one. Skipping it keeps the direct-vs-remote baseline comparison strict.
-			if (context.IsRemote())
-				Assert.Ignore("Eager loads do not combine on a remote context, so it cannot exercise the ordering invariant this test guards.");
-
+			// Eager loads do not combine on a remote context, so it would run the same eager load as separate commands and
+			// produce a differently-grouped baseline than the direct leg; remote legs are excluded above.
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
 			// Combining forced on: the ORDERING INVARIANT this test guards exists only in BuildPlan's combined path, so with
@@ -663,13 +659,13 @@ namespace Tests.Linq
 				.UseCombinedCommands(true));
 
 			var counter = new SelectQueryCounter();
-			if (!context.IsRemote()) db.AddInterceptor(counter);
+			db.AddInterceptor(counter);
 
 			using var tCo  = db.CreateLocalTable(companies);
 			using var tDep = db.CreateLocalTable(departments);
 			using var tEmp = db.CreateLocalTable(employees);
 
-			if (!context.IsRemote()) counter.Count = 0;
+			counter.Count = 0;
 
 			var query =
 				from c in tCo
@@ -743,7 +739,7 @@ namespace Tests.Linq
 
 			// Anti-trivial guard: the non-combinable buffered harvester runs its own queries in addition to the combined
 			// command, so a mixed plan is strictly more than a single round-trip (a fully-combined collapse would be 1).
-			if (!context.IsRemote()) counter.Count.ShouldBeGreaterThan(1);
+			counter.Count.ShouldBeGreaterThan(1);
 		}
 
 		// The other side of the ordering guard. TryGetCombinedEagerEnumerable refuses the combined path for a layout where
