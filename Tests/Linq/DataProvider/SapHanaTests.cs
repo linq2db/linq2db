@@ -885,10 +885,11 @@ namespace Tests.DataProvider
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<NoIdentityTable>();
 
-			var ex = Assert.Throws<LinqToDBException>(
-				() => tb.InsertWithIdentity(() => new NoIdentityTable { Id = 1, Value = "value" }));
+			Action act = () => tb.InsertWithIdentity(() => new NoIdentityTable { Id = 1, Value = "value" });
 
-			Assert.That(ex!.Message, Does.Contain("Identity field must be defined"));
+			var ex = act.ShouldThrow<LinqToDBException>();
+
+			ex.Message.ShouldContain("Identity field must be defined", Case.Sensitive);
 		}
 	}
 }

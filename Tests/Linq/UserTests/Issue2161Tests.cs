@@ -9,6 +9,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.UserTests
 {
 	[TestFixture]
@@ -63,7 +65,7 @@ namespace Tests.UserTests
 				// multi-result-set command — when the UseCombinedCommands policy switch is on (off by default in 6.x) AND
 				// the provider supports multi-statement batches + multiple result sets. Otherwise, and on remote contexts,
 				// they still run as two separate commands.
-				Assert.That(interceptor.Count, Is.EqualTo(db.UsesCombinedEagerLoading() ? 1 : 2));
+				interceptor.Count.ShouldBe(db.UsesCombinedEagerLoading() ? 1 : 2);
 			}
 		}
 

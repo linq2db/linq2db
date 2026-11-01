@@ -282,10 +282,19 @@ namespace Tests.Linq
 			{
 				var parent = query(db, id).ToList().Single();
 
-				Assert.That(parent.ParentID, Is.EqualTo(id));
-				Assert.That(
-					parent.Children.Select(c => c.ChildID).OrderBy(x => x),
-					Is.EqualTo(db.Child.Where(c => c.ParentID == id).Select(c => c.ChildID).OrderBy(x => x).ToList()));
+				var childIds = parent.Children
+					.Select(c => c.ChildID)
+					.OrderBy(x => x)
+					.ToList();
+
+				var expectedChildIds = db.Child
+					.Where(c => c.ParentID == id)
+					.Select(c => c.ChildID)
+					.OrderBy(x => x)
+					.ToList();
+
+				parent.ParentID.ShouldBe(id);
+				childIds.ShouldBe(expectedChildIds);
 			}
 		}
 
@@ -301,10 +310,19 @@ namespace Tests.Linq
 			{
 				var parent = (await query(db, id).ToListAsync()).Single();
 
-				Assert.That(parent.ParentID, Is.EqualTo(id));
-				Assert.That(
-					parent.Children.Select(c => c.ChildID).OrderBy(x => x),
-					Is.EqualTo(db.Child.Where(c => c.ParentID == id).Select(c => c.ChildID).OrderBy(x => x).ToList()));
+				var childIds = parent.Children
+					.Select(c => c.ChildID)
+					.OrderBy(x => x)
+					.ToList();
+
+				var expectedChildIds = db.Child
+					.Where(c => c.ParentID == id)
+					.Select(c => c.ChildID)
+					.OrderBy(x => x)
+					.ToList();
+
+				parent.ParentID.ShouldBe(id);
+				childIds.ShouldBe(expectedChildIds);
 			}
 		}
 

@@ -11,6 +11,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.xUpdate
 {
 	[TestFixture]
@@ -137,8 +139,9 @@ namespace Tests.xUpdate
 			// The sqlite_sequence reset carries the table name as an inline SqlValue inside a SqlRawStatement
 			// (IsParameterDependent is false), so the whole-query parameterization pass leaves it inline. Guard that:
 			// the reset must render WHERE NAME='TestIdTrun', never a parameter.
-			Assert.That(capture.ResetSql, Is.Not.Null);
-			Assert.That(capture.ResetSql, Does.Contain("'TestIdTrun'"));
+			capture.ResetSql
+				.ShouldNotBeNull()
+				.ShouldContain("'TestIdTrun'", Case.Sensitive);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2847")]

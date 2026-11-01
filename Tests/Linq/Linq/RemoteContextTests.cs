@@ -239,12 +239,10 @@ namespace Tests.Linq
 				await context.InsertOrReplaceAsync(new ClientLifetimeEntity { Id = 1, Value = "first"  });
 				await context.InsertOrReplaceAsync(new ClientLifetimeEntity { Id = 1, Value = "second" });
 
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(context.NonQueryExecutions, Is.EqualTo(2),                    "both InsertOrReplace operations must reach the backend - the test no longer exercises the path it was written for");
-					Assert.That(context.ClientsCreated,     Is.GreaterThanOrEqualTo(2),       "each runner obtains its own client - with fewer there is nothing to leak and nothing to assert");
-					Assert.That(context.ClientsDisposed,    Is.EqualTo(context.ClientsCreated), "every client the runner obtained must be disposed");
-				}
+				context.ShouldSatisfyAllConditions(
+					c => c.NonQueryExecutions.ShouldBe(2,                     "both InsertOrReplace operations must reach the backend - the test no longer exercises the path it was written for"),
+					c => c.ClientsCreated    .ShouldBeGreaterThanOrEqualTo(2, "each runner obtains its own client - with fewer there is nothing to leak and nothing to assert"),
+					c => c.ClientsDisposed   .ShouldBe(c.ClientsCreated,      "every client the runner obtained must be disposed"));
 			}
 			finally
 			{
@@ -286,12 +284,10 @@ namespace Tests.Linq
 
 				await context.InsertOrReplaceAsync(new ClientLifetimeEntity { Id = 1, Value = "first" });
 
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(context.NonQueryExecutions, Is.EqualTo(1), "the InsertOrReplace did not reach the backend - the test no longer exercises the path it was written for");
-					Assert.That(context.ClientsCreated,     Is.EqualTo(1), "the one shared client must be handed to every caller");
-					Assert.That(context.ClientsDisposed,    Is.Zero,       "a client the context owns must outlive the runner that used it");
-				}
+				context.ShouldSatisfyAllConditions(
+					c => c.NonQueryExecutions.ShouldBe(1, "the InsertOrReplace did not reach the backend - the test no longer exercises the path it was written for"),
+					c => c.ClientsCreated    .ShouldBe(1, "the one shared client must be handed to every caller"),
+					c => c.ClientsDisposed   .ShouldBe(0, "a client the context owns must outlive the runner that used it"));
 			}
 			finally
 			{
