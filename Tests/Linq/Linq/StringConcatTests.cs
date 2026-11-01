@@ -1078,6 +1078,51 @@ namespace Tests.Linq
 			[Column(DataType = DataType.VarChar, Length = 8000, CanBeNull = false)] public string Notes { get; set; } = default!;
 		}
 
+		[Table]
+		sealed class LongVarCharKeyRow
+		{
+			[PrimaryKey]                                                            public int    Id    { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 8000, CanBeNull = false)] public string Notes { get; set; } = default!;
+			[Column(DataType = DataType.VarChar, Length = 20,   CanBeNull = false)] public string Sku   { get; set; } = default!;
+		}
+
+		// A nested concatenation of VarChar operands is not Unicode, so the long VarChar beside it is not widened to
+		// nvarchar(max), which would turn the comparison with the VarChar key into nvarchar.
+		[Test]
+		public void NestedVarCharConcatIsNotWidened([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new LongVarCharKeyRow { Id = 1, Notes = "A", Sku = "B" } });
+
+			var count = table
+				.Count(r => string.Concat(r.Notes, string.Concat(r.Sku, r.Sku)) == r.Sku);
+
+			count.ShouldBe(0);
+
+			GetCurrentBaselines()
+				.ShouldNotContain("NVarChar(Max)");
+		}
+
+		// A long VarChar inside a nested concatenation beside an NVarChar column keeps its length.
+		[Test]
+		public void NestedLongVarCharBesideNVarCharKeepsLength([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(ConcatProductData);
+			using var notes = db.CreateLocalTable(new[] { new LongVarCharKeyRow { Id = 1, Notes = new string('a', 6000), Sku = "S" } });
+
+			var query =
+				from p in table
+				from n in notes
+				where p.Id == 1
+				select Sql.AsSql(string.Concat(p.Title, string.Concat(n.Notes, n.Sku)));
+
+			query
+				.Single()
+				.Length
+				.ShouldBe(8 + 6000 + 1);
+		}
+
 		// varchar(8000) + nvarchar(4000) is nvarchar(4000) on SQL Server, so a default-typed parameter would cut the value.
 		[Test]
 		public void ConcatParameterBesideLongVarCharKeepsLength([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)

@@ -252,6 +252,12 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 			for (var i = 0; i < element.Expressions.Length; i++)
 			{
+				if (element.Expressions[i] is SqlConcatExpression nested)
+				{
+					hasUnicode |= HasUnicodeOperand(nested);
+					continue;
+				}
+
 				var operandType = QueryHelper.GetDbDataType(element.Expressions[i], MappingSchema);
 
 				if (QueryHelper.IsUnicode(operandType.DataType))
@@ -269,6 +275,20 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				operands[i] = PseudoFunctions.MakeCast(operands[i], new DbDataType(typeof(string), DataType.NVarChar, null, -1));
 
 			return new SqlConcatExpression(element.PreserveNull, operands);
+		}
+
+		// A nested concatenation has no type of its own, so the string default (NVarChar) would count it as Unicode.
+		bool HasUnicodeOperand(SqlConcatExpression concat)
+		{
+			foreach (var operand in concat.Expressions)
+			{
+				if (operand is SqlConcatExpression nested
+					? HasUnicodeOperand(nested)
+					: QueryHelper.IsUnicode(QueryHelper.GetDbDataType(operand, MappingSchema).DataType))
+					return true;
+			}
+
+			return false;
 		}
 
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
