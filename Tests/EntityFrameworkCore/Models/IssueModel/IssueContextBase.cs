@@ -436,6 +436,14 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 				v => v != null ? (DateTime?)issue6181TwiceConverter.ConvertToProvider(Issue6181Counted(v.Value)) : (DateTime?)null,
 				v => v != null ? (DateTime?)issue6181TwiceConverter.ConvertFromProvider(v.Value) : (DateTime?)null);
 
+			// the target reads its parameter once, on a branch never taken; the delegated call still evaluates the argument
+			var issue6181GatedTarget = new ValueConverter<DateTime, DateTime>(
+				v => Issue6181Converting(Issue6181Never ? v : Issue6181Fixed),
+				v => v);
+			var issue6181GatedConverter = new ValueConverter<DateTime?, DateTime?>(
+				v => v != null ? (DateTime?)issue6181GatedTarget.ConvertToProvider(Issue6181Counted(v.Value)) : (DateTime?)null,
+				v => v != null ? (DateTime?)issue6181GatedTarget.ConvertFromProvider(v.Value) : (DateTime?)null);
+
 			modelBuilder.Entity<Issue6181TableOne>(b =>
 			{
 				b.Property(e => e.Id).ValueGeneratedNever();
@@ -458,6 +466,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 #endif
 				b.Property(e => e.ChainedDate).HasConversion(issue6181ChainedNullableConverter);
 				b.Property(e => e.CountedDate).HasConversion(issue6181CountedConverter);
+				b.Property(e => e.GatedDate).HasConversion(issue6181GatedConverter);
 
 				b.HasOne(e => e.TableOne)
 					.WithMany()
@@ -559,20 +568,37 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		// set by the test that reads it, so runs on other providers do not count into it
 		public static readonly AsyncLocal<Issue6181Counts?> Issue6181Counting = new();
 
-		static DateTime Issue6181Counted(DateTime v)
+		internal static void Issue6181CountArgument()
 		{
 			if (Issue6181Counting.Value is { } counts)
 				counts.Arguments++;
+		}
 
+		static void Issue6181CountConversion()
+		{
+			if (Issue6181Counting.Value is { } counts)
+				counts.Conversions++;
+		}
+
+		static DateTime Issue6181Counted(DateTime v)
+		{
+			Issue6181CountArgument();
 			return v;
 		}
 
 		static DateTime Issue6181Twice(DateTime first, DateTime second)
 		{
-			if (Issue6181Counting.Value is { } counts)
-				counts.Conversions++;
-
+			Issue6181CountConversion();
 			return Issue5975ToStore(first).AddTicks(second.Ticks - first.Ticks);
+		}
+
+		static bool     Issue6181Never => false;
+		static DateTime Issue6181Fixed => new(2020, 1, 1);
+
+		static DateTime Issue6181Converting(DateTime v)
+		{
+			Issue6181CountConversion();
+			return v;
 		}
 
 		sealed class Issue6181ConverterHolder

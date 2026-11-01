@@ -1685,17 +1685,48 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			using var ctx = CreateContext(provider, useNodaTime: false);
 			Issue6181Seed(ctx);
 
+			Issue6181ShouldEvaluateArgumentOncePerConversion(() => ctx.Issue6181TableTwos
+				.ToLinqToDBTable()
+				.Where(r => r.Id == 1)
+				.Set(r => r.CountedDate, (DateTime?)Issue5975Stored)
+				.Update());
+
+			ctx.Issue6181TableTwos
+				.ToLinqToDB()
+				.Where(r => r.Id == 1)
+				.Select(r => r.CountedDate)
+				.Single()
+				.ShouldBe(Issue5975Stored);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void Issue6181_DelegatedArgumentIsEvaluatedBeforeAConditionalTarget(
+#if NET8_0
+			// EF8 registers the NodaTime plugin process-wide, so useNodaTime: false cannot keep #5981 out
+			[EFDataSources(TestProvName.AllPostgreSQL)] string provider)
+#else
+			[EFDataSources] string provider)
+#endif
+		{
+			using var ctx = CreateContext(provider, useNodaTime: false);
+			Issue6181Seed(ctx);
+
+			Issue6181ShouldEvaluateArgumentOncePerConversion(() => ctx.Issue6181TableTwos
+				.ToLinqToDBTable()
+				.Where(r => r.Id == 1)
+				.Set(r => r.GatedDate, (DateTime?)Issue5975Stored)
+				.Update());
+		}
+
+		static void Issue6181ShouldEvaluateArgumentOncePerConversion(Action write)
+		{
 			var counts = new IssueContextBase.Issue6181Counts();
 
 			IssueContextBase.Issue6181Counting.Value = counts;
 
 			try
 			{
-				ctx.Issue6181TableTwos
-					.ToLinqToDBTable()
-					.Where(r => r.Id == 1)
-					.Set(r => r.CountedDate, (DateTime?)Issue5975Stored)
-					.Update();
+				write();
 			}
 			finally
 			{
@@ -1704,13 +1735,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			counts.Conversions.ShouldBeGreaterThan(0);
 			counts.Arguments.ShouldBe(counts.Conversions);
-
-			ctx.Issue6181TableTwos
-				.ToLinqToDB()
-				.Where(r => r.Id == 1)
-				.Select(r => r.CountedDate)
-				.Single()
-				.ShouldBe(Issue5975Stored);
 		}
 
 		#endregion

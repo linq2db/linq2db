@@ -469,6 +469,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		public DateTime?          TypedOverriddenDate { get; set; }
 		public DateTime?          ChainedDate         { get; set; }
 		public DateTime?          CountedDate         { get; set; }
+		public DateTime?          GatedDate           { get; set; }
 		public int?               TableOneId          { get; set; }
 		public Issue6181TableOne? TableOne            { get; set; }
 	}

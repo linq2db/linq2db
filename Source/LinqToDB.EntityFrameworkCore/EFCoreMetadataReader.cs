@@ -645,10 +645,13 @@ namespace LinqToDB.EntityFrameworkCore
 				{
 					var inlinedTarget = InlineConverterCalls(targetLambda, visiting);
 
-					// the delegate evaluates its argument once; substituting it for a parameter read any other number
-					// of times would repeat or drop the argument's calls
-					if (!IsDuplicable(argument) && ReadCount(inlinedTarget.Parameters[0], inlinedTarget.Body) != 1)
+					// the delegate evaluates its argument once, before the body; substituted, the argument runs where the
+					// parameter is read, which is the same only for a single read that the body evaluates first
+					if (!IsDuplicable(argument)
+						&& !(ReadCount(inlinedTarget.Parameters[0], inlinedTarget.Body) == 1 && IsReadFirst(inlinedTarget.Body, inlinedTarget.Parameters[0])))
+					{
 						return e;
+					}
 
 					var inlined = inlinedTarget.GetBody(argument);
 
@@ -669,6 +672,29 @@ namespace LinqToDB.EntityFrameworkCore
 					UnaryExpression { NodeType: ExpressionType.Convert, Operand: var operand }                                   => IsDuplicable(operand),
 					_                                                                                                            => false,
 				};
+
+			static bool IsReadFirst(Expression expression, ParameterExpression parameter)
+			{
+				for (var current = expression; current != null; )
+				{
+					if (ReferenceEquals(current, parameter))
+						return true;
+
+					current = current switch
+					{
+						MethodCallExpression call       => call.Object ?? (call.Arguments.Count > 0 ? call.Arguments[0] : null),
+						MemberExpression member         => member.Expression,
+						UnaryExpression unary           => unary.Operand,
+						BinaryExpression binary         => binary.Left,
+						ConditionalExpression condition => condition.Test,
+						InvocationExpression invocation => invocation.Expression,
+						NewExpression @new              => @new.Arguments.Count > 0 ? @new.Arguments[0] : null,
+						_                               => null,
+					};
+				}
+
+				return false;
+			}
 
 			static int ReadCount(ParameterExpression parameter, Expression body)
 			{
