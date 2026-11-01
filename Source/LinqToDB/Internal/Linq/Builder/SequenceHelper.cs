@@ -177,9 +177,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			return IsNull(other) ? value : body;
 
-			// a user-defined operator or HasValue of a reference type can answer null for an instance the converter is handed
+			// a user-defined operator or HasValue of a reference type can answer null for an instance the converter is
+			// handed; a lifted operator never sees a null operand
 			bool ComparesWithNull(BinaryExpression test)
-				=> (test.Method == null || parameter.Type.IsNullableType || test.Method.DeclaringType?.Assembly == typeof(object).Assembly)
+				=> (test.Method == null || test.IsLifted || test.Method.DeclaringType?.Assembly == typeof(object).Assembly)
 				&& (ReferenceEquals(test.Left, parameter) && IsNull(test.Right)
 				|| ReferenceEquals(test.Right, parameter) && IsNull(test.Left));
 

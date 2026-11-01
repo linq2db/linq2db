@@ -2138,6 +2138,75 @@ namespace Tests.Linq
 				.ShouldContain(refusal);
 		}
 
+		/// <summary>
+		/// A value type whose equality, declared on its nullable form, treats a zero count as null.
+		/// </summary>
+		readonly struct SentinelCount : IEquatable<SentinelCount>
+		{
+			public SentinelCount(int value) => Value = value;
+
+			public int Value { get; }
+
+			static bool IsNull(SentinelCount? count) => count.GetValueOrDefault().Value == 0;
+
+			public static bool operator ==(SentinelCount? left, SentinelCount? right)
+				=> IsNull(left) ? IsNull(right) : !IsNull(right) && left.GetValueOrDefault().Value == right.GetValueOrDefault().Value;
+
+			public static bool operator !=(SentinelCount? left, SentinelCount? right) => !(left == right);
+
+			public bool Equals(SentinelCount other) => this == other;
+
+			public override bool Equals(object? obj) => obj is SentinelCount other && Equals(other);
+
+			public override int GetHashCode() => IsNull(this) ? 0 : Value.GetHashCode();
+		}
+
+		[Table]
+		sealed class SentinelCountRow
+		{
+			[PrimaryKey] public int            Id      { get; set; }
+			[Column]     public SentinelCount  Plain   { get; set; }
+			[Column]     public SentinelCount? Guarded { get; set; }
+		}
+
+		/// <summary>
+		/// A null comparison on a nullable value type is set aside only when it is lifted: an operator declared on the
+		/// nullable form itself can answer null for a value, so the guarded conversion stores something else for it.
+		/// </summary>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void NonLiftedNullComparisonOfAValueTypeIsRefused([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<SentinelCountRow>()
+					.Property(e => e.Plain)
+						.HasConversion(v => (int?)v.Value, v => new SentinelCount(v.GetValueOrDefault()))
+					.Property(e => e.Guarded)
+						.HasConversion(
+							v => v != null ? (int?)v.Value.Value : null,
+							v => v != null ? (SentinelCount?)new SentinelCount(v.Value) : null)
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var t  = db.CreateLocalTable<SentinelCountRow>();
+
+			var compared = () => t
+				.Where(r => r.Plain == r.Guarded)
+				.ToArray();
+
+			var refusal = string.Format(
+				CultureInfo.InvariantCulture,
+				ErrorHelper.Error_ValueConverter_DivergentOperands,
+				nameof(SentinelCountRow.Plain),
+				nameof(SentinelCountRow.Guarded));
+
+			compared
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain(refusal);
+		}
+
 		[Table]
 		sealed class Issue5976RowA
 		{
