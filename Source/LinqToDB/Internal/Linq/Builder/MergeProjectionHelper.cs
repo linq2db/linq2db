@@ -206,13 +206,15 @@ namespace LinqToDB.Internal.Linq.Builder
 				return true;
 			}
 
-			if (projection1 is SqlPathExpression && IsNullValueOrSqlNull(projection2))
+			// A branch with nothing at this place selects NULL into every column the other branch reads there, so a
+			// projection that reads such a row as null reads the rows of both branches.
+			if (IsNullValueOrSqlNull(projection2) && ReadsNullColumnsAsNull(projection1))
 			{
 				merged = projection1;
 				return true;
 			}
 
-			if (projection2 is SqlPathExpression && IsNullValueOrSqlNull(projection1))
+			if (IsNullValueOrSqlNull(projection1) && ReadsNullColumnsAsNull(projection2))
 			{
 				merged = projection2;
 				return true;
@@ -248,6 +250,20 @@ namespace LinqToDB.Internal.Linq.Builder
 				return true;
 
 			return false;
+		}
+
+		/// <summary>
+		/// Whether a projection reads a row whose columns are all NULL as null: a column, or a value chosen against null
+		/// by testing a column for NULL.
+		/// </summary>
+		static bool ReadsNullColumnsAsNull(Expression projection)
+		{
+			if (projection is SqlPathExpression)
+				return true;
+
+			return projection is ConditionalExpression { Test: BinaryExpression { NodeType: ExpressionType.Equal or ExpressionType.NotEqual } test } conditional
+				&& test.Left is SqlPathExpression && test.Right.IsNullValue
+				&& IsNullValueOrSqlNull(test.NodeType == ExpressionType.Equal ? conditional.IfTrue : conditional.IfFalse);
 		}
 
 		#region Nested class
