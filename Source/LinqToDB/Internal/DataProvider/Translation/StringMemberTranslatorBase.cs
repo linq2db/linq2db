@@ -255,11 +255,11 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, concat, methodCall);
 		}
 
-		// A fragment takes a neighbouring column's type only when that type is Unicode. A non-Unicode one would send a
-		// parameter or literal beside it as non-Unicode, losing every character outside the column's code page, so the
-		// fragment keeps the type of where the concatenation is used instead. A column with a converter or unit is not
-		// lent either: a fragment is not a stored value of it.
-		static IDisposable? UsingUnicodeTypeFromOperand(ITranslationContext translationContext, Expression[] arguments)
+		// A value built into a string beside a column takes that column's type only when the type is Unicode. A non-Unicode
+		// one would send a parameter or literal beside it as non-Unicode, losing every character outside the column's code
+		// page, so the value keeps the type of where the call is used instead. A column with a converter or unit is not
+		// lent either: the value is not a stored value of it.
+		static IDisposable? UsingUnicodeTypeFromOperand(ITranslationContext translationContext, params Expression[] arguments)
 		{
 			foreach (var argument in arguments)
 			{
@@ -301,7 +301,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		Expression? TranslateSqlReplace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
-			using var disposable = translationContext.UsingTypeFromExpression(methodCall.Arguments[0], methodCall.Arguments[1]);
+			using var disposable = UsingUnicodeTypeFromOperand(translationContext, methodCall.Arguments[0], methodCall.Arguments[1]);
 
 			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out var translatedField))
 				return translationContext.CreateErrorExpression(methodCall.Arguments[0], type: methodCall.Type);
@@ -328,7 +328,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (translationContext.CanBeEvaluatedOnClient(methodCall))
 				return null;
 
-			using var disposable = translationContext.UsingTypeFromExpression(methodCall.Object);
+			using var disposable = UsingUnicodeTypeFromOperand(translationContext, methodCall.Object);
 
 			if (!translationContext.TranslateToSqlExpression(methodCall.Object, out var translatedField))
 				return translationContext.CreateErrorExpression(methodCall.Object, type: methodCall.Type);
@@ -381,23 +381,27 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (translationFlags.HasFlag(TranslationFlags.Expression) && translationContext.CanBeEvaluatedOnClient(methodCall))
 				return null;
 
-			using var disposable = translationContext.UsingTypeFromExpression(methodCall.Object);
+			using var disposable = UsingUnicodeTypeFromOperand(translationContext, methodCall.Object);
 
 			if (!translationContext.TranslateToSqlExpression(methodCall.Object, out var translatedField))
 				return translationContext.CreateErrorExpression(methodCall.Object, type: methodCall.Type);
 
-			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
+			ISqlExpression? translatedPadding;
 
-			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out var translatedPadding))
-				return translationContext.CreateErrorExpression(methodCall.Arguments[0], type: methodCall.Type);
+			using (translationContext.UsingColumnDescriptor(null))
+			{
+				if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out translatedPadding))
+					return translationContext.CreateErrorExpression(methodCall.Arguments[0], type: methodCall.Type);
+			}
 
 			ISqlExpression? translatedPaddingChar = null;
 			if (methodCall.Arguments.Count > 1)
 			{
-				using var d = translationContext.UsingTypeFromExpression(translatedField);
-
 				if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[1], out translatedPaddingChar))
 					return translationContext.CreateErrorExpression(methodCall.Arguments[1], type: methodCall.Type);
+
+				translatedPaddingChar = SqlExpressionFactoryExtensions.AsNonUnicodeAsciiLiteral(translatedPaddingChar, translationContext.ExpressionFactory.GetDbDataType(translatedField))
+					?? translatedPaddingChar;
 			}
 
 			var resultSql = TranslatePadLeft(translationContext, methodCall, translationFlags, translatedField, translatedPadding, translatedPaddingChar);

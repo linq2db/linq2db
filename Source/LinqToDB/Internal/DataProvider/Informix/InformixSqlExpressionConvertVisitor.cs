@@ -23,14 +23,15 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		{
 			//Informix cannot process parameter in Like template (only Informix provider, not InformixDB2)
 			//
-			if (EvaluationContext.ParameterValues != null)
+			// The literal stands in for the parameter, so it takes the value the parameter would send - after the
+			// column's value converter - not the client value.
+			if (EvaluationContext.ParameterValues != null
+				&& predicate.Expr2.ElementType != QueryElementType.SqlValue
+				&& predicate.Expr2.TryEvaluateExpressionForServer(EvaluationContext, out var value))
 			{
-				var exp2 = TryConvertToValue(predicate.Expr2, EvaluationContext);
+				var exp2 = new SqlValue(QueryHelper.GetDbDataType(predicate.Expr2, MappingSchema), value);
 
-				if (!ReferenceEquals(exp2, predicate.Expr2))
-				{
-					predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, exp2, predicate.Escape);
-				}
+				predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, exp2, predicate.Escape);
 			}
 
 			return predicate;

@@ -238,27 +238,28 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			if (operands != null)
 				element = new SqlConcatExpression(element.PreserveNull, operands);
 
-			element = WidenLongNonUnicodeBesideUnicode(element);
+			if (WidenLongNonUnicodeBesideUnicode(element.Expressions) is { } widened)
+				element = new SqlConcatExpression(element.PreserveNull, widened);
 
 			return base.ConvertConcat(element);
 		}
 
-		// A Unicode operand turns the whole concatenation Unicode, and a non-MAX non-Unicode operand is then converted to
-		// nvarchar(4000), cutting one declared longer than that. Cast to NVarChar(Max) it keeps its length.
-		SqlConcatExpression WidenLongNonUnicodeBesideUnicode(SqlConcatExpression element)
+		// A Unicode operand turns the whole concatenation (or REPLACE) Unicode, and a non-MAX non-Unicode operand is then
+		// converted to nvarchar(4000), cutting one declared longer than that. Cast to NVarChar(Max) it keeps its length.
+		ISqlExpression[]? WidenLongNonUnicodeBesideUnicode(ISqlExpression[] expressions)
 		{
 			var        hasUnicode     = false;
 			List<int>? longNonUnicode = null;
 
-			for (var i = 0; i < element.Expressions.Length; i++)
+			for (var i = 0; i < expressions.Length; i++)
 			{
-				if (element.Expressions[i] is SqlConcatExpression nested)
+				if (expressions[i] is SqlConcatExpression nested)
 				{
 					hasUnicode |= HasUnicodeOperand(nested);
 					continue;
 				}
 
-				var operandType = QueryHelper.GetDbDataType(element.Expressions[i], MappingSchema);
+				var operandType = QueryHelper.GetDbDataType(expressions[i], MappingSchema);
 
 				if (QueryHelper.IsUnicode(operandType.DataType))
 					hasUnicode = true;
@@ -267,14 +268,14 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			}
 
 			if (!hasUnicode || longNonUnicode == null)
-				return element;
+				return null;
 
-			var operands = (ISqlExpression[])element.Expressions.Clone();
+			var operands = (ISqlExpression[])expressions.Clone();
 
 			foreach (var i in longNonUnicode)
 				operands[i] = PseudoFunctions.MakeCast(operands[i], new DbDataType(typeof(string), DataType.NVarChar, null, -1));
 
-			return new SqlConcatExpression(element.PreserveNull, operands);
+			return operands;
 		}
 
 		// A nested concatenation has no type of its own, so the string default (NVarChar) would count it as Unicode.
@@ -422,6 +423,19 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 					return Factory.Sub(func.Type, valueLength, Factory.Value(func.Type, 1));
 	}
+
+				case PseudoFunctions.REPLACE:
+				{
+					if (WidenLongNonUnicodeBesideUnicode(func.Parameters) is { } widened)
+					{
+						func = new SqlFunction(func.Type, func.Name, func.Flags, func.NullabilityType, func.CanBeNullNullable, widened)
+						{
+							DoNotOptimize = func.DoNotOptimize,
+						};
+					}
+
+					break;
+				}
 }
 
 			return base.ConvertSqlFunction(func);
