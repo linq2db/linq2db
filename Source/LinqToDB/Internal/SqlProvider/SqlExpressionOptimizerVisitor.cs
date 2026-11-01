@@ -1271,6 +1271,10 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 				return Visit(newElement);
 
 			var operands = element.Expressions;
+
+			if (!ConcatNeedsFolding(operands))
+				return element;
+
 			List<ISqlExpression>? folded = null;
 			string?               pending = null;
 
@@ -1345,6 +1349,40 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 				return folded[0];
 
 			return new SqlConcatExpression(element.PreserveNull, folded.ToArray());
+		}
+
+		static readonly DbDataType _concatLiteralType = new(typeof(string));
+
+		// Mirrors the fold loop in VisitSqlConcatExpression: true when it would emit anything other than the
+		// same operands. Without it a lone literal is rebuilt on every pass and the fold never reaches a fixpoint.
+		bool ConcatNeedsFolding(ISqlExpression[] operands)
+		{
+			var previousIsLiteral = false;
+
+			foreach (var operand in operands)
+			{
+				if (TryEvaluateNoParameters(operand, out var value))
+				{
+					if (value is null)
+						return true;
+
+					if (value is string s)
+					{
+						if (s.Length == 0 || previousIsLiteral || operands.Length == 1)
+							return true;
+
+						if (operand is not SqlValue { Value: string } literal || literal.ValueType != _concatLiteralType)
+							return true;
+
+						previousIsLiteral = true;
+						continue;
+					}
+				}
+
+				previousIsLiteral = false;
+			}
+
+			return false;
 		}
 
 		protected internal override IQueryElement VisitSqlCastExpression(SqlCastExpression element)

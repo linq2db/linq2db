@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -925,6 +927,187 @@ namespace Tests.Linq
 					.Select(e => new { id = e.Id.ToString("N"), name = e.Name, parent = (string?)("p_" + e.ParentId!.Value.ToString("N")) }));
 
 			AssertQuery(query);
+		}
+
+		#endregion
+
+		#region Optimizer literal folding over a hand-built concat
+
+		static readonly DbDataType ConcatStringType = new(typeof(string));
+
+		static (SqlField str1, SqlField str2) GetConcatFields(MappingSchema ms)
+		{
+			var table = new SqlTable(ms.GetEntityDescriptor(typeof(ConcatTestEntity)));
+
+			return (
+				table.FindFieldByMemberName(nameof(ConcatTestEntity.Str1))!,
+				table.FindFieldByMemberName(nameof(ConcatTestEntity.Str2))!);
+		}
+
+		static IQueryElement OptimizeConcat(MappingSchema ms, IQueryElement element, EvaluationContext? evaluationContext = null)
+		{
+			var optimizer = new SqlExpressionOptimizerVisitor(true);
+
+			return optimizer.Optimize(
+				evaluationContext ?? new EvaluationContext(),
+				NullabilityContext.NonQuery,
+				null,
+				new DataOptions(),
+				ms,
+				element,
+				visitQueries     : false,
+				reducePredicates : false);
+		}
+
+		[Test]
+		public void Optimizer_LoneLiteral_KeepsConcat()
+		{
+			var ms           = new MappingSchema();
+			var (str1, str2) = GetConcatFields(ms);
+			var literal      = new SqlValue("-");
+			var concat       = new SqlConcatExpression(false, str1, literal, str2);
+
+			var result = OptimizeConcat(ms, concat);
+
+			result.ShouldBeSameAs(concat);
+			concat.Expressions[1].ShouldBeSameAs(literal);
+		}
+
+		[Test]
+		public void Optimizer_LiteralsSeparatedByNonStringConstant_KeepsConcat()
+		{
+			var ms        = new MappingSchema();
+			var (str1, _) = GetConcatFields(ms);
+			var concat    = new SqlConcatExpression(false, str1, new SqlValue("a"), new SqlValue(5), new SqlValue("b"));
+
+			var result = OptimizeConcat(ms, concat);
+
+			result.ShouldBeSameAs(concat);
+		}
+
+		[Test]
+		public void Optimizer_AdjacentLiterals_Merge()
+		{
+			var ms           = new MappingSchema();
+			var (str1, str2) = GetConcatFields(ms);
+			var concat       = new SqlConcatExpression(false, str1, new SqlValue("a"), new SqlValue("b"), str2);
+
+			var result = OptimizeConcat(ms, concat);
+
+			var folded = result.ShouldBeOfType<SqlConcatExpression>();
+			folded.Expressions.Length.ShouldBe(3);
+			folded.Expressions[0].ShouldBeSameAs(str1);
+			folded.Expressions[2].ShouldBeSameAs(str2);
+
+			var merged = folded.Expressions[1].ShouldBeOfType<SqlValue>();
+			merged.Value.ShouldBe("ab");
+		}
+
+		[Test]
+		public void Optimizer_EmptyLiteral_Drops()
+		{
+			var ms           = new MappingSchema();
+			var (str1, str2) = GetConcatFields(ms);
+			var concat       = new SqlConcatExpression(false, str1, new SqlValue(""), str2);
+
+			var result = OptimizeConcat(ms, concat);
+
+			var folded = result.ShouldBeOfType<SqlConcatExpression>();
+			folded.Expressions.Length.ShouldBe(2);
+			folded.Expressions[0].ShouldBeSameAs(str1);
+			folded.Expressions[1].ShouldBeSameAs(str2);
+		}
+
+		[Test]
+		public void Optimizer_NullLiteral_PreserveNull_ReturnsNull()
+		{
+			var ms           = new MappingSchema();
+			var (str1, str2) = GetConcatFields(ms);
+			var concat       = new SqlConcatExpression(true, str1, new SqlValue(typeof(string), null), str2);
+
+			var result = OptimizeConcat(ms, concat);
+
+			var value = result.ShouldBeOfType<SqlValue>();
+			value.Value.ShouldBeNull();
+		}
+
+		[Test]
+		public void Optimizer_NullLiteral_NoPreserveNull_Drops()
+		{
+			var ms           = new MappingSchema();
+			var (str1, str2) = GetConcatFields(ms);
+			var concat       = new SqlConcatExpression(false, str1, new SqlValue(typeof(string), null), str2);
+
+			var result = OptimizeConcat(ms, concat);
+
+			var folded = result.ShouldBeOfType<SqlConcatExpression>();
+			folded.Expressions.Length.ShouldBe(2);
+			folded.Expressions[0].ShouldBeSameAs(str1);
+			folded.Expressions[1].ShouldBeSameAs(str2);
+		}
+
+		[Test]
+		public void Optimizer_SingleLiteral_CollapsesToLiteral()
+		{
+			var ms     = new MappingSchema();
+			var concat = new SqlConcatExpression(false, new SqlValue("x"));
+
+			var result = OptimizeConcat(ms, concat);
+
+			var value = result.ShouldBeOfType<SqlValue>();
+			value.Value.ShouldBe("x");
+		}
+
+		[Test]
+		public void Optimizer_TypedLiteral_RebuiltWithStringType()
+		{
+			var ms           = new MappingSchema();
+			var (str1, str2) = GetConcatFields(ms);
+			var concat       = new SqlConcatExpression(false, str1, new SqlValue(new DbDataType(typeof(string), DataType.NVarChar), "-"), str2);
+
+			var result = OptimizeConcat(ms, concat);
+
+			result.ShouldNotBeSameAs(concat);
+
+			var folded  = result.ShouldBeOfType<SqlConcatExpression>();
+			var literal = folded.Expressions[1].ShouldBeOfType<SqlValue>();
+			literal.Value.ShouldBe("-");
+			literal.ValueType.ShouldBe(ConcatStringType);
+		}
+
+		[Test]
+		public void Optimizer_FoldedConcat_IsFixpoint([Values] bool typedLiteral)
+		{
+			var ms           = new MappingSchema();
+			var (str1, str2) = GetConcatFields(ms);
+			var concat       = typedLiteral
+				? new SqlConcatExpression(false, str1, new SqlValue(new DbDataType(typeof(string), DataType.NVarChar), "-"), str2)
+				: new SqlConcatExpression(false, str1, new SqlValue("a"), new SqlValue("b"), str2);
+
+			var once  = OptimizeConcat(ms, concat);
+			var twice = OptimizeConcat(ms, once);
+
+			once.ShouldNotBeSameAs(concat);
+			twice.ShouldBeSameAs(once);
+		}
+
+		[Test]
+		public void Optimizer_InlinedParameter_ReplacedByValue()
+		{
+			var ms           = new MappingSchema();
+			var (str1, str2) = GetConcatFields(ms);
+			var parameter    = new SqlParameter(ConcatStringType, "p", "-") { IsQueryParameter = false };
+			var concat       = new SqlConcatExpression(false, str1, parameter, str2);
+
+			var values = new SqlParameterValues();
+			values.SetValue(parameter, "-", "-");
+
+			var result = OptimizeConcat(ms, concat, new EvaluationContext(values));
+
+			var folded  = result.ShouldBeOfType<SqlConcatExpression>();
+			var literal = folded.Expressions[1].ShouldBeOfType<SqlValue>();
+			literal.Value.ShouldBe("-");
+			literal.ValueType.ShouldBe(ConcatStringType);
 		}
 
 		#endregion
