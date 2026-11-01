@@ -68,6 +68,13 @@ Creating the schema (e.g. in tests or first-run setup) is ordinary linq2db DDL �
 linq2db DDL creates no foreign keys, so `DeleteAsync` removes a deleted user's claims, logins, tokens and role
 memberships (and a deleted role's memberships and claims) itself, where EF Core relies on `ON DELETE CASCADE`.
 
+It creates no indexes either. EF Core's unique `UserNameIndex` (`NormalizedUserName`) and `RoleNameIndex`
+(`NormalizedName`) are what stop two concurrent registrations of one name, so add them yourself to a schema created
+with `CreateTable`: without them uniqueness rests on `UserValidator` / `RoleValidator`, which check before inserting.
+`AddToRoleAsync`, `SetTokenAsync` and `AddOrUpdatePasskeyAsync` also look a row up before inserting it, as EF Core's
+stores do, so two concurrent identical writes fail on the table's key. Where the defaults drop that key (the token
+table on Firebird 2.5, the passkey table on Access, Informix and Firebird 2.5) they store a duplicate row instead.
+
 ### Identity options
 
 The stores read **only** `IdentityOptions.Stores.SchemaVersion` (injected as `IOptions<IdentityOptions>`; pass it to
@@ -134,8 +141,9 @@ protected override void ConfigureMappings(MappingSchema ms)
 
 `context.AddMappingSchema(ms)` after construction also outranks the defaults, but a schema built on its own starts
 from blank attributes: a rename there replaces the default column mapping instead of inheriting its length and
-nullability. `DataOptions.UseMappingSchema(...)` does **not** work at all — the contexts add their own schema in the
-constructor, after the options have been applied, so the defaults outrank anything supplied that way.
+nullability. `DataOptions.UseMappingSchema(...)` cannot override the defaults — the contexts add their own schema in
+the constructor, after the options have been applied, so the defaults outrank anything supplied that way. It still
+maps what the defaults leave alone, such as your application's own entities on the same context.
 
 ### Customization limits
 
@@ -228,6 +236,10 @@ there: user and role updates throw, and every `UserManager` operation that saves
 identity columns either, so int / long keys must be assigned by the caller. Reads, claims, logins, tokens, roles and
 deletes work.
 
+On **SQL Server** `UpdateAsync` reads the regenerated `ConcurrencyStamp` back with an `OUTPUT` clause, which SQL Server
+rejects on a table with an enabled `UPDATE` trigger: with such a trigger on `AspNetUsers` or `AspNetRoles`, user and
+role updates throw. Override `UpdateAsync` in a derived store for such a schema.
+
 Providers without a date/time-with-offset type — MySQL, Access, SQL CE, SQL Server 2005, Sybase, SAP HANA, Informix,
 DB2 LUW and YDB — and Firebird, whose 4.0+ `TIMESTAMP WITH TIME ZONE` FirebirdClient cannot write yet
 ([#5915](https://github.com/linq2db/linq2db/issues/5915)), store `LockoutEnd` as UTC, truncated to whole seconds, and
@@ -235,7 +247,9 @@ read it back at a zero offset.
 
 Some columns are narrower than EF Core's: on **Access** the 256-character user and role name, email, phone,
 password-hash and security-stamp columns hold 255, and `ClaimValue` holds at most 2000 characters on MySQL, Oracle, Firebird, DB2, Informix (2000
-bytes), SAP HANA, Sybase and SQL CE. A longer value is rejected on insert or update.
+bytes), SAP HANA, Sybase and SQL CE. `ClaimType` takes the provider's default string width (255 on most),
+`ProviderDisplayName` holds 128 everywhere, and a token `Value` holds 8000 bytes on Informix and 5000 characters on
+SAP HANA. A longer value is rejected on insert or update.
 
 On **SAP HANA** a passkey's `Data` column holds at most 5000 characters, the widest `NVARCHAR` it binds: enough for
 the default `none` attestation, possibly not for a direct-attestation certificate chain.

@@ -468,6 +468,11 @@ namespace Tests.Identity
 
 		#region What customization cannot do
 
+		sealed class AuditRow
+		{
+			public int Id { get; set; }
+		}
+
 		[Test]
 		public void DataOptionsMappingSchemaDoesNotOverrideDefaults([DataSources(false)] string context)
 		{
@@ -475,6 +480,7 @@ namespace Tests.Identity
 
 			new FluentMappingBuilder(consumer)
 				.Entity<IdentityUser>().HasTableName("ShouldNotWin")
+				.Entity<AuditRow>().HasTableName("AuditLog")
 				.Build();
 
 			using var db = new IdentityDataConnection(new DataOptions()
@@ -484,6 +490,9 @@ namespace Tests.Identity
 			// The context adds its own schema in the constructor, after the options have been applied, and the
 			// later addition takes priority - so a schema passed this way cannot override a default.
 			db.MappingSchema.GetEntityDescriptor(typeof(IdentityUser)).Name.Name.ShouldBe("AspNetUsers");
+
+			// It still maps what the defaults leave alone.
+			db.MappingSchema.GetEntityDescriptor(typeof(AuditRow)).Name.Name.ShouldBe("AuditLog");
 		}
 
 		[Test]
