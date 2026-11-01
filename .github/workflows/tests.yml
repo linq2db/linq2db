@@ -468,7 +468,7 @@ jobs:
 
   # Azure's create_baselines_branch, for a caller with no Azure half to run it: a baselines branch left
   # by an earlier run is rebased onto baselines master once, before any leg clones it. The comment path
-  # leaves it off - Azure still runs that job there, and two force-pushers on one branch race.
+  # leaves it off - Azure still runs that job there, so a second rebase would only repeat it.
   baselines_init:
     name: Rebase test baselines branch
     needs: build
