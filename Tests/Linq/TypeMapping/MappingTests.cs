@@ -6,11 +6,14 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.Types;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.TypeMapping
 {
@@ -166,6 +169,20 @@ namespace Tests.TypeMapping
 			{
 				return _errors.GetEnumerator();
 			}
+		}
+
+		public class BindingItem;
+
+		public class BindingDerivedItem : BindingItem;
+
+		public class BindingSample
+		{
+			public BindingSample(int value)
+			{
+			}
+
+			public int    Widen (int value)       => value;
+			public string Accept(BindingItem item) => "base";
 		}
 	}
 	
@@ -437,6 +454,25 @@ namespace Tests.TypeMapping
 			Bit1   = 1,
 			Bit3   = 4,
 			Bits24 = 10
+		}
+
+		sealed class BindingDerivedItem : TypeWrapper
+		{
+			public BindingDerivedItem(object instance) : base(instance, null)
+			{
+			}
+		}
+
+		sealed class BindingSample : TypeWrapper
+		{
+			public BindingSample(object instance) : base(instance, null)
+			{
+			}
+
+			public BindingSample(byte value) : base(null!, null) => throw new NotImplementedException();
+
+			public int    Widen (byte value)              => throw new NotImplementedException();
+			public string Accept(BindingDerivedItem item) => throw new NotImplementedException();
 		}
 
 		[TestFixture]
@@ -817,6 +853,55 @@ namespace Tests.TypeMapping
 				var mapper         = new ValueTaskToTaskMapper();
 
 				Assert.That(((ICustomMapper)mapper).CanMap(taskExpression), Is.False);
+			}
+
+			private static TypeMapper CreateBindingTypeMapper()
+			{
+				var typeMapper = new TypeMapper();
+
+				typeMapper.RegisterTypeWrapper<BindingSample     >(typeof(Dynamic.BindingSample));
+				typeMapper.RegisterTypeWrapper<BindingDerivedItem>(typeof(Dynamic.BindingDerivedItem));
+
+				typeMapper.FinalizeMappings();
+
+				return typeMapper;
+			}
+
+			[Test]
+			public void MethodRequiringValueCoercionIsNotFound()
+			{
+				var typeMapper = CreateBindingTypeMapper();
+
+				Action act = () => typeMapper.MapLambda((BindingSample s, byte value) => s.Widen(value));
+
+				var ex = act.ShouldThrow<LinqToDBException>();
+
+				ex.Message.ShouldContain("Method not found in target type");
+			}
+
+			[Test]
+			public void ConstructorRequiringValueCoercionIsNotFound()
+			{
+				var typeMapper = CreateBindingTypeMapper();
+
+				Action act = () => typeMapper.MapExpression(() => new BindingSample((byte)1));
+
+				var ex = act.ShouldThrow<LinqToDBException>();
+
+				ex.Message.ShouldContain("Constructor not found in target type");
+			}
+
+			[Test]
+			public void MethodWithBaseTypeParameterBinds()
+			{
+				var typeMapper = CreateBindingTypeMapper();
+
+				var lambda = typeMapper.MapLambda((BindingSample s, BindingDerivedItem item) => s.Accept(item));
+				var func   = (Func<Dynamic.BindingSample, Dynamic.BindingDerivedItem, string>)lambda.CompileExpression();
+
+				var result = func(new Dynamic.BindingSample(1), new Dynamic.BindingDerivedItem());
+
+				result.ShouldBe("base");
 			}
 		}
 	}

@@ -13,6 +13,7 @@ using DuckDB.NET.Native;
 using FirebirdSql.Data.Types;
 
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Extensions;
 
 using Microsoft.Data.SqlTypes;
 using Microsoft.SqlServer.Types;
@@ -368,7 +369,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 		static object GetMethodValue(object value, string methodName)
 		{
-			var method = value.GetType().GetMethod(methodName, BindingFlags.Public | BindingFlags.Instance, binder: null, types: Type.EmptyTypes, modifiers: null)
+			var method = value.GetType().GetPublicInstanceMethodEx(methodName)
 				?? throw new InvalidOperationException($"Provider-specific type '{value.GetType().FullName}' doesn't contain '{methodName}' method.");
 
 			return method.InvokeExt(value, null)

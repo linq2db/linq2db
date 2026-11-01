@@ -332,7 +332,7 @@ namespace LinqToDB.Concurrency
 		// Those are projected whole instead and materialized through the usual constructor mapping.
 		private static bool CanInitLockColumns(Type objType)
 		{
-			return objType.GetConstructor(Type.EmptyTypes) != null;
+			return objType.GetConstructorEx(Type.EmptyTypes) != null;
 		}
 
 		// (deleted, inserted) => new T { lockCol = inserted.lockCol, ... } — OUTPUT projection of new lock value(s)
