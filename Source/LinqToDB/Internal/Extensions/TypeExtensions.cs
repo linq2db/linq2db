@@ -17,12 +17,13 @@ namespace LinqToDB.Internal.Extensions
 			/// </summary>
 			public bool IsStringType => type == typeof(string);
 
-#if NET8_0_OR_GREATER
 			/// <summary>
-			///		Returns <see langword="true" /> iff the type is <c><see langword="typeof" />(<see cref="MemoryExtensions"/>)</c>.
+			///		Returns <see langword="true" /> iff the type is <c>System.MemoryExtensions</c>.
 			/// </summary>
-			public bool IsMemoryExtensionsType => type == typeof(MemoryExtensions);
-#endif
+			/// <remarks>
+			///		Matched by name: modern runtimes load the netstandard2.0 build too, which doesn't reference <c>System.Memory</c> (#6067).
+			/// </remarks>
+			public bool IsMemoryExtensionsType => string.Equals(type.FullName, "System.MemoryExtensions", StringComparison.Ordinal);
 
 			/// <summary>
 			/// Returns <see cref="List{T}"/> type where the element is the specified <see cref="Type"/>.

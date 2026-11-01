@@ -462,6 +462,40 @@ namespace Tests.Linq
 			Assert.That(res, Is.EqualTo(expected));
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6067")]
+		public void ArrayContainsValueType([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var ids = new[] { 1, 2, 3 };
+
+			var items = db.Person
+				.Where(p => ids.Contains(p.ID))
+				.Select(p => p.ID)
+				.ToList();
+
+			items
+				.OrderBy(i => i)
+				.ShouldBe([1, 2, 3]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6067")]
+		public void ArrayContainsReferenceType([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var names = new[] { "John", "Jane" };
+
+			var items = db.Person
+				.Where(p => names.Contains(p.FirstName))
+				.Select(p => p.FirstName)
+				.ToList();
+
+			items
+				.OrderBy(i => i)
+				.ShouldBe(["Jane", "John"]);
+		}
+
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void ContainsSubqueryTest([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
