@@ -436,6 +436,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 				v => v != null ? (DateTime?)issue6181TwiceConverter.ConvertToProvider(Issue6181Counted(v.Value)) : (DateTime?)null,
 				v => v != null ? (DateTime?)issue6181TwiceConverter.ConvertFromProvider(v.Value) : (DateTime?)null);
 
+			// a user-defined conversion in the argument, into the target reading its parameter twice
+			var issue6181CastConverter = new ValueConverter<Issue6181Stamp?, DateTime?>(
+				v => v != null ? (DateTime?)issue6181TwiceConverter.ConvertToProvider((DateTime)v) : (DateTime?)null,
+				v => v != null ? new Issue6181Stamp((DateTime)issue6181TwiceConverter.ConvertFromProvider(v.Value)!) : null);
+
 			// the target reads its parameter once, on a branch never taken; the delegated call still evaluates the argument
 			var issue6181GatedTarget = new ValueConverter<DateTime, DateTime>(
 				v => Issue6181Converting(Issue6181Never ? v : Issue6181Fixed),
@@ -467,6 +472,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 				b.Property(e => e.ChainedDate).HasConversion(issue6181ChainedNullableConverter);
 				b.Property(e => e.CountedDate).HasConversion(issue6181CountedConverter);
 				b.Property(e => e.GatedDate).HasConversion(issue6181GatedConverter);
+				b.Property(e => e.CastDate).HasConversion(issue6181CastConverter);
 
 				b.HasOne(e => e.TableOne)
 					.WithMany()

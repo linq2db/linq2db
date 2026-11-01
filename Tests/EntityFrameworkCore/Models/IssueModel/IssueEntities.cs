@@ -470,8 +470,25 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		public DateTime?          ChainedDate         { get; set; }
 		public DateTime?          CountedDate         { get; set; }
 		public DateTime?          GatedDate           { get; set; }
+		public Issue6181Stamp?    CastDate            { get; set; }
 		public int?               TableOneId          { get; set; }
 		public Issue6181TableOne? TableOne            { get; set; }
+	}
+
+	/// <summary>
+	/// A value whose conversion to <see cref="DateTime"/> is a user-defined operator the test counts.
+	/// </summary>
+	public sealed class Issue6181Stamp
+	{
+		public Issue6181Stamp(DateTime value) => Value = value;
+
+		public DateTime Value { get; }
+
+		public static explicit operator DateTime(Issue6181Stamp stamp)
+		{
+			IssueContextBase.Issue6181CountArgument();
+			return stamp.Value;
+		}
 	}
 
 	#endregion

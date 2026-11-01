@@ -669,7 +669,7 @@ namespace LinqToDB.EntityFrameworkCore
 					ParameterExpression or ConstantExpression                                                                     => true,
 					MemberExpression { Member: FieldInfo, Expression: var instance }                                              => instance == null || IsDuplicable(instance),
 					MemberExpression { Member.Name: nameof(Nullable<>.Value), Expression: { Type.IsNullableType: true } instance } => IsDuplicable(instance),
-					UnaryExpression { NodeType: ExpressionType.Convert, Operand: var operand }                                   => IsDuplicable(operand),
+					UnaryExpression { NodeType: ExpressionType.Convert, Method: null, Operand: var operand }                     => IsDuplicable(operand),
 					_                                                                                                            => false,
 				};
 

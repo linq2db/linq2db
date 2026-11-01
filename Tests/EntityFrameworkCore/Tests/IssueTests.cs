@@ -1718,6 +1718,33 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				.Update());
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void Issue6181_DelegatedUserDefinedConversionIsEvaluatedOnce(
+#if NET8_0
+			// EF8 registers the NodaTime plugin process-wide, so useNodaTime: false cannot keep #5981 out
+			[EFDataSources(TestProvName.AllPostgreSQL)] string provider)
+#else
+			[EFDataSources] string provider)
+#endif
+		{
+			using var ctx = CreateContext(provider, useNodaTime: false);
+			Issue6181Seed(ctx);
+
+			Issue6181ShouldEvaluateArgumentOncePerConversion(() => ctx.Issue6181TableTwos
+				.ToLinqToDBTable()
+				.Where(r => r.Id == 1)
+				.Set(r => r.CastDate, new Issue6181Stamp(Issue5975Stored))
+				.Update());
+
+			ctx.Issue6181TableTwos
+				.ToLinqToDB()
+				.Where(r => r.Id == 1)
+				.Select(r => r.CastDate)
+				.Single()!
+				.Value
+				.ShouldBe(Issue5975Stored);
+		}
+
 		static void Issue6181ShouldEvaluateArgumentOncePerConversion(Action write)
 		{
 			var counts = new IssueContextBase.Issue6181Counts();
