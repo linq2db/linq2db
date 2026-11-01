@@ -2054,6 +2054,90 @@ namespace Tests.Linq
 				.ShouldContain(refusal);
 		}
 
+		/// <summary>
+		/// A reference type that answers its own null test: <see cref="HasValue"/> and the equality operators treat an
+		/// instance without a value as null.
+		/// </summary>
+		sealed class CountOption
+		{
+			public CountOption(bool hasValue, int value)
+			{
+				HasValue = hasValue;
+				Value    = value;
+			}
+
+			public bool HasValue { get; }
+			public int  Value    { get; }
+
+			static bool IsEmpty(CountOption? option) => option is null || !option.HasValue;
+
+			public static bool operator ==(CountOption? left, CountOption? right)
+				=> IsEmpty(left) ? IsEmpty(right) : !IsEmpty(right) && left!.Value == right!.Value;
+
+			public static bool operator !=(CountOption? left, CountOption? right) => !(left == right);
+
+			public override bool Equals(object? obj) => obj is CountOption other && this == other;
+
+			public override int GetHashCode() => IsEmpty(this) ? 0 : Value.GetHashCode();
+		}
+
+		[Table]
+		sealed class CountOptionRow
+		{
+			[PrimaryKey] public int          Id      { get; set; }
+			[Column]     public CountOption  Plain   { get; set; } = null!;
+			[Column]     public CountOption? Guarded { get; set; }
+		}
+
+		public enum OwnNullTest
+		{
+			HasValueMember,
+			EqualityOperator,
+		}
+
+		/// <summary>
+		/// A null test a reference type answers itself is not set aside: it can answer null for an instance, which
+		/// the converter is handed, so the guarded conversion stores something else for it.
+		/// </summary>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void OwnNullTestOfAReferenceTypeIsRefused([DataSources] string context, [Values] OwnNullTest nullTest)
+		{
+			Expression<Func<CountOption?, int?>> guarded = nullTest switch
+			{
+				OwnNullTest.HasValueMember   => v => v!.HasValue ? (int?)v.Value : null,
+				OwnNullTest.EqualityOperator => v => v != null ? (int?)v.Value : null,
+				_                            => throw new ArgumentOutOfRangeException(nameof(nullTest)),
+			};
+
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<CountOptionRow>()
+					.Property(e => e.Plain)
+						.HasConversion(v => (int?)v.Value, v => new CountOption(true, v.GetValueOrDefault()))
+					.Property(e => e.Guarded)
+						.HasConversion(guarded, v => new CountOption(true, v.GetValueOrDefault()))
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var t  = db.CreateLocalTable<CountOptionRow>();
+
+			var compared = () => t
+				.Where(r => r.Plain == r.Guarded)
+				.ToArray();
+
+			var refusal = string.Format(
+				CultureInfo.InvariantCulture,
+				ErrorHelper.Error_ValueConverter_DivergentOperands,
+				nameof(CountOptionRow.Plain),
+				nameof(CountOptionRow.Guarded));
+
+			compared
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain(refusal);
+		}
+
 		[Table]
 		sealed class Issue5976RowA
 		{
