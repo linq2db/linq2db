@@ -445,6 +445,55 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 
 	#endregion
 
+	#region Issue 6181
+
+	public sealed class Issue6181TableOne
+	{
+		public int       Id        { get; set; }
+		public string?   Name      { get; set; }
+		public DateTime  CreatedOn { get; set; }
+		public DateTime  ChainedOn { get; set; }
+		public DateTime? FromDate  { get; set; }
+		public DateTime? ToDate    { get; set; }
+	}
+
+	public sealed class Issue6181TableTwo
+	{
+		public int                Id                  { get; set; }
+		public string?            Code                { get; set; }
+		public DateTime?          FromDate            { get; set; }
+		public DateTime?          ToDate              { get; set; }
+		public DateTime?          OtherDate           { get; set; }
+		public DateTime?          HeldDate            { get; set; }
+		public DateTime?          OverriddenDate      { get; set; }
+		public DateTime?          TypedOverriddenDate { get; set; }
+		public DateTime?          ChainedDate         { get; set; }
+		public DateTime?          CountedDate         { get; set; }
+		public DateTime?          GatedDate           { get; set; }
+		public Issue6181Stamp?    CastDate            { get; set; }
+		public DateTime?          ClockDate           { get; set; }
+		public int?               TableOneId          { get; set; }
+		public Issue6181TableOne? TableOne            { get; set; }
+	}
+
+	/// <summary>
+	/// A value whose conversion to <see cref="DateTime"/> is a user-defined operator the test counts.
+	/// </summary>
+	public sealed class Issue6181Stamp
+	{
+		public Issue6181Stamp(DateTime value) => Value = value;
+
+		public DateTime Value { get; }
+
+		public static explicit operator DateTime(Issue6181Stamp stamp)
+		{
+			IssueContextBase.Issue6181CountArgument();
+			return stamp.Value;
+		}
+	}
+
+	#endregion
+
 	#region Issue 5355
 
 	public interface IIssue5355Profile
