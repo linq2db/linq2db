@@ -8,6 +8,7 @@ using System.Transactions;
 
 using LinqToDB;
 using LinqToDB.Async;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -1100,6 +1101,182 @@ namespace Tests.Linq
 					.OrderBy(v => v)
 					.ToList();
 			}
+		}
+
+		[Table("Parent")]
+		sealed class ParentWithLinkedChildren
+		{
+			[Column] public int  ParentID { get; set; }
+			[Column] public int? Value1   { get; set; }
+
+			[Association(QueryExpressionMethod = nameof(ChildrenExpression), CanBeNull = true)]
+			public IEnumerable<ChildWithLinkedParent> Children { get; set; } = null!;
+
+			public static Expression<Func<ParentWithLinkedChildren, IDataContext, IQueryable<ChildWithLinkedParent>>> ChildrenExpression()
+			{
+				return (p, db) => db.GetTable<ChildWithLinkedParent>()
+					.Where(c => c.ParentID == p.ParentID)
+					.OrderBy(c => c.ChildID);
+			}
+		}
+
+		[Table("Child")]
+		sealed class ChildWithLinkedParent
+		{
+			[Column] public int ParentID { get; set; }
+			[Column] public int ChildID  { get; set; }
+
+			[Association(QueryExpressionMethod = nameof(LinkedParentExpression), CanBeNull = true)]
+			public Parent? LinkedParent { get; set; }
+
+			[Association(QueryExpressionMethod = nameof(LinkedParentExpression), CanBeNull = false)]
+			public Parent LinkedParentRequired { get; set; } = null!;
+
+			[Association(QueryExpressionMethod = nameof(LinkedParentByOuterKeyExpression), CanBeNull = true)]
+			public Parent? LinkedParentByOuterKey { get; set; }
+
+			public static Expression<Func<ChildWithLinkedParent, IDataContext, IQueryable<Parent>>> LinkedParentExpression()
+			{
+				return (c, db) =>
+					from g in db.GetTable<GrandChild>()
+						.Where(g => g.ChildID == c.ChildID)
+						.Take(1)
+					join p in db.GetTable<Parent>() on g.ParentID equals (int?)p.ParentID
+					select p;
+			}
+
+			public static Expression<Func<ChildWithLinkedParent, IDataContext, IQueryable<Parent>>> LinkedParentByOuterKeyExpression()
+			{
+				return (c, db) =>
+					from g in db.GetTable<GrandChild>()
+						.Where(g => g.ChildID == c.ChildID)
+						.Take(1)
+					from p in db.GetTable<Parent>()
+						.Where(p => p.ParentID == c.ParentID)
+						.DefaultIfEmpty()
+					select p;
+			}
+		}
+
+		List<(int ChildID, int? LinkedParentID)> LinkedParentExpected()
+		{
+			return Child
+				.Select(c => (
+					c.ChildID,
+					GrandChild
+						.Where(g => g.ChildID == c.ChildID)
+						.Select(g => g.ParentID)
+						.FirstOrDefault()))
+				.OrderBy(c => c.ChildID)
+				.ToList();
+		}
+
+		List<(int ChildID, int? LinkedParentID)> LinkedParentByOuterKeyExpected()
+		{
+			return Child
+				.Select(c => (
+					c.ChildID,
+					GrandChild.Any(g => g.ChildID == c.ChildID) ? c.ParentID : (int?)null))
+				.OrderBy(c => c.ChildID)
+				.ToList();
+		}
+
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllAccess, TestProvName.AllFirebirdLess3, TestProvName.AllMySql57, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6208")]
+		public void ThenLoadNullableJoinedAssociationKeepsUnmatchedRows([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var parents = db.GetTable<ParentWithLinkedChildren>()
+				.LoadWith(p => p.Children)
+				.ThenLoad(c => c.LinkedParent)
+				.ToList();
+
+			parents
+				.SelectMany(p => p.Children)
+				.Select(c => (c.ChildID, LinkedParentID: c.LinkedParent?.ParentID))
+				.OrderBy(c => c.ChildID)
+				.ToList()
+				.ShouldBe(LinkedParentExpected());
+		}
+
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllAccess, TestProvName.AllFirebirdLess3, TestProvName.AllMySql57, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6208")]
+		public void SelectNullableJoinedAssociationKeepsUnmatchedRows([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from c in db.GetTable<ChildWithLinkedParent>()
+				select new
+				{
+					c.ChildID,
+					c.LinkedParent,
+				};
+
+			query
+				.ToList()
+				.Select(c => (c.ChildID, LinkedParentID: c.LinkedParent?.ParentID))
+				.OrderBy(c => c.ChildID)
+				.ToList()
+				.ShouldBe(LinkedParentExpected());
+		}
+
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllAccess, TestProvName.AllFirebirdLess3, TestProvName.AllMySql57, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6208")]
+		public void SelectRequiredJoinedAssociationKeepsOnlyMatchedRows([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from c in db.GetTable<ChildWithLinkedParent>()
+				select new
+				{
+					c.ChildID,
+					c.LinkedParentRequired,
+				};
+
+			var expected = LinkedParentExpected()
+				.Where(c => c.LinkedParentID != null)
+				.ToList();
+
+			query
+				.ToList()
+				.Select(c => (c.ChildID, LinkedParentID: (int?)c.LinkedParentRequired.ParentID))
+				.OrderBy(c => c.ChildID)
+				.ToList()
+				.ShouldBe(expected);
+		}
+
+		[ThrowsForProvider("DuckDB.NET.Data.DuckDBException", TestProvName.AllDuckDB, ErrorMessage = "Not implemented Error: Non-inner join on correlated columns not supported")]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllAccess, TestProvName.AllFirebirdLess3, TestProvName.AllMySql57, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ActiveIssue(6224, Configurations = [TestProvName.AllSQLite], ErrorMessage = "no such column: c_1.ParentID")]
+		[ActiveIssue(6224, Configurations = [TestProvName.AllDB2, TestProvName.AllInformix], ErrorMessage = "An ON clause")]
+		[ActiveIssue(6224, Configurations = [TestProvName.AllMariaDB], ErrorMessage = "Unknown column 'c_1.ParentID' in 'ON'")]
+		[ActiveIssue(6224, Configurations = [TestProvName.AllOracle11], ErrorMessage = "ORA-00904")]
+		[ActiveIssue(6224, Configurations = [ProviderName.PostgreSQL92], ErrorMessage = "invalid reference to FROM-clause entry for table \"c_1\"")]
+		[ActiveIssue(6224, Configurations = [ProviderName.Firebird3], ErrorMessage = "Column unknown")]
+		[ActiveIssue(6224, Configurations = [TestProvName.AllClickHouse], ErrorMessage = "Correlated subqueries are not supported in JOINs")]
+		[ActiveIssue(6224, Configurations = [TestProvName.AllYdb], ErrorMessage = "unknown corellation name: c_1")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6208")]
+		public void SelectNullableLeftJoinedAssociationKeepsNulls([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from c in db.GetTable<ChildWithLinkedParent>()
+				select new
+				{
+					c.ChildID,
+					c.LinkedParentByOuterKey,
+				};
+
+			query
+				.ToList()
+				.Select(c => (c.ChildID, LinkedParentID: c.LinkedParentByOuterKey?.ParentID))
+				.OrderBy(c => c.ChildID)
+				.ToList()
+				.ShouldBe(LinkedParentByOuterKeyExpected());
 		}
 	}
 }
