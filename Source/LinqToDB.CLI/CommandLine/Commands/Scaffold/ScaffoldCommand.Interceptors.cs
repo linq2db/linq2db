@@ -273,6 +273,8 @@ namespace LinqToDB.CommandLine.Commands.Scaffold
 		{
 			// load T4 template as in-memory assembly
 			var (status, templateAsembly) = CompileAndLoadAssembly(TEMPLATE_ASSEMBLY_NAME, templateCode, references);
+			if (status != StatusCodes.SUCCESS)
+				return (status, null);
 
 			// find and instantiate template host class
 			var type = templateAsembly!.GetTypes().FirstOrDefault(type => string.Equals(type.Name, TEMPLATE_CLASS_NAME, StringComparison.Ordinal));
