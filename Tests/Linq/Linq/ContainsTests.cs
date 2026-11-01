@@ -707,6 +707,32 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
+		/// A value added to a converted column or its <c>SUM</c> goes through the column's converter; a factor or
+		/// divisor does not.
+		/// </summary>
+		[Test]
+		public void ArithmeticWithConvertedColumn([DataSources] string context)
+		{
+			var operand = 2;
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new ConvertedAmount[]
+			{
+				new() { Id = 1, Group = 1, Cents = 3 },
+				new() { Id = 2, Group = 1, Cents = 4 },
+			});
+
+			var group = table.GroupBy(x => x.Group);
+			var row   = table.Where(x => x.Id == 1);
+
+			group.Select(g => g.Sum(x => x.Cents) * operand).Single().ShouldBe(14);
+			group.Select(g => g.Sum(x => x.Cents) / operand).Single().ShouldBe(3);
+			group.Select(g => g.Sum(x => x.Cents) + operand).Single().ShouldBe(9);
+			row.Select(x => x.Cents * operand).Single().ShouldBe(6);
+			row.Select(x => x.Cents + operand).Single().ShouldBe(5);
+		}
+
+		/// <summary>
 		/// A value searched in a projected <c>SUM</c> over a converted column goes through the column's converter.
 		/// </summary>
 		[Test]
