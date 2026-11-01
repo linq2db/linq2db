@@ -47,12 +47,10 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			Registration.RegisterMethod(() => "".TrimStart((char[])null!), TranslateStringTrimStart);
 			Registration.RegisterMethod(() => "".TrimEnd  ((char[])null!), TranslateStringTrimEnd);
-#if NET8_0_OR_GREATER
-			Registration.RegisterMethod(() => "".TrimStart(),    TranslateStringTrimStart);
-			Registration.RegisterMethod(() => "".TrimStart(' '), TranslateStringTrimStart);
-			Registration.RegisterMethod(() => "".TrimEnd  (),    TranslateStringTrimEnd);
-			Registration.RegisterMethod(() => "".TrimEnd  (' '), TranslateStringTrimEnd);
-#endif
+			RegisterStringMethod(nameof(string.TrimStart), [],             TranslateStringTrimStart);
+			RegisterStringMethod(nameof(string.TrimStart), [typeof(char)], TranslateStringTrimStart);
+			RegisterStringMethod(nameof(string.TrimEnd),   [],             TranslateStringTrimEnd);
+			RegisterStringMethod(nameof(string.TrimEnd),   [typeof(char)], TranslateStringTrimEnd);
 
 			Registration.RegisterMethod(() => string.IsNullOrWhiteSpace(null), TranslateStringIsNullOrWhiteSpace);
 
@@ -386,6 +384,17 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				return null;
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, resultSql, methodCall);
+		}
+
+		// Resolved at runtime: the netstandard2.0 build can't name an overload added in .NET Core, yet it runs on
+		// modern runtimes, where `s.TrimStart()` binds to exactly such an overload (#6075).
+		void RegisterStringMethod(string name, Type[] parameterTypes, TranslationRegistration.TranslateMethodFunc translate)
+		{
+			if (typeof(string).GetMethod(name, parameterTypes) is { } method)
+			{
+				var call = Expression.Call(Expression.Constant(string.Empty), method, parameterTypes.Select(Expression.Default));
+				Registration.RegisterMethodInternal(Expression.Lambda(call), translate, isGenericTypeMatch: false);
+			}
 		}
 
 		Expression? TranslateStringTrimStart(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
