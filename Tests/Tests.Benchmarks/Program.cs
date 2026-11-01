@@ -1,4 +1,7 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 using BenchmarkDotNet.Running;
 
@@ -15,82 +18,35 @@ namespace LinqToDB.Benchmarks
 	{
 		internal static readonly string[] _defaultArguments = new[] { "--filter", "*.Queries.*", "*.QueryGeneration.*" };
 
+		// Manual runners: they bypass BDN's child-process toolchain, which antivirus / endpoint protection can block.
+		// Usage: <verb> [iterations] [warmups]; manual-deepjoin also takes [onlyDepth]. manual-render and manual-eager
+		// tag their output with the RENDER_BENCH_TAG env var so branch and master runs can be diffed.
+		static readonly Dictionary<string, Action<string[]>> _manualRunners = new(StringComparer.Ordinal)
+		{
+			["manual-cache"]      = a => CacheActivityBenchmark.RunManually (Arg(a, 2, 5),   Arg(a, 1, 20)),
+			["manual-paramreuse"] = a => ParameterReuseBenchmark.RunManually(Arg(a, 2, 200), Arg(a, 1, 2000)),
+			["manual-render"]     = a => RenderPipelineBenchmark.RunManually(Arg(a, 2, 5),   Arg(a, 1, 20)),
+			["manual-eager"]      = a => EagerLoadingBenchmark.RunManually  (Arg(a, 2, 5),   Arg(a, 1, 20)),
+			["manual-weakjoin"]   = a => WeakJoinScanBenchmark.RunManually  (Arg(a, 2, 2),   Arg(a, 1, 8)),
+			["manual-deepjoin"]   = a => DeepJoinChainBenchmark.RunManually (Arg(a, 2, 1),   Arg(a, 1, 3), Arg(a, 3, 0)),
+		};
+
+		static int Arg(string[] args, int index, int defaultValue)
+			=> args.Length > index && int.TryParse(args[index], out var value) ? value : defaultValue;
+
 		static void Main(string[] args)
 		{
-			// Manual cache benchmark runner — bypasses BDN's child-process toolchain
-			// when antivirus / endpoint protection blocks it.
-			//
-			// Usage: manual-cache [iterations] [warmups]
-			if (args.Length > 0 && args[0] == "manual-cache")
+			if (args.Length > 0 && _manualRunners.TryGetValue(args[0], out var run))
 			{
-				var iters   = args.Length > 1 && int.TryParse(args[1], out var n) ? n : 20;
-				var warmups = args.Length > 2 && int.TryParse(args[2], out var w) ? w : 5;
-				CacheActivityBenchmark.RunManually(warmups, iters);
+				run(args);
 				return;
 			}
 
-			// Same fallback for the parameter-reuse benchmarks.
-			//
-			// Usage: manual-paramreuse [iterations] [warmups]
-			if (args.Length > 0 && args[0] == "manual-paramreuse")
+			// Usage: bdn <BenchmarkSwitcher args>, e.g. bdn --filter *EagerLoading*. Runs with each class's own [Config]
+			// rather than Config.Instance, so the classes that force InProcessEmit spawn no child processes.
+			if (args.Length > 0 && args[0] == "bdn")
 			{
-				var iters   = args.Length > 1 && int.TryParse(args[1], out var n) ? n : 2000;
-				var warmups = args.Length > 2 && int.TryParse(args[2], out var w) ? w : 200;
-				ParameterReuseBenchmark.RunManually(warmups, iters);
-				return;
-			}
-
-			// Manual render-pipeline benchmark runner (branch-vs-master). Tag the run via the
-			// RENDER_BENCH_TAG env var. Usage: manual-render [iterations] [warmups]
-			if (args.Length > 0 && args[0] == "manual-render")
-			{
-				var iters   = args.Length > 1 && int.TryParse(args[1], out var n) ? n : 20;
-				var warmups = args.Length > 2 && int.TryParse(args[2], out var w) ? w : 5;
-				RenderPipelineBenchmark.RunManually(warmups, iters);
-				return;
-			}
-
-			// Manual eager-loading benchmark runner (branch-vs-master), over real in-memory SQLite. Tag the run via
-			// the RENDER_BENCH_TAG env var. Usage: manual-eager [iterations] [warmups]
-			if (args.Length > 0 && args[0] == "manual-eager")
-			{
-				var iters   = args.Length > 1 && int.TryParse(args[1], out var n) ? n : 20;
-				var warmups = args.Length > 2 && int.TryParse(args[2], out var w) ? w : 5;
-				EagerLoadingBenchmark.RunManually(warmups, iters);
-				return;
-			}
-
-			// Rigorous BenchmarkDotNet runs of the pipeline benchmarks, using each class's own [Config] (a single
-			// InProcessEmit job — does NOT spawn child processes, unlike Config.Instance's multi-runtime fan-out).
-			// Usage: bdn-render | bdn-eager
-			if (args.Length > 0 && args[0] == "bdn-render")
-			{
-				BenchmarkRunner.Run<RenderPipelineBenchmark>();
-				return;
-			}
-
-			if (args.Length > 0 && args[0] == "bdn-eager")
-			{
-				BenchmarkRunner.Run<EagerLoadingBenchmark>();
-				return;
-			}
-
-			// Usage: manual-weakjoin [iterations] [warmups]
-			if (args.Length > 0 && args[0] == "manual-weakjoin")
-			{
-				var iters   = args.Length > 1 && int.TryParse(args[1], out var n) ? n : 8;
-				var warmups = args.Length > 2 && int.TryParse(args[2], out var w) ? w : 2;
-				WeakJoinScanBenchmark.RunManually(warmups, iters);
-				return;
-			}
-
-			// Usage: manual-deepjoin [iterations] [warmups] [onlyDepth]
-			if (args.Length > 0 && args[0] == "manual-deepjoin")
-			{
-				var iters   = args.Length > 1 && int.TryParse(args[1], out var dn) ? dn : 3;
-				var warmups = args.Length > 2 && int.TryParse(args[2], out var dw) ? dw : 1;
-				var depth   = args.Length > 3 && int.TryParse(args[3], out var dd) ? dd : 0;
-				DeepJoinChainBenchmark.RunManually(warmups, iters, depth);
+				BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args.Skip(1).ToArray());
 				return;
 			}
 
