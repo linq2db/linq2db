@@ -1244,5 +1244,51 @@ namespace Tests.Linq
 				result.Count.ShouldBe(5);
 			}
 		}
+
+		static MappingSchema CapturedIdFuncFilterSchema(int id)
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<Person>()
+					.HasQueryFilter((q, _) => q.Where(p => p.ID == id))
+				.Build();
+
+			return ms;
+		}
+
+		static MappingSchema CapturedIdLambdaFilterSchema(int id)
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<Person>()
+					.HasQueryFilter(p => p.ID == id)
+				.Build();
+
+			return ms;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6235"), QueryCacheTest]
+		[ActiveIssue(6235, ErrorTypeName = "Shouldly.ShouldAssertException")]
+		public void FuncFilterCapturedValuePerSchema([IncludeDataSources(TestProvName.AllSQLiteBase)] string context)
+		{
+			using (var db = GetDataContext(context, CapturedIdFuncFilterSchema(1)))
+				db.Person.Select(p => p.ID).ToArray().ShouldBe([1]);
+
+			using (var db = GetDataContext(context, CapturedIdFuncFilterSchema(2)))
+				db.Person.Select(p => p.ID).ToArray().ShouldBe([2]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6235"), QueryCacheTest]
+		[ActiveIssue(6235, ErrorTypeName = "Shouldly.ShouldAssertException")]
+		public void LambdaFilterCapturedValuePerSchema([IncludeDataSources(TestProvName.AllSQLiteBase)] string context)
+		{
+			using (var db = GetDataContext(context, CapturedIdLambdaFilterSchema(1)))
+				db.Person.Select(p => p.ID).ToArray().ShouldBe([1]);
+
+			using (var db = GetDataContext(context, CapturedIdLambdaFilterSchema(2)))
+				db.Person.Select(p => p.ID).ToArray().ShouldBe([2]);
+		}
 	}
 }

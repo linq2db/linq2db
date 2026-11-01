@@ -1440,7 +1440,8 @@ namespace Tests.Linq
 
 			new FluentMappingBuilder(ms)
 				.Entity<Model.Person>()
-					.HasQueryFilter((q, _) =>
+					// keyed per context: another invocation's schema would share this ID and its cached query (#6235)
+					.HasQueryFilter(context, (q, _) =>
 					{
 						var p    = Expression.Parameter(typeof(Model.Person), "p");
 						var c    = Expression.Constant(ids);
