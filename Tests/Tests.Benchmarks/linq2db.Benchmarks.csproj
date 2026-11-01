@@ -1,5 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<Import Project="..\linq2db.Providers.props" />
+	<Import Project="..\..\SQLite.Runtime.props" />
 
 	<PropertyGroup>
 		<AssemblyName>linq2db.Benchmarks</AssemblyName>

@@ -3578,8 +3578,15 @@ namespace Tests.Linq
 			result.Items1.Count.ShouldBe(companies.Length);
 			result.Items2.Count.ShouldBe(departments.Length);
 
-			// CteUnion: single UNION ALL query; non-CTE providers fall back to KeyedQuery (buffer + 2 child queries).
-			if (!context.IsRemote()) counter.Count.ShouldBe(!IsCteSupported(context) ? 3 : 1);
+			// CteUnion emits a single UNION ALL. On non-CTE providers this falls back to KeyedQuery, but the two
+			// collections are independent (not parent-keyed), so the combined engine batches them and the root into
+			// one multi-result-set command — but only when combining is enabled (UseCombinedCommands is opt-in in 6.x)
+			// and the provider supports it. Otherwise the buffer + 2 child queries run as 3 separate commands.
+			if (!context.IsRemote())
+			{
+				var oneCommand = IsCteSupported(context) || db.UsesCombinedEagerLoading();
+				counter.Count.ShouldBe(oneCommand ? 1 : 3);
+			}
 		}
 
 		[Test]
@@ -3620,8 +3627,15 @@ namespace Tests.Linq
 			result.Items1.Count.ShouldBe(companies.Length);
 			result.Items2.Count.ShouldBe(departments.Length);
 
-			// CteUnion: single UNION ALL query; non-CTE providers fall back to KeyedQuery (buffer + 2 child queries + scalar).
-			if (!context.IsRemote()) counter.Count.ShouldBe(!IsCteSupported(context) ? 3 : 1);
+			// CteUnion emits a single UNION ALL. On non-CTE providers this falls back to KeyedQuery, but the two
+			// collections are independent (not parent-keyed) and the scalar folds into the root, so the combined
+			// engine batches them into one multi-result-set command — but only when combining is enabled
+			// (UseCombinedCommands is opt-in in 6.x) and the provider supports it. Otherwise the 3 statements run separately.
+			if (!context.IsRemote())
+			{
+				var oneCommand = IsCteSupported(context) || db.UsesCombinedEagerLoading();
+				counter.Count.ShouldBe(oneCommand ? 1 : 3);
+			}
 		}
 
 		[Test]

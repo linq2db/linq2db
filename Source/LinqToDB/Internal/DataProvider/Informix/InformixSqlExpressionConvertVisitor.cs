@@ -18,6 +18,8 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		protected override bool SupportsNullInColumn              => false;
 		protected override bool SupportsDistinctAsExistsIntersect => true;
 		protected override bool ConcatRequiresExplicitStringCast  => false;
+		// IFX expression cannot be predicate
+		protected override bool ForceConvertSetValue              => true;
 
 		public override ISqlPredicate ConvertLikePredicate(SqlPredicate.Like predicate)
 		{
@@ -341,30 +343,6 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			return InformixSqlOptimizer.WrapParameters(
 				base.ConvertIsDistinctPredicateAsIntersect(predicate),
 				VisitMode);
-		}
-
-		protected internal override IQueryElement VisitSqlSetExpression(SqlSetExpression element)
-		{
-			var newElement = (SqlSetExpression)base.VisitSqlSetExpression(element);
-
-			// IFX expression cannot be predicate
-			var wrapped = newElement.Expression == null ? null : WrapBooleanExpression(newElement.Expression, includeFields : false, withNull: newElement.Column.CanBeNullable(NullabilityContext), forceConvert: true);
-
-			if (!ReferenceEquals(wrapped, newElement.Expression))
-			{
-				if (wrapped != null)
-					wrapped = (ISqlExpression)Optimize(wrapped);
-				if (GetVisitMode(newElement) == VisitMode.Modify)
-				{
-					newElement.Expression = wrapped;
-				}
-				else
-				{
-					newElement = new SqlSetExpression(newElement.Column, wrapped);
-				}
-			}
-
-			return newElement;
 		}
 
 		protected internal override IQueryElement VisitExprPredicate(SqlPredicate.Expr predicate)

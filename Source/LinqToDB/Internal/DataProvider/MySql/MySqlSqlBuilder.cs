@@ -42,16 +42,6 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			return true;
 		}
 
-		public override int CommandCount(SqlStatement statement)
-		{
-			return statement.NeedsIdentity ? 2 : 1;
-		}
-
-		protected override void BuildCommand(SqlStatement statement, int commandNumber)
-		{
-			StringBuilder.AppendLine("SELECT LAST_INSERT_ID()");
-		}
-
 		protected override string LimitFormat(SelectQuery selectQuery)
 		{
 			return "LIMIT {0}";
@@ -59,7 +49,9 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 		protected override void BuildOffsetLimit(SelectQuery selectQuery)
 		{
-			SqlOptimizer.ConvertSkipTake(NullabilityContext, MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
+			// TAKE/SKIP resolved during render-prep (see SqlExpressionConvertVisitor.ResolveSkipTakeValues).
+			var takeExpr = selectQuery.Select.TakeValue;
+			var skipExpr = selectQuery.Select.SkipValue;
 
 			if (skipExpr == null)
 				base.BuildOffsetLimit(selectQuery);
@@ -390,7 +382,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 					AppendIndent();
 					BuildExpression(expr.Column, false, true);
 					StringBuilder.Append(" = ");
-					var convertedExpr = ConvertElement(expr.Expression!);
+					var convertedExpr = expr.Expression!;
 					BuildExpression(convertedExpr, false, true);
 				}
 

@@ -6,11 +6,16 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.DataProvider.SQLite;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -2581,6 +2586,63 @@ namespace Tests.xUpdate
 				Value3 = tb.Where(r => r.Id == id2).Select(r => r.Value4).SingleOrDefault(),
 				Value4 = "string 2",
 			});
+		}
+
+		[Table]
+		sealed class ArchivableDocument
+		{
+			[PrimaryKey] public int    Id         { get; set; }
+			[Column    ] public string Title      { get; set; } = null!;
+			[Column    ] public bool   IsArchived { get; set; }
+		}
+
+		// Emulates InsertOrReplace with an UPDATE followed by an INSERT, as a provider without a native upsert does.
+		sealed class NoNativeUpsertSQLiteProvider : SQLiteDataProvider
+		{
+			public NoNativeUpsertSQLiteProvider() : base("SQLite.NoNativeUpsert.ArchiveGuard", SQLiteProvider.Microsoft)
+			{
+				SqlProviderFlags.IsInsertOrUpdateSupported = false;
+			}
+		}
+
+		// Archived documents are read-only: every UPDATE this connection runs skips them.
+		sealed class ArchiveGuardConnection(DataOptions options) : DataConnection(options)
+		{
+			protected override SqlStatement ProcessQuery(SqlStatement statement, EvaluationContext context)
+			{
+				if (statement is SqlUpdateStatement update)
+				{
+					var isArchived = ((SqlTable)update.Update.Table!).FindFieldByMemberName(nameof(ArchivableDocument.IsArchived))!;
+
+					update.SelectQuery.Where.EnsureConjunction().AddEqual(isArchived, new SqlValue(false), CompareNulls.LikeSql);
+				}
+
+				return base.ProcessQuery(statement, context);
+			}
+		}
+
+		// ProcessQuery is the shipped hook for rewriting every statement a connection runs, so the UPDATE an emulated
+		// InsertOrReplace runs has to reach it like any other.
+		[Test]
+		public void EmulatedInsertOrReplace_UpdateGoesThroughProcessQuery()
+		{
+			using var db = new ArchiveGuardConnection(new DataOptions()
+				.UseConnectionString(new NoNativeUpsertSQLiteProvider(), "Data Source=:memory:"));
+
+			using var documents = db.CreateLocalTable(new[]
+			{
+				new ArchivableDocument { Id = 1, Title = "Signed contract", IsArchived = true },
+			});
+
+			Action replace = () => db.InsertOrReplace(new ArchivableDocument { Id = 1, Title = "Edited", IsArchived = true });
+
+			// the guarded UPDATE matches nothing, so the emulation goes on to INSERT a key that already exists
+			replace.ShouldThrow<Microsoft.Data.Sqlite.SqliteException>();
+
+			documents
+				.Single()
+				.Title
+				.ShouldBe("Signed contract");
 		}
 	}
 }

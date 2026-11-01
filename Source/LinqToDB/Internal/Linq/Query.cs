@@ -20,14 +20,25 @@ namespace LinqToDB.Internal.Linq
 {
 	public abstract class Query
 	{
-		internal Func<IDataContext,IQueryExpressions,object?[]?,object?[]?,object?>                         GetElement      = null!;
-		internal Func<IDataContext,IQueryExpressions,object?[]?,object?[]?,CancellationToken,Task<object?>> GetElementAsync = null!;
+		internal Func<IDataContext,IQueryExpressions,SqlCommandExecutionContext?,object?>                         GetElement      = null!;
+		internal Func<IDataContext,IQueryExpressions,SqlCommandExecutionContext?,CancellationToken,Task<object?>> GetElementAsync = null!;
+
+		// Eager-aware element selection (First/Single/…), set only by FirstSingleBuilder. Unlike GetElement, these route
+		// through the combined eager engine (Query<T>.GetEagerEnumerable — one multi-result-set command when eligible,
+		// else the sequential harvesters + base enumerable) and take the single element, so First/Single batch their
+		// eager children the same way ToList()/foreach do. When set, the element execution paths use these INSTEAD of
+		// GetElement and skip the InitHarvesters pre-init (GetEagerEnumerable runs the harvesters itself). Null for
+		// scalar / ExecuteElement / non-query queries, which keep the pre-inited-harvesters GetElement path.
+		internal Func<IDataContext,IQueryExpressions,object?[]?,object?>?                         GetEagerElement;
+		internal Func<IDataContext,IQueryExpressions,object?[]?,CancellationToken,Task<object?>>? GetEagerElementAsync;
 
 		#region Init
 
-		internal readonly List<QueryInfo> Queries = new (1);
+		// One logical query per Query. Multi-statement expansion is modelled by SqlCommandScenario at render time
+		// (DataConnection.QueryRunner.GetCommand), not by a list here. Set in Init.
+		internal QueryInfo QueryInfo = null!;
 
-		public IReadOnlyCollection<QueryInfo> GetQueries()    => Queries;
+		public IReadOnlyCollection<QueryInfo> GetQueries()    => new[] { QueryInfo };
 		public bool                           IsFinalized     { get; internal set; }
 		public SqlErrorExpression?            ErrorExpression { get; internal set; }
 
@@ -146,56 +157,62 @@ namespace LinqToDB.Internal.Linq
 
 		#region Eager Loading
 
-		Preamble[]? _preambles;
+		Harvester[]? _harvesters;
 
-		internal void SetPreambles(List<Preamble>? preambles)
+		internal void SetHarvesters(List<Harvester>? harvesters)
 		{
-			_preambles = preambles?.ToArray();
+			_harvesters = harvesters?.ToArray();
 		}
 
-		internal bool IsAnyPreambles()
+		internal bool IsAnyHarvesters()
 		{
-			if (_preambles == null || _preambles.Length == 0)
+			if (_harvesters == null || _harvesters.Length == 0)
 				return false;
 
-			for (var i = 0; i < _preambles.Length; i++)
+			for (var i = 0; i < _harvesters.Length; i++)
 			{
-				if (!_preambles[i].IsInlined)
+				if (!_harvesters[i].IsInlined)
 					return true;
 			}
 
 			return false;
 		}
 
-		internal object?[]? InitPreambles(IDataContext dc, IQueryExpressions expressions, object?[]? ps)
-		{
-			if (_preambles == null)
-				return null;
+		// Exposes the harvester array to QueryRunner.TryGetCombinedEagerEnumerable so the main query and its combinable
+		// eager-load children can be assembled into one multi-result-set command.
+		internal Harvester[]? HarvestersArray => _harvesters;
 
-			var preambles = new object[_preambles.Length];
-			for (var i = 0; i < preambles.Length; i++)
+		internal SqlCommandExecutionContext? InitHarvesters(IDataContext dc, IQueryExpressions expressions, object?[]? ps)
+		{
+			// A query with no harvesters still needs a context when it carries compiled-query parameters (ps != null), so the
+			// mapper/parameter accessors can read them from the context. Regular queries pass ps == null here and stay context-free.
+			if (_harvesters == null)
+				return ps is null ? null : new SqlCommandExecutionContext(0, ps);
+
+			var context = new SqlCommandExecutionContext(_harvesters.Length, ps);
+			for (var i = 0; i < _harvesters.Length; i++)
 			{
-				preambles[i] = _preambles[i].Execute(dc, expressions, ps, preambles);
+				context.SetResult(i, _harvesters[i].Execute(dc, expressions, context));
 			}
 
-			return preambles;
+			return context;
 		}
 
-		internal async Task<object?[]?> InitPreamblesAsync(IDataContext dc, IQueryExpressions expressions, object?[]? ps, CancellationToken cancellationToken)
+		internal async Task<SqlCommandExecutionContext?> InitHarvestersAsync(IDataContext dc, IQueryExpressions expressions, object?[]? ps, CancellationToken cancellationToken)
 		{
-			if (_preambles == null)
-				return null;
+			if (_harvesters == null)
+				return ps is null ? null : new SqlCommandExecutionContext(0, ps);
 
-			var preambles = new object[_preambles.Length];
-			for (var i = 0; i < preambles.Length; i++)
+			var context = new SqlCommandExecutionContext(_harvesters.Length, ps);
+			for (var i = 0; i < _harvesters.Length; i++)
 			{
-				preambles[i] = await _preambles[i].ExecuteAsync(dc, expressions, ps, preambles, cancellationToken).ConfigureAwait(false);
+				context.SetResult(i, await _harvesters[i].ExecuteAsync(dc, expressions, context, cancellationToken).ConfigureAwait(false));
 			}
 
-			return preambles;
+			return context;
 		}
 
-		internal IDisposable? StartLoadTransaction(IDataContext dataContext)
+		internal LoadTransaction? StartLoadTransaction(IDataContext dataContext)
 		{
 			var dc = GetTransactionOwner(dataContext);
 
@@ -203,12 +220,12 @@ namespace LinqToDB.Internal.Linq
 				return null;
 
 			if (dataContext is DataContext ctx)
-				return ctx.BeginTransaction(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel);
+				return new LoadTransaction(ctx.BeginTransaction(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel));
 
-			return dc.BeginTransaction(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel);
+			return new LoadTransaction(dc.BeginTransaction(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel));
 		}
 
-		internal async Task<IAsyncDisposable?> StartLoadTransactionAsync(IDataContext dataContext, CancellationToken cancellationToken)
+		internal async Task<LoadTransaction?> StartLoadTransactionAsync(IDataContext dataContext, CancellationToken cancellationToken)
 		{
 			var dc = GetTransactionOwner(dataContext);
 
@@ -216,18 +233,88 @@ namespace LinqToDB.Internal.Linq
 				return null;
 
 			if (dataContext is DataContext ctx)
-				return await ctx.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken)
-					.ConfigureAwait(false);
+				return new LoadTransaction(
+					await ctx.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken)
+						.ConfigureAwait(false));
 
-			return await dc.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken)
-				.ConfigureAwait(false);
+			return new LoadTransaction(
+				await dc.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken)
+					.ConfigureAwait(false));
+		}
+
+		/// <summary>
+		/// The implicit transaction that keeps the reads of an eager-loading query consistent. It covers the reads only: an
+		/// enumeration buffers the main rows and commits it with <see cref="Complete"/> before returning the first one, so the
+		/// caller's code never runs inside a transaction it did not open. Disposing it uncommitted rolls it back.
+		/// </summary>
+		internal sealed class LoadTransaction : IDisposable, IAsyncDisposable
+		{
+			readonly object _transaction;
+
+			// Once committed or disposed, the connection's current transaction may be another one, and disposing ours
+			// again would dispose it.
+			bool _released;
+
+			public LoadTransaction(DataContextTransaction transaction)
+			{
+				_transaction = transaction;
+			}
+
+			public LoadTransaction(DataConnectionTransaction transaction)
+			{
+				_transaction = transaction;
+			}
+
+			public void Complete()
+			{
+				if (_released)
+					return;
+
+				if (_transaction is DataContextTransaction contextTransaction)
+					contextTransaction.CommitTransaction();
+				else
+					((DataConnectionTransaction)_transaction).Commit();
+
+				_released = true;
+			}
+
+			public async Task CompleteAsync(CancellationToken cancellationToken)
+			{
+				if (_released)
+					return;
+
+				if (_transaction is DataContextTransaction contextTransaction)
+					await contextTransaction.CommitTransactionAsync(cancellationToken).ConfigureAwait(false);
+				else
+					await ((DataConnectionTransaction)_transaction).CommitAsync(cancellationToken).ConfigureAwait(false);
+
+				_released = true;
+			}
+
+			public void Dispose()
+			{
+				if (_released)
+					return;
+
+				_released = true;
+				((IDisposable)_transaction).Dispose();
+			}
+
+			public ValueTask DisposeAsync()
+			{
+				if (_released)
+					return default;
+
+				_released = true;
+				return ((IAsyncDisposable)_transaction).DisposeAsync();
+			}
 		}
 
 		DataConnection? GetTransactionOwner(IDataContext dataContext)
 		{
-			// Do not start implicit transaction if there is no preambles
+			// Do not start implicit transaction if there is no harvesters
 			//
-			if (!IsAnyPreambles())
+			if (!IsAnyHarvesters())
 				return null;
 
 			var dc = dataContext switch
