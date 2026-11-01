@@ -1122,6 +1122,48 @@ namespace Tests.Linq
 		}
 
 		[Table]
+		sealed class ConvertedUnicodeConcatRow
+		{
+			[PrimaryKey]                                                                public int    Id   { get; set; }
+			[Column(DataType = DataType.NVarChar, Length = 20, CanBeNull = false)]
+			[ValueConverter(ConverterType = typeof(PrefixConverter))]                   public string Conv { get; set; } = default!;
+		}
+
+		// A fragment beside a Unicode converted column is not sent through the column's converter either.
+		[Test]
+		[ActiveIssue(6195, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
+		public void ConcatFragmentBesideConvertedNVarCharIsNotConverted([DataSources(TestProvName.AllAccess)] string context)
+		{
+			var dash = "-";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new ConvertedUnicodeConcatRow { Id = 1, Conv = "c1" } });
+
+			var value = table
+				.Select(p => Sql.AsSql(p.Conv + "|" + dash))
+				.Single();
+
+			value.ShouldBe("c1|-");
+		}
+
+		// Conv is read raw beside Plain (#6219), but the fragment after it is not converted through Conv's converter.
+		[Test]
+		[ActiveIssue(6195, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
+		public void ConcatFragmentAfterPlainAndConvertedUnicodeColumnIsNotConverted([DataSources(TestProvName.AllAccess)] string context)
+		{
+			var suffix = "-";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new PlainAndConvertedUnicodeRow { Id = 1, Plain = "A-", Conv = "n1" } });
+
+			var value = table
+				.Select(r => Sql.AsSql(string.Concat(r.Plain, r.Conv, suffix)))
+				.Single();
+
+			value.ShouldBe("A-x:n1-");
+		}
+
+		[Table]
 		sealed class ConvertedConcatTitleRow
 		{
 			[PrimaryKey]                                                                public int    Id    { get; set; }
