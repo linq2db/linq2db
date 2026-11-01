@@ -359,6 +359,39 @@ namespace Tests.Linq
 			commands.Any(c => c.Contains("-- Command 1", StringComparison.Ordinal)).ShouldBe(batch);
 		}
 
+		// The server's connection turns DbBatch off; the client asks for it. The insert follows the client's options,
+		// so it renders as a DbBatch, and the server must still be able to execute what it rendered.
+		[Test]
+		[UsesRemoteContext]
+		public void CombinedCommandClientDbBatchRunsWhenServerDisablesIt(
+			[IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllMySqlConnector)] string context)
+		{
+			var executed = new List<string>();
+
+			using var db = GetServerContainer().CreateContext(
+				(_, o) => o.UseConfiguration(context).UseCombinedCommands(true).UseDbBatch(true),
+				(configuration, _) => new DataConnection(new DataOptions()
+					.UseConfiguration(configuration)
+					.UseDbBatch(false)
+					.UseTracing(TraceLevel.Info, info =>
+					{
+						if (info.TraceInfoStep == TraceInfoStep.BeforeExecute
+							&& info.Operation is TraceOperation.ExecuteNonQuery or TraceOperation.ExecuteScalar or TraceOperation.ExecuteReader)
+							executed.Add(info.SqlText);
+					})));
+
+			using var table = db.CreateLocalTable<CombinedOptionRow>();
+
+			executed.Clear();
+
+			var id = db.InsertWithInt32Identity(new CombinedOptionRow { Value = "a" });
+
+			var row = table.Single(r => r.Id == id);
+
+			row.Value.ShouldBe("a");
+			executed.Count.ShouldBe(2);
+		}
+
 		[Table]
 		sealed class ConfigurationScopedColumnRow
 		{
