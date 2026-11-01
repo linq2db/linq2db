@@ -338,6 +338,49 @@ namespace Tests.Linq
 			third.Values!.Keys.ShouldBe(new[] { "1" });
 		}
 
+		/// <summary>A compiled query is built like a sub-query, so a template passing the key to Sql.Property hits #5953 too.</summary>
+		// SQLite only: the SQL is the plain projection ProjectsRuntimeColumnSetIntoStore runs everywhere; this pins how
+		// a compiled query builds the template.
+		[Test]
+		[ActiveIssue(5953, ErrorType = typeof(InvalidOperationException), ErrorMessage = "variable 'n' of type 'System.String' referenced from scope '', but it is not defined")]
+		public void SelectDynamicInCompiledQueryWithPropertyTemplate([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_data);
+
+			var query = CompiledQuery.Compile((IDataContext dc, string[] names) => dc
+				.GetTable<Amounts>()
+				.SelectDynamic(x => new AmountsDto { Id = x.Id }, names, (x, n) => Sql.Property<decimal>(x, n)));
+
+			var rows = query(db, new[] { "Usd" })
+				.ToList()
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			rows[0].Values!["Usd"].ShouldBe(10.5m);
+		}
+
+		/// <summary>Keys passed to a compiled query as a query are refused as a query, not as a read of the range variables.</summary>
+		// SQLite only: the builder throws before the compiled query's SQL is built.
+		[Test]
+		public void SelectDynamicInCompiledQueryWithQueryKeysThrows([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_data);
+
+			var query = CompiledQuery.Compile((IDataContext dc, IEnumerable<string> keys) => dc
+				.GetTable<Amounts>()
+				.SelectDynamic(x => new AmountsDto { Id = x.Id }, keys, (x, n) => n == "Usd" ? x.Usd : x.Eur));
+
+			var keys = t
+				.Where(x => x.Id == 1)
+				.Select(x => "Usd");
+
+			var act = () => query(db, keys).ToList();
+
+			act.ShouldThrow<LinqToDBException>().Message.ShouldContain("is a query");
+		}
+
 		// SQLite only: the SQL is the plain projection ProjectsRuntimeColumnSetIntoStore runs everywhere; this pins how
 		// CompiledTable keys the column set.
 		[Test]

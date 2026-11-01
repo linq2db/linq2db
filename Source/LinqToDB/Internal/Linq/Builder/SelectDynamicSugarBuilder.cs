@@ -29,7 +29,13 @@ namespace LinqToDB.Internal.Linq.Builder
 				var argument = methodCall.Arguments[i];
 
 				if (!IsQueryIndependent(builder, argument))
-					throw new LinqToDBException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.SelectDynamic.Error_ArgumentDependsOnQuery, methodCall.Method.GetParameters()[i].Name));
+				{
+					var error = typeof(IQueryable).IsAssignableFrom(argument.Type)
+						? ErrorHelper.SelectDynamic.Error_ArgumentIsAQuery
+						: ErrorHelper.SelectDynamic.Error_ArgumentDependsOnQuery;
+
+					throw new LinqToDBException(string.Format(CultureInfo.InvariantCulture, error, methodCall.Method.GetParameters()[i].Name));
+				}
 
 				args[i] = BuildTimeArgumentReader.ReadArgument(builder, argument);
 			}

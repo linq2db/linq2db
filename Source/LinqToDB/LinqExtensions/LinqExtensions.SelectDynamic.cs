@@ -36,9 +36,14 @@ namespace LinqToDB
 		/// The runtime key set. One output column is generated per key.
 		/// In a compiled query, pass the key collection itself as a parameter: keys read through a member of a parameter
 		/// (<c>s.Keys</c>) are matched on that parameter's instance, so a member reassigned on the same instance reuses the
-		/// first call's column set.
+		/// first call's column set. Written in a sub-query or a compiled query, the keys must be a collection rather than a
+		/// query.
 		/// </param>
-		/// <param name="valueTemplate">Per-column value expression, parameterized by the key.</param>
+		/// <param name="valueTemplate">
+		/// Per-column value expression, parameterized by the key.
+		/// Written in a sub-query or a compiled query, a template passing the key to <see cref="Sql.Property{T}(object?, string)"/>
+		/// is not supported yet (issue #5953).
+		/// </param>
 		/// <param name="nameSelector">
 		/// Maps a key to the store key of the generated column. Defaults to the invariant string form of the key.
 		/// Evaluated once per key each time the call runs; the resulting names take part in the query cache key.
