@@ -168,9 +168,9 @@ LinqToDB.Internal.SqlProvider.SqlStepCondition.SourceStepIndex.get -> int
 LinqToDB.Internal.SqlProvider.SqlStepCondition.SourceStepIndex.init -> void
 LinqToDB.Internal.SqlProvider.SqlStepCondition.SqlStepCondition() -> void
 LinqToDB.Internal.SqlProvider.SqlStepConditionKind
+LinqToDB.Internal.SqlProvider.SqlStepConditionKind.NoRowsAffected = 2 -> LinqToDB.Internal.SqlProvider.SqlStepConditionKind
 LinqToDB.Internal.SqlProvider.SqlStepConditionKind.ResultIsNotNull = 1 -> LinqToDB.Internal.SqlProvider.SqlStepConditionKind
 LinqToDB.Internal.SqlProvider.SqlStepConditionKind.ResultIsNull = 0 -> LinqToDB.Internal.SqlProvider.SqlStepConditionKind
-LinqToDB.Internal.SqlProvider.SqlStepConditionKind.ResultIsZero = 2 -> LinqToDB.Internal.SqlProvider.SqlStepConditionKind
 LinqToDB.Internal.SqlProvider.SqlStepKind
 LinqToDB.Internal.SqlProvider.SqlStepKind.NonQuery = 0 -> LinqToDB.Internal.SqlProvider.SqlStepKind
 LinqToDB.Internal.SqlProvider.SqlStepKind.Reader = 2 -> LinqToDB.Internal.SqlProvider.SqlStepKind

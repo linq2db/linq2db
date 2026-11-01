@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Reflection;
 
@@ -28,7 +29,7 @@ namespace LinqToDB.Internal.SqlProvider
 	}
 
 	/// <summary>
-	/// Predicate applied to an earlier step's unified result value to gate a <see cref="SqlCommandStep"/>.
+	/// Predicate applied to an earlier step's recorded result to gate a <see cref="SqlCommandStep"/>.
 	/// </summary>
 	public enum SqlStepConditionKind
 	{
@@ -36,8 +37,8 @@ namespace LinqToDB.Internal.SqlProvider
 		ResultIsNull,
 		/// <summary>Run when the referenced step's result is not <see langword="null"/>.</summary>
 		ResultIsNotNull,
-		/// <summary>Run when the referenced step's result equals zero.</summary>
-		ResultIsZero,
+		/// <summary>Run when the referenced <see cref="SqlStepKind.NonQuery"/> step executed and affected no rows.</summary>
+		NoRowsAffected,
 	}
 
 	/// <summary>
@@ -50,6 +51,18 @@ namespace LinqToDB.Internal.SqlProvider
 
 		/// <summary>Index (into <see cref="SqlCommandScenario.Steps"/>) of the step whose result is tested.</summary>
 		public required int SourceStepIndex { get; init; }
+
+		/// <summary>Whether the condition holds against the results recorded so far in <paramref name="context"/>.</summary>
+		internal bool Evaluate(SqlCommandExecutionContext context)
+		{
+			return Kind switch
+			{
+				SqlStepConditionKind.ResultIsNull    => context.GetResult(SourceStepIndex) is null,
+				SqlStepConditionKind.ResultIsNotNull => context.GetResult(SourceStepIndex) is not null,
+				SqlStepConditionKind.NoRowsAffected  => context.WasExecuted(SourceStepIndex) && context.GetRowsAffected(SourceStepIndex) == 0,
+				_                                    => throw new InvalidOperationException($"Unexpected {nameof(SqlStepConditionKind)}: {Kind}"),
+			};
+		}
 	}
 
 	/// <summary>
@@ -128,14 +141,16 @@ namespace LinqToDB.Internal.SqlProvider
 
 	/// <summary>
 	/// Threaded through the scenario interpreter; the single carrier of inter-step data. Holds one unified result value
-	/// per step (rows-affected / scalar / output-parameter value / recordset marker). Gates, the outcome, and parameter
-	/// forwarding read from it by explicit step index — nothing is pushed or declared by the producing step.
+	/// per step (rows-affected / scalar / output-parameter value / recordset marker), plus the typed rows-affected count
+	/// of each executed <see cref="SqlStepKind.NonQuery"/> step. Gates, the outcome, and parameter forwarding read from it
+	/// by explicit step index — nothing is pushed or declared by the producing step.
 	/// </summary>
 	public sealed class SqlCommandExecutionContext
 	{
 		readonly object?[]  _results;
 		readonly bool[]     _executed;
 		readonly object?[]? _parameters;
+		int[]?              _rowsAffected;
 
 		/// <summary>Creates a context sized for <paramref name="stepCount"/> steps.</summary>
 		/// <param name="stepCount">Number of steps in the scenario.</param>
@@ -195,6 +210,11 @@ namespace LinqToDB.Internal.SqlProvider
 
 		/// <summary>Gets the recorded result value of a step (<see langword="null"/> if not executed).</summary>
 		public object? GetResult(int step) => _results[step];
+
+		// Allocated on the first non-query step, so eager-loading contexts, which never record one, stay allocation-free.
+		internal void SetRowsAffected(int step, int rowsAffected) => (_rowsAffected ??= new int[_results.Length])[step] = rowsAffected;
+
+		internal int GetRowsAffected(int step) => _rowsAffected?[step] ?? 0;
 
 		/// <summary>Whether the step has executed.</summary>
 		public bool WasExecuted(int step) => _executed[step];

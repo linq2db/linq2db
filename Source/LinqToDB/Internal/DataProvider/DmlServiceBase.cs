@@ -187,7 +187,7 @@ namespace LinqToDB.Internal.DataProvider
 							},
 							Kind = SqlStepKind.NonQuery,
 						},
-						insertStep with { RunIf = new SqlStepCondition { Kind = SqlStepConditionKind.ResultIsZero, SourceStepIndex = 0 } },
+						insertStep with { RunIf = new SqlStepCondition { Kind = SqlStepConditionKind.NoRowsAffected, SourceStepIndex = 0 } },
 					],
 					OutcomeSteps = [0, 1],
 				};

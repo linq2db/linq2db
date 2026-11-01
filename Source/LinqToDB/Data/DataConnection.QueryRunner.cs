@@ -621,32 +621,6 @@ namespace LinqToDB.Data
 			// field they need (rows-affected for ExecuteNonQuery, scalar for ExecuteScalar).
 			readonly record struct ScenarioOutcome(int RowsAffected, object? Scalar);
 
-			static bool EvaluateGate(SqlStepCondition condition, SqlCommandExecutionContext context)
-			{
-				var value = context.GetResult(condition.SourceStepIndex);
-
-				return condition.Kind switch
-				{
-					SqlStepConditionKind.ResultIsNull    => value is null,
-					SqlStepConditionKind.ResultIsNotNull => value is not null,
-					SqlStepConditionKind.ResultIsZero    => IsZeroNumeric(value),
-					_                                    => throw new InvalidOperationException($"Unexpected {nameof(SqlStepConditionKind)}: {condition.Kind}"),
-				};
-			}
-
-			// Numeric-zero test for a gate value. Today the only ResultIsZero source is the InsertOrReplace/Upsert
-			// UPDATE step's rows-affected (always a boxed int), but a future gate over a Scalar step could carry a
-			// COUNT boxed as long/decimal, so match any integral/decimal zero rather than only a boxed Int32.
-			static bool IsZeroNumeric(object? value) => value switch
-			{
-				int     i => i == 0,
-				long    l => l == 0,
-				short   s => s == 0,
-				byte    b => b == 0,
-				decimal m => m == 0m,
-				_         => false,
-			};
-
 			static object? ResolveOutcome(IReadOnlyList<int> outcomeSteps, SqlCommandExecutionContext context)
 			{
 				object? outcome = null;
@@ -667,7 +641,7 @@ namespace LinqToDB.Data
 			{
 				var step = steps[stepIndex];
 
-				if (step.RunIf is { } gate && !EvaluateGate(gate, context))
+				if (step.RunIf is { } gate && !gate.Evaluate(context))
 					return;
 
 				InitCommand(dataConnection, executionQuery, commandIndex);
@@ -678,7 +652,8 @@ namespace LinqToDB.Data
 					{
 						var outParam = step.OutParameterName is null ? null : AddOutputParameter(dataConnection, step);
 						var n        = dataConnection.ExecuteNonQuery();
-						context.SetResult(stepIndex, outParam != null ? outParam.Value : n);
+						context.SetResult      (stepIndex, outParam != null ? outParam.Value : n);
+						context.SetRowsAffected(stepIndex, n);
 						break;
 					}
 					case SqlStepKind.Scalar:
@@ -911,7 +886,8 @@ namespace LinqToDB.Data
 							// reader is fully consumed; no current combined group gates/outcomes on a NonQuery step, so it is
 							// stored but unused. A future combined scenario consuming it must harvest per-statement counts.
 							case SqlStepKind.NonQuery:
-								context.SetResult(i, dr.RecordsAffected);
+								context.SetResult      (i, dr.RecordsAffected);
+								context.SetRowsAffected(i, dr.RecordsAffected);
 								break;
 						}
 					},
@@ -932,7 +908,7 @@ namespace LinqToDB.Data
 			{
 				var step = steps[stepIndex];
 
-				if (step.RunIf is { } gate && !EvaluateGate(gate, context))
+				if (step.RunIf is { } gate && !gate.Evaluate(context))
 					return;
 
 				InitCommand(dataConnection, executionQuery, commandIndex);
@@ -943,7 +919,8 @@ namespace LinqToDB.Data
 					{
 						var outParam = step.OutParameterName is null ? null : AddOutputParameter(dataConnection, step);
 						var n        = await dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(false);
-						context.SetResult(stepIndex, outParam != null ? outParam.Value : n);
+						context.SetResult      (stepIndex, outParam != null ? outParam.Value : n);
+						context.SetRowsAffected(stepIndex, n);
 						break;
 					}
 					case SqlStepKind.Scalar:
@@ -1057,7 +1034,8 @@ namespace LinqToDB.Data
 							// reader is fully consumed; no current combined group gates/outcomes on a NonQuery step, so it is
 							// stored but unused. A future combined scenario consuming it must harvest per-statement counts.
 							case SqlStepKind.NonQuery:
-								context.SetResult(i, dr.RecordsAffected);
+								context.SetResult      (i, dr.RecordsAffected);
+								context.SetRowsAffected(i, dr.RecordsAffected);
 								break;
 						}
 					},
