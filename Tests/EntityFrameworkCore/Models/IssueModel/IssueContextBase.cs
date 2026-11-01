@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -427,6 +428,14 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 				v => Issue5975ToStore(v).AddHours(2),
 				v => Issue5975FromStore(v.AddHours(-2)));
 
+			// the target reads its parameter twice; the delegated call evaluates the counted argument once
+			var issue6181TwiceConverter = new ValueConverter<DateTime, DateTime>(
+				v => Issue6181Twice(v, v),
+				v => Issue5975FromStore(v));
+			var issue6181CountedConverter = new ValueConverter<DateTime?, DateTime?>(
+				v => v != null ? (DateTime?)issue6181TwiceConverter.ConvertToProvider(Issue6181Counted(v.Value)) : (DateTime?)null,
+				v => v != null ? (DateTime?)issue6181TwiceConverter.ConvertFromProvider(v.Value) : (DateTime?)null);
+
 			modelBuilder.Entity<Issue6181TableOne>(b =>
 			{
 				b.Property(e => e.Id).ValueGeneratedNever();
@@ -448,6 +457,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 				b.Property(e => e.TypedOverriddenDate).HasConversion(issue6181TypedOverriddenConverter);
 #endif
 				b.Property(e => e.ChainedDate).HasConversion(issue6181ChainedNullableConverter);
+				b.Property(e => e.CountedDate).HasConversion(issue6181CountedConverter);
 
 				b.HasOne(e => e.TableOne)
 					.WithMany()
@@ -539,6 +549,31 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 
 		static DateTime Issue5975ToStore  (DateTime v) => v.AddHours(1);
 		static DateTime Issue5975FromStore(DateTime v) => v.AddHours(-1);
+
+		public sealed class Issue6181Counts
+		{
+			public int Arguments   { get; set; }
+			public int Conversions { get; set; }
+		}
+
+		// set by the test that reads it, so runs on other providers do not count into it
+		public static readonly AsyncLocal<Issue6181Counts?> Issue6181Counting = new();
+
+		static DateTime Issue6181Counted(DateTime v)
+		{
+			if (Issue6181Counting.Value is { } counts)
+				counts.Arguments++;
+
+			return v;
+		}
+
+		static DateTime Issue6181Twice(DateTime first, DateTime second)
+		{
+			if (Issue6181Counting.Value is { } counts)
+				counts.Conversions++;
+
+			return Issue5975ToStore(first).AddTicks(second.Ticks - first.Ticks);
+		}
 
 		sealed class Issue6181ConverterHolder
 		{

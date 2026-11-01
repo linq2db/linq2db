@@ -643,7 +643,14 @@ namespace LinqToDB.EntityFrameworkCore
 
 				try
 				{
-					var inlined = InlineConverterCalls(targetLambda, visiting).GetBody(argument);
+					var inlinedTarget = InlineConverterCalls(targetLambda, visiting);
+
+					// the delegate evaluates its argument once; substituting it for a parameter read any other number
+					// of times would repeat or drop the argument's calls
+					if (!IsDuplicable(argument) && ReadCount(inlinedTarget.Parameters[0], inlinedTarget.Body) != 1)
+						return e;
+
+					var inlined = inlinedTarget.GetBody(argument);
 
 					return inlined.Type == e.Type ? inlined : Expression.Convert(inlined, e.Type);
 				}
@@ -652,6 +659,29 @@ namespace LinqToDB.EntityFrameworkCore
 					visiting.Remove(target);
 				}
 			});
+
+			static bool IsDuplicable(Expression expression)
+				=> expression switch
+				{
+					ParameterExpression or ConstantExpression                                                                     => true,
+					MemberExpression { Member: FieldInfo, Expression: var instance }                                              => instance == null || IsDuplicable(instance),
+					MemberExpression { Member.Name: nameof(Nullable<>.Value), Expression: { Type.IsNullableType: true } instance } => IsDuplicable(instance),
+					UnaryExpression { NodeType: ExpressionType.Convert, Operand: var operand }                                   => IsDuplicable(operand),
+					_                                                                                                            => false,
+				};
+
+			static int ReadCount(ParameterExpression parameter, Expression body)
+			{
+				var count = new StrongBox<int>();
+
+				body.Visit((parameter, count), static (context, e) =>
+				{
+					if (ReferenceEquals(e, context.parameter))
+						context.count.Value++;
+				});
+
+				return count.Value;
+			}
 		}
 
 		// EF Core stores values through the delegates, which its own converters compile from the expressions; a
