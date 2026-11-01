@@ -107,7 +107,10 @@ namespace Tests.UserTests
 
 			// Without complex join conditions the subquery's WHERE must stay in the derived table, not land in the LEFT JOIN ON.
 			if (context.IsAnyOf(TestProvName.AllYdb, TestProvName.AllAccess))
-				query.GetSelectQuery().From.Tables[0].Joins[0].Condition.Predicates.Count.ShouldBe(1);
+			{
+				var leftJoinPredicates = query.GetSelectQuery().From.Tables[0].Joins[0].Condition.Predicates;
+				leftJoinPredicates.Count.ShouldBe(1);
+			}
 
 			var sourcesCount = QueryHelper.EnumerateAccessibleSources(query.GetSelectQuery()).Count(s => s.ElementType == QueryElementType.SqlQuery);
 
