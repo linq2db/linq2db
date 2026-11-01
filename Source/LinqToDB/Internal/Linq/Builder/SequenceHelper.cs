@@ -19,7 +19,6 @@ namespace LinqToDB.Internal.Linq.Builder
 {
 	internal static class SequenceHelper
 	{
-
 		/// <summary>
 		/// Whether two stored values are handed to the reader on the same terms, so one reading can serve both.
 		/// </summary>
@@ -55,9 +54,8 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// <para>
 		/// A converter built from delegates rather than expressions holds them as opaque constants, so two of those
 		/// compare equal only when they hold the same delegate, however alike they behave. That is the safe direction
-		/// to be wrong in: the answer is
-		/// used to decide whether one reading can serve both values, and "no" costs a column or a refusal while
-		/// "yes" would silently read one value through the other's conversion.
+		/// to be wrong in: the answer is used to decide whether one reading can serve both values, and "no" costs a
+		/// column or a refusal while "yes" would silently read one value through the other's conversion.
 		/// </para>
 		/// </remarks>
 		public static bool ConvertTheSameWay(IValueConverter? converter1, IValueConverter? converter2)
