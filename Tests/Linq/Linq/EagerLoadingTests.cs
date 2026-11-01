@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Async;
+using LinqToDB.Data;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlQuery;
@@ -3873,6 +3875,9 @@ namespace Tests.Linq
 		public void CorrelatedAndDetachedChildren_CombineIntoSingleCommand(
 			[IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
+			if (!combinedCommands)
+				Assert.Ignore("Forces UseCombinedCommands on, so the (true) fixture instance already runs it.");
+
 			var (masters, correlated, detached) = GenerateMixedEagerData();
 
 			// This test exists to assert the combined engine merges heterogeneous children, so it opts into the policy
@@ -4104,17 +4109,26 @@ namespace Tests.Linq
 		// This test registers NO interceptor on purpose. DataConnection.CanUseDbBatch requires Interceptor == null, so
 		// any interceptor-based assertion would itself force the concat path and collapse the axis — which is also why
 		// the UseDbBatch=false branch had no option-driven coverage before: it was reachable only through a registered
-		// ICommandInterceptor or on net462.
+		// ICommandInterceptor or on net462. The backend is read from tracing instead, which is interceptor-free.
 		[Test]
 		public void CombinedEagerLoad_HonoursDbBatchBackend(
 			[IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySql)] string context,
 			[Values] bool useDbBatch)
 		{
-			var (masters, correlated, detached) = GenerateMixedEagerData();
+			if (!combinedCommands)
+				Assert.Ignore("Forces UseCombinedCommands on, so the (true) fixture instance already runs it.");
 
-			// Opts into combining explicitly rather than relying on the fixture parameter, so both backends are
-			// exercised regardless of which fixture instance is running.
-			using var db = GetDataContext(context, o => o.UseCombinedCommands(true).UseDbBatch(useDbBatch));
+			var (masters, correlated, detached) = GenerateMixedEagerData();
+			var commands                        = new List<string>();
+
+			using var db = GetDataContext(context, o => o
+				.UseCombinedCommands(true)
+				.UseDbBatch(useDbBatch)
+				.UseTracing(TraceLevel.Info, info =>
+				{
+					if (info.TraceInfoStep == TraceInfoStep.BeforeExecute)
+						commands.Add(info.SqlText);
+				}));
 
 			using var tMaster     = db.CreateLocalTable(masters);
 			using var tCorrelated = db.CreateLocalTable(correlated);
@@ -4135,6 +4149,8 @@ namespace Tests.Linq
 						.ToList(),
 				};
 
+			commands.Clear();
+
 			var result = query.ToList();
 
 			result.Count.ShouldBe(masters.Length);
@@ -4145,6 +4161,18 @@ namespace Tests.Linq
 			{
 				m.Correlated.Select(c => c.Id).ShouldBe(correlated.Where(c => c.MasterId == m.Id).Select(c => c.Id).OrderBy(id => id).ToList());
 				m.Detached  .Select(d => d.Id).ShouldBe(detached.Select(d => d.Id).OrderBy(id => id).ToList());
+			}
+
+			// Eager loads do not combine on a remote context, and its commands are traced on the server.
+			if (!context.IsRemote())
+			{
+#if SUPPORTS_DBBATCH
+				var batch = useDbBatch && ((DataConnection)db).OpenDbConnection().CanCreateBatch;
+#else
+				var batch = false;
+#endif
+
+				commands.Any(c => c.Contains("-- Command 1", StringComparison.Ordinal)).ShouldBe(batch);
 			}
 		}
 
