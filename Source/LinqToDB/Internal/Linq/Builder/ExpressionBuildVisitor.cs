@@ -3804,16 +3804,27 @@ namespace LinqToDB.Internal.Linq.Builder
 			SuggestedDescriptor columnDescriptor = default;
 			switch (node.NodeType)
 			{
-				case ExpressionType.Add:
-				case ExpressionType.AddChecked:
-				case ExpressionType.And:
 				case ExpressionType.Divide:
-				case ExpressionType.ExclusiveOr:
 				case ExpressionType.Modulo:
 				case ExpressionType.Multiply:
 				case ExpressionType.MultiplyChecked:
-				case ExpressionType.Or:
 				case ExpressionType.Power:
+				{
+					columnDescriptor = SuggestColumnDescriptor(left, right);
+
+					// A factor is not a stored value: the converter or unit of the column beside it does not apply.
+					if (columnDescriptor.Descriptor is { ValueConverter: not null } or { DurationUnit: not null }
+						|| columnDescriptor.ForConstants is { ValueConverter: not null } or { DurationUnit: not null })
+						columnDescriptor = default;
+
+					break;
+				}
+
+				case ExpressionType.Add:
+				case ExpressionType.AddChecked:
+				case ExpressionType.And:
+				case ExpressionType.ExclusiveOr:
+				case ExpressionType.Or:
 				case ExpressionType.Subtract:
 				case ExpressionType.SubtractChecked:
 				case ExpressionType.Coalesce:
