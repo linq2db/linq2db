@@ -1042,7 +1042,7 @@ namespace LinqToDB.Data
 		// carries no command interceptor: interceptors are DbCommand-typed and a DbBatch is not a DbCommand, so the
 		// CanUseDbBatch gate excludes a registered ICommandInterceptor. Tracing IS supported (the batch's combined text is
 		// traced) and the exception interceptor DOES run (see RunBatchReader).
-		// TODO: route through a DbBatch-aware interceptor surface (e.g. IDbBatchInterceptor) once one exists.
+		// TODO: route through a DbBatch-aware interceptor surface (e.g. IDbBatchInterceptor) once one exists (#6230).
 		internal DataReaderWrapper ExecuteBatchDataReader(DbBatch batch, CommandBehavior commandBehavior)
 		{
 			return TraceExecuteReader(null, () => GetBatchTraceText(batch, isAsync: false), () => RunBatchReader(batch, GetCommandBehavior(commandBehavior)));
