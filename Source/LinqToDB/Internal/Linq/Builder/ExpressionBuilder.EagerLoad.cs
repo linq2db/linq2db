@@ -366,7 +366,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			IBuildContext                   sequence,
 			Expression                      keyExpression,
 			ParameterExpression             queryParameter,
-			List<Harvester>                  harvesters,
+			List<Harvester>                 harvesters,
 			List<(LambdaExpression, bool)>? additionalOrderBy,
 			Expression[]                    previousKeys)
 			where TKey : notnull
@@ -404,7 +404,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		Expression BuildHarvesterQueryDetached<T>(
 			IBuildContext       sequence,
 			ParameterExpression queryParameter,
-			List<Harvester>      harvesters)
+			List<Harvester>     harvesters)
 		{
 			var query = new Query<T>(DataContext);
 
@@ -568,7 +568,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			Expression                       expression,
 			IBuildContext                    buildContext,
 			ParameterExpression              queryParameter,
-			ref List<Harvester>?              harvesters,
+			ref List<Harvester>?             harvesters,
 			Expression[]                     previousKeys,
 			out Func<Expression, Expression> finalizer)
 		{

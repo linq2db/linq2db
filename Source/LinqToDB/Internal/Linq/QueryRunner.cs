@@ -463,9 +463,9 @@ namespace LinqToDB.Internal.Linq
 
 				var q = queryFunc;
 
-				queryFunc = (qq, db, mapper, expr, harvesters, qn) =>
-					new LimitResultEnumerable<T>(q(qq, db, mapper, expr, harvesters, qn),
-						EvaluateTakeSkipValue(qq, expr, db, harvesters?.Parameters, skipValue), null);
+				queryFunc = (qq, db, mapper, expr, context, qn) =>
+					new LimitResultEnumerable<T>(q(qq, db, mapper, expr, context, qn),
+						EvaluateTakeSkipValue(qq, expr, db, context?.Parameters, skipValue), null);
 			}
 
 			return queryFunc;
@@ -473,25 +473,25 @@ namespace LinqToDB.Internal.Linq
 
 		sealed class BasicResultEnumerable<T> : IResultEnumerable<T>
 		{
-			readonly IDataContext      _dataContext;
-			readonly IQueryExpressions _expressions;
-			readonly Query             _query;
-			readonly SqlCommandExecutionContext? _harvesters;
-			readonly int               _queryNumber;
-			readonly Mapper<T>         _mapper;
+			readonly IDataContext                _dataContext;
+			readonly IQueryExpressions           _expressions;
+			readonly Query                       _query;
+			readonly SqlCommandExecutionContext? _context;
+			readonly int                         _queryNumber;
+			readonly Mapper<T>                   _mapper;
 
 			public BasicResultEnumerable(
-				IDataContext      dataContext,
-				IQueryExpressions expressions,
-				Query             query,
-				SqlCommandExecutionContext? harvesters,
-				int               queryNumber,
-				Mapper<T>         mapper)
+				IDataContext                dataContext,
+				IQueryExpressions           expressions,
+				Query                       query,
+				SqlCommandExecutionContext? context,
+				int                         queryNumber,
+				Mapper<T>                   mapper)
 			{
 				_dataContext = dataContext;
 				_expressions = expressions;
 				_query       = query;
-				_harvesters  = harvesters;
+				_context     = context;
 				_queryNumber = queryNumber;
 				_mapper      = mapper;
 			}
@@ -500,7 +500,7 @@ namespace LinqToDB.Internal.Linq
 			{
 				using var _      = ActivityService.Start(ActivityID.ExecuteQuery);
 
-				using var runner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expressions, _harvesters?.Parameters, _harvesters?.Results);
+				using var runner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expressions, _context?.Parameters, _context?.Results);
 				using var dr     = runner.ExecuteReader();
 
 				var dataReader = dr.DataReader!;
@@ -561,7 +561,7 @@ namespace LinqToDB.Internal.Linq
 			{
 				await using (ActivityService.StartAndConfigureAwait(ActivityID.ExecuteQueryAsync))
 				{
-					var runner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expressions, _harvesters?.Parameters, _harvesters?.Results);
+					var runner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expressions, _context?.Parameters, _context?.Results);
 					await using var _2 = runner.ConfigureAwait(false);
 
 					var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
@@ -633,27 +633,27 @@ namespace LinqToDB.Internal.Linq
 		// mapper its context (DataContext / parameters / RowsCount); its command is never executed.
 		sealed class ExternalReaderResultEnumerable<T> : IResultEnumerable<T>
 		{
-			readonly IDataContext      _dataContext;
-			readonly IQueryExpressions _expressions;
-			readonly Query             _query;
-			readonly SqlCommandExecutionContext? _harvesters;
-			readonly int               _queryNumber;
-			readonly Mapper<T>         _mapper;
-			readonly DbDataReader      _dataReader;
+			readonly IDataContext                _dataContext;
+			readonly IQueryExpressions           _expressions;
+			readonly Query                       _query;
+			readonly SqlCommandExecutionContext? _context;
+			readonly int                         _queryNumber;
+			readonly Mapper<T>                   _mapper;
+			readonly DbDataReader                _dataReader;
 
 			public ExternalReaderResultEnumerable(
-				IDataContext      dataContext,
-				IQueryExpressions expressions,
-				Query             query,
-				SqlCommandExecutionContext? harvesters,
-				int               queryNumber,
-				Mapper<T>         mapper,
-				DbDataReader      dataReader)
+				IDataContext                dataContext,
+				IQueryExpressions           expressions,
+				Query                       query,
+				SqlCommandExecutionContext? context,
+				int                         queryNumber,
+				Mapper<T>                   mapper,
+				DbDataReader                dataReader)
 			{
 				_dataContext = dataContext;
 				_expressions = expressions;
 				_query       = query;
-				_harvesters  = harvesters;
+				_context     = context;
 				_queryNumber = queryNumber;
 				_mapper      = mapper;
 				_dataReader  = dataReader;
@@ -661,7 +661,7 @@ namespace LinqToDB.Internal.Linq
 
 			public IEnumerator<T> GetEnumerator()
 			{
-				using var runner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expressions, _harvesters?.Parameters, _harvesters?.Results);
+				using var runner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expressions, _context?.Parameters, _context?.Results);
 
 				var dataReader = _dataReader;
 
@@ -698,7 +698,7 @@ namespace LinqToDB.Internal.Linq
 
 			public async IAsyncEnumerable<T> GetAsyncEnumerable([EnumeratorCancellation] CancellationToken cancellationToken = default)
 			{
-				var runner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expressions, _harvesters?.Parameters, _harvesters?.Results);
+				var runner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expressions, _context?.Parameters, _context?.Results);
 				await using var _2 = runner.ConfigureAwait(false);
 
 				var dataReader = _dataReader;
@@ -765,7 +765,7 @@ namespace LinqToDB.Internal.Linq
 				IQueryExpressions expressions,
 				Query<T>          query,
 				object?[]?        parameters,
-				Harvester[]        harvesters)
+				Harvester[]       harvesters)
 			{
 				_dataContext = dataContext;
 				_expressions = expressions;
@@ -1154,15 +1154,15 @@ namespace LinqToDB.Internal.Linq
 		}
 
 		static IResultEnumerable<T> ExecuteQuery<T>(
-			Query             query,
-			IDataContext      dataContext,
-			Mapper<T>         mapper,
-			IQueryExpressions expressions,
-			SqlCommandExecutionContext? harvesters,
-			int               queryNumber
+			Query                       query,
+			IDataContext                dataContext,
+			Mapper<T>                   mapper,
+			IQueryExpressions           expressions,
+			SqlCommandExecutionContext? context,
+			int                         queryNumber
 		)
 		{
-			return new BasicResultEnumerable<T>(dataContext, expressions, query, harvesters, queryNumber, mapper);
+			return new BasicResultEnumerable<T>(dataContext, expressions, query, context, queryNumber, mapper);
 		}
 
 		static void SetRunQuery<T>(
@@ -1173,31 +1173,31 @@ namespace LinqToDB.Internal.Linq
 
 			var mapper   = new Mapper<T>(expression);
 
-			query.GetResultEnumerable = (db, expr, harvesters) =>
+			query.GetResultEnumerable = (db, expr, context) =>
 			{
 				using var _ = ActivityService.Start(ActivityID.GetIEnumerable);
-				return executeQuery(query, db, mapper, expr, harvesters, 0);
+				return executeQuery(query, db, mapper, expr, context, 0);
 			};
 
 			// A Skip the provider cannot render is applied while reading, on a combined command's reader as on its own.
 			if (emulatedSkip == null)
 			{
-				query.GetResultFromReader = (db, expr, harvesters, reader) =>
-					new ExternalReaderResultEnumerable<T>(db, expr, query, harvesters, 0, mapper, reader);
+				query.GetResultFromReader = (db, expr, context, reader) =>
+					new ExternalReaderResultEnumerable<T>(db, expr, query, context, 0, mapper, reader);
 			}
 			else
 			{
-				query.GetResultFromReader = (db, expr, harvesters, reader) =>
+				query.GetResultFromReader = (db, expr, context, reader) =>
 					new LimitResultEnumerable<T>(
-						new ExternalReaderResultEnumerable<T>(db, expr, query, harvesters, 0, mapper, reader),
-						EvaluateTakeSkipValue(query, expr, db, harvesters?.Parameters, emulatedSkip),
+						new ExternalReaderResultEnumerable<T>(db, expr, query, context, 0, mapper, reader),
+						EvaluateTakeSkipValue(query, expr, db, context?.Parameters, emulatedSkip),
 						null);
 			}
 		}
 
 		static readonly PropertyInfo _dataContextInfo = MemberHelper.PropertyOf<IQueryRunner>(p => p.DataContext);
 		static readonly PropertyInfo _expressionsInfo = MemberHelper.PropertyOf<IQueryRunner>(p => p.Expressions);
-		static readonly PropertyInfo _harvestersInfo  = MemberHelper.PropertyOf<IQueryRunner>(p => p.ExecutionContext);
+		static readonly PropertyInfo _contextInfo     = MemberHelper.PropertyOf<IQueryRunner>(p => p.ExecutionContext);
 		// The compiled-query parameters now live on the execution context; the mapper reads qr.ExecutionContext.Parameters.
 		static readonly PropertyInfo _executionContextParametersInfo = MemberHelper.PropertyOf<SqlCommandExecutionContext>(c => c.Parameters);
 
@@ -1213,7 +1213,7 @@ namespace LinqToDB.Internal.Linq
 			var dataContextVar   = expression.Parameters[1];
 			var expressionVar    = expression.Parameters[3];
 			var parametersVar    = expression.Parameters[4];
-			var harvestersVar    = expression.Parameters[5];
+			var contextVar       = expression.Parameters[5];
 
 			var locals = new List<ParameterExpression>();
 			var exprs  = new List<Expression>();
@@ -1223,8 +1223,8 @@ namespace LinqToDB.Internal.Linq
 			// parametersVar is the compiled-query args slot. It is assigned only when the mapper body references it, which
 			// happens iff this is a compiled query — and a compiled query always allocates an execution context (see the
 			// QueryRunnerBase guard), so qr.ExecutionContext is non-null exactly when this two-hop read is emitted.
-			SetLocalSource(parametersVar, Expression.Property(Expression.Property(queryRunnerParam, _harvestersInfo), _executionContextParametersInfo));
-			SetLocal(harvestersVar,  _harvestersInfo);
+			SetLocalSource(parametersVar, Expression.Property(Expression.Property(queryRunnerParam, _contextInfo), _executionContextParametersInfo));
+			SetLocal(contextVar,     _contextInfo);
 
 			void SetLocal(ParameterExpression local, PropertyInfo prop)
 				=> SetLocalSource(local, Expression.Property(queryRunnerParam, prop));
@@ -1277,19 +1277,19 @@ namespace LinqToDB.Internal.Linq
 			var l      = WrapMapper(expression);
 			var mapper = new Mapper<object>(l);
 
-			query.GetElement      = (db, expr, harvesters) => ExecuteElement(query, db, mapper, expr, harvesters);
-			query.GetElementAsync = (db, expr, harvesters, token) => ExecuteElementAsync<object?>(query, db, mapper, expr, harvesters, token);
+			query.GetElement      = (db, expr, context) => ExecuteElement(query, db, mapper, expr, context);
+			query.GetElementAsync = (db, expr, context, token) => ExecuteElementAsync<object?>(query, db, mapper, expr, context, token);
 		}
 
 		static T ExecuteElement<T>(
-			Query             query,
-			IDataContext      dataContext,
-			Mapper<T>         mapper,
-			IQueryExpressions expressions,
-			SqlCommandExecutionContext? harvesters)
+			Query                       query,
+			IDataContext                dataContext,
+			Mapper<T>                   mapper,
+			IQueryExpressions           expressions,
+			SqlCommandExecutionContext? context)
 		{
 			using var m      = ActivityService.Start(ActivityID.ExecuteElement);
-			using var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, harvesters?.Parameters, harvesters?.Results);
+			using var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, context?.Parameters, context?.Results);
 			using var dr     = runner.ExecuteReader();
 
 			DbDataReader dataReader;
@@ -1319,16 +1319,16 @@ namespace LinqToDB.Internal.Linq
 		}
 
 		static async Task<T> ExecuteElementAsync<T>(
-			Query             query,
-			IDataContext      dataContext,
-			Mapper<object>    mapper,
-			IQueryExpressions expressions,
-			SqlCommandExecutionContext? harvesters,
-			CancellationToken cancellationToken)
+			Query                       query,
+			IDataContext                dataContext,
+			Mapper<object>              mapper,
+			IQueryExpressions           expressions,
+			SqlCommandExecutionContext? context,
+			CancellationToken           cancellationToken)
 		{
 			await using (ActivityService.StartAndConfigureAwait(ActivityID.ExecuteElementAsync))
 			{
-				var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, harvesters?.Parameters, harvesters?.Results);
+				var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, context?.Parameters, context?.Results);
 				await using var _1 = runner.ConfigureAwait(false);
 
 				var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
@@ -1370,27 +1370,27 @@ namespace LinqToDB.Internal.Linq
 		{
 			FinalizeQuery(query);
 
-			query.GetElement      = (db, expr, harvesters) => ScalarQuery(query, db, expr, harvesters);
-			query.GetElementAsync = (db, expr, harvesters, token) => ScalarQueryAsync(query, db, expr, harvesters, token);
+			query.GetElement      = (db, expr, context) => ScalarQuery(query, db, expr, context);
+			query.GetElementAsync = (db, expr, context, token) => ScalarQueryAsync(query, db, expr, context, token);
 		}
 
-		static object? ScalarQuery(Query query, IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? harvesters)
+		static object? ScalarQuery(Query query, IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context)
 		{
 			using var m      = ActivityService.Start(ActivityID.ExecuteScalar);
-			using var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, harvesters?.Parameters, harvesters?.Results);
+			using var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, context?.Parameters, context?.Results);
 			return runner.ExecuteScalar();
 		}
 
 		static async Task<object?> ScalarQueryAsync(
-			Query             query,
-			IDataContext      dataContext,
-			IQueryExpressions expressions,
-			SqlCommandExecutionContext? harvesters,
-			CancellationToken cancellationToken)
+			Query                       query,
+			IDataContext                dataContext,
+			IQueryExpressions           expressions,
+			SqlCommandExecutionContext? context,
+			CancellationToken           cancellationToken)
 		{
 			await using (ActivityService.StartAndConfigureAwait(ActivityID.ExecuteScalarAsync))
 			{
-				var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, harvesters?.Parameters, harvesters?.Results);
+				var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, context?.Parameters, context?.Results);
 				await using (runner.ConfigureAwait(false))
 					return await runner.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
 			}
@@ -1404,27 +1404,27 @@ namespace LinqToDB.Internal.Linq
 		{
 			FinalizeQuery(query);
 
-			query.GetElement      = (db, expr, harvesters) => NonQueryQuery(query, db, expr, harvesters);
-			query.GetElementAsync = (db, expr, harvesters, token) => NonQueryQueryAsync(query, db, expr, harvesters, token);
+			query.GetElement      = (db, expr, context) => NonQueryQuery(query, db, expr, context);
+			query.GetElementAsync = (db, expr, context, token) => NonQueryQueryAsync(query, db, expr, context, token);
 		}
 
-		static int NonQueryQuery(Query query, IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? harvesters)
+		static int NonQueryQuery(Query query, IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context)
 		{
 			using var m      = ActivityService.Start(ActivityID.ExecuteNonQuery);
-			using var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, harvesters?.Parameters, harvesters?.Results);
+			using var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, context?.Parameters, context?.Results);
 			return runner.ExecuteNonQuery();
 		}
 
 		static async Task<object?> NonQueryQueryAsync(
-			Query             query,
-			IDataContext      dataContext,
-			IQueryExpressions expressions,
-			SqlCommandExecutionContext? harvesters,
-			CancellationToken cancellationToken)
+			Query                       query,
+			IDataContext                dataContext,
+			IQueryExpressions           expressions,
+			SqlCommandExecutionContext? context,
+			CancellationToken           cancellationToken)
 		{
 			await using (ActivityService.StartAndConfigureAwait(ActivityID.ExecuteNonQueryAsync))
 			{
-				var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, harvesters?.Parameters, harvesters?.Results);
+				var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, context?.Parameters, context?.Results);
 				await using (runner.ConfigureAwait(false))
 					return await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
 			}
@@ -1434,11 +1434,11 @@ namespace LinqToDB.Internal.Linq
 
 		#region GetSqlText
 
-		public static IReadOnlyList<QuerySql> GetSqlText(Query query, IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? harvesters)
+		public static IReadOnlyList<QuerySql> GetSqlText(Query query, IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context)
 		{
 			using var m      = ActivityService.Start(ActivityID.GetSqlText);
 
-			using var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, parameters, harvesters?.Results);
+			using var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, parameters, context?.Results);
 			return runner.GetSqlText();
 		}
 

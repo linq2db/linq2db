@@ -281,11 +281,11 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		bool BuildQuery<T>(
-			Query<T>            query,
-			IBuildContext       sequence,
-			ParameterExpression queryParameter,
+			Query<T>             query,
+			IBuildContext        sequence,
+			ParameterExpression  queryParameter,
 			ref List<Harvester>? harvesters,
-			Expression[]        previousKeys)
+			Expression[]         previousKeys)
 		{
 			// Track harvester start index so buffer materialization only processes
 			// harvesters added at this BuildQuery level (not outer levels).

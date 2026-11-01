@@ -205,11 +205,11 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// strategy-determined finalizer (e.g. <c>ToColumns</c> for Default/KeyedQuery, identity for CteUnion).
 		/// </summary>
 		Expression FinalizeProjection<T>(
-			IBuildContext       context,
-			Expression          expression,
-			ParameterExpression queryParameter,
+			IBuildContext        context,
+			Expression           expression,
+			ParameterExpression  queryParameter,
 			ref List<Harvester>? harvesters,
-			Expression[]        previousKeys)
+			Expression[]         previousKeys)
 		{
 			if (expression.NodeType == ExpressionType.Default)
 				return expression;

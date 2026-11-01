@@ -41,7 +41,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			IBuildContext          buildContext,
 			SqlEagerLoadExpression eagerLoad,
 			ParameterExpression    queryParameter,
-			List<Harvester>         harvesters,
+			List<Harvester>        harvesters,
 			Expression[]           previousKeys,
 			EagerLoadState         state)
 		{
@@ -832,7 +832,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			IBuildContext                   childSequence,
 			Expression                      keyExpression,
 			ParameterExpression             queryParameter,
-			List<Harvester>                  harvesters,
+			List<Harvester>                 harvesters,
 			List<(LambdaExpression, bool)>? additionalOrderBy,
 			Expression[]                    previousKeys,
 			int                             keysDataIndex,
@@ -1059,7 +1059,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			Query<T>                    query,
 			IBuildContext               sequence,
 			Expression                  finalized,
-			List<Harvester>              harvesters,
+			List<Harvester>             harvesters,
 			SelectQuery                 selectQuery,
 			SqlPlaceholderExpression[]  placeholders,
 			Type[]                      colTypes,
@@ -1086,7 +1086,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				placeholderMap[placeholders[i].Index!.Value] = i;
 
 			var bufferRowParam = Expression.Parameter(typeof(TBuffer), "bufRow");
-			var harvesterParam  = Expression.Parameter(typeof(SqlCommandExecutionContext), "pr");
+			var harvesterParam = Expression.Parameter(typeof(SqlCommandExecutionContext), "pr");
 
 			var visitor = new BufferReconstructionVisitor(placeholderMap, bufferRowParam, harvesterParam);
 			var reconstructed = visitor.Visit(finalized)!;
@@ -1210,7 +1210,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var bufferRowParam = Expression.Parameter(typeof(object), "row");
 			// Use a Convert expression as the "buffer row" so the visitor reads tuple fields from it
 			var typedRow       = Expression.Convert(bufferRowParam, typeof(TBuffer));
-			var dummyHarvester  = Expression.Parameter(typeof(SqlCommandExecutionContext), "unused");
+			var dummyHarvester = Expression.Parameter(typeof(SqlCommandExecutionContext), "unused");
 
 			var visitor = new BufferReconstructionVisitor(placeholderMap, typedRow, dummyHarvester);
 			var keyFromBuffer = visitor.Visit(mainKeyExpression)!;
@@ -1457,16 +1457,16 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		sealed class BufferResultEnumerable<TBuffer, T> : IResultEnumerable<T>
 		{
-			readonly List<TBuffer>                                        _buffer;
-			readonly IQueryExpressions                                    _expr;
+			readonly List<TBuffer>                                                                _buffer;
+			readonly IQueryExpressions                                                            _expr;
 			readonly Func<IQueryExpressions, object?[]?, TBuffer, SqlCommandExecutionContext?, T> _reconstruct;
-			readonly SqlCommandExecutionContext?                         _context;
+			readonly SqlCommandExecutionContext?                                                  _context;
 
 			public BufferResultEnumerable(
-				List<TBuffer>                                                buffer,
-				IQueryExpressions                                            expr,
-				Func<IQueryExpressions, object?[]?, TBuffer, SqlCommandExecutionContext?, T>  reconstruct,
-				SqlCommandExecutionContext?                                  context)
+				List<TBuffer>                                                                buffer,
+				IQueryExpressions                                                            expr,
+				Func<IQueryExpressions, object?[]?, TBuffer, SqlCommandExecutionContext?, T> reconstruct,
+				SqlCommandExecutionContext?                                                  context)
 			{
 				_buffer      = buffer;
 				_expr        = expr;
