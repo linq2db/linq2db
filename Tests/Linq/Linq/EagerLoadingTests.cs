@@ -4167,7 +4167,11 @@ namespace Tests.Linq
 			if (!context.IsRemote())
 			{
 #if SUPPORTS_DBBATCH
-				var batch = useDbBatch && ((DataConnection)db).OpenDbConnection().CanCreateBatch;
+				// The harness registers a command interceptor on the sequential-access configurations, which forces the
+				// concatenated backend.
+				var batch = useDbBatch
+					&& !context.IsAnyOf(TestProvName.AllSqlServerSequentialAccess)
+					&& ((DataConnection)db).OpenDbConnection().CanCreateBatch;
 #else
 				var batch = false;
 #endif
