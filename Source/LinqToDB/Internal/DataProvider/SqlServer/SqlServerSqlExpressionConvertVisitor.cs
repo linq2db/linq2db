@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Internal.DataProvider.Translation;
@@ -237,7 +238,57 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			if (operands != null)
 				element = new SqlConcatExpression(element.PreserveNull, operands);
 
+			element = WidenLongNonUnicodeBesideUnicode(element);
+
 			return base.ConvertConcat(element);
+		}
+
+		// A Unicode operand turns the whole concatenation Unicode, and a non-MAX non-Unicode operand is then converted to
+		// nvarchar(4000), cutting one declared longer than that. Cast to NVarChar(Max) it keeps its length.
+		SqlConcatExpression WidenLongNonUnicodeBesideUnicode(SqlConcatExpression element)
+		{
+			var        hasUnicode     = false;
+			List<int>? longNonUnicode = null;
+
+			for (var i = 0; i < element.Expressions.Length; i++)
+			{
+				if (element.Expressions[i] is SqlConcatExpression nested)
+				{
+					hasUnicode |= HasUnicodeOperand(nested);
+					continue;
+				}
+
+				var operandType = QueryHelper.GetDbDataType(element.Expressions[i], MappingSchema);
+
+				if (QueryHelper.IsUnicode(operandType.DataType))
+					hasUnicode = true;
+				else if (operandType.DataType is DataType.VarChar or DataType.Char && operandType.Length is > 4000 and <= 8000)
+					(longNonUnicode ??= new()).Add(i);
+			}
+
+			if (!hasUnicode || longNonUnicode == null)
+				return element;
+
+			var operands = (ISqlExpression[])element.Expressions.Clone();
+
+			foreach (var i in longNonUnicode)
+				operands[i] = PseudoFunctions.MakeCast(operands[i], new DbDataType(typeof(string), DataType.NVarChar, null, -1));
+
+			return new SqlConcatExpression(element.PreserveNull, operands);
+		}
+
+		// A nested concatenation has no type of its own, so the string default (NVarChar) would count it as Unicode.
+		bool HasUnicodeOperand(SqlConcatExpression concat)
+		{
+			foreach (var operand in concat.Expressions)
+			{
+				if (operand is SqlConcatExpression nested
+					? HasUnicodeOperand(nested)
+					: QueryHelper.IsUnicode(QueryHelper.GetDbDataType(operand, MappingSchema).DataType))
+					return true;
+			}
+
+			return false;
 		}
 
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)

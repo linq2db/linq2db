@@ -671,5 +671,145 @@ namespace Tests.Linq
 
 			atHalf.ShouldBe(0);
 		}
+
+		sealed class TimesHundredConverter() : ValueConverter<int, int>(v => v * 100, v => v / 100, false);
+
+		[Table]
+		sealed class ConvertedAmount
+		{
+			[PrimaryKey]                                                             public int Id    { get; set; }
+			[Column]                                                                 public int Group { get; set; }
+			[Column, ValueConverter(ConverterType = typeof(TimesHundredConverter))] public int Cents { get; set; }
+		}
+
+		/// <summary>
+		/// A value compared with a <c>SUM</c> over a converted column goes through the column's converter.
+		/// </summary>
+		[Test]
+		public void SumOfConvertedColumnComparedWithValue([DataSources] string context)
+		{
+			var total = 7;
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new ConvertedAmount[]
+			{
+				new() { Id = 1, Group = 1, Cents = 3 },
+				new() { Id = 2, Group = 1, Cents = 4 },
+				new() { Id = 3, Group = 2, Cents = 5 },
+			});
+
+			var count = table
+				.GroupBy(x => x.Group)
+				.Where(g => g.Sum(x => x.Cents) == total)
+				.Count();
+
+			count.ShouldBe(1);
+		}
+
+		/// <summary>
+		/// A value added to a converted column or its <c>SUM</c> goes through the column's converter; a factor or
+		/// divisor does not.
+		/// </summary>
+		[Test]
+		public void ArithmeticWithConvertedColumn([DataSources] string context)
+		{
+			var operand = 2;
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new ConvertedAmount[]
+			{
+				new() { Id = 1, Group = 1, Cents = 3 },
+				new() { Id = 2, Group = 1, Cents = 4 },
+			});
+
+			var group = table.GroupBy(x => x.Group);
+			var row   = table.Where(x => x.Id == 1);
+
+			group.Select(g => g.Sum(x => x.Cents) * operand).Single().ShouldBe(14);
+			group.Select(g => g.Sum(x => x.Cents) / operand).Single().ShouldBe(3);
+			group.Select(g => g.Sum(x => x.Cents) + operand).Single().ShouldBe(9);
+			row.Select(x => x.Cents * operand).Single().ShouldBe(6);
+			row.Select(x => x.Cents + operand).Single().ShouldBe(5);
+		}
+
+		/// <summary>
+		/// A value searched in a projected <c>SUM</c> over a converted column goes through the column's converter.
+		/// </summary>
+		[Test]
+		public void SequenceContainsSumOfConvertedColumn([DataSources] string context)
+		{
+			var total = 7;
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new ConvertedAmount[]
+			{
+				new() { Id = 1, Group = 1, Cents = 3 },
+				new() { Id = 2, Group = 1, Cents = 4 },
+				new() { Id = 3, Group = 2, Cents = 5 },
+			});
+
+			var count = table
+				.Count(t => table
+					.GroupBy(x => x.Group)
+					.Select(g => g.Sum(x => x.Cents))
+					.Contains(total));
+
+			count.ShouldBe(3);
+		}
+
+		sealed class PrefixConverter() : ValueConverter<string?, string?>(v => v == null ? null : "x:" + v, v => v == null ? null : v.Substring(2), true);
+
+		[Table]
+		sealed class PrefixedCode
+		{
+			[PrimaryKey]                                                                                                 public int     Id   { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 20), ValueConverter(ConverterType = typeof(PrefixConverter))] public string? Code { get; set; }
+		}
+
+		/// <summary>
+		/// A value searched in a projected cast of a converted column goes through the column's converter, also when the
+		/// cast changes the database type.
+		/// </summary>
+		[Test]
+		public void SequenceContainsCastOfConvertedColumn([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new PrefixedCode { Id = 1, Code = "A" } });
+
+			table
+				.Select(t => Sql.Convert(Sql.Types.NVarChar(40), t.Code))
+				.Contains("A")
+				.ShouldBeTrue();
+		}
+
+		[Table]
+		sealed class PrefixedCodeWithTitle
+		{
+			[PrimaryKey]                                                                                                public int     Id    { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 20), ValueConverter(ConverterType = typeof(PrefixConverter))] public string? Code  { get; set; }
+			[Column(DataType = DataType.NVarChar, Length = 20)]                                                         public string? Title { get; set; }
+		}
+
+		/// <summary>
+		/// A value searched in a projected concatenation of a converted non-Unicode column and a Unicode one goes
+		/// through the converter the projection is read through.
+		/// </summary>
+		[Test]
+		public void SequenceContainsConcatOfConvertedAndUnicodeColumn([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new PrefixedCodeWithTitle { Id = 1, Code = "A", Title = "T" } });
+
+			var concatenated = table
+				.Select(t => t.Code + t.Title);
+
+			concatenated
+				.Single()
+				.ShouldBe("AT");
+
+			concatenated
+				.Contains("AT")
+				.ShouldBeTrue();
+		}
 	}
 }
