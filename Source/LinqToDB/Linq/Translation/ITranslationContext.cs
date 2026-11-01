@@ -68,6 +68,15 @@ namespace LinqToDB.Linq.Translation
 		/// <param name="expression"></param>
 		void MarkAsNonParameter(Expression expression, object? currentValue);
 
+		/// <summary>
+		/// Forces expression cache to compare <paramref name="expression"/> by value, where <paramref name="expression"/> is
+		/// computed from the query expression node <paramref name="source"/> and is not itself part of the query expression.
+		/// </summary>
+		/// <param name="expression">Expression evaluated on cache lookup and compared with <paramref name="currentValue"/>.</param>
+		/// <param name="currentValue">Value of <paramref name="expression"/> the query was built with.</param>
+		/// <param name="source">Query expression node <paramref name="expression"/> is computed from.</param>
+		void MarkAsNonParameter(Expression expression, object? currentValue, Expression source);
+
 		IDisposable UsingColumnDescriptor(ColumnDescriptor? columnDescriptor);
 		IDisposable UsingCurrentAggregationContext(Expression basedOn);
 	}
