@@ -1119,6 +1119,42 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void LeftJoinTableFreePredicateOverNestedRightJoin([DataSources] string context, [Values] bool matches)
+		{
+			using var db = GetDataContext(context);
+
+			// server-decided, so the optimizer cannot fold it away
+			var date = new DateTime(2000, 1, 1);
+
+			var nested =
+				from c in db.Child
+				from g in db.GrandChild.RightJoin(g => g.ChildID == c.ChildID)
+				select new { c, g };
+
+			var query = matches
+				? db.Parent.LeftJoin(nested, (p, x) => p.ParentID == x.g.ParentID && Sql.CurrentTimestamp > date, (p, x) => new { p.ParentID, GrandChildID = (int?)x.g.GrandChildID })
+				: db.Parent.LeftJoin(nested, (p, x) => p.ParentID == x.g.ParentID && Sql.CurrentTimestamp < date, (p, x) => new { p.ParentID, GrandChildID = (int?)x.g.GrandChildID });
+
+			var actual = query
+				.ToList()
+				.Select(r => (r.ParentID, r.GrandChildID));
+
+			var nestedRows = GrandChild
+				.SelectMany(g => Child
+					.Where(c => c.ChildID == g.ChildID)
+					.Select(c => g)
+					.DefaultIfEmpty(g));
+
+			var expected = Parent
+				.SelectMany(p => nestedRows
+					.Where(g => p.ParentID == g.ParentID && matches)
+					.Select(g => (p.ParentID, (int?)g.GrandChildID))
+					.DefaultIfEmpty((p.ParentID, null)));
+
+			actual.ShouldBe(expected, ignoreOrder: true);
+		}
+
+		[Test]
 		public void MultipleLeftJoin([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
