@@ -1973,8 +1973,8 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
-		/// A value added to a converted column or its <c>SUM</c> goes through the column's converter; a factor or
-		/// divisor does not.
+		/// A value added to, subtracted from or taken as a modulus of a converted column or its <c>SUM</c> goes
+		/// through the column's converter; a factor or divisor does not.
 		/// </summary>
 		[Test]
 		public void ArithmeticWithConvertedColumn([DataSources] string context)
@@ -1991,11 +1991,50 @@ namespace Tests.Linq
 			var group = table.GroupBy(x => x.Group);
 			var row   = table.Where(x => x.Id == 1);
 
-			group.Select(g => g.Sum(x => x.Cents) * operand).Single().ShouldBe(14);
-			group.Select(g => g.Sum(x => x.Cents) / operand).Single().ShouldBe(3);
-			group.Select(g => g.Sum(x => x.Cents) + operand).Single().ShouldBe(9);
-			row.Select(x => x.Cents * operand).Single().ShouldBe(6);
-			row.Select(x => x.Cents + operand).Single().ShouldBe(5);
+			group
+				.Select(g => g.Sum(x => x.Cents) * operand)
+				.Single()
+				.ShouldBe(14);
+
+			group
+				.Select(g => operand * g.Sum(x => x.Cents))
+				.Single()
+				.ShouldBe(14);
+
+			group
+				.Select(g => g.Sum(x => x.Cents) / operand)
+				.Single()
+				.ShouldBe(3);
+
+			group
+				.Select(g => g.Sum(x => x.Cents) % operand)
+				.Single()
+				.ShouldBe(1);
+
+			group
+				.Select(g => g.Sum(x => x.Cents) + operand)
+				.Single()
+				.ShouldBe(9);
+
+			row
+				.Select(x => x.Cents * operand)
+				.Single()
+				.ShouldBe(6);
+
+			row
+				.Select(x => x.Cents % operand)
+				.Single()
+				.ShouldBe(1);
+
+			row
+				.Select(x => x.Cents + operand)
+				.Single()
+				.ShouldBe(5);
+
+			row
+				.Select(x => x.Cents - operand)
+				.Single()
+				.ShouldBe(1);
 		}
 
 		/// <summary>
