@@ -325,6 +325,10 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					return MeasureStringOperand(nullability.SqlExpression);
 				case SqlCoalesceExpression coalesce:
 					return Combine(coalesce.Expressions, sum: false);
+				// The base visitor lowers a coalesce to this function, typed from its first operand, before the
+				// concatenation around it is measured.
+				case SqlFunction { Name: "Coalesce" } coalesceFunction:
+					return Combine(coalesceFunction.Parameters, sum: false);
 				case SqlConditionExpression condition:
 					return Combine([condition.TrueValue, condition.FalseValue], sum: false);
 				case SqlCaseExpression caseExpression:
