@@ -1156,6 +1156,36 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void LeftJoinJoinedSideEqualityOverNestedRightJoin([DataSources] string context, [Values(11, -1)] int id)
+		{
+			using var db = GetDataContext(context);
+
+			var nested =
+				from c in db.Child
+				from g in db.GrandChild.RightJoin(g => g.ChildID == c.ChildID)
+				select new { c, g };
+
+			var actual = db.Parent
+				.LeftJoin(nested, (p, x) => p.ParentID == x.g.ParentID && x.c.ChildID == id, (p, x) => new { p.ParentID, GrandChildID = (int?)x.g.GrandChildID })
+				.ToList()
+				.Select(r => (r.ParentID, r.GrandChildID));
+
+			var nestedRows = GrandChild
+				.SelectMany(g => Child
+					.Where(c => c.ChildID == g.ChildID)
+					.Select(c => (c: (Child?)c, g))
+					.DefaultIfEmpty((c: null, g)));
+
+			var expected = Parent
+				.SelectMany(p => nestedRows
+					.Where(x => p.ParentID == x.g.ParentID && x.c != null && x.c.ChildID == id)
+					.Select(x => (p.ParentID, (int?)x.g.GrandChildID))
+					.DefaultIfEmpty((p.ParentID, null)));
+
+			actual.ShouldBe(expected, ignoreOrder: true);
+		}
+
+		[Test]
 		public void LeftJoinPredicateOverNestedJoinColumn([DataSources] string context, [Values] bool inner)
 		{
 			using var db = GetDataContext(context);

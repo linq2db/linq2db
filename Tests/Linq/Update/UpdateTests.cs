@@ -2076,6 +2076,63 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[Table]
+		sealed class NullableKeyMainTable
+		{
+			[PrimaryKey] public int     Id;
+			[Column]     public int?    Ref;
+			[Column]     public string? Field;
+
+			[Association(ThisKey = nameof(Ref), OtherKey = nameof(NullableKeyAssociatedTable.Ref))]
+			public NullableKeyAssociatedTable AssociatedOptional = null!;
+
+			public static readonly NullableKeyMainTable[] Data =
+			[
+				new() { Id = 1, Ref = 1,    Field = "value 1" },
+				new() { Id = 2, Ref = null, Field = "value 2" },
+				new() { Id = 3, Ref = 3,    Field = "value 3" },
+			];
+		}
+
+		[Table]
+		sealed class NullableKeyAssociatedTable
+		{
+			[PrimaryKey] public int  Id;
+			[Column]     public int? Ref;
+
+			[Association(ThisKey = nameof(Ref), OtherKey = nameof(NullableKeyMainTable.Ref))]
+			public NullableKeyMainTable MainOptional = null!;
+
+			public static readonly NullableKeyAssociatedTable[] Data =
+			[
+				new() { Id = 1, Ref = 1 },
+				new() { Id = 3, Ref = 3 },
+			];
+		}
+
+		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		public void UpdateByNullableAssociationOptional([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
+		{
+			using var db   = GetDataContext(context);
+			using var main = db.CreateLocalTable(NullableKeyMainTable.Data);
+			using var _    = db.CreateLocalTable(NullableKeyAssociatedTable.Data);
+
+			var id = 3;
+
+			main
+				.Where(m => m.Id == id)
+				.Select(m => m.AssociatedOptional!.MainOptional)
+				.Update(p => new NullableKeyMainTable() { Field = "test" });
+
+			var fields = main
+				.OrderBy(m => m.Id)
+				.Select(m => m.Field)
+				.ToArray();
+
+			fields.ShouldBe(["value 1", "value 2", "test"]);
+		}
+
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void UpdateByAssociationRequired([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)

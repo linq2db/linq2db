@@ -2611,14 +2611,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return true;
 		}
 
-		bool IsKeyEqualityCondition(SqlJoinedTable join, NullabilityContext nullabilityContext)
+		bool HasOuterIndependentPredicate(SqlJoinedTable join)
 		{
-			var joinNullability = nullabilityContext.WithJoinSource(join.Table.Source);
+			if (join.Condition.IsOr)
+				return false;
 
-			return join.Condition.Predicates.TrueForAll(p =>
-				p is SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } exprExpr
-				&& exprExpr.Expr1 is not SqlValue && exprExpr.Expr2 is not SqlValue
-				&& exprExpr.Reduce(joinNullability, _evaluationContext, false, _dataOptions.LinqOptions) is SqlPredicate.ExprExpr);
+			var sources = QueryHelper.EnumerateAccessibleSources(join.Table).ToList();
+
+			return join.Condition.Predicates.Exists(p => !QueryHelper.IsDependsOnOuterSources(p, currentSources: sources));
 		}
 
 		bool JoinMoveSubQueryUp(SelectQuery selectQuery, SqlJoinedTable joinTable)
@@ -2663,12 +2663,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (joinTable.JoinType != JoinType.Inner)
 			{
-				// Flattened, the subquery's joins would nest under the LEFT join and its WHERE, or an ON predicate over
-				// their tables, would sit in ON where OptimizeJoinConditions cannot push it into a derived table
-				// (see Issue2832Tests, JoinTests.LeftJoinPredicateOverNestedJoinColumn). Key equalities stay in ON either
-				// way, so they don't block flattening: UPDATE correction needs the update table flattened (UpdateByAssociationOptional).
+				// Flattened, the subquery's joins would nest under the LEFT join, and its WHERE, or an ON predicate that
+				// does not read the outer side, would stay in ON or be pushed into a derived table of the first table
+				// alone (wrong beside a nested RIGHT join; see Issue2832Tests, JoinTests.LeftJoinPredicateOverNestedJoinColumn,
+				// JoinTests.LeftJoinJoinedSideEqualityOverNestedRightJoin). Predicates reading the outer side are handled
+				// the same either way, so they don't block flattening: UPDATE correction needs the update table flattened
+				// (UpdateByAssociationOptional, UpdateByNullableAssociationOptional).
 				if (joinTable.JoinType == JoinType.Left && !_providerFlags.IsComplexJoinConditionSupported && subQuery.From.Tables[0].Joins.Count > 0
-					&& (subQuery.HasWhere || !IsKeyEqualityCondition(joinTable, NullabilityContext.GetContext(selectQuery))))
+					&& (subQuery.HasWhere || HasOuterIndependentPredicate(joinTable)))
 					return false;
 
 				if (subQuery.HasWhere)
