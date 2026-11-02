@@ -1243,6 +1243,35 @@ namespace Tests.Linq
 				.ShouldBe(6001);
 		}
 
+		[Table]
+		sealed class CoalesceVarCharRow
+		{
+			[PrimaryKey]                                                            public int     Id    { get; set; }
+			[Column(DataType = DataType.VarChar,  Length = 20)]                     public string? Sku   { get; set; }
+			[Column(DataType = DataType.NVarChar, Length = 40)]                     public string? Title { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 8000, CanBeNull = false)] public string  Notes { get; set; } = default!;
+		}
+
+		// SQL Server: as ConcatLongVarCharBesideMixedConditionKeepsLength; a COALESCE with a Unicode operand is nvarchar
+		// whichever position that operand takes.
+		[Test]
+		public void ConcatLongVarCharBesideMixedCoalesceKeepsLength([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new CoalesceVarCharRow { Id = 1, Sku = null, Title = "T", Notes = new string('d', 6000) } });
+
+			var result = table
+				.Select(t => new
+				{
+					Before = Sql.AsSql((t.Sku ?? t.Title) + t.Notes),
+					After  = Sql.AsSql(t.Notes + (t.Sku ?? t.Title)),
+				})
+				.Single();
+
+			new[] { result.Before.Length, result.After.Length }
+				.ShouldBe([6001, 6001]);
+		}
+
 		sealed class PrefixConverter() : ValueConverter<string, string>(v => "x:" + v, v => v.Substring(2), false);
 
 		[Table]
