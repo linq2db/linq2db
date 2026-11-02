@@ -824,10 +824,10 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		// Cyrillic literals stay in the command text, so the test is not shipped to the whole matrix: SQL Server separates a
-		// Unicode literal from a non-Unicode one, SQLite runs as a control.
+		// Informix: excluded for the Cyrillic seed values.
 		[Test]
-		public void ComputedLiteralBesideVarCharKeepsUnicode([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllSQLite)] string context)
+		[ThrowsCannotBeConverted(TestProvName.AllAccessJet)]
+		public void ComputedLiteralBesideVarCharKeepsUnicode([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(UnicodeArgumentData);
@@ -844,9 +844,10 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		// The Chars arm puts a Cyrillic literal in the command text; scoped as ComputedLiteralBesideVarCharKeepsUnicode.
+		// Informix: excluded for the Cyrillic seed values.
 		[Test]
-		public void ComputedArgumentBesideCharKeepsUnicode([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllSQLite)] string context)
+		[ThrowsCannotBeConverted(TestProvName.AllAccessJet)]
+		public void ComputedArgumentBesideCharKeepsUnicode([DataSources(TestProvName.AllInformix)] string context)
 		{
 			var suffix = "Жук";
 
