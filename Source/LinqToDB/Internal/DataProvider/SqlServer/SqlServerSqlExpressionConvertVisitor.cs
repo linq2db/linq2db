@@ -511,9 +511,21 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 				case PseudoFunctions.REPLACE:
 				{
-					if (WidenLongNonUnicodeBesideUnicode(func.Parameters, concatenation: false) is { } widened)
+					var parameters = WidenLongNonUnicodeBesideUnicode(func.Parameters, concatenation: false) ?? func.Parameters;
+					var type       = func.Type;
+
+					// A Unicode argument turns REPLACE nvarchar. Declared with the value's non-Unicode type, it would hide that
+					// from an enclosing concatenation, which then would not widen a long VarChar operand beside it.
+					if (type.DataType is DataType.Char or DataType.VarChar && Array.Exists(func.Parameters, p => MeasureStringOperand(p).Unicode))
 					{
-						func = new SqlFunction(func.Type, func.Name, func.Flags, func.NullabilityType, func.CanBeNullNullable, widened)
+						var length = ReferenceEquals(parameters[0], func.Parameters[0]) ? type.Length : -1;
+
+						type = new DbDataType(typeof(string), DataType.NVarChar, null, length);
+					}
+
+					if (!ReferenceEquals(parameters, func.Parameters) || type != func.Type)
+					{
+						func = new SqlFunction(type, func.Name, func.Flags, func.NullabilityType, func.CanBeNullNullable, parameters)
 						{
 							DoNotOptimize = func.DoNotOptimize,
 						};

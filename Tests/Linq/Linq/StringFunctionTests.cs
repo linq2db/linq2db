@@ -1070,6 +1070,37 @@ namespace Tests.Linq
 		}
 
 		[Table]
+		sealed class ReplaceInConcatRow
+		{
+			[PrimaryKey]                                                            public int    Id     { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 50,   CanBeNull = false)] public string Short  { get; set; } = default!;
+			[Column(DataType = DataType.VarChar, Length = 8000, CanBeNull = false)] public string Notes  { get; set; } = default!;
+			[Column(DataType = DataType.VarChar, Length = 8000, CanBeNull = false)] public string Notes2 { get; set; } = default!;
+		}
+
+		// SQL Server: as ReplaceBesideLongVarCharKeepsLength.
+		[Test]
+		public void ReplaceWithUnicodeArgumentInConcatKeepsLongVarChar([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			var suffix = "x";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new ReplaceInConcatRow { Id = 1, Short = "abc", Notes = new string('n', 6000), Notes2 = new string('m', 6000) } });
+
+			var result = table
+				.Select(t => new
+				{
+					Parameter = Sql.AsSql(t.Short.Replace("a", suffix) + t.Notes),
+					Literal   = Sql.AsSql(t.Short.Replace("a", "Ж") + t.Notes),
+					Long      = Sql.AsSql(t.Notes.Replace("n", suffix) + t.Notes2),
+				})
+				.Single();
+
+			new[] { result.Parameter.Length, result.Literal.Length, result.Long.Length }
+				.ShouldBe([6003, 6003, 12000]);
+		}
+
+		[Table]
 		sealed class ShortVarCharRow
 		{
 			[PrimaryKey]                                                            public int    Id  { get; set; }
