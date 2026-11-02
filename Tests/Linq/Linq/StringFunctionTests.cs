@@ -1124,7 +1124,7 @@ namespace Tests.Linq
 
 		// SQL Server: scoped as ReplaceLiteralGrowingPast4000BesideVarChar.
 		[Test]
-		[ActiveIssue(6212, Configuration = TestProvName.AllSqlServer, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}8000{1}but was")]
+		[ActiveIssue(6236, Configuration = TestProvName.AllSqlServer, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}8000{1}but was")]
 		public void ReplaceParameterGrowingPast4000BesideVarChar([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllSQLite)] string context)
 		{
 			var replacement = "bb";
