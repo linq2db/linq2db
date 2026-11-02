@@ -1045,7 +1045,7 @@ namespace Tests.Linq
 			var result = table
 				.Select(t => new
 				{
-					Literal   = Sql.AsSql(t.Notes.Replace("a", "b")),
+					Literal   = Sql.AsSql(t.Notes.Replace("a", "Ж")),
 					Parameter = Sql.AsSql(t.Notes.Replace("a", replacement)),
 				})
 				.Single();
@@ -1062,7 +1062,7 @@ namespace Tests.Linq
 			using var table = db.CreateLocalTable(new[] { new LongVarCharRow { Id = 1, Notes = new string('a', 6000) } });
 
 			var result = table
-				.Select(t => Sql.AsSql(t.Notes.PadLeft(7000, 'b')))
+				.Select(t => Sql.AsSql(t.Notes.PadLeft(7000, 'Ж')))
 				.Single();
 
 			result.Length
