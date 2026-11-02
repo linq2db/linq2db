@@ -113,8 +113,10 @@ namespace LinqToDB.Internal.Linq.Builder
 				captured = builder.CurrentOrderBy is { Count: > 0 } current ? current.ToArray() : [];
 			}
 
+			// Thrown, not returned: a subquery that fails to build falls back to client-side evaluation (eager loading,
+			// AggregateExecute), which would pick an arbitrary row per key instead of reporting the missing ordering.
 			if (captured.Length == 0)
-				return BuildSequenceResult.Error(sequenceExpression, ErrorHelper.Error_DistinctByRequiresOrderBy);
+				throw SqlErrorExpression.CreateException(sequenceExpression, ErrorHelper.Error_DistinctByRequiresOrderBy);
 
 			// On providers that support PostgreSQL-style DISTINCT ON, lower DistinctBy to it directly instead of the
 			// ROW_NUMBER() emulation: the key selector becomes the ON list and the sequence's ordering is reordered to

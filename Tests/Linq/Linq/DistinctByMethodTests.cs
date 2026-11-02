@@ -1477,6 +1477,46 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_DistinctByRequiresOrderBy)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByInCorrelatedAggregateAfterGroupByRequiresOrderBy([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// Neither ordering survives the GroupBy (the outer one is constant per row, the tie-break is not a key), so the
+			// groups have no order; the subquery must not fall back to the client-side aggregate.
+			var query = db.Parent
+				.Select(p => db.Child
+					.OrderBy(c => -p.ParentID)
+					.ThenByDescending(c => c.ChildID)
+					.GroupBy(c => c.ChildID % 3)
+					.Select(g => new { g.Key })
+					.DistinctBy(x => x.Key > 0)
+					.Count());
+
+			AssertQuery(query);
+		}
+
+		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_DistinctByRequiresOrderBy)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByInCorrelatedSubQueryAfterGroupByRequiresOrderBy([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// As DistinctByInCorrelatedAggregateAfterGroupByRequiresOrderBy; eager loading would pick an arbitrary group.
+			var query = db.Parent
+				.Select(p => db.Child
+					.OrderBy(c => -p.ParentID)
+					.ThenByDescending(c => c.ChildID)
+					.GroupBy(c => c.ChildID % 3)
+					.Select(g => new { g.Key })
+					.DistinctBy(x => x.Key > 0)
+					.Select(x => x.Key)
+					.FirstOrDefault());
+
+			AssertQuery(query);
+		}
+
 		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		[ActiveIssue(6223, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "could not be converted to SQL.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6223")]
