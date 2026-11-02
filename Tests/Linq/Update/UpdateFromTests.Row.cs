@@ -64,7 +64,7 @@ namespace Tests.xUpdate
 			records[2].LastName.ShouldBe("ThirdFairy");
 		}
 
-		[ActiveIssue(6241, Configurations = [TestProvName.AllOracle11], ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "records[2].FirstName")]
+		[ActiveIssue(6241, Configurations = [TestProvName.AllOracle11], ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}\"ThirdTooth\"{1}but was")]
 		[Test]
 		public void UpdateFromSubqueryRowCorrelatedValuesKeepsUnmatched([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL95Plus, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
@@ -83,18 +83,23 @@ namespace Tests.xUpdate
 					x => Sql.Row(x.FirstName, x.LastName),
 					x => (
 						from s in db.SelectQuery(() => 1)
-						from canChange in sourceTable.Where(t => t.Id == x.Id + 1).DefaultIfEmpty()
+						from canChange in sourceTable
+							.Where(t => t.Id == x.Id + 1)
+							.DefaultIfEmpty()
 						select Sql.Row(
 							canChange != null ? canChange.FirstName! : x.FirstName,
 							canChange != null ? canChange.LastName!  : x.LastName
 						)
-					).Single()
+					)
+					.Single()
 				)
 				.Update();
 
 			affectedCount.ShouldBe(1);
 
-			var records = sourceTable.OrderBy(x => x.Id).ToList();
+			var records = sourceTable
+				.OrderBy(x => x.Id)
+				.ToList();
 
 			records[2].FirstName.ShouldBe("ThirdTooth");
 			records[2].LastName.ShouldBe("ThirdFairy");
