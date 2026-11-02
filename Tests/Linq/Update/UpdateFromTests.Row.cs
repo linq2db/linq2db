@@ -64,6 +64,42 @@ namespace Tests.xUpdate
 			records[2].LastName.ShouldBe("ThirdFairy");
 		}
 
+		[ActiveIssue(6241, Configurations = [TestProvName.AllOracle11], ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "records[2].FirstName")]
+		[Test]
+		public void UpdateFromSubqueryRowCorrelatedValuesKeepsUnmatched([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL95Plus, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using var sourceTable = db.CreateLocalTable(
+			[
+				new UpdateSubquerySourceTable { Id = 1, FirstName = "FirstTooth",  LastName = "FirstFairy"  },
+				new UpdateSubquerySourceTable { Id = 2, FirstName = "SecondTooth", LastName = "SecondFairy" },
+				new UpdateSubquerySourceTable { Id = 3, FirstName = "ThirdTooth",  LastName = "ThirdFairy"  }
+			]);
+
+			var affectedCount = sourceTable
+				.Where(x => x.Id == 3)
+				.Set(
+					x => Sql.Row(x.FirstName, x.LastName),
+					x => (
+						from s in db.SelectQuery(() => 1)
+						from canChange in sourceTable.Where(t => t.Id == x.Id + 1).DefaultIfEmpty()
+						select Sql.Row(
+							canChange != null ? canChange.FirstName! : x.FirstName,
+							canChange != null ? canChange.LastName!  : x.LastName
+						)
+					).Single()
+				)
+				.Update();
+
+			affectedCount.ShouldBe(1);
+
+			var records = sourceTable.OrderBy(x => x.Id).ToList();
+
+			records[2].FirstName.ShouldBe("ThirdTooth");
+			records[2].LastName.ShouldBe("ThirdFairy");
+		}
+
 		[Test]
 		public void UpdateFromSubqueryRowMixedIndependentAndDependent([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
