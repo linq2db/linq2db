@@ -1123,8 +1123,9 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			// server-decided, so the optimizer cannot fold it away
-			var date = new DateTime(2000, 1, 1);
+			// server-decided, so the optimizer cannot fold it away; compared as a year because Firebird 4+ types a
+			// parameter compared to CURRENT_TIMESTAMP as TIMESTAMP WITH TIME ZONE (#5915)
+			var year = 2000;
 
 			var nested =
 				from c in db.Child
@@ -1132,8 +1133,8 @@ namespace Tests.Linq
 				select new { c, g };
 
 			var query = matches
-				? db.Parent.LeftJoin(nested, (p, x) => p.ParentID == x.g.ParentID && Sql.CurrentTimestamp > date, (p, x) => new { p.ParentID, GrandChildID = (int?)x.g.GrandChildID })
-				: db.Parent.LeftJoin(nested, (p, x) => p.ParentID == x.g.ParentID && Sql.CurrentTimestamp < date, (p, x) => new { p.ParentID, GrandChildID = (int?)x.g.GrandChildID });
+				? db.Parent.LeftJoin(nested, (p, x) => p.ParentID == x.g.ParentID && Sql.CurrentTimestamp.Year > year, (p, x) => new { p.ParentID, GrandChildID = (int?)x.g.GrandChildID })
+				: db.Parent.LeftJoin(nested, (p, x) => p.ParentID == x.g.ParentID && Sql.CurrentTimestamp.Year < year, (p, x) => new { p.ParentID, GrandChildID = (int?)x.g.GrandChildID });
 
 			var actual = query
 				.ToList()
