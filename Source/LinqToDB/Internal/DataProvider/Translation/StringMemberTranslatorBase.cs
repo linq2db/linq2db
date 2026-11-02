@@ -258,7 +258,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		// A value built into a string beside a column takes that column's type only when the type is Unicode. A non-Unicode
 		// one would send a parameter or literal beside it as non-Unicode, losing every character outside the column's code
 		// page, so the value keeps the type of where the call is used instead. A column with a converter or unit is not
-		// lent either: the value is not a stored value of it.
+		// lent either: the value is not a stored value of it. Nor is a converter or unit of where the call is used applied
+		// to the value: it applies to the call's result as a whole.
 		static IDisposable? UsingUnicodeTypeFromOperand(ITranslationContext translationContext, params Expression[] arguments)
 		{
 			foreach (var argument in arguments)
@@ -272,7 +273,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 					return translationContext.UsingColumnDescriptor(descriptor);
 			}
 
-			return null;
+			return translationContext.CurrentColumnDescriptor is { ValueConverter: not null } or { DurationUnit: not null }
+				? translationContext.UsingColumnDescriptor(null)
+				: null;
 		}
 
 		protected virtual Expression? TranslateLike(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)

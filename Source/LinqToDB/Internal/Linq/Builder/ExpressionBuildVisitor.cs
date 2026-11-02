@@ -3805,7 +3805,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			switch (node.NodeType)
 			{
 				case ExpressionType.Divide:
-				case ExpressionType.Modulo:
 				case ExpressionType.Multiply:
 				case ExpressionType.MultiplyChecked:
 				case ExpressionType.Power:
@@ -3824,6 +3823,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				case ExpressionType.AddChecked:
 				case ExpressionType.And:
 				case ExpressionType.ExclusiveOr:
+				case ExpressionType.Modulo:
 				case ExpressionType.Or:
 				case ExpressionType.Subtract:
 				case ExpressionType.SubtractChecked:

@@ -238,58 +238,143 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			if (operands != null)
 				element = new SqlConcatExpression(element.PreserveNull, operands);
 
-			if (WidenLongNonUnicodeBesideUnicode(element.Expressions) is { } widened)
+			if (WidenLongNonUnicodeBesideUnicode(element.Expressions, concatenation: true) is { } widened)
 				element = new SqlConcatExpression(element.PreserveNull, widened);
 
 			return base.ConvertConcat(element);
 		}
 
-		// A Unicode operand turns the whole concatenation (or REPLACE) Unicode, and a non-MAX non-Unicode operand is then
-		// converted to nvarchar(4000), cutting one declared longer than that. Cast to NVarChar(Max) it keeps its length.
-		ISqlExpression[]? WidenLongNonUnicodeBesideUnicode(ISqlExpression[] expressions)
+		// A Unicode operand turns the concatenation nvarchar, and SQL Server then cuts a non-Unicode operand longer than
+		// 4000 characters when converting it, and the running result at 4000 characters until an operand of a MAX type
+		// joins it. So such an operand is cast to NVarChar(Max) itself, and when the operands before the first MAX one
+		// can still add up to more, so is the leftmost one that is not a literal, which makes every step MAX. A Unicode
+		// argument turns REPLACE nvarchar too, but its result is not the sum of its arguments: only the first cast applies.
+		ISqlExpression[]? WidenLongNonUnicodeBesideUnicode(ISqlExpression[] expressions, bool concatenation)
 		{
-			var        hasUnicode     = false;
-			List<int>? longNonUnicode = null;
+			var shapes        = new StringOperandShape[expressions.Length];
+			var hasUnicode    = false;
+			var hasNonUnicode = false;
 
-			for (var i = 0; i < expressions.Length; i++)
+			for (var i = 0; i < shapes.Length; i++)
 			{
-				if (expressions[i] is SqlConcatExpression nested)
-				{
-					hasUnicode |= HasUnicodeOperand(nested);
-					continue;
-				}
+				shapes[i] = MeasureStringOperand(expressions[i]);
 
-				var operandType = QueryHelper.GetDbDataType(expressions[i], MappingSchema);
-
-				if (QueryHelper.IsUnicode(operandType.DataType))
-					hasUnicode = true;
-				else if (operandType.DataType is DataType.VarChar or DataType.Char && operandType.Length is > 4000 and <= 8000)
-					(longNonUnicode ??= new()).Add(i);
+				hasUnicode    |= shapes[i].Unicode;
+				hasNonUnicode |= shapes[i].NonUnicode;
 			}
 
-			if (!hasUnicode || longNonUnicode == null)
+			if (!hasUnicode || !hasNonUnicode)
 				return null;
 
-			var operands = (ISqlExpression[])expressions.Clone();
+			var maxType = new DbDataType(typeof(string), DataType.NVarChar, null, -1);
 
-			foreach (var i in longNonUnicode)
-				operands[i] = PseudoFunctions.MakeCast(operands[i], new DbDataType(typeof(string), DataType.NVarChar, null, -1));
+			ISqlExpression[]? operands = null;
+
+			for (var i = 0; i < shapes.Length; i++)
+			{
+				if (shapes[i] is { Unicode: false, Length: > 4000 } && expressions[i] is not SqlValue)
+				{
+					operands    ??= (ISqlExpression[])expressions.Clone();
+					operands[i] =   PseudoFunctions.MakeCast(operands[i], maxType);
+					shapes[i]   =   shapes[i] with { Length = null };
+				}
+			}
+
+			if (!concatenation)
+				return operands;
+
+			var length = 0L;
+
+			foreach (var shape in shapes)
+			{
+				if (shape.Length == null)
+					break;
+
+				length += shape.Length.Value;
+			}
+
+			if (length > 4000)
+			{
+				var first = Array.FindIndex(expressions, e => e is not SqlValue);
+
+				if (first >= 0 && shapes[first].Length != null)
+				{
+					operands        ??= (ISqlExpression[])expressions.Clone();
+					operands[first] =   PseudoFunctions.MakeCast(operands[first], maxType);
+				}
+			}
 
 			return operands;
 		}
 
-		// A nested concatenation has no type of its own, so the string default (NVarChar) would count it as Unicode.
-		bool HasUnicodeOperand(SqlConcatExpression concat)
+		readonly record struct StringOperandShape(bool Unicode, bool NonUnicode, long? Length);
+
+		// Looks through the nodes that have no string type of their own - a nested concatenation, a subquery column, a
+		// condition - since the string default (NVarChar) would count them as Unicode, and a condition's first branch
+		// is not its type on SQL Server. A null length is a MAX type; a parameter or an operand of unknown length counts
+		// as one character, as its value is not known here.
+		StringOperandShape MeasureStringOperand(ISqlExpression expr)
 		{
-			foreach (var operand in concat.Expressions)
+			switch (expr)
 			{
-				if (operand is SqlConcatExpression nested
-					? HasUnicodeOperand(nested)
-					: QueryHelper.IsUnicode(QueryHelper.GetDbDataType(operand, MappingSchema).DataType))
-					return true;
+				case SqlConcatExpression concat:
+					return Combine(concat.Expressions, sum: true);
+				case SqlColumn column:
+					return MeasureStringOperand(column.Expression);
+				case SqlNullabilityExpression nullability:
+					return MeasureStringOperand(nullability.SqlExpression);
+				case SqlCoalesceExpression coalesce:
+					return Combine(coalesce.Expressions, sum: false);
+				case SqlConditionExpression condition:
+					return Combine([condition.TrueValue, condition.FalseValue], sum: false);
+				case SqlCaseExpression caseExpression:
+				{
+					var branches = new List<ISqlExpression>(caseExpression.Cases.Count + 1);
+
+					foreach (var item in caseExpression.Cases)
+						branches.Add(item.ResultExpression);
+
+					if (caseExpression.ElseExpression != null)
+						branches.Add(caseExpression.ElseExpression);
+
+					return Combine(branches, sum: false);
+				}
 			}
 
-			return false;
+			var type    = QueryHelper.GetDbDataType(expr, MappingSchema);
+			var unicode = QueryHelper.IsUnicode(type.DataType);
+
+			long? length = expr switch
+			{
+				SqlValue { Value: string value }               => value.Length,
+				SqlParameter                                   => 1,
+				_ when type.Length == -1                       => null,
+				_ when type.Length > 0                         => type.Length,
+				_                                              => 1,
+			};
+
+			return new(unicode, !unicode, length);
+		}
+
+		StringOperandShape Combine(IEnumerable<ISqlExpression> operands, bool sum)
+		{
+			var   unicode    = false;
+			var   nonUnicode = false;
+			long? length     = 0;
+
+			foreach (var operand in operands)
+			{
+				var shape = MeasureStringOperand(operand);
+
+				unicode    |= shape.Unicode;
+				nonUnicode |= shape.NonUnicode;
+
+				length = length == null || shape.Length == null
+					? null
+					: sum ? length + shape.Length : Math.Max(length.Value, shape.Length.Value);
+			}
+
+			return new(unicode, nonUnicode, length);
 		}
 
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
@@ -426,7 +511,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 				case PseudoFunctions.REPLACE:
 				{
-					if (WidenLongNonUnicodeBesideUnicode(func.Parameters) is { } widened)
+					if (WidenLongNonUnicodeBesideUnicode(func.Parameters, concatenation: false) is { } widened)
 					{
 						func = new SqlFunction(func.Type, func.Name, func.Flags, func.NullabilityType, func.CanBeNullNullable, widened)
 						{
