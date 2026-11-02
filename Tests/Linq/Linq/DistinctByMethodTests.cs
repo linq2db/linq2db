@@ -1195,6 +1195,37 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		// The ROW_NUMBER lowering overflows the stack building a concatenation ordered before a GroupBy (on master too).
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterGroupByOrderedByConcatOfKey([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// Descending, so a fallback to the key order (ascending) picks other rows.
+			var query = db.Person
+				.OrderByDescending(p => p.FirstName + "x")
+				.GroupBy(p => p.FirstName)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.DistinctBy(x => x.Key.Length);
+
+			AssertQuery(query);
+		}
+
+		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_DistinctByRequiresOrderBy)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterGroupByOrderedByConcatOfNonKeyRequiresOrderBy([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.OrderByDescending(p => p.LastName + "x")
+				.GroupBy(p => p.FirstName)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.DistinctBy(x => x.Key.Length);
+
+			AssertQuery(query);
+		}
+
 		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
 		public void DistinctByAfterGroupByOrderedByCoalesceOfKey([DataSources] string context)

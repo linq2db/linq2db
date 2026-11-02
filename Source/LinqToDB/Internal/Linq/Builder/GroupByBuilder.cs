@@ -363,6 +363,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				or SqlNullabilityExpression
 				or SqlCastExpression
 				or SqlCoalesceExpression
+				or SqlConcatExpression
 				or SqlParameterizedExpressionBase
 				or SqlConditionExpression
 				or SqlCaseExpression
@@ -414,6 +415,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					case QueryElementType.SqlNullabilityExpression:
 					case QueryElementType.SqlCast:
 					case QueryElementType.SqlCoalesce:
+					case QueryElementType.SqlConcat:
 					case QueryElementType.SqlCondition:
 					case QueryElementType.SqlCase:
 					case QueryElementType.SearchCondition:
