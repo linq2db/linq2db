@@ -2622,7 +2622,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return join.Condition.Predicates.Exists(p => !QueryHelper.IsDependsOnOuterSources(p, currentSources: sources));
 		}
 
-		// UPDATE correction cannot reach a target nested in a derived table under a join (BasicSqlOptimizer.BasicCorrectUpdate).
+		// Without UPDATE FROM support, UPDATE correction cannot join a target nested in a derived table under a join (BasicSqlOptimizer.BasicCorrectUpdate).
 		bool ContainsUpdateTable(SqlTableSource tableSource)
 		{
 			return _updateTable != null && (tableSource.Source == _updateTable || tableSource.HasElement(_updateTable));

@@ -574,9 +574,9 @@ namespace LinqToDB.Internal.SqlProvider
 		/// key (into one column of a row key) whose outer side reads every table the predicate reads, as
 		/// <c>CASE WHEN predicate THEN outerKey ELSE NULL END = innerKey</c>. An ON clause that is itself a disjunction is
 		/// left untouched. A LEFT-joined subquery with joins of its own is not flattened into the outer query when it has a
-		/// WHERE or its ON clause has a predicate that does not read the outer side, so those predicates can stay inside
-		/// the derived table; one holding the UPDATE target is still flattened, because UPDATE correction cannot reach a
-		/// target nested in a derived table.
+		/// WHERE or its AND-joined ON clause has a predicate that does not read the outer side, so those predicates can stay
+		/// inside the derived table; that refusal is skipped for one holding the UPDATE target, because without UPDATE FROM
+		/// support UPDATE correction cannot join a target nested under a joined derived table.
 		/// <code>
 		/// FROM T1 INNER JOIN T2 ON t1.field1 == t2.field1 AND t1.field2 == t2.field2 AND t1.field3 > 10
 		/// -- with flag:
