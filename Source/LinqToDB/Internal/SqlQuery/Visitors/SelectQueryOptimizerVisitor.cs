@@ -2611,6 +2611,16 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return true;
 		}
 
+		bool IsKeyEqualityCondition(SqlJoinedTable join, NullabilityContext nullabilityContext)
+		{
+			var joinNullability = nullabilityContext.WithJoinSource(join.Table.Source);
+
+			return join.Condition.Predicates.TrueForAll(p =>
+				p is SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } exprExpr
+				&& exprExpr.Expr1 is not SqlValue && exprExpr.Expr2 is not SqlValue
+				&& exprExpr.Reduce(joinNullability, _evaluationContext, false, _dataOptions.LinqOptions) is SqlPredicate.ExprExpr);
+		}
+
 		bool JoinMoveSubQueryUp(SelectQuery selectQuery, SqlJoinedTable joinTable)
 		{
 			if (joinTable.Table.Source is not SelectQuery subQuery)
@@ -2655,8 +2665,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				// Flattened, the subquery's joins would nest under the LEFT join and its WHERE, or an ON predicate over
 				// their tables, would sit in ON where OptimizeJoinConditions cannot push it into a derived table
-				// (see Issue2832Tests, JoinTests.LeftJoinPredicateOverNestedJoinColumn).
-				if (joinTable.JoinType == JoinType.Left && !_providerFlags.IsComplexJoinConditionSupported && subQuery.From.Tables[0].Joins.Count > 0)
+				// (see Issue2832Tests, JoinTests.LeftJoinPredicateOverNestedJoinColumn). Key equalities stay in ON either
+				// way, so they don't block flattening: UPDATE correction needs the update table flattened (UpdateByAssociationOptional).
+				if (joinTable.JoinType == JoinType.Left && !_providerFlags.IsComplexJoinConditionSupported && subQuery.From.Tables[0].Joins.Count > 0
+					&& (subQuery.HasWhere || !IsKeyEqualityCondition(joinTable, NullabilityContext.GetContext(selectQuery))))
 					return false;
 
 				if (subQuery.HasWhere)
