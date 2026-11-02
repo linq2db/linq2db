@@ -865,6 +865,8 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		// SQL Server: a Unicode argument cast to the VarChar(50) value lost its characters; PostgreSQL: a Text argument cast
+		// to VarChar(50) was cut to 50 characters.
 		[Test]
 		public void ComputedArgumentBesideVarCharKeepsLength([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL)] string context)
 		{
@@ -1233,7 +1235,10 @@ namespace Tests.Linq
 				new PlainAndConvertedUnicodeTable { Id = 2, Plain = "zz", Conv = "yy" },
 			});
 
-			var read = table.OrderBy(r => r.Id).Select(r => r.Plain + r.Conv).First();
+			var read = table
+				.OrderBy(r => r.Id)
+				.Select(r => r.Plain + r.Conv)
+				.First();
 
 			table
 				.Count(r => Sql.Like(r.Plain + r.Conv, read))
