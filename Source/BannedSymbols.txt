@@ -240,13 +240,13 @@ M:System.Type.GetConstructor(System.Type[]); use GetConstructorEx extension (or 
 M:System.Type.GetConstructor(System.Reflection.BindingFlags,System.Type[]); use GetConstructorEx extension
 M:System.Type.GetConstructor(System.Reflection.BindingFlags,System.Reflection.Binder,System.Type[],System.Reflection.ParameterModifier[]); use GetConstructorEx extension
 M:System.Type.GetConstructor(System.Reflection.BindingFlags,System.Reflection.Binder,System.Reflection.CallingConventions,System.Type[],System.Reflection.ParameterModifier[]); use GetConstructorEx extension
-M:System.Type.GetMethod(System.String,System.Type[]); use GetMethodEx extension (or GetMethodCoercing when the caller converts arguments)
-M:System.Type.GetMethod(System.String,System.Type[],System.Reflection.ParameterModifier[]); use GetMethodEx extension
+M:System.Type.GetMethod(System.String,System.Type[]); use GetMethodEx(name, BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static, types) (or GetMethodCoercing when the caller converts arguments)
+M:System.Type.GetMethod(System.String,System.Type[],System.Reflection.ParameterModifier[]); use GetMethodEx(name, BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static, types)
 M:System.Type.GetMethod(System.String,System.Reflection.BindingFlags,System.Type[]); use GetMethodEx extension
 M:System.Type.GetMethod(System.String,System.Reflection.BindingFlags,System.Reflection.Binder,System.Type[],System.Reflection.ParameterModifier[]); use GetMethodEx extension
 M:System.Type.GetMethod(System.String,System.Reflection.BindingFlags,System.Reflection.Binder,System.Reflection.CallingConventions,System.Type[],System.Reflection.ParameterModifier[]); use GetMethodEx extension
-M:System.Type.GetMethod(System.String,System.Int32,System.Type[]); use GetMethodEx extension
-M:System.Type.GetMethod(System.String,System.Int32,System.Type[],System.Reflection.ParameterModifier[]); use GetMethodEx extension
+M:System.Type.GetMethod(System.String,System.Int32,System.Type[]); use GetMethodEx(name, genericParametersCount, BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static, types)
+M:System.Type.GetMethod(System.String,System.Int32,System.Type[],System.Reflection.ParameterModifier[]); use GetMethodEx(name, genericParametersCount, BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static, types)
 M:System.Type.GetMethod(System.String,System.Int32,System.Reflection.BindingFlags,System.Type[]); use GetMethodEx extension
 M:System.Type.GetMethod(System.String,System.Int32,System.Reflection.BindingFlags,System.Reflection.Binder,System.Type[],System.Reflection.ParameterModifier[]); use GetMethodEx extension
 M:System.Type.GetMethod(System.String,System.Int32,System.Reflection.BindingFlags,System.Reflection.Binder,System.Reflection.CallingConventions,System.Type[],System.Reflection.ParameterModifier[]); use GetMethodEx extension
