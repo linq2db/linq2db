@@ -838,7 +838,27 @@ namespace Tests.Linq
 					t.Id,
 					Chars         = Sql.AsSql(t.VarCharColumn.Replace('A', 'Ж')),
 					FunctionChars = Sql.AsSql(Sql.Replace(t.VarCharColumn, 'A', 'Ж')),
-					Padded        = Sql.AsSql(t.VarCharColumn.PadLeft(8, 'Ж')),
+				});
+
+			AssertQuery(query);
+		}
+
+		// Informix: excluded for the Cyrillic seed values.
+		[Test]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse + "," + TestProvName.AllDB2, ErrorMessage = "Assert.That(exceptExpected, Is.Zero)",
+			Details = "no-issue: ClickHouse's LPAD and DB2's LPAD over a VARCHAR count bytes, so a two-byte padding character pads short")]
+		[ActiveIssue(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Not 1 symbol in paddingSymbol",
+			Details = "no-issue: YDB's String::LeftPad takes a one-byte padding symbol")]
+		public void PaddingCharBesideVarCharKeepsUnicode([DataSources(TestProvName.AllInformix)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(UnicodeArgumentData);
+
+			var query = table
+				.Select(t => new
+				{
+					t.Id,
+					Padded = Sql.AsSql(t.VarCharColumn.PadLeft(8, 'Ж')),
 				});
 
 			AssertQuery(query);
