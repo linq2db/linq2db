@@ -569,12 +569,14 @@ namespace LinqToDB.Internal.SqlProvider
 		/// result; anything else stays in ON, where the provider may reject it. For an INNER JOIN, each predicate that
 		/// is not a plain equality of two non-literal expressions goes to WHERE. For a LEFT JOIN, a predicate that does
 		/// not depend on the outer side is pushed into a derived table wrapping the joined table or subquery (not when it
-		/// reads a nested join's table, or the joined source is another kind of source); a predicate depending only on
-		/// the outer side is folded into a plain equality key (into one column of a row key) whose outer side reads every
-		/// table the predicate reads, as <c>CASE WHEN predicate THEN outerKey ELSE NULL END = innerKey</c>. An ON clause
-		/// that is itself a disjunction is left untouched. A LEFT-joined subquery with joins of its own is not flattened
-		/// into the outer query when it has a WHERE or its ON clause has a predicate that does not read the outer side, so
-		/// those predicates can stay inside the derived table.
+		/// reads a nested join's table, the joined source is another kind of source, or the joined side holds the UPDATE
+		/// target, which then keeps it in ON); a predicate depending only on the outer side is folded into a plain equality
+		/// key (into one column of a row key) whose outer side reads every table the predicate reads, as
+		/// <c>CASE WHEN predicate THEN outerKey ELSE NULL END = innerKey</c>. An ON clause that is itself a disjunction is
+		/// left untouched. A LEFT-joined subquery with joins of its own is not flattened into the outer query when it has a
+		/// WHERE or its ON clause has a predicate that does not read the outer side, so those predicates can stay inside
+		/// the derived table; one holding the UPDATE target is still flattened, because UPDATE correction cannot reach a
+		/// target nested in a derived table.
 		/// <code>
 		/// FROM T1 INNER JOIN T2 ON t1.field1 == t2.field1 AND t1.field2 == t2.field2 AND t1.field3 > 10
 		/// -- with flag:
