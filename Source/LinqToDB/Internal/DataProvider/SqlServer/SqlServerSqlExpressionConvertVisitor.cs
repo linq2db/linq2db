@@ -344,6 +344,12 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			var type    = QueryHelper.GetDbDataType(expr, MappingSchema);
 			var unicode = QueryHelper.IsUnicode(type.DataType);
 
+			// A string function returns its first argument's type, while its declared type was copied at translation, before
+			// that argument could turn Unicode here (a REPLACE with a Unicode argument).
+			if (!unicode && type.DataType is DataType.Char or DataType.VarChar or DataType.Text
+				&& expr is SqlFunction { Parameters: [var first, ..] } && MeasureStringOperand(first).Unicode)
+				unicode = true;
+
 			long? length = expr switch
 			{
 				SqlValue { Value: string value }               => value.Length,

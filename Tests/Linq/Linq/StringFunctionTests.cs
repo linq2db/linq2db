@@ -1096,11 +1096,12 @@ namespace Tests.Linq
 					Parameter = Sql.AsSql(t.Short.Replace("a", suffix) + t.Notes),
 					Literal   = Sql.AsSql(t.Short.Replace("a", "Ж") + t.Notes),
 					Long      = Sql.AsSql(t.Notes.Replace("n", suffix) + t.Notes2),
+					Trimmed   = Sql.AsSql(t.Short.Replace("a", suffix).TrimEnd() + t.Notes),
 				})
 				.Single();
 
-			new[] { result.Parameter.Length, result.Literal.Length, result.Long.Length }
-				.ShouldBe([6003, 6003, 12000]);
+			new[] { result.Parameter.Length, result.Literal.Length, result.Long.Length, result.Trimmed.Length }
+				.ShouldBe([6003, 6003, 12000, 6003]);
 		}
 
 		[Table]
