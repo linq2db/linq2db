@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 
 using LinqToDB.Internal.Extensions;
@@ -43,11 +44,17 @@ namespace Tests.Common
 			public string Tie   (BaseItem item) => "base item";
 			public string Tie   (object item)   => "object";
 			public string Hidden(BaseItem item) => "base";
+
+			public string HiddenGeneric<T>   (T item)               => "base";
+			public string HiddenEnumerable<T>(IEnumerable<T> items) => "base";
 		}
 
 		sealed class DerivedOverloads : Overloads
 		{
 			public new string Hidden(BaseItem item) => "derived";
+
+			public new string HiddenGeneric<T>   (T item)               => "derived";
+			public new string HiddenEnumerable<T>(IEnumerable<T> items) => "derived";
 		}
 
 		class MixedBase
@@ -177,6 +184,19 @@ namespace Tests.Common
 		public void GetMethodExWithArityPrefersHidingMethod()
 		{
 			var method = typeof(DerivedOverloads).GetMethodEx(nameof(DerivedOverloads.Hidden), 0, PublicInstance, typeof(Item));
+
+			method.ShouldNotBeNull();
+
+			var declaringType = method.DeclaringType;
+
+			declaringType.ShouldBe(typeof(DerivedOverloads));
+		}
+
+		[Test]
+		public void GetMethodExWithArityPrefersHidingGenericMethod([Values(nameof(DerivedOverloads.HiddenGeneric), nameof(DerivedOverloads.HiddenEnumerable))] string name)
+		{
+			var argumentType = name == nameof(DerivedOverloads.HiddenGeneric) ? typeof(Item) : typeof(Item[]);
+			var method       = typeof(DerivedOverloads).GetMethodEx(name, 1, PublicInstance, argumentType);
 
 			method.ShouldNotBeNull();
 

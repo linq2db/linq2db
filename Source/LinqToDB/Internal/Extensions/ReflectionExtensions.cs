@@ -300,7 +300,39 @@ namespace LinqToDB.Internal.Extensions
 				var py = y.GetParameters();
 
 				for (var i = 0; i < px.Length; i++)
-					if (px[i].ParameterType != py[i].ParameterType)
+					if (!IsSameType(px[i].ParameterType, py[i].ParameterType))
+						return false;
+
+				return true;
+			}
+
+			// every generic method definition declares its own type parameters, so they are compared by position
+			static bool IsSameType(Type x, Type y)
+			{
+				if (x == y)
+					return true;
+
+				if (x.IsGenericParameter || y.IsGenericParameter)
+					return x.IsGenericParameter && y.IsGenericParameter
+						&& x.DeclaringMethod != null && y.DeclaringMethod != null
+						&& x.GenericParameterPosition == y.GenericParameterPosition;
+
+				if (x.HasElementType || y.HasElementType)
+					return x.HasElementType && y.HasElementType
+						&& x.IsArray   == y.IsArray
+						&& x.IsByRef   == y.IsByRef
+						&& x.IsPointer == y.IsPointer
+						&& (!x.IsArray || x.GetArrayRank() == y.GetArrayRank())
+						&& IsSameType(x.GetElementType()!, y.GetElementType()!);
+
+				if (!x.IsGenericType || !y.IsGenericType || x.GetGenericTypeDefinition() != y.GetGenericTypeDefinition())
+					return false;
+
+				var ax = x.GetGenericArguments();
+				var ay = y.GetGenericArguments();
+
+				for (var i = 0; i < ax.Length; i++)
+					if (!IsSameType(ax[i], ay[i]))
 						return false;
 
 				return true;
