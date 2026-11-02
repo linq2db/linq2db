@@ -957,6 +957,21 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void ConcatWithNVarCharMatchesComparedParameter([DataSources(TestProvName.AllInformix)] string context)
+		{
+			var key = "A-100A-100Жук";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(ConcatProductData);
+
+			var query = table
+				.Where(p => p.Sku + p.Title == key)
+				.Select(p => p.Id);
+
+			AssertQuery(query);
+		}
+
+		[Test]
 		[ActiveIssue(6195, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
 		public void ConcatParameterTakesComparedColumnType([DataSources(TestProvName.AllInformix, TestProvName.AllAccess)] string context)
 		{
@@ -1348,12 +1363,21 @@ namespace Tests.Linq
 		public void ComparedConcatOfConvertedAndUnicodeColumnKeepsConverter([DataSources] string context)
 		{
 			var bound = "c1T";
+			var array = new[] { bound };
 
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(new[] { new ConvertedConcatTitleRow { Id = 1, Conv = "c1", Title = "T" } });
 
 			table
 				.Count(p => p.Conv + p.Title == bound)
+				.ShouldBe(1);
+
+			table
+				.Count(p => bound == p.Conv + p.Title)
+				.ShouldBe(1);
+
+			table
+				.Count(p => array.Contains(p.Conv + p.Title))
 				.ShouldBe(1);
 		}
 
@@ -1378,13 +1402,29 @@ namespace Tests.Linq
 				new PlainAndConvertedUnicodeRow { Id = 2, Plain = "zz", Conv = "yy" },
 			});
 
-			var read  = table.OrderBy(r => r.Id).Select(r => r.Plain + r.Conv).First();
+			var read = table
+				.OrderBy(r => r.Id)
+				.Select(r => r.Plain + r.Conv)
+				.First();
+
 			var array = new[] { read };
 
-			table.Count(r => r.Plain + r.Conv == read).ShouldBe(1);
-			table.Count(r => r.Plain + r.Conv != read).ShouldBe(1);
-			table.Select(r => r.Plain + r.Conv).Contains(read).ShouldBeTrue();
-			table.Count(r => array.Contains(r.Plain + r.Conv)).ShouldBe(1);
+			table
+				.Count(r => r.Plain + r.Conv == read)
+				.ShouldBe(1);
+
+			table
+				.Count(r => r.Plain + r.Conv != read)
+				.ShouldBe(1);
+
+			table
+				.Select(r => r.Plain + r.Conv)
+				.Contains(read)
+				.ShouldBeTrue();
+
+			table
+				.Count(r => array.Contains(r.Plain + r.Conv))
+				.ShouldBe(1);
 		}
 
 		#endregion
