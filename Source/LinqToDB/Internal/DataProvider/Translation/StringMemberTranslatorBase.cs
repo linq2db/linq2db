@@ -258,7 +258,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		// A fragment takes a neighbouring column's type only when that type is Unicode. A non-Unicode one would send a
 		// parameter or literal beside it as non-Unicode, losing every character outside the column's code page, so the
 		// fragment keeps the type of where the concatenation is used instead. A column with a converter or unit is not
-		// lent either: a fragment is not a stored value of it.
+		// lent either: a fragment is not a stored value of it. Nor is a converter or unit of where the concatenation is
+		// used applied to a fragment: it applies to the concatenation as a whole.
 		static IDisposable? UsingUnicodeTypeFromOperand(ITranslationContext translationContext, Expression[] arguments)
 		{
 			foreach (var argument in arguments)
@@ -272,7 +273,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 					return translationContext.UsingColumnDescriptor(descriptor);
 			}
 
-			return null;
+			return translationContext.CurrentColumnDescriptor is { ValueConverter: not null } or { DurationUnit: not null }
+				? translationContext.UsingColumnDescriptor(null)
+				: null;
 		}
 
 		protected virtual Expression? TranslateLike(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)

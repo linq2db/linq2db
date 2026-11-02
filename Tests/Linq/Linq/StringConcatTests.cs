@@ -1208,6 +1208,42 @@ namespace Tests.Linq
 			value.ShouldBe("A-x:n1-");
 		}
 
+		[Table("ConvertedTargetRow")]
+		sealed class ConvertedTargetRow
+		{
+			[PrimaryKey]                                                                public int    Id   { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 20, CanBeNull = false)]       public string Sku  { get; set; } = default!;
+			[Column(DataType = DataType.VarChar, Length = 40, CanBeNull = false)]
+			[ValueConverter(ConverterType = typeof(PrefixConverter))]                   public string Conv { get; set; } = default!;
+		}
+
+		[Table("ConvertedTargetRow")]
+		sealed class ConvertedTargetRawRow
+		{
+			[PrimaryKey]                                                                public int    Id   { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 40, CanBeNull = false)]       public string Conv { get; set; } = default!;
+		}
+
+		// The target's converter applies to the assigned concatenation as a whole, not again to each fragment of it.
+		[Test]
+		[ActiveIssue(6195, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
+		public void ConcatAssignedToConvertedColumnIsConvertedOnce([DataSources(TestProvName.AllAccess)] string context)
+		{
+			var suffix = "-s";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new ConvertedTargetRow { Id = 1, Sku = "A", Conv = "z" } });
+
+			table
+				.Set(r => r.Conv, r => r.Sku + suffix)
+				.Update();
+
+			db.GetTable<ConvertedTargetRawRow>()
+				.Single()
+				.Conv
+				.ShouldBe("x:A-s");
+		}
+
 		[Table]
 		sealed class ConvertedConcatTitleRow
 		{
