@@ -247,9 +247,9 @@ M:System.Type.GetMethod(System.String,System.Reflection.BindingFlags,System.Refl
 M:System.Type.GetMethod(System.String,System.Reflection.BindingFlags,System.Reflection.Binder,System.Reflection.CallingConventions,System.Type[],System.Reflection.ParameterModifier[]); use GetMethodEx extension
 M:System.Type.GetMethod(System.String,System.Int32,System.Type[]); use GetMethodEx(name, genericParametersCount, BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static, types)
 M:System.Type.GetMethod(System.String,System.Int32,System.Type[],System.Reflection.ParameterModifier[]); use GetMethodEx(name, genericParametersCount, BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static, types)
-M:System.Type.GetMethod(System.String,System.Int32,System.Reflection.BindingFlags,System.Type[]); use GetMethodEx extension
-M:System.Type.GetMethod(System.String,System.Int32,System.Reflection.BindingFlags,System.Reflection.Binder,System.Type[],System.Reflection.ParameterModifier[]); use GetMethodEx extension
-M:System.Type.GetMethod(System.String,System.Int32,System.Reflection.BindingFlags,System.Reflection.Binder,System.Reflection.CallingConventions,System.Type[],System.Reflection.ParameterModifier[]); use GetMethodEx extension
+M:System.Type.GetMethod(System.String,System.Int32,System.Reflection.BindingFlags,System.Type[]); use GetMethodEx(name, genericParametersCount, bindingFlags, types)
+M:System.Type.GetMethod(System.String,System.Int32,System.Reflection.BindingFlags,System.Reflection.Binder,System.Type[],System.Reflection.ParameterModifier[]); use GetMethodEx(name, genericParametersCount, bindingFlags, types)
+M:System.Type.GetMethod(System.String,System.Int32,System.Reflection.BindingFlags,System.Reflection.Binder,System.Reflection.CallingConventions,System.Type[],System.Reflection.ParameterModifier[]); use GetMethodEx(name, genericParametersCount, bindingFlags, types)
 M:System.Type.GetProperty(System.String,System.Type[]); use GetProperty(name) or GetMethodEx on the accessor
 M:System.Type.GetProperty(System.String,System.Type,System.Type[]); use GetProperty(name) or GetMethodEx on the accessor
 M:System.Type.GetProperty(System.String,System.Type,System.Type[],System.Reflection.ParameterModifier[]); use GetProperty(name) or GetMethodEx on the accessor

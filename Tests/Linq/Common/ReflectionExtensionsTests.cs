@@ -46,6 +46,7 @@ namespace Tests.Common
 			public string Hidden(BaseItem item) => "base";
 
 			public string HiddenGeneric<T>   (T item)               => "base";
+			public string HiddenArray<T>     (T[] items)            => "base";
 			public string HiddenEnumerable<T>(IEnumerable<T> items) => "base";
 		}
 
@@ -54,6 +55,7 @@ namespace Tests.Common
 			public new string Hidden(BaseItem item) => "derived";
 
 			public new string HiddenGeneric<T>   (T item)               => "derived";
+			public new string HiddenArray<T>     (T[] items)            => "derived";
 			public new string HiddenEnumerable<T>(IEnumerable<T> items) => "derived";
 		}
 
@@ -193,7 +195,7 @@ namespace Tests.Common
 		}
 
 		[Test]
-		public void GetMethodExWithArityPrefersHidingGenericMethod([Values(nameof(DerivedOverloads.HiddenGeneric), nameof(DerivedOverloads.HiddenEnumerable))] string name)
+		public void GetMethodExWithArityPrefersHidingGenericMethod([Values(nameof(DerivedOverloads.HiddenGeneric), nameof(DerivedOverloads.HiddenArray), nameof(DerivedOverloads.HiddenEnumerable))] string name)
 		{
 			var argumentType = name == nameof(DerivedOverloads.HiddenGeneric) ? typeof(Item) : typeof(Item[]);
 			var method       = typeof(DerivedOverloads).GetMethodEx(name, 1, PublicInstance, argumentType);
