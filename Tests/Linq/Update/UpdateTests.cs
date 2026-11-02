@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB;
@@ -2131,6 +2132,85 @@ namespace Tests.xUpdate
 				.ToArray();
 
 			fields.ShouldBe(["value 1", "value 2", "test"]);
+		}
+
+		[Table]
+		sealed class FilteredMainTable
+		{
+			[PrimaryKey] public int     Id;
+			[Column]     public string? Field;
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(FilteredAssociatedTable.Id), ExpressionPredicate = nameof(FlagPredicate), CanBeNull = true)]
+			public FilteredAssociatedTable? AssociatedOptional;
+
+			static Expression<Func<FilteredMainTable, FilteredAssociatedTable, bool>> FlagPredicate => (m, a) => a.Flag;
+
+			public static readonly FilteredMainTable[] Data =
+			[
+				new() { Id = 1, Field = "value 1" },
+				new() { Id = 2, Field = "value 2" },
+				new() { Id = 3, Field = "value 3" },
+			];
+		}
+
+		[Table]
+		sealed class FilteredAssociatedTable
+		{
+			[PrimaryKey] public int     Id;
+			[Column]     public bool    Flag;
+			[Column]     public string? Note;
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(FilteredMainTable.Id))]
+			public FilteredMainTable MainOptional = null!;
+
+			public static readonly FilteredAssociatedTable[] Data =
+			[
+				new() { Id = 1, Flag = true,  Note = "note 1" },
+				new() { Id = 2, Flag = false, Note = "note 2" },
+				new() { Id = 3, Flag = true,  Note = "note 3" },
+			];
+		}
+
+		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		public void UpdateByFilteredAssociationOptional([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context, [Values(2, 3)] int id)
+		{
+			using var db    = GetDataContext(context);
+			using var main  = db.CreateLocalTable(FilteredMainTable.Data);
+			using var assoc = db.CreateLocalTable(FilteredAssociatedTable.Data);
+
+			main
+				.Where(m => m.Id == id)
+				.Select(m => m.AssociatedOptional!)
+				.Update(a => new FilteredAssociatedTable() { Note = "test" });
+
+			var notes = assoc
+				.OrderBy(a => a.Id)
+				.Select(a => a.Note)
+				.ToArray();
+
+			notes.ShouldBe(id == 3 ? ["note 1", "note 2", "test"] : ["note 1", "note 2", "note 3"]);
+		}
+
+		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		public void UpdateByFilteredAssociationOptionalTwoHops([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context, [Values(2, 3)] int id)
+		{
+			using var db   = GetDataContext(context);
+			using var main = db.CreateLocalTable(FilteredMainTable.Data);
+			using var _    = db.CreateLocalTable(FilteredAssociatedTable.Data);
+
+			main
+				.Where(m => m.Id == id)
+				.Select(m => m.AssociatedOptional!.MainOptional)
+				.Update(p => new FilteredMainTable() { Field = "test" });
+
+			var fields = main
+				.OrderBy(m => m.Id)
+				.Select(m => m.Field)
+				.ToArray();
+
+			fields.ShouldBe(id == 3 ? ["value 1", "value 2", "test"] : ["value 1", "value 2", "value 3"]);
 		}
 
 		[Test]

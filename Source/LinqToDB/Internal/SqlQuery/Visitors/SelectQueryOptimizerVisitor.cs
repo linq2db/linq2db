@@ -470,6 +470,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			_updateTable = element.Update.Table as ISqlTableSource ?? element.Update.TableSource;
 			var result = base.VisitSqlInsertOrUpdateStatement(element);
 			_updateQuery = null;
+			_updateTable = null;
 			return result;
 		}
 
@@ -2621,6 +2622,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return join.Condition.Predicates.Exists(p => !QueryHelper.IsDependsOnOuterSources(p, currentSources: sources));
 		}
 
+		// UPDATE correction cannot reach a target nested in a derived table under a join (BasicSqlOptimizer.BasicCorrectUpdate).
+		bool ContainsUpdateTable(SqlTableSource tableSource)
+		{
+			return _updateTable != null && (tableSource.Source == _updateTable || tableSource.HasElement(_updateTable));
+		}
+
 		bool JoinMoveSubQueryUp(SelectQuery selectQuery, SqlJoinedTable joinTable)
 		{
 			if (joinTable.Table.Source is not SelectQuery subQuery)
@@ -2670,7 +2677,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				// the same either way, so they don't block flattening: UPDATE correction needs the update table flattened
 				// (UpdateByAssociationOptional, UpdateByNullableAssociationOptional).
 				if (joinTable.JoinType == JoinType.Left && !_providerFlags.IsComplexJoinConditionSupported && subQuery.From.Tables[0].Joins.Count > 0
-					&& (subQuery.HasWhere || HasOuterIndependentPredicate(joinTable)))
+					&& (subQuery.HasWhere || HasOuterIndependentPredicate(joinTable)) && !ContainsUpdateTable(joinTable.Table))
 					return false;
 
 				if (subQuery.HasWhere)
@@ -2986,6 +2993,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							if (QueryHelper.IsDependsOnSources(predicate, nestedJoinSources))
 								continue;
 						}
+
+						if (ContainsUpdateTable(join.Table))
+							continue;
 
 						// A predicate independent of the outer side filters only the joined rows: push it into
 						// the right derived table.
