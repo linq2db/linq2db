@@ -334,6 +334,17 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				// return type, the string default.
 				case SqlFunction { Parameters: [var argument, ..] } function when _typePreservingFunctions.Contains(function.Name):
 					return MeasureStringOperand(argument);
+				// REPLACE holds its value's data, nvarchar when any argument is Unicode, whatever type it was declared with, so
+				// one over a parameter or an untyped function is not taken for an expression of unknown type.
+				case SqlFunction { Name: "Replace", Parameters: [var value, ..] } replace:
+				{
+					var shape = MeasureStringOperand(value);
+
+					if (!shape.Unicode && Array.Exists(replace.Parameters, p => MeasureStringOperand(p).Unicode))
+						shape = shape with { Unicode = true };
+
+					return replace.Type.Length > 0 ? shape with { Length = replace.Type.Length } : shape;
+				}
 				case SqlConditionExpression condition:
 					return Combine([condition.TrueValue, condition.FalseValue], sum: false);
 				case SqlCaseExpression caseExpression:
@@ -359,10 +370,6 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			if (!unicode && type.DataType is DataType.Char or DataType.VarChar or DataType.Text
 				&& expr is SqlFunction { Parameters: [var first, ..] } && MeasureStringOperand(first) is { Unicode: true } firstShape)
 				(unicode, nonUnicode) = (true, firstShape.NonUnicode);
-			// A REPLACE that only a Unicode argument turned nvarchar holds varchar data and counts as both, so two of them, or
-			// one beside a parameter, still reach the total-length rule.
-			else if (unicode && expr is SqlFunction { Name: "Replace", Parameters: [var value, ..] } && MeasureStringOperand(value).NonUnicode)
-				nonUnicode = true;
 
 			// Any other function or expression typed only by the string default says nothing of what it returns, so it
 			// counts as the longest non-Unicode value short of MAX.
@@ -567,9 +574,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					var parameters = WidenLongNonUnicodeBesideUnicode(func.Parameters, concatenation: false) ?? func.Parameters;
 					var type       = func.Type;
 
-					// A Unicode argument turns REPLACE nvarchar. Declared with the value's non-Unicode type, it would hide that
-					// from an enclosing concatenation, which then would not widen a long VarChar operand beside it. A value of
-					// unknown length takes the nvarchar(4000) the server returns, rather than counting as one character.
+					// A Unicode argument turns REPLACE nvarchar. A value of unknown length takes the nvarchar(4000) the server
+					// returns, which an enclosing concatenation measures rather than counting it as one character.
 					if (type.DataType is DataType.Char or DataType.VarChar && Array.Exists(func.Parameters, p => MeasureStringOperand(p).Unicode))
 					{
 						var length = ReferenceEquals(parameters[0], func.Parameters[0]) ? type.Length ?? 4000 : -1;

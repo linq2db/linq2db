@@ -1166,6 +1166,7 @@ namespace Tests.Linq
 					Nullable = Sql.AsSql(t.NLeft!.Replace("b", replacement) + t.NRight!.Replace("c", replacement)),
 					Nested   = Sql.AsSql(t.Left.Replace("b", replacement).Replace("e", other) + t.Right.Replace("c", replacement).Replace("e", other)),
 					Trimmed  = Sql.AsSql(t.Left.Replace("b", replacement).TrimEnd() + t.Right.Replace("c", replacement).TrimEnd()),
+					Upper    = Sql.AsSql(t.Left.ToUpper().Replace("B", "Ж") + t.Right.ToUpper().Replace("C", "Ж")),
 					Literal  = Sql.AsSql(t.Left.Replace("b", "Ж") + t.Right.Replace("c", "Ж")),
 					Suffixed = Sql.AsSql(t.Left.Replace("b", replacement) + t.Right.Replace("c", replacement) + suffix),
 				})
@@ -1184,8 +1185,8 @@ namespace Tests.Linq
 			var matched = table
 				.Count(t => t.Left.Replace("b", replacement) + t.Right.Replace("c", replacement) == expected);
 
-			new[] { result.Both.Length, result.Nullable!.Length, result.Nested.Length, result.Trimmed.Length, result.Literal.Length, result.Suffixed.Length, distinct.Length, matched }
-				.ShouldBe([6000, 6000, 6000, 6000, 6000, 6001, 6000, 1]);
+			new[] { result.Both.Length, result.Nullable!.Length, result.Nested.Length, result.Trimmed.Length, result.Upper.Length, result.Literal.Length, result.Suffixed.Length, distinct.Length, matched }
+				.ShouldBe([6000, 6000, 6000, 6000, 6000, 6000, 6001, 6000, 1]);
 		}
 
 		[Table]
