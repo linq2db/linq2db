@@ -141,8 +141,9 @@ namespace Tests.Identity
 				.ShouldBe(name);
 		}
 
-		// The two providers whose default string widths count bytes - Oracle's VARCHAR2 and Informix's NVarChar - so a
-		// two-byte ClaimType (200 characters, 255 wide) or ProviderDisplayName (100, 128 wide) overruns them unless pinned
+		// The two providers whose default string widths count bytes - Oracle's VARCHAR2 and Informix's NVarChar. Oracle's
+		// test database is UTF-8, where 'ü' takes two bytes; Informix's runs a single-byte locale, so there only a value
+		// longer than the unpinned width (255 for ClaimType, 128 for ProviderDisplayName) overruns it
 		[Test]
 		public async Task NonAsciiClaimTypeAndLoginName([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllInformix)] string context)
 		{
@@ -153,7 +154,8 @@ namespace Tests.Identity
 			var users = new UserStore<IdentityUser>(ctx);
 			var roles = new RoleStore<IdentityRole>(ctx);
 
-			var type = new string('ü', 200);
+			var informix = context.IsAnyOf(TestProvName.AllInformix);
+			var type     = new string('ü', informix ? 300 : 200);
 
 			var user = NewUser("olga");
 			await users.CreateAsync(user);
@@ -175,7 +177,7 @@ namespace Tests.Identity
 				.Type
 				.ShouldBe(type);
 
-			var displayName = new string('ü', 100);
+			var displayName = new string('ü', informix ? 200 : 100);
 			await users.AddLoginAsync(user, new UserLoginInfo("google", "key-olga", displayName));
 
 			var logins = await users.GetLoginsAsync(user);
