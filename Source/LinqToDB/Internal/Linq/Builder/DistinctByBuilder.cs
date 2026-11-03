@@ -207,15 +207,17 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var partitionBody = SequenceHelper.PrepareBody(selector, sequence);
 
-				var partitionPart = ExpressionHelpers.CollectMembers(partitionBody).ToArray();
+				var partitionPart = ExpressionHelpers.CollectMembers(partitionBody).Select(m => BuildOnSequence(builder, sequence, m)).ToArray();
 				if (partitionPart.Length == 0)
 					partitionPart = [Expression.Constant(1)];
 
 				var buildMethod = _buildDistinctByViaRowNumberMethodInfo.MakeGenericMethod(sequence.ElementType);
-				var expression  = (Expression)buildMethod.InvokeExt(null, [builder, sequence, partitionPart, captured])!;
+				var windowOrder = Array.ConvertAll(captured, c => (BuildOnSequence(builder, sequence, c.expr), c.descending, c.nulls));
+				var expression  = (Expression)buildMethod.InvokeExt(null, [builder, sequence, partitionPart, windowOrder])!;
 
 				// Re-apply OrderBy on the outer result. The OVER clause's ORDER BY only governs
-				// which row in each partition wins rn=1; it doesn't order the surviving rows.
+				// which row in each partition wins rn=1; it doesn't order the surviving rows. The captured expressions, not the
+				// window's placeholders, are re-applied: OrderByBuilder publishes them, and a GroupBy above matches them to its keys.
 				var orderByLambdas = new (LambdaExpression lambda, bool isDescending, Sql.NullsPosition nulls)[captured.Length];
 				for (var i = 0; i < captured.Length; i++)
 					orderByLambdas[i] = (BuildOrderByLambda(captured[i].expr, sequence.ElementType), captured[i].descending, captured[i].nulls);
@@ -295,6 +297,16 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			var param = Expression.Parameter(elementType, "x");
 			return Expression.Lambda(body, param);
+		}
+
+		// Resolves a window argument against the built sequence, so it reads the sequence's own column (a grouped aggregate
+		// included). Left as an expression, it is re-entered through the context chain, which rebuilds an aggregate as a
+		// correlated subquery over the ROW_NUMBER query's source; once another argument forces the window's arguments into
+		// that source, the subquery references the derived table it sits in.
+		static Expression BuildOnSequence(ExpressionBuilder builder, IBuildContext sequence, Expression expr)
+		{
+			var sql = builder.BuildSqlExpression(sequence, expr, BuildPurpose.Sql, BuildFlags.ForKeys);
+			return sql is SqlPlaceholderExpression ? sql : expr;
 		}
 
 		static List<ISqlExpression> CollectDistinctOnExpressions(Expression keySql)

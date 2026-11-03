@@ -1197,10 +1197,9 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		// The DISTINCT ON lowering only: the ROW_NUMBER lowering overflows the stack building such an ordering before a
-		// GroupBy (https://github.com/linq2db/linq2db/issues/6242, on master too).
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
-		public void DistinctByAfterGroupByOrderedByConcatOfKey([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
+		public void DistinctByAfterGroupByOrderedByConcatOfKey([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1214,10 +1213,11 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		// As DistinctByAfterGroupByOrderedByConcatOfKey. An entry that is not kept cuts the ordering before the key tie-break,
-		// so the whole ordering is dropped and DistinctBy throws.
+		// An entry that is not kept cuts the ordering before the key tie-break, so the whole ordering is dropped and DistinctBy
+		// throws.
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
-		public void DistinctByAfterGroupByOrderedByCompareToOfKey([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
+		public void DistinctByAfterGroupByOrderedByCompareToOfKey([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1231,9 +1231,9 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		// As DistinctByAfterGroupByOrderedByCompareToOfKey.
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
-		public void DistinctByAfterGroupByOrderedByStartsWithOfKey([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
+		public void DistinctByAfterGroupByOrderedByStartsWithOfKey([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1247,9 +1247,9 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		// As DistinctByAfterGroupByOrderedByCompareToOfKey.
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
-		public void DistinctByAfterGroupByOrderedByLikeOfKey([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
+		public void DistinctByAfterGroupByOrderedByLikeOfKey([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1272,9 +1272,9 @@ namespace Tests.Linq
 				.ShouldBe(expected.ToList(), ignoreOrder: true);
 		}
 
-		// As DistinctByAfterGroupByOrderedByCompareToOfKey.
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
-		public void DistinctByAfterGroupByOrderedByDateDifferenceOfKey([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
+		public void DistinctByAfterGroupByOrderedByDateDifferenceOfKey([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1290,9 +1290,9 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		// As DistinctByAfterGroupByOrderedByCompareToOfKey.
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
-		public void DistinctByAfterGroupByOrderedByDateDifferencePartOfKey([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
+		public void DistinctByAfterGroupByOrderedByDateDifferencePartOfKey([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1308,9 +1308,9 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		// As DistinctByAfterGroupByOrderedByCompareToOfKey.
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
-		public void DistinctByAfterGroupByOrderedByDateShiftOfKey([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
+		public void DistinctByAfterGroupByOrderedByDateShiftOfKey([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1737,6 +1737,69 @@ namespace Tests.Linq
 				.ToList();
 
 			result.ShouldBe(expected);
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByOnAggregateAfterGroupByOrderedByFunctionOfKey([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.OrderByDescending(p => p.Value1 ?? 0)
+				.GroupBy(p => p.Value1)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.DistinctBy(x => x.Count);
+
+			AssertQuery(query);
+		}
+
+		// The ordering a DistinctBy re-applies is what the GroupBy above it keeps.
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterGroupByOverDistinctBy([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.OrderByDescending(p => p.Value1 ?? 0)
+				.ThenByDescending(p => p.ParentID)
+				.DistinctBy(p => p.Value1 ?? 0)
+				.GroupBy(p => p.Value1 ?? 0)
+				.Select(g => new { g.Key, Max = g.Max(p => p.ParentID) })
+				.DistinctBy(x => x.Key % 2);
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByOnAggregateOrderedByAggregateAfterGroupBy([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.GroupBy(p => p.Value1)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.OrderByDescending(x => x.Count)
+				.ThenByDescending(x => x.Key ?? 0)
+				.DistinctBy(x => x.Count);
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByOverOrderedScalarSequence([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Select(p => p.ParentID)
+				.OrderByDescending(id => id)
+				.DistinctBy(id => id % 2);
+
+			AssertQuery(query);
 		}
 
 		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
