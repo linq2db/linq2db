@@ -84,20 +84,44 @@ namespace Tests.Identity
 
 			var ms = db.MappingSchema;
 
-			ms.GetEntityDescriptor(typeof(AppUser     )).Name.Name.ShouldBe("AspNetUsers");
-			ms.GetEntityDescriptor(typeof(AppRole     )).Name.Name.ShouldBe("AspNetRoles");
-			ms.GetEntityDescriptor(typeof(AppUserClaim)).Name.Name.ShouldBe("AspNetUserClaims");
-			ms.GetEntityDescriptor(typeof(AppUserRole )).Name.Name.ShouldBe("AspNetUserRoles");
-			ms.GetEntityDescriptor(typeof(AppUserLogin)).Name.Name.ShouldBe("AspNetUserLogins");
-			ms.GetEntityDescriptor(typeof(AppRoleClaim)).Name.Name.ShouldBe("AspNetRoleClaims");
-			ms.GetEntityDescriptor(typeof(AppUserToken)).Name.Name.ShouldBe("AspNetUserTokens");
+			ms
+				.GetEntityDescriptor(typeof(AppUser))
+				.Name.Name
+				.ShouldBe("AspNetUsers");
+			ms
+				.GetEntityDescriptor(typeof(AppRole))
+				.Name.Name
+				.ShouldBe("AspNetRoles");
+			ms
+				.GetEntityDescriptor(typeof(AppUserClaim))
+				.Name.Name
+				.ShouldBe("AspNetUserClaims");
+			ms
+				.GetEntityDescriptor(typeof(AppUserRole))
+				.Name.Name
+				.ShouldBe("AspNetUserRoles");
+			ms
+				.GetEntityDescriptor(typeof(AppUserLogin))
+				.Name.Name
+				.ShouldBe("AspNetUserLogins");
+			ms
+				.GetEntityDescriptor(typeof(AppRoleClaim))
+				.Name.Name
+				.ShouldBe("AspNetRoleClaims");
+			ms
+				.GetEntityDescriptor(typeof(AppUserToken))
+				.Name.Name
+				.ShouldBe("AspNetUserTokens");
 
 			var user     = ms.GetEntityDescriptor(typeof(AppUser));
 			var userRole = ms.GetEntityDescriptor(typeof(AppUserRole));
 
 			// The defaults are registered against the consumer's type, so they reach its inherited members,
 			// and its own members are mapped alongside them.
-			user.Columns.Single(c => c.MemberName == nameof(AppUser.Email)).Length.ShouldBe(256);
+			user.Columns
+				.Single(c => c.MemberName == nameof(AppUser.Email))
+				.Length
+				.ShouldBe(256);
 			user.Columns
 				.Select(c => c.MemberName)
 				.ShouldContain(nameof(AppUser.Tenant));
@@ -105,9 +129,18 @@ namespace Tests.Identity
 			// The string-key width has to reach the generic entry points as well: unpinned, these widen to the
 			// provider default, which diverges from the EF Core schema everywhere and overruns Firebird 2.5's
 			// index limit on the AspNetUserRoles composite key.
-			user    .Columns.Single(c => c.MemberName == nameof(AppUser    .Id    )).Length.ShouldBe(36);
-			userRole.Columns.Single(c => c.MemberName == nameof(AppUserRole.UserId)).Length.ShouldBe(36);
-			userRole.Columns.Single(c => c.MemberName == nameof(AppUserRole.RoleId)).Length.ShouldBe(36);
+			user.Columns
+				.Single(c => c.MemberName == nameof(AppUser.Id))
+				.Length
+				.ShouldBe(36);
+			userRole.Columns
+				.Single(c => c.MemberName == nameof(AppUserRole.UserId))
+				.Length
+				.ShouldBe(36);
+			userRole.Columns
+				.Single(c => c.MemberName == nameof(AppUserRole.RoleId))
+				.Length
+				.ShouldBe(36);
 		}
 
 		[Test]
@@ -123,8 +156,12 @@ namespace Tests.Identity
 			var user = new AppUser { Id = Guid.NewGuid().ToString(), UserName = "ada", NormalizedUserName = "ADA", Tenant = "acme" };
 			var role = new AppRole { Id = Guid.NewGuid().ToString(), Name = "custom", NormalizedName = "CUSTOM" };
 
-			(await users.CreateAsync(user)).Succeeded.ShouldBeTrue();
-			(await roles.CreateAsync(role)).Succeeded.ShouldBeTrue();
+			(await users.CreateAsync(user))
+				.Succeeded
+				.ShouldBeTrue();
+			(await roles.CreateAsync(role))
+				.Succeeded
+				.ShouldBeTrue();
 
 			// the consumer's own member survives the round-trip
 			var loaded = await users.FindByIdAsync(user.Id);
@@ -152,7 +189,9 @@ namespace Tests.Identity
 			var token = await users.GetTokenAsync(user, "prov", "tok", default);
 			token.ShouldBe("value");
 
-			(await users.DeleteAsync(user)).Succeeded.ShouldBeTrue();
+			(await users.DeleteAsync(user))
+				.Succeeded
+				.ShouldBeTrue();
 		}
 
 		[Test]
@@ -242,23 +281,47 @@ namespace Tests.Identity
 			var user = ms.GetEntityDescriptor(typeof(TUser));
 
 			user.Name.Name.ShouldBe("AspNetUsers");
-			user.Columns.Single(c => c.MemberName == nameof(IdentityUser.Id)).Length.ShouldBe(36);
+			user.Columns
+				.Single(c => c.MemberName == nameof(IdentityUser.Id))
+				.Length
+				.ShouldBe(36);
 			user.Columns
 				.Select(c => c.MemberName)
 				.ShouldContain(nameof(AppUser.Tenant));
 
-			ms.GetEntityDescriptor(typeof(TUserClaim)).Name.Name.ShouldBe("AspNetUserClaims");
-			ms.GetEntityDescriptor(typeof(TUserLogin)).Name.Name.ShouldBe("AspNetUserLogins");
-			ms.GetEntityDescriptor(typeof(TUserToken)).Name.Name.ShouldBe("AspNetUserTokens");
+			ms
+				.GetEntityDescriptor(typeof(TUserClaim))
+				.Name.Name
+				.ShouldBe("AspNetUserClaims");
+			ms
+				.GetEntityDescriptor(typeof(TUserLogin))
+				.Name.Name
+				.ShouldBe("AspNetUserLogins");
+			ms
+				.GetEntityDescriptor(typeof(TUserToken))
+				.Name.Name
+				.ShouldBe("AspNetUserTokens");
 
 			// what the user navigations return, whatever the context's own satellite types are
-			ms.GetEntityDescriptor(typeof(IdentityUserClaim<string>)).Name.Name.ShouldBe("AspNetUserClaims");
-			ms.GetEntityDescriptor(typeof(IdentityUserLogin<string>)).Name.Name.ShouldBe("AspNetUserLogins");
+			ms
+				.GetEntityDescriptor(typeof(IdentityUserClaim<string>))
+				.Name.Name
+				.ShouldBe("AspNetUserClaims");
+			ms
+				.GetEntityDescriptor(typeof(IdentityUserLogin<string>))
+				.Name.Name
+				.ShouldBe("AspNetUserLogins");
 
 			if (role != null)
-				ms.GetEntityDescriptor(role).Name.Name.ShouldBe("AspNetRoles");
+				ms
+					.GetEntityDescriptor(role)
+					.Name.Name
+					.ShouldBe("AspNetRoles");
 			else
-				ms.GetEntityDescriptor(typeof(IdentityRole)).Name.Name.ShouldBe(nameof(IdentityRole));
+				ms
+					.GetEntityDescriptor(typeof(IdentityRole))
+					.Name.Name
+					.ShouldBe(nameof(IdentityRole));
 		}
 
 		[Test]
@@ -274,7 +337,9 @@ namespace Tests.Identity
 			var store = new UserOnlyStore<AppUser, IDataContext, string, AppUserClaim, AppUserLogin, AppUserToken>(ctx);
 			var user  = new AppUser { Id = Guid.NewGuid().ToString(), UserName = "solo", NormalizedUserName = "SOLO", Tenant = "acme" };
 
-			(await store.CreateAsync(user)).Succeeded.ShouldBeTrue();
+			(await store.CreateAsync(user))
+				.Succeeded
+				.ShouldBeTrue();
 			var solo = await store.FindByNameAsync("SOLO");
 			solo
 				.ShouldNotBeNull()
@@ -299,7 +364,9 @@ namespace Tests.Identity
 			var token = await store.GetTokenAsync(user, "prov", "tok", default);
 			token.ShouldBe("value");
 
-			(await store.DeleteAsync(user)).Succeeded.ShouldBeTrue();
+			(await store.DeleteAsync(user))
+				.Succeeded
+				.ShouldBeTrue();
 			ctx.GetTable<AppUserClaim>()
 				.Count(r => r.UserId == user.Id)
 				.ShouldBe(0);
@@ -330,14 +397,23 @@ namespace Tests.Identity
 				var passkey = ms.GetEntityDescriptor(typeof(AppUserPasskey));
 
 				passkey.Name.Name.ShouldBe("AspNetUserPasskeys");
-				passkey.Columns.Single(c => c.MemberName == nameof(AppUserPasskey.CredentialId)).Length.ShouldBe(credentialIdLength);
-				passkey.Columns.Single(c => c.MemberName == nameof(AppUserPasskey.UserId))      .Length.ShouldBe(36);
+				passkey.Columns
+					.Single(c => c.MemberName == nameof(AppUserPasskey.CredentialId))
+					.Length
+					.ShouldBe(credentialIdLength);
+				passkey.Columns
+					.Single(c => c.MemberName == nameof(AppUserPasskey.UserId))
+					.Length
+					.ShouldBe(36);
 				passkey.Columns
 						.Select(c => c.MemberName)
 						.ShouldContain(nameof(AppUserPasskey.Device));
 
 				// no passkey navigation exists, so the stock type is not mapped alongside the custom one
-				ms.GetEntityDescriptor(typeof(IdentityUserPasskey<string>)).Name.Name.ShouldNotBe("AspNetUserPasskeys");
+				ms
+					.GetEntityDescriptor(typeof(IdentityUserPasskey<string>))
+					.Name.Name
+					.ShouldNotBe("AspNetUserPasskeys");
 			}
 		}
 
@@ -351,7 +427,9 @@ namespace Tests.Identity
 
 			var store = new AppPasskeyStore(ctx, Options.Create(new IdentityOptions { Stores = { SchemaVersion = IdentitySchemaVersions.Version3 } }));
 			var user  = new AppUser { Id = Guid.NewGuid().ToString(), UserName = "pk", NormalizedUserName = "PK" };
-			(await store.CreateAsync(user)).Succeeded.ShouldBeTrue();
+			(await store.CreateAsync(user))
+				.Succeeded
+				.ShouldBeTrue();
 
 			var laptop = NewPasskey([1, 2, 3], "laptop");
 			var phone  = NewPasskey([4, 5, 6], "phone");
@@ -379,9 +457,13 @@ namespace Tests.Identity
 				.ShouldBe(7u);
 
 			await store.RemovePasskeyAsync(user, phone.CredentialId, default);
-			(await store.GetPasskeysAsync(user, default)).Count.ShouldBe(1);
+			(await store.GetPasskeysAsync(user, default))
+				.Count
+				.ShouldBe(1);
 
-			(await store.DeleteAsync(user)).Succeeded.ShouldBeTrue();
+			(await store.DeleteAsync(user))
+				.Succeeded
+				.ShouldBeTrue();
 			ctx.GetTable<AppUserPasskey>()
 				.Count(p => p.UserId == user.Id)
 				.ShouldBe(0);
@@ -431,7 +513,10 @@ namespace Tests.Identity
 
 			ed.Name.Name.ShouldBe(RenamedIdentityConnection.UserTable);
 			email.ColumnName.ShouldBe(RenamedIdentityConnection.EmailColumn);
-			ed.Columns.Single(c => c.MemberName == nameof(IdentityUser.PasswordHash)).DataType.ShouldBe(DataType.VarChar);
+			ed.Columns
+				.Single(c => c.MemberName == nameof(IdentityUser.PasswordHash))
+				.DataType
+				.ShouldBe(DataType.VarChar);
 
 			// The second pass clones what the defaults registered rather than starting from a blank attribute,
 			// so a rename keeps the default length.
@@ -448,7 +533,9 @@ namespace Tests.Identity
 			var store = new UserStore<IdentityUser>(ctx);
 			var user  = NewUser("rena");
 
-			(await store.CreateAsync(user)).Succeeded.ShouldBeTrue();
+			(await store.CreateAsync(user))
+				.Succeeded
+				.ShouldBeTrue();
 
 			var found = await store.FindByEmailAsync(user.NormalizedEmail!);
 			found.ShouldNotBeNull();
@@ -461,7 +548,9 @@ namespace Tests.Identity
 				.SingleAsync();
 			rawEmail.ShouldBe(user.Email);
 
-			(await store.DeleteAsync(user)).Succeeded.ShouldBeTrue();
+			(await store.DeleteAsync(user))
+				.Succeeded
+				.ShouldBeTrue();
 		}
 
 		#endregion
@@ -489,10 +578,16 @@ namespace Tests.Identity
 
 			// The context adds its own schema in the constructor, after the options have been applied, and the
 			// later addition takes priority - so a schema passed this way cannot override a default.
-			db.MappingSchema.GetEntityDescriptor(typeof(IdentityUser)).Name.Name.ShouldBe("AspNetUsers");
+			db.MappingSchema
+				.GetEntityDescriptor(typeof(IdentityUser))
+				.Name.Name
+				.ShouldBe("AspNetUsers");
 
 			// It still maps what the defaults leave alone.
-			db.MappingSchema.GetEntityDescriptor(typeof(AuditRow)).Name.Name.ShouldBe("AuditLog");
+			db.MappingSchema
+				.GetEntityDescriptor(typeof(AuditRow))
+				.Name.Name
+				.ShouldBe("AuditLog");
 		}
 
 		[Test]

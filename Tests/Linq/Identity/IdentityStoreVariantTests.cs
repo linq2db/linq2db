@@ -29,16 +29,22 @@ namespace Tests.Identity
 			var store = new UserOnlyStore<IdentityUser>(ctx);
 			var user  = NewUser("ulf");
 
-			(await store.CreateAsync(user)).Succeeded.ShouldBeTrue();
+			(await store.CreateAsync(user))
+				.Succeeded
+				.ShouldBeTrue();
 
 			await store.AddClaimsAsync(user, new[] { new Claim("x", "1") });
-			(await store.GetClaimsAsync(user)).Count.ShouldBe(1);
+			(await store.GetClaimsAsync(user))
+				.Count
+				.ShouldBe(1);
 
 			await store.AddLoginAsync(user, new UserLoginInfo("p", "k", "P"));
 			var byLogin = await store.FindByLoginAsync("p", "k");
 			byLogin.ShouldNotBeNull();
 
-			(await store.DeleteAsync(user)).Succeeded.ShouldBeTrue();
+			(await store.DeleteAsync(user))
+				.Succeeded
+				.ShouldBeTrue();
 		}
 
 		[Test]
@@ -53,12 +59,16 @@ namespace Tests.Identity
 			var store = new UserStore<IdentityUser>(dc);
 			var user  = NewUser("dctx");
 
-			(await store.CreateAsync(user)).Succeeded.ShouldBeTrue();
+			(await store.CreateAsync(user))
+				.Succeeded
+				.ShouldBeTrue();
 
 			var found = await store.FindByIdAsync(user.Id);
 			found.ShouldNotBeNull();
 
-			(await store.DeleteAsync(user)).Succeeded.ShouldBeTrue();
+			(await store.DeleteAsync(user))
+				.Succeeded
+				.ShouldBeTrue();
 		}
 
 		// Regression for LinqToDB.Identity#18: non-string key types (Guid here, int below) are supported.
@@ -74,8 +84,12 @@ namespace Tests.Identity
 
 			var user = new IdentityUser<Guid> { Id = Guid.NewGuid(), UserName = "gail", NormalizedUserName = "GAIL" };
 			var role = new IdentityRole<Guid> { Id = Guid.NewGuid(), Name = "gadmin", NormalizedName = "GADMIN" };
-			(await users.CreateAsync(user)).Succeeded.ShouldBeTrue();
-			(await roles.CreateAsync(role)).Succeeded.ShouldBeTrue();
+			(await users.CreateAsync(user))
+				.Succeeded
+				.ShouldBeTrue();
+			(await roles.CreateAsync(role))
+				.Succeeded
+				.ShouldBeTrue();
 
 			var found = await users.FindByIdAsync(user.Id.ToString());
 			found
@@ -88,7 +102,9 @@ namespace Tests.Identity
 			var inRole = await users.IsInRoleAsync(user, "GADMIN");
 			inRole.ShouldBeTrue();
 
-			(await users.DeleteAsync(user)).Succeeded.ShouldBeTrue();
+			(await users.DeleteAsync(user))
+				.Succeeded
+				.ShouldBeTrue();
 		}
 
 		[Test]
@@ -103,7 +119,9 @@ namespace Tests.Identity
 			var roles = new RoleStore<IdentityRole<int>, IDataContext, int>(ctx);
 
 			var user = new IdentityUser<int> { UserName = "ivan", NormalizedUserName = "IVAN" };
-			(await users.CreateAsync(user)).Succeeded.ShouldBeTrue();
+			(await users.CreateAsync(user))
+				.Succeeded
+				.ShouldBeTrue();
 			user.Id.ShouldBeGreaterThan(0); // DB-generated identity key read back
 
 			var found = await users.FindByIdAsync(user.Id.ToString());
@@ -120,7 +138,9 @@ namespace Tests.Identity
 			var inRole = await users.IsInRoleAsync(user, "IADMIN");
 			inRole.ShouldBeTrue();
 
-			(await users.DeleteAsync(user)).Succeeded.ShouldBeTrue();
+			(await users.DeleteAsync(user))
+				.Succeeded
+				.ShouldBeTrue();
 		}
 
 		// Regression for LinqToDB.Identity#12: the stores resolve through DI (AddLinqToDBStores) and drive a UserManager.
@@ -153,7 +173,9 @@ namespace Tests.Identity
 			var users = sp.GetRequiredService<UserManager<IdentityUser>>();
 			var roles = sp.GetRequiredService<RoleManager<IdentityRole>>();
 
-			(await roles.CreateAsync(new IdentityRole("manager"))).Succeeded.ShouldBeTrue();
+			(await roles.CreateAsync(new IdentityRole("manager")))
+				.Succeeded
+				.ShouldBeTrue();
 
 			var created = await users.CreateAsync(new IdentityUser("di-user"), "P@ssw0rd1!");
 			created.Succeeded.ShouldBeTrue();
@@ -161,7 +183,9 @@ namespace Tests.Identity
 			var found = await users.FindByNameAsync("di-user");
 			found.ShouldNotBeNull();
 
-			(await users.AddToRoleAsync(found, "manager")).Succeeded.ShouldBeTrue();
+			(await users.AddToRoleAsync(found, "manager"))
+				.Succeeded
+				.ShouldBeTrue();
 
 			var inRole = await users.IsInRoleAsync(found, "manager");
 			inRole.ShouldBeTrue();
@@ -188,7 +212,9 @@ namespace Tests.Identity
 			using var scope    = provider.CreateScope();
 			var users = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser<int>>>();
 
-			(await users.CreateAsync(new IdentityUser<int> { UserName = "int-di" }, "P@ssw0rd1!")).Succeeded.ShouldBeTrue();
+			(await users.CreateAsync(new IdentityUser<int> { UserName = "int-di" }, "P@ssw0rd1!"))
+				.Succeeded
+				.ShouldBeTrue();
 
 			var byName = await users.FindByNameAsync("int-di");
 			byName.ShouldNotBeNull();
@@ -225,18 +251,25 @@ namespace Tests.Identity
 
 			if (withRoles)
 			{
-				sp.GetRequiredService<IUserStore<IdentityUser>>().ShouldBeOfType<UserStore<IdentityUser, IdentityRole, DataConnection, string>>();
-				sp.GetRequiredService<IRoleStore<IdentityRole>>().ShouldBeOfType<RoleStore<IdentityRole, DataConnection, string>>();
+				sp
+					.GetRequiredService<IUserStore<IdentityUser>>()
+					.ShouldBeOfType<UserStore<IdentityUser, IdentityRole, DataConnection, string>>();
+				sp
+					.GetRequiredService<IRoleStore<IdentityRole>>()
+					.ShouldBeOfType<RoleStore<IdentityRole, DataConnection, string>>();
 			}
 			else
 			{
-				sp.GetRequiredService<IUserStore<IdentityUser>>().ShouldBeOfType<UserOnlyStore<IdentityUser, DataConnection, string>>();
+				sp
+					.GetRequiredService<IUserStore<IdentityUser>>()
+					.ShouldBeOfType<UserOnlyStore<IdentityUser, DataConnection, string>>();
 				var roleStore = sp.GetService<IRoleStore<IdentityRole>>();
 				roleStore.ShouldBeNull();
 			}
 
 			var users = sp.GetRequiredService<UserManager<IdentityUser>>();
-			(await users.CreateAsync(new IdentityUser("plain-di"), "P@ssw0rd1!")).Succeeded.ShouldBeTrue();
+			var created = await users.CreateAsync(new IdentityUser("plain-di"), "P@ssw0rd1!");
+			created.Succeeded.ShouldBeTrue();
 
 			var found = await users.FindByNameAsync("plain-di");
 			found.ShouldNotBeNull();
@@ -264,9 +297,11 @@ namespace Tests.Identity
 			using var scope    = provider.CreateScope();
 			var sp = scope.ServiceProvider;
 
-			sp.GetRequiredService<IUserStore<IdentityCustomizationTests.AppUser>>().ShouldBeOfType<UserOnlyStore<
-				IdentityCustomizationTests.AppUser, IdentityCustomizationTests.AppUserOnlyConnection, string,
-				IdentityCustomizationTests.AppUserClaim, IdentityCustomizationTests.AppUserLogin, IdentityCustomizationTests.AppUserToken>>();
+			sp
+				.GetRequiredService<IUserStore<IdentityCustomizationTests.AppUser>>()
+				.ShouldBeOfType<UserOnlyStore<
+					IdentityCustomizationTests.AppUser, IdentityCustomizationTests.AppUserOnlyConnection, string,
+					IdentityCustomizationTests.AppUserClaim, IdentityCustomizationTests.AppUserLogin, IdentityCustomizationTests.AppUserToken>>();
 
 			var users = sp.GetRequiredService<UserManager<IdentityCustomizationTests.AppUser>>();
 			var solo    = new IdentityCustomizationTests.AppUser { Id = Guid.NewGuid().ToString(), UserName = "solo-di", Tenant = "acme" };
@@ -295,9 +330,11 @@ namespace Tests.Identity
 			using var provider = services.BuildServiceProvider();
 			using var scope    = provider.CreateScope();
 
-			scope.ServiceProvider.GetRequiredService<IUserStore<IdentityCustomizationTests.AppUser>>().ShouldBeOfType<UserOnlyStore<
-				IdentityCustomizationTests.AppUser, IdentityCustomizationTests.AppIdentityConnection, string,
-				IdentityCustomizationTests.AppUserClaim, IdentityCustomizationTests.AppUserLogin, IdentityCustomizationTests.AppUserToken>>();
+			scope.ServiceProvider
+				.GetRequiredService<IUserStore<IdentityCustomizationTests.AppUser>>()
+				.ShouldBeOfType<UserOnlyStore<
+					IdentityCustomizationTests.AppUser, IdentityCustomizationTests.AppIdentityConnection, string,
+					IdentityCustomizationTests.AppUserClaim, IdentityCustomizationTests.AppUserLogin, IdentityCustomizationTests.AppUserToken>>();
 		}
 
 		// The role path of AddLinqToDBStores, on every TFM: a DataContext-based identity context and a custom model each
@@ -324,19 +361,27 @@ namespace Tests.Identity
 			using var scope    = provider.CreateScope();
 			var sp = scope.ServiceProvider;
 
-			sp.GetRequiredService<IUserStore<IdentityUser>>().ShouldBeOfType<UserStore<
-				IdentityUser, IdentityRole, IdentityDataContext, string,
-				IdentityUserClaim<string>, IdentityUserRole<string>, IdentityUserLogin<string>, IdentityUserToken<string>, IdentityRoleClaim<string>>>();
-			sp.GetRequiredService<IRoleStore<IdentityRole>>().ShouldBeOfType<RoleStore<
-				IdentityRole, IdentityDataContext, string, IdentityUserRole<string>, IdentityRoleClaim<string>>>();
+			sp
+				.GetRequiredService<IUserStore<IdentityUser>>()
+				.ShouldBeOfType<UserStore<
+					IdentityUser, IdentityRole, IdentityDataContext, string,
+					IdentityUserClaim<string>, IdentityUserRole<string>, IdentityUserLogin<string>, IdentityUserToken<string>, IdentityRoleClaim<string>>>();
+			sp
+				.GetRequiredService<IRoleStore<IdentityRole>>()
+				.ShouldBeOfType<RoleStore<
+					IdentityRole, IdentityDataContext, string, IdentityUserRole<string>, IdentityRoleClaim<string>>>();
 
-			sp.GetRequiredService<IUserStore<IdentityCustomizationTests.AppUser>>().ShouldBeOfType<UserStore<
-				IdentityCustomizationTests.AppUser, IdentityCustomizationTests.AppRole, IdentityCustomizationTests.AppIdentityConnection, string,
-				IdentityCustomizationTests.AppUserClaim, IdentityCustomizationTests.AppUserRole, IdentityCustomizationTests.AppUserLogin,
-				IdentityCustomizationTests.AppUserToken, IdentityCustomizationTests.AppRoleClaim>>();
-			sp.GetRequiredService<IRoleStore<IdentityCustomizationTests.AppRole>>().ShouldBeOfType<RoleStore<
-				IdentityCustomizationTests.AppRole, IdentityCustomizationTests.AppIdentityConnection, string,
-				IdentityCustomizationTests.AppUserRole, IdentityCustomizationTests.AppRoleClaim>>();
+			sp
+				.GetRequiredService<IUserStore<IdentityCustomizationTests.AppUser>>()
+				.ShouldBeOfType<UserStore<
+					IdentityCustomizationTests.AppUser, IdentityCustomizationTests.AppRole, IdentityCustomizationTests.AppIdentityConnection, string,
+					IdentityCustomizationTests.AppUserClaim, IdentityCustomizationTests.AppUserRole, IdentityCustomizationTests.AppUserLogin,
+					IdentityCustomizationTests.AppUserToken, IdentityCustomizationTests.AppRoleClaim>>();
+			sp
+				.GetRequiredService<IRoleStore<IdentityCustomizationTests.AppRole>>()
+				.ShouldBeOfType<RoleStore<
+					IdentityCustomizationTests.AppRole, IdentityCustomizationTests.AppIdentityConnection, string,
+					IdentityCustomizationTests.AppUserRole, IdentityCustomizationTests.AppRoleClaim>>();
 		}
 
 		// the user-only path over a DataContext-based identity context
@@ -353,8 +398,10 @@ namespace Tests.Identity
 			using var provider = services.BuildServiceProvider();
 			using var scope    = provider.CreateScope();
 
-			scope.ServiceProvider.GetRequiredService<IUserStore<IdentityUser>>().ShouldBeOfType<UserOnlyStore<
-				IdentityUser, IdentityDataContext, string, IdentityUserClaim<string>, IdentityUserLogin<string>, IdentityUserToken<string>>>();
+			scope.ServiceProvider
+				.GetRequiredService<IUserStore<IdentityUser>>()
+				.ShouldBeOfType<UserOnlyStore<
+					IdentityUser, IdentityDataContext, string, IdentityUserClaim<string>, IdentityUserLogin<string>, IdentityUserToken<string>>>();
 		}
 
 #if NET10_0_OR_GREATER
@@ -406,7 +453,9 @@ namespace Tests.Identity
 
 			var users = sp.GetRequiredService<UserManager<IdentityCustomizationTests.AppUser>>();
 			var user  = new IdentityCustomizationTests.AppUser { Id = Guid.NewGuid().ToString(), UserName = "pk-di" };
-			(await users.CreateAsync(user, "P@ssw0rd1!")).Succeeded.ShouldBeTrue();
+			(await users.CreateAsync(user, "P@ssw0rd1!"))
+				.Succeeded
+				.ShouldBeTrue();
 
 			var passkeyStore = (IUserPasskeyStore<IdentityCustomizationTests.AppUser>)store;
 			await passkeyStore.AddOrUpdatePasskeyAsync(user, new UserPasskeyInfo(
@@ -414,7 +463,9 @@ namespace Tests.Identity
 				transports: ["internal"], isUserVerified: true, isBackupEligible: false,
 				isBackedUp: false, attestationObject: [5], clientDataJson: [6]), default);
 
-			(await passkeyStore.GetPasskeysAsync(user, default)).Count.ShouldBe(1);
+			(await passkeyStore.GetPasskeysAsync(user, default))
+				.Count
+				.ShouldBe(1);
 		}
 #endif
 

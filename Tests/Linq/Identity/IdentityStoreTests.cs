@@ -27,13 +27,34 @@ namespace Tests.Identity
 			using var setup = GetSetup(context);
 			var ms = setup.MappingSchema;
 
-			ms.GetEntityDescriptor(typeof(IdentityUser)).Name.Name             .ShouldBe("AspNetUsers");
-			ms.GetEntityDescriptor(typeof(IdentityRole)).Name.Name             .ShouldBe("AspNetRoles");
-			ms.GetEntityDescriptor(typeof(IdentityUserClaim<string>)).Name.Name.ShouldBe("AspNetUserClaims");
-			ms.GetEntityDescriptor(typeof(IdentityUserRole <string>)).Name.Name.ShouldBe("AspNetUserRoles");
-			ms.GetEntityDescriptor(typeof(IdentityUserLogin<string>)).Name.Name.ShouldBe("AspNetUserLogins");
-			ms.GetEntityDescriptor(typeof(IdentityUserToken<string>)).Name.Name.ShouldBe("AspNetUserTokens");
-			ms.GetEntityDescriptor(typeof(IdentityRoleClaim<string>)).Name.Name.ShouldBe("AspNetRoleClaims");
+			ms
+				.GetEntityDescriptor(typeof(IdentityUser))
+				.Name.Name
+				.ShouldBe("AspNetUsers");
+			ms
+				.GetEntityDescriptor(typeof(IdentityRole))
+				.Name.Name
+				.ShouldBe("AspNetRoles");
+			ms
+				.GetEntityDescriptor(typeof(IdentityUserClaim<string>))
+				.Name.Name
+				.ShouldBe("AspNetUserClaims");
+			ms
+				.GetEntityDescriptor(typeof(IdentityUserRole<string>))
+				.Name.Name
+				.ShouldBe("AspNetUserRoles");
+			ms
+				.GetEntityDescriptor(typeof(IdentityUserLogin<string>))
+				.Name.Name
+				.ShouldBe("AspNetUserLogins");
+			ms
+				.GetEntityDescriptor(typeof(IdentityUserToken<string>))
+				.Name.Name
+				.ShouldBe("AspNetUserTokens");
+			ms
+				.GetEntityDescriptor(typeof(IdentityRoleClaim<string>))
+				.Name.Name
+				.ShouldBe("AspNetRoleClaims");
 		}
 
 		[Test]
@@ -47,7 +68,9 @@ namespace Tests.Identity
 			var store = new UserStore<IdentityUser>(ctx);
 			var user  = NewUser("alice");
 
-			(await store.CreateAsync(user)).Succeeded.ShouldBeTrue();
+			(await store.CreateAsync(user))
+				.Succeeded
+				.ShouldBeTrue();
 
 			var byId = await store.FindByIdAsync(user.Id);
 			byId.ShouldNotBeNull();
@@ -59,13 +82,17 @@ namespace Tests.Identity
 
 			await store.SetEmailAsync(byName, "new@test.com");
 			await store.SetNormalizedEmailAsync(byName, "NEW@TEST.COM");
-			(await store.UpdateAsync(byName)).Succeeded.ShouldBeTrue();
+			(await store.UpdateAsync(byName))
+				.Succeeded
+				.ShouldBeTrue();
 
 			var byEmail = await store.FindByEmailAsync("NEW@TEST.COM");
 			byEmail.ShouldNotBeNull();
 			byEmail.Id.ShouldBe(user.Id);
 
-			(await store.DeleteAsync(byEmail)).Succeeded.ShouldBeTrue();
+			(await store.DeleteAsync(byEmail))
+				.Succeeded
+				.ShouldBeTrue();
 
 			var deleted = await store.FindByIdAsync(user.Id);
 			deleted.ShouldBeNull();
@@ -88,8 +115,12 @@ namespace Tests.Identity
 
 			var user = new IdentityUser(name) { NormalizedUserName = name.ToUpperInvariant(), Email = email, NormalizedEmail = email.ToUpperInvariant() };
 			var role = new IdentityRole(name) { NormalizedName = name.ToUpperInvariant() };
-			(await users.CreateAsync(user)).Succeeded.ShouldBeTrue();
-			(await roles.CreateAsync(role)).Succeeded.ShouldBeTrue();
+			(await users.CreateAsync(user))
+				.Succeeded
+				.ShouldBeTrue();
+			(await roles.CreateAsync(role))
+				.Succeeded
+				.ShouldBeTrue();
 
 			var byName = await users.FindByNameAsync(name.ToUpperInvariant());
 			byName
@@ -172,7 +203,9 @@ namespace Tests.Identity
 				await users.SetTokenAsync(owner, "google", "refresh", "tok", default);
 			}
 
-			(await users.DeleteAsync(user)).Succeeded.ShouldBeTrue();
+			(await users.DeleteAsync(user))
+				.Succeeded
+				.ShouldBeTrue();
 
 			ctx.GetTable<IdentityUserClaim<string>>()
 				.Count(r => r.UserId == user.Id)
@@ -234,7 +267,9 @@ namespace Tests.Identity
 			await roles.AddClaimAsync(role,     new Claim("perm", "all"));
 			await roles.AddClaimAsync(survivor, new Claim("perm", "all"));
 
-			(await roles.DeleteAsync(role)).Succeeded.ShouldBeTrue();
+			(await roles.DeleteAsync(role))
+				.Succeeded
+				.ShouldBeTrue();
 
 			ctx.GetTable<IdentityUserRole<string>>()
 				.Count(r => r.RoleId == role.Id)
@@ -268,9 +303,13 @@ namespace Tests.Identity
 
 			var stale = await users.FindByIdAsync(user.Id);
 			stale.ShouldNotBeNull();
-			(await users.UpdateAsync(user)).Succeeded.ShouldBeTrue();
+			(await users.UpdateAsync(user))
+				.Succeeded
+				.ShouldBeTrue();
 
-			(await users.DeleteAsync(stale)).Succeeded.ShouldBeFalse();
+			(await users.DeleteAsync(stale))
+				.Succeeded
+				.ShouldBeFalse();
 
 			var existing = await users.FindByIdAsync(user.Id);
 			existing.ShouldNotBeNull();
@@ -280,7 +319,9 @@ namespace Tests.Identity
 				.Select(c => c.Value)
 				.ShouldBe(["read"]);
 
-			(await users.DeleteAsync(user)).Succeeded.ShouldBeTrue();
+			(await users.DeleteAsync(user))
+				.Succeeded
+				.ShouldBeTrue();
 		}
 
 		[Test]
@@ -306,7 +347,9 @@ namespace Tests.Identity
 			await store.SetEmailConfirmedAsync(user, true);
 			await store.SetTwoFactorEnabledAsync(user, true);
 			await store.SetSecurityStampAsync(user, stamp);
-			(await store.UpdateAsync(user)).Succeeded.ShouldBeTrue();
+			(await store.UpdateAsync(user))
+				.Succeeded
+				.ShouldBeTrue();
 
 			var u = await store.FindByIdAsync(user.Id);
 			u.ShouldNotBeNull();
@@ -329,7 +372,9 @@ namespace Tests.Identity
 
 			// the original instance is still usable for a further update (concurrency stamp refreshed)
 			await store.SetPhoneNumberAsync(user, "+15559999");
-			(await store.UpdateAsync(user)).Succeeded.ShouldBeTrue();
+			(await store.UpdateAsync(user))
+				.Succeeded
+				.ShouldBeTrue();
 		}
 
 		[Test]
@@ -377,7 +422,9 @@ namespace Tests.Identity
 			// reader shifts MaxValue through local time (#6031)
 			var permanent = context.IsAnyOf(ProviderName.SQLiteMS) ? DateTimeOffset.MaxValue.AddDays(-1) : DateTimeOffset.MaxValue;
 			await store.SetLockoutEndDateAsync(u, permanent);
-			(await store.UpdateAsync(u)).Succeeded.ShouldBeTrue();
+			(await store.UpdateAsync(u))
+				.Succeeded
+				.ShouldBeTrue();
 
 			var afterPermanent = await store.FindByIdAsync(user.Id);
 			afterPermanent.ShouldNotBeNull();
@@ -693,7 +740,9 @@ namespace Tests.Identity
 			var store = new RoleStore<IdentityRole>(ctx);
 			var role  = NewRole("admin");
 
-			(await store.CreateAsync(role)).Succeeded.ShouldBeTrue();
+			(await store.CreateAsync(role))
+				.Succeeded
+				.ShouldBeTrue();
 
 			var byId = await store.FindByIdAsync(role.Id);
 			byId.ShouldNotBeNull();
@@ -701,7 +750,9 @@ namespace Tests.Identity
 
 			await store.SetRoleNameAsync(byId, "administrator");
 			await store.SetNormalizedRoleNameAsync(byId, "ADMINISTRATOR");
-			(await store.UpdateAsync(byId)).Succeeded.ShouldBeTrue();
+			(await store.UpdateAsync(byId))
+				.Succeeded
+				.ShouldBeTrue();
 
 			var byName = await store.FindByNameAsync("ADMINISTRATOR");
 			byName
@@ -712,7 +763,9 @@ namespace Tests.Identity
 			// the same instance stays usable after an optimistic update (its concurrency stamp is refreshed)
 			await store.SetRoleNameAsync(byId, "admin2");
 			await store.SetNormalizedRoleNameAsync(byId, "ADMIN2");
-			(await store.UpdateAsync(byId)).Succeeded.ShouldBeTrue();
+			(await store.UpdateAsync(byId))
+				.Succeeded
+				.ShouldBeTrue();
 
 			await store.AddClaimAsync(byId, new Claim("perm", "all"));
 
@@ -726,7 +779,9 @@ namespace Tests.Identity
 			var removedClaims = await store.GetClaimsAsync(byId);
 			removedClaims.ShouldBeEmpty();
 
-			(await store.DeleteAsync(byId)).Succeeded.ShouldBeTrue();
+			(await store.DeleteAsync(byId))
+				.Succeeded
+				.ShouldBeTrue();
 
 			var deleted = await store.FindByIdAsync(role.Id);
 			deleted.ShouldBeNull();
@@ -765,7 +820,9 @@ namespace Tests.Identity
 
 			await store.AddOrUpdatePasskeyAsync(user, passkey, default);
 
-			(await store.GetPasskeysAsync(user, default)).Count.ShouldBe(1);
+			(await store.GetPasskeysAsync(user, default))
+				.Count
+				.ShouldBe(1);
 
 			var byPasskeyId = await store.FindByPasskeyIdAsync(credId, default);
 			byPasskeyId
@@ -791,7 +848,9 @@ namespace Tests.Identity
 			updated.ShouldNotBeNull();
 			updated.SignCount.ShouldBe(5u);
 			updated.Name     .ShouldBe("key1-renamed");
-			(await store.GetPasskeysAsync(user, default)).Count.ShouldBe(1);
+			(await store.GetPasskeysAsync(user, default))
+				.Count
+				.ShouldBe(1);
 
 			await store.RemovePasskeyAsync(user, credId, default);
 
@@ -955,7 +1014,9 @@ namespace Tests.Identity
 				isBackedUp: false, attestationObject: [5], clientDataJson: [6]), default);
 
 			store.Created.ShouldBe(1);
-			(await store.GetPasskeysAsync(user, default)).Count.ShouldBe(1);
+			(await store.GetPasskeysAsync(user, default))
+				.Count
+				.ShouldBe(1);
 		}
 #endif
 	}

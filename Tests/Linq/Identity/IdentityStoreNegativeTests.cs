@@ -79,8 +79,12 @@ namespace Tests.Identity
 			await roles.CreateAsync(freshRole);
 			await roles.CreateAsync(role);
 
-			(await users.UpdateAsync(fresh))    .Succeeded.ShouldBeTrue();
-			(await roles.UpdateAsync(freshRole)).Succeeded.ShouldBeTrue();
+			(await users.UpdateAsync(fresh))
+				.Succeeded
+				.ShouldBeTrue();
+			(await roles.UpdateAsync(freshRole))
+				.Succeeded
+				.ShouldBeTrue();
 
 			// Corrupt the stored ConcurrencyStamp out-of-band so the optimistic filter no longer matches. Through
 			// ctx, not the setup connection: Access does not show one connection the rows another just inserted,
@@ -94,8 +98,12 @@ namespace Tests.Identity
 				.Set(r => r.ConcurrencyStamp, "stale")
 				.UpdateAsync();
 
-			(await users.UpdateAsync(user)).Succeeded.ShouldBeFalse();
-			(await roles.UpdateAsync(role)).Succeeded.ShouldBeFalse();
+			(await users.UpdateAsync(user))
+				.Succeeded
+				.ShouldBeFalse();
+			(await roles.UpdateAsync(role))
+				.Succeeded
+				.ShouldBeFalse();
 		}
 
 		[Test]
@@ -115,7 +123,9 @@ namespace Tests.Identity
 			await users.CreateAsync(user);
 			await roles.CreateAsync(role);
 
-			(await users.DeleteAsync(fresh)).Succeeded.ShouldBeTrue();
+			(await users.DeleteAsync(fresh))
+				.Succeeded
+				.ShouldBeTrue();
 
 			// see ConcurrencyFailureOnUpdate for why this goes through ctx
 			await ctx.GetTable<IdentityUser>()
@@ -127,8 +137,12 @@ namespace Tests.Identity
 				.Set(r => r.ConcurrencyStamp, "stale")
 				.UpdateAsync();
 
-			(await users.DeleteAsync(user)).Succeeded.ShouldBeFalse();
-			(await roles.DeleteAsync(role)).Succeeded.ShouldBeFalse();
+			(await users.DeleteAsync(user))
+				.Succeeded
+				.ShouldBeFalse();
+			(await roles.DeleteAsync(role))
+				.Succeeded
+				.ShouldBeFalse();
 		}
 
 		[Test]
