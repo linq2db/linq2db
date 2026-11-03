@@ -240,7 +240,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 			if (element.ElseExpression != null)
 			{
-				var elseExpression = WrapBooleanExpression(element.ElseExpression, includeFields : true, forceConvert: true);
+				var elseExpression = FoldValuePredicate(element.ElseExpression, includeFields : true, forceConvert: true);
 
 				if (!ReferenceEquals(elseExpression, element.ElseExpression))
 				{
@@ -253,7 +253,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 		protected override SqlCaseExpression.CaseItem ConvertCaseItem(SqlCaseExpression.CaseItem newElement)
 		{
-			var resultExpr = WrapBooleanExpression(newElement.ResultExpression, includeFields : true, forceConvert: true);
+			var resultExpr = FoldValuePredicate(newElement.ResultExpression, includeFields : true, forceConvert: true);
 
 			if (!ReferenceEquals(resultExpr, newElement.ResultExpression))
 			{
@@ -271,8 +271,8 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			var trueValue  = isTrueParameter  && falseIsOtherValue ? QueryHelper.MarkAsNonQueryParameters(element.TrueValue)  : element.TrueValue;
 			var falseValue = isFalseParameter && trueIsOtherValue  ? QueryHelper.MarkAsNonQueryParameters(element.FalseValue) : element.FalseValue;
 
-			trueValue  = WrapBooleanExpression(trueValue,  includeFields : false, forceConvert: true);
-			falseValue = WrapBooleanExpression(falseValue, includeFields : false, forceConvert: true);
+			trueValue  = FoldValuePredicate(trueValue,  includeFields : false, forceConvert: true);
+			falseValue = FoldValuePredicate(falseValue, includeFields : false, forceConvert: true);
 
 			if (!ReferenceEquals(trueValue, element.TrueValue) || !ReferenceEquals(falseValue, element.FalseValue))
 			{

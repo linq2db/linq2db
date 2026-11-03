@@ -114,13 +114,29 @@ namespace LinqToDB.Internal.SqlProvider
 		// NOTE: the IsInsidePredicate save/restore that used to live in a Visit override here is inherited from
 		// SqlExpressionOptimizerVisitor.Visit — the two were byte-identical apart from the field name.
 
+		/// <summary>
+		/// The column's nullability for the value <paramref name="newExpression"/> its visit produced. The column still holds the
+		/// expression it had before the visit, so a conditional the visit collapsed to a non-null branch would otherwise keep
+		/// reporting the dropped NULL branch.
+		/// </summary>
+		bool CanColumnValueBeNull(SqlColumn column, ISqlExpression expression, ISqlExpression newExpression)
+		{
+			if (!column.CanBeNullable(NullabilityContext))
+				return false;
+
+			if (ReferenceEquals(newExpression, expression) || column.Parent == null || column.Parent.HasSetOperators)
+				return true;
+
+			return NullabilityContext.CanBeNullSource(column.Parent) == true || newExpression.CanBeNullable(NullabilityContext);
+		}
+
 		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
 		{
 			var saveDeferPredicateReduce = BeginDeferPredicateReduce();
 			var newElement = base.VisitSqlColumnExpression(column, expression);
 			DeferPredicateReduce = saveDeferPredicateReduce;
 
-			newElement = FoldValuePredicate(newElement, includeFields: false, withNull: column.CanBeNullable(NullabilityContext));
+			newElement = FoldValuePredicate(newElement, includeFields: false, withNull: CanColumnValueBeNull(column, expression, newElement));
 			if (!ReferenceEquals(newElement, expression))
 				expression = (ISqlExpression)VisitFinishing(newElement);
 
@@ -156,12 +172,21 @@ namespace LinqToDB.Internal.SqlProvider
 			return result;
 		}
 
+		protected override ISqlExpression? VisitConditionalResult(ISqlExpression? expression)
+		{
+			var saveDeferPredicateReduce = BeginDeferPredicateReduce();
+			var result                   = base.VisitConditionalResult(expression);
+			DeferPredicateReduce         = saveDeferPredicateReduce;
+
+			return result;
+		}
+
 		protected internal override IQueryElement VisitSqlConditionExpression(SqlConditionExpression element)
 		{
 			var newElement = base.VisitSqlConditionExpression(element);
 
 			if (!ReferenceEquals(newElement, element))
-				return Visit(newElement);
+				return VisitReplacement(newElement);
 
 			newElement = ConvertSqlCondition(element);
 
@@ -200,7 +225,7 @@ namespace LinqToDB.Internal.SqlProvider
 			var newElement = base.VisitSqlCaseExpression(element);
 
 			if (!ReferenceEquals(newElement, element))
-				return Visit(newElement);
+				return VisitReplacement(newElement);
 
 			newElement = ConvertSqlCaseExpression(element);
 
@@ -605,7 +630,7 @@ namespace LinqToDB.Internal.SqlProvider
 		/// <summary>
 		/// Folds a value slot's predicate into a CASE where the provider needs it, and otherwise reduces it in place.
 		/// </summary>
-		ISqlExpression FoldValuePredicate(ISqlExpression expression, bool includeFields, bool forceConvert = false, bool withNull = true)
+		protected ISqlExpression FoldValuePredicate(ISqlExpression expression, bool includeFields, bool forceConvert = false, bool withNull = true)
 		{
 			return FinishDeferredPredicate(WrapBooleanExpression(expression, includeFields, forceConvert, withNull));
 		}
@@ -2082,7 +2107,7 @@ namespace LinqToDB.Internal.SqlProvider
 			var newElement = base.VisitSqlCoalesceExpression(element);
 			DeferPredicateReduce = saveDeferPredicateReduce;
 			if (!ReferenceEquals(newElement, element))
-				return Visit(newElement);
+				return VisitReplacement(newElement);
 
 			var wrappedElement = WrapBooleanCoalesceItems(element, newElement);
 			if (wrappedElement != null)
@@ -2715,8 +2740,8 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual ISqlExpression ConvertSqlCondition(SqlConditionExpression element)
 		{
-			var trueValue  = WrapBooleanExpression(element.TrueValue, includeFields : false);
-			var falseValue = WrapBooleanExpression(element.FalseValue, includeFields : false);
+			var trueValue  = FoldValuePredicate(element.TrueValue, includeFields : false);
+			var falseValue = FoldValuePredicate(element.FalseValue, includeFields : false);
 
 			if (!ReferenceEquals(trueValue, element.TrueValue) || !ReferenceEquals(falseValue, element.FalseValue))
 			{
@@ -2730,7 +2755,7 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			if (element.ElseExpression != null)
 			{
-				var elseExpression = WrapBooleanExpression(element.ElseExpression, includeFields : true);
+				var elseExpression = FoldValuePredicate(element.ElseExpression, includeFields : true);
 
 				if (!ReferenceEquals(elseExpression, element.ElseExpression))
 				{
@@ -2743,7 +2768,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual SqlCaseExpression.CaseItem ConvertCaseItem(SqlCaseExpression.CaseItem newElement)
 		{
-			var resultExpr = WrapBooleanExpression(newElement.ResultExpression, includeFields : true);
+			var resultExpr = FoldValuePredicate(newElement.ResultExpression, includeFields : true);
 
 			if (!ReferenceEquals(resultExpr, newElement.ResultExpression))
 			{
@@ -2801,7 +2826,7 @@ namespace LinqToDB.Internal.SqlProvider
 							new SqlCaseExpression.CaseItem[]
 							{
 								new(CopyForFold(predicate), trueValue),
-								new(new SqlPredicate.Not(CopyForFold(predicate)), falseValue),
+								new(NegateForFold(CopyForFold(predicate)), falseValue),
 							},
 							new SqlValue(toType, null));
 					}
@@ -2815,6 +2840,20 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 
 			return expr;
+		}
+
+		/// <summary>
+		/// The false item of the three-valued fold: the predicate is FALSE, so an UNKNOWN still reaches ELSE NULL. A plain
+		/// <see cref="SqlPredicate.Not"/> would be inverted with C# semantics, which counts NULL as not true.
+		/// </summary>
+		static ISqlPredicate NegateForFold(ISqlPredicate predicate)
+		{
+			return predicate switch
+			{
+				SqlPredicate.IsTrue isTrue                                      => new SqlPredicate.IsTrue(isTrue.Expr1, isTrue.TrueValue, isTrue.FalseValue, isTrue.WithNull, !isTrue.IsNot),
+				SqlSearchCondition { Predicates: [SqlPredicate.IsTrue single] } => NegateForFold(single),
+				_                                                               => new SqlPredicate.Not(predicate),
+			};
 		}
 
 		ISqlPredicate CopyForFold(ISqlPredicate predicate)

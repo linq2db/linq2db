@@ -41,6 +41,9 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </summary>
 		protected bool               DeferPredicateReduce { get; set; }
 
+		// DeferPredicateReduce as it was before Visit reset it for the element being visited; read by VisitReplacement.
+		bool _enclosingDeferPredicateReduce;
+
 		protected DataOptions       DataOptions       { get; private set; } = default!;
 		protected EvaluationContext EvaluationContext { get; private set; } = default!;
 		protected MappingSchema     MappingSchema     { get; private set; } = default!;
@@ -101,6 +104,7 @@ namespace LinqToDB.Internal.SqlProvider
 			VisitQueries        = default;
 			IsInsidePredicate   = default;
 			DeferPredicateReduce = default;
+			_enclosingDeferPredicateReduce = default;
 			_reducePredicates   = default;
 			EvaluationContext   = default!;
 			NullabilityContext  = default!;
@@ -122,6 +126,9 @@ namespace LinqToDB.Internal.SqlProvider
 
 			var saveIsInsidePredicate    = IsInsidePredicate;
 			var saveDeferPredicateReduce = DeferPredicateReduce;
+			var saveEnclosingDefer       = _enclosingDeferPredicateReduce;
+
+			_enclosingDeferPredicateReduce = saveDeferPredicateReduce;
 
 			if (element is not SqlNullabilityExpression and not ISqlPredicate)
 			{
@@ -131,10 +138,26 @@ namespace LinqToDB.Internal.SqlProvider
 
 			var newElement = base.Visit(element);
 
-			IsInsidePredicate    = saveIsInsidePredicate;
-			DeferPredicateReduce = saveDeferPredicateReduce;
+			IsInsidePredicate              = saveIsInsidePredicate;
+			DeferPredicateReduce           = saveDeferPredicateReduce;
+			_enclosingDeferPredicateReduce = saveEnclosingDefer;
 
 			return newElement;
+		}
+
+		/// <summary>
+		/// Re-visits a replacement of the element being visited with the <see cref="DeferPredicateReduce"/> its slot gave that
+		/// element. <see cref="Visit"/> resets the flag for a non-predicate element, so a conditional that collapses to a
+		/// predicate result would otherwise hand its slot that predicate already reduced.
+		/// </summary>
+		protected IQueryElement VisitReplacement(IQueryElement element)
+		{
+			var saveDeferPredicateReduce = DeferPredicateReduce;
+			DeferPredicateReduce         = _enclosingDeferPredicateReduce;
+			var result                   = Visit(element);
+			DeferPredicateReduce         = saveDeferPredicateReduce;
+
+			return result;
 		}
 
 		#region Helper functions
@@ -201,12 +224,12 @@ namespace LinqToDB.Internal.SqlProvider
 			var saveAllowOptimize = _allowOptimize;
 			_allowOptimize = element.Condition;
 
-			var newExpr = base.VisitSqlConditionExpression(element);
+			var newExpr = VisitConditionChildren(element);
 
 			_allowOptimize = saveAllowOptimize;
 
 			if (!ReferenceEquals(newExpr, element))
-				return Visit(newExpr);
+				return VisitReplacement(newExpr);
 
 			if (TryEvaluate(element.Condition, out var value) && value is bool boolValue)
 			{
@@ -224,7 +247,7 @@ namespace LinqToDB.Internal.SqlProvider
 				if (trueConditional.Condition.Equals(element.Condition, SqlQuery.SqlExtensions.DefaultComparer))
 				{
 					var newConditionExpression = new SqlConditionExpression(element.Condition, trueConditional.TrueValue, element.FalseValue);
-					return Visit(newConditionExpression);
+					return VisitReplacement(newConditionExpression);
 				}
 			}
 
@@ -237,7 +260,7 @@ namespace LinqToDB.Internal.SqlProvider
 						new(falseConditional.Condition, falseConditional.TrueValue),
 					}, falseConditional.FalseValue);
 
-				return Visit(newCaseExpression);
+				return VisitReplacement(newCaseExpression);
 			}
 
 			if (element.FalseValue is SqlCaseExpression falseCase)
@@ -251,7 +274,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 				var newCaseExpression = new SqlCaseExpression(falseCase.Type, caseItems, falseCase.ElseExpression);
 
-				return Visit(newCaseExpression);
+				return VisitReplacement(newCaseExpression);
 			}
 
 			if (element.Condition is SqlPredicate.IsNull isNullPredicate)
@@ -295,9 +318,63 @@ namespace LinqToDB.Internal.SqlProvider
 			return element;
 		}
 
+		/// <summary>
+		/// Visits a CASE / IIF result value: a value slot, unlike the condition beside it.
+		/// </summary>
+		protected virtual ISqlExpression? VisitConditionalResult(ISqlExpression? expression)
+		{
+			return (ISqlExpression?)Visit(expression);
+		}
+
+		// QueryElementVisitor's child visit, with the result children routed through VisitConditionalResult.
+		IQueryElement VisitConditionChildren(SqlConditionExpression element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					Visit(element.Condition);
+					VisitConditionalResult(element.TrueValue);
+					VisitConditionalResult(element.FalseValue);
+
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					element.Modify(
+						(ISqlPredicate)Visit(element.Condition),
+						VisitConditionalResult(element.TrueValue)!,
+						VisitConditionalResult(element.FalseValue)!
+					);
+
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var predicate  = (ISqlPredicate)Visit(element.Condition);
+					var trueValue  = VisitConditionalResult(element.TrueValue)!;
+					var falseValue = VisitConditionalResult(element.FalseValue)!;
+
+					if (ShouldReplace(element)                         ||
+					    element.Condition != predicate                 ||
+					    !ReferenceEquals(element.TrueValue, trueValue) ||
+					    !ReferenceEquals(element.FalseValue, falseValue))
+					{
+						return NotifyReplaced(new SqlConditionExpression(predicate, trueValue, falseValue), element);
+					}
+
+					break;
+				}
+				default:
+					return ThrowInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
 		protected override SqlCaseExpression.CaseItem VisitCaseItem(SqlCaseExpression.CaseItem element)
 		{
-			var newElement =  base.VisitCaseItem(element);
+			var newElement = element.Update((ISqlPredicate)Visit(element.Condition), VisitConditionalResult(element.ResultExpression)!);
 
 			if (TryEvaluate(newElement.Condition, out var result) && result is bool boolValue)
 			{
@@ -307,12 +384,54 @@ namespace LinqToDB.Internal.SqlProvider
 			return newElement;
 		}
 
+		// QueryElementVisitor's child visit, with the ELSE routed through VisitConditionalResult (the items go through VisitCaseItem).
+		IQueryElement VisitCaseChildren(SqlCaseExpression element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					VisitElements(element._cases, VisitMode.ReadOnly, VisitCaseItem);
+					VisitConditionalResult(element.ElseExpression);
+
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					var newElements = VisitElements(element._cases, VisitMode.Modify, VisitCaseItem);
+					var defaultExpr = VisitConditionalResult(element.ElseExpression);
+
+					element.Modify(newElements, defaultExpr);
+
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var newElements = VisitElements(element._cases, VisitMode.Transform, VisitCaseItem);
+					var elseExpr    = VisitConditionalResult(element.ElseExpression);
+
+					if (ShouldReplace(element)                        ||
+					    !ReferenceEquals(element._cases, newElements) ||
+					    !ReferenceEquals(element.ElseExpression, elseExpr))
+					{
+						return NotifyReplaced(new SqlCaseExpression(element.Type, element._cases != newElements ? newElements : element._cases.ToList(), elseExpr), element);
+					}
+
+					break;
+				}
+				default:
+					return ThrowInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
 		protected internal override IQueryElement VisitSqlCaseExpression(SqlCaseExpression element)
 		{
-			var newExpr = base.VisitSqlCaseExpression(element);
+			var newExpr = VisitCaseChildren(element);
 
 			if (!ReferenceEquals(newExpr, element))
-				return Visit(newExpr);
+				return VisitReplacement(newExpr);
 
 			HashSet<ISqlPredicate>? seen = null;
 
@@ -349,7 +468,7 @@ namespace LinqToDB.Internal.SqlProvider
 						var newCaseExpression = new SqlCaseExpression(element.Type, newCases, caseItem.ResultExpression);
 						NotifyReplaced(newCaseExpression, element);
 
-						return Visit(newCaseExpression);
+						return VisitReplacement(newCaseExpression);
 					}
 
 					if (caseItem.Condition == SqlPredicate.False
@@ -363,14 +482,14 @@ namespace LinqToDB.Internal.SqlProvider
 						var newCaseExpression = new SqlCaseExpression(element.Type, newCases, element.ElseExpression);
 						NotifyReplaced(newCaseExpression, element);
 
-						return Visit(newCaseExpression);
+						return VisitReplacement(newCaseExpression);
 					}
 				}
 			}
 
 			return element.Cases switch
 			{
-				[{ } c] => Visit(new SqlConditionExpression(c.Condition, c.ResultExpression, element.ElseExpression ?? new SqlValue(element.Type, null))),
+				[{ } c] => VisitReplacement(new SqlConditionExpression(c.Condition, c.ResultExpression, element.ElseExpression ?? new SqlValue(element.Type, null))),
 				[] => element.ElseExpression ?? new SqlValue(element.Type, null),
 				_ => element,
 			};

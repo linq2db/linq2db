@@ -93,6 +93,31 @@ namespace Tests.xUpdate
 			output.ShouldBe(expected);
 		}
 
+		[Test]
+		public void UpdateWithConditionalNullableComparisonInOutput([IncludeDataSources(true, FeatureUpdateOutputWithoutOldMultipleWithExpressions)] string context, [Values] bool flag)
+		{
+			var data = GetSourceData()
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value, ValueStr = s.Id % 2 == 0 ? null : s.ValueStr })
+				.ToArray();
+
+			using var db     = GetDataContext(context);
+			using var target = db.CreateLocalTable(data);
+
+			var expected = data
+				.Select(t => new { t.Id, IsOther = flag ? (bool?)(t.ValueStr != "Str1") : null })
+				.ToArray();
+
+			// Sql.AsSql keeps the condition a parameter, so the conditional is only resolved once its value is known
+			var output = target
+				.UpdateWithOutput(
+					t => new DestinationTable { Id = t.Id, Value = t.Value + 1, ValueStr = t.ValueStr },
+					(deleted, inserted) => new { inserted.Id, IsOther = Sql.AsSql(flag) ? (bool?)(inserted.ValueStr != "Str1") : null })
+				.OrderBy(r => r.Id)
+				.ToArray();
+
+			output.ShouldBe(expected);
+		}
+
 		#region Update against ITable<T> target
 
 		[Test]

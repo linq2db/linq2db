@@ -1285,6 +1285,211 @@ namespace Tests.Linq
 			AssertQuery(tb.Select(r => new { r.Id, IsNotIn = !r.Value5.In(r.Value4) }));
 		}
 
+		sealed class NullableFlagTable
+		{
+			[PrimaryKey] public int   Id   { get; set; }
+			[Column]     public int?  A    { get; set; }
+			[Column]     public int?  B    { get; set; }
+			[Column]     public int?  C    { get; set; }
+			[Column]     public bool? Flag { get; set; }
+
+			static IReadOnlyCollection<NullableFlagTable> GetData()
+			{
+				var testData = new List<NullableFlagTable>();
+
+				var values = new int?[]  { null, 1, 2 };
+				var flags  = new bool?[] { null, true, false };
+
+				var id = 1;
+				foreach (var a in values)
+					foreach (var b in values)
+						foreach (var c in new int?[] { null, 1 })
+							foreach (var flag in flags)
+							{
+								testData.Add(new NullableFlagTable()
+								{
+									Id   = id++,
+									A    = a,
+									B    = b,
+									C    = c,
+									Flag = flag,
+								});
+							}
+
+				return testData;
+			}
+
+			public static readonly IReadOnlyCollection<NullableFlagTable> Data = GetData();
+		}
+
+		[ActiveIssue(6209, Configurations = [TestProvName.AllSQLite, TestProvName.AllAccess], Details = "no-declaration: SQLite / Access emit the C# comparison as a bare predicate value, which reads NULL for a one-side-NULL row; master is identical.")]
+		[Test]
+		public void Test_ConditionalNullableColumnOrComparison([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(NullableFlagTable.Data);
+
+			// a NULL Flag in the true branch must stay NULL: the three-valued fold's false item is the SQL negation
+			AssertQuery(tb.Select(r => new { r.Id, Value = r.C == null ? r.Flag : r.A == r.B }));
+		}
+
+		[ActiveIssue(6209, Configurations = [TestProvName.AllSQLite, TestProvName.AllAccess], Details = "no-declaration: SQLite / Access emit the C# comparison as a bare predicate value, which reads NULL for a one-side-NULL row; master is identical.")]
+		[Test]
+		public void Test_ConditionalNullOrComparison([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(NullableFlagTable.Data);
+
+			// a CLR comparison is never NULL, so with one of A / B NULL the false branch reads false, not NULL
+			AssertQuery(tb.Select(r => new { r.Id, Value = r.Flag == null ? null : (bool?)(r.A == r.B) }));
+		}
+
+		[Test]
+		public void Test_ConditionalChainOfNullableColumns([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(NullableFlagTable.Data);
+
+			// merged into one CASE whose results are bare bool? columns: a NULL Flag must stay NULL
+			AssertQuery(tb.Select(r => new { r.Id, Value = r.C == null ? r.Flag : r.A == null ? (bool?)true : r.Flag }));
+		}
+
+		[ActiveIssue(6209, Configurations = [TestProvName.AllSQLite, TestProvName.AllAccess], Details = "no-declaration: SQLite / Access emit the C# comparison as a bare predicate value, which reads NULL for a one-side-NULL row; master is identical.")]
+		[Test]
+		public void Test_CoalesceOfComparisonAsConditionalResult([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(NullableFlagTable.Data);
+
+			AssertQuery(tb.Select(r => new { r.Id, Value = r.C == null ? ((bool?)(r.A == r.B) ?? r.Flag) : r.Flag }));
+		}
+
+		[ActiveIssue(6209, Configuration = TestProvName.AllSQLite, ErrorTypeName = "Shouldly.ShouldAssertException", Details = "SQLite stores the C# comparison as a bare predicate value, NULL for a one-side-NULL row; master is identical.")]
+		[Test]
+		public void Test_CoalesceOfComparisonAsSetValue([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(NullableFlagTable.Data);
+
+			tb
+				.Set(r => r.Flag, r => (bool?)(r.A == r.B) ?? r.Flag)
+				.Update();
+
+			var expected = NullableFlagTable.Data
+				.Select(r => new { r.Id, Flag = (bool?)(r.A == r.B) ?? r.Flag })
+				.OrderBy(r => r.Id)
+				.ToArray();
+
+			tb
+				.OrderBy(r => r.Id)
+				.Select(r => new { r.Id, r.Flag })
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
+		[Test]
+		public void Test_ConditionalOnParameterWithNullableComparison([DataSources] string context, [Values] bool flag)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(NullableFlagTable.Data);
+
+			// Sql.AsSql keeps the condition a parameter, so the conditional is only resolved once its value is known
+			AssertQuery(tb.Select(r => new { r.Id, Value = Sql.AsSql(flag) ? (bool?)(r.A == r.B) : null }));
+		}
+
+		[Test]
+		public void Test_CaseOnFalseParametersWithNullableComparison([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(NullableFlagTable.Data);
+
+			var first  = false;
+			var second = false;
+
+			// both conditions stay parameters that evaluate false, so only the ELSE survives once their values are known
+			AssertQuery(tb.Select(r => new { r.Id, Value = Sql.AsSql(first) ? null : Sql.AsSql(second) ? (bool?)true : (bool?)(r.A == r.B) }));
+		}
+
+		[ActiveIssue(6209, Configurations = [TestProvName.AllSQLite, TestProvName.AllInformix, TestProvName.AllAccess], ErrorTypeName = "Shouldly.ShouldAssertException", Details = "SQLite / Informix / Access order by the C# comparison as a bare predicate value, NULL for a one-side-NULL row (Access also sorts True as -1, #6203); master is identical.")]
+		[Test]
+		public void Test_ConditionalOnParameterWithNullableComparisonAsOrderBy([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(NullableFlagTable.Data);
+
+			// true: the conditional collapses to the comparison once the parameter's value is known
+			var flag = true;
+
+			var expected = NullableFlagTable.Data
+				.OrderBy(r => (bool?)(r.A == r.B))
+				.ThenBy(r => r.Id)
+				.Select(r => r.Id)
+				.ToArray();
+
+			tb
+				.OrderBy(r => Sql.AsSql(flag) ? (bool?)(r.A == r.B) : null)
+				.ThenBy(r => r.Id)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
+		[Test]
+		public void Test_ConditionalOnParameterWithNullableComparisonAsGroupBy([DataSources] string context, [Values] bool flag)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(NullableFlagTable.Data);
+
+			AssertQuery(
+				tb
+					.GroupBy(r => Sql.AsSql(flag) ? (bool?)(r.A == r.B) : null)
+					.Select(g => new { g.Key, Count = g.Count() }));
+		}
+
+		[ActiveIssue(6209, Configurations = [TestProvName.AllSQLite, TestProvName.AllInformix, TestProvName.AllAccess], Details = "no-declaration: SQLite / Informix / Access emit the C# comparison as a bare predicate value, which reads NULL for a one-side-NULL row; master is identical.")]
+		[Test]
+		public void Test_ConditionalOnParameterWithNullableComparisonInConcat([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(NullableFlagTable.Data);
+
+			// true: the conditional collapses to the comparison once the parameter's value is known
+			var flag = true;
+
+			AssertQuery(
+				tb
+					.Select(r => new { r.Id, Value = Sql.AsSql(flag) ? (bool?)(r.A == r.B) : null })
+					.Concat(tb.Select(r => new { Id = r.Id + 1000, Value = r.Flag })));
+		}
+
+		[Test]
+		public void Test_ToNullableComparison([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(NullableFlagTable.Data);
+
+			AssertQuery(tb.Select(r => new { r.Id, Value = Sql.ToNullable(r.A == r.B) }));
+		}
+
+		[Test]
+		public void Test_ConditionalOnParameterWithSqlNullComparison([DataSources] string context, [Values] bool flag)
+		{
+			using var db = GetDataContext(context, o => o.UseCompareNulls(CompareNulls.LikeSql));
+			using var tb = db.CreateLocalTable(NullableFlagTable.Data);
+
+			// LikeSql: a comparison with a NULL operand is UNKNOWN, which the value slot's two-valued fold reads as false
+			var expected = NullableFlagTable.Data
+				.Select(r => new { r.Id, Value = flag ? (bool?)(r.A != null && r.B != null && r.A == r.B) : null })
+				.OrderBy(r => r.Id)
+				.ToArray();
+
+			tb
+				.Select(r => new { r.Id, Value = Sql.AsSql(flag) ? (bool?)(r.A == r.B) : null })
+				.OrderBy(r => r.Id)
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
 		[ActiveIssue(6203, Configuration = TestProvName.AllAccess, ErrorTypeName = "Shouldly.ShouldAssertException")]
 		[Test]
 		public void Test_NullableComparisonAsOrderByItem([DataSources] string context)

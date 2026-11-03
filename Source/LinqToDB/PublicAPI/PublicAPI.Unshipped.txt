@@ -137,6 +137,10 @@ LinqToDB.Internal.SqlProvider.SqlCommandStep.Statement.init -> void
 LinqToDB.Internal.SqlProvider.SqlExpressionOptimizerVisitor.DeferPredicateReduce.get -> bool
 LinqToDB.Internal.SqlProvider.SqlExpressionOptimizerVisitor.DeferPredicateReduce.set -> void
 LinqToDB.Internal.SqlProvider.SqlExpressionOptimizerVisitor.VisitNotOperand(LinqToDB.Internal.SqlQuery.SqlPredicate.Not! predicate) -> LinqToDB.Internal.SqlQuery.ISqlPredicate!
+LinqToDB.Internal.SqlProvider.SqlExpressionOptimizerVisitor.VisitReplacement(LinqToDB.Internal.SqlQuery.IQueryElement! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+virtual LinqToDB.Internal.SqlProvider.SqlExpressionOptimizerVisitor.VisitConditionalResult(LinqToDB.Internal.SqlQuery.ISqlExpression? expression) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.VisitConditionalResult(LinqToDB.Internal.SqlQuery.ISqlExpression? expression) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.FoldValuePredicate(LinqToDB.Internal.SqlQuery.ISqlExpression! expression, bool includeFields, bool forceConvert = false, bool withNull = true) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ForceConvertSetValue.get -> bool
 override LinqToDB.Internal.DataProvider.Informix.InformixSqlExpressionConvertVisitor.ForceConvertSetValue.get -> bool
 LinqToDB.Internal.SqlProvider.SqlExpressionOptimizerVisitor.InitState(LinqToDB.Internal.SqlQuery.EvaluationContext! evaluationContext, LinqToDB.Internal.SqlQuery.NullabilityContext! nullabilityContext, LinqToDB.Internal.SqlQuery.Visitors.SqlQueryVisitor.IVisitorTransformationInfo? transformationInfo, LinqToDB.DataOptions! dataOptions, LinqToDB.Mapping.MappingSchema! mappingSchema, bool visitQueries) -> void
