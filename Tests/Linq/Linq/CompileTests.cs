@@ -271,16 +271,20 @@ namespace Tests.Linq
 		// arguments. Regression guard for folding the parameters array into SqlCommandExecutionContext:
 		// here the one context carries both the compiled args AND the eager-load (harvester) results.
 		[Test]
-		public void CompiledQueryWithEagerLoad([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void CompiledQueryWithEagerLoad([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool combinedCommands)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, int id) =>
-				db.Parent.LoadWith(p => p.Children).Where(p => p.ParentID == id));
+				db.Parent
+					.LoadWith(p => p.Children)
+					.Where(p => p.ParentID == id));
 
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.UseCombinedCommands(combinedCommands));
 
 			foreach (var id in new[] { 1, 2 })
 			{
-				var parent = query(db, id).ToList().Single();
+				var parent = query(db, id)
+					.ToList()
+					.Single();
 
 				var childIds = parent.Children
 					.Select(c => c.ChildID)
@@ -299,16 +303,21 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async Task CompiledQueryWithEagerLoadAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public async Task CompiledQueryWithEagerLoadAsync([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool combinedCommands)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, int id) =>
-				db.Parent.LoadWith(p => p.Children).Where(p => p.ParentID == id));
+				db.Parent
+					.LoadWith(p => p.Children)
+					.Where(p => p.ParentID == id));
 
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.UseCombinedCommands(combinedCommands));
 
 			foreach (var id in new[] { 1, 2 })
 			{
-				var parent = (await query(db, id).ToListAsync()).Single();
+				var parents = await query(db, id)
+					.ToListAsync();
+
+				var parent = parents.Single();
 
 				var childIds = parent.Children
 					.Select(c => c.ChildID)

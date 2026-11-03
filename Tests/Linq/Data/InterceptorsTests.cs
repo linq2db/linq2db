@@ -1579,9 +1579,9 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void EagerLoadCachedRenderBindsPerExecutionParameters([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllMySql)] string context)
+		public void EagerLoadCachedRenderBindsPerExecutionParameters([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllMySql)] string context, [Values] bool combinedCommands)
 		{
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.UseCombinedCommands(combinedCommands));
 
 			using var parents  = db.CreateLocalTable<Pr5EagerParent>();
 			using var children = db.CreateLocalTable<Pr5EagerChild>();
