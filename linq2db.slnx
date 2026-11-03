@@ -183,6 +183,7 @@
     <File Path="Build/Azure/scripts/firebird.sh" />
     <File Path="Build/Azure/scripts/hana2.sh" />
     <File Path="Build/Azure/scripts/hana2.tests.sh" />
+    <File Path="Build/Azure/scripts/mssql-wait.sh" />
     <File Path="Build/Azure/scripts/mysql.sh" />
     <File Path="Build/Azure/scripts/oracle1112.sh" />
     <File Path="Build/Azure/scripts/oracle1819.sh" />
@@ -388,9 +389,7 @@
     <File Path="UserDataProviders.json" />
     <File Path="UserDataProviders.json.template" />
     <Project Path="Tests/Base/Tests.Base.csproj" />
-    <Project Path="Tests/EntityFrameworkCore.FSharp/Tests.EntityFrameworkCore.FSharp.fsproj">
-      <Build Solution="Testing|*" Project="false" />
-    </Project>
+    <Project Path="Tests/EntityFrameworkCore.FSharp/Tests.EntityFrameworkCore.FSharp.fsproj" />
     <Project Path="Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF10.csproj" />
     <Project Path="Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF3.csproj">
       <Build Solution="Testing|*" Project="false" />
@@ -410,6 +409,11 @@
     <Project Path="Tests/Tests.Benchmarks/linq2db.Benchmarks.csproj">
       <Build Solution="Testing|*" Project="false" />
     </Project>
+    <Project Path="Tests/Tests.FpuJit/Tests.FpuJit.csproj">
+      <Build Solution="Azure|*" Project="false" />
+      <Build Solution="Release|*" Project="false" />
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
     <Project Path="Tests/Tests.Playground/Tests.Playground.csproj">
       <Build Solution="Azure|*" Project="false" />
       <Build Solution="Release|*" Project="false" />
@@ -423,6 +427,11 @@
     <Project Path="Tests/Tests.T4/Tests.T4.csproj">
       <BuildDependency Project="NuGet/NuGet.csproj" />
       <BuildDependency Project="Tests/Linq/Tests.csproj" />
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
+    <Project Path="Tests/Tests.Wasm/Tests.Wasm.csproj">
+      <Build Solution="Azure|*" Project="false" />
+      <Build Solution="Release|*" Project="false" />
       <Build Solution="Testing|*" Project="false" />
     </Project>
     <Project Path="Tests/VisualBasic/Tests.VisualBasic.vbproj" />

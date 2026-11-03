@@ -443,13 +443,6 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
 
-			// YDB: the remote (LinqService) path renders the mandatory same-type CAST(Unicode::GetLength(...) AS Int32)
-			// as bare Unicode::GetLength(...), while direct access emits Unwrap(CAST(... AS Int32)). The result is
-			// identical; the cast node is dropped before the server-side builder only on the remote path. To investigate.
-			using var _ = context.IsAnyOf(TestProvName.AllYdb)
-				? new DisableBaseline("https://github.com/linq2db/linq2db/issues/5169 - YDB remote/direct CAST(Unicode::GetLength AS Int32) elision divergence (result-neutral)")
-				: null;
-
 			var query =
 				from t in table
 				select Sql.AsSql(string.Join(", ", new[] { t.NullableValue, t.NotNullableValue, t.VarcharValue, t.NVarcharValue }.Where(x => x != null).Where(x => x!.Contains("A"))));

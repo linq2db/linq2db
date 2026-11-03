@@ -104,33 +104,5 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			return constructed;
 		}
-
-		public SqlGenericConstructorExpression RemapToNewPath(Expression prefixPath, SqlGenericConstructorExpression constructorExpression, Expression currentPath)
-		{
-			//TODO: only assignments
-			var newAssignments = new List<SqlGenericConstructorExpression.Assignment>();
-
-			foreach (var assignment in constructorExpression.Assignments)
-			{
-				Expression newAssignmentExpression;
-
-				var memberAccess = Expression.MakeMemberAccess(currentPath, assignment.MemberInfo);
-
-				if (assignment.Expression is SqlGenericConstructorExpression generic)
-				{
-					newAssignmentExpression = RemapToNewPath(prefixPath, generic, memberAccess);
-				}
-				else
-				{
-					newAssignmentExpression = memberAccess;
-				}
-
-				newAssignments.Add(new SqlGenericConstructorExpression.Assignment(assignment.MemberInfo,
-					newAssignmentExpression, assignment.IsMandatory, assignment.IsLoaded));
-			}
-
-			return new SqlGenericConstructorExpression(SqlGenericConstructorExpression.CreateType.Auto,
-				constructorExpression.ObjectType, null, newAssignments.AsReadOnly(), constructorExpression.MappingSchema, currentPath);
-		}
 	}
 }

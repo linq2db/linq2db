@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -38,7 +39,7 @@ namespace ToolsExample
 
 				var count = db.GetTable<Customer>().Count();
 
-				Console.WriteLine($"Count is {count}");
+				Console.WriteLine($"Count is {count.ToString(CultureInfo.InvariantCulture)}");
 			}
 
 			// Display hierarchy metrics.

@@ -12,7 +12,7 @@ using LinqToDB.Remote.HttpClient.Server;
 
 namespace HttpClientServer
 {
-	public class Program
+	static class Program
 	{
 		public static void Main(string[] args)
 		{

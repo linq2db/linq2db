@@ -228,6 +228,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 				switch (dataType.DataType)
 				{
+					case DataType.DateTime2     :
 					case DataType.DateTimeOffset: parameter.DbType = DbType.DateTime; return;
 					case DataType.SByte         : parameter.DbType = DbType.Byte; return;
 					case DataType.UInt16        : parameter.DbType = DbType.Int16; return;

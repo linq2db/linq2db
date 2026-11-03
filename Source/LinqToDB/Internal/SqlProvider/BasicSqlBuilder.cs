@@ -2967,6 +2967,35 @@ namespace LinqToDB.Internal.SqlProvider
 			BuildExpression(GetPrecedence(predicate), predicate.SubQuery);
 		}
 
+		/// <summary>
+		/// The type an IN-list value is written with: the tested expression's, except beside a value computed from a
+		/// coarse date/time column - MIN/MAX, COALESCE, a value window function - where it takes the mapping schema's
+		/// type for the value, and beside a computed decimal, where it is widened to hold the value.
+		/// </summary>
+		/// <remarks>
+		/// A computed value has no stored width or scale to match, so narrowing the value to the column's would only
+		/// lose its sub-second part, its time part or its decimal digits. A value converter does not change that: the
+		/// values are already in its stored terms, and a decimal one is still a decimal. Any other column type still
+		/// lends itself, because it may name how the value is stored - a <see cref="Guid"/> as text or as binary.
+		/// </remarks>
+		internal DbDataType GetInListValueType(ISqlExpression expr1, DbDataType expr1Type, object? value)
+		{
+			if (value != null
+				&& (QueryHelper.IsCoarserDateTime(expr1Type, new DbDataType(typeof(DateTime), DataType.DateTime2)) || QueryHelper.IsDecimal(expr1Type.DataType))
+				&& !QueryHelper.IsStoredColumn(expr1))
+			{
+				if (value is decimal decimalValue && QueryHelper.IsDecimal(expr1Type.DataType))
+					return QueryHelper.GetDecimalTypeForValue(expr1Type, decimalValue);
+
+				var valueType = MappingSchema.GetDbDataType(value.GetType());
+
+				if (QueryHelper.IsCoarserDateTime(expr1Type, valueType))
+					return valueType;
+			}
+
+			return expr1Type;
+		}
+
 		protected virtual void BuildInListPredicate(SqlPredicate.InList predicate)
 		{
 			var values = predicate.Values;
@@ -3130,7 +3159,7 @@ namespace LinqToDB.Internal.SqlProvider
 					if (value is ISqlExpression expression)
 						BuildExpression(expression);
 					else
-						BuildValue(dbDataType, value);
+						BuildValue(GetInListValueType(predicate.Expr1, dbDataType, value), value);
 
 					StringBuilder.Append(InlineComma);
 				}
@@ -3459,6 +3488,14 @@ namespace LinqToDB.Internal.SqlProvider
 
 					BuildSqlValue(sqlval);
 					break;
+
+				case QueryElementType.SqlDefaultValueExpression:
+				{
+					var defaultValue = (SqlDefaultValueExpression)expr;
+
+					BuildSqlValue(new SqlValue(defaultValue.Type, defaultValue.Value));
+					break;
+				}
 
 				case QueryElementType.SqlExpression:
 				{

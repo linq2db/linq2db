@@ -7,7 +7,7 @@ using LinqToDB.Mapping;
 
 namespace UtcDateTime
 {
-	internal class Program
+	static class Program
 	{
 		static readonly DataOptions _options = new DataOptions()
 			.UseSQLite("Data Source=db.sqlite", SQLiteProvider.Microsoft)
@@ -77,7 +77,7 @@ namespace UtcDateTime
 			}
 		}
 
-		public class Table
+		public sealed class Table
 		{
 			[Column, DataType(DataType.DateTime)]
 			public DateTime Date { get; set; }
