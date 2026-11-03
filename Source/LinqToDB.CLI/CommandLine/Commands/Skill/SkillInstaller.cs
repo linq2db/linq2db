@@ -23,9 +23,47 @@ namespace LinqToDB.CommandLine.Commands.Skill
 
 			var manifest = SkillManifest.TryRead(manifestPath);
 
+			// what dotnet-package-skills recorded for the destination (the parent of the skill directory); it is only read
+			var destination = Path.GetDirectoryName(directory)!;
+			var otherTool   = PackageSkillsManifest.TryRead(destination);
+
+			SkillPath.EnsureNoLinks(root, Path.Combine(destination, PackageSkillsManifest.FileName));
+
+			// the other tool's record wins, even when this tool's own marker is also present
+			var externalVersion = otherTool.GetOwnerVersion(bundle.Name);
+
+			if (externalVersion != null)
+			{
+				return new SkillInstallPlan
+				{
+					Bundle          = bundle,
+					Root            = root,
+					Directory       = directory,
+					State           = SkillInstallState.ManagedExternally,
+					Reason          = $"managed by dotnet-package-skills (linq2db {externalVersion}); left unchanged",
+					ExternalVersion = externalVersion,
+				};
+			}
+
+			// without a readable record nobody knows what the other tool owns: leave alone whatever this tool did not install
+			if (otherTool.Exists && !otherTool.IsReadable && manifest == null
+				&& Directory.Exists(directory) && Directory.EnumerateFileSystemEntries(directory).Any())
+			{
+				return new SkillInstallPlan
+				{
+					Bundle    = bundle,
+					Root      = root,
+					Directory = directory,
+					State     = SkillInstallState.ManagedExternally,
+					Reason    = $"'{PackageSkillsManifest.FileName}' cannot be read, so it is unknown whether dotnet-package-skills owns this directory; left unchanged",
+				};
+			}
+
+			var otherToolPresent = otherTool.Exists && otherTool.IsReadable;
+
 			if (!Directory.Exists(directory) || (manifest == null && !Directory.EnumerateFileSystemEntries(directory).Any()))
 			{
-				var missing = new SkillInstallPlan { Bundle = bundle, Root = root, Directory = directory, State = SkillInstallState.Missing, Reason = "not installed", WriteManifest = true };
+				var missing = new SkillInstallPlan { Bundle = bundle, Root = root, Directory = directory, State = SkillInstallState.Missing, Reason = "not installed", WriteManifest = true, OtherToolPresent = otherToolPresent };
 
 				missing.Writes.AddRange(bundle.Files);
 				missing.Owned.UnionWith(bundle.Hashes.Keys);
@@ -43,6 +81,7 @@ namespace LinqToDB.CommandLine.Commands.Skill
 					State         = SkillInstallState.Unmanaged,
 					Reason        = $"directory exists but was not installed by this tool ('{SkillManifest.FileName}' is missing, unreadable or invalid)",
 					WriteManifest = true,
+					OtherToolPresent = otherToolPresent,
 				};
 
 				unmanaged.Writes.AddRange(bundle.Files);
@@ -152,7 +191,7 @@ namespace LinqToDB.CommandLine.Commands.Skill
 				reason = staleReasons.Count > 0 ? string.Join(", ", staleReasons) : "content differs from the current skill";
 			}
 
-			var plan = new SkillInstallPlan { Bundle = bundle, Root = root, Directory = directory, State = state, Reason = reason };
+			var plan = new SkillInstallPlan { Bundle = bundle, Root = root, Directory = directory, State = state, Reason = reason, OtherToolPresent = otherToolPresent };
 
 			plan.Writes   .AddRange(writes);
 			plan.Deletes  .AddRange(deletes);

@@ -237,6 +237,8 @@ namespace LinqToDB.CommandLine.Commands.Skill
 						await environment.Error.WriteLineAsync($"Warning: the project uses linq2db {linq2db.Version}, but the installed skill describes linq2db {library.Version}.");
 				}
 
+				// the linq2db-cli skill always comes from the copy embedded in the tool, never from the package: it describes
+				// the options of the tool that is running, and it is the only copy that cannot be older than that tool
 				bundles = [library, SkillSource.GetCliSkill()];
 
 				foreach (var skillRoot in _skillRoots)
@@ -254,11 +256,11 @@ namespace LinqToDB.CommandLine.Commands.Skill
 			await environment.Out.WriteLineAsync($"linq2db skill: {library.Origin}; linq2db-cli skill: {bundles[1].Origin}.");
 
 			return check
-				? await Check(environment, root, plans)
+				? await Check(environment, root, plans, found.Count > 0 ? found[0].Version : null)
 				: await Apply(environment, root, plans, force);
 		}
 
-		private static async Task<int> Check(ICliEnvironment environment, string root, List<SkillInstallPlan> plans)
+		private static async Task<int> Check(ICliEnvironment environment, string root, List<SkillInstallPlan> plans, string? resolvedVersion)
 		{
 			var failed = false;
 
@@ -270,6 +272,20 @@ namespace LinqToDB.CommandLine.Commands.Skill
 				{
 					await environment.Out.WriteLineAsync($"  up to date: {relative}");
 				}
+				else if (plan.State == SkillInstallState.ManagedExternally)
+				{
+					// not ours to update, but a copy of another linq2db version is as stale as one of ours
+					if (plan.ExternalVersion != null && resolvedVersion != null && !SameVersion(plan.ExternalVersion, resolvedVersion))
+					{
+						failed = true;
+						await environment.Error.WriteLineAsync(
+							$"  stale: {relative}: managed by dotnet-package-skills (linq2db {plan.ExternalVersion}), the project uses linq2db {resolvedVersion}; run 'dotnet-package-skills install' to update it");
+					}
+					else
+					{
+						await environment.Out.WriteLineAsync($"  {relative}: {plan.Reason}");
+					}
+				}
 				else
 				{
 					failed = true;
@@ -279,7 +295,7 @@ namespace LinqToDB.CommandLine.Commands.Skill
 
 			if (failed)
 			{
-				await environment.Error.WriteLineAsync("Installed skills are not current. Run 'dotnet linq2db skill install' to update them.");
+				await environment.Error.WriteLineAsync("Installed skills are not current. Run 'dotnet linq2db skill install' (or 'dotnet-package-skills install' for the ones it manages) to update them.");
 				return StatusCodes.EXPECTED_ERROR;
 			}
 
@@ -308,6 +324,14 @@ namespace LinqToDB.CommandLine.Commands.Skill
 				if (plan.State == SkillInstallState.UpToDate)
 				{
 					await environment.Out.WriteLineAsync($"  up to date: {relative}");
+					await PrintHandOff(environment, plan, relative);
+					continue;
+				}
+
+				if (plan.State == SkillInstallState.ManagedExternally)
+				{
+					// neither a conflict nor something '--force' may override
+					await environment.Out.WriteLineAsync($"  {relative}: {plan.Reason}");
 					continue;
 				}
 
@@ -323,11 +347,49 @@ namespace LinqToDB.CommandLine.Commands.Skill
 
 				var verb = plan.State == SkillInstallState.Missing ? "installed" : "updated";
 				await environment.Out.WriteLineAsync($"  {verb}: {relative} ({plan.Bundle.Files.Count} file(s), version {plan.Bundle.Version})");
+				await PrintHandOff(environment, plan, relative);
 			}
 
 			await PrintPointerHint(environment, root);
 
 			return StatusCodes.SUCCESS;
+		}
+
+		/// <summary>
+		/// The destination is also managed by dotnet-package-skills, which skips a folder it does not own: say how to let it take over.
+		/// </summary>
+		private static async Task PrintHandOff(ICliEnvironment environment, SkillInstallPlan plan, string relative)
+		{
+			if (plan.OtherToolPresent)
+			{
+				await environment.Out.WriteLineAsync(
+					$"    dotnet-package-skills will skip this folder. To let it manage the skill, delete '{relative}' and run 'dotnet-package-skills install'.");
+			}
+		}
+
+		/// <summary>
+		/// Package versions are compared without regard to case or build metadata, and a trailing zero revision does not count.
+		/// </summary>
+		private static bool SameVersion(string left, string right)
+		{
+			static string Normalize(string version)
+			{
+				var plus = version.IndexOf('+', StringComparison.Ordinal);
+
+				if (plus >= 0)
+					version = version.Substring(0, plus);
+
+				var dash   = version.IndexOf('-', StringComparison.Ordinal);
+				var number = dash >= 0 ? version.Substring(0, dash) : version;
+				var rest   = dash >= 0 ? version.Substring(dash)    : string.Empty;
+
+				if (number.EndsWith(".0", StringComparison.Ordinal) && number.Split('.').Length == 4)
+					number = number.Substring(0, number.Length - 2);
+
+				return (number + rest).ToLowerInvariant();
+			}
+
+			return string.Equals(Normalize(left), Normalize(right), StringComparison.Ordinal);
 		}
 
 		/// <summary>

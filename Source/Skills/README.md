@@ -15,8 +15,9 @@ These files are package content, not maintainer documentation and not library so
 | `linq2db/SKILL.md` | Skill entry point: general rules and the guide index. |
 | `linq2db/docs/*.md` | Task guides. |
 | `linq2db/docs/crud/*.md` | CRUD guides; `crud.md` routes to one file per operation. |
+| `../LinqToDB.CLI/SKILL.md` | Entry point of the `linq2db-cli` skill (the `linq2db.cli` tool). Not in this directory: it is one file, also embedded in the tool, and packed from there. |
 
-`Source/LinqToDB/LinqToDB.csproj` packs `linq2db/**/*.md` into the package as:
+`Source/LinqToDB/LinqToDB.csproj` packs `linq2db/**/*.md` and `../LinqToDB.CLI/SKILL.md` into the package as:
 
 ```text
 skills/
@@ -24,14 +25,32 @@ skills/
     SKILL.md
     docs/
       ...
+  linq2db-cli/
+    SKILL.md
 ```
+
+Only the `linq2db` package carries skills. Provider metapackages and integration packages do not: they depend on
+`linq2db`, and a second copy under the same skill name would collide.
 
 The skill is used from one of two places:
 
 - the restored package, `<global-packages>/linq2db/<version>/skills/linq2db/`;
 - a copy in the consuming repository, `.agents/skills/linq2db/` or `.claude/skills/linq2db/`
   (made by `dotnet linq2db skill install` or by hand; the command comes with the `linq2db.cli` tool, installed or run
-  without installing as `dnx linq2db.cli skill install`).
+  without installing as `dnx linq2db.cli skill install`, or by Microsoft's beta `dotnet-package-skills` tool, see below).
+
+Two installers can fill a repository, and a destination (`.agents/skills`, `.claude/skills`) should have one of them:
+
+- `dotnet linq2db skill install` writes `linq2db` and `linq2db-cli` into both destinations, takes `linq2db-cli` from the
+  tool, and records its files in `.linq2db-skill.json` inside each skill folder. It reads, and never writes, the
+  `.dotnet-package-skills.json` of a destination: a folder listed there is left unchanged (even with `--force`), and
+  `--check` fails when the recorded linq2db version differs from the project's. When it owns a folder in a destination
+  that has such a file, it prints how to hand the folder over (delete it and run `dotnet-package-skills install`).
+- `dotnet-package-skills install` (beta) copies the skills of the direct `PackageReference` packages into one
+  destination per run (`.agents/skills`; run again with `-d .claude/skills`), records them in
+  `.dotnet-package-skills.json`, and skips a non-empty folder it did not install. Because it reads direct references
+  only, a project that gets `linq2db` transitively (provider or integration packages) uses
+  `dotnet-package-skills install -p linq2db@<version>`.
 
 ## Rules for skill content
 

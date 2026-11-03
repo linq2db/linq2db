@@ -23,5 +23,12 @@ namespace LinqToDB.CommandLine.Commands.Skill
 		public HashSet<string>            Owned     { get; } = new(SkillPath.Comparer);
 		/// <summary>Whether the manifest has to be (re)written.</summary>
 		public bool                       WriteManifest { get; set; }
+		/// <summary>
+		/// For <see cref="SkillInstallState.ManagedExternally"/>: the package version that dotnet-package-skills installed,
+		/// or <see langword="null"/> when its record is unreadable and the owner is unknown.
+		/// </summary>
+		public string?                    ExternalVersion { get; init; }
+		/// <summary>The destination holds a readable dotnet-package-skills record, yet this tool owns the directory.</summary>
+		public bool                       OtherToolPresent { get; init; }
 	}
 }

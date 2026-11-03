@@ -35,6 +35,11 @@ namespace LinqToDB.CommandLine.Commands.Skill
 			}
 		}
 
+		/// <summary>
+		/// The skill of this tool. It is taken from the copy embedded in the tool even though the linq2db package ships the
+		/// same file: the text documents the options of the tool version that runs, and a package of another version
+		/// would describe another tool.
+		/// </summary>
 		public static SkillBundle GetCliSkill()
 		{
 			return new SkillBundle(

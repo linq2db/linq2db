@@ -12,5 +12,10 @@ namespace LinqToDB.CommandLine.Commands.Skill
 		Modified,
 		/// <summary>The directory exists, but the tool did not install it.</summary>
 		Unmanaged,
+		/// <summary>
+		/// The dotnet-package-skills tool owns the directory (or may own it, when its record cannot be read); it is never touched,
+		/// not even with <c>--force</c>.
+		/// </summary>
+		ManagedExternally,
 	}
 }

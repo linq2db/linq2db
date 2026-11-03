@@ -5,6 +5,8 @@ description: Use when you need to look at a real database from the command line 
 
 # linq2db CLI Agent Skill
 
+This skill needs the `linq2db.cli` tool; referencing the `linq2db` package does not provide it. If `dotnet linq2db` is not available, ask the user before installing the tool (`dotnet tool install -g linq2db.cli`) or running it without installing (`dnx linq2db.cli ...`, .NET 10 SDK). When the tool is available, the output of `dotnet linq2db skill` is authoritative for that tool version; options and behavior may differ from this copy, which can come from another version.
+
 Use `dotnet linq2db` to run linq2db command-line tools.
 
 ## Query Command
@@ -722,7 +724,12 @@ Use this command when an agent needs current instructions for using linq2db CLI 
 Use `dotnet linq2db skill install [--project <project file or directory>] [--root <directory>] [--check] [--force]` to add the agent skills to a repository (it needs the `linq2db.cli` tool, which referencing the `linq2db` package does not provide; without installing the tool, run it as `dnx linq2db.cli skill install [options]` with the .NET 10 SDK). It installs two skills, each as a real copy in both `.agents/skills/<name>/` (Codex, GitHub Copilot, Cursor, Gemini, Junie and others) and `.claude/skills/<name>/` (Claude Code):
 
 - `linq2db`: guidance for writing code with the linq2db library. It is taken from the linq2db NuGet package version the project references (the project must be restored; the package's assets file is located through MSBuild), so the guidance matches the API in use. When the package carries no skill, or no restored project references linq2db, the copy embedded in the tool is used and a warning says so when its version differs.
-- `linq2db-cli`: this document, taken from the tool.
+- `linq2db-cli`: this document, always taken from the tool, never from the package, so it describes the tool that runs.
+
+The `linq2db` package also carries both skills (`skills/linq2db/` and `skills/linq2db-cli/`), so Microsoft's beta `dotnet-package-skills` tool can install them as well. It reads direct `PackageReference` items only, so a project that gets `linq2db` transitively (through a provider package or an EF Core or ASP.NET integration package) uses `dotnet-package-skills install -p linq2db@<version>` or this command. It writes one destination per run (`.agents/skills` by default; run it again with `-d .claude/skills` for Claude Code) and records what it installed in `.dotnet-package-skills.json` there. Use one installer per destination:
+
+- This command only reads `.dotnet-package-skills.json`. A skill folder listed there is left unchanged, even with `--force`; `--check` accepts it when the recorded linq2db version equals the version the project uses and fails when it differs. When that file cannot be read (invalid, or a newer format version), ownership is unknown and every folder this command did not install is left unchanged.
+- `dotnet-package-skills` skips a folder it did not install. After this command installs a skill into a destination that has a `.dotnet-package-skills.json`, it prints how to hand the folder over: delete the folder and run `dotnet-package-skills install`.
 
 Options:
 
