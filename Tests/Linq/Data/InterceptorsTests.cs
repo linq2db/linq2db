@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -1477,7 +1478,16 @@ namespace Tests.Data
 		[Test]
 		public void EagerLoadExceptionIntercepted([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySql)] string context)
 		{
-			using var db = GetDataConnection(context, o => o.UseCombinedCommands(true));
+			var commands = new List<string>();
+
+			using var db = GetDataConnection(context, o => o
+				.UseCombinedCommands(true)
+				.UseTracing(TraceLevel.Info, info =>
+				{
+					if (info.TraceInfoStep == TraceInfoStep.BeforeExecute && info.Operation == TraceOperation.ExecuteReader)
+						commands.Add(info.SqlText);
+				}));
+
 			db.AddInterceptor(new TestExceptionInterceptor());
 
 			Action act = () => db.GetTable<EagerExceptionParent>()
@@ -1485,12 +1495,23 @@ namespace Tests.Data
 				.ToList();
 
 			act.ShouldThrow<TestException>();
+
+			AssertCombinedEagerExecution(context, db, commands);
 		}
 
 		[Test]
 		public async Task EagerLoadExceptionInterceptedAsync([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySql)] string context)
 		{
-			using var db = GetDataConnection(context, o => o.UseCombinedCommands(true));
+			var commands = new List<string>();
+
+			using var db = GetDataConnection(context, o => o
+				.UseCombinedCommands(true)
+				.UseTracing(TraceLevel.Info, info =>
+				{
+					if (info.TraceInfoStep == TraceInfoStep.BeforeExecute && info.Operation == TraceOperation.ExecuteReader)
+						commands.Add(info.SqlText);
+				}));
+
 			db.AddInterceptor(new TestExceptionInterceptor());
 
 			Func<Task> act = () => db.GetTable<EagerExceptionParent>()
@@ -1498,6 +1519,27 @@ namespace Tests.Data
 				.ToListAsync();
 
 			await act.ShouldThrowAsync<TestException>();
+
+			AssertCombinedEagerExecution(context, db, commands);
+		}
+
+		// The sequential path fails on its first query the same way, so the throw alone does not show that the intercepted
+		// execution carried both statements.
+		static void AssertCombinedEagerExecution(string context, DataConnection db, List<string> commands)
+		{
+#if SUPPORTS_DBBATCH
+			var batch = !context.IsAnyOf(TestProvName.AllSqlServerSequentialAccess)
+				&& db.OpenDbConnection().CanCreateBatch;
+#else
+			var batch = false;
+#endif
+
+			var text = commands.ShouldHaveSingleItem();
+
+			if (batch)
+				text.ShouldContain("-- Command 2");
+			else
+				text.Split('\n').ShouldContain(line => line.Trim() == ";");
 		}
 		#endregion
 
