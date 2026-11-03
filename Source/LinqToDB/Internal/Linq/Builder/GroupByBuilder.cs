@@ -364,6 +364,10 @@ namespace LinqToDB.Internal.Linq.Builder
 				or SqlCastExpression
 				or SqlCoalesceExpression
 				or SqlConcatExpression
+				or SqlCompareToExpression
+				or SqlIntervalDifferenceExpression
+				or SqlIntervalPartExpression
+				or SqlTemporalArithmeticExpression
 				or SqlParameterizedExpressionBase
 				or SqlConditionExpression
 				or SqlCaseExpression
@@ -416,6 +420,10 @@ namespace LinqToDB.Internal.Linq.Builder
 					case QueryElementType.SqlCast:
 					case QueryElementType.SqlCoalesce:
 					case QueryElementType.SqlConcat:
+					case QueryElementType.CompareTo:
+					case QueryElementType.SqlIntervalDifference:
+					case QueryElementType.SqlIntervalPart:
+					case QueryElementType.SqlTemporalArithmetic:
 					case QueryElementType.SqlCondition:
 					case QueryElementType.SqlCase:
 					case QueryElementType.SearchCondition:
@@ -427,6 +435,8 @@ namespace LinqToDB.Internal.Linq.Builder
 					case QueryElementType.IsDistinctPredicate:
 					case QueryElementType.BetweenPredicate:
 					case QueryElementType.InListPredicate:
+					case QueryElementType.LikePredicate:
+					case QueryElementType.SearchStringPredicate:
 						return true;
 				}
 

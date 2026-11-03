@@ -1195,9 +1195,10 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		// The ROW_NUMBER lowering overflows the stack building a concatenation ordered before a GroupBy (on master too).
+		// The DISTINCT ON lowering only: the ROW_NUMBER lowering overflows the stack building such an ordering before a
+		// GroupBy (https://github.com/linq2db/linq2db/issues/6242, on master too).
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
-		public void DistinctByAfterGroupByOrderedByConcatOfKey([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
+		public void DistinctByAfterGroupByOrderedByConcatOfKey([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1207,6 +1208,118 @@ namespace Tests.Linq
 				.GroupBy(p => p.FirstName)
 				.Select(g => new { g.Key, Count = g.Count() })
 				.DistinctBy(x => x.Key.Length);
+
+			AssertQuery(query);
+		}
+
+		// As DistinctByAfterGroupByOrderedByConcatOfKey. An entry that is not kept cuts the ordering before the key tie-break,
+		// so the whole ordering is dropped and DistinctBy throws.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterGroupByOrderedByCompareToOfKey([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.OrderBy(p => p.FirstName.CompareTo("K"))
+				.ThenByDescending(p => p.FirstName)
+				.GroupBy(p => p.FirstName)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.DistinctBy(x => x.Key.Length);
+
+			AssertQuery(query);
+		}
+
+		// As DistinctByAfterGroupByOrderedByCompareToOfKey.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterGroupByOrderedByStartsWithOfKey([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.OrderBy(p => p.FirstName.StartsWith("J"))
+				.ThenByDescending(p => p.FirstName)
+				.GroupBy(p => p.FirstName)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.DistinctBy(x => x.Key.Length);
+
+			AssertQuery(query);
+		}
+
+		// As DistinctByAfterGroupByOrderedByCompareToOfKey.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterGroupByOrderedByLikeOfKey([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.OrderBy(p => Sql.Like(p.FirstName, "J%"))
+				.ThenByDescending(p => p.FirstName)
+				.GroupBy(p => p.FirstName)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.DistinctBy(x => x.Key.Length);
+
+			var expected = Person
+				.OrderBy(p => p.FirstName.StartsWith("J"))
+				.ThenByDescending(p => p.FirstName)
+				.GroupBy(p => p.FirstName)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.DistinctBy(x => x.Key.Length);
+
+			query
+				.ToList()
+				.ShouldBe(expected.ToList(), ignoreOrder: true);
+		}
+
+		// As DistinctByAfterGroupByOrderedByCompareToOfKey.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterGroupByOrderedByDateDifferenceOfKey([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var baseDate = new DateTime(2000, 1, 1);
+
+			var query = db.Types
+				.OrderBy(t => t.DateTimeValue - baseDate)
+				.ThenByDescending(t => t.DateTimeValue)
+				.GroupBy(t => t.DateTimeValue)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.DistinctBy(x => x.Key.Year > 0);
+
+			AssertQuery(query);
+		}
+
+		// As DistinctByAfterGroupByOrderedByCompareToOfKey.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterGroupByOrderedByDateDifferencePartOfKey([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var baseDate = new DateTime(2000, 1, 1);
+
+			var query = db.Types
+				.OrderBy(t => (t.DateTimeValue - baseDate).TotalDays)
+				.ThenByDescending(t => t.DateTimeValue)
+				.GroupBy(t => t.DateTimeValue)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.DistinctBy(x => x.Key.Year > 0);
+
+			AssertQuery(query);
+		}
+
+		// As DistinctByAfterGroupByOrderedByCompareToOfKey.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterGroupByOrderedByDateShiftOfKey([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var baseDate = new DateTime(2000, 1, 1);
+
+			var query = db.Types
+				.OrderByDescending(t => t.DateTimeValue + (t.DateTimeValue - baseDate))
+				.ThenBy(t => t.DateTimeValue)
+				.GroupBy(t => t.DateTimeValue)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.DistinctBy(x => x.Key.Year > 0);
 
 			AssertQuery(query);
 		}
