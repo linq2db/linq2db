@@ -30,41 +30,72 @@ namespace LinqToDB.CommandLine.Commands.Skill
 
 		/// <summary>
 		/// Finds the first symbolic link or junction on the way from <paramref name="root"/> to <paramref name="path"/> and
-		/// returns it with the final target it resolves to, or <see langword="null"/> when the path has no link.
-		/// The target is <see langword="null"/> when it cannot be resolved.
+		/// returns its path, or <see langword="null"/> when the path has no link. A link that cannot be inspected counts as a link.
 		/// </summary>
-		public static (string Link, string? Target, string Remainder)? FindLink(string root, string path)
+		public static string? FindLink(string root, string path)
 		{
-			var current  = root;
-			var segments = Path.GetRelativePath(root, path).Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+			var current = root;
 
-			for (var i = 0; i < segments.Length; i++)
+			foreach (var segment in Path.GetRelativePath(root, path).Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
 			{
-				current = Path.Combine(current, segments[i]);
+				current = Path.Combine(current, segment);
 
-				FileSystemInfo info = Directory.Exists(current) ? new DirectoryInfo(current) : new FileInfo(current);
-
-				if (info.LinkTarget != null || (info.Exists && info.Attributes.HasFlag(FileAttributes.ReparsePoint)))
+				try
 				{
-					string? target = null;
+					FileSystemInfo info = Directory.Exists(current) ? new DirectoryInfo(current) : new FileInfo(current);
 
-					try
-					{
-						target = info.ResolveLinkTarget(true)?.FullName;
-					}
-					catch (IOException)
-					{
-						// a loop of links: no target
-					}
+					if (info.LinkTarget != null || (info.Exists && info.Attributes.HasFlag(FileAttributes.ReparsePoint)))
+						return current;
 
-					return (current, target, string.Join(Path.DirectorySeparatorChar, segments.Skip(i + 1).ToArray()));
+					if (!info.Exists)
+						return null;
 				}
-
-				if (!info.Exists)
-					return null;
+				catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+				{
+					return current;
+				}
 			}
 
 			return null;
+		}
+
+		/// <summary>
+		/// The path with every link on the way resolved, ancestors included (a symbolic link above the repository, a
+		/// <c>/tmp</c> that is a link, a mapped drive), so that two spellings of one directory compare equal. A link that cannot
+		/// be resolved is left as it is.
+		/// </summary>
+		public static string GetRealPath(string path)
+		{
+			return GetRealPath(path, 0);
+		}
+
+		private static string GetRealPath(string path, int depth)
+		{
+			var full    = Path.GetFullPath(path);
+			var current = Path.GetPathRoot(full)!;
+
+			foreach (var segment in full.Substring(current.Length).Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
+			{
+				if (segment.Length == 0)
+					continue;
+
+				current = Path.Combine(current, segment);
+
+				try
+				{
+					FileSystemInfo info   = Directory.Exists(current) ? new DirectoryInfo(current) : new FileInfo(current);
+					var            target = depth < 32 ? info.ResolveLinkTarget(true) : null;
+
+					if (target != null)
+						current = GetRealPath(target.FullName, depth + 1);
+				}
+				catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+				{
+					// not resolvable: keep the name as written
+				}
+			}
+
+			return current;
 		}
 
 		/// <summary>

@@ -545,6 +545,31 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task AliasIsRecognizedWhenTheRepositoryIsReachedThroughALinkedAncestor()
+		{
+			var repo = CreateRepository("5.0.0");
+			var via  = Path.Combine(_directory, "via");
+
+			Directory.CreateDirectory(Path.Combine(repo.Root, ".agents", "skills"));
+			Directory.CreateDirectory(Path.Combine(repo.Root, ".claude"));
+
+			// the alias points at the real spelling, while --root names the repository through a linked ancestor
+			if (!TryCreateDirectoryLink(via, _directory)
+				|| !TryCreateDirectoryLink(Path.Combine(repo.Root, ".claude", "skills"), Path.Combine(repo.Root, ".agents", "skills")))
+				Assert.Ignore("Symbolic links are not available.");
+
+			var viaRoot = Path.Combine(via, "repo");
+			var result  = await RunCli("skill", "install", "--project", repo.Project, "--root", viaRoot);
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.ExitCode.ShouldBe(0, result.Error);
+				result.Output.  ShouldContain("handled there");
+				File.Exists(Path.Combine(repo.Root, ".agents", "skills", "linq2db", "SKILL.md")).ShouldBeTrue();
+			}
+		}
+
+		[Test]
 		public async Task DanglingSkillsRootLinkSkipsOnlyThatDestination()
 		{
 			var repo = CreateRepository("5.0.0");

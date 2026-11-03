@@ -251,21 +251,21 @@ namespace LinqToDB.CommandLine.Commands.Skill
 
 					if (link != null)
 					{
-						var (_, target, rest) = link.Value;
-						var real              = target == null ? null : (rest.Length == 0 ? target : Path.Combine(target, rest));
+						// compared as fully resolved paths, so a repository reached through a linked ancestor still matches
+						var real = SkillPath.GetRealPath(destination);
 
 						// one tool directory aliased to the other is common: the real directory is processed once, under its own name
-						if (real != null && destinations.Exists(d => !string.Equals(d, destination, StringComparison.Ordinal)
+						if (Directory.Exists(real) && destinations.Exists(d => !string.Equals(d, destination, StringComparison.Ordinal)
 							&& SkillPath.FindLink(root, d) == null
-							&& SkillPath.Comparer.Equals(Path.GetFullPath(real), Path.GetFullPath(d))))
+							&& SkillPath.Comparer.Equals(real, SkillPath.GetRealPath(d))))
 						{
-							await environment.Out.WriteLineAsync($"  {relative}: link to {Path.GetRelativePath(root, real)}; handled there");
+							await environment.Out.WriteLineAsync($"  {relative}: link to {Path.GetRelativePath(SkillPath.GetRealPath(root), real)}; handled there");
 						}
 						else
 						{
-							var why = real == null || !Directory.Exists(real)
-								? $"'{link.Value.Link}' is a dangling or unresolvable link"
-								: $"'{link.Value.Link}' is a link to '{real}', which is not another skill directory of this tool";
+							var why = !Directory.Exists(real)
+								? $"'{link}' is a dangling or unresolvable link"
+								: $"'{link}' resolves to '{real}', which is not another skill directory of this tool";
 
 							await environment.Error.WriteLineAsync($"  skipped: {relative}: {why}; refusing to write through it.");
 							skipped++;
@@ -414,7 +414,9 @@ namespace LinqToDB.CommandLine.Commands.Skill
 
 			await PrintHandOff(environment, root, changed);
 
-			await PrintPointerHint(environment, root);
+			// nothing was installed or checked when every destination was refused
+			if (plans.Count > 0)
+				await PrintPointerHint(environment, root);
 
 			// a destination that was refused is not a success, although the others were handled
 			return skipped > 0 ? StatusCodes.EXPECTED_ERROR : StatusCodes.SUCCESS;
