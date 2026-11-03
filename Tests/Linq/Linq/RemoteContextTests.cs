@@ -391,12 +391,22 @@ namespace Tests.Linq
 
 			executed.Clear();
 
-			var id = db.InsertWithInt32Identity(new CombinedOptionRow { Value = "a" });
-
-			var row = table.Single(r => r.Id == id);
+			var id       = db.InsertWithInt32Identity(new CombinedOptionRow { Value = "a" });
+			var commands = executed.ToList();
+			var row      = table.Single(r => r.Id == id);
 
 			row.Value.ShouldBe("a");
-			executed.Count.ShouldBe(2);
+
+#if SUPPORTS_DBBATCH
+			var batch = context.IsAnyOf(TestProvName.AllMySqlConnector);
+#else
+			var batch = false;
+#endif
+
+			commands.Count.ShouldBe(1);
+			commands
+				.Any(c => c.Contains("-- Command 1", StringComparison.Ordinal))
+				.ShouldBe(batch);
 		}
 
 		[Table]
