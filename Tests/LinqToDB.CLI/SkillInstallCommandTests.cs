@@ -506,10 +506,88 @@ namespace Tests.LinqToDB.CLI
 
 			using (Assert.EnterMultipleScope())
 			{
+				// only the destination behind the link is refused
 				result.ExitCode.ShouldBe(-3);
-				result.Error.   ShouldContain("symbolic link");
+				result.Error.   ShouldContain("skipped: " + Path.Combine(".agents", "skills"));
+				result.Error.   ShouldContain("not another skill directory");
 				Directory.EnumerateFileSystemEntries(outside).ShouldBeEmpty();
-				Directory.Exists(Path.Combine(repo.Root, ".claude")).ShouldBeFalse();
+				File.Exists(Path.Combine(repo.Root, ".claude", "skills", "linq2db", "SKILL.md")).ShouldBeTrue();
+
+				var check = await RunCli("skill", "install", "--project", repo.Project, "--check");
+				check.ExitCode.ShouldBe(-3);
+				check.Error.   ShouldContain("skipped: " + Path.Combine(".agents", "skills"));
+			}
+		}
+
+		[Test]
+		public async Task SkillsRootLinkedToTheOtherDestinationIsHandledOnce()
+		{
+			var repo = CreateRepository("5.0.0");
+
+			Directory.CreateDirectory(Path.Combine(repo.Root, ".agents", "skills"));
+			Directory.CreateDirectory(Path.Combine(repo.Root, ".claude"));
+
+			if (!TryCreateDirectoryLink(Path.Combine(repo.Root, ".claude", "skills"), Path.Combine(repo.Root, ".agents", "skills")))
+				Assert.Ignore("Symbolic links are not available.");
+
+			var install = await RunCli("skill", "install", "--project", repo.Project);
+			var check   = await RunCli("skill", "install", "--project", repo.Project, "--check");
+
+			using (Assert.EnterMultipleScope())
+			{
+				install.ExitCode.ShouldBe(0, install.Error);
+				install.Output.  ShouldContain($"{Path.Combine(".claude", "skills")}: link to {Path.Combine(".agents", "skills")}; handled there");
+				File.Exists(Path.Combine(repo.Root, ".agents", "skills", "linq2db", "SKILL.md")).ShouldBeTrue();
+				File.Exists(Path.Combine(repo.Root, ".claude", "skills", "linq2db-cli", "SKILL.md")).ShouldBeTrue();
+				check.ExitCode.ShouldBe(0, check.Error);
+				check.Output.  ShouldContain("handled there");
+			}
+		}
+
+		[Test]
+		public async Task DanglingSkillsRootLinkSkipsOnlyThatDestination()
+		{
+			var repo = CreateRepository("5.0.0");
+
+			Directory.CreateDirectory(Path.Combine(repo.Root, ".agents"));
+
+			if (!TryCreateDirectoryLink(Path.Combine(repo.Root, ".agents", "skills"), Path.Combine(_directory, "does-not-exist")))
+				Assert.Ignore("Symbolic links are not available.");
+
+			var install = await RunCli("skill", "install", "--project", repo.Project);
+			var check   = await RunCli("skill", "install", "--project", repo.Project, "--check");
+
+			using (Assert.EnterMultipleScope())
+			{
+				install.ExitCode.ShouldBe(-3);
+				install.Error.   ShouldContain("skipped: " + Path.Combine(".agents", "skills"));
+				install.Error.   ShouldContain("dangling");
+				File.Exists(Path.Combine(repo.Root, ".claude", "skills", "linq2db", "SKILL.md")).ShouldBeTrue();
+				check.ExitCode.  ShouldBe(-3);
+				check.Error.     ShouldContain("dangling");
+			}
+		}
+
+		[Test]
+		public async Task RecordClaimingAFolderTwiceIsUnreadable()
+		{
+			var repo        = CreateRepository("5.0.0");
+			var destination = Path.Combine(repo.Root, ".agents", "skills");
+			var folder      = Path.Combine(destination, "linq2db");
+
+			Directory.CreateDirectory(folder);
+			File.WriteAllText(Path.Combine(folder, "SKILL.md"), "somebody's skill\n");
+			File.WriteAllText(
+				Path.Combine(destination, ".dotnet-package-skills.json"),
+				"{\"version\":1,\"packages\":{\"linq2db\":{\"versions\":{\"5.0.0\":{\"skills\":[\"linq2db\"]},\"5.0.1\":{\"skills\":[\"Linq2db\"]}}}}}");
+
+			var result = await RunCli("skill", "install", "--project", repo.Project, "--check");
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.ExitCode.ShouldBe(-3);
+				result.Error.   ShouldContain("ownership unknown");
+				result.Error.   ShouldContain("fix or delete it, or run 'dotnet-package-skills install' to see its error");
 			}
 		}
 
@@ -1061,7 +1139,7 @@ namespace Tests.LinqToDB.CLI
 			using (Assert.EnterMultipleScope())
 			{
 				result.ExitCode.ShouldBe(-3);
-				result.Error.   ShouldContain($"ownership unknown: {Path.Combine(".agents", "skills", "linq2db")}; .dotnet-package-skills.json could not be read");
+				result.Error.   ShouldContain($"ownership unknown: {Path.Combine(".agents", "skills", "linq2db")}; {Path.Combine(".agents", "skills", ".dotnet-package-skills.json")} could not be read; fix or delete it");
 			}
 		}
 

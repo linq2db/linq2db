@@ -102,7 +102,13 @@ namespace LinqToDB.CommandLine.Commands.Skill
 						foreach (var skill in skills.EnumerateArray())
 						{
 							if (skill.ValueKind == JsonValueKind.String && skill.GetString() is { Length: > 0 } name)
+							{
+								// the other tool rejects a manifest that claims one folder twice, so nothing in it can be trusted
+								if (manifest._owners.ContainsKey(name))
+									return new(true, false);
+
 								manifest._owners[name] = new PackageSkillOwner(package.Name, version.Name);
+							}
 						}
 					}
 				}

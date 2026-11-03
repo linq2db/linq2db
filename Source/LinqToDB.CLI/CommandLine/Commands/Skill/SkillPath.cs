@@ -29,6 +29,45 @@ namespace LinqToDB.CommandLine.Commands.Skill
 		}
 
 		/// <summary>
+		/// Finds the first symbolic link or junction on the way from <paramref name="root"/> to <paramref name="path"/> and
+		/// returns it with the final target it resolves to, or <see langword="null"/> when the path has no link.
+		/// The target is <see langword="null"/> when it cannot be resolved.
+		/// </summary>
+		public static (string Link, string? Target, string Remainder)? FindLink(string root, string path)
+		{
+			var current  = root;
+			var segments = Path.GetRelativePath(root, path).Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+			for (var i = 0; i < segments.Length; i++)
+			{
+				current = Path.Combine(current, segments[i]);
+
+				FileSystemInfo info = Directory.Exists(current) ? new DirectoryInfo(current) : new FileInfo(current);
+
+				if (info.LinkTarget != null || (info.Exists && info.Attributes.HasFlag(FileAttributes.ReparsePoint)))
+				{
+					string? target = null;
+
+					try
+					{
+						target = info.ResolveLinkTarget(true)?.FullName;
+					}
+					catch (IOException)
+					{
+						// a loop of links: no target
+					}
+
+					return (current, target, string.Join(Path.DirectorySeparatorChar, segments.Skip(i + 1).ToArray()));
+				}
+
+				if (!info.Exists)
+					return null;
+			}
+
+			return null;
+		}
+
+		/// <summary>
 		/// Throws when any existing part of <paramref name="path"/> below <paramref name="root"/> is a symbolic link or
 		/// a junction. Writing or deleting through one could leave the repository.
 		/// </summary>

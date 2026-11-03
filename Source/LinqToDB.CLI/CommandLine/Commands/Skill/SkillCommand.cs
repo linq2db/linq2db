@@ -52,7 +52,7 @@ namespace LinqToDB.CommandLine.Commands.Skill
 			"force",
 			null,
 			false,
-			"overwrite files that were edited locally or that this tool did not install",
+			"overwrite files that were edited locally or that this tool did not install (folders managed by dotnet-package-skills are never overwritten)",
 			null,
 			null,
 			null,
@@ -205,7 +205,8 @@ namespace LinqToDB.CommandLine.Commands.Skill
 
 			SkillBundle   library;
 			SkillBundle[] bundles;
-			var           plans = new List<SkillInstallPlan>();
+			var           plans   = new List<SkillInstallPlan>();
+			var           skipped = 0;
 
 			try
 			{
@@ -241,10 +242,53 @@ namespace LinqToDB.CommandLine.Commands.Skill
 				// the options of the tool that is running, and it is the only copy that cannot be older than that tool
 				bundles = [library, SkillSource.GetCliSkill()];
 
-				foreach (var skillRoot in _skillRoots)
+				var destinations = _skillRoots.Select(r => Path.Combine(root, r.Replace('/', Path.DirectorySeparatorChar))).ToList();
+
+				foreach (var destination in destinations)
 				{
-					foreach (var bundle in bundles)
-						plans.Add(SkillInstaller.Analyze(bundle, root, Path.Combine(root, skillRoot.Replace('/', Path.DirectorySeparatorChar), bundle.Name)));
+					var relative = Path.GetRelativePath(root, destination);
+					var link     = SkillPath.FindLink(root, destination);
+
+					if (link != null)
+					{
+						var (_, target, rest) = link.Value;
+						var real              = target == null ? null : (rest.Length == 0 ? target : Path.Combine(target, rest));
+
+						// one tool directory aliased to the other is common: the real directory is processed once, under its own name
+						if (real != null && destinations.Exists(d => !string.Equals(d, destination, StringComparison.Ordinal)
+							&& SkillPath.FindLink(root, d) == null
+							&& SkillPath.Comparer.Equals(Path.GetFullPath(real), Path.GetFullPath(d))))
+						{
+							await environment.Out.WriteLineAsync($"  {relative}: link to {Path.GetRelativePath(root, real)}; handled there");
+						}
+						else
+						{
+							var why = real == null || !Directory.Exists(real)
+								? $"'{link.Value.Link}' is a dangling or unresolvable link"
+								: $"'{link.Value.Link}' is a link to '{real}', which is not another skill directory of this tool";
+
+							await environment.Error.WriteLineAsync($"  skipped: {relative}: {why}; refusing to write through it.");
+							skipped++;
+						}
+
+						continue;
+					}
+
+					var destinationPlans = new List<SkillInstallPlan>();
+
+					try
+					{
+						foreach (var bundle in bundles)
+							destinationPlans.Add(SkillInstaller.Analyze(bundle, root, Path.Combine(destination, bundle.Name)));
+
+						plans.AddRange(destinationPlans);
+					}
+					catch (InvalidOperationException ex)
+					{
+						// a link inside the destination: that destination is skipped, the others are still handled
+						await environment.Error.WriteLineAsync($"  skipped: {relative}: {ex.Message}");
+						skipped++;
+					}
 				}
 			}
 			catch (Exception ex) when (ex is InvalidDataException or InvalidOperationException)
@@ -256,13 +300,13 @@ namespace LinqToDB.CommandLine.Commands.Skill
 			await environment.Out.WriteLineAsync($"linq2db skill: {library.Origin}; linq2db-cli skill: {bundles[1].Origin}.");
 
 			return check
-				? await Check(environment, root, plans, found.Count > 0 ? found[0].Version : null)
-				: await Apply(environment, root, plans, force);
+				? await Check(environment, root, plans, found.Count > 0 ? found[0].Version : null, skipped)
+				: await Apply(environment, root, plans, force, skipped);
 		}
 
-		private static async Task<int> Check(ICliEnvironment environment, string root, List<SkillInstallPlan> plans, string? resolvedVersion)
+		private static async Task<int> Check(ICliEnvironment environment, string root, List<SkillInstallPlan> plans, string? resolvedVersion, int skipped)
 		{
-			var failed = false;
+			var failed = skipped > 0;
 
 			foreach (var plan in plans)
 			{
@@ -282,7 +326,8 @@ namespace LinqToDB.CommandLine.Commands.Skill
 					else if (plan.OwnershipUnknown)
 					{
 						failed = true;
-						await environment.Error.WriteLineAsync($"  ownership unknown: {relative}; {PackageSkillsManifest.FileName} could not be read");
+						await environment.Error.WriteLineAsync(
+							$"  ownership unknown: {relative}; {Path.Combine(Path.GetDirectoryName(relative)!, PackageSkillsManifest.FileName)} could not be read; fix or delete it, or run 'dotnet-package-skills install' to see its error");
 					}
 					// not ours to update, but a copy of another linq2db version is as stale as one of ours
 					else if (plan.ExternalOwner is { IsLinq2db: true } owner && resolvedVersion != null && !SameVersion(owner.Version, resolvedVersion))
@@ -312,7 +357,7 @@ namespace LinqToDB.CommandLine.Commands.Skill
 			return StatusCodes.SUCCESS;
 		}
 
-		private static async Task<int> Apply(ICliEnvironment environment, string root, List<SkillInstallPlan> plans, bool force)
+		private static async Task<int> Apply(ICliEnvironment environment, string root, List<SkillInstallPlan> plans, bool force, int skipped)
 		{
 			var conflicts = plans.SelectMany(static p => p.Conflicts).ToList();
 
@@ -323,7 +368,7 @@ namespace LinqToDB.CommandLine.Commands.Skill
 				foreach (var conflict in conflicts)
 					await environment.Error.WriteLineAsync($"  {conflict}");
 
-				await environment.Error.WriteLineAsync("Use '--force' to overwrite them.");
+				await environment.Error.WriteLineAsync("Use '--force' to overwrite them (folders managed by dotnet-package-skills are never overwritten).");
 				return StatusCodes.EXPECTED_ERROR;
 			}
 
@@ -371,7 +416,8 @@ namespace LinqToDB.CommandLine.Commands.Skill
 
 			await PrintPointerHint(environment, root);
 
-			return StatusCodes.SUCCESS;
+			// a destination that was refused is not a success, although the others were handled
+			return skipped > 0 ? StatusCodes.EXPECTED_ERROR : StatusCodes.SUCCESS;
 		}
 
 		/// <summary>
