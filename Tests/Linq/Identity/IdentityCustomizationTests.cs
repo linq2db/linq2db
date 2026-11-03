@@ -406,8 +406,8 @@ namespace Tests.Identity
 					.Length
 					.ShouldBe(36);
 				passkey.Columns
-						.Select(c => c.MemberName)
-						.ShouldContain(nameof(AppUserPasskey.Device));
+					.Select(c => c.MemberName)
+					.ShouldContain(nameof(AppUserPasskey.Device));
 
 				// no passkey navigation exists, so the stock type is not mapped alongside the custom one
 				ms
