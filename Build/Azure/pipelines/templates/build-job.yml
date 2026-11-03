@@ -58,7 +58,7 @@ jobs:
     inputs:
       command: build
       projects: 'Examples/Examples.slnx'
-      arguments: '--configuration Debug'
+      arguments: '--configuration $(release_configuration)'
     displayName: Build Examples (verify)
     condition: and(succeeded(), ${{ parameters.with_examples }})
 
@@ -118,14 +118,18 @@ jobs:
     inputs:
       script: |
         ECHO ON
-        REM publish main and ef.core tests for all TFMs (without architecture!)
-        FOR %%f IN ($(netfx_tfm) net8.0 net9.0 net10.0) DO (
+        REM publish the main tests for net8+ (without architecture!)
+        FOR %%f IN (net8.0 net9.0 net10.0) DO (
             dotnet publish Tests/Linq/Tests.csproj -f %%f -c $(test_configuration) -o .build/publish/Tests/$(test_configuration)/%%f_x64
             if %errorlevel% neq 0 exit
             )
 
-        REM -a x64: net462 is AnyCPU and runs as x64; without an explicit RID the SQLitePCLRaw net4x
-        REM native target ships only the x86 e_sqlite3, which the x64 EF test process cannot load.
+        REM -a x64 for both net462 suites: the SDK defaults a .NET Framework exe with no RID to win-x86,
+        REM so the main suite ran 32-bit and its NUnit result string ran out of address space on full runs.
+        REM The EF3 suite also needs the RID for the x64 e_sqlite3, which the net4x native target omits.
+        dotnet publish Tests/Linq/Tests.csproj -f $(netfx_tfm) -c $(test_configuration) -a x64 -o .build/publish/Tests/$(test_configuration)/$(netfx_tfm)_x64
+        if %errorlevel% neq 0 exit
+
         dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF3.csproj -f net462 -c $(test_configuration) -a x64 -o .build/publish/EFTests/$(test_configuration)/net462_x64
         if %errorlevel% neq 0 exit
 

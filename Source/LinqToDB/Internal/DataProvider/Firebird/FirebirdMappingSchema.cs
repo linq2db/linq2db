@@ -61,9 +61,9 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				var f = (float)v;
 				if (float.IsNaN(f))
 					sb.Append("CAST(LOG(1, 1) AS FLOAT)");
-				else if (float.IsNegativeInfinity(f))
+				else if (FloatingPointHelper.IsNegativeInfinity(f))
 					sb.Append("CAST(LOG(1, 0.5) AS FLOAT)");
-				else if (float.IsPositiveInfinity(f))
+				else if (FloatingPointHelper.IsPositiveInfinity(f))
 					sb.Append("CAST(LOG(1, 2) AS FLOAT)");
 				else
 					sb.AppendFormat(CultureInfo.InvariantCulture, "{0:G9}", f);
@@ -74,9 +74,9 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				var d = (double)v;
 				if (double.IsNaN(d))
 					sb.Append("LOG(1, 1)");
-				else if (double.IsNegativeInfinity(d))
+				else if (FloatingPointHelper.IsNegativeInfinity(d))
 					sb.Append("LOG(1, 0.5)");
-				else if (double.IsPositiveInfinity(d))
+				else if (FloatingPointHelper.IsPositiveInfinity(d))
 					sb.Append("LOG(1, 2)");
 				else
 					sb.AppendFormat(CultureInfo.InvariantCulture, "{0:G17}", d);

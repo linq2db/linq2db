@@ -95,7 +95,6 @@ jobs:
         run: |
           $common = @(
             '--configuration', '${{ env.RELEASE_CONFIGURATION }}'
-            '-p:RunAnalyzersDuringBuild=false'
             '-p:RunApiAnalyzersDuringBuild=false'
           ) + ('${{ env.VERSION_ARGS }}' -split ' ' | Where-Object { $_ })
 
@@ -109,13 +108,12 @@ jobs:
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
 
-      # Analyzers stay off, matching build.yml's `with_analyzers: false` until dotnet/roslyn#80621
-      # ships. The API analyzers are a release-prep gate (/release-publicapi), not a per-PR one.
+      # The API analyzers are a release-prep gate (/release-publicapi), not a per-PR one.
       - name: Build solution
-        run: dotnet build ${{ env.SOLUTION }} --configuration ${{ env.RELEASE_CONFIGURATION }} -p:RunAnalyzersDuringBuild=false -p:RunApiAnalyzersDuringBuild=false ${{ env.VERSION_ARGS }}
+        run: dotnet build ${{ env.SOLUTION }} --configuration ${{ env.RELEASE_CONFIGURATION }} -p:RunApiAnalyzersDuringBuild=false ${{ env.VERSION_ARGS }}
 
       - name: Pack solution
-        run: dotnet pack ${{ env.SOLUTION }} --configuration ${{ env.RELEASE_CONFIGURATION }} -p:RunAnalyzersDuringBuild=false -p:RunApiAnalyzersDuringBuild=false ${{ env.VERSION_ARGS }}
+        run: dotnet pack ${{ env.SOLUTION }} --configuration ${{ env.RELEASE_CONFIGURATION }} -p:RunApiAnalyzersDuringBuild=false ${{ env.VERSION_ARGS }}
 
       # Both scripts already carry -NoAzdoLogs and signal through their exit code, so they need no
       # porting - only the switch. nuget-job.yml runs these before publishing; on a PR they are the
@@ -171,7 +169,7 @@ jobs:
             9.x
             10.x
 
-      - run: dotnet build Examples/Examples.slnx --configuration Debug
+      - run: dotnet build Examples/Examples.slnx --configuration ${{ env.RELEASE_CONFIGURATION }}
 
   # Roslyn analyzer/code-fix unit tests, both the shipped (L2DB1xxx) and the repo-internal (LINQ2DB0xxx) sets.
   # DB-free and single-TFM, so Linux is fine. Two projects because they host different Roslyn versions: the
@@ -215,6 +213,25 @@ jobs:
 
       - run: .build/publish/singlefile/linq2db.Tests.SingleFile.exe
 
+  # Regression guard for #6042 / #6051: JIT-compiles every netfx-shipped assembly in an x86 process with
+  # FP exceptions unmasked, as C++Builder / Delphi hosts run them. Release, not Azure: it checks the
+  # binaries that ship and reads no test configuration.
+  fpu-jit-sweep:
+    name: x86 FPU-unmasked JIT sweep
+    runs-on: windows-2025
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.x
+
+      - run: dotnet build Tests/Tests.FpuJit/Tests.FpuJit.csproj --configuration ${{ env.RELEASE_CONFIGURATION }} -p:RunApiAnalyzersDuringBuild=false
+
+      - run: .build/bin/Tests.FpuJit/${{ env.RELEASE_CONFIGURATION }}/net462/linq2db.Tests.FpuJit.exe
+
   # Port of templates/test-cli.yml. No database, so it belongs here rather than in the provider matrix.
   cli-tests:
     name: CLI tests (${{ matrix.os }})
@@ -257,4 +274,45 @@ jobs:
         with:
           name: cli-test-results-${{ matrix.os }}
           path: CliTestResults/*.trx
+          if-no-files-found: error
+
+  # Regression guard for #5158 / #5159: the remote client run inside the browser-wasm runtime, under Node, against
+  # every provider configuration of an in-process server. No database: GetInfo never opens a connection.
+  wasm-tests:
+    name: WASM runtime tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.x
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+
+      - run: pwsh -NoProfile -File Tests/Tests.Wasm/publish-wasm-bundles.ps1
+
+      - run: dotnet build Tests/Tests.Wasm/Tests.Wasm.csproj --configuration ${{ env.TEST_CONFIGURATION }}
+
+      # DB2 and Informix.DB2 load the IBM client's native libraries, as the Linux provider legs set up in
+      # Build/Azure/scripts/db2.provider.sh.
+      - name: Put the IBM DB2 client on the library path
+        run: |
+          clidriver="$PWD/.build/bin/Tests.Wasm/${{ env.TEST_CONFIGURATION }}/clidriver"
+          test -d "$clidriver" || { echo "::error::$clidriver not found"; exit 1; }
+          echo "$clidriver/bin" >> "$GITHUB_PATH"
+          echo "$clidriver/lib" >> "$GITHUB_PATH"
+          echo "LD_LIBRARY_PATH=$clidriver/lib" >> "$GITHUB_ENV"
+
+      - run: dotnet test --project Tests/Tests.Wasm/Tests.Wasm.csproj --configuration ${{ env.TEST_CONFIGURATION }} --no-build --report-trx --report-trx-filename wasm.trx --results-directory ${{ github.workspace }}/WasmTestResults
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: wasm-test-results
+          path: WasmTestResults/*.trx
           if-no-files-found: error

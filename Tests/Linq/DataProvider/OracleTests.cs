@@ -612,20 +612,18 @@ namespace Tests.DataProvider
 #endif
 
 		[Test]
+		[NoBaselines("Server-side guid generation test")]
 		public void TestGuid([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (new DisableBaseline("Server-side guid generation test"))
-			using (var conn = GetDataContext(context))
+			using var conn = GetDataContext(context);
+			var guid = conn.Execute<Guid>("SELECT \"guidDataType\" FROM \"AllTypes\" WHERE ID = 2");
+			using (Assert.EnterMultipleScope())
 			{
-				var guid = conn.Execute<Guid>("SELECT \"guidDataType\" FROM \"AllTypes\" WHERE ID = 2");
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(conn.Execute<Guid?>("SELECT \"guidDataType\" FROM \"AllTypes\" WHERE ID = 1"), Is.Null);
-					Assert.That(conn.Execute<Guid?>("SELECT \"guidDataType\" FROM \"AllTypes\" WHERE ID = 2"), Is.EqualTo(guid));
+				Assert.That(conn.Execute<Guid?>("SELECT \"guidDataType\" FROM \"AllTypes\" WHERE ID = 1"), Is.Null);
+				Assert.That(conn.Execute<Guid?>("SELECT \"guidDataType\" FROM \"AllTypes\" WHERE ID = 2"), Is.EqualTo(guid));
 
-					Assert.That(conn.Execute<Guid>(PathThroughSql($"50"), DataParameter.Create("p", guid)), Is.EqualTo(guid));
-					Assert.That(conn.Execute<Guid>(PathThroughSql($"51"), new DataParameter { Name = "p", Value = guid }), Is.EqualTo(guid));
-				}
+				Assert.That(conn.Execute<Guid>(PathThroughSql($"50"), DataParameter.Create("p", guid)), Is.EqualTo(guid));
+				Assert.That(conn.Execute<Guid>(PathThroughSql($"51"), new DataParameter { Name = "p", Value = guid }), Is.EqualTo(guid));
 			}
 		}
 
@@ -1058,9 +1056,9 @@ namespace Tests.DataProvider
 #region Sequence
 
 		[Test]
+		[NoBaselines("Sequence values could vary for Oracle")]
 		public void SequenceInsert([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using var _ = new DisableBaseline("Sequence values could vary for Oracle");
 			using var db = GetDataContext(context);
 
 			db.GetTable<OracleSpecific.SequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
@@ -1074,9 +1072,9 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Sequence values could vary for Oracle")]
 		public void SequenceInsertWithIdentity([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using var _ = new DisableBaseline("Sequence values could vary for Oracle");
 			using var db = GetDataContext(context);
 
 			db.GetTable<OracleSpecific.SequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
@@ -1197,12 +1195,12 @@ namespace Tests.DataProvider
 		/// batches split only under an explicit <see cref="BulkCopyOptions.MaxSqlLengthForBatch"/>.
 		/// </summary>
 		[Test]
+		[NoBaselines("generated statement volume is the subject of the test")]
 		public void BulkCopyMultipleRowsCrossesSqlLengthLimit(
 			[IncludeDataSources(TestProvName.AllOracle)] string              context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy,
 			[Values]                                     bool                useParameters)
 		{
-			using var _  = new DisableBaseline("generated statement volume is the subject of the test");
 			using var db = GetDataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = useAlternativeBulkCopy }));
 
 			var queries = new SaveQueriesInterceptor();
@@ -1286,6 +1284,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Sequence values could vary for Oracle")]
 		public void BulkCopyRetrieveSequencesProviderSpecific(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
@@ -1294,6 +1293,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Sequence values could vary for Oracle")]
 		public async Task BulkCopyRetrieveSequencesProviderSpecificAsync(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
@@ -1302,6 +1302,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Sequence values could vary for Oracle")]
 		public void BulkCopyRetrieveSequencesMultipleRows(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
@@ -1310,6 +1311,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Sequence values could vary for Oracle")]
 		public async Task BulkCopyRetrieveSequencesMultipleRowsAsync(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
@@ -1318,6 +1320,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Sequence values could vary for Oracle")]
 		public void BulkCopyRetrieveSequencesRowByRow(
 			[IncludeDataSources(TestProvName.AllOracle)] string              context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
@@ -1326,6 +1329,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Sequence values could vary for Oracle")]
 		public async Task BulkCopyRetrieveSequencesRowByRowAsync(
 			[IncludeDataSources(TestProvName.AllOracle)] string              context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
@@ -1366,6 +1370,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Sequence values could vary for Oracle")]
 		public void BulkCopyRetrieveSequencesProviderSpecificUsingOptions(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
@@ -1374,6 +1379,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Sequence values could vary for Oracle")]
 		public async Task BulkCopyRetrieveSequencesProviderSpecificUsingOptionsAsync(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
@@ -1382,6 +1388,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Sequence values could vary for Oracle")]
 		public void BulkCopyRetrieveSequencesMultipleRowsUsingOptions(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
@@ -1390,6 +1397,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Sequence values could vary for Oracle")]
 		public async Task BulkCopyRetrieveSequencesMultipleRowsUsingOptionsAsync(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
@@ -1398,6 +1406,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Sequence values could vary for Oracle")]
 		public void BulkCopyRetrieveSequencesRowByRowUsingOptions(
 			[IncludeDataSources(TestProvName.AllOracle)] string              context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
@@ -1406,6 +1415,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Sequence values could vary for Oracle")]
 		public async Task BulkCopyRetrieveSequencesRowByRowUsingOptionsAsync(
 			[IncludeDataSources(TestProvName.AllOracle)] string              context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
@@ -1417,7 +1427,6 @@ namespace Tests.DataProvider
 		{
 			// RetrieveIdentity inlines sequence-allocated ids as literals, so the captured SQL records
 			// SEQUENCETESTSEQ state - same reason SequenceInsert/SequenceInsertWithIdentity opt out
-			using var _ = new DisableBaseline("Sequence values could vary for Oracle");
 
 			var data = new[]
 			{
@@ -1453,7 +1462,6 @@ namespace Tests.DataProvider
 		{
 			// RetrieveIdentity inlines sequence-allocated ids as literals, so the captured SQL records
 			// SEQUENCETESTSEQ state - same reason SequenceInsert/SequenceInsertWithIdentity opt out
-			using var _ = new DisableBaseline("Sequence values could vary for Oracle");
 
 			var data = new[]
 			{
@@ -4526,9 +4534,9 @@ END convert_bool;");
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4661")]
+		[NoBaselines("big sad sql")]
 		public void BlobLiteralsLimit([IncludeDataSources(TestProvName.AllOracle)] string context, [Values] bool inline)
 		{
-			using var _  = new DisableBaseline("big sad sql");
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<BlobsTable>();
 

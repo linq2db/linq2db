@@ -43,8 +43,8 @@
 			//"SqlServer.2022.MS",
 			//"SqlServer.2025",
 			//"SqlServer.2025.MS",
-			//"SqlServer.SA",
-			//"SqlServer.SA.MS",
+			//"SqlServer.CS",
+			//"SqlServer.CS.MS",
 			//"SqlServer.Contained",
 			//"SqlServer.Contained.MS",
 			//"SqlServer.Northwind",
@@ -174,8 +174,8 @@
 			//"SqlServer.2022.MS",
 			//"SqlServer.2025",
 			//"SqlServer.2025.MS",
-			//"SqlServer.SA",
-			//"SqlServer.SA.MS",
+			//"SqlServer.CS",
+			//"SqlServer.CS.MS",
 			//"SqlServer.Contained",
 			//"SqlServer.Contained.MS",
 			//"SqlServer.Northwind",
@@ -301,8 +301,8 @@
 			//"SqlServer.2022.MS",
 			//"SqlServer.2025",
 			//"SqlServer.2025.MS",
-			//"SqlServer.SA",
-			//"SqlServer.SA.MS",
+			//"SqlServer.CS",
+			//"SqlServer.CS.MS",
 			//"SqlServer.Contained",
 			//"SqlServer.Contained.MS",
 			//"SqlServer.Northwind",
@@ -428,8 +428,8 @@
 			//"SqlServer.2022.MS",
 			//"SqlServer.2025",
 			//"SqlServer.2025.MS",
-			//"SqlServer.SA",
-			//"SqlServer.SA.MS",
+			//"SqlServer.CS",
+			//"SqlServer.CS.MS",
 			//"SqlServer.Contained",
 			//"SqlServer.Contained.MS",
 			//"SqlServer.Northwind",
@@ -588,21 +588,21 @@
 				"Provider": "Microsoft.Data.SqlClient",
 				"ConnectionString": "Server=localhost,1425;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
 			},
-			"SqlServer.SA": {
+			"SqlServer.CS": {
 				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "localhost,1419;Database=TestDataSA;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
+				"ConnectionString": "Server=localhost,1425;Database=TestDataCS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
 			},
-			"SqlServer.SA.MS": {
+			"SqlServer.CS.MS": {
 				"Provider": "Microsoft.Data.SqlClient",
-				"ConnectionString": "localhost,1419;Database=TestDataMSSA;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
+				"ConnectionString": "Server=localhost,1425;Database=TestDataMSCS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
 			},
 			"SqlServer.Contained": {
 				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "localhost,1419;Database=TestDataContained;User Id=sa;Password=Password12!Encrypt=true;TrustServerCertificate=true"
+				"ConnectionString": "Server=localhost,1425;Database=TestDataContained;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
 			},
 			"SqlServer.Contained.MS": {
 				"Provider": "Microsoft.Data.SqlClient",
-				"ConnectionString": "localhost,1419;Database=TestDataMSContained;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
+				"ConnectionString": "Server=localhost,1425;Database=TestDataMSContained;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
 			},
 			"SqlServer.Northwind": {
 				"Provider": "System.Data.SqlClient",

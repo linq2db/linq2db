@@ -321,6 +321,33 @@ namespace Tests.Linq
 			Assert.DoesNotThrow(() => result.p.Children.Single().Parent!.Children.Single());
 		}
 
+		// LoadWith12 through a hand-built IndexExpression in place of the compiler's get_Item call; Access is excluded
+		// as it is for LoadWith12.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5879")]
+		public void LoadWithHandBuiltIndexer([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var p     = Expression.Parameter(typeof(Parent), "p");
+			var first = Expression.MakeIndex(
+				Expression.Property(p, nameof(Model.Parent.Children)),
+				typeof(List<Child>).GetProperty("Item"),
+				[Expression.Constant(0)]);
+
+			var path = Expression.Lambda<Func<Parent, List<Child>?>>(
+				Expression.Property(Expression.Property(first, nameof(Model.Child.Parent)), nameof(Model.Parent.Children)),
+				p);
+
+			var query =
+				from parent in db.Parent.LoadWith(path)
+				where parent.ParentID < 2
+				select parent;
+
+			var result = query.FirstOrDefault()!;
+
+			Shouldly.Should.NotThrow(() => result.Children.Single().Parent!.Children.Single());
+		}
+
 		[Test]
 		public void LoadWithFirstOrDefaultParameter([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values(2, 3)] int id)
 		{

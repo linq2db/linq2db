@@ -182,7 +182,7 @@ namespace Tests
 			var res = new TestDataConnection(options);
 
 			/*
-			// add extra mapping schema to not share mappers with other sql2017/2019 providers
+			// add extra mapping schema to not share mappers with other sql server providers
 			// use same schema to use cache within test provider scope
 			if (configuration.IsAnyOf(TestProvName.AllSqlServerSequentialAccess))
 			{
@@ -216,7 +216,7 @@ namespace Tests
 			if (ms != null)
 				options = options.UseMappingSchema(ms);
 
-			// add extra mapping schema to not share mappers with other sql2017/2019 providers
+			// add extra mapping schema to not share mappers with other sql server providers
 			// use same schema to use cache within test provider scope
 			if (configuration.IsAnyOf(TestProvName.AllSqlServerSequentialAccess))
 			{

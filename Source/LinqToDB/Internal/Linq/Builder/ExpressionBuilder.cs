@@ -92,12 +92,31 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (_currentOrderBy is null || _currentOrderBy.Count == 0)
 				return;
 
+			using var outside = UsingOutsideProjectionValue();
+
 			for (var i = 0; i < _currentOrderBy.Count; i++)
 			{
 				var (expr, descending, nulls) = _currentOrderBy[i];
 				var resolved           = BuildSqlExpression(context, expr);
 				_currentOrderBy[i]     = (resolved, descending, nulls);
 			}
+		}
+
+		/// <summary>
+		/// What is built within is query structure rather than a value of the projection (<see cref="BuildFlags.ValueOfProjection"/>).
+		/// </summary>
+		public ExpressionBuildVisitor.StateHolder<BuildFlags> UsingOutsideProjectionValue()
+		{
+			return _buildVisitor.UsingOutsideProjectionValue();
+		}
+
+		/// <summary>
+		/// Reads <paramref name="operand"/>, which a calculation consumes, the way the reader reads a value of the projection into
+		/// .NET; <paramref name="written"/> is the operand as the query writes it.
+		/// </summary>
+		public SqlPlaceholderExpression ReadAsTheReaderReads(Expression written, SqlPlaceholderExpression operand)
+		{
+			return _buildVisitor.ReadAsTheReaderReads(written, operand);
 		}
 
 		/// <summary>
@@ -273,7 +292,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			// preambles added at this BuildQuery level (not outer levels).
 			var preambleStartIndex = preambles?.Count ?? 0;
 
-			var expr = _buildVisitor.BuildExpression(sequence, new ContextRefExpression(typeof(T), sequence), buildPurpose: BuildPurpose.Expression);
+			var expr = _buildVisitor.BuildExpression(sequence, new ContextRefExpression(typeof(T), sequence), buildPurpose: BuildPurpose.Expression, buildFlags: BuildFlags.ValueOfProjection);
 
 			var finalized = FinalizeProjection<T>(sequence, expr, queryParameter, ref preambles, previousKeys);
 
@@ -462,6 +481,8 @@ namespace LinqToDB.Internal.Linq.Builder
 		public BuildSequenceResult TryBuildSequence(BuildInfo buildInfo)
 		{
 			using var m = ActivityService.Start(ActivityID.BuildSequence);
+
+			using var outside = _buildVisitor.UsingOutsideProjectionValue();
 
 			var originalExpression = buildInfo.Expression;
 
