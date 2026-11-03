@@ -345,14 +345,19 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				}
 			}
 
-			var type    = QueryHelper.GetDbDataType(expr, MappingSchema);
-			var unicode = QueryHelper.IsUnicode(type.DataType);
+			var type       = QueryHelper.GetDbDataType(expr, MappingSchema);
+			var unicode    = QueryHelper.IsUnicode(type.DataType);
+			var nonUnicode = !unicode;
 
 			// A string function returns its first argument's type, while its declared type was copied at translation, before
 			// that argument could turn Unicode here (a REPLACE with a Unicode argument).
 			if (!unicode && type.DataType is DataType.Char or DataType.VarChar or DataType.Text
-				&& expr is SqlFunction { Parameters: [var first, ..] } && MeasureStringOperand(first).Unicode)
-				unicode = true;
+				&& expr is SqlFunction { Parameters: [var first, ..] } && MeasureStringOperand(first) is { Unicode: true } firstShape)
+				(unicode, nonUnicode) = (true, firstShape.NonUnicode);
+			// A REPLACE that only a Unicode argument turned nvarchar holds varchar data and counts as both, so two of them, or
+			// one beside a parameter, still reach the total-length rule.
+			else if (unicode && expr is SqlFunction { Name: "Replace", Parameters: [var value, ..] } && MeasureStringOperand(value).NonUnicode)
+				nonUnicode = true;
 
 			long? length = expr switch
 			{
@@ -363,7 +368,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				_                                              => 1,
 			};
 
-			return new(unicode, !unicode, length);
+			return new(unicode, nonUnicode, length);
 		}
 
 		StringOperandShape Combine(IEnumerable<ISqlExpression> operands, bool sum)
@@ -525,10 +530,11 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					var type       = func.Type;
 
 					// A Unicode argument turns REPLACE nvarchar. Declared with the value's non-Unicode type, it would hide that
-					// from an enclosing concatenation, which then would not widen a long VarChar operand beside it.
+					// from an enclosing concatenation, which then would not widen a long VarChar operand beside it. A value of
+					// unknown length takes the nvarchar(4000) the server returns, rather than counting as one character.
 					if (type.DataType is DataType.Char or DataType.VarChar && Array.Exists(func.Parameters, p => MeasureStringOperand(p).Unicode))
 					{
-						var length = ReferenceEquals(parameters[0], func.Parameters[0]) ? type.Length : -1;
+						var length = ReferenceEquals(parameters[0], func.Parameters[0]) ? type.Length ?? 4000 : -1;
 
 						type = new DbDataType(typeof(string), DataType.NVarChar, null, length);
 					}

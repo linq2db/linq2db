@@ -1125,6 +1125,99 @@ namespace Tests.Linq
 		}
 
 		[Table]
+		sealed class SplitReplaceRow
+		{
+			[PrimaryKey]                                                            public int     Id     { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 3000, CanBeNull = false)] public string  Left   { get; set; } = default!;
+			[Column(DataType = DataType.VarChar, Length = 3000, CanBeNull = false)] public string  Right  { get; set; } = default!;
+			[Column(DataType = DataType.VarChar, Length = 3000, CanBeNull = true )] public string? NLeft  { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 3000, CanBeNull = true )] public string? NRight { get; set; }
+		}
+
+		static readonly SplitReplaceRow[] SplitReplaceData =
+		[
+			new()
+			{
+				Id     = 1,
+				Left   = new string('b', 3000),
+				Right  = new string('c', 3000),
+				NLeft  = new string('b', 3000),
+				NRight = new string('c', 3000),
+			},
+		];
+
+		// SQL Server: a Unicode argument turns REPLACE over a VarChar value nvarchar(4000), so a concatenation of two of them
+		// is cut at 4000 characters unless widened; SQLite runs as a control.
+		[Test]
+		public void ReplaceWithUnicodeArgumentOnBothSidesOfConcatKeepsLength([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllSQLite)] string context)
+		{
+			var replacement = "e";
+			var other       = "f";
+			var suffix      = "x";
+			var expected    = new string('e', 6000);
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(SplitReplaceData);
+
+			var result = table
+				.Select(t => new
+				{
+					Both     = Sql.AsSql(t.Left.Replace("b", replacement) + t.Right.Replace("c", replacement)),
+					Nullable = Sql.AsSql(t.NLeft!.Replace("b", replacement) + t.NRight!.Replace("c", replacement)),
+					Nested   = Sql.AsSql(t.Left.Replace("b", replacement).Replace("e", other) + t.Right.Replace("c", replacement).Replace("e", other)),
+					Trimmed  = Sql.AsSql(t.Left.Replace("b", replacement).TrimEnd() + t.Right.Replace("c", replacement).TrimEnd()),
+					Literal  = Sql.AsSql(t.Left.Replace("b", "Ж") + t.Right.Replace("c", "Ж")),
+					Suffixed = Sql.AsSql(t.Left.Replace("b", replacement) + t.Right.Replace("c", replacement) + suffix),
+				})
+				.Single();
+
+			var distinct = table
+				.Select(t => new
+				{
+					L = t.Left.Replace("b", replacement),
+					R = t.Right.Replace("c", replacement),
+				})
+				.Distinct()
+				.Select(t => Sql.AsSql(t.L + t.R))
+				.Single();
+
+			var matched = table
+				.Count(t => t.Left.Replace("b", replacement) + t.Right.Replace("c", replacement) == expected);
+
+			new[] { result.Both.Length, result.Nullable!.Length, result.Nested.Length, result.Trimmed.Length, result.Literal.Length, result.Suffixed.Length, distinct.Length, matched }
+				.ShouldBe([6000, 6000, 6000, 6000, 6000, 6001, 6000, 1]);
+		}
+
+		[Table]
+		sealed class DbTypeOnlyVarCharRow
+		{
+			[PrimaryKey]                                                                       public int    Id    { get; set; }
+			[Column(DbType = "varchar(3000)", DataType = DataType.VarChar, CanBeNull = false)] public string Left  { get; set; } = default!;
+			[Column(DbType = "varchar(3000)", DataType = DataType.VarChar, CanBeNull = false)] public string Right { get; set; } = default!;
+		}
+
+		// SQL Server: as ReplaceWithUnicodeArgumentOnBothSidesOfConcatKeepsLength, over columns mapped without a length.
+		[Test]
+		public void ReplaceWithUnicodeArgumentOverVarCharWithoutLengthInConcatKeepsLength([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllSQLite)] string context)
+		{
+			var replacement = "e";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new DbTypeOnlyVarCharRow { Id = 1, Left = new string('b', 3000), Right = new string('c', 3000) } });
+
+			var result = table
+				.Select(t => new
+				{
+					Beside = Sql.AsSql(t.Left.Replace("b", replacement) + t.Right),
+					Both   = Sql.AsSql(t.Left.Replace("b", replacement) + t.Right.Replace("c", replacement)),
+				})
+				.Single();
+
+			new[] { result.Beside.Length, result.Both.Length }
+				.ShouldBe([6000, 6000]);
+		}
+
+		[Table]
 		sealed class ShortVarCharRow
 		{
 			[PrimaryKey]                                                            public int    Id  { get; set; }
