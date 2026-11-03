@@ -847,15 +847,18 @@ namespace Tests.Infrastructure
 		[Test]
 		public void WithCombinedCommandsTest()
 		{
-			new LinqOptions()
-				.WithCombinedCommands(true)
-				.UseCombinedCommands
-				.ShouldBeTrue();
+			// Each option is set by one `with` and must survive the copy constructor of the next.
+			var combined = new LinqOptions()
+				.WithDbBatch(true)
+				.WithCombinedCommands(true);
 
-			new LinqOptions()
-				.WithDbBatch(false)
-				.UseDbBatch
-				.ShouldBeFalse();
+			combined.UseCombinedCommands.ShouldBeTrue();
+			combined.UseDbBatch.ShouldBeTrue();
+
+			var concatenated = combined.WithDbBatch(false);
+
+			concatenated.UseDbBatch.ShouldBeFalse();
+			concatenated.UseCombinedCommands.ShouldBeTrue();
 
 			new DataOptions()
 				.UseCombinedCommands(true)
