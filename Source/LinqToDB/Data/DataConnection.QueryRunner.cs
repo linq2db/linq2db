@@ -165,7 +165,7 @@ namespace LinqToDB.Data
 			// hints. For a non-parameter-dependent query the PreparedQuery is cached on QueryInfo.Prepared and reused
 			// across runs; a parameter-dependent one is rebuilt each run. Each PreparedCommand carries its group's concat
 			// form (Concat, always present for DML) and, when batch-eligible, the per-statement DbBatch templates (Batch);
-			// the interpreter picks per run by CanUseDbBatch.
+			// the interpreter picks per run by CanRunDbBatch.
 			private sealed record RenderedQuery(PreparedQuery Prepared, IReadOnlyCollection<string>? QueryHints);
 
 			private sealed record ExecutionPreparedQuery(RenderedQuery PreparedQuery, DbParameter[]?[] CommandsParameters, IReadOnlyParameterValues? ParameterValues);

@@ -188,7 +188,7 @@ namespace Tests.xUpdate
 				.ShouldBe("Shepard");
 		}
 
-		// Registering the counter forces the concatenated backend: CanUseDbBatch requires no command interceptor, and a
+		// Registering the counter forces the concatenated backend: CanRunDbBatch requires no command interceptor, and a
 		// DbBatch would not report through CommandInitialized anyway. So these counts measure the concat path — which is
 		// the one every provider shares.
 		int InsertWithIdentityRoundTrips(string context, bool combinedCommands, out bool combining)
