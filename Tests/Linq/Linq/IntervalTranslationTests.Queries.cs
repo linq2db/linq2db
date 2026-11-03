@@ -1083,6 +1083,31 @@ namespace Tests.Linq
 			descending.ShouldBe([1, 3, 2]);
 		}
 
+#if NET5_0_OR_GREATER
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterGroupByOrderedByDurationOfKey([DataSources] string context)
+		{
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<DurationRow>();
+
+			Seed(db, TimeSpan.FromSeconds(50), TimeSpan.FromSeconds(150), TimeSpan.FromSeconds(200), TimeSpan.FromSeconds(30));
+
+			// Descending, so a fallback to the key order (ascending) picks other rows.
+			var picked = t
+				.OrderByDescending(r => r.InSeconds.TotalSeconds)
+				.ThenBy(r => r.InSeconds)
+				.GroupBy(r => r.InSeconds)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.DistinctBy(x => x.Key > TimeSpan.FromSeconds(100))
+				.ToArray();
+
+			picked
+				.Select(x => x.Key)
+				.ShouldBe([TimeSpan.FromSeconds(200), TimeSpan.FromSeconds(50)], ignoreOrder: true);
+		}
+#endif
+
 		/// <summary>
 		/// Membership tests convert each candidate into the column's declared unit.
 		/// </summary>

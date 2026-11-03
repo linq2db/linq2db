@@ -365,6 +365,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				or SqlCoalesceExpression
 				or SqlConcatExpression
 				or SqlCompareToExpression
+				or SqlIntervalExpression
 				or SqlIntervalDifferenceExpression
 				or SqlIntervalPartExpression
 				or SqlTemporalArithmeticExpression
@@ -421,6 +422,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					case QueryElementType.SqlCoalesce:
 					case QueryElementType.SqlConcat:
 					case QueryElementType.CompareTo:
+					case QueryElementType.SqlInterval:
 					case QueryElementType.SqlIntervalDifference:
 					case QueryElementType.SqlIntervalPart:
 					case QueryElementType.SqlTemporalArithmetic:

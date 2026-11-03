@@ -1236,7 +1236,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var query = db.Person
-				.OrderBy(p => p.FirstName.StartsWith("J"))
+				.OrderByDescending(p => p.FirstName.StartsWith("J"))
 				.ThenByDescending(p => p.FirstName)
 				.GroupBy(p => p.FirstName)
 				.Select(g => new { g.Key, Count = g.Count() })
@@ -1252,14 +1252,14 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var query = db.Person
-				.OrderBy(p => Sql.Like(p.FirstName, "J%"))
+				.OrderByDescending(p => Sql.Like(p.FirstName, "J%"))
 				.ThenByDescending(p => p.FirstName)
 				.GroupBy(p => p.FirstName)
 				.Select(g => new { g.Key, Count = g.Count() })
 				.DistinctBy(x => x.Key.Length);
 
 			var expected = Person
-				.OrderBy(p => p.FirstName.StartsWith("J"))
+				.OrderByDescending(p => p.FirstName.StartsWith("J"))
 				.ThenByDescending(p => p.FirstName)
 				.GroupBy(p => p.FirstName)
 				.Select(g => new { g.Key, Count = g.Count() })
