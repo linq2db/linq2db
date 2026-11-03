@@ -1056,7 +1056,12 @@ namespace LinqToDB.Data
 
 			try
 			{
-				return new DataReaderWrapper(this, batch.ExecuteReader(commandBehavior), null);
+				// The batch comes from the provider connection beneath RetryingDbConnection, so it applies the policy itself.
+				var reader = RetryPolicy is { } policy
+					? policy.Execute(() => batch.ExecuteReader(commandBehavior))
+					: batch.ExecuteReader(commandBehavior);
+
+				return new DataReaderWrapper(this, reader, null);
 			}
 			catch (Exception ex) when (((IInterceptable<IExceptionInterceptor>)this).Interceptor is { } eInterceptor)
 			{

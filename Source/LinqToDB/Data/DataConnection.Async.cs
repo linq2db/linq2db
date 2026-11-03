@@ -807,7 +807,11 @@ namespace LinqToDB.Data
 
 			try
 			{
-				return new DataReaderWrapper(this, await batch.ExecuteReaderAsync(commandBehavior, cancellationToken).ConfigureAwait(false), null);
+				var reader = RetryPolicy is { } policy
+					? await policy.ExecuteAsync(ct => batch.ExecuteReaderAsync(commandBehavior, ct), cancellationToken).ConfigureAwait(false)
+					: await batch.ExecuteReaderAsync(commandBehavior, cancellationToken).ConfigureAwait(false);
+
+				return new DataReaderWrapper(this, reader, null);
 			}
 			catch (Exception ex) when (((IInterceptable<IExceptionInterceptor>)this).Interceptor is { } eInterceptor)
 			{

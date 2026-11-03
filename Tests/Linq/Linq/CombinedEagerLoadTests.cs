@@ -1,10 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Data;
+using LinqToDB.Data.RetryPolicy;
 using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
@@ -198,6 +203,131 @@ namespace Tests.Linq
 			commands
 				.Any(c => c.Contains("-- Command 1", StringComparison.Ordinal))
 				.ShouldBe(batch);
+		}
+
+		// The DbBatch is created on the provider connection beneath RetryingDbConnection, so the retry policy wraps it only
+		// when the batch execution calls the policy itself.
+		[Test]
+		public void CombinedEagerLoad_ExecutesThroughRetryPolicy(
+			[IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySql)] string context)
+		{
+			var (masters, correlated, _) = EagerLoadingTests.MixedEagerData.Generate();
+			var policy                   = new ReaderCountingRetryPolicy();
+			var commands                 = new List<string>();
+
+			using var db = GetDataContext(context, o => o
+				.UseCombinedCommands(true)
+				.UseRetryPolicy(policy)
+				.UseTracing(TraceLevel.Info, info =>
+				{
+					if (info.TraceInfoStep == TraceInfoStep.BeforeExecute && info.Operation == TraceOperation.ExecuteReader)
+						commands.Add(info.SqlText);
+				}));
+
+			using var tMaster     = db.CreateLocalTable(masters);
+			using var tCorrelated = db.CreateLocalTable(correlated);
+
+			var query =
+				from m in tMaster
+				orderby m.Id
+				select new
+				{
+					m.Id,
+					Correlated = tCorrelated
+						.Where(c => c.MasterId == m.Id)
+						.ToList(),
+				};
+
+			commands.Clear();
+			policy.Readers = 0;
+
+			var result = query.ToList();
+
+			result.Count.ShouldBe(masters.Length);
+
+			AssertSingleCommandUnderPolicy(context, db, commands, policy);
+		}
+
+		[Test]
+		public async Task CombinedEagerLoad_ExecutesThroughRetryPolicyAsync(
+			[IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySql)] string context)
+		{
+			var (masters, correlated, _) = EagerLoadingTests.MixedEagerData.Generate();
+			var policy                   = new ReaderCountingRetryPolicy();
+			var commands                 = new List<string>();
+
+			await using var db = GetDataContext(context, o => o
+				.UseCombinedCommands(true)
+				.UseRetryPolicy(policy)
+				.UseTracing(TraceLevel.Info, info =>
+				{
+					if (info.TraceInfoStep == TraceInfoStep.BeforeExecute && info.Operation == TraceOperation.ExecuteReader)
+						commands.Add(info.SqlText);
+				}));
+
+			await using var tMaster     = db.CreateLocalTable(masters);
+			await using var tCorrelated = db.CreateLocalTable(correlated);
+
+			var query =
+				from m in tMaster
+				orderby m.Id
+				select new
+				{
+					m.Id,
+					Correlated = tCorrelated
+						.Where(c => c.MasterId == m.Id)
+						.ToList(),
+				};
+
+			commands.Clear();
+			policy.Readers = 0;
+
+			var result = await query.ToListAsync();
+
+			result.Count.ShouldBe(masters.Length);
+
+			AssertSingleCommandUnderPolicy(context, db, commands, policy);
+		}
+
+		static void AssertSingleCommandUnderPolicy(string context, IDataContext db, List<string> commands, ReaderCountingRetryPolicy policy)
+		{
+#if SUPPORTS_DBBATCH
+			var batch = !context.IsAnyOf(TestProvName.AllSqlServerSequentialAccess)
+				&& ((DataConnection)db).OpenDbConnection().CanCreateBatch;
+#else
+			var batch = false;
+#endif
+
+			commands.Count.ShouldBe(1);
+			commands[0]
+				.Contains("-- Command 1", StringComparison.Ordinal)
+				.ShouldBe(batch);
+			policy.Readers.ShouldBe(1);
+		}
+
+		sealed class ReaderCountingRetryPolicy : IRetryPolicy
+		{
+			public int Readers { get; set; }
+
+			public TResult Execute<TResult>(Func<TResult> operation)
+			{
+				if (typeof(TResult) == typeof(DbDataReader))
+					Readers++;
+
+				return operation();
+			}
+
+			public void Execute(Action operation) => operation();
+
+			public Task<TResult> ExecuteAsync<TResult>(Func<CancellationToken, Task<TResult>> operation, CancellationToken cancellationToken = default)
+			{
+				if (typeof(TResult) == typeof(DbDataReader))
+					Readers++;
+
+				return operation(cancellationToken);
+			}
+
+			public Task ExecuteAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken = default) => operation(cancellationToken);
 		}
 	}
 }
