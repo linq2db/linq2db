@@ -1326,6 +1326,54 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterGroupByOrderedByDateAddOfKey([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Types
+				.OrderByDescending(t => t.DateTimeValue.AddDays(1))
+				.GroupBy(t => t.DateTimeValue)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.DistinctBy(x => x.Key.Year);
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterGroupByOrderedByDateShiftByParameterOfKey([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var days = 2;
+
+			var query = db.Types
+				.OrderByDescending(t => t.DateTimeValue.AddHours(-3 * days))
+				.GroupBy(t => t.DateTimeValue)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.DistinctBy(x => x.Key.Year);
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterGroupByOrderedByYearOfKey([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Types
+				.OrderByDescending(t => t.DateTimeValue.Year)
+				.ThenByDescending(t => t.DateTimeValue)
+				.GroupBy(t => t.DateTimeValue)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.DistinctBy(x => x.Key.Year);
+
+			AssertQuery(query);
+		}
+
 		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_DistinctByRequiresOrderBy)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
 		public void DistinctByAfterGroupByOrderedByConcatOfNonKeyRequiresOrderBy([DataSources] string context)

@@ -404,7 +404,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						ctx.Result = column.Parent != null && !ctx.Within.Queries.Contains(column.Parent) || QueryHelper.IsConstant(column);
 						return false;
 					case SqlParameterizedExpressionBase parameterized:
-						ctx.Result = parameterized.IsPure && (parameterized.Flags & (SqlFlags.IsAggregate | SqlFlags.IsWindowFunction)) == 0;
+						ctx.Result = (parameterized.Flags & (SqlFlags.IsAggregate | SqlFlags.IsWindowFunction)) == 0;
 						return ctx.Result;
 				}
 
