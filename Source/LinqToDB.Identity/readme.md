@@ -158,10 +158,11 @@ maps what the defaults leave alone, such as your application's own entities on t
   your own mapping to the same provider to override it.
 * **Some columns carry a provider-scoped database type that outranks an unscoped `HasDataType` / `HasLength`.**
   `ClaimValue` on both claim tables and `AspNetUserTokens.Value` on MySQL, Oracle, Firebird, Access, DB2, Informix,
-  SAP HANA, Sybase and SQL CE, and the 256-character name, email, phone, password-hash and security-stamp columns on
-  Access and Informix, are typed for those providers by the defaults. An unscoped `HasDataType` or `HasLength` on
-  them is ignored by `CreateTable` there; set `HasDbType` to override. On Oracle the same name, email and profile
-  columns and `ProviderDisplayName` are pinned to `NVarChar` (`NVARCHAR2`), which outranks an unscoped `HasDataType`.
+  SAP HANA, Sybase and SQL CE, the 256-character name, email, phone, password-hash and security-stamp columns on
+  Access and Informix, and `ClaimType` on Informix, are typed for those providers by the defaults. An unscoped
+  `HasDataType` or `HasLength` on them is ignored by `CreateTable` there; set `HasDbType` to override. On Oracle the
+  same name, email and profile columns, `ClaimType` and `ProviderDisplayName` are pinned to `NVarChar` (`NVARCHAR2`),
+  which outranks an unscoped `HasDataType`.
 * **String keys are 36 characters wide**, the length of the GUID string `IdentityUser` / `IdentityRole` generate
   (EF Core uses 450 on SQL Server). Ids you assign yourself — an external subject id, an email — need a wider key:
   `HasLength` on `Id` and on every `UserId` / `RoleId` column in a `ConfigureMappings` override. Mind the index
@@ -249,7 +250,7 @@ read it back at a zero offset.
 
 Some columns are narrower than EF Core's: on **Access** the 256-character user and role name, email, phone,
 password-hash and security-stamp columns hold 255, and `ClaimValue` holds at most 2000 characters on MySQL, Oracle, Firebird, DB2, Informix (2000
-bytes), SAP HANA, Sybase and SQL CE. `ClaimType` takes the provider's default string width (255 on most),
+bytes), SAP HANA, Sybase and SQL CE. `ClaimType` takes the provider's default string width (255 on most; 1024 bytes on Informix),
 `ProviderDisplayName` holds 128 everywhere, and a token `Value` holds 8000 bytes on Informix and 5000 characters on
 SAP HANA. A longer value is rejected on insert or update.
 

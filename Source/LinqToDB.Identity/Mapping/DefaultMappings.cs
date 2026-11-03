@@ -119,6 +119,8 @@ namespace LinqToDB.Identity
 				.Property(e => e.UserId)
 					.IsNullable(false)
 				.Property(e => e.ClaimType)
+					.HasAttribute(InformixTextLimit())
+					.HasAttribute(OracleUnicodeText())
 				.Property(e => e.ClaimValue)
 				;
 
@@ -149,6 +151,8 @@ namespace LinqToDB.Identity
 				.Property(e => e.RoleId)
 					.IsNullable(false)
 				.Property(e => e.ClaimType)
+					.HasAttribute(InformixTextLimit())
+					.HasAttribute(OracleUnicodeText())
 				.Property(e => e.ClaimValue)
 				;
 

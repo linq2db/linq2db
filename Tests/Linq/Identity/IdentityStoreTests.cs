@@ -110,6 +110,41 @@ namespace Tests.Identity
 				.ShouldBe(name);
 		}
 
+		// The two providers whose default ClaimType width counts bytes - Oracle's VARCHAR2 and Informix's NVarChar, capped at
+		// 255 bytes - so 200 two-byte characters overrun it unless the column is pinned
+		[Test]
+		public async Task NonAsciiClaimType([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllInformix)] string context)
+		{
+			using var setup  = GetSetup(context);
+			using var schema = new Schema(setup);
+			using var ctx    = GetDataContext(context, setup.MappingSchema);
+
+			var users = new UserStore<IdentityUser>(ctx);
+			var roles = new RoleStore<IdentityRole>(ctx);
+
+			var type = new string('ü', 200);
+
+			var user = NewUser("olga");
+			await users.CreateAsync(user);
+			await users.AddClaimsAsync(user, [new Claim(type, "v")]);
+
+			var holders = await users.GetUsersForClaimAsync(new Claim(type, "v"));
+			holders
+				.ShouldHaveSingleItem()
+				.Id
+				.ShouldBe(user.Id);
+
+			var role = new IdentityRole("auditor") { NormalizedName = "AUDITOR" };
+			await roles.CreateAsync(role);
+			await roles.AddClaimAsync(role, new Claim(type, "v"));
+
+			var roleClaims = await roles.GetClaimsAsync(role);
+			roleClaims
+				.ShouldHaveSingleItem()
+				.Type
+				.ShouldBe(type);
+		}
+
 		// CreateTable emits no foreign keys, so nothing cascades: the store itself has to remove the dependents
 		[Test]
 		public async Task UserDeleteRemovesDependents([DataSources] string context)
