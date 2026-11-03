@@ -66,7 +66,7 @@ namespace Tests.Infrastructure
 			{
 				using var db = new TestDataConnection(options => options.UseTracing(ti => s1 = ti.SqlText));
 
-				_child = db.Child.ToList();
+				_ = db.Child.ToList();
 
 				Assert.That(s1, Is.Not.Null);
 			}
@@ -76,7 +76,7 @@ namespace Tests.Infrastructure
 
 				using var db = new TestDataConnection();
 
-				_child = db.Child.ToList();
+				_ = db.Child.ToList();
 
 				Assert.That(s1, Is.Null);
 			}
@@ -89,7 +89,7 @@ namespace Tests.Infrastructure
 
 			using var db = new TestDataConnection();
 
-			_child = db.Child.ToList();
+			_ = db.Child.ToList();
 
 			Assert.That(s1, Is.Null);
 
@@ -101,7 +101,7 @@ namespace Tests.Infrastructure
 				.UseMappingSchema(db.MappingSchema)
 				.UseTracing(ti => s1 = ti.SqlText));
 
-			_child = db1.Child.ToList();
+			_ = db1.Child.ToList();
 
 			Assert.That(s1, Is.Not.Null);
 		}
