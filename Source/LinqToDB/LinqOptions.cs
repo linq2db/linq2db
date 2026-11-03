@@ -265,7 +265,8 @@ namespace LinqToDB
 		// TODO: Default to true in v7 (#6214)
 		bool                      UseCombinedCommands         = false
 		// If you add another parameter here, don't forget to update
-		// LinqOptions copy constructor and IConfigurationID.ConfigurationID.
+		// LinqOptions copy constructor and IConfigurationID.ConfigurationID,
+		// and to keep a shipped signature as a binary-compat constructor / Deconstruct pair (see below).
 	)
 		: IOptionSet
 	{
@@ -361,6 +362,81 @@ namespace LinqToDB
 				out cacheSlidingExpiration, out preferApply, out keepDistinctOrdered, out parameterizeTakeSkip,
 				out enableContextSchemaEdit, out preferExistsForScalar,
 				out _, out _, out _, out _, out _, out _, out _);
+		}
+
+		/// <summary>
+		/// Binary-compatibility overload of the record's positional constructor — mirrors the
+		/// public ctor signature as it was before <see cref="UseDbBatch"/> and <see cref="UseCombinedCommands"/> were added,
+		/// so assemblies compiled against the previous linq2db release continue to load.
+		/// </summary>
+		// TODO: remove in v7 (binary-compat shim — drop together with the matching Deconstruct overload).
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public LinqOptions(
+			bool                      preloadGroups,
+			bool                      ignoreEmptyUpdate,
+			bool                      generateExpressionTest,
+			bool                      traceMapperExpression,
+			bool                      concatenateOrderBy,
+			bool                      optimizeJoins,
+			CompareNulls              compareNulls,
+			bool                      guardGrouping,
+			bool                      disableQueryCache,
+			TimeSpan?                 cacheSlidingExpiration,
+			bool                      preferApply,
+			bool                      keepDistinctOrdered,
+			bool                      parameterizeTakeSkip,
+			bool                      enableContextSchemaEdit,
+			bool                      preferExistsForScalar,
+			bool                      preferClientCalculation,
+			UpsertEmulationPolicy     upsertEmulationPolicy,
+			EagerLoadingStrategy      defaultEagerLoadingStrategy,
+			ImplicitCollectionLoading implicitCollectionLoading,
+			bool                      optimizeForSequentialAccess)
+			: this(
+				preloadGroups, ignoreEmptyUpdate, generateExpressionTest, traceMapperExpression,
+				concatenateOrderBy, optimizeJoins, compareNulls, guardGrouping, disableQueryCache,
+				cacheSlidingExpiration, preferApply, keepDistinctOrdered, parameterizeTakeSkip,
+				enableContextSchemaEdit, preferExistsForScalar, preferClientCalculation, upsertEmulationPolicy,
+				defaultEagerLoadingStrategy, implicitCollectionLoading, optimizeForSequentialAccess,
+				UseDbBatch: true, UseCombinedCommands: false)
+		{
+		}
+
+		/// <summary>
+		/// Binary-compatibility overload of the record's <c>Deconstruct</c> — mirrors the
+		/// method signature as it was before <see cref="UseDbBatch"/> and <see cref="UseCombinedCommands"/> were added.
+		/// </summary>
+		// TODO: remove in v7 (binary-compat shim — drop together with the matching constructor overload).
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public void Deconstruct(
+			out bool                      preloadGroups,
+			out bool                      ignoreEmptyUpdate,
+			out bool                      generateExpressionTest,
+			out bool                      traceMapperExpression,
+			out bool                      concatenateOrderBy,
+			out bool                      optimizeJoins,
+			out CompareNulls              compareNulls,
+			out bool                      guardGrouping,
+			out bool                      disableQueryCache,
+			out TimeSpan?                 cacheSlidingExpiration,
+			out bool                      preferApply,
+			out bool                      keepDistinctOrdered,
+			out bool                      parameterizeTakeSkip,
+			out bool                      enableContextSchemaEdit,
+			out bool                      preferExistsForScalar,
+			out bool                      preferClientCalculation,
+			out UpsertEmulationPolicy     upsertEmulationPolicy,
+			out EagerLoadingStrategy      defaultEagerLoadingStrategy,
+			out ImplicitCollectionLoading implicitCollectionLoading,
+			out bool                      optimizeForSequentialAccess)
+		{
+			Deconstruct(
+				out preloadGroups, out ignoreEmptyUpdate, out generateExpressionTest, out traceMapperExpression,
+				out concatenateOrderBy, out optimizeJoins, out compareNulls, out guardGrouping, out disableQueryCache,
+				out cacheSlidingExpiration, out preferApply, out keepDistinctOrdered, out parameterizeTakeSkip,
+				out enableContextSchemaEdit, out preferExistsForScalar, out preferClientCalculation, out upsertEmulationPolicy,
+				out defaultEagerLoadingStrategy, out implicitCollectionLoading, out optimizeForSequentialAccess,
+				out _, out _);
 		}
 
 		int? _configurationID;
