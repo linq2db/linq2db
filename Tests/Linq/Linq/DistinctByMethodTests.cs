@@ -1125,8 +1125,8 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var query = db.Parent
-				.OrderBy(p => p.ParentID > 2)
-				.ThenByDescending(p => p.ParentID)
+				.OrderByDescending(p => p.ParentID > 2)
+				.ThenBy(p => p.ParentID)
 				.GroupBy(p => p.ParentID)
 				.Select(g => new { g.Key, Count = g.Count() })
 				.DistinctBy(x => x.Key % 2);
@@ -1281,8 +1281,8 @@ namespace Tests.Linq
 			var baseDate = new DateTime(2000, 1, 1);
 
 			var query = db.Types
-				.OrderBy(t => t.DateTimeValue - baseDate)
-				.ThenByDescending(t => t.DateTimeValue)
+				.OrderByDescending(t => t.DateTimeValue - baseDate)
+				.ThenBy(t => t.DateTimeValue)
 				.GroupBy(t => t.DateTimeValue)
 				.Select(g => new { g.Key, Count = g.Count() })
 				.DistinctBy(x => x.Key.Year > 0);
@@ -1299,8 +1299,8 @@ namespace Tests.Linq
 			var baseDate = new DateTime(2000, 1, 1);
 
 			var query = db.Types
-				.OrderBy(t => (t.DateTimeValue - baseDate).TotalDays)
-				.ThenByDescending(t => t.DateTimeValue)
+				.OrderByDescending(t => (t.DateTimeValue - baseDate).TotalDays)
+				.ThenBy(t => t.DateTimeValue)
 				.GroupBy(t => t.DateTimeValue)
 				.Select(g => new { g.Key, Count = g.Count() })
 				.DistinctBy(x => x.Key.Year > 0);
