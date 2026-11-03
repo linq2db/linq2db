@@ -1106,6 +1106,23 @@ namespace Tests.Linq
 				.Select(x => x.Key)
 				.ShouldBe([TimeSpan.FromSeconds(200), TimeSpan.FromSeconds(50)], ignoreOrder: true);
 		}
+
+		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_DistinctByRequiresOrderBy)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterGroupByOrderedByDurationOfNonKeyRequiresOrderBy([DataSources] string context)
+		{
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<DurationRow>();
+
+			Seed(db, TimeSpan.FromSeconds(50), TimeSpan.FromSeconds(150));
+
+			_ = t
+				.OrderByDescending(r => r.InTicks.TotalSeconds)
+				.GroupBy(r => r.InSeconds)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.DistinctBy(x => x.Key > TimeSpan.FromSeconds(100))
+				.ToArray();
+		}
 #endif
 
 		/// <summary>
