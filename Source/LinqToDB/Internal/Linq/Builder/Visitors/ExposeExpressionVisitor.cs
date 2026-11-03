@@ -457,15 +457,26 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			});
 		}
 
-		// Substitutes the compiled query's argument array with its values, so an expression reading them can be
+		// Substitutes the compiled query's arguments with their values, so an expression reading them can be
 		// evaluated. Returns the expression unchanged when it reads nothing from the array.
+		// Slot by slot: a delegate compiled from the result is cached, and the whole array would keep the first
+		// caller's data context alive.
 		Expression ResolveCompiledQueryArguments(Expression expression)
 		{
 			if (_parameterValues == null)
 				return expression;
 
 			return expression.Transform(_parameterValues, static (values, e) =>
-				e == ExpressionBuilder.ParametersParam ? Expression.Constant(values, e.Type) : e)!;
+			{
+				if (e is BinaryExpression { NodeType: ExpressionType.ArrayIndex, Right: ConstantExpression { Value: int idx } } arrayIndex
+					&& arrayIndex.Left == ExpressionBuilder.ParametersParam
+					&& idx >= 0 && idx < values.Length)
+				{
+					return Expression.Constant(values[idx], arrayIndex.Type);
+				}
+
+				return e == ExpressionBuilder.ParametersParam ? Expression.Constant(values, e.Type) : e;
+			})!;
 		}
 
 		// Recognises the shape CompileQuery leaves for a compiled query's own parameters - Convert(ps[i], T) -

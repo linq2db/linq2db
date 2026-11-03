@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 
 using LinqToDB;
 using LinqToDB.Expressions;
@@ -453,6 +454,51 @@ namespace Tests.Linq
 				.ShouldBe(new[] { "b_1", "b_2" });
 
 			b.Values!["b_2"].ShouldBe(21m);
+		}
+
+		/// <summary>
+		/// A name selector reading a compiled query's parameter is materialised with that parameter's value only: the
+		/// cached query does not keep the first call's data context alive.
+		/// </summary>
+		// SQLite only: this pins what the compiled query's cache holds on to, which no provider affects.
+		[Test]
+		public void CompiledQueryNameSelectorDoesNotRetainTheContext([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var factors = new[] { 1, 2 };
+
+			var query = CompiledQuery.Compile((IDataContext dc, string prefix) => dc
+				.GetTable<Amounts>()
+				.SelectDynamic(x => new AmountsDto { Id = x.Id }, factors, (x, k) => x.Usd * k, k => prefix + k));
+
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			WeakReference RunOnce(string ctx)
+			{
+				var db = GetDataContext(ctx);
+
+				using (db.CreateLocalTable(_data))
+				{
+					query(db, "a_")
+						.ToList();
+				}
+
+				db.Dispose();
+
+				return new WeakReference(db);
+			}
+
+			var reference = RunOnce(context);
+
+			for (var i = 0; i < 3; i++)
+			{
+				GC.Collect();
+				GC.WaitForPendingFinalizers();
+			}
+
+			reference
+				.IsAlive
+				.ShouldBeFalse();
+
+			GC.KeepAlive(query);
 		}
 
 		/// <summary>A name selector passed as a compiled query's parameter: each delegate gets its own names.</summary>
