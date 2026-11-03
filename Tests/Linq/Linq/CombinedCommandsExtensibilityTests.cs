@@ -100,7 +100,9 @@ namespace Tests.Linq
 			Seed(db);
 			counter.Count = 0;
 
-			parents.LoadWith(p => p.Children).ToList();
+			parents
+				.LoadWith(p => p.Children)
+				.ToList();
 
 			counter.Count.ShouldBe(1);
 		}
@@ -131,7 +133,9 @@ namespace Tests.Linq
 			Seed(db);
 			db.ProcessQueryCount = 0;
 
-			var loaded = parents.LoadWith(p => p.Children).ToList();
+			var loaded = parents
+				.LoadWith(p => p.Children)
+				.ToList();
 
 			loaded.ShouldHaveSingleItem();
 			loaded[0].Children.Count.ShouldBe(2);
@@ -161,9 +165,15 @@ namespace Tests.Linq
 			List<CeParent> loaded;
 
 			using (new TransactionScope())
-				loaded = db.GetTable<CeParent>().LoadWith(p => p.Children).ToList();
+			{
+				loaded = db.GetTable<CeParent>()
+					.LoadWith(p => p.Children)
+					.ToList();
+			}
 
-			loaded.ShouldHaveSingleItem().Children.Count.ShouldBe(2);
+			var parent = loaded.ShouldHaveSingleItem();
+
+			parent.Children.Count.ShouldBe(2);
 			counter.Count.ShouldBe(1);
 		}
 
@@ -186,9 +196,15 @@ namespace Tests.Linq
 			List<CeParent> loaded;
 
 			using (new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
-				loaded = await db.GetTable<CeParent>().LoadWith(p => p.Children).ToListAsync();
+			{
+				loaded = await db.GetTable<CeParent>()
+					.LoadWith(p => p.Children)
+					.ToListAsync();
+			}
 
-			loaded.ShouldHaveSingleItem().Children.Count.ShouldBe(2);
+			var parent = loaded.ShouldHaveSingleItem();
+
+			parent.Children.Count.ShouldBe(2);
 			counter.Count.ShouldBe(1);
 		}
 

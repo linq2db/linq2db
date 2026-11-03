@@ -261,7 +261,9 @@ namespace Tests.xUpdate
 					commands = counter.Count;
 			}
 
-			db.Patient.Single(p => p.PersonID == id).Diagnosis.ShouldBe("abc2");
+			var patient = db.Patient.Single(p => p.PersonID == id);
+
+			patient.Diagnosis.ShouldBe("abc2");
 
 			return commands;
 		}

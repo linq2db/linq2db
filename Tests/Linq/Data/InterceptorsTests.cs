@@ -519,7 +519,9 @@ namespace Tests.Data
 		public void DataContext_ExecuteScalar([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool combinedCommands)
 		{
 			// use non-temp table as sqlite temp tables are session-bound and context recreates session
-			using var db = new DataContext(new DataOptions().UseConfiguration(context).UseCombinedCommands(combinedCommands));
+			using var db = new DataContext(new DataOptions()
+				.UseConfiguration(context)
+				.UseCombinedCommands(combinedCommands));
 			using var table = db.CreateTempTable<InterceptorsTestsTable>(tableOptions: TableOptions.None);
 			var interceptor = new TestCommandInterceptor();
 			db.AddInterceptor(interceptor);
@@ -554,7 +556,9 @@ namespace Tests.Data
 		public async Task DataContext_ExecuteScalarAsync([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool combinedCommands)
 		{
 			// use non-temp table as sqlite temp tables are session-bound and context recreates session
-			await using var db = new DataContext(new DataOptions().UseConfiguration(context).UseCombinedCommands(combinedCommands));
+			await using var db = new DataContext(new DataOptions()
+				.UseConfiguration(context)
+				.UseCombinedCommands(combinedCommands));
 			await using var table = await db.CreateTempTableAsync<InterceptorsTestsTable>(tableOptions: TableOptions.None);
 			var interceptor = new TestCommandInterceptor();
 			db.AddInterceptor(interceptor);
@@ -1476,7 +1480,9 @@ namespace Tests.Data
 			using var db = GetDataConnection(context, o => o.UseCombinedCommands(true));
 			db.AddInterceptor(new TestExceptionInterceptor());
 
-			Action act = () => db.GetTable<EagerExceptionParent>().LoadWith(p => p.Children).ToList();
+			Action act = () => db.GetTable<EagerExceptionParent>()
+				.LoadWith(p => p.Children)
+				.ToList();
 
 			act.ShouldThrow<TestException>();
 		}
@@ -1487,7 +1493,9 @@ namespace Tests.Data
 			using var db = GetDataConnection(context, o => o.UseCombinedCommands(true));
 			db.AddInterceptor(new TestExceptionInterceptor());
 
-			Func<Task> act = () => db.GetTable<EagerExceptionParent>().LoadWith(p => p.Children).ToListAsync();
+			Func<Task> act = () => db.GetTable<EagerExceptionParent>()
+				.LoadWith(p => p.Children)
+				.ToListAsync();
 
 			await act.ShouldThrowAsync<TestException>();
 		}
@@ -1520,7 +1528,9 @@ namespace Tests.Data
 			beginCount                       = 0;
 			interceptor.ReaderHadTransaction = null;
 
-			var result = db.GetTable<Pr5EagerParent>().LoadWith(p => p.Children).ToList();
+			var result = db.GetTable<Pr5EagerParent>()
+				.LoadWith(p => p.Children)
+				.ToList();
 
 			result                          .Count.ShouldBe(1);
 			result[0].Children              .Count.ShouldBe(1);
@@ -1551,7 +1561,9 @@ namespace Tests.Data
 
 			beginCount = 0;
 
-			var result = db.GetTable<Pr5EagerParent>().LoadWith(p => p.Children).ToList();
+			var result = db.GetTable<Pr5EagerParent>()
+				.LoadWith(p => p.Children)
+				.ToList();
 
 			result            .Count.ShouldBe(1);
 			result[0].Children.Count.ShouldBe(1);
@@ -1571,7 +1583,9 @@ namespace Tests.Data
 
 			db.NextQueryHints.Add("-- pr5 next-query hint");
 
-			var result = db.GetTable<Pr5EagerParent>().LoadWith(p => p.Children).ToList();
+			var result = db.GetTable<Pr5EagerParent>()
+				.LoadWith(p => p.Children)
+				.ToList();
 
 			result[0].Children.Count.ShouldBe(1);
 			// The one-shot hint must be consumed by the eager load, not left behind to leak onto the next query.
@@ -1595,7 +1609,10 @@ namespace Tests.Data
 			// OWN parameter (2), not the first run's cached value (1). A stale bind would return parent 1 / child 10.
 			for (var id = 1; id <= 2; id++)
 			{
-				var result = db.GetTable<Pr5EagerParent>().Where(p => p.Id == id).LoadWith(p => p.Children).ToList();
+				var result = db.GetTable<Pr5EagerParent>()
+					.Where(p => p.Id == id)
+					.LoadWith(p => p.Children)
+					.ToList();
 
 				result                        .Count.ShouldBe(1);
 				result[0].Id                  .ShouldBe(id);

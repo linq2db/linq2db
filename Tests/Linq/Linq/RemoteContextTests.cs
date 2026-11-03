@@ -325,16 +325,20 @@ namespace Tests.Linq
 		{
 			var executed = new List<string>();
 
-			using var db = GetServerContainer().CreateContext(
-				(_, o) => o.UseConfiguration(context).UseCombinedCommands(combined).UseDbBatch(useDbBatch),
-				(configuration, _) => new DataConnection(new DataOptions()
-					.UseConfiguration(configuration)
-					.UseTracing(TraceLevel.Info, info =>
-					{
-						if (info.TraceInfoStep == TraceInfoStep.BeforeExecute
-							&& info.Operation is TraceOperation.ExecuteNonQuery or TraceOperation.ExecuteScalar or TraceOperation.ExecuteReader)
-							executed.Add(info.SqlText);
-					})));
+			using var db = GetServerContainer()
+				.CreateContext(
+					(_, o) => o
+						.UseConfiguration(context)
+						.UseCombinedCommands(combined)
+						.UseDbBatch(useDbBatch),
+					(configuration, _) => new DataConnection(new DataOptions()
+						.UseConfiguration(configuration)
+						.UseTracing(TraceLevel.Info, info =>
+						{
+							if (info.TraceInfoStep == TraceInfoStep.BeforeExecute
+								&& info.Operation is TraceOperation.ExecuteNonQuery or TraceOperation.ExecuteScalar or TraceOperation.ExecuteReader)
+								executed.Add(info.SqlText);
+						})));
 
 			using var table = db.CreateLocalTable<CombinedOptionRow>();
 
@@ -342,8 +346,9 @@ namespace Tests.Linq
 
 			var id       = db.InsertWithInt32Identity(new CombinedOptionRow { Value = "a" });
 			var commands = executed.ToList();
+			var row      = table.Single(r => r.Id == id);
 
-			table.Single(r => r.Id == id).Value.ShouldBe("a");
+			row.Value.ShouldBe("a");
 
 #if SUPPORTS_DBBATCH
 			var batch = combined && useDbBatch && context.IsAnyOf(TestProvName.AllMySqlConnector);
@@ -352,7 +357,9 @@ namespace Tests.Linq
 #endif
 
 			commands.Count.ShouldBe(combined ? 1 : 2);
-			commands.Any(c => c.Contains("-- Command 1", StringComparison.Ordinal)).ShouldBe(batch);
+			commands
+				.Any(c => c.Contains("-- Command 1", StringComparison.Ordinal))
+				.ShouldBe(batch);
 		}
 
 		// The server's connection turns DbBatch off; the client asks for it. The insert follows the client's options,
@@ -364,17 +371,21 @@ namespace Tests.Linq
 		{
 			var executed = new List<string>();
 
-			using var db = GetServerContainer().CreateContext(
-				(_, o) => o.UseConfiguration(context).UseCombinedCommands(true).UseDbBatch(true),
-				(configuration, _) => new DataConnection(new DataOptions()
-					.UseConfiguration(configuration)
-					.UseDbBatch(false)
-					.UseTracing(TraceLevel.Info, info =>
-					{
-						if (info.TraceInfoStep == TraceInfoStep.BeforeExecute
-							&& info.Operation is TraceOperation.ExecuteNonQuery or TraceOperation.ExecuteScalar or TraceOperation.ExecuteReader)
-							executed.Add(info.SqlText);
-					})));
+			using var db = GetServerContainer()
+				.CreateContext(
+					(_, o) => o
+						.UseConfiguration(context)
+						.UseCombinedCommands(true)
+						.UseDbBatch(true),
+					(configuration, _) => new DataConnection(new DataOptions()
+						.UseConfiguration(configuration)
+						.UseDbBatch(false)
+						.UseTracing(TraceLevel.Info, info =>
+						{
+							if (info.TraceInfoStep == TraceInfoStep.BeforeExecute
+								&& info.Operation is TraceOperation.ExecuteNonQuery or TraceOperation.ExecuteScalar or TraceOperation.ExecuteReader)
+								executed.Add(info.SqlText);
+						})));
 
 			using var table = db.CreateLocalTable<CombinedOptionRow>();
 

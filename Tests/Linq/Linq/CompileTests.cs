@@ -608,7 +608,8 @@ namespace Tests.Linq
 			var seen = new List<int>();
 
 			// Returning false keeps the enumeration going, so this walks every matching row.
-			await query(db, 1).ForEachUntilAsync(p => { seen.Add(p.ParentID); return false; });
+			await query(db, 1)
+				.ForEachUntilAsync(p => { seen.Add(p.ParentID); return false; });
 
 			seen.ShouldBe([1]);
 		}

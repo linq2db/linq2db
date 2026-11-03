@@ -106,15 +106,18 @@ namespace Tests.Linq
 			pattern = "be";                                                           // change ONLY the volatile parameter value
 			var run2        = Run();                                                  // run 2: query-cache hit + partial render
 			var run2Renders = RenderDiagnostics.BuildSqlCount - baseline - run1Renders;
+			var run2Misses  = parents.GetCacheMissCount();
 
 			afterFirstMiss.ShouldBeGreaterThan(missStart);                            // run 1 compiled the query (a cache miss)
-			parents.GetCacheMissCount().ShouldBe(afterFirstMiss);                     // run 2 reused it (a cache hit) - precondition
+			run2Misses.ShouldBe(afterFirstMiss);                                      // run 2 reused it (a cache hit) - precondition
 			run1Renders.ShouldBeGreaterThanOrEqualTo(2);                              // run 1 rendered the main + the detail
 			run2Renders.ShouldBeGreaterThanOrEqualTo(1);                              // the parameter-dependent detail re-rendered
 			run2Renders.ShouldBeLessThanOrEqualTo(run1Renders);                      // concat cache is all-or-nothing: a volatile step re-renders the whole command (== run 1)
 
 			run2.ShouldHaveSingleItem();
-			run2[0].Children.Select(c => c.Name).ShouldBe(new[] { "beta" });          // the LIKE filter actually applied
+			run2[0].Children
+				.Select(c => c.Name)
+				.ShouldBe(new[] { "beta" });                                          // the LIKE filter actually applied
 		}
 
 		// A fully stable eager load renders once and is fully reused - nothing re-renders on the second run. This is the
@@ -154,7 +157,9 @@ namespace Tests.Linq
 
 			Run();                                                                    // second run
 
-			parents.GetCacheMissCount().ShouldBe(afterMiss);                          // query-cache hit
+			var afterSecondRun = parents.GetCacheMissCount();
+
+			afterSecondRun.ShouldBe(afterMiss);                                       // query-cache hit
 			(RenderDiagnostics.BuildSqlCount - baseline).ShouldBe(0);                 // fully stable => nothing re-rendered
 		}
 	}
