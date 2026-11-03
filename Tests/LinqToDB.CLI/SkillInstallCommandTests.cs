@@ -1061,6 +1061,183 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task UninstallRemovesEverythingInstalledFromBothDestinations()
+		{
+			var repo = CreateRepository("5.0.0");
+			await RunCli("skill", "install", "--project", repo.Project);
+
+			var result = await RunCli("skill", "uninstall", "--project", repo.Project);
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.ExitCode.ShouldBe(0, result.Error);
+				result.Output.  ShouldContain($"removed: {Path.Combine(".agents", "skills", "linq2db")}");
+				result.Output.  ShouldContain($"removed: {Path.Combine(".claude", "skills", "linq2db-cli")}");
+
+				foreach (var root in new[] { ".agents", ".claude" })
+				{
+					Directory.Exists(Path.Combine(repo.Root, root, "skills", "linq2db")).ShouldBeFalse();
+					Directory.Exists(Path.Combine(repo.Root, root, "skills", "linq2db-cli")).ShouldBeFalse();
+				}
+			}
+		}
+
+		[Test]
+		public async Task UninstallKeepsEditedFileAndFailsUntilForced()
+		{
+			var repo = CreateRepository("5.0.0");
+			await RunCli("skill", "install", "--project", repo.Project);
+
+			var edited = Path.Combine(repo.Root, ".agents", "skills", "linq2db", "SKILL.md");
+			File.AppendAllText(edited, "my edit\n");
+
+			var result = await RunCli("skill", "uninstall", "--project", repo.Project);
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.ExitCode.ShouldBe(-3);
+				result.Error.   ShouldContain($"kept {Path.Combine(".agents", "skills", "linq2db")}: 1 file(s) changed or added; remove by hand");
+				File.ReadAllText(edited).ShouldEndWith("my edit\n");
+				// the unchanged recorded files are gone, and the marker still lists what is left
+				File.Exists(Path.Combine(repo.Root, ".agents", "skills", "linq2db", "docs", "crud", "crud-update.md")).ShouldBeFalse();
+				JsonDocument.Parse(File.ReadAllText(Path.Combine(repo.Root, ".agents", "skills", "linq2db", LibraryManifestFile))).RootElement
+					.GetProperty("files").EnumerateObject().Select(p => p.Name).ShouldBe(["SKILL.md"]);
+				// the other destination is handled regardless
+				Directory.Exists(Path.Combine(repo.Root, ".claude", "skills", "linq2db")).ShouldBeFalse();
+			}
+
+			var forced = await RunCli("skill", "uninstall", "--project", repo.Project, "--force");
+
+			using (Assert.EnterMultipleScope())
+			{
+				forced.ExitCode.ShouldBe(0, forced.Error);
+				Directory.Exists(Path.Combine(repo.Root, ".agents", "skills", "linq2db")).ShouldBeFalse();
+			}
+		}
+
+		[Test]
+		public async Task UninstallKeepsFilesTheToolDidNotInstallEvenWithForce()
+		{
+			var repo = CreateRepository("5.0.0");
+			await RunCli("skill", "install", "--project", repo.Project);
+
+			var notes = Path.Combine(repo.Root, ".claude", "skills", "linq2db", "notes.md");
+			File.WriteAllText(notes, "mine\n");
+
+			var plain  = await RunCli("skill", "uninstall", "--project", repo.Project);
+			var forced = await RunCli("skill", "uninstall", "--project", repo.Project, "--force");
+
+			using (Assert.EnterMultipleScope())
+			{
+				plain.ExitCode.ShouldBe(-3);
+				plain.Error.   ShouldContain($"kept {Path.Combine(".claude", "skills", "linq2db")}: 1 file(s) changed or added; remove by hand");
+				forced.ExitCode.ShouldBe(0, forced.Error + forced.Output);
+				File.ReadAllText(notes).ShouldBe("mine\n");
+				Directory.EnumerateFileSystemEntries(Path.GetDirectoryName(notes)!).Count().ShouldBe(1);
+				Directory.Exists(Path.Combine(repo.Root, ".agents", "skills", "linq2db")).ShouldBeFalse();
+			}
+		}
+
+		[Test]
+		public async Task UninstallLeavesFoldersOfPackageSkillsToolAndFoldersWithoutMarker()
+		{
+			var repo        = CreateRepository("5.0.0");
+			var destination = Path.Combine(repo.Root, ".agents", "skills");
+
+			WriteOtherToolFolder(destination, "linq2db", "5.0.0", "their linq2db\n");
+
+			Directory.CreateDirectory(Path.Combine(repo.Root, ".claude", "skills", "linq2db"));
+			File.WriteAllText(Path.Combine(repo.Root, ".claude", "skills", "linq2db", "SKILL.md"), "hand-made\n");
+
+			var before = Snapshot(repo.Root);
+			var result = await RunCli("skill", "uninstall", "--project", repo.Project, "--force");
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.ExitCode.ShouldBe(0, result.Error);
+				result.Output.  ShouldContain("managed by dotnet-package-skills (linq2db 5.0.0); left unchanged");
+				result.Output.  ShouldContain("not installed by this tool");
+				result.Output.  ShouldContain("Nothing to uninstall.");
+				Snapshot(repo.Root).ShouldBe(before);
+			}
+		}
+
+		[Test]
+		public async Task UninstallTouchesNothingWhereOwnershipIsUnknown()
+		{
+			var repo = CreateRepository("5.0.0");
+			await RunCli("skill", "install", "--project", repo.Project);
+
+			File.WriteAllText(Path.Combine(repo.Root, ".agents", "skills", ".dotnet-package-skills.json"), "not json");
+
+			var before = Snapshot(Path.Combine(repo.Root, ".agents"));
+			var result = await RunCli("skill", "uninstall", "--project", repo.Project, "--force");
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.ExitCode.ShouldBe(0, result.Error);
+				result.Error.   ShouldContain("could not be read");
+				Snapshot(Path.Combine(repo.Root, ".agents")).ShouldBe(before);
+				Directory.Exists(Path.Combine(repo.Root, ".claude", "skills", "linq2db")).ShouldBeFalse();
+			}
+		}
+
+		[Test]
+		public async Task UninstallHandlesAnAliasedDestinationOnce()
+		{
+			var repo = CreateRepository("5.0.0");
+
+			Directory.CreateDirectory(Path.Combine(repo.Root, ".agents", "skills"));
+			Directory.CreateDirectory(Path.Combine(repo.Root, ".claude"));
+
+			if (!TryCreateDirectoryLink(Path.Combine(repo.Root, ".claude", "skills"), Path.Combine(repo.Root, ".agents", "skills")))
+				Assert.Ignore("Symbolic links are not available.");
+
+			await RunCli("skill", "install", "--project", repo.Project);
+
+			var result = await RunCli("skill", "uninstall", "--project", repo.Project);
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.ExitCode.ShouldBe(0, result.Error);
+				result.Output.  ShouldContain("handled there");
+				Regex.Count(result.Output, "removed:").ShouldBe(2);
+				Directory.Exists(Path.Combine(repo.Root, ".agents", "skills", "linq2db")).ShouldBeFalse();
+			}
+		}
+
+		[Test]
+		public async Task UninstallWithNothingInstalledSucceeds()
+		{
+			var repo   = CreateRepository("5.0.0");
+			var result = await RunCli("skill", "uninstall", "--project", repo.Project);
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.ExitCode.ShouldBe(0, result.Error);
+				result.Output.  ShouldContain("Nothing to uninstall.");
+				Directory.Exists(Path.Combine(repo.Root, ".agents")).ShouldBeFalse();
+			}
+		}
+
+		[Test]
+		public async Task UninstallFreesTheFolderForPackageSkillsTool()
+		{
+			var repo        = CreateRepository("5.0.0");
+			var destination = Path.Combine(repo.Root, ".agents", "skills");
+
+			WriteOtherToolFolder(destination, "other-skill", "1.0.0", "other\n", package: "other.package");
+			await RunCli("skill", "install", "--project", repo.Project);
+			await RunCli("skill", "uninstall", "--project", repo.Project);
+
+			// their tool installs into a destination only when the folder is absent; its record and the unrelated skill are untouched
+			Directory.Exists(Path.Combine(destination, "linq2db")).ShouldBeFalse();
+			Directory.Exists(Path.Combine(destination, "linq2db-cli")).ShouldBeFalse();
+			File.ReadAllText(Path.Combine(destination, "other-skill", "SKILL.md")).ShouldBe("other\n");
+			File.Exists(Path.Combine(destination, ".dotnet-package-skills.json")).ShouldBeTrue();
+		}
+
+		[Test]
 		public async Task ListedFolderThatDoesNotExistIsMissingAndNotWritten()
 		{
 			var repo        = CreateRepository("5.0.0");
@@ -1332,9 +1509,9 @@ namespace Tests.LinqToDB.CLI
 			{
 				result.ExitCode.ShouldBe(0, result.Error);
 				result.Output.  ShouldContain($"updated: {Path.Combine(".agents", "skills", "linq2db")} ");
-				result.Output.  ShouldContain($"dotnet-package-skills will skip this folder. To let it manage the skill, delete '{Path.Combine(".agents", "skills", "linq2db")}' and run 'dotnet-package-skills install'.");
+				result.Output.  ShouldContain("dotnet-package-skills will skip this folder. To let it manage the skill, run 'dotnet linq2db skill uninstall', then 'dotnet-package-skills install'.");
 				// only the destination with a record of the other tool gets the hint
-				result.Output.  ShouldNotContain($"delete '{Path.Combine(".claude", "skills", "linq2db")}'");
+				result.Output.  ShouldNotContain("dotnet-package-skills will skip these");
 				JsonDocument.Parse(File.ReadAllText(Path.Combine(destination, "linq2db", LibraryManifestFile))).RootElement.GetProperty("version").GetString().ShouldBe("5.1.0");
 				File.ReadAllText(Path.Combine(destination, ".dotnet-package-skills.json")).ShouldBe(recordBefore);
 			}

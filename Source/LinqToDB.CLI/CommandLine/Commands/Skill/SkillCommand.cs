@@ -16,7 +16,8 @@ namespace LinqToDB.CommandLine.Commands.Skill
 	/// </summary>
 	internal sealed class SkillCommand : CliCommand
 	{
-		private const string InstallOperation = "install";
+		private const string InstallOperation   = "install";
+		private const string UninstallOperation = "uninstall";
 
 		private static readonly string[] _skillRoots = [".agents/skills", ".claude/skills"];
 
@@ -52,7 +53,7 @@ namespace LinqToDB.CommandLine.Commands.Skill
 			"force",
 			null,
 			false,
-			"overwrite files that were edited locally or that this tool did not install (folders managed by dotnet-package-skills are never overwritten)",
+			"overwrite files that were edited locally or that this tool did not install (folders managed by dotnet-package-skills are never overwritten); with 'uninstall', also removes installed files that were edited locally",
 			null,
 			null,
 			null,
@@ -66,13 +67,14 @@ namespace LinqToDB.CommandLine.Commands.Skill
 				"skill",
 				true,
 				false,
-				"[install] [options]",
-				"print agent instructions in Markdown format, or install the linq2db agent skills into a repository",
+				"[install|uninstall] [options]",
+				"print agent instructions in Markdown format, or install or remove the linq2db agent skills of a repository",
 				[
 					new("dotnet linq2db skill",                                              "prints the linq2db CLI skill as Markdown"),
 					new("dotnet linq2db skill install",                                      "installs the linq2db and linq2db-cli skills into .agents/skills and .claude/skills of the current repository"),
 					new("dotnet linq2db skill install --project src/App/App.csproj",        "takes the library skill from the linq2db version that project references"),
 					new("dotnet linq2db skill install --check",                              "exits with a non-zero code when installed skills are missing, stale or edited"),
+					new("dotnet linq2db skill uninstall",                                    "removes the files that 'skill install' wrote (edited and added files are kept); folders managed by dotnet-package-skills are never touched"),
 				],
 				true)
 		{
@@ -106,16 +108,29 @@ namespace LinqToDB.CommandLine.Commands.Skill
 				return StatusCodes.SUCCESS;
 			}
 
-			if (unknownArgs.Count > 1 || (unknownArgs.Count == 1 && !string.Equals(unknownArgs.Single(), InstallOperation, StringComparison.Ordinal)))
+			var isUninstall = unknownArgs.Count == 1 && string.Equals(unknownArgs.Single(), UninstallOperation, StringComparison.Ordinal);
+
+			if (unknownArgs.Count > 1 || (unknownArgs.Count == 1 && !isUninstall && !string.Equals(unknownArgs.Single(), InstallOperation, StringComparison.Ordinal)))
 			{
-				await environment.Error.WriteLineAsync($"Command '{Name}' doesn't accept arguments. Use '{Name} {InstallOperation}' to install the skills.");
+				await environment.Error.WriteLineAsync($"Command '{Name}' doesn't accept arguments. Use '{Name} {InstallOperation}' to install the skills or '{Name} {UninstallOperation}' to remove them.");
 				return StatusCodes.INVALID_ARGUMENTS;
 			}
 
 			if (unknownArgs.Count == 0)
 			{
-				await environment.Error.WriteLineAsync($"Options of command '{Name}' are supported only with '{InstallOperation}'.");
+				await environment.Error.WriteLineAsync($"Options of command '{Name}' are supported only with '{InstallOperation}' or '{UninstallOperation}'.");
 				return StatusCodes.INVALID_ARGUMENTS;
+			}
+
+			if (isUninstall)
+			{
+				if (checkValue != null)
+				{
+					await environment.Error.WriteLineAsync($"Option '--check' is not supported with '{UninstallOperation}'.");
+					return StatusCodes.INVALID_ARGUMENTS;
+				}
+
+				return await Uninstall(environment, (string?)projectValue, (string?)rootValue, (bool?)forceValue ?? false);
 			}
 
 			return await Install(
@@ -242,38 +257,13 @@ namespace LinqToDB.CommandLine.Commands.Skill
 				// the options of the tool that is running, and it is the only copy that cannot be older than that tool
 				bundles = [library, SkillSource.GetCliSkill()];
 
-				var destinations = _skillRoots.Select(r => Path.Combine(root, r.Replace('/', Path.DirectorySeparatorChar))).ToList();
+				var (destinations, linkSkipped) = await ResolveDestinations(environment, root);
+
+				skipped += linkSkipped;
 
 				foreach (var destination in destinations)
 				{
-					var relative = Path.GetRelativePath(root, destination);
-					var link     = SkillPath.FindLink(root, destination);
-
-					if (link != null)
-					{
-						// compared as fully resolved paths, so a repository reached through a linked ancestor still matches
-						var real = SkillPath.GetRealPath(destination);
-
-						// one tool directory aliased to the other is common: the real directory is processed once, under its own name
-						if (Directory.Exists(real) && destinations.Exists(d => !string.Equals(d, destination, StringComparison.Ordinal)
-							&& SkillPath.FindLink(root, d) == null
-							&& SkillPath.Comparer.Equals(real, SkillPath.GetRealPath(d))))
-						{
-							await environment.Out.WriteLineAsync($"  {relative}: link to {Path.GetRelativePath(SkillPath.GetRealPath(root), real)}; handled there");
-						}
-						else
-						{
-							var why = !Directory.Exists(real)
-								? $"'{link}' is a dangling or unresolvable link"
-								: $"'{link}' resolves to '{real}', which is not another skill directory of this tool";
-
-							await environment.Error.WriteLineAsync($"  skipped: {relative}: {why}; refusing to write through it.");
-							skipped++;
-						}
-
-						continue;
-					}
-
+					var relative         = Path.GetRelativePath(root, destination);
 					var destinationPlans = new List<SkillInstallPlan>();
 
 					try
@@ -302,6 +292,142 @@ namespace LinqToDB.CommandLine.Commands.Skill
 			return check
 				? await Check(environment, root, plans, found.Count > 0 ? found[0].Version : null, skipped)
 				: await Apply(environment, root, plans, force, skipped);
+		}
+
+		private static async Task<int> Uninstall(ICliEnvironment environment, string? projectOption, string? rootOption, bool force)
+		{
+			var projectPath = Path.GetFullPath(projectOption ?? Directory.GetCurrentDirectory());
+
+			if (!Directory.Exists(projectPath) && !File.Exists(projectPath))
+			{
+				await environment.Error.WriteLineAsync($"Project '{projectPath}' was not found.");
+				return StatusCodes.INVALID_ARGUMENTS;
+			}
+
+			var projectDirectory = Directory.Exists(projectPath) ? projectPath : Path.GetDirectoryName(projectPath)!;
+			var root             = rootOption != null ? Path.GetFullPath(rootOption) : FindRepositoryRoot(projectDirectory);
+
+			var (destinations, skipped) = await ResolveDestinations(environment, root);
+			var plans                   = new List<SkillUninstallPlan>();
+
+			foreach (var destination in destinations)
+			{
+				var destinationPlans = new List<SkillUninstallPlan>();
+
+				try
+				{
+					foreach (var name in new[] { SkillSource.LibrarySkillName, SkillSource.CliSkillName })
+						destinationPlans.Add(SkillUninstaller.Analyze(name, root, Path.Combine(destination, name)));
+
+					plans.AddRange(destinationPlans);
+				}
+				catch (InvalidOperationException ex)
+				{
+					// a link inside the destination: that destination is skipped, the others are still handled
+					await environment.Error.WriteLineAsync($"  skipped: {Path.GetRelativePath(root, destination)}: {ex.Message}");
+					skipped++;
+				}
+			}
+
+			var kept      = 0;
+			var installed = false;
+
+			foreach (var plan in plans)
+			{
+				var relative = Path.GetRelativePath(root, plan.Directory);
+
+				switch (plan.State)
+				{
+					case SkillUninstallState.NotInstalled:
+						break;
+					case SkillUninstallState.OwnershipUnknown:
+						await environment.Error.WriteLineAsync($"Warning: {relative}: {plan.Reason}.");
+						break;
+					case SkillUninstallState.ManagedExternally:
+					case SkillUninstallState.NotInstalledByTool:
+						await environment.Out.WriteLineAsync($"  {relative}: {plan.Reason}");
+						break;
+					default:
+					{
+						installed = true;
+
+						int left;
+
+						try
+						{
+							left = SkillUninstaller.Apply(plan, root, force);
+						}
+						catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
+						{
+							await environment.Error.WriteLineAsync($"Cannot remove '{plan.Directory}': {ex.Message}");
+							return StatusCodes.EXPECTED_ERROR;
+						}
+
+						if (left == 0)
+						{
+							await environment.Out.WriteLineAsync($"  removed: {relative}");
+						}
+						else
+						{
+							kept += left;
+							await environment.Error.WriteLineAsync($"  kept {relative}: {left.ToString(System.Globalization.CultureInfo.InvariantCulture)} file(s) changed or added; remove by hand");
+						}
+
+						break;
+					}
+				}
+			}
+
+			if (!installed)
+				await environment.Out.WriteLineAsync("Nothing to uninstall.");
+
+			// edited or added files were left in place, or a destination was refused: not a clean result
+			return kept > 0 || skipped > 0 ? StatusCodes.EXPECTED_ERROR : StatusCodes.SUCCESS;
+		}
+
+		/// <summary>
+		/// The destinations that can be written: a destination root that is a link to the other destination is handled there, and
+		/// one that links anywhere else (or nowhere) is reported and skipped.
+		/// </summary>
+		private static async Task<(List<string> Destinations, int Skipped)> ResolveDestinations(ICliEnvironment environment, string root)
+		{
+			var all     = _skillRoots.Select(r => Path.Combine(root, r.Replace('/', Path.DirectorySeparatorChar))).ToList();
+			var result  = new List<string>();
+			var skipped = 0;
+
+			foreach (var destination in all)
+			{
+				var relative = Path.GetRelativePath(root, destination);
+				var link     = SkillPath.FindLink(root, destination);
+
+				if (link == null)
+				{
+					result.Add(destination);
+					continue;
+				}
+
+				// compared as fully resolved paths, so a repository reached through a linked ancestor still matches
+				var real = SkillPath.GetRealPath(destination);
+
+				// one tool directory aliased to the other is common: the real directory is processed once, under its own name
+				if (Directory.Exists(real) && all.Exists(d => !string.Equals(d, destination, StringComparison.Ordinal)
+					&& SkillPath.FindLink(root, d) == null
+					&& SkillPath.Comparer.Equals(real, SkillPath.GetRealPath(d))))
+				{
+					await environment.Out.WriteLineAsync($"  {relative}: link to {Path.GetRelativePath(SkillPath.GetRealPath(root), real)}; handled there");
+				}
+				else
+				{
+					var why = !Directory.Exists(real)
+						? $"'{link}' is a dangling or unresolvable link"
+						: $"'{link}' resolves to '{real}', which is not another skill directory of this tool";
+
+					await environment.Error.WriteLineAsync($"  skipped: {relative}: {why}; refusing to write through it.");
+					skipped++;
+				}
+			}
+
+			return (result, skipped);
 		}
 
 		private static async Task<int> Check(ICliEnvironment environment, string root, List<SkillInstallPlan> plans, string? resolvedVersion, int skipped)
@@ -435,12 +561,12 @@ namespace LinqToDB.CommandLine.Commands.Skill
 				if (folders.Count == 1)
 				{
 					await environment.Out.WriteLineAsync(
-						$"    dotnet-package-skills will skip this folder. To let it manage the skill, delete '{folders[0]}' and run 'dotnet-package-skills install'.");
+						"    dotnet-package-skills will skip this folder. To let it manage the skill, run 'dotnet linq2db skill uninstall', then 'dotnet-package-skills install'.");
 				}
 				else
 				{
 					await environment.Out.WriteLineAsync(
-						$"    dotnet-package-skills will skip these folders: {string.Join(", ", folders.Select(static f => $"'{f}'"))}. To let it manage a skill, delete its folder and run 'dotnet-package-skills install'.");
+						$"    dotnet-package-skills will skip these folders: {string.Join(", ", folders.Select(static f => $"'{f}'"))}. To let it manage them, run 'dotnet linq2db skill uninstall', then 'dotnet-package-skills install'.");
 				}
 			}
 		}

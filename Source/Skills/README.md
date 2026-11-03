@@ -45,7 +45,12 @@ Two installers can fill a repository, and a destination (`.agents/skills`, `.cla
   tool, and records its files in `.linq2db-skill.json` inside each skill folder. It reads, and never writes, the
   `.dotnet-package-skills.json` of a destination: a folder listed there is left unchanged (even with `--force`), and
   `--check` fails when the recorded linq2db version differs from the project's. When it owns a folder in a destination
-  that has such a file, it prints how to hand the folder over (delete it and run `dotnet-package-skills install`).
+  that has such a file, it prints how to hand the folder over (`dotnet linq2db skill uninstall`, then `dotnet-package-skills install`).
+- `dotnet linq2db skill uninstall` removes what the first installer wrote, in both destinations: only folders with a
+  `.linq2db-skill.json`, and inside them only files that still match the record; edited or added files are kept
+  (non-zero exit; `--force` also removes edited recorded files, never files it did not install). Folders owned by
+  `dotnet-package-skills`, folders without the marker, and everything in a destination whose
+  `.dotnet-package-skills.json` cannot be read are left alone.
 - `dotnet-package-skills install` (beta) copies the skills of the direct `PackageReference` packages into one
   destination per run (`.agents/skills`; run again with `-d .claude/skills`), records them in
   `.dotnet-package-skills.json`, and skips a non-empty folder it did not install. Because it reads direct references
