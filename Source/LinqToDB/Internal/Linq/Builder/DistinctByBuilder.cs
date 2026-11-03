@@ -154,8 +154,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						// The ordering that picks the surviving row then sits below this query (on the limited query, or on a
 						// query the sequence wraps), so it is re-translated here from the captured ordering.
-						if (distinctOnContext.SelectQuery.OrderBy.IsEmpty && !AddCapturedOrdering(builder, distinctOnContext, captured))
-							throw SqlErrorExpression.CreateException(sequenceExpression, ErrorHelper.Error_DistinctByRequiresOrderBy);
+						if (distinctOnContext.SelectQuery.OrderBy.IsEmpty)
+						{
+							if (!AddCapturedOrdering(builder, distinctOnContext, captured, out var skipped))
+								throw SqlErrorExpression.CreateException(sequenceExpression, ErrorHelper.Error_DistinctByRequiresOrderBy);
+
+							if (!skipped)
+								ClearConsumedOrderBy(SingleSubQuery(distinctOnContext.SelectQuery));
+						}
 
 						var reordered = ApplyDistinctOn(distinctOnContext.SelectQuery, onExpressions);
 
@@ -202,8 +208,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				// plain column there, so it gets materialized as an extra projected column and appended as a trailing
 				// sort key that merely repeats the leading one. A limited sequence keeps its ordering — there it
 				// decides which rows survive, and the optimizer leaves such a sequence alone anyway.
-				if (!sequence.SelectQuery.IsLimited)
-					sequence.SelectQuery.OrderBy.Items.Clear();
+				ClearConsumedOrderBy(sequence.SelectQuery);
 
 				var partitionBody = SequenceHelper.PrepareBody(selector, sequence);
 
@@ -309,6 +314,27 @@ namespace LinqToDB.Internal.Linq.Builder
 			return sql is SqlPlaceholderExpression ? sql : expr;
 		}
 
+		// Clears the ORDER BY of a query the DistinctBy re-applies the captured ordering above, and of the single-source
+		// queries it selects from (a GroupBy's source query, where a kept pre-group ordering still sits): the optimizer would
+		// lift each one again as a duplicate sort key. Stops where the ordering decides which rows survive (a limited or a
+		// DISTINCT ON query) and at an aggregation that needs its source ordered.
+		static void ClearConsumedOrderBy(SelectQuery? query)
+		{
+			while (query != null && !query.IsLimited && !query.HasSetOperators && !query.Select.IsDistinct)
+			{
+				if (QueryHelper.IsAggregationQuery(query, out var needsOrderBy) && needsOrderBy)
+					return;
+
+				query.OrderBy.Items.Clear();
+				query = SingleSubQuery(query);
+			}
+		}
+
+		static SelectQuery? SingleSubQuery(SelectQuery query)
+		{
+			return query.From.Tables is [{ Joins.Count: 0, Source: SelectQuery subQuery }] ? subQuery : null;
+		}
+
 		static List<ISqlExpression> CollectDistinctOnExpressions(Expression keySql)
 		{
 			return ExpressionBuilder.CollectDistinctPlaceholders(keySql, false)
@@ -319,11 +345,13 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		// An entry anchored above the DISTINCT ON query (an outer-correlated key) is constant per row and skipped. One anchored
 		// below it (inside a CTE body) cannot be lifted, and without it the surviving row is arbitrary, so it is reported:
-		// returns false when such an entry was met.
-		static bool AddCapturedOrdering(ExpressionBuilder builder, IBuildContext context, (Expression expr, bool descending, Sql.NullsPosition nulls)[] captured)
+		// returns false when such an entry was met. skipped reports an entry left out, so the ordering added is not the whole one.
+		static bool AddCapturedOrdering(ExpressionBuilder builder, IBuildContext context, (Expression expr, bool descending, Sql.NullsPosition nulls)[] captured, out bool skipped)
 		{
 			var orderBy = context.SelectQuery.OrderBy;
 			var below   = default(GroupByBuilder.QuerySources);
+
+			skipped = false;
 
 			foreach (var (expr, descending, nulls) in captured)
 			{
@@ -344,6 +372,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (placeholder.SelectQuery != null && below.Queries.Contains(placeholder.SelectQuery))
 						return false;
+
+					skipped = true;
 				}
 			}
 
