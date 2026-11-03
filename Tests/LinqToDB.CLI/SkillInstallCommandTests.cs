@@ -1207,6 +1207,48 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task UninstallSkipsAFolderItCannotReadAndHandlesTheOthers()
+		{
+			if (OperatingSystem.IsWindows())
+				Assert.Ignore("Uses POSIX permissions.");
+
+			var repo = CreateRepository("5.0.0");
+			await RunCli("skill", "install", "--project", repo.Project);
+
+			var locked = Path.Combine(repo.Root, ".agents", "skills", "linq2db", "docs");
+
+			File.SetUnixFileMode(locked, UnixFileMode.None);
+
+			try
+			{
+				try
+				{
+					_ = Directory.GetFiles(locked);
+					Assert.Ignore("Permissions are not enforced (running as root?).");
+				}
+				catch (UnauthorizedAccessException)
+				{
+				}
+
+				var result = await RunCli("skill", "uninstall", "--project", repo.Project);
+
+				using (Assert.EnterMultipleScope())
+				{
+					result.ExitCode.ShouldBe(-3);
+					result.Error.   ShouldContain($"cannot read {Path.Combine(".agents", "skills", "linq2db")}");
+					// the folder it could not read is untouched, everything else is removed
+					File.Exists(Path.Combine(repo.Root, ".agents", "skills", "linq2db", "SKILL.md")).ShouldBeTrue();
+					Directory.Exists(Path.Combine(repo.Root, ".agents", "skills", "linq2db-cli")).ShouldBeFalse();
+					Directory.Exists(Path.Combine(repo.Root, ".claude", "skills", "linq2db")).ShouldBeFalse();
+				}
+			}
+			finally
+			{
+				File.SetUnixFileMode(locked, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+			}
+		}
+
+		[Test]
 		public async Task UninstallWithNothingInstalledSucceeds()
 		{
 			var repo   = CreateRepository("5.0.0");

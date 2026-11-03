@@ -61,7 +61,7 @@ namespace LinqToDB.CommandLine.Commands.Skill
 
 		/// <summary>
 		/// The path with every link on the way resolved, ancestors included (a symbolic link above the repository, a
-		/// <c>/tmp</c> that is a link, a mapped drive), so that two spellings of one directory compare equal. A link that cannot
+		/// <c>/tmp</c> that is a link), so that two spellings of one directory compare equal. A link that cannot
 		/// be resolved is left as it is.
 		/// </summary>
 		public static string GetRealPath(string path)

@@ -312,20 +312,25 @@ namespace LinqToDB.CommandLine.Commands.Skill
 
 			foreach (var destination in destinations)
 			{
-				var destinationPlans = new List<SkillUninstallPlan>();
-
-				try
+				foreach (var name in new[] { SkillSource.LibrarySkillName, SkillSource.CliSkillName })
 				{
-					foreach (var name in new[] { SkillSource.LibrarySkillName, SkillSource.CliSkillName })
-						destinationPlans.Add(SkillUninstaller.Analyze(name, root, Path.Combine(destination, name)));
+					var directory = Path.Combine(destination, name);
 
-					plans.AddRange(destinationPlans);
-				}
-				catch (InvalidOperationException ex)
-				{
-					// a link inside the destination: that destination is skipped, the others are still handled
-					await environment.Error.WriteLineAsync($"  skipped: {Path.GetRelativePath(root, destination)}: {ex.Message}");
-					skipped++;
+					try
+					{
+						plans.Add(SkillUninstaller.Analyze(name, root, directory));
+					}
+					catch (InvalidOperationException ex)
+					{
+						// a link inside the folder: that folder is skipped, the others are still handled
+						await environment.Error.WriteLineAsync($"  skipped: {Path.GetRelativePath(root, directory)}: {ex.Message}");
+						skipped++;
+					}
+					catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+					{
+						await environment.Error.WriteLineAsync($"  skipped: cannot read {Path.GetRelativePath(root, directory)}: {ex.Message}");
+						skipped++;
+					}
 				}
 			}
 
@@ -359,8 +364,10 @@ namespace LinqToDB.CommandLine.Commands.Skill
 						}
 						catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
 						{
-							await environment.Error.WriteLineAsync($"Cannot remove '{plan.Directory}': {ex.Message}");
-							return StatusCodes.EXPECTED_ERROR;
+							// counted as a failure; the other folders are still handled
+							await environment.Error.WriteLineAsync($"  skipped: cannot remove {relative}: {ex.Message}");
+							skipped++;
+							break;
 						}
 
 						if (left == 0)

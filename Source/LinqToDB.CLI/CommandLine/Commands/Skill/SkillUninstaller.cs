@@ -102,7 +102,7 @@ namespace LinqToDB.CommandLine.Commands.Skill
 		{
 			var manifest = plan.Manifest!;
 			var removed  = plan.Unchanged.Concat(force ? plan.Changed : []).ToList();
-			var kept     = force ? [] : plan.Changed;
+			var kept     = new List<string>(force ? [] : plan.Changed);
 
 			// nothing is changed before every path has been checked again
 			SkillPath.EnsureNoLinks(root, plan.Directory);
@@ -115,6 +115,13 @@ namespace LinqToDB.CommandLine.Commands.Skill
 			foreach (var path in removed)
 			{
 				var full = GetPath(plan.Directory, path);
+
+				// the content is checked again right before the delete: a file edited since the analysis is kept
+				if (!force && File.Exists(full) && !string.Equals(SkillHash.ComputeFile(full), manifest.Files[path], StringComparison.Ordinal))
+				{
+					kept.Add(path);
+					continue;
+				}
 
 				if (File.Exists(full))
 					File.Delete(full);
