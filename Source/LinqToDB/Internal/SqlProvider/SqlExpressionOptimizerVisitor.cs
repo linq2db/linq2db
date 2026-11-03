@@ -1923,7 +1923,9 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 			if (!ReferenceEquals(newElement, predicate))
 				return Visit(newElement);
 
-			if (TryEvaluateNoParameters(predicate, out var value) && value is bool boolValue)
+			// With this run's parameter values, as an enclosing search condition or CASE folds it: a provider lowers the comparison
+			// right after (SQLite's strftime), and the lowered form no longer evaluates.
+			if (TryEvaluate(predicate, out var value) && value is bool boolValue)
 			{
 				return SqlPredicate.MakeBool(boolValue);
 			}

@@ -494,6 +494,30 @@ namespace Tests.Linq
 			table.Where(k => k.ToDelete <= TestData.NonReadonlyDateTime).ToList();
 		}
 
+		// Both sides are known on each run, so the comparison folds by the parameter's value. On SQLite it has to fold before
+		// the date comparison is rewritten through strftime, which can no longer be evaluated.
+		[Test]
+		public void DateTimeConstantComparedWithParameterFoldsPerValue([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var date  = TestData.DateTime0.AddDays(1);
+			var query = db.Person
+				.Where(p => Sql.AsSql(TestData.DateTime0) <= date);
+
+			AssertQuery(query);
+			var whenTrue = query.ToSqlQuery();
+
+			date = TestData.DateTime0.AddDays(-1);
+
+			var whenFalseRows = query.ToList();
+			var whenFalse     = query.ToSqlQuery();
+
+			whenFalseRows.ShouldBeEmpty();
+			whenTrue     .Parameters.ShouldBeEmpty();
+			whenFalse    .Parameters.ShouldBeEmpty();
+		}
+
 		[Table]
 		sealed class TestEqualsTable1
 		{
