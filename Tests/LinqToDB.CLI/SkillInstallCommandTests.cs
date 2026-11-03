@@ -958,6 +958,114 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task ListedFolderThatDoesNotExistIsMissingAndNotWritten()
+		{
+			var repo        = CreateRepository("5.0.0");
+			var destination = Path.Combine(repo.Root, ".agents", "skills");
+
+			Directory.CreateDirectory(destination);
+			File.WriteAllText(Path.Combine(destination, ".dotnet-package-skills.json"), OtherToolRecord("linq2db", "5.0.0", "linq2db", "linq2db-cli"));
+
+			var check   = await RunCli("skill", "install", "--project", repo.Project, "--check");
+			var install = await RunCli("skill", "install", "--project", repo.Project);
+
+			using (Assert.EnterMultipleScope())
+			{
+				check.ExitCode.ShouldBe(-3);
+				check.Error.   ShouldContain($"missing: {Path.Combine(".agents", "skills", "linq2db")} (managed by dotnet-package-skills); run 'dotnet-package-skills install'");
+				install.ExitCode.ShouldBe(0, install.Error);
+				install.Output.  ShouldContain($"missing: {Path.Combine(".agents", "skills", "linq2db")} (managed by dotnet-package-skills); run 'dotnet-package-skills install'");
+				Directory.Exists(Path.Combine(destination, "linq2db")).ShouldBeFalse();
+				Directory.Exists(Path.Combine(destination, "linq2db-cli")).ShouldBeFalse();
+			}
+		}
+
+		[Test]
+		public async Task FolderOfAnotherPackageIsLeftUnchangedAndNeverStale()
+		{
+			var repo = CreateRepository("5.0.0");
+
+			WriteOtherToolFolder(Path.Combine(repo.Root, ".agents", "skills"), "linq2db", "1.0.0", "someone else's\n", package: "Other.Package");
+
+			var check = await RunCli("skill", "install", "--project", repo.Project, "--check");
+			var force = await RunCli("skill", "install", "--project", repo.Project, "--force");
+
+			using (Assert.EnterMultipleScope())
+			{
+				check.Output.  ShouldContain("managed by dotnet-package-skills (package Other.Package 1.0.0); left unchanged");
+				force.ExitCode.ShouldBe(0, force.Error);
+				File.ReadAllText(Path.Combine(repo.Root, ".agents", "skills", "linq2db", "SKILL.md")).ShouldBe("someone else's\n");
+			}
+		}
+
+		[Test]
+		public async Task HandOffHintIsPrintedOncePerDestinationAndNotForUpToDateFolders()
+		{
+			var repo        = CreateRepository("5.0.0");
+			var destination = Path.Combine(repo.Root, ".agents", "skills");
+
+			WriteOtherToolFolder(destination, "other-skill", "1.0.0", "other\n", package: "other.package");
+
+			var first  = await RunCli("skill", "install", "--project", repo.Project);
+			var second = await RunCli("skill", "install", "--project", repo.Project);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Regex.Count(first.Output, "dotnet-package-skills will skip").ShouldBe(1);
+				first.Output.ShouldContain(Path.Combine(".agents", "skills", "linq2db"));
+				first.Output.ShouldContain(Path.Combine(".agents", "skills", "linq2db-cli"));
+				second.ExitCode.ShouldBe(0, second.Error);
+				second.Output.  ShouldContain("up to date");
+				second.Output.  ShouldNotContain("dotnet-package-skills will skip");
+			}
+		}
+
+		[TestCase("6.6.0",        "6.6.0",        true)]
+		[TestCase("6.6.0",        "6.6.0.0",      true)]
+		[TestCase("6.6.0",        "6.6",          true)]
+		[TestCase("6.6.0",        "06.6.0",       true)]
+		[TestCase("6.6.0-rc.1",   "6.6.0-RC.1",   true)]
+		[TestCase("6.6.0",        "6.6.0+abc",    true)]
+		[TestCase("6.6.0",        "6.6.1",        false)]
+		[TestCase("6.6.0-rc.1",   "6.6.0",        false)]
+		[TestCase("6.6.0.1",      "6.6.0",        false)]
+		public async Task CheckComparesRecordedVersionLikeNuGet(string projectVersion, string recorded, bool passes)
+		{
+			var repo = CreateRepository(projectVersion);
+
+			foreach (var root in new[] { ".agents/skills", ".claude/skills" })
+			{
+				var destination = Path.Combine(repo.Root, root.Replace('/', Path.DirectorySeparatorChar));
+
+				WriteOtherToolFolder(destination, "linq2db",     recorded, "their linq2db\n");
+				WriteOtherToolFolder(destination, "linq2db-cli", recorded, "their cli\n", append: true);
+			}
+
+			var result = await RunCli("skill", "install", "--project", repo.Project, "--check");
+
+			result.ExitCode.ShouldBe(passes ? 0 : -3, result.Error);
+		}
+
+		[Test]
+		public async Task CheckFailsWhenRecordOfPackageSkillsToolCannotBeRead()
+		{
+			var repo        = CreateRepository("5.0.0");
+			var destination = Path.Combine(repo.Root, ".agents", "skills");
+
+			Directory.CreateDirectory(Path.Combine(destination, "linq2db"));
+			File.WriteAllText(Path.Combine(destination, "linq2db", "SKILL.md"), "somebody's skill\n");
+			File.WriteAllText(Path.Combine(destination, ".dotnet-package-skills.json"), "not json");
+
+			var result = await RunCli("skill", "install", "--project", repo.Project, "--check");
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.ExitCode.ShouldBe(-3);
+				result.Error.   ShouldContain($"ownership unknown: {Path.Combine(".agents", "skills", "linq2db")}; .dotnet-package-skills.json could not be read");
+			}
+		}
+
+		[Test]
 		public async Task FoldersOwnedByPackageSkillsToolAreLeftUnchangedEvenWithForce([Values] bool force)
 		{
 			var repo = CreateRepository("5.0.0");
@@ -1060,7 +1168,7 @@ namespace Tests.LinqToDB.CLI
 			using (Assert.EnterMultipleScope())
 			{
 				result.ExitCode.ShouldBe(0, result.Error);
-				result.Output.  ShouldContain("cannot be read");
+				result.Error.   ShouldContain("could not be read");
 				File.ReadAllText(Path.Combine(folder, "SKILL.md")).ShouldBe("somebody's skill\n");
 				File.Exists(Path.Combine(folder, LibraryManifestFile)).ShouldBeFalse();
 				File.ReadAllText(Path.Combine(destination, ".dotnet-package-skills.json")).ShouldBe(record);
@@ -1134,12 +1242,7 @@ namespace Tests.LinqToDB.CLI
 		[Test]
 		public void OnlyLinq2dbPackagePacksBothSkills()
 		{
-			var directory = new DirectoryInfo(AppContext.BaseDirectory);
-
-			while (directory != null && !File.Exists(Path.Combine(directory.FullName, "linq2db.slnx")))
-				directory = directory.Parent;
-
-			directory.ShouldNotBeNull("repository root (linq2db.slnx) above " + AppContext.BaseDirectory);
+			var directory = FindRepositoryRoot();
 
 			var source   = Path.Combine(directory.FullName, "Source");
 			var packed   = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -1169,6 +1272,19 @@ namespace Tests.LinqToDB.CLI
 				File.Exists(Path.Combine(source, "Skills", "linq2db", "SKILL.md")).ShouldBeTrue();
 				carriers.Distinct().ShouldBe(["LinqToDB"]);
 			}
+		}
+
+		// located from this source file, so the build output may be anywhere
+		private static DirectoryInfo FindRepositoryRoot([System.Runtime.CompilerServices.CallerFilePath] string? thisFile = null)
+		{
+			var directory = new DirectoryInfo(Path.GetDirectoryName(thisFile)!);
+
+			while (directory != null && !File.Exists(Path.Combine(directory.FullName, "linq2db.slnx")))
+				directory = directory.Parent;
+
+			directory.ShouldNotBeNull("repository root (linq2db.slnx) above " + thisFile);
+
+			return directory;
 		}
 
 		private static string OtherToolRecord(string package, string version, params string[] skills)

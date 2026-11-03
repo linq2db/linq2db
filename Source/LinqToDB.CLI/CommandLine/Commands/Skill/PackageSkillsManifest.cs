@@ -21,7 +21,7 @@ namespace LinqToDB.CommandLine.Commands.Skill
 		/// <summary>The only format version of the file that is understood.</summary>
 		private const int SupportedFormatVersion = 1;
 
-		private readonly Dictionary<string, string> _owners = new(StringComparer.OrdinalIgnoreCase);
+		private readonly Dictionary<string, PackageSkillOwner> _owners = new(StringComparer.OrdinalIgnoreCase);
 
 		private PackageSkillsManifest(bool exists, bool isReadable)
 		{
@@ -42,12 +42,12 @@ namespace LinqToDB.CommandLine.Commands.Skill
 		public static PackageSkillsManifest None { get; } = new(false, true);
 
 		/// <summary>
-		/// Version of the package that owns the skill folder, or <see langword="null"/> when no package does.
+		/// Package and package version that own the skill folder, or <see langword="null"/> when no package does.
 		/// Names are compared without regard to case.
 		/// </summary>
-		public string? GetOwnerVersion(string skillName)
+		public PackageSkillOwner? GetOwner(string skillName)
 		{
-			return _owners.TryGetValue(skillName, out var version) ? version : null;
+			return _owners.TryGetValue(skillName, out var owner) ? owner : null;
 		}
 
 		/// <summary>
@@ -102,7 +102,7 @@ namespace LinqToDB.CommandLine.Commands.Skill
 						foreach (var skill in skills.EnumerateArray())
 						{
 							if (skill.ValueKind == JsonValueKind.String && skill.GetString() is { Length: > 0 } name)
-								manifest._owners[name] = version.Name;
+								manifest._owners[name] = new PackageSkillOwner(package.Name, version.Name);
 						}
 					}
 				}

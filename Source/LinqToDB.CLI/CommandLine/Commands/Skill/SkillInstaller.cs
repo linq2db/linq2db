@@ -25,23 +25,31 @@ namespace LinqToDB.CommandLine.Commands.Skill
 
 			// what dotnet-package-skills recorded for the destination (the parent of the skill directory); it is only read
 			var destination = Path.GetDirectoryName(directory)!;
-			var otherTool   = PackageSkillsManifest.TryRead(destination);
+			var otherPath   = Path.Combine(destination, PackageSkillsManifest.FileName);
 
-			SkillPath.EnsureNoLinks(root, Path.Combine(destination, PackageSkillsManifest.FileName));
+			SkillPath.EnsureNoLinks(root, otherPath);
+
+			var otherTool = PackageSkillsManifest.TryRead(destination);
 
 			// the other tool's record wins, even when this tool's own marker is also present
-			var externalVersion = otherTool.GetOwnerVersion(bundle.Name);
+			var owner = otherTool.GetOwner(bundle.Name);
 
-			if (externalVersion != null)
+			if (owner != null)
 			{
+				var missingExternal = !File.Exists(Path.Combine(directory, "SKILL.md"));
+				var who             = owner.IsLinq2db ? $"linq2db {owner.Version}" : $"package {owner}";
+
 				return new SkillInstallPlan
 				{
 					Bundle          = bundle,
 					Root            = root,
 					Directory       = directory,
 					State           = SkillInstallState.ManagedExternally,
-					Reason          = $"managed by dotnet-package-skills (linq2db {externalVersion}); left unchanged",
-					ExternalVersion = externalVersion,
+					Reason          = missingExternal
+						? "managed by dotnet-package-skills, but the folder does not exist"
+						: $"managed by dotnet-package-skills ({who}); left unchanged",
+					ExternalOwner   = owner,
+					ExternalMissing = missingExternal,
 				};
 			}
 
@@ -55,7 +63,8 @@ namespace LinqToDB.CommandLine.Commands.Skill
 					Root      = root,
 					Directory = directory,
 					State     = SkillInstallState.ManagedExternally,
-					Reason    = $"'{PackageSkillsManifest.FileName}' cannot be read, so it is unknown whether dotnet-package-skills owns this directory; left unchanged",
+					Reason    = $"{PackageSkillsManifest.FileName} could not be read, so it is unknown whether dotnet-package-skills owns this directory; left unchanged",
+					OwnershipUnknown = true,
 				};
 			}
 

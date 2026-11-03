@@ -274,12 +274,22 @@ namespace LinqToDB.CommandLine.Commands.Skill
 				}
 				else if (plan.State == SkillInstallState.ManagedExternally)
 				{
+					if (plan.ExternalMissing)
+					{
+						failed = true;
+						await environment.Error.WriteLineAsync($"  missing: {relative} (managed by dotnet-package-skills); run 'dotnet-package-skills install'");
+					}
+					else if (plan.OwnershipUnknown)
+					{
+						failed = true;
+						await environment.Error.WriteLineAsync($"  ownership unknown: {relative}; {PackageSkillsManifest.FileName} could not be read");
+					}
 					// not ours to update, but a copy of another linq2db version is as stale as one of ours
-					if (plan.ExternalVersion != null && resolvedVersion != null && !SameVersion(plan.ExternalVersion, resolvedVersion))
+					else if (plan.ExternalOwner is { IsLinq2db: true } owner && resolvedVersion != null && !SameVersion(owner.Version, resolvedVersion))
 					{
 						failed = true;
 						await environment.Error.WriteLineAsync(
-							$"  stale: {relative}: managed by dotnet-package-skills (linq2db {plan.ExternalVersion}), the project uses linq2db {resolvedVersion}; run 'dotnet-package-skills install' to update it");
+							$"  stale: {relative}: managed by dotnet-package-skills (linq2db {owner.Version}), the project uses linq2db {resolvedVersion}; run 'dotnet-package-skills install' to update it");
 					}
 					else
 					{
@@ -317,6 +327,8 @@ namespace LinqToDB.CommandLine.Commands.Skill
 				return StatusCodes.EXPECTED_ERROR;
 			}
 
+			var changed = new List<SkillInstallPlan>();
+
 			foreach (var plan in plans)
 			{
 				var relative = Path.GetRelativePath(root, plan.Directory);
@@ -324,14 +336,19 @@ namespace LinqToDB.CommandLine.Commands.Skill
 				if (plan.State == SkillInstallState.UpToDate)
 				{
 					await environment.Out.WriteLineAsync($"  up to date: {relative}");
-					await PrintHandOff(environment, plan, relative);
 					continue;
 				}
 
 				if (plan.State == SkillInstallState.ManagedExternally)
 				{
 					// neither a conflict nor something '--force' may override
-					await environment.Out.WriteLineAsync($"  {relative}: {plan.Reason}");
+					if (plan.ExternalMissing)
+						await environment.Out.WriteLineAsync($"  missing: {relative} (managed by dotnet-package-skills); run 'dotnet-package-skills install'");
+					else if (plan.OwnershipUnknown)
+						await environment.Error.WriteLineAsync($"Warning: {relative}: {plan.Reason}.");
+					else
+						await environment.Out.WriteLineAsync($"  {relative}: {plan.Reason}");
+
 					continue;
 				}
 
@@ -347,8 +364,10 @@ namespace LinqToDB.CommandLine.Commands.Skill
 
 				var verb = plan.State == SkillInstallState.Missing ? "installed" : "updated";
 				await environment.Out.WriteLineAsync($"  {verb}: {relative} ({plan.Bundle.Files.Count} file(s), version {plan.Bundle.Version})");
-				await PrintHandOff(environment, plan, relative);
+				changed.Add(plan);
 			}
+
+			await PrintHandOff(environment, root, changed);
 
 			await PrintPointerHint(environment, root);
 
@@ -356,21 +375,34 @@ namespace LinqToDB.CommandLine.Commands.Skill
 		}
 
 		/// <summary>
-		/// The destination is also managed by dotnet-package-skills, which skips a folder it does not own: say how to let it take over.
+		/// A destination that also holds a record of dotnet-package-skills: it skips a folder it did not install, so say once per
+		/// destination, for the folders written by this run, how to let it take over.
 		/// </summary>
-		private static async Task PrintHandOff(ICliEnvironment environment, SkillInstallPlan plan, string relative)
+		private static async Task PrintHandOff(ICliEnvironment environment, string root, List<SkillInstallPlan> changed)
 		{
-			if (plan.OtherToolPresent)
+			foreach (var destination in changed.Where(static p => p.OtherToolPresent).GroupBy(static p => Path.GetDirectoryName(p.Directory)!, SkillPath.Comparer))
 			{
-				await environment.Out.WriteLineAsync(
-					$"    dotnet-package-skills will skip this folder. To let it manage the skill, delete '{relative}' and run 'dotnet-package-skills install'.");
+				var folders = destination.Select(p => Path.GetRelativePath(root, p.Directory)).ToList();
+
+				if (folders.Count == 1)
+				{
+					await environment.Out.WriteLineAsync(
+						$"    dotnet-package-skills will skip this folder. To let it manage the skill, delete '{folders[0]}' and run 'dotnet-package-skills install'.");
+				}
+				else
+				{
+					await environment.Out.WriteLineAsync(
+						$"    dotnet-package-skills will skip these folders: {string.Join(", ", folders.Select(static f => $"'{f}'"))}. To let it manage a skill, delete its folder and run 'dotnet-package-skills install'.");
+				}
 			}
 		}
 
 		/// <summary>
-		/// Package versions are compared without regard to case or build metadata, and a trailing zero revision does not count.
+		/// Package versions are compared the way NuGet does: the numeric part is padded to three components (a fourth is kept
+		/// unless it is zero) with leading zeros ignored, build metadata (<c>+...</c>) is ignored, and the prerelease label is
+		/// compared without regard to case.
 		/// </summary>
-		private static bool SameVersion(string left, string right)
+		internal static bool SameVersion(string left, string right)
 		{
 			static string Normalize(string version)
 			{
@@ -381,12 +413,25 @@ namespace LinqToDB.CommandLine.Commands.Skill
 
 				var dash   = version.IndexOf('-', StringComparison.Ordinal);
 				var number = dash >= 0 ? version.Substring(0, dash) : version;
-				var rest   = dash >= 0 ? version.Substring(dash)    : string.Empty;
+				var label  = dash >= 0 ? version.Substring(dash)    : string.Empty;
+				var parts  = number.Split('.');
+				var values = new List<string>();
 
-				if (number.EndsWith(".0", StringComparison.Ordinal) && number.Split('.').Length == 4)
-					number = number.Substring(0, number.Length - 2);
+				foreach (var part in parts)
+				{
+					if (!System.Numerics.BigInteger.TryParse(part, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var value))
+						return version.ToLowerInvariant();
 
-				return (number + rest).ToLowerInvariant();
+					values.Add(value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+				}
+
+				while (values.Count < 3)
+					values.Add("0");
+
+				if (values.Count == 4 && string.Equals(values[3], "0", StringComparison.Ordinal))
+					values.RemoveAt(3);
+
+				return string.Join('.', values.ToArray()) + label.ToLowerInvariant();
 			}
 
 			return string.Equals(Normalize(left), Normalize(right), StringComparison.Ordinal);
