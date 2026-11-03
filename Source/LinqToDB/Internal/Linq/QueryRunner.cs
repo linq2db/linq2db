@@ -432,9 +432,9 @@ namespace LinqToDB.Internal.Linq
 			object?[]?        ps);
 
 		static Func<Query,IDataContext,Mapper<T>, IQueryExpressions, SqlCommandExecutionContext?,int, IResultEnumerable<T>> GetExecuteQuery<T>(
-				Query                                                                                                  query,
+				Query                                                                                                        query,
 				Func<Query,IDataContext,Mapper<T>, IQueryExpressions, SqlCommandExecutionContext?,int, IResultEnumerable<T>> queryFunc,
-				out ISqlExpression?                                                                                    emulatedSkip)
+				out ISqlExpression?                                                                                          emulatedSkip)
 		{
 			FinalizeQuery(query);
 

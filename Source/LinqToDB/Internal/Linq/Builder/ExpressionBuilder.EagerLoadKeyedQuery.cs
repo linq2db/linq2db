@@ -1406,14 +1406,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		sealed class BufferMaterializeHarvester<TBuffer> : Harvester
 		{
-			readonly Query<TBuffer>           _bufferQuery;
-			readonly Query                    _sourceQuery;
-			readonly IKeyedQueryKeysHarvester[]  _keysHarvesters;
+			readonly Query<TBuffer>             _bufferQuery;
+			readonly Query                      _sourceQuery;
+			readonly IKeyedQueryKeysHarvester[] _keysHarvesters;
 
 			public BufferMaterializeHarvester(Query<TBuffer> bufferQuery, Query sourceQuery, IKeyedQueryKeysHarvester[] keysHarvesters)
 			{
-				_bufferQuery   = bufferQuery;
-				_sourceQuery   = sourceQuery;
+				_bufferQuery    = bufferQuery;
+				_sourceQuery    = sourceQuery;
 				_keysHarvesters = keysHarvesters;
 			}
 
