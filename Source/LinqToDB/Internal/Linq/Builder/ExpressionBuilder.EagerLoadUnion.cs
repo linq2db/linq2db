@@ -1580,8 +1580,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				HarvesterResultType = harvesterResultType;
 			}
 
-			public override ExpressionType NodeType => ExpressionType.Extension;
-			public override Type           Type     => HarvesterResultType;
+			public override ExpressionType NodeType  => ExpressionType.Extension;
+			public override Type           Type      => HarvesterResultType;
 			public override bool           CanReduce => false;
 
 			protected override Expression VisitChildren(ExpressionVisitor visitor) => this;
@@ -1706,22 +1706,22 @@ namespace LinqToDB.Internal.Linq.Builder
 		sealed class CteUnionHarvester<TKey, TCarrier> : Harvester, IStepMaterializer
 			where TKey : notnull
 		{
-			readonly Query<TCarrier>            _query;
-			readonly Func<TCarrier, int>        _getSetId;
-			readonly Func<TCarrier, TKey>       _getKey;
+			readonly Query<TCarrier>                                       _query;
+			readonly Func<TCarrier, int>                                   _getSetId;
+			readonly Func<TCarrier, TKey>                                  _getKey;
 			readonly Func<TCarrier, SqlCommandExecutionContext?, object>[] _detailExtractors;
-			readonly int                        _branchCount;
-			readonly int[]?                     _nestedProcessingOrder; // nested setIds in reverse depth order (deepest first)
-			readonly int                        _harvesterIndex;
+			readonly int                                                   _branchCount;
+			readonly int[]?                                                _nestedProcessingOrder; // nested setIds in reverse depth order (deepest first)
+			readonly int                                                   _harvesterIndex;
 
 			public CteUnionHarvester(
-				Query<TCarrier>                      query,
-				Func<TCarrier, int>                  getSetId,
-				Func<TCarrier, TKey>                 getKey,
+				Query<TCarrier>                                       query,
+				Func<TCarrier, int>                                   getSetId,
+				Func<TCarrier, TKey>                                  getKey,
 				Func<TCarrier, SqlCommandExecutionContext?, object>[] detailExtractors,
-				int                                  branchCount,
-				int[]?                               nestedProcessingOrder,
-				int                                  harvesterIndex)
+				int                                                   branchCount,
+				int[]?                                                nestedProcessingOrder,
+				int                                                   harvesterIndex)
 			{
 				_query                  = query;
 				_getSetId               = getSetId;
