@@ -279,6 +279,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				builder.RegisterOrderBy(expr, descending, nulls, reset: false);
 			}
+
+			if (kept.Count == 0)
+				builder.MarkOrderByDropped();
 		}
 
 		// A column re-exposes its expression per row, so two expressions whose column chains share an element are the same

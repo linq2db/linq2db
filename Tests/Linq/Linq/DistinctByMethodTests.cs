@@ -3,8 +3,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
@@ -1659,6 +1661,82 @@ namespace Tests.Linq
 					.FirstOrDefault());
 
 			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByWithoutOrderingInCorrelatedSubQuery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// Every child of a parent has the same ParentID, so any surviving row gives the expected key.
+			var query = db.Parent
+				.Select(p => new
+				{
+					p.ParentID,
+					Key = db.Child
+						.Where(c => c.ParentID == p.ParentID)
+						.DistinctBy(c => c.ParentID)
+						.Select(c => (int?)c.ParentID)
+						.FirstOrDefault(),
+				});
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByWithoutOrderingInEagerLoadedCollection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var result = db.Parent
+				.Select(p => new
+				{
+					p.ParentID,
+					ChildIDs = p.Children
+						.DistinctBy(c => c.ChildID)
+						.Select(c => c.ChildID)
+						.ToList(),
+				})
+				.ToList()
+				.Select(r => new { r.ParentID, ChildIDs = string.Join(",", r.ChildIDs.OrderBy(id => id)) })
+				.OrderBy(r => r.ParentID)
+				.ToList();
+
+			var expected = Parent
+				.Select(p => new { p.ParentID, ChildIDs = string.Join(",", p.Children.Select(c => c.ChildID).OrderBy(id => id)) })
+				.OrderBy(r => r.ParentID)
+				.ToList();
+
+			result.ShouldBe(expected);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public async Task DistinctByWithoutOrderingInEagerLoadedCollectionAsync([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var loaded = await db.Parent
+				.Select(p => new
+				{
+					p.ParentID,
+					ChildIDs = p.Children
+						.DistinctBy(c => c.ChildID)
+						.Select(c => c.ChildID)
+						.ToList(),
+				})
+				.ToListAsync();
+
+			var result = loaded
+				.Select(r => new { r.ParentID, ChildIDs = string.Join(",", r.ChildIDs.OrderBy(id => id)) })
+				.OrderBy(r => r.ParentID)
+				.ToList();
+
+			var expected = Parent
+				.Select(p => new { p.ParentID, ChildIDs = string.Join(",", p.Children.Select(c => c.ChildID).OrderBy(id => id)) })
+				.OrderBy(r => r.ParentID)
+				.ToList();
+
+			result.ShouldBe(expected);
 		}
 
 		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]

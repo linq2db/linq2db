@@ -65,6 +65,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		public List<TableBuilder.TableContext>? TablesInScope;
 
 		List<(Expression expr, bool descending, Sql.NullsPosition nulls)>? _currentOrderBy;
+		bool                                                               _isOrderByDropped;
 
 		/// <summary>
 		/// Records an OrderBy clause as it's processed by <see cref="OrderByBuilder"/> so eager-load
@@ -73,11 +74,30 @@ namespace LinqToDB.Internal.Linq.Builder
 		internal void RegisterOrderBy(Expression expr, bool descending, Sql.NullsPosition nulls, bool reset)
 		{
 			if (reset || _currentOrderBy == null)
-				_currentOrderBy = new();
+			{
+				_currentOrderBy   = new();
+				_isOrderByDropped = false;
+			}
+
 			_currentOrderBy.Add((expr, descending, nulls));
 		}
 
 		internal IReadOnlyList<(Expression expr, bool descending, Sql.NullsPosition nulls)>? CurrentOrderBy => _currentOrderBy;
+
+		/// <summary>
+		/// Whether the sequence had an ordering that a builder could not carry forward (see <see cref="MarkOrderByDropped"/>),
+		/// as opposed to never having one. Both leave <see cref="CurrentOrderBy"/> empty.
+		/// </summary>
+		internal bool IsOrderByDropped => _isOrderByDropped;
+
+		/// <summary>
+		/// Records that the captured ordering was dropped because it no longer orders the rows (a <c>GroupBy</c> whose source
+		/// ordering does not order the groups). Cleared by the next <c>OrderBy</c>.
+		/// </summary>
+		internal void MarkOrderByDropped()
+		{
+			_isOrderByDropped = true;
+		}
 
 		/// <summary>
 		/// Re-resolves each captured OrderBy body through <paramref name="context"/> so the bodies
@@ -143,9 +163,11 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// </summary>
 		internal IDisposable IsolateOrderBy()
 		{
-			var saved       = _currentOrderBy;
-			_currentOrderBy = null;
-			return new IsolateOrderByScope(this, saved);
+			var saved         = _currentOrderBy;
+			var savedDropped  = _isOrderByDropped;
+			_currentOrderBy   = null;
+			_isOrderByDropped = false;
+			return new IsolateOrderByScope(this, saved, savedDropped);
 		}
 
 		/// <summary>
@@ -194,16 +216,19 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			readonly ExpressionBuilder                          _builder;
 			readonly List<(Expression expr, bool descending, Sql.NullsPosition nulls)>? _saved;
+			readonly bool                                                               _savedDropped;
 
-			public IsolateOrderByScope(ExpressionBuilder builder, List<(Expression expr, bool descending, Sql.NullsPosition nulls)>? saved)
+			public IsolateOrderByScope(ExpressionBuilder builder, List<(Expression expr, bool descending, Sql.NullsPosition nulls)>? saved, bool savedDropped)
 			{
-				_builder = builder;
-				_saved   = saved;
+				_builder      = builder;
+				_saved        = saved;
+				_savedDropped = savedDropped;
 			}
 
 			public void Dispose()
 			{
-				_builder._currentOrderBy = _saved;
+				_builder._currentOrderBy   = _saved;
+				_builder._isOrderByDropped = _savedDropped;
 			}
 		}
 

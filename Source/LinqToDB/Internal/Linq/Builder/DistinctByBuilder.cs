@@ -85,6 +85,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			BuildSequenceResult                   buildResult;
 			IBuildContext                         sequence;
 			(Expression expr, bool descending, Sql.NullsPosition nulls)[] captured;
+			bool                                  dropped;
 
 			// Isolate OrderBy state across the *inner* sequence build only. DistinctBy
 			// consumes the upstream OrderBy semantically (row-number partition order);
@@ -111,12 +112,19 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				sequence = buildResult.BuildContext;
 				captured = builder.CurrentOrderBy is { Count: > 0 } current ? current.ToArray() : [];
+				dropped  = builder.IsOrderByDropped;
 			}
 
-			// Thrown, not returned: a subquery that fails to build falls back to client-side evaluation (eager loading,
-			// AggregateExecute), which would pick an arbitrary row per key instead of reporting the missing ordering.
+			// A dropped ordering is thrown, not returned: a subquery that fails to build falls back to client-side evaluation
+			// (eager loading, AggregateExecute), which would pick an arbitrary row per key instead of the ordered one. Without
+			// any ordering every row is a valid choice, so that fallback stays available.
 			if (captured.Length == 0)
-				throw SqlErrorExpression.CreateException(sequenceExpression, ErrorHelper.Error_DistinctByRequiresOrderBy);
+			{
+				if (dropped)
+					throw SqlErrorExpression.CreateException(sequenceExpression, ErrorHelper.Error_DistinctByRequiresOrderBy);
+
+				return BuildSequenceResult.Error(sequenceExpression, ErrorHelper.Error_DistinctByRequiresOrderBy);
+			}
 
 			// On providers that support PostgreSQL-style DISTINCT ON, lower DistinctBy to it directly instead of the
 			// ROW_NUMBER() emulation: the key selector becomes the ON list and the sequence's ordering is reordered to
@@ -147,7 +155,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						// The ordering that picks the surviving row then sits below this query (on the limited query, or on a
 						// query the sequence wraps), so it is re-translated here from the captured ordering.
 						if (distinctOnContext.SelectQuery.OrderBy.IsEmpty && !AddCapturedOrdering(builder, distinctOnContext, captured))
-							return BuildSequenceResult.Error(sequenceExpression, ErrorHelper.Error_DistinctByRequiresOrderBy);
+							throw SqlErrorExpression.CreateException(sequenceExpression, ErrorHelper.Error_DistinctByRequiresOrderBy);
 
 						var reordered = ApplyDistinctOn(distinctOnContext.SelectQuery, onExpressions);
 
