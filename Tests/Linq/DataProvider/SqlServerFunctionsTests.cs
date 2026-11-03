@@ -184,12 +184,15 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 
-			var query = CompiledQuery.Compile((SystemDB dc, int len) => dc.Select(() => SqlFn.Cast<string?>("abcdef", () => SqlType.NVarChar(len))));
+			var query = CompiledQuery.Compile((SystemDB dc, int len) => dc
+				.Select(() => SqlFn.Cast<string?>("abcdef", () => SqlType.NVarChar(len))));
 
-			query(db, 2).ShouldBe("ab");
+			query(db, 2)
+				.ShouldBe("ab");
 			var sql2 = db.LastQuery;
 
-			query(db, 4).ShouldBe("abcd");
+			query(db, 4)
+				.ShouldBe("abcd");
 			var sql4 = db.LastQuery;
 
 			sql4.ShouldNotBe(sql2);

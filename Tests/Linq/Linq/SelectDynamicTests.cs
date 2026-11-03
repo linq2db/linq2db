@@ -296,7 +296,10 @@ namespace Tests.Linq
 
 			var act = () => query.ToList();
 
-			act.ShouldThrow<LinqToDBException>().Message.ShouldContain("store 'A' in different terms");
+			act
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain("store 'A' in different terms");
 		}
 
 		/// <summary>Keys passed as a compiled query's parameter: each call gets its own column set.</summary>
@@ -376,9 +379,13 @@ namespace Tests.Linq
 				.Where(x => x.Id == 1)
 				.Select(x => "Usd");
 
-			var act = () => query(db, keys).ToList();
+			var act = () => query(db, keys)
+				.ToList();
 
-			act.ShouldThrow<LinqToDBException>().Message.ShouldContain("is a query");
+			act
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain("is a query");
 		}
 
 		// SQLite only: the SQL is the plain projection ProjectsRuntimeColumnSetIntoStore runs everywhere; this pins how
@@ -535,7 +542,10 @@ namespace Tests.Linq
 
 			var act = () => query.ToArray();
 
-			act.ShouldThrow<LinqToDBException>().Message.ShouldContain("'keys' argument of SelectDynamic must not depend on the query's range variables");
+			act
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain("'keys' argument of SelectDynamic must not depend on the query's range variables");
 		}
 
 		// SQLite only: the builder throws before any SQL is built.
@@ -555,7 +565,10 @@ namespace Tests.Linq
 
 			var act = () => query.ToArray();
 
-			act.ShouldThrow<LinqToDBException>().Message.ShouldContain("'nameSelector' argument of SelectDynamic must not depend on the query's range variables");
+			act
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain("'nameSelector' argument of SelectDynamic must not depend on the query's range variables");
 		}
 
 		[Test]
@@ -620,7 +633,10 @@ namespace Tests.Linq
 					new[] { "Usd" },
 					(x, n) => Sql.Property<decimal>(x, n));
 
-			act.ShouldThrow<LinqToDBException>().Message.ShouldContain("has no dynamic column setter");
+			act
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain("has no dynamic column setter");
 		}
 
 		/// <summary>
@@ -755,7 +771,10 @@ namespace Tests.Linq
 					(x, n) => Sql.Property<decimal>(x, n))
 				.ToList();
 
-			act.ShouldThrow<ArgumentException>().Message.ShouldContain("Duplicate dynamic column name");
+			act
+				.ShouldThrow<ArgumentException>()
+				.Message
+				.ShouldContain("Duplicate dynamic column name");
 		}
 
 		// SQLite only: the call throws before any SQL is built.
@@ -773,7 +792,10 @@ namespace Tests.Linq
 					_ => "")
 				.ToList();
 
-			act.ShouldThrow<ArgumentException>().Message.ShouldContain("empty dynamic column name");
+			act
+				.ShouldThrow<ArgumentException>()
+				.Message
+				.ShouldContain("empty dynamic column name");
 		}
 
 		/// <summary>A generated column named after a real member would be shadowed by it, silently.</summary>
@@ -792,7 +814,10 @@ namespace Tests.Linq
 					_ => nameof(AmountsDto.Id))
 				.ToList();
 
-			act.ShouldThrow<ArgumentException>().Message.ShouldContain("collides with a member");
+			act
+				.ShouldThrow<ArgumentException>()
+				.Message
+				.ShouldContain("collides with a member");
 		}
 
 		#region The cases this operator was justified by
