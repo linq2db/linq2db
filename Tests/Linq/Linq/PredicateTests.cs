@@ -1323,7 +1323,6 @@ namespace Tests.Linq
 			public static readonly IReadOnlyCollection<NullableFlagTable> Data = GetData();
 		}
 
-		[ActiveIssue(6209, Configurations = [TestProvName.AllSQLite, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird3Plus, TestProvName.AllMySql, TestProvName.AllPostgreSQL, TestProvName.AllYdb], Details = "no-declaration: SQLite, Access and the native-boolean providers emit the C# comparison as a bare predicate value, which reads NULL for a one-side-NULL row; master is identical.")]
 		[Test]
 		public void Test_ConditionalNullableColumnOrComparison([DataSources(TestProvName.AllSybase)] string context)
 		{
@@ -1334,7 +1333,6 @@ namespace Tests.Linq
 			AssertQuery(tb.Select(r => new { r.Id, Value = r.C == null ? r.Flag : r.A == r.B }));
 		}
 
-		[ActiveIssue(6209, Configurations = [TestProvName.AllSQLite, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird3Plus, TestProvName.AllMySql, TestProvName.AllPostgreSQL, TestProvName.AllYdb], Details = "no-declaration: SQLite, Access and the native-boolean providers emit the C# comparison as a bare predicate value, which reads NULL for a one-side-NULL row; master is identical.")]
 		[Test]
 		public void Test_ConditionalNullOrComparison([DataSources(TestProvName.AllSybase)] string context)
 		{
@@ -1355,7 +1353,6 @@ namespace Tests.Linq
 			AssertQuery(tb.Select(r => new { r.Id, Value = r.C == null ? r.Flag : r.A == null ? (bool?)true : r.Flag }));
 		}
 
-		[ActiveIssue(6209, Configurations = [TestProvName.AllSQLite, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird3Plus, TestProvName.AllMySql, TestProvName.AllPostgreSQL, TestProvName.AllYdb], Details = "no-declaration: SQLite, Access and the native-boolean providers emit the C# comparison as a bare predicate value, which reads NULL for a one-side-NULL row; master is identical.")]
 		[Test]
 		public void Test_CoalesceOfComparisonAsConditionalResult([DataSources(TestProvName.AllSybase)] string context)
 		{
@@ -1365,7 +1362,6 @@ namespace Tests.Linq
 			AssertQuery(tb.Select(r => new { r.Id, Value = r.C == null ? ((bool?)(r.A == r.B) ?? r.Flag) : r.Flag }));
 		}
 
-		[ActiveIssue(6209, Configurations = [TestProvName.AllSQLite, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird3Plus, TestProvName.AllMySql, TestProvName.AllPostgreSQL, TestProvName.AllYdb], ErrorTypeName = "Shouldly.ShouldAssertException", Details = "SQLite and the native-boolean providers store the C# comparison as a bare predicate value, NULL for a one-side-NULL row; master is identical.")]
 		[Test]
 		public void Test_CoalesceOfComparisonAsSetValue([DataSources(TestProvName.AllSybase)] string context)
 		{
@@ -1411,7 +1407,7 @@ namespace Tests.Linq
 			AssertQuery(tb.Select(r => new { r.Id, Value = Sql.AsSql(first) ? null : Sql.AsSql(second) ? (bool?)true : (bool?)(r.A == r.B) }));
 		}
 
-		[ActiveIssue(6209, Configurations = [TestProvName.AllSQLite, TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird3Plus, TestProvName.AllMySql, TestProvName.AllPostgreSQL, TestProvName.AllYdb], ErrorTypeName = "Shouldly.ShouldAssertException", Details = "SQLite, Informix, Access and the native-boolean providers order by the C# comparison as a bare predicate value, NULL for a one-side-NULL row (Access also sorts True as -1, #6203); master is identical.")]
+		[ActiveIssue(6203, Configuration = TestProvName.AllAccess, ErrorTypeName = "Shouldly.ShouldAssertException")]
 		[Test]
 		public void Test_ConditionalOnParameterWithNullableComparisonAsOrderBy([DataSources(TestProvName.AllSybase)] string context)
 		{
@@ -1447,7 +1443,6 @@ namespace Tests.Linq
 					.Select(g => new { g.Key, Count = g.Count() }));
 		}
 
-		[ActiveIssue(6209, Configurations = [TestProvName.AllSQLite, TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird3Plus, TestProvName.AllMySql, TestProvName.AllPostgreSQL, TestProvName.AllYdb], Details = "no-declaration: SQLite, Informix, Access and the native-boolean providers emit the C# comparison as a bare predicate value, which reads NULL for a one-side-NULL row; master is identical.")]
 		[Test]
 		public void Test_ConditionalOnParameterWithNullableComparisonInConcat([DataSources(TestProvName.AllSybase)] string context)
 		{

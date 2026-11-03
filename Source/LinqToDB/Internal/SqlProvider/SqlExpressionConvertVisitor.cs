@@ -2785,7 +2785,9 @@ namespace LinqToDB.Internal.SqlProvider
 			{
 				var unwrapped = QueryHelper.UnwrapNullablity(expr);
 
-				var wrap = includeFields && unwrapped.ElementType is QueryElementType.Column or QueryElementType.SqlField or QueryElementType.SqlCteTableField;
+				var wrap           = includeFields && unwrapped.ElementType is QueryElementType.Column or QueryElementType.SqlField or QueryElementType.SqlCteTableField;
+				var unknownAsFalse = false;
+
 				if (!wrap && unwrapped.IsPredicate())
 				{
 					if (unwrapped.TryEvaluateExpression(EvaluationContext, out var res))
@@ -2800,7 +2802,12 @@ namespace LinqToDB.Internal.SqlProvider
 						}
 					}
 
-					wrap = !SqlProviderFlags.SupportsBooleanType || (!withNull && unwrapped.CanBeNullableOrUnknown(NullabilityContext, withoutUnknownErased: true)) || forceConvert;
+					// UNKNOWN would reach the slot as NULL, where the slot cannot hold one or the predicate is never NULL in C#
+					// (a LikeClr comparison of nullable operands).
+					unknownAsFalse = unwrapped.CanBeNullableOrUnknown(NullabilityContext, withoutUnknownErased: true)
+						&& (!withNull || !unwrapped.CanBeNullableOrUnknown(NullabilityContext, withoutUnknownErased: false));
+
+					wrap = !SqlProviderFlags.SupportsBooleanType || unknownAsFalse || forceConvert;
 				}
 
 				if (wrap)
@@ -2830,7 +2837,7 @@ namespace LinqToDB.Internal.SqlProvider
 							},
 							new SqlValue(toType, null));
 					}
-					else if (!withNull || !SqlProviderFlags.SupportsBooleanType || forceConvert)
+					else if (!withNull || unknownAsFalse || !SqlProviderFlags.SupportsBooleanType || forceConvert)
 					{
 						expr = new SqlConditionExpression(CopyForFold(predicate), trueValue, falseValue);
 					}
