@@ -332,6 +332,7 @@ namespace LinqToDB.Identity
 					.HasLength(KEYS_LENGTH)
 				.Property(e => e.ProviderDisplayName)
 					.HasLength(128) // (un)educated guess...
+					.HasAttribute(InformixTextLimit())
 					.HasAttribute(OracleUnicodeText())
 				.Property(e => e.UserId)
 					.IsNullable(false)

@@ -141,10 +141,10 @@ namespace Tests.Identity
 				.ShouldBe(name);
 		}
 
-		// The two providers whose default ClaimType width counts bytes - Oracle's VARCHAR2 and Informix's NVarChar, capped at
-		// 255 bytes - so 200 two-byte characters overrun it unless the column is pinned
+		// The two providers whose default string widths count bytes - Oracle's VARCHAR2 and Informix's NVarChar - so a
+		// two-byte ClaimType (200 characters, 255 wide) or ProviderDisplayName (100, 128 wide) overruns them unless pinned
 		[Test]
-		public async Task NonAsciiClaimType([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllInformix)] string context)
+		public async Task NonAsciiClaimTypeAndLoginName([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllInformix)] string context)
 		{
 			using var setup  = GetSetup(context);
 			using var schema = new Schema(setup);
@@ -174,6 +174,15 @@ namespace Tests.Identity
 				.ShouldHaveSingleItem()
 				.Type
 				.ShouldBe(type);
+
+			var displayName = new string('ü', 100);
+			await users.AddLoginAsync(user, new UserLoginInfo("google", "key-olga", displayName));
+
+			var logins = await users.GetLoginsAsync(user);
+			logins
+				.ShouldHaveSingleItem()
+				.ProviderDisplayName
+				.ShouldBe(displayName);
 		}
 
 		// CreateTable emits no foreign keys, so nothing cascades: the store itself has to remove the dependents
