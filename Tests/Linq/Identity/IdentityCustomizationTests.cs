@@ -604,7 +604,10 @@ namespace Tests.Identity
 
 			db.AddMappingSchema(consumer);
 
-			var email = db.MappingSchema.GetEntityDescriptor(typeof(IdentityUser)).Columns.Single(c => c.MemberName == nameof(IdentityUser.Email));
+			var email = db.MappingSchema
+				.GetEntityDescriptor(typeof(IdentityUser))
+				.Columns
+				.Single(c => c.MemberName == nameof(IdentityUser.Email));
 
 			// unlike a second pass in ConfigureMappings, a schema built on its own starts from a blank attribute,
 			// so the rename wins but the default length is gone
