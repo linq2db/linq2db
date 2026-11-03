@@ -71,9 +71,11 @@ memberships (and a deleted role's memberships and claims) itself, where EF Core 
 It creates no indexes either. EF Core's unique `UserNameIndex` (`NormalizedUserName`) and `RoleNameIndex`
 (`NormalizedName`) are what stop two concurrent registrations of one name, so add them yourself to a schema created
 with `CreateTable`: without them uniqueness rests on `UserValidator` / `RoleValidator`, which check before inserting.
-`AddToRoleAsync`, `SetTokenAsync` and `AddOrUpdatePasskeyAsync` also look a row up before inserting it, as EF Core's
-stores do, so two concurrent identical writes fail on the table's key. Where the defaults drop that key (the token
-table on Firebird 2.5, the passkey table on Access, Informix and Firebird 2.5) they store a duplicate row instead.
+`SetTokenAsync` and `AddOrUpdatePasskeyAsync` look a row up before inserting it, as EF Core's stores do, and
+`AddToRoleAsync` does too (EF Core's store leaves that check to `UserManager`), so two concurrent identical writes fail
+on the table's key. Where the defaults drop that key (the token table on Firebird 2.5, the passkey table on Access,
+Informix and Firebird 2.5) they store a duplicate row instead; the stores read the first copy and update or remove
+every copy, so the duplicate does not break the token or passkey.
 
 ### Identity options
 

@@ -590,17 +590,20 @@ namespace LinqToDB.Identity
 				.ConfigureAwait(false);
 		}
 
+		// The passkey finders take the first match, not a single one: without a key (Access, Informix, Firebird 2.5)
+		// two concurrent registrations of one credential can store a duplicate row.
+
 		/// <summary>
 		/// Finds a passkey for the specified user with the specified credential id.
 		/// </summary>
 		protected virtual Task<TUserPasskey?> FindUserPasskeyAsync(TKey userId, byte[] credentialId, CancellationToken cancellationToken)
-			=> UserPasskeys.SingleOrDefaultAsync(p => p.UserId.Equals(userId) && p.CredentialId == credentialId, cancellationToken);
+			=> UserPasskeys.FirstOrDefaultAsync(p => p.UserId.Equals(userId) && p.CredentialId == credentialId, cancellationToken);
 
 		/// <summary>
 		/// Finds a passkey with the specified credential id.
 		/// </summary>
 		protected virtual Task<TUserPasskey?> FindUserPasskeyByIdAsync(byte[] credentialId, CancellationToken cancellationToken)
-			=> UserPasskeys.SingleOrDefaultAsync(p => p.CredentialId == credentialId, cancellationToken);
+			=> UserPasskeys.FirstOrDefaultAsync(p => p.CredentialId == credentialId, cancellationToken);
 
 		/// <summary>
 		/// Called to create a new instance of the passkey entity.

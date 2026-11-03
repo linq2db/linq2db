@@ -764,6 +764,52 @@ namespace Tests.Identity
 			removed.ShouldBeNull();
 		}
 
+		// Access, Informix and Firebird 2.5 store passkeys without a primary key, so two concurrent registrations of one
+		// credential can leave a duplicate row; the store still has to find, update and remove that credential.
+		[Test]
+		public async Task DuplicatePasskeyRowStillResolves([IncludeDataSources(true, TestProvName.AllAccess, TestProvName.AllInformix, TestProvName.AllFirebirdLess3)] string context)
+		{
+			using var setup  = GetSetup(context);
+			using var schema = new Schema(setup);
+			using var ctx    = GetDataContext(context, setup.MappingSchema);
+
+			var store = new UserStore<IdentityUser>(ctx, options: SchemaVersion3);
+			var user  = NewUser("kate");
+			await store.CreateAsync(user);
+
+			var passkey = new UserPasskeyInfo(
+				[7, 8, 9], [1, 2], DateTimeOffset.UtcNow, signCount: 1,
+				transports: ["usb"], isUserVerified: true, isBackupEligible: false,
+				isBackedUp: false, attestationObject: [3], clientDataJson: [4]);
+
+			await store.AddOrUpdatePasskeyAsync(user, passkey, default);
+
+			var row = await ctx
+				.GetTable<IdentityUserPasskey<string>>()
+				.SingleAsync(p => p.UserId == user.Id);
+			await ctx.InsertAsync(row);
+
+			var byPasskeyId = await store.FindByPasskeyIdAsync(passkey.CredentialId, default);
+			byPasskeyId
+				.ShouldNotBeNull()
+				.Id
+				.ShouldBe(user.Id);
+
+			passkey.SignCount = 2;
+			await store.AddOrUpdatePasskeyAsync(user, passkey, default);
+
+			var found = await store.FindPasskeyAsync(user, passkey.CredentialId, default);
+			found
+				.ShouldNotBeNull()
+				.SignCount
+				.ShouldBe(2u);
+
+			await store.RemovePasskeyAsync(user, passkey.CredentialId, default);
+
+			var remaining = await store.GetPasskeysAsync(user, default);
+			remaining.ShouldBeEmpty();
+		}
+
 		// A direct-attestation certificate chain takes the stored JSON past 5000 characters. SAP HANA's widest
 		// NVarChar is 5000 and its NText parameter binds as DbType.Xml, so the readme documents the cap there instead.
 		[Test]
