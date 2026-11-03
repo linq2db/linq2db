@@ -617,6 +617,34 @@ namespace Tests.Linq
 				.ShouldContain("'nameSelector' argument of SelectDynamic must not depend on the query's range variables");
 		}
 
+		/// <summary>
+		/// Keys that are a query declared as a plain sequence are rejected inline too: run while the query is built, they
+		/// would be read once and reused by every later execution.
+		/// </summary>
+		// SQLite only: the builder throws before any SQL is built.
+		[Test]
+		public void InlineKeysHoldingAQueryThrow([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_data);
+
+			IEnumerable<int> keys = t.Select(x => x.Id);
+
+			var query =
+				from a in t
+				where t.Where(x => x.Id > 0)
+					.SelectDynamic(x => new AmountsDto { Id = x.Id }, keys, (x, k) => x.Usd * k, k => "W" + k)
+					.Any(r => r.Id == a.Id && Sql.Property<decimal>(r, "W2") > 50)
+				select a.Id;
+
+			var act = () => query.ToArray();
+
+			act
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain("'keys' argument of SelectDynamic is a query");
+		}
+
 		[Test]
 		[ActiveIssue(5953, ErrorType = typeof(InvalidOperationException), ErrorMessage = "variable 'n' of type 'System.String' referenced from scope '', but it is not defined")]
 		public void SelectDynamicOverACorrelatedSource([DataSources] string context)

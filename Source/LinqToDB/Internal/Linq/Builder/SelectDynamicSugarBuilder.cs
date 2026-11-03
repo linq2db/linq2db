@@ -30,19 +30,26 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (!IsQueryIndependent(builder, argument))
 				{
-					var error = typeof(IQueryable).IsAssignableFrom(argument.Type)
-						? ErrorHelper.SelectDynamic.Error_ArgumentIsAQuery
-						: ErrorHelper.SelectDynamic.Error_ArgumentDependsOnQuery;
-
-					throw new LinqToDBException(string.Format(CultureInfo.InvariantCulture, error, methodCall.Method.GetParameters()[i].Name));
+					throw Error(
+						typeof(IQueryable).IsAssignableFrom(argument.Type)
+							? ErrorHelper.SelectDynamic.Error_ArgumentIsAQuery
+							: ErrorHelper.SelectDynamic.Error_ArgumentDependsOnQuery,
+						i);
 				}
 
 				args[i] = BuildTimeArgumentReader.ReadArgument(builder, argument);
+
+				// A query declared as a plain sequence passes the check above, and the call would run it here.
+				if (args[i] is IQueryable)
+					throw Error(ErrorHelper.SelectDynamic.Error_ArgumentIsAQuery, i);
 			}
 
 			var desugared = (IQueryable)methodCall.Method.InvokeExt(null, args)!;
 
 			return BuildSequenceResult.FromContext(builder.BuildSequence(new BuildInfo(buildInfo, builder.ConvertExpressionTree(desugared.Expression))));
+
+			LinqToDBException Error(string error, int index)
+				=> new(string.Format(CultureInfo.InvariantCulture, error, methodCall.Method.GetParameters()[index].Name));
 		}
 
 		// A quoted lambda becomes SQL, so it may read the row. Everything else runs once, while the query is built.
