@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Internal.DataProvider.Translation;
@@ -329,6 +330,10 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				// concatenation around it is measured.
 				case SqlFunction { Name: "Coalesce" } coalesceFunction:
 					return Combine(coalesceFunction.Parameters, sum: false);
+				// These return their first argument's type and at most its length, but are typed by their method's
+				// return type, the string default.
+				case SqlFunction { Parameters: [var argument, ..] } function when _typePreservingFunctions.Contains(function.Name):
+					return MeasureStringOperand(argument);
 				case SqlConditionExpression condition:
 					return Combine([condition.TrueValue, condition.FalseValue], sum: false);
 				case SqlCaseExpression caseExpression:
@@ -359,6 +364,14 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			else if (unicode && expr is SqlFunction { Name: "Replace", Parameters: [var value, ..] } && MeasureStringOperand(value).NonUnicode)
 				nonUnicode = true;
 
+			// Any other function or expression typed only by the string default says nothing of what it returns, so it
+			// counts as the longest non-Unicode value short of MAX.
+			if (expr is SqlFunction or SqlExpression && type == MappingSchema.GetDbDataType(typeof(string)))
+				return new(Unicode: false, NonUnicode: true, Length: 8000);
+
+			if (type.Length == null && GetDbTypeLength(type.DbType) is { } dbTypeLength)
+				type = type.WithLength(dbTypeLength);
+
 			long? length = expr switch
 			{
 				SqlValue { Value: string value }               => value.Length,
@@ -369,6 +382,31 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			};
 
 			return new(unicode, nonUnicode, length);
+		}
+
+		static readonly HashSet<string> _typePreservingFunctions = new(StringComparer.OrdinalIgnoreCase)
+		{
+			"Upper", "Lower", "LTrim", "RTrim", "Trim", "Left", "Right", "Reverse", PseudoFunctions.TO_UPPER, PseudoFunctions.TO_LOWER,
+		};
+
+		// A column mapped with only a DbType has its length there: `varchar(3000)` is 3000, `varchar(max)` is -1.
+		static int? GetDbTypeLength(string? dbType)
+		{
+			if (dbType == null)
+				return null;
+
+			var open  = dbType.IndexOf('(', StringComparison.Ordinal);
+			var close = dbType.IndexOf(')', StringComparison.Ordinal);
+
+			if (open < 0 || close < open)
+				return null;
+
+			var value = dbType.Substring(open + 1, close - open - 1).Trim();
+
+			if (value.Equals("max", StringComparison.OrdinalIgnoreCase))
+				return -1;
+
+			return int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var length) && length > 0 ? length : null;
 		}
 
 		StringOperandShape Combine(IEnumerable<ISqlExpression> operands, bool sum)

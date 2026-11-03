@@ -1243,6 +1243,104 @@ namespace Tests.Linq
 				.ShouldBe(6001);
 		}
 
+		// A VarChar operand inside a string function keeps its length beside a Unicode parameter.
+		[Test]
+		public void ConcatParameterBesideVarCharFunctionsKeepsTotalLength([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			var suffix = "x";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(SplitVarCharData);
+
+			table
+				.Select(t => Sql.AsSql(t.Left.ToUpper() + t.Right.ToUpper() + suffix))
+				.Single()
+				.Length
+				.ShouldBe(6001);
+
+			table
+				.Select(t => Sql.AsSql(t.Left.Trim() + t.Right.Trim() + suffix))
+				.Single()
+				.Length
+				.ShouldBe(6001);
+		}
+
+		// A short VarChar operand inside a string function is measured by its column, so nothing is cast to MAX.
+		[Test]
+		public void ConcatParameterBesideShortVarCharFunctionIsNotWidened([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var suffix = "x";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(SplitVarCharData);
+
+			table
+				.Select(t => Sql.AsSql(t.Sku.ToUpper() + suffix))
+				.Single()
+				.ShouldBe("Sx");
+
+			GetCurrentBaselines()
+				.ShouldNotContain("Max");
+		}
+
+		[Test]
+		public void ConcatOfVarCharFunctionsComparedWithParameter([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			var suffix   = "x";
+			var expected = new string('B', 3000) + new string('C', 3000) + suffix;
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(SplitVarCharData);
+
+			table
+				.Count(t => t.Left.ToUpper() + t.Right.ToUpper() + suffix == expected)
+				.ShouldBe(1);
+		}
+
+		// SQL Server's ISNULL returns its first argument's type; the query only knows the string default.
+		[Sql.Function("IsNull", ServerSideOnly = true)]
+		static string IsNull(string value, string replacement) => throw new InvalidOperationException();
+
+		// A function with no type of its own over a long VarChar operand keeps its length beside a Unicode parameter.
+		[Test]
+		public void ConcatParameterBesideUntypedFunctionKeepsTotalLength([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			var suffix = "x";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(SplitVarCharData);
+
+			table
+				.Select(t => Sql.AsSql(IsNull(t.Left, "") + IsNull(t.Right, "") + suffix))
+				.Single()
+				.Length
+				.ShouldBe(6001);
+		}
+
+		[Table]
+		sealed class DbTypeVarCharRow
+		{
+			[PrimaryKey]                                                                        public int    Id    { get; set; }
+			[Column(DbType = "varchar(3000)", DataType = DataType.VarChar, CanBeNull = false)] public string Left  { get; set; } = default!;
+			[Column(DbType = "varchar(3000)", DataType = DataType.VarChar, CanBeNull = false)] public string Right { get; set; } = default!;
+		}
+
+		// The lengths of VarChar columns mapped with a DbType and no Length still add up beside a Unicode parameter.
+		[Test]
+		public void ConcatParameterBesideVarCharWithoutLengthKeepsTotalLength([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			var suffix = "x";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new DbTypeVarCharRow { Id = 1, Left = new string('b', 3000), Right = new string('c', 3000) } });
+
+			table
+				.Select(t => Sql.AsSql(t.Left + t.Right + suffix))
+				.Single()
+				.Length
+				.ShouldBe(6001);
+		}
+
 		[Table]
 		sealed class CoalesceVarCharRow
 		{
