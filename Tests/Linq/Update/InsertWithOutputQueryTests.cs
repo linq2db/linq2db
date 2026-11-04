@@ -7,6 +7,7 @@ using LinqToDB.Async;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.Mapping;
+using LinqToDB.Remote;
 
 using Npgsql;
 
@@ -1430,6 +1431,86 @@ namespace Tests.xUpdate
 				.Count()
 				.ShouldBe(0);
 		}
+
+		[Test]
+		public void MaterializationFailureKeepsInsert([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db     = GetDataConnection(context);
+			using var source = db.CreateLocalTable(GetSourceData());
+			using var target = db.CreateLocalTable<TargetTable>();
+
+			// without eager loading no transaction is started: the insert commits with the statement
+			Action act = () => source
+				.Where(s => s.Id <= 3)
+				.InsertWithOutputQuery(target, s => new TargetTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr })
+				.Select(t => FailOnSecond(t.Id))
+				.ToArray();
+
+			var ex = act.ShouldThrow<InvalidOperationException>();
+			ex.Message.ShouldBe("Materialization failed.");
+
+			db.Transaction.ShouldBeNull();
+			target
+				.Count()
+				.ShouldBe(3);
+		}
+
+		[Test]
+		public void ReadOnlyServiceRefusesOutputQuery([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db     = GetDataConnection(context);
+			using var source = db.CreateLocalTable(GetSourceData());
+			using var target = db.CreateLocalTable<TargetTable>();
+			using var remote = new ReadOnlyRemoteDataContext(db, context);
+
+			// control: a plain insert is refused by the read-only service policy
+			Action insert = () => remote.GetTable<SourceTable>()
+				.Where(s => s.Id <= 3)
+				.Insert(remote.GetTable<TargetTable>(), s => new TargetTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr });
+
+			var insertEx = insert.ShouldThrow<LinqToDBException>();
+			insertEx.Message.ShouldBe("Insert/Update/Delete requests are not allowed by the service policy.");
+
+			// the same insert reaches the service as a SELECT, with the INSERT inside its CTE
+			Action output = () => remote.GetTable<SourceTable>()
+				.Where(s => s.Id <= 3)
+				.InsertWithOutputQuery(remote.GetTable<TargetTable>(), s => new TargetTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr })
+				.Select(t => t.Id)
+				.ToArray();
+
+			var outputEx = output.ShouldThrow<LinqToDBException>();
+			outputEx.Message.ShouldBe("Insert/Update/Delete requests are not allowed by the service policy.");
+
+			target
+				.Count()
+				.ShouldBe(0);
+		}
+
+		// Serves the remote protocol in-process from a LinqService that keeps the default AllowUpdates = false.
+		sealed class ReadOnlyRemoteDataContext : RemoteDataContextBase
+		{
+			readonly DataOptions _backendOptions;
+			readonly string      _configuration;
+
+			// The configuration name keys the process-wide ConfigurationInfo cache, so it carries the backend's name.
+			public ReadOnlyRemoteDataContext(DataConnection backend, string context)
+				: base(new DataOptions()
+					.UseConfiguration("Test.ReadOnlyRemote." + context))
+			{
+				_backendOptions = backend.Options;
+				_configuration  = "Test.ReadOnlyRemote." + context;
+			}
+
+			protected override string ContextIDPrefix => _configuration;
+
+			protected override ILinqService GetClient() => new ReadOnlyLinqService(_backendOptions);
+
+			sealed class ReadOnlyLinqService(DataOptions options) : LinqService
+			{
+				public override DataConnection CreateDataContext(string? configuration) => new(options);
+			}
+		}
+
 		// Guard test: keep SqlProviderFlags.IsInsertOutputQuerySupported honest. It probes whether the provider accepts the
 		// data-modifying CTE that BasicSqlBuilder.BuildDataModificationCteBody renders and fails when reality diverges
 		// from the declared flag, signalling that the provider's flag (set in its DataProvider) needs updating.

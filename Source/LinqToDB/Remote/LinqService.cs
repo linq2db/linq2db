@@ -71,7 +71,8 @@ namespace LinqToDB.Remote
 
 		protected virtual void ValidateQuery(LinqServiceQuery query)
 		{
-			if (!AllowUpdates && query.Statement.QueryType != QueryType.Select)
+			// a SELECT can carry a data-modifying statement inside a CTE (InsertWithOutputQuery)
+			if (!AllowUpdates && (query.Statement.QueryType != QueryType.Select || query.Statement.Find(QueryElementType.SqlDataModificationTable) != null))
 				throw new LinqToDBException("Insert/Update/Delete requests are not allowed by the service policy.");
 		}
 

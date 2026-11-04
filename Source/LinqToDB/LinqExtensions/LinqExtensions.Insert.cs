@@ -1161,6 +1161,8 @@ namespace LinqToDB
 		/// Eager loading over the output loads child records by key from the returned rows (<see cref="EagerLoadingStrategy.KeyedQuery"/>,
 		/// regardless of the configured strategy); child queries that cannot be keyed
 		/// to the output, or that read the output themselves, throw <see cref="LinqToDBException"/>.
+		/// Outside a transaction the insert is committed when the statement runs, so a failure while the returned rows are read
+		/// does not undo it; run the query in a transaction when it must be undone.
 		/// </para>
 		/// Database support:
 		/// <list type="bullet">
@@ -1205,6 +1207,8 @@ namespace LinqToDB
 		/// Eager loading over the output loads child records by key from the returned rows (<see cref="EagerLoadingStrategy.KeyedQuery"/>,
 		/// regardless of the configured strategy); child queries that cannot be keyed
 		/// to the output, or that read the output themselves, throw <see cref="LinqToDBException"/>.
+		/// Outside a transaction the insert is committed when the statement runs, so a failure while the returned rows are read
+		/// does not undo it; run the query in a transaction when it must be undone.
 		/// </para>
 		/// Database support:
 		/// <list type="bullet">
