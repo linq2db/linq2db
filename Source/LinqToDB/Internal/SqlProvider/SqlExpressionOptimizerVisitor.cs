@@ -247,7 +247,7 @@ namespace LinqToDB.Internal.SqlProvider
 				if (trueConditional.Condition.Equals(element.Condition, SqlQuery.SqlExtensions.DefaultComparer))
 				{
 					var newConditionExpression = new SqlConditionExpression(element.Condition, trueConditional.TrueValue, element.FalseValue);
-					return VisitReplacement(newConditionExpression);
+					return VisitReplacement(NotifyReplaced(newConditionExpression, element));
 				}
 			}
 
@@ -260,7 +260,7 @@ namespace LinqToDB.Internal.SqlProvider
 						new(falseConditional.Condition, falseConditional.TrueValue),
 					}, falseConditional.FalseValue);
 
-				return VisitReplacement(newCaseExpression);
+				return VisitReplacement(NotifyReplaced(newCaseExpression, element));
 			}
 
 			if (element.FalseValue is SqlCaseExpression falseCase)
@@ -274,7 +274,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 				var newCaseExpression = new SqlCaseExpression(falseCase.Type, caseItems, falseCase.ElseExpression);
 
-				return VisitReplacement(newCaseExpression);
+				return VisitReplacement(NotifyReplaced(newCaseExpression, element));
 			}
 
 			if (element.Condition is SqlPredicate.IsNull isNullPredicate)

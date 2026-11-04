@@ -2002,6 +2002,41 @@ namespace Tests.Linq
 				.ShouldBe(new bool?[] { true, true, false });
 		}
 
+		[Table]
+		sealed class SetFlagTable
+		{
+			[PrimaryKey] public int   Id { get; set; }
+			[Column    ] public bool? F  { get; set; }
+			[Column    ] public int?  A  { get; set; }
+			[Column    ] public int?  B  { get; set; }
+			[Column    ] public int?  C  { get; set; }
+		}
+
+		[Test]
+		public void NullableComparisonAsConditionalElseSetValue([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllPostgreSQL)] string context)
+		{
+			var data = new[]
+			{
+				new SetFlagTable { Id = 1, F = true,  A = 1,    B = 1,    C = null },
+				new SetFlagTable { Id = 2, F = true,  A = 1,    B = 2,    C = 1    },
+				new SetFlagTable { Id = 3, F = null,  A = null, B = 1,    C = 1    },
+				new SetFlagTable { Id = 4, F = null,  A = null, B = null, C = 1    },
+			};
+
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(data);
+
+			tb
+				.Set(r => r.F, r => r.C == null ? r.F : r.A == r.B)
+				.Update();
+
+			tb
+				.OrderBy(r => r.Id)
+				.Select(r => r.F)
+				.ToArray()
+				.ShouldBe(new bool?[] { true, false, false, true });
+		}
+
 		[ActiveIssue(ErrorTypeName = "System.NullReferenceException", ErrorMessage = "Object reference not set to an instance of an object.",
 			Details = "no-issue: a null first argument to Sql.PadLeft throws while the accessor is built, before any SQL is produced. #4799 is the only PadLeft issue on the tracker and reports trimming, which is a different defect.")]
 		[Test]
