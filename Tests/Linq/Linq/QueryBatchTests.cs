@@ -12,6 +12,7 @@ using LinqToDB.Data;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -1110,9 +1111,25 @@ namespace Tests.Linq
 			Ids(positional.Item2).ShouldBe(PageIds(0, 3));
 		}
 
+		sealed class ProcessingConnection(DataOptions options) : DataConnection(options)
+		{
+			protected override SqlStatement ProcessQuery(SqlStatement statement, EvaluationContext context)
+			{
+				return statement;
+			}
+		}
+
+		sealed class ProcessingContext(DataOptions options) : DataContext(options)
+		{
+			protected override DataConnection CreateDataConnection(DataOptions options)
+			{
+				return new ProcessingConnection(options);
+			}
+		}
+
 		// Where the statements cannot be combined, forcing Default only adds round trips: a configured CteUnion already reads
-		// the nested collection in one statement. A DataContext never combines; the DataConnection arm is the control that
-		// does, and the providers that cannot are covered by NestedCollectionCombinesWhateverTheDefaultStrategy.
+		// the nested collection in one statement. A ProcessQuery override keeps a connection from combining, on its own and
+		// under a DataContext; the providers that cannot combine are covered by NestedCollectionCombinesWhateverTheDefaultStrategy.
 		[Test]
 		public void ConfiguredStrategyStaysWhereNothingCombines(
 			[IncludeDataSources(TestProvName.AllSQLite)] string context,
@@ -1126,7 +1143,7 @@ namespace Tests.Linq
 			var options = Traced(trace)(new DataOptions().UseConfiguration(context))
 				.UseDefaultEagerLoadingStrategy(EagerLoadingStrategy.CteUnion);
 
-			using IDataContext target = dataContext ? new DataContext(options) : new DataConnection(options);
+			using IDataContext target = dataContext ? new ProcessingContext(options) : new ProcessingConnection(options);
 
 			var itemTable  = target.GetTable<BatchItem>();
 			var groupTable = target.GetTable<BatchGroup>();
@@ -1175,7 +1192,7 @@ namespace Tests.Linq
 			total.ShouldBe(selected.Total);
 			batchIds.ShouldBe(selectedIds);
 			batchIds.ShouldBe(ExpectedGroupedIds());
-			batchReaders.ShouldBe(target.UsesCombinedQueryBatch() ? 1 : selectReaders);
+			batchReaders.ShouldBe(selectReaders);
 		}
 
 		// Where the batch combines, it loads with the Default strategy whatever the configured one, and KeyedQuery shows the

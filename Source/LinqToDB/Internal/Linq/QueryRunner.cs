@@ -1133,14 +1133,6 @@ namespace LinqToDB.Internal.Linq
 			if (dataContext.QueryHints.Count > 0 || dataContext.NextQueryHints.Count > 0)
 				return null;
 
-			// Same reason, the other piece of GetCommand-only state: DataConnection.ProcessQuery is a shipped extension
-			// point that lets a subclass rewrite the statement before render, and GetCommand is its only caller. This path
-			// renders the main query's statement and each combinable child's directly, so a subclass's rewrite would keep
-			// applying to the non-combinable children and silently stop applying to everything else. Combining steps aside
-			// for such a subclass rather than apply the rewrite to part of the load.
-			if (EagerResultEnumerable<T>.GetDataConnection(dataContext).IsProcessQueryOverridden)
-				return null;
-
 			if (!EagerResultEnumerable<T>.HasCombinable(harvesters))
 				return null;
 
@@ -1155,9 +1147,22 @@ namespace LinqToDB.Internal.Linq
 
 		// The part of the combined gate that the context type and the provider decide. The query cache bucket pins both,
 		// so a build may rely on it.
+		//
+		// A ProcessQuery override is a property of the type too. ProcessQuery is a shipped extension point that lets a
+		// subclass rewrite the statement before render, and GetCommand is its only caller. The combined path renders the
+		// main query's statement and each combinable child's directly, so a subclass's rewrite would keep applying to the
+		// non-combinable children and silently stop applying to everything else. Combining steps aside for such a
+		// subclass rather than apply the rewrite to part of the load.
 		internal static bool CanCombineCommands(IDataContext dataContext)
 		{
-			return dataContext is DataConnection or DataContext
+			var canRenderDirectly = dataContext switch
+			{
+				DataConnection dataConnection => !dataConnection.IsProcessQueryOverridden,
+				DataContext    context        => !context.IsProcessQueryOverridden,
+				_                             => false,
+			};
+
+			return canRenderDirectly
 				&& dataContext.SqlProviderFlags.IsMultiStatementBatchSupported
 				&& dataContext.SqlProviderFlags.IsMultipleResultSetsSupported;
 		}

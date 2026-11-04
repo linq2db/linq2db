@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -381,6 +383,33 @@ namespace LinqToDB
 			AssertDisposed();
 
 			return new(options);
+		}
+
+		static readonly ConcurrentDictionary<Type,bool> _createDataConnectionOverrides = new();
+
+		// Whether the connection this context runs on overrides ProcessQuery. A type that does not override
+		// CreateDataConnection runs on a plain DataConnection, so answering for it creates no connection.
+		internal bool IsProcessQueryOverridden
+		{
+			get
+			{
+				var type = GetType();
+
+				if (type == typeof(DataContext))
+					return false;
+
+				var createsOwn = _createDataConnectionOverrides.GetOrAdd(
+					type,
+					static t => t.GetMethod(
+							nameof(CreateDataConnection),
+							BindingFlags.Instance | BindingFlags.NonPublic,
+							null,
+							[typeof(DataOptions)],
+							null)
+						?.DeclaringType != typeof(DataContext));
+
+				return createsOwn && GetDataConnection().IsProcessQueryOverridden;
+			}
 		}
 
 		/// <summary>

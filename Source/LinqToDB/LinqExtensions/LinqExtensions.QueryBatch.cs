@@ -34,7 +34,7 @@ namespace LinqToDB
 		/// lists them in.
 		/// </para>
 		/// <para>
-		/// Where the statements are combined, collections in the selector are loaded with
+		/// Where the context and its provider can combine statements, collections in the selector are loaded with
 		/// <see cref="EagerLoadingStrategy.Default"/>, which overrides <see cref="LinqOptions.DefaultEagerLoadingStrategy"/>
 		/// and any <c>With*LoadStrategy()</c> call inside the selector; elsewhere the configured strategy applies. Either way
 		/// they are explicit loads for <see cref="LinqOptions.ImplicitCollectionLoading"/>.
