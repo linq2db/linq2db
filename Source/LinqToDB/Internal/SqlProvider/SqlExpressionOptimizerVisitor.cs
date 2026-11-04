@@ -1564,7 +1564,7 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 			if (folded.Count == 1)
 				return folded[0];
 
-			return new SqlConcatExpression(element.PreserveNull, folded.ToArray());
+			return NotifyReplaced(new SqlConcatExpression(element.PreserveNull, folded.ToArray()), element);
 		}
 
 		protected internal override IQueryElement VisitSqlCastExpression(SqlCastExpression element)
