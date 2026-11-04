@@ -406,8 +406,10 @@ the default `none` attestation, possibly not for a direct-attestation certificat
 
 ## Navigations
 
-Association helpers for the standard Identity entity types are provided as **extension methods** (extension
-*properties* can't be used in expression trees), usable inside any linq2db query:
+Association helpers for the standard Identity entity types are provided as **extension methods**, usable inside any
+linq2db query. They are methods because `IdentityUser<TKey>` / `IdentityRole<TKey>` are Microsoft's types, so a
+navigation *property* on them could only be a C# 14 extension property, and C# forbids extension-property access
+inside expression trees (CS9296), which linq2db queries are.
 
 | Receiver | Method | Related rows |
 |---|---|---|
@@ -432,9 +434,53 @@ They are query-only markers — linq2db expands them into the corresponding join
 
 They return the stock types (`IdentityRole<TKey>`, `IdentityUserClaim<TKey>`, …) even when the context uses your own:
 the generic contexts map the stock types to the same `AspNet*` tables for that reason, so your types' extra members
-are not visible through a navigation — join your own table on `Id` for those. If your `ConfigureMappings` override
-renames a table, rename the stock type's table as well, or query `GetTable<TRole>()` / `GetTable<TUserRole>()`
-directly.
+are not visible through them. If your `ConfigureMappings` override renames a table, rename the stock type's table as
+well. There are no overloads that return your types: C# cannot infer those type arguments from the receiver, so every
+call would have to spell them out (`u.Roles<AppRole, string>()`).
+
+### Navigation properties on your own types
+
+Your own user and role subclasses can carry typed navigation **properties**, which linq2db expands the same way. Mark
+a one-to-many navigation with `[Association]` on its keys, and a many-to-many one (through `AspNetUserRoles`) with a
+`QueryExpressionMethod` that joins the link table. Association properties are not columns, so the table stays
+interchangeable with a stock `AspNetUsers`:
+
+```csharp
+public class AppUser : IdentityUser<string>
+{
+    [Association(ThisKey = nameof(Id), OtherKey = nameof(AppUserClaim.UserId))]
+    public IEnumerable<AppUserClaim> Claims { get; set; } = null!;
+
+    [Association(QueryExpressionMethod = nameof(RolesQuery))]
+    public IEnumerable<AppRole> Roles { get; set; } = null!;
+
+    static Expression<Func<AppUser, IDataContext, IQueryable<AppRole>>> RolesQuery()
+        => (user, db) => db.GetTable<AppUserRole>()
+            .Where(ur => ur.UserId == user.Id)
+            .SelectMany(ur => db.GetTable<AppRole>().Where(r => r.Id == ur.RoleId));
+}
+
+public class AppRole : IdentityRole<string>
+{
+    [Association(QueryExpressionMethod = nameof(UsersQuery))]
+    public IEnumerable<AppUser> Users { get; set; } = null!;
+
+    static Expression<Func<AppRole, IDataContext, IQueryable<AppUser>>> UsersQuery()
+        => (role, db) => db.GetTable<AppUserRole>()
+            .Where(ur => ur.RoleId == role.Id)
+            .SelectMany(ur => db.GetTable<AppUser>().Where(u => u.Id == ur.UserId));
+}
+
+public class AppUserClaim : IdentityUserClaim<string>;
+public class AppUserRole  : IdentityUserRole <string>;
+
+// with IdentityDataConnection<AppUser, AppRole, string, AppUserClaim, AppUserRole, …> as the context:
+var roleNames = db.GetTable<AppUser>()
+    .Where(u => u.NormalizedUserName == "ALICE")
+    .SelectMany(u => u.Roles)
+    .Select(r => r.Name)
+    .ToList();
+```
 
 ## Supported frameworks
 

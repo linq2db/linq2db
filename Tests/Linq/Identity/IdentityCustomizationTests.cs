@@ -79,6 +79,90 @@ namespace Tests.Identity
 		}
 #endif
 
+		// Typed navigations the consumer declares on their own subclasses, which the stock extension methods cannot
+		// return: their type arguments are not inferable from the receiver.
+		public class NavUser : IdentityUser<string>
+		{
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(NavUserClaim.UserId))]
+			public IEnumerable<NavUserClaim> Claims { get; set; } = null!;
+
+			[Association(QueryExpressionMethod = nameof(RolesQuery))]
+			public IEnumerable<NavRole> Roles { get; set; } = null!;
+
+			static Expression<Func<NavUser, IDataContext, IQueryable<NavRole>>> RolesQuery()
+				=> (user, db) => db.GetTable<NavUserRole>()
+					.Where(ur => ur.UserId == user.Id)
+					.SelectMany(ur => db.GetTable<NavRole>().Where(r => r.Id == ur.RoleId));
+		}
+
+		public class NavRole : IdentityRole<string>
+		{
+			[Association(QueryExpressionMethod = nameof(UsersQuery))]
+			public IEnumerable<NavUser> Users { get; set; } = null!;
+
+			static Expression<Func<NavRole, IDataContext, IQueryable<NavUser>>> UsersQuery()
+				=> (role, db) => db.GetTable<NavUserRole>()
+					.Where(ur => ur.RoleId == role.Id)
+					.SelectMany(ur => db.GetTable<NavUser>().Where(u => u.Id == ur.UserId));
+		}
+
+		public class NavUserClaim : IdentityUserClaim<string>
+		{
+			public string? Issuer { get; set; }
+		}
+
+		public class NavUserRole : IdentityUserRole<string>;
+
+		internal sealed class NavIdentityConnection(DataOptions options)
+			: IdentityDataConnection<NavUser, NavRole, string, NavUserClaim, NavUserRole, IdentityUserLogin<string>, IdentityRoleClaim<string>, IdentityUserToken<string>>(options);
+
+		[Test]
+		public async Task OwnNavigationProperties([DataSources] string context)
+		{
+			using var setup  = new NavIdentityConnection(new DataOptions().UseConfiguration(context.StripRemote()));
+			using var schema = new KeyedSchema<NavUser, NavRole, string, NavUserClaim, NavUserRole, IdentityUserLogin<string>, IdentityRoleClaim<string>, IdentityUserToken<string>>(setup);
+			using var ctx    = GetDataContext(context, setup.MappingSchema);
+
+			// association members are not columns
+			setup.MappingSchema
+				.GetEntityDescriptor(typeof(NavUser))
+				.Columns
+				.Select(c => c.MemberName)
+				.ShouldNotContain(nameof(NavUser.Roles));
+
+			var users = new UserStore<NavUser, NavRole, IDataContext, string, NavUserClaim, NavUserRole, IdentityUserLogin<string>, IdentityUserToken<string>, IdentityRoleClaim<string>>(ctx);
+			var roles = new RoleStore<NavRole, IDataContext, string, NavUserRole, IdentityRoleClaim<string>>(ctx);
+
+			var user = new NavUser { Id = Guid.NewGuid().ToString(), UserName = "navy", NormalizedUserName = "NAVY" };
+			var role = new NavRole { Id = Guid.NewGuid().ToString(), Name = "deck", NormalizedName = "DECK" };
+			await users.CreateAsync(user);
+			await roles.CreateAsync(role);
+			await users.AddToRoleAsync(user, "DECK");
+			await ctx.InsertAsync(new NavUserClaim { UserId = user.Id, ClaimType = "scope", ClaimValue = "read", Issuer = "local" });
+
+			var roleNames = await ctx.GetTable<NavUser>()
+				.Where(u => u.Id == user.Id)
+				.SelectMany(u => u.Roles)
+				.Select(r => r.Name)
+				.ToListAsync();
+
+			var issuers = await ctx.GetTable<NavUser>()
+				.Where(u => u.Id == user.Id)
+				.SelectMany(u => u.Claims)
+				.Select(c => c.Issuer)
+				.ToListAsync();
+
+			var userNames = await ctx.GetTable<NavRole>()
+				.Where(r => r.Id == role.Id)
+				.SelectMany(r => r.Users)
+				.Select(u => u.UserName)
+				.ToListAsync();
+
+			roleNames.ShouldBe(["deck"]);
+			issuers  .ShouldBe(["local"]);
+			userNames.ShouldBe(["navy"]);
+		}
+
 		[Test]
 		public void CustomModelTypesKeepDefaultMappings([DataSources(false)] string context)
 		{
