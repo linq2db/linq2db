@@ -792,14 +792,14 @@ namespace LinqToDB.Data
 
 #if SUPPORTS_DBBATCH
 		// DbBatch execution shares TraceExecuteReaderAsync with the single-command path. See ExecuteBatchDataReader (sync
-		// sibling) for why this carries no command interceptor (the CanUseDbBatch gate); the exception interceptor DOES run
+		// sibling) for why this carries no command interceptor (the CanRunDbBatch gate); the exception interceptor DOES run
 		// (see RunBatchReaderAsync).
 		internal Task<DataReaderWrapper> ExecuteBatchDataReaderAsync(DbBatch batch, CommandBehavior commandBehavior, CancellationToken cancellationToken)
 		{
 			return TraceExecuteReaderAsync(null, () => GetBatchTraceText(batch, isAsync: true), () => RunBatchReaderAsync(batch, GetCommandBehavior(commandBehavior), cancellationToken), cancellationToken);
 		}
 
-		// The DbBatch execution delegate for TraceExecuteReaderAsync. No command interceptor runs here (the CanUseDbBatch gate
+		// The DbBatch execution delegate for TraceExecuteReaderAsync. No command interceptor runs here (the CanRunDbBatch gate
 		// already excludes a registered ICommandInterceptor); the exception interceptor DOES run.
 		async Task<DataReaderWrapper> RunBatchReaderAsync(DbBatch batch, CommandBehavior commandBehavior, CancellationToken cancellationToken)
 		{
@@ -807,7 +807,11 @@ namespace LinqToDB.Data
 
 			try
 			{
-				return new DataReaderWrapper(this, await batch.ExecuteReaderAsync(commandBehavior, cancellationToken).ConfigureAwait(false), null);
+				var reader = RetryPolicy is { } policy
+					? await policy.ExecuteAsync(ct => batch.ExecuteReaderAsync(commandBehavior, ct), cancellationToken).ConfigureAwait(false)
+					: await batch.ExecuteReaderAsync(commandBehavior, cancellationToken).ConfigureAwait(false);
+
+				return new DataReaderWrapper(this, reader, null);
 			}
 			catch (Exception ex) when (((IInterceptable<IExceptionInterceptor>)this).Interceptor is { } eInterceptor)
 			{

@@ -68,28 +68,6 @@ namespace LinqToDB.Common
 		}
 
 		/// <summary>
-		/// Enables combined multi-statement execution: several statements of one logical operation are sent as a single
-		/// database round-trip and their result sets read in order. Drives both eager loading (a main query plus its child
-		/// collections collapse from N+1 round-trips to 1) and multi-step DML.
-		/// Default value: <see langword="false"/>.
-		/// </summary>
-		/// <remarks>
-		/// This is a process-global default for the <see cref="LinqOptions.UseCombinedCommands"/> context option; prefer
-		/// setting it per-context via <see cref="DataOptionsExtensions.UseCombinedCommands"/> when different contexts need
-		/// different values. Enabling it is observable, not merely faster — <see cref="LinqOptions.UseCombinedCommands"/>
-		/// documents what changes, and it is planned to default to <see langword="true"/> in version 7.
-		/// </remarks>
-		public static bool UseCombinedCommands
-		{
-			get => Linq.Options.UseCombinedCommands;
-			set
-			{
-				if (Linq.Options.UseCombinedCommands != value)
-					Linq.Options = Linq.Options with { UseCombinedCommands = value };
-			}
-		}
-
-		/// <summary>
 		/// Determines the length after which logging of binary data in SQL will be truncated.
 		/// This is to avoid Out-Of-Memory exceptions when getting SqlText from <see cref="TraceInfo"/>.
 		/// </summary>
@@ -502,6 +480,48 @@ namespace LinqToDB.Common
 				{
 					if (Options.PreferClientCalculation != value)
 						Options = Options with { PreferClientCalculation = value };
+				}
+			}
+
+			/// <summary>
+			/// Enables combined multi-statement execution: several statements of one logical operation are sent as a single
+			/// database round-trip and their result sets read in order. Drives both eager loading (a main query plus its child
+			/// collections collapse from N+1 round-trips to 1) and multi-step DML.
+			/// Default value: <see langword="false"/>.
+			/// </summary>
+			/// <remarks>
+			/// This is a process-global default for the <see cref="LinqOptions.UseCombinedCommands"/> context option; prefer
+			/// setting it per-context via <see cref="DataOptionsExtensions.UseCombinedCommands"/> when different contexts need
+			/// different values. Enabling it is observable, not merely faster — <see cref="LinqOptions.UseCombinedCommands"/>
+			/// documents what changes, and it is planned to default to <see langword="true"/> in version 7.
+			/// </remarks>
+			public static bool UseCombinedCommands
+			{
+				get => Options.UseCombinedCommands;
+				set
+				{
+					if (Options.UseCombinedCommands != value)
+						Options = Options with { UseCombinedCommands = value };
+				}
+			}
+
+			/// <summary>
+			/// Selects the backend used for combined multi-statement execution: the ADO.NET <c>DbBatch</c> API when the
+			/// provider supports it, or a single semicolon-concatenated command otherwise. Has no effect where statements are
+			/// not combined.
+			/// Default value: <see langword="true"/>.
+			/// </summary>
+			/// <remarks>
+			/// This is a process-global default for the <see cref="LinqOptions.UseDbBatch"/> context option; prefer setting it
+			/// per-context via <see cref="DataOptionsExtensions.UseDbBatch"/> when different contexts need different values.
+			/// </remarks>
+			public static bool UseDbBatch
+			{
+				get => Options.UseDbBatch;
+				set
+				{
+					if (Options.UseDbBatch != value)
+						Options = Options with { UseDbBatch = value };
 				}
 			}
 		}

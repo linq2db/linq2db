@@ -165,7 +165,7 @@ namespace LinqToDB.Data
 			// hints. For a non-parameter-dependent query the PreparedQuery is cached on QueryInfo.Prepared and reused
 			// across runs; a parameter-dependent one is rebuilt each run. Each PreparedCommand carries its group's concat
 			// form (Concat, always present for DML) and, when batch-eligible, the per-statement DbBatch templates (Batch);
-			// the interpreter picks per run by CanUseDbBatch.
+			// the interpreter picks per run by CanRunDbBatch.
 			private sealed record RenderedQuery(PreparedQuery Prepared, IReadOnlyCollection<string>? QueryHints);
 
 			private sealed record ExecutionPreparedQuery(RenderedQuery PreparedQuery, DbParameter[]?[] CommandsParameters, IReadOnlyParameterValues? ParameterValues);
@@ -199,7 +199,14 @@ namespace LinqToDB.Data
 					var statement = query.Statement;
 					var options   = query.DataOptions ?? dataConnection.Options;
 
-					if (query is QueryInfo { Prepared: { } cachedPrepared })
+					// Query hints apply to one command, so a run that carries them keeps the steps separate, as an eager load
+					// does, and renders that plan for this run only.
+					var hinted = options.LinqOptions.UseCombinedCommands
+						&& (dataConnection.QueryHints.Count > 0 || dataConnection.NextQueryHints.Count > 0);
+
+					if (hinted)
+						options = options.WithOptions<LinqOptions>(o => o with { UseCombinedCommands = false });
+					else if (query is QueryInfo { Prepared: { } cachedPrepared })
 					{
 						return new RenderedQuery(cachedPrepared, dataConnection.GetNextCommandHints(!forGetSqlText));
 					}
@@ -252,7 +259,7 @@ namespace LinqToDB.Data
 					// safe. !IsParameterDependent: the SQL cannot depend on this run's values, so the structure can be memoized
 					// - which is also why those values must be withheld from the contexts below (baking them into the cached
 					// structure would make a re-run reuse them).
-					var prepareOnce = !continuousRun && !statement.IsParameterDependent;
+					var prepareOnce = !continuousRun && !statement.IsParameterDependent && !hinted;
 
 					// ── Phase S — structural prepare (parameter-independent) ──────────────────────────────────────
 					// The whole-query optimize+convert runs before aliasing (a conversion that restructures the AST,
@@ -332,7 +339,7 @@ namespace LinqToDB.Data
 					// and never needs the statement at execution.
 					// Skipped outright when the master switch is off: the plan is then all-singleton, so every group would be
 					// rejected by the <= 1 step test inside and we would allocate an array of nulls per prepare for nothing.
-					if (options.LinqOptions.UseCombinedCommands && dataConnection.CanUseDbBatch)
+					if (options.LinqOptions.UseCombinedCommands && options.LinqOptions.UseDbBatch && dataConnection.CanRunDbBatch)
 						batchCommands = RenderBatchTemplates(dataConnection, structure.Scenario, structure.Plan, parameterValues);
 #endif
 
@@ -359,7 +366,8 @@ namespace LinqToDB.Data
 					if (prepareOnce && query is QueryInfo queryInfo)
 						queryInfo.Prepared = prepared;
 
-					query.IsContinuousRun = true;
+					if (!hinted)
+						query.IsContinuousRun = true;
 
 					return new RenderedQuery(prepared, dataConnection.GetNextCommandHints(!forGetSqlText));
 				}
@@ -536,7 +544,9 @@ namespace LinqToDB.Data
 				}
 
 #if SUPPORTS_DBBATCH
-				if (dataConnection.CanUseDbBatch)
+				// CanRunDbBatch, not CanUseDbBatch: a remote DML query was rendered as a batch under the client's UseDbBatch,
+				// which the server connection's own option must not override.
+				if (dataConnection.CanRunDbBatch)
 				{
 					var batch = dataConnection.CreateBatch(statements);
 
@@ -583,7 +593,7 @@ namespace LinqToDB.Data
 				}
 
 #if SUPPORTS_DBBATCH
-				if (dataConnection.CanUseDbBatch)
+				if (dataConnection.CanRunDbBatch)
 				{
 					var batch = dataConnection.CreateBatch(statements);
 
@@ -613,32 +623,6 @@ namespace LinqToDB.Data
 			// field they need (rows-affected for ExecuteNonQuery, scalar for ExecuteScalar).
 			readonly record struct ScenarioOutcome(int RowsAffected, object? Scalar);
 
-			static bool EvaluateGate(SqlStepCondition condition, SqlCommandExecutionContext context)
-			{
-				var value = context.GetResult(condition.SourceStepIndex);
-
-				return condition.Kind switch
-				{
-					SqlStepConditionKind.ResultIsNull    => value is null,
-					SqlStepConditionKind.ResultIsNotNull => value is not null,
-					SqlStepConditionKind.ResultIsZero    => IsZeroNumeric(value),
-					_                                    => throw new InvalidOperationException($"Unexpected {nameof(SqlStepConditionKind)}: {condition.Kind}"),
-				};
-			}
-
-			// Numeric-zero test for a gate value. Today the only ResultIsZero source is the InsertOrReplace/Upsert
-			// UPDATE step's rows-affected (always a boxed int), but a future gate over a Scalar step could carry a
-			// COUNT boxed as long/decimal, so match any integral/decimal zero rather than only a boxed Int32.
-			static bool IsZeroNumeric(object? value) => value switch
-			{
-				int     i => i == 0,
-				long    l => l == 0,
-				short   s => s == 0,
-				byte    b => b == 0,
-				decimal m => m == 0m,
-				_         => false,
-			};
-
 			static object? ResolveOutcome(IReadOnlyList<int> outcomeSteps, SqlCommandExecutionContext context)
 			{
 				object? outcome = null;
@@ -659,7 +643,7 @@ namespace LinqToDB.Data
 			{
 				var step = steps[stepIndex];
 
-				if (step.RunIf is { } gate && !EvaluateGate(gate, context))
+				if (step.RunIf is { } gate && !gate.Evaluate(context))
 					return;
 
 				InitCommand(dataConnection, executionQuery, commandIndex);
@@ -670,7 +654,8 @@ namespace LinqToDB.Data
 					{
 						var outParam = step.OutParameterName is null ? null : AddOutputParameter(dataConnection, step);
 						var n        = dataConnection.ExecuteNonQuery();
-						context.SetResult(stepIndex, outParam != null ? outParam.Value : n);
+						context.SetResult      (stepIndex, outParam != null ? outParam.Value : n);
+						context.SetRowsAffected(stepIndex, n);
 						break;
 					}
 					case SqlStepKind.Scalar:
@@ -790,7 +775,7 @@ namespace LinqToDB.Data
 				// means a batch-eligible multi-statement group rendered at build), the connection can batch, and no command-0
 				// query hints apply (those can't ride a DbBatch). Else fall back to the always-present concat command.
 				if (command.Batch != null
-					&& dataConnection.CanUseDbBatch
+					&& dataConnection.CanRunDbBatch
 					&& !(commandIndex == 0 && pq.QueryHints != null))
 				{
 					var templates = command.Batch;
@@ -903,7 +888,8 @@ namespace LinqToDB.Data
 							// reader is fully consumed; no current combined group gates/outcomes on a NonQuery step, so it is
 							// stored but unused. A future combined scenario consuming it must harvest per-statement counts.
 							case SqlStepKind.NonQuery:
-								context.SetResult(i, dr.RecordsAffected);
+								context.SetResult      (i, dr.RecordsAffected);
+								context.SetRowsAffected(i, dr.RecordsAffected);
 								break;
 						}
 					},
@@ -924,7 +910,7 @@ namespace LinqToDB.Data
 			{
 				var step = steps[stepIndex];
 
-				if (step.RunIf is { } gate && !EvaluateGate(gate, context))
+				if (step.RunIf is { } gate && !gate.Evaluate(context))
 					return;
 
 				InitCommand(dataConnection, executionQuery, commandIndex);
@@ -935,7 +921,8 @@ namespace LinqToDB.Data
 					{
 						var outParam = step.OutParameterName is null ? null : AddOutputParameter(dataConnection, step);
 						var n        = await dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(false);
-						context.SetResult(stepIndex, outParam != null ? outParam.Value : n);
+						context.SetResult      (stepIndex, outParam != null ? outParam.Value : n);
+						context.SetRowsAffected(stepIndex, n);
 						break;
 					}
 					case SqlStepKind.Scalar:
@@ -1049,7 +1036,8 @@ namespace LinqToDB.Data
 							// reader is fully consumed; no current combined group gates/outcomes on a NonQuery step, so it is
 							// stored but unused. A future combined scenario consuming it must harvest per-statement counts.
 							case SqlStepKind.NonQuery:
-								context.SetResult(i, dr.RecordsAffected);
+								context.SetResult      (i, dr.RecordsAffected);
+								context.SetRowsAffected(i, dr.RecordsAffected);
 								break;
 						}
 					},

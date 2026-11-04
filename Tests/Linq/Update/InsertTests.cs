@@ -2614,7 +2614,9 @@ namespace Tests.xUpdate
 				{
 					var isArchived = ((SqlTable)update.Update.Table!).FindFieldByMemberName(nameof(ArchivableDocument.IsArchived))!;
 
-					update.SelectQuery.Where.EnsureConjunction().AddEqual(isArchived, new SqlValue(false), CompareNulls.LikeSql);
+					update.SelectQuery.Where
+						.EnsureConjunction()
+						.AddEqual(isArchived, new SqlValue(false), CompareNulls.LikeSql);
 				}
 
 				return base.ProcessQuery(statement, context);

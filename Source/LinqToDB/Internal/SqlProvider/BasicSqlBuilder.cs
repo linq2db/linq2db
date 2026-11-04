@@ -413,12 +413,12 @@ namespace LinqToDB.Internal.SqlProvider
 				case QueryType.TruncateTable : BuildTruncateTableStatement((SqlTruncateTableStatement)Statement);                                               break;
 				case QueryType.Merge         : BuildMergeStatement((SqlMergeStatement)Statement);                                                               break;
 				case QueryType.MultiInsert   : BuildMultiInsertQuery((SqlMultiInsertStatement)Statement);                                                       break;
-				case QueryType.Fragment      : BuildFragmentStatement((SqlFragmentStatement)Statement);                                                         break;
+				case QueryType.Raw           : BuildRawStatement((SqlRawStatement)Statement);                                                                   break;
 				default                      : BuildUnknownQuery();                                                                                             break;
 			}
 		}
 
-		protected virtual void BuildFragmentStatement(SqlFragmentStatement statement)
+		protected virtual void BuildRawStatement(SqlRawStatement statement)
 		{
 			BuildExpression(statement.Expression);
 		}

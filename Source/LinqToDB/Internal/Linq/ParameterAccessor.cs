@@ -14,12 +14,12 @@ namespace LinqToDB.Internal.Linq
 	sealed class ParameterAccessor
 	{
 		public ParameterAccessor(
-			int                                                       accessorId,
-			Func<IQueryExpressions, IDataContext?,object?[]?,SqlCommandExecutionContext?,object?> clientValueAccessor,
-			Func<object?,object?>?                                    clientToProviderConverter,
-			Func<object?,object?>?                                    itemAccessor,
-			Func<object?,DbDataType>?                                 dbDataTypeAccessor,
-			SqlParameter                                              sqlParameter)
+			int                                                                                  accessorId,
+			Func<IQueryExpressions,IDataContext?,object?[]?,SqlCommandExecutionContext?,object?> clientValueAccessor,
+			Func<object?,object?>?                                                               clientToProviderConverter,
+			Func<object?,object?>?                                                               itemAccessor,
+			Func<object?,DbDataType>?                                                            dbDataTypeAccessor,
+			SqlParameter                                                                         sqlParameter)
 		{
 			AccessorId                = accessorId;
 			ClientToProviderConverter = clientToProviderConverter;
@@ -29,12 +29,12 @@ namespace LinqToDB.Internal.Linq
 			SqlParameter              = sqlParameter;
 		}
 
-		public readonly int                                                      AccessorId;
+		public readonly int                                                                                  AccessorId;
 		public readonly Func<IQueryExpressions,IDataContext?,object?[]?,SqlCommandExecutionContext?,object?> ClientValueAccessor;
-		public readonly Func<object?,object?>?                                   ClientToProviderConverter;
-		public readonly Func<object?,object?>?                                   ItemAccessor;
-		public readonly Func<object?,DbDataType>?                                DbDataTypeAccessor;
-		public readonly SqlParameter                                             SqlParameter;
+		public readonly Func<object?,object?>?                                                               ClientToProviderConverter;
+		public readonly Func<object?,object?>?                                                               ItemAccessor;
+		public readonly Func<object?,DbDataType>?                                                            DbDataTypeAccessor;
+		public readonly SqlParameter                                                                         SqlParameter;
 #if DEBUG
 		public Expression<Func<IQueryExpressions,IDataContext?,object?[]?,SqlCommandExecutionContext?,object?>>? AccessorExpr;
 #endif

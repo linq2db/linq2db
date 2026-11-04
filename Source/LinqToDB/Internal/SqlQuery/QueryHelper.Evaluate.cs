@@ -210,7 +210,7 @@ namespace LinqToDB.Internal.SqlQuery
 						{
 							if (value1 is not IComparable comp1 || value2 is not IComparable comp2)
 							{
-								result = false;
+								result = (value1 == null || value2 == null) ? exprExpr.UnknownAsValue ?? false : false;
 								return true;
 							}
 

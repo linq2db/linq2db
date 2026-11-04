@@ -21,7 +21,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			IBuildContext          buildContext,
 			SqlEagerLoadExpression eagerLoad,
 			ParameterExpression    queryParameter,
-			List<Harvester>         harvesters,
+			List<Harvester>        harvesters,
 			Expression[]           previousKeys,
 			EagerLoadState         state)
 		{
@@ -169,8 +169,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public bool CanCombine => query.GetResultFromReader != null;
 
-			public SqlStatement? GetCombinableStatement()
-				=> query.QueryInfo.Statement;
+			public QueryInfo? GetCombinableQueryInfo()
+				=> query.QueryInfo;
 
 			public void AddCombinableParameterValues(SqlParameterValues values, IQueryExpressions expressions, IDataContext dataContext, object?[]? parameters, SqlCommandExecutionContext context)
 			{
@@ -202,8 +202,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public bool CanCombine => query.GetResultFromReader != null;
 
-			public SqlStatement? GetCombinableStatement()
-				=> query.QueryInfo.Statement;
+			public QueryInfo? GetCombinableQueryInfo()
+				=> query.QueryInfo;
 
 			public void AddCombinableParameterValues(SqlParameterValues values, IQueryExpressions expressions, IDataContext dataContext, object?[]? parameters, SqlCommandExecutionContext context)
 			{

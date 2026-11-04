@@ -74,7 +74,8 @@ namespace Tests.Infrastructure
 			var sqlOptimizer = provider.GetSqlOptimizer(dataOptions);
 			var factory      = sqlOptimizer.CreateSqlExpressionFactory(ms, dataOptions);
 
-			var scenario = new OracleDmlService().BuildCommandScenario(truncate, provider.SqlProviderFlags, factory);
+			var scenario = new OracleDmlService()
+				.BuildCommandScenario(truncate, provider.SqlProviderFlags, factory);
 
 			scenario.ShouldNotBeNull();
 			scenario.Steps.Count.ShouldBe(2);

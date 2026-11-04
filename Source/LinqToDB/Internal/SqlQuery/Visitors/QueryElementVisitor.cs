@@ -1819,7 +1819,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return element;
 		}
 
-		protected internal virtual IQueryElement VisitSqlFragmentStatement(SqlFragmentStatement element)
+		protected internal virtual IQueryElement VisitSqlRawStatement(SqlRawStatement element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -1849,7 +1849,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					    element.SqlQueryExtensions != ext)
 					{
 						return NotifyReplaced(
-							new SqlFragmentStatement(expression)
+							new SqlRawStatement(expression)
 							{
 								Tag                = tag,
 								SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList(),

@@ -156,9 +156,8 @@ namespace LinqToDB.Benchmarks.Queries
 		}
 
 		// ----------------------------------------------------------------------------------
-		// Manual runner — for when BDN's child-process toolchain is blocked by antivirus.
-		// Emits a markdown table (Mean/Median/Allocated per op) plus the retained-memory footprint of many distinct
-		// cached eager queries, tagged via RENDER_BENCH_TAG so two runs (branch vs master) can be diffed.
+		// Manual runner: a fixed warmup/iteration budget plus the retained-memory footprint of DistinctCount cached
+		// eager queries, which BDN does not measure. Tagged via RENDER_BENCH_TAG so branch and master runs can be diffed.
 		// ----------------------------------------------------------------------------------
 
 		static long GetAllocatedBytes()
@@ -166,7 +165,8 @@ namespace LinqToDB.Benchmarks.Queries
 #if NETCOREAPP3_0_OR_GREATER
 			return GC.GetTotalAllocatedBytes(precise: true);
 #else
-			return GC.GetTotalMemory(forceFullCollection: false);
+			AppDomain.MonitoringIsEnabled = true;
+			return AppDomain.CurrentDomain.MonitoringTotalAllocatedMemorySize;
 #endif
 		}
 

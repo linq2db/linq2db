@@ -9,7 +9,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 {
 	/// <summary>
 	/// Sybase ASE DML mechanics. Truncate-with-identity-reset is split into the truncate plus an
-	/// <see cref="SqlFragmentStatement"/> (<c>sp_chgattribute ... 'identity_burn_max'</c>);
+	/// <see cref="SqlRawStatement"/> (<c>sp_chgattribute ... 'identity_burn_max'</c>);
 	/// everything else (including identity inserts, which emit their own trailing select) uses the legacy path.
 	/// </summary>
 	public sealed class SybaseDmlService : DmlServiceBase
@@ -25,7 +25,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 					Steps =
 					[
 						new SqlCommandStep { Statement = statement, Kind = SqlStepKind.NonQuery },
-						new SqlCommandStep { Statement = new SqlFragmentStatement(factory.Fragment("sp_chgattribute {0}, 'identity_burn_max', 0, '0'", new SqlObjectNameExpression(truncate.Table.TableName, ConvertType.NameToQueryTable, truncate.Table.TableOptions))), Kind = SqlStepKind.NonQuery },
+						new SqlCommandStep { Statement = new SqlRawStatement(factory.Fragment("sp_chgattribute {0}, 'identity_burn_max', 0, '0'", new SqlObjectNameExpression(truncate.Table.TableName, ConvertType.NameToQueryTable, truncate.Table.TableOptions))), Kind = SqlStepKind.NonQuery },
 					],
 					OutcomeSteps = [0],
 				};

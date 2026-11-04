@@ -1040,23 +1040,28 @@ namespace LinqToDB.Data
 
 		// DbBatch execution shares the ExecuteReader tracing scaffold (TraceExecuteReader) with the single-command path, but
 		// carries no command interceptor: interceptors are DbCommand-typed and a DbBatch is not a DbCommand, so the
-		// CanUseDbBatch gate excludes a registered ICommandInterceptor. Tracing IS supported (the batch's combined text is
+		// CanRunDbBatch gate excludes a registered ICommandInterceptor. Tracing IS supported (the batch's combined text is
 		// traced) and the exception interceptor DOES run (see RunBatchReader).
-		// TODO: route through a DbBatch-aware interceptor surface (e.g. IDbBatchInterceptor) once one exists.
+		// TODO: route through a DbBatch-aware interceptor surface (e.g. IDbBatchInterceptor) once one exists (#6230).
 		internal DataReaderWrapper ExecuteBatchDataReader(DbBatch batch, CommandBehavior commandBehavior)
 		{
 			return TraceExecuteReader(null, () => GetBatchTraceText(batch, isAsync: false), () => RunBatchReader(batch, GetCommandBehavior(commandBehavior)));
 		}
 
 		// The DbBatch execution delegate for TraceExecuteReader. A DbBatch is not a DbCommand, so no command interceptor runs
-		// here (the CanUseDbBatch gate already excludes a registered ICommandInterceptor); the exception interceptor DOES run.
+		// here (the CanRunDbBatch gate already excludes a registered ICommandInterceptor); the exception interceptor DOES run.
 		DataReaderWrapper RunBatchReader(DbBatch batch, CommandBehavior commandBehavior)
 		{
 			CheckAndThrowOnDisposed();
 
 			try
 			{
-				return new DataReaderWrapper(this, batch.ExecuteReader(commandBehavior), null);
+				// The batch comes from the provider connection beneath RetryingDbConnection, so it applies the policy itself.
+				var reader = RetryPolicy is { } policy
+					? policy.Execute(() => batch.ExecuteReader(commandBehavior))
+					: batch.ExecuteReader(commandBehavior);
+
+				return new DataReaderWrapper(this, reader, null);
 			}
 			catch (Exception ex) when (((IInterceptable<IExceptionInterceptor>)this).Interceptor is { } eInterceptor)
 			{
@@ -1067,32 +1072,23 @@ namespace LinqToDB.Data
 		}
 
 		// The batch's SQL for tracing/baselines: ONE "-- <config> <provider>" header for the whole DbBatch
-		// submission, then each DbBatchCommand under a "-- Batch N" marker with its own parameters dumped
-		// (each command has an independent parameter scope) followed by its SQL text.
+		// submission, then each DbBatchCommand under a "-- Command N" marker with its own parameters printed the way
+		// TraceInfo.SqlText prints a DbCommand's (each command has an independent parameter scope), followed by its SQL text.
 		string GetBatchTraceText(DbBatch batch, bool isAsync)
 		{
-			var sb = new StringBuilder();
+			var sb          = new StringBuilder();
+			var sqlProvider = DataProvider.CreateSqlBuilder(MappingSchema, Options);
 
-			// One comment header for the whole DbBatch submission. The command SQL is already prepared, so we do
-			// NOT create a SqlBuilder here — the header comes from the connection and each command's text/parameters
-			// are taken as-is from the DbBatchCommand.
-			TraceInfo.AppendCommandComment(sb, this, sqlBuilderName: null, isAsync);
+			TraceInfo.AppendCommandComment(sb, this, sqlProvider.Name, isAsync);
 
-			var batchNumber = 0;
+			var commandNumber = 0;
 
 			foreach (DbBatchCommand command in batch.BatchCommands)
 			{
-				sb.Append("-- Batch ").Append(++batchNumber).AppendLine();
+				sb.Append("-- Command ").Append(++commandNumber).AppendLine();
 
-				// Each command has its own parameter scope; emit its parameters as comment lines.
-				foreach (DbParameter parameter in command.Parameters)
-				{
-					var value = parameter.Value is null or DBNull
-						? "NULL"
-						: Convert.ToString(parameter.Value, CultureInfo.InvariantCulture);
-
-					sb.Append("-- ").Append(parameter.ParameterName).Append(" = ").AppendLine(value);
-				}
+				if (command.Parameters.Count > 0)
+					sqlProvider.PrintParameters(this, sb, System.Linq.Enumerable.Cast<DbParameter>(command.Parameters));
 
 				sb.AppendLine(command.CommandText);
 			}
@@ -1114,10 +1110,16 @@ namespace LinqToDB.Data
 		internal bool CanUseDbBatch =>
 #if SUPPORTS_DBBATCH
 			Options.LinqOptions.UseDbBatch
-			&& ((IInterceptable<ICommandInterceptor>)this).Interceptor == null
-			&& CanCreateBatch;
+			&& CanRunDbBatch;
 #else
 			false;
+#endif
+
+#if SUPPORTS_DBBATCH
+		// CanUseDbBatch without the option, for a DML query that carries its own options: a remote query brings the client's.
+		internal bool CanRunDbBatch =>
+			((IInterceptable<ICommandInterceptor>)this).Interceptor == null
+			&& CanCreateBatch;
 #endif
 
 		private int? _commandTimeout;

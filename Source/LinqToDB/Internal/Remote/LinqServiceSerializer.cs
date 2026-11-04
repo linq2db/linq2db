@@ -765,6 +765,8 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 				Append(options.LinqOptions.PreferExistsForScalar);
 				Append(options.SqlOptions.EnableConstantExpressionInOrderBy);
 				Append(options.SqlOptions.GenerateFinalAliases);
+				Append(options.LinqOptions.UseCombinedCommands);
+				Append(options.LinqOptions.UseDbBatch);
 			}
 
 			public string Serialize(
@@ -2007,7 +2009,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 					}
 
 					case QueryElementType.SqlObjectNameExpression:
-					case QueryElementType.SqlFragmentStatement:
+					case QueryElementType.SqlRawStatement:
 						// Produced server-side during scenario render; never present in a client-serialized statement.
 						// Make that explicit instead of falling through to the generic "not implemented" message.
 						throw new InvalidOperationException($"{e.ElementType} is produced during server-side render and is not remote-serializable.");
@@ -2071,9 +2073,14 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 				var preferExistsForScalar         = ReadBool();
 				var enableConstantExprInOrderBy   = ReadBool();
 				var generateFinalAliases          = ReadBool();
+				var useCombinedCommands           = ReadBool();
+				var useDbBatch                    = ReadBool();
 
 				options = options
-					.WithOptions<LinqOptions>(lo => lo.WithPreferExistsForScalar(preferExistsForScalar))
+					.WithOptions<LinqOptions>(lo => lo
+						.WithPreferExistsForScalar(preferExistsForScalar)
+						.WithCombinedCommands(useCombinedCommands)
+						.WithDbBatch(useDbBatch))
 					.WithOptions<SqlOptions>(so =>
 						so.WithEnableConstantExpressionInOrderBy(enableConstantExprInOrderBy)
 							.WithGenerateFinalAliases(generateFinalAliases)
@@ -3380,7 +3387,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 					}
 
 					case QueryElementType.SqlObjectNameExpression:
-					case QueryElementType.SqlFragmentStatement:
+					case QueryElementType.SqlRawStatement:
 						throw new InvalidOperationException($"{(QueryElementType)type} is produced during server-side render and is not remote-serializable.");
 
 					default:

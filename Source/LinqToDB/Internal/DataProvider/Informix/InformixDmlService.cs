@@ -12,7 +12,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 	/// Informix DML mechanics. An identity insert retrieves the generated key with a from-less scalar
 	/// <c>SELECT DBINFO('sqlca.sqlerrd1')</c> — the builder appends Informix's single-row fake table (a scalar step); a
 	/// truncate-with-identity-reset is the truncate plus one <c>ALTER TABLE … MODIFY … SERIAL(1)</c> per identity
-	/// column (a <see cref="SqlFragmentStatement"/>). Everything else uses the base scenario.
+	/// column (a <see cref="SqlRawStatement"/>). Everything else uses the base scenario.
 	/// </summary>
 	public sealed class InformixDmlService : DmlServiceBase
 	{
@@ -24,7 +24,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			{
 				var table = truncate.Table!;
 
-				return PerFieldResetScenario(truncate, field => new SqlFragmentStatement(factory.Fragment(
+				return PerFieldResetScenario(truncate, field => new SqlRawStatement(factory.Fragment(
 					"ALTER TABLE {0} MODIFY {1} SERIAL(1)",
 					new SqlObjectNameExpression(table.TableName, ConvertType.NameToQueryTable),
 					new SqlObjectNameExpression(new SqlObjectName(field.PhysicalName), ConvertType.NameToQueryField))));

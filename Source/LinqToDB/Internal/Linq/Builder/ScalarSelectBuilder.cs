@@ -36,7 +36,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			// Where nothing is combined, the configured strategy stays: it may read the collections in fewer statements. It is
 			// set on the root context alone, which makes the collections explicit loads without overriding inner markers.
-			if (!QueryRunner.CanCombineCommands(builder.DataContext, out _))
+			if (!QueryRunner.CanCombineCommands(builder.DataContext))
 			{
 				var modifier   = builder.GetTranslationModifier();
 				var configured = modifier.EagerLoadingStrategy ?? builder.DataContext.Options.LinqOptions.DefaultEagerLoadingStrategy;

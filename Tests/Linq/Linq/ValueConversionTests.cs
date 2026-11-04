@@ -1937,5 +1937,129 @@ namespace Tests.Linq
 			t.Max(r => r.Value).ShouldBe(30);
 			t.Min(r => r.Value).ShouldBe(10);
 		}
+
+		sealed class TimesHundredConverter() : ValueConverter<int, int>(v => v * 100, v => v / 100, false);
+
+		[Table]
+		sealed class ConvertedAmount
+		{
+			[PrimaryKey]                                                             public int Id    { get; set; }
+			[Column]                                                                 public int Group { get; set; }
+			[Column, ValueConverter(ConverterType = typeof(TimesHundredConverter))] public int Cents { get; set; }
+		}
+
+		/// <summary>
+		/// A value compared with a <c>SUM</c> over a converted column goes through the column's converter.
+		/// </summary>
+		[Test]
+		public void SumOfConvertedColumnComparedWithValue([DataSources] string context)
+		{
+			var total = 7;
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new ConvertedAmount[]
+			{
+				new() { Id = 1, Group = 1, Cents = 3 },
+				new() { Id = 2, Group = 1, Cents = 4 },
+				new() { Id = 3, Group = 2, Cents = 5 },
+			});
+
+			var count = table
+				.GroupBy(x => x.Group)
+				.Where(g => g.Sum(x => x.Cents) == total)
+				.Count();
+
+			count.ShouldBe(1);
+		}
+
+		/// <summary>
+		/// A value added to, subtracted from or taken as a modulus of a converted column or its <c>SUM</c> goes
+		/// through the column's converter; a factor or divisor does not.
+		/// </summary>
+		[Test]
+		public void ArithmeticWithConvertedColumn([DataSources] string context)
+		{
+			var operand = 2;
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new ConvertedAmount[]
+			{
+				new() { Id = 1, Group = 1, Cents = 3 },
+				new() { Id = 2, Group = 1, Cents = 4 },
+			});
+
+			var group = table.GroupBy(x => x.Group);
+			var row   = table.Where(x => x.Id == 1);
+
+			group
+				.Select(g => g.Sum(x => x.Cents) * operand)
+				.Single()
+				.ShouldBe(14);
+
+			group
+				.Select(g => operand * g.Sum(x => x.Cents))
+				.Single()
+				.ShouldBe(14);
+
+			group
+				.Select(g => g.Sum(x => x.Cents) / operand)
+				.Single()
+				.ShouldBe(3);
+
+			group
+				.Select(g => g.Sum(x => x.Cents) % operand)
+				.Single()
+				.ShouldBe(1);
+
+			group
+				.Select(g => g.Sum(x => x.Cents) + operand)
+				.Single()
+				.ShouldBe(9);
+
+			row
+				.Select(x => x.Cents * operand)
+				.Single()
+				.ShouldBe(6);
+
+			row
+				.Select(x => x.Cents % operand)
+				.Single()
+				.ShouldBe(1);
+
+			row
+				.Select(x => x.Cents + operand)
+				.Single()
+				.ShouldBe(5);
+
+			row
+				.Select(x => x.Cents - operand)
+				.Single()
+				.ShouldBe(1);
+		}
+
+		/// <summary>
+		/// A value searched in a projected <c>SUM</c> over a converted column goes through the column's converter.
+		/// </summary>
+		[Test]
+		public void SequenceContainsSumOfConvertedColumn([DataSources] string context)
+		{
+			var total = 7;
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new ConvertedAmount[]
+			{
+				new() { Id = 1, Group = 1, Cents = 3 },
+				new() { Id = 2, Group = 1, Cents = 4 },
+				new() { Id = 3, Group = 2, Cents = 5 },
+			});
+
+			var count = table
+				.Count(t => table
+					.GroupBy(x => x.Group)
+					.Select(g => g.Sum(x => x.Cents))
+					.Contains(total));
+
+			count.ShouldBe(3);
+		}
 	}
 }
