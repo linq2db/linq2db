@@ -266,9 +266,10 @@ namespace Tests.Linq
 			selectAgain.ShouldBe(2);
 		}
 
-		// The combined gate requires a DataConnection whatever the provider; one concat and one DbBatch provider show it.
+		// A DataContext combines the batch on the connection it holds, as a DataConnection does; one concat and one DbBatch
+		// provider show it.
 		[Test]
-		public void DataContextRunsTheBatchSequentially([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
+		public void DataContextRunsTheBatchInOneCommand([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var items = db.CreateLocalTable(BatchItem.Seed);
@@ -292,7 +293,7 @@ namespace Tests.Linq
 
 			total.ShouldBe(BatchItem.Seed.Length);
 			Ids(page).ShouldBe(PageIds(0, 3));
-			trace.Readers.ShouldBe(2);
+			trace.Readers.ShouldBe(1);
 		}
 
 		// A SQL comment is a hint every provider renders; SQLite and SQL Server cover the concat and the DbBatch provider.
