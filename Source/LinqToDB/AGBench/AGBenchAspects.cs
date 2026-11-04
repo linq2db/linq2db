@@ -1,4 +1,5 @@
 // Local measurement aspects for AspectGenerator; never committed upstream.
+#pragma warning disable // measurement-only file
 using System;
 
 namespace LinqToDB.AGBench
