@@ -245,15 +245,14 @@ namespace LinqToDB.Internal.Extensions
 		/// Parameter types follow the rules of <see cref="GetMethodEx(Type, string, BindingFlags, Type[])"/>; a parameter whose type contains generic parameters
 		/// (<c>T</c>, <c>T[]</c>, <c>IEnumerable&lt;T&gt;</c>) matches any requested type and counts as identical.
 		/// Unlike <see cref="GetMethodEx(Type, string, int, Type[])"/>, which returns the first exact match of a generic method,
-		/// an identical match wins over a reference-assignable one, a method hidden by a more derived method with the same parameter types is skipped,
-		/// and remaining ties throw <see cref="AmbiguousMatchException"/>.
+		/// an identical match wins over a reference-assignable one, and a candidate is skipped when another one declared on the same or a more derived type
+		/// is more specific (each parameter type is the same as or assignable to its own) or hides it with the same parameter types.
+		/// Remaining ties throw <see cref="AmbiguousMatchException"/>.
 		/// </summary>
 		public static MethodInfo? GetMethodEx(this Type type, string name, int genericParametersCount, BindingFlags bindingFlags, params Type[] types)
 		{
-			MethodInfo? identical  = null;
-			MethodInfo? compatible = null;
-			var         ambiguousIdentical  = false;
-			var         ambiguousCompatible = false;
+			List<MethodInfo>? identical  = null;
+			List<MethodInfo>? compatible = null;
 
 			foreach (var method in type.GetMethods(bindingFlags))
 			{
@@ -271,39 +270,67 @@ namespace LinqToDB.Internal.Extensions
 					continue;
 
 				if (IsIdentical(parameters, types))
-					Select(ref identical, ref ambiguousIdentical, method);
+					(identical ??= new()).Add(method);
 				else
-					Select(ref compatible, ref ambiguousCompatible, method);
+					(compatible ??= new()).Add(method);
 			}
 
-			if (identical != null ? ambiguousIdentical : ambiguousCompatible)
-				throw new AmbiguousMatchException($"Ambiguous match found for {type.FullName}.{name}.");
+			var candidates = identical ?? compatible;
 
-			return identical ?? compatible;
+			if (candidates == null)
+				return null;
 
-			// a method hidden by a more derived one with the same signature is not a competing candidate
-			static void Select(ref MethodInfo? current, ref bool ambiguous, MethodInfo method)
+			MethodInfo? result = null;
+
+			foreach (var candidate in candidates)
 			{
-				if (current == null)
-					current = method;
-				else if (!HasSameParameters(current, method))
-					ambiguous = true;
-				else if (method.DeclaringType!.IsSubclassOf(current.DeclaringType!))
-					current = method;
-				else if (!current.DeclaringType!.IsSubclassOf(method.DeclaringType!))
-					ambiguous = true;
+				if (IsDominated(candidate, candidates))
+					continue;
+
+				if (result != null)
+					throw new AmbiguousMatchException($"Ambiguous match found for {type.FullName}.{name}.");
+
+				result = candidate;
 			}
 
-			static bool HasSameParameters(MethodInfo x, MethodInfo y)
+			return result;
+
+			static bool IsDominated(MethodInfo method, List<MethodInfo> candidates)
 			{
-				var px = x.GetParameters();
-				var py = y.GetParameters();
+				foreach (var other in candidates)
+					if (other != method && Dominates(other, method))
+						return true;
+
+				return false;
+			}
+
+			// a more specific candidate on a less derived type stays a tie: C# binds the derived method, the binder the more specific one
+			static bool Dominates(MethodInfo x, MethodInfo y)
+			{
+				var derived = x.DeclaringType!.IsSubclassOf(y.DeclaringType!);
+
+				if (!derived && x.DeclaringType != y.DeclaringType)
+					return false;
+
+				var px           = x.GetParameters();
+				var py           = y.GetParameters();
+				var moreSpecific = false;
 
 				for (var i = 0; i < px.Length; i++)
-					if (!IsSameType(px[i].ParameterType, py[i].ParameterType))
+				{
+					var tx = px[i].ParameterType;
+					var ty = py[i].ParameterType;
+
+					if (IsSameType(tx, ty))
+						continue;
+
+					if (tx.ContainsGenericParameters || ty.ContainsGenericParameters || !ty.IsAssignableFrom(tx))
 						return false;
 
-				return true;
+					moreSpecific = true;
+				}
+
+				return moreSpecific || derived;
 			}
 
 			// every generic method definition declares its own type parameters, so they are compared by position

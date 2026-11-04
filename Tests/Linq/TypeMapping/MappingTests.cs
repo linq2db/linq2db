@@ -183,6 +183,8 @@ namespace Tests.TypeMapping
 
 			public int    Widen (int value)       => value;
 			public string Accept(BindingItem item) => "base";
+			public string Pick  (BindingItem item) => "base";
+			public string Pick  (object      item) => "object";
 		}
 	}
 	
@@ -473,6 +475,9 @@ namespace Tests.TypeMapping
 
 			public int    Widen (byte value)              => throw new NotImplementedException();
 			public string Accept(BindingDerivedItem item) => throw new NotImplementedException();
+
+			[TypeWrapperGenericArgs(0)]
+			public string Pick  (BindingDerivedItem item) => throw new NotImplementedException();
 		}
 
 		[TestFixture]
@@ -897,6 +902,19 @@ namespace Tests.TypeMapping
 				var typeMapper = CreateBindingTypeMapper();
 
 				var lambda = typeMapper.MapLambda((BindingSample s, BindingDerivedItem item) => s.Accept(item));
+				var func   = (Func<Dynamic.BindingSample, Dynamic.BindingDerivedItem, string>)lambda.CompileExpression();
+
+				var result = func(new Dynamic.BindingSample(1), new Dynamic.BindingDerivedItem());
+
+				result.ShouldBe("base");
+			}
+
+			[Test]
+			public void ArityMethodBindsMostSpecificOverload()
+			{
+				var typeMapper = CreateBindingTypeMapper();
+
+				var lambda = typeMapper.MapLambda((BindingSample s, BindingDerivedItem item) => s.Pick(item));
 				var func   = (Func<Dynamic.BindingSample, Dynamic.BindingDerivedItem, string>)lambda.CompileExpression();
 
 				var result = func(new Dynamic.BindingSample(1), new Dynamic.BindingDerivedItem());

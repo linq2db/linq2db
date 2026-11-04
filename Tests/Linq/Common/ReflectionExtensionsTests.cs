@@ -13,7 +13,11 @@ namespace Tests.Common
 	[TestFixture]
 	public class ReflectionExtensionsTests : TestBase
 	{
-		class BaseItem;
+		interface IFirst;
+
+		interface ISecond;
+
+		class BaseItem : IFirst, ISecond;
 
 		sealed class Item : BaseItem;
 
@@ -39,11 +43,13 @@ namespace Tests.Common
 
 		class Overloads
 		{
-			public string Pick  (Item item)     => "identical";
-			public string Pick  (object item)   => "compatible";
-			public string Tie   (BaseItem item) => "base item";
-			public string Tie   (object item)   => "object";
-			public string Hidden(BaseItem item) => "base";
+			public string Pick    (Item item)     => "identical";
+			public string Pick    (object item)   => "compatible";
+			public string Specific(BaseItem item) => "base item";
+			public string Specific(object item)   => "object";
+			public string Tie     (IFirst item)   => "first";
+			public string Tie     (ISecond item)  => "second";
+			public string Hidden  (BaseItem item) => "base";
 
 			public string HiddenGeneric<T>   (T item)               => "base";
 			public string HiddenArray<T>     (T[] items)            => "base";
@@ -164,6 +170,18 @@ namespace Tests.Common
 			var parameterType = method.GetParameters()[0].ParameterType;
 
 			parameterType.ShouldBe(typeof(Item));
+		}
+
+		[Test]
+		public void GetMethodExWithArityPrefersMostSpecificParameters()
+		{
+			var method = typeof(Overloads).GetMethodEx(nameof(Overloads.Specific), 0, PublicInstance, typeof(Item));
+
+			method.ShouldNotBeNull();
+
+			var parameterType = method.GetParameters()[0].ParameterType;
+
+			parameterType.ShouldBe(typeof(BaseItem));
 		}
 
 		[Test]
