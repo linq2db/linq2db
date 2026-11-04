@@ -848,6 +848,7 @@ namespace LinqToDB.Internal.SqlQuery
 			return commonType ?? SqlDataType.MakeUndefined(typeof(object)).Type;
 		}
 
+		[LinqToDB.AGBench.BenchMethod]
 		public static DbDataType GetDbDataType(ISqlExpression expr, MappingSchema mappingSchema)
 		{
 			var result = GetDbDataType(expr);

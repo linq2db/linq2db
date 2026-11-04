@@ -23,6 +23,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.SqlProvider
 {
+	[LinqToDB.AGBench.BenchType(TargetFilter = "method: Build*")]
 	public abstract partial class BasicSqlBuilder : ISqlBuilder
 	{
 		#region Init

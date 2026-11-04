@@ -1,0 +1,16 @@
+<Project>
+	<!-- Local measurement wiring for AspectGenerator; never committed upstream. -->
+	<PropertyGroup>
+		<AGB_ANY Condition="'$(AGB_M)'=='true' or '$(AGB_T)'=='true' or '$(AGB_X)'=='true' or '$(AGB_XC)'=='true' or '$(AGB_MASS)'=='true' or '$(AGB_NONE)'=='true'">true</AGB_ANY>
+		<DefineConstants Condition="'$(AGB_ANY)'=='true'">$(DefineConstants);AGBENCH</DefineConstants>
+		<DefineConstants Condition="'$(AGB_M)'=='true'">$(DefineConstants);AGB_M</DefineConstants>
+		<DefineConstants Condition="'$(AGB_T)'=='true'">$(DefineConstants);AGB_T</DefineConstants>
+		<DefineConstants Condition="'$(AGB_X)'=='true'">$(DefineConstants);AGB_X</DefineConstants>
+		<DefineConstants Condition="'$(AGB_XC)'=='true'">$(DefineConstants);AGB_XC</DefineConstants>
+		<DefineConstants Condition="'$(AGB_MASS)'=='true'">$(DefineConstants);AGB_MASS</DefineConstants>
+		<RestoreAdditionalProjectSources Condition="'$(AGB_ANY)'=='true'">$(AGB_FEED)</RestoreAdditionalProjectSources>
+	</PropertyGroup>
+	<ItemGroup Condition="'$(AGB_ANY)'=='true'">
+		<PackageReference Include="AspectGenerator" VersionOverride="$(AGB_VERSION)" PrivateAssets="all" />
+	</ItemGroup>
+</Project>
