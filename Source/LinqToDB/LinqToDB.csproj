@@ -176,4 +176,5 @@
 		<AdditionalFiles Include="PublicAPI/PublicAPI.*.txt" />
 		<AdditionalFiles Include="PublicAPI/$(TargetFramework)/PublicAPI.*.txt" />
 	</ItemGroup>
+	<Import Project="AGBench/AGBench.targets" />
 </Project>
