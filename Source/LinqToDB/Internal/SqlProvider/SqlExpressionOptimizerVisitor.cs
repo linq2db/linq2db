@@ -101,17 +101,17 @@ namespace LinqToDB.Internal.SqlProvider
 		public override void Cleanup()
 		{
 			base.Cleanup();
-			VisitQueries        = default;
-			IsInsidePredicate   = default;
-			DeferPredicateReduce = default;
+			VisitQueries                   = default;
+			IsInsidePredicate              = default;
+			DeferPredicateReduce           = default;
 			_enclosingDeferPredicateReduce = default;
-			_reducePredicates   = default;
-			EvaluationContext   = default!;
-			NullabilityContext  = default!;
-			DataOptions         = default!;
-			MappingSchema       = default!;
-			_allowOptimize      = default;
-			_allowOptimizeList  = default;
+			_reducePredicates              = default;
+			EvaluationContext              = default!;
+			NullabilityContext             = default!;
+			DataOptions                    = default!;
+			MappingSchema                  = default!;
+			_allowOptimize                 = default;
+			_allowOptimizeList             = default;
 			// Balanced by the save/restore in VisitSqlSearchCondition, so normal flow never leaves it set — but this visitor
 			// instance is shared and pooled, so an exception unwinding out of that scope would latch `true` for every later
 			// query on it, silently suppressing the IS NULL constant fold. Cleanup is the "reset to initial state" contract.
@@ -757,7 +757,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 					var modify = GetVisitMode(element) == VisitMode.Modify;
 
-					var oldContext      = NullabilityContext;
+					var oldContext     = NullabilityContext;
 					NullabilityContext = new NullabilityContext(NullabilityContext, notNullOverrides);
 
 					var modified = false;
@@ -1188,12 +1188,12 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 
 			var saveInsidePredicate = IsInsidePredicate;
-			var saveAllow     = _allowOptimize;
+			var saveAllow           = _allowOptimize;
 
-			IsInsidePredicate    = true;
+			IsInsidePredicate     = true;
 			_allowOptimize        = predicate.Predicate;
 			var newInnerPredicate = (ISqlPredicate)Visit(predicate.Predicate);
-			IsInsidePredicate    = saveInsidePredicate;
+			IsInsidePredicate     = saveInsidePredicate;
 			_allowOptimize        = saveAllow;
 
 			if (newInnerPredicate.CanInvert(NullabilityContext))
@@ -1916,9 +1916,9 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 		protected internal override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
 		{
 			var saveInsidePredicate = IsInsidePredicate;
-			IsInsidePredicate      = true;
+			IsInsidePredicate       = true;
 			var newElement          = base.VisitExprExprPredicate(predicate);
-			IsInsidePredicate      = saveInsidePredicate;
+			IsInsidePredicate       = saveInsidePredicate;
 
 			if (!ReferenceEquals(newElement, predicate))
 				return Visit(newElement);
@@ -2126,9 +2126,9 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 				SqlPredicate.Operator.Less           => v1 < v2,
 				SqlPredicate.Operator.NotGreater or
 				SqlPredicate.Operator.LessOrEqual    => v1 <= v2,
-				_ => throw new InvalidOperationException(),
+				_                                    => throw new InvalidOperationException(),
 			};
-			}
+		}
 
 		static bool Compare(object? value1, object? value2, SqlPredicate.Operator op, out bool result)
 		{
@@ -2213,15 +2213,15 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 		{
 			return op switch
 			{
-				SqlPredicate.Operator.Equal => op,
-				SqlPredicate.Operator.NotEqual => op,
-				SqlPredicate.Operator.Greater => SqlPredicate.Operator.Less,
-				SqlPredicate.Operator.NotLess => SqlPredicate.Operator.NotGreater,
+				SqlPredicate.Operator.Equal          => op,
+				SqlPredicate.Operator.NotEqual       => op,
+				SqlPredicate.Operator.Greater        => SqlPredicate.Operator.Less,
+				SqlPredicate.Operator.NotLess        => SqlPredicate.Operator.NotGreater,
 				SqlPredicate.Operator.GreaterOrEqual => SqlPredicate.Operator.LessOrEqual,
-				SqlPredicate.Operator.Less => SqlPredicate.Operator.Greater,
-				SqlPredicate.Operator.NotGreater => SqlPredicate.Operator.NotLess,
-				SqlPredicate.Operator.LessOrEqual => SqlPredicate.Operator.GreaterOrEqual,
-				_ => throw new InvalidOperationException(),
+				SqlPredicate.Operator.Less           => SqlPredicate.Operator.Greater,
+				SqlPredicate.Operator.NotGreater     => SqlPredicate.Operator.NotLess,
+				SqlPredicate.Operator.LessOrEqual    => SqlPredicate.Operator.GreaterOrEqual,
+				_                                    => throw new InvalidOperationException(),
 			};
 		}
 
@@ -2694,7 +2694,7 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 						SqlPredicate.Operator.Greater        => new SqlSearchCondition(true, true, predicate, new SqlSearchCondition(false, false, new SqlPredicate.IsNull(compare.Expression1, true), new SqlPredicate.IsNull(compare.Expression2, false))),
 						SqlPredicate.Operator.LessOrEqual    => new SqlSearchCondition(true, true, predicate, new SqlPredicate.IsNull(compare.Expression1, false)),
 						SqlPredicate.Operator.GreaterOrEqual => new SqlSearchCondition(true, true, predicate, new SqlPredicate.IsNull(compare.Expression2, false)),
-						_ => predicate,
+						_                                    => predicate,
 					};
 				}
 
