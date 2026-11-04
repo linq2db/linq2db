@@ -763,7 +763,9 @@ namespace Tests.Identity
 			name.CanBeNull.ShouldBeTrue();
 
 			// the lookup parameter follows the column type, which is what keeps a VARCHAR2 index usable on Oracle
-			LookupParameterType(db).ShouldBe(oracle ? DataType.VarChar : LookupParameterType(defaults));
+			// (ClickHouse has no parameters: values are inlined as literals)
+			if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				LookupParameterType(db).ShouldBe(oracle ? DataType.VarChar : LookupParameterType(defaults));
 
 			static ColumnDescriptor NormalizedUserNameColumn(IdentityDataConnection db)
 				=> db.MappingSchema
