@@ -352,9 +352,8 @@ namespace LinqToDB.Internal.Linq.Builder
 		IQueryExpressions FinalizeQueryCacheInformation<T>(Query<T> query, List<Preamble>? preambles)
 		{
 			List<SqlParameter>? builtParameters = null;
-			List<SqlValue>?     builtValues     = null;
 
-			if (ParametersContext.CacheManager.HasParameters || ParametersContext.CacheManager.HasConstants)
+			if (ParametersContext.CacheManager.HasParameters)
 			{
 				var usedParameters = new HashSet<SqlParameter>();
 				var usedValues     = new HashSet<SqlValue>();
@@ -373,10 +372,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 
 				builtParameters = usedParameters.ToList();
-				builtValues     = usedValues.ToList();
 			}
 
-			var (compareInfo, parameterAccessors, expressions) = ParametersContext.CacheManager.BuildQueryCacheCompareInfo(this, DataContext, ParametersContext.ParametersExpression, builtParameters, builtValues);
+			var (compareInfo, parameterAccessors, expressions) = ParametersContext.CacheManager.BuildQueryCacheCompareInfo(DataContext, ParametersContext.ParametersExpression, builtParameters);
 			
 			query.ParameterAccessors = parameterAccessors;
 			query.CompareInfo        = compareInfo;
