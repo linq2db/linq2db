@@ -371,10 +371,17 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				&& expr is SqlFunction { Parameters: [var first, ..] } && MeasureStringOperand(first) is { Unicode: true } firstShape)
 				(unicode, nonUnicode) = (true, firstShape.NonUnicode);
 
-			// Any other function or expression typed only by the string default says nothing of what it returns, so it
-			// counts as the longest non-Unicode value short of MAX.
-			if (expr is SqlFunction or SqlExpression && type == MappingSchema.GetDbDataType(typeof(string)))
-				return new(Unicode: false, NonUnicode: true, Length: 8000);
+			// Any other function or expression typed only by the string default is judged by its string arguments.
+			if (type == MappingSchema.GetDbDataType(typeof(string)))
+			{
+				switch (expr)
+				{
+					case SqlFunction function:
+						return MeasureByStringArguments(function.Parameters);
+					case SqlExpression expression:
+						return MeasureByStringArguments(expression.Parameters);
+				}
+			}
 
 			if (type.Length == null && GetDbTypeLength(type.DbType) is { } dbTypeLength)
 				type = type.WithLength(dbTypeLength);
@@ -414,6 +421,22 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				return -1;
 
 			return int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var length) && length > 0 ? length : null;
+		}
+
+		// With no Unicode argument such a function counts as the longest non-Unicode value short of MAX, since it can outgrow
+		// its arguments (SPACE, STUFF), and with only Unicode ones as a parameter does. With both it is Unicode unless its
+		// longest argument is too long for nvarchar: ISNULL returns that varchar value, which is then cast on its own.
+		StringOperandShape MeasureByStringArguments(ISqlExpression[] arguments)
+		{
+			var shape = Combine(Array.FindAll(arguments, a => QueryHelper.GetDbDataType(a, MappingSchema).IsTextType()), sum: false);
+
+			return shape switch
+			{
+				{ Unicode: false }    => new(Unicode: false, NonUnicode: true,  Length: 8000),
+				{ NonUnicode: false } => new(Unicode: true,  NonUnicode: false, Length: 1),
+				{ Length: <= 4000 }   => shape,
+				_                     => shape with { Unicode = false },
+			};
 		}
 
 		StringOperandShape Combine(IEnumerable<ISqlExpression> operands, bool sum)
