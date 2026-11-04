@@ -3085,13 +3085,49 @@ namespace LinqToDB.Internal.Linq.Builder
 			return _buildPurpose is BuildPurpose.Sql || (_buildPurpose is BuildPurpose.Expression && _buildFlags.HasFlag(BuildFlags.ForSetProjection));
 		}
 
+		static readonly HashSet<Type> _bclConstantTypes =
+		[
+			typeof(string), typeof(bool), typeof(char),
+			typeof(sbyte), typeof(byte), typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(long), typeof(ulong),
+			typeof(float), typeof(double), typeof(decimal),
+			typeof(DateTime), typeof(DateTimeOffset), typeof(TimeSpan), typeof(Guid),
+#if SUPPORTS_DATEONLY
+			typeof(DateOnly), typeof(TimeOnly),
+#endif
+		];
+
+		/// <summary>
+		/// Whether every leaf of <paramref name="node"/> is written in the query itself: a scalar literal, null,
+		/// a default value or a static member of a BCL value type (<c>string.Empty</c>, <c>DateTime.MinValue</c>).
+		/// A value read through a closure object, a static member of a user type or a collection element is a
+		/// run-time input: it stays a parameter and never decides the SQL while the query is built, so the query
+		/// tree with those inputs taken out is a complete cache key.
+		/// </summary>
+		bool IsTreeLiteral(Expression node)
+		{
+			return null == node.Find(MappingSchema, static (ms, e) =>
+			{
+				switch (e)
+				{
+					case ConstantExpression c:
+						return c.Value is not null && (c.Value is IEnumerable and not string || !ms.IsScalarType(c.Value.GetType()));
+					case MemberExpression { Expression: null } m:
+						return m.Member.DeclaringType == null || !_bclConstantTypes.Contains(m.Member.DeclaringType);
+					case ParameterExpression:
+						return true;
+					default:
+						return false;
+				}
+			});
+		}
+
 		public bool HandleValue(Expression node, [NotNullWhen(true)] out Expression? translated)
 		{
 			if (CanTryHandleValue(node))
 			{
 				ISqlExpression? sql = null;
 
-				if (CurrentDescriptor?.ValueConverter == null && Builder.CanBeConstant(node) && Builder.CanBeEvaluatedOnClient(node) && !_buildFlags.HasFlag(BuildFlags.ForceParameter))
+				if (CurrentDescriptor?.ValueConverter == null && Builder.CanBeConstant(node) && IsTreeLiteral(node) && Builder.CanBeEvaluatedOnClient(node) && !_buildFlags.HasFlag(BuildFlags.ForceParameter))
 				{
 					sql = Builder.BuildConstant(MappingSchema, node, ConstantDescriptor);
 				}
