@@ -263,6 +263,28 @@ namespace Tests.Linq
 			});
 		}
 
+		// An empty First empties the one row the select reads, which reports as First on an empty source does; the element
+		// path is provider-independent.
+		[Test]
+		public async Task EmptyFirstThrowsAsFirst([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool async)
+		{
+			using var db = GetDataContext(context);
+
+			var plain = Shouldly.Should.Throw<InvalidOperationException>(() => db.Parent
+				.Where(p => p.ParentID < 0)
+				.First());
+
+			var select = async
+				? await Shouldly.Should.ThrowAsync<InvalidOperationException>(() => db.SelectAsync(() => db.Parent
+					.Where(p => p.ParentID < 0)
+					.First()))
+				: Shouldly.Should.Throw<InvalidOperationException>(() => db.Select(() => db.Parent
+					.Where(p => p.ParentID < 0)
+					.First()));
+
+			select.Message.ShouldBe(plain.Message);
+		}
+
 		// The nested select is a value of the enclosing row, filtered on and projected; the binding is the builder's, so one
 		// provider shows it.
 		[Test]

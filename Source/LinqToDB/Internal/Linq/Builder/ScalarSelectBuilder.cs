@@ -125,7 +125,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				SetElementSelection(query);
 			}
 
-			// One row by construction; a compiled query reads it as an element.
+			// One row by construction, read as an element: an element terminal that finds nothing empties the row, which then
+			// reports as First on an empty source does.
 			public override void SetElementSelection<T>(Query<T> query)
 			{
 				query.GetElement = (db, expr, preambles) =>
@@ -133,6 +134,15 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				query.GetElementAsync = async (db, expr, preambles, token) =>
 					await query.GetResultEnumerable(db, expr, preambles).FirstAsync(token).ConfigureAwait(false);
+
+				query.GetEagerElement = (db, expr, ps) =>
+					query.GetEagerEnumerable(db, expr, ps).Enumerable.First();
+
+				query.GetEagerElementAsync = async (db, expr, ps, token) =>
+				{
+					var (enumerable, _, _) = await query.GetEagerEnumerableAsync(db, expr, ps, token).ConfigureAwait(false);
+					return await enumerable.FirstAsync(token).ConfigureAwait(false);
+				};
 			}
 
 			public override SqlStatement GetResultStatement()

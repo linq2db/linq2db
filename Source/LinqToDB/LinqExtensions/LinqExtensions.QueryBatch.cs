@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Async;
+using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.Reflection;
@@ -61,12 +61,10 @@ namespace LinqToDB
 			ArgumentNullException.ThrowIfNull(dataContext);
 			ArgumentNullException.ThrowIfNull(selector);
 
-			var q = new ExpressionQueryImpl<T>(dataContext, CreateQueryBatchExpression(dataContext, selector));
+			var expr = CreateQueryBatchExpression(dataContext, selector);
+			var q    = new ExpressionQueryImpl<T>(dataContext, expr);
 
-			foreach (var item in q)
-				return item;
-
-			throw new InvalidOperationException();
+			return ((IQueryProvider)q).Execute<T>(expr);
 		}
 
 		/// <summary>
@@ -79,7 +77,7 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>The results.</returns>
 		[Pure]
-		public static async Task<T> QueryBatchAsync<T>(
+		public static Task<T> QueryBatchAsync<T>(
 							this IDataContext dataContext,
 			[InstantHandle] Expression<Func<T>> selector,
 							CancellationToken   token = default)
@@ -87,22 +85,10 @@ namespace LinqToDB
 			ArgumentNullException.ThrowIfNull(dataContext);
 			ArgumentNullException.ThrowIfNull(selector);
 
-			var q = new ExpressionQueryImpl<T>(dataContext, CreateQueryBatchExpression(dataContext, selector));
+			var expr = CreateQueryBatchExpression(dataContext, selector);
+			var q    = new ExpressionQueryImpl<T>(dataContext, expr);
 
-			var read = false;
-			var item = default(T)!; // this is fine, as we never return it
-
-			await q.ForEachUntilAsync(r =>
-			{
-				read = true;
-				item = r;
-				return false;
-			}, token).ConfigureAwait(false);
-
-			if (read)
-				return item;
-
-			throw new InvalidOperationException();
+			return ((IQueryProviderAsync)q).ExecuteAsync<T>(expr, token);
 		}
 
 		/// <summary>

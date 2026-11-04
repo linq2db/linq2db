@@ -1041,6 +1041,30 @@ namespace Tests.Linq
 			selectTexts.Length.ShouldBe(2);
 		}
 
+		// An empty First empties the one row the batch reads, which reports as First on an empty source does; the element
+		// path is provider-independent.
+		[Test]
+		public async Task EmptyFirstThrowsAsFirst([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool async)
+		{
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var plain = Shouldly.Should.Throw<InvalidOperationException>(() => items
+				.Where(i => i.Id > 100)
+				.First());
+
+			Expression<Func<BatchItem>>       first = () => items
+				.Where(i => i.Id > 100)
+				.First();
+			Expression<Func<List<BatchItem>>> rows  = () => items.ToList();
+
+			var batch = async
+				? await Shouldly.Should.ThrowAsync<InvalidOperationException>(() => db.QueryBatchAsync(first, rows))
+				: Shouldly.Should.Throw<InvalidOperationException>(() => db.QueryBatch(first, rows));
+
+			batch.Message.ShouldBe(plain.Message);
+		}
+
 		// A nested batch is a scalar subquery of the enclosing row, in both forms; the binding is the builder's, so one
 		// provider shows it.
 		[Test]
