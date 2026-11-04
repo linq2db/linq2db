@@ -671,5 +671,60 @@ namespace Tests.Linq
 
 			atHalf.ShouldBe(0);
 		}
+
+		sealed class PrefixConverter() : ValueConverter<string?, string?>(v => v == null ? null : "x:" + v, v => v == null ? null : v.Substring(2), true);
+
+		[Table]
+		sealed class PrefixedCode
+		{
+			[PrimaryKey]                                                                                                 public int     Id   { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 20), ValueConverter(ConverterType = typeof(PrefixConverter))] public string? Code { get; set; }
+		}
+
+		/// <summary>
+		/// A value searched in a projected cast of a converted column goes through the column's converter, also when the
+		/// cast changes the database type.
+		/// </summary>
+		[Test]
+		public void SequenceContainsCastOfConvertedColumn([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new PrefixedCode { Id = 1, Code = "A" } });
+
+			table
+				.Select(t => Sql.Convert(Sql.Types.NVarChar(40), t.Code))
+				.Contains("A")
+				.ShouldBeTrue();
+		}
+
+		[Table]
+		sealed class PrefixedCodeWithTitle
+		{
+			[PrimaryKey]                                                                                                public int     Id    { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 20), ValueConverter(ConverterType = typeof(PrefixConverter))] public string? Code  { get; set; }
+			[Column(DataType = DataType.NVarChar, Length = 20)]                                                         public string? Title { get; set; }
+		}
+
+		/// <summary>
+		/// A value searched in a projected concatenation of a converted non-Unicode column and a Unicode one goes
+		/// through the converter the projection is read through.
+		/// </summary>
+		[Test]
+		public void SequenceContainsConcatOfConvertedAndUnicodeColumn([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new PrefixedCodeWithTitle { Id = 1, Code = "A", Title = "T" } });
+
+			var concatenated = table
+				.Select(t => t.Code + t.Title);
+
+			concatenated
+				.Single()
+				.ShouldBe("AT");
+
+			concatenated
+				.Contains("AT")
+				.ShouldBeTrue();
+		}
 	}
 }
