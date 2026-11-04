@@ -2657,7 +2657,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				// which changes rows or is invalid SQL - they must stay inside the APPLY subquery.
 				if (joinTable.JoinType is JoinType.OuterApply or JoinType.CrossApply
 					&& _providerFlags.IsApplyJoinSupported
-					&& subQuery.From.Tables[0].Joins.Count > 0)
+					&& !subQuery.IsSingleTableQueryWithoutJoins)
 				{
 					return false;
 				}
