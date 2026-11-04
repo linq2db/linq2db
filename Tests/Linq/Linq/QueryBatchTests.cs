@@ -1316,7 +1316,7 @@ namespace Tests.Linq
 
 #if !NETFRAMEWORK
 			if (context.IsAnyOf(TestProvName.AllPostgreSQL))
-				trace.Texts[0].ShouldContain("-- Batch ");
+				trace.Texts[0].ShouldContain("-- Command ");
 #endif
 		}
 
@@ -1355,7 +1355,7 @@ namespace Tests.Linq
 			Ids(page).ShouldBe(PageIds(0, 3));
 			trace.Readers.ShouldBe(1);
 			interceptor.Count.ShouldBe(1);
-			trace.Texts[0].ShouldNotContain("-- Batch ");
+			trace.Texts[0].ShouldNotContain("-- Command ");
 		}
 	}
 }
