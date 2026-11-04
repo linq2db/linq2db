@@ -5,7 +5,9 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Async;
+using LinqToDB.Data;
 using LinqToDB.Identity;
+using LinqToDB.Internal.SqlProvider;
 
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
@@ -295,6 +297,140 @@ namespace Tests.Identity
 			ctx.GetTable<IdentityRoleClaim<string>>()
 				.Count(r => r.RoleId == survivor.Id)
 				.ShouldBe(1);
+		}
+
+		// with UseIdentityDatabaseCascadeDelete the stores delete only the user / role row; on a schema without the
+		// foreign keys that leaves every dependent in place, which is what shows the dependent deletes were skipped
+		[Test]
+		public async Task DatabaseCascadeDeleteSkipsDependentDeletes([DataSources] string context)
+		{
+			using var setup  = GetSetup(context);
+			using var schema = new Schema(setup);
+			using var ctx    = GetDataContext(context, o => o.UseMappingSchema(setup.MappingSchema).UseIdentityDatabaseCascadeDelete());
+
+			var users = new UserStore<IdentityUser>(ctx);
+			var roles = new RoleStore<IdentityRole>(ctx);
+
+			var user = NewUser("cascaded");
+			var role = NewRole("cascaded-role");
+			await users.CreateAsync(user);
+			await roles.CreateAsync(role);
+
+			await users.AddToRoleAsync(user, "CASCADED-ROLE");
+			await users.AddClaimsAsync(user, [new Claim("scope", "read")]);
+			await users.AddLoginAsync(user, new UserLoginInfo("google", "key-cascaded", "Google"));
+			await users.SetTokenAsync(user, "google", "refresh", "tok", default);
+			await roles.AddClaimAsync(role, new Claim("perm", "all"));
+
+			(await users.DeleteAsync(user))
+				.Succeeded
+				.ShouldBeTrue();
+			(await roles.DeleteAsync(role))
+				.Succeeded
+				.ShouldBeTrue();
+
+			ctx.GetTable<IdentityUser>()
+				.Count(r => r.Id == user.Id)
+				.ShouldBe(0);
+			ctx.GetTable<IdentityRole>()
+				.Count(r => r.Id == role.Id)
+				.ShouldBe(0);
+
+			ctx.GetTable<IdentityUserClaim<string>>()
+				.Count(r => r.UserId == user.Id)
+				.ShouldBe(1);
+			ctx.GetTable<IdentityUserLogin<string>>()
+				.Count(r => r.UserId == user.Id)
+				.ShouldBe(1);
+			ctx.GetTable<IdentityUserToken<string>>()
+				.Count(r => r.UserId == user.Id)
+				.ShouldBe(1);
+			ctx.GetTable<IdentityUserRole<string>>()
+				.Count(r => r.UserId == user.Id)
+				.ShouldBe(1);
+			ctx.GetTable<IdentityRoleClaim<string>>()
+				.Count(r => r.RoleId == role.Id)
+				.ShouldBe(1);
+		}
+
+		// the same deletes against ON DELETE CASCADE foreign keys: the database removes the dependents the stores skip
+		[Test]
+		public async Task DatabaseCascadeDeleteRemovesDependentsThroughForeignKeys([IncludeDataSources(true,
+			TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySql, TestProvName.AllOracle,
+			TestProvName.AllSqlCe, TestProvName.AllAccess)] string context)
+		{
+			using var setup  = GetSetup(context);
+			using var schema = new Schema(setup);
+
+			AddCascadeForeignKey<IdentityUserClaim<string>>(setup, nameof(IdentityUserClaim<>.UserId), typeof(IdentityUser));
+			AddCascadeForeignKey<IdentityUserLogin<string>>(setup, nameof(IdentityUserLogin<>.UserId), typeof(IdentityUser));
+			AddCascadeForeignKey<IdentityUserToken<string>>(setup, nameof(IdentityUserToken<>.UserId), typeof(IdentityUser));
+			AddCascadeForeignKey<IdentityUserRole <string>>(setup, nameof(IdentityUserRole <>.UserId), typeof(IdentityUser));
+			AddCascadeForeignKey<IdentityUserRole <string>>(setup, nameof(IdentityUserRole <>.RoleId), typeof(IdentityRole));
+			AddCascadeForeignKey<IdentityRoleClaim<string>>(setup, nameof(IdentityRoleClaim<>.RoleId), typeof(IdentityRole));
+
+			using var ctx = GetDataContext(context, o => o.UseMappingSchema(setup.MappingSchema).UseIdentityDatabaseCascadeDelete());
+
+			var users = new UserStore<IdentityUser>(ctx);
+			var roles = new RoleStore<IdentityRole>(ctx);
+
+			var user   = NewUser("fk-user");
+			var member = NewUser("fk-member");
+			var role   = NewRole("fk-role");
+			await users.CreateAsync(user);
+			await users.CreateAsync(member);
+			await roles.CreateAsync(role);
+
+			await users.AddToRoleAsync(user,   "FK-ROLE");
+			await users.AddToRoleAsync(member, "FK-ROLE");
+			await users.AddClaimsAsync(user, [new Claim("scope", "read")]);
+			await users.AddLoginAsync(user, new UserLoginInfo("google", "key-fk", "Google"));
+			await users.SetTokenAsync(user, "google", "refresh", "tok", default);
+			await roles.AddClaimAsync(role, new Claim("perm", "all"));
+
+			(await users.DeleteAsync(user))
+				.Succeeded
+				.ShouldBeTrue();
+
+			ctx.GetTable<IdentityUserClaim<string>>()
+				.Count(r => r.UserId == user.Id)
+				.ShouldBe(0);
+			ctx.GetTable<IdentityUserLogin<string>>()
+				.Count(r => r.UserId == user.Id)
+				.ShouldBe(0);
+			ctx.GetTable<IdentityUserToken<string>>()
+				.Count(r => r.UserId == user.Id)
+				.ShouldBe(0);
+			ctx.GetTable<IdentityUserRole<string>>()
+				.Count(r => r.UserId == user.Id)
+				.ShouldBe(0);
+
+			(await roles.DeleteAsync(role))
+				.Succeeded
+				.ShouldBeTrue();
+
+			ctx.GetTable<IdentityUserRole<string>>()
+				.Count(r => r.RoleId == role.Id)
+				.ShouldBe(0);
+			ctx.GetTable<IdentityRoleClaim<string>>()
+				.Count(r => r.RoleId == role.Id)
+				.ShouldBe(0);
+
+			static void AddCascadeForeignKey<TDependent>(IdentityDataConnection db, string member, Type principal)
+			{
+				var sb         = db.DataProvider.CreateSqlBuilder(db.MappingSchema, db.Options);
+				var dependent  = db.MappingSchema.GetEntityDescriptor(typeof(TDependent));
+				var principals = db.MappingSchema.GetEntityDescriptor(principal);
+				var column     = dependent.Columns.Single(c => c.MemberName == member).ColumnName;
+				var key        = principals.Columns.Single(c => c.MemberName == nameof(IdentityUser.Id)).ColumnName;
+
+				db.Execute(
+					$"ALTER TABLE {sb.ConvertInline(dependent.Name.Name, ConvertType.NameToQueryTable)} " +
+					$"ADD CONSTRAINT {sb.ConvertInline($"FK_{dependent.Name.Name}_{column}", ConvertType.NameToQueryField)} " +
+					$"FOREIGN KEY ({sb.ConvertInline(column, ConvertType.NameToQueryField)}) " +
+					$"REFERENCES {sb.ConvertInline(principals.Name.Name, ConvertType.NameToQueryTable)} ({sb.ConvertInline(key, ConvertType.NameToQueryField)}) " +
+					"ON DELETE CASCADE");
+			}
 		}
 
 		// a delete that loses the optimistic check must not have removed the dependents either

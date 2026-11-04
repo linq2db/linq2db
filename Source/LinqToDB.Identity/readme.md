@@ -65,10 +65,27 @@ matching `UserStore` / `RoleStore` — or a `UserOnlyStore` when no role type is
 Creating the schema (e.g. in tests or first-run setup) is ordinary linq2db DDL — `CreateTable<IdentityUser>()`,
 `CreateTable<IdentityRole>()`, and so on for the seven (eight on .NET 10 with passkeys) `AspNet*` tables.
 
-linq2db DDL creates no foreign keys, so `DeleteAsync` removes a deleted user's claims, logins, tokens and role
-memberships (and a deleted role's memberships and claims) itself, where EF Core relies on `ON DELETE CASCADE`.
+### Deleting users and roles
 
-It creates no indexes either. EF Core's unique `UserNameIndex` (`NormalizedUserName`) and `RoleNameIndex`
+linq2db DDL creates no foreign keys, so `DeleteAsync` removes a deleted user's claims, logins, tokens, passkeys and
+role memberships (and a deleted role's memberships and claims) itself, where EF Core relies on `ON DELETE CASCADE`.
+
+When your database already cascades those deletes — an EF Core-created schema, or foreign keys you added — the extra
+`DELETE` statements find nothing to remove. Tell the stores so, and `DeleteAsync` deletes only the user or role row:
+
+```csharp
+services.AddScoped(_ => new IdentityDataConnection(
+    new DataOptions()
+        .UseSqlServer(connectionString)
+        .UseIdentityDatabaseCascadeDelete()));
+```
+
+Set it only when every dependent table cascades: the stores then leave the dependent rows to the database. The
+setting is read from the context's `DataOptions`, so on a remote (LinqService) context set it on the client's options.
+
+### Indexes and uniqueness
+
+linq2db DDL creates no indexes either. EF Core's unique `UserNameIndex` (`NormalizedUserName`) and `RoleNameIndex`
 (`NormalizedName`) are what stop two concurrent registrations of one name, so add them yourself to a schema created
 with `CreateTable`: without them uniqueness rests on `UserValidator` / `RoleValidator`, which check before inserting.
 `SetTokenAsync` and `AddOrUpdatePasskeyAsync` look a row up before inserting it, as EF Core's stores do, and

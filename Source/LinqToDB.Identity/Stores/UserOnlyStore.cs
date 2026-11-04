@@ -212,6 +212,9 @@ namespace LinqToDB.Identity
 				|| await Context.GetTable<TUser>().AnyAsync(u => u.Id.Equals(user.Id), cancellationToken).ConfigureAwait(false)))
 				return IdentityResult.Failed(ErrorDescriber.ConcurrencyFailure());
 
+			if (Context.DatabaseCascadesDeletes())
+				return IdentityResult.Success;
+
 			// CreateTable emits no foreign keys, so nothing cascades from the user row (EF Core relies on ON DELETE CASCADE)
 			await UserClaims.Where(e => e.UserId.Equals(user.Id)).DeleteAsync(cancellationToken).ConfigureAwait(false);
 			await UserLogins.Where(e => e.UserId.Equals(user.Id)).DeleteAsync(cancellationToken).ConfigureAwait(false);

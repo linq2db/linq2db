@@ -10,6 +10,9 @@ namespace LinqToDB.Identity
 {
 	internal static class Extensions
 	{
+		public static bool DatabaseCascadesDeletes(this IDataContext db)
+			=> db.Options.FindOrDefault(LinqToDBIdentityOptions.Default).DatabaseCascadeDelete;
+
 		public static async ValueTask InsertAndSetIdentity<TEntity>(this IDataContext db, TEntity obj, CancellationToken cancellationToken)
 			where TEntity : class
 		{

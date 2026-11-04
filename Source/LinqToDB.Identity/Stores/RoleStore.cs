@@ -142,6 +142,9 @@ namespace LinqToDB.Identity
 				|| await Context.GetTable<TRole>().AnyAsync(r => r.Id.Equals(role.Id), cancellationToken).ConfigureAwait(false)))
 				return IdentityResult.Failed(ErrorDescriber.ConcurrencyFailure());
 
+			if (Context.DatabaseCascadesDeletes())
+				return IdentityResult.Success;
+
 			// CreateTable emits no foreign keys, so nothing cascades from the role row (EF Core relies on ON DELETE CASCADE)
 			await Context.GetTable<TUserRole>().Where(e => e.RoleId.Equals(role.Id)).DeleteAsync(cancellationToken).ConfigureAwait(false);
 			await RoleClaims                   .Where(e => e.RoleId.Equals(role.Id)).DeleteAsync(cancellationToken).ConfigureAwait(false);

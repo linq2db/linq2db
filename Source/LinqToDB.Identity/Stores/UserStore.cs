@@ -189,7 +189,7 @@ namespace LinqToDB.Identity
 		{
 			var result = await base.DeleteAsync(user, cancellationToken).ConfigureAwait(false);
 
-			if (result.Succeeded)
+			if (result.Succeeded && !Context.DatabaseCascadesDeletes())
 				await UserRoles.Where(e => e.UserId.Equals(user.Id)).DeleteAsync(cancellationToken).ConfigureAwait(false);
 
 			return result;
