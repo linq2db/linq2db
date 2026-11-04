@@ -1,4 +1,15 @@
 ﻿#nullable enable
+*REMOVED*LinqToDB.Internal.Expressions.TagExpression
+*REMOVED*LinqToDB.Internal.Expressions.TagExpression.InnerExpression.get -> System.Linq.Expressions.Expression!
+*REMOVED*LinqToDB.Internal.Expressions.TagExpression.Tag.get -> object!
+*REMOVED*LinqToDB.Internal.Expressions.TagExpression.TagExpression(System.Linq.Expressions.Expression! innerExpression, object! tag) -> void
+*REMOVED*LinqToDB.Internal.Expressions.TagExpression.Update(System.Linq.Expressions.Expression! innerExpression, object! tag) -> LinqToDB.Internal.Expressions.TagExpression!
+*REMOVED*override LinqToDB.Internal.Expressions.TagExpression.CanReduce.get -> bool
+*REMOVED*override LinqToDB.Internal.Expressions.TagExpression.NodeType.get -> System.Linq.Expressions.ExpressionType
+*REMOVED*override LinqToDB.Internal.Expressions.TagExpression.Reduce() -> System.Linq.Expressions.Expression!
+*REMOVED*override LinqToDB.Internal.Expressions.TagExpression.ToString() -> string!
+*REMOVED*override LinqToDB.Internal.Expressions.TagExpression.Type.get -> System.Type!
+*REMOVED*virtual LinqToDB.Internal.Expressions.ExpressionVisitorBase.VisitTagExpression(LinqToDB.Internal.Expressions.TagExpression! node) -> System.Linq.Expressions.Expression!
 const LinqToDB.Internal.Common.ErrorHelper.Error_DynamicColumns_NoSetter = "Type '{0}' is materialized with dynamic column(s) {1}, but has no dynamic column setter. Add a member marked with DynamicColumnsStoreAttribute, or configure a setter through DynamicColumnAccessorAttribute or DynamicPropertyAccessors." -> string!
 LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQLMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator
 LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQLMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator() -> void

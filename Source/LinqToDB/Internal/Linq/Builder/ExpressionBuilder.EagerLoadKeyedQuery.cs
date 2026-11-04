@@ -1385,11 +1385,6 @@ namespace LinqToDB.Internal.Linq.Builder
 				return Visit(node.InnerExpression);
 			}
 
-			public override Expression VisitTagExpression(TagExpression node)
-			{
-				return Visit(node.InnerExpression);
-			}
-
 			public override Expression VisitSqlQueryRootExpression(SqlQueryRootExpression node)
 			{
 				return Expression.Default(node.Type);
