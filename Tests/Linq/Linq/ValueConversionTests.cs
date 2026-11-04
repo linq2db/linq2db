@@ -1808,6 +1808,69 @@ namespace Tests.Linq
 		}
 
 		[Table]
+		sealed class TicksConversionRow
+		{
+			[PrimaryKey] public int       Id    { get; set; }
+			[Column]     public DateTime  Plain { get; set; }
+			[Column]     public DateTime? Date  { get; set; }
+		}
+
+		static MappingSchema TicksConversionMappingSchema()
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<TicksConversionRow>()
+					.Property(e => e.Plain)
+						.HasConversion(v => v.Ticks, v => new DateTime(v))
+					.Property(e => e.Date)
+						.HasConversion(
+							v => v != null ? (long?)v.Value.Ticks : null,
+							v => v != null ? (DateTime?)new DateTime(v.Value) : null)
+				.Build();
+
+			return ms;
+		}
+
+		/// <summary>
+		/// The plain and the nullable spelling of one conversion compare, and share one reading, when the conversion
+		/// changes the stored type as well.
+		/// </summary>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void PlainAndNullableSpellingsOfOneTypeChangingConversionCompare([DataSources] string context)
+		{
+			var value  = new DateTime(2020, 1, 1, 10, 0, 0);
+			var value2 = value.AddDays(1);
+
+			using var db = GetDataContext(context, TicksConversionMappingSchema());
+			using var t  = db.CreateLocalTable(
+			[
+				new TicksConversionRow { Id = 1, Plain = value,  Date = value  },
+				new TicksConversionRow { Id = 2, Plain = value,  Date = value2 },
+				new TicksConversionRow { Id = 3, Plain = value2, Date = null   },
+			]);
+
+			t
+				.Where(r => r.Plain == r.Date)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([1]);
+
+			t
+				.Where(r => r.Plain < r.Date)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([2]);
+
+			// the nullable arm first, so the plain value is read through the nullable conversion
+			t
+				.OrderBy(r => r.Id)
+				.Select(r => Sql.AsSql(r.Id != 1 ? r.Date : (DateTime?)r.Plain))
+				.ToArray()
+				.ShouldBe([value, value2, null]);
+		}
+
+		[Table]
 		sealed class ReferenceConversionRow
 		{
 			[PrimaryKey] public int     Id      { get; set; }
