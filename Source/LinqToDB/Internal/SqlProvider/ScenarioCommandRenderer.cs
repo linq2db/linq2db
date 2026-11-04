@@ -35,7 +35,7 @@ namespace LinqToDB.Internal.SqlProvider
 	/// One physical command's cache slot in a <see cref="PreparedScenario"/>, covering a contiguous run of scenario steps
 	/// (<see cref="StepIndexes"/>). <see cref="Concat"/> is the universal semicolon-joined form (runs on any backend as one
 	/// DbCommand); <see cref="Batch"/> is the optional per-statement isolated-scope form (DbBatch). DML fills BOTH and picks
-	/// at runtime by <c>CanUseDbBatch</c>; eager fills exactly ONE (the backend recorded in <see cref="PreparedScenario.WasBatch"/>).
+	/// at runtime by <c>CanRunDbBatch</c>; eager fills exactly ONE (the backend recorded in <see cref="PreparedScenario.WasBatch"/>).
 	/// A null <see cref="Concat"/> or a null <see cref="Batch"/> element means "render fresh this run" (parameter-dependent);
 	/// a null <see cref="Batch"/> array means the command is not batch-eligible.
 	/// </summary>

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,6 +15,8 @@ using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -333,26 +336,25 @@ namespace Tests.Data
 			}
 
 			table.InsertWithIdentity(() => new InterceptorsTestsTable() { ID = 1 });
-			using (Assert.EnterMultipleScope())
-			{
-				// Which callbacks fire depends on whether the identity insert runs combined. Combined: INSERT + SELECT
-				// last_insert_rowid() go as ONE command via ExecuteReader, with rows-affected and the identity harvested
-				// from the reader — so ExecuteScalar / ExecuteNonQuery are never called. Sequential: two commands, the
-				// INSERT as a non-query and the identity SELECT as a scalar.
-				//
-				// Read back from the context rather than reused from combinedCommands, so the expectation cannot drift from
-				// the engine's own gate: it also accounts for provider capability and for contexts the combined executor
-				// cannot serve at all.
-				var combined = db.UsesCombinedCommands();
 
-				Assert.That(interceptor.ExecuteScalarTriggered,             Is.EqualTo(!combined));
-				Assert.That(interceptor.ExecuteScalarAsyncTriggered,        Is.False);
-				Assert.That(interceptor.ExecuteReaderTriggered,             Is.EqualTo(combined));
-				Assert.That(interceptor.ExecuteReaderAsyncTriggered,        Is.False);
-				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.EqualTo(combined));
-				Assert.That(interceptor.ExecuteNonQueryTriggered,           Is.EqualTo(!combined));
-				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered,      Is.False);
-			}
+			// Which callbacks fire depends on whether the identity insert runs combined. Combined: INSERT + SELECT
+			// last_insert_rowid() go as ONE command via ExecuteReader, with rows-affected and the identity harvested
+			// from the reader — so ExecuteScalar / ExecuteNonQuery are never called. Sequential: two commands, the
+			// INSERT as a non-query and the identity SELECT as a scalar.
+			//
+			// Read back from the context rather than reused from combinedCommands, so the expectation cannot drift from
+			// the engine's own gate: it also accounts for provider capability and for contexts the combined executor
+			// cannot serve at all.
+			var combined = db.UsesCombinedCommands();
+
+			interceptor.ShouldSatisfyAllConditions(
+				i => i.ExecuteScalarTriggered            .ShouldBe(!combined),
+				i => i.ExecuteScalarAsyncTriggered       .ShouldBeFalse(),
+				i => i.ExecuteReaderTriggered            .ShouldBe(combined),
+				i => i.ExecuteReaderAsyncTriggered       .ShouldBeFalse(),
+				i => i.ExecuteAfterExecuteReaderTriggered.ShouldBe(combined),
+				i => i.ExecuteNonQueryTriggered          .ShouldBe(!combined),
+				i => i.ExecuteNonQueryAsyncTriggered     .ShouldBeFalse());
 		}
 
 		[Test]
@@ -374,21 +376,20 @@ namespace Tests.Data
 			}
 
 			await table.InsertWithIdentityAsync(() => new InterceptorsTestsTable() { ID = 1 });
-			using (Assert.EnterMultipleScope())
-			{
-				// Combined into ONE command via ExecuteReaderAsync (see the sync test): the async reader interceptors
-				// fire, not ExecuteScalarAsync / ExecuteNonQueryAsync. Sequential instead runs a non-query INSERT and a
-				// scalar identity SELECT.
-				var combined = db.UsesCombinedCommands();
 
-				Assert.That(interceptor.ExecuteScalarTriggered,             Is.False);
-				Assert.That(interceptor.ExecuteScalarAsyncTriggered,        Is.EqualTo(!combined));
-				Assert.That(interceptor.ExecuteReaderTriggered,             Is.False);
-				Assert.That(interceptor.ExecuteReaderAsyncTriggered,        Is.EqualTo(combined));
-				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.EqualTo(combined));
-				Assert.That(interceptor.ExecuteNonQueryTriggered,           Is.False);
-				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered,      Is.EqualTo(!combined));
-			}
+			// Combined into ONE command via ExecuteReaderAsync (see the sync test): the async reader interceptors
+			// fire, not ExecuteScalarAsync / ExecuteNonQueryAsync. Sequential instead runs a non-query INSERT and a
+			// scalar identity SELECT.
+			var combined = db.UsesCombinedCommands();
+
+			interceptor.ShouldSatisfyAllConditions(
+				i => i.ExecuteScalarTriggered            .ShouldBeFalse(),
+				i => i.ExecuteScalarAsyncTriggered       .ShouldBe(!combined),
+				i => i.ExecuteReaderTriggered            .ShouldBeFalse(),
+				i => i.ExecuteReaderAsyncTriggered       .ShouldBe(combined),
+				i => i.ExecuteAfterExecuteReaderTriggered.ShouldBe(combined),
+				i => i.ExecuteNonQueryTriggered          .ShouldBeFalse(),
+				i => i.ExecuteNonQueryAsyncTriggered     .ShouldBe(!combined));
 		}
 
 		[Test]
@@ -519,7 +520,9 @@ namespace Tests.Data
 		public void DataContext_ExecuteScalar([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool combinedCommands)
 		{
 			// use non-temp table as sqlite temp tables are session-bound and context recreates session
-			using var db = new DataContext(new DataOptions().UseConfiguration(context).UseCombinedCommands(combinedCommands));
+			using var db = new DataContext(new DataOptions()
+				.UseConfiguration(context)
+				.UseCombinedCommands(combinedCommands));
 			using var table = db.CreateTempTable<InterceptorsTestsTable>(tableOptions: TableOptions.None);
 			var interceptor = new TestCommandInterceptor();
 			db.AddInterceptor(interceptor);
@@ -535,27 +538,28 @@ namespace Tests.Data
 			}
 
 			table.InsertWithIdentity(() => new InterceptorsTestsTable() { ID = 1 });
-			using (Assert.EnterMultipleScope())
-			{
-				// Combined into ONE command via ExecuteReader (see DataConnection_ExecuteScalar): reader interceptors
-				// fire, not ExecuteScalar / ExecuteNonQuery. Sequential runs the two commands separately instead.
-				var combined = db.UsesCombinedCommands();
 
-				Assert.That(interceptor.ExecuteScalarTriggered,             Is.EqualTo(!combined));
-				Assert.That(interceptor.ExecuteScalarAsyncTriggered,        Is.False);
-				Assert.That(interceptor.ExecuteReaderTriggered,             Is.EqualTo(combined));
-				Assert.That(interceptor.ExecuteReaderAsyncTriggered,        Is.False);
-				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.EqualTo(combined));
-				Assert.That(interceptor.ExecuteNonQueryTriggered,           Is.EqualTo(!combined));
-				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered,      Is.False);
-			}
+			// Combined into ONE command via ExecuteReader (see DataConnection_ExecuteScalar): reader interceptors
+			// fire, not ExecuteScalar / ExecuteNonQuery. Sequential runs the two commands separately instead.
+			var combined = db.UsesCombinedCommands();
+
+			interceptor.ShouldSatisfyAllConditions(
+				i => i.ExecuteScalarTriggered            .ShouldBe(!combined),
+				i => i.ExecuteScalarAsyncTriggered       .ShouldBeFalse(),
+				i => i.ExecuteReaderTriggered            .ShouldBe(combined),
+				i => i.ExecuteReaderAsyncTriggered       .ShouldBeFalse(),
+				i => i.ExecuteAfterExecuteReaderTriggered.ShouldBe(combined),
+				i => i.ExecuteNonQueryTriggered          .ShouldBe(!combined),
+				i => i.ExecuteNonQueryAsyncTriggered     .ShouldBeFalse());
 		}
 
 		[Test]
 		public async Task DataContext_ExecuteScalarAsync([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool combinedCommands)
 		{
 			// use non-temp table as sqlite temp tables are session-bound and context recreates session
-			await using var db = new DataContext(new DataOptions().UseConfiguration(context).UseCombinedCommands(combinedCommands));
+			await using var db = new DataContext(new DataOptions()
+				.UseConfiguration(context)
+				.UseCombinedCommands(combinedCommands));
 			await using var table = await db.CreateTempTableAsync<InterceptorsTestsTable>(tableOptions: TableOptions.None);
 			var interceptor = new TestCommandInterceptor();
 			db.AddInterceptor(interceptor);
@@ -571,20 +575,19 @@ namespace Tests.Data
 			}
 
 			await table.InsertWithIdentityAsync(() => new InterceptorsTestsTable() { ID = 1 });
-			using (Assert.EnterMultipleScope())
-			{
-				// Combined into ONE command via ExecuteReaderAsync (see the sync test): the async reader interceptors
-				// fire, not ExecuteScalarAsync / ExecuteNonQueryAsync. Sequential runs the two commands separately.
-				var combined = db.UsesCombinedCommands();
 
-				Assert.That(interceptor.ExecuteScalarTriggered,             Is.False);
-				Assert.That(interceptor.ExecuteScalarAsyncTriggered,        Is.EqualTo(!combined));
-				Assert.That(interceptor.ExecuteReaderTriggered,             Is.False);
-				Assert.That(interceptor.ExecuteReaderAsyncTriggered,        Is.EqualTo(combined));
-				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.EqualTo(combined));
-				Assert.That(interceptor.ExecuteNonQueryTriggered,           Is.False);
-				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered,      Is.EqualTo(!combined));
-			}
+			// Combined into ONE command via ExecuteReaderAsync (see the sync test): the async reader interceptors
+			// fire, not ExecuteScalarAsync / ExecuteNonQueryAsync. Sequential runs the two commands separately.
+			var combined = db.UsesCombinedCommands();
+
+			interceptor.ShouldSatisfyAllConditions(
+				i => i.ExecuteScalarTriggered            .ShouldBeFalse(),
+				i => i.ExecuteScalarAsyncTriggered       .ShouldBe(!combined),
+				i => i.ExecuteReaderTriggered            .ShouldBeFalse(),
+				i => i.ExecuteReaderAsyncTriggered       .ShouldBe(combined),
+				i => i.ExecuteAfterExecuteReaderTriggered.ShouldBe(combined),
+				i => i.ExecuteNonQueryTriggered          .ShouldBeFalse(),
+				i => i.ExecuteNonQueryAsyncTriggered     .ShouldBe(!combined));
 		}
 
 		[Test]
@@ -1475,21 +1478,68 @@ namespace Tests.Data
 		[Test]
 		public void EagerLoadExceptionIntercepted([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySql)] string context)
 		{
-			using var db = GetDataConnection(context, o => o.UseCombinedCommands(true));
+			var commands = new List<string>();
+
+			using var db = GetDataConnection(context, o => o
+				.UseCombinedCommands(true)
+				.UseTracing(TraceLevel.Info, info =>
+				{
+					if (info.TraceInfoStep == TraceInfoStep.BeforeExecute && info.Operation == TraceOperation.ExecuteReader)
+						commands.Add(info.SqlText);
+				}));
+
 			db.AddInterceptor(new TestExceptionInterceptor());
 
-			Assert.Throws<TestException>(() =>
-				db.GetTable<EagerExceptionParent>().LoadWith(p => p.Children).ToList());
+			Action act = () => db.GetTable<EagerExceptionParent>()
+				.LoadWith(p => p.Children)
+				.ToList();
+
+			act.ShouldThrow<TestException>();
+
+			AssertCombinedEagerExecution(context, db, commands);
 		}
 
 		[Test]
-		public void EagerLoadExceptionInterceptedAsync([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySql)] string context)
+		public async Task EagerLoadExceptionInterceptedAsync([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySql)] string context)
 		{
-			using var db = GetDataConnection(context, o => o.UseCombinedCommands(true));
+			var commands = new List<string>();
+
+			using var db = GetDataConnection(context, o => o
+				.UseCombinedCommands(true)
+				.UseTracing(TraceLevel.Info, info =>
+				{
+					if (info.TraceInfoStep == TraceInfoStep.BeforeExecute && info.Operation == TraceOperation.ExecuteReader)
+						commands.Add(info.SqlText);
+				}));
+
 			db.AddInterceptor(new TestExceptionInterceptor());
 
-			Assert.ThrowsAsync<TestException>(() =>
-				db.GetTable<EagerExceptionParent>().LoadWith(p => p.Children).ToListAsync());
+			Func<Task> act = () => db.GetTable<EagerExceptionParent>()
+				.LoadWith(p => p.Children)
+				.ToListAsync();
+
+			await act.ShouldThrowAsync<TestException>();
+
+			AssertCombinedEagerExecution(context, db, commands);
+		}
+
+		// The sequential path fails on its first query the same way, so the throw alone does not show that the intercepted
+		// execution carried both statements.
+		static void AssertCombinedEagerExecution(string context, DataConnection db, List<string> commands)
+		{
+#if SUPPORTS_DBBATCH
+			var batch = !context.IsAnyOf(TestProvName.AllSqlServerSequentialAccess)
+				&& db.OpenDbConnection().CanCreateBatch;
+#else
+			var batch = false;
+#endif
+
+			var text = commands.ShouldHaveSingleItem();
+
+			if (batch)
+				text.ShouldContain("-- Command 2");
+			else
+				text.Split('\n').ShouldContain(line => line.Trim() == ";");
 		}
 		#endregion
 
@@ -1520,12 +1570,14 @@ namespace Tests.Data
 			beginCount                       = 0;
 			interceptor.ReaderHadTransaction = null;
 
-			var result = db.GetTable<Pr5EagerParent>().LoadWith(p => p.Children).ToList();
+			var result = db.GetTable<Pr5EagerParent>()
+				.LoadWith(p => p.Children)
+				.ToList();
 
-			Assert.That(result,             Has.Count.EqualTo(1));
-			Assert.That(result[0].Children, Has.Count.EqualTo(1));
-			Assert.That(beginCount, Is.GreaterThanOrEqualTo(1), "eager load should open a read-consistency transaction");
-			Assert.That(interceptor.ReaderHadTransaction, Is.True, "eager load must execute its read inside the read-consistency transaction");
+			result                          .Count.ShouldBe(1);
+			result[0].Children              .Count.ShouldBe(1);
+			beginCount                      .ShouldBeGreaterThanOrEqualTo(1, "eager load should open a read-consistency transaction");
+			interceptor.ReaderHadTransaction.ShouldBe(true, "eager load must execute its read inside the read-consistency transaction");
 		}
 
 		[Test]
@@ -1551,11 +1603,13 @@ namespace Tests.Data
 
 			beginCount = 0;
 
-			var result = db.GetTable<Pr5EagerParent>().LoadWith(p => p.Children).ToList();
+			var result = db.GetTable<Pr5EagerParent>()
+				.LoadWith(p => p.Children)
+				.ToList();
 
-			Assert.That(result,             Has.Count.EqualTo(1));
-			Assert.That(result[0].Children, Has.Count.EqualTo(1));
-			Assert.That(beginCount, Is.Zero, "eager load should reuse the active transaction, not open a second one");
+			result            .Count.ShouldBe(1);
+			result[0].Children.Count.ShouldBe(1);
+			beginCount        .ShouldBe(0, "eager load should reuse the active transaction, not open a second one");
 		}
 
 		[Test]
@@ -1571,17 +1625,19 @@ namespace Tests.Data
 
 			db.NextQueryHints.Add("-- pr5 next-query hint");
 
-			var result = db.GetTable<Pr5EagerParent>().LoadWith(p => p.Children).ToList();
+			var result = db.GetTable<Pr5EagerParent>()
+				.LoadWith(p => p.Children)
+				.ToList();
 
-			Assert.That(result[0].Children, Has.Count.EqualTo(1));
+			result[0].Children.Count.ShouldBe(1);
 			// The one-shot hint must be consumed by the eager load, not left behind to leak onto the next query.
-			Assert.That(db.NextQueryHints, Is.Empty, "eager load must consume NextQueryHints so it cannot leak to the next query");
+			db.NextQueryHints.ShouldBeEmpty("eager load must consume NextQueryHints so it cannot leak to the next query");
 		}
 
 		[Test]
-		public void EagerLoadCachedRenderBindsPerExecutionParameters([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllMySql)] string context)
+		public void EagerLoadCachedRenderBindsPerExecutionParameters([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllMySql)] string context, [Values] bool combinedCommands)
 		{
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.UseCombinedCommands(combinedCommands));
 
 			using var parents  = db.CreateLocalTable<Pr5EagerParent>();
 			using var children = db.CreateLocalTable<Pr5EagerChild>();
@@ -1595,12 +1651,15 @@ namespace Tests.Data
 			// OWN parameter (2), not the first run's cached value (1). A stale bind would return parent 1 / child 10.
 			for (var id = 1; id <= 2; id++)
 			{
-				var result = db.GetTable<Pr5EagerParent>().Where(p => p.Id == id).LoadWith(p => p.Children).ToList();
+				var result = db.GetTable<Pr5EagerParent>()
+					.Where(p => p.Id == id)
+					.LoadWith(p => p.Children)
+					.ToList();
 
-				Assert.That(result,                         Has.Count.EqualTo(1));
-				Assert.That(result[0].Id,                   Is.EqualTo(id));
-				Assert.That(result[0].Children,             Has.Count.EqualTo(1));
-				Assert.That(result[0].Children[0].ParentId, Is.EqualTo(id));
+				result                        .Count.ShouldBe(1);
+				result[0].Id                  .ShouldBe(id);
+				result[0].Children            .Count.ShouldBe(1);
+				result[0].Children[0].ParentId.ShouldBe(id);
 			}
 		}
 

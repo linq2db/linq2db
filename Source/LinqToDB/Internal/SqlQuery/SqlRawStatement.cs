@@ -15,10 +15,10 @@ namespace LinqToDB.Internal.SqlQuery
 	/// Produced server-side during scenario render (never present in a client-serialized statement), so it is
 	/// intentionally not handled by <c>LinqServiceSerializer</c> — remote serialization of it would throw.
 	/// </remarks>
-	public sealed class SqlFragmentStatement : SqlStatement
+	public sealed class SqlRawStatement : SqlStatement
 	{
-		/// <summary>Creates a fragment statement that renders <paramref name="expression"/> as a full command.</summary>
-		public SqlFragmentStatement(ISqlExpression expression)
+		/// <summary>Creates a raw statement that renders <paramref name="expression"/> as a full command.</summary>
+		public SqlRawStatement(ISqlExpression expression)
 		{
 			Expression = expression;
 		}
@@ -26,8 +26,8 @@ namespace LinqToDB.Internal.SqlQuery
 		/// <summary>The raw SQL expression rendered as the command body.</summary>
 		public ISqlExpression Expression { get; set; }
 
-		public override QueryType        QueryType   => QueryType.Fragment;
-		public override QueryElementType ElementType => QueryElementType.SqlFragmentStatement;
+		public override QueryType        QueryType   => QueryType.Raw;
+		public override QueryElementType ElementType => QueryElementType.SqlRawStatement;
 
 		public override bool IsParameterDependent
 		{
@@ -54,6 +54,6 @@ namespace LinqToDB.Internal.SqlQuery
 		}
 
 		[DebuggerStepThrough]
-		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlFragmentStatement(this);
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlRawStatement(this);
 	}
 }

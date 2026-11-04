@@ -30,7 +30,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			Expression          expression,
 			IBuildContext       buildContext,
 			ParameterExpression queryParameter,
-			List<Harvester>      harvesters,
+			List<Harvester>     harvesters,
 			Expression[]        previousKeys,
 			EagerLoadState      state)
 		{
@@ -1155,7 +1155,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			IBuildContext       combinedSequence,
 			Expression          keyExpression,
 			ParameterExpression queryParameter,
-			List<Harvester>      harvesters,
+			List<Harvester>     harvesters,
 			CteUnionBranch[]    branches,
 			int[][]             slotMaps,
 			Type[]              carrierTypes)
@@ -1271,7 +1271,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			Query<T>            query,
 			IBuildContext       sequence,
 			Expression          finalized,
-			List<Harvester>      harvesters,
+			List<Harvester>     harvesters,
 			int                 harvesterStartIndex,
 			ParameterExpression queryParameter,
 			CteUnionPhase2Info  info)
@@ -1296,7 +1296,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			Query<T>            query,
 			IBuildContext       sequence,
 			Expression          finalized,
-			List<Harvester>      harvesters,
+			List<Harvester>     harvesters,
 			int                 harvesterStartIndex,
 			CteUnionPhase2Info  info,
 			ParameterExpression queryParameter)
@@ -1415,7 +1415,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			// 6. Replace GetResultEnumerable with UNION ALL-based iterator.
-			var harvesterIdx0       = harvesterStartIndex;
+			var harvesterIdx0      = harvesterStartIndex;
 			var branchCount0       = branches.Length;
 			var parentSetId0       = info.ParentSetId;
 			var synthesizeParent0  = info.SynthesizeParent;
@@ -1470,22 +1470,22 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		sealed class CteUnionResultEnumerable<T, TCarrier> : IResultEnumerable<T>
 		{
-			readonly List<TCarrier>                                               _carriers;
-			readonly Func<TCarrier, int>                                          _getSetId;
-			readonly int                                                           _parentSetId;
-			readonly bool                                                          _synthesizeParent;
-			readonly IQueryExpressions                                             _expr;
-			readonly Func<IQueryExpressions, object?[]?, TCarrier, SqlCommandExecutionContext?, T>  _parentMapper;
-			readonly SqlCommandExecutionContext?                                  _harvesterResults;
+			readonly List<TCarrier>                                                                _carriers;
+			readonly Func<TCarrier, int>                                                           _getSetId;
+			readonly int                                                                           _parentSetId;
+			readonly bool                                                                          _synthesizeParent;
+			readonly IQueryExpressions                                                             _expr;
+			readonly Func<IQueryExpressions, object?[]?, TCarrier, SqlCommandExecutionContext?, T> _parentMapper;
+			readonly SqlCommandExecutionContext?                                                   _harvesterResults;
 
 			public CteUnionResultEnumerable(
-				List<TCarrier>                                                     carriers,
-				Func<TCarrier, int>                                                getSetId,
-				int                                                                parentSetId,
-				bool                                                               synthesizeParent,
-				IQueryExpressions                                                  expr,
-				Func<IQueryExpressions, object?[]?, TCarrier, SqlCommandExecutionContext?, T>       parentMapper,
-				SqlCommandExecutionContext?                                        harvesterResults)
+				List<TCarrier>                                                                carriers,
+				Func<TCarrier, int>                                                           getSetId,
+				int                                                                           parentSetId,
+				bool                                                                          synthesizeParent,
+				IQueryExpressions                                                             expr,
+				Func<IQueryExpressions, object?[]?, TCarrier, SqlCommandExecutionContext?, T> parentMapper,
+				SqlCommandExecutionContext?                                                   harvesterResults)
 			{
 				_carriers         = carriers;
 				_getSetId         = getSetId;
@@ -1493,7 +1493,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				_synthesizeParent = synthesizeParent;
 				_expr             = expr;
 				_parentMapper     = parentMapper;
-				_harvesterResults  = harvesterResults;
+				_harvesterResults = harvesterResults;
 			}
 
 			public IEnumerator<T> GetEnumerator()
@@ -1580,8 +1580,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				HarvesterResultType = harvesterResultType;
 			}
 
-			public override ExpressionType NodeType => ExpressionType.Extension;
-			public override Type           Type     => HarvesterResultType;
+			public override ExpressionType NodeType  => ExpressionType.Extension;
+			public override Type           Type      => HarvesterResultType;
 			public override bool           CanReduce => false;
 
 			protected override Expression VisitChildren(ExpressionVisitor visitor) => this;
@@ -1657,13 +1657,13 @@ namespace LinqToDB.Internal.Linq.Builder
 		// branches deepest-first so their HarvesterResults are populated before parent detail extractors
 		// look them up. Shared by the inline and harvester execution modes.
 		static void RunNestedCteUnionPasses<TKey, TCarrier>(
-			List<TCarrier>                       carriers,
-			object?[]                            buckets,
-			Func<TCarrier, int>                  getSetId,
-			Func<TCarrier, TKey>                 getKey,
+			List<TCarrier>                                        carriers,
+			object?[]                                             buckets,
+			Func<TCarrier, int>                                   getSetId,
+			Func<TCarrier, TKey>                                  getKey,
 			Func<TCarrier, SqlCommandExecutionContext?, object>[] detailExtractors,
-			int[]                                nestedProcessingOrder,
-			SqlCommandExecutionContext?          harvesterResults)
+			int[]                                                 nestedProcessingOrder,
+			SqlCommandExecutionContext?                           harvesterResults)
 			where TKey : notnull
 		{
 			foreach (var nestedSetId in nestedProcessingOrder)
@@ -1684,14 +1684,14 @@ namespace LinqToDB.Internal.Linq.Builder
 		// Dispatches a single carrier into its non-nested branch bucket. Serves both the single-pass
 		// loops (nestedSetIds null) and the non-nested sweep of the multi-pass path (nested excluded).
 		static void AddNonNestedCarrier<TKey, TCarrier>(
-			TCarrier                             carrier,
-			object?[]                            buckets,
-			Func<TCarrier, int>                  getSetId,
-			Func<TCarrier, TKey>                 getKey,
+			TCarrier                                              carrier,
+			object?[]                                             buckets,
+			Func<TCarrier, int>                                   getSetId,
+			Func<TCarrier, TKey>                                  getKey,
 			Func<TCarrier, SqlCommandExecutionContext?, object>[] detailExtractors,
-			int                                  branchCount,
-			HashSet<int>?                        nestedSetIds,
-			SqlCommandExecutionContext?          harvesterResults)
+			int                                                   branchCount,
+			HashSet<int>?                                         nestedSetIds,
+			SqlCommandExecutionContext?                           harvesterResults)
 			where TKey : notnull
 		{
 			var setId = getSetId(carrier);
@@ -1706,22 +1706,22 @@ namespace LinqToDB.Internal.Linq.Builder
 		sealed class CteUnionHarvester<TKey, TCarrier> : Harvester, IStepMaterializer
 			where TKey : notnull
 		{
-			readonly Query<TCarrier>            _query;
-			readonly Func<TCarrier, int>        _getSetId;
-			readonly Func<TCarrier, TKey>       _getKey;
+			readonly Query<TCarrier>                                       _query;
+			readonly Func<TCarrier, int>                                   _getSetId;
+			readonly Func<TCarrier, TKey>                                  _getKey;
 			readonly Func<TCarrier, SqlCommandExecutionContext?, object>[] _detailExtractors;
-			readonly int                        _branchCount;
-			readonly int[]?                     _nestedProcessingOrder; // nested setIds in reverse depth order (deepest first)
-			readonly int                        _harvesterIndex;
+			readonly int                                                   _branchCount;
+			readonly int[]?                                                _nestedProcessingOrder; // nested setIds in reverse depth order (deepest first)
+			readonly int                                                   _harvesterIndex;
 
 			public CteUnionHarvester(
-				Query<TCarrier>                      query,
-				Func<TCarrier, int>                  getSetId,
-				Func<TCarrier, TKey>                 getKey,
+				Query<TCarrier>                                       query,
+				Func<TCarrier, int>                                   getSetId,
+				Func<TCarrier, TKey>                                  getKey,
 				Func<TCarrier, SqlCommandExecutionContext?, object>[] detailExtractors,
-				int                                  branchCount,
-				int[]?                               nestedProcessingOrder,
-				int                                  harvesterIndex)
+				int                                                   branchCount,
+				int[]?                                                nestedProcessingOrder,
+				int                                                   harvesterIndex)
 			{
 				_query                  = query;
 				_getSetId               = getSetId;
@@ -1741,8 +1741,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			// whose result set is bucketed off the shared reader instead of a separate round-trip.
 			public bool CanCombine => _query.GetResultFromReader != null;
 
-			public SqlStatement? GetCombinableStatement()
-				=> _query.QueryInfo.Statement;
+			public QueryInfo? GetCombinableQueryInfo()
+				=> _query.QueryInfo;
 
 			public void AddCombinableParameterValues(SqlParameterValues values, IQueryExpressions expressions, IDataContext dataContext, object?[]? parameters, SqlCommandExecutionContext context)
 			{

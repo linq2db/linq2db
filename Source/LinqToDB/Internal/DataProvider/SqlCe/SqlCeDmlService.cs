@@ -13,7 +13,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 		/// <summary>
 		/// SQL CE DML mechanics. An identity insert is split into the insert (non-query) plus a scalar
 		/// <c>SELECT @@IDENTITY</c>; a truncate-with-reset becomes the truncate plus one
-		/// <see cref="SqlFragmentStatement"/> per identity column
+		/// <see cref="SqlRawStatement"/> per identity column
 		/// (<c>ALTER TABLE … ALTER COLUMN … IDENTITY(1, 1)</c>). Everything else uses the base scenario.
 		/// </summary>
 		public override SqlCommandScenario? BuildCommandScenario(SqlStatement statement, SqlProviderFlags flags, ISqlExpressionFactory factory)
@@ -22,7 +22,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 			{
 				var table = truncate.Table!;
 
-				return PerFieldResetScenario(truncate, field => new SqlFragmentStatement(factory.Fragment(
+				return PerFieldResetScenario(truncate, field => new SqlRawStatement(factory.Fragment(
 					"ALTER TABLE {0} ALTER COLUMN {1} IDENTITY(1, 1)",
 					new SqlObjectNameExpression(table.TableName, ConvertType.NameToQueryTable, table.TableOptions),
 					new SqlObjectNameExpression(new SqlObjectName(field.PhysicalName), ConvertType.NameToQueryField))));
