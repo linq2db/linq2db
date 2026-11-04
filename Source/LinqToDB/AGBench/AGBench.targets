@@ -8,9 +8,11 @@
 		<DefineConstants Condition="'$(AGB_X)'=='true'">$(DefineConstants);AGB_X</DefineConstants>
 		<DefineConstants Condition="'$(AGB_XC)'=='true'">$(DefineConstants);AGB_XC</DefineConstants>
 		<DefineConstants Condition="'$(AGB_MASS)'=='true'">$(DefineConstants);AGB_MASS</DefineConstants>
-		<RestoreAdditionalProjectSources Condition="'$(AGB_ANY)'=='true'">$(AGB_FEED)</RestoreAdditionalProjectSources>
 	</PropertyGroup>
+	<!-- The same wiring the package gives: its props and targets, and the analyzer assembly. -->
+	<Import Project="$(AGB_SRC)\build\AspectGenerator.props" Condition="'$(AGB_ANY)'=='true'" />
+	<Import Project="$(AGB_SRC)\build\AspectGenerator.targets" Condition="'$(AGB_ANY)'=='true'" />
 	<ItemGroup Condition="'$(AGB_ANY)'=='true'">
-		<PackageReference Include="AspectGenerator" VersionOverride="$(AGB_VERSION)" PrivateAssets="all" />
+		<Analyzer Include="$(AGB_SRC)\bin\Release\netstandard2.0\AspectGenerator.dll" />
 	</ItemGroup>
 </Project>
