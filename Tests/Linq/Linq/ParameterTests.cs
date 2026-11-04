@@ -518,6 +518,61 @@ namespace Tests.Linq
 			whenFalse    .Parameters.ShouldBeEmpty();
 		}
 
+		[Test]
+		public void NegatedConstantComparedWithNullDateParameter([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			DateTime? date = null;
+
+			var query = db.Person
+				.Where(p => !(Sql.AsSql((DateTime?)TestData.DateTime0) <= date));
+
+			AssertQuery(query);
+
+			date = TestData.DateTime0.AddDays(1);
+
+			AssertQuery(query);
+
+			date = null;
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void NegatedConstantComparedWithNullIntParameter([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			int? value = null;
+
+			var query = db.Person
+				.Where(p => !(Sql.AsSql((int?)1) > value));
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void NegatedConstantComparedWithNullParameterUnderLikeSql([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context, o => o.UseCompareNulls(CompareNulls.LikeSql));
+
+			int? value = null;
+
+			var query = db.Person
+				.Where(p => !(Sql.AsSql((int?)1) > value));
+
+			query.ToList().ShouldBeEmpty();
+
+			value = 0;
+
+			query.ToList().ShouldBeEmpty();
+
+			value = 2;
+
+			query.ToList().Count.ShouldBe(db.Person.Count());
+		}
+
 		[Table]
 		sealed class TestEqualsTable1
 		{
