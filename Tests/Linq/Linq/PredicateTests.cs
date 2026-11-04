@@ -1012,6 +1012,31 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void Test_PredicateWithBooleanParameterRendersAsPlainPredicate([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(BooleanTable.Data);
+
+			var flag = true;
+
+			void ShouldRenderAs(IQueryable<BooleanTable> folded, IQueryable<BooleanTable> plain)
+			{
+				AssertQuery(folded);
+
+				folded.ToSqlQuery().Sql.ShouldBe(plain.ToSqlQuery().Sql);
+			}
+
+			ShouldRenderAs(tb.Where(r => (r.Value1 > r.Value4) == flag), tb.Where(r => r.Value1 > r.Value4));
+			ShouldRenderAs(tb.Where(r => (r.Value5 == r.Value4) == flag), tb.Where(r => r.Value5 == r.Value4));
+
+			flag = false;
+
+			ShouldRenderAs(tb.Where(r => (r.Value1 > r.Value4) == flag), tb.Where(r => !(r.Value1 > r.Value4)));
+			ShouldRenderAs(tb.Where(r => (r.Value1 == r.Value4) == flag), tb.Where(r => r.Value1 != r.Value4));
+			ShouldRenderAs(tb.Where(r => (r.Value5 == r.Value4) == flag), tb.Where(r => r.Value5 != r.Value4));
+		}
+
+		[Test]
 		public void Test_PredicateWithPredicate([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

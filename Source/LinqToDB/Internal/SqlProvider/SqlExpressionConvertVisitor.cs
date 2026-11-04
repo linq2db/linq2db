@@ -530,9 +530,10 @@ namespace LinqToDB.Internal.SqlProvider
 			// base is the optimizer: it visits the children and optimizes this node (it also owns the IsInsidePredicate
 			// save/restore, so IsInsidePredicate is back to the enclosing value by the time we read it below).
 			// Operands are value slots: ConvertExprExprPredicate decides whether a predicate operand becomes a CASE first.
-			// A provider with boolean values that compares predicates never folds one, so its operands reduce at once, unless
-			// the comparison itself is deferred (a NOT or a value slot still has to decide on it).
-			var deferOperands            = DeferPredicateReduce || (!_finishingDeferred && (!SqlProviderFlags.SupportsBooleanType || !SqlProviderFlags.SupportsPredicatesComparison));
+			// A provider with boolean values that compares predicates folds one only against a boolean value, so its operands
+			// reduce at once, unless the comparison itself is deferred (a NOT or a value slot still has to decide on it). A
+			// folding comparison keeps its operand unreduced: it becomes the predicate in this comparison's place.
+			var deferOperands            = DeferPredicateReduce || (!_finishingDeferred && (!SqlProviderFlags.SupportsBooleanType || !SqlProviderFlags.SupportsPredicatesComparison || FoldsToPredicateOperand(predicate)));
 			var saveDeferPredicateReduce = DeferPredicateReduce;
 			DeferPredicateReduce         = deferOperands;
 			var newElement               = base.VisitExprExprPredicate(predicate);
@@ -566,6 +567,14 @@ namespace LinqToDB.Internal.SqlProvider
 				return Visit(reduced);
 
 			return predicate;
+		}
+
+		// The fold in SqlExpressionOptimizerVisitor.VisitExprExprPredicate: a predicate compared with a known boolean value.
+		bool FoldsToPredicateOperand(SqlPredicate.ExprExpr predicate)
+		{
+			return predicate is { Operator: SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual, UnknownAsValue: null }
+				&& (predicate.Expr1 is ISqlPredicate && QueryHelper.GetBoolValue(predicate.Expr2, EvaluationContext) != null
+					|| predicate.Expr2 is ISqlPredicate && QueryHelper.GetBoolValue(predicate.Expr1, EvaluationContext) != null);
 		}
 
 		/// <summary>
