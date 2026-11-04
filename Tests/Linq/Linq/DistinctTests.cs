@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
@@ -513,7 +514,7 @@ namespace Tests.Linq
 						.Count(),
 					LongCount = db.GrandChild
 						.Where(g => g.ParentID == p.ParentID)
-						.Select(g => new { g.ChildID, g.GrandChildID })
+						.Select(g => new { g.ParentID, g.ChildID })
 						.Distinct()
 						.LongCount(),
 				};
@@ -754,6 +755,140 @@ namespace Tests.Linq
 						.Distinct()
 						.Count(),
 				};
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllOracle11, TestProvName.AllMySql57, TestProvName.AllMariaDB, TestProvName.AllDB2)]
+		[ThrowsRequiresCorrelatedSubquery]
+		[ActiveIssue(6166, Configuration = TestProvName.AllSybase, ErrorMessage = "does not match with a table name or alias name")]
+		[Test]
+		public void DistinctCountWithNullsInCorrelatedSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				orderby p.ParentID
+				select new
+				{
+					p.ParentID,
+					Anonymous = db.Parent
+						.Where(x => x.ParentID <= p.ParentID)
+						.Select(x => new { x.Value1 })
+						.Distinct()
+						.Count(),
+					AfterWhere = db.Parent
+						.Where(x => x.ParentID <= p.ParentID)
+						.Select(x => x.Value1)
+						.Distinct()
+						.Where(v => v != 1)
+						.Count(),
+				};
+
+			AssertQuery(query);
+		}
+
+		static int LastDigit(int? value) => value.GetValueOrDefault() % 10;
+
+		static string Label(int value) => "#" + value;
+
+		// A SQL DISTINCT has no column for a client-side value, so the sub-query is refused and the
+		// eager-load fallback takes over.
+		[ActiveIssue(5787, ErrorMessage = "There is no method 'AggregateExecute'")]
+		[Test]
+		public void DistinctCountOfClientOnlyValueInCorrelatedSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				orderby p.ParentID
+				select new
+				{
+					p.ParentID,
+					Anonymous = db.GrandChild
+						.Where(g => g.ParentID == p.ParentID)
+						.Select(g => new { V = LastDigit(g.GrandChildID) })
+						.Distinct()
+						.Count(),
+					Scalar = db.GrandChild
+						.Where(g => g.ParentID == p.ParentID)
+						.Select(g => LastDigit(g.GrandChildID))
+						.Distinct()
+						.Count(),
+				};
+
+			AssertQuery(query);
+		}
+
+		[ActiveIssue(5787, ErrorMessage = "There is no method 'AggregateExecute'")]
+		[Test]
+		public void DistinctCountOfClientOnlyValueInGroup([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from g in db.GrandChild
+				group g by g.ParentID into grp
+				orderby grp.Key
+				select new
+				{
+					grp.Key,
+					Cnt = grp
+						.Select(x => new { V = LastDigit(x.GrandChildID) })
+						.Distinct()
+						.Count(),
+				};
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void DistinctCountOfClientOnlyValueRefuses([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			Action anonymous = () => _ = db.Child
+				.Select(c => new { V = LastDigit(c.ChildID) })
+				.Distinct()
+				.Count();
+
+			Action scalar = () => _ = db.Child
+				.Select(c => LastDigit(c.ChildID))
+				.Distinct()
+				.Count();
+
+			Action afterTake = () => _ = db.Child
+				.Select(c => LastDigit(c.ChildID))
+				.Distinct()
+				.Take(100)
+				.Count();
+
+			anonymous
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain("could not be converted to SQL.");
+
+			scalar
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain("could not be converted to SQL.");
+
+			afterTake
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain("could not be converted to SQL.");
+		}
+
+		[Test]
+		public void DistinctOfClientOnlyValueMaterializes([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Child
+				.Select(c => new { c.ParentID, Name = Label(c.ChildID) })
+				.Distinct();
 
 			AssertQuery(query);
 		}

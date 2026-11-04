@@ -2,6 +2,7 @@
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Reflection;
@@ -123,6 +124,10 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					result = Builder.BuildSqlExpression(Context, corrected);
 					result = Builder.UpdateNesting(Context, result);
+
+					// A client-side value has no DISTINCT column; a SQL consumer would count distinct inputs, or none.
+					if (flags.IsSql() && result.Find(static e => e is ContextRefExpression) != null)
+						return new SqlErrorExpression(path);
 				}
 				else
 				{
