@@ -621,20 +621,20 @@ namespace LinqToDB.Internal.Linq
 			{
 				sqlValues ??= [];
 
-				var                  mapped    = new HashSet<Expression>();
-				HashSet<Expression>? usedPaths = null;
+				var                  tokens   = new Dictionary<Expression, Expression>();
+				HashSet<Expression>? usedKeys = null;
 
 				foreach (var (value, accessor, _) in _bySqlValueCompare)
 				{
 					if (sqlValues.Contains(value))
-						(usedPaths ??= new(ExpressionEqualityComparer.Instance)).Add(ApplyAccessors(accessor, mapped));
+						(usedKeys ??= new(ExpressionEqualityComparer.Instance)).Add(ReplaceMappedConstants(accessor, tokens));
 				}
 
 				foreach (var entry in _bySqlValueCompare)
 				{
 					// A value the optimizer folded out of the SQL still decided its shape. For now every absent value is
 					// compared unless the key covers it; linq2db#6184 tracks recording the values the optimizer consumes.
-					if (!sqlValues.Contains(entry.value) && IsCoveredByCacheKey(entry.accessor, usedPaths, mapped, dc.MappingSchema))
+					if (!sqlValues.Contains(entry.value) && IsCoveredByCacheKey(entry.accessor, usedKeys, tokens, dc.MappingSchema))
 						continue;
 
 					(sqlValueCompares ??= []).Add(entry);
@@ -825,18 +825,42 @@ namespace LinqToDB.Internal.Linq
 			}
 		}
 
-		bool IsCoveredByCacheKey(Expression accessor, HashSet<Expression>? usedPaths, HashSet<Expression> mapped, MappingSchema mappingSchema)
+		bool IsCoveredByCacheKey(Expression accessor, HashSet<Expression>? usedKeys, Dictionary<Expression, Expression> tokens, MappingSchema mappingSchema)
 		{
-			// Match key paths, not nodes: the comparer matches constants by content, so two equal arrays would pass for one.
-			if (usedPaths?.Contains(ApplyAccessors(accessor, mapped)) == true)
-				return true;
-
-			return accessor.Unwrap() switch
+			var covered = accessor.Unwrap() switch
 			{
 				DefaultExpression           => true,
 				ConstantExpression constant => ExpressionCacheHelpers.IsComparedByValueInKey(constant, mappingSchema),
 				_                           => false,
 			};
+
+			return covered || usedKeys?.Contains(ReplaceMappedConstants(accessor, tokens)) == true;
+		}
+
+		/// <summary>
+		/// Replaces each constant the key maps with a token unique to that node, so equal results read the same nodes: the
+		/// comparer matches constants by content, and two equal arrays would pass for one. Not the node's key path, which
+		/// grows with its depth in the query.
+		/// </summary>
+		Expression ReplaceMappedConstants(Expression expression, Dictionary<Expression, Expression> tokens)
+		{
+			return expression.Transform(
+				(tokens, paramContext : this),
+				static (context, expr) =>
+				{
+					if (expr.NodeType == ExpressionType.ArrayIndex && ((BinaryExpression)expr).Left == ExpressionBuilder.ParametersParam)
+						return new TransformInfo(expr, true);
+
+					if (expr is ConstantExpression { Value: not null } && context.paramContext.GetAccessorExpression(expr, out _))
+					{
+						if (!context.tokens.TryGetValue(expr, out var token))
+							context.tokens.Add(expr, token = Expression.Convert(Expression.Constant(new object()), expr.Type));
+
+						return new TransformInfo(token);
+					}
+
+					return new TransformInfo(expr);
+				});
 		}
 
 		/// <summary>
