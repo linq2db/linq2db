@@ -1469,8 +1469,6 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 			return element;
 		}
 
-		static readonly DbDataType PlainStringType = new(typeof(string));
-
 		protected internal override IQueryElement VisitSqlConcatExpression(SqlConcatExpression element)
 		{
 			var newElement = base.VisitSqlConcatExpression(element);
@@ -1478,13 +1476,12 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 				return Visit(newElement);
 
 			var operands = element.Expressions;
+
+			if (!ConcatNeedsFolding(operands))
+				return element;
+
 			List<ISqlExpression>? folded = null;
 			string?               pending = null;
-			// True only when the fold really rewrites something (drops a null/empty operand, or merges adjacent constants).
-			// A lone constant that just passes through `pending` re-mints an equal SqlValue but is NOT a change; treating it
-			// as one would rebuild a structurally-identical node each visit and, now that the convert re-visits the optimized
-			// node in the same traversal, spin forever. Keep the fold idempotent: no real change → return the original.
-			var changed = false;
 
 			void EnsureFolded(int upTo)
 			{
@@ -1518,7 +1515,6 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 						// to match string.Concat null-as-empty semantics — an evaluated NULL is
 						// functionally an empty string. Drop.
 						EnsureFolded(i);
-						changed = true;
 						continue;
 					}
 
@@ -1527,17 +1523,10 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 						if (s.Length == 0)
 						{
 							EnsureFolded(i);
-							changed = true;
 							continue;
 						}
 
 						EnsureFolded(i);
-						// Two constants collapsing into one is a real fold. So is turning a non-SqlValue operand
-						// (an evaluable parameter / computed expression) into a literal, and so is re-typing a literal that
-						// took the type of a neighbouring column (a VarChar one loses SQL Server's N prefix) as a plain
-						// string: only an operand that is ALREADY the equal plain-string SqlValue must not count as a change.
-						if (pending != null || operand is not SqlValue { ValueType: var literalType } || !literalType.Equals(PlainStringType))
-							changed = true;
 						pending = pending == null ? s : pending + s;
 						continue;
 					}
@@ -1553,7 +1542,7 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 				}
 			}
 
-			if (folded == null || !changed)
+			if (folded == null)
 				return element;
 
 			FlushPending();
@@ -1565,6 +1554,40 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 				return folded[0];
 
 			return NotifyReplaced(new SqlConcatExpression(element.PreserveNull, folded.ToArray()), element);
+		}
+
+		static readonly DbDataType _concatLiteralType = new(typeof(string));
+
+		// Mirrors the fold loop in VisitSqlConcatExpression: true when it would emit anything other than the
+		// same operands. Without it a lone literal is rebuilt on every pass and the fold never reaches a fixpoint.
+		bool ConcatNeedsFolding(ISqlExpression[] operands)
+		{
+			var previousIsLiteral = false;
+
+			foreach (var operand in operands)
+			{
+				if (TryEvaluateNoParameters(operand, out var value))
+				{
+					if (value is null)
+						return true;
+
+					if (value is string s)
+					{
+						if (s.Length == 0 || previousIsLiteral || operands.Length == 1)
+							return true;
+
+						if (operand is not SqlValue { Value: string } literal || literal.ValueType != _concatLiteralType)
+							return true;
+
+						previousIsLiteral = true;
+						continue;
+					}
+				}
+
+				previousIsLiteral = false;
+			}
+
+			return false;
 		}
 
 		protected internal override IQueryElement VisitSqlCastExpression(SqlCastExpression element)
