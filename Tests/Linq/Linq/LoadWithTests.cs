@@ -1122,6 +1122,10 @@ namespace Tests.Linq
 			[PrimaryKey] public int Id             { get; set; }
 			[Column    ] public int ProductId      { get; set; }
 			[Column    ] public int OrganisationId { get; set; }
+
+			// same name and element type as ClashSystem.Stages, different keys
+			[Association(ThisKey = nameof(ProductId), OtherKey = nameof(ClashStage.ProductId))]
+			public List<ClashStage> Stages { get; set; } = null!;
 		}
 
 		[Table]
@@ -1232,6 +1236,74 @@ namespace Tests.Linq
 				.Select(po => po.Id)
 				.OrderBy(id => id)
 				.ShouldBe(filtered ? new[] { 3 } : new[] { 3, 4 });
+		}
+
+		[Test]
+		public void ThenLoadOnSelectManySourceWithRootMemberNameAndTypeClash([DataSources] string context)
+		{
+			using var db         = GetDataContext(context);
+			using var orgs       = db.CreateLocalTable(
+				Enumerable
+					.Range(1, 5)
+					.Select(i => new ClashOrg { Id = i }));
+			using var orgSystems = db.CreateLocalTable(new[]
+			{
+				new ClashOrgSystem { Id = 1, SystemId = 10, OrganisationId = 5 },
+				new ClashOrgSystem { Id = 2, SystemId = 20, OrganisationId = 5 },
+			});
+			using var systems    = db.CreateLocalTable(new[] { new ClashSystem { Id = 10 }, new ClashSystem { Id = 20 }, new ClashSystem { Id = 30 } });
+			using var stages     = db.CreateLocalTable(new[]
+			{
+				new ClashStage { Id = 100, SystemId = 10, ProductId = 1000 },
+				new ClashStage { Id = 200, SystemId = 20, ProductId = 2000 },
+				new ClashStage { Id = 300, SystemId = 30, ProductId = 1000 },
+			});
+			using var products   = db.CreateLocalTable(new[] { new ClashProduct { Id = 1000 }, new ClashProduct { Id = 2000 } });
+			using var prodOrgs   = db.CreateLocalTable(new[]
+			{
+				new ClashProductOrg { Id = 1, ProductId = 1000, OrganisationId = 1 },
+				new ClashProductOrg { Id = 2, ProductId = 2000, OrganisationId = 2 },
+			});
+
+			var query =
+				from o in db.GetTable<ClashOrg>()
+				where o.Id == 5
+				from a in db.GetTable<ClashOrgSystem>()
+				where a.OrganisationId == o.Id
+				join s in db.GetTable<ClashSystem>() on a.SystemId equals s.Id
+				select s;
+
+			// a wrong binding to ClashSystem.Stages passes the filter type check and fails silently
+			var result = query
+				.LoadWith(x => x.Stages)
+					.ThenLoad(x => x.Product)
+						.ThenLoad(x => x.Organisations)
+							.ThenLoad(x => x.Stages)
+				.ToList()
+				.OrderBy(s => s.Id)
+				.ToList();
+
+			result
+				.Select(s => s.Id)
+				.ShouldBe(new[] { 10, 20 });
+
+			// stage 300 belongs to system 30, which the query does not return
+			result[0].Stages
+				.Single()
+				.Product.Organisations
+				.Single()
+				.Stages
+				.Select(st => st.Id)
+				.OrderBy(id => id)
+				.ShouldBe(new[] { 100, 300 });
+
+			result[1].Stages
+				.Single()
+				.Product.Organisations
+				.Single()
+				.Stages
+				.Select(st => st.Id)
+				.ShouldBe(new[] { 200 });
 		}
 	}
 }
