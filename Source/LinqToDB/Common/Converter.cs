@@ -5,6 +5,7 @@ using System.Data.Linq;
 using System.Globalization;
 using System.IO;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Xml;
 
 using JetBrains.Annotations;
@@ -14,6 +15,7 @@ using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Conversion;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.ExpressionVisitors;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Common
@@ -76,10 +78,10 @@ namespace LinqToDB.Common
 		// netstandard2.0 build, which can't name the type (#6077). Same lambda shape as `v => v.ToDateTime(TimeOnly.MinValue)`.
 		static void SetDateOnlyToDateTimeConverter()
 		{
-			if (Type.GetType("System.DateOnly")                is not { } dateOnly
-				|| Type.GetType("System.TimeOnly")             is not { } timeOnly
-				|| dateOnly.GetMethod("ToDateTime", [timeOnly]) is not { } toDateTime
-				|| timeOnly.GetProperty("MinValue")             is not { } minValue)
+			if (Type.GetType("System.DateOnly")                                                              is not { } dateOnly
+				|| Type.GetType("System.TimeOnly")                                                           is not { } timeOnly
+				|| dateOnly.GetMethodEx("ToDateTime", BindingFlags.Public | BindingFlags.Instance, timeOnly) is not { } toDateTime
+				|| timeOnly.GetProperty("MinValue")                                                          is not { } minValue)
 				return;
 
 			var v = Expression.Parameter(dateOnly, "v");

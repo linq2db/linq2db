@@ -74,7 +74,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			// runtimes also load the netstandard2.0 build (#6077); built from Ticks as DateTime(DateOnly, TimeOnly) is .NET 8+.
 			if (Type.GetType("System.TimeOnly") is { } timeOnly
 				&& timeOnly.GetProperty("Ticks") is { } ticks
-				&& typeof(DateTime).GetConstructor([typeof(long)]) is { } dateTimeCtor)
+				&& typeof(DateTime).GetConstructorEx(typeof(long)) is { } dateTimeCtor)
 			{
 				var value = Expression.Parameter(timeOnly, "value");
 				SetConvertExpression(timeOnly, typeof(DateTime), Expression.Lambda(Expression.New(dateTimeCtor, Expression.Property(value, ticks)), value), conversionType: ConversionType.FromDatabase);
