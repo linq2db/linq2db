@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -641,6 +643,264 @@ namespace Tests.Identity
 			// ColumnAttribute - and a scoped mapping outranks an unscoped one, which is what swallows the rename.
 			// Everywhere else the same override applies normally.
 			userId.ColumnName.ShouldBe(context.IsAnyOf(TestProvName.AllFirebirdLess3) ? "UserId" : "UserRef");
+		}
+
+		#endregion
+
+		#region Provider-scoped overrides
+
+		sealed class OracleVarChar2Connection(DataOptions options) : IdentityDataConnection(options)
+		{
+			protected override void ConfigureMappings(MappingSchema mappingSchema)
+			{
+				base.ConfigureMappings(mappingSchema);
+
+				new FluentMappingBuilder(mappingSchema)
+					.Entity<IdentityUser>()
+						.Property(e => e.NormalizedUserName).HasAttribute(new DataTypeAttribute(DataType.VarChar) { Configuration = ProviderName.Oracle })
+						.Property(e => e.NormalizedEmail)   .HasAttribute(new DataTypeAttribute(DataType.VarChar) { Configuration = ProviderName.Oracle })
+					.Build();
+			}
+		}
+
+		[Test]
+		public void ProviderScopedDataTypeOverridesScopedDefault([DataSources(false)] string context)
+		{
+			var options = new DataOptions().UseConfiguration(context.StripRemote());
+
+			using var defaults = new IdentityDataConnection(options);
+			using var db       = new OracleVarChar2Connection(options);
+
+			var oracle = context.IsAnyOf(TestProvName.AllOracle);
+			var name   = NormalizedUserNameColumn(db);
+
+			name.DataType.ShouldBe(oracle ? DataType.VarChar : NormalizedUserNameColumn(defaults).DataType);
+			name.Length.ShouldBe(256);
+			name.CanBeNull.ShouldBeTrue();
+
+			// the lookup parameter follows the column type, which is what keeps a VARCHAR2 index usable on Oracle
+			LookupParameterType(db).ShouldBe(oracle ? DataType.VarChar : LookupParameterType(defaults));
+
+			static ColumnDescriptor NormalizedUserNameColumn(IdentityDataConnection db)
+				=> db.MappingSchema
+					.GetEntityDescriptor(typeof(IdentityUser))
+					.Columns.Single(c => c.MemberName == nameof(IdentityUser.NormalizedUserName));
+
+			static DataType LookupParameterType(IdentityDataConnection db)
+			{
+				var normalizedName = "ALICE";
+
+				return db.GetTable<IdentityUser>()
+					.Where(u => u.NormalizedUserName == normalizedName)
+					.ToSqlQuery()
+					.Parameters
+					.Single()
+					.DbDataType.DataType;
+			}
+		}
+
+		sealed class Firebird25RenamedTokenConnection(DataOptions options) : IdentityDataConnection(options)
+		{
+			protected override void ConfigureMappings(MappingSchema mappingSchema)
+			{
+				base.ConfigureMappings(mappingSchema);
+
+				new FluentMappingBuilder(mappingSchema)
+					.Entity<IdentityUserToken<string>>()
+						.Property(e => e.UserId)
+							.HasColumnName("UserRef")
+							.HasAttribute(new ColumnAttribute
+							{
+								Configuration = ProviderName.Firebird25,
+								Name          = "UserRef",
+								Length        = 36,
+								CanBeNull     = false,
+								IsPrimaryKey  = false,
+							})
+					.Build();
+			}
+		}
+
+		[Test]
+		public void ProviderScopedColumnOverridesScopedDefault([DataSources(false)] string context)
+		{
+			using var db = new Firebird25RenamedTokenConnection(new DataOptions().UseConfiguration(context.StripRemote()));
+
+			var userId = db.MappingSchema
+				.GetEntityDescriptor(typeof(IdentityUserToken<string>))
+				.Columns.Single(c => c.MemberName == nameof(IdentityUserToken<>.UserId));
+
+			userId.ColumnName.ShouldBe("UserRef");
+			userId.Length.ShouldBe(36);
+			userId.CanBeNull.ShouldBeFalse();
+			// a scoped ColumnAttribute replaces the whole column mapping, so it restates the dropped key itself
+			userId.IsPrimaryKey.ShouldBe(!context.IsAnyOf(TestProvName.AllFirebirdLess3));
+		}
+
+		// Every provider-scoped default, as the readme's "Provider-specific mappings" section lists it.
+		sealed record ScopedDefault(Type Entity, string Member, string Kind, string Configuration);
+
+		const string DataTypeKind  = nameof(DataTypeAttribute);
+		const string ConverterKind = nameof(ValueConverterAttribute);
+		const string ColumnKind    = nameof(ColumnAttribute);
+
+		static readonly string[] TextLimitProviders = [ProviderName.Access, ProviderName.Informix, ProviderName.Oracle];
+		static readonly string[] TypeAndCommentProviders = [ProviderName.Informix, ProviderName.Oracle];
+		static readonly string[] LockoutEndProviders =
+		[
+			ProviderName.MySql, ProviderName.Access, ProviderName.SqlCe, ProviderName.SqlServer2005, ProviderName.Sybase,
+			ProviderName.SapHana, ProviderName.Informix, ProviderName.DB2LUW, ProviderName.Firebird, ProviderName.Ydb,
+		];
+		static readonly string[] LongTextProviders =
+		[
+			ProviderName.MySql, ProviderName.Oracle, ProviderName.Firebird, ProviderName.Access, ProviderName.DB2,
+			ProviderName.Informix, ProviderName.SapHana, ProviderName.Sybase, ProviderName.SqlCe,
+		];
+
+		static IEnumerable<ScopedDefault> Rows<T>(string kind, string[] configurations, params string[] members)
+			=> from m in members from c in configurations select new ScopedDefault(typeof(T), m, kind, c);
+
+		static readonly ScopedDefault[] ScopedDefaults =
+		[
+			.. Rows<IdentityUser>(DataTypeKind, TextLimitProviders,
+				nameof(IdentityUser.UserName), nameof(IdentityUser.NormalizedUserName), nameof(IdentityUser.Email), nameof(IdentityUser.NormalizedEmail),
+				nameof(IdentityUser.PasswordHash), nameof(IdentityUser.SecurityStamp), nameof(IdentityUser.PhoneNumber)),
+			.. Rows<IdentityUser>(DataTypeKind,  LockoutEndProviders, nameof(IdentityUser.LockoutEnd)),
+			.. Rows<IdentityUser>(ConverterKind, LockoutEndProviders, nameof(IdentityUser.LockoutEnd)),
+			.. Rows<IdentityRole>(DataTypeKind, TextLimitProviders, nameof(IdentityRole.Name), nameof(IdentityRole.NormalizedName)),
+			.. Rows<IdentityUserClaim<string>>(DataTypeKind, TypeAndCommentProviders, nameof(IdentityUserClaim<>.ClaimType)),
+			.. Rows<IdentityUserClaim<string>>(DataTypeKind, LongTextProviders,       nameof(IdentityUserClaim<>.ClaimValue)),
+			.. Rows<IdentityRoleClaim<string>>(DataTypeKind, TypeAndCommentProviders, nameof(IdentityRoleClaim<>.ClaimType)),
+			.. Rows<IdentityRoleClaim<string>>(DataTypeKind, LongTextProviders,       nameof(IdentityRoleClaim<>.ClaimValue)),
+			.. Rows<IdentityUserLogin<string>>(DataTypeKind, TypeAndCommentProviders, nameof(IdentityUserLogin<>.ProviderDisplayName)),
+			.. Rows<IdentityUserToken<string>>(DataTypeKind, LongTextProviders,       nameof(IdentityUserToken<>.Value)),
+			.. Rows<IdentityUserToken<string>>(ColumnKind, [ProviderName.Firebird25],
+				nameof(IdentityUserToken<>.UserId), nameof(IdentityUserToken<>.LoginProvider), nameof(IdentityUserToken<>.Name)),
+#if NET10_0_OR_GREATER
+			.. Rows<IdentityUserPasskey<string>>(ColumnKind,
+				[ProviderName.MySql, ProviderName.Oracle, ProviderName.Firebird, ProviderName.Access, ProviderName.Informix, ProviderName.SqlCe],
+				nameof(IdentityUserPasskey<>.Data)),
+			.. Rows<IdentityUserPasskey<string>>(ColumnKind, [ProviderName.Access, ProviderName.Firebird25, ProviderName.Informix],
+				nameof(IdentityUserPasskey<>.CredentialId)),
+			.. Rows<IdentityUserPasskey<string>>(ConverterKind, [ProviderName.Informix], nameof(IdentityUserPasskey<>.CredentialId)),
+#endif
+		];
+
+		static readonly Type[] IdentityEntities =
+		[
+			typeof(IdentityUser), typeof(IdentityRole), typeof(IdentityUserClaim<string>), typeof(IdentityUserRole<string>),
+			typeof(IdentityUserLogin<string>), typeof(IdentityUserToken<string>), typeof(IdentityRoleClaim<string>),
+#if NET10_0_OR_GREATER
+			typeof(IdentityUserPasskey<string>),
+#endif
+		];
+
+		static string Describe(ScopedDefault row) => $"{row.Entity.Name}.{row.Member} {row.Kind} @{row.Configuration}";
+
+		// Pins the readme's per-provider list to DefaultMappings: a scoped default added, dropped or moved to another
+		// provider fails here on that provider's leg until the list (and the readme) follow.
+		[Test]
+		public void ScopedDefaultsMatchDocumentedInventory([DataSources(false)] string context)
+		{
+			using var db = GetSetup(context);
+
+			var ms = db.MappingSchema;
+
+			var actual =
+			(
+				from type in IdentityEntities
+				from column in ms.GetEntityDescriptor(type).Columns
+				from attribute in ms.GetAttributes<MappingAttribute>(type, column.MemberInfo)
+				where !string.IsNullOrEmpty(attribute.Configuration)
+				let kind = attribute switch
+				{
+					DataTypeAttribute       => DataTypeKind,
+					ValueConverterAttribute => ConverterKind,
+					ColumnAttribute         => ColumnKind,
+					_                       => attribute.GetType().Name,
+				}
+				select Describe(new ScopedDefault(type, column.MemberName, kind, attribute.Configuration!))
+			)
+			// the stock IdentityUser / IdentityRole see their defaults again through the IdentityUser<string> /
+			// IdentityRole<string> mirror registration, so one documented row resolves more than once
+			.Distinct(StringComparer.Ordinal)
+			.OrderBy(d => d, StringComparer.Ordinal)
+			.ToArray();
+
+			var expected = ScopedDefaults
+				.Where(r => ms.ConfigurationList.Contains(r.Configuration, StringComparer.Ordinal))
+				.Select(Describe)
+				.OrderBy(d => d, StringComparer.Ordinal)
+				.ToArray();
+
+			actual.ShouldBe(expected);
+		}
+
+		const string OverrideDbType = "OverriddenDbType";
+
+		static readonly IValueConverter OverrideConverter = new ValueConverter<object, object>(v => v, v => v, handlesNulls: false);
+
+		// One later scoped attribute per documented row, with the row's own configuration, in the readme's recipe form.
+		sealed class EveryScopedDefaultOverriddenConnection(DataOptions options) : IdentityDataConnection(options)
+		{
+			protected override void ConfigureMappings(MappingSchema mappingSchema)
+			{
+				base.ConfigureMappings(mappingSchema);
+
+				var builder = new FluentMappingBuilder(mappingSchema);
+
+				foreach (var row in ScopedDefaults)
+				{
+					MappingAttribute attribute = row.Kind switch
+					{
+						DataTypeKind  => new DataTypeAttribute(DataType.VarChar, OverrideDbType) { Configuration = row.Configuration },
+						ConverterKind => new ValueConverterAttribute { Configuration = row.Configuration, ValueConverter = OverrideConverter },
+						_             => new ColumnAttribute { Configuration = row.Configuration, Name = "Overridden" + row.Member, IsPrimaryKey = false },
+					};
+
+					typeof(EveryScopedDefaultOverriddenConnection)
+						.GetMethod(nameof(AddOverride), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+						.MakeGenericMethod(row.Entity)
+						.Invoke(null, [builder, row.Member, attribute]);
+				}
+
+				builder.Build();
+			}
+
+			static void AddOverride<T>(FluentMappingBuilder builder, string member, MappingAttribute attribute)
+			{
+				var entity = Expression.Parameter(typeof(T), "e");
+				var access = Expression.Lambda<Func<T, object?>>(Expression.Convert(Expression.PropertyOrField(entity, member), typeof(object)), entity);
+
+				builder.Entity<T>().Property(access).HasAttribute(attribute);
+			}
+		}
+
+		[Test]
+		public void ScopedOverrideWinsOverEveryScopedDefault([DataSources(false)] string context)
+		{
+			using var db = new EveryScopedDefaultOverriddenConnection(new DataOptions().UseConfiguration(context.StripRemote()));
+
+			var ms = db.MappingSchema;
+
+			foreach (var row in ScopedDefaults.Where(r => ms.ConfigurationList.Contains(r.Configuration, StringComparer.Ordinal)))
+			{
+				var column = ms.GetEntityDescriptor(row.Entity).Columns.Single(c => c.MemberInfo.Name == row.Member);
+
+				switch (row.Kind)
+				{
+					case DataTypeKind:
+						column.DbType.ShouldBe(OverrideDbType, Describe(row));
+						column.DataType.ShouldBe(DataType.VarChar, Describe(row));
+						break;
+					case ConverterKind:
+						column.ValueConverter.ShouldBeSameAs(OverrideConverter, Describe(row));
+						break;
+					default:
+						column.ColumnName.ShouldBe("Overridden" + row.Member, Describe(row));
+						break;
+				}
+			}
 		}
 
 		#endregion

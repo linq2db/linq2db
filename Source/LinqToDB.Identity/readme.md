@@ -147,22 +147,151 @@ nullability. `DataOptions.UseMappingSchema(...)` cannot override the defaults �
 the constructor, after the options have been applied, so the defaults outrank anything supplied that way. It still
 maps what the defaults leave alone, such as your application's own entities on the same context.
 
+### Unscoped and provider-scoped mappings
+
+A mapping attribute is **unscoped** when its `Configuration` is not set: it applies on every provider. It is
+**provider-scoped** when `Configuration` names a provider (`ProviderName.Oracle`, `ProviderName.Firebird25`, …): it
+applies only on that provider and its dialects (`ProviderName.Oracle` also covers `Oracle.11.Managed`), and there it
+is read before the unscoped one. The defaults are unscoped, except where a provider needs a different column type, a
+value conversion or a dropped key; [Provider-specific mappings](#provider-specific-mappings) lists every one.
+
+`FluentMappingBuilder.Entity<T>()` writes unscoped mappings. To write a provider-scoped one, add the attribute with
+`Configuration` set through `HasAttribute`. Don't use the `Entity<T>(configuration)` overload for this: it changes
+the unscoped mapping instead, so the change reaches every provider
+([#3136](https://github.com/linq2db/linq2db/issues/3136)).
+
+Two consequences for overriding a default:
+
+* **An unscoped mapping does not reach a column the defaults scope to your provider** where that scoped default sets
+  the same thing. A rename of a column that has a provider-scoped `ColumnAttribute` is dropped on that provider with
+  no error, and an unscoped `HasDataType` / `HasLength` does not change the DDL of a column whose scoped
+  `DataTypeAttribute` sets a database type (`NVarChar(255)`, `LongText`, …). A scoped `DataTypeAttribute` with no
+  database type (the Oracle `NVarChar` and the `LockoutEnd` rows below) is the exception: the column's own data type
+  wins over it, so an unscoped `HasDataType` overrides it — on every provider at once.
+* **A provider-scoped attribute added in `ConfigureMappings` outranks the defaults' attribute of the same kind for
+  the same provider.** That is how to change one provider's default without touching the others; see
+  [Changing a provider-specific mapping](#changing-a-provider-specific-mapping).
+
+### Provider-specific mappings
+
+Every provider-scoped default, by provider. *User text columns* are `AspNetUsers.UserName`, `NormalizedUserName`,
+`Email`, `NormalizedEmail`, `PasswordHash`, `SecurityStamp`, `PhoneNumber` and `AspNetRoles.Name`, `NormalizedName`.
+`ClaimValue` is the column on both `AspNetUserClaims` and `AspNetRoleClaims`, and *UTC* means the value is stored
+converted to UTC, truncated to whole seconds, and read back at a zero offset. The last column is the attribute kind
+that carries the default, which is the kind an override uses.
+
+| Provider (`Configuration`) | Column | Default there | Why | Attribute |
+|---|---|---|---|---|
+| MySQL, MariaDB (`ProviderName.MySql`) | `AspNetUsers.LockoutEnd` | `DataType.DateTime2` (`DATETIME`), UTC | no date/time-with-offset type; `TIMESTAMP` ends in 2038 | `DataTypeAttribute`, `ValueConverterAttribute` |
+| | `ClaimValue` | `VarChar(2000)` | unbounded strings default to 255; the stores compare it with `=`, so no LOB | `DataTypeAttribute` |
+| | `AspNetUserTokens.Value` | `Text` | a saved token passes 255; never compared | `DataTypeAttribute` |
+| | `AspNetUserPasskeys.Data` | `DataType.NText` | the passkey JSON is about 1 KB | `ColumnAttribute` |
+| Oracle (`ProviderName.Oracle`) | user text columns, `ClaimType`, `AspNetUserLogins.ProviderDisplayName` | `NVARCHAR2` (`DataType.NVarChar`, no database type) | `VARCHAR2` counts bytes, so non-ASCII text overruns it | `DataTypeAttribute` |
+| | `ClaimValue` | `NVarChar2(2000)` | as MySQL | `DataTypeAttribute` |
+| | `AspNetUserTokens.Value` | `NClob` | as MySQL | `DataTypeAttribute` |
+| | `AspNetUserPasskeys.Data` | `DataType.NText` | wider than the 2000 an unbounded string gets | `ColumnAttribute` |
+| Firebird, all versions (`ProviderName.Firebird`) | `AspNetUsers.LockoutEnd` | `DataType.DateTime2` (`TIMESTAMP`), UTC | FirebirdClient cannot write `TIMESTAMP WITH TIME ZONE` ([#5915](https://github.com/linq2db/linq2db/issues/5915)) | `DataTypeAttribute`, `ValueConverterAttribute` |
+| | `ClaimValue` | `VarChar(2000) CHARACTER SET UNICODE_FSS` | as MySQL | `DataTypeAttribute` |
+| | `AspNetUserTokens.Value` | `BLOB SUB_TYPE TEXT CHARACTER SET UNICODE_FSS` | as MySQL | `DataTypeAttribute` |
+| | `AspNetUserPasskeys.Data` | `BLOB SUB_TYPE TEXT CHARACTER SET UNICODE_FSS` | as MySQL | `ColumnAttribute` |
+| Firebird 2.5 (`ProviderName.Firebird25`) | `AspNetUserTokens.UserId`, `LoginProvider`, `Name` | not a primary key | the three-column key is too wide for its index | `ColumnAttribute` |
+| | `AspNetUserPasskeys.CredentialId` | not a primary key | the 1024-byte key is too wide for its index | `ColumnAttribute` |
+| Access (`ProviderName.Access`) | user text columns | `NVarChar(255)` | text columns hold at most 255 characters | `DataTypeAttribute` |
+| | `AspNetUsers.LockoutEnd` | `DataType.DateTime`, UTC | no date/time-with-offset type | `DataTypeAttribute`, `ValueConverterAttribute` |
+| | `ClaimValue`, `AspNetUserTokens.Value` | `LongText` | text columns hold at most 255 characters | `DataTypeAttribute` |
+| | `AspNetUserPasskeys.Data` | `LongText` | as above | `ColumnAttribute` |
+| | `AspNetUserPasskeys.CredentialId` | `LongBinary`, not a primary key | binary columns hold at most 255 bytes, and the `LongBinary` that holds more cannot be indexed | `ColumnAttribute` |
+| DB2 LUW and z/OS (`ProviderName.DB2`) | `ClaimValue` | `NVarChar(2000)` | as MySQL | `DataTypeAttribute` |
+| | `AspNetUserTokens.Value` | `NClob` | as MySQL | `DataTypeAttribute` |
+| DB2 LUW (`ProviderName.DB2LUW`) | `AspNetUsers.LockoutEnd` | `DataType.DateTime2`, UTC | no date/time-with-offset type | `DataTypeAttribute`, `ValueConverterAttribute` |
+| Informix (`ProviderName.Informix`) | user text columns, `ClaimType`, `AspNetUserLogins.ProviderDisplayName` | `LVarChar(1024)` | `NVarChar` holds 255 bytes, fewer than 256 characters in a multi-byte locale | `DataTypeAttribute` |
+| | `AspNetUsers.LockoutEnd` | `DataType.DateTime2`, UTC | no date/time-with-offset type | `DataTypeAttribute`, `ValueConverterAttribute` |
+| | `ClaimValue` | `LVarChar(2000)` | as MySQL | `DataTypeAttribute` |
+| | `AspNetUserTokens.Value`, `AspNetUserPasskeys.Data` | `LVarChar(8000)` | as MySQL | `DataTypeAttribute` / `ColumnAttribute` |
+| | `AspNetUserPasskeys.CredentialId` | `LVarChar(2048)` holding hex text, not a primary key | a `BYTE` column can be neither compared nor indexed | `ColumnAttribute`, `ValueConverterAttribute` |
+| SAP HANA (`ProviderName.SapHana`) | `AspNetUsers.LockoutEnd` | `DataType.DateTime2`, UTC | no date/time-with-offset type | `DataTypeAttribute`, `ValueConverterAttribute` |
+| | `ClaimValue` | `NVarChar(2000)` | as MySQL | `DataTypeAttribute` |
+| | `AspNetUserTokens.Value` | `NVarChar(5000)` | the widest `NVARCHAR` it binds | `DataTypeAttribute` |
+| Sybase ASE (`ProviderName.Sybase`) | `AspNetUsers.LockoutEnd` | `DataType.DateTime2`, UTC | no date/time-with-offset type | `DataTypeAttribute`, `ValueConverterAttribute` |
+| | `ClaimValue` | `NVarChar(2000)` | as MySQL | `DataTypeAttribute` |
+| | `AspNetUserTokens.Value` | `UniText` | as MySQL | `DataTypeAttribute` |
+| SQL CE (`ProviderName.SqlCe`) | `AspNetUsers.LockoutEnd` | `DataType.DateTime2`, UTC | no date/time-with-offset type | `DataTypeAttribute`, `ValueConverterAttribute` |
+| | `ClaimValue` | `NVarChar(2000)` | as MySQL | `DataTypeAttribute` |
+| | `AspNetUserTokens.Value`, `AspNetUserPasskeys.Data` | `NText` | `NVarChar` holds at most 4000 characters | `DataTypeAttribute` / `ColumnAttribute` |
+| SQL Server 2005 (`ProviderName.SqlServer2005`) | `AspNetUsers.LockoutEnd` | `DataType.DateTime`, UTC | no `datetimeoffset` before 2008 | `DataTypeAttribute`, `ValueConverterAttribute` |
+| YDB (`ProviderName.Ydb`) | `AspNetUsers.LockoutEnd` | `DataType.Timestamp64`, UTC | no date/time-with-offset type; `Timestamp` ends in 2105 | `DataTypeAttribute`, `ValueConverterAttribute` |
+
+PostgreSQL, SQL Server 2008 and later, SQLite, DuckDB and ClickHouse have no provider-specific mappings.
+
+### Changing a provider-specific mapping
+
+Override in `ConfigureMappings`, after `base.ConfigureMappings(ms)`, with an attribute of the kind the table names and
+the `Configuration` it names. Each kind needs a different shape.
+
+**`DataTypeAttribute`** changes the column's type and keeps the default name, length and nullability. This keeps the
+name and email lookup columns `VARCHAR2` on Oracle, which an existing `VARCHAR2` schema needs to keep using its
+indexes; the lookup parameters follow the column type:
+
+```csharp
+protected override void ConfigureMappings(MappingSchema ms)
+{
+    base.ConfigureMappings(ms);
+    new FluentMappingBuilder(ms)
+        .Entity<IdentityUser>()
+            .Property(e => e.NormalizedUserName).HasAttribute(new DataTypeAttribute(DataType.VarChar) { Configuration = ProviderName.Oracle })
+            .Property(e => e.NormalizedEmail)   .HasAttribute(new DataTypeAttribute(DataType.VarChar) { Configuration = ProviderName.Oracle })
+        .Build();
+}
+```
+
+Give it a database type to replace one the defaults set, such as a wider `ClaimValue` on MySQL —
+`new DataTypeAttribute(DataType.NVarChar, "VarChar(4000)") { Configuration = ProviderName.MySql }`. Keep `ClaimValue`
+a type the provider can compare with `=`: the stores filter on it.
+
+**`ValueConverterAttribute`** replaces the conversion. One for `LockoutEnd` converts `DateTimeOffset?` to a value the
+pinned column type stores, and back. Keep it to whole seconds: the pinned types round a finer fraction, which carries
+`DateTimeOffset.MaxValue` — the usual permanent lockout — past their maximum:
+
+```csharp
+new FluentMappingBuilder(ms)
+    .Entity<IdentityUser>()
+        .Property(e => e.LockoutEnd)
+            .HasAttribute(new ValueConverterAttribute
+            {
+                Configuration  = ProviderName.SqlCe,
+                ValueConverter = new ValueConverter<DateTimeOffset?, DateTime?>(
+                    toDatabase,     // Func<DateTimeOffset?, DateTime?>
+                    fromDatabase,   // Func<DateTime?, DateTimeOffset?>
+                    handlesNulls: true),
+            })
+    .Build();
+```
+
+**`ColumnAttribute`** replaces the whole column mapping on that provider, so it has to restate everything it keeps.
+Renaming `AspNetUserTokens.UserId` therefore takes two mappings: the unscoped rename, and a Firebird 2.5 one that
+repeats the defaults' length, nullability and dropped key there:
+
+```csharp
+new FluentMappingBuilder(ms)
+    .Entity<IdentityUserToken<string>>()
+        .Property(e => e.UserId)
+            .HasColumnName("UserRef")
+            .HasAttribute(new ColumnAttribute
+            {
+                Configuration = ProviderName.Firebird25,
+                Name          = "UserRef",
+                Length        = 36,
+                CanBeNull     = false,
+                IsPrimaryKey  = false,
+            })
+    .Build();
+```
+
+`IsPrimaryKey = false` has to be stated, not left out: the defaults mark the key separately, and a scoped
+`ColumnAttribute` that leaves the flag unset brings that key back on the provider that cannot index it.
+
 ### Customization limits
 
-* **A column the defaults pin for a specific provider cannot be renamed on that provider by an unscoped mapping.**
-  `AspNetUserTokens.UserId` / `LoginProvider` / `Name` on Firebird 2.5, and `AspNetUserPasskeys.CredentialId` on
-  Access, Informix and Firebird 2.5, carry provider-scoped mappings that drop a primary key those engines cannot
-  index (Informix also stores the id as hex text, as it cannot compare a binary value that wide);
-  `AspNetUserPasskeys.Data` on MySQL, Oracle, Firebird, Access, Informix and SQL CE carries one that widens it to a
-  text/CLOB column. A provider-scoped mapping outranks an unscoped one, so the rename is dropped with no error. Scope
-  your own mapping to the same provider to override it.
-* **Some columns carry a provider-scoped database type that outranks an unscoped `HasDataType` / `HasLength`.**
-  `ClaimValue` on both claim tables and `AspNetUserTokens.Value` on MySQL, Oracle, Firebird, Access, DB2, Informix,
-  SAP HANA, Sybase and SQL CE, the 256-character name, email, phone, password-hash and security-stamp columns on
-  Access and Informix, and `ClaimType` and `ProviderDisplayName` on Informix, are typed for those providers by the defaults. An unscoped
-  `HasDataType` or `HasLength` on them is ignored by `CreateTable` there; set `HasDbType` to override. On Oracle the
-  same name, email and profile columns, `ClaimType` and `ProviderDisplayName` are pinned to `NVarChar` (`NVARCHAR2`),
-  which outranks an unscoped `HasDataType`.
 * **String keys are 36 characters wide**, the length of the GUID string `IdentityUser` / `IdentityRole` generate
   (EF Core uses 450 on SQL Server). Ids you assign yourself — an external subject id, an email — need a wider key:
   `HasLength` on `Id` and on every `UserId` / `RoleId` column in a `ConfigureMappings` override. Mind the index
@@ -252,7 +381,8 @@ Some columns are narrower than EF Core's: on **Access** the 256-character user a
 password-hash and security-stamp columns hold 255, and `ClaimValue` holds at most 2000 characters on MySQL, Oracle, Firebird, DB2, Informix (2000
 bytes), SAP HANA, Sybase and SQL CE. `ClaimType` takes the provider's default string width (255 on most; 1024 bytes on Informix),
 `ProviderDisplayName` holds 128 (1024 bytes on Informix), and a token `Value` holds 8000 bytes on Informix and 5000 characters on
-SAP HANA. A longer value is rejected on insert or update.
+SAP HANA. A longer value is rejected on insert or update. Every provider-specific type is listed under
+[Provider-specific mappings](#provider-specific-mappings).
 
 On **SAP HANA** a passkey's `Data` column holds at most 5000 characters, the widest `NVARCHAR` it binds: enough for
 the default `none` attestation, possibly not for a direct-attestation certificate chain.
@@ -306,6 +436,15 @@ server converts the written UTC value with that zone, and other session zones ha
 against an EF Core-created table. On the providers that store `LockoutEnd` as UTC (see *Provider
 support*), a value an earlier version stored in server-local time reads back shifted by that offset until it is next
 written.
+
+On **Oracle** the name, email and profile columns, `ClaimType`, `ClaimValue` and `ProviderDisplayName` are now
+`NVARCHAR2`, and the stores bind their lookup parameters as `NVARCHAR2`. Tables EF Core created already use
+`NVARCHAR2`; tables the standalone package created, and hand-made schemas, may use `VARCHAR2`. Results stay correct
+against a `VARCHAR2` column, but Oracle converts the column rather than the parameter, so an index on
+`NormalizedUserName` / `NormalizedEmail` is no longer used and every sign-in scans `AspNetUsers`. Either convert
+the columns (`ALTER TABLE "AspNetUsers" MODIFY ("NormalizedUserName" NVARCHAR2(256), "NormalizedEmail"
+NVARCHAR2(256), …)`), or keep `VARCHAR2` with the Oracle-scoped mapping shown in
+[Changing a provider-specific mapping](#changing-a-provider-specific-mapping).
 
 | Area | Before (standalone) | After (monorepo) |
 |---|---|---|
