@@ -9,6 +9,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\VisualBasic\Tests.VisualBasic.vbproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB.Identity\LinqToDB.Identity.csproj" />
 	</ItemGroup>
 
 	<!-- the SAP client checks that libadonetHDB has its own version, and no package carries the
