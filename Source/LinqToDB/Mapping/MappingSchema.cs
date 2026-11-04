@@ -1492,15 +1492,16 @@ namespace LinqToDB.Mapping
 
 			// Resolved at runtime: modern runtimes also load the netstandard2.0 build, which can't name DateOnly (#6077).
 			// Stored exactly as SetConverter<DateOnly, string> stores it - an invoked delegate, so it stays client-side.
+			// The delegate is bound to a compiled generic method: compiling here would run a user-set expression compiler
+			// inside MappingSchema's type initializer.
 			void SetDateOnlyToStringConverter()
 			{
-				if (Type.GetType("System.DateOnly") is not { } dateOnly
-					|| dateOnly.GetMethod(nameof(ToString), [typeof(string), typeof(IFormatProvider)]) is not { } toString
-					|| typeof(DateTimeFormatInfo).GetProperty(nameof(DateTimeFormatInfo.InvariantInfo)) is not { } invariantInfo)
+				if (Type.GetType("System.DateOnly") is not { } dateOnly)
 					return;
 
-				var v    = Expression.Parameter(dateOnly, "v");
-				var func = Expression.Lambda(Expression.Call(v, toString, Expression.Constant("yyyy-MM-dd"), Expression.Property(null, invariantInfo)), v).CompileExpression();
+				var func = Delegate.CreateDelegate(
+					typeof(Func<,>).MakeGenericType(dateOnly, typeof(string)),
+					MemberHelper.MethodOfGeneric(() => FormatInvariantDate(default(DateTime))).MakeGenericMethod(dateOnly));
 				var p    = Expression.Parameter(dateOnly, "p");
 				var ex   = Expression.Lambda(Expression.Invoke(Expression.Constant(func), p), p);
 
@@ -1512,6 +1513,10 @@ namespace LinqToDB.Mapping
 
 				SetNullableConversion(new(dateOnly), new(typeof(string)), ex, ConversionType.Common);
 			}
+
+			static string FormatInvariantDate<T>(T value)
+				where T : IFormattable
+				=> value.ToString("yyyy-MM-dd", DateTimeFormatInfo.InvariantInfo);
 
 			protected internal override int GenerateID() => 0;
 
