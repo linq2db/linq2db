@@ -16,7 +16,6 @@ namespace LinqToDB.Internal.Linq
 		#region Helper methods to obtain MethodInfo in a safe way
 
 #pragma warning disable IDE0060 // Remove unused parameter
-		[LinqToDB.AGBench.BenchMethod]
 		public static MethodInfo GetMethodInfo<T1,T2>(Func<T1,T2> f, T1 unused1)
 		{
 			return f.GetMethodInfo();
