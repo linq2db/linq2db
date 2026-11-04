@@ -3518,7 +3518,10 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllAccess, TestProvName.AllFirebirdLess3, TestProvName.AllMySql57, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllAccess, TestProvName.AllFirebirdLess3, TestProvName.AllMySql57, TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllOracle11], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllClickHouse, ProviderName.Ydb], ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative, ErrorMessage = "nested LATERAL")]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, ErrorMessage = "nested LATERAL")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6208")]
 		public void NestedOuterApplyTakeWithInnerJoinKeepsUnmatchedRows([DataSources] string context)
 		{
