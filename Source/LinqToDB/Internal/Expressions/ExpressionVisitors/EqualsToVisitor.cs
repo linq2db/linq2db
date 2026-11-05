@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Threading;
 
 namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 {
@@ -8,12 +9,11 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 	{
 		// Objects met so far in one cache-key comparison, by placeholder ordinal: a placeholder with an ordinal
 		// seen before matches only the same object again. Set by the lookup around the whole comparison.
-		[ThreadStatic]
-		static Dictionary<int, object?>? _identities;
+		static readonly AsyncLocal<Dictionary<int, object?>?> _identities = new();
 
 		internal static IDisposable IdentityScope()
 		{
-			_identities = new Dictionary<int, object?>();
+			_identities.Value = new Dictionary<int, object?>();
 			return new IdentityScopeEnd();
 		}
 
@@ -21,7 +21,7 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 		{
 			public void Dispose()
 			{
-				_identities = null;
+				_identities.Value = null;
 			}
 		}
 
@@ -38,15 +38,17 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 				// special cache case
 				if (expr1.NodeType == ExpressionType.Extension && expr2.NodeType == ExpressionType.Constant && expr1 is ConstantPlaceholderExpression placeholder)
 				{
-					if (placeholder.Ordinal < 0 || _identities == null)
+					var identities = _identities.Value;
+
+					if (placeholder.Ordinal < 0 || identities == null)
 						return true;
 
 					var value = ((ConstantExpression)expr2).Value;
 
-					if (_identities.TryGetValue(placeholder.Ordinal, out var seen))
+					if (identities.TryGetValue(placeholder.Ordinal, out var seen))
 						return ReferenceEquals(seen, value);
 
-					_identities.Add(placeholder.Ordinal, value);
+					identities.Add(placeholder.Ordinal, value);
 					return true;
 				}
 

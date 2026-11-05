@@ -437,13 +437,6 @@ namespace LinqToDB.Internal.Linq
 			return transformed;
 		}
 
-		/// <summary>
-		/// All non-value type expressions and parameterized expressions will be transformed to ConstantPlaceholderExpression. It prevents from caching big reference classes in cache.
-		/// </summary>
-		/// <param name="expression"></param>
-		/// <param name="nonComparable"></param>
-		/// <param name="newParameterized"></param>
-		/// <returns></returns>
 		sealed class PlaceholderContext
 		{
 			public PlaceholderContext(HashSet<Expression> nonComparable, HashSet<Expression>? parameterized, HashSet<Expression>? dependentArguments, MappingSchema mappingSchema)
@@ -483,6 +476,9 @@ namespace LinqToDB.Internal.Linq
 			}
 		}
 
+		/// <summary>
+		/// All non-value type expressions and parameterized expressions will be transformed to ConstantPlaceholderExpression. It prevents from caching big reference classes in cache.
+		/// </summary>
 		Expression ReplaceParameterizedAndClosures(Expression expression, PlaceholderContext context)
 		{
 			var result = expression.Transform(context, static (ctx, e) =>
