@@ -2288,9 +2288,25 @@ namespace Tests.Linq
 #if !NETFRAMEWORK
 		static IEnumerable<TestCaseData> DuckDBParameterTypeCases()
 		{
-			yield return ParameterTypeCase("Int32"     , new DbDataType(typeof(int)       , DataType.Int32)    , 1             , "DECLARE $p INTEGER -- Int32"     );
 			yield return ParameterTypeCase("Boolean"   , new DbDataType(typeof(bool)      , DataType.Boolean)  , true          , "DECLARE $p BOOLEAN -- Boolean"   );
+			yield return ParameterTypeCase("SByte"     , new DbDataType(typeof(sbyte)     , DataType.SByte)    , (sbyte)1      , "DECLARE $p TINYINT -- SByte"     );
+			yield return ParameterTypeCase("Byte"      , new DbDataType(typeof(byte)      , DataType.Byte)     , (byte)1       , "DECLARE $p UTINYINT -- Byte"     );
+			yield return ParameterTypeCase("Int16"     , new DbDataType(typeof(short)     , DataType.Int16)    , (short)1      , "DECLARE $p SMALLINT -- Int16"    );
+			yield return ParameterTypeCase("UInt16"    , new DbDataType(typeof(ushort)    , DataType.UInt16)   , (ushort)1     , "DECLARE $p USMALLINT -- UInt16"  );
+			yield return ParameterTypeCase("Int32"     , new DbDataType(typeof(int)       , DataType.Int32)    , 1             , "DECLARE $p INTEGER -- Int32"     );
+			yield return ParameterTypeCase("UInt32"    , new DbDataType(typeof(uint)      , DataType.UInt32)   , 1U            , "DECLARE $p UINTEGER -- UInt32"   );
+			yield return ParameterTypeCase("Int64"     , new DbDataType(typeof(long)      , DataType.Int64)    , 1L            , "DECLARE $p BIGINT -- Int64"      );
+			yield return ParameterTypeCase("UInt64"    , new DbDataType(typeof(ulong)     , DataType.UInt64)   , 1UL           , "DECLARE $p UBIGINT -- UInt64"    );
+			yield return ParameterTypeCase("Single"    , new DbDataType(typeof(float)     , DataType.Single)   , 1.5f          , "DECLARE $p FLOAT -- Single"      );
+			yield return ParameterTypeCase("Double"    , new DbDataType(typeof(double)    , DataType.Double)   , 1.5           , "DECLARE $p DOUBLE -- Double"     );
+			yield return ParameterTypeCase("Money"     , new DbDataType(typeof(decimal)   , DataType.Money)    , 1.5m          , "DECLARE $p DECIMAL -- Currency"  );
 			yield return ParameterTypeCase("BigInteger", new DbDataType(typeof(System.Numerics.BigInteger), DataType.Undefined), System.Numerics.BigInteger.One, "DECLARE $p BIGNUM -- VarNumeric");
+			yield return ParameterTypeCase("Date"      , new DbDataType(typeof(DateTime)  , DataType.Date)     , TestData.Date , "DECLARE $p DATE -- Date"         );
+			yield return ParameterTypeCase("Time"      , new DbDataType(typeof(TimeSpan)  , DataType.Time)     , TimeSpan.FromHours(1), "DECLARE $p TIME -- Time"  );
+			yield return ParameterTypeCase("DateTime"  , new DbDataType(typeof(DateTime)  , DataType.DateTime) , TestData.DateTime, "DECLARE $p TIMESTAMP -- DateTime");
+			yield return ParameterTypeCase("DateTime2" , new DbDataType(typeof(DateTime)  , DataType.DateTime2), TestData.DateTime, "DECLARE $p TIMESTAMP -- DateTime2");
+			yield return ParameterTypeCase("DateTimeOffset", new DbDataType(typeof(DateTimeOffset), DataType.DateTimeOffset), TestData.DateTimeOffset, "DECLARE $p TIMESTAMPTZ -- DateTimeOffset");
+			yield return ParameterTypeCase("Guid"      , new DbDataType(typeof(Guid)      , DataType.Guid)     , TestData.Guid1, "DECLARE $p UUID -- Guid"         );
 			yield return ParameterTypeCase("String"    , new DbDataType(typeof(string)    , DataType.NVarChar) , "abc"         , "DECLARE $p NVarChar(3) -- String");
 			yield return ParameterTypeCase("Binary"    , new DbDataType(typeof(byte[])    , DataType.Binary)   , new byte[3]   , "DECLARE $p Binary(3)"            );
 			yield return ParameterTypeCase("Decimal"   , new DbDataType(typeof(decimal)   , DataType.Decimal)  , 1.5m          , "DECLARE $p Decimal(2, 1)"        );
@@ -2319,18 +2335,32 @@ namespace Tests.Linq
 
 		static IEnumerable<TestCaseData> ClickHouseParameterTypeCases()
 		{
+			var int64    = new DbDataType(typeof(long?)   , DataType.Int64);
+			var guid     = new DbDataType(typeof(Guid)    , DataType.Guid);
+			var dateTime = new DbDataType(typeof(DateTime), DataType.DateTime);
+			var boolean  = new DbDataType(typeof(bool)    , DataType.Boolean);
+
 #if !NETFRAMEWORK
-			yield return ParameterTypeCase([ClickHouseProvider.Octonica        , 1L  , "DECLARE @p Int64"                    ], "Octonica"      , "Value");
-			yield return ParameterTypeCase([ClickHouseProvider.Octonica        , null, "DECLARE @p Int64"                    ], "Octonica"      , "Null" );
+			yield return ParameterTypeCase([ClickHouseProvider.Octonica        , int64   , 1L               , "DECLARE @p Int64"                    ], "Octonica"      , "Int64"    );
+			yield return ParameterTypeCase([ClickHouseProvider.Octonica        , int64   , null             , "DECLARE @p Int64"                    ], "Octonica"      , "NullInt64");
+			yield return ParameterTypeCase([ClickHouseProvider.Octonica        , guid    , TestData.Guid1   , "DECLARE @p Guid"                     ], "Octonica"      , "Guid"     );
+			yield return ParameterTypeCase([ClickHouseProvider.Octonica        , dateTime, TestData.DateTime, "DECLARE @p DateTime"                 ], "Octonica"      , "DateTime" );
+			yield return ParameterTypeCase([ClickHouseProvider.Octonica        , boolean , true             , "DECLARE @p Boolean"                  ], "Octonica"      , "Boolean"  );
 #endif
-			yield return ParameterTypeCase([ClickHouseProvider.ClickHouseDriver, 1L  , "DECLARE @p Int64"                    ], "Driver"        , "Value");
-			yield return ParameterTypeCase([ClickHouseProvider.ClickHouseDriver, null, "DECLARE @p Nullable(Nothing) -- Int64"], "Driver"        , "Null" );
-			yield return ParameterTypeCase([ClickHouseProvider.MySqlConnector  , 1L  , "DECLARE @p Int64"                    ], "MySqlConnector", "Value");
-			yield return ParameterTypeCase([ClickHouseProvider.MySqlConnector  , null, "DECLARE @p Int64"                    ], "MySqlConnector", "Null" );
+			yield return ParameterTypeCase([ClickHouseProvider.ClickHouseDriver, int64   , 1L               , "DECLARE @p Int64"                    ], "Driver"        , "Int64"    );
+			yield return ParameterTypeCase([ClickHouseProvider.ClickHouseDriver, int64   , null             , "DECLARE @p Nullable(Nothing) -- Int64"], "Driver"        , "NullInt64");
+			yield return ParameterTypeCase([ClickHouseProvider.ClickHouseDriver, guid    , TestData.Guid1   , "DECLARE @p UUID -- Guid"             ], "Driver"        , "Guid"     );
+			yield return ParameterTypeCase([ClickHouseProvider.ClickHouseDriver, dateTime, TestData.DateTime, "DECLARE @p DateTime"                 ], "Driver"        , "DateTime" );
+			yield return ParameterTypeCase([ClickHouseProvider.ClickHouseDriver, boolean , true             , "DECLARE @p Bool -- Boolean"          ], "Driver"        , "Boolean"  );
+			yield return ParameterTypeCase([ClickHouseProvider.MySqlConnector  , int64   , 1L               , "DECLARE @p Int64"                    ], "MySqlConnector", "Int64"    );
+			yield return ParameterTypeCase([ClickHouseProvider.MySqlConnector  , int64   , null             , "DECLARE @p Int64"                    ], "MySqlConnector", "NullInt64");
+			yield return ParameterTypeCase([ClickHouseProvider.MySqlConnector  , guid    , TestData.Guid1   , "DECLARE @p Guid"                     ], "MySqlConnector", "Guid"     );
+			yield return ParameterTypeCase([ClickHouseProvider.MySqlConnector  , dateTime, TestData.DateTime, "DECLARE @p Datetime -- DateTime"     ], "MySqlConnector", "DateTime" );
+			yield return ParameterTypeCase([ClickHouseProvider.MySqlConnector  , boolean , true             , "DECLARE @p Bool -- Boolean"          ], "MySqlConnector", "Boolean"  );
 		}
 
 		[TestCaseSource(nameof(ClickHouseParameterTypeCases))]
-		public void ParameterTypeNameClickHouse(ClickHouseProvider clickHouseProvider, long? value, string expected)
+		public void ParameterTypeNameClickHouse(ClickHouseProvider clickHouseProvider, DbDataType dataType, object? value, string expected)
 		{
 			DbParameter parameter = clickHouseProvider switch
 			{
@@ -2341,7 +2371,7 @@ namespace Tests.Linq
 				_                                 => new ClickHouse.Driver.ADO.Parameters.ClickHouseDbParameter(),
 			};
 
-			PrintParameterDeclaration(ClickHouseTools.GetDataProvider(clickHouseProvider), parameter, new DbDataType(typeof(long?), DataType.Int64), value)
+			PrintParameterDeclaration(ClickHouseTools.GetDataProvider(clickHouseProvider), parameter, dataType, value)
 				.ShouldBe(expected);
 		}
 
