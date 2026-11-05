@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using LinqToDB.Async;
 using LinqToDB.Concurrency;
+using LinqToDB.Internal.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 
@@ -297,7 +299,7 @@ namespace LinqToDB.Identity
 			ArgumentNullException.ThrowIfNull(claims);
 
 			var userId   = Expression.PropertyOrField(Expression.Constant(user, typeof(TUser)), nameof(user.Id));
-			var equals   = typeof(TKey).GetMethod(nameof(IEquatable<>.Equals), new[] {typeof(TKey)})
+			var equals   = typeof(TKey).GetMethodEx(nameof(IEquatable<>.Equals), BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static, typeof(TKey))
 				?? throw new InvalidOperationException($"Cannot find method Equals on type {typeof(TKey)}");
 			var uc       = Expression.Parameter(typeof(TUserClaim));
 			var cv       = Expression.PropertyOrField(uc, nameof(IdentityUserClaim<>.ClaimValue));
