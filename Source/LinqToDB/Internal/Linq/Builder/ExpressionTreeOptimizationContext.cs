@@ -352,48 +352,100 @@ namespace LinqToDB.Internal.Linq.Builder
 				nameof(string.LastIndexOf),
 			};
 
-			// Types whose default text form varies with the culture: a decimal separator, a date pattern.
+			// Types whose text form varies with the culture: a decimal separator, a date pattern, the minus sign
+			// (U+2212 under ICU for sv-SE), digit substitution.
 			static readonly HashSet<Type> _cultureFormattedTypes = new()
 			{
+				typeof(sbyte),
+				typeof(byte),
+				typeof(short),
+				typeof(ushort),
+				typeof(int),
+				typeof(uint),
+				typeof(long),
+				typeof(ulong),
 				typeof(float),
 				typeof(double),
 				typeof(decimal),
 				typeof(DateTime),
 				typeof(DateTimeOffset),
+#if NET5_0_OR_GREATER
+				typeof(nint),
+				typeof(nuint),
+#endif
 #if SUPPORTS_DATEONLY
 				typeof(DateOnly),
 				typeof(TimeOnly),
 #endif
 			};
 
+			static bool IsCultureFormatted(Expression value)
+			{
+				return _cultureFormattedTypes.Contains(value.UnwrapConvert().Type.UnwrapNullableType());
+			}
+
+			// string.Concat / string.Join / the + operator format every non-string operand with the ambient culture.
+			static bool ConcatenatesCultureFormatted(IEnumerable<Expression> operands)
+			{
+				foreach (var operand in operands)
+				{
+					if (operand is NewArrayExpression array)
+					{
+						if (ConcatenatesCultureFormatted(array.Expressions))
+							return true;
+					}
+					else if (IsCultureFormatted(operand))
+					{
+						return true;
+					}
+				}
+
+				return false;
+			}
+
 			static bool DependsOnAmbientCulture(MethodCallExpression node)
 			{
-				var method = node.Method;
+				var method     = node.Method;
+				var parameters = method.GetParameters();
+
+				// An explicit comparison or culture argument decides first: a literal Ordinal/Invariant choice fixes
+				// the result, a CurrentCulture choice, a null provider or a provider computed at run time does not.
+				for (var i = 0; i < parameters.Length; i++)
+				{
+					var type     = parameters[i].ParameterType;
+					var argument = node.Arguments[i];
+
+					if (type == typeof(StringComparison))
+					{
+						return argument is not ConstantExpression { Value: StringComparison comparison }
+							|| comparison is StringComparison.CurrentCulture or StringComparison.CurrentCultureIgnoreCase;
+					}
+
+					if (type == typeof(IFormatProvider) || type == typeof(CultureInfo))
+					{
+						if (argument is not ConstantExpression { Value: null })
+							return false;
+					}
+				}
+
+				if (method.DeclaringType == typeof(string)
+					&& (string.Equals(method.Name, nameof(string.Concat), StringComparison.Ordinal) || string.Equals(method.Name, nameof(string.Join), StringComparison.Ordinal)))
+				{
+					return ConcatenatesCultureFormatted(node.Arguments);
+				}
 
 				if (!_cultureSensitiveMethods.Contains(method.Name))
 					return false;
-
-				var parameters = method.GetParameters();
-
-				foreach (var parameter in parameters)
-				{
-					var type = parameter.ParameterType;
-					if (type == typeof(IFormatProvider) || type == typeof(CultureInfo) || type == typeof(StringComparison))
-						return false;
-				}
 
 				if (string.Equals(method.Name, nameof(object.ToString), StringComparison.Ordinal)
 					|| string.Equals(method.Name, nameof(int.Parse), StringComparison.Ordinal)
 					|| string.Equals(method.Name, nameof(int.TryParse), StringComparison.Ordinal))
 				{
-					// The value's own type decides, not the static type the call is made through (object, Nullable<T>).
+					// The value's own type decides, not the static type the call is made through (object, Nullable<T>):
+					// a number or a date formats by the culture, a bool, char, Guid, enum or string does not.
 					var valueType = (node.Object?.UnwrapConvert().Type ?? method.DeclaringType!).UnwrapNullableType();
 
-					if (_cultureFormattedTypes.Contains(valueType))
-						return true;
-
-					// An integer, bool, char, Guid or string formats the same everywhere unless a format is given.
-					return parameters.Length > 0 && valueType != typeof(string) && valueType != typeof(bool) && valueType != typeof(char) && valueType != typeof(Guid);
+					return _cultureFormattedTypes.Contains(valueType);
 				}
 
 				return true;
@@ -542,7 +594,28 @@ namespace LinqToDB.Internal.Linq.Builder
 					return node;
 				}
 
+				// "w" + 2.5 is string.Concat over a culture-formatted operand.
+				if (node.Method is { DeclaringType: var owner, Name: nameof(string.Concat) } && owner == typeof(string)
+					&& ConcatenatesCultureFormatted([node.Left, node.Right]))
+				{
+					IsImmutable = false;
+					return node;
+				}
+
 				return base.VisitBinary(node);
+			}
+
+			protected override Expression VisitNew(NewExpression node)
+			{
+				// A constructor runs code; only one that merely stores its arguments is a function of them: an
+				// anonymous type, a Nullable, an immutable BCL type (new DateTime(2020, 1, 1), new Guid(text)).
+				var type = node.Type;
+
+				if (type.IsAnonymousType() || IsNullable(type) || _immutableInstanceMembers.Contains(type) || _wholeImmutableTypes.Contains(type))
+					return base.VisitNew(node);
+
+				IsImmutable = false;
+				return node;
 			}
 
 			protected override Expression VisitIndex(IndexExpression node)
@@ -588,7 +661,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					// A member of an object written in the query (new { Category = "Some" }.Category) is one of its
 					// constructor arguments; otherwise the member must be unchangeable after construction and the
 					// receiver fixed itself.
-					if (node.Expression is NewExpression { Members: not null } created && created.Members.Contains(node.Member)
+					if (node.Expression is NewExpression { Members: not null } created && created.Type.IsAnonymousType() && created.Members.Contains(node.Member)
 						|| IsReadOnlyMember(node.Member))
 					{
 						Visit(node.Expression);
