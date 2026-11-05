@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -332,8 +334,74 @@ namespace LinqToDB.Internal.Linq.Builder
 				typeof(Range),
 			};
 
+			// Members of the BCL whose result depends on the ambient culture unless the call names a culture or a
+			// comparison explicitly. Their value is not a function of the expression alone.
+			static readonly HashSet<string> _cultureSensitiveMethods = new(StringComparer.Ordinal)
+			{
+				nameof(object.ToString),
+				nameof(string.Format),
+				nameof(int.Parse),
+				nameof(int.TryParse),
+				nameof(string.ToUpper),
+				nameof(string.ToLower),
+				nameof(string.Compare),
+				nameof(string.CompareTo),
+				nameof(string.StartsWith),
+				nameof(string.EndsWith),
+				nameof(string.IndexOf),
+				nameof(string.LastIndexOf),
+			};
+
+			static bool DependsOnAmbientCulture(MethodInfo method)
+			{
+				if (!_cultureSensitiveMethods.Contains(method.Name))
+					return false;
+
+				var owner = method.DeclaringType;
+
+				// string.ToString() is the string itself; bool, char and Guid format the same in every culture.
+				if (string.Equals(method.Name, nameof(object.ToString), StringComparison.Ordinal)
+					&& (owner == typeof(string) || owner == typeof(bool) || owner == typeof(char) || owner == typeof(Guid)))
+				{
+					return false;
+				}
+
+				foreach (var parameter in method.GetParameters())
+				{
+					var type = parameter.ParameterType;
+					if (type == typeof(IFormatProvider) || type == typeof(CultureInfo) || type == typeof(StringComparison))
+						return false;
+				}
+
+				return true;
+			}
+
+			static bool IsNullable(Type? type)
+			{
+				return type is { IsGenericType: true } && type.GetGenericTypeDefinition() == typeof(Nullable<>);
+			}
+
+			// A member that cannot change after the object is constructed: a readonly field, an init-only or
+			// get-only auto-property, or an instance member of an immutable BCL type. Reading it through an
+			// immutable receiver yields a value fixed by the expression.
+			bool IsReadOnlyMember(MemberInfo member)
+			{
+				if (member is FieldInfo field)
+					return field.IsInitOnly;
+
+				return member is PropertyInfo property && IsReadOnlyProperty(property);
+			}
+
 			bool IsReadOnlyProperty(PropertyInfo property)
 			{
+				var getMethod = property.GetMethod;
+
+				if (getMethod == null || getMethod.IsStatic)
+				{
+					// A static property runs code: DateTime.Now, DateTime.Today, CultureInfo.CurrentCulture.
+					return false;
+				}
+
 				if (property.DeclaringType != null)
 				{
 					if (_wholeImmutableTypes.Contains(property.DeclaringType))
@@ -341,7 +409,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						return true;
 					}
 
-					if (_immutableInstanceMembers.Contains(property.DeclaringType) && property.GetMethod != null && !property.GetMethod.IsStatic)
+					if (_immutableInstanceMembers.Contains(property.DeclaringType) || IsNullable(property.DeclaringType))
 					{
 						return true;
 					}
@@ -352,6 +420,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					// Check if the SetMethod is init-only
 					return setMethod.ReturnParameter.GetRequiredCustomModifiers().Contains(typeof(IsExternalInit));
+				}
+
+				// A get-only auto-property reads a readonly backing field; a get-only property with a body runs code.
+				if (getMethod.IsDefined(typeof(CompilerGeneratedAttribute), false))
+				{
+					return true;
 				}
 
 #if SUPPORTS_READONLY
@@ -427,7 +501,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			protected override Expression VisitMethodCall(MethodCallExpression node)
 			{
-				if (IsReadOnlyMethod(node.Method))
+				if (IsReadOnlyMethod(node.Method) && !DependsOnAmbientCulture(node.Method))
 					return base.VisitMethodCall(node);
 
 				// we cannot predict the result of method call
@@ -435,16 +509,51 @@ namespace LinqToDB.Internal.Linq.Builder
 				return node;
 			}
 
+			protected override Expression VisitBinary(BinaryExpression node)
+			{
+				// An element read from an array that already exists is read from a mutable object, however the array
+				// itself is reached; only an array written in the query (new[] { 1, 2 }) is fixed.
+				if (node.NodeType == ExpressionType.ArrayIndex && node.Left.NodeType != ExpressionType.NewArrayInit)
+				{
+					IsImmutable = false;
+					return node;
+				}
+
+				return base.VisitBinary(node);
+			}
+
+			protected override Expression VisitIndex(IndexExpression node)
+			{
+				if (node.Object?.NodeType != ExpressionType.NewArrayInit)
+				{
+					IsImmutable = false;
+					return node;
+				}
+
+				return base.VisitIndex(node);
+			}
+
+			protected override Expression VisitConstant(ConstantExpression node)
+			{
+				// A literal written in the query is null or a scalar. An object, a collection or a delegate held
+				// in a constant is a run-time input: the cache key keeps only its type, so a value read through it
+				// must stay a parameter.
+				if (node.Value is not null && (node.Value is IEnumerable and not string || !_mappingSchema.IsScalarType(node.Value.GetType())))
+				{
+					IsImmutable = false;
+				}
+
+				return node;
+			}
+
 			protected override Expression VisitMember(MemberExpression node)
 			{
 				if (node.Expression is null)
 				{
-					if (node.Member is FieldInfo { IsStatic: true, IsInitOnly: true })
-					{
-						return node;
-					}
-
-					if (node.Member is PropertyInfo property && IsReadOnlyProperty(property))
+					// A static readonly field or a constant is fixed once its type is initialised: a function of
+					// the expression. A static property runs code (DateTime.Now, CultureInfo.CurrentCulture) and a
+					// mutable static field changes under the query: both are run-time inputs.
+					if (node.Member is FieldInfo { IsStatic: true } field && (field.IsInitOnly || field.IsLiteral))
 					{
 						return node;
 					}
@@ -453,10 +562,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 				else
 				{
-					if (node.Expression.UnwrapConvert() is not ConstantExpression)
-						return base.VisitMember(node);
-
-					if (node.Member is PropertyInfo property && IsReadOnlyProperty(property))
+					// Fixed only when the member cannot change after construction and the receiver is fixed itself.
+					if (IsReadOnlyMember(node.Member))
 					{
 						Visit(node.Expression);
 						return node;
