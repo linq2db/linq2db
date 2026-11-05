@@ -9,19 +9,36 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 	{
 		// Objects met so far in one cache-key comparison, by placeholder ordinal: a placeholder with an ordinal
 		// seen before matches only the same object again. Set by the lookup around the whole comparison.
-		static readonly AsyncLocal<Dictionary<int, object?>?> _identities = new();
+		sealed class IdentityMap
+		{
+			public Dictionary<int, object?>? Seen;
+		}
 
+		static readonly AsyncLocal<IdentityMap?> _identities = new();
+
+		/// <summary>
+		/// Opens a scope for one cache-key comparison; the map is allocated on the first ordinal placeholder met,
+		/// and the scope that was open before (a nested comparison from a dynamic accessor) is restored on dispose.
+		/// </summary>
 		internal static IDisposable IdentityScope()
 		{
-			_identities.Value = new Dictionary<int, object?>();
-			return new IdentityScopeEnd();
+			var previous = _identities.Value;
+			_identities.Value = new IdentityMap();
+			return new IdentityScopeEnd(previous);
 		}
 
 		sealed class IdentityScopeEnd : IDisposable
 		{
+			readonly IdentityMap? _previous;
+
+			public IdentityScopeEnd(IdentityMap? previous)
+			{
+				_previous = previous;
+			}
+
 			public void Dispose()
 			{
-				_identities.Value = null;
+				_identities.Value = _previous;
 			}
 		}
 
@@ -44,11 +61,12 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 						return true;
 
 					var value = ((ConstantExpression)expr2).Value;
+					var seen  = identities.Seen ??= new Dictionary<int, object?>();
 
-					if (identities.TryGetValue(placeholder.Ordinal, out var seen))
-						return ReferenceEquals(seen, value);
+					if (seen.TryGetValue(placeholder.Ordinal, out var known))
+						return ReferenceEquals(known, value);
 
-					identities.Add(placeholder.Ordinal, value);
+					seen.Add(placeholder.Ordinal, value);
 					return true;
 				}
 

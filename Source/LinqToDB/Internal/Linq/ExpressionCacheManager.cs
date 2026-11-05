@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -29,13 +31,21 @@ namespace LinqToDB.Internal.Linq
 		public HashSet<Expression>                                 NonComparableExpressions { get; } = [];
 
 		List<(object? value, Expression accessor)>?                     _byValueCompare;
-		Dictionary<int, (Expression main, Expression other)>?           _duplicateParametersCheck;
+		List<(SqlValue value, Expression accessor)>?                    _foldedValues;
+
+		/// <summary>
+		/// Whether a value folded into the SQL at build time is re-evaluated and compared on every lookup. Under
+		/// the folding rule (a folded value is a function of the query expression) the compare never fails; it is
+		/// kept as a net until that rule is proven over the whole suite on several providers.
+		/// </summary>
+		public static bool CompareFoldedValues = !string.Equals(Environment.GetEnvironmentVariable("LINQ2DB_COMPARE_FOLDED"), "0", StringComparison.Ordinal);
 		Dictionary<int, (Expression param, ParameterCacheEntry entry)>? _parameterEntries;
 
 		List<SqlParameter>? _nonQueryParameters;
 
 		public Expression RootPath      { get; set; } = ExpressionBuilder.QueryExpressionContainerParam;
 		public bool       HasParameters => _parameterEntries  != null;
+		public bool       HasConstants  => _foldedValues != null;
 
 		public ExpressionCacheManager(Expression mainExpression, IUniqueIdGenerator<ExpressionCacheManager> generator)
 		{
@@ -122,163 +132,6 @@ namespace LinqToDB.Internal.Linq
 			return transformed;
 		}
 
-		public void RegisterDuplicateCheck(int parameterId, Expression mainParam, Expression otherParam)
-		{
-			_duplicateParametersCheck ??= new();
-			if (_duplicateParametersCheck.ContainsKey(parameterId))
-				return;
-
-			_duplicateParametersCheck.Add(parameterId, (mainParam, otherParam));
-		}
-
-		public void RegisterParameterEntry(Expression paramExpr, ParameterCacheEntry entry)
-		{
-			_parameterEntries ??= new();
-
-			if (_parameterEntries.ContainsKey(entry.ParameterId))
-				return;
-
-			_parameterEntries.Add(entry.ParameterId, (paramExpr, entry));
-		}
-
-		public bool TryFindParameterEntry(Expression paramExpr, [NotNullWhen(true)] out ParameterCacheEntry? entry)
-		{
-			if (_parameterEntries == null)
-			{
-				entry = null;
-				return false;
-			}
-
-			foreach (var pair in _parameterEntries.Values)
-			{
-				if (ReferenceEquals(pair.param, paramExpr))
-				{
-					entry = pair.entry;
-					return true;
-				}
-			}
-
-			entry = null;
-			return false;
-		}
-
-		/// <summary>
-		/// Registers parameter entry in cache. Searches for duplicates and registers them.
-		/// </summary>
-		/// <param name="paramExpr">Expression the parameter value is read from.</param>
-		/// <param name="paramEntry">Cache entry being registered.</param>
-		/// <param name="evaluator">Evaluates an occurrence to its current value, used to confirm that two
-		/// occurrences agree before they share a parameter. <see langword="null"/> when no evaluator is
-		/// available, in which case structurally equal occurrences are shared unchecked.</param>
-		/// <param name="allowNameLookup">Whether the by-parameter-path-name lookup may run. It compares
-		/// occurrences that are <i>not</i> structurally equal, which only makes sense for scalar values.</param>
-		/// <param name="finalParameterId">Id of the parameter to use - an existing one when a duplicate was
-		/// found, otherwise <paramref name="paramEntry"/>'s own.</param>
-		public void RegisterParameterEntry(Expression paramExpr, ParameterCacheEntry paramEntry, Func<Expression, object?>? evaluator, bool allowNameLookup, out int finalParameterId)
-		{
-			void EnsureEvaluated(ParameterCacheEntry localEntry, Expression expr)
-			{
-				if (localEntry.IsEvaluated)
-					return;
-
-				localEntry.SetEvaluatedValue(evaluator(expr));
-			}
-
-			// Confirming that two occurrences agree means running the user's own code at build time. When
-			// that throws, the pair simply is not proven equal: each occurrence keeps its own parameter and
-			// the original exception still surfaces later, from the accessor that actually needs the value.
-			// Letting the throw escape instead would be read by the caller as "this is not a parameter" and
-			// resurface as "the LINQ expression could not be converted to SQL", hiding the real cause.
-			bool TryProveEqual(ParameterCacheEntry firstEntry, Expression firstExpr, ParameterCacheEntry secondEntry, Expression secondExpr)
-			{
-				if (evaluator == null)
-					return false;
-
-				try
-				{
-					EnsureEvaluated(firstEntry,  firstExpr);
-					EnsureEvaluated(secondEntry, secondExpr);
-				}
-				catch (Exception ex) when (ex is not (OperationCanceledException or OutOfMemoryException))
-				{
-					return false;
-				}
-
-				return Equals(firstEntry.EvaluatedValue, secondEntry.EvaluatedValue);
-			}
-
-			_parameterEntries ??= new();
-
-			foreach (var (param, entry) in _parameterEntries.Values)
-			{
-				if (ExpressionEqualityComparer.Instance.Equals(param, paramExpr)
-					&& entry.DbDataType.Equals(paramEntry.DbDataType)
-					&& ExpressionEqualityComparer.Instance.Equals(entry.ClientValueGetter, paramEntry.ClientValueGetter)
-				    && ExpressionEqualityComparer.Instance.Equals(entry.ClientToProviderConverter, paramEntry.ClientToProviderConverter)
-				    && ExpressionEqualityComparer.Instance.Equals(entry.ItemAccessor, paramEntry.ItemAccessor)
-				    && ExpressionEqualityComparer.Instance.Equals(entry.DbDataTypeAccessor, paramEntry.DbDataTypeAccessor))
-				{
-					// Structural equality alone does not mean both occurrences produce the same value: a
-					// method call or an impure getter can return something different each time. Sharing a
-					// parameter in that case leaves the duplicate check below permanently unsatisfied, so
-					// the cached query is rejected on every execution while the plan still carries a single
-					// parameter - the second occurrence silently reuses the first value and the accessors
-					// are re-evaluated more times on each rebuild. Confirm the values agree first, exactly
-					// as the by-name-and-value lookup below already does. Without an evaluator there is nothing
-					// to compare with, so structurally equal occurrences are still shared unchecked.
-					if (evaluator != null && !ReferenceEquals(param, paramExpr) && !TryProveEqual(entry, param, paramEntry, paramExpr))
-						continue;
-
-					// found duplicate, we have to register value comparison
-
-					finalParameterId = entry.ParameterId;
-
-					// register for duplicates only non the same parameter expressions
-					if (!ReferenceEquals(param, paramExpr))
-					{
-						RegisterDuplicateCheck(entry.ParameterId, entry.ClientValueGetter, paramEntry.ClientValueGetter);
-					}
-
-					return;
-				}
-			}
-
-			// find duplicates by name and value
-			if (allowNameLookup && evaluator != null)
-			{
-				var paramName = BuildParameterPath(paramExpr);
-				if (paramName != null)
-				{
-					foreach (var (param, entry) in _parameterEntries.Values)
-					{
-						if (CanBeDuplicate(paramEntry, paramExpr, paramName, param, entry, BuildParameterPath(param))
-							&& TryProveEqual(entry, param, paramEntry, paramExpr))
-						{
-							// found duplicate, we have to register value comparison
-
-							finalParameterId = entry.ParameterId;
-							RegisterDuplicateCheck(entry.ParameterId, entry.ClientValueGetter, paramEntry.ClientValueGetter);
-
-							return;
-						}
-					}
-				}
-			}
-
-			_parameterEntries.Add(paramEntry.ParameterId, (paramExpr, paramEntry));
-			finalParameterId = paramEntry.ParameterId;
-
-			static bool CanBeDuplicate(ParameterCacheEntry paramEntry, Expression paramExpression, string paramName, Expression testedExprExpression, ParameterCacheEntry testedEntry, string? testedName)
-			{
-				return string.Equals(paramName, testedName, StringComparison.Ordinal) && paramExpression.Type.UnwrapNullableType() == testedExprExpression.Type.UnwrapNullableType()
-					   && !ExpressionEqualityComparer.Instance.Equals(paramExpression, testedExprExpression)
-				       && testedEntry.DbDataType.EqualsDbOnly(paramEntry.DbDataType)
-				       && ExpressionEqualityComparer.Instance.Equals(testedEntry.ClientToProviderConverter, paramEntry.ClientToProviderConverter)
-				       && ExpressionEqualityComparer.Instance.Equals(testedEntry.ItemAccessor, paramEntry.ItemAccessor)
-				       && ExpressionEqualityComparer.Instance.Equals(testedEntry.DbDataTypeAccessor, paramEntry.DbDataTypeAccessor);
-			}
-		}
-
 		/// <summary>
 		/// Suggests a display name for a parameter built from <paramref name="expression"/>, taken from the
 		/// member the value is read from rather than from the column it is compared against - a parameter
@@ -338,35 +191,121 @@ namespace LinqToDB.Internal.Linq
 			}
 		}
 
-		static string? BuildParameterPath(Expression? expression)
+		public void RegisterParameterEntry(Expression paramExpr, ParameterCacheEntry entry)
 		{
-			return expression switch
+			_parameterEntries ??= new();
+
+			if (_parameterEntries.ContainsKey(entry.ParameterId))
+				return;
+
+			_parameterEntries.Add(entry.ParameterId, (paramExpr, entry));
+		}
+
+		public bool TryFindParameterEntry(Expression paramExpr, [NotNullWhen(true)] out ParameterCacheEntry? entry)
+		{
+			if (_parameterEntries == null)
 			{
-				MemberExpression member when member.Member.IsNullableValueMember() =>
-					BuildParameterPath(member.Expression),
+				entry = null;
+				return false;
+			}
 
-				MemberExpression member => BuildParameterPathCore(member),
-
-				UnaryExpression unary => BuildParameterPath(unary.Operand),
-
-				_ => null,
-			};
-
-			static string? BuildParameterPathCore(MemberExpression member)
+			foreach (var pair in _parameterEntries.Values)
 			{
-				var result = member.Member.Name;
-
-				var next = member.Expression;
-				while (next is MemberExpression nextMember)
+				if (ReferenceEquals(pair.param, paramExpr))
 				{
-					result = nextMember.Member.Name + "_" + result;
-					next   = nextMember.Expression;
+					entry = pair.entry;
+					return true;
 				}
+			}
 
-				if (next != null && next.NodeType != ExpressionType.Constant)
-					return null;
+			entry = null;
+			return false;
+		}
 
-				return result;
+		/// <summary>
+		/// Registers parameter entry in cache. Two occurrences share one parameter only when they are structurally
+		/// equal and read storage without running code: a chain of fields, auto-properties, nullable accessors and
+		/// conversions over the same source. Such a pair is one value by construction. Any other expression - a
+		/// method call, a property with a body - gets its own parameter per occurrence, so that two reads the user
+		/// wrote stay two reads (an impure getter returns a different value each time).
+		/// </summary>
+		/// <param name="paramExpr">Expression the parameter value is read from.</param>
+		/// <param name="paramEntry">Cache entry being registered.</param>
+		/// <param name="finalParameterId">Id of the parameter to use - an existing one when a duplicate was
+		/// found, otherwise <paramref name="paramEntry"/>'s own.</param>
+		public void RegisterParameterEntry(Expression paramExpr, ParameterCacheEntry paramEntry, out int finalParameterId)
+		{
+			_parameterEntries ??= new();
+
+			var pure = IsPureChain(paramExpr);
+
+			foreach (var (param, entry) in _parameterEntries.Values)
+			{
+				if ((pure || ReferenceEquals(param, paramExpr))
+					&& ExpressionEqualityComparer.Instance.Equals(param, paramExpr)
+					&& entry.DbDataType.EqualsDbOnly(paramEntry.DbDataType)
+					&& ExpressionEqualityComparer.Instance.Equals(entry.ClientValueGetter, paramEntry.ClientValueGetter)
+					&& ExpressionEqualityComparer.Instance.Equals(entry.ClientToProviderConverter, paramEntry.ClientToProviderConverter)
+					&& ExpressionEqualityComparer.Instance.Equals(entry.ItemAccessor, paramEntry.ItemAccessor)
+					&& ExpressionEqualityComparer.Instance.Equals(entry.DbDataTypeAccessor, paramEntry.DbDataTypeAccessor))
+				{
+					finalParameterId = entry.ParameterId;
+					return;
+				}
+			}
+
+			_parameterEntries.Add(paramEntry.ParameterId, (paramExpr, paramEntry));
+			finalParameterId = paramEntry.ParameterId;
+		}
+
+		/// <summary>
+		/// Whether <paramref name="expression"/> only reads storage: a constant, a compiled-query parameter or a
+		/// static field, through fields, auto-properties, <c>Nullable</c> accessors, array length, an element at a
+		/// literal index, and conversions. A property getter with a body or any other method call runs code and
+		/// is not pure.
+		/// </summary>
+		static bool IsPureChain(Expression expression)
+		{
+			while (true)
+			{
+				switch (expression)
+				{
+					case ConstantExpression:
+					case ParameterExpression:
+						return true;
+
+					case UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked or ExpressionType.ArrayLength } unary:
+						expression = unary.Operand;
+						continue;
+
+					case BinaryExpression { NodeType: ExpressionType.ArrayIndex, Right: ConstantExpression } index:
+						expression = index.Left;
+						continue;
+
+					case MemberExpression member:
+						if (member.Member is PropertyInfo property)
+						{
+							var nullable = property.DeclaringType is { IsGenericType: true } owner && owner.GetGenericTypeDefinition() == typeof(Nullable<>);
+
+							if (!nullable && property.GetMethod?.IsDefined(typeof(CompilerGeneratedAttribute), false) != true)
+								return false;
+						}
+
+						if (member.Expression == null)
+							return member.Member is FieldInfo;
+
+						expression = member.Expression;
+						continue;
+
+					case MethodCallExpression { Arguments.Count: 0, Object: not null } call
+						when string.Equals(call.Method.Name, nameof(Nullable<>.GetValueOrDefault), StringComparison.Ordinal)
+							&& call.Method.DeclaringType is { IsGenericType: true } type && type.GetGenericTypeDefinition() == typeof(Nullable<>):
+						expression = call.Object;
+						continue;
+
+					default:
+						return false;
+				}
 			}
 		}
 
@@ -439,29 +378,46 @@ namespace LinqToDB.Internal.Linq
 
 		sealed class PlaceholderContext
 		{
-			public PlaceholderContext(HashSet<Expression> nonComparable, HashSet<Expression>? parameterized, HashSet<Expression>? dependentArguments, MappingSchema mappingSchema)
+			public PlaceholderContext(HashSet<Expression> nonComparable, HashSet<Expression>? parameterized, HashSet<Expression>? folded, HashSet<Expression>? dependentArguments, MappingSchema mappingSchema)
 			{
 				NonComparable      = nonComparable;
 				Parameterized      = parameterized;
+				Folded             = folded;
 				DependentArguments = dependentArguments;
 				MappingSchema      = mappingSchema;
 			}
 
 			public HashSet<Expression>  NonComparable      { get; }
 			public HashSet<Expression>? Parameterized      { get; }
+			public HashSet<Expression>? Folded             { get; }
 			public HashSet<Expression>? DependentArguments { get; }
 			public MappingSchema        MappingSchema      { get; }
 
 			public Dictionary<Expression, ConstantPlaceholderExpression> Replacements { get; } = new();
 			public Dictionary<object, int>                               Ordinals     { get; } = new(ReferenceEqualityComparer.Instance);
+			public Dictionary<object, int>                               Occurrences  { get; } = new(ReferenceEqualityComparer.Instance);
+
+			/// <summary>
+			/// Counts how often each object constant occurs in <paramref name="expression"/>: only an object that
+			/// occurs more than once needs an ordinal, because only then does the key say "the same object again",
+			/// which a lookup must check. A query whose closures each occur once pays nothing at lookup.
+			/// </summary>
+			public void CountObjects(Expression expression)
+			{
+				expression.Visit(this, static (ctx, e) =>
+				{
+					if (e is ConstantExpression { Value: { } value } && value is not string && !value.GetType().IsValueType)
+						ctx.Occurrences[value] = ctx.Occurrences.TryGetValue(value, out var n) ? n + 1 : 1;
+				});
+			}
 
 			public ConstantPlaceholderExpression Placeholder(Expression e)
 			{
 				// Two occurrences of one object get one ordinal; a value-type or string constant that became a
-				// parameter (Take(2)) has no identity worth recording.
+				// parameter (Take(2)), or an object met only once, has no identity worth recording.
 				var ordinal = -1;
 
-				if (e is ConstantExpression { Value: { } value } && value is not string && !value.GetType().IsValueType)
+				if (e is ConstantExpression { Value: { } value } && value is not string && !value.GetType().IsValueType && Occurrences.TryGetValue(value, out var occurrences) && occurrences > 1)
 				{
 					if (!Ordinals.TryGetValue(value, out ordinal))
 					{
@@ -496,7 +452,7 @@ namespace LinqToDB.Internal.Linq
 					// a [SqlQueryDependent] argument reads stays too: its content shaped the SQL and is compared
 					// by the attribute.
 					if (e is ConstantExpression literal
-						&& (literal.Value is not Array && !ExpressionCacheHelpers.ShouldRemoveConstantFromCache(literal, ctx.MappingSchema) && ctx.Parameterized?.Contains(e) != true
+						&& (literal.Value is not Array && !ExpressionCacheHelpers.ShouldRemoveConstantFromCache(literal, ctx.MappingSchema) && (ctx.Parameterized?.Contains(e) != true || ctx.Folded?.Contains(e) == true)
 							|| ctx.DependentArguments?.Contains(e) == true))
 					{
 						return new TransformInfo(e);
@@ -543,8 +499,8 @@ namespace LinqToDB.Internal.Linq
 		/// <param name="parameterExpressions"></param>
 		/// <param name="parameters"></param>
 		/// <returns></returns>
-		public (QueryCacheCompareInfo compareInfo, List<ParameterAccessor>? parameterAccessors, IQueryExpressions expressions) BuildQueryCacheCompareInfo(IDataContext dc,
-			IQueryExpressions parameterExpressions, List<SqlParameter>? parameters)
+		public (QueryCacheCompareInfo compareInfo, List<ParameterAccessor>? parameterAccessors, IQueryExpressions expressions) BuildQueryCacheCompareInfo(IExpressionEvaluator evaluator, IDataContext dc,
+			IQueryExpressions parameterExpressions, List<SqlParameter>? parameters, List<SqlValue>? sqlValues)
 		{
 			List<SqlParameter>? knownParameters = null;
 			if (parameters != null)
@@ -652,7 +608,35 @@ namespace LinqToDB.Internal.Linq
 					CollectDependentConstantArguments(da.Used, dependentArguments);
 			}
 
-			var placeholderContext = new PlaceholderContext(nonComparable, parameterizedLiterals, dependentArguments, dc.MappingSchema);
+			// The literals of a folded expression that survived into the SQL stay in the key by value even when a
+			// parameter accessor reaches one of them elsewhere in the tree (one constant node under Where and
+			// under Take); a fold the builder discarded (Take's argument before it became a parameter) does not count.
+			HashSet<Expression>? foldedLiterals = null;
+
+			if (_foldedValues != null && sqlValues is { Count: > 0 })
+			{
+				foreach (var (value, accessor) in _foldedValues)
+				{
+					if (sqlValues.Contains(value))
+					{
+						accessor.Visit(foldedLiterals ??= [], static (set, e) =>
+						{
+							if (e is ConstantExpression)
+								set.Add(e);
+						});
+					}
+				}
+			}
+
+			var placeholderContext = new PlaceholderContext(nonComparable, parameterizedLiterals, foldedLiterals, dependentArguments, dc.MappingSchema);
+
+			placeholderContext.CountObjects(MainExpression);
+
+			if (DynamicAccessors != null)
+			{
+				foreach (var da in DynamicAccessors.Values)
+					placeholderContext.CountObjects(da.Used);
+			}
 
 			if (DynamicAccessors != null)
 			{
@@ -672,27 +656,6 @@ namespace LinqToDB.Internal.Linq
 			}
 
 			List<(ValueAccessorFunc main, ValueAccessorFunc other)>? comparisionFunctions = null;
-
-			if (_duplicateParametersCheck != null)
-			{
-				foreach (var (main, other) in _duplicateParametersCheck.Values)
-				{
-					var mainValueExpr  = PrepareExpressionAccessors(dc, main, nonComparable).EnsureType<object>();
-					var otherValueExpr = PrepareExpressionAccessors(dc, other, nonComparable).EnsureType<object>();
-
-					// IQueryExpressions queryExpressions, IDataContext  dataContext, object?[]? compiledParameters
-					var mainFunc = Expression.Lambda<ValueAccessorFunc>(mainValueExpr, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
-							ExpressionBuilder.ParametersParam)
-						.CompileExpression();
-
-					var otherFunc = Expression.Lambda<ValueAccessorFunc>(otherValueExpr, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
-							ExpressionBuilder.ParametersParam)
-						.CompileExpression();
-
-					comparisionFunctions ??= [];
-					comparisionFunctions.Add((mainFunc, otherFunc));
-				}
-			}
 
 			if (_byValueCompare != null)
 			{
@@ -714,8 +677,32 @@ namespace LinqToDB.Internal.Linq
 				}
 			}
 
+			if (CompareFoldedValues && _foldedValues != null && sqlValues is { Count: > 0 })
+			{
+				foreach (var (value, accessor) in _foldedValues)
+				{
+					if (!sqlValues.Contains(value))
+						continue;
+
+					var mainValueExpr = Expression.Constant(evaluator.Evaluate(accessor)).EnsureType<object>();
+
+					var otherValueExpr = PrepareExpressionAccessors(dc, accessor, nonComparable).EnsureType<object>();
+
+					var mainFunc = Expression.Lambda<ValueAccessorFunc>(mainValueExpr, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
+							ExpressionBuilder.ParametersParam)
+						.CompileExpression();
+
+					var otherFunc = Expression.Lambda<ValueAccessorFunc>(otherValueExpr, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
+							ExpressionBuilder.ParametersParam)
+						.CompileExpression();
+
+					comparisionFunctions ??= [];
+					comparisionFunctions.Add((mainFunc, otherFunc));
+				}
+			}
+
 			var mainExpression = ReplaceParameterizedAndClosures(MainExpression, placeholderContext);
-			var compareInfo    = new QueryCacheCompareInfo(mainExpression, dynamicAccessors, comparisionFunctions);
+			var compareInfo    = new QueryCacheCompareInfo(mainExpression, dynamicAccessors, comparisionFunctions, placeholderContext.Ordinals.Count > 0);
 
 			return (compareInfo, parameterAccessors, parameterExpressions);
 		}
@@ -736,8 +723,19 @@ namespace LinqToDB.Internal.Linq
 		/// <param name="expression"></param>
 		public void MarkAsValue(Expression expression, object? currentValue)
 		{
+			// The value is compared with a fresh read on every lookup; an array is snapshotted, or a mutation in
+			// place would compare the array with itself.
+			if (currentValue is Array array)
+				currentValue = array.Clone();
+
 			_byValueCompare ??= new();
 			_byValueCompare.Add((currentValue, expression));
+		}
+
+		public void RegisterSqlValue(Expression constantExpr, SqlValue value)
+		{
+			_foldedValues ??= new();
+			_foldedValues.Add((value, constantExpr));
 		}
 
 	}

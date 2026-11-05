@@ -151,21 +151,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				CacheManager.RegisterParameterEntry(expr, entry);
 			else
 			{
-				// The evaluator lets registration confirm that two occurrences of the same expression really
-				// produce the same value before they share a parameter. That check matters for every kind of
-				// value, so supply it whenever a builder is available - including collection parameters of an
-				// IN predicate, where two calls returning different collections must not be merged. The
-				// by-parameter-path-name lookup, on the other hand, compares occurrences that are not
-				// structurally equal and stays limited to scalars.
-				Func<Expression, object?>? evaluator = context?.Builder != null ? context.Builder.EvaluateExpression : null;
-
-				var allowNameLookup = evaluator != null && mappingSchema.IsScalarType(expr.Type);
-
-				// No try/catch here: registration handles an occurrence it cannot evaluate by leaving the two
-				// parameters separate, so a throw from the user's own expression is never turned into "this is
-				// not a parameter" - which the caller would report as "the LINQ expression could not be
-				// converted to SQL", hiding the real cause. The exception surfaces from the accessor instead.
-				CacheManager.RegisterParameterEntry(expr, entry, evaluator, allowNameLookup, out finalParameterId);
+				CacheManager.RegisterParameterEntry(expr, entry, out finalParameterId);
 			}
 
 			_parametersById ??= new();
@@ -614,6 +600,11 @@ namespace LinqToDB.Internal.Linq.Builder
 		public void MarkAsValue(Expression expression, object? value)
 		{
 			CacheManager.MarkAsValue(expression, value);
+		}
+
+		public void RegisterSqlValue(Expression constantExpr, SqlValue value)
+		{
+			CacheManager.RegisterSqlValue(constantExpr, value);
 		}
 	}
 }

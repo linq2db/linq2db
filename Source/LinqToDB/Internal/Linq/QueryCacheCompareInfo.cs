@@ -9,12 +9,18 @@ namespace LinqToDB.Internal.Linq
 	{
 		public Expression MainExpression { get; }
 
-		public QueryCacheCompareInfo(Expression mainExpression, List<DynamicExpressionInfo>? dynamicAccessors, List<(ValueAccessorFunc main, ValueAccessorFunc other)>? comparisionFunctions)
+		public QueryCacheCompareInfo(Expression mainExpression, List<DynamicExpressionInfo>? dynamicAccessors, List<(ValueAccessorFunc main, ValueAccessorFunc other)>? comparisionFunctions, bool hasOrdinals)
 		{
 			MainExpression       = mainExpression;
 			DynamicAccessors     = dynamicAccessors;
 			ComparisionFunctions = comparisionFunctions;
+			HasOrdinals          = hasOrdinals;
 		}
+
+		/// <summary>
+		/// Whether any placeholder in the key carries an ordinal, so that a comparison needs an identity scope.
+		/// </summary>
+		public readonly bool HasOrdinals;
 
 		public delegate Expression ExpressionAccessorFunc(IDataContext dataContext,      MappingSchema mappingSchema);
 		public delegate object?    ValueAccessorFunc(IQueryExpressions queryExpressions, IDataContext  dataContext, object?[]? compiledParameters);

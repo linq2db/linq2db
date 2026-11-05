@@ -61,7 +61,7 @@ namespace LinqToDB.Internal.Linq
 			if (CompareInfo == null)
 				return false;
 
-			using var identities = EqualsToVisitor.IdentityScope();
+			using var identities = CompareInfo.HasOrdinals ? EqualsToVisitor.IdentityScope() : null;
 
 			var result = CompareInfo.MainExpression.EqualsTo(expressions.MainExpression);
 
