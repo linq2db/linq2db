@@ -116,7 +116,7 @@ namespace Tests.Linq
 				.Where(t => t.Int1 == value.GetValueOrDefault() || t.Int2 == value.GetValueOrDefault())
 				.ToSqlQuery();
 
-			sql.Parameters.Count.ShouldBe(1);
+			sql.Parameters.Count.ShouldBe(2); // GetValueOrDefault() is a call: one parameter per occurrence
 		}
 
 		[Test]

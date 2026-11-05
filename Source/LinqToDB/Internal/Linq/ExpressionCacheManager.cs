@@ -223,11 +223,11 @@ namespace LinqToDB.Internal.Linq
 		}
 
 		/// <summary>
-		/// Registers parameter entry in cache. Two occurrences share one parameter only when they are structurally
-		/// equal and read storage without running code: a chain of fields, auto-properties, nullable accessors and
-		/// conversions over the same source. Such a pair is one value by construction. Any other expression - a
-		/// method call, a property with a body - gets its own parameter per occurrence, so that two reads the user
-		/// wrote stay two reads (an impure getter returns a different value each time).
+		/// Registers parameter entry in cache. Two occurrences share one parameter only when they read the same C#
+		/// variable - a captured local or field of the same closure object, a static field, a compiled-query
+		/// parameter - through the same access path: fields, auto-properties, Nullable.Value/HasValue, array length,
+		/// an element at a literal index and conversions. Values are never compared. Any method call, including a
+		/// property getter with a body, gets its own parameter per occurrence: two calls the user wrote are two reads.
 		/// </summary>
 		/// <param name="paramExpr">Expression the parameter value is read from.</param>
 		/// <param name="paramEntry">Cache entry being registered.</param>
@@ -259,10 +259,10 @@ namespace LinqToDB.Internal.Linq
 		}
 
 		/// <summary>
-		/// Whether <paramref name="expression"/> only reads storage: a constant, a compiled-query parameter or a
-		/// static field, through fields, auto-properties, <c>Nullable</c> accessors, array length, an element at a
-		/// literal index, and conversions. A property getter with a body or any other method call runs code and
-		/// is not pure.
+		/// Whether <paramref name="expression"/> names a C# variable through an access path without a call: a
+		/// constant (closure object), a compiled-query parameter or a static field, through fields, auto-properties,
+		/// <c>Nullable.Value</c>/<c>HasValue</c>, array length, an element at a literal index, and conversions. A
+		/// property getter with a body or any method call (<c>GetValueOrDefault()</c> included) is a call.
 		/// </summary>
 		static bool IsPureChain(Expression expression)
 		{
@@ -295,12 +295,6 @@ namespace LinqToDB.Internal.Linq
 							return member.Member is FieldInfo;
 
 						expression = member.Expression;
-						continue;
-
-					case MethodCallExpression { Arguments.Count: 0, Object: not null } call
-						when string.Equals(call.Method.Name, nameof(Nullable<>.GetValueOrDefault), StringComparison.Ordinal)
-							&& call.Method.DeclaringType is { IsGenericType: true } type && type.GetGenericTypeDefinition() == typeof(Nullable<>):
-						expression = call.Object;
 						continue;
 
 					default:
