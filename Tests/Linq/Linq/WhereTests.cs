@@ -238,6 +238,28 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void LogicalAndOverClientValues([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var ids = new[] { 1, 0 };
+
+			db.Person
+				.Where(p => ids[0] > 0 & ids[1] > 0 & p.ID == 2)
+				.Select(p => p.ID)
+				.ToArray()
+				.ShouldBeEmpty();
+
+			ids[1] = 1;
+
+			db.Person
+				.Where(p => ids[0] > 0 & ids[1] > 0 & p.ID == 2)
+				.Select(p => p.ID)
+				.ToArray()
+				.ShouldBe([2]);
+		}
+
+		[Test]
 		public void BinarySubtract([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

@@ -1,10 +1,30 @@
 using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 {
 	static class EqualsToVisitor
 	{
+		// Objects met so far in one cache-key comparison, by placeholder ordinal: a placeholder with an ordinal
+		// seen before matches only the same object again. Set by the lookup around the whole comparison.
+		[ThreadStatic]
+		static Dictionary<int, object?>? _identities;
+
+		internal static IDisposable IdentityScope()
+		{
+			_identities = new Dictionary<int, object?>();
+			return new IdentityScopeEnd();
+		}
+
+		sealed class IdentityScopeEnd : IDisposable
+		{
+			public void Dispose()
+			{
+				_identities = null;
+			}
+		}
+
 		internal static bool EqualsTo(this Expression? expr1, Expression? expr2)
 		{
 			if (expr1 == expr2)
@@ -16,7 +36,21 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 			if (expr1.NodeType != expr2.NodeType)
 			{
 				// special cache case
-				return expr1.NodeType == ExpressionType.Extension && expr2.NodeType == ExpressionType.Constant && expr1 is ConstantPlaceholderExpression;
+				if (expr1.NodeType == ExpressionType.Extension && expr2.NodeType == ExpressionType.Constant && expr1 is ConstantPlaceholderExpression placeholder)
+				{
+					if (placeholder.Ordinal < 0 || _identities == null)
+						return true;
+
+					var value = ((ConstantExpression)expr2).Value;
+
+					if (_identities.TryGetValue(placeholder.Ordinal, out var seen))
+						return ReferenceEquals(seen, value);
+
+					_identities.Add(placeholder.Ordinal, value);
+					return true;
+				}
+
+				return false;
 			}
 
 			return expr1.NodeType switch

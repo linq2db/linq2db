@@ -444,41 +444,78 @@ namespace LinqToDB.Internal.Linq
 		/// <param name="nonComparable"></param>
 		/// <param name="newParameterized"></param>
 		/// <returns></returns>
-		Expression ReplaceParameterizedAndClosures(Expression expression, HashSet<Expression> nonComparable, HashSet<Expression>? parameterized, Dictionary<Expression, ConstantPlaceholderExpression>? newParameterized, MappingSchema mappingSchema)
+		sealed class PlaceholderContext
 		{
-			var result = expression.Transform((nonComparable, parameterized, newParameterized, mappingSchema), static (ctx, e) =>
+			public PlaceholderContext(HashSet<Expression> nonComparable, HashSet<Expression>? parameterized, HashSet<Expression>? dependentArguments, MappingSchema mappingSchema)
 			{
-				if (ctx.newParameterized != null && ctx.newParameterized.TryGetValue(e, out var constantPlaceholder))
+				NonComparable      = nonComparable;
+				Parameterized      = parameterized;
+				DependentArguments = dependentArguments;
+				MappingSchema      = mappingSchema;
+			}
+
+			public HashSet<Expression>  NonComparable      { get; }
+			public HashSet<Expression>? Parameterized      { get; }
+			public HashSet<Expression>? DependentArguments { get; }
+			public MappingSchema        MappingSchema      { get; }
+
+			public Dictionary<Expression, ConstantPlaceholderExpression> Replacements { get; } = new();
+			public Dictionary<object, int>                               Ordinals     { get; } = new(ReferenceEqualityComparer.Instance);
+
+			public ConstantPlaceholderExpression Placeholder(Expression e)
+			{
+				// Two occurrences of one object get one ordinal; a value-type or string constant that became a
+				// parameter (Take(2)) has no identity worth recording.
+				var ordinal = -1;
+
+				if (e is ConstantExpression { Value: { } value } && value is not string && !value.GetType().IsValueType)
+				{
+					if (!Ordinals.TryGetValue(value, out ordinal))
+					{
+						ordinal = Ordinals.Count;
+						Ordinals.Add(value, ordinal);
+					}
+				}
+
+				var placeholder = new ConstantPlaceholderExpression(e.Type, ordinal);
+				Replacements[e] = placeholder;
+				return placeholder;
+			}
+		}
+
+		Expression ReplaceParameterizedAndClosures(Expression expression, PlaceholderContext context)
+		{
+			var result = expression.Transform(context, static (ctx, e) =>
+			{
+				if (ctx.Replacements.TryGetValue(e, out var constantPlaceholder))
 				{
 					return new TransformInfo(constantPlaceholder, true);
 				}
 
-				if (ctx.nonComparable.Contains(e) && e is not ConstantExpression { Value: null })
+				if (ctx.NonComparable.Contains(e) && e is not ConstantExpression { Value: null })
 				{
 					// A scalar literal an accessor merely read (an extension argument, a duplicate check) is still
 					// written in the query: it stays in the key by value. Only a literal the builder turned into a
-					// parameter is taken out, so that one query serves every value at that position.
+					// parameter is taken out, so that one query serves every value at that position. A constant
+					// a [SqlQueryDependent] argument reads stays too: its content shaped the SQL and is compared
+					// by the attribute.
 					if (e is ConstantExpression literal
-						&& !ExpressionCacheHelpers.ShouldRemoveConstantFromCache(literal, ctx.mappingSchema)
-						&& ctx.parameterized?.Contains(e) != true)
+						&& (literal.Value is not Array && !ExpressionCacheHelpers.ShouldRemoveConstantFromCache(literal, ctx.MappingSchema) && ctx.Parameterized?.Contains(e) != true
+							|| ctx.DependentArguments?.Contains(e) == true))
 					{
 						return new TransformInfo(e);
 					}
 
-					var newValue = new ConstantPlaceholderExpression(e.Type);
-					ctx.newParameterized![e] = newValue;
-					return new TransformInfo(newValue, true);
+					return new TransformInfo(ctx.Placeholder(e), true);
 				}
 
 				if (e.NodeType == ExpressionType.Constant)
 				{
 					var c = (ConstantExpression)e;
 
-					if (ExpressionCacheHelpers.ShouldRemoveConstantFromCache(c, ctx.mappingSchema))
+					if (ExpressionCacheHelpers.ShouldRemoveConstantFromCache(c, ctx.MappingSchema))
 					{
-						var replacement = new ConstantPlaceholderExpression(e.Type);
-						ctx.newParameterized![e] = replacement;
-						return new TransformInfo(replacement);
+						return new TransformInfo(ctx.Placeholder(e));
 					}
 				}
 
@@ -486,6 +523,21 @@ namespace LinqToDB.Internal.Linq
 			});
 
 			return result;
+		}
+
+		static void CollectDependentConstantArguments(Expression expression, HashSet<Expression> result)
+		{
+			expression.Visit(result, static (set, e) =>
+			{
+				if (e is MethodCallExpression call && SqlQueryDependentAttributeHelper.GetQueryDependentAttributes(call.Method) is { } attributes)
+				{
+					for (var i = 0; i < call.Arguments.Count; i++)
+					{
+						if (attributes[i] != null && call.Arguments[i] is ConstantExpression)
+							set.Add(call.Arguments[i]);
+					}
+				}
+			});
 		}
 
 		/// <summary>
@@ -578,8 +630,6 @@ namespace LinqToDB.Internal.Linq
 
 			List<DynamicExpressionInfo>? dynamicAccessors   = null;
 
-			var replacements = new Dictionary<Expression, ConstantPlaceholderExpression>();
-
 			// Literals the builder turned into parameters (Take(2), Set(f, 1), Sql.Parameter(2)): the key keeps a
 			// placeholder at those positions.
 			HashSet<Expression>? parameterizedLiterals = null;
@@ -596,6 +646,18 @@ namespace LinqToDB.Internal.Linq
 				}
 			}
 
+			var dependentArguments = new HashSet<Expression>();
+
+			CollectDependentConstantArguments(MainExpression, dependentArguments);
+
+			if (DynamicAccessors != null)
+			{
+				foreach (var da in DynamicAccessors.Values)
+					CollectDependentConstantArguments(da.Used, dependentArguments);
+			}
+
+			var placeholderContext = new PlaceholderContext(nonComparable, parameterizedLiterals, dependentArguments, dc.MappingSchema);
+
 			if (DynamicAccessors != null)
 			{
 				var runtimeExpressions = new RuntimeExpressionsContainer(parameterExpressions.MainExpression);
@@ -605,7 +667,7 @@ namespace LinqToDB.Internal.Linq
 				{
 					runtimeExpressions.AddExpression(da.ExpressionId, da.Used);
 
-					var replaced = ReplaceParameterizedAndClosures(da.Used, nonComparable, parameterizedLiterals, replacements, dc.MappingSchema);
+					var replaced = ReplaceParameterizedAndClosures(da.Used, placeholderContext);
 
 					dynamicAccessors.Add(da with { Used = replaced });
 				}
@@ -656,7 +718,7 @@ namespace LinqToDB.Internal.Linq
 				}
 			}
 
-			var mainExpression = ReplaceParameterizedAndClosures(MainExpression, nonComparable, parameterizedLiterals, replacements, dc.MappingSchema);
+			var mainExpression = ReplaceParameterizedAndClosures(MainExpression, placeholderContext);
 			var compareInfo    = new QueryCacheCompareInfo(mainExpression, dynamicAccessors, comparisionFunctions);
 
 			return (compareInfo, parameterAccessors, parameterExpressions);

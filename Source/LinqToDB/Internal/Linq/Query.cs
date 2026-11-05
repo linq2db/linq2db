@@ -61,6 +61,8 @@ namespace LinqToDB.Internal.Linq
 			if (CompareInfo == null)
 				return false;
 
+			using var identities = EqualsToVisitor.IdentityScope();
+
 			var result = CompareInfo.MainExpression.EqualsTo(expressions.MainExpression);
 
 			if (!result)

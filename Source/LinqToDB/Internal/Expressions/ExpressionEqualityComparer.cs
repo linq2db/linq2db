@@ -563,6 +563,13 @@ namespace LinqToDB.Internal.Expressions
 					return Compare(((IQueryable)a.Value).Expression, ((IQueryable)b.Value).Expression);
 				}
 
+				// An array is a mutable object whose identity the cache key records: two arrays with equal content are
+				// still two inputs, each read through its own accessors, so a translation is never shared between them.
+				if (a.Value is Array || b.Value is Array)
+				{
+					return false;
+				}
+
 				if (a.Value is IEnumerable ae && b.Value is IEnumerable be)
 				{
 					return SequencesEqual(ae, be);
