@@ -1,0 +1,583 @@
+# linq2db.Identity<!-- omit in toc -->
+
+`linq2db.Identity` is an [ASP.NET Core Identity](https://learn.microsoft.com/aspnet/core/security/authentication/identity)
+persistence provider built on [LINQ to DB](https://github.com/linq2db/linq2db). It implements the Identity store
+contracts (`IUserStore`, `IRoleStore`, and the full family of optional interfaces) on top of a linq2db `IDataContext`,
+so you get Identity's `UserManager` / `RoleManager` / `SignInManager` backed by linq2db's fast, type-safe SQL instead
+of Entity Framework Core.
+
+It uses the **standard `Microsoft.AspNetCore.Identity` entity types** (`IdentityUser<TKey>`, `IdentityRole<TKey>`, …)
+and produces the **same `AspNet*` database schema** as the EF Core provider — so it is a drop-in storage backend for an
+existing Identity database.
+
+* [Why use it](#why-use-it)
+* [Install](#install)
+* [Quick start (DI)](#quick-start-di)
+  * [Deleting users and roles](#deleting-users-and-roles)
+  * [Indexes and uniqueness](#indexes-and-uniqueness)
+  * [Identity options](#identity-options)
+  * [`UserManager` operations are not atomic](#usermanager-operations-are-not-atomic)
+* [The identity context](#the-identity-context)
+  * [Unscoped and provider-scoped mappings](#unscoped-and-provider-scoped-mappings)
+  * [Provider-specific mappings](#provider-specific-mappings)
+  * [Changing a provider-specific mapping](#changing-a-provider-specific-mapping)
+  * [Customization limits](#customization-limits)
+  * [Remote (LinqService) clients](#remote-linqservice-clients)
+* [Custom key types (int / Guid)](#custom-key-types-int--guid)
+* [What's supported](#whats-supported)
+  * [Provider support](#provider-support)
+* [Navigations](#navigations)
+  * [Navigation properties on your own types](#navigation-properties-on-your-own-types)
+* [Supported frameworks](#supported-frameworks)
+* [Migrating from the standalone `linq2db.Identity`](#migrating-from-the-standalone-linq2dbidentity)
+
+## Why use it
+
+* **No EF Core dependency** — Identity storage on linq2db alone.
+* **Same schema** as the EF Core Identity provider (`AspNetUsers`, `AspNetRoles`, …) — compatible with databases
+  EF Core created, no migration required.
+* **Fast, type-safe** SQL via linq2db; automatic optimistic concurrency (the `ConcurrencyStamp` is a linq2db
+  optimistic-lock column).
+* Works over the **direct** connection and the **remote [LinqService](https://linq2db.github.io/articles/general/Client-Server.html)** path.
+* Arbitrary key types (`string`, `Guid`, `int`, `long`, …).
+
+## Install
+
+```sh
+dotnet add package linq2db.Identity
+```
+
+The matching `Microsoft.Extensions.Identity.Stores` version is pulled in automatically.
+
+## Quick start (DI)
+
+Register a linq2db identity context, then point the Identity stores at it with `AddLinqToDBStores<TContext>()`
+(an `IdentityBuilder` extension in the `Microsoft.Extensions.DependencyInjection` namespace):
+
+```csharp
+using LinqToDB;
+using LinqToDB.Identity;
+using Microsoft.AspNetCore.Identity;
+
+// 1. register the linq2db context (any IDataContext works: DataConnection / DataContext / a remote context)
+services.AddScoped(_ => new IdentityDataConnection(
+    new DataOptions().UseSqlServer(connectionString)));
+
+// 2. wire Identity to the linq2db stores
+services.AddIdentity<IdentityUser, IdentityRole>()
+    .AddLinqToDBStores<IdentityDataConnection>()
+    .AddDefaultTokenProviders();
+```
+
+`AddLinqToDBStores<TContext>` infers the user / role / key / entity types from the `IdentityBuilder` and (when
+`TContext` derives from `IdentityDataConnection<…>` / `IdentityDataContext<…>`) from the context, registering the
+matching `UserStore` / `RoleStore` — or a `UserOnlyStore` when no role type is configured.
+
+Creating the schema (e.g. in tests or first-run setup) is ordinary linq2db DDL — `CreateTable<IdentityUser>()`,
+`CreateTable<IdentityRole>()`, and so on for the seven (eight on .NET 10 with passkeys) `AspNet*` tables.
+
+### Deleting users and roles
+
+linq2db DDL creates no foreign keys, so `DeleteAsync` removes a deleted user's claims, logins, tokens, passkeys and
+role memberships (and a deleted role's memberships and claims) itself, where EF Core relies on `ON DELETE CASCADE`.
+
+When your database already cascades those deletes — an EF Core-created schema, or foreign keys you added — the extra
+`DELETE` statements find nothing to remove. Tell the stores so, and `DeleteAsync` deletes only the user or role row:
+
+```csharp
+services.AddScoped(_ => new IdentityDataConnection(
+    new DataOptions()
+        .UseSqlServer(connectionString)
+        .UseIdentityDatabaseCascadeDelete()));
+```
+
+Set it only when every dependent table cascades: the stores then leave the dependent rows to the database. The
+setting is read from the context's `DataOptions`, so on a remote (LinqService) context set it on the client's options.
+
+### Indexes and uniqueness
+
+linq2db DDL creates no indexes either. EF Core's unique `UserNameIndex` (`NormalizedUserName`) and `RoleNameIndex`
+(`NormalizedName`) are what stop two concurrent registrations of one name, so add them yourself to a schema created
+with `CreateTable`: without them uniqueness rests on `UserValidator` / `RoleValidator`, which check before inserting.
+`SetTokenAsync` and `AddOrUpdatePasskeyAsync` look a row up before inserting it, as EF Core's stores do, and
+`AddToRoleAsync` does too (EF Core's store leaves that check to `UserManager`), so two concurrent identical writes fail
+on the table's key. Where the defaults drop that key (the token table on Firebird 2.5, the passkey table on Access,
+Informix and Firebird 2.5) they store a duplicate row instead; the stores read the first copy and update or remove
+every copy, so the duplicate does not break the token or passkey.
+
+### Identity options
+
+The stores read **only** `IdentityOptions.Stores.SchemaVersion` (injected as `IOptions<IdentityOptions>`; pass it to
+the store constructor when creating a store by hand). Passkeys need `IdentitySchemaVersions.Version3`, the first
+schema version with the `AspNetUserPasskeys` table: below it the passkey members throw `InvalidOperationException`
+and `DeleteAsync` leaves that table alone, matching EF Core, whose model has no passkey entity there. Without options
+the stores behave as `Version1`; the `StoreOptions` default (`IdentitySchemaVersions.Default`) is below `Version3`
+too, so set the version explicitly to use passkeys.
+
+No other option is applied — `Stores.MaxLengthForKeys` included. If you need one, please open a
+[feature request](https://github.com/linq2db/linq2db/issues/new/choose).
+
+`Stores.ProtectPersonalData` is **not supported**: the stores do not encrypt the `[ProtectedPersonalData]` columns,
+so they do not implement `IProtectedUserStore<TUser>`, and `UserManager` refuses the option at construction rather
+than storing that data in plaintext.
+
+### `UserManager` operations are not atomic
+
+linq2db has no change tracker, so every store call is written when it runs. A `UserManager` method that makes several
+store calls is therefore not one unit of work, as it is under EF Core's single `SaveChanges`: `AddClaimsAsync`
+inserts the claims and then updates the user under the optimistic concurrency check, and when that update returns
+`ConcurrencyFailure` the claims are already stored. Retrying `AddClaimsAsync` then duplicates them (nothing in
+`AspNetUserClaims` prevents it). Retrying `AddLoginAsync` or `AddToRoleAsync` returns a failed result instead
+(`LoginAlreadyAssociated` / `UserAlreadyInRole`), because `UserManager` finds the row the first attempt stored. Token
+writes are safe to repeat.
+
+To make such an operation atomic, run it in a transaction on the same scoped context the stores resolve, and commit
+only on success:
+
+```csharp
+await using var tx = await db.BeginTransactionAsync();   // db: the scoped IdentityDataConnection
+
+var result = await userManager.AddClaimsAsync(user, claims);
+
+if (result.Succeeded)
+    await tx.CommitAsync();                              // otherwise disposing rolls the claims back
+```
+
+## The identity context
+
+`IdentityDataConnection` / `IdentityDataContext` (and their generic `<TUser, TRole, TKey, …>` forms) apply the default
+`AspNet*` fluent mappings for you:
+
+* `IdentityDataConnection` (based on `DataConnection`) — keeps the connection open for its lifetime.
+* `IdentityDataContext` (based on `DataContext`) — opens a connection per query and closes it afterwards (EF-like).
+
+Deriving from one of those contexts is how you get the default mappings — they are applied by the context
+constructor and are not exposed separately.
+
+To customize, override `ConfigureMappings` (it is `protected virtual`): call `base.ConfigureMappings(ms)` first,
+then run a second `FluentMappingBuilder` over the same schema. The later pass wins and inherits what the defaults
+already set, so a rename keeps the default length and nullability:
+
+```csharp
+protected override void ConfigureMappings(MappingSchema ms)
+{
+    base.ConfigureMappings(ms);
+    new FluentMappingBuilder(ms)
+        .Entity<IdentityUser>()
+            .Property(e => e.Email).HasColumnName("EmailAddress")
+        .Build();
+}
+```
+
+`context.AddMappingSchema(ms)` after construction also outranks the defaults, but a schema built on its own starts
+from blank attributes: a rename there replaces the default column mapping instead of inheriting its length and
+nullability. `DataOptions.UseMappingSchema(...)` cannot override the defaults — the contexts add their own schema in
+the constructor, after the options have been applied, so the defaults outrank anything supplied that way. It still
+maps what the defaults leave alone, such as your application's own entities on the same context.
+
+### Unscoped and provider-scoped mappings
+
+A mapping attribute is **unscoped** when its `Configuration` is not set: it applies on every provider. It is
+**provider-scoped** when `Configuration` names a provider (`ProviderName.Oracle`, `ProviderName.Firebird25`, …): it
+applies only on that provider and its dialects (`ProviderName.Oracle` also covers `Oracle.11.Managed`), and there it
+is read before the unscoped one. The defaults are unscoped, except where a provider needs a different column type, a
+value conversion or a dropped key; [Provider-specific mappings](#provider-specific-mappings) lists every one.
+
+`FluentMappingBuilder.Entity<T>()` writes unscoped mappings. To write a provider-scoped one, add the attribute with
+`Configuration` set through `HasAttribute`. Don't use the `Entity<T>(configuration)` overload for this: it changes
+the unscoped mapping instead, so the change reaches every provider
+([#3136](https://github.com/linq2db/linq2db/issues/3136)).
+
+Two consequences for overriding a default:
+
+* **An unscoped mapping does not reach a column the defaults scope to your provider** where that scoped default sets
+  the same thing. A rename of a column that has a provider-scoped `ColumnAttribute` is dropped on that provider with
+  no error, and an unscoped `HasDataType` / `HasLength` does not change the DDL of a column whose scoped
+  `DataTypeAttribute` sets a database type (`NVarChar(255)`, `LongText`, …). A scoped `DataTypeAttribute` with no
+  database type (the Oracle `NVarChar` and the `LockoutEnd` rows below) is the exception: the column's own data type
+  wins over it, so an unscoped `HasDataType` overrides it — on every provider at once.
+* **A provider-scoped attribute added in `ConfigureMappings` outranks the defaults' attribute of the same kind for
+  the same provider.** That is how to change one provider's default without touching the others; see
+  [Changing a provider-specific mapping](#changing-a-provider-specific-mapping).
+
+### Provider-specific mappings
+
+Every provider-scoped default, by provider. *User text columns* are `AspNetUsers.UserName`, `NormalizedUserName`,
+`Email`, `NormalizedEmail`, `PasswordHash`, `SecurityStamp`, `PhoneNumber` and `AspNetRoles.Name`, `NormalizedName`.
+`ClaimValue` is the column on both `AspNetUserClaims` and `AspNetRoleClaims`, and *UTC* means the value is stored
+converted to UTC, truncated to whole seconds, and read back at a zero offset. The last column is the attribute kind
+that carries the default, which is the kind an override uses.
+
+| Provider (`Configuration`) | Column | Default there | Why | Attribute |
+|---|---|---|---|---|
+| MySQL, MariaDB (`ProviderName.MySql`) | `AspNetUsers.LockoutEnd` | `DataType.DateTime2` (`DATETIME`), UTC | no date/time-with-offset type; `TIMESTAMP` ends in 2038 | `DataTypeAttribute`, `ValueConverterAttribute` |
+| | `ClaimValue` | `VarChar(2000)` | unbounded strings default to 255; the stores compare it with `=`, so no LOB | `DataTypeAttribute` |
+| | `AspNetUserTokens.Value` | `Text` | a saved token passes 255; never compared | `DataTypeAttribute` |
+| | `AspNetUserPasskeys.Data` | `DataType.NText` | the passkey JSON is about 1 KB | `ColumnAttribute` |
+| Oracle (`ProviderName.Oracle`) | user text columns, `ClaimType`, `AspNetUserLogins.ProviderDisplayName` | `NVARCHAR2` (`DataType.NVarChar`, no database type) | `VARCHAR2` counts bytes, so non-ASCII text overruns it | `DataTypeAttribute` |
+| | `ClaimValue` | `NVarChar2(2000)` | as MySQL | `DataTypeAttribute` |
+| | `AspNetUserTokens.Value` | `NClob` | as MySQL | `DataTypeAttribute` |
+| | `AspNetUserPasskeys.Data` | `DataType.NText` | wider than the 2000 an unbounded string gets | `ColumnAttribute` |
+| Firebird, all versions (`ProviderName.Firebird`) | `AspNetUsers.LockoutEnd` | `DataType.DateTime2` (`TIMESTAMP`), UTC | FirebirdClient cannot write `TIMESTAMP WITH TIME ZONE` ([#5915](https://github.com/linq2db/linq2db/issues/5915)) | `DataTypeAttribute`, `ValueConverterAttribute` |
+| | `ClaimValue` | `VarChar(2000) CHARACTER SET UNICODE_FSS` | as MySQL | `DataTypeAttribute` |
+| | `AspNetUserTokens.Value` | `BLOB SUB_TYPE TEXT CHARACTER SET UNICODE_FSS` | as MySQL | `DataTypeAttribute` |
+| | `AspNetUserPasskeys.Data` | `BLOB SUB_TYPE TEXT CHARACTER SET UNICODE_FSS` | as MySQL | `ColumnAttribute` |
+| Firebird 2.5 (`ProviderName.Firebird25`) | `AspNetUserTokens.UserId`, `LoginProvider`, `Name` | not a primary key | the three-column key is too wide for its index | `ColumnAttribute` |
+| | `AspNetUserPasskeys.CredentialId` | not a primary key | the 1024-byte key is too wide for its index | `ColumnAttribute` |
+| Access (`ProviderName.Access`) | user text columns | `NVarChar(255)` | text columns hold at most 255 characters | `DataTypeAttribute` |
+| | `AspNetUsers.LockoutEnd` | `DataType.DateTime`, UTC | no date/time-with-offset type | `DataTypeAttribute`, `ValueConverterAttribute` |
+| | `ClaimValue`, `AspNetUserTokens.Value` | `LongText` | text columns hold at most 255 characters | `DataTypeAttribute` |
+| | `AspNetUserPasskeys.Data` | `LongText` | as above | `ColumnAttribute` |
+| | `AspNetUserPasskeys.CredentialId` | `LongBinary`, not a primary key | binary columns hold at most 255 bytes, and the `LongBinary` that holds more cannot be indexed | `ColumnAttribute` |
+| DB2 LUW and z/OS (`ProviderName.DB2`) | `ClaimValue` | `NVarChar(2000)` | as MySQL | `DataTypeAttribute` |
+| | `AspNetUserTokens.Value` | `NClob` | as MySQL | `DataTypeAttribute` |
+| DB2 LUW (`ProviderName.DB2LUW`) | `AspNetUsers.LockoutEnd` | `DataType.DateTime2`, UTC | no date/time-with-offset type | `DataTypeAttribute`, `ValueConverterAttribute` |
+| Informix (`ProviderName.Informix`) | user text columns, `ClaimType`, `AspNetUserLogins.ProviderDisplayName` | `LVarChar(1024)` | `NVarChar` holds 255 bytes, fewer than 256 characters in a multi-byte locale | `DataTypeAttribute` |
+| | `AspNetUsers.LockoutEnd` | `DataType.DateTime2`, UTC | no date/time-with-offset type | `DataTypeAttribute`, `ValueConverterAttribute` |
+| | `ClaimValue` | `LVarChar(2000)` | as MySQL | `DataTypeAttribute` |
+| | `AspNetUserTokens.Value`, `AspNetUserPasskeys.Data` | `LVarChar(8000)` | as MySQL | `DataTypeAttribute` / `ColumnAttribute` |
+| | `AspNetUserPasskeys.CredentialId` | `LVarChar(2048)` holding hex text, not a primary key | a `BYTE` column can be neither compared nor indexed | `ColumnAttribute`, `ValueConverterAttribute` |
+| SAP HANA (`ProviderName.SapHana`) | `AspNetUsers.LockoutEnd` | `DataType.DateTime2`, UTC | no date/time-with-offset type | `DataTypeAttribute`, `ValueConverterAttribute` |
+| | `ClaimValue` | `NVarChar(2000)` | as MySQL | `DataTypeAttribute` |
+| | `AspNetUserTokens.Value` | `NVarChar(5000)` | the widest `NVARCHAR` it binds | `DataTypeAttribute` |
+| Sybase ASE (`ProviderName.Sybase`) | `AspNetUsers.LockoutEnd` | `DataType.DateTime2`, UTC | no date/time-with-offset type | `DataTypeAttribute`, `ValueConverterAttribute` |
+| | `ClaimValue` | `NVarChar(2000)` | as MySQL | `DataTypeAttribute` |
+| | `AspNetUserTokens.Value` | `UniText` | as MySQL | `DataTypeAttribute` |
+| SQL CE (`ProviderName.SqlCe`) | `AspNetUsers.LockoutEnd` | `DataType.DateTime2`, UTC | no date/time-with-offset type | `DataTypeAttribute`, `ValueConverterAttribute` |
+| | `ClaimValue` | `NVarChar(2000)` | as MySQL | `DataTypeAttribute` |
+| | `AspNetUserTokens.Value`, `AspNetUserPasskeys.Data` | `NText` | `NVarChar` holds at most 4000 characters | `DataTypeAttribute` / `ColumnAttribute` |
+| SQL Server 2005 (`ProviderName.SqlServer2005`) | `AspNetUsers.LockoutEnd` | `DataType.DateTime`, UTC | no `datetimeoffset` before 2008 | `DataTypeAttribute`, `ValueConverterAttribute` |
+| YDB (`ProviderName.Ydb`) | `AspNetUsers.LockoutEnd` | `DataType.Timestamp64`, UTC | no date/time-with-offset type; `Timestamp` ends in 2105 | `DataTypeAttribute`, `ValueConverterAttribute` |
+
+PostgreSQL, SQL Server 2008 and later, SQLite, DuckDB and ClickHouse have no provider-specific mappings.
+
+### Changing a provider-specific mapping
+
+Override in `ConfigureMappings`, after `base.ConfigureMappings(ms)`, with an attribute of the kind the table names and
+the `Configuration` it names. Each kind needs a different shape.
+
+**`DataTypeAttribute`** changes the column's type and keeps the default name, length and nullability. This keeps the
+name and email lookup columns `VARCHAR2` on Oracle, which an existing `VARCHAR2` schema needs to keep using its
+indexes; the lookup parameters follow the column type:
+
+```csharp
+protected override void ConfigureMappings(MappingSchema ms)
+{
+    base.ConfigureMappings(ms);
+    new FluentMappingBuilder(ms)
+        .Entity<IdentityUser>()
+            .Property(e => e.NormalizedUserName).HasAttribute(new DataTypeAttribute(DataType.VarChar) { Configuration = ProviderName.Oracle })
+            .Property(e => e.NormalizedEmail)   .HasAttribute(new DataTypeAttribute(DataType.VarChar) { Configuration = ProviderName.Oracle })
+        .Build();
+}
+```
+
+Give it a database type to replace one the defaults set, such as a wider `ClaimValue` on MySQL —
+`new DataTypeAttribute(DataType.NVarChar, "VarChar(4000)") { Configuration = ProviderName.MySql }`. Keep `ClaimValue`
+a type the provider can compare with `=`: the stores filter on it.
+
+**`ValueConverterAttribute`** replaces the conversion. One for `LockoutEnd` converts `DateTimeOffset?` to a value the
+pinned column type stores, and back. Keep it to whole seconds: the pinned types round a finer fraction, which carries
+`DateTimeOffset.MaxValue` — the usual permanent lockout — past their maximum:
+
+```csharp
+new FluentMappingBuilder(ms)
+    .Entity<IdentityUser>()
+        .Property(e => e.LockoutEnd)
+            .HasAttribute(new ValueConverterAttribute
+            {
+                Configuration  = ProviderName.SqlCe,
+                ValueConverter = new ValueConverter<DateTimeOffset?, DateTime?>(
+                    toDatabase,     // Func<DateTimeOffset?, DateTime?>
+                    fromDatabase,   // Func<DateTime?, DateTimeOffset?>
+                    handlesNulls: true),
+            })
+    .Build();
+```
+
+**`ColumnAttribute`** replaces the whole column mapping on that provider, so it has to restate everything it keeps.
+Renaming `AspNetUserTokens.UserId` therefore takes two mappings: the unscoped rename, and a Firebird 2.5 one that
+repeats the defaults' length, nullability and dropped key there:
+
+```csharp
+new FluentMappingBuilder(ms)
+    .Entity<IdentityUserToken<string>>()
+        .Property(e => e.UserId)
+            .HasColumnName("UserRef")
+            .HasAttribute(new ColumnAttribute
+            {
+                Configuration = ProviderName.Firebird25,
+                Name          = "UserRef",
+                Length        = 36,
+                CanBeNull     = false,
+                IsPrimaryKey  = false,
+            })
+    .Build();
+```
+
+`IsPrimaryKey = false` has to be stated, not left out: the defaults mark the key separately, and a scoped
+`ColumnAttribute` that leaves the flag unset brings that key back on the provider that cannot index it.
+
+### Customization limits
+
+* **String keys are 36 characters wide**, the length of the GUID string `IdentityUser` / `IdentityRole` generate
+  (EF Core uses 450 on SQL Server). Ids you assign yourself — an external subject id, an email — need a wider key:
+  `HasLength` on `Id` and on every `UserId` / `RoleId` column in a `ConfigureMappings` override. Mind the index
+  limit of composite keys such as `AspNetUserRoles (UserId, RoleId)` on your provider.
+* **Extra properties on a subclass become columns.** `class AppUser : IdentityUser<string> { public string Tenant { get; set; } }`
+  maps `Tenant` as a column, so `CreateTable` emits it and inserts include it — the same as EF Core, but the table is
+  then no longer interchangeable with a stock `AspNetUsers` unless you `Ignore` the property.
+* **A custom passkey type needs the matching store.** On .NET 10 the contexts and stores take an optional
+  `TUserPasskey` (`IdentityDataConnection<TUser, TRole, TKey, …, TUserToken, TUserPasskey>`,
+  `UserStore<…, TRoleClaim, TUserPasskey>`, `UserOnlyStore<…, TUserToken, TUserPasskey>`), as EF Core does.
+  `AddLinqToDBStores` picks the passkey-aware store for such a context; a store built by hand without the
+  `TUserPasskey` argument queries the stock `IdentityUserPasskey<TKey>`, which that context does not map.
+* **On .NET 10 the role-aware store and contexts no longer derive from their user-only counterparts.** They derive
+  from the passkey-aware forms instead, as in EF Core, so `UserStore<…, TRoleClaim>` is not a
+  `UserOnlyStore<…, TUserToken>` there. Code that upcasts between them should target the `IUser*Store<TUser>`
+  interfaces or `UserStoreBase<TUser, TKey, TUserClaim, TUserLogin, TUserToken>` instead, which are the same on every
+  target framework.
+* **Mappings are built once per context type, for the process lifetime.** `ConfigureMappings` runs on the first
+  instantiation of a given context class and the result is cached against that class, so mappings cannot vary per
+  instance — per-tenant table names, for example.
+* **`AddLinqToDBStores<TContext>` applies no mappings when `TContext` is not one of the identity contexts.** The
+  stores are still registered and will run, but against tables named after the CLR types.
+
+### Remote (LinqService) clients
+
+A remote context cannot derive from the identity contexts, so give **both ends** the identity mapping schema. Take
+it from an identity context built for the provider - constructing one opens no connection:
+
+```csharp
+var identitySchema = new IdentityDataConnection(new DataOptions().UseSqlServer(connectionString)).MappingSchema;
+
+// client: the remote context the stores run on
+services.AddScoped<IDataContext>(_ => new MyRemoteContext(remoteOptions.UseMappingSchema(identitySchema)));
+
+// server: the DataConnection the LinqService executes on
+dataConnection.AddMappingSchema(identitySchema);
+```
+
+## Custom key types (int / Guid)
+
+Arbitrary `TKey` is supported via the generic context and stores:
+
+```csharp
+public class AppUser : IdentityUser<int> { }
+public class AppRole : IdentityRole<int> { }
+
+services.AddScoped(_ => new IdentityDataConnection<AppUser, AppRole, int>(options));
+services.AddIdentityCore<AppUser>().AddRoles<AppRole>()
+    .AddLinqToDBStores<IdentityDataConnection<AppUser, AppRole, int>>();
+```
+
+* **int / long** keys are mapped as store-generated **identity** columns (assigned on insert), matching EF Core.
+* **string / Guid** keys are client-assigned (set `Id` yourself, as Identity's `IdentityUser` does for strings).
+* `UserManager.FindByIdAsync` takes a **string** — that is the ASP.NET Core framework signature; the store converts it
+  to your key type, so pass `id.ToString()`.
+
+## What's supported
+
+The full modern store contract:
+
+* User CRUD, claims, logins, external tokens.
+* Roles, role claims, user-role membership.
+* Password hash, security stamp, email/phone confirmation, two-factor, lockout.
+* Authenticator keys and two-factor **recovery codes**.
+* The queryable user/role stores.
+* Roleless **`UserOnlyStore`**.
+* **Passkeys** (`IUserPasskeyStore`) on .NET 10.
+
+### Provider support
+
+Every linq2db provider runs the stores, with one exception. **ClickHouse** reports neither updated rows nor an
+affected-rows count for an `UPDATE`, so the optimistic-concurrency check behind `UpdateAsync` cannot be decided
+there: user and role updates throw, and every `UserManager` operation that saves the user throws with them. It has no
+identity columns either, so int / long keys must be assigned by the caller. Reads, claims, logins, tokens, roles and
+deletes work.
+
+On **SQL Server** `UpdateAsync` reads the regenerated `ConcurrencyStamp` back with an `OUTPUT` clause, which SQL Server
+rejects on a table with an enabled `UPDATE` trigger: with such a trigger on `AspNetUsers` or `AspNetRoles`, user and
+role updates throw. Override `UpdateAsync` in a derived store for such a schema.
+
+Providers without a date/time-with-offset type — MySQL, Access, SQL CE, SQL Server 2005, Sybase, SAP HANA, Informix,
+DB2 LUW and YDB — and Firebird, whose 4.0+ `TIMESTAMP WITH TIME ZONE` FirebirdClient cannot write yet
+([#5915](https://github.com/linq2db/linq2db/issues/5915)), store `LockoutEnd` as UTC, truncated to whole seconds, and
+read it back at a zero offset.
+
+Some columns are narrower than EF Core's: on **Access** the 256-character user and role name, email, phone,
+password-hash and security-stamp columns hold 255, and `ClaimValue` holds at most 2000 characters on MySQL, Oracle, Firebird, DB2, Informix (2000
+bytes), SAP HANA, Sybase and SQL CE. `ClaimType` takes the provider's default string width (255 on most; 1024 bytes on Informix),
+`ProviderDisplayName` holds 128 (1024 bytes on Informix), and a token `Value` holds 8000 bytes on Informix and 5000 characters on
+SAP HANA. A longer value is rejected on insert or update. Every provider-specific type is listed under
+[Provider-specific mappings](#provider-specific-mappings).
+
+On **SAP HANA** a passkey's `Data` column holds at most 5000 characters, the widest `NVARCHAR` it binds: enough for
+the default `none` attestation, possibly not for a direct-attestation certificate chain.
+
+## Navigations
+
+Association helpers for the standard Identity entity types are provided as **extension methods**, usable inside any
+linq2db query. They are methods because `IdentityUser<TKey>` / `IdentityRole<TKey>` are Microsoft's types, so a
+navigation *property* on them could only be a C# 14 extension property, and C# forbids extension-property access
+inside expression trees (CS9296), which linq2db queries are.
+
+| Receiver | Method | Related rows |
+|---|---|---|
+| `IdentityUser<TKey>` | `.Roles()`  | `AspNetRoles` the user belongs to (through `AspNetUserRoles`) |
+| `IdentityUser<TKey>` | `.Claims()` | `AspNetUserClaims` |
+| `IdentityUser<TKey>` | `.Logins()` | `AspNetUserLogins` |
+| `IdentityRole<TKey>` | `.Users()`  | `AspNetUsers` in the role (through `AspNetUserRoles`) |
+| `IdentityRole<TKey>` | `.Claims()` | `AspNetRoleClaims` |
+
+```csharp
+using LinqToDB;
+using LinqToDB.Identity;
+
+var roleNames = db.GetTable<IdentityUser>()
+    .Where(u => u.NormalizedUserName == "ALICE")
+    .SelectMany(u => u.Roles())
+    .Select(r => r.Name)
+    .ToList();
+```
+
+They are query-only markers — linq2db expands them into the corresponding join; calling one outside a query throws.
+
+They return the stock types (`IdentityRole<TKey>`, `IdentityUserClaim<TKey>`, …) even when the context uses your own:
+the generic contexts map the stock types to the same `AspNet*` tables for that reason, so your types' extra members
+are not visible through them. If your `ConfigureMappings` override renames a table, rename the stock type's table as
+well. There are no overloads that return your types: C# cannot infer those type arguments from the receiver, so every
+call would have to spell them out (`u.Roles<AppRole, string>()`).
+
+### Navigation properties on your own types
+
+Your own user and role subclasses can carry typed navigation **properties**, which linq2db expands the same way. Mark
+a one-to-many navigation with `[Association]` on its keys, and a many-to-many one (through `AspNetUserRoles`) with a
+`QueryExpressionMethod` that joins the link table. Association properties are not columns, so the table stays
+interchangeable with a stock `AspNetUsers`:
+
+```csharp
+public class AppUser : IdentityUser<string>
+{
+    [Association(ThisKey = nameof(Id), OtherKey = nameof(AppUserClaim.UserId))]
+    public IEnumerable<AppUserClaim> Claims { get; set; } = null!;
+
+    [Association(QueryExpressionMethod = nameof(RolesQuery))]
+    public IEnumerable<AppRole> Roles { get; set; } = null!;
+
+    static Expression<Func<AppUser, IDataContext, IQueryable<AppRole>>> RolesQuery()
+        => (user, db) => db.GetTable<AppUserRole>()
+            .Where(ur => ur.UserId == user.Id)
+            .SelectMany(ur => db.GetTable<AppRole>().Where(r => r.Id == ur.RoleId));
+}
+
+public class AppRole : IdentityRole<string>
+{
+    [Association(QueryExpressionMethod = nameof(UsersQuery))]
+    public IEnumerable<AppUser> Users { get; set; } = null!;
+
+    static Expression<Func<AppRole, IDataContext, IQueryable<AppUser>>> UsersQuery()
+        => (role, db) => db.GetTable<AppUserRole>()
+            .Where(ur => ur.RoleId == role.Id)
+            .SelectMany(ur => db.GetTable<AppUser>().Where(u => u.Id == ur.UserId));
+}
+
+public class AppUserClaim : IdentityUserClaim<string>;
+public class AppUserRole  : IdentityUserRole <string>;
+
+// with IdentityDataConnection<AppUser, AppRole, string, AppUserClaim, AppUserRole, …> as the context:
+var roleNames = db.GetTable<AppUser>()
+    .Where(u => u.NormalizedUserName == "ALICE")
+    .SelectMany(u => u.Roles)
+    .Select(r => r.Name)
+    .ToList();
+```
+
+## Supported frameworks
+
+`net462`, `netstandard2.0`, `net8.0`, `net9.0`, `net10.0`. (Passkeys are .NET 10 only.)
+
+## Migrating from the standalone `linq2db.Identity`
+
+The package id stays **`linq2db.Identity`** and now follows linq2db's own version line — a *minor* step from the
+standalone 6.0.0, but the API is **breaking**: don't let a `6.*` range or an automated minor update pick it up
+unreviewed. Existing `AspNet*` tables keep working with **no DB migration**; tables the standalone package created
+need their names mapped or renamed — see *Database* below. Tables created by this version's `CreateTable` differ on some providers: wider claim, token and passkey
+data columns, and `LockoutEnd` as `DATETIME` on MySQL, `TIMESTAMP` on Firebird 4+ and `Timestamp64` on YDB. Widening
+an existing table to match is optional; values that did not fit the old columns never could be stored. An EF
+Core-created Firebird 4+ `TIMESTAMP WITH TIME ZONE` `LockoutEnd` round-trips when the session time zone is UTC; the
+server converts the written UTC value with that zone, and other session zones have not been checked. Neither has YDB
+against an EF Core-created table. On the providers that store `LockoutEnd` as UTC (see *Provider
+support*), a value an earlier version stored in server-local time reads back shifted by that offset until it is next
+written.
+
+On **Oracle** the name, email and profile columns, `ClaimType`, `ClaimValue` and `ProviderDisplayName` are now
+`NVARCHAR2`, and the stores bind their lookup parameters as `NVARCHAR2`. Tables EF Core created already use
+`NVARCHAR2`; tables the standalone package created, and hand-made schemas, may use `VARCHAR2`. Results stay correct
+against a `VARCHAR2` column, but Oracle converts the column rather than the parameter, so an index on
+`NormalizedUserName` / `NormalizedEmail` is no longer used and every sign-in scans `AspNetUsers`. Either convert
+the columns (`ALTER TABLE "AspNetUsers" MODIFY ("NormalizedUserName" NVARCHAR2(256), "NormalizedEmail"
+NVARCHAR2(256), …)`), or keep `VARCHAR2` with the Oracle-scoped mapping shown in
+[Changing a provider-specific mapping](#changing-a-provider-specific-mapping).
+
+| Area | Before (standalone) | After (monorepo) |
+|---|---|---|
+| Entity model | custom `IIdentityUser<TKey>` / `IIdentityRole<TKey>` / `IIdentity*` interface family | standard `Microsoft.AspNetCore.Identity.IdentityUser<TKey>` / `IdentityRole<TKey>` base types |
+| Context wiring | `IConnectionFactory` / `DefaultConnectionFactory` | a linq2db `IDataContext` registered in DI (e.g. `IdentityDataConnection`) |
+| DI registration | `AddLinqToDBStores(new DefaultConnectionFactory())` (+ entity-type generic args) | `AddLinqToDBStores<TContext>()` |
+| Concurrency stamp | manual | automatic (linq2db `OptimisticLockPropertyAttribute` / `VersionBehavior`) |
+| Table names | none mapped — `CreateTable` used the CLR type names | `AspNet*`, as EF Core |
+| TFMs | `netstandard2.0` | `net462; netstandard2.0; net8.0; net9.0; net10.0` |
+
+**Entity model.** Replace types implementing the old custom interfaces with subclasses of the ASP.NET Core base types
+(or use the defaults). The custom `IIdentityUser` / `IIdentityRole` / `IIdentityUserClaim` / … interfaces and
+`IConcurrency` / `IClameConverter` are gone:
+
+```diff
+- public class ApplicationUser : IIdentityUser<string> { … }
++ public class ApplicationUser : Microsoft.AspNetCore.Identity.IdentityUser<string> { … }
+```
+
+**DI wiring.** `IConnectionFactory` is removed. Register your linq2db context with DI and point the stores at it with
+`AddLinqToDBStores<TContext>()`:
+
+```diff
+- services.AddIdentity<ApplicationUser, IdentityRole>()
+-     .AddLinqToDBStores(new DefaultConnectionFactory())
+-     .AddDefaultTokenProviders();
++ services.AddScoped(_ => new IdentityDataConnection(
++     new DataOptions().UseConnectionString(providerName, connectionString)));
++
++ services.AddIdentity<IdentityUser, IdentityRole>()
++     .AddLinqToDBStores<IdentityDataConnection>()
++     .AddDefaultTokenProviders();
+```
+
+**Database.** The default mapping produces EF Core's `AspNetUsers` / `AspNetRoles` / `AspNetUserClaims` /
+`AspNetUserRoles` / `AspNetUserLogins` / `AspNetUserTokens` / `AspNetRoleClaims` layout (plus `AspNetUserPasskeys` on
+.NET 10), so a database EF Core created, or one you had already mapped to those names, is compatible as-is.
+
+The standalone package mapped no table names, so a schema it created with `CreateTable<T>()` — as its sample did —
+has tables named after the CLR types: `ApplicationUser`, `IdentityRole`, ``IdentityUserClaim`1``, and so on. Either
+rename those tables to the `AspNet*` names, or map the old names in a `ConfigureMappings` override:
+
+```csharp
+public class AppDataConnection(DataOptions options) : IdentityDataConnection<ApplicationUser, IdentityRole, string>(options)
+{
+    protected override void ConfigureMappings(MappingSchema ms)
+    {
+        base.ConfigureMappings(ms);
+        new FluentMappingBuilder(ms)
+            .Entity<ApplicationUser>()          .HasTableName("ApplicationUser")
+            .Entity<IdentityRole>()             .HasTableName("IdentityRole")
+            .Entity<IdentityUserClaim<string>>().HasTableName("IdentityUserClaim`1")
+            .Entity<IdentityUserRole<string>>() .HasTableName("IdentityUserRole`1")
+            .Entity<IdentityUserLogin<string>>().HasTableName("IdentityUserLogin`1")
+            .Entity<IdentityUserToken<string>>().HasTableName("IdentityUserToken`1")
+            .Entity<IdentityRoleClaim<string>>().HasTableName("IdentityRoleClaim`1")
+            .Build();
+    }
+}
+```
+
+The navigation helpers query the stock types, so rename those as well if you use them (see [Navigations](#navigations)).
