@@ -714,7 +714,7 @@ namespace Tests.Linq
 
 			query
 				.GetCacheMissCount()
-				.ShouldBe(missCount + 1);
+				.ShouldBe(missCount);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5879")]
