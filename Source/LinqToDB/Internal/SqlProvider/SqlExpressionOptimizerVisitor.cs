@@ -1947,8 +1947,8 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 				return Visit(newElement);
 
 			// With this run's parameter values, as an enclosing search condition or CASE folds it: a provider lowers the comparison
-			// right after (SQLite's strftime), and the lowered form no longer evaluates. Under LikeSql a NULL operand stays UNKNOWN:
-			// Reduce ignores the UnknownAsValue an inverted ordering comparison carries, so the fold does as well.
+			// right after (SQLite's strftime), and the lowered form no longer evaluates. Under LikeSql the fold ignores the
+			// UnknownAsValue an inverted ordering comparison carries, as Reduce does, so a NULL operand folds to FALSE.
 			var evaluated = predicate.UnknownAsValue != null && DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeSql
 				? new SqlPredicate.ExprExpr(predicate.Expr1, predicate.Operator, predicate.Expr2, null)
 				: predicate;
