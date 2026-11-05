@@ -11,6 +11,7 @@ using JetBrains.Annotations;
 
 using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.Reflection;
 
@@ -438,7 +439,7 @@ namespace LinqToDB
 			for (var i = 0; i < members.Length; i++)
 				members[i] = tupleType.GetField("Item" + (i + 1).ToString(CultureInfo.InvariantCulture))!;
 
-			return Expression.New(tupleType.GetConstructor(itemTypes)!, bodies, members);
+			return Expression.New(tupleType.GetConstructorEx(itemTypes)!, bodies, members);
 		}
 	}
 }

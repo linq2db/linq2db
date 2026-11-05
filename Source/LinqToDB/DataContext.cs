@@ -15,6 +15,7 @@ using JetBrains.Annotations;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlProvider;
@@ -400,12 +401,10 @@ namespace LinqToDB
 
 				var createsOwn = _createDataConnectionOverrides.GetOrAdd(
 					type,
-					static t => t.GetMethod(
+					static t => t.GetMethodEx(
 							nameof(CreateDataConnection),
 							BindingFlags.Instance | BindingFlags.NonPublic,
-							null,
-							[typeof(DataOptions)],
-							null)
+							typeof(DataOptions))
 						?.DeclaringType != typeof(DataContext));
 
 				return createsOwn && GetDataConnection().IsProcessQueryOverridden;
