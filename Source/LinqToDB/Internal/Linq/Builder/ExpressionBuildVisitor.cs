@@ -3357,14 +3357,15 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		SuggestedDescriptor SuggestColumnDescriptor(ColumnDescriptor? descriptor, ISqlExpression expr)
 		{
-			// A value computed from a coarse date/time column is not stored in it, so a constant written beside it keeps
-			// its sub-second or time part. A parameter still takes the column's type: it may carry a value read back from it.
+			// A value computed from a coarse date/time column is not stored in it, so a value written beside it keeps its
+			// sub-second or time part - as a literal and as a parameter alike: a parameter carries the value's own type,
+			// never a coarser one borrowed from a column the value is not compared with directly.
 			if (descriptor is { ValueConverter: null } && !QueryHelper.IsStoredValue(expr))
 			{
 				var columnType = descriptor.GetDbDataType(true);
 
 				if (QueryHelper.IsCoarserDateTime(columnType, MappingSchema.GetDbDataType(columnType.SystemType)))
-					return new(descriptor, null);
+					return new(null, null);
 			}
 
 			return new(descriptor, descriptor);

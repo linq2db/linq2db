@@ -1989,6 +1989,31 @@ namespace Tests.Linq
 			equal.ShouldBe(0);
 		}
 
+		// The same comparison with the value read from a closure: a parameter must carry the value's own type
+		// (DateTime), not the Date type of the column beside the aggregate, or the time part is cut off.
+		[Test]
+		public void CoarseAggregateComparedWithFinerParameter([DataSources] string context)
+		{
+			var coarseValue = CoarseValue;
+
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarse(db);
+
+			var maxDayBelow = t
+				.GroupBy(r => r.Id)
+				.Where(g => g.Max(r => r.Day) < coarseValue)
+				.Count();
+
+			maxDayBelow.ShouldBe(1);
+
+			var minDayNotBelow = t
+				.GroupBy(r => r.Id)
+				.Where(g => g.Min(r => r.Day) >= coarseValue)
+				.Count();
+
+			minDayNotBelow.ShouldBe(0);
+		}
+
 		/// <summary>
 		/// An aggregate over a coarse column is a computed value too: the literal beside it keeps its time part.
 		/// </summary>
