@@ -904,7 +904,7 @@ namespace Tests.Linq
 
 			query
 				.GetCacheMissCount()
-				.ShouldBe(missCount + 1);
+				.ShouldBe(missCount);
 		}
 
 		// Query-cache test: provider-independent.
@@ -955,7 +955,7 @@ namespace Tests.Linq
 
 			query
 				.GetCacheMissCount()
-				.ShouldBe(missCount + 1);
+				.ShouldBe(missCount);
 		}
 
 		// Query-cache test: provider-independent.

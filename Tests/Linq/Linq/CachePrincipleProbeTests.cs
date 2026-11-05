@@ -1,9 +1,12 @@
 using System;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading;
 
 using LinqToDB;
+using LinqToDB.Internal.SqlQuery;
 
 using NUnit.Framework;
 
@@ -74,6 +77,45 @@ namespace Tests.Linq
 			Query().GetCacheMissCount().ShouldBe(missCount);
 			sql1.Parameters.Count.ShouldBe(1);
 			sql2.Parameters.Count.ShouldBe(1);
+		}
+
+		sealed class ArrayFlagBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqlExtensionBuilder builder)
+			{
+				builder.ResultExpression = new SqlValue(builder.GetValue<int[]>(0)[0] == 1);
+			}
+		}
+
+		[Sql.Extension("", BuilderType = typeof(ArrayFlagBuilder), ServerSideOnly = true)]
+		static bool ArrayFlag(int[] values) => values[0] == 1;
+
+		static readonly MethodInfo _arrayFlag = typeof(CachePrincipleProbeTests).GetMethod(nameof(ArrayFlag), BindingFlags.NonPublic | BindingFlags.Static)!;
+
+		// One constant array read by an extension builder (shapes the SQL) and indexed elsewhere (a parameter).
+		// The parameter's accessor takes the array out of the key; the extension's read must then be compared.
+		[Test, QueryCacheTest]
+		public void ConstantArrayReadByExtensionAndIndexed([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query(int[] values)
+			{
+				var p = Expression.Parameter(typeof(Model.Person), "p");
+				var c = Expression.Constant(values);
+
+				var body = Expression.AndAlso(
+					Expression.Call(_arrayFlag, c),
+					Expression.Equal(Expression.PropertyOrField(p, nameof(Model.Person.ID)), Expression.ArrayIndex(c, Expression.Constant(1))));
+
+				return db.Person
+					.Where(Expression.Lambda<Func<Model.Person, bool>>(body, p))
+					.Select(p => p.ID);
+			}
+
+			Query([1, 2]).ToArray().ShouldBe([2]);
+			Query([0, 2]).ToArray().ShouldBeEmpty();
+			Query([1, 3]).ToArray().ShouldBe([3]);
 		}
 
 		// Culture-sensitive formatting over literals: the result depends on the ambient culture, not on the
