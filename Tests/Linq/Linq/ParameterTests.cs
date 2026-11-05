@@ -518,6 +518,8 @@ namespace Tests.Linq
 			whenFalse    .Parameters.ShouldBeEmpty();
 		}
 
+		// SQLite only, direct and remote: the three tests below pin the shared evaluator behind both folds, which no provider
+		// overrides for an ordering comparison; before the fix they were red alike on every provider.
 		[Test]
 		public void NegatedConstantComparedWithNullDateParameter([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
