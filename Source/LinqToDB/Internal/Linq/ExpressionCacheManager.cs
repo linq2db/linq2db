@@ -29,7 +29,6 @@ namespace LinqToDB.Internal.Linq
 		public HashSet<Expression>                                 NonComparableExpressions { get; } = [];
 
 		List<(object? value, Expression accessor)>?                     _byValueCompare;
-		List<(SqlValue value, Expression accessor)>?                    _bySqlValueCompare;
 		Dictionary<int, (Expression main, Expression other)>?           _duplicateParametersCheck;
 		Dictionary<int, (Expression param, ParameterCacheEntry entry)>? _parameterEntries;
 
@@ -37,7 +36,6 @@ namespace LinqToDB.Internal.Linq
 
 		public Expression RootPath      { get; set; } = ExpressionBuilder.QueryExpressionContainerParam;
 		public bool       HasParameters => _parameterEntries  != null;
-		public bool       HasConstants  => _bySqlValueCompare != null;
 
 		public ExpressionCacheManager(Expression mainExpression, IUniqueIdGenerator<ExpressionCacheManager> generator)
 		{
@@ -446,9 +444,9 @@ namespace LinqToDB.Internal.Linq
 		/// <param name="nonComparable"></param>
 		/// <param name="newParameterized"></param>
 		/// <returns></returns>
-		Expression ReplaceParameterizedAndClosures(Expression expression, HashSet<Expression> nonComparable, Dictionary<Expression, ConstantPlaceholderExpression>? newParameterized, MappingSchema mappingSchema)
+		Expression ReplaceParameterizedAndClosures(Expression expression, HashSet<Expression> nonComparable, HashSet<Expression>? parameterized, Dictionary<Expression, ConstantPlaceholderExpression>? newParameterized, MappingSchema mappingSchema)
 		{
-			var result = expression.Transform((nonComparable, newParameterized, mappingSchema), static (ctx, e) =>
+			var result = expression.Transform((nonComparable, parameterized, newParameterized, mappingSchema), static (ctx, e) =>
 			{
 				if (ctx.newParameterized != null && ctx.newParameterized.TryGetValue(e, out var constantPlaceholder))
 				{
@@ -457,6 +455,16 @@ namespace LinqToDB.Internal.Linq
 
 				if (ctx.nonComparable.Contains(e) && e is not ConstantExpression { Value: null })
 				{
+					// A scalar literal an accessor merely read (an extension argument, a duplicate check) is still
+					// written in the query: it stays in the key by value. Only a literal the builder turned into a
+					// parameter is taken out, so that one query serves every value at that position.
+					if (e is ConstantExpression literal
+						&& !ExpressionCacheHelpers.ShouldRemoveConstantFromCache(literal, ctx.mappingSchema)
+						&& ctx.parameterized?.Contains(e) != true)
+					{
+						return new TransformInfo(e);
+					}
+
 					var newValue = new ConstantPlaceholderExpression(e.Type);
 					ctx.newParameterized![e] = newValue;
 					return new TransformInfo(newValue, true);
@@ -486,10 +494,9 @@ namespace LinqToDB.Internal.Linq
 		/// <param name="dc"></param>
 		/// <param name="parameterExpressions"></param>
 		/// <param name="parameters"></param>
-		/// <param name="sqlValues"></param>
 		/// <returns></returns>
-		public (QueryCacheCompareInfo compareInfo, List<ParameterAccessor>? parameterAccessors, IQueryExpressions expressions) BuildQueryCacheCompareInfo(IExpressionEvaluator evaluator, IDataContext dc,
-			IQueryExpressions parameterExpressions, List<SqlParameter>? parameters, List<SqlValue>? sqlValues)
+		public (QueryCacheCompareInfo compareInfo, List<ParameterAccessor>? parameterAccessors, IQueryExpressions expressions) BuildQueryCacheCompareInfo(IDataContext dc,
+			IQueryExpressions parameterExpressions, List<SqlParameter>? parameters)
 		{
 			List<SqlParameter>? knownParameters = null;
 			if (parameters != null)
@@ -573,6 +580,22 @@ namespace LinqToDB.Internal.Linq
 
 			var replacements = new Dictionary<Expression, ConstantPlaceholderExpression>();
 
+			// Literals the builder turned into parameters (Take(2), Set(f, 1), Sql.Parameter(2)): the key keeps a
+			// placeholder at those positions.
+			HashSet<Expression>? parameterizedLiterals = null;
+
+			if (_parameterEntries != null)
+			{
+				foreach (var (paramExpr, _) in _parameterEntries.Values)
+				{
+					paramExpr.Visit(parameterizedLiterals ??= [], static (set, e) =>
+					{
+						if (e is ConstantExpression)
+							set.Add(e);
+					});
+				}
+			}
+
 			if (DynamicAccessors != null)
 			{
 				var runtimeExpressions = new RuntimeExpressionsContainer(parameterExpressions.MainExpression);
@@ -582,7 +605,7 @@ namespace LinqToDB.Internal.Linq
 				{
 					runtimeExpressions.AddExpression(da.ExpressionId, da.Used);
 
-					var replaced = ReplaceParameterizedAndClosures(da.Used, nonComparable, replacements, dc.MappingSchema);
+					var replaced = ReplaceParameterizedAndClosures(da.Used, nonComparable, parameterizedLiterals, replacements, dc.MappingSchema);
 
 					dynamicAccessors.Add(da with { Used = replaced });
 				}
@@ -633,31 +656,7 @@ namespace LinqToDB.Internal.Linq
 				}
 			}
 
-			if (_bySqlValueCompare != null && sqlValues is { Count: > 0})
-			{
-				foreach (var (value, accessor) in _bySqlValueCompare)
-				{
-					if (!sqlValues.Contains(value))
-						continue;
-
-					var mainValueExpr = Expression.Constant(evaluator.Evaluate(accessor)).EnsureType<object>();
-
-					var otherValueExpr = PrepareExpressionAccessors(dc, accessor, nonComparable).EnsureType<object>();
-
-					var mainFunc = Expression.Lambda<ValueAccessorFunc>(mainValueExpr, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
-							ExpressionBuilder.ParametersParam)
-						.CompileExpression();
-
-					var otherFunc = Expression.Lambda<ValueAccessorFunc>(otherValueExpr, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
-							ExpressionBuilder.ParametersParam)
-						.CompileExpression();
-
-					comparisionFunctions ??= [];
-					comparisionFunctions.Add((mainFunc, otherFunc));
-				}
-			}
-
-			var mainExpression = ReplaceParameterizedAndClosures(MainExpression, nonComparable, replacements, dc.MappingSchema);
+			var mainExpression = ReplaceParameterizedAndClosures(MainExpression, nonComparable, parameterizedLiterals, replacements, dc.MappingSchema);
 			var compareInfo    = new QueryCacheCompareInfo(mainExpression, dynamicAccessors, comparisionFunctions);
 
 			return (compareInfo, parameterAccessors, parameterExpressions);
@@ -681,12 +680,6 @@ namespace LinqToDB.Internal.Linq
 		{
 			_byValueCompare ??= new();
 			_byValueCompare.Add((currentValue, expression));
-		}
-
-		public void RegisterSqlValue(Expression constantExpr, SqlValue value)
-		{
-			_bySqlValueCompare ??= new();
-			_bySqlValueCompare.Add((value, constantExpr));
 		}
 
 	}
