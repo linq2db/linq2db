@@ -1837,7 +1837,7 @@ namespace Tests.Linq
 		/// changes the stored type as well.
 		/// </summary>
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
-		public void PlainAndNullableSpellingsOfOneTypeChangingConversionCompare([DataSources] string context)
+		public void PlainAndNullableSpellingsOfOneTypeChangingConversionCompare([DataSources(TestProvName.AllAccess)] string context)
 		{
 			var value  = new DateTime(2020, 1, 1, 10, 0, 0);
 			var value2 = value.AddDays(1);
