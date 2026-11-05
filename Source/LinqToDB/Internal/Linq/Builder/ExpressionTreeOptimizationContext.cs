@@ -352,25 +352,48 @@ namespace LinqToDB.Internal.Linq.Builder
 				nameof(string.LastIndexOf),
 			};
 
-			static bool DependsOnAmbientCulture(MethodInfo method)
+			// Types whose default text form varies with the culture: a decimal separator, a date pattern.
+			static readonly HashSet<Type> _cultureFormattedTypes = new()
 			{
+				typeof(float),
+				typeof(double),
+				typeof(decimal),
+				typeof(DateTime),
+				typeof(DateTimeOffset),
+#if SUPPORTS_DATEONLY
+				typeof(DateOnly),
+				typeof(TimeOnly),
+#endif
+			};
+
+			static bool DependsOnAmbientCulture(MethodCallExpression node)
+			{
+				var method = node.Method;
+
 				if (!_cultureSensitiveMethods.Contains(method.Name))
 					return false;
 
-				var owner = method.DeclaringType;
+				var parameters = method.GetParameters();
 
-				// string.ToString() is the string itself; bool, char and Guid format the same in every culture.
-				if (string.Equals(method.Name, nameof(object.ToString), StringComparison.Ordinal)
-					&& (owner == typeof(string) || owner == typeof(bool) || owner == typeof(char) || owner == typeof(Guid)))
-				{
-					return false;
-				}
-
-				foreach (var parameter in method.GetParameters())
+				foreach (var parameter in parameters)
 				{
 					var type = parameter.ParameterType;
 					if (type == typeof(IFormatProvider) || type == typeof(CultureInfo) || type == typeof(StringComparison))
 						return false;
+				}
+
+				if (string.Equals(method.Name, nameof(object.ToString), StringComparison.Ordinal)
+					|| string.Equals(method.Name, nameof(int.Parse), StringComparison.Ordinal)
+					|| string.Equals(method.Name, nameof(int.TryParse), StringComparison.Ordinal))
+				{
+					// The value's own type decides, not the static type the call is made through (object, Nullable<T>).
+					var valueType = (node.Object?.UnwrapConvert().Type ?? method.DeclaringType!).UnwrapNullableType();
+
+					if (_cultureFormattedTypes.Contains(valueType))
+						return true;
+
+					// An integer, bool, char, Guid or string formats the same everywhere unless a format is given.
+					return parameters.Length > 0 && valueType != typeof(string) && valueType != typeof(bool) && valueType != typeof(char) && valueType != typeof(Guid);
 				}
 
 				return true;
@@ -501,7 +524,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			protected override Expression VisitMethodCall(MethodCallExpression node)
 			{
-				if (IsReadOnlyMethod(node.Method) && !DependsOnAmbientCulture(node.Method))
+				if (IsReadOnlyMethod(node.Method) && !DependsOnAmbientCulture(node))
 					return base.VisitMethodCall(node);
 
 				// we cannot predict the result of method call
@@ -562,8 +585,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 				else
 				{
-					// Fixed only when the member cannot change after construction and the receiver is fixed itself.
-					if (IsReadOnlyMember(node.Member))
+					// A member of an object written in the query (new { Category = "Some" }.Category) is one of its
+					// constructor arguments; otherwise the member must be unchangeable after construction and the
+					// receiver fixed itself.
+					if (node.Expression is NewExpression { Members: not null } created && created.Members.Contains(node.Member)
+						|| IsReadOnlyMember(node.Member))
 					{
 						Visit(node.Expression);
 						return node;
