@@ -147,7 +147,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (childMember == null)
 						throw new LinqToDBException($"Association key '{childName}' not found for type '{objectType}.");
 
-					var current = ExpressionBuilder.Equal(builder.MappingSchema,
+					var current = ExpressionBuilder.Equal(mappingSchema,
 						Expression.MakeMemberAccess(currentParentParam, parentMember.MemberInfo),
 						Expression.MakeMemberAccess(childParam, childMember.MemberInfo));
 
@@ -171,7 +171,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (inline && !shouldAddDefaultIfEmpty)
 				{
-					var ed = builder.MappingSchema.GetEntityDescriptor(objectType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+					var ed = mappingSchema.GetEntityDescriptor(objectType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 					if (ed.QueryFilters.Count > 0)
 					{
 						shouldAddDefaultIfEmpty = true;
@@ -271,7 +271,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (memberFilter != null)
 					{
 						var elementType = EagerLoading.GetEnumerableElementType(memberFilter.Parameters[0].Type,
-							builder.MappingSchema);
+							mappingSchema);
 						var filtered   = Expression.Convert(body, typeof(IEnumerable<>).MakeGenericType(elementType));
 						var filterBody = memberFilter.GetBody(filtered);
 						body = Expression.Call(
@@ -318,7 +318,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				for (var t = parentType.BaseType; t != null && t != typeof(object); t = t.BaseType)
 				{
-					if (builder.MappingSchema.GetEntityDescriptor(t, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated).InheritanceMapping.Count > 0)
+					if (mappingSchema.GetEntityDescriptor(t, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated).InheritanceMapping.Count > 0)
 					{
 						parentRootType = t;
 						break;
@@ -334,13 +334,13 @@ namespace LinqToDB.Internal.Linq.Builder
 				// an association declared on an abstract intermediate carries no discriminator code of its own,
 				// so no filter is emitted for it and the join is not narrowed to the intermediate's leaf codes
 				// (known limitation).
-				var ed = builder.MappingSchema.GetEntityDescriptor(parentRootType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+				var ed = mappingSchema.GetEntityDescriptor(parentRootType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 				Expression? discriminatorPredicate = null;
 				foreach (var inheritanceMapping in ed.InheritanceMapping)
 				{
 					if (inheritanceMapping.Type == parentType)
 					{
-						var codeEquals = ExpressionBuilder.Equal(builder.MappingSchema,
+						var codeEquals = ExpressionBuilder.Equal(mappingSchema,
 							Expression.MakeMemberAccess(definedQueryMethod.Parameters[0], inheritanceMapping.Discriminator.MemberInfo),
 							Expression.Constant(inheritanceMapping.Code));
 

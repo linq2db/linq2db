@@ -640,10 +640,10 @@ namespace LinqToDB.Internal.Linq.Builder
 				return newSlot;
 			}
 
-			(DbDataType DbType, IValueConverter? Converter) GetSlotMetadata(SqlPlaceholderExpression placeholder, Type nullableClrType)
+			(DbDataType DbType, IValueConverter? Converter) GetSlotMetadata(SqlPlaceholderExpression placeholder, Type nullableClrType, MappingSchema mappingSchema)
 			{
 				var descriptor = QueryHelper.GetColumnDescriptor(placeholder.Sql);
-				var dbType     = (descriptor?.GetDbDataType(true) ?? QueryHelper.GetDbDataType(placeholder.Sql, MappingSchema))
+				var dbType     = (descriptor?.GetDbDataType(true) ?? QueryHelper.GetDbDataType(placeholder.Sql, mappingSchema))
 					.WithSystemType(nullableClrType);
 				return (dbType, descriptor?.ValueConverter);
 			}
@@ -659,7 +659,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (colType.IsValueType && Nullable.GetUnderlyingType(colType) == null)
 						colType = typeof(Nullable<>).MakeGenericType(colType);
 
-					var (dbType, converter) = GetSlotMetadata(phs[c], colType);
+					var (dbType, converter) = GetSlotMetadata(phs[c], colType, branches[b].DetailContext.MappingSchema);
 					slotMaps[b][c] = AllocateSlot(b, colType, dbType, converter, slotMaps[b], c);
 				}
 			}
@@ -676,7 +676,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (colType.IsValueType && Nullable.GetUnderlyingType(colType) == null)
 					colType = typeof(Nullable<>).MakeGenericType(colType);
 
-				var (dbType, converter) = GetSlotMetadata(mainPlaceholders[c], colType);
+				var (dbType, converter) = GetSlotMetadata(mainPlaceholders[c], colType, buildContext.MappingSchema);
 				parentSlotMap[c] = AllocateSlot(parentSetId, colType, dbType, converter, parentSlotMap, c);
 			}
 
@@ -748,7 +748,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					// branch's RN field — no in-memory re-sort needed here, child OrderBy is already
 					// preserved by RN encoding.
 
-					lookupExpr = SqlAdjustTypeExpression.AdjustType(lookupExpr, nested.EagerLoad.Type, MappingSchema);
+					lookupExpr = SqlAdjustTypeExpression.AdjustType(lookupExpr, nested.EagerLoad.Type, buildContext.MappingSchema);
 
 					branch.BuiltDetailExpr = branch.BuiltDetailExpr.Transform(
 						(nested.EagerLoad, lookupExpr),
@@ -1047,7 +1047,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					// branch's RN field — no in-memory re-sort needed here, child OrderBy is already
 					// preserved by RN encoding.
 
-					resultExpr = SqlAdjustTypeExpression.AdjustType(resultExpr, branch.EagerLoad.Type, MappingSchema);
+					resultExpr = SqlAdjustTypeExpression.AdjustType(resultExpr, branch.EagerLoad.Type, buildContext.MappingSchema);
 					results[branch.EagerLoad.SequenceExpression] = resultExpr;
 				}
 
@@ -1253,7 +1253,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				// branch's RN field — no in-memory re-sort needed here, child OrderBy is already
 				// preserved by RN encoding.
 
-				resultExpr = SqlAdjustTypeExpression.AdjustType(resultExpr, branch.EagerLoad.Type, MappingSchema);
+				resultExpr = SqlAdjustTypeExpression.AdjustType(resultExpr, branch.EagerLoad.Type, combinedSequence.MappingSchema);
 
 				results[branch.EagerLoad.SequenceExpression] = resultExpr;
 			}

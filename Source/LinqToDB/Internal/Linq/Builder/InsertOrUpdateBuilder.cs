@@ -149,7 +149,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (flags.IsInsertOrUpdateSupported && !needsEmulation)
 					QueryRunner.SetNonQueryQuery(query);
 				else
-					QueryRunner.MakeAlternativeInsertOrUpdate(Builder.DataContext.MappingSchema, query);
+					QueryRunner.MakeAlternativeInsertOrUpdate(MappingSchema, query);
 			}
 
 			public override SqlStatement GetResultStatement()

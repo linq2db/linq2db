@@ -139,7 +139,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return errorExpression.WithType(eagerLoad.Type);
 			}
 
-			resultExpression = SqlAdjustTypeExpression.AdjustType(resultExpression, eagerLoad.Type, MappingSchema);
+			resultExpression = SqlAdjustTypeExpression.AdjustType(resultExpression, eagerLoad.Type, buildContext.MappingSchema);
 
 			return resultExpression;
 		}
