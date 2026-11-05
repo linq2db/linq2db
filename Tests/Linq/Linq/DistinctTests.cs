@@ -796,6 +796,7 @@ namespace Tests.Linq
 		// A SQL DISTINCT has no column for a client-side value, so the sub-query is refused and the
 		// eager-load fallback takes over.
 		[ActiveIssue(5787, ErrorMessage = "There is no method 'AggregateExecute'")]
+		[ActiveIssue(5787, Configuration = TestProvName.AllYdb, SkipForLinqService = true, ErrorMessage = "Transaction is broken")]
 		[Test]
 		public void DistinctCountOfClientOnlyValueInCorrelatedSubquery([DataSources] string context)
 		{
@@ -823,6 +824,7 @@ namespace Tests.Linq
 		}
 
 		[ActiveIssue(5787, ErrorMessage = "There is no method 'AggregateExecute'")]
+		[ActiveIssue(5787, Configuration = TestProvName.AllYdb, SkipForLinqService = true, ErrorMessage = "Transaction is broken")]
 		[Test]
 		public void DistinctCountOfClientOnlyValueInGroup([DataSources] string context)
 		{
@@ -891,6 +893,168 @@ namespace Tests.Linq
 				.Distinct();
 
 			AssertQuery(query);
+		}
+
+		[Test]
+		public void DistinctCountOfMemberAndItsClientValue([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Child
+				.Select(c => new { c.ChildID, Name = Label(c.ChildID) })
+				.Distinct();
+
+			var expected = Child
+				.Select(c => new { c.ChildID, Name = Label(c.ChildID) })
+				.Distinct()
+				.ToList();
+
+			query
+				.Count()
+				.ShouldBe(expected.Count);
+
+			query
+				.Where(x => x.ChildID > 20)
+				.Count()
+				.ShouldBe(expected.Count(x => x.ChildID > 20));
+
+			query
+				.Max(x => x.ChildID)
+				.ShouldBe(expected.Max(x => x.ChildID));
+		}
+
+		[Test]
+		public void DistinctCountOfMemberAndItsClientValueBelowWrapper([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var expected = Child
+				.Select(c => new { c.ChildID, Name = Label(c.ChildID) })
+				.Distinct()
+				.Count();
+
+			db.Child
+				.Select(c => new { c.ChildID, Name = Label(c.ChildID) })
+				.OrderBy(x => x.ChildID)
+				.Distinct()
+				.Count()
+				.ShouldBe(expected);
+
+			db.Child
+				.Select(c => new { c.ChildID, Name = Label(c.ChildID) })
+				.Take(100)
+				.Distinct()
+				.Count()
+				.ShouldBe(expected);
+		}
+
+		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllOracle11, TestProvName.AllMySql57, TestProvName.AllMariaDB, TestProvName.AllDB2)]
+		[ThrowsRequiresCorrelatedSubquery]
+		[ActiveIssue(6166, Configuration = TestProvName.AllSybase, ErrorMessage = "does not match with a table name or alias name")]
+		[Test]
+		public void DistinctCountOfMemberAndItsClientValueInCorrelatedSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				orderby p.ParentID
+				select new
+				{
+					p.ParentID,
+					Count = db.Child
+						.Where(c => c.ParentID == p.ParentID)
+						.Select(c => new { c.ChildID, Name = Label(c.ChildID) })
+						.Distinct()
+						.Count(),
+				};
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllOracle11, TestProvName.AllMySql57, TestProvName.AllMariaDB, TestProvName.AllDB2)]
+		[ThrowsRequiresCorrelatedSubquery]
+		[ActiveIssue(6166, Configuration = TestProvName.AllSybase, ErrorMessage = "does not match with a table name or alias name")]
+		[Test]
+		public void DistinctCountOfMemberAndItsClientValueInGroup([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from c in db.Child
+				group c by c.ParentID into g
+				orderby g.Key
+				select new
+				{
+					g.Key,
+					Count = g
+						.Select(x => new { x.ChildID, Name = Label(x.ChildID) })
+						.Distinct()
+						.Count(),
+				};
+
+			AssertQuery(query);
+		}
+
+		static string Label(int first, int second) => first + "#" + second;
+
+		[Test]
+		public void DistinctCountOfClientValueOverOtherColumnRefuses([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			Action count = () => _ = db.Child
+				.Select(c => new { c.ParentID, Name = Label(c.ChildID) })
+				.Distinct()
+				.Count();
+
+			Action sum = () => _ = db.Child
+				.Select(c => new { c.ParentID, Name = Label(c.ChildID) })
+				.Distinct()
+				.Sum(x => x.ParentID);
+
+			Action partialInputs = () => _ = db.Child
+				.Select(c => new { c.ParentID, Name = Label(c.ParentID, c.ChildID) })
+				.Distinct()
+				.Count();
+
+			Action associationKey = () => _ = db.Parent
+				.Select(p => new { p.Value1, Kids = p.Children.Select(c => c.ChildID).ToList() })
+				.Distinct()
+				.Count();
+
+			count
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain("Label(");
+
+			sum
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain("Label(");
+
+			partialInputs
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain("Label(");
+
+			associationKey
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain("Children");
+		}
+
+		[Test]
+		public void DistinctCountOfMemberAndEagerLoad([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var count = db.Parent
+				.Select(p => new { p.ParentID, Kids = p.Children.Select(c => c.ChildID).ToList() })
+				.Distinct()
+				.Count();
+
+			count.ShouldBe(Parent.Select(p => p.ParentID).Distinct().Count());
 		}
 
 		[Test]

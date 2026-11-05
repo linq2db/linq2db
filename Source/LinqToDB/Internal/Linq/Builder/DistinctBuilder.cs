@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -6,6 +8,7 @@ using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Reflection;
+using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
@@ -125,9 +128,9 @@ namespace LinqToDB.Internal.Linq.Builder
 					result = Builder.BuildSqlExpression(Context, corrected);
 					result = Builder.UpdateNesting(Context, result);
 
-					// A client-side value has no DISTINCT column; a SQL consumer would count distinct inputs, or none.
-					if (flags.IsSql() && result.Find(static e => e is ContextRefExpression) != null)
-						return new SqlErrorExpression(path);
+					// A client-side value has no DISTINCT column, so it is exact for a SQL consumer only when the columns it reads are DISTINCT columns.
+					if (flags.IsSql() && result.Find(static e => e is ContextRefExpression) != null && FindValueOutsideDistinct(result) is { } clientValue)
+						return new SqlErrorExpression(clientValue, "Distinct() has no column for this client-side value.", path.Type);
 				}
 				else
 				{
@@ -135,6 +138,110 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 
 				return result;
+			}
+
+			Expression? FindValueOutsideDistinct(Expression projection)
+			{
+				if (projection is SqlGenericConstructorExpression constructor)
+				{
+					foreach (var parameter in constructor.Parameters)
+						if (FindValueOutsideDistinct(parameter.Expression) is { } found)
+							return found;
+
+					foreach (var assignment in constructor.Assignments)
+						if (FindValueOutsideDistinct(assignment.Expression) is { } found)
+							return found;
+
+					return null;
+				}
+
+				if (projection.Find(static e => e is ContextRefExpression) == null)
+					return null;
+
+				if (Context is not SubQueryContext { SubQuery.SelectQuery.Select.Columns: var distinctColumns })
+					return projection;
+
+				var carried = true;
+
+				projection.Visit(e =>
+				{
+					if (!carried || e is SqlPlaceholderExpression)
+						return false;
+
+					var root = e;
+					while (root is MemberExpression { Expression: { } inner })
+						root = inner;
+
+					if (root is not ContextRefExpression)
+						return true;
+
+					carried = ReadsOnlyDistinctColumns(e, distinctColumns);
+					return false;
+				});
+
+				return carried ? null : projection;
+			}
+
+			bool ReadsOnlyDistinctColumns(Expression input, List<SqlColumn> distinctColumns)
+			{
+				// Anything reached through an association is a function of its keys.
+				Expression? association = null;
+				for (var current = input; current is MemberExpression member; current = member.Expression)
+					if (Builder.IsAssociation(member, out _))
+						association = member;
+
+				var inputs = new List<Expression>();
+
+				if (association is MemberExpression { Expression: { } owner })
+				{
+					var descriptor = Builder.GetAssociationDescriptor(association, out _);
+					if (descriptor is null or { ThisKey.Length: 0 } || descriptor.ExpressionPredicate != null || descriptor.Predicate != null || descriptor.ExpressionQueryMethod != null || descriptor.ExpressionQuery != null)
+						return false;
+
+					var entityDescriptor = MappingSchema.GetEntityDescriptor(owner.Type);
+
+					foreach (var key in descriptor.ThisKey)
+					{
+						var column = entityDescriptor.Columns.FirstOrDefault(c => string.Equals(c.MemberName, key, StringComparison.Ordinal));
+						if (column?.MemberInfo.DeclaringType?.IsAssignableFrom(owner.Type) != true)
+							return false;
+
+						inputs.Add(Expression.MakeMemberAccess(owner, column.MemberInfo));
+					}
+				}
+				else
+				{
+					inputs.Add(input);
+				}
+
+				foreach (var item in inputs)
+				{
+					var root = item;
+					while (root is MemberExpression { Expression: { } inner })
+						root = inner;
+
+					var inputContext = ((ContextRefExpression)root).BuildContext;
+					var sql          = Builder.BuildSqlExpression(inputContext, item);
+
+					if (sql.Find(static e => e is ContextRefExpression or SqlErrorExpression) != null)
+						return false;
+
+					foreach (var placeholder in ExpressionBuilder.CollectDistinctPlaceholders(sql, false))
+						if (!distinctColumns.Exists(c => SelectsPlaceholder(c, placeholder)))
+							return false;
+				}
+
+				return true;
+			}
+
+			// The placeholder is in the input query's coordinates; each sub-query between that query and the DISTINCT wraps its column once more.
+			static bool SelectsPlaceholder(SqlColumn distinctColumn, SqlPlaceholderExpression placeholder)
+			{
+				for (var current = distinctColumn.Expression as SqlColumn; current != null; current = current.Expression as SqlColumn)
+					if (current.Parent == placeholder.SelectQuery)
+						return ReferenceEquals(current.Expression, placeholder.Sql);
+
+				return false;
 			}
 
 			public override IBuildContext Clone(CloningContext context)
