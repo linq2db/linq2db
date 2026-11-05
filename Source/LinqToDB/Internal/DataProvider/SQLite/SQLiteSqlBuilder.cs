@@ -33,6 +33,10 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 		protected override ConcatBuildStyle ConcatStyle       => ConcatBuildStyle.Pipes;
 
+		// SQLite binds `||` tighter than `* / %` and looser than unary operators (https://www.sqlite.org/lang_expr.html#operators)
+		protected override int GetPrecedence(ISqlExpression expr)
+			=> expr is SqlConcatExpression ? Precedence.Multiplicative + 1 : base.GetPrecedence(expr);
+
 		public override int CommandCount(SqlStatement statement)
 		{
 			return statement switch
