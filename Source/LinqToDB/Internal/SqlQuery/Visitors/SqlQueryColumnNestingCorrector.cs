@@ -149,7 +149,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		public bool HasSelectQuery { get; private set; }
 
 		/// <summary>
-		/// Set when the last <see cref="CorrectColumnNesting"/> walk met a column of a query that encloses the reference.
+		/// Set when the last <see cref="CorrectColumnNesting"/> walk met a column of the reference's own query or of a query enclosing it.
 		/// </summary>
 		public bool HasAncestorReference { get; private set; }
 

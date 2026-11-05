@@ -1289,9 +1289,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				var item = _pendingReplacements[i];
 
-				var corrected = scoped
-					? ReferenceEquals(item.Level, selectQuery)
-					: !ReferenceEquals(item.Owner, selectQuery);
+				var corrected = !ReferenceEquals(item.Owner, selectQuery) && (!scoped || ReferenceEquals(item.Level, selectQuery));
 
 				if (!corrected)
 					_pendingReplacements[kept++] = item;
