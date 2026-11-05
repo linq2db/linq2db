@@ -9,8 +9,9 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Async;
+using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.Reflection;
 
@@ -34,7 +35,7 @@ namespace LinqToDB
 		/// lists them in.
 		/// </para>
 		/// <para>
-		/// Where the statements are combined, collections in the selector are loaded with
+		/// Where the context and its provider can combine statements, collections in the selector are loaded with
 		/// <see cref="EagerLoadingStrategy.Default"/>, which overrides <see cref="LinqOptions.DefaultEagerLoadingStrategy"/>
 		/// and any <c>With*LoadStrategy()</c> call inside the selector; elsewhere the configured strategy applies. Either way
 		/// they are explicit loads for <see cref="LinqOptions.ImplicitCollectionLoading"/>.
@@ -53,6 +54,7 @@ namespace LinqToDB
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="selector">The results to read.</param>
 		/// <returns>The results.</returns>
+		/// <exception cref="LinqToDBException">The context has pending <see cref="IDataContext.QueryHints"/> or <see cref="IDataContext.NextQueryHints"/>.</exception>
 		[Pure]
 		public static T QueryBatch<T>(
 							this IDataContext dataContext,
@@ -61,12 +63,10 @@ namespace LinqToDB
 			ArgumentNullException.ThrowIfNull(dataContext);
 			ArgumentNullException.ThrowIfNull(selector);
 
-			var q = new ExpressionQueryImpl<T>(dataContext, CreateQueryBatchExpression(dataContext, selector));
+			var expr = CreateQueryBatchExpression(dataContext, selector);
+			var q    = new ExpressionQueryImpl<T>(dataContext, expr);
 
-			foreach (var item in q)
-				return item;
-
-			throw new InvalidOperationException();
+			return ((IQueryProvider)q).Execute<T>(expr);
 		}
 
 		/// <summary>
@@ -78,8 +78,9 @@ namespace LinqToDB
 		/// <param name="selector">The results to read.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>The results.</returns>
+		/// <exception cref="LinqToDBException">The context has pending <see cref="IDataContext.QueryHints"/> or <see cref="IDataContext.NextQueryHints"/>.</exception>
 		[Pure]
-		public static async Task<T> QueryBatchAsync<T>(
+		public static Task<T> QueryBatchAsync<T>(
 							this IDataContext dataContext,
 			[InstantHandle] Expression<Func<T>> selector,
 							CancellationToken   token = default)
@@ -87,22 +88,10 @@ namespace LinqToDB
 			ArgumentNullException.ThrowIfNull(dataContext);
 			ArgumentNullException.ThrowIfNull(selector);
 
-			var q = new ExpressionQueryImpl<T>(dataContext, CreateQueryBatchExpression(dataContext, selector));
+			var expr = CreateQueryBatchExpression(dataContext, selector);
+			var q    = new ExpressionQueryImpl<T>(dataContext, expr);
 
-			var read = false;
-			var item = default(T)!; // this is fine, as we never return it
-
-			await q.ForEachUntilAsync(r =>
-			{
-				read = true;
-				item = r;
-				return false;
-			}, token).ConfigureAwait(false);
-
-			if (read)
-				return item;
-
-			throw new InvalidOperationException();
+			return ((IQueryProviderAsync)q).ExecuteAsync<T>(expr, token);
 		}
 
 		/// <summary>
@@ -452,7 +441,7 @@ namespace LinqToDB
 			for (var i = 0; i < members.Length; i++)
 				members[i] = tupleType.GetField("Item" + (i + 1).ToString(CultureInfo.InvariantCulture))!;
 
-			return Expression.New(tupleType.GetConstructor(itemTypes)!, bodies, members);
+			return Expression.New(tupleType.GetConstructorEx(itemTypes)!, bodies, members);
 		}
 	}
 }

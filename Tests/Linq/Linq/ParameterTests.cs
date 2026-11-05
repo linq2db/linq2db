@@ -519,7 +519,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NegatedConstantComparedWithNullDateParameter([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void NegatedConstantComparedWithNullDateParameter([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -540,7 +540,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NegatedConstantComparedWithNullIntParameter([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void NegatedConstantComparedWithNullIntParameter([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -553,7 +553,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NegatedConstantComparedWithNullParameterUnderLikeSql([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void NegatedConstantComparedWithNullParameterUnderLikeSql([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context, o => o.UseCompareNulls(CompareNulls.LikeSql));
 
@@ -562,15 +562,69 @@ namespace Tests.Linq
 			var query = db.Person
 				.Where(p => !(Sql.AsSql((int?)1) > value));
 
-			query.ToList().ShouldBeEmpty();
+			query
+				.ToList()
+				.ShouldBeEmpty();
 
 			value = 0;
 
-			query.ToList().ShouldBeEmpty();
+			query
+				.ToList()
+				.ShouldBeEmpty();
 
 			value = 2;
 
-			query.ToList().Count.ShouldBe(db.Person.Count());
+			query
+				.ToList()
+				.Count
+				.ShouldBe(db.Person.Count());
+		}
+
+		[ActiveIssue(6256, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}[2, 3, 4]{1}but was")]
+		[Test]
+		public void NegatedComparisonWithNullParameterInsideNotUnderLikeSql([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context, o => o.UseCompareNulls(CompareNulls.LikeSql));
+
+			int? value = null;
+
+			var expected = db.Person
+				.Select(p => p.ID)
+				.Where(id => id != 1)
+				.OrderBy(id => id)
+				.ToArray();
+
+			// the un-simplified negation is the shape under test
+#pragma warning disable MA0213 // Simplify negated boolean expression
+			db.Person
+				.Where(p => !(!(Sql.AsSql((int?)1) > value) && p.ID == 1))
+#pragma warning restore MA0213
+				.Select(p => p.ID)
+				.OrderBy(id => id)
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
+		[ActiveIssue(6256, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}[2, 3, 4]{1}but was")]
+		[Test]
+		public void ComparisonWithNullParameterInsideNotUnderLikeSql([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context, o => o.UseCompareNulls(CompareNulls.LikeSql));
+
+			int? value = null;
+
+			var expected = db.Person
+				.Select(p => p.ID)
+				.Where(id => id != 1)
+				.OrderBy(id => id)
+				.ToArray();
+
+			db.Person
+				.Where(p => !(Sql.AsSql((int?)1) > value && p.ID == 1))
+				.Select(p => p.ID)
+				.OrderBy(id => id)
+				.ToArray()
+				.ShouldBe(expected);
 		}
 
 		[Table]
@@ -2013,7 +2067,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullableComparisonAsConditionalElseSetValue([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllPostgreSQL)] string context)
+		public void NullableComparisonAsConditionalElseSetValue([DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var data = new[]
 			{

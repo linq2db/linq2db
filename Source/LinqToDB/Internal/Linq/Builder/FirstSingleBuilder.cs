@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using LinqToDB.Async;
 using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.Linq.Builder
@@ -341,7 +342,36 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var projected = base.MakeExpression(path, flags);
 
+				// The value is read from a subquery, which SQL reads as NULL when it finds no row. Where the value itself cannot
+				// be NULL, that NULL is the empty source; a window value (LAG at a partition edge) is NULL whatever its
+				// arguments, so it is not checked. The slot is read as nullable, as the Min / Max check reads it, so a strategy
+				// that rebuilds the reader keeps the NULL.
+				if (TranslationModifier.StrictElementOperators
+					&& _methodKind is MethodKind.First or MethodKind.Single
+					&& flags.IsExpression()
+					&& !flags.IsForSetProjection()
+					&& projected is SqlPlaceholderExpression placeholder
+					&& !placeholder.Type.IsNullableOrReferenceType
+					&& !placeholder.Sql.CanBeNullable(NullabilityContext.GetContext(placeholder.SelectQuery))
+					&& !QueryHelper.ContainsWindowFunction(QueryHelper.GetUnderlyingExpression(placeholder.Sql) ?? placeholder.Sql))
+				{
+					return Expression.Call(
+						typeof(FirstSingleContext),
+						nameof(ThrowIfEmpty),
+						[placeholder.Type],
+						placeholder.WithType(placeholder.Type.AsNullable()));
+				}
+
 				return projected;
+			}
+
+			static TValue ThrowIfEmpty<TValue>(TValue? value)
+				where TValue : struct
+			{
+				if (value is null)
+					throw new InvalidOperationException("Sequence contains no elements");
+
+				return value.Value;
 			}
 
 			public override IBuildContext Clone(CloningContext context)

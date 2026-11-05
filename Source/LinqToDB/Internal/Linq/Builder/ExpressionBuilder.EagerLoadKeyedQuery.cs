@@ -278,7 +278,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 
 					var keyDetailExpression = Expression.New(
-						keyDetailType.GetConstructor([keyType, detailType])!,
+						keyDetailType.GetConstructorEx([keyType, detailType])!,
 						carriedKey,
 						detailParameter);
 					var selector = Expression.Lambda(keyDetailExpression, keyParameter, detailParameter);
@@ -603,7 +603,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				fkAccess = Expression.Convert(fkAccess, keyType);
 
 			// Build: new KeyDetailEnvelope(d.CompanyId, <original body producing detailType>)
-			var envelopeCtor = keyDetailType.GetConstructor([keyType, detailType])!;
+			var envelopeCtor = keyDetailType.GetConstructorEx([keyType, detailType])!;
 			var envelopeBody = Expression.New(envelopeCtor, fkAccess, selectLambda.Body);
 
 			// New lambda: d => new KeyDetailEnvelope(d.CompanyId, new { d.Id, d.Name, ... })
@@ -1363,11 +1363,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			public override Expression VisitMarkerExpression(MarkerExpression node)
-			{
-				return Visit(node.InnerExpression);
-			}
-
-			public override Expression VisitTagExpression(TagExpression node)
 			{
 				return Visit(node.InnerExpression);
 			}

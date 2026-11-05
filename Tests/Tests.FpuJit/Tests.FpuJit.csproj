@@ -22,6 +22,7 @@
 		<ProjectReference Include="..\..\Source\LinqToDB.EntityFrameworkCore\LinqToDB.EntityFrameworkCore.EF3.csproj" />
 		<ProjectReference Include="..\..\Source\LinqToDB.Extensions\LinqToDB.Extensions.csproj" />
 		<ProjectReference Include="..\..\Source\LinqToDB.FSharp\LinqToDB.FSharp.fsproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB.Identity\LinqToDB.Identity.csproj" />
 		<ProjectReference Include="..\..\Source\LinqToDB.Remote.Grpc\LinqToDB.Remote.Grpc.csproj" />
 		<ProjectReference Include="..\..\Source\LinqToDB.Remote.HttpClient.Client\LinqToDB.Remote.HttpClient.Client.csproj" />
 		<ProjectReference Include="..\..\Source\LinqToDB.Remote.SignalR.Client\LinqToDB.Remote.SignalR.Client.csproj" />

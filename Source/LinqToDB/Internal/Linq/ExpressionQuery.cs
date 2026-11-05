@@ -116,6 +116,8 @@ namespace LinqToDB.Internal.Linq
 			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
 			var query       = GetQuery(ref expressions, false, out _);
 
+			query.ThrowIfQueryBatchHasQueryHints(DataContext);
+
 			var transaction = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(false);
 			await using var tr = (transaction ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
 
@@ -297,6 +299,8 @@ namespace LinqToDB.Internal.Linq
 			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
 			var query       = GetQuery(ref expressions, false, out _);
 
+			query.ThrowIfQueryBatchHasQueryHints(DataContext);
+
 			using var transaction = StartLoadTransaction(query);
 
 			if (query.GetEagerElement != null)
@@ -327,6 +331,8 @@ namespace LinqToDB.Internal.Linq
 
 			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
 			var query       = GetQuery(ref expressions, false, out _);
+
+			query.ThrowIfQueryBatchHasQueryHints(DataContext);
 
 			using var transaction = StartLoadTransaction(query);
 

@@ -66,7 +66,7 @@ namespace Tests
 		/// </summary>
 		public static bool UsesCombinedQueryBatch(this IDataContext db)
 		{
-			return db is DataConnection
+			return db is DataConnection or DataContext
 				&& db.SqlProviderFlags.IsMultiStatementBatchSupported
 				&& db.SqlProviderFlags.IsMultipleResultSetsSupported
 				&& db.QueryHints.Count == 0
