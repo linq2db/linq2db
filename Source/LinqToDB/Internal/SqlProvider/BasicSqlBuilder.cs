@@ -4588,7 +4588,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		#region GetPrecedence
 
-		static int GetPrecedence(ISqlExpression expr)
+		protected virtual int GetPrecedence(ISqlExpression expr)
 		{
 			return expr.Precedence;
 		}
