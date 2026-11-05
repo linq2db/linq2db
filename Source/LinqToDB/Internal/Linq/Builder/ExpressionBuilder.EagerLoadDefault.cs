@@ -93,7 +93,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				var mainParameter   = Expression.Parameter(mainType, "m");
 				var detailParameter = Expression.Parameter(detailType, "d");
 
-				var keyDetailExpression = Expression.New(keyDetailType.GetConstructor([mainKeyExpression.Type, detailType])!, detailKeyExpression, detailParameter);
+				var keyDetailExpression = Expression.New(keyDetailType.GetConstructorEx([mainKeyExpression.Type, detailType])!, detailKeyExpression, detailParameter);
 
 				var clonedParentContextRef = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(clonedParentContext.ElementType), clonedParentContext);
 

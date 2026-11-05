@@ -229,7 +229,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					// CteCollectorVisitor elides it from the WITH clause.
 					var detailParam = Expression.Parameter(info.DetailType, "d");
 					var envNew = Expression.New(
-						branchEnvType.GetConstructor([cteKeyType, info.DetailType])!,
+						branchEnvType.GetConstructorEx([cteKeyType, info.DetailType])!,
 						[Expression.Constant(0), detailParam],
 						[branchEnvKeyField, branchEnvDetailField]);
 					var resultSel = Expression.Lambda(envNew, detailParam);
@@ -274,7 +274,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							: BuildValueTupleNew(cteKeyType, branchKeyVFs);
 
 					var envNew = Expression.New(
-						branchEnvType.GetConstructor([cteKeyType, info.DetailType])!,
+						branchEnvType.GetConstructorEx([cteKeyType, info.DetailType])!,
 						[branchKeyBody, detailParameter],
 						[branchEnvKeyField, branchEnvDetailField]);
 
@@ -438,7 +438,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						var nestedEnvDetailField = nestedEnvType.GetField(nameof(KeyDetailEnvelope<,>.Detail))!;
 
 						var nestedEnvNew = Expression.New(
-							nestedEnvType.GetConstructor([nestedCteKeyType, nestedDetailType])!,
+							nestedEnvType.GetConstructorEx([nestedCteKeyType, nestedDetailType])!,
 							[nestedKeyBody, nestedDetailParam],
 							[nestedEnvKeyField, nestedEnvDetailField]);
 
