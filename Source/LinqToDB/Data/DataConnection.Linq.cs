@@ -4,6 +4,7 @@ using System.Data.Common;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 
@@ -47,12 +48,10 @@ namespace LinqToDB.Data
 
 				return _processQueryOverrides.GetOrAdd(
 					type,
-					static t => t.GetMethod(
+					static t => t.GetMethodEx(
 							nameof(ProcessQuery),
 							BindingFlags.Instance | BindingFlags.NonPublic,
-							null,
-							[typeof(SqlStatement), typeof(EvaluationContext)],
-							null)
+							typeof(SqlStatement), typeof(EvaluationContext))
 						?.DeclaringType != typeof(DataConnection));
 			}
 		}
