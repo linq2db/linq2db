@@ -11,6 +11,7 @@
       "Source\\LinqToDB.EntityFrameworkCore\\LinqToDB.EntityFrameworkCore.EF10.csproj",
       "Source\\LinqToDB.Extensions\\LinqToDB.Extensions.csproj",
       "Source\\LinqToDB.FSharp\\LinqToDB.FSharp.fsproj",
+      "Source\\LinqToDB.Identity\\LinqToDB.Identity.csproj",
       "Source\\LinqToDB.Remote.HttpClient.Client\\LinqToDB.Remote.HttpClient.Client.csproj",
       "Source\\LinqToDB.Remote.HttpClient.Server\\LinqToDB.Remote.HttpClient.Server.csproj",
       "Source\\LinqToDB.Remote.SignalR.Client\\LinqToDB.Remote.SignalR.Client.csproj",
