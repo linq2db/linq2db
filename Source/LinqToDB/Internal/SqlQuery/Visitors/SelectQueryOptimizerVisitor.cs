@@ -2958,12 +2958,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					if (move && isLeft)
 					{
 						sources ??= QueryHelper.EnumerateAccessibleSources(join.Table).ToList();
-						move = !QueryHelper.IsDependsOnSources(predicate, sources);
 
-						// Push into the right derived table only when the predicate depends solely on the join's
-						// own subtree (sources); a predicate that also references the outer side is a genuine
-						// cross-input condition and must stay in ON.
-						if (!move && !QueryHelper.IsDependsOnOuterSources(predicate, currentSources: sources))
+						// Moving a LEFT JOIN predicate to WHERE would filter out the outer rows the join must keep (#6148),
+						// so one that reads the outer side stays in ON and the provider may reject it.
+						move = false;
+
+						// Push into the right derived table only when the predicate does not depend on the outer side.
+						if (!QueryHelper.IsDependsOnOuterSources(predicate, currentSources: sources))
 						{
 							if (nestedWhereCond == null)
 							{

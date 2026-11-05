@@ -1177,6 +1177,7 @@ namespace Tests.Linq
 			public User? User { get; set; }
 		}
 
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb, ErrorMessage = "each equality predicate argument must depend on exactly one JOIN input")]
 		[Test]
 		public void Issue1614Test([DataSources(TestProvName.AllAccess)] string context)
 		{
