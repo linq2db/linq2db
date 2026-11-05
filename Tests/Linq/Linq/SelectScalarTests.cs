@@ -266,7 +266,7 @@ namespace Tests.Linq
 		// An empty First empties the one row the select reads, which reports as First on an empty source does; the element
 		// path is provider-independent.
 		[Test]
-		public async Task EmptyFirstThrowsAsFirst([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool async)
+		public async Task EmptyFirstThrowsAsFirst([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool isAsync)
 		{
 			using var db = GetDataContext(context);
 
@@ -274,7 +274,7 @@ namespace Tests.Linq
 				.Where(p => p.ParentID < 0)
 				.First());
 
-			var select = async
+			var select = isAsync
 				? await Shouldly.Should.ThrowAsync<InvalidOperationException>(() => db.SelectAsync(() => db.Parent
 					.Where(p => p.ParentID < 0)
 					.First()))

@@ -54,6 +54,7 @@ namespace LinqToDB
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="selector">The results to read.</param>
 		/// <returns>The results.</returns>
+		/// <exception cref="LinqToDBException">The context has pending <see cref="IDataContext.QueryHints"/> or <see cref="IDataContext.NextQueryHints"/>.</exception>
 		[Pure]
 		public static T QueryBatch<T>(
 							this IDataContext dataContext,
@@ -77,6 +78,7 @@ namespace LinqToDB
 		/// <param name="selector">The results to read.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>The results.</returns>
+		/// <exception cref="LinqToDBException">The context has pending <see cref="IDataContext.QueryHints"/> or <see cref="IDataContext.NextQueryHints"/>.</exception>
 		[Pure]
 		public static Task<T> QueryBatchAsync<T>(
 							this IDataContext dataContext,

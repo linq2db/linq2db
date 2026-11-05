@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Data;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.ExpressionVisitors;
 using LinqToDB.Internal.Linq.Builder;
@@ -185,6 +186,14 @@ namespace LinqToDB.Internal.Linq
 		// Set for a QueryBatch query: the call itself is the opt-in that LinqOptions.UseCombinedCommands otherwise
 		// stands for, so the combined gate does not consult the option for it.
 		internal bool CombinedCommandsRequested { get; set; }
+
+		// Query hints belong to one command, and a batch chooses its statements when it is built, before it can see them.
+		// The element entry points call this before the load transaction and the collections, which run before the row.
+		internal void ThrowIfQueryBatchHasQueryHints(IDataContext dataContext)
+		{
+			if (CombinedCommandsRequested && (dataContext.QueryHints.Count > 0 || dataContext.NextQueryHints.Count > 0))
+				throw new LinqToDBException(ErrorHelper.Error_QueryHints_In_QueryBatch);
+		}
 
 		internal SqlCommandExecutionContext? InitHarvesters(IDataContext dc, IQueryExpressions expressions, object?[]? ps)
 		{

@@ -30,26 +30,35 @@ namespace LinqToDB.Internal.Linq.Builder
 				: LinqExtensions.NewQueryBatchTuple(methodCall.Type, methodCall.Arguments.Skip(1).Select(static a => a.UnwrapLambda().Body));
 
 			if (buildInfo.IsSubQuery || !IsQueryBatch(methodCall))
-				return BuildSequenceResult.FromContext(new ScalarSelectContext(builder.GetTranslationModifier(), builder, buildInfo.Parent, body, selectQuery));
+				return BuildSequenceResult.FromContext(new ScalarSelectContext(builder.GetTranslationModifier(), builder, buildInfo.Parent, body, selectQuery, isQueryBatch: false));
 
 			builder.CombinedCommandsRequested = true;
+
+			// A batch is new API, so its element operators follow LINQ: an empty First or Single fails. Pushed build-wide
+			// (not temporary), so every part and every query nested in one carries it.
+			var strict = builder.GetTranslationModifier().WithStrictElementOperators(true);
 
 			// Where nothing is combined, the configured strategy stays: it may read the collections in fewer statements. It is
 			// set on the root context alone, which makes the collections explicit loads without overriding inner markers.
 			if (!QueryRunner.CanCombineCommands(builder.DataContext))
 			{
-				var modifier   = builder.GetTranslationModifier();
-				var configured = modifier.EagerLoadingStrategy ?? builder.DataContext.Options.LinqOptions.DefaultEagerLoadingStrategy;
+				var configured = strict.EagerLoadingStrategy ?? builder.DataContext.Options.LinqOptions.DefaultEagerLoadingStrategy;
 
-				return BuildSequenceResult.FromContext(new ScalarSelectContext(modifier.WithEagerLoadingStrategy(configured), builder, null, body, selectQuery));
+				builder.PushTranslationModifier(strict, false);
+
+				var configuredContext = new ScalarSelectContext(strict.WithEagerLoadingStrategy(configured), builder, null, body, selectQuery, isQueryBatch: true);
+
+				builder.PopTranslationModifier();
+
+				return BuildSequenceResult.FromContext(configuredContext);
 			}
 
-			// The Default strategy is the one that combines, so it is pushed build-wide (not temporary): nested
-			// collections resolve their strategy from the builder, and a configured default or an inner With*LoadStrategy
-			// marker would otherwise split them back out of the batch.
-			builder.PushTranslationModifier(builder.GetTranslationModifier().WithEagerLoadingStrategy(EagerLoadingStrategy.Default), false);
+			// The Default strategy is the one that combines, so it is pushed build-wide too: nested collections resolve their
+			// strategy from the builder, and a configured default or an inner With*LoadStrategy marker would otherwise split
+			// them back out of the batch.
+			builder.PushTranslationModifier(strict.WithEagerLoadingStrategy(EagerLoadingStrategy.Default), false);
 
-			var context = new ScalarSelectContext(builder.GetTranslationModifier(), builder, null, body, selectQuery);
+			var context = new ScalarSelectContext(builder.GetTranslationModifier(), builder, null, body, selectQuery, isQueryBatch: true);
 
 			builder.PopTranslationModifier();
 
@@ -57,7 +66,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
-		sealed class ScalarSelectContext : BuildContextBase
+		internal sealed class ScalarSelectContext : BuildContextBase
 		{
 			public override MappingSchema MappingSchema   => Builder.MappingSchema;
 			public override Expression    Expression      => Body;
@@ -66,13 +75,17 @@ namespace LinqToDB.Internal.Linq.Builder
 			// when used in a scalar context (e.g. a window ORDER BY key), not be treated as a collection.
 			public override bool          IsSingleElement => true;
 
-			public Expression Body { get; }
+			public Expression Body         { get; }
 
-			public ScalarSelectContext(TranslationModifier translationModifier, ExpressionBuilder builder, IBuildContext? parent, Expression body, SelectQuery selectQuery)
+			// The root of a QueryBatch: each part of it is a query of its own.
+			public bool       IsQueryBatch { get; }
+
+			public ScalarSelectContext(TranslationModifier translationModifier, ExpressionBuilder builder, IBuildContext? parent, Expression body, SelectQuery selectQuery, bool isQueryBatch)
 				: base(translationModifier, builder, body.Type, selectQuery)
 			{
-				Parent = parent;
-				Body   = body;
+				Parent       = parent;
+				Body         = body;
+				IsQueryBatch = isQueryBatch;
 
 				// Keep the wrapping SELECT: once MakeExpression materializes the body as (SELECT body), the optimizer
 				// would otherwise inline a no-FROM scalar subquery back to a bare constant — invalid as a window ORDER BY
@@ -113,7 +126,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new ScalarSelectContext(TranslationModifier, Builder, context.CloneContext(Parent), context.CloneExpression(Body), context.CloneElement(SelectQuery));
+				return new ScalarSelectContext(TranslationModifier, Builder, context.CloneContext(Parent), context.CloneExpression(Body), context.CloneElement(SelectQuery), IsQueryBatch);
 			}
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
@@ -129,6 +142,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			// reports as First on an empty source does.
 			public override void SetElementSelection<T>(Query<T> query)
 			{
+				if (IsQueryBatch)
+				{
+					SetQueryBatchElementSelection(query);
+					return;
+				}
+
 				query.GetElement = (db, expr, preambles) =>
 					query.GetResultEnumerable(db, expr, preambles).First();
 
@@ -142,6 +161,25 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					var (enumerable, _, _) = await query.GetEagerEnumerableAsync(db, expr, ps, token).ConfigureAwait(false);
 					return await enumerable.FirstAsync(token).ConfigureAwait(false);
+				};
+			}
+
+			// A part's Single reads its rows into the batch row, so more than one batch row means a part found more than one.
+			static void SetQueryBatchElementSelection<T>(Query<T> query)
+			{
+				query.GetElement = (db, expr, preambles) =>
+					query.GetResultEnumerable(db, expr, preambles).Single();
+
+				query.GetElementAsync = async (db, expr, preambles, token) =>
+					await query.GetResultEnumerable(db, expr, preambles).SingleAsync(token).ConfigureAwait(false);
+
+				query.GetEagerElement = (db, expr, ps) =>
+					query.GetEagerEnumerable(db, expr, ps).Enumerable.Single();
+
+				query.GetEagerElementAsync = async (db, expr, ps, token) =>
+				{
+					var (enumerable, _, _) = await query.GetEagerEnumerableAsync(db, expr, ps, token).ConfigureAwait(false);
+					return await enumerable.SingleAsync(token).ConfigureAwait(false);
 				};
 			}
 
