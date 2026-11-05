@@ -7,6 +7,7 @@ using System.Reflection;
 
 using LinqToDB.Common;
 using LinqToDB.DataProvider.ClickHouse;
+using LinqToDB.Internal.DataProvider.DB2;
 using LinqToDB.Metrics;
 using LinqToDB.Tools.Activity;
 
@@ -82,7 +83,7 @@ public class TestsInitialization
 		if (OperatingSystem.IsLinux())
 		{
 			IntPtr db2Handle = default;
-			System.Runtime.InteropServices.NativeLibrary.SetDllImportResolver(typeof(IBM.Data.Db2.DB2Connection).Assembly, (module, assembly, searchPath) =>
+			System.Runtime.InteropServices.NativeLibrary.SetDllImportResolver(DB2ProviderAdapter.Instance.ConnectionType.Assembly, (module, assembly, searchPath) =>
 			{
 				if (module == "libdb2.so")
 				{
@@ -495,9 +496,9 @@ public class TestsInitialization
 	// InternalOperation1 is the driver's pool purge; reflection keeps legs without the driver from loading it.
 	static void PurgeDB2ConnectionPool()
 	{
-		var driver = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(static a => a.GetName().Name == "IBM.Data.Db2");
-		var purge  = driver?.GetType("IBM.Data.Db2.DB2ConnPool")?.GetMethod("InternalOperation1", BindingFlags.Public | BindingFlags.Static, Type.EmptyTypes);
-
+		var driver = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(static a => a == DB2ProviderAdapter.Instance.ConnectionType.Assembly);
+		var purge  = driver?.GetType($"{DB2ProviderAdapter.Instance.ConnectionType.Namespace}.DB2ConnPool")?.GetMethod("InternalOperation1", BindingFlags.Public | BindingFlags.Static, Type.EmptyTypes);
+		
 		if (purge == null)
 			return;
 
