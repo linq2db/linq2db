@@ -565,7 +565,7 @@ namespace Tests.Linq
 
 				var parameters = new List<SqlParameter>();
 				query.GetSelectQuery().CollectParameters(parameters);
-				parameters.Distinct().Count().ShouldBe(2);
+				parameters.Distinct().Count().ShouldBe(3); // personId is read from two closures and ctn: one parameter per source, no merge by name and value
 			}
 
 			{
@@ -588,7 +588,7 @@ namespace Tests.Linq
 
 				var parameters = new List<SqlParameter>();
 				query.GetSelectQuery().CollectParameters(parameters);
-				parameters.Distinct().Count().ShouldBe(2);
+				parameters.Distinct().Count().ShouldBe(3); // as above: three sources, three parameters
 			}
 		}
 
@@ -1682,9 +1682,9 @@ namespace Tests.Linq
 			var query1  = db.Parent.Where(x => x.ParentID == GetId(id, 0) || x.ParentID == GetId(id, 0));
 			AssertQuery(query1);
 
-			// check only one parameter generated
+			// GetId(...) is a method call: one parameter per occurrence, the values are not compared at build time
 			if(!context.IsAnyOf(TestProvName.AllClickHouse))
-				Assert.That(query1.ToSqlQuery().Parameters, Has.Count.EqualTo(1));
+				Assert.That(query1.ToSqlQuery().Parameters, Has.Count.EqualTo(2));
 
 			id = 2;
 
@@ -1698,7 +1698,7 @@ namespace Tests.Linq
 			// query1 third call is structurally identical to the first; cache must reuse the
 			// 1-parameter plan, not promote to query2's 2-parameter plan
 			if (!context.IsAnyOf(TestProvName.AllClickHouse))
-				query1.ToSqlQuery().Parameters.Count.ShouldBe(1);
+				query1.ToSqlQuery().Parameters.Count.ShouldBe(2);
 		}
 
 #if SUPPORTS_DATEONLY

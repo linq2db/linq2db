@@ -64,7 +64,7 @@ namespace Tests.Linq
 		}
 
 		[Test, QueryCacheTest]
-		public void StaticArrayElementSeesMutation([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void StaticArrayElementSeesMutation([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -95,7 +95,7 @@ namespace Tests.Linq
 		}
 
 		[Test, QueryCacheTest]
-		public void StaticFieldSeesMutation([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void StaticFieldSeesMutation([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -125,7 +125,7 @@ namespace Tests.Linq
 		}
 
 		[Test, QueryCacheTest]
-		public void StaticListCountSeesMutation([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void StaticListCountSeesMutation([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -152,7 +152,7 @@ namespace Tests.Linq
 		}
 
 		[Test, QueryCacheTest]
-		public void ConstantMemberSeesNewInstance([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ConstantMemberSeesNewInstance([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -190,7 +190,7 @@ namespace Tests.Linq
 		}
 
 		[Test, QueryCacheTest]
-		public void ConstantArrayElementSeesMutation([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ConstantArrayElementSeesMutation([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -209,7 +209,7 @@ namespace Tests.Linq
 		}
 
 		[Test, QueryCacheTest]
-		public void ConstantArrayElementHitsOnEqualArray([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ConstantArrayElementHitsOnEqualArray([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -230,7 +230,7 @@ namespace Tests.Linq
 		}
 
 		[Test, QueryCacheTest]
-		public void ConstantArrayElementsSeeMutation([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ConstantArrayElementsSeeMutation([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -249,7 +249,7 @@ namespace Tests.Linq
 		}
 
 		[Test, QueryCacheTest]
-		public void ConstantArrayElementsHitOnEqualArray([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ConstantArrayElementsHitOnEqualArray([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -257,7 +257,7 @@ namespace Tests.Linq
 		}
 
 		[Test, QueryCacheTest]
-		public void ConstantArrayElementBesideEqualArray([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ConstantArrayElementBesideEqualArray([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -293,7 +293,7 @@ namespace Tests.Linq
 		}
 
 		[Test, QueryCacheTest]
-		public void PrunedStaticFieldKeepsCachedQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void PrunedStaticFieldKeepsCachedQuery([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -326,7 +326,7 @@ namespace Tests.Linq
 		}
 
 		[Test, QueryCacheTest]
-		public void ConstantArrayNullCheckHitsOnEqualArray([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ConstantArrayNullCheckHitsOnEqualArray([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -347,7 +347,7 @@ namespace Tests.Linq
 		}
 
 		[Test, QueryCacheTest]
-		public void ConstantArrayLength([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ConstantArrayLength([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -369,7 +369,7 @@ namespace Tests.Linq
 
 		// A scalar literal is part of the tree: a different literal is a different query.
 		[Test, QueryCacheTest]
-		public void ScalarLiteralIsPartOfTheKey([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ScalarLiteralIsPartOfTheKey([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -394,7 +394,7 @@ namespace Tests.Linq
 		}
 
 		[Test, QueryCacheTest]
-		public void ScalarNullCheckKeepsConstantInKey([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ScalarNullCheckKeepsConstantInKey([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -420,7 +420,7 @@ namespace Tests.Linq
 		}
 
 		[Test, QueryCacheTest]
-		public void ScalarBesideSurvivingValueKeepsConstantInKey([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ScalarBesideSurvivingValueKeepsConstantInKey([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -457,7 +457,7 @@ namespace Tests.Linq
 		static readonly MethodInfo _boolLiteral = typeof(CachePrincipleTests).GetMethod(nameof(BoolLiteral), BindingFlags.NonPublic | BindingFlags.Static)!;
 
 		[Test, QueryCacheTest]
-		public void ScalarBesideExtensionArgumentKeepsCompare([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ScalarBesideExtensionArgumentKeepsCompare([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -484,7 +484,7 @@ namespace Tests.Linq
 
 		// A closure variable in a bool chain: parameter, one cached query for every value.
 		[Test, QueryCacheTest]
-		public void ClosureFlagIsParameter([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ClosureFlagIsParameter([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
 

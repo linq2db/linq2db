@@ -35,7 +35,7 @@ namespace Tests.Linq
 
 		// A mutable field read through a static readonly object: the object is fixed, its field is not.
 		[Test, QueryCacheTest]
-		public void MutableFieldOfStaticReadonlyObjectIsParameter([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void MutableFieldOfStaticReadonlyObjectIsParameter([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -57,7 +57,7 @@ namespace Tests.Linq
 
 		// The clock behind a static property: never folded, always the current value.
 		[Test, QueryCacheTest]
-		public void ClockIsParameter([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ClockIsParameter([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -95,7 +95,7 @@ namespace Tests.Linq
 		// One constant array read by an extension builder (shapes the SQL) and indexed elsewhere (a parameter).
 		// The parameter's accessor takes the array out of the key; the extension's read must then be compared.
 		[Test, QueryCacheTest]
-		public void ConstantArrayReadByExtensionAndIndexed([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ConstantArrayReadByExtensionAndIndexed([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -118,10 +118,83 @@ namespace Tests.Linq
 			Query([1, 3]).ToArray().ShouldBe([3]);
 		}
 
+		sealed class Counting
+		{
+			static int _next;
+
+			public Counting()
+			{
+				Value = ++_next;
+			}
+
+			public int Value { get; }
+		}
+
+		sealed class Holder
+		{
+			public Holder(int value)
+			{
+				Value = value;
+			}
+
+			public int Value { get; }
+		}
+
+		static readonly Holder _holder = new(1);
+
+		// A constructor runs code: new Counting().Value is a run-time input. A get-only auto-property read through
+		// a static readonly object is fixed once the object is.
+		[Test, QueryCacheTest]
+		public void ConstructorWithSideEffectIsParameter([DataSources(false)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query() { return db.Person.Select(p => Sql.AsSql(new Counting().Value)).Take(1); }
+
+			var first  = Query().Single();
+			var second = Query().Single();
+
+			second.ShouldBe(first + 1);
+
+			var sql = db.Person.Where(p => p.ID == _holder.Value).Select(p => p.ID).ToSqlQuery();
+			sql.Parameters.Count.ShouldBe(0);
+		}
+
+		// A comparison that names the current culture reads ambient state: tr-TR's dotted I differs from en-US.
+		[Test, QueryCacheTest]
+		public void CurrentCultureComparisonIsParameter([DataSources(false)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<bool> Query()
+			{
+				return db.Person.Where(p => p.ID == 1).Select(p => Sql.AsSql("i".Equals("I", StringComparison.CurrentCultureIgnoreCase)));
+			}
+
+			var culture = CultureInfo.CurrentCulture;
+
+			try
+			{
+				CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
+				Query().Single().ShouldBeTrue();
+				var missCount = Query().GetCacheMissCount();
+
+				CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("tr-TR");
+				Query().Single().ShouldBeFalse();
+				Query().GetCacheMissCount().ShouldBe(missCount);
+
+				db.Person.Where(p => p.ID == 1).Select(p => Sql.AsSql("i".Equals("I", StringComparison.OrdinalIgnoreCase))).ToSqlQuery().Parameters.Count.ShouldBe(0);
+			}
+			finally
+			{
+				CultureInfo.CurrentCulture = culture;
+			}
+		}
+
 		// Culture-sensitive formatting over literals: the result depends on the ambient culture, not on the
 		// expression. It stays a parameter, so a culture change is seen without a rebuild.
 		[Test, QueryCacheTest]
-		public void CultureSensitiveFormattingIsParameter([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void CultureSensitiveFormattingIsParameter([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
 

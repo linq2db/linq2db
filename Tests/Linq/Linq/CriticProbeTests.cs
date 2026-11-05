@@ -18,7 +18,7 @@ namespace Tests.Linq
 		}
 
 		[Test, QueryCacheTest]
-		public void BclStaticClock([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void BclStaticClock([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -40,7 +40,7 @@ namespace Tests.Linq
 		}
 
 		[Test, QueryCacheTest]
-		public void ClosureConditionalInExpose([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ClosureConditionalInExpose([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
 

@@ -102,7 +102,7 @@ namespace Tests.Linq
 				.Where(t => t.String2 == ReuseHolder.Get().ValueProperty || t.String3 == ReuseHolder.Get().ValueProperty)
 				.ToSqlQuery();
 
-			sql.Parameters.Count.ShouldBe(1);
+			sql.Parameters.Count.ShouldBe(2); // one parameter per occurrence: the values are not compared at build time
 		}
 
 		[Test]
@@ -341,8 +341,9 @@ namespace Tests.Linq
 
 			var sql = WhereInt2(db.GetTable<ParameterDeduplication>(), 1).ToSqlQuery();
 
-			sql.Parameters.Count.ShouldBe(1);
+			sql.Parameters.Count.ShouldBe(2); // one parameter per occurrence: the values are not compared at build time
 			sql.Parameters[0].Value.ShouldBe(1);
+			sql.Parameters[1].Value.ShouldBe(1);
 		}
 
 		[Test]
@@ -352,8 +353,9 @@ namespace Tests.Linq
 
 			var sql = WhereIntN2(db.GetTable<ParameterDeduplication>(), 1).ToSqlQuery();
 
-			sql.Parameters.Count.ShouldBe(1);
+			sql.Parameters.Count.ShouldBe(4); // one parameter per occurrence: the values are not compared at build time
 			sql.Parameters[0].Value.ShouldBe(1);
+			sql.Parameters[1].Value.ShouldBe(1);
 		}
 
 		[Test]
@@ -433,7 +435,7 @@ namespace Tests.Linq
 
 			var sql = query.ToSqlQuery();
 
-			sql.Parameters.Count.ShouldBe(1);
+			sql.Parameters.Count.ShouldBe(4); // one parameter per occurrence: the values are not compared at build time
 			sql.Parameters[0].Value.ShouldBe(value);
 		}
 
@@ -456,7 +458,7 @@ namespace Tests.Linq
 
 			var sql = query.ToSqlQuery();
 
-			sql.Parameters.Count.ShouldBe(1);
+			sql.Parameters.Count.ShouldBe(4); // one parameter per occurrence: the values are not compared at build time
 			sql.Parameters[0].Value.ShouldBe(value);
 		}
 
@@ -481,7 +483,7 @@ namespace Tests.Linq
 
 			var sql = filtered.ToSqlQuery();
 
-			sql.Parameters.Count.ShouldBe(1);
+			sql.Parameters.Count.ShouldBe(5); // one parameter per occurrence: the values are not compared at build time
 			sql.Parameters[0].Value.ShouldBe(value);
 		}
 

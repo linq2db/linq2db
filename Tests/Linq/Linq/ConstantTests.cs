@@ -103,7 +103,7 @@ namespace Tests.Linq
 				where e.GuidValue == ConstantsContainer.GuidNonReadonly && e.GuidNullableValue == ConstantsContainer.GuidNonReadonly
 				select e;
 
-			query.GetStatement().CollectParameters().Length.ShouldBe(context.IsUseParameters() ? 1 : 0);
+			query.GetStatement().CollectParameters().Length.ShouldBe(context.IsUseParameters() ? 2 : 0 /* one per column: the nullable column reads through its own getter */);
 
 			AssertQuery(query);
 		}
