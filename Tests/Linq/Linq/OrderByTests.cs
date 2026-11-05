@@ -1060,6 +1060,41 @@ namespace Tests.Linq
 				.ShouldBe(expected);
 		}
 
+		sealed class BoolAsInt16Table
+		{
+			[PrimaryKey]                        public int  Id   { get; set; }
+			[Column(DataType = DataType.Int16)] public bool Flag { get; set; }
+		}
+
+		static readonly BoolAsInt16Table[] _boolAsInt16Data =
+		[
+			new BoolAsInt16Table { Id = 1, Flag = true  },
+			new BoolAsInt16Table { Id = 2, Flag = false },
+			new BoolAsInt16Table { Id = 3, Flag = true  },
+			new BoolAsInt16Table { Id = 4, Flag = false },
+		];
+
+		// Access-only: several providers cannot seed a bool mapped to Int16.
+		[Test]
+		public void OrderByBooleanStoredAsInt16([IncludeDataSources(true, TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_boolAsInt16Data);
+
+			var expected = _boolAsInt16Data
+				.OrderBy(r => r.Flag)
+				.ThenBy(r => r.Id)
+				.Select(r => r.Id)
+				.ToArray();
+
+			t
+				.OrderBy(r => r.Flag)
+				.ThenBy(r => r.Id)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
 		[Test]
 		public void OrderByBooleanPredicate([DataSources] string context)
 		{
