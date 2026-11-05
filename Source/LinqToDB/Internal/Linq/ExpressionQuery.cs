@@ -389,11 +389,11 @@ namespace LinqToDB.Internal.Linq
 			if (transaction == null)
 				return enumerable.GetEnumerator();
 
-			var rows = enumerable.ToList();
+			var rows = BufferedRows<T>.Read(enumerable);
 
 			transaction.Complete();
 
-			return rows.GetEnumerator();
+			return rows;
 		}
 
 		#endregion

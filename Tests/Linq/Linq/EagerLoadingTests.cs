@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Interceptors;
+using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
@@ -4361,6 +4363,149 @@ namespace Tests.Linq
 			var exported = await invoices.CountAsync(i => i.Exported);
 
 			exported.ShouldBe(ExportInvoices.Length);
+		}
+
+		// More main rows than the buffer's first array holds, so the buffer grows.
+		static readonly ExportInvoice[] ManyExportInvoices = Enumerable
+			.Range(1, 40)
+			.Select(id => new ExportInvoice { Id = id })
+			.ToArray();
+
+		static readonly ExportInvoiceLine[] ManyExportInvoiceLines = Enumerable
+			.Range(1, 40)
+			.Select(id => new ExportInvoiceLine { Id = id * 10, InvoiceId = id })
+			.ToArray();
+
+		static int OwnLineId(ExportInvoice invoice)
+		{
+			invoice.Lines
+				.Single()
+				.InvoiceId
+				.ShouldBe(invoice.Id);
+
+			return invoice.Id;
+		}
+
+		// A second Dispose must not return the buffer's array to the pool again: the two buffers opened afterwards would
+		// both rent that array, and the first would read the second's rows.
+		[Test]
+		public void EagerLoadBuffersStayApartAfterADoubleDispose([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db       = GetDataConnection(context, o => o.UseCombinedCommands(combinedCommands));
+			using var invoices = db.CreateLocalTable(ManyExportInvoices);
+			using var lines    = db.CreateLocalTable(ManyExportInvoiceLines);
+
+			var withLines = invoices
+				.LoadWith(i => i.Lines);
+
+			withLines
+				.ToList()
+				.Select(OwnLineId)
+				.ShouldBe(Enumerable.Range(1, 40), ignoreOrder: true);
+
+			var disposedTwice = withLines
+				.Where(i => i.Id <= 10)
+				.GetEnumerator();
+
+			disposedTwice
+				.MoveNext()
+				.ShouldBeTrue();
+
+			disposedTwice.Dispose();
+			disposedTwice.Dispose();
+
+			using var first = withLines
+				.Where(i => i.Id <= 10)
+				.GetEnumerator();
+
+			using var second = withLines
+				.Where(i => i.Id > 30)
+				.GetEnumerator();
+
+			var firstIds  = new List<int>();
+			var secondIds = new List<int>();
+
+			bool hasFirst, hasSecond;
+
+			do
+			{
+				hasFirst  = first.MoveNext();
+				hasSecond = second.MoveNext();
+
+				if (hasFirst)
+					firstIds.Add(OwnLineId(first.Current));
+
+				if (hasSecond)
+					secondIds.Add(OwnLineId(second.Current));
+			}
+			while (hasFirst || hasSecond);
+
+			firstIds.ShouldBe(Enumerable.Range(1, 10), ignoreOrder: true);
+			secondIds.ShouldBe(Enumerable.Range(31, 10), ignoreOrder: true);
+		}
+
+		[Test]
+		public async Task EagerLoadBuffersStayApartAfterADoubleDisposeAsync([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db       = GetDataConnection(context, o => o.UseCombinedCommands(combinedCommands));
+			using var invoices = db.CreateLocalTable(ManyExportInvoices);
+			using var lines    = db.CreateLocalTable(ManyExportInvoiceLines);
+
+			var withLines = invoices
+				.LoadWith(i => i.Lines);
+
+			// ExecuteAsyncEnumerable buffers before it returns and hands out the buffer's own enumerator. The public
+			// GetAsyncEnumerator wraps it, buffers lazily and ignores a second DisposeAsync, so it cannot show the guard.
+			static async Task<IAsyncEnumerator<ExportInvoice>> BufferAsync(IQueryable<ExportInvoice> query)
+			{
+				var rows = await ((IQueryProviderAsync)query.Provider)
+					.ExecuteAsyncEnumerable<ExportInvoice>(query.Expression, CancellationToken.None);
+
+				return rows.GetAsyncEnumerator();
+			}
+
+			var allIds = new List<int>();
+
+			await using (var all = await BufferAsync(withLines))
+			{
+				while (await all.MoveNextAsync())
+					allIds.Add(OwnLineId(all.Current));
+			}
+
+			allIds.ShouldBe(Enumerable.Range(1, 40), ignoreOrder: true);
+
+			var disposedTwice = await BufferAsync(withLines.Where(i => i.Id <= 10));
+
+			var moved = await disposedTwice.MoveNextAsync();
+
+			moved.ShouldBeTrue();
+
+			await disposedTwice.DisposeAsync();
+			await disposedTwice.DisposeAsync();
+
+			await using var first  = await BufferAsync(withLines.Where(i => i.Id <= 10));
+			await using var second = await BufferAsync(withLines.Where(i => i.Id > 30));
+
+			var firstIds  = new List<int>();
+			var secondIds = new List<int>();
+
+			bool hasFirst, hasSecond;
+
+			do
+			{
+				hasFirst  = await first.MoveNextAsync();
+				hasSecond = await second.MoveNextAsync();
+
+				if (hasFirst)
+					firstIds.Add(OwnLineId(first.Current));
+
+				if (hasSecond)
+					secondIds.Add(OwnLineId(second.Current));
+			}
+			while (hasFirst || hasSecond);
+
+			firstIds.ShouldBe(Enumerable.Range(1, 10), ignoreOrder: true);
+			secondIds.ShouldBe(Enumerable.Range(31, 10), ignoreOrder: true);
 		}
 
 		#endregion
