@@ -1539,7 +1539,9 @@ namespace Tests.Data
 			if (batch)
 				text.ShouldContain("-- Command 2");
 			else
-				text.Split('\n').ShouldContain(line => line.Trim() == ";");
+				text
+					.Split('\n')
+					.ShouldContain(line => line.Trim() == ";");
 		}
 		#endregion
 
