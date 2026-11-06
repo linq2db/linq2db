@@ -36,8 +36,8 @@ namespace LinqToDB
 		/// The runtime key set. One output column is generated per key.
 		/// In a compiled query, pass the key collection itself as a parameter: keys read through a member of a parameter
 		/// (<c>s.Keys</c>) are matched on that parameter's instance, so a member reassigned on the same instance reuses the
-		/// first call's column set. Written in a sub-query or a compiled query, the keys must be a collection rather than a
-		/// query.
+		/// first call's column set. Written in a sub-query or a compiled query, the keys must be a materialized collection
+		/// (an array, a list, a set): a query or a deferred sequence (<c>q.AsEnumerable().Select(...)</c>) is refused.
 		/// </param>
 		/// <param name="valueTemplate">
 		/// Per-column value expression, parameterized by the key.

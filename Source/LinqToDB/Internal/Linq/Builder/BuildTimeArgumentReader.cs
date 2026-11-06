@@ -1,10 +1,13 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
 using LinqToDB.Expressions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 
@@ -17,7 +20,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		// by-value comparison, as extension builders do, so a changed value is a different query rather than a hit on the
 		// one built for the old value. A quoted lambda is passed through rather than compiled, so it may reference an
 		// enclosing lambda's parameter; what it reads becomes SQL.
-		internal static object? ReadArgument(ExpressionBuilder builder, Expression argument)
+		internal static object? ReadArgument(ExpressionBuilder builder, Expression argument, string parameterName)
 		{
 			switch (argument)
 			{
@@ -29,7 +32,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					var result = Array.CreateInstance(array.Type.GetElementType()!, array.Expressions.Count);
 
 					for (var i = 0; i < array.Expressions.Count; i++)
-						result.SetValue(ReadArgument(builder, array.Expressions[i]), i);
+						result.SetValue(ReadArgument(builder, array.Expressions[i], parameterName), i);
 
 					return result;
 				}
@@ -41,8 +44,13 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var value = argument.EvaluateExpression();
 
+			// Refused before it is enumerated: a query, or a deferred sequence that may run one, would run here, again at
+			// every cache lookup, and a compiled query would keep it, with its data context, in its cache key.
+			if (value is IQueryable || value is IEnumerable deferred and not string && !IsMaterialized(deferred))
+				throw new LinqToDBException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.SelectDynamic.Error_ArgumentIsAQuery, parameterName));
+
 			// Read once, so the call and the comparison see the same items however the sequence enumerates.
-			if (value is IEnumerable sequence and not string and not IQueryable and not Array && argument.Type.GetItemType() is { } itemType)
+			if (value is IEnumerable sequence and not string and not Array && argument.Type.GetItemType() is { } itemType)
 			{
 				var items = sequence.Cast<object?>().ToArray();
 				var array = Array.CreateInstance(itemType, items.Length);
@@ -85,6 +93,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				return new TransformInfo(e);
 			});
 		}
+
+		static bool IsMaterialized(IEnumerable sequence)
+			=> sequence is ICollection
+				|| sequence.GetType().GetInterfaces().Any(static t => t.IsGenericType
+					&& (t.GetGenericTypeDefinition() == typeof(ICollection<>) || t.GetGenericTypeDefinition() == typeof(IReadOnlyCollection<>)));
 
 		static readonly object _threw = new();
 

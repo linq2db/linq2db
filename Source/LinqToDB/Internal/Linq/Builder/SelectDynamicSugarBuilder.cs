@@ -37,11 +37,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						i);
 				}
 
-				args[i] = BuildTimeArgumentReader.ReadArgument(builder, argument);
-
-				// A query declared as a plain sequence passes the check above, and the call would run it here.
-				if (args[i] is IQueryable)
-					throw Error(ErrorHelper.SelectDynamic.Error_ArgumentIsAQuery, i);
+				args[i] = BuildTimeArgumentReader.ReadArgument(builder, argument, methodCall.Method.GetParameters()[i].Name!);
 			}
 
 			var desugared = (IQueryable)methodCall.Method.InvokeExt(null, args)!;

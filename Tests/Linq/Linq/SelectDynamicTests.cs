@@ -389,6 +389,35 @@ namespace Tests.Linq
 				.ShouldContain("is a query");
 		}
 
+		/// <summary>
+		/// Keys passed to a compiled query as a deferred sequence over a query are refused too: the compiled query's cache
+		/// would keep the sequence, and with it the query and its data context, and run it on every call.
+		/// </summary>
+		// SQLite only: the builder throws before the compiled query's SQL is built.
+		[Test]
+		public void SelectDynamicInCompiledQueryWithLazyKeysThrows([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_data);
+
+			var query = CompiledQuery.Compile((IDataContext dc, IEnumerable<string> keys) => dc
+				.GetTable<Amounts>()
+				.SelectDynamic(x => new AmountsDto { Id = x.Id }, keys, (x, n) => n == "Usd" ? x.Usd : x.Eur));
+
+			var keys = t
+				.Where(x => x.Id == 1)
+				.AsEnumerable()
+				.Select(x => "Usd");
+
+			var act = () => query(db, keys)
+				.ToList();
+
+			act
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain("is a query");
+		}
+
 		// SQLite only: the SQL is the plain projection ProjectsRuntimeColumnSetIntoStore runs everywhere; this pins how
 		// CompiledTable keys the column set.
 		[Test]
@@ -479,6 +508,56 @@ namespace Tests.Linq
 				{
 					query(db, "a_")
 						.ToList();
+				}
+
+				db.Dispose();
+
+				return new WeakReference(db);
+			}
+
+			var reference = RunOnce(context);
+
+			for (var i = 0; i < 3; i++)
+			{
+				GC.Collect();
+				GC.WaitForPendingFinalizers();
+			}
+
+			reference
+				.IsAlive
+				.ShouldBeFalse();
+
+			GC.KeepAlive(query);
+		}
+
+		/// <summary>
+		/// Keys passed to a compiled query as a deferred sequence over a query are refused before the compiled query caches
+		/// anything, so it does not keep that query's data context alive.
+		/// </summary>
+		// SQLite only: this pins what the compiled query's cache holds on to, which no provider affects.
+		[Test]
+		public void CompiledQueryLazyKeysDoNotRetainTheContext([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var query = CompiledQuery.Compile((IDataContext dc, IEnumerable<string> keys) => dc
+				.GetTable<Amounts>()
+				.SelectDynamic(x => new AmountsDto { Id = x.Id }, keys, (x, n) => n == "Usd" ? x.Usd : x.Eur));
+
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			WeakReference RunOnce(string ctx)
+			{
+				var db = GetDataContext(ctx);
+
+				using (var t = db.CreateLocalTable(_data))
+				{
+					var keys = t
+						.Where(x => x.Id == 1)
+						.AsEnumerable()
+						.Select(x => "Usd");
+
+					var act = () => query(db, keys)
+						.ToList();
+
+					act.ShouldThrow<LinqToDBException>();
 				}
 
 				db.Dispose();
@@ -643,6 +722,60 @@ namespace Tests.Linq
 				.ShouldThrow<LinqToDBException>()
 				.Message
 				.ShouldContain("'keys' argument of SelectDynamic is a query");
+		}
+
+		/// <summary>
+		/// Keys that are a deferred sequence over a query are rejected inline: read while the query is built and again at
+		/// every cache lookup, they would run that query on each execution.
+		/// </summary>
+		// SQLite only: the builder throws before any SQL is built.
+		[Test]
+		public void InlineKeysLazyOverAQueryThrow([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_data);
+
+			IEnumerable<int> keys = t
+				.Select(x => x.Id)
+				.AsEnumerable()
+				.Select(k => k);
+
+			var query =
+				from a in t
+				where t.Where(x => x.Id > 0)
+					.SelectDynamic(x => new AmountsDto { Id = x.Id }, keys, (x, k) => x.Usd * k, k => "W" + k)
+					.Any(r => r.Id == a.Id && Sql.Property<decimal>(r, "W2") > 50)
+				select a.Id;
+
+			var act = () => query.ToArray();
+
+			act
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain("'keys' argument of SelectDynamic is a query");
+		}
+
+		/// <summary>A materialized collection that is not a list or an array is accepted inline.</summary>
+		// SQLite only: the SQL is the sub-query InlineSelectDynamicCachesByKeySet runs; this pins which key collections
+		// the builder accepts.
+		[Test]
+		public void InlineKeysInAHashSet([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_data);
+
+			var factors = new HashSet<int> { 1, 2 };
+
+			var query =
+				from a in t
+				where t.Where(x => x.Id > 0)
+					.SelectDynamic(x => new AmountsDto { Id = x.Id }, factors, (x, k) => x.Usd * k, k => "W" + k)
+					.Any(r => r.Id == a.Id && Sql.Property<decimal>(r, "W2") > 50)
+				select a.Id;
+
+			query
+				.ToArray()
+				.ShouldBe(new[] { 2 });
 		}
 
 		[Test]
