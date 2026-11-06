@@ -34,6 +34,7 @@ namespace LinqToDB.CommandLine.Commands.Scaffold
 
 			// generic options
 			AddOption(_generalOptions, General.Import);
+			AddOption(_generalOptions, General.TargetLanguage);
 			AddOption(_generalOptions, General.Output);
 			AddOption(_generalOptions, General.Overwrite);
 			AddOption(_generalOptions, General.Provider);

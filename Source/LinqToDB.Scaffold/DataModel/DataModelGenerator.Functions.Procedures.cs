@@ -348,12 +348,9 @@ namespace LinqToDB.DataModel
 						var prop        = customRecordProperties![i];
 						initializers[i] = context.AST.Assign(
 							prop.Reference,
-							context.AST.Call(
-								new CodeTypeReference(WellKnownTypes.LinqToDB.Common.Converter),
-								WellKnownTypes.LinqToDB.Common.Converter_ChangeTypeTo,
+							BuildChangeTypeTo(
+								context,
 								prop.Type.Type,
-								new[] { prop.Type.Type },
-								false,
 								context.AST.Call(
 									drParam.Reference,
 									WellKnownTypes.System.Data.Common.DbDataReader_GetValue,
@@ -371,7 +368,13 @@ namespace LinqToDB.DataModel
 										[],
 										initializers)));
 
-					queryProcTypeArgs = [];
+					// C# infers the QueryProc<T> type argument from the mapper lambda's return type, so it is
+					// omitted. F# cannot: an un-annotated call is ambiguous between the objectReader:Func<..>
+					// and template:T overloads (both match a Func value), so emit the explicit type argument to
+					// pin T = result type and eliminate the template overloads (FS0041).
+					queryProcTypeArgs = context.LanguageProvider.Features.HasFlag(LanguageFeatures.LambdaReturnTypeInference)
+						? []
+						: new[] { returnElementType! };
 				}
 				else
 				{
@@ -470,7 +473,13 @@ namespace LinqToDB.DataModel
 					var properties         = resultClassBuilder.Properties(true);
 					var initializers       = new CodeAssignmentStatement[parameterRebinds.Length + 1];
 
-					asyncResult.MainResult.Type = returnType;
+					// F# does not implicitly widen, so the wrapper's result property type must match the value
+					// assigned to it exactly. generateToList materializes the result to a List<T> (it must be
+					// consumed before the output parameters are populated), whereas returnType is IEnumerable<T>;
+					// C# tolerates the implicit List->IEnumerable conversion, F# rejects it (FS3172).
+					asyncResult.MainResult.Type = generateToList && !context.LanguageProvider.Features.HasFlag(LanguageFeatures.ImplicitUpcast)
+						? WellKnownTypes.System.Collections.Generic.List(returnElementType!)
+						: returnType;
 					var prop                    = context.DefineProperty(properties, asyncResult.MainResult);
 					initializers[0]             = context.AST.Assign(prop.Property.Reference, result);
 
@@ -544,7 +553,7 @@ namespace LinqToDB.DataModel
 			// pass parameter value for in and inout parameters
 			// otherwise pass null
 			ctorParams[1] = direction is System.Data.ParameterDirection.Input or System.Data.ParameterDirection.InputOutput
-				? parameter!.Reference
+				? BuildProcedureParameterValue(context, parameter!)
 				: context.AST.Null(WellKnownTypes.System.ObjectNullable, true);
 			if (dataType != null)
 				ctorParams[2] = context.AST.Constant(dataType.Value, true);
@@ -607,12 +616,9 @@ namespace LinqToDB.DataModel
 			{
 				parameterRebinds[rebindIndex] = context.AST.Assign(
 					rebindTo,
-					context.AST.Call(
-						new CodeTypeReference(WellKnownTypes.LinqToDB.Common.Converter),
-						WellKnownTypes.LinqToDB.Common.Converter_ChangeTypeTo,
+					BuildChangeTypeTo(
+						context,
 						valueType,
-						new[] { valueType },
-						false,
 						context.AST.Member(
 							context.AST.Index(
 								parametersVar.Reference,
@@ -622,6 +628,78 @@ namespace LinqToDB.DataModel
 			}
 
 			return context.AST.New(WellKnownTypes.LinqToDB.Data.DataParameter, ctorParams, ctorInitializers);
+		}
+
+		// TODO: handle F# option values in DataParameter and Converter by mapping infrastructure instead of generating
+		// conversions (BuildProcedureParameterValue, BuildChangeTypeTo)
+
+		/// <summary>
+		/// Generates <c>DataParameter</c> value for procedure parameter.
+		/// F# option-typed parameter (nullable scalar) is unwrapped to its value or <see langword="null"/>,
+		/// as providers don't know F# option type.
+		/// </summary>
+		private static ICodeExpression BuildProcedureParameterValue(IDataModelGenerationContext context, CodeParameter parameter)
+		{
+			var method = GetFSharpOptionMethod(context, parameter.Type.Type, "toNullable", "toObj");
+
+			return method == null
+				? parameter.Reference
+				: CallFSharpOption(context, method, WellKnownTypes.System.ObjectNullable, parameter.Reference);
+		}
+
+		/// <summary>
+		/// Generates <c>Converter.ChangeTypeTo&lt;T&gt;</c> call. For F# option-typed <paramref name="type"/> value is
+		/// converted to <see cref="Nullable{T}"/> (or <see langword="string"/>) and wrapped into option, as converter cannot
+		/// convert value to option of other type (e.g. <see langword="int"/> to <c>SqlInt32 option</c>).
+		/// </summary>
+		private static ICodeExpression BuildChangeTypeTo(IDataModelGenerationContext context, IType type, params ICodeExpression[] args)
+		{
+			var method     = GetFSharpOptionMethod(context, type, "ofNullable", "ofObj");
+			var targetType = method == null
+				? type
+				: type.IsValueType
+					? new GenericType([context.AST.Name("System")], context.AST.Name("Nullable"), true, false, [type.WithNullability(false)], true)
+					: type.WithNullability(false);
+
+			var convert = context.AST.Call(
+				new CodeTypeReference(WellKnownTypes.LinqToDB.Common.Converter),
+				WellKnownTypes.LinqToDB.Common.Converter_ChangeTypeTo,
+				targetType,
+				new[] { targetType },
+				false,
+				args);
+
+			// explicit element type argument: under F# nullness checks Converter.ChangeTypeTo<string> returns non-nullable
+			// string, which inferred Option.ofObj reports with FS3262
+			return method == null ? convert : CallFSharpOption(context, method, type, convert, type.WithNullability(false));
+		}
+
+		/// <summary>
+		/// Returns F# <c>Option</c> module function to use for option-typed (nullable scalar) <paramref name="type"/>
+		/// or <see langword="null"/> when type is not rendered as option.
+		/// </summary>
+		private static string? GetFSharpOptionMethod(IDataModelGenerationContext context, IType type, string valueTypeMethod, string stringMethod)
+		{
+			if (!context.LanguageProvider.Features.HasFlag(LanguageFeatures.OptionTypes) || !type.IsNullable)
+				return null;
+
+			if (type.IsValueType)
+				return valueTypeMethod;
+
+			return string.Equals(context.LanguageProvider.GetAlias(type.WithNullability(false)), "string", StringComparison.Ordinal)
+				? stringMethod
+				: null;
+		}
+
+		private static ICodeExpression CallFSharpOption(IDataModelGenerationContext context, string method, IType returnType, ICodeExpression value, IType? elementType = null)
+		{
+			return context.AST.Call(
+				new CodeTypeReference(context.LanguageProvider.TypeParser.Parse("Microsoft.FSharp.Core.Option", false)),
+				context.AST.Name(method),
+				returnType,
+				elementType == null ? [] : [elementType],
+				false,
+				value);
 		}
 	}
 }

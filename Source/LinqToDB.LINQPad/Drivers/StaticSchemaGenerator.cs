@@ -146,6 +146,7 @@ internal static class StaticSchemaGenerator
 				(ca != null && ca.IsColumn) ||
 				pk != null ||
 				id != null ||
+				ma.MemberInfo.HasAttribute<NullableAttribute>() ||
 				(ca == null && !table.IsColumnAttributeRequired && MappingSchema.Default.IsScalarType(ma.Type))
 			orderby
 				ca == null ? 1 : ca.Order >= 0 ? 0 : 2,

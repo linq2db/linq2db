@@ -28,14 +28,32 @@
 		<Compile Include="OptionTypes.fs" />
 		<Compile Include="OptionQueryTests.fs" />
 		<Compile Include="DuQueryTests.fs" />
+		<Compile Include="GeneratedModel.fs" />
+		<Compile Include="..\FSharp.Scaffold\SQLite\TestDataDB.fs" Link="Scaffold\SQLite.fs" />
+		<Compile Include="..\FSharp.Scaffold\SQLiteFluent\TestDataDB.fs" Link="Scaffold\SQLiteFluent.fs" />
+		<Compile Include="..\FSharp.Scaffold\SqlServer\TestDataDB.fs" Link="Scaffold\SqlServer.fs" />
+		<Compile Include="GeneratedCode.fs" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\Base\Tests.Base.csproj" />
 		<ProjectReference Include="..\..\Source\LinqToDB.FSharp\LinqToDB.FSharp.fsproj" />
+		<!-- ComparerBuilder for the linked scaffold output's equatable entities -->
+		<ProjectReference Include="..\..\Source\LinqToDB.Tools\LinqToDB.Tools.csproj" />
 
 		<PackageReference Include="FSharp.Core" />
 		<PackageReference Include="Npgsql.NodaTime" />
+	</ItemGroup>
+
+	<!-- Microsoft.SqlServer.Types for the linked SQL Server scaffold output; same assemblies as linq2db.Providers.props -->
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
+		<PackageReference Include="Microsoft.SqlServer.Types" />
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' != 'net462' ">
+		<Reference Include="Microsoft.SqlServer.Types">
+			<HintPath>$(MSBuildThisFileDirectory)\..\..\Redist\dotMorten.Microsoft.SqlServer.Types\Microsoft.SqlServer.Types.dll</HintPath>
+		</Reference>
 	</ItemGroup>
 
 </Project>
