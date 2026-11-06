@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 using LinqToDB;
 using LinqToDB.Internal.Common;
@@ -16,7 +17,9 @@ namespace LinqToDB.Internal.Linq.Builder
 		nameof(LinqExtensions.Insert), 
 		nameof(LinqExtensions.InsertWithIdentity), 
 		nameof(LinqExtensions.InsertWithOutput), 
-		nameof(LinqExtensions.InsertWithOutputInto))]
+		nameof(LinqExtensions.InsertWithOutputInto),
+		nameof(LinqExtensions.InsertWithOutputQuery),
+		nameof(LinqExtensions.DataModificationSource))]
 	sealed class InsertBuilder : MethodCallBuilder
 	{
 		#region InsertBuilder
@@ -52,6 +55,13 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
+			// Registered before the source is built, so that it is built once: for the CTE body, not for the reference.
+			if (string.Equals(methodCall.Method.Name, nameof(LinqExtensions.InsertWithOutputQuery), StringComparison.Ordinal))
+				return BuildDataModificationReference(builder, methodCall, buildInfo);
+
+			if (string.Equals(methodCall.Method.Name, nameof(LinqExtensions.DataModificationSource), StringComparison.Ordinal))
+				methodCall = (MethodCallExpression)methodCall.Arguments[0];
+
 			var shouldDisableFilters = typeof(ITable<>).IsSameOrParentOf(methodCall.Method.GetParameters()[0].ParameterType);
 			var buildResult          = TryBuildSequenceWithFilter(builder, new BuildInfo(buildInfo, methodCall.Arguments[0]), shouldDisableFilters);
 
@@ -69,7 +79,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				nameof(LinqExtensions.Insert)               => InsertContext.InsertTypeEnum.Insert,
 				nameof(LinqExtensions.InsertWithIdentity)   => InsertContext.InsertTypeEnum.InsertWithIdentity,
 				nameof(LinqExtensions.InsertWithOutput)     => InsertContext.InsertTypeEnum.InsertOutput,
-				nameof(LinqExtensions.InsertWithOutputInto) => InsertContext.InsertTypeEnum.InsertOutputInto,
+				nameof(LinqExtensions.InsertWithOutputInto)  => InsertContext.InsertTypeEnum.InsertOutputInto,
+				nameof(LinqExtensions.InsertWithOutputQuery) => InsertContext.InsertTypeEnum.InsertOutputQuery,
 				_ => InsertContext.InsertTypeEnum.Insert,
 			};
 
@@ -249,7 +260,51 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			insertStatement.Insert.WithIdentity = insertType is InsertContext.InsertTypeEnum.InsertWithIdentity;
 
+			if (insertType is InsertContext.InsertTypeEnum.InsertOutputQuery)
+			{
+				var insertedTable = (insertContext.Into == null ? null : SequenceHelper.GetTableContext(insertContext.Into)?.SqlTable)
+					?? throw new InvalidOperationException("Cannot find target table for INSERT statement");
+
+				// The output rows of the insert, built as the body of the CTE that DataModificationReference registered.
+				var table        = new SqlDataModificationTable(insertedTable, insertStatement, LinqExtensions.GetDataModificationIdentity(methodCall));
+				var tableContext = new TableBuilder.TableContext(builder.GetTranslationModifier(), builder, sequence.MappingSchema, new SelectQuery(), table, false);
+
+				return BuildSequenceResult.FromContext(tableContext);
+			}
+
 			return BuildSequenceResult.FromContext(insertContext);
+		}
+
+		static readonly MethodInfo _dataModificationSourceMethod =
+			typeof(LinqExtensions).GetMethod(nameof(LinqExtensions.DataModificationSource), BindingFlags.Static | BindingFlags.NonPublic)!;
+
+		/// <summary>
+		/// A reference to the output of an <c>InsertWithOutputQuery</c> call: an ordinary CTE, registered once per call
+		/// identity, whose body is built from <c>DataModificationSource(call)</c>.
+		/// </summary>
+		static BuildSequenceResult BuildDataModificationReference(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		{
+			if (!builder.DataContext.SqlProviderFlags.IsInsertOutputQuerySupported)
+				throw new LinqToDBException(ErrorHelper.Error_OutputQuery_NotSupported);
+
+			var call        = builder.IdentifyDataModificationCall(methodCall);
+			var elementType = call.Method.GetGenericArguments()[^1];
+			var cteContext  = builder.FindRegisteredCteContext(call);
+
+			if (cteContext == null)
+			{
+				var cteClause = new CteClause(null, elementType, true, null);
+
+				cteContext = new CteContext(builder.GetTranslationModifier(), builder, null, cteClause, null!)
+				{
+					CteExpression = Expression.Call(_dataModificationSourceMethod.MakeGenericMethod(elementType), call),
+				};
+
+				builder.RegisterCteContext(cteContext, call);
+				builder.RegisterDataModificationCte(LinqExtensions.GetDataModificationIdentity(call)!, cteContext);
+			}
+
+			return BuildSequenceResult.FromContext(new CteTableContext(cteContext.TranslationModifier, builder, buildInfo.Parent, elementType, buildInfo.SelectQuery, cteContext));
 		}
 
 		#endregion
@@ -266,6 +321,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				InsertWithIdentity,
 				InsertOutput,
 				InsertOutputInto,
+				InsertOutputQuery,
 			}
 
 			public InsertContext(IBuildContext querySequence, InsertTypeEnum insertType, SqlInsertStatement insertStatement, LambdaExpression? outputExpression)

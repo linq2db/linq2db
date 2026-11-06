@@ -93,6 +93,20 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return result;
 		}
 
+		protected override IQueryElement VisitNestedStatement(SqlStatement statement)
+		{
+			// Visited as a statement root: INSERT ... SELECT maps select columns to target columns by position,
+			// so none of them may be removed.
+			var prevInExpression = _inExpression;
+			_inExpression = true;
+
+			var result = base.VisitNestedStatement(statement);
+
+			_inExpression = prevInExpression;
+
+			return result;
+		}
+
 		protected internal override IQueryElement VisitSqlOrderByClause(SqlOrderByClause element)
 		{
 			var prevInExpression = _inExpression;

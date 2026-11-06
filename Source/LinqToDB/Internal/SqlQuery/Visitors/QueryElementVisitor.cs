@@ -1561,6 +1561,66 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return element;
 		}
 
+		protected internal virtual IQueryElement VisitSqlDataModificationTable(SqlDataModificationTable element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					VisitNestedStatement(element.Statement);
+					VisitElements(element.SqlQueryExtensions, VisitMode.ReadOnly);
+
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					element.Statement = (SqlStatementWithQueryBase)VisitNestedStatement(element.Statement);
+					VisitElements(element.SqlQueryExtensions, VisitMode.Modify);
+
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var statement = (SqlStatementWithQueryBase)VisitNestedStatement(element.Statement);
+					var ext       = VisitElements(element.SqlQueryExtensions, VisitMode.Transform);
+
+					if (ShouldReplace(element)                         ||
+					    !ReferenceEquals(element.Statement, statement) ||
+					    element.SqlQueryExtensions != ext)
+					{
+						var newTable = new SqlDataModificationTable(element, statement)
+						{
+							SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList(),
+						};
+
+						NotifyReplaced(newTable.All, element.All);
+
+						for (var index = 0; index < newTable.Fields.Count; index++)
+						{
+							NotifyReplaced(newTable.Fields[index], element.Fields[index]);
+						}
+
+						return NotifyReplaced(newTable, element);
+					}
+
+					break;
+				}
+				default:
+					return ThrowInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
+		/// <summary>
+		/// Visits a statement nested inside another statement's tree (<see cref="SqlDataModificationTable.Statement"/>).
+		/// A visitor that keeps per-query context overrides it to visit the statement as an isolated root.
+		/// </summary>
+		protected virtual IQueryElement VisitNestedStatement(SqlStatement statement)
+		{
+			return Visit(statement)!;
+		}
+
 		protected internal virtual IQueryElement VisitSqlCteTable(SqlCteTable element)
 		{
 			switch (GetVisitMode(element))
