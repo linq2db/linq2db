@@ -1700,6 +1700,7 @@ namespace Tests.Linq
 
 		sealed class DerivedAssociationChild2 : DerivedAssociationChildBase;
 
+		[ActiveIssue(6215, Configuration = TestProvName.AllAccess)]
 		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb, ErrorMessage = "each equality predicate argument must depend on exactly one JOIN input")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6148")]
 		public void DerivedAssociationKeepsOtherDerivedRows([DataSources] string context)

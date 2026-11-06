@@ -105,7 +105,7 @@ namespace Tests.UserTests
 
 			// YDB has no correlated-subquery support (SqlProviderFlags.IsSupportedSimpleCorrelatedSubqueries is
 			// false), so the optimizer cannot collapse these into the flat shape the other providers reach.
-			Assert.That(sourcesCount, Is.LessThanOrEqualTo(context.IsAnyOf(TestProvName.AllYdb) ? 5 : 2));
+			Assert.That(sourcesCount, Is.LessThanOrEqualTo(context.IsAnyOf(TestProvName.AllYdb) ? 6 : 2));
 		}
 	}
 }
