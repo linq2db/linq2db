@@ -38,6 +38,28 @@ namespace Tests.Linq
 			}
 		}
 
+		// A compiled scalar select runs as an element query, so a collection in it has to load on that path too; the path is
+		// provider-independent.
+		[Test]
+		public void CompiledScalarSelectWithCollection([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var query = CompiledQuery.Compile((ITestDataContext db, int take) => db.Select(() => new
+			{
+				Total    = db.Parent.Count(),
+				Children = db.Child
+					.OrderBy(c => c.ChildID)
+					.Take(take)
+					.ToList(),
+			}));
+
+			using var db = GetDataContext(context);
+
+			var result = query(db, 3);
+
+			result.Total.ShouldBe(Parent.Count());
+			result.Children.Count.ShouldBe(3);
+		}
+
 		[Test]
 		public void CompiledTest2([DataSources] string context)
 		{

@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -1117,13 +1118,12 @@ namespace LinqToDB.Internal.Linq
 				return null;
 
 			// Master switch (off by default in 6.x): combining is observable, not merely faster — it changes the emitted SQL
-			// and the ADO.NET path it travels. Provider capability is checked on top of it, never instead of it.
-			if (!dataContext.Options.LinqOptions.UseCombinedCommands)
+			// and the ADO.NET path it travels. Provider capability is checked on top of it, never instead of it. A QueryBatch
+			// query is the per-call opt-in, so it stands in for the switch.
+			if (!dataContext.Options.LinqOptions.UseCombinedCommands && !query.CombinedCommandsRequested)
 				return null;
 
-			if (dataContext is not (DataConnection or DataContext)
-				|| !dataContext.SqlProviderFlags.IsMultiStatementBatchSupported
-				|| !dataContext.SqlProviderFlags.IsMultipleResultSetsSupported)
+			if (!CanCombineCommands(dataContext))
 				return null;
 
 			// Query hints (context QueryHints / one-shot NextQueryHints) are applied AND cleared by the sequential
@@ -1131,14 +1131,6 @@ namespace LinqToDB.Internal.Linq
 			// hints are pending; otherwise the hint is dropped from the eager SQL and a one-shot NextQueryHints leaks onto
 			// the next query.
 			if (dataContext.QueryHints.Count > 0 || dataContext.NextQueryHints.Count > 0)
-				return null;
-
-			// Same reason, the other piece of GetCommand-only state: DataConnection.ProcessQuery is a shipped extension
-			// point that lets a subclass rewrite the statement before render, and GetCommand is its only caller. This path
-			// renders the main query's statement and each combinable child's directly, so a subclass's rewrite would keep
-			// applying to the non-combinable children and silently stop applying to everything else. Combining steps aside
-			// for such a subclass rather than apply the rewrite to part of the load.
-			if (EagerResultEnumerable<T>.GetDataConnection(dataContext).IsProcessQueryOverridden)
 				return null;
 
 			if (!EagerResultEnumerable<T>.HasCombinable(harvesters))
@@ -1151,6 +1143,28 @@ namespace LinqToDB.Internal.Linq
 				return null;
 
 			return new EagerResultEnumerable<T>(dataContext, expressions, query, parameters, harvesters);
+		}
+
+		// The part of the combined gate that the context type and the provider decide. The query cache bucket pins both,
+		// so a build may rely on it.
+		//
+		// A ProcessQuery override is a property of the type too. ProcessQuery is a shipped extension point that lets a
+		// subclass rewrite the statement before render, and GetCommand is its only caller. The combined path renders the
+		// main query's statement and each combinable child's directly, so a subclass's rewrite would keep applying to the
+		// non-combinable children and silently stop applying to everything else. Combining steps aside for such a
+		// subclass rather than apply the rewrite to part of the load.
+		internal static bool CanCombineCommands(IDataContext dataContext)
+		{
+			var canRenderDirectly = dataContext switch
+			{
+				DataConnection dataConnection => !dataConnection.IsProcessQueryOverridden,
+				DataContext    context        => !context.IsProcessQueryOverridden,
+				_                             => false,
+			};
+
+			return canRenderDirectly
+				&& dataContext.SqlProviderFlags.IsMultiStatementBatchSupported
+				&& dataContext.SqlProviderFlags.IsMultipleResultSetsSupported;
 		}
 
 		static IResultEnumerable<T> ExecuteQuery<T>(
