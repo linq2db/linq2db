@@ -220,6 +220,202 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		[QueryCacheTest]
+		public void LambdaParameterBindingIsPartOfTheKey([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			Expression<Func<Model.Person, bool>> P(bool correlated)
+			{
+				var a = Expression.Parameter(typeof(Model.Person), "p");
+				var b = Expression.Parameter(typeof(Model.Person), "p");
+				var inner = Expression.Lambda(
+					Expression.GreaterThan(
+						Expression.Field(b, nameof(Model.Person.ID)),
+						Expression.Field(correlated ? a : b, nameof(Model.Person.ID))), b);
+				var body = Expression.Call(typeof(Queryable), nameof(Queryable.Any),
+					[typeof(Model.Person)], db.Person.Expression, Expression.Quote(inner));
+				return Expression.Lambda<Func<Model.Person, bool>>(body, a);
+			}
+
+			var uncorrelated = db.Person
+				.Where(P(false))
+				.Select(p => p.ID);
+			uncorrelated.ClearCache();
+			var missCount = uncorrelated.GetCacheMissCount();
+			uncorrelated
+				.ToArray()
+				.ShouldBeEmpty();
+			uncorrelated
+				.GetCacheMissCount()
+				.ShouldBe(missCount + 1);
+
+			var correlated = db.Person
+				.Where(P(true))
+				.Select(p => p.ID);
+			correlated
+				.ToArray()
+				.OrderBy(id => id)
+				.ToArray()
+				.ShouldBe([1, 2, 3]);
+			correlated
+				.GetCacheMissCount()
+				.ShouldBe(missCount + 2);
+
+			var correlatedAgain = db.Person
+				.Where(P(true))
+				.Select(p => p.ID);
+			correlatedAgain
+				.ToArray()
+				.Length
+				.ShouldBe(3);
+			correlatedAgain
+				.GetCacheMissCount()
+				.ShouldBe(missCount + 2);
+
+			var uncorrelatedAgain = db.Person
+				.Where(P(false))
+				.Select(p => p.ID);
+			uncorrelatedAgain
+				.ToArray()
+				.ShouldBeEmpty();
+			uncorrelatedAgain
+				.GetCacheMissCount()
+				.ShouldBe(missCount + 2);
+		}
+
+		[Test]
+		[QueryCacheTest]
+		public void CompilerLambdaParameterBindingsAndAccessors([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query(int minimumId, bool rename, bool reverse = false)
+			{
+				if (reverse)
+					return db.Person
+						.Where(p2 => db.Person.Any(p => p2.ID > p.ID) && p2.ID >= minimumId)
+						.Select(p2 => p2.ID);
+
+				if (rename)
+					return db.Person
+						.Where(p2 => db.Person.Any(p => p.ID > p2.ID) && p2.ID >= minimumId)
+						.Select(p2 => p2.ID);
+
+				return db.Person
+					.Where(p => db.Person.Any(p2 => p2.ID > p.ID) && p.ID >= minimumId)
+					.Select(p => p.ID);
+			}
+
+			var original = Query(1, false);
+			original.ClearCache();
+			var missCount = original.GetCacheMissCount();
+			original
+				.ToArray()
+				.OrderBy(id => id)
+				.ToArray()
+				.ShouldBe([1, 2, 3]);
+			original
+				.GetCacheMissCount()
+				.ShouldBe(missCount + 1);
+
+			// Swapping names preserves bindings, but the names become table aliases in the SQL, so this is a new entry.
+			var renamed = Query(2, true);
+			renamed
+				.ToArray()
+				.OrderBy(id => id)
+				.ToArray()
+				.ShouldBe([2, 3]);
+			renamed
+				.GetCacheMissCount()
+				.ShouldBe(missCount + 2);
+
+			var reversed = Query(2, true, reverse: true);
+			reversed
+				.ToArray()
+				.OrderBy(id => id)
+				.ToArray()
+				.ShouldBe([2, 3, 4]);
+			reversed
+				.GetCacheMissCount()
+				.ShouldBe(missCount + 3);
+
+			var originalAgain = Query(3, false);
+			originalAgain
+				.ToArray()
+				.OrderBy(id => id)
+				.ToArray()
+				.ShouldBe([3]);
+			originalAgain
+				.GetCacheMissCount()
+				.ShouldBe(missCount + 3);
+
+			var renamedAgain = Query(3, true);
+			renamedAgain
+				.ToArray()
+				.OrderBy(id => id)
+				.ToArray()
+				.ShouldBe([3]);
+			renamedAgain
+				.GetCacheMissCount()
+				.ShouldBe(missCount + 3);
+
+			var reversedAgain = Query(3, true, reverse: true);
+			reversedAgain
+				.ToArray()
+				.OrderBy(id => id)
+				.ToArray()
+				.ShouldBe([3, 4]);
+			reversedAgain
+				.GetCacheMissCount()
+				.ShouldBe(missCount + 3);
+		}
+
+		[Test]
+		[QueryCacheTest]
+		public void CompilerLambdaShadowingIsPartOfTheKey([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var shadowed = db.Person
+				.Where(p => db.Person.Any(p => p.ID > p.ID + 0))
+				.Select(p => p.ID);
+			shadowed.ClearCache();
+			var missCount = shadowed.GetCacheMissCount();
+			shadowed
+				.ToArray()
+				.ShouldBeEmpty();
+			shadowed
+				.GetCacheMissCount()
+				.ShouldBe(missCount + 1);
+
+			var correlated = db.Person
+				.Where(p => db.Person.Any(p2 => p2.ID > p.ID + 0))
+				.Select(p => p.ID);
+			correlated
+				.ToArray()
+				.OrderBy(id => id)
+				.ToArray()
+				.ShouldBe([1, 2, 3]);
+			correlated
+				.GetCacheMissCount()
+				.ShouldBe(missCount + 2);
+
+			long Nested(int minimumId)
+			{
+				var query = db.Person
+					.Where(p => db.Person.Any(p2 => p2.ID > p.ID) && p.ID >= minimumId)
+					.Select(p => p.ID);
+				query.ToArray();
+				return query.GetCacheMissCount();
+			}
+
+			var nestedMisses = Nested(1);
+			Nested(2).ShouldBe(nestedMisses);
+			Nested(3).ShouldBe(nestedMisses);
+		}
+
 		static int ClientSide(Sql.IQueryableContainer? container) => container == null ? 1 : 2;
 
 		// Query-cache test: provider-independent.
