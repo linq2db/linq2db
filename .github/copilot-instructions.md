@@ -38,3 +38,21 @@ When performing a code review, **comment on formatting only when it is clearly p
 - Use Shouldly for assertions in tests instead of NUnit Assert.
 - **New test code puts one call per line in a method chain**, for LINQ queries and assertion chains alike. A single call followed by an assertion (`query.ToList().ShouldBeEmpty();`) is a chain too. Prefer the query in a variable, asserted separately. Existing tests the PR does not rewrite are left as they are.
 - **A narrowed provider set is a claim.** `[DataSources]` runs every configured provider. An exclusion in `[DataSources(...)]`, or an `[IncludeDataSources(...)]` that is not a single-provider translator test, needs a `//` line above the test naming why each provider is in or out: a measured failure, or the provider-specific mechanism the test exists for. A test of a provider-independent fix (shared optimizer, evaluator or builder code) with a narrowed set and no stated reason is a finding: widen it to `[DataSources]` and let a real failure justify each exclusion. This holds in particular when a reviewer proposed the test as `[DataSources]` and the committed version narrows it.
+
+## AI Documentation Consistency
+
+The `Source/Skills/linq2db/docs/` directory contains machine-readable references consumed by AI agents. When reviewing a pull request, flag any of the following mismatches as a comment. Do not flag these if the PR already includes a matching update to the relevant document.
+
+**Provider setup and capabilities**
+
+- **`ProviderName.cs` changed** (constant added, removed, or renamed): verify `Source/Skills/linq2db/docs/provider-setup.md` `ProviderName` constants tables are up to date.
+
+- **`DataOptionsExtensions.Provider.cs` changed** (new or modified `UseXxx` method or parameter): verify `Source/Skills/linq2db/docs/provider-setup.md` method signatures and enum tables reflect the change.
+
+- **Any `*Version.cs` or `*Provider.cs` enum file changed** (value added or removed): verify the corresponding enum table in `Source/Skills/linq2db/docs/provider-setup.md` is up to date.
+
+- **`SqlProviderFlags` changed**, or a provider's SQL builder gained or lost a feature (MERGE, CTE, window functions, APPLY/LATERAL, OUTPUT/RETURNING, bulk copy, upsert): verify `Source/Skills/linq2db/docs/provider-capabilities.md` matrix row for that provider is correct.
+
+- **A translator registration changed** in `StringMemberTranslatorBase`, `MathMemberTranslatorBase`, `DateFunctionsTranslatorBase`, `ConvertMemberTranslatorDefault`, or any `*MemberTranslator*.cs` (method added, removed, or renamed): verify `Source/Skills/linq2db/docs/translatable-methods.md` reflects the change (table row added, removed, or updated).
+
+- **`DataOptionsExtensions.cs` changed** — a `UseXxx` method added, removed, or its behavior changed (connection, tracing, retry, interceptors, member translators): verify `Source/Skills/linq2db/docs/configuration.md` reflects the change.

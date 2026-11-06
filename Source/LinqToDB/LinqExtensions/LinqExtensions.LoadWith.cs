@@ -43,6 +43,22 @@ namespace LinqToDB
 		/// <param name="table">Table-like query source.</param>
 		/// <param name="selector">Association selection expression.</param>
 		/// <returns>Table-like query source.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// <para><b>LoadWith call graph:</b></para>
+		/// <code>
+		/// Queryable&lt;TEntity&gt;
+		///  ├─ LoadWith(selector)
+		///  │   └─ ILoadWithQueryable&lt;TEntity,TProperty&gt;
+		///  │       ├─ ThenLoad(...)
+		///  │       ├─ ThenLoad(..., loadFunc)
+		///  │       ├─ [add more ThenLoad links]
+		///  │       └─ Enumerate / ToList / First / ...
+		///  │           └─ executes base query + additional association queries as needed
+		///  └─ LoadWith(selector, loadFunc)
+		///      └─ same chain as above
+		/// </code>
+		/// </remarks>
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> LoadWithAsTable<T>(

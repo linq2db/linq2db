@@ -22,8 +22,77 @@ using static LinqToDB.MultiInsertExtensions;
 namespace LinqToDB
 {
 	/// <summary>
-	/// Contains extension methods for LINQ queries.
+	/// LINQ extension methods that define LinqToDB query translation directives,
+	/// SQL semantics, and command execution APIs.
 	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// <see cref="LinqExtensions"/> is the primary extension surface for LinqToDB queryables
+	/// (for example, <see cref="ITable{T}"/> and <see cref="IQueryable{T}"/>).
+	/// </para>
+	///
+	/// <para><b>API groups:</b></para>
+	/// <list type="bullet">
+	///   <item>
+	///     <description>
+	///       <b>Query translation directives</b>:
+	///       methods that annotate a query or its nodes to influence SQL semantics
+	///       without forcing immediate execution.
+	///     </description>
+	///   </item>
+	///   <item>
+	///     <description>
+	///       <b>Navigation loading directives (LoadWith)</b>:
+	///       methods that control association loading and join graph construction
+	///       (for example, eager loading via navigation paths).
+	///       These directives affect SQL semantics but do not trigger execution.
+	///     </description>
+	///   </item>
+	///   <item>
+	///     <description>
+	///       <b>Data modification APIs (DML)</b>:
+	///       methods that translate to INSERT, UPDATE, or DELETE statements
+	///       and execute immediately or on enumeration depending on the specific API.
+	///     </description>
+	///   </item>
+	///   <item>
+	///     <description>
+	///       <b>Merge APIs</b>:
+	///       methods that define conditional data modification semantics
+	///       (INSERT/UPDATE/DELETE branches) represented as a single SQL MERGE statement
+	///       when supported by the provider.
+	///     </description>
+	///   </item>
+	///   <item>
+	///     <description>
+	///       <b>Query and table hints</b>:
+	///       methods that attach provider-specific hints to queries or tables
+	///       (for example, <c>WITH (NOLOCK)</c>, index hints, join hints).
+	///       Hint syntax and applicability are provider-defined.
+	///     </description>
+	///   </item>
+	///   <item>
+	///     <description>
+	///       <b>Table configuration directives</b>:
+	///       methods that assign per-query table identifiers or other configuration
+	///       that influences how a table source is represented in SQL text.
+	///     </description>
+	///   </item>
+	///   <item>
+	///     <description>
+	///       <b>Table and query helpers</b>:
+	///       methods that build or adapt <see cref="ITable{T}"/> / <see cref="IQueryable{T}"/>
+	///       instances, or provide utility operations used by the translation and DML APIs.
+	///     </description>
+	///   </item>
+	/// </list>
+	///
+	/// <para>
+	/// <b>Provider contract:</b>
+	/// availability, supported syntax, and exact SQL semantics are defined by the configured provider.
+	/// When an API is not supported, behavior is provider-defined.
+	/// </para>
+	/// </remarks>
 	[PublicAPI]
 	public static partial class LinqExtensions
 	{
@@ -37,6 +106,9 @@ namespace LinqToDB
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="selector">Value selection expression.</param>
 		/// <returns>Requested value.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
 		[Pure]
 		public static T Select<T>(
 							this IDataContext dataContext,
@@ -67,6 +139,9 @@ namespace LinqToDB
 		/// <param name="selector">Value selection expression.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Requested value.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
 		[Pure]
 		public static async Task<T> SelectAsync<T>(
 							this IDataContext dataContext,
@@ -119,6 +194,9 @@ namespace LinqToDB
 		/// Expression supports only target table record new expression with field initializers.
 		/// Accepts updated record as parameter.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
 		public static int InsertOrUpdate<T>(
 							this ITable<T> target,
 			[InstantHandle] Expression<Func<T>> insertSetter,
@@ -153,6 +231,9 @@ namespace LinqToDB
 		/// Accepts updated record as parameter.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
 		public static Task<int> InsertOrUpdateAsync<T>(
 							this ITable<T> target,
 			[InstantHandle] Expression<Func<T>> insertSetter,
@@ -191,6 +272,9 @@ namespace LinqToDB
 		/// <param name="keySelector">Key fields selector to specify what fields and values must be used as key fields for selection between insert and update operations.
 		/// Expression supports only target table record new expression with field initializers for each key field. Assigned key field value will be used as key value by operation type selector.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
 		public static int InsertOrUpdate<T>(
 							this ITable<T> target,
 			[InstantHandle] Expression<Func<T>> insertSetter,
@@ -231,6 +315,9 @@ namespace LinqToDB
 		/// Expression supports only target table record new expression with field initializers for each key field. Assigned key field value will be used as key value by operation type selector.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
 		public static Task<int> InsertOrUpdateAsync<T>(
 							this ITable<T> target,
 			[InstantHandle] Expression<Func<T>> insertSetter,
@@ -272,6 +359,9 @@ namespace LinqToDB
 		/// Tracked by <a href="https://github.com/linq2db/linq2db/issues/798">issue</a>.
 		/// Default value: <see langword="true"/>.</param>
 		/// <returns>Number of affected records. Usually <c>-1</c> as it is not data modification operation.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
 		public static int Drop<T>(this ITable<T> target, bool throwExceptionIfNotExists = true)
 			where T : notnull
 		{
@@ -306,6 +396,9 @@ namespace LinqToDB
 		/// Default value: <see langword="true"/>.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records. Usually <c>-1</c> as it is not data modification operation.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
 		public static async Task<int> DropAsync<T>(
 			this ITable<T> target,
 			bool throwExceptionIfNotExists = true,
@@ -345,6 +438,9 @@ namespace LinqToDB
 		/// <param name="target">Truncated table.</param>
 		/// <param name="resetIdentity">Performs reset identity column.</param>
 		/// <returns>Number of affected records. Usually <c>-1</c> as it is not data modification operation.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
 		public static int Truncate<T>(this ITable<T> target, bool resetIdentity = true)
 			where T : notnull
 		{
@@ -368,6 +464,9 @@ namespace LinqToDB
 		/// <param name="resetIdentity">Performs reset identity column.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records. Usually <c>-1</c> as it is not data modification operation.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
 		public static Task<int> TruncateAsync<T>(
 			this ITable<T> target,
 			bool resetIdentity = true,
@@ -399,6 +498,9 @@ namespace LinqToDB
 		/// <param name="source">Source query.</param>
 		/// <param name="count">Expression that defines number of records to select.</param>
 		/// <returns>Query with limit applied.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[LinqTunnel]
 		[Pure]
 		public static IQueryable<TSource> Take<TSource>(
@@ -429,6 +531,9 @@ namespace LinqToDB
 		/// <param name="count">Expression that defines SQL TAKE parameter value.</param>
 		/// <param name="hints"><see cref="TakeHints"/> hints for SQL TAKE clause.</param>
 		/// <returns>Query with limit applied.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[LinqTunnel]
 		[Pure]
 		public static IQueryable<TSource> Take<TSource>(
@@ -460,6 +565,9 @@ namespace LinqToDB
 		/// <param name="count">SQL TAKE parameter value.</param>
 		/// <param name="hints"><see cref="TakeHints"/> hints for SQL TAKE clause.</param>
 		/// <returns>Query with limit applied.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[LinqTunnel]
 		[Pure]
 		public static IQueryable<TSource> Take<TSource>(
@@ -488,6 +596,9 @@ namespace LinqToDB
 		/// <param name="source">Source query.</param>
 		/// <param name="count">Expression that defines number of records to skip.</param>
 		/// <returns>Query without skipped records.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[LinqTunnel]
 		[Pure]
 		public static IQueryable<TSource> Skip<TSource>(
@@ -516,6 +627,9 @@ namespace LinqToDB
 		/// <param name="index">Expression that defines index of record to select.</param>
 		/// <exception cref="InvalidOperationException">Source query doesn't have record with specified index.</exception>
 		/// <returns>Record at specified position.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
 		[Pure]
 		public static TSource ElementAt<TSource>(
 					   this IQueryable<TSource> source,
@@ -544,6 +658,9 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <exception cref="InvalidOperationException">Source query doesn't have record with specified index.</exception>
 		/// <returns>Record at specified position.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
 		[Pure]
 		public static Task<TSource> ElementAtAsync<TSource>(
 					   this IQueryable<TSource> source,
@@ -572,6 +689,9 @@ namespace LinqToDB
 		/// <param name="source">Source query.</param>
 		/// <param name="index">Expression that defines index of record to select.</param>
 		/// <returns>Record at specified position or default value, if source query doesn't have record with such index.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
 		[Pure]
 		public static TSource ElementAtOrDefault<TSource>(
 					   this IQueryable<TSource> source,
@@ -598,6 +718,9 @@ namespace LinqToDB
 		/// <param name="index">Expression that defines index of record to select.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Record at specified position or default value, if source query doesn't have record with such index.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
 		[Pure]
 		public static Task<TSource> ElementAtOrDefaultAsync<TSource>(
 					   this IQueryable<TSource> source,
@@ -634,6 +757,9 @@ namespace LinqToDB
 		/// <param name="source">Source query to filter.</param>
 		/// <param name="predicate">Filtering expression.</param>
 		/// <returns>Filtered query.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[LinqTunnel]
 		[Pure]
 		public static IQueryable<TSource> Having<TSource>(
@@ -666,6 +792,9 @@ namespace LinqToDB
 		/// <param name="source">Source query.</param>
 		/// <param name="keySelector">Sort expression selector.</param>
 		/// <returns>Sorted query.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[LinqTunnel]
 		[Pure]
 		public static IOrderedQueryable<TSource> ThenOrBy<TSource, TKey>(
@@ -694,6 +823,9 @@ namespace LinqToDB
 		/// <param name="source">Source query.</param>
 		/// <param name="keySelector">Sort expression selector.</param>
 		/// <returns>Sorted query.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[LinqTunnel]
 		[Pure]
 		public static IOrderedQueryable<TSource> ThenOrByDescending<TSource, TKey>(
@@ -839,6 +971,9 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source query record type.</typeparam>
 		/// <param name="source">Source query.</param>
 		/// <returns>Unsorted query.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[LinqTunnel]
 		[Pure]
 		public static IQueryable<TSource> RemoveOrderBy<TSource>(this IQueryable<TSource> source)
@@ -866,6 +1001,9 @@ namespace LinqToDB
 		/// <param name="joinType">Type of join.</param>
 		/// <param name="predicate">Join predicate.</param>
 		/// <returns>Right operand.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> Join<TSource>(
@@ -900,6 +1038,9 @@ namespace LinqToDB
 		/// <param name="predicate">Join predicate.</param>
 		/// <param name="resultSelector">A function to create a result element from two matching elements.</param>
 		/// <returns>Right operand.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TResult> Join<TOuter, TInner, TResult>(
@@ -1123,6 +1264,9 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source query record type.</typeparam>
 		/// <param name="source">Source query.</param>
 		/// <returns>Common table expression.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> AsCte<TSource>(this IQueryable<TSource> source)
@@ -1146,6 +1290,9 @@ namespace LinqToDB
 		/// <param name="source">Source query.</param>
 		/// <param name="name">Common table expression name.</param>
 		/// <returns>Common table expression.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> AsCte<TSource>(
@@ -1219,6 +1366,9 @@ namespace LinqToDB
 		/// <returns>An <see cref="IQueryable{T}" /> that represents the input sequence.</returns>
 		/// <exception cref="ArgumentNullException">
 		/// <paramref name="source" /> is <see langword="null" />.</exception>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		public static IQueryable<TElement> AsQueryable<TElement>(
 			this IEnumerable<TElement> source,
 			IDataContext dataContext)
@@ -1250,6 +1400,9 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source query record type.</typeparam>
 		/// <param name="source">Source data query.</param>
 		/// <returns>Query converted into sub-query.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> AsSubQuery<TSource>(this IQueryable<TSource> source)
@@ -1295,6 +1448,9 @@ namespace LinqToDB
 		/// <param name="source">Source data query.</param>
 		/// <param name="queryName">Query name.</param>
 		/// <returns>Query converted into sub-query.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> AsSubQuery<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string queryName)
@@ -1348,6 +1504,9 @@ namespace LinqToDB
 		/// <param name="source">Source data query.</param>
 		/// <param name="queryName">Query name.</param>
 		/// <returns>Query converted into sub-query.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> QueryName<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string queryName)
@@ -1400,6 +1559,9 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source query record type.</typeparam>
 		/// <param name="source">Source data query.</param>
 		/// <returns>Query with inlined parameters.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> InlineParameters<TSource>(this IQueryable<TSource> source)
@@ -1427,6 +1589,9 @@ namespace LinqToDB
 		/// <typeparam name="TElement">The type of the values in the <see cref="IGrouping{TKey, TElement}" />.</typeparam>
 		/// <param name="grouping">Source data query.</param>
 		/// <returns>Query with suppressed grouping guard.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<IGrouping<TKey, TElement>> DisableGuard<TKey, TElement>(this IQueryable<IGrouping<TKey, TElement>> grouping)
@@ -1455,6 +1620,9 @@ namespace LinqToDB
 		/// <param name="source">Source data query.</param>
 		/// <param name="keySelector">A function to specify which fields are unique.</param>
 		/// <returns>Query converted into sub-query.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> HasUniqueKey<TSource, TKey>(
@@ -1495,6 +1663,9 @@ namespace LinqToDB
 		/// <returns>An <see cref="IQueryable{T}" /> that contains the concatenated elements of the two input sequences.</returns>
 		/// <exception cref="ArgumentNullException">
 		/// <paramref name="source1" /> or <paramref name="source2" /> is <see langword="null" />.</exception>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		public static IQueryable<TSource> UnionAll<TSource>(
 			 this IQueryable<TSource> source1,
 				  IEnumerable<TSource> source2)
@@ -1512,6 +1683,9 @@ namespace LinqToDB
 		/// <returns>An <see cref="IQueryable{T}" /> that contains the set difference of the two sequences.</returns>
 		/// <exception cref="ArgumentNullException">
 		/// <paramref name="source1" /> or <paramref name="source2" /> is <see langword="null" />.</exception>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		public static IQueryable<TSource> ExceptAll<TSource>(
 			 this IQueryable<TSource> source1,
 				  IEnumerable<TSource> source2)
@@ -1537,6 +1711,9 @@ namespace LinqToDB
 		/// <returns>A sequence that contains the set intersection of the two sequences.</returns>
 		/// <exception cref="ArgumentNullException">
 		/// <paramref name="source1" /> or <paramref name="source2" /> is <see langword="null" />.</exception>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		public static IQueryable<TSource> IntersectAll<TSource>(
 			 this IQueryable<TSource> source1,
 				  IEnumerable<TSource> source2)
@@ -1566,6 +1743,9 @@ namespace LinqToDB
 		/// <param name="source">Source query.</param>
 		/// <param name="entityTypes">Optional types with which filters should be disabled.</param>
 		/// <returns>Query with disabled filters.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[LinqTunnel]
 		[Pure]
 		public static IQueryable<TSource> IgnoreFilters<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] params Type[] entityTypes)
@@ -1665,6 +1845,9 @@ namespace LinqToDB
 		/// <param name="source">Source data query.</param>
 		/// <param name="tagValue">Tag text to be added as comment before generated query.</param>
 		/// <returns>Query with tag.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[LinqTunnel]
 		[Pure]
 		public static IQueryable<TSource> TagQuery<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string tagValue)
@@ -1694,6 +1877,9 @@ namespace LinqToDB
 		/// <param name="table">Table-like query source.</param>
 		/// <param name="tagValue">Tag text to be added as comment before generated query.</param>
 		/// <returns>Table-like query source with tag.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> TagQuery<T>(this ITable<T> table, [SqlQueryDependent] string tagValue) where T : notnull
@@ -1717,7 +1903,12 @@ namespace LinqToDB
 		/// <summary>
 		/// Convert Linq To DB query to SQL command with parameters.
 		/// </summary>
-		/// <remarks>Eager load queries currently return only SQL for main query.</remarks>
+		/// <remarks>
+		/// Eager load queries currently return only SQL for main query.
+		/// <para>
+		/// Execution is immediate and the method is terminal.
+		/// </para>
+		/// </remarks>
 		public static QuerySql ToSqlQuery<T>(this IQueryable<T> query, SqlGenerationOptions? options = null)
 		{
 			var expressionQuery = (IExpressionQuery)query.GetLinqToDBSource();
@@ -1730,6 +1921,9 @@ namespace LinqToDB
 		/// <summary>
 		/// Convert Linq To DB query to SQL command with parameters.
 		/// </summary>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
 		public static QuerySql ToSqlQuery<T>(this IUpdatable<T> query, SqlGenerationOptions? options = null)
 		{
 			var expressionQuery = (IExpressionQuery)((Updatable<T>)query).Query.GetLinqToDBSource();
@@ -1740,6 +1934,9 @@ namespace LinqToDB
 		/// <summary>
 		/// Convert Linq To DB query to SQL command with parameters.
 		/// </summary>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
 		public static QuerySql ToSqlQuery<T>(this IValueInsertable<T> query, SqlGenerationOptions? options = null)
 		{
 			var expressionQuery = (IExpressionQuery)((ValueInsertable<T>)query).Query.GetLinqToDBSource();
@@ -1750,6 +1947,9 @@ namespace LinqToDB
 		/// <summary>
 		/// Convert Linq To DB query to SQL command with parameters.
 		/// </summary>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
 		public static QuerySql ToSqlQuery<TSource, TTarget>(this ISelectInsertable<TSource, TTarget> query, SqlGenerationOptions? options = null)
 		{
 			var expressionQuery = (IExpressionQuery)((SelectInsertable<TSource, TTarget>)query).Query.GetLinqToDBSource();
@@ -1760,7 +1960,12 @@ namespace LinqToDB
 		/// <summary>
 		/// Convert Linq To DB query to SQL command with parameters.
 		/// </summary>
-		/// <remarks>Eager load queries currently return only SQL for main query.</remarks>
+		/// <remarks>
+		/// Eager load queries currently return only SQL for main query.
+		/// <para>
+		/// Execution is immediate and the method is terminal.
+		/// </para>
+		/// </remarks>
 		public static QuerySql ToSqlQuery<TSource>(this IMultiInsertInto<TSource> query, SqlGenerationOptions? options = null)
 		{
 			var expressionQuery = (IExpressionQuery)((MultiInsertQuery<TSource>)query).Query.GetLinqToDBSource();
@@ -1771,7 +1976,12 @@ namespace LinqToDB
 		/// <summary>
 		/// Convert Linq To DB query to SQL command with parameters.
 		/// </summary>
-		/// <remarks>Eager load queries currently return only SQL for main query.</remarks>
+		/// <remarks>
+		/// Eager load queries currently return only SQL for main query.
+		/// <para>
+		/// Execution is immediate and the method is terminal.
+		/// </para>
+		/// </remarks>
 		public static QuerySql ToSqlQuery<TSource>(this IMultiInsertElse<TSource> query, SqlGenerationOptions? options = null)
 		{
 			var expressionQuery = (IExpressionQuery)((MultiInsertQuery<TSource>)query).Query.GetLinqToDBSource();
@@ -1782,7 +1992,12 @@ namespace LinqToDB
 		/// <summary>
 		/// Convert Linq To DB query to SQL command with parameters.
 		/// </summary>
-		/// <remarks>Eager load queries currently return only SQL for main query.</remarks>
+		/// <remarks>
+		/// Eager load queries currently return only SQL for main query.
+		/// <para>
+		/// Execution is immediate and the method is terminal.
+		/// </para>
+		/// </remarks>
 		public static QuerySql ToSqlQuery<TSource, TTarget>(this IMergeable<TSource, TTarget> query, SqlGenerationOptions? options = null)
 		{
 			var expressionQuery = (IExpressionQuery)((MergeQuery<TSource, TTarget>)query).Query.GetLinqToDBSource();
@@ -1791,6 +2006,12 @@ namespace LinqToDB
 		}
 		#endregion
 
+		/// <summary>
+		/// Executes aggregate expression against source query.
+		/// </summary>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
 		[Pure]
 		public static TResult AggregateExecute<TSource, TResult>(this IQueryable<TSource> source, Expression<Func<IEnumerable<TSource>, TResult>> aggregate)
 		{
@@ -1806,6 +2027,12 @@ namespace LinqToDB
 			return currentSource.Provider.Execute<TResult>(expr);
 		}
 
+		/// <summary>
+		/// Executes aggregate expression against source query asynchronously.
+		/// </summary>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
 		[Pure]
 		public static Task<TResult> AggregateExecuteAsync<TSource, TResult>(this IQueryable<TSource> source, Expression<Func<IEnumerable<TSource>, TResult>> aggregate, CancellationToken cancellationToken = default)
 		{

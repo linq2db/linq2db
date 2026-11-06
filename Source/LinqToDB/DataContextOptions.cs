@@ -11,6 +11,15 @@ using LinqToDB.Remote;
 
 namespace LinqToDB
 {
+	/// <summary>
+	/// Defines per-context execution and translation options applied to <see cref="DataConnection"/>,
+	/// <see cref="DataContext"/>, and remote contexts.
+	/// </summary>
+	/// <remarks>
+	/// Use <see cref="DataOptions"/> and <c>Use...</c> extension methods to compose stable reusable
+	/// configuration. Use <see cref="IDataContext.UseOptions"/> only for scoped temporary overrides
+	/// on an existing context instance.
+	/// </remarks>
 	/// <param name="CommandTimeout">
 	/// The command timeout in seconds, or <see langword="null"/> if none has been set.
 	/// Negative timeout value means that default timeout will be used.
@@ -19,6 +28,9 @@ namespace LinqToDB
 	/// </param>
 	/// <param name="Interceptors">
 	/// Gets Interceptors to use with <see cref="DataConnection"/> instance.
+	/// </param>
+	/// <param name="MemberTranslators">
+	/// Gets custom member translators used during expression translation.
 	/// </param>
 	public sealed record DataContextOptions
 	(

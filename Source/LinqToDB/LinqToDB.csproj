@@ -8,10 +8,14 @@
 		<Title>LINQ to DB</Title>
 		<Description>LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.</Description>
 		<Product>$(Title)</Product>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
 	
 	<ItemGroup Label="Nuget">
-		<None Include="readme.md" Pack="true" PackagePath="readme.md" />
+		<None Include="README.md" Pack="true" PackagePath="README.md" />
+		<None Include="..\Skills\linq2db\**\*.md" Pack="true" PackagePath="skills/linq2db/%(RecursiveDir)%(Filename)%(Extension)" />
+		<!-- the skill of the linq2db.cli tool is a single file kept next to the tool; packed here so that dotnet-package-skills installs both skills -->
+		<None Include="..\LinqToDB.CLI\SKILL.md" Pack="true" PackagePath="skills/linq2db-cli/SKILL.md" />
 	</ItemGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug' OR '$(Configuration)'=='Testing' OR '$(Configuration)'=='Azure'">

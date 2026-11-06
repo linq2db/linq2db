@@ -20,6 +20,9 @@ namespace LinqToDB.DataProvider.Access
 
 		#region AccessSpecific Hints
 
+		/// <summary>
+		/// Adds an Access <c>WITH OWNERACCESS OPTION</c> subquery hint.
+		/// </summary>
 		[ExpressionMethod(nameof(WithOwnerAccessOptionImpl))]
 		public static IAccessSpecificQueryable<TSource> WithOwnerAccessOption<TSource>(this IAccessSpecificQueryable<TSource> query)
 			where TSource : notnull
