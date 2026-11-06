@@ -114,6 +114,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("multi-threading")]
 		public void SchemaProvider_TableDroppedConcurrently([IncludeDataSources(TestProvName.AllYdb)] string context)
 		{
 			// Every schema step lists the tables first and then describes each one. Tables dropped by another
