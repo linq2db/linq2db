@@ -209,7 +209,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 							{
 								var resolved = ResolveCompiledQueryArguments(newArgument);
 
-								if (!ReferenceEquals(resolved, newArgument) && IsCompilable(resolved))
+								if (!ReferenceEquals(resolved, newArgument) && IsCompilableArgument(resolved))
 								{
 									RecordMaterializedArgumentSlots(newArgument);
 
@@ -457,15 +457,26 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			});
 		}
 
-		// Substitutes the compiled query's argument array with its values, so an expression reading them can be
+		// Substitutes the compiled query's arguments with their values, so an expression reading them can be
 		// evaluated. Returns the expression unchanged when it reads nothing from the array.
+		// Slot by slot: a delegate compiled from the result is cached, and the whole array would keep the first
+		// caller's data context alive.
 		Expression ResolveCompiledQueryArguments(Expression expression)
 		{
 			if (_parameterValues == null)
 				return expression;
 
 			return expression.Transform(_parameterValues, static (values, e) =>
-				e == ExpressionBuilder.ParametersParam ? Expression.Constant(values, e.Type) : e)!;
+			{
+				if (e is BinaryExpression { NodeType: ExpressionType.ArrayIndex, Right: ConstantExpression { Value: int idx } } arrayIndex
+					&& arrayIndex.Left == ExpressionBuilder.ParametersParam
+					&& idx >= 0 && idx < values.Length)
+				{
+					return Expression.Constant(values[idx], arrayIndex.Type);
+				}
+
+				return e == ExpressionBuilder.ParametersParam ? Expression.Constant(values, e.Type) : e;
+			})!;
 		}
 
 		// Recognises the shape CompileQuery leaves for a compiled query's own parameters - Convert(ps[i], T) -
@@ -857,6 +868,13 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			using var visitor = _isCompilableVisitorPool.Allocate();
 			return visitor.Value.CanBeEvaluatedOnClient(expression, _optimizationContext);
 		}
+
+		// A delegate argument evaluates to the delegate, so only what its body reads besides its own parameters has to be
+		// client-side.
+		bool IsCompilableArgument(Expression expression)
+			=> expression is LambdaExpression lambda
+				? IsCompilable(lambda.Parameters.Aggregate(lambda.Body, static (body, p) => body.Replace(p, Expression.Default(p.Type))))
+				: IsCompilable(expression);
 
 		interface IConvertHelper
 		{
