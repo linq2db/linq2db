@@ -503,6 +503,141 @@ namespace Tests.Linq
 			table.Where(k => k.ToDelete <= TestData.NonReadonlyDateTime).ToList();
 		}
 
+		// Both sides are known on each run, so the comparison folds by the parameter's value. On SQLite it has to fold before
+		// the date comparison is rewritten through strftime, which can no longer be evaluated.
+		[Test]
+		public void DateTimeConstantComparedWithParameterFoldsPerValue([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var date  = TestData.DateTime0.AddDays(1);
+			var query = db.Person
+				.Where(p => Sql.AsSql(TestData.DateTime0) <= date);
+
+			AssertQuery(query);
+			var whenTrue = query.ToSqlQuery();
+
+			date = TestData.DateTime0.AddDays(-1);
+
+			var whenFalseRows = query.ToList();
+			var whenFalse     = query.ToSqlQuery();
+
+			whenFalseRows.ShouldBeEmpty();
+			whenTrue     .Parameters.ShouldBeEmpty();
+			whenFalse    .Parameters.ShouldBeEmpty();
+		}
+
+		// SQLite only, direct and remote: the three tests below pin the shared evaluator behind both folds, which no provider
+		// overrides for an ordering comparison; before the fix they were red alike on every provider.
+		[Test]
+		public void NegatedConstantComparedWithNullDateParameter([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			DateTime? date = null;
+
+			var query = db.Person
+				.Where(p => !(Sql.AsSql((DateTime?)TestData.DateTime0) <= date));
+
+			AssertQuery(query);
+
+			date = TestData.DateTime0.AddDays(1);
+
+			AssertQuery(query);
+
+			date = null;
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void NegatedConstantComparedWithNullIntParameter([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			int? value = null;
+
+			var query = db.Person
+				.Where(p => !(Sql.AsSql((int?)1) > value));
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void NegatedConstantComparedWithNullParameterUnderLikeSql([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context, o => o.UseCompareNulls(CompareNulls.LikeSql));
+
+			int? value = null;
+
+			var query = db.Person
+				.Where(p => !(Sql.AsSql((int?)1) > value));
+
+			query
+				.ToList()
+				.ShouldBeEmpty();
+
+			value = 0;
+
+			query
+				.ToList()
+				.ShouldBeEmpty();
+
+			value = 2;
+
+			query
+				.ToList()
+				.Count
+				.ShouldBe(db.Person.Count());
+		}
+
+		[ActiveIssue(6256, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}[2, 3, 4]{1}but was")]
+		[Test]
+		public void NegatedComparisonWithNullParameterInsideNotUnderLikeSql([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context, o => o.UseCompareNulls(CompareNulls.LikeSql));
+
+			int? value = null;
+
+			var expected = db.Person
+				.Select(p => p.ID)
+				.Where(id => id != 1)
+				.OrderBy(id => id)
+				.ToArray();
+
+			// the un-simplified negation is the shape under test
+#pragma warning disable MA0213 // Simplify negated boolean expression
+			db.Person
+				.Where(p => !(!(Sql.AsSql((int?)1) > value) && p.ID == 1))
+#pragma warning restore MA0213
+				.Select(p => p.ID)
+				.OrderBy(id => id)
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
+		[ActiveIssue(6256, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}[2, 3, 4]{1}but was")]
+		[Test]
+		public void ComparisonWithNullParameterInsideNotUnderLikeSql([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context, o => o.UseCompareNulls(CompareNulls.LikeSql));
+
+			int? value = null;
+
+			var expected = db.Person
+				.Select(p => p.ID)
+				.Where(id => id != 1)
+				.OrderBy(id => id)
+				.ToArray();
+
+			db.Person
+				.Where(p => !(Sql.AsSql((int?)1) > value && p.ID == 1))
+				.Select(p => p.ID)
+				.OrderBy(id => id)
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
 		[Table]
 		sealed class TestEqualsTable1
 		{
@@ -1878,6 +2013,93 @@ namespace Tests.Linq
 
 				Assert.That(record.Value, Is.EqualTo(!value));
 			}
+		}
+
+		[Test]
+		public void NullableComparisonAsSetValue([DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var data = new[]
+			{
+				new TestBool { Id = 1, Value = null  },
+				new TestBool { Id = 2, Value = false },
+				new TestBool { Id = 3, Value = true  },
+			};
+
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(data);
+
+			// C# reads NULL != true as true, so the stored value must not be NULL
+			tb.Update(r => new TestBool()
+			{
+				Value = r.Value != true
+			});
+
+			tb
+				.OrderBy(r => r.Id)
+				.Select(r => r.Value)
+				.ToArray()
+				.ShouldBe(new bool?[] { true, true, false });
+		}
+
+		[Test]
+		public void NullableComparisonAsConditionalSetValue([DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var data = new[]
+			{
+				new TestBool { Id = 1, Value = null  },
+				new TestBool { Id = 2, Value = false },
+				new TestBool { Id = 3, Value = true  },
+			};
+
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(data);
+
+			// the comparison is a result of the conditional, so it is folded there, not by the SET slot
+			tb.Update(r => new TestBool()
+			{
+				Value = r.Id > 0 ? r.Value != true : null
+			});
+
+			tb
+				.OrderBy(r => r.Id)
+				.Select(r => r.Value)
+				.ToArray()
+				.ShouldBe(new bool?[] { true, true, false });
+		}
+
+		[Table]
+		sealed class SetFlagTable
+		{
+			[PrimaryKey] public int   Id { get; set; }
+			[Column    ] public bool? F  { get; set; }
+			[Column    ] public int?  A  { get; set; }
+			[Column    ] public int?  B  { get; set; }
+			[Column    ] public int?  C  { get; set; }
+		}
+
+		[Test]
+		public void NullableComparisonAsConditionalElseSetValue([DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var data = new[]
+			{
+				new SetFlagTable { Id = 1, F = true,  A = 1,    B = 1,    C = null },
+				new SetFlagTable { Id = 2, F = true,  A = 1,    B = 2,    C = 1    },
+				new SetFlagTable { Id = 3, F = null,  A = null, B = 1,    C = 1    },
+				new SetFlagTable { Id = 4, F = null,  A = null, B = null, C = 1    },
+			};
+
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(data);
+
+			tb
+				.Set(r => r.F, r => r.C == null ? r.F : r.A == r.B)
+				.Update();
+
+			tb
+				.OrderBy(r => r.Id)
+				.Select(r => r.F)
+				.ToArray()
+				.ShouldBe(new bool?[] { true, false, false, true });
 		}
 
 		[ActiveIssue(ErrorTypeName = "System.NullReferenceException", ErrorMessage = "Object reference not set to an instance of an object.",
