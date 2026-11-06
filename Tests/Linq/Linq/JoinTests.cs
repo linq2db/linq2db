@@ -3492,5 +3492,68 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
+
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllAccess, TestProvName.AllFirebirdLess3, TestProvName.AllMySql57, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6208")]
+		public void OuterApplyTakeWithInnerJoinKeepsUnmatchedRows([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from c in db.Child
+				from x in (
+					from g in db.GrandChild
+						.Where(g => g.ChildID == c.ChildID)
+						.OrderBy(g => g.GrandChildID)
+						.Take(1)
+					join p in db.Parent on g.ParentID equals (int?)p.ParentID
+					select p
+				).DefaultIfEmpty()
+				select new
+				{
+					c.ChildID,
+					ParentID = x == null ? (int?)null : x.ParentID,
+				};
+
+			AssertQuery(query);
+		}
+
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllAccess, TestProvName.AllFirebirdLess3, TestProvName.AllMySql57, TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllOracle11], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllClickHouse, ProviderName.Ydb], ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative, ErrorMessage = "nested LATERAL")]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, ErrorMessage = "nested LATERAL")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6208")]
+		public void NestedOuterApplyTakeWithInnerJoinKeepsUnmatchedRows([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from c in db.Child
+				from x in (
+					from g in db.GrandChild
+						.Where(g => g.ChildID == c.ChildID)
+						.OrderBy(g => g.GrandChildID)
+						.Take(1)
+					join p in db.Parent on g.ParentID equals (int?)p.ParentID
+					from ch in db.Child
+						.Where(ch => ch.ParentID == p.ParentID && ch.ChildID != c.ChildID)
+						.OrderBy(ch => ch.ChildID)
+						.Take(1)
+						.DefaultIfEmpty()
+					select new
+					{
+						p.ParentID,
+						OtherChildID = ch == null ? (int?)null : ch.ChildID,
+					}
+				).DefaultIfEmpty()
+				select new
+				{
+					c.ChildID,
+					ParentID     = x == null ? (int?)null : x.ParentID,
+					OtherChildID = x == null ? null       : x.OtherChildID,
+				};
+
+			AssertQuery(query);
+		}
 	}
 }

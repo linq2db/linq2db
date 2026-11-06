@@ -51,7 +51,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Retries_JitterCodes([Values(
 			"Aborted", "Undetermined",
-			"Unavailable", "ClientTransportUnknown", "ClientTransportUnavailable",
+			"Unavailable", "ClientTransportUnknown", "ClientTransportUnavailable", "ClientTransportCancelled",
 			"Overloaded", "ClientTransportResourceExhausted")] string code)
 		{
 			Assert.That(RunCount(Policy(enableRetryIdempotence: true), YdbEx(code)), Is.EqualTo(MaxAttempts));
