@@ -25,6 +25,10 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		protected override ConcatBuildStyle ConcatStyle => ConcatBuildStyle.Pipes;
 
+		// Firebird binds `||` tighter than every arithmetic operator, unary minus included
+		protected override int GetPrecedence(ISqlExpression expr)
+			=> expr is SqlConcatExpression ? Precedence.Unary + 1 : base.GetPrecedence(expr);
+
 		public FirebirdSqlBuilder(IDataProvider provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
@@ -669,7 +673,11 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				if (typeRequired)
 					StringBuilder.Append("CAST(");
 
-				BuildExpression(value);
+				// the dropped CAST was a primary expression, so the bare operand keeps that precedence
+				if (typeRequired)
+					BuildExpression(value);
+				else
+					BuildExpression(Precedence.Primary, value);
 
 				if (typeRequired)
 				{
