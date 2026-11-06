@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Internal.Common;
@@ -403,6 +405,656 @@ namespace Tests.Linq
 				.OrderBy(r => r.ParentID);
 
 			AssertQuery(query);
+		}
+
+		// The correlated DISTINCT derived table is refused where the provider limits correlation depth,
+		// and reaches the server on Sybase (#6166).
+		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllOracle11, TestProvName.AllMySql57, TestProvName.AllMariaDB, TestProvName.AllDB2)]
+		[ThrowsRequiresCorrelatedSubquery]
+		[ActiveIssue(6166, Configuration = TestProvName.AllSybase, ErrorMessage = "does not match with a table name or alias name")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6035")]
+		public void DistinctCountOfAnonymousInCorrelatedSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				orderby p.ParentID
+				select new
+				{
+					p.ParentID,
+					Cnt = db.GrandChild
+						.Where(g => g.ParentID == p.ParentID)
+						.Select(g => new { g.ChildID })
+						.Distinct()
+						.Count(x => x.ChildID != null),
+				};
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllOracle11, TestProvName.AllMySql57, TestProvName.AllMariaDB, TestProvName.AllDB2)]
+		[ThrowsRequiresCorrelatedSubquery]
+		[ActiveIssue(6166, Configuration = TestProvName.AllSybase, ErrorMessage = "does not match with a table name or alias name")]
+		[Test]
+		public void DistinctCountWithPredicateInCorrelatedSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				orderby p.ParentID
+				select new
+				{
+					p.ParentID,
+					Anonymous = db.GrandChild
+						.Where(g => g.ParentID == p.ParentID)
+						.Select(g => new { g.ChildID })
+						.Distinct()
+						.Count(x => x.ChildID > 20),
+					Scalar = db.GrandChild
+						.Where(g => g.ParentID == p.ParentID)
+						.Select(g => g.ChildID)
+						.Distinct()
+						.Count(x => x > 20),
+				};
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllOracle11, TestProvName.AllMySql57, TestProvName.AllMariaDB, TestProvName.AllDB2)]
+		[ThrowsRequiresCorrelatedSubquery]
+		[ActiveIssue(6166, Configuration = TestProvName.AllSybase, ErrorMessage = "does not match with a table name or alias name")]
+		[Test]
+		public void DistinctCountAfterWhereInCorrelatedSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				orderby p.ParentID
+				select new
+				{
+					p.ParentID,
+					Anonymous = db.GrandChild
+						.Where(g => g.ParentID == p.ParentID)
+						.Select(g => new { g.ChildID })
+						.Distinct()
+						.Where(x => x.ChildID > 20)
+						.Count(),
+					Scalar = db.GrandChild
+						.Where(g => g.ParentID == p.ParentID)
+						.Select(g => g.ChildID)
+						.Distinct()
+						.Where(x => x > 20)
+						.Count(),
+				};
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllOracle11, TestProvName.AllMySql57, TestProvName.AllMariaDB, TestProvName.AllDB2)]
+		[ThrowsRequiresCorrelatedSubquery]
+		[ActiveIssue(6166, Configuration = TestProvName.AllSybase, ErrorMessage = "does not match with a table name or alias name")]
+		[Test]
+		public void DistinctCountOfMultiMemberAnonymousInCorrelatedSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				orderby p.ParentID
+				select new
+				{
+					p.ParentID,
+					Count = db.GrandChild
+						.Where(g => g.ParentID == p.ParentID)
+						.Select(g => new { g.ChildID })
+						.Distinct()
+						.Count(),
+					LongCount = db.GrandChild
+						.Where(g => g.ParentID == p.ParentID)
+						.Select(g => new { g.ParentID, g.ChildID })
+						.Distinct()
+						.LongCount(),
+				};
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllOracle11, TestProvName.AllMySql57, TestProvName.AllMariaDB, TestProvName.AllDB2)]
+		[ThrowsRequiresCorrelatedSubquery]
+		[ActiveIssue(6166, Configuration = TestProvName.AllSybase, ErrorMessage = "does not match with a table name or alias name")]
+		[Test]
+		public void DistinctSumAfterWhereInCorrelatedSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				orderby p.ParentID
+				select new
+				{
+					p.ParentID,
+					Sum = db.GrandChild
+						.Where(g => g.ParentID == p.ParentID)
+						.Select(g => g.ChildID ?? 0)
+						.Distinct()
+						.Where(x => x > 20)
+						.Sum(),
+				};
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllOracle11, TestProvName.AllMySql57, TestProvName.AllMariaDB, TestProvName.AllDB2)]
+		[ThrowsRequiresCorrelatedSubquery]
+		[ActiveIssue(6166, Configuration = TestProvName.AllSybase, ErrorMessage = "does not match with a table name or alias name")]
+		[Test]
+		public void DistinctCountInCorrelatedPredicate([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				where db.GrandChild
+					.Where(g => g.ParentID == p.ParentID)
+					.Select(g => new { g.ChildID })
+					.Distinct()
+					.Count(x => x.ChildID > 20) > 1
+				orderby p.ParentID
+				select p.ParentID;
+
+			AssertQuery(query, EqualityComparer<int>.Default);
+		}
+
+		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllOracle11, TestProvName.AllMySql57, TestProvName.AllMariaDB, TestProvName.AllDB2)]
+		[ThrowsRequiresCorrelatedSubquery]
+		[ActiveIssue(6166, Configuration = TestProvName.AllSybase, ErrorMessage = "does not match with a table name or alias name")]
+		[Test]
+		public void DistinctCountOverAssociation([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent.LoadWith(p => p.Children) // for AssertQuery
+				orderby p.ParentID
+				select new
+				{
+					p.ParentID,
+					Anonymous = p.Children
+						.Select(c => new { c.ChildID })
+						.Distinct()
+						.Count(),
+					WithPredicate = p.Children
+						.Select(c => c.ChildID)
+						.Distinct()
+						.Count(x => x > 20),
+					AfterWhere = p.Children
+						.Select(c => c.ChildID)
+						.Distinct()
+						.Where(x => x > 20)
+						.Count(),
+				};
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllOracle11, TestProvName.AllMySql57, TestProvName.AllMariaDB, TestProvName.AllDB2)]
+		[ThrowsRequiresCorrelatedSubquery]
+		[ActiveIssue(6166, Configuration = TestProvName.AllSybase, ErrorMessage = "does not match with a table name or alias name")]
+		[ActiveIssue(6175, Configuration = TestProvName.AllOracle12, ErrorMessage = "<> { Key = 1, Anonymous = 8, Entity = 22 }")]
+		[Test]
+		public void DistinctCountOfAnonymousInGroup([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from g in db.GrandChild
+				group g by g.ParentID into grp
+				orderby grp.Key
+				select new
+				{
+					grp.Key,
+					Anonymous = grp
+						.Select(x => new { x.ChildID })
+						.Distinct()
+						.Count(),
+					Entity = grp
+						.Distinct()
+						.Count(),
+				};
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllOracle11, TestProvName.AllMySql57, TestProvName.AllMariaDB, TestProvName.AllDB2)]
+		[ThrowsRequiresCorrelatedSubquery]
+		[ActiveIssue(6166, Configuration = TestProvName.AllSybase, ErrorMessage = "does not match with a table name or alias name")]
+		[ActiveIssue(6175, Configuration = TestProvName.AllOracle12, ErrorMessage = "Expected: property Count equal to 3")]
+		[Test]
+		public void DistinctCountOfAnonymousInHaving([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from g in db.GrandChild
+				group g by g.ParentID into grp
+				where grp
+					.Select(x => new { x.ChildID })
+					.Distinct()
+					.Count() > 1
+				orderby grp.Key
+				select grp.Key;
+
+			AssertQuery(query, EqualityComparer<int?>.Default);
+		}
+
+		// Grouped: a non-outermost Distinct keeps the eager-load fallback, so providers that refuse
+		// the correlated derived table still answer it; Access refuses the grouped form either way.
+		[ThrowsCannotBeConverted(TestProvName.AllAccess)]
+		[Test]
+		public void DistinctCountAfterWhereInGroup([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from g in db.GrandChild
+				group g by g.ParentID into grp
+				orderby grp.Key
+				select new
+				{
+					grp.Key,
+					Scalar = grp
+						.Select(x => x.ChildID)
+						.Distinct()
+						.Where(x => x > 20)
+						.Count(),
+					Anonymous = grp
+						.Select(x => new { x.ChildID })
+						.Distinct()
+						.Where(x => x.ChildID > 20)
+						.Count(),
+				};
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted(TestProvName.AllOracle11, TestProvName.AllMySql57, TestProvName.AllMariaDB, TestProvName.AllDB2)]
+		[ThrowsRequiresCorrelatedSubquery]
+		[ActiveIssue(6173, Configuration = TestProvName.AllPostgreSQL93Minus, ErrorMessage = "syntax error at or near")]
+		[Test]
+		public void DistinctStringJoinAfterWhereInCorrelatedSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				orderby p.ParentID
+				select new
+				{
+					p.ParentID,
+					Ids = string.Join(
+						",",
+						db.Child
+							.Where(c => c.ParentID == p.ParentID)
+							.Select(c => c.ChildID.ToString())
+							.Distinct()
+							.Where(x => x != "11")),
+				};
+
+			var expected =
+				from p in Parent
+				orderby p.ParentID
+				select new
+				{
+					p.ParentID,
+					Ids = Child
+						.Where(c => c.ParentID == p.ParentID)
+						.Select(c => c.ChildID.ToString())
+						.Distinct()
+						.Where(x => x != "11")
+						.OrderBy(x => x)
+						.ToArray(),
+				};
+
+			// SQL gives no order for the joined values; compare them sorted.
+			var actual =
+				from r in query.ToList()
+				select new
+				{
+					r.ParentID,
+					Ids = (r.Ids ?? "")
+						.Split(',')
+						.Where(x => x.Length > 0)
+						.OrderBy(x => x)
+						.ToArray(),
+				};
+
+			actual
+				.Select(r => r.ParentID + ":" + string.Join(",", r.Ids))
+				.ShouldBe(expected.Select(r => r.ParentID + ":" + string.Join(",", r.Ids)));
+		}
+
+		[ThrowsCannotBeConverted(TestProvName.AllAccess)]
+		[ThrowsRequiresCorrelatedSubquery]
+		[Test]
+		public void DistinctCountOfScalarInCorrelatedSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				orderby p.ParentID
+				select new
+				{
+					p.ParentID,
+					Cnt = db.GrandChild
+						.Where(g => g.ParentID == p.ParentID)
+						.Select(g => g.ChildID)
+						.Distinct()
+						.Count(),
+				};
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllOracle11, TestProvName.AllMySql57, TestProvName.AllMariaDB, TestProvName.AllDB2)]
+		[ThrowsRequiresCorrelatedSubquery]
+		[ActiveIssue(6166, Configuration = TestProvName.AllSybase, ErrorMessage = "does not match with a table name or alias name")]
+		[Test]
+		public void DistinctCountWithNullsInCorrelatedSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				orderby p.ParentID
+				select new
+				{
+					p.ParentID,
+					Anonymous = db.Parent
+						.Where(x => x.ParentID <= p.ParentID)
+						.Select(x => new { x.Value1 })
+						.Distinct()
+						.Count(),
+					AfterWhere = db.Parent
+						.Where(x => x.ParentID <= p.ParentID)
+						.Select(x => x.Value1)
+						.Distinct()
+						.Where(v => v != 1)
+						.Count(),
+				};
+
+			AssertQuery(query);
+		}
+
+		static int LastDigit(int? value) => value.GetValueOrDefault() % 10;
+
+		static string Label(int value) => "#" + value;
+
+		// A SQL DISTINCT has no column for a client-side value, so the sub-query is refused and the
+		// eager-load fallback takes over.
+		[ActiveIssue(5787, ErrorMessage = "There is no method 'AggregateExecute'")]
+		[ActiveIssue(5787, Configuration = TestProvName.AllYdb, SkipForLinqService = true, ErrorMessage = "Transaction is broken")]
+		[Test]
+		public void DistinctCountOfClientOnlyValueInCorrelatedSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				orderby p.ParentID
+				select new
+				{
+					p.ParentID,
+					Anonymous = db.GrandChild
+						.Where(g => g.ParentID == p.ParentID)
+						.Select(g => new { V = LastDigit(g.GrandChildID) })
+						.Distinct()
+						.Count(),
+					Scalar = db.GrandChild
+						.Where(g => g.ParentID == p.ParentID)
+						.Select(g => LastDigit(g.GrandChildID))
+						.Distinct()
+						.Count(),
+				};
+
+			AssertQuery(query);
+		}
+
+		[ActiveIssue(5787, ErrorMessage = "There is no method 'AggregateExecute'")]
+		[ActiveIssue(5787, Configuration = TestProvName.AllYdb, SkipForLinqService = true, ErrorMessage = "Transaction is broken")]
+		[Test]
+		public void DistinctCountOfClientOnlyValueInGroup([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from g in db.GrandChild
+				group g by g.ParentID into grp
+				orderby grp.Key
+				select new
+				{
+					grp.Key,
+					Cnt = grp
+						.Select(x => new { V = LastDigit(x.GrandChildID) })
+						.Distinct()
+						.Count(),
+				};
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void DistinctCountOfClientOnlyValueRefuses([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			Action anonymous = () => _ = db.Child
+				.Select(c => new { V = LastDigit(c.ChildID) })
+				.Distinct()
+				.Count();
+
+			Action scalar = () => _ = db.Child
+				.Select(c => LastDigit(c.ChildID))
+				.Distinct()
+				.Count();
+
+			Action afterTake = () => _ = db.Child
+				.Select(c => LastDigit(c.ChildID))
+				.Distinct()
+				.Take(100)
+				.Count();
+
+			anonymous
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain("could not be converted to SQL.");
+
+			scalar
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain("could not be converted to SQL.");
+
+			afterTake
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain("could not be converted to SQL.");
+		}
+
+		[Test]
+		public void DistinctOfClientOnlyValueMaterializes([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Child
+				.Select(c => new { c.ParentID, Name = Label(c.ChildID) })
+				.Distinct();
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void DistinctCountOfMemberAndItsClientValue([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Child
+				.Select(c => new { c.ChildID, Name = Label(c.ChildID) })
+				.Distinct();
+
+			var expected = Child
+				.Select(c => new { c.ChildID, Name = Label(c.ChildID) })
+				.Distinct()
+				.ToList();
+
+			query
+				.Count()
+				.ShouldBe(expected.Count);
+
+			query
+				.Where(x => x.ChildID > 20)
+				.Count()
+				.ShouldBe(expected.Count(x => x.ChildID > 20));
+
+			query
+				.Max(x => x.ChildID)
+				.ShouldBe(expected.Max(x => x.ChildID));
+		}
+
+		[Test]
+		public void DistinctCountOfMemberAndItsClientValueBelowWrapper([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var expected = Child
+				.Select(c => new { c.ChildID, Name = Label(c.ChildID) })
+				.Distinct()
+				.Count();
+
+			db.Child
+				.Select(c => new { c.ChildID, Name = Label(c.ChildID) })
+				.OrderBy(x => x.ChildID)
+				.Distinct()
+				.Count()
+				.ShouldBe(expected);
+
+			db.Child
+				.Select(c => new { c.ChildID, Name = Label(c.ChildID) })
+				.Take(100)
+				.Distinct()
+				.Count()
+				.ShouldBe(expected);
+		}
+
+		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllOracle11, TestProvName.AllMySql57, TestProvName.AllMariaDB, TestProvName.AllDB2)]
+		[ThrowsRequiresCorrelatedSubquery]
+		[ActiveIssue(6166, Configuration = TestProvName.AllSybase, ErrorMessage = "does not match with a table name or alias name")]
+		[Test]
+		public void DistinctCountOfMemberAndItsClientValueInCorrelatedSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				orderby p.ParentID
+				select new
+				{
+					p.ParentID,
+					Count = db.Child
+						.Where(c => c.ParentID == p.ParentID)
+						.Select(c => new { c.ChildID, Name = Label(c.ChildID) })
+						.Distinct()
+						.Count(),
+				};
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllOracle11, TestProvName.AllMySql57, TestProvName.AllMariaDB, TestProvName.AllDB2)]
+		[ThrowsRequiresCorrelatedSubquery]
+		[ActiveIssue(6166, Configuration = TestProvName.AllSybase, ErrorMessage = "does not match with a table name or alias name")]
+		[Test]
+		public void DistinctCountOfMemberAndItsClientValueInGroup([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from c in db.Child
+				group c by c.ParentID into g
+				orderby g.Key
+				select new
+				{
+					g.Key,
+					Count = g
+						.Select(x => new { x.ChildID, Name = Label(x.ChildID) })
+						.Distinct()
+						.Count(),
+				};
+
+			AssertQuery(query);
+		}
+
+		static string Label(int first, int second) => first + "#" + second;
+
+		[Test]
+		public void DistinctCountOfClientValueOverOtherColumnRefuses([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			Action count = () => _ = db.Child
+				.Select(c => new { c.ParentID, Name = Label(c.ChildID) })
+				.Distinct()
+				.Count();
+
+			Action sum = () => _ = db.Child
+				.Select(c => new { c.ParentID, Name = Label(c.ChildID) })
+				.Distinct()
+				.Sum(x => x.ParentID);
+
+			Action partialInputs = () => _ = db.Child
+				.Select(c => new { c.ParentID, Name = Label(c.ParentID, c.ChildID) })
+				.Distinct()
+				.Count();
+
+			Action associationKey = () => _ = db.Parent
+				.Select(p => new { p.Value1, Kids = p.Children.Select(c => c.ChildID).ToList() })
+				.Distinct()
+				.Count();
+
+			count
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain("Label(");
+
+			sum
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain("Label(");
+
+			partialInputs
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain("Label(");
+
+			associationKey
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain("Children");
+		}
+
+		[Test]
+		public void DistinctCountOfMemberAndEagerLoad([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var count = db.Parent
+				.Select(p => new { p.ParentID, Kids = p.Children.Select(c => c.ChildID).ToList() })
+				.Distinct()
+				.Count();
+
+			count.ShouldBe(Parent.Select(p => p.ParentID).Distinct().Count());
 		}
 
 		[Test]
