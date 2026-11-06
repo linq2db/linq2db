@@ -104,7 +104,8 @@ namespace Tests.UserTests
 			var sourcesCount = QueryHelper.EnumerateAccessibleSources(query.GetSelectQuery()).Count(s => s.ElementType == QueryElementType.SqlQuery);
 
 			// YDB has no correlated-subquery support (SqlProviderFlags.IsSupportedSimpleCorrelatedSubqueries is
-			// false), so the optimizer cannot collapse these into the flat shape the other providers reach.
+			// false), so the optimizer cannot collapse these into the flat shape the other providers reach; one more
+			// wraps a LEFT JOIN predicate, as IsComplexJoinConditionSupported is false.
 			Assert.That(sourcesCount, Is.LessThanOrEqualTo(context.IsAnyOf(TestProvName.AllYdb) ? 6 : 2));
 		}
 	}
