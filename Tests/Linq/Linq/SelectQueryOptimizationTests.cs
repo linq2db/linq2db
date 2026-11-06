@@ -732,6 +732,97 @@ namespace Tests.Linq
 			visitor.FirstIterationPassesExecuted.ShouldBe(visitor.FirstIterationPassesReached);
 			visitor.LaterIterationPassesExecuted.ShouldBe(0);
 		}
+
+		// FROM (FROM (FROM Child c JOIN Parent p) s1 JOIN Parent p1) s2 JOIN Parent p2 ... — the self-join chain shape.
+		// A finalized statement is already flattened, so the tree is built by hand.
+		static (SelectQuery Query, SqlColumn Key) BuildJoinChain(MappingSchema ms, int depth)
+		{
+			var child  = new SqlTable(ms.GetEntityDescriptor(typeof(Model.Child)));
+			var parent = new SqlTable(ms.GetEntityDescriptor(typeof(Model.Parent)));
+
+			var query  = new SelectQuery();
+			var source = new SqlTableSource(child, "c");
+
+			source.Joins.Add(new SqlJoinedTable(JoinType.Inner, new SqlTableSource(parent, "p"), false, new SqlSearchCondition()
+				.AddEqual(child.FindFieldByMemberName(nameof(Model.Child.ParentID))!, parent.FindFieldByMemberName(nameof(Model.Parent.ParentID))!, CompareNulls.LikeSql)));
+
+			query.From.Tables.Add(source);
+
+			var key = query.Select.AddNewColumn(parent.FindFieldByMemberName(nameof(Model.Parent.ParentID))!);
+
+			for (var i = 1; i <= depth; i++)
+			{
+				parent = new SqlTable(ms.GetEntityDescriptor(typeof(Model.Parent)));
+
+				var next = new SelectQuery();
+
+				source = new SqlTableSource(query, $"s{i}");
+
+				source.Joins.Add(new SqlJoinedTable(JoinType.Inner, new SqlTableSource(parent, $"p{i}"), false, new SqlSearchCondition()
+					.AddEqual(key, parent.FindFieldByMemberName(nameof(Model.Parent.ParentID))!, CompareNulls.LikeSql)));
+
+				next.From.Tables.Add(source);
+
+				key   = next.Select.AddNewColumn(parent.FindFieldByMemberName(nameof(Model.Parent.ParentID))!);
+				query = next;
+			}
+
+			return (query, key);
+		}
+
+		static LinqToDB.Internal.SqlQuery.Visitors.SelectQueryOptimizerVisitor OptimizeStatement(Model.TestDataConnection db, SqlStatement statement)
+		{
+			var visitor = new LinqToDB.Internal.SqlQuery.Visitors.SelectQueryOptimizerVisitor();
+
+			visitor.Optimize(
+				statement,
+				statement,
+				db.DataProvider.SqlProviderFlags,
+				removeWeakJoins: true,
+				db.Options,
+				db.MappingSchema,
+				new EvaluationContext());
+
+			return visitor;
+		}
+
+		[Test]
+		public void CorrectionWalksSkipPulledUpJoinsInJoinChain()
+		{
+			using var db = GetDataConnection();
+
+			var (query, _) = BuildJoinChain(db.MappingSchema, 4);
+
+			var visitor = OptimizeStatement(db, new SqlSelectStatement(query));
+
+			visitor.CorrectionWalks.ShouldBeGreaterThan(0);
+			visitor.ScopedCorrectionWalks.ShouldBeGreaterThan(0);
+		}
+
+		[Test]
+		public void CorrectionWalksStayFullWithEnclosingQueryReference()
+		{
+			using var db = GetDataConnection();
+
+			var (query, key) = BuildJoinChain(db.MappingSchema, 4);
+
+			// OUTER APPLY body referencing a column of the query that encloses it
+			var child = new SqlTable(db.MappingSchema.GetEntityDescriptor(typeof(Model.Child)));
+			var apply = new SelectQuery();
+
+			apply.From.Table(child);
+			apply.Where.SearchCondition.AddEqual(child.FindFieldByMemberName(nameof(Model.Child.ParentID))!, key, CompareNulls.LikeSql);
+
+			var applyColumn = apply.Select.AddNewColumn(child.FindFieldByMemberName(nameof(Model.Child.ChildID))!);
+
+			query.From.Tables[0].Joins.Add(new SqlJoinedTable(JoinType.OuterApply, new SqlTableSource(apply, "a"), false, new SqlSearchCondition()));
+			query.Select.AddNew(applyColumn);
+
+			var visitor = OptimizeStatement(db, new SqlSelectStatement(query));
+
+			visitor.CorrectionWalks.ShouldBeGreaterThan(0);
+			visitor.ScopedCorrectionWalks.ShouldBe(0);
+		}
 #endif
 	}
 }
