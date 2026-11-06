@@ -92,7 +92,7 @@ namespace LinqToDB.CommandLine.Commands.Schema
 			var output = CommandOutput.Create(environment, settings.OutputFile);
 			await using var _ = output;
 
-			var result = await new SchemaInspectionExecutor(settings).Execute(output.Writer, cancellationToken);
+			var result = await new SchemaInspectionExecutor(environment, settings).Execute(output.Writer, cancellationToken);
 
 			if (result.Error != null)
 			{

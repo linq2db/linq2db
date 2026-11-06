@@ -2,6 +2,7 @@ using System;
 using System.IO;
 
 using LinqToDB.CommandLine.Commands.Credentials;
+using LinqToDB.CommandLine.Commands.QueryExecution;
 
 namespace LinqToDB.CommandLine
 {
@@ -42,5 +43,10 @@ namespace LinqToDB.CommandLine
 		bool TryReadSecret(string prompt, out string? secret, out string? error);
 		/// <summary>Reads one line from standard input.</summary>
 		string? ReadLine();
+		/// <summary>
+		/// Logs on as a Windows user for database work. Work run in the session must not load code or read the
+		/// tool's files: the impersonated identity usually cannot access them.
+		/// </summary>
+		IImpersonationSession StartImpersonation(string user, string password, WindowsImpersonationMode mode);
 	}
 }
