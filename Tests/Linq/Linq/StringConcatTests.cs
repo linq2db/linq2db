@@ -1477,6 +1477,25 @@ namespace Tests.Linq
 				.ShouldBe("x:A-s");
 		}
 
+		// The converter's prefix is inlined as a literal, so it is never NULL and needs no empty-string guard.
+		[Test]
+		[ActiveIssue(6195, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
+		public void ConcatAssignedToConvertedColumnKeepsPrefixUnguarded([DataSources(TestProvName.AllAccess)] string context)
+		{
+			var suffix = "-s";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new ConvertedTargetRow { Id = 1, Sku = "A", Conv = "z" } });
+
+			table
+				.Set(r => r.Conv, r => r.Sku + suffix)
+				.Update();
+
+			var updateSql = LastQuery!;
+
+			updateSql.ShouldNotMatch(@"N?'x:', N?''\)");
+		}
+
 		[Table]
 		sealed class ConvertedConcatTitleRow
 		{
