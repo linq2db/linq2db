@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 using LinqToDB.CommandLine;
 using LinqToDB.CommandLine.Commands.Connection;
+using LinqToDB.CommandLine.Commands.Credentials;
 using LinqToDB.CommandLine.Commands.QueryExecution;
 using LinqToDB.CommandLine.Options;
 
@@ -93,6 +94,7 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 			AddOption(QueryExecutionCliOptions.ConnectionOptions, QueryExecutionCliOptions.ConnectionString);
 			AddOption(QueryExecutionCliOptions.ConnectionOptions, QueryExecutionCliOptions.ConnectionStringEnv);
 			AddOption(QueryExecutionCliOptions.ConnectionOptions, QueryExecutionCliOptions.Credentials);
+			AddOption(QueryExecutionCliOptions.ConnectionOptions, QueryExecutionCliOptions.CredentialsCli);
 			AddOption(QueryExecutionCliOptions.OutputOptions,     _output);
 			AddOption(QueryExecutionCliOptions.OutputOptions,     QueryExecutionCliOptions.MaxRows);
 			AddOption(_existsOptions,                            _ifExists);
@@ -114,6 +116,7 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 			options.Remove(QueryExecutionCliOptions.ConnectionString,    out var connectionString);
 			options.Remove(QueryExecutionCliOptions.ConnectionStringEnv, out var connectionStringEnv);
 			options.Remove(QueryExecutionCliOptions.Credentials,         out var credentials);
+			options.Remove(QueryExecutionCliOptions.CredentialsCli,      out var credentialsCli);
 			options.Remove(_output,                                      out var output);
 			options.Remove(QueryExecutionCliOptions.MaxRows,             out var maxRows);
 			options.Remove(_ifExists,                                   out var ifExists);
@@ -142,6 +145,7 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 				(string?)connectionString,
 				(string?)connectionStringEnv,
 				(string?)credentials,
+				(string?)credentialsCli,
 				(string?)output ?? DefaultOutput,
 				(string?)maxRows,
 				(string?)ifExists ?? "error");
@@ -207,7 +211,7 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 			return StatusCodes.SUCCESS;
 		}
 
-		static async ValueTask<bool> TryWriteConfiguration(ICliEnvironment environment, string configPath, string contents)
+		internal static async ValueTask<bool> TryWriteConfiguration(ICliEnvironment environment, string configPath, string contents)
 		{
 			var directory = Path.GetDirectoryName(configPath);
 			var fileName  = Path.GetFileName(configPath);
@@ -285,10 +289,17 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 				return false;
 			}
 
+			// The profile would be written, then refused by every command that loads it.
+			if (values.CredentialsCli != null && !CredentialStoreSelector.ValidateValue(values.CredentialsCli, out var credentialsCliError))
+			{
+				environment.Error.WriteLine($"Option '--{QueryExecutionCliOptions.CredentialsCli.Name}': {credentialsCliError}");
+				return false;
+			}
+
 			return true;
 		}
 
-		static bool TryLoadRoot(ICliEnvironment environment, string configPath, out JsonObject root)
+		internal static bool TryLoadRoot(ICliEnvironment environment, string configPath, out JsonObject root)
 		{
 			root = null!;
 
@@ -352,6 +363,9 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 			if (values.Credentials != null)
 				profile["credentials"] = values.Credentials;
 
+			if (values.CredentialsCli != null)
+				profile["credentialsCli"] = values.CredentialsCli;
+
 			profile["maxRows"]       = maxRows;
 			profile["output"]        = values.Output;
 			profile["enableExecute"] = false;
@@ -368,6 +382,7 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 			string? ConnectionString,
 			string? ConnectionStringEnv,
 			string? Credentials,
+			string? CredentialsCli,
 			string  Output,
 			string? MaxRows,
 			string  IfExists);

@@ -10,6 +10,8 @@ namespace Tests.LinqToDB.CLI
 	{
 		public Dictionary<string, (string User, string Password)> Credentials { get; } = new(StringComparer.Ordinal);
 		public HashSet<string> UnreadableTargets { get; } = new(StringComparer.Ordinal);
+		/// <summary>When set, clear fails after removing this many records, as a store that erases one by one can.</summary>
+		public int? ClearFailsAfter { get; set; }
 
 		public bool TryRead(string target, out string? user, out string? password, out string? error)
 		{
@@ -27,9 +29,9 @@ namespace Tests.LinqToDB.CLI
 			return false;
 		}
 
-		public bool TryStore(string profile, string user, string password, out string? error)
+		public bool TryStore(string name, string user, string password, out string? error)
 		{
-			Credentials[$"linq2db/{profile}"] = (user, password);
+			Credentials[$"linq2db/{name}"] = (user, password);
 			error = null;
 			return true;
 		}
@@ -57,25 +59,33 @@ namespace Tests.LinqToDB.CLI
 			return true;
 		}
 
-		public bool TryRemove(string profile, out bool removed, out string? error)
+		public bool TryRemove(string name, out bool removed, out string? error)
 		{
-			removed = Credentials.Remove($"linq2db/{profile}");
+			removed = Credentials.Remove($"linq2db/{name}");
 			error   = null;
 			return true;
 		}
 
 		public bool TryClear(out int removedCount, out string? error)
 		{
-			var targets = Credentials.Keys.Where(static target => target.StartsWith("linq2db/", StringComparison.Ordinal)).ToArray();
+			var targets = Credentials.Keys.Where(static target => target.StartsWith("linq2db/", StringComparison.Ordinal)).Order(StringComparer.Ordinal).ToArray();
+
+			removedCount = 0;
 
 			foreach (var target in targets)
 			{
+				if (removedCount == ClearFailsAfter)
+				{
+					error = $"Cannot remove credential target '{target}'.";
+					return false;
+				}
+
 				Credentials.Remove(target);
 				UnreadableTargets.Remove(target);
+				removedCount++;
 			}
 
-			removedCount = targets.Length;
-			error        = null;
+			error = null;
 			return true;
 		}
 	}

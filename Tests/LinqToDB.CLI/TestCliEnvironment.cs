@@ -26,9 +26,46 @@ namespace Tests.LinqToDB.CLI
 		public TextWriter Error => _error;
 
 		public int BufferWidth => 120;
+
+		public TestCliEnvironment()
+		{
+			// The OS-default local store needs a resolvable credentials directory; with the default (fake) local store
+			// nothing is created there.
+			EnvironmentVariables[CredentialsDirectory.Variable] = Path.Combine(Path.GetTempPath(), "linq2db-cli-tests-unused-credentials");
+		}
+
+		/// <summary>Windows Credential Manager (and, unless <see cref="UseRealLocalStore"/> is set, the local store).</summary>
 		public ICredentialStore CredentialStore { get; } = new TestCredentialStore();
 		public Dictionary<string, (string User, string Password)> Credentials => ((TestCredentialStore)CredentialStore).Credentials;
 		public HashSet<string> UnreadableCredentialTargets => ((TestCredentialStore)CredentialStore).UnreadableTargets;
+
+		/// <summary>Use the real local store in the credentials directory instead of the in-memory store.</summary>
+		public bool UseRealLocalStore { get; set; }
+
+		/// <summary>Extra environment for credentials CLI processes (store file, fake tools on PATH).</summary>
+		public Dictionary<string, string?> CredentialsCliEnvironment { get; } = new(StringComparer.Ordinal);
+		/// <summary>Whether credentials CLI runs are interactive (LINQ2DB_CREDENTIAL_INTERACTIVE=1).</summary>
+		public bool InteractiveCredentialsCli { get; set; }
+
+		/// <summary>Fails <see cref="MoveFile"/> for a destination: returns the exception to throw, or <see langword="null"/>.</summary>
+		public Func<string, Exception?>? MoveFileFault { get; set; }
+
+		public ICredentialStore CreateLocalCredentialStore(string directory)
+		{
+			return UseRealLocalStore
+				? new LocalCredentialStore(directory, EnvironmentVariables.GetValueOrDefault("USERPROFILE"))
+				: CredentialStore;
+		}
+
+		public ICredentialStore CreateCredentialsCliStore(CredentialsCliSettings settings)
+		{
+			// The example credentials CLI runs through "dotnet run": allow for a slow machine.
+			return new CredentialsCliStore(new CredentialsCliProcessRunner(settings, InteractiveCredentialsCli, CredentialsCliEnvironment)
+			{
+				Timeout            = TimeSpan.FromSeconds(120),
+				InteractiveTimeout = TimeSpan.FromSeconds(120),
+			});
+		}
 
 		public string Output      => _output.ToString();
 		public string ErrorOutput => _error .ToString();
@@ -63,6 +100,16 @@ namespace Tests.LinqToDB.CLI
 
 		public void MoveFile(string sourcePath, string destinationPath, bool overwrite)
 		{
+			if (MoveFileFault?.Invoke(destinationPath) is { } fault)
+				throw fault;
+
+			// Files written by the command itself (generated scripts) live on the real file system.
+			if (!Files.ContainsKey(sourcePath) && File.Exists(sourcePath))
+			{
+				File.Move(sourcePath, destinationPath, overwrite);
+				return;
+			}
+
 			if (!Files.TryGetValue(sourcePath, out var contents))
 				throw new FileNotFoundException("Source file not found.", sourcePath);
 
