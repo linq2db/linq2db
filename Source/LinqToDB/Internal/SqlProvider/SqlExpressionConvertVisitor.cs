@@ -3278,10 +3278,36 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected ISqlExpression ConvertCoalesceToBinaryFunc(SqlCoalesceExpression coalesce, string funcName, bool supportsParameters = true)
 		{
-			var last = coalesce.Expressions[^1];
+			var count = coalesce.Expressions.Length;
+
+			// An inlined parameter renders its bound value, so a non-null one decides the result and the operands after
+			// it are dead. Inlining makes the statement parameter-dependent, so this is re-decided on every execution.
+			if (!supportsParameters)
+			{
+				for (var i = 0; i < count - 1; i++)
+				{
+					var parameter = coalesce.Expressions[i] switch
+					{
+						SqlParameter p                                  => p,
+						SqlParameterCastExpression { Parameter: var p } => p,
+						_                                               => null,
+					};
+
+					if (parameter != null && parameter.GetParameterValue(EvaluationContext.ParameterValues).ProviderValue != null)
+					{
+						count = i + 1;
+						break;
+					}
+				}
+			}
+
+			var last = coalesce.Expressions[count - 1];
 			MarkParameters(last);
 
-			for (int i = coalesce.Expressions.Length - 2; i >= 0; i--)
+			if (count == 1)
+				return last;
+
+			for (int i = count - 2; i >= 0; i--)
 			{
 				var param = coalesce.Expressions[i];
 				MarkParameters(param);
