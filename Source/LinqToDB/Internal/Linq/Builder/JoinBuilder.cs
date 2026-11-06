@@ -36,7 +36,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (outerContextResult.BuildContext == null)
 				return outerContextResult;
 
-			var innerContextResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
+			var innerContextResult = builder.TryBuildJoinedSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()), out var innerOrderBy);
 			if (innerContextResult.BuildContext == null)
 				return innerContextResult;
 
@@ -92,6 +92,8 @@ namespace LinqToDB.Internal.Linq.Builder
 #else
 			var joinType = JoinType.Inner;
 #endif
+
+			builder.AppendJoinedOrderBy(innerOrderBy, joinedFirst: joinType is JoinType.Right);
 
 			var outerKeyLambda = methodCall.Arguments[2].UnwrapLambda();
 			var innerKeyLambda = methodCall.Arguments[3].UnwrapLambda();

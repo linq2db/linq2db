@@ -85,6 +85,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			BuildSequenceResult                   buildResult;
 			IBuildContext                         sequence;
 			(Expression expr, bool descending, Sql.NullsPosition nulls)[] captured;
+			bool                                  dropped;
 
 			// Isolate OrderBy state across the *inner* sequence build only. DistinctBy
 			// consumes the upstream OrderBy semantically (row-number partition order);
@@ -111,16 +112,25 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				sequence = buildResult.BuildContext;
 				captured = builder.CurrentOrderBy is { Count: > 0 } current ? current.ToArray() : [];
+				dropped  = builder.IsOrderByDropped;
 			}
 
+			// A dropped ordering is thrown, not returned: a subquery that fails to build falls back to client-side evaluation
+			// (eager loading, AggregateExecute), which would pick an arbitrary row per key instead of the ordered one. Without
+			// any ordering every row is a valid choice, so that fallback stays available.
 			if (captured.Length == 0)
+			{
+				if (dropped)
+					throw SqlErrorExpression.CreateException(sequenceExpression, ErrorHelper.Error_DistinctByRequiresOrderBy);
+
 				return BuildSequenceResult.Error(sequenceExpression, ErrorHelper.Error_DistinctByRequiresOrderBy);
+			}
 
 			// On providers that support PostgreSQL-style DISTINCT ON, lower DistinctBy to it directly instead of the
-			// ROW_NUMBER() emulation: the key selector becomes the ON list and the preceding OrderBy — already applied
-			// to the sequence built above — is reordered to lead with those keys. Reuses that sequence (no second
-			// TryBuildSequence, which would leak an extra table reference). Falls through to ROW_NUMBER when the key
-			// has no usable SQL form (empty ON list, e.g. DistinctBy(x => 1)).
+			// ROW_NUMBER() emulation: the key selector becomes the ON list and the sequence's ordering is reordered to
+			// lead with those keys. Reuses that sequence (building its expression a second time would leak an extra table
+			// reference). Falls through to ROW_NUMBER when the key has no usable SQL form (empty ON list, e.g.
+			// DistinctBy(x => 1)).
 			if (builder.DataContext.SqlProviderFlags.IsDistinctOnSupported)
 			{
 				var partitionBody = SequenceHelper.PrepareBody(selector, sequence);
@@ -128,15 +138,64 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (SequenceHelper.IsSqlReady(keySql))
 				{
-					var onExpressions = ExpressionBuilder.CollectDistinctPlaceholders(keySql, false)
-						.Select(static p => p.Sql)
-						.Where(static s => !QueryHelper.IsConstant(s))
-						.ToList();
+					var onExpressions = CollectDistinctOnExpressions(keySql);
 
 					if (onExpressions.Count > 0)
 					{
-						ApplyDistinctOn(sequence.SelectQuery, onExpressions);
-						return BuildSequenceResult.FromContext(sequence);
+						var distinctOnContext = sequence;
+
+						// DISTINCT ON is evaluated before its query's ORDER BY and LIMIT/OFFSET, and a DISTINCT query keeps its own
+						// DISTINCT ON, so such a sequence is selected from rather than extended.
+						if (sequence.SelectQuery.IsLimited || sequence.SelectQuery.Select.IsDistinct)
+						{
+							distinctOnContext = new SubQueryContext(sequence);
+							onExpressions     = CollectDistinctOnExpressions(builder.UpdateNesting(distinctOnContext, keySql));
+						}
+
+						// The ordering that picks the surviving row then sits below this query (on the limited query, or on a
+						// query the sequence wraps), so it is re-translated here from the captured ordering.
+						if (distinctOnContext.SelectQuery.OrderBy.IsEmpty)
+						{
+							if (!AddCapturedOrdering(builder, distinctOnContext, captured, out var skipped))
+								throw SqlErrorExpression.CreateException(sequenceExpression, ErrorHelper.Error_DistinctByRequiresOrderBy);
+
+							if (!skipped)
+								ClearConsumedOrderBy(SingleSubQuery(distinctOnContext.SelectQuery));
+						}
+
+						var reordered = ApplyDistinctOn(distinctOnContext.SelectQuery, onExpressions);
+
+						if (buildInfo.IgnoreOrderBy)
+							return BuildSequenceResult.FromContext(distinctOnContext);
+
+						var ordering = Array.FindAll(captured, c => CanOrderBy(builder, distinctOnContext, c.expr));
+
+						if (ordering.Length == 0)
+							return BuildSequenceResult.FromContext(distinctOnContext);
+
+						// An ORDER BY that already led with the keys returns the rows in the captured order, so the ordering is only
+						// published to the consumers above, as OrderByBuilder publishes a re-applied one.
+						if (!reordered)
+						{
+							for (var i = 0; i < ordering.Length; i++)
+							{
+								builder.RegisterOrderBy(ordering[i].expr, ordering[i].descending, ordering[i].nulls, reset: i == 0);
+							}
+
+							return BuildSequenceResult.FromContext(distinctOnContext);
+						}
+
+						// Otherwise the DISTINCT ON query is ordered by its keys first, so the captured ordering is re-applied above
+						// it, as on the ROW_NUMBER path below.
+						var orderByLambdas = new (LambdaExpression lambda, bool isDescending, Sql.NullsPosition nulls)[ordering.Length];
+						for (var i = 0; i < ordering.Length; i++)
+						{
+							orderByLambdas[i] = (BuildOrderByLambda(ordering[i].expr, distinctOnContext.ElementType), ordering[i].descending, ordering[i].nulls);
+						}
+
+						var distinctOnRef = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(distinctOnContext.ElementType), new SourceAnchorContext(distinctOnContext));
+
+						return builder.TryBuildSequence(new BuildInfo(buildInfo, WindowFunctionHelpers.ApplyOrderBy(distinctOnRef, orderByLambdas)));
 					}
 				}
 			}
@@ -149,20 +208,21 @@ namespace LinqToDB.Internal.Linq.Builder
 				// plain column there, so it gets materialized as an extra projected column and appended as a trailing
 				// sort key that merely repeats the leading one. A limited sequence keeps its ordering — there it
 				// decides which rows survive, and the optimizer leaves such a sequence alone anyway.
-				if (!sequence.SelectQuery.IsLimited)
-					sequence.SelectQuery.OrderBy.Items.Clear();
+				ClearConsumedOrderBy(sequence.SelectQuery);
 
 				var partitionBody = SequenceHelper.PrepareBody(selector, sequence);
 
-				var partitionPart = ExpressionHelpers.CollectMembers(partitionBody).ToArray();
+				var partitionPart = ExpressionHelpers.CollectMembers(partitionBody).Select(m => BuildOnSequence(builder, sequence, m)).ToArray();
 				if (partitionPart.Length == 0)
 					partitionPart = [Expression.Constant(1)];
 
 				var buildMethod = _buildDistinctByViaRowNumberMethodInfo.MakeGenericMethod(sequence.ElementType);
-				var expression  = (Expression)buildMethod.InvokeExt(null, [builder, sequence, partitionPart, captured])!;
+				var windowOrder = Array.ConvertAll(captured, c => (BuildOnSequence(builder, sequence, c.expr), c.descending, c.nulls));
+				var expression  = (Expression)buildMethod.InvokeExt(null, [builder, sequence, partitionPart, windowOrder])!;
 
 				// Re-apply OrderBy on the outer result. The OVER clause's ORDER BY only governs
-				// which row in each partition wins rn=1; it doesn't order the surviving rows.
+				// which row in each partition wins rn=1; it doesn't order the surviving rows. The captured expressions, not the
+				// window's placeholders, are re-applied: OrderByBuilder publishes them, and a GroupBy above matches them to its keys.
 				var orderByLambdas = new (LambdaExpression lambda, bool isDescending, Sql.NullsPosition nulls)[captured.Length];
 				for (var i = 0; i < captured.Length; i++)
 					orderByLambdas[i] = (BuildOrderByLambda(captured[i].expr, sequence.ElementType), captured[i].descending, captured[i].nulls);
@@ -244,10 +304,96 @@ namespace LinqToDB.Internal.Linq.Builder
 			return Expression.Lambda(body, param);
 		}
 
+		// Resolves a window argument against the built sequence, so it reads the sequence's own column (a grouped aggregate
+		// included). Left as an expression, it is re-entered through the context chain, which rebuilds an aggregate as a
+		// correlated subquery over the ROW_NUMBER query's source; once another argument forces the window's arguments into
+		// that source, the subquery references the derived table it sits in.
+		static Expression BuildOnSequence(ExpressionBuilder builder, IBuildContext sequence, Expression expr)
+		{
+			var sql = builder.BuildSqlExpression(sequence, expr, BuildPurpose.Sql, BuildFlags.ForKeys);
+			return sql is SqlPlaceholderExpression ? sql : expr;
+		}
+
+		// Clears the ORDER BY of a query the DistinctBy re-applies the captured ordering above, and of the single-source
+		// queries it selects from (a GroupBy's source query, where a kept pre-group ordering still sits): the optimizer would
+		// lift each one again as a duplicate sort key. Stops where the ordering decides which rows survive (a limited or a
+		// DISTINCT ON query) and at an aggregation that needs its source ordered.
+		static void ClearConsumedOrderBy(SelectQuery? query)
+		{
+			while (query != null && !query.IsLimited && !query.HasSetOperators && !query.Select.IsDistinct)
+			{
+				if (QueryHelper.IsAggregationQuery(query, out var needsOrderBy) && needsOrderBy)
+					return;
+
+				query.OrderBy.Items.Clear();
+				query = SingleSubQuery(query);
+			}
+		}
+
+		static SelectQuery? SingleSubQuery(SelectQuery query)
+		{
+			return query.From.Tables is [{ Joins.Count: 0, Source: SelectQuery subQuery }] ? subQuery : null;
+		}
+
+		static List<ISqlExpression> CollectDistinctOnExpressions(Expression keySql)
+		{
+			return ExpressionBuilder.CollectDistinctPlaceholders(keySql, false)
+				.Select(static p => p.Sql)
+				.Where(static s => !QueryHelper.IsConstant(s))
+				.ToList();
+		}
+
+		// An entry anchored above the DISTINCT ON query (an outer-correlated key) is constant per row and skipped. One anchored
+		// below it (inside a CTE body) cannot be lifted, and without it the surviving row is arbitrary, so it is reported:
+		// returns false when such an entry was met. skipped reports an entry left out, so the ordering added is not the whole one.
+		static bool AddCapturedOrdering(ExpressionBuilder builder, IBuildContext context, (Expression expr, bool descending, Sql.NullsPosition nulls)[] captured, out bool skipped)
+		{
+			var orderBy = context.SelectQuery.OrderBy;
+			var below   = default(GroupByBuilder.QuerySources);
+
+			skipped = false;
+
+			foreach (var (expr, descending, nulls) in captured)
+			{
+				var orderSql = builder.BuildSqlExpression(context, expr, BuildPurpose.Sql, BuildFlags.ForKeys);
+
+				foreach (var placeholder in ExpressionBuilder.CollectDistinctPlaceholders(orderSql, false))
+				{
+					if (QueryHelper.IsConstant(placeholder.Sql))
+						continue;
+
+					if (placeholder.SelectQuery == context.SelectQuery)
+					{
+						orderBy.Expr(placeholder.Sql, descending, false, nulls);
+						continue;
+					}
+
+					below ??= new GroupByBuilder.QuerySources(context.SelectQuery);
+
+					if (placeholder.SelectQuery != null && below.Queries.Contains(placeholder.SelectQuery))
+						return false;
+
+					skipped = true;
+				}
+			}
+
+			return true;
+		}
+
+		// The same reach as AddCapturedOrdering, for a whole entry: an ordering the DISTINCT ON query cannot reach is not
+		// re-applied above it.
+		static bool CanOrderBy(ExpressionBuilder builder, IBuildContext context, Expression orderExpr)
+		{
+			var orderSql     = builder.BuildSqlExpression(context, orderExpr, BuildPurpose.Sql, BuildFlags.ForKeys);
+			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(orderSql, false).FindAll(static p => !QueryHelper.IsConstant(p.Sql));
+
+			return placeholders.Count > 0 && placeholders.TrueForAll(p => p.SelectQuery == context.SelectQuery);
+		}
+
 		// PostgreSQL/DuckDB require ORDER BY to begin with the DISTINCT ON expressions. Move (or synthesize) the ON
 		// keys to the front of the existing OrderBy, preserving the user's ordering for the remaining keys, then mark
-		// the select clause as DISTINCT ON.
-		static void ApplyDistinctOn(SelectQuery selectQuery, List<ISqlExpression> onExpressions)
+		// the select clause as DISTINCT ON. Returns whether the OrderBy did not already lead with the keys.
+		static bool ApplyDistinctOn(SelectQuery selectQuery, List<ISqlExpression> onExpressions)
 		{
 			var items   = selectQuery.OrderBy.Items;
 			var leading = new List<SqlOrderByItem>(onExpressions.Count);
@@ -260,12 +406,20 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var tail = items.FindAll(i => !onExpressions.Exists(on => on.Equals(i.Expression)));
 
+			var reordered = leading.Count > items.Count;
+			for (var i = 0; !reordered && i < leading.Count; i++)
+			{
+				reordered = !ReferenceEquals(leading[i], items[i]);
+			}
+
 			items.Clear();
 			items.AddRange(leading);
 			items.AddRange(tail);
 
 			selectQuery.Select.IsDistinct = true;
 			selectQuery.Select.DistinctOn = onExpressions;
+
+			return reordered;
 		}
 	}
 }
