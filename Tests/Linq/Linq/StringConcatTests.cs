@@ -1281,6 +1281,21 @@ namespace Tests.Linq
 				.Single()
 				.ShouldBe("Sx");
 
+			table
+				.Select(t => Sql.AsSql(t.Sku.ToLower() + suffix))
+				.Single()
+				.ShouldBe("sx");
+
+			table
+				.Select(t => Sql.AsSql(t.Sku.Trim() + suffix))
+				.Single()
+				.ShouldBe("Sx");
+
+			table
+				.Select(t => Sql.AsSql(t.Sku.Remove(0, 1) + suffix))
+				.Single()
+				.ShouldBe("x");
+
 			GetCurrentBaselines()
 				.ShouldNotContain("Max");
 		}
@@ -1303,7 +1318,10 @@ namespace Tests.Linq
 		[Sql.Function("IsNull", ServerSideOnly = true)]
 		static string IsNull(string value, string replacement) => throw new InvalidOperationException();
 
-		// A function with no type of its own over a long VarChar operand keeps its length beside a Unicode parameter.
+		[Sql.Expression("IsNull({0}, {1})", ServerSideOnly = true)]
+		static string IsNullExpression(string value, string replacement) => throw new InvalidOperationException();
+
+		// A function or expression with no type of its own over a long VarChar operand keeps its length beside a Unicode parameter.
 		[Test]
 		public void ConcatParameterBesideUntypedFunctionKeepsTotalLength([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
@@ -1317,6 +1335,79 @@ namespace Tests.Linq
 				.Single()
 				.Length
 				.ShouldBe(6001);
+
+			table
+				.Select(t => Sql.AsSql(IsNullExpression(t.Left, "") + IsNullExpression(t.Right, "") + suffix))
+				.Single()
+				.Length
+				.ShouldBe(6001);
+
+			table
+				.Select(t => Sql.AsSql(suffix + IsNull(t.Notes, "")))
+				.Single()
+				.Length
+				.ShouldBe(6001);
+
+			table
+				.Select(t => Sql.AsSql(t.Title + Sql.Stuff(t.Left, 1, 0, t.Right)))
+				.Single()!
+				.Length
+				.ShouldBe(6001);
+
+			table
+				.Select(t => Sql.AsSql(Sql.Space(t.Id * 5000) + suffix))
+				.Single()!
+				.Length
+				.ShouldBe(5001);
+		}
+
+		// Remove() and PadRight() translate to STUFF and REPLICATE with a Unicode argument, so they are nvarchar over a VarChar value.
+		[Test]
+		public void ConcatParameterBesideUnicodeFunctionsOfVarCharKeepsTotalLength([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			var suffix = "x";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(SplitVarCharData);
+
+			table
+				.Select(t => Sql.AsSql(t.Left.Remove(0, 1) + t.Right.Remove(0, 1) + suffix))
+				.Single()
+				.Length
+				.ShouldBe(5999);
+
+			table
+				.Select(t => Sql.AsSql(t.Left.PadRight(3001) + t.Right.PadRight(3001) + suffix))
+				.Single()
+				.Length
+				.ShouldBe(6003);
+
+			table
+				.Select(t => Sql.AsSql(t.Notes + t.Left.Remove(0, 1)))
+				.Single()
+				.Length
+				.ShouldBe(8999);
+
+			table
+				.Select(t => Sql.AsSql(t.Notes.Replace("a", t.Left.Remove(0, 1))))
+				.Single()
+				.Length
+				.ShouldBe(6000);
+		}
+
+		// A non-Latin REPLACE argument over a VarChar value, compared with a Unicode parameter, keeps its characters.
+		[Test]
+		public void ConcatOfReplaceWithNonLatinArgumentComparedWithParameter([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			var replacement = "ж";
+			var expected    = new string('ж', 3000) + new string('c', 3000);
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(SplitVarCharData);
+
+			table
+				.Count(t => t.Left.Replace("b", replacement) + t.Right == expected)
+				.ShouldBe(1);
 		}
 
 		[Table]
