@@ -56,7 +56,10 @@ namespace Tests.LinqToDB.CLI
 			return fileName;
 		}
 
-		protected static async Task<CliProcessResult> RunCliProcess(params string[] arguments)
+		protected static Task<CliProcessResult> RunCliProcess(params string[] arguments)
+			=> RunCliProcess(TimeSpan.FromSeconds(20), arguments);
+
+		protected static async Task<CliProcessResult> RunCliProcess(TimeSpan timeout, params string[] arguments)
 		{
 			var cliAssembly = Path.Combine(AppContext.BaseDirectory, "dotnet-linq2db.dll");
 
@@ -82,7 +85,7 @@ namespace Tests.LinqToDB.CLI
 
 			try
 			{
-				await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(20)).ConfigureAwait(false);
+				await process.WaitForExitAsync().WaitAsync(timeout).ConfigureAwait(false);
 			}
 			catch (TimeoutException)
 			{
