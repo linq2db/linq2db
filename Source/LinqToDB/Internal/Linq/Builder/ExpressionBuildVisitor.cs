@@ -3678,7 +3678,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (clientItems?.Count > 1)
 			{
-				var clientCondition = clientItems.Aggregate(node.NodeType == ExpressionType.AndAlso ? Expression.AndAlso : Expression.OrElse);
+				var clientCondition = clientItems.Aggregate(node.NodeType is ExpressionType.OrElse or ExpressionType.Or ? Expression.OrElse : Expression.AndAlso);
+
+				Builder.ParametersContext.RegisterComposedSource(clientCondition, clientItems);
 
 				if (HandleValue(clientCondition, out var translatedValue))
 				{
@@ -6099,6 +6101,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			public void MarkAsNonParameter(Expression expression, object? currentValue)
 			{
 				Builder.ParametersContext.MarkAsValue(expression, currentValue);
+			}
+
+			public void MarkAsNonParameter(Expression expression, object? currentValue, Expression source)
+			{
+				Builder.ParametersContext.MarkAsValue(expression, currentValue, source);
 			}
 
 			public IDisposable UsingColumnDescriptor(ColumnDescriptor? columnDescriptor)
