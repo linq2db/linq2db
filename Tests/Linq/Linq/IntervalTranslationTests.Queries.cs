@@ -400,6 +400,37 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
+		/// A sprint whose planning is spent before any of its tasks starts.
+		/// </summary>
+		[Table]
+		sealed class SprintRow
+		{
+			[PrimaryKey] public int    Id              { get; set; }
+			[Column]     public double PlanningMinutes { get; set; }
+		}
+
+		/// <summary>
+		/// A sum over a difference of no rows adds nothing.
+		/// </summary>
+		/// <remarks>
+		/// In SQL the sum of no rows is <c>NULL</c>, so the arithmetic around it has to see the zero the aggregate is
+		/// coalesced to.
+		/// </remarks>
+		[Test]
+		public void SumOverADifferenceOfNoRowsAddsNothing([IncludeDataSources(TestProvName.AllYdb)] string context)
+		{
+			using var db      = GetDataContext(context, BuildSchema());
+			using var sprints = db.CreateLocalTable(new[] { new SprintRow { Id = 1, PlanningMinutes = 30 } });
+			using var tasks   = db.CreateLocalTable<BudgetedTaskRow>();
+
+			var spent = sprints
+				.Select(s => s.PlanningMinutes + tasks.Sum(r => (r.FinishedOn - r.StartedOn).TotalMinutes))
+				.Single();
+
+			spent.ShouldBe(30);
+		}
+
+		/// <summary>
 		/// Ordering by a difference orders by the duration.
 		/// </summary>
 		[Test]

@@ -649,7 +649,6 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ActiveIssue(5169, Configuration = TestProvName.AllPostgreSQL, BaselinesMismatch = true, Details = "remote MERGE-source parameter dedup/naming differs (value_2/value_3 vs value/value_2)")]
 		public void TestTypesInsertByMerge([MergeDataContextSource(TestProvName.AllInformix, TestProvName.AllSybase)] string context)
 		{
 			var isIDS = IsIDSProvider(context);
