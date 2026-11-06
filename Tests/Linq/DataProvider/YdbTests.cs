@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Async;
@@ -110,6 +111,79 @@ namespace Tests.DataProvider
 				.ToArray();
 
 			Assert.That(pks, Is.EqualTo(new[] { nameof(SimpleEntity.Id) }));
+		}
+
+		[Test]
+		public void SchemaProvider_TableDroppedConcurrently([IncludeDataSources(TestProvName.AllYdb)] string context)
+		{
+			// Every schema step lists the tables first and then describes each one. Tables dropped by another
+			// connection in between must be left out of the result, not fail the whole read with SchemeError.
+			const int workers   = 2;
+			const int minCycles = 10;
+
+			using var cts = new CancellationTokenSource();
+
+			var cycles = 0;
+
+			var ddl = Enumerable.Range(0, workers)
+				.Select(i => Task.Run(() =>
+				{
+					var name = FormattableString.Invariant($"{nameof(SchemaProvider_TableDroppedConcurrently)}_{i}");
+
+					using var ddb = GetDataConnection(context);
+
+					try
+					{
+						while (!cts.IsCancellationRequested)
+						{
+							ddb.DropTable<SimpleEntity>(name, throwExceptionIfNotExists: false);
+							ddb.CreateTable<SimpleEntity>(name);
+							Interlocked.Increment(ref cycles);
+						}
+					}
+					finally
+					{
+						ddb.DropTable<SimpleEntity>(name, throwExceptionIfNotExists: false);
+					}
+				}))
+				.ToArray();
+
+			var readCompleted = false;
+
+			try
+			{
+				using var db = GetDataConnection(context);
+
+				var minEnd = DateTime.UtcNow.AddSeconds(5);
+				var maxEnd = DateTime.UtcNow.AddSeconds(60);
+
+				// run for at least 5 seconds and at least minCycles DDL cycles, so a slow worker start cannot
+				// make the test pass without any concurrent DDL
+				while ((DateTime.UtcNow < minEnd || Volatile.Read(ref cycles) < minCycles)
+					&& DateTime.UtcNow < maxEnd
+					&& !ddl.Any(t => t.IsCompleted))
+				{
+					db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions { GetProcedures = false });
+				}
+
+				readCompleted = true;
+			}
+			finally
+			{
+				cts.Cancel();
+
+				try
+				{
+					// bounded: lets the workers drop their tables before the next test runs
+					Task.WaitAll(ddl, TimeSpan.FromSeconds(30));
+				}
+				catch (AggregateException) when (!readCompleted)
+				{
+					// the schema read failed: that exception is the one to report, not a worker's
+				}
+			}
+
+			Assert.That(cycles, Is.GreaterThanOrEqualTo(minCycles));
 		}
 		#endregion
 
