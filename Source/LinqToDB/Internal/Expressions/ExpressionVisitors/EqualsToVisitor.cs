@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
-using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Internal.Expressions.ExpressionVisitors
@@ -481,14 +480,14 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 					&& string.Equals(first.Name, second.Name, StringComparison.Ordinal);
 			}
 
-			// Whether a subtree shared by both trees references a parameter that resolves to different declarations
-			// in them. A parameter the subtree declares itself is checked as well, which can only cost a cache hit.
+			// Whether a subtree shared by both trees can compare differently from itself under these bindings.
 			public bool AffectSharedSubtree(Expression shared)
 			{
-				return shared.Find(this, static (bindings, e) => e is ParameterExpression p && !bindings.ResolvesToItself(p)) != null;
+				using var visitor = SharedSubtreeVisitor.Pool.Allocate();
+				return visitor.Value.IsAffected(shared, this);
 			}
 
-			bool ResolvesToItself(ParameterExpression parameter)
+			public bool ResolvesToItself(ParameterExpression parameter)
 			{
 				for (var i = _pairs.Count - 1; i >= 0; i--)
 				{
@@ -517,6 +516,104 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 
 				// Accessor expressions also contain free runtime/context parameters.
 				return string.Equals(first.Name, second.Name, StringComparison.Ordinal);
+			}
+		}
+
+		// A shared subtree is affected when a parameter that is free in it resolves to different declarations in the two
+		// trees; parameters it declares itself are resolved inside it. An extension node may hide parameters from
+		// visitors, so a shared extension is accepted only when it is known to hold no expression.
+		sealed class SharedSubtreeVisitor : ExpressionVisitorBase
+		{
+			internal static readonly ObjectPool<SharedSubtreeVisitor> Pool = new(() => new SharedSubtreeVisitor(), v => v.Cleanup(), 100);
+
+			readonly List<ParameterExpression> _declared = new();
+			ParameterBindings?                 _bindings;
+			bool                               _affected;
+
+			public override void Cleanup()
+			{
+				_declared.Clear();
+				_bindings = null;
+				_affected = false;
+				base.Cleanup();
+			}
+
+			public bool IsAffected(Expression shared, ParameterBindings bindings)
+			{
+				_bindings = bindings;
+				Visit(shared);
+				return _affected;
+			}
+
+			public override Expression? Visit(Expression? node)
+			{
+				if (node == null || _affected)
+					return node;
+
+				if (node is ParameterExpression parameter)
+				{
+					if (!IsDeclared(parameter) && !_bindings!.ResolvesToItself(parameter))
+						_affected = true;
+
+					return node;
+				}
+
+				// ChangeTypeExpression is the only non-standard node type whose child is visited.
+				if (node.NodeType == ExpressionType.Extension || (node.NodeType > ExpressionType.IsFalse && node is not ChangeTypeExpression))
+				{
+					if (!IsParameterFreeLeaf(node))
+						_affected = true;
+
+					return node;
+				}
+
+				return base.Visit(node);
+			}
+
+			static bool IsParameterFreeLeaf(Expression node)
+			{
+				// Exact type match: a derived node could add children.
+				return node.GetType() == typeof(SqlQueryRootExpression)
+					|| node is ConstantPlaceholderExpression or DefaultValueExpression;
+			}
+
+			bool IsDeclared(ParameterExpression parameter)
+			{
+				for (var i = _declared.Count - 1; i >= 0; i--)
+					if (ReferenceEquals(_declared[i], parameter))
+						return true;
+
+				return false;
+			}
+
+			protected override Expression VisitLambda<T>(Expression<T> node)
+			{
+				var count = _declared.Count;
+				_declared.AddRange(node.Parameters);
+				Visit(node.Body);
+				_declared.RemoveRange(count, _declared.Count - count);
+				return node;
+			}
+
+			protected override Expression VisitBlock(BlockExpression node)
+			{
+				var count = _declared.Count;
+				_declared.AddRange(node.Variables);
+				foreach (var expression in node.Expressions)
+					Visit(expression);
+				_declared.RemoveRange(count, _declared.Count - count);
+				return node;
+			}
+
+			protected override CatchBlock VisitCatchBlock(CatchBlock node)
+			{
+				var count = _declared.Count;
+				if (node.Variable != null)
+					_declared.Add(node.Variable);
+				Visit(node.Filter);
+				Visit(node.Body);
+				_declared.RemoveRange(count, _declared.Count - count);
+				return node;
 			}
 		}
 	}

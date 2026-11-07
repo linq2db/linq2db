@@ -429,35 +429,51 @@ namespace Tests.Linq
 			var children = db.GetTable<Model.Child>();
 			var filtered = db.Child.Where(c => c.ChildID > 0);
 
-			long Table(int id)
+			IQueryable<int> Table(int id)
 			{
-				var query = db.Parent
+				return db.Parent
 					.Where(p => children.Any(c => c.ParentID == p.ParentID) && p.ParentID >= id)
 					.Select(p => p.ParentID);
-				query.ToArray();
-				return query.GetCacheMissCount();
 			}
 
-			long Query(int id)
+			IQueryable<int> Query(int id)
 			{
-				var query = db.Parent
+				return db.Parent
 					.Where(p => filtered.Any(c => c.ParentID == p.ParentID) && p.ParentID >= id)
 					.Select(p => p.ParentID);
-				query.ToArray();
-				return query.GetCacheMissCount();
 			}
 
-			var tableMisses = Table(1);
-			Table(2)
-				.ShouldBe(tableMisses);
-			Table(3)
-				.ShouldBe(tableMisses);
+			int[] Expected(int id)
+			{
+				return Parent
+					.Where(p => Child.Any(c => c.ChildID > 0 && c.ParentID == p.ParentID) && p.ParentID >= id)
+					.Select(p => p.ParentID)
+					.OrderBy(v => v)
+					.ToArray();
+			}
 
-			var queryMisses = Query(1);
-			Query(2)
-				.ShouldBe(queryMisses);
-			Query(3)
-				.ShouldBe(queryMisses);
+			void Check(Func<int, IQueryable<int>> build)
+			{
+				var first = build(1);
+				first.ClearCache();
+				var missCount = first.GetCacheMissCount();
+
+				for (var id = 1; id <= 3; id++)
+				{
+					var query = id == 1 ? first : build(id);
+					query
+						.ToArray()
+						.OrderBy(v => v)
+						.ToArray()
+						.ShouldBe(Expected(id));
+					query
+						.GetCacheMissCount()
+						.ShouldBe(missCount + 1);
+				}
+			}
+
+			Check(Table);
+			Check(Query);
 		}
 
 		static int ClientSide(Sql.IQueryableContainer? container) => container == null ? 1 : 2;

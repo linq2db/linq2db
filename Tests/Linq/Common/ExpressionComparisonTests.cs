@@ -105,14 +105,22 @@ namespace Tests.Common
 			CompareBoth(Expression.Lambda(unbound, a), Expression.Lambda(unbound, b), true);
 		}
 
-		sealed class SharedExtension(Expression? child) : Expression
+		sealed class SharedExtension(Expression? child, bool traversable = true) : Expression
 		{
-			public override ExpressionType NodeType => ExpressionType.Extension;
-			public override Type           Type     => typeof(int);
+			public override ExpressionType NodeType  => ExpressionType.Extension;
+			public override Type           Type      => typeof(int);
+			public override bool           CanReduce => Child != null;
+
+			public override Expression Reduce()
+			{
+				return Child ?? this;
+			}
 
 			protected override Expression VisitChildren(ExpressionVisitor visitor)
 			{
-				visitor.Visit(Child);
+				if (traversable)
+					visitor.Visit(Child);
+
 				return this;
 			}
 
@@ -128,15 +136,74 @@ namespace Tests.Common
 			CompareBoth(Expression.Lambda(shared, a), Expression.Lambda(shared, a), true);
 			CompareBoth(Expression.Lambda(shared, a), Expression.Lambda(shared, b), false);
 
-			// A shared node that references no bound parameter, such as a captured table, still matches.
+			// An unknown extension could hide a parameter, so it is rejected even when it references none.
 			var leaf = new SharedExtension(null);
-			CompareBoth(Expression.Lambda(leaf, a), Expression.Lambda(leaf, b), true);
-			var unbound = new SharedExtension(Expression.Parameter(typeof(int), "p"));
-			CompareBoth(Expression.Lambda(unbound, a), Expression.Lambda(unbound, b), true);
+			CompareBoth(Expression.Lambda(leaf, a), Expression.Lambda(leaf, b), false);
+
+			// Extensions known to hold no expression, such as a captured table's root, still match.
+			Expression[] leaves =
+			[
+				new SqlQueryRootExpression(MappingSchema.Default, typeof(object)),
+				new ConstantPlaceholderExpression(typeof(int)),
+				new DefaultValueExpression(MappingSchema.Default, typeof(int)),
+			];
+
+			foreach (var known in leaves)
+				CompareBoth(Expression.Lambda(known, a), Expression.Lambda(known, b), true);
+		}
+
+		[Test]
+		public void SharedOpaqueExtensionNodesAreRejected()
+		{
+			var a = Expression.Parameter(typeof(int), "p");
+			var b = Expression.Parameter(typeof(int), "p");
+
+			// Both nodes hide their child from visitors: the left one reads the inner parameter, the right one the outer.
+			var opaque = new SharedExtension(a, traversable: false);
+			CompareBoth(Expression.Lambda(Expression.Lambda(opaque, a), a), Expression.Lambda(Expression.Lambda(opaque, a), a), true);
+			CompareBoth(Expression.Lambda(Expression.Lambda(opaque, a), a), Expression.Lambda(Expression.Lambda(opaque, b), a), false);
+
+			var constructor = typeof(Holder).GetConstructor([typeof(int)])!;
+			var access      = new SqlGenericParamAccessExpression(Expression.New(constructor, a), constructor.GetParameters()[0]);
+			CompareBoth(Expression.Lambda(Expression.Lambda(access, a), a), Expression.Lambda(Expression.Lambda(access, b), a), false);
+		}
+
+		[Test]
+		public void SharedSubtreeDeclarationsAreLocal()
+		{
+			var a = Expression.Parameter(typeof(int), "p");
+			var b = Expression.Parameter(typeof(int), "p");
+
+			// The shared subtree declares the parameter itself, so the outer bindings cannot reach it.
+			var lambda = Expression.Lambda(a, a);
+			CompareBoth(Expression.Lambda(lambda, a), Expression.Lambda(lambda, b), true);
+
+			var block = Expression.Block([a], Expression.Assign(a, Expression.Constant(1)), a);
+			CompareBoth(Expression.Lambda(block, a), Expression.Lambda(block, b), true);
+
+			var e1 = Expression.Parameter(typeof(Exception), "e");
+			var e2 = Expression.Parameter(typeof(Exception), "e");
+			var handler = Expression.TryCatch(
+				Expression.Constant(0),
+				Expression.Catch(e1, Expression.Condition(Expression.Equal(e1, Expression.Constant(null)), Expression.Constant(1), Expression.Constant(2))));
+			CompareBoth(Expression.Lambda(handler, e1), Expression.Lambda(handler, e2), true);
+
+			// A parameter that is free in the shared subtree still has to resolve to the same declaration.
+			var free = Expression.Lambda(Expression.Add(a, Expression.Constant(1)), Expression.Parameter(typeof(int), "q"));
+			CompareBoth(Expression.Lambda(free, a), Expression.Lambda(free, b), false);
 		}
 
 		public sealed class Holder
 		{
+			public Holder()
+			{
+			}
+
+			public Holder(int value)
+			{
+				Value = value;
+			}
+
 			public int Value { get; set; }
 		}
 
