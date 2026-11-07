@@ -227,25 +227,22 @@ namespace Tests.Linq
 		/// both sides, so the sign and rough size of each member stay stable regardless of clock skew between the
 		/// test host and the server.
 		/// </remarks>
+		// These providers read DateTime.Now on the client and send it as a parameter or, on Firebird and YDB, as
+		// a literal, so no two runs - and not the direct and the remote one - record the same statement. The
+		// rest call the server's clock and keep their baselines.
+		[NoBaselines("Current datetime parameters used", Configurations = [
+			TestProvName.AllFirebird,
+			TestProvName.AllYdb,
+			TestProvName.AllSqlServer,
+			TestProvName.AllPostgreSQL,
+			TestProvName.AllMySql,
+			TestProvName.AllDB2,
+			TestProvName.AllInformix,
+			TestProvName.AllSybase,
+			TestProvName.AllSapHana])]
 		[Test]
 		public void DateDifferenceFromServerNow([DataSources(UnsupportedDifferenceProviders)] string context)
 		{
-			// These providers read DateTime.Now on the client and send it as a parameter or, on Firebird and YDB, as
-			// a literal, so no two runs - and not the direct and the remote one - record the same statement. The
-			// rest call the server's clock and keep their baselines.
-			using var noBaseline = context.IsAnyOf(
-				TestProvName.AllFirebird,
-				TestProvName.AllYdb,
-				TestProvName.AllSqlServer,
-				TestProvName.AllPostgreSQL,
-				TestProvName.AllMySql,
-				TestProvName.AllDB2,
-				TestProvName.AllInformix,
-				TestProvName.AllSybase,
-				TestProvName.AllSapHana)
-				? new DisableBaseline("Current datetime parameters used")
-				: null;
-
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(ClosedPeriods);
 
@@ -1035,10 +1032,10 @@ namespace Tests.Linq
 		];
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5777")]
+		[NoBaselines("Current datetime parameters used")]
 		public void DateDifferenceFromToday([DataSources(UnsupportedDifferenceProviders)] string context)
 		{
 			// DateTime.Today is read on the client, so the statement carries the run date and changes every day.
-			using var noBaseline = new DisableBaseline("Current datetime parameters used");
 
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(ClosedPeriods);

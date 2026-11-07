@@ -275,3 +275,44 @@ jobs:
           name: cli-test-results-${{ matrix.os }}
           path: CliTestResults/*.trx
           if-no-files-found: error
+
+  # Regression guard for #5158 / #5159: the remote client run inside the browser-wasm runtime, under Node, against
+  # every provider configuration of an in-process server. No database: GetInfo never opens a connection.
+  wasm-tests:
+    name: WASM runtime tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.x
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+
+      - run: pwsh -NoProfile -File Tests/Tests.Wasm/publish-wasm-bundles.ps1
+
+      - run: dotnet build Tests/Tests.Wasm/Tests.Wasm.csproj --configuration ${{ env.TEST_CONFIGURATION }}
+
+      # DB2 and Informix.DB2 load the IBM client's native libraries, as the Linux provider legs set up in
+      # Build/Azure/scripts/db2.provider.sh.
+      - name: Put the IBM DB2 client on the library path
+        run: |
+          clidriver="$PWD/.build/bin/Tests.Wasm/${{ env.TEST_CONFIGURATION }}/clidriver"
+          test -d "$clidriver" || { echo "::error::$clidriver not found"; exit 1; }
+          echo "$clidriver/bin" >> "$GITHUB_PATH"
+          echo "$clidriver/lib" >> "$GITHUB_PATH"
+          echo "LD_LIBRARY_PATH=$clidriver/lib" >> "$GITHUB_ENV"
+
+      - run: dotnet test --project Tests/Tests.Wasm/Tests.Wasm.csproj --configuration ${{ env.TEST_CONFIGURATION }} --no-build --report-trx --report-trx-filename wasm.trx --results-directory ${{ github.workspace }}/WasmTestResults
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: wasm-test-results
+          path: WasmTestResults/*.trx
+          if-no-files-found: error

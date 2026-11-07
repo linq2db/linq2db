@@ -8,7 +8,7 @@ artifact we publish:
 | Artifact | How the binaries get in |
 |---|---|
 | `linq2db.cli` (pointer + 7 RID sub-packages) | `PackAsTool` publishes the entire dependency closure into `tools/<tfm>/<rid>/` — around 90 NuGet packages and 158 assemblies per RID, against 22 `PackageReference` lines |
-| the 14 T4 packages | each `NuGet/*/linq2db.*.csproj` copies named provider assemblies into `tools/`, including SQL CE and the SAP HANA client out of `Redist/`, and IBM's 223-file `clidriver` tree |
+| the 14 T4 packages | each `NuGet/*/linq2db.*.csproj` copies named provider assemblies into `tools/`, including the SQL CE natives and IBM's 223-file `clidriver` tree |
 | `linq2db.LINQPad.lpx` | `Source/LinqToDB.LINQPad/Nuget/Pack.cmd` archives the whole `net472` output directory |
 
 All of them declare `PackageLicenseExpression=MIT`. That is correct for linq2db's own code and says
@@ -94,8 +94,7 @@ Notes on the fields that are easy to get wrong:
 - **`redistribution: "unresolved"`** is a deliberate, shipping state for components whose vendor terms have
   not yet been adjudicated. It changes nothing about what is packed; it marks the entry for the audit.
 - **A component with no `licenseTexts` is not automatically a defect.** Public-domain software has no text
-  to reproduce. It *is* a defect when the terms exist and we simply do not carry them — currently SQL CE
-  and the SAP HANA client, both `Redist/` binaries with no license file in this repository.
+  to reproduce. It *is* a defect when the terms exist and we simply do not carry them.
 - **`revisit` is an optional marker for a decision taken on a condition that will change** — an upstream
   package we are waiting on, a question raised with a vendor. `-Action harvest` prints every one of them,
   so they resurface on each release-prep run instead of resting in a file nobody re-reads. Clear the field
@@ -107,11 +106,12 @@ Notes on the fields that are easy to get wrong:
 
 ## Which packages are asserted to bundle nothing
 
-`verify` also checks the other direction. `linq2db`, `linq2db.Tools`, `linq2db.Scaffold`, `linq2db.Compat`,
-`linq2db.Extensions`, `linq2db.FSharp`, the six `linq2db.Remote.*`, the four `linq2db.EntityFrameworkCore`
-packages, `linq2db.Analyzers` and the `linq2db.LINQPad` **nupkg** must contain no third-party binary at
-all. If one acquires a bundled DLL, that is a change in what we redistribute, and it fails the build rather
-than passing unnoticed.
+`verify` also checks the other direction. Every package that is not a notices-bearing artifact in
+`components.json` must contain no third-party binary at all — `linq2db`, `linq2db.Tools`, the
+`linq2db.Remote.*` and `linq2db.EntityFrameworkCore` packages, `linq2db.Identity` and the `linq2db.LINQPad`
+**nupkg**, for example. The rule is applied by exclusion, not by name, so a new package is covered without
+being listed. If one acquires a bundled DLL, that is a change in what we redistribute, and it fails the build
+rather than passing unnoticed.
 
 The `linq2db.cli` pointer package has its own expectation: it must carry `tools/any/any/DotnetToolSettings.xml`
 and no assemblies whatsoever. Without a per-class rule an artifact the script failed to read would satisfy
