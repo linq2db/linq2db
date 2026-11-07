@@ -1851,6 +1851,30 @@ namespace Tests.Linq
 		}
 
 		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[ActiveIssue(6260, Configurations = [TestProvName.AllPostgreSQL, TestProvName.AllDuckDB], ErrorMessage = "{ ParentID = 2, ChildID = 21 }, { ParentID = 2, ChildID = 22 }")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByKeepsEarlierOrderingAsTieBreaker([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var result = db.Child
+				.OrderByDescending(c => c.ChildID)
+				.Select(c => new { c.ParentID, c.ChildID })
+				.OrderBy(c => c.ParentID)
+				.DistinctBy(c => c.ChildID)
+				.ToList();
+
+			var expected = Child
+				.OrderByDescending(c => c.ChildID)
+				.Select(c => new { c.ParentID, c.ChildID })
+				.OrderBy(c => c.ParentID)
+				.DistinctBy(c => c.ChildID)
+				.ToList();
+
+			result.ShouldBe(expected);
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		[ActiveIssue(6223, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "could not be converted to SQL.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6223")]
 		public void DistinctByAfterLeftJoinThenGroupByInnerKey([DataSources] string context)

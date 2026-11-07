@@ -315,18 +315,27 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		// Clears the ORDER BY of a query the DistinctBy re-applies the captured ordering above, and of the single-source
-		// queries it selects from (a GroupBy's source query, where a kept pre-group ordering still sits): the optimizer would
-		// lift each one again as a duplicate sort key. Stops where the ordering decides which rows survive (a limited or a
-		// DISTINCT ON query) and at an aggregation that needs its source ordered.
+		// queries below a grouping (a GroupBy's source, where a kept pre-group ordering still sits): the optimizer would lift
+		// each one again as a duplicate sort key. Above the grouping, an ORDER BY is an earlier ordering the captured one reset,
+		// which the optimizer lifts as a tie-breaker, so it stays. Stops where the ordering decides which rows survive (a
+		// limited or a DISTINCT ON query) and at an aggregation that needs its source ordered.
 		static void ClearConsumedOrderBy(SelectQuery? query)
 		{
+			var isTop         = true;
+			var belowGrouping = false;
+
 			while (query != null && !query.IsLimited && !query.HasSetOperators && !query.Select.IsDistinct)
 			{
-				if (QueryHelper.IsAggregationQuery(query, out var needsOrderBy) && needsOrderBy)
+				var isAggregation = QueryHelper.IsAggregationQuery(query, out var needsOrderBy);
+				if (isAggregation && needsOrderBy)
 					return;
 
-				query.OrderBy.Items.Clear();
-				query = SingleSubQuery(query);
+				if (isTop || belowGrouping)
+					query.OrderBy.Items.Clear();
+
+				belowGrouping |= isAggregation || !query.Select.GroupBy.IsEmpty;
+				isTop          = false;
+				query          = SingleSubQuery(query);
 			}
 		}
 
