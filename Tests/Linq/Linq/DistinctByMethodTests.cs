@@ -1852,7 +1852,7 @@ namespace Tests.Linq
 		}
 
 		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
-		[ActiveIssue(6260, Configurations = [TestProvName.AllPostgreSQL, TestProvName.AllDuckDB], ErrorMessage = "{ ParentID = 2, ChildID = 21 }, { ParentID = 2, ChildID = 22 }")]
+		[ActiveIssue(6260, Configurations = [TestProvName.AllPostgreSQL, TestProvName.AllDuckDB], ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}{ ParentID = 2, ChildID = 22 }, { ParentID = 2, ChildID = 21 }{1}but was")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
 		public void DistinctByKeepsEarlierOrderingAsTieBreaker([DataSources] string context)
 		{
