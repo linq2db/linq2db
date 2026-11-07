@@ -558,8 +558,7 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 					return node;
 				}
 
-				// ChangeTypeExpression is the only non-standard node type whose child is visited.
-				if (node.NodeType == ExpressionType.Extension || (node.NodeType > ExpressionType.IsFalse && node is not ChangeTypeExpression))
+				if (!IsVisitedKind(node))
 				{
 					if (!IsParameterFreeLeaf(node))
 						_affected = true;
@@ -568,6 +567,19 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 				}
 
 				return base.Visit(node);
+			}
+
+			// Whether the visitor reaches every child of the node: a standard node of System.Linq.Expressions other than
+			// Extension, or ChangeTypeExpression. Any other node, a custom one claiming a standard kind or one whose kind
+			// is outside the standard range, may hide its children.
+			static bool IsVisitedKind(Expression node)
+			{
+				var kind = node.NodeType;
+
+				if (kind is >= ExpressionType.Add and <= ExpressionType.IsFalse)
+					return kind != ExpressionType.Extension && node.GetType().Assembly == typeof(Expression).Assembly;
+
+				return node.GetType() == typeof(ChangeTypeExpression);
 			}
 
 			static bool IsParameterFreeLeaf(Expression node)

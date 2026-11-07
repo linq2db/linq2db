@@ -168,6 +168,33 @@ namespace Tests.Common
 			CompareBoth(Expression.Lambda(Expression.Lambda(access, a), a), Expression.Lambda(Expression.Lambda(access, b), a), false);
 		}
 
+		sealed class CustomKindNode(Expression child, ExpressionType nodeType) : Expression
+		{
+			public override ExpressionType NodeType  => nodeType;
+			public override Type           Type      => child.Type;
+			public override bool           CanReduce => true;
+
+			public override Expression Reduce()
+			{
+				return child;
+			}
+
+			protected override Expression VisitChildren(ExpressionVisitor visitor)
+			{
+				return this;
+			}
+		}
+
+		[Test]
+		public void SharedNodesOfUnknownKindAreRejected([Values(-1, 1001, (int)ExpressionType.Add)] int nodeType)
+		{
+			var a = Expression.Parameter(typeof(int), "p");
+			var b = Expression.Parameter(typeof(int), "p");
+
+			var opaque = new CustomKindNode(a, (ExpressionType)nodeType);
+			CompareBoth(Expression.Lambda(Expression.Lambda(opaque, a), a), Expression.Lambda(Expression.Lambda(opaque, b), a), false);
+		}
+
 		[Test]
 		public void SharedSubtreeDeclarationsAreLocal()
 		{
