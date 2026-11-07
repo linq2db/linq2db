@@ -7,6 +7,7 @@ using System.Reflection;
 
 using LinqToDB.Common;
 using LinqToDB.DataProvider.ClickHouse;
+using LinqToDB.Internal.DataProvider.DB2;
 using LinqToDB.Metrics;
 using LinqToDB.Tools.Activity;
 
@@ -81,24 +82,35 @@ public class TestsInitialization
 		// explicitly from the known clidriver path. See https://github.com/linq2db/linq2db/issues/5538
 		if (OperatingSystem.IsLinux())
 		{
-			IntPtr db2Handle = default;
-			System.Runtime.InteropServices.NativeLibrary.SetDllImportResolver(typeof(IBM.Data.Db2.DB2Connection).Assembly, (module, assembly, searchPath) =>
+			var providerAssembly = LinqToDB.Internal.Common.Tools.TryLoadAssembly(
+				DB2ProviderAdapter.AssemblyName, DB2ProviderAdapter.ProviderFactoryName);
+
+#if !NETFRAMEWORK
+			providerAssembly ??= LinqToDB.Internal.Common.Tools.TryLoadAssembly(
+				DB2ProviderAdapter.AssemblyNameOld, DB2ProviderAdapter.ProviderFactoryName);
+#endif
+
+			if (providerAssembly != null)
 			{
-				if (module == "libdb2.so")
+				IntPtr db2Handle = default;
+				System.Runtime.InteropServices.NativeLibrary.SetDllImportResolver(providerAssembly, (module, assembly, searchPath) =>
 				{
-					if (db2Handle == default)
+					if (module == "libdb2.so")
 					{
-						var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "clidriver", "lib", "libdb2.so");
-						if (File.Exists(path))
-							db2Handle = System.Runtime.InteropServices.NativeLibrary.Load(path);
+						if (db2Handle == default)
+						{
+							var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "clidriver", "lib", "libdb2.so");
+							if (File.Exists(path))
+								db2Handle = System.Runtime.InteropServices.NativeLibrary.Load(path);
+						}
+
+						if (db2Handle != default)
+							return db2Handle;
 					}
 
-					if (db2Handle != default)
-						return db2Handle;
-				}
-
-				return IntPtr.Zero;
-			});
+					return IntPtr.Zero;
+				});
+			}
 		}
 #else
 		// force load of SDS runtime first as there is no SetDllImportResolver API
@@ -495,8 +507,22 @@ public class TestsInitialization
 	// InternalOperation1 is the driver's pool purge; reflection keeps legs without the driver from loading it.
 	static void PurgeDB2ConnectionPool()
 	{
-		var driver = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(static a => a.GetName().Name == "IBM.Data.Db2");
-		var purge  = driver?.GetType("IBM.Data.Db2.DB2ConnPool")?.GetMethod("InternalOperation1", BindingFlags.Public | BindingFlags.Static, Type.EmptyTypes);
+		var clientNamespace = DB2ProviderAdapter.ClientNamespace;
+		// Try to find the DB2 provider assembly by its known namespace, which matches the assembly name. 
+		var driver = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(static a => a.GetName().Name == DB2ProviderAdapter.ClientNamespace);
+
+#if !NETFRAMEWORK
+		// Fall back to the old client namespace for the legacy IBM.Data.DB2 provider, which is still used in some test legs by the IBM i provider.
+		// Both providers are never loaded in the same run, so this is safe. They are loaded by DB2ProviderAdapter which tries to load them in the same order.
+		// The old provider's assembly name is also the same as its namespace.
+		if (driver == null)
+		{
+			clientNamespace = DB2ProviderAdapter.ClientNamespaceOld;
+			driver = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(static a => a.GetName().Name == DB2ProviderAdapter.ClientNamespaceOld);
+		}
+#endif
+
+		var purge  = driver?.GetType($"{clientNamespace}.DB2ConnPool")?.GetMethod("InternalOperation1", BindingFlags.Public | BindingFlags.Static, Type.EmptyTypes);
 
 		if (purge == null)
 			return;

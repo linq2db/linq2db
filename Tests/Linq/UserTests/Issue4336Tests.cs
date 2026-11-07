@@ -2,12 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 
-#if NETFRAMEWORK
-using IBM.Data.DB2;
-#else
-using IBM.Data.Db2;
-#endif
-
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
