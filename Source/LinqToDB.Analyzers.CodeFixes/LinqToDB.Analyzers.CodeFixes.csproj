@@ -1,4 +1,5 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<!-- TreatAsLocalProperty: the docs build passes TargetFramework globally (Docs/source/docfx.json); this project stays netstandard2.0 -->
+<Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="TargetFramework">
 
 	<PropertyGroup>
 		<!-- This is the packable project for the linq2db.Analyzers package (analyzer + code-fix assemblies).

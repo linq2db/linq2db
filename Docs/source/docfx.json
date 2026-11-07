@@ -1,0 +1,350 @@
+{
+	//https://github.com/dotnet/docfx/tree/main/docs/docs
+
+	// IMPORTANT:
+	// we use a custom docfx build to handle namespace conflicts:
+	// https://github.com/dotnet/docfx/issues/8966
+	// see Docs/README.md for how it is produced.
+	//
+	// `assemblyUids` lists the assemblies whose APIs carry the assembly they are declared in as a
+	// component of their UID, as in `linq2db.Tools::LinqToDB.Tools.Activity.ActivityStatistics`. It is a
+	// project level setting, because every metadata entry has to agree: an entry mints UIDs for the APIs
+	// it references as well as the ones it documents, and a reference that comes out unqualified loses its
+	// link with no warning. So every assembly appearing in another assembly's public signatures is listed
+	// here, not only the ones whose namespaces collide.
+	//
+	// The assembly is not part of the namespace, so pages, titles and links keep naming the namespaces as
+	// they are declared: `LinqToDB` reads as `LinqToDB` everywhere, and only the UID and the file name
+	// carry the assembly. `assemblyLabel` is left unset, which is what keeps it that way; setting it to
+	// `suffix` would append the assembly to every namespace label and page title.
+	//
+	// LinqToDB.Identity is deliberately absent: its namespace does not collide and nothing else here
+	// references it.
+	"assemblyUids": [
+		"linq2db",
+		"linq2db.Extensions",
+		"linq2db.Compat",
+		"linq2db.FSharp",
+		"linq2db.Remote.Grpc",
+		"linq2db.Remote.Wcf",
+		"linq2db.Tools",
+		"linq2db.Scaffold",
+		"linq2db.Remote.HttpClient.Client",
+		"linq2db.Remote.HttpClient.Server",
+		"linq2db.Remote.SignalR.Client",
+		"linq2db.Remote.SignalR.Server"
+	],
+	"metadata": [
+		// The four EntityFrameworkCore entries all build an assembly named `linq2db.EntityFrameworkCore`,
+		// so they cannot be told apart by assembly name. Each uses `assemblyUidOverride` instead, which
+		// names the entry rather than the assembly. That works here only because nothing else in this
+		// project references the EF Core packages: a reference into them from another entry could not say
+		// which of the four versions it meant.
+		//
+		// docfx documents one target framework per project, the first one unless `TargetFramework` is set.
+		// Entries whose project targets net10.0 set it, so the site shows the API of current .NET rather than
+		// of .NET Framework. The property is global, so it reaches every referenced project as well; the two
+		// netstandard2.0 analyzer projects they all reference keep their own framework through
+		// TreatAsLocalProperty (https://github.com/dotnet/docfx/issues/10772).
+		{
+			"src": [
+				{
+					"files": [
+						"Source/LinqToDB/LinqToDB.csproj"
+					],
+					"src": "../.."
+				}
+			],
+			"properties": {
+				"TargetFramework": "net10.0"
+			},
+			"filter": "filter.yml",
+			"output": "api/linq2db"
+		},
+		{
+			"src": [
+				{
+					"files": [
+						"Source/LinqToDB.Extensions/LinqToDB.Extensions.csproj"
+					],
+					"src": "../.."
+				}
+			],
+			"properties": {
+				"TargetFramework": "net10.0"
+			},
+			"filter": "filter.yml",
+			"output": "api/linq2db.extensions"
+		},
+		{
+			"src": [
+				{
+					"files": [
+						"Source/LinqToDB.Compat/LinqToDB.Compat.csproj"
+					],
+					"src": "../.."
+				}
+			],
+			"properties": {
+				"TargetFramework": "net10.0"
+			},
+			"filter": "filter.yml",
+			"output": "api/linq2db.compat"
+		},
+		{
+			"src": [
+				{
+					// single target framework on purpose: the glob used to match every TFM folder,
+					// which loaded the same assembly five times and reported every member of it as a
+					// duplicate. netstandard2.0 is the surface available to every consumer.
+					"files": [
+						".build/bin/LinqToDB.FSharp/Release/netstandard2.0/linq2db.FSharp.dll"
+					],
+					"src": "../.."
+				}
+			],
+			// only the net462 output carries its dependencies next to the assembly, so the F# types in
+			// the public signatures are resolved from there instead of being reported unresolved.
+			"references": [
+				{
+					"files": [
+						".build/bin/LinqToDB.FSharp/Release/net462/FSharp.Core.dll",
+						".build/bin/LinqToDB.FSharp/Release/net462/Microsoft.Bcl.AsyncInterfaces.dll"
+					],
+					"src": "../.."
+				}
+			],
+			"filter": "filter.yml",
+			"output": "api/linq2db.fsharp"
+		},
+		{
+			"src": [
+				{
+					"files": [
+						"Source/LinqToDB.Remote.Grpc/LinqToDB.Remote.Grpc.csproj"
+					],
+					"src": "../.."
+				}
+			],
+			"properties": {
+				"TargetFramework": "net10.0"
+			},
+			"filter": "filter.yml",
+			"output": "api/linq2db.remote.grpc"
+		},
+		{
+			"src": [
+				{
+					"files": [
+						"Source/LinqToDB.Remote.Wcf/LinqToDB.Remote.Wcf.csproj"
+					],
+					"src": "../.."
+				}
+			],
+			"filter": "filter.yml",
+			"output": "api/linq2db.remote.wcf"
+		},
+		{
+			"src": [
+				{
+					"files": [
+						"Source/LinqToDB.Tools/LinqToDB.Tools.csproj"
+					],
+					"src": "../.."
+				}
+			],
+			"properties": {
+				"TargetFramework": "net10.0"
+			},
+			"filter": "filter.yml",
+			"output": "api/linq2db.tools"
+		},
+		{
+			"src": [
+				{
+					"files": [
+						"Source/LinqToDB.Scaffold/LinqToDB.Scaffold.csproj"
+					],
+					"src": "../.."
+				}
+			],
+			"properties": {
+				"TargetFramework": "net10.0"
+			},
+			"filter": "filter.yml",
+			"output": "api/linq2db.scaffold"
+		},
+		{
+			"src": [
+				{
+					"files": [
+						"Source/LinqToDB.EntityFrameworkCore/LinqToDB.EntityFrameworkCore.EF3.csproj"
+					],
+					"src": "../.."
+				}
+			],
+			"filter": "filter.yml",
+			"output": "api/linq2db.efcore.3",
+			"assemblyUidOverride": "linq2db.EntityFrameworkCore.EF3"
+		},
+		{
+			"src": [
+				{
+					"files": [
+						"Source/LinqToDB.EntityFrameworkCore/LinqToDB.EntityFrameworkCore.EF8.csproj"
+					],
+					"src": "../.."
+				}
+			],
+			"filter": "filter.yml",
+			"output": "api/linq2db.efcore.8",
+			"assemblyUidOverride": "linq2db.EntityFrameworkCore.EF8"
+		},
+		{
+			"src": [
+				{
+					"files": [
+						"Source/LinqToDB.EntityFrameworkCore/LinqToDB.EntityFrameworkCore.EF9.csproj"
+					],
+					"src": "../.."
+				}
+			],
+			"filter": "filter.yml",
+			"output": "api/linq2db.efcore.9",
+			"assemblyUidOverride": "linq2db.EntityFrameworkCore.EF9"
+		},
+		{
+			"src": [
+				{
+					"files": [
+						"Source/LinqToDB.EntityFrameworkCore/LinqToDB.EntityFrameworkCore.EF10.csproj"
+					],
+					"src": "../.."
+				}
+			],
+			"filter": "filter.yml",
+			"output": "api/linq2db.efcore.10",
+			"assemblyUidOverride": "linq2db.EntityFrameworkCore.EF10"
+		},
+		{
+			"src": [
+				{
+					"files": [
+						"Source/LinqToDB.Identity/LinqToDB.Identity.csproj"
+					],
+					"src": "../.."
+				}
+			],
+			"properties": {
+				"TargetFramework": "net10.0"
+			},
+			"filter": "filter.yml",
+			"output": "api/linq2db.identity"
+		},
+		{
+			"src": [
+				{
+					"files": [
+						"Source/LinqToDB.Remote.HttpClient.Client/LinqToDB.Remote.HttpClient.Client.csproj"
+					],
+					"src": "../.."
+				}
+			],
+			"properties": {
+				"TargetFramework": "net10.0"
+			},
+			"filter": "filter.yml",
+			"output": "api/linq2db.remote.httpclient.client"
+		},
+		{
+			"src": [
+				{
+					"files": [
+						"Source/LinqToDB.Remote.HttpClient.Server/LinqToDB.Remote.HttpClient.Server.csproj"
+					],
+					"src": "../.."
+				}
+			],
+			"properties": {
+				"TargetFramework": "net10.0"
+			},
+			"filter": "filter.yml",
+			"output": "api/linq2db.remote.httpclient.server"
+		},
+		{
+			"src": [
+				{
+					"files": [
+						"Source/LinqToDB.Remote.SignalR.Client/LinqToDB.Remote.SignalR.Client.csproj"
+					],
+					"src": "../.."
+				}
+			],
+			"properties": {
+				"TargetFramework": "net10.0"
+			},
+			"filter": "filter.yml",
+			"output": "api/linq2db.remote.signalr.client"
+		},
+		{
+			"src": [
+				{
+					"files": [
+						"Source/LinqToDB.Remote.SignalR.Server/LinqToDB.Remote.SignalR.Server.csproj"
+					],
+					"src": "../.."
+				}
+			],
+			"properties": {
+				"TargetFramework": "net10.0"
+			},
+			"filter": "filter.yml",
+			"output": "api/linq2db.remote.signalr.server"
+		}
+	],
+	"build": {
+		"content": [
+			{
+				"files": [
+					"api/**/*.{md,yml}",
+					"articles/**/*.{md,yml}",
+					"toc.yml",
+					"*.md"
+				]
+			}
+		],
+		"resource": [
+			{
+				"files": [
+					"images/**",
+					"**.png",
+					"**.jpg",
+					"articles/cli-help.txt",
+					".nojekyll"
+				]
+			}
+		],
+		"dest": "../../.build/docs/_site",
+		"globalMetadataFiles": [],
+		"globalMetadata": {
+			//https://github.com/dotnet/docfx/blob/main/docs/docs/template.md#modern-template
+			"_appTitle": "Linq To DB",
+			"_appName": "Linq To DB",
+			"_appFooter": "© 2011-2026 Linq To DB Team<br/>Generated by <strong><a href='https://github.com/dotnet/docfx' target='_blank'>DocFX</a></strong>",
+			"_appLogoPath": "images/icon.png",
+			"_appFaviconPath": "images/icon.ico",
+			"_enableSearch": true,
+			"_disableNewTab": false,
+			"_disableContribution": true
+		},
+		"fileMetadataFiles": [],
+		"template": [
+			"default",
+			"modern",
+			"templates/custom"
+		],
+		"postProcessors": [ "ExtractSearchIndex" ],
+		"noLangKeyword": false,
+		"keepFileLink": false
+	}
+}
