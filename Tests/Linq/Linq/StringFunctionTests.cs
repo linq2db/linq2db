@@ -1023,10 +1023,10 @@ namespace Tests.Linq
 			AssertQuery(predicate);
 		}
 
-		// Oracle counts a negative substr start from the right, so a length beyond the string length must be clamped to
-		// the first character rather than land inside the string.
+		// Oracle and SQLite count a negative substr start from the right, so a length beyond the string length must be
+		// clamped to the first character rather than land inside the string.
 		[Test]
-		public void RightLongerThanString([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		public void RightLongerThanString([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllSQLite)] string context)
 		{
 			var data = new[]
 			{

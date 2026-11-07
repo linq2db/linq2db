@@ -265,12 +265,15 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 		{
 			public override ISqlExpression? TranslateRight(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression length)
 			{
-				// SUBSTRING(value, LENGTH(value) - length + 1)
+				// SUBSTRING(value, MAX(LENGTH(value) - length + 1, 1))
+				// SQLite counts a negative start from the right, so a length beyond the string is clamped to the first character.
 
 				var factory = translationContext.ExpressionFactory;
 				var intType = factory.GetDbDataType(typeof(int));
 
-				var start = factory.Add(intType, factory.Sub(intType, factory.Function(intType, "LENGTH", value), length), factory.Value(1));
+				var start = factory.Function(intType, "MAX",
+					factory.Add(intType, factory.Sub(intType, factory.Function(intType, "LENGTH", value), length), factory.Value(1)),
+					factory.Value(1));
 
 				return factory.Function(factory.GetDbDataType(methodCall.Type), "SUBSTRING", value, start);
 			}
