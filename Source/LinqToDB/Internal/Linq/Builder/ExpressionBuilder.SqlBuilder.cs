@@ -1635,7 +1635,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					var truePath = Project(context, path, nextPath, nextIndex, flags, unary.Operand, strict);
 
-					var isPredicate = MakeIsPredicateExpression(context, Expression.TypeIs(unary.Operand, unary.Type));
+					// After a join the projecting context carries the outer source's schema; the operand's table has its own.
+					var operandTable = unary.Operand is ContextRefExpression ? SequenceHelper.GetTableContext(this, unary.Operand) : null;
+					var isPredicate  = MakeIsPredicateExpression((IBuildContext?)operandTable ?? context, Expression.TypeIs(unary.Operand, unary.Type));
 
 					if (isPredicate is ConstantExpression constExpr)
 					{

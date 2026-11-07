@@ -363,6 +363,13 @@ namespace Tests.Mapping
 			[Column]     public int Kind { get; set; }
 		}
 
+		[Table("SourceSchemaShape")]
+		sealed class ShapeKindRow
+		{
+			[PrimaryKey] public int       Id   { get; set; }
+			[Column]     public ShapeKind Kind { get; set; }
+		}
+
 		// Enum codes on an int column without MapValue: the code's value comes from the schema's enum conversion.
 		[Table("SourceSchemaShape")]
 		[InheritanceMapping(Code = ShapeKind.Circle, Type = typeof(EnumCircle))]
@@ -828,6 +835,59 @@ namespace Tests.Mapping
 			actual
 				.ToList()
 				.ShouldBe(expected);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
+		public void TypeAsOnSecondHandleFollowsItsSchema([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db  = GetDataContext(context);
+			using var tmp = db.CreateLocalTable(ShapeRows);
+
+			var parents = db.Parent;
+
+			ITable<Shape> shapes;
+
+			using (db.UseMappingSchema(ShapeCodes()))
+			{
+				shapes = db.GetTable<Shape>();
+			}
+
+			var query =
+				from p in parents
+				join s in shapes on p.ParentID equals s.Id
+				select new { s.Id, Circle = s as ShapeCircle };
+
+			query
+				.Select(x => new { x.Id, Kind = (string?)x.Circle!.Kind })
+				.ToList()
+				.OrderBy(x => x.Id)
+				.Select(x => x.Kind)
+				.ToList()
+				.ShouldBe(["C1", null]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
+		public void ReadConversionFollowsHandleSchema([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db  = GetDataContext(context);
+			using var tmp = db.CreateLocalTable(new[] { new ShapeCodeRow { Id = 1, Kind = 101 }, new ShapeCodeRow { Id = 2, Kind = 102 } });
+
+			var schema = new MappingSchema();
+			schema.SetConvertExpression<ShapeKind, int>(kind => (int)kind + 101);
+			schema.SetConvertExpression<int, ShapeKind>(value => (ShapeKind)(value - 101));
+
+			ITable<ShapeKindRow> rows;
+
+			using (db.UseMappingSchema(schema))
+			{
+				rows = db.GetTable<ShapeKindRow>();
+			}
+
+			rows
+				.OrderBy(r => r.Id)
+				.ToList()
+				.Select(r => r.Kind)
+				.ShouldBe([ShapeKind.Circle, ShapeKind.Square]);
 		}
 	}
 }
