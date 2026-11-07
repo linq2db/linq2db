@@ -26,6 +26,8 @@ namespace Tests.Analyzers.Internal
 			string oracleReg = "",
 			string pgReg     = "",
 			string sqliteReg = "",
+			string ydb       = "",
+			string ydbReg    = "",
 			string rightAttr = "",
 			string extra     = "",
 			bool   sentinel  = true) => $$"""
@@ -42,6 +44,7 @@ namespace Tests.Analyzers.Internal
 					public const string PostgreSQL = "PostgreSQL";
 					public const string SQLite     = "SQLite";
 					public const string SQLiteMS   = "SQLite.MS";
+					public const string Ydb        = "YDB";
 				}
 
 				public static partial class Sql
@@ -103,6 +106,7 @@ namespace Tests.Analyzers.Internal
 							{ ProviderName.Oracle,   new Dictionary<MemberInfoWithType,IExpressionInfo> { {{oracle}} } },
 							{ ProviderName.SQLite,   new Dictionary<MemberInfoWithType,IExpressionInfo> { {{sqlite}} } },
 							{ ProviderName.SQLiteMS, new Dictionary<MemberInfoWithType,IExpressionInfo> { {{sqliteMs}} } },
+							{ ProviderName.Ydb,      new Dictionary<MemberInfoWithType,IExpressionInfo> { {{ydb}} } },
 						};
 					}
 
@@ -182,6 +186,19 @@ namespace Tests.Analyzers.Internal
 					public SQLiteMemberTranslator()
 					{
 						{{sqliteReg}}
+					}
+				}
+			}
+
+			namespace LinqToDB.Internal.DataProvider.Ydb.Translation
+			{
+				using LinqToDB.Internal.DataProvider.Translation;
+
+				public class YdbMemberTranslator : MemberTranslatorBase
+				{
+					public YdbMemberTranslator()
+					{
+						{{ydbReg}}
 					}
 				}
 			}
@@ -336,6 +353,13 @@ namespace Tests.Analyzers.Internal
 				sqliteMs:  "{ {|LINQ2DB0007:M(() => Math.Floor(0.0))|}, N(() => null) },",
 				sqliteReg: "Registration.RegisterMethod((double v) => Math.Floor(v), H);"));
 
+		// A section key and its translator namespace can differ in case: ProviderName.Ydb is "YDB", the namespace is Ydb.
+		[Test]
+		public Task SectionKeyMatchesProviderNamespaceIgnoringCase() => Verify(
+			Source(
+				ydb:    "{ {|LINQ2DB0007:M(() => Math.Floor(0.0))|}, N(() => null) },",
+				ydbReg: "Registration.RegisterMethod((double v) => Math.Floor(v), H);"));
+
 		// The common table runs for every provider, so any registration - provider-scoped included - is dead behind it.
 		[Test]
 		public Task CommonEntryAgainstProviderRegistrationIsReported() => Verify(
@@ -398,6 +422,11 @@ namespace Tests.Analyzers.Internal
 		[Test]
 		public Task EntryOutsideAnInitializerIsDrift() => Verify(
 			Source(extra: "static MemberInfoWithType Helper() => {|LINQ2DB0009:M(() => Math.Abs(0))|};"));
+
+		// A field table that LoadMembers never registers under a section key has no section either.
+		[Test]
+		public Task UnregisteredFieldTableIsDrift() => Verify(
+			Source(extra: "internal static readonly Dictionary<MemberInfoWithType,IExpressionInfo> _orphan = new() { { {|LINQ2DB0009:M(() => Math.Abs(0))|}, N(() => null) } };"));
 
 		// An entry whose lambda names no member cannot be keyed.
 		[Test]

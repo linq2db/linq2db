@@ -332,7 +332,7 @@ namespace CodeGenerators
 			ConcurrentBag<MapEntry>                       entries,
 			ConcurrentBag<Registration>                   registrations,
 			ConcurrentDictionary<IFieldSymbol, string>    fieldSections,
-			ConcurrentBag<(Location Location, string Reason)> failures)
+			ConcurrentBag<(Location, string)>             failures)
 		{
 			foreach (var (location, reason) in failures)
 				context.ReportDiagnostic(Diagnostic.Create(ModelUnreadable, location, reason));
