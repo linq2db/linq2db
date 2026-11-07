@@ -192,7 +192,7 @@ namespace Tests.Analyzers.Internal
 		const string PowRegistration   = "Registration.RegisterMethod((double x, double y) => Math.Pow(x, y), H);";
 		const string RightRegistration = "Registration.RegisterMethod((string? s, int? n) => Sql.Right(s, n), H);";
 
-		#region LINQ2DB0007 - common table
+		#region LINQ2DB0008 - common table
 
 		// The #5922 instance itself: Math.Pow mapped in the common table and registered by the base math translator.
 		// Pins the message arguments too, because they are what tells a reader which registration is dead and where.
@@ -201,7 +201,7 @@ namespace Tests.Analyzers.Internal
 			Source(
 				common:  "{ {|#0:M(() => Math.Pow(0, 0))|}, N(() => null) },",
 				baseReg: PowRegistration),
-			new DiagnosticResult("LINQ2DB0007", DiagnosticSeverity.Warning)
+			new DiagnosticResult("LINQ2DB0008", DiagnosticSeverity.Warning)
 				.WithLocation(0)
 				.WithArguments("System.Math.Pow(double, double)", "common", "LinqToDB.Internal.DataProvider.Translation.MathMemberTranslatorBase"));
 
@@ -230,7 +230,7 @@ namespace Tests.Analyzers.Internal
 		[Test]
 		public Task RegisteredPropertyIsReported() => Verify(
 			Source(
-				common:  "{ {|LINQ2DB0007:M(() => \"\".Length)|}, N(() => null) },",
+				common:  "{ {|LINQ2DB0008:M(() => \"\".Length)|}, N(() => null) },",
 				baseReg: "Registration.RegisterMember((string s) => s.Length, H);"));
 
 		// Same member name on a different receiver type is a different key.
@@ -243,14 +243,14 @@ namespace Tests.Analyzers.Internal
 		[Test]
 		public Task RegisteredConstructorIsReported() => Verify(
 			Source(
-				common:  "{ {|LINQ2DB0007:M(() => new DateTime(0L))|}, N(() => null) },",
+				common:  "{ {|LINQ2DB0008:M(() => new DateTime(0L))|}, N(() => null) },",
 				baseReg: "Registration.RegisterConstructor((long ticks) => new DateTime(ticks), H);"));
 
 		// A replacement registration is shadowed the same way: the map entry is applied before it is looked up.
 		[Test]
 		public Task RegisteredReplacementIsReported() => Verify(
 			Source(
-				common:  "{ {|LINQ2DB0007:M(() => Math.Pow(0, 0))|}, N(() => null) },",
+				common:  "{ {|LINQ2DB0008:M(() => Math.Pow(0, 0))|}, N(() => null) },",
 				baseReg: "Registration.RegisterReplacement((double x, double y) => Math.Pow(x, y), (double x, double y) => Math.Exp(y * Math.Log(x)));"));
 
 		// A generic-match registration covers every instantiation of the method, as TranslationRegistration stores
@@ -258,7 +258,7 @@ namespace Tests.Analyzers.Internal
 		[Test]
 		public Task GenericMatchRegistrationCoversOtherInstantiations() => Verify(
 			Source(
-				common:  "{ {|LINQ2DB0007:M(() => Sql.Identity(\"\"))|}, N(() => null) },",
+				common:  "{ {|LINQ2DB0008:M(() => Sql.Identity(\"\"))|}, N(() => null) },",
 				baseReg: "Registration.RegisterMethod((int v) => Sql.Identity(v), H, isGenericTypeMatch: true);"));
 
 		// Control for the arm above: without the flag the registration covers its own instantiation only.
@@ -304,7 +304,7 @@ namespace Tests.Analyzers.Internal
 
 		#endregion
 
-		#region LINQ2DB0007 - provider sections
+		#region LINQ2DB0008 - provider sections
 
 		// A base registration is inherited by every provider translator, so it covers every section.
 		[Test]
@@ -312,14 +312,14 @@ namespace Tests.Analyzers.Internal
 			Source(
 				oracle:  "{ {|#0:M(() => Sql.Right(\"\", 0))|}, N(() => null) },",
 				baseReg: RightRegistration),
-			new DiagnosticResult("LINQ2DB0007", DiagnosticSeverity.Warning)
+			new DiagnosticResult("LINQ2DB0008", DiagnosticSeverity.Warning)
 				.WithLocation(0)
 				.WithArguments("LinqToDB.Sql.Right(string?, int?)", "'Oracle'", "LinqToDB.Internal.DataProvider.Translation.MathMemberTranslatorBase"));
 
 		[Test]
 		public Task ProviderEntryAgainstItsOwnProviderRegistrationIsReported() => Verify(
 			Source(
-				oracle:    "{ {|LINQ2DB0007:M(() => Sql.Right(\"\", 0))|}, N(() => null) },",
+				oracle:    "{ {|LINQ2DB0008:M(() => Sql.Right(\"\", 0))|}, N(() => null) },",
 				oracleReg: RightRegistration));
 
 		// Control for the arm above: a registration in another provider's namespace never runs for Oracle.
@@ -333,26 +333,26 @@ namespace Tests.Analyzers.Internal
 		[Test]
 		public Task DottedSectionResolvesToItsProviderRoot() => Verify(
 			Source(
-				sqliteMs:  "{ {|LINQ2DB0007:M(() => Math.Floor(0.0))|}, N(() => null) },",
+				sqliteMs:  "{ {|LINQ2DB0008:M(() => Math.Floor(0.0))|}, N(() => null) },",
 				sqliteReg: "Registration.RegisterMethod((double v) => Math.Floor(v), H);"));
 
 		// The common table runs for every provider, so any registration - provider-scoped included - is dead behind it.
 		[Test]
 		public Task CommonEntryAgainstProviderRegistrationIsReported() => Verify(
 			Source(
-				common: "{ {|LINQ2DB0007:M(() => Sql.Right(\"\", 0))|}, N(() => null) },",
+				common: "{ {|LINQ2DB0008:M(() => Sql.Right(\"\", 0))|}, N(() => null) },",
 				pgReg:  RightRegistration));
 
 		#endregion
 
-		#region LINQ2DB0008
+		#region LINQ2DB0009
 
 		[Test]
 		public Task ProviderEntryKillsSameConfigurationAttribute() => Verify(
 			Source(
 				oracle:    "{ {|#0:M(() => Sql.Right(\"\", 0))|}, N(() => null) },",
 				rightAttr: "[Function(ProviderName.Oracle, \"SUBSTR\")]"),
-			new DiagnosticResult("LINQ2DB0008", DiagnosticSeverity.Warning)
+			new DiagnosticResult("LINQ2DB0009", DiagnosticSeverity.Warning)
 				.WithLocation(0)
 				.WithArguments("LinqToDB.Sql.Right(string?, int?)", "'Oracle'", "FunctionAttribute", "Oracle"));
 
@@ -360,14 +360,14 @@ namespace Tests.Analyzers.Internal
 		[Test]
 		public Task ConfigurationSetByPropertyIsRead() => Verify(
 			Source(
-				oracle:    "{ {|LINQ2DB0008:M(() => Sql.Right(\"\", 0))|}, N(() => null) },",
+				oracle:    "{ {|LINQ2DB0009:M(() => Sql.Right(\"\", 0))|}, N(() => null) },",
 				rightAttr: "[Function(\"SUBSTR\", Configuration = ProviderName.Oracle)]"));
 
 		// A sub-configuration of the section's provider sits behind the same map entry in ConfigurationList.
 		[Test]
 		public Task ProviderEntryKillsSubConfigurationAttribute() => Verify(
 			Source(
-				sqlite:    "{ {|LINQ2DB0008:M(() => Sql.Right(\"\", 0))|}, N(() => null) },",
+				sqlite:    "{ {|LINQ2DB0009:M(() => Sql.Right(\"\", 0))|}, N(() => null) },",
 				rightAttr: "[Function(ProviderName.SQLiteMS, \"SUBSTR\")]"));
 
 		// Controls: an unconfigured attribute still serves every other provider, another provider's attribute is
@@ -387,28 +387,28 @@ namespace Tests.Analyzers.Internal
 		[Test]
 		public Task CommonEntryKillsUnconfiguredAttribute() => Verify(
 			Source(
-				common:    "{ {|LINQ2DB0008:M(() => Sql.Right(\"\", 0))|}, N(() => null) },",
+				common:    "{ {|LINQ2DB0009:M(() => Sql.Right(\"\", 0))|}, N(() => null) },",
 				rightAttr: "[Function(\"RIGHT\")]"));
 
 		#endregion
 
-		#region LINQ2DB0009
+		#region LINQ2DB0010
 
 		// An M call outside a table initializer has no section: the reader reports it rather than guessing one.
 		[Test]
 		public Task EntryOutsideAnInitializerIsDrift() => Verify(
-			Source(extra: "static MemberInfoWithType Helper() => {|LINQ2DB0009:M(() => Math.Abs(0))|};"));
+			Source(extra: "static MemberInfoWithType Helper() => {|LINQ2DB0010:M(() => Math.Abs(0))|};"));
 
 		// An entry whose lambda names no member cannot be keyed.
 		[Test]
 		public Task EntryWithoutAMemberIsDrift() => Verify(
-			Source(common: "{ {|LINQ2DB0009:M(() => 1 + 2)|}, N(() => null) },"));
+			Source(common: "{ {|LINQ2DB0010:M(() => 1 + 2)|}, N(() => null) },"));
 
 		// No entries at all means the reader no longer recognises the tables, which must not read as "no shadows".
 		[Test]
 		public Task EmptyModelIsDrift() => Verify(
 			Source(sentinel: false)
-				.Replace("public static class Expressions", "public static class {|LINQ2DB0009:Expressions|}", System.StringComparison.Ordinal));
+				.Replace("public static class Expressions", "public static class {|LINQ2DB0010:Expressions|}", System.StringComparison.Ordinal));
 
 		// A pattern held in a variable hides the registered member, so a shadow of it would go unreported. The
 		// forwarding helper in the extensions class is the one exemption, and every fixture compiles it.
@@ -416,7 +416,7 @@ namespace Tests.Analyzers.Internal
 		public Task NonLambdaRegistrationPatternIsDrift() => Verify(
 			Source(baseReg: """
 				Expression<Func<double, double>> pattern = v => Math.Floor(v);
-				{|LINQ2DB0009:Registration.RegisterMethod(pattern, H)|};
+				{|LINQ2DB0010:Registration.RegisterMethod(pattern, H)|};
 				"""));
 
 		#endregion

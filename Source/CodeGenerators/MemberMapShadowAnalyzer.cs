@@ -14,11 +14,11 @@ namespace CodeGenerators
 	/// before the build visitor consults member translators or <c>Sql.ExpressionAttribute</c>-derived attributes,
 	/// so whatever the map covers is dead code on the other two paths - and it still reads as live.
 	/// <list type="bullet">
-	/// <item><c>LINQ2DB0007</c> - a map entry whose member is also registered with a member translator covering
+	/// <item><c>LINQ2DB0008</c> - a map entry whose member is also registered with a member translator covering
 	/// the entry's section.</item>
-	/// <item><c>LINQ2DB0008</c> - a map entry that makes one of the member's attributes unreachable: a common
+	/// <item><c>LINQ2DB0009</c> - a map entry that makes one of the member's attributes unreachable: a common
 	/// entry hides every attribute, a provider entry hides the attributes configured for that provider.</item>
-	/// <item><c>LINQ2DB0009</c> - the map could not be read, so the two rules above cannot be trusted.</item>
+	/// <item><c>LINQ2DB0010</c> - the map could not be read, so the two rules above cannot be trusted.</item>
 	/// </list>
 	/// The rule is "the same member on both sides", so cooperative chains - an entry that expands <i>into</i> a
 	/// registered member - are excluded by construction.
@@ -27,7 +27,7 @@ namespace CodeGenerators
 	/// A registration in the shared translation namespaces is inherited by every provider translator and covers
 	/// every section; one in <c>LinqToDB.Internal.DataProvider.&lt;P&gt;</c> covers the sections whose key, up to
 	/// its first dot, is <c>P</c>. Sections are recognised by the shape of the table initializers rather than by
-	/// field names, so a rename keeps the rule alive and a reshaped table reports <c>LINQ2DB0009</c>.
+	/// field names, so a rename keeps the rule alive and a reshaped table reports <c>LINQ2DB0010</c>.
 	/// </remarks>
 	[DiagnosticAnalyzer(LanguageNames.CSharp)]
 	public sealed class MemberMapShadowAnalyzer : DiagnosticAnalyzer
@@ -44,7 +44,7 @@ namespace CodeGenerators
 		];
 
 		static readonly DiagnosticDescriptor ShadowedRegistration = new(
-			id:                 "LINQ2DB0007",
+			id:                 "LINQ2DB0008",
 			title:              "A member map entry shadows a member translator registration",
 			messageFormat:      "'{0}' is mapped in the {1} section and also registered by {2}; the map entry is applied first, so the registration never runs there. Remove the map entry and move any provider-specific emulation into a translator override.",
 			category:           "Usage",
@@ -54,7 +54,7 @@ namespace CodeGenerators
 			customTags:         WellKnownDiagnosticTags.CompilationEnd);
 
 		static readonly DiagnosticDescriptor ShadowedAttribute = new(
-			id:                 "LINQ2DB0008",
+			id:                 "LINQ2DB0009",
 			title:              "A member map entry makes a function attribute unreachable",
 			messageFormat:      "'{0}' is mapped in the {1} section, which makes its {2} for configuration '{3}' unreachable. Remove the map entry and implement the provider form as a translator, or remove the dead attribute.",
 			category:           "Usage",
@@ -64,9 +64,9 @@ namespace CodeGenerators
 			customTags:         WellKnownDiagnosticTags.CompilationEnd);
 
 		static readonly DiagnosticDescriptor ModelUnreadable = new(
-			id:                 "LINQ2DB0009",
+			id:                 "LINQ2DB0010",
 			title:              "The Expressions member map could not be read",
-			messageFormat:      "The Expressions member map could not be read: {0}. LINQ2DB0007 and LINQ2DB0008 cannot be trusted until the reader is updated.",
+			messageFormat:      "The Expressions member map could not be read: {0}. LINQ2DB0008 and LINQ2DB0009 cannot be trusted until the reader is updated.",
 			category:           "Usage",
 			defaultSeverity:    DiagnosticSeverity.Warning,
 			isEnabledByDefault: true,
