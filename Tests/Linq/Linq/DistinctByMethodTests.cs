@@ -1290,7 +1290,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3, TestProvName.AllInformix])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
 		public void DistinctByAfterGroupByOrderedByDateDifferencePartOfKey([DataSources] string context)
 		{
@@ -1309,6 +1309,7 @@ namespace Tests.Linq
 		}
 
 		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[ThrowsForProvider(typeof(LinqToDBException), [TestProvName.AllSapHana, TestProvName.AllDB2], ErrorMessage = ErrorHelper.Error_Interval_Shift)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
 		public void DistinctByAfterGroupByOrderedByDateShiftOfKey([DataSources] string context)
 		{
