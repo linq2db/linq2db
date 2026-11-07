@@ -889,5 +889,34 @@ namespace Tests.Mapping
 				.Select(r => r.Kind)
 				.ShouldBe([ShapeKind.Circle, ShapeKind.Square]);
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
+		public void LoadWithFollowsHandleSchema([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			ITable<ChildWithoutAssociation> children;
+
+			using (db.UseMappingSchema(new FluentMappingBuilder(new())
+				.Entity<ChildWithoutAssociation>()
+					.Association(c => c.Parent, c => c.ParentID, p => p!.ParentID)
+				.Build()
+				.MappingSchema))
+			{
+				children = db.GetTable<ChildWithoutAssociation>();
+			}
+
+			var expected = Child
+				.OrderBy(c => c.ChildID)
+				.Select(c => (int?)c.ParentID)
+				.ToList();
+
+			children
+				.LoadWith(c => c.Parent)
+				.OrderBy(c => c.ChildID)
+				.ToList()
+				.Select(c => c.Parent?.ParentID)
+				.ShouldBe(expected);
+		}
 	}
 }
