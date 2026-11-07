@@ -1864,7 +1864,9 @@ namespace Tests.Linq
 		static RoundValues[] RoundValuesFor(string context)
 		{
 			return context.IsAnyOf(TestProvName.AllAccess)
-				? RoundValuesData.Where(r => r.D != null && r.P != null).ToArray()
+				? RoundValuesData
+					.Where(r => r.D != null && r.P != null)
+					.ToArray()
 				: RoundValuesData;
 		}
 
