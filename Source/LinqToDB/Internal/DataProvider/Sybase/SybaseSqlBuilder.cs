@@ -207,7 +207,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 						return sb.Append(value);
 
 					// https://github.com/linq2db/linq2db/issues/1064
-					if (convertType == ConvertType.NameToQueryField && Name.Length > 0 && value[0] == '#')
+					if (convertType == ConvertType.NameToQueryField && value.Length > 0 && value[0] == '#')
 						return sb.Append(value);
 
 					return sb.Append('[').Append(value).Append(']');
@@ -271,25 +271,6 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)
 		{
 			StringBuilder.Append("TRUNCATE TABLE ");
-		}
-
-		public override int CommandCount(SqlStatement statement)
-		{
-			return statement switch
-			{
-				SqlTruncateTableStatement trun => trun.ResetIdentity && trun.Table!.IdentityFields.Count > 0 ? 2 : 1,
-				_ => 1,
-			};
-		}
-
-		protected override void BuildCommand(SqlStatement statement, int commandNumber)
-		{
-			if (statement is SqlTruncateTableStatement trun)
-			{
-				StringBuilder.Append("sp_chgattribute ");
-				BuildObjectName(StringBuilder, trun.Table!.TableName, ConvertType.NameToQueryTable, true, trun.Table.TableOptions);
-				StringBuilder.AppendLine(", 'identity_burn_max', 0, '0'");
-			}
 		}
 
 		private void BuildIdentityInsert(SqlTableSource table, bool enable)
@@ -442,7 +423,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 				dataType = CorrectDecimalFacets(dataType, val);
 			else if (value is SqlParameter param)
 			{
-				var paramValue = param.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+				var paramValue = param.GetParameterValue(RenderContext.EvaluationContext.ParameterValues);
 
 				if (paramValue.ProviderValue is decimal decValue)
 					dataType = CorrectDecimalFacets(dataType, decValue);

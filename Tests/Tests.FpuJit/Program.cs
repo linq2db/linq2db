@@ -27,6 +27,7 @@ namespace Tests.FpuJit
 			"linq2db.EntityFrameworkCore",
 			"linq2db.Extensions",
 			"linq2db.FSharp",
+			"linq2db.Identity",
 			"linq2db.Remote.Grpc",
 			"linq2db.Remote.HttpClient.Client",
 			"linq2db.Remote.SignalR.Client",
