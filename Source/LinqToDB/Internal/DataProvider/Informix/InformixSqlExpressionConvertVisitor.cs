@@ -18,6 +18,8 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		protected override bool SupportsNullInColumn              => false;
 		protected override bool SupportsDistinctAsExistsIntersect => true;
 		protected override bool ConcatRequiresExplicitStringCast  => false;
+		// IFX expression cannot be predicate
+		protected override bool ForceConvertSetValue              => true;
 
 		public override ISqlPredicate ConvertLikePredicate(SqlPredicate.Like predicate)
 		{
@@ -238,7 +240,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 			if (element.ElseExpression != null)
 			{
-				var elseExpression = WrapBooleanExpression(element.ElseExpression, includeFields : true, forceConvert: true);
+				var elseExpression = FoldValuePredicate(element.ElseExpression, includeFields : true, forceConvert: true);
 
 				if (!ReferenceEquals(elseExpression, element.ElseExpression))
 				{
@@ -251,7 +253,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 		protected override SqlCaseExpression.CaseItem ConvertCaseItem(SqlCaseExpression.CaseItem newElement)
 		{
-			var resultExpr = WrapBooleanExpression(newElement.ResultExpression, includeFields : true, forceConvert: true);
+			var resultExpr = FoldValuePredicate(newElement.ResultExpression, includeFields : true, forceConvert: true);
 
 			if (!ReferenceEquals(resultExpr, newElement.ResultExpression))
 			{
@@ -269,8 +271,8 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			var trueValue  = isTrueParameter  && falseIsOtherValue ? QueryHelper.MarkAsNonQueryParameters(element.TrueValue)  : element.TrueValue;
 			var falseValue = isFalseParameter && trueIsOtherValue  ? QueryHelper.MarkAsNonQueryParameters(element.FalseValue) : element.FalseValue;
 
-			trueValue  = WrapBooleanExpression(trueValue,  includeFields : false, forceConvert: true);
-			falseValue = WrapBooleanExpression(falseValue, includeFields : false, forceConvert: true);
+			trueValue  = FoldValuePredicate(trueValue,  includeFields : false, forceConvert: true);
+			falseValue = FoldValuePredicate(falseValue, includeFields : false, forceConvert: true);
 
 			if (!ReferenceEquals(trueValue, element.TrueValue) || !ReferenceEquals(falseValue, element.FalseValue))
 			{
@@ -341,30 +343,6 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			return InformixSqlOptimizer.WrapParameters(
 				base.ConvertIsDistinctPredicateAsIntersect(predicate),
 				VisitMode);
-		}
-
-		protected internal override IQueryElement VisitSqlSetExpression(SqlSetExpression element)
-		{
-			var newElement = (SqlSetExpression)base.VisitSqlSetExpression(element);
-
-			// IFX expression cannot be predicate
-			var wrapped = newElement.Expression == null ? null : WrapBooleanExpression(newElement.Expression, includeFields : false, withNull: newElement.Column.CanBeNullable(NullabilityContext), forceConvert: true);
-
-			if (!ReferenceEquals(wrapped, newElement.Expression))
-			{
-				if (wrapped != null)
-					wrapped = (ISqlExpression)Optimize(wrapped);
-				if (GetVisitMode(newElement) == VisitMode.Modify)
-				{
-					newElement.Expression = wrapped;
-				}
-				else
-				{
-					newElement = new SqlSetExpression(newElement.Column, wrapped);
-				}
-			}
-
-			return newElement;
 		}
 
 		protected internal override IQueryElement VisitExprPredicate(SqlPredicate.Expr predicate)
