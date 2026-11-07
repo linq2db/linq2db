@@ -1876,6 +1876,32 @@ namespace Tests.Linq
 		}
 
 		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[ActiveIssue(6260, Configurations = [TestProvName.AllPostgreSQL, TestProvName.AllDuckDB], ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}{ Key = 7, Count = 1 }, { Key = 6, Count = 1 }{1}but was")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterGroupByKeepsPreGroupOrderingAsTieBreaker([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var result = db.Parent
+				.OrderByDescending(p => p.ParentID)
+				.GroupBy(p => p.ParentID)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.OrderBy(x => x.Count)
+				.DistinctBy(x => x.Key)
+				.ToList();
+
+			var expected = Parent
+				.OrderByDescending(p => p.ParentID)
+				.GroupBy(p => p.ParentID)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.OrderBy(x => x.Count)
+				.DistinctBy(x => x.Key)
+				.ToList();
+
+			result.ShouldBe(expected);
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		[ActiveIssue(6223, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "could not be converted to SQL.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6223")]
 		public void DistinctByAfterLeftJoinThenGroupByInnerKey([DataSources] string context)

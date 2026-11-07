@@ -66,6 +66,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		List<(Expression expr, bool descending, Sql.NullsPosition nulls)>? _currentOrderBy;
 		bool                                                               _isOrderByDropped;
+		bool                                                               _isOrderByKeptThroughGrouping;
 
 		/// <summary>
 		/// Records an OrderBy clause as it's processed by <see cref="OrderByBuilder"/> so eager-load
@@ -75,8 +76,9 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			if (reset || _currentOrderBy == null)
 			{
-				_currentOrderBy   = new();
-				_isOrderByDropped = false;
+				_currentOrderBy               = new();
+				_isOrderByDropped             = false;
+				_isOrderByKeptThroughGrouping = false;
 			}
 
 			_currentOrderBy.Add((expr, descending, nulls));
@@ -97,6 +99,21 @@ namespace LinqToDB.Internal.Linq.Builder
 		internal void MarkOrderByDropped()
 		{
 			_isOrderByDropped = true;
+		}
+
+		/// <summary>
+		/// Whether <see cref="CurrentOrderBy"/> is the ordering a <c>GroupBy</c> kept from its source (see
+		/// <see cref="MarkOrderByKeptThroughGrouping"/>), so the source's ORDER BY repeats it. Cleared by the next <c>OrderBy</c>,
+		/// after which that ORDER BY is an earlier ordering the new one only resets.
+		/// </summary>
+		internal bool IsOrderByKeptThroughGrouping => _isOrderByKeptThroughGrouping;
+
+		/// <summary>
+		/// Records that the captured ordering is the one a <c>GroupBy</c> kept from its source.
+		/// </summary>
+		internal void MarkOrderByKeptThroughGrouping()
+		{
+			_isOrderByKeptThroughGrouping = true;
 		}
 
 		/// <summary>
@@ -163,11 +180,13 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// </summary>
 		internal IDisposable IsolateOrderBy()
 		{
-			var saved         = _currentOrderBy;
-			var savedDropped  = _isOrderByDropped;
-			_currentOrderBy   = null;
-			_isOrderByDropped = false;
-			return new IsolateOrderByScope(this, saved, savedDropped);
+			var saved                     = _currentOrderBy;
+			var savedDropped              = _isOrderByDropped;
+			var savedKept                 = _isOrderByKeptThroughGrouping;
+			_currentOrderBy               = null;
+			_isOrderByDropped             = false;
+			_isOrderByKeptThroughGrouping = false;
+			return new IsolateOrderByScope(this, saved, savedDropped, savedKept);
 		}
 
 		/// <summary>
@@ -217,18 +236,21 @@ namespace LinqToDB.Internal.Linq.Builder
 			readonly ExpressionBuilder                          _builder;
 			readonly List<(Expression expr, bool descending, Sql.NullsPosition nulls)>? _saved;
 			readonly bool                                                               _savedDropped;
+			readonly bool                                                               _savedKept;
 
-			public IsolateOrderByScope(ExpressionBuilder builder, List<(Expression expr, bool descending, Sql.NullsPosition nulls)>? saved, bool savedDropped)
+			public IsolateOrderByScope(ExpressionBuilder builder, List<(Expression expr, bool descending, Sql.NullsPosition nulls)>? saved, bool savedDropped, bool savedKept)
 			{
 				_builder      = builder;
 				_saved        = saved;
 				_savedDropped = savedDropped;
+				_savedKept    = savedKept;
 			}
 
 			public void Dispose()
 			{
-				_builder._currentOrderBy   = _saved;
-				_builder._isOrderByDropped = _savedDropped;
+				_builder._currentOrderBy               = _saved;
+				_builder._isOrderByDropped             = _savedDropped;
+				_builder._isOrderByKeptThroughGrouping = _savedKept;
 			}
 		}
 

@@ -282,6 +282,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (kept.Count == 0)
 				builder.MarkOrderByDropped();
+			else
+				builder.MarkOrderByKeptThroughGrouping();
 		}
 
 		// A column re-exposes its expression per row, so two expressions whose column chains share an element are the same

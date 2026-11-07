@@ -86,6 +86,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			IBuildContext                         sequence;
 			(Expression expr, bool descending, Sql.NullsPosition nulls)[] captured;
 			bool                                  dropped;
+			bool                                  keptThroughGrouping;
 
 			// Isolate OrderBy state across the *inner* sequence build only. DistinctBy
 			// consumes the upstream OrderBy semantically (row-number partition order);
@@ -112,7 +113,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				sequence = buildResult.BuildContext;
 				captured = builder.CurrentOrderBy is { Count: > 0 } current ? current.ToArray() : [];
-				dropped  = builder.IsOrderByDropped;
+				dropped             = builder.IsOrderByDropped;
+				keptThroughGrouping = builder.IsOrderByKeptThroughGrouping;
 			}
 
 			// A dropped ordering is thrown, not returned: a subquery that fails to build falls back to client-side evaluation
@@ -160,7 +162,7 @@ namespace LinqToDB.Internal.Linq.Builder
 								throw SqlErrorExpression.CreateException(sequenceExpression, ErrorHelper.Error_DistinctByRequiresOrderBy);
 
 							if (!skipped)
-								ClearConsumedOrderBy(SingleSubQuery(distinctOnContext.SelectQuery));
+								ClearConsumedOrderBy(SingleSubQuery(distinctOnContext.SelectQuery), keptThroughGrouping);
 						}
 
 						var reordered = ApplyDistinctOn(distinctOnContext.SelectQuery, onExpressions);
@@ -208,7 +210,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				// plain column there, so it gets materialized as an extra projected column and appended as a trailing
 				// sort key that merely repeats the leading one. A limited sequence keeps its ordering — there it
 				// decides which rows survive, and the optimizer leaves such a sequence alone anyway.
-				ClearConsumedOrderBy(sequence.SelectQuery);
+				ClearConsumedOrderBy(sequence.SelectQuery, keptThroughGrouping);
 
 				var partitionBody = SequenceHelper.PrepareBody(selector, sequence);
 
@@ -314,12 +316,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			return sql is SqlPlaceholderExpression ? sql : expr;
 		}
 
-		// Clears the ORDER BY of a query the DistinctBy re-applies the captured ordering above, and of the single-source
-		// queries below a grouping (a GroupBy's source, where a kept pre-group ordering still sits): the optimizer would lift
-		// each one again as a duplicate sort key. Above the grouping, an ORDER BY is an earlier ordering the captured one reset,
+		// Clears the ORDER BY of a query the DistinctBy re-applies the captured ordering above and, when the captured ordering
+		// is the one a GroupBy kept, of the single-source queries below that grouping, where it still sits: the optimizer would
+		// lift each one again as a duplicate sort key. Any other ORDER BY below is an earlier ordering the captured one reset,
 		// which the optimizer lifts as a tie-breaker, so it stays. Stops where the ordering decides which rows survive (a
 		// limited or a DISTINCT ON query) and at an aggregation that needs its source ordered.
-		static void ClearConsumedOrderBy(SelectQuery? query)
+		static void ClearConsumedOrderBy(SelectQuery? query, bool keptThroughGrouping)
 		{
 			var isTop         = true;
 			var belowGrouping = false;
@@ -330,7 +332,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (isAggregation && needsOrderBy)
 					return;
 
-				if (isTop || belowGrouping)
+				if (isTop || belowGrouping && keptThroughGrouping)
 					query.OrderBy.Items.Clear();
 
 				belowGrouping |= isAggregation || !query.Select.GroupBy.IsEmpty;
