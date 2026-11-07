@@ -506,17 +506,14 @@ public class TestsInitialization
 	static void PurgeDB2ConnectionPool()
 	{
 		var clientNamespace = DB2ProviderAdapter.ClientNamespace;
-		// Try to find the DB2 provider assembly by its known namespace, which matches the assembly name. 
-		var driver = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(static a => a.GetName().Name == DB2ProviderAdapter.ClientNamespace);
+		var driver          = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(static a => a.GetName().Name == DB2ProviderAdapter.AssemblyName);
 
 #if !NETFRAMEWORK
-		// Fall back to the old client namespace for the legacy IBM.Data.DB2 provider, which is still used in some test legs by the IBM i provider.
-		// Both providers are never loaded in the same run, so this is safe. They are loaded by DB2ProviderAdapter which tries to load them in the same order.
-		// The old provider's assembly name is also the same as its namespace.
+		// IBM.Data.DB2.Core: the legacy .NET client DB2ProviderAdapter still falls back to.
 		if (driver == null)
 		{
 			clientNamespace = DB2ProviderAdapter.ClientNamespaceOld;
-			driver = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(static a => a.GetName().Name == DB2ProviderAdapter.ClientNamespaceOld);
+			driver          = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(static a => a.GetName().Name == DB2ProviderAdapter.AssemblyNameOld);
 		}
 #endif
 
