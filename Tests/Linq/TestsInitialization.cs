@@ -85,10 +85,8 @@ public class TestsInitialization
 			var providerAssembly = LinqToDB.Internal.Common.Tools.TryLoadAssembly(
 				DB2ProviderAdapter.AssemblyName, DB2ProviderAdapter.ProviderFactoryName);
 
-#if !NETFRAMEWORK
 			providerAssembly ??= LinqToDB.Internal.Common.Tools.TryLoadAssembly(
 				DB2ProviderAdapter.AssemblyNameOld, DB2ProviderAdapter.ProviderFactoryName);
-#endif
 
 			if (providerAssembly != null)
 			{
