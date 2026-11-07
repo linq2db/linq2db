@@ -416,6 +416,48 @@ namespace Tests.Linq
 			Nested(3).ShouldBe(nestedMisses);
 		}
 
+		[Test]
+		[QueryCacheTest]
+		public void CapturedQueryableInstanceHitsTheCache([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// The captured table and query are inlined as the same instances on every run, inside lambdas whose
+			// parameters are new on every run.
+			var children = db.GetTable<Model.Child>();
+			var filtered = db.Child.Where(c => c.ChildID > 0);
+
+			long Table(int id)
+			{
+				var query = db.Parent
+					.Where(p => children.Any(c => c.ParentID == p.ParentID) && p.ParentID >= id)
+					.Select(p => p.ParentID);
+				query.ToArray();
+				return query.GetCacheMissCount();
+			}
+
+			long Query(int id)
+			{
+				var query = db.Parent
+					.Where(p => filtered.Any(c => c.ParentID == p.ParentID) && p.ParentID >= id)
+					.Select(p => p.ParentID);
+				query.ToArray();
+				return query.GetCacheMissCount();
+			}
+
+			var tableMisses = Table(1);
+			Table(2)
+				.ShouldBe(tableMisses);
+			Table(3)
+				.ShouldBe(tableMisses);
+
+			var queryMisses = Query(1);
+			Query(2)
+				.ShouldBe(queryMisses);
+			Query(3)
+				.ShouldBe(queryMisses);
+		}
+
 		static int ClientSide(Sql.IQueryableContainer? container) => container == null ? 1 : 2;
 
 		// Query-cache test: provider-independent.

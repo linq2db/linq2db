@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Internal.Expressions.ExpressionVisitors
@@ -24,8 +25,9 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 
 		static bool EqualsTo(this Expression? expr1, Expression? expr2, ParameterBindings bindings)
 		{
-			if (expr1 == expr2 && (expr1 == null || bindings.AreIdentical))
-				return true;
+			// A shared subtree equals itself unless it references a parameter that the two trees bind differently.
+			if (ReferenceEquals(expr1, expr2))
+				return expr1 == null || bindings.AreIdentical || !bindings.AffectSharedSubtree(expr1);
 
 			if (expr1 == null || expr2 == null || expr1.Type != expr2.Type)
 				return false;
@@ -114,20 +116,14 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 					((ChangeTypeExpression)expr1).Type == ((ChangeTypeExpression)expr2).Type &&
 					((ChangeTypeExpression)expr1).Expression.EqualsTo(((ChangeTypeExpression)expr2).Expression, bindings),
 
-				ExpressionType.Extension => EqualsExtensions(expr1, expr2, bindings),
+				ExpressionType.Extension => EqualsExtensions(expr1, expr2),
 
-				// A shared unsupported node cannot be accepted under different bindings.
-				_ when expr1 == expr2 => false,
 				_ => throw new InvalidOperationException($"Unhandled expression type: {expr1.NodeType}"),
 			};
 		}
 
-		static bool EqualsExtensions(Expression expr1, Expression expr2, ParameterBindings bindings)
+		static bool EqualsExtensions(Expression expr1, Expression expr2)
 		{
-			// A shared node cannot be accepted under different bindings.
-			if (ReferenceEquals(expr1, expr2))
-				return bindings.AreIdentical;
-
 			return expr1.Equals(expr2);
 		}
 
@@ -483,6 +479,26 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 				return first.Type == second.Type
 					&& first.IsByRef == second.IsByRef
 					&& string.Equals(first.Name, second.Name, StringComparison.Ordinal);
+			}
+
+			// Whether a subtree shared by both trees references a parameter that resolves to different declarations
+			// in them. A parameter the subtree declares itself is checked as well, which can only cost a cache hit.
+			public bool AffectSharedSubtree(Expression shared)
+			{
+				return shared.Find(this, static (bindings, e) => e is ParameterExpression p && !bindings.ResolvesToItself(p)) != null;
+			}
+
+			bool ResolvesToItself(ParameterExpression parameter)
+			{
+				for (var i = _pairs.Count - 1; i >= 0; i--)
+				{
+					var (declaredFirst, declaredSecond) = _pairs[i];
+
+					if (ReferenceEquals(declaredFirst, parameter) || ReferenceEquals(declaredSecond, parameter))
+						return ReferenceEquals(declaredFirst, declaredSecond);
+				}
+
+				return true;
 			}
 
 			public bool Compare(ParameterExpression first, ParameterExpression second)

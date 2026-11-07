@@ -96,19 +96,27 @@ namespace Tests.Common
 		{
 			var a = Expression.Parameter(typeof(int), "p");
 			var b = Expression.Parameter(typeof(int), "p");
-			var shared = Expression.Switch(Expression.Constant(0), a);
+			// .NET Framework requires at least one case.
+			var shared = Expression.Switch(Expression.Constant(0), a, Expression.SwitchCase(a, Expression.Constant(1)));
 			CompareBoth(Expression.Lambda(shared, a), Expression.Lambda(shared, a), true);
 			CompareBoth(Expression.Lambda(shared, a), Expression.Lambda(shared, b), false);
+
+			var unbound = Expression.Switch(Expression.Constant(0), Expression.Constant(1), Expression.SwitchCase(Expression.Constant(2), Expression.Constant(1)));
+			CompareBoth(Expression.Lambda(unbound, a), Expression.Lambda(unbound, b), true);
 		}
 
-		sealed class SharedExtension(Expression child) : Expression
+		sealed class SharedExtension(Expression? child) : Expression
 		{
 			public override ExpressionType NodeType => ExpressionType.Extension;
 			public override Type           Type     => typeof(int);
 
-			protected override Expression VisitChildren(ExpressionVisitor visitor) => this;
+			protected override Expression VisitChildren(ExpressionVisitor visitor)
+			{
+				visitor.Visit(Child);
+				return this;
+			}
 
-			public Expression Child { get; } = child;
+			public Expression? Child { get; } = child;
 		}
 
 		[Test]
@@ -119,6 +127,12 @@ namespace Tests.Common
 			var shared = new SharedExtension(a);
 			CompareBoth(Expression.Lambda(shared, a), Expression.Lambda(shared, a), true);
 			CompareBoth(Expression.Lambda(shared, a), Expression.Lambda(shared, b), false);
+
+			// A shared node that references no bound parameter, such as a captured table, still matches.
+			var leaf = new SharedExtension(null);
+			CompareBoth(Expression.Lambda(leaf, a), Expression.Lambda(leaf, b), true);
+			var unbound = new SharedExtension(Expression.Parameter(typeof(int), "p"));
+			CompareBoth(Expression.Lambda(unbound, a), Expression.Lambda(unbound, b), true);
 		}
 
 		public sealed class Holder
