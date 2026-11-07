@@ -128,6 +128,9 @@
 		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions"             Version="$(Net8LatestForNuget)"        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))"  />
 		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions"             Version="$(Net9LatestForNuget)"        Condition="'$(TargetFramework)'=='net9.0'"  />
 		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions"             Version="$(Net10LatestForNuget)"       Condition="'$(TargetFramework)'=='net10.0'" />
+		<PackageVersion Include="Microsoft.Extensions.Identity.Stores"                  Version="$(Net8LatestForNuget)"        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))"  />
+		<PackageVersion Include="Microsoft.Extensions.Identity.Stores"                  Version="$(Net9LatestForNuget)"        Condition="'$(TargetFramework)'=='net9.0'"  />
+		<PackageVersion Include="Microsoft.Extensions.Identity.Stores"                  Version="$(Net10LatestForNuget)"       Condition="'$(TargetFramework)'=='net10.0'" />
 	</ItemGroup>
 
 	<ItemGroup Label="LINQPad-only">
@@ -177,7 +180,7 @@
 		<!--System.Data.SQLite ships no native of its own; it loads e_sqlite3 from SQLitePCLRaw.lib.e_sqlite3,
 		    declared in the vulnerability-managed group below alongside Microsoft.Data.Sqlite's copy.-->
 		<PackageVersion Include="System.Data.SQLite"                                    Version="2.0.4"                        />
-		<PackageVersion Include="Ydb.Sdk"                                               Version="0.35.0"                       />
+		<PackageVersion Include="Ydb.Sdk"                                               Version="0.38.0"                       />
 		<PackageVersion Include="DuckDB.NET.Data.Full"                                  Version="1.5.5"                        />
 		<PackageVersion Include="linq2db4iSeries"                                       Version="6.5.0"                        />
 	</ItemGroup>
@@ -276,8 +279,8 @@
 		<PackageVersion Include="System.Runtime.InteropServices.RuntimeInformation"     Version="4.3.0"                        />
 
 		<PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly"           Version="$(Net10Latest)"               />
-		<!--GHSA-g27p-qf6j-c96c, GHSA-qjpx-jqm5-h2c4: back to $(Net10Latest) once it reaches 10.0.13-->
-		<PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server"    Version="10.0.13"                      />
+		<!--GHSA-g27p-qf6j-c96c, GHSA-qjpx-jqm5-h2c4: back to $(Net10Latest) once it reaches 10.0.14-->
+		<PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server"    Version="10.0.14"                      />
 		<PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="$(Net10Latest)"               />
 	</ItemGroup>
 

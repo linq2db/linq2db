@@ -16,13 +16,33 @@ namespace LinqToDB.Internal.SqlProvider
 {
 	public class SqlExpressionOptimizerVisitor : SqlQueryVisitor
 	{
-		NullabilityContext          _nullabilityContext = default!;
 		ICollection<ISqlPredicate>? _allowOptimizeList;
 		ISqlPredicate?              _allowOptimize;
-		bool                        _visitQueries;
-		bool                        _isInsidePredicate;
-		bool                        _reducePredicates;
 		bool                        _doNotOptimizeNulls;
+
+		/// <summary>
+		/// Runs the CompareNulls null-guard reduce during an <b>optimize-only</b> pass. Off by default, and
+		/// <see cref="SqlExpressionConvertVisitor"/> never turns it on: the reduce is a lowering step, so on the render path it
+		/// runs in the convert, <i>after</i> a node is lowered. The one caller that needs it here is the aggregation builder
+		/// (<c>ExpressionBuilder.Aggregation</c>), which normalizes a bare <see cref="SqlSearchCondition"/> at build time with
+		/// no <see cref="OptimizationContext"/> available.
+		/// </summary>
+		bool                        _reducePredicates;
+
+		// Shared with SqlExpressionConvertVisitor, which derives from this visitor so that one traversal both optimizes and
+		// lowers each node. Protected rather than private for that reason.
+		protected NullabilityContext NullabilityContext { get; set; } = default!;
+		protected bool               VisitQueries       { get; set; }
+		protected bool               IsInsidePredicate  { get; set; }
+
+		/// <summary>
+		/// Set while a value slot visits its value. A predicate found there is not reduced yet: the slot decides first whether
+		/// to fold it into a CASE, where it is reduced as a condition, and otherwise reduces it in place.
+		/// </summary>
+		protected bool               DeferPredicateReduce { get; set; }
+
+		// DeferPredicateReduce as it was before Visit reset it for the element being visited; read by VisitReplacement.
+		bool _enclosingDeferPredicateReduce;
 
 		protected DataOptions       DataOptions       { get; private set; } = default!;
 		protected EvaluationContext EvaluationContext { get; private set; } = default!;
@@ -32,42 +52,70 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 		}
 
+		/// <summary>
+		/// Optimize-only entry point, over the <b>un-lowered</b> AST. Used by the query-build phase
+		/// (<c>SelectQueryOptimizerVisitor</c>) and by callers that have no <see cref="OptimizationContext"/>. The render
+		/// pipeline instead runs <see cref="SqlExpressionConvertVisitor.Convert"/>, which is this visitor plus the lowering.
+		/// </summary>
 		public virtual IQueryElement Optimize(
+			EvaluationContext           evaluationContext,
+			NullabilityContext          nullabilityContext,
+			DataOptions                 dataOptions,
+			MappingSchema               mappingSchema,
+			IQueryElement               element,
+			bool                        visitQueries,
+			bool                        reducePredicates = false)
+		{
+			Cleanup();
+			InitState(evaluationContext, nullabilityContext, null, dataOptions, mappingSchema, visitQueries);
+
+			// Deliberately NOT part of InitState: SqlExpressionConvertVisitor.Convert shares InitState and must leave this off
+			// (it reduces after lowering instead). Only an optimize-only pass may turn it on.
+			_reducePredicates = reducePredicates;
+
+			return ProcessElement(element);
+		}
+
+		/// <summary>
+		/// Seeds the per-pass state. Shared with <see cref="SqlExpressionConvertVisitor.Convert"/>, which sources the same
+		/// values from its <see cref="OptimizationContext"/>. Call after <see cref="Cleanup"/>.
+		/// </summary>
+		protected void InitState(
 			EvaluationContext           evaluationContext,
 			NullabilityContext          nullabilityContext,
 			IVisitorTransformationInfo? transformationInfo,
 			DataOptions                 dataOptions,
 			MappingSchema               mappingSchema,
-			IQueryElement               element,
-			bool                        visitQueries,
-			bool                        reducePredicates)
+			bool                        visitQueries)
 		{
-			Cleanup();
-			EvaluationContext  = evaluationContext;
-			DataOptions        = dataOptions;
-			MappingSchema      = mappingSchema;
-			_visitQueries      = visitQueries;
-			_reducePredicates  = reducePredicates;
+			EvaluationContext = evaluationContext;
+			DataOptions       = dataOptions;
+			MappingSchema     = mappingSchema;
+			VisitQueries      = visitQueries;
 
 			SetTransformationInfo(transformationInfo);
 
-			_nullabilityContext = nullabilityContext.WithTransformationInfo(GetTransformationInfo());
-
-			return ProcessElement(element);
+			NullabilityContext = nullabilityContext.WithTransformationInfo(GetTransformationInfo());
 		}
 
 		public override void Cleanup()
 		{
 			base.Cleanup();
-			_visitQueries       = default;
-			_isInsidePredicate  = default;
-			_reducePredicates   = default;
-			EvaluationContext   = default!;
-			_nullabilityContext = default!;
-			DataOptions         = default!;
-			MappingSchema       = default!;
-			_allowOptimize      = default;
-			_allowOptimizeList  = default;
+			VisitQueries                   = default;
+			IsInsidePredicate              = default;
+			DeferPredicateReduce           = default;
+			_enclosingDeferPredicateReduce = default;
+			_reducePredicates              = default;
+			EvaluationContext              = default!;
+			NullabilityContext             = default!;
+			DataOptions                    = default!;
+			MappingSchema                  = default!;
+			_allowOptimize                 = default;
+			_allowOptimizeList             = default;
+			// Balanced by the save/restore in VisitSqlSearchCondition, so normal flow never leaves it set — but this visitor
+			// instance is shared and pooled, so an exception unwinding out of that scope would latch `true` for every later
+			// query on it, silently suppressing the IS NULL constant fold. Cleanup is the "reset to initial state" contract.
+			_doNotOptimizeNulls = default;
 		}
 
 		[return: NotNullIfNotNull(nameof(element))]
@@ -76,18 +124,40 @@ namespace LinqToDB.Internal.SqlProvider
 			if (element == null)
 				return element;
 
-			var saveIsInsidePredicate = _isInsidePredicate;
+			var saveIsInsidePredicate    = IsInsidePredicate;
+			var saveDeferPredicateReduce = DeferPredicateReduce;
+			var saveEnclosingDefer       = _enclosingDeferPredicateReduce;
+
+			_enclosingDeferPredicateReduce = saveDeferPredicateReduce;
 
 			if (element is not SqlNullabilityExpression and not ISqlPredicate)
 			{
-				_isInsidePredicate = false;
+				IsInsidePredicate    = false;
+				DeferPredicateReduce = false;
 			}
 
 			var newElement = base.Visit(element);
 
-			_isInsidePredicate = saveIsInsidePredicate;
+			IsInsidePredicate              = saveIsInsidePredicate;
+			DeferPredicateReduce           = saveDeferPredicateReduce;
+			_enclosingDeferPredicateReduce = saveEnclosingDefer;
 
 			return newElement;
+		}
+
+		/// <summary>
+		/// Re-visits a replacement of the element being visited with the <see cref="DeferPredicateReduce"/> its slot gave that
+		/// element. <see cref="Visit"/> resets the flag for a non-predicate element, so a conditional that collapses to a
+		/// predicate result would otherwise hand its slot that predicate already reduced.
+		/// </summary>
+		protected IQueryElement VisitReplacement(IQueryElement element)
+		{
+			var saveDeferPredicateReduce = DeferPredicateReduce;
+			DeferPredicateReduce         = _enclosingDeferPredicateReduce;
+			var result                   = Visit(element);
+			DeferPredicateReduce         = saveDeferPredicateReduce;
+
+			return result;
 		}
 
 		#region Helper functions
@@ -125,12 +195,12 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected internal override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
 		{
-			var saveNullabilityContext = _nullabilityContext;
-			_nullabilityContext = _nullabilityContext.WithJoinSource(element.Table.Source);
+			var saveNullabilityContext = NullabilityContext;
+			NullabilityContext = NullabilityContext.WithJoinSource(element.Table.Source);
 
 			var newElement = base.VisitSqlJoinedTable(element);
 
-			_nullabilityContext = saveNullabilityContext;
+			NullabilityContext = saveNullabilityContext;
 
 			return newElement;
 		}
@@ -154,24 +224,30 @@ namespace LinqToDB.Internal.SqlProvider
 			var saveAllowOptimize = _allowOptimize;
 			_allowOptimize = element.Condition;
 
-			var newExpr = base.VisitSqlConditionExpression(element);
+			var newExpr = VisitConditionChildren(element);
 
 			_allowOptimize = saveAllowOptimize;
 
 			if (!ReferenceEquals(newExpr, element))
-				return Visit(newExpr);
+				return VisitReplacement(newExpr);
 
 			if (TryEvaluate(element.Condition, out var value) && value is bool boolValue)
 			{
 				return boolValue ? element.TrueValue : element.FalseValue;
 			}
 
+			if (element.Condition is SqlPredicate.TruePredicate)
+				return element.TrueValue;
+
+			if (element.Condition is SqlPredicate.FalsePredicate)
+				return element.FalseValue;
+
 			if (element.TrueValue is SqlConditionExpression trueConditional)
 			{
 				if (trueConditional.Condition.Equals(element.Condition, SqlQuery.SqlExtensions.DefaultComparer))
 				{
 					var newConditionExpression = new SqlConditionExpression(element.Condition, trueConditional.TrueValue, element.FalseValue);
-					return Visit(newConditionExpression);
+					return VisitReplacement(NotifyReplaced(newConditionExpression, element));
 				}
 			}
 
@@ -184,7 +260,7 @@ namespace LinqToDB.Internal.SqlProvider
 						new(falseConditional.Condition, falseConditional.TrueValue),
 					}, falseConditional.FalseValue);
 
-				return Visit(newCaseExpression);
+				return VisitReplacement(NotifyReplaced(newCaseExpression, element));
 			}
 
 			if (element.FalseValue is SqlCaseExpression falseCase)
@@ -198,7 +274,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 				var newCaseExpression = new SqlCaseExpression(falseCase.Type, caseItems, falseCase.ElseExpression);
 
-				return Visit(newCaseExpression);
+				return VisitReplacement(NotifyReplaced(newCaseExpression, element));
 			}
 
 			if (element.Condition is SqlPredicate.IsNull isNullPredicate)
@@ -242,9 +318,63 @@ namespace LinqToDB.Internal.SqlProvider
 			return element;
 		}
 
+		/// <summary>
+		/// Visits a CASE / IIF result value: a value slot, unlike the condition beside it.
+		/// </summary>
+		protected virtual ISqlExpression? VisitConditionalResult(ISqlExpression? expression)
+		{
+			return (ISqlExpression?)Visit(expression);
+		}
+
+		// QueryElementVisitor's child visit, with the result children routed through VisitConditionalResult.
+		IQueryElement VisitConditionChildren(SqlConditionExpression element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					Visit(element.Condition);
+					VisitConditionalResult(element.TrueValue);
+					VisitConditionalResult(element.FalseValue);
+
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					element.Modify(
+						(ISqlPredicate)Visit(element.Condition),
+						VisitConditionalResult(element.TrueValue)!,
+						VisitConditionalResult(element.FalseValue)!
+					);
+
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var predicate  = (ISqlPredicate)Visit(element.Condition);
+					var trueValue  = VisitConditionalResult(element.TrueValue)!;
+					var falseValue = VisitConditionalResult(element.FalseValue)!;
+
+					if (ShouldReplace(element)                         ||
+					    element.Condition != predicate                 ||
+					    !ReferenceEquals(element.TrueValue, trueValue) ||
+					    !ReferenceEquals(element.FalseValue, falseValue))
+					{
+						return NotifyReplaced(new SqlConditionExpression(predicate, trueValue, falseValue), element);
+					}
+
+					break;
+				}
+				default:
+					return ThrowInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
 		protected override SqlCaseExpression.CaseItem VisitCaseItem(SqlCaseExpression.CaseItem element)
 		{
-			var newElement =  base.VisitCaseItem(element);
+			var newElement = element.Update((ISqlPredicate)Visit(element.Condition), VisitConditionalResult(element.ResultExpression)!);
 
 			if (TryEvaluate(newElement.Condition, out var result) && result is bool boolValue)
 			{
@@ -254,12 +384,54 @@ namespace LinqToDB.Internal.SqlProvider
 			return newElement;
 		}
 
+		// QueryElementVisitor's child visit, with the ELSE routed through VisitConditionalResult (the items go through VisitCaseItem).
+		IQueryElement VisitCaseChildren(SqlCaseExpression element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					VisitElements(element._cases, VisitMode.ReadOnly, VisitCaseItem);
+					VisitConditionalResult(element.ElseExpression);
+
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					var newElements = VisitElements(element._cases, VisitMode.Modify, VisitCaseItem);
+					var defaultExpr = VisitConditionalResult(element.ElseExpression);
+
+					element.Modify(newElements, defaultExpr);
+
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var newElements = VisitElements(element._cases, VisitMode.Transform, VisitCaseItem);
+					var elseExpr    = VisitConditionalResult(element.ElseExpression);
+
+					if (ShouldReplace(element)                        ||
+					    !ReferenceEquals(element._cases, newElements) ||
+					    !ReferenceEquals(element.ElseExpression, elseExpr))
+					{
+						return NotifyReplaced(new SqlCaseExpression(element.Type, element._cases != newElements ? newElements : element._cases.ToList(), elseExpr), element);
+					}
+
+					break;
+				}
+				default:
+					return ThrowInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
 		protected internal override IQueryElement VisitSqlCaseExpression(SqlCaseExpression element)
 		{
-			var newExpr = base.VisitSqlCaseExpression(element);
+			var newExpr = VisitCaseChildren(element);
 
 			if (!ReferenceEquals(newExpr, element))
-				return Visit(newExpr);
+				return VisitReplacement(newExpr);
 
 			HashSet<ISqlPredicate>? seen = null;
 
@@ -296,7 +468,7 @@ namespace LinqToDB.Internal.SqlProvider
 						var newCaseExpression = new SqlCaseExpression(element.Type, newCases, caseItem.ResultExpression);
 						NotifyReplaced(newCaseExpression, element);
 
-						return Visit(newCaseExpression);
+						return VisitReplacement(newCaseExpression);
 					}
 
 					if (caseItem.Condition == SqlPredicate.False
@@ -310,14 +482,14 @@ namespace LinqToDB.Internal.SqlProvider
 						var newCaseExpression = new SqlCaseExpression(element.Type, newCases, element.ElseExpression);
 						NotifyReplaced(newCaseExpression, element);
 
-						return Visit(newCaseExpression);
+						return VisitReplacement(newCaseExpression);
 					}
 				}
 			}
 
 			return element.Cases switch
 			{
-				[{ } c] => Visit(new SqlConditionExpression(c.Condition, c.ResultExpression, element.ElseExpression ?? new SqlValue(element.Type, null))),
+				[{ } c] => VisitReplacement(new SqlConditionExpression(c.Condition, c.ResultExpression, element.ElseExpression ?? new SqlValue(element.Type, null))),
 				[] => element.ElseExpression ?? new SqlValue(element.Type, null),
 				_ => element,
 			};
@@ -360,7 +532,7 @@ namespace LinqToDB.Internal.SqlProvider
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
 
-			if (!singlePredicate && !_doNotOptimizeNulls && !_nullabilityContext.IsEmpty)
+			if (!singlePredicate && !_doNotOptimizeNulls && !NullabilityContext.IsEmpty)
 			{
 				// run again to optimize possible new IS [NOT] NULL predicates with nullability context updated with previous optimizations
 				newElement = base.VisitSqlSearchCondition(element);
@@ -412,6 +584,10 @@ namespace LinqToDB.Internal.SqlProvider
 								if (element.Predicates.Count == 0)
 									element.Predicates.Add(SqlPredicate.True);
 
+								// RemoveAt shifts the next predicate into slot i; step back so the loop re-examines it instead
+								// of skipping it (else a second adjacent TRUE survives as a residual AND 1 = 1). Matches the
+								// unnesting branch above.
+								--i;
 								continue;
 							}
 
@@ -435,6 +611,8 @@ namespace LinqToDB.Internal.SqlProvider
 								if (element.Predicates.Count == 0)
 									element.Predicates.Add(SqlPredicate.False);
 
+								// See the TRUE branch above: step back so the shifted predicate is not skipped.
+								--i;
 								continue;
 							}
 
@@ -579,8 +757,8 @@ namespace LinqToDB.Internal.SqlProvider
 
 					var modify = GetVisitMode(element) == VisitMode.Modify;
 
-					var oldContext      = _nullabilityContext;
-					_nullabilityContext = new NullabilityContext(_nullabilityContext, notNullOverrides);
+					var oldContext     = NullabilityContext;
+					NullabilityContext = new NullabilityContext(NullabilityContext, notNullOverrides);
 
 					var modified = false;
 					var indexOffset = 0;
@@ -611,6 +789,8 @@ namespace LinqToDB.Internal.SqlProvider
 							continue;
 						}
 
+						var nestedCountBefore = predicate is SqlSearchCondition nestedBefore ? nestedBefore.Predicates.Count : -1;
+
 						var newPredicate = (ISqlPredicate)Visit(predicate);
 
 						if (!ReferenceEquals(newPredicate, predicate))
@@ -625,6 +805,13 @@ namespace LinqToDB.Internal.SqlProvider
 								newPredicates ??= [.. element.Predicates.Take(i)];
 							}
 						}
+						else if (modify && predicate is SqlSearchCondition nestedAfter && nestedAfter.Predicates.Count != nestedCountBefore)
+						{
+							// A nested SearchCondition reduced IN PLACE under the not-null context keeps the same reference,
+							// so the ReferenceEquals check above misses it; force the parent re-visit so the now-single-element
+							// wrapper gets unnested (reaching the fixed point the double-convert / remote path reaches on its own).
+							modified = true;
+						}
 
 						if (newPredicates != null)
 						{
@@ -632,7 +819,7 @@ namespace LinqToDB.Internal.SqlProvider
 						}
 					}
 
-					_nullabilityContext = oldContext;
+					NullabilityContext = oldContext;
 
 					if (!modify && newPredicates != null)
 						return Visit(new SqlSearchCondition(element.IsOr, canBeUnknown: element.CanReturnUnknown, newPredicates));
@@ -739,8 +926,8 @@ namespace LinqToDB.Internal.SqlProvider
 							if (visitedPredicates.Contains(predicate2))
 								continue;
 
-							if (SimilarityMerger.Instance.TryMerge(_nullabilityContext, _isInsidePredicate, predicate1, predicate2, element.IsOr, out var mergedPredicate) ||
-								SimilarityMerger.Instance.TryMerge(_nullabilityContext, _isInsidePredicate, predicate2, predicate1, element.IsOr, out mergedPredicate))
+							if (SimilarityMerger.Instance.TryMerge(NullabilityContext, IsInsidePredicate, predicate1, predicate2, element.IsOr, out var mergedPredicate) ||
+								SimilarityMerger.Instance.TryMerge(NullabilityContext, IsInsidePredicate, predicate2, predicate1, element.IsOr, out mergedPredicate))
 							{
 								var predicatesList = element.Predicates;
 
@@ -885,7 +1072,7 @@ namespace LinqToDB.Internal.SqlProvider
 				if (visitedPredicates.Contains(conditionPredicate))
 					continue;
 
-				if (SimilarityMerger.Instance.TryMerge(_nullabilityContext, _isInsidePredicate, predicate, conditionPredicate, !searchCondition.IsOr, out var mergedSingle, out var mergedConditional))
+				if (SimilarityMerger.Instance.TryMerge(NullabilityContext, IsInsidePredicate, predicate, conditionPredicate, !searchCondition.IsOr, out var mergedSingle, out var mergedConditional))
 				{
 					isOptimized = true;
 
@@ -934,7 +1121,7 @@ namespace LinqToDB.Internal.SqlProvider
 			if (!ReferenceEquals(newElement, predicate))
 				return Visit(newElement);
 
-			if (_nullabilityContext.IsEmpty)
+			if (NullabilityContext.IsEmpty)
 				return predicate;
 
 			// Here, several optimisations would already have occured:
@@ -957,43 +1144,61 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected internal override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
-			var saveNullabilityContext = _nullabilityContext;
-			_nullabilityContext = _nullabilityContext.WithQuery(selectQuery);
+			var saveNullabilityContext = NullabilityContext;
+			NullabilityContext = NullabilityContext.WithQuery(selectQuery);
 
 			var result = base.VisitSqlQuery(selectQuery);
 
-			_nullabilityContext = saveNullabilityContext;
+			NullabilityContext = saveNullabilityContext;
 
 			return result;
 		}
 
 		protected internal override IQueryElement VisitSqlTableSource(SqlTableSource element)
 		{
-			if (!_visitQueries)
+			if (!VisitQueries)
 				return element;
 
 			return base.VisitSqlTableSource(element);
 		}
 
+		/// <summary>
+		/// Visits the operand of <paramref name="predicate"/> the way <see cref="VisitNotPredicate"/> does: nested in a
+		/// predicate, and allowed to be optimized into a different predicate kind.
+		/// </summary>
+		protected ISqlPredicate VisitNotOperand(SqlPredicate.Not predicate)
+		{
+			var saveInsidePredicate = IsInsidePredicate;
+			var saveAllow           = _allowOptimize;
+
+			IsInsidePredicate = true;
+			_allowOptimize    = predicate.Predicate;
+			var newInner      = (ISqlPredicate)Visit(predicate.Predicate);
+			IsInsidePredicate = saveInsidePredicate;
+			_allowOptimize    = saveAllow;
+
+			return newInner;
+		}
+
 		protected internal override IQueryElement VisitNotPredicate(SqlPredicate.Not predicate)
 		{
-			if (predicate.Predicate.CanInvert(_nullabilityContext))
+			if (predicate.Predicate.CanInvert(NullabilityContext))
 			{
-				return Visit(predicate.Predicate.Invert(_nullabilityContext));
+				return Visit(predicate.Predicate.Invert(NullabilityContext));
 			}
 
-			var saveInsidePredicate = _isInsidePredicate;
-			var saveAllow     = _allowOptimize;
+			var saveInsidePredicate = IsInsidePredicate;
+			var saveAllow           = _allowOptimize;
 
-			_isInsidePredicate    = true;
+			IsInsidePredicate     = true;
 			_allowOptimize        = predicate.Predicate;
 			var newInnerPredicate = (ISqlPredicate)Visit(predicate.Predicate);
-			_isInsidePredicate    = saveInsidePredicate;
+			IsInsidePredicate     = saveInsidePredicate;
 			_allowOptimize        = saveAllow;
 
-			if (newInnerPredicate.CanInvert(_nullabilityContext))
+			if (newInnerPredicate.CanInvert(NullabilityContext))
 			{
-				return Visit(newInnerPredicate.Invert(_nullabilityContext));
+				return Visit(newInnerPredicate.Invert(NullabilityContext));
 			}
 
 			if (!ReferenceEquals(newInnerPredicate, predicate.Predicate))
@@ -1046,7 +1251,7 @@ namespace LinqToDB.Internal.SqlProvider
 					// expression needs no interval type, no date addition and no lowering, so it still works on a
 					// provider that could express none of those. Blocking the fold instead would refuse the query
 					// there - and refuse a shape that was answered before durations were translated at all.
-					if (!element.Temporal.CanBeNullable(_nullabilityContext))
+					if (!element.Temporal.CanBeNullable(NullabilityContext))
 						return Visit(remaining);
 
 					return Visit(new SqlConditionExpression(
@@ -1271,6 +1476,10 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 				return Visit(newElement);
 
 			var operands = element.Expressions;
+
+			if (!ConcatNeedsFolding(operands))
+				return element;
+
 			List<ISqlExpression>? folded = null;
 			string?               pending = null;
 
@@ -1344,7 +1553,41 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 			if (folded.Count == 1)
 				return folded[0];
 
-			return new SqlConcatExpression(element.PreserveNull, folded.ToArray());
+			return NotifyReplaced(new SqlConcatExpression(element.PreserveNull, folded.ToArray()), element);
+		}
+
+		static readonly DbDataType _concatLiteralType = new(typeof(string));
+
+		// Mirrors the fold loop in VisitSqlConcatExpression: true when it would emit anything other than the
+		// same operands. Without it a lone literal is rebuilt on every pass and the fold never reaches a fixpoint.
+		bool ConcatNeedsFolding(ISqlExpression[] operands)
+		{
+			var previousIsLiteral = false;
+
+			foreach (var operand in operands)
+			{
+				if (TryEvaluateNoParameters(operand, out var value))
+				{
+					if (value is null)
+						return true;
+
+					if (value is string s)
+					{
+						if (s.Length == 0 || previousIsLiteral || operands.Length == 1)
+							return true;
+
+						if (operand is not SqlValue { Value: string } literal || literal.ValueType != _concatLiteralType)
+							return true;
+
+						previousIsLiteral = true;
+						continue;
+					}
+				}
+
+				previousIsLiteral = false;
+			}
+
+			return false;
 		}
 
 		protected internal override IQueryElement VisitSqlCastExpression(SqlCastExpression element)
@@ -1379,10 +1622,15 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 			{
 				NotifyReplaced(newExpression, columnExpression);
 
-				var query = VisitSqlQuery(selectQuery);
+				// newExpression was built from columnExpression, so it CONTAINS it. The mapping above rewrites every
+				// columnExpression to newExpression — including the one nested inside newExpression, which would make
+				// newExpression its own descendant (an AST cycle). Under the old two-visitor design the optimizer and the
+				// convert held separate replacement maps, so this rewrite never reached the convert-produced innards of
+				// newExpression; the merged single-map visitor needs the guard made explicit. Mark newExpression terminal so
+				// the map is not re-applied inside it — it was already fully visited when built above.
+				NotifyReplaced(newExpression, newExpression);
 
-				// magic...
-				NotifyReplaced(columnExpression, columnExpression);
+				var query = VisitSqlQuery(selectQuery);
 
 				return query;
 			}
@@ -1573,7 +1821,7 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 
 					newExpressions.AddRange(inner.Expressions);
 				}
-				else if (!_nullabilityContext.IsEmpty && !expr.CanBeNullable(_nullabilityContext) && i != element.Expressions.Length - 1)
+				else if (!NullabilityContext.IsEmpty && !expr.CanBeNullable(NullabilityContext) && i != element.Expressions.Length - 1)
 				{
 					if (newExpressions == null)
 					{
@@ -1607,10 +1855,10 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 			if (!ReferenceEquals(newPredicate, predicate))
 				return Visit(newPredicate);
 
-			if (_nullabilityContext.IsEmpty)
+			if (NullabilityContext.IsEmpty)
 				return predicate;
 
-			if (!_doNotOptimizeNulls && !predicate.Expr1.CanBeNullableOrUnknown(_nullabilityContext, false))
+			if (!_doNotOptimizeNulls && !predicate.Expr1.CanBeNullableOrUnknown(NullabilityContext, false))
 			{
 				//TODO: Exception for Row, find time to analyze why it's needed
 				if (predicate.Expr1.ElementType != QueryElementType.SqlRow)
@@ -1624,7 +1872,7 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 
 			using (var reducer = ReduceIsNullExpressionVisitor.Pool.Allocate())
 			{
-				newPredicate = reducer.Value.Reduce(_nullabilityContext, predicate);
+				newPredicate = reducer.Value.Reduce(NullabilityContext, predicate);
 			}
 
 			if (!ReferenceEquals(newPredicate, predicate))
@@ -1641,8 +1889,8 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 			// Dropping it keeps generated SQL clean and avoids the CASE-WHEN emulation key on providers that
 			// lack native NULLS ordering.
 			if (newElement.NullsPosition != Sql.NullsPosition.None
-				&& !_nullabilityContext.IsEmpty
-				&& !newElement.Expression.CanBeNullable(_nullabilityContext))
+				&& !NullabilityContext.IsEmpty
+				&& !newElement.Expression.CanBeNullable(NullabilityContext))
 			{
 				return new SqlOrderByItem(newElement.Expression, newElement.IsDescending, newElement.IsPositioned, Sql.NullsPosition.None);
 			}
@@ -1660,7 +1908,7 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 			if (element.SqlExpression is SqlNullabilityExpression nullabilityExpression)
 			{
 				return SqlNullabilityExpression.ApplyNullability(nullabilityExpression.SqlExpression,
-					element.CanBeNullable(_nullabilityContext));
+					element.CanBeNullable(NullabilityContext));
 			}
 
 			var inner = element.SqlExpression;
@@ -1690,33 +1938,45 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 
 		protected internal override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
 		{
-			var saveInsidePredicate = _isInsidePredicate;
-			_isInsidePredicate      = true;
+			var saveInsidePredicate = IsInsidePredicate;
+			IsInsidePredicate       = true;
 			var newElement          = base.VisitExprExprPredicate(predicate);
-			_isInsidePredicate      = saveInsidePredicate;
+			IsInsidePredicate       = saveInsidePredicate;
 
 			if (!ReferenceEquals(newElement, predicate))
 				return Visit(newElement);
 
-			if (TryEvaluateNoParameters(predicate, out var value) && value is bool boolValue)
+			// With this run's parameter values, as an enclosing search condition or CASE folds it: a provider lowers the comparison
+			// right after (SQLite's strftime), and the lowered form no longer evaluates. Under LikeSql the fold ignores the
+			// UnknownAsValue an inverted ordering comparison carries, as Reduce does, so a NULL operand folds to FALSE.
+			var evaluated = predicate.UnknownAsValue != null && DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeSql
+				? new SqlPredicate.ExprExpr(predicate.Expr1, predicate.Operator, predicate.Expr2, null)
+				: predicate;
+
+			if (TryEvaluate(evaluated, out var value) && value is bool boolValue)
 			{
 				return SqlPredicate.MakeBool(boolValue);
 			}
 
+			// Optimize-only passes that opt in (the aggregation builder). On the render path this is off, and
+			// SqlExpressionConvertVisitor.VisitExprExprPredicate reduces AFTER lowering instead — the reduce needs converted
+			// structure, which is what made the old late reduce pass necessary in the first place.
 			if (_reducePredicates)
 			{
-				var reduced = predicate.Reduce(_nullabilityContext, EvaluationContext, _isInsidePredicate, DataOptions.LinqOptions);
+				var reduced = ReduceExprExprPredicate(predicate);
 
 				if (!ReferenceEquals(reduced, predicate))
-				{
 					return Visit(reduced);
-				}
 			}
 
 			var expr = predicate;
 
 			if (expr.Operator is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
 			{
+				// A parameter's value is bound only on a per-run render, which BasicSqlOptimizer.IsParameterDependedElement
+				// selects for this comparison, so the fold reads it there. Where it is not bound, the `is not SqlParameter`
+				// guards keep the parameter out of a predicate: that would lower `(A = B) = @p` to an inverted comparison on
+				// engines with no boolean type (Firebird 2.5).
 				if (expr.UnknownAsValue == null)
 				{
 					if (expr.Expr2 is ISqlPredicate expr2Predicate)
@@ -1729,7 +1989,7 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 
 							return transformed;
 						}
-						else if (expr.Expr1 is not ISqlPredicate)
+						else if (expr.Expr1 is not ISqlPredicate && QueryHelper.UnwrapNullablity(expr.Expr1) is not SqlParameter)
 						{
 							return new SqlPredicate.ExprExpr(new SqlSearchCondition(false, canBeUnknown: null, new SqlPredicate.Expr(expr.Expr1)), expr.Operator, expr.Expr2, expr.UnknownAsValue);
 						}
@@ -1744,7 +2004,7 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 							var transformed = expr1Predicate.MakeNot(isNot);
 							return transformed;
 						}
-						else if (expr.Expr2 is not ISqlPredicate)
+						else if (expr.Expr2 is not ISqlPredicate && QueryHelper.UnwrapNullablity(expr.Expr2) is not SqlParameter)
 						{
 							return new SqlPredicate.ExprExpr(expr.Expr1, expr.Operator, new SqlSearchCondition(false, canBeUnknown: null, new SqlPredicate.Expr(expr.Expr2)), expr.UnknownAsValue);
 						}
@@ -1835,23 +2095,12 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 			if (!ReferenceEquals(newElement, predicate))
 				return Visit(newElement);
 
-			// Under CompareNulls.LikeClr (WithNull set) an item NULL in the row must equal a NULL tested value, and a negated test
-			// must keep a row whose item is NULL; IN cannot say either, so such a list is the LikeClr comparisons it stands for.
-			// Inside another predicate a missed NULL item makes IN unknown where C# answers false, so it is rewritten there too.
-			// Constant and parameter items alone do not call for it: the builder already splits a NULL value out of the list.
-			if (_reducePredicates
-				&& predicate.WithNull != null
-				&& !_nullabilityContext.IsEmpty
-				&& predicate.Expr1.ElementType != QueryElementType.SqlRow
-				&& (predicate.IsNot || _isInsidePredicate || predicate.Expr1.CanBeNullableOrUnknown(_nullabilityContext, false))
-				&& predicate.Values.Exists(v => v is not (SqlValue or SqlParameter) && v.CanBeNullableOrUnknown(_nullabilityContext, false)))
+			if (_reducePredicates)
 			{
-				var search = new SqlSearchCondition(true);
+				var reduced = ReduceInListPredicate(predicate);
 
-				foreach (var value in predicate.Values)
-					search.Add(new SqlPredicate.ExprExpr(predicate.Expr1, SqlPredicate.Operator.Equal, value, true));
-
-				return Visit(search.MakeNot(predicate.IsNot));
+				if (!ReferenceEquals(reduced, predicate))
+					return Visit(reduced);
 			}
 
 			if (EvaluationContext.ParameterValues == null)
@@ -1900,9 +2149,9 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 				SqlPredicate.Operator.Less           => v1 < v2,
 				SqlPredicate.Operator.NotGreater or
 				SqlPredicate.Operator.LessOrEqual    => v1 <= v2,
-				_ => throw new InvalidOperationException(),
+				_                                    => throw new InvalidOperationException(),
 			};
-			}
+		}
 
 		static bool Compare(object? value1, object? value2, SqlPredicate.Operator op, out bool result)
 		{
@@ -1987,15 +2236,15 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 		{
 			return op switch
 			{
-				SqlPredicate.Operator.Equal => op,
-				SqlPredicate.Operator.NotEqual => op,
-				SqlPredicate.Operator.Greater => SqlPredicate.Operator.Less,
-				SqlPredicate.Operator.NotLess => SqlPredicate.Operator.NotGreater,
+				SqlPredicate.Operator.Equal          => op,
+				SqlPredicate.Operator.NotEqual       => op,
+				SqlPredicate.Operator.Greater        => SqlPredicate.Operator.Less,
+				SqlPredicate.Operator.NotLess        => SqlPredicate.Operator.NotGreater,
 				SqlPredicate.Operator.GreaterOrEqual => SqlPredicate.Operator.LessOrEqual,
-				SqlPredicate.Operator.Less => SqlPredicate.Operator.Greater,
-				SqlPredicate.Operator.NotGreater => SqlPredicate.Operator.NotLess,
-				SqlPredicate.Operator.LessOrEqual => SqlPredicate.Operator.GreaterOrEqual,
-				_ => throw new InvalidOperationException(),
+				SqlPredicate.Operator.Less           => SqlPredicate.Operator.Greater,
+				SqlPredicate.Operator.NotGreater     => SqlPredicate.Operator.NotLess,
+				SqlPredicate.Operator.LessOrEqual    => SqlPredicate.Operator.GreaterOrEqual,
+				_                                    => throw new InvalidOperationException(),
 			};
 		}
 
@@ -2025,7 +2274,7 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 					}
 				}
 
-				if (!sqlConditionExpression.Condition.CanBeUnknown(_nullabilityContext, false))
+				if (!sqlConditionExpression.Condition.CanBeUnknown(NullabilityContext, false))
 				{
 					if (op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
 					{
@@ -2227,15 +2476,56 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 
 			if (_reducePredicates)
 			{
-				var reduced = isTrue.Reduce(_nullabilityContext, _isInsidePredicate);
+				var reduced = ReduceIsTruePredicate(isTrue);
 
 				if (!ReferenceEquals(reduced, isTrue))
-				{
 					return (ISqlPredicate)Visit(reduced);
-				}
 			}
 
 			return isTrue;
+		}
+
+		/// <summary>
+		/// The CompareNulls null-guard rewrite for a comparison. Shared: an opt-in optimize-only pass calls it via
+		/// <c>_reducePredicates</c>, and <see cref="SqlExpressionConvertVisitor"/> calls it after lowering the node.
+		/// </summary>
+		protected ISqlPredicate ReduceExprExprPredicate(SqlPredicate.ExprExpr predicate)
+		{
+			return predicate.Reduce(NullabilityContext, EvaluationContext, IsInsidePredicate, DataOptions.LinqOptions);
+		}
+
+		/// <summary>
+		/// The CompareNulls null-guard rewrite for an IS TRUE predicate. See <see cref="ReduceExprExprPredicate"/>.
+		/// </summary>
+		protected ISqlPredicate ReduceIsTruePredicate(SqlPredicate.IsTrue isTrue)
+		{
+			return isTrue.Reduce(NullabilityContext, IsInsidePredicate);
+		}
+
+		/// <summary>
+		/// The CompareNulls null-item rewrite for an IN list. See <see cref="ReduceExprExprPredicate"/>.
+		/// </summary>
+		protected ISqlPredicate ReduceInListPredicate(SqlPredicate.InList predicate)
+		{
+			// Under CompareNulls.LikeClr (WithNull set) an item NULL in the row must equal a NULL tested value, and a negated test
+			// must keep a row whose item is NULL; IN cannot say either, so such a list is the LikeClr comparisons it stands for.
+			// Inside another predicate a missed NULL item makes IN unknown where C# answers false, so it is rewritten there too.
+			// Constant and parameter items alone do not call for it: the builder already splits a NULL value out of the list.
+			if (predicate.WithNull != null
+				&& !NullabilityContext.IsEmpty
+				&& predicate.Expr1.ElementType != QueryElementType.SqlRow
+				&& (predicate.IsNot || IsInsidePredicate || predicate.Expr1.CanBeNullableOrUnknown(NullabilityContext, false))
+				&& predicate.Values.Exists(v => v is not (SqlValue or SqlParameter) && v.CanBeNullableOrUnknown(NullabilityContext, false)))
+			{
+				var search = new SqlSearchCondition(true);
+
+				foreach (var value in predicate.Values)
+					search.Add(new SqlPredicate.ExprExpr(predicate.Expr1, SqlPredicate.Operator.Equal, value, true));
+
+				return search.MakeNot(predicate.IsNot);
+			}
+
+			return predicate;
 		}
 
 		ISqlPredicate OptimizeExpExprPredicate(SqlPredicate.ExprExpr exprExpr)
@@ -2297,7 +2587,7 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 			var left  = QueryHelper.UnwrapNullablity(exprExpr.Expr1);
 			var right = QueryHelper.UnwrapNullablity(exprExpr.Expr2);
 
-			if (!exprExpr.Expr1.CanBeNullable(_nullabilityContext) && left.Equals(right))
+			if (!exprExpr.Expr1.CanBeNullable(NullabilityContext) && left.Equals(right))
 			{
 				if (exprExpr.Operator is SqlPredicate.Operator.Equal or SqlPredicate.Operator.GreaterOrEqual or SqlPredicate.Operator.LessOrEqual or SqlPredicate.Operator.NotGreater or SqlPredicate.Operator.NotLess)
 				{
@@ -2310,9 +2600,9 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 				}
 			}
 
-			if (!_nullabilityContext.IsEmpty                       &&
-			    !exprExpr.Expr1.CanBeNullable(_nullabilityContext) &&
-			    !exprExpr.Expr2.CanBeNullable(_nullabilityContext) &&
+			if (!NullabilityContext.IsEmpty                       &&
+			    !exprExpr.Expr1.CanBeNullable(NullabilityContext) &&
+			    !exprExpr.Expr2.CanBeNullable(NullabilityContext) &&
 			    exprExpr.Expr1.SystemType!.IsSignedNumberType      &&
 			    exprExpr.Expr2.SystemType!.IsSignedNumberType)
 			{
@@ -2366,8 +2656,8 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 
 			ISqlPredicate ConvertStringCompare(SqlCompareToExpression compare, SqlPredicate.Operator @operator)
 			{
-				var expr1Nullable = _nullabilityContext.CanBeNull(compare.Expression1);
-				var expr2Nullable = _nullabilityContext.CanBeNull(compare.Expression2);
+				var expr1Nullable = NullabilityContext.CanBeNull(compare.Expression1);
+				var expr2Nullable = NullabilityContext.CanBeNull(compare.Expression2);
 
 				var expr1IsNull = TryEvaluateNoParameters(compare.Expression1, out var result) && result is null;
 				var expr2IsNull = TryEvaluateNoParameters(compare.Expression2, out     result) && result is null;
@@ -2427,7 +2717,7 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 						SqlPredicate.Operator.Greater        => new SqlSearchCondition(true, true, predicate, new SqlSearchCondition(false, false, new SqlPredicate.IsNull(compare.Expression1, true), new SqlPredicate.IsNull(compare.Expression2, false))),
 						SqlPredicate.Operator.LessOrEqual    => new SqlSearchCondition(true, true, predicate, new SqlPredicate.IsNull(compare.Expression1, false)),
 						SqlPredicate.Operator.GreaterOrEqual => new SqlSearchCondition(true, true, predicate, new SqlPredicate.IsNull(compare.Expression2, false)),
-						_ => predicate,
+						_                                    => predicate,
 					};
 				}
 
