@@ -239,9 +239,11 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 				var valueType = factory.GetDbDataType(value);
 
 				/*
-					Sgn([Value]) * Int(Abs([Value]) * (10 ^ [Precision]) + 0.5) / (10 ^ [Precision])
+					m = Abs([Value]) * (10 ^ [Precision])
+					Sgn([Value]) * (Int(m) + Int((m - Int(m)) * 2)) / (10 ^ [Precision])
 
-					Int is a floor, so it is applied to the magnitude only.
+					Int(m + 0.5) is wrong for doubles (0.49999999999999994 + 0.5 is 1.0), and Access compares a double with the
+					literal 0.5 imprecisely (0.49999999999999994 < 0.5 is false). The fraction and its doubling are exact.
 				*/
 
 				ISqlExpression? power = precision is null or SqlValue { Value: 0 }
@@ -250,7 +252,9 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 
 				var magnitude = factory.Function(valueType, "Abs", value);
 				var scaled    = power == null ? magnitude : factory.Multiply(valueType, magnitude, power);
-				var rounded   = factory.Function(valueType, "Int", factory.Add(valueType, scaled, factory.Value(valueType, 0.5)));
+				var floor     = factory.Function(valueType, "Int", scaled);
+				var rounded   = factory.Add(valueType, floor,
+					factory.Function(valueType, "Int", factory.Multiply(valueType, factory.Sub(valueType, scaled, floor), factory.Value(valueType, 2))));
 				var unscaled  = power == null ? rounded : factory.Div(valueType, rounded, power);
 
 				return factory.Multiply(valueType, factory.Function(valueType, "Sgn", value), unscaled);

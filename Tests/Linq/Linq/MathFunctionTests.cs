@@ -2050,7 +2050,7 @@ namespace Tests.Linq
 		// a negative precision. The client cannot round to a negative precision, so the results are stated. Adding 0.5 to
 		// the scaled magnitude would itself round: the largest double below 0.5 and an odd integer above 2^52 would move.
 		[Test]
-		public void SqlRoundDoubleWidePrecision([IncludeDataSources(true, TestProvName.AllMySql, TestProvName.AllClickHouse, TestProvName.AllDB2)] string context)
+		public void SqlRoundDoubleWidePrecision([IncludeDataSources(true, TestProvName.AllMySql, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllAccess)] string context)
 		{
 			var data = new[]
 			{
