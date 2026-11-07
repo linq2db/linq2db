@@ -1349,6 +1349,18 @@ namespace Tests.Linq
 				.ShouldBe(6001);
 
 			table
+				.Select(t => Sql.AsSql(suffix + IsNull(t.Notes, suffix + t.Notes)))
+				.Single()
+				.Length
+				.ShouldBe(6001);
+
+			table
+				.Select(t => Sql.AsSql(suffix + IsNullExpression(t.Notes, suffix + t.Notes)))
+				.Single()
+				.Length
+				.ShouldBe(6001);
+
+			table
 				.Select(t => Sql.AsSql(t.Title + Sql.Stuff(t.Left, 1, 0, t.Right)))
 				.Single()!
 				.Length
