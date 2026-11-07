@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using JetBrains.Annotations;
@@ -111,7 +112,7 @@ namespace Tests.Mapping
 			[Column]     public string? Name  { get; set; }
 		}
 
-		static MappingSchema Scope(System.Action<EntityMappingBuilder<SourceSchemaRow>> configure)
+		static MappingSchema Scope(Action<EntityMappingBuilder<SourceSchemaRow>> configure)
 		{
 			var builder = new FluentMappingBuilder(new());
 
@@ -781,7 +782,7 @@ namespace Tests.Mapping
 				children = db.GetTable<ChildWithoutAssociation>();
 			}
 
-			var ids      = Child.Select(c => c.ChildID).ToHashSet();
+			var ids      = new HashSet<int>(Child.Select(c => c.ChildID));
 			var expected = Enumerable.Range(1, 9).Select(n => n * 10 + 1).TakeWhile(ids.Contains).ToList();
 
 			var cte = db.GetCte<ChildWithoutAssociation>(prev =>
