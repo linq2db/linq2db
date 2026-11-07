@@ -2019,10 +2019,11 @@ namespace Tests.Linq
 			[Column    ] public int    P  { get; set; }
 		}
 
-		// 1.15 is stored as 1.1499999..., so C# rounds it away from zero to 1.1 at one digit, while the same value cast
-		// to numeric is an exact tie and rounds to 1.2. Math.Round must keep the double route on PostgreSQL even though
-		// Sql.Round(double?, int?) takes the numeric one there; MySQL, ClickHouse and DB2 scale the double by a power of ten,
-		// where the scaled residue must not become a tie either.
+		// C# scales a double by a power of ten before rounding: 1.15 and 2.675 become exact ties, and 1.005 becomes
+		// 100.49999..., which rounds down. The server must agree in both modes. PostgreSQL's numeric cast cannot separate the
+		// routes here, because POWER(10, p) returns a double.
+		[ActiveIssue(6263, Configuration = TestProvName.AllDB2, ErrorMessage = "Assert.That(exceptExpected, Is.Zero)",
+			Details = "DB2's native ROUND(1.15, 1) on a DOUBLE returns 1.1 in the ToEven column; .NET scales to the tie 11.5 and returns 1.2")]
 		[Test]
 		public void MathRoundResidueDoubleKeepsDoubleRoute([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllMySql, TestProvName.AllClickHouse, TestProvName.AllDB2)] string context)
 		{
@@ -2030,6 +2031,7 @@ namespace Tests.Linq
 			{
 				new ResidueValues { Id = 1, F = 1.15,  P = 1 },
 				new ResidueValues { Id = 2, F = 2.675, P = 2 },
+				new ResidueValues { Id = 3, F = 1.005, P = 2 },
 			};
 
 			using var db = GetDataContext(context);
@@ -2040,7 +2042,8 @@ namespace Tests.Linq
 				.Select(r => new
 				{
 					r.Id,
-					Away = Sql.AsSql(Math.Round(r.F, r.P, MidpointRounding.AwayFromZero)),
+					Away   = Sql.AsSql(Math.Round(r.F, r.P, MidpointRounding.AwayFromZero)),
+					ToEven = Sql.AsSql(Math.Round(r.F, r.P)),
 				});
 
 			AssertQuery(query);
