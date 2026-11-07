@@ -42,6 +42,8 @@ namespace Tests.Analyzers.Internal
 			{
 				sealed class ContextRefExpression { public LinqToDB.Internal.Linq.Builder.IBuildContext BuildContext { get; } = null!; }
 
+				class SqlQueryRootExpression { public LinqToDB.Mapping.MappingSchema MappingSchema { get; } = null!; }
+
 				static class InternalExtensions
 				{
 					public static object SkipMethodChain(this object expression, LinqToDB.Mapping.MappingSchema mappingSchema) => expression;
@@ -119,7 +121,7 @@ namespace Tests.Analyzers.Internal
 
 					public CounterContext(ExpressionBuilder builder, IBuildContext sequence) : base(builder) { _sequence = sequence; }
 
-					public override MappingSchema MappingSchema => {|LINQ2DB0007:Builder.MappingSchema|};
+					public override MappingSchema MappingSchema => {|LINQ2DB0010:Builder.MappingSchema|};
 				}
 			""");
 
@@ -148,7 +150,7 @@ namespace Tests.Analyzers.Internal
 
 					public override MappingSchema MappingSchema
 					{
-						get { return {|LINQ2DB0007:Builder.MappingSchema|}; }
+						get { return {|LINQ2DB0010:Builder.MappingSchema|}; }
 					}
 				}
 			""");
@@ -172,7 +174,7 @@ namespace Tests.Analyzers.Internal
 					public override MappingSchema MappingSchema => _mappingSchema;
 				}
 			"""),
-			new DiagnosticResult("LINQ2DB0007", DiagnosticSeverity.Warning)
+			new DiagnosticResult("LINQ2DB0010", DiagnosticSeverity.Warning)
 				.WithLocation(0)
 				.WithArguments("'SelectContext' holds the source context 'InnerContext': return its MappingSchema instead of the data context's"));
 
@@ -222,7 +224,7 @@ namespace Tests.Analyzers.Internal
 					public override MappingSchema MappingSchema { get; }
 				}
 			"""),
-			new DiagnosticResult("LINQ2DB0007", DiagnosticSeverity.Warning)
+			new DiagnosticResult("LINQ2DB0010", DiagnosticSeverity.Warning)
 				.WithLocation(0)
 				.WithArguments("'SelectContext' holds the source context 'InnerContext': return its MappingSchema instead of the data context's"));
 
@@ -242,7 +244,7 @@ namespace Tests.Analyzers.Internal
 					public override MappingSchema MappingSchema => _mappingSchema;
 				}
 			"""),
-			new DiagnosticResult("LINQ2DB0007", DiagnosticSeverity.Warning)
+			new DiagnosticResult("LINQ2DB0010", DiagnosticSeverity.Warning)
 				.WithLocation(0)
 				.WithArguments("'mappingSchema' is in scope: read 'mappingSchema' instead of the data context's MappingSchema"));
 
@@ -322,9 +324,9 @@ namespace Tests.Analyzers.Internal
 				{
 					public static bool M(ExpressionBuilder builder, MappingSchema mappingSchema)
 					{
-						System.Func<bool> f = () => {|LINQ2DB0007:builder.MappingSchema|}.IsScalarType(typeof(int));
+						System.Func<bool> f = () => {|LINQ2DB0010:builder.MappingSchema|}.IsScalarType(typeof(int));
 
-						return {|LINQ2DB0007:builder.MappingSchema|}.IsScalarType(typeof(int)) && f();
+						return {|LINQ2DB0010:builder.MappingSchema|}.IsScalarType(typeof(int)) && f();
 					}
 				}
 			""");
@@ -334,15 +336,15 @@ namespace Tests.Analyzers.Internal
 		public Task DescriptorCarriersReport() => Verify("""
 				static class Helper
 				{
-					public static object A(ExpressionBuilder builder, EntityDescriptor entityDescriptor)       => {|LINQ2DB0007:builder.MappingSchema|};
-					public static object B(ExpressionBuilder builder, ColumnDescriptor? columnDescriptor)      => {|LINQ2DB0007:builder.MappingSchema|};
-					public static object C(ExpressionBuilder builder, AssociationDescriptor associationDescriptor) => {|LINQ2DB0007:builder.MappingSchema|};
+					public static object A(ExpressionBuilder builder, EntityDescriptor entityDescriptor)       => {|LINQ2DB0010:builder.MappingSchema|};
+					public static object B(ExpressionBuilder builder, ColumnDescriptor? columnDescriptor)      => {|LINQ2DB0010:builder.MappingSchema|};
+					public static object C(ExpressionBuilder builder, AssociationDescriptor associationDescriptor) => {|LINQ2DB0010:builder.MappingSchema|};
 
 					public static object D(ExpressionBuilder builder, object o)
 					{
 						var descriptor = (ColumnDescriptor)o;
 
-						return {|LINQ2DB0007:builder.MappingSchema|};
+						return {|LINQ2DB0010:builder.MappingSchema|};
 					}
 				}
 			""");
@@ -355,7 +357,7 @@ namespace Tests.Analyzers.Internal
 				{
 					IBuildContext _context = null!;
 
-					public object M() => {|LINQ2DB0007:_context.Builder.MappingSchema|};
+					public object M() => {|LINQ2DB0010:_context.Builder.MappingSchema|};
 				}
 
 				sealed class KeyContext : BuildContextBase
@@ -364,9 +366,9 @@ namespace Tests.Analyzers.Internal
 
 					public override MappingSchema MappingSchema => throw new System.NotSupportedException();
 
-					public bool IsScalar(System.Type type) => {|LINQ2DB0007:Builder.MappingSchema|}.IsScalarType(type);
+					public bool IsScalar(System.Type type) => {|LINQ2DB0010:Builder.MappingSchema|}.IsScalarType(type);
 
-					public object Alternative() => {|LINQ2DB0007:Builder.DataContext.MappingSchema|};
+					public object Alternative() => {|LINQ2DB0010:Builder.DataContext.MappingSchema|};
 				}
 			""");
 
@@ -396,7 +398,7 @@ namespace Tests.Analyzers.Internal
 					public override MappingSchema MappingSchema => {|#0:Builder.MappingSchema|};
 				}
 			"""),
-			new DiagnosticResult("LINQ2DB0007", DiagnosticSeverity.Warning)
+			new DiagnosticResult("LINQ2DB0010", DiagnosticSeverity.Warning)
 				.WithLocation(0)
 				.WithArguments("'RefContext' holds the source context '_sourceRef': return its MappingSchema instead of the data context's"));
 
@@ -406,7 +408,7 @@ namespace Tests.Analyzers.Internal
 				sealed class SomeBuilder : MethodCallBuilder
 				{
 					protected override object BuildMethodCall(ExpressionBuilder builder, object methodCall)
-						=> {|LINQ2DB0007:builder.DataContext.MappingSchema|};
+						=> {|LINQ2DB0010:builder.DataContext.MappingSchema|};
 				}
 			""");
 
@@ -415,7 +417,7 @@ namespace Tests.Analyzers.Internal
 		public Task DerivedAliasReports() => Verify("""
 				sealed partial class ParametersContext
 				{
-					public bool Prepare(MappingSchema mappingSchema, System.Type type) => {|LINQ2DB0007:MappingSchema|}.IsScalarType(type);
+					public bool Prepare(MappingSchema mappingSchema, System.Type type) => {|LINQ2DB0010:MappingSchema|}.IsScalarType(type);
 				}
 			""");
 
@@ -428,7 +430,7 @@ namespace Tests.Analyzers.Internal
 
 					public MappingSchema MappingSchema { get => DataContext.MappingSchema; }
 
-					public bool Prepare(MappingSchema mappingSchema, System.Type type) => {|LINQ2DB0007:MappingSchema|}.IsScalarType(type);
+					public bool Prepare(MappingSchema mappingSchema, System.Type type) => {|LINQ2DB0010:MappingSchema|}.IsScalarType(type);
 				}
 
 				sealed class BodyAlias
@@ -437,7 +439,7 @@ namespace Tests.Analyzers.Internal
 
 					public MappingSchema MappingSchema { get { return DataContext.MappingSchema; } }
 
-					public bool Prepare(MappingSchema mappingSchema, System.Type type) => {|LINQ2DB0007:MappingSchema|}.IsScalarType(type);
+					public bool Prepare(MappingSchema mappingSchema, System.Type type) => {|LINQ2DB0010:MappingSchema|}.IsScalarType(type);
 				}
 			""");
 
@@ -455,12 +457,12 @@ namespace Tests.Analyzers.Internal
 		public Task ContextCarriersReport() => Verify("""
 				static class Helper
 				{
-					public static object A(ExpressionBuilder builder, IBuildContext context) => {|LINQ2DB0007:builder.MappingSchema|};
+					public static object A(ExpressionBuilder builder, IBuildContext context) => {|LINQ2DB0010:builder.MappingSchema|};
 
 					public static object? B(ExpressionBuilder builder, object expression)
 					{
 						if (expression is ContextRefExpression contextRef)
-							return {|LINQ2DB0007:builder.MappingSchema|};
+							return {|LINQ2DB0010:builder.MappingSchema|};
 
 						return null;
 					}
@@ -500,7 +502,7 @@ namespace Tests.Analyzers.Internal
 						=> context != null ? context.MappingSchema : {|#0:builder.MappingSchema|};
 				}
 			"""),
-			new DiagnosticResult("LINQ2DB0007", DiagnosticSeverity.Warning)
+			new DiagnosticResult("LINQ2DB0010", DiagnosticSeverity.Warning)
 				.WithLocation(0)
 				.WithArguments("'context' is in scope: read 'context?.MappingSchema ?? builder.MappingSchema' instead of the data context's MappingSchema"));
 
@@ -531,13 +533,13 @@ namespace Tests.Analyzers.Internal
 					}
 				}
 			"""),
-			new DiagnosticResult("LINQ2DB0007", DiagnosticSeverity.Warning)
+			new DiagnosticResult("LINQ2DB0010", DiagnosticSeverity.Warning)
 				.WithLocation(0)
 				.WithArguments("'descriptor' is in scope: read 'descriptor.MappingSchema' instead of the data context's MappingSchema"),
-			new DiagnosticResult("LINQ2DB0007", DiagnosticSeverity.Warning)
+			new DiagnosticResult("LINQ2DB0010", DiagnosticSeverity.Warning)
 				.WithLocation(1)
 				.WithArguments("'descriptor' is in scope: read 'descriptor.MappingSchema' instead of the data context's MappingSchema"),
-			new DiagnosticResult("LINQ2DB0007", DiagnosticSeverity.Warning)
+			new DiagnosticResult("LINQ2DB0010", DiagnosticSeverity.Warning)
 				.WithLocation(2)
 				.WithArguments("'descriptor' is in scope: read 'descriptor?.MappingSchema ?? builder.MappingSchema' instead of the data context's MappingSchema"));
 
@@ -568,7 +570,7 @@ namespace Tests.Analyzers.Internal
 
 					public override MappingSchema MappingSchema => _inner.MappingSchema;
 
-					public object Instance(ExpressionBuilder builder) => {|LINQ2DB0007:builder.MappingSchema|};
+					public object Instance(ExpressionBuilder builder) => {|LINQ2DB0010:builder.MappingSchema|};
 
 					public static object Static(ExpressionBuilder builder) => builder.MappingSchema;
 				}
@@ -628,7 +630,7 @@ namespace Tests.Analyzers.Internal
 					{
 						var context = (IBuildContext)o;
 
-						return {|LINQ2DB0007:builder.MappingSchema|};
+						return {|LINQ2DB0010:builder.MappingSchema|};
 					}
 
 					public static object After(ExpressionBuilder builder, object o)
@@ -673,9 +675,9 @@ namespace Tests.Analyzers.Internal
 				{
 					public static object M(ExpressionBuilder builder, IBuildContext context)
 					{
-						object Local() => {|LINQ2DB0007:builder.MappingSchema|};
+						object Local() => {|LINQ2DB0010:builder.MappingSchema|};
 
-						System.Func<object> lambda = () => {|LINQ2DB0007:builder.MappingSchema|};
+						System.Func<object> lambda = () => {|LINQ2DB0010:builder.MappingSchema|};
 
 						return Local() ?? lambda();
 					}
@@ -726,7 +728,7 @@ namespace Tests.Analyzers.Internal
 					public object Read(ExpressionBuilder builder) => {|#0:builder.MappingSchema|};
 				}
 			"""),
-			new DiagnosticResult("LINQ2DB0007", DiagnosticSeverity.Warning)
+			new DiagnosticResult("LINQ2DB0010", DiagnosticSeverity.Warning)
 				.WithLocation(0)
 				.WithArguments("'MappingSchema' is in scope: read 'MappingSchema' instead of the data context's MappingSchema"));
 
@@ -738,7 +740,7 @@ namespace Tests.Analyzers.Internal
 					public static object? Body(ExpressionBuilder builder, object o)
 					{
 						foreach (var column in (ColumnDescriptor[])o)
-							return {|LINQ2DB0007:builder.MappingSchema|};
+							return {|LINQ2DB0010:builder.MappingSchema|};
 
 						return null;
 					}
@@ -778,7 +780,7 @@ namespace Tests.Analyzers.Internal
 						var attributes = LinqToDB.Sql.ExtensionAttribute.GetExtensionAttributes(methodCall, builder.MappingSchema);
 						var root       = methodCall.SkipMethodChain(builder.MappingSchema);
 
-						return {|LINQ2DB0007:builder.MappingSchema|};
+						return {|LINQ2DB0010:builder.MappingSchema|};
 					}
 				}
 			""");
@@ -791,15 +793,15 @@ namespace Tests.Analyzers.Internal
 				{
 					public static MappingSchema A(ExpressionBuilder builder, IBuildContext? context) => context?.MappingSchema ?? builder.MappingSchema;
 
-					public static MappingSchema B(ExpressionBuilder builder, IBuildContext? context) => context?.MappingSchema ?? Wrap({|LINQ2DB0007:builder.MappingSchema|});
+					public static MappingSchema B(ExpressionBuilder builder, IBuildContext? context) => context?.MappingSchema ?? Wrap({|LINQ2DB0010:builder.MappingSchema|});
 
 					public static MappingSchema C(ExpressionBuilder builder, IBuildContext context) => context.MappingSchema ?? builder.MappingSchema;
 
 					public static MappingSchema D(ExpressionBuilder builder, MappingSchema? mappingSchema) => mappingSchema ?? builder.MappingSchema;
 
-					public static MappingSchema E(ExpressionBuilder builder, IBuildContext? parent, IBuildContext context) => parent?.MappingSchema ?? {|LINQ2DB0007:builder.MappingSchema|};
+					public static MappingSchema E(ExpressionBuilder builder, IBuildContext? parent, IBuildContext context) => parent?.MappingSchema ?? {|LINQ2DB0010:builder.MappingSchema|};
 
-					public static MappingSchema F(ExpressionBuilder builder, IBuildContext? context) => context?.Parent!.MappingSchema ?? {|LINQ2DB0007:builder.MappingSchema|};
+					public static MappingSchema F(ExpressionBuilder builder, IBuildContext? context) => context?.Parent!.MappingSchema ?? {|LINQ2DB0010:builder.MappingSchema|};
 
 					static MappingSchema Wrap(MappingSchema mappingSchema) => mappingSchema;
 				}
@@ -818,7 +820,7 @@ namespace Tests.Analyzers.Internal
 
 					public override MappingSchema MappingSchema => _source.MappingSchema;
 
-					public MappingSchema FromParent(ExpressionBuilder builder) => Parent?.MappingSchema ?? {|LINQ2DB0007:builder.MappingSchema|};
+					public MappingSchema FromParent(ExpressionBuilder builder) => Parent?.MappingSchema ?? {|LINQ2DB0010:builder.MappingSchema|};
 				}
 			""");
 
@@ -862,12 +864,219 @@ namespace Tests.Analyzers.Internal
 				}
 			""");
 
+		// A query root carries the snapshot a handle was created under.
+		[Test]
+		public Task QueryRootIsACarrier() => AnalyzerVerifier<BuildContextMappingSchemaAnalyzer>.VerifyAsync(
+			Code("""
+				static class Helper
+				{
+					public static MappingSchema M(ExpressionBuilder builder, SqlQueryRootExpression root) => {|#0:builder.MappingSchema|};
+				}
+
+				sealed class RootHoldingContext : BuildContextBase
+				{
+					readonly SqlQueryRootExpression _root;
+
+					public RootHoldingContext(ExpressionBuilder builder, SqlQueryRootExpression root) : base(builder) { _root = root; }
+
+					public override MappingSchema MappingSchema => {|#1:Builder.MappingSchema|};
+				}
+			"""),
+			new DiagnosticResult("LINQ2DB0010", DiagnosticSeverity.Warning)
+				.WithLocation(0)
+				.WithArguments("'root' is in scope: read 'root.MappingSchema' instead of the data context's MappingSchema"),
+			new DiagnosticResult("LINQ2DB0010", DiagnosticSeverity.Warning)
+				.WithLocation(1)
+				.WithArguments("'RootHoldingContext' holds the source context '_root': return its MappingSchema instead of the data context's"));
+
+		// A type parameter constrained to a context is a context - as a parameter and as a context's source member.
+		[Test]
+		public Task TypeParameterConstrainedToContextIsACarrier() => AnalyzerVerifier<BuildContextMappingSchemaAnalyzer>.VerifyAsync(
+			Code("""
+				static class Helper
+				{
+					public static MappingSchema M<T>(ExpressionBuilder builder, T context) where T : IBuildContext => {|#0:builder.MappingSchema|};
+				}
+
+				sealed class ProxyContext<TOwner> : BuildContextBase
+					where TOwner : IBuildContext
+				{
+					readonly TOwner _owner;
+
+					public ProxyContext(ExpressionBuilder builder, TOwner owner) : base(builder) { _owner = owner; }
+
+					public override MappingSchema MappingSchema => {|#1:Builder.MappingSchema|};
+				}
+			"""),
+			new DiagnosticResult("LINQ2DB0010", DiagnosticSeverity.Warning)
+				.WithLocation(0)
+				.WithArguments("'context' is in scope: read 'context.MappingSchema' instead of the data context's MappingSchema"),
+			new DiagnosticResult("LINQ2DB0010", DiagnosticSeverity.Warning)
+				.WithLocation(1)
+				.WithArguments("'ProxyContext' holds the source context '_owner': return its MappingSchema instead of the data context's"));
+
+		// In a root context Builder.MappingSchema is its own MappingSchema, so reading it there changes nothing - in any
+		// getter spelling the root is recognised by.
+		[Test]
+		public Task ReadThroughRootBuilderIsSilent() => Verify("""
+				sealed class RootContext : BuildContextBase
+				{
+					public RootContext(ExpressionBuilder builder) : base(builder) { }
+
+					public override MappingSchema MappingSchema => Builder.MappingSchema;
+
+					public bool IsScalar(System.Type type) => Builder.MappingSchema.IsScalarType(type);
+				}
+
+				sealed class ThisRootContext : BuildContextBase
+				{
+					public ThisRootContext(ExpressionBuilder builder) : base(builder) { }
+
+					public override MappingSchema MappingSchema => this.Builder.MappingSchema;
+
+					public bool IsScalar(ExpressionBuilder builder, System.Type type) => builder.MappingSchema.IsScalarType(type);
+				}
+			""");
+
+		// An alias is recognised by the type its getter reads through, however the receiver is spelled.
+		[Test]
+		public Task AliasSpellingsAreLiveReads() => Verify("""
+				sealed class ThisAlias
+				{
+					public IDataContext DataContext = null!;
+
+					public MappingSchema MappingSchema => this.DataContext.MappingSchema;
+				}
+
+				sealed class BangAlias
+				{
+					IDataContext? _dataContext;
+
+					public MappingSchema MappingSchema => (_dataContext!).MappingSchema;
+				}
+
+				sealed class TwoHopAlias
+				{
+					public ExpressionBuilder Builder = null!;
+
+					public MappingSchema MappingSchema => Builder.DataContext.MappingSchema;
+				}
+
+				static class Helper
+				{
+					public static object A(ThisAlias   owner, IBuildContext context) => {|LINQ2DB0010:owner.MappingSchema|};
+					public static object B(BangAlias   owner, IBuildContext context) => {|LINQ2DB0010:owner.MappingSchema|};
+					public static object C(TwoHopAlias owner, IBuildContext context) => {|LINQ2DB0010:owner.MappingSchema|};
+				}
+			""");
+
+		// A local copy of the builder's data context reads the live schema too, unless it is reassigned.
+		[Test]
+		public Task LocalCopyOfDataContextIsALiveRead() => Verify("""
+				static class Helper
+				{
+					public static object Copy(ExpressionBuilder builder, IBuildContext sequence)
+					{
+						var dc = builder.DataContext;
+						return {|LINQ2DB0010:dc.MappingSchema|};
+					}
+
+					public static object Reassigned(ExpressionBuilder builder, IBuildContext sequence, IDataContext other)
+					{
+						var dc = builder.DataContext;
+						dc = other;
+						return dc.MappingSchema;
+					}
+				}
+			""");
+
+		// A schema-typed left operand says nothing about the other sources in scope: one that cannot be null is still
+		// the source to read, and TryGetRootMappingSchema is ExpressionBuilder's, not any method of that name.
+		[Test]
+		public Task SchemaTypedFallbackStillSeesCarriers() => AnalyzerVerifier<BuildContextMappingSchemaAnalyzer>.VerifyAsync(
+			Code("""
+				static class Helper
+				{
+					public static MappingSchema Hint(ExpressionBuilder builder, MappingSchema? hint, IBuildContext context) => hint ?? {|#0:builder.MappingSchema|};
+
+					public static MappingSchema Root(ExpressionBuilder builder, object expression, IBuildContext context)
+						=> ExpressionBuilder.TryGetRootMappingSchema(expression) ?? {|#1:builder.MappingSchema|};
+
+					public static MappingSchema Local(ExpressionBuilder builder, IBuildContext? context)
+					{
+						static MappingSchema? TryGetRootMappingSchema(int value) => null;
+
+						return TryGetRootMappingSchema(1) ?? {|#2:builder.MappingSchema|};
+					}
+
+					public static MappingSchema NullableOnly(ExpressionBuilder builder, MappingSchema? hint, IBuildContext? context) => hint ?? builder.MappingSchema;
+
+					public static MappingSchema OwnOperand(ExpressionBuilder builder, MappingSchema hint) => hint ?? builder.MappingSchema;
+				}
+
+				// The CteContext shape: in its own getter the context's members are no carriers.
+				sealed class CteLikeContext : BuildContextBase
+				{
+					public CteLikeContext(ExpressionBuilder builder) : base(builder) { }
+
+					public IBuildContext? Inner      { get; set; }
+					public object         Expression { get; set; } = null!;
+
+					public override MappingSchema MappingSchema => Inner?.MappingSchema ?? ExpressionBuilder.TryGetRootMappingSchema(Expression) ?? Builder.MappingSchema;
+				}
+			"""),
+			new DiagnosticResult("LINQ2DB0010", DiagnosticSeverity.Warning)
+				.WithLocation(0)
+				.WithArguments("'context' is in scope: read 'context.MappingSchema' instead of the data context's MappingSchema"),
+			new DiagnosticResult("LINQ2DB0010", DiagnosticSeverity.Warning)
+				.WithLocation(1)
+				.WithArguments("'context' is in scope: read 'context.MappingSchema' instead of the data context's MappingSchema"),
+			new DiagnosticResult("LINQ2DB0010", DiagnosticSeverity.Warning)
+				.WithLocation(2)
+				.WithArguments("'context' is in scope: read 'context?.MappingSchema ?? builder.MappingSchema' instead of the data context's MappingSchema"));
+
+		// The suggestion prefers a parameter over a local taken from Parent, and a null-checked parameter is not nullable.
+		[Test]
+		public Task SuggestionPrefersParametersAndFollowsNullChecks() => AnalyzerVerifier<BuildContextMappingSchemaAnalyzer>.VerifyAsync(
+			Code("""
+				static class Helper
+				{
+					public static object ParentLocal(ExpressionBuilder builder, IBuildContext sequence)
+					{
+						var outer = sequence.Parent;
+						return {|#0:builder.MappingSchema|};
+					}
+
+					public static object Checked(ExpressionBuilder builder, IBuildContext? context)
+					{
+						if (context == null)
+							throw new System.ArgumentNullException(nameof(context));
+
+						return {|#1:builder.MappingSchema|};
+					}
+				}
+			"""),
+			new DiagnosticResult("LINQ2DB0010", DiagnosticSeverity.Warning)
+				.WithLocation(0)
+				.WithArguments("'sequence' is in scope: read 'sequence.MappingSchema' instead of the data context's MappingSchema"),
+			new DiagnosticResult("LINQ2DB0010", DiagnosticSeverity.Warning)
+				.WithLocation(1)
+				.WithArguments("'context' is in scope: read 'context.MappingSchema' instead of the data context's MappingSchema"));
+
+		[Test]
+		public Task NameOfIsNoRead() => Verify("""
+				static class Helper
+				{
+					public static string N(ExpressionBuilder builder, IBuildContext context) => nameof(builder.MappingSchema);
+				}
+			""");
+
 		// A companion type that has gone missing is reported once, on ExpressionBuilder.
 		[Test]
 		public Task DriftIsReported() => AnalyzerVerifier<BuildContextMappingSchemaAnalyzer>.VerifyAsync("""
 			namespace LinqToDB.Internal.Linq.Builder
 			{
-				sealed class {|LINQ2DB0007:ExpressionBuilder|}
+				sealed class {|LINQ2DB0011:ExpressionBuilder|}
 				{
 				}
 			}
@@ -879,9 +1088,9 @@ namespace Tests.Analyzers.Internal
 			Model
 				.Replace("sealed partial class ExpressionBuilder", "sealed partial class {|#0:ExpressionBuilder|}")
 				.Replace("MappingSchema     => DataContext.MappingSchema;", "MappingSchema     { get; } = null!;"),
-			new DiagnosticResult("LINQ2DB0007", DiagnosticSeverity.Warning)
+			new DiagnosticResult("LINQ2DB0011", DiagnosticSeverity.Warning)
 				.WithLocation(0)
-				.WithArguments("The LINQ2DB0007 model could not be read: 'LinqToDB.Internal.Linq.Builder.ExpressionBuilder.MappingSchema' is no longer a '<IDataContext member>.MappingSchema' getter. The rule is disabled for the whole compilation until the analyzer is updated."));
+				.WithMessage("The LINQ2DB0010 model could not be read: 'LinqToDB.Internal.Linq.Builder.ExpressionBuilder.MappingSchema' is no longer a '<IDataContext member>.MappingSchema' getter. The rule is disabled for the whole compilation until the analyzer is updated."));
 
 		// A renamed member a trigger matches by name disables the rule visibly, not silently.
 		[Test]
@@ -890,17 +1099,17 @@ namespace Tests.Analyzers.Internal
 				.Replace("sealed partial class ExpressionBuilder", "sealed partial class {|#0:ExpressionBuilder|}")
 				.Replace("ExpressionBuilder Builder       { get; }", "ExpressionBuilder Owner         { get; }")
 				.Replace("Builder = builder;", "Owner = builder;"),
-			new DiagnosticResult("LINQ2DB0007", DiagnosticSeverity.Warning)
+			new DiagnosticResult("LINQ2DB0011", DiagnosticSeverity.Warning)
 				.WithLocation(0)
-				.WithArguments("The LINQ2DB0007 model could not be read: 'LinqToDB.Internal.Linq.Builder.IBuildContext.Builder' was not found in the assembly that declares 'LinqToDB.Internal.Linq.Builder.ExpressionBuilder'. The rule is disabled for the whole compilation until the analyzer is updated."));
+				.WithMessage("The LINQ2DB0010 model could not be read: 'LinqToDB.Internal.Linq.Builder.IBuildContext.Builder' was not found in the assembly that declares 'LinqToDB.Internal.Linq.Builder.ExpressionBuilder'. The rule is disabled for the whole compilation until the analyzer is updated."));
 
 		[Test]
 		public Task BuildMethodCallDriftIsReported() => AnalyzerVerifier<BuildContextMappingSchemaAnalyzer>.VerifyAsync(
 			Model
 				.Replace("sealed partial class ExpressionBuilder", "sealed partial class {|#0:ExpressionBuilder|}")
 				.Replace("protected abstract object BuildMethodCall(", "protected abstract object BuildCall("),
-			new DiagnosticResult("LINQ2DB0007", DiagnosticSeverity.Warning)
+			new DiagnosticResult("LINQ2DB0011", DiagnosticSeverity.Warning)
 				.WithLocation(0)
-				.WithArguments("The LINQ2DB0007 model could not be read: 'LinqToDB.Internal.Linq.Builder.MethodCallBuilder.BuildMethodCall' was not found in the assembly that declares 'LinqToDB.Internal.Linq.Builder.ExpressionBuilder'. The rule is disabled for the whole compilation until the analyzer is updated."));
+				.WithMessage("The LINQ2DB0010 model could not be read: 'LinqToDB.Internal.Linq.Builder.MethodCallBuilder.BuildMethodCall' was not found in the assembly that declares 'LinqToDB.Internal.Linq.Builder.ExpressionBuilder'. The rule is disabled for the whole compilation until the analyzer is updated."));
 	}
 }

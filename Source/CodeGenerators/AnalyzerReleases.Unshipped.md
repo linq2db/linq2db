@@ -11,4 +11,5 @@ LINQ2DB0003 | Usage | Warning | ServerSideOnlyContractAnalyzer
 LINQ2DB0004 | Usage | Warning | ProjectFlagsAnalyzer
 LINQ2DB0005 | Usage | Warning | ProjectFlagsAnalyzer
 LINQ2DB0006 | Usage | Warning | ProjectFlagsAnalyzer
-LINQ2DB0007 | Usage | Warning | BuildContextMappingSchemaAnalyzer
+LINQ2DB0010 | Usage | Warning | BuildContextMappingSchemaAnalyzer
+LINQ2DB0011 | Usage | Warning | BuildContextMappingSchemaAnalyzer

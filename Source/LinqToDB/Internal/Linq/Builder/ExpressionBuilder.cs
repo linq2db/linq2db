@@ -215,7 +215,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		public static readonly ParameterExpression QueryExpressionContainerParam = Expression.Parameter(typeof(IQueryExpressions), "container");
 		public static readonly ParameterExpression RowCounterParam               = Expression.Parameter(typeof(int),          "counter");
 
-		// The data context's live schema. A step with a source in reach reads the source's instead (LINQ2DB0007):
+		// The data context's live schema. A step with a source in reach reads the source's instead (LINQ2DB0010):
 		// a handle created before UseMappingSchema keeps the schema it was created under.
 		public MappingSchema MappingSchema => DataContext.MappingSchema;
 
