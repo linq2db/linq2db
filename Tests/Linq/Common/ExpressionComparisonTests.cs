@@ -288,12 +288,14 @@ namespace Tests.Common
 			var a = Expression.Parameter(typeof(int), "p");
 			var b = Expression.Parameter(typeof(int), "p");
 			CompareBoth(Expression.Lambda(a, a), Expression.Lambda(a, b), false);
-			CompareBoth(a, b, true);
+			// A pair left over from the comparison above would bind a on one side only.
+			CompareBoth(a, Expression.Parameter(typeof(int), "p"), true);
 
 			var unsupported = Expression.Loop(Expression.Empty());
-			Assert.Throws<InvalidOperationException>(() => CacheEquals(
-				Expression.Lambda(unsupported, a), Expression.Lambda(Expression.Loop(Expression.Empty()), b)));
-			CompareBoth(a, b, true);
+			Action act = () => CacheEquals(
+				Expression.Lambda(unsupported, a), Expression.Lambda(Expression.Loop(Expression.Empty()), b));
+			act.ShouldThrow<InvalidOperationException>();
+			CompareBoth(a, Expression.Parameter(typeof(int), "p"), true);
 		}
 	}
 }

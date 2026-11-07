@@ -412,8 +412,10 @@ namespace Tests.Linq
 			}
 
 			var nestedMisses = Nested(1);
-			Nested(2).ShouldBe(nestedMisses);
-			Nested(3).ShouldBe(nestedMisses);
+			Nested(2)
+				.ShouldBe(nestedMisses);
+			Nested(3)
+				.ShouldBe(nestedMisses);
 		}
 
 		[Test]
