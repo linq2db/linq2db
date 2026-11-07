@@ -42,16 +42,20 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 		{
 			public override ISqlExpression? TranslateRight(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression length)
 			{
-				var factory = translationContext.ExpressionFactory;
+				var factory    = translationContext.ExpressionFactory;
+				var resultType = factory.GetDbDataType(methodCall.Type);
 
-				return new SqlExpression(
-					factory.GetDbDataType(methodCall.Type),
+				var substring = new SqlExpression(
+					resultType,
 					"Unicode::Substring({0}, CAST(Unicode::GetLength({0}) - {1} AS UInt32), {1})",
 					Precedence.Primary,
 					SqlFlags.IsPure,
 					ParametersNullabilityType.IfAnyParameterNullable,
 					value,
 					length);
+
+				// Unicode::Substring reads a NULL count as "to the end"
+				return factory.Condition(factory.IsNull(length), factory.Null(resultType), substring);
 			}
 
 			public override ISqlExpression? TranslatePadLeft(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression? paddingChar)

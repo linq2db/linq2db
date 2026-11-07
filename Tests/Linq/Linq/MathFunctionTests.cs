@@ -1870,6 +1870,9 @@ namespace Tests.Linq
 
 		// DuckDB cannot round a DECIMAL to a precision taken from a column.
 		[ThrowsForProvider("DuckDB.NET.Data.DuckDBException", TestProvName.AllDuckDB, ErrorMessage = "with non-constant precision is not supported")]
+		[ActiveIssue(6055, Configuration = TestProvName.AllYdb, SkipForNonLinqService = true,
+			ErrorTypeName = "Grpc.Core.RpcException", ErrorMessage = "Failed to convert type: Optional<Decimal(35,13)> to Optional<Decimal(22,13)>",
+			Details = "LinqServiceSerializer drops SqlBinaryExpression's precision/scale, so the server folds the non-mandatory narrowing casts")]
 		[Test]
 		public void SqlRoundDecimalOverloads([DataSources] string context)
 		{
