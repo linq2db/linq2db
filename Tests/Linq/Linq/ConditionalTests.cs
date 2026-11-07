@@ -254,5 +254,70 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
+
+		[Table]
+		sealed class NestedConditionData
+		{
+			[PrimaryKey] public int   Id { get; set; }
+			[Column    ] public bool? F  { get; set; }
+			[Column    ] public int?  A  { get; set; }
+			[Column    ] public int?  B  { get; set; }
+			[Column    ] public int?  C  { get; set; }
+
+			public static readonly NestedConditionData[] Data =
+			[
+				new NestedConditionData { Id = 1, A = 1,    B = 2,    C = null },
+				new NestedConditionData { Id = 2, A = 1,    B = 1,    C = null },
+				new NestedConditionData { Id = 3, A = 2,    B = 1,    C = null },
+				new NestedConditionData { Id = 4, A = 1,    B = 2,    C = 1    },
+				new NestedConditionData { Id = 5, A = 2,    B = 2,    C = 1    },
+				new NestedConditionData { Id = 6, A = null, B = 1,    C = 1    },
+				new NestedConditionData { Id = 7, A = 1,    B = null, C = 1    },
+			];
+		}
+
+		[ActiveIssue(6255, ErrorMessage = "{ Id = 1, V = False } <> { Id = 1, V = True }")]
+		[Test]
+		public void NestedConditionWithSwappedValues([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(NestedConditionData.Data);
+
+			AssertQuery(tb.Select(r => new { r.Id, V = (r.C == null ? r.A == 1 : r.B == 1) ? r.B == 1 : r.A == 1 }));
+			AssertQuery(tb.Where(r => (r.C == null ? r.A == 1 : r.B == 1) ? r.B == 1 : r.A == 1));
+		}
+
+		[ActiveIssue(6255, ErrorMessage = "{ Id = 3, V = True } <> { Id = 3, V = False }")]
+		[Test]
+		public void NestedConditionWithSameValues([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(NestedConditionData.Data);
+
+			AssertQuery(tb.Select(r => new { r.Id, V = (r.C == null ? r.A == 1 : r.B == 1) ? r.A == 1 : r.B == 1 }));
+		}
+
+		[ActiveIssue(6255, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}[False, True, False, True, False, True, True]{1}but was")]
+		[Test]
+		public void NestedConditionWithSwappedValuesAsSetValue([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(NestedConditionData.Data);
+
+			var expected = NestedConditionData.Data
+				.OrderBy(r => r.Id)
+				.Select(r => (bool?)((r.C == null ? r.A == 1 : r.B == 1) ? r.B == 1 : r.A == 1))
+				.ToArray();
+
+			tb
+				.Set(r => r.F, r => (r.C == null ? r.A == 1 : r.B == 1) ? r.B == 1 : r.A == 1)
+				.Update();
+
+			tb
+				.OrderBy(r => r.Id)
+				.Select(r => r.F)
+				.ToArray()
+				.ShouldBe(expected);
+		}
 	}
 }

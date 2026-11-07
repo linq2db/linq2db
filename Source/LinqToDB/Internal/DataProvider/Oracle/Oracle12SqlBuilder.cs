@@ -35,7 +35,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		protected override bool ShouldBuildWhere(SelectQuery selectQuery, out SqlSearchCondition condition)
 		{
-			condition = PrepareSearchCondition(selectQuery.Where.SearchCondition);
+			condition = selectQuery.Where.SearchCondition;
 
 			return !condition.IsTrue;
 		}

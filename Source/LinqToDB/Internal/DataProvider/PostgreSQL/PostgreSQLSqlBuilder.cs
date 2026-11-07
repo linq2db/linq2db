@@ -473,7 +473,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			var literal = value switch
 			{
 				SqlValue sqlValue                                  => sqlValue.Value,
-				SqlParameter { IsQueryParameter: false } parameter => parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues).ProviderValue,
+				SqlParameter { IsQueryParameter: false } parameter => parameter.GetParameterValue(RenderContext.EvaluationContext.ParameterValues).ProviderValue,
 				_                                                  => null,
 			};
 
