@@ -368,7 +368,7 @@ namespace CodeGenerators
 		}
 
 		// definiteOnly: only a carrier that cannot be null where the read sits; excluded: the fallback's own left operand;
-		// ownSchemaMembersAllowed: false at a definition site, whose read defines the own property and schema-typed fields.
+		// ownSchemaMembersAllowed: false at a definition site, whose read defines the context's schema-typed members.
 		static Carrier? FindCarrier(IPropertyReferenceOperation op, IOperation read, IMethodSymbol member, INamedTypeSymbol enclosingType, Model model, bool membersAllowed,
 			bool definiteOnly = false, ISymbol? excluded = null, bool ownSchemaMembersAllowed = true)
 		{
@@ -417,7 +417,7 @@ namespace CodeGenerators
 							|| !AssignedAt(local, op.Syntax, semanticModel, ref flow))
 							continue;
 						type     = local.Type;
-						nullable = VarNullability(local, semanticModel);
+						nullable = VarNullability(local, position, semanticModel);
 						tier     = FromParent(local) ? 2 : 1;
 						break;
 
@@ -427,7 +427,7 @@ namespace CodeGenerators
 
 					// A root's own MappingSchema returns the live schema, so it is no source; any other context's is.
 					case IPropertySymbol property when instanceAllowed && !property.IsStatic && property.Name != "Parent" && IsOwnMember(property, enclosingType)
-						&& !(property.Name == SchemaProperty && (!ownSchemaMembersAllowed || model.HasRootSchemaGetter(enclosingType))):
+						&& (ownSchemaMembersAllowed || !model.IsSchema(property.Type)) && !(property.Name == SchemaProperty && model.HasRootSchemaGetter(enclosingType)):
 						type = property.Type;
 						break;
 
@@ -589,15 +589,17 @@ namespace CodeGenerators
 
 		/// <summary>
 		/// A <c>var</c> local is nullable by declaration whatever it holds, so its initializer's flow state (or a
-		/// <c>foreach</c> element's annotation) decides. <see langword="null"/> for an explicitly typed local.
+		/// <c>foreach</c> element's annotation) decides. An explicitly typed annotated local follows its flow state at the read.
 		/// </summary>
-		static bool? VarNullability(ILocalSymbol local, SemanticModel semanticModel) => local.DeclaringSyntaxReferences[0].GetSyntax() switch
+		static bool? VarNullability(ILocalSymbol local, int position, SemanticModel semanticModel) => local.DeclaringSyntaxReferences[0].GetSyntax() switch
 		{
 			VariableDeclaratorSyntax { Initializer.Value: var value, Parent: VariableDeclarationSyntax { Type.IsVar: true } }
 				=> semanticModel.GetTypeInfo(value).Nullability.FlowState == NullableFlowState.MaybeNull,
 			ForEachStatementSyntax { Type.IsVar: true } loop
 				=> semanticModel.GetForEachStatementInfo(loop).ElementType?.NullableAnnotation == NullableAnnotation.Annotated,
-			_   => null,
+			_   => local.Type.NullableAnnotation == NullableAnnotation.Annotated
+				? semanticModel.GetSpeculativeTypeInfo(position, SyntaxFactory.IdentifierName(local.Name), SpeculativeBindingOption.BindAsExpression).Nullability.FlowState != NullableFlowState.NotNull
+				: null,
 		};
 
 		static bool InConstructorInitializer(SyntaxNode node)
@@ -802,7 +804,8 @@ namespace CodeGenerators
 					{
 						AssignmentExpressionSyntax assignment                         => assignment.Left,
 						ArgumentSyntax { RefKindKeyword.RawKind: not 0 } argument     => argument.Expression,
-						ArgumentSyntax { Parent: TupleExpressionSyntax } element      => element.Expression,
+						ArgumentSyntax { Parent: TupleExpressionSyntax tuple } element when IsDeconstructionTarget(tuple)
+							=> element.Expression,
 						RefExpressionSyntax reference                                 => reference.Expression,
 						_                                                             => null,
 					};
@@ -815,6 +818,14 @@ namespace CodeGenerators
 				}
 
 				return true;
+			}
+
+			static bool IsDeconstructionTarget(TupleExpressionSyntax tuple)
+			{
+				while (tuple.Parent is ArgumentSyntax { Parent: TupleExpressionSyntax outer })
+					tuple = outer;
+
+				return tuple.Parent is AssignmentExpressionSyntax assignment && assignment.Left == tuple;
 			}
 
 			public bool IsAlias(IPropertySymbol property)

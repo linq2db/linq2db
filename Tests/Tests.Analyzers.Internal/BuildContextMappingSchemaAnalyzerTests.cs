@@ -1115,6 +1115,65 @@ namespace Tests.Analyzers.Internal
 			new DiagnosticResult("LINQ2DB0010", DiagnosticSeverity.Warning)
 				.WithLocation(0)
 				.WithArguments("'root' is in scope: read 'root.MappingSchema' instead of the data context's MappingSchema"));
+		// A tuple is a write only as a deconstruction target; as a value it leaves the copy alone.
+		[Test]
+		public Task TupleValueIsNoWrite() => Verify("""
+				static class Helper
+				{
+					public static object Value(ExpressionBuilder builder, IBuildContext sequence)
+					{
+						var dc   = builder.DataContext;
+						var pair = (dc, 1);
+						return {|LINQ2DB0010:dc.MappingSchema|};
+					}
+
+					public static object NestedTarget(ExpressionBuilder builder, IBuildContext sequence, IDataContext other)
+					{
+						var dc = builder.DataContext;
+						((dc, _), _) = ((other, 1), 1);
+						return dc.MappingSchema;
+					}
+				}
+			""");
+
+		// An explicitly typed nullable local follows its null check, like a parameter.
+		[Test]
+		public Task ExplicitNullableLocalFollowsNullChecks() => AnalyzerVerifier<BuildContextMappingSchemaAnalyzer>.VerifyAsync(
+			Code("""
+				static class Helper
+				{
+					static MappingSchema? Provide() => null;
+
+					public static MappingSchema M(ExpressionBuilder builder)
+					{
+						MappingSchema? local = Provide();
+
+						if (local != null)
+							return {|#0:builder.MappingSchema|};
+
+						return null!;
+					}
+				}
+			"""),
+			new DiagnosticResult("LINQ2DB0010", DiagnosticSeverity.Warning)
+				.WithLocation(0)
+				.WithArguments("'local' is in scope: read 'local' instead of the data context's MappingSchema"));
+
+		// At a definition site a schema-typed member is no carrier, field or property alike.
+		[Test]
+		public Task DefinitionSiteFallbackIgnoresSchemaProperties() => Verify("""
+				sealed class SchemaPropertyContext : BuildContextBase
+				{
+					readonly MappingSchema? _hint;
+
+					public SchemaPropertyContext(ExpressionBuilder builder, MappingSchema? hint) : base(builder) { _hint = hint; }
+
+					public MappingSchema Other { get; } = null!;
+
+					public override MappingSchema MappingSchema => _hint ?? Builder.MappingSchema;
+				}
+			""");
+
 		// A schema-typed left operand says nothing about the other sources in scope: one that cannot be null is still
 		// the source to read, and TryGetRootMappingSchema is ExpressionBuilder's, not any method of that name.
 		[Test]
