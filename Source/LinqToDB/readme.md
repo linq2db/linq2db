@@ -75,7 +75,7 @@ Notable open-source users:
 
 ### Passing Into Constructor
 
-You can simply pass connection string into `DataConnection` or `DataContext` constructor using [`DataOptions`](https://linq2db.github.io/api/LinqToDB.DataOptions.html) class.
+You can simply pass connection string into `DataConnection` or `DataContext` constructor using [`DataOptions`](https://linq2db.github.io/api/linq2db/linq2db--LinqToDB.DataOptions.html) class.
 
 Minimal configuration example:
 ```cs
