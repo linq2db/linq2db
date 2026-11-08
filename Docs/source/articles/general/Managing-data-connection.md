@@ -1,5 +1,7 @@
 # Managing Data Connection
 
+TO-7 control: <xref:LinqToDB.DoesNotExist>
+
 Since connecting to a database is an expensive operation, .NET database providers use connection pools to minimize this cost. They take a connection from the pool, use it, and then release the connection back to the pool so it could be reused.
 
 If you don't release database connections back to the pool then:
