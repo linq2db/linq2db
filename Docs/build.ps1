@@ -52,6 +52,10 @@ try
 		$staging = "$docfx.tmp"
 		if (Test-Path $staging) { Remove-Item $staging -Recurse -Force }
 		Expand-Archive $zip -DestinationPath $staging
+		if (-not (Test-Path (Join-Path $staging 'docfx.dll')))
+		{
+			throw "docfx.zip from $($pin.url) has no docfx.dll at its root"
+		}
 		Move-Item $staging $docfx
 		Remove-Item $zip -Force
 	}

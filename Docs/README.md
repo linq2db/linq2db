@@ -18,8 +18,10 @@ the built assembly) and runs docfx. Open `.build/docs/_site/index.html`, or serv
 
 ## Publishing
 
-`.github/workflows/docs.yml` builds the site on every pull request that touches `Docs/`, `README.md` or
-`CONTRIBUTING.md`, and publishes it to `linq2db/linq2db.github.io` when a (non-prerelease) GitHub release
+`.github/workflows/docs.yml` builds the site on every pull request that touches `Docs/`, `README.md`,
+`CONTRIBUTING.md`, the build settings it depends on (`global.json`, `Directory.Build.props`,
+`Directory.Packages.props`, `Source/**/Directory.Build.props`, `Source/Analyzers.Common.props`) or the
+workflow itself, and publishes it to `linq2db/linq2db.github.io` when a (non-prerelease) GitHub release
 is published. To re-publish a release:
 
 ```
