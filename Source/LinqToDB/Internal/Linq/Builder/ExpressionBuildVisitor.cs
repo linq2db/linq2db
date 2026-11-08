@@ -2858,6 +2858,13 @@ namespace LinqToDB.Internal.Linq.Builder
 
 								if (enumMappingType != null)
 								{
+									if (_buildPurpose is BuildPurpose.Sql
+									    && _buildFlags.HasFlag(BuildFlags.ForKeys)
+									    && enumMappingType.UnwrapNullableType() == node.Operand.Type.UnwrapNullableType())
+									{
+										return Visit(placeholder.WithType(node.Type));
+									}
+
 									if (TryCastTo(placeholder, enumMappingType, node.Type, out casted))
 									{
 										return Visit(casted);
