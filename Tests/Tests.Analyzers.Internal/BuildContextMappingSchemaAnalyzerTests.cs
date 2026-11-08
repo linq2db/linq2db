@@ -508,7 +508,7 @@ namespace Tests.Analyzers.Internal
 
 		// A var local is nullable by declaration; its initializer decides which form is suggested.
 		[Test]
-		public Task VarCarrierSuggestionFollowsInitializer() => AnalyzerVerifier<BuildContextMappingSchemaAnalyzer>.VerifyAsync(
+		public Task VarCarrierSuggestionFollowsFlowState() => AnalyzerVerifier<BuildContextMappingSchemaAnalyzer>.VerifyAsync(
 			Code("""
 				static class Helper
 				{
@@ -1127,6 +1127,14 @@ namespace Tests.Analyzers.Internal
 						return {|LINQ2DB0010:dc.MappingSchema|};
 					}
 
+					public static object AssignedValue(ExpressionBuilder builder, IBuildContext sequence)
+					{
+						var dc = builder.DataContext;
+						(IDataContext, int) pair;
+						pair = (dc, 1);
+						return {|LINQ2DB0010:dc.MappingSchema|};
+					}
+
 					public static object NestedTarget(ExpressionBuilder builder, IBuildContext sequence, IDataContext other)
 					{
 						var dc = builder.DataContext;
@@ -1153,10 +1161,36 @@ namespace Tests.Analyzers.Internal
 
 						return null!;
 					}
+
+					public static MappingSchema Var(ExpressionBuilder builder)
+					{
+						var local = Provide();
+
+						if (local != null)
+							return {|#1:builder.MappingSchema|};
+
+						return null!;
+					}
+
+					public static MappingSchema VarFallback(ExpressionBuilder builder, MappingSchema? hint)
+					{
+						var local = Provide();
+
+						if (local != null)
+							return hint ?? {|#2:builder.MappingSchema|};
+
+						return null!;
+					}
 				}
 			"""),
 			new DiagnosticResult("LINQ2DB0010", DiagnosticSeverity.Warning)
 				.WithLocation(0)
+				.WithArguments("'local' is in scope: read 'local' instead of the data context's MappingSchema"),
+			new DiagnosticResult("LINQ2DB0010", DiagnosticSeverity.Warning)
+				.WithLocation(1)
+				.WithArguments("'local' is in scope: read 'local' instead of the data context's MappingSchema"),
+			new DiagnosticResult("LINQ2DB0010", DiagnosticSeverity.Warning)
+				.WithLocation(2)
 				.WithArguments("'local' is in scope: read 'local' instead of the data context's MappingSchema"));
 
 		// At a definition site a schema-typed member is no carrier, field or property alike.
@@ -1173,6 +1207,25 @@ namespace Tests.Analyzers.Internal
 					public override MappingSchema MappingSchema => _hint ?? Builder.MappingSchema;
 				}
 			""");
+
+		// A foreach variable over nullable elements may be null at the read.
+		[Test]
+		public Task ForEachOverNullableSchemasSuggestsFallback() => AnalyzerVerifier<BuildContextMappingSchemaAnalyzer>.VerifyAsync(
+			Code("""
+				static class Helper
+				{
+					public static MappingSchema M(ExpressionBuilder builder, System.Collections.Generic.IEnumerable<MappingSchema?> schemas)
+					{
+						foreach (var ms in schemas)
+							return {|#0:builder.MappingSchema|};
+
+						return null!;
+					}
+				}
+			"""),
+			new DiagnosticResult("LINQ2DB0010", DiagnosticSeverity.Warning)
+				.WithLocation(0)
+				.WithArguments("'ms' is in scope: read 'ms ?? builder.MappingSchema' instead of the data context's MappingSchema"));
 
 		// A schema-typed left operand says nothing about the other sources in scope: one that cannot be null is still
 		// the source to read, and TryGetRootMappingSchema is ExpressionBuilder's, not any method of that name.

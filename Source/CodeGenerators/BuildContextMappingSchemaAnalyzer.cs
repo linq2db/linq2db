@@ -408,7 +408,7 @@ namespace CodeGenerators
 							|| !AssignedAt(parameter, op.Syntax, semanticModel, ref flow))
 							continue;
 						type     = parameter.Type;
-						nullable = ParameterNullability(parameter, position, semanticModel);
+						nullable = VariableNullability(parameter.Type, parameter.Name, position, semanticModel);
 						tier     = 0;
 						break;
 
@@ -417,7 +417,7 @@ namespace CodeGenerators
 							|| !AssignedAt(local, op.Syntax, semanticModel, ref flow))
 							continue;
 						type     = local.Type;
-						nullable = VarNullability(local, position, semanticModel);
+						nullable = VariableNullability(local.Type, local.Name, position, semanticModel);
 						tier     = FromParent(local) ? 2 : 1;
 						break;
 
@@ -454,13 +454,16 @@ namespace CodeGenerators
 			return best;
 		}
 
-		/// <summary>An annotated parameter is nullable unless the flow state at the read says otherwise (a null check before it).</summary>
-		static bool? ParameterNullability(IParameterSymbol parameter, int position, SemanticModel semanticModel)
+		/// <summary>
+		/// An annotated parameter or local (every <c>var</c> is) is nullable unless the flow state at the read says otherwise:
+		/// a null check, or a non-null initializer. <see langword="null"/> when the type is not annotated.
+		/// </summary>
+		static bool? VariableNullability(ITypeSymbol type, string name, int position, SemanticModel semanticModel)
 		{
-			if (parameter.Type.NullableAnnotation != NullableAnnotation.Annotated)
+			if (type.NullableAnnotation != NullableAnnotation.Annotated)
 				return null;
 
-			var info = semanticModel.GetSpeculativeTypeInfo(position, SyntaxFactory.IdentifierName(parameter.Name), SpeculativeBindingOption.BindAsExpression);
+			var info = semanticModel.GetSpeculativeTypeInfo(position, SyntaxFactory.IdentifierName(name), SpeculativeBindingOption.BindAsExpression);
 
 			return info.Nullability.FlowState != NullableFlowState.NotNull;
 		}
@@ -586,21 +589,6 @@ namespace CodeGenerators
 
 			return false;
 		}
-
-		/// <summary>
-		/// A <c>var</c> local is nullable by declaration whatever it holds, so its initializer's flow state (or a
-		/// <c>foreach</c> element's annotation) decides. An explicitly typed annotated local follows its flow state at the read.
-		/// </summary>
-		static bool? VarNullability(ILocalSymbol local, int position, SemanticModel semanticModel) => local.DeclaringSyntaxReferences[0].GetSyntax() switch
-		{
-			VariableDeclaratorSyntax { Initializer.Value: var value, Parent: VariableDeclarationSyntax { Type.IsVar: true } }
-				=> semanticModel.GetTypeInfo(value).Nullability.FlowState == NullableFlowState.MaybeNull,
-			ForEachStatementSyntax { Type.IsVar: true } loop
-				=> semanticModel.GetForEachStatementInfo(loop).ElementType?.NullableAnnotation == NullableAnnotation.Annotated,
-			_   => local.Type.NullableAnnotation == NullableAnnotation.Annotated
-				? semanticModel.GetSpeculativeTypeInfo(position, SyntaxFactory.IdentifierName(local.Name), SpeculativeBindingOption.BindAsExpression).Nullability.FlowState != NullableFlowState.NotNull
-				: null,
-		};
 
 		static bool InConstructorInitializer(SyntaxNode node)
 		{
