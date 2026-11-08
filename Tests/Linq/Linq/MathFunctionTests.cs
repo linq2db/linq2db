@@ -2117,8 +2117,9 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		// Firebird and SAP HANA round Sql.RoundToEven(double) through a decimal of scale 10, where this value becomes 1.5 and
-		// rounds to 2. Math.Round must stay on the double and answer 1, as C# does.
+		// Firebird rounds Sql.RoundToEven(double) through a decimal of scale 10, where this value becomes 1.5 and rounds to 2.
+		// Math.Round must stay on the double and answer 1, as C# does. SAP HANA's cast does not move this value, so there the
+		// test only checks the result.
 		[Test]
 		public void MathRoundToEvenStaysOffDecimal([IncludeDataSources(true, TestProvName.AllFirebird, TestProvName.AllSapHana)] string context)
 		{
