@@ -2049,18 +2049,58 @@ namespace Tests.Linq
 		}
 
 		// C# scales a double by a power of ten before rounding: 1.15 and 2.675 become exact ties, and 1.005 becomes
-		// 100.49999..., which rounds down. The server must agree in both modes. PostgreSQL's numeric cast cannot separate the
-		// routes here, because POWER(10, p) returns a double.
-		[ActiveIssue(6263, Configuration = TestProvName.AllDB2, ErrorMessage = "Assert.That(exceptExpected, Is.Zero)",
-			Details = "DB2's native ROUND(1.15, 1) on a DOUBLE returns 1.1 in the ToEven column; .NET scales to the tie 11.5 and returns 1.2")]
+		// 100.49999..., which rounds down. The server must agree in both modes.
+		static readonly ResidueValues[] ResidueRows =
+		[
+			new ResidueValues { Id = 1, F = 1.15,  P = 1 },
+			new ResidueValues { Id = 2, F = 2.675, P = 2 },
+			new ResidueValues { Id = 3, F = 1.005, P = 2 },
+		];
+
 		[Test]
 		public void MathRoundResidueDoubleKeepsDoubleRoute([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllMySql, TestProvName.AllClickHouse, TestProvName.AllDB2)] string context)
 		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(ResidueRows);
+
+			var query = t
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					r.Id,
+					Away = Sql.AsSql(Math.Round(r.F, r.P, MidpointRounding.AwayFromZero)),
+				});
+
+			AssertQuery(query);
+		}
+
+		[ActiveIssue(6263, Configuration = TestProvName.AllDB2, ErrorMessage = "Assert.That(exceptExpected, Is.Zero)",
+			Details = "DB2's native ROUND(1.15, 1) on a DOUBLE returns 1.1; .NET scales to the tie 11.5 and returns 1.2")]
+		[Test]
+		public void MathRoundResidueDoubleToEven([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllMySql, TestProvName.AllClickHouse, TestProvName.AllDB2)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(ResidueRows);
+
+			var query = t
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					r.Id,
+					ToEven = Sql.AsSql(Math.Round(r.F, r.P)),
+				});
+
+			AssertQuery(query);
+		}
+
+		// PostgreSQL's float8 to numeric cast keeps 15 significant digits, so on the numeric route of Sql.Round(double, p)
+		// this value becomes 1.5 and rounds to 2. Math.Round must stay on float8 and answer 1, as C# does.
+		[Test]
+		public void MathRoundAwayFromZeroStaysOffNumeric([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
 			var data = new[]
 			{
-				new ResidueValues { Id = 1, F = 1.15,  P = 1 },
-				new ResidueValues { Id = 2, F = 2.675, P = 2 },
-				new ResidueValues { Id = 3, F = 1.005, P = 2 },
+				new ResidueValues { Id = 1, F = 1.4999999999999998, P = 0 },
 			};
 
 			using var db = GetDataContext(context);
@@ -2071,8 +2111,31 @@ namespace Tests.Linq
 				.Select(r => new
 				{
 					r.Id,
-					Away   = Sql.AsSql(Math.Round(r.F, r.P, MidpointRounding.AwayFromZero)),
-					ToEven = Sql.AsSql(Math.Round(r.F, r.P)),
+					Away = Sql.AsSql(Math.Round(r.F, r.P, MidpointRounding.AwayFromZero)),
+				});
+
+			AssertQuery(query);
+		}
+
+		// Firebird and SAP HANA round Sql.RoundToEven(double) through a decimal of scale 10, where this value becomes 1.5 and
+		// rounds to 2. Math.Round must stay on the double and answer 1, as C# does.
+		[Test]
+		public void MathRoundToEvenStaysOffDecimal([IncludeDataSources(true, TestProvName.AllFirebird, TestProvName.AllSapHana)] string context)
+		{
+			var data = new[]
+			{
+				new ResidueValues { Id = 1, F = 1.49999999999, P = 0 },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var query = t
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					r.Id,
+					ToEven = Sql.AsSql(Math.Round(r.F)),
 				});
 
 			AssertQuery(query);
