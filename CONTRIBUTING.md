@@ -363,6 +363,8 @@ In general you should follow simple rules:
 * Code style should match exising code
 * There should be no compilation warnings (will fail CI builds)
 * Do not add new features without tests
+* Put a regression test in the fixture that owns the behaviour, or in a new fixture named for it (`Tests/Linq/<Area>/<Behaviour>Tests.cs`), with the issue in `[Test(Description = "<url>")]`. Do not add new `Issue<N>Tests.cs` fixtures or extend existing ones
+* In new test code, put one call per line in a method chain, for both LINQ queries and assertions
 * Avoid direct pushes to `master` and `release` branches
 * To fix some issue or implement new feature create new branch and make pull request after you are ready to merge or create pull request as `work-in-progress` pull request. Merge your PR only after contributors' review.
 * bugfix branches must use `issue/<issue_id>` naming format
