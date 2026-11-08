@@ -15,11 +15,11 @@ inspired by [this issue](https://github.com/aspnet/EntityFrameworkCore/issues/11
 * Fast eager loading (incomparable faster on massive `Include` query)
 * Global query filters optimization
 * Better SQL optimization
-* [CTE support](https://linq2db.github.io/articles/sql/CTE.html)
-* [MERGE support](https://linq2db.github.io/articles/sql/merge/Merge-API-Description.html)
+* [CTE support](https://linq2db.github.io/articles/sql/cte.html)
+* [MERGE support](https://linq2db.github.io/articles/sql/merge/merge-api-description.html)
 * Table hints
-* [Analytic/Window functions support](https://linq2db.github.io/articles/sql/Window-Functions-(Analytic-Functions).html)
-* Fast [BulkCopy](https://linq2db.github.io/articles/sql/Bulk-Copy.html) of millions records
+* [Analytic/Window functions support](https://linq2db.github.io/articles/sql/window-functions-(analytic-functions).html)
+* Fast [BulkCopy](https://linq2db.github.io/articles/sql/bulk-copy.html) of millions records
 * Native SQL operations for updating, deleting, inserting records via LINQ query
 * Temporary tables support
 * Cross database/linked server queries.

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.Build.NoTargets/3.7.0">
 	<!--
 	Solution-visibility project only: no code, nothing to compile or pack.
-	Globs Docs/ so the documentation sources show up in Solution Explorer.
+	Globs docs/ so the documentation sources show up in Solution Explorer.
 	-->
 	<PropertyGroup>
 		<TargetFrameworks />

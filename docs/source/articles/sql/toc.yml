@@ -1,12 +1,12 @@
 - name: Joins
-  href: Join-Operators.md
+  href: join-operators.md
 - name: Common Table Expressions (CTE)
-  href: CTE.md
+  href: cte.md
 - name: Bulk Copy (Bulk Insert)
-  href: Bulk-Copy.md
+  href: bulk-copy.md
 - name: Window (Analytic) Functions
-  href: Window-Functions-(Analytic-Functions).md
+  href: window-functions-(analytic-functions).md
 - name: MERGE
   href: merge/toc.yml
 - name: Query Extensions
-  href: Query-Extensions.md
+  href: query-extensions.md

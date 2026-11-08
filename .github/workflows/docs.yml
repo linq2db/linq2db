@@ -1,4 +1,4 @@
-# Documentation site: builds Docs/ with the pinned custom docfx (Docs/README.md) and publishes it to
+# Documentation site: builds docs/ with the pinned custom docfx (docs/README.md) and publishes it to
 # linq2db/linq2db.github.io.
 #
 # - pull_request: build only, and only when the PR touches the site's sources or the build settings the
@@ -54,7 +54,7 @@ jobs:
           # on its own line, so a failing diff fails this job (and the build then runs) instead of reading as "no docs change"
           files=$(git -c core.quotePath=off diff --name-only --no-renames "$BASE...$HEAD")
           # README.md / CONTRIBUTING.md are included into the site; Roslyn, SDK, TFM and output-path settings feed docfx metadata
-          if grep -qE '^(Docs/|README\.md$|CONTRIBUTING\.md$|Directory\.(Build|Packages)\.props$|global\.json$|Source/Analyzers\.Common\.props$|Source/.*Directory\.Build\.props$|\.github/workflows/docs\.yml$)' <<< "$files"; then
+          if grep -qE '^(docs/|README\.md$|CONTRIBUTING\.md$|Directory\.(Build|Packages)\.props$|global\.json$|Source/Analyzers\.Common\.props$|Source/.*Directory\.Build\.props$|\.github/workflows/docs\.yml$)' <<< "$files"; then
             echo "docs=true" >> "$GITHUB_OUTPUT"
           else
             echo "docs=false" >> "$GITHUB_OUTPUT"
@@ -77,11 +77,11 @@ jobs:
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .build/docfx
-          key: docfx-${{ hashFiles('Docs/docfx-version.json') }}
+          key: docfx-${{ hashFiles('docs/docfx-version.json') }}
 
       - name: Build site
         shell: pwsh
-        run: ./Docs/build.ps1 -WarningsAsErrors
+        run: ./docs/build.ps1 -WarningsAsErrors
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:

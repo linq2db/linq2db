@@ -37,7 +37,7 @@ Follow the next steps to create a data model from your existing database:
 //  Load<DB_NAME>Metadata(connectionString);
 ```
 
-4. See more at [LinqToDB T4 Models](https://linq2db.github.io/articles/T4.htm) and this [readme](https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB.Templates/README.md) on GitHub.
+4. See more at [LinqToDB T4 Models](https://linq2db.github.io/articles/t4.htm) and this [readme](https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB.Templates/README.md) on GitHub.
 
 ## T4 template example
 

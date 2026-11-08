@@ -7,8 +7,8 @@ Contributing article include the repository's `README.md` and `CONTRIBUTING.md`.
 ## Building locally
 
 ```powershell
-./Docs/build.ps1                    # output: .build/docs/_site
-./Docs/build.ps1 -WarningsAsErrors  # what CI runs
+./docs/build.ps1                    # output: .build/docs/_site
+./docs/build.ps1 -WarningsAsErrors  # what CI runs
 ```
 
 Needs only the .NET SDK from `global.json`; tested on Windows only. The script cleans the previous output, downloads the pinned
@@ -18,7 +18,7 @@ the built assembly) and runs docfx. Open `.build/docs/_site/index.html`, or serv
 
 ## Publishing
 
-`.github/workflows/docs.yml` builds the site on every pull request that touches `Docs/`, `README.md`,
+`.github/workflows/docs.yml` builds the site on every pull request that touches `docs/`, `README.md`,
 `CONTRIBUTING.md`, the build settings it depends on (`global.json`, `Directory.Build.props`,
 `Directory.Packages.props`, `Source/**/Directory.Build.props`, `Source/Analyzers.Common.props`) or the
 workflow itself, and publishes it to `linq2db/linq2db.github.io` when a (non-prerelease) GitHub release

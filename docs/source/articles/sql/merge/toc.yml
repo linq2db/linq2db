@@ -1,0 +1,8 @@
+- name: API
+  href: merge-api.md
+- name: Background
+  href: merge-api-background.md
+- name: Description
+  href: merge-api-description.md
+- name: Migration from previous API
+  href: merge-api-migration.md

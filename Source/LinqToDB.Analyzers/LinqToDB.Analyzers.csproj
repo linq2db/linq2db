@@ -1,4 +1,4 @@
-<!-- TreatAsLocalProperty: the docs build passes TargetFramework globally (Docs/source/docfx.json); this project stays netstandard2.0 -->
+<!-- TreatAsLocalProperty: the docs build passes TargetFramework globally (docs/source/docfx.json); this project stays netstandard2.0 -->
 <Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="TargetFramework">
 
 	<PropertyGroup>

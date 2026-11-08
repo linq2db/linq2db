@@ -270,8 +270,8 @@
   <Folder Name="/Build/Redist/">
     <File Path="Redist/Readme.md" />
   </Folder>
-  <Folder Name="/Docs/">
-    <Project Path="Docs/Docs.csproj">
+  <Folder Name="/docs/">
+    <Project Path="docs/Docs.csproj">
       <Build Solution="*|*" Project="false" />
     </Project>
   </Folder>

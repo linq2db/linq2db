@@ -9,10 +9,10 @@
 - name: How To
   href: how-to/toc.yml
 - name: CLI Scaffold Tool
-  href: CLI.md
+  href: cli.md
 - name: T4 Templates (Obsoleted)
-  href: T4.md
+  href: t4.md
 - name: FAQ
-  href: FAQ.md
+  href: faq.md
 - name: Project
   href: project/toc.yml

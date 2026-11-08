@@ -3,7 +3,7 @@
 	Builds the linq2db documentation site into .build/docs/_site.
 
 .DESCRIPTION
-	Uses the custom docfx build pinned in Docs/docfx-version.json (see Docs/README.md): downloads it on
+	Uses the custom docfx build pinned in docs/docfx-version.json (see docs/README.md): downloads it on
 	first use, verifies its SHA-256 and caches it under .build/docfx/<sha256>/.
 
 .PARAMETER WarningsAsErrors
@@ -29,7 +29,7 @@ try
 	$docfxDll = Join-Path $docfx 'docfx.dll'
 
 	Write-Host 'Cleanup previous build artifacts...'
-	foreach ($dir in @('.build/docs/_site', 'Docs/source/api'))
+	foreach ($dir in @('.build/docs/_site', 'docs/source/api'))
 	{
 		if (Test-Path $dir) { Remove-Item $dir -Recurse -Force }
 	}
@@ -76,7 +76,7 @@ try
 	}
 
 	Write-Host 'Build DocFX documentation...'
-	$docfxArgs = @($docfxDll, 'Docs/source/docfx.json')
+	$docfxArgs = @($docfxDll, 'docs/source/docfx.json')
 	if ($WarningsAsErrors) { $docfxArgs += '--warningsAsErrors' }
 	dotnet @docfxArgs
 	if ($LASTEXITCODE -ne 0)
