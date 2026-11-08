@@ -93,7 +93,8 @@ jobs:
   deploy:
     name: Deploy to linq2db.github.io
     needs: build
-    if: ${{ github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.deploy) }}
+    # spelled out: `changes` is skipped outside PRs, and the implicit success() would skip this job with it
+    if: ${{ !cancelled() && needs.build.result == 'success' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.deploy)) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment: docs
