@@ -11,7 +11,7 @@ Contributing article include the repository's `README.md` and `CONTRIBUTING.md`.
 ./Docs/build.ps1 -WarningsAsErrors  # what CI runs
 ```
 
-Needs only the .NET SDK from `global.json`. The script cleans the previous output, downloads the pinned
+Needs only the .NET SDK from `global.json`; tested on Windows only. The script cleans the previous output, downloads the pinned
 docfx on first use (cached under `.build/docfx/<sha256>/`), builds `LinqToDB.FSharp` (its API is read from
 the built assembly) and runs docfx. Open `.build/docs/_site/index.html`, or serve it with
 `dotnet .build/docfx/<sha256>/docfx.dll serve .build/docs/_site`.
