@@ -866,6 +866,66 @@ namespace Tests.Mapping
 				.ShouldBe(["C1", null]);
 		}
 
+		// The operand reached through a projected member still resolves to the second handle's table.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
+		public void TypeAsOnProjectedSecondHandleFollowsItsSchema([DataSources] string context)
+		{
+			using var db  = GetDataContext(context);
+			using var tmp = db.CreateLocalTable(ShapeRows);
+
+			var parents = db.Parent;
+
+			ITable<Shape> shapes;
+
+			using (db.UseMappingSchema(ShapeCodes()))
+			{
+				shapes = db.GetTable<Shape>();
+			}
+
+			var query =
+				from p in parents
+				join s in shapes on p.ParentID equals s.Id
+				select new { p, s };
+
+			query
+				.Select(x => new { x.s.Id, Circle = x.s as ShapeCircle })
+				.OrderBy(x => x.Id)
+				.Select(x => (string?)x.Circle!.Kind)
+				.ToList()
+				.ShouldBe(["C1", null]);
+		}
+
+		// A clause between the join and the select makes the operand a member of the transparent identifier.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
+		public void TypeAsAfterWhereOnSecondHandleFollowsItsSchema([DataSources] string context)
+		{
+			using var db  = GetDataContext(context);
+			using var tmp = db.CreateLocalTable(ShapeRows);
+
+			var parents = db.Parent;
+
+			ITable<Shape> shapes;
+
+			using (db.UseMappingSchema(ShapeCodes()))
+			{
+				shapes = db.GetTable<Shape>();
+			}
+
+			var query =
+				from p in parents
+				join s in shapes on p.ParentID equals s.Id
+				where s.Id > 0
+				select new { s.Id, Circle = s as ShapeCircle };
+
+			query
+				.Select(x => new { x.Id, Kind = (string?)x.Circle!.Kind })
+				.ToList()
+				.OrderBy(x => x.Id)
+				.Select(x => x.Kind)
+				.ToList()
+				.ShouldBe(["C1", null]);
+		}
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
 		public void ReadConversionFollowsHandleSchema([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
