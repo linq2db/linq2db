@@ -2942,6 +2942,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				var moved                      = false;
 				var isLeft                     = join.JoinType == JoinType.Left;
 				List<ISqlTableSource>? sources = null;
+				List<ISqlTableSource>? nestedJoinSources = null;
 
 				SqlSearchCondition? whereCond       = null;
 				SqlSearchCondition? nestedWhereCond = null;
@@ -2963,7 +2964,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						move = false;
 
 						// Push into the right derived table only when the predicate does not depend on the outer side.
-						if (!QueryHelper.IsDependsOnOuterSources(predicate, currentSources: sources))
+						// The derived table wraps join.Table.Source alone: a nested RIGHT/FULL join keeps its rows past an
+						// emptied source, and a predicate on a nested join's table would lose its reference.
+						nestedJoinSources ??= join.Table.Joins.SelectMany(static j => QueryHelper.EnumerateAccessibleSources(j.Table)).ToList();
+
+						if (!QueryHelper.IsDependsOnOuterSources(predicate, currentSources: sources)
+							&& !join.Table.Joins.Exists(static j => j.JoinType is JoinType.Right or JoinType.Full or JoinType.RightApply or JoinType.FullApply)
+							&& !QueryHelper.IsDependsOnSources(predicate, nestedJoinSources))
 						{
 							if (nestedWhereCond == null)
 							{
