@@ -112,8 +112,8 @@ namespace LinqToDB.Internal.Linq.Builder
 					return buildResult;
 				}
 
-				sequence = buildResult.BuildContext;
-				captured = builder.CurrentOrderBy is { Count: > 0 } current ? current.ToArray() : [];
+				sequence            = buildResult.BuildContext;
+				captured            = builder.CurrentOrderBy is { Count: > 0 } current ? current.ToArray() : [];
 				dropped             = builder.IsOrderByDropped;
 				keptThroughGrouping = builder.IsOrderByKeptThroughGrouping;
 			}

@@ -1478,7 +1478,10 @@ namespace Tests.Linq
 			AssertQuery(query);
 
 			// A rejected subquery falls back to eager loading, which returns the same rows.
-			query.ToSqlQuery().Sql.ShouldContain("DISTINCT ON");
+			query
+				.ToSqlQuery()
+				.Sql
+				.ShouldContain("DISTINCT ON");
 		}
 
 		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
@@ -1629,9 +1632,8 @@ namespace Tests.Linq
 			query.ToList();
 		}
 
-		// Value1 repeats, so the row DISTINCT ON keeps per key reaches the Contains result. Contains reports the DistinctBy
-		// error as a generic conversion failure.
-		[ThrowsCannotBeConverted]
+		// Value1 repeats, so the row DISTINCT ON keeps per key reaches the Contains result.
+		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_DistinctByRequiresOrderBy)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
 		public void DistinctByAfterCteInContainsRequiresOrderBy([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
 		{
