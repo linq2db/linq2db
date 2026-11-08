@@ -950,6 +950,35 @@ namespace Tests.Mapping
 				.ShouldBe([ShapeKind.Circle, ShapeKind.Square]);
 		}
 
+		// LoadWith through a projected second handle finds the association in that handle's schema.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
+		public void LoadWithOnSecondHandleFollowsItsSchema([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			ITable<ChildWithoutAssociation> children;
+
+			using (db.UseMappingSchema(new FluentMappingBuilder(new())
+				.Entity<ChildWithoutAssociation>()
+					.Association(c => c.Parent, c => c.ParentID, p => p!.ParentID)
+				.Build()
+				.MappingSchema))
+			{
+				children = db.GetTable<ChildWithoutAssociation>();
+			}
+
+			var query =
+				from p in db.Parent
+				join c in children on p.ParentID equals c.ParentID
+				select new { p, c };
+
+			var rows = query
+				.LoadWith(x => x.c.Parent)
+				.ToList();
+
+			rows.Count.ShouldBeGreaterThan(0);
+			rows.ShouldAllBe(r => r.c.Parent != null);
+		}
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
 		public void LoadWithFollowsHandleSchema([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{

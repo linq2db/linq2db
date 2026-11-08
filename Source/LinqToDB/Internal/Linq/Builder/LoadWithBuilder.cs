@@ -252,7 +252,13 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						var mexpr         = (MemberExpression)expression;
 						lastMember        = mexpr.Member;
-						var isAssociation = ExpressionBuilder.IsAssociation(mappingSchema, expression, out var associationMember);
+
+						// After a join the path's root is the handle the member belongs to, with its own schema.
+						var root = expression.UnwrapConvert();
+						while (root is MemberExpression { Expression: { } owner })
+							root = owner.UnwrapConvert();
+
+						var isAssociation = ExpressionBuilder.IsAssociation((root as ContextRefExpression)?.BuildContext.MappingSchema ?? mappingSchema, expression, out var associationMember);
 
 						if (!isAssociation)
 						{
