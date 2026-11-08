@@ -1124,6 +1124,33 @@ namespace Tests.Mapping
 			rows.ShouldAllBe(r => r.c.Parent!.Children!.Count > 0);
 		}
 
+		// A handle inside a nested projection is still that handle.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
+		public void LoadWithThroughNestedProjectionFollowsHandleSchema([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			ITable<ChildHop> children;
+
+			using (db.UseMappingSchema(HopAssociations()))
+			{
+				children = db.GetTable<ChildHop>();
+			}
+
+			var query =
+				from p in db.Parent
+				join c in children on p.ParentID equals c.ParentID
+				select new { p, c };
+
+			var rows = query
+				.Select(r => new { One = new { r.p, r.c } })
+				.LoadWith(a => a.One.c.Parent)
+				.ToList();
+
+			rows.Count.ShouldBeGreaterThan(0);
+			rows.ShouldAllBe(r => r.One.c.Parent != null);
+		}
+
 		// LoadWith finds an association declared only in the handle's schema.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
 		public void LoadWithFollowsHandleSchema([DataSources] string context)

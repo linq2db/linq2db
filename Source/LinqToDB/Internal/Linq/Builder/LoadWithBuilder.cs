@@ -346,13 +346,14 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (current is not ContextRefExpression root)
 				return fallback;
 
-			// Only the leading members can project a handle; what follows it is that entity's own.
+			// A nested projection's member is no handle itself, so the walk goes on to the member that is.
 			foreach (var link in links)
 			{
-				if (link is not MemberExpression || builder.BuildTraverseExpression(link).UnwrapConvert() is not ContextRefExpression resolved)
+				if (link is not MemberExpression)
 					break;
 
-				root = resolved;
+				if (builder.BuildTraverseExpression(link).UnwrapConvert() is ContextRefExpression resolved)
+					root = resolved;
 			}
 
 			return root.BuildContext.MappingSchema;
