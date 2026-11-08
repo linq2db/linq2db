@@ -910,6 +910,8 @@ namespace Tests.Linq
 		}
 
 		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb, ErrorMessage = "JOIN ON expression must be a conjunction of equality predicates")]
+		// #6215: Jet applies a false ON conjunct that reads no joined column as a filter, dropping the outer rows
+		[ThrowsForProvider(typeof(ShouldAssertException), TestProvName.AllAccess, ErrorMessage = "is missing", AlsoWhenParameter = "matches", AlsoWhenValue = false)]
 		[Test]
 		public void LeftJoinTableFreePredicateOverNestedRightJoin([DataSources] string context, [Values] bool matches)
 		{
