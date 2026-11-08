@@ -2200,8 +2200,8 @@ namespace Tests.Linq
 					SqlDouble          = Sql.AsSql(Sql.Truncate(r.F)),
 					MathDecimal        = Sql.AsSql(Math.Truncate(r.N)),
 					MathDouble         = Sql.AsSql(Math.Truncate(r.G)),
-					SqlDecimalOnClient = Sql.Truncate(r.D),
-					SqlDoubleOnClient  = Sql.Truncate(r.F),
+					SqlDecimalNoAsSql  = Sql.Truncate(r.D),
+					SqlDoubleNoAsSql   = Sql.Truncate(r.F),
 				});
 
 			AssertQuery(query);
