@@ -28,9 +28,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var rnCall = WindowFunctionHelpers.BuildRowNumber(partitionPart, orderByPart);
 
+			// Without the null alias the columns the window's arguments reach are named after the RowNumber member.
 			var resultExpression = ExpressionHelpers.MakeCall((IQueryable<T> q, long rn) =>
 					q
-						.Select(e => new { Entity = e, RowNumber = rn })
+						.Select(e => new { Entity = e, RowNumber = Sql.Alias(rn, null!) })
 						.Where(e => e.RowNumber == 1)
 						.Select(e => e.Entity)
 				,
