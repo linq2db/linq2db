@@ -1651,7 +1651,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							return next == null ? SequenceHelper.EnsureType(truePath, unary.Type) : truePath;
 						}
 
-						return new DefaultValueExpression(context.MappingSchema, truePath.Type, true);
+						return new DefaultValueExpression(operandTable?.MappingSchema ?? context.MappingSchema, truePath.Type, true);
 					}
 
 					var falsePath = Expression.Constant(null, truePath.Type);

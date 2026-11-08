@@ -82,7 +82,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					? selector.Body
 					: SequenceHelper.PrepareBody(selector, sequence);
 
-				var extractResult = ExtractAssociations(builder, sequence.MappingSchema, table, path, null);
+				var extractResult = ExtractAssociations(builder, (table as IBuildContext)?.MappingSchema ?? sequence.MappingSchema, table, path, null);
 
 				if (extractResult == null)
 					throw new LinqToDBException($"Unable to retrieve properties path for LoadWith/ThenLoad. Path: '{selector}'");
@@ -182,6 +182,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			ILoadWithContext? context    = parentContext;
 			MemberInfo?       lastMember = null;
+			var               pathSchema = GetPathMappingSchema(builder, expression, mappingSchema);
 
 			var members = new List<MemberInfo>();
 			var stop    = false;
@@ -252,13 +253,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						var mexpr         = (MemberExpression)expression;
 						lastMember        = mexpr.Member;
-
-						// After a join the path's root is the handle the member belongs to, with its own schema.
-						var root = expression.UnwrapConvert();
-						while (root is MemberExpression { Expression: { } owner })
-							root = owner.UnwrapConvert();
-
-						var isAssociation = ExpressionBuilder.IsAssociation((root as ContextRefExpression)?.BuildContext.MappingSchema ?? mappingSchema, expression, out var associationMember);
+						var isAssociation = ExpressionBuilder.IsAssociation(pathSchema, expression, out var associationMember);
 
 						if (!isAssociation)
 						{
@@ -319,6 +314,48 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			return (context ?? parentContext, members);
+		}
+
+		/// <summary>
+		/// The handle a path starts from decides all of its associations, and after a join that is not the sequence. A path
+		/// with no context at its root (<c>ThenLoad</c>'s parameter) keeps <paramref name="fallback"/>.
+		/// </summary>
+		static MappingSchema GetPathMappingSchema(ExpressionBuilder builder, Expression path, MappingSchema fallback)
+		{
+			var links   = new Stack<Expression>();
+			var current = path.UnwrapConvert();
+
+			while (true)
+			{
+				var next = current switch
+				{
+					MemberExpression { Expression: { } owner }                 => owner,
+					BinaryExpression { NodeType: ExpressionType.ArrayIndex } a => a.Left,
+					MethodCallExpression { Object: { } instance }              => instance,
+					MethodCallExpression { Arguments.Count: > 0 } call         => call.Arguments[0],
+					_                                                          => null,
+				};
+
+				if (next == null)
+					break;
+
+				links.Push(current);
+				current = next.UnwrapConvert();
+			}
+
+			if (current is not ContextRefExpression root)
+				return fallback;
+
+			// Only the leading members can project a handle; what follows it is that entity's own.
+			foreach (var link in links)
+			{
+				if (link is not MemberExpression || builder.BuildTraverseExpression(link).UnwrapConvert() is not ContextRefExpression resolved)
+					break;
+
+				root = resolved;
+			}
+
+			return root.BuildContext.MappingSchema;
 		}
 
 		static LoadWithEntity MergeLoadWith(LoadWithEntity loadWith, LoadWithMember[] defined)

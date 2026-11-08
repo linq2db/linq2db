@@ -217,6 +217,29 @@ namespace Tests.Mapping
 		}
 
 		[Table("Child")]
+		sealed class ChildHop
+		{
+			[Column]    public int        ParentID { get; set; }
+			[Column]    public int        ChildID  { get; set; }
+			[NotColumn] public ParentHop? Parent   { get; set; }
+		}
+
+		[Table("Parent")]
+		sealed class ParentHop
+		{
+			[Column]    public int             ParentID { get; set; }
+			[NotColumn] public List<ChildHop>? Children { get; set; }
+		}
+
+		static MappingSchema HopAssociations() => new FluentMappingBuilder(new())
+			.Entity<ChildHop>()
+				.Association(c => c.Parent, c => c.ParentID, p => p!.ParentID)
+			.Entity<ParentHop>()
+				.Association<ChildHop, int, int>(p => p.Children!, p => p.ParentID, c => c.ParentID)
+			.Build()
+			.MappingSchema;
+
+		[Table("Child")]
 		sealed class ChildWithAlias
 		{
 			[Column]    public int ParentID { get; set; }
@@ -1019,6 +1042,88 @@ namespace Tests.Mapping
 			rows.Count.ShouldBeGreaterThan(0);
 			rows.ShouldAllBe(r => r.c.Parent != null);
 		}
+		// Past a collection hop the path still belongs to the handle it started from.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
+		public void LoadWithThroughIndexerFollowsHandleSchema([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			ITable<ChildHop> children;
+
+			using (db.UseMappingSchema(HopAssociations()))
+			{
+				children = db.GetTable<ChildHop>();
+			}
+
+			var query =
+				from p in db.Parent
+				join c in children on p.ParentID equals c.ParentID
+				select new { p, c };
+
+			var rows = query
+				.LoadWith(x => x.c.Parent!.Children![0].Parent)
+				.ToList();
+
+			rows.Count.ShouldBeGreaterThan(0);
+
+			foreach (var row in rows)
+				row.c.Parent!.Children!.ShouldAllBe(c => c.Parent != null);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
+		public void LoadWithThroughFirstFollowsHandleSchema([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			ITable<ChildHop> children;
+
+			using (db.UseMappingSchema(HopAssociations()))
+			{
+				children = db.GetTable<ChildHop>();
+			}
+
+			var query =
+				from p in db.Parent
+				join c in children on p.ParentID equals c.ParentID
+				select new { p, c };
+
+			var rows = query
+				.LoadWith(x => x.c.Parent!.Children!.First().Parent)
+				.ToList();
+
+			rows.Count.ShouldBeGreaterThan(0);
+
+			foreach (var row in rows)
+				row.c.Parent!.Children!.ShouldAllBe(c => c.Parent != null);
+		}
+
+		// ThenLoad's parameter belongs to no context: the handle LoadWith registered on decides.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
+		public void ThenLoadOnSecondHandleFollowsItsSchema([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			ITable<ChildHop> children;
+
+			using (db.UseMappingSchema(HopAssociations()))
+			{
+				children = db.GetTable<ChildHop>();
+			}
+
+			var query =
+				from p in db.Parent
+				join c in children on p.ParentID equals c.ParentID
+				select new { p, c };
+
+			var rows = query
+				.LoadWith(x => x.c.Parent)
+				.ThenLoad(p => p!.Children)
+				.ToList();
+
+			rows.Count.ShouldBeGreaterThan(0);
+			rows.ShouldAllBe(r => r.c.Parent!.Children!.Count > 0);
+		}
+
 		// LoadWith finds an association declared only in the handle's schema.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
 		public void LoadWithFollowsHandleSchema([DataSources] string context)
