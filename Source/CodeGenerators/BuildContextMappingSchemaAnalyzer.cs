@@ -43,7 +43,7 @@ namespace CodeGenerators
 	/// left the builder chain is not followed either: cached in a field, returned from a helper, or held by a local copy
 	/// of the data context that is reassigned (a never-reassigned <c>var dc = builder.DataContext</c> is). Method-attribute
 	/// lookups stay on the live schema on purpose: no source exists before the sequence is built, and whether
-	/// extensions should follow the snapshot is undecided (#5951).
+	/// extensions should follow the snapshot is undecided (#6269).
 	/// </remarks>
 	[DiagnosticAnalyzer(LanguageNames.CSharp)]
 	public sealed class BuildContextMappingSchemaAnalyzer : DiagnosticAnalyzer
@@ -147,7 +147,7 @@ namespace CodeGenerators
 			var enclosingType = member.ContainingType;
 
 			// Definition site: the context decides its own schema here, so the type's members can make it wrong, and a
-			// constructor's parameters too. Its own members are no carriers there - the read is what defines them.
+			// constructor's parameters too. Its own schema members are no carriers there - the read is what defines them.
 			var definitionSite = IsDefinitionSite(read, member, enclosingType, model);
 
 			switch (ClassifyFallback(read, model, out var fallbackOperand))
@@ -157,7 +157,7 @@ namespace CodeGenerators
 
 				// The left operand only may be null; a carrier that cannot be is still the source to read.
 				case Fallback.ExemptWithoutCarrier:
-					var definite = FindCarrier(op, read, member, enclosingType, model, membersAllowed: !definitionSite, definiteOnly: true, excluded: fallbackOperand);
+					var definite = FindCarrier(op, read, member, enclosingType, model, membersAllowed: true, definiteOnly: true, excluded: fallbackOperand, ownSchemaMembersAllowed: !definitionSite);
 					if (definite != null)
 						Report(context, op, $"'{definite.Value.Name}' is in scope: read '{definite.Value.Suggestion}' instead of the data context's MappingSchema");
 					return;
@@ -168,7 +168,7 @@ namespace CodeGenerators
 				var source = model.FindSourceMember(enclosingType);
 				if (source != null)
 				{
-					Report(context, op, $"'{enclosingType.Name}' holds the source context '{source.Name}': return its MappingSchema instead of the data context's");
+					Report(context, op, $"'{enclosingType.Name}' holds the source '{source.Name}': return its MappingSchema instead of the data context's");
 					return;
 				}
 
@@ -302,8 +302,13 @@ namespace CodeGenerators
 			if (member.MethodKind == MethodKind.PropertyGet && member.AssociatedSymbol is IPropertySymbol { Name: SchemaProperty })
 				return true;
 
+			// The fallback's whole value is what is assigned: _schema = hint ?? builder.MappingSchema.
+			var value = read;
+			while (value.Parent is ICoalesceOperation coalesce && ReferenceEquals(coalesce.WhenNull, value))
+				value = coalesce;
+
 			return member.MethodKind == MethodKind.Constructor
-				&& read.Parent is ISimpleAssignmentOperation { Target: var target }
+				&& value.Parent is ISimpleAssignmentOperation { Target: var target }
 				&& target switch
 				{
 					IFieldReferenceOperation    field    => SymbolEqualityComparer.Default.Equals(field.Field.ContainingType, type) && model.IsSchema(field.Field.Type),
@@ -362,9 +367,10 @@ namespace CodeGenerators
 			public string Suggestion { get; } = suggestion;
 		}
 
-		// definiteOnly: only a carrier that cannot be null where the read sits; excluded: the fallback's own left operand.
+		// definiteOnly: only a carrier that cannot be null where the read sits; excluded: the fallback's own left operand;
+		// ownSchemaMembersAllowed: false at a definition site, whose read defines the own property and schema-typed fields.
 		static Carrier? FindCarrier(IPropertyReferenceOperation op, IOperation read, IMethodSymbol member, INamedTypeSymbol enclosingType, Model model, bool membersAllowed,
-			bool definiteOnly = false, ISymbol? excluded = null)
+			bool definiteOnly = false, ISymbol? excluded = null, bool ownSchemaMembersAllowed = true)
 		{
 			var semanticModel = op.SemanticModel;
 			if (semanticModel == null)
@@ -415,13 +421,13 @@ namespace CodeGenerators
 						tier     = FromParent(local) ? 2 : 1;
 						break;
 
-					case IFieldSymbol field when instanceAllowed && !field.IsStatic && !field.IsImplicitlyDeclared && IsOwnMember(field, enclosingType):
+					case IFieldSymbol field when instanceAllowed && !field.IsStatic && !field.IsImplicitlyDeclared && IsOwnMember(field, enclosingType) && (ownSchemaMembersAllowed || !model.IsSchema(field.Type)):
 						type = field.Type;
 						break;
 
 					// A root's own MappingSchema returns the live schema, so it is no source; any other context's is.
 					case IPropertySymbol property when instanceAllowed && !property.IsStatic && property.Name != "Parent" && IsOwnMember(property, enclosingType)
-						&& !(property.Name == SchemaProperty && model.HasRootSchemaGetter(enclosingType)):
+						&& !(property.Name == SchemaProperty && (!ownSchemaMembersAllowed || model.HasRootSchemaGetter(enclosingType))):
 						type = property.Type;
 						break;
 
@@ -477,7 +483,7 @@ namespace CodeGenerators
 		static (int Rank, string? Suggestion) Classify(string name, ITypeSymbol? type, bool nullable, string read, Model model)
 		{
 			if (model.IsSchema(type))
-				return (0, nullable ? $"{name} ?? {read}" : name);
+				return (nullable ? 3 : 0, nullable ? $"{name} ?? {read}" : name);
 
 			var access = nullable ? "?." : ".";
 
@@ -796,6 +802,8 @@ namespace CodeGenerators
 					{
 						AssignmentExpressionSyntax assignment                         => assignment.Left,
 						ArgumentSyntax { RefKindKeyword.RawKind: not 0 } argument     => argument.Expression,
+						ArgumentSyntax { Parent: TupleExpressionSyntax } element      => element.Expression,
+						RefExpressionSyntax reference                                 => reference.Expression,
 						_                                                             => null,
 					};
 
@@ -861,11 +869,26 @@ namespace CodeGenerators
 			static ITypeSymbol? ReceiverType(ExpressionSyntax expression, INamedTypeSymbol lookupType) => Strip(expression) switch
 			{
 				ThisExpressionSyntax                                  => lookupType,
-				IdentifierNameSyntax name                             => MemberTypeOf(lookupType, name.Identifier.ValueText),
+				IdentifierNameSyntax name                             => MemberTypeOf(lookupType, name.Identifier.ValueText) ?? PrimaryConstructorParameterType(lookupType, name.Identifier.ValueText),
 				MemberAccessExpressionSyntax { Expression: var inner } access
 					=> ReceiverType(inner, lookupType) is { } innerType ? MemberTypeOf(innerType, access.Name.Identifier.ValueText) : null,
 				_                                                     => null,
 			};
+
+			static ITypeSymbol? PrimaryConstructorParameterType(INamedTypeSymbol type, string name)
+			{
+				foreach (var constructor in type.InstanceConstructors)
+				{
+					if (!constructor.DeclaringSyntaxReferences.Any(static reference => reference.GetSyntax() is TypeDeclarationSyntax))
+						continue;
+
+					foreach (var parameter in constructor.Parameters)
+						if (parameter.Name == name)
+							return parameter.Type;
+				}
+
+				return null;
+			}
 
 			static ExpressionSyntax? Strip(ExpressionSyntax? expression)
 			{

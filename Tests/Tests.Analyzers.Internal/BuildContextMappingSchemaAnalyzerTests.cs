@@ -176,7 +176,7 @@ namespace Tests.Analyzers.Internal
 			"""),
 			new DiagnosticResult("LINQ2DB0010", DiagnosticSeverity.Warning)
 				.WithLocation(0)
-				.WithArguments("'SelectContext' holds the source context 'InnerContext': return its MappingSchema instead of the data context's"));
+				.WithArguments("'SelectContext' holds the source 'InnerContext': return its MappingSchema instead of the data context's"));
 
 		// The same ctor on a root context is a capture point.
 		[Test]
@@ -226,7 +226,7 @@ namespace Tests.Analyzers.Internal
 			"""),
 			new DiagnosticResult("LINQ2DB0010", DiagnosticSeverity.Warning)
 				.WithLocation(0)
-				.WithArguments("'SelectContext' holds the source context 'InnerContext': return its MappingSchema instead of the data context's"));
+				.WithArguments("'SelectContext' holds the source 'InnerContext': return its MappingSchema instead of the data context's"));
 
 		// The GroupJoinInnerContext shape - a ctor handed the source's schema that captures the live one instead.
 		[Test]
@@ -400,7 +400,7 @@ namespace Tests.Analyzers.Internal
 			"""),
 			new DiagnosticResult("LINQ2DB0010", DiagnosticSeverity.Warning)
 				.WithLocation(0)
-				.WithArguments("'RefContext' holds the source context '_sourceRef': return its MappingSchema instead of the data context's"));
+				.WithArguments("'RefContext' holds the source '_sourceRef': return its MappingSchema instead of the data context's"));
 
 		// The DataContext spelling on an ExpressionBuilder parameter, inside BuildMethodCall.
 		[Test]
@@ -887,7 +887,7 @@ namespace Tests.Analyzers.Internal
 				.WithArguments("'root' is in scope: read 'root.MappingSchema' instead of the data context's MappingSchema"),
 			new DiagnosticResult("LINQ2DB0010", DiagnosticSeverity.Warning)
 				.WithLocation(1)
-				.WithArguments("'RootHoldingContext' holds the source context '_root': return its MappingSchema instead of the data context's"));
+				.WithArguments("'RootHoldingContext' holds the source '_root': return its MappingSchema instead of the data context's"));
 
 		// A type parameter constrained to a context is a context - as a parameter and as a context's source member.
 		[Test]
@@ -913,7 +913,7 @@ namespace Tests.Analyzers.Internal
 				.WithArguments("'context' is in scope: read 'context.MappingSchema' instead of the data context's MappingSchema"),
 			new DiagnosticResult("LINQ2DB0010", DiagnosticSeverity.Warning)
 				.WithLocation(1)
-				.WithArguments("'ProxyContext' holds the source context '_owner': return its MappingSchema instead of the data context's"));
+				.WithArguments("'ProxyContext' holds the source '_owner': return its MappingSchema instead of the data context's"));
 
 		// In a root context Builder.MappingSchema is its own MappingSchema, so reading it there changes nothing - in any
 		// getter spelling the root is recognised by.
@@ -990,6 +990,131 @@ namespace Tests.Analyzers.Internal
 				}
 			""");
 
+		// A constructor fallback still defines the context's schema, through any number of links: its own schema members
+		// are no carriers there.
+		[Test]
+		public Task ConstructorFallbackDefinesTheSchema() => Verify("""
+				sealed class FieldFallbackContext : BuildContextBase
+				{
+					readonly MappingSchema _mappingSchema;
+
+					public FieldFallbackContext(ExpressionBuilder builder, MappingSchema? hint) : base(builder) { _mappingSchema = hint ?? builder.MappingSchema; }
+
+					public override MappingSchema MappingSchema => _mappingSchema;
+				}
+
+				sealed class TwoLinkFieldFallbackContext : BuildContextBase
+				{
+					readonly MappingSchema _mappingSchema;
+
+					public TwoLinkFieldFallbackContext(ExpressionBuilder builder, MappingSchema? hint, MappingSchema? other) : base(builder) { _mappingSchema = hint ?? other ?? builder.MappingSchema; }
+
+					public override MappingSchema MappingSchema => _mappingSchema;
+				}
+
+				sealed class PropertyFallbackContext : BuildContextBase
+				{
+					public PropertyFallbackContext(ExpressionBuilder builder, MappingSchema? hint) : base(builder) { MappingSchema = hint ?? builder.MappingSchema; }
+
+					public override MappingSchema MappingSchema { get; }
+				}
+
+				sealed class TwoLinkPropertyFallbackContext : BuildContextBase
+				{
+					public TwoLinkPropertyFallbackContext(ExpressionBuilder builder, MappingSchema? hint, MappingSchema? other) : base(builder) { MappingSchema = hint ?? other ?? builder.MappingSchema; }
+
+					public override MappingSchema MappingSchema { get; }
+				}
+			""");
+
+		// In a definition site's fallback the source the context holds is still the one to read; its own schema members are not.
+		[Test]
+		public Task DefinitionSiteFallbackStillSeesSourceMembers() => AnalyzerVerifier<BuildContextMappingSchemaAnalyzer>.VerifyAsync(
+			Code("""
+				sealed class HintWithSourceContext : BuildContextBase
+				{
+					readonly IBuildContext  _sequence;
+					readonly MappingSchema? _hint;
+
+					public HintWithSourceContext(ExpressionBuilder builder, IBuildContext sequence, MappingSchema? hint) : base(builder) { _sequence = sequence; _hint = hint; }
+
+					public override MappingSchema MappingSchema => _hint ?? {|#0:Builder.MappingSchema|};
+				}
+			"""),
+			new DiagnosticResult("LINQ2DB0010", DiagnosticSeverity.Warning)
+				.WithLocation(0)
+				.WithArguments("'_sequence' is in scope: read '_sequence.MappingSchema' instead of the data context's MappingSchema"));
+
+		// The suggestion must not be reported in its turn: a definite source wins over a nullable schema.
+		[Test]
+		public Task DefiniteCarrierOutranksNullableSchema() => AnalyzerVerifier<BuildContextMappingSchemaAnalyzer>.VerifyAsync(
+			Code("""
+				static class Helper
+				{
+					public static MappingSchema M(ExpressionBuilder builder, MappingSchema? hint, IBuildContext context) => {|#0:builder.MappingSchema|};
+				}
+			"""),
+			new DiagnosticResult("LINQ2DB0010", DiagnosticSeverity.Warning)
+				.WithLocation(0)
+				.WithArguments("'context' is in scope: read 'context.MappingSchema' instead of the data context's MappingSchema"));
+
+		// Every way of writing to the local ends the copy: a tuple target, a ref argument and a ref alias.
+		[Test]
+		public Task WrittenLocalCopyIsNoLiveRead() => Verify("""
+				static class Helper
+				{
+					static void Touch(ref IDataContext dc) { }
+
+					public static object Tuple(ExpressionBuilder builder, IBuildContext sequence, IDataContext other)
+					{
+						var dc = builder.DataContext;
+						(dc, _) = (other, 1);
+						return dc.MappingSchema;
+					}
+
+					public static object RefArgument(ExpressionBuilder builder, IBuildContext sequence)
+					{
+						var dc = builder.DataContext;
+						Touch(ref dc);
+						return dc.MappingSchema;
+					}
+
+					public static object RefAlias(ExpressionBuilder builder, IBuildContext sequence, IDataContext other)
+					{
+						var dc = builder.DataContext;
+						ref var alias = ref dc;
+						alias = other;
+						return dc.MappingSchema;
+					}
+				}
+			""");
+
+		// An alias over a primary-constructor parameter reads the live schema like one over a field.
+		[Test]
+		public Task PrimaryConstructorAliasIsALiveRead() => Verify("""
+				sealed class ParameterAlias(IDataContext dataContext)
+				{
+					public MappingSchema MappingSchema => dataContext.MappingSchema;
+				}
+
+				static class Helper
+				{
+					public static object M(ParameterAlias owner, IBuildContext context) => {|LINQ2DB0010:owner.MappingSchema|};
+				}
+			""");
+
+		// A type parameter constrained to a query root counts by its constraint too: that goes through base types, not interfaces.
+		[Test]
+		public Task TypeParameterConstrainedToQueryRootIsACarrier() => AnalyzerVerifier<BuildContextMappingSchemaAnalyzer>.VerifyAsync(
+			Code("""
+				static class Helper
+				{
+					public static MappingSchema M<T>(ExpressionBuilder builder, T root) where T : SqlQueryRootExpression => {|#0:builder.MappingSchema|};
+				}
+			"""),
+			new DiagnosticResult("LINQ2DB0010", DiagnosticSeverity.Warning)
+				.WithLocation(0)
+				.WithArguments("'root' is in scope: read 'root.MappingSchema' instead of the data context's MappingSchema"));
 		// A schema-typed left operand says nothing about the other sources in scope: one that cannot be null is still
 		// the source to read, and TryGetRootMappingSchema is ExpressionBuilder's, not any method of that name.
 		[Test]
