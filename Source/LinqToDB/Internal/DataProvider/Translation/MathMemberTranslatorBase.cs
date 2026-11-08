@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Expressions;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 
@@ -482,11 +483,16 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				var valueFloor = factory.Function(valueType, "FLOOR", value);
 				var valueSub   = factory.Sub(valueType, value, valueFloor);
 
-				var isMidpoint = factory.Equal(valueSub, factory.Value(valueType, 0.5));
+				// A CLR double renders as a BINARY_DOUBLE literal on Oracle, which would take a decimal value through floating point.
+				var isDecimal = valueType.SystemType.UnwrapNullableType() == typeof(decimal);
+
+				ISqlExpression Half() => isDecimal ? factory.Value(valueType, 0.5m) : factory.Value(valueType, 0.5);
+
+				var isMidpoint = factory.Equal(valueSub, Half());
 
 				var evenNeighbour = factory.Multiply(
 					valueType,
-					factory.Function(valueType, "ROUND", ParametersNullabilityType.SameAsFirstParameter, factory.Multiply(valueType, value, factory.Value(valueType, 0.5)), factory.Value(0)),
+					factory.Function(valueType, "ROUND", ParametersNullabilityType.SameAsFirstParameter, factory.Multiply(valueType, value, Half()), factory.Value(0)),
 					factory.Value(2));
 
 				var falseValue = factory.Function(valueType, "ROUND", ParametersNullabilityType.SameAsFirstParameter, value, factory.Value(0));

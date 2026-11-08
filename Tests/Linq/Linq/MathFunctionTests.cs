@@ -1996,6 +1996,7 @@ namespace Tests.Linq
 				new HeadroomValues { Id = 1, D = 12345678901234567.3m },
 				new HeadroomValues { Id = 2, D = 12345678901234565.5m },
 				new HeadroomValues { Id = 3, D = 12345678901234566.5m },
+				new HeadroomValues { Id = 4, D = 20000000000000001.5m },
 			};
 
 			using var db = GetDataContext(context);
