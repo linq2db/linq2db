@@ -128,7 +128,9 @@ namespace Tests.Mapping
 			using var db  = GetDataContext(context);
 			using var tmp = db.CreateLocalTable<SourceSchemaRow>();
 
-			using (db.UseMappingSchema(Scope(e => e.Property(p => p.Value).HasSkipOnInsert())))
+			using (db.UseMappingSchema(Scope(e => e
+				.Property(p => p.Value)
+				.HasSkipOnInsert())))
 			{
 				tmp.Insert(new SourceSchemaRow { Id = 1, Value = 5, Name = "a" }, b => b);
 			}
@@ -146,7 +148,9 @@ namespace Tests.Mapping
 			using var db  = GetDataContext(context);
 			using var tmp = db.CreateLocalTable(new[] { new SourceSchemaRow { Id = 1, Value = 5, Name = "a" } });
 
-			using (db.UseMappingSchema(Scope(e => e.Property(p => p.Value).IsPrimaryKey())))
+			using (db.UseMappingSchema(Scope(e => e
+				.Property(p => p.Value)
+				.IsPrimaryKey())))
 			{
 				tmp.Update(new SourceSchemaRow { Id = 1, Value = 6, Name = "b" }, b => b);
 			}
@@ -164,7 +168,9 @@ namespace Tests.Mapping
 			using var db  = GetDataContext(context);
 			using var tmp = db.CreateLocalTable(new[] { new SourceSchemaRow { Id = 1, Value = 5, Name = "a" } });
 
-			using (db.UseMappingSchema(Scope(e => e.Property(p => p.Value).IsPrimaryKey())))
+			using (db.UseMappingSchema(Scope(e => e
+				.Property(p => p.Value)
+				.IsPrimaryKey())))
 			{
 				tmp.Upsert(new SourceSchemaRow { Id = 1, Value = 6, Name = "b" });
 			}
@@ -184,7 +190,9 @@ namespace Tests.Mapping
 			using var db  = GetDataContext(context);
 			using var tmp = db.CreateLocalTable<SourceSchemaRow>();
 
-			using (db.UseMappingSchema(Scope(e => e.Property(p => p.Value).HasSkipOnInsert())))
+			using (db.UseMappingSchema(Scope(e => e
+				.Property(p => p.Value)
+				.HasSkipOnInsert())))
 			{
 				tmp
 					.Merge()
@@ -553,7 +561,9 @@ namespace Tests.Mapping
 
 			var query = db.FromSql<SourceSchemaRow>("SELECT Id, Value, Name FROM SourceSchemaRow");
 
-			using (db.UseMappingSchema(Scope(e => e.Property(p => p.Value).HasColumnName("Value2"))))
+			using (db.UseMappingSchema(Scope(e => e
+				.Property(p => p.Value)
+				.HasColumnName("Value2"))))
 			{
 				query
 					.Single()
@@ -588,7 +598,7 @@ namespace Tests.Mapping
 		}
 
 		// CreateTempTable with setTable swaps the data context's schema while the temp table lives, so a handle
-		// created before it keeps its own key.
+		// created before it keeps its own key. Direct contexts only: the temp table is filled through a DataConnection's bulk copy.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
 		public void EntityUpdateFollowsHandleSchemaUnderTempTable([DataSources(false)] string context)
 		{
@@ -597,7 +607,9 @@ namespace Tests.Mapping
 
 			using (db.CreateTempTable(
 				Array.Empty<SourceSchemaRow>(),
-				e => e.Property(p => p.Value).IsPrimaryKey(),
+				e => e
+					.Property(p => p.Value)
+					.IsPrimaryKey(),
 				tableName: "SourceSchemaRowTemp",
 				tableOptions: TableOptions.NotSet))
 			{
@@ -790,7 +802,11 @@ namespace Tests.Mapping
 			}
 
 			var ids      = new HashSet<int>(Child.Select(c => c.ChildID));
-			var expected = Enumerable.Range(1, 9).Select(n => n * 10 + 1).TakeWhile(ids.Contains).ToList();
+			var expected = Enumerable
+				.Range(1, 9)
+				.Select(n => n * 10 + 1)
+				.TakeWhile(ids.Contains)
+				.ToList();
 
 			var cte = db.GetCte<ChildWithoutAssociation>(prev =>
 				children
@@ -837,8 +853,9 @@ namespace Tests.Mapping
 				.ShouldBe(expected);
 		}
 
+		// The operand of 'as' is the second handle's table: its discriminator codes come from that handle's schema.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
-		public void TypeAsOnSecondHandleFollowsItsSchema([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TypeAsOnSecondHandleFollowsItsSchema([DataSources] string context)
 		{
 			using var db  = GetDataContext(context);
 			using var tmp = db.CreateLocalTable(ShapeRows);
@@ -926,8 +943,31 @@ namespace Tests.Mapping
 				.ShouldBe(["C1", null]);
 		}
 
+		// A conversion added to the context after the handle was taken does not apply to the handle's columns.
+		// Direct contexts only: AddMappingSchema is a DataConnection member.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
-		public void ReadConversionFollowsHandleSchema([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void ReadConversionAddedAfterHandleDoesNotApply([DataSources(false)] string context)
+		{
+			using var db  = GetDataConnection(context);
+			using var tmp = db.CreateLocalTable(new[] { new ShapeCodeRow { Id = 1, Kind = 101 }, new ShapeCodeRow { Id = 2, Kind = 102 } });
+
+			var rows = db.GetTable<ShapeKindRow>();
+
+			var schema = new MappingSchema();
+			schema.SetConvertExpression<ShapeKind, int>(kind => (int)kind + 101);
+			schema.SetConvertExpression<int, ShapeKind>(value => (ShapeKind)(value - 101));
+
+			db.AddMappingSchema(schema);
+
+			rows
+				.OrderBy(r => r.Id)
+				.ToList()
+				.Select(r => r.Kind)
+				.ShouldBe([(ShapeKind)101, (ShapeKind)102]);
+		}
+		// A column is read with the conversions of the handle's schema, not the executing context's.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
+		public void ReadConversionFollowsHandleSchema([DataSources] string context)
 		{
 			using var db  = GetDataContext(context);
 			using var tmp = db.CreateLocalTable(new[] { new ShapeCodeRow { Id = 1, Kind = 101 }, new ShapeCodeRow { Id = 2, Kind = 102 } });
@@ -979,8 +1019,9 @@ namespace Tests.Mapping
 			rows.Count.ShouldBeGreaterThan(0);
 			rows.ShouldAllBe(r => r.c.Parent != null);
 		}
+		// LoadWith finds an association declared only in the handle's schema.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5951")]
-		public void LoadWithFollowsHandleSchema([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void LoadWithFollowsHandleSchema([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
