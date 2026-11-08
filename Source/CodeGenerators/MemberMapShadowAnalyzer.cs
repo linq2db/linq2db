@@ -18,7 +18,8 @@ namespace CodeGenerators
 	/// the entry's section.</item>
 	/// <item><c>LINQ2DB0008</c> - a map entry that makes one of the member's attributes unreachable: a common
 	/// entry hides every attribute, a provider entry hides the attributes configured for that provider.</item>
-	/// <item><c>LINQ2DB0009</c> - the map could not be read, so the two rules above cannot be trusted.</item>
+	/// <item><c>LINQ2DB0009</c> - the map, the registrations or the attribute type could not be read, so the two
+	/// rules above cannot be trusted.</item>
 	/// </list>
 	/// The rule is "the same member on both sides", so cooperative chains - an entry that expands <i>into</i> a
 	/// registered member - are excluded by construction.
@@ -65,8 +66,8 @@ namespace CodeGenerators
 
 		static readonly DiagnosticDescriptor ModelUnreadable = new(
 			id:                 "LINQ2DB0009",
-			title:              "The Expressions member map could not be read",
-			messageFormat:      "The Expressions member map could not be read: {0}. LINQ2DB0007 and LINQ2DB0008 cannot be trusted until the reader is updated.",
+			title:              "The member map model could not be read",
+			messageFormat:      "The member map model could not be read: {0}. LINQ2DB0007 and LINQ2DB0008 cannot be trusted until the reader is updated.",
 			category:           "Usage",
 			defaultSeverity:    DiagnosticSeverity.Warning,
 			isEnabledByDefault: true,
@@ -133,10 +134,15 @@ namespace CodeGenerators
 		{
 			// The public MapMember overloads forward a caller-supplied expression through M; only a lambda written
 			// in place is a table entry.
-			if (invocation.Arguments.Length != 1 || GetLambda(invocation.Arguments[0].Value) is not { } lambda)
-				return;
-
 			var location = invocation.Syntax.GetLocation();
+
+			if (invocation.Arguments.Length != 1 || GetLambda(invocation.Arguments[0].Value) is not { } lambda)
+			{
+				if (ResolveSection(invocation) != null)
+					failures.Add((location, "a map entry's key is not a lambda written in place, so the member it maps is unknown"));
+
+				return;
+			}
 
 			if (ResolveMember(lambda) is not { } key)
 			{
@@ -190,7 +196,10 @@ namespace CodeGenerators
 			}
 
 			if (ResolveMember(lambda) is not { } key || registeringType == null)
+			{
+				failures.Add((invocation.Syntax.GetLocation(), $"a {invocation.TargetMethod.Name} pattern does not name a method, property, field or constructor"));
 				return;
+			}
 
 			registrations.Add(new Registration(key, isGenericTypeMatch, registeringType, ProviderOf(registeringType.ContainingNamespace)));
 		}
@@ -270,7 +279,14 @@ namespace CodeGenerators
 		/// </summary>
 		static MemberKey? ResolveMember(IAnonymousFunctionOperation lambda)
 		{
-			var body = lambda.Body.Operations.Length == 1 ? lambda.Body.Operations[0] : null;
+			var operations = lambda.Body.Operations;
+
+			// The body of a lambda converted to Expression<Action> ends in an implicit return.
+			var count = operations.Length > 1 && operations[operations.Length - 1] is IReturnOperation { ReturnedValue: null }
+				? operations.Length - 1
+				: operations.Length;
+
+			var body = count == 1 ? operations[0] : null;
 
 			var value = body switch
 			{
@@ -337,12 +353,19 @@ namespace CodeGenerators
 			foreach (var (location, reason) in failures)
 				context.ReportDiagnostic(Diagnostic.Create(ModelUnreadable, location, reason));
 
+			var modelLocation = expressionsType.Locations.Length > 0 ? expressionsType.Locations[0] : Location.None;
+
 			if (entries.IsEmpty && failures.IsEmpty)
 			{
-				var location = expressionsType.Locations.Length > 0 ? expressionsType.Locations[0] : Location.None;
-				context.ReportDiagnostic(Diagnostic.Create(ModelUnreadable, location, "no member map entries were found"));
+				context.ReportDiagnostic(Diagnostic.Create(ModelUnreadable, modelLocation, "no member map entries were found"));
 				return;
 			}
+
+			if (registrations.IsEmpty)
+				context.ReportDiagnostic(Diagnostic.Create(ModelUnreadable, modelLocation, "no member translator registrations were found"));
+
+			if (attributeType == null)
+				context.ReportDiagnostic(Diagnostic.Create(ModelUnreadable, modelLocation, $"type '{AttributeTypeName}' was not found"));
 
 			// Deterministic choice of the registration a diagnostic names, whatever order the bag yields.
 			var orderedRegistrations = registrations

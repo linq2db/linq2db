@@ -15,8 +15,8 @@ namespace Tests.Analyzers.Internal
 		// A miniature of the real model: Expressions with its M/N helpers, a common table registered under "" by
 		// field, provider sections keyed by ProviderName constants, the registration extensions, a base translator in
 		// the shared Translation namespace and one translator per provider namespace. Every placeholder is a slot a
-		// fixture fills; the Math.Sin entry keeps the common table non-empty, so only the drift fixture that drops it
-		// can reach the empty-model diagnostic.
+		// fixture fills; the Math.Sin entry and the Math.Cos registration keep both sides of the model non-empty, so
+		// only the drift fixtures that drop them can reach the empty-model diagnostics.
 		static string Source(
 			string common    = "",
 			string oracle    = "",
@@ -30,7 +30,8 @@ namespace Tests.Analyzers.Internal
 			string ydbReg    = "",
 			string rightAttr = "",
 			string extra     = "",
-			bool   sentinel  = true) => $$"""
+			bool   sentinel  = true,
+			bool   anyReg    = true) => $$"""
 			#nullable enable
 			using System;
 			using System.Collections.Generic;
@@ -146,6 +147,7 @@ namespace Tests.Analyzers.Internal
 				{
 					public MathMemberTranslatorBase()
 					{
+						{{(anyReg ? "Registration.RegisterMethod((double v) => Math.Cos(v), H);" : "")}}
 						{{baseReg}}
 					}
 				}
@@ -269,6 +271,13 @@ namespace Tests.Analyzers.Internal
 			Source(
 				common:  "{ {|LINQ2DB0007:M(() => Math.Pow(0, 0))|}, N(() => null) },",
 				baseReg: "Registration.RegisterReplacement((double x, double y) => Math.Pow(x, y), (double x, double y) => Math.Exp(y * Math.Log(x)));"));
+
+		// A parameterless pattern binds to the Expression<Action> overload, whose lambda body ends in an implicit return.
+		[Test]
+		public Task ActionPatternRegistrationIsReported() => Verify(
+			Source(
+				common:  "{ {|LINQ2DB0007:M(() => Sql.Right(\"\", 0))|}, N(() => null) },",
+				baseReg: "Registration.RegisterMethod(() => Sql.Right(\"\", 0), H);"));
 
 		// A generic-match registration covers every instantiation of the method, as TranslationRegistration stores
 		// the generic definition.
@@ -436,8 +445,28 @@ namespace Tests.Analyzers.Internal
 		// No entries at all means the reader no longer recognises the tables, which must not read as "no shadows".
 		[Test]
 		public Task EmptyModelIsDrift() => Verify(
-			Source(sentinel: false)
-				.Replace("public static class Expressions", "public static class {|LINQ2DB0009:Expressions|}", System.StringComparison.Ordinal));
+			ExpectDriftOnExpressions(Source(sentinel: false)));
+
+		// The registration side of the model has the same failure: no registrations would read as "no shadows".
+		[Test]
+		public Task NoRegistrationsIsDrift() => Verify(
+			ExpectDriftOnExpressions(Source(anyReg: false)));
+
+		// The analyzer names these types by string, so a rename silences a rule unless it is reported.
+		[Test]
+		public Task RenamedRegistrationExtensionsIsDrift() => Verify(
+			ExpectDriftOnExpressions(
+				Source()
+					.Replace("TranslationRegistrationExtensions", "RenamedRegistrationExtensions", System.StringComparison.Ordinal)));
+
+		[Test]
+		public Task RenamedExpressionAttributeIsDrift() => Verify(
+			ExpectDriftOnExpressions(
+				Source()
+					.Replace("ExpressionAttribute", "RenamedAttribute", System.StringComparison.Ordinal)));
+
+		static string ExpectDriftOnExpressions(string source) =>
+			source.Replace("public static class Expressions", "public static class {|LINQ2DB0009:Expressions|}", System.StringComparison.Ordinal);
 
 		// A pattern held in a variable hides the registered member, so a shadow of it would go unreported. The
 		// forwarding helper in the extensions class is the one exemption, and every fixture compiles it.
@@ -448,6 +477,18 @@ namespace Tests.Analyzers.Internal
 				{|LINQ2DB0009:Registration.RegisterMethod(pattern, H)|};
 				"""));
 
+		// A pattern lambda that names no member cannot be keyed, on the registration side as on the map side.
+		[Test]
+		public Task RegistrationWithoutAMemberIsDrift() => Verify(
+			Source(baseReg: "{|LINQ2DB0009:Registration.RegisterMethod((double x, double y) => x + y, H)|};"));
+
+		// A table entry keyed by a held expression hides its member; the forwarding MapMember is not in a table.
+		[Test]
+		public Task TableEntryWithoutALambdaIsDrift() => Verify(
+			Source(
+				common: "{ {|LINQ2DB0009:M(_held)|}, N(() => null) },",
+				extra:  "static readonly Expression<Func<double>> _held = () => Math.Abs(0.0);"));
+
 		#endregion
 
 		// The unchanged path: a model with no overlap at all - the common sentinel, the forwarding MapMember and an
@@ -455,5 +496,9 @@ namespace Tests.Analyzers.Internal
 		[Test]
 		public Task CleanModelIsNotReported() => Verify(
 			Source(baseReg: PowRegistration));
+
+		// Any other assembly has no Expressions table to read, and costs nothing.
+		[Test]
+		public Task CompilationWithoutTheMapIsNotReported() => Verify("public class C { }");
 	}
 }
