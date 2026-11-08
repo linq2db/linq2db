@@ -2015,6 +2015,32 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		// Convert.ToXxx rounds through Math.Round, so these negative midpoints depend on the same to-even emulation.
+		[Test]
+		public void ConvertToInt32NegativeMidpointsRoundToEven([DataSources] string context)
+		{
+			var data = new[]
+			{
+				new MidpointValues { Id = 1, D = -2.5m, F = -2.5 },
+				new MidpointValues { Id = 2, D = -0.5m, F = -0.5 },
+				new MidpointValues { Id = 3, D = -3.5m, F = -3.5 },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var query = t
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					r.Id,
+					FromDecimal = Sql.AsSql(Convert.ToInt32(r.D)),
+					FromDouble  = Sql.AsSql(Convert.ToInt32(r.F)),
+				});
+
+			AssertQuery(query);
+		}
+
 		sealed class ResidueValues
 		{
 			[PrimaryKey] public int    Id { get; set; }
