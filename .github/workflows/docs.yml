@@ -87,6 +87,7 @@ jobs:
         with:
           name: docs-site
           path: .build/docs/_site
+          include-hidden-files: true # .nojekyll: the deploy's rsync --delete would remove it from the site
           if-no-files-found: error
           retention-days: 7
 
