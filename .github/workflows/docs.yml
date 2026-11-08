@@ -6,7 +6,8 @@
 #   PR that does not touch them reports the build as skipped - which satisfies a required check - instead
 #   of leaving it pending. If the detection itself fails, the build runs.
 # - release published: build the release tag and deploy it. Prereleases are skipped so they never
-#   replace the stable site. A release whose tag predates this file has no run at all, as the workflow
+#   replace the stable site; that includes a -suffixed tag (v6.0.0-rc.1), as those are published without
+#   GitHub's prerelease flag. A release whose tag predates this file has no run at all, as the workflow
 #   is read from the tag's tree.
 # - workflow_dispatch: rebuild the dispatch ref; `deploy` publishes it, which the `docs` environment
 #   allows only from a v* tag (gh workflow run docs.yml --ref v<ver> -f deploy=true).
@@ -63,7 +64,7 @@ jobs:
   build:
     name: Build docs
     needs: changes
-    if: ${{ !cancelled() && (github.event_name != 'pull_request' || needs.changes.result != 'success' || needs.changes.outputs.docs == 'true') && (github.event_name != 'release' || !github.event.release.prerelease) }}
+    if: ${{ !cancelled() && (github.event_name != 'pull_request' || needs.changes.result != 'success' || needs.changes.outputs.docs == 'true') && (github.event_name != 'release' || (!github.event.release.prerelease && !contains(github.event.release.tag_name, '-'))) }}
     runs-on: windows-2025
     timeout-minutes: 120
     steps:
