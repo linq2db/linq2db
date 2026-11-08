@@ -107,6 +107,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			var sequenceExpr    = methodCall.Arguments[0];
 			var groupingKind    = GroupingType.Default;
 
+			var orderByBeforeSource = builder.CurrentOrderBy;
+
 			var dataSequenceResult = builder.TryBuildSequence(new BuildInfo(buildInfo, sequenceExpr));
 			if (dataSequenceResult.BuildContext == null)
 				return dataSequenceResult;
@@ -175,7 +177,10 @@ namespace LinqToDB.Internal.Linq.Builder
 				return BuildSequenceResult.Error(groupingKeys);
 			}
 
-			KeepOrderByOfGroupingKeys(builder, dataSequence, groupingKeys, groupingKind);
+			// An ordering already current before the source was built belongs to another query: a lazily built CTE body runs
+			// while the sequence that first reads it is ordered.
+			if (!ReferenceEquals(builder.CurrentOrderBy, orderByBeforeSource))
+				KeepOrderByOfGroupingKeys(builder, dataSequence, groupingKeys, groupingKind);
 
 #if DEBUG
 			System.Diagnostics.Debug.WriteLine("BuildMethodCall GroupBy:\n" + groupBy.SelectQuery);

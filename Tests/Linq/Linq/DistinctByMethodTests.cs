@@ -1552,6 +1552,43 @@ namespace Tests.Linq
 			query.ToList();
 		}
 
+		// A CTE body is built on first use, while the outer ordering is current: its GroupBy must leave that ordering alone.
+		// AssertQuery cannot run AsCte; CTE-capable providers covering both the DISTINCT ON and the ROW_NUMBER lowering.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterJoinToGroupedCteKeepsOuterOrdering([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllDuckDB, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var cte = db.Child
+				.GroupBy(c => c.ParentID)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.AsCte();
+
+			var query =
+				from p in db.Parent.OrderByDescending(p => p.ParentID)
+				join c in cte on p.ParentID equals c.Key
+				select new { p.ParentID, p.Value1, c.Count };
+
+			var counts = Child
+				.GroupBy(c => c.ParentID)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.ToList();
+
+			var joined =
+				from p in Parent.OrderByDescending(p => p.ParentID)
+				join c in counts on p.ParentID equals c.Key
+				select new { p.ParentID, p.Value1, c.Count };
+
+			var expected = joined
+				.DistinctBy(x => x.Value1)
+				.ToList();
+
+			query
+				.DistinctBy(x => x.Value1)
+				.ToList()
+				.ShouldBe(expected);
+		}
+
 		// A is not a grouping key: a union column takes its value from every leg, so it does not match the key B.
 		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_DistinctByRequiresOrderBy)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
