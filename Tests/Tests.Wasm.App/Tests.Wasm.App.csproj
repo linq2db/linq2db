@@ -4,6 +4,8 @@
 		<TargetFramework>$(LatestTargetFramework)</TargetFramework>
 		<TargetFrameworks></TargetFrameworks>
 		<RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
+		<!-- Mono does not implement runtime-async, which every net11.0 target is built with. -->
+		<UseMonoRuntime>false</UseMonoRuntime>
 
 		<OutputType>Exe</OutputType>
 		<RootNamespace>Tests.Wasm</RootNamespace>

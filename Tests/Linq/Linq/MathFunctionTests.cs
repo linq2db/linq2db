@@ -426,7 +426,7 @@ namespace Tests.Linq
 				orderby p.ID
 				select Sql.AsSql(Math.Round(p.MoneyValue, 5) + p.MoneyValue);
 
-			AssertQuery(sum, ByValue);
+			AssertQueryWithinDelta(sum);
 
 			var condition =
 				from p in db.Types
@@ -434,7 +434,7 @@ namespace Tests.Linq
 				orderby p.ID
 				select Sql.AsSql(p.ID > 2 ? Math.Round(p.MoneyValue, 5) : p.MoneyValue);
 
-			AssertQuery(condition, ByValue);
+			AssertQueryWithinDelta(condition);
 		}
 
 		[Test]
@@ -448,7 +448,7 @@ namespace Tests.Linq
 				orderby p.ID
 				select Sql.AsSql(Sql.Round(p.MoneyValue, 5) + p.MoneyValue);
 
-			AssertQuery(away, ByNullableValue);
+			AssertQueryWithinDelta(away);
 
 			var even =
 				from p in db.Types
@@ -456,7 +456,7 @@ namespace Tests.Linq
 				orderby p.ID
 				select Sql.AsSql(Sql.RoundToEven(p.MoneyValue, 5) + p.MoneyValue);
 
-			AssertQuery(even, ByNullableValue);
+			AssertQueryWithinDelta(even);
 		}
 
 		// A non-constant precision must not cost the value its fractional digits.
@@ -472,7 +472,7 @@ namespace Tests.Linq
 				orderby p.ID
 				select Sql.AsSql(Math.Round(p.MoneyValue, p.ID % 2 + 2));
 
-			AssertQuery(atOrAboveScale, ByValue);
+			AssertQueryWithinDelta(atOrAboveScale);
 
 			var belowScale =
 				from p in db.Types
@@ -480,7 +480,7 @@ namespace Tests.Linq
 				orderby p.ID
 				select Sql.AsSql(Math.Round(p.MoneyValue, p.ID % 2 + 1));
 
-			AssertQuery(belowScale, ByValue);
+			AssertQueryWithinDelta(belowScale);
 		}
 
 		sealed class RoundNearLimit
@@ -1375,7 +1375,7 @@ namespace Tests.Linq
 						Runtime = Sql.AsSql(Sql.RoundToEven(r.D, r.P)),
 					});
 
-			AssertQuery(query);
+			AssertQueryWithinDelta(query);
 		}
 
 		sealed class RoundDeclaredShapeFull

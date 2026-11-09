@@ -2761,14 +2761,14 @@ namespace Tests.Linq
 				.Concat(t.Select(r => 1.004m))
 				.ToArray();
 
-			values.ShouldBe([1.00m, 1.004m], ignoreOrder: true);
+			AreEqualWithinDelta([1.00m, 1.004m], values);
 
 			var conditional = t
 				.Select(r => r.Id > 0 ? r.Value : r.Value + 1)
 				.Concat(t.Select(r => 1.004m))
 				.ToArray();
 
-			conditional.ShouldBe([1.00m, 1.004m], ignoreOrder: true);
+			AreEqualWithinDelta([1.00m, 1.004m], conditional);
 		}
 
 		sealed class FineDecimalRow
@@ -2795,7 +2795,7 @@ namespace Tests.Linq
 				.Concat(t.Select(r => 1.000000000005m))
 				.ToArray();
 
-			values.ShouldBe([1.000000000005m, 1.000000000005m]);
+			AreEqualWithinDelta([1.000000000005m, 1.000000000005m], values);
 		}
 
 		sealed class WideDecimalRow

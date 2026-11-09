@@ -40,6 +40,13 @@ namespace Tests
 			=> AreEqual(t => t, expected, result, new DeltaComparer<T>(delta));
 
 		/// <summary>
+		/// <see cref="AssertQuery{T}"/>, but floating-point values compare within <paramref name="delta"/>, as in
+		/// <see cref="AreEqualWithinDelta{T}"/>.
+		/// </summary>
+		protected T[] AssertQueryWithinDelta<T>(IQueryable<T> query, decimal delta = FloatingPointDelta)
+			=> AssertQuery(query, new DeltaComparer<T>(delta));
+
+		/// <summary>
 		/// Default <b>relative</b> tolerance for <see cref="AreEqualWithinDelta{T}"/>. See
 		/// <see cref="FloatingPoint.Delta"/>, which <see cref="LinqDataTypes"/> equality shares.
 		/// </summary>
