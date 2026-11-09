@@ -13,7 +13,8 @@ using NUnit.Framework;
 
 namespace Tests.Mapping
 {
-	[TestFixture]
+	// NonParallelizable: the tests swap the decimal field reader on the shared provider instance.
+	[TestFixture, NonParallelizable]
 	public class DecimalOverflowTests : TestBase
 	{
 		[Test]

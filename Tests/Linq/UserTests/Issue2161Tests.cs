@@ -3,10 +3,13 @@ using System.Data.Common;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.UserTests
 {
@@ -55,11 +58,14 @@ namespace Tests.UserTests
 			{
 				var interceptor = new CountCommandsInterceptor();
 				db.AddInterceptor(interceptor);
-				//Below line makes same join queries twice
 				var query = db.GetTable<Order>().LoadWith(o => o.Details).Where(o => o.OrderId == 1);
 				var order = query.FirstOrDefault();
 
-				Assert.That(interceptor.Count, Is.EqualTo(2));
+				// A First/Single over an eager LoadWith batches the main query and the eager query into one combined
+				// multi-result-set command — when the UseCombinedCommands policy switch is on (off by default in 6.x) AND
+				// the provider supports multi-statement batches + multiple result sets. Otherwise, and on remote contexts,
+				// they still run as two separate commands.
+				interceptor.Count.ShouldBe(db.UsesCombinedEagerLoading() ? 1 : 2);
 			}
 		}
 

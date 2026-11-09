@@ -24,22 +24,7 @@ namespace Tests
 {
 	partial class TestBase
 	{
-#if !NETFRAMEWORK
-		public static readonly IEqualityComparer<decimal> DecimalComparerInstance = EqualityComparer<decimal>.Default;
-#else
-		public static readonly IEqualityComparer<decimal> DecimalComparerInstance = new DecimalComparer();
-
-		sealed class DecimalComparer : IEqualityComparer<decimal>
-		{
-			bool IEqualityComparer<decimal>.Equals(decimal x, decimal y) => x == y;
-
-			int IEqualityComparer<decimal>.GetHashCode(decimal obj)
-			{
-				// workaround netfx bug in decimal.GetHashCode
-				return (obj / 1.00000000000000000000000000000m).GetHashCode();
-			}
-		}
-#endif
+		public static readonly IEqualityComparer<decimal> DecimalComparerInstance = TestComparers.DecimalByValue;
 
 		/// <summary>
 		/// <see cref="AreEqual{T}(IEnumerable{T}, IEnumerable{T}, bool, bool)"/>, but floating-point values -
@@ -130,7 +115,7 @@ namespace Tests
 
 		protected void AreEqualWithComparer<T>(IEnumerable<T> expected, IEnumerable<T> result)
 		{
-			AreEqual(t => t, expected, result, ComparerBuilder.GetEqualityComparer<T>());
+			AreEqual(t => t, expected, result, TestComparers.GetDefault<T>());
 		}
 
 		protected void AreEqualWithComparer<T>(IEnumerable<T> expected, IEnumerable<T> result, Func<MemberAccessor, bool> memberPredicate)

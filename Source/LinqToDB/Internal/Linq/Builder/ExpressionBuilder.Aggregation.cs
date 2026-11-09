@@ -66,14 +66,15 @@ namespace LinqToDB.Internal.Linq.Builder
 					return false;
 				}
 
-				sql = placeholder.Sql;
+				// A plain-mode item is an operand of the function; an aggregate's input is built with the scope cleared.
+				sql = builder.ReadAsTheReaderReads(expression, placeholder).Sql;
 
 				if (sql is SqlSearchCondition)
 				{
 					var optimizer         = new SqlExpressionOptimizerVisitor(true);
 					var evaluationContext = new EvaluationContext();
 					var nullability       = NullabilityContext.GetContext(SqlContext?.BuildContext.SelectQuery);
-					var optimized         = optimizer.Optimize(evaluationContext, nullability, null, builder.DataOptions, contextToUse.MappingSchema, sql, true, true);
+					var optimized         = optimizer.Optimize(evaluationContext, nullability, builder.DataOptions, contextToUse.MappingSchema, sql, true, true);
 					sql = (ISqlExpression)optimized;
 				}
 

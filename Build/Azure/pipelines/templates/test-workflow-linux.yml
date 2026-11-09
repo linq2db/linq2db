@@ -52,6 +52,7 @@ steps:
       # b=$(avail); sudo apt-get clean;                     report $b "apt clean (~0.1Gb)"
       # b=$(avail); sudo rm -rf /usr/share/dotnet;          report $b "remove dotnet (~2-3Gb est)"
   displayName: Cleanup Junk
+  condition: and(variables.title, succeeded())
 
 # Diagnostic: list the heaviest resident processes so we can spot agent background services worth
 # killing to free RAM for the test process (some jobs run near the memory ceiling). RSS is in KB.
@@ -61,7 +62,7 @@ steps:
       echo ">>> Top memory-consuming processes (RSS > 10 MB):"
       ps -eo pid,ppid,rss,comm --sort=-rss | awk 'NR==1 {print; next} $3 > 10240' | head -n 51
   displayName: Probe memory (top processes)
-  condition: succeeded()
+  condition: and(variables.title, succeeded())
 
 - task: DownloadPipelineArtifact@2
   inputs:

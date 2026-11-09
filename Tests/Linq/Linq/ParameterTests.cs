@@ -200,10 +200,13 @@ namespace Tests.Linq
 
 		sealed class AllTypes
 		{
+			[Column("decimalDataType")]
 			public decimal DecimalDataType;
+			[Column("binaryDataType")]
 			public byte[]? BinaryDataType;
+			[Column("varbinaryDataType")]
 			public byte[]? VarBinaryDataType;
-			[Column(DataType = DataType.VarChar)]
+			[Column("varcharDataType", DataType = DataType.VarChar)]
 			public string? VarcharDataType;
 		}
 
@@ -489,6 +492,141 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable<Issue1189Customer>();
 			table.Where(k => k.ToDelete <= TestData.NonReadonlyDateTime).ToList();
+		}
+
+		// Both sides are known on each run, so the comparison folds by the parameter's value. On SQLite it has to fold before
+		// the date comparison is rewritten through strftime, which can no longer be evaluated.
+		[Test]
+		public void DateTimeConstantComparedWithParameterFoldsPerValue([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var date  = TestData.DateTime0.AddDays(1);
+			var query = db.Person
+				.Where(p => Sql.AsSql(TestData.DateTime0) <= date);
+
+			AssertQuery(query);
+			var whenTrue = query.ToSqlQuery();
+
+			date = TestData.DateTime0.AddDays(-1);
+
+			var whenFalseRows = query.ToList();
+			var whenFalse     = query.ToSqlQuery();
+
+			whenFalseRows.ShouldBeEmpty();
+			whenTrue     .Parameters.ShouldBeEmpty();
+			whenFalse    .Parameters.ShouldBeEmpty();
+		}
+
+		// SQLite only, direct and remote: the three tests below pin the shared evaluator behind both folds, which no provider
+		// overrides for an ordering comparison; before the fix they were red alike on every provider.
+		[Test]
+		public void NegatedConstantComparedWithNullDateParameter([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			DateTime? date = null;
+
+			var query = db.Person
+				.Where(p => !(Sql.AsSql((DateTime?)TestData.DateTime0) <= date));
+
+			AssertQuery(query);
+
+			date = TestData.DateTime0.AddDays(1);
+
+			AssertQuery(query);
+
+			date = null;
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void NegatedConstantComparedWithNullIntParameter([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			int? value = null;
+
+			var query = db.Person
+				.Where(p => !(Sql.AsSql((int?)1) > value));
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void NegatedConstantComparedWithNullParameterUnderLikeSql([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context, o => o.UseCompareNulls(CompareNulls.LikeSql));
+
+			int? value = null;
+
+			var query = db.Person
+				.Where(p => !(Sql.AsSql((int?)1) > value));
+
+			query
+				.ToList()
+				.ShouldBeEmpty();
+
+			value = 0;
+
+			query
+				.ToList()
+				.ShouldBeEmpty();
+
+			value = 2;
+
+			query
+				.ToList()
+				.Count
+				.ShouldBe(db.Person.Count());
+		}
+
+		[ActiveIssue(6256, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}[2, 3, 4]{1}but was")]
+		[Test]
+		public void NegatedComparisonWithNullParameterInsideNotUnderLikeSql([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context, o => o.UseCompareNulls(CompareNulls.LikeSql));
+
+			int? value = null;
+
+			var expected = db.Person
+				.Select(p => p.ID)
+				.Where(id => id != 1)
+				.OrderBy(id => id)
+				.ToArray();
+
+			// the un-simplified negation is the shape under test
+#pragma warning disable MA0213 // Simplify negated boolean expression
+			db.Person
+				.Where(p => !(!(Sql.AsSql((int?)1) > value) && p.ID == 1))
+#pragma warning restore MA0213
+				.Select(p => p.ID)
+				.OrderBy(id => id)
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
+		[ActiveIssue(6256, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}[2, 3, 4]{1}but was")]
+		[Test]
+		public void ComparisonWithNullParameterInsideNotUnderLikeSql([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context, o => o.UseCompareNulls(CompareNulls.LikeSql));
+
+			int? value = null;
+
+			var expected = db.Person
+				.Select(p => p.ID)
+				.Where(id => id != 1)
+				.OrderBy(id => id)
+				.ToArray();
+
+			db.Person
+				.Where(p => !(Sql.AsSql((int?)1) > value && p.ID == 1))
+				.Select(p => p.ID)
+				.OrderBy(id => id)
+				.ToArray()
+				.ShouldBe(expected);
 		}
 
 		[Table]
@@ -1502,10 +1640,9 @@ namespace Tests.Linq
 		// on SqlServer.2017.MS.LinqService (build 22779) and was killed by --hangdump-timeout 5m on
 		// SqlServer.Contained.LinqService (22810), starving unrelated tests meanwhile. Awaiting frees
 		// the thread for the duration of the round-trip, so the burst no longer exhausts the pool.
+		[NoBaselines("multi-threading")]
 		public async Task TestIQueryableParameterEvaluationMultiThreaded([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
-			using var _ = new DisableBaseline("multi-threading");
-
 			// per-invocation state: a shared instance field is clobbered when parallel execution runs
 			// this test concurrently for several SqlServer contexts (thread index collides across them).
 			var paramValues = new int[30];
@@ -1869,6 +2006,93 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void NullableComparisonAsSetValue([DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var data = new[]
+			{
+				new TestBool { Id = 1, Value = null  },
+				new TestBool { Id = 2, Value = false },
+				new TestBool { Id = 3, Value = true  },
+			};
+
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(data);
+
+			// C# reads NULL != true as true, so the stored value must not be NULL
+			tb.Update(r => new TestBool()
+			{
+				Value = r.Value != true
+			});
+
+			tb
+				.OrderBy(r => r.Id)
+				.Select(r => r.Value)
+				.ToArray()
+				.ShouldBe(new bool?[] { true, true, false });
+		}
+
+		[Test]
+		public void NullableComparisonAsConditionalSetValue([DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var data = new[]
+			{
+				new TestBool { Id = 1, Value = null  },
+				new TestBool { Id = 2, Value = false },
+				new TestBool { Id = 3, Value = true  },
+			};
+
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(data);
+
+			// the comparison is a result of the conditional, so it is folded there, not by the SET slot
+			tb.Update(r => new TestBool()
+			{
+				Value = r.Id > 0 ? r.Value != true : null
+			});
+
+			tb
+				.OrderBy(r => r.Id)
+				.Select(r => r.Value)
+				.ToArray()
+				.ShouldBe(new bool?[] { true, true, false });
+		}
+
+		[Table]
+		sealed class SetFlagTable
+		{
+			[PrimaryKey] public int   Id { get; set; }
+			[Column    ] public bool? F  { get; set; }
+			[Column    ] public int?  A  { get; set; }
+			[Column    ] public int?  B  { get; set; }
+			[Column    ] public int?  C  { get; set; }
+		}
+
+		[Test]
+		public void NullableComparisonAsConditionalElseSetValue([DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var data = new[]
+			{
+				new SetFlagTable { Id = 1, F = true,  A = 1,    B = 1,    C = null },
+				new SetFlagTable { Id = 2, F = true,  A = 1,    B = 2,    C = 1    },
+				new SetFlagTable { Id = 3, F = null,  A = null, B = 1,    C = 1    },
+				new SetFlagTable { Id = 4, F = null,  A = null, B = null, C = 1    },
+			};
+
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(data);
+
+			tb
+				.Set(r => r.F, r => r.C == null ? r.F : r.A == r.B)
+				.Update();
+
+			tb
+				.OrderBy(r => r.Id)
+				.Select(r => r.F)
+				.ToArray()
+				.ShouldBe(new bool?[] { true, false, false, true });
+		}
+
 		[ActiveIssue(ErrorTypeName = "System.NullReferenceException", ErrorMessage = "Object reference not set to an instance of an object.",
 			Details = "no-issue: a null first argument to Sql.PadLeft throws while the accessor is built, before any SQL is produced. #4799 is the only PadLeft issue on the tracker and reports trimming, which is a different defect.")]
 		[Test]
@@ -2014,6 +2238,142 @@ namespace Tests.Linq
 
 			byString.Length.ShouldBe(1);
 			byNumber.Length.ShouldBe(1);
+		}
+
+		[Table]
+		sealed class ArrayLengthTable
+		{
+			[PrimaryKey] public int Id    { get; set; }
+			[Column]     public int Value { get; set; }
+		}
+
+		[Test]
+		public void ArrayLengthInWhere([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var arr = new[] { 0 };
+
+			var query = db.Person
+				.Where(p => p.ID == arr.Length);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void ArrayLengthInInsertSetter([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<ArrayLengthTable>();
+
+			var arr = new[] { 0, 0, 0 };
+
+			table.Insert(() => new ArrayLengthTable
+			{
+				Id    = 1,
+				Value = arr.Length,
+			});
+
+			table
+				.Single()
+				.Value
+				.ShouldBe(3);
+		}
+
+		[Test, QueryCacheTest]
+		public void ArrayLengthIsReadPerExecution([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[]
+			{
+				new ArrayLengthTable { Id = 1, Value = 10 },
+				new ArrayLengthTable { Id = 2, Value = 20 },
+			});
+
+			var arr = new[] { 0 };
+
+			var query = table
+				.Where(t => t.Id == arr.Length);
+
+			query
+				.Single()
+				.Value
+				.ShouldBe(10);
+
+			var cacheMissCount = query.GetCacheMissCount();
+
+			arr = new[] { 0, 0 };
+
+			query
+				.Single()
+				.Value
+				.ShouldBe(20);
+
+			query
+				.GetCacheMissCount()
+				.ShouldBe(cacheMissCount);
+		}
+
+		[Test]
+		public void ArrayLengthInCompiledQuery([DataSources] string context)
+		{
+			var query = CompiledQuery.Compile((ITestDataContext db, int[] arr) =>
+				db.Person
+					.Where(p => p.ID == arr.Length)
+					.Select(p => p.ID));
+
+			using var db = GetDataContext(context);
+
+			query(db, new[] { 0 })
+				.Single()
+				.ShouldBe(1);
+
+			query(db, new[] { 0, 0 })
+				.Single()
+				.ShouldBe(2);
+		}
+
+		[Test]
+		public void ArrayLengthInSetProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var arr = new[] { 0, 0 };
+
+			var query = db.Person
+				.Where(p => p.ID == 1)
+				.Select(p => new { p.ID, L = arr.Length })
+				.Concat(db.Person
+					.Where(p => p.ID == 2)
+					.Select(p => new { p.ID, L = 0 }));
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void ArrayLengthInProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var arr = new[] { 0, 0 };
+
+			var query =
+				from p in db.Person
+				where p.ID == 1
+				select new
+				{
+					p.ID,
+					L = arr.Length,
+				};
+
+			query
+				.GetSelectQuery()
+				.Select
+				.Columns
+				.Count
+				.ShouldBe(1);
+
+			AssertQuery(query);
 		}
 	}
 }

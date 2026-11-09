@@ -20,10 +20,10 @@
 		    select between the modern and the legacy surface.-->
 		<!--initial version, referenced from nuspec-->
 		<BandLatestForNuget Condition="'$(TargetFramework)'=='net10.0'">10.0.0</BandLatestForNuget>
-		<BandLatestForNuget Condition="'$(TargetFramework)'=='net11.0'">11.0.0-rc.2.26504.105</BandLatestForNuget>
+		<BandLatestForNuget Condition="'$(TargetFramework)'=='net11.0'">11.0.0-rc.3.26522.148</BandLatestForNuget>
 		<!--latest version (not referenced from nuspec)-->
 		<BandLatest Condition="'$(TargetFramework)'=='net10.0'">10.0.12</BandLatest>
-		<BandLatest Condition="'$(TargetFramework)'=='net11.0'">11.0.0-rc.2.26504.105</BandLatest>
+		<BandLatest Condition="'$(TargetFramework)'=='net11.0'">11.0.0-rc.3.26522.148</BandLatest>
 
 		<!--single version across every TFM, for packages we deliberately do not float per band-->
 		<Net10Latest>10.0.12</Net10Latest>
@@ -38,7 +38,7 @@
 
 		<!--FSharp.Core floor for linq2db.FSharp, referenced from nuspec: the FSharp.Core the band's first SDK shipped
 		    with; net462/netstandard2.0 take the lowest supported band's, as $(LegacyNetPackageVersion) does.-->
-		<FSharpCoreForNuget Condition="'$(TargetFramework)'=='net11.0'">11.0.101-rc2.26504.105</FSharpCoreForNuget>
+		<FSharpCoreForNuget Condition="'$(TargetFramework)'=='net11.0'">11.0.101-rc3.26522.148</FSharpCoreForNuget>
 		<FSharpCoreForNuget Condition="'$(FSharpCoreForNuget)'==''">10.0.100</FSharpCoreForNuget>
 
 		<!--EF 3.1 versions for netfx support-->
@@ -134,6 +134,8 @@
 		<PackageVersion Include="Microsoft.Extensions.DependencyInjection"              Version="$(BandLatestForNuget)"        Condition="'$(BandLatestForNuget)'!=''" />
 		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions"             Version="$(LegacyNetPackageVersion)"   Condition="'$(BandLatestForNuget)'==''" />
 		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions"             Version="$(BandLatestForNuget)"        Condition="'$(BandLatestForNuget)'!=''" />
+		<PackageVersion Include="Microsoft.Extensions.Identity.Stores"                  Version="$(LegacyNetPackageVersion)"   Condition="'$(BandLatestForNuget)'==''" />
+		<PackageVersion Include="Microsoft.Extensions.Identity.Stores"                  Version="$(BandLatestForNuget)"        Condition="'$(BandLatestForNuget)'!=''" />
 	</ItemGroup>
 
 	<ItemGroup Label="LINQPad-only">
@@ -155,6 +157,7 @@
 		<PackageVersion Include="IBM.Data.DB.Provider"                                  Version="11.5.9000.4"                  />
 		<PackageVersion Include="Microsoft.Data.SqlClient"                              Version="7.0.2"                        />
 		<PackageVersion Include="Microsoft.Data.Sqlite"                                 Version="$(Net10Latest)"               />
+		<PackageVersion Include="Microsoft.SqlServer.Compact"                           Version="4.0.8876.1"                   />
 		<PackageVersion Include="Microsoft.SqlServer.TransactSql.ScriptDom"             Version="180.102.0"                    />
 		<PackageVersion Include="Microsoft.SqlServer.Types"                             Version="170.1000.7"                   />
 		<PackageVersion Include="MySqlConnector"                                        Version="2.6.2"                        />
@@ -170,6 +173,7 @@
 		<PackageVersion Include="Octonica.ClickHouseClient"                             Version="4.1.6"                        />
 		<PackageVersion Include="Oracle.ManagedDataAccess"                              Version="21.23.0"                      />
 		<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="23.26.301"                    />
+		<PackageVersion Include="Sap.Data.Hana.Net.v10.0"                               Version="2.30.27"                      Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
 		<PackageVersion Include="System.Data.Odbc"                                      Version="$(Net10Latest)"               />
 		<!--tests override this via VersionOverride, see $(OleDbTestsVersion) above-->
 		<PackageVersion Include="System.Data.OleDb"                                     Version="$(Net10Latest)"               />
@@ -177,9 +181,9 @@
 		<!--System.Data.SQLite ships no native of its own; it loads e_sqlite3 from SQLitePCLRaw.lib.e_sqlite3,
 		    declared in the vulnerability-managed group below alongside Microsoft.Data.Sqlite's copy.-->
 		<PackageVersion Include="System.Data.SQLite"                                    Version="2.0.4"                        />
-		<PackageVersion Include="Ydb.Sdk"                                               Version="0.35.0"                       />
+		<PackageVersion Include="Ydb.Sdk"                                               Version="0.38.0"                       />
 		<PackageVersion Include="DuckDB.NET.Data.Full"                                  Version="1.5.5"                        />
-		<PackageVersion Include="linq2db4iSeries"                                       Version="6.3.0"                        />
+		<PackageVersion Include="linq2db4iSeries"                                       Version="6.5.0"                        />
 	</ItemGroup>
 
 	<ItemGroup Label="Remote">
@@ -188,7 +192,9 @@
 		<PackageVersion Include="Microsoft.AspNetCore.SignalR.Core"                     Version="$(SignalRLegacyVersion)"      />
 
 		<PackageVersion Include="Microsoft.AspNetCore.SignalR.Client"                   Version="$(SignalRLegacyVersion)"      Condition="'$(BandLatestForNuget)'==''" />
-		<PackageVersion Include="Microsoft.AspNetCore.SignalR.Client"                   Version="$(BandLatestForNuget)"        Condition="'$(BandLatestForNuget)'!=''" />
+		<!--GHSA-334f-vvp4-7g6p: first versions whose SignalR.Common is patched; a shipped package's direct dependency must not be vulnerable-->
+		<PackageVersion Include="Microsoft.AspNetCore.SignalR.Client"                   Version="10.0.13"                      Condition="'$(BandLatestForNuget)'!='' and '$(TargetFramework)'=='net10.0'" />
+		<PackageVersion Include="Microsoft.AspNetCore.SignalR.Client"                   Version="$(BandLatestForNuget)"        Condition="'$(BandLatestForNuget)'!='' and '$(TargetFramework)'!='net10.0'" />
 
 		<PackageVersion Include="System.Net.Http.Json"                                  Version="$(LegacyNetPackageVersion)"   Condition="'$(BandLatestForNuget)'==''" />
 		<PackageVersion Include="System.Net.Http.Json"                                  Version="$(BandLatestForNuget)"        Condition="'$(BandLatestForNuget)'!=''" />
@@ -223,12 +229,12 @@
 		<PackageVersion Include="System.Linq.Dynamic.Core"                              Version="1.7.4"                        />
 		<!--net11 cannot sit below linq2db.FSharp's net11 floor, $(FSharpCoreForNuget)-->
 		<PackageVersion Include="FSharp.Core"                                           Version="10.1.401"                     Condition="'$(TargetFramework)'!='net11.0'" />
-		<PackageVersion Include="FSharp.Core"                                           Version="11.0.101-rc2.26504.105"       Condition="'$(TargetFramework)'=='net11.0'" />
+		<PackageVersion Include="FSharp.Core"                                           Version="11.0.101-rc3.26522.148"       Condition="'$(TargetFramework)'=='net11.0'" />
 		<PackageVersion Include="LinqKit"                                               Version="1.3.11"                       />
 
-		<PackageVersion Include="Microsoft.Extensions.Logging.Console"                  Version="$(LegacyNetPackageLatest)"    Condition="'$(BandLatest)'==''" />
+		<PackageVersion Include="Microsoft.Extensions.Logging.Console"                 Version="$(LegacyNetPackageLatest)"    Condition="'$(BandLatest)'==''" />
 		<PackageVersion Include="Microsoft.Extensions.Logging.Console"                  Version="$(BandLatest)"                Condition="'$(BandLatest)'!=''" />
-		<PackageVersion Include="EntityFrameworkCore.FSharp"                            Version="6.0.7"                        />
+		<PackageVersion Include="EntityFrameworkCore.FSharp"                            Version="10.0.0"                       />
 
 		<PackageVersion Include="Pomelo.EntityFrameworkCore.MySql"                      Version="3.2.7"                        Condition="'$(TargetFramework)'=='net462'"  />
 		<!--Pomelo's newest line is EF Core 9; Microting is a maintained fork of it that ships an EF Core 10 line.
@@ -237,12 +243,12 @@
 		    There is no EF Core 11 line from either, so the net11 EF tests carry no MySQL provider.-->
 		<PackageVersion Include="Microting.EntityFrameworkCore.MySql"                   Version="10.0.11"                      Condition="'$(TargetFramework)'=='net10.0'" />
 		<!--numbered independently of the runtime band, so these stay explicit rather than reading $(BandLatest).
-		    The net11 row needs the EF11 test project's direct EF pins: Npgsql's 11.0.0-rc.1.1 hard-pins
-		    Microsoft.EntityFrameworkCore [11.0.0-rc.1.26425.128], one release behind $(BandLatest).
+		    The net11 row needs the EF11 test project's direct EF pins: Npgsql's 11.0.0-rc.2 hard-pins
+		    Microsoft.EntityFrameworkCore [11.0.0-rc.2.26504.105], one release behind $(BandLatest).
 		    Drop those pins once Npgsql ships a release that pins the current band.-->
 		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"        Version="3.1.18"                       Condition="'$(TargetFramework)'=='net462'"  />
 		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"        Version="10.0.3"                       Condition="'$(TargetFramework)'=='net10.0'" />
-		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"        Version="11.0.0-rc.1.1"                Condition="'$(TargetFramework)'=='net11.0'" />
+		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"        Version="11.0.0-rc.2"                  Condition="'$(TargetFramework)'=='net11.0'" />
 		<!--referenced directly only by the EF11 test project, to override the pin above-->
 		<PackageVersion Include="Microsoft.EntityFrameworkCore"                         Version="$(BandLatestForNuget)"        Condition="'$(BandLatestForNuget)'!=''" />
 		<PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite"                  Version="$(EF3Latest)"                 Condition="'$(BandLatest)'==''" />
@@ -263,15 +269,15 @@
 	</ItemGroup>
 
 	<ItemGroup Label="Examples">
-		<PackageVersion Include="linq2db.t4models"                                      Version="6.5.0"                        />
+		<PackageVersion Include="linq2db.t4models"                                      Version="6.5.1"                        />
 		<PackageVersion Include="Microsoft.Extensions.ObjectPool"                       Version="$(Net10Latest)"               />
 		<PackageVersion Include="OpenTelemetry"                                         Version="$(OpenTelemetryVersion)"      />
 		<PackageVersion Include="OpenTelemetry.Exporter.Console"                        Version="$(OpenTelemetryVersion)"      />
 		<PackageVersion Include="System.Runtime.InteropServices.RuntimeInformation"     Version="4.3.0"                        />
 
 		<PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly"           Version="$(Net10Latest)"               />
-		<!--GHSA-g27p-qf6j-c96c, GHSA-qjpx-jqm5-h2c4: back to $(Net10Latest) once it reaches 10.0.13-->
-		<PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server"    Version="10.0.13"                      />
+		<!--GHSA-g27p-qf6j-c96c, GHSA-qjpx-jqm5-h2c4: back to $(Net10Latest) once it reaches 10.0.14-->
+		<PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server"    Version="10.0.14"                      />
 		<PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="$(Net10Latest)"               />
 	</ItemGroup>
 
@@ -299,8 +305,6 @@
 		<!--CVE-2025-6965 (SQLite before 3.50.2): EF Core $(EF3Latest) on net462 pulls lib.e_sqlite3 2.1.2
 		    transitively and transitive pinning is off, so this stands until EF3/net462 leaves the matrix.-->
 		<NuGetAuditSuppress Include="https://github.com/advisories/GHSA-2m69-gcr7-jv3q" />
-		<!--GHSA-334f-vvp4-7g6p: patched SignalR.Core 1.2.14 is not published; SignalR.Common is transitive in shipped packages and left to consumers-->
-		<NuGetAuditSuppress Include="https://github.com/advisories/GHSA-334f-vvp4-7g6p" />
 
 		<!--GHSA-2fmv-rv2c-59x7, GHSA-846f-f764-76mx: tests and linq2db.cli resolve 8.0.1-9.0.13 via SqlClient (7.1.1 still pulls 9.0.18), Oracle, EF Core and Roslyn-->
 		<PackageVersion Include="System.Security.Cryptography.Pkcs"                     Version="9.0.21"                       />

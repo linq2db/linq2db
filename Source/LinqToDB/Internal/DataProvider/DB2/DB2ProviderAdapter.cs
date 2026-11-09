@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 
 using LinqToDB.Common;
 using LinqToDB.Extensions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.Types;
 using LinqToDB.Internal.Mapping;
@@ -195,10 +196,10 @@ namespace LinqToDB.Internal.DataProvider.DB2
 		static class DecimalFloatConverters
 		{
 			// "NaN"/"Infinity"/"-Infinity" parse natively; "sNaN" (signaling NaN) does not, so map it to NaN.
-			public static double  ToDouble        (string s) => s is "sNaN" ? double.NaN : double.Parse(s, CultureInfo.InvariantCulture);
-			public static float   ToSingle        (string s) => s is "sNaN" ? float .NaN : float .Parse(s, CultureInfo.InvariantCulture);
-			public static double? ToDoubleNullable(string s) => s is "sNaN" ? double.NaN : double.Parse(s, CultureInfo.InvariantCulture);
-			public static float?  ToSingleNullable(string s) => s is "sNaN" ? float .NaN : float .Parse(s, CultureInfo.InvariantCulture);
+			public static double  ToDouble        (string s) => s is "sNaN" ? FloatingPointHelper.DoubleNaN : double.Parse(s, CultureInfo.InvariantCulture);
+			public static float   ToSingle        (string s) => s is "sNaN" ? FloatingPointHelper.SingleNaN : float .Parse(s, CultureInfo.InvariantCulture);
+			public static double? ToDoubleNullable(string s) => s is "sNaN" ? FloatingPointHelper.DoubleNaN : double.Parse(s, CultureInfo.InvariantCulture);
+			public static float?  ToSingleNullable(string s) => s is "sNaN" ? FloatingPointHelper.SingleNaN : float .Parse(s, CultureInfo.InvariantCulture);
 
 			public static decimal ToDecimal(string s) => IsSpecial(s) ? default : Parse(s);
 			public static byte    ToByte   (string s) => IsSpecial(s) ? default : (byte)  Parse(s);

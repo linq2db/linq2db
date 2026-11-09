@@ -7,6 +7,7 @@ using System.Reflection;
 
 using LinqToDB.Common;
 using LinqToDB.DataProvider.ClickHouse;
+using LinqToDB.Internal.DataProvider.DB2;
 using LinqToDB.Metrics;
 using LinqToDB.Tools.Activity;
 
@@ -39,10 +40,6 @@ public class TestsInitialization
 	[OneTimeSetUp]
 	public void TestAssemblySetup()
 	{
-		// both SQLite clients are SQLitePCLRaw-based and share one native package, so both resolve
-		// e_sqlite3 under runtimes/ here; see SQLite.Runtime.props for the netfx deployment gap
-		Environment.SetEnvironmentVariable("PreLoadSQLite_BaseDirectory", AppDomain.CurrentDomain.BaseDirectory);
-
 #if NET8_0_OR_GREATER
 		// this API is not available in NETFX, but for some reason it works if SDS test run first (which is true now)
 		IntPtr? handle = null;
@@ -85,24 +82,33 @@ public class TestsInitialization
 		// explicitly from the known clidriver path. See https://github.com/linq2db/linq2db/issues/5538
 		if (OperatingSystem.IsLinux())
 		{
-			IntPtr db2Handle = default;
-			System.Runtime.InteropServices.NativeLibrary.SetDllImportResolver(typeof(IBM.Data.Db2.DB2Connection).Assembly, (module, assembly, searchPath) =>
+			var providerAssembly = LinqToDB.Internal.Common.Tools.TryLoadAssembly(
+				DB2ProviderAdapter.AssemblyName, DB2ProviderAdapter.ProviderFactoryName);
+
+			providerAssembly ??= LinqToDB.Internal.Common.Tools.TryLoadAssembly(
+				DB2ProviderAdapter.AssemblyNameOld, DB2ProviderAdapter.ProviderFactoryName);
+
+			if (providerAssembly != null)
 			{
-				if (module == "libdb2.so")
+				IntPtr db2Handle = default;
+				System.Runtime.InteropServices.NativeLibrary.SetDllImportResolver(providerAssembly, (module, assembly, searchPath) =>
 				{
-					if (db2Handle == default)
+					if (module == "libdb2.so")
 					{
-						var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "clidriver", "lib", "libdb2.so");
-						if (File.Exists(path))
-							db2Handle = System.Runtime.InteropServices.NativeLibrary.Load(path);
+						if (db2Handle == default)
+						{
+							var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "clidriver", "lib", "libdb2.so");
+							if (File.Exists(path))
+								db2Handle = System.Runtime.InteropServices.NativeLibrary.Load(path);
+						}
+
+						if (db2Handle != default)
+							return db2Handle;
 					}
 
-					if (db2Handle != default)
-						return db2Handle;
-				}
-
-				return IntPtr.Zero;
-			});
+					return IntPtr.Zero;
+				});
+			}
 		}
 #else
 		// force load of SDS runtime first as there is no SetDllImportResolver API
@@ -495,6 +501,39 @@ public class TestsInitialization
 	}
 #endif
 
+	// Pooled IBM connections left until process exit race the driver's exit handler against its pool timer (SIGSEGV, exit 139).
+	// InternalOperation1 is the driver's pool purge; reflection keeps legs without the driver from loading it.
+	static void PurgeDB2ConnectionPool()
+	{
+		var clientNamespace = DB2ProviderAdapter.ClientNamespace;
+		var driver          = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(static a => a.GetName().Name == DB2ProviderAdapter.AssemblyName);
+
+#if !NETFRAMEWORK
+		// IBM.Data.DB2.Core: the legacy .NET client DB2ProviderAdapter still falls back to.
+		if (driver == null)
+		{
+			clientNamespace = DB2ProviderAdapter.ClientNamespaceOld;
+			driver          = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(static a => a.GetName().Name == DB2ProviderAdapter.AssemblyNameOld);
+		}
+#endif
+
+		var purge  = driver?.GetType($"{clientNamespace}.DB2ConnPool")?.GetMethod("InternalOperation1", BindingFlags.Public | BindingFlags.Static, Type.EmptyTypes);
+
+		if (purge == null)
+			return;
+
+		try
+		{
+			purge.Invoke(null, null);
+			TestContext.Progress.WriteLine("[db2] connection pool purged");
+		}
+		catch (Exception ex)
+		{
+			// Best effort: a purge failure must not fail a run whose tests have all completed.
+			TestContext.Progress.WriteLine($"[db2] connection pool purge failed: {ex.InnerException?.Message ?? ex.Message}");
+		}
+	}
+
 	[OneTimeTearDown]
 	public void TestAssemblyTeardown()
 	{
@@ -503,6 +542,8 @@ public class TestsInitialization
 		_dispatcher?.Shutdown(m => TestContext.Progress.WriteLine(m), TimeSpan.FromSeconds(10));
 
 		TestInMemoryDatabases.DisposeAll();
+
+		PurgeDB2ConnectionPool();
 
 		if (_doMetrics)
 		{

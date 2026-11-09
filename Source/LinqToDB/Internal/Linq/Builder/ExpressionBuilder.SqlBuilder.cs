@@ -295,6 +295,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			return _buildVisitor.UsingColumnDescriptor(columnDescriptor);
 		}
 
+		internal IDisposable UsingColumnDescriptorBeside(ColumnDescriptor? columnDescriptor, ISqlExpression expr)
+		{
+			return _buildVisitor.UsingColumnDescriptorBeside(columnDescriptor, expr);
+		}
+
 #pragma warning disable RS0059 // Do not add multiple public overloads with optional parameters
 		public static SqlPlaceholderExpression CreatePlaceholder(IBuildContext? context, ISqlExpression sqlExpression,
 #pragma warning restore RS0059 // Do not add multiple public overloads with optional parameters
