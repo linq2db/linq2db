@@ -538,6 +538,16 @@ namespace Tests.Linq
 			FSharp.OptionQueryTests.Value(db).ShouldBe(1);
 		}
 
+		[Test(Description = "F# option .Value compared to a plain column is not refused as divergent storage")]
+		public void OptionQuery_ValueComparedToColumn([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			FSharp.OptionQueryTests
+				.ValueComparedToColumn(db)
+				.ShouldBe([4]);
+		}
+
 		[Test(Description = "F# option .Value in a projection translates to the underlying column")]
 		public void OptionQuery_ValueProjection([DataSources] string context)
 		{
@@ -721,6 +731,16 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 			FSharp.DuQueryTests.OptionValueProjection(db).ShouldBe(new[] { 10 });
+		}
+
+		[Test(Description = "F# option-of-union .Value compared to a union column is not refused as divergent storage")]
+		public void DuQuery_OptionValueComparedToUnionColumn([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			FSharp.DuQueryTests
+				.OptionValueComparedToUnionColumn(db)
+				.ShouldBe([1]);
 		}
 
 		[Test(Description = "F# single-case DU column round-trips and equality translates to SQL")]

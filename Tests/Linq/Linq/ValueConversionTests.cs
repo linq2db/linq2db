@@ -6,6 +6,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
@@ -1541,6 +1542,52 @@ namespace Tests.Linq
 			matched.ShouldBe([1]);
 		}
 
+		sealed class BlankPaddedCharConverter : ValueConverter<char?, char>
+		{
+			public BlankPaddedCharConverter() : base(
+				x => (!x.HasValue || x == default || x == '\0') ? ' ' : x.Value,
+				x => char.IsLetterOrDigit(x) ? x : null,
+				true)
+			{
+			}
+		}
+
+		[Table]
+		sealed class SharedConverterRowA
+		{
+			[PrimaryKey                                                   ] public int   Id   { get; set; }
+			[ValueConverter(ConverterType = typeof(BlankPaddedCharConverter))]
+			[Column(Length = 1)                                           ] public char? Code { get; set; }
+		}
+
+		[Table]
+		sealed class SharedConverterRowB
+		{
+			[PrimaryKey                                                   ] public int   Id   { get; set; }
+			[ValueConverter(ConverterType = typeof(BlankPaddedCharConverter))]
+			[Column(Length = 1)                                           ] public char? Code { get; set; }
+		}
+
+		/// <summary>
+		/// Two columns naming the same converter class get one converter instance each, and still combine in a set
+		/// operation.
+		/// </summary>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6052")]
+		public void SetOperationOverColumnsSharingAConverterClass([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var a  = db.CreateLocalTable([new SharedConverterRowA { Id = 1, Code = 'A' }, new SharedConverterRowA { Id = 2, Code = null }]);
+			using var b  = db.CreateLocalTable([new SharedConverterRowB { Id = 3, Code = 'B' }]);
+
+			var rows = a
+				.Select(r => new { r.Id, r.Code })
+				.Union(b.Select(r => new { r.Id, r.Code }))
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			rows.Select(r => r.Code).ShouldBe(['A', null, 'B']);
+		}
+
 		#region Issue 5975 / 5976
 
 		static DateTime Issue5975ToStore  (DateTime v) => v.AddHours(1);
@@ -1795,6 +1842,49 @@ namespace Tests.Linq
 			t.Count(r => r.Doubled == 10).ShouldBe(1);
 		}
 
+		sealed class StorageTransparentConverter : ValueConverter<int, int>, IStorageTransparentConverter
+		{
+			public StorageTransparentConverter() : base(v => v, p => p, false)
+			{
+			}
+		}
+
+		[Table]
+		sealed class StorageTransparentRow
+		{
+			[PrimaryKey] public int Id     { get; set; }
+			[Column, ValueConverter(ConverterType = typeof(StorageTransparentConverter))]
+			             public int Marked { get; set; }
+			[Column    ] public int Plain  { get; set; }
+		}
+
+		/// <summary>
+		/// A converter marked as storing the value unchanged is not refused against a column without conversion.
+		/// </summary>
+		[Test]
+		public void StorageTransparentConversionCombines([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<StorageTransparentRow>();
+
+			db.Insert(new StorageTransparentRow { Id = 1, Marked = 5, Plain = 5 });
+			db.Insert(new StorageTransparentRow { Id = 2, Marked = 6, Plain = 7 });
+
+			var ids = t
+				.Where(r => r.Marked == r.Plain)
+				.Select(r => r.Id)
+				.ToArray();
+
+			ids.ShouldBe([1]);
+
+			var sums = t
+				.OrderBy(r => r.Id)
+				.Select(r => Sql.AsSql(r.Marked + r.Plain))
+				.ToArray();
+
+			sums.ShouldBe([10, 13]);
+		}
+
 		sealed class ScaledValueRow
 		{
 			[PrimaryKey] public int Id    { get; set; }
@@ -1846,6 +1936,130 @@ namespace Tests.Linq
 			// The aggregates that do answer in the column's own domain still read through the conversion.
 			t.Max(r => r.Value).ShouldBe(30);
 			t.Min(r => r.Value).ShouldBe(10);
+		}
+
+		sealed class TimesHundredConverter() : ValueConverter<int, int>(v => v * 100, v => v / 100, false);
+
+		[Table]
+		sealed class ConvertedAmount
+		{
+			[PrimaryKey]                                                             public int Id    { get; set; }
+			[Column]                                                                 public int Group { get; set; }
+			[Column, ValueConverter(ConverterType = typeof(TimesHundredConverter))] public int Cents { get; set; }
+		}
+
+		/// <summary>
+		/// A value compared with a <c>SUM</c> over a converted column goes through the column's converter.
+		/// </summary>
+		[Test]
+		public void SumOfConvertedColumnComparedWithValue([DataSources] string context)
+		{
+			var total = 7;
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new ConvertedAmount[]
+			{
+				new() { Id = 1, Group = 1, Cents = 3 },
+				new() { Id = 2, Group = 1, Cents = 4 },
+				new() { Id = 3, Group = 2, Cents = 5 },
+			});
+
+			var count = table
+				.GroupBy(x => x.Group)
+				.Where(g => g.Sum(x => x.Cents) == total)
+				.Count();
+
+			count.ShouldBe(1);
+		}
+
+		/// <summary>
+		/// A value added to, subtracted from or taken as a modulus of a converted column or its <c>SUM</c> goes
+		/// through the column's converter; a factor or divisor does not.
+		/// </summary>
+		[Test]
+		public void ArithmeticWithConvertedColumn([DataSources] string context)
+		{
+			var operand = 2;
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new ConvertedAmount[]
+			{
+				new() { Id = 1, Group = 1, Cents = 3 },
+				new() { Id = 2, Group = 1, Cents = 4 },
+			});
+
+			var group = table.GroupBy(x => x.Group);
+			var row   = table.Where(x => x.Id == 1);
+
+			group
+				.Select(g => g.Sum(x => x.Cents) * operand)
+				.Single()
+				.ShouldBe(14);
+
+			group
+				.Select(g => operand * g.Sum(x => x.Cents))
+				.Single()
+				.ShouldBe(14);
+
+			group
+				.Select(g => g.Sum(x => x.Cents) / operand)
+				.Single()
+				.ShouldBe(3);
+
+			group
+				.Select(g => g.Sum(x => x.Cents) % operand)
+				.Single()
+				.ShouldBe(1);
+
+			group
+				.Select(g => g.Sum(x => x.Cents) + operand)
+				.Single()
+				.ShouldBe(9);
+
+			row
+				.Select(x => x.Cents * operand)
+				.Single()
+				.ShouldBe(6);
+
+			row
+				.Select(x => x.Cents % operand)
+				.Single()
+				.ShouldBe(1);
+
+			row
+				.Select(x => x.Cents + operand)
+				.Single()
+				.ShouldBe(5);
+
+			row
+				.Select(x => x.Cents - operand)
+				.Single()
+				.ShouldBe(1);
+		}
+
+		/// <summary>
+		/// A value searched in a projected <c>SUM</c> over a converted column goes through the column's converter.
+		/// </summary>
+		[Test]
+		public void SequenceContainsSumOfConvertedColumn([DataSources] string context)
+		{
+			var total = 7;
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new ConvertedAmount[]
+			{
+				new() { Id = 1, Group = 1, Cents = 3 },
+				new() { Id = 2, Group = 1, Cents = 4 },
+				new() { Id = 3, Group = 2, Cents = 5 },
+			});
+
+			var count = table
+				.Count(t => table
+					.GroupBy(x => x.Group)
+					.Select(g => g.Sum(x => x.Cents))
+					.Contains(total));
+
+			count.ShouldBe(3);
 		}
 	}
 }

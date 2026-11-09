@@ -18,6 +18,8 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		protected override bool SupportsNullInColumn              => false;
 		protected override bool SupportsDistinctAsExistsIntersect => true;
 		protected override bool ConcatRequiresExplicitStringCast  => false;
+		// IFX expression cannot be predicate
+		protected override bool ForceConvertSetValue              => true;
 
 		public override ISqlPredicate ConvertLikePredicate(SqlPredicate.Like predicate)
 		{
@@ -118,17 +120,15 @@ namespace LinqToDB.Internal.DataProvider.Informix
 						if (argument.ElementType == QueryElementType.SqlParameter && argumentType.Equals(toType))
 							break;
 
+						// DataType.Date is DATETIME YEAR TO DAY here, as in DDL and in .Date: Date() would make a DATE, which a
+						// UNION or CASE refuses beside one
 						if (IsDateDataType(toType, "Date"))
 						{
-							if (argument.SystemType == typeof(string))
-							{
-								return new SqlFunction(
-									cast.Type,
-									"Date",
-									new SqlFunction(cast.Type, "To_Date", argument, new SqlValue("%Y-%m-%d")));
-							}
+							var date = argument.SystemType == typeof(string)
+								? new SqlFunction(cast.Type, "To_Date", argument, new SqlValue("%Y-%m-%d"))
+								: argument;
 
-							return new SqlFunction(cast.Type, "Date", argument);
+							return new SqlFunction(cast.Type, "Extend", ParametersNullabilityType.SameAsFirstParameter, date, new SqlFragment("Year to Day"));
 						}
 
 						if ((IsDateTime2Type(cast.ToType, "DateTime2")
@@ -143,6 +143,10 @@ namespace LinqToDB.Internal.DataProvider.Informix
 						{
 							return new SqlCastExpression(new SqlExpression(QueryHelper.GetDbDataType(cast.Expression, MappingSchema), "Extend({0}, Hour to Second)", Precedence.Primary, argument), new DbDataType(typeof(string), DataType.Char, null, 8), null, true);
 						}
+
+						// To_Date over a value that already is a date/time cannot pick an overload
+						if (argument.SystemType?.ToUnderlying() is var argSystemType && (argSystemType == typeof(DateTime) || argSystemType == typeof(DateTimeOffset)))
+							break;
 
 						return new SqlFunction(cast.Type, "To_Date", argument);
 
@@ -236,7 +240,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 			if (element.ElseExpression != null)
 			{
-				var elseExpression = WrapBooleanExpression(element.ElseExpression, includeFields : true, forceConvert: true);
+				var elseExpression = FoldValuePredicate(element.ElseExpression, includeFields : true, forceConvert: true);
 
 				if (!ReferenceEquals(elseExpression, element.ElseExpression))
 				{
@@ -249,7 +253,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 		protected override SqlCaseExpression.CaseItem ConvertCaseItem(SqlCaseExpression.CaseItem newElement)
 		{
-			var resultExpr = WrapBooleanExpression(newElement.ResultExpression, includeFields : true, forceConvert: true);
+			var resultExpr = FoldValuePredicate(newElement.ResultExpression, includeFields : true, forceConvert: true);
 
 			if (!ReferenceEquals(resultExpr, newElement.ResultExpression))
 			{
@@ -267,8 +271,8 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			var trueValue  = isTrueParameter  && falseIsOtherValue ? QueryHelper.MarkAsNonQueryParameters(element.TrueValue)  : element.TrueValue;
 			var falseValue = isFalseParameter && trueIsOtherValue  ? QueryHelper.MarkAsNonQueryParameters(element.FalseValue) : element.FalseValue;
 
-			trueValue  = WrapBooleanExpression(trueValue,  includeFields : false, forceConvert: true);
-			falseValue = WrapBooleanExpression(falseValue, includeFields : false, forceConvert: true);
+			trueValue  = FoldValuePredicate(trueValue,  includeFields : false, forceConvert: true);
+			falseValue = FoldValuePredicate(falseValue, includeFields : false, forceConvert: true);
 
 			if (!ReferenceEquals(trueValue, element.TrueValue) || !ReferenceEquals(falseValue, element.FalseValue))
 			{
@@ -339,30 +343,6 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			return InformixSqlOptimizer.WrapParameters(
 				base.ConvertIsDistinctPredicateAsIntersect(predicate),
 				VisitMode);
-		}
-
-		protected internal override IQueryElement VisitSqlSetExpression(SqlSetExpression element)
-		{
-			var newElement = (SqlSetExpression)base.VisitSqlSetExpression(element);
-
-			// IFX expression cannot be predicate
-			var wrapped = newElement.Expression == null ? null : WrapBooleanExpression(newElement.Expression, includeFields : false, withNull: newElement.Column.CanBeNullable(NullabilityContext), forceConvert: true);
-
-			if (!ReferenceEquals(wrapped, newElement.Expression))
-			{
-				if (wrapped != null)
-					wrapped = (ISqlExpression)Optimize(wrapped);
-				if (GetVisitMode(newElement) == VisitMode.Modify)
-				{
-					newElement.Expression = wrapped;
-				}
-				else
-				{
-					newElement = new SqlSetExpression(newElement.Column, wrapped);
-				}
-			}
-
-			return newElement;
 		}
 
 		protected internal override IQueryElement VisitExprPredicate(SqlPredicate.Expr predicate)

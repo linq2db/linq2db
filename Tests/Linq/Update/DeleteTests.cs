@@ -603,7 +603,7 @@ namespace Tests.xUpdate
 			ErrorMessage = "Dynamic SQL Error", Details = "no-issue: as the PostgreSQL half.")]
 		[ActiveIssue(Configuration = TestProvName.AllDuckDB, ErrorTypeName = "DuckDB.NET.Data.DuckDBException",
 			ErrorMessage = "Parser Error: syntax error at or near \"(\"", Details = "no-issue: as the PostgreSQL half.")]
-		[ActiveIssue(Configuration = TestProvName.AllSapHana, ErrorMessage = "[SAP AG][LIBODBCHDB SO][HDBODBC]",
+		[ActiveIssue(Configuration = TestProvName.AllSapHana, ErrorMessage = "sql syntax error: incorrect syntax near \"(\"",
 			Details = "no-issue: as the PostgreSQL half. Type-less because the ODBC and native HANA drivers raise their own.")]
 		[ActiveIssue(Configuration = TestProvName.AllClickHouse,
 			Details = "no-declaration: the three ClickHouse drivers fail two different ways - a server syntax error, and Octonica losing the connection - with no text in common.")]
@@ -648,7 +648,7 @@ namespace Tests.xUpdate
 			ErrorMessage = "Dynamic SQL Error", Details = "no-issue: as DeleteFromWithTake.")]
 		[ActiveIssue(Configuration = TestProvName.AllDuckDB, ErrorTypeName = "DuckDB.NET.Data.DuckDBException",
 			ErrorMessage = "Parser Error: syntax error at or near \"(\"", Details = "no-issue: as DeleteFromWithTake.")]
-		[ActiveIssue(Configuration = TestProvName.AllSapHana, ErrorMessage = "[SAP AG][LIBODBCHDB SO][HDBODBC]",
+		[ActiveIssue(Configuration = TestProvName.AllSapHana, ErrorMessage = "sql syntax error: incorrect syntax near \"(\"",
 			Details = "no-issue: as DeleteFromWithTake.")]
 		[ActiveIssue(Configuration = TestProvName.AllSybase, ErrorTypeName = "AdoNetCore.AseClient.AseException",
 			ErrorMessage = "cannot use a derived table", Details = "no-issue: ASE rejects the derived table by name.")]

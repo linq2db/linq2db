@@ -161,7 +161,7 @@ COMPONENTS
    License: MIT  see [7]
    © Microsoft Corporation. All rights reserved.
 
-30. Microsoft.Extensions.Configuration net10.0: 10.0.12, net10.0-windows7.0: 10.0.8, net11.0: 11.0.0-rc.2.26504.105
+30. Microsoft.Extensions.Configuration net10.0: 10.0.12, net10.0-windows7.0: 10.0.8, net11.0: 11.0.0-rc.3.26522.148
    https://dot.net/
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
@@ -171,37 +171,37 @@ COMPONENTS
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-32. Microsoft.Extensions.Configuration.Binder net10.0: 10.0.12, net10.0-windows7.0: 10.0.8, net11.0: 11.0.0-rc.2.26504.105
+32. Microsoft.Extensions.Configuration.Binder net10.0: 10.0.12, net10.0-windows7.0: 10.0.8, net11.0: 11.0.0-rc.3.26522.148
    https://dot.net/
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-33. Microsoft.Extensions.Configuration.CommandLine net10.0: 10.0.0, net11.0: 11.0.0-rc.2.26504.105
+33. Microsoft.Extensions.Configuration.CommandLine net10.0: 10.0.0, net11.0: 11.0.0-rc.3.26522.148
    https://dot.net/
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-34. Microsoft.Extensions.Configuration.EnvironmentVariables net10.0: 10.0.0, net11.0: 11.0.0-rc.2.26504.105
+34. Microsoft.Extensions.Configuration.EnvironmentVariables net10.0: 10.0.0, net11.0: 11.0.0-rc.3.26522.148
    https://dot.net/
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-35. Microsoft.Extensions.Configuration.FileExtensions net10.0: 10.0.0, net11.0: 11.0.0-rc.2.26504.105
+35. Microsoft.Extensions.Configuration.FileExtensions net10.0: 10.0.0, net11.0: 11.0.0-rc.3.26522.148
    https://dot.net/
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-36. Microsoft.Extensions.Configuration.Json net10.0: 10.0.0, net11.0: 11.0.0-rc.2.26504.105
+36. Microsoft.Extensions.Configuration.Json net10.0: 10.0.0, net11.0: 11.0.0-rc.3.26522.148
    https://dot.net/
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-37. Microsoft.Extensions.Configuration.UserSecrets net10.0: 10.0.0, net11.0: 11.0.0-rc.2.26504.105
+37. Microsoft.Extensions.Configuration.UserSecrets net10.0: 10.0.0, net11.0: 11.0.0-rc.3.26522.148
    https://dot.net/
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-38. Microsoft.Extensions.DependencyInjection net10.0: 10.0.12, net10.0-windows7.0: 10.0.8, net11.0: 11.0.0-rc.2.26504.105, net462: 10.0.0, net472: 10.0.0
+38. Microsoft.Extensions.DependencyInjection net10.0: 10.0.12, net10.0-windows7.0: 10.0.8, net11.0: 11.0.0-rc.3.26522.148, net462: 10.0.0, net472: 10.0.0
    https://dot.net/
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
@@ -216,7 +216,7 @@ COMPONENTS
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-41. Microsoft.Extensions.Diagnostics net10.0: 10.0.8, net10.0-windows7.0: 10.0.8, net11.0: 11.0.0-rc.2.26504.105
+41. Microsoft.Extensions.Diagnostics net10.0: 10.0.8, net10.0-windows7.0: 10.0.8, net11.0: 11.0.0-rc.3.26522.148
    https://dot.net/
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
@@ -231,17 +231,17 @@ COMPONENTS
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-44. Microsoft.Extensions.FileProviders.Physical net10.0: 10.0.0, net11.0: 11.0.0-rc.2.26504.105
+44. Microsoft.Extensions.FileProviders.Physical net10.0: 10.0.0, net11.0: 11.0.0-rc.3.26522.148
    https://dot.net/
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-45. Microsoft.Extensions.FileSystemGlobbing net10.0: 10.0.0, net11.0: 11.0.0-rc.2.26504.105
+45. Microsoft.Extensions.FileSystemGlobbing net10.0: 10.0.0, net11.0: 11.0.0-rc.3.26522.148
    https://dot.net/
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-46. Microsoft.Extensions.Hosting net10.0: 10.0.0, net11.0: 11.0.0-rc.2.26504.105
+46. Microsoft.Extensions.Hosting net10.0: 10.0.0, net11.0: 11.0.0-rc.3.26522.148
    https://dot.net/
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
@@ -256,7 +256,7 @@ COMPONENTS
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-49. Microsoft.Extensions.Logging net10.0: 10.0.12, net10.0-windows7.0: 10.0.8, net11.0: 11.0.0-rc.2.26504.105, net462: 10.0.0, net472: 10.0.0
+49. Microsoft.Extensions.Logging net10.0: 10.0.12, net10.0-windows7.0: 10.0.8, net11.0: 11.0.0-rc.3.26522.148, net462: 10.0.0, net472: 10.0.0
    https://dot.net/
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
@@ -266,27 +266,27 @@ COMPONENTS
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-51. Microsoft.Extensions.Logging.Configuration net10.0: 10.0.12, net11.0: 11.0.0-rc.2.26504.105
+51. Microsoft.Extensions.Logging.Configuration net10.0: 10.0.12, net11.0: 11.0.0-rc.3.26522.148
    https://dot.net/
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-52. Microsoft.Extensions.Logging.Console net10.0: 10.0.12, net11.0: 11.0.0-rc.2.26504.105
+52. Microsoft.Extensions.Logging.Console net10.0: 10.0.12, net11.0: 11.0.0-rc.3.26522.148
    https://dot.net/
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-53. Microsoft.Extensions.Logging.Debug net10.0: 10.0.0, net11.0: 11.0.0-rc.2.26504.105
+53. Microsoft.Extensions.Logging.Debug net10.0: 10.0.0, net11.0: 11.0.0-rc.3.26522.148
    https://dot.net/
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-54. Microsoft.Extensions.Logging.EventLog net10.0: 10.0.0, net11.0: 11.0.0-rc.2.26504.105
+54. Microsoft.Extensions.Logging.EventLog net10.0: 10.0.0, net11.0: 11.0.0-rc.3.26522.148
    https://dot.net/
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-55. Microsoft.Extensions.Logging.EventSource net10.0: 10.0.0, net11.0: 11.0.0-rc.2.26504.105
+55. Microsoft.Extensions.Logging.EventSource net10.0: 10.0.0, net11.0: 11.0.0-rc.3.26522.148
    https://dot.net/
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
@@ -296,7 +296,7 @@ COMPONENTS
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-57. Microsoft.Extensions.Options.ConfigurationExtensions net10.0: 10.0.12, net10.0-windows7.0: 10.0.8, net11.0: 11.0.0-rc.2.26504.105
+57. Microsoft.Extensions.Options.ConfigurationExtensions net10.0: 10.0.12, net10.0-windows7.0: 10.0.8, net11.0: 11.0.0-rc.3.26522.148
    https://dot.net/
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
@@ -446,7 +446,7 @@ COMPONENTS
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-88. System.Diagnostics.EventLog net10.0: 10.0.12, net11.0: 11.0.0-rc.2.26504.105
+88. System.Diagnostics.EventLog net10.0: 10.0.12, net11.0: 11.0.0-rc.3.26522.148
    https://dot.net/
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
@@ -506,11 +506,11 @@ COMPONENTS
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-100. Ydb.Protos 1.2.0
+100. Ydb.Protos 1.4.0
    https://github.com/ydb-platform/ydb-dotnet-genproto
    License: Apache-2.0  see [1]
 
-101. Ydb.Sdk 0.35.0
+101. Ydb.Sdk 0.38.0
    https://github.com/ydb-platform/ydb-dotnet-sdk
    License: Apache-2.0  see [1]
 

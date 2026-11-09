@@ -114,7 +114,7 @@ namespace LinqToDB
 					var argument = mc.Arguments[i];
 
 					// interpolation arguments render as parameters, only the format shapes the SQL
-					if (dependent[i] is SqlQueryDependentFormatAttribute && SqlQueryDependentFormatAttribute.TrySplit(argument, out var format, out _))
+					if (dependent[i] is SqlQueryDependentFormatAttribute && FormattableStringHelper.TrySplit(argument, out var format, out _))
 						argument = format;
 
 					argument.Visit(context, static (c, a) =>

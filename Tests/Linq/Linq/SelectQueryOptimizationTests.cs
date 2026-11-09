@@ -2,6 +2,8 @@
 
 using LinqToDB;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
@@ -52,6 +54,42 @@ namespace Tests.Linq
 			// passes for an unconditional wrap, which would put a spurious cast around every folded parameter
 			// on the providers that wrap parameter usages - visible only as a moved baseline.
 			QueryHelper.CreateSqlValue(42, dbDataType, parameter).ShouldBeOfType<SqlParameter>();
+		}
+
+		[Test]
+		public void MinMaxReportTheirArgumentsTypeRatherThanTheirOwn()
+		{
+			// MIN, MAX and the value window functions (LAG, LEAD, FIRST_VALUE, LAST_VALUE, NTH_VALUE) return a row's
+			// value unchanged, so the argument's column describes the result - the
+			// relation SqlArgumentDomain.Element states and GetColumnDescriptor already reads. Without the arm
+			// the node matched no case in GetDbDataTypeImpl and fell to the CLR-type catch-all, which the
+			// mapping-schema fallback then answered with the default for the system type: a MAX over a column
+			// declared DataType.DateTime reported the schema's DateTime64(7), which is the type ClickHouse's
+			// epoch functions are then told to expect. (#5960)
+			var argumentType = new DbDataType(typeof(string), DataType.VarChar, null, 50, null, null);
+			// The length is what tells the declared type from the schema default for string.
+			var declaredType = new DbDataType(typeof(string), DataType.NVarChar, null, 100, null, null);
+			var argument     = new SqlValue(argumentType, "x");
+
+			foreach (var name in new[] { "MIN", "MAX", "LAG", "LEAD", "FIRST_VALUE", "LAST_VALUE", "NTH_VALUE" })
+			{
+				var aggregate = new SqlExtendedFunction(declaredType, name, [new SqlFunctionArgument(argument)], [true],
+					isAggregate: true, argumentDomain: SqlArgumentDomains.ForAggregate(name));
+
+				var aggregateType = QueryHelper.GetDbDataType(aggregate, MappingSchema.Default);
+
+				aggregateType.ShouldBe(argumentType);
+			}
+
+			// SUM answers in the argument's terms but can outgrow the width it is declared with, so it keeps the
+			// schema default for its CLR type, as every other extended function does. This half fails for an arm
+			// that takes the argument's type for every aggregate.
+			var sum = new SqlExtendedFunction(declaredType, "SUM", [new SqlFunctionArgument(argument)], [true],
+				isAggregate: true, argumentDomain: SqlArgumentDomains.ForAggregate("SUM"));
+
+			var sumType = QueryHelper.GetDbDataType(sum, MappingSchema.Default);
+
+			sumType.ShouldBe(MappingSchema.Default.GetDbDataType(typeof(string)));
 		}
 
 		[Test]
@@ -658,5 +696,42 @@ namespace Tests.Linq
 			selectQuery.OrderBy.IsEmpty.ShouldBeTrue();
 		}
 
+#if BUGCHECK
+		[Test]
+		public void WholeTreeExpressionPassRunsOnlyInFirstIteration()
+		{
+			using var db = GetDataConnection();
+
+			var cte = db.Child
+				.Where(c => c.ChildID > 10)
+				.AsCte();
+
+			var query =
+				from c in cte
+				select new { c.ChildID };
+
+			// A clone, because the statement belongs to the query cache.
+			var statement = query
+				.GetStatement()
+				.Clone();
+
+			var visitor = new LinqToDB.Internal.SqlQuery.Visitors.SelectQueryOptimizerVisitor();
+
+			visitor.Optimize(
+				statement,
+				statement,
+				db.DataProvider.SqlProviderFlags,
+				removeWeakJoins: true,
+				db.Options,
+				db.MappingSchema,
+				new EvaluationContext());
+
+			// Root and CTE body are each reached in both fixpoint iterations; the pass runs only in the first.
+			visitor.FirstIterationPassesReached.ShouldBeGreaterThanOrEqualTo(2);
+			visitor.LaterIterationPassesReached.ShouldBeGreaterThanOrEqualTo(2);
+			visitor.FirstIterationPassesExecuted.ShouldBe(visitor.FirstIterationPassesReached);
+			visitor.LaterIterationPassesExecuted.ShouldBe(0);
+		}
+#endif
 	}
 }

@@ -11,6 +11,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Linq
 {
 	[TestFixture]
@@ -216,6 +218,37 @@ namespace Tests.Linq
 
 				return new WeakReference<IDataContext>(db);
 			}
+		}
+
+		static int ClientSide(Sql.IQueryableContainer? container) => container == null ? 1 : 2;
+
+		// Query-cache test: provider-independent.
+		[Test]
+		[QueryCacheTest]
+		public void NullQueryableContainerArgumentHitsCache([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query()
+			{
+				return db.Person
+					.Where(p => p.ID == 1)
+					.Select(p => ClientSide(null));
+			}
+
+			Query()
+				.ToArray()
+				.ShouldBe([1]);
+
+			var missCount = Query().GetCacheMissCount();
+
+			Query()
+				.ToArray()
+				.ShouldBe([1]);
+
+			Query()
+				.GetCacheMissCount()
+				.ShouldBe(missCount);
 		}
 	}
 }

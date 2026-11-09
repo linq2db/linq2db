@@ -136,8 +136,8 @@ namespace LinqToDB.Internal.Expressions.Types
 				var w2oType = typeof(Dictionary<,>).MakeGenericType(wrapperType, originalType);
 				var o2wType = typeof(Dictionary<,>).MakeGenericType(originalType, wrapperType);
 
-				var wrapperToOriginal = w2oType.GetConstructor([])!.InvokeExt<IDictionary>([]);
-				var originalToWrapper = o2wType.GetConstructor([])!.InvokeExt<IDictionary>([]);
+				var wrapperToOriginal = w2oType.GetConstructorEx()!.InvokeExt<IDictionary>([]);
+				var originalToWrapper = o2wType.GetConstructorEx()!.InvokeExt<IDictionary>([]);
 
 				var w2o = wrapperToOriginal;
 				var o2w = originalToWrapper;
@@ -210,7 +210,7 @@ namespace LinqToDB.Internal.Expressions.Types
 
 				// pre-register factory, so we don't need to use concurrent dictionary to access factory later
 				var types = delegates != null ? _wrapperConstructorParameters2 : _wrapperConstructorParameters1;
-				var ctor = wrapperType.GetConstructor(types);
+				var ctor = wrapperType.GetConstructorEx(types);
 
 				if (ctor == null)
 					throw new LinqToDBException($"Cannot find constructor ({string.Join(", ", types.Select(t => t.ToString()))}) in type {wrapperType}");
@@ -669,7 +669,7 @@ namespace LinqToDB.Internal.Expressions.Types
 									.ToArray();
 
 								var bindingFlags = ne.Constructor.GetAttribute<WrappedBindingFlagsAttribute>()?.BindingFlags ?? BindingFlags.Public | BindingFlags.Instance;
-								var ctor = replacement.GetConstructor(bindingFlags, paramTypes);
+								var ctor = replacement.GetConstructorEx(bindingFlags, paramTypes);
 
 								if (ctor == null)
 								{
@@ -796,12 +796,8 @@ namespace LinqToDB.Internal.Expressions.Types
 									var bindingFlags = mc.Method.GetAttribute<WrappedBindingFlagsAttribute>()?.BindingFlags ?? (BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
 
 									var method = attr != null
-#if NET8_0_OR_GREATER
-										? replacement.GetMethod(methodName, attr.ArgCount, bindingFlags, null, types, null)
-#else
-										? replacement.GetMethod(methodName, attr.ArgCount, bindingFlags, types)
-#endif
-										: replacement.GetMethod(methodName, bindingFlags, null, types, null);
+										? replacement.GetMethodEx(methodName, attr.ArgCount, bindingFlags, types)
+										: replacement.GetMethodEx(methodName, bindingFlags, types);
 
 									if (method == null
 										|| (customReturnMapper == null && !mc.Method.ReturnType.IsAssignableFrom(method.ReturnType) && (!context.Mapper.TryMapType(mc.Method.ReturnType, out var newReturnType) || method.ReturnType != newReturnType)))
