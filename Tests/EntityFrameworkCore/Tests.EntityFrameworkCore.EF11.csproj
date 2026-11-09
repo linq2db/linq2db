@@ -20,7 +20,7 @@
 		    and TestBase builds connection strings with it, so it is referenced directly instead of guarded.-->
 		<PackageReference Remove="Pomelo.EntityFrameworkCore.MySql" />
 		<PackageReference Include="MySqlConnector" />
-		<!--Npgsql's 11.0.0-rc.1.1 hard-pins the previous EF release candidate. A direct reference outranks
+		<!--Npgsql's 11.0.0-rc.2 hard-pins the previous EF release candidate. A direct reference outranks
 		    the pin - NuGet reports it as out of constraint, not a conflict - so these two lines and the NoWarn
 		    above are what make the PostgreSQL EF tests restore. Remove all three once Npgsql ships a release
 		    pinning the current band.-->

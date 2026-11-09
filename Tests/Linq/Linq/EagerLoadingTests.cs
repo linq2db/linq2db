@@ -1,11 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Async;
+using LinqToDB.Interceptors;
+using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
@@ -19,9 +23,34 @@ using Tests.Model;
 
 namespace Tests.Linq
 {
-	[TestFixture]
-	public class EagerLoadingTests : TestBase
+	// Runs twice: once with combined multi-statement execution off (the 6.x default) and once with it on. Eager loading on
+	// the Default strategy is the combinable one, so this is where both shapes need real coverage — the engine must not go
+	// untested just because it does not ship enabled.
+	[TestFixture(false)]
+	[TestFixture(true)]
+	public class EagerLoadingTests(bool combinedCommands) : TestBase
 	{
+		// Overrides the base helper by overload resolution — the base declares GetDataContext(string, MappingSchema? = null,
+		// ...), so this exact-arity one wins for every plain GetDataContext(context) call and the fixture parameter reaches
+		// all ~70 of them without editing any. The two sites passing their own options builder or mapping schema keep their
+		// existing behaviour.
+		protected ITestDataContext GetDataContext(string configuration)
+		{
+			// Eager loads do not combine on a remote context, so with it on the remote context runs the same eager load as
+			// separate commands. Same SQL, different physical grouping — which would make the remote baseline differ from
+			// the direct one for every test in this fixture, for a reason that is not a SQL divergence. Suppressing the
+			// baseline for that leg keeps the direct-vs-remote gate STRICT for the whole suite instead of loosening the
+			// comparison to tolerate the difference.
+			//
+			// The leg still RUNS: skipping it with Assert.Ignore breaks the tests whose expected failure is declared by
+			// attribute ([ThrowsForProvider] and friends), because the IgnoreException arrives before the exception they
+			// require and is reported as the wrong type.
+			if (combinedCommands && configuration.IsRemote())
+				CustomTestContext.Get().Set(CustomTestContext.BASELINE_DISABLED, true);
+
+			return base.GetDataContext(configuration, o => o.UseCombinedCommands(combinedCommands));
+		}
+
 		[Table]
 		sealed class MasterClass
 		{
@@ -1788,6 +1817,11 @@ namespace Tests.Linq
 		{
 			var queries = new SaveQueriesInterceptor();
 			using var db = GetDataContext(context);
+
+			// Combining runs the association query in the main query's command, so the count passes without #3806 being fixed.
+			if (db.UsesCombinedEagerLoading())
+				Assert.Ignore("The command count is not #3806's subject when eager loading is combined.");
+
 			db.AddInterceptor(queries);
 
 			using var table = db.CreateLocalTable<Issue3806Table>();
@@ -3754,6 +3788,724 @@ namespace Tests.Linq
 		{
 			var query = (IAsyncEnumerable<LoadWithPassthroughRoot>)_passthroughQuery.LoadWith(a => a.Child);
 			Assert.That(() => query.GetAsyncEnumerator(), Throws.TypeOf<LinqToDBException>());
+		}
+
+		#endregion
+
+		#region Heterogeneous combinable eager children (keyed correlated + non-keyed detached) in one query
+
+		[Table]
+		internal sealed class MixedMaster
+		{
+			[Column, PrimaryKey] public int     Id   { get; set; }
+			[Column]             public string? Name { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(MixedCorrelatedChild.MasterId))]
+			public List<MixedCorrelatedChild> CorrelatedChildren { get; set; } = null!;
+		}
+
+		// FK-correlated to MixedMaster: each master sees only its own rows. Under the Default
+		// eager-loading strategy this becomes a combinable Harvester<TKey,T> (IStepMaterializer).
+		[Table]
+		internal sealed class MixedCorrelatedChild
+		{
+			[Column, PrimaryKey] public int     Id       { get; set; }
+			[Column]             public int     MasterId { get; set; }
+			[Column]             public string? Name     { get; set; }
+		}
+
+		// Not correlated to MixedMaster at all — the eager-loaded expression references no master
+		// field, so the same full set attaches to every master. Under the Default strategy this
+		// becomes a DetachedHarvester<T>: a non-keyed but combinable child (IStepMaterializer), so its
+		// standalone SELECT merges into the same combined command as the keyed correlated child.
+		[Table]
+		internal sealed class MixedDetachedChild
+		{
+			[Column, PrimaryKey] public int     Id   { get; set; }
+			[Column]             public string? Name { get; set; }
+		}
+
+		internal sealed class CombinedCommandCounter : CommandInterceptor
+		{
+			public int Count { get; set; }
+
+			public override DbCommand CommandInitialized(CommandEventData eventData, DbCommand command)
+			{
+				var sql = command.CommandText;
+
+				if (sql.Contains("SELECT", StringComparison.OrdinalIgnoreCase)
+					&& !sql.Contains("CREATE", StringComparison.OrdinalIgnoreCase)
+					&& !sql.Contains("DROP", StringComparison.OrdinalIgnoreCase)
+					&& !sql.Contains("INSERT", StringComparison.OrdinalIgnoreCase))
+				{
+					Count++;
+				}
+
+				return command;
+			}
+		}
+
+		// A type rather than a fixture method: CombinedEagerLoadTests shares the data, and a fixture's non-test methods stay private.
+		internal static class MixedEagerData
+		{
+			public static (MixedMaster[], MixedCorrelatedChild[], MixedDetachedChild[]) Generate()
+			{
+				var masters = Enumerable.Range(1, 3)
+					.Select(i => new MixedMaster { Id = i, Name = "Master" + i })
+					.ToArray();
+
+				var correlated = masters
+					.SelectMany(m => Enumerable.Range(1, 2 + m.Id)
+						.Select(k => new MixedCorrelatedChild
+						{
+							Id       = m.Id * 100 + k,
+							MasterId = m.Id,
+							Name     = $"Corr{m.Id}_{k}",
+						}))
+					.ToArray();
+
+				var detached = Enumerable.Range(1, 4)
+					.Select(k => new MixedDetachedChild { Id = k, Name = "Det" + k })
+					.ToArray();
+
+				return (masters, correlated, detached);
+			}
+		}
+
+		// SQLite cannot render OFFSET without LIMIT, so a Skip without Take is applied while the rows are read; a child read
+		// from the combined command has to apply it as well.
+		[Test]
+		public void ChildrenSkipWithoutTake([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masters, correlated, detached) = MixedEagerData.Generate();
+
+			using var db          = GetDataContext(context);
+			using var tMaster     = db.CreateLocalTable(masters);
+			using var tCorrelated = db.CreateLocalTable(correlated);
+			using var tDetached   = db.CreateLocalTable(detached);
+
+			var result = tMaster
+				.OrderBy(m => m.Id)
+				.Select(m => new
+				{
+					m.Id,
+					Correlated = tCorrelated
+						.Where(c => c.MasterId == m.Id)
+						.OrderBy(c => c.Id)
+						.Skip(1)
+						.ToList(),
+					Detached = tDetached
+						.OrderBy(d => d.Id)
+						.Skip(2)
+						.ToList(),
+				})
+				.ToList();
+
+			var expectedDetached = detached
+				.OrderBy(d => d.Id)
+				.Skip(2)
+				.Select(d => d.Id)
+				.ToArray();
+
+			result.Count.ShouldBe(masters.Length);
+
+			foreach (var m in result)
+			{
+				var expectedCorrelated = correlated
+					.Where(c => c.MasterId == m.Id)
+					.OrderBy(c => c.Id)
+					.Skip(1)
+					.Select(c => c.Id)
+					.ToArray();
+
+				var correlatedIds = m.Correlated
+					.Select(c => c.Id)
+					.ToArray();
+
+				var detachedIds = m.Detached
+					.Select(d => d.Id)
+					.ToArray();
+
+				correlatedIds.ShouldBe(expectedCorrelated);
+				detachedIds.ShouldBe(expectedDetached);
+			}
+		}
+
+		static FormattableString DetachedInList(string tableName, IEnumerable<int> values)
+		{
+			var arguments = values
+				.Cast<object>()
+				.ToArray();
+
+			var placeholders = Enumerable
+				.Range(0, arguments.Length)
+				.Select(k => "{" + k + "}");
+
+			var format = $"SELECT * FROM [{tableName}] WHERE [Id] IN ({string.Join(",", placeholders)})";
+
+			return System.Runtime.CompilerServices.FormattableStringFactory.Create(format, arguments);
+		}
+
+		// SQL Server rejects a request with more than 2100 parameters, sp_executesql spends two of them on the statement and
+		// its parameter list, and semicolon-joined statements share one request - so children whose parameters add up past
+		// 2098 have to go in separate commands. The interceptor forces the joined command; each child alone stays under the
+		// limit.
+		[Test]
+		public void CombinedChildrenStayUnderTheParameterLimit(
+			[IncludeDataSources(TestProvName.AllSqlServer)] string context,
+			[Values(2098, 2099, 2100, 2101)]                int    total)
+		{
+			var (_, _, detached) = MixedEagerData.Generate();
+
+			using var db        = GetDataContext(context);
+			using var tDetached = db.CreateLocalTable(detached);
+
+			var counter = new CombinedCommandCounter();
+			db.AddInterceptor(counter);
+
+			var firstCount  = total / 2;
+			var secondCount = total - firstCount;
+
+			var first  = DetachedInList(tDetached.TableName, new[] { 1, 2 }.Concat(Enumerable.Range(10_001, firstCount  - 2)));
+			var second = DetachedInList(tDetached.TableName, new[] { 3, 4 }.Concat(Enumerable.Range(20_001, secondCount - 2)));
+
+			var result = db.Select(() => new
+			{
+				First  = db.FromSql<MixedDetachedChild>(first)
+					.ToList(),
+				Second = db.FromSql<MixedDetachedChild>(second)
+					.ToList(),
+			});
+
+			var firstIds = result.First
+				.Select(d => d.Id)
+				.OrderBy(id => id)
+				.ToArray();
+
+			var secondIds = result.Second
+				.Select(d => d.Id)
+				.OrderBy(id => id)
+				.ToArray();
+
+			firstIds.ShouldBe(new[] { 1, 2 });
+			secondIds.ShouldBe(new[] { 3, 4 });
+
+			if (combinedCommands && !context.IsRemote())
+				counter.Count.ShouldBe(total <= 2098 ? 1 : 2);
+		}
+
+		// The main query of a combined command is read through the same reader path as its children, so its emulated Skip
+		// has to survive too. Only a detached child here: a correlated one reads the main query as a subquery, and SQLite
+		// refuses a Skip without Take there whatever the execution path.
+		[Test]
+		public void MainQuerySkipWithoutTake([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masters, _, detached) = MixedEagerData.Generate();
+
+			using var db        = GetDataContext(context);
+			using var tMaster   = db.CreateLocalTable(masters);
+			using var tDetached = db.CreateLocalTable(detached);
+
+			var result = tMaster
+				.OrderBy(m => m.Id)
+				.Skip(1)
+				.Select(m => new
+				{
+					m.Id,
+					Detached = tDetached
+						.OrderBy(d => d.Id)
+						.ToList(),
+				})
+				.ToList();
+
+			var expectedMasters = masters
+				.OrderBy(m => m.Id)
+				.Skip(1)
+				.Select(m => m.Id)
+				.ToArray();
+
+			var masterIds = result
+				.Select(m => m.Id)
+				.ToArray();
+
+			masterIds.ShouldBe(expectedMasters);
+			result[0].Detached.Count.ShouldBe(detached.Length);
+		}
+
+		#endregion
+
+		#region Writes during an eager load
+
+		[Table]
+		sealed class ExportInvoice
+		{
+			[PrimaryKey] public int  Id       { get; set; }
+			[Column    ] public bool Exported { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(ExportInvoiceLine.InvoiceId))]
+			public List<ExportInvoiceLine> Lines { get; set; } = null!;
+		}
+
+		[Table]
+		sealed class ExportInvoiceLine
+		{
+			[PrimaryKey] public int Id        { get; set; }
+			[Column    ] public int InvoiceId { get; set; }
+		}
+
+		static readonly ExportInvoice[] ExportInvoices =
+		{
+			new() { Id = 1 },
+			new() { Id = 2 },
+		};
+
+		static readonly ExportInvoiceLine[] ExportInvoiceLines =
+		{
+			new() { Id = 10, InvoiceId = 1 },
+			new() { Id = 20, InvoiceId = 2 },
+		};
+
+		// Each invoice is marked exported on the same connection while its eager load is still being enumerated. The load's
+		// implicit read-consistency transaction must not take these writes in.
+		[Test]
+		public void WritesDuringEagerLoadEnumerationPersist([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var invoices = db.CreateLocalTable(ExportInvoices);
+			using var lines    = db.CreateLocalTable(ExportInvoiceLines);
+
+			var withLines = invoices
+				.LoadWith(i => i.Lines);
+
+			foreach (var invoice in withLines)
+			{
+				invoices
+					.Where(i => i.Id == invoice.Id)
+					.Set(i => i.Exported, true)
+					.Update();
+			}
+
+			invoices
+				.Count(i => i.Exported)
+				.ShouldBe(ExportInvoices.Length);
+		}
+
+		[Test]
+		public async Task WritesDuringEagerLoadEnumerationPersistAsync([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var invoices = db.CreateLocalTable(ExportInvoices);
+			using var lines    = db.CreateLocalTable(ExportInvoiceLines);
+
+			var withLines = invoices
+				.LoadWith(i => i.Lines)
+				.AsAsyncEnumerable();
+
+			await foreach (var invoice in withLines)
+			{
+				await invoices
+					.Where(i => i.Id == invoice.Id)
+					.Set(i => i.Exported, true)
+					.UpdateAsync();
+			}
+
+			var exported = await invoices.CountAsync(i => i.Exported);
+
+			exported.ShouldBe(ExportInvoices.Length);
+		}
+
+		static int FailOnSecondInvoice(int id)
+		{
+			if (id == 2)
+				throw new InvalidOperationException("second invoice");
+
+			return id;
+		}
+
+		// The main rows are read to the end before the implicit transaction commits, so a failure of the projection surfaces
+		// before the loop body sees a row, and nothing the caller does can be enlisted in that transaction.
+		[Test]
+		public void EagerLoadProjectionFailureSurfacesBeforeTheFirstRow([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var invoices = db.CreateLocalTable(ExportInvoices);
+			using var lines    = db.CreateLocalTable(ExportInvoiceLines);
+
+			var withLines = invoices
+				.OrderBy(i => i.Id)
+				.Select(i => new { i.Id, Check = FailOnSecondInvoice(i.Id), Lines = i.Lines.ToList() });
+
+			var seen = 0;
+
+			Shouldly.Should.Throw<InvalidOperationException>(() =>
+			{
+				foreach (var _ in withLines)
+					seen++;
+			});
+
+			seen.ShouldBe(0);
+		}
+
+		[Test]
+		public async Task EagerLoadProjectionFailureSurfacesBeforeTheFirstRowAsync([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var invoices = db.CreateLocalTable(ExportInvoices);
+			using var lines    = db.CreateLocalTable(ExportInvoiceLines);
+
+			var withLines = invoices
+				.OrderBy(i => i.Id)
+				.Select(i => new { i.Id, Check = FailOnSecondInvoice(i.Id), Lines = i.Lines.ToList() })
+				.AsAsyncEnumerable();
+
+			var seen = 0;
+
+			await Shouldly.Should.ThrowAsync<InvalidOperationException>(async () =>
+			{
+				await foreach (var _ in withLines)
+					seen++;
+			});
+
+			seen.ShouldBe(0);
+		}
+
+		[Test]
+		public void WritesBeforeEagerLoadLoopFailurePersist([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var invoices = db.CreateLocalTable(ExportInvoices);
+			using var lines    = db.CreateLocalTable(ExportInvoiceLines);
+
+			var withLines = invoices
+				.LoadWith(i => i.Lines)
+				.OrderBy(i => i.Id);
+
+			Shouldly.Should.Throw<InvalidOperationException>(() =>
+			{
+				foreach (var invoice in withLines)
+				{
+					FailOnSecondInvoice(invoice.Id);
+
+					invoices
+						.Where(i => i.Id == invoice.Id)
+						.Set(i => i.Exported, true)
+						.Update();
+				}
+			});
+
+			invoices
+				.Count(i => i.Exported)
+				.ShouldBe(1);
+		}
+
+		[Test]
+		public async Task WritesBeforeEagerLoadLoopFailurePersistAsync([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var invoices = db.CreateLocalTable(ExportInvoices);
+			using var lines    = db.CreateLocalTable(ExportInvoiceLines);
+
+			var withLines = invoices
+				.LoadWith(i => i.Lines)
+				.OrderBy(i => i.Id)
+				.AsAsyncEnumerable();
+
+			await Shouldly.Should.ThrowAsync<InvalidOperationException>(async () =>
+			{
+				await foreach (var invoice in withLines)
+				{
+					FailOnSecondInvoice(invoice.Id);
+
+					await invoices
+						.Where(i => i.Id == invoice.Id)
+						.Set(i => i.Exported, true)
+						.UpdateAsync();
+				}
+			});
+
+			var exported = await invoices.CountAsync(i => i.Exported);
+
+			exported.ShouldBe(1);
+		}
+
+		[Test]
+		public void TransactionPerItemDuringEagerLoadEnumeration([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db       = GetDataConnection(context, o => o.UseCombinedCommands(combinedCommands));
+			using var invoices = db.CreateLocalTable(ExportInvoices);
+			using var lines    = db.CreateLocalTable(ExportInvoiceLines);
+
+			var withLines = invoices
+				.LoadWith(i => i.Lines);
+
+			foreach (var invoice in withLines)
+			{
+				using var tr = db.BeginTransaction();
+
+				invoices
+					.Where(i => i.Id == invoice.Id)
+					.Set(i => i.Exported, true)
+					.Update();
+
+				tr.Commit();
+			}
+
+			invoices
+				.Count(i => i.Exported)
+				.ShouldBe(ExportInvoices.Length);
+		}
+
+		[Test]
+		public void WritesDuringEagerLoadEnumerationAreVisibleToAnotherConnection([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var invoices = db.CreateLocalTable(ExportInvoices);
+			using var lines    = db.CreateLocalTable(ExportInvoiceLines);
+
+			var withLines = invoices
+				.LoadWith(i => i.Lines);
+
+			var seen = new List<bool>();
+
+			foreach (var invoice in withLines)
+			{
+				invoices
+					.Where(i => i.Id == invoice.Id)
+					.Set(i => i.Exported, true)
+					.Update();
+
+				using var other = GetDataConnection(context);
+
+				seen.Add(other
+					.GetTable<ExportInvoice>()
+					.Where(i => i.Id == invoice.Id)
+					.Select(i => i.Exported)
+					.Single());
+			}
+
+			seen.ShouldBe(new[] { true, true });
+		}
+
+		[Test]
+		public async Task TransactionPerItemDuringEagerLoadEnumerationAsync([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db       = GetDataConnection(context, o => o.UseCombinedCommands(combinedCommands));
+			using var invoices = db.CreateLocalTable(ExportInvoices);
+			using var lines    = db.CreateLocalTable(ExportInvoiceLines);
+
+			var withLines = invoices
+				.LoadWith(i => i.Lines)
+				.AsAsyncEnumerable();
+
+			await foreach (var invoice in withLines)
+			{
+				await using var tr = await db.BeginTransactionAsync();
+
+				await invoices
+					.Where(i => i.Id == invoice.Id)
+					.Set(i => i.Exported, true)
+					.UpdateAsync();
+
+				await tr.CommitAsync();
+			}
+
+			var exported = await invoices.CountAsync(i => i.Exported);
+
+			exported.ShouldBe(ExportInvoices.Length);
+		}
+
+		[Test]
+		public async Task WritesDuringEagerLoadEnumerationAreVisibleToAnotherConnectionAsync([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var invoices = db.CreateLocalTable(ExportInvoices);
+			using var lines    = db.CreateLocalTable(ExportInvoiceLines);
+
+			var withLines = invoices
+				.LoadWith(i => i.Lines)
+				.AsAsyncEnumerable();
+
+			var seen = new List<bool>();
+
+			await foreach (var invoice in withLines)
+			{
+				await invoices
+					.Where(i => i.Id == invoice.Id)
+					.Set(i => i.Exported, true)
+					.UpdateAsync();
+
+				using var other = GetDataConnection(context);
+
+				seen.Add(other
+					.GetTable<ExportInvoice>()
+					.Where(i => i.Id == invoice.Id)
+					.Select(i => i.Exported)
+					.Single());
+			}
+
+			seen.ShouldBe(new[] { true, true });
+		}
+
+		[Test]
+		public async Task WritesDuringEagerLoadForEachAsyncPersist([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var invoices = db.CreateLocalTable(ExportInvoices);
+			using var lines    = db.CreateLocalTable(ExportInvoiceLines);
+
+			await invoices
+				.LoadWith(i => i.Lines)
+				.ForEachAsync(invoice => invoices
+					.Where(i => i.Id == invoice.Id)
+					.Set(i => i.Exported, true)
+					.Update());
+
+			var exported = await invoices.CountAsync(i => i.Exported);
+
+			exported.ShouldBe(ExportInvoices.Length);
+		}
+
+		// More main rows than the buffer's first array holds, so the buffer grows.
+		static readonly ExportInvoice[] ManyExportInvoices = Enumerable
+			.Range(1, 40)
+			.Select(id => new ExportInvoice { Id = id })
+			.ToArray();
+
+		static readonly ExportInvoiceLine[] ManyExportInvoiceLines = Enumerable
+			.Range(1, 40)
+			.Select(id => new ExportInvoiceLine { Id = id * 10, InvoiceId = id })
+			.ToArray();
+
+		static int OwnLineId(ExportInvoice invoice)
+		{
+			invoice.Lines
+				.Single()
+				.InvoiceId
+				.ShouldBe(invoice.Id);
+
+			return invoice.Id;
+		}
+
+		// A second Dispose must not return the buffer's array to the pool again: the two buffers opened afterwards would
+		// both rent that array, and the first would read the second's rows.
+		[Test]
+		public void EagerLoadBuffersStayApartAfterADoubleDispose([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db       = GetDataConnection(context, o => o.UseCombinedCommands(combinedCommands));
+			using var invoices = db.CreateLocalTable(ManyExportInvoices);
+			using var lines    = db.CreateLocalTable(ManyExportInvoiceLines);
+
+			var withLines = invoices
+				.LoadWith(i => i.Lines);
+
+			withLines
+				.ToList()
+				.Select(OwnLineId)
+				.ShouldBe(Enumerable.Range(1, 40), ignoreOrder: true);
+
+			var disposedTwice = withLines
+				.Where(i => i.Id <= 10)
+				.GetEnumerator();
+
+			disposedTwice
+				.MoveNext()
+				.ShouldBeTrue();
+
+			disposedTwice.Dispose();
+			disposedTwice.Dispose();
+
+			using var first = withLines
+				.Where(i => i.Id <= 10)
+				.GetEnumerator();
+
+			using var second = withLines
+				.Where(i => i.Id > 30)
+				.GetEnumerator();
+
+			var firstIds  = new List<int>();
+			var secondIds = new List<int>();
+
+			bool hasFirst, hasSecond;
+
+			do
+			{
+				hasFirst  = first.MoveNext();
+				hasSecond = second.MoveNext();
+
+				if (hasFirst)
+					firstIds.Add(OwnLineId(first.Current));
+
+				if (hasSecond)
+					secondIds.Add(OwnLineId(second.Current));
+			}
+			while (hasFirst || hasSecond);
+
+			firstIds.ShouldBe(Enumerable.Range(1, 10), ignoreOrder: true);
+			secondIds.ShouldBe(Enumerable.Range(31, 10), ignoreOrder: true);
+		}
+
+		[Test]
+		public async Task EagerLoadBuffersStayApartAfterADoubleDisposeAsync([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db       = GetDataConnection(context, o => o.UseCombinedCommands(combinedCommands));
+			using var invoices = db.CreateLocalTable(ManyExportInvoices);
+			using var lines    = db.CreateLocalTable(ManyExportInvoiceLines);
+
+			var withLines = invoices
+				.LoadWith(i => i.Lines);
+
+			// ExecuteAsyncEnumerable buffers before it returns and hands out the buffer's own enumerator. The public
+			// GetAsyncEnumerator wraps it, buffers lazily and ignores a second DisposeAsync, so it cannot show the guard.
+			static async Task<IAsyncEnumerator<ExportInvoice>> BufferAsync(IQueryable<ExportInvoice> query)
+			{
+				var rows = await ((IQueryProviderAsync)query.Provider)
+					.ExecuteAsyncEnumerable<ExportInvoice>(query.Expression, CancellationToken.None);
+
+				return rows.GetAsyncEnumerator();
+			}
+
+			var allIds = new List<int>();
+
+			await using (var all = await BufferAsync(withLines))
+			{
+				while (await all.MoveNextAsync())
+					allIds.Add(OwnLineId(all.Current));
+			}
+
+			allIds.ShouldBe(Enumerable.Range(1, 40), ignoreOrder: true);
+
+			var disposedTwice = await BufferAsync(withLines.Where(i => i.Id <= 10));
+
+			var moved = await disposedTwice.MoveNextAsync();
+
+			moved.ShouldBeTrue();
+
+			await disposedTwice.DisposeAsync();
+			await disposedTwice.DisposeAsync();
+
+			await using var first  = await BufferAsync(withLines.Where(i => i.Id <= 10));
+			await using var second = await BufferAsync(withLines.Where(i => i.Id > 30));
+
+			var firstIds  = new List<int>();
+			var secondIds = new List<int>();
+
+			bool hasFirst, hasSecond;
+
+			do
+			{
+				hasFirst  = await first.MoveNextAsync();
+				hasSecond = await second.MoveNextAsync();
+
+				if (hasFirst)
+					firstIds.Add(OwnLineId(first.Current));
+
+				if (hasSecond)
+					secondIds.Add(OwnLineId(second.Current));
+			}
+			while (hasFirst || hasSecond);
+
+			firstIds.ShouldBe(Enumerable.Range(1, 10), ignoreOrder: true);
+			secondIds.ShouldBe(Enumerable.Range(31, 10), ignoreOrder: true);
 		}
 
 		#endregion

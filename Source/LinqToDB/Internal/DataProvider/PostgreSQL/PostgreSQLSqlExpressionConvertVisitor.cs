@@ -267,7 +267,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 						// The operand's own precedence is carried over. Left unstated it defaults to Unknown, which the
 						// renderer reads as binding loosest: as a parent it wraps nothing, so a rebuilt remainder over a
 						// sum rendered as a % b + c - the sum losing the brackets it was written with.
-						var newExpr =  PseudoFunctions.MakeMandatoryCast(new SqlBinaryExpression(systemType, newExpr1, element.Operation, element.Expr2, element.Precedence), toType);
+						var newExpr =  PseudoFunctions.MakeMandatoryCast(new SqlBinaryExpression(systemType, newExpr1, element.Operation, element.Expr2, element.Precedence), QueryHelper.GetDbDataType(element, MappingSchema));
 						return Visit(Optimize(newExpr));
 					}
 

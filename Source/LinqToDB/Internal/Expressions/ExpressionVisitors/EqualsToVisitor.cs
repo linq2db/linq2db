@@ -1,8 +1,6 @@
 using System;
 using System.Linq.Expressions;
 
-using LinqToDB.Internal.Extensions;
-
 namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 {
 	static class EqualsToVisitor
@@ -73,6 +71,7 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 				ExpressionType.Call         => EqualsToX((MethodCallExpression)expr1, (MethodCallExpression)expr2),
 				ExpressionType.Constant     => EqualsToX((ConstantExpression)expr1, (ConstantExpression)expr2),
 				ExpressionType.Invoke       => EqualsToX((InvocationExpression)expr1, (InvocationExpression)expr2),
+				ExpressionType.Index        => EqualsToX((IndexExpression)expr1, (IndexExpression)expr2),
 				ExpressionType.Lambda       => EqualsToX((LambdaExpression)expr1, (LambdaExpression)expr2),
 				ExpressionType.ListInit     => EqualsToX((ListInitExpression)expr1, (ListInitExpression)expr2),
 				ExpressionType.MemberAccess => EqualsToX((MemberExpression)expr1, (MemberExpression)expr2),
@@ -290,6 +289,18 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 			return true;
 		}
 
+		static bool EqualsToX(IndexExpression expr1, IndexExpression expr2)
+		{
+			if (expr1.Indexer != expr2.Indexer || expr1.Arguments.Count != expr2.Arguments.Count || !expr1.Object.EqualsTo(expr2.Object))
+				return false;
+
+			for (var i = 0; i < expr1.Arguments.Count; i++)
+				if (!expr1.Arguments[i].EqualsTo(expr2.Arguments[i]))
+					return false;
+
+			return true;
+		}
+
 		static bool EqualsToX(ConstantExpression expr1, ConstantExpression expr2)
 		{
 			if (expr1.Value == null && expr2.Value == null)
@@ -348,16 +359,6 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 
 		static bool DefaultCompareArguments(Expression arg1, Expression arg2)
 		{
-			if (typeof(Sql.IQueryableContainer).IsSameOrParentOf(arg1.Type))
-			{
-				if (arg1.NodeType == ExpressionType.Constant && arg2.NodeType == ExpressionType.Constant)
-				{
-					var query1 = (arg1.EvaluateExpression<Sql.IQueryableContainer>()!).Query;
-					var query2 = (arg2.EvaluateExpression<Sql.IQueryableContainer>()!).Query;
-					return EqualsTo(query1.Expression, query2.Expression);
-				}
-			}
-
 			return arg1.EqualsTo(arg2);
 		}
 	}

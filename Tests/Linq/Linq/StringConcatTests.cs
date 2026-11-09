@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -839,6 +841,742 @@ namespace Tests.Linq
 			res[1].Text14.ShouldBe("Element тест4 Text14");
 		}
 
+		#region Concat fragments beside a VarChar column
+
+		[Table]
+		sealed class ConcatProduct
+		{
+			[PrimaryKey]                                                           public int    Id    { get; set; }
+			[Column(DataType = DataType.VarChar,  Length = 20, CanBeNull = false)] public string Sku   { get; set; } = default!;
+			[Column(DataType = DataType.NVarChar, Length = 40, CanBeNull = false)] public string Title { get; set; } = default!;
+		}
+
+		static readonly ConcatProduct[] ConcatProductData =
+		[
+			new() { Id = 1, Sku = "A-100",   Title = "A-100Жук" },
+			new() { Id = 2, Sku = "B-200",   Title = "B-200"    },
+			new() { Id = 3, Sku = "A-100-X", Title = "A-100-X"  },
+		];
+
+		// Informix.DB2: the CI container's code page rejects the Cyrillic seed values at insert time.
+		// Access: the concatenation loops (#6193) and grows the expression past a gigabyte, enough to run the 32-bit test
+		// host out of memory, so it is not run there rather than gated.
+		[Test]
+		[ActiveIssue(6195, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
+		public void ConcatParameterBesideVarCharKeepsUnicode([DataSources(TestProvName.AllInformix, TestProvName.AllAccess)] string context)
+		{
+			var suffix = "Жук";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(ConcatProductData);
+
+			var query = table
+				.Select(p => new
+				{
+					p.Id,
+					Tail   = Sql.AsSql(p.Sku + suffix),
+					Framed = Sql.AsSql(suffix + p.Sku + suffix),
+					Call   = Sql.AsSql(string.Concat(p.Sku, suffix)),
+				});
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void ConcatLiteralBesideVarCharKeepsUnicode([DataSources(TestProvName.AllInformix, TestProvName.AllAccess)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(ConcatProductData);
+
+			var query = table
+				.Select(p => new
+				{
+					p.Id,
+					Caption = Sql.AsSql("Артикул " + p.Sku),
+				});
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void ConcatParameterBesideNVarCharKeepsColumnType([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var suffix = "Жук";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(ConcatProductData);
+
+			var query = table
+				.Select(p => new
+				{
+					p.Id,
+					Tail = Sql.AsSql(p.Title + suffix),
+				});
+
+			AssertQuery(query);
+
+			GetCurrentBaselines()
+				.ShouldContain("DECLARE @suffix NVarChar(40)");
+		}
+
+		[Test]
+		public void ConcatParameterBesideLaterNVarCharKeepsColumnType([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var suffix = "Жук";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(ConcatProductData);
+
+			var query = table
+				.Select(p => new
+				{
+					p.Id,
+					Label = Sql.AsSql(string.Concat(p.Sku, suffix, p.Title)),
+				});
+
+			AssertQuery(query);
+
+			GetCurrentBaselines()
+				.ShouldContain("DECLARE @suffix NVarChar(40)");
+		}
+
+		[Test]
+		public void ConcatWithNVarCharTypesComparedParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var key = "A-100A-100Жук";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(ConcatProductData);
+
+			var query = table
+				.Where(p => p.Sku + p.Title == key)
+				.Select(p => p.Id);
+
+			AssertQuery(query);
+
+			GetCurrentBaselines()
+				.ShouldContain("DECLARE @key NVarChar(40)");
+		}
+
+		[Test]
+		public void ConcatWithNVarCharMatchesComparedParameter([DataSources(TestProvName.AllInformix)] string context)
+		{
+			var key = "A-100A-100Жук";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(ConcatProductData);
+
+			var query = table
+				.Where(p => p.Sku + p.Title == key)
+				.Select(p => p.Id);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		[ActiveIssue(6195, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
+		public void ConcatParameterTakesComparedColumnType([DataSources(TestProvName.AllInformix, TestProvName.AllAccess)] string context)
+		{
+			var suffix = "Жук";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(ConcatProductData);
+
+			var query = table
+				.Where(p => p.Title == p.Sku + suffix)
+				.Select(p => p.Id);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		[ActiveIssue(6195, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
+		public void ConcatOnLeftParameterTakesComparedColumnType([DataSources(TestProvName.AllInformix, TestProvName.AllAccess)] string context)
+		{
+			var suffix = "Жук";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(ConcatProductData);
+
+			var query = table
+				.Where(p => p.Sku + suffix == p.Title)
+				.Select(p => p.Id);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		[ActiveIssue(6195, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
+		public void ConcatInListKeepsUnicode([DataSources(TestProvName.AllInformix, TestProvName.AllAccess)] string context)
+		{
+			var suffix = "Жук";
+			var titles = new[] { "A-100Щит", "B-200Жук" };
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(ConcatProductData);
+
+			var query = table
+				.Where(p => titles.Contains(p.Sku + suffix))
+				.Select(p => p.Id);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void ConcatParameterInJoinKeepsComparedColumnType([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var keySuffix = "-X";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(ConcatProductData);
+
+			var query =
+				from a in table
+				from b in table
+				where b.Sku == a.Sku + keySuffix
+				select new { A = a.Id, B = b.Id };
+
+			AssertQuery(query);
+
+			// An nvarchar parameter would turn the key comparison into nvarchar and convert the indexed column.
+			GetCurrentBaselines()
+				.ShouldContain("DECLARE @keySuffix VarChar");
+		}
+
+		[Test]
+		[ActiveIssue(6195, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
+		public void ConcatProjectionContainsKeepsUnicode([DataSources(TestProvName.AllInformix, TestProvName.AllAccess)] string context)
+		{
+			var suffix = "Жук";
+			var hit    = "A-100Жук";
+			var miss   = "A-100Щит";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(ConcatProductData);
+
+			var concatenated = table
+				.Select(p => p.Sku + suffix);
+
+			concatenated
+				.Contains(hit)
+				.ShouldBeTrue();
+
+			concatenated
+				.Contains(miss)
+				.ShouldBeFalse();
+		}
+
+		[Test]
+		[ActiveIssue(6195, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
+		public void ConcatInlineInListKeepsUnicode([DataSources(TestProvName.AllInformix, TestProvName.AllAccess)] string context)
+		{
+			var suffix = "Жук";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(ConcatProductData);
+
+			var literals = table
+				.Where(p => new[] { "A-100Жук", "B-200Щит" }.Contains(p.Sku + suffix))
+				.Select(p => p.Id);
+
+			AssertQuery(literals);
+
+			var withColumn = table
+				.Where(p => new[] { p.Title, "B-200Жук" }.Contains(p.Sku + suffix))
+				.Select(p => p.Id);
+
+			AssertQuery(withColumn);
+		}
+
+		[Table]
+		sealed class LongVarCharRow
+		{
+			[PrimaryKey]                                                            public int    Id    { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 8000, CanBeNull = false)] public string Notes { get; set; } = default!;
+		}
+
+		[Table]
+		sealed class LongVarCharKeyRow
+		{
+			[PrimaryKey]                                                            public int    Id    { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 8000, CanBeNull = false)] public string Notes { get; set; } = default!;
+			[Column(DataType = DataType.VarChar, Length = 20,   CanBeNull = false)] public string Sku   { get; set; } = default!;
+		}
+
+		// A nested concatenation of VarChar operands is not Unicode, so the long VarChar beside it is not widened to
+		// nvarchar(max), which would turn the comparison with the VarChar key into nvarchar.
+		[Test]
+		public void NestedVarCharConcatIsNotWidened([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new LongVarCharKeyRow { Id = 1, Notes = "A", Sku = "B" } });
+
+			var count = table
+				.Count(r => string.Concat(r.Notes, string.Concat(r.Sku, r.Sku)) == r.Sku);
+
+			count.ShouldBe(0);
+
+			GetCurrentBaselines()
+				.ShouldNotContain("NVarChar(Max)");
+		}
+
+		// The same holds for a VarChar concatenation reached through a subquery column.
+		[Test]
+		public void SubqueryVarCharConcatIsNotWidened([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new LongVarCharKeyRow { Id = 1, Notes = "A", Sku = "B" } });
+
+			var count = table
+				.Select(r => new { r.Notes, r.Sku, Twice = r.Sku + r.Sku })
+				.Distinct()
+				.Take(10)
+				.Count(r => r.Notes + r.Twice == r.Sku);
+
+			count.ShouldBe(0);
+
+			GetCurrentBaselines()
+				.ShouldNotContain("NVarChar(Max)");
+		}
+
+		// A long VarChar inside a nested concatenation beside an NVarChar column keeps its length.
+		[Test]
+		public void NestedLongVarCharBesideNVarCharKeepsLength([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(ConcatProductData);
+			using var notes = db.CreateLocalTable(new[] { new LongVarCharKeyRow { Id = 1, Notes = new string('a', 6000), Sku = "S" } });
+
+			var query =
+				from p in table
+				from n in notes
+				where p.Id == 1
+				select Sql.AsSql(string.Concat(p.Title, string.Concat(n.Notes, n.Sku)));
+
+			query
+				.Single()
+				.Length
+				.ShouldBe(8 + 6000 + 1);
+		}
+
+		// varchar(8000) + nvarchar(4000) is nvarchar(4000) on SQL Server, so a default-typed parameter would cut the value.
+		[Test]
+		public void ConcatParameterBesideLongVarCharKeepsLength([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			var suffix = "x";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new LongVarCharRow { Id = 1, Notes = new string('a', 6000) } });
+
+			var value = table
+				.Select(t => Sql.AsSql(t.Notes + suffix))
+				.Single();
+
+			value.Length.ShouldBe(6001);
+		}
+
+		[Table]
+		sealed class SplitVarCharRow
+		{
+			[PrimaryKey]                                                             public int    Id    { get; set; }
+			[Column(DataType = DataType.VarChar,  Length = 4000, CanBeNull = false)] public string Full  { get; set; } = default!;
+			[Column(DataType = DataType.VarChar,  Length = 3000, CanBeNull = false)] public string Left  { get; set; } = default!;
+			[Column(DataType = DataType.VarChar,  Length = 3000, CanBeNull = false)] public string Right { get; set; } = default!;
+			[Column(DataType = DataType.VarChar,  Length = 8000, CanBeNull = false)] public string Notes { get; set; } = default!;
+			[Column(DataType = DataType.VarChar,  Length = 20,   CanBeNull = false)] public string Sku   { get; set; } = default!;
+			[Column(DataType = DataType.NVarChar, Length = 40,   CanBeNull = false)] public string Title { get; set; } = default!;
+			[Column]                                                                 public bool   Flag  { get; set; }
+		}
+
+		static readonly SplitVarCharRow[] SplitVarCharData =
+		[
+			new()
+			{
+				Id    = 1,
+				Full  = new string('a', 4000),
+				Left  = new string('b', 3000),
+				Right = new string('c', 3000),
+				Notes = new string('d', 6000),
+				Sku   = "S",
+				Title = "T",
+			},
+		];
+
+		// SQL Server cuts the whole nvarchar concatenation at 4000 characters, so the non-Unicode operands are judged by
+		// their total length, not one by one.
+		[Test]
+		public void ConcatParameterBesideVarCharOperandsKeepsTotalLength([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			var suffix = "x";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(SplitVarCharData);
+
+			table
+				.Select(t => Sql.AsSql(t.Full + suffix))
+				.Single()
+				.Length
+				.ShouldBe(4001);
+
+			table
+				.Select(t => Sql.AsSql(t.Left + t.Right + suffix))
+				.Single()
+				.Length
+				.ShouldBe(6001);
+
+			table
+				.Select(t => Sql.AsSql(Sql.Concat(t.Notes, t.Sku) + suffix))
+				.Single()!
+				.Length
+				.ShouldBe(6002);
+		}
+
+		// A CASE with a Unicode branch is nvarchar on SQL Server, so the long VarChar beside it keeps its length.
+		[Test]
+		public void ConcatLongVarCharBesideMixedConditionKeepsLength([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(SplitVarCharData);
+
+			table
+				.Select(t => Sql.AsSql(t.Notes + (t.Flag ? t.Sku : t.Title)))
+				.Single()
+				.Length
+				.ShouldBe(6001);
+		}
+
+		// A VarChar operand inside a string function keeps its length beside a Unicode parameter.
+		[Test]
+		public void ConcatParameterBesideVarCharFunctionsKeepsTotalLength([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			var suffix = "x";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(SplitVarCharData);
+
+			table
+				.Select(t => Sql.AsSql(t.Left.ToUpper() + t.Right.ToUpper() + suffix))
+				.Single()
+				.Length
+				.ShouldBe(6001);
+
+			table
+				.Select(t => Sql.AsSql(t.Left.Trim() + t.Right.Trim() + suffix))
+				.Single()
+				.Length
+				.ShouldBe(6001);
+		}
+
+		// A short VarChar operand inside a string function is measured by its column, so nothing is cast to MAX.
+		[Test]
+		public void ConcatParameterBesideShortVarCharFunctionIsNotWidened([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var suffix = "x";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(SplitVarCharData);
+
+			table
+				.Select(t => Sql.AsSql(t.Sku.ToUpper() + suffix))
+				.Single()
+				.ShouldBe("Sx");
+
+			GetCurrentBaselines()
+				.ShouldNotContain("Max");
+		}
+
+		[Test]
+		public void ConcatOfVarCharFunctionsComparedWithParameter([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			var suffix   = "x";
+			var expected = new string('B', 3000) + new string('C', 3000) + suffix;
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(SplitVarCharData);
+
+			table
+				.Count(t => t.Left.ToUpper() + t.Right.ToUpper() + suffix == expected)
+				.ShouldBe(1);
+		}
+
+		// SQL Server's ISNULL returns its first argument's type; the query only knows the string default.
+		[Sql.Function("IsNull", ServerSideOnly = true)]
+		static string IsNull(string value, string replacement) => throw new InvalidOperationException();
+
+		// A function with no type of its own over a long VarChar operand keeps its length beside a Unicode parameter.
+		[Test]
+		public void ConcatParameterBesideUntypedFunctionKeepsTotalLength([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			var suffix = "x";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(SplitVarCharData);
+
+			table
+				.Select(t => Sql.AsSql(IsNull(t.Left, "") + IsNull(t.Right, "") + suffix))
+				.Single()
+				.Length
+				.ShouldBe(6001);
+		}
+
+		[Table]
+		sealed class DbTypeVarCharRow
+		{
+			[PrimaryKey]                                                                        public int    Id    { get; set; }
+			[Column(DbType = "varchar(3000)", DataType = DataType.VarChar, CanBeNull = false)] public string Left  { get; set; } = default!;
+			[Column(DbType = "varchar(3000)", DataType = DataType.VarChar, CanBeNull = false)] public string Right { get; set; } = default!;
+		}
+
+		// The lengths of VarChar columns mapped with a DbType and no Length still add up beside a Unicode parameter.
+		[Test]
+		public void ConcatParameterBesideVarCharWithoutLengthKeepsTotalLength([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			var suffix = "x";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new DbTypeVarCharRow { Id = 1, Left = new string('b', 3000), Right = new string('c', 3000) } });
+
+			table
+				.Select(t => Sql.AsSql(t.Left + t.Right + suffix))
+				.Single()
+				.Length
+				.ShouldBe(6001);
+		}
+
+		[Table]
+		sealed class CoalesceVarCharRow
+		{
+			[PrimaryKey]                                                            public int     Id    { get; set; }
+			[Column(DataType = DataType.VarChar,  Length = 20)]                     public string? Sku   { get; set; }
+			[Column(DataType = DataType.NVarChar, Length = 40)]                     public string? Title { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 8000, CanBeNull = false)] public string  Notes { get; set; } = default!;
+		}
+
+		// SQL Server: as ConcatLongVarCharBesideMixedConditionKeepsLength; a COALESCE with a Unicode operand is nvarchar
+		// whichever position that operand takes.
+		[Test]
+		public void ConcatLongVarCharBesideMixedCoalesceKeepsLength([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new CoalesceVarCharRow { Id = 1, Sku = null, Title = "T", Notes = new string('d', 6000) } });
+
+			var result = table
+				.Select(t => new
+				{
+					Before = Sql.AsSql((t.Sku ?? t.Title) + t.Notes),
+					After  = Sql.AsSql(t.Notes + (t.Sku ?? t.Title)),
+				})
+				.Single();
+
+			new[] { result.Before.Length, result.After.Length }
+				.ShouldBe([6001, 6001]);
+		}
+
+		sealed class PrefixConverter() : ValueConverter<string, string>(v => "x:" + v, v => v.Substring(2), false);
+
+		[Table]
+		sealed class ConvertedConcatRow
+		{
+			[PrimaryKey]                                                                public int    Id   { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 20, CanBeNull = false)]
+			[ValueConverter(ConverterType = typeof(PrefixConverter))]                   public string Conv { get; set; } = default!;
+		}
+
+		// A fragment beside a non-Unicode converted column is not sent through the column's converter.
+		[Test]
+		[ActiveIssue(6195, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
+		public void ConcatFragmentBesideConvertedVarCharIsNotConverted([DataSources(TestProvName.AllAccess)] string context)
+		{
+			var dash = "-";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new ConvertedConcatRow { Id = 1, Conv = "c1" } });
+
+			var value = table
+				.Select(p => Sql.AsSql(p.Conv + "|" + dash))
+				.Single();
+
+			value.ShouldBe("c1|-");
+		}
+
+		[Table]
+		sealed class ConvertedUnicodeConcatRow
+		{
+			[PrimaryKey]                                                                public int    Id   { get; set; }
+			[Column(DataType = DataType.NVarChar, Length = 20, CanBeNull = false)]
+			[ValueConverter(ConverterType = typeof(PrefixConverter))]                   public string Conv { get; set; } = default!;
+		}
+
+		// A fragment beside a Unicode converted column is not sent through the column's converter either.
+		[Test]
+		[ActiveIssue(6195, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
+		public void ConcatFragmentBesideConvertedNVarCharIsNotConverted([DataSources(TestProvName.AllAccess)] string context)
+		{
+			var dash = "-";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new ConvertedUnicodeConcatRow { Id = 1, Conv = "c1" } });
+
+			var value = table
+				.Select(p => Sql.AsSql(p.Conv + "|" + dash))
+				.Single();
+
+			value.ShouldBe("c1|-");
+		}
+
+		// Conv is read raw beside Plain (#6219), but the fragment after it is not converted through Conv's converter.
+		[Test]
+		[ActiveIssue(6195, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
+		public void ConcatFragmentAfterPlainAndConvertedUnicodeColumnIsNotConverted([DataSources(TestProvName.AllAccess)] string context)
+		{
+			var suffix = "-";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new PlainAndConvertedUnicodeRow { Id = 1, Plain = "A-", Conv = "n1" } });
+
+			var value = table
+				.Select(r => Sql.AsSql(string.Concat(r.Plain, r.Conv, suffix)))
+				.Single();
+
+			value.ShouldBe("A-x:n1-");
+		}
+
+		[Table("ConvertedTargetRow")]
+		sealed class ConvertedTargetRow
+		{
+			[PrimaryKey]                                                                public int    Id   { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 20, CanBeNull = false)]       public string Sku  { get; set; } = default!;
+			[Column(DataType = DataType.VarChar, Length = 40, CanBeNull = false)]
+			[ValueConverter(ConverterType = typeof(PrefixConverter))]                   public string Conv { get; set; } = default!;
+		}
+
+		[Table("ConvertedTargetRow")]
+		sealed class ConvertedTargetRawRow
+		{
+			[PrimaryKey]                                                                public int    Id   { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 40, CanBeNull = false)]       public string Conv { get; set; } = default!;
+		}
+
+		// The target's converter applies to the assigned concatenation as a whole, not again to each fragment of it.
+		[Test]
+		[ActiveIssue(6195, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
+		public void ConcatAssignedToConvertedColumnIsConvertedOnce([DataSources(TestProvName.AllAccess)] string context)
+		{
+			var suffix = "-s";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new ConvertedTargetRow { Id = 1, Sku = "A", Conv = "z" } });
+
+			table
+				.Set(r => r.Conv, r => r.Sku + suffix)
+				.Update();
+
+			db.GetTable<ConvertedTargetRawRow>()
+				.Single()
+				.Conv
+				.ShouldBe("x:A-s");
+		}
+
+		// The converter's prefix is inlined as a literal, so it is never NULL and needs no empty-string guard.
+		[Test]
+		[ActiveIssue(6195, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0109E")]
+		public void ConcatAssignedToConvertedColumnKeepsPrefixUnguarded([DataSources(TestProvName.AllAccess)] string context)
+		{
+			var suffix = "-s";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new ConvertedTargetRow { Id = 1, Sku = "A", Conv = "z" } });
+
+			table
+				.Set(r => r.Conv, r => r.Sku + suffix)
+				.Update();
+
+			var updateSql = LastQuery!;
+
+			updateSql.ShouldNotMatch(@"N?'x:', N?''\)");
+		}
+
+		[Table]
+		sealed class ConvertedConcatTitleRow
+		{
+			[PrimaryKey]                                                                public int    Id    { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 20, CanBeNull = false)]
+			[ValueConverter(ConverterType = typeof(PrefixConverter))]                   public string Conv  { get; set; } = default!;
+			[Column(DataType = DataType.NVarChar, Length = 20, CanBeNull = false)]      public string Title { get; set; } = default!;
+		}
+
+		// The typing lookup names the Unicode Title, but the concatenation is read through Conv's converter, so a value
+		// compared with it must go through that converter too.
+		[Test]
+		public void ComparedConcatOfConvertedAndUnicodeColumnKeepsConverter([DataSources] string context)
+		{
+			var bound = "c1T";
+			var array = new[] { bound };
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new ConvertedConcatTitleRow { Id = 1, Conv = "c1", Title = "T" } });
+
+			table
+				.Count(p => p.Conv + p.Title == bound)
+				.ShouldBe(1);
+
+			table
+				.Count(p => bound == p.Conv + p.Title)
+				.ShouldBe(1);
+
+			table
+				.Count(p => array.Contains(p.Conv + p.Title))
+				.ShouldBe(1);
+		}
+
+		[Table]
+		sealed class PlainAndConvertedUnicodeRow
+		{
+			[PrimaryKey]                                                                public int    Id    { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 20, CanBeNull = false)]       public string Plain { get; set; } = default!;
+			[Column(DataType = DataType.NVarChar, Length = 20, CanBeNull = false)]
+			[ValueConverter(ConverterType = typeof(PrefixConverter))]                   public string Conv  { get; set; } = default!;
+		}
+
+		// The typing lookup names the converted Conv, but the concatenation is read through the plain Plain, so a value
+		// compared with it must not go through Conv's converter.
+		[Test]
+		public void ComparedConcatOfPlainAndConvertedUnicodeColumnKeepsReadPath([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[]
+			{
+				new PlainAndConvertedUnicodeRow { Id = 1, Plain = "A-", Conv = "n1" },
+				new PlainAndConvertedUnicodeRow { Id = 2, Plain = "zz", Conv = "yy" },
+			});
+
+			var read = table
+				.OrderBy(r => r.Id)
+				.Select(r => r.Plain + r.Conv)
+				.First();
+
+			var array = new[] { read };
+
+			table
+				.Count(r => r.Plain + r.Conv == read)
+				.ShouldBe(1);
+
+			table
+				.Count(r => r.Plain + r.Conv != read)
+				.ShouldBe(1);
+
+			table
+				.Select(r => r.Plain + r.Conv)
+				.Contains(read)
+				.ShouldBeTrue();
+
+			table
+				.Count(r => array.Contains(r.Plain + r.Conv))
+				.ShouldBe(1);
+		}
+
+		#endregion
+
 		#region Concat inside a set-operation operand's projection
 
 		[Table]
@@ -925,6 +1663,233 @@ namespace Tests.Linq
 					.Select(e => new { id = e.Id.ToString("N"), name = e.Name, parent = (string?)("p_" + e.ParentId!.Value.ToString("N")) }));
 
 			AssertQuery(query);
+		}
+
+		#endregion
+
+		#region Unicode literal with a non-Unicode column
+
+		[Table("ConcatCatalogItem")]
+		sealed class ConcatCatalogItem
+		{
+			[PrimaryKey]                                        public int    Id    { get; set; }
+			[Column(DataType = DataType.VarChar,  Length = 20)] public string Sku   { get; set; } = string.Empty;
+			[Column(DataType = DataType.NVarChar, Length = 50)] public string Label { get; set; } = string.Empty;
+		}
+
+		static readonly ConcatCatalogItem[] CatalogItems =
+		{
+			new() { Id = 1, Sku = "A-100", Label = "" },
+		};
+
+		// SQL Server marks a Unicode literal with the N prefix, which follows the literal's own type. A literal joined to a
+		// VarChar column must keep it, or the server converts the literal to the code page and non-Latin text becomes '?'.
+		[Test]
+		public void Concat_UnicodeLiteralWithVarCharColumn_Select([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(CatalogItems);
+
+			table
+				.Select(x => Sql.AsSql("Артикул " + x.Sku))
+				.Single()
+				.ShouldBe("Артикул A-100");
+		}
+
+		[Test]
+		public void Concat_UnicodeLiteralWithVarCharColumn_Update([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(CatalogItems);
+
+			table
+				.Set(x => x.Label, x => "Артикул " + x.Sku)
+				.Update();
+
+			table
+				.Single()
+				.Label
+				.ShouldBe("Артикул A-100");
+		}
+
+		#endregion
+
+		#region Optimizer literal folding over a hand-built concat
+
+		static readonly DbDataType ConcatStringType = new(typeof(string));
+
+		static (SqlField str1, SqlField str2) GetConcatFields(MappingSchema ms)
+		{
+			var table = new SqlTable(ms.GetEntityDescriptor(typeof(ConcatTestEntity)));
+
+			return (
+				table.FindFieldByMemberName(nameof(ConcatTestEntity.Str1))!,
+				table.FindFieldByMemberName(nameof(ConcatTestEntity.Str2))!);
+		}
+
+		static IQueryElement OptimizeConcat(MappingSchema ms, IQueryElement element, EvaluationContext? evaluationContext = null)
+		{
+			var optimizer = new SqlExpressionOptimizerVisitor(true);
+
+			return optimizer.Optimize(
+				evaluationContext ?? new EvaluationContext(),
+				NullabilityContext.NonQuery,
+				new DataOptions(),
+				ms,
+				element,
+				visitQueries     : false,
+				reducePredicates : false);
+		}
+
+		[Test]
+		public void Optimizer_LoneLiteral_KeepsConcat()
+		{
+			var ms           = new MappingSchema();
+			var (str1, str2) = GetConcatFields(ms);
+			var literal      = new SqlValue("-");
+			var concat       = new SqlConcatExpression(false, str1, literal, str2);
+
+			var result = OptimizeConcat(ms, concat);
+
+			result.ShouldBeSameAs(concat);
+			concat.Expressions[1].ShouldBeSameAs(literal);
+		}
+
+		[Test]
+		public void Optimizer_LiteralsSeparatedByNonStringConstant_KeepsConcat()
+		{
+			var ms        = new MappingSchema();
+			var (str1, _) = GetConcatFields(ms);
+			var concat    = new SqlConcatExpression(false, str1, new SqlValue("a"), new SqlValue(5), new SqlValue("b"));
+
+			var result = OptimizeConcat(ms, concat);
+
+			result.ShouldBeSameAs(concat);
+		}
+
+		[Test]
+		public void Optimizer_AdjacentLiterals_Merge()
+		{
+			var ms           = new MappingSchema();
+			var (str1, str2) = GetConcatFields(ms);
+			var concat       = new SqlConcatExpression(false, str1, new SqlValue("a"), new SqlValue("b"), str2);
+
+			var result = OptimizeConcat(ms, concat);
+
+			var folded = result.ShouldBeOfType<SqlConcatExpression>();
+			folded.Expressions.Length.ShouldBe(3);
+			folded.Expressions[0].ShouldBeSameAs(str1);
+			folded.Expressions[2].ShouldBeSameAs(str2);
+
+			var merged = folded.Expressions[1].ShouldBeOfType<SqlValue>();
+			merged.Value.ShouldBe("ab");
+		}
+
+		[Test]
+		public void Optimizer_EmptyLiteral_Drops()
+		{
+			var ms           = new MappingSchema();
+			var (str1, str2) = GetConcatFields(ms);
+			var concat       = new SqlConcatExpression(false, str1, new SqlValue(""), str2);
+
+			var result = OptimizeConcat(ms, concat);
+
+			var folded = result.ShouldBeOfType<SqlConcatExpression>();
+			folded.Expressions.Length.ShouldBe(2);
+			folded.Expressions[0].ShouldBeSameAs(str1);
+			folded.Expressions[1].ShouldBeSameAs(str2);
+		}
+
+		[Test]
+		public void Optimizer_NullLiteral_PreserveNull_ReturnsNull()
+		{
+			var ms           = new MappingSchema();
+			var (str1, str2) = GetConcatFields(ms);
+			var concat       = new SqlConcatExpression(true, str1, new SqlValue(typeof(string), null), str2);
+
+			var result = OptimizeConcat(ms, concat);
+
+			var value = result.ShouldBeOfType<SqlValue>();
+			value.Value.ShouldBeNull();
+		}
+
+		[Test]
+		public void Optimizer_NullLiteral_NoPreserveNull_Drops()
+		{
+			var ms           = new MappingSchema();
+			var (str1, str2) = GetConcatFields(ms);
+			var concat       = new SqlConcatExpression(false, str1, new SqlValue(typeof(string), null), str2);
+
+			var result = OptimizeConcat(ms, concat);
+
+			var folded = result.ShouldBeOfType<SqlConcatExpression>();
+			folded.Expressions.Length.ShouldBe(2);
+			folded.Expressions[0].ShouldBeSameAs(str1);
+			folded.Expressions[1].ShouldBeSameAs(str2);
+		}
+
+		[Test]
+		public void Optimizer_SingleLiteral_CollapsesToLiteral()
+		{
+			var ms     = new MappingSchema();
+			var concat = new SqlConcatExpression(false, new SqlValue("x"));
+
+			var result = OptimizeConcat(ms, concat);
+
+			var value = result.ShouldBeOfType<SqlValue>();
+			value.Value.ShouldBe("x");
+		}
+
+		[Test]
+		public void Optimizer_TypedLiteral_RebuiltWithStringType()
+		{
+			var ms           = new MappingSchema();
+			var (str1, str2) = GetConcatFields(ms);
+			var concat       = new SqlConcatExpression(false, str1, new SqlValue(new DbDataType(typeof(string), DataType.NVarChar), "-"), str2);
+
+			var result = OptimizeConcat(ms, concat);
+
+			result.ShouldNotBeSameAs(concat);
+
+			var folded  = result.ShouldBeOfType<SqlConcatExpression>();
+			var literal = folded.Expressions[1].ShouldBeOfType<SqlValue>();
+			literal.Value.ShouldBe("-");
+			literal.ValueType.ShouldBe(ConcatStringType);
+		}
+
+		[Test]
+		public void Optimizer_FoldedConcat_IsFixpoint([Values] bool typedLiteral)
+		{
+			var ms           = new MappingSchema();
+			var (str1, str2) = GetConcatFields(ms);
+			var concat       = typedLiteral
+				? new SqlConcatExpression(false, str1, new SqlValue(new DbDataType(typeof(string), DataType.NVarChar), "-"), str2)
+				: new SqlConcatExpression(false, str1, new SqlValue("a"), new SqlValue("b"), str2);
+
+			var once  = OptimizeConcat(ms, concat);
+			var twice = OptimizeConcat(ms, once);
+
+			once.ShouldNotBeSameAs(concat);
+			twice.ShouldBeSameAs(once);
+		}
+
+		[Test]
+		public void Optimizer_InlinedParameter_ReplacedByValue()
+		{
+			var ms           = new MappingSchema();
+			var (str1, str2) = GetConcatFields(ms);
+			var parameter    = new SqlParameter(ConcatStringType, "p", "-") { IsQueryParameter = false };
+			var concat       = new SqlConcatExpression(false, str1, parameter, str2);
+
+			var values = new SqlParameterValues();
+			values.SetValue(parameter, "-", "-");
+
+			var result = OptimizeConcat(ms, concat, new EvaluationContext(values));
+
+			var folded  = result.ShouldBeOfType<SqlConcatExpression>();
+			var literal = folded.Expressions[1].ShouldBeOfType<SqlValue>();
+			literal.Value.ShouldBe("-");
+			literal.ValueType.ShouldBe(ConcatStringType);
 		}
 
 		#endregion

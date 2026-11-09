@@ -77,6 +77,10 @@ namespace Tests.Linq
 			Details = "as the Access half.")]
 		[ActiveIssue(3691, Configuration = TestProvName.AllSqlServer, ErrorMessage = "Incorrect syntax near ')'.",
 			Details = "as the Access half. Message-only: the two SqlClient packages raise their own exception types and the WCF wrapper carries the sentence through.")]
+		[ActiveIssue(3691, Configuration = TestProvName.AllSQLiteClassic, ErrorMessage = "SQL logic error",
+			Details = "as the Access half.")]
+		[ActiveIssue(3691, Configuration = ProviderName.SQLiteMS, ErrorMessage = "near \")\": syntax error",
+			Details = "as the Access half.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3691")]
 		public void Issue3691Test([DataSources] string context)
 		{

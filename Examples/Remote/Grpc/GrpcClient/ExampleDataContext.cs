@@ -18,7 +18,10 @@ namespace DataModels
 #pragma warning disable CA2000 // Dispose objects before losing scope
 						  new HttpClientHandler()
 						  {
+							  // the example server listens on localhost with the untrusted ASP.NET Core development certificate
+#pragma warning disable MA0039 // Do not write your own certificate validation method
 							  ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+#pragma warning restore MA0039 // Do not write your own certificate validation method
 						  })
 #pragma warning restore CA2000 // Dispose objects before losing scope
 				  })

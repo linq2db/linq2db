@@ -52,17 +52,13 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			public int? ValueN { get; set; }
 		}
 
-		// Both cases below put an option-typed member through the query pipeline, where EntityFrameworkCore
-		// .FSharp's own IMemberTranslator runs. That package's last release is 6.0.7 (2022) and it has not
-		// followed EF Core since; TestLeftJoin above stays live because it never reaches a member translator.
-		const string OptionTranslatorBroken = "EntityFrameworkCore.FSharp 6.0.7 calls ISqlExpressionFactory.Convert(SqlExpression, Type, RelationalTypeMapping), removed in EF Core 10";
-
-		[ActiveIssue(4646, Details = OptionTranslatorBroken)]
 		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/260")]
 		public void Issue4646TestLinqToDB([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 			using var db = ctx.CreateLinqToDBConnection();
+
+			db.GetTable<Issue4646Table>().Delete();
 
 			FSharpTestMethods.Issue4646TestLinqToDB(ctx);
 
@@ -74,12 +70,13 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			}
 		}
 
-		[ActiveIssue(4646, Details = OptionTranslatorBroken)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4646")]
 		public void Issue4646TestEF([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 			using var db = ctx.CreateLinqToDBConnection();
+
+			db.GetTable<Issue4646Table>().Delete();
 
 			FSharpTestMethods.Issue4646TestEF(ctx);
 			ctx.SaveChanges();

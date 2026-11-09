@@ -4,7 +4,7 @@
 	<PropertyGroup>
 		<TargetFrameworks>$(TestTargetFrameworks)</TargetFrameworks>
 		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">$(LatestTargetFramework)</TargetFrameworks>
-		<DefineConstants Condition=" $(X86STUBS) == 'True' ">$(DefineConstants);DB2STUBS;HANASTUBS</DefineConstants>
+		<DefineConstants Condition=" $(X86STUBS) == 'True' ">$(DefineConstants);DB2STUBS</DefineConstants>
 		<IsPackable>false</IsPackable>
 	</PropertyGroup>
 

@@ -6,7 +6,9 @@
 	EnableNullableReferenceTypes = true;
 	GenerateDatabaseInfo         = false;
 
-	// both SQLite clients share one native package and resolve e_sqlite3 under runtimes/
+	// the T4 host shadow-copies System.Data.SQLite.dll, and its native pre-loader (which reads this variable)
+	// trusts the original folder only if it has an arch-marker subfolder - today a side effect of other
+	// providers' natives, so name the tools folder explicitly
 	var sqliteRuntimesPath = Host.ResolveAssemblyReference("$(LinqToDBT4SharedTools)");
 	Environment.SetEnvironmentVariable("PreLoadSQLite_BaseDirectory", sqliteRuntimesPath);
 #>
