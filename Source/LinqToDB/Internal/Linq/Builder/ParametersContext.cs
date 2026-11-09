@@ -399,7 +399,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return parameterCacheEntry;
 		}
 
-		static readonly MethodInfo _enumToObject       = MemberHelper.MethodOf(() => Enum.ToObject(default(Type)!, default(object)!));
+		static readonly MethodInfo _enumToObject      = MemberHelper.MethodOf(() => Enum.ToObject(default(Type)!, default(object)!));
 		static readonly MethodInfo _isDefaultMappedTo = MemberHelper.MethodOf(() => IsDefaultMappedTo(default(MappingSchema)!, default(object)!, default(Type)!));
 
 		static bool IsDefaultMappedTo(MappingSchema mappingSchema, object value, Type enumType)

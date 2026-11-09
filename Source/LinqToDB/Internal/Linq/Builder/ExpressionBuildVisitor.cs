@@ -5335,6 +5335,10 @@ namespace LinqToDB.Internal.Linq.Builder
 						return new SqlPredicate.IsNull(operandSql, op == SqlPredicate.Operator.NotEqual);
 					}
 
+					// A constant of another enum is not a value of the operand: the regular compare converts it through the column.
+					if (origValue is Enum && origValue.GetType() != type.UnwrapNullableType())
+						return null;
+
 					var mapValue  = origValue;
 
 					foreach (var enumVal in MappingSchema.GetMapValues(type.UnwrapNullableType())!)
