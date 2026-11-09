@@ -1592,6 +1592,256 @@ namespace Tests.Linq
 				.ShouldBe(expected);
 		}
 
+		// As DistinctByAfterJoinToGroupedCteKeepsOuterOrdering; the body's own OrderBy must not replace the outer ordering.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterJoinToOrderedCteKeepsOuterOrdering([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllDuckDB, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var cte = db.Child
+				.OrderBy(c => c.ChildID)
+				.Take(1000)
+				.AsCte();
+
+			var query =
+				from p in db.Parent.OrderByDescending(p => p.ParentID)
+				join c in cte on p.ParentID equals c.ParentID
+				select new { p.ParentID, p.Value1 };
+
+			var joined =
+				from p in Parent.OrderByDescending(p => p.ParentID)
+				join c in Child on p.ParentID equals c.ParentID
+				select new { p.ParentID, p.Value1 };
+
+			var expected = joined
+				.DistinctBy(x => x.Value1)
+				.ToList();
+
+			query
+				.DistinctBy(x => x.Value1)
+				.ToList()
+				.ShouldBe(expected);
+		}
+
+		// As DistinctByAfterJoinToGroupedCteKeepsOuterOrdering, with an ordering inside the grouped body.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterJoinToOrderedGroupedCteKeepsOuterOrdering([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllDuckDB, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var cte = db.Child
+				.OrderBy(c => c.ParentID)
+				.GroupBy(c => c.ParentID)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.AsCte();
+
+			var query =
+				from p in db.Parent.OrderByDescending(p => p.ParentID)
+				join c in cte on p.ParentID equals c.Key
+				select new { p.ParentID, p.Value1, c.Count };
+
+			var counts = Child
+				.GroupBy(c => c.ParentID)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.ToList();
+
+			var joined =
+				from p in Parent.OrderByDescending(p => p.ParentID)
+				join c in counts on p.ParentID equals c.Key
+				select new { p.ParentID, p.Value1, c.Count };
+
+			var expected = joined
+				.DistinctBy(x => x.Value1)
+				.ToList();
+
+			query
+				.DistinctBy(x => x.Value1)
+				.ToList()
+				.ShouldBe(expected);
+		}
+
+		// As DistinctByAfterJoinToGroupedCteKeepsOuterOrdering; the body's Distinct must not prune the outer ordering.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByAfterJoinToDistinctCteKeepsOuterOrdering([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllDuckDB, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var cte = db.Child
+				.Select(c => new { c.ParentID })
+				.Distinct()
+				.AsCte();
+
+			var query =
+				from p in db.Parent.OrderByDescending(p => p.ParentID)
+				join c in cte on p.ParentID equals c.ParentID
+				select new { p.ParentID, p.Value1 };
+
+			var parentIds = Child
+				.Select(c => new { c.ParentID })
+				.Distinct()
+				.ToList();
+
+			var joined =
+				from p in Parent.OrderByDescending(p => p.ParentID)
+				join c in parentIds on p.ParentID equals c.ParentID
+				select new { p.ParentID, p.Value1 };
+
+			var expected = joined
+				.DistinctBy(x => x.Value1)
+				.ToList();
+
+			query
+				.DistinctBy(x => x.Value1)
+				.ToList()
+				.ShouldBe(expected);
+		}
+
+		// The body's ordering leads here and cannot be lifted out of the CTE, so a joined side's ordering must not stand in for
+		// it. The ROW_NUMBER path fails this shape with an SQL error, on master too.
+		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_DistinctByRequiresOrderBy)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByOverOrderedCteJoinedToOrderedSourceRequiresOrderBy([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var cte = db.Parent
+				.OrderByDescending(p => p.ParentID)
+				.Take(1000)
+				.AsCte();
+
+			var query =
+				from p in cte
+				join c in db.Child.OrderBy(c => c.ChildID) on p.ParentID equals c.ParentID
+				select new { p.ParentID, p.Value1, c.ChildID };
+
+			query
+				.DistinctBy(x => x.Value1)
+				.ToList();
+		}
+
+		// As DistinctByOverOrderedCteJoinedToOrderedSourceRequiresOrderBy, read first inside the collection's own build.
+		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_DistinctByRequiresOrderBy)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByOverOrderedCteWithOrderedCollectionRequiresOrderBy([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var cte = db.Parent
+				.OrderByDescending(p => p.ParentID)
+				.Take(1000)
+				.AsCte();
+
+			var query =
+				from p in cte
+				from c in db.Child
+					.OrderBy(c => c.ChildID)
+					.Where(c => c.ParentID == p.ParentID)
+				select new { p.ParentID, p.Value1, c.ChildID };
+
+			query
+				.DistinctBy(x => x.Value1)
+				.ToList();
+		}
+
+		// The body is built after the ordered side was joined and must not prune that side's ordering, the only one there is.
+		// AssertQuery cannot run AsCte; CTE-capable providers covering both the DISTINCT ON and the ROW_NUMBER lowering.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByOverGroupedCteJoinedToOrderedSourceKeepsItsOrdering([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllDuckDB, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var cte = db.Child
+				.GroupBy(c => c.ParentID)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.AsCte();
+
+			var query =
+				from c in cte
+				join p in db.Parent.OrderByDescending(p => p.ParentID) on c.Key equals p.ParentID
+				select new { p.ParentID, p.Value1, c.Count };
+
+			var counts = Child
+				.GroupBy(c => c.ParentID)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.ToList();
+
+			var joined =
+				from p in Parent.OrderByDescending(p => p.ParentID)
+				join c in counts on p.ParentID equals c.Key
+				select new { p.ParentID, p.Value1, c.Count };
+
+			var expected = joined
+				.DistinctBy(x => x.Value1)
+				.ToList();
+
+			query
+				.DistinctBy(x => x.Value1)
+				.ToList()
+				.ShouldBe(expected);
+		}
+
+		// As DistinctByOverGroupedCteJoinedToOrderedSourceKeepsItsOrdering, read first inside the collection's own build.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByOverGroupedCteWithOrderedCollectionKeepsItsOrdering([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllDuckDB, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var cte = db.Child
+				.GroupBy(c => c.ParentID)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.AsCte();
+
+			var query =
+				from c in cte
+				from p in db.Parent
+					.OrderByDescending(p => p.ParentID)
+					.Where(p => p.ParentID == c.Key)
+				select new { p.ParentID, p.Value1, c.Count };
+
+			var counts = Child
+				.GroupBy(c => c.ParentID)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.ToList();
+
+			var joined =
+				from p in Parent.OrderByDescending(p => p.ParentID)
+				join c in counts on p.ParentID equals c.Key
+				select new { p.ParentID, p.Value1, c.Count };
+
+			var expected = joined
+				.DistinctBy(x => x.Value1)
+				.ToList();
+
+			query
+				.DistinctBy(x => x.Value1)
+				.ToList()
+				.ShouldBe(expected);
+		}
+
+		// The joined CTE's ordering is the only one: published, it is reported. Discarded, a correlated subquery would fall back
+		// to client-side evaluation with an arbitrary row. The ROW_NUMBER path fails this shape with an SQL error, on master too.
+		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_DistinctByRequiresOrderBy)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
+		public void DistinctByInProjectionOverSourceJoinedToOrderedCteRequiresOrderBy([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var cte = db.Parent
+				.OrderByDescending(p => p.ParentID)
+				.Take(1000)
+				.AsCte();
+
+			var query = db.Parent
+				.Select(p => db.Child
+					.Where(c => c.ParentID == p.ParentID)
+					.Join(cte, c => c.ParentID, q => q.ParentID, (c, q) => new { c.ChildID, q.ParentID })
+					.DistinctBy(x => x.ChildID % 2)
+					.Select(x => x.ParentID)
+					.FirstOrDefault());
+
+			query.ToList();
+		}
+
 		// A is not a grouping key: a union column takes its value from every leg, so it does not match the key B.
 		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_DistinctByRequiresOrderBy)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]

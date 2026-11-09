@@ -174,11 +174,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		/// <summary>
 		/// Save the current OrderBy state and clear it so an independent sub-sequence build (subquery,
-		/// set-operation side, join inner, SelectMany collection) cannot pollute the outer state.
+		/// set-operation side, join inner, SelectMany collection, a lazily built CTE body) cannot pollute the outer state.
 		/// Caller disposes the returned scope to restore; a joined sequence then adds its own ordering
-		/// through <see cref="AppendJoinedOrderBy"/>.
+		/// through <see cref="AppendJoinedOrderBy"/>. With <paramref name="publishOnDispose"/> the state built inside the scope
+		/// is put ahead of the restored one when the scope closes.
 		/// </summary>
-		internal IDisposable IsolateOrderBy()
+		internal IDisposable IsolateOrderBy(bool publishOnDispose = false)
 		{
 			var saved                     = _currentOrderBy;
 			var savedDropped              = _isOrderByDropped;
@@ -186,7 +187,28 @@ namespace LinqToDB.Internal.Linq.Builder
 			_currentOrderBy               = null;
 			_isOrderByDropped             = false;
 			_isOrderByKeptThroughGrouping = false;
-			return new IsolateOrderByScope(this, saved, savedDropped, savedKept);
+			_orderByScope                 = new IsolateOrderByScope(this, saved, savedDropped, savedKept, _orderByScope, publishOnDispose);
+			return _orderByScope;
+		}
+
+		IsolateOrderByScope? _orderByScope;
+
+		/// <summary>
+		/// The innermost open <see cref="IsolateOrderBy"/> scope, for <see cref="IsWithinOrderByScope"/>.
+		/// </summary>
+		internal IDisposable? CurrentOrderByScope => _orderByScope;
+
+		/// <summary>
+		/// Whether the current OrderBy state was opened inside <paramref name="scope"/> or is that scope itself.
+		/// </summary>
+		internal bool IsWithinOrderByScope(IDisposable? scope)
+		{
+			var current = _orderByScope;
+
+			while (current != null && !ReferenceEquals(current, scope))
+				current = current.Parent;
+
+			return scope == null || current != null;
 		}
 
 		/// <summary>
@@ -238,19 +260,41 @@ namespace LinqToDB.Internal.Linq.Builder
 			readonly bool                                                               _savedDropped;
 			readonly bool                                                               _savedKept;
 
-			public IsolateOrderByScope(ExpressionBuilder builder, List<(Expression expr, bool descending, Sql.NullsPosition nulls)>? saved, bool savedDropped, bool savedKept)
+			readonly bool                                                               _publishOnDispose;
+
+			public IsolateOrderByScope? Parent { get; }
+
+			public IsolateOrderByScope(ExpressionBuilder builder, List<(Expression expr, bool descending, Sql.NullsPosition nulls)>? saved, bool savedDropped, bool savedKept, IsolateOrderByScope? parent, bool publishOnDispose)
 			{
-				_builder      = builder;
-				_saved        = saved;
-				_savedDropped = savedDropped;
-				_savedKept    = savedKept;
+				_builder          = builder;
+				_saved            = saved;
+				_savedDropped     = savedDropped;
+				_savedKept        = savedKept;
+				Parent            = parent;
+				_publishOnDispose = publishOnDispose;
 			}
 
 			public void Dispose()
 			{
+				var built        = _builder._currentOrderBy;
+				var builtDropped = _builder._isOrderByDropped;
+				var builtKept    = _builder._isOrderByKeptThroughGrouping;
+
+				_builder._orderByScope                 = Parent;
 				_builder._currentOrderBy               = _saved;
 				_builder._isOrderByDropped             = _savedDropped;
 				_builder._isOrderByKeptThroughGrouping = _savedKept;
+
+				if (!_publishOnDispose)
+					return;
+
+				_builder.AppendJoinedOrderBy(built, joinedFirst: true);
+
+				if (builtDropped)
+					_builder.MarkOrderByDropped();
+
+				if (builtKept)
+					_builder.MarkOrderByKeptThroughGrouping();
 			}
 		}
 
