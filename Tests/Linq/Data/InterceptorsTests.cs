@@ -1476,7 +1476,7 @@ namespace Tests.Data
 		// UseCombinedCommands is forced on because it is off by default in 6.x - without it the batch templates are never
 		// rendered, the eager load runs sequentially, and both tests pass while testing the plain ExecuteReader path.
 		[Test]
-		public void EagerLoadExceptionIntercepted([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySql)] string context)
+		public void EagerLoadExceptionIntercepted([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySqlConnector)] string context)
 		{
 			var commands = new List<string>();
 
@@ -1500,7 +1500,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task EagerLoadExceptionInterceptedAsync([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySql)] string context)
+		public async Task EagerLoadExceptionInterceptedAsync([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySqlConnector)] string context)
 		{
 			var commands = new List<string>();
 

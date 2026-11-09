@@ -209,7 +209,7 @@ namespace Tests.Linq
 		// when the batch execution calls the policy itself.
 		[Test]
 		public void CombinedEagerLoad_ExecutesThroughRetryPolicy(
-			[IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySql)] string context)
+			[IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySqlConnector)] string context)
 		{
 			var (masters, correlated, _) = EagerLoadingTests.MixedEagerData.Generate();
 			var policy                   = new ReaderCountingRetryPolicy();
@@ -250,7 +250,7 @@ namespace Tests.Linq
 
 		[Test]
 		public async Task CombinedEagerLoad_ExecutesThroughRetryPolicyAsync(
-			[IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySql)] string context)
+			[IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySqlConnector)] string context)
 		{
 			var (masters, correlated, _) = EagerLoadingTests.MixedEagerData.Generate();
 			var policy                   = new ReaderCountingRetryPolicy();
