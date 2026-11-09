@@ -13,7 +13,6 @@ using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Mapping;
-using LinqToDB.Tools.Comparers;
 
 namespace Tests
 {
@@ -292,7 +291,7 @@ namespace Tests
 				var methodIfo = genericMethodInfo.MakeGenericMethod(mc.Method.GetGenericArguments());
 				if (methodIfo.GetParameters().Length == 3)
 				{
-					var equalityComparer = ComparerBuilder.GetEqualityComparer(elementType);
+					var equalityComparer = TestComparers.GetDefault(elementType);
 
 					var comparerExpr = Expression.Constant(equalityComparer,
 						typeof(IEqualityComparer<>).MakeGenericType(elementType));
@@ -518,7 +517,7 @@ namespace Tests
 
 			if (actual.Length > 0 || expected.Length > 0)
 			{
-				comparer ??= ComparerBuilder.GetEqualityComparer<T>();
+				comparer ??= TestComparers.GetDefault<T>();
 				AreEqual(expected, actual, comparer, allowEmpty: true);
 			}
 

@@ -20,7 +20,7 @@ All T4 properties use `LinqToDBT4` name prefix.
   - `LinqToDBT4MySqlClientPath`: path to `tools` folder with `MySqlConnector` MySql client
   - `LinqToDBT4OracleClientPath`: path to `tools` folder with `Oracle.ManagedDataAccess` Oracle client
   - `LinqToDBT4PostgreSQLClientPath`: path to `tools` folder with `Npgsql` PostgreSQL client
-  - `LinqToDBT4SapHanaClientPath`: path to `tools` folder with SapHana client
+  - `LinqToDBT4SapHanaClientPath`: path to `tools` folder with the `System.Data.Odbc` client. The native SAP HANA client (`Sap.Data.Hana.v4.5`) is not bundled: install the SAP HANA client, which registers it for .NET Framework
   - `LinqToDBT4SqlCeClientPath`: path to `tools` folder with SqlCe client
   - `LinqToDBT4SQLiteClientPath`: path to `tools` folder with `System.Data.SQLite` SQLite client
   - `LinqToDBT4SqlServerClientPath`: path to `tools` folder with `Microsoft.SqlServer.Types` assembly for SQL Server spatial types

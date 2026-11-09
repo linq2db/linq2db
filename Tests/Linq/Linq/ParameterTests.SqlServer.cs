@@ -16,25 +16,25 @@ namespace Tests.Linq
 		[Table("AllTypes")]
 		sealed class AllTypesWithLength
 		{
-			[Column(                             Length = 1)]  public byte[]? VarBinaryDataType;
-			[Column(DataType = DataType.VarChar, Length = 20)] public string? VarcharDataType;
-			[Column(                             Length = 20)] public string? NVarcharDataType;
+			[Column("varbinaryDataType",                              Length = 1)]  public byte[]? VarBinaryDataType;
+			[Column("varcharDataType",   DataType = DataType.VarChar, Length = 20)] public string? VarcharDataType;
+			[Column("nvarcharDataType",                               Length = 20)] public string? NVarcharDataType;
 		}
 
 		[Table("AllTypes")]
 		sealed class AllTypesCustom
 		{
-			[Column] public VarBinary? VarBinaryDataType;
-			[Column] public VarChar?   VarcharDataType;
-			[Column] public NVarChar?  NVarcharDataType;
+			[Column("varbinaryDataType")] public VarBinary? VarBinaryDataType;
+			[Column("varcharDataType")]   public VarChar?   VarcharDataType;
+			[Column("nvarcharDataType")]  public NVarChar?  NVarcharDataType;
 		}
 
 		[Table("AllTypes")]
 		sealed class AllTypesCustomWithLength
 		{
-			[Column(Length = 1)]  public VarBinary? VarBinaryDataType;
-			[Column(Length = 20)] public VarChar?   VarcharDataType;
-			[Column(Length = 20)] public NVarChar?  NVarcharDataType;
+			[Column("varbinaryDataType", Length = 1)]  public VarBinary? VarBinaryDataType;
+			[Column("varcharDataType",   Length = 20)] public VarChar?   VarcharDataType;
+			[Column("nvarcharDataType",  Length = 20)] public NVarChar?  NVarcharDataType;
 		}
 
 		sealed class AllTypesCustomMaxLength

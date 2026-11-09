@@ -42,14 +42,12 @@
 	</ItemGroup>
 
 	<!-- The clidriver/ folder is populated by IBM.Data.DB.Provider during build of NuGet.csproj, which
-	     runs *after* this csproj's static <None Include> globs are evaluated. Inject items into Pack's
-	     internal `_PackageFiles` collection via a Target so the glob is expanded at pack-time. -->
+	     runs *after* this csproj's static globs are evaluated, so the glob is declared in a Target to
+	     expand it at pack-time. -->
 	<Target Name="IncludeClidriverInPack" BeforeTargets="_GetPackageFiles">
+		<Error Condition="!Exists('$(ToolsPath)/clidriver/bin/db2cli.dll')" Text="'$(ToolsPath)/clidriver' holds no IBM clidriver - build NuGet/NuGet.csproj first." />
 		<ItemGroup>
-			<_PackageFiles Include="$(ToolsPath)\clidriver\**\*">
-				<BuildAction>None</BuildAction>
-				<PackagePath>tools\clidriver\%(RecursiveDir)%(Filename)%(Extension)</PackagePath>
-			</_PackageFiles>
+			<None Include="$(ToolsPath)/clidriver/**" Pack="true" PackagePath="tools/clidriver" Visible="false" />
 		</ItemGroup>
 	</Target>
 

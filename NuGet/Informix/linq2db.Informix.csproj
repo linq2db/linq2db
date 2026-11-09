@@ -34,11 +34,21 @@
 		<None Include="$(ToolsPath)/Humanizer.dll"								   Pack="true" PackagePath="tools"           Visible="false" />
 		<None Include="$(ToolsPath)/Microsoft.Bcl.AsyncInterfaces.dll"			   Pack="true" PackagePath="tools"           Visible="false" />
 		<None Include="$(ToolsPath)/IBM.Data.DB2.DLL"                              Pack="true" PackagePath="tools"           Visible="false" />
-		<None Include="$(ToolsPath)/clidriver/**"                                  Pack="true" PackagePath="tools/clidriver" Visible="false" />
+		<!-- clidriver shipped via a Target below — see IncludeClidriverInPack -->
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="../NuGet.csproj" />
 	</ItemGroup>
+
+	<!-- The clidriver/ folder is populated by IBM.Data.DB.Provider during build of NuGet.csproj, which
+	     runs *after* this csproj's static globs are evaluated, so the glob is declared in a Target to
+	     expand it at pack-time. -->
+	<Target Name="IncludeClidriverInPack" BeforeTargets="_GetPackageFiles">
+		<Error Condition="!Exists('$(ToolsPath)/clidriver/bin/db2cli.dll')" Text="'$(ToolsPath)/clidriver' holds no IBM clidriver - build NuGet/NuGet.csproj first." />
+		<ItemGroup>
+			<None Include="$(ToolsPath)/clidriver/**" Pack="true" PackagePath="tools/clidriver" Visible="false" />
+		</ItemGroup>
+	</Target>
 
 </Project>
