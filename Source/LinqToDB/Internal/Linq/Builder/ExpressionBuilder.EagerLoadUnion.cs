@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -29,7 +28,6 @@ namespace LinqToDB.Internal.Linq.Builder
 		Dictionary<Expression, Expression>? ProcessCteUnionBatch(
 			Expression          expression,
 			IBuildContext       buildContext,
-			ParameterExpression queryParameter,
 			List<Harvester>     harvesters,
 			Expression[]        previousKeys,
 			EagerLoadState      state)
@@ -197,13 +195,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			for (int i = 0; i < allDependencies.Count; i++)
 				depToVF[allDependencies[i]] = keyVirtualFields[i];
 
-			// Phase 3a: discover parent SQL placeholders. The branches loop reads these only to
-			// decide whether the parent has scalar columns to carry through the parent UNION-ALL
-			// branch — branch construction itself depends only on whether children correlate
-			// with the parent (allDependencies).
-			var mainRef          = new ContextRefExpression(sourceType, rootCteTableCtx);
-			var mainBuiltExpr    = BuildSqlExpression(rootCteTableCtx, mainRef, BuildPurpose.Expression, BuildFlags.ForSetProjection);
-			var mainPlaceholders = CollectDistinctPlaceholders(mainBuiltExpr, false);
+			// Phase 3a: the parent row is rebuilt from the carrier: a slot for each placeholder of its reader, and the key slot
+			// for the collections' lookups.
+			var parentReader     = expression.Transform(static e => e is SqlEagerLoadExpression ? Expression.Default(e.Type) : e);
+			var mainPlaceholders = CollectDistinctPlaceholders(parentReader, false);
+			var parentKey        = Expression.Parameter(cteKeyType, "parentKey");
 
 			var simplifiedBranches = allDependencies.Count == 0;
 
@@ -838,15 +834,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			// Phase 5b: Add parent branch (setId = parentSetId, LAST in UNION ALL).
 			// Parent data comes from the root CTE (which wraps buildContext — entity or SetOperation).
 			//
-			// emitParentBranch — parent has scalar SQL placeholders that need to flow through the
-			//   UNION ALL carrier; iterator filters parent rows by setId.
+			// emitParentBranch — parent has scalar SQL placeholders or correlation keys that need to flow
+			//   through the UNION ALL carrier; iterator filters parent rows by setId.
 			// synthesizeParent — no scalars and no dependencies; the parent row is materialized in
 			//   C# from default(TCarrier) and HarvesterResult lookups, no parent branch is emitted.
-			// useInlineMode    — either of the above; if neither, falls back to harvester execution
-			//   (UNION ALL runs as a child harvester, main query runs separately).
-			var emitParentBranch = mainPlaceholders.Count > 0;
-			var synthesizeParent = !emitParentBranch && allDependencies.Count == 0;
-			var useInlineMode    = emitParentBranch || synthesizeParent;
+			var emitParentBranch = mainPlaceholders.Count > 0 || allDependencies.Count > 0;
+			var synthesizeParent = !emitParentBranch;
 
 			if (!emitParentBranch)
 				parentSetId = -1;
@@ -900,21 +893,15 @@ namespace LinqToDB.Internal.Linq.Builder
 				for (int s = dataSlotOffset; s < parentArgs.Length; s++)
 					parentArgs[s] = Expression.Default(carrierTypes[s]);
 
-				// Data: build from the parent CTE context itself (not external mainPlaceholders)
+				// Data: what the parent row reads, through the parent CTE context.
+				for (int c = 0; c < mainPlaceholders.Count; c++)
 				{
-					var parentCteRef   = new ContextRefExpression(sourceType, parentBranchTableCtx);
-					var parentBuiltCte = BuildSqlExpression(parentBranchTableCtx, parentCteRef, BuildPurpose.Expression, BuildFlags.ForSetProjection);
-					var parentCtePhs   = CollectDistinctPlaceholders(parentBuiltCte, false);
+					var slotIdx = parentSlotMap[c];
+					Expression access = parentBranchTableCtx.RegisterVirtualField(mainPlaceholders[c]);
 
-					for (int c = 0; c < parentCtePhs.Count && c < mainPlaceholders.Count; c++)
-					{
-						var slotIdx = parentSlotMap[c];
-						Expression access = parentBranchTableCtx.RegisterVirtualField(parentCtePhs[c]);
-
-						if (access.Type != carrierTypes[slotIdx])
-							access = Expression.Convert(access, carrierTypes[slotIdx]);
-						parentArgs[slotIdx] = access;
-					}
+					if (access.Type != carrierTypes[slotIdx])
+						access = Expression.Convert(access, carrierTypes[slotIdx]);
+					parentArgs[slotIdx] = access;
 				}
 
 				// Ensure all carrier args match expected types
@@ -976,115 +963,79 @@ namespace LinqToDB.Internal.Linq.Builder
 			var combinedSequence = BuildSequence(new BuildInfo((IBuildContext?)null, concatExpr,
 				new SelectQuery()));
 
-			if (useInlineMode)
+			// Phase 7a: store UNION ALL info for Phase 2 (applied in BuildQuery).
+			state.CteUnionInfo = new CteUnionPhase2Info
 			{
-				// Phase 7a: Single-query mode — store UNION ALL info for Phase 2 (applied in BuildQuery).
-				state.CteUnionInfo = new CteUnionPhase2Info
-				{
-					CombinedSequence   = combinedSequence,
-					KeyType            = cteKeyType,
-					CarrierType        = carrierType,
-					CarrierTypes       = carrierTypes,
-					Branches           = branches.ToArray(),
-					SlotMaps           = slotMaps,
-					ParentSetId        = parentSetId,
-					ParentSlotMap      = parentSlotMap,
-					SynthesizeParent   = synthesizeParent,
-				};
-				state.HasCteUnionQuery = true;
+				CombinedSequence   = combinedSequence,
+				KeyType            = cteKeyType,
+				CarrierType        = carrierType,
+				CarrierTypes       = carrierTypes,
+				Branches           = branches.ToArray(),
+				SlotMaps           = slotMaps,
+				ParentSetId        = parentSetId,
+				ParentPlaceholders = mainPlaceholders,
+				ParentKey          = parentKey,
+				ParentSlotMap      = parentSlotMap,
+				SynthesizeParent   = synthesizeParent,
+			};
+			state.HasCteUnionQuery = true;
 
-				// Request that the main query be marked finalized on commit — its statement shares the
-				// SelectQuery with the CTE body and must not be finalized separately (mutations like
-				// Oracle 11's ReplaceTakeSkipWithRowNum would corrupt the shared CTE body). The union
-				// query built in SetupCteUnionQuery has its own independent finalization. The actual
-				// _query.IsFinalized = true is applied only when CompleteEagerLoadingExpressions commits.
-				state.QueryFinalizedRequested = true;
-			}
+			// Request that the main query be marked finalized on commit — its statement shares the
+			// SelectQuery with the CTE body and must not be finalized separately (mutations like
+			// Oracle 11's ReplaceTakeSkipWithRowNum would corrupt the shared CTE body). The union
+			// query built in SetupCteUnionQuery has its own independent finalization. The actual
+			// _query.IsFinalized = true is applied only when CompleteEagerLoadingExpressions commits.
+			state.QueryFinalizedRequested = true;
 
-			// Phase 7b: Build result expressions
+			// Phase 7b: Build result expressions. HarvesterResult access is resolved at runtime in Phase 2.
 			var results = new Dictionary<Expression, Expression>(ExpressionEqualityComparer.Instance);
 
-			if (useInlineMode)
+			for (int b = 0; b < branches.Count; b++)
 			{
-				// Single-query mode: HarvesterResult access is resolved at runtime in Phase 2
-				for (int b = 0; b < branches.Count; b++)
-				{
-					var branch     = branches[b];
-					var detailType = branch.DetailType;
+				var branch     = branches[b];
+				var detailType = branch.DetailType;
 
-					// Use full allDependencies key to match carrier key.
-					// Zero-dep case: synthesise constant 0 (mirrors parentArgs[1] / branchKeyBody / cteKeyType).
-					var keyExpr = allDependencies.Count == 0
-						? (Expression)Expression.Constant(0)
-						: allDependencies.Count == 1
-							? allDependencies[0]
-							: GenerateKeyExpression(allDependencies.ToArray(), 0);
+				var harvesterResultType = typeof(HarvesterResult<,>).MakeGenericType(cteKeyType, typeof(object));
+				var getListMethod      = harvesterResultType.GetMethod(nameof(HarvesterResult<,>.GetList))!;
 
-					var harvesterResultType = typeof(HarvesterResult<,>).MakeGenericType(cteKeyType, typeof(object));
-					var getListMethod      = harvesterResultType.GetMethod(nameof(HarvesterResult<,>.GetList))!;
+				Expression harvesterAccess = Expression.Convert(
+					Expression.ArrayIndex(
+						Expression.Convert(
+							Expression.Call(ExecutionContextParam, SqlCommandExecutionContext.GetResultMethodInfo, ExpressionInstances.Int32(harvesters.Count)),
+							typeof(object?[])),
+						ExpressionInstances.Int32(b)),
+					harvesterResultType);
 
-					Expression harvesterAccess = Expression.Convert(
-						Expression.ArrayIndex(
-							Expression.Convert(
-								Expression.Call(ExecutionContextParam, SqlCommandExecutionContext.GetResultMethodInfo, ExpressionInstances.Int32(harvesters.Count)),
-								typeof(object?[])),
-							ExpressionInstances.Int32(b)),
-						harvesterResultType);
+				Expression resultExpr = Expression.Call(harvesterAccess, getListMethod, parentKey);
 
-					Expression resultExpr = Expression.Call(harvesterAccess, getListMethod, keyExpr);
+				var objParam = Expression.Parameter(typeof(object), "o");
+				var castLambda = Expression.Lambda(Expression.Convert(objParam, detailType), objParam);
+				resultExpr = Expression.Call(
+					typeof(Enumerable), nameof(Enumerable.Select),
+					[typeof(object), detailType],
+					resultExpr, castLambda);
 
-					var objParam = Expression.Parameter(typeof(object), "o");
-					var castLambda = Expression.Lambda(Expression.Convert(objParam, detailType), objParam);
-					resultExpr = Expression.Call(
-						typeof(Enumerable), nameof(Enumerable.Select),
-						[typeof(object), detailType],
-						resultExpr, castLambda);
+				resultExpr = Expression.Call(
+					typeof(Enumerable), nameof(Enumerable.ToList),
+					[detailType],
+					resultExpr);
 
-					resultExpr = Expression.Call(
-						typeof(Enumerable), nameof(Enumerable.ToList),
-						[detailType],
-						resultExpr);
+				// Carrier sort (setId, RN, key) drives HarvesterResult bucket order through the
+				// branch's RN field — no in-memory re-sort needed here, child OrderBy is already
+				// preserved by RN encoding.
 
-					// Carrier sort (setId, RN, key) drives HarvesterResult bucket order through the
-					// branch's RN field — no in-memory re-sort needed here, child OrderBy is already
-					// preserved by RN encoding.
-
-					resultExpr = SqlAdjustTypeExpression.AdjustType(resultExpr, branch.EagerLoad.Type, MappingSchema);
-					results[branch.EagerLoad.SequenceExpression] = resultExpr;
-				}
-
-				harvesters.Add(new CteUnionPlaceholderHarvester());
+				resultExpr = SqlAdjustTypeExpression.AdjustType(resultExpr, branch.EagerLoad.Type, MappingSchema);
+				results[branch.EagerLoad.SequenceExpression] = resultExpr;
 			}
-			else
-			{
-				// Harvester mode: create CteUnionHarvester that executes the UNION ALL as a child query
-				Expression mainKeyExpression = allDependencies.Count == 0
-					? Expression.Constant(0)
-					: allDependencies.Count == 1
-						? allDependencies[0]
-						: GenerateKeyExpression(allDependencies.ToArray(), 0);
 
-				var result = (Dictionary<Expression, Expression>)_buildCteUnionHarvesterMethodInfo
-					.MakeGenericMethod(cteKeyType, carrierType)
-					.InvokeExt<object>(this, new object?[]
-					{
-						combinedSequence,
-						mainKeyExpression,
-						queryParameter, harvesters,
-						branches.ToArray(), slotMaps, carrierTypes,
-					})!;
-
-				foreach (var kvp in result)
-					results[kvp.Key] = kvp.Value;
-			}
+			harvesters.Add(new CteUnionPlaceholderHarvester());
 
 			return results;
 		}
 
 		/// <summary>
 		/// Builds the per-branch detail extractors that reconstruct each child detail from a carrier
-		/// ValueTuple slot, resolving any nested harvester lookups. Shared by the harvester
-		/// (BuildCteUnionHarvester) and inline (SetupCteUnionQuery) execution modes.
+		/// ValueTuple slot, resolving any nested harvester lookups.
 		/// </summary>
 		Func<TCarrier, SqlCommandExecutionContext?, object>[] BuildCteUnionDetailExtractors<TCarrier>(CteUnionBranch[] branches, int[][] slotMaps, int harvesterIndex)
 		{
@@ -1145,122 +1096,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			return detailExtractors;
-		}
-
-		static readonly MethodInfo _buildCteUnionHarvesterMethodInfo =
-			typeof(ExpressionBuilder).GetMethod(nameof(BuildCteUnionHarvester), BindingFlags.Instance | BindingFlags.NonPublic)
-			?? throw new InvalidOperationException();
-
-		Dictionary<Expression, Expression> BuildCteUnionHarvester<TKey, TCarrier>(
-			IBuildContext       combinedSequence,
-			Expression          keyExpression,
-			ParameterExpression queryParameter,
-			List<Harvester>     harvesters,
-			CteUnionBranch[]    branches,
-			int[][]             slotMaps,
-			Type[]              carrierTypes)
-			where TKey : notnull
-		{
-			var query = new Query<TCarrier>(DataContext);
-			query.Init(combinedSequence);
-			query.SetParametersAccessors(_parametersContext.CurrentSqlParameters.ToList());
-
-			if (!BuildQuery(query, combinedSequence, queryParameter, ref harvesters!, []))
-			{
-				// Surface the specific translation error per eager load instead of a generic throw, matching
-				// BuildHarvesterQueryAttached / BuildKeyedQueryHarvesterAttached so the real cause is reported.
-				var errorResult = new Dictionary<Expression, Expression>(branches.Length);
-				foreach (var branch in branches)
-					errorResult[branch.EagerLoad.SequenceExpression] = query.ErrorExpression!;
-				return errorResult;
-			}
-
-			// Build setId extractor
-			var carrierParam   = Expression.Parameter(typeof(TCarrier), "vt");
-			var setIdAccess    = AccessValueTupleField(carrierParam, 0);
-			var setIdExtractor = Expression.Lambda<Func<TCarrier, int>>(setIdAccess, carrierParam).CompileExpression();
-
-			// Build key extractor
-			var keyAccess = AccessValueTupleField(carrierParam, 1);
-			if (keyAccess.Type != typeof(TKey))
-				keyAccess = Expression.Convert(keyAccess, typeof(TKey));
-			var keyExtractor = Expression.Lambda<Func<TCarrier, TKey>>(keyAccess, carrierParam).CompileExpression();
-
-			// Build detail extractors per branch — reconstruct detail from carrier VT slots
-			var detailExtractors = BuildCteUnionDetailExtractors<TCarrier>(branches, slotMaps, harvesters.Count);
-
-			// Create harvester — compute nested processing order (deepest first)
-			int[]? nestedProcessingOrder = null;
-			{
-				List<int>? nestedIds = null;
-				for (int b = 0; b < branches.Length; b++)
-				{
-					if (branches[b].IsNested)
-					{
-						nestedIds ??= new List<int>();
-						nestedIds.Add(b);
-					}
-				}
-
-				if (nestedIds != null)
-				{
-					nestedIds.Sort();
-					nestedIds.Reverse(); // deepest first (BFS assigns higher indices to deeper levels)
-					nestedProcessingOrder = nestedIds.ToArray();
-				}
-			}
-
-			var idx       = harvesters.Count;
-			var harvester = new CteUnionHarvester<TKey, TCarrier>(query, setIdExtractor, keyExtractor, detailExtractors, branches.Length, nestedProcessingOrder, idx);
-			harvesters.Add(harvester);
-
-			// Build result expressions for each branch
-			var results = new Dictionary<Expression, Expression>(ExpressionEqualityComparer.Instance);
-
-			for (int b = 0; b < branches.Length; b++)
-			{
-				var branch     = branches[b];
-				var detailType = branch.DetailType;
-
-				// Access: ((HarvesterResult<TKey, object>)((object?[])harvesters[idx])[b]).GetList(key)
-				// Then cast each element to detailType
-				var harvesterResultType = typeof(HarvesterResult<,>).MakeGenericType(typeof(TKey), typeof(object));
-				var getListMethod      = harvesterResultType.GetMethod("GetList")!;
-
-				Expression harvesterAccess = Expression.Convert(
-					Expression.ArrayIndex(
-						Expression.Convert(
-							Expression.Call(ExecutionContextParam, SqlCommandExecutionContext.GetResultMethodInfo, ExpressionInstances.Int32(idx)),
-							typeof(object?[])),
-						ExpressionInstances.Int32(b)),
-					harvesterResultType);
-
-				Expression resultExpr = Expression.Call(harvesterAccess, getListMethod, keyExpression);
-
-				// Cast List<object> to List<DetailType> via Select + Cast
-				var objParam = Expression.Parameter(typeof(object), "o");
-				var castLambda = Expression.Lambda(Expression.Convert(objParam, detailType), objParam);
-				resultExpr = Expression.Call(
-					typeof(Enumerable), nameof(Enumerable.Select),
-					[typeof(object), detailType],
-					resultExpr, castLambda);
-
-				// ToList() to match expected List<T> type
-				resultExpr = Expression.Call(
-					typeof(Enumerable), nameof(Enumerable.ToList),
-					[detailType],
-					resultExpr);
-
-				// Carrier sort (setId, RN, key) drives HarvesterResult bucket order through the
-				// branch's RN field — no in-memory re-sort needed here, child OrderBy is already
-				// preserved by RN encoding.
-
-				resultExpr = SqlAdjustTypeExpression.AdjustType(resultExpr, branch.EagerLoad.Type, MappingSchema);
-
-				results[branch.EagerLoad.SequenceExpression] = resultExpr;
-			}
-
-			return results;
 		}
 
 		/// <summary>
@@ -1355,19 +1190,25 @@ namespace LinqToDB.Internal.Linq.Builder
 			var detailExtractors = BuildCteUnionDetailExtractors<TCarrier>(branches, info.SlotMaps, harvesterStartIndex);
 
 			// 4. Build parent row reconstruction: replace SqlPlaceholderExpressions in the main
-			//    expression with carrier slot access by positional matching.
-			//    Collect placeholders from finalized in order — they correspond 1:1 to mainPlaceholders.
+			//    expression with the carrier slot registered for each, and the collections' key
+			//    with the carrier's key slot.
 			var parentCarrierParam = Expression.Parameter(typeof(TCarrier), "pvt");
 
-			var finalizedPlaceholders = CollectDistinctPlaceholders(finalized, false);
-			var phToSlot = new Dictionary<SqlPlaceholderExpression, int>(finalizedPlaceholders.Count);
-			for (int i = 0; i < finalizedPlaceholders.Count && i < info.ParentSlotMap.Length; i++)
-				phToSlot[finalizedPlaceholders[i]] = info.ParentSlotMap[i];
+			var phToSlot = new Dictionary<SqlPlaceholderExpression, int>(info.ParentPlaceholders.Count);
+			for (int i = 0; i < info.ParentPlaceholders.Count; i++)
+				phToSlot[info.ParentPlaceholders[i]] = info.ParentSlotMap[i];
+
+			var parentKeySlot = AccessValueTupleField(parentCarrierParam, 1);
+			if (parentKeySlot.Type != typeof(TKey))
+				parentKeySlot = Expression.Convert(parentKeySlot, typeof(TKey));
 
 			var parentReconstructed = finalized.Transform(
-				(phToSlot, parentCarrierParam),
+				(phToSlot, parentCarrierParam, parentKey: info.ParentKey, parentKeySlot),
 				static (ctx, e) =>
 				{
+					if (e == ctx.parentKey)
+						return ctx.parentKeySlot;
+
 					if (e is SqlPlaceholderExpression spe && ctx.phToSlot.TryGetValue(spe, out var slotIdx))
 					{
 						var access = AccessValueTupleField(ctx.parentCarrierParam, slotIdx);
@@ -1558,6 +1399,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			public CteUnionBranch[]                  Branches           = null!;
 			public int[][]                           SlotMaps           = null!;
 			public int                               ParentSetId;
+			public List<SqlPlaceholderExpression>    ParentPlaceholders = null!;
+			public ParameterExpression               ParentKey          = null!;
 			public int[]                             ParentSlotMap      = null!;
 			// When the parent contributes no scalars and has no dependencies, no parent branch
 			// is built; the iterator yields a single row from default(TCarrier) instead.
@@ -1638,7 +1481,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		// Creates the per-branch HarvesterResult bucket array for a CteUnion result set: nested branches
-		// use an object-keyed bucket, the rest a TKey-keyed one. Shared by the inline + harvester modes.
+		// use an object-keyed bucket, the rest a TKey-keyed one.
 		static object?[] CreateCteUnionBuckets<TKey>(int branchCount, HashSet<int>? nestedSetIds)
 			where TKey : notnull
 		{
@@ -1655,7 +1498,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		// Multi-pass dispatch: buckets each carrier whose setId is a nested branch, processing nested
 		// branches deepest-first so their HarvesterResults are populated before parent detail extractors
-		// look them up. Shared by the inline and harvester execution modes.
+		// look them up.
 		static void RunNestedCteUnionPasses<TKey, TCarrier>(
 			List<TCarrier>                                        carriers,
 			object?[]                                             buckets,
@@ -1702,150 +1545,5 @@ namespace LinqToDB.Internal.Linq.Builder
 				((HarvesterResult<TKey, object>)buckets[setId]!).Add(key, detail);
 			}
 		}
-
-		sealed class CteUnionHarvester<TKey, TCarrier> : Harvester, IStepMaterializer
-			where TKey : notnull
-		{
-			readonly Query<TCarrier>                                       _query;
-			readonly Func<TCarrier, int>                                   _getSetId;
-			readonly Func<TCarrier, TKey>                                  _getKey;
-			readonly Func<TCarrier, SqlCommandExecutionContext?, object>[] _detailExtractors;
-			readonly int                                                   _branchCount;
-			readonly int[]?                                                _nestedProcessingOrder; // nested setIds in reverse depth order (deepest first)
-			readonly int                                                   _harvesterIndex;
-
-			public CteUnionHarvester(
-				Query<TCarrier>                                       query,
-				Func<TCarrier, int>                                   getSetId,
-				Func<TCarrier, TKey>                                  getKey,
-				Func<TCarrier, SqlCommandExecutionContext?, object>[] detailExtractors,
-				int                                                   branchCount,
-				int[]?                                                nestedProcessingOrder,
-				int                                                   harvesterIndex)
-			{
-				_query                  = query;
-				_getSetId               = getSetId;
-				_getKey                 = getKey;
-				_detailExtractors       = detailExtractors;
-				_branchCount            = branchCount;
-				_nestedProcessingOrder  = nestedProcessingOrder;
-				_harvesterIndex         = harvesterIndex;
-			}
-
-			// Self-executing path (a non-combinable UNION-ALL harvester: separate round-trip). Same bucketing as the
-			// combined-reader path below; only the carrier source differs.
-			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context)
-				=> BuildResult(_query.GetResultEnumerable(dataContext, expressions, context), context);
-
-			// IStepMaterializer: the UNION-ALL is a single statement, so it can join the combined command as one Reader step
-			// whose result set is bucketed off the shared reader instead of a separate round-trip.
-			public bool CanCombine => _query.GetResultFromReader != null;
-
-			public QueryInfo? GetCombinableQueryInfo()
-				=> _query.QueryInfo;
-
-			public void AddCombinableParameterValues(SqlParameterValues values, IQueryExpressions expressions, IDataContext dataContext, object?[]? parameters, SqlCommandExecutionContext context)
-			{
-				QueryRunner.SetParameters(_query, expressions, dataContext, parameters, values, context);
-			}
-
-			public object MaterializeFromReader(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, DbDataReader dataReader)
-				=> BuildResult(_query.GetResultFromReader!(dataContext, expressions, context, dataReader), context);
-
-			public Task<object> MaterializeFromReaderAsync(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, DbDataReader dataReader, CancellationToken cancellationToken)
-				=> BuildResultAsync(_query.GetResultFromReader!(dataContext, expressions, context, dataReader), context, cancellationToken);
-
-			// Buckets the carrier stream (setId-routed) into the N-branch HarvesterResults; only the source enumerable differs
-			// between the self-executing (GetResultEnumerable) and combined-reader (GetResultFromReader) paths. Results are
-			// stored in the context slot early so nested-branch detail extractors can resolve sibling results while bucketing.
-			object BuildResult(IEnumerable<TCarrier> carriers, SqlCommandExecutionContext? context)
-			{
-				var nestedSetIds = _nestedProcessingOrder != null ? new HashSet<int>(_nestedProcessingOrder) : null;
-
-				var results = ExpressionBuilder.CreateCteUnionBuckets<TKey>(_branchCount, nestedSetIds);
-
-				if (context != null)
-				{
-					// The context is always sized to the harvester count (EagerResultEnumerable / Query.GetEagerEnumerable),
-					// so this slot must exist; fail loudly rather than silently dropping the nested-branch results a detail
-					// extractor resolves below.
-					if (_harvesterIndex >= context.Results.Length)
-						throw new InvalidOperationException(
-							"CteUnion harvester slot is outside the execution context - nested-branch results would be lost.");
-
-					context.SetResult(_harvesterIndex, results);
-				}
-
-				if (_nestedProcessingOrder != null)
-				{
-					// Multi-pass: buffer all carriers, nested branches (deepest first), then non-nested,
-					// so nested HarvesterResults are populated before parent extractors look them up.
-					var buffered = carriers.ToList();
-
-					ExpressionBuilder.RunNestedCteUnionPasses<TKey, TCarrier>(buffered, results, _getSetId, _getKey, _detailExtractors, _nestedProcessingOrder, context);
-
-					foreach (var carrier in buffered)
-						ExpressionBuilder.AddNonNestedCarrier<TKey, TCarrier>(carrier, results, _getSetId, _getKey, _detailExtractors, _branchCount, nestedSetIds, context);
-				}
-				else
-				{
-					// Single pass: stream, no nested branches.
-					foreach (var carrier in carriers)
-						ExpressionBuilder.AddNonNestedCarrier<TKey, TCarrier>(carrier, results, _getSetId, _getKey, _detailExtractors, _branchCount, nestedSetIds, context);
-				}
-
-				return results;
-			}
-
-			public override Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context,
-				CancellationToken cancellationToken)
-				=> BuildResultAsync(_query.GetResultEnumerable(dataContext, expressions, context), context, cancellationToken);
-
-			// Async sibling of BuildResult.
-			async Task<object> BuildResultAsync(IAsyncEnumerable<TCarrier> carriers, SqlCommandExecutionContext? context, CancellationToken cancellationToken)
-			{
-				var nestedSetIds = _nestedProcessingOrder != null ? new HashSet<int>(_nestedProcessingOrder) : null;
-
-				var results = ExpressionBuilder.CreateCteUnionBuckets<TKey>(_branchCount, nestedSetIds);
-
-				if (context != null)
-				{
-					// The context is always sized to the harvester count (EagerResultEnumerable / Query.GetEagerEnumerable),
-					// so this slot must exist; fail loudly rather than silently dropping the nested-branch results a detail
-					// extractor resolves below.
-					if (_harvesterIndex >= context.Results.Length)
-						throw new InvalidOperationException(
-							"CteUnion harvester slot is outside the execution context - nested-branch results would be lost.");
-
-					context.SetResult(_harvesterIndex, results);
-				}
-
-				if (_nestedProcessingOrder != null)
-				{
-					var buffered = new List<TCarrier>();
-
-					await foreach (var carrier in carriers.WithCancellation(cancellationToken).ConfigureAwait(false))
-						buffered.Add(carrier);
-
-					ExpressionBuilder.RunNestedCteUnionPasses<TKey, TCarrier>(buffered, results, _getSetId, _getKey, _detailExtractors, _nestedProcessingOrder, context);
-
-					foreach (var carrier in buffered)
-						ExpressionBuilder.AddNonNestedCarrier<TKey, TCarrier>(carrier, results, _getSetId, _getKey, _detailExtractors, _branchCount, nestedSetIds, context);
-				}
-				else
-				{
-					await foreach (var carrier in carriers.WithCancellation(cancellationToken).ConfigureAwait(false))
-						ExpressionBuilder.AddNonNestedCarrier<TKey, TCarrier>(carrier, results, _getSetId, _getKey, _detailExtractors, _branchCount, nestedSetIds, context);
-				}
-
-				return results;
-			}
-
-			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values)
-			{
-				QueryHelper.CollectParametersAndValues(_query.QueryInfo.Statement, parameters, values);
-			}
-		}
-
 	}
 }
