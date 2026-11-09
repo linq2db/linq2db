@@ -1898,7 +1898,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
-		public void UnreferencedExprArgumentIsNotSent([DataSources(TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.Informix)] string context)
+		public void UnreferencedExprArgumentIsNotSent([DataSources(TestProvName.AllNativeAccess, TestProvName.AllSapHana, ProviderName.Informix)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2034,7 +2034,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
-		public void ArgumentReferencedByPositionIsSent([IncludeDataSources(true, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllSQLiteClassic, TestProvName.AllMySql)] string context, [Values] bool dataParameter)
+		public void ArgumentReferencedByPositionIsSent([IncludeDataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSapHana, TestProvName.AllSQLiteClassic, TestProvName.AllMySql)] string context, [Values] bool dataParameter)
 		{
 			using var db = GetDataContext(context);
 
@@ -2049,7 +2049,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
-		public void PlainArgumentReferencedByPositionIsSent([IncludeDataSources(true, TestProvName.AllAccess, TestProvName.AllSapHana)] string context)
+		public void PlainArgumentReferencedByPositionIsSent([IncludeDataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSapHana)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2069,7 +2069,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
-		public void PlainExprArgumentReferencedByPositionIsSent([IncludeDataSources(true, TestProvName.AllAccess, TestProvName.AllSapHana)] string context)
+		public void PlainExprArgumentReferencedByPositionIsSent([IncludeDataSources(true, TestProvName.AllNativeAccess, TestProvName.AllSapHana)] string context)
 		{
 			using var db = GetDataContext(context);
 

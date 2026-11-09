@@ -2007,7 +2007,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullableComparisonAsSetValue([DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		public void NullableComparisonAsSetValue([DataSources(TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var data = new[]
 			{
@@ -2033,7 +2033,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullableComparisonAsConditionalSetValue([DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		public void NullableComparisonAsConditionalSetValue([DataSources(TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var data = new[]
 			{
@@ -2069,7 +2069,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullableComparisonAsConditionalElseSetValue([DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		public void NullableComparisonAsConditionalElseSetValue([DataSources(TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var data = new[]
 			{

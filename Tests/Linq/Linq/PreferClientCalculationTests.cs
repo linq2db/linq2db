@@ -789,7 +789,7 @@ namespace Tests.Linq
 		// A zero interval is outside the ratio's domain, as a zero divisor is. Option off only: with the option on the client
 		// divides by TimeSpan.Zero and answers Infinity. Access keeps a duration as money and refuses its tick total.
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_Interval_Member)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ErrorMessage = ErrorHelper.Error_Interval_Member)]
 		public void IntervalRatioOverMissedLeftJoinKeepsNull([DataSources] string context)
 		{
 			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(false));
