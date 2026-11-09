@@ -460,6 +460,16 @@ namespace Tests.Linq
 			AssertQueryWithinDelta(even);
 		}
 
+		// Access spells % as MOD, which binds tighter than + and -, so a sum or difference operand needs its own parentheses.
+		[Test]
+		public void ModuloOperandKeepsItsGrouping([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			AssertQuery(db.Types.OrderBy(p => p.ID).Select(p => Sql.AsSql((p.ID + 5) % 3)));
+			AssertQuery(db.Types.OrderBy(p => p.ID).Select(p => Sql.AsSql((100 - p.ID) % 3)));
+		}
+
 		// A non-constant precision must not cost the value its fractional digits.
 		// DuckDB rejects ROUND(DECIMAL, INTEGER) with a non-constant precision.
 		// Expected comes from the in-memory rows: Sybase's values arrive through double, so on .NET 11 a loaded
