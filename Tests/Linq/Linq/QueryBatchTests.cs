@@ -2226,9 +2226,10 @@ namespace Tests.Linq
 			hints.Clear();
 		}
 
-		// A batch is new API, so a First nested in one of its parts follows LINQ too; the same query outside a batch keeps
-		// reading the empty source as the default value.
+		// A batch is new API, so a First nested in one of its parts follows LINQ too; the same query outside a batch does not
+		// throw: it reads the empty source as the default value, or drops the row.
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void NestedEmptyReadThrowsInsideTheBatch([DataSources(false, NoFromlessSubquery)] string context)
 		{
 			using var db     = GetDataContext(context);
@@ -2247,8 +2248,17 @@ namespace Tests.Linq
 				.Compile()
 				.Invoke();
 
-			// SQL CE reads the First with CROSS APPLY, which drops the row.
-			int[] expected = context.IsAnyOf(ProviderName.SqlCe) ? [9, 10] : [0, 9, 10, 0];
+			// Where the First is no scalar subquery it is an inner join - CROSS APPLY on SQL CE, a ROW_NUMBER join or
+			// INNER JOIN LATERAL elsewhere - which drops the row.
+			int[] expected = context.IsAnyOf(
+				ProviderName.SqlCe,
+				TestProvName.AllClickHouse,
+				TestProvName.AllInformix,
+				TestProvName.AllOracle11,
+				TestProvName.AllSapHana,
+				TestProvName.AllYdb)
+				? [9, 10]
+				: [0, 9, 10, 0];
 
 			outside.ShouldBe(expected);
 
