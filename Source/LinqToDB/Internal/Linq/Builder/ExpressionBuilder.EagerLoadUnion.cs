@@ -993,11 +993,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				};
 				state.HasCteUnionQuery = true;
 
-				// Request that the main query be marked finalized on commit — its statement shares the
+				// Request that the query being built skips finalization — its statement shares the
 				// SelectQuery with the CTE body and must not be finalized separately (mutations like
 				// Oracle 11's ReplaceTakeSkipWithRowNum would corrupt the shared CTE body). The union
-				// query built in SetupCteUnionQuery has its own independent finalization. The actual
-				// _query.IsFinalized = true is applied only when CompleteEagerLoadingExpressions commits.
+				// query built in SetupCteUnionQuery has its own independent finalization. BuildQuery of
+				// that query applies this after CompleteEagerLoadingExpressions commits; it may be a
+				// detached child's, not the root's.
 				state.QueryFinalizedRequested = true;
 			}
 
