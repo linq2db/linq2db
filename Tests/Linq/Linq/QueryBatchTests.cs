@@ -1842,6 +1842,83 @@ namespace Tests.Linq
 			batch.Message.ShouldBe(alone.Message);
 		}
 
+		static int ClientValue(int id) => id + 1;
+
+		static int ClientSum(int first, int second) => first + second;
+
+		public enum ComputedRead
+		{
+			ClientColumn,
+			Constant,
+			ClientConstant,
+			Conditional,
+		}
+
+		static Expression<Func<int>> ComputedPart(IQueryable<BatchItem> source, ComputedRead read, bool isSingle)
+		{
+			return (read, isSingle) switch
+			{
+				(ComputedRead.ClientColumn,   false) => () => source
+					.Select(i => ClientValue(i.Id))
+					.First(),
+				(ComputedRead.ClientColumn,   true ) => () => source
+					.Select(i => ClientValue(i.Id))
+					.Single(),
+				(ComputedRead.Constant,       false) => () => source
+					.Select(i => 2)
+					.First(),
+				(ComputedRead.Constant,       true ) => () => source
+					.Select(i => 2)
+					.Single(),
+				(ComputedRead.ClientConstant, false) => () => source
+					.Select(i => ClientSum(1, 1))
+					.First(),
+				(ComputedRead.ClientConstant, true ) => () => source
+					.Select(i => ClientSum(1, 1))
+					.Single(),
+				(ComputedRead.Conditional,    false) => () => source
+					.Select(i => i.Id > 0 ? ClientValue(i.Id) : ClientValue(i.GroupId))
+					.First(),
+				_                                    => () => source
+					.Select(i => i.Id > 0 ? ClientValue(i.Id) : ClientValue(i.GroupId))
+					.Single(),
+			};
+		}
+
+		// A value that is no column of the row shows no more of the row than a NULL does.
+		[Test]
+		public void ComputedValueOverAnEmptySourceThrowsAsThePartAlone(
+			[DataSources(false, NoFromlessSubquery)] string context,
+			[Values] ComputedRead read,
+			[Values] bool isSingle)
+		{
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var part = ComputedPart(items.Where(i => i.Id > 100), read, isSingle);
+
+			var alone = ThrowOfThePartAlone(part);
+			var batch = Shouldly.Should.Throw<InvalidOperationException>(() => db.QueryBatch(part, () => items.ToList()));
+
+			batch.Message.ShouldBe(alone.Message);
+		}
+
+		[Test]
+		public void ComputedValueOfARowReadsAsThePartAlone(
+			[DataSources(false, NoFromlessSubquery)] string context,
+			[Values] ComputedRead read,
+			[Values] bool isSingle)
+		{
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var part = ComputedPart(items.Where(i => i.Id == 1), read, isSingle);
+
+			var (value, _) = db.QueryBatch(part, () => items.ToList());
+
+			value.ShouldBe(part.Compile()());
+		}
+
 		[Test]
 		public void NullableReadOverAnEmptySourceThrowsAsThePartAlone([DataSources(false, NoFromlessSubquery)] string context)
 		{

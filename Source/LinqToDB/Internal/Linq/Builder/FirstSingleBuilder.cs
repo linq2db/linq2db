@@ -355,15 +355,17 @@ namespace LinqToDB.Internal.Linq.Builder
 				// shows the row; any other value can be NULL by itself or pass a converter, so a marker beside it shows the row.
 				// A Single reads the marker too: the join behind it makes a second row a second batch row, which the batch's own
 				// Single refuses, where a scalar subquery leaves that to the server.
+				// A value that is no column of the row - a constant, a client computation - shows nothing of the row at all.
 				// A value slot is read as nullable, as the Min / Max check reads it, so a strategy that rebuilds the reader keeps
 				// the NULL.
 				if (TranslationModifier.StrictElementOperators
 					&& _methodKind is MethodKind.First or MethodKind.Single
 					&& flags.IsExpression()
-					&& !flags.IsForSetProjection()
-					&& projected is SqlPlaceholderExpression placeholder)
+					&& !flags.IsForSetProjection())
 				{
-					if (_methodKind == MethodKind.First && IsNotNullColumn(placeholder))
+					var placeholder = projected as SqlPlaceholderExpression;
+
+					if (placeholder != null && _methodKind == MethodKind.First && IsNotNullColumn(placeholder))
 					{
 						return Expression.Call(
 							typeof(FirstSingleContext),
@@ -372,7 +374,8 @@ namespace LinqToDB.Internal.Linq.Builder
 							placeholder.WithType(placeholder.Type.AsNullable()));
 					}
 
-					if (Sequence is DefaultIfEmptyBuilder.DefaultIfEmptyContext defaultIfEmpty)
+					if (Sequence is DefaultIfEmptyBuilder.DefaultIfEmptyContext defaultIfEmpty
+						&& (placeholder != null || SequenceHelper.IsSameContext(path, this)))
 					{
 						var markerPath = SequenceHelper.CreateSpecialProperty(
 							new ContextRefExpression(defaultIfEmpty.ElementType, defaultIfEmpty),
@@ -381,19 +384,19 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						var marker = Builder.BuildExpression(defaultIfEmpty, markerPath);
 
-						return placeholder.Type.IsNullableOrReferenceType
+						return placeholder != null && !placeholder.Type.IsNullableOrReferenceType
 							? Expression.Call(
-								typeof(FirstSingleContext),
-								nameof(ThrowIfNoRowReference),
-								[placeholder.Type],
-								marker,
-								placeholder)
-							: Expression.Call(
 								typeof(FirstSingleContext),
 								nameof(ThrowIfNoRowValue),
 								[placeholder.Type],
 								marker,
-								placeholder.WithType(placeholder.Type.AsNullable()));
+								placeholder.WithType(placeholder.Type.AsNullable()))
+							: Expression.Call(
+								typeof(FirstSingleContext),
+								nameof(ThrowIfNoRow),
+								[projected.Type],
+								marker,
+								projected);
 					}
 				}
 
@@ -426,7 +429,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return value.GetValueOrDefault();
 			}
 
-			static TValue ThrowIfNoRowReference<TValue>(int? marker, TValue value)
+			static TValue ThrowIfNoRow<TValue>(int? marker, TValue value)
 			{
 				if (marker is null)
 					throw new InvalidOperationException("Sequence contains no elements");
