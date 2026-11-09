@@ -19,19 +19,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY . /src
 WORKDIR /src
 
-# The offline test run uses the file-based SQLite providers only - the same set as CI's Linux SQLite leg
-# (Build/Azure/net100/sqlite.json). TestConfiguration finds this file by walking up from the test assembly.
+# The offline test run uses the suite's default SQLite provider and its Northwind database.
+# TestConfiguration finds this file by walking up from the test assembly.
 RUN cat > /src/UserDataProviders.json <<'JSON'
 {
 	"NET100": {
 		"Providers": [
 			"TestNoopProvider",
-			"SQLite.Classic",
-			"Northwind.SQLite",
 			"SQLite.MS",
-			"Northwind.SQLite.MS",
-			"SQLite.Classic.MPU",
-			"SQLite.Classic.MPM"
+			"Northwind.SQLite.MS"
 		]
 	}
 }

@@ -45,8 +45,8 @@ The trust split:
 
 - The image builds the core library and the main test suite for `net10.0` under `/src`.
 - `linq2db-oss-build` rebuilds after an edit (packages are already restored, no network needed).
-- `linq2db-oss-test` runs the whole suite against the file-based SQLite providers; `linq2db-oss-test
-  "FullyQualifiedName~<TestClassOrMethod>"` runs a subset. Only SQLite (`SQLite.MS`, `SQLite.Classic`) is available
+- `linq2db-oss-test` runs the whole suite against SQLite; `linq2db-oss-test
+  "FullyQualifiedName~<TestClassOrMethod>"` runs a subset. Only `SQLite.MS` is available
   offline, so reproducers should target SQLite where the bug is not provider-specific; for a provider-specific SQL
   generation bug, the generated SQL text (`query.ToSqlQuery().Sql`, or `DataConnection.LastQuery`) is sufficient
   evidence.
