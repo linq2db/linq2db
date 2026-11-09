@@ -884,7 +884,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConcatLiteralBesideVarCharKeepsUnicode([DataSources(TestProvName.AllInformix, TestProvName.AllAccess)] string context)
+		public void ConcatLiteralBesideVarCharKeepsUnicode([DataSources(TestProvName.AllInformix, TestProvName.AllNativeAccess)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(ConcatProductData);

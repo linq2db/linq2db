@@ -646,7 +646,7 @@ namespace Tests.Linq
 		// sibling's not-yet-populated slot, a child collection would come back empty and AreEqual below would catch it.
 		[Test]
 		public void MixedCombinableAndNonCombinable_NestedKeyedUnderCombinable(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			// Eager loads do not combine on a remote context, so it would run the same eager load as separate commands and
 			// produce a differently-grouped baseline than the direct leg; remote legs are excluded above.

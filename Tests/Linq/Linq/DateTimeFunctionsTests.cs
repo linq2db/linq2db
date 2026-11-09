@@ -981,7 +981,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ActiveIssue(5965, Configurations = [TestProvName.AllOracle, TestProvName.AllYdb], ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}2026-06-01T10:00:00.2260000{1}but was")]
-		public void DateAddMillisecondOverASecondPrecisionColumn([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
+		public void DateAddMillisecondOverASecondPrecisionColumn([DataSources(TestProvName.AllInformix, TestProvName.AllNativeAccess, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
 		{
 			var value = CoarseValue;
 
@@ -1009,7 +1009,7 @@ namespace Tests.Linq
 		[ActiveIssue(5965, Configuration = TestProvName.AllSqlServer2008Plus, ErrorMessage = "is not supported by date function dateadd for data type date")]
 		[ActiveIssue(5965, Configurations = [TestProvName.AllFirebird, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllYdb], ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}2026-06-01T00:00:00.2260000{1}but was")]
 		[ActiveIssue(5965, Configuration = TestProvName.AllDB2, ErrorMessage = "SQL0182N")]
-		public void DateAddMillisecondOverADateColumn([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
+		public void DateAddMillisecondOverADateColumn([DataSources(TestProvName.AllInformix, TestProvName.AllNativeAccess, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
 		{
 			var day = CoarseValue.Date;
 
@@ -1033,7 +1033,7 @@ namespace Tests.Linq
 		[ActiveIssue(5965, Configuration = TestProvName.AllSqlServer2008Plus, ErrorMessage = "is not supported by date function datepart for data type date")]
 		[ActiveIssue(5965, Configuration = TestProvName.AllFirebird, ErrorMessage = "Specified EXTRACT part does not exist in input datatype")]
 		[ActiveIssue(5965, Configuration = TestProvName.AllOracle, ErrorMessage = "ORA-01821")]
-		public void DatePartMillisecondOverADateColumn([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
+		public void DatePartMillisecondOverADateColumn([DataSources(TestProvName.AllInformix, TestProvName.AllNativeAccess, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = SeedCoarse(db);
@@ -1062,7 +1062,7 @@ namespace Tests.Linq
 		/// </remarks>
 		[Test]
 		[ActiveIssue(5965, Configuration = TestProvName.AllOracle, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}500{1}but was")]
-		public void DatePartMillisecondBeforeTheEpoch([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql, TestProvName.AllYdb)] string context)
+		public void DatePartMillisecondBeforeTheEpoch([DataSources(TestProvName.AllInformix, TestProvName.AllNativeAccess, TestProvName.AllSapHana, TestProvName.AllMySql, TestProvName.AllYdb)] string context)
 		{
 			var wide = new DateTime(1969, 1, 1, 0, 0, 0, 500);
 
@@ -1092,7 +1092,7 @@ namespace Tests.Linq
 		/// </remarks>
 		[Test]
 		[ActiveIssue(5965, Configuration = TestProvName.AllOracle, ErrorMessage = "ORA-01821")]
-		public void DatePartMillisecondOverASecondPrecisionColumn([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
+		public void DatePartMillisecondOverASecondPrecisionColumn([DataSources(TestProvName.AllInformix, TestProvName.AllNativeAccess, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = SeedCoarse(db);
