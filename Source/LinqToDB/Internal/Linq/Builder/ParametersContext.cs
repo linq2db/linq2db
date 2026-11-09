@@ -333,7 +333,21 @@ namespace LinqToDB.Internal.Linq.Builder
 							}
 
 							if (columnDescriptor != null)
+							{
 								providerValueGetter = columnDescriptor.ApplyConversions(providerValueGetter, paramDataType, true);
+							}
+							else if (convertExpr == null
+								&& Converter.GetDefaultMappingFromEnumType(MappingSchema, providerValueGetter.Type.UnwrapNullableType()) is { } mappedEnum
+								&& mappedEnum.UnwrapNullableType().IsEnum)
+							{
+								// With no column to convert through, an enum mapped onto another enum takes that enum's database mapping.
+								var convertLambda   = MappingSchema.GenerateSafeConvert(providerValueGetter.Type, mappedEnum.MakeNullable());
+								providerValueGetter = InternalExtensions.ApplyLambdaToExpression(convertLambda, providerValueGetter);
+								paramDataType       = mappingSchema.GetDbDataType(mappedEnum);
+
+								if (paramDataType.EqualsDbOnly(SqlDataType.MakeUndefined(mappedEnum).Type))
+									paramDataType = mappingSchema.GetUnderlyingDataType(mappedEnum, out _).Type;
+							}
 
 							providerValueGetter = convertExpr != null
 								? InternalExtensions.ApplyLambdaToExpression(convertExpr, providerValueGetter)
