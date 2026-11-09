@@ -24,7 +24,8 @@ namespace Tests.Wasm
 		public const string TrimFull         = nameof(TrimFull);
 		public const string NoReflectionJson = nameof(NoReflectionJson);
 
-		public static readonly TimeSpan Timeout = TimeSpan.FromMinutes(2);
+		// CoreCLR on browser-wasm needs minutes for a bundle's whole matrix, where Mono needed seconds.
+		public static readonly TimeSpan Timeout = TimeSpan.FromMinutes(15);
 
 		// A harness that cannot find its bundles must say so, not look somewhere else.
 		public static string RepoRoot { get; } = TestUtils.TryFindRepoRoot()
