@@ -413,6 +413,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("Client-side Guid generation", Configurations = [TestProvName.AllAccessLibRed])]
 		public void NewGuid1(
 			[DataSources(
 				ProviderName.DB2,
