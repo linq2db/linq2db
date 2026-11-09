@@ -1407,6 +1407,40 @@ namespace Tests.Linq
 				.ShouldBe(6000);
 		}
 
+		[Table]
+		sealed class UnicodeBesideVarCharRow
+		{
+			[PrimaryKey]                                                             public int    Id      { get; set; }
+			[Column(DataType = DataType.NVarChar, Length = 3000, CanBeNull = false)] public string Unicode { get; set; } = default!;
+			[Column(DataType = DataType.VarChar,  Length = 3000, CanBeNull = false)] public string Ansi    { get; set; } = default!;
+		}
+
+		// A function with only Unicode string arguments is as long as its longest argument: ISNULL over an NVarChar(3000)
+		// column beside a VarChar(3000) column adds up to 6000 characters, past what a non-MAX nvarchar holds.
+		[Test]
+		public void ConcatOfUnicodeOnlyFunctionBesideVarCharKeepsTotalLength([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			var data = new[]
+			{
+				new UnicodeBesideVarCharRow { Id = 1, Unicode = new string('ж', 3000), Ansi = new string('b', 3000) },
+			};
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			table
+				.Select(t => Sql.AsSql(IsNull(t.Unicode, "") + t.Ansi))
+				.Single()
+				.Length
+				.ShouldBe(6000);
+
+			table
+				.Select(t => Sql.AsSql(IsNullExpression(t.Unicode, "") + t.Ansi))
+				.Single()
+				.Length
+				.ShouldBe(6000);
+		}
+
 		// A non-Latin REPLACE argument over a VarChar value, compared with a Unicode parameter, keeps its characters.
 		[Test]
 		public void ConcatOfReplaceWithNonLatinArgumentComparedWithParameter([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)

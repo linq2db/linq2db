@@ -424,7 +424,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		}
 
 		// With no Unicode argument such a function counts as the longest non-Unicode value short of MAX, since it can outgrow
-		// its arguments (SPACE, STUFF), and with only Unicode ones as a parameter does. With both it is Unicode unless its
+		// its arguments (SPACE, STUFF), and with only Unicode ones as the longest of them. With both it is Unicode unless its
 		// longest argument is too long for nvarchar or a MAX one: ISNULL returns its varchar value, which is then cast on its own.
 		StringOperandShape MeasureByStringArguments(ISqlExpression[] arguments)
 		{
@@ -433,7 +433,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			return shape switch
 			{
 				{ Unicode: false }    => new(Unicode: false, NonUnicode: true,  Length: 8000),
-				{ NonUnicode: false } => new(Unicode: true,  NonUnicode: false, Length: 1),
+				{ NonUnicode: false } => shape,
 				{ Length: <= 4000 }   => shape,
 				_                     => new(Unicode: false, NonUnicode: true,  Length: shape.Length ?? 8000),
 			};
