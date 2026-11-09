@@ -2768,6 +2768,46 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void DirectEnumCastOverConstantConditionalContains([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var genders = new[] { ApiGender.Female };
+
+			var query = db.Person
+				.Where(p => genders.Contains((ApiGender)(p.ID > 2 ? Gender.Male : Gender.Female)));
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void DirectEnumCastOverConstantConditionalUsesEnumConverter([DataSources] string context)
+		{
+			var ms = CreateApiGenderSchema();
+
+			// Swapped on purpose: the rows tell this converter's value from the registered enum's mapping.
+			ms.SetConverter<ApiGender, DataParameter>(value => new DataParameter(null, value == ApiGender.Female ? "M" : "F", DataType.VarChar));
+
+			using var db = GetDataContext(context, ms);
+
+			var gender = ApiGender.Female;
+
+			var ids = db.Person
+				.Where(p => (ApiGender)(p.ID > 2 ? Gender.Male : Gender.Female) == gender)
+				.Select(p => p.ID)
+				.OrderBy(id => id)
+				.ToArray();
+
+			var expected = Person
+				.Where(p => p.ID > 2)
+				.Select(p => p.ID)
+				.OrderBy(id => id)
+				.ToArray();
+
+			ids.ShouldBe(expected);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
 		public void ProjectedEnumCastChildReferencesParent([DataSources] string context)
 		{
 			using var db = GetDataContext(context, CreateApiGenderSchema());

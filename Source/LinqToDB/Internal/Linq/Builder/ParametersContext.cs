@@ -337,8 +337,9 @@ namespace LinqToDB.Internal.Linq.Builder
 								providerValueGetter = columnDescriptor.ApplyConversions(providerValueGetter, paramDataType, true);
 							}
 							else if (convertExpr == null
-								&& Converter.GetDefaultMappingFromEnumType(MappingSchema, providerValueGetter.Type.UnwrapNullableType()) is { } mappedEnum
-								&& mappedEnum.UnwrapNullableType().IsEnum)
+								&& mappingSchema.GetDefaultFromEnumType(providerValueGetter.Type.UnwrapNullableType()) is { IsEnum: true } mappedEnum
+								&& Converter.GetDefaultMappingFromEnumType(MappingSchema, providerValueGetter.Type.UnwrapNullableType())?.UnwrapNullableType() == mappedEnum
+								&& MappingSchema.GetConvertExpression(providerValueGetter.Type.UnwrapNullableType(), typeof(DataParameter), false, false) == null)
 							{
 								// With no column to convert through, an enum mapped onto another enum takes that enum's database mapping.
 								var convertLambda   = MappingSchema.GenerateSafeConvert(providerValueGetter.Type, mappedEnum.MakeNullable());
