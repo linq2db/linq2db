@@ -30,7 +30,7 @@ namespace Tests.xUpdate
 	public class InsertTests : TestBase
 	{
 		[Test]
-		[NoBaselines("Client-side Guid generation", Configurations = [TestProvName.AllSapHana, TestProvName.AllYdb])]
+		[NoBaselines("Client-side Guid generation", Configurations = [TestProvName.AllSapHana, TestProvName.AllYdb, TestProvName.AllAccessLibRed])]
 		public void DistinctInsert1(
 			[DataSources(
 				ProviderName.DB2,
@@ -69,7 +69,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[NoBaselines("Client-side Guid generation", Configurations = [TestProvName.AllSapHana, TestProvName.AllYdb])]
+		[NoBaselines("Client-side Guid generation", Configurations = [TestProvName.AllSapHana, TestProvName.AllYdb, TestProvName.AllAccessLibRed])]
 		public void DistinctInsert2(
 			[DataSources(
 				ProviderName.DB2,
