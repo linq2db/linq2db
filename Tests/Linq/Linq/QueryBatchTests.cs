@@ -417,6 +417,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllYdb, ErrorMessage = ErrorHelper.Error_Join_Without_Condition, AlsoWhenParameter = "terminal", AlsoWhenValue = Terminal.SingleOrDefaultEmpty)]
 		public void EveryTerminalReadsItsValue([DataSources(NoFromlessSubquery)] string context, [Values] Terminal terminal)
 		{
 			var trace = new CommandTrace();
@@ -1664,6 +1665,7 @@ namespace Tests.Linq
 		// A scalar read is a subquery of the batch row, which SQL reads as NULL when it finds nothing.
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid, AlsoWhenParameter = "read", AlsoWhenValue = EmptyRead.FirstValue)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllYdb, ErrorMessage = ErrorHelper.Error_Join_Without_Condition, AlsoWhenParameter = "read", AlsoWhenValue = EmptyRead.SingleValue)]
 		public void EmptyScalarReadThrowsAsThePartAlone(
 			[DataSources(false, NoFromlessSubquery)] string context,
 			[Values] EmptyRead read)
@@ -1883,6 +1885,7 @@ namespace Tests.Linq
 		// A value that is no column of the row shows no more of the row than a NULL does.
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid, AlsoWhenParameter = "isSingle", AlsoWhenValue = false)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllYdb, ErrorMessage = ErrorHelper.Error_Join_Without_Condition, AlsoWhenParameter = "isSingle", AlsoWhenValue = true)]
 		public void ComputedValueOverAnEmptySourceThrowsAsThePartAlone(
 			[DataSources(false, NoFromlessSubquery)] string context,
 			[Values] ComputedRead read,
@@ -1901,6 +1904,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid, AlsoWhenParameter = "isSingle", AlsoWhenValue = false)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllYdb, ErrorMessage = ErrorHelper.Error_Join_Without_Condition, AlsoWhenParameter = "isSingle", AlsoWhenValue = true)]
 		public void ComputedValueOfARowReadsAsThePartAlone(
 			[DataSources(false, NoFromlessSubquery)] string context,
 			[Values] ComputedRead read,
@@ -1918,6 +1922,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllYdb, ErrorMessage = ErrorHelper.Error_Join_Without_Condition)]
 		public void NullableReadOverAnEmptySourceThrowsAsThePartAlone([DataSources(false, NoFromlessSubquery)] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -1961,6 +1966,7 @@ namespace Tests.Linq
 
 		// The marker joins the rows to the batch row, which is read with Single.
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllYdb, ErrorMessage = ErrorHelper.Error_Join_Without_Condition)]
 		public void TwoRowNullableSingleThrowsAsThePartAlone([DataSources(false, NoFromlessSubquery)] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -1972,11 +1978,12 @@ namespace Tests.Linq
 
 			ThrowOfThePartAlone(part);
 
-			Shouldly.Should.Throw<InvalidOperationException>(() => db.QueryBatch(part, () => items.ToList()));
+			ThrowOfTheBatch(() => db.QueryBatch(part, () => items.ToList()));
 		}
 
 		// A scalar subquery would leave the second row to the server: an error of its own, or on SQLite the first row.
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllYdb, ErrorMessage = ErrorHelper.Error_Join_Without_Condition)]
 		public void TwoRowNotNullSingleThrowsAsThePartAlone([DataSources(false, NoFromlessSubquery)] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -1988,7 +1995,7 @@ namespace Tests.Linq
 
 			ThrowOfThePartAlone(part);
 
-			Shouldly.Should.Throw<InvalidOperationException>(() => db.QueryBatch(part, () => items.ToList()));
+			ThrowOfTheBatch(() => db.QueryBatch(part, () => items.ToList()));
 		}
 
 		[Test]
@@ -2273,6 +2280,7 @@ namespace Tests.Linq
 
 		// An entity Single reads its rows into the batch row, so two rows make two batch rows.
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllYdb, ErrorMessage = ErrorHelper.Error_Join_Without_Condition, AlsoWhenParameter = "orDefault", AlsoWhenValue = true)]
 		public void TwoRowSingleThrowsAsThePartAlone(
 			[DataSources(false, NoFromlessSubquery)] string context,
 			[Values] bool orDefault)
@@ -2289,7 +2297,7 @@ namespace Tests.Linq
 					.Single();
 
 			var alone = ThrowOfThePartAlone(part);
-			var batch = Shouldly.Should.Throw<InvalidOperationException>(() => db.QueryBatch(part, () => items.ToList()));
+			var batch = ThrowOfTheBatch(() => db.QueryBatch(part, () => items.ToList()));
 
 			batch.Message.ShouldBe(alone.Message);
 		}

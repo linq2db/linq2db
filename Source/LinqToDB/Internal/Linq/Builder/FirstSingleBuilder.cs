@@ -102,6 +102,15 @@ namespace LinqToDB.Internal.Linq.Builder
 				cardinality |= SourceCardinality.Zero;
 			}
 
+			// A strict Single finds a second row by the row it multiplies. Claiming one row would let the optimizer fold the
+			// join into scalar subqueries that read the first row (YDB), so such a join stays one or is refused.
+			if (buildInfo.Parent != null
+				&& methodKind is MethodKind.Single or MethodKind.SingleOrDefault
+				&& builder.GetTranslationModifier().StrictElementOperators)
+			{
+				cardinality = (cardinality | SourceCardinality.Many) & ~SourceCardinality.One;
+			}
+
 			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, argument)
 			{
 				SourceCardinality = cardinality,
