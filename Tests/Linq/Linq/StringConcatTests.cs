@@ -1452,29 +1452,81 @@ namespace Tests.Linq
 			[Column(DataType = DataType.VarChar,  Length = 3000, CanBeNull = false)] public string Right   { get; set; } = default!;
 		}
 
-		// JSON_VALUE returns nvarchar(4000) and ISNULL its first argument's nvarchar(3000), though each takes a MAX argument.
+		static readonly MaxArgumentFunctionRow[] MaxArgumentFunctionData =
+		[
+			new()
+			{
+				Id      = 1,
+				Doc     = "{\"a\":\"" + new string('j', 3000) + "\"}",
+				Unicode = "u",
+				Left    = new string('b', 3000),
+				Right   = new string('c', 3000),
+			},
+		];
+
+		// JSON_VALUE (SQL Server 2016+) returns nvarchar(4000) though it takes a MAX argument, so it counts as 4000 characters,
+		// and a concatenation with one VarChar(3000) column, or between two, is cast to MAX.
 		[Test]
 		public void ConcatOfNonMaxFunctionWithMaxArgumentBesideVarCharKeepsTotalLength([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			var suffix = "x";
-			var data   = new[]
-			{
-				new MaxArgumentFunctionRow { Id = 1, Doc = "{\"a\":\"j\"}", Unicode = "u", Left = new string('b', 3000), Right = new string('c', 3000) },
-			};
 
 			using var db    = GetDataContext(context);
-			using var table = db.CreateLocalTable(data);
+			using var table = db.CreateLocalTable(MaxArgumentFunctionData);
 
 			var result = table
 				.Select(t => new
 				{
-					Json   = Sql.AsSql(SqlFn.JsonValue(t.Doc, "$.a") + t.Left + t.Right + suffix),
-					IsNull = Sql.AsSql(IsNull(t.Unicode, t.Doc) + t.Left + t.Right + suffix),
+					Beside  = Sql.AsSql(SqlFn.JsonValue(t.Doc, "$.a") + t.Left),
+					Between = Sql.AsSql(t.Left + SqlFn.JsonValue(t.Doc, "$.a") + t.Right),
+					First   = Sql.AsSql(SqlFn.JsonValue(t.Doc, "$.a") + t.Left + t.Right + suffix),
 				})
 				.Single();
 
-			new[] { result.Json.Length, result.IsNull.Length }
-				.ShouldBe([6002, 6002]);
+			new[] { result.Beside.Length, result.Between.Length, result.First.Length }
+				.ShouldBe([6000, 9000, 9001]);
+		}
+
+		// ISNULL returns its first argument's nvarchar(3000) though its second is MAX; the 4000 cut of a non-MAX nvarchar is
+		// SQL Server's.
+		[Test]
+		public void ConcatOfIsNullWithMaxReplacementBesideVarCharKeepsTotalLength([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			var suffix = "x";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(MaxArgumentFunctionData);
+
+			table
+				.Select(t => Sql.AsSql(IsNull(t.Unicode, t.Doc) + t.Left + t.Right + suffix))
+				.Single()
+				.Length
+				.ShouldBe(6002);
+		}
+
+		[Table]
+		sealed class ShortUnicodeBesideVarCharRow
+		{
+			[PrimaryKey]                                                           public int    Id      { get; set; }
+			[Column(DataType = DataType.NVarChar, Length = 10, CanBeNull = false)] public string Unicode { get; set; } = default!;
+			[Column(DataType = DataType.VarChar,  Length = 10, CanBeNull = false)] public string Ansi    { get; set; } = default!;
+		}
+
+		// A short Unicode-only function beside a short VarChar column adds up to far less than 4000, so nothing is cast to MAX;
+		// the SQL text assertion is SQL Server's widening.
+		[Test]
+		public void ConcatOfShortUnicodeOnlyFunctionBesideShortVarCharIsNotWidened([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new ShortUnicodeBesideVarCharRow { Id = 1, Unicode = "s", Ansi = "v" } });
+
+			table
+				.Select(t => Sql.AsSql(IsNull(t.Unicode, "") + t.Ansi))
+				.Single()
+				.ShouldBe("sv");
+
+			GetCurrentBaselines()
+				.ShouldNotContain("Max");
 		}
 
 		// A non-Latin REPLACE argument over a VarChar value, compared with a Unicode parameter, keeps its characters.
