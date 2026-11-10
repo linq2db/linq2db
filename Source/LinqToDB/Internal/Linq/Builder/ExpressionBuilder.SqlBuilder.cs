@@ -156,8 +156,9 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// Checks that provider can handle limitation inside subquery. This function is tightly coupled with <see cref="SelectQueryOptimizerVisitor.OptimizeApplyJoin"/>
 		/// </summary>
 		/// <param name="context"></param>
+		/// <param name="loadedSeparately">A collection <paramref name="context"/> stands for is read by a query of its own (an eager load), not joined to <paramref name="parent"/>.</param>
 		/// <returns></returns>
-		public bool IsSupportedSubquery(IBuildContext parent, IBuildContext context, out string? errorMessage)
+		public bool IsSupportedSubquery(IBuildContext parent, IBuildContext context, bool loadedSeparately, out string? errorMessage)
 		{
 			errorMessage = null;
 
@@ -185,9 +186,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var expr = parent.Builder.BuildSqlExpression(clonedContext, new ContextRefExpression(clonedContext.ElementType, clonedContext));
 
-				// A collection that does not reference the parent is loaded by a query of its own, never joined to the parent.
-				// A join simulated for it would only keep the optimizer from simplifying the parent's own joins.
-				if (!context.IsSingleElement && !QueryHelper.IsDependsOnOuterSources(clonedContext.SelectQuery))
+				// An eager-loaded collection that does not reference the parent never joins it. A join simulated for it would
+				// only keep the optimizer from simplifying the parent's own joins.
+				if (loadedSeparately && !context.IsSingleElement && !QueryHelper.IsDependsOnOuterSources(clonedContext.SelectQuery))
 					return true;
 
 				// add fake join there is no still reference

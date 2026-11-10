@@ -330,6 +330,7 @@ namespace Tests.Linq
 			result.Children.ShouldBe(Child.Count());
 		}
 
+		// Access refuses a FROM-less SELECT holding a subquery, as in SubQueryAggregate.
 		[Test]
 		public void SubQueryFirstBesideCollection([DataSources(TestProvName.AllAccess)] string context)
 		{

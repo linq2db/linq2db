@@ -1897,7 +1897,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				using var snapshot = CreateSnapshot();
 				var       sequence = Builder.BuildSequence(buildInfo);
 
-				if (!Builder.IsSupportedSubquery(rootContext.BuildContext, sequence, out var errorMessage))
+				if (!Builder.IsSupportedSubquery(rootContext.BuildContext, sequence, loadedSeparately: false, out var errorMessage))
 				{
 					sequence.Detach();
 					return new SqlErrorExpression(expression, errorMessage, expression.Type, true);
@@ -5817,7 +5817,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (_gettingSubquery == 0)
 				{
 					++_gettingSubquery;
-					var isSupported = Builder.IsSupportedSubquery(onContext, buildResult.BuildContext, out errorMessage);
+					var isSupported = Builder.IsSupportedSubquery(onContext, buildResult.BuildContext, loadedSeparately: _buildPurpose is BuildPurpose.Expression, out errorMessage);
 					--_gettingSubquery;
 					if (!isSupported)
 					{
