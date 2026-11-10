@@ -2016,6 +2016,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ActiveIssue(6289, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "YdbDataReader was closed during transaction execution")]
 		public void NestedNullableReadKeepsEveryRow([DataSources(false, NoFromlessSubquery)] string context)
 		{
 			using var db     = GetDataContext(context);
@@ -2043,7 +2044,7 @@ namespace Tests.Linq
 
 			values.ShouldBe(new int?[] { 4, 1, 2, null });
 
-			Shouldly.Should.Throw<InvalidOperationException>(() => db.QueryBatch(
+			ThrowOfTheBatch(() => db.QueryBatch(
 				() => groups
 					.OrderBy(g => g.Id)
 					.Select(g => new
@@ -2254,6 +2255,7 @@ namespace Tests.Linq
 		// throw: it reads the empty source as the default value, or drops the row.
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ActiveIssue(6289, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "YdbDataReader was closed during transaction execution")]
 		public void NestedEmptyReadThrowsInsideTheBatch([DataSources(false, NoFromlessSubquery)] string context)
 		{
 			using var db     = GetDataContext(context);
@@ -2287,7 +2289,7 @@ namespace Tests.Linq
 			outside.ShouldBe(expected);
 
 			var empty = Shouldly.Should.Throw<InvalidOperationException>(() => Array.Empty<int>().First());
-			var batch = Shouldly.Should.Throw<InvalidOperationException>(() => db.QueryBatch(() => items.Count(), firsts));
+			var batch = ThrowOfTheBatch(() => db.QueryBatch(() => items.Count(), firsts));
 
 			batch.Message.ShouldBe(empty.Message);
 		}
