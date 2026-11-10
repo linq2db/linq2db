@@ -7,7 +7,9 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\..\..\Source\LinqToDB.Remote.HttpClient.Client\LinqToDB.Remote.HttpClient.Client.csproj" />
+		<!-- Blazor apps run on Mono, so both edges to linq2db need the build without runtime-async. -->
+		<ProjectReference Include="..\..\..\..\Source\LinqToDB.Remote.HttpClient.Client\LinqToDB.Remote.HttpClient.Client.csproj" AdditionalProperties="BrowserWasmAssetBuild=true" />
+		<ProjectReference Update="..\..\..\..\Source\LinqToDB\LinqToDB.csproj" AdditionalProperties="BrowserWasmAssetBuild=true" />
 
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" />
