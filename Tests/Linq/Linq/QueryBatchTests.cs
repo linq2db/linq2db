@@ -1921,30 +1921,39 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllYdb, ErrorMessage = ErrorHelper.Error_Join_Without_Condition)]
-		public void NullableReadOverAnEmptySourceThrowsAsThePartAlone([DataSources(false, NoFromlessSubquery)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid, AlsoWhenParameter = "isSingle", AlsoWhenValue = false)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllYdb, ErrorMessage = ErrorHelper.Error_Join_Without_Condition, AlsoWhenParameter = "isSingle", AlsoWhenValue = true)]
+		public void NullableReadOverAnEmptySourceThrowsAsThePartAlone(
+			[DataSources(false, NoFromlessSubquery)] string context,
+			[Values] bool isSingle)
 		{
 			using var db    = GetDataContext(context);
 			using var items = db.CreateLocalTable(BatchItem.Seed);
 
-			Expression<Func<int?>> value = () => items
-				.Where(i => i.Id > 100)
-				.Select(i => i.Value)
-				.First();
+			if (isSingle)
+			{
+				Expression<Func<string?>> name = () => items
+					.Where(i => i.Id > 100)
+					.Select(i => i.Name)
+					.Single();
 
-			Expression<Func<string?>> name = () => items
-				.Where(i => i.Id > 100)
-				.Select(i => i.Name)
-				.Single();
+				var aloneName = ThrowOfThePartAlone(name);
+				var batchName = ThrowOfTheBatch(() => db.QueryBatch(name, () => items.ToList()));
 
-			var aloneValue = ThrowOfThePartAlone(value);
-			var batchValue = ThrowOfTheBatch(() => db.QueryBatch(value, () => items.ToList()));
-			var aloneName  = ThrowOfThePartAlone(name);
-			var batchName  = ThrowOfTheBatch(() => db.QueryBatch(name, () => items.ToList()));
+				batchName.Message.ShouldBe(aloneName.Message);
+			}
+			else
+			{
+				Expression<Func<int?>> value = () => items
+					.Where(i => i.Id > 100)
+					.Select(i => i.Value)
+					.First();
 
-			batchValue.Message.ShouldBe(aloneValue.Message);
-			batchName.Message.ShouldBe(aloneName.Message);
+				var aloneValue = ThrowOfThePartAlone(value);
+				var batchValue = ThrowOfTheBatch(() => db.QueryBatch(value, () => items.ToList()));
+
+				batchValue.Message.ShouldBe(aloneValue.Message);
+			}
 		}
 
 		[Test]
@@ -2235,26 +2244,27 @@ namespace Tests.Linq
 			hints.Clear();
 		}
 
-		// A batch is new API, so a First nested in one of its parts follows LINQ too; the same query outside a batch does not
-		// throw: it reads the empty source as the default value, or drops the row.
-		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		[ActiveIssue(6289, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "YdbDataReader was closed during transaction execution")]
-		public void NestedEmptyReadThrowsInsideTheBatch([DataSources(false, NoFromlessSubquery)] string context)
+		static Expression<Func<List<int>>> NestedFirsts(IQueryable<BatchGroup> groups, IQueryable<BatchItem> items)
 		{
-			using var db     = GetDataContext(context);
-			using var items  = db.CreateLocalTable(BatchItem.Seed);
-			using var groups = db.CreateLocalTable(BatchGroup.Seed);
-
-			Expression<Func<List<int>>> firsts = () => groups
+			return () => groups
 				.OrderBy(g => g.Id)
 				.Select(g => items
 					.Where(i => i.GroupId == g.Id && i.Id > 8)
 					.Select(i => i.Id)
 					.First())
 				.ToList();
+		}
 
-			var outside = firsts
+		// The same query outside a batch does not throw: it reads the empty source as the default value, or drops the row.
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		public void NestedEmptyReadOutsideABatchDoesNotThrow([DataSources(false, NoFromlessSubquery)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var items  = db.CreateLocalTable(BatchItem.Seed);
+			using var groups = db.CreateLocalTable(BatchGroup.Seed);
+
+			var outside = NestedFirsts(groups, items)
 				.Compile()
 				.Invoke();
 
@@ -2271,6 +2281,19 @@ namespace Tests.Linq
 				: [0, 9, 10, 0];
 
 			outside.ShouldBe(expected);
+		}
+
+		// A batch is new API, so a First nested in one of its parts follows LINQ too.
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ActiveIssue(6289, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "YdbDataReader was closed during transaction execution")]
+		public void NestedEmptyReadThrowsInsideTheBatch([DataSources(false, NoFromlessSubquery)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var items  = db.CreateLocalTable(BatchItem.Seed);
+			using var groups = db.CreateLocalTable(BatchGroup.Seed);
+
+			var firsts = NestedFirsts(groups, items);
 
 			var empty = Shouldly.Should.Throw<InvalidOperationException>(() => Array.Empty<int>().First());
 			var batch = ThrowOfTheBatch(() => db.QueryBatch(() => items.Count(), firsts));
