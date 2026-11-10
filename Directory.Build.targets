@@ -2,9 +2,26 @@
 
 	<!-- .targets, not .props: a props file is evaluated before the project body, so $(TargetFramework)
 	     is empty there for a project that declares a single TargetFramework in its own body, and the
-	     condition silently never fires. Override with -p:Features=strict to build without it. -->
+	     condition silently never fires. Override with -p:Features=strict to build without it.
+	     Mono, the default browser-wasm runtime, cannot run runtime-async methods. -->
 	<PropertyGroup>
-		<Features Condition=" $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net11.0')) ">$(Features);runtime-async=on</Features>
+		<Features Condition=" $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net11.0')) and '$(BrowserWasmAssetBuild)' != 'true' and '$(RuntimeIdentifier)' != 'browser-wasm' ">$(Features);runtime-async=on</Features>
 	</PropertyGroup>
+
+	<!-- A package a browser app can load carries a second net11.0 build, without runtime-async. NuGet selects
+	     runtimes/browser-wasm by RID: a net11.0-browser asset is never chosen by a plain net11.0 + browser-wasm app. -->
+	<PropertyGroup Condition=" '$(PackBrowserWasmAsset)' == 'true' and '$(BrowserWasmAssetBuild)' != 'true' and $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net11.0')) ">
+		<TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);AddBrowserWasmAssetToPackage</TargetsForTfmSpecificContentInPackage>
+	</PropertyGroup>
+
+	<Target Name="AddBrowserWasmAssetToPackage">
+		<MSBuild Projects="$(MSBuildProjectFullPath)" Targets="Build" Properties="TargetFramework=$(TargetFramework);BrowserWasmAssetBuild=true">
+			<Output TaskParameter="TargetOutputs" ItemName="_BrowserWasmAsset" />
+		</MSBuild>
+
+		<ItemGroup>
+			<TfmSpecificPackageFile Include="@(_BrowserWasmAsset)" PackagePath="runtimes/browser-wasm/lib/$(TargetFramework)/" />
+		</ItemGroup>
+	</Target>
 
 </Project>

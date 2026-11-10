@@ -14,7 +14,7 @@ namespace Tests.Wasm
 
 	sealed record ConfigurationReport(string Configuration, IReadOnlyList<OperationResult> Operations, IReadOnlyList<string> ResolveAttempts);
 
-	sealed record ModeRun(string Mode, IReadOnlyDictionary<string, ConfigurationReport> Reports, int ExitCode, bool TimedOut, string Output);
+	sealed record ModeRun(string Runtime, string Mode, IReadOnlyDictionary<string, ConfigurationReport> Reports, int ExitCode, bool TimedOut, string Output);
 
 	/// <summary>Runs a published Tests.Wasm.App bundle under Node and collects its per-configuration reports.</summary>
 	static class WasmBundleRunner
@@ -24,22 +24,26 @@ namespace Tests.Wasm
 		public const string TrimFull         = nameof(TrimFull);
 		public const string NoReflectionJson = nameof(NoReflectionJson);
 
-		// CoreCLR on browser-wasm needs minutes for a bundle's whole matrix, where Mono needed seconds.
-		public static readonly TimeSpan Timeout = TimeSpan.FromMinutes(15);
+		public const string Mono    = nameof(Mono);
+		public const string CoreCLR = nameof(CoreCLR);
+
+		// A Debug bundle's whole matrix takes minutes on either runtime; CoreCLR is the slower one.
+		public static TimeSpan GetTimeout(string runtime) => TimeSpan.FromMinutes(runtime == CoreCLR ? 12 : 5);
 
 		// A harness that cannot find its bundles must say so, not look somewhere else.
 		public static string RepoRoot { get; } = TestUtils.TryFindRepoRoot()
 			?? throw new InvalidOperationException($"linq2db.slnx not found above {AppContext.BaseDirectory}.");
 
-		public static string GetBundleEntry(string mode) => Path.Combine(RepoRoot, ".build", "wasm", mode, "wwwroot", "main.mjs");
+		public static string GetBundleEntry(string runtime, string mode) => Path.Combine(RepoRoot, ".build", "wasm", runtime, mode, "wwwroot", "main.mjs");
 
-		public static async Task<ModeRun> RunAsync(string mode, Uri server, IReadOnlyList<string> configurations)
+		public static async Task<ModeRun> RunAsync(string runtime, string mode, Uri server, IReadOnlyList<string> configurations)
 		{
-			var entry = GetBundleEntry(mode);
+			var entry   = GetBundleEntry(runtime, mode);
+			var timeout = GetTimeout(runtime);
 
 			if (!File.Exists(entry))
 				throw new InvalidOperationException(
-					$"WASM bundle '{mode}' is missing ({entry}). Publish it first: pwsh -NoProfile -File Tests/Tests.Wasm/publish-wasm-bundles.ps1");
+					$"WASM bundle '{runtime}/{mode}' is missing ({entry}). Publish it first: pwsh -NoProfile -File Tests/Tests.Wasm/publish-wasm-bundles.ps1");
 
 			var startInfo = new ProcessStartInfo("node")
 			{
@@ -64,7 +68,7 @@ namespace Tests.Wasm
 
 			var timedOut = false;
 
-			using (var cts = new CancellationTokenSource(Timeout))
+			using (var cts = new CancellationTokenSource(timeout))
 			{
 				try
 				{
@@ -93,14 +97,14 @@ namespace Tests.Wasm
 			}
 
 			var log = new StringBuilder()
-				.AppendLine(timedOut ? $"node timed out after {Timeout} and was killed" : $"node exit code: {process.ExitCode}")
+				.AppendLine(timedOut ? $"node timed out after {timeout} and was killed" : $"node exit code: {process.ExitCode}")
 				.AppendLine("--- stdout (without report lines) ---")
 				.AppendLine(string.Join("\n", output.Split('\n').Where(l => !l.StartsWith(WasmReport.Prefix, StringComparison.Ordinal))))
 				.AppendLine("--- stderr ---")
 				.AppendLine(await stderr.ConfigureAwait(false))
 				.ToString();
 
-			return new ModeRun(mode, reports, process.ExitCode, timedOut, log);
+			return new ModeRun(runtime, mode, reports, process.ExitCode, timedOut, log);
 		}
 
 		static ConfigurationReport Parse(string json)
