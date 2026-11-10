@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -33,6 +34,40 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		protected override void BuildMergeStatement(SqlMergeStatement merge)     => throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		protected override void BuildParameter(SqlParameter parameter) => throw new LinqToDBException($"Parameters not supported for {Name} provider");
+
+		// a client type name is printed without the base Size / Precision suffix: Octonica reports Precision 38 and Scale 9 for every type
+		protected override void PrintParameterType(IDataContext dataContext, StringBuilder sb, DbParameter parameter)
+		{
+			if (GetProviderTypeName(dataContext, parameter) == null && GetClientTypeName(dataContext, parameter) is { } typeName)
+			{
+				sb.Append(typeName);
+
+				var dbType = parameter.DbType.ToString();
+				if (!string.Equals(typeName, dbType, StringComparison.Ordinal))
+					sb.Append(" -- ").Append(dbType);
+
+				return;
+			}
+
+			base.PrintParameterType(dataContext, sb, parameter);
+		}
+
+		string? GetClientTypeName(IDataContext dataContext, DbParameter parameter)
+		{
+			if (DataProvider is not ClickHouseDataProvider provider
+				|| provider.Adapter.GetParameterTypeName is not { } getTypeName
+				|| provider.TryGetProviderParameter(dataContext, parameter) is not { } param)
+				return null;
+
+			try
+			{
+				return getTypeName(param);
+			}
+			catch (Exception)
+			{
+				return null;
+			}
+		}
 
 		// ClickHouse value window functions (FIRST_VALUE/LAST_VALUE/NTH_VALUE) skip NULLs by default, so RESPECT
 		// NULLS must be emitted explicitly to get null-respecting behavior. LEAD/LAG default to RESPECT and reject
