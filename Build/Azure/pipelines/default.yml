@@ -18,7 +18,11 @@ trigger:
 # when we have multiple test runs waiting for free job, when nobody needs them
 # we only want to trigger it for pr to release branch (build and nugets - its tests run on GitHub, see above)
 pr:
-  - release
+  # draft -> ready queues a new run for the same commit; it must not cancel the one in flight
+  autoCancel: false
+  branches:
+    include:
+    - release
 
 stages:
 

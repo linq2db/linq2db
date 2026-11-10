@@ -12,4 +12,5 @@
 Build/licenses/generated/** text eol=lf
 Build/licenses/texts/**     text eol=lf
 .githooks/** text    eol=lf
+.oss-scanner/** text eol=lf
 "/Data/Setup Scripts/ase.sql" text eol=lf
