@@ -314,6 +314,10 @@ LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQLMemberTranslator
 LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQLMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator() -> void
 override LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQL95MemberTranslator.CreateAggregateFunctionsMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator!
 override LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQLMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator.IsFilterSupported.get -> bool
+static LinqToDB.Internal.Expressions.ExpressionEvaluator.TryEvaluateCapturedValue(this System.Linq.Expressions.Expression! expr, out object? value) -> bool
+override LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlBuilder.PrintParameterType(LinqToDB.IDataContext! dataContext, System.Text.StringBuilder! sb, System.Data.Common.DbParameter! parameter) -> void
+override LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlBuilder.GetProviderTypeName(LinqToDB.IDataContext! dataContext, System.Data.Common.DbParameter! parameter) -> string?
+override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlBuilder.GetProviderTypeName(LinqToDB.IDataContext! dataContext, System.Data.Common.DbParameter! parameter) -> string?
 override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlBuilder.GetPrecedence(LinqToDB.Internal.SqlQuery.ISqlExpression! expr) -> int
 override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlBuilder.GetPrecedence(LinqToDB.Internal.SqlQuery.ISqlExpression! expr) -> int
 virtual LinqToDB.Internal.SqlProvider.BasicSqlBuilder.GetPrecedence(LinqToDB.Internal.SqlQuery.ISqlExpression! expr) -> int

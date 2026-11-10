@@ -239,7 +239,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			if (operands != null)
 				element = new SqlConcatExpression(element.PreserveNull, operands);
 
-			element = WidenLongNonUnicodeBesideUnicode(element);
+			if (WidenLongNonUnicodeBesideUnicode(element.Expressions, concatenation: true) is { } widened)
+				element = new SqlConcatExpression(element.PreserveNull, widened);
 
 			return base.ConvertConcat(element);
 		}
@@ -247,23 +248,24 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		// A Unicode operand turns the concatenation nvarchar, and SQL Server then cuts a non-Unicode operand longer than
 		// 4000 characters when converting it, and the running result at 4000 characters until an operand of a MAX type
 		// joins it. So such an operand is cast to NVarChar(Max) itself, and when the operands before the first MAX one
-		// can still add up to more, so is the leftmost one that is not a literal, which makes every step MAX.
-		SqlConcatExpression WidenLongNonUnicodeBesideUnicode(SqlConcatExpression element)
+		// can still add up to more, so is the leftmost one that is not a literal, which makes every step MAX. A Unicode
+		// argument turns REPLACE nvarchar too, but its result is not the sum of its arguments: only the first cast applies.
+		ISqlExpression[]? WidenLongNonUnicodeBesideUnicode(ISqlExpression[] expressions, bool concatenation)
 		{
-			var shapes        = new StringOperandShape[element.Expressions.Length];
+			var shapes        = new StringOperandShape[expressions.Length];
 			var hasUnicode    = false;
 			var hasNonUnicode = false;
 
 			for (var i = 0; i < shapes.Length; i++)
 			{
-				shapes[i] = MeasureStringOperand(element.Expressions[i]);
+				shapes[i] = MeasureStringOperand(expressions[i]);
 
 				hasUnicode    |= shapes[i].Unicode;
 				hasNonUnicode |= shapes[i].NonUnicode;
 			}
 
 			if (!hasUnicode || !hasNonUnicode)
-				return element;
+				return null;
 
 			var maxType = new DbDataType(typeof(string), DataType.NVarChar, null, -1);
 
@@ -271,13 +273,16 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 			for (var i = 0; i < shapes.Length; i++)
 			{
-				if (shapes[i] is { Unicode: false, Length: > 4000 } && element.Expressions[i] is not SqlValue)
+				if (shapes[i] is { Unicode: false, Length: > 4000 } && expressions[i] is not SqlValue)
 				{
-					operands    ??= (ISqlExpression[])element.Expressions.Clone();
+					operands    ??= (ISqlExpression[])expressions.Clone();
 					operands[i] =   PseudoFunctions.MakeCast(operands[i], maxType);
 					shapes[i]   =   shapes[i] with { Length = null };
 				}
 			}
+
+			if (!concatenation)
+				return operands;
 
 			var length = 0L;
 
@@ -291,16 +296,16 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 			if (length > 4000)
 			{
-				var first = Array.FindIndex(element.Expressions, e => e is not SqlValue);
+				var first = Array.FindIndex(expressions, e => e is not SqlValue);
 
 				if (first >= 0 && shapes[first].Length != null)
 				{
-					operands        ??= (ISqlExpression[])element.Expressions.Clone();
+					operands        ??= (ISqlExpression[])expressions.Clone();
 					operands[first] =   PseudoFunctions.MakeCast(operands[first], maxType);
 				}
 			}
 
-			return operands == null ? element : new SqlConcatExpression(element.PreserveNull, operands);
+			return operands;
 		}
 
 		readonly record struct StringOperandShape(bool Unicode, bool NonUnicode, long? Length);
@@ -329,6 +334,17 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				// return type, the string default.
 				case SqlFunction { Parameters: [var argument, ..] } function when _typePreservingFunctions.Contains(function.Name):
 					return MeasureStringOperand(argument);
+				// REPLACE holds its value's data, nvarchar when any argument is Unicode, whatever type it was declared with, so
+				// one over a parameter or an untyped function is not taken for an expression of unknown type.
+				case SqlFunction { Name: "Replace", Parameters: [var value, ..] } replace:
+				{
+					var shape = MeasureStringOperand(value);
+
+					if (!shape.Unicode && Array.Exists(replace.Parameters, p => MeasureStringOperand(p).Unicode))
+						shape = shape with { Unicode = true };
+
+					return replace.Type.Length > 0 ? shape with { Length = replace.Type.Length } : shape;
+				}
 				case SqlConditionExpression condition:
 					return Combine([condition.TrueValue, condition.FalseValue], sum: false);
 				case SqlCaseExpression caseExpression:
@@ -345,13 +361,27 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				}
 			}
 
-			var type    = QueryHelper.GetDbDataType(expr, MappingSchema);
-			var unicode = QueryHelper.IsUnicode(type.DataType);
+			var type       = QueryHelper.GetDbDataType(expr, MappingSchema);
+			var unicode    = QueryHelper.IsUnicode(type.DataType);
+			var nonUnicode = !unicode;
 
-			// Any other function or expression typed only by the string default says nothing of what it returns, so it
-			// counts as the longest non-Unicode value short of MAX.
-			if (expr is SqlFunction or SqlExpression && type == MappingSchema.GetDbDataType(typeof(string)))
-				return new(Unicode: false, NonUnicode: true, Length: 8000);
+			// A string function returns its first argument's type, while its declared type was copied at translation, before
+			// that argument could turn Unicode here (a REPLACE with a Unicode argument).
+			if (!unicode && type.DataType is DataType.Char or DataType.VarChar or DataType.Text
+				&& expr is SqlFunction { Parameters: [var first, ..] } && MeasureStringOperand(first) is { Unicode: true } firstShape)
+				(unicode, nonUnicode) = (true, firstShape.NonUnicode);
+
+			// Any other function or expression typed only by the string default is judged by its string arguments.
+			if (type == MappingSchema.GetDbDataType(typeof(string)))
+			{
+				switch (expr)
+				{
+					case SqlFunction function:
+						return MeasureByStringArguments(function.Parameters);
+					case SqlExpression expression:
+						return MeasureByStringArguments(expression.Parameters);
+				}
+			}
 
 			if (type.Length == null && GetDbTypeLength(type.DbType) is { } dbTypeLength)
 				type = type.WithLength(dbTypeLength);
@@ -365,7 +395,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				_                                              => 1,
 			};
 
-			return new(unicode, !unicode, length);
+			return new(unicode, nonUnicode, length);
 		}
 
 		static readonly HashSet<string> _typePreservingFunctions = new(StringComparer.OrdinalIgnoreCase)
@@ -391,6 +421,23 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				return -1;
 
 			return int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var length) && length > 0 ? length : null;
+		}
+
+		// With no Unicode argument such a function counts as the longest non-Unicode value short of MAX, since it can outgrow
+		// its arguments (SPACE, STUFF), and with only Unicode ones as the longest of them, a MAX one as 4000 since the function
+		// need not return MAX (JSON_VALUE). With both it is Unicode unless its longest argument is too long for nvarchar or a
+		// MAX one: ISNULL returns its varchar value, which is then cast on its own.
+		StringOperandShape MeasureByStringArguments(ISqlExpression[] arguments)
+		{
+			var shape = Combine(Array.FindAll(arguments, a => QueryHelper.GetDbDataType(a, MappingSchema).IsTextType()), sum: false);
+
+			return shape switch
+			{
+				{ Unicode: false }    => new(Unicode: false, NonUnicode: true,  Length: 8000),
+				{ NonUnicode: false } => shape with { Length = shape.Length ?? 4000 },
+				{ Length: <= 4000 }   => shape,
+				_                     => new(Unicode: false, NonUnicode: true,  Length: shape.Length ?? 8000),
+			};
 		}
 
 		StringOperandShape Combine(IEnumerable<ISqlExpression> operands, bool sum)
@@ -545,6 +592,31 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 					return Factory.Sub(func.Type, valueLength, Factory.Value(func.Type, 1));
 	}
+
+				case PseudoFunctions.REPLACE:
+				{
+					var parameters = WidenLongNonUnicodeBesideUnicode(func.Parameters, concatenation: false) ?? func.Parameters;
+					var type       = func.Type;
+
+					// A Unicode argument turns REPLACE nvarchar. A value of unknown length takes the nvarchar(4000) the server
+					// returns, which an enclosing concatenation measures rather than counting it as one character.
+					if (type.DataType is DataType.Char or DataType.VarChar && Array.Exists(func.Parameters, p => MeasureStringOperand(p).Unicode))
+					{
+						var length = ReferenceEquals(parameters[0], func.Parameters[0]) ? type.Length ?? 4000 : -1;
+
+						type = new DbDataType(typeof(string), DataType.NVarChar, null, length);
+					}
+
+					if (!ReferenceEquals(parameters, func.Parameters) || type != func.Type)
+					{
+						func = new SqlFunction(type, func.Name, func.Flags, func.NullabilityType, func.CanBeNullNullable, parameters)
+						{
+							DoNotOptimize = func.DoNotOptimize,
+						};
+					}
+
+					break;
+				}
 }
 
 			return base.ConvertSqlFunction(func);
