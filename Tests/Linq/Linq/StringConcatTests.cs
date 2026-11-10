@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
@@ -1439,6 +1440,41 @@ namespace Tests.Linq
 				.Single()
 				.Length
 				.ShouldBe(6000);
+		}
+
+		[Table]
+		sealed class MaxArgumentFunctionRow
+		{
+			[PrimaryKey]                                                             public int    Id      { get; set; }
+			[Column(DataType = DataType.NVarChar, Length = -1,   CanBeNull = false)] public string Doc     { get; set; } = default!;
+			[Column(DataType = DataType.NVarChar, Length = 3000, CanBeNull = false)] public string Unicode { get; set; } = default!;
+			[Column(DataType = DataType.VarChar,  Length = 3000, CanBeNull = false)] public string Left    { get; set; } = default!;
+			[Column(DataType = DataType.VarChar,  Length = 3000, CanBeNull = false)] public string Right   { get; set; } = default!;
+		}
+
+		// JSON_VALUE returns nvarchar(4000) and ISNULL its first argument's nvarchar(3000), though each takes a MAX argument.
+		[Test]
+		public void ConcatOfNonMaxFunctionWithMaxArgumentBesideVarCharKeepsTotalLength([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			var suffix = "x";
+			var data   = new[]
+			{
+				new MaxArgumentFunctionRow { Id = 1, Doc = "{\"a\":\"j\"}", Unicode = "u", Left = new string('b', 3000), Right = new string('c', 3000) },
+			};
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var result = table
+				.Select(t => new
+				{
+					Json   = Sql.AsSql(SqlFn.JsonValue(t.Doc, "$.a") + t.Left + t.Right + suffix),
+					IsNull = Sql.AsSql(IsNull(t.Unicode, t.Doc) + t.Left + t.Right + suffix),
+				})
+				.Single();
+
+			new[] { result.Json.Length, result.IsNull.Length }
+				.ShouldBe([6002, 6002]);
 		}
 
 		// A non-Latin REPLACE argument over a VarChar value, compared with a Unicode parameter, keeps its characters.
