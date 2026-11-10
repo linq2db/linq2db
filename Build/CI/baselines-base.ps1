@@ -82,8 +82,11 @@ function Update-BaselinesPrBase {
     }
 
     Write-Host "Retargeting baselines PR #${number} from '${current}' to '${Base}'"
-    $null = gh api -XPATCH "repos/${Org}/${BaselinesRepo}/pulls/${number}" -F base=$Base
+    $output = gh api -XPATCH "repos/${Org}/${BaselinesRepo}/pulls/${number}" -F base=$Base 2>&1
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "Failed to retarget baselines PR #${number}. Error code ${LASTEXITCODE}"
+        # Not fatal: GitHub refuses (422) a base the head has no commits over - a stacked PR whose baselines
+        # match its parent's. Left set, the exit code fails a caller that ends here (ensure-baselines-branch.ps1).
+        Write-Host "Failed to retarget baselines PR #${number}. Error code ${LASTEXITCODE}, output: ${output}"
+        $global:LASTEXITCODE = 0
     }
 }
