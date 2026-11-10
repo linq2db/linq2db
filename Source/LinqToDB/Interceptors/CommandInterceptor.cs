@@ -7,6 +7,14 @@ using LinqToDB.Common;
 
 namespace LinqToDB.Interceptors
 {
+	/// <summary>
+	/// Base <see cref="ICommandInterceptor"/> implementation with no-op virtual methods; override only what you need.
+	/// </summary>
+	/// <remarks>
+	/// Registering a command interceptor disables DbBatch-based command batching — combined multi-statement execution
+	/// (for example eager loading) falls back to a single semicolon-concatenated command so the interceptor still
+	/// observes execution. See <see cref="LinqToDB.LinqOptions.UseDbBatch"/>.
+	/// </remarks>
 	public abstract class CommandInterceptor : ICommandInterceptor
 	{
 		public virtual DbCommand                  CommandInitialized      (CommandEventData eventData, DbCommand command) => command;

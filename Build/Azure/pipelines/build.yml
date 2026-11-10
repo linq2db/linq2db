@@ -5,6 +5,8 @@ variables:
 # always trigger on PRs
 trigger: none
 pr:
+  # draft -> ready queues a new run for the same commit; it must not cancel the one in flight
+  autoCancel: false
   branches:
     include:
     - '*'

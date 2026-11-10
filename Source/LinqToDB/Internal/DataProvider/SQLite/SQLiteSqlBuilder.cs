@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
 using System.Text;
 
 using LinqToDB.DataProvider;
@@ -36,28 +38,6 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 		// SQLite binds `||` tighter than `* / %` and looser than unary operators (https://www.sqlite.org/lang_expr.html#operators)
 		protected override int GetPrecedence(ISqlExpression expr)
 			=> expr is SqlConcatExpression ? Precedence.Multiplicative + 1 : base.GetPrecedence(expr);
-
-		public override int CommandCount(SqlStatement statement)
-		{
-			return statement switch
-			{
-				SqlTruncateTableStatement trun => trun.ResetIdentity && trun.Table!.IdentityFields.Count > 0 ? 2 : 1,
-				_ => statement.NeedsIdentity ? 2 : 1,
-			};
-		}
-
-		protected override void BuildCommand(SqlStatement statement, int commandNumber)
-		{
-			if (statement is SqlTruncateTableStatement trun)
-			{
-				StringBuilder.Append("UPDATE SQLITE_SEQUENCE SET SEQ=0 WHERE NAME=");
-				MappingSchema.ConvertToSqlValue(StringBuilder, null, DataOptions, trun.Table!.TableName.Name);
-			}
-			else
-			{
-				StringBuilder.AppendLine("SELECT last_insert_rowid()");
-			}
-		}
 
 		protected override string LimitFormat(SelectQuery selectQuery)
 		{
@@ -108,6 +88,67 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			}
 
 			return sb.Append(value);
+		}
+
+		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
+		{
+			var typeName = base.GetProviderTypeName(dataContext, parameter);
+
+			if (typeName != null || DataProvider is not SQLiteDataProvider provider || provider.TryGetProviderParameter(dataContext, parameter) is not { } param)
+				return typeName;
+
+			var hasValue = param.Value is not (null or DBNull);
+
+			if (provider.Adapter.GetSqliteType is { } getSqliteType)
+			{
+				// Microsoft.Data.Sqlite reports Text for every null, which it binds as an untyped NULL
+				if (!hasValue)
+					return GetStorageClass(param.DbType);
+
+				try
+				{
+					return getSqliteType(param).ToString();
+				}
+				catch (Exception)
+				{
+					return null;
+				}
+			}
+
+			// System.Data.SQLite binds DbType.Object by the type of the value
+			return param.DbType == DbType.Object && hasValue
+				? GetStorageClass(param.Value!.GetType())
+				: GetStorageClass(param.DbType);
+		}
+
+		// mirrors System.Data.SQLite SQLiteStatement.BindParameter with default connection settings (BinaryGUID, DateTimeFormat, no Bind*AsText flags)
+		static string GetStorageClass(DbType dbType)
+		{
+			return dbType switch
+			{
+				DbType.Boolean or DbType.SByte  or DbType.Byte
+					or DbType.Int16 or DbType.UInt16
+					or DbType.Int32 or DbType.UInt32
+					or DbType.Int64 or DbType.UInt64              => "Integer",
+				DbType.Currency or DbType.Single or DbType.Double => "Real",
+				DbType.Binary   or DbType.Guid                    => "Blob",
+				_                                                 => "Text",
+			};
+		}
+
+		// mirrors System.Data.SQLite SQLiteConvert.TypeToDbType
+		static string GetStorageClass(Type type)
+		{
+			return Type.GetTypeCode(type) switch
+			{
+				TypeCode.Boolean or TypeCode.Char  or TypeCode.SByte or TypeCode.Byte
+					or TypeCode.Int16 or TypeCode.UInt16
+					or TypeCode.Int32 or TypeCode.UInt32
+					or TypeCode.Int64 or TypeCode.UInt64                            => "Integer",
+				TypeCode.Single or TypeCode.Double                                  => "Real",
+				TypeCode.Object when type == typeof(byte[]) || type == typeof(Guid) => "Blob",
+				_                                                                   => "Text",
+			};
 		}
 
 		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
@@ -214,8 +255,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 		protected override void BuildSqlValuesTable(SqlValuesTable valuesTable, string alias, out bool aliasBuilt)
 		{
-			valuesTable = ConvertElement(valuesTable);
-			var rows = valuesTable.BuildRows(OptimizationContext.EvaluationContext);
+			var rows = valuesTable.BuildRows(RenderContext.EvaluationContext);
 
 			if (rows.Count == 0)
 			{
