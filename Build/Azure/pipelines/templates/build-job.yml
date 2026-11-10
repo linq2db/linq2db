@@ -219,6 +219,15 @@ jobs:
     displayName: Build Solution for Nuget
     condition: and(succeeded(), ${{ parameters.with_nugets }})
 
+  # The browser build of LinqToDB is a separate instance that every package hook requests at once.
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: build
+      projects: Source/LinqToDB/LinqToDB.csproj
+      arguments: -f net11.0 -property:BrowserWasmAssetBuild=true -property:RunAnalyzersDuringBuild=${{ variables['with_analyzers'] }} -property:RunApiAnalyzersDuringBuild=${{ variables['with_api_analyzers'] }} --configuration $(release_configuration)
+    displayName: Build LinqToDB browser asset
+    condition: and(succeeded(), ${{ parameters.with_nugets }})
+
   - task: DotNetCoreCLI@2
     inputs:
       command: custom
@@ -226,6 +235,14 @@ jobs:
       projects: $(solution)
       arguments: -property:RunAnalyzersDuringBuild=${{ variables['with_analyzers'] }} -property:RunApiAnalyzersDuringBuild=${{ variables['with_api_analyzers'] }} --configuration $(release_configuration)
     displayName: Pack Solution for Nuget
+    condition: and(succeeded(), ${{ parameters.with_nugets }})
+
+  - task: PowerShell@2
+    displayName: Verify browser-wasm assets
+    inputs:
+      pwsh: true
+      filePath: '$(Build.SourcesDirectory)/Build/Azure/scripts/verify-browser-wasm-asset.ps1'
+      arguments: '-PackagesDir "$(Build.SourcesDirectory)/.build/package/release"'
     condition: and(succeeded(), ${{ parameters.with_nugets }})
 
   # These two live here rather than in nuget-job.yml, where the other pre-publish guards sit, for two
