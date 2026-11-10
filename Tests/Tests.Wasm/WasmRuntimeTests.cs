@@ -23,6 +23,7 @@ namespace Tests.Wasm
 	[Description("https://github.com/linq2db/linq2db/issues/5159")]
 	public sealed class WasmRuntimeTests
 	{
+		static readonly string[] _allRuntimes  = [WasmBundleRunner.Mono, WasmBundleRunner.CoreCLR];
 		static readonly string[] _allModes     = [WasmBundleRunner.Debug, WasmBundleRunner.TrimPartial, WasmBundleRunner.TrimFull, WasmBundleRunner.NoReflectionJson];
 		static readonly string[] _workingModes = [WasmBundleRunner.Debug, WasmBundleRunner.TrimPartial];
 
@@ -89,27 +90,36 @@ namespace Tests.Wasm
 				.Where(r => !r.IsAvailable)
 				.Select(r => new TestCaseData(r.Configuration));
 
+		public static IEnumerable<TestCaseData> AllBundles     => Bundles(_allModes);
+		public static IEnumerable<TestCaseData> WorkingBundles => Bundles(_workingModes);
+
+		static IEnumerable<TestCaseData> Bundles(string[] modes) =>
+			from runtime in _allRuntimes
+			from mode    in modes
+			select new TestCaseData(runtime, mode);
+
 		static IEnumerable<TestCaseData> Cases(string[] modes, Func<MatrixRow, bool> filter) =>
-			from mode in modes
-			from row  in ProviderMatrix.Rows
+			from runtime in _allRuntimes
+			from mode    in modes
+			from row     in ProviderMatrix.Rows
 			where row.IsAvailable && filter(row)
-			select new TestCaseData(mode, row.Configuration);
+			select new TestCaseData(runtime, mode, row.Configuration);
 
 		[TestCaseSource(nameof(ClientWorksCases))]
-		public Task ClientWorks(string mode, string configuration) => AssertClientAsync(mode, configuration);
+		public Task ClientWorks(string runtime, string mode, string configuration) => AssertClientAsync(runtime, mode, configuration);
 
 		[ActiveIssue(6167, ErrorMessage = "Cannot load assembly")]
 		[TestCaseSource(nameof(ClientLoadsProviderAssemblyCases))]
-		public Task ClientLoadsProviderAssembly(string mode, string configuration) => AssertClientAsync(mode, configuration);
+		public Task ClientLoadsProviderAssembly(string runtime, string mode, string configuration) => AssertClientAsync(runtime, mode, configuration);
 
 		// A #6168 fix exposes #6167 on the LoadsProviderAssembly rows: split these cases by it, as for the working modes.
 		[ActiveIssue(6168, ErrorMessage = "DeserializeNoConstructor")]
 		[TestCaseSource(nameof(FullTrimmingCases))]
-		public Task ClientFailsUnderFullTrimming(string mode, string configuration) => AssertClientAsync(mode, configuration);
+		public Task ClientFailsUnderFullTrimming(string runtime, string mode, string configuration) => AssertClientAsync(runtime, mode, configuration);
 
 		[ActiveIssue(6168, ErrorMessage = "JsonSerializerIsReflectionDisabled")]
 		[TestCaseSource(nameof(NoReflectionJsonCases))]
-		public Task ClientFailsWithoutReflectionJson(string mode, string configuration) => AssertClientAsync(mode, configuration);
+		public Task ClientFailsWithoutReflectionJson(string runtime, string mode, string configuration) => AssertClientAsync(runtime, mode, configuration);
 
 		[TestCaseSource(nameof(UnavailableCases))]
 		public void UnavailableOnRunner(string configuration)
@@ -128,11 +138,10 @@ namespace Tests.Wasm
 		}
 
 		// The SqlServer mapping schema probes optional assemblies once per process, so the capture is checked per mode.
-		[TestCase(WasmBundleRunner.Debug)]
-		[TestCase(WasmBundleRunner.TrimPartial)]
-		public async Task ResolveAttemptsAreCaptured(string mode)
+		[TestCaseSource(nameof(WorkingBundles))]
+		public async Task ResolveAttemptsAreCaptured(string runtime, string mode)
 		{
-			var run = await GetRunAsync(mode);
+			var run = await GetRunAsync(runtime, mode);
 
 			var attempts = run.Reports.Values
 				.SelectMany(r => r.ResolveAttempts)
@@ -143,10 +152,10 @@ namespace Tests.Wasm
 
 		// Every per-configuration error is caught inside the app, so a bundle that exits non-zero or hangs has a problem no
 		// case report can show.
-		[TestCaseSource(nameof(_allModes))]
-		public async Task BundleExitsCleanly(string mode)
+		[TestCaseSource(nameof(AllBundles))]
+		public async Task BundleExitsCleanly(string runtime, string mode)
 		{
-			var run = await GetRunAsync(mode);
+			var run = await GetRunAsync(runtime, mode);
 
 			run.TimedOut.ShouldBeFalse(run.Output);
 			run.ExitCode.ShouldBe(0, run.Output);
@@ -205,9 +214,10 @@ namespace Tests.Wasm
 				.ShouldBeEmpty("rows whose UnavailableAssembly / UnavailableReason disagree with UnavailableOn: an unavailable row names the assembly it misses and why, an available row neither");
 		}
 
-		async Task AssertClientAsync(string mode, string configuration)
+		async Task AssertClientAsync(string runtime, string mode, string configuration)
 		{
-			var row = ProviderMatrix.Find(configuration)!;
+			var row    = ProviderMatrix.Find(configuration)!;
+			var bundle = $"{runtime}/{mode}";
 
 			if (_preflight[configuration] is { } serverError)
 			{
@@ -217,16 +227,16 @@ namespace Tests.Wasm
 				throw new ShouldAssertException($"'{configuration}' cannot be constructed server-side on this runner; list it as unavailable or fix the environment (server error in the test output).");
 			}
 
-			var run = await GetRunAsync(mode);
+			var run = await GetRunAsync(runtime, mode);
 
 			if (!run.Reports.TryGetValue(configuration, out var report))
 			{
-				var reason = run.TimedOut ? $"timed out after {WasmBundleRunner.Timeout}" : $"exited with {run.ExitCode}";
+				var reason = run.TimedOut ? $"timed out after {WasmBundleRunner.GetTimeout(runtime)}" : $"exited with {run.ExitCode}";
 
 				// Printed, not thrown, for the same reason as the server error: Node's output can carry a gate's phrase.
 				await TestContext.Out.WriteLineAsync(run.Output);
 
-				throw new ShouldAssertException($"The '{mode}' bundle reported nothing for '{configuration}' (node {reason}; its output is in the test output).");
+				throw new ShouldAssertException($"The '{bundle}' bundle reported nothing for '{configuration}' (node {reason}; its output is in the test output).");
 			}
 
 			if (report.ResolveAttempts.Count > 0)
@@ -244,10 +254,10 @@ namespace Tests.Wasm
 					continue;
 				}
 
-				operation.Error.ShouldBeNull($"{operation.Name} failed for '{configuration}' in '{mode}': {operation.ErrorType}: {operation.ErrorMessage}");
+				operation.Error.ShouldBeNull($"{operation.Name} failed for '{configuration}' in '{bundle}': {operation.ErrorType}: {operation.ErrorMessage}");
 
 				if (operation.Name is not (WasmReport.Init or WasmReport.RoundTrip))
-					operation.Result.ShouldNotBeNullOrWhiteSpace($"{operation.Name} generated no SQL for '{configuration}' in '{mode}'");
+					operation.Result.ShouldNotBeNullOrWhiteSpace($"{operation.Name} generated no SQL for '{configuration}' in '{bundle}'");
 			}
 
 			string[] expected = configuration == ProviderMatrix.RoundTripConfiguration
@@ -267,18 +277,20 @@ namespace Tests.Wasm
 			}
 		}
 
-		Task<ModeRun> GetRunAsync(string mode)
+		Task<ModeRun> GetRunAsync(string runtime, string mode)
 		{
+			var key = $"{runtime}/{mode}";
+
 			lock (_runs)
 			{
-				if (!_runs.TryGetValue(mode, out var run))
+				if (!_runs.TryGetValue(key, out var run))
 				{
 					var configurations = ProviderMatrix.Rows
 						.Where(r => r.IsAvailable && _preflight[r.Configuration] == null)
 						.Select(r => r.Configuration)
 						.ToList();
 
-					_runs[mode] = run = WasmBundleRunner.RunAsync(mode, _server!.Address, configurations);
+					_runs[key] = run = WasmBundleRunner.RunAsync(runtime, mode, _server!.Address, configurations);
 				}
 
 				return run;
