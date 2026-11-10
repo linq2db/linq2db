@@ -94,6 +94,7 @@
 
 		<ArtifactsPath>$(MSBuildThisFileDirectory).build</ArtifactsPath>
 		<ArtifactsPivots>$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)</ArtifactsPivots>
+		<ArtifactsPivots Condition=" '$(BrowserWasmAssetBuild)' == 'true' ">$(ArtifactsPivots)\browser-asset</ArtifactsPivots>
 	</PropertyGroup>
 
 	<PropertyGroup Label="Nuget">
