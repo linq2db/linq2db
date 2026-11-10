@@ -100,6 +100,14 @@ namespace LinqToDB.Internal.Linq.Builder
 				return true;
 			}
 
+			// One place read as a type by one branch and as its nullable form by the other: the nullable reading holds both.
+			if (projection1 is SqlPathExpression path1 && projection2 is SqlPathExpression path2
+				&& path1.Path.SequenceEqual(path2.Path, ExpressionEqualityComparer.Instance))
+			{
+				merged = path1.Type.IsNullableType ? path1 : path2;
+				return true;
+			}
+
 			if (SequenceHelper.UnwrapDefaultIfEmpty(projection1) is SqlGenericConstructorExpression generic1 &&
 			    SequenceHelper.UnwrapDefaultIfEmpty(projection2) is SqlGenericConstructorExpression generic2)
 			{
@@ -142,10 +150,33 @@ namespace LinqToDB.Internal.Linq.Builder
 							return false;
 						resultAssignments.Add(a1);
 					}
-					else if (!TryMergeProjections(a1.Expression, found.Expression, flags, out var mergedAssignment))
-						return false;
 					else
-						resultAssignments.Add(a1.WithExpression(mergedAssignment));
+					{
+						var target = a1;
+						var expr1  = a1.Expression;
+						var expr2  = found.Expression;
+
+						// A dynamic column is matched by name, so branches can disagree on whether its cell is nullable;
+						// the shared cell is read as the nullable type, which holds both.
+						if (expr1.Type != expr2.Type && expr1.Type.UnwrapNullableType() == expr2.Type.UnwrapNullableType())
+						{
+							var nullableType = expr1.Type.MakeNullable();
+
+							if (a1.MemberInfo.GetMemberType() != nullableType)
+								target = found;
+
+							if (expr1.Type != nullableType)
+								expr1 = Expression.Convert(expr1, nullableType);
+
+							if (expr2.Type != nullableType)
+								expr2 = Expression.Convert(expr2, nullableType);
+						}
+
+						if (!TryMergeProjections(expr1, expr2, flags, out var mergedAssignment))
+							return false;
+
+						resultAssignments.Add(target.WithExpression(mergedAssignment));
+					}
 				}
 
 				foreach (var a2 in generic2.Assignments)
