@@ -471,26 +471,20 @@ namespace Tests.Linq
 
 		// A non-constant precision must not cost the value its fractional digits.
 		// DuckDB rejects ROUND(DECIMAL, INTEGER) with a non-constant precision.
+		// Expected comes from the in-memory rows: Sybase's values arrive through double, so on .NET 11 a loaded
+		// 11.45 is no longer a midpoint client-side and rounds up, while the server rounds 11.45 to even.
 		[Test]
 		public void Round16([DataSources(TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 
-			var atOrAboveScale =
-				from p in db.Types
-				where p.MoneyValue != 0
-				orderby p.ID
-				select Sql.AsSql(Math.Round(p.MoneyValue, p.ID % 2 + 2));
+			AreEqualWithinDelta(
+				from p in    Types where p.MoneyValue != 0 select Math.Round(p.MoneyValue, p.ID % 2 + 2),
+				from p in db.Types where p.MoneyValue != 0 select Sql.AsSql(Math.Round(p.MoneyValue, p.ID % 2 + 2)));
 
-			AssertQueryWithinDelta(atOrAboveScale);
-
-			var belowScale =
-				from p in db.Types
-				where p.MoneyValue != 0
-				orderby p.ID
-				select Sql.AsSql(Math.Round(p.MoneyValue, p.ID % 2 + 1));
-
-			AssertQueryWithinDelta(belowScale);
+			AreEqualWithinDelta(
+				from p in    Types where p.MoneyValue != 0 select Math.Round(p.MoneyValue, p.ID % 2 + 1),
+				from p in db.Types where p.MoneyValue != 0 select Sql.AsSql(Math.Round(p.MoneyValue, p.ID % 2 + 1)));
 		}
 
 		sealed class RoundNearLimit

@@ -891,9 +891,18 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Issue3830TestTable.TestData);
 
-			var result = table.OrderBy(r => r.Bool1).ThenBy(r => r.Id).Select(r => r.Id).ToArray();
+			var expected = Issue3830TestTable.TestData
+				.OrderBy(r => r.Bool1)
+				.ThenBy(r => r.Id)
+				.Select(r => r.Id)
+				.ToArray();
 
-			result.ShouldBe(Issue3830TestTable.TestData.OrderBy(r => r.Bool1).ThenBy(r => r.Id).Select(r => r.Id).ToArray());
+			table
+				.OrderBy(r => r.Bool1)
+				.ThenBy(r => r.Id)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe(expected);
 		}
 
 		[Test]

@@ -242,6 +242,134 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void DistinctOrderByBooleanSequence([DataSources] string context, [Values] bool descending)
+		{
+			using var db = GetDataContext(context);
+
+			var source = Types
+				.Select(t => new { t.ID, t.BoolValue })
+				.Distinct();
+
+			var query = db.Types
+				.Select(t => new { t.ID, t.BoolValue })
+				.Distinct();
+
+			var expected = (descending ? source.OrderByDescending(t => t.BoolValue) : source.OrderBy(t => t.BoolValue))
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray();
+
+			var ordered = descending ? query.OrderByDescending(t => t.BoolValue) : query.OrderBy(t => t.BoolValue);
+
+			ordered
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
+		// Access-only: DISTINCT reads an outer-joined Yes/No column as False, not NULL.
+		[Test]
+		public void DistinctOrderByOuterJoinedBooleanKey([IncludeDataSources(true, TestProvName.AllAccess)] string context, [Values] bool descending)
+		{
+			using var db = GetDataContext(context);
+
+			var source =
+				(
+					from p in Parent
+					join t in Types2 on p.ParentID + 8 equals t.ID into g
+					from t in g.DefaultIfEmpty()
+					select new { p.ParentID, BoolValue = (bool?)(t?.BoolValue ?? false) }
+				)
+				.Distinct();
+
+			var query =
+				(
+					from p in db.Parent
+					join t in db.Types2 on p.ParentID + 8 equals t.ID into g
+					from t in g.DefaultIfEmpty()
+					select new { p.ParentID, BoolValue = t!.BoolValue }
+				)
+				.Distinct();
+
+			var expected = (descending ? source.OrderByDescending(r => r.BoolValue) : source.OrderBy(r => r.BoolValue))
+				.ThenBy(r => r.ParentID)
+				.Select(r => (r.ParentID, r.BoolValue))
+				.ToArray();
+
+			var ordered = descending ? query.OrderByDescending(r => r.BoolValue) : query.OrderBy(r => r.BoolValue);
+
+			ordered
+				.ThenBy(r => r.ParentID)
+				.ToArray()
+				.Select(r => (r.ParentID, r.BoolValue))
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
+		// Access-only: the other providers place NULL by their own DefaultNullsOrdering.
+		[Test]
+		public void DistinctOrderByNullableBooleanExpression([IncludeDataSources(true, TestProvName.AllAccess)] string context, [Values] bool descending)
+		{
+			using var db = GetDataContext(context);
+
+			var source = Types2
+				.Select(t => new { t.ID, Value = t.ID > 8 ? null : t.BoolValue })
+				.Distinct();
+
+			var query = db.Types2
+				.Select(t => new { t.ID, Value = t.ID > 8 ? null : t.BoolValue })
+				.Distinct();
+
+			var expected = (descending ? source.OrderByDescending(r => r.Value) : source.OrderBy(r => r.Value))
+				.ThenBy(r => r.ID)
+				.Select(r => (r.ID, r.Value))
+				.ToArray();
+
+			var ordered = descending ? query.OrderByDescending(r => r.Value) : query.OrderBy(r => r.Value);
+
+			ordered
+				.ThenBy(r => r.ID)
+				.ToArray()
+				.Select(r => (r.ID, r.Value))
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
+		// Access-only, pins a known limitation: under DISTINCT a nullable key can only be flipped, not negated,
+		// so NULL sorts after True instead of before False.
+		[Test]
+		public void DistinctOrderByNullableBooleanSubQueryColumn([IncludeDataSources(true, TestProvName.AllAccess)] string context, [Values] bool descending)
+		{
+			using var db = GetDataContext(context);
+
+			var source = Types2
+				.Select(t => new { t.ID, Value = t.ID > 8 ? null : t.BoolValue })
+				.Distinct();
+
+			var query = db.Types2
+				.Select(t => new { t.ID, Value = t.ID > 8 ? null : t.BoolValue })
+				.AsSubQuery()
+				.Distinct();
+
+			var expected = (descending
+					? source.OrderBy(r => r.Value != null).ThenByDescending(r => r.Value)
+					: source.OrderBy(r => r.Value == null).ThenBy(r => r.Value))
+				.ThenBy(r => r.ID)
+				.Select(r => (r.ID, r.Value))
+				.ToArray();
+
+			var ordered = descending ? query.OrderByDescending(r => r.Value) : query.OrderBy(r => r.Value);
+
+			ordered
+				.ThenBy(r => r.ID)
+				.ToArray()
+				.Select(r => (r.ID, r.Value))
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
+		[Test]
 		public void OrderByExpressionDistinct([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

@@ -611,7 +611,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						var lambda = method.Arguments[1].UnwrapLambda();
 						if (null != lambda.Body.Find(1, (_, e) => e is MethodCallExpression))
 						{
-							chain.RemoveAt(i);
+							chain.RemoveRange(i, chain.Count - i);
 							current = method;
 							break;
 						}

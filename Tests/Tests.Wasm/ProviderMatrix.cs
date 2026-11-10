@@ -96,6 +96,7 @@ namespace Tests.Wasm
 			new(ProviderName.AccessJetOdbc,           ProviderName.AccessJetOdbc,           () => AccessTools.GetDataProvider(AccessVersion.Jet, AccessProvider.ODBC),  Refused),
 			new(ProviderName.AccessAceOleDb,          ProviderName.AccessAceOleDb,          () => AccessTools.GetDataProvider(AccessVersion.Ace, AccessProvider.OleDb), Refused),
 			new(ProviderName.AccessAceOdbc,           ProviderName.AccessAceOdbc,           () => AccessTools.GetDataProvider(AccessVersion.Ace, AccessProvider.ODBC),  Refused),
+			new(ProviderName.AccessLibRed,            ProviderName.AccessLibRed,            () => AccessTools.GetDataProvider(provider: AccessProvider.LibRed),          Refused),
 
 			new(ProviderName.DB2LUW,                  ProviderName.DB2LUW,                  () => DB2Tools.GetDataProvider(DB2Version.LUW), Built, LoadsProviderAssembly: true),
 			// The client puts the configuration name into the request path unescaped (#6176), so the row is keyed without '/'.
