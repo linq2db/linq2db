@@ -90,3 +90,47 @@ function Update-BaselinesPrBase {
         $global:LASTEXITCODE = 0
     }
 }
+
+function Test-RebaseInProgress {
+    return (Test-Path (git rev-parse --git-path rebase-merge)) -or (Test-Path (git rev-parse --git-path rebase-apply))
+}
+
+# Rebases HEAD onto $Onto with every conflict resolved to $Onto's side. A PR's baselines conflict with its
+# base when another PR's baselines merged there first; the run's legs then regenerate this PR's own changes
+# on top (push-baselines.ps1 replays with -X theirs). Returns $false, with no rebase left in progress, when
+# the rebase still cannot finish.
+function Invoke-BaselinesRebase([Parameter(Mandatory)][string] $Onto) {
+    # during a rebase "ours" is the branch being rebased onto
+    git rebase -X ours $Onto | Out-Host
+    if ($LASTEXITCODE -ne 0 -and -not (Test-RebaseInProgress)) {
+        return $false
+    }
+
+    for ($step = 0; (Test-RebaseInProgress) -and $step -lt 1000; $step++) {
+        # -X settles content conflicts only: a path modified on one side and deleted on the other stays unmerged
+        $unmerged = @(git diff --name-only --diff-filter=U)
+        foreach ($path in $unmerged) {
+            git cat-file -e ":2:${path}" 2>$null
+            if ($LASTEXITCODE -eq 0) {
+                git checkout --ours -- $path | Out-Host
+                git add -- $path | Out-Host
+            } else {
+                git rm -q -- $path | Out-Host
+            }
+            Write-Host "Conflict in '${path}' resolved to ${Onto}'s side"
+        }
+
+        git -c core.editor=true rebase --continue | Out-Host
+        if ($LASTEXITCODE -ne 0 -and $unmerged.Count -eq 0) {
+            # stopped on something other than a conflict: retrying cannot help
+            break
+        }
+    }
+
+    if (Test-RebaseInProgress) {
+        git rebase --abort | Out-Host
+        return $false
+    }
+
+    return $true
+}

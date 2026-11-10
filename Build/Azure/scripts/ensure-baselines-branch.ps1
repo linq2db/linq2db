@@ -16,7 +16,8 @@ build 23009 - for 0.3 min of work.
 What is left here is the one case the legs cannot handle: a branch left by an earlier
 run of the same PR that has fallen behind baselines master. Every leg then bases its
 clone on that stale branch (checkout-baselines.ps1), so it is rebased onto master here,
-once, before any leg starts.
+once, before any leg starts. A conflict - another PR's baselines merged first - is resolved
+to master's side (Invoke-BaselinesRebase); the legs then regenerate this PR's own baselines.
 
 Reads the auth token from the GITHUB_TOKEN environment variable (= BASELINES_GH_PAT).
 The rebase path also needs git identity via EMAIL / GIT_AUTHOR_NAME / GIT_COMMITTER_NAME.
@@ -114,9 +115,8 @@ if (-not $branchHash) {
                     exit 1
                 }
                 $leased = git rev-parse HEAD
-                git rebase origin/$base
-                if ($LASTEXITCODE -ne 0) {
-                    Write-Host "Failed to rebase baselines PR on origin/${base}. Delete branch and re-run tests. Error code ${LASTEXITCODE}"
+                if (-not (Invoke-BaselinesRebase -Onto origin/$base)) {
+                    Write-Host "Failed to rebase baselines PR on origin/${base} even with conflicts resolved to its side. Delete branch and re-run tests."
                     exit 1
                 }
                 $output = git push --force-with-lease=refs/heads/${Branch}:${leased} origin HEAD:refs/heads/$Branch 2>&1
