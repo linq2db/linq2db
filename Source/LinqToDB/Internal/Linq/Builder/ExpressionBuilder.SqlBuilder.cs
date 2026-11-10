@@ -185,6 +185,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var expr = parent.Builder.BuildSqlExpression(clonedContext, new ContextRefExpression(clonedContext.ElementType, clonedContext));
 
+				// A collection that does not reference the parent is loaded by a query of its own, never joined to the parent.
+				// A join simulated for it would only keep the optimizer from simplifying the parent's own joins.
+				if (!context.IsSingleElement && !QueryHelper.IsDependsOnOuterSources(clonedContext.SelectQuery))
+					return true;
+
 				// add fake join there is no still reference
 				if (clonedParentContext.SelectQuery.From.Tables.Count > 0
 					&& clonedParentContext.SelectQuery.Find(e => e is SelectQuery sc && sc == clonedContext.SelectQuery) == null)

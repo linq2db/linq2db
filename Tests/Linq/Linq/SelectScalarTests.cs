@@ -331,6 +331,39 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void SubQueryFirstBesideCollection([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var result = db.Select(() => new
+			{
+				FirstId  = db.Parent
+					.OrderBy(p => p.ParentID)
+					.First()
+					.ParentID,
+				Children = db.Child
+					.OrderBy(c => c.ChildID)
+					.Take(2)
+					.ToList(),
+			});
+
+			var firstId = Parent
+				.OrderBy(p => p.ParentID)
+				.First()
+				.ParentID;
+
+			var childIds = Child
+				.OrderBy(c => c.ChildID)
+				.Take(2)
+				.Select(c => c.ChildID);
+
+			result.FirstId.ShouldBe(firstId);
+			result.Children
+				.Select(c => c.ChildID)
+				.ShouldBe(childIds);
+		}
+
+		[Test]
 		public void SubQueryWithCastAndHasValue([DataSources(TestProvName.AllSybase, ProviderName.SqlCe)] string context)
 		{
 			using var db = GetDataContext(context);
