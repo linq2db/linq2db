@@ -124,6 +124,21 @@ namespace Tests.Linq
 			return Shouldly.Should.Throw<InvalidOperationException>(() => alone());
 		}
 
+		// Catches only the LINQ exception, so a provider's refusal to translate the batch reaches a declared Throws*.
+		static InvalidOperationException ThrowOfTheBatch(Action batch)
+		{
+			try
+			{
+				batch();
+			}
+			catch (InvalidOperationException ex)
+			{
+				return ex;
+			}
+
+			throw new ShouldAssertException("The batch should throw System.InvalidOperationException but did not.");
+		}
+
 		static string[] GroupedIds(IEnumerable<(int Id, IEnumerable<BatchItem> Items)> groups)
 		{
 			return groups
@@ -1671,6 +1686,7 @@ namespace Tests.Linq
 
 		// A scalar read is a subquery of the batch row, which SQL reads as NULL when it finds nothing.
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid, AlsoWhenParameter = "read", AlsoWhenValue = EmptyRead.FirstValue)]
 		public void EmptyScalarReadThrowsAsThePartAlone(
 			[DataSources(false, NoFromlessSubquery)] string context,
 			[Values] EmptyRead read)
@@ -1696,7 +1712,7 @@ namespace Tests.Linq
 			};
 
 			var alone = ThrowOfThePartAlone(part);
-			var batch = Shouldly.Should.Throw<InvalidOperationException>(() => db.QueryBatch(part, () => items.ToList()));
+			var batch = ThrowOfTheBatch(() => db.QueryBatch(part, () => items.ToList()));
 
 			batch.Message.ShouldBe(alone.Message);
 		}
@@ -1744,6 +1760,7 @@ namespace Tests.Linq
 
 		// A NULL the value itself can hold does not mean an empty source, so the part reads what it reads alone.
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
 		public void NullValueReadsAsThePartAlone([DataSources(false, NoFromlessSubquery)] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -1826,6 +1843,7 @@ namespace Tests.Linq
 		// A converter that handles nulls turns the NULL of an empty source into a value, so only the marker shows the empty
 		// source.
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
 		public void ConverterDoesNotHideAnEmptySource([DataSources(false, NoFromlessSubquery)] string context)
 		{
 			using var db   = GetDataContext(context);
@@ -1837,7 +1855,7 @@ namespace Tests.Linq
 				.First();
 
 			var alone = ThrowOfThePartAlone(part);
-			var batch = Shouldly.Should.Throw<InvalidOperationException>(() => db.QueryBatch(part, () => rows.ToList()));
+			var batch = ThrowOfTheBatch(() => db.QueryBatch(part, () => rows.ToList()));
 
 			batch.Message.ShouldBe(alone.Message);
 		}
@@ -1887,6 +1905,7 @@ namespace Tests.Linq
 
 		// A value that is no column of the row shows no more of the row than a NULL does.
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid, AlsoWhenParameter = "isSingle", AlsoWhenValue = false)]
 		public void ComputedValueOverAnEmptySourceThrowsAsThePartAlone(
 			[DataSources(false, NoFromlessSubquery)] string context,
 			[Values] ComputedRead read,
@@ -1898,12 +1917,13 @@ namespace Tests.Linq
 			var part = ComputedPart(items.Where(i => i.Id > 100), read, isSingle);
 
 			var alone = ThrowOfThePartAlone(part);
-			var batch = Shouldly.Should.Throw<InvalidOperationException>(() => db.QueryBatch(part, () => items.ToList()));
+			var batch = ThrowOfTheBatch(() => db.QueryBatch(part, () => items.ToList()));
 
 			batch.Message.ShouldBe(alone.Message);
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid, AlsoWhenParameter = "isSingle", AlsoWhenValue = false)]
 		public void ComputedValueOfARowReadsAsThePartAlone(
 			[DataSources(false, NoFromlessSubquery)] string context,
 			[Values] ComputedRead read,
@@ -1920,6 +1940,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
 		public void NullableReadOverAnEmptySourceThrowsAsThePartAlone([DataSources(false, NoFromlessSubquery)] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -1936,15 +1957,16 @@ namespace Tests.Linq
 				.Single();
 
 			var aloneValue = ThrowOfThePartAlone(value);
-			var batchValue = Shouldly.Should.Throw<InvalidOperationException>(() => db.QueryBatch(value, () => items.ToList()));
+			var batchValue = ThrowOfTheBatch(() => db.QueryBatch(value, () => items.ToList()));
 			var aloneName  = ThrowOfThePartAlone(name);
-			var batchName  = Shouldly.Should.Throw<InvalidOperationException>(() => db.QueryBatch(name, () => items.ToList()));
+			var batchName  = ThrowOfTheBatch(() => db.QueryBatch(name, () => items.ToList()));
 
 			batchValue.Message.ShouldBe(aloneValue.Message);
 			batchName.Message.ShouldBe(aloneName.Message);
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
 		public void NullInARowReadsNull([DataSources(false, NoFromlessSubquery)] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -1993,6 +2015,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void NestedNullableReadKeepsEveryRow([DataSources(false, NoFromlessSubquery)] string context)
 		{
 			using var db     = GetDataContext(context);
@@ -2067,6 +2090,7 @@ namespace Tests.Linq
 
 		// The check stays out of set-operation branches.
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void SetOperationBranchReadsItsValue([DataSources(false, NoFromlessSubquery)] string context)
 		{
 			using var db     = GetDataContext(context);
