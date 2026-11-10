@@ -184,6 +184,18 @@ namespace LinqToDB.Internal.DataProvider.Access
 						break;
 				}
 			}
+			else if (Provider == AccessProvider.LibRed && value is bool b)
+			{
+				// LibRed binds a bool to an integer column as -1 (and overflows a Byte); ACE binds 1, and a
+				// parameter predicate compares the stored value exactly
+				value = dataType.DataType switch
+				{
+					DataType.Byte  => b ? (byte)1  : (byte)0,
+					DataType.Int16 => b ? (short)1 : (short)0,
+					DataType.Int32 => b ? 1 : 0,
+					_              => value,
+				};
+			}
 
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}

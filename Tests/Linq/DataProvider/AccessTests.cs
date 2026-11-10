@@ -794,6 +794,70 @@ namespace Tests.DataProvider
 
 		#endregion
 
+		[Table("BoolAsIntegerTable")]
+		sealed class BoolAsIntegerTable
+		{
+			[PrimaryKey                       ] public int  Id        { get; set; }
+			[Column(DataType = DataType.Byte) ] public bool ByteFlag  { get; set; }
+			[Column(DataType = DataType.Int16)] public bool Int16Flag { get; set; }
+			[Column(DataType = DataType.Int32)] public bool Int32Flag { get; set; }
+		}
+
+		[Table("BoolAsIntegerTable")]
+		sealed class BoolAsIntegerRawTable
+		{
+			[PrimaryKey] public int   Id        { get; set; }
+			[Column    ] public byte  ByteFlag  { get; set; }
+			[Column    ] public short Int16Flag { get; set; }
+			[Column    ] public int   Int32Flag { get; set; }
+		}
+
+		// True is -1 in Access SQL, but a bool bound to an integer column is stored as 1 by every driver, so a parameter
+		// compare against it finds the row
+		[Test]
+		public void BoolStoredAsInteger([IncludeDataSources(true, TestProvName.AllAccess)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<BoolAsIntegerTable>();
+
+			db.Insert(new BoolAsIntegerTable { Id = 1, ByteFlag = true,  Int16Flag = true,  Int32Flag = true  });
+			db.Insert(new BoolAsIntegerTable { Id = 2, ByteFlag = false, Int16Flag = false, Int32Flag = false });
+
+			db.GetTable<BoolAsIntegerRawTable>()
+				.OrderBy(r => r.Id)
+				.ToArray()
+				.Select(r => (r.Id, r.ByteFlag, r.Int16Flag, r.Int32Flag))
+				.ToArray()
+				.ShouldBe([(1, (byte)1, (short)1, 1), (2, (byte)0, (short)0, 0)]);
+
+			table
+				.OrderBy(r => r.Id)
+				.ToArray()
+				.Select(r => (r.Id, r.ByteFlag, r.Int16Flag, r.Int32Flag))
+				.ToArray()
+				.ShouldBe([(1, true, true, true), (2, false, false, false)]);
+
+			var flag = true;
+
+			table
+				.Where(r => r.ByteFlag == flag)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([1]);
+
+			table
+				.Where(r => r.Int16Flag == flag)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([1]);
+
+			table
+				.Where(r => r.Int32Flag == flag)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([1]);
+		}
+
 		[Table]
 		sealed class LongTextTable
 		{
