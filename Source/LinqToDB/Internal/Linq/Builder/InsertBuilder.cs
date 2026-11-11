@@ -76,9 +76,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var insertType = methodCall.Method.Name switch
 			{
-				nameof(LinqExtensions.Insert)               => InsertContext.InsertTypeEnum.Insert,
-				nameof(LinqExtensions.InsertWithIdentity)   => InsertContext.InsertTypeEnum.InsertWithIdentity,
-				nameof(LinqExtensions.InsertWithOutput)     => InsertContext.InsertTypeEnum.InsertOutput,
+				nameof(LinqExtensions.Insert)                => InsertContext.InsertTypeEnum.Insert,
+				nameof(LinqExtensions.InsertWithIdentity)    => InsertContext.InsertTypeEnum.InsertWithIdentity,
+				nameof(LinqExtensions.InsertWithOutput)      => InsertContext.InsertTypeEnum.InsertOutput,
 				nameof(LinqExtensions.InsertWithOutputInto)  => InsertContext.InsertTypeEnum.InsertOutputInto,
 				nameof(LinqExtensions.InsertWithOutputQuery) => InsertContext.InsertTypeEnum.InsertOutputQuery,
 				_ => InsertContext.InsertTypeEnum.Insert,

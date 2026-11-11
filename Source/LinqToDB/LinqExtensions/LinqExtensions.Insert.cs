@@ -1161,8 +1161,9 @@ namespace LinqToDB
 		/// Eager loading over the output loads child records by key from the returned rows (<see cref="EagerLoadingStrategy.KeyedQuery"/>,
 		/// regardless of the configured strategy); child queries that cannot be keyed
 		/// to the output, or that read the output themselves, throw <see cref="LinqToDBException"/>.
-		/// Outside a transaction the insert is committed when the statement runs, so a failure while the returned rows are read
-		/// does not undo it; run the query in a transaction when it must be undone.
+		/// Without eager loading, and outside a transaction, the insert is committed when the statement runs, so a failure while the
+		/// returned rows are read does not undo it; run the query in a transaction when it must be undone. With eager loading on a
+		/// direct connection the query runs in an implicit transaction, which such a failure rolls back together with the insert.
 		/// </para>
 		/// Database support:
 		/// <list type="bullet">
@@ -1170,6 +1171,7 @@ namespace LinqToDB
 		/// </list>
 		/// Other databases throw <see cref="LinqToDBException"/> when the query is built.
 		/// </remarks>
+		[LinqTunnel]
 		[Pure]
 		public static IQueryable<TTarget> InsertWithOutputQuery<TTarget>(
 			this ITable<TTarget>      target,
@@ -1207,8 +1209,9 @@ namespace LinqToDB
 		/// Eager loading over the output loads child records by key from the returned rows (<see cref="EagerLoadingStrategy.KeyedQuery"/>,
 		/// regardless of the configured strategy); child queries that cannot be keyed
 		/// to the output, or that read the output themselves, throw <see cref="LinqToDBException"/>.
-		/// Outside a transaction the insert is committed when the statement runs, so a failure while the returned rows are read
-		/// does not undo it; run the query in a transaction when it must be undone.
+		/// Without eager loading, and outside a transaction, the insert is committed when the statement runs, so a failure while the
+		/// returned rows are read does not undo it; run the query in a transaction when it must be undone. With eager loading on a
+		/// direct connection the query runs in an implicit transaction, which such a failure rolls back together with the insert.
 		/// </para>
 		/// Database support:
 		/// <list type="bullet">
@@ -1216,6 +1219,7 @@ namespace LinqToDB
 		/// </list>
 		/// Other databases throw <see cref="LinqToDBException"/> when the query is built.
 		/// </remarks>
+		[LinqTunnel]
 		[Pure]
 		public static IQueryable<TTarget> InsertWithOutputQuery<TSource,TTarget>(
 			this IQueryable<TSource>          source,
@@ -1287,8 +1291,8 @@ namespace LinqToDB
 			return query.CreateQuery<TTarget>(expr);
 		}
 
-		static readonly MethodInfo _insertWithOutputQueryTable           = MethodHelper.GetMethodInfo(InsertWithOutputQuery, (ITable<object>)null!, (Expression<Func<object>>)null!).GetGenericMethodDefinition();
-		static readonly MethodInfo _insertWithOutputQueryTableIdentified = MethodHelper.GetMethodInfo(InsertWithOutputQuery, (ITable<object>)null!, (Expression<Func<object>>)null!, (DataModificationIdentity)null!).GetGenericMethodDefinition();
+		static readonly MethodInfo _insertWithOutputQueryTable            = MethodHelper.GetMethodInfo(InsertWithOutputQuery, (ITable<object>)null!, (Expression<Func<object>>)null!).GetGenericMethodDefinition();
+		static readonly MethodInfo _insertWithOutputQueryTableIdentified  = MethodHelper.GetMethodInfo(InsertWithOutputQuery, (ITable<object>)null!, (Expression<Func<object>>)null!, (DataModificationIdentity)null!).GetGenericMethodDefinition();
 		static readonly MethodInfo _insertWithOutputQuerySource           = MethodHelper.GetMethodInfo(InsertWithOutputQuery, (IQueryable<object>)null!, (ITable<object>)null!, (Expression<Func<object,object>>)null!).GetGenericMethodDefinition();
 		static readonly MethodInfo _insertWithOutputQuerySourceIdentified = MethodHelper.GetMethodInfo(InsertWithOutputQuery, (IQueryable<object>)null!, (ITable<object>)null!, (Expression<Func<object,object>>)null!, (DataModificationIdentity)null!).GetGenericMethodDefinition();
 

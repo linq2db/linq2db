@@ -24,6 +24,8 @@ namespace Tests.xUpdate
 	[TestFixture]
 	public class InsertWithOutputQueryTests : TestBase
 	{
+		private const string FeatureOutputQuery = TestProvName.AllPostgreSQL;
+
 		[Table("InsertOutputQuerySource")]
 		sealed class SourceTable
 		{
@@ -144,7 +146,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void FromQuery_Select([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context, [Values(100, 200)] int param)
+		public void FromQuery_Select([IncludeDataSources(true, FeatureOutputQuery)] string context, [Values(100, 200)] int param)
 		{
 			using var db     = GetDataContext(context);
 			using var source = db.CreateLocalTable(GetSourceData());
@@ -184,7 +186,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void FromQuery_ProjectionFilterAndAggregate([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void FromQuery_ProjectionFilterAndAggregate([IncludeDataSources(true, FeatureOutputQuery)] string context)
 		{
 			using var db     = GetDataContext(context);
 			using var source = db.CreateLocalTable(GetSourceData());
@@ -206,7 +208,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void SingleRecord_Select([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void SingleRecord_Select([IncludeDataSources(true, FeatureOutputQuery)] string context)
 		{
 			using var db     = GetDataContext(context);
 			using var target = db.CreateLocalTable<TargetTable>();
@@ -226,7 +228,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void OutputFeedsInsert([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void OutputFeedsInsert([IncludeDataSources(true, FeatureOutputQuery)] string context)
 		{
 			using var db     = GetDataContext(context);
 			using var source = db.CreateLocalTable(GetSourceData());
@@ -261,7 +263,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/discussions/5679")]
-		public void GeneratedKeysJoinedBackToInput([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void GeneratedKeysJoinedBackToInput([IncludeDataSources(true, FeatureOutputQuery)] string context)
 		{
 			using var db     = GetDataContext(context);
 			using var input  = db.CreateLocalTable(new[]
@@ -305,7 +307,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void OutputReferencedTwiceInsertsOnce([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void OutputReferencedTwiceInsertsOnce([IncludeDataSources(true, FeatureOutputQuery)] string context)
 		{
 			using var db     = GetDataContext(context);
 			using var source = db.CreateLocalTable(GetSourceData());
@@ -327,7 +329,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void NotSupported([DataSources(false, TestProvName.AllPostgreSQL)] string context)
+		public void NotSupported([DataSources(false, FeatureOutputQuery)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -342,7 +344,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void NotSupported_Remote([DataSources(TestProvName.AllPostgreSQL)] string context)
+		public void NotSupported_Remote([DataSources(FeatureOutputQuery)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -356,7 +358,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void SingleRecord_DefaultOutput([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void SingleRecord_DefaultOutput([IncludeDataSources(true, FeatureOutputQuery)] string context)
 		{
 			using var db     = GetDataContext(context);
 			using var target = db.CreateLocalTable<TargetTable>();
@@ -376,7 +378,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void FromQuery_SequenceIdentity([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void FromQuery_SequenceIdentity([IncludeDataSources(true, FeatureOutputQuery)] string context)
 		{
 			using var db     = GetDataContext(context);
 			using var source = db.CreateLocalTable(GetSourceData());
@@ -435,9 +437,8 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void EagerLoadOverOutputInsertsOnce([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void EagerLoadOverOutputInsertsOnce([IncludeDataSources(true, FeatureOutputQuery)] string context)
 		{
-			using var _      = context.IsRemote() ? new DisableBaseline("Only direct access commits the implicit load transaction") : null;
 			using var db     = GetDataContext(context);
 			using var input  = db.CreateLocalTable(new[]
 			{
@@ -470,9 +471,8 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void EagerLoadOverOutput_UnionStrategyMarker([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void EagerLoadOverOutput_UnionStrategyMarker([IncludeDataSources(true, FeatureOutputQuery)] string context)
 		{
-			using var _      = context.IsRemote() ? new DisableBaseline("Only direct access commits the implicit load transaction") : null;
 			using var db     = GetDataContext(context);
 			using var input  = db.CreateLocalTable(new[]
 			{
@@ -505,7 +505,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void EagerLoadOverOutput_NotKeyableThrows([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void EagerLoadOverOutput_NotKeyableThrows([IncludeDataSources(true, FeatureOutputQuery)] string context)
 		{
 			using var db     = GetDataContext(context);
 			using var source = db.CreateLocalTable(GetSourceData());
@@ -535,7 +535,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void CapturedConditionRemovesOutput([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context, [Values] bool flag)
+		public void CapturedConditionRemovesOutput([IncludeDataSources(true, FeatureOutputQuery)] string context, [Values] bool flag)
 		{
 			using var db     = GetDataContext(context);
 			using var source = db.CreateLocalTable(GetSourceData());
@@ -561,7 +561,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void EagerLoadReadsOutputInParentAndChildThrows([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void EagerLoadReadsOutputInParentAndChildThrows([IncludeDataSources(true, FeatureOutputQuery)] string context)
 		{
 			using var db     = GetDataContext(context);
 			using var source = db.CreateLocalTable(GetSourceData());
@@ -593,7 +593,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void EagerLoadReadsOutputInChildOnlyThrows([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void EagerLoadReadsOutputInChildOnlyThrows([IncludeDataSources(true, FeatureOutputQuery)] string context)
 		{
 			using var db     = GetDataContext(context);
 			using var source = db.CreateLocalTable(GetSourceData());
@@ -625,7 +625,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void OutputInSubqueryPredicate([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void OutputInSubqueryPredicate([IncludeDataSources(true, FeatureOutputQuery)] string context)
 		{
 			using var db     = GetDataContext(context);
 			using var source = db.CreateLocalTable(GetSourceData());
@@ -649,7 +649,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void OutputFeedsUpdate([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void OutputFeedsUpdate([IncludeDataSources(true, FeatureOutputQuery)] string context)
 		{
 			using var db     = GetDataContext(context);
 			using var source = db.CreateLocalTable(GetSourceData());
@@ -675,7 +675,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UnreadOutputStillInserts([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void UnreadOutputStillInserts([IncludeDataSources(true, FeatureOutputQuery)] string context)
 		{
 			using var db     = GetDataContext(context);
 			using var source = db.CreateLocalTable(GetSourceData());
@@ -699,7 +699,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void OutputCountOnly([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void OutputCountOnly([IncludeDataSources(true, FeatureOutputQuery)] string context)
 		{
 			using var db     = GetDataContext(context);
 			using var source = db.CreateLocalTable(GetSourceData());
@@ -717,7 +717,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, QueryCacheTest]
-		public void OneQueryableTwiceThenTwoCalls([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void OneQueryableTwiceThenTwoCalls([IncludeDataSources(true, FeatureOutputQuery)] string context)
 		{
 			using var db     = GetDataContext(context);
 			using var target = db.CreateLocalTable<IdentityTarget>();
@@ -751,7 +751,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, QueryCacheTest]
-		public void TwoCallsThenOneQueryableTwice([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void TwoCallsThenOneQueryableTwice([IncludeDataSources(true, FeatureOutputQuery)] string context)
 		{
 			using var db     = GetDataContext(context);
 			using var target = db.CreateLocalTable<IdentityTarget>();
@@ -788,7 +788,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TwoIdenticalCallsInsertTwice([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void TwoIdenticalCallsInsertTwice([IncludeDataSources(true, FeatureOutputQuery)] string context)
 		{
 			using var db     = GetDataContext(context);
 			using var target = db.CreateLocalTable<IdentityTarget>();
@@ -812,7 +812,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, QueryCacheTest]
-		public void OutputQueryIsCached([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		public void OutputQueryIsCached([IncludeDataSources(FeatureOutputQuery)] string context)
 		{
 			using var db     = GetDataContext(context);
 			using var target = db.CreateLocalTable<IdentityTarget>();
@@ -836,7 +836,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, QueryCacheTest]
-		public void TwoOutputQueriesAreCached([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		public void TwoOutputQueriesAreCached([IncludeDataSources(FeatureOutputQuery)] string context)
 		{
 			using var db     = GetDataContext(context);
 			using var target = db.CreateLocalTable<IdentityTarget>();
@@ -871,7 +871,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void CompiledQueryInsertsPerInvocation([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		public void CompiledQueryInsertsPerInvocation([IncludeDataSources(FeatureOutputQuery)] string context)
 		{
 			using var db     = GetDataContext(context);
 			using var target = db.CreateLocalTable<IdentityTarget>();
@@ -895,7 +895,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void CompiledQueryTwoIdenticalCalls([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		public void CompiledQueryTwoIdenticalCalls([IncludeDataSources(FeatureOutputQuery)] string context)
 		{
 			using var db     = GetDataContext(context);
 			using var target = db.CreateLocalTable<IdentityTarget>();
@@ -917,7 +917,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void CompiledConditionKeepsInsert([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		public void CompiledConditionKeepsInsert([IncludeDataSources(FeatureOutputQuery)] string context)
 		{
 			using var db     = GetDataContext(context);
 			using var source = db.CreateLocalTable(GetSourceData());
@@ -945,7 +945,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InlineCallInQueryLambda([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void InlineCallInQueryLambda([IncludeDataSources(true, FeatureOutputQuery)] string context)
 		{
 			using var db     = GetDataContext(context);
 			using var source = db.CreateLocalTable(GetSourceData());
@@ -971,7 +971,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void ChainedOutputQueries([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void ChainedOutputQueries([IncludeDataSources(true, FeatureOutputQuery)] string context)
 		{
 			using var db     = GetDataContext(context);
 			using var source = db.CreateLocalTable(GetSourceData());
@@ -996,7 +996,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void DerivedTypeTarget([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		public void DerivedTypeTarget([IncludeDataSources(FeatureOutputQuery)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable<TphBase>();
@@ -1015,7 +1015,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void AssociationOverOutput([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void AssociationOverOutput([IncludeDataSources(true, FeatureOutputQuery)] string context)
 		{
 			using var db     = GetDataContext(context);
 			using var source = db.CreateLocalTable(GetSourceData());
@@ -1036,21 +1036,32 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void CorrelatedCallThrows([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		public void CorrelatedCallThrows([IncludeDataSources(FeatureOutputQuery)] string context, [Values] bool fromSource)
 		{
 			using var db     = GetDataContext(context);
 			using var source = db.CreateLocalTable(GetSourceData());
 			using var target = db.CreateLocalTable<TargetTable>();
 
-			var query = source
-				.Where(s => s.Id <= 2)
-				.Select(s => new
-				{
-					s.Id,
-					Inserted = target
-						.InsertWithOutputQuery(() => new TargetTable { Id = s.Id + 100, Value = s.Value, ValueStr = s.ValueStr })
-						.Count(),
-				});
+			var query = fromSource
+				? source
+					.Where(s => s.Id <= 2)
+					.Select(s => new
+					{
+						s.Id,
+						Inserted = source
+							.Where(o => o.Id == s.Id)
+							.InsertWithOutputQuery(target, o => new TargetTable { Id = o.Id + 100, Value = o.Value, ValueStr = o.ValueStr })
+							.Count(),
+					})
+				: source
+					.Where(s => s.Id <= 2)
+					.Select(s => new
+					{
+						s.Id,
+						Inserted = target
+							.InsertWithOutputQuery(() => new TargetTable { Id = s.Id + 100, Value = s.Value, ValueStr = s.ValueStr })
+							.Count(),
+					});
 
 			Action act = () => query.ToArray();
 
@@ -1063,7 +1074,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task EagerLoadOverOutputCommitsLoadTransaction([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] EagerLoadExecution execution)
+		public async Task EagerLoadOverOutputCommitsLoadTransaction([IncludeDataSources(FeatureOutputQuery)] string context, [Values] EagerLoadExecution execution)
 		{
 			var begun     = 0;
 			var committed = 0;
@@ -1144,7 +1155,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task EagerLoadOverOutputCommitsWhenEnumerationEnds([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] EnumerationEnd end)
+		public async Task EagerLoadOverOutputCommitsWhenEnumerationEnds([IncludeDataSources(FeatureOutputQuery)] string context, [Values] EnumerationEnd end)
 		{
 			using var db     = GetDataConnection(context);
 			using var input  = db.CreateLocalTable(new[]
@@ -1231,7 +1242,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task EagerLoadOverOutputRollsBackOnFailure([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values(EnumerationEnd.Completed, EnumerationEnd.AsyncCompleted, EnumerationEnd.ForEachAsync)] EnumerationEnd end)
+		public async Task EagerLoadOverOutputRollsBackOnFailure([IncludeDataSources(FeatureOutputQuery)] string context, [Values(EnumerationEnd.Completed, EnumerationEnd.AsyncCompleted, EnumerationEnd.ForEachAsync)] EnumerationEnd end)
 		{
 			using var db     = GetDataConnection(context);
 			using var input  = db.CreateLocalTable(new[]
@@ -1296,7 +1307,7 @@ namespace Tests.xUpdate
 				.ShouldBe(0);
 		}
 		[Test]
-		public async Task EagerLoadOverOutputWithDetachedChildCommitsAfterReader([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] bool combined, [Values(EnumerationEnd.Completed, EnumerationEnd.Break, EnumerationEnd.AsyncBreak)] EnumerationEnd end)
+		public async Task EagerLoadOverOutputWithDetachedChildCommitsAfterReader([IncludeDataSources(FeatureOutputQuery)] string context, [Values] bool combined, [Values(EnumerationEnd.Completed, EnumerationEnd.Break, EnumerationEnd.AsyncBreak)] EnumerationEnd end)
 		{
 			var committed = 0;
 
@@ -1370,7 +1381,7 @@ namespace Tests.xUpdate
 				.ShouldBe(3);
 		}
 		[Test]
-		public void QueryBatchWithOutputCount([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		public void QueryBatchWithOutputCount([IncludeDataSources(FeatureOutputQuery)] string context)
 		{
 			var committed = 0;
 
@@ -1408,7 +1419,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void QueryBatchWithOutputCollectionThrows([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		public void QueryBatchWithOutputCollectionThrows([IncludeDataSources(FeatureOutputQuery)] string context)
 		{
 			using var db     = GetDataConnection(context);
 			using var source = db.CreateLocalTable(GetSourceData());
@@ -1433,7 +1444,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MaterializationFailureKeepsInsert([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		public void MaterializationFailureKeepsInsert([IncludeDataSources(FeatureOutputQuery)] string context)
 		{
 			using var db     = GetDataConnection(context);
 			using var source = db.CreateLocalTable(GetSourceData());
@@ -1456,7 +1467,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void ReadOnlyServiceRefusesOutputQuery([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		public void ReadOnlyServiceRefusesOutputQuery([IncludeDataSources(FeatureOutputQuery)] string context)
 		{
 			using var db     = GetDataConnection(context);
 			using var source = db.CreateLocalTable(GetSourceData());
