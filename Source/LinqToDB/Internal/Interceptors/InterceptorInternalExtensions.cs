@@ -67,10 +67,11 @@ namespace LinqToDB.Internal.Interceptors
 		}
 
 		/// <summary>
-		/// Adds the types of the registered interceptors that take part in query translation, so that contexts whose
-		/// interceptors translate a query differently do not share a cached query. Only the types are added: what
-		/// differs between instances of one type is compared on a cache hit, so per-request instances keep sharing
-		/// the cached query.
+		/// Adds the types of the registered interceptors that take part in query translation, so that a context does
+		/// not reuse a query cached for a context with other interceptor types. Only the types are added, so that
+		/// per-request instances keep sharing the cached query. For <see cref="IQueryExpressionInterceptor"/> the
+		/// rewrites that run after the cache lookup are re-checked on a cache hit; <see cref="IEntityBindingInterceptor"/>
+		/// instances of one type are assumed to translate alike.
 		/// </summary>
 		public static IdentifierBuilder AddTranslationInterceptors(this IdentifierBuilder builder, IInterceptable interceptable)
 		{

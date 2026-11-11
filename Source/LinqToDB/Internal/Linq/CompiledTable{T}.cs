@@ -44,12 +44,12 @@ namespace LinqToDB.Internal.Linq
 			return new DependentArgumentValues(values);
 		}
 
-		Query<T> GetInfo(IDataContext dataContext, object?[] parameterValues)
+		Query<T> GetInfo(IDataContext dataContext, object?[] parameterValues, out IQueryExpressions expressions)
 		{
 			for (;;)
 			{
 				var indexes = _dependentArgumentIndexes;
-				var query   = GetInfo(dataContext, parameterValues, indexes, out var unseenSlots);
+				var query   = GetInfo(dataContext, parameterValues, indexes, out var unseenSlots, out expressions);
 
 				if (unseenSlots == null)
 					return query;
@@ -59,7 +59,7 @@ namespace LinqToDB.Internal.Linq
 			}
 		}
 
-		Query<T> GetInfo(IDataContext dataContext, object?[] parameterValues, int[] indexes, out int[]? unseenSlots)
+		Query<T> GetInfo(IDataContext dataContext, object?[] parameterValues, int[] indexes, out int[]? unseenSlots, out IQueryExpressions expressions)
 		{
 			var cacheKey =
 				(
@@ -72,7 +72,10 @@ namespace LinqToDB.Internal.Linq
 					dependent  : GetDependentArgumentValues(indexes, parameterValues)
 				);
 
-			if (QueryRunner.Cache<T>.QueryCache.TryGetValue(cacheKey, out var cached))
+			// A query with dynamic expression accessors (query filters, interceptor rewrites) depends on the executing
+			// context beyond the configuration id: re-evaluate them for this context. When they differ, the query is
+			// rebuilt and replaces the cached one.
+			if (QueryRunner.Cache<T>.QueryCache.TryGetValue(cacheKey, out var cached) && TryReuse(cached, dataContext, out expressions))
 			{
 				unseenSlots = null;
 
@@ -83,6 +86,8 @@ namespace LinqToDB.Internal.Linq
 			// its key can be checked against what the build materialised, and a thread hitting it in that window
 			// would run this query for its own argument values.
 			var query = BuildQuery(dataContext, parameterValues, out var materializedSlots);
+
+			expressions = query.CompiledExpressions!;
 
 			if (!IsCovered(materializedSlots, indexes))
 			{
@@ -103,6 +108,22 @@ namespace LinqToDB.Internal.Linq
 			unseenSlots = null;
 
 			return query;
+		}
+
+		static bool TryReuse(Query<T> query, IDataContext dataContext, out IQueryExpressions expressions)
+		{
+			expressions = query.CompiledExpressions!;
+
+			if (query.CompareInfo?.DynamicAccessors == null)
+				return true;
+
+			if (query.CompareDynamic(dataContext, expressions, compareValues: false, out var matched))
+			{
+				expressions = matched;
+				return true;
+			}
+
+			return false;
 		}
 
 		Query<T> BuildQuery(IDataContext dataContext, object?[] parameterValues, out int[] materializedSlots)
@@ -164,23 +185,22 @@ namespace LinqToDB.Internal.Linq
 		public IQueryable<T> Create(object[] parameters)
 		{
 			var db    = (IDataContext)parameters[0];
-			var query = GetInfo(db, parameters);
+			var query = GetInfo(db, parameters, out var expressions);
 
 			// The exposed tree, not _expression: Info carries parameter accessors built against it, and a
 			// pre-set Info makes ExpressionQuery skip the expose that would otherwise reconcile the two.
-			return new Table<T>(db, query.CompiledExpressions!.MainExpression)
+			return new Table<T>(db, expressions.MainExpression)
 			{
 				Info                = query,
 				Parameters          = parameters,
-				CompiledExpressions = query.CompiledExpressions,
+				CompiledExpressions = expressions,
 			};
 		}
 
 		public T Execute(object[] parameters)
 		{
 			var db          = (IDataContext)parameters[0];
-			var query       = GetInfo(db, parameters);
-			var expressions = query.CompiledExpressions!;
+			var query       = GetInfo(db, parameters, out var expressions);
 
 			using var transaction = query.StartLoadTransaction(db);
 
@@ -198,8 +218,7 @@ namespace LinqToDB.Internal.Linq
 		public async Task<T> ExecuteAsync(object[] parameters, CancellationToken cancellationToken)
 		{
 			var db          = (IDataContext)parameters[0];
-			var query       = GetInfo(db, parameters);
-			var expressions = query.CompiledExpressions!;
+			var query       = GetInfo(db, parameters, out var expressions);
 
 			var transaction = await query.StartLoadTransactionAsync(db, cancellationToken).ConfigureAwait(false);
 			await using var tr = (transaction ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);

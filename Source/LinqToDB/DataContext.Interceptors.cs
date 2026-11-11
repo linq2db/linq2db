@@ -71,6 +71,10 @@ namespace LinqToDB
 			set => _exceptionInterceptor = (AggregatedExceptionInterceptor?)value;
 		}
 
+		// Changes whenever an interceptor is added or removed. A scope (UseOptions, UseMappingSchema) restores the
+		// configuration id it saved only if no interceptor changed meanwhile.
+		int _interceptorsVersion;
+
 		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>
 		public void AddInterceptor(IInterceptor interceptor)
 		{
@@ -82,12 +86,11 @@ namespace LinqToDB
 		void AddInterceptor(IInterceptor interceptor, bool addToOptions)
 		{
 			if (addToOptions)
-			{
 				Options = Options.UseInterceptor(interceptor);
 
-				// the configuration id is computed from Options
-				_configurationID = null;
-			}
+			// interceptors that take part in query translation are part of the configuration id
+			_configurationID = null;
+			_interceptorsVersion++;
 
 			switch (interceptor)
 			{
@@ -131,10 +134,12 @@ namespace LinqToDB
 		{
 			AssertDisposed();
 
-			Options          = Options.RemoveInterceptor(interceptor);
-			_configurationID = null;
+			Options = Options.RemoveInterceptor(interceptor);
 
 			this.RemoveInterceptorImpl(interceptor);
+
+			_configurationID = null;
+			_interceptorsVersion++;
 		}
 	}
 }
