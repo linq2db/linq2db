@@ -239,8 +239,9 @@
 		<!--Pomelo's newest line is EF Core 9; Microting is a maintained fork of it that ships an EF Core 10 line.
 		    Its versions track EF Core patch numbers 1:1, so keep this in step with $(BandLatest) - or, when
 		    Microting lags, at the newest release whose own dependency floors $(BandLatest) already satisfies.
-		    There is no EF Core 11 line from either, so the net11 EF tests carry no MySQL provider.-->
+		    Its EF Core 11 line is a preview so far; move to the release once it ships.-->
 		<PackageVersion Include="Microting.EntityFrameworkCore.MySql"                   Version="10.0.11"                      Condition="'$(TargetFramework)'=='net10.0'" />
+		<PackageVersion Include="Microting.EntityFrameworkCore.MySql"                   Version="11.0.0-preview.1"             Condition="'$(TargetFramework)'=='net11.0'" />
 		<!--numbered independently of the runtime band, so these stay explicit rather than reading $(BandLatest).
 		    The net11 row needs the EF11 test project's direct EF pins: Npgsql's 11.0.0-rc.3 hard-pins
 		    Microsoft.EntityFrameworkCore [11.0.0-rc.3.26522.148], the release candidate of $(BandLatest).
