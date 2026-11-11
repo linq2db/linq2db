@@ -193,6 +193,11 @@
   <Folder Name="/Build/Redist/">
     <File Path="Redist/Readme.md" />
   </Folder>
+  <Folder Name="/docs/">
+    <Project Path="docs/Docs.csproj">
+      <Build Solution="*|*" Project="false" />
+    </Project>
+  </Folder>
   <Folder Name="/Packaging/">
     <Project Path="NuGet/Access/linq2db.Access.csproj">
       <Build Solution="Testing|*" Project="false" />
