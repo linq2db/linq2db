@@ -31,6 +31,10 @@ namespace LinqToDB
 	/// <see cref="IQueryable{T}"/> is read inside the batch and returned as rows in memory.
 	/// </para>
 	/// <para>
+	/// The parts — their number, order and types — are part of the query the batch builds and caches: a batch whose parts follow
+	/// the data builds a query for each distinct set of parts.
+	/// </para>
+	/// <para>
 	/// A batch is executed once. The parts are read as one result, so a part that fails fails the whole batch; a batch that
 	/// failed keeps no values and can be executed again, in the transaction of its context as that transaction stands.
 	/// Executing an empty batch sends nothing.
