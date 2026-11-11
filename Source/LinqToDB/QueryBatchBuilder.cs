@@ -72,8 +72,8 @@ namespace LinqToDB
 		/// <see cref="LinqExtensions.QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.</param>
 		/// <returns>The result, readable after the batch is executed.</returns>
 		/// <exception cref="ArgumentNullException"><paramref name="part"/> is <see langword="null"/>.</exception>
-		/// <exception cref="ArgumentException"><paramref name="part"/> creates a task, which could run a separate query outside the
-		/// batch. Reading a task held by a captured variable is allowed.</exception>
+		/// <exception cref="ArgumentException">An expression in <paramref name="part"/> may create a task, which could run a query
+		/// outside the batch. Reading a task held by a captured variable is allowed.</exception>
 		/// <exception cref="InvalidOperationException">The batch has been executed or is being executed.</exception>
 		public QueryBatchResult<T> Add<T>(Expression<Func<T>> part)
 		{
@@ -100,7 +100,8 @@ namespace LinqToDB
 		/// <c>First()</c> or <c>Single()</c> failed as described for
 		/// <see cref="LinqExtensions.QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.</exception>
 		/// <exception cref="LinqToDBException">The context has pending <see cref="IDataContext.QueryHints"/> or
-		/// <see cref="IDataContext.NextQueryHints"/>, or the provider cannot translate the parts as one statement.</exception>
+		/// <see cref="IDataContext.NextQueryHints"/>, the provider cannot translate the parts as one statement, or an expression
+		/// in a part may create a task, which could run a query outside the batch.</exception>
 		public void Execute()
 		{
 			ThrowIfNotPending();
@@ -138,7 +139,8 @@ namespace LinqToDB
 		/// <c>First()</c> or <c>Single()</c> failed as described for
 		/// <see cref="LinqExtensions.QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.</exception>
 		/// <exception cref="LinqToDBException">The context has pending <see cref="IDataContext.QueryHints"/> or
-		/// <see cref="IDataContext.NextQueryHints"/>, or the provider cannot translate the parts as one statement.</exception>
+		/// <see cref="IDataContext.NextQueryHints"/>, the provider cannot translate the parts as one statement, or an expression
+		/// in a part may create a task, which could run a query outside the batch.</exception>
 		/// <exception cref="OperationCanceledException"><paramref name="token"/> was cancelled and the batch has parts.</exception>
 		public async Task ExecuteAsync(CancellationToken token = default)
 		{
