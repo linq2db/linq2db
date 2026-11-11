@@ -1435,7 +1435,6 @@ namespace Tests.Linq
 			AssertQuery(tb.Select(r => new { r.Id, Value = Sql.AsSql(first) ? null : Sql.AsSql(second) ? (bool?)true : (bool?)(r.A == r.B) }));
 		}
 
-		[ActiveIssue(6203, Configuration = TestProvName.AllAccess, ErrorTypeName = "Shouldly.ShouldAssertException")]
 		[Test]
 		public void Test_ConditionalOnParameterWithNullableComparisonAsOrderBy([DataSources(TestProvName.AllSybase)] string context)
 		{
@@ -1514,7 +1513,6 @@ namespace Tests.Linq
 				.ShouldBe(expected);
 		}
 
-		[ActiveIssue(6203, Configuration = TestProvName.AllAccess, ErrorTypeName = "Shouldly.ShouldAssertException")]
 		[Test]
 		public void Test_NullableComparisonAsOrderByItem([DataSources] string context)
 		{
