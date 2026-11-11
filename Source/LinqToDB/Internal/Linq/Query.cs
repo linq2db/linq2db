@@ -195,6 +195,14 @@ namespace LinqToDB.Internal.Linq
 				throw new LinqToDBException(ErrorHelper.Error_QueryHints_In_QueryBatch);
 		}
 
+		// A batch sends its parts together, so a token cancelled before the call sends none of them. Other queries keep
+		// leaving the token to the provider.
+		internal void ThrowIfQueryBatchIsCancelled(CancellationToken cancellationToken)
+		{
+			if (CombinedCommandsRequested)
+				cancellationToken.ThrowIfCancellationRequested();
+		}
+
 		internal SqlCommandExecutionContext? InitHarvesters(IDataContext dc, IQueryExpressions expressions, object?[]? ps)
 		{
 			// A query with no harvesters still needs a context when it carries compiled-query parameters (ps != null), so the

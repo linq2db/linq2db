@@ -117,6 +117,7 @@ namespace LinqToDB.Internal.Linq
 			var query       = GetQuery(ref expressions, false, out _);
 
 			query.ThrowIfQueryBatchHasQueryHints(DataContext);
+			query.ThrowIfQueryBatchIsCancelled(cancellationToken);
 
 			var transaction = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(false);
 			await using var tr = (transaction ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
