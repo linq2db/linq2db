@@ -222,7 +222,7 @@
 		<PackageVersion Include="Microsoft.AspNetCore.OData"                            Version="9.5.0"                        />
 		<PackageVersion Include="MiniProfiler.Shared"                                   Version="4.5.4"                        />
 		<PackageVersion Include="MiniProfiler.Minimal"                                  Version="4.5.4"                        />
-		<PackageVersion Include="Newtonsoft.Json"                                       Version="13.0.3"                       />
+		<PackageVersion Include="Newtonsoft.Json"                                       Version="13.0.4"                       />
 		<PackageVersion Include="NodaTime"                                              Version="3.3.3"                        />
 		<PackageVersion Include="protobuf-net.Grpc.AspNetCore"                          Version="1.3.14"                       />
 		<PackageVersion Include="System.Linq.Dynamic.Core"                              Version="1.7.4"                        />
@@ -310,6 +310,9 @@
 		<PackageVersion Include="System.Security.Cryptography.Pkcs"                     Version="9.0.21"                       />
 
 		<PackageVersion Include="Microsoft.AspNetCore.Server.Kestrel.Core"              Version="$(AspNetCoreLegacyVersion)"   Condition="'$(TargetFramework)'=='net462'" />
+		<!--GHSA-67wp-ghc2-fw2g, GHSA-6527-9fp8-r4x6: SignalR $(SignalRLegacyVersion) resolves Http.Connections 1.2.0 and WebUtilities 2.3.12 for the net462 tests-->
+		<PackageVersion Include="Microsoft.AspNetCore.Http.Connections"                 Version="1.2.14"                       Condition="'$(TargetFramework)'=='net462'" />
+		<PackageVersion Include="Microsoft.AspNetCore.WebUtilities"                     Version="2.3.14"                       Condition="'$(TargetFramework)'=='net462'" />
 		<!--not $(LegacyNetPackageVersion): 10.0.0 is the build GHSA-73j8-2gch-69rq names-->
 		<PackageVersion Include="Microsoft.Bcl.Memory"                                  Version="$(LegacyNetPackageLatest)"    Condition="'$(BandLatest)'==''" />
 		<PackageVersion Include="Microsoft.Bcl.Memory"                                  Version="$(BandLatest)"                Condition="'$(BandLatest)'!=''" />
