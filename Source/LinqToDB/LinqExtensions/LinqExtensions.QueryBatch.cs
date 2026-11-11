@@ -43,7 +43,11 @@ namespace LinqToDB
 		/// </para>
 		/// <para>
 		/// Inside the selector, <c>First()</c> and <c>Single()</c> throw <see cref="InvalidOperationException"/> when they find no
-		/// row, also in a query nested in a part. The same query outside a batch reads an empty source as the default value.
+		/// row, also in a query nested in a part.
+		/// </para>
+		/// <para>
+		/// A provider can refuse a selector whose parts it translates one by one: the parts are joined into one statement, and
+		/// not every database supports every such join.
 		/// </para>
 		/// </remarks>
 		/// <example>
@@ -59,8 +63,8 @@ namespace LinqToDB
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="selector">The results to read.</param>
 		/// <returns>The results.</returns>
-		/// <exception cref="LinqToDBException">The context has pending <see cref="IDataContext.QueryHints"/> or <see cref="IDataContext.NextQueryHints"/>.</exception>
-		/// <exception cref="InvalidOperationException">A <c>First()</c> or <c>Single()</c> in the selector found no row, or a part read with <c>Single()</c> found several.</exception>
+		/// <exception cref="LinqToDBException">The context has pending <see cref="IDataContext.QueryHints"/> or <see cref="IDataContext.NextQueryHints"/>, or the provider cannot translate the parts as one statement.</exception>
+		/// <exception cref="InvalidOperationException">A <c>First()</c> or <c>Single()</c> in the selector found no row, or a <c>Single()</c> or <c>SingleOrDefault()</c> found more than one.</exception>
 		[Pure]
 		public static T QueryBatch<T>(
 							this IDataContext dataContext,
@@ -84,8 +88,8 @@ namespace LinqToDB
 		/// <param name="selector">The results to read.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>The results.</returns>
-		/// <exception cref="LinqToDBException">The context has pending <see cref="IDataContext.QueryHints"/> or <see cref="IDataContext.NextQueryHints"/>.</exception>
-		/// <exception cref="InvalidOperationException">A <c>First()</c> or <c>Single()</c> in the selector found no row, or a part read with <c>Single()</c> found several.</exception>
+		/// <exception cref="LinqToDBException">The context has pending <see cref="IDataContext.QueryHints"/> or <see cref="IDataContext.NextQueryHints"/>, or the provider cannot translate the parts as one statement.</exception>
+		/// <exception cref="InvalidOperationException">A <c>First()</c> or <c>Single()</c> in the selector found no row, or a <c>Single()</c> or <c>SingleOrDefault()</c> found more than one.</exception>
 		[Pure]
 		[AsyncExtensions.ElementAsync]
 		public static Task<T> QueryBatchAsync<T>(
