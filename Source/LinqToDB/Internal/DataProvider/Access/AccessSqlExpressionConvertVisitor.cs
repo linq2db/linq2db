@@ -568,10 +568,16 @@ namespace LinqToDB.Internal.DataProvider.Access
 			if (newElement.IsPositioned || !IsBooleanSortKey(newElement.Expression))
 				return newElement;
 
-			var flip = isDistinct || !newElement.Expression.CanBeNullable(NullabilityContext);
+			var flip = (isDistinct && !CanNegateSortKeyUnderDistinct) || !newElement.Expression.CanBeNullable(NullabilityContext);
 
 			return new SqlOrderByItem(ToSortKey(newElement.Expression, flip), newElement.IsDescending != flip, false, newElement.NullsPosition);
 		}
+
+		/// <summary>
+		/// Whether the engine accepts a negated boolean sort key under <c>DISTINCT</c>, so a nullable key keeps NULL first
+		/// there too. Jet and ACE reject it as conflicting with <c>DISTINCT</c>.
+		/// </summary>
+		protected virtual bool CanNegateSortKeyUnderDistinct => false;
 
 		protected internal override IQueryElement VisitSqlWindowOrderItem(SqlWindowOrderItem element)
 		{
