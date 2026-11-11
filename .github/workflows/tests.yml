@@ -81,9 +81,6 @@ env:
   TEST_CONFIGURATION: Azure
   TEST_RETRY_ARGS: --retry-failed-tests 2 --retry-failed-tests-max-tests 5
   BASELINES_MASTER: master
-  # The .NET 11 SDK is still prerelease, so setup-dotnet needs the exact build global.json pins.
-  # Collapse to 11.x once .NET 11 ships.
-  DOTNET_SDK_11: 11.0.100-rc.3.26522.148
 
 jobs:
   # Reads the same test-matrix.yml Azure compiles, which is the point of expressing entry selection as
@@ -267,7 +264,7 @@ jobs:
         with:
           dotnet-version: |
             10.x
-            ${{ env.DOTNET_SDK_11 }}
+            11.x
 
       - run: dotnet build ${{ env.TEST_SOLUTION_FILTER }} --configuration ${{ env.TEST_CONFIGURATION }}
 
@@ -393,7 +390,7 @@ jobs:
         with:
           dotnet-version: |
             10.x
-            ${{ env.DOTNET_SDK_11 }}
+            11.x
 
       - name: Publish and stage (win-x86)
         shell: pwsh
@@ -536,7 +533,7 @@ jobs:
         with:
           dotnet-version: |
             10.x
-            ${{ env.DOTNET_SDK_11 }}
+            11.x
 
       # Anonymous pulls hit Docker Hub's rate limit (#6008); a failed login falls back to them.
       # Plain CLI, not docker/login-action: the repo allows GitHub-owned actions only.
@@ -676,7 +673,7 @@ jobs:
         with:
           dotnet-version: |
             10.x
-            ${{ env.DOTNET_SDK_11 }}
+            11.x
 
       # An x86 leg runs x86 apphosts, which need an x86 runtime the image does not carry - Azure does
       # the same thing with UseDotNet@2 under PROCESSOR_ARCHITECTURE=x86. Installed after the x64 one
@@ -687,7 +684,7 @@ jobs:
           architecture: x86
           dotnet-version: |
             10.x
-            ${{ env.DOTNET_SDK_11 }}
+            11.x
 
       # The win-mssql legs pull multi-GB images; anonymous pulls hit Docker Hub's rate limit (#6008).
       # Every windows script_global is a SQL Server container script, as every linux one is a container
