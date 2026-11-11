@@ -38,7 +38,7 @@ Before command execution, linq2db will try to validate your command and throw `L
 ## Operations API
 
 Merge operations will be added to generated query in the same order as they were called on command builder, because it is possible to specify several operations that could match the same record using operation conditions. In such cases database engine choose first matching operation as a winner.
-Also dont forget to check what your database engine could [[support|Merge-API-:-Background-Information-and-Providers-Support]] to understand what API you can use.
+Also don't forget to check what your database engine could [support](xref:Merge-API-Background) to understand what API you can use.
 
 ## Methods
 
@@ -144,8 +144,7 @@ If there are multiple operations within same group - only last one allowed to ha
 
 ### `setter`
 
-Record creation expression. Defines set ex`InsertWhenNotMatched` takes insert operation options and returns new merge command builder with new operation. `InsertWhenNotMatchedAnd` method additionally takes operation condition expression.
-pressions for values in new record. For methods without this parameters source record inserted into target (except fields marked with `SkipOnInsert` attribute or `IsIdentity` for provider without identity insert support).
+Record creation expression. Defines set expressions for values in new record. For methods without this parameters source record inserted into target (except fields marked with `SkipOnInsert` attribute or `IsIdentity` for provider without identity insert support).
 
 ```cs
 db.Table
@@ -315,7 +314,7 @@ Record update expression. Optional. Defines update expressions for values in tar
 ```cs
 db.Table
     .Merge()
-    .From(source)
+    .Using(source)
     .OnTargetKey()
     .UpdateWhenMatchedThenDelete((target, source) => new TargetRecord()
     {
