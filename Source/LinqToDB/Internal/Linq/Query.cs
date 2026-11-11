@@ -77,6 +77,25 @@ namespace LinqToDB.Internal.Linq
 			if (!result)
 				return false;
 
+			return CompareDynamic(dataContext, expressions, compareValues: true, out matchedQueryExpressions);
+		}
+
+		/// <summary>
+		/// Re-evaluates the parts of this query that depend on the executing context rather than on the main expression
+		/// (dynamic expression accessors and value comparisons) and checks them against the ones the query was built from.
+		/// On success returns the expressions to run the query with: <paramref name="expressions"/>' main expression plus
+		/// the re-evaluated accessor results, from which the parameter values are read.
+		/// <paramref name="compareValues"/> also runs the value comparisons, which read the values from the main expression.
+		/// </summary>
+		internal bool CompareDynamic(IDataContext dataContext, IQueryExpressions expressions, bool compareValues, [NotNullWhen(true)] out IQueryExpressions? matchedQueryExpressions)
+		{
+			matchedQueryExpressions = null;
+
+			if (CompareInfo == null)
+				return false;
+
+			bool result;
+
 			var runtimeExpressions = new RuntimeExpressionsContainer(expressions.MainExpression);
 			matchedQueryExpressions = runtimeExpressions;
 
@@ -104,7 +123,7 @@ namespace LinqToDB.Internal.Linq
 				}
 			}
 
-			if (CompareInfo.ComparisionFunctions != null)
+			if (compareValues && CompareInfo.ComparisionFunctions != null)
 			{
 				foreach (var (main, other) in CompareInfo.ComparisionFunctions)
 				{

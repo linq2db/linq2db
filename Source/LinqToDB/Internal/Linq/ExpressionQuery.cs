@@ -33,6 +33,11 @@ namespace LinqToDB.Internal.Linq
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		internal Query<T>?  Info;
 
+		// Configuration id and flags of the context when GetQuery cached Info; null for an Info set from outside (a compiled
+		// table). The context's configuration can change after that (AddInterceptor, UseMappingSchema, ...).
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		(int configurationID, QueryFlags queryFlags)? _infoKey;
+
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		internal object?[]? Parameters;
 
@@ -98,14 +103,19 @@ namespace LinqToDB.Internal.Linq
 
 			if (cache && Info != null)
 			{
-				return Info;
+				if (_infoKey == null || _infoKey.Value == (DataContext.ConfigurationID, DataContext.GetQueryFlags()))
+					return Info;
+
+				Info     = null;
+				_infoKey = null;
 			}
 
 			var info = Query<T>.GetQuery(DataContext, ref expression, out dependsOnParameters);
 
 			if (cache && info.CompareInfo?.IsFastComparable == true && !dependsOnParameters)
 			{
-				Info = info;
+				Info     = info;
+				_infoKey = (DataContext.ConfigurationID, DataContext.GetQueryFlags());
 			}
 
 			return info;

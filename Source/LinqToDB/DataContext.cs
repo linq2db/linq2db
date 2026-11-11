@@ -14,6 +14,7 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Infrastructure;
+using LinqToDB.Internal.Interceptors;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
@@ -156,6 +157,7 @@ namespace LinqToDB
 						.Add(ConfigurationString)
 						.Add(Options)
 						.Add(GetType())
+						.AddTranslationInterceptors(this)
 						.CreateID();
 				}
 
@@ -926,7 +928,8 @@ namespace LinqToDB
 			if (((IConfigurationID)prevOptions).ConfigurationID == ((IConfigurationID)newOptions).ConfigurationID)
 				return null;
 
-			var configurationID = _configurationID;
+			var configurationID     = _configurationID;
+			var interceptorsVersion = _interceptorsVersion;
 
 			Options          = newOptions;
 			_configurationID = null;
@@ -940,7 +943,7 @@ namespace LinqToDB
 #if DEBUG
 				_configurationID = null;
 #else
-				_configurationID = configurationID;
+				_configurationID = interceptorsVersion == _interceptorsVersion ? configurationID : null;
 #endif
 			};
 
@@ -951,14 +954,15 @@ namespace LinqToDB
 		public IDisposable? UseMappingSchema(MappingSchema mappingSchema)
 		{
 			var oldSchema       = MappingSchema;
-			var configurationID = _configurationID;
+			var configurationID     = _configurationID;
+			var interceptorsVersion = _interceptorsVersion;
 
 			AddMappingSchema(mappingSchema);
 
 			return new DisposableAction(() =>
 			{
 				((IDataContext)this).SetMappingSchema(oldSchema);
-				_configurationID = configurationID;
+				_configurationID = interceptorsVersion == _interceptorsVersion ? configurationID : null;
 			});
 		}
 

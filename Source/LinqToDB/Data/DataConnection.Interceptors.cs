@@ -24,6 +24,10 @@ namespace LinqToDB.Data
 		IQueryExpressionInterceptor?  IInterceptable<IQueryExpressionInterceptor>. Interceptor { get; set; }
 		IExceptionInterceptor?        IInterceptable<IExceptionInterceptor>.       Interceptor { get; set; }
 
+		// Changes whenever an interceptor is added or removed. A scope (UseOptions, UseMappingSchema) restores the
+		// configuration id it saved only if no interceptor changed meanwhile.
+		int _interceptorsVersion;
+
 		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>
 		public void AddInterceptor(IInterceptor interceptor)
 		{
@@ -33,6 +37,7 @@ namespace LinqToDB.Data
 
 			// interceptors that take part in query translation are part of the configuration id
 			_configurationID = null;
+			_interceptorsVersion++;
 		}
 
 		public Action<IInterceptor>? OnRemoveInterceptor { get; set; }
@@ -45,6 +50,7 @@ namespace LinqToDB.Data
 			this.RemoveInterceptorImpl(interceptor);
 
 			_configurationID = null;
+			_interceptorsVersion++;
 
 			OnRemoveInterceptor?.Invoke(interceptor);
 		}
