@@ -2860,6 +2860,27 @@ namespace Tests.Linq
 				.ShouldNotMatch(@"(?i:CAST)\s*\(\s*[^\s,]*Gender");
 		}
 
+		enum SpelledOutGender
+		{
+			[MapValue("Male")]    Male,
+			[MapValue("Female")]  Female,
+			[MapValue("Unknown")] Unknown,
+			[MapValue("Other")]   Other,
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void DirectCastToEnumWithOtherMapValuesEqualParameter([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var gender = SpelledOutGender.Female;
+
+			var query = db.Person
+				.Where(p => (SpelledOutGender)p.Gender == gender);
+
+			AssertQuery(query);
+		}
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
 		public void DirectEnumCastConstantOnLeft([DataSources] string context)
 		{
