@@ -2881,6 +2881,66 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[ActiveIssue(6298, ErrorMessage = "Expected and result lists are different")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6298")]
+		public void DirectCastToEnumWithOtherMapValuesEqualConstant([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.Where(p => (SpelledOutGender)p.Gender == SpelledOutGender.Female);
+
+			AssertQuery(query);
+		}
+
+		[ActiveIssue(6298, ErrorMessage = "Expected and result lists are different")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6298")]
+		public void DirectCastToEnumWithOtherMapValuesContains([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var genders = new[] { SpelledOutGender.Female, SpelledOutGender.Other };
+
+			var query = db.Person
+				.Where(p => genders.Contains((SpelledOutGender)p.Gender));
+
+			AssertQuery(query);
+		}
+
+		enum UnmappedGender
+		{
+			Male,
+			Female,
+			Unknown,
+			Other,
+		}
+
+		[ActiveIssue(6298, ErrorMessage = "Expected and result lists are different")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6298")]
+		public void DirectCastToEnumWithoutMapValuesEqualParameter([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var gender = UnmappedGender.Female;
+
+			var query = db.Person
+				.Where(p => (UnmappedGender)p.Gender == gender);
+
+			AssertQuery(query);
+		}
+
+		[ActiveIssue(6298, ErrorMessage = "Expected and result lists are different")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6298")]
+		public void DirectCastToEnumWithoutMapValuesEqualConstant([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.Where(p => (UnmappedGender)p.Gender == UnmappedGender.Female);
+
+			AssertQuery(query);
+		}
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
 		public void DirectEnumCastConstantOnLeft([DataSources] string context)
 		{
