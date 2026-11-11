@@ -24,10 +24,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (call.Method.DeclaringType == typeof(LinqExtensions) || !call.IsQueryable)
 				return false;
 
-			if (call.Arguments.Count != 5)
-				return false;
-
-			return true;
+			// Queryable.FullJoin has no comparer-less overload: its comparer is an optional parameter, so it is always 6 arguments
+			return call.Arguments.Count == 5
+				|| call.Arguments.Count == 6 && call.Arguments[5] is ConstantExpression { Value: null };
 		}
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -66,7 +65,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				_                                => JoinType.Inner,
 			};
 
-			if (joinType is JoinType.Right)
+			if (joinType is JoinType.Right or JoinType.Full)
 			{
 				outerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(
 					buildInfo.Parent,
@@ -78,7 +77,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				outerContext = new SubQueryContext(outerContext);
 			}
 
-			if (joinType is JoinType.Left)
+			if (joinType is JoinType.Left or JoinType.Full)
 			{
 				innerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(
 					buildInfo.Parent,
