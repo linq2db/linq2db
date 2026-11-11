@@ -30,10 +30,6 @@ on:
 permissions:
   contents: read
 
-env:
-  # Same pin as build.yml; collapse to 11.x once .NET 11 ships.
-  DOTNET_SDK_11: 11.0.100-rc.3.26522.148
-
 concurrency:
   group: docs-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -79,7 +75,7 @@ jobs:
         with:
           dotnet-version: |
             10.x
-            ${{ env.DOTNET_SDK_11 }}
+            11.x
 
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:

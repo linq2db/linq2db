@@ -1056,7 +1056,7 @@
       "versions": {
         "net10.0": "10.0.12",
         "net10.0-windows7.0": "10.0.8",
-        "net11.0": "11.0.0-rc.3.26522.148"
+        "net11.0": "11.0.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -1104,7 +1104,7 @@
       "versions": {
         "net10.0": "10.0.12",
         "net10.0-windows7.0": "10.0.8",
-        "net11.0": "11.0.0-rc.3.26522.148"
+        "net11.0": "11.0.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -1126,7 +1126,7 @@
       "packageId": "Microsoft.Extensions.Configuration.CommandLine",
       "versions": {
         "net10.0": "10.0.0",
-        "net11.0": "11.0.0-rc.3.26522.148"
+        "net11.0": "11.0.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -1148,7 +1148,7 @@
       "packageId": "Microsoft.Extensions.Configuration.EnvironmentVariables",
       "versions": {
         "net10.0": "10.0.0",
-        "net11.0": "11.0.0-rc.3.26522.148"
+        "net11.0": "11.0.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -1170,7 +1170,7 @@
       "packageId": "Microsoft.Extensions.Configuration.FileExtensions",
       "versions": {
         "net10.0": "10.0.0",
-        "net11.0": "11.0.0-rc.3.26522.148"
+        "net11.0": "11.0.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -1192,7 +1192,7 @@
       "packageId": "Microsoft.Extensions.Configuration.Json",
       "versions": {
         "net10.0": "10.0.0",
-        "net11.0": "11.0.0-rc.3.26522.148"
+        "net11.0": "11.0.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -1214,7 +1214,7 @@
       "packageId": "Microsoft.Extensions.Configuration.UserSecrets",
       "versions": {
         "net10.0": "10.0.0",
-        "net11.0": "11.0.0-rc.3.26522.148"
+        "net11.0": "11.0.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -1237,7 +1237,7 @@
       "versions": {
         "net10.0": "10.0.12",
         "net10.0-windows7.0": "10.0.8",
-        "net11.0": "11.0.0-rc.3.26522.148",
+        "net11.0": "11.0.0",
         "net462": "10.0.0",
         "net472": "10.0.0"
       },
@@ -1310,7 +1310,7 @@
       "versions": {
         "net10.0": "10.0.8",
         "net10.0-windows7.0": "10.0.8",
-        "net11.0": "11.0.0-rc.3.26522.148"
+        "net11.0": "11.0.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -1375,7 +1375,7 @@
       "packageId": "Microsoft.Extensions.FileProviders.Physical",
       "versions": {
         "net10.0": "10.0.0",
-        "net11.0": "11.0.0-rc.3.26522.148"
+        "net11.0": "11.0.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -1397,7 +1397,7 @@
       "packageId": "Microsoft.Extensions.FileSystemGlobbing",
       "versions": {
         "net10.0": "10.0.0",
-        "net11.0": "11.0.0-rc.3.26522.148"
+        "net11.0": "11.0.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -1419,7 +1419,7 @@
       "packageId": "Microsoft.Extensions.Hosting",
       "versions": {
         "net10.0": "10.0.0",
-        "net11.0": "11.0.0-rc.3.26522.148"
+        "net11.0": "11.0.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -1491,7 +1491,7 @@
       "versions": {
         "net10.0": "10.0.12",
         "net10.0-windows7.0": "10.0.8",
-        "net11.0": "11.0.0-rc.3.26522.148",
+        "net11.0": "11.0.0",
         "net462": "10.0.0",
         "net472": "10.0.0"
       },
@@ -1545,7 +1545,7 @@
       "packageId": "Microsoft.Extensions.Logging.Configuration",
       "versions": {
         "net10.0": "10.0.12",
-        "net11.0": "11.0.0-rc.3.26522.148"
+        "net11.0": "11.0.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -1567,7 +1567,7 @@
       "packageId": "Microsoft.Extensions.Logging.Console",
       "versions": {
         "net10.0": "10.0.12",
-        "net11.0": "11.0.0-rc.3.26522.148"
+        "net11.0": "11.0.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -1589,7 +1589,7 @@
       "packageId": "Microsoft.Extensions.Logging.Debug",
       "versions": {
         "net10.0": "10.0.0",
-        "net11.0": "11.0.0-rc.3.26522.148"
+        "net11.0": "11.0.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -1611,7 +1611,7 @@
       "packageId": "Microsoft.Extensions.Logging.EventLog",
       "versions": {
         "net10.0": "10.0.0",
-        "net11.0": "11.0.0-rc.3.26522.148"
+        "net11.0": "11.0.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -1633,7 +1633,7 @@
       "packageId": "Microsoft.Extensions.Logging.EventSource",
       "versions": {
         "net10.0": "10.0.0",
-        "net11.0": "11.0.0-rc.3.26522.148"
+        "net11.0": "11.0.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -1681,7 +1681,7 @@
       "versions": {
         "net10.0": "10.0.12",
         "net10.0-windows7.0": "10.0.8",
-        "net11.0": "11.0.0-rc.3.26522.148"
+        "net11.0": "11.0.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -2631,7 +2631,7 @@
       "packageId": "System.Diagnostics.EventLog",
       "versions": {
         "net10.0": "10.0.12",
-        "net11.0": "11.0.0-rc.3.26522.148"
+        "net11.0": "11.0.0"
       },
       "license": "MIT",
       "licenseTexts": [

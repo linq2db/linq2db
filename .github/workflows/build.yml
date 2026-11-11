@@ -41,9 +41,6 @@ env:
   SOLUTION: linq2db.slnx
   RELEASE_CONFIGURATION: Release
   TEST_CONFIGURATION: Azure
-  # The .NET 11 SDK is still prerelease, so setup-dotnet needs the exact build global.json pins.
-  # Collapse to 11.x once .NET 11 ships.
-  DOTNET_SDK_11: 11.0.100-rc.3.26522.148
   # Per-test retry for the MTP runner, as build-vars.yml:24.
   TEST_RETRY_ARGS: --retry-failed-tests 2 --retry-failed-tests-max-tests 5
 
@@ -63,7 +60,7 @@ jobs:
         with:
           dotnet-version: |
             10.x
-            ${{ env.DOTNET_SDK_11 }}
+            11.x
 
       # Same shape as build-job.yml:49-55: a dev suffix everywhere except the release branch.
       - name: Resolve version suffix
@@ -177,7 +174,7 @@ jobs:
         with:
           dotnet-version: |
             10.x
-            ${{ env.DOTNET_SDK_11 }}
+            11.x
 
       - run: dotnet build Examples/Examples.slnx --configuration ${{ env.RELEASE_CONFIGURATION }}
 
@@ -196,7 +193,7 @@ jobs:
         with:
           dotnet-version: |
             10.x
-            ${{ env.DOTNET_SDK_11 }}
+            11.x
 
       # --project, not a positional path: global.json selects the Microsoft.Testing.Platform runner,
       # whose CLI rejects a bare project argument with "Specifying a project for 'dotnet test' should
@@ -217,7 +214,7 @@ jobs:
 
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
-          dotnet-version: ${{ env.DOTNET_SDK_11 }}
+          dotnet-version: 11.x
 
       - run: dotnet publish Tests/Tests.SingleFile/Tests.SingleFile.csproj -c Release -f net11.0 -r win-x64 --self-contained true -p:PublishSingleFile=true -o .build/publish/singlefile
 
@@ -236,7 +233,7 @@ jobs:
 
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
-          dotnet-version: ${{ env.DOTNET_SDK_11 }}
+          dotnet-version: 11.x
 
       - run: dotnet build Tests/Tests.FpuJit/Tests.FpuJit.csproj --configuration ${{ env.RELEASE_CONFIGURATION }} -p:RunApiAnalyzersDuringBuild=false
 
@@ -265,7 +262,7 @@ jobs:
         with:
           dotnet-version: |
             10.x
-            ${{ env.DOTNET_SDK_11 }}
+            11.x
 
       - run: dotnet build Tests/LinqToDB.CLI/Tests.LinqToDB.CLI.csproj --configuration ${{ env.TEST_CONFIGURATION }}
 
@@ -297,7 +294,7 @@ jobs:
 
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
-          dotnet-version: ${{ env.DOTNET_SDK_11 }}
+          dotnet-version: 11.x
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
