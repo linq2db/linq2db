@@ -34,6 +34,35 @@ namespace LinqToDB.CommandLine.Commands.Scaffold
 			// processed on controller level already
 			options.Remove(General.Import);
 
+			// target language selection
+			options.Remove(General.TargetLanguage, out var languageValue);
+			var language = string.Equals((string?)languageValue, "f#", StringComparison.Ordinal) ? LanguageProviders.FSharp : LanguageProviders.CSharp;
+
+			// F# is emitted through the AST code path only; the T4 template mode is C#-only
+			if (language == LanguageProviders.FSharp
+				&& options.TryGetValue(General.OptionsTemplate, out var templateValue) && templateValue is "t4")
+			{
+				await environment.Error.WriteLineAsync("F# generation (--target-language f#) is not supported together with the T4 template mode (-t t4).").ConfigureAwait(false);
+				return StatusCodes.INVALID_ARGUMENTS;
+			}
+
+			// reject options that don't apply to the selected target language (fail fast, don't silently ignore)
+			if (language == LanguageProviders.FSharp)
+			{
+				var hasUnsupported = false;
+				foreach (var specified in options.Keys)
+				{
+					if (!specified.Languages.HasFlag(TargetLanguages.FSharp))
+					{
+						await environment.Error.WriteLineAsync($"Option '--{specified.Name}' is not supported for target language F#.").ConfigureAwait(false);
+						hasUnsupported = true;
+					}
+				}
+
+				if (hasUnsupported)
+					return StatusCodes.INVALID_ARGUMENTS;
+			}
+
 			// scaffold settings object initialization
 			var settings = ProcessScaffoldOptions(options);
 			if (settings == null)
@@ -106,11 +135,12 @@ namespace LinqToDB.CommandLine.Commands.Scaffold
 			}
 
 			// perform scaffolding
-			return Scaffold(settings, interceptors, provider, providerLocation, connectionString, additionalConnectionString, output, overwrite);
+			return Scaffold(settings, language, interceptors, provider, providerLocation, connectionString, additionalConnectionString, output, overwrite);
 		}
 
 		private int Scaffold(
 			ScaffoldOptions       settings,
+			ILanguageProvider     language,
 			ScaffoldInterceptors? interceptors,
 			string                provider,
 			string?               providerLocation,
@@ -124,8 +154,6 @@ namespace LinqToDB.CommandLine.Commands.Scaffold
 			if (dc == null)
 				return StatusCodes.EXPECTED_ERROR;
 
-			var language = LanguageProviders.CSharp;
-
 			var legacyProvider   = new LegacySchemaProvider(dc, settings.Schema, language);
 			ISchemaProvider      schemaProvider       = legacyProvider;
 			ITypeMappingProvider typeMappingsProvider = legacyProvider;
@@ -137,7 +165,7 @@ namespace LinqToDB.CommandLine.Commands.Scaffold
 				typeMappingsProvider     = new AggregateTypeMappingsProvider(legacyProvider, secondLegacyProvider);
 			}
 
-			var generator  = new Scaffolder(LanguageProviders.CSharp, HumanizerNameConverter.Instance, settings, interceptors);
+			var generator  = new Scaffolder(language, HumanizerNameConverter.Instance, settings, interceptors);
 			var dataModel  = generator.LoadDataModel(schemaProvider, typeMappingsProvider);
 			var sqlBuilder = dc.DataProvider.CreateSqlBuilder(dc.MappingSchema, dc.Options);
 			var files      = generator.GenerateCodeModel(

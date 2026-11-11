@@ -141,6 +141,54 @@ namespace Tests.Linq
 			FSharp.Issue4646.TestOptionRoundtrip(db);
 		}
 
+		[Test(Description = "linq2db round-trips the CLI scaffolder's generated F# record shape (#1553)")]
+		public void GeneratedShape_EntityRoundtrip([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.GeneratedModel.TestGeneratedEntityRoundtrip(db);
+		}
+
+		[Test(Description = "the scaffolder's generated DataConnection context (DataOptions<T> ctor + GetTable member) works at runtime (#1553)")]
+		public void GeneratedShape_ContextTableAccess([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.GeneratedModel.TestGeneratedContextTableAccess(db);
+		}
+
+		[Test(Description = "an option-typed argument of a generated stored-procedure wrapper reaches the database as its value (#1553)")]
+		public void GeneratedShape_OptionParameter([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.GeneratedModel.TestGeneratedOptionParameter(db);
+		}
+
+		[Test(Description = "a generated stored-procedure wrapper reads an output parameter value back into an option (#1553)")]
+		public void GeneratedShape_OptionReadBack()
+		{
+			FSharp.GeneratedModel.TestGeneratedOptionReadBack();
+		}
+
+		[Test(Description = "queries, associations and Find methods of the scaffolder's generated F# model (#1553)")]
+		public void GeneratedCode_Queries([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.GeneratedCode.TestGeneratedQueries(db);
+		}
+
+		[Test(Description = "the scaffolder's generated F# fluent mapping (static initializer) is applied (#1553)")]
+		public void GeneratedCode_FluentMapping([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.GeneratedCode.TestGeneratedFluentMapping(db);
+		}
+
+		[Test(Description = "a generated F# stored-procedure wrapper accepts Some/None arguments and reads the output back (#1553)")]
+		public void GeneratedCode_ProcedureOptionParameters([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.GeneratedCode.TestGeneratedProcedureOptionParameters(db);
+		}
+
 		[Test(Description = "Auto 'T option mapping must not override an explicit fluent DataType on an option column (#195 follow-up)")]
 		public void OptionMapping_ExplicitDataTypePreserved([DataSources] string context)
 		{
@@ -148,6 +196,13 @@ namespace Tests.Linq
 
 			using var db = GetDataContext(context, ms);
 			FSharp.OptionMappingPrecedence.VerifyExplicitDataTypePreserved(db);
+		}
+
+		[Test(Description = "an option member without [<Column>] is still a column when the table requires column attributes")]
+		public void OptionMapping_UnattributedOptionIsColumn([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionMappingPrecedence.VerifyUnattributedOptionIsColumn(db);
 		}
 
 		[Test(Description = "Nullable<_> element option must not produce Nullable<Nullable<_>> (#195)")]

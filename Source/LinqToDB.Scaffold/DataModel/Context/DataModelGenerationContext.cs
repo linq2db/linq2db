@@ -207,7 +207,7 @@ namespace LinqToDB.DataModel
 		{
 			return _extensionsClass ??= _dataContextClass.Group
 				.New(_languageProvider.ASTBuilder.Name(DataModelConstants.EXTENSIONS_CLASS))
-				.SetModifiers(Modifiers.Public | Modifiers.Static | Modifiers.Partial);
+				.SetModifiers(Modifiers.Public | Modifiers.Static | (_languageProvider.Features.HasFlag(LanguageFeatures.PartialTypes) ? Modifiers.Partial : Modifiers.None));
 		}
 	}
 }
