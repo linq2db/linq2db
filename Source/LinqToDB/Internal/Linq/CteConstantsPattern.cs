@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
 
 namespace LinqToDB.Internal.Linq
@@ -45,6 +46,14 @@ namespace LinqToDB.Internal.Linq
 			[NotNullWhen(true)] out Expression?   accessor,
 			[NotNullWhen(true)] out string?       pattern)
 		{
+			// Path builds an accessor per visited node: run it only for a query that has a CTE-defining call.
+			if (mainExpression.Find(static e => e is MethodCallExpression call && IsCteDefiningCall(call)) == null)
+			{
+				accessor = null;
+				pattern  = null;
+				return false;
+			}
+
 			var calls = new List<(Expression node, Expression path)>();
 
 			mainExpression.Path(mainExpressionPath, calls, static (calls, e, p) =>

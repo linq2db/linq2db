@@ -320,6 +320,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		Dictionary<DataModificationIdentity, MethodCallExpression>? CollectDataModificationCalls()
 		{
+			if (Expression.Find(static e => IsInsertOutputQueryCall(e)) == null)
+				return null;
+
 			var calls = new List<MethodCallExpression>();
 
 			Expression.Visit(calls, static (calls, e) =>
