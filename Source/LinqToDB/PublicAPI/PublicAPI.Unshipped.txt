@@ -313,6 +313,13 @@ static LinqToDB.LinqExtensions.QueryBatchAsync<T1, T2, T3, T4, T5>(this LinqToDB
 static LinqToDB.LinqExtensions.QueryBatchAsync<T1, T2, T3, T4, T5, T6>(this LinqToDB.IDataContext! dataContext, System.Linq.Expressions.Expression<System.Func<T1>!>! result1, System.Linq.Expressions.Expression<System.Func<T2>!>! result2, System.Linq.Expressions.Expression<System.Func<T3>!>! result3, System.Linq.Expressions.Expression<System.Func<T4>!>! result4, System.Linq.Expressions.Expression<System.Func<T5>!>! result5, System.Linq.Expressions.Expression<System.Func<T6>!>! result6, System.Threading.CancellationToken token = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<(T1, T2, T3, T4, T5, T6)>!
 static LinqToDB.LinqExtensions.QueryBatchAsync<T1, T2, T3, T4, T5, T6, T7>(this LinqToDB.IDataContext! dataContext, System.Linq.Expressions.Expression<System.Func<T1>!>! result1, System.Linq.Expressions.Expression<System.Func<T2>!>! result2, System.Linq.Expressions.Expression<System.Func<T3>!>! result3, System.Linq.Expressions.Expression<System.Func<T4>!>! result4, System.Linq.Expressions.Expression<System.Func<T5>!>! result5, System.Linq.Expressions.Expression<System.Func<T6>!>! result6, System.Linq.Expressions.Expression<System.Func<T7>!>! result7, System.Threading.CancellationToken token = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<(T1, T2, T3, T4, T5, T6, T7)>!
 static readonly LinqToDB.Internal.Reflection.Methods.LinqToDB.QueryBatch -> System.Reflection.MethodInfo!
+static LinqToDB.LinqExtensions.CreateQueryBatch(this LinqToDB.IDataContext! dataContext) -> LinqToDB.QueryBatchBuilder!
+LinqToDB.QueryBatchBuilder
+LinqToDB.QueryBatchBuilder.Add<T>(System.Linq.Expressions.Expression<System.Func<T>!>! part) -> LinqToDB.QueryBatchResult<T>!
+LinqToDB.QueryBatchBuilder.Execute() -> void
+LinqToDB.QueryBatchBuilder.ExecuteAsync(System.Threading.CancellationToken token = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+LinqToDB.QueryBatchResult<T>
+LinqToDB.QueryBatchResult<T>.Value.get -> T
 *REMOVED*LinqToDB.Internal.Expressions.TagExpression
 *REMOVED*LinqToDB.Internal.Expressions.TagExpression.InnerExpression.get -> System.Linq.Expressions.Expression!
 *REMOVED*LinqToDB.Internal.Expressions.TagExpression.Tag.get -> object!
@@ -326,6 +333,10 @@ static readonly LinqToDB.Internal.Reflection.Methods.LinqToDB.QueryBatch -> Syst
 *REMOVED*virtual LinqToDB.Internal.Expressions.ExpressionVisitorBase.VisitTagExpression(LinqToDB.Internal.Expressions.TagExpression! node) -> System.Linq.Expressions.Expression!
 const LinqToDB.Internal.Common.ErrorHelper.Error_DynamicColumns_NoSetter = "Type '{0}' is materialized with dynamic column(s) {1}, but has no dynamic column setter. Add a member marked with DynamicColumnsStoreAttribute, or configure a setter through DynamicColumnAccessorAttribute or DynamicPropertyAccessors." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_QueryHints_In_QueryBatch = "QueryBatch does not support query hints." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_QueryBatch_NotExecuted = "The query batch has not been executed." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_QueryBatch_AlreadyExecuted = "The query batch has already been executed." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_QueryBatch_Running = "The query batch is being executed." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_QueryBatch_TaskPart = "A query batch part cannot return or create a task: it could run a separate query outside the batch." -> string!
 LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQLMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator
 LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQLMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator() -> void
 override LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQL95MemberTranslator.CreateAggregateFunctionsMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator!

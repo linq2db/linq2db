@@ -65,6 +65,7 @@ namespace LinqToDB
 		/// <returns>The results.</returns>
 		/// <exception cref="LinqToDBException">The context has pending <see cref="IDataContext.QueryHints"/> or <see cref="IDataContext.NextQueryHints"/>, or the provider cannot translate the parts as one statement.</exception>
 		/// <exception cref="InvalidOperationException">A <c>First()</c> or <c>Single()</c> in the selector found no row, or a part read with <c>Single()</c> or <c>SingleOrDefault()</c> found more than one.</exception>
+		/// <seealso cref="CreateQueryBatch(IDataContext)">CreateQueryBatch, for reads added from several call sites.</seealso>
 		[Pure]
 		public static T QueryBatch<T>(
 							this IDataContext dataContext,
@@ -430,12 +431,71 @@ namespace LinqToDB
 			return dataContext.QueryBatchAsync(Combine<(T1, T2, T3, T4, T5, T6, T7)>(result1, result2, result3, result4, result5, result6, result7), token);
 		}
 
-		static MethodCallExpression CreateQueryBatchExpression<T>(IDataContext dataContext, Expression<Func<T>> selector)
+		/// <summary>
+		/// Creates a batch that collects reads from any number of call sites and runs them in one round trip, as one
+		/// <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/> call. See <see cref="QueryBatchBuilder"/>.
+		/// </summary>
+		/// <example>
+		/// <code>
+		/// var batch = db.CreateQueryBatch();
+		///
+		/// var total = batch.Add(() => products.Count());
+		/// var rows  = batch.Add(() => products.OrderBy(p => p.Id).Skip(skip).Take(take).ToList());
+		///
+		/// await batch.ExecuteAsync(cancellationToken);
+		///
+		/// return (total.Value, rows.Value);
+		/// </code>
+		/// </example>
+		/// <param name="dataContext">Database connection context the parts are read through.</param>
+		/// <returns>An empty batch.</returns>
+		[Pure]
+		public static QueryBatchBuilder CreateQueryBatch(this IDataContext dataContext)
+		{
+			ArgumentNullException.ThrowIfNull(dataContext);
+
+			return new QueryBatchBuilder(dataContext);
+		}
+
+		internal static MethodCallExpression CreateQueryBatchExpression(IDataContext dataContext, LambdaExpression selector)
 		{
 			return Expression.Call(
 				null,
-				Methods.LinqToDB.QueryBatch.MakeGenericMethod(typeof(T)),
+				Methods.LinqToDB.QueryBatch.MakeGenericMethod(selector.ReturnType),
 				SqlQueryRootExpression.Create(dataContext), Expression.Quote(selector));
+		}
+
+		static readonly Type[] QueryBatchTupleTypes =
+		[
+			typeof(ValueTuple<>),
+			typeof(ValueTuple<,>),
+			typeof(ValueTuple<,,>),
+			typeof(ValueTuple<,,,>),
+			typeof(ValueTuple<,,,,>),
+			typeof(ValueTuple<,,,,,>),
+			typeof(ValueTuple<,,,,,,>),
+			typeof(ValueTuple<,,,,,,,>),
+		];
+
+		// Any number of parts: seven values per tuple and the rest in a nested tuple bound to Rest, so the result type, which
+		// keys the query cache, follows the part types.
+		internal static NewExpression NewNestedQueryBatchTuple(IReadOnlyList<Expression> bodies, int start)
+		{
+			var hasRest   = bodies.Count - start > 7;
+			var count     = hasRest ? 8 : bodies.Count - start;
+			var arguments = new Expression[count];
+
+			for (var i = 0; i < count; i++)
+				arguments[i] = hasRest && i == 7 ? NewNestedQueryBatchTuple(bodies, start + 7) : bodies[start + i];
+
+			var argumentTypes = arguments.Select(static a => a.Type).ToArray();
+			var tupleType     = QueryBatchTupleTypes[count - 1].MakeGenericType(argumentTypes);
+			var members       = new MemberInfo[count];
+
+			for (var i = 0; i < count; i++)
+				members[i] = tupleType.GetField(hasRest && i == 7 ? "Rest" : "Item" + (i + 1).ToString(CultureInfo.InvariantCulture))!;
+
+			return Expression.New(tupleType.GetConstructorEx(argumentTypes)!, arguments, members);
 		}
 
 		static Expression<Func<TTuple>> Combine<TTuple>(params LambdaExpression[] results)
