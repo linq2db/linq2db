@@ -1599,6 +1599,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				=> Task.FromResult<object>(Array.Empty<object?>());
 
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values) { }
+
+			public override IEnumerable<SqlStatement> GetStatements() => [];
 		}
 
 		/// <summary>Pass 1 branch metadata collected before root CTE creation.</summary>
@@ -1844,6 +1846,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values)
 			{
 				QueryHelper.CollectParametersAndValues(_query.QueryInfo.Statement, parameters, values);
+			}
+
+			public override IEnumerable<SqlStatement> GetStatements()
+			{
+				return [_query.QueryInfo.Statement];
 			}
 		}
 

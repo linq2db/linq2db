@@ -262,6 +262,7 @@ namespace LinqToDB.Internal.SqlProvider
 			RenderContext       = renderContext;
 			Indent              = indent;
 			AliasMode           = aliasMode;
+			_setOperatorsBuilt  = false;
 
 			NullabilityContext = nullabilityContext ?? NullabilityContext.GetContext(statement.SelectQuery);
 			if (statement.SelectQuery != null)
@@ -269,22 +270,8 @@ namespace LinqToDB.Internal.SqlProvider
 
 			BuildSql();
 
-			if (Statement.SelectQuery is { HasSetOperators: true })
-			{
-				foreach (var union in Statement.SelectQuery.SetOperators)
-				{
-					AppendIndent();
-					BuildSetOperation(union.Operation, sb);
-					sb.AppendLine();
-
-					var sqlBuilder = ((BasicSqlBuilder)CreateSqlBuilder());
-					sqlBuilder.BuildSql(
-						new SqlSelectStatement(union.SelectQuery) { ParentStatement = statement }, sb,
-						renderContext, indent,
-						aliasMode, NullabilityContext);
-					MergeSqlBuilderData(sqlBuilder);
-				}
-			}
+			if (!_setOperatorsBuilt)
+				BuildSetOperators(statement, indent, aliasMode);
 
 			switch (statement.QueryType)
 			{
@@ -423,6 +410,34 @@ namespace LinqToDB.Internal.SqlProvider
 			BuildExpression(statement.Expression);
 		}
 
+		bool _setOperatorsBuilt;
+
+		/// <summary>
+		/// Renders the set operators of the statement's query. An insert calls it right after its source, ahead of
+		/// <c>RETURNING</c> or the identity clause; a statement that does not call it gets them after the whole statement.
+		/// </summary>
+		protected void BuildSetOperators(SqlStatement statement, int indent, ColumnAliasMode aliasMode)
+		{
+			if (statement.SelectQuery is not { HasSetOperators: true } selectQuery)
+				return;
+
+			_setOperatorsBuilt = true;
+
+			foreach (var union in selectQuery.SetOperators)
+			{
+				AppendIndent();
+				BuildSetOperation(union.Operation, StringBuilder);
+				StringBuilder.AppendLine();
+
+				var sqlBuilder = ((BasicSqlBuilder)CreateSqlBuilder());
+				sqlBuilder.BuildSql(
+					new SqlSelectStatement(union.SelectQuery) { ParentStatement = statement }, StringBuilder,
+					RenderContext, indent,
+					aliasMode, NullabilityContext);
+				MergeSqlBuilderData(sqlBuilder);
+			}
+		}
+
 		protected void BuildSqlForUnion()
 		{
 			if (Statement.SelectQuery?.SqlQueryExtensions is not null)
@@ -535,8 +550,51 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual void BuildCteBody(SelectQuery selectQuery)
 		{
+			if (selectQuery.From.Tables is [{ Source: SqlDataModificationTable dataModification }])
+			{
+				BuildDataModificationCteBody(selectQuery, dataModification);
+				return;
+			}
+
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
 			sqlBuilder.BuildSql(new SqlSelectStatement(selectQuery), StringBuilder, RenderContext, Indent, AliasMode, NullabilityContext);
+			MergeSqlBuilderData(sqlBuilder);
+		}
+
+		SqlOutputClause? _dataModificationOutput;
+
+		// A CTE body over a data-modifying table renders as that statement, returning the body columns. The output list is
+		// built here from the body, which is the only representation of it, so the cached statement is left unchanged.
+		void BuildDataModificationCteBody(SelectQuery body, SqlDataModificationTable table)
+		{
+			var target  = table.Statement switch
+			{
+				SqlInsertStatement insert => insert.Insert.Into!,
+				_                         => throw new LinqToDBException(ErrorHelper.Error_OutputQuery_NotSupported),
+			};
+
+			var context = (table, target, special: SqlProviderFlags.OutputInsertUseSpecialTable);
+			var columns = body.Select.Columns.Select(column => column.Expression.Convert(context, static (visitor, e) =>
+			{
+				if (e is SqlField field && field.Table == visitor.Context.table)
+				{
+					var targetField = visitor.Context.target.Fields.Find(f => string.Equals(f.Name, field.Name, StringComparison.Ordinal))
+						?? (field.IsDynamic ? new SqlField(field) { Table = visitor.Context.target } : null)
+						?? throw new InvalidOperationException($"Field '{field.Name}' not found in table '{visitor.Context.target}'.");
+
+					return visitor.Context.special
+						? new SqlAnchor(targetField, SqlAnchor.AnchorKindEnum.Inserted)
+						: targetField;
+				}
+
+				return e;
+			})).ToList();
+
+			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
+
+			sqlBuilder._dataModificationOutput = new SqlOutputClause { OutputColumns = columns.Count > 0 ? columns : null };
+			sqlBuilder.BuildSql(table.Statement, StringBuilder, RenderContext, Indent, AliasMode, NullabilityContext);
+
 			MergeSqlBuilderData(sqlBuilder);
 		}
 
@@ -562,6 +620,8 @@ namespace LinqToDB.Internal.SqlProvider
 				BuildStep = Step.OrderByClause;   BuildOrderByClause(statement.SelectQuery);
 				BuildStep = Step.OffsetLimit;     BuildOffsetLimit(statement.SelectQuery);
 				BuildStep = Step.QueryExtensions; BuildSubQueryExtensions(statement);
+
+				BuildSetOperators(statement, Indent, AliasMode);
 			}
 
 			if (insertClause.WithIdentity)
@@ -569,7 +629,7 @@ namespace LinqToDB.Internal.SqlProvider
 			else
 			{
 				BuildStep = Step.Output;
-				BuildOutputSubclause(statement.OutputClause);
+				BuildOutputSubclause(_dataModificationOutput ?? statement.OutputClause);
 			}
 		}
 
@@ -590,12 +650,14 @@ namespace LinqToDB.Internal.SqlProvider
 				BuildStep = Step.OrderByClause;   BuildOrderByClause(statement.SelectQuery);
 				BuildStep = Step.OffsetLimit;     BuildOffsetLimit(statement.SelectQuery);
 				BuildStep = Step.QueryExtensions; BuildSubQueryExtensions(statement);
+
+				BuildSetOperators(statement, Indent, AliasMode);
 			}
 
 			if (insertClause.WithIdentity)
 				BuildGetIdentity(insertClause);
 			else
-				BuildOutputSubclause(statement.OutputClause);
+				BuildOutputSubclause(_dataModificationOutput ?? statement.OutputClause);
 		}
 
 		protected virtual void BuildMultiInsertQuery(SqlMultiInsertStatement statement)
@@ -1992,6 +2054,9 @@ namespace LinqToDB.Internal.SqlProvider
 					StringBuilder.Append(GetPhysicalTableName(table, alias));
 					break;
 				}
+
+				case QueryElementType.SqlDataModificationTable:
+					throw new LinqToDBException(ErrorHelper.Error_OutputQuery_NotSupported);
 
 				case QueryElementType.SqlRawSqlTable:
 				{
@@ -3536,6 +3601,9 @@ namespace LinqToDB.Internal.SqlProvider
 					break;
 				}
 
+				case QueryElementType.SqlDataModificationTable:
+					throw new LinqToDBException(ErrorHelper.Error_OutputQuery_NotSupported);
+
 				case QueryElementType.GroupingSet:
 				{
 					var groupingSet = (SqlGroupingSet) expr;
@@ -4757,6 +4825,9 @@ namespace LinqToDB.Internal.SqlProvider
 				case QueryElementType.SqlTableLikeSource:
 					return null;
 
+				case QueryElementType.SqlDataModificationTable:
+					throw new LinqToDBException(ErrorHelper.Error_OutputQuery_NotSupported);
+
 				default:
 					throw new InvalidOperationException($"Unexpected table type {table.ElementType}");
 			}
@@ -4832,6 +4903,9 @@ namespace LinqToDB.Internal.SqlProvider
 
 				case QueryElementType.SqlRawSqlTable:
 					return BuildObjectName(new(), ((SqlTable)table).TableName, ConvertType.NameToCteName, true, TableOptions.NotSet, withoutSuffix: withoutSuffix).ToString();
+
+				case QueryElementType.SqlDataModificationTable:
+					throw new LinqToDBException(ErrorHelper.Error_OutputQuery_NotSupported);
 
 				case QueryElementType.SqlTableLikeSource:
 					return ConvertInline(((SqlTableLikeSource)table).Name, ConvertType.NameToQueryTable);

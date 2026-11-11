@@ -277,6 +277,8 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				BuildStep = Step.OrderByClause;   BuildOrderByClause     (statement.SelectQuery);
 				BuildStep = Step.OffsetLimit;     BuildOffsetLimit       (statement.SelectQuery);
 				BuildStep = Step.QueryExtensions; BuildSubQueryExtensions(statement);
+
+				BuildSetOperators(statement, Indent, AliasMode);
 			}
 
 			if (insertClause.WithIdentity)

@@ -184,6 +184,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				return await query.GetResultFromReader!(dataContext, expressions, context, dataReader).ToListAsync(cancellationToken).ConfigureAwait(false);
 			}
+
+			public override IEnumerable<SqlStatement> GetStatements()
+			{
+				return [query.QueryInfo.Statement];
+			}
 		}
 
 		sealed class Harvester<TKey, T>(Query<KeyDetailEnvelope<TKey, T>> query) : Harvester, IStepMaterializer
@@ -236,6 +241,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values)
 			{
 				QueryHelper.CollectParametersAndValues(query.QueryInfo.Statement, parameters, values);
+			}
+
+			public override IEnumerable<SqlStatement> GetStatements()
+			{
+				return [query.QueryInfo.Statement];
 			}
 		}
 	}

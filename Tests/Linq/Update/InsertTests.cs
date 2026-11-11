@@ -638,6 +638,38 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException", TestProvName.AllAccessOdbc, ErrorMessage = "Syntax error (missing operator)")]
+		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb, ErrorMessage = "Syntax error (missing operator)")]
+		public void InsertConcat([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			try
+			{
+				db.Parent.Delete(p => p.ParentID > 1000);
+
+				// a plain setter keeps the set operator on the insert's own source
+				db.Parent
+					.Where(p => p.ParentID == 1)
+					.Select(p => new Parent { ParentID = p.ParentID + 1000, Value1 = p.Value1 })
+					.Concat(db.Parent
+						.Where(p => p.ParentID == 2)
+						.Select(p => new Parent { ParentID = p.ParentID + 1000, Value1 = p.Value1 }))
+					.Insert(db.Parent, p => new Parent { ParentID = p.ParentID, Value1 = p.Value1 });
+
+				db.Parent
+					.Where(p => p.ParentID > 1000)
+					.Select(p => p.ParentID)
+					.OrderBy(id => id)
+					.ToArray()
+					.ShouldBe(new[] { 1001, 1002 });
+			}
+			finally
+			{
+				db.Parent.Delete(p => p.ParentID > 1000);
+			}
+		}
+
+		[Test]
 		public void InsertEnum1([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
