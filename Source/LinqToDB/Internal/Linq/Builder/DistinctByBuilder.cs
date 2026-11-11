@@ -160,7 +160,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						if (distinctOnContext.SelectQuery.OrderBy.IsEmpty)
 						{
 							if (!AddCapturedOrdering(builder, distinctOnContext, captured, out var skipped))
-								throw SqlErrorExpression.CreateException(sequenceExpression, ErrorHelper.Error_DistinctByRequiresOrderBy);
+								throw SqlErrorExpression.CreateException(sequenceExpression, ErrorHelper.Error_DistinctByOrderingInCte);
 
 							if (!skipped)
 								ClearConsumedOrderBy(SingleSubQuery(distinctOnContext.SelectQuery), keptThroughGrouping);

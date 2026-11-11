@@ -898,7 +898,7 @@ namespace Tests.Linq
 
 		// The ordering is anchored inside the CTE body, which the DISTINCT ON query cannot reach; the ROW_NUMBER path fails
 		// this shape with an SQL error (on master too).
-		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_DistinctByRequiresOrderBy)]
+		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_DistinctByOrderingInCte)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
 		public void DistinctByAfterCteRequiresOrderBy([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
 		{
@@ -1698,7 +1698,7 @@ namespace Tests.Linq
 
 		// The body's ordering leads here and cannot be lifted out of the CTE, so a joined side's ordering must not stand in for
 		// it. The ROW_NUMBER path fails this shape with an SQL error, on master too.
-		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_DistinctByRequiresOrderBy)]
+		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_DistinctByOrderingInCte)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
 		public void DistinctByOverOrderedCteJoinedToOrderedSourceRequiresOrderBy([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
 		{
@@ -1720,7 +1720,7 @@ namespace Tests.Linq
 		}
 
 		// As DistinctByOverOrderedCteJoinedToOrderedSourceRequiresOrderBy, read first inside the collection's own build.
-		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_DistinctByRequiresOrderBy)]
+		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_DistinctByOrderingInCte)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
 		public void DistinctByOverOrderedCteWithOrderedCollectionRequiresOrderBy([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
 		{
@@ -1820,7 +1820,7 @@ namespace Tests.Linq
 
 		// The joined CTE's ordering is the only one: published, it is reported. Discarded, a correlated subquery would fall back
 		// to client-side evaluation with an arbitrary row. The ROW_NUMBER path fails this shape with an SQL error, on master too.
-		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_DistinctByRequiresOrderBy)]
+		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_DistinctByOrderingInCte)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
 		public void DistinctByInProjectionOverSourceJoinedToOrderedCteRequiresOrderBy([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
 		{
@@ -1883,7 +1883,7 @@ namespace Tests.Linq
 		}
 
 		// Value1 repeats, so the row DISTINCT ON keeps per key reaches the Contains result.
-		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_DistinctByRequiresOrderBy)]
+		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_DistinctByOrderingInCte)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
 		public void DistinctByAfterCteInContainsRequiresOrderBy([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
 		{

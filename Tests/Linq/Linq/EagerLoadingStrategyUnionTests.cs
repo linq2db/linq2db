@@ -3986,7 +3986,7 @@ namespace Tests.Linq
 
 		// An ordering anchored inside the CTE body cannot reach the DISTINCT ON query, which would keep an arbitrary row per key;
 		// only the DISTINCT ON lowering (PostgreSQL, DuckDB) reaches that check.
-		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_DistinctByRequiresOrderBy)]
+		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_DistinctByOrderingInCte)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6192")]
 		public void Confirm_Union_RootAfterCteDistinctByRequiresOrderBy(
 			[IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
