@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Linq.Expressions;
 
 using LinqToDB.Mapping;
@@ -21,6 +22,15 @@ namespace LinqToDB.Internal.Linq
 			}
 
 			return false;
+		}
+
+		/// <summary>
+		/// Whether the cache key compares <paramref name="constant"/> by value: kept in the key and not a collection,
+		/// which the key compares with <see cref="object.Equals(object)"/> (by reference for an array).
+		/// </summary>
+		public static bool IsComparedByValueInKey(ConstantExpression constant, MappingSchema mappingSchema)
+		{
+			return !ShouldRemoveConstantFromCache(constant, mappingSchema) && constant.Value is string or not IEnumerable;
 		}
 	}
 }

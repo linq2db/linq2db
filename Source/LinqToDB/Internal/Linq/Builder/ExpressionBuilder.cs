@@ -350,7 +350,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		IQueryExpressions FinalizeQueryCacheInformation<T>(Query<T> query, List<Harvester>? harvesters)
 		{
 			List<SqlParameter>? builtParameters = null;
-			List<SqlValue>?     builtValues     = null;
+			HashSet<SqlValue>?  builtValues     = null;
 
 			if (ParametersContext.CacheManager.HasParameters || ParametersContext.CacheManager.HasConstants)
 			{
@@ -368,7 +368,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 
 				builtParameters = usedParameters.ToList();
-				builtValues     = usedValues.ToList();
+				builtValues     = usedValues;
 			}
 
 			var (compareInfo, parameterAccessors, expressions) = ParametersContext.CacheManager.BuildQueryCacheCompareInfo(this, DataContext, ParametersContext.ParametersExpression, builtParameters, builtValues);
