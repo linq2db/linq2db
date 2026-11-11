@@ -2807,7 +2807,7 @@ namespace Tests.Linq
 			again.Message.ShouldBe(ErrorHelper.Error_QueryBatch_AlreadyExecuted);
 		}
 
-		// An empty batch builds no query, so a pending hint is neither refused nor taken.
+		// An empty batch builds no query, so a pending hint is neither refused nor taken, and a cancelled token is not checked.
 		[Test]
 		public async Task EmptyBatchSendsNothing([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool isAsync)
 		{
@@ -2823,7 +2823,18 @@ namespace Tests.Linq
 
 			var batch = db.CreateQueryBatch();
 
-			await Run(batch, isAsync);
+			if (isAsync)
+			{
+				using var cancelled = new CancellationTokenSource();
+
+				cancelled.Cancel();
+
+				await batch.ExecuteAsync(cancelled.Token);
+			}
+			else
+			{
+				batch.Execute();
+			}
 
 			trace.Readers.ShouldBe(0);
 			trace.Begins.ShouldBe(0);
@@ -3004,9 +3015,10 @@ namespace Tests.Linq
 				.ShouldBe(PageIds(0, 2));
 		}
 
-		// Without the check SQLite sends the reader or BEGIN first and SQL Server cancels it on the server.
+		// The QueryBatch node checks the token before any command (CancelledTokenSendsNothing); this shows the explicit batch
+		// reaches that check and stays retryable. SQLite and SQL Server are the two backends that would otherwise send first.
 		[Test]
-		public async Task CancelledTokenSendsNothing([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
+		public async Task ExplicitBatchCancelledTokenSendsNothing([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
 		{
 			var trace = new CommandTrace();
 
@@ -3164,6 +3176,39 @@ namespace Tests.Linq
 			throw new InvalidOperationException("A refused part was recorded.");
 		}
 
+		static Task<int> StartTask(int id)
+		{
+			return Task.FromResult(id);
+		}
+
+		// Add checks the part as written; a task hidden in a captured query appears only when the batch is built, and the
+		// QueryBatch node refuses it there. The part stays in the batch, so every run is refused.
+		[Test]
+		public void TaskInACapturedQueryIsRefusedAtExecute([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var trace = new CommandTrace();
+
+			using var db    = GetDataContext(context, Traced(trace));
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var started = items.Select(i => StartTask(i.Id));
+			var batch   = db.CreateQueryBatch();
+
+			batch.Add(() => started.ToList());
+
+			trace.Reset();
+
+			Shouldly.Should
+				.Throw<LinqToDBException>(batch.Execute)
+				.Message
+				.ShouldBe(ErrorHelper.Error_QueryBatch_TaskPart);
+			trace.Readers.ShouldBe(0);
+			Shouldly.Should
+				.Throw<LinqToDBException>(batch.Execute)
+				.Message
+				.ShouldBe(ErrorHelper.Error_QueryBatch_TaskPart);
+		}
+
 		sealed class TaskHolder
 		{
 			public Task<int> Pending = null!;
@@ -3206,11 +3251,7 @@ namespace Tests.Linq
 			// Recorded anyway, this part would fail the run below, so it shows that a refused part is not kept.
 			ShouldRefuse(() => batch.Add(() => RefusedPartRuns()));
 
-			// A part whose result is a task reads nothing, even when the task already exists.
 			var ready = Task.FromResult(2);
-
-			ShouldRefuse(() => batch.Add(() => ready));
-			ShouldRefuse(() => batch.Add<object>(() => ready));
 
 			// A field of a value the part computes may hold a task the part has just started.
 			ShouldRefuse(() => batch.Add(() => HoldTask().Pending.Result));
@@ -3225,6 +3266,10 @@ namespace Tests.Linq
 			var constant   = batch.Add(Expression.Lambda<Func<int>>(
 				Expression.Property(Expression.Constant(Task.FromResult(4)), nameof(Task<>.Result))));
 
+			// The held task itself is a value like any other, as the QueryBatch node allows.
+			var heldTask     = batch.Add(() => ready);
+			var heldAsObject = batch.Add<object>(() => ready);
+
 			trace.Reset();
 			batch.Execute();
 
@@ -3233,6 +3278,8 @@ namespace Tests.Linq
 				.ShouldBe(PageIds(0, 2));
 			fromStatic.Value.ShouldBe(3);
 			constant.Value.ShouldBe(4);
+			heldTask.Value.ShouldBeSameAs(ready);
+			heldAsObject.Value.ShouldBeSameAs(ready);
 			trace.Readers.ShouldBe(1);
 		}
 

@@ -77,8 +77,14 @@ namespace LinqToDB.Internal.Linq.Builder
 		// Checked when the batch is built, so a cached batch pays nothing for it.
 		static void ThrowIfPartCreatesTask(Expression body)
 		{
-			if (body.Find(static e => IsTask(e.Type) && !IsHeldTask(e)) != null)
+			if (CreatesTask(body))
 				throw new LinqToDBException(ErrorHelper.Error_QueryBatch_TaskPart);
+		}
+
+		// Shared with QueryBatchBuilder.Add, which refuses the same parts when they are added.
+		internal static bool CreatesTask(Expression body)
+		{
+			return body.Find(static e => IsTask(e.Type) && !IsHeldTask(e)) != null;
 		}
 
 		static bool IsTask(Type type)
