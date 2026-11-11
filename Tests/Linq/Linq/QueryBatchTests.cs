@@ -408,11 +408,38 @@ namespace Tests.Linq
 			PerRow,
 			Nested,
 			Compiled,
+			Operator,
+			Property,
+			Source,
 		}
 
 		static ValueTask<int> CountLater(IQueryable<BatchItem> source)
 		{
 			return new ValueTask<int>(source.Count());
+		}
+
+		// A cast that calls a conversion operator, or a property of a user type, creates the task, although each reads like
+		// a held value.
+		sealed class CountJob(IQueryable<BatchItem> source)
+		{
+			readonly IQueryable<BatchItem> _source = source;
+
+			public Task<int> Task => _source.CountAsync(CancellationToken.None);
+
+			public static explicit operator Task<int>(CountJob job)
+			{
+				return job._source.CountAsync(CancellationToken.None);
+			}
+		}
+
+		// A completion source the part obtains through a call is not held: the call runs while the row is read.
+		static TaskCompletionSource<int> CountingSource(IQueryable<BatchItem> source)
+		{
+			var completion = new TaskCompletionSource<int>();
+
+			completion.SetResult(source.Count());
+
+			return completion;
 		}
 
 		// A part that creates a task starts it while the batch row is read: a query of its own, outside the batch, that
@@ -436,6 +463,8 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context, Traced(trace));
 			using var items = db.CreateLocalTable(BatchItem.Seed);
 
+			var job = new CountJob(items);
+
 			trace.Reset();
 
 			var error = part switch
@@ -456,6 +485,9 @@ namespace Tests.Linq
 				TaskPart.Compiled  => isAsync
 					? await Shouldly.Should.ThrowAsync<LinqToDBException>(() => compiledAsync(db, CancellationToken.None))
 					: Shouldly.Should.Throw<LinqToDBException>(() => compiled(db)),
+				TaskPart.Operator  => await RefusalOf(db, () => new { Total = items.Count(), Started = ((Task<int>)job).Result }, isAsync),
+				TaskPart.Property  => await RefusalOf(db, () => new { Total = items.Count(), Started = job.Task.Result }, isAsync),
+				TaskPart.Source    => await RefusalOf(db, () => new { Total = items.Count(), Started = CountingSource(items).Task.Result }, isAsync),
 				_                  => throw new InvalidOperationException($"Unexpected part {part}."),
 			};
 
@@ -478,6 +510,12 @@ namespace Tests.Linq
 			ArrayElement,
 			Cast,
 			CompiledArgument,
+			CompletionSource,
+			CompletedTask,
+#if !NETFRAMEWORK
+			NonGenericCompletionSource,
+			CompletedValueTask,
+#endif
 			Returned,
 		}
 
@@ -495,7 +533,7 @@ namespace Tests.Linq
 				Total = dc
 					.GetTable<BatchItem>()
 					.Count(),
-				Held  = argument.Result,
+				Held  = argument.Result == 5,
 			}));
 
 			using var db    = GetDataContext(context);
@@ -504,6 +542,16 @@ namespace Tests.Linq
 			var    task  = Task.FromResult(5);
 			var    tasks = new[] { task };
 			object boxed = task;
+
+			var source = new TaskCompletionSource<int>();
+
+			source.SetResult(5);
+
+#if !NETFRAMEWORK
+			var nonGeneric = new TaskCompletionSource();
+
+			nonGeneric.SetResult();
+#endif
 
 			if (held == HeldTask.Returned)
 			{
@@ -514,16 +562,22 @@ namespace Tests.Linq
 
 			var result = held switch
 			{
-				HeldTask.CapturedVariable => db.QueryBatch(() => new { Total = items.Count(), Held = task.Result }),
-				HeldTask.StaticField      => db.QueryBatch(() => new { Total = items.Count(), Held = HeldTasks.Five.Result }),
-				HeldTask.ArrayElement     => db.QueryBatch(() => new { Total = items.Count(), Held = tasks[0].Result }),
-				HeldTask.Cast             => db.QueryBatch(() => new { Total = items.Count(), Held = ((Task<int>)boxed).Result }),
-				HeldTask.CompiledArgument => compiled(db, task),
-				_                         => throw new InvalidOperationException($"Unexpected task {held}."),
+				HeldTask.CapturedVariable           => db.QueryBatch(() => new { Total = items.Count(), Held = task.Result == 5 }),
+				HeldTask.StaticField                => db.QueryBatch(() => new { Total = items.Count(), Held = HeldTasks.Five.Result == 5 }),
+				HeldTask.ArrayElement               => db.QueryBatch(() => new { Total = items.Count(), Held = tasks[0].Result == 5 }),
+				HeldTask.Cast                       => db.QueryBatch(() => new { Total = items.Count(), Held = ((Task<int>)boxed).Result == 5 }),
+				HeldTask.CompiledArgument           => compiled(db, task),
+				HeldTask.CompletionSource           => db.QueryBatch(() => new { Total = items.Count(), Held = source.Task.Result == 5 }),
+				HeldTask.CompletedTask              => db.QueryBatch(() => new { Total = items.Count(), Held = Task.CompletedTask.IsCompleted }),
+#if !NETFRAMEWORK
+				HeldTask.NonGenericCompletionSource => db.QueryBatch(() => new { Total = items.Count(), Held = nonGeneric.Task.IsCompleted }),
+				HeldTask.CompletedValueTask         => db.QueryBatch(() => new { Total = items.Count(), Held = ValueTask.CompletedTask.IsCompleted }),
+#endif
+				_                                   => throw new InvalidOperationException($"Unexpected task {held}."),
 			};
 
 			result.Total.ShouldBe(BatchItem.Seed.Length);
-			result.Held.ShouldBe(5);
+			result.Held.ShouldBeTrue();
 		}
 
 		// A batch sends its parts together, so a token cancelled before the call sends none of them: no command and no load
