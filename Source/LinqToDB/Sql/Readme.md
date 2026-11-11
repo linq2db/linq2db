@@ -4,7 +4,7 @@ This folder contains SQL extensions for Linq To DB, as well as components to hel
 
 ## `Sql`
 
-The SQL class contains a number of functions implementing common DB functions such as `Between` or `CurrentTimestamp`. [The XMLDocs provide a list of all the provided functions](https://linq2db.github.io/api/LinqToDB.Sql.html).
+The SQL class contains a number of functions implementing common DB functions such as `Between` or `CurrentTimestamp`. [The XMLDocs provide a list of all the provided functions](https://linq2db.github.io/api/linq2db/linq2db--LinqToDB.Sql.html).
 
 Note that many of these are used automatically behind the scenes. For example, The provider will automatically translate something such as `table.SomeDateTimeField.Year` into the appropriate `DatePart` call.
 
