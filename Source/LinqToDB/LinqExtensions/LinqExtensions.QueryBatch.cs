@@ -465,39 +465,6 @@ namespace LinqToDB
 				SqlQueryRootExpression.Create(dataContext), Expression.Quote(selector));
 		}
 
-		static readonly Type[] QueryBatchTupleTypes =
-		[
-			typeof(ValueTuple<>),
-			typeof(ValueTuple<,>),
-			typeof(ValueTuple<,,>),
-			typeof(ValueTuple<,,,>),
-			typeof(ValueTuple<,,,,>),
-			typeof(ValueTuple<,,,,,>),
-			typeof(ValueTuple<,,,,,,>),
-			typeof(ValueTuple<,,,,,,,>),
-		];
-
-		// Any number of parts: seven values per tuple and the rest in a nested tuple bound to Rest, so the result type, which
-		// keys the query cache, follows the part types.
-		internal static NewExpression NewNestedQueryBatchTuple(IReadOnlyList<Expression> bodies, int start)
-		{
-			var hasRest   = bodies.Count - start > 7;
-			var count     = hasRest ? 8 : bodies.Count - start;
-			var arguments = new Expression[count];
-
-			for (var i = 0; i < count; i++)
-				arguments[i] = hasRest && i == 7 ? NewNestedQueryBatchTuple(bodies, start + 7) : bodies[start + i];
-
-			var argumentTypes = arguments.Select(static a => a.Type).ToArray();
-			var tupleType     = QueryBatchTupleTypes[count - 1].MakeGenericType(argumentTypes);
-			var members       = new MemberInfo[count];
-
-			for (var i = 0; i < count; i++)
-				members[i] = tupleType.GetField(hasRest && i == 7 ? "Rest" : "Item" + (i + 1).ToString(CultureInfo.InvariantCulture))!;
-
-			return Expression.New(tupleType.GetConstructorEx(argumentTypes)!, arguments, members);
-		}
-
 		static Expression<Func<TTuple>> Combine<TTuple>(params LambdaExpression[] results)
 		{
 			for (var i = 0; i < results.Length; i++)

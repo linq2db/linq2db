@@ -11,6 +11,7 @@ using LinqToDB.Expressions;
 using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Linq.Builder;
 
 namespace LinqToDB
 {
@@ -227,14 +228,16 @@ namespace LinqToDB
 			}
 		}
 
-		// The parts become one QueryBatch call whose selector builds a tuple of them; the tuple type is known only now.
+		// The parts become one QueryBatch call whose selector builds a tuple of them, nested through Rest beyond seven; the
+		// tuple type, which keys the query cache, is known only now.
 		(Expression expression, IQueryable query) BuildQuery()
 		{
-			var bodies     = _parts.Select(static p => p.Body).ToList();
-			var body       = LinqExtensions.NewNestedQueryBatchTuple(bodies, 0);
+			var bodies     = _parts.Select(static p => p.Body).ToArray();
+			var tupleType  = ExpressionBuilder.BuildValueTupleType(bodies.Select(static b => b.Type).ToArray());
+			var body       = ExpressionBuilder.BuildValueTupleNew(tupleType, bodies);
 			var expression = LinqExtensions.CreateQueryBatchExpression(_dataContext, Expression.Lambda(body));
 
-			return (expression, ExpressionQueryImpl.CreateQuery(body.Type, _dataContext, expression));
+			return (expression, ExpressionQueryImpl.CreateQuery(tupleType, _dataContext, expression));
 		}
 
 		// Seven values per tuple, the rest in the nested tuple of its Rest field.
