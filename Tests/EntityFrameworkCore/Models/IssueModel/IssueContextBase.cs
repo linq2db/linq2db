@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -68,6 +69,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 
 		public DbSet<Issue5975TableOne> Issue5975TableOnes { get; set; } = null!;
 		public DbSet<Issue5975TableTwo> Issue5975TableTwos { get; set; } = null!;
+
+		public DbSet<Issue6181TableOne> Issue6181TableOnes { get; set; } = null!;
+		public DbSet<Issue6181TableTwo> Issue6181TableTwos { get; set; } = null!;
 
 		public DbSet<Issue5355LicenseProfile> Issue5355LicenseProfiles { get; set; } = null!;
 		public DbSet<Issue5355Customer>       Issue5355Customers       { get; set; } = null!;
@@ -388,6 +392,102 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 					.HasForeignKey(e => e.TableOneId);
 			});
 
+			// delegates the same way, to a conversion that stores differently
+			var issue6181OtherConverter = new ValueConverter<DateTime, DateTime>(
+				v => v.AddHours(2),
+				v => v.AddHours(-2));
+			var issue6181OtherNullableConverter = new ValueConverter<DateTime?, DateTime?>(
+				v => v != null ? (DateTime?)issue6181OtherConverter.ConvertToProvider(v.Value) : (DateTime?)null,
+				v => v != null ? (DateTime?)issue6181OtherConverter.ConvertFromProvider(v.Value) : (DateTime?)null);
+
+			// delegates through a holder that is not set while the model is mapped
+			Issue6181ConverterHolder? issue6181Holder = null;
+			var issue6181HeldConverter = new ValueConverter<DateTime?, DateTime?>(
+				v => v != null ? (DateTime?)issue6181Holder!.Converter.ConvertToProvider(v.Value) : (DateTime?)null,
+				v => v != null ? (DateTime?)issue6181Holder!.Converter.ConvertFromProvider(v.Value) : (DateTime?)null);
+
+			// delegates to a converter whose delegates are its own, not compiled from its expressions
+			var issue6181Overriding = new Issue6181OverridingConverter();
+			var issue6181OverriddenConverter = new ValueConverter<DateTime?, DateTime?>(
+				v => v != null ? (DateTime?)issue6181Overriding.ConvertToProvider(v.Value) : (DateTime?)null,
+				v => v != null ? (DateTime?)issue6181Overriding.ConvertFromProvider(v.Value) : (DateTime?)null);
+
+#if !NETFRAMEWORK
+			// the same, overriding the typed delegate the untyped one is built from (absent in EF Core 3.1)
+			var issue6181TypedOverriding = new Issue6181TypedOverridingConverter();
+			var issue6181TypedOverriddenConverter = new ValueConverter<DateTime?, DateTime?>(
+				v => v != null ? (DateTime?)issue6181TypedOverriding.ConvertToProvider(v.Value) : (DateTime?)null,
+				v => v != null ? (DateTime?)issue6181TypedOverriding.ConvertFromProvider(v.Value) : (DateTime?)null);
+#endif
+
+			// one delegate call nested in another: issue5975Converter, then issue6181OtherConverter
+			var issue6181ChainedNullableConverter = new ValueConverter<DateTime?, DateTime?>(
+				v => v != null ? (DateTime?)issue6181OtherConverter.ConvertToProvider((DateTime)issue5975Converter.ConvertToProvider(v.Value)!) : (DateTime?)null,
+				v => v != null ? (DateTime?)issue5975Converter.ConvertFromProvider((DateTime)issue6181OtherConverter.ConvertFromProvider(v.Value)!) : (DateTime?)null);
+			var issue6181ChainedConverter = new ValueConverter<DateTime, DateTime>(
+				v => Issue5975ToStore(v).AddHours(2),
+				v => Issue5975FromStore(v.AddHours(-2)));
+
+			// the target reads its parameter twice; the delegated call evaluates the counted argument once
+			var issue6181TwiceConverter = new ValueConverter<DateTime, DateTime>(
+				v => Issue6181Twice(v, v),
+				v => Issue5975FromStore(v));
+			var issue6181CountedConverter = new ValueConverter<DateTime?, DateTime?>(
+				v => v != null ? (DateTime?)issue6181TwiceConverter.ConvertToProvider(Issue6181Counted(v.Value)) : (DateTime?)null,
+				v => v != null ? (DateTime?)issue6181TwiceConverter.ConvertFromProvider(v.Value) : (DateTime?)null);
+
+			// a user-defined conversion in the argument, into the target reading its parameter twice
+			var issue6181CastConverter = new ValueConverter<Issue6181Stamp?, DateTime?>(
+				v => v != null ? (DateTime?)issue6181TwiceConverter.ConvertToProvider((DateTime)v) : (DateTime?)null,
+				v => v != null ? new Issue6181Stamp((DateTime)issue6181TwiceConverter.ConvertFromProvider(v.Value)!) : null);
+
+			// the target reads its parameter once, on a branch never taken; the delegated call still evaluates the argument
+			var issue6181GatedTarget = new ValueConverter<DateTime, DateTime>(
+				v => Issue6181Converting(Issue6181Never ? v : Issue6181Fixed),
+				v => v);
+			var issue6181GatedConverter = new ValueConverter<DateTime?, DateTime?>(
+				v => v != null ? (DateTime?)issue6181GatedTarget.ConvertToProvider(Issue6181Counted(v.Value)) : (DateTime?)null,
+				v => v != null ? (DateTime?)issue6181GatedTarget.ConvertFromProvider(v.Value) : (DateTime?)null);
+
+			// the argument reads a field the target advances before it reads its parameter
+			var issue6181ClockTarget = new ValueConverter<DateTime, DateTime>(
+				v => Issue6181ReadAfter(Issue6181AdvanceClock(), v),
+				v => v);
+			var issue6181ClockConverter = new ValueConverter<DateTime?, DateTime?>(
+				v => v != null ? (DateTime?)issue6181ClockTarget.ConvertToProvider(Issue6181TheClock.Now) : (DateTime?)null,
+				v => v != null ? (DateTime?)issue6181ClockTarget.ConvertFromProvider(v.Value) : (DateTime?)null);
+
+			modelBuilder.Entity<Issue6181TableOne>(b =>
+			{
+				b.Property(e => e.Id).ValueGeneratedNever();
+				b.Property(e => e.CreatedOn).HasConversion(issue5975Converter);
+				b.Property(e => e.ChainedOn).HasConversion(issue6181ChainedConverter);
+				b.Property(e => e.FromDate).HasConversion(issue5975NullableConverter);
+				b.Property(e => e.ToDate).HasConversion(issue5975NullableConverter);
+			});
+
+			modelBuilder.Entity<Issue6181TableTwo>(b =>
+			{
+				b.Property(e => e.Id).ValueGeneratedNever();
+				b.Property(e => e.FromDate).HasConversion(issue5975NullableConverter);
+				b.Property(e => e.ToDate).HasConversion(issue5975NullableConverter);
+				b.Property(e => e.OtherDate).HasConversion(issue6181OtherNullableConverter);
+				b.Property(e => e.HeldDate).HasConversion(issue6181HeldConverter);
+				b.Property(e => e.OverriddenDate).HasConversion(issue6181OverriddenConverter);
+#if !NETFRAMEWORK
+				b.Property(e => e.TypedOverriddenDate).HasConversion(issue6181TypedOverriddenConverter);
+#endif
+				b.Property(e => e.ChainedDate).HasConversion(issue6181ChainedNullableConverter);
+				b.Property(e => e.CountedDate).HasConversion(issue6181CountedConverter);
+				b.Property(e => e.GatedDate).HasConversion(issue6181GatedConverter);
+				b.Property(e => e.CastDate).HasConversion(issue6181CastConverter);
+				b.Property(e => e.ClockDate).HasConversion(issue6181ClockConverter);
+
+				b.HasOne(e => e.TableOne)
+					.WithMany()
+					.HasForeignKey(e => e.TableOneId);
+			});
+
 			modelBuilder.Entity<Issue5388Task>().Property(x => x.IsArchived)
 				.IsRequired()
 				.HasConversion<short>(); // bool stored as smallint in database
@@ -473,5 +573,109 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 
 		static DateTime Issue5975ToStore  (DateTime v) => v.AddHours(1);
 		static DateTime Issue5975FromStore(DateTime v) => v.AddHours(-1);
+
+		public sealed class Issue6181Counts
+		{
+			public int Arguments   { get; set; }
+			public int Conversions { get; set; }
+		}
+
+		// set by the test that reads it, so runs on other providers do not count into it
+		public static readonly AsyncLocal<Issue6181Counts?> Issue6181Counting = new();
+
+		internal static void Issue6181CountArgument()
+		{
+			if (Issue6181Counting.Value is { } counts)
+				counts.Arguments++;
+		}
+
+		static void Issue6181CountConversion()
+		{
+			if (Issue6181Counting.Value is { } counts)
+				counts.Conversions++;
+		}
+
+		static DateTime Issue6181Counted(DateTime v)
+		{
+			Issue6181CountArgument();
+			return v;
+		}
+
+		static DateTime Issue6181Twice(DateTime first, DateTime second)
+		{
+			Issue6181CountConversion();
+			return Issue5975ToStore(first).AddTicks(second.Ticks - first.Ticks);
+		}
+
+		static bool     Issue6181Never => false;
+		static DateTime Issue6181Fixed => new(2020, 1, 1);
+
+		static DateTime Issue6181Converting(DateTime v)
+		{
+			Issue6181CountConversion();
+			return v;
+		}
+
+		sealed class Issue6181Clock
+		{
+			public DateTime Now;
+			public DateTime Before;
+		}
+
+		static readonly Issue6181Clock Issue6181TheClock = new();
+
+		static readonly Lock Issue6181ClockLock = new();
+
+		// serializes the test runs on different providers, which share the clock
+		public static void Issue6181WithClock(Action action)
+		{
+			lock (Issue6181ClockLock)
+				action();
+		}
+
+		static DateTime Issue6181AdvanceClock()
+		{
+			Issue6181TheClock.Before = Issue6181TheClock.Now;
+			Issue6181TheClock.Now    = Issue6181TheClock.Now.AddHours(1);
+			return default;
+		}
+
+		// counts an argument read before the target advanced the clock
+		static DateTime Issue6181ReadAfter(DateTime ignored, DateTime value)
+		{
+			Issue6181CountConversion();
+
+			if (value == Issue6181TheClock.Before)
+				Issue6181CountArgument();
+
+			return value;
+		}
+
+		sealed class Issue6181ConverterHolder
+		{
+			public ValueConverter<DateTime, DateTime> Converter = new(v => v, v => v);
+		}
+
+		sealed class Issue6181OverridingConverter : ValueConverter<DateTime, DateTime>
+		{
+			public Issue6181OverridingConverter() : base(v => Issue5975ToStore(v), v => Issue5975FromStore(v))
+			{
+			}
+
+			public override Func<object?, object?> ConvertToProvider   => base.ConvertToProvider;
+			public override Func<object?, object?> ConvertFromProvider => base.ConvertFromProvider;
+		}
+
+#if !NETFRAMEWORK
+		sealed class Issue6181TypedOverridingConverter : ValueConverter<DateTime, DateTime>
+		{
+			public Issue6181TypedOverridingConverter() : base(v => Issue5975ToStore(v), v => Issue5975FromStore(v))
+			{
+			}
+
+			public override Func<DateTime, DateTime> ConvertToProviderTyped   => base.ConvertToProviderTyped;
+			public override Func<DateTime, DateTime> ConvertFromProviderTyped => base.ConvertFromProviderTyped;
+		}
+#endif
 	}
 }

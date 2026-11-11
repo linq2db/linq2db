@@ -42,11 +42,11 @@ In other words **LINQ to DB is type-safe SQL**.
 ## Standout Features
 
 - Rich Querying API:
-  - [Explicit Join Syntax](https://linq2db.github.io/articles/sql/Join-Operators.html) (In addition to standard LINQ join syntax)
-  - [CTE Support](https://linq2db.github.io/articles/sql/CTE.html)
-  - [Bulk Copy/Insert](https://linq2db.github.io/articles/sql/Bulk-Copy.html)
-  - [Window/Analytic Functions](https://linq2db.github.io/articles/sql/Window-Functions-%28Analytic-Functions%29.html)
-  - [Merge API](https://linq2db.github.io/articles/sql/merge/Merge-API-Description.html)
+  - [Explicit Join Syntax](https://linq2db.github.io/articles/sql/join-operators.html) (In addition to standard LINQ join syntax)
+  - [CTE Support](https://linq2db.github.io/articles/sql/cte.html)
+  - [Bulk Copy/Insert](https://linq2db.github.io/articles/sql/bulk-copy.html)
+  - [Window/Analytic Functions](https://linq2db.github.io/articles/sql/window-functions-%28analytic-functions%29.html)
+  - [Merge API](https://linq2db.github.io/articles/sql/merge/merge-api-description.html)
 - Extensibility:
   - [Ability to Map Custom SQL to Static Functions](https://github.com/linq2db/linq2db/tree/master/Source/LinqToDB/Sql/)
 
@@ -75,7 +75,7 @@ Notable open-source users:
 
 ### Passing Into Constructor
 
-You can simply pass connection string into `DataConnection` or `DataContext` constructor using [`DataOptions`](https://linq2db.github.io/api/LinqToDB.DataOptions.html) class.
+You can simply pass connection string into `DataConnection` or `DataContext` constructor using [`DataOptions`](https://linq2db.github.io/api/linq2db/linq2db--LinqToDB.DataOptions.html) class.
 
 Minimal configuration example:
 ```cs
@@ -324,7 +324,7 @@ public static List<Product> GetProducts()
 }
 ```
 
-Make sure you **always** wrap your `DataConnection` class (in our case `DbNorthwind`) in a `using` statement. This is required for proper resource management, like releasing the database connections back into the pool ([more details](https://linq2db.github.io/articles/general/Managing-data-connection.html)).
+Make sure you **always** wrap your `DataConnection` class (in our case `DbNorthwind`) in a `using` statement. This is required for proper resource management, like releasing the database connections back into the pool ([more details](https://linq2db.github.io/articles/general/managing-data-connection.html)).
 
 ## Queries
 
@@ -434,7 +434,7 @@ select new Product
 };
 ```
 
-[More samples are here](https://linq2db.github.io/articles/sql/Join-Operators.html)
+[More samples are here](https://linq2db.github.io/articles/sql/join-operators.html)
 
 ### Creating your POCOs
 
@@ -585,7 +585,7 @@ db.Product
 
 ### Bulk Copy
 
-Bulk copy feature supports the transfer of large amounts of data into a table from another data source. For more details read this [article](https://linq2db.github.io/articles/sql/Bulk-Copy.html).
+Bulk copy feature supports the transfer of large amounts of data into a table from another data source. For more details read this [article](https://linq2db.github.io/articles/sql/bulk-copy.html).
 
 ```c#
 using LinqToDB.Data;
@@ -685,11 +685,11 @@ public class DbNorthwind : LinqToDB.Data.DataConnection
 
 ### Merge
 
-[Here](https://linq2db.github.io/articles/sql/merge/Merge-API.html) you can read about SQL MERGE support.
+[Here](https://linq2db.github.io/articles/sql/merge/merge-api.html) you can read about SQL MERGE support.
 
 ### Window (Analytic) Functions
 
-[Here](https://linq2db.github.io/articles/sql/Window-Functions-%28Analytic-Functions%29.html) you can read about Window (Analytic) Functions support.
+[Here](https://linq2db.github.io/articles/sql/window-functions-%28analytic-functions%29.html) you can read about Window (Analytic) Functions support.
 
 ## Analyzers
 
@@ -807,4 +807,4 @@ public class DbDataContext : DataConnection
 
 ## More
 
-Still have questions left? Check out our [documentation site](https://linq2db.github.io) and [FAQ](https://linq2db.github.io/articles/FAQ.html)
+Still have questions left? Check out our [documentation site](https://linq2db.github.io) and [FAQ](https://linq2db.github.io/articles/faq.html)
