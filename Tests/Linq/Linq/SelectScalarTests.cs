@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB;
@@ -263,6 +264,143 @@ namespace Tests.Linq
 			});
 		}
 
+		// An empty First empties the one row the select reads, which reports as First on an empty source does; the element
+		// path is provider-independent.
+		[Test]
+		public async Task EmptyFirstThrowsAsFirst([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool isAsync)
+		{
+			using var db = GetDataContext(context);
+
+			var plain = Shouldly.Should.Throw<InvalidOperationException>(() => db.Parent
+				.Where(p => p.ParentID < 0)
+				.First());
+
+			var select = isAsync
+				? await Shouldly.Should.ThrowAsync<InvalidOperationException>(() => db.SelectAsync(() => db.Parent
+					.Where(p => p.ParentID < 0)
+					.First()))
+				: Shouldly.Should.Throw<InvalidOperationException>(() => db.Select(() => db.Parent
+					.Where(p => p.ParentID < 0)
+					.First()));
+
+			select.Message.ShouldBe(plain.Message);
+		}
+
+		// The nested select is a value of the enclosing row, filtered on and projected; the binding is the builder's, so one
+		// provider shows it.
+		[Test]
+		public void NestedInQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var result = db.Parent
+				.Where(p => db.Select(() => db.Child.Count(c => c.ParentID == p.ParentID)) > 1)
+				.OrderBy(p => p.ParentID)
+				.Select(p => new
+				{
+					p.ParentID,
+					Total    = db.Select(() => db.Child.Count()),
+					Children = db.Select(() => db.Child.Count(c => c.ParentID == p.ParentID)),
+				})
+				.ToList()
+				.Select(r => $"{r.ParentID}:{r.Total}:{r.Children}")
+				.ToArray();
+
+			var expected = Parent
+				.Where(p => Child.Count(c => c.ParentID == p.ParentID) > 1)
+				.OrderBy(p => p.ParentID)
+				.Select(p => $"{p.ParentID}:{Child.Count()}:{Child.Count(c => c.ParentID == p.ParentID)}")
+				.ToArray();
+
+			result.ShouldBe(expected);
+		}
+
+		// A nested select that reads no table, or reads an entity, is a value of the enclosing row too.
+		[Test]
+		public void NestedValueAndEntityInQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var result = db.Parent
+				.OrderBy(p => p.ParentID)
+				.Select(p => new
+				{
+					p.ParentID,
+					Next  = db.Select(() => p.ParentID + 1),
+					Child = db.Select(() => db.Child
+						.Where(c => c.ParentID == p.ParentID)
+						.OrderBy(c => c.ChildID)
+						.FirstOrDefault()),
+				})
+				.ToList()
+				.Select(r => $"{r.ParentID}:{r.Next}:{r.Child?.ChildID}")
+				.ToArray();
+
+			var expected = Parent
+				.OrderBy(p => p.ParentID)
+				.Select(p => $"{p.ParentID}:{p.ParentID + 1}:{Child.Where(c => c.ParentID == p.ParentID).OrderBy(c => c.ChildID).FirstOrDefault()?.ChildID}")
+				.ToArray();
+
+			result.ShouldBe(expected);
+		}
+
+		// Beside an eager-loaded collection, inside one, and inside one that reads the enclosing row only through the nested
+		// select.
+		[Test]
+		public void NestedSelectWithEagerLoadedCollections(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context,
+			[Values(EagerLoadingStrategy.Default, EagerLoadingStrategy.KeyedQuery)] EagerLoadingStrategy strategy)
+		{
+			AssertNestedSelectWithEagerLoadedCollections(context, strategy);
+		}
+
+		[Test]
+		[ActiveIssue(6294, ErrorType = typeof(InvalidOperationException), ErrorMessage = "Invalid SQL.")]
+		public void NestedSelectWithEagerLoadedCollectionsUnderCteUnion([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			AssertNestedSelectWithEagerLoadedCollections(context, EagerLoadingStrategy.CteUnion);
+		}
+
+		void AssertNestedSelectWithEagerLoadedCollections(string context, EagerLoadingStrategy strategy)
+		{
+			using var db = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(strategy));
+
+			var result = db.Parent
+				.OrderBy(p => p.ParentID)
+				.Select(p => new
+				{
+					p.ParentID,
+					Count    = db.Select(() => db.Child.Count(c => c.ParentID == p.ParentID)),
+					Children = p.Children
+						.OrderBy(c => c.ChildID)
+						.Select(c => new
+						{
+							c.ChildID,
+							Count = db.Select(() => db.GrandChild.Count(g => g.ChildID == c.ChildID)),
+							Next  = db.Select(() => c.ChildID + 1),
+						})
+						.ToList(),
+					All      = db.Child
+						.OrderBy(c => c.ChildID)
+						.Select(c => new
+						{
+							c.ChildID,
+							Count = db.Select(() => db.GrandChild.Count(g => g.ParentID == p.ParentID)),
+						})
+						.ToList(),
+				})
+				.ToList()
+				.Select(r => $"{r.ParentID}:{r.Count}:{string.Join(",", r.Children.Select(c => $"{c.ChildID}={c.Count}/{c.Next}"))}:{string.Join(",", r.All.Select(c => $"{c.ChildID}={c.Count}"))}")
+				.ToArray();
+
+			var expected = Parent
+				.OrderBy(p => p.ParentID)
+				.Select(p => $"{p.ParentID}:{Child.Count(c => c.ParentID == p.ParentID)}:{string.Join(",", Child.Where(c => c.ParentID == p.ParentID).OrderBy(c => c.ChildID).Select(c => $"{c.ChildID}={GrandChild.Count(g => g.ChildID == c.ChildID)}/{c.ChildID + 1}"))}:{string.Join(",", Child.OrderBy(c => c.ChildID).Select(c => $"{c.ChildID}={GrandChild.Count(g => g.ParentID == p.ParentID)}"))}")
+				.ToArray();
+
+			result.ShouldBe(expected);
+		}
+
 		[Test]
 		public void SubQueryAggregate([DataSources(TestProvName.AllAccess)]
 			string context)
@@ -277,6 +415,92 @@ namespace Tests.Linq
 
 			result.Parents.ShouldBe(Parent.Count());
 			result.Children.ShouldBe(Child.Count());
+		}
+
+		// Access refuses a FROM-less SELECT holding a subquery, as in SubQueryAggregate.
+		[Test]
+		public void SubQueryFirstBesideCollection([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var result = db.Select(() => new
+			{
+				FirstId  = db.Parent
+					.OrderBy(p => p.ParentID)
+					.First()
+					.ParentID,
+				Children = db.Child
+					.OrderBy(c => c.ChildID)
+					.Take(2)
+					.ToList(),
+			});
+
+			var firstId = Parent
+				.OrderBy(p => p.ParentID)
+				.First()
+				.ParentID;
+
+			var childIds = Child
+				.OrderBy(c => c.ChildID)
+				.Take(2)
+				.Select(c => c.ChildID);
+
+			result.FirstId.ShouldBe(firstId);
+			result.Children
+				.Select(c => c.ChildID)
+				.ShouldBe(childIds);
+		}
+
+		public enum EagerElementRead
+		{
+			LoadWithFirst,
+			LoadWithSingle,
+			LoadWithFirstOrDefault,
+			ProjectedFirst,
+		}
+
+		// Validating the read as a subquery (SQLite has no APPLY) clones the context chain of its eager load, which leads
+		// back to the select's own context; the cloning is the builder's, so one provider shows it.
+		[Test]
+		public async Task ElementReadWithEagerLoadedCollection([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] EagerElementRead read, [Values] bool isAsync)
+		{
+			using var db = GetDataContext(context);
+
+			Expression<Func<Parent>> selector = read switch
+			{
+				EagerElementRead.LoadWithFirst          => () => db.Parent
+					.LoadWith(p => p.Children)
+					.Where(p => p.ParentID == 3)
+					.First(),
+				EagerElementRead.LoadWithSingle         => () => db.Parent
+					.LoadWith(p => p.Children)
+					.Where(p => p.ParentID == 3)
+					.Single(),
+				EagerElementRead.LoadWithFirstOrDefault => () => db.Parent
+					.LoadWith(p => p.Children)
+					.Where(p => p.ParentID == 3)
+					.FirstOrDefault()!,
+				EagerElementRead.ProjectedFirst         => () => db.Parent
+					.Where(p => p.ParentID == 3)
+					.Select(p => new Parent { ParentID = p.ParentID, Children = p.Children.ToList() })
+					.First(),
+				_                                       => throw new ArgumentOutOfRangeException(nameof(read)),
+			};
+
+			var parent = isAsync
+				? await db.SelectAsync(selector)
+				: db.Select(selector);
+
+			var childIds = Child
+				.Where(c => c.ParentID == 3)
+				.Select(c => c.ChildID)
+				.OrderBy(id => id);
+
+			parent.ParentID.ShouldBe(3);
+			parent.Children
+				.Select(c => c.ChildID)
+				.OrderBy(id => id)
+				.ShouldBe(childIds);
 		}
 
 		[Test]

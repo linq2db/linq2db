@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
-	[DebuggerDisplay("InlineParameters = {InlineParameters}, IgnoreQueryFilterScopes = {IgnoreQueryFilterScopes}, EagerLoadingStrategy = {EagerLoadingStrategy}")]
+	[DebuggerDisplay("InlineParameters = {InlineParameters}, IgnoreQueryFilterScopes = {IgnoreQueryFilterScopes}, EagerLoadingStrategy = {EagerLoadingStrategy}, StrictElementOperators = {StrictElementOperators}")]
 	sealed class TranslationModifier : IEquatable<TranslationModifier>
 	{
 		public static readonly TranslationModifier Default = new();
@@ -13,20 +13,27 @@ namespace LinqToDB.Internal.Linq.Builder
 			bool                  inlineParameters     = false,
 			Type[]?               ignoreQueryFilters   = null,
 			EagerLoadingStrategy? eagerLoadingStrategy = null)
-			: this(inlineParameters, ignoreQueryFilters == null ? null : [new FilterIgnoreScope(null, ignoreQueryFilters)], eagerLoadingStrategy)
+			: this(inlineParameters, ignoreQueryFilters == null ? null : [new FilterIgnoreScope(null, ignoreQueryFilters)], eagerLoadingStrategy, false)
 		{
 		}
 
-		TranslationModifier(bool inlineParameters, FilterIgnoreScope[]? scopes, EagerLoadingStrategy? eagerLoadingStrategy)
+		TranslationModifier(bool inlineParameters, FilterIgnoreScope[]? scopes, EagerLoadingStrategy? eagerLoadingStrategy, bool strictElementOperators)
 		{
 			InlineParameters        = inlineParameters;
 			IgnoreQueryFilterScopes = scopes;
 			EagerLoadingStrategy    = eagerLoadingStrategy;
+			StrictElementOperators  = strictElementOperators;
 		}
 
 		public bool                  InlineParameters        { get; }
 		public FilterIgnoreScope[]?  IgnoreQueryFilterScopes { get; }
 		public EagerLoadingStrategy? EagerLoadingStrategy    { get; }
+
+		/// <summary>
+		/// A <c>First</c> / <c>Single</c> read from a subquery fails on an empty source, as LINQ to Objects does, instead of
+		/// reading the NULL as the default value.
+		/// </summary>
+		public bool                  StrictElementOperators  { get; }
 
 		/// <summary>
 		/// Whole-entity disable check — returns <see langword="true"/> when at least one registered scope disables
@@ -78,6 +85,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (EagerLoadingStrategy != other.EagerLoadingStrategy)
 				return false;
 
+			if (StrictElementOperators != other.StrictElementOperators)
+				return false;
+
 			if (ReferenceEquals(IgnoreQueryFilterScopes, other.IgnoreQueryFilterScopes))
 				return true;
 
@@ -99,7 +109,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (InlineParameters == inlineParameters)
 				return this;
 
-			return new TranslationModifier(inlineParameters, IgnoreQueryFilterScopes, EagerLoadingStrategy);
+			return new TranslationModifier(inlineParameters, IgnoreQueryFilterScopes, EagerLoadingStrategy, StrictElementOperators);
 		}
 
 		/// <summary>
@@ -119,7 +129,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var existing = IgnoreQueryFilterScopes;
 			if (existing == null)
-				return new TranslationModifier(InlineParameters, [scope], EagerLoadingStrategy);
+				return new TranslationModifier(InlineParameters, [scope], EagerLoadingStrategy, StrictElementOperators);
 
 			foreach (var s in existing)
 				if (s.Equals(scope))
@@ -129,7 +139,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			Array.Copy(existing, newArr, existing.Length);
 			newArr[existing.Length] = scope;
 
-			return new TranslationModifier(InlineParameters, newArr, EagerLoadingStrategy);
+			return new TranslationModifier(InlineParameters, newArr, EagerLoadingStrategy, StrictElementOperators);
 		}
 
 		public TranslationModifier WithEagerLoadingStrategy(EagerLoadingStrategy strategy)
@@ -137,7 +147,15 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (EagerLoadingStrategy == strategy)
 				return this;
 
-			return new TranslationModifier(InlineParameters, IgnoreQueryFilterScopes, strategy);
+			return new TranslationModifier(InlineParameters, IgnoreQueryFilterScopes, strategy, StrictElementOperators);
+		}
+
+		public TranslationModifier WithStrictElementOperators(bool strictElementOperators)
+		{
+			if (StrictElementOperators == strictElementOperators)
+				return this;
+
+			return new TranslationModifier(InlineParameters, IgnoreQueryFilterScopes, EagerLoadingStrategy, strictElementOperators);
 		}
 
 		public override bool Equals([NotNullWhen(true)] object? obj)
@@ -150,6 +168,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var hashCode = new HashCode();
 			hashCode.Add(InlineParameters);
 			hashCode.Add(EagerLoadingStrategy);
+			hashCode.Add(StrictElementOperators);
 
 			if (IgnoreQueryFilterScopes != null)
 			{

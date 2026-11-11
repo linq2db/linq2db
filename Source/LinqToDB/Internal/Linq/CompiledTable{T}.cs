@@ -182,6 +182,8 @@ namespace LinqToDB.Internal.Linq
 			var query       = GetInfo(db, parameters);
 			var expressions = query.CompiledExpressions!;
 
+			query.ThrowIfQueryBatchHasQueryHints(db);
+
 			using var transaction = query.StartLoadTransaction(db);
 
 			// A compiled query always carries its argument array, so InitHarvesters returns a context even when the
@@ -200,6 +202,9 @@ namespace LinqToDB.Internal.Linq
 			var db          = (IDataContext)parameters[0];
 			var query       = GetInfo(db, parameters);
 			var expressions = query.CompiledExpressions!;
+
+			query.ThrowIfQueryBatchHasQueryHints(db);
+			query.ThrowIfQueryBatchIsCancelled(cancellationToken);
 
 			var transaction = await query.StartLoadTransactionAsync(db, cancellationToken).ConfigureAwait(false);
 			await using var tr = (transaction ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
