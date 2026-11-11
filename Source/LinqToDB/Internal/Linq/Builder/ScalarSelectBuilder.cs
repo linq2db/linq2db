@@ -88,8 +88,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				|| type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ValueTask<>);
 		}
 
-		// A task held by a captured variable, a static field, an array element or a compiled-query argument starts nothing
-		// when it is read.
+		// A task held by a captured variable, a static field, an array element, a compiled-query argument or a completion
+		// source, or a completed task, starts nothing when it is read.
 		static bool IsHeldTask(Expression expression)
 		{
 			while (true)
@@ -106,7 +106,15 @@ namespace LinqToDB.Internal.Linq.Builder
 						expression = field.Expression;
 						break;
 
-					case UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked or ExpressionType.TypeAs } convert:
+					case MemberExpression { Member: PropertyInfo property } member when ReturnsExistingTask(property):
+						if (member.Expression == null)
+							return true;
+
+						expression = member.Expression;
+						break;
+
+					// A user-defined conversion is a call, which may start the task.
+					case UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked or ExpressionType.TypeAs, Method: null } convert:
 						expression = convert.Operand;
 						break;
 
@@ -118,6 +126,22 @@ namespace LinqToDB.Internal.Linq.Builder
 						return false;
 				}
 			}
+		}
+
+		// The non-generic TaskCompletionSource and ValueTask.CompletedTask exist from .NET 5, so they are matched by name.
+		static bool ReturnsExistingTask(PropertyInfo property)
+		{
+			var declaringType = property.DeclaringType;
+
+			return property.Name switch
+			{
+				nameof(TaskCompletionSource<>.Task) =>
+					(declaringType is { IsGenericType: true } && declaringType.GetGenericTypeDefinition() == typeof(TaskCompletionSource<>))
+					|| string.Equals(declaringType?.FullName, "System.Threading.Tasks.TaskCompletionSource", StringComparison.Ordinal),
+				nameof(Task.CompletedTask) =>
+					declaringType == typeof(Task) || declaringType == typeof(ValueTask),
+				_ => false,
+			};
 		}
 
 		[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]

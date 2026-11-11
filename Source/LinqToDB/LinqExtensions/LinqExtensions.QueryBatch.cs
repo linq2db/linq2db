@@ -63,7 +63,7 @@ namespace LinqToDB
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="selector">The results to read.</param>
 		/// <returns>The results.</returns>
-		/// <exception cref="LinqToDBException">The context has pending <see cref="IDataContext.QueryHints"/> or <see cref="IDataContext.NextQueryHints"/>, the provider cannot translate the parts as one statement, or an expression in the selector creates a task, which could run a query outside the batch.</exception>
+		/// <exception cref="LinqToDBException">The context has pending <see cref="IDataContext.QueryHints"/> or <see cref="IDataContext.NextQueryHints"/>, the provider cannot translate the parts as one statement, or an expression in the selector may create a task, which could run a query outside the batch.</exception>
 		/// <exception cref="InvalidOperationException">A <c>First()</c> or <c>Single()</c> in the selector found no row, or a part read with <c>Single()</c> or <c>SingleOrDefault()</c> found more than one.</exception>
 		[Pure]
 		public static T QueryBatch<T>(
@@ -88,7 +88,7 @@ namespace LinqToDB
 		/// <param name="selector">The results to read.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>The results.</returns>
-		/// <exception cref="LinqToDBException">The context has pending <see cref="IDataContext.QueryHints"/> or <see cref="IDataContext.NextQueryHints"/>, the provider cannot translate the parts as one statement, or an expression in the selector creates a task, which could run a query outside the batch.</exception>
+		/// <exception cref="LinqToDBException">The context has pending <see cref="IDataContext.QueryHints"/> or <see cref="IDataContext.NextQueryHints"/>, the provider cannot translate the parts as one statement, or an expression in the selector may create a task, which could run a query outside the batch.</exception>
 		/// <exception cref="InvalidOperationException">A <c>First()</c> or <c>Single()</c> in the selector found no row, or a part read with <c>Single()</c> or <c>SingleOrDefault()</c> found more than one.</exception>
 		/// <exception cref="OperationCanceledException"><paramref name="token"/> is cancelled. A token cancelled before the call sends no command.</exception>
 		[Pure]

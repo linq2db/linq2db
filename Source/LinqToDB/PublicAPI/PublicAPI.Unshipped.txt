@@ -326,7 +326,7 @@ static readonly LinqToDB.Internal.Reflection.Methods.LinqToDB.QueryBatch -> Syst
 *REMOVED*virtual LinqToDB.Internal.Expressions.ExpressionVisitorBase.VisitTagExpression(LinqToDB.Internal.Expressions.TagExpression! node) -> System.Linq.Expressions.Expression!
 const LinqToDB.Internal.Common.ErrorHelper.Error_DynamicColumns_NoSetter = "Type '{0}' is materialized with dynamic column(s) {1}, but has no dynamic column setter. Add a member marked with DynamicColumnsStoreAttribute, or configure a setter through DynamicColumnAccessorAttribute or DynamicPropertyAccessors." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_QueryHints_In_QueryBatch = "QueryBatch does not support query hints." -> string!
-const LinqToDB.Internal.Common.ErrorHelper.Error_QueryBatch_TaskPart = "A query batch part cannot create a task: it could run a separate query outside the batch." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_QueryBatch_TaskPart = "A query batch part cannot hold an expression that may create a task: it could run a separate query outside the batch." -> string!
 LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQLMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator
 LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQLMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator() -> void
 override LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQL95MemberTranslator.CreateAggregateFunctionsMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator!
