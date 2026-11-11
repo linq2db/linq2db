@@ -4,11 +4,14 @@ using System.Data.Common;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Transactions;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.MySql;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Linq;
@@ -28,6 +31,7 @@ namespace Tests.Linq
 		// which a batch with a scalar read over a table builds; SelectScalarTests.SubQueryAggregate excludes it likewise.
 		const string NoFromlessSubquery = TestProvName.AllAccess;
 
+		// A local seed gives the tests known page ids and a fixed NULL pattern.
 		[Table]
 		sealed class BatchItem
 		{
@@ -113,6 +117,28 @@ namespace Tests.Linq
 			return Ids(page);
 		}
 
+		static InvalidOperationException ThrowOfThePartAlone<T>(Expression<Func<T>> part)
+		{
+			var alone = part.Compile();
+
+			return Shouldly.Should.Throw<InvalidOperationException>(() => alone());
+		}
+
+		// Catches only the LINQ exception, so a provider's refusal to translate the batch reaches a declared Throws*.
+		static InvalidOperationException ThrowOfTheBatch(Action batch)
+		{
+			try
+			{
+				batch();
+			}
+			catch (InvalidOperationException ex)
+			{
+				return ex;
+			}
+
+			throw new ShouldAssertException("The batch should throw System.InvalidOperationException but did not.");
+		}
+
 		static string[] GroupedIds(IEnumerable<(int Id, IEnumerable<BatchItem> Items)> groups)
 		{
 			return groups
@@ -145,7 +171,8 @@ namespace Tests.Linq
 					.ToList());
 
 			total.ShouldBe(BatchItem.Seed.Length);
-			Ids(page).ShouldBe(PageIds(2, 3));
+			Ids(page)
+				.ShouldBe(PageIds(2, 3));
 		}
 
 		[Test]
@@ -167,7 +194,8 @@ namespace Tests.Linq
 					.ToList());
 
 			total.ShouldBe(BatchItem.Seed.Length);
-			Ids(page).ShouldBe(PageIds(2, 3));
+			Ids(page)
+				.ShouldBe(PageIds(2, 3));
 			trace.Readers.ShouldBe(db.UsesCombinedQueryBatch() ? 1 : 2);
 		}
 
@@ -190,7 +218,8 @@ namespace Tests.Linq
 					.ToList());
 
 			total.ShouldBe(BatchItem.Seed.Length);
-			Ids(rest).ShouldBe(PageIds(2, BatchItem.Seed.Length));
+			Ids(rest)
+				.ShouldBe(PageIds(2, BatchItem.Seed.Length));
 			trace.Readers.ShouldBe(db.UsesCombinedQueryBatch() ? 1 : 2);
 		}
 
@@ -215,7 +244,8 @@ namespace Tests.Linq
 			});
 
 			result.Total.ShouldBe(BatchItem.Seed.Length);
-			Ids(result.Page).ShouldBe(PageIds(2, 3));
+			Ids(result.Page)
+				.ShouldBe(PageIds(2, 3));
 			trace.Readers.ShouldBe(2);
 		}
 
@@ -277,7 +307,10 @@ namespace Tests.Linq
 
 			var trace = new CommandTrace();
 
-			using var dc = new DataContext(Traced(trace)(new DataOptions().UseConfiguration(context)));
+			var options = new DataOptions()
+				.UseConfiguration(context);
+
+			using var dc = new DataContext(Traced(trace)(options));
 
 			var table = dc
 				.GetTable<BatchItem>()
@@ -293,23 +326,53 @@ namespace Tests.Linq
 					.ToList());
 
 			total.ShouldBe(BatchItem.Seed.Length);
-			Ids(page).ShouldBe(PageIds(0, 3));
+			Ids(page)
+				.ShouldBe(PageIds(0, 3));
 			trace.Readers.ShouldBe(1);
 		}
 
 		// The refusal comes before any command, so SQLite and SQL Server (concat and DbBatch) stand for every provider.
 		[Test]
 		public async Task PendingHintsAreRefused(
-			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context,
+			[IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context,
 			[Values] bool oneShot,
 			[Values] bool isAsync)
 		{
-			const string hint = "-- query batch hint";
-
 			var trace = new CommandTrace();
 
 			using var db    = GetDataContext(context, Traced(trace));
 			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			await BatchRefusesHints(db, items, trace, oneShot, isAsync);
+		}
+
+		// A DataContext takes its hints itself and hands them to a connection only when a command runs.
+		[Test]
+		public async Task PendingHintsAreRefusedOnADataContext(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context,
+			[Values] bool oneShot,
+			[Values] bool isAsync)
+		{
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var trace = new CommandTrace();
+
+			var options = new DataOptions()
+				.UseConfiguration(context);
+
+			using var dc = new DataContext(Traced(trace)(options));
+
+			var table = dc
+				.GetTable<BatchItem>()
+				.TableName(items.TableName);
+
+			await BatchRefusesHints(dc, table, trace, oneShot, isAsync);
+		}
+
+		static async Task BatchRefusesHints(IDataContext db, IQueryable<BatchItem> items, CommandTrace trace, bool oneShot, bool isAsync)
+		{
+			const string hint = "-- query batch hint";
 
 			var hints = oneShot ? db.NextQueryHints : db.QueryHints;
 
@@ -354,6 +417,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllYdb, ErrorMessage = ErrorHelper.Error_Join_Without_Condition, AlsoWhenParameter = "terminal", AlsoWhenValue = Terminal.SingleOrDefaultEmpty)]
 		public void EveryTerminalReadsItsValue([DataSources(NoFromlessSubquery)] string context, [Values] Terminal terminal)
 		{
 			var trace = new CommandTrace();
@@ -502,7 +566,7 @@ namespace Tests.Linq
 
 				case Terminal.FirstMember:
 				{
-					var run = () => db.QueryBatch(() => new
+					var r = db.QueryBatch(() => new
 					{
 						X    = items
 							.OrderBy(i => i.Id)
@@ -514,18 +578,6 @@ namespace Tests.Linq
 							.ToList(),
 					});
 
-					// Sybase takes no ordered First as a subquery of a FROM-less SELECT.
-					if (context.IsAnyOf(TestProvName.AllSybase))
-					{
-						run
-							.ShouldThrow<LinqToDBException>()
-							.Message
-							.ShouldContain(ErrorHelper.Error_Correlated_Subqueries);
-						return;
-					}
-
-					var r = run();
-
 					r.X.ShouldBe(1);
 					rows = r.Rows;
 					break;
@@ -533,7 +585,7 @@ namespace Tests.Linq
 
 				case Terminal.FirstEntity:
 				{
-					var run = () => db.QueryBatch(() => new
+					var r = db.QueryBatch(() => new
 					{
 						X    = items
 							.OrderBy(i => i.Id)
@@ -543,17 +595,6 @@ namespace Tests.Linq
 							.Take(2)
 							.ToList(),
 					});
-
-					if (context.IsAnyOf(TestProvName.AllSybase))
-					{
-						run
-							.ShouldThrow<LinqToDBException>()
-							.Message
-							.ShouldContain(ErrorHelper.Error_Correlated_Subqueries);
-						return;
-					}
-
-					var r = run();
 
 					r.X.Id.ShouldBe(1);
 					rows = r.Rows;
@@ -636,8 +677,10 @@ namespace Tests.Linq
 							.ToArray(),
 					});
 
-					Ids(r.A).ShouldBe(Ids(seed.Where(i => i.Id < 3)));
-					Ids(r.B).ShouldBe(Ids(seed.Where(i => i.Id > 8)));
+					Ids(r.A)
+						.ShouldBe(Ids(seed.Where(i => i.Id < 3)));
+					Ids(r.B)
+						.ShouldBe(Ids(seed.Where(i => i.Id > 8)));
 					collections = 2;
 					break;
 				}
@@ -658,7 +701,8 @@ namespace Tests.Linq
 			}
 
 			if (rows != null)
-				Ids(rows).ShouldBe(PageIds(0, 2));
+				Ids(rows)
+					.ShouldBe(PageIds(0, 2));
 
 			if (!context.IsRemote())
 				trace.Readers.ShouldBe(collections == 0 || db.UsesCombinedQueryBatch() ? 1 : 1 + collections);
@@ -699,7 +743,8 @@ namespace Tests.Linq
 					.ToList());
 
 			count.ShouldBe(10);
-			Ids(rows).ShouldBe(PageIds(0, 2));
+			Ids(rows)
+				.ShouldBe(PageIds(0, 2));
 		}
 
 		[Test]
@@ -716,7 +761,8 @@ namespace Tests.Linq
 
 			count.ShouldBe(10);
 			name.ShouldBe("N3");
-			Ids(rows).ShouldBe(PageIds(0, 2));
+			Ids(rows)
+				.ShouldBe(PageIds(0, 2));
 		}
 
 		[Test]
@@ -733,7 +779,8 @@ namespace Tests.Linq
 
 			count.ShouldBe(10);
 			name.ShouldBe("N3");
-			Ids(rows).ShouldBe(PageIds(0, 2));
+			Ids(rows)
+				.ShouldBe(PageIds(0, 2));
 			longCount.ShouldBe(5L);
 		}
 
@@ -751,7 +798,8 @@ namespace Tests.Linq
 
 			count.ShouldBe(10);
 			name.ShouldBe("N3");
-			Ids(rows).ShouldBe(PageIds(0, 2));
+			Ids(rows)
+				.ShouldBe(PageIds(0, 2));
 			longCount.ShouldBe(5L);
 			anyNull.ShouldBeTrue();
 		}
@@ -770,7 +818,8 @@ namespace Tests.Linq
 
 			count.ShouldBe(10);
 			name.ShouldBe("N3");
-			Ids(rows).ShouldBe(PageIds(0, 2));
+			Ids(rows)
+				.ShouldBe(PageIds(0, 2));
 			longCount.ShouldBe(5L);
 			anyNull.ShouldBeTrue();
 			max.ShouldBe(10);
@@ -792,7 +841,8 @@ namespace Tests.Linq
 
 			count.ShouldBe(10);
 			name.ShouldBe("N3");
-			Ids(rows).ShouldBe(PageIds(0, 2));
+			Ids(rows)
+				.ShouldBe(PageIds(0, 2));
 			longCount.ShouldBe(5L);
 			anyNull.ShouldBeTrue();
 			max.ShouldBe(10);
@@ -818,7 +868,8 @@ namespace Tests.Linq
 					.ToList());
 
 			total.ShouldBe(BatchItem.Seed.Length);
-			Ids(page).ShouldBe(PageIds(2, 3));
+			Ids(page)
+				.ShouldBe(PageIds(2, 3));
 			trace.Readers.ShouldBe(db.UsesCombinedQueryBatch() ? 1 : 2);
 			trace.AnyAsync.ShouldBeTrue();
 
@@ -834,7 +885,8 @@ namespace Tests.Linq
 			});
 
 			named.Total.ShouldBe(BatchItem.Seed.Length);
-			Ids(named.Page).ShouldBe(PageIds(0, 3));
+			Ids(named.Page)
+				.ShouldBe(PageIds(0, 3));
 			trace.Readers.ShouldBe(db.UsesCombinedQueryBatch() ? 1 : 2);
 		}
 
@@ -854,7 +906,8 @@ namespace Tests.Linq
 			});
 
 			batch.Total.ShouldBe(BatchItem.Seed.Length);
-			Ids(batch.Page).ShouldBe(PageIds(0, 3));
+			Ids(batch.Page)
+				.ShouldBe(PageIds(0, 3));
 
 			Action select = () => db.Select(() => new
 			{
@@ -898,8 +951,10 @@ namespace Tests.Linq
 			var second = Run();
 
 			Query<(int, List<BatchItem>)>.CacheMissCount.ShouldBe(misses);
-			Ids(first.Item2).ShouldBe(PageIds(0, 2));
-			Ids(second.Item2).ShouldBe(PageIds(0, 4));
+			Ids(first.Item2)
+				.ShouldBe(PageIds(0, 2));
+			Ids(second.Item2)
+				.ShouldBe(PageIds(0, 4));
 		}
 
 		[Test]
@@ -944,7 +999,8 @@ namespace Tests.Linq
 						.ToList());
 
 				total.ShouldBe(BatchItem.Seed.Length);
-				Ids(page).ShouldBe(PageIds(0, 3));
+				Ids(page)
+					.ShouldBe(PageIds(0, 3));
 			}
 
 			trace.Begins.ShouldBe(0);
@@ -1116,7 +1172,9 @@ namespace Tests.Linq
 		{
 			var single = CompiledQuery.Compile((IDataContext db, int take) => db.QueryBatch(() => new
 			{
-				Total = db.GetTable<BatchItem>().Count(),
+				Total = db
+					.GetTable<BatchItem>()
+					.Count(),
 				Page  = db.GetTable<BatchItem>()
 					.OrderBy(i => i.Id)
 					.Take(take)
@@ -1124,7 +1182,9 @@ namespace Tests.Linq
 			}));
 
 			var tuple = CompiledQuery.Compile((IDataContext db, int take) => db.QueryBatch(
-				() => db.GetTable<BatchItem>().Count(),
+				() => db
+					.GetTable<BatchItem>()
+					.Count(),
 				() => db.GetTable<BatchItem>()
 					.OrderBy(i => i.Id)
 					.Take(take)
@@ -1137,9 +1197,50 @@ namespace Tests.Linq
 			var positional = tuple(db, 3);
 
 			named.Total.ShouldBe(BatchItem.Seed.Length);
-			Ids(named.Page).ShouldBe(PageIds(0, 2));
+			Ids(named.Page)
+				.ShouldBe(PageIds(0, 2));
 			positional.Item1.ShouldBe(BatchItem.Seed.Length);
-			Ids(positional.Item2).ShouldBe(PageIds(0, 3));
+			Ids(positional.Item2)
+				.ShouldBe(PageIds(0, 3));
+		}
+
+		// CompiledQuery replaces the async call with the sync form; only the call into the compiled table stays async.
+		[Test]
+		public async Task CompiledQueryBatchAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var single = CompiledQuery.Compile((IDataContext db, int take, CancellationToken token) => db.QueryBatchAsync(() => new
+			{
+				Total = db
+					.GetTable<BatchItem>()
+					.Count(),
+				Page  = db.GetTable<BatchItem>()
+					.OrderBy(i => i.Id)
+					.Take(take)
+					.ToList(),
+			}, token));
+
+			var tuple = CompiledQuery.Compile((IDataContext db, int take, CancellationToken token) => db.QueryBatchAsync(
+				() => db
+					.GetTable<BatchItem>()
+					.Count(),
+				() => db.GetTable<BatchItem>()
+					.OrderBy(i => i.Id)
+					.Take(take)
+					.ToList(),
+				token));
+
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var named      = await single(db, 2, default);
+			var positional = await tuple(db, 3, default);
+
+			named.Total.ShouldBe(BatchItem.Seed.Length);
+			Ids(named.Page)
+				.ShouldBe(PageIds(0, 2));
+			positional.Item1.ShouldBe(BatchItem.Seed.Length);
+			Ids(positional.Item2)
+				.ShouldBe(PageIds(0, 3));
 		}
 
 		sealed class ProcessingConnection(DataOptions options) : DataConnection(options)
@@ -1170,8 +1271,12 @@ namespace Tests.Linq
 			using var items  = db.CreateLocalTable(BatchItem.Seed);
 			using var groups = db.CreateLocalTable(BatchGroup.Seed);
 
-			var trace   = new CommandTrace();
-			var options = Traced(trace)(new DataOptions().UseConfiguration(context))
+			var trace = new CommandTrace();
+
+			var configuration = new DataOptions()
+				.UseConfiguration(context);
+
+			var options = Traced(trace)(configuration)
 				.UseDefaultEagerLoadingStrategy(EagerLoadingStrategy.CteUnion);
 
 			using IDataContext target = dataContext ? new ProcessingContext(options) : new ProcessingConnection(options);
@@ -1359,7 +1464,8 @@ namespace Tests.Linq
 					.ToList());
 
 			total.ShouldBe(BatchItem.Seed.Length);
-			Ids(page).ShouldBe(PageIds(0, 3));
+			Ids(page)
+				.ShouldBe(PageIds(0, 3));
 			trace.Readers.ShouldBe(1);
 
 #if !NETFRAMEWORK
@@ -1379,9 +1485,151 @@ namespace Tests.Linq
 			}
 		}
 
+		public enum MySqlDataRoute
+		{
+			ProviderName,
+			ProviderInstance,
+			UseMySql,
+		}
+
+		// A connection string can refuse several statements in one command, and connections share the provider instance,
+		// so MySql.Data runs them one after another on every route, whichever context runs them and whatever the string says.
+		[Test]
+		public void MySqlDataRunsStatementsOneAfterAnother(
+			[IncludeDataSources(TestProvName.AllMySql80)] string context,
+			[Values("", ";AllowBatch=true", ";AllowBatch=false")] string option,
+			[Values] MySqlDataRoute route,
+			[Values] bool dataContext)
+		{
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var trace            = new CommandTrace();
+			var connectionString = GetConnectionString(context) + option;
+			var empty            = new DataOptions();
+
+			var configuration = route switch
+			{
+				MySqlDataRoute.ProviderName     => empty.UseConnectionString(ProviderName.MySql80MySqlData, connectionString),
+				MySqlDataRoute.ProviderInstance => empty.UseConnectionString(MySqlTools.GetDataProvider(MySqlVersion.MySql80, MySqlProvider.MySqlData), connectionString),
+				_                               => empty.UseMySql(connectionString, MySqlVersion.MySql80, MySqlProvider.MySqlData),
+			};
+
+			var options = Traced(trace)(configuration);
+
+			using IDataContext target = dataContext ? new DataContext(options) : new DataConnection(options);
+
+			var table = target
+				.GetTable<BatchItem>()
+				.TableName(items.TableName);
+
+			trace.Reset();
+
+			var (total, page) = target.QueryBatch(
+				() => table.Count(),
+				() => table
+					.OrderBy(i => i.Id)
+					.Take(3)
+					.ToList());
+
+			total.ShouldBe(BatchItem.Seed.Length);
+			Ids(page)
+				.ShouldBe(PageIds(0, 3));
+			trace.Readers.ShouldBe(2);
+		}
+
+		// The option on a query of its own takes the same way out.
+		[Test]
+		public void MySqlDataRunsCombinedCommandsOneAfterAnother(
+			[IncludeDataSources(TestProvName.AllMySql80)] string context,
+			[Values("", ";AllowBatch=false")] string option)
+		{
+			using var db     = GetDataContext(context);
+			using var items  = db.CreateLocalTable(BatchItem.Seed);
+			using var groups = db.CreateLocalTable(BatchGroup.Seed);
+
+			var trace = new CommandTrace();
+
+			var configuration = new DataOptions()
+				.UseMySql(GetConnectionString(context) + option, MySqlVersion.MySql80, MySqlProvider.MySqlData);
+
+			using var target = new DataConnection(Traced(trace, useCombinedCommands: true)(configuration));
+
+			var itemTable = target
+				.GetTable<BatchItem>()
+				.TableName(items.TableName);
+
+			var groupTable = target
+				.GetTable<BatchGroup>()
+				.TableName(groups.TableName);
+
+			trace.Reset();
+
+			var rows = groupTable
+				.OrderBy(g => g.Id)
+				.Select(g => new
+				{
+					g.Id,
+					Items = itemTable
+						.Where(i => i.GroupId == g.Id)
+						.ToList(),
+				})
+				.ToList();
+
+			rows.Count.ShouldBe(BatchGroup.Seed.Length);
+			trace.Readers.ShouldBe(2);
+		}
+
+		[Test]
+		public void OnlyMySqlConnectorCombinesStatements(
+			[Values(MySqlVersion.MySql57, MySqlVersion.MySql80, MySqlVersion.MariaDB10)] MySqlVersion version,
+			[Values(MySqlProvider.MySqlData, MySqlProvider.MySqlConnector)] MySqlProvider provider)
+		{
+			MySqlTools.GetDataProvider(version, provider)
+				.SqlProviderFlags
+				.IsMultiStatementBatchSupported
+				.ShouldBe(provider == MySqlProvider.MySqlConnector);
+		}
+
+		// A remote context runs each statement on a call of its own, on providers that combine on a direct connection.
+		[Test]
+		[UsesRemoteContext]
+		public void RemoteContextRunsStatementsOneAfterAnother(
+			[IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllMySqlConnector)] string context)
+		{
+			var readers = new List<string>();
+
+			using var db = GetServerContainer()
+				.CreateContext(
+					(_, o) => o.UseConfiguration(context),
+					(configuration, _) => new DataConnection(new DataOptions()
+						.UseConfiguration(configuration)
+						.UseTracing(TraceLevel.Info, info =>
+						{
+							if (info.TraceInfoStep == TraceInfoStep.BeforeExecute && info.Operation == TraceOperation.ExecuteReader)
+								readers.Add(info.SqlText);
+						})));
+
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			readers.Clear();
+
+			var (total, page) = db.QueryBatch(
+				() => items.Count(),
+				() => items
+					.OrderBy(i => i.Id)
+					.Take(3)
+					.ToList());
+
+			total.ShouldBe(BatchItem.Seed.Length);
+			Ids(page)
+				.ShouldBe(PageIds(0, 3));
+			readers.Count.ShouldBe(2);
+		}
+
 		// The providers that combine; an interceptor turns DbBatch off, so each sends one concatenated command.
 		[Test]
-		public void ConcatRunsWithAnInterceptor([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySql)] string context)
+		public void ConcatRunsWithAnInterceptor([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySqlConnector)] string context)
 		{
 			var trace       = new CommandTrace();
 			var interceptor = new CountingInterceptor();
@@ -1400,7 +1648,8 @@ namespace Tests.Linq
 					.ToList());
 
 			total.ShouldBe(BatchItem.Seed.Length);
-			Ids(page).ShouldBe(PageIds(0, 3));
+			Ids(page)
+				.ShouldBe(PageIds(0, 3));
 			trace.Readers.ShouldBe(1);
 			interceptor.Count.ShouldBe(1);
 			trace.Texts[0].ShouldNotContain("-- Command ");
@@ -1413,11 +1662,12 @@ namespace Tests.Linq
 			SingleValue,
 		}
 
-		// A scalar read is a subquery of the batch row, which SQL reads as NULL when it finds nothing; the APPLY / LATERAL
-		// providers show the other shapes.
+		// A scalar read is a subquery of the batch row, which SQL reads as NULL when it finds nothing.
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid, AlsoWhenParameter = "read", AlsoWhenValue = EmptyRead.FirstValue)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllYdb, ErrorMessage = ErrorHelper.Error_Join_Without_Condition, AlsoWhenParameter = "read", AlsoWhenValue = EmptyRead.SingleValue)]
 		public void EmptyScalarReadThrowsAsThePartAlone(
-			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllPostgreSQL)] string context,
+			[DataSources(false, NoFromlessSubquery)] string context,
 			[Values] EmptyRead read)
 		{
 			using var db    = GetDataContext(context);
@@ -1440,8 +1690,8 @@ namespace Tests.Linq
 					.Single(),
 			};
 
-			var alone = Shouldly.Should.Throw<InvalidOperationException>(() => part.Compile()());
-			var batch = Shouldly.Should.Throw<InvalidOperationException>(() => db.QueryBatch(part, () => items.ToList()));
+			var alone = ThrowOfThePartAlone(part);
+			var batch = ThrowOfTheBatch(() => db.QueryBatch(part, () => items.ToList()));
 
 			batch.Message.ShouldBe(alone.Message);
 		}
@@ -1470,7 +1720,7 @@ namespace Tests.Linq
 				.Select(i => i.Id)
 				.First();
 
-			var alone = Shouldly.Should.Throw<InvalidOperationException>(() => first.Compile()());
+			var alone = ThrowOfThePartAlone(first);
 			var batch = Shouldly.Should.Throw<InvalidOperationException>(() => target.QueryBatch(
 				first,
 				() => groupTable
@@ -1489,8 +1739,8 @@ namespace Tests.Linq
 
 		// A NULL the value itself can hold does not mean an empty source, so the part reads what it reads alone.
 		[Test]
-		public void NullValueReadsAsThePartAlone(
-			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllPostgreSQL)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
+		public void NullValueReadsAsThePartAlone([DataSources(false, NoFromlessSubquery)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var items = db.CreateLocalTable(BatchItem.Seed);
@@ -1500,16 +1750,21 @@ namespace Tests.Linq
 				.Select(i => i.Value!.Value)
 				.First();
 
-			var alone      = part.Compile()();
+			var alone = part
+				.Compile()
+				.Invoke();
+
 			var (value, _) = db.QueryBatch(part, () => items.ToList());
 
 			value.ShouldBe(alone);
 		}
 
-		// A window value is NULL at a partition edge whatever its arguments, so its NULL is not an empty source either.
+		// A window value is NULL at a partition edge whatever its arguments, so its NULL is not an empty source either. Not
+		// every provider has LAG, and those below read it through the same marker as any computed value. SQL Server has it
+		// from 2012.
 		[Test]
 		public void WindowValueReadsAsThePartAlone(
-			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllPostgreSQL)] string context)
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2012Plus, TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var items = db.CreateLocalTable(BatchItem.Seed);
@@ -1519,23 +1774,452 @@ namespace Tests.Linq
 				.Select(i => Sql.Ext.Lag(i.Id, Sql.Nulls.None).Over().OrderBy(i.Id).ToValue())
 				.First();
 
-			var alone      = part.Compile()();
+			var alone = part
+				.Compile()
+				.Invoke();
+
 			var (value, _) = db.QueryBatch(part, () => items.ToList());
 
 			value.ShouldBe(alone);
 		}
 
+		// SQLite reads a division by zero as NULL, where the others raise it.
+		[Test]
+		public void ComputedNullReadsAsThePartAlone([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			Expression<Func<int>> part = () => items
+				.Where(i => i.Id == 1)
+				.Select(i => i.Id / (i.Id - 1))
+				.First();
+
+			var alone = part
+				.Compile()
+				.Invoke();
+
+			var (value, _) = db.QueryBatch(part, () => items.ToList());
+
+			value.ShouldBe(alone);
+		}
+
+		sealed class NullToMinusSevenAttribute : ValueConverterAttribute
+		{
+			public NullToMinusSevenAttribute()
+			{
+				ValueConverter = new ValueConverter<int, int?>(v => v, v => v ?? -7, handlesNulls: true);
+			}
+		}
+
+		[Table]
+		sealed class ConvertedItem
+		{
+			[Column, PrimaryKey]                         public int Id    { get; set; }
+			[Column(CanBeNull = true), NullToMinusSeven] public int Value { get; set; }
+		}
+
+		// A converter that handles nulls turns the NULL of an empty source into a value, so only the marker shows the empty
+		// source.
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
+		public void ConverterDoesNotHideAnEmptySource([DataSources(false, NoFromlessSubquery)] string context)
+		{
+			using var db   = GetDataContext(context);
+			using var rows = db.CreateLocalTable(new[] { new ConvertedItem { Id = 1, Value = 1 } });
+
+			Expression<Func<int>> part = () => rows
+				.Where(x => x.Value > 100)
+				.Select(x => x.Value)
+				.First();
+
+			var alone = ThrowOfThePartAlone(part);
+			var batch = ThrowOfTheBatch(() => db.QueryBatch(part, () => rows.ToList()));
+
+			batch.Message.ShouldBe(alone.Message);
+		}
+
+		static int ClientValue(int id) => id + 1;
+
+		static int ClientSum(int first, int second) => first + second;
+
+		public enum ComputedRead
+		{
+			ClientColumn,
+			Constant,
+			ClientConstant,
+			Conditional,
+		}
+
+		static Expression<Func<int>> ComputedPart(IQueryable<BatchItem> source, ComputedRead read, bool isSingle)
+		{
+			return (read, isSingle) switch
+			{
+				(ComputedRead.ClientColumn,   false) => () => source
+					.Select(i => ClientValue(i.Id))
+					.First(),
+				(ComputedRead.ClientColumn,   true ) => () => source
+					.Select(i => ClientValue(i.Id))
+					.Single(),
+				(ComputedRead.Constant,       false) => () => source
+					.Select(i => 2)
+					.First(),
+				(ComputedRead.Constant,       true ) => () => source
+					.Select(i => 2)
+					.Single(),
+				(ComputedRead.ClientConstant, false) => () => source
+					.Select(i => ClientSum(1, 1))
+					.First(),
+				(ComputedRead.ClientConstant, true ) => () => source
+					.Select(i => ClientSum(1, 1))
+					.Single(),
+				(ComputedRead.Conditional,    false) => () => source
+					.Select(i => i.Id > 0 ? ClientValue(i.Id) : ClientValue(i.GroupId))
+					.First(),
+				_                                    => () => source
+					.Select(i => i.Id > 0 ? ClientValue(i.Id) : ClientValue(i.GroupId))
+					.Single(),
+			};
+		}
+
+		// A value that is no column of the row shows no more of the row than a NULL does.
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid, AlsoWhenParameter = "isSingle", AlsoWhenValue = false)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllYdb, ErrorMessage = ErrorHelper.Error_Join_Without_Condition, AlsoWhenParameter = "isSingle", AlsoWhenValue = true)]
+		public void ComputedValueOverAnEmptySourceThrowsAsThePartAlone(
+			[DataSources(false, NoFromlessSubquery)] string context,
+			[Values] ComputedRead read,
+			[Values] bool isSingle)
+		{
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var part = ComputedPart(items.Where(i => i.Id > 100), read, isSingle);
+
+			var alone = ThrowOfThePartAlone(part);
+			var batch = ThrowOfTheBatch(() => db.QueryBatch(part, () => items.ToList()));
+
+			batch.Message.ShouldBe(alone.Message);
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid, AlsoWhenParameter = "isSingle", AlsoWhenValue = false)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllYdb, ErrorMessage = ErrorHelper.Error_Join_Without_Condition, AlsoWhenParameter = "isSingle", AlsoWhenValue = true)]
+		public void ComputedValueOfARowReadsAsThePartAlone(
+			[DataSources(false, NoFromlessSubquery)] string context,
+			[Values] ComputedRead read,
+			[Values] bool isSingle)
+		{
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var part = ComputedPart(items.Where(i => i.Id == 1), read, isSingle);
+
+			var (value, _) = db.QueryBatch(part, () => items.ToList());
+
+			value.ShouldBe(part.Compile()());
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid, AlsoWhenParameter = "isSingle", AlsoWhenValue = false)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllYdb, ErrorMessage = ErrorHelper.Error_Join_Without_Condition, AlsoWhenParameter = "isSingle", AlsoWhenValue = true)]
+		public void NullableReadOverAnEmptySourceThrowsAsThePartAlone(
+			[DataSources(false, NoFromlessSubquery)] string context,
+			[Values] bool isSingle)
+		{
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			if (isSingle)
+			{
+				Expression<Func<string?>> name = () => items
+					.Where(i => i.Id > 100)
+					.Select(i => i.Name)
+					.Single();
+
+				var aloneName = ThrowOfThePartAlone(name);
+				var batchName = ThrowOfTheBatch(() => db.QueryBatch(name, () => items.ToList()));
+
+				batchName.Message.ShouldBe(aloneName.Message);
+			}
+			else
+			{
+				Expression<Func<int?>> value = () => items
+					.Where(i => i.Id > 100)
+					.Select(i => i.Value)
+					.First();
+
+				var aloneValue = ThrowOfThePartAlone(value);
+				var batchValue = ThrowOfTheBatch(() => db.QueryBatch(value, () => items.ToList()));
+
+				batchValue.Message.ShouldBe(aloneValue.Message);
+			}
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
+		public void NullInARowReadsNull([DataSources(false, NoFromlessSubquery)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			Expression<Func<int?>> part = () => items
+				.Where(i => i.Id == 3)
+				.Select(i => i.Value)
+				.First();
+
+			var (value, _) = db.QueryBatch(part, () => items.ToList());
+
+			value.ShouldBeNull();
+		}
+
+		// The marker joins the rows to the batch row, which is read with Single.
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllYdb, ErrorMessage = ErrorHelper.Error_Join_Without_Condition)]
+		public void TwoRowNullableSingleThrowsAsThePartAlone([DataSources(false, NoFromlessSubquery)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			Expression<Func<int?>> part = () => items
+				.Select(i => i.Value)
+				.Single();
+
+			ThrowOfThePartAlone(part);
+
+			ThrowOfTheBatch(() => db.QueryBatch(part, () => items.ToList()));
+		}
+
+		// A scalar subquery would leave the second row to the server: an error of its own, or on SQLite the first row.
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllYdb, ErrorMessage = ErrorHelper.Error_Join_Without_Condition)]
+		public void TwoRowNotNullSingleThrowsAsThePartAlone([DataSources(false, NoFromlessSubquery)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			Expression<Func<int>> part = () => items
+				.Select(i => i.Id)
+				.Single();
+
+			ThrowOfThePartAlone(part);
+
+			ThrowOfTheBatch(() => db.QueryBatch(part, () => items.ToList()));
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ActiveIssue(6289, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "YdbDataReader was closed during transaction execution")]
+		public void NestedNullableReadKeepsEveryRow([DataSources(false, NoFromlessSubquery)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var items  = db.CreateLocalTable(BatchItem.Seed);
+			using var groups = db.CreateLocalTable(BatchGroup.Seed);
+
+			var (rows, _) = db.QueryBatch(
+				() => groups
+					.OrderBy(g => g.Id)
+					.Select(g => new
+					{
+						g.Id,
+						First = items
+							.Where(i => i.GroupId == g.Id)
+							.OrderBy(i => i.Id)
+							.Select(i => i.Value)
+							.First(),
+					})
+					.ToList(),
+				() => items.Count());
+
+			var values = rows
+				.Select(r => r.First)
+				.ToArray();
+
+			values.ShouldBe(new int?[] { 4, 1, 2, null });
+
+			ThrowOfTheBatch(() => db.QueryBatch(
+				() => groups
+					.OrderBy(g => g.Id)
+					.Select(g => new
+					{
+						g.Id,
+						First = items
+							.Where(i => i.GroupId == g.Id && i.Id > 8)
+							.OrderBy(i => i.Id)
+							.Select(i => i.Value)
+							.First(),
+					})
+					.ToList(),
+				() => items.Count()));
+		}
+
+		// Only a read that cannot show its row pays for a marker: a First of a NOT NULL column stays a plain scalar subquery. The
+		// three providers read a marker by a join, by APPLY and by LATERAL.
+		[Test]
+		public void NotNullColumnStaysAScalarSubquery(
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllPostgreSQL)] string context)
+		{
+			var trace = new CommandTrace();
+
+			using var db    = GetDataContext(context, Traced(trace));
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			trace.Reset();
+
+			var (first, count) = db.QueryBatch(
+				() => items
+					.Where(i => i.Id > 1)
+					.OrderBy(i => i.Id)
+					.Select(i => i.Id)
+					.First(),
+				() => items.Count());
+
+			first.ShouldBe(2);
+			count.ShouldBe(10);
+
+			trace.Texts
+				.ShouldHaveSingleItem()
+				.ShouldNotContain("JOIN");
+		}
+
+		// The check stays out of set-operation branches.
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		public void SetOperationBranchReadsItsValue([DataSources(false, NoFromlessSubquery)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var items  = db.CreateLocalTable(BatchItem.Seed);
+			using var groups = db.CreateLocalTable(BatchGroup.Seed);
+
+			var (rows, _) = db.QueryBatch(
+				() => groups
+					.Where(g => g.Id == 1)
+					.Select(g => new
+					{
+						g.Id,
+						V = items
+							.Where(i => i.GroupId == g.Id)
+							.OrderBy(i => i.Id)
+							.Select(i => i.Value)
+							.First(),
+					})
+					.Concat(groups
+						.Where(g => g.Id == 2)
+						.Select(g => new
+						{
+							g.Id,
+							V = items
+								.Where(i => i.GroupId == g.Id)
+								.OrderBy(i => i.Id)
+								.Select(i => i.Value)
+								.First(),
+						}))
+					.ToList(),
+				() => items.Count());
+
+			var values = rows
+				.OrderBy(r => r.Id)
+				.Select(r => r.V)
+				.ToArray();
+
+			values.ShouldBe(new int?[] { 4, 1 });
+		}
+
+		// Where the batch does not combine, KeyedQuery rebuilds the reader of the batch row, the marker included.
+		[Test]
+		public void MarkerSurvivesKeyedQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			NullableReadUnderTheConfiguredStrategy(context, EagerLoadingStrategy.KeyedQuery);
+		}
+
+		// CteUnion rebuilds the parent row from carrier slots, which hold no slot for the marker.
+		[ActiveIssue(5823)]
+		[Test]
+		public void MarkerSurvivesCteUnion([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			NullableReadUnderTheConfiguredStrategy(context, EagerLoadingStrategy.CteUnion);
+		}
+
+		void NullableReadUnderTheConfiguredStrategy(string context, EagerLoadingStrategy strategy)
+		{
+			using var db     = GetDataContext(context);
+			using var items  = db.CreateLocalTable(BatchItem.Seed);
+			using var groups = db.CreateLocalTable(BatchGroup.Seed);
+
+			var options = new DataOptions()
+				.UseConfiguration(context)
+				.UseDefaultEagerLoadingStrategy(strategy);
+
+			using var target = new ProcessingConnection(options);
+
+			var itemTable  = target.GetTable<BatchItem>();
+			var groupTable = target.GetTable<BatchGroup>();
+
+			Expression<Func<int?>> empty = () => itemTable
+				.Where(i => i.Id > 100)
+				.Select(i => i.Value)
+				.First();
+
+			Expression<Func<int?>> present = () => itemTable
+				.Where(i => i.Id == 3)
+				.Select(i => i.Value)
+				.First();
+
+			Shouldly.Should.Throw<InvalidOperationException>(() => target.QueryBatch(
+				empty,
+				() => groupTable
+					.OrderBy(g => g.Id)
+					.Select(g => new
+					{
+						g.Id,
+						Items = itemTable
+							.Where(i => i.GroupId == g.Id)
+							.ToList(),
+					})
+					.ToList()));
+
+			var (value, rows) = target.QueryBatch(
+				present,
+				() => groupTable
+					.OrderBy(g => g.Id)
+					.Select(g => new
+					{
+						g.Id,
+						Items = itemTable
+							.Where(i => i.GroupId == g.Id)
+							.ToList(),
+					})
+					.ToList());
+
+			value.ShouldBeNull();
+			rows.Count.ShouldBe(4);
+		}
+
 		// A compiled batch loads its collections before it reads the row, so the refusal must come first there too.
 		[Test]
-		public void CompiledQueryBatchRefusesPendingHints([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool oneShot)
+		public async Task CompiledQueryBatchRefusesPendingHints(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context,
+			[Values] bool oneShot,
+			[Values] bool isAsync)
 		{
 			const string hint = "-- query batch hint";
 
 			var batch = CompiledQuery.Compile((IDataContext db) => db.QueryBatch(
-				() => db.GetTable<BatchItem>().Count(),
+				() => db
+					.GetTable<BatchItem>()
+					.Count(),
 				() => db.GetTable<BatchItem>()
 					.OrderBy(i => i.Id)
 					.ToList()));
+
+			var batchAsync = CompiledQuery.Compile((IDataContext db) => db.QueryBatchAsync(
+				() => db
+					.GetTable<BatchItem>()
+					.Count(),
+				() => db.GetTable<BatchItem>()
+					.OrderBy(i => i.Id)
+					.ToList(),
+				default));
 
 			var trace = new CommandTrace();
 
@@ -1547,9 +2231,11 @@ namespace Tests.Linq
 			trace.Reset();
 			hints.Add(hint);
 
-			Shouldly.Should.Throw<LinqToDBException>(() => batch(db))
-				.Message
-				.ShouldBe(ErrorHelper.Error_QueryHints_In_QueryBatch);
+			var error = isAsync
+				? await Shouldly.Should.ThrowAsync<LinqToDBException>(() => batchAsync(db))
+				: Shouldly.Should.Throw<LinqToDBException>(() => batch(db));
+
+			error.Message.ShouldBe(ErrorHelper.Error_QueryHints_In_QueryBatch);
 
 			trace.Readers.ShouldBe(0);
 			trace.Begins.ShouldBe(0);
@@ -1558,36 +2244,68 @@ namespace Tests.Linq
 			hints.Clear();
 		}
 
-		// A batch is new API, so a First nested in one of its parts follows LINQ too; the same query outside a batch keeps
-		// reading the empty source as the default value.
-		[Test]
-		public void NestedEmptyReadThrowsInsideTheBatch(
-			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllPostgreSQL)] string context)
+		static Expression<Func<List<int>>> NestedFirsts(IQueryable<BatchGroup> groups, IQueryable<BatchItem> items)
 		{
-			using var db     = GetDataContext(context);
-			using var items  = db.CreateLocalTable(BatchItem.Seed);
-			using var groups = db.CreateLocalTable(BatchGroup.Seed);
-
-			Expression<Func<List<int>>> firsts = () => groups
+			return () => groups
 				.OrderBy(g => g.Id)
 				.Select(g => items
 					.Where(i => i.GroupId == g.Id && i.Id > 8)
 					.Select(i => i.Id)
 					.First())
 				.ToList();
+		}
 
-			firsts.Compile()().ShouldBe([0, 9, 10, 0]);
+		// The same query outside a batch does not throw: it reads the empty source as the default value, or drops the row.
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		public void NestedEmptyReadOutsideABatchDoesNotThrow([DataSources(false, NoFromlessSubquery)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var items  = db.CreateLocalTable(BatchItem.Seed);
+			using var groups = db.CreateLocalTable(BatchGroup.Seed);
+
+			var outside = NestedFirsts(groups, items)
+				.Compile()
+				.Invoke();
+
+			// Where the First is no scalar subquery it is an inner join - CROSS APPLY on SQL CE, a ROW_NUMBER join or
+			// INNER JOIN LATERAL elsewhere - which drops the row.
+			int[] expected = context.IsAnyOf(
+				ProviderName.SqlCe,
+				TestProvName.AllClickHouse,
+				TestProvName.AllInformix,
+				TestProvName.AllOracle11,
+				TestProvName.AllSapHana,
+				TestProvName.AllYdb)
+				? [9, 10]
+				: [0, 9, 10, 0];
+
+			outside.ShouldBe(expected);
+		}
+
+		// A batch is new API, so a First nested in one of its parts follows LINQ too.
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ActiveIssue(6289, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "YdbDataReader was closed during transaction execution")]
+		public void NestedEmptyReadThrowsInsideTheBatch([DataSources(false, NoFromlessSubquery)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var items  = db.CreateLocalTable(BatchItem.Seed);
+			using var groups = db.CreateLocalTable(BatchGroup.Seed);
+
+			var firsts = NestedFirsts(groups, items);
 
 			var empty = Shouldly.Should.Throw<InvalidOperationException>(() => Array.Empty<int>().First());
-			var batch = Shouldly.Should.Throw<InvalidOperationException>(() => db.QueryBatch(() => items.Count(), firsts));
+			var batch = ThrowOfTheBatch(() => db.QueryBatch(() => items.Count(), firsts));
 
 			batch.Message.ShouldBe(empty.Message);
 		}
 
 		// An entity Single reads its rows into the batch row, so two rows make two batch rows.
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllYdb, ErrorMessage = ErrorHelper.Error_Join_Without_Condition, AlsoWhenParameter = "orDefault", AlsoWhenValue = true)]
 		public void TwoRowSingleThrowsAsThePartAlone(
-			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllPostgreSQL)] string context,
+			[DataSources(false, NoFromlessSubquery)] string context,
 			[Values] bool orDefault)
 		{
 			using var db    = GetDataContext(context);
@@ -1601,8 +2319,8 @@ namespace Tests.Linq
 					.Where(i => i.Id < 3)
 					.Single();
 
-			var alone = Shouldly.Should.Throw<InvalidOperationException>(() => part.Compile()());
-			var batch = Shouldly.Should.Throw<InvalidOperationException>(() => db.QueryBatch(part, () => items.ToList()));
+			var alone = ThrowOfThePartAlone(part);
+			var batch = ThrowOfTheBatch(() => db.QueryBatch(part, () => items.ToList()));
 
 			batch.Message.ShouldBe(alone.Message);
 		}

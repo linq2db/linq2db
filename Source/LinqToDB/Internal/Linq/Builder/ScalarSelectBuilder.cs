@@ -126,7 +126,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new ScalarSelectContext(TranslationModifier, Builder, context.CloneContext(Parent), context.CloneExpression(Body), context.CloneElement(SelectQuery), IsQueryBatch);
+				return new ScalarSelectContext(TranslationModifier, Builder, null, context.CloneExpression(Body), context.CloneElement(SelectQuery), IsQueryBatch);
 			}
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)

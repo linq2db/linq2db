@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Async;
 using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
@@ -40,6 +41,14 @@ namespace LinqToDB
 		/// and any <c>With*LoadStrategy()</c> call inside the selector; elsewhere the configured strategy applies. Either way
 		/// they are explicit loads for <see cref="LinqOptions.ImplicitCollectionLoading"/>.
 		/// </para>
+		/// <para>
+		/// Inside the selector, <c>First()</c> and <c>Single()</c> throw <see cref="InvalidOperationException"/> when they find no
+		/// row, also in a query nested in a part.
+		/// </para>
+		/// <para>
+		/// A provider can refuse a selector whose parts it runs one by one: the parts are read in one statement, which not
+		/// every database can express.
+		/// </para>
 		/// </remarks>
 		/// <example>
 		/// <code>
@@ -54,7 +63,8 @@ namespace LinqToDB
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="selector">The results to read.</param>
 		/// <returns>The results.</returns>
-		/// <exception cref="LinqToDBException">The context has pending <see cref="IDataContext.QueryHints"/> or <see cref="IDataContext.NextQueryHints"/>.</exception>
+		/// <exception cref="LinqToDBException">The context has pending <see cref="IDataContext.QueryHints"/> or <see cref="IDataContext.NextQueryHints"/>, or the provider cannot translate the parts as one statement.</exception>
+		/// <exception cref="InvalidOperationException">A <c>First()</c> or <c>Single()</c> in the selector found no row, or a part read with <c>Single()</c> or <c>SingleOrDefault()</c> found more than one.</exception>
 		[Pure]
 		public static T QueryBatch<T>(
 							this IDataContext dataContext,
@@ -78,8 +88,10 @@ namespace LinqToDB
 		/// <param name="selector">The results to read.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>The results.</returns>
-		/// <exception cref="LinqToDBException">The context has pending <see cref="IDataContext.QueryHints"/> or <see cref="IDataContext.NextQueryHints"/>.</exception>
+		/// <exception cref="LinqToDBException">The context has pending <see cref="IDataContext.QueryHints"/> or <see cref="IDataContext.NextQueryHints"/>, or the provider cannot translate the parts as one statement.</exception>
+		/// <exception cref="InvalidOperationException">A <c>First()</c> or <c>Single()</c> in the selector found no row, or a part read with <c>Single()</c> or <c>SingleOrDefault()</c> found more than one.</exception>
 		[Pure]
+		[AsyncExtensions.ElementAsync]
 		public static Task<T> QueryBatchAsync<T>(
 							this IDataContext dataContext,
 			[InstantHandle] Expression<Func<T>> selector,
@@ -258,6 +270,7 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>The results, in argument order.</returns>
 		[Pure]
+		[AsyncExtensions.ElementAsync]
 		public static Task<(T1, T2)> QueryBatchAsync<T1, T2>(
 							this IDataContext    dataContext,
 			[InstantHandle] Expression<Func<T1>> result1,
@@ -280,6 +293,7 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>The results, in argument order.</returns>
 		[Pure]
+		[AsyncExtensions.ElementAsync]
 		public static Task<(T1, T2, T3)> QueryBatchAsync<T1, T2, T3>(
 							this IDataContext    dataContext,
 			[InstantHandle] Expression<Func<T1>> result1,
@@ -305,6 +319,7 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>The results, in argument order.</returns>
 		[Pure]
+		[AsyncExtensions.ElementAsync]
 		public static Task<(T1, T2, T3, T4)> QueryBatchAsync<T1, T2, T3, T4>(
 							this IDataContext    dataContext,
 			[InstantHandle] Expression<Func<T1>> result1,
@@ -333,6 +348,7 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>The results, in argument order.</returns>
 		[Pure]
+		[AsyncExtensions.ElementAsync]
 		public static Task<(T1, T2, T3, T4, T5)> QueryBatchAsync<T1, T2, T3, T4, T5>(
 							this IDataContext    dataContext,
 			[InstantHandle] Expression<Func<T1>> result1,
@@ -364,6 +380,7 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>The results, in argument order.</returns>
 		[Pure]
+		[AsyncExtensions.ElementAsync]
 		public static Task<(T1, T2, T3, T4, T5, T6)> QueryBatchAsync<T1, T2, T3, T4, T5, T6>(
 							this IDataContext    dataContext,
 			[InstantHandle] Expression<Func<T1>> result1,
@@ -398,6 +415,7 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>The results, in argument order.</returns>
 		[Pure]
+		[AsyncExtensions.ElementAsync]
 		public static Task<(T1, T2, T3, T4, T5, T6, T7)> QueryBatchAsync<T1, T2, T3, T4, T5, T6, T7>(
 							this IDataContext    dataContext,
 			[InstantHandle] Expression<Func<T1>> result1,

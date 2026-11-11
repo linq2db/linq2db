@@ -68,9 +68,7 @@ namespace Tests
 		{
 			return db is DataConnection or DataContext
 				&& db.SqlProviderFlags.IsMultiStatementBatchSupported
-				&& db.SqlProviderFlags.IsMultipleResultSetsSupported
-				&& db.QueryHints.Count == 0
-				&& db.NextQueryHints.Count == 0;
+				&& db.SqlProviderFlags.IsMultipleResultSetsSupported;
 		}
 	}
 }

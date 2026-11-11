@@ -93,6 +93,24 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
+			// A strict scalar read may need a marker of its row, which only an outer join leaves when the source is empty.
+			if (buildInfo.Parent != null
+				&& methodKind is MethodKind.First or MethodKind.Single
+				&& builder.GetTranslationModifier().StrictElementOperators
+				&& builder.MappingSchema.IsScalarType(methodCall.Type))
+			{
+				cardinality |= SourceCardinality.Zero;
+			}
+
+			// A strict Single finds a second row by the row it multiplies. Claiming one row would let the optimizer fold the
+			// join into scalar subqueries that read the first row (YDB), so such a join stays one or is refused.
+			if (buildInfo.Parent != null
+				&& methodKind is MethodKind.Single or MethodKind.SingleOrDefault
+				&& builder.GetTranslationModifier().StrictElementOperators)
+			{
+				cardinality = (cardinality | SourceCardinality.Many) & ~SourceCardinality.One;
+			}
+
 			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, argument)
 			{
 				SourceCardinality = cardinality,
@@ -342,27 +360,64 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var projected = base.MakeExpression(path, flags);
 
-				// The value is read from a subquery, which SQL reads as NULL when it finds no row. Where the value itself cannot
-				// be NULL, that NULL is the empty source; a window value (LAG at a partition edge) is NULL whatever its
-				// arguments, so it is not checked. The slot is read as nullable, as the Min / Max check reads it, so a strategy
-				// that rebuilds the reader keeps the NULL.
+				// SQL reads a subquery that finds no row as NULL. A NOT NULL column read as is has no other NULL, so its value
+				// shows the row; any other value can be NULL by itself or pass a converter, so a marker beside it shows the row.
+				// A Single reads the marker too: the join behind it makes a second row a second batch row, which the batch's own
+				// Single refuses, where a scalar subquery leaves that to the server.
+				// A value that is no column of the row - a constant, a client computation - shows nothing of the row at all.
+				// A value slot is read as nullable, as the Min / Max check reads it, so a strategy that rebuilds the reader keeps
+				// the NULL.
 				if (TranslationModifier.StrictElementOperators
 					&& _methodKind is MethodKind.First or MethodKind.Single
 					&& flags.IsExpression()
-					&& !flags.IsForSetProjection()
-					&& projected is SqlPlaceholderExpression placeholder
-					&& !placeholder.Type.IsNullableOrReferenceType
-					&& !placeholder.Sql.CanBeNullable(NullabilityContext.GetContext(placeholder.SelectQuery))
-					&& !QueryHelper.ContainsWindowFunction(QueryHelper.GetUnderlyingExpression(placeholder.Sql) ?? placeholder.Sql))
+					&& !flags.IsForSetProjection())
 				{
-					return Expression.Call(
-						typeof(FirstSingleContext),
-						nameof(ThrowIfEmpty),
-						[placeholder.Type],
-						placeholder.WithType(placeholder.Type.AsNullable()));
+					var placeholder = projected as SqlPlaceholderExpression;
+
+					if (placeholder != null && _methodKind == MethodKind.First && IsNotNullColumn(placeholder))
+					{
+						return Expression.Call(
+							typeof(FirstSingleContext),
+							nameof(ThrowIfEmpty),
+							[placeholder.Type],
+							placeholder.WithType(placeholder.Type.AsNullable()));
+					}
+
+					if (Sequence is DefaultIfEmptyBuilder.DefaultIfEmptyContext defaultIfEmpty
+						&& (placeholder != null || SequenceHelper.IsSameContext(path, this)))
+					{
+						var markerPath = SequenceHelper.CreateSpecialProperty(
+							new ContextRefExpression(defaultIfEmpty.ElementType, defaultIfEmpty),
+							typeof(int?),
+							DefaultIfEmptyBuilder.DefaultIfEmptyContext.NotNullPropName);
+
+						var marker = Builder.BuildExpression(defaultIfEmpty, markerPath);
+
+						return placeholder != null && !placeholder.Type.IsNullableOrReferenceType
+							? Expression.Call(
+								typeof(FirstSingleContext),
+								nameof(ThrowIfNoRowValue),
+								[placeholder.Type],
+								marker,
+								placeholder.WithType(placeholder.Type.AsNullable()))
+							: Expression.Call(
+								typeof(FirstSingleContext),
+								nameof(ThrowIfNoRow),
+								[projected.Type],
+								marker,
+								projected);
+					}
 				}
 
 				return projected;
+			}
+
+			static bool IsNotNullColumn(SqlPlaceholderExpression placeholder)
+			{
+				return !placeholder.Type.IsNullableOrReferenceType
+					&& QueryHelper.GetUnderlyingExpression(placeholder.Sql) is SqlField field
+					&& field.ColumnDescriptor?.ValueConverter == null
+					&& !placeholder.Sql.CanBeNullable(NullabilityContext.GetContext(placeholder.SelectQuery));
 			}
 
 			static TValue ThrowIfEmpty<TValue>(TValue? value)
@@ -372,6 +427,23 @@ namespace LinqToDB.Internal.Linq.Builder
 					throw new InvalidOperationException("Sequence contains no elements");
 
 				return value.Value;
+			}
+
+			static TValue ThrowIfNoRowValue<TValue>(int? marker, TValue? value)
+				where TValue : struct
+			{
+				if (marker is null)
+					throw new InvalidOperationException("Sequence contains no elements");
+
+				return value.GetValueOrDefault();
+			}
+
+			static TValue ThrowIfNoRow<TValue>(int? marker, TValue value)
+			{
+				if (marker is null)
+					throw new InvalidOperationException("Sequence contains no elements");
+
+				return value;
 			}
 
 			public override IBuildContext Clone(CloningContext context)
