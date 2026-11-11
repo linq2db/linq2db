@@ -24,7 +24,7 @@ This API available since linq2db 1.9.0. It superseeds previous version of API wi
 
 ## Introduction
 
-Merge is an atomic operation to update table (target) content using other table (source). Merge API provides methods to build Merge command and execute it. Command could have following elements (availability depends on database engine, see [[support table|Merge-API-:-Background-Information-and-Providers-Support]] for more details):
+Merge is an atomic operation to update table (target) content using other table (source). Merge API provides methods to build Merge command and execute it. Command could have following elements (availability depends on database engine, see [support table](xref:Merge-API-Background) for more details):
 
 - target. Required element. Could be a table or updateable view
 - source. Required element. Could be a table, query or client-side collection
