@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB;
@@ -361,6 +362,58 @@ namespace Tests.Linq
 			result.FirstId.ShouldBe(firstId);
 			result.Children
 				.Select(c => c.ChildID)
+				.ShouldBe(childIds);
+		}
+
+		public enum EagerElementRead
+		{
+			LoadWithFirst,
+			LoadWithSingle,
+			LoadWithFirstOrDefault,
+			ProjectedFirst,
+		}
+
+		// Validating the read as a subquery (SQLite has no APPLY) clones the context chain of its eager load, which leads
+		// back to the select's own context; the cloning is the builder's, so one provider shows it.
+		[Test]
+		public async Task ElementReadWithEagerLoadedCollection([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] EagerElementRead read, [Values] bool isAsync)
+		{
+			using var db = GetDataContext(context);
+
+			Expression<Func<Parent>> selector = read switch
+			{
+				EagerElementRead.LoadWithFirst          => () => db.Parent
+					.LoadWith(p => p.Children)
+					.Where(p => p.ParentID == 3)
+					.First(),
+				EagerElementRead.LoadWithSingle         => () => db.Parent
+					.LoadWith(p => p.Children)
+					.Where(p => p.ParentID == 3)
+					.Single(),
+				EagerElementRead.LoadWithFirstOrDefault => () => db.Parent
+					.LoadWith(p => p.Children)
+					.Where(p => p.ParentID == 3)
+					.FirstOrDefault()!,
+				EagerElementRead.ProjectedFirst         => () => db.Parent
+					.Where(p => p.ParentID == 3)
+					.Select(p => new Parent { ParentID = p.ParentID, Children = p.Children.ToList() })
+					.First(),
+				_                                       => throw new ArgumentOutOfRangeException(nameof(read)),
+			};
+
+			var parent = isAsync
+				? await db.SelectAsync(selector)
+				: db.Select(selector);
+
+			var childIds = Child
+				.Where(c => c.ParentID == 3)
+				.Select(c => c.ChildID)
+				.OrderBy(id => id);
+
+			parent.ParentID.ShouldBe(3);
+			parent.Children
+				.Select(c => c.ChildID)
+				.OrderBy(id => id)
 				.ShouldBe(childIds);
 		}
 
