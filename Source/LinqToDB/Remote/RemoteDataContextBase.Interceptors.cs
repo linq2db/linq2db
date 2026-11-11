@@ -27,6 +27,9 @@ namespace LinqToDB.Remote
 			ThrowOnDisposed();
 
 			this.AddInterceptorImpl(interceptor);
+
+			// interceptors that take part in query translation are part of the configuration id
+			_configurationID = null;
 		}
 
 		/// <inheritdoc cref="IDataContext.RemoveInterceptor(IInterceptor)"/>
@@ -35,6 +38,8 @@ namespace LinqToDB.Remote
 			ThrowOnDisposed();
 
 			this.RemoveInterceptorImpl(interceptor);
+
+			_configurationID = null;
 		}
 	}
 }

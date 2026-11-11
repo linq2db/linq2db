@@ -143,6 +143,22 @@ namespace LinqToDB.Internal.Linq
 			return exposed;
 		}
 
+		// A query found by the lookup with the unexposed tree was stored by a context for which exposing that tree changed
+		// nothing, so the tree is what ExposeAndPrepareExpression would hand to the interceptor. The interceptor instance
+		// is not part of the cache key: if this context's interceptor rewrites the exposed tree, the found query was
+		// translated without that rewrite and must not be used.
+		static bool IsRewrittenOnExpose(IDataContext dataContext, Expression expr)
+		{
+			if (dataContext is IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } interceptor })
+			{
+				var processed = interceptor.ProcessExpression(expr, new QueryExpressionArgs(dataContext, expr, QueryExpressionArgs.ExpressionKind.ExposedQuery));
+
+				return !ReferenceEquals(processed, expr);
+			}
+
+			return false;
+		}
+
 		public static Query<T> GetQuery(IDataContext dataContext, ref IQueryExpressions expressions, out bool dependsOnParameters)
 		{
 			using var mt = ActivityService.Start(ActivityID.GetQueryTotal);
@@ -188,7 +204,8 @@ namespace LinqToDB.Internal.Linq
 					queryFlags = dataContext.GetQueryFlags();
 					using (ActivityService.Start(ActivityID.GetQueryFindFind))
 					{
-						if (QueryCache.Default.TryFind(typeof(T), dataContext, runtimeExpressions, queryFlags, out var foundQuery, out var matchedExpressions))
+						if (QueryCache.Default.TryFind(typeof(T), dataContext, runtimeExpressions, queryFlags, out var foundQuery, out var matchedExpressions)
+							&& !IsRewrittenOnExpose(dataContext, expr))
 						{
 							expressions = matchedExpressions;
 							return (Query<T>)foundQuery;

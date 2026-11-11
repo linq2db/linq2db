@@ -30,6 +30,9 @@ namespace LinqToDB.Data
 			CheckAndThrowOnDisposed();
 
 			this.AddInterceptorImpl(interceptor);
+
+			// interceptors that take part in query translation are part of the configuration id
+			_configurationID = null;
 		}
 
 		public Action<IInterceptor>? OnRemoveInterceptor { get; set; }
@@ -40,6 +43,9 @@ namespace LinqToDB.Data
 			CheckAndThrowOnDisposed();
 
 			this.RemoveInterceptorImpl(interceptor);
+
+			_configurationID = null;
+
 			OnRemoveInterceptor?.Invoke(interceptor);
 		}
 	}
