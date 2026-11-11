@@ -327,19 +327,75 @@ namespace Tests.Linq
 				{
 					p.ParentID,
 					Next  = db.Select(() => p.ParentID + 1),
-					Self  = db.Select(() => p),
 					Child = db.Select(() => db.Child
 						.Where(c => c.ParentID == p.ParentID)
 						.OrderBy(c => c.ChildID)
 						.FirstOrDefault()),
 				})
 				.ToList()
-				.Select(r => $"{r.ParentID}:{r.Next}:{r.Self.ParentID}:{r.Child?.ChildID}")
+				.Select(r => $"{r.ParentID}:{r.Next}:{r.Child?.ChildID}")
 				.ToArray();
 
 			var expected = Parent
 				.OrderBy(p => p.ParentID)
-				.Select(p => $"{p.ParentID}:{p.ParentID + 1}:{p.ParentID}:{Child.Where(c => c.ParentID == p.ParentID).OrderBy(c => c.ChildID).FirstOrDefault()?.ChildID}")
+				.Select(p => $"{p.ParentID}:{p.ParentID + 1}:{Child.Where(c => c.ParentID == p.ParentID).OrderBy(c => c.ChildID).FirstOrDefault()?.ChildID}")
+				.ToArray();
+
+			result.ShouldBe(expected);
+		}
+
+		// Beside an eager-loaded collection, inside one, and inside one that reads the enclosing row only through the nested
+		// select.
+		[Test]
+		public void NestedSelectWithEagerLoadedCollections(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context,
+			[Values(EagerLoadingStrategy.Default, EagerLoadingStrategy.KeyedQuery)] EagerLoadingStrategy strategy)
+		{
+			AssertNestedSelectWithEagerLoadedCollections(context, strategy);
+		}
+
+		[Test]
+		[ActiveIssue(6294, ErrorType = typeof(InvalidOperationException), ErrorMessage = "Invalid SQL.")]
+		public void NestedSelectWithEagerLoadedCollectionsUnderCteUnion([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			AssertNestedSelectWithEagerLoadedCollections(context, EagerLoadingStrategy.CteUnion);
+		}
+
+		void AssertNestedSelectWithEagerLoadedCollections(string context, EagerLoadingStrategy strategy)
+		{
+			using var db = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(strategy));
+
+			var result = db.Parent
+				.OrderBy(p => p.ParentID)
+				.Select(p => new
+				{
+					p.ParentID,
+					Count    = db.Select(() => db.Child.Count(c => c.ParentID == p.ParentID)),
+					Children = p.Children
+						.OrderBy(c => c.ChildID)
+						.Select(c => new
+						{
+							c.ChildID,
+							Count = db.Select(() => db.GrandChild.Count(g => g.ChildID == c.ChildID)),
+							Next  = db.Select(() => c.ChildID + 1),
+						})
+						.ToList(),
+					All      = db.Child
+						.OrderBy(c => c.ChildID)
+						.Select(c => new
+						{
+							c.ChildID,
+							Count = db.Select(() => db.GrandChild.Count(g => g.ParentID == p.ParentID)),
+						})
+						.ToList(),
+				})
+				.ToList()
+				.Select(r => $"{r.ParentID}:{r.Count}:{string.Join(",", r.Children.Select(c => $"{c.ChildID}={c.Count}/{c.Next}"))}:{string.Join(",", r.All.Select(c => $"{c.ChildID}={c.Count}"))}")
+				.ToArray();
+
+			var expected = Parent
+				.OrderBy(p => p.ParentID)
+				.Select(p => $"{p.ParentID}:{Child.Count(c => c.ParentID == p.ParentID)}:{string.Join(",", Child.Where(c => c.ParentID == p.ParentID).OrderBy(c => c.ChildID).Select(c => $"{c.ChildID}={GrandChild.Count(g => g.ChildID == c.ChildID)}/{c.ChildID + 1}"))}:{string.Join(",", Child.OrderBy(c => c.ChildID).Select(c => $"{c.ChildID}={GrandChild.Count(g => g.ParentID == p.ParentID)}"))}")
 				.ToArray();
 
 			result.ShouldBe(expected);
