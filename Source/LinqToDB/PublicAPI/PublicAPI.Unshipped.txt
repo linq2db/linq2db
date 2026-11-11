@@ -81,6 +81,7 @@ LinqToDB.Internal.DataProvider.SQLite.SQLiteDmlService.SQLiteDmlService() -> voi
 LinqToDB.Internal.DataProvider.Sybase.SybaseDmlService
 LinqToDB.Internal.DataProvider.Sybase.SybaseDmlService.SybaseDmlService() -> void
 LinqToDB.Internal.Linq.IQueryRunner.ExecutionContext.get -> LinqToDB.Internal.SqlProvider.SqlCommandExecutionContext?
+LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSetOperators(LinqToDB.Internal.SqlQuery.SqlStatement! statement, int indent, LinqToDB.Internal.SqlProvider.BasicSqlBuilder.ColumnAliasMode aliasMode) -> void
 LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSql(LinqToDB.Internal.SqlQuery.SqlStatement! statement, System.Text.StringBuilder! sb, LinqToDB.Internal.SqlProvider.ISqlBuilderRenderContext! renderContext, LinqToDB.Internal.SqlQuery.AliasesContext! aliases, LinqToDB.Internal.SqlQuery.NullabilityContext? nullabilityContext, int startIndent = 0) -> void
 LinqToDB.Internal.SqlProvider.BasicSqlBuilder.RenderContext.get -> LinqToDB.Internal.SqlProvider.ISqlBuilderRenderContext!
 LinqToDB.Internal.SqlProvider.BasicSqlBuilder.RenderContext.set -> void

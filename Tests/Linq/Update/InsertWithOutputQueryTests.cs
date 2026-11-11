@@ -1061,6 +1061,28 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		public void ConcatSourceOutput([IncludeDataSources(true, FeatureOutputQuery)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var source = db.CreateLocalTable(GetSourceData());
+			using var target = db.CreateLocalTable<TargetTable>();
+
+			var output = source
+				.Where(s => s.Id <= 2)
+				.Concat(source.Where(s => s.Id >= 9))
+				.InsertWithOutputQuery(target, s => new TargetTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr })
+				.Select(t => t.Id)
+				.ToArray();
+
+			output
+				.OrderBy(id => id)
+				.ShouldBe(new[] { 1, 2, 9, 10 });
+			target
+				.Count()
+				.ShouldBe(4);
+		}
+
+		[Test]
 		public void CorrelatedCallThrows([IncludeDataSources(FeatureOutputQuery)] string context, [Values] bool fromSource)
 		{
 			using var db     = GetDataContext(context);

@@ -262,6 +262,7 @@ namespace LinqToDB.Internal.SqlProvider
 			RenderContext       = renderContext;
 			Indent              = indent;
 			AliasMode           = aliasMode;
+			_setOperatorsBuilt  = false;
 
 			NullabilityContext = nullabilityContext ?? NullabilityContext.GetContext(statement.SelectQuery);
 			if (statement.SelectQuery != null)
@@ -269,22 +270,8 @@ namespace LinqToDB.Internal.SqlProvider
 
 			BuildSql();
 
-			if (Statement.SelectQuery is { HasSetOperators: true })
-			{
-				foreach (var union in Statement.SelectQuery.SetOperators)
-				{
-					AppendIndent();
-					BuildSetOperation(union.Operation, sb);
-					sb.AppendLine();
-
-					var sqlBuilder = ((BasicSqlBuilder)CreateSqlBuilder());
-					sqlBuilder.BuildSql(
-						new SqlSelectStatement(union.SelectQuery) { ParentStatement = statement }, sb,
-						renderContext, indent,
-						aliasMode, NullabilityContext);
-					MergeSqlBuilderData(sqlBuilder);
-				}
-			}
+			if (!_setOperatorsBuilt)
+				BuildSetOperators(statement, indent, aliasMode);
 
 			switch (statement.QueryType)
 			{
@@ -421,6 +408,34 @@ namespace LinqToDB.Internal.SqlProvider
 		protected virtual void BuildRawStatement(SqlRawStatement statement)
 		{
 			BuildExpression(statement.Expression);
+		}
+
+		bool _setOperatorsBuilt;
+
+		/// <summary>
+		/// Renders the set operators of the statement's query. An insert calls it right after its source, ahead of
+		/// <c>RETURNING</c> or the identity clause; a statement that does not call it gets them after the whole statement.
+		/// </summary>
+		protected void BuildSetOperators(SqlStatement statement, int indent, ColumnAliasMode aliasMode)
+		{
+			if (statement.SelectQuery is not { HasSetOperators: true } selectQuery)
+				return;
+
+			_setOperatorsBuilt = true;
+
+			foreach (var union in selectQuery.SetOperators)
+			{
+				AppendIndent();
+				BuildSetOperation(union.Operation, StringBuilder);
+				StringBuilder.AppendLine();
+
+				var sqlBuilder = ((BasicSqlBuilder)CreateSqlBuilder());
+				sqlBuilder.BuildSql(
+					new SqlSelectStatement(union.SelectQuery) { ParentStatement = statement }, StringBuilder,
+					RenderContext, indent,
+					aliasMode, NullabilityContext);
+				MergeSqlBuilderData(sqlBuilder);
+			}
 		}
 
 		protected void BuildSqlForUnion()
@@ -605,6 +620,8 @@ namespace LinqToDB.Internal.SqlProvider
 				BuildStep = Step.OrderByClause;   BuildOrderByClause(statement.SelectQuery);
 				BuildStep = Step.OffsetLimit;     BuildOffsetLimit(statement.SelectQuery);
 				BuildStep = Step.QueryExtensions; BuildSubQueryExtensions(statement);
+
+				BuildSetOperators(statement, Indent, AliasMode);
 			}
 
 			if (insertClause.WithIdentity)
@@ -633,6 +650,8 @@ namespace LinqToDB.Internal.SqlProvider
 				BuildStep = Step.OrderByClause;   BuildOrderByClause(statement.SelectQuery);
 				BuildStep = Step.OffsetLimit;     BuildOffsetLimit(statement.SelectQuery);
 				BuildStep = Step.QueryExtensions; BuildSubQueryExtensions(statement);
+
+				BuildSetOperators(statement, Indent, AliasMode);
 			}
 
 			if (insertClause.WithIdentity)
