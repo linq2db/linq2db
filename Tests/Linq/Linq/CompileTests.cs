@@ -60,6 +60,18 @@ namespace Tests.Linq
 			result.Children.Count.ShouldBe(3);
 		}
 
+		// Without a collection, too.
+		[Test]
+		public void CompiledScalarSelect([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var query = CompiledQuery.Compile((ITestDataContext db, int min) => db.Select(() => db.Parent.Count(p => p.ParentID >= min)));
+
+			using var db = GetDataContext(context);
+
+			query(db, 3).ShouldBe(Parent.Count(p => p.ParentID >= 3));
+			query(db, 5).ShouldBe(Parent.Count(p => p.ParentID >= 5));
+		}
+
 		[Test]
 		public void CompiledTest2([DataSources] string context)
 		{

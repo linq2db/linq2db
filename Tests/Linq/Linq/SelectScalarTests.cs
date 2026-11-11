@@ -315,6 +315,36 @@ namespace Tests.Linq
 			result.ShouldBe(expected);
 		}
 
+		// A nested select that reads no table, or reads an entity, is a value of the enclosing row too.
+		[Test]
+		public void NestedValueAndEntityInQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var result = db.Parent
+				.OrderBy(p => p.ParentID)
+				.Select(p => new
+				{
+					p.ParentID,
+					Next  = db.Select(() => p.ParentID + 1),
+					Self  = db.Select(() => p),
+					Child = db.Select(() => db.Child
+						.Where(c => c.ParentID == p.ParentID)
+						.OrderBy(c => c.ChildID)
+						.FirstOrDefault()),
+				})
+				.ToList()
+				.Select(r => $"{r.ParentID}:{r.Next}:{r.Self.ParentID}:{r.Child?.ChildID}")
+				.ToArray();
+
+			var expected = Parent
+				.OrderBy(p => p.ParentID)
+				.Select(p => $"{p.ParentID}:{p.ParentID + 1}:{p.ParentID}:{Child.Where(c => c.ParentID == p.ParentID).OrderBy(c => c.ChildID).FirstOrDefault()?.ChildID}")
+				.ToArray();
+
+			result.ShouldBe(expected);
+		}
+
 		[Test]
 		public void SubQueryAggregate([DataSources(TestProvName.AllAccess)]
 			string context)
