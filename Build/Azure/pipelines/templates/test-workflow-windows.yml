@@ -17,7 +17,7 @@ parameters:
   tfms:
   - { flag: netfx,  gate: netfx,       label: 'NETFX',   dir: '$(netfx_tfm)', trx: 'netfx',   sdk: '',     preview: false, pr_main: true  }
   - { flag: net100, gate: modern_tfms, label: '.NET 10', dir: 'net10.0',      trx: 'net10.0', sdk: '10.x', preview: false, pr_main: false }
-  - { flag: net110, gate: modern_tfms, label: '.NET 11', dir: 'net11.0',      trx: 'net11.0', sdk: '11.x', preview: true,  pr_main: true  }
+  - { flag: net110, gate: modern_tfms, label: '.NET 11', dir: 'net11.0',      trx: 'net11.0', sdk: '11.x', preview: false,  pr_main: true  }
 
 steps:
 - checkout: none

@@ -35,7 +35,6 @@ jobs:
     inputs:
       packageType: sdk
       version: 11.x
-      includePreviewVersions: true
 
   - task: DotNetCoreCLI@2
     inputs:
