@@ -30,6 +30,8 @@ namespace LinqToDB.Internal.DataProvider.Access
 		public    override bool             CanLowerIntervalShift       => true;
 		protected override bool             IsTickArithmeticSupported   => true;
 
+		protected override bool CanNegateSortKeyUnderDistinct => true;
+
 		protected override string? DatePartName(SqlIntervalUnit unit)
 		{
 			return unit == SqlIntervalUnit.Millisecond ? "ms" : base.DatePartName(unit);

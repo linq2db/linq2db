@@ -355,6 +355,7 @@ override LinqToDB.Internal.DataProvider.Access.AccessLibRedSqlBuilder.SupportsCo
 override LinqToDB.Internal.DataProvider.Access.AccessLibRedSqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
 override LinqToDB.Internal.DataProvider.Access.AccessLibRedSqlExpressionConvertVisitor.CanLowerIntervalShift.get -> bool
 override LinqToDB.Internal.DataProvider.Access.AccessLibRedSqlExpressionConvertVisitor.CanMeasureDifferenceInTicks.get -> bool
+override LinqToDB.Internal.DataProvider.Access.AccessLibRedSqlExpressionConvertVisitor.CanNegateSortKeyUnderDistinct.get -> bool
 override LinqToDB.Internal.DataProvider.Access.AccessLibRedSqlExpressionConvertVisitor.ConvertSqlBinaryExpression(LinqToDB.Internal.SqlQuery.SqlBinaryExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.Internal.DataProvider.Access.AccessLibRedSqlExpressionConvertVisitor.CountDateBoundaries(LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, LinqToDB.Internal.SqlQuery.ISqlExpression! start, LinqToDB.Internal.SqlQuery.ISqlExpression! end) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.DataProvider.Access.AccessLibRedSqlExpressionConvertVisitor.DatePartName(LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit) -> string?
@@ -400,6 +401,7 @@ override LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.Lower
 static LinqToDB.Internal.DataProvider.LibRedProviderAdapter.GetInstance() -> LinqToDB.Internal.DataProvider.LibRedProviderAdapter!
 virtual LinqToDB.Internal.DataProvider.Access.AccessSqlBuilderBase.IsCaseExpressionSupported.get -> bool
 virtual LinqToDB.Internal.DataProvider.Access.AccessSqlBuilderBase.IsCommentSupported.get -> bool
+virtual LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.CanNegateSortKeyUnderDistinct.get -> bool
 virtual LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.DatePartName(LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit) -> string?
 virtual LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.IsTickArithmeticSupported.get -> bool
 virtual LinqToDB.Internal.DataProvider.Access.AccessSqlOptimizer.CorrectExistsAndIn(LinqToDB.Internal.SqlQuery.SqlStatement! statement, LinqToDB.DataOptions! dataOptions, LinqToDB.Mapping.MappingSchema! mappingSchema) -> LinqToDB.Internal.SqlQuery.SqlStatement!
