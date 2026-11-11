@@ -93,6 +93,12 @@ namespace Tests.xUpdate
 			[Column]               public int Value { get; set; }
 		}
 
+		[Table("InsertOutputQueryIdentity")]
+		sealed class IdentityTargetValueOnly
+		{
+			[Column] public int Value { get; set; }
+		}
+
 		[Table("InsertOutputQueryTph")]
 		[InheritanceMapping(Code = 1, Type = typeof(TphBase), IsDefault = true)]
 		[InheritanceMapping(Code = 2, Type = typeof(TphDerived))]
@@ -1033,6 +1039,25 @@ namespace Tests.xUpdate
 			target
 				.Count()
 				.ShouldBe(3);
+		}
+
+		[Test]
+		public void DynamicColumnOverOutput([IncludeDataSources(true, FeatureOutputQuery)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var target = db.CreateLocalTable<IdentityTarget>();
+
+			// Id is not mapped by IdentityTargetValueOnly: it is read from the output as a dynamic column
+			var output = db.GetTable<IdentityTargetValueOnly>()
+				.InsertWithOutputQuery(() => new IdentityTargetValueOnly { Value = 5 })
+				.Select(t => new { Id = Sql.Property<int>(t, "Id"), t.Value })
+				.ToArray();
+
+			var inserted = target.Single();
+
+			output.Length.ShouldBe(1);
+			output[0].Id.ShouldBe(inserted.Id);
+			output[0].Value.ShouldBe(5);
 		}
 
 		[Test]

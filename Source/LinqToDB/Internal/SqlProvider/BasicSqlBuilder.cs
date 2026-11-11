@@ -564,6 +564,7 @@ namespace LinqToDB.Internal.SqlProvider
 				if (e is SqlField field && field.Table == visitor.Context.table)
 				{
 					var targetField = visitor.Context.target.Fields.Find(f => string.Equals(f.Name, field.Name, StringComparison.Ordinal))
+						?? (field.IsDynamic ? new SqlField(field) { Table = visitor.Context.target } : null)
 						?? throw new InvalidOperationException($"Field '{field.Name}' not found in table '{visitor.Context.target}'.");
 
 					return visitor.Context.special
