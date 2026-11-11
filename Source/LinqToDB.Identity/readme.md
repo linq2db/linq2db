@@ -38,7 +38,7 @@ existing Identity database.
   EF Core created, no migration required.
 * **Fast, type-safe** SQL via linq2db; automatic optimistic concurrency (the `ConcurrencyStamp` is a linq2db
   optimistic-lock column).
-* Works over the **direct** connection and the **remote [LinqService](https://linq2db.github.io/articles/general/Client-Server.html)** path.
+* Works over the **direct** connection and the **remote LinqService** path.
 * Arbitrary key types (`string`, `Guid`, `int`, `long`, …).
 
 ## Install
