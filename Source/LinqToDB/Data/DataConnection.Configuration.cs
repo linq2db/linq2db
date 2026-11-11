@@ -10,6 +10,7 @@ using LinqToDB.Data.RetryPolicy;
 using LinqToDB.DataProvider;
 using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Interceptors;
 
 namespace LinqToDB.Data
 {
@@ -493,6 +494,7 @@ namespace LinqToDB.Data
 						.Add(ConfigurationString)
 						.Add(Options)
 						.Add(GetType())
+						.AddTranslationInterceptors(this)
 						.CreateID();
 				}
 

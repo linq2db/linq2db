@@ -82,7 +82,12 @@ namespace LinqToDB
 		void AddInterceptor(IInterceptor interceptor, bool addToOptions)
 		{
 			if (addToOptions)
+			{
 				Options = Options.UseInterceptor(interceptor);
+
+				// the configuration id is computed from Options
+				_configurationID = null;
+			}
 
 			switch (interceptor)
 			{
@@ -126,7 +131,8 @@ namespace LinqToDB
 		{
 			AssertDisposed();
 
-			Options = Options.RemoveInterceptor(interceptor);
+			Options          = Options.RemoveInterceptor(interceptor);
+			_configurationID = null;
 
 			this.RemoveInterceptorImpl(interceptor);
 		}

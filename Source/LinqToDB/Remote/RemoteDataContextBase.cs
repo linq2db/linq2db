@@ -332,6 +332,7 @@ namespace LinqToDB.Remote
 						.Add(_msID = ((IConfigurationID)MappingSchema).ConfigurationID)
 						.Add(Options)
 						.Add(GetType())
+						.AddTranslationInterceptors(this)
 						.CreateID();
 				}
 
