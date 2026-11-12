@@ -5,7 +5,7 @@ parameters:
   # Linux has no netfx leg and is x64-only, so the entries carry no arch or netfx handling.
   tfms:
   - { flag: net100, label: '.NET 10', dir: 'net10.0', sdk: '10.x', preview: false, pr_main: false }
-  - { flag: net110, label: '.NET 11', dir: 'net11.0', sdk: '11.x', preview: false,  pr_main: true  }
+  - { flag: net110, label: '.NET 11', dir: 'net11.0', sdk: '11.x', preview: false, pr_main: true  }
 
 steps:
 - checkout: none
