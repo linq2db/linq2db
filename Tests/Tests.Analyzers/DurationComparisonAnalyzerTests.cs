@@ -1044,7 +1044,7 @@ namespace Tests.Analyzers
 
 		// The whole-millisecond rounding reading is decided from symbol presence, so the only thing that can vary it
 		// is the target framework. The snippet declares its own LinqToDB.Mapping types because the real assembly is
-		// the net8.0 build and cannot be referenced from a lower reference set; the analyzer resolves them through
+		// the net10.0 build and cannot be referenced from a lower reference set; the analyzer resolves them through
 		// GetTypeByMetadataName either way.
 		const string SubMillisecondModel = """
 			using System;
@@ -1080,8 +1080,8 @@ namespace Tests.Analyzers
 
 		const string SubMillisecondComparison = "r.InMillis == TimeSpan.FromMilliseconds(0.5)";
 
-		// .NET 9 gave every From* factory a component form, and these shapes do not exist on the Net80 pack the
-		// rest of the fixture compiles against. Every component must be written out: an expression tree may not
+		// .NET 9 gave every From* factory a component form, so these tests pin Net90, the first pack that has
+		// these shapes. Every component must be written out: an expression tree may not
 		// contain a call that uses an optional argument (CS0854), so the abbreviated FromSeconds(1, 500) does not
 		// compile in the only context this rule analyses. Same self-declared anchors as above, for the same reason.
 		const string ComponentFactoryModel = """

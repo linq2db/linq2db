@@ -16,7 +16,7 @@ namespace LinqToDB.Analyzers
 	/// </summary>
 	/// <remarks>
 	/// Constrained by both projects at once: Roslyn 5.0 API surface only (this project pins 5.0.0 while
-	/// CodeGenerators takes 5.6.0), and the helper types are nested so one file declares one top-level
+	/// CodeGenerators takes 5.9.0), and the helper types are nested so one file declares one top-level
 	/// type (MA0048) and one link suffices.
 	/// </remarks>
 	internal static class ServerSideOnlyContract

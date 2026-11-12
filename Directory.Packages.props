@@ -17,7 +17,10 @@
 		<!--In-box .NET package versions that track $(TargetFramework). Two rows per supported band is the
 		    whole per-version cost: every package whose major follows the runtime reads $(BandLatest*) and
 		    needs no condition of its own. Empty on net462/netstandard2.0, which is how the rows below
-		    select between the modern and the legacy surface.-->
+		    select between the modern and the legacy surface. Properties evaluate before the project body,
+		    so the band is seen only by a TFM from a TargetFrameworks inner build or Directory.Build.props;
+		    a <TargetFramework> set in the project body, or a platform TFM (net10.0-windows7.0), reads it
+		    as empty and gets the legacy rows.-->
 		<!--initial version, referenced from nuspec-->
 		<BandLatestForNuget Condition="'$(TargetFramework)'=='net10.0'">10.0.0</BandLatestForNuget>
 		<BandLatestForNuget Condition="'$(TargetFramework)'=='net11.0'">11.0.0</BandLatestForNuget>

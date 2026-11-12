@@ -46,7 +46,7 @@
 		    actionable while the same source also compiles for net462/netstandard2.0/net10.0, where those
 		    overloads do not exist - adding the argument is a compile error on every other TFM. Suppressed
 		    for this TFM only; lift it once Meziantou.Polyfill carries these overloads, which makes the
-		    calls portable, or when net10.0 is dropped.-->
+		    calls portable.-->
 		<NoWarn Condition="'$(TargetFramework)'=='net11.0'">$(NoWarn);MA0001</NoWarn>
 		<Features>strict</Features>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
