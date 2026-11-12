@@ -171,7 +171,7 @@
     <File Path="Data/Setup Scripts/readme.md" />
     <File Path="Data/Setup Scripts/saphana2.cmd" />
     <File Path="Data/Setup Scripts/sqlserver2005-win.cmd" />
-    <File Path="Data/Setup Scripts/sqlserver2016.cmd" />
+    <File Path="Data/Setup Scripts/sqlserver2016-win.cmd" />
     <File Path="Data/Setup Scripts/sqlserver2017.cmd" />
     <File Path="Data/Setup Scripts/sqlserver2019.cmd" />
     <File Path="Data/Setup Scripts/sqlserver2022-win.cmd" />
@@ -318,9 +318,7 @@
     <Project Path="Tests/EntityFrameworkCore.FSharp/Tests.EntityFrameworkCore.FSharp.EF10.fsproj">
       <Build Solution="Testing|*" Project="false" />
     </Project>
-    <Project Path="Tests/EntityFrameworkCore.FSharp/Tests.EntityFrameworkCore.FSharp.EF11.fsproj">
-      <Build Solution="Testing|*" Project="false" />
-    </Project>
+    <Project Path="Tests/EntityFrameworkCore.FSharp/Tests.EntityFrameworkCore.FSharp.EF11.fsproj" />
     <Project Path="Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF10.csproj">
       <Build Solution="Testing|*" Project="false" />
     </Project>
