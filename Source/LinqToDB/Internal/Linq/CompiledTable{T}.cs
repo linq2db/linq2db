@@ -221,6 +221,7 @@ namespace LinqToDB.Internal.Linq
 				Parameters          = parameters,
 				CompiledExpressions = expressions,
 				CompiledResolver    = _resolver,
+				InfoKey             = ExpressionQuery<T>.GetInfoKey(db),
 			};
 		}
 

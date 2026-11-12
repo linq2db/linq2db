@@ -98,11 +98,20 @@ namespace LinqToDB.Internal.Linq
 
 			bool result;
 
-			var runtimeExpressions = new RuntimeExpressionsContainer(expressions.MainExpression);
-			matchedQueryExpressions = runtimeExpressions;
+			if (CompareInfo.DynamicAccessors == null && compiledParameters != null)
+			{
+				// Nothing to add to a compiled query's own expressions: they are used as they are.
+				matchedQueryExpressions = expressions;
+			}
+			else
+			{
+				matchedQueryExpressions = new RuntimeExpressionsContainer(expressions.MainExpression);
+			}
 
 			if (CompareInfo.DynamicAccessors != null)
 			{
+				var runtimeExpressions = (RuntimeExpressionsContainer)matchedQueryExpressions;
+
 				List<(int, Expression)>? testedExpressions = null;
 
 				foreach (var da in CompareInfo.DynamicAccessors)
