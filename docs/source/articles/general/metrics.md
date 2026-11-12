@@ -192,8 +192,8 @@ Count is 91
 ## Tools
 
 The `LinqToDB.Tools` package contains two activity factories `ActivityHierarchy` and `ActivityStatistics`
-that can be used to generate `Linq To DB` activity reports. An exsample of how to use these factories 
-can be found [here](https://github.com/linq2db/linq2db/tree/metrics/Examples/Metrics/Tools).
+that can be used to generate `Linq To DB` activity reports. An example of how to use these factories 
+can be found [here](https://github.com/linq2db/linq2db/tree/master/Examples/Metrics/Tools).
 
 The following is an output of this example:
 
