@@ -644,16 +644,17 @@ namespace LinqToDB.Internal.Linq
 		}
 
 		/// <summary>
-		/// Compiles the comparison of a value the query was built with against the current one. Two values of one value type
-		/// that is not a sequence are compared with <see cref="EqualityComparer{T}.Default"/>, which neither boxes them nor
-		/// changes the result <see cref="ExpressionEqualityComparer.CompareValues"/> would give; anything else goes through
-		/// <see cref="ExpressionEqualityComparer.CompareValues"/> (sequences by content, queryables as opaque).
+		/// Compiles the comparison of a value the query was built with against the current one. Two values of one type with
+		/// a known value equality (see <see cref="HasPlainValueEquality"/>) are compared with
+		/// <see cref="EqualityComparer{T}.Default"/>, which does not box them; anything else goes through
+		/// <see cref="ExpressionEqualityComparer.CompareValues"/> (sequences by content, queryables as opaque, other values
+		/// by <see cref="object.Equals(object)"/>).
 		/// </summary>
 		static ValueCompareFunc BuildValueComparison(Expression main, Expression other)
 		{
 			Expression body;
 
-			if (main.Type == other.Type && main.Type.IsValueType && !typeof(System.Collections.IEnumerable).IsAssignableFrom(main.Type))
+			if (main.Type == other.Type && HasPlainValueEquality(main.Type))
 				body = Expression.Call(_valuesEqualMethod.MakeGenericMethod(main.Type), main, other);
 			else
 				body = Expression.Call(_compareValuesMethod, main.EnsureType<object>(), other.EnsureType<object>());
@@ -662,6 +663,27 @@ namespace LinqToDB.Internal.Linq
 			return Expression.Lambda<ValueCompareFunc>(body, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
 					ExpressionBuilder.ParametersParam)
 				.CompileExpression();
+		}
+
+		// Types whose IEquatable<T>.Equals agrees with Equals(object), so the typed comparison gives the result
+		// CompareValues gives. A user struct may implement the two differently, and must keep the old comparison.
+		static bool HasPlainValueEquality(Type type)
+		{
+			type = Nullable.GetUnderlyingType(type) ?? type;
+
+			if (type.IsPrimitive || type.IsEnum)
+				return true;
+
+			return type == typeof(decimal)
+				|| type == typeof(DateTime)
+				|| type == typeof(DateTimeOffset)
+				|| type == typeof(TimeSpan)
+				|| type == typeof(Guid)
+#if SUPPORTS_DATEONLY
+				|| type == typeof(DateOnly)
+				|| type == typeof(TimeOnly)
+#endif
+				;
 		}
 
 		static bool ValuesEqual<TValue>(TValue value1, TValue value2)
