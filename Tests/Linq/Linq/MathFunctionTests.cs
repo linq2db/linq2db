@@ -285,16 +285,17 @@ namespace Tests.Linq
 				q);
 		}
 
-		// Rounds the decimal rather than casting to double first: .NET 11 changed Math.Round(double, digits)
-		// at midpoints - Math.Round(6.55d, 1) is 6.5 there and 6.6 on .NET 10 - so the client no longer agrees
-		// with the SQL ROUND it generates. The decimal overload is unchanged. Same for Round4Sql and Round11.
+		// The expected side rounds the decimal: .NET 11 changed Math.Round(double, digits) at midpoints -
+		// Math.Round(6.55d, 1) is 6.5 there and 6.6 on .NET 10 - while the SQL ROUND generated for the double
+		// still answers 6.6. The query keeps the double, so the Float ROUND translation stays covered. Same for
+		// Round4Sql and Round11.
 		[Test]
 		public void Round4([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqualWithinDelta(
-				from t in from p in Types select Math.Round(p.MoneyValue, 1) where t != 0 select Math.Round(t, 5),
-				from t in from p in db.Types select Math.Round(p.MoneyValue, 1) where t != 0 select Math.Round(t, 5));
+				from t in from p in    Types select (double)Math.Round(p.MoneyValue, 1) where t != 0 select Math.Round(t, 5),
+				from t in from p in db.Types select Math.Round((double)p.MoneyValue, 1) where t != 0 select Math.Round(t, 5));
 		}
 
 		[Test]
@@ -302,8 +303,8 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 			AreEqualWithinDelta(
-				from t in from p in Types select Math.Round(p.MoneyValue, 1) where t != 0 select Math.Round(t, 5),
-				from t in from p in db.Types select Math.Round(p.MoneyValue, 1) where t != 0 select Sql.AsSql(Math.Round(t, 5)));
+				from t in from p in    Types select (double)Math.Round(p.MoneyValue, 1) where t != 0 select Math.Round(t, 5),
+				from t in from p in db.Types select Math.Round((double)p.MoneyValue, 1) where t != 0 select Sql.AsSql(Math.Round(t, 5)));
 		}
 
 		[Test]
@@ -371,8 +372,8 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 			AreEqualWithinDelta(
-				from t in from p in Types select Math.Round(p.MoneyValue, 1, MidpointRounding.ToEven) where t != 0 select Math.Round(t, 5),
-				from t in from p in db.Types select Math.Round(p.MoneyValue, 1, MidpointRounding.ToEven) where t != 0 select Math.Round(t, 5));
+				from t in from p in    Types select (double)Math.Round(p.MoneyValue, 1, MidpointRounding.ToEven) where t != 0 select Math.Round(t, 5),
+				from t in from p in db.Types select Math.Round((double)p.MoneyValue, 1, MidpointRounding.ToEven) where t != 0 select Math.Round(t, 5));
 		}
 
 		// TODO: implement other MidpointRounding values (and remove NUnit4001 suppress)
