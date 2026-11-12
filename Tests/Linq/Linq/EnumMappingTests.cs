@@ -2917,7 +2917,22 @@ namespace Tests.Linq
 
 		[ActiveIssue(6298, Details = "no-declaration: the column side is CAST(Gender AS Int) over the char column, so an engine that coerces it returns wrong rows and a strict one refuses it in its own words - '42883: operator does not exist: integer = character' on PostgreSQL, 'Conversion failed when converting the varchar value 'F' to data type int' on SQL Server.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6298")]
-		public void DirectCastToEnumWithoutMapValuesEqualParameter([DataSources] string context)
+		// Access drops the integer cast and answers correctly: DirectCastToEnumWithoutMapValuesEqualParameterCastDropped.
+		public void DirectCastToEnumWithoutMapValuesEqualParameter([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var gender = UnmappedGender.Female;
+
+			var query = db.Person
+				.Where(p => (UnmappedGender)p.Gender == gender);
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6298")]
+		// Access's ConvertConversion drops a cast to an integer, so the column is compared with the parameter's 'F' directly.
+		public void DirectCastToEnumWithoutMapValuesEqualParameterCastDropped([IncludeDataSources(true, TestProvName.AllAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
