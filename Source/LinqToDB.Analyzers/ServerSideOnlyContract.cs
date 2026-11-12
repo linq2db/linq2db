@@ -15,9 +15,9 @@ namespace LinqToDB.Analyzers
 	/// registration and (user-facing only) option reads.
 	/// </summary>
 	/// <remarks>
-	/// Constrained by both projects at once: Roslyn 4.8 API surface only (this project pins 4.8.0 while
-	/// CodeGenerators takes 5.6.0), no <see cref="ImmutableArray{T}"/> collection expressions, and the
-	/// helper types are nested so one file declares one top-level type (MA0048) and one link suffices.
+	/// Constrained by both projects at once: Roslyn 5.0 API surface only (this project pins 5.0.0 while
+	/// CodeGenerators takes 5.6.0), and the helper types are nested so one file declares one top-level
+	/// type (MA0048) and one link suffices.
 	/// </remarks>
 	internal static class ServerSideOnlyContract
 	{

@@ -660,11 +660,10 @@ namespace Tests.Analyzers
 		[Test]
 		public Task DoesNotReportForEachOverCollectionExpression()
 		{
-			// Characterization, not a decision about the syntax: Roslyn 4.8 - the line this analyzer is pinned to,
-			// matching the lowest supported SDK - exposes neither ICollectionExpressionOperation nor
-			// OperationKind.CollectionExpression, so [..] cannot be recognized here while the same elements written
-			// new[] { .. } are reported. Recall-only, never a wrong report. Should this go red, the pin was raised
-			// and the arm can be added - update the wiki's recognised-constants list with it.
+			// Characterization, not a decision about the syntax: there is no [..] arm, so [..] is not recognized here
+			// while the same elements written new[] { .. } are reported. Recall-only, never a wrong report. The arm
+			// became possible when the pin moved from Roslyn 4.8 to 5.0, which exposes ICollectionExpressionOperation;
+			// adding it turns this red - update the wiki's recognised-constants list with it.
 			return Verify.VerifyAsync(Source("""
 						TimeSpan[] bounds = [TimeSpan.FromSeconds(1.5), TimeSpan.FromSeconds(2.5)];
 
