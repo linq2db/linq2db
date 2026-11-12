@@ -102,7 +102,9 @@ namespace LinqToDB.Internal.Linq
 		/// </summary>
 		public static long CacheMissCount => QueryCache.Default.GetMissCount(typeof(T));
 
-		static Expression ExposeAndPrepareExpression(Expression expr, IDataContext dataContext, ExpressionTreeOptimizationContext optimizationContext)
+		// exposedStageResult: the ExposedQuery interceptor's result for expr, when it already ran in this execution; used
+		// instead of calling the interceptor again if exposing expr changes nothing.
+		static Expression ExposeAndPrepareExpression(Expression expr, IDataContext dataContext, ExpressionTreeOptimizationContext optimizationContext, Expression? exposedStageResult)
 		{
 			var        beforeExpose = expr;
 			Expression exposed;
@@ -120,7 +122,10 @@ namespace LinqToDB.Internal.Linq
 
 				if (dataContext is IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } interceptor })
 				{
-					var processed = interceptor.ProcessExpression(exposed, new QueryExpressionArgs(dataContext, exposed, QueryExpressionArgs.ExpressionKind.ExposedQuery));
+					var processed = iteration == 0 && exposedStageResult != null && ReferenceEquals(exposed, expr)
+						? exposedStageResult
+						: interceptor.ProcessExpression(exposed, new QueryExpressionArgs(dataContext, exposed, QueryExpressionArgs.ExpressionKind.ExposedQuery));
+
 					if (!ReferenceEquals(processed, exposed))
 					{
 						// Doe exposing again after interceptor processing
@@ -143,41 +148,35 @@ namespace LinqToDB.Internal.Linq
 			return exposed;
 		}
 
-		/// <summary>
-		/// For a query kept on an IQueryable (one whose tree neither expose nor the interceptors changed when it was
-		/// built): runs the context's query interceptor on that tree at the Query and ExposedQuery stages again. The
-		/// kept query stays valid only if both return the tree unchanged - an interceptor may rewrite differently on a
-		/// later execution.
-		/// </summary>
-		internal static bool IsRewrittenByQueryInterceptor(IDataContext dataContext, Expression expr)
-		{
-			if (dataContext is IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } interceptor })
-			{
-				var processed = interceptor.ProcessExpression(expr, new QueryExpressionArgs(dataContext, expr, QueryExpressionArgs.ExpressionKind.Query));
-
-				return !ReferenceEquals(processed, expr) || IsRewrittenOnExpose(dataContext, expr);
-			}
-
-			return false;
-		}
-
 		// A query found by the lookup with the unexposed tree was stored by a context for which exposing that tree changed
 		// nothing, so the tree is what ExposeAndPrepareExpression would hand to the interceptor. The interceptor instance
 		// is not part of the cache key: if this context's interceptor rewrites the exposed tree, the found query was
 		// translated without that rewrite and must not be used.
-		static bool IsRewrittenOnExpose(IDataContext dataContext, Expression expr)
+		// The interceptor's result is kept in exposedStageResult, so the stage runs once per execution.
+		static bool IsRewrittenOnExpose(IDataContext dataContext, Expression expr, ref Expression? exposedStageResult)
 		{
 			if (dataContext is IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } interceptor })
 			{
-				var processed = interceptor.ProcessExpression(expr, new QueryExpressionArgs(dataContext, expr, QueryExpressionArgs.ExpressionKind.ExposedQuery));
+				exposedStageResult ??= interceptor.ProcessExpression(expr, new QueryExpressionArgs(dataContext, expr, QueryExpressionArgs.ExpressionKind.ExposedQuery));
 
-				return !ReferenceEquals(processed, expr);
+				return !ReferenceEquals(exposedStageResult, expr);
 			}
 
 			return false;
 		}
 
 		public static Query<T> GetQuery(IDataContext dataContext, ref IQueryExpressions expressions, out bool dependsOnParameters)
+		{
+			return GetQuery(dataContext, ref expressions, out dependsOnParameters, queryStageDone: false, queryStageRewrote: false, exposedStageResult: null);
+		}
+
+		/// <param name="queryStageDone">
+		/// The caller already ran the preprocessing and the Query interceptor stage on <paramref name="expressions"/> in this
+		/// execution (an IQueryable checking the query it kept), so each interceptor stage still runs once per execution.
+		/// </param>
+		/// <param name="queryStageRewrote">Whether that Query stage changed the tree.</param>
+		/// <param name="exposedStageResult">The ExposedQuery interceptor's result for that tree, if the caller already ran it.</param>
+		internal static Query<T> GetQuery(IDataContext dataContext, ref IQueryExpressions expressions, out bool dependsOnParameters, bool queryStageDone, bool queryStageRewrote, Expression? exposedStageResult)
 		{
 			using var mt = ActivityService.Start(ActivityID.GetQueryTotal);
 
@@ -195,29 +194,37 @@ namespace LinqToDB.Internal.Linq
 				{
 					optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
 
-					// I hope fast tree optimization for unbalanced Binary Expressions. See Issue447Tests.
-					//
-					expr = BinaryExpressionAggregatorVisitor.Instance.Visit(expr);
-
-					dependsOnParameters = false;
-
-					if (dataContext is IExpressionPreprocessor preprocessor)
-						expr = preprocessor.ProcessExpression(expr);
-
-					// The cache key below is built from the rewritten tree, so this runs before the lookup and
-					// therefore on every execution. Keying the cache on the pre-interception tree would let a hit
-					// skip the rewrite, but only by retaining both trees - one to match on, one to run.
-					if (dataContext is IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } interceptor })
+					if (queryStageDone)
 					{
-						var intercepted = interceptor.ProcessExpression(expr, new QueryExpressionArgs(dataContext, expr, QueryExpressionArgs.ExpressionKind.Query));
+						// The caller already ran the preprocessing and the Query stage on this tree in this execution.
+						dependsOnParameters = queryStageRewrote;
+					}
+					else
+					{
+						// I hope fast tree optimization for unbalanced Binary Expressions. See Issue447Tests.
+						//
+						expr = BinaryExpressionAggregatorVisitor.Instance.Visit(expr);
 
-						// The rewritten tree belongs to this execution and this interceptor: the caller must not keep it, or
-						// the query found for it, in place of the original tree (an IQueryable executed again re-runs the
-						// interceptor, which may have been removed or replaced meanwhile).
-						if (!ReferenceEquals(intercepted, expr))
-							dependsOnParameters = true;
+						dependsOnParameters = false;
 
-						expr = intercepted;
+						if (dataContext is IExpressionPreprocessor preprocessor)
+							expr = preprocessor.ProcessExpression(expr);
+
+						// The cache key below is built from the rewritten tree, so this runs before the lookup and
+						// therefore on every execution. Keying the cache on the pre-interception tree would let a hit
+						// skip the rewrite, but only by retaining both trees - one to match on, one to run.
+						if (dataContext is IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } interceptor })
+						{
+							var intercepted = interceptor.ProcessExpression(expr, new QueryExpressionArgs(dataContext, expr, QueryExpressionArgs.ExpressionKind.Query));
+
+							// The rewritten tree belongs to this execution and this interceptor: the caller must not keep it, or
+							// the query found for it, in place of the original tree (an IQueryable executed again re-runs the
+							// interceptor, which may have been removed or replaced meanwhile).
+							if (!ReferenceEquals(intercepted, expr))
+								dependsOnParameters = true;
+
+							expr = intercepted;
+						}
 					}
 				}
 
@@ -233,7 +240,7 @@ namespace LinqToDB.Internal.Linq
 					using (ActivityService.Start(ActivityID.GetQueryFindFind))
 					{
 						if (QueryCache.Default.TryFind(typeof(T), dataContext, runtimeExpressions, queryFlags, out var foundQuery, out var matchedExpressions)
-							&& !IsRewrittenOnExpose(dataContext, expr))
+							&& !IsRewrittenOnExpose(dataContext, expr, ref exposedStageResult))
 						{
 							expressions = matchedExpressions;
 							return (Query<T>)foundQuery;
@@ -246,7 +253,7 @@ namespace LinqToDB.Internal.Linq
 				// Parameters with SqlQueryDependentAttribute will be transferred to constants
 				// No LambdaExpressions which are located in constants, they will be expanded and injected into tree
 				//
-				var exposed = ExposeAndPrepareExpression(expr, dataContext, optimizationContext);
+				var exposed = ExposeAndPrepareExpression(expr, dataContext, optimizationContext, exposedStageResult);
 
 				// simple trees do not mutate
 				var isExposed = !ReferenceEquals(exposed, expr);

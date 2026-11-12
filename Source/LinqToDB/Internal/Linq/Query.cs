@@ -50,6 +50,9 @@ namespace LinqToDB.Internal.Linq
 			SqlOptimizer     = dataContext.GetSqlOptimizer(dataContext.Options);
 			SqlProviderFlags = dataContext.SqlProviderFlags;
 			DataOptions      = dataContext.Options;
+			ContextType      = dataContext.GetType();
+			ConfigurationID  = dataContext.ConfigurationID;
+			QueryFlags       = dataContext.GetQueryFlags();
 		}
 
 		#endregion
@@ -64,6 +67,19 @@ namespace LinqToDB.Internal.Linq
 		internal readonly ISqlOptimizer    SqlOptimizer;
 		internal readonly SqlProviderFlags SqlProviderFlags;
 		internal readonly DataOptions      DataOptions;
+
+		// The context this query was built for, as far as the query cache key distinguishes contexts. An IQueryable that
+		// keeps its query (or the one a compiled query returned) reuses it only while its context still matches.
+		internal readonly Type       ContextType;
+		internal readonly int        ConfigurationID;
+		internal readonly QueryFlags QueryFlags;
+
+		internal bool IsBuiltFor(IDataContext dataContext)
+		{
+			return ContextType == dataContext.GetType()
+				&& ConfigurationID == dataContext.ConfigurationID
+				&& QueryFlags == dataContext.GetQueryFlags();
+		}
 
 		protected internal bool Compare(IDataContext dataContext, IQueryExpressions expressions, [NotNullWhen(true)] out IQueryExpressions? matchedQueryExpressions)
 		{
@@ -136,13 +152,9 @@ namespace LinqToDB.Internal.Linq
 
 			if (CompareInfo.ComparisionFunctions != null)
 			{
-				foreach (var (main, other) in CompareInfo.ComparisionFunctions)
+				foreach (var compare in CompareInfo.ComparisionFunctions)
 				{
-					var value1 = main(matchedQueryExpressions, dataContext, compiledParameters);
-					var value2 = other(matchedQueryExpressions, dataContext, compiledParameters);
-					result = ExpressionEqualityComparer.CompareValues(value1, value2);
-
-					if (!result)
+					if (!compare(matchedQueryExpressions, dataContext, compiledParameters))
 						return false;
 				}
 			}
@@ -151,6 +163,10 @@ namespace LinqToDB.Internal.Linq
 		}
 
 		internal QueryCacheCompareInfo? CompareInfo;
+
+		// The compiled table (CompiledTable<T>) that built this query, if any: the IQueryable it returns finds its way back
+		// through the query it holds instead of carrying another field.
+		internal object? CompiledSource;
 
 		internal List<ParameterAccessor>? ParameterAccessors { get; set; }
 

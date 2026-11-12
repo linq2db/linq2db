@@ -19,11 +19,7 @@ namespace LinqToDB.Internal.Linq
 		{
 			_expression               = expression;
 			_dependentArgumentIndexes = dependentArgumentIndexes;
-			_resolver                 = Resolve;
 		}
-
-		// One delegate per compiled table, handed to every IQueryable Create returns.
-		readonly Func<IDataContext, object?[], (Query<T> query, IQueryExpressions expressions)> _resolver;
 
 		readonly Expression _expression;
 
@@ -182,6 +178,7 @@ namespace LinqToDB.Internal.Linq
 			}
 
 			query.CompiledExpressions = expressions;
+			query.CompiledSource      = this;
 
 			return query;
 		}
@@ -215,22 +212,49 @@ namespace LinqToDB.Internal.Linq
 
 			// The exposed tree, not _expression: Info carries parameter accessors built against it, and a
 			// pre-set Info makes ExpressionQuery skip the expose that would otherwise reconcile the two.
-			return new Table<T>(db, expressions.MainExpression)
+			return new CompiledTableQuery(db, expressions.MainExpression)
 			{
 				Info                = query,
 				Parameters          = parameters,
 				CompiledExpressions = expressions,
-				CompiledResolver    = _resolver,
-				InfoKey             = ExpressionQuery<T>.GetInfoKey(db),
 			};
 		}
 
-		// Lets the IQueryable returned by Create re-resolve its query on every execution, through the same revalidation.
-		(Query<T> query, IQueryExpressions expressions) Resolve(IDataContext dataContext, object?[] parameterValues)
+		/// <summary>
+		/// The IQueryable Create returns. On every execution it checks that its query still fits: while the context
+		/// matches the one the query was built for and no argument selects the query by value ([SqlQueryDependent],
+		/// which the caller may change in the argument array), the query is revalidated in place; otherwise it is
+		/// resolved through the compiled query again.
+		/// </summary>
+		sealed class CompiledTableQuery(IDataContext dataContext, Expression expression) : Table<T>(dataContext, expression)
 		{
-			var query = GetInfo(dataContext, parameterValues, out var expressions);
+			internal override Query<T>? TryGetCompiledQuery(ref IQueryExpressions expression)
+			{
+				// Info is always a query this compiled table built (Create and the resolution below set it).
+				var source = (CompiledTable<T>)Info!.CompiledSource!;
 
-			return (query, expressions);
+				if (source._dependentArgumentIndexes.Length == 0 && Info.IsBuiltFor(DataContext))
+				{
+					if (Info.CompareInfo?.IsFastComparable != false)
+						return Info;
+
+					if (Info.Revalidate(DataContext, CompiledExpressions!, Parameters!, out var revalidated))
+					{
+						CompiledExpressions = revalidated;
+						expression          = revalidated;
+
+						return Info;
+					}
+				}
+
+				var query = source.GetInfo(DataContext, Parameters!, out var compiled);
+
+				Info                = query;
+				CompiledExpressions = compiled;
+				expression          = compiled;
+
+				return query;
+			}
 		}
 
 		public T Execute(object[] parameters)

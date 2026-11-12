@@ -591,26 +591,17 @@ namespace LinqToDB.Internal.Linq
 				parameterExpressions = runtimeExpressions;
 			}
 
-			List<(ValueAccessorFunc main, ValueAccessorFunc other)>? comparisionFunctions = null;
+			List<ValueCompareFunc>? comparisionFunctions = null;
 
 			if (_duplicateParametersCheck != null)
 			{
 				foreach (var (main, other) in _duplicateParametersCheck.Values)
 				{
-					var mainValueExpr  = PrepareExpressionAccessors(dc, main, nonComparable).EnsureType<object>();
-					var otherValueExpr = PrepareExpressionAccessors(dc, other, nonComparable).EnsureType<object>();
-
-					// IQueryExpressions queryExpressions, IDataContext  dataContext, object?[]? compiledParameters
-					var mainFunc = Expression.Lambda<ValueAccessorFunc>(mainValueExpr, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
-							ExpressionBuilder.ParametersParam)
-						.CompileExpression();
-
-					var otherFunc = Expression.Lambda<ValueAccessorFunc>(otherValueExpr, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
-							ExpressionBuilder.ParametersParam)
-						.CompileExpression();
+					var mainValueExpr  = PrepareExpressionAccessors(dc, main, nonComparable);
+					var otherValueExpr = PrepareExpressionAccessors(dc, other, nonComparable);
 
 					comparisionFunctions ??= [];
-					comparisionFunctions.Add((mainFunc, otherFunc));
+					comparisionFunctions.Add(BuildValueComparison(mainValueExpr, otherValueExpr));
 				}
 			}
 
@@ -618,19 +609,10 @@ namespace LinqToDB.Internal.Linq
 			{
 				foreach (var (value, accessor) in _byValueCompare)
 				{
-					var mainValueExpr  = Expression.Constant(value).EnsureType<object>();
-					var otherValueExpr = PrepareExpressionAccessors(dc, accessor, nonComparable).EnsureType<object>();
-
-					var mainFunc = Expression.Lambda<ValueAccessorFunc>(mainValueExpr, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
-							ExpressionBuilder.ParametersParam)
-						.CompileExpression();
-
-					var otherFunc = Expression.Lambda<ValueAccessorFunc>(otherValueExpr, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
-							ExpressionBuilder.ParametersParam)
-						.CompileExpression();
+					var otherValueExpr = PrepareExpressionAccessors(dc, accessor, nonComparable);
 
 					comparisionFunctions ??= [];
-					comparisionFunctions.Add((mainFunc, otherFunc));
+					comparisionFunctions.Add(BuildValueComparison(ValueConstant(value, otherValueExpr.Type), otherValueExpr));
 				}
 			}
 
@@ -641,20 +623,10 @@ namespace LinqToDB.Internal.Linq
 					if (!sqlValues.Contains(value))
 						continue;
 
-					var mainValueExpr = Expression.Constant(evaluator.Evaluate(accessor)).EnsureType<object>();
-
-					var otherValueExpr = PrepareExpressionAccessors(dc, accessor, nonComparable).EnsureType<object>();
-
-					var mainFunc = Expression.Lambda<ValueAccessorFunc>(mainValueExpr, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
-							ExpressionBuilder.ParametersParam)
-						.CompileExpression();
-
-					var otherFunc = Expression.Lambda<ValueAccessorFunc>(otherValueExpr, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
-							ExpressionBuilder.ParametersParam)
-						.CompileExpression();
+					var otherValueExpr = PrepareExpressionAccessors(dc, accessor, nonComparable);
 
 					comparisionFunctions ??= [];
-					comparisionFunctions.Add((mainFunc, otherFunc));
+					comparisionFunctions.Add(BuildValueComparison(ValueConstant(evaluator.Evaluate(accessor), otherValueExpr.Type), otherValueExpr));
 				}
 			}
 
@@ -663,6 +635,42 @@ namespace LinqToDB.Internal.Linq
 
 			return (compareInfo, parameterAccessors, parameterExpressions);
 		}
+
+		static Expression ValueConstant(object? value, Type type)
+		{
+			return value != null && value.GetType() == type
+				? Expression.Constant(value, type)
+				: Expression.Constant(value);
+		}
+
+		/// <summary>
+		/// Compiles the comparison of a value the query was built with against the current one. Two values of one value type
+		/// that is not a sequence are compared with <see cref="EqualityComparer{T}.Default"/>, which neither boxes them nor
+		/// changes the result <see cref="ExpressionEqualityComparer.CompareValues"/> would give; anything else goes through
+		/// <see cref="ExpressionEqualityComparer.CompareValues"/> (sequences by content, queryables as opaque).
+		/// </summary>
+		static ValueCompareFunc BuildValueComparison(Expression main, Expression other)
+		{
+			Expression body;
+
+			if (main.Type == other.Type && main.Type.IsValueType && !typeof(System.Collections.IEnumerable).IsAssignableFrom(main.Type))
+				body = Expression.Call(_valuesEqualMethod.MakeGenericMethod(main.Type), main, other);
+			else
+				body = Expression.Call(_compareValuesMethod, main.EnsureType<object>(), other.EnsureType<object>());
+
+			// IQueryExpressions queryExpressions, IDataContext dataContext, object?[]? compiledParameters
+			return Expression.Lambda<ValueCompareFunc>(body, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
+					ExpressionBuilder.ParametersParam)
+				.CompileExpression();
+		}
+
+		static bool ValuesEqual<TValue>(TValue value1, TValue value2)
+		{
+			return EqualityComparer<TValue>.Default.Equals(value1, value2);
+		}
+
+		static readonly System.Reflection.MethodInfo _valuesEqualMethod   = MemberHelper.MethodOfGeneric<int>(v => ValuesEqual(v, v));
+		static readonly System.Reflection.MethodInfo _compareValuesMethod = MemberHelper.MethodOf(() => ExpressionEqualityComparer.CompareValues(null, null));
 
 		/// <summary>
 		/// Registers parameter which is used in non-query operation and not present in result SQL. Like handling Skip in Providers which do not support it.

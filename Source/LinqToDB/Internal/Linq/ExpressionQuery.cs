@@ -35,15 +35,6 @@ namespace LinqToDB.Internal.Linq
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		internal Query<T>?  Info;
 
-		// What Info was found for (see GetInfoKey): Info is reused only while the context still matches it.
-		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		internal (int configurationID, QueryFlags queryFlags, int interceptorsGeneration)? InfoKey;
-
-		// Set by a compiled table on the IQueryable it returns: unless its Info is fast-comparable and the context still
-		// matches InfoKey, it is re-resolved through the compiled query's cache, which revalidates it.
-		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		internal Func<IDataContext, object?[], (Query<T> query, IQueryExpressions expressions)>? CompiledResolver;
-
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		internal object?[]? Parameters;
 
@@ -107,73 +98,59 @@ namespace LinqToDB.Internal.Linq
 		{
 			dependsOnParameters = false;
 
-			if (cache && CompiledResolver != null)
-			{
-				// While the context matches the key, the query found for this IQueryable is still the compiled query's
-				// candidate for it: revalidate it directly (nothing to check for a fast-comparable one).
-				if (Info != null && InfoKey != null && InfoKey.Value == GetInfoKey(DataContext))
-				{
-					if (Info.CompareInfo?.IsFastComparable != false)
-						return Info;
+			if (cache && TryGetCompiledQuery(ref expression) is { } compiled)
+				return compiled;
 
-					if (Info.Revalidate(DataContext, CompiledExpressions!, Parameters!, out var revalidated))
-					{
-						CompiledExpressions = revalidated;
-						expression          = revalidated;
-
-						return Info;
-					}
-				}
-
-				var (query, compiled) = CompiledResolver(DataContext, Parameters!);
-
-				Info                = query;
-				InfoKey             = GetInfoKey(DataContext);
-				CompiledExpressions = compiled;
-				expression          = compiled;
-
-				return query;
-			}
+			var queryStageDone     = false;
+			var queryStageRewrote  = false;
+			var exposedStageResult = (Expression?)null;
 
 			if (cache && Info != null)
 			{
-				if (InfoKey != null && InfoKey.Value == GetInfoKey(DataContext)
-					&& !Query<T>.IsRewrittenByQueryInterceptor(DataContext, expression.MainExpression))
-					return Info;
+				// A query is kept only if nothing in it is re-evaluated on a cache hit (see below); it stays valid while the
+				// context matches the one it was built for and the query interceptor, if any, still leaves the tree alone.
+				// The interceptor stages run here once; when they rewrite, their results go on to the normal path.
+				if (Info.IsBuiltFor(DataContext))
+				{
+					if (DataContext is not IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } interceptor })
+						return Info;
 
-				Info    = null;
-				InfoKey = null;
+					var main      = expression.MainExpression;
+					var processed = interceptor.ProcessExpression(main, new QueryExpressionArgs(DataContext, main, QueryExpressionArgs.ExpressionKind.Query));
+
+					queryStageDone = true;
+
+					if (!ReferenceEquals(processed, main))
+					{
+						queryStageRewrote = true;
+						expression        = new RuntimeExpressionsContainer(processed);
+					}
+					else
+					{
+						exposedStageResult = interceptor.ProcessExpression(main, new QueryExpressionArgs(DataContext, main, QueryExpressionArgs.ExpressionKind.ExposedQuery));
+
+						if (ReferenceEquals(exposedStageResult, main))
+							return Info;
+					}
+				}
+
+				Info = null;
 			}
 
-			var info = Query<T>.GetQuery(DataContext, ref expression, out dependsOnParameters);
+			var info = Query<T>.GetQuery(DataContext, ref expression, out dependsOnParameters, queryStageDone, queryStageRewrote, exposedStageResult);
 
 			// Only a query that the cache would accept without re-evaluating anything is kept (no dynamic accessors or
 			// value comparisons, no part of the tree rewritten by expose or by an interceptor).
-			if (cache && info.CompareInfo?.IsFastComparable == true && !dependsOnParameters && GetInfoKey(DataContext) is { } key)
-			{
-				Info    = info;
-				InfoKey = key;
-			}
+			if (cache && info.CompareInfo?.IsFastComparable == true && !dependsOnParameters)
+				Info = info;
 
 			return info;
 		}
 
-		// A kept query stays valid while the context's configuration id, query flags and registered interceptor instances are
-		// unchanged: the id covers mapping schema, options and interceptor types, the generation counts every
-		// AddInterceptor / RemoveInterceptor (so another instance of the same type is noticed). A context that cannot report
-		// such a generation keeps nothing once it has a query interceptor.
-		internal static (int configurationID, QueryFlags queryFlags, int interceptorsGeneration)? GetInfoKey(IDataContext dataContext)
+		// The IQueryable a compiled query returns resolves its query through the compiled query.
+		internal virtual Query<T>? TryGetCompiledQuery(ref IQueryExpressions expression)
 		{
-			int generation;
-
-			if (dataContext is IInterceptorsGeneration interceptors)
-				generation = interceptors.InterceptorsGeneration;
-			else if (dataContext is IInterceptable<IQueryExpressionInterceptor> { Interceptor: not null })
-				return null;
-			else
-				generation = 0;
-
-			return (dataContext.ConfigurationID, dataContext.GetQueryFlags(), generation);
+			return null;
 		}
 
 		async Task<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken)
