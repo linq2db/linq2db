@@ -30,12 +30,9 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 #if NETFRAMEWORK
 		public  static readonly IEnumerable<string> UnmanagedAssemblyNames = ["Sap.Data.Hana.v4.5"];
-#elif NET10_0_OR_GREATER
-		public  static readonly IEnumerable<string> UnmanagedAssemblyNames = ["Sap.Data.Hana.Net.v10.0", "Sap.Data.Hana.Net.v8.0", "Sap.Data.Hana.Net.v6.0", "Sap.Data.Hana.Core.v2.1"];
-#elif NET8_0_OR_GREATER
-		public  static readonly IEnumerable<string> UnmanagedAssemblyNames = ["Sap.Data.Hana.Net.v8.0", "Sap.Data.Hana.Net.v6.0", "Sap.Data.Hana.Core.v2.1"];
 #else
-		public  static readonly IEnumerable<string> UnmanagedAssemblyNames = ["Sap.Data.Hana.Core.v2.1"];
+		// netstandard2.0 probes the .NET client names too: it is the asset .NET 8/9 apps resolve
+		public  static readonly IEnumerable<string> UnmanagedAssemblyNames = ["Sap.Data.Hana.Net.v10.0", "Sap.Data.Hana.Net.v8.0", "Sap.Data.Hana.Net.v6.0", "Sap.Data.Hana.Core.v2.1"];
 #endif
 
 		public const string UnmanagedClientNamespace     = "Sap.Data.Hana";

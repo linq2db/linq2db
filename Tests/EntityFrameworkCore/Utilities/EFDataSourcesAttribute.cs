@@ -18,7 +18,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		{
 			try
 			{
-				return TestConfiguration.UserProviders.Where(p => Providers.Contains(p) && TestConfiguration.EFProviders.Contains(p));
+				return TestConfiguration.UserProviders.Where(p => Providers.Contains(p) && EFTestProviders.Supported.Contains(p));
 			}
 			catch (Exception e)
 			{

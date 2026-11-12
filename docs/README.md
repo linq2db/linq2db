@@ -60,7 +60,7 @@ in file names). Nothing displayed names the assembly, because `assemblyLabel` is
 `custom/linq2db-assembly-uids`: the commits of dotnet/docfx#11090, merged with upstream `main`, plus the
 `Microsoft.CodeAnalysis*` pins linq2db needs and the `linq2db-build.yml` workflow. Pushing a
 `linq2db-<yyyymmdd>-<sha7>` tag there runs that workflow, which builds the templates and
-`dotnet publish src/docfx -c Release -f net10.0`, and attaches `docfx.zip` and `docfx.zip.sha256` to a
+`dotnet publish src/docfx -c Release -f net11.0`, and attaches `docfx.zip` and `docfx.zip.sha256` to a
 release of that tag. Copy the tag, asset URL and the hash from `docfx.zip.sha256` into
 `docfx-version.json`.
 

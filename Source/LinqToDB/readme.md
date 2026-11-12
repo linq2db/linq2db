@@ -693,7 +693,7 @@ public class DbNorthwind : LinqToDB.Data.DataConnection
 
 ## Analyzers
 
-Roslyn analyzers and code fixes that flag legacy API usage, offer automatic migrations to the current API, and report mistakes the compiler cannot see — a query that is valid C# but cannot mean what it says — ship in the [`linq2db.Analyzers`](https://www.nuget.org/packages/linq2db.Analyzers) package, which `linq2db` depends on. No extra package reference is needed — the rules also reach a project that references only a satellite package (`linq2db.EntityFrameworkCore`, the Tools or Remote packages). They run only in IDEs / SDKs with Roslyn 4.8 or later (.NET SDK 8.0+, Visual Studio 2022 17.8+) and are silently skipped on older toolchains.
+Roslyn analyzers and code fixes that flag legacy API usage, offer automatic migrations to the current API, and report mistakes the compiler cannot see — a query that is valid C# but cannot mean what it says — ship in the [`linq2db.Analyzers`](https://www.nuget.org/packages/linq2db.Analyzers) package, which `linq2db` depends on. No extra package reference is needed — the rules also reach a project that references only a satellite package (`linq2db.EntityFrameworkCore`, the Tools or Remote packages). They run only in IDEs / SDKs with Roslyn 5.0 or later (.NET SDK 10.0.100+, Visual Studio 2026) and are silently skipped on older toolchains.
 
 | Id | Severity | Description |
 |----|----------|-------------|

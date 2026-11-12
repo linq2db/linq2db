@@ -22,7 +22,7 @@
 
 > **Install requires .NET 10 SDK or higher** — `linq2db.cli` ships as per-RID tool packages (a .NET 10 SDK feature; older `dotnet tool install` clients don't understand the pointer-package selection and would install an empty shell).
 >
-> **Runtime: .NET 8 or higher** — once installed, the tool runs on .NET 8 / 9 / 10.
+> **Runtime: .NET 10 or higher** — once installed, the tool runs on .NET 10 / 11.
 
 Install as global tool:
 

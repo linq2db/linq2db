@@ -70,10 +70,11 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      # SDK selection is global.json's job (see build.yml)
+      # SDK selection is global.json's job (see build.yml). 11.x alone: docfx is a net11.0 app and loads the
+      # projects through the .NET 11 SDK, which also builds their net10.0 targets
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
-          dotnet-version: 10.x
+          dotnet-version: 11.x
 
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
