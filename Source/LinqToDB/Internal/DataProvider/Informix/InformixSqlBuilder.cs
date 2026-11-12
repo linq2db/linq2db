@@ -32,49 +32,21 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 		protected override ConcatBuildStyle ConcatStyle => ConcatBuildStyle.Pipes;
 
-		public override int CommandCount(SqlStatement statement)
-		{
-			return statement switch
-			{
-				SqlTruncateTableStatement trun => trun.ResetIdentity ? 1 + trun.Table!.IdentityFields.Count : 1,
-				_ => statement.NeedsIdentity ? 2 : 1,
-			};
-		}
-
-		protected override void BuildCommand(SqlStatement statement, int commandNumber)
-		{
-			if (statement is SqlTruncateTableStatement trun)
-			{
-				var field = trun.Table!.IdentityFields[commandNumber - 1];
-
-				StringBuilder.Append("ALTER TABLE ");
-				BuildObjectName(StringBuilder, trun.Table.TableName, ConvertType.NameToQueryTable, true, trun.Table.TableOptions);
-				StringBuilder.Append(" MODIFY ");
-				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
-				StringBuilder.AppendLine(" SERIAL(1)");
-			}
-			else
-			{
-				StringBuilder.AppendLine("SELECT DBINFO('sqlca.sqlerrd1') FROM systables where tabid = 1");
-			}
-		}
-
 		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)
 		{
 			StringBuilder.Append("TRUNCATE TABLE ");
 		}
 
 		protected override void BuildSql(
-			int commandNumber,
 			SqlStatement statement,
 			StringBuilder sb,
-			OptimizationContext optimizationContext,
+			ISqlBuilderRenderContext renderContext,
 			int indent,
 			ColumnAliasMode aliasMode,
 			NullabilityContext? nullabilityContext
 		)
 		{
-			base.BuildSql(commandNumber, statement, sb, optimizationContext, indent, aliasMode, nullabilityContext);
+			base.BuildSql(statement, sb, renderContext, indent, aliasMode, nullabilityContext);
 
 			sb
 				.Replace("NULL IS NOT NULL", "1=0")
@@ -133,7 +105,12 @@ namespace LinqToDB.Internal.DataProvider.Informix
 				case DataType.VarBinary  : StringBuilder.Append("BYTE");                      return;
 				case DataType.Boolean    : StringBuilder.Append("BOOLEAN");                   return;
 				case DataType.DateTime   : StringBuilder.Append("datetime year to second");   return;
-				case DataType.DateTime2  : StringBuilder.Append("datetime year to fraction"); return;
+				case DataType.DateTime2 when type.Precision == 0:
+					StringBuilder.Append("datetime year to second");
+					return;
+				case DataType.DateTime2  :
+					StringBuilder.Append(CultureInfo.InvariantCulture, $"datetime year to fraction({Math.Max(1, Math.Min(type.Precision ?? 5, 5))})");
+					return;
 				case DataType.Time       :
 					StringBuilder.Append(CultureInfo.InvariantCulture, $"INTERVAL HOUR TO FRACTION({type.Length ?? 5})");
 					return;
@@ -377,7 +354,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			// IFX doesn't support `NULL [NOT] IN`
 			if (predicate.Expr1 is SqlParameter { IsQueryParameter: false } parameter)
 			{
-				var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+				var paramValue = parameter.GetParameterValue(RenderContext.EvaluationContext.ParameterValues);
 				if (paramValue.ProviderValue == null)
 				{
 					var nullExpr = new SqlCastExpression(new SqlValue(paramValue.DbDataType, null), paramValue.DbDataType, null, isMandatory: true);
@@ -393,7 +370,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			// IFX doesn't support `NULL [NOT] IN`
 			if (predicate.Expr1 is SqlParameter { IsQueryParameter: false } parameter)
 			{
-				var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+				var paramValue = parameter.GetParameterValue(RenderContext.EvaluationContext.ParameterValues);
 				if (paramValue.ProviderValue == null)
 				{
 					var nullExpr = new SqlCastExpression(new SqlValue(paramValue.DbDataType, null), paramValue.DbDataType, null, isMandatory: true);

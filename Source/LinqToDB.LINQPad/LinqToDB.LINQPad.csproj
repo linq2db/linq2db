@@ -5,7 +5,7 @@
 		<AssemblyName>linq2db.LINQPad</AssemblyName>
 
 		<GenerateDocumentationFile>false</GenerateDocumentationFile>
-		<TargetFrameworks>net472;net8.0-windows7.0</TargetFrameworks>
+		<TargetFrameworks>net472;net10.0-windows7.0</TargetFrameworks>
 		<UseWPF>true</UseWPF>
 
 		<DefineConstants>WITH_ISERIES;$(DefineConstants)</DefineConstants>
@@ -53,6 +53,9 @@
 		<PackageReference Include="System.Memory" />
 		<PackageReference Include="System.Buffers" />
 
+		<!--transitive vulnerable package (via Microsoft.Data.SqlClient): the lpx bundles its dependencies-->
+		<PackageReference Include="System.Security.Cryptography.Pkcs" />
+
 		<PackageReference Include="Oracle.ManagedDataAccess" VersionOverride="$(OracleManagedLinqPadVersion)" />
 
 		<!--PackageReference + Reference belongs to same nuget-->
@@ -68,16 +71,8 @@
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
 		<!-- the nuget driver loads into the LINQPad host, whose in-box System.Collections.Immutable and
-		     System.Reflection.Metadata win over ours, so Roslyn's floor for them has to stay at 8.0.0 -->
+		     System.Reflection.Metadata win over ours, so Roslyn's floor for them must not exceed the host's -->
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="$(RoslynLinqPadVersion)" />
-
-		<!-- Roslyn's API is expressed in ImmutableArray (EmitResult.Diagnostics), so this reference cannot be
-		     avoided - but the version stamped on it has to be the lowest supported host's, for the same reason:
-		     the assembly is in the shared framework, so a .NET 8 host offers 8.0.0.0 and cannot satisfy a higher
-		     reference. Oracle's client pulls the package to 10.x transitively, which stamped 10.0.0.0 and is the
-		     load failure reported in #5768. NU1605 is expected: the downgrade only decides what this assembly
-		     compiles against, and LINQPad restores the Oracle client's own closure when it provisions it. -->
-		<PackageReference Include="System.Collections.Immutable" VersionOverride="$(Net8LatestForNuget)" NoWarn="NU1605" />
 
 		<PackageReference Include="System.Data.Odbc" />
 		<PackageReference Include="System.Data.OleDb" />
@@ -126,8 +121,10 @@
 		</Page>
 	</ItemGroup>
 
-	<!-- Generate the LINQPad 5 .lpx plugin on the net472 build. Set to false (-p:GenerateLpxArtifacts=false)
-	     to build the driver assembly only, without 7-Zip / Pack.cmd. -->
+	<!-- Generate the LINQPad 5 .lpx plugin on build. Set to false (on the command line) to build the
+	     driver assembly only, e.g. to avoid coupling a local build to 7-Zip / Pack.cmd. Never pass it
+	     from a ProjectReference: a global property the solution build does not also set forks a second
+	     MSBuild instance of this project, and the two race to write the same output files. -->
 	<PropertyGroup>
 		<GenerateLpxArtifacts Condition="'$(GenerateLpxArtifacts)' == ''">true</GenerateLpxArtifacts>
 	</PropertyGroup>
@@ -140,10 +137,10 @@
 		<Copy SourceFiles="$(PkgIBM_Data_DB_Provider)\build\net451\x86\IBM.Data.DB2.dll" DestinationFiles="$(TargetDir)\IBM.Data.DB2.DLL_provider\x86\IBM.Data.DB2.dll" />
 
 		<!-- LINQPad 5 runs x86/x64 only, so ship just those natives. One folder now: both SQLite providers
-		     load the same e_sqlite3 from runtimes/, which is Microsoft.Data.Sqlite's default probing path
-		     and, since System.Data.SQLite is SQLitePCLRaw-based, System.Data.SQLite's too. These copies live
-		     here, before Pack.cmd, because targets hooked on AfterTargets="PostBuildEvent" have no guaranteed
-		     order relative to this one and could otherwise land after the archive was written. -->
+		     load the same e_sqlite3 from runtimes/, which is Microsoft.Data.Sqlite's default probing path and
+		     a path System.Data.SQLite's native pre-loader searches too. These copies live here, before
+		     Pack.cmd, because targets hooked on AfterTargets="PostBuildEvent" have no guaranteed order
+		     relative to this one and could otherwise land after the archive was written. -->
 		<Copy SourceFiles="$(PkgSQLitePCLRaw_lib_e_sqlite3)\runtimes\win-x86\native\e_sqlite3.dll" DestinationFiles="$(TargetDir)\runtimes\win-x86\native\e_sqlite3.dll" />
 		<Copy SourceFiles="$(PkgSQLitePCLRaw_lib_e_sqlite3)\runtimes\win-x64\native\e_sqlite3.dll" DestinationFiles="$(TargetDir)\runtimes\win-x64\native\e_sqlite3.dll" />
 
@@ -168,12 +165,10 @@
 	     generated from central package management instead of being duplicated in code, where they would drift.
 
 	     Watch the TFM branches when bumping a client. These expand against *this* project's TargetFramework
-	     (net8.0-windows7.0), so a PackageVersion split across TFMs contributes only its net8.0-compatible entry:
-	     Net.IBM.Data.Db2 and its -lnx/-osx siblings resolve to 9.0.0.400, never to the 10.0.0.200 the net10.0
-	     entries carry. That is required rather than incidental - those 10.x packages ship a net10.0-only
-	     dependency group, and the driver assembly is lib/net8.0 - but it means bumping a net10.0-conditioned
-	     entry alone never reaches the driver, which then keeps provisioning the old client with nothing to say
-	     so. Bump the net8.0 branch in the same change, or confirm deliberately that the driver stays behind. -->
+	     (net10.0-windows7.0), so a PackageVersion split across TFMs contributes only its net10.0-compatible entry:
+	     bumping an entry conditioned on a newer TFM alone never reaches the driver, which then keeps provisioning
+	     the old client with nothing to say so. Bump the net10.0 branch in the same change, or confirm deliberately
+	     that the driver stays behind. -->
 	<Target Name="GenerateNuGetPackageVersions" BeforeTargets="BeforeCompile" Condition="'$(TargetFramework)' != 'net472'">
 		<PropertyGroup>
 			<_NuGetPackageVersionsFile>$(IntermediateOutputPath)NuGetPackageVersions.g.cs</_NuGetPackageVersionsFile>
@@ -203,6 +198,7 @@ internal static class NuGetPackageVersions
 	public const string Npgsql                              = "@(PackageVersion->WithMetadataValue('Identity', 'Npgsql')->'%(Version)')"%3B
 	public const string Octonica_ClickHouseClient           = "@(PackageVersion->WithMetadataValue('Identity', 'Octonica.ClickHouseClient')->'%(Version)')"%3B
 	public const string Oracle_ManagedDataAccess_Core       = "@(PackageVersion->WithMetadataValue('Identity', 'Oracle.ManagedDataAccess.Core')->'%(Version)')"%3B
+	public const string Sap_Data_Hana_Net_v10_0             = "@(PackageVersion->WithMetadataValue('Identity', 'Sap.Data.Hana.Net.v10.0')->'%(Version)')"%3B
 	public const string SQLitePCLRaw_lib_e_sqlite3          = "@(PackageVersion->WithMetadataValue('Identity', 'SQLitePCLRaw.lib.e_sqlite3')->'%(Version)')"%3B
 	public const string System_Data_Odbc                    = "@(PackageVersion->WithMetadataValue('Identity', 'System.Data.Odbc')->'%(Version)')"%3B
 	public const string System_Data_OleDb                   = "@(PackageVersion->WithMetadataValue('Identity', 'System.Data.OleDb')->'%(Version)')"%3B

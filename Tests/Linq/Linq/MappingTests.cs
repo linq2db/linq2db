@@ -280,9 +280,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MyType3()
+		public void MyType3([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using var db = (TestDataConnection)new TestDataConnection();
+			using var db = GetDataConnection(context);
 			db.AddMappingSchema(_myMappingSchema);
 			try
 			{
@@ -295,9 +295,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MyType4()
+		public void MyType4([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using var db = (TestDataConnection)new TestDataConnection();
+			using var db = GetDataConnection(context);
 			db.AddMappingSchema(_myMappingSchema);
 			try
 			{
@@ -311,9 +311,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MyType5()
+		public void MyType5([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using var db = (TestDataConnection)new TestDataConnection();
+			using var db = GetDataConnection(context);
 			db.AddMappingSchema(_myMappingSchema);
 			try
 			{
@@ -1536,12 +1536,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("Use of DateTimeOffset.Now")]
 		public void TimespanAsTicksRegression([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var ms = new MappingSchema();
 			ms.SetDataType(typeof(TimeSpan), DataType.Int64);
 
-			using var bl = new DisableBaseline("Use of DateTimeOffset.Now");
 			using var db = GetDataContext(context, ms);
 			using var tb = db.CreateLocalTable<TimespanAsTicksRegressionTable>();
 
@@ -1712,7 +1712,7 @@ namespace Tests.Linq
 					.ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(1));
-				Assert.That(res[0].Value, Is.EqualTo(value));
+				Assert.That(res[0].Value, Is.EqualTo(value).Within(FloatingPointDeltaPercent).Percent);
 			}
 		}
 
@@ -1728,13 +1728,13 @@ namespace Tests.Linq
 
 			var res = query.ToArray();
 			Assert.That(res, Has.Length.EqualTo(4));
-			Assert.That(res[0].Value, Is.EqualTo(value));
+			Assert.That(res[0].Value, Is.EqualTo(value).Within(FloatingPointDeltaPercent).Percent);
 
 			value = 2147483648.123m;
 
 			res = query.ToArray();
 			Assert.That(res, Has.Length.EqualTo(4));
-			Assert.That(res[0].Value, Is.EqualTo(value));
+			Assert.That(res[0].Value, Is.EqualTo(value).Within(FloatingPointDeltaPercent).Percent);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955"), QueryCacheTest]

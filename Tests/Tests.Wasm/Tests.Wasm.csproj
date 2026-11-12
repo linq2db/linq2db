@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\linq2db.TestProjects.props" />
+
+	<PropertyGroup>
+		<!-- Plural on purpose: Directory.Packages.props evaluates before this file, so a singular TargetFramework leaves its band rows empty. -->
+		<TargetFrameworks>$(LatestTargetFramework)</TargetFrameworks>
+
+		<AssemblyName>linq2db.Tests.Wasm</AssemblyName>
+		<RootNamespace>Tests.Wasm</RootNamespace>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+		<!-- On net11 that framework supplies it, so the Tests-wide pin is pruned and fails restore (NU1510). -->
+		<PackageReference Remove="System.Security.Cryptography.Pkcs" />
+
+		<ProjectReference Include="..\..\Source\LinqToDB.Remote.HttpClient.Server\LinqToDB.Remote.HttpClient.Server.csproj" />
+
+		<!-- The WASM bundles are published by publish-wasm-bundles.ps1; only the entity mapping and the app/host contract (server route, report) are shared. -->
+		<Compile Include="..\Tests.Wasm.App\WasmPerson.cs" Link="WasmPerson.cs" />
+		<Compile Include="..\Tests.Wasm.App\WasmReport.cs" Link="WasmReport.cs" />
+	</ItemGroup>
+</Project>

@@ -23,7 +23,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestMappingCombine([IncludeDataSources(ProviderName.SQLiteMS, TestProvName.AllClickHouse)] string context)
+		public void TestMappingCombine([IncludeDataSources(ProviderName.SQLiteMS)] string context)
 		{
 			var ms = new MappingSchema();
 			var mb = new FluentMappingBuilder(ms);

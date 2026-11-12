@@ -1,0 +1,345 @@
+using System;
+using System.Collections.Concurrent;
+using LinqToDB.Data;
+using LinqToDB.Mapping;
+using Microsoft.AspNetCore.Identity;
+
+namespace LinqToDB.Identity
+{
+	/// <summary>
+	/// Base class for the LinqToDB database context used for identity.
+	/// </summary>
+	public class IdentityDataConnection : IdentityDataConnection<IdentityUser, IdentityRole, string>
+	{
+		/// <summary>
+		/// Constructor with options.
+		/// </summary>
+		/// <param name="options">Connection options.</param>
+		public IdentityDataConnection(DataOptions options)
+			: base(options)
+		{
+		}
+
+		/// <summary>
+		/// Default constructor.
+		/// </summary>
+		public IdentityDataConnection()
+		{
+		}
+	}
+
+	/// <summary>
+	/// Base class for the LinqToDB database context used for identity.
+	/// </summary>
+	/// <typeparam name="TUser">The type of the user objects.</typeparam>
+	public class IdentityDataConnection<TUser> : IdentityDataConnection<TUser, IdentityRole, string>
+		where TUser : IdentityUser
+	{
+		/// <summary>
+		/// Constructor with options.
+		/// </summary>
+		/// <param name="options">Connection options.</param>
+		public IdentityDataConnection(DataOptions options)
+			: base(options)
+		{
+		}
+
+		/// <summary>
+		/// Default constructor.
+		/// </summary>
+		public IdentityDataConnection()
+		{
+		}
+	}
+
+	/// <summary>
+	/// Base class for the LinqToDB database context used for identity.
+	/// </summary>
+	/// <typeparam name="TUser">The type of user objects.</typeparam>
+	/// <typeparam name="TRole">The type of role objects.</typeparam>
+	/// <typeparam name="TKey">The type of the primary key for users and roles.</typeparam>
+	public class IdentityDataConnection<TUser, TRole, TKey> :
+		IdentityDataConnection<TUser, TRole, TKey, IdentityUserClaim<TKey>, IdentityUserRole<TKey>, IdentityUserLogin<TKey>, IdentityRoleClaim<TKey>, IdentityUserToken<TKey>>
+		where TUser : IdentityUser<TKey>
+		where TRole : IdentityRole<TKey>
+		where TKey  : IEquatable<TKey>
+	{
+		/// <summary>
+		/// Constructor with options.
+		/// </summary>
+		/// <param name="options">Connection options.</param>
+		public IdentityDataConnection(DataOptions options)
+			: base(options)
+		{
+		}
+
+		/// <summary>
+		/// Default constructor.
+		/// </summary>
+		public IdentityDataConnection()
+		{
+		}
+	}
+
+	/// <summary>
+	/// Base class for the LinqToDB database context used for identity.
+	/// </summary>
+	/// <typeparam name="TUser">The type of user objects.</typeparam>
+	/// <typeparam name="TKey">The type of the primary key for users and roles.</typeparam>
+	/// <typeparam name="TUserClaim">The type of the user claim object.</typeparam>
+	/// <typeparam name="TUserLogin">The type of the user login object.</typeparam>
+	/// <typeparam name="TUserToken">The type of the user token object.</typeparam>
+#if NET10_0_OR_GREATER
+	public class IdentityDataConnection<TUser, TKey, TUserClaim, TUserLogin, TUserToken> :
+		IdentityDataConnection<TUser, TKey, TUserClaim, TUserLogin, TUserToken, IdentityUserPasskey<TKey>>
+		where TUser      : IdentityUser<TKey>
+		where TKey       : IEquatable<TKey>
+		where TUserClaim : IdentityUserClaim<TKey>
+		where TUserLogin : IdentityUserLogin<TKey>
+		where TUserToken : IdentityUserToken<TKey>
+	{
+		/// <summary>
+		/// Constructor with options.
+		/// </summary>
+		/// <param name="options">Connection options.</param>
+		public IdentityDataConnection(DataOptions options)
+			: base(options)
+		{
+		}
+
+		/// <summary>
+		/// Default constructor.
+		/// </summary>
+		public IdentityDataConnection()
+		{
+		}
+	}
+
+	/// <summary>
+	/// Base class for the LinqToDB database context used for identity.
+	/// </summary>
+	/// <typeparam name="TUser">The type of user objects.</typeparam>
+	/// <typeparam name="TKey">The type of the primary key for users and roles.</typeparam>
+	/// <typeparam name="TUserClaim">The type of the user claim object.</typeparam>
+	/// <typeparam name="TUserLogin">The type of the user login object.</typeparam>
+	/// <typeparam name="TUserToken">The type of the user token object.</typeparam>
+	/// <typeparam name="TUserPasskey">The type of the user passkey object.</typeparam>
+	public class IdentityDataConnection<TUser, TKey, TUserClaim, TUserLogin, TUserToken, TUserPasskey> :
+#else
+	public class IdentityDataConnection<TUser, TKey, TUserClaim, TUserLogin, TUserToken> :
+#endif
+		DataConnection
+		where TUser      : IdentityUser<TKey>
+		where TKey       : IEquatable<TKey>
+		where TUserClaim : IdentityUserClaim<TKey>
+		where TUserLogin : IdentityUserLogin<TKey>
+		where TUserToken : IdentityUserToken<TKey>
+#if NET10_0_OR_GREATER
+		where TUserPasskey : IdentityUserPasskey<TKey>
+#endif
+	{
+		// Keyed by the most-derived type: role mappings are added by derived ConfigureMappings overrides whose
+		// role type arguments aren't part of this base type, so a single base-scoped cache would let two contexts
+		// that differ only in role types collide on one schema.
+		private static readonly ConcurrentDictionary<Type, MappingSchema> _mappingSchemas = new ();
+
+		/// <summary>
+		/// Constructor with options.
+		/// </summary>
+		/// <param name="options">Connection options.</param>
+		public IdentityDataConnection(DataOptions options)
+			: base(options)
+		{
+			AddMappingSchema(GetMappingSchema());
+		}
+
+		/// <summary>
+		/// Default constructor.
+		/// </summary>
+		public IdentityDataConnection()
+		{
+			AddMappingSchema(GetMappingSchema());
+		}
+
+		private MappingSchema GetMappingSchema()
+			=> _mappingSchemas.GetOrAdd(GetType(), _ =>
+			{
+				var ms = new MappingSchema();
+				ConfigureMappings(ms);
+				return ms;
+			});
+
+		/// <summary>
+		/// Registers the identity entity mappings (the <c>AspNet*</c> tables) into <paramref name="mappingSchema"/>.
+		/// Runs once per context type and the result is cached for the process lifetime, so mappings cannot vary per instance.
+		/// To customize, call the base implementation first, then apply a further <see cref="FluentMappingBuilder"/> pass.
+		/// </summary>
+		/// <param name="mappingSchema">The schema to configure.</param>
+		protected virtual void ConfigureMappings(MappingSchema mappingSchema)
+		{
+			var builder = new FluentMappingBuilder(mappingSchema);
+
+			DefaultMappings.SetupIdentityUser     <TKey, TUser     >(builder);
+			DefaultMappings.SetupIdentityUserClaim<TKey, TUserClaim>(builder);
+			DefaultMappings.SetupIdentityUserLogin<TKey, TUserLogin>(builder);
+			DefaultMappings.SetupIdentityUserToken<TKey, TUserToken>(builder);
+#if NET10_0_OR_GREATER
+			DefaultMappings.SetupIdentityUserPasskey<TKey, TUserPasskey>(builder);
+#endif
+
+			// IdentityNavigations return the stock satellite types, so they need the AspNet* tables too
+			if (typeof(TUserClaim) != typeof(IdentityUserClaim<TKey>)) DefaultMappings.SetupIdentityUserClaim<TKey, IdentityUserClaim<TKey>>(builder);
+			if (typeof(TUserLogin) != typeof(IdentityUserLogin<TKey>)) DefaultMappings.SetupIdentityUserLogin<TKey, IdentityUserLogin<TKey>>(builder);
+
+			builder.Build();
+		}
+
+		/// <summary>
+		/// Gets the <see cref="ITable{TEntity}" /> of Users.
+		/// </summary>
+		public ITable<TUser> Users => this.GetTable<TUser>();
+
+		/// <summary>
+		/// Gets the <see cref="ITable{TEntity}" /> of User claims.
+		/// </summary>
+		public ITable<TUserClaim> UserClaims => this.GetTable<TUserClaim>();
+
+		/// <summary>
+		/// Gets the <see cref="ITable{TEntity}" /> of User logins.
+		/// </summary>
+		public ITable<TUserLogin> UserLogins => this.GetTable<TUserLogin>();
+
+		/// <summary>
+		/// Gets the <see cref="ITable{TEntity}" /> of User tokens.
+		/// </summary>
+		public ITable<TUserToken> UserTokens => this.GetTable<TUserToken>();
+
+#if NET10_0_OR_GREATER
+		/// <summary>
+		/// Gets the <see cref="ITable{TEntity}" /> of User passkeys.
+		/// </summary>
+		public ITable<TUserPasskey> UserPasskeys => this.GetTable<TUserPasskey>();
+#endif
+	}
+
+	/// <summary>
+	/// Base class for the LinqToDB database context used for identity.
+	/// </summary>
+	/// <typeparam name="TUser">The type of user objects.</typeparam>
+	/// <typeparam name="TRole">The type of role objects.</typeparam>
+	/// <typeparam name="TKey">The type of the primary key for users and roles.</typeparam>
+	/// <typeparam name="TUserClaim">The type of the user claim object.</typeparam>
+	/// <typeparam name="TUserRole">The type of the user role object.</typeparam>
+	/// <typeparam name="TUserLogin">The type of the user login object.</typeparam>
+	/// <typeparam name="TRoleClaim">The type of the role claim object.</typeparam>
+	/// <typeparam name="TUserToken">The type of the user token object.</typeparam>
+#if NET10_0_OR_GREATER
+	public class IdentityDataConnection<TUser, TRole, TKey, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken> :
+		IdentityDataConnection<TUser, TRole, TKey, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken, IdentityUserPasskey<TKey>>
+		where TUser      : IdentityUser<TKey>
+		where TRole      : IdentityRole<TKey>
+		where TKey       : IEquatable<TKey>
+		where TUserClaim : IdentityUserClaim<TKey>
+		where TUserRole  : IdentityUserRole<TKey>
+		where TUserLogin : IdentityUserLogin<TKey>
+		where TRoleClaim : IdentityRoleClaim<TKey>
+		where TUserToken : IdentityUserToken<TKey>
+	{
+		/// <summary>
+		/// Constructor with options.
+		/// </summary>
+		/// <param name="options">Connection options.</param>
+		public IdentityDataConnection(DataOptions options)
+			: base(options)
+		{
+		}
+
+		/// <summary>
+		/// Default constructor.
+		/// </summary>
+		public IdentityDataConnection()
+		{
+		}
+	}
+
+	/// <summary>
+	/// Base class for the LinqToDB database context used for identity.
+	/// </summary>
+	/// <typeparam name="TUser">The type of user objects.</typeparam>
+	/// <typeparam name="TRole">The type of role objects.</typeparam>
+	/// <typeparam name="TKey">The type of the primary key for users and roles.</typeparam>
+	/// <typeparam name="TUserClaim">The type of the user claim object.</typeparam>
+	/// <typeparam name="TUserRole">The type of the user role object.</typeparam>
+	/// <typeparam name="TUserLogin">The type of the user login object.</typeparam>
+	/// <typeparam name="TRoleClaim">The type of the role claim object.</typeparam>
+	/// <typeparam name="TUserToken">The type of the user token object.</typeparam>
+	/// <typeparam name="TUserPasskey">The type of the user passkey object.</typeparam>
+	public class IdentityDataConnection<TUser, TRole, TKey, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken, TUserPasskey> :
+		IdentityDataConnection<TUser, TKey, TUserClaim, TUserLogin, TUserToken, TUserPasskey>
+#else
+	public class IdentityDataConnection<TUser, TRole, TKey, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken> :
+		IdentityDataConnection<TUser, TKey, TUserClaim, TUserLogin, TUserToken>
+#endif
+		where TUser      : IdentityUser<TKey>
+		where TRole      : IdentityRole<TKey>
+		where TKey       : IEquatable<TKey>
+		where TUserClaim : IdentityUserClaim<TKey>
+		where TUserRole  : IdentityUserRole<TKey>
+		where TUserLogin : IdentityUserLogin<TKey>
+		where TRoleClaim : IdentityRoleClaim<TKey>
+		where TUserToken : IdentityUserToken<TKey>
+#if NET10_0_OR_GREATER
+		where TUserPasskey : IdentityUserPasskey<TKey>
+#endif
+	{
+		/// <summary>
+		/// Constructor with options.
+		/// </summary>
+		/// <param name="options">Connection options.</param>
+		public IdentityDataConnection(DataOptions options)
+			: base(options)
+		{
+		}
+
+		/// <summary>
+		/// Default constructor.
+		/// </summary>
+		public IdentityDataConnection()
+		{
+		}
+
+		/// <inheritdoc />
+		protected override void ConfigureMappings(MappingSchema mappingSchema)
+		{
+			base.ConfigureMappings(mappingSchema);
+
+			var builder = new FluentMappingBuilder(mappingSchema);
+
+			DefaultMappings.SetupIdentityRole     <TKey, TRole     >(builder);
+			DefaultMappings.SetupIdentityUserRole <TKey, TUserRole >(builder);
+			DefaultMappings.SetupIdentityRoleClaim<TKey, TRoleClaim>(builder);
+
+			if (typeof(TUserRole ) != typeof(IdentityUserRole <TKey>)) DefaultMappings.SetupIdentityUserRole <TKey, IdentityUserRole <TKey>>(builder);
+			if (typeof(TRoleClaim) != typeof(IdentityRoleClaim<TKey>)) DefaultMappings.SetupIdentityRoleClaim<TKey, IdentityRoleClaim<TKey>>(builder);
+			if (typeof(TRole     ) != typeof(IdentityRole     <TKey>)) DefaultMappings.SetupIdentityRole     <TKey, IdentityRole     <TKey>>(builder);
+			if (typeof(TUser     ) != typeof(IdentityUser     <TKey>)) DefaultMappings.SetupIdentityUser     <TKey, IdentityUser     <TKey>>(builder);
+
+			builder.Build();
+		}
+
+		/// <summary>
+		/// Gets the <see cref="ITable{TEntity}" /> of User roles.
+		/// </summary>
+		public ITable<TUserRole> UserRoles => this.GetTable<TUserRole>();
+
+		/// <summary>
+		/// Gets the <see cref="ITable{TEntity}" /> of roles.
+		/// </summary>
+		public ITable<TRole> Roles => this.GetTable<TRole>();
+
+		/// <summary>
+		/// Gets the <see cref="ITable{TEntity}" /> of role claims.
+		/// </summary>
+		public ITable<TRoleClaim> RoleClaims => this.GetTable<TRoleClaim>();
+	}
+}

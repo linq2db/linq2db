@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.Threading.Tasks;
 
 using LinqToDB;
@@ -38,7 +39,7 @@ namespace OpenTelemetryExample
 
 				var count = await db.GetTable<Customer>().CountAsync();
 
-				Console.WriteLine($"Count is {count}");
+				Console.WriteLine($"Count is {count.ToString(CultureInfo.InvariantCulture)}");
 			}
 		}
 
@@ -46,8 +47,8 @@ namespace OpenTelemetryExample
 		static readonly ActivityListener _activityListener = new()
 		{
 			ShouldListenTo      = _ => true,
-			SampleUsingParentId = (ref ActivityCreationOptions<string>          _) => ActivitySamplingResult.AllData,
-			Sample              = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData
+			SampleUsingParentId = (ref _) => ActivitySamplingResult.AllData,
+			Sample              = (ref _) => ActivitySamplingResult.AllData
 		};
 
 		// This class is used to collect LinqToDB telemetry data.

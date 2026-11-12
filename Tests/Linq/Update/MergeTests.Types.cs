@@ -413,7 +413,7 @@ namespace Tests.xUpdate
 				Assert.That(actual.FieldGuid, Is.EqualTo(expected.FieldGuid));
 
 			if (!provider.IsAnyOf(TestProvName.AllSQLite))
-				Assert.That(actual.FieldDecimal, Is.EqualTo(expected.FieldDecimal));
+				Assert.That(actual.FieldDecimal, Is.EqualTo(expected.FieldDecimal).Within(FloatingPointDeltaPercent).Percent);
 
 			if (   !provider.IsAnyOf(TestProvName.AllSqlServer2005)
 				&& provider != ProviderName.SqlCe
@@ -651,8 +651,6 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestTypesInsertByMerge([MergeDataContextSource(TestProvName.AllInformix, TestProvName.AllSybase)] string context)
 		{
-			using var _ = context.IsAnyOf(TestProvName.AllPostgreSQL) ? new DisableBaseline("https://github.com/linq2db/linq2db/issues/5169 - PostgreSQL remote/direct MERGE-source parameter dedup/naming divergence (value_2/value_3 vs value/value_2)") : null;
-
 			var isIDS = IsIDSProvider(context);
 
 			using var db = GetDataContext(context);

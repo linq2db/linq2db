@@ -1,12 +1,21 @@
+extern alias MySqlConnector;
+
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text;
 using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Data;
+using LinqToDB.DataProvider;
+using LinqToDB.DataProvider.ClickHouse;
+using LinqToDB.DataProvider.DuckDB;
+using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
@@ -200,10 +209,13 @@ namespace Tests.Linq
 
 		sealed class AllTypes
 		{
+			[Column("decimalDataType")]
 			public decimal DecimalDataType;
+			[Column("binaryDataType")]
 			public byte[]? BinaryDataType;
+			[Column("varbinaryDataType")]
 			public byte[]? VarBinaryDataType;
-			[Column(DataType = DataType.VarChar)]
+			[Column("varcharDataType", DataType = DataType.VarChar)]
 			public string? VarcharDataType;
 		}
 
@@ -489,6 +501,141 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable<Issue1189Customer>();
 			table.Where(k => k.ToDelete <= TestData.NonReadonlyDateTime).ToList();
+		}
+
+		// Both sides are known on each run, so the comparison folds by the parameter's value. On SQLite it has to fold before
+		// the date comparison is rewritten through strftime, which can no longer be evaluated.
+		[Test]
+		public void DateTimeConstantComparedWithParameterFoldsPerValue([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var date  = TestData.DateTime0.AddDays(1);
+			var query = db.Person
+				.Where(p => Sql.AsSql(TestData.DateTime0) <= date);
+
+			AssertQuery(query);
+			var whenTrue = query.ToSqlQuery();
+
+			date = TestData.DateTime0.AddDays(-1);
+
+			var whenFalseRows = query.ToList();
+			var whenFalse     = query.ToSqlQuery();
+
+			whenFalseRows.ShouldBeEmpty();
+			whenTrue     .Parameters.ShouldBeEmpty();
+			whenFalse    .Parameters.ShouldBeEmpty();
+		}
+
+		// SQLite only, direct and remote: the three tests below pin the shared evaluator behind both folds, which no provider
+		// overrides for an ordering comparison; before the fix they were red alike on every provider.
+		[Test]
+		public void NegatedConstantComparedWithNullDateParameter([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			DateTime? date = null;
+
+			var query = db.Person
+				.Where(p => !(Sql.AsSql((DateTime?)TestData.DateTime0) <= date));
+
+			AssertQuery(query);
+
+			date = TestData.DateTime0.AddDays(1);
+
+			AssertQuery(query);
+
+			date = null;
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void NegatedConstantComparedWithNullIntParameter([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			int? value = null;
+
+			var query = db.Person
+				.Where(p => !(Sql.AsSql((int?)1) > value));
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void NegatedConstantComparedWithNullParameterUnderLikeSql([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context, o => o.UseCompareNulls(CompareNulls.LikeSql));
+
+			int? value = null;
+
+			var query = db.Person
+				.Where(p => !(Sql.AsSql((int?)1) > value));
+
+			query
+				.ToList()
+				.ShouldBeEmpty();
+
+			value = 0;
+
+			query
+				.ToList()
+				.ShouldBeEmpty();
+
+			value = 2;
+
+			query
+				.ToList()
+				.Count
+				.ShouldBe(db.Person.Count());
+		}
+
+		[ActiveIssue(6256, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}[2, 3, 4]{1}but was")]
+		[Test]
+		public void NegatedComparisonWithNullParameterInsideNotUnderLikeSql([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context, o => o.UseCompareNulls(CompareNulls.LikeSql));
+
+			int? value = null;
+
+			var expected = db.Person
+				.Select(p => p.ID)
+				.Where(id => id != 1)
+				.OrderBy(id => id)
+				.ToArray();
+
+			// the un-simplified negation is the shape under test
+#pragma warning disable MA0213 // Simplify negated boolean expression
+			db.Person
+				.Where(p => !(!(Sql.AsSql((int?)1) > value) && p.ID == 1))
+#pragma warning restore MA0213
+				.Select(p => p.ID)
+				.OrderBy(id => id)
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
+		[ActiveIssue(6256, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}[2, 3, 4]{1}but was")]
+		[Test]
+		public void ComparisonWithNullParameterInsideNotUnderLikeSql([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context, o => o.UseCompareNulls(CompareNulls.LikeSql));
+
+			int? value = null;
+
+			var expected = db.Person
+				.Select(p => p.ID)
+				.Where(id => id != 1)
+				.OrderBy(id => id)
+				.ToArray();
+
+			db.Person
+				.Where(p => !(Sql.AsSql((int?)1) > value && p.ID == 1))
+				.Select(p => p.ID)
+				.OrderBy(id => id)
+				.ToArray()
+				.ShouldBe(expected);
 		}
 
 		[Table]
@@ -1502,10 +1649,9 @@ namespace Tests.Linq
 		// on SqlServer.2017.MS.LinqService (build 22779) and was killed by --hangdump-timeout 5m on
 		// SqlServer.Contained.LinqService (22810), starving unrelated tests meanwhile. Awaiting frees
 		// the thread for the duration of the round-trip, so the burst no longer exhausts the pool.
+		[NoBaselines("multi-threading")]
 		public async Task TestIQueryableParameterEvaluationMultiThreaded([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
-			using var _ = new DisableBaseline("multi-threading");
-
 			// per-invocation state: a shared instance field is clobbered when parallel execution runs
 			// this test concurrently for several SqlServer contexts (thread index collides across them).
 			var paramValues = new int[30];
@@ -1869,6 +2015,93 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void NullableComparisonAsSetValue([DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var data = new[]
+			{
+				new TestBool { Id = 1, Value = null  },
+				new TestBool { Id = 2, Value = false },
+				new TestBool { Id = 3, Value = true  },
+			};
+
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(data);
+
+			// C# reads NULL != true as true, so the stored value must not be NULL
+			tb.Update(r => new TestBool()
+			{
+				Value = r.Value != true
+			});
+
+			tb
+				.OrderBy(r => r.Id)
+				.Select(r => r.Value)
+				.ToArray()
+				.ShouldBe(new bool?[] { true, true, false });
+		}
+
+		[Test]
+		public void NullableComparisonAsConditionalSetValue([DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var data = new[]
+			{
+				new TestBool { Id = 1, Value = null  },
+				new TestBool { Id = 2, Value = false },
+				new TestBool { Id = 3, Value = true  },
+			};
+
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(data);
+
+			// the comparison is a result of the conditional, so it is folded there, not by the SET slot
+			tb.Update(r => new TestBool()
+			{
+				Value = r.Id > 0 ? r.Value != true : null
+			});
+
+			tb
+				.OrderBy(r => r.Id)
+				.Select(r => r.Value)
+				.ToArray()
+				.ShouldBe(new bool?[] { true, true, false });
+		}
+
+		[Table]
+		sealed class SetFlagTable
+		{
+			[PrimaryKey] public int   Id { get; set; }
+			[Column    ] public bool? F  { get; set; }
+			[Column    ] public int?  A  { get; set; }
+			[Column    ] public int?  B  { get; set; }
+			[Column    ] public int?  C  { get; set; }
+		}
+
+		[Test]
+		public void NullableComparisonAsConditionalElseSetValue([DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var data = new[]
+			{
+				new SetFlagTable { Id = 1, F = true,  A = 1,    B = 1,    C = null },
+				new SetFlagTable { Id = 2, F = true,  A = 1,    B = 2,    C = 1    },
+				new SetFlagTable { Id = 3, F = null,  A = null, B = 1,    C = 1    },
+				new SetFlagTable { Id = 4, F = null,  A = null, B = null, C = 1    },
+			};
+
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(data);
+
+			tb
+				.Set(r => r.F, r => r.C == null ? r.F : r.A == r.B)
+				.Update();
+
+			tb
+				.OrderBy(r => r.Id)
+				.Select(r => r.F)
+				.ToArray()
+				.ShouldBe(new bool?[] { true, false, false, true });
+		}
+
 		[ActiveIssue(ErrorTypeName = "System.NullReferenceException", ErrorMessage = "Object reference not set to an instance of an object.",
 			Details = "no-issue: a null first argument to Sql.PadLeft throws while the accessor is built, before any SQL is produced. #4799 is the only PadLeft issue on the tracker and reports trimming, which is a different defect.")]
 		[Test]
@@ -2015,5 +2248,371 @@ namespace Tests.Linq
 			byString.Length.ShouldBe(1);
 			byNumber.Length.ShouldBe(1);
 		}
+
+		[Table]
+		sealed class ArrayLengthTable
+		{
+			[PrimaryKey] public int Id    { get; set; }
+			[Column]     public int Value { get; set; }
+		}
+
+		[Test]
+		public void ArrayLengthInWhere([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var arr = new[] { 0 };
+
+			var query = db.Person
+				.Where(p => p.ID == arr.Length);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void ArrayLengthInInsertSetter([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<ArrayLengthTable>();
+
+			var arr = new[] { 0, 0, 0 };
+
+			table.Insert(() => new ArrayLengthTable
+			{
+				Id    = 1,
+				Value = arr.Length,
+			});
+
+			table
+				.Single()
+				.Value
+				.ShouldBe(3);
+		}
+
+		[Test, QueryCacheTest]
+		public void ArrayLengthIsReadPerExecution([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[]
+			{
+				new ArrayLengthTable { Id = 1, Value = 10 },
+				new ArrayLengthTable { Id = 2, Value = 20 },
+			});
+
+			var arr = new[] { 0 };
+
+			var query = table
+				.Where(t => t.Id == arr.Length);
+
+			query
+				.Single()
+				.Value
+				.ShouldBe(10);
+
+			var cacheMissCount = query.GetCacheMissCount();
+
+			arr = new[] { 0, 0 };
+
+			query
+				.Single()
+				.Value
+				.ShouldBe(20);
+
+			query
+				.GetCacheMissCount()
+				.ShouldBe(cacheMissCount);
+		}
+
+		[Test]
+		public void ArrayLengthInCompiledQuery([DataSources] string context)
+		{
+			var query = CompiledQuery.Compile((ITestDataContext db, int[] arr) =>
+				db.Person
+					.Where(p => p.ID == arr.Length)
+					.Select(p => p.ID));
+
+			using var db = GetDataContext(context);
+
+			query(db, new[] { 0 })
+				.Single()
+				.ShouldBe(1);
+
+			query(db, new[] { 0, 0 })
+				.Single()
+				.ShouldBe(2);
+		}
+
+		[Test]
+		public void ArrayLengthInSetProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var arr = new[] { 0, 0 };
+
+			var query = db.Person
+				.Where(p => p.ID == 1)
+				.Select(p => new { p.ID, L = arr.Length })
+				.Concat(db.Person
+					.Where(p => p.ID == 2)
+					.Select(p => new { p.ID, L = 0 }));
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void ArrayLengthInProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var arr = new[] { 0, 0 };
+
+			var query =
+				from p in db.Person
+				where p.ID == 1
+				select new
+				{
+					p.ID,
+					L = arr.Length,
+				};
+
+			query
+				.GetSelectQuery()
+				.Select
+				.Columns
+				.Count
+				.ShouldBe(1);
+
+			AssertQuery(query);
+		}
+
+		#region Parameter type names in the trace DECLARE block
+
+		static string PrintParameterDeclaration(IDataProvider provider, DbParameter parameter, DbDataType? dataType = null, object? value = null)
+		{
+			// the connection is never opened: SetParameter and PrintParameters only touch the parameter
+			var options = new DataOptions()
+				.UseConnectionString(provider, "Data Source=:memory:");
+
+			using var db = new DataConnection(options);
+
+			if (dataType != null)
+				provider.SetParameter(db, parameter, "p", dataType.Value, value);
+			else
+				parameter.ParameterName = "p";
+
+			var sb = new StringBuilder();
+
+			provider
+				.CreateSqlBuilder(db.MappingSchema, db.Options)
+				.PrintParameters(db, sb, [parameter]);
+
+			return sb
+				.ToString()
+				.Split('\n')[0]
+				.TrimEnd('\r');
+		}
+
+		static TestCaseData ParameterTypeCase(object?[] arguments, params string[] displayNames)
+		{
+			var testCase = new TestCaseData(arguments);
+
+			testCase.SetArgDisplayNames(displayNames);
+
+			return testCase;
+		}
+
+		static TestCaseData ParameterTypeCase(string name, DbDataType dataType, object? value, string expected)
+		{
+			return ParameterTypeCase([dataType, value, expected], name);
+		}
+
+		static IEnumerable<TestCaseData> SQLiteMSParameterTypeCases()
+		{
+			yield return ParameterTypeCase("Int32"     , new DbDataType(typeof(int)     , DataType.Int32)       , 1                , "DECLARE @p Integer -- Int32"     );
+			yield return ParameterTypeCase("DateTime"  , new DbDataType(typeof(DateTime), DataType.DateTime)    , TestData.DateTime, "DECLARE @p Text(23) -- DateTime" );
+			yield return ParameterTypeCase("Guid"      , new DbDataType(typeof(Guid)    , DataType.Guid)        , TestData.Guid1   , "DECLARE @p Blob(16) -- Guid"     );
+			yield return ParameterTypeCase("GuidAsText", new DbDataType(typeof(Guid)    , DataType.Guid, "TEXT"), TestData.Guid1   , "DECLARE @p Text(36) -- Guid"     );
+			yield return ParameterTypeCase("Boolean"   , new DbDataType(typeof(bool)    , DataType.Boolean)     , true             , "DECLARE @p Integer -- Boolean"   );
+			yield return ParameterTypeCase("Double"    , new DbDataType(typeof(double)  , DataType.Double)      , 1.5              , "DECLARE @p Real -- Double"       );
+			yield return ParameterTypeCase("NullInt32" , new DbDataType(typeof(int?)    , DataType.Int32)       , null             , "DECLARE @p Integer -- Int32"     );
+			yield return ParameterTypeCase("String"    , new DbDataType(typeof(string)  , DataType.NVarChar)    , "abc"            , "DECLARE @p NVarChar(3) -- String");
+			yield return ParameterTypeCase("Binary"    , new DbDataType(typeof(byte[])  , DataType.Binary)      , new byte[3]      , "DECLARE @p Binary(3)"            );
+			yield return ParameterTypeCase("Decimal"   , new DbDataType(typeof(decimal) , DataType.Decimal)     , 1.5m             , "DECLARE @p Decimal(2, 1)"        );
+		}
+
+		[TestCaseSource(nameof(SQLiteMSParameterTypeCases))]
+		public void ParameterTypeNameSQLiteMS(DbDataType dataType, object? value, string expected)
+		{
+			PrintParameterDeclaration(SQLiteTools.GetDataProvider(SQLiteProvider.Microsoft), new Microsoft.Data.Sqlite.SqliteParameter(), dataType, value)
+				.ShouldBe(expected);
+		}
+
+		[Test]
+		public void ParameterTypeNameSQLiteMSObject()
+		{
+			var parameter = new Microsoft.Data.Sqlite.SqliteParameter
+			{
+				DbType = DbType.Object,
+				Value  = 1,
+			};
+
+			PrintParameterDeclaration(SQLiteTools.GetDataProvider(SQLiteProvider.Microsoft), parameter)
+				.ShouldBe("DECLARE @p Integer -- Object");
+		}
+
+		[Test]
+		public void ParameterTypeNameSQLiteMSUnmappedValue()
+		{
+			// Microsoft.Data.Sqlite throws for a CLR type it cannot bind; the trace must still be written
+			var parameter = new Microsoft.Data.Sqlite.SqliteParameter
+			{
+				DbType = DbType.Object,
+				Value  = new object(),
+			};
+
+			PrintParameterDeclaration(SQLiteTools.GetDataProvider(SQLiteProvider.Microsoft), parameter)
+				.ShouldBe("DECLARE @p  -- Object");
+		}
+
+		static IEnumerable<TestCaseData> SQLiteClassicParameterTypeCases()
+		{
+			yield return ParameterTypeCase("Int32"   , new DbDataType(typeof(int)     , DataType.Int32)   , 1                , "DECLARE @p Integer -- Int32"         );
+			yield return ParameterTypeCase("Boolean" , new DbDataType(typeof(bool)    , DataType.Boolean) , true             , "DECLARE @p Integer -- Boolean"       );
+			yield return ParameterTypeCase("Guid"    , new DbDataType(typeof(Guid)    , DataType.Guid)    , TestData.Guid1   , "DECLARE @p Blob -- Guid"             );
+			yield return ParameterTypeCase("Double"  , new DbDataType(typeof(double)  , DataType.Double)  , 1.5              , "DECLARE @p Real -- Double"           );
+			yield return ParameterTypeCase("DateTime", new DbDataType(typeof(DateTime), DataType.DateTime), TestData.DateTime, "DECLARE @p VarChar(23) -- AnsiString");
+			yield return ParameterTypeCase("String"  , new DbDataType(typeof(string)  , DataType.NVarChar), "abc"            , "DECLARE @p NVarChar(3) -- String"    );
+			yield return ParameterTypeCase("Binary"  , new DbDataType(typeof(byte[])  , DataType.Binary)  , new byte[3]      , "DECLARE @p Binary(3)"                );
+			yield return ParameterTypeCase("Decimal" , new DbDataType(typeof(decimal) , DataType.Decimal) , 1.5m             , "DECLARE @p Decimal(2, 1)"            );
+		}
+
+		[TestCaseSource(nameof(SQLiteClassicParameterTypeCases))]
+		public void ParameterTypeNameSQLiteClassic(DbDataType dataType, object? value, string expected)
+		{
+			PrintParameterDeclaration(SQLiteTools.GetDataProvider(SQLiteProvider.System), new System.Data.SQLite.SQLiteParameter(), dataType, value)
+				.ShouldBe(expected);
+		}
+
+		[Test]
+		public void ParameterTypeNameSQLiteClassicObject()
+		{
+			// System.Data.SQLite binds a DbType.Object parameter by the type of its value
+			var parameter = new System.Data.SQLite.SQLiteParameter
+			{
+				DbType = DbType.Object,
+				Value  = 1,
+			};
+
+			PrintParameterDeclaration(SQLiteTools.GetDataProvider(SQLiteProvider.System), parameter)
+				.ShouldBe("DECLARE @p Integer -- Object");
+		}
+
+#if !NETFRAMEWORK
+		static IEnumerable<TestCaseData> DuckDBParameterTypeCases()
+		{
+			yield return ParameterTypeCase("Boolean"   , new DbDataType(typeof(bool)      , DataType.Boolean)  , true          , "DECLARE $p BOOLEAN -- Boolean"   );
+			yield return ParameterTypeCase("SByte"     , new DbDataType(typeof(sbyte)     , DataType.SByte)    , (sbyte)1      , "DECLARE $p TINYINT -- SByte"     );
+			yield return ParameterTypeCase("Byte"      , new DbDataType(typeof(byte)      , DataType.Byte)     , (byte)1       , "DECLARE $p UTINYINT -- Byte"     );
+			yield return ParameterTypeCase("Int16"     , new DbDataType(typeof(short)     , DataType.Int16)    , (short)1      , "DECLARE $p SMALLINT -- Int16"    );
+			yield return ParameterTypeCase("UInt16"    , new DbDataType(typeof(ushort)    , DataType.UInt16)   , (ushort)1     , "DECLARE $p USMALLINT -- UInt16"  );
+			yield return ParameterTypeCase("Int32"     , new DbDataType(typeof(int)       , DataType.Int32)    , 1             , "DECLARE $p INTEGER -- Int32"     );
+			yield return ParameterTypeCase("UInt32"    , new DbDataType(typeof(uint)      , DataType.UInt32)   , 1U            , "DECLARE $p UINTEGER -- UInt32"   );
+			yield return ParameterTypeCase("Int64"     , new DbDataType(typeof(long)      , DataType.Int64)    , 1L            , "DECLARE $p BIGINT -- Int64"      );
+			yield return ParameterTypeCase("UInt64"    , new DbDataType(typeof(ulong)     , DataType.UInt64)   , 1UL           , "DECLARE $p UBIGINT -- UInt64"    );
+			yield return ParameterTypeCase("Single"    , new DbDataType(typeof(float)     , DataType.Single)   , 1.5f          , "DECLARE $p FLOAT -- Single"      );
+			yield return ParameterTypeCase("Double"    , new DbDataType(typeof(double)    , DataType.Double)   , 1.5           , "DECLARE $p DOUBLE -- Double"     );
+			yield return ParameterTypeCase("Money"     , new DbDataType(typeof(decimal)   , DataType.Money)    , 1.5m          , "DECLARE $p DECIMAL -- Currency"  );
+			yield return ParameterTypeCase("BigInteger", new DbDataType(typeof(System.Numerics.BigInteger), DataType.Undefined), System.Numerics.BigInteger.One, "DECLARE $p BIGNUM -- VarNumeric");
+			yield return ParameterTypeCase("Date"      , new DbDataType(typeof(DateTime)  , DataType.Date)     , TestData.Date , "DECLARE $p DATE -- Date"         );
+			yield return ParameterTypeCase("Time"      , new DbDataType(typeof(TimeSpan)  , DataType.Time)     , TimeSpan.FromHours(1), "DECLARE $p TIME -- Time"  );
+			yield return ParameterTypeCase("DateTime"  , new DbDataType(typeof(DateTime)  , DataType.DateTime) , TestData.DateTime, "DECLARE $p TIMESTAMP -- DateTime");
+			yield return ParameterTypeCase("DateTime2" , new DbDataType(typeof(DateTime)  , DataType.DateTime2), TestData.DateTime, "DECLARE $p TIMESTAMP -- DateTime2");
+			yield return ParameterTypeCase("DateTimeOffset", new DbDataType(typeof(DateTimeOffset), DataType.DateTimeOffset), TestData.DateTimeOffset, "DECLARE $p TIMESTAMPTZ -- DateTimeOffset");
+			yield return ParameterTypeCase("Guid"      , new DbDataType(typeof(Guid)      , DataType.Guid)     , TestData.Guid1, "DECLARE $p UUID -- Guid"         );
+			yield return ParameterTypeCase("String"    , new DbDataType(typeof(string)    , DataType.NVarChar) , "abc"         , "DECLARE $p NVarChar(3) -- String");
+			yield return ParameterTypeCase("Binary"    , new DbDataType(typeof(byte[])    , DataType.Binary)   , new byte[3]   , "DECLARE $p Binary(3)"            );
+			yield return ParameterTypeCase("Decimal"   , new DbDataType(typeof(decimal)   , DataType.Decimal)  , 1.5m          , "DECLARE $p Decimal(2, 1)"        );
+		}
+
+		[TestCaseSource(nameof(DuckDBParameterTypeCases))]
+		public void ParameterTypeNameDuckDB(DbDataType dataType, object? value, string expected)
+		{
+			PrintParameterDeclaration(DuckDBTools.GetDataProvider(), new DuckDB.NET.Data.DuckDBParameter(), dataType, value)
+				.ShouldBe(expected);
+		}
+
+		[Test]
+		public void ParameterTypeNameDuckDBObject()
+		{
+			// no value: DuckDBParameter.Value's setter would re-derive DbType from it
+			var parameter = new DuckDB.NET.Data.DuckDBParameter
+			{
+				DbType = DbType.Object,
+			};
+
+			PrintParameterDeclaration(DuckDBTools.GetDataProvider(), parameter)
+				.ShouldBe("DECLARE $p  -- Object");
+		}
+#endif
+
+		static IEnumerable<TestCaseData> ClickHouseParameterTypeCases()
+		{
+			var int64    = new DbDataType(typeof(long?)   , DataType.Int64);
+			var guid     = new DbDataType(typeof(Guid)    , DataType.Guid);
+			var dateTime = new DbDataType(typeof(DateTime), DataType.DateTime);
+			var boolean  = new DbDataType(typeof(bool)    , DataType.Boolean);
+
+#if !NETFRAMEWORK
+			yield return ParameterTypeCase([ClickHouseProvider.Octonica        , int64   , 1L               , "DECLARE @p Int64"                    ], "Octonica"      , "Int64"    );
+			yield return ParameterTypeCase([ClickHouseProvider.Octonica        , int64   , null             , "DECLARE @p Int64"                    ], "Octonica"      , "NullInt64");
+			yield return ParameterTypeCase([ClickHouseProvider.Octonica        , guid    , TestData.Guid1   , "DECLARE @p Guid"                     ], "Octonica"      , "Guid"     );
+			yield return ParameterTypeCase([ClickHouseProvider.Octonica        , dateTime, TestData.DateTime, "DECLARE @p DateTime"                 ], "Octonica"      , "DateTime" );
+			yield return ParameterTypeCase([ClickHouseProvider.Octonica        , boolean , true             , "DECLARE @p Boolean"                  ], "Octonica"      , "Boolean"  );
+#endif
+			yield return ParameterTypeCase([ClickHouseProvider.ClickHouseDriver, int64   , 1L               , "DECLARE @p Int64"                    ], "Driver"        , "Int64"    );
+			yield return ParameterTypeCase([ClickHouseProvider.ClickHouseDriver, int64   , null             , "DECLARE @p Nullable(Nothing) -- Int64"], "Driver"        , "NullInt64");
+			yield return ParameterTypeCase([ClickHouseProvider.ClickHouseDriver, guid    , TestData.Guid1   , "DECLARE @p UUID -- Guid"             ], "Driver"        , "Guid"     );
+			yield return ParameterTypeCase([ClickHouseProvider.ClickHouseDriver, dateTime, TestData.DateTime, "DECLARE @p DateTime"                 ], "Driver"        , "DateTime" );
+			yield return ParameterTypeCase([ClickHouseProvider.ClickHouseDriver, boolean , true             , "DECLARE @p Bool -- Boolean"          ], "Driver"        , "Boolean"  );
+			yield return ParameterTypeCase([ClickHouseProvider.MySqlConnector  , int64   , 1L               , "DECLARE @p Int64"                    ], "MySqlConnector", "Int64"    );
+			yield return ParameterTypeCase([ClickHouseProvider.MySqlConnector  , int64   , null             , "DECLARE @p Int64"                    ], "MySqlConnector", "NullInt64");
+			yield return ParameterTypeCase([ClickHouseProvider.MySqlConnector  , guid    , TestData.Guid1   , "DECLARE @p Guid"                     ], "MySqlConnector", "Guid"     );
+			yield return ParameterTypeCase([ClickHouseProvider.MySqlConnector  , dateTime, TestData.DateTime, "DECLARE @p Datetime -- DateTime"     ], "MySqlConnector", "DateTime" );
+			yield return ParameterTypeCase([ClickHouseProvider.MySqlConnector  , boolean , true             , "DECLARE @p Bool -- Boolean"          ], "MySqlConnector", "Boolean"  );
+		}
+
+		[TestCaseSource(nameof(ClickHouseParameterTypeCases))]
+		public void ParameterTypeNameClickHouse(ClickHouseProvider clickHouseProvider, DbDataType dataType, object? value, string expected)
+		{
+			DbParameter parameter = clickHouseProvider switch
+			{
+#if !NETFRAMEWORK
+				ClickHouseProvider.Octonica       => new Octonica.ClickHouseClient.ClickHouseParameter(),
+#endif
+				ClickHouseProvider.MySqlConnector => new MySqlConnector::MySqlConnector.MySqlParameter(),
+				_                                 => new ClickHouse.Driver.ADO.Parameters.ClickHouseDbParameter(),
+			};
+
+			PrintParameterDeclaration(ClickHouseTools.GetDataProvider(clickHouseProvider), parameter, dataType, value)
+				.ShouldBe(expected);
+		}
+
+		// the providers this naming covers that take LINQ parameters (ClickHouse inlines them)
+		[Test]
+		public void ParameterTypeNameInTrace([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var id = 1;
+
+			db.Person
+				.Where(p => p.ID == id)
+				.ToList();
+
+			GetCurrentBaselines()
+				.ShouldContain(context.IsAnyOf(ProviderName.DuckDB) ? "DECLARE $id INTEGER -- Int32" : "DECLARE @id Integer -- Int32");
+		}
+
+		#endregion
 	}
 }
