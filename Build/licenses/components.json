@@ -2634,30 +2634,6 @@
       ]
     },
     {
-      "id": "system.io.hashing",
-      "displayName": "System.IO.Hashing",
-      "packageId": "System.IO.Hashing",
-      "versions": {
-        "net10.0": "10.0.15",
-        "net10.0-windows7.0": "10.0.15",
-        "net11.0": "10.0.15",
-        "net472": "10.0.15"
-      },
-      "license": "MIT",
-      "licenseTexts": [
-        "notices-6d15e10a.txt"
-      ],
-      "copyright": "© Microsoft Corporation. All rights reserved.",
-      "projectUrl": "https://dot.net/",
-      "redistribution": "permitted",
-      "files": [
-        "System.IO.Hashing.dll"
-      ],
-      "artifacts": [
-        "linq2db.LINQPad.lpx"
-      ]
-    },
-    {
       "id": "system.io.pipelines",
       "displayName": "System.IO.Pipelines",
       "packageId": "System.IO.Pipelines",

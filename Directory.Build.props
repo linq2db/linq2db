@@ -217,7 +217,8 @@
 		<PackageReference Include="Meziantou.Analyzer" PrivateAssets="All" />
 		<PackageReference Include="Meziantou.Polyfill" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" PrivateAssets="All" />
-		<PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+		<!--build assets only: Microsoft.Build.Tasks.Git declares System.IO.Hashing as a plain dependency, which otherwise lands in every output and the lpx-->
+		<PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" IncludeAssets="build;buildMultitargeting;buildTransitive" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(Language)'=='C#'">
