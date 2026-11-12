@@ -11,7 +11,7 @@ redistributed inside this artifact; they are NOT covered by that MIT license and
 subject to their own terms, reproduced in full below.
 
 Artifact:   linq2db.LINQPad (LINQPad 5 plugin)
-Components: 64
+Components: 65
 
 --------------------------------------------------------------------------------------------------
 COMPONENTS
@@ -21,7 +21,7 @@ COMPONENTS
    https://github.com/DataAction/AdoNetCore.AseClient
    License: Apache-2.0  see [1]
 
-2. ClickHouse.Driver net10.0: 1.4.0, net10.0-windows7.0: 1.4.0, net11.0: 1.4.0, net462: 0.9.0, net472: 0.9.0
+2. ClickHouse.Driver net10.0: 1.5.0, net10.0-windows7.0: 1.5.0, net11.0: 1.5.0, net462: 0.9.0, net472: 0.9.0
    https://github.com/ClickHouse/clickhouse-cs
    License: MIT  see [2]
 
@@ -42,16 +42,16 @@ COMPONENTS
    Copyright IBM Corporation
    IBM grants redistribution of the Redistributables in object-code form only as part of a value-added application developed using the Program. linq2db satisfies all three limbs: the client is bundled inside linq2db scaffolding packages and the LINQPad driver rather than offered standalone, those packages are our own application built using the client, and only compiled assemblies and native libraries are shipped - no IBM source. Note on scope: IBM ships its own enumeration at clidriver/license/odbc_REDIST.txt, reproduced below. Of the 86 distinct clidriver binaries shipped here, 34 do not appear on that list - 30 GSKit crypto libraries (gsk8*.dll), 2 ICC crypto libraries (icclib084/085.dll) and Microsoft Visual C++ 12.0 runtime (msvcp120.dll, msvcr120.dll). All of them are delivered inside IBM own NuGet package as runtime dependencies of the driver (GSKit provides its TLS support), so the list reads as incomplete rather than exclusive.
 
-6. linq2db4iSeries 6.5.0
+6. linq2db4iSeries 6.5.1
    https://github.com/LinqToDB4iSeries/Linq2DB4iSeries
    License: MIT  see [5]
 
-7. Microsoft.Bcl.AsyncInterfaces 10.0.3
+7. Microsoft.Bcl.AsyncInterfaces 10.0.15
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-8. Microsoft.Bcl.Cryptography net10.0: 9.0.13, net10.0-windows7.0: 9.0.13, net11.0: 9.0.13, net462: 8.0.0, net472: 9.0.21
+8. Microsoft.Bcl.Cryptography net10.0: 9.0.18, net10.0-windows7.0: 9.0.18, net11.0: 9.0.18, net462: 8.0.0, net472: 10.0.15
    https://dot.net/
    License: MIT  see [7]
    © Microsoft Corporation. All rights reserved.
@@ -76,52 +76,52 @@ COMPONENTS
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-13. Microsoft.Data.SqlClient 7.0.2
+13. Microsoft.Data.SqlClient 7.1.1
    https://aka.ms/sqlclientproject
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-14. Microsoft.Data.SqlClient.Extensions.Abstractions 7.0.2
+14. Microsoft.Data.SqlClient.Extensions.Abstractions 7.1.1
    https://aka.ms/sqlclientproject
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-15. Microsoft.Data.SqlClient.Internal.Logging 7.0.2
+15. Microsoft.Data.SqlClient.Internal.Logging 7.1.1
    https://aka.ms/sqlclientproject
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-16. Microsoft.Data.SqlClient.SNI.runtime 6.0.2
+16. Microsoft.Data.SqlClient.SNI.runtime 7.1.0
    https://aka.ms/sqlclientproject
    License: Microsoft Software License Terms (Distributable Code)  see [9]
    © Microsoft Corporation. All rights reserved.
 
-17. Microsoft.Data.Sqlite.Core 10.0.12
+17. Microsoft.Data.Sqlite.Core 10.0.15
    https://docs.microsoft.com/dotnet/standard/data/sqlite/
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-18. Microsoft.Extensions.Caching.Abstractions net10.0: 10.0.10, net10.0-windows7.0: 9.0.13, net462: 8.0.0, net472: 8.0.0
+18. Microsoft.Extensions.Caching.Abstractions net10.0: 10.0.14, net10.0-windows7.0: 9.0.18, net462: 8.0.0, net472: 8.0.0
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-19. Microsoft.Extensions.Caching.Memory net10.0: 9.0.13, net10.0-windows7.0: 9.0.13, net11.0: 9.0.13, net462: 8.0.1, net472: 8.0.1
+19. Microsoft.Extensions.Caching.Memory net10.0: 9.0.18, net10.0-windows7.0: 9.0.18, net11.0: 9.0.18, net462: 8.0.1, net472: 8.0.1
    https://dot.net/
    License: MIT  see [7]
    © Microsoft Corporation. All rights reserved.
 
-20. Microsoft.Extensions.Configuration.Abstractions net10.0: 10.0.12, net10.0-windows7.0: 10.0.8, net462: 10.0.0, net472: 10.0.0
+20. Microsoft.Extensions.Configuration.Abstractions net10.0: 10.0.15, net10.0-windows7.0: 10.0.8, net462: 10.0.0, net472: 10.0.0
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-21. Microsoft.Extensions.DependencyInjection net10.0: 10.0.12, net10.0-windows7.0: 10.0.8, net11.0: 11.0.0, net462: 10.0.0, net472: 10.0.0
+21. Microsoft.Extensions.DependencyInjection net10.0: 10.0.15, net10.0-windows7.0: 10.0.8, net11.0: 11.0.0, net462: 10.0.0, net472: 10.0.0
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-22. Microsoft.Extensions.DependencyInjection.Abstractions net10.0: 10.0.12, net10.0-windows7.0: 10.0.8, net462: 10.0.0, net472: 10.0.0
+22. Microsoft.Extensions.DependencyInjection.Abstractions 10.0.15
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
@@ -131,22 +131,22 @@ COMPONENTS
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-24. Microsoft.Extensions.Logging net10.0: 10.0.12, net10.0-windows7.0: 10.0.8, net11.0: 11.0.0, net462: 10.0.0, net472: 10.0.0
+24. Microsoft.Extensions.Logging net10.0: 10.0.15, net10.0-windows7.0: 10.0.8, net11.0: 11.0.0, net462: 10.0.0, net472: 10.0.0
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-25. Microsoft.Extensions.Logging.Abstractions net10.0: 10.0.12, net10.0-windows7.0: 10.0.8, net462: 10.0.0, net472: 10.0.0
+25. Microsoft.Extensions.Logging.Abstractions 10.0.15
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-26. Microsoft.Extensions.Options net10.0: 10.0.12, net10.0-windows7.0: 10.0.8, net462: 10.0.0, net472: 10.0.0
+26. Microsoft.Extensions.Options net10.0: 10.0.15, net10.0-windows7.0: 10.0.8, net462: 10.0.0, net472: 10.0.0
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-27. Microsoft.Extensions.Primitives net10.0: 10.0.12, net10.0-windows7.0: 10.0.8, net462: 10.0.0, net472: 10.0.0
+27. Microsoft.Extensions.Primitives net10.0: 10.0.15, net10.0-windows7.0: 10.0.8, net462: 10.0.0, net472: 10.0.0
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
@@ -197,12 +197,12 @@ COMPONENTS
    Copyright (c) Microsoft Corporation.
    The bundled binary is version 170.1000.7, whose embedded license.md is the MICROSOFT SQL SERVER VNEXT COMMUNITY PREVIEW pre-release text: its term ended 09/30/2022, it grants installation "solely to internally evaluate it and provide feedback to Microsoft", and it contains no DISTRIBUTABLE CODE section or any distribution grant. That appears to be a packaging error on a stable release - 160.1000.6 of the same package carries ordinary MICROSOFT SOFTWARE LICENSE TERMS for MICROSOFT SYSTEM CLR TYPES FOR MICROSOFT SQL SERVER 2022, with an explicit DISTRIBUTABLE CODE grant covering third-party distribution. Reported to Microsoft. The terms reproduced here are the 160.1000.6 ones, which is what we understand to have been intended for this package; the text Microsoft actually attached to 170.1000.7 is the pre-release one described above.
 
-37. MySqlConnector 2.6.2
+37. MySqlConnector 3.0.0
    https://mysqlconnector.net/
    License: MIT  see [2]
    Copyright 2016–2026 Bradley Grainger
 
-38. Net.IBM.Data.Db2 10.0.0.200
+38. Net.IBM.Data.Db2 10.0.0.400
    License: IBM International Program License Agreement - Redistributables  see [11]
    Copyright(c) 2025 IBM Corporation. All rights reserved
    IBM grants redistribution of the Redistributables in object-code form only as part of a value-added application developed using the Program. linq2db satisfies all three limbs: the client is bundled inside linq2db scaffolding packages and the LINQPad driver rather than offered standalone, those packages are our own application built using the client, and only compiled assemblies and native libraries are shipped - no IBM source.
@@ -216,24 +216,24 @@ COMPONENTS
    License: PostgreSQL  see [12]
    Copyright 2025 © The Npgsql Development Team
 
-41. Oracle.ManagedDataAccess.Core 23.26.301
+41. Oracle.ManagedDataAccess.Core 23.26.400
    https://www.oracle.com/database/technologies/appdev/dotnet.html
    License: Oracle Free Distribution, Hosting, and Use Terms and Conditions  see [13]
    Copyright © 2026, Oracle and/or its affiliates
 
-42. SQLitePCLRaw.bundle_e_sqlite3 2.1.12
+42. SQLitePCLRaw.bundle_e_sqlite3 2.1.13
    License: Apache-2.0  see [1]
    Copyright 2014-2024 SourceGear, LLC
 
-43. SQLitePCLRaw.core 2.1.12
+43. SQLitePCLRaw.core 2.1.13
    License: Apache-2.0  see [1]
    Copyright 2014-2024 SourceGear, LLC
 
-44. SQLitePCLRaw.lib.e_sqlite3 net10.0: 2.1.12, net10.0-windows7.0: 3.53.3, net11.0: 2.1.12, net462: 3.53.3, net472: 3.53.3
+44. SQLitePCLRaw.lib.e_sqlite3 net10.0: 2.1.13, net10.0-windows7.0: 3.53.3, net11.0: 2.1.13, net462: 3.53.3, net472: 3.53.3
    License: Apache-2.0  see [1]
    Copyright 2014-2024 SourceGear, LLC
 
-45. SQLitePCLRaw.provider.dynamic_cdecl 2.1.12
+45. SQLitePCLRaw.provider.dynamic_cdecl 2.1.13
    License: Apache-2.0  see [1]
    Copyright 2014-2024 SourceGear, LLC
 
@@ -256,12 +256,12 @@ COMPONENTS
    License: Public Domain
    Public Domain
 
-50. System.Diagnostics.DiagnosticSource 10.0.3
+50. System.Diagnostics.DiagnosticSource 10.0.15
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-51. System.Formats.Asn1 net462: 8.0.1, net472: 9.0.21
+51. System.Formats.Asn1 net462: 8.0.1, net472: 10.0.15
    https://dot.net/
    License: MIT  see [15]
    © Microsoft Corporation. All rights reserved.
@@ -271,12 +271,12 @@ COMPONENTS
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-53. System.IO.Hashing 10.0.12
+53. System.IO.Hashing 10.0.15
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-54. System.IO.Pipelines 10.0.3
+54. System.IO.Pipelines 10.0.9
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
@@ -301,7 +301,7 @@ COMPONENTS
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-59. System.Security.Cryptography.Pkcs net10.0: 9.0.21, net11.0: 9.0.21, net462: 8.0.1, net472: 9.0.21
+59. System.Security.Cryptography.Pkcs net10.0: 10.0.15, net11.0: 10.0.15, net462: 8.0.1, net472: 10.0.15
    https://dot.net/
    License: MIT  see [7]
    © Microsoft Corporation. All rights reserved.
@@ -311,12 +311,12 @@ COMPONENTS
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-61. System.Text.Encodings.Web 10.0.3
+61. System.Text.Encodings.Web 10.0.9
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-62. System.Text.Json 10.0.3
+62. System.Text.Json 10.0.9
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
@@ -326,7 +326,12 @@ COMPONENTS
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-64. System.Threading.Tasks.Extensions 4.6.3
+64. System.Threading.RateLimiting net10.0: 9.0.18, net10.0-windows7.0: 9.0.18, net11.0: 9.0.18, net462: 8.0.0, net472: 8.0.0
+   https://dot.net/
+   License: MIT  see [7]
+   © Microsoft Corporation. All rights reserved.
+
+65. System.Threading.Tasks.Extensions 4.6.3
    https://github.com/dotnet/maintenance-packages
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
@@ -2457,7 +2462,7 @@ You are solely responsible for determining the appropriateness of using and dist
 --------------------------------------------------------------------------------------------------
 
 [7] notices-40686c64.txt
-    Applies to: Microsoft.Bcl.Cryptography, Microsoft.Extensions.Caching.Memory, System.Security.Cryptography.Pkcs
+    Applies to: Microsoft.Bcl.Cryptography, Microsoft.Extensions.Caching.Memory, System.Security.Cryptography.Pkcs, System.Threading.RateLimiting
 
 .NET Runtime uses third-party libraries or other resources that may be
 distributed under licenses different than the .NET Runtime software.
