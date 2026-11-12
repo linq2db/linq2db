@@ -172,7 +172,7 @@ jobs:
 
   # Roslyn analyzer/code-fix unit tests, both the shipped (L2DB1xxx) and the repo-internal (LINQ2DB0xxx) sets.
   # DB-free and single-TFM, so Linux is fine. Two projects because they host different Roslyn versions: the
-  # shipped analyzers are pinned to 4.8 (the consumer floor) and CodeGenerators builds against 5.6.
+  # shipped analyzers are pinned to 5.0 (the consumer floor) and CodeGenerators builds against 5.9.
   analyzer-tests:
     name: Analyzer tests
     runs-on: ubuntu-24.04
