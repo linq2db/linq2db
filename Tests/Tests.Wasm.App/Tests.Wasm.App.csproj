@@ -4,6 +4,8 @@
 		<TargetFramework>$(LatestTargetFramework)</TargetFramework>
 		<TargetFrameworks></TargetFrameworks>
 		<RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
+		<UseMonoRuntime Condition="'$(WasmRuntime)' == 'CoreCLR'">false</UseMonoRuntime>
+		<UseMonoRuntime Condition="'$(WasmRuntime)' == 'Mono'">true</UseMonoRuntime>
 
 		<OutputType>Exe</OutputType>
 		<RootNamespace>Tests.Wasm</RootNamespace>
@@ -13,8 +15,8 @@
 		<ProduceReferenceAssembly>false</ProduceReferenceAssembly>
 		<IsPackable>false</IsPackable>
 
-		<!-- Built only by Tests/Tests.Wasm/publish-wasm-bundles.ps1, one publish per WasmBundleMode. -->
-		<PublishDir>$(MSBuildThisFileDirectory)..\..\.build\wasm\$(WasmBundleMode)\</PublishDir>
+		<!-- Built only by Tests/Tests.Wasm/publish-wasm-bundles.ps1, one publish per WasmRuntime and WasmBundleMode. -->
+		<PublishDir>$(MSBuildThisFileDirectory)..\..\.build\wasm\$(WasmRuntime)\$(WasmBundleMode)\</PublishDir>
 
 		<!-- The harness measures runtime behaviour; trim-analysis cleanliness of linq2db is #6168 / AOT work. -->
 		<SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
@@ -44,8 +46,19 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\Source\LinqToDB.Remote.HttpClient.Client\LinqToDB.Remote.HttpClient.Client.csproj" GlobalPropertiesToRemove="WasmBundleMode" />
+		<ProjectReference Include="..\..\Source\LinqToDB.Remote.HttpClient.Client\LinqToDB.Remote.HttpClient.Client.csproj" GlobalPropertiesToRemove="WasmBundleMode;WasmRuntime" />
 	</ItemGroup>
+
+	<!-- The SDK adds LinqToDB and LinqToDB.Analyzers.CodeFixes as bare transitive references, which would otherwise
+	     build them a second time, with this app's globals, into the same output. CodeFixes is dropped as in
+	     Source/Directory.Build.props. -->
+	<Target Name="_StripWasmGlobalsFromTransitiveReferences" AfterTargets="IncludeTransitiveProjectReferences">
+		<ItemGroup>
+			<_WasmTransitiveReference Include="@(_TransitiveProjectReferences)" Condition="'%(Filename)' != 'LinqToDB.Analyzers.CodeFixes'" />
+			<ProjectReference Remove="@(_TransitiveProjectReferences)" />
+			<ProjectReference Include="@(_WasmTransitiveReference)" GlobalPropertiesToRemove="WasmBundleMode;WasmRuntime" />
+		</ItemGroup>
+	</Target>
 
 	<ItemGroup>
 		<!-- Reports through stdout, so the Tests-wide ban on System.Console (RS0030) does not apply. -->
@@ -54,6 +67,10 @@
 
 	<Target Name="CheckWasmBundleMode" BeforeTargets="Build" Condition="'$(WasmBundleMode)' != 'Debug' and '$(WasmBundleMode)' != 'TrimPartial' and '$(WasmBundleMode)' != 'TrimFull' and '$(WasmBundleMode)' != 'NoReflectionJson'">
 		<Error Text="Unknown WasmBundleMode '$(WasmBundleMode)'. Expected Debug, TrimPartial, TrimFull or NoReflectionJson." />
+	</Target>
+
+	<Target Name="CheckWasmRuntime" BeforeTargets="Build" Condition="'$(WasmRuntime)' != 'Mono' and '$(WasmRuntime)' != 'CoreCLR'">
+		<Error Text="Unknown WasmRuntime '$(WasmRuntime)'. Expected Mono or CoreCLR." />
 	</Target>
 
 </Project>

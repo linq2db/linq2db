@@ -7,7 +7,7 @@
 	     NuGet collapses them inside a single project's restore graph, so a TFM-conditional reference to two of
 	     them resolves to the wrong one and restore fails with NU1201. -->
 	<PropertyGroup>
-		<LangVersion>9</LangVersion>
+		<LangVersion>11</LangVersion>
 		<WarningLevel>5</WarningLevel>
 		<DisableImplicitFSharpCoreReference>true</DisableImplicitFSharpCoreReference>
 
