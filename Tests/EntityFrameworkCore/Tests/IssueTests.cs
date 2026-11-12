@@ -1405,12 +1405,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
 		public void Issue6181_CompareGroupedDateWithNullableDate(
-#if NET8_0
-			// EF8 registers the NodaTime plugin process-wide, so useNodaTime: false cannot keep #5981 out
-			[EFDataSources(TestProvName.AllPostgreSQL)] string provider)
-#else
 			[EFDataSources] string provider)
-#endif
 		{
 			using var ctx = CreateContext(provider, useNodaTime: false);
 			Issue6181Seed(ctx);
@@ -1448,12 +1443,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
 		public void Issue6181_WindowFunctionOrderedByDateComparison(
-#if NET8_0
-			// EF8 registers the NodaTime plugin process-wide, so useNodaTime: false cannot keep #5981 out
-			[EFDataSources(TestProvName.AllPostgreSQL, TestProvName.AllMySql57)] string provider)
-#else
 			[EFDataSources(TestProvName.AllMySql57)] string provider)
-#endif
 		{
 			using var ctx = CreateContext(provider, useNodaTime: false);
 			Issue6181Seed(ctx);
@@ -1522,12 +1512,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
 		public void Issue6181_DelegatingToAnotherConversionIsRefused(
-#if NET8_0
-			// EF8 registers the NodaTime plugin process-wide, so useNodaTime: false cannot keep #5981 out
-			[EFDataSources(TestProvName.AllPostgreSQL)] string provider)
-#else
 			[EFDataSources] string provider)
-#endif
 		{
 			using var ctx = CreateContext(provider, useNodaTime: false);
 			Issue6181Seed(ctx);
@@ -1556,12 +1541,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
 		public void Issue6181_DelegatingThroughAnUnsetHolderMaps(
-#if NET8_0
-			// EF8 registers the NodaTime plugin process-wide, so useNodaTime: false cannot keep #5981 out
-			[EFDataSources(TestProvName.AllPostgreSQL)] string provider)
-#else
 			[EFDataSources] string provider)
-#endif
 		{
 			using var ctx = CreateContext(provider, useNodaTime: false);
 			Issue6181Seed(ctx);
@@ -1576,12 +1556,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
 		public void Issue6181_DelegatingToAnOverridingConverterIsRefused(
-#if NET8_0
-			// EF8 registers the NodaTime plugin process-wide, so useNodaTime: false cannot keep #5981 out
-			[EFDataSources(TestProvName.AllPostgreSQL)] string provider)
-#else
 			[EFDataSources] string provider)
-#endif
 		{
 			using var ctx = CreateContext(provider, useNodaTime: false);
 			Issue6181Seed(ctx);
@@ -1611,12 +1586,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 #if !NETFRAMEWORK
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
 		public void Issue6181_DelegatingToATypedOverridingConverterIsRefused(
-#if NET8_0
-			// EF8 registers the NodaTime plugin process-wide, so useNodaTime: false cannot keep #5981 out
-			[EFDataSources(TestProvName.AllPostgreSQL)] string provider)
-#else
 			[EFDataSources] string provider)
-#endif
 		{
 			using var ctx = CreateContext(provider, useNodaTime: false);
 			Issue6181Seed(ctx);
@@ -1646,12 +1616,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
 		public void Issue6181_NestedDelegationCompares(
-#if NET8_0
-			// EF8 registers the NodaTime plugin process-wide, so useNodaTime: false cannot keep #5981 out
-			[EFDataSources(TestProvName.AllPostgreSQL)] string provider)
-#else
 			[EFDataSources] string provider)
-#endif
 		{
 			using var ctx = CreateContext(provider, useNodaTime: false);
 			Issue6181Seed(ctx);
@@ -1670,12 +1635,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
 		public void Issue6181_DelegatedArgumentIsEvaluatedOnce(
-#if NET8_0
-			// EF8 registers the NodaTime plugin process-wide, so useNodaTime: false cannot keep #5981 out
-			[EFDataSources(TestProvName.AllPostgreSQL)] string provider)
-#else
 			[EFDataSources] string provider)
-#endif
 		{
 			using var ctx = CreateContext(provider, useNodaTime: false);
 			Issue6181Seed(ctx);
@@ -1696,12 +1656,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
 		public void Issue6181_DelegatedArgumentIsEvaluatedBeforeAConditionalTarget(
-#if NET8_0
-			// EF8 registers the NodaTime plugin process-wide, so useNodaTime: false cannot keep #5981 out
-			[EFDataSources(TestProvName.AllPostgreSQL)] string provider)
-#else
 			[EFDataSources] string provider)
-#endif
 		{
 			using var ctx = CreateContext(provider, useNodaTime: false);
 			Issue6181Seed(ctx);
@@ -1715,12 +1670,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
 		public void Issue6181_DelegatedUserDefinedConversionIsEvaluatedOnce(
-#if NET8_0
-			// EF8 registers the NodaTime plugin process-wide, so useNodaTime: false cannot keep #5981 out
-			[EFDataSources(TestProvName.AllPostgreSQL)] string provider)
-#else
 			[EFDataSources] string provider)
-#endif
 		{
 			using var ctx = CreateContext(provider, useNodaTime: false);
 			Issue6181Seed(ctx);
@@ -1742,12 +1692,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
 		public void Issue6181_DelegatedFieldArgumentIsReadBeforeTheTarget(
-#if NET8_0
-			// EF8 registers the NodaTime plugin process-wide, so useNodaTime: false cannot keep #5981 out
-			[EFDataSources(TestProvName.AllPostgreSQL)] string provider)
-#else
 			[EFDataSources] string provider)
-#endif
 		{
 			using var ctx = CreateContext(provider, useNodaTime: false);
 			Issue6181Seed(ctx);
