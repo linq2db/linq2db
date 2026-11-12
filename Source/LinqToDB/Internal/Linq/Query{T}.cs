@@ -143,6 +143,24 @@ namespace LinqToDB.Internal.Linq
 			return exposed;
 		}
 
+		/// <summary>
+		/// For a query kept on an IQueryable (one whose tree neither expose nor the interceptors changed when it was
+		/// built): runs the context's query interceptor on that tree at the Query and ExposedQuery stages again. The
+		/// kept query stays valid only if both return the tree unchanged - an interceptor may rewrite differently on a
+		/// later execution.
+		/// </summary>
+		internal static bool IsRewrittenByQueryInterceptor(IDataContext dataContext, Expression expr)
+		{
+			if (dataContext is IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } interceptor })
+			{
+				var processed = interceptor.ProcessExpression(expr, new QueryExpressionArgs(dataContext, expr, QueryExpressionArgs.ExpressionKind.Query));
+
+				return !ReferenceEquals(processed, expr) || IsRewrittenOnExpose(dataContext, expr);
+			}
+
+			return false;
+		}
+
 		// A query found by the lookup with the unexposed tree was stored by a context for which exposing that tree changed
 		// nothing, so the tree is what ExposeAndPrepareExpression would hand to the interceptor. The interceptor instance
 		// is not part of the cache key: if this context's interceptor rewrites the exposed tree, the found query was
@@ -237,10 +255,13 @@ namespace LinqToDB.Internal.Linq
 				var currentQueries = new RuntimeExpressionsContainer(expr);
 				expressions = currentQueries;
 
-				if (isExposed && useCache)
-				{
+				// The exposed tree (possibly rewritten by an ExposedQuery interceptor) belongs to this execution, whether
+				// or not the query cache is used: the caller must not keep it in place of the original tree.
+				if (isExposed)
 					dependsOnParameters = true;
 
+				if (isExposed && useCache)
+				{
 					queryFlags |= QueryFlags.ExpandedQuery;
 
 					// search again
