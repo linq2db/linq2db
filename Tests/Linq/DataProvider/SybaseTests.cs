@@ -48,8 +48,20 @@ namespace Tests.DataProvider
 			if (provider == SybaseProvider.Unmanaged && !LinqToDB.Internal.Common.Tools.IsProviderAssemblyPresent(SybaseProviderAdapter.NativeAssemblyName))
 			{
 				// without its assembly the native provider cannot be created, and must not fall back to the managed one
-				Assert.Throws<TargetInvocationException>(() => SybaseTools.GetDataProvider(provider));
-				Assert.Throws<TargetInvocationException>(() => new DataOptions().UseAse(provider));
+				Action getDataProvider = () => SybaseTools.GetDataProvider(provider);
+				Action useAse          = () => new DataOptions().UseAse(provider);
+
+				getDataProvider
+					.ShouldThrow<TargetInvocationException>()
+					.GetBaseException()
+					.Message
+					.ShouldContain(SybaseProviderAdapter.NativeAssemblyName);
+
+				useAse
+					.ShouldThrow<TargetInvocationException>()
+					.GetBaseException()
+					.Message
+					.ShouldContain(SybaseProviderAdapter.NativeAssemblyName);
 				return;
 			}
 
