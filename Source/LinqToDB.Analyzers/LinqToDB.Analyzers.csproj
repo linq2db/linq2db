@@ -19,7 +19,7 @@
 
 	<ItemGroup>
 		<!-- Pin to the Roslyn bundled with the lowest supported SDK (see Directory.Packages.props). -->
-		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" VersionOverride="4.8.0" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" VersionOverride="5.0.0" />
 	</ItemGroup>
 
 </Project>

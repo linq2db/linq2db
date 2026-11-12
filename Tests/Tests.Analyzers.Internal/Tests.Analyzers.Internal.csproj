@@ -23,7 +23,7 @@
 		<PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" />
 		<!-- CodeGenerators compiles against Microsoft.CodeAnalysis.CSharp 5.9.0 (netstandard2.0 branch of the
-		     conditional entry), so its analyzers cannot load in the 4.8 host Tests.Analyzers runs. That 4.8 pin is
+		     conditional entry), so its analyzers cannot load in the 5.0 host Tests.Analyzers runs. That 5.0 pin is
 		     the shipped package's consumer floor and must stay, hence a VersionOverride here rather than a change
 		     to Directory.Packages.props. -->
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" VersionOverride="5.9.0" />

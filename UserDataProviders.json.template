@@ -254,6 +254,9 @@
 			//"ClickHouse.Octonica",
 			//"ClickHouse.Driver",
 			//"ClickHouse.MySql",
+
+			// YDB
+			//"YDB",
 		]
 	},
 
@@ -382,6 +385,9 @@
 			//"ClickHouse.Octonica",
 			//"ClickHouse.Driver",
 			//"ClickHouse.MySql",
+
+			// YDB
+			//"YDB",
 		]
 	},
 

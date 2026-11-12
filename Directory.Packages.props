@@ -17,7 +17,10 @@
 		<!--In-box .NET package versions that track $(TargetFramework). Two rows per supported band is the
 		    whole per-version cost: every package whose major follows the runtime reads $(BandLatest*) and
 		    needs no condition of its own. Empty on net462/netstandard2.0, which is how the rows below
-		    select between the modern and the legacy surface.-->
+		    select between the modern and the legacy surface. Properties evaluate before the project body,
+		    so the band is seen only by a TFM from a TargetFrameworks inner build or Directory.Build.props;
+		    a <TargetFramework> set in the project body, or a platform TFM (net10.0-windows7.0), reads it
+		    as empty and gets the legacy rows.-->
 		<!--initial version, referenced from nuspec-->
 		<BandLatestForNuget Condition="'$(TargetFramework)'=='net10.0'">10.0.0</BandLatestForNuget>
 		<BandLatestForNuget Condition="'$(TargetFramework)'=='net11.0'">11.0.0</BandLatestForNuget>
@@ -214,7 +217,7 @@
 		<PackageVersion Include="NUnit3TestAdapter"                                     Version="6.3.0"                        />
 		<!--Roslyn analyzer/code-fix unit-test harness for Tests/Tests.Analyzers and Tests/Tests.Analyzers.Internal.
 		    The latter overrides Microsoft.CodeAnalysis.CSharp.Workspaces to 5.9.0, matching the Roslyn CodeGenerators
-		    builds against; the 4.8.0 pin on that package in "Build: Analyzers and Tools" above is the shipped
+		    builds against; the 5.0.0 pin on that package in "Build: Analyzers and Tools" above is the shipped
 		    analyzer package's consumer floor and must stay put.-->
 		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing"        Version="1.1.4"                        />
 		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing"         Version="1.1.4"                        />

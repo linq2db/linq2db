@@ -6,7 +6,7 @@ see — a query that is valid C# but cannot mean what it says. The package ships
 
 You normally don't reference this package: `linq2db` depends on it, so the rules arrive with the library —
 including in a project that references only a satellite package (`linq2db.Tools`, `linq2db.Remote.*`,
-`linq2db.EntityFrameworkCore`). They require Roslyn 4.8 or later (.NET SDK 8.0+, Visual Studio 2022 17.8+)
+`linq2db.EntityFrameworkCore`). They require Roslyn 5.0 or later (.NET SDK 10.0.100+, Visual Studio 2026)
 and are silently skipped on older toolchains.
 
 Reference it directly only to run the rules against an **older** linq2db — e.g. to size and apply a
