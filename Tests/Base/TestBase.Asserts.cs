@@ -92,7 +92,14 @@ namespace Tests
 				if (IsLeaf(type))
 					return x.Equals(y);
 
-				foreach (var property in type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
+				var properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public);
+
+				// A field-mapped entity (LinqDataTypes) has no properties to walk, which would make every
+				// instance equal to every other; it keeps its own equality instead.
+				if (properties.Length == 0)
+					return x.Equals(y);
+
+				foreach (var property in properties)
 					if (!ValuesEqual(property.GetValue(x), property.GetValue(y)))
 						return false;
 
