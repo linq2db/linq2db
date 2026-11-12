@@ -5,6 +5,8 @@ using LinqToDB;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Linq
 {
 	[TestFixture]
@@ -88,6 +90,17 @@ namespace Tests.Linq
 					(p, c) => new { p, c });
 
 			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6311")]
+		public void FullJoinTupleOverloadIsNotTranslated([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent.FullJoin(db.Child, p => p.ParentID, c => c.ParentID);
+
+			var act = () => query.ToArray();
+			act.ShouldThrow<LinqToDBException>().Message.ShouldContain("could not be converted to SQL");
 		}
 	}
 }

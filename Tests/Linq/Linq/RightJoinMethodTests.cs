@@ -5,6 +5,8 @@ using LinqToDB;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Linq
 {
 	[TestFixture]
@@ -81,6 +83,30 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6310")]
+		public void RightJoinWithNullComparer([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				db.Parent.RightJoin(db.Child, p => p.ParentID, c => c.ParentID, (p, c) => new { ParentID = (int?)p!.ParentID, ChildID = (int?)c!.ChildID }, null);
+
+			AssertQuery(query);
+		}
+
+#if NET11_0_OR_GREATER
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6311")]
+		public void RightJoinTupleOverloadIsNotTranslated([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent.RightJoin(db.Child, p => p.ParentID, c => c.ParentID);
+
+			var act = () => query.ToArray();
+			act.ShouldThrow<LinqToDBException>().Message.ShouldContain("could not be converted to SQL");
+		}
+#endif
 	}
 }
 #endif

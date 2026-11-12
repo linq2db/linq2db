@@ -3555,5 +3555,39 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6310")]
+		public void JoinMethodWithNullComparer([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent.Join(db.Child, p => p.ParentID, c => c.ParentID, (p, c) => new { p.ParentID, c.ChildID }, comparer: null);
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6310")]
+		public void JoinMethodWithComparerIsNotTranslated([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent.Join(db.Child, p => p.ParentID, c => c.ParentID, (p, c) => new { p.ParentID, c.ChildID }, EqualityComparer<int>.Default);
+
+			var act = () => query.ToArray();
+			act.ShouldThrow<LinqToDBException>().Message.ShouldContain("could not be converted to SQL");
+		}
+
+#if NET11_0_OR_GREATER
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6311")]
+		public void JoinMethodTupleOverloadIsNotTranslated([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent.Join(db.Child, p => p.ParentID, c => c.ParentID);
+
+			var act = () => query.ToArray();
+			act.ShouldThrow<LinqToDBException>().Message.ShouldContain("could not be converted to SQL");
+		}
+#endif
 	}
 }

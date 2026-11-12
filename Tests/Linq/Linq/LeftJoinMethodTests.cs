@@ -7,6 +7,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Linq
 {
 	[TestFixture]
@@ -120,6 +122,35 @@ namespace Tests.Linq
 
 			AreEqual(expected, actual);
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6310")]
+		public void LeftJoinWithNullComparer([DataSources] string context)
+		{
+			using var db        = GetDataContext(context);
+			using var customers = db.CreateLocalTable(Customers);
+			using var orders    = db.CreateLocalTable(Orders);
+
+			var query = customers
+				.LeftJoin(orders, c => c.Id, o => o.CustomerId, (c, o) => new { c.Name, OrderName = o!.Name }, null);
+
+			AssertQuery(query);
+		}
+
+#if NET11_0_OR_GREATER
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6311")]
+		public void LeftJoinTupleOverloadIsNotTranslated([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db        = GetDataContext(context);
+			using var customers = db.CreateLocalTable(Customers);
+			using var orders    = db.CreateLocalTable(Orders);
+
+			// called as a static method: the extension form binds to the test-only ExpressionTestExtensions.LeftJoin
+			var query = Queryable.LeftJoin(customers, orders, c => c.Id, o => o.CustomerId);
+
+			var act = () => query.ToArray();
+			act.ShouldThrow<LinqToDBException>().Message.ShouldContain("could not be converted to SQL");
+		}
+#endif
 	}
 }
 
