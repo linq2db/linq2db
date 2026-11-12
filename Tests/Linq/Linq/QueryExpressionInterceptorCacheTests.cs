@@ -952,5 +952,90 @@ namespace Tests.Linq
 				interceptor.Calls.Count(k => k == ToArgsKind(kind)).ShouldBe(1, string.Join(", ", interceptor.Calls));
 			}
 		}
+		// IEquatable<T>.Equals deliberately disagrees with the inherited field-wise Equals(object): the query cache must
+		// keep comparing such a value the way it always did.
+#pragma warning disable CA1067 // the test needs IEquatable<T>.Equals and Equals(object) to differ
+		readonly struct LooseValue(int n) : IEquatable<LooseValue>
+		{
+			public int N { get; } = n;
+
+			public bool Equals(LooseValue other)
+			{
+				return N % 10 == other.N % 10;
+			}
+		}
+#pragma warning restore CA1067
+
+		sealed class BakeBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqlExtensionBuilder builder)
+			{
+				builder.ResultExpression = new LinqToDB.Internal.SqlQuery.SqlValue(builder.GetValue<LooseValue>(0).N);
+			}
+		}
+
+		[Sql.Extension("", BuilderType = typeof(BakeBuilder), ServerSideOnly = true)]
+		static int Bake(LooseValue value)
+		{
+			throw new ServerSideOnlyException(nameof(Bake));
+		}
+
+		// A value an extension builder reads and bakes into the SQL is compared by Equals(object), not by IEquatable<T>.
+		[Test, QueryCacheTest]
+		public void BakedStructValueComparedAsBefore([IncludeDataSources(ProviderName.SQLiteMS)] string context)
+		{
+			Query.ClearCaches();
+
+			using var db = GetDataConnection(context);
+
+			var value = new LooseValue(1);
+
+			db.Select(() => Bake(value)).ShouldBe(1);
+
+			value = new LooseValue(11);
+
+			db.Select(() => Bake(value)).ShouldBe(11);
+		}
+
+		sealed class SumBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqlExtensionBuilder builder)
+			{
+				var values = builder.GetValue<System.Collections.Immutable.ImmutableArray<int>?>(0);
+
+				builder.ResultExpression = new LinqToDB.Internal.SqlQuery.SqlValue(values?.Sum() ?? 0);
+			}
+		}
+
+		[Sql.Extension("", BuilderType = typeof(SumBuilder), ServerSideOnly = true)]
+		static int BakeSum(System.Collections.Immutable.ImmutableArray<int>? values)
+		{
+			throw new ServerSideOnlyException(nameof(BakeSum));
+		}
+
+		// A sequence value (also inside Nullable<T>) is compared by content: an equal array created anew hits the cache.
+		[Test, QueryCacheTest]
+		public void BakedNullableSequenceComparedByContent([IncludeDataSources(ProviderName.SQLiteMS)] string context)
+		{
+			Query.ClearCaches();
+
+			using var db = GetDataConnection(context);
+
+			System.Collections.Immutable.ImmutableArray<int>? values = System.Collections.Immutable.ImmutableArray.Create(1);
+
+			db.Select(() => BakeSum(values)).ShouldBe(1);
+
+			var misses = Query<int>.CacheMissCount;
+
+			values = System.Collections.Immutable.ImmutableArray.Create(1);
+
+			db.Select(() => BakeSum(values)).ShouldBe(1);
+
+			Query<int>.CacheMissCount.ShouldBe(misses);
+
+			values = System.Collections.Immutable.ImmutableArray.Create(2, 3);
+
+			db.Select(() => BakeSum(values)).ShouldBe(5);
+		}
 	}
 }
