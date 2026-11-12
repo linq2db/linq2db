@@ -3579,14 +3579,26 @@ namespace Tests.Linq
 
 #if NET11_0_OR_GREATER
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6311")]
-		public void JoinMethodTupleOverloadIsNotTranslated([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void JoinMethodTupleOverload([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
 			var query = db.Parent.Join(db.Child, p => p.ParentID, c => c.ParentID);
 
-			var act = () => query.ToArray();
-			act.ShouldThrow<LinqToDBException>().Message.ShouldContain("could not be converted to SQL");
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6311")]
+		public void JoinMethodTupleOverloadComposed([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Join(db.Child, p => p.ParentID, c => c.ParentID)
+				.Where(t => t.Inner.ChildID > 20)
+				.Select(t => new { t.Outer.ParentID, t.Outer.Value1, t.Inner.ChildID });
+
+			AssertQuery(query);
 		}
 #endif
 	}

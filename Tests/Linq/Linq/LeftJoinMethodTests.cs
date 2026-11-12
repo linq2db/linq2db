@@ -7,8 +7,6 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-using Shouldly;
-
 namespace Tests.Linq
 {
 	[TestFixture]
@@ -137,18 +135,32 @@ namespace Tests.Linq
 		}
 
 #if NET11_0_OR_GREATER
+		// called as a static method: the extension form binds to the test-only ExpressionTestExtensions.LeftJoin
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6311")]
-		public void LeftJoinTupleOverloadIsNotTranslated([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void LeftJoinTupleOverload([DataSources] string context)
 		{
 			using var db        = GetDataContext(context);
 			using var customers = db.CreateLocalTable(Customers);
 			using var orders    = db.CreateLocalTable(Orders);
 
-			// called as a static method: the extension form binds to the test-only ExpressionTestExtensions.LeftJoin
-			var query = Queryable.LeftJoin(customers, orders, c => c.Id, o => o.CustomerId);
+			var query = Queryable.LeftJoin(customers, orders, c => c.Id, o => o.CustomerId)
+				.Select(t => new { t.Outer.Name, OrderName = t.Inner!.Name });
 
-			var act = () => query.ToArray();
-			act.ShouldThrow<LinqToDBException>().Message.ShouldContain("could not be converted to SQL");
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6311")]
+		public void LeftJoinTupleOverloadUnmatched([DataSources] string context)
+		{
+			using var db        = GetDataContext(context);
+			using var customers = db.CreateLocalTable(Customers);
+			using var orders    = db.CreateLocalTable(Orders);
+
+			var query = Queryable.LeftJoin(customers, orders, c => c.Id, o => o.CustomerId)
+				.Where(t => t.Inner == null)
+				.Select(t => t.Outer.Name);
+
+			AssertQuery(query);
 		}
 #endif
 	}
