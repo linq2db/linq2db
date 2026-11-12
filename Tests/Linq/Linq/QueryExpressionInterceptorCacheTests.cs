@@ -1037,5 +1037,153 @@ namespace Tests.Linq
 
 			db.Select(() => BakeSum(values)).ShouldBe(5);
 		}
+		[Table]
+		sealed class TenantItem
+		{
+			[PrimaryKey] public int Id       { get; set; }
+			[Column    ] public int TenantId { get; set; }
+		}
+
+		public enum TenantShape
+		{
+			// Expression.Property(Expression.Constant(owner), "TenantId")
+			MemberOfInstance,
+			// a local captured by a lambda
+			Closure,
+			// Expression.Constant(tenantId)
+			RawConstant,
+		}
+
+		public enum TenantStage
+		{
+			// no interceptor: the same Where written into the query by hand
+			HandWritten,
+			Query,
+			ExposedQuery,
+			QueryFilter,
+		}
+
+		sealed class TenantOwner(int tenantId)
+		{
+			public int TenantId => tenantId;
+		}
+
+		const string TenantMarker = "__tenant";
+
+		// Appends Where(e => e.TenantId == <tenant>) with the tenant id taken the given way.
+		static Expression AddTenantFilter(Expression source, TenantShape shape, TenantOwner owner)
+		{
+			if (source is MethodCallExpression { Method.Name: "Where" } mc
+				&& mc.Arguments[1] is UnaryExpression { Operand: LambdaExpression { Parameters: [{ Name: TenantMarker }] } })
+				return source;
+
+			var tenantId = owner.TenantId;
+
+			Expression value = shape switch
+			{
+				TenantShape.MemberOfInstance => Expression.Property(Expression.Constant(owner), nameof(TenantOwner.TenantId)),
+				TenantShape.Closure          => ((Expression<Func<int>>)(() => tenantId)).Body,
+				_                            => Expression.Constant(tenantId),
+			};
+
+			var p = Expression.Parameter(typeof(TenantItem), TenantMarker);
+
+			return Expression.Call(
+				typeof(Queryable), nameof(Queryable.Where), [typeof(TenantItem)],
+				source,
+				Expression.Quote(Expression.Lambda<Func<TenantItem, bool>>(Expression.Equal(Expression.Property(p, nameof(TenantItem.TenantId)), value), p)));
+		}
+
+		sealed class TenantInterceptor(QueryExpressionArgs.ExpressionKind kind, TenantShape shape, int tenantId) : IQueryExpressionInterceptor
+		{
+			readonly TenantOwner _owner = new(tenantId);
+
+			public Expression ProcessExpression(Expression expression, QueryExpressionArgs args)
+			{
+				if (args.Kind != kind || !typeof(IQueryable<TenantItem>).IsAssignableFrom(expression.Type))
+					return expression;
+
+				return AddTenantFilter(expression, shape, _owner);
+			}
+		}
+
+		static readonly MappingSchema _tenantSchema = new FluentMappingBuilder(new MappingSchema())
+			.Entity<TenantItem>().HasQueryFilter(e => e.Id > 0)
+			.Build()
+			.MappingSchema;
+
+		/// <summary>
+		/// How many queries the cache keeps when every context has its own interceptor instance carrying a tenant id,
+		/// compared with the same filter written by hand. Instances are not part of the cache key: a tenant id read from
+		/// the instance or from a closure becomes a parameter and all tenants share one query; a raw constant is a literal
+		/// in the SQL and every tenant gets its own query, exactly as a literal written into a query by hand.
+		/// </summary>
+		// The entry count is a diagnostics hook of the cache, present only in BUGCHECK builds.
+		static int CountCacheEntries()
+		{
+#if BUGCHECK
+			return QueryCache.Default.CountEntries();
+#else
+			return 0;
+#endif
+		}
+
+		[Test, QueryCacheTest]
+		public void TenantFilterCacheEntries(
+			[IncludeDataSources(ProviderName.SQLiteMS)] string      context,
+			[Values]                                    TenantStage stage,
+			[Values]                                    TenantShape shape)
+		{
+			const int Tenants = 100;
+
+			Query.ClearCaches();
+
+			using var setup = GetDataConnection(context, o => o.UseMappingSchema(_tenantSchema));
+			using var table = setup.CreateLocalTable(Enumerable.Range(1, Tenants).Select(i => new TenantItem { Id = i, TenantId = i }));
+
+			var kind = stage switch
+			{
+				TenantStage.Query        => QueryExpressionArgs.ExpressionKind.Query,
+				TenantStage.ExposedQuery => QueryExpressionArgs.ExpressionKind.ExposedQuery,
+				_                        => QueryExpressionArgs.ExpressionKind.QueryFilter,
+			};
+
+			var entriesBefore = CountCacheEntries();
+			var missesBefore  = Query<TenantItem>.CacheMissCount;
+			var wrongRows     = 0;
+
+			for (var tenant = 1; tenant <= Tenants; tenant++)
+			{
+				using var db = stage == TenantStage.HandWritten
+					? GetDataConnection(context, o => o.UseMappingSchema(_tenantSchema))
+					: GetDataConnection(context, o => o.UseMappingSchema(_tenantSchema).UseInterceptor(new TenantInterceptor(kind, shape, tenant)));
+
+				var query = db.GetTable<TenantItem>().AsQueryable();
+
+				if (stage == TenantStage.HandWritten)
+					query = query.Provider.CreateQuery<TenantItem>(AddTenantFilter(query.Expression, shape, new TenantOwner(tenant)));
+
+				var rows = query.ToArray();
+
+				if (rows.Length != 1 || rows[0].TenantId != tenant)
+					wrongRows++;
+			}
+
+			var entries = CountCacheEntries() - entriesBefore;
+			var misses  = Query<TenantItem>.CacheMissCount - missesBefore;
+
+			// a literal per tenant: one query per tenant, of which one bucket keeps at most 16
+			var expectedMisses = shape == TenantShape.RawConstant ? Tenants : 1;
+
+			using (Assert.EnterMultipleScope())
+			{
+				wrongRows.ShouldBe(0, $"entries {entries}, misses {misses}");
+				misses.ShouldBe(expectedMisses, $"entries {entries}, wrong rows {wrongRows}");
+
+#if BUGCHECK
+				entries.ShouldBe(shape == TenantShape.RawConstant ? 16 : 1, $"misses {misses}, wrong rows {wrongRows}");
+#endif
+			}
+		}
 	}
 }
