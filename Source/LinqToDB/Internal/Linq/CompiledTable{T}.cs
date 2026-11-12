@@ -19,7 +19,11 @@ namespace LinqToDB.Internal.Linq
 		{
 			_expression               = expression;
 			_dependentArgumentIndexes = dependentArgumentIndexes;
+			_resolver                 = Resolve;
 		}
+
+		// One delegate per compiled table, handed to every IQueryable Create returns.
+		readonly Func<IDataContext, object?[], (Query<T> query, IQueryExpressions expressions)> _resolver;
 
 		readonly Expression _expression;
 
@@ -216,7 +220,7 @@ namespace LinqToDB.Internal.Linq
 				Info                = query,
 				Parameters          = parameters,
 				CompiledExpressions = expressions,
-				CompiledResolver    = Resolve,
+				CompiledResolver    = _resolver,
 			};
 		}
 

@@ -755,5 +755,112 @@ namespace Tests.Linq
 				}
 			}
 		}
+		// An IQueryable executed again after RemoveInterceptor, with the query cache disabled.
+		[Test, QueryCacheTest]
+		public void ReuseQueryableWithQueryCacheDisabled(
+			[IncludeDataSources(ProviderName.SQLiteMS)] string context,
+			[Values(Kind.Query, Kind.ExposedQuery)]     Kind   kind,
+			[Values]                                    bool   viaDataContext)
+		{
+			var ms = _noFilterSchema;
+
+			Query.ClearCaches();
+
+			using var setup = GetDataConnection(context, o => o.UseMappingSchema(ms));
+			using var table = setup.CreateLocalTable(Enumerable.Range(1, 4).Select(i => new CacheItem { Id = i }));
+
+			using IDataContext db = viaDataContext
+				? new DataContext(new DataOptions().UseConfiguration(context).UseMappingSchema(ms).UseDisableQueryCache(true))
+				: GetDataConnection(context, o => o.UseMappingSchema(ms).UseDisableQueryCache(true));
+
+			var interceptor = new FilterInterceptor(ToArgsKind(kind), Mode.Le2);
+
+			db.AddInterceptor(interceptor);
+
+			var query = db.GetTable<CacheItem>();
+
+			query.ToArray().Length.ShouldBe(2);
+
+			db.RemoveInterceptor(interceptor);
+
+			query.ToArray().Length.ShouldBe(4, "after RemoveInterceptor");
+		}
+
+		// Returns its input until Active is set, then adds Where(e => e.Id <= 2) at its stage.
+		sealed class ToggleInterceptor(QueryExpressionArgs.ExpressionKind kind) : IQueryExpressionInterceptor
+		{
+			readonly FilterInterceptor _filter = new(kind, Mode.Le2);
+
+			public bool Active { get; set; }
+			public int  Calls  { get; private set; }
+
+			public Expression ProcessExpression(Expression expression, QueryExpressionArgs args)
+			{
+				Calls++;
+
+				return Active ? _filter.ProcessExpression(expression, args) : expression;
+			}
+		}
+
+		// An interceptor that did not rewrite the first execution may rewrite a later one: an IQueryable executed again
+		// must still run it.
+		[Test, QueryCacheTest]
+		public void ReuseQueryableAfterInterceptorStartsRewriting(
+			[IncludeDataSources(ProviderName.SQLiteMS)] string context,
+			[Values(Kind.Query, Kind.ExposedQuery)]     Kind   kind,
+			[Values]                                    bool   viaDataContext)
+		{
+			var ms = _noFilterSchema;
+
+			Query.ClearCaches();
+
+			using var setup = GetDataConnection(context, o => o.UseMappingSchema(ms));
+			using var table = setup.CreateLocalTable(Enumerable.Range(1, 4).Select(i => new CacheItem { Id = i }));
+
+			using IDataContext db = viaDataContext
+				? new DataContext(new DataOptions().UseConfiguration(context).UseMappingSchema(ms))
+				: GetDataConnection(context, o => o.UseMappingSchema(ms));
+
+			var interceptor = new ToggleInterceptor(ToArgsKind(kind));
+
+			db.AddInterceptor(interceptor);
+
+			var query = db.GetTable<CacheItem>();
+
+			query.ToArray().Length.ShouldBe(4);
+
+			interceptor.Active = true;
+
+			using (Assert.EnterMultipleScope())
+			{
+				query.ToArray().Length.ShouldBe(2, "same IQueryable");
+				db.GetTable<CacheItem>().ToArray().Length.ShouldBe(2, "new IQueryable");
+			}
+		}
+
+		// An IQueryable whose interceptors leave its tree unchanged keeps its query across executions.
+		[Test, QueryCacheTest]
+		public void ReuseQueryableKeepsQueryWhenInterceptorsDoNotRewrite([IncludeDataSources(ProviderName.SQLiteMS)] string context)
+		{
+			var ms = _noFilterSchema;
+
+			Query.ClearCaches();
+
+			using var setup = GetDataConnection(context, o => o.UseMappingSchema(ms));
+			using var table = setup.CreateLocalTable(Enumerable.Range(1, 4).Select(i => new CacheItem { Id = i }));
+
+			using var db = GetDataConnection(context, o => o.UseMappingSchema(ms));
+
+			db.AddInterceptor(new ToggleInterceptor(QueryExpressionArgs.ExpressionKind.Query));
+
+			var query = db.GetTable<CacheItem>();
+
+			query.ToArray().Length.ShouldBe(4);
+
+			var info = query.GetCompiledQueryInfo();
+
+			query.ToArray().Length.ShouldBe(4);
+			query.GetCompiledQueryInfo().ShouldBeSameAs(info);
+		}
 	}
 }

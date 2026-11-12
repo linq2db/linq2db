@@ -120,7 +120,8 @@ namespace LinqToDB.Internal.Linq
 
 			if (cache && Info != null)
 			{
-				if (_infoKey != null && _infoKey.Value == GetInfoKey(DataContext))
+				if (_infoKey != null && _infoKey.Value == GetInfoKey(DataContext)
+					&& !Query<T>.IsRewrittenByQueryInterceptor(DataContext, expression.MainExpression))
 					return Info;
 
 				Info     = null;
