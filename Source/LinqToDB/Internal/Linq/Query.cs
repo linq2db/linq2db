@@ -77,17 +77,19 @@ namespace LinqToDB.Internal.Linq
 			if (!result)
 				return false;
 
-			return CompareDynamic(dataContext, expressions, compareValues: true, out matchedQueryExpressions);
+			return Revalidate(dataContext, expressions, compiledParameters: null, out matchedQueryExpressions);
 		}
 
 		/// <summary>
-		/// Re-evaluates the parts of this query that depend on the executing context rather than on the main expression
-		/// (dynamic expression accessors and value comparisons) and checks them against the ones the query was built from.
+		/// The part of <see cref="Compare"/> that does not follow from the main expression: re-evaluates the dynamic
+		/// expression accessors (query filters, interceptor rewrites) for <paramref name="dataContext"/> and runs the value
+		/// comparisons (parameters merged because their values were equal when the query was built). Every path that
+		/// reuses a built query - the query cache, compiled queries, an IQueryable executed again - goes through it.
 		/// On success returns the expressions to run the query with: <paramref name="expressions"/>' main expression plus
 		/// the re-evaluated accessor results, from which the parameter values are read.
-		/// <paramref name="compareValues"/> also runs the value comparisons, which read the values from the main expression.
 		/// </summary>
-		internal bool CompareDynamic(IDataContext dataContext, IQueryExpressions expressions, bool compareValues, [NotNullWhen(true)] out IQueryExpressions? matchedQueryExpressions)
+		/// <param name="compiledParameters">Arguments of a compiled query, read by the value comparisons; <see langword="null"/> otherwise.</param>
+		internal bool Revalidate(IDataContext dataContext, IQueryExpressions expressions, object?[]? compiledParameters, [NotNullWhen(true)] out IQueryExpressions? matchedQueryExpressions)
 		{
 			matchedQueryExpressions = null;
 
@@ -123,12 +125,12 @@ namespace LinqToDB.Internal.Linq
 				}
 			}
 
-			if (compareValues && CompareInfo.ComparisionFunctions != null)
+			if (CompareInfo.ComparisionFunctions != null)
 			{
 				foreach (var (main, other) in CompareInfo.ComparisionFunctions)
 				{
-					var value1 = main(matchedQueryExpressions, dataContext, null);
-					var value2 = other(matchedQueryExpressions, dataContext, null);
+					var value1 = main(matchedQueryExpressions, dataContext, compiledParameters);
+					var value2 = other(matchedQueryExpressions, dataContext, compiledParameters);
 					result = ExpressionEqualityComparer.CompareValues(value1, value2);
 
 					if (!result)

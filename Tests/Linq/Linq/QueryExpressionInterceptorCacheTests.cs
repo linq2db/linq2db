@@ -591,5 +591,169 @@ namespace Tests.Linq
 			db.RemoveInterceptor(interceptor);
 			query.ToArray().Length.ShouldBe(4, "after RemoveInterceptor");
 		}
+		sealed class Box(int value)
+		{
+			public int Value => value;
+		}
+
+		// Adds Where(e => e.Id >= low.Value && e.Id <= high.Value) to the query filter.
+		sealed class RangeFilterInterceptor(int low, int high) : IQueryExpressionInterceptor
+		{
+			readonly Box _low  = new(low);
+			readonly Box _high = new(high);
+
+			public Expression ProcessExpression(Expression expression, QueryExpressionArgs args)
+			{
+				if (args.Kind != QueryExpressionArgs.ExpressionKind.QueryFilter || !typeof(IQueryable<CacheItem>).IsAssignableFrom(expression.Type))
+					return expression;
+
+				var p    = Expression.Parameter(typeof(CacheItem), "e");
+				var id   = Expression.Property(p, nameof(CacheItem.Id));
+				var body = Expression.AndAlso(
+					Expression.GreaterThanOrEqual(id, Expression.Property(Expression.Constant(_low),  nameof(Box.Value))),
+					Expression.LessThanOrEqual   (id, Expression.Property(Expression.Constant(_high), nameof(Box.Value))));
+
+				return Expression.Call(
+					typeof(Queryable), nameof(Queryable.Where), [typeof(CacheItem)],
+					expression,
+					Expression.Quote(Expression.Lambda<Func<CacheItem, bool>>(body, p)));
+			}
+		}
+
+		// Equal values at build time let the translator merge two parameters into one; a context with different values must
+		// not reuse that query, compiled or not.
+		[Test, QueryCacheTest]
+		public void MergedParametersFromInterceptor([IncludeDataSources(ProviderName.SQLiteMS)] string context, [Values] bool compiled, [Values] bool aFirst)
+		{
+			Query.ClearCaches();
+
+			using var setup = GetDataConnection(context, o => o.UseMappingSchema(_lambdaFilterSchema));
+			using var t     = setup.CreateLocalTable(Enumerable.Range(1, 4).Select(i => new CacheItem { Id = i }));
+
+			using var a = GetDataConnection(context, o => o.UseMappingSchema(_lambdaFilterSchema).UseInterceptor(new RangeFilterInterceptor(2, 2)));
+			using var b = GetDataConnection(context, o => o.UseMappingSchema(_lambdaFilterSchema).UseInterceptor(new RangeFilterInterceptor(1, 3)));
+
+			int[] RunQuery(DataConnection db)
+			{
+				var query = compiled ? _compiledTable(db) : db.GetTable<CacheItem>();
+
+				return query.ToArray().Select(e => e.Id).OrderBy(i => i).ToArray();
+			}
+
+			int[] resA, resB;
+
+			if (aFirst)
+			{
+				resA = RunQuery(a);
+				resB = RunQuery(b);
+			}
+			else
+			{
+				resB = RunQuery(b);
+				resA = RunQuery(a);
+			}
+
+			using (Assert.EnterMultipleScope())
+			{
+				resA.ShouldBe([2], "context A");
+				resB.ShouldBe([1, 2, 3], "context B");
+				_compiledCount(a).ShouldBe(1, "context A, compiled count");
+				_compiledCount(b).ShouldBe(3, "context B, compiled count");
+			}
+		}
+
+		// An IQueryable executed again after its query interceptor was replaced by another instance of the same type.
+		[Test, QueryCacheTest]
+		public void ReuseQueryableAfterReplacingInterceptor(
+			[IncludeDataSources(ProviderName.SQLiteMS)] string context,
+			[Values(Kind.Query, Kind.ExposedQuery, Kind.QueryFilterLambda)] Kind kind,
+			[Values]                                    bool   viaDataContext)
+		{
+			var ms = kind == Kind.QueryFilterLambda ? _lambdaFilterSchema : _noFilterSchema;
+
+			Query.ClearCaches();
+
+			using var setup = GetDataConnection(context, o => o.UseMappingSchema(ms));
+			using var table = setup.CreateLocalTable(Enumerable.Range(1, 4).Select(i => new CacheItem { Id = i }));
+
+			using IDataContext db = viaDataContext
+				? new DataContext(new DataOptions().UseConfiguration(context).UseMappingSchema(ms))
+				: GetDataConnection(context, o => o.UseMappingSchema(ms));
+
+			var unchanged = new FilterInterceptor(ToArgsKind(kind), Mode.Unchanged);
+			var limiting  = new FilterInterceptor(ToArgsKind(kind), Mode.Le2);
+
+			db.AddInterceptor(unchanged);
+
+			var query = db.GetTable<CacheItem>();
+
+			query.ToArray().Length.ShouldBe(4);
+
+			db.RemoveInterceptor(unchanged);
+			db.AddInterceptor(limiting);
+
+			using (Assert.EnterMultipleScope())
+			{
+				query.ToArray().Length.ShouldBe(2, "same IQueryable");
+				db.GetTable<CacheItem>().ToArray().Length.ShouldBe(2, "new IQueryable");
+			}
+		}
+
+		// The IQueryable returned by a compiled query, enumerated again after AddInterceptor.
+		[Test, QueryCacheTest]
+		public void CompiledQueryableAfterAddInterceptor([IncludeDataSources(ProviderName.SQLiteMS)] string context)
+		{
+			Query.ClearCaches();
+
+			using var setup = GetDataConnection(context, o => o.UseMappingSchema(_lambdaFilterSchema));
+			using var t     = setup.CreateLocalTable(Enumerable.Range(1, 4).Select(i => new CacheItem { Id = i }));
+
+			using var db = GetDataConnection(context, o => o.UseMappingSchema(_lambdaFilterSchema));
+
+			var query = _compiledTable(db);
+
+			query.ToArray().Length.ShouldBe(4);
+
+			db.AddInterceptor(new LimitFilterInterceptor(3));
+
+			using (Assert.EnterMultipleScope())
+			{
+				query.ToArray().Length.ShouldBe(3, "same IQueryable");
+				_compiledTable(db).ToArray().Length.ShouldBe(3, "new compiled IQueryable");
+			}
+		}
+
+		// Two contexts whose same-type interceptors rewrite differently, alternating on one compiled query: each keeps its
+		// own built query instead of rebuilding on every switch.
+		[Test, QueryCacheTest]
+		public void CompiledQueryAlternatingContexts([IncludeDataSources(ProviderName.SQLiteMS)] string context)
+		{
+			Query.ClearCaches();
+
+			using var setup = GetDataConnection(context, o => o.UseMappingSchema(_lambdaFilterSchema));
+			using var t     = setup.CreateLocalTable(Enumerable.Range(1, 4).Select(i => new CacheItem { Id = i }));
+
+			using var a = GetDataConnection(context, o => o.UseMappingSchema(_lambdaFilterSchema).UseInterceptor(new FilterInterceptor(QueryExpressionArgs.ExpressionKind.QueryFilter, Mode.Le2)));
+			using var b = GetDataConnection(context, o => o.UseMappingSchema(_lambdaFilterSchema).UseInterceptor(new FilterInterceptor(QueryExpressionArgs.ExpressionKind.QueryFilter, Mode.Gt2)));
+
+			var infoA = _compiledTable(a).GetCompiledQueryInfo();
+			var infoB = _compiledTable(b).GetCompiledQueryInfo();
+
+			infoA.ShouldNotBeSameAs(infoB);
+
+			for (var i = 0; i < 5; i++)
+			{
+				var queryA = _compiledTable(a);
+				var queryB = _compiledTable(b);
+
+				using (Assert.EnterMultipleScope())
+				{
+					queryA.GetCompiledQueryInfo().ShouldBeSameAs(infoA, $"A, round {i}");
+					queryB.GetCompiledQueryInfo().ShouldBeSameAs(infoB, $"B, round {i}");
+					queryA.ToArray().Select(e => e.Id).OrderBy(id => id).ToArray().ShouldBe([1, 2], $"A, round {i}");
+					queryB.ToArray().Select(e => e.Id).OrderBy(id => id).ToArray().ShouldBe([3, 4], $"B, round {i}");
+				}
+			}
+		}
 	}
 }

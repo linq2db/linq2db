@@ -44,7 +44,10 @@ namespace LinqToDB.Internal.Linq
 			return new DependentArgumentValues(values);
 		}
 
-		Query<T> GetInfo(IDataContext dataContext, object?[] parameterValues, out IQueryExpressions expressions)
+		// Candidates kept per cache key; see QueryRunner.Cache<T>.QueryCache.
+		const int MaxCandidates = 4;
+
+		internal Query<T> GetInfo(IDataContext dataContext, object?[] parameterValues, out IQueryExpressions expressions)
 		{
 			for (;;)
 			{
@@ -72,14 +75,21 @@ namespace LinqToDB.Internal.Linq
 					dependent  : GetDependentArgumentValues(indexes, parameterValues)
 				);
 
-			// A query with dynamic expression accessors (query filters, interceptor rewrites) depends on the executing
-			// context beyond the configuration id: re-evaluate them for this context. When they differ, the query is
-			// rebuilt and replaces the cached one.
-			if (QueryRunner.Cache<T>.QueryCache.TryGetValue(cacheKey, out var cached) && TryReuse(cached, dataContext, out expressions))
-			{
-				unseenSlots = null;
+			// A query with dynamic expression accessors (query filters, interceptor rewrites) or merged parameters depends
+			// on the executing context and arguments beyond this key: every candidate is revalidated before it is used.
+			QueryRunner.Cache<T>.QueryCache.TryGetValue(cacheKey, out var candidates);
 
-				return cached;
+			if (candidates != null)
+			{
+				foreach (var candidate in candidates)
+				{
+					if (TryReuse(candidate, dataContext, parameterValues, out expressions))
+					{
+						unseenSlots = null;
+
+						return candidate;
+					}
+				}
 			}
 
 			// Built outside the cache on purpose. Routing this through GetOrCreate publishes the entry before
@@ -98,11 +108,21 @@ namespace LinqToDB.Internal.Linq
 				return query;
 			}
 
+			// Newest first; the oldest candidate drops out once MaxCandidates are kept. A concurrent publish for the same
+			// key may drop the other thread's candidate, which only costs a rebuild.
+			var count  = candidates == null ? 0 : Math.Min(candidates.Length, MaxCandidates - 1);
+			var update = new Query<T>[count + 1];
+
+			update[0] = query;
+
+			if (count > 0)
+				Array.Copy(candidates!, 0, update, 1, count);
+
 			using (var entry = QueryRunner.Cache<T>.QueryCache.CreateEntry(cacheKey))
 			{
 				entry.SlidingExpiration = dataContext.Options.LinqOptions.CacheSlidingExpirationOrDefault;
 				entry.Size              = 1;
-				entry.Value             = query;
+				entry.Value             = update;
 			}
 
 			unseenSlots = null;
@@ -110,14 +130,16 @@ namespace LinqToDB.Internal.Linq
 			return query;
 		}
 
-		static bool TryReuse(Query<T> query, IDataContext dataContext, out IQueryExpressions expressions)
+		// The main expression is this fold site's own tree, identical for every candidate, so only the part of the cache
+		// comparison that depends on the context and the arguments is checked.
+		static bool TryReuse(Query<T> query, IDataContext dataContext, object?[] parameterValues, out IQueryExpressions expressions)
 		{
 			expressions = query.CompiledExpressions!;
 
-			if (query.CompareInfo?.DynamicAccessors == null)
+			if (query.CompareInfo == null || query.CompareInfo.IsFastComparable)
 				return true;
 
-			if (query.CompareDynamic(dataContext, expressions, compareValues: false, out var matched))
+			if (query.Revalidate(dataContext, expressions, parameterValues, out var matched))
 			{
 				expressions = matched;
 				return true;
@@ -194,7 +216,16 @@ namespace LinqToDB.Internal.Linq
 				Info                = query,
 				Parameters          = parameters,
 				CompiledExpressions = expressions,
+				CompiledResolver    = Resolve,
 			};
+		}
+
+		// Lets the IQueryable returned by Create re-resolve its query on every execution, through the same revalidation.
+		(Query<T> query, IQueryExpressions expressions) Resolve(IDataContext dataContext, object?[] parameterValues)
+		{
+			var query = GetInfo(dataContext, parameterValues, out var expressions);
+
+			return (query, expressions);
 		}
 
 		public T Execute(object[] parameters)

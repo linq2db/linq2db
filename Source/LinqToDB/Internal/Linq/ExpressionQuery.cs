@@ -8,9 +8,11 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Data;
+using LinqToDB.Interceptors;
 using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Interceptors;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Metrics;
@@ -33,10 +35,14 @@ namespace LinqToDB.Internal.Linq
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		internal Query<T>?  Info;
 
-		// Configuration id and flags of the context when GetQuery cached Info; null for an Info set from outside (a compiled
-		// table). The context's configuration can change after that (AddInterceptor, UseMappingSchema, ...).
+		// What Info was found for (see GetInfoKey): Info is reused only while the context still matches it.
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		(int configurationID, QueryFlags queryFlags)? _infoKey;
+		(int configurationID, QueryFlags queryFlags, int interceptorsGeneration)? _infoKey;
+
+		// Set by a compiled table on the IQueryable it returns: its Info is re-resolved through the compiled query's
+		// cache on every execution, instead of being kept.
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		internal Func<IDataContext, object?[], (Query<T> query, IQueryExpressions expressions)>? CompiledResolver;
 
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		internal object?[]? Parameters;
@@ -101,9 +107,20 @@ namespace LinqToDB.Internal.Linq
 		{
 			dependsOnParameters = false;
 
+			if (cache && CompiledResolver != null)
+			{
+				var (query, compiled) = CompiledResolver(DataContext, Parameters!);
+
+				Info                = query;
+				CompiledExpressions = compiled;
+				expression          = compiled;
+
+				return query;
+			}
+
 			if (cache && Info != null)
 			{
-				if (_infoKey == null || _infoKey.Value == (DataContext.ConfigurationID, DataContext.GetQueryFlags()))
+				if (_infoKey != null && _infoKey.Value == GetInfoKey(DataContext))
 					return Info;
 
 				Info     = null;
@@ -112,13 +129,33 @@ namespace LinqToDB.Internal.Linq
 
 			var info = Query<T>.GetQuery(DataContext, ref expression, out dependsOnParameters);
 
-			if (cache && info.CompareInfo?.IsFastComparable == true && !dependsOnParameters)
+			// Only a query that the cache would accept without re-evaluating anything is kept (no dynamic accessors or
+			// value comparisons, no part of the tree rewritten by expose or by an interceptor).
+			if (cache && info.CompareInfo?.IsFastComparable == true && !dependsOnParameters && GetInfoKey(DataContext) is { } key)
 			{
 				Info     = info;
-				_infoKey = (DataContext.ConfigurationID, DataContext.GetQueryFlags());
+				_infoKey = key;
 			}
 
 			return info;
+		}
+
+		// A kept query stays valid while the context's configuration id, query flags and registered interceptor instances are
+		// unchanged: the id covers mapping schema, options and interceptor types, the generation counts every
+		// AddInterceptor / RemoveInterceptor (so another instance of the same type is noticed). A context that cannot report
+		// such a generation keeps nothing once it has a query interceptor.
+		static (int configurationID, QueryFlags queryFlags, int interceptorsGeneration)? GetInfoKey(IDataContext dataContext)
+		{
+			int generation;
+
+			if (dataContext is IInterceptorsGeneration interceptors)
+				generation = interceptors.InterceptorsGeneration;
+			else if (dataContext is IInterceptable<IQueryExpressionInterceptor> { Interceptor: not null })
+				return null;
+			else
+				generation = 0;
+
+			return (dataContext.ConfigurationID, dataContext.GetQueryFlags(), generation);
 		}
 
 		async Task<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken)
