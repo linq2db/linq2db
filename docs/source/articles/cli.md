@@ -27,7 +27,7 @@ uid: cli
 ## Installation
 
 > [!NOTE]
-> Requres .NET 6 or higher.
+> Requires .NET 10 or higher.
 
 Install as global tool:
 
