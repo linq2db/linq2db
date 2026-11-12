@@ -36,7 +36,7 @@ namespace Tests.UserTests
 			using var db = GetDataConnection(options);
 
 			var ids = new[] { 1, 2 };
-			AreEqual(
+			AreEqualWithinDelta(
 				GetTypes(context).Where(_ => !ids.Contains(_.ID)),
 				db.Types.Where(_ => !ids.Contains(_.ID)));
 

@@ -17,8 +17,8 @@
 
 	<!-- Register linq2db's test-run command-line options (provider / test-progress) with the NUnit MTP
 	     runner. The generated entry point calls Tests.TestRunBuilderHook.AddExtensions(); the type lives in
-	     Tests.Base. Limited to C# test projects: they all reference Tests.Base, whereas the F# EF test project
-	     (Tests.EntityFrameworkCore.FSharp) imports these props but neither references Tests.Base nor uses
+	     Tests.Base. Limited to C# test projects: they all reference Tests.Base, whereas the F# EF model projects
+	     (Tests.EntityFrameworkCore.FSharp.*) import these props but neither reference Tests.Base nor use
 	     TestConfiguration, so the hook type would not resolve there (and there is nothing to filter). -->
 	<ItemGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
 		<TestingPlatformBuilderHook Include="23DD2B7A-070B-49AF-A837-EE5B967B4B4B">

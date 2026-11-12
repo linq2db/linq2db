@@ -156,7 +156,9 @@ namespace Tests.Linq
 			var totals = await query.ToListAsync();
 
 			// Mixed values, only negative values, and no rows must all use LINQ Sum semantics.
-			totals.ShouldBe([7.75m, 0m, 0m]);
+			// Rounded rather than compared within a delta, so the totals stay ordered by parent: AseClient on
+			// .NET 11 reads 7.75 as 7.7500000000000001613292832525 (AseClient#240).
+			totals.Select(t => Math.Round(t, 10)).ShouldBe([7.75m, 0m, 0m]);
 		}
 
 		// SqlCe: seeding the decimal rows overflows in BulkCopy (#4438).
@@ -199,7 +201,7 @@ namespace Tests.Linq
 			var totals   = await query.ToListAsync();
 			var expected = applyFilter ? new[] { 5.5m, 0m, 0m } : new[] { 11.75m, 1m, 0m };
 
-			totals.ShouldBe(expected);
+			totals.Select(t => Math.Round(t, 10)).ShouldBe(expected);
 		}
 
 		class User
