@@ -49,6 +49,17 @@
 		<ProjectReference Include="..\..\Source\LinqToDB.Remote.HttpClient.Client\LinqToDB.Remote.HttpClient.Client.csproj" GlobalPropertiesToRemove="WasmBundleMode;WasmRuntime" />
 	</ItemGroup>
 
+	<!-- The SDK adds LinqToDB and LinqToDB.Analyzers.CodeFixes as bare transitive references, which would otherwise
+	     build them a second time, with this app's globals, into the same output. CodeFixes is dropped as in
+	     Source/Directory.Build.props. -->
+	<Target Name="_StripWasmGlobalsFromTransitiveReferences" AfterTargets="IncludeTransitiveProjectReferences">
+		<ItemGroup>
+			<_WasmTransitiveReference Include="@(_TransitiveProjectReferences)" Condition="'%(Filename)' != 'LinqToDB.Analyzers.CodeFixes'" />
+			<ProjectReference Remove="@(_TransitiveProjectReferences)" />
+			<ProjectReference Include="@(_WasmTransitiveReference)" GlobalPropertiesToRemove="WasmBundleMode;WasmRuntime" />
+		</ItemGroup>
+	</Target>
+
 	<ItemGroup>
 		<!-- Reports through stdout, so the Tests-wide ban on System.Console (RS0030) does not apply. -->
 		<AdditionalFiles Remove="..\BannedSymbols.txt" />
