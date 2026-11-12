@@ -13,8 +13,7 @@ namespace LinqToDB
 		IInterceptable<IUnwrapDataObjectInterceptor>,
 		IInterceptable<IEntityBindingInterceptor>,
 		IInterceptable<IQueryExpressionInterceptor>,
-		IInterceptable<IExceptionInterceptor>,
-		IInterceptorsGeneration
+		IInterceptable<IExceptionInterceptor>
 	{
 		AggregatedCommandInterceptor? _commandInterceptor;
 		ICommandInterceptor? IInterceptable<ICommandInterceptor>.Interceptor
@@ -73,10 +72,8 @@ namespace LinqToDB
 		}
 
 		// Changes whenever an interceptor is added or removed. A scope (UseOptions, UseMappingSchema) restores the
-		// configuration id it saved only if no interceptor changed meanwhile, and an IQueryable drops the query it kept.
+		// configuration id it saved only if no interceptor changed meanwhile.
 		int _interceptorsVersion;
-
-		int IInterceptorsGeneration.InterceptorsGeneration => _interceptorsVersion;
 
 		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>
 		public void AddInterceptor(IInterceptor interceptor)

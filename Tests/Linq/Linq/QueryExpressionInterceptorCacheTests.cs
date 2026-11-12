@@ -862,5 +862,95 @@ namespace Tests.Linq
 			query.ToArray().Length.ShouldBe(4);
 			query.GetCompiledQueryInfo().ShouldBeSameAs(info);
 		}
+		static readonly Func<IDataContext, Type[], IQueryable<CacheItem>> _compiledIgnoreFilters =
+			CompiledQuery.Compile((IDataContext db, Type[] types) => db.GetTable<CacheItem>().IgnoreFilters(types));
+
+		static readonly MappingSchema _upToTwoFilterSchema = new FluentMappingBuilder(new MappingSchema())
+			.Entity<CacheItem>().HasQueryFilter(e => e.Id <= 2)
+			.Build()
+			.MappingSchema;
+
+		// A [SqlQueryDependent] argument selects the query by value; the caller may change it in the argument array
+		// between creating the compiled IQueryable and enumerating it, or between two enumerations.
+		[Test, QueryCacheTest]
+		public void CompiledQueryableDependentArgumentChanged([IncludeDataSources(ProviderName.SQLiteMS)] string context, [Values] bool beforeFirstRun)
+		{
+			Query.ClearCaches();
+
+			using var setup = GetDataConnection(context, o => o.UseMappingSchema(_upToTwoFilterSchema));
+			using var t     = setup.CreateLocalTable(Enumerable.Range(1, 4).Select(i => new CacheItem { Id = i }));
+
+			using var db = GetDataConnection(context, o => o.UseMappingSchema(_upToTwoFilterSchema));
+
+			var types = new[] { typeof(CacheItem) };
+			var query = _compiledIgnoreFilters(db, types);
+
+			if (!beforeFirstRun)
+				query.ToArray().Length.ShouldBe(4);
+
+			types[0] = typeof(string);
+
+			query.ToArray().Length.ShouldBe(2, "after the argument changed");
+		}
+
+		// Adds Where(e => e.Id <= 2) at its stage once after being armed; records every call.
+		sealed class ArmOnceInterceptor(QueryExpressionArgs.ExpressionKind kind) : IQueryExpressionInterceptor
+		{
+			readonly FilterInterceptor _filter = new(kind, Mode.Le2);
+
+			public bool                                          Armed { get; set; }
+			public System.Collections.Generic.List<QueryExpressionArgs.ExpressionKind> Calls { get; } = [];
+
+			public Expression ProcessExpression(Expression expression, QueryExpressionArgs args)
+			{
+				Calls.Add(args.Kind);
+
+				if (!Armed || args.Kind != kind)
+					return expression;
+
+				Armed = false;
+
+				return _filter.ProcessExpression(expression, args);
+			}
+		}
+
+		// Each interceptor stage runs once per execution, and a rewrite it returns is used.
+		[Test, QueryCacheTest]
+		public void InterceptorStagesRunOncePerExecution(
+			[IncludeDataSources(ProviderName.SQLiteMS)] string context,
+			[Values(Kind.Query, Kind.ExposedQuery)]     Kind   kind,
+			[Values]                                    bool   viaDataContext,
+			[Values]                                    bool   sameQueryable)
+		{
+			var ms = _noFilterSchema;
+
+			Query.ClearCaches();
+
+			using var setup = GetDataConnection(context, o => o.UseMappingSchema(ms));
+			using var table = setup.CreateLocalTable(Enumerable.Range(1, 4).Select(i => new CacheItem { Id = i }));
+
+			using IDataContext db = viaDataContext
+				? new DataContext(new DataOptions().UseConfiguration(context).UseMappingSchema(ms))
+				: GetDataConnection(context, o => o.UseMappingSchema(ms));
+
+			var interceptor = new ArmOnceInterceptor(ToArgsKind(kind));
+
+			db.AddInterceptor(interceptor);
+
+			var query = db.GetTable<CacheItem>();
+
+			query.ToArray().Length.ShouldBe(4);
+
+			interceptor.Armed = true;
+			interceptor.Calls.Clear();
+
+			var rows = (sameQueryable ? query : db.GetTable<CacheItem>()).ToArray().Length;
+
+			using (Assert.EnterMultipleScope())
+			{
+				rows.ShouldBe(2);
+				interceptor.Calls.Count(k => k == ToArgsKind(kind)).ShouldBe(1, string.Join(", ", interceptor.Calls));
+			}
+		}
 	}
 }
