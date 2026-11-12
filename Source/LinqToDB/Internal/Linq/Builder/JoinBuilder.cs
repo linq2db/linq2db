@@ -24,9 +24,13 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (call.Method.DeclaringType == typeof(LinqExtensions) || !call.IsQueryable)
 				return false;
 
+#if NET11_0_OR_GREATER
 			// Queryable.FullJoin has no comparer-less overload: its comparer is an optional parameter, so it is always 6 arguments
-			return call.Arguments.Count == 5
-				|| call.Arguments.Count == 6 && call.Arguments[5] is ConstantExpression { Value: null };
+			if (call.Arguments.Count == 6)
+				return call is { Method.Name: nameof(Queryable.FullJoin), Arguments: [.., ConstantExpression { Value: null }] };
+#endif
+
+			return call.Arguments.Count == 5;
 		}
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
