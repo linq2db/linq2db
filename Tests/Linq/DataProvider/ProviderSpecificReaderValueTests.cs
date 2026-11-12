@@ -74,7 +74,7 @@ namespace Tests.DataProvider
 
 				if (context.IsAnyOf(TestProvName.AllSqlServerMS))
 				{
-					// TODO: Recheck with the official Microsoft.SqlServer.Types package: https://github.com/linq2db/linq2db/issues/5730
+					// net8+ tests reference the System.Data.SqlClient-bound Microsoft.SqlServer.Types, whose UDT attributes MDS doesn't recognise: https://github.com/linq2db/linq2db/issues/5730
 					AssertBothReadsFail(conn, "Cast('/1/3/' as hierarchyid)", "Microsoft.SqlServer.Server.InvalidUdtException");
 				}
 				else
@@ -100,7 +100,7 @@ namespace Tests.DataProvider
 		{
 			if (context.IsAnyOf(TestProvName.AllSqlServerMS))
 			{
-				// TODO: Recheck with the official Microsoft.SqlServer.Types package: https://github.com/linq2db/linq2db/issues/5730
+				// net8+ tests reference the System.Data.SqlClient-bound Microsoft.SqlServer.Types, whose UDT attributes MDS doesn't recognise: https://github.com/linq2db/linq2db/issues/5730
 				Assert.Inconclusive("Spatial types test disabled for Microsoft.Data.SqlClient");
 			}
 
@@ -221,11 +221,14 @@ namespace Tests.DataProvider
 		{
 			using var conn = GetDataConnection(context);
 
+			// the native client returns HanaDecimal unless the connection sets "return hanadecimal=false"
+			var decimalType = context.IsAnyOf(ProviderName.SapHanaNative) ? typeof(Sap.Data.Hana.HanaDecimal) : typeof(decimal);
+
 			using (Assert.EnterMultipleScope())
 			{
 				AssertReadMatrix(conn, "CAST(123 AS INTEGER) FROM dummy"                                , typeof(int)     , typeof(int)     , "123");
 				AssertReadMatrix(conn, "CAST(1234567890123 AS BIGINT) FROM dummy"                      , typeof(long)    , typeof(long)    , "1234567890123");
-				AssertReadMatrix(conn, "CAST(123.45 AS DECIMAL(10,2)) FROM dummy"                      , typeof(decimal) , typeof(decimal) , "123.45");
+				AssertReadMatrix(conn, "CAST(123.45 AS DECIMAL(10,2)) FROM dummy"                      , decimalType     , decimalType     , "123.45");
 				AssertReadMatrix(conn, "CAST(1.25 AS REAL) FROM dummy"                                 , typeof(float)   , typeof(float)   , "1.25");
 				AssertReadMatrix(conn, "CAST(1.25 AS DOUBLE) FROM dummy"                               , typeof(double)  , typeof(double)  , "1.25");
 				AssertReadMatrix(conn, "CAST('text' AS VARCHAR(10)) FROM dummy"                        , typeof(string)  , typeof(string)  , "text");
@@ -236,6 +239,10 @@ namespace Tests.DataProvider
 			}
 		}
 
+#if NET11_0_OR_GREATER
+		[ActiveIssue(Configuration = TestProvName.AllSybase, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "CAST(123.45 AS DECIMAL(10,2))",
+			Details = "https://github.com/DataAction/AdoNetCore.AseClient/issues/240. AdoNetCore.AseClient returns DECIMAL through a double on .NET 11, so CAST(123.45 AS DECIMAL(10,2)) reads back as 123.45000000000000256981935710 from GetValue, GetProviderSpecificValue, GetDecimal and GetString alike. The same driver and query return 123.45 on .NET 10; MONEY is exact on both. No read path preserves the value, so this matrix cannot assert one.")]
+#endif
 		[Test]
 		public void SybaseProviderSpecificReadMatrix([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
@@ -245,7 +252,6 @@ namespace Tests.DataProvider
 			{
 				AssertReadMatrix(conn, "CAST(123 AS INT)"                         , typeof(int)     , typeof(int)     , "123");
 				AssertReadMatrix(conn, "CAST(1234567890123 AS BIGINT)"            , typeof(long)    , typeof(long)    , "1234567890123");
-				AssertReadMatrix(conn, "CAST(123.45 AS DECIMAL(10,2))"            , typeof(decimal) , typeof(decimal) , "123.45");
 				AssertReadMatrix(conn, "CAST(1.25 AS REAL)"                       , typeof(float)   , typeof(float)   , "1.25");
 				AssertReadMatrix(conn, "CAST(1.25 AS FLOAT)"                      , typeof(double)  , typeof(double)  , "1.25");
 				AssertReadMatrix(conn, "CAST('text' AS VARCHAR(10))"              , typeof(string)  , typeof(string)  , "text");
@@ -253,6 +259,8 @@ namespace Tests.DataProvider
 				AssertReadMatrix(conn, "CAST('03:04:05' AS TIME)"                 , typeof(DateTime), typeof(DateTime), "1900-01-01T03:04:05.0000000");
 				AssertReadMatrix(conn, "CAST('2024-01-02 03:04:05.123' AS DATETIME)", typeof(DateTime), typeof(DateTime), "2024-01-02T03:04:05.1230000");
 				AssertReadMatrix(conn, "CAST(0x3039 AS BINARY(2))"                , typeof(byte[])  , typeof(byte[])  , "0x3039");
+				// Last: on .NET 11 it fails (AseClient#240), and Shouldly throws at once, so the rows above must come first
+				AssertReadMatrix(conn, "CAST(123.45 AS DECIMAL(10,2))"            , typeof(decimal) , typeof(decimal) , "123.45");
 			}
 		}
 

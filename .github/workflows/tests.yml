@@ -1,5 +1,6 @@
-# Provider tests on GitHub Actions - the Linux legs, and the Windows legs that need no docker
-# container (the win-mssql ones stay on Azure).
+# Provider tests on GitHub Actions. By default the Linux legs and the Windows legs that need no docker
+# container - the win-mssql ones stay on Azure, so development runs split load across both CIs.
+# all_legs drops that split and takes every leg; tests-release.yml passes it for the release run.
 #
 # Normally started by tests-comment.yml, when someone comments `/azp run test-<db>` on a PR. That path
 # calls this workflow rather than dispatching it, so `ref` can be refs/pull/<n>/merge - which
@@ -18,7 +19,11 @@ on:
         required: true
         default: '[sqlite.all]'
       full_run:
-        description: "Run every TFM's main suite, not just net10 (release-run behaviour)"
+        description: "Run every TFM's main suite, not just the newest (release-run behaviour)"
+        type: boolean
+        default: false
+      all_legs:
+        description: 'Run every leg, including the ones the development split leaves on Azure (release-run behaviour)'
         type: boolean
         default: false
       ref:
@@ -27,6 +32,10 @@ on:
       baselines_branch:
         description: 'Baselines branch to push to, e.g. baselines/pr_5848. Empty = do not capture baselines.'
         required: false
+      rebase_baselines:
+        description: 'Rebase an existing baselines branch onto baselines master before the legs start'
+        type: boolean
+        default: false
       pr:
         description: 'Source PR number, for the courtesy comment on the baselines PR.'
         required: false
@@ -41,12 +50,18 @@ on:
       full_run:
         type: boolean
         default: false
+      all_legs:
+        type: boolean
+        default: false
       ref:
         type: string
         required: false
       baselines_branch:
         type: string
         required: false
+      rebase_baselines:
+        type: boolean
+        default: false
       pr:
         type: string
         required: false
@@ -56,7 +71,8 @@ permissions:
 
 concurrency:
   # Per surface, so two concurrent single-provider runs coexist the way separate Azure definitions do.
-  group: tests-${{ inputs.ref || github.ref }}-${{ inputs.surface }}
+  # A full run is keyed apart, so a `/azp run test-all` comment on the release PR cannot cancel it.
+  group: tests-${{ inputs.ref || github.ref }}-${{ inputs.surface }}${{ inputs.full_run && '-full' || '' }}
   cancel-in-progress: true
 
 env:
@@ -106,6 +122,8 @@ jobs:
           python3 - <<'PY' >> "$GITHUB_OUTPUT"
           import json, os, sys, yaml
           surface = os.environ['SURFACE']
+          all_legs = os.environ.get('ALL_LEGS') == 'true'
+          full_run = os.environ.get('FULL_RUN') == 'true'
           # Selection is a substring test, and '' is a substring of everything - an empty surface
           # would silently select every leg. workflow_dispatch cannot produce one (the input is
           # required and defaulted), but any other trigger leaves inputs.* empty, so guard it here
@@ -126,20 +144,20 @@ jobs:
               if surface not in e['filters']:
                   continue
 
-              # w_DB2InformixDuckDB sets enable_os_windows inside an Azure template conditional, so a
-              # stock parser sees a key whose whole name is that conditional and e.get(...) is None -
-              # the entry drops out silently. That is the right answer for it today (its windows leg is
-              # release-run only, and release runs stay on Azure), but the next entry to grow one of
-              # these must not be dropped without a word.
+              # An Azure template conditional is a key whose whole name is the conditional to a stock
+              # parser, so the selectors inside it read as None and the entry drops out silently. Selectors
+              # are plain data for that reason (win_full_run_only replaced the last one). Only legs this
+              # run would take are refused: a stacked PR's merge ref can predate that change, and its
+              # comment runs should not start failing over a leg they never selected.
               #
               # The prefix is assembled rather than written out because GitHub evaluates its own
               # expression syntax ANYWHERE in this file - script bodies and comments included - and a
               # literal one here fails the whole workflow at dispatch with "Unrecognized named-value".
               azure_expr = '$' + '{{'
-              if e.get('gh_windows') == 'true' and any(str(k).startswith(azure_expr) for k in e):
-                  print(f"::error::{e['name']} is marked gh_windows but carries an Azure template "
-                        "conditional key - a stock YAML parser cannot see the selectors inside it, so "
-                        "the leg would be silently dropped here", file=sys.stderr)
+              if (all_legs or e.get('gh_windows') == 'true') and any(str(k).startswith(azure_expr) for k in e):
+                  print(f"::error::{e['name']} carries an Azure template conditional key - a stock YAML "
+                        "parser cannot see the selectors inside it, so the leg would be silently dropped "
+                        "here", file=sys.stderr)
                   raise SystemExit(1)
 
               if e.get('enable_os_ubuntu') is True:
@@ -147,7 +165,7 @@ jobs:
                   # The other half of the split in test-jobs.yml: Azure skips entries marked gh_linux,
                   # so only those run here. An entry without it stays on Azure - today every ubuntu entry
                   # carries the flag, so the branch exists for a future entry that has to stay behind.
-                  if e.get('gh_linux') == 'true':
+                  if all_legs or e.get('gh_linux') == 'true':
                       linux.append({
                           'name':          e['name'],
                           'title':         e['title'],
@@ -155,23 +173,19 @@ jobs:
                           'script_global': e.get('script_linux_global', ''),
                           'script_local':  e.get('script_linux_local', ''),
                           'retry':         bool(e.get('retry', False)),
-                          'net80':         e.get('enable_fw_net80') is True,
-                          'net90':         e.get('enable_fw_net90') is True,
-                          'net100':        e.get('enable_fw_net100') is True,
                       })
 
-              if e.get('enable_os_windows') is True:
+              if e.get('enable_os_windows') is True and (full_run or e.get('win_full_run_only') is not True):
                   matched += 1
-                  if e.get('gh_windows') == 'true':
+                  if all_legs or e.get('gh_windows') == 'true':
                       # test-jobs.yml's rule, restated: windows runs a non-netfx TFM only for a leg
                       # linux cannot cover, unless win_tfms_always opts out. netfx is windows-only, so
-                      # it always follows the entry's own switch.
+                      # it always follows the entry's own switch. The modern TFMs have no per-entry
+                      # switch - see the TARGET FRAMEWORK SELECTORS note in test-matrix.yml.
                       own_tfms = e.get('enable_os_ubuntu') is not True or e.get('win_tfms_always') is True
                       tfms = {
                           'netfx':  e.get('enable_fw_netfx') is True,
-                          'net80':  own_tfms and e.get('enable_fw_net80') is True,
-                          'net90':  own_tfms and e.get('enable_fw_net90') is True,
-                          'net100': own_tfms and e.get('enable_fw_net100') is True,
+                          'modern': own_tfms,
                       }
                       # What win_tfms_always exists to prevent. Without this the leg runs no suite at
                       # all and fails one step later on a missing .trx, which reads as a test problem.
@@ -185,7 +199,7 @@ jobs:
                           'title':           e['title'],
                           'config':          e['config_win'],
                           'arch':            'x86' if x86 else 'x64',
-                          # Names the binaries artifact half: test_net80<suffix>_binaries. Data rather
+                          # Names the binaries artifact half: test_net110<suffix>_binaries. Data rather
                           # than an expression in the step, so the artifact naming stays in one place.
                           'artifact_suffix': '_x86' if x86 else '',
                           'script_global':   e.get('script_win_global', ''),
@@ -217,6 +231,8 @@ jobs:
           PY
         env:
           SURFACE: ${{ inputs.surface }}
+          ALL_LEGS: ${{ inputs.all_legs }}
+          FULL_RUN: ${{ inputs.full_run }}
 
       # A surface that matches no entry at all is the failure that looks like success - build 23192 on
       # the Azure side went green having run nothing. A surface whose legs all stay on Azure is a
@@ -247,9 +263,8 @@ jobs:
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: |
-            8.x
-            9.x
             10.x
+            11.x
 
       - run: dotnet build ${{ env.TEST_SOLUTION_FILTER }} --configuration ${{ env.TEST_CONFIGURATION }}
 
@@ -258,9 +273,8 @@ jobs:
         run: |
           $cfg = '${{ env.TEST_CONFIGURATION }}'
           $tfms = @(
-            @{ dir = 'net8.0';  flag = 'net80';  ef = 'EF8'  },
-            @{ dir = 'net9.0';  flag = 'net90';  ef = 'EF9'  },
-            @{ dir = 'net10.0'; flag = 'net100'; ef = 'EF10' }
+            @{ dir = 'net10.0'; ef = 'EF10' },
+            @{ dir = 'net11.0'; ef = 'EF11' }
           )
           foreach ($t in $tfms) {
             dotnet publish Tests/Linq/Tests.csproj -f $t.dir -c $cfg -o ".build/publish/Tests/$cfg/$($t.dir)_x64"
@@ -278,12 +292,13 @@ jobs:
               # DataProviders.json is where the *.Azure connection strings come from.
               Copy-Item DataProviders.json, .runsettings $dest
             }
-            Copy-Item -Recurse -Force "Build/$cfg/$($t.flag)" "testing/configs/$($t.flag)"
           }
 
-          # Unconditional, unlike the netfx binaries below: these are three-line JSON files, and one
+          # One config per test job, shared by every TFM: the provider list does not depend on the
+          # target framework, and DataProviders.json points each <TFM>.Azure at the same Azure.TestJob
+          # key. Staged unconditionally, netfx included - these are three-line JSON files, and one
           # shape for test_configs beats a second artifact variant to reason about.
-          Copy-Item -Recurse -Force "Build/$cfg/netfx" "testing/configs/netfx"
+          Copy-Item -Recurse -Force "Build/$cfg/configs" "testing/configs"
 
           New-Item -ItemType Directory -Force -Path testing/scripts | Out-Null
           Copy-Item -Recurse -Force "Build/$cfg/scripts/*" testing/scripts
@@ -297,11 +312,13 @@ jobs:
         run: |
           $cfg = '${{ env.TEST_CONFIGURATION }}'
 
-          dotnet publish Tests/Linq/Tests.csproj -f net462 -c $cfg -o ".build/publish/Tests/$cfg/net462_x64"
+          # -a x64 for both net462 suites: the SDK defaults a .NET Framework exe with no RID to win-x86,
+          # so the main suite ran 32-bit and its NUnit result string ran out of address space on full
+          # runs. The EF3 suite also needs the RID for the x64 e_sqlite3, which the net4x native target
+          # omits.
+          dotnet publish Tests/Linq/Tests.csproj -f net462 -c $cfg -a x64 -o ".build/publish/Tests/$cfg/net462_x64"
           if ($LASTEXITCODE) { throw 'publish Tests net462 failed' }
 
-          # -a x64: net462 is AnyCPU and runs as x64; without an explicit RID the SQLitePCLRaw net4x
-          # native target ships only the x86 e_sqlite3, which the x64 EF test process cannot load.
           dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF3.csproj -f net462 -c $cfg -a x64 -o ".build/publish/EFTests/$cfg/net462_x64"
           if ($LASTEXITCODE) { throw 'publish EF3 net462 failed' }
 
@@ -339,22 +356,15 @@ jobs:
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: test_net80_binaries
-          path: testing/net8.0
-          if-no-files-found: error
-          include-hidden-files: true
-
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: test_net90_binaries
-          path: testing/net9.0
-          if-no-files-found: error
-          include-hidden-files: true
-
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
           name: test_net100_binaries
           path: testing/net10.0
+          if-no-files-found: error
+          include-hidden-files: true
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: test_net110_binaries
+          path: testing/net11.0
           if-no-files-found: error
           include-hidden-files: true
 
@@ -379,9 +389,8 @@ jobs:
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: |
-            8.x
-            9.x
             10.x
+            11.x
 
       - name: Publish and stage (win-x86)
         shell: pwsh
@@ -389,9 +398,8 @@ jobs:
           $cfg = '${{ env.TEST_CONFIGURATION }}'
           $tfms = @(
             @{ dir = 'net462';  ef = 'EF3';  stubs = $false },
-            @{ dir = 'net8.0';  ef = 'EF8';  stubs = $true  },
-            @{ dir = 'net9.0';  ef = 'EF9';  stubs = $true  },
-            @{ dir = 'net10.0'; ef = 'EF10'; stubs = $true  }
+            @{ dir = 'net10.0'; ef = 'EF10'; stubs = $true  },
+            @{ dir = 'net11.0'; ef = 'EF11'; stubs = $true  }
           )
           foreach ($t in $tfms) {
             # Built as an array and splatted once, rather than conditionally splatting a second one:
@@ -425,35 +433,64 @@ jobs:
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: test_net80_x86_binaries
-          path: testing/net8.0
-          if-no-files-found: error
-          include-hidden-files: true
-
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: test_net90_x86_binaries
-          path: testing/net9.0
-          if-no-files-found: error
-          include-hidden-files: true
-
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
           name: test_net100_x86_binaries
           path: testing/net10.0
           if-no-files-found: error
           include-hidden-files: true
 
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: test_net110_x86_binaries
+          path: testing/net11.0
+          if-no-files-found: error
+          include-hidden-files: true
+
+  # Azure's create_baselines_branch, for a caller with no Azure half to run it: a baselines branch left
+  # by an earlier run is rebased onto baselines master once, before any leg clones it. The comment path
+  # leaves it off - Azure still runs that job there, so a second rebase would only repeat it.
+  baselines_init:
+    name: Rebase test baselines branch
+    needs: build
+    if: inputs.rebase_baselines
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: test_scripts
+          path: scripts
+
+      # GITHUB_TOKEN carries the baselines PAT for both git and gh. GH_TOKEN stays unset, because gh
+      # prefers it. -EmitOutputs is left off: it writes an Azure variable, and the branch name is
+      # already the caller's baselines_branch input.
+      - name: Rebase test baselines
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.BASELINES_GH_PAT }}
+          EMAIL: actions@linq2db.com
+          GIT_AUTHOR_NAME: GitHub Actions Bot
+          GIT_COMMITTER_NAME: GitHub Actions Bot
+          PR_ID: ${{ inputs.pr }}
+        run: |
+          ./scripts/ensure-baselines-branch.ps1 -PrId "$Env:PR_ID" -BaselinesMaster "$Env:BASELINES_MASTER" -Rebase
+          exit $LASTEXITCODE
+
   linux-tests:
     name: Lin ${{ matrix.name }}
-    needs: [prepare, build]
+    needs: [prepare, build, baselines_init]
     # An empty matrix is not "no jobs" - it fails the RUN, with no failed job to point at and no
     # annotation on any check run, so `gh run view` shows every job green under a red run. Surfaces
     # whose linux legs all stay on Azure - every windows-only surface - hit it, so the job is skipped
-    # explicitly rather than instantiated with nothing in it.
-    if: needs.prepare.outputs.any == 'true'
+    # explicitly rather than instantiated with nothing in it. baselines_init is skipped unless the
+    # caller asks for it, and a skipped dependency skips the dependent by default, hence the spelled
+    # out gate.
+    if: >
+      !cancelled()
+      && needs.prepare.outputs.any == 'true'
+      && needs.build.result == 'success'
+      && (needs.baselines_init.result == 'success' || needs.baselines_init.result == 'skipped')
     runs-on: ubuntu-24.04
-    timeout-minutes: 180
+    timeout-minutes: ${{ inputs.full_run && 300 || 180 }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.prepare.outputs.linux) }}
@@ -495,9 +532,8 @@ jobs:
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: |
-            8.x
-            9.x
             10.x
+            11.x
 
       # Anonymous pulls hit Docker Hub's rate limit (#6008); a failed login falls back to them.
       # Plain CLI, not docker/login-action: the repo allows GitHub-owned actions only.
@@ -521,53 +557,31 @@ jobs:
       # HANA legs only fit after free-disk-space.sh. Matrix values go through env, not `run:`
       # interpolation, which would turn test-matrix.yml data into code.
 
-      - name: Extract .NET 8 test binaries
-        if: matrix.net80
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: test_net80_binaries
-          path: net8.0
-
-      - name: Tests (.NET 8)
-        if: matrix.net80
-        env:
-          CONFIG: ${{ matrix.config }}
-          SETUP: ${{ matrix.script_local }}
-          RETRY: ${{ matrix.retry }}
-          # net8/net9 run the main suite on release runs only; the EF.Core suite always runs.
-          # Mirrors pr_main in test-workflow-linux.yml.
-          RUN_MAIN: ${{ inputs.full_run }}
-        run: >
-          scripts/run-provider-tests.sh --tfm net8.0 --flag net80
-          --config "$CONFIG" --setup "$SETUP" --retry "$RETRY" --main "$RUN_MAIN"
-
-      - name: Extract .NET 9 test binaries
-        if: matrix.net90
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: test_net90_binaries
-          path: net9.0
-
-      - name: Tests (.NET 9)
-        if: matrix.net90
-        env:
-          CONFIG: ${{ matrix.config }}
-          SETUP: ${{ matrix.script_local }}
-          RETRY: ${{ matrix.retry }}
-          RUN_MAIN: ${{ inputs.full_run }}
-        run: >
-          scripts/run-provider-tests.sh --tfm net9.0 --flag net90
-          --config "$CONFIG" --setup "$SETUP" --retry "$RETRY" --main "$RUN_MAIN"
-
       - name: Extract .NET 10 test binaries
-        if: matrix.net100
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: test_net100_binaries
           path: net10.0
 
       - name: Tests (.NET 10)
-        if: matrix.net100
+        env:
+          CONFIG: ${{ matrix.config }}
+          SETUP: ${{ matrix.script_local }}
+          RETRY: ${{ matrix.retry }}
+          # Every TFM but the newest runs the main suite on release runs only; the EF.Core suite
+          # always runs. Mirrors pr_main in test-workflow-linux.yml.
+          RUN_MAIN: ${{ inputs.full_run }}
+        run: >
+          scripts/run-provider-tests.sh --tfm net10.0
+          --config "$CONFIG" --setup "$SETUP" --retry "$RETRY" --main "$RUN_MAIN"
+
+      - name: Extract .NET 11 test binaries
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: test_net110_binaries
+          path: net11.0
+
+      - name: Tests (.NET 11)
         env:
           CONFIG: ${{ matrix.config }}
           SETUP: ${{ matrix.script_local }}
@@ -575,7 +589,7 @@ jobs:
           # The newest TFM carries the main suite on every run - pr_main: true.
           RUN_MAIN: 'true'
         run: >
-          scripts/run-provider-tests.sh --tfm net10.0 --flag net100
+          scripts/run-provider-tests.sh --tfm net11.0
           --config "$CONFIG" --setup "$SETUP" --retry "$RETRY" --main "$RUN_MAIN"
 
       # Stands in for PublishTestResults@2, including its failTaskOnMissingResultsFile: a leg whose
@@ -610,24 +624,25 @@ jobs:
             -BaselinesMaster "$Env:BASELINES_MASTER" -PrId "$Env:PR_ID" -GitHubAnnotations
           exit $LASTEXITCODE
 
-  # The windows legs that need no docker container. Same shape as linux-tests, with three differences
-  # forced by the platform: netfx is in the TFM list, the suites are apphost .exe rather than
-  # `dotnet <dll>`, and a leg may be x86 - which changes both the SDK installed and the artifact half
-  # it downloads.
+  # The windows legs - the docker-free ones, plus the win-mssql ones under all_legs. Same shape as
+  # linux-tests, with three differences forced by the platform: netfx is in the TFM list, the suites
+  # are apphost .exe rather than `dotnet <dll>`, and a leg may be x86 - which changes both the SDK
+  # installed and the artifact half it downloads.
   windows-tests:
     name: Win ${{ matrix.name }}
     # build_x86 is skipped for a surface with no x86 leg, and a skipped dependency skips the dependent
     # by default - so the gate is spelled out rather than left to `needs`. !cancelled() rather than
     # always(), so a cancelled run does not start legs. windows_any for the same reason linux-tests
     # tests `any`: an empty matrix fails the run rather than producing no jobs.
-    needs: [prepare, build, build_x86]
+    needs: [prepare, build, build_x86, baselines_init]
     if: >
       !cancelled()
       && needs.prepare.outputs.windows_any == 'true'
       && needs.build.result == 'success'
       && (needs.build_x86.result == 'success' || needs.build_x86.result == 'skipped')
+      && (needs.baselines_init.result == 'success' || needs.baselines_init.result == 'skipped')
     runs-on: windows-2025
-    timeout-minutes: 180
+    timeout-minutes: ${{ inputs.full_run && 300 || 180 }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.prepare.outputs.windows) }}
@@ -657,9 +672,8 @@ jobs:
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: |
-            8.x
-            9.x
             10.x
+            11.x
 
       # An x86 leg runs x86 apphosts, which need an x86 runtime the image does not carry - Azure does
       # the same thing with UseDotNet@2 under PROCESSOR_ARCHITECTURE=x86. Installed after the x64 one
@@ -669,9 +683,22 @@ jobs:
         with:
           architecture: x86
           dotnet-version: |
-            8.x
-            9.x
             10.x
+            11.x
+
+      # The win-mssql legs pull multi-GB images; anonymous pulls hit Docker Hub's rate limit (#6008).
+      # Every windows script_global is a SQL Server container script, as every linux one is a container
+      # script; a failed login falls back to anonymous pulls.
+      - name: Docker Hub login
+        if: matrix.script_global != ''
+        continue-on-error: true
+        shell: pwsh
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          $Env:DOCKERHUB_TOKEN | docker login --username "$Env:DOCKERHUB_USERNAME" --password-stdin
+          exit $LASTEXITCODE
 
       - name: Execute global setup script
         if: matrix.script_global != ''
@@ -724,71 +751,47 @@ jobs:
           # win_efcore_only in test-workflow-windows.yml.
           RUN_MAIN: ${{ inputs.full_run || !matrix.efcore_only }}
         run: |
-          ./scripts/run-provider-tests.ps1 -Tfm net462 -Flag netfx -Arch "$Env:ARCH" -Config "$Env:CONFIG" `
-            -SetupCmd "$Env:SETUP_CMD" -SetupPs1 "$Env:SETUP_PS1" -PreTest "$Env:PRE_TEST" -PostTest "$Env:POST_TEST" `
-            -Retry "$Env:RETRY" -Main "$Env:RUN_MAIN"
-          exit $LASTEXITCODE
-
-      - name: Extract .NET 8 test binaries
-        if: matrix.net80
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: test_net80${{ matrix.artifact_suffix }}_binaries
-          path: net8.0
-
-      - name: Tests (.NET 8)
-        if: matrix.net80
-        shell: pwsh
-        env:
-          CONFIG: ${{ matrix.config }}
-          ARCH: ${{ matrix.arch }}
-          SETUP_CMD: ${{ matrix.script_local }}
-          SETUP_PS1: ${{ matrix.psscript_local }}
-          PRE_TEST: ${{ matrix.pre_test }}
-          POST_TEST: ${{ matrix.post_test }}
-          RETRY: ${{ matrix.retry }}
-          # net8/net9 run the main suite on release runs only; the EF.Core suite always runs.
-          RUN_MAIN: ${{ inputs.full_run }}
-        run: |
-          ./scripts/run-provider-tests.ps1 -Tfm net8.0 -Flag net80 -Arch "$Env:ARCH" -Config "$Env:CONFIG" `
-            -SetupCmd "$Env:SETUP_CMD" -SetupPs1 "$Env:SETUP_PS1" -PreTest "$Env:PRE_TEST" -PostTest "$Env:POST_TEST" `
-            -Retry "$Env:RETRY" -Main "$Env:RUN_MAIN"
-          exit $LASTEXITCODE
-
-      - name: Extract .NET 9 test binaries
-        if: matrix.net90
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: test_net90${{ matrix.artifact_suffix }}_binaries
-          path: net9.0
-
-      - name: Tests (.NET 9)
-        if: matrix.net90
-        shell: pwsh
-        env:
-          CONFIG: ${{ matrix.config }}
-          ARCH: ${{ matrix.arch }}
-          SETUP_CMD: ${{ matrix.script_local }}
-          SETUP_PS1: ${{ matrix.psscript_local }}
-          PRE_TEST: ${{ matrix.pre_test }}
-          POST_TEST: ${{ matrix.post_test }}
-          RETRY: ${{ matrix.retry }}
-          RUN_MAIN: ${{ inputs.full_run }}
-        run: |
-          ./scripts/run-provider-tests.ps1 -Tfm net9.0 -Flag net90 -Arch "$Env:ARCH" -Config "$Env:CONFIG" `
+          ./scripts/run-provider-tests.ps1 -Tfm net462 -Arch "$Env:ARCH" -Config "$Env:CONFIG" `
             -SetupCmd "$Env:SETUP_CMD" -SetupPs1 "$Env:SETUP_PS1" -PreTest "$Env:PRE_TEST" -PostTest "$Env:POST_TEST" `
             -Retry "$Env:RETRY" -Main "$Env:RUN_MAIN"
           exit $LASTEXITCODE
 
       - name: Extract .NET 10 test binaries
-        if: matrix.net100
+        if: matrix.modern
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: test_net100${{ matrix.artifact_suffix }}_binaries
           path: net10.0
 
       - name: Tests (.NET 10)
-        if: matrix.net100
+        if: matrix.modern
+        shell: pwsh
+        env:
+          CONFIG: ${{ matrix.config }}
+          ARCH: ${{ matrix.arch }}
+          SETUP_CMD: ${{ matrix.script_local }}
+          SETUP_PS1: ${{ matrix.psscript_local }}
+          PRE_TEST: ${{ matrix.pre_test }}
+          POST_TEST: ${{ matrix.post_test }}
+          RETRY: ${{ matrix.retry }}
+          # Every TFM but the newest runs the main suite on release runs only; the EF.Core suite
+          # always runs.
+          RUN_MAIN: ${{ inputs.full_run }}
+        run: |
+          ./scripts/run-provider-tests.ps1 -Tfm net10.0 -Arch "$Env:ARCH" -Config "$Env:CONFIG" `
+            -SetupCmd "$Env:SETUP_CMD" -SetupPs1 "$Env:SETUP_PS1" -PreTest "$Env:PRE_TEST" -PostTest "$Env:POST_TEST" `
+            -Retry "$Env:RETRY" -Main "$Env:RUN_MAIN"
+          exit $LASTEXITCODE
+
+      - name: Extract .NET 11 test binaries
+        if: matrix.modern
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: test_net110${{ matrix.artifact_suffix }}_binaries
+          path: net11.0
+
+      - name: Tests (.NET 11)
+        if: matrix.modern
         shell: pwsh
         env:
           CONFIG: ${{ matrix.config }}
@@ -802,7 +805,7 @@ jobs:
           # leaves it to the linux legs.
           RUN_MAIN: ${{ inputs.full_run || !matrix.efcore_only }}
         run: |
-          ./scripts/run-provider-tests.ps1 -Tfm net10.0 -Flag net100 -Arch "$Env:ARCH" -Config "$Env:CONFIG" `
+          ./scripts/run-provider-tests.ps1 -Tfm net11.0 -Arch "$Env:ARCH" -Config "$Env:CONFIG" `
             -SetupCmd "$Env:SETUP_CMD" -SetupPs1 "$Env:SETUP_PS1" -PreTest "$Env:PRE_TEST" -PostTest "$Env:POST_TEST" `
             -Retry "$Env:RETRY" -Main "$Env:RUN_MAIN"
           exit $LASTEXITCODE

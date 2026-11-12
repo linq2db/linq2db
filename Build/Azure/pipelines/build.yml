@@ -5,6 +5,8 @@ variables:
 # always trigger on PRs
 trigger: none
 pr:
+  # draft -> ready queues a new run for the same commit; it must not cancel the one in flight
+  autoCancel: false
   branches:
     include:
     - '*'
@@ -24,5 +26,5 @@ stages:
       with_tests: false
       with_analyzer_tests: true
       with_singlefile_smoke: true
-      with_analyzers: false # true disabled till https://github.com/dotnet/roslyn/pull/80621 shipped
+      with_analyzers: true
       with_release: false

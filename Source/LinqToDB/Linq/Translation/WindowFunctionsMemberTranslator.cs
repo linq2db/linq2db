@@ -772,6 +772,12 @@ namespace LinqToDB.Linq.Translation
 			{
 				foreach (var argument in information.Arguments)
 				{
+					// LAG / LEAD answer their default in place of the first argument's value, which is read back through
+					// that argument's column, so the default is written in the column's terms.
+					using var defaultScope = arguments.Count == 2 && functionName is "LAG" or "LEAD"
+						? translationContext.UsingColumnDescriptor(QueryHelper.GetColumnDescriptor(arguments[0].Expression))
+						: null;
+
 					var translated = translationContext.Translate(argument.Expr);
 					if (translated is not SqlPlaceholderExpression placeholder)
 						return SqlErrorExpression.EnsureError(translated, methodCall.Type);
@@ -931,10 +937,9 @@ namespace LinqToDB.Linq.Translation
 				nullTreatment   : information.NullTreatment,
 				fromPosition    : information.FromPosition,
 				isWindowFunction: true,
-				// The same three names an ordinary aggregate builds, so they answer about their argument the same
-				// way here. Nothing reaches this with a declared duration today - the window aggregates are typed
-				// per overload and none takes a TimeSpan - but a name carrying two domains would make two otherwise
-				// identical nodes stop comparing equal.
+				// MIN, MAX and SUM answer about their argument the same way an ordinary aggregate does, since a name
+				// carrying two domains would make two otherwise identical nodes stop comparing equal. The value
+				// functions (LAG, FIRST_VALUE, ...) return the argument's own values.
 				argumentDomain  : SqlArgumentDomains.ForAggregate(functionName)
 			);
 

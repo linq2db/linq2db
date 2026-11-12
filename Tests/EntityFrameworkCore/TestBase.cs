@@ -9,7 +9,6 @@ using LinqToDB.Data;
 using LinqToDB.EntityFrameworkCore.Tests.Logging;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
-using LinqToDB.Tools.Comparers;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -18,6 +17,7 @@ using Microsoft.Extensions.Logging.Console;
 using NodaTime;
 
 using NUnit.Framework;
+using NUnit.Framework.Internal;
 
 using Tests;
 
@@ -79,24 +79,31 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		{
 			// establish a fresh per-test context; EF tests never use the remote (LinqService) path
 			CustomTestContext.Begin(false, null);
+
+			if (NoBaselinesAttribute.AppliesTo(TestExecutionContext.CurrentContext.CurrentTest))
+				CustomTestContext.Get().Set(CustomTestContext.BASELINE_DISABLED, true);
 		}
 
 		[TearDown]
 		public virtual void OnAfterTest()
 		{
-			// as EF generates SQL differently, we cannot share baselines
+			try
+			{
+				// as EF generates SQL differently, we cannot share baselines
 #if NETFRAMEWORK
-			BaselinesManager.Dump(false, ".EF31");
-#elif NET8_0
-			BaselinesManager.Dump(false, ".EF8");
-#elif NET9_0
-			BaselinesManager.Dump(false, ".EF9");
+				BaselinesManager.Dump(false, ".EF31");
 #elif NET10_0
-			BaselinesManager.Dump(false, ".EF10");
+				BaselinesManager.Dump(false, ".EF10");
+#elif NET11_0
+				BaselinesManager.Dump(false, ".EF11");
 #else
 #error Unknown framework
 #endif
-			CustomTestContext.Release();
+			}
+			finally
+			{
+				CustomTestContext.Release();
+			}
 		}
 
 		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, bool allowEmpty = false)
@@ -106,7 +113,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 		protected void AreEqualWithComparer<T>(IEnumerable<T> expected, IEnumerable<T> result)
 		{
-			AreEqual(t => t, expected, result, ComparerBuilder.GetEqualityComparer<T>());
+			AreEqual(t => t, expected, result, TestComparers.GetDefault<T>());
 		}
 
 		protected void AreEqual<T>(Func<T, T> fixSelector, IEnumerable<T> expected, IEnumerable<T> result, IEqualityComparer<T> comparer, bool allowEmpty = false)
@@ -165,12 +172,10 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		// use TFM-specific suffix to avoid database conflicts on parallel runs
 #if NETFRAMEWORK
 		private const string DB_SUFFIX = "ef31";
-#elif NET8_0
-		private const string DB_SUFFIX = "ef8";
-#elif NET9_0
-		private const string DB_SUFFIX = "ef9";
 #elif NET10_0
 		private const string DB_SUFFIX = "ef10";
+#elif NET11_0
+		private const string DB_SUFFIX = "ef11";
 #else
 #error Unknown framework
 #endif

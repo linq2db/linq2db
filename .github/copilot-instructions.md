@@ -37,3 +37,5 @@ When performing a code review, **comment on formatting only when it is clearly p
 ## Testing
 
 - Use Shouldly for assertions in tests instead of NUnit Assert.
+- **New test code puts one call per line in a method chain**, for LINQ queries and assertion chains alike. A single call followed by an assertion (`query.ToList().ShouldBeEmpty();`) is a chain too. Prefer the query in a variable, asserted separately. Existing tests the PR does not rewrite are left as they are.
+- **A narrowed provider set is a claim.** `[DataSources]` runs every configured provider. An exclusion in `[DataSources(...)]`, or an `[IncludeDataSources(...)]` that is not a single-provider translator test, needs a `//` line above the test naming why each provider is in or out: a measured failure, or the provider-specific mechanism the test exists for. A test of a provider-independent fix (shared optimizer, evaluator or builder code) with a narrowed set and no stated reason is a finding: widen it to `[DataSources]` and let a real failure justify each exclusion. This holds in particular when a reviewer proposed the test as `[DataSources]` and the committed version narrows it.

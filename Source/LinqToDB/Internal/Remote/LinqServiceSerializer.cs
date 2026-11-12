@@ -758,6 +758,8 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 				Append(options.LinqOptions.PreferExistsForScalar);
 				Append(options.SqlOptions.EnableConstantExpressionInOrderBy);
 				Append(options.SqlOptions.GenerateFinalAliases);
+				Append(options.LinqOptions.UseCombinedCommands);
+				Append(options.LinqOptions.UseDbBatch);
 			}
 
 			public string Serialize(
@@ -873,6 +875,16 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 								var elemType = t.GetItemType()!;
 								GetType(GetArrayType(elemType));
 							}
+
+							break;
+						}
+
+					case QueryElementType.SqlDefaultValueExpression :
+						{
+							var defaultValue = (SqlDefaultValueExpression)e;
+
+							GetType(defaultValue.Type.SystemType);
+							GetType(defaultValue.Value?.GetType());
 
 							break;
 						}
@@ -1062,6 +1074,17 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 
 							Append(elem.ValueType);
 							var type  = elem.Value?.GetType() ?? elem.ValueType.SystemType;
+							Append(type, elem.Value);
+
+							break;
+						}
+
+					case QueryElementType.SqlDefaultValueExpression :
+						{
+							var elem = (SqlDefaultValueExpression)e;
+
+							Append(elem.Type);
+							var type  = elem.Value?.GetType() ?? elem.Type.SystemType;
 							Append(type, elem.Value);
 
 							break;
@@ -1957,6 +1980,12 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						break;
 					}
 
+					case QueryElementType.SqlObjectNameExpression:
+					case QueryElementType.SqlRawStatement:
+						// Produced server-side during scenario render; never present in a client-serialized statement.
+						// Make that explicit instead of falling through to the generic "not implemented" message.
+						throw new InvalidOperationException($"{e.ElementType} is produced during server-side render and is not remote-serializable.");
+
 					default:
 						throw new InvalidOperationException($"Serialize not implemented for element {e.ElementType}");
 				}
@@ -2016,9 +2045,14 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 				var preferExistsForScalar         = ReadBool();
 				var enableConstantExprInOrderBy   = ReadBool();
 				var generateFinalAliases          = ReadBool();
+				var useCombinedCommands           = ReadBool();
+				var useDbBatch                    = ReadBool();
 
 				options = options
-					.WithOptions<LinqOptions>(lo => lo.WithPreferExistsForScalar(preferExistsForScalar))
+					.WithOptions<LinqOptions>(lo => lo
+						.WithPreferExistsForScalar(preferExistsForScalar)
+						.WithCombinedCommands(useCombinedCommands)
+						.WithDbBatch(useDbBatch))
 					.WithOptions<SqlOptions>(so =>
 						so.WithEnableConstantExpressionInOrderBy(enableConstantExprInOrderBy)
 							.WithGenerateFinalAliases(generateFinalAliases)
@@ -2265,6 +2299,16 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							var value         = ReadValue(ReadType()!);
 
 							obj = new SqlValue(dbDataType, value);
+
+							break;
+						}
+
+					case QueryElementType.SqlDefaultValueExpression :
+						{
+							var dbDataType    = ReadDbDataType();
+							var value         = ReadValue(ReadType()!);
+
+							obj = new SqlDefaultValueExpression(dbDataType, value);
 
 							break;
 						}
@@ -3289,6 +3333,10 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 
 						break;
 					}
+
+					case QueryElementType.SqlObjectNameExpression:
+					case QueryElementType.SqlRawStatement:
+						throw new InvalidOperationException($"{(QueryElementType)type} is produced during server-side render and is not remote-serializable.");
 
 					default:
 						throw new InvalidOperationException($"Parse not implemented for element {(QueryElementType)type}");

@@ -451,6 +451,12 @@ namespace LinqToDB.Internal.DataProvider.Access
 			return element;
 		}
 
+		// Access dates start at 0100-01-01, and it reads #0001-01-01# back as 2001.
+		public override ISqlExpression ConvertDefaultValue(SqlDefaultValueExpression expression)
+		{
+			return RaiseDefaultDate(expression, new DateTime(100, 1, 1)) ?? base.ConvertDefaultValue(expression);
+		}
+
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
 			return func switch
@@ -527,6 +533,66 @@ namespace LinqToDB.Internal.DataProvider.Access
 				SqlBinaryExpression(var type, var ex1, "|", var ex2) => new SqlBinaryExpression(type, ex1, "BOR", ex2, Precedence.Bitwise - 1),
 				_ => base.ConvertSqlBinaryExpression(element),
 			};
+		}
+
+		bool _isDistinctOrderBy;
+
+		// True is -1, so a boolean key sorts True first. A non-nullable key flips its direction instead of becoming an
+		// expression DISTINCT would reject (Jet accepts it parenthesized); a nullable one is negated, keeping NULL first,
+		// except under DISTINCT, where only the flip is accepted.
+		// Either way the key leaves as an int, so the second convert pass of the remote path leaves it alone.
+		protected internal override IQueryElement VisitSqlOrderByClause(SqlOrderByClause element)
+		{
+			var saved = _isDistinctOrderBy;
+
+			_isDistinctOrderBy = element.SelectQuery?.Select.IsDistinct == true;
+
+			var result = base.VisitSqlOrderByClause(element);
+
+			_isDistinctOrderBy = saved;
+
+			return result;
+		}
+
+		protected internal override IQueryElement VisitSqlOrderByItem(SqlOrderByItem element)
+		{
+			var isDistinct = _isDistinctOrderBy;
+			var newElement = (SqlOrderByItem)base.VisitSqlOrderByItem(element);
+
+			if (newElement.IsPositioned || !IsBooleanSortKey(newElement.Expression))
+				return newElement;
+
+			var flip = isDistinct || !newElement.Expression.CanBeNullable(NullabilityContext);
+
+			return new SqlOrderByItem(ToSortKey(newElement.Expression, flip), newElement.IsDescending != flip, false, newElement.NullsPosition);
+		}
+
+		protected internal override IQueryElement VisitSqlWindowOrderItem(SqlWindowOrderItem element)
+		{
+			var newElement = (SqlWindowOrderItem)base.VisitSqlWindowOrderItem(element);
+
+			if (!IsBooleanSortKey(newElement.Expression))
+				return newElement;
+
+			var flip = !newElement.Expression.CanBeNullable(NullabilityContext);
+
+			return new SqlWindowOrderItem(ToSortKey(newElement.Expression, flip), newElement.IsDescending != flip, newElement.NullsPosition);
+		}
+
+		// Only a Yes/No value stores True as -1; a converted or differently typed column already sorts in CLR order.
+		bool IsBooleanSortKey(ISqlExpression expr)
+		{
+			return (expr.SystemType == typeof(bool) || expr.SystemType == typeof(bool?))
+				&& QueryHelper.UnwrapNullablity(expr) is not (SqlValue or SqlParameter)
+				&& QueryHelper.GetColumnDescriptor(expr)?.ValueConverter == null
+				&& QueryHelper.GetDbDataType(expr, MappingSchema).DataType is DataType.Boolean or DataType.Undefined;
+		}
+
+		ISqlExpression ToSortKey(ISqlExpression expr, bool flip)
+		{
+			return flip
+				? new SqlExpression(Factory.GetDbDataType(typeof(int)), "({0})", Precedence.Unknown, expr)
+				: Factory.Negate(Factory.GetDbDataType(typeof(int?)), expr);
 		}
 	}
 }

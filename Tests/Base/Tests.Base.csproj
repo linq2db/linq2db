@@ -32,8 +32,10 @@
 		<PackageReference Include="Microsoft.AspNetCore" />
 		<PackageReference Include="Microsoft.AspNetCore.SignalR" />
 
-		<!--vulnerable transient dependency-->
+		<!--vulnerable transient dependencies-->
 		<PackageReference Include="Microsoft.AspNetCore.Server.Kestrel.Core" />
+		<PackageReference Include="Microsoft.AspNetCore.Http.Connections" />
+		<PackageReference Include="Microsoft.AspNetCore.WebUtilities" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net462' ">

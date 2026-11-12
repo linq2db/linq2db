@@ -7,6 +7,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Extensions
 {
 	[TestFixture]
@@ -134,6 +136,27 @@ namespace Tests.Extensions
 			Assert.That(LastQuery, Contains.Substring("\n\t\t\tFOR UPDATE").Using(StringComparison.Ordinal));
 			Assert.That(LastQuery, Contains.Substring("\nFOR SHARE").Using(StringComparison.Ordinal));
 			Assert.That(LastQuery, Contains.Substring("\nFOR KEY SHARE NOWAIT").Using(StringComparison.Ordinal));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6182")]
+		public void SubQueryHintAfterGroupJoinAsSubQuery([IncludeDataSources(true, TestProvName.AllPostgreSQL95Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				(
+					from p in db.Parent.Where(p => p.ParentID > 1)
+					join c in db.Child on p.ParentID equals c.ParentID into cs
+					select new { p.ParentID, Cnt = cs.Count() }
+				)
+				.AsSubQuery()
+				.SubQueryHint(PostgreSQLHints.ForUpdate)
+				.Where(x => x.Cnt > 0);
+
+			_ = q.ToList();
+
+			LastQuery!.ShouldContain("\n\t\tFOR UPDATE", Case.Sensitive);
+			LastQuery!.ShouldNotContain("\nFOR UPDATE", Case.Sensitive);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5856")]
