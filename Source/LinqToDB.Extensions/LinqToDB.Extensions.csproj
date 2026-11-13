@@ -24,7 +24,8 @@
 		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" PrivateAssets="contentfiles;build" />
 
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+		<!--in the shared framework from net11.0 on: https://learn.microsoft.com/dotnet/core/compatibility/extensions/11/extensions-in-shared-framework-->
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net11.0'))" />
 	</ItemGroup>
 
 	<ItemGroup>

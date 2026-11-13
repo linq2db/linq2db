@@ -84,6 +84,7 @@ namespace LinqToDB.Internal.SqlQuery
 			Alias      = table.Alias;
 			Cte        = cte;
 			ObjectType = cte?.ObjectType ?? table.ObjectType;
+			CanBeNull  = table.CanBeNull;
 			Fields     = new();
 
 			foreach (var field in fields)

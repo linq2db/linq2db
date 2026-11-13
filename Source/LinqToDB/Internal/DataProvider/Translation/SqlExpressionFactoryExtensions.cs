@@ -391,7 +391,57 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		public static ISqlExpression Replace(this ISqlExpressionFactory factory, ISqlExpression expression, ISqlExpression oldSubString, ISqlExpression newSubstring)
 		{
 			var valueType = factory.GetDbDataType(expression);
-			return factory.Function(valueType, PseudoFunctions.REPLACE, expression, factory.EnsureType(oldSubString, valueType), factory.EnsureType(newSubstring, valueType));
+			return factory.Function(valueType, PseudoFunctions.REPLACE, expression, EnsureReplaceArgumentType(factory, oldSubString, valueType), EnsureReplaceArgumentType(factory, newSubstring, valueType));
+		}
+
+		// An argument is brought to the value's type only when the cast changes nothing it holds: not when it is Unicode
+		// beside a non-Unicode value, which loses every character outside the value's code page; not when the value is
+		// shorter than the argument or the argument's length is unknown, which cuts its tail; and not to a fixed-length
+		// value, which pads it.
+		static ISqlExpression EnsureReplaceArgumentType(ISqlExpressionFactory factory, ISqlExpression argument, DbDataType valueType)
+		{
+			if (AsNonUnicodeAsciiLiteral(argument, valueType) is { } literal)
+				return literal;
+
+			var argumentType = factory.GetDbDataType(argument);
+
+			var losesCharacters = valueType.DataType is DataType.Char or DataType.VarChar or DataType.Text
+				&& QueryHelper.IsUnicode(argumentType.DataType);
+
+			var losesTail = valueType.Length != null && (argumentType.Length == null || argumentType.Length > valueType.Length);
+
+			var padsTail = valueType.DataType is DataType.Char or DataType.NChar;
+
+			return losesCharacters || losesTail || padsTail ? argument : factory.EnsureType(argument, valueType);
+		}
+
+		// An ASCII-only literal reads the same in every code page, so beside a non-Unicode value it stays non-Unicode: a
+		// Unicode one would turn the result Unicode, which SQL Server cuts at 4000 characters instead of 8000.
+		internal static SqlValue? AsNonUnicodeAsciiLiteral(ISqlExpression argument, DbDataType valueType)
+		{
+			if (valueType.DataType is not (DataType.Char or DataType.VarChar or DataType.Text)
+				|| argument is not SqlValue { ValueType.DataType: not (DataType.Char or DataType.VarChar or DataType.Text) } literal)
+				return null;
+
+			var isAscii = literal.Value switch
+			{
+				string text => IsAscii(text),
+				char   c    => c < 0x80,
+				_           => false,
+			};
+
+			return isAscii ? new SqlValue(literal.ValueType.WithDataType(DataType.VarChar), literal.Value) : null;
+
+			static bool IsAscii(string text)
+			{
+				foreach (var c in text)
+				{
+					if (c >= 0x80)
+						return false;
+				}
+
+				return true;
+			}
 		}
 
 		#endregion

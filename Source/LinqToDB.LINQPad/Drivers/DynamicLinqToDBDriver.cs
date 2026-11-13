@@ -79,6 +79,9 @@ public sealed partial class LinqToDBDriver : DynamicDataContextDriver
 	{
 		switch (forToken)
 		{
+			case "net11.0":
+				yield return "net11.0";
+				goto case "net10.0";
 			case "net10.0":
 				yield return "net10.0";
 				goto case "net9.0";

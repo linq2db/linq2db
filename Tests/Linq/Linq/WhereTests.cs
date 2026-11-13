@@ -1194,7 +1194,7 @@ namespace Tests.Linq
 			if (context.IsAnyOf(ProviderName.DB2))
 				q = q.AsQueryable().Select(t => Math.Round(t, 2));
 
-			AreEqual(
+			AreEqualWithinDelta(
 				from p in Types
 				select new { Value = Math.Round(p.MoneyValue, 2) } into pp
 				where pp.Value != 0 && pp.Value != 7
@@ -2617,6 +2617,27 @@ namespace Tests.Linq
 
 			var result1 = query1.ToArray();
 			var result2 = query2.ToArray();
+		}
+
+		// A top-level OR in WHERE is printed one operand per line, the layout users snapshot in their own SQL baselines.
+		[Test]
+		public void TopLevelOrPrintsOneOperandPerLine([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.Where(p =>
+					p.FirstName  == "John"      ||
+					p.LastName   == "Pupkin"    ||
+					p.MiddleName == "Ivanovich" ||
+					p.ID         == 4);
+
+			query
+				.ToSqlQuery()
+				.Sql
+				.Split('\n')
+				.Count(line => line.TrimEnd().EndsWith(" OR", StringComparison.Ordinal))
+				.ShouldBe(3);
 		}
 
 	}

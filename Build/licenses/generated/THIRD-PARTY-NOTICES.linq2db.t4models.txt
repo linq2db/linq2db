@@ -21,7 +21,7 @@ COMPONENTS
    https://github.com/DataAction/AdoNetCore.AseClient
    License: Apache-2.0  see [1]
 
-2. ClickHouse.Driver net10.0: 1.4.0, net462: 0.9.0, net472: 0.9.0, net8.0: 1.4.0, net8.0-windows7.0: 1.4.0, net9.0: 1.4.0
+2. ClickHouse.Driver net10.0: 1.4.0, net10.0-windows7.0: 1.4.0, net11.0: 1.4.0, net462: 0.9.0, net472: 0.9.0
    https://github.com/ClickHouse/clickhouse-cs
    License: MIT  see [2]
 
@@ -52,12 +52,12 @@ COMPONENTS
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-8. Microsoft.Extensions.Http net10.0: 10.0.8, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.8, net8.0-windows7.0: 10.0.8, net9.0: 10.0.8
+8. Microsoft.Extensions.Http net10.0: 10.0.8, net10.0-windows7.0: 10.0.8, net11.0: 10.0.8, net462: 10.0.0, net472: 10.0.0
    https://dot.net/
    License: MIT  see [5]
    © Microsoft Corporation. All rights reserved.
 
-9. Microsoft.Extensions.Logging.Abstractions net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
+9. Microsoft.Extensions.Logging.Abstractions net10.0: 10.0.12, net10.0-windows7.0: 10.0.8, net462: 10.0.0, net472: 10.0.0
    https://dot.net/
    License: MIT  see [5]
    © Microsoft Corporation. All rights reserved.
@@ -84,16 +84,16 @@ COMPONENTS
    License: MIT  see [2]
    Copyright 2016–2026 Bradley Grainger
 
-14. Net.IBM.Data.Db2 9.0.0.400
+14. Net.IBM.Data.Db2 10.0.0.200
    License: IBM International Program License Agreement - Redistributables  see [9]
    Copyright(c) 2025 IBM Corporation. All rights reserved
    IBM grants redistribution of the Redistributables in object-code form only as part of a value-added application developed using the Program. linq2db satisfies all three limbs: the client is bundled inside linq2db scaffolding packages and the LINQPad driver rather than offered standalone, those packages are our own application built using the client, and only compiled assemblies and native libraries are shipped - no IBM source.
 
-15. NodaTime net10.0: 3.2.3, net462: 3.2.2, net472: 3.2.2, net8.0: 3.2.3, net8.0-windows7.0: 3.2.3, net9.0: 3.2.3
+15. NodaTime net10.0: 3.2.3, net10.0-windows7.0: 3.2.3, net11.0: 3.2.3, net462: 3.2.2, net472: 3.2.2
    https://nodatime.org/
    License: Apache-2.0  see [1]
 
-16. Npgsql net10.0: 10.0.3, net462: 8.0.9, net472: 8.0.9, net8.0: 10.0.3, net8.0-windows7.0: 10.0.3, net9.0: 10.0.3
+16. Npgsql net10.0: 10.0.3, net10.0-windows7.0: 10.0.3, net11.0: 10.0.3, net462: 8.0.9, net472: 8.0.9
    https://github.com/npgsql/npgsql
    License: PostgreSQL  see [10]
    Copyright 2025 © The Npgsql Development Team
@@ -110,7 +110,7 @@ COMPONENTS
    Copyright (c) Microsoft Corporation
    Terms sourced from SQLCE_EULA_ENU.rtf as shipped in the package; the copy here is a plain-text rendering of that RTF, which is also published at http://www.microsoft.com/web/webpi/eula/SQLCE_SP1_EULA_ENU.rtf. Section 2a grants Distributable Code rights - "you are permitted to distribute in programs you develop", "You may copy and distribute the object code form of code listed in REDIST.TXT files" and "Third Party Distribution" - subject to adding significant primary functionality, which linq2db scaffolding does.
 
-19. SQLitePCLRaw.lib.e_sqlite3 net10.0: 2.1.12, net462: 3.53.3, net472: 3.53.3, net8.0: 2.1.12, net8.0-windows7.0: 3.53.3, net9.0: 2.1.12
+19. SQLitePCLRaw.lib.e_sqlite3 net10.0: 2.1.12, net10.0-windows7.0: 3.53.3, net11.0: 2.1.12, net462: 3.53.3, net472: 3.53.3
    License: Apache-2.0  see [1]
    Copyright 2014-2024 SourceGear, LLC
 
@@ -119,7 +119,7 @@ COMPONENTS
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-21. System.Collections.Immutable net462: 9.0.10, net472: 10.0.3, net8.0: 10.0.3, net8.0-windows7.0: 8.0.0, net9.0: 10.0.3
+21. System.Collections.Immutable net462: 9.0.10, net472: 10.0.3
    https://dot.net/
    License: MIT  see [5]
    © Microsoft Corporation. All rights reserved.
@@ -133,7 +133,7 @@ COMPONENTS
    License: Public Domain
    Public Domain
 
-24. System.Diagnostics.DiagnosticSource net462: 10.0.3, net472: 10.0.3, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
+24. System.Diagnostics.DiagnosticSource 10.0.3
    https://dot.net/
    License: MIT  see [5]
    © Microsoft Corporation. All rights reserved.
@@ -148,7 +148,7 @@ COMPONENTS
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-27. System.Text.Json net462: 10.0.3, net472: 10.0.3, net8.0: 10.0.12, net8.0-windows7.0: 10.0.5, net9.0: 10.0.12
+27. System.Text.Json 10.0.3
    https://dot.net/
    License: MIT  see [5]
    © Microsoft Corporation. All rights reserved.

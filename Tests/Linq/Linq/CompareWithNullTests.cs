@@ -183,6 +183,91 @@ namespace Tests.Linq
 			result.ShouldBe(option == CompareNulls.LikeSql ? 0 : 2);
 		}
 
+		const int HeadOfficeRegion = 7;
+
+		[Table]
+		sealed class RegionalCustomer
+		{
+			[PrimaryKey] public int  Id       { get; set; }
+			[Column    ] public int? RegionId { get; set; }
+		}
+
+		[Table]
+		sealed class RegionalOrder
+		{
+			[PrimaryKey] public int Id         { get; set; }
+			[Column    ] public int CustomerId { get; set; }
+		}
+
+		private static readonly RegionalCustomer[] RegionalCustomers = new[]
+		{
+			new RegionalCustomer { Id = 1, RegionId = null             },
+			new RegionalCustomer { Id = 2, RegionId = 5                },
+			new RegionalCustomer { Id = 3, RegionId = HeadOfficeRegion },
+		};
+
+		private static readonly RegionalOrder[] RegionalOrders = new[]
+		{
+			new RegionalOrder { Id = 10, CustomerId = 1 },
+			new RegionalOrder { Id = 20, CustomerId = 2 },
+			new RegionalOrder { Id = 30, CustomerId = 3 },
+		};
+
+		// An optional filter left unset is a parameter that evaluates to NULL, not the NULL literal. Under the default
+		// CompareNulls.LikeClr comparing it keeps the CLR meaning: null == 7 is false and null != 7 is true.
+		[Test]
+		public void UnsetFilterComparedWithConstant([DataSources] string context)
+		{
+			using var db        = GetDataContext(context);
+			using var customers = db.CreateLocalTable(RegionalCustomers);
+
+			int? selectedRegion = null;
+
+			var headOfficeSelected = customers
+				.Where(c => Sql.AsSql(selectedRegion) == HeadOfficeRegion);
+
+			var otherRegionSelected = customers
+				.Where(c => Sql.AsSql(selectedRegion) != HeadOfficeRegion);
+
+			AssertQuery(headOfficeSelected);
+			AssertQuery(otherRegionSelected);
+		}
+
+		[ActiveIssue(Configuration = TestProvName.AllAccess, ErrorMessage = "expression not supported.",
+			Details = "no-issue: the key folds to ON (1 = 0) only once the parameter is read, after AccessSqlOptimizer.CorrectInnerJoins has run; fails on master too.")]
+		[Test]
+		public void UnsetFilterInCompositeJoinKey([DataSources] string context)
+		{
+			using var db        = GetDataContext(context);
+			using var customers = db.CreateLocalTable(RegionalCustomers);
+			using var orders    = db.CreateLocalTable(RegionalOrders);
+
+			int? selectedRegion = null;
+
+			var query =
+				from c in customers
+				join o in orders
+					on new { c.Id, Region = selectedRegion } equals new { Id = o.CustomerId, Region = (int?)HeadOfficeRegion }
+				select o;
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void UnsetFilterNotInRegionList([DataSources] string context)
+		{
+			using var db        = GetDataContext(context);
+			using var customers = db.CreateLocalTable(RegionalCustomers);
+
+			int? selectedRegion = null;
+
+			// an unset filter is found only in the list of a customer without a region, so every other customer is kept
+			var query = customers
+				.Where(c => !new int?[] { c.RegionId, HeadOfficeRegion }.Contains(selectedRegion));
+
+			AssertQuery(query);
+		}
+
 		public class Src
 		{
 			public int     Id     { get; set; }
