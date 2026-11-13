@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Internal.DataProvider.Translation;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.SqlQuery;
@@ -275,12 +276,31 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 				
 				return result;
 			}
+
+			// round() on a Float rounds a midpoint to even.
+			protected override ISqlExpression? TranslateRoundAwayFromZero(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
+			{
+				var factory = translationContext.ExpressionFactory;
+				var type    = factory.GetDbDataType(value);
+
+				if (type.SystemType.UnwrapNullableType() == typeof(decimal))
+					return base.TranslateRoundAwayFromZero(translationContext, methodCall, value, precision);
+
+				return RoundAwayFromZeroByMagnitude(factory, value, precision, factory.Value(type, 10.0));
+			}
 		}
 
 		protected class StringMemberTranslator : StringMemberTranslatorBase
 		{
 			static readonly bool[] OneArgumentNullability = new[] { true };
 			static readonly bool[] TwoArgumentNullability = new[] { true, true };
+
+			public override ISqlExpression? TranslateRight(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression length)
+			{
+				var factory = translationContext.ExpressionFactory;
+
+				return factory.Function(factory.GetDbDataType(methodCall.Type), "rightUTF8", value, length);
+			}
 
 			public override ISqlExpression? TranslateTrimStart(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
 			{

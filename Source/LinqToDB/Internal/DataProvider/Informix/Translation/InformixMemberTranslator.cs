@@ -32,6 +32,21 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 			return new GuidMemberTranslator();
 		}
 
+		protected override IMemberTranslator CreateMathMemberTranslator()
+		{
+			return new InformixMathMemberTranslator();
+		}
+
+		protected class InformixMathMemberTranslator : MathMemberTranslatorBase
+		{
+			protected override ISqlExpression? TranslateTruncate(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value)
+			{
+				var factory = translationContext.ExpressionFactory;
+
+				return factory.Function(factory.GetDbDataType(methodCall.Type), "Trunc", value, factory.Value(0));
+			}
+		}
+
 		protected class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertBit(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
@@ -349,6 +364,11 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 
 		protected class StringMemberTranslator : StringMemberTranslatorBase
 		{
+			public override ISqlExpression? TranslateRight(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression length)
+			{
+				return TranslateRightAsSubstring(translationContext, methodCall, clampStart: false);
+			}
+
 			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool withoutSeparator)
 			{
 				var builder = new AggregateFunctionBuilder();

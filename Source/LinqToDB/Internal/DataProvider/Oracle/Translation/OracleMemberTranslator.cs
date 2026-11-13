@@ -274,6 +274,13 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 
 				return factory.Function(dbType, "LEAST", xValue, yValue);
 			}
+
+			protected override ISqlExpression? TranslateTruncate(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value)
+			{
+				var factory = translationContext.ExpressionFactory;
+
+				return factory.Function(factory.GetDbDataType(methodCall.Type), "Trunc", value, factory.Value(0));
+			}
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
@@ -328,6 +335,12 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 		protected class OracleStringMemberTranslator : StringMemberTranslatorBase
 		{
 			protected virtual bool IsWithinGroupRequired => true;
+
+			// SUBSTR counts a negative start from the end of the string.
+			public override ISqlExpression? TranslateRight(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression length)
+			{
+				return TranslateRightAsSubstring(translationContext, methodCall, clampStart: true);
+			}
 
 			// Oracle treats empty string as NULL, so LTRIM/RTRIM may return NULL even when
 			// both arguments are non-null (e.g. LTRIM('aaa','a') -> '' -> NULL). Mark the

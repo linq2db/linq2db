@@ -195,6 +195,13 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 			{
 				return base.TranslateRoundToEven(translationContext, methodCall, value, precision ?? translationContext.ExpressionFactory.Value(0));
 			}
+
+			protected override ISqlExpression? TranslateTruncate(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value)
+			{
+				var factory = translationContext.ExpressionFactory;
+
+				return factory.Function(factory.GetDbDataType(methodCall.Type), "Round", value, factory.Value(0), factory.Value(1));
+			}
 		}
 
 		protected class SqlServerStringMemberTranslator : StringMemberTranslatorBase

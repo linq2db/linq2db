@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using LinqToDB.Common;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider.Translation;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.SqlQuery;
@@ -16,7 +17,41 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 		protected override IMemberTranslator  CreateSqlTypesTranslator()             => new SqlTypesTranslation();
 		protected override IMemberTranslator  CreateDateMemberTranslator()           => new DateFunctionsTranslator();
 		protected override IMemberTranslator  CreateStringMemberTranslator()         => new StringMemberTranslator();
+		protected override IMemberTranslator  CreateMathMemberTranslator()           => new DuckDBMathMemberTranslator();
 		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator() => new DuckDBWindowFunctionsMemberTranslator();
+
+		protected class DuckDBMathMemberTranslator : MathMemberTranslatorBase
+		{
+			protected override ISqlExpression? TranslateRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
+			{
+				var factory   = translationContext.ExpressionFactory;
+				var valueType = factory.GetDbDataType(value);
+
+				if (precision is not (null or SqlValue { Value: 0 }) || valueType.SystemType.UnwrapNullableType() != typeof(decimal))
+					return base.TranslateRoundToEven(translationContext, methodCall, value, precision);
+
+				// The base form's value * 0.5 overflows a DECIMAL(18), and round_even returns a DOUBLE.
+				ISqlExpression Floor() => factory.Function(valueType, "FLOOR", value);
+
+				var isMidpoint = factory.Equal(factory.Sub(valueType, value, Floor()), factory.Value(valueType, 0.5m));
+
+				var evenNeighbour = factory.Condition(
+					factory.Equal(factory.Mod(Floor(), factory.Value(2)), factory.Value(0)),
+					Floor(),
+					factory.Add(valueType, Floor(), factory.Value(valueType, 1m)));
+
+				var nearest = factory.Function(valueType, "ROUND", ParametersNullabilityType.SameAsFirstParameter, value, factory.Value(0));
+
+				return factory.Condition(isMidpoint, evenNeighbour, nearest);
+			}
+
+			protected override ISqlExpression? TranslateTruncate(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value)
+			{
+				var factory = translationContext.ExpressionFactory;
+
+				return factory.Function(factory.GetDbDataType(methodCall.Type), "Trunc", value);
+			}
+		}
 
 		protected class DuckDBWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
 		{
