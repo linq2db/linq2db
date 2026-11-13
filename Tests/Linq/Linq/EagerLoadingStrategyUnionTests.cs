@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Async;
+using LinqToDB.Data;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Common;
@@ -3859,6 +3861,310 @@ namespace Tests.Linq
 
 				resultDepts.Zip(resultDepts.Skip(1), (a, b) => a.Id >= b.Id).ShouldAllBe(v => v);
 			}
+		}
+
+		#endregion
+
+		#region What the parent row reads
+
+		// The parent row reads the computed value and, for the collection, the correlation key.
+		[Test]
+		public void ParentReadsComputedMember(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
+		{
+			var (companies, departments, _, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			var result = tCo
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					Tag         = c.Name + "_x",
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				})
+				.WithUnionLoadStrategy()
+				.ToList();
+
+			result.Count.ShouldBe(companies.Length);
+
+			for (var i = 0; i < result.Count; i++)
+			{
+				var company = companies[i];
+
+				var expected = departments
+					.Where(d => d.CompanyId == company.Id)
+					.OrderBy(d => d.Id)
+					.ToList();
+
+				result[i].Tag.ShouldBe(company.Name + "_x");
+				result[i].Departments.ShouldBe(expected, ComparerBuilder.GetEqualityComparer(expected));
+			}
+		}
+
+		// The correlation key is read only for the collection.
+		[Test]
+		public void ParentReadsKeyItDoesNotProject(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
+		{
+			var (companies, departments, _, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			var result = tCo
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				})
+				.WithUnionLoadStrategy()
+				.ToList();
+
+			result.Count.ShouldBe(companies.Length);
+
+			for (var i = 0; i < result.Count; i++)
+			{
+				var company = companies[i];
+
+				var expected = departments
+					.Where(d => d.CompanyId == company.Id)
+					.OrderBy(d => d.Id)
+					.ToList();
+
+				result[i].Name.ShouldBe(company.Name);
+				result[i].Departments.ShouldBe(expected, ComparerBuilder.GetEqualityComparer(expected));
+			}
+		}
+
+		// A value computed on the client reads its column, which the projection does not hold as a member.
+		[Test]
+		public void ParentReadsColumnsOfAClientValue(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
+		{
+			var (companies, departments, _, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			var result = tCo
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					Tag         = ClientTag(c.Name, c.Id),
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				})
+				.WithUnionLoadStrategy()
+				.ToList();
+
+			result.Count.ShouldBe(companies.Length);
+
+			for (var i = 0; i < result.Count; i++)
+			{
+				var company = companies[i];
+
+				var expected = departments
+					.Where(d => d.CompanyId == company.Id)
+					.OrderBy(d => d.Id)
+					.ToList();
+
+				result[i].Tag.ShouldBe(ClientTag(company.Name, company.Id));
+				result[i].Departments.ShouldBe(expected, ComparerBuilder.GetEqualityComparer(expected));
+			}
+		}
+
+		// A concatenation with no SQL translation for its operand is computed from the column on the client.
+		[Test]
+		public void ParentReadsColumnOfAnUntranslatedConcat(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
+		{
+			var (companies, departments, _, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			var result = tCo
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					Tag         = "p_" + c.Id.ToString("D3", System.Globalization.CultureInfo.InvariantCulture),
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				})
+				.WithUnionLoadStrategy()
+				.ToList();
+
+			result.Count.ShouldBe(companies.Length);
+
+			for (var i = 0; i < result.Count; i++)
+			{
+				var company = companies[i];
+
+				var expected = departments
+					.Where(d => d.CompanyId == company.Id)
+					.OrderBy(d => d.Id)
+					.ToList();
+
+				result[i].Tag.ShouldBe("p_" + company.Id.ToString("D3", System.Globalization.CultureInfo.InvariantCulture));
+				result[i].Departments.ShouldBe(expected, ComparerBuilder.GetEqualityComparer(expected));
+			}
+		}
+
+		// The parent row reads nothing but the key of its collection, and stays in the one statement.
+		[Test]
+		public void ParentReadsOnlyTheKey(
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
+		{
+			var (companies, departments, _, _, _, _) = GenerateHierarchy();
+
+			var readers = 0;
+
+			using var db   = GetDataContext(context, o => o.UseTracing(TraceLevel.Info, ti =>
+			{
+				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute && ti.Operation == TraceOperation.ExecuteReader)
+					readers++;
+			}));
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			readers = 0;
+
+			var result = tCo
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				})
+				.WithUnionLoadStrategy()
+				.ToList();
+
+			result.Count.ShouldBe(companies.Length);
+			readers.ShouldBe(1);
+
+			for (var i = 0; i < result.Count; i++)
+			{
+				var company = companies[i];
+
+				var expected = departments
+					.Where(d => d.CompanyId == company.Id)
+					.OrderBy(d => d.Id)
+					.ToList();
+
+				result[i].Departments.ShouldBe(expected, ComparerBuilder.GetEqualityComparer(expected));
+			}
+		}
+
+		// An aggregate of a non-nullable value checks its slot for NULL as it is read.
+		[Test]
+		public void ParentReadsCheckedAggregate(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
+		{
+			var (companies, departments, _, _, _, _) = GenerateHierarchy();
+
+			var companyIds = departments
+				.Select(d => d.CompanyId)
+				.Distinct()
+				.ToArray();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies.Where(c => companyIds.Contains(c.Id)));
+			using var tDep = db.CreateLocalTable(departments);
+
+			var result = tCo
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					MaxId       = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.Max(d => d.Id),
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				})
+				.WithUnionLoadStrategy()
+				.ToList();
+
+			foreach (var row in result)
+			{
+				var expected = departments
+					.Where(d => d.CompanyId == row.Id)
+					.OrderBy(d => d.Id)
+					.ToList();
+
+				row.MaxId.ShouldBe(expected.Max(d => d.Id));
+				row.Departments.ShouldBe(expected, ComparerBuilder.GetEqualityComparer(expected));
+			}
+		}
+
+		// The parent's columns come out of a grouping rather than a table.
+		[Test]
+		public void ParentIsAGrouping(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
+		{
+			var (_, departments, _, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tDep = db.CreateLocalTable(departments);
+
+			var result = tDep
+				.GroupBy(d => d.CompanyId)
+				.OrderBy(g => g.Key)
+				.Select(g => new
+				{
+					g.Key,
+					Total = g.Count(),
+					Items = tDep
+						.Where(d => d.CompanyId == g.Key)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				})
+				.WithUnionLoadStrategy()
+				.ToList();
+
+			var groups = departments
+				.GroupBy(d => d.CompanyId)
+				.OrderBy(g => g.Key)
+				.ToList();
+
+			result.Count.ShouldBe(groups.Count);
+
+			for (var i = 0; i < result.Count; i++)
+			{
+				var expected = groups[i]
+					.OrderBy(d => d.Id)
+					.ToList();
+
+				result[i].Key.ShouldBe(groups[i].Key);
+				result[i].Total.ShouldBe(expected.Count);
+				result[i].Items.ShouldBe(expected, ComparerBuilder.GetEqualityComparer(expected));
+			}
+		}
+
+		static string ClientTag(string? name, int id)
+		{
+			return name + "#" + id.ToString(System.Globalization.CultureInfo.InvariantCulture);
 		}
 
 		#endregion
