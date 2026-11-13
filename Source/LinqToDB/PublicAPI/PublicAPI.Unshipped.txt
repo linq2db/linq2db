@@ -315,11 +315,9 @@ static LinqToDB.LinqExtensions.QueryBatchAsync<T1, T2, T3, T4, T5, T6, T7>(this 
 static readonly LinqToDB.Internal.Reflection.Methods.LinqToDB.QueryBatch -> System.Reflection.MethodInfo!
 static LinqToDB.LinqExtensions.CreateQueryBatch(this LinqToDB.IDataContext! dataContext) -> LinqToDB.QueryBatchBuilder!
 LinqToDB.QueryBatchBuilder
-LinqToDB.QueryBatchBuilder.Add<T>(System.Linq.Expressions.Expression<System.Func<T>!>! part) -> LinqToDB.QueryBatchResult<T>!
+LinqToDB.QueryBatchBuilder.Set<T>(System.Linq.Expressions.Expression<System.Func<T>!>! query, System.Action<T>! setter) -> void
 LinqToDB.QueryBatchBuilder.Execute() -> void
 LinqToDB.QueryBatchBuilder.ExecuteAsync(System.Threading.CancellationToken token = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-LinqToDB.QueryBatchResult<T>
-LinqToDB.QueryBatchResult<T>.Value.get -> T
 *REMOVED*LinqToDB.Internal.Expressions.TagExpression
 *REMOVED*LinqToDB.Internal.Expressions.TagExpression.InnerExpression.get -> System.Linq.Expressions.Expression!
 *REMOVED*LinqToDB.Internal.Expressions.TagExpression.Tag.get -> object!
@@ -334,7 +332,6 @@ LinqToDB.QueryBatchResult<T>.Value.get -> T
 const LinqToDB.Internal.Common.ErrorHelper.Error_DynamicColumns_NoSetter = "Type '{0}' is materialized with dynamic column(s) {1}, but has no dynamic column setter. Add a member marked with DynamicColumnsStoreAttribute, or configure a setter through DynamicColumnAccessorAttribute or DynamicPropertyAccessors." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_QueryHints_In_QueryBatch = "QueryBatch does not support query hints." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_QueryBatch_TaskPart = "A query batch part cannot hold an expression that may create a task: it could run a separate query outside the batch." -> string!
-const LinqToDB.Internal.Common.ErrorHelper.Error_QueryBatch_NotExecuted = "The query batch has not been executed." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_QueryBatch_AlreadyExecuted = "The query batch has already been executed." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_QueryBatch_Running = "The query batch is being executed." -> string!
 LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQLMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator
