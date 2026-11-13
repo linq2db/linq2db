@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<!-- Override multi-TFM default from Tests/Directory.Build.props — this project is -->
 		<!-- only meaningful on modern .NET (PublishSingleFile is not supported on net462). -->
-		<TargetFramework>net10.0</TargetFramework>
+		<TargetFramework>$(LatestTargetFramework)</TargetFramework>
 		<TargetFrameworks></TargetFrameworks>
 
 		<OutputType>Exe</OutputType>
