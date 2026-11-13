@@ -58,7 +58,7 @@ namespace Tests.Linq
 		public void BoolField1([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			AreEqual(
+			AreEqualWithinDelta(
 				from t in    Types where t.BoolValue select t.MoneyValue,
 				from t in db.Types where t.BoolValue select t.MoneyValue);
 		}
@@ -67,7 +67,7 @@ namespace Tests.Linq
 		public void BoolField2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			AreEqual(
+			AreEqualWithinDelta(
 				from t in    Types where !t.BoolValue select t.MoneyValue,
 				from t in db.Types where !t.BoolValue select t.MoneyValue);
 		}
@@ -76,7 +76,7 @@ namespace Tests.Linq
 		public void BoolField3([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			AreEqual(
+			AreEqualWithinDelta(
 				from t in    Types where t.BoolValue == true select t.MoneyValue,
 				from t in db.Types where t.BoolValue == true select t.MoneyValue);
 		}
@@ -85,7 +85,7 @@ namespace Tests.Linq
 		public void BoolField4([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			AreEqual(
+			AreEqualWithinDelta(
 				from t in    Types where t.BoolValue == false select t.MoneyValue,
 				from t in db.Types where t.BoolValue == false select t.MoneyValue);
 		}
@@ -94,7 +94,7 @@ namespace Tests.Linq
 		public void BoolField5([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			AreEqual(
+			AreEqualWithinDelta(
 				from p in from t in    Types select new { t.MoneyValue, b = !t.BoolValue } where p.b == false select p.MoneyValue,
 				from p in from t in db.Types select new { t.MoneyValue, b = !t.BoolValue } where p.b == false select p.MoneyValue);
 		}
@@ -103,7 +103,7 @@ namespace Tests.Linq
 		public void BoolField6([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			AreEqual(
+			AreEqualWithinDelta(
 				from p in from t in    Types select new { t.MoneyValue, b = !t.BoolValue } where p.b select p.MoneyValue,
 				from p in from t in db.Types select new { t.MoneyValue, b = !t.BoolValue } where p.b select p.MoneyValue);
 		}

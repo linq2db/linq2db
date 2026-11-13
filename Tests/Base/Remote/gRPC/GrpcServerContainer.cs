@@ -1,13 +1,17 @@
 ﻿#if !NETFRAMEWORK
 using System;
+using System.Collections.Concurrent;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading;
 
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
@@ -68,7 +72,15 @@ namespace Tests.Remote.ServerContainer
 				webBuilder =>
 				{
 					webBuilder.UseStartup<Startup>();
-					webBuilder.ConfigureKestrel(o => o.ConfigureHttpsDefaults(h => h.ServerCertificate = _certificate));
+					webBuilder.ConfigureKestrel(o =>
+					{
+						o.ConfigureHttpsDefaults(h => h.ServerCertificate = _certificate);
+						o.ConfigureEndpointDefaults(l => l.Use(next => connection =>
+						{
+							GrpcServerConnections.OnAccepted(connection);
+							return next(connection);
+						}));
+					});
 					webBuilder.UseUrls(GetServiceUrl(port));
 				}).Build();
 
@@ -111,6 +123,38 @@ namespace Tests.Remote.ServerContainer
 					endpoints.MapGrpcService<TestGrpcLinqService>();
 				});
 			}
+		}
+	}
+
+	/// <summary>
+	/// Counts the TCP connections the gRPC test host has accepted and closed, so tests can check how many
+	/// connections a client opens and when it closes them.
+	/// </summary>
+	public static class GrpcServerConnections
+	{
+		static int _accepted;
+
+		static readonly ConcurrentDictionary<int, bool> _closed = new();
+
+		/// <summary>
+		/// Connections accepted since the process started, by every gRPC test host.
+		/// </summary>
+		public static int Accepted => Volatile.Read(ref _accepted);
+
+		/// <summary>
+		/// How many of the connections accepted after the <paramref name="accepted"/> reading of <see cref="Accepted"/>
+		/// have been closed.
+		/// </summary>
+		public static int ClosedSince(int accepted)
+		{
+			return _closed.Keys.Count(id => id > accepted);
+		}
+
+		internal static void OnAccepted(ConnectionContext connection)
+		{
+			var id = Interlocked.Increment(ref _accepted);
+
+			connection.ConnectionClosed.Register(() => _closed.TryAdd(id, true));
 		}
 	}
 }

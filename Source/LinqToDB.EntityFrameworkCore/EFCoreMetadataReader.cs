@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
@@ -141,7 +141,7 @@ namespace LinqToDB.EntityFrameworkCore
 #endif
 
 				// QueryFilterAttribute
-#if EF10
+#if EF10_OR_GREATER
 				foreach (var queryFilter in et.GetDeclaredQueryFilters())
 				{
 					if (queryFilter is { Expression: { } filter })
@@ -773,7 +773,7 @@ namespace LinqToDB.EntityFrameworkCore
 #endif
 			}
 
-#if !EF31 && !EF8
+#if !EF31
 			private static readonly ConstructorInfo _ctor = typeof(SqlTransparentExpression).GetConstructorEx([typeof(ConstantExpression), typeof(RelationalTypeMapping)])
 				?? throw new InvalidOperationException();
 

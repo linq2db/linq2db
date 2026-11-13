@@ -22,12 +22,12 @@ COMPONENTS
    License: MIT  see [1]
    Copyright (c) .NET Foundation and Contributors
 
-2. Microsoft.Bcl.AsyncInterfaces 10.0.3
+2. Microsoft.Bcl.AsyncInterfaces 10.0.15
    https://dot.net/
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-3. Oracle.ManagedDataAccess.Core 23.26.301
+3. Oracle.ManagedDataAccess.Core 23.26.400
    https://www.oracle.com/database/technologies/appdev/dotnet.html
    License: Oracle Free Distribution, Hosting, and Use Terms and Conditions  see [3]
    Copyright © 2026, Oracle and/or its affiliates

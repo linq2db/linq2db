@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="LinqToDB.EntityFrameworkCore.props" />
+
+	<PropertyGroup>
+		<TargetFrameworks>net11.0</TargetFrameworks>
+		<Version>$(EF11Version)</Version>
+		<!--don't remove it! WPF doesn't work with non-4-component versions-->
+		<AssemblyVersion>$(EF11Version).0</AssemblyVersion>
+		<DefineConstants>EF11;EF10_OR_GREATER;$(DefineConstants)</DefineConstants>
+		<!--no shipped version to validate against yet; re-enable with $(EF11BaselineVersion) after the first release-->
+		<EnablePackageValidation>false</EnablePackageValidation>
+	</PropertyGroup>
+
+	<PropertyGroup Label="Nuget">
+		<PackageId>linq2db.EntityFrameworkCore</PackageId>
+		<Title>Linq to DB extensions for Entity Framework Core 11</Title>
+		<Description>Allows to execute Linq to DB queries in Entity Framework Core DbContext.</Description>
+		<Product>$(Title)</Product>
+
+		<PackageVersion>$(Version)</PackageVersion>
+		<PackageVersion Condition=" '$(ApplyVersionSuffix)' == 'true' ">$(PackageVersion)$(VersionSuffix)</PackageVersion>
+
+		<PackageTags>$(PackageTags);entity-framework-core;EntityFrameworkCore;EFCore</PackageTags>
+	</PropertyGroup>
+
+	<ItemGroup Label="Nuget">
+		<None Include="readme.md" Pack="true" PackagePath="readme.md" />
+	</ItemGroup>
+
+</Project>
