@@ -2594,6 +2594,60 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void EqualsObjectOfRegisteredEnumMirroredThrows([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			object value = ApiGender.Female;
+
+			var query = db.Person
+				.Where(p => value.Equals(p.Gender));
+
+			Shouldly.Should.Throw<LinqToDBConvertException>(() => query.ToList());
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void EnumEqualsColumn([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var query =
+				from p in db.Person
+				from c in db.Person
+				where p.Gender.Equals(c.Gender)
+				select new { p.ID, OtherID = c.ID };
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void EnumEqualsConstantStaysLiteral([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var query = db.Person
+				.Where(p => p.Gender.Equals(Gender.Female));
+
+			AssertQuery(query);
+
+			query.ToSqlQuery().Parameters.ShouldBeEmpty();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void NullableEnumEqualsNull([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var query = db.Person
+				.Select(p => new { p.ID, Gender = (Gender?)p.Gender })
+				.Where(p => p.Gender.Equals(null));
+
+			AssertQuery(query);
+
+			query.ToSqlQuery().Parameters.ShouldBeEmpty();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
 		public void ProjectedEnumCastJoinKey([DataSources] string context)
 		{
 			using var db = GetDataContext(context, CreateApiGenderSchema());

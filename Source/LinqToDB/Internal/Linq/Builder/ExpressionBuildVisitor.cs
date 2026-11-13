@@ -4142,13 +4142,16 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (node is { Method.Name: "Equals", Object: { }, Arguments.Count: 1 })
 			{
+				var receiver = node.Object;
 				var argument = node.Arguments[0];
 
-				// The parameter converter sees only the column's enum, which also accepts an enum mapped onto it: the receiver's type decides.
-				if (argument.Type == typeof(object) && node.Object.Type.UnwrapNullableType() is { IsEnum: true } receiverEnum)
-					argument = Expression.Call(CheckEnumEqualsArgumentMethod.MakeGenericMethod(receiverEnum), argument);
+				// The parameter converter sees only the column's enum, which also accepts an enum mapped onto it: the other side's static type decides.
+				if (argument.Type == typeof(object) && receiver.Type.UnwrapNullableType() is { IsEnum: true } receiverEnum)
+					argument = GuardEnumEqualsValue(argument, receiverEnum);
+				else if (receiver.Type == typeof(object) && argument is UnaryExpression { NodeType: ExpressionType.Convert } convert && convert.Operand.Type.UnwrapNullableType() is { IsEnum: true } argumentEnum)
+					receiver = GuardEnumEqualsValue(receiver, argumentEnum);
 
-				result = ConvertCompareExpression(ExpressionType.Equal, node.Object, argument);
+				result = ConvertCompareExpression(ExpressionType.Equal, receiver, argument);
 				return !IsSame(result, node);
 			}
 
@@ -4246,14 +4249,33 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		internal static readonly MethodInfo CheckEnumEqualsArgumentMethod = MemberHelper.MethodOfGeneric(() => CheckEnumEqualsArgument<DataType>(null));
 
-		// TEnum.Equals(object) is false for a boxed enum of another type: fail as an unconvertible value does, instead of matching through the column's enum.
+		// A column or other server-side value is compared as before; a constant is checked once here and stays a literal.
+		Expression GuardEnumEqualsValue(Expression value, Type enumType)
+		{
+			if (!Builder.CanBeEvaluatedOnClient(value))
+				return value;
+
+			if (Builder.CanBeConstant(value))
+			{
+				ThrowIfOtherEnum(Builder.EvaluateExpression(value), enumType);
+				return value;
+			}
+
+			return Expression.Call(CheckEnumEqualsArgumentMethod.MakeGenericMethod(enumType), value);
+		}
+
 		static object? CheckEnumEqualsArgument<TEnum>(object? value)
 			where TEnum : struct, Enum
 		{
-			if (value is Enum and not TEnum)
-				throw new LinqToDBConvertException($"Cannot convert value '{value}: {value.GetType().FullName}' to type '{typeof(TEnum).FullName}'");
-
+			ThrowIfOtherEnum(value, typeof(TEnum));
 			return value;
+		}
+
+		// TEnum.Equals(object) is false for a boxed enum of another type: fail as an unconvertible value does, instead of matching through the column's enum.
+		static void ThrowIfOtherEnum(object? value, Type enumType)
+		{
+			if (value is Enum && value.GetType() != enumType)
+				throw new LinqToDBConvertException($"Cannot convert value '{value}: {value.GetType().FullName}' to type '{enumType.FullName}'");
 		}
 
 		ISqlPredicate ConvertExpressionToPredicate(ISqlExpression sqlExpression, bool withNull = false, bool forceEquality = false)
