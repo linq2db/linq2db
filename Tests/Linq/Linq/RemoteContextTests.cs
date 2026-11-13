@@ -479,9 +479,9 @@ namespace Tests.Linq
 
 			// Nothing listens on the port, so starting fails either way - what matters is that it fails for
 			// that reason and not because a context disposed the connection underneath its owner.
-			var error = Assert.CatchAsync(() => hubConnection.StartAsync());
+			var error = await Shouldly.Should.ThrowAsync<Exception>(() => hubConnection.StartAsync());
 
-			Assert.That(error, Is.Not.InstanceOf<ObjectDisposedException>());
+			error.ShouldNotBeOfType<ObjectDisposedException>();
 
 			await hubConnection.DisposeAsync();
 		}
