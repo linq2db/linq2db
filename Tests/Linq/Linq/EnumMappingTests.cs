@@ -2808,6 +2808,63 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void EnumConditionalWithValueToSqlConverterEqualParameter([DataSources] string context, [Values] bool inline)
+		{
+			var ms = new MappingSchema();
+
+			// Keeps Gender literals as enum values instead of mapping them to 'M' / 'F'.
+			ms.SetValueToSqlConverter(typeof(Gender), (sb, dt, v) => sb
+				.Append('\'')
+				.Append((Gender)v switch { Gender.Male => "M", Gender.Female => "F", Gender.Unknown => "U", _ => "O" })
+				.Append('\''));
+
+			using var db = GetDataContext(context, ms);
+
+			db.InlineParameters = inline;
+
+			var gender = Gender.Female;
+
+			var query = db.Person
+				.Where(p => (p.ID > 2 ? Gender.Female : Gender.Male) == gender);
+
+			AssertQuery(query);
+		}
+
+		enum ConvertedLevel
+		{
+			Low  = 1,
+			High = 2,
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void EnumConditionalWithValueToSqlConverterNoMapValues([DataSources] string context, [Values] bool inline)
+		{
+			var ms = new MappingSchema();
+
+			ms.SetValueToSqlConverter(typeof(ConvertedLevel), (sb, dt, v) => sb.Append((int)(ConvertedLevel)v));
+
+			using var db = GetDataContext(context, ms);
+
+			db.InlineParameters = inline;
+
+			var level = ConvertedLevel.High;
+
+			var ids = db.Person
+				.Where(p => (p.ID > 2 ? ConvertedLevel.High : ConvertedLevel.Low) == level)
+				.Select(p => p.ID)
+				.OrderBy(id => id)
+				.ToArray();
+
+			var expected = Person
+				.Where(p => p.ID > 2)
+				.Select(p => p.ID)
+				.OrderBy(id => id)
+				.ToArray();
+
+			ids.ShouldBe(expected);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
 		public void ProjectedEnumCastChildReferencesParent([DataSources] string context)
 		{
 			using var db = GetDataContext(context, CreateApiGenderSchema());

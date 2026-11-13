@@ -183,13 +183,51 @@ namespace LinqToDB.Internal.SqlProvider
 			return TryEvaluate(expr, out result);
 		}
 
-		// An enum's client value never equals the mapped literals of a CASE, the value the database sees can.
-		bool TryEvaluateAsProviderValue(IQueryElement expr, out object? result)
+		// A client enum never equals a mapped literal, while its provider value can. Values that mix enums with other values are
+		// compared as provider values, and only when those come out as one type: an enum literal kept by a value-to-SQL converter
+		// stays an enum on the server too.
+		bool ReconcileEnumValues(IQueryElement?[] expressions, bool[] evaluated, object?[] values)
 		{
-			if (!TryEvaluateNoParameters(expr, out result))
-				return false;
+			var hasEnum  = false;
+			var hasOther = false;
 
-			return result is not Enum || expr.TryEvaluateExpressionForServer(EvaluationContext, out result);
+			for (var i = 0; i < values.Length; i++)
+			{
+				if (!evaluated[i] || values[i] == null)
+					continue;
+
+				if (values[i] is Enum)
+					hasEnum = true;
+				else
+					hasOther = true;
+			}
+
+			if (!hasEnum || !hasOther)
+				return true;
+
+			Type? type = null;
+
+			for (var i = 0; i < values.Length; i++)
+			{
+				// a missing ELSE is a NULL
+				if (!evaluated[i] || expressions[i] == null)
+					continue;
+
+				if (!expressions[i]!.TryEvaluateExpressionForServer(EvaluationContext, out var value))
+					return false;
+
+				values[i] = value;
+
+				if (value == null)
+					continue;
+
+				if (type == null)
+					type = value.GetType();
+				else if (type != value.GetType())
+					return false;
+			}
+
+			return true;
 		}
 
 		protected bool TryEvaluate(IQueryElement expr, out object? result)
@@ -2270,9 +2308,25 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 
 			if (unwrappedOther is SqlConditionExpression sqlConditionExpression)
 			{
-				var otherEvaluated = TryEvaluateAsProviderValue(unwrappedValue, out var otherVal);
-				var trueEvaluated  = TryEvaluateAsProviderValue(sqlConditionExpression.TrueValue, out var trueVal);
-				var falseEvaluated = TryEvaluateAsProviderValue(sqlConditionExpression.FalseValue, out var falseVal);
+				var otherEvaluated = TryEvaluateNoParameters(unwrappedValue, out var otherVal);
+				var trueEvaluated  = TryEvaluateNoParameters(sqlConditionExpression.TrueValue, out var trueVal);
+				var falseEvaluated = TryEvaluateNoParameters(sqlConditionExpression.FalseValue, out var falseVal);
+
+				if (otherEvaluated && (trueEvaluated || falseEvaluated))
+				{
+					var values = new[] { otherVal, trueVal, falseVal };
+
+					if (ReconcileEnumValues([unwrappedValue, sqlConditionExpression.TrueValue, sqlConditionExpression.FalseValue], [otherEvaluated, trueEvaluated, falseEvaluated], values))
+					{
+						otherVal = values[0];
+						trueVal  = values[1];
+						falseVal = values[2];
+					}
+					else
+					{
+						otherEvaluated = false;
+					}
+				}
 
 				if (otherEvaluated && trueEvaluated && falseEvaluated
 					&& !Equals(otherVal, trueVal) && !Equals(otherVal, falseVal))
@@ -2396,36 +2450,61 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 			{
 				// Try comparing by values
 
-				if (TryEvaluateAsProviderValue(unwrappedValue, out var value))
+				if (TryEvaluateNoParameters(unwrappedValue, out var value))
 				{
-					var caseMatch      = new bool [sqlCaseExpression._cases.Count];
+					var count          = sqlCaseExpression._cases.Count;
+					var caseMatch      = new bool [count];
 					var allEvaluatable = true;
 					var elseMatch      = false;
 
-					for (var index = 0; index < sqlCaseExpression._cases.Count; index++)
+					// [0] the compared value, [1..count] the CASE results, [count + 1] the ELSE
+					var expressions = new IQueryElement?[count + 2];
+					var evaluated   = new bool          [count + 2];
+					var values      = new object?       [count + 2];
+
+					expressions[0] = unwrappedValue;
+					evaluated  [0] = true;
+					values     [0] = value;
+
+					for (var index = 0; index < count && allEvaluatable; index++)
 					{
-						var caseItem = sqlCaseExpression._cases[index];
-						if (TryEvaluateAsProviderValue(caseItem.ResultExpression, out var caseItemValue)
-						    && Compare(caseItemValue, value, op, out var result))
-						{
-							caseMatch[index] = result;
-						}
-						else
-						{
-							allEvaluatable = false;
-							break;
-						}
+						expressions[index + 1] = sqlCaseExpression._cases[index].ResultExpression;
+						evaluated  [index + 1] = allEvaluatable = TryEvaluateNoParameters(sqlCaseExpression._cases[index].ResultExpression, out values[index + 1]);
 					}
 
-					object? elseValue = null;
-
-					if ((sqlCaseExpression.ElseExpression == null || sqlCaseExpression.ElseExpression.TryEvaluateExpression(EvaluationContext, out elseValue))
-					    && Compare(elseValue, value, op, out var compareResult))
+					if (allEvaluatable)
 					{
-						elseMatch = compareResult;
+						expressions[count + 1] = sqlCaseExpression.ElseExpression;
+						evaluated  [count + 1] = allEvaluatable = sqlCaseExpression.ElseExpression == null || sqlCaseExpression.ElseExpression.TryEvaluateExpression(EvaluationContext, out values[count + 1]);
 					}
-					else
-						allEvaluatable = false;
+
+					allEvaluatable = allEvaluatable && ReconcileEnumValues(expressions, evaluated, values);
+
+					if (allEvaluatable)
+					{
+						value = values[0];
+
+						for (var index = 0; index < count; index++)
+						{
+							if (Compare(values[index + 1], value, op, out var result))
+							{
+								caseMatch[index] = result;
+							}
+							else
+							{
+								allEvaluatable = false;
+								break;
+							}
+						}
+
+						if (allEvaluatable)
+						{
+							if (Compare(values[count + 1], value, op, out var compareResult))
+								elseMatch = compareResult;
+							else
+								allEvaluatable = false;
+						}
+					}
 
 					if (allEvaluatable)
 					{
