@@ -215,7 +215,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			var result = null != pathExpression.Find(this, static (ctx, e) =>
 			{
-				if (ctx.Builder.IsAssociation(e, out _))
+				if (ExpressionBuilder.IsAssociation(ctx.TargetContextRef.BuildContext.MappingSchema, e, out _))
 				{
 					if (e.NodeType == ExpressionType.MemberAccess)
 					{

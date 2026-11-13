@@ -215,7 +215,7 @@ namespace LinqToDB.Internal.Linq
 				internal override Expression VisitConvertFromDataReaderExpression(ConvertFromDataReaderExpression node)
 				{
 					if (_slowMode)
-						return Visit(new ConvertFromDataReaderExpression(node.Type, node.Index, node.Converter, node.DataContextParam, _newVariable!, _context).Reduce());
+						return Visit(new ConvertFromDataReaderExpression(node.Type, node.Index, node.Converter, node.DataContextParam, _newVariable!, _context, node.MappingSchema).Reduce());
 					else
 						return Visit(node.Reduce(_context, _dataReader, _newVariable!));
 				}
