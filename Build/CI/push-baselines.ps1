@@ -204,7 +204,16 @@ if (-not $PrId) {
     exit 0
 }
 Write-Host "Post notification to source PR about baselines PR creation"
-$note = "Test baselines changed by this PR. Don't forget to merge/close baselines PR after this pr merged/closed."
+# The link must be in the comment itself: GitHub's PR Overview page (preview, 2026-11) does not render
+# the cross-reference event the baselines PR body creates, so that event cannot be relied on to find it.
+$baselinesPr = $null
+try { $baselinesPr = ($output -join "`n") | ConvertFrom-Json } catch { }
+if ($baselinesPr -and $baselinesPr.html_url) {
+    $baselinesRef = "[${Org}/${BaselinesRepo}#$($baselinesPr.number)]($($baselinesPr.html_url))"
+} else {
+    $baselinesRef = "baselines PR"
+}
+$note = "Test baselines changed by this PR: ${baselinesRef}. Don't forget to merge/close it after this PR is merged/closed."
 $output = gh api /repos/$Org/$SourceRepo/issues/$PrId/comments -F body="$note"
 if ($LASTEXITCODE -ne 0 -or -not ($output -match "html_url")) {
     # A warning, not a failure. The two exits above guard something real - the baselines were not

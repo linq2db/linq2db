@@ -1,7 +1,12 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
+using System.Threading.Tasks;
 
+using LinqToDB.Expressions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
@@ -28,6 +33,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			var body        = methodCall.Arguments.Count == 2
 				? methodCall.Arguments[1].UnwrapLambda().Body
 				: LinqExtensions.NewQueryBatchTuple(methodCall.Type, methodCall.Arguments.Skip(1).Select(static a => a.UnwrapLambda().Body));
+
+			if (IsQueryBatch(methodCall))
+				ThrowIfPartCreatesTask(body);
 
 			if (buildInfo.IsSubQuery || !IsQueryBatch(methodCall))
 				return BuildSequenceResult.FromContext(new ScalarSelectContext(builder.GetTranslationModifier(), builder, buildInfo.Parent, body, selectQuery, isQueryBatch: false));
@@ -63,6 +71,78 @@ namespace LinqToDB.Internal.Linq.Builder
 			builder.PopTranslationModifier();
 
 			return BuildSequenceResult.FromContext(context);
+		}
+
+		// A task created by a part starts while the row is read: a query of its own, outside the batch, that nothing observes.
+		// Checked when the batch is built, so a cached batch pays nothing for it.
+		static void ThrowIfPartCreatesTask(Expression body)
+		{
+			if (body.Find(static e => IsTask(e.Type) && !IsHeldTask(e)) != null)
+				throw new LinqToDBException(ErrorHelper.Error_QueryBatch_TaskPart);
+		}
+
+		static bool IsTask(Type type)
+		{
+			return typeof(Task).IsAssignableFrom(type)
+				|| type == typeof(ValueTask)
+				|| type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ValueTask<>);
+		}
+
+		// A task held by a captured variable, a field of the data context, a static field, an array element, a compiled-query
+		// argument or a completion source, or a completed task, starts nothing when it is read.
+		static bool IsHeldTask(Expression expression)
+		{
+			while (true)
+			{
+				switch (expression)
+				{
+					// Expose turns a captured data context into a query root.
+					case ConstantExpression or ParameterExpression or SqlQueryRootExpression:
+						return true;
+
+					case MemberExpression { Member: FieldInfo } field:
+						if (field.Expression == null)
+							return true;
+
+						expression = field.Expression;
+						break;
+
+					case MemberExpression { Member: PropertyInfo property } member when ReturnsExistingTask(property):
+						if (member.Expression == null)
+							return true;
+
+						expression = member.Expression;
+						break;
+
+					// A user-defined conversion is a call, which may start the task.
+					case UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked or ExpressionType.TypeAs, Method: null } convert:
+						expression = convert.Operand;
+						break;
+
+					case BinaryExpression { NodeType: ExpressionType.ArrayIndex } element:
+						expression = element.Left;
+						break;
+
+					default:
+						return false;
+				}
+			}
+		}
+
+		// The non-generic TaskCompletionSource and ValueTask.CompletedTask exist from .NET 5, so they are matched by name.
+		static bool ReturnsExistingTask(PropertyInfo property)
+		{
+			var declaringType = property.DeclaringType;
+
+			return property.Name switch
+			{
+				nameof(TaskCompletionSource<>.Task) =>
+					(declaringType is { IsGenericType: true } && declaringType.GetGenericTypeDefinition() == typeof(TaskCompletionSource<>))
+					|| string.Equals(declaringType?.FullName, "System.Threading.Tasks.TaskCompletionSource", StringComparison.Ordinal),
+				nameof(Task.CompletedTask) =>
+					declaringType == typeof(Task) || declaringType == typeof(ValueTask),
+				_ => false,
+			};
 		}
 
 		[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]

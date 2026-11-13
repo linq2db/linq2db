@@ -34,7 +34,7 @@ COMPONENTS
    License: MIT  see [3]
    © Microsoft Corporation. All rights reserved.
 
-4. Net.IBM.Data.Db2 9.0.0.400
+4. Net.IBM.Data.Db2 10.0.0.200
    License: IBM International Program License Agreement - Redistributables  see [4]
    Copyright(c) 2025 IBM Corporation. All rights reserved
    IBM grants redistribution of the Redistributables in object-code form only as part of a value-added application developed using the Program. linq2db satisfies all three limbs: the client is bundled inside linq2db scaffolding packages and the LINQPad driver rather than offered standalone, those packages are our own application built using the client, and only compiled assemblies and native libraries are shipped - no IBM source.

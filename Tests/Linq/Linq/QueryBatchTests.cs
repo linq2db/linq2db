@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Transactions;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.MySql;
@@ -21,6 +22,8 @@ using LinqToDB.Mapping;
 using NUnit.Framework;
 
 using Shouldly;
+
+using Tests.Model;
 
 namespace Tests.Linq
 {
@@ -395,6 +398,281 @@ namespace Tests.Linq
 			hints.ShouldBe([hint]);
 
 			hints.Clear();
+		}
+
+		public enum TaskPart
+		{
+			Returned,
+			TupleItem,
+			Member,
+			AsObject,
+			ValueTask,
+			PerRow,
+			Nested,
+			Compiled,
+			Operator,
+			Property,
+			Source,
+		}
+
+		static ValueTask<int> CountLater(IQueryable<BatchItem> source)
+		{
+			return new ValueTask<int>(source.Count());
+		}
+
+		// A cast that calls a conversion operator, or a property of a user type, creates the task, although each reads like
+		// a held value.
+		sealed class CountJob(IQueryable<BatchItem> source)
+		{
+			readonly IQueryable<BatchItem> _source = source;
+
+			public Task<int> Task => _source.CountAsync(CancellationToken.None);
+
+			public static explicit operator Task<int>(CountJob job)
+			{
+				return job._source.CountAsync(CancellationToken.None);
+			}
+		}
+
+		// A completion source the part obtains through a call is not held: the call runs while the row is read.
+		static TaskCompletionSource<int> CountingSource(IQueryable<BatchItem> source)
+		{
+			var completion = new TaskCompletionSource<int>();
+
+			completion.SetResult(source.Count());
+
+			return completion;
+		}
+
+		// A part that creates a task starts it while the batch row is read: a query of its own, outside the batch, that
+		// nothing observes. The refusal comes before any command, so SQLite and SQL Server stand for every provider.
+		[Test]
+		public async Task TaskPartsAreRefused(
+			[IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context,
+			[Values] TaskPart part,
+			[Values] bool isAsync)
+		{
+			var compiled = CompiledQuery.Compile((IDataContext dc) => dc.QueryBatch<object>(() => dc
+				.GetTable<BatchItem>()
+				.ToListAsync(CancellationToken.None)));
+
+			var compiledAsync = CompiledQuery.Compile((IDataContext dc, CancellationToken token) => dc.QueryBatchAsync(() => dc
+				.GetTable<BatchItem>()
+				.ToListAsync(CancellationToken.None), token));
+
+			var trace = new CommandTrace();
+
+			using var db    = GetDataContext(context, Traced(trace));
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var job = new CountJob(items);
+
+			trace.Reset();
+
+			var error = part switch
+			{
+				TaskPart.Returned  => await RefusalOf(db, () => items.ToListAsync(CancellationToken.None), isAsync),
+				TaskPart.TupleItem => isAsync
+					? await Shouldly.Should.ThrowAsync<LinqToDBException>(() => db.QueryBatchAsync(() => items.Count(), () => items.ToListAsync(CancellationToken.None)))
+					: Shouldly.Should.Throw<LinqToDBException>(() => db.QueryBatch(() => items.Count(), () => items.ToListAsync(CancellationToken.None))),
+				TaskPart.Member    => await RefusalOf(db, () => new { Total = items.Count(), Rows = items.ToListAsync(CancellationToken.None) }, isAsync),
+				TaskPart.AsObject  => await RefusalOf<object>(db, () => items.ToListAsync(CancellationToken.None), isAsync),
+				TaskPart.ValueTask => await RefusalOf(db, () => CountLater(items), isAsync),
+				TaskPart.PerRow    => await RefusalOf(db, () => items
+					.Select(i => Task.FromResult(i.Id))
+					.ToList(), isAsync),
+				TaskPart.Nested    => isAsync
+					? await Shouldly.Should.ThrowAsync<LinqToDBException>(() => db.SelectAsync(() => new { Rows = db.QueryBatch<object>(() => items.ToListAsync(CancellationToken.None)) }))
+					: Shouldly.Should.Throw<LinqToDBException>(() => db.Select(() => new { Rows = db.QueryBatch<object>(() => items.ToListAsync(CancellationToken.None)) })),
+				TaskPart.Compiled  => isAsync
+					? await Shouldly.Should.ThrowAsync<LinqToDBException>(() => compiledAsync(db, CancellationToken.None))
+					: Shouldly.Should.Throw<LinqToDBException>(() => compiled(db)),
+				TaskPart.Operator  => await RefusalOf(db, () => new { Total = items.Count(), Started = ((Task<int>)job).Result }, isAsync),
+				TaskPart.Property  => await RefusalOf(db, () => new { Total = items.Count(), Started = job.Task.Result }, isAsync),
+				TaskPart.Source    => await RefusalOf(db, () => new { Total = items.Count(), Started = CountingSource(items).Task.Result }, isAsync),
+				_                  => throw new InvalidOperationException($"Unexpected part {part}."),
+			};
+
+			error.Message.ShouldBe(ErrorHelper.Error_QueryBatch_TaskPart);
+			trace.Readers.ShouldBe(0);
+			trace.Begins.ShouldBe(0);
+		}
+
+		static async Task<LinqToDBException> RefusalOf<T>(IDataContext db, Expression<Func<T>> selector, bool isAsync)
+		{
+			return isAsync
+				? await Shouldly.Should.ThrowAsync<LinqToDBException>(() => db.QueryBatchAsync(selector))
+				: Shouldly.Should.Throw<LinqToDBException>(() => db.QueryBatch(selector));
+		}
+
+		public enum HeldTask
+		{
+			CapturedVariable,
+			ContextField,
+			CompiledContextField,
+			StaticField,
+			ArrayElement,
+			Cast,
+			CompiledArgument,
+			CompletionSource,
+			CompletedTask,
+#if !NETFRAMEWORK
+			NonGenericCompletionSource,
+			CompletedValueTask,
+#endif
+			Returned,
+		}
+
+		static class HeldTasks
+		{
+			public static readonly Task<int> Five = Task.FromResult(5);
+		}
+
+		sealed class TaskFieldConnection : TestDataConnection
+		{
+			public TaskFieldConnection(string context) : base(context)
+			{
+			}
+
+			public readonly Task<int> PendingTask = Task.FromResult(5);
+		}
+
+		// A task the selector only reads starts nothing, wherever it is held.
+		[Test]
+		public void HeldTaskIsRead([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] HeldTask held)
+		{
+			var compiled = CompiledQuery.Compile((IDataContext dc, Task<int> argument) => dc.QueryBatch(() => new
+			{
+				Total = dc
+					.GetTable<BatchItem>()
+					.Count(),
+				Held  = argument.Result == 5,
+			}));
+
+			var compiledField = CompiledQuery.Compile((TaskFieldConnection dc) => dc.QueryBatch(() => new
+			{
+				Total = dc
+					.GetTable<BatchItem>()
+					.Count(),
+				Held  = dc.PendingTask.Result == 5,
+			}));
+
+			using var db    = held is HeldTask.ContextField or HeldTask.CompiledContextField ? new TaskFieldConnection(context) : GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var fields = db as TaskFieldConnection;
+
+			var    task  = Task.FromResult(5);
+			var    tasks = new[] { task };
+			object boxed = task;
+
+			var source = new TaskCompletionSource<int>();
+
+			source.SetResult(5);
+
+#if !NETFRAMEWORK
+			var nonGeneric = new TaskCompletionSource();
+
+			nonGeneric.SetResult();
+#endif
+
+			if (held == HeldTask.Returned)
+			{
+				db.QueryBatch<object>(() => task)
+					.ShouldBeSameAs(task);
+				return;
+			}
+
+			var result = held switch
+			{
+				HeldTask.CapturedVariable           => db.QueryBatch(() => new { Total = items.Count(), Held = task.Result == 5 }),
+				HeldTask.ContextField               => db.QueryBatch(() => new { Total = items.Count(), Held = fields!.PendingTask.Result == 5 }),
+				HeldTask.CompiledContextField       => compiledField(fields!),
+				HeldTask.StaticField                => db.QueryBatch(() => new { Total = items.Count(), Held = HeldTasks.Five.Result == 5 }),
+				HeldTask.ArrayElement               => db.QueryBatch(() => new { Total = items.Count(), Held = tasks[0].Result == 5 }),
+				HeldTask.Cast                       => db.QueryBatch(() => new { Total = items.Count(), Held = ((Task<int>)boxed).Result == 5 }),
+				HeldTask.CompiledArgument           => compiled(db, task),
+				HeldTask.CompletionSource           => db.QueryBatch(() => new { Total = items.Count(), Held = source.Task.Result == 5 }),
+				HeldTask.CompletedTask              => db.QueryBatch(() => new { Total = items.Count(), Held = Task.CompletedTask.IsCompleted }),
+#if !NETFRAMEWORK
+				HeldTask.NonGenericCompletionSource => db.QueryBatch(() => new { Total = items.Count(), Held = nonGeneric.Task.IsCompleted }),
+				HeldTask.CompletedValueTask         => db.QueryBatch(() => new { Total = items.Count(), Held = ValueTask.CompletedTask.IsCompleted }),
+#endif
+				_                                   => throw new InvalidOperationException($"Unexpected task {held}."),
+			};
+
+			result.Total.ShouldBe(BatchItem.Seed.Length);
+			result.Held.ShouldBeTrue();
+		}
+
+		// A batch sends its parts together, so a token cancelled before the call sends none of them: no command and no load
+		// transaction. One concat and one DbBatch provider, with a collection (which opens the transaction) and without, and
+		// the compiled path, which enters on its own.
+		[Test]
+		public async Task CancelledTokenSendsNothing(
+			[IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context,
+			[Values] bool withCollection,
+			[Values] bool compiled)
+		{
+			var scalars = CompiledQuery.Compile((IDataContext db, CancellationToken token) => db.QueryBatchAsync(
+				() => db
+					.GetTable<BatchItem>()
+					.Count(),
+				token));
+
+			var withList = CompiledQuery.Compile((IDataContext db, CancellationToken token) => db.QueryBatchAsync(() => new
+			{
+				Total = db
+					.GetTable<BatchItem>()
+					.Count(),
+				Page  = db.GetTable<BatchItem>()
+					.OrderBy(i => i.Id)
+					.Take(3)
+					.ToList(),
+			}, token));
+
+			var trace = new CommandTrace();
+
+			using var db    = GetDataContext(context, Traced(trace));
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var cancelled = new CancellationToken(true);
+
+			trace.Reset();
+
+			var error = (withCollection, compiled) switch
+			{
+				(false, false) => await Shouldly.Should.ThrowAsync<OperationCanceledException>(() => db.QueryBatchAsync(() => items.Count(), cancelled)),
+				(true,  false) => await Shouldly.Should.ThrowAsync<OperationCanceledException>(() => db.QueryBatchAsync(
+					() => items.Count(),
+					() => items
+						.OrderBy(i => i.Id)
+						.Take(3)
+						.ToList(),
+					cancelled)),
+				(false, true)  => await Shouldly.Should.ThrowAsync<OperationCanceledException>(() => scalars(db, cancelled)),
+				(true,  true)  => await Shouldly.Should.ThrowAsync<OperationCanceledException>(() => withList(db, cancelled)),
+			};
+
+			error.CancellationToken.ShouldBe(cancelled);
+			trace.Readers.ShouldBe(0);
+			trace.Begins.ShouldBe(0);
+		}
+
+		// The up-front token check is the batch's own: a query outside a batch still leaves the token to the provider.
+		[Test]
+		public async Task CancelledTokenOutsideABatchReachesTheProvider([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var trace = new CommandTrace();
+
+			using var db    = GetDataContext(context, Traced(trace));
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			trace.Reset();
+
+			await Shouldly.Should.ThrowAsync<OperationCanceledException>(() => items.CountAsync(new CancellationToken(true)));
+
+			trace.Readers.ShouldBe(1);
 		}
 
 		public enum Terminal

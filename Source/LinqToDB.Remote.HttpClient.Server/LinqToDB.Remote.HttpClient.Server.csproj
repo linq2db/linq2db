@@ -4,8 +4,8 @@
 		<RootNamespace>LinqToDB.Remote.HttpClient.Server</RootNamespace>
 		<OutputType>Library</OutputType>
 
-		<TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
-		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">net10.0</TargetFrameworks>
+		<TargetFrameworks>$(ToolTargetFrameworks)</TargetFrameworks>
+		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">$(LatestTargetFramework)</TargetFrameworks>
 
 		<IsAotCompatible>true</IsAotCompatible>
 	</PropertyGroup>

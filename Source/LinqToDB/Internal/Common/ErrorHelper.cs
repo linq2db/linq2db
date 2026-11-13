@@ -34,6 +34,7 @@
 		public const string Error_OutputQuery_Duplicated           = "InsertWithOutputQuery produced more than one data-modifying statement for one call, which would run the insert more than once. This is an internal error, please report it.";
 		public const string Error_OutputQuery_NotTranslated        = "InsertWithOutputQuery produced no data-modifying statement for one call, so the insert would not run. This is an internal error, please report it.";
 		public const string Error_QueryHints_In_QueryBatch         = "QueryBatch does not support query hints.";
+		public const string Error_QueryBatch_TaskPart              = "A query batch part cannot hold an expression that may create a task: it could run a separate query outside the batch.";
 
 		public const string Error_WindowFunctionsInSearchCondition                = "Window functions cannot be used in search condition.";
 		public const string Error_WindowFunction_PercentRank                      = "PERCENT_RANK is not supported by current provider.";

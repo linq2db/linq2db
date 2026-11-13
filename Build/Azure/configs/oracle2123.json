@@ -1,0 +1,8 @@
+{
+	"Azure.TestJob": {
+		"Providers": [
+			"Oracle.21.Managed",
+			"Oracle.23.Managed"
+		]
+	}
+}

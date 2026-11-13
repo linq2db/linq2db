@@ -8,9 +8,8 @@ VERSION_PROP should be one of:
 
 - Version - version for majority of projects
 - EF3Version - version for EF.Core 3.1 integration
-- EF8Version - version for EF.Core 8 integration
-- EF9Version - version for EF.Core 9 integration
 - EF10Version - version for EF.Core 10 integration
+- EF11Version - version for EF.Core 11 integration
 
 Usage:
 
