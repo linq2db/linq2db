@@ -154,9 +154,12 @@
 		<Polyfill>$(Polyfill)|T:System.Reflection.Nullability</Polyfill>
 		<Polyfill>$(Polyfill)|T:System.Runtime.CompilerServices.CallerArgumentExpressionAttribute</Polyfill>
 		<Polyfill>$(Polyfill)|T:System.Runtime.CompilerServices.CompilerFeatureRequiredAttribute</Polyfill>
+		<Polyfill>$(Polyfill)|T:System.Runtime.CompilerServices.IsClosedTypeAttribute</Polyfill>
 		<Polyfill>$(Polyfill)|T:System.Runtime.CompilerServices.IsExternalInit</Polyfill>
+		<Polyfill>$(Polyfill)|T:System.Runtime.CompilerServices.IUnion</Polyfill>
 		<Polyfill>$(Polyfill)|T:System.Runtime.CompilerServices.RequiredMemberAttribute</Polyfill>
 		<Polyfill>$(Polyfill)|T:System.Runtime.CompilerServices.SkipLocalsInitAttribute</Polyfill>
+		<Polyfill>$(Polyfill)|T:System.Runtime.CompilerServices.UnionAttribute</Polyfill>
 		<Polyfill>$(Polyfill)|T:System.Threading.Lock</Polyfill>
 		<Polyfill>$(Polyfill)|M:System.ArgumentException.ThrowIfNullOrEmpty(System.String,System.String)</Polyfill>
 		<Polyfill>$(Polyfill)|M:System.ArgumentException.ThrowIfNullOrWhiteSpace(System.String,System.String)</Polyfill>
@@ -214,7 +217,8 @@
 		<PackageReference Include="Meziantou.Analyzer" PrivateAssets="All" />
 		<PackageReference Include="Meziantou.Polyfill" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" PrivateAssets="All" />
-		<PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+		<!--build assets only: Microsoft.Build.Tasks.Git declares System.IO.Hashing as a plain dependency, which otherwise lands in every output and the lpx-->
+		<PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" IncludeAssets="build;buildMultitargeting;buildTransitive" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(Language)'=='C#'">
