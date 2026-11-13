@@ -233,6 +233,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb, ErrorMessage = "each equality predicate argument must depend on exactly one JOIN input")]
 		[Test]
 		public void TestLoadWithWithCast([DataSources(false)] string context)
 		{
@@ -249,6 +250,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb, ErrorMessage = "each equality predicate argument must depend on exactly one JOIN input")]
 		[Test]
 		public void TestNestedLoadWithWithCast([DataSources(false)] string context)
 		{

@@ -909,6 +909,117 @@ namespace Tests.Linq
 				select new { p, ch });
 		}
 
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb, ErrorMessage = "JOIN ON expression must be a conjunction of equality predicates")]
+		// #6215: Jet applies a false ON conjunct that reads no joined column as a filter, dropping the outer rows
+		[ThrowsForProvider(typeof(ShouldAssertException), TestProvName.AllAccess, ErrorMessage = "is missing", AlsoWhenParameter = "matches", AlsoWhenValue = false)]
+		[Test]
+		public void LeftJoinTableFreePredicateOverNestedRightJoin([DataSources] string context, [Values] bool matches)
+		{
+			using var db = GetDataContext(context);
+
+			// server-decided, so the optimizer cannot fold it away; compared as a year because Firebird 4+ types a
+			// parameter compared to CURRENT_TIMESTAMP as TIMESTAMP WITH TIME ZONE (#5915)
+			var year = 2000;
+
+			var nested =
+				from c in db.Child
+				from g in db.GrandChild.RightJoin(g => g.ChildID == c.ChildID)
+				select new { c, g };
+
+			var query = matches
+				? db.Parent.LeftJoin(nested, (p, x) => p.ParentID == x.g.ParentID && Sql.CurrentTimestamp.Year > year, (p, x) => new { p.ParentID, GrandChildID = (int?)x.g.GrandChildID })
+				: db.Parent.LeftJoin(nested, (p, x) => p.ParentID == x.g.ParentID && Sql.CurrentTimestamp.Year < year, (p, x) => new { p.ParentID, GrandChildID = (int?)x.g.GrandChildID });
+
+			var actual = query
+				.ToList()
+				.Select(r => (r.ParentID, r.GrandChildID));
+
+			var nestedRows = GrandChild
+				.SelectMany(g => Child
+					.Where(c => c.ChildID == g.ChildID)
+					.Select(c => g)
+					.DefaultIfEmpty(g));
+
+			var expected = Parent
+				.SelectMany(p => nestedRows
+					.Where(g => p.ParentID == g.ParentID && matches)
+					.Select(g => (p.ParentID, (int?)g.GrandChildID))
+					.DefaultIfEmpty((p.ParentID, null)));
+
+			actual.ShouldBe(expected, ignoreOrder: true);
+		}
+
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb, ErrorMessage = "JOIN ON expression must be a conjunction of equality predicates")]
+		[Test]
+		public void LeftJoinJoinedSidePredicateOverNestedRightJoin([DataSources] string context, [Values(11, -1)] int id)
+		{
+			using var db = GetDataContext(context);
+
+			var nested =
+				from c in db.Child
+				from g in db.GrandChild.RightJoin(g => g.ChildID == c.ChildID)
+				select new { c, g };
+
+			var actual = db.Parent
+				.LeftJoin(nested, (p, x) => p.ParentID == x.g.ParentID && x.c.ChildID > id, (p, x) => new { p.ParentID, GrandChildID = (int?)x.g.GrandChildID })
+				.ToList()
+				.Select(r => (r.ParentID, r.GrandChildID));
+
+			var nestedRows = GrandChild
+				.SelectMany(g => Child
+					.Where(c => c.ChildID == g.ChildID)
+					.Select(c => (c: (Child?)c, g))
+					.DefaultIfEmpty((c: null, g)));
+
+			var expected = Parent
+				.SelectMany(p => nestedRows
+					.Where(x => p.ParentID == x.g.ParentID && x.c != null && x.c.ChildID > id)
+					.Select(x => (p.ParentID, (int?)x.g.GrandChildID))
+					.DefaultIfEmpty((p.ParentID, null)));
+
+			actual.ShouldBe(expected, ignoreOrder: true);
+		}
+
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb, ErrorMessage = "JOIN ON expression must be a conjunction of equality predicates")]
+		[Test]
+		public void LeftJoinPredicateOverNestedJoinColumn([DataSources] string context, [Values] bool inner)
+		{
+			using var db = GetDataContext(context);
+
+			var nested = inner
+				? from c in db.Child
+				  from g in db.GrandChild.InnerJoin(g => g.ChildID == c.ChildID)
+				  select new { c, g }
+				: from c in db.Child
+				  from g in db.GrandChild.LeftJoin(g => g.ChildID == c.ChildID)
+				  select new { c, g };
+
+			var query = db.Parent.LeftJoin(
+				nested,
+				(p, x) => p.ParentID == x.c.ParentID && x.g.GrandChildID > 300,
+				(p, x) => new { p.ParentID, ChildID = (int?)x.c.ChildID, GrandChildID = (int?)x.g.GrandChildID });
+
+			var actual = query
+				.ToList()
+				.Select(r => (r.ParentID, r.ChildID, r.GrandChildID));
+
+			var nestedRows = Child
+				.SelectMany(c => GrandChild
+					.Where(g => g.ChildID == c.ChildID)
+					.Select(g => (c, g: (Model.GrandChild?)g))
+					.DefaultIfEmpty((c, g: null))
+					.Where(x => !inner || x.g != null))
+				.ToList();
+
+			var expected = Parent
+				.SelectMany(p => nestedRows
+					.Where(x => p.ParentID == x.c.ParentID && x.g?.GrandChildID > 300)
+					.Select(x => (p.ParentID, (int?)x.c.ChildID, x.g?.GrandChildID))
+					.DefaultIfEmpty((p.ParentID, null, null)));
+
+			actual.ShouldBe(expected, ignoreOrder: true);
+		}
+
 		[Test]
 		public void MultipleLeftJoin([DataSources] string context)
 		{
