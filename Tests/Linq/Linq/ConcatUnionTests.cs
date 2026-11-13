@@ -1734,9 +1734,6 @@ namespace Tests.Linq
 		[ActiveIssue(Configuration = TestProvName.AllSybase, SkipForLinqService = true,
 			ErrorTypeName = "AdoNetCore.AseClient.AseException", ErrorMessage = "does not allow null values.",
 			Details = "no-issue: a Sybase BIT column cannot hold NULL, so the seed row with a null bool? cannot be inserted. Update BoolN handling for sybase.")]
-		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "System.ArgumentException",
-			ErrorMessage = "Byte array for Guid must be exactly 16 bytes long",
-			Details = "no-issue: a GUID column read through a set operation carrying null literals comes back as a byte array of the wrong length. Not the declared-type-vs-value regression behind AggregatesKeepTheDeclaredUnit: alpha.4 fixed that one and not this. The raw-ADO set-operation reads all succeed. LibRed.Ado 11.0.0-alpha.3 and alpha.4; re-check when a newer LibRed ships.")]
 		[Test(Description = "null literals in first query")]
 		public void Issue3360_LiteralsInFirstQuery([DataSources] string context)
 		{

@@ -125,6 +125,19 @@ namespace LinqToDB.Internal.DataProvider.Access
 		public sealed class AceOleDbMappingSchema () : LockedMappingSchema(ProviderName.AccessAceOleDb, OleDbInstance, Instance);
 		public sealed class AceOdbcDbMappingSchema() : LockedMappingSchema(ProviderName.AccessAceOdbc , Instance);
 
-		public sealed class LibRedMappingSchema   () : LockedMappingSchema(ProviderName.AccessLibRed  , Instance);
+		public sealed class LibRedMappingSchema : LockedMappingSchema
+		{
+			public LibRedMappingSchema() : base(ProviderName.AccessLibRed, Instance)
+			{
+				// the OLE DB literal form: the base quoted '{...}' string turns a GUID column of a set operation
+				// into a binary one, as it does on ACE. Set here rather than by chaining OleDbInstance, which
+				// would also apply mappings configured for "Access.OleDb"
+#if NETFRAMEWORK
+				SetValueToSqlConverter(typeof(Guid), (sb, _, _, v) => sb.Append('{').Append(CultureInfo.InvariantCulture, $"guid {(Guid)v:B}").Append('}'));
+#else
+				SetValueToSqlConverter(typeof(Guid), (sb, _, _, v) => sb.Append(CultureInfo.InvariantCulture, $"{{guid {(Guid)v:B}}}"));
+#endif
+			}
+		}
 	}
 }
