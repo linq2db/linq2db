@@ -15,7 +15,7 @@ namespace Cli.NoMetadata.Access.LibRed
 	public class AllType
 	{
 		public int       Id                       { get; set; } // Long
-		public bool?     BitDataType              { get; set; } // Bit
+		public bool      BitDataType              { get; set; } // Bit
 		public short?    SmallintDataType         { get; set; } // Short
 		public decimal?  DecimalDataType          { get; set; } // Decimal(18, 0)
 		public int?      IntDataType              { get; set; } // Long

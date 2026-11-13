@@ -9,6 +9,7 @@ using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -670,7 +671,7 @@ namespace Cli.All.Access.LibRed
 		#endregion
 
 		#region PatientSelectByName
-		public static int PatientSelectByName(this TestDataDB dataConnection, string? firstName, string? lastName)
+		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this TestDataDB dataConnection, string? firstName, string? lastName)
 		{
 			var parameters = new []
 			{
@@ -685,10 +686,10 @@ namespace Cli.All.Access.LibRed
 					Size = 50
 				}
 			};
-			return dataConnection.ExecuteProc("[Patient_SelectByName]", parameters);
+			return dataConnection.QueryProc<PatientSelectByNameResult>("[Patient_SelectByName]", parameters);
 		}
 
-		public static Task<int> PatientSelectByNameAsync(this TestDataDB dataConnection, string? firstName, string? lastName, CancellationToken cancellationToken = default)
+		public static Task<IEnumerable<PatientSelectByNameResult>> PatientSelectByNameAsync(this TestDataDB dataConnection, string? firstName, string? lastName, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
@@ -703,7 +704,17 @@ namespace Cli.All.Access.LibRed
 					Size = 50
 				}
 			};
-			return dataConnection.ExecuteProcAsync("[Patient_SelectByName]", cancellationToken, parameters);
+			return dataConnection.QueryProcAsync<PatientSelectByNameResult>("[Patient_SelectByName]", cancellationToken, parameters);
+		}
+
+		public partial class PatientSelectByNameResult
+		{
+			[Column("PersonID"  , DataType  = DataType.Int32  , DbType   = "Long"                                   )] public int     PersonId   { get; set; }
+			[Column("FirstName" , CanBeNull = false           , DataType = DataType.VarChar, DbType = "VarChar(50)" )] public string  FirstName  { get; set; } = null!;
+			[Column("LastName"  , CanBeNull = false           , DataType = DataType.VarChar, DbType = "VarChar(50)" )] public string  LastName   { get; set; } = null!;
+			[Column("MiddleName", DataType  = DataType.VarChar, DbType   = "VarChar(50)"                            )] public string? MiddleName { get; set; }
+			[Column("Gender"    , DataType  = DataType.VarChar, DbType   = "VarChar(1)"                             )] public char    Gender     { get; set; }
+			[Column("Diagnosis" , CanBeNull = false           , DataType = DataType.VarChar, DbType = "VarChar(255)")] public string  Diagnosis  { get; set; } = null!;
 		}
 		#endregion
 
@@ -792,7 +803,7 @@ namespace Cli.All.Access.LibRed
 		#endregion
 
 		#region PersonSelectByKey
-		public static int PersonSelectByKey(this TestDataDB dataConnection, int? id)
+		public static IEnumerable<PersonSelectByKeyResult> PersonSelectByKey(this TestDataDB dataConnection, int? id)
 		{
 			var parameters = new []
 			{
@@ -801,10 +812,10 @@ namespace Cli.All.Access.LibRed
 					DbType = "Long"
 				}
 			};
-			return dataConnection.ExecuteProc("[Person_SelectByKey]", parameters);
+			return dataConnection.QueryProc<PersonSelectByKeyResult>("[Person_SelectByKey]", parameters);
 		}
 
-		public static Task<int> PersonSelectByKeyAsync(this TestDataDB dataConnection, int? id, CancellationToken cancellationToken = default)
+		public static Task<IEnumerable<PersonSelectByKeyResult>> PersonSelectByKeyAsync(this TestDataDB dataConnection, int? id, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
@@ -813,12 +824,21 @@ namespace Cli.All.Access.LibRed
 					DbType = "Long"
 				}
 			};
-			return dataConnection.ExecuteProcAsync("[Person_SelectByKey]", cancellationToken, parameters);
+			return dataConnection.QueryProcAsync<PersonSelectByKeyResult>("[Person_SelectByKey]", cancellationToken, parameters);
+		}
+
+		public partial class PersonSelectByKeyResult
+		{
+			[Column("PersonID"  , DataType  = DataType.Int32  , DbType   = "Long"                                  )] public int     PersonId   { get; set; }
+			[Column("FirstName" , CanBeNull = false           , DataType = DataType.VarChar, DbType = "VarChar(50)")] public string  FirstName  { get; set; } = null!;
+			[Column("LastName"  , CanBeNull = false           , DataType = DataType.VarChar, DbType = "VarChar(50)")] public string  LastName   { get; set; } = null!;
+			[Column("MiddleName", DataType  = DataType.VarChar, DbType   = "VarChar(50)"                           )] public string? MiddleName { get; set; }
+			[Column("Gender"    , DataType  = DataType.VarChar, DbType   = "VarChar(1)"                            )] public char    Gender     { get; set; }
 		}
 		#endregion
 
 		#region PersonSelectByName
-		public static int PersonSelectByName(this TestDataDB dataConnection, string? firstName, string? lastName)
+		public static IEnumerable<PersonSelectByNameResult> PersonSelectByName(this TestDataDB dataConnection, string? firstName, string? lastName)
 		{
 			var parameters = new []
 			{
@@ -833,10 +853,10 @@ namespace Cli.All.Access.LibRed
 					Size = 50
 				}
 			};
-			return dataConnection.ExecuteProc("[Person_SelectByName]", parameters);
+			return dataConnection.QueryProc<PersonSelectByNameResult>("[Person_SelectByName]", parameters);
 		}
 
-		public static Task<int> PersonSelectByNameAsync(this TestDataDB dataConnection, string? firstName, string? lastName, CancellationToken cancellationToken = default)
+		public static Task<IEnumerable<PersonSelectByNameResult>> PersonSelectByNameAsync(this TestDataDB dataConnection, string? firstName, string? lastName, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
@@ -851,12 +871,21 @@ namespace Cli.All.Access.LibRed
 					Size = 50
 				}
 			};
-			return dataConnection.ExecuteProcAsync("[Person_SelectByName]", cancellationToken, parameters);
+			return dataConnection.QueryProcAsync<PersonSelectByNameResult>("[Person_SelectByName]", cancellationToken, parameters);
+		}
+
+		public partial class PersonSelectByNameResult
+		{
+			[Column("PersonID"  , DataType  = DataType.Int32  , DbType   = "Long"                                  )] public int     PersonId   { get; set; }
+			[Column("FirstName" , CanBeNull = false           , DataType = DataType.VarChar, DbType = "VarChar(50)")] public string  FirstName  { get; set; } = null!;
+			[Column("LastName"  , CanBeNull = false           , DataType = DataType.VarChar, DbType = "VarChar(50)")] public string  LastName   { get; set; } = null!;
+			[Column("MiddleName", DataType  = DataType.VarChar, DbType   = "VarChar(50)"                           )] public string? MiddleName { get; set; }
+			[Column("Gender"    , DataType  = DataType.VarChar, DbType   = "VarChar(1)"                            )] public char    Gender     { get; set; }
 		}
 		#endregion
 
 		#region PersonSelectListByName
-		public static int PersonSelectListByName(this TestDataDB dataConnection, string? firstName, string? lastName)
+		public static IEnumerable<PersonSelectListByNameResult> PersonSelectListByName(this TestDataDB dataConnection, string? firstName, string? lastName)
 		{
 			var parameters = new []
 			{
@@ -871,10 +900,10 @@ namespace Cli.All.Access.LibRed
 					Size = 50
 				}
 			};
-			return dataConnection.ExecuteProc("[Person_SelectListByName]", parameters);
+			return dataConnection.QueryProc<PersonSelectListByNameResult>("[Person_SelectListByName]", parameters);
 		}
 
-		public static Task<int> PersonSelectListByNameAsync(this TestDataDB dataConnection, string? firstName, string? lastName, CancellationToken cancellationToken = default)
+		public static Task<IEnumerable<PersonSelectListByNameResult>> PersonSelectListByNameAsync(this TestDataDB dataConnection, string? firstName, string? lastName, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
@@ -889,7 +918,16 @@ namespace Cli.All.Access.LibRed
 					Size = 50
 				}
 			};
-			return dataConnection.ExecuteProcAsync("[Person_SelectListByName]", cancellationToken, parameters);
+			return dataConnection.QueryProcAsync<PersonSelectListByNameResult>("[Person_SelectListByName]", cancellationToken, parameters);
+		}
+
+		public partial class PersonSelectListByNameResult
+		{
+			[Column("PersonID"  , DataType  = DataType.Int32  , DbType   = "Long"                                  )] public int     PersonId   { get; set; }
+			[Column("FirstName" , CanBeNull = false           , DataType = DataType.VarChar, DbType = "VarChar(50)")] public string  FirstName  { get; set; } = null!;
+			[Column("LastName"  , CanBeNull = false           , DataType = DataType.VarChar, DbType = "VarChar(50)")] public string  LastName   { get; set; } = null!;
+			[Column("MiddleName", DataType  = DataType.VarChar, DbType   = "VarChar(50)"                           )] public string? MiddleName { get; set; }
+			[Column("Gender"    , DataType  = DataType.VarChar, DbType   = "VarChar(1)"                            )] public char    Gender     { get; set; }
 		}
 		#endregion
 

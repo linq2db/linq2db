@@ -21,7 +21,7 @@ namespace Cli.All.Access.LibRed
 		[Column("MoneyValue"    , DataType = DataType.Decimal , DbType = "Decimal(10, 4)", Precision = 10, Scale = 4)] public decimal?  MoneyValue     { get; set; } // Decimal(10, 4)
 		[Column("DateTimeValue" , DataType = DataType.DateTime, DbType = "DateTime"                                 )] public DateTime? DateTimeValue  { get; set; } // DateTime
 		[Column("DateTimeValue2", DataType = DataType.DateTime, DbType = "DateTime"                                 )] public DateTime? DateTimeValue2 { get; set; } // DateTime
-		[Column("BoolValue"     , DataType = DataType.Boolean , DbType = "Bit"                                      )] public bool?     BoolValue      { get; set; } // Bit
+		[Column("BoolValue"     , DataType = DataType.Boolean , DbType = "Bit"                                      )] public bool      BoolValue      { get; set; } // Bit
 		[Column("GuidValue"     , DataType = DataType.Guid    , DbType = "GUID"                                     )] public Guid?     GuidValue      { get; set; } // GUID
 		[Column("BinaryValue"   , DataType = DataType.Image   , DbType = "LongBinary"                               )] public byte[]?   BinaryValue    { get; set; } // LongBinary
 		[Column("SmallIntValue" , DataType = DataType.Int16   , DbType = "Short"                                    )] public short?    SmallIntValue  { get; set; } // Short

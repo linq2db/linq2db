@@ -9,6 +9,7 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 #pragma warning disable 1573, 1591
@@ -70,7 +71,7 @@ namespace Cli.T4.Access.LibRed
 	public partial class AllType
 	{
 		[Column("ID"                      , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int       ID                       { get; set; } // Long
-		[Column("bitDataType"                                                                          )] public bool?     BitDataType              { get; set; } // Bit
+		[Column("bitDataType"                                                                          )] public bool      BitDataType              { get; set; } // Bit
 		[Column("smallintDataType"                                                                     )] public short?    SmallintDataType         { get; set; } // Short
 		[Column("decimalDataType"                                                                      )] public decimal?  DecimalDataType          { get; set; } // Decimal(18, 0)
 		[Column("intDataType"                                                                          )] public int?      IntDataType              { get; set; } // Long
@@ -184,6 +185,34 @@ namespace Cli.T4.Access.LibRed
 		}
 		#endregion
 
+		#region PatientSelectByName
+		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this TestDataDB dataConnection, string? firstName, string? lastName)
+		{
+			var parameters = new []
+			{
+				new DataParameter("@firstName", firstName, DataType.VarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@lastName", lastName, DataType.VarChar)
+				{
+					Size = 50
+				}
+			};
+			return dataConnection.QueryProc<PatientSelectByNameResult>("[Patient_SelectByName]", parameters);
+		}
+
+		public partial class PatientSelectByNameResult
+		{
+			[Column("PersonID"                     )] public int     PersonID   { get; set; }
+			[Column("FirstName" , CanBeNull = false)] public string  FirstName  { get; set; } = null!;
+			[Column("LastName"  , CanBeNull = false)] public string  LastName   { get; set; } = null!;
+			[Column("MiddleName"                   )] public string? MiddleName { get; set; }
+			[Column("Gender"                       )] public char    Gender     { get; set; }
+			[Column("Diagnosis" , CanBeNull = false)] public string  Diagnosis  { get; set; } = null!;
+		}
+		#endregion
+
 		#region PersonDelete
 		public static int PersonDelete(this TestDataDB dataConnection, int? personId)
 		{
@@ -218,6 +247,80 @@ namespace Cli.T4.Access.LibRed
 				}
 			};
 			return dataConnection.ExecuteProc("[Person_Insert]", parameters);
+		}
+		#endregion
+
+		#region PersonSelectByKey
+		public static IEnumerable<PersonSelectByKeyResult> PersonSelectByKey(this TestDataDB dataConnection, int? id)
+		{
+			var parameters = new []
+			{
+				new DataParameter("@id", id, DataType.Int32)
+			};
+			return dataConnection.QueryProc<PersonSelectByKeyResult>("[Person_SelectByKey]", parameters);
+		}
+
+		public partial class PersonSelectByKeyResult
+		{
+			[Column("PersonID"                     )] public int     PersonID   { get; set; }
+			[Column("FirstName" , CanBeNull = false)] public string  FirstName  { get; set; } = null!;
+			[Column("LastName"  , CanBeNull = false)] public string  LastName   { get; set; } = null!;
+			[Column("MiddleName"                   )] public string? MiddleName { get; set; }
+			[Column("Gender"                       )] public char    Gender     { get; set; }
+		}
+		#endregion
+
+		#region PersonSelectByName
+		public static IEnumerable<PersonSelectByNameResult> PersonSelectByName(this TestDataDB dataConnection, string? firstName, string? lastName)
+		{
+			var parameters = new []
+			{
+				new DataParameter("@firstName", firstName, DataType.VarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@lastName", lastName, DataType.VarChar)
+				{
+					Size = 50
+				}
+			};
+			return dataConnection.QueryProc<PersonSelectByNameResult>("[Person_SelectByName]", parameters);
+		}
+
+		public partial class PersonSelectByNameResult
+		{
+			[Column("PersonID"                     )] public int     PersonID   { get; set; }
+			[Column("FirstName" , CanBeNull = false)] public string  FirstName  { get; set; } = null!;
+			[Column("LastName"  , CanBeNull = false)] public string  LastName   { get; set; } = null!;
+			[Column("MiddleName"                   )] public string? MiddleName { get; set; }
+			[Column("Gender"                       )] public char    Gender     { get; set; }
+		}
+		#endregion
+
+		#region PersonSelectListByName
+		public static IEnumerable<PersonSelectListByNameResult> PersonSelectListByName(this TestDataDB dataConnection, string? firstName, string? lastName)
+		{
+			var parameters = new []
+			{
+				new DataParameter("@firstName", firstName, DataType.VarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@lastName", lastName, DataType.VarChar)
+				{
+					Size = 50
+				}
+			};
+			return dataConnection.QueryProc<PersonSelectListByNameResult>("[Person_SelectListByName]", parameters);
+		}
+
+		public partial class PersonSelectListByNameResult
+		{
+			[Column("PersonID"                     )] public int     PersonID   { get; set; }
+			[Column("FirstName" , CanBeNull = false)] public string  FirstName  { get; set; } = null!;
+			[Column("LastName"  , CanBeNull = false)] public string  LastName   { get; set; } = null!;
+			[Column("MiddleName"                   )] public string? MiddleName { get; set; }
+			[Column("Gender"                       )] public char    Gender     { get; set; }
 		}
 		#endregion
 
@@ -304,7 +407,7 @@ namespace Cli.T4.Access.LibRed
 		[Column("MoneyValue"    )] public decimal?  MoneyValue     { get; set; } // Decimal(10, 4)
 		[Column("DateTimeValue" )] public DateTime? DateTimeValue  { get; set; } // DateTime
 		[Column("DateTimeValue2")] public DateTime? DateTimeValue2 { get; set; } // DateTime
-		[Column("BoolValue"     )] public bool?     BoolValue      { get; set; } // Bit
+		[Column("BoolValue"     )] public bool      BoolValue      { get; set; } // Bit
 		[Column("GuidValue"     )] public Guid?     GuidValue      { get; set; } // GUID
 		[Column("BinaryValue"   )] public byte[]?   BinaryValue    { get; set; } // LongBinary
 		[Column("SmallIntValue" )] public short?    SmallIntValue  { get; set; } // Short
@@ -374,7 +477,7 @@ namespace Cli.T4.Access.LibRed
 		[Column("Field3"                              )] public int?      Field3          { get; set; } // Long
 		[Column("Field4"                              )] public int?      Field4          { get; set; } // Long
 		[Column("Field5"                              )] public int?      Field5          { get; set; } // Long
-		[Column("FieldBoolean"                        )] public bool?     FieldBoolean    { get; set; } // Bit
+		[Column("FieldBoolean"                        )] public bool      FieldBoolean    { get; set; } // Bit
 		[Column("FieldString"                         )] public string?   FieldString     { get; set; } // VarChar(20)
 		[Column("FieldNString"                        )] public string?   FieldNString    { get; set; } // VarChar(20)
 		[Column("FieldChar"                           )] public char?     FieldChar       { get; set; } // Char(1)
@@ -400,7 +503,7 @@ namespace Cli.T4.Access.LibRed
 		[Column("Field3"                              )] public int?      Field3          { get; set; } // Long
 		[Column("Field4"                              )] public int?      Field4          { get; set; } // Long
 		[Column("Field5"                              )] public int?      Field5          { get; set; } // Long
-		[Column("FieldBoolean"                        )] public bool?     FieldBoolean    { get; set; } // Bit
+		[Column("FieldBoolean"                        )] public bool      FieldBoolean    { get; set; } // Bit
 		[Column("FieldString"                         )] public string?   FieldString     { get; set; } // VarChar(20)
 		[Column("FieldNString"                        )] public string?   FieldNString    { get; set; } // VarChar(20)
 		[Column("FieldChar"                           )] public char?     FieldChar       { get; set; } // Char(1)
@@ -460,6 +563,6 @@ namespace Cli.T4.Access.LibRed
 	public partial class ScalarDataReader
 	{
 		[Column("intField"   )] public int?    IntField    { get; set; } // Long
-		[Column("stringField")] public string? StringField { get; set; } // VarChar(0)
+		[Column("stringField")] public string? StringField { get; set; } // VarChar
 	}
 }

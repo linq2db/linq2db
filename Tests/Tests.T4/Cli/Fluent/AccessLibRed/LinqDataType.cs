@@ -18,7 +18,7 @@ namespace Cli.Fluent.Access.LibRed
 		public decimal?  MoneyValue     { get; set; } // Decimal(10, 4)
 		public DateTime? DateTimeValue  { get; set; } // DateTime
 		public DateTime? DateTimeValue2 { get; set; } // DateTime
-		public bool?     BoolValue      { get; set; } // Bit
+		public bool      BoolValue      { get; set; } // Bit
 		public Guid?     GuidValue      { get; set; } // GUID
 		public byte[]?   BinaryValue    { get; set; } // LongBinary
 		public short?    SmallIntValue  { get; set; } // Short

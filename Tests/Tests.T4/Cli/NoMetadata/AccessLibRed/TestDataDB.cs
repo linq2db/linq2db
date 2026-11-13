@@ -7,6 +7,7 @@
 
 using LinqToDB;
 using LinqToDB.Data;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -111,7 +112,7 @@ namespace Cli.NoMetadata.Access.LibRed
 		#endregion
 
 		#region PatientSelectByName
-		public static int PatientSelectByName(this TestDataDB dataConnection, string? firstName, string? lastName)
+		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this TestDataDB dataConnection, string? firstName, string? lastName)
 		{
 			var parameters = new []
 			{
@@ -124,10 +125,10 @@ namespace Cli.NoMetadata.Access.LibRed
 					Size = 50
 				}
 			};
-			return dataConnection.ExecuteProc("[Patient_SelectByName]", parameters);
+			return dataConnection.QueryProc<PatientSelectByNameResult>("[Patient_SelectByName]", parameters);
 		}
 
-		public static Task<int> PatientSelectByNameAsync(this TestDataDB dataConnection, string? firstName, string? lastName, CancellationToken cancellationToken = default)
+		public static Task<IEnumerable<PatientSelectByNameResult>> PatientSelectByNameAsync(this TestDataDB dataConnection, string? firstName, string? lastName, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
@@ -140,7 +141,17 @@ namespace Cli.NoMetadata.Access.LibRed
 					Size = 50
 				}
 			};
-			return dataConnection.ExecuteProcAsync("[Patient_SelectByName]", cancellationToken, parameters);
+			return dataConnection.QueryProcAsync<PatientSelectByNameResult>("[Patient_SelectByName]", cancellationToken, parameters);
+		}
+
+		public partial class PatientSelectByNameResult
+		{
+			public int     PersonId   { get; set; }
+			public string  FirstName  { get; set; } = null!;
+			public string  LastName   { get; set; } = null!;
+			public string? MiddleName { get; set; }
+			public char    Gender     { get; set; }
+			public string  Diagnosis  { get; set; } = null!;
 		}
 		#endregion
 
@@ -215,27 +226,36 @@ namespace Cli.NoMetadata.Access.LibRed
 		#endregion
 
 		#region PersonSelectByKey
-		public static int PersonSelectByKey(this TestDataDB dataConnection, int? id)
+		public static IEnumerable<PersonSelectByKeyResult> PersonSelectByKey(this TestDataDB dataConnection, int? id)
 		{
 			var parameters = new []
 			{
 				new DataParameter("@id", id, DataType.Int32)
 			};
-			return dataConnection.ExecuteProc("[Person_SelectByKey]", parameters);
+			return dataConnection.QueryProc<PersonSelectByKeyResult>("[Person_SelectByKey]", parameters);
 		}
 
-		public static Task<int> PersonSelectByKeyAsync(this TestDataDB dataConnection, int? id, CancellationToken cancellationToken = default)
+		public static Task<IEnumerable<PersonSelectByKeyResult>> PersonSelectByKeyAsync(this TestDataDB dataConnection, int? id, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
 				new DataParameter("@id", id, DataType.Int32)
 			};
-			return dataConnection.ExecuteProcAsync("[Person_SelectByKey]", cancellationToken, parameters);
+			return dataConnection.QueryProcAsync<PersonSelectByKeyResult>("[Person_SelectByKey]", cancellationToken, parameters);
+		}
+
+		public partial class PersonSelectByKeyResult
+		{
+			public int     PersonId   { get; set; }
+			public string  FirstName  { get; set; } = null!;
+			public string  LastName   { get; set; } = null!;
+			public string? MiddleName { get; set; }
+			public char    Gender     { get; set; }
 		}
 		#endregion
 
 		#region PersonSelectByName
-		public static int PersonSelectByName(this TestDataDB dataConnection, string? firstName, string? lastName)
+		public static IEnumerable<PersonSelectByNameResult> PersonSelectByName(this TestDataDB dataConnection, string? firstName, string? lastName)
 		{
 			var parameters = new []
 			{
@@ -248,10 +268,10 @@ namespace Cli.NoMetadata.Access.LibRed
 					Size = 50
 				}
 			};
-			return dataConnection.ExecuteProc("[Person_SelectByName]", parameters);
+			return dataConnection.QueryProc<PersonSelectByNameResult>("[Person_SelectByName]", parameters);
 		}
 
-		public static Task<int> PersonSelectByNameAsync(this TestDataDB dataConnection, string? firstName, string? lastName, CancellationToken cancellationToken = default)
+		public static Task<IEnumerable<PersonSelectByNameResult>> PersonSelectByNameAsync(this TestDataDB dataConnection, string? firstName, string? lastName, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
@@ -264,12 +284,21 @@ namespace Cli.NoMetadata.Access.LibRed
 					Size = 50
 				}
 			};
-			return dataConnection.ExecuteProcAsync("[Person_SelectByName]", cancellationToken, parameters);
+			return dataConnection.QueryProcAsync<PersonSelectByNameResult>("[Person_SelectByName]", cancellationToken, parameters);
+		}
+
+		public partial class PersonSelectByNameResult
+		{
+			public int     PersonId   { get; set; }
+			public string  FirstName  { get; set; } = null!;
+			public string  LastName   { get; set; } = null!;
+			public string? MiddleName { get; set; }
+			public char    Gender     { get; set; }
 		}
 		#endregion
 
 		#region PersonSelectListByName
-		public static int PersonSelectListByName(this TestDataDB dataConnection, string? firstName, string? lastName)
+		public static IEnumerable<PersonSelectListByNameResult> PersonSelectListByName(this TestDataDB dataConnection, string? firstName, string? lastName)
 		{
 			var parameters = new []
 			{
@@ -282,10 +311,10 @@ namespace Cli.NoMetadata.Access.LibRed
 					Size = 50
 				}
 			};
-			return dataConnection.ExecuteProc("[Person_SelectListByName]", parameters);
+			return dataConnection.QueryProc<PersonSelectListByNameResult>("[Person_SelectListByName]", parameters);
 		}
 
-		public static Task<int> PersonSelectListByNameAsync(this TestDataDB dataConnection, string? firstName, string? lastName, CancellationToken cancellationToken = default)
+		public static Task<IEnumerable<PersonSelectListByNameResult>> PersonSelectListByNameAsync(this TestDataDB dataConnection, string? firstName, string? lastName, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
@@ -298,7 +327,16 @@ namespace Cli.NoMetadata.Access.LibRed
 					Size = 50
 				}
 			};
-			return dataConnection.ExecuteProcAsync("[Person_SelectListByName]", cancellationToken, parameters);
+			return dataConnection.QueryProcAsync<PersonSelectListByNameResult>("[Person_SelectListByName]", cancellationToken, parameters);
+		}
+
+		public partial class PersonSelectListByNameResult
+		{
+			public int     PersonId   { get; set; }
+			public string  FirstName  { get; set; } = null!;
+			public string  LastName   { get; set; } = null!;
+			public string? MiddleName { get; set; }
+			public char    Gender     { get; set; }
 		}
 		#endregion
 

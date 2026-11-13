@@ -22,7 +22,7 @@ namespace Cli.Default.Access.LibRed
 		[Column("Field3"                              )] public int?      Field3          { get; set; } // Long
 		[Column("Field4"                              )] public int?      Field4          { get; set; } // Long
 		[Column("Field5"                              )] public int?      Field5          { get; set; } // Long
-		[Column("FieldBoolean"                        )] public bool?     FieldBoolean    { get; set; } // Bit
+		[Column("FieldBoolean"                        )] public bool      FieldBoolean    { get; set; } // Bit
 		[Column("FieldString"                         )] public string?   FieldString     { get; set; } // VarChar(20)
 		[Column("FieldNString"                        )] public string?   FieldNString    { get; set; } // VarChar(20)
 		[Column("FieldChar"                           )] public char?     FieldChar       { get; set; } // Char(1)

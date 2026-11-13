@@ -20,7 +20,7 @@ namespace Cli.Default.Access.LibRed
 		[Column("MoneyValue"    )] public decimal?  MoneyValue     { get; set; } // Decimal(10, 4)
 		[Column("DateTimeValue" )] public DateTime? DateTimeValue  { get; set; } // DateTime
 		[Column("DateTimeValue2")] public DateTime? DateTimeValue2 { get; set; } // DateTime
-		[Column("BoolValue"     )] public bool?     BoolValue      { get; set; } // Bit
+		[Column("BoolValue"     )] public bool      BoolValue      { get; set; } // Bit
 		[Column("GuidValue"     )] public Guid?     GuidValue      { get; set; } // GUID
 		[Column("BinaryValue"   )] public byte[]?   BinaryValue    { get; set; } // LongBinary
 		[Column("SmallIntValue" )] public short?    SmallIntValue  { get; set; } // Short

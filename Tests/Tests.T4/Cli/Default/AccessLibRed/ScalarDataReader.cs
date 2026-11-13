@@ -16,6 +16,6 @@ namespace Cli.Default.Access.LibRed
 	public class ScalarDataReader
 	{
 		[Column("intField"   )] public int?    IntField    { get; set; } // Long
-		[Column("stringField")] public string? StringField { get; set; } // VarChar(0)
+		[Column("stringField")] public string? StringField { get; set; } // VarChar
 	}
 }

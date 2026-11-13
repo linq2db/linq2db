@@ -18,7 +18,7 @@ namespace Cli.All.Access.LibRed
 	public class AllType
 	{
 		[Column("ID"                      , DataType = DataType.Int32    , DbType = "Long"          , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int       Id                       { get; set; } // Long
-		[Column("bitDataType"             , DataType = DataType.Boolean  , DbType = "Bit"                                                                        )] public bool?     BitDataType              { get; set; } // Bit
+		[Column("bitDataType"             , DataType = DataType.Boolean  , DbType = "Bit"                                                                        )] public bool      BitDataType              { get; set; } // Bit
 		[Column("smallintDataType"        , DataType = DataType.Int16    , DbType = "Short"                                                                      )] public short?    SmallintDataType         { get; set; } // Short
 		[Column("decimalDataType"         , DataType = DataType.Decimal  , DbType = "Decimal(18, 0)", Precision  = 18  , Scale        = 0                        )] public decimal?  DecimalDataType          { get; set; } // Decimal(18, 0)
 		[Column("intDataType"             , DataType = DataType.Int32    , DbType = "Long"                                                                       )] public int?      IntDataType              { get; set; } // Long

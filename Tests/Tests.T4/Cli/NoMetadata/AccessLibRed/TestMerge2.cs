@@ -20,7 +20,7 @@ namespace Cli.NoMetadata.Access.LibRed
 		public int?      Field3          { get; set; } // Long
 		public int?      Field4          { get; set; } // Long
 		public int?      Field5          { get; set; } // Long
-		public bool?     FieldBoolean    { get; set; } // Bit
+		public bool      FieldBoolean    { get; set; } // Bit
 		public string?   FieldString     { get; set; } // VarChar(20)
 		public string?   FieldNString    { get; set; } // VarChar(20)
 		public char?     FieldChar       { get; set; } // Char(1)

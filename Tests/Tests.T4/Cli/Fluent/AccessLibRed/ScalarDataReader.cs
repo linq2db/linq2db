@@ -14,6 +14,6 @@ namespace Cli.Fluent.Access.LibRed
 	public class ScalarDataReader
 	{
 		public int?    IntField    { get; set; } // Long
-		public string? StringField { get; set; } // VarChar(0)
+		public string? StringField { get; set; } // VarChar
 	}
 }

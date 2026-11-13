@@ -16,7 +16,7 @@ namespace Cli.All.Access.LibRed
 	[Table("Scalar_DataReader", IsView = true)]
 	public class ScalarDataReader
 	{
-		[Column("intField"   , DataType = DataType.Int32  , DbType = "Long"                  )] public int?    IntField    { get; set; } // Long
-		[Column("stringField", DataType = DataType.VarChar, DbType = "VarChar(0)", Length = 0)] public string? StringField { get; set; } // VarChar(0)
+		[Column("intField"   , DataType = DataType.Int32  , DbType = "Long"   )] public int?    IntField    { get; set; } // Long
+		[Column("stringField", DataType = DataType.VarChar, DbType = "VarChar")] public string? StringField { get; set; } // VarChar
 	}
 }

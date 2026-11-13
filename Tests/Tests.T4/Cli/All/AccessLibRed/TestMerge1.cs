@@ -25,7 +25,7 @@ namespace Cli.All.Access.LibRed
 		[Column("Field3"         , DataType = DataType.Int32    , DbType = "Long"                                            )] public int?      Field3          { get; set; } // Long
 		[Column("Field4"         , DataType = DataType.Int32    , DbType = "Long"                                            )] public int?      Field4          { get; set; } // Long
 		[Column("Field5"         , DataType = DataType.Int32    , DbType = "Long"                                            )] public int?      Field5          { get; set; } // Long
-		[Column("FieldBoolean"   , DataType = DataType.Boolean  , DbType = "Bit"                                             )] public bool?     FieldBoolean    { get; set; } // Bit
+		[Column("FieldBoolean"   , DataType = DataType.Boolean  , DbType = "Bit"                                             )] public bool      FieldBoolean    { get; set; } // Bit
 		[Column("FieldString"    , DataType = DataType.VarChar  , DbType = "VarChar(20)"    , Length       = 20              )] public string?   FieldString     { get; set; } // VarChar(20)
 		[Column("FieldNString"   , DataType = DataType.VarChar  , DbType = "VarChar(20)"    , Length       = 20              )] public string?   FieldNString    { get; set; } // VarChar(20)
 		[Column("FieldChar"      , DataType = DataType.Char     , DbType = "Char(1)"        , Length       = 1               )] public char?     FieldChar       { get; set; } // Char(1)
