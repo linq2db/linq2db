@@ -2580,6 +2580,20 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void EqualsObjectOfRegisteredEnumOnColumnThrows([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			object value = ApiGender.Female;
+
+			// Gender.Equals(ApiGender) is false in C#: the receiver is the column enum, not the registered cast.
+			var query = db.Person
+				.Where(p => p.Gender.Equals(value));
+
+			Shouldly.Should.Throw<LinqToDBConvertException>(() => query.ToList());
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
 		public void ProjectedEnumCastJoinKey([DataSources] string context)
 		{
 			using var db = GetDataContext(context, CreateApiGenderSchema());

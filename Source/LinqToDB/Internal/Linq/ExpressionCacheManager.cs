@@ -316,6 +316,11 @@ namespace LinqToDB.Internal.Linq
 				MethodCallExpression { Object: { } target } call when IsValuePreservingCall(call) =>
 					SuggestParameterDisplayName(target),
 
+				// the enum Equals(object) guard returns its argument
+				MethodCallExpression { Object: null, Method.IsGenericMethod: true, Arguments: [var argument] } call
+					when call.Method.GetGenericMethodDefinition() == ExpressionBuildVisitor.CheckEnumEqualsArgumentMethod =>
+					SuggestParameterDisplayName(argument),
+
 				_ => null,
 			};
 
