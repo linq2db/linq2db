@@ -2758,11 +2758,11 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
-		public void DirectEnumCastOverConstantConditionalEqualNullableParameter([DataSources] string context, [Values] bool female)
+		public void DirectEnumCastOverConstantConditionalEqualNullableParameter([DataSources] string context, [Values] bool? female)
 		{
 			using var db = GetDataContext(context, CreateApiGenderSchema());
 
-			ApiGender? gender = female ? ApiGender.Female : ApiGender.Male;
+			ApiGender? gender = female switch { true => ApiGender.Female, false => ApiGender.Male, null => null };
 
 			var query = db.Person
 				.Where(p => (ApiGender?)(p.ID > 2 ? Gender.Male : Gender.Female) == gender);
