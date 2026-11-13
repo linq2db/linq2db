@@ -48,7 +48,7 @@ internal sealed class ClickHouseProvider : DatabaseProviderBase
 	// each client is touched from its own non-inlined method: the assembly is loaded when a method
 	// referencing its types is JIT-compiled, and only the packages of the provider the connection uses
 	// are provisioned (see GetNuGetPackages), so a shared body would load the ones that are missing
-	public override void ClearAllPools(string providerName)
+	public override void ClearAllPools(string providerName, string? connectionString)
 	{
 		// octonica provider doesn't implement connection pooling
 		// client provider use http connections pooling

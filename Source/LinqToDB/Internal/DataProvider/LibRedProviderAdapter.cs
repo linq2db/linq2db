@@ -1,7 +1,10 @@
-using System;
+﻿using System;
 using System.Data.Common;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading;
 
+using LinqToDB.Common;
 using LinqToDB.Internal.Expressions.Types;
 
 namespace LinqToDB.Internal.DataProvider
@@ -20,11 +23,7 @@ namespace LinqToDB.Internal.DataProvider
 			Type parameterType,
 			Type commandType,
 			Type transactionType,
-			Func<string, DbConnection> connectionFactory,
-
-			Func  <string, bool> databaseExists,
-			Action<string>       dropDatabase,
-			Action<DbConnection> clearPool)
+			Func<string, DbConnection> connectionFactory)
 		{
 			ConnectionType     = connectionType;
 			DataReaderType     = dataReaderType;
@@ -33,9 +32,9 @@ namespace LinqToDB.Internal.DataProvider
 			TransactionType    = transactionType;
 			_connectionFactory = connectionFactory;
 
-			DatabaseExists = databaseExists;
-			DropDatabase   = dropDatabase;
-			ClearPool      = clearPool;
+			// bound on first use: the statics belong to a prerelease surface, and a signature change there must not
+			// fail every LibRed connection
+			_databaseManagement = new(() => CreateDatabaseManagement(connectionType), LazyThreadSafetyMode.ExecutionAndPublication);
 		}
 
 #region IDynamicProviderAdapter
@@ -51,9 +50,16 @@ namespace LinqToDB.Internal.DataProvider
 
 #endregion
 
-		public Func  <string, bool> DatabaseExists { get; }
-		public Action<string>       DropDatabase   { get; }
-		public Action<DbConnection> ClearPool      { get; }
+		readonly Lazy<DatabaseManagement> _databaseManagement;
+
+		public Func  <string, bool>   DatabaseExists => _databaseManagement.Value.DatabaseExists;
+		/// <summary>
+		/// Creates a database file: connection string, and <see langword="true"/> for an <c>.accdb</c> (ACE 12) file,
+		/// <see langword="false"/> for an <c>.mdb</c> (Jet 4) one.
+		/// </summary>
+		public Action<string, bool>   CreateDatabase => _databaseManagement.Value.CreateDatabase;
+		public Action<string>         DropDatabase   => _databaseManagement.Value.DropDatabase;
+		public Action<DbConnection>   ClearPool      => _databaseManagement.Value.ClearPool;
 
 		public static LibRedProviderAdapter GetInstance()
 		{
@@ -87,12 +93,51 @@ namespace LinqToDB.Internal.DataProvider
 					parameterType,
 					commandType,
 					transactionType,
-					typeMapper.BuildTypedFactory<string, LibRedConnection, DbConnection>(connectionString => new LibRedConnection(connectionString)),
-					typeMapper.BuildFunc<string, bool>(typeMapper.MapLambda((string connectionString) => LibRedConnection.DatabaseExists(connectionString))),
-					typeMapper.BuildAction<string>(typeMapper.MapActionLambda((string connectionString) => LibRedConnection.DropDatabase(connectionString))),
-					typeMapper.BuildAction<DbConnection>(typeMapper.MapActionLambda((LibRedConnection connection) => LibRedConnection.ClearPool(connection))));
+					typeMapper.BuildTypedFactory<string, LibRedConnection, DbConnection>(connectionString => new LibRedConnection(connectionString)));
 			}
 		}
+
+		static DatabaseManagement CreateDatabaseManagement(Type connectionType)
+		{
+			var typeMapper = new TypeMapper();
+			typeMapper.RegisterTypeWrapper<LibRedConnection>(connectionType);
+			typeMapper.FinalizeMappings();
+
+			// CreateDatabase(string connectionString, Collation? collation, JetVersion version): the TypeMapper cannot
+			// wrap the nullable Collation struct, so the call is built directly
+			var create = connectionType.GetMethod("CreateDatabase", BindingFlags.Public | BindingFlags.Static)
+				?? throw new InvalidOperationException($"{connectionType.FullName}.CreateDatabase not found");
+
+			var parameters       = create.GetParameters();
+			var versionType      = parameters[2].ParameterType;
+			var connectionString = Expression.Parameter(typeof(string), "connectionString");
+			var accdb            = Expression.Parameter(typeof(bool),   "accdb");
+
+			var createDatabase = Expression.Lambda<Action<string, bool>>(
+				Expression.Call(
+					create,
+					connectionString,
+					Expression.Default(parameters[1].ParameterType),
+					Expression.Condition(
+						accdb,
+						Expression.Constant(Enum.Parse(versionType, "Version12_2007"), versionType),
+						Expression.Constant(Enum.Parse(versionType, "Version4"),       versionType))),
+				connectionString,
+				accdb)
+				.CompileExpression();
+
+			return new DatabaseManagement(
+				typeMapper.BuildFunc<string, bool>(typeMapper.MapLambda((string cs) => LibRedConnection.DatabaseExists(cs))),
+				createDatabase,
+				typeMapper.BuildAction<string>(typeMapper.MapActionLambda((string cs) => LibRedConnection.DropDatabase(cs))),
+				typeMapper.BuildAction<DbConnection>(typeMapper.MapActionLambda((LibRedConnection connection) => LibRedConnection.ClearPool(connection))));
+		}
+
+		sealed record DatabaseManagement(
+			Func  <string, bool> DatabaseExists,
+			Action<string, bool> CreateDatabase,
+			Action<string>       DropDatabase,
+			Action<DbConnection> ClearPool);
 
 		#region Wrappers
 

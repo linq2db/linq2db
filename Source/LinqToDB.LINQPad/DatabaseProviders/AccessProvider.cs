@@ -62,13 +62,22 @@ internal sealed class AccessProvider : DatabaseProviderBase
 	// each client is touched from its own non-inlined method: the assembly is loaded when a method
 	// referencing its types is JIT-compiled, and only the packages of the provider the connection uses
 	// are provisioned (see GetNuGetPackages), so a shared body would load the one that is missing
-	public override void ClearAllPools(string providerName)
+	public override void ClearAllPools(string providerName, string? connectionString)
 	{
 		if (Platform.IsWindows && string.Equals(providerName, ProviderName.Access, StringComparison.Ordinal))
 			ReleaseOleDbPool();
 
 		if (string.Equals(providerName, ProviderName.AccessOdbc, StringComparison.Ordinal))
 			ReleaseOdbcPool();
+
+		// LibRed has no pool-wide release, only ClearPool on a connection to the database
+		if (connectionString != null && string.Equals(providerName, ProviderName.AccessLibRed, StringComparison.Ordinal))
+		{
+			var adapter = LibRedProviderAdapter.GetInstance();
+
+			using var cn = adapter.CreateConnection(connectionString);
+			adapter.ClearPool(cn);
+		}
 	}
 
 	[MethodImpl(MethodImplOptions.NoInlining)]

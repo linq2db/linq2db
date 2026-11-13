@@ -45,7 +45,10 @@ internal interface IDatabaseProvider
 	/// <summary>
 	/// Release all connections.
 	/// </summary>
-	void ClearAllPools(string providerName);
+	/// <param name="providerName">Provider name.</param>
+	/// <param name="connectionString">Connection string of the connection, resolved against password manager, for a
+	/// client that can release a pool only through a connection.</param>
+	void ClearAllPools(string providerName, string? connectionString);
 
 	/// <summary>
 	/// Returns last schema update time.

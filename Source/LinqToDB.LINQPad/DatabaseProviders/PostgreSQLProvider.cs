@@ -29,7 +29,7 @@ internal sealed class PostgreSQLProvider : DatabaseProviderBase
 	public override IEnumerable<(string Id, string Version)> GetNuGetPackages(string providerName) => [("Npgsql", NuGetPackageVersions.Npgsql)];
 #endif
 
-	public override void ClearAllPools(string providerName)
+	public override void ClearAllPools(string providerName, string? connectionString)
 	{
 		NpgsqlConnection.ClearAllPools();
 	}

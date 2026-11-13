@@ -71,7 +71,7 @@ If you have errors displaying types from Microsoft.SqlServer.Types assembly, add
 	private static IReadOnlyList<Assembly>? _additionalAssemblies;
 #endif
 
-	public override void ClearAllPools(string providerName)
+	public override void ClearAllPools(string providerName, string? connectionString)
 	{
 		SqlConnection.ClearAllPools();
 	}

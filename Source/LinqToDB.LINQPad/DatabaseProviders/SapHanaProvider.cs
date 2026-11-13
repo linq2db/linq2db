@@ -88,7 +88,7 @@ internal sealed class SapHanaProvider : DatabaseProviderBase
 	// the ODBC client is touched from its own non-inlined method: the assembly is loaded when a method
 	// referencing its types is JIT-compiled, and the native variant does not provision System.Data.Odbc
 	// (see GetNuGetPackages), so a shared body would load it for that variant too
-	public override void ClearAllPools(string providerName)
+	public override void ClearAllPools(string providerName, string? connectionString)
 	{
 		if (string.Equals(providerName, ProviderName.SapHanaOdbc, StringComparison.Ordinal))
 			ReleaseOdbcPool();

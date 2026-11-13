@@ -25,7 +25,7 @@ internal sealed class SybaseAseProvider : DatabaseProviderBase
 	public override IEnumerable<(string Id, string Version)> GetNuGetPackages(string providerName) => [("AdoNetCore.AseClient", NuGetPackageVersions.AdoNetCore_AseClient)];
 #endif
 
-	public override void ClearAllPools(string providerName)
+	public override void ClearAllPools(string providerName, string? connectionString)
 	{
 		AseConnection.ClearPools();
 	}

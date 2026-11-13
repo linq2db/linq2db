@@ -72,7 +72,7 @@ internal sealed class DB2Provider : DatabaseProviderBase
 	}
 #endif
 
-	public override void ClearAllPools(string providerName)
+	public override void ClearAllPools(string providerName, string? connectionString)
 	{
 		// Net.IBM.Data.Db2 10.x has no safe replacement: ReleaseObjectPool is obsolete-as-error there
 #if NETFRAMEWORK
