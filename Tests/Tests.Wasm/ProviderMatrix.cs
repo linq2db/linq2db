@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Access;
 using LinqToDB.DataProvider.ClickHouse;
@@ -83,10 +82,6 @@ namespace Tests.Wasm
 		const MergeOutcome Refused = MergeOutcome.Throws;
 		const MergeOutcome Built   = MergeOutcome.Generates;
 
-		// SybaseTools.GetDataProvider(SybaseProvider.Unmanaged) returns the managed provider when the native assembly is
-		// absent (#6177); the provider name still selects the native one.
-		const string SybaseNative = "Sybase.Native";
-
 		const string NotOnNet   = "assembly is referenced for net462 only (Redist), so the provider cannot be constructed on .NET";
 		const string NotShipped = "assembly is not referenced by any test project, so the provider cannot be constructed";
 
@@ -157,7 +152,7 @@ namespace Tests.Wasm
 			new(ProviderName.SQLiteClassic,           ProviderName.SQLiteClassic,           () => SQLiteTools.GetDataProvider(SQLiteProvider.System),    Refused),
 			new(ProviderName.SQLiteMS,                ProviderName.SQLiteMS,                () => SQLiteTools.GetDataProvider(SQLiteProvider.Microsoft), Refused),
 
-			new(ProviderName.Sybase,                  ProviderName.Sybase,                  () => DataConnection.GetDataProvider(SybaseNative, DummyConnectionString)!, Built, UnavailableOn: RunnerOS.Any, UnavailableAssembly: SybaseProviderAdapter.NativeAssemblyName, UnavailableReason: "Sybase.AdoNet45.AseClient " + NotShipped),
+			new(ProviderName.Sybase,                  ProviderName.Sybase,                  () => SybaseTools.GetDataProvider(SybaseProvider.Unmanaged), Built, UnavailableOn: RunnerOS.Any, UnavailableAssembly: SybaseProviderAdapter.NativeAssemblyName, UnavailableReason: "Sybase.AdoNet45.AseClient " + NotShipped),
 			new(ProviderName.SybaseManaged,           ProviderName.SybaseManaged,           () => SybaseTools.GetDataProvider(SybaseProvider.DataAction), Built),
 
 			new(ProviderName.SapHanaNative,           ProviderName.SapHanaNative,           () => SapHanaTools.GetDataProvider(SapHanaProvider.Unmanaged), Built, UnavailableOn: RunnerOS.Any, UnavailableAssembly: SapHanaProviderAdapter.UnmanagedAssemblyNames.First(), UnavailableReason: "Sap.Data.Hana comes from SAP's NuGet packages, which Tests.Wasm does not reference"),
