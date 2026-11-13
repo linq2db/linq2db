@@ -224,6 +224,12 @@ namespace LinqToDB.Remote
 
 			public bool IsTableNotFoundException(Exception exception)
 				=> ProviderService.IsTableNotFoundException(exception);
+
+			public Internal.SqlProvider.SqlCommandScenario? BuildCommandScenario(Internal.SqlQuery.SqlStatement statement, Internal.SqlProvider.SqlProviderFlags flags, Linq.Translation.ISqlExpressionFactory factory)
+				=> ProviderService.BuildCommandScenario(statement, flags, factory);
+
+			public Internal.SqlProvider.SqlCommandGroupPlan PlanScenario(Internal.SqlProvider.SqlCommandScenario scenario, Internal.SqlProvider.SqlProviderFlags flags)
+				=> ProviderService.PlanScenario(scenario, flags);
 		}
 
 		ConfigurationInfo? _configurationInfo;
@@ -485,7 +491,7 @@ namespace LinqToDB.Remote
 					{
 						return Expression.Lambda<Func<ISqlBuilder>>(
 							Expression.New(
-								key.SqlProviderType.GetConstructor(new[]
+								key.SqlProviderType.GetConstructorEx(new[]
 								{
 									typeof(IDataProvider),
 									typeof(MappingSchema),
@@ -521,7 +527,7 @@ namespace LinqToDB.Remote
 					static key =>
 					{
 						var p = Expression.Parameter(typeof(DataOptions));
-						var c = key.SqlOptimizerType.GetConstructor(new[] {typeof(SqlProviderFlags)});
+						var c = key.SqlOptimizerType.GetConstructorEx(new[] {typeof(SqlProviderFlags)});
 
 						if (c != null)
 							return Expression
@@ -534,7 +540,7 @@ namespace LinqToDB.Remote
 						return Expression
 							.Lambda<Func<DataOptions, ISqlOptimizer>>(
 								Expression.New(
-									key.SqlOptimizerType.GetConstructor(new[] {typeof(SqlProviderFlags), typeof(DataOptions)}) 
+									key.SqlOptimizerType.GetConstructorEx(new[] {typeof(SqlProviderFlags), typeof(DataOptions)})
 										?? throw new InvalidOperationException($"Constructor for type '{key.SqlOptimizerType.Name}' not found."),
 									Expression.Constant(key.SqlProviderFlags),
 									p

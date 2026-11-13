@@ -66,7 +66,7 @@ namespace Tests.Infrastructure
 			{
 				using var db = new TestDataConnection(options => options.UseTracing(ti => s1 = ti.SqlText));
 
-				_child = db.Child.ToList();
+				_ = db.Child.ToList();
 
 				Assert.That(s1, Is.Not.Null);
 			}
@@ -76,7 +76,7 @@ namespace Tests.Infrastructure
 
 				using var db = new TestDataConnection();
 
-				_child = db.Child.ToList();
+				_ = db.Child.ToList();
 
 				Assert.That(s1, Is.Null);
 			}
@@ -89,7 +89,7 @@ namespace Tests.Infrastructure
 
 			using var db = new TestDataConnection();
 
-			_child = db.Child.ToList();
+			_ = db.Child.ToList();
 
 			Assert.That(s1, Is.Null);
 
@@ -101,7 +101,7 @@ namespace Tests.Infrastructure
 				.UseMappingSchema(db.MappingSchema)
 				.UseTracing(ti => s1 = ti.SqlText));
 
-			_child = db1.Child.ToList();
+			_ = db1.Child.ToList();
 
 			Assert.That(s1, Is.Not.Null);
 		}
@@ -841,6 +841,63 @@ namespace Tests.Infrastructure
 			finally
 			{
 				Configuration.Sql.DefaultNullsPosition = saved;
+			}
+		}
+
+		[Test]
+		public void WithCombinedCommandsTest()
+		{
+			// Each option is set by one `with` and must survive the copy constructor of the next.
+			var combined = new LinqOptions()
+				.WithDbBatch(true)
+				.WithCombinedCommands(true);
+
+			combined.UseCombinedCommands.ShouldBeTrue();
+			combined.UseDbBatch.ShouldBeTrue();
+
+			var concatenated = combined.WithDbBatch(false);
+
+			concatenated.UseDbBatch.ShouldBeFalse();
+			concatenated.UseCombinedCommands.ShouldBeTrue();
+
+			new DataOptions()
+				.UseCombinedCommands(true)
+				.LinqOptions
+				.UseCombinedCommands
+				.ShouldBeTrue();
+
+			new DataOptions()
+				.UseDbBatch(false)
+				.LinqOptions
+				.UseDbBatch
+				.ShouldBeFalse();
+		}
+
+		// NonParallelizable for the same reason as ConfigurationSqlDefaultNullsPositionTest: the subject is the
+		// process-global setter, and while it is in effect any concurrent lane building a DataOptions combines commands.
+		[Test, NonParallelizable]
+		public void ConfigurationLinqCombinedCommandsTest()
+		{
+			var savedCombined = Configuration.Linq.UseCombinedCommands;
+			var savedBatch    = Configuration.Linq.UseDbBatch;
+
+			try
+			{
+				Configuration.Linq.UseCombinedCommands = true;
+				Configuration.Linq.UseDbBatch          = false;
+
+				Configuration.Linq.Options.UseCombinedCommands.ShouldBeTrue();
+				Configuration.Linq.Options.UseDbBatch.ShouldBeFalse();
+
+				var options = new DataOptions().LinqOptions;
+
+				options.UseCombinedCommands.ShouldBeTrue();
+				options.UseDbBatch.ShouldBeFalse();
+			}
+			finally
+			{
+				Configuration.Linq.UseCombinedCommands = savedCombined;
+				Configuration.Linq.UseDbBatch          = savedBatch;
 			}
 		}
 	}

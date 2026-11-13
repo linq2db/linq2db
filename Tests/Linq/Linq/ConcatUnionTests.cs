@@ -2758,14 +2758,14 @@ namespace Tests.Linq
 				.Concat(t.Select(r => 1.004m))
 				.ToArray();
 
-			values.ShouldBe([1.00m, 1.004m], ignoreOrder: true);
+			AreEqualWithinDelta([1.00m, 1.004m], values);
 
 			var conditional = t
 				.Select(r => r.Id > 0 ? r.Value : r.Value + 1)
 				.Concat(t.Select(r => 1.004m))
 				.ToArray();
 
-			conditional.ShouldBe([1.00m, 1.004m], ignoreOrder: true);
+			AreEqualWithinDelta([1.00m, 1.004m], conditional);
 		}
 
 		sealed class FineDecimalRow
@@ -2792,7 +2792,7 @@ namespace Tests.Linq
 				.Concat(t.Select(r => 1.000000000005m))
 				.ToArray();
 
-			values.ShouldBe([1.000000000005m, 1.000000000005m]);
+			AreEqualWithinDelta([1.000000000005m, 1.000000000005m], values);
 		}
 
 		sealed class WideDecimalRow
@@ -2911,6 +2911,269 @@ namespace Tests.Linq
 				.Select(m => m.ParentID < 4 ? new LowHolder(m.Info) : (ValueHolder)new HighHolder(m.Info));
 
 			AssertQuery(query);
+		}
+
+		static IQueryable<T> UnionOrConcat<T>(IQueryable<T> objects, IQueryable<T> nulls, bool union, bool nullFirst)
+		{
+			var (first, second) = nullFirst ? (nulls, objects) : (objects, nulls);
+
+			return union ? first.Union(second) : first.Concat(second);
+		}
+
+		public enum ComparingSetOperation
+		{
+			Intersect,
+			IntersectNullFirst,
+			Except,
+		}
+
+		static IQueryable<T> Compare<T>(IQueryable<T> objects, IQueryable<T> nulls, ComparingSetOperation operation)
+		{
+			return operation switch
+			{
+				ComparingSetOperation.Intersect          => objects.Intersect(nulls),
+				ComparingSetOperation.IntersectNullFirst => nulls.Intersect(objects),
+				ComparingSetOperation.Except             => objects.Except(nulls),
+				_                                        => throw new ArgumentOutOfRangeException(nameof(operation)),
+			};
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6156")]
+		public void JoinedEntityAgainstNullBranch([DataSources] string context, [Values] bool union, [Values] bool nullFirst)
+		{
+			using var db = GetDataContext(context);
+
+			var objects =
+				from p in db.Parent
+				from c in db.Child
+					.Where(c => c.ParentID == p.ParentID)
+					.DefaultIfEmpty()
+				select new { p.ParentID, Child = c };
+
+			var nulls =
+				from p in db.Parent
+				select new { p.ParentID, Child = (Child?)null };
+
+			AssertQuery(UnionOrConcat(objects, nulls, union, nullFirst));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6156")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		public void JoinedEntityAgainstNullBranchCompared([DataSources] string context, [Values] ComparingSetOperation operation)
+		{
+			using var db = GetDataContext(context);
+
+			var objects =
+				from p in db.Parent
+				from c in db.Child
+					.Where(c => c.ParentID == p.ParentID)
+					.DefaultIfEmpty()
+				select new { p.ParentID, Child = c };
+
+			var nulls =
+				from p in db.Parent
+				select new { p.ParentID, Child = (Child?)null };
+
+			AssertQuery(Compare(objects, nulls, operation));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6156")]
+		public void NestedSetAgainstNullBranch([DataSources] string context, [Values] bool joined, [Values] bool innerUnion, [Values] bool innerNullFirst, [Values] bool outerNullFirst)
+		{
+			using var db = GetDataContext(context);
+
+			var objects = joined
+				? from p in db.Parent
+				  from c in db.Child
+					  .Where(c => c.ParentID == p.ParentID)
+					  .DefaultIfEmpty()
+				  select new { p.ParentID, Child = (Child?)c }
+				: db.Parent.Select(p => new { p.ParentID, Child = (Child?)new Child { ParentID = p.ParentID, ChildID = p.ParentID + 100 } });
+
+			var nulls =
+				from p in db.Parent
+				select new { p.ParentID, Child = (Child?)null };
+
+			var inner = UnionOrConcat(objects, nulls, innerUnion, innerNullFirst);
+
+			AssertQuery(UnionOrConcat(inner, nulls, union: true, outerNullFirst));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6156")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		public void NestedSetAgainstNullBranchCompared([DataSources] string context, [Values] bool innerUnion, [Values] bool innerNullFirst, [Values(ComparingSetOperation.Intersect, ComparingSetOperation.Except)] ComparingSetOperation operation)
+		{
+			using var db = GetDataContext(context);
+
+			var objects =
+				from p in db.Parent
+				from c in db.Child
+					.Where(c => c.ParentID == p.ParentID)
+					.DefaultIfEmpty()
+				select new { p.ParentID, Child = (Child?)c };
+
+			var nulls =
+				from p in db.Parent
+				select new { p.ParentID, Child = (Child?)null };
+
+			var inner = UnionOrConcat(objects, nulls, innerUnion, innerNullFirst);
+
+			AssertQuery(Compare(inner, nulls, operation));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6156")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		// Informix fails when EXCEPT compares a NULL constant with a NOT NULL column read through a set-operation derived table.
+		[ThrowsForProvider("IBM.Data.Db2.DB2Exception", TestProvName.AllInformix, ErrorMessage = "unexpected null pointer encountered",
+			AlsoWhenParameter = "operation", AlsoWhenValue = ComparingSetOperation.Except)]
+		public void NestedSetOfNewObjectsAgainstNullBranchCompared([DataSources] string context, [Values] bool innerUnion, [Values] bool innerNullFirst, [Values(ComparingSetOperation.Intersect, ComparingSetOperation.Except)] ComparingSetOperation operation)
+		{
+			using var db = GetDataContext(context);
+
+			var objects = db.Parent.Select(p => new { p.ParentID, Child = (Child?)new Child { ParentID = p.ParentID, ChildID = p.ParentID + 100 } });
+
+			var nulls =
+				from p in db.Parent
+				select new { p.ParentID, Child = (Child?)null };
+
+			var inner = UnionOrConcat(objects, nulls, innerUnion, innerNullFirst);
+
+			AssertQuery(Compare(inner, nulls, operation));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6156")]
+		public void JoinedEntityMemberAfterConcat([DataSources] string context, [Values] bool nullFirst)
+		{
+			using var db = GetDataContext(context);
+
+			var objects =
+				from p in db.Parent
+				from c in db.Child
+					.Where(c => c.ParentID == p.ParentID)
+					.DefaultIfEmpty()
+				select new { p.ParentID, Child = c };
+
+			var nulls =
+				from p in db.Parent
+				select new { p.ParentID, Child = (Child?)null };
+
+			AssertQuery(UnionOrConcat(objects, nulls, union: false, nullFirst)
+				.Select(x => new { x.ParentID, Id = x.Child == null ? -1 : x.Child.ChildID }));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6156")]
+		public void JoinedEntityNullTestAfterConcat([DataSources] string context, [Values] bool nullFirst)
+		{
+			using var db = GetDataContext(context);
+
+			var objects =
+				from p in db.Parent
+				from c in db.Child
+					.Where(c => c.ParentID == p.ParentID)
+					.DefaultIfEmpty()
+				select new { p.ParentID, Child = c };
+
+			var nulls =
+				from p in db.Parent
+				select new { p.ParentID, Child = (Child?)null };
+
+			AssertQuery(UnionOrConcat(objects, nulls, false, nullFirst).Where(x => x.Child == null).Select(x => x.ParentID));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6156")]
+		public void AssociationAgainstNullBranch([DataSources] string context, [Values] bool union, [Values] bool nullFirst)
+		{
+			using var db = GetDataContext(context);
+
+			var objects = db.Person
+				.Select(p => new { p.ID, p.Patient });
+
+			var nulls = db.Person
+				.Select(p => new { p.ID, Patient = (Patient?)null });
+
+			// AssertQuery's expected side does not navigate associations, so the expected rows are written out.
+			var expectedObjects = Person
+				.Select(p => new { p.ID, Patient = (Patient?)Patient.FirstOrDefault(t => t.PersonID == p.ID) })
+				.AsQueryable();
+
+			var expectedNulls = Person
+				.Select(p => new { p.ID, Patient = (Patient?)null })
+				.AsQueryable();
+
+			AreEqual(
+				UnionOrConcat(expectedObjects, expectedNulls, union, nullFirst),
+				UnionOrConcat(objects, nulls, union, nullFirst));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6156")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		public void AssociationAgainstNullBranchCompared([DataSources] string context, [Values] ComparingSetOperation operation)
+		{
+			using var db = GetDataContext(context);
+
+			var objects = db.Person
+				.Select(p => new { p.ID, p.Patient });
+
+			var nulls = db.Person
+				.Select(p => new { p.ID, Patient = (Patient?)null });
+
+			// AssertQuery's expected side does not navigate associations, so the expected rows are written out.
+			var expectedObjects = Person
+				.Select(p => new { p.ID, Patient = (Patient?)Patient.FirstOrDefault(t => t.PersonID == p.ID) })
+				.AsQueryable();
+
+			var expectedNulls = Person
+				.Select(p => new { p.ID, Patient = (Patient?)null })
+				.AsQueryable();
+
+			AreEqual(
+				Compare(expectedObjects, expectedNulls, operation),
+				Compare(objects, nulls, operation));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6156")]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		public void FirstOrDefaultAgainstNullBranch([DataSources] string context, [Values] bool union, [Values] bool nullFirst)
+		{
+			using var db = GetDataContext(context);
+
+			var objects = db.Parent
+				.Select(p => new
+				{
+					p.ParentID,
+					Child = (Child?)db.Child
+						.Where(c => c.ParentID == p.ParentID)
+						.OrderBy(c => c.ChildID)
+						.FirstOrDefault(),
+				});
+
+			var nulls = db.Parent
+				.Select(p => new { p.ParentID, Child = (Child?)null });
+
+			AssertQuery(UnionOrConcat(objects, nulls, union, nullFirst));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6156")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		public void FirstOrDefaultAgainstNullBranchCompared([DataSources] string context, [Values] ComparingSetOperation operation)
+		{
+			using var db = GetDataContext(context);
+
+			var objects = db.Parent
+				.Select(p => new
+				{
+					p.ParentID,
+					Child = (Child?)db.Child
+						.Where(c => c.ParentID == p.ParentID)
+						.OrderBy(c => c.ChildID)
+						.FirstOrDefault(),
+				});
+
+			var nulls = db.Parent
+				.Select(p => new { p.ParentID, Child = (Child?)null });
+
+			AssertQuery(Compare(objects, nulls, operation));
 		}
 	}
 }

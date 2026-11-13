@@ -1,0 +1,134 @@
+# Documentation site: builds docs/ with the pinned custom docfx (docs/README.md) and publishes it to
+# linq2db/linq2db.github.io.
+#
+# - pull_request: build only, and only when the PR touches the site's sources or the build settings the
+#   docs build depends on. The check is decided inside the workflow rather than by a `paths:` filter, so a
+#   PR that does not touch them reports the build as skipped - which satisfies a required check - instead
+#   of leaving it pending. If the detection itself fails, the build runs.
+# - release published: build the release tag and deploy it. Prereleases are skipped so they never
+#   replace the stable site; that includes a -suffixed tag (v6.0.0-rc.1), as those are published without
+#   GitHub's prerelease flag. A release whose tag predates this file has no run at all, as the workflow
+#   is read from the tag's tree.
+# - workflow_dispatch: rebuild the dispatch ref; `deploy` publishes it, which the `docs` environment
+#   allows only from a v* tag (gh workflow run docs.yml --ref v<ver> -f deploy=true).
+#
+# Actions are pinned by SHA and limited to GitHub-owned ones, matching the repository's
+# `allowed_actions: selected` + `github_owned_allowed` policy.
+name: docs
+
+on:
+  pull_request:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: Publish the built site to linq2db.github.io (allowed from a v* tag only).
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  changes:
+    name: Detect docs changes
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      docs: ${{ steps.diff.outputs.docs }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - id: diff
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # on its own line, so a failing diff fails this job (and the build then runs) instead of reading as "no docs change"
+          files=$(git -c core.quotePath=off diff --name-only --no-renames "$BASE...$HEAD")
+          # README.md / CONTRIBUTING.md are included into the site; Roslyn, SDK, TFM and output-path settings feed docfx metadata
+          if grep -qE '^(docs/|README\.md$|CONTRIBUTING\.md$|Directory\.(Build|Packages)\.props$|global\.json$|Source/Analyzers\.Common\.props$|Source/.*Directory\.Build\.props$|\.github/workflows/docs\.yml$)' <<< "$files"; then
+            echo "docs=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "docs=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    name: Build docs
+    needs: changes
+    if: ${{ !cancelled() && (github.event_name != 'pull_request' || needs.changes.result != 'success' || needs.changes.outputs.docs == 'true') && (github.event_name != 'release' || (!github.event.release.prerelease && !contains(github.event.release.tag_name, '-'))) }}
+    runs-on: windows-2025
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # SDK selection is global.json's job (see build.yml). 11.x alone: docfx is a net11.0 app and loads the
+      # projects through the .NET 11 SDK, which also builds their net10.0 targets
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 11.x
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .build/docfx
+          key: docfx-${{ hashFiles('docs/docfx-version.json') }}
+
+      - name: Build site
+        shell: pwsh
+        run: ./docs/build.ps1 -WarningsAsErrors
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: docs-site
+          path: .build/docs/_site
+          include-hidden-files: true # .nojekyll: the deploy's rsync --delete would remove it from the site
+          if-no-files-found: error
+          retention-days: 7
+
+  deploy:
+    name: Deploy to linq2db.github.io
+    needs: build
+    # spelled out: `changes` is skipped outside PRs, and the implicit success() would skip this job with it
+    if: ${{ !cancelled() && needs.build.result == 'success' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.deploy)) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: docs
+    concurrency:
+      group: docs-deploy
+      cancel-in-progress: false
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: docs-site
+          path: _site
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: linq2db/linq2db.github.io
+          ref: master
+          ssh-key: ${{ secrets.DOCS_DEPLOY_KEY }}
+          path: site
+
+      - name: Publish
+        env:
+          TAG: ${{ github.event.release.tag_name || github.ref_name }}
+        run: |
+          rsync -a --delete --exclude .git _site/ site/
+          cd site
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Site unchanged."
+            exit 0
+          fi
+          git commit -q -m "Docs: linq2db $TAG"
+          git push -q origin master
