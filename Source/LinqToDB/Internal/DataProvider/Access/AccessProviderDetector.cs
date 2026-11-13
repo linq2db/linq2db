@@ -162,14 +162,14 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 			if (options.ConfigurationString?.Contains("Access", StringComparison.Ordinal) == true)
 			{
-				// a LibRed connection string is "Data Source=<file>" and carries no marker of its own,
-				// so the configuration name is the only place the flavour can be read from
-				if (options.ConfigurationString.Contains("LibRed", StringComparison.Ordinal))
-					return AccessProvider.LibRed;
-				else if (options.ConfigurationString.Contains("Access.Odbc", StringComparison.Ordinal))
+				if (options.ConfigurationString.Contains("Access.Odbc", StringComparison.Ordinal))
 					return AccessProvider.ODBC;
 				else if (options.ConfigurationString.Contains("Access.OleDb", StringComparison.Ordinal))
 					return AccessProvider.OleDb;
+				// a LibRed connection string is "Data Source=<file>" and carries no marker of its own,
+				// so the configuration name is the only place the flavour can be read from
+				else if (options.ConfigurationString.Contains("LibRed", StringComparison.Ordinal))
+					return AccessProvider.LibRed;
 			}
 
 			return Common.Tools.IsProviderAssemblyPresent(OdbcProviderAdapter.AssemblyName)

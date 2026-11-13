@@ -201,8 +201,8 @@ Legend:
 |`ProviderName.AccessAceOleDb`|Tests against Access using OLE DB ACE provider||
 |`ProviderName.AccessJetOdbc`|Tests against Access using ODBC JET provider||
 |`ProviderName.AccessAceOdbc`|Tests against Access using ODBC ACE provider||
-|`TestProvName.AccessLibRedMdb`|Tests against an `.mdb` file using the managed LibRed engine|net11.0 only|
-|`TestProvName.AccessLibRedAccdb`|Tests against an `.accdb` file using the managed LibRed engine|net11.0 only|
+|`TestProvName.AccessLibRedMdb`|Tests against an `.mdb` file using the managed LibRed engine|no netfx|
+|`TestProvName.AccessLibRedAccdb`|Tests against an `.accdb` file using the managed LibRed engine|no netfx|
 |`ProviderName.DB2`|DB2 LUW 11.5||
 |`ProviderName.InformixDB2`|Informix 14.10 (IDS using IBM.Data.DB2)||
 |`TestProvName.Oracle11Native`|Oracle 11g using native provider||

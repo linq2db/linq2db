@@ -774,16 +774,16 @@
 				"ConnectionString": "Driver={Microsoft Access Driver (*.mdb, *.accdb)};Dbq=Database\\TestData.ODBC.mdb;ExtendedAnsiSQL=1"
 			},
 			"Access.LibRed.Mdb": {
-				"ConnectionString": "Data Source=Database\\TestData.LibRed.mdb"
+				"ConnectionString": "Data Source=Database/TestData.LibRed.mdb"
 			},
 			"Access.LibRed.Mdb.Data": {
-				"ConnectionString": "Data Source=Database\\Data\\TestData.LibRed.mdb"
+				"ConnectionString": "Data Source=Database/Data/TestData.LibRed.mdb"
 			},
 			"Access.LibRed.Accdb": {
-				"ConnectionString": "Data Source=Database\\TestData.LibRed.accdb"
+				"ConnectionString": "Data Source=Database/TestData.LibRed.accdb"
 			},
 			"Access.LibRed.Accdb.Data": {
-				"ConnectionString": "Data Source=Database\\Data\\TestData.LibRed.accdb"
+				"ConnectionString": "Data Source=Database/Data/TestData.LibRed.accdb"
 			},
 			"SqlCe": {
 				"ConnectionString": "Data Source=Database\\TestData.sdf"
