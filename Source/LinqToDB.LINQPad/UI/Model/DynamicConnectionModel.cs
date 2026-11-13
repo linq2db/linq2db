@@ -34,7 +34,8 @@ internal sealed class DynamicConnectionModel : ConnectionModelBase, INotifyPrope
 			foreach (var provider in db.Providers.Where(p => !p.IsHidden))
 				Providers.Add(provider);
 
-			if (Providers.Count == 1)
+			// a connection stored with a provider hidden on this host (Access OLE DB / ODBC off Windows) keeps it
+			if (Providers.Count == 1 && !db.Providers.Any(p => p.IsHidden && string.Equals(p.Name, Settings.Connection.Provider, System.StringComparison.Ordinal)))
 				Settings.Connection.Provider = Providers[0].Name;
 		}
 
