@@ -6,25 +6,26 @@ namespace DataModels
 {
 	public partial class ExampleDataContext
 	{
-		public ExampleDataContext()
-			: base(
-				  "https://localhost:15001",
-				  new GrpcChannelOptions()
-				  {
-					  // HttpClient instantiated manually for simplicilty of example
-					  // in real code concider use of dependency injection and IHttpClientFactory
-					  // https://docs.microsoft.com/en-us/dotnet/core/extensions/http-client
-					  HttpClient = new HttpClient(
+		// One channel for the whole application. A GrpcChannel is thread-safe and meant to be long-lived: every
+		// context created over it shares its connections instead of opening its own, and none of them disposes it.
+		static readonly GrpcChannel _channel = GrpcChannel.ForAddress(
+			"https://localhost:15001",
+			new GrpcChannelOptions()
+			{
 #pragma warning disable CA2000 // Dispose objects before losing scope
-						  new HttpClientHandler()
-						  {
-							  // the example server listens on localhost with the untrusted ASP.NET Core development certificate
+				// Lives as long as the channel. Accepts the example server's development certificate:
+				// do not do this in production.
+				HttpHandler = new HttpClientHandler()
+				{
 #pragma warning disable MA0039 // Do not write your own certificate validation method
-							  ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+					ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
 #pragma warning restore MA0039 // Do not write your own certificate validation method
-						  })
+				}
 #pragma warning restore CA2000 // Dispose objects before losing scope
-				  })
+			});
+
+		public ExampleDataContext()
+			: base(_channel)
 		{
 		}
 	}
