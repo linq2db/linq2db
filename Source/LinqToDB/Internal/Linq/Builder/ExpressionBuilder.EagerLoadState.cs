@@ -23,9 +23,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			public CteUnionPhase2Info? CteUnionInfo;
 
 			/// <summary>
-			/// True when a strategy requested that <c>_query.IsFinalized</c> be set on commit.
-			/// Populated mid-attempt (e.g. by CteUnion batching); only applied to the real query once
-			/// <see cref="CompleteEagerLoadingExpressions"/> decides the attempt succeeded.
+			/// True when a strategy requested that the query being built skips finalization.
+			/// Populated mid-attempt (e.g. by CteUnion batching); read by <c>BuildQuery</c> of that query once
+			/// <see cref="CompleteEagerLoadingExpressions"/> has committed the attempt.
 			/// </summary>
 			public bool QueryFinalizedRequested;
 
