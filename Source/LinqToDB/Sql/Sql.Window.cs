@@ -28,9 +28,9 @@ namespace LinqToDB
 	public static class WindowFunctionBuilder
 	{
 		/// <summary>Marker interface indicating the window function definition is complete and can be returned from the builder lambda.</summary>
-		public interface IDefinedFunction<out TR> { }
+		public interface IDefinedFunction<out TR>;
 		/// <summary>Marker interface indicating the window function definition is complete and can be returned from the builder lambda.</summary>
-		public interface IDefinedFunction { }
+		public interface IDefinedFunction;
 
 		/// <summary>Provides the FILTER (WHERE ...) clause for aggregate window functions.</summary>
 		public interface IFilterPart<out TFiltered>
@@ -61,9 +61,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>Terminal for ordered-set aggregates (PERCENTILE_CONT/DISC): optionally adds <c>FILTER (WHERE ...)</c> or completes the definition.</summary>
-		public interface IOrderedSetFilter<out TValue> : IFilterPart<IDefinedFunction<TValue>>, IDefinedFunction<TValue>
-		{
-		}
+		public interface IOrderedSetFilter<out TValue> : IFilterPart<IDefinedFunction<TValue>>, IDefinedFunction<TValue>;
 
 		/// <summary>Provides ORDER BY for ordered-set aggregate functions (e.g. PERCENTILE_CONT) that require exactly one ordering column.</summary>
 		public interface IOnlyOrderByPart
@@ -118,9 +116,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>Optional <c>OVER (PARTITION BY ...)</c> for a windowed single-key ordered-set aggregate, then completes.</summary>
-		public interface IOrderedSetWindowPartition<out TValue> : IPartitionPart<IDefinedFunction<TValue>>, IDefinedFunction<TValue>
-		{
-		}
+		public interface IOrderedSetWindowPartition<out TValue> : IPartitionPart<IDefinedFunction<TValue>>, IDefinedFunction<TValue>;
 
 		/// <summary>Within-group ORDER BY for a <b>windowed</b> multi-key ordered-set aggregate (<c>Sql.Window.PercentileDisc</c>): the first sort key, then ThenBy/ThenByDesc, then an optional <c>OVER (PARTITION BY ...)</c>.</summary>
 		public interface IOrderedSetWindowMultiOrder
@@ -175,7 +171,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>A reusable window definition created by <see cref="DefineWindow"/>. Pass to <c>UseWindow()</c> to reference it.</summary>
-		public interface IDefinedWindow {}
+		public interface IDefinedWindow;
 
 		/// <summary>Provides frame type selection: ROWS, RANGE, or GROUPS with BETWEEN syntax.</summary>
 		public interface IFramePartFunction
@@ -294,14 +290,10 @@ namespace LinqToDB
 		}
 
 		/// <summary>Terminal state after OrderBy: allows ThenBy or completes the definition.</summary>
-		public interface IThenByPartFinal : IThenOrderPart<IThenByPartFinal>, IDefinedFunction
-		{
-		}
+		public interface IThenByPartFinal : IThenOrderPart<IThenByPartFinal>, IDefinedFunction;
 
 		/// <summary>State requiring OrderBy, then allows ThenBy. Used after PartitionBy in ranking functions.</summary>
-		public interface IROrderByPartOThenByPartFinal : IOrderByPart<IThenByPartFinal>
-		{
-		}
+		public interface IROrderByPartOThenByPartFinal : IOrderByPart<IThenByPartFinal>;
 
 		/// <summary>Provides the <c>DISTINCT</c> aggregate modifier for aggregate window functions (COUNT(expr)/SUM/AVG/MIN/MAX).</summary>
 		public interface IDistinctPart<out TNext>
@@ -343,21 +335,15 @@ namespace LinqToDB
 		/// Builder state after KeepFirst/KeepLast — requires mandatory ORDER BY.
 		/// <para>Chain: <c>.OrderBy(...)[.ThenBy(...)][.PartitionBy(...)]</c></para>
 		/// </summary>
-		public interface IKeepOrderByRequired : IOrderByPart<IKeepThenByOrPartitionFinal>
-		{
-		}
+		public interface IKeepOrderByRequired : IOrderByPart<IKeepThenByOrPartitionFinal>;
 
 		/// <summary>Builder state after KEEP ORDER BY — allows ThenBy, optional PartitionBy, or completes.</summary>
-		public interface IKeepThenByOrPartitionFinal : IThenOrderPart<IKeepThenByOrPartitionFinal>, IPartitionPart<IDefinedFunction>, IDefinedFunction
-		{
-		}
+		public interface IKeepThenByOrPartitionFinal : IThenOrderPart<IKeepThenByOrPartitionFinal>, IPartitionPart<IDefinedFunction>, IDefinedFunction;
 
 		#region DefineWindow
 
 		/// <summary>Builder interface for <see cref="DefineWindow"/>. Allows specifying PartitionBy, OrderBy, and frame clauses.</summary>
-		public interface IWindowBuilder : IOPartitionOOrderOFrameFinal
-		{
-		}
+		public interface IWindowBuilder : IOPartitionOOrderOFrameFinal;
 
 		/// <summary>
 		/// Defines a reusable window specification that can be shared across multiple window function calls via UseWindow.
@@ -391,32 +377,24 @@ namespace LinqToDB
 		/// <para>Chain: <c>[UseWindow(wnd)] | [PartitionBy(...)].OrderBy(...)[.ThenBy(...)]</c></para>
 		/// <para>ORDER BY is mandatory. FILTER and frame clauses are not available.</para>
 		/// </summary>
-		public interface IOPartitionROrderFinal : IUseWindow<IDefinedFunction>, IPartitionPart<IROrderByPartOThenByPartFinal>, IROrderByPartOThenByPartFinal
-		{
-		}
+		public interface IOPartitionROrderFinal : IUseWindow<IDefinedFunction>, IPartitionPart<IROrderByPartOThenByPartFinal>, IROrderByPartOThenByPartFinal;
 
 		/// <summary>
 		/// Builder for aggregate window functions with an argument: COUNT(expr), SUM, AVG, MIN, MAX.
 		/// <para>Chain: <c>[.Distinct()][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...]</c>, or <c>.UseWindow(...)</c>.</para>
 		/// <para>Optional <c>DISTINCT</c> aggregate modifier, then the standard aggregate clauses (single-shot Distinct). <c>UseWindow</c> applies a reusable window definition (from <c>DefineWindow</c>) and is an alternative to the inline clauses, not combined with them.</para>
 		/// </summary>
-		public interface IAggregateFinal : IDistinctPart<IOFilterOPartitionOOrderOFrameFinal>, IOFilterOPartitionOOrderOFrameFinal
-		{
-		}
+		public interface IAggregateFinal : IDistinctPart<IOFilterOPartitionOOrderOFrameFinal>, IOFilterOPartitionOOrderOFrameFinal;
 
 		/// <summary>
 		/// Builder for two-argument statistical window aggregates: COVAR_POP/COVAR_SAMP, CORR, REGR_*.
 		/// <para>Chain: <c>[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...]</c>, or <c>.UseWindow(...)</c>.</para>
 		/// <para>Supports FILTER, frame specification, and UseWindow. Does NOT support DISTINCT or KEEP — neither is valid on two-argument aggregates.</para>
 		/// </summary>
-		public interface IBivariateAggregateFinal : IFilterPart<IOPartitionOOrderOFrameFinal>, IOPartitionOOrderOFrameFinal, IUseWindow<IDefinedFunction>
-		{
-		}
+		public interface IBivariateAggregateFinal : IFilterPart<IOPartitionOOrderOFrameFinal>, IOPartitionOOrderOFrameFinal, IUseWindow<IDefinedFunction>;
 
 		/// <summary>State providing PartitionBy only, then completes.</summary>
-		public interface IOPartitionFinal : IPartitionPart<IDefinedFunction>, IDefinedFunction
-		{
-		}
+		public interface IOPartitionFinal : IPartitionPart<IDefinedFunction>, IDefinedFunction;
 
 		/// <summary>
 		/// Builder for aggregate window functions: SUM, AVG, MIN, MAX.
@@ -424,42 +402,30 @@ namespace LinqToDB
 		/// <para>Or with KEEP: <c>[.KeepFirst()|.KeepLast()].OrderBy(...)[.ThenBy(...)][.PartitionBy(...)]</c></para>
 		/// <para>All clauses are optional. Supports FILTER, frame specification, UseWindow, and KEEP (Oracle) — UseWindow (a reusable window definition from <c>DefineWindow</c>) and KEEP are alternatives to the inline clauses, not combined with them.</para>
 		/// </summary>
-		public interface IOFilterOPartitionOOrderOFrameFinal : IFilterPart<IOPartitionOOrderOFrameFinal>, IOPartitionOOrderOFrameFinal, IUseWindow<IDefinedFunction>, IKeepPart<IKeepOrderByRequired>
-		{
-		}
+		public interface IOFilterOPartitionOOrderOFrameFinal : IFilterPart<IOPartitionOOrderOFrameFinal>, IOPartitionOOrderOFrameFinal, IUseWindow<IDefinedFunction>, IKeepPart<IKeepOrderByRequired>;
 
 		/// <summary>
 		/// Builder for value window functions: FIRST_VALUE, LAST_VALUE, NTH_VALUE.
 		/// <para>Chain: <c>[PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...]</c>, or <c>.UseWindow(...)</c>.</para>
 		/// <para>Supports frame specification and UseWindow (a reusable window definition from <c>DefineWindow</c>, an alternative to the inline clauses). Does NOT support FILTER clause.</para>
 		/// </summary>
-		public interface IOPartitionOOrderOFrameWithWindowFinal : IOPartitionOOrderOFrameFinal, IUseWindow<IDefinedFunction>
-		{
-		}
+		public interface IOPartitionOOrderOFrameWithWindowFinal : IOPartitionOOrderOFrameFinal, IUseWindow<IDefinedFunction>;
 
 		/// <summary>State providing PartitionBy, OrderBy, and frame specification.</summary>
-		public interface IOPartitionOOrderOFrameFinal : IPartitionPart<IOrderOFrameFinal>, IOrderOFrameFinal
-		{
-		}
+		public interface IOPartitionOOrderOFrameFinal : IPartitionPart<IOrderOFrameFinal>, IOrderOFrameFinal;
 
 		/// <summary>Terminal state after OrderBy in frame-capable chains: allows frame specification or completes.</summary>
-		public interface IOFrameFinal : IFramePartFunction, IDefinedFunction
-		{
-		}
+		public interface IOFrameFinal : IFramePartFunction, IDefinedFunction;
 
 		/// <summary>State after OrderBy in frame-capable chains: allows ThenBy, frame specification, or completes.</summary>
-		public interface IOThenPartOFrameFinal : IThenOrderPart<IOThenPartOFrameFinal>, IOFrameFinal
-		{
-		}
+		public interface IOThenPartOFrameFinal : IThenOrderPart<IOThenPartOFrameFinal>, IOFrameFinal;
 
 		// TODO: v7 - inheriting IOFrameFinal here exposes the frame methods before OrderBy has been called, so
 		// PartitionBy(x).RowsBetweenValues(1, 1) compiles. A frame is defined relative to the window ordering, so
 		// only the state after OrderBy should offer one. Until that is fixed the unordered shape reaches the server,
 		// where the strict providers are handed a stand-in ordering and the rest sort by nothing.
 		/// <summary>State providing OrderBy in frame-capable chains.</summary>
-		public interface IOrderOFrameFinal : IOrderByPart<IOThenPartOFrameFinal>, IOFrameFinal
-		{
-		}
+		public interface IOrderOFrameFinal : IOrderByPart<IOThenPartOFrameFinal>, IOFrameFinal;
 
 		/// <summary>Provides function-level null treatment (<c>IGNORE NULLS</c> / <c>RESPECT NULLS</c>) for value/offset window functions.</summary>
 		public interface INullTreatmentPart<out TNext>
@@ -486,30 +452,22 @@ namespace LinqToDB
 		/// <para>Chain: <c>[.IgnoreNulls()|.RespectNulls()] [UseWindow(wnd)] | [PartitionBy(...)].OrderBy(...)[.ThenBy(...)]</c></para>
 		/// <para>Optional null treatment, then mandatory ORDER BY (via the inherited chain).</para>
 		/// </summary>
-		public interface ILeadLagFinal : INullTreatmentPart<IOPartitionROrderFinal>, IOPartitionROrderFinal
-		{
-		}
+		public interface ILeadLagFinal : INullTreatmentPart<IOPartitionROrderFinal>, IOPartitionROrderFinal;
 
 		/// <summary>
 		/// Builder for value window functions: FIRST_VALUE, LAST_VALUE.
 		/// <para>Chain: <c>[.IgnoreNulls()|.RespectNulls()] [UseWindow(wnd)] | [PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...]</c></para>
 		/// </summary>
-		public interface IValueFinal : INullTreatmentPart<IOPartitionOOrderOFrameWithWindowFinal>, IOPartitionOOrderOFrameWithWindowFinal
-		{
-		}
+		public interface IValueFinal : INullTreatmentPart<IOPartitionOOrderOFrameWithWindowFinal>, IOPartitionOOrderOFrameWithWindowFinal;
 
 		/// <summary>
 		/// Builder for NTH_VALUE. Optional <c>FROM FIRST/LAST</c> then optional <c>IGNORE/RESPECT NULLS</c> (in SQL order), then the window spec.
 		/// <para>Chain: <c>[.FromFirst()|.FromLast()] [.IgnoreNulls()|.RespectNulls()] [UseWindow(wnd)] | [PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...]</c></para>
 		/// </summary>
-		public interface INthValueFinal : IFromPart<INthValueNullsStep>, INullTreatmentPart<IOPartitionOOrderOFrameWithWindowFinal>, IOPartitionOOrderOFrameWithWindowFinal
-		{
-		}
+		public interface INthValueFinal : IFromPart<INthValueNullsStep>, INullTreatmentPart<IOPartitionOOrderOFrameWithWindowFinal>, IOPartitionOOrderOFrameWithWindowFinal;
 
 		/// <summary>Builder state after <c>FROM FIRST/LAST</c> on NTH_VALUE — allows optional <c>IGNORE/RESPECT NULLS</c>, then the window spec.</summary>
-		public interface INthValueNullsStep : INullTreatmentPart<IOPartitionOOrderOFrameWithWindowFinal>, IOPartitionOOrderOFrameWithWindowFinal
-		{
-		}
+		public interface INthValueNullsStep : INullTreatmentPart<IOPartitionOOrderOFrameWithWindowFinal>, IOPartitionOOrderOFrameWithWindowFinal;
 
 		#endregion Predefined chains
 

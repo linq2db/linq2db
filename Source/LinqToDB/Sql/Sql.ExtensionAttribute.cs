@@ -21,8 +21,8 @@ namespace LinqToDB
 {
 	public partial class Sql
 	{
-		public interface ISqlExtension { }
-		public interface IWindowFunction { }
+		public interface ISqlExtension;
+		public interface IWindowFunction;
 
 		sealed class SqlExtensionImpl : ISqlExtension;
 		sealed class WindowFunctionImpl : IWindowFunction;

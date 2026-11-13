@@ -1,6 +1,4 @@
 ﻿namespace LinqToDB.DataProvider.MySql
 {
-	public interface IMySqlExtensions
-	{
-	}
+	public interface IMySqlExtensions;
 }
