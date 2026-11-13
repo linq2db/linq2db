@@ -2935,8 +2935,11 @@ namespace Tests.Linq
 
 			try
 			{
-				var entered = await Task.WhenAny(interceptor.Entered.Task, Task.Delay(TimeSpan.FromSeconds(30)));
+				using var timeout = new CancellationTokenSource();
 
+				var entered = await Task.WhenAny(interceptor.Entered.Task, Task.Delay(TimeSpan.FromSeconds(30), timeout.Token));
+
+				timeout.Cancel();
 				entered.ShouldBeSameAs(interceptor.Entered.Task);
 
 				Shouldly.Should
