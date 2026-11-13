@@ -57,7 +57,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Basic5([DataSources(TestProvName.AllAccess)] string context)
+		public void Basic5([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -308,7 +308,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OneParam3([DataSources(TestProvName.AllAccess)] string context)
+		public void OneParam3([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(

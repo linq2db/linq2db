@@ -15,7 +15,7 @@ namespace Tests.UserTests
 		{
 			public static string[] Unsupported = new[]
 			{
-				TestProvName.AllAccess,
+				TestProvName.AllNativeAccess,
 				TestProvName.AllSQLite,
 				TestProvName.AllOracle,
 				TestProvName.AllMySql,

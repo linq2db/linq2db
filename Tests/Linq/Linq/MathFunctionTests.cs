@@ -24,7 +24,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Acos([DataSources(TestProvName.AllAccess)] string context)
+		public void Acos([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -33,7 +33,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Asin([DataSources(TestProvName.AllAccess)] string context)
+		public void Asin([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -51,7 +51,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Atan2([DataSources(TestProvName.AllAccess)] string context)
+		public void Atan2([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -458,6 +458,16 @@ namespace Tests.Linq
 				select Sql.AsSql(Sql.RoundToEven(p.MoneyValue, 5) + p.MoneyValue);
 
 			AssertQueryWithinDelta(even);
+		}
+
+		// Access spells % as MOD, which binds tighter than + and -, so a sum or difference operand needs its own parentheses.
+		[Test]
+		public void ModuloOperandKeepsItsGrouping([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			AssertQuery(db.Types.OrderBy(p => p.ID).Select(p => Sql.AsSql((p.ID + 5) % 3)));
+			AssertQuery(db.Types.OrderBy(p => p.ID).Select(p => Sql.AsSql((100 - p.ID) % 3)));
 		}
 
 		// A non-constant precision must not cost the value its fractional digits.

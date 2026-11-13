@@ -97,7 +97,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[ThrowsCannotBeConverted([TestProvName.AllNativeAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		[Test]
 		public void DistinctByNullableKeyAfterWhere([DataSources] string context)
 		{
@@ -114,7 +114,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[ThrowsCannotBeConverted([TestProvName.AllNativeAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		[Test]
 		public void DistinctByNullableKeyNoFilter([DataSources] string context)
 		{
@@ -130,7 +130,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[ThrowsCannotBeConverted([TestProvName.AllNativeAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		[Test]
 		public void DistinctByNonNullableKeyAfterWhere([DataSources] string context)
 		{
@@ -145,7 +145,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[ThrowsCannotBeConverted([TestProvName.AllNativeAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		[Test]
 		public void DistinctByFilterAfterOrderBy([DataSources] string context)
 		{
@@ -196,7 +196,7 @@ namespace Tests.Linq
 		// DistinctByAfterJoin do not — those shapes leave no wrapper for the re-entry to peel — so treat them as
 		// breadth rather than regression pins when bisecting this area.
 
-		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[ThrowsCannotBeConverted([TestProvName.AllNativeAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		[Test]
 		public void DistinctByAfterTwoFilters([DataSources] string context)
 		{
@@ -212,7 +212,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[ThrowsCannotBeConverted([TestProvName.AllNativeAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		[Test]
 		public void DistinctByAfterProjection([DataSources] string context)
 		{
@@ -229,7 +229,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[ThrowsCannotBeConverted([TestProvName.AllNativeAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		[Test]
 		public void DistinctByAfterAsSubQuery([DataSources] string context)
 		{
@@ -245,7 +245,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[ThrowsCannotBeConverted([TestProvName.AllNativeAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		[Test]
 		public void DistinctByAfterDistinct([DataSources] string context)
 		{
@@ -262,7 +262,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[ThrowsCannotBeConverted([TestProvName.AllNativeAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		[Test]
 		public void DistinctByCompositeKeyAfterWhere([DataSources] string context)
 		{
@@ -277,7 +277,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[ThrowsCannotBeConverted([TestProvName.AllNativeAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		[Test]
 		public void DistinctByAfterJoin([DataSources] string context)
 		{
@@ -296,7 +296,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[ThrowsCannotBeConverted([TestProvName.AllNativeAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		[Test]
 		public void DistinctByFilteredOnBothSides([DataSources] string context)
 		{
@@ -313,7 +313,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[ThrowsCannotBeConverted([TestProvName.AllNativeAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		[Test]
 		public void NestedDistinctByWithFilters([DataSources] string context)
 		{
@@ -331,7 +331,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[ThrowsCannotBeConverted([TestProvName.AllNativeAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		[Test]
 		public void DistinctByAfterWhereThenTake([DataSources] string context)
 		{
@@ -348,7 +348,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[ThrowsCannotBeConverted([TestProvName.AllNativeAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		[Test]
 		public void DistinctBy([DataSources] string context)
 		{
@@ -363,7 +363,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[ThrowsCannotBeConverted([TestProvName.AllNativeAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		[Test]
 		public void DistinctByOrderByNulls(
 			[DataSources] string context,
@@ -417,7 +417,7 @@ namespace Tests.Linq
 			Assert.That(outerOrderBy, Does.Not.Match(@"\[c\d+\]"), sql);
 		}
 
-		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[ThrowsCannotBeConverted([TestProvName.AllNativeAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		[Test]
 		public void DistinctByDefaultNullsPosition([DataSources] string context)
 		{

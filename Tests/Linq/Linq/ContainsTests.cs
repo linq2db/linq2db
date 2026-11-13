@@ -190,7 +190,7 @@ namespace Tests.Linq
 		// It is the only DB that returns 1 for `WHERE Int NOT IN (null, null)`
 		// Nope, Access is not alone anymore
 		[Test]
-		public void AllNullsLikeClr([DataSources(TestProvName.AllAccess)] string context)
+		public void AllNullsLikeClr([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			AllNulls(context, withNullCompares: true);
 		}
@@ -202,7 +202,7 @@ namespace Tests.Linq
 		// The two sibling LikeSql gates below carry the same declaration for the same reason.
 		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/38439", Configuration = TestProvName.AllClickHouse, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was")]
 		[Test]
-		public void AllNullsLikeSql([DataSources(TestProvName.AllAccess)] string context)
+		public void AllNullsLikeSql([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			AllNulls(context, withNullCompares: false);
 		}
@@ -225,14 +225,14 @@ namespace Tests.Linq
 		// It is the only DB that returns 1 for `WHERE Enum NOT IN (null, null)`
 		// Nope, Access is not alone anymore
 		[Test]
-		public void AllNullsEnumLikeClr([DataSources(TestProvName.AllAccess)] string context)
+		public void AllNullsEnumLikeClr([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			AllNullsEnum(context, withNullCompares: true);
 		}
 
 		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/38439", Configuration = TestProvName.AllClickHouse, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was")]
 		[Test]
-		public void AllNullsEnumLikeSql([DataSources(TestProvName.AllAccess)] string context)
+		public void AllNullsEnumLikeSql([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			AllNullsEnum(context, withNullCompares: false);
 		}
@@ -255,14 +255,14 @@ namespace Tests.Linq
 		// It is the only DB that returns 1 for `WHERE CEnum NOT IN (null, null)`
 		// Nope, Access is not alone anymore
 		[Test]
-		public void AllNullsCEnumLikeClr([DataSources(TestProvName.AllAccess)] string context)
+		public void AllNullsCEnumLikeClr([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			AllNullsCEnum(context, withNullCompares: true);
 		}
 
 		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/38439", Configuration = TestProvName.AllClickHouse, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was")]
 		[Test]
-		public void AllNullsCEnumLikeSql([DataSources(TestProvName.AllAccess)] string context)
+		public void AllNullsCEnumLikeSql([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			AllNullsCEnum(context, withNullCompares: false);
 		}
@@ -467,7 +467,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		public void ContainsSubqueryTest([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void ContainsSubqueryTest([DataSources(TestProvName.AllNativeAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 

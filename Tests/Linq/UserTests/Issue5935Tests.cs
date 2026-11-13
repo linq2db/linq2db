@@ -191,7 +191,7 @@ namespace Tests.UserTests
 			[DataSources] string context,
 			[Values(EagerLoadingStrategy.Default, EagerLoadingStrategy.KeyedQuery)] EagerLoadingStrategy strategy)
 		{
-			if (strategy == EagerLoadingStrategy.KeyedQuery && context.IsAnyOf(TestProvName.AllAccess))
+			if (strategy == EagerLoadingStrategy.KeyedQuery && context.IsAnyOf(TestProvName.AllNativeAccess))
 				Assert.Ignore("KeyedQuery emits its key set as a FROM-less UNION ALL derived table, which Access rejects.");
 
 			using var db    = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(strategy));
@@ -218,7 +218,7 @@ namespace Tests.UserTests
 			[DataSources] string context,
 			[Values(EagerLoadingStrategy.Default, EagerLoadingStrategy.KeyedQuery)] EagerLoadingStrategy strategy)
 		{
-			if (strategy == EagerLoadingStrategy.KeyedQuery && context.IsAnyOf(TestProvName.AllAccess))
+			if (strategy == EagerLoadingStrategy.KeyedQuery && context.IsAnyOf(TestProvName.AllNativeAccess))
 				Assert.Ignore("KeyedQuery emits its key set as a FROM-less UNION ALL derived table, which Access rejects.");
 
 			using var db    = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(strategy));
@@ -250,7 +250,7 @@ namespace Tests.UserTests
 			[DataSources] string context,
 			[Values(EagerLoadingStrategy.Default, EagerLoadingStrategy.KeyedQuery)] EagerLoadingStrategy strategy)
 		{
-			if (strategy == EagerLoadingStrategy.KeyedQuery && context.IsAnyOf(TestProvName.AllAccess))
+			if (strategy == EagerLoadingStrategy.KeyedQuery && context.IsAnyOf(TestProvName.AllNativeAccess))
 				Assert.Ignore("KeyedQuery emits its key set as a FROM-less UNION ALL derived table, which Access rejects.");
 
 			using var db    = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(strategy));
@@ -280,7 +280,7 @@ namespace Tests.UserTests
 			[DataSources] string context,
 			[Values(EagerLoadingStrategy.Default, EagerLoadingStrategy.KeyedQuery)] EagerLoadingStrategy strategy)
 		{
-			if (strategy == EagerLoadingStrategy.KeyedQuery && context.IsAnyOf(TestProvName.AllAccess))
+			if (strategy == EagerLoadingStrategy.KeyedQuery && context.IsAnyOf(TestProvName.AllNativeAccess))
 				Assert.Ignore("KeyedQuery emits its key set as a FROM-less UNION ALL derived table, which Access rejects.");
 
 			using var db    = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(strategy));

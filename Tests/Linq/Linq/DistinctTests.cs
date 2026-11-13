@@ -268,20 +268,20 @@ namespace Tests.Linq
 				.ShouldBe(expected);
 		}
 
-		// Access-only: DISTINCT reads an outer-joined Yes/No column as False, not NULL.
-		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed,
-			Details = "no-declaration: needs the LibRed dialect extensions - LibRed reads the unmatched rows as NULL, and the DISTINCT sort-key flip then orders them against .NET; an assertion failure, not a throw.")]
+		// Access-only: under DISTINCT Jet and ACE read an outer-joined Yes/No column as False, not NULL; LibRed reads NULL.
 		[Test]
 		public void DistinctOrderByOuterJoinedBooleanKey([IncludeDataSources(true, TestProvName.AllAccess)] string context, [Values] bool descending)
 		{
 			using var db = GetDataContext(context);
+
+			var unmatchedIsNull = context.IsAnyOf(TestProvName.AllAccessLibRed);
 
 			var source =
 				(
 					from p in Parent
 					join t in Types2 on p.ParentID + 8 equals t.ID into g
 					from t in g.DefaultIfEmpty()
-					select new { p.ParentID, BoolValue = (bool?)(t?.BoolValue ?? false) }
+					select new { p.ParentID, BoolValue = unmatchedIsNull ? t?.BoolValue : (t?.BoolValue ?? false) }
 				)
 				.Distinct();
 
@@ -338,8 +338,8 @@ namespace Tests.Linq
 				.ShouldBe(expected);
 		}
 
-		// Access-only, pins a known limitation: under DISTINCT a nullable key can only be flipped, not negated,
-		// so NULL sorts after True instead of before False.
+		// Access-only, pins a known Jet / ACE limitation: under DISTINCT a nullable key can only be flipped, not negated,
+		// so NULL sorts after True instead of before False. LibRed accepts the negation and keeps the .NET order.
 		[Test]
 		public void DistinctOrderByNullableBooleanSubQueryColumn([IncludeDataSources(true, TestProvName.AllAccess)] string context, [Values] bool descending)
 		{
@@ -354,9 +354,15 @@ namespace Tests.Linq
 				.AsSubQuery()
 				.Distinct();
 
-			var expected = (descending
-					? source.OrderBy(r => r.Value != null).ThenByDescending(r => r.Value)
-					: source.OrderBy(r => r.Value == null).ThenBy(r => r.Value))
+			var flipOnly = !context.IsAnyOf(TestProvName.AllAccessLibRed);
+
+			var expected = (flipOnly
+					? descending
+						? source.OrderBy(r => r.Value != null).ThenByDescending(r => r.Value)
+						: source.OrderBy(r => r.Value == null).ThenBy(r => r.Value)
+					: descending
+						? source.OrderByDescending(r => r.Value)
+						: source.OrderBy(r => r.Value))
 				.ThenBy(r => r.ID)
 				.Select(r => (r.ID, r.Value))
 				.ToArray();
@@ -540,7 +546,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AssociationAfterDistinctWithGroupBy([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void AssociationAfterDistinctWithGroupBy([DataSources(TestProvName.AllNativeAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -587,7 +593,7 @@ namespace Tests.Linq
 			AssertQuery(query2);
 		}
 
-		[ThrowsRequiredOuterJoins(TestProvName.AllAccess)]
+		[ThrowsRequiredOuterJoins(TestProvName.AllNativeAccess)]
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public void DistinctWithAssociationInSubquery([DataSources] string context)
@@ -809,7 +815,7 @@ namespace Tests.Linq
 		}
 
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllAccess], ErrorMessage = ErrorHelper.Error_Skip_in_Subquery)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllNativeAccess], ErrorMessage = ErrorHelper.Error_Skip_in_Subquery)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2943")]
 		public void OrderByDistinctSkipTakeFirst([DataSources] string context)
 		{
@@ -847,7 +853,7 @@ namespace Tests.Linq
 		}
 
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllYdb, TestProvName.AllAccess, TestProvName.AllSQLite], ErrorMessage = ErrorHelper.Error_Skip_in_Subquery)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllYdb, TestProvName.AllNativeAccess, TestProvName.AllSQLite], ErrorMessage = ErrorHelper.Error_Skip_in_Subquery)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2943")]
 		public void OrderByDistinctSkipFirst([DataSources] string context)
 		{

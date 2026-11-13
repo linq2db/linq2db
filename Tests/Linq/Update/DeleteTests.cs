@@ -421,7 +421,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void DeleteOrdered([DataSources(
-				TestProvName.AllAccess,
+				TestProvName.AllNativeAccess,
 				TestProvName.AllClickHouse,
 				ProviderName.SqlCe,
 				TestProvName.AllYdb,

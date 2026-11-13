@@ -175,7 +175,7 @@ namespace Tests.Linq
 		/// </para>
 		/// </remarks>
 		[Test]
-		public void EachDeclaredUnitRoundTripsAndReads([DataSources(false, TestProvName.AllAccess)] string context)
+		public void EachDeclaredUnitRoundTripsAndReads([DataSources(false, TestProvName.AllNativeAccess, TestProvName.AccessLibRedMdb)] string context)
 		{
 			var days         = TimeSpan.FromHours(60);
 			var milliseconds = new TimeSpan(0, 1, 2, 3, 456);
@@ -225,7 +225,7 @@ namespace Tests.Linq
 		/// </para>
 		/// </remarks>
 		[Test]
-		public void AUnitFinerThanATickHasNoMembers([DataSources(false, TestProvName.AllAccess)] string context)
+		public void AUnitFinerThanATickHasNoMembers([DataSources(false, TestProvName.AllNativeAccess, TestProvName.AccessLibRedMdb)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable<UnitSpreadRow>();

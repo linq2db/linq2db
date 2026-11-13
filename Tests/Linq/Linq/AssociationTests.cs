@@ -365,7 +365,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestTernary1([DataSources(TestProvName.AllAccess, TestProvName.AllSQLite)] string context)
+		public void TestTernary1([DataSources(TestProvName.AllNativeAccess, TestProvName.AllSQLite)] string context)
 		{
 			var ids = new[] { 1, 5 };
 
@@ -385,7 +385,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestTernary2([DataSources(TestProvName.AllAccess, TestProvName.AllSQLite)] string context)
+		public void TestTernary2([DataSources(TestProvName.AllNativeAccess, TestProvName.AllSQLite)] string context)
 		{
 			var ids = new[] { 1, 5 };
 
@@ -745,7 +745,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestGenericAssociation1([DataSources(TestProvName.AllAccess, TestProvName.AllSQLite)] string context)
+		public void TestGenericAssociation1([DataSources(TestProvName.AllNativeAccess, TestProvName.AllSQLite)] string context)
 		{
 			var ids = new[] { 1, 5 };
 
@@ -765,7 +765,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestGenericAssociationRuntime([DataSources(TestProvName.AllAccess, TestProvName.AllSQLite)] string context)
+		public void TestGenericAssociationRuntime([DataSources(TestProvName.AllNativeAccess, TestProvName.AllSQLite)] string context)
 		{
 			var ids = new[] { 1, 5 };
 
@@ -1178,7 +1178,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue1614Test([DataSources(TestProvName.AllAccess)] string context)
+		public void Issue1614Test([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<User>())
@@ -1250,7 +1250,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		public void Issue1711Test1([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void Issue1711Test1([DataSources(TestProvName.AllNativeAccess, TestProvName.AccessLibRedMdb, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 			new FluentMappingBuilder(ms)
@@ -1272,7 +1272,7 @@ namespace Tests.Linq
 
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void Issue1711Test2([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void Issue1711Test2([DataSources(TestProvName.AllNativeAccess, TestProvName.AccessLibRedMdb, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 			new FluentMappingBuilder(ms)

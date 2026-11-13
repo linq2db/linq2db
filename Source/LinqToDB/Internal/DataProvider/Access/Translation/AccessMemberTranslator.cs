@@ -213,6 +213,11 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 
 		protected class MathMemberTranslator : MathMemberTranslatorBase
 		{
+			protected virtual ISqlExpression Power(ISqlExpressionFactory factory, DbDataType type, ISqlExpression x, ISqlExpression y)
+			{
+				return factory.Binary(type, x, "^", y);
+			}
+
 			protected override ISqlExpression? TranslateRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
 			{
 				var factory   = translationContext.ExpressionFactory;
@@ -288,7 +293,7 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 
 					// Calculate 10 ^ [Precision]
 					var ten   = factory.Value(valueType, 10);
-					var power = factory.Binary(valueType, ten, "^", precision);
+					var power = Power(factory, valueType, ten, precision);
 
 					// [Value] * (10 ^ [Precision])
 					var scaled = factory.Multiply(valueType, value, power);
@@ -333,7 +338,7 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 					yValue = factory.Cast(yValue, xType);
 				}
 
-				var result = factory.Binary(yType, xValue, "^", yValue);
+				var result = Power(factory, yType, xValue, yValue);
 
 				if (!resultType.EqualsDbOnly(xType))
 				{

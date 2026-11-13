@@ -77,8 +77,14 @@ namespace LinqToDB.Internal.DataProvider.Access
 		/// </remarks>
 		protected override ISqlExpression? ElapsedTicks(SqlIntervalDifferenceExpression element)
 		{
-			return null;
+			return IsTickArithmeticSupported ? base.ElapsedTicks(element) : null;
 		}
+
+		/// <summary>
+		/// Whether this engine can count and shift in a unit fine enough, and wide enough, to carry a tick count - which
+		/// Jet and ACE cannot, for the reasons <see cref="ElapsedTicks"/> and <see cref="LowerTemporalArithmetic"/> give.
+		/// </summary>
+		protected virtual bool IsTickArithmeticSupported => false;
 
 		/// <inheritdoc />
 		/// <remarks>
@@ -101,7 +107,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 		/// </remarks>
 		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
 		{
-			return null;
+			return IsTickArithmeticSupported ? base.LowerTemporalArithmetic(element) : null;
 		}
 
 		const string DateDiffFunction = "DateDiff";
@@ -220,7 +226,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 			return base.LowerIntervalPart(element);
 		}
 
-		static string? DatePartName(SqlIntervalUnit unit)
+		protected virtual string? DatePartName(SqlIntervalUnit unit)
 		{
 			return unit switch
 			{
@@ -528,7 +534,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 		{
 			return element switch
 			{
-				SqlBinaryExpression(var type, var ex1, "%", var ex2) => new SqlBinaryExpression(type, ex1, "MOD", ex2, Precedence.Additive - 1),
+				SqlBinaryExpression(var type, var ex1, "%", var ex2) => new SqlBinaryExpression(type, ex1, "MOD", ex2, Precedence.Subtraction + 1),
 				SqlBinaryExpression(var type, var ex1, "&", var ex2) => new SqlBinaryExpression(type, ex1, "BAND", ex2, Precedence.Bitwise),
 				SqlBinaryExpression(var type, var ex1, "|", var ex2) => new SqlBinaryExpression(type, ex1, "BOR", ex2, Precedence.Bitwise - 1),
 				_ => base.ConvertSqlBinaryExpression(element),
@@ -562,10 +568,16 @@ namespace LinqToDB.Internal.DataProvider.Access
 			if (newElement.IsPositioned || !IsBooleanSortKey(newElement.Expression))
 				return newElement;
 
-			var flip = isDistinct || !newElement.Expression.CanBeNullable(NullabilityContext);
+			var flip = (isDistinct && !CanNegateSortKeyUnderDistinct) || !newElement.Expression.CanBeNullable(NullabilityContext);
 
 			return new SqlOrderByItem(ToSortKey(newElement.Expression, flip), newElement.IsDescending != flip, false, newElement.NullsPosition);
 		}
+
+		/// <summary>
+		/// Whether the engine accepts a negated boolean sort key under <c>DISTINCT</c>, so a nullable key keeps NULL first
+		/// there too. Jet and ACE reject it as conflicting with <c>DISTINCT</c>.
+		/// </summary>
+		protected virtual bool CanNegateSortKeyUnderDistinct => false;
 
 		protected internal override IQueryElement VisitSqlWindowOrderItem(SqlWindowOrderItem element)
 		{

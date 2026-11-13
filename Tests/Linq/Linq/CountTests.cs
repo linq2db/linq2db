@@ -206,7 +206,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupBy23([DataSources(ProviderName.SqlCe, TestProvName.AllOracle, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void GroupBy23([DataSources(ProviderName.SqlCe, TestProvName.AllOracle, TestProvName.AllNativeAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(

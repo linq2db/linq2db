@@ -336,7 +336,7 @@ namespace Tests.Linq
 		// DECIMAL(18,3) and Informix's 16-digit DECIMAL.
 		// Access has no 64-bit integer type: CREATE TABLE fails with "Syntax error in field definition".
 		[Test]
-		public void Int64ThroughDecimalAndText([DataSources(TestProvName.AllAccess)] string context)
+		public void Int64ThroughDecimalAndText([DataSources(TestProvName.AllNativeAccess, TestProvName.AccessLibRedMdb)] string context)
 		{
 			var data = new[]
 			{

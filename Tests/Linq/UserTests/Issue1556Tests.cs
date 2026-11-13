@@ -11,7 +11,7 @@ namespace Tests.UserTests
 	{
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		public void Issue1556Test([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void Issue1556Test([DataSources(TestProvName.AllNativeAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(

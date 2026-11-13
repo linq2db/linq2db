@@ -49,7 +49,7 @@ namespace Tests.UserTests
 
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		public void Test2([DataSources(TestProvName.AllAccess, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
+		public void Test2([DataSources(TestProvName.AllNativeAccess, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
 		{
 			var harnessIds = Array.Empty<int>();
 

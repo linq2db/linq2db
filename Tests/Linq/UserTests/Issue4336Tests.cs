@@ -15,8 +15,10 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue4336Tests : TestBase
 	{
+		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorMessage = "Column 'vpcc.Id' was not found",
+			Details = "no-issue: LibRed's hash join cannot resolve this query's join key. LibRed.Ado 11.0.0-alpha.4; re-check when a newer LibRed ships.")]
 		[Test]
-		public void Issue4336Test([DataSources(TestProvName.AllAccess)] string context)
+		public void Issue4336Test([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t1 = db.CreateLocalTable(new[] {new Product {Id = 1, Name = "p", CategoryId = 1}});

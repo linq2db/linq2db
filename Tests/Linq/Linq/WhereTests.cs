@@ -215,21 +215,21 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void BinaryXor([DataSources(TestProvName.AllAccess)] string context)
+		public void BinaryXor([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			TestOneJohn(from p in db.Person where (p.ID ^ 2) == 3 select p);
 		}
 
 		[Test]
-		public void BinaryAnd([DataSources(TestProvName.AllAccess)] string context)
+		public void BinaryAnd([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			TestOneJohn(from p in db.Person where (p.ID & 3) == 1 select p);
 		}
 
 		[Test]
-		public void BinaryOr([DataSources(TestProvName.AllAccess)] string context)
+		public void BinaryOr([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -2138,7 +2138,7 @@ namespace Tests.Linq
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Issue_SubQueryFilter3([DataSources(
 			TestProvName.AllClickHouse,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			TestProvName.AllSapHana,
 			TestProvName.AllFirebirdLess4,
 			TestProvName.AllOracle,
@@ -2238,7 +2238,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Issue_Filter_Checked([DataSources(
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			TestProvName.AllMySql,
@@ -2563,7 +2563,7 @@ namespace Tests.Linq
 		public void PredicateOptimization_Subquery([DataSources(
 			TestProvName.AllOracle,
 			TestProvName.AllSybase,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			TestProvName.AllMariaDB,
 			TestProvName.AllMySql57,
 			TestProvName.AllDB2,
