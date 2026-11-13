@@ -7,7 +7,9 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\..\..\Source\LinqToDB.Remote.SignalR.Client\LinqToDB.Remote.SignalR.Client.csproj" />
+		<!-- Blazor apps run on Mono, so both edges to linq2db need the build without runtime-async. -->
+		<ProjectReference Include="..\..\..\..\Source\LinqToDB.Remote.SignalR.Client\LinqToDB.Remote.SignalR.Client.csproj" AdditionalProperties="BrowserWasmAssetBuild=true" />
+		<ProjectReference Update="..\..\..\..\Source\LinqToDB\LinqToDB.csproj" AdditionalProperties="BrowserWasmAssetBuild=true" />
 
 		<PackageReference Include="Octonica.ClickHouseClient" />
 		<PackageReference Include="ClickHouse.Driver" />

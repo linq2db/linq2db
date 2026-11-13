@@ -107,6 +107,10 @@ jobs:
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
 
+          # The browser build of LinqToDB is a separate instance that every package hook requests at once.
+          dotnet build Source/LinqToDB/LinqToDB.csproj @common -f net11.0 -p:BrowserWasmAssetBuild=true
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       # The API analyzers are a release-prep gate (/release-publicapi), not a per-PR one.
       - name: Build solution
         run: dotnet build ${{ env.SOLUTION }} --configuration ${{ env.RELEASE_CONFIGURATION }} -p:RunApiAnalyzersDuringBuild=false ${{ env.VERSION_ARGS }}
@@ -124,6 +128,10 @@ jobs:
       - name: Verify analyzer delivery metadata
         shell: pwsh
         run: ./Build/Azure/scripts/verify-analyzer-delivery.ps1 -PackagesDir .build/package/release -NoAzdoLogs
+
+      - name: Verify browser-wasm assets
+        shell: pwsh
+        run: ./Build/Azure/scripts/verify-browser-wasm-asset.ps1 -PackagesDir .build/package/release -NoAzdoLogs
 
       # linq2db.cli, the 14 T4 packages and the LINQPad 5 .lpx physically redistribute third-party
       # binaries under an MIT license expression that covers only linq2db's own code. `check` catches a
@@ -279,7 +287,7 @@ jobs:
   wasm-tests:
     name: WASM runtime tests
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 90
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

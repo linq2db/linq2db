@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<Configurations>Testing;Debug;Release;Azure</Configurations>
 		
-		<LangVersion>14</LangVersion>
+		<LangVersion>15</LangVersion>
 		<Nullable>enable</Nullable>
 		<WarningLevel>9999</WarningLevel>
 		<ErrorReport>prompt</ErrorReport>

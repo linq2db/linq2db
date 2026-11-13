@@ -94,15 +94,16 @@ namespace LinqToDB.Internal.Linq.Builder
 				|| type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ValueTask<>);
 		}
 
-		// A task held by a captured variable, a static field, an array element, a compiled-query argument or a completion
-		// source, or a completed task, starts nothing when it is read.
+		// A task held by a captured variable, a field of the data context, a static field, an array element, a compiled-query
+		// argument or a completion source, or a completed task, starts nothing when it is read.
 		static bool IsHeldTask(Expression expression)
 		{
 			while (true)
 			{
 				switch (expression)
 				{
-					case ConstantExpression or ParameterExpression:
+					// Expose turns a captured data context into a query root.
+					case ConstantExpression or ParameterExpression or SqlQueryRootExpression:
 						return true;
 
 					case MemberExpression { Member: FieldInfo } field:

@@ -508,6 +508,8 @@ namespace Tests.Linq
 		public enum HeldTask
 		{
 			CapturedVariable,
+			ContextField,
+			CompiledContextField,
 			StaticField,
 			ArrayElement,
 			Cast,
@@ -526,6 +528,15 @@ namespace Tests.Linq
 			public static readonly Task<int> Five = Task.FromResult(5);
 		}
 
+		sealed class TaskFieldConnection : TestDataConnection
+		{
+			public TaskFieldConnection(string context) : base(context)
+			{
+			}
+
+			public readonly Task<int> PendingTask = Task.FromResult(5);
+		}
+
 		// A task the selector only reads starts nothing, wherever it is held.
 		[Test]
 		public void HeldTaskIsRead([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] HeldTask held)
@@ -538,8 +549,18 @@ namespace Tests.Linq
 				Held  = argument.Result == 5,
 			}));
 
-			using var db    = GetDataContext(context);
+			var compiledField = CompiledQuery.Compile((TaskFieldConnection dc) => dc.QueryBatch(() => new
+			{
+				Total = dc
+					.GetTable<BatchItem>()
+					.Count(),
+				Held  = dc.PendingTask.Result == 5,
+			}));
+
+			using var db    = held is HeldTask.ContextField or HeldTask.CompiledContextField ? new TaskFieldConnection(context) : GetDataContext(context);
 			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var fields = db as TaskFieldConnection;
 
 			var    task  = Task.FromResult(5);
 			var    tasks = new[] { task };
@@ -565,6 +586,8 @@ namespace Tests.Linq
 			var result = held switch
 			{
 				HeldTask.CapturedVariable           => db.QueryBatch(() => new { Total = items.Count(), Held = task.Result == 5 }),
+				HeldTask.ContextField               => db.QueryBatch(() => new { Total = items.Count(), Held = fields!.PendingTask.Result == 5 }),
+				HeldTask.CompiledContextField       => compiledField(fields!),
 				HeldTask.StaticField                => db.QueryBatch(() => new { Total = items.Count(), Held = HeldTasks.Five.Result == 5 }),
 				HeldTask.ArrayElement               => db.QueryBatch(() => new { Total = items.Count(), Held = tasks[0].Result == 5 }),
 				HeldTask.Cast                       => db.QueryBatch(() => new { Total = items.Count(), Held = ((Task<int>)boxed).Result == 5 }),
