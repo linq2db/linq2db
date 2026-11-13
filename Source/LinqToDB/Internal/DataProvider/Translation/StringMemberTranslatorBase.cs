@@ -7,6 +7,7 @@ using System.Reflection;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
@@ -417,7 +418,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		// modern runtimes, where `s.TrimStart()` binds to exactly such an overload (#6075).
 		void RegisterStringMethod(string name, Type[] parameterTypes, TranslationRegistration.TranslateMethodFunc translate)
 		{
-			if (typeof(string).GetMethod(name, parameterTypes) is { } method)
+			if (typeof(string).GetMethodEx(name, BindingFlags.Public | BindingFlags.Instance, parameterTypes) is { } method)
 			{
 				var call = Expression.Call(Expression.Constant(string.Empty), method, parameterTypes.Select(Expression.Default));
 				Registration.RegisterMethodInternal(Expression.Lambda(call), translate, isGenericTypeMatch: false);
