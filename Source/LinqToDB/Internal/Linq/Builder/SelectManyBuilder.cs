@@ -52,10 +52,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			using var snapshot = builder.CreateSnapshot();
 
-			var collectionResult = builder.TryBuildSequence(collectionInfo);
+			var collectionResult = builder.TryBuildJoinedSequence(collectionInfo, out var collectionOrderBy);
 
 			if (collectionResult.BuildContext == null)
 				return collectionResult;
+
+			builder.AppendJoinedOrderBy(collectionOrderBy, joinedFirst: collectionInfo.JoinType is JoinType.Right);
 
 			var originalCollection = collectionResult.BuildContext;
 
