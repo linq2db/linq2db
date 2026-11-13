@@ -164,9 +164,10 @@ namespace LinqToDB.Internal.SqlQuery
 
 					if (value1 != null && value2 != null)
 					{
-						if (value1.GetType().IsEnum != value2.GetType().IsEnum)
+						if (value1.GetType().IsEnum != value2.GetType().IsEnum
+							|| (value1.GetType().IsEnum && value1.GetType() != value2.GetType()))
 						{
-							// An enum's client value doesn't compare with a mapped literal, its provider value does.
+							// An enum's client value doesn't compare with a mapped literal or another enum type, its provider value does.
 							if (forServer
 								|| !exprExpr.Expr1.TryEvaluateExpression(true, context, out value1)
 								|| !exprExpr.Expr2.TryEvaluateExpression(true, context, out value2)

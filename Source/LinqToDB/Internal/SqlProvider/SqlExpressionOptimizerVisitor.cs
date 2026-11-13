@@ -183,13 +183,14 @@ namespace LinqToDB.Internal.SqlProvider
 			return TryEvaluate(expr, out result);
 		}
 
-		// A client enum never equals a mapped literal, while its provider value can. Values that mix enums with other values are
-		// compared as provider values, and only when those come out as one type: an enum literal kept by a value-to-SQL converter
-		// stays an enum on the server too.
+		// A client enum never equals a mapped literal or another enum type, while its provider value can. Values that mix an enum
+		// with other values or with another enum type are compared as provider values, and only when those come out as one type:
+		// an enum literal kept by a value-to-SQL converter stays an enum on the server too.
 		bool ReconcileEnumValues(IQueryElement?[] expressions, bool[] evaluated, object?[] values)
 		{
-			var hasEnum  = false;
-			var hasOther = false;
+			Type? enumType = null;
+			var   mixed    = false;
+			var   hasOther = false;
 
 			for (var i = 0; i < values.Length; i++)
 			{
@@ -197,12 +198,19 @@ namespace LinqToDB.Internal.SqlProvider
 					continue;
 
 				if (values[i] is Enum)
-					hasEnum = true;
+				{
+					var valueType = values[i]!.GetType();
+
+					if (enumType == null)
+						enumType = valueType;
+					else if (enumType != valueType)
+						mixed = true;
+				}
 				else
 					hasOther = true;
 			}
 
-			if (!hasEnum || !hasOther)
+			if (enumType == null || (!mixed && !hasOther))
 				return true;
 
 			Type? type = null;

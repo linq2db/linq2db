@@ -2880,11 +2880,7 @@ namespace Tests.Linq
 		{
 			var ms = new MappingSchema();
 
-			// Keeps Gender literals as enum values instead of mapping them to 'M' / 'F'.
-			ms.SetValueToSqlConverter(typeof(Gender), (sb, dt, v) => sb
-				.Append('\'')
-				.Append((Gender)v switch { Gender.Male => "M", Gender.Female => "F", Gender.Unknown => "U", _ => "O" })
-				.Append('\''));
+			SetGenderLiteralConverter(ms);
 
 			using var db = GetDataContext(context, ms);
 
@@ -2930,6 +2926,52 @@ namespace Tests.Linq
 				.ToArray();
 
 			ids.ShouldBe(expected);
+		}
+
+		// Keeps Gender literals as enum values instead of mapping them to 'M' / 'F'.
+		static void SetGenderLiteralConverter(MappingSchema ms)
+		{
+			ms.SetValueToSqlConverter(typeof(Gender), (sb, dt, v) => sb
+				.Append('\'')
+				.Append((Gender)v switch { Gender.Male => "M", Gender.Female => "F", Gender.Unknown => "U", _ => "O" })
+				.Append('\''));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void DirectEnumCastOverParameterConditionalEqualParameter([DataSources] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			db.InlineParameters = inline;
+
+			var male   = Gender.Male;
+			var female = Gender.Female;
+			var gender = ApiGender.Female;
+
+			var query = db.Person
+				.Where(p => (ApiGender)(p.ID > 2 ? male : female) == gender);
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void DirectEnumCastOverConstantConditionalWithLiteralConverter([DataSources] string context, [Values] bool inline)
+		{
+			var ms = CreateApiGenderSchema();
+
+			// The parameter's provider value is 'F' while the kept literals stay Gender: nothing to fold.
+			SetGenderLiteralConverter(ms);
+
+			using var db = GetDataContext(context, ms);
+
+			db.InlineParameters = inline;
+
+			var gender = ApiGender.Female;
+
+			var query = db.Person
+				.Where(p => (ApiGender)(p.ID > 2 ? Gender.Male : Gender.Female) == gender);
+
+			AssertQuery(query);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
