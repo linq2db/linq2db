@@ -2858,6 +2858,13 @@ namespace LinqToDB.Internal.Linq.Builder
 
 								if (enumMappingType != null)
 								{
+									if (_buildPurpose is BuildPurpose.Sql
+									    && _buildFlags.HasFlag(BuildFlags.ForKeys)
+									    && enumMappingType.UnwrapNullableType() == node.Operand.Type.UnwrapNullableType())
+									{
+										return Visit(placeholder.WithType(node.Type));
+									}
+
 									if (TryCastTo(placeholder, enumMappingType, node.Type, out casted))
 									{
 										return Visit(casted);
@@ -5327,6 +5334,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						return new SqlPredicate.IsNull(operandSql, op == SqlPredicate.Operator.NotEqual);
 					}
+
+					// A constant of an enum mapped onto the operand's enum has no map value of its own: the regular compare converts it through the column.
+					if (origValue is Enum && Converter.GetDefaultMappingFromEnumType(MappingSchema, origValue.GetType())?.UnwrapNullableType() == type.UnwrapNullableType())
+						return null;
 
 					var mapValue  = origValue;
 

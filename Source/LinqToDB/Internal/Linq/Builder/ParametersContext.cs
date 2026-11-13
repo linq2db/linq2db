@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Reflection;
 
 using LinqToDB.Common;
 using LinqToDB.Data;
@@ -285,7 +286,8 @@ namespace LinqToDB.Internal.Linq.Builder
 								}
 							}
 
-							if (providerValueGetter.Type.IsNullableType && providerValueGetter.Type.UnwrapNullableType() != memberType)
+							if ((providerValueGetter.Type.IsNullableType && providerValueGetter.Type.UnwrapNullableType() != memberType)
+								|| (providerValueGetter.Type.IsEnum && memberType.UnwrapNullableType().IsEnum && providerValueGetter.Type != memberType.UnwrapNullableType()))
 							{
 								var toType = !memberType.IsNullableOrReferenceType
 									? memberType.MakeNullable()
@@ -331,7 +333,22 @@ namespace LinqToDB.Internal.Linq.Builder
 							}
 
 							if (columnDescriptor != null)
+							{
 								providerValueGetter = columnDescriptor.ApplyConversions(providerValueGetter, paramDataType, true);
+							}
+							else if (convertExpr == null
+								&& mappingSchema.GetDefaultFromEnumType(providerValueGetter.Type.UnwrapNullableType()) is { IsEnum: true } mappedEnum
+								&& Converter.GetDefaultMappingFromEnumType(MappingSchema, providerValueGetter.Type.UnwrapNullableType())?.UnwrapNullableType() == mappedEnum
+								&& MappingSchema.GetConvertExpression(providerValueGetter.Type.UnwrapNullableType(), typeof(DataParameter), false, false) == null)
+							{
+								// With no column to convert through, an enum mapped onto another enum takes that enum's database mapping.
+								var convertLambda   = MappingSchema.GenerateSafeConvert(providerValueGetter.Type, mappedEnum.MakeNullable());
+								providerValueGetter = InternalExtensions.ApplyLambdaToExpression(convertLambda, providerValueGetter);
+								paramDataType       = mappingSchema.GetDbDataType(mappedEnum);
+
+								if (paramDataType.EqualsDbOnly(SqlDataType.MakeUndefined(mappedEnum).Type))
+									paramDataType = mappingSchema.GetUnderlyingDataType(mappedEnum, out _).Type;
+							}
 
 							providerValueGetter = convertExpr != null
 								? InternalExtensions.ApplyLambdaToExpression(convertExpr, providerValueGetter)
@@ -397,6 +414,14 @@ namespace LinqToDB.Internal.Linq.Builder
 			return parameterCacheEntry;
 		}
 
+		static readonly MethodInfo _enumToObject      = MemberHelper.MethodOf(() => Enum.ToObject(default(Type)!, default(object)!));
+		static readonly MethodInfo _isDefaultMappedTo = MemberHelper.MethodOf(() => IsDefaultMappedTo(default(MappingSchema)!, default(object)!, default(Type)!));
+
+		static bool IsDefaultMappedTo(MappingSchema mappingSchema, object value, Type enumType)
+		{
+			return Converter.GetDefaultMappingFromEnumType(mappingSchema, value.GetType())?.UnwrapNullableType() == enumType;
+		}
+
 		static LambdaExpression? GenerateConvertFromObject(MappingSchema mappingSchema, Type toType)
 		{
 			var param = Expression.Parameter(typeof(object), "p");
@@ -418,6 +443,13 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (underlying.IsEnum)
 			{
+				convertBody = Inject(convertBody, Expression.Condition(
+					Expression.AndAlso(
+						Expression.TypeIs(param, typeof(Enum)),
+						Expression.Call(_isDefaultMappedTo, Expression.Constant(mappingSchema), param, Expression.Constant(underlying))),
+					Expression.Convert(Expression.Call(_enumToObject, Expression.Constant(underlying), param), toType),
+					continuation));
+
 				var intConverter = mappingSchema.GetConvertExpression(new DbDataType(typeof(int)), new DbDataType(toType), checkNull : false, createDefault : true);
 
 				if (intConverter != null)

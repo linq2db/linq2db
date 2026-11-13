@@ -183,6 +183,15 @@ namespace LinqToDB.Internal.SqlProvider
 			return TryEvaluate(expr, out result);
 		}
 
+		// An enum's client value never equals the mapped literals of a CASE, the value the database sees can.
+		bool TryEvaluateAsProviderValue(IQueryElement expr, out object? result)
+		{
+			if (!TryEvaluateNoParameters(expr, out result))
+				return false;
+
+			return result is not Enum || expr.TryEvaluateExpressionForServer(EvaluationContext, out result);
+		}
+
 		protected bool TryEvaluate(IQueryElement expr, out object? result)
 		{
 			if (expr.TryEvaluateExpression(EvaluationContext, out result))
@@ -2261,9 +2270,9 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 
 			if (unwrappedOther is SqlConditionExpression sqlConditionExpression)
 			{
-				var otherEvaluated = TryEvaluateNoParameters(unwrappedValue, out var otherVal);
-				var trueEvaluated  = TryEvaluateNoParameters(sqlConditionExpression.TrueValue, out var trueVal);
-				var falseEvaluated = TryEvaluateNoParameters(sqlConditionExpression.FalseValue, out var falseVal);
+				var otherEvaluated = TryEvaluateAsProviderValue(unwrappedValue, out var otherVal);
+				var trueEvaluated  = TryEvaluateAsProviderValue(sqlConditionExpression.TrueValue, out var trueVal);
+				var falseEvaluated = TryEvaluateAsProviderValue(sqlConditionExpression.FalseValue, out var falseVal);
 
 				if (otherEvaluated && trueEvaluated && falseEvaluated
 					&& !Equals(otherVal, trueVal) && !Equals(otherVal, falseVal))
@@ -2387,7 +2396,7 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 			{
 				// Try comparing by values
 
-				if (TryEvaluateNoParameters(unwrappedValue, out var value))
+				if (TryEvaluateAsProviderValue(unwrappedValue, out var value))
 				{
 					var caseMatch      = new bool [sqlCaseExpression._cases.Count];
 					var allEvaluatable = true;
@@ -2396,7 +2405,7 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 					for (var index = 0; index < sqlCaseExpression._cases.Count; index++)
 					{
 						var caseItem = sqlCaseExpression._cases[index];
-						if (TryEvaluateNoParameters(caseItem.ResultExpression, out var caseItemValue)
+						if (TryEvaluateAsProviderValue(caseItem.ResultExpression, out var caseItemValue)
 						    && Compare(caseItemValue, value, op, out var result))
 						{
 							caseMatch[index] = result;

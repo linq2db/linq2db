@@ -1,13 +1,17 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.InteropServices;
 
 using LinqToDB;
 using LinqToDB.Common;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -2347,6 +2351,652 @@ namespace Tests.Linq
 			[PrimaryKey]
 			public int Id { get; set; }
 			public string? Name { get; set; }
+		}
+
+		enum ApiGender
+		{
+			Male,
+			Female,
+			Unknown,
+			Other,
+		}
+
+		static MappingSchema CreateApiGenderSchema()
+		{
+			var ms = new MappingSchema();
+
+			ms.SetDefaultFromEnumType(typeof(ApiGender), typeof(Gender));
+
+			return ms;
+		}
+
+		static MappingSchema CreateApiGenderObjectParameterSchema()
+		{
+			var ms = CreateApiGenderSchema();
+
+			ms.SetConverter<object?, DataParameter>(value => new DataParameter(null, value is Enum e ? ms.EnumToValue(e) : value, DataType.Undefined));
+
+			return ms;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void ProjectedEnumCastSelect([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var query = db.Person
+				.Select(p => new { p.ID, Gender = (ApiGender)p.Gender });
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void ProjectedEnumCastEqualConstant([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var query = db.Person
+				.Select(p => new { p.ID, Gender = (ApiGender)p.Gender })
+				.Where(p => p.Gender == ApiGender.Female);
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void ProjectedEnumCastEqualParameter([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var gender = ApiGender.Female;
+
+			var query = db.Person
+				.Select(p => new { p.ID, Gender = (ApiGender)p.Gender })
+				.Where(p => p.Gender == gender);
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void ProjectedEnumCastNullableEqualParameter([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			ApiGender? gender = ApiGender.Female;
+
+			var query = db.Person
+				.Select(p => new { p.ID, Gender = (ApiGender?)p.Gender })
+				.Where(p => p.Gender == gender);
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void ProjectedEnumCastEqualsObject([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			object gender = ApiGender.Female;
+
+			var query = db.Person
+				.Select(p => new { p.ID, Gender = (ApiGender)p.Gender })
+				.Where(p => p.Gender.Equals(gender));
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void ProjectedEnumCastNotEqualsObject([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			object gender = ApiGender.Female;
+
+			var query = db.Person
+				.Select(p => new { p.ID, Gender = (ApiGender)p.Gender })
+				.Where(p => !p.Gender.Equals(gender));
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void ProjectedEnumCastOrderBy([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var query = db.Person
+				.Select(p => new { p.ID, Gender = (ApiGender)p.Gender })
+				.OrderBy(p => p.Gender)
+				.ThenBy(p => p.ID);
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void ProjectedEnumCastGroupBy([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var query = db.Person
+				.Select(p => new { p.ID, Gender = (ApiGender)p.Gender })
+				.GroupBy(p => p.Gender)
+				.Select(g => new { g.Key, Count = g.Count() });
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void ProjectedEnumCastDistinct([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var query = db.Person
+				.Select(p => new { Gender = (ApiGender)p.Gender })
+				.Distinct();
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void ProjectedEnumCastConcat([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var query = db.Person
+				.Select(p => new { p.ID, Gender = (ApiGender)p.Gender })
+				.Concat(db.Person
+					.Select(p => new { p.ID, Gender = (ApiGender)p.Gender }));
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void ProjectedEnumCastUnionEagerLoad([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var result = db.Person
+				.OrderBy(p => p.ID)
+				.Select(p => new
+				{
+					p.ID,
+					First = db.Person
+						.Where(o => o.ID == p.ID)
+						.Select(o => new { Gender = (ApiGender)o.Gender })
+						.ToList(),
+					Second = db.Person
+						.Where(o => o.ID == p.ID)
+						.Select(o => new { o.ID, Gender = (ApiGender)o.Gender })
+						.ToList(),
+				})
+				.WithUnionLoadStrategy()
+				.ToList();
+
+			var expected = Person
+				.OrderBy(p => p.ID)
+				.Select(p => (ApiGender)p.Gender)
+				.ToArray();
+
+			result
+				.Select(r => r.First.Single().Gender)
+				.ToArray()
+				.ShouldBe(expected);
+
+			result
+				.Select(r => r.Second.Single().Gender)
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void ProjectedEnumCastEqualsObjectWithObjectConverter([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderObjectParameterSchema());
+
+			object gender = ApiGender.Female;
+
+			var query = db.Person
+				.Select(p => new { p.ID, Gender = (ApiGender)p.Gender })
+				.Where(p => p.Gender.Equals(gender));
+
+			AssertQuery(query);
+		}
+
+		enum UnmappedEnum
+		{
+			Value1 = 1,
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void EqualsObjectOfUnmappedEnumThrows([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			object value = UnmappedEnum.Value1;
+
+			var query = db.Person
+				.Where(p => p.Gender.Equals(value));
+
+			Shouldly.Should.Throw<LinqToDBConvertException>(() => query.ToList());
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void ProjectedEnumCastJoinKey([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var left = db.Person
+				.Select(p => new { p.ID, Gender = (ApiGender)p.Gender });
+
+			var right = db.Person
+				.Select(p => new { p.ID, Gender = (ApiGender)p.Gender });
+
+			var query =
+				from l in left
+				join r in right on l.Gender equals r.Gender
+				select new { LeftId = l.ID, RightId = r.ID, r.Gender };
+
+			AssertQuery(query);
+		}
+
+#if NET8_0_OR_GREATER
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void ProjectedEnumCastDistinctBy([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var query = db.Person
+				.Select(p => new { p.ID, Gender = (ApiGender)p.Gender })
+				.OrderBy(p => p.ID)
+				.DistinctBy(p => p.Gender)
+				.Select(p => p.Gender);
+
+			AssertQuery(query, EqualityComparer<ApiGender>.Default);
+		}
+#endif
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void ProjectedEnumCastContains([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var genders = new[] { ApiGender.Female, ApiGender.Other };
+
+			var query = db.Person
+				.Select(p => new { p.ID, Gender = (ApiGender)p.Gender })
+				.Where(p => genders.Contains(p.Gender));
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void ProjectedEnumCastUnionEagerLoadOrdered([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var result = db.Person
+				.OrderBy(p => p.ID)
+				.Select(p => new
+				{
+					p.ID,
+					First = db.Person
+						.Where(o => o.ID == p.ID)
+						.OrderBy(o => o.ID)
+						.Select(o => new { Gender = (ApiGender)o.Gender })
+						.ToList(),
+					Second = db.Person
+						.Where(o => o.ID == p.ID)
+						.OrderBy(o => o.ID)
+						.Select(o => new { o.ID, Gender = (ApiGender)o.Gender })
+						.ToList(),
+				})
+				.WithUnionLoadStrategy()
+				.ToList();
+
+			var expected = Person
+				.OrderBy(p => p.ID)
+				.Select(p => (ApiGender)p.Gender)
+				.ToArray();
+
+			result
+				.Select(r => r.First.Single().Gender)
+				.ToArray()
+				.ShouldBe(expected);
+
+			result
+				.Select(r => r.Second.Single().Gender)
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void DirectEnumCastEqualConstant([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var query = db.Person
+				.Where(p => (ApiGender)p.Gender == ApiGender.Female);
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void DirectEnumCastNotEqualConstant([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var query = db.Person
+				.Where(p => (ApiGender)p.Gender != ApiGender.Female);
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void DirectEnumCastEqualParameter([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var gender = ApiGender.Female;
+
+			var query = db.Person
+				.Where(p => (ApiGender)p.Gender == gender);
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void DirectEnumCastOverConditionalEqualParameter([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var gender = ApiGender.Female;
+
+			var query = db.Person
+				.Where(p => (ApiGender)(p.ID > 1000 ? Gender.Male : p.Gender) == gender);
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void DirectEnumCastOverConstantConditionalEqualParameter([DataSources] string context, [Values] bool female)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var gender = female ? ApiGender.Female : ApiGender.Male;
+
+			var query = db.Person
+				.Where(p => (ApiGender)(p.ID > 2 ? Gender.Male : Gender.Female) == gender);
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void DirectEnumCastOverConstantCaseEqualParameter([DataSources] string context, [Values] bool female)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var gender = female ? ApiGender.Female : ApiGender.Male;
+
+			var query = db.Person
+				.Where(p => (ApiGender)(p.ID > 3 ? Gender.Male : p.ID > 2 ? Gender.Other : Gender.Female) == gender);
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void DirectEnumCastOverConstantConditionalEqualNullableParameter([DataSources] string context, [Values] bool female)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			ApiGender? gender = female ? ApiGender.Female : ApiGender.Male;
+
+			var query = db.Person
+				.Where(p => (ApiGender?)(p.ID > 2 ? Gender.Male : Gender.Female) == gender);
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void DirectEnumCastOverConstantConditionalEqualConstant([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var query = db.Person
+				.Where(p => (ApiGender)(p.ID > 2 ? Gender.Male : Gender.Female) == ApiGender.Female);
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void DirectEnumCastOverConstantConditionalContains([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var genders = new[] { ApiGender.Female };
+
+			var query = db.Person
+				.Where(p => genders.Contains((ApiGender)(p.ID > 2 ? Gender.Male : Gender.Female)));
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void DirectEnumCastOverConstantConditionalUsesEnumConverter([DataSources] string context)
+		{
+			var ms = CreateApiGenderSchema();
+
+			// Swapped on purpose: the rows tell this converter's value from the registered enum's mapping.
+			ms.SetConverter<ApiGender, DataParameter>(value => new DataParameter(null, value == ApiGender.Female ? "M" : "F", DataType.VarChar));
+
+			using var db = GetDataContext(context, ms);
+
+			var gender = ApiGender.Female;
+
+			var ids = db.Person
+				.Where(p => (ApiGender)(p.ID > 2 ? Gender.Male : Gender.Female) == gender)
+				.Select(p => p.ID)
+				.OrderBy(id => id)
+				.ToArray();
+
+			var expected = Person
+				.Where(p => p.ID > 2)
+				.Select(p => p.ID)
+				.OrderBy(id => id)
+				.ToArray();
+
+			ids.ShouldBe(expected);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void ProjectedEnumCastChildReferencesParent([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var result = db.Person
+				.Select(p => new { p.ID, Gender = (ApiGender)p.Gender })
+				.OrderBy(p => p.ID)
+				.Select(p => new
+				{
+					p.ID,
+					Same = db.Person
+						.Where(o => (ApiGender)o.Gender == p.Gender)
+						.Select(o => o.ID)
+						.ToList(),
+				})
+				.ToList();
+
+			var expected = Person
+				.OrderBy(p => p.ID)
+				.Select(p => Person.Count(o => o.Gender == p.Gender))
+				.ToArray();
+
+			result
+				.Select(r => r.Same.Count)
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
+		enum DtoGender
+		{
+			[MapValue("M")] Male,
+			[MapValue("F")] Female,
+			[MapValue("U")] Unknown,
+			[MapValue("O")] Other,
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void DirectCastToEnumWithOwnMapValuesEqualConstant([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.Where(p => (DtoGender)p.Gender == DtoGender.Female);
+
+			AssertQuery(query);
+
+			query
+				.ToSqlQuery()
+				.Sql
+				.ShouldNotMatch(@"(?i:CAST)\s*\(\s*[^\s,]*Gender");
+		}
+
+		enum SpelledOutGender
+		{
+			[MapValue("Male")]    Male,
+			[MapValue("Female")]  Female,
+			[MapValue("Unknown")] Unknown,
+			[MapValue("Other")]   Other,
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void DirectCastToEnumWithOtherMapValuesEqualParameter([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var gender = SpelledOutGender.Female;
+
+			var query = db.Person
+				.Where(p => (SpelledOutGender)p.Gender == gender);
+
+			AssertQuery(query);
+		}
+
+		[ActiveIssue(6298, ErrorMessage = "Expected and result lists are different")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6298")]
+		public void DirectCastToEnumWithOtherMapValuesEqualConstant([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.Where(p => (SpelledOutGender)p.Gender == SpelledOutGender.Female);
+
+			AssertQuery(query);
+		}
+
+		[ActiveIssue(6298, ErrorMessage = "Expected and result lists are different")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6298")]
+		public void DirectCastToEnumWithOtherMapValuesContains([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var genders = new[] { SpelledOutGender.Female, SpelledOutGender.Other };
+
+			var query = db.Person
+				.Where(p => genders.Contains((SpelledOutGender)p.Gender));
+
+			AssertQuery(query);
+		}
+
+		enum UnmappedGender
+		{
+			Male,
+			Female,
+			Unknown,
+			Other,
+		}
+
+		[ActiveIssue(6298, Details = "no-declaration: the column side is CAST(Gender AS Int) over the char column, so an engine that coerces it returns wrong rows and a strict one refuses it in its own words - '42883: operator does not exist: integer = character' on PostgreSQL, 'Conversion failed when converting the varchar value 'F' to data type int' on SQL Server.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6298")]
+		// Access drops the integer cast and answers correctly: DirectCastToEnumWithoutMapValuesEqualParameterCastDropped.
+		public void DirectCastToEnumWithoutMapValuesEqualParameter([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var gender = UnmappedGender.Female;
+
+			var query = db.Person
+				.Where(p => (UnmappedGender)p.Gender == gender);
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6298")]
+		// Access's ConvertConversion drops a cast to an integer, so the column is compared with the parameter's 'F' directly.
+		public void DirectCastToEnumWithoutMapValuesEqualParameterCastDropped([IncludeDataSources(true, TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var gender = UnmappedGender.Female;
+
+			var query = db.Person
+				.Where(p => (UnmappedGender)p.Gender == gender);
+
+			AssertQuery(query);
+		}
+
+		[ActiveIssue(6298, ErrorMessage = "Expected and result lists are different")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6298")]
+		public void DirectCastToEnumWithoutMapValuesEqualConstant([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.Where(p => (UnmappedGender)p.Gender == UnmappedGender.Female);
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void DirectEnumCastConstantOnLeft([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var query = db.Person
+				.Where(p => ApiGender.Female == (ApiGender)p.Gender);
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void ProjectedEnumCastContainsInlineArray([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var query = db.Person
+				.Select(p => new { p.ID, Gender = (ApiGender)p.Gender })
+				.Where(p => new[] { ApiGender.Female, ApiGender.Other }.Contains(p.Gender));
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void ProjectedEnumCastEmitsNoSqlCast([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var gender = ApiGender.Female;
+
+			var query = db.Person
+				.Select(p => new { p.ID, Gender = (ApiGender)p.Gender })
+				.Where(p => p.Gender == gender)
+				.Select(p => p.ID);
+
+			var sql = query
+				.ToSqlQuery()
+				.Sql;
+
+			sql.ShouldNotMatch(@"(?i:CAST)\s*\(\s*[^\s,]*Gender");
+			sql.ShouldNotContain("CASE", Case.Insensitive);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5416")]
