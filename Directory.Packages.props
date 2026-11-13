@@ -25,11 +25,11 @@
 		<BandLatestForNuget Condition="'$(TargetFramework)'=='net10.0'">10.0.0</BandLatestForNuget>
 		<BandLatestForNuget Condition="'$(TargetFramework)'=='net11.0'">11.0.0</BandLatestForNuget>
 		<!--latest version (not referenced from nuspec)-->
-		<BandLatest Condition="'$(TargetFramework)'=='net10.0'">10.0.12</BandLatest>
+		<BandLatest Condition="'$(TargetFramework)'=='net10.0'">10.0.15</BandLatest>
 		<BandLatest Condition="'$(TargetFramework)'=='net11.0'">11.0.0</BandLatest>
 
 		<!--single version across every TFM, for packages we deliberately do not float per band-->
-		<Net10Latest>10.0.12</Net10Latest>
+		<Net10Latest>10.0.15</Net10Latest>
 
 		<!--In-box package floor for the net462/netstandard2.0 surfaces: the lowest supported runtime, per
 		    https://github.com/linq2db/linq2db/issues/3953. Moves with the oldest row of $(BandLatestForNuget)
@@ -37,7 +37,7 @@
 		<LegacyNetPackageVersion>10.0.0</LegacyNetPackageVersion>
 		<!--Same band, newest patch. For pins that must not sit on a known-vulnerable build - the floor
 		    release is routinely the one an advisory names - and for test-only packages.-->
-		<LegacyNetPackageLatest>10.0.12</LegacyNetPackageLatest>
+		<LegacyNetPackageLatest>10.0.15</LegacyNetPackageLatest>
 
 		<!--FSharp.Core floor for linq2db.FSharp, referenced from nuspec: the FSharp.Core the band's first SDK shipped
 		    with; net462/netstandard2.0 take the lowest supported band's, as $(LegacyNetPackageVersion) does.-->
@@ -51,7 +51,7 @@
 		<EF3NpgsqlVersion>4.1.14</EF3NpgsqlVersion>
 
 		<!--used by VersionOverride in project files-->
-		<OracleManagedLinqPadVersion>23.26.301</OracleManagedLinqPadVersion>
+		<OracleManagedLinqPadVersion>23.26.400</OracleManagedLinqPadVersion>
 
 		<!--
 		used by VersionOverride in project files (tests only - linq2db.cli and the LINQPad driver stay on $(Net10Latest))
@@ -85,14 +85,14 @@
 		    System.Data.SqlClient tests need. The two assembly versions are incompatible, so they stay apart.-->
 		<DotMortenSqlServerTypesLinqPadVersion>2.5.0</DotMortenSqlServerTypesLinqPadVersion>
 
-		<!--bundled version for legacy SignalR packages (net462 + SignalR.Client !net8+ + SignalR.Core)-->
-		<SignalRLegacyVersion>1.2.13</SignalRLegacyVersion>
+		<!--bundled version for legacy SignalR packages (net462 + SignalR.Client net462/netstandard2.0 + SignalR.Core)-->
+		<SignalRLegacyVersion>1.2.14</SignalRLegacyVersion>
 		<!--bundled version for legacy AspNetCore [net462] packages (Microsoft.AspNetCore + Kestrel.Core)-->
-		<AspNetCoreLegacyVersion>2.3.13</AspNetCoreLegacyVersion>
+		<AspNetCoreLegacyVersion>2.3.14</AspNetCoreLegacyVersion>
 		<!--bundled version for OpenTelemetry packages-->
-		<OpenTelemetryVersion>1.18.0</OpenTelemetryVersion>
+		<OpenTelemetryVersion>1.21.0</OpenTelemetryVersion>
 		<!--bundled version for Microsoft.Testing.Platform / Extensions packages-->
-		<MicrosoftTestingVersion>2.4.0</MicrosoftTestingVersion>
+		<MicrosoftTestingVersion>2.5.3</MicrosoftTestingVersion>
 	</PropertyGroup>
 
 	<ItemGroup Label="Build: Analyzers and Tools">
@@ -100,13 +100,13 @@
 		<PackageVersion Include="DotNet.ReproducibleBuilds"                             Version="2.0.5"                        />
 		<PackageVersion Include="Lindhart.Analyser.MissingAwaitWarning"                 Version="4.0.0-beta"                   />
 		<PackageVersion Include="Meziantou.Analyzer"                                    Version="3.0.231"                      />
-		<PackageVersion Include="Meziantou.Polyfill"                                    Version="1.0.165"                      />
+		<PackageVersion Include="Meziantou.Polyfill"                                    Version="1.0.171"                      />
 		<PackageVersion Include="Microsoft.CodeAnalysis.Analyzers"                      Version="5.9.0"                        />
 		<!--Shipped analyzer package (linq2db.Analyzers) targets the Roslyn bundled with the LOWEST supported .NET SDK's first feature band (.NET 10 => 10.0.1xx => Roslyn 5.0) for broad IDE reach; bump only when that SDK is dropped. Measured mapping: 10.0.2xx ships 5.3 and 10.0.4xx ships 5.9. Kept separate from the runtime pin below; CentralPackageTransitivePinningEnabled=false so the transitive CodeAnalysis assemblies don't clash.-->
 		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces"              Version="5.0.0"                        />
 		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers"             Version="5.6.0"                        />
 		<PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers"             Version="5.6.0"                        />
-		<PackageVersion Include="Microsoft.SourceLink.GitHub"                           Version="10.0.401"                     />
+		<PackageVersion Include="Microsoft.SourceLink.GitHub"                           Version="11.0.100"                     />
 	</ItemGroup>
 
 	<ItemGroup Label="Polyfills">
@@ -123,10 +123,10 @@
 		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp"                         Version="5.9.0"                        />
 		<PackageVersion Include="Microsoft.Extensions.DependencyModel"                  Version="$(Net10Latest)"               />
 		<PackageVersion Include="Microsoft.Extensions.Hosting"                          Version="$(BandLatestForNuget)"         Condition="'$(BandLatestForNuget)'!=''" />
-		<PackageVersion Include="ModelContextProtocol"                                  Version="2.2.0"                        />
+		<PackageVersion Include="ModelContextProtocol"                                  Version="2.4.0"                        />
 		<PackageVersion Include="Mono.TextTemplating"                                   Version="3.0.0"                        />
 		<PackageVersion Include="protobuf-net.Grpc"                                     Version="1.3.14"                       />
-		<PackageVersion Include="protobuf-net"                                          Version="3.4.21"                       />
+		<PackageVersion Include="protobuf-net"                                          Version="3.4.40"                       />
 
 		<PackageVersion Include="Microsoft.EntityFrameworkCore.Relational"              Version="$(EF3LatestNuget)"            Condition="'$(BandLatestForNuget)'==''" />
 		<PackageVersion Include="Microsoft.EntityFrameworkCore.Relational"              Version="$(BandLatestForNuget)"        Condition="'$(BandLatestForNuget)'!=''" />
@@ -150,31 +150,31 @@
 
 	<ItemGroup Label="Database Providers">
 		<PackageVersion Include="AdoNetCore.AseClient"                                  Version="0.19.2"                       />
-		<PackageVersion Include="Devart.Data.Oracle"                                    Version="11.2.192"                     />
-		<PackageVersion Include="ClickHouse.Driver"                                     Version="0.9.0"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
-		<PackageVersion Include="ClickHouse.Driver"                                     Version="1.4.0"                        Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))"  />
+		<PackageVersion Include="Devart.Data.Oracle"                                    Version="11.3.248"                     />
+		<PackageVersion Include="ClickHouse.Driver"                                     Version="0.9.0"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
+		<PackageVersion Include="ClickHouse.Driver"                                     Version="1.5.0"                        Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))"  />
 		<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"                   Version="1.5.0"                        />
 		<!--<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"                   Version="2.5.0"                 />-->
 		<PackageVersion Include="FirebirdSql.Data.FirebirdClient"                       Version="10.3.4"                       />
 		<PackageVersion Include="IBM.Data.DB.Provider"                                  Version="11.5.9000.4"                  />
-		<PackageVersion Include="Microsoft.Data.SqlClient"                              Version="7.0.2"                        />
+		<PackageVersion Include="Microsoft.Data.SqlClient"                              Version="7.1.1"                        />
 		<PackageVersion Include="Microsoft.Data.Sqlite"                                 Version="$(Net10Latest)"               />
 		<PackageVersion Include="Microsoft.SqlServer.Compact"                           Version="4.0.8876.1"                   />
-		<PackageVersion Include="Microsoft.SqlServer.TransactSql.ScriptDom"             Version="180.102.0"                    />
+		<PackageVersion Include="Microsoft.SqlServer.TransactSql.ScriptDom"             Version="180.140.0"                    />
 		<PackageVersion Include="Microsoft.SqlServer.Types"                             Version="170.1000.7"                   />
-		<PackageVersion Include="MySqlConnector"                                        Version="2.6.2"                        />
-		<PackageVersion Include="MySql.Data"                                            Version="26.7.0"                       />
-		<!--IBM ships no .NET 11 build; 10.0.0.200 is the newest and its net10.0 asset binds on net11 too-->
-		<PackageVersion Include="Net.IBM.Data.Db2"                                      Version="10.0.0.200"                   />
-		<PackageVersion Include="Net.IBM.Data.Db2-lnx"                                  Version="10.0.0.200"                   />
-		<PackageVersion Include="Net.IBM.Data.Db2-osx"                                  Version="10.0.0.200"                   />
-		<PackageVersion Include="Npgsql"                                                Version="8.0.9"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
-		<PackageVersion Include="Npgsql"                                                Version="10.0.3"                       Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
-		<PackageVersion Include="Npgsql.NodaTime"                                       Version="8.0.9"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
-		<PackageVersion Include="Npgsql.NodaTime"                                       Version="10.0.3"                       Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
+		<PackageVersion Include="MySqlConnector"                                        Version="3.0.0"                        />
+		<PackageVersion Include="MySql.Data"                                            Version="26.10.0"                      />
+		<!--IBM ships no .NET 11 build; the net10.0 asset binds on net11 too-->
+		<PackageVersion Include="Net.IBM.Data.Db2"                                      Version="10.0.0.400"                   />
+		<PackageVersion Include="Net.IBM.Data.Db2-lnx"                                  Version="10.0.0.400"                   />
+		<PackageVersion Include="Net.IBM.Data.Db2-osx"                                  Version="10.0.0.400"                   />
+		<PackageVersion Include="Npgsql"                                                Version="8.0.9"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
+		<PackageVersion Include="Npgsql"                                                Version="10.0.3"                       Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
+		<PackageVersion Include="Npgsql.NodaTime"                                       Version="8.0.9"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
+		<PackageVersion Include="Npgsql.NodaTime"                                       Version="10.0.3"                       Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
 		<PackageVersion Include="Octonica.ClickHouseClient"                             Version="4.1.6"                        />
-		<PackageVersion Include="Oracle.ManagedDataAccess"                              Version="21.23.0"                      />
-		<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="23.26.301"                    />
+		<PackageVersion Include="Oracle.ManagedDataAccess"                              Version="21.24.0"                      />
+		<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="23.26.400"                    />
 		<PackageVersion Include="Sap.Data.Hana.Net.v10.0"                               Version="2.30.27"                      Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
 		<PackageVersion Include="System.Data.Odbc"                                      Version="$(Net10Latest)"               />
 		<!--tests override this via VersionOverride, see $(OleDbTestsVersion) above-->
@@ -185,11 +185,11 @@
 		<PackageVersion Include="System.Data.SQLite"                                    Version="2.0.4"                        />
 		<PackageVersion Include="Ydb.Sdk"                                               Version="0.38.0"                       />
 		<PackageVersion Include="DuckDB.NET.Data.Full"                                  Version="1.5.5"                        />
-		<PackageVersion Include="linq2db4iSeries"                                       Version="6.5.0"                        />
+		<PackageVersion Include="linq2db4iSeries"                                       Version="6.5.1"                        />
 	</ItemGroup>
 
 	<ItemGroup Label="Remote">
-		<PackageVersion Include="Grpc.Net.Client"                                       Version="2.83.0"                       />
+		<PackageVersion Include="Grpc.Net.Client"                                       Version="2.85.0"                       />
 
 		<PackageVersion Include="Microsoft.AspNetCore.SignalR.Core"                     Version="$(SignalRLegacyVersion)"      />
 
@@ -212,8 +212,8 @@
 		<PackageVersion Include="Microsoft.Testing.Extensions.HangDump"                 Version="$(MicrosoftTestingVersion)"   />
 		<PackageVersion Include="Microsoft.Testing.Extensions.Retry"                    Version="$(MicrosoftTestingVersion)"   />
 		<PackageVersion Include="NUnit"                                                 Version="4.6.1"                        />
-		<PackageVersion Include="NUnit.Analyzers"                                       Version="4.14.0"                       />
-		<PackageVersion Include="NUnit3TestAdapter"                                     Version="6.3.0"                        />
+		<PackageVersion Include="NUnit.Analyzers"                                       Version="4.15.0"                       />
+		<PackageVersion Include="NUnit3TestAdapter"                                     Version="6.3.1"                        />
 		<!--Roslyn analyzer/code-fix unit-test harness for Tests/Tests.Analyzers and Tests/Tests.Analyzers.Internal.
 		    The latter overrides Microsoft.CodeAnalysis.CSharp.Workspaces to 5.9.0, matching the Roslyn CodeGenerators
 		    builds against; the 5.0.0 pin on that package in "Build: Analyzers and Tools" above is the shipped
@@ -221,18 +221,18 @@
 		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing"        Version="1.1.4"                        />
 		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing"         Version="1.1.4"                        />
 
-		<PackageVersion Include="Microsoft.AspNet.OData"                                Version="7.8.0"                        />
+		<PackageVersion Include="Microsoft.AspNet.OData"                                Version="7.8.1"                        />
 		<PackageVersion Include="Microsoft.AspNetCore.OData"                            Version="9.5.0"                        />
 		<PackageVersion Include="MiniProfiler.Shared"                                   Version="4.5.4"                        />
 		<PackageVersion Include="MiniProfiler.Minimal"                                  Version="4.5.4"                        />
 		<PackageVersion Include="Newtonsoft.Json"                                       Version="13.0.4"                       />
-		<PackageVersion Include="NodaTime"                                              Version="3.3.3"                        />
+		<PackageVersion Include="NodaTime"                                              Version="3.3.7"                        />
 		<PackageVersion Include="protobuf-net.Grpc.AspNetCore"                          Version="1.3.14"                       />
 		<PackageVersion Include="System.Linq.Dynamic.Core"                              Version="1.7.4"                        />
 		<!--net11 cannot sit below linq2db.FSharp's net11 floor, $(FSharpCoreForNuget)-->
-		<PackageVersion Include="FSharp.Core"                                           Version="10.1.401"                     Condition="'$(TargetFramework)'!='net11.0'" />
+		<PackageVersion Include="FSharp.Core"                                           Version="10.1.404"                     Condition="'$(TargetFramework)'!='net11.0'" />
 		<PackageVersion Include="FSharp.Core"                                           Version="11.0.101"                     Condition="'$(TargetFramework)'=='net11.0'" />
-		<PackageVersion Include="LinqKit"                                               Version="1.3.11"                       />
+		<PackageVersion Include="LinqKit"                                               Version="1.4.1"                        />
 
 		<PackageVersion Include="Microsoft.Extensions.Logging.Console"                 Version="$(LegacyNetPackageLatest)"    Condition="'$(BandLatest)'==''" />
 		<PackageVersion Include="Microsoft.Extensions.Logging.Console"                  Version="$(BandLatest)"                Condition="'$(BandLatest)'!=''" />
@@ -243,7 +243,7 @@
 		    Its versions track EF Core patch numbers 1:1, so keep this in step with $(BandLatest) - or, when
 		    Microting lags, at the newest release whose own dependency floors $(BandLatest) already satisfies.
 		    Its EF Core 11 line is a preview so far; move to the release once it ships.-->
-		<PackageVersion Include="Microting.EntityFrameworkCore.MySql"                   Version="10.0.11"                      Condition="'$(TargetFramework)'=='net10.0'" />
+		<PackageVersion Include="Microting.EntityFrameworkCore.MySql"                   Version="10.0.14"                      Condition="'$(TargetFramework)'=='net10.0'" />
 		<PackageVersion Include="Microting.EntityFrameworkCore.MySql"                   Version="11.0.0-preview.1"             Condition="'$(TargetFramework)'=='net11.0'" />
 		<!--numbered independently of the runtime band, so these stay explicit rather than reading $(BandLatest).
 		    The net11 row needs the EF11 test project's direct EF pins: Npgsql's 11.0.0-rc.3 hard-pins
@@ -268,7 +268,7 @@
 
 	<ItemGroup Label="Benchmarks">
 		<PackageVersion Include="BenchmarkDotNet"                                       Version="0.15.8"                       />
-		<PackageVersion Include="JetBrains.Profiler.Api"                                Version="1.4.13"                       />
+		<PackageVersion Include="JetBrains.Profiler.Api"                                Version="1.4.14"                       />
 	</ItemGroup>
 
 	<ItemGroup Label="Examples">
@@ -279,8 +279,7 @@
 		<PackageVersion Include="System.Runtime.InteropServices.RuntimeInformation"     Version="4.3.0"                        />
 
 		<PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly"           Version="$(Net10Latest)"               />
-		<!--GHSA-g27p-qf6j-c96c, GHSA-qjpx-jqm5-h2c4: back to $(Net10Latest) once it reaches 10.0.14-->
-		<PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server"    Version="10.0.14"                      />
+		<PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server"    Version="$(Net10Latest)"               />
 		<PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="$(Net10Latest)"               />
 	</ItemGroup>
 
@@ -290,13 +289,6 @@
 	</ItemGroup>
 
 	<ItemGroup Label="Manage Transient Packages with Vulnerabilities">
-		<!--suppress invalid System.Private.Uri errors : https://github.com/dotnet/sdk/issues/42651-->
-		<NuGetAuditSuppress
-			Include="
-			https://github.com/advisories/GHSA-5f2m-466j-3848;
-			https://github.com/advisories/GHSA-x5qj-9vmx-7g6g;
-			https://github.com/advisories/GHSA-xhfc-gr8f-ffwc" />
-
 		<!--
 		One native package for both SQLite clients: System.Data.SQLite 2.x ships no native of its own and
 		DllImports e_sqlite3, so a second native package (SourceGear.sqlite3, carried until 6.5.0) only put a
@@ -309,16 +301,12 @@
 		    transitively and transitive pinning is off, so this stands until EF3/net462 leaves the matrix.-->
 		<NuGetAuditSuppress Include="https://github.com/advisories/GHSA-2m69-gcr7-jv3q" />
 
-		<!--GHSA-2fmv-rv2c-59x7, GHSA-846f-f764-76mx: tests and linq2db.cli resolve 8.0.1-9.0.13 via SqlClient (7.1.1 still pulls 9.0.18), Oracle, EF Core and Roslyn-->
-		<PackageVersion Include="System.Security.Cryptography.Pkcs"                     Version="9.0.21"                       />
+		<!--GHSA-2fmv-rv2c-59x7, GHSA-846f-f764-76mx: tests and linq2db.cli resolve vulnerable 8.0.1/9.0.x via SqlClient, Oracle and Roslyn; EF Core 10.0.15 needs >= 10.0.13-->
+		<PackageVersion Include="System.Security.Cryptography.Pkcs"                     Version="$(LegacyNetPackageLatest)"    />
 
-		<PackageVersion Include="Microsoft.AspNetCore.Server.Kestrel.Core"              Version="$(AspNetCoreLegacyVersion)"   Condition="'$(TargetFramework)'=='net462'" />
 		<!--GHSA-67wp-ghc2-fw2g, GHSA-6527-9fp8-r4x6: SignalR $(SignalRLegacyVersion) resolves Http.Connections 1.2.0 and WebUtilities 2.3.12 for the net462 tests-->
 		<PackageVersion Include="Microsoft.AspNetCore.Http.Connections"                 Version="1.2.14"                       Condition="'$(TargetFramework)'=='net462'" />
 		<PackageVersion Include="Microsoft.AspNetCore.WebUtilities"                     Version="2.3.14"                       Condition="'$(TargetFramework)'=='net462'" />
-		<!--not $(LegacyNetPackageVersion): 10.0.0 is the build GHSA-73j8-2gch-69rq names-->
-		<PackageVersion Include="Microsoft.Bcl.Memory"                                  Version="$(LegacyNetPackageLatest)"    Condition="'$(BandLatest)'==''" />
-		<PackageVersion Include="Microsoft.Bcl.Memory"                                  Version="$(BandLatest)"                Condition="'$(BandLatest)'!=''" />
 	</ItemGroup>
 
 </Project>

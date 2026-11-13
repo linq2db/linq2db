@@ -56,8 +56,9 @@ namespace LinqToDB.Remote.SignalR
 		string? ILinqService.RemoteClientTag { get; set; } = "Signal/R";
 
 		// Deliberately does nothing: the hub connection is handed in, so it belongs to whoever created it -
-		// SignalRDataContext disposes the one it creates for itself. RemoteDataContextBase.OwnsClient is false
-		// for that context, so nothing releases this instance per query either.
+		// SignalRDataContext disposes it only when constructed with disposeHubConnection: true.
+		// RemoteDataContextBase.OwnsClient is false for that context, so nothing releases this instance per
+		// query either.
 		public ValueTask DisposeAsync() => default;
 	}
 }
