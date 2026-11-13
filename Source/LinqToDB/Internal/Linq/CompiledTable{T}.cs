@@ -44,12 +44,15 @@ namespace LinqToDB.Internal.Linq
 			return new DependentArgumentValues(values);
 		}
 
-		Query<T> GetInfo(IDataContext dataContext, object?[] parameterValues)
+		// Candidates kept per cache key; see QueryRunner.Cache<T>.QueryCache.
+		const int MaxCandidates = 4;
+
+		internal Query<T> GetInfo(IDataContext dataContext, object?[] parameterValues, out IQueryExpressions expressions)
 		{
 			for (;;)
 			{
 				var indexes = _dependentArgumentIndexes;
-				var query   = GetInfo(dataContext, parameterValues, indexes, out var unseenSlots);
+				var query   = GetInfo(dataContext, parameterValues, indexes, out var unseenSlots, out expressions);
 
 				if (unseenSlots == null)
 					return query;
@@ -59,7 +62,7 @@ namespace LinqToDB.Internal.Linq
 			}
 		}
 
-		Query<T> GetInfo(IDataContext dataContext, object?[] parameterValues, int[] indexes, out int[]? unseenSlots)
+		Query<T> GetInfo(IDataContext dataContext, object?[] parameterValues, int[] indexes, out int[]? unseenSlots, out IQueryExpressions expressions)
 		{
 			var cacheKey =
 				(
@@ -72,17 +75,29 @@ namespace LinqToDB.Internal.Linq
 					dependent  : GetDependentArgumentValues(indexes, parameterValues)
 				);
 
-			if (QueryRunner.Cache<T>.QueryCache.TryGetValue(cacheKey, out var cached))
-			{
-				unseenSlots = null;
+			// A query with dynamic expression accessors (query filters, interceptor rewrites) or merged parameters depends
+			// on the executing context and arguments beyond this key: every candidate is revalidated before it is used.
+			QueryRunner.Cache<T>.QueryCache.TryGetValue(cacheKey, out var candidates);
 
-				return cached;
+			if (candidates != null)
+			{
+				foreach (var candidate in candidates)
+				{
+					if (TryReuse(candidate, dataContext, parameterValues, out expressions))
+					{
+						unseenSlots = null;
+
+						return candidate;
+					}
+				}
 			}
 
 			// Built outside the cache on purpose. Routing this through GetOrCreate publishes the entry before
 			// its key can be checked against what the build materialised, and a thread hitting it in that window
 			// would run this query for its own argument values.
 			var query = BuildQuery(dataContext, parameterValues, out var materializedSlots);
+
+			expressions = query.CompiledExpressions!;
 
 			if (!IsCovered(materializedSlots, indexes))
 			{
@@ -93,16 +108,44 @@ namespace LinqToDB.Internal.Linq
 				return query;
 			}
 
+			// Newest first; the oldest candidate drops out once MaxCandidates are kept. A concurrent publish for the same
+			// key may drop the other thread's candidate, which only costs a rebuild.
+			var count  = candidates == null ? 0 : Math.Min(candidates.Length, MaxCandidates - 1);
+			var update = new Query<T>[count + 1];
+
+			update[0] = query;
+
+			if (count > 0)
+				Array.Copy(candidates!, 0, update, 1, count);
+
 			using (var entry = QueryRunner.Cache<T>.QueryCache.CreateEntry(cacheKey))
 			{
 				entry.SlidingExpiration = dataContext.Options.LinqOptions.CacheSlidingExpirationOrDefault;
 				entry.Size              = 1;
-				entry.Value             = query;
+				entry.Value             = update;
 			}
 
 			unseenSlots = null;
 
 			return query;
+		}
+
+		// The main expression is this fold site's own tree, identical for every candidate, so only the part of the cache
+		// comparison that depends on the context and the arguments is checked.
+		static bool TryReuse(Query<T> query, IDataContext dataContext, object?[] parameterValues, out IQueryExpressions expressions)
+		{
+			expressions = query.CompiledExpressions!;
+
+			if (query.CompareInfo == null || query.CompareInfo.IsFastComparable)
+				return true;
+
+			if (query.Revalidate(dataContext, expressions, parameterValues, out var matched))
+			{
+				expressions = matched;
+				return true;
+			}
+
+			return false;
 		}
 
 		Query<T> BuildQuery(IDataContext dataContext, object?[] parameterValues, out int[] materializedSlots)
@@ -135,6 +178,7 @@ namespace LinqToDB.Internal.Linq
 			}
 
 			query.CompiledExpressions = expressions;
+			query.CompiledSource      = this;
 
 			return query;
 		}
@@ -164,23 +208,59 @@ namespace LinqToDB.Internal.Linq
 		public IQueryable<T> Create(object[] parameters)
 		{
 			var db    = (IDataContext)parameters[0];
-			var query = GetInfo(db, parameters);
+			var query = GetInfo(db, parameters, out var expressions);
 
 			// The exposed tree, not _expression: Info carries parameter accessors built against it, and a
 			// pre-set Info makes ExpressionQuery skip the expose that would otherwise reconcile the two.
-			return new Table<T>(db, query.CompiledExpressions!.MainExpression)
+			return new CompiledTableQuery(db, expressions.MainExpression)
 			{
 				Info                = query,
 				Parameters          = parameters,
-				CompiledExpressions = query.CompiledExpressions,
+				CompiledExpressions = expressions,
 			};
+		}
+
+		/// <summary>
+		/// The IQueryable Create returns. On every execution it checks that its query still fits: while the context
+		/// matches the one the query was built for and no argument selects the query by value ([SqlQueryDependent],
+		/// which the caller may change in the argument array), the query is revalidated in place; otherwise it is
+		/// resolved through the compiled query again.
+		/// </summary>
+		sealed class CompiledTableQuery(IDataContext dataContext, Expression expression) : Table<T>(dataContext, expression)
+		{
+			internal override Query<T>? TryGetCompiledQuery(ref IQueryExpressions expression)
+			{
+				// Info is always a query this compiled table built (Create and the resolution below set it).
+				var source = (CompiledTable<T>)Info!.CompiledSource!;
+
+				if (source._dependentArgumentIndexes.Length == 0 && Info.IsBuiltFor(DataContext))
+				{
+					if (Info.CompareInfo?.IsFastComparable != false)
+						return Info;
+
+					if (Info.Revalidate(DataContext, CompiledExpressions!, Parameters!, out var revalidated))
+					{
+						CompiledExpressions = revalidated;
+						expression          = revalidated;
+
+						return Info;
+					}
+				}
+
+				var query = source.GetInfo(DataContext, Parameters!, out var compiled);
+
+				Info                = query;
+				CompiledExpressions = compiled;
+				expression          = compiled;
+
+				return query;
+			}
 		}
 
 		public T Execute(object[] parameters)
 		{
 			var db          = (IDataContext)parameters[0];
-			var query       = GetInfo(db, parameters);
-			var expressions = query.CompiledExpressions!;
+			var query       = GetInfo(db, parameters, out var expressions);
 
 			using var transaction = query.StartLoadTransaction(db);
 
@@ -198,8 +278,7 @@ namespace LinqToDB.Internal.Linq
 		public async Task<T> ExecuteAsync(object[] parameters, CancellationToken cancellationToken)
 		{
 			var db          = (IDataContext)parameters[0];
-			var query       = GetInfo(db, parameters);
-			var expressions = query.CompiledExpressions!;
+			var query       = GetInfo(db, parameters, out var expressions);
 
 			var transaction = await query.StartLoadTransactionAsync(db, cancellationToken).ConfigureAwait(false);
 			await using var tr = (transaction ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);

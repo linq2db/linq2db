@@ -332,6 +332,7 @@ namespace LinqToDB.Remote
 						.Add(_msID = ((IConfigurationID)MappingSchema).ConfigurationID)
 						.Add(Options)
 						.Add(GetType())
+						.AddTranslationInterceptors(this)
 						.CreateID();
 				}
 
@@ -777,7 +778,8 @@ namespace LinqToDB.Remote
 			if (((IConfigurationID)prevOptions).ConfigurationID == ((IConfigurationID)newOptions).ConfigurationID)
 				return null;
 
-			var configurationID = _configurationID;
+			var configurationID     = _configurationID;
+			var interceptorsVersion = _interceptorsVersion;
 
 			Options          = newOptions;
 			_configurationID = null;
@@ -787,7 +789,7 @@ namespace LinqToDB.Remote
 			action += () =>
 			{
 				Options          = prevOptions;
-				_configurationID = configurationID;
+				_configurationID = interceptorsVersion == _interceptorsVersion ? configurationID : null;
 			};
 
 			return new DisposableAction(action);
@@ -797,14 +799,15 @@ namespace LinqToDB.Remote
 		public IDisposable? UseMappingSchema(MappingSchema mappingSchema)
 		{
 			var oldSchema       = MappingSchema;
-			var configurationID = _configurationID;
+			var configurationID     = _configurationID;
+			var interceptorsVersion = _interceptorsVersion;
 
 			AddMappingSchema(mappingSchema);
 
 			return new DisposableAction(() =>
 			{
 				((IDataContext)this).SetMappingSchema(oldSchema);
-				_configurationID = configurationID;
+				_configurationID = interceptorsVersion == _interceptorsVersion ? configurationID : null;
 			});
 		}
 	}

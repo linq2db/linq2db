@@ -8,9 +8,11 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Data;
+using LinqToDB.Interceptors;
 using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Interceptors;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Metrics;
@@ -96,19 +98,59 @@ namespace LinqToDB.Internal.Linq
 		{
 			dependsOnParameters = false;
 
+			if (cache && TryGetCompiledQuery(ref expression) is { } compiled)
+				return compiled;
+
+			var queryStageDone     = false;
+			var queryStageRewrote  = false;
+			var exposedStageResult = (Expression?)null;
+
 			if (cache && Info != null)
 			{
-				return Info;
+				// A query is kept only if nothing in it is re-evaluated on a cache hit (see below); it stays valid while the
+				// context matches the one it was built for and the query interceptor, if any, still leaves the tree alone.
+				// The interceptor stages run here once; when they rewrite, their results go on to the normal path.
+				if (Info.IsBuiltFor(DataContext))
+				{
+					if (DataContext is not IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } interceptor })
+						return Info;
+
+					var main      = expression.MainExpression;
+					var processed = interceptor.ProcessExpression(main, new QueryExpressionArgs(DataContext, main, QueryExpressionArgs.ExpressionKind.Query));
+
+					queryStageDone = true;
+
+					if (!ReferenceEquals(processed, main))
+					{
+						queryStageRewrote = true;
+						expression        = new RuntimeExpressionsContainer(processed);
+					}
+					else
+					{
+						exposedStageResult = interceptor.ProcessExpression(main, new QueryExpressionArgs(DataContext, main, QueryExpressionArgs.ExpressionKind.ExposedQuery));
+
+						if (ReferenceEquals(exposedStageResult, main))
+							return Info;
+					}
+				}
+
+				Info = null;
 			}
 
-			var info = Query<T>.GetQuery(DataContext, ref expression, out dependsOnParameters);
+			var info = Query<T>.GetQuery(DataContext, ref expression, out dependsOnParameters, queryStageDone, queryStageRewrote, exposedStageResult);
 
+			// Only a query that the cache would accept without re-evaluating anything is kept (no dynamic accessors or
+			// value comparisons, no part of the tree rewritten by expose or by an interceptor).
 			if (cache && info.CompareInfo?.IsFastComparable == true && !dependsOnParameters)
-			{
 				Info = info;
-			}
 
 			return info;
+		}
+
+		// The IQueryable a compiled query returns resolves its query through the compiled query.
+		internal virtual Query<T>? TryGetCompiledQuery(ref IQueryExpressions expression)
+		{
+			return null;
 		}
 
 		async Task<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken)

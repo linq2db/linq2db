@@ -50,6 +50,9 @@ namespace LinqToDB.Internal.Linq
 			SqlOptimizer     = dataContext.GetSqlOptimizer(dataContext.Options);
 			SqlProviderFlags = dataContext.SqlProviderFlags;
 			DataOptions      = dataContext.Options;
+			ContextType      = dataContext.GetType();
+			ConfigurationID  = dataContext.ConfigurationID;
+			QueryFlags       = dataContext.GetQueryFlags();
 		}
 
 		#endregion
@@ -65,6 +68,19 @@ namespace LinqToDB.Internal.Linq
 		internal readonly SqlProviderFlags SqlProviderFlags;
 		internal readonly DataOptions      DataOptions;
 
+		// The context this query was built for, as far as the query cache key distinguishes contexts. An IQueryable that
+		// keeps its query (or the one a compiled query returned) reuses it only while its context still matches.
+		internal readonly Type       ContextType;
+		internal readonly int        ConfigurationID;
+		internal readonly QueryFlags QueryFlags;
+
+		internal bool IsBuiltFor(IDataContext dataContext)
+		{
+			return ContextType == dataContext.GetType()
+				&& ConfigurationID == dataContext.ConfigurationID
+				&& QueryFlags == dataContext.GetQueryFlags();
+		}
+
 		protected internal bool Compare(IDataContext dataContext, IQueryExpressions expressions, [NotNullWhen(true)] out IQueryExpressions? matchedQueryExpressions)
 		{
 			matchedQueryExpressions = null;
@@ -77,11 +93,41 @@ namespace LinqToDB.Internal.Linq
 			if (!result)
 				return false;
 
-			var runtimeExpressions = new RuntimeExpressionsContainer(expressions.MainExpression);
-			matchedQueryExpressions = runtimeExpressions;
+			return Revalidate(dataContext, expressions, compiledParameters: null, out matchedQueryExpressions);
+		}
+
+		/// <summary>
+		/// The part of <see cref="Compare"/> that does not follow from the main expression: re-evaluates the dynamic
+		/// expression accessors (query filters, interceptor rewrites) for <paramref name="dataContext"/> and runs the value
+		/// comparisons (parameters merged because their values were equal when the query was built). Every path that
+		/// reuses a built query - the query cache, compiled queries, an IQueryable executed again - goes through it.
+		/// On success returns the expressions to run the query with: <paramref name="expressions"/>' main expression plus
+		/// the re-evaluated accessor results, from which the parameter values are read.
+		/// </summary>
+		/// <param name="compiledParameters">Arguments of a compiled query, read by the value comparisons; <see langword="null"/> otherwise.</param>
+		internal bool Revalidate(IDataContext dataContext, IQueryExpressions expressions, object?[]? compiledParameters, [NotNullWhen(true)] out IQueryExpressions? matchedQueryExpressions)
+		{
+			matchedQueryExpressions = null;
+
+			if (CompareInfo == null)
+				return false;
+
+			bool result;
+
+			if (CompareInfo.DynamicAccessors == null && compiledParameters != null)
+			{
+				// Nothing to add to a compiled query's own expressions: they are used as they are.
+				matchedQueryExpressions = expressions;
+			}
+			else
+			{
+				matchedQueryExpressions = new RuntimeExpressionsContainer(expressions.MainExpression);
+			}
 
 			if (CompareInfo.DynamicAccessors != null)
 			{
+				var runtimeExpressions = (RuntimeExpressionsContainer)matchedQueryExpressions;
+
 				List<(int, Expression)>? testedExpressions = null;
 
 				foreach (var da in CompareInfo.DynamicAccessors)
@@ -106,13 +152,9 @@ namespace LinqToDB.Internal.Linq
 
 			if (CompareInfo.ComparisionFunctions != null)
 			{
-				foreach (var (main, other) in CompareInfo.ComparisionFunctions)
+				foreach (var compare in CompareInfo.ComparisionFunctions)
 				{
-					var value1 = main(matchedQueryExpressions, dataContext, null);
-					var value2 = other(matchedQueryExpressions, dataContext, null);
-					result = ExpressionEqualityComparer.CompareValues(value1, value2);
-
-					if (!result)
+					if (!compare(matchedQueryExpressions, dataContext, compiledParameters))
 						return false;
 				}
 			}
@@ -121,6 +163,10 @@ namespace LinqToDB.Internal.Linq
 		}
 
 		internal QueryCacheCompareInfo? CompareInfo;
+
+		// The compiled table (CompiledTable<T>) that built this query, if any: the IQueryable it returns finds its way back
+		// through the query it holds instead of carrying another field.
+		internal object? CompiledSource;
 
 		internal List<ParameterAccessor>? ParameterAccessors { get; set; }
 

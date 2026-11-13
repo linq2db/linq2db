@@ -1,6 +1,7 @@
 ﻿using System;
 
 using LinqToDB.Interceptors;
+using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Internal.Interceptors
 {
@@ -62,6 +63,30 @@ namespace LinqToDB.Internal.Interceptors
 					break;
 				default:
 					throw new InvalidOperationException($"AddInterceptor for '{typeof(T).Name}' is not implemented.");
+			}
+		}
+
+		/// <summary>
+		/// Adds the types of the registered interceptors that take part in query translation, so that a context does
+		/// not reuse a query cached for a context with other interceptor types. Only the types are added, so that
+		/// per-request instances keep sharing the cached query. For <see cref="IQueryExpressionInterceptor"/> the
+		/// rewrites that run after the cache lookup are re-checked on a cache hit; <see cref="IEntityBindingInterceptor"/>
+		/// instances of one type are assumed to translate alike.
+		/// </summary>
+		public static IdentifierBuilder AddTranslationInterceptors(this IdentifierBuilder builder, IInterceptable interceptable)
+		{
+			AddTypes(builder, (interceptable as IInterceptable<IQueryExpressionInterceptor>)?.Interceptor);
+			AddTypes(builder, (interceptable as IInterceptable<IEntityBindingInterceptor>)?.Interceptor);
+
+			return builder;
+
+			static void AddTypes<T>(IdentifierBuilder builder, T? interceptor)
+				where T : class, IInterceptor
+			{
+				if (interceptor is AggregatedInterceptor<T> aggregated)
+					builder.AddTypes(aggregated.Interceptors);
+				else
+					builder.Add(interceptor?.GetType());
 			}
 		}
 

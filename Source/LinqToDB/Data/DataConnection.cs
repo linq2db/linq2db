@@ -1974,7 +1974,8 @@ namespace LinqToDB.Data
 			if (((IConfigurationID)prevOptions).ConfigurationID == ((IConfigurationID)newOptions).ConfigurationID)
 				return null;
 
-			var configurationID = _configurationID;
+			var configurationID     = _configurationID;
+			var interceptorsVersion = _interceptorsVersion;
 
 			Options          = newOptions;
 			_configurationID = null;
@@ -1988,7 +1989,7 @@ namespace LinqToDB.Data
 #if DEBUG
 				_configurationID = null;
 #else
-				_configurationID = configurationID;
+				_configurationID = interceptorsVersion == _interceptorsVersion ? configurationID : null;
 #endif
 			};
 
@@ -1999,14 +2000,15 @@ namespace LinqToDB.Data
 		public IDisposable? UseMappingSchema(MappingSchema mappingSchema)
 		{
 			var oldSchema       = MappingSchema;
-			var configurationID = _configurationID;
+			var configurationID     = _configurationID;
+			var interceptorsVersion = _interceptorsVersion;
 
 			AddMappingSchema(mappingSchema);
 
 			return new DisposableAction(() =>
 			{
 				((IDataContext)this).SetMappingSchema(oldSchema);
-				_configurationID = configurationID;
+				_configurationID = interceptorsVersion == _interceptorsVersion ? configurationID : null;
 			});
 		}
 	}
