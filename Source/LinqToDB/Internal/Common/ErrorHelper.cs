@@ -29,6 +29,8 @@
 		public const string Error_EnumerationNotStarted            = "Enumeration not started.";
 		public const string Error_QueryHints_In_QueryBatch         = "QueryBatch does not support query hints.";
 		public const string Error_QueryBatch_TaskPart              = "A query batch part cannot hold an expression that may create a task: it could run a separate query outside the batch.";
+		public const string Error_QueryBatch_AlreadyExecuted       = "The query batch has already been executed.";
+		public const string Error_QueryBatch_Running               = "The query batch is being executed.";
 
 		public const string Error_WindowFunctionsInSearchCondition                = "Window functions cannot be used in search condition.";
 		public const string Error_WindowFunction_PercentRank                      = "PERCENT_RANK is not supported by current provider.";

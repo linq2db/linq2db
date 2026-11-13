@@ -2602,5 +2602,1101 @@ namespace Tests.Linq
 
 			batch.Message.ShouldBe(alone.Message);
 		}
+
+		static async Task Run(QueryBatchBuilder batch, bool isAsync)
+		{
+			if (isAsync)
+				await batch.ExecuteAsync();
+			else
+				batch.Execute();
+		}
+
+		// A part's value as its setter delivers it; Count shows how many times the setter ran.
+		sealed class Received<T>
+		{
+			public T   Value = default!;
+			public int Count;
+		}
+
+		static Received<T> Receive<T>(QueryBatchBuilder batch, Expression<Func<T>> query)
+		{
+			var received = new Received<T>();
+
+			batch.Set(query, value =>
+			{
+				received.Value = value;
+				received.Count++;
+			});
+
+			return received;
+		}
+
+		// Fifteen parts, so the tuple nests twice; collections and entities sit past the seventh part. No part is a strict First
+		// of a value, which Sybase refuses (StrictValueReadsReadAsThePartAlone). Traced keeps the test out of the baselines.
+		[Test]
+		public async Task ExplicitBatchReadsEachPart([DataSources(NoFromlessSubquery)] string context, [Values] bool isAsync)
+		{
+			using var db    = GetDataContext(context, Traced(new CommandTrace()));
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var batch = db.CreateQueryBatch();
+
+			var count      = Receive(batch, () => items.Count());
+			var emptyMax   = Receive(batch, () => items
+				.Where(i => i.Id > 100)
+				.Max(i => (int?)i.Id));
+			var min        = Receive(batch, () => items.Min(i => i.Id));
+			var any        = Receive(batch, () => items.Any(i => i.Id == 7));
+			var constant   = Receive(batch, () => 42);
+			var sum        = Receive(batch, () => items.Sum(i => i.Id));
+			var longCount  = Receive(batch, () => items.LongCount(i => i.GroupId == 2));
+			var page       = Receive(batch, () => items
+				.OrderBy(i => i.Id)
+				.Take(3)
+				.ToList());
+			var entity     = Receive(batch, () => items.First(i => i.Id == 2));
+			var array      = Receive(batch, () => items
+				.Where(i => i.GroupId == 1)
+				.OrderBy(i => i.Id)
+				.ToArray());
+			var nullCount  = Receive(batch, () => items.Count(i => i.Value == null));
+			var maxGroup   = Receive(batch, () => items.Max(i => i.GroupId));
+			var values     = Receive(batch, () => items
+				.Where(i => i.GroupId == 3)
+				.OrderBy(i => i.Id)
+				.Select(i => i.Id)
+				.ToList());
+			var entity2    = Receive(batch, () => items.First(i => i.Id == 9));
+			var last       = Receive(batch, () => items
+				.Where(i => i.GroupId == 4)
+				.OrderBy(i => i.Id)
+				.ToList());
+
+			await Run(batch, isAsync);
+
+			var seed = BatchItem.Seed;
+
+			count.Value.ShouldBe(seed.Length);
+			emptyMax.Value.ShouldBeNull();
+			min.Value.ShouldBe(seed.Min(i => i.Id));
+			any.Value.ShouldBeTrue();
+			constant.Value.ShouldBe(42);
+			sum.Value.ShouldBe(seed.Sum(i => i.Id));
+			longCount.Value.ShouldBe(seed.LongCount(i => i.GroupId == 2));
+			Ids(page.Value)
+				.ShouldBe(PageIds(0, 3));
+			entity.Value.Id.ShouldBe(2);
+			Ids(array.Value)
+				.ShouldBe(Ids(seed.Where(i => i.GroupId == 1)));
+			nullCount.Value.ShouldBe(seed.Count(i => i.Value == null));
+			maxGroup.Value.ShouldBe(seed.Max(i => i.GroupId));
+			values.Value.ShouldBe(Ids(seed.Where(i => i.GroupId == 3)));
+			entity2.Value.Id.ShouldBe(9);
+			Ids(last.Value)
+				.ShouldBe(Ids(seed.Where(i => i.GroupId == 4)));
+		}
+
+		// The eighth part is the only value of the nested tuple; one part is a tuple of one. Both are decided before any SQL.
+		[Test]
+		public void ExplicitBatchOfEightPartsAndOfOne([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var batch = db.CreateQueryBatch();
+
+			var count     = Receive(batch, () => items.Count());
+			var min       = Receive(batch, () => items.Min(i => i.Id));
+			var max       = Receive(batch, () => items.Max(i => i.Id));
+			var sum       = Receive(batch, () => items.Sum(i => i.Id));
+			var longCount = Receive(batch, () => items.LongCount(i => i.GroupId == 2));
+			var any       = Receive(batch, () => items.Any(i => i.Id == 7));
+			var nullCount = Receive(batch, () => items.Count(i => i.Value == null));
+			var eighth    = Receive(batch, () => items
+				.OrderBy(i => i.Id)
+				.Take(2)
+				.ToList());
+
+			batch.Execute();
+
+			var seed = BatchItem.Seed;
+
+			count.Value.ShouldBe(seed.Length);
+			min.Value.ShouldBe(1);
+			max.Value.ShouldBe(seed.Length);
+			sum.Value.ShouldBe(seed.Sum(i => i.Id));
+			longCount.Value.ShouldBe(seed.LongCount(i => i.GroupId == 2));
+			any.Value.ShouldBeTrue();
+			nullCount.Value.ShouldBe(seed.Count(i => i.Value == null));
+			Ids(eighth.Value)
+				.ShouldBe(PageIds(0, 2));
+
+			var single = db.CreateQueryBatch();
+			var rows   = Receive(single, () => items
+				.OrderBy(i => i.Id)
+				.Skip(1)
+				.Take(2)
+				.ToList());
+
+			single.Execute();
+
+			Ids(rows.Value)
+				.ShouldBe(PageIds(1, 2));
+		}
+
+		// A remote context runs the parts one by one on the server, where the client counts no readers; Access refuses the
+		// FROM-less subquery.
+		[Test]
+		public void ExplicitBatchSendsOneCommand([DataSources(false, NoFromlessSubquery)] string context, [Values] bool useCombinedCommands)
+		{
+			var trace = new CommandTrace();
+
+			using var db    = GetDataContext(context, Traced(trace, useCombinedCommands));
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			Expression<Func<int>>             totalPart = () => items.Count();
+			Expression<Func<List<BatchItem>>> pagePart  = () => items
+				.OrderBy(i => i.Id)
+				.Skip(2)
+				.Take(3)
+				.ToList();
+
+			trace.Reset();
+			db.QueryBatch(totalPart, pagePart);
+
+			var queryBatchReaders = trace.Readers;
+
+			var batch = db.CreateQueryBatch();
+			var total = Receive(batch, totalPart);
+			var page  = Receive(batch, pagePart);
+
+			trace.Reset();
+			batch.Execute();
+
+			total.Value.ShouldBe(BatchItem.Seed.Length);
+			Ids(page.Value)
+				.ShouldBe(PageIds(2, 3));
+			trace.Readers.ShouldBe(db.UsesCombinedQueryBatch() ? 1 : queryBatchReaders);
+		}
+
+		sealed class Page
+		{
+			public int             Total;
+			public List<BatchItem> Rows = null!;
+		}
+
+		static Received<int> AddTotal(QueryBatchBuilder batch, IQueryable<BatchItem> items)
+		{
+			return Receive(batch, () => items.Count());
+		}
+
+		static Received<List<BatchItem>> AddRows(QueryBatchBuilder batch, IQueryable<BatchItem> items, int skip, int take)
+		{
+			return Receive(batch, () => items
+				.OrderBy(i => i.Id)
+				.Skip(skip)
+				.Take(take)
+				.ToList());
+		}
+
+		// Where a part is added from makes no difference to the query, so one provider shows it.
+		[Test]
+		public async Task PartsFromSeveralMethods([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool isAsync)
+		{
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var batch = db.CreateQueryBatch();
+			var total = AddTotal(batch, items);
+			var rows  = AddRows(batch, items, 4, 3);
+
+			await Run(batch, isAsync);
+
+			var result = new Page { Total = total.Value, Rows = rows.Value };
+
+			result.Total.ShouldBe(BatchItem.Seed.Length);
+			Ids(result.Rows)
+				.ShouldBe(PageIds(4, 3));
+		}
+
+		// Equal-shaped parts are told apart while the query is built, before any SQL, so one provider shows it.
+		[Test]
+		public void SameShapedPartsReadTheirOwnValues([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var batch  = db.CreateQueryBatch();
+			var counts = new List<Received<int>>();
+
+			foreach (var id in new[] { 1, 2, 3 })
+				counts.Add(Receive(batch, () => items.Count(i => i.Id <= id)));
+
+			Expression<Func<int>>             count = () => items.Count(i => i.GroupId == 2);
+			Expression<Func<List<BatchItem>>> rows  = () => items
+				.Where(i => i.GroupId == 2)
+				.OrderBy(i => i.Id)
+				.ToList();
+
+			var count1 = Receive(batch, count);
+			var count2 = Receive(batch, count);
+			var rows1  = Receive(batch, rows);
+			var rows2  = Receive(batch, rows);
+
+			batch.Execute();
+
+			counts
+				.Select(c => c.Value)
+				.ShouldBe([1, 2, 3]);
+
+			var expectedRows = Ids(BatchItem.Seed.Where(i => i.GroupId == 2));
+
+			count1.Value.ShouldBe(expectedRows.Length);
+			count2.Value.ShouldBe(expectedRows.Length);
+			Ids(rows1.Value)
+				.ShouldBe(expectedRows);
+			Ids(rows2.Value)
+				.ShouldBe(expectedRows);
+		}
+
+		// The setters run after the batch's own read, so one provider shows it.
+		[Test]
+		public async Task SettersRunAfterTheRun([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool isAsync)
+		{
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var order = new List<int>();
+			var batch = db.CreateQueryBatch();
+
+			batch.Set(() => items.Count(), _ => order.Add(0));
+			batch.Set(() => items.Min(i => i.Id), _ => order.Add(1));
+			batch.Set(
+				() => items
+					.Where(i => i.Id > 100)
+					.Select(i => i.Id)
+					.First(),
+				_ => order.Add(2));
+
+			if (isAsync)
+				await Shouldly.Should.ThrowAsync<InvalidOperationException>(() => batch.ExecuteAsync());
+			else
+				Shouldly.Should.Throw<InvalidOperationException>(batch.Execute);
+
+			order.ShouldBeEmpty();
+
+			items.Insert(() => new BatchItem { Id = 101, GroupId = 1 });
+
+			await Run(batch, isAsync);
+
+			order.ShouldBe([0, 1, 2]);
+		}
+
+		// A setter is user code run after the read, so one provider shows that it ends the run.
+		[Test]
+		public async Task ThrowingSetterEndsTheRun([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool isAsync)
+		{
+			var trace = new CommandTrace();
+
+			using var db    = GetDataContext(context, Traced(trace));
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			int? first = null;
+			int? third = null;
+
+			var batch = db.CreateQueryBatch();
+
+			batch.Set(() => items.Count(), v => first = v);
+			batch.Set(() => items.Min(i => i.Id), _ => throw new InvalidOperationException("The second setter."));
+			batch.Set(() => items.Max(i => i.Id), v => third = v);
+
+			trace.Reset();
+
+			var error = isAsync
+				? await Shouldly.Should.ThrowAsync<InvalidOperationException>(() => batch.ExecuteAsync())
+				: Shouldly.Should.Throw<InvalidOperationException>(batch.Execute);
+
+			error.Message.ShouldBe("The second setter.");
+			first.ShouldBe(BatchItem.Seed.Length);
+			third.ShouldBeNull();
+			trace.Readers.ShouldBe(1);
+			Shouldly.Should
+				.Throw<InvalidOperationException>(batch.Execute)
+				.Message
+				.ShouldBe(ErrorHelper.Error_QueryBatch_AlreadyExecuted);
+			Shouldly.Should
+				.Throw<InvalidOperationException>(() => batch.Set(() => items.Count(), _ => { }))
+				.Message
+				.ShouldBe(ErrorHelper.Error_QueryBatch_AlreadyExecuted);
+		}
+
+		// The direction of each assignment is the compiler's, so one provider shows the usage.
+		[Test]
+		public void SetterAssignsAWiderTarget([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			IList<BatchItem> rows  = null!;
+			long             count = 0;
+
+			var batch = db.CreateQueryBatch();
+
+			batch.Set(
+				() => items
+					.OrderBy(i => i.Id)
+					.Take(2)
+					.ToList(),
+				v => rows = v);
+			batch.Set(() => items.Count(), v => count = v);
+
+			batch.Execute();
+
+			Ids(rows)
+				.ShouldBe(PageIds(0, 2));
+			count.ShouldBe(BatchItem.Seed.Length);
+		}
+
+		// The batch's own state decides this before any command, so one provider shows it.
+		[Test]
+		public async Task ExecutedBatchRefusesSetAndExecute([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool isAsync)
+		{
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var batch = db.CreateQueryBatch();
+			var total = Receive(batch, () => items.Count());
+
+			await Run(batch, isAsync);
+
+			total.Value.ShouldBe(BatchItem.Seed.Length);
+
+			Shouldly.Should
+				.Throw<InvalidOperationException>(() => Receive(batch, () => items.Count()))
+				.Message
+				.ShouldBe(ErrorHelper.Error_QueryBatch_AlreadyExecuted);
+
+			var again = isAsync
+				? await Shouldly.Should.ThrowAsync<InvalidOperationException>(() => batch.ExecuteAsync())
+				: Shouldly.Should.Throw<InvalidOperationException>(batch.Execute);
+
+			again.Message.ShouldBe(ErrorHelper.Error_QueryBatch_AlreadyExecuted);
+		}
+
+		// An empty batch builds no query, so a pending hint is neither refused nor taken, and a cancelled token is not checked.
+		[Test]
+		public async Task EmptyBatchSendsNothing([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool isAsync)
+		{
+			const string hint = "-- empty batch hint";
+
+			var trace = new CommandTrace();
+
+			using var db    = GetDataContext(context, Traced(trace));
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			db.NextQueryHints.Add(hint);
+			trace.Reset();
+
+			var batch = db.CreateQueryBatch();
+
+			if (isAsync)
+			{
+				using var cancelled = new CancellationTokenSource();
+
+				cancelled.Cancel();
+
+				await batch.ExecuteAsync(cancelled.Token);
+			}
+			else
+			{
+				batch.Execute();
+			}
+
+			trace.Readers.ShouldBe(0);
+			trace.Begins.ShouldBe(0);
+			db.NextQueryHints.ShouldBe([hint]);
+			Shouldly.Should
+				.Throw<InvalidOperationException>(() => Receive(batch, () => items.Count()))
+				.Message
+				.ShouldBe(ErrorHelper.Error_QueryBatch_AlreadyExecuted);
+
+			db.NextQueryHints.Clear();
+		}
+
+		// Holds the batch's reader until released, so the test can act while ExecuteAsync is in flight.
+		sealed class HoldingInterceptor : CommandInterceptor
+		{
+			public readonly TaskCompletionSource<bool> Entered = new(TaskCreationOptions.RunContinuationsAsynchronously);
+			public readonly TaskCompletionSource<bool> Release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+			public override async Task<Option<DbDataReader>> ExecuteReaderAsync(CommandEventData eventData, DbCommand command, System.Data.CommandBehavior commandBehavior, Option<DbDataReader> result, CancellationToken cancellationToken)
+			{
+				Entered.TrySetResult(true);
+
+				await Release.Task.ConfigureAwait(false);
+
+				return result;
+			}
+		}
+
+		// The batch's own state decides this; the interceptor needs a reader to hold, which SQLite gives.
+		[Test]
+		public async Task RunningBatchRefusesSetAndExecute([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var interceptor = new HoldingInterceptor();
+
+			db.AddInterceptor(interceptor);
+
+			var batch = db.CreateQueryBatch();
+			var total = Receive(batch, () => items.Count());
+
+			var running = batch.ExecuteAsync();
+
+			try
+			{
+				using var timeout = new CancellationTokenSource();
+
+				var entered = await Task.WhenAny(interceptor.Entered.Task, Task.Delay(TimeSpan.FromSeconds(30), timeout.Token));
+
+				timeout.Cancel();
+				entered.ShouldBeSameAs(interceptor.Entered.Task);
+
+				Shouldly.Should
+					.Throw<InvalidOperationException>(() => Receive(batch, () => items.Count()))
+					.Message
+					.ShouldBe(ErrorHelper.Error_QueryBatch_Running);
+
+				// The refusal comes before any await; a second run would wait on the held reader instead.
+				var second = batch.ExecuteAsync();
+
+				second.IsCompleted.ShouldBeTrue();
+
+				var executeError = await Shouldly.Should.ThrowAsync<InvalidOperationException>(() => second);
+
+				executeError.Message.ShouldBe(ErrorHelper.Error_QueryBatch_Running);
+				total.Count.ShouldBe(0);
+			}
+			finally
+			{
+				interceptor.Release.TrySetResult(true);
+			}
+
+			await running;
+
+			total.Value.ShouldBe(BatchItem.Seed.Length);
+		}
+
+		// The refusal comes before any command, so one provider shows that the batch stays retryable.
+		[Test]
+		public async Task RefusedHintsLeaveTheBatchRetryable([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			const string hint = "-- refused batch hint";
+
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var batch = db.CreateQueryBatch();
+			var total = Receive(batch, () => items.Count());
+
+			db.NextQueryHints.Add(hint);
+
+			var refused = await Shouldly.Should.ThrowAsync<LinqToDBException>(() => batch.ExecuteAsync());
+
+			refused.Message.ShouldBe(ErrorHelper.Error_QueryHints_In_QueryBatch);
+
+			db.NextQueryHints.Clear();
+
+			await batch.ExecuteAsync();
+
+			total.Value.ShouldBe(BatchItem.Seed.Length);
+		}
+
+		// The remote case runs the same batch through the server, one statement after another, so Traced keeps the test out
+		// of the baselines that would differ from the direct ones.
+		[Test]
+		public async Task FailedRunLeavesTheBatchRetryable([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool isAsync)
+		{
+			using var db    = GetDataContext(context, Traced(new CommandTrace()));
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			Expression<Func<int>> firstPart = () => items
+				.Where(i => i.Id > 100)
+				.Select(i => i.Id)
+				.First();
+
+			var batch = db.CreateQueryBatch();
+			var first = Receive(batch, firstPart);
+			var page  = Receive(batch, () => items
+				.OrderBy(i => i.Id)
+				.Take(2)
+				.ToList());
+
+			var partAlone = firstPart.Compile();
+			var alone     = Shouldly.Should.Throw<InvalidOperationException>(() => partAlone());
+			var error     = isAsync
+				? await Shouldly.Should.ThrowAsync<InvalidOperationException>(() => batch.ExecuteAsync())
+				: Shouldly.Should.Throw<InvalidOperationException>(batch.Execute);
+
+			error.Message.ShouldBe(alone.Message);
+			first.Count.ShouldBe(0);
+			page.Count.ShouldBe(0);
+
+			items.Insert(() => new BatchItem { Id = 101, GroupId = 1 });
+
+			await Run(batch, isAsync);
+
+			first.Value.ShouldBe(101);
+			Ids(page.Value)
+				.ShouldBe(PageIds(0, 2));
+		}
+
+		[Table]
+		sealed class BatchLater
+		{
+			[Column, PrimaryKey] public int Id { get; set; }
+		}
+
+		// PostgreSQL aborts a transaction on an error, so a retry there shows that the batch's own read transaction was
+		// rolled back.
+		[Test]
+		public void DatabaseErrorLeavesTheBatchRetryable([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			// A table left behind by an interrupted run on a persistent database would make the first run succeed.
+			db.DropTable<BatchLater>(throwExceptionIfNotExists: false);
+
+			var later = db.GetTable<BatchLater>();
+
+			var batch = db.CreateQueryBatch();
+			var count = Receive(batch, () => later.Count());
+			var page  = Receive(batch, () => items
+				.OrderBy(i => i.Id)
+				.Take(2)
+				.ToList());
+
+			Shouldly.Should.Throw<Exception>(batch.Execute);
+
+			using var created = db.CreateLocalTable<BatchLater>();
+
+			batch.Execute();
+
+			count.Value.ShouldBe(0);
+			Ids(page.Value)
+				.ShouldBe(PageIds(0, 2));
+		}
+
+		// The QueryBatch node checks the token before any command (CancelledTokenSendsNothing); this shows the explicit batch
+		// reaches that check and stays retryable. SQLite and SQL Server are the two backends that would otherwise send first.
+		[Test]
+		public async Task ExplicitBatchCancelledTokenSendsNothing([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
+		{
+			var trace = new CommandTrace();
+
+			using var db    = GetDataContext(context, Traced(trace));
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var batch = db.CreateQueryBatch();
+			var total = Receive(batch, () => items.Count());
+			var page  = Receive(batch, () => items
+				.OrderBy(i => i.Id)
+				.Take(2)
+				.ToList());
+
+			using var cancelled = new CancellationTokenSource();
+
+			cancelled.Cancel();
+			trace.Reset();
+
+			await Shouldly.Should.ThrowAsync<OperationCanceledException>(() => batch.ExecuteAsync(cancelled.Token));
+
+			trace.Readers.ShouldBe(0);
+			trace.Begins.ShouldBe(0);
+
+			await batch.ExecuteAsync();
+
+			total.Value.ShouldBe(BatchItem.Seed.Length);
+			Ids(page.Value)
+				.ShouldBe(PageIds(0, 2));
+		}
+
+		// Captured values are read while the parameters are built, before any SQL, so one provider shows it.
+		[Test]
+		public void CapturedValuesAreReadAtExecute([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var take  = 2;
+			var batch = db.CreateQueryBatch();
+			var page  = Receive(batch, () => items
+				.OrderBy(i => i.Id)
+				.Take(take)
+				.ToList());
+
+			take = 4;
+
+			batch.Execute();
+
+			Ids(page.Value)
+				.ShouldBe(PageIds(0, 4));
+		}
+
+		// Query-cache reuse is decided before any SQL, so one provider shows it.
+		[Test, QueryCacheTest]
+		public void SameCallSitesReuseTheCachedQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			static List<BatchItem> RunBatch(IDataContext dataContext, int take)
+			{
+				var batch = dataContext.CreateQueryBatch();
+
+				Receive(batch, () => dataContext
+					.GetTable<BatchItem>()
+					.Count());
+
+				var page = Receive(batch, () => dataContext
+					.GetTable<BatchItem>()
+					.OrderBy(i => i.Id)
+					.Take(take)
+					.ToList());
+
+				batch.Execute();
+
+				return page.Value;
+			}
+
+			var first  = RunBatch(db, 2);
+			var misses = Query<(int, List<BatchItem>)>.CacheMissCount;
+
+			using var other = GetDataContext(context);
+
+			var second = RunBatch(other, 4);
+
+			Query<(int, List<BatchItem>)>.CacheMissCount.ShouldBe(misses);
+			Ids(first)
+				.ShouldBe(PageIds(0, 2));
+			Ids(second)
+				.ShouldBe(PageIds(0, 4));
+		}
+
+		// The cached query is keyed by its result type: batches of 2 … 17 parts are 16 other tuple types, so they do not evict
+		// the one-part batch. The predicate is this test's own, so the first run is a miss.
+		[Test, QueryCacheTest]
+		public void PartTypesKeyTheCachedQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			void RunBatch(int parts)
+			{
+				var batch = db.CreateQueryBatch();
+
+				for (var added = 0; added < parts; added++)
+					Receive(batch, () => items.Count(i => i.Name != nameof(PartTypesKeyTheCachedQuery)));
+
+				batch.Execute();
+			}
+
+			var before = Query<ValueTuple<int>>.CacheMissCount;
+
+			RunBatch(1);
+
+			var afterFirst = Query<ValueTuple<int>>.CacheMissCount;
+
+			for (var parts = 2; parts <= 17; parts++)
+				RunBatch(parts);
+
+			var beforeAgain = Query<ValueTuple<int>>.CacheMissCount;
+
+			RunBatch(1);
+
+			(afterFirst - before)
+				.ShouldBe(1);
+			Query<ValueTuple<int>>.CacheMissCount.ShouldBe(beforeAgain);
+		}
+
+		// The refusal comes before any command, so one provider shows it; PendingHintsAreRefused covers DbBatch and remote.
+		[Test]
+		public void PendingHintsAreRefusedAtExecute([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool oneShot)
+		{
+			const string hint = "-- explicit batch hint";
+
+			var trace = new CommandTrace();
+
+			using var db    = GetDataContext(context, Traced(trace));
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var hints = oneShot ? db.NextQueryHints : db.QueryHints;
+
+			hints.Add(hint);
+			trace.Reset();
+
+			var batch = db.CreateQueryBatch();
+
+			Receive(batch, () => items.Count());
+
+			Shouldly.Should
+				.Throw<LinqToDBException>(batch.Execute)
+				.Message
+				.ShouldBe(ErrorHelper.Error_QueryHints_In_QueryBatch);
+			trace.Readers.ShouldBe(0);
+			hints.ShouldBe([hint]);
+
+			hints.Clear();
+		}
+
+		static Task<int> RefusedPartRuns()
+		{
+			throw new InvalidOperationException("A refused part was recorded.");
+		}
+
+		static Task<int> StartTask(int id)
+		{
+			return Task.FromResult(id);
+		}
+
+		// Set checks the part as written; a task hidden in a captured query appears only when the batch is built, and the
+		// QueryBatch node refuses it there. The part stays in the batch, so every run is refused.
+		[Test]
+		public void TaskInACapturedQueryIsRefusedAtExecute([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var trace = new CommandTrace();
+
+			using var db    = GetDataContext(context, Traced(trace));
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var started = items.Select(i => StartTask(i.Id));
+			var batch   = db.CreateQueryBatch();
+
+			Receive(batch, () => started.ToList());
+
+			trace.Reset();
+
+			Shouldly.Should
+				.Throw<LinqToDBException>(batch.Execute)
+				.Message
+				.ShouldBe(ErrorHelper.Error_QueryBatch_TaskPart);
+			trace.Readers.ShouldBe(0);
+			Shouldly.Should
+				.Throw<LinqToDBException>(batch.Execute)
+				.Message
+				.ShouldBe(ErrorHelper.Error_QueryBatch_TaskPart);
+		}
+
+		sealed class TaskHolder
+		{
+			public Task<int> Pending = null!;
+		}
+
+		static TaskHolder HoldTask()
+		{
+			throw new InvalidOperationException("A refused part was evaluated.");
+		}
+
+		static class ReadyTasks
+		{
+			public static readonly Task<int> Three = Task.FromResult(3);
+		}
+
+		// Set refuses the part before any query is built, so one provider shows it.
+		[Test]
+		public void TaskPartIsRefused([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var trace = new CommandTrace();
+
+			using var db    = GetDataContext(context, Traced(trace));
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var batch = db.CreateQueryBatch();
+
+			void ShouldRefuse(Action add)
+			{
+				Shouldly.Should
+					.Throw<ArgumentException>(add)
+					.Message
+					.ShouldStartWith(ErrorHelper.Error_QueryBatch_TaskPart);
+			}
+
+			ShouldRefuse(() => Receive(batch, () => items.ToListAsync(default)));
+			ShouldRefuse(() => Receive<object>(batch, () => items.ToListAsync(default)));
+			ShouldRefuse(() => Receive(batch, () => new { Rows = items.ToListAsync(default) }));
+			ShouldRefuse(() => Receive(batch, () => new ValueTask<int>(1)));
+
+			// Recorded anyway, this part would fail the run below, so it shows that a refused part is not kept.
+			ShouldRefuse(() => Receive(batch, () => RefusedPartRuns()));
+
+			var ready = Task.FromResult(2);
+
+			// A field of a value the part computes may hold a task the part has just started.
+			ShouldRefuse(() => Receive(batch, () => HoldTask().Pending.Result));
+
+			// A task held by a captured variable, a static field or a constant starts nothing when its result is read.
+			var total    = Receive(batch, () => items.Count());
+			var filtered = Receive(batch, () => items
+				.Where(i => i.Id <= ready.Result)
+				.OrderBy(i => i.Id)
+				.ToList());
+			var fromStatic = Receive(batch, () => items.Count(i => i.Id <= ReadyTasks.Three.Result));
+			var constant   = Receive(batch, Expression.Lambda<Func<int>>(
+				Expression.Property(Expression.Constant(Task.FromResult(4)), nameof(Task<>.Result))));
+
+			// The held task itself is a value like any other, as the QueryBatch node allows.
+			var heldTask     = Receive(batch, () => ready);
+			var heldAsObject = Receive<object>(batch, () => ready);
+
+			trace.Reset();
+			batch.Execute();
+
+			total.Value.ShouldBe(BatchItem.Seed.Length);
+			Ids(filtered.Value)
+				.ShouldBe(PageIds(0, 2));
+			fromStatic.Value.ShouldBe(3);
+			constant.Value.ShouldBe(4);
+			heldTask.Value.ShouldBeSameAs(ready);
+			heldAsObject.Value.ShouldBeSameAs(ready);
+			trace.Readers.ShouldBe(1);
+
+			// A task field of a captured context is held by the context, as a captured variable holds one.
+			using var taskFields = new TaskFieldConnection(context);
+
+			var fieldBatch = taskFields.CreateQueryBatch();
+			var fieldTask  = Receive(fieldBatch, () => taskFields.PendingTask.Result);
+
+			fieldBatch.Execute();
+
+			fieldTask.Value.ShouldBe(5);
+		}
+
+		// The strict reads of a value join the batch row to their source, which Sybase refuses as the sibling
+		// NullValueReadsAsThePartAlone shows; the whole batch reports it.
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
+		public void StrictValueReadsReadAsThePartAlone([DataSources(false, NoFromlessSubquery)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			Expression<Func<int?>>    nullPart = () => items
+				.Where(i => i.Id == 3)
+				.Select(i => i.Value)
+				.First();
+			Expression<Func<string?>> namePart = () => items
+				.Where(i => i.Id == 5)
+				.Select(i => i.Name)
+				.First();
+
+			var batch = db.CreateQueryBatch();
+			var value = Receive(batch, nullPart);
+			var name  = Receive(batch, namePart);
+			var row   = Receive(batch, () => items
+				.Where(i => i.Id == 4)
+				.Select(i => new { i.Id, i.Name })
+				.First());
+			var total = Receive(batch, () => items.Count());
+
+			batch.Execute();
+
+			var valueAlone = nullPart
+				.Compile()
+				.Invoke();
+			var nameAlone  = namePart
+				.Compile()
+				.Invoke();
+
+			value.Value.ShouldBe(valueAlone);
+			name.Value.ShouldBe(nameAlone);
+			row.Value.ShouldBe(new { Id = 4, Name = (string?)"N4" });
+			total.Value.ShouldBe(BatchItem.Seed.Length);
+		}
+
+		// Every part is read before any setter runs, which the parameters decide before any SQL, so one provider shows it.
+		[Test]
+		public void PartReadsASetterTargetBeforeExecute([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var             total = -1;
+			List<BatchItem> rows  = null!;
+
+			var batch = db.CreateQueryBatch();
+
+			batch.Set(() => items.Count(), v => total = v);
+			batch.Set(
+				() => items
+					.Where(i => i.Id > total)
+					.ToList(),
+				v => rows = v);
+
+			batch.Execute();
+
+			rows.Count.ShouldBe(BatchItem.Seed.Length);
+			total.ShouldBe(BatchItem.Seed.Length);
+		}
+
+		static int ClientMinId(ITestDataContext db)
+		{
+			return db.Person is null ? 0 : 1;
+		}
+
+		// The engine reads a captured context of the batch's configuration as the query's root, beside a collection part too.
+		// Traced keeps the remote pair out of the baselines.
+		[Test]
+		public void PartsReadThroughACapturedContext([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context, Traced(new CommandTrace()));
+
+			var batch    = db.CreateQueryBatch();
+			var count    = Receive(batch, () => db.Person.Count());
+			var table    = Receive(batch, () => db
+				.GetTable<Person>()
+				.Count(p => p.ID > 1));
+			var nested   = Receive(batch, () => db.Parent.Count(p => db.Child.Any(c => c.ParentID == p.ParentID)));
+			var rows     = Receive(batch, () => db.Person
+				.OrderBy(p => p.ID)
+				.Select(p => p.ID)
+				.ToList());
+			var helper   = Receive(batch, () => db.Person.Count(p => p.ID > ClientMinId(db)));
+			var extended = Receive(batch, () => db
+				.PersonAfter(1)
+				.Count());
+
+			batch.Execute();
+
+			count.Value.ShouldBe(db.Person.Count());
+			table.Value.ShouldBe(db.Person.Count(p => p.ID > 1));
+			nested.Value.ShouldBe(db.Parent.Count(p => db.Child.Any(c => c.ParentID == p.ParentID)));
+			rows.Value.ShouldBe(db.Person
+				.OrderBy(p => p.ID)
+				.Select(p => p.ID)
+				.ToList());
+			helper.Value.ShouldBe(db.Person.Count(p => p.ID > 1));
+			extended.Value.ShouldBe(db.Person.Count(p => p.ID > 1));
+
+			IDataContext wideContext = db;
+
+			var wide      = db.CreateQueryBatch();
+			var wideCount = Receive(wide, () => wideContext
+				.GetTable<Person>()
+				.Count());
+
+			wide.Execute();
+
+			wideCount.Value.ShouldBe(count.Value);
+
+			// A captured argument of a method over the context is read on every run, also on a cache hit.
+			int After(int id)
+			{
+				var after = db.CreateQueryBatch();
+				var read  = Receive(after, () => db
+					.PersonAfter(id)
+					.Count());
+				var all   = Receive(after, () => db.Person.ToList());
+
+				after.Execute();
+
+				all.Value.Count.ShouldBe(count.Value);
+
+				return read.Value;
+			}
+
+			After(1)
+				.ShouldBe(db.Person.Count(p => p.ID > 1));
+
+			var misses = Query<(int, List<Person>)>.CacheMissCount;
+
+			After(3)
+				.ShouldBe(db.Person.Count(p => p.ID > 3));
+			Query<(int, List<Person>)>.CacheMissCount.ShouldBe(misses);
+		}
+
+		sealed class PersonConnection(string configuration) : TestDataConnection(configuration)
+		{
+			public int MinId { get; set; }
+
+			public IQueryable<Person> PersonAfter(int id)
+			{
+				return Person.Where(p => p.ID > id);
+			}
+		}
+
+		// Instance members of a typed connection; a direct context, since a remote one is not a DataConnection.
+		[Test]
+		public void PartsReadThroughATypedContext([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var one   = new PersonConnection(context) { MinId = 1 };
+			using var three = new PersonConnection(context) { MinId = 3 };
+
+			static int AboveMinId(PersonConnection dataContext)
+			{
+				var batch = dataContext.CreateQueryBatch();
+				var read  = Receive(batch, () => dataContext.Person.Count(p => p.ID > dataContext.MinId));
+				var all   = Receive(batch, () => dataContext.Person.ToList());
+
+				batch.Execute();
+
+				all.Value.ShouldNotBeEmpty();
+
+				return read.Value;
+			}
+
+			AboveMinId(one)
+				.ShouldBe(one.Person.Count(p => p.ID > 1));
+			AboveMinId(three)
+				.ShouldBe(three.Person.Count(p => p.ID > 3));
+
+			var methodBatch = one.CreateQueryBatch();
+			var method      = Receive(methodBatch, () => one
+				.PersonAfter(2)
+				.Count());
+			var all         = Receive(methodBatch, () => one.Person.ToList());
+
+			methodBatch.Execute();
+
+			method.Value.ShouldBe(one.Person.Count(p => p.ID > 2));
+			all.Value.ShouldNotBeEmpty();
+		}
+
+		// A queryable part is loaded with the batch, as a collection; SQLite (concat) and SQL Server (DbBatch) combine it.
+		[Test]
+		public void QueryablePartReadsInsideTheBatch([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
+		{
+			var trace = new CommandTrace();
+
+			using var db    = GetDataContext(context, Traced(trace));
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var batch = db.CreateQueryBatch();
+			var total = Receive(batch, () => items.Count());
+			var rows  = Receive(batch, () => items.Where(i => i.Id < 3));
+
+			trace.Reset();
+			batch.Execute();
+
+			trace.Readers.ShouldBe(db.UsesCombinedQueryBatch() ? 1 : 2);
+
+			trace.Reset();
+
+			total.Value.ShouldBe(BatchItem.Seed.Length);
+			Ids(rows.Value)
+				.ShouldBe([1, 2], ignoreOrder: true);
+			trace.Readers.ShouldBe(0);
+		}
+	}
+
+	// A method over the context that a batch part calls on a captured context.
+	static class QueryBatchContextExtensions
+	{
+		public static IQueryable<Person> PersonAfter(this ITestDataContext db, int id)
+		{
+			return db.Person.Where(p => p.ID > id);
+		}
 	}
 }

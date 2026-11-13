@@ -65,6 +65,7 @@ namespace LinqToDB
 		/// <returns>The results.</returns>
 		/// <exception cref="LinqToDBException">The context has pending <see cref="IDataContext.QueryHints"/> or <see cref="IDataContext.NextQueryHints"/>, the provider cannot translate the parts as one statement, or an expression in the selector may create a task, which could run a query outside the batch.</exception>
 		/// <exception cref="InvalidOperationException">A <c>First()</c> or <c>Single()</c> in the selector found no row, or a part read with <c>Single()</c> or <c>SingleOrDefault()</c> found more than one.</exception>
+		/// <seealso cref="CreateQueryBatch(IDataContext)">CreateQueryBatch, for reads added from several call sites.</seealso>
 		[Pure]
 		public static T QueryBatch<T>(
 							this IDataContext dataContext,
@@ -431,11 +432,36 @@ namespace LinqToDB
 			return dataContext.QueryBatchAsync(Combine<(T1, T2, T3, T4, T5, T6, T7)>(result1, result2, result3, result4, result5, result6, result7), token);
 		}
 
-		static MethodCallExpression CreateQueryBatchExpression<T>(IDataContext dataContext, Expression<Func<T>> selector)
+		/// <summary>
+		/// Creates a batch that collects reads from any number of call sites and runs them in one round trip, as one
+		/// <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/> call. See <see cref="QueryBatchBuilder"/>.
+		/// </summary>
+		/// <example>
+		/// <code>
+		/// var page  = new Page&lt;Product&gt;();
+		/// var batch = db.CreateQueryBatch();
+		///
+		/// batch.Set(() => db.Products.Count(),                                             v => page.Total = v);
+		/// batch.Set(() => db.Products.OrderBy(p => p.Id).Skip(skip).Take(take).ToList(), v => page.Rows  = v);
+		///
+		/// await batch.ExecuteAsync(cancellationToken);
+		/// </code>
+		/// </example>
+		/// <param name="dataContext">Database connection context the parts are read through.</param>
+		/// <returns>An empty batch.</returns>
+		[Pure]
+		public static QueryBatchBuilder CreateQueryBatch(this IDataContext dataContext)
+		{
+			ArgumentNullException.ThrowIfNull(dataContext);
+
+			return new QueryBatchBuilder(dataContext);
+		}
+
+		internal static MethodCallExpression CreateQueryBatchExpression(IDataContext dataContext, LambdaExpression selector)
 		{
 			return Expression.Call(
 				null,
-				Methods.LinqToDB.QueryBatch.MakeGenericMethod(typeof(T)),
+				Methods.LinqToDB.QueryBatch.MakeGenericMethod(selector.ReturnType),
 				SqlQueryRootExpression.Create(dataContext), Expression.Quote(selector));
 		}
 
