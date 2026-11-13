@@ -186,7 +186,7 @@ namespace Tests.Common
 		}
 
 		[Test]
-		public void SharedNodesOfUnknownKindAreRejected([Values(-1, 1001, (int)ExpressionType.Add)] int nodeType)
+		public void SharedNodesOfUnknownKindAreRejected([Values(-1, (int)ChangeTypeExpression.ChangeTypeType, 1001, (int)ExpressionType.Add)] int nodeType)
 		{
 			var a = Expression.Parameter(typeof(int), "p");
 			var b = Expression.Parameter(typeof(int), "p");
@@ -218,6 +218,16 @@ namespace Tests.Common
 			// A parameter that is free in the shared subtree still has to resolve to the same declaration.
 			var free = Expression.Lambda(Expression.Add(a, Expression.Constant(1)), Expression.Parameter(typeof(int), "q"));
 			CompareBoth(Expression.Lambda(free, a), Expression.Lambda(free, b), false);
+
+			// A declaration ends with its scope: a later reference in the same shared subtree resolves outside it.
+			var afterLambda = Expression.Block(lambda, a);
+			CompareBoth(Expression.Lambda(afterLambda, a), Expression.Lambda(afterLambda, b), false);
+
+			var afterBlock = Expression.Block(block, a);
+			CompareBoth(Expression.Lambda(afterBlock, a), Expression.Lambda(afterBlock, b), false);
+
+			var afterCatch = Expression.Block(handler, e1);
+			CompareBoth(Expression.Lambda(afterCatch, e1), Expression.Lambda(afterCatch, e2), false);
 		}
 
 		public sealed class Holder
@@ -257,6 +267,12 @@ namespace Tests.Common
 
 			CompareBoth(first, second, true);
 			CompareBoth(first, Expression.Lambda(Expression.Block(Expression.Lambda(y, y), y), x), false);
+
+			// A block's variables go out of scope with the block as well.
+			CompareBoth(
+				Expression.Lambda(Expression.Block(Expression.Block([a], a), a), a),
+				Expression.Lambda(Expression.Block(Expression.Block([y], y), x), x),
+				true);
 		}
 
 		[Test]
