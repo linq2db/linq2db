@@ -727,7 +727,7 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.Cot (0)         ), N(() => L<double?,double?>(v => Sql.Cos(v) / Sql.Sin(v) ))        },
 					{ M(() => Sql.Cosh(0)         ), N(() => L<double?,double?>(v => (Sql.Exp(v) + Sql.Exp(-v)) / 2 )) },
 
-					{ M(() => Sql.Degrees((decimal?)0)), N(() => L<decimal?,decimal?>(v => (decimal?)(v!.Value * (180 / 3.1415926535897932384626433833m)))) },
+					{ M(() => Sql.Degrees((decimal?)0)), N(() => L<decimal?,decimal?>(v => (decimal?)(v!.Value * (180 / Sql.DecimalPI)))) },
 					{ M(() => Sql.Degrees((double?) 0)), N(() => L<double?, double?> (v => (double?) (v!.Value * (180 / Math.PI)))) },
 					{ M(() => Sql.Degrees((short?)  0)), N(() => L<short?,  short?>  (v => (short?)  (v!.Value * (180 / Math.PI)))) },
 					{ M(() => Sql.Degrees((int?)    0)), N(() => L<int?,    int?>    (v => (int?)    (v!.Value * (180 / Math.PI)))) },
@@ -763,7 +763,7 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.Cot  (0)),   N(() => L<double?,double?>(v => Sql.Cos(v) / Sql.Sin(v) )) },
 					{ M(() => Sql.Log10(0.0)), N(() => L<double?,double?>(v => Sql.Log(10, v)          )) },
 
-					{ M(() => Sql.Degrees((decimal?)0)), N(() => L<decimal?,decimal?>( v => (decimal?)(v!.Value * (180 / 3.1415926535897932384626433833m)))) },
+					{ M(() => Sql.Degrees((decimal?)0)), N(() => L<decimal?,decimal?>( v => (decimal?)(v!.Value * (180 / Sql.DecimalPI)))) },
 					{ M(() => Sql.Degrees((double?) 0)), N(() => L<double?, double?> ( v => (double?) (v!.Value * (180 / Math.PI)))) },
 					{ M(() => Sql.Degrees((short?)  0)), N(() => L<short?,  short?>  ( v => (short?)  (v!.Value * (180 / Math.PI)))) },
 					{ M(() => Sql.Degrees((int?)    0)), N(() => L<int?,    int?>    ( v => (int?)    (v!.Value * (180 / Math.PI)))) },
@@ -860,7 +860,7 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.Log (0m, 0)),          N(() => L<decimal?,decimal?,decimal?>((m,n) => Sql.Log(n) / Sql.Log(m))) },
 					{ M(() => Sql.Log (0.0,0)),          N(() => L<double?,double?,double?>   ((m,n) => Sql.Log(n) / Sql.Log(m)))    },
 
-					{ M(() => Sql.Degrees((decimal?)0)), N(() => L<decimal?,decimal?>(v => (decimal?)(v!.Value * (180 / 3.1415926535897932384626433833m)))) },
+					{ M(() => Sql.Degrees((decimal?)0)), N(() => L<decimal?,decimal?>(v => (decimal?)(v!.Value * (180 / Sql.DecimalPI)))) },
 					{ M(() => Sql.Degrees((double?) 0)), N(() => L<double?, double?> (v => (double?) (v!.Value * (180 / Math.PI)))) },
 					{ M(() => Sql.Degrees((short?)  0)), N(() => L<short?,  short?>  (v => (short?)  (v!.Value * (180 / Math.PI)))) },
 					{ M(() => Sql.Degrees((int?)    0)), N(() => L<int?,    int?>    (v => (int?)    (v!.Value * (180 / Math.PI)))) },
@@ -893,7 +893,7 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.Log  (0.0,0)), N(() => L<double?,double?,double?>   ((m,n)   => Sql.Log(n) / Sql.Log(m)       )) },
 					{ M(() => Sql.Log10(0.0)  ), N(() => L<double?,double?>           (n => Sql.Log(n) / Sql.Log(10.0)    )) },
 
-					{ M(() => Sql.Degrees((decimal?)0)), N(() => L<decimal?,decimal?>(v => (decimal?)         (          v!.Value  * (180 / 3.1415926535897932384626433833m)))) },
+					{ M(() => Sql.Degrees((decimal?)0)), N(() => L<decimal?,decimal?>(v => (decimal?)         (          v!.Value  * (180 / Sql.DecimalPI)))) },
 					{ M(() => Sql.Degrees((double?) 0)), N(() => L<double?, double?> (v => (double?)          (          v!.Value  * (180 / Math.PI)))) },
 					{ M(() => Sql.Degrees((short?)  0)), N(() => L<short?,  short?>  (v => (short?)  AccessInt(AccessInt(v!.Value) * (180 / Math.PI)))) },
 					{ M(() => Sql.Degrees((int?)    0)), N(() => L<int?,    int?>    (v => (int?)    AccessInt(AccessInt(v!.Value) * (180 / Math.PI)))) },
@@ -934,7 +934,7 @@ namespace LinqToDB.Linq
 				#region SapHana
 
 				{ ProviderName.SapHana, new Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo> {
-					{ M(() => Sql.Degrees((decimal?)0)), N(() => L<decimal?,decimal?>(v => (decimal?) (v!.Value * (180 / 3.1415926535897932384626433833m)))) },
+					{ M(() => Sql.Degrees((decimal?)0)), N(() => L<decimal?,decimal?>(v => (decimal?) (v!.Value * (180 / Sql.DecimalPI)))) },
 					{ M(() => Sql.Degrees((double?) 0)), N(() => L<double?, double?> (v => (double?)  (v!.Value * (180 / Math.PI)))) },
 					{ M(() => Sql.Degrees((short?)  0)), N(() => L<short?,  short?>  (v => (short?)   (v!.Value * (180 / Math.PI)))) },
 					{ M(() => Sql.Degrees((int?)    0)), N(() => L<int?,    int?>    (v => (int?)     (v!.Value * (180 / Math.PI)))) },
@@ -1212,7 +1212,7 @@ namespace LinqToDB.Linq
 		// TODO: Made private or remove in v7
 		[Obsolete("This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		[Sql.Function("PI", ServerSideOnly = true, CanBeNull = false)]
-		public static decimal DecimalPI() { return 3.1415926535897932384626433833m; }
+		public static decimal DecimalPI() { return Sql.DecimalPI; }
 		// TODO: Made private or remove in v7
 		[Obsolete("This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		[Sql.Function("PI", ServerSideOnly = true, CanBeNull = false)]

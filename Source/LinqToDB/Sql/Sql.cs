@@ -1055,9 +1055,11 @@ namespace LinqToDB
 		[Expression(PN.SQLite,     "1/TAN({0})", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static double?  Cot    (double?  value) { return value == null ? null : (double?)Math.Cos(value.Value) / Math.Sin(value.Value); }
 
+		internal const decimal DecimalPI = 3.1415926535897932384626433833m;
+
 		// YQL has no DEGREES; compute via Math::Pi(). Cast the argument to Double so it does not mix with the literal/Pi.
 		[Expression(PN.Ydb, "CAST({0} AS Double) * 180.0 / Math::Pi()", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static decimal? Degrees(decimal? value) => value == null ? null : (value.Value * 180m / 3.1415926535897932384626433833m);
+		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static decimal? Degrees(decimal? value) => value == null ? null : (value.Value * 180m / DecimalPI);
 		[Expression(PN.Ydb, "CAST({0} AS Double) * 180.0 / Math::Pi()", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static double?  Degrees(double?  value) => value == null ? null : (value.Value * 180 / Math.PI);
 		[Expression(PN.Ydb, "CAST({0} AS Double) * 180.0 / Math::Pi()", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
