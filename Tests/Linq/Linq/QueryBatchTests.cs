@@ -3388,33 +3388,6 @@ namespace Tests.Linq
 				.Throw<LinqToDBException>(batch.Execute)
 				.Message
 				.ShouldBe(ErrorHelper.Error_QueryBatch_TaskPart);
-
-			// The node reads a captured context of the batch's configuration as the query's root, which holds no task.
-			var taskOptions = new DataOptions()
-				.UseConfiguration(context);
-
-			using var taskFields = new TaskFieldConnection(Traced(trace)(taskOptions));
-
-			var fieldBatch = taskFields.CreateQueryBatch();
-
-			Receive(fieldBatch, () => taskFields.PendingTask.Result);
-
-			trace.Reset();
-
-			Shouldly.Should
-				.Throw<LinqToDBException>(fieldBatch.Execute)
-				.Message
-				.ShouldBe(ErrorHelper.Error_QueryBatch_TaskPart);
-			trace.Readers.ShouldBe(0);
-			Shouldly.Should
-				.Throw<LinqToDBException>(fieldBatch.Execute)
-				.Message
-				.ShouldBe(ErrorHelper.Error_QueryBatch_TaskPart);
-		}
-
-		sealed class TaskFieldConnection(DataOptions options) : TestDataConnection(options)
-		{
-			public Task<int> PendingTask = Task.FromResult(5);
 		}
 
 		sealed class TaskHolder
@@ -3489,6 +3462,16 @@ namespace Tests.Linq
 			heldTask.Value.ShouldBeSameAs(ready);
 			heldAsObject.Value.ShouldBeSameAs(ready);
 			trace.Readers.ShouldBe(1);
+
+			// A task field of a captured context is held by the context, as a captured variable holds one.
+			using var taskFields = new TaskFieldConnection(context);
+
+			var fieldBatch = taskFields.CreateQueryBatch();
+			var fieldTask  = Receive(fieldBatch, () => taskFields.PendingTask.Result);
+
+			fieldBatch.Execute();
+
+			fieldTask.Value.ShouldBe(5);
 		}
 
 		// The strict reads of a value join the batch row to their source, which Sybase refuses as the sibling
