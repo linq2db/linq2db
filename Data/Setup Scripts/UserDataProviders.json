@@ -23,17 +23,12 @@
 		]
 	},
 
-	"NET80" :
-	{
-		"BasedOn" : "NETBASE"
-	},
-
-	"NET90":
-	{
-		"BasedOn" : "NETBASE"
-	},
-
 	"NET100":
+	{
+		"BasedOn" : "NETBASE"
+	},
+
+	"NET110":
 	{
 		"BasedOn" : "NETBASE"
 	},

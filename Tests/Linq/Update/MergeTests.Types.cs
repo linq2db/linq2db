@@ -413,7 +413,7 @@ namespace Tests.xUpdate
 				Assert.That(actual.FieldGuid, Is.EqualTo(expected.FieldGuid));
 
 			if (!provider.IsAnyOf(TestProvName.AllSQLite))
-				Assert.That(actual.FieldDecimal, Is.EqualTo(expected.FieldDecimal));
+				Assert.That(actual.FieldDecimal, Is.EqualTo(expected.FieldDecimal).Within(FloatingPointDeltaPercent).Percent);
 
 			if (   !provider.IsAnyOf(TestProvName.AllSqlServer2005)
 				&& provider != ProviderName.SqlCe

@@ -38,7 +38,7 @@ existing Identity database.
   EF Core created, no migration required.
 * **Fast, type-safe** SQL via linq2db; automatic optimistic concurrency (the `ConcurrencyStamp` is a linq2db
   optimistic-lock column).
-* Works over the **direct** connection and the **remote [LinqService](https://linq2db.github.io/articles/general/Client-Server.html)** path.
+* Works over the **direct** connection and the **remote LinqService** path.
 * Arbitrary key types (`string`, `Guid`, `int`, `long`, …).
 
 ## Install
@@ -495,7 +495,7 @@ var roleNames = db.GetTable<AppUser>()
 
 ## Supported frameworks
 
-`net462`, `netstandard2.0`, `net8.0`, `net9.0`, `net10.0`. (Passkeys are .NET 10 only.)
+`net462`, `netstandard2.0`, `net10.0`, `net11.0`. (Passkeys are .NET 10+ only.)
 
 ## Migrating from the standalone `linq2db.Identity`
 
@@ -527,7 +527,7 @@ NVARCHAR2(256), …)`), or keep `VARCHAR2` with the Oracle-scoped mapping shown 
 | DI registration | `AddLinqToDBStores(new DefaultConnectionFactory())` (+ entity-type generic args) | `AddLinqToDBStores<TContext>()` |
 | Concurrency stamp | manual | automatic (linq2db `OptimisticLockPropertyAttribute` / `VersionBehavior`) |
 | Table names | none mapped — `CreateTable` used the CLR type names | `AspNet*`, as EF Core |
-| TFMs | `netstandard2.0` | `net462; netstandard2.0; net8.0; net9.0; net10.0` |
+| TFMs | `netstandard2.0` | `net462; netstandard2.0; net10.0; net11.0` |
 
 **Entity model.** Replace types implementing the old custom interfaces with subclasses of the ASP.NET Core base types
 (or use the defaults). The custom `IIdentityUser` / `IIdentityRole` / `IIdentityUserClaim` / … interfaces and
