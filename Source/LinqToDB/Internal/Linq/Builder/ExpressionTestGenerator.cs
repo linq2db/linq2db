@@ -156,7 +156,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					typeNamespaceList.All(type =>
 						!IsUserType(type)
 						|| IsAnonymous(type)
-						|| type.Assembly == GetType().Assembly
+						|| type.Assembly == typeof(ExpressionTestGenerator).Assembly
 						|| (type.IsGenericType && type.GetGenericTypeDefinition() != type)
 					)
 				)
@@ -609,7 +609,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			if (!IsUserType(type) ||
 				IsAnonymous(type) ||
-				type.Assembly == GetType().Assembly ||
+				type.Assembly == typeof(ExpressionTestGenerator).Assembly ||
 				(type.IsGenericType && type.GetGenericTypeDefinition() != type))
 			{
 				return;

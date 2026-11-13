@@ -166,7 +166,7 @@ namespace LinqToDB.DataModel
 		/// <param name="methods">Methods group that owns new method.</param>
 		/// <param name="model">Method model.</param>
 		/// <param name="async">If <see langword="true" />, append <see cref="DataModelConstants.ASYNC_SUFFIX"/> to method name.</param>
-		/// <param name="withAwait">If <see langword="true" />, method contains <c>await</c> operations and should be marked with <c>async</c> modifier.</param>
+		/// <param name="withAwait">If <see langword="true" />, method contains <see langword="await"/> operations and should be marked with <see langword="async"/> modifier.</param>
 		/// <returns>Method builder instance.</returns>
 		public static MethodBuilder DefineMethod(this IDataModelGenerationContext context, MethodGroup methods, MethodModel model, bool async = false, bool withAwait = false)
 		{

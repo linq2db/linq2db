@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<LangVersion>9</LangVersion>
+		<LangVersion>11</LangVersion>
 		<AssemblyName>linq2db.FSharp</AssemblyName>
 		<RootNamespace>LinqToDB.FSharp</RootNamespace>
 
