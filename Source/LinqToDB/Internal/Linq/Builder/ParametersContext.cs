@@ -106,7 +106,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			ColumnDescriptor?  columnDescriptor,
 			bool               doNotCheckCompatibility = false,
 			string?            alias                   = null,
-			BuildParameterType buildParameterType      = BuildParameterType.Default)
+			BuildParameterType buildParameterType      = BuildParameterType.Default,
+			bool               forComparison           = false)
 		{
 			if (columnDescriptor is null && expr is ConstantExpression { Value: null })
 				return null;
@@ -137,7 +138,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			// value is read from the store dictionary instead.
 			expr = ReplaceDynamicColumnGetters(expr, mappingSchema);
 
-			var entry       = PrepareParameterCacheEntry(mappingSchema, expr, parameterName, columnDescriptor, doNotCheckCompatibility, buildParameterType);
+			var entry       = PrepareParameterCacheEntry(mappingSchema, expr, parameterName, columnDescriptor, doNotCheckCompatibility, buildParameterType, forComparison);
 
 			if (entry is null)
 				return null;
@@ -212,7 +213,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			});
 		}
 
-		ParameterCacheEntry? PrepareParameterCacheEntry(MappingSchema mappingSchema, Expression paramExpression, string parameterName, ColumnDescriptor? columnDescriptor, bool doNotCheckCompatibility, BuildParameterType buildParameterType)
+		ParameterCacheEntry? PrepareParameterCacheEntry(MappingSchema mappingSchema, Expression paramExpression, string parameterName, ColumnDescriptor? columnDescriptor, bool doNotCheckCompatibility, BuildParameterType buildParameterType, bool forComparison)
 		{
 			Type? elementType     = null;
 			var   isParameterList = buildParameterType == BuildParameterType.InPredicate;
@@ -336,12 +337,14 @@ namespace LinqToDB.Internal.Linq.Builder
 							{
 								providerValueGetter = columnDescriptor.ApplyConversions(providerValueGetter, paramDataType, true);
 							}
-							else if (convertExpr == null
+							else if (forComparison
+								&& convertExpr == null
 								&& mappingSchema.GetDefaultFromEnumType(providerValueGetter.Type.UnwrapNullableType()) is { IsEnum: true } mappedEnum
 								&& Converter.GetDefaultMappingFromEnumType(MappingSchema, providerValueGetter.Type.UnwrapNullableType())?.UnwrapNullableType() == mappedEnum
 								&& MappingSchema.GetConvertExpression(providerValueGetter.Type.UnwrapNullableType(), typeof(DataParameter), false, false) == null)
 							{
-								// With no column to convert through, an enum mapped onto another enum takes that enum's database mapping.
+								// Compared with no column to convert through, an enum mapped onto another enum takes that enum's database
+								// mapping. A value that is only selected or passed to raw SQL keeps its own, so it reads back as itself.
 								var convertLambda   = MappingSchema.GenerateSafeConvert(providerValueGetter.Type, mappedEnum.MakeNullable());
 								providerValueGetter = InternalExtensions.ApplyLambdaToExpression(convertLambda, providerValueGetter);
 								paramDataType       = mappingSchema.GetDbDataType(mappedEnum);

@@ -3118,7 +3118,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (toTranslate is not SqlGenericConstructorExpression)
 					{
-						sql = Builder.ParametersContext.BuildParameter(BuildContext, toTranslate, CurrentDescriptor, alias: Alias);
+						sql = Builder.ParametersContext.BuildParameter(BuildContext, toTranslate, CurrentDescriptor, alias: Alias, forComparison: _buildFlags.HasFlag(BuildFlags.ForKeys));
 					}
 				}
 
@@ -5653,7 +5653,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						if (Builder.CanBeEvaluatedOnClient(arr))
 						{
 							// The collection is written into the SQL as values, so it takes the terms a constant would.
-							var parameter = Builder.ParametersContext.BuildParameter(BuildContext, arr, ConstantDescriptor, buildParameterType : ParametersContext.BuildParameterType.InPredicate);
+							var parameter = Builder.ParametersContext.BuildParameter(BuildContext, arr, ConstantDescriptor, buildParameterType : ParametersContext.BuildParameterType.InPredicate, forComparison : true);
 
 							if (parameter != null)
 							{
