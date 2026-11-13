@@ -5253,13 +5253,9 @@ LICENSE INFORMATION
 The Programs listed below are licensed under the following License Information terms and conditions in addition to the Program license terms previously agreed to by Client and IBM. If Client does not have previously agreed to license terms in effect for the Program, the International Program License Agreement (i125-3301-15) applies.
 
 Program Name (Program Number):
-IBM Data Server Provider for .NET 9 (Tool)
+IBM Data Server Provider for .NET 10.0 - Update 1 (Tool)
 
 The following standard terms apply to Licensee's use of the Program.
-
-Modifiable Third Party Code
-
-To the extent, if any, in the NOTICES file IBM identifies third party code as "Modifiable Third Party Code," IBM authorizes Licensee to 1) modify the Modifiable Third Party Code and 2) reverse engineer the Program modules that directly interface with the Modifiable Third Party Code provided that it is only for the purpose of debugging Licensee's modifications to such third party code. IBM's service and support obligations, if any, apply only to the unmodified Program.
 
 Redistributables
 
@@ -5269,148 +5265,270 @@ IBM, its suppliers and distributors provide the Redistributables and related doc
 
 The following are Redistributables:
 IBM Data Server Provider for .NET Redistributables:
-
+ 
 The following list includes files that are provided to Licensee pursuant to the Redistributables section of the IBM International Program License Agreements License Information that applies to this Program:
-
+ 
 List Redistributable files:
-
+ 
 Common list for all OS - Unix,Linux,MacOS,Windows,Linux PowerPC and Linux on IBM Z:
-
+ 
 04370923.cnv
+
 08500923.cnv
+
 08501252.cnv 
+
 08600923.cnv
+
 08630923.cnv
+
 09230437.cnv
+
 09230850.cnv
+
 09230860.cnv
+
 09231043.cnv
+
 09231051.cnv
+
 09231114.cnv
+
 09231208.cnv
+
 09231252.cnv
+
 09231275.cnv
+
 09241252.cnv
+
 09370950.cnv
+
 10430923.cnv
+
 10510923.cnv
+
 11140923.cnv
+
 12080923.cnv
+
 12520850.cnv
+
 12520923.cnv
+
 12750923.cnv
+
 1388ucs2.cnv
+
 1399ucs2.cnv
+
 0939ucs2.cnv
+
 0930ucs2.cnv
+
 1390ucs2.cnv
+
 ucs20943.cnv
+
 0954ucs2.cnv
+
 5039ucs2.cnv
+
 0943ucs2.cnv
+
 IBM00850.ucs
+
 IBM00923.ucs
+
 IBM01252.ucs
+
 db2dsdriver.cfg.sample 
+
 db2dsdriver.xsd
+
 DigiCertGlobalRootCA.arm
+
 db2level
+
 db2trc
+
 db2drdat
+
 db2cli
+
 db2diag
+
 db2support
+
 db2admh.mo
+
 db2adm.mo
+
 db2caem.mo
+
 db2supp.mo
+
 db2cklog.mo
+
 db2fodc.mo
+
 db2stt.mo
+
 db2clia1.lst
+
 db2clias.lst
+
 db2cli.mo
+
 db2clit.mo
+
 db2clp.mo
+
 db2clp2.mo
+
 db2diag.mo
+
 db2sqlh.mo
+
 db2sql.mo
+
 IBMIAMauth.so
+
 IBMkrb5.so
+
 IBMkrb5.so.1 
+
 libdb2clixml4c.so
+
 libdb2clixml4c.so.1
+
 libDB2xml4c.so
+
 libDB2xml4c.so.58
+
 libdb2.so
+
 libdb2.so.1
+
 libdb2o.so
+
 libdb2o.so.1
+
 db2cli.bnd
+
 db2clipk.bnd
+
 db2clist.bnd
+
 db2ajgrt.bnd
+
 db2spcdb.bnd
+
 db2cli.lst
+
 conlic.bin
+
 odbc_notices.txt
+
 odbc_REDIST.txt
+
 odbc_LI_en.txt
+
 ICCSIG.txt
+
 ibm.com_IBM_Data_Server_Driver_for_ODBC_and_CLI-11.5.0.swidtag
+
 IBM.Data.Db2.dll
+
 Readme.txt
+
 Lic_en.txt
+
 Readme.md
+
 TestConn.dll
+
 TestConn.exe
+
 TestConn.runtimeconfig
-
-
+ 
 For MacOS in addition to common files:
+
 libdb2.dylib
+
 libdb2o.dylib
+
 libdb2clixml4c.dylib
+
 libDB2xml4c.58.0.dylib
+
 libDB2xml4c.58.dylib
+
 libDB2xml4c.dylib
+
 IBMIAMauth.dylib
-
-
+ 
+ 
 For Windows in addition to common files:
+
 db2app64.dll
+
 db2cli64.dll
+
 db2cli.exe
+
 db2clixml4c64.dll
+
 db2diag.exe
+
 db2drdat.exe
+
 db2ldap64.dll
+
 db2ldapm64.dll
+
 db2level.exe
+
 db2osse64.dll
+
 db2support.exe
+
 db2trc.exe
+
 db2trcapi64.dll
+
 db2trcd64.exe
+
 DB2xml4c_cli64_5_8.dll
+
 DB2xml4c_cli64_5_8.dll.2.manifest
+
 IBM.DB2.APP64.manifest
+
 IBM.DB2.CLI64.manifest
+
 IBM.DB2.CLIXML4C64.manifest
+
 IBM.DB2.SEC64.manifest
+
 IBMIAMauth64.dll
+
 IBMkrb5TwoPart64.dll
+
 IBMkrb564.dll
+
 IBMLDAPauthclient64.dll
+
 IBMOSauthclient64.dll
+
 IBMOSauthclientTwoPart64.dll
 
+ 
 
 
-L/N: L-ZRDX-CGZHUA
-D/N: L-ZRDX-CGZHUA
-P/N: L-ZRDX-CGZHUA
+L/N: L-XWAF-Z4E6X3
+D/N: L-XWAF-Z4E6X3
+P/N: L-XWAF-Z4E6X3
 
 International Program License Agreement
 
