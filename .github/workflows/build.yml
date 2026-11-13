@@ -56,7 +56,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
           dotnet-version: |
             10.x
@@ -107,6 +107,10 @@ jobs:
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
 
+          # The browser build of LinqToDB is a separate instance that every package hook requests at once.
+          dotnet build Source/LinqToDB/LinqToDB.csproj @common -f net11.0 -p:BrowserWasmAssetBuild=true
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       # The API analyzers are a release-prep gate (/release-publicapi), not a per-PR one.
       - name: Build solution
         run: dotnet build ${{ env.SOLUTION }} --configuration ${{ env.RELEASE_CONFIGURATION }} -p:RunApiAnalyzersDuringBuild=false ${{ env.VERSION_ARGS }}
@@ -125,6 +129,10 @@ jobs:
         shell: pwsh
         run: ./Build/Azure/scripts/verify-analyzer-delivery.ps1 -PackagesDir .build/package/release -NoAzdoLogs
 
+      - name: Verify browser-wasm assets
+        shell: pwsh
+        run: ./Build/Azure/scripts/verify-browser-wasm-asset.ps1 -PackagesDir .build/package/release -NoAzdoLogs
+
       # linq2db.cli, the 14 T4 packages and the LINQPad 5 .lpx physically redistribute third-party
       # binaries under an MIT license expression that covers only linq2db's own code. `check` catches a
       # hand-edited or un-regenerated notices file; `verify` opens the packed output and fails on a
@@ -138,7 +146,7 @@ jobs:
         shell: pwsh
         run: ./Build/Azure/scripts/third-party-notices.ps1 -Action verify -PackagesDir .build/package/release -LpxDir .build/lpx -NoAzdoLogs
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: nugets
           path: .build/package/release
@@ -147,7 +155,7 @@ jobs:
       # The .lpx is produced during the net472 build of LinqToDB.LINQPad (GenerateLpxArtifacts,
       # default true). `error` rather than `warn`: a silently missing .lpx is how the LINQPad 5
       # artifact goes stale without anyone noticing.
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: linq2db_linqpad_lpx
           path: .build/lpx
@@ -162,7 +170,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
           dotnet-version: |
             10.x
@@ -181,7 +189,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
           dotnet-version: |
             10.x
@@ -204,7 +212,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
           dotnet-version: 11.x
 
@@ -223,7 +231,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
           dotnet-version: 11.x
 
@@ -250,7 +258,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
           dotnet-version: |
             10.x
@@ -267,7 +275,7 @@ jobs:
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: cli-test-results-${{ matrix.os }}
@@ -279,12 +287,12 @@ jobs:
   wasm-tests:
     name: WASM runtime tests
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 90
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
           dotnet-version: 11.x
 
@@ -308,7 +316,7 @@ jobs:
 
       - run: dotnet test --project Tests/Tests.Wasm/Tests.Wasm.csproj --configuration ${{ env.TEST_CONFIGURATION }} --no-build --report-trx --report-trx-filename wasm.trx --results-directory ${{ github.workspace }}/WasmTestResults
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: wasm-test-results

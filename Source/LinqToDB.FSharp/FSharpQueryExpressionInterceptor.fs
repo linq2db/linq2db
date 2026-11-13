@@ -161,7 +161,7 @@ type private FSharpRewriteVisitor(mappingSchema: MappingSchema) =
                 | _ -> simplified <- false
                 i <- i - 1
 
-            if simplified then this.Visit result |> nonNull
+            if simplified then this.Visit result
             else base.VisitBlock node
         else
             base.VisitBlock node
@@ -244,12 +244,12 @@ type private FSharpRewriteVisitor(mappingSchema: MappingSchema) =
                             |> nonNull
                         // Re-normalize any residual F# shapes, then wrap the way the translator's UnwrapLambda
                         // expects (it peels Quote/Convert, then casts to LambdaExpression).
-                        Some (Expression.Quote(this.Visit (replaced :?> LambdaExpression) |> nonNull))
+                        Some (Expression.Quote(this.Visit (replaced :?> LambdaExpression)))
                 | bare ->
                     // No captured variables: convert the quotation directly with F#'s own method.
                     let q   = this.Eval bare
                     let lam = (node.Method.InvokeExt(null, [| q |]) |> nonNull) :?> LambdaExpression
-                    Some (Expression.Quote(this.Visit lam |> nonNull))
+                    Some (Expression.Quote(this.Visit lam))
             // Fail safe: any unexpected shape/evaluation surprise leaves the node untouched (no worse than
             // before this rewrite existed), so only genuinely-matching F# quotation predicates are transformed.
             // A flatten-invariant violation raised by the nested Visit is not such a surprise - it must stay
@@ -377,7 +377,7 @@ type private FSharpRewriteVisitor(mappingSchema: MappingSchema) =
                             raise (FlattenInvariantException
                                        "F# chained group join could not be flattened: the group join's inner sequence or a hoisted tail operator is correlated to the outer element. See https://github.com/linq2db/linq2db/issues/5790")
 
-                        Some (this.Visit flattened |> nonNull)
+                        Some (this.Visit flattened)
         // Stays broad: AsLambda's cast and the pair-type construction still signal an unsupported shape by
         // throwing (a non-lambda argument, a non-generic outer element). It therefore also swallows a genuine
         // rewrite bug, whose fallback here is the un-flattened INNER JOIN LATERAL shape - silent row loss.
@@ -414,6 +414,6 @@ type FSharpQueryExpressionInterceptor private () =
             // Only the raw, pre-expose query tree (standard nodes) - the post-expose tree carries
             // linq2db custom nodes the F# constructs we handle never appear in.
             if args.Kind = QueryExpressionArgs.ExpressionKind.Query then
-                FSharpRewriteVisitor(args.DataContext.MappingSchema).Visit expression |> nonNull
+                FSharpRewriteVisitor(args.DataContext.MappingSchema).Visit expression
             else
                 expression

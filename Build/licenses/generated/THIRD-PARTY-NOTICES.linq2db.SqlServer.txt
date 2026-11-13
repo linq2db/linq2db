@@ -22,7 +22,7 @@ COMPONENTS
    License: MIT  see [1]
    Copyright (c) .NET Foundation and Contributors
 
-2. Microsoft.Bcl.AsyncInterfaces 10.0.3
+2. Microsoft.Bcl.AsyncInterfaces 10.0.15
    https://dot.net/
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.

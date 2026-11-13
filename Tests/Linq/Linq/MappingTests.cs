@@ -637,9 +637,7 @@ namespace Tests.Linq
 		#endregion
 
 		#region Issue 4113
-		public interface IInterface1
-		{
-		}
+		public interface IInterface1;
 
 		public interface IInterface2
 		{
