@@ -18,7 +18,7 @@
 
 		/// <summary>
 		/// Indicates that variable type could be infered from assigned value.
-		/// This could be used to generate <c>var</c> instead of specific type.
+		/// This could be used to generate <see langword="var"/> instead of specific type.
 		/// </summary>
 		public bool RValueTyped { get; }
 

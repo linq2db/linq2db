@@ -19,8 +19,7 @@ namespace Tests.UserTests
 		{
 			static int? UserId { get; set; } = 123;
 
-			public interface IBaseEntity
-			{ }
+			public interface IBaseEntity;
 
 			public interface IIdentifiable<T> : IBaseEntity
 			{

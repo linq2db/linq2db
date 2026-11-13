@@ -174,7 +174,7 @@ namespace Tests.Linq
 		/// parameter is over the line. A seconds-unit column lowers the same bound to seconds and stays well
 		/// under it, and a bound written into the statement is never bound at all.
 		/// <para>
-		/// Not an interval defect, and gated rather than declared for that reason: a plain captured <c>long</c>
+		/// Not an interval defect, and gated rather than declared for that reason: a plain captured <see langword="long"/>
 		/// compared against an ordinary integer column throws exactly the same way, with no duration anywhere. It
 		/// is also not declarable as a refusal - what escapes is a raw <see cref="OverflowException"/> rather than
 		/// one of ours, and the failure follows the <em>value</em>, not the shape of the query: the same comparison

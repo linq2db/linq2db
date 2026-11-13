@@ -2,7 +2,5 @@
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	public interface IOracleSpecificQueryable<out TSource> : IQueryable<TSource>
-	{
-	}
+	public interface IOracleSpecificQueryable<out TSource> : IQueryable<TSource>;
 }

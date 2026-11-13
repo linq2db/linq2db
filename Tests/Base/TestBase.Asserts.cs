@@ -326,11 +326,11 @@ namespace Tests
 
 				// TODO: AllTypes
 			}
-			catch
+			catch (Exception ex)
 			{
 				_badState = true;
 
-				throw new InvalidOperationException("SMOrc");
+				throw new InvalidOperationException("SMOrc", ex);
 			}
 		}
 	}

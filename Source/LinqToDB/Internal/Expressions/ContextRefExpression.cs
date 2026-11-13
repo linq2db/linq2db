@@ -87,7 +87,7 @@ namespace LinqToDB.Internal.Expressions
 				return true;
 			}
 
-			if (obj.GetType() != GetType())
+			if (obj.GetType() != typeof(ContextRefExpression))
 			{
 				return false;
 			}

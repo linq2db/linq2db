@@ -432,7 +432,6 @@ dotnet_diagnostic.MA0207.severity = error # MA0207: [FixedAddressValueType] fiel
 dotnet_diagnostic.MA0208.severity = error # MA0208: [FixedAddressValueType] fields must be value types
 dotnet_diagnostic.MA0209.severity = none # MA0209: Use in keyword for in parameter — also in NoWarn: 275s/build (8th costliest analyzer) for 2 trivial findings
 dotnet_diagnostic.MA0210.severity = none # MA0210: Use in keyword to call the in overload — also in NoWarn, shares MA0209's analyzer
-dotnet_diagnostic.MA0212.severity = error # MA0212: Use MemoryMarshal.GetReference instead of indexing at 0
 
 dotnet_diagnostic.MA0213.severity = error # MA0213: Simplify negated boolean expression
 dotnet_diagnostic.MA0214.severity = none # MA0214: Use 'await' instead of returning the task — inverse of MA0215, which we enable; linq2db returns the task directly wherever it can
@@ -447,6 +446,27 @@ dotnet_diagnostic.MA0222.severity = error # MA0222: JsonSourceGenerationOptions 
 dotnet_diagnostic.MA0223.severity = error # MA0223: JsonSourceGenerationOptions should set RespectRequiredConstructorParameters
 dotnet_diagnostic.MA0224.severity = none # MA0224: JsonSerializerOptions should set RespectNullableAnnotations — would change how the CLI and LINQPad driver deserialize user config JSON, which is a behaviour change rather than a lint fix
 dotnet_diagnostic.MA0225.severity = none # MA0225: JsonSerializerOptions should set RespectRequiredConstructorParameters — same reason as MA0224
+
+dotnet_diagnostic.MA0226.severity = error # MA0226: EventSource class should be sealed
+dotnet_diagnostic.MA0227.severity = error # MA0227: Avoid using 'Enumerable.Contains' on a set
+dotnet_diagnostic.MA0228.severity = error # MA0228: The event id of an EventSource must be greater than zero
+dotnet_diagnostic.MA0229.severity = error # MA0229: The event id of an EventSource is already used by another event
+dotnet_diagnostic.MA0230.severity = error # MA0230: The event name of an EventSource is already used by another event
+dotnet_diagnostic.MA0231.severity = error # MA0231: An EventSource event method must not be static
+dotnet_diagnostic.MA0232.severity = error # MA0232: An EventSource event method must not be an explicit interface implementation
+dotnet_diagnostic.MA0233.severity = error # MA0233: An abstract EventSource must not declare event methods
+dotnet_diagnostic.MA0234.severity = error # MA0234: The event id written by an EventSource event method must match its [Event] attribute
+dotnet_diagnostic.MA0235.severity = error # MA0235: The payload written by an EventSource event method must match its parameters
+dotnet_diagnostic.MA0236.severity = error # MA0236: The payload written by an EventSource event method must use the order of its parameters
+dotnet_diagnostic.MA0237.severity = error # MA0237: An EventSource event method writing a related activity id must declare it as its first parameter
+dotnet_diagnostic.MA0238.severity = error # MA0238: The parameter type of an EventSource event method is not supported
+dotnet_diagnostic.MA0239.severity = error # MA0239: Use 'typeof' instead of 'GetType()' when the type is sealed
+dotnet_diagnostic.MA0240.severity = error # MA0240: Do not use banned syntax
+dotnet_diagnostic.MA0241.severity = error # MA0241: The banned syntax entry is not valid
+dotnet_diagnostic.MA0242.severity = error # MA0242: Use a value factory to compute the value only when the key is not in the ConcurrentDictionary
+dotnet_diagnostic.MA0243.severity = none # MA0243: Use an escape sequence for invisible characters — counts U+0009 as invisible, and tabs are our indentation inside multi-line SQL and raw-string snippets: 2744 tab sites, no other character found, no option to exempt tabs and no code fix for raw strings
+dotnet_diagnostic.MA0244.severity = error # MA0244: Use a decimal literal instead of converting a floating-point constant to decimal
+dotnet_diagnostic.MA0245.severity = none # MA0245: Review the conversion of a floating-point value to decimal — 43 runtime double/float to decimal conversions; .NET 11's exact conversion was accepted as-is in #5942 (mitigated in tests, not in the library), and each site would need its own semantic decision
 
 MA0002.report_collection_expressions = true
 MA0011.consider_nullable_types = true
