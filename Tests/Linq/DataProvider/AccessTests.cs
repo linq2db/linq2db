@@ -9,7 +9,9 @@ using System.Xml.Linq;
 
 using LinqToDB;
 using LinqToDB.Common;
+using LinqToDB.Configuration;
 using LinqToDB.Data;
+using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Access;
 using LinqToDB.Mapping;
 
@@ -443,6 +445,57 @@ namespace Tests.DataProvider
 			Assert.That(File.Exists(expectedName), Is.False);
 		}
 
+		// one file per context and format: the two LibRed configurations run in parallel lanes
+		[Test]
+		public void CreateDatabaseLibRed([IncludeDataSources(TestProvName.AllAccessLibRed)] string context, [Values] bool accdb)
+		{
+			var name             = $"TestDatabase.{context}.{(accdb ? "Ace" : "Jet")}";
+			var extension        = accdb ? ".accdb" : ".mdb";
+			var version          = accdb ? AccessVersion.Ace : AccessVersion.Jet;
+			var provider         = AccessTools.GetDataProvider(provider: AccessProvider.LibRed);
+			var options          = new DataOptions().UseConnectionString(provider, $"Data Source={name}{extension}");
+
+			AccessTools.CreateDatabase(name, AccessProvider.LibRed, deleteIfExists: true, version: version);
+			File.Exists(name + extension)
+				.ShouldBeTrue();
+
+			using (var db = new DataConnection(options))
+				db.CreateTable<SqlCeTests.CreateTableTest>();
+
+			// without deleteIfExists the file is kept, table included
+			AccessTools.CreateDatabase(name, AccessProvider.LibRed, version: version);
+
+			using (var db = new DataConnection(options))
+				db.DropTable<SqlCeTests.CreateTableTest>();
+
+			// a pooled connection to the file was opened and closed above
+			AccessTools.DropDatabase(name, AccessProvider.LibRed, extension);
+			File.Exists(name + extension)
+				.ShouldBeFalse();
+		}
+
+		// the factory a .config <dataProvider> entry names; it is internal, so it is reached by name as a configuration
+		// would. Limited to the LibRed contexts, the only ones where LibRed.Ado is referenced
+		[Test]
+		public void FactoryResolvesAssemblyName([IncludeDataSources(TestProvName.AllAccessLibRed)] string context)
+		{
+			var factory = (IDataProviderFactory)Activator.CreateInstance(typeof(AccessTools).Assembly.GetType("LinqToDB.DataProvider.Access.AccessFactory", true)!, nonPublic: true)!;
+
+			string Resolve(string assemblyName) => factory
+				.GetDataProvider([new NamedValue { Name = "assemblyName", Value = assemblyName }, new NamedValue { Name = "version", Value = "ACE" }])
+				.Name;
+
+			Resolve("LibRed.Ado")
+				.ShouldBe(ProviderName.AccessLibRed);
+			Resolve("System.Data.Odbc")
+				.ShouldBe(ProviderName.AccessAceOdbc);
+
+			// OLE DB exists on Windows only
+			if (OperatingSystem.IsWindows())
+				Resolve("System.Data.OleDb")
+					.ShouldBe(ProviderName.AccessAceOleDb);
+		}
+
 		[Test]
 		public void BulkCopyLinqTypes([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
@@ -784,12 +837,20 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestConvertToDate_WithNull([IncludeDataSources(TestProvName.AllNativeAccess)] string context)
+		public void TestConvertToDate_WithNull([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
-			Assert.That(() => db.GetTable<AllTypesTable>().Select(r => Sql.AsSql(Sql.AsNotNull(r.DateTime!.Value).Date)).ToArray(),
-				Throws.Exception);
+			var query = db.GetTable<AllTypesTable>()
+				.Select(r => Sql.AsSql(Sql.AsNotNull(r.DateTime!.Value).Date));
+
+			// the Microsoft drivers reject DateValue over the NULL row; LibRed evaluates it
+			if (context.IsAnyOf(TestProvName.AllAccessLibRed))
+				query
+					.ToArray()
+					.ShouldNotBeEmpty();
+			else
+				Assert.That(() => query.ToArray(), Throws.Exception);
 		}
 
 		#endregion
