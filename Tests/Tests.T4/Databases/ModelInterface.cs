@@ -5,9 +5,7 @@ using LinqToDB.Data;
 
 namespace ModelInterfaceDataContext
 {
-	public partial interface ITestDataDB
-	{
-	}
+	public partial interface ITestDataDB;
 
 	public class DataConnectionTestDataDB : DataConnection, ITestDataDB
 	{

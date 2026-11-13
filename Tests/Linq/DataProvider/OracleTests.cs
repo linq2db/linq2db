@@ -2904,7 +2904,6 @@ namespace Tests.DataProvider
 					if (ReferenceEquals(x, y)) return true;
 					if (ReferenceEquals(x, null)) return false;
 					if (ReferenceEquals(y, null)) return false;
-					if (x.GetType() != y.GetType()) return false;
 					return x.Id == y.Id && x.BoolProp == y.BoolProp && x.NullableBoolProp == y.NullableBoolProp;
 				}
 

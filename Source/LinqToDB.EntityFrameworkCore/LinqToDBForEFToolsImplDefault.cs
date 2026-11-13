@@ -70,7 +70,7 @@ namespace LinqToDB.EntityFrameworkCore
 			{
 				if (obj is null) return false;
 				if (ReferenceEquals(this, obj)) return true;
-				if (obj.GetType() != GetType()) return false;
+				if (obj.GetType() != typeof(ProviderKey)) return false;
 				return Equals((ProviderKey) obj);
 			}
 

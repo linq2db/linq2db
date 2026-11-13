@@ -260,7 +260,7 @@ jobs:
         with:
           ref: ${{ inputs.ref || github.ref }}
 
-      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
           dotnet-version: |
             10.x
@@ -332,14 +332,14 @@ jobs:
       # include-hidden-files on every upload below: .runsettings is a dotfile, which upload-artifact
       # drops by default and without warning, and MTP does not auto-discover it - so each leg fails
       # on a missing runsettings file having tested nothing.
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: test_scripts
           path: testing/scripts
           if-no-files-found: error
           include-hidden-files: true
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: test_configs
           path: testing/configs
@@ -347,21 +347,21 @@ jobs:
           include-hidden-files: true
 
       - if: needs.prepare.outputs.windows_any == 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: test_netfx_binaries
           path: testing/net462
           if-no-files-found: error
           include-hidden-files: true
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: test_net100_binaries
           path: testing/net10.0
           if-no-files-found: error
           include-hidden-files: true
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: test_net110_binaries
           path: testing/net11.0
@@ -386,7 +386,7 @@ jobs:
         with:
           ref: ${{ inputs.ref || github.ref }}
 
-      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
           dotnet-version: |
             10.x
@@ -424,21 +424,21 @@ jobs:
             }
           }
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: test_netfx_x86_binaries
           path: testing/net462
           if-no-files-found: error
           include-hidden-files: true
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: test_net100_x86_binaries
           path: testing/net10.0
           if-no-files-found: error
           include-hidden-files: true
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: test_net110_x86_binaries
           path: testing/net11.0
@@ -455,7 +455,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: test_scripts
           path: scripts
@@ -495,12 +495,12 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJSON(needs.prepare.outputs.linux) }}
     steps:
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: test_scripts
           path: scripts
 
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: test_configs
           path: configs
@@ -529,7 +529,7 @@ jobs:
 
       # One call installs all three SDKs and keeps them, so unlike Azure there is no per-TFM
       # UseDotNet@2 step - see phase 2 of the migration plan.
-      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
           dotnet-version: |
             10.x
@@ -558,7 +558,7 @@ jobs:
       # interpolation, which would turn test-matrix.yml data into code.
 
       - name: Extract .NET 10 test binaries
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: test_net100_binaries
           path: net10.0
@@ -576,7 +576,7 @@ jobs:
           --config "$CONFIG" --setup "$SETUP" --retry "$RETRY" --main "$RUN_MAIN"
 
       - name: Extract .NET 11 test binaries
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: test_net110_binaries
           path: net11.0
@@ -647,12 +647,12 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJSON(needs.prepare.outputs.windows) }}
     steps:
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: test_scripts
           path: scripts
 
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: test_configs
           path: configs
@@ -669,7 +669,7 @@ jobs:
           ./scripts/checkout-baselines.ps1 -Branch "$Env:BRANCH" -BaselinesMaster "$Env:BASELINES_MASTER"
           exit $LASTEXITCODE
 
-      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
           dotnet-version: |
             10.x
@@ -679,7 +679,7 @@ jobs:
       # the same thing with UseDotNet@2 under PROCESSOR_ARCHITECTURE=x86. Installed after the x64 one
       # so the x86 install owns DOTNET_ROOT and PATH on the legs that need it.
       - if: matrix.arch == 'x86'
-        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
           architecture: x86
           dotnet-version: |
@@ -730,7 +730,7 @@ jobs:
 
       - name: Extract NETFX test binaries
         if: matrix.netfx
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: test_netfx${{ matrix.artifact_suffix }}_binaries
           path: net462
@@ -758,7 +758,7 @@ jobs:
 
       - name: Extract .NET 10 test binaries
         if: matrix.modern
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: test_net100${{ matrix.artifact_suffix }}_binaries
           path: net10.0
@@ -785,7 +785,7 @@ jobs:
 
       - name: Extract .NET 11 test binaries
         if: matrix.modern
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: test_net110${{ matrix.artifact_suffix }}_binaries
           path: net11.0

@@ -127,7 +127,7 @@ namespace LinqToDB.EntityFrameworkCore
 					return true;
 				}
 
-				if (obj.GetType() != GetType())
+				if (obj.GetType() != typeof(TypeKey))
 				{
 					return false;
 				}

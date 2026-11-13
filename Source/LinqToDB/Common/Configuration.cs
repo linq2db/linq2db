@@ -26,7 +26,7 @@ namespace LinqToDB.Common
 		/// <summary>
 		/// If <see langword="true" /> - structures (except primitive values including enums) will be treated as scalar types during mapping;
 		/// otherwise they will be treated the same way as classes.
-		/// Default value: <c>false</c>.
+		/// Default value: <see langword="false"/>.
 		/// </summary>
 		// TODO: Remove in v7
 		[Obsolete("This API planned for removal in version 7. Use MappingSchema.SetScalarType or ScalarTypeAttribute to configure scalar structs"), EditorBrowsable(EditorBrowsableState.Never)]
@@ -145,8 +145,8 @@ namespace LinqToDB.Common
 			/// <summary>
 			/// Controls behavior of bulk copy timeout if <see cref="BulkCopyOptions.BulkCopyTimeout"/> is not provided.
 			/// - if <see langword="true" /> - the currently set command timeout on the <see cref="DataConnection"/> is used
-			/// - if <c>false</c> - command timeout is infinite.
-			/// Default value: <c>false</c>.
+			/// - if <see langword="false"/> - command timeout is infinite.
+			/// Default value: <see langword="false"/>.
 			/// </summary>
 			public static bool BulkCopyUseConnectionCommandTimeout;
 		}
@@ -535,7 +535,7 @@ namespace LinqToDB.Common
 			/// <summary>
 			/// if set to <see langword="true" />, SchemaProvider uses <see cref="CommandBehavior.SchemaOnly"/> to get metadata.
 			/// Otherwise, the <c>sp_describe_first_result_set</c> sproc is used.
-			/// Default value: <c>false</c>.
+			/// Default value: <see langword="false"/>.
 			/// </summary>
 			public static bool UseSchemaOnlyToGetSchema;
 		}
@@ -549,16 +549,16 @@ namespace LinqToDB.Common
 			/// <summary>
 			/// Controls format of type name, sent over remote context:
 			/// - if <see langword="true" /> - name from <see cref="Type.AssemblyQualifiedName"/> used;
-			/// - if <c>false</c> - name from <see cref="Type.FullName"/> used.
-			/// Default value: <c>false</c>.
+			/// - if <see langword="false"/> - name from <see cref="Type.FullName"/> used.
+			/// Default value: <see langword="false"/>.
 			/// </summary>
 			public static bool SerializeAssemblyQualifiedName;
 
 			/// <summary>
 			/// Controls behavior of Linq To DB, when it cannot load <see cref="Type"/> by type name on query deserialization:
 			/// - if <see langword="true" /> - <see cref="LinqToDBException"/> will be thrown;
-			/// - if <c>false</c> - type load error will be ignored.
-			/// Default value: <c>false</c>.
+			/// - if <see langword="false"/> - type load error will be ignored.
+			/// Default value: <see langword="false"/>.
 			/// </summary>
 			public static bool ThrowUnresolvedTypeException;
 		}

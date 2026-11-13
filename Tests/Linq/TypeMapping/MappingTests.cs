@@ -24,9 +24,7 @@ namespace Tests.TypeMapping
 		public delegate string      ReturningDelegate           (string input);
 		public delegate SampleClass ReturningDelegateWithMapping(SampleClass input);
 
-		public interface ISampleClass
-		{
-		}
+		public interface ISampleClass;
 
 		public class SampleClass : ISampleClass
 		{

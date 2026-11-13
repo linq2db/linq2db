@@ -199,9 +199,7 @@ namespace LinqToDB
 			IReadyToFunction<TR> PartitionBy([ExprParameter("partition_expr")] params object?[] expressions);
 		}
 
-		public interface IPartitionedMayHaveOrder<out TR> : IReadyToFunction<TR>, INeedsOrderByOnly<TR>
-		{
-		}
+		public interface IPartitionedMayHaveOrder<out TR> : IReadyToFunction<TR>, INeedsOrderByOnly<TR>;
 
 		public interface IOverMayHavePartitionAndOrder<out TR> : IReadyToFunction<TR>, INeedsOrderByOnly<TR>
 		{
@@ -222,8 +220,8 @@ namespace LinqToDB
 			IOverMayHavePartitionAndOrder<TR> Over();
 		}
 
-		public interface IAggregateFunction<out TR> : IAnalyticFunction<TR> {}
-		public interface IAggregateFunctionSelfContained<out TR> : IAggregateFunction<TR>, IReadyToFunction<TR> {}
+		public interface IAggregateFunction<out TR> : IAnalyticFunction<TR>;
+		public interface IAggregateFunctionSelfContained<out TR> : IAggregateFunction<TR>, IReadyToFunction<TR>;
 
 		public interface IOrderedReadyToFunction<out TR> : IReadyToFunction<TR>
 		{
@@ -304,9 +302,7 @@ namespace LinqToDB
 			IPartitionDefinedReadyForSortingWithWindow<TR> PartitionBy([ExprParameter("partition_expr")] params object?[] expressions);
 		}
 
-		public interface IPartitionDefinedReadyForSortingWithWindow<out TR> : IReadyForSortingWithWindow<TR>, IReadyToFunction<TR>
-		{
-		}
+		public interface IPartitionDefinedReadyForSortingWithWindow<out TR> : IReadyForSortingWithWindow<TR>, IReadyToFunction<TR>;
 
 		public interface IOrderedReadyToWindowing<out TR> : IReadyToFunction<TR>
 		{

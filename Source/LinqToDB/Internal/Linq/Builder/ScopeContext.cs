@@ -89,7 +89,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return true;
 			}
 
-			if (obj.GetType() != GetType())
+			if (obj.GetType() != typeof(ScopeContext))
 			{
 				return false;
 			}

@@ -5,7 +5,5 @@
 		public int GetNext();
 	}
 
-	interface IUniqueIdGenerator<T> : IUniqueIdGenerator
-	{
-	}
+	interface IUniqueIdGenerator<T> : IUniqueIdGenerator;
 }

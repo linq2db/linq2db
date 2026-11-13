@@ -3,9 +3,10 @@
 
 	<PropertyGroup>
 		<WasmBundleMode Condition="'$(WasmBundleMode)' == ''">Debug</WasmBundleMode>
+		<WasmRuntime Condition="'$(WasmRuntime)' == ''">Mono</WasmRuntime>
 
-		<!-- One obj/bin per bundle mode, so a publish never reuses another mode's trimmed output. -->
+		<!-- One obj/bin per runtime and bundle mode, so a publish never reuses another bundle's trimmed output or runtime pack. -->
 		<!-- Must be set before the SDK derives BaseIntermediateOutputPath, hence here and not in the project. -->
-		<ArtifactsProjectName>$(MSBuildProjectName)_$(WasmBundleMode)</ArtifactsProjectName>
+		<ArtifactsProjectName>$(MSBuildProjectName)_$(WasmRuntime)_$(WasmBundleMode)</ArtifactsProjectName>
 	</PropertyGroup>
 </Project>

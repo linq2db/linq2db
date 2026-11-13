@@ -17,7 +17,7 @@ Components: 12
 COMPONENTS
 --------------------------------------------------------------------------------------------------
 
-1. ClickHouse.Driver net10.0: 1.4.0, net10.0-windows7.0: 1.4.0, net11.0: 1.4.0, net462: 0.9.0, net472: 0.9.0
+1. ClickHouse.Driver net10.0: 1.5.0, net10.0-windows7.0: 1.5.0, net11.0: 1.5.0, net462: 0.9.0, net472: 0.9.0
    https://github.com/ClickHouse/clickhouse-cs
    License: MIT  see [1]
 
@@ -26,7 +26,7 @@ COMPONENTS
    License: MIT  see [1]
    Copyright (c) .NET Foundation and Contributors
 
-3. Microsoft.Bcl.AsyncInterfaces 10.0.3
+3. Microsoft.Bcl.AsyncInterfaces 10.0.15
    https://dot.net/
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
@@ -36,12 +36,12 @@ COMPONENTS
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-5. Microsoft.Extensions.Logging.Abstractions net10.0: 10.0.12, net10.0-windows7.0: 10.0.8, net462: 10.0.0, net472: 10.0.0
+5. Microsoft.Extensions.Logging.Abstractions 10.0.15
    https://dot.net/
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-6. MySqlConnector 2.6.2
+6. MySqlConnector 3.0.0
    https://mysqlconnector.net/
    License: MIT  see [1]
    Copyright 2016–2026 Bradley Grainger
@@ -55,7 +55,7 @@ COMPONENTS
    License: MIT  see [1]
    © Microsoft Corporation. All rights reserved.
 
-9. System.Diagnostics.DiagnosticSource 10.0.3
+9. System.Diagnostics.DiagnosticSource 10.0.15
    https://dot.net/
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
@@ -65,7 +65,7 @@ COMPONENTS
    License: MIT  see [1]
    © Microsoft Corporation. All rights reserved.
 
-11. System.Text.Json 10.0.3
+11. System.Text.Json 10.0.9
    https://dot.net/
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
