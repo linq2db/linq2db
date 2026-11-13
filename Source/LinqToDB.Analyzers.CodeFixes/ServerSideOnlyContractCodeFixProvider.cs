@@ -41,9 +41,11 @@ namespace LinqToDB.Analyzers.CodeFixes
 		const string ExpressionAttributeMetadataName = "LinqToDB.Sql+ExpressionAttribute";
 
 		/// <inheritdoc/>
-		public override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(
+		public override ImmutableArray<string> FixableDiagnosticIds =>
+		[
 			ServerSideOnlyContractAnalyzer.MissingMarkerDiagnosticId,
-			ServerSideOnlyContractAnalyzer.WrongExceptionDiagnosticId);
+			ServerSideOnlyContractAnalyzer.WrongExceptionDiagnosticId,
+		];
 
 		// A custom solution-scoped Fix-All - see ContractFixAllProvider for why neither
 		// WellKnownFixAllProviders.BatchFixer nor DocumentBasedFixAllProvider can express this fix.
@@ -644,7 +646,7 @@ namespace LinqToDB.Analyzers.CodeFixes
 						&& TryRewriteAt(targetRoot, targetLocation, remedy, out var crossOriginal, out var crossReplacement)
 						&& crossOriginal is not null
 						&& crossReplacement is not null
-							? ImmutableArray.Create((targetDocument.Id, crossOriginal, crossReplacement))
+							? [(targetDocument.Id, crossOriginal, crossReplacement)]
 							: none;
 				}
 
@@ -656,7 +658,7 @@ namespace LinqToDB.Analyzers.CodeFixes
 					&& TryRewrite(documentRoot, documentModel, diagnostic, out var original, out var replacement)
 					&& original is not null
 					&& replacement is not null
-						? ImmutableArray.Create((document.Id, original, replacement))
+						? [(document.Id, original, replacement)]
 						: none;
 			}
 		}

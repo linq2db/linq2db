@@ -31,26 +31,6 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 		protected override ConcatBuildStyle ConcatStyle => ConcatBuildStyle.Pipes;
 
-		public override int CommandCount(SqlStatement statement)
-		{
-			return statement.NeedsIdentity ? 2 : 1;
-		}
-
-		protected override void BuildCommand(SqlStatement statement, int commandNumber)
-		{
-			var insertClause = Statement.InsertClause;
-			if (insertClause != null)
-			{
-				var identityField = insertClause.Into!.GetIdentityField();
-				var table = insertClause.Into;
-
-				if (identityField == null || table == null)
-					throw new LinqToDBException($"Identity field must be defined for '{insertClause.Into.NameForLogging}'.");
-
-				StringBuilder.Append("SELECT CURRENT_IDENTITY_VALUE() FROM DUMMY");
-			}
-		}
-
 		protected override string LimitFormat(SelectQuery selectQuery)
 		{
 			return "LIMIT {0}";

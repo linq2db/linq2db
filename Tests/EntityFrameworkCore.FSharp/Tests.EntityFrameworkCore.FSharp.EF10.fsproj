@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="Tests.EntityFrameworkCore.FSharp.props" />
+
+	<PropertyGroup>
+		<TargetFrameworks>$(LowestSupportedTargetFramework)</TargetFrameworks>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Source\LinqToDB.EntityFrameworkCore\LinqToDB.EntityFrameworkCore.EF10.csproj" />
+	</ItemGroup>
+
+</Project>

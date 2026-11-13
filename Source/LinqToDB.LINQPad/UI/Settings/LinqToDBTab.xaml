@@ -18,7 +18,7 @@
 			ToolTip="Allows Linq To DB to remove unnecessary JOINs from LINQ queries" >
 			<TextBlock>Enable JOINs optimization in LINQ queries (<Hyperlink
 					RequestNavigate="Url_Click"
-					NavigateUri="https://linq2db.github.io/api/LinqToDB.Common.Configuration.Linq.html#LinqToDB_Common_Configuration_Linq_OptimizeJoins">
+					NavigateUri="https://linq2db.github.io/api/linq2db/linq2db--LinqToDB.Common.Configuration.Linq.html#linq2db__LinqToDB_Common_Configuration_Linq_OptimizeJoins">
 					<TextBlock Text="details"/>
 				</Hyperlink>)
 			</TextBlock>
