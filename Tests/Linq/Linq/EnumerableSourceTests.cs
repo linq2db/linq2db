@@ -622,7 +622,7 @@ namespace Tests.Linq
 					return true;
 				}
 
-				if (obj.GetType() != GetType())
+				if (obj.GetType() != typeof(TableToInsert))
 				{
 					return false;
 				}

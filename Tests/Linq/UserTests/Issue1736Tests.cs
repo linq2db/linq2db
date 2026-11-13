@@ -11,9 +11,7 @@ namespace Tests.UserTests.Issue1736
 	[TestFixture]
 	public class UserTest : TestBase
 	{
-		public interface IModifiedTimeStamp
-		{
-		}
+		public interface IModifiedTimeStamp;
 
 		public class BasicDTO : BasicDTOwithoutID, IDTOWithId
 		{
@@ -24,25 +22,15 @@ namespace Tests.UserTests.Issue1736
 
 		public class BasicDTOwithoutID : IMccEntityState;
 
-		public interface ICreatedTimeStamp
-		{
-		}
+		public interface ICreatedTimeStamp;
 
-		public interface IDTOWithId
-		{
-		}
+		public interface IDTOWithId;
 
-		public interface IHasArchiveTable
-		{
-		}
+		public interface IHasArchiveTable;
 
-		public interface IMccEntityState
-		{
-		}
+		public interface IMccEntityState;
 
-		public interface IExtensionData
-		{
-		}
+		public interface IExtensionData;
 
 		public class AisleDTO : BasicDTOwithExtensionData
 		{

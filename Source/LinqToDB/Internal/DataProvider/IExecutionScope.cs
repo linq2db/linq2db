@@ -2,7 +2,5 @@
 
 namespace LinqToDB.Internal.DataProvider
 {
-	public interface IExecutionScope : IDisposable, IAsyncDisposable
-	{
-	}
+	public interface IExecutionScope : IDisposable, IAsyncDisposable;
 }

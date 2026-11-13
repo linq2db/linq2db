@@ -39,7 +39,7 @@ namespace Tests.Linq
 			{
 				if (ReferenceEquals(null, obj)) return false;
 				if (ReferenceEquals(this, obj)) return true;
-				if (obj.GetType() != GetType()) return false;
+				if (obj.GetType() != typeof(AsyncDataProjection)) return false;
 				return Equals((AsyncDataProjection)obj);
 			}
 

@@ -517,7 +517,7 @@ namespace LinqToDB.CommandLine.Commands.Help
 		/// </summary>
 		private void PrintHeader(ICliEnvironment environment)
 		{
-			environment.Out.WriteLine("dotnet linq2db - Linq To DB command-line utilities. Version: {0}", GetType().Assembly.GetName().Version);
+			environment.Out.WriteLine("dotnet linq2db - Linq To DB command-line utilities. Version: {0}", typeof(HelpCommand).Assembly.GetName().Version);
 		}
 	}
 }

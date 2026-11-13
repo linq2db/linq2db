@@ -99,7 +99,7 @@
 		<PackageVersion Include="AsyncFixer"                                            Version="2.1.0"                        />
 		<PackageVersion Include="DotNet.ReproducibleBuilds"                             Version="2.0.5"                        />
 		<PackageVersion Include="Lindhart.Analyser.MissingAwaitWarning"                 Version="4.0.0-beta"                   />
-		<PackageVersion Include="Meziantou.Analyzer"                                    Version="3.0.231"                      />
+		<PackageVersion Include="Meziantou.Analyzer"                                    Version="3.0.339"                      />
 		<PackageVersion Include="Meziantou.Polyfill"                                    Version="1.0.171"                      />
 		<PackageVersion Include="Microsoft.CodeAnalysis.Analyzers"                      Version="5.9.0"                        />
 		<!--Shipped analyzer package (linq2db.Analyzers) targets the Roslyn bundled with the LOWEST supported .NET SDK's first feature band (.NET 10 => 10.0.1xx => Roslyn 5.0) for broad IDE reach; bump only when that SDK is dropped. Measured mapping: 10.0.2xx ships 5.3 and 10.0.4xx ships 5.9. Kept separate from the runtime pin below; CentralPackageTransitivePinningEnabled=false so the transitive CodeAnalysis assemblies don't clash.-->

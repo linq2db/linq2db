@@ -1268,9 +1268,7 @@ namespace Tests.Linq
 
 		static class Issue5040
 		{
-			public interface IBaseEntity
-			{
-			}
+			public interface IBaseEntity;
 
 			public interface IEntityWithPermissions : IBaseEntity
 			{

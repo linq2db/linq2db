@@ -478,7 +478,7 @@ namespace Tests.Linq
 			// A preceding OrderBy that carries a custom IComparer<T> has no SQL form, so it must not be
 			// extracted as a plain ordering for the ROW_NUMBER rewrite (which would silently drop the comparer).
 			var query = table
-				.OrderBy(t => t.Name, Comparer<string>.Default)
+				.OrderBy(t => t.Name, StringComparer.Ordinal)
 				.DistinctBy(x => x.Group);
 
 			AssertQuery(query);
