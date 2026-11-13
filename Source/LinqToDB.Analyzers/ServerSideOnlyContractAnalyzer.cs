@@ -67,7 +67,7 @@ namespace LinqToDB.Analyzers
 			helpLinkUri:        "https://github.com/linq2db/linq2db/wiki/" + WrongExceptionDiagnosticId);
 
 		/// <inheritdoc/>
-		public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(MissingMarkerRule, WrongExceptionRule);
+		public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => [MissingMarkerRule, WrongExceptionRule];
 
 		/// <inheritdoc/>
 		public override void Initialize(AnalysisContext context)
@@ -204,7 +204,7 @@ namespace LinqToDB.Analyzers
 			INamedTypeSymbol       @default)
 		{
 			if (options is null || !options.TryGetValue(key, out var value) || string.IsNullOrWhiteSpace(value))
-				return ImmutableArray.Create(@default);
+				return [@default];
 
 			var builder = ImmutableArray.CreateBuilder<INamedTypeSymbol>();
 

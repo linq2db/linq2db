@@ -15,6 +15,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests.Model;
 
 namespace Tests.DataProvider
@@ -791,5 +793,69 @@ namespace Tests.DataProvider
 		}
 
 		#endregion
+
+		[Table]
+		sealed class LongTextTable
+		{
+			[PrimaryKey                       ] public int     Id    { get; set; }
+			[Column(DataType = DataType.NText)] public string? Value { get; set; }
+		}
+
+		[Table]
+		sealed class LongAnsiTextTable
+		{
+			[PrimaryKey                      ] public int     Id    { get; set; }
+			[Column(DataType = DataType.Text)] public string? Value { get; set; }
+		}
+
+		// past the 255 characters a Text parameter can carry; the second row shares the first 300 characters, so '='
+		// has to compare the whole memo value, not a prefix
+		[Test]
+		public void LongTextParameter([IncludeDataSources(true, TestProvName.AllAccess)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<LongTextTable>();
+
+			var value = new string('x', 1000);
+			var other = new string('x', 300) + new string('y', 700);
+
+			db.Insert(new LongTextTable { Id = 1, Value = value });
+			db.Insert(new LongTextTable { Id = 2, Value = other });
+
+			table
+				.Single(r => r.Id == 1)
+				.Value
+				.ShouldBe(value);
+
+			table
+				.Where(r => r.Value == value)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([1]);
+		}
+
+		[Test]
+		public void LongAnsiTextParameter([IncludeDataSources(true, TestProvName.AllAccess)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<LongAnsiTextTable>();
+
+			var value = new string('x', 1000);
+			var other = new string('x', 300) + new string('y', 700);
+
+			db.Insert(new LongAnsiTextTable { Id = 1, Value = value });
+			db.Insert(new LongAnsiTextTable { Id = 2, Value = other });
+
+			table
+				.Single(r => r.Id == 1)
+				.Value
+				.ShouldBe(value);
+
+			table
+				.Where(r => r.Value == value)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([1]);
+		}
 	}
 }

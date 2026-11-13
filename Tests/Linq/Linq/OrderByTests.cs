@@ -956,5 +956,162 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		[Test]
+		public void OrderByBooleanColumn([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var expected = Types
+				.OrderBy(t => t.BoolValue)
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray();
+
+			db.Types
+				.OrderBy(t => t.BoolValue)
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
+		[Test]
+		public void OrderByBooleanColumnDescending([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var expected = Types
+				.OrderByDescending(t => t.BoolValue)
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray();
+
+			db.Types
+				.OrderByDescending(t => t.BoolValue)
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
+		[Test]
+		public void OrderByNullableBooleanColumn([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var expected = Types2
+				.OrderBy(t => t.BoolValue)
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray();
+
+			db.Types2
+				.OrderBy(t => t.BoolValue)
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
+		[Test]
+		public void OrderByNullableBooleanColumnDescending([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var expected = Types2
+				.OrderByDescending(t => t.BoolValue)
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray();
+
+			db.Types2
+				.OrderByDescending(t => t.BoolValue)
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
+		// Access-only: the other providers place NULL by their own DefaultNullsOrdering.
+		[Test]
+		public void OrderByOuterJoinedBooleanKey([IncludeDataSources(true, TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var expectedQuery =
+				from p in Parent
+				join t in Types2 on p.ParentID + 8 equals t.ID into g
+				from t in g.DefaultIfEmpty()
+				orderby t?.BoolValue, p.ParentID
+				select p.ParentID;
+
+			var query =
+				from p in db.Parent
+				join t in db.Types2 on p.ParentID + 8 equals t.ID into g
+				from t in g.DefaultIfEmpty()
+				orderby t!.BoolValue, p.ParentID
+				select p.ParentID;
+
+			var expected = expectedQuery.ToArray();
+
+			query
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
+		sealed class BoolAsInt16Table
+		{
+			[PrimaryKey]                        public int  Id   { get; set; }
+			[Column(DataType = DataType.Int16)] public bool Flag { get; set; }
+		}
+
+		static readonly BoolAsInt16Table[] _boolAsInt16Data =
+		[
+			new BoolAsInt16Table { Id = 1, Flag = true  },
+			new BoolAsInt16Table { Id = 2, Flag = false },
+			new BoolAsInt16Table { Id = 3, Flag = true  },
+			new BoolAsInt16Table { Id = 4, Flag = false },
+		];
+
+		// Access-only: several providers cannot seed a bool mapped to Int16.
+		[Test]
+		public void OrderByBooleanStoredAsInt16([IncludeDataSources(true, TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_boolAsInt16Data);
+
+			var expected = _boolAsInt16Data
+				.OrderBy(r => r.Flag)
+				.ThenBy(r => r.Id)
+				.Select(r => r.Id)
+				.ToArray();
+
+			t
+				.OrderBy(r => r.Flag)
+				.ThenBy(r => r.Id)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
+		[Test]
+		public void OrderByBooleanPredicate([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var expected = Types
+				.OrderBy(t => t.ID > 5)
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray();
+
+			db.Types
+				.OrderBy(t => t.ID > 5)
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray()
+				.ShouldBe(expected);
+		}
 	}
 }
