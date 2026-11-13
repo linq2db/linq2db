@@ -54,8 +54,10 @@ internal static class DatabaseProviders
 		{
 			providers.Add(provider.Database, provider);
 
+			// a paired entry (ProviderInfo.SecondaryName) repeats a name its database already registered
 			foreach (var info in provider.Providers)
-				providersByName.Add(info.Name, provider);
+				if (info.SecondaryName == null)
+					providersByName.Add(info.Name, provider);
 		}
 	}
 
@@ -86,7 +88,7 @@ internal static class DatabaseProviders
 	{
 		foreach (var provider in Providers.Values)
 		{
-			// a database that cannot work on this host needs no client (e.g. Access OLE DB on macOS)
+			// a database that cannot work on this host needs no client (e.g. SQL CE on macOS)
 			if (!provider.IsPlatformSupported)
 				continue;
 
@@ -101,9 +103,11 @@ internal static class DatabaseProviders
 	/// </summary>
 	public static IEnumerable<(string Id, string Version)> GetNuGetPackages(IDatabaseProvider provider)
 	{
+		// a hidden provider is either legacy-only or unusable on this host (e.g. Access OLE DB on macOS)
 		foreach (var info in provider.Providers)
-			foreach (var package in provider.GetNuGetPackages(info.Name))
-				yield return package;
+			if (!info.IsHidden)
+				foreach (var package in provider.GetNuGetPackages(info.Name))
+					yield return package;
 	}
 #endif
 

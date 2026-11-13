@@ -10,7 +10,7 @@ Following databases supported:
 * **DuckDB**
 * **Firebird**
 * **Informix**: 64-bit LINQPad only — the LINQPad 5 `.lpx` also supports 32-bit
-* **Microsoft Access**: both OLE DB and ODBC drivers *(Windows only)*
+* **Microsoft Access**: OLE DB and ODBC drivers *(Windows only)*; managed LibRed engine on every OS *(not in the LINQPad 5 `.lpx`)*
 * **Microsoft SQL Server** 2005+ *(including **Microsoft SQL Azure**)*
 * **Microsoft SQL Server Compact (SQL CE)** *(Windows only)*
 * **MariaDB**

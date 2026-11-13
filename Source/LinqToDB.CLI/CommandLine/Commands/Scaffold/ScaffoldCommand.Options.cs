@@ -93,6 +93,7 @@ JSON file example:
 					null,
 					false,
 					new (false, false, nameof(DatabaseType.Access),          "MS Access (requires OLE DB or/and ODBC provider installed)"),
+					new (false, false, nameof(DatabaseType.AccessLibRed),    "MS Access using the managed LibRed engine (no driver install)"),
 					new (false, false, nameof(DatabaseType.DB2),             "IBM DB2 LUW or z/OS"                                       ),
 					new (false, false, nameof(DatabaseType.Firebird),        "Firebird"                                                  ),
 					new (false, false, nameof(DatabaseType.Informix),        "IBM Informix"                                              ),
@@ -1929,6 +1930,7 @@ string // also you can put aggregate function name as string directly to list
 		private enum DatabaseType
 		{
 			Access,
+			AccessLibRed,
 			DB2,
 			Firebird,
 			Informix,
