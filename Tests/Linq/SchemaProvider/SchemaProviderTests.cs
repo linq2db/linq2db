@@ -10,6 +10,8 @@ using LinqToDB.SchemaProvider;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.SchemaProvider
 {
 	[TestFixture]
@@ -481,6 +483,46 @@ namespace Tests.SchemaProvider
 			var       pk       = table.Columns.FirstOrDefault(t => t.IsPrimaryKey);
 
 			Assert.That(pk, Is.Not.Null);
+		}
+
+		[Table("LibRedSchemaTypes")]
+		sealed class LibRedSchemaTypesTable
+		{
+			[Column] public int Id { get; set; }
+		}
+
+		// ACCDB-only types (an .mdb refuses BIGINT and DATETIME2) and a Yes/No column declared NULL, which Access
+		// cannot store as NULL
+		[Test]
+		public void AccessLibRedColumnTypes([IncludeDataSources(TestProvName.AccessLibRedAccdb)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			db.DropTable<LibRedSchemaTypesTable>(throwExceptionIfNotExists: false);
+			db.Execute("CREATE TABLE [LibRedSchemaTypes] ([Id] INT, [Big] BIGINT, [Stamp] DATETIME2, [Flag] BIT NULL)");
+
+			try
+			{
+				var schema = db.DataProvider
+					.GetSchemaProvider()
+					.GetSchema(db, new GetSchemaOptions { GetProcedures = false });
+
+				var columns = schema.Tables
+					.Single(t => t.TableName == "LibRedSchemaTypes")
+					.Columns
+					.ToDictionary(c => c.ColumnName);
+
+				columns["Big"].DataType.ShouldBe(DataType.Int64);
+				columns["Big"].SystemType.ShouldBe(typeof(long));
+				columns["Stamp"].DataType.ShouldBe(DataType.DateTime2);
+				columns["Stamp"].SystemType.ShouldBe(typeof(DateTime));
+				columns["Flag"].IsNullable.ShouldBeFalse();
+				columns["Flag"].MemberType.ShouldBe("bool");
+			}
+			finally
+			{
+				db.DropTable<LibRedSchemaTypesTable>();
+			}
 		}
 	}
 }

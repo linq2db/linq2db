@@ -39,8 +39,11 @@ namespace LinqToDB.Internal.DataProvider.Access
 			new() { TypeName = "Decimal",    DataType = "System.Decimal", CreateFormat = "Decimal({0}, {1})", CreateParameters = "precision,scale" },
 			new() { TypeName = "DateTime",   DataType = "System.DateTime"                                                             },
 			new() { TypeName = "GUID",       DataType = "System.Guid"                                                                 },
-			// the CreateFormat casing follows the TypeName so a scaffolded column type reads as the OLE DB
-			// flavour spells it - Access itself is case-insensitive here
+			// ACCDB-only: Large Number and Date/Time Extended
+			new() { TypeName = "BigInt",     DataType = "System.Int64"                                                                },
+			new() { TypeName = "DateTime2",  DataType = "System.DateTime"                                                             },
+			// the CreateFormat casing follows LibRed's TypeName (Char(20), VarBinary(20)), where the OLE DB
+			// flavour spells CHAR(20) / VARBINARY(20) - Access itself is case-insensitive here
 			new() { TypeName = "Char",       DataType = "System.String",  CreateFormat = "Char({0})",         CreateParameters = "length" },
 			new() { TypeName = "VarChar",    DataType = "System.String",  CreateFormat = "VarChar({0})",      CreateParameters = "length" },
 			new() { TypeName = "LongText",   DataType = "System.String"                                                               },
@@ -54,6 +57,23 @@ namespace LinqToDB.Internal.DataProvider.Access
 			_dataTypes.ToDictionary(dt => dt.TypeName!, StringComparer.OrdinalIgnoreCase);
 
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection) => _dataTypes;
+
+		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale)
+		{
+			return dataType?.ToLowerInvariant() switch
+			{
+				"bigint"    => DataType.Int64,
+				"datetime2" => DataType.DateTime2,
+				_           => base.GetDataType(dataType, columnType, length, precision, scale),
+			};
+		}
+
+		// LibRed reports a width of 0 where it does not know one - an expression column of a stored query
+		static int? KnownLength(object value)
+		{
+			var length = Converter.ChangeTypeTo<int?>(value);
+			return length > 0 ? length : null;
+		}
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
@@ -80,23 +100,34 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
+			var connection = dataConnection.OpenDbConnection();
+
+			var views = connection.GetSchema("Tables").AsEnumerable()
+				.Where (t => string.Equals(t.Field<string>("TABLE_TYPE"), "VIEW", StringComparison.Ordinal))
+				.Select(t => ID(t, "TABLE_NAME"))
+				.ToHashSet(StringComparer.Ordinal);
+
 			return
 			(
-				from c in dataConnection.OpenDbConnection().GetSchema("Columns").AsEnumerable()
+				from c in connection.GetSchema("Columns").AsEnumerable()
+				let tableId  = ID(c, "TABLE_NAME")
 				let typeName = c.Field<string>("TYPE_NAME")
 				let dt       = typeName != null && _dataTypesByName.TryGetValue(typeName, out var info) ? info : null
 				let parms    = dt?.CreateParameters
 				select new ColumnInfo
 				{
-					TableID     = ID(c, "TABLE_NAME"),
+					TableID     = tableId,
 					Name        = c.Field<string>("COLUMN_NAME")!,
 					Ordinal     = Converter.ChangeTypeTo<int>(c["ORDINAL_POSITION"]),
 					DataType    = typeName,
-					IsNullable  = c.Field<bool>("IS_NULLABLE"),
+					// a stored Yes/No cannot hold NULL - LibRed stores False, as ACE does - yet it reports the
+					// declared nullability; a view column passes through, as an outer join can produce NULL there
+					IsNullable  = c.Field<bool>("IS_NULLABLE")
+						&& (views.Contains(tableId) || !string.Equals(typeName, "Bit", StringComparison.OrdinalIgnoreCase)),
 					IsIdentity  = c.Field<bool>("IS_AUTOINCREMENT"),
 					// a length of 0 is reported for the unbounded types, and a precision for every numeric;
 					// carrying either where the type cannot spell it would put it in the scaffolded type name
-					Length      = parms?.Contains("length",    StringComparison.Ordinal) == true ? Converter.ChangeTypeTo<int?>(c["CHARACTER_MAXIMUM_LENGTH"]) : null,
+					Length      = parms?.Contains("length",    StringComparison.Ordinal) == true ? KnownLength(c["CHARACTER_MAXIMUM_LENGTH"]) : null,
 					Precision   = parms?.Contains("precision", StringComparison.Ordinal) == true ? Converter.ChangeTypeTo<int?>(c["NUMERIC_PRECISION"])        : null,
 					Scale       = parms?.Contains("scale",     StringComparison.Ordinal) == true ? Converter.ChangeTypeTo<int?>(c["NUMERIC_SCALE"])            : null,
 					Description = c.Field<string>("DESCRIPTION"),
@@ -170,7 +201,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 				let columnType = r.Field<string>("DataTypeName")
 				let isNullable = r.Field<bool>  ("AllowDBNull")
 				let systemType = r.Field<Type>  ("DataType")
-				let length     = r.Field<int?>  ("ColumnSize")
+				let length     = KnownLength(r["ColumnSize"])
 				let precision  = Converter.ChangeTypeTo<int>(r["NumericPrecision"])
 				let scale      = Converter.ChangeTypeTo<int>(r["NumericScale"])
 				let dt         = GetDataType(columnType, null, options)
@@ -211,7 +242,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 					IsOut         = false,
 					IsResult      = false,
 					IsNullable    = p.Field<bool>("IS_NULLABLE"),
-					Length        = parms?.Contains("length",    StringComparison.Ordinal) == true ? Converter.ChangeTypeTo<int?>(p["CHARACTER_MAXIMUM_LENGTH"]) : null,
+					Length        = parms?.Contains("length",    StringComparison.Ordinal) == true ? KnownLength(p["CHARACTER_MAXIMUM_LENGTH"]) : null,
 					Precision     = parms?.Contains("precision", StringComparison.Ordinal) == true ? Converter.ChangeTypeTo<int?>(p["NUMERIC_PRECISION"])        : null,
 					Scale         = parms?.Contains("scale",     StringComparison.Ordinal) == true ? Converter.ChangeTypeTo<int?>(p["NUMERIC_SCALE"])            : null,
 					Description   = p.Field<string>("DESCRIPTION"),
