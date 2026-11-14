@@ -1,6 +1,4 @@
 ﻿namespace LinqToDB.DataProvider.PostgreSQL
 {
-	public interface IPostgreSQLExtensions
-	{
-	}
+	public interface IPostgreSQLExtensions;
 }

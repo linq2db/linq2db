@@ -121,7 +121,7 @@ namespace LinqToDB.DataModel
 		public const string EXTENSIONS_ENTITY_ASSOCIATIONS_REGION        = "{0} Associations";
 #endif
 		/// <summary>
-		/// Association extension method <c>this</c> parameter name.
+		/// Association extension method <see langword="this"/> parameter name.
 		/// </summary>
 		public const string EXTENSIONS_ENTITY_THIS_PARAMETER             = "obj";
 		/// <summary>
@@ -169,7 +169,7 @@ namespace LinqToDB.DataModel
 		/// </summary>
 		public const string AGGREGATE_RECORD_TYPE                        = "TSource";
 		/// <summary>
-		/// Aggregate function mapping <c>this</c> parameter name.
+		/// Aggregate function mapping <see langword="this"/> parameter name.
 		/// </summary>
 		public const string AGGREGATE_SOURCE_PARAMETER                   = "src";
 		/// <summary>
@@ -182,7 +182,7 @@ namespace LinqToDB.DataModel
 		public const string TABLE_FUNCTION_METHOD_INFO_CONTEXT_PARAMETER = "ctx";
 
 		/// <summary>
-		/// Stored procedure <c>this</c> data context parameter name.
+		/// Stored procedure <see langword="this"/> data context parameter name.
 		/// </summary>
 		public const string STORED_PROCEDURE_CONTEXT_PARAMETER           = "dataConnection";
 		/// <summary>

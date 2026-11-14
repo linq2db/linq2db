@@ -26,9 +26,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 		private Func<ITestDataReader, int, long>           _readOracleDecimalToLong = null!;
 		private Func<ITestDataReader, int, decimal>        _readOracleDecimalToDecimal = null!;
 
-		interface ITestDataReader
-		{ 
-		}
+		interface ITestDataReader;
 
 		sealed class Original
 		{

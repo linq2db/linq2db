@@ -11,9 +11,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue2000Tests : TestBase
 	{
-		public interface ITest1
-		{
-		}
+		public interface ITest1;
 
 		public class Test1 : ITest1
 		{

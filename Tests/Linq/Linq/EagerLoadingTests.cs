@@ -2122,7 +2122,7 @@ namespace Tests.Linq
 			using var t2 = db.CreateLocalTable<ItemValue>();
 
 			t1
-				.OrderBy(x => x.Values.Sum(y => (decimal?)y.Value) ?? (decimal)0.0)
+				.OrderBy(x => x.Values.Sum(y => (decimal?)y.Value) ?? 0m)
 				.Select(x => new
 				{
 					Id = x.Id,

@@ -2,7 +2,5 @@
 
 namespace LinqToDB.DataProvider.ClickHouse
 {
-	public interface IClickHouseSpecificQueryable<out TSource> : IQueryable<TSource>
-	{
-	}
+	public interface IClickHouseSpecificQueryable<out TSource> : IQueryable<TSource>;
 }
