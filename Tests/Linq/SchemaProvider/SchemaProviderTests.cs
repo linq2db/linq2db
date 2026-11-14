@@ -10,6 +10,8 @@ using LinqToDB.SchemaProvider;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.SchemaProvider
 {
 	[TestFixture]
@@ -481,6 +483,78 @@ namespace Tests.SchemaProvider
 			var       pk       = table.Columns.FirstOrDefault(t => t.IsPrimaryKey);
 
 			Assert.That(pk, Is.Not.Null);
+		}
+
+		[Table("LibRedSchemaTypes")]
+		sealed class LibRedSchemaTypesTable
+		{
+			[Column] public int Id { get; set; }
+		}
+
+		// ACCDB-only types (an .mdb refuses BIGINT and DATETIME2) and a Yes/No column declared NULL, which Access
+		// cannot store as NULL
+		[Test]
+		public void AccessLibRedColumnTypes([IncludeDataSources(TestProvName.AccessLibRedAccdb)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			string[] views = ["LibRedSchemaTypesOuter", "LibRedSchemaTypesInner", "LibRedSchemaTypesPlain"];
+
+			// leftovers of an interrupted run
+			foreach (var view in views)
+			{
+				try
+				{
+					db.Execute($"DROP VIEW [{view}]");
+				}
+				catch (Exception)
+				{
+				}
+			}
+
+			db.DropTable<LibRedSchemaTypesTable>(throwExceptionIfNotExists: false);
+
+			db.Execute("CREATE TABLE [LibRedSchemaTypes] ([Id] INT, [Big] BIGINT, [Stamp] DATETIME2, [Flag] BIT NULL)");
+			// an outer join can read a Yes/No column as NULL, yet LibRed, OLE DB and ODBC all report it not nullable
+			db.Execute("CREATE VIEW [LibRedSchemaTypesOuter] AS SELECT [t].[Flag] FROM [LibRedSchemaTypes] [s] LEFT JOIN [LibRedSchemaTypes] [t] ON [s].[Id] = [t].[Big]");
+			db.Execute("CREATE VIEW [LibRedSchemaTypesInner] AS SELECT [t].[Flag] FROM [LibRedSchemaTypes] [s] INNER JOIN [LibRedSchemaTypes] [t] ON [s].[Id] = [t].[Big]");
+			db.Execute("CREATE VIEW [LibRedSchemaTypesPlain] AS SELECT [Flag] FROM [LibRedSchemaTypes]");
+
+			try
+			{
+				var schema = db.DataProvider
+					.GetSchemaProvider()
+					.GetSchema(db, new GetSchemaOptions { GetProcedures = false });
+
+				var columns = schema.Tables
+					.Single(t => t.TableName == "LibRedSchemaTypes")
+					.Columns
+					.ToDictionary(c => c.ColumnName);
+
+				columns["Big"].DataType.ShouldBe(DataType.Int64);
+				columns["Big"].SystemType.ShouldBe(typeof(long));
+				columns["Stamp"].DataType.ShouldBe(DataType.DateTime2);
+				columns["Stamp"].SystemType.ShouldBe(typeof(DateTime));
+				columns["Flag"].IsNullable.ShouldBeFalse();
+				columns["Flag"].MemberType.ShouldBe("bool");
+
+				foreach (var view in views)
+				{
+					var flag = schema.Tables
+						.Single(t => t.TableName == view)
+						.Columns
+						.Single(c => c.ColumnName == "Flag");
+
+					flag.IsNullable.ShouldBeFalse(view);
+					flag.MemberType.ShouldBe("bool", view);
+				}
+			}
+			finally
+			{
+				foreach (var view in views)
+					db.Execute($"DROP VIEW [{view}]");
+				db.DropTable<LibRedSchemaTypesTable>();
+			}
 		}
 	}
 }

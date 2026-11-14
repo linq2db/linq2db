@@ -2035,6 +2035,7 @@ namespace Tests.Linq
 		[Test]
 		[ActiveIssue(5998, Configuration = TestProvName.AllAccessOdbc, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was")]
 		[ActiveIssue(6047, Configuration = TestProvName.AllAccessOleDb, ErrorMessage = "Cannot have aggregate function in WHERE clause")]
+		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorMessage = "Function MAX is not supported", Details = "no-issue: needs the LibRed dialect extensions.")]
 		public void CoarseAggregateInListKeepsLiteralTime([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

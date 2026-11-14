@@ -51,7 +51,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Overrides database name with new name for current query. This call will have effect only for databases that support
 		/// database name in fully-qualified table name.
-		/// <para>Supported by: Access, DB2, MySQL, PostgreSQL, SAP HANA, SQLite, Informix, SQL Server, Sybase ASE.</para>
+		/// <para>Supported by: Access (not the LibRed flavour), DB2, MySQL, PostgreSQL, SAP HANA, SQLite, Informix, SQL Server, Sybase ASE.</para>
 		/// <para>Requires schema name (see <see cref="SchemaName{T}(ITable{T}, string)"/>): DB2, SAP HANA, PostgreSQL.</para>
 		/// <para>PostgreSQL supports only name of current database.</para>
 		/// </summary>

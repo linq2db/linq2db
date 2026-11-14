@@ -17,5 +17,16 @@
 		/// Access ODBC provider.
 		/// </summary>
 		ODBC,
+		/// <summary>
+		/// LibRed managed Access provider. Requires .NET 10 or greater.
+		/// </summary>
+		/// <remarks>
+		/// <c>LibRed.Ado</c> is a prerelease package; this provider is tested against the version <c>linq2db.cli</c> and the
+		/// LINQPad driver reference, and other prereleases can differ in behaviour the provider relies on (GUID literal
+		/// matching changed between alpha.2 and alpha.3). LibRed keeps no Access lock file (<c>.ldb</c> / <c>.laccdb</c>),
+		/// so Access or another Microsoft driver cannot see that a database is in use through LibRed: don't open the same
+		/// file from another process at the same time.
+		/// </remarks>
+		LibRed,
 	}
 }

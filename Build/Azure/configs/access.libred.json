@@ -1,0 +1,8 @@
+{
+	"Azure.TestJob": {
+		"Providers": [
+			"Access.LibRed.Mdb",
+			"Access.LibRed.Accdb"
+		]
+	}
+}

@@ -33,6 +33,13 @@ namespace Tests.DataProvider
 		protected virtual bool TestParameters => true;
 
 		/// <summary>
+		/// Table name to create the test table under. <see langword="null"/> uses the mapped name, which is
+		/// the CLR name <c>TypeTable`2</c> — rejected by databases that disallow a backtick in an object
+		/// name, Access among them.
+		/// </summary>
+		protected virtual string? TypeTableName => null;
+
+		/// <summary>
 		/// Performs single type configuration testing:
 		/// <list type="bullet">
 		/// <item>column type generation (CreateTable API)</item>
@@ -97,6 +104,12 @@ namespace Tests.DataProvider
 			var ms = new MappingSchema();
 
 			var ent = new FluentMappingBuilder(ms).Entity<TypeTable<TType, TNullableType>>();
+
+			// the name has to go on the mapping rather than on CreateLocalTable: the bulk-copy blocks below
+			// call db.BulkCopy(options, data), which resolves the table from the mapping schema and would
+			// otherwise write to a different table than the one created here
+			if (TypeTableName != null)
+				ent.HasTableName(TypeTableName);
 
 			ent.Property(e => e.Id).IsPrimaryKey();
 

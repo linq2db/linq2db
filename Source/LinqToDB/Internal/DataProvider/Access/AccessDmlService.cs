@@ -57,7 +57,26 @@ namespace LinqToDB.Internal.DataProvider.Access
 					|| exception.Message.Contains("does not exist", StringComparison.OrdinalIgnoreCase);
 			}
 
+			// Access via LibRed — no error number, and the shape differs per statement:
+			// SELECT raises SqlBindException, DROP TABLE a plain InvalidOperationException.
+			if (TypeOrMessageContains(exception, "SqlBindException"))
+				return exception.Message.Contains("does not exist", StringComparison.OrdinalIgnoreCase);
+
+			// DROP TABLE says "no such table" up to 11.0.0-alpha.4 and "Table 'X' does not exist." from beta.1;
+			// the latter is matched on the table wording only, so a missing database file is not swallowed
+			if (TypeOrMessageContains(exception, "InvalidOperationException"))
+				return exception.Message.Contains("no such table", StringComparison.OrdinalIgnoreCase)
+					|| exception.Message.Contains("no such procedure", StringComparison.OrdinalIgnoreCase)
+					|| IsMissingTableMessage(exception.Message);
+
 			return false;
+		}
+
+		static bool IsMissingTableMessage(string message)
+		{
+			var start = message.IndexOf("Table '", StringComparison.Ordinal);
+
+			return start >= 0 && message.IndexOf("' does not exist", start, StringComparison.Ordinal) > start;
 		}
 	}
 }

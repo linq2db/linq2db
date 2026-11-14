@@ -14,9 +14,10 @@ namespace LinqToDB.DataProvider.Access
 		{
 			var provider = GetAssemblyName(attributes) switch
 			{
-				OleDbProviderAdapter.AssemblyName => AccessProvider.OleDb,
-				OdbcProviderAdapter.AssemblyName  => AccessProvider.ODBC,
-				_                                 => AccessProvider.AutoDetect,
+				OleDbProviderAdapter.AssemblyName  => AccessProvider.OleDb,
+				OdbcProviderAdapter.AssemblyName   => AccessProvider.ODBC,
+				LibRedProviderAdapter.AssemblyName => AccessProvider.LibRed,
+				_                                  => AccessProvider.AutoDetect,
 			};
 
 			var version = GetVersion(attributes) switch

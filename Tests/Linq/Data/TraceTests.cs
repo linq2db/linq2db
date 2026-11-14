@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -83,7 +84,8 @@ namespace Tests.Data
 				() => db.GetTable<Child>().ToList(),
 				Throws.TypeOf<ArgumentException>()
 					.Or.TypeOf<InvalidOperationException>()
-					.Or.TypeOf<MySqlException>());
+					.Or.TypeOf<MySqlException>()
+					.Or.TypeOf<FileNotFoundException>());
 			using (Assert.EnterMultipleScope())
 			{
 				// steps called once
@@ -116,7 +118,8 @@ namespace Tests.Data
 				() => db.GetTable<Child>().ToListAsync(),
 				Throws.TypeOf<ArgumentException>()
 					.Or.TypeOf<InvalidOperationException>()
-					.Or.TypeOf<MySqlException>());
+					.Or.TypeOf<MySqlException>()
+					.Or.TypeOf<FileNotFoundException>());
 
 			using (Assert.EnterMultipleScope())
 			{

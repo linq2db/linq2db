@@ -265,9 +265,8 @@ internal static class DriverHelper
 				if (model.DynamicConnection.ConnectionString == null)
 					throw new LinqToDBLinqPadException("Connection string is not specified");
 
-				if (model.DynamicConnection.SecondaryProvider != null
-					&& string.Equals(model.DynamicConnection.Provider.Name, model.DynamicConnection.SecondaryProvider.Name, StringComparison.Ordinal))
-					throw new LinqToDBLinqPadException("Secondary connection shouldn't use same provider type as primary connection");
+				if (model.DynamicConnection.Provider.SecondaryName != null && model.DynamicConnection.SecondaryConnectionString == null)
+					throw new LinqToDBLinqPadException($"{model.DynamicConnection.SecondaryConnectionStringLabel} is not specified");
 
 				if (model.DynamicConnection.Database.IsProviderPathSupported(model.DynamicConnection.Provider.Name))
 				{
