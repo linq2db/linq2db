@@ -453,7 +453,8 @@ namespace Tests.DataProvider
 			var extension        = accdb ? ".accdb" : ".mdb";
 			var version          = accdb ? AccessVersion.Ace : AccessVersion.Jet;
 			var provider         = AccessTools.GetDataProvider(provider: AccessProvider.LibRed);
-			var options          = new DataOptions().UseConnectionString(provider, $"Data Source={name}{extension}");
+			var options          = new DataOptions()
+				.UseConnectionString(provider, $"Data Source={name}{extension}");
 
 			AccessTools.CreateDatabase(name, AccessProvider.LibRed, deleteIfExists: true, version: version);
 			File.Exists(name + extension)
@@ -468,7 +469,18 @@ namespace Tests.DataProvider
 			using (var db = new DataConnection(options))
 				db.DropTable<SqlCeTests.CreateTableTest>();
 
-			// a pooled connection to the file was opened and closed above
+			using (var db = new DataConnection(options))
+				db.CreateTable<SqlCeTests.CreateTableTest>();
+
+			// with deleteIfExists an existing file is replaced, so the table can be created again
+			AccessTools.CreateDatabase(name, AccessProvider.LibRed, deleteIfExists: true, version: version);
+
+			using (var db = new DataConnection(options))
+			{
+				db.CreateTable<SqlCeTests.CreateTableTest>();
+				db.DropTable<SqlCeTests.CreateTableTest>();
+			}
+
 			AccessTools.DropDatabase(name, AccessProvider.LibRed, extension);
 			File.Exists(name + extension)
 				.ShouldBeFalse();

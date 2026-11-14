@@ -132,8 +132,9 @@ namespace LinqToDB.DataProvider.Access
 		/// <see cref="CreateDatabase(string, bool, AccessVersion)"/> does.</param>
 		/// <param name="deleteIfExists">If <see langword="true"/>, existing database will be removed before create.</param>
 		/// <param name="version">Database format when <paramref name="databaseName"/> has no extension:
-		/// <see cref="AccessVersion.Ace"/> creates an <c>.accdb</c> file, <see cref="AccessVersion.Jet"/> an <c>.mdb</c> one.
-		/// Default value: <see cref="AccessVersion.Ace"/>.</param>
+		/// <see cref="AccessVersion.Ace"/> creates an <c>.accdb</c> file, any other value an <c>.mdb</c> one. With any provider
+		/// other than <see cref="AccessProvider.LibRed"/> it also selects the OLE DB engine (ACE or Jet), as
+		/// <see cref="CreateDatabase(string, bool, AccessVersion)"/> does. Default value: <see cref="AccessVersion.Ace"/>.</param>
 		public static void CreateDatabase(string databaseName, AccessProvider provider, bool deleteIfExists = false, AccessVersion version = AccessVersion.Ace)
 		{
 			if (provider != AccessProvider.LibRed)
@@ -146,7 +147,7 @@ namespace LinqToDB.DataProvider.Access
 
 			databaseName = databaseName.Trim();
 
-			var defaultExtension = version == AccessVersion.Jet ? ".mdb" : ".accdb";
+			var defaultExtension = version == AccessVersion.Ace ? ".accdb" : ".mdb";
 
 			// add extension if not specified
 			if (!databaseName.EndsWith(".mdb", StringComparison.OrdinalIgnoreCase) && !databaseName.EndsWith(".accdb", StringComparison.OrdinalIgnoreCase))
