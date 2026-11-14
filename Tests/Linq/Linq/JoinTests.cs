@@ -3661,6 +3661,41 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
+
+		[ThrowsRequiresCorrelatedSubquery]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6311")]
+		public void JoinMethodEnumerableTupleOverload([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Where(p => p.Children
+					.Join(p.GrandChildren, c => (int?)c.ChildID, g => g.ChildID)
+					.Any(t => t.Inner.GrandChildID > 0));
+
+			AreEqual(ExpectedParentsWithJoinedGrandChildren(), query);
+		}
+
+		[ThrowsRequiresCorrelatedSubquery]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6310")]
+		public void JoinMethodEnumerableTupleOverloadWithNullComparer([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Where(p => p.Children
+					.Join(p.GrandChildren, c => (int?)c.ChildID, g => g.ChildID, comparer: null)
+					.Any(t => t.Inner.GrandChildID > 0));
+
+			AreEqual(ExpectedParentsWithJoinedGrandChildren(), query);
+		}
+
+		// The in-memory Parent rows carry no Children / GrandChildren, so the expected side spells the associations out.
+		IEnumerable<Parent> ExpectedParentsWithJoinedGrandChildren()
+			=> Parent.Where(p => Child
+				.Where(c => c.ParentID == p.ParentID)
+				.Join(GrandChild.Where(g => g.ParentID == p.ParentID), c => (int?)c.ChildID, g => g.ChildID, (c, g) => g)
+				.Any(g => g.GrandChildID > 0));
 #endif
 	}
 }
