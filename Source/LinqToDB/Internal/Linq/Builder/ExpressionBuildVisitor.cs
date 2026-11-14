@@ -3118,7 +3118,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (toTranslate is not SqlGenericConstructorExpression)
 					{
-						sql = Builder.ParametersContext.BuildParameter(BuildContext, toTranslate, CurrentDescriptor, alias: Alias, forComparison: _buildFlags.HasFlag(BuildFlags.ForKeys));
+						sql = Builder.ParametersContext.BuildParameter(BuildContext, toTranslate, CurrentDescriptor, alias: Alias);
 					}
 				}
 
@@ -4690,6 +4690,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			left  = CollapseNullableConvert(left);
 			right = CollapseNullableConvert(right);
 
+			if (!TryCompareInRegisteredEnum(ref left, ref right))
+				TryCompareInRegisteredEnum(ref right, ref left);
+
 			if (BuildContext == null)
 				throw new InvalidOperationException();
 
@@ -5316,6 +5319,73 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		#region ConvertEnumConversion
 
+		// (E)x with E registered onto x's enum by SetDefaultFromEnumType, and with no parameter converter of its own: a value of E
+		// compared with it is written in x's terms, as C#'s numeric cast reads it.
+		bool TryGetRegisteredEnumCast(Expression cast, Type? valueType, [NotNullWhen(true)] out UnaryExpression? convert)
+		{
+			convert = cast as UnaryExpression;
+
+			if (convert is not { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked, Method: null }
+				|| convert.Operand.Type.UnwrapNullableType() is not { IsEnum: true } sourceEnum
+				|| convert.Type.UnwrapNullableType() is not { IsEnum: true } targetEnum
+				|| sourceEnum == targetEnum
+				|| valueType?.UnwrapNullableType() != targetEnum
+				|| Converter.GetDefaultMappingFromEnumType(MappingSchema, targetEnum)?.UnwrapNullableType() != sourceEnum
+				|| MappingSchema.GetConvertExpression(targetEnum, typeof(DataParameter), false, false) != null)
+			{
+				convert = null;
+				return false;
+			}
+
+			return true;
+		}
+
+		bool TryCompareInRegisteredEnum(ref Expression cast, ref Expression value)
+		{
+			if (!TryGetRegisteredEnumCast(cast, value.Type, out var convert) || !Builder.CanBeEvaluatedOnClient(value))
+				return false;
+
+			var sourceEnum = convert.Operand.Type.UnwrapNullableType();
+			var nullable   = value.Type.IsNullableType || convert.Operand.Type.IsNullableType;
+
+			cast  = !nullable || convert.Operand.Type.IsNullableType ? convert.Operand : Expression.Convert(convert.Operand, sourceEnum.MakeNullable());
+			value = CastRegisteredEnum(value, sourceEnum, nullable);
+
+			return true;
+		}
+
+		// One client call, so the value is a single parameter of the target enum rather than a cast over the source's; a constant
+		// stays a literal.
+		Expression CastRegisteredEnum(Expression value, Type toEnum, bool nullable)
+		{
+			var fromEnum = value.Type.UnwrapNullableType();
+
+			Expression cast = nullable
+				? Expression.Call(CastNullableEnumMethod.MakeGenericMethod(fromEnum, toEnum), value.Type.IsNullableType ? value : Expression.Convert(value, fromEnum.MakeNullable()))
+				: Expression.Call(CastEnumMethod.MakeGenericMethod(fromEnum, toEnum), value);
+
+			return Builder.CanBeConstant(value)
+				? Expression.Constant(Builder.EvaluateExpression(cast), cast.Type)
+				: cast;
+		}
+
+		internal static readonly MethodInfo CastEnumMethod         = MemberHelper.MethodOfGeneric(() => CastEnum<DataType, DataType>(default));
+		internal static readonly MethodInfo CastNullableEnumMethod = MemberHelper.MethodOfGeneric(() => CastNullableEnum<DataType, DataType>(default));
+
+		static TTo CastEnum<TFrom, TTo>(TFrom value)
+			where TFrom : struct, Enum
+			where TTo   : struct, Enum
+		{
+			return (TTo)Enum.ToObject(typeof(TTo), value);
+		}
+
+		static TTo? CastNullableEnum<TFrom, TTo>(TFrom? value)
+			where TFrom : struct, Enum
+			where TTo   : struct, Enum
+		{
+			return value == null ? null : CastEnum<TFrom, TTo>(value.Value);
+		}
+
 		ISqlPredicate? ConvertEnumConversion(Expression left, SqlPredicate.Operator op, Expression right)
 		{
 			Expression value;
@@ -5606,6 +5676,28 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		private ISqlPredicate? ConvertInPredicate(Expression value, Expression arr)
 		{
+			if (arr.Type.GetItemType() is { } itemType
+				&& TryGetRegisteredEnumCast(value, itemType, out var enumCast)
+				&& (arr is NewArrayExpression { NodeType: ExpressionType.NewArrayInit } items && items.Expressions.All(Builder.CanBeEvaluatedOnClient)
+					|| Builder.CanBeEvaluatedOnClient(arr)))
+			{
+				var sourceEnum = enumCast.Operand.Type.UnwrapNullableType();
+				var nullable   = itemType.IsNullableType || enumCast.Operand.Type.IsNullableType;
+				var sourceType = nullable ? sourceEnum.MakeNullable() : sourceEnum;
+
+				value = enumCast.Operand.Type == sourceType ? enumCast.Operand : Expression.Convert(enumCast.Operand, sourceType);
+
+				if (arr is NewArrayExpression { NodeType: ExpressionType.NewArrayInit } inline)
+				{
+					arr = Expression.NewArrayInit(sourceType, inline.Expressions.Select(e => CastRegisteredEnum(e, sourceEnum, nullable)));
+				}
+				else
+				{
+					var item = Expression.Parameter(itemType, "item");
+					arr = Expression.Call(Methods.Enumerable.Select.MakeGenericMethod(itemType, sourceType), arr, Expression.Lambda(Expression.Convert(item, sourceType), item));
+				}
+			}
+
 			ISqlExpression? expr = null;
 
 			Expression builtExpr;
@@ -5675,7 +5767,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						if (Builder.CanBeEvaluatedOnClient(arr))
 						{
 							// The collection is written into the SQL as values, so it takes the terms a constant would.
-							var parameter = Builder.ParametersContext.BuildParameter(BuildContext, arr, ConstantDescriptor, buildParameterType : ParametersContext.BuildParameterType.InPredicate, forComparison : true);
+							var parameter = Builder.ParametersContext.BuildParameter(BuildContext, arr, ConstantDescriptor, buildParameterType : ParametersContext.BuildParameterType.InPredicate);
 
 							if (parameter != null)
 							{
