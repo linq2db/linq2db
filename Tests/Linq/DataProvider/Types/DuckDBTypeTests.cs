@@ -465,6 +465,8 @@ namespace Tests.DataProvider
 			// native types
 			// provider appender converts DuckDBInterval to TimeSpan, which fails for non-zero months
 			await TestType<DuckDBInterval, DuckDBInterval?>(context, new DbDataType(typeof(DuckDBInterval)), new DuckDBInterval(123, 2, 123456789012), new DuckDBInterval(-2, 30, 212345678901), expectedParamCount: 0, testBulkCopyType: TestBulkCopyType);
+			// micros is signed, stored as two's complement in ulong
+			await TestType<DuckDBInterval, DuckDBInterval?>(context, new DbDataType(typeof(DuckDBInterval)), new DuckDBInterval(-1, -2, unchecked((ulong)-3_723_000_000L)), new DuckDBInterval(0, -3, unchecked((ulong)-1L)), expectedParamCount: 0, testBulkCopyType: TestBulkCopyType);
 			await TestType<DuckDBInterval, DuckDBInterval?>(context, new DbDataType(typeof(DuckDBInterval)), new DuckDBInterval(0, 2, 23456789012), new DuckDBInterval(0, 30, 12345678901), expectedParamCount: 0);
 			await TestType<DuckDBInterval, DuckDBInterval?>(context, new DbDataType(typeof(DuckDBInterval)), new DuckDBInterval(0, 0, 56789012), new DuckDBInterval(0, 0, 56789012), expectedParamCount: 0);
 		}

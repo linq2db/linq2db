@@ -212,16 +212,19 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 					.Append(days is 1 or -1 ? " day" : " days");
 			}
 
-			if (microSeconds > 0)
+			// DuckDB micros is signed: the driver exposes it as ulong two's complement
+			var micros = unchecked((long)microSeconds);
+
+			if (micros != 0)
 			{
 				if (months != 0 || days != 0)
 					sb.Append(' ');
 				sb
-					.Append(microSeconds.ToString(CultureInfo.InvariantCulture))
-					.Append(microSeconds is 1 ? " microsecond" : " microseconds");
+					.Append(micros.ToString(CultureInfo.InvariantCulture))
+					.Append(micros is 1 or -1 ? " microsecond" : " microseconds");
 			}
 
-			if (months == 0 && days == 0 && microSeconds == 0)
+			if (months == 0 && days == 0 && micros == 0)
 				sb.Append("0 microseconds");
 
 			sb.Append("'::INTERVAL");
