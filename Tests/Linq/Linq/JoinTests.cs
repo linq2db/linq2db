@@ -3577,6 +3577,48 @@ namespace Tests.Linq
 			act.ShouldThrow<LinqToDBException>().Message.ShouldContain("could not be converted to SQL");
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6311")]
+		public void JoinMethodLookalikeWithThreeGenericArguments([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = JoinLookalike.Join(db.Parent, db.Child, p => p.ParentID, c => c.ParentID, (p, c) => new { p.ParentID, c.ChildID });
+
+			var expected =
+				from p in Parent
+				join c in Child on p.ParentID equals c.ParentID
+				select new { p.ParentID, c.ChildID };
+
+			AreEqual(expected, query);
+		}
+
+		// Not an extension method, so it never competes with Queryable.Join in this namespace. Its three generic arguments match
+		// the .NET 11 tuple-returning Join, but it takes a result selector.
+		static class JoinLookalike
+		{
+			[IsQueryable]
+			public static IQueryable<TResult> Join<TOuter, TInner, TResult>(
+				IQueryable<TOuter> outer,
+				IQueryable<TInner> inner,
+				Expression<Func<TOuter, int>> outerKeySelector,
+				Expression<Func<TInner, int>> innerKeySelector,
+				Expression<Func<TOuter, TInner, TResult>> resultSelector)
+			{
+				var method = typeof(JoinLookalike)
+					.GetMethod(nameof(Join))!
+					.MakeGenericMethod(typeof(TOuter), typeof(TInner), typeof(TResult));
+
+				return outer.Provider.CreateQuery<TResult>(
+					Expression.Call(
+						method,
+						outer.Expression,
+						inner.Expression,
+						Expression.Quote(outerKeySelector),
+						Expression.Quote(innerKeySelector),
+						Expression.Quote(resultSelector)));
+			}
+		}
+
 #if NET11_0_OR_GREATER
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6311")]
 		public void JoinMethodTupleOverload([DataSources] string context)

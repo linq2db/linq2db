@@ -42,9 +42,12 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		// .NET 11 Join<TOuter, TInner, TKey>(outer, inner, outerKeySelector, innerKeySelector, comparer) and its LeftJoin /
-		// RightJoin / FullJoin siblings return (TOuter Outer, TInner Inner) instead of taking a result selector
+		// RightJoin / FullJoin siblings return (TOuter Outer, TInner Inner) instead of taking a result selector. An [IsQueryable]
+		// method of the same name can have three generic arguments too, so the declaring type is part of the check.
 		static bool IsTupleJoin(MethodCallExpression call)
-			=> call.Method.IsGenericMethod && call.Method.GetGenericArguments().Length == 3;
+			=> call.Method.IsGenericMethod
+			&& call.Method.GetGenericArguments().Length == 3
+			&& (call.Method.DeclaringType == typeof(Queryable) || call.Method.DeclaringType == typeof(Enumerable));
 
 		static LambdaExpression BuildTupleSelector(MethodCallExpression methodCall, LambdaExpression outerKeyLambda, LambdaExpression innerKeyLambda)
 		{
