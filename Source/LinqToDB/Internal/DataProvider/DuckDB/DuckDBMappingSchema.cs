@@ -201,8 +201,8 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			{
 				// INTERVAL for values outside TIME range
 				sb.Append("INTERVAL '");
-				if (value.TotalDays is >= 1 or <= -1)
-					sb.Append(CultureInfo.InvariantCulture, $"{(int)value.TotalDays} days ");
+				if (value.Days != 0)
+					sb.Append(CultureInfo.InvariantCulture, $"{value.Days} days ");
 
 				if (value < TimeSpan.Zero)
 					sb.Append(CultureInfo.InvariantCulture, $"-{-value.Hours:00}:{-value.Minutes:00}:{-value.Seconds:00}");

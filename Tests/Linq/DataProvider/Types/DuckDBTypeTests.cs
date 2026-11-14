@@ -458,6 +458,9 @@ namespace Tests.DataProvider
 			await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan)), -large, -small);
 			// INTERVAL has microsecond precision
 			await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan)), TimeSpan.MinValue, TimeSpan.MaxValue, getExpectedValue: v => TimeSpan.FromTicks(v.Ticks / 10 * 10), getExpectedNullableValue: v => TimeSpan.FromTicks(v!.Value.Ticks / 10 * 10));
+			// TotalDays rounds up to the next day here
+			var dayBoundary = TimeSpan.FromDays(1_000_000) - TimeSpan.FromTicks(10);
+			await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan)), dayBoundary, -dayBoundary);
 
 			// native types
 			// provider appender converts DuckDBInterval to TimeSpan, which fails for non-zero months
