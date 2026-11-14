@@ -102,11 +102,6 @@ namespace LinqToDB.Internal.DataProvider.Access
 		{
 			var connection = dataConnection.OpenDbConnection();
 
-			var views = connection.GetSchema("Tables").AsEnumerable()
-				.Where (t => string.Equals(t.Field<string>("TABLE_TYPE"), "VIEW", StringComparison.Ordinal))
-				.Select(t => ID(t, "TABLE_NAME"))
-				.ToHashSet(StringComparer.Ordinal);
-
 			return
 			(
 				from c in connection.GetSchema("Columns").AsEnumerable()
@@ -120,10 +115,10 @@ namespace LinqToDB.Internal.DataProvider.Access
 					Name        = c.Field<string>("COLUMN_NAME")!,
 					Ordinal     = Converter.ChangeTypeTo<int>(c["ORDINAL_POSITION"]),
 					DataType    = typeName,
-					// a stored Yes/No cannot hold NULL - LibRed stores False, as ACE does - yet it reports the
-					// declared nullability; a view column passes through, as an outer join can produce NULL there
-					IsNullable  = c.Field<bool>("IS_NULLABLE")
-						&& (views.Contains(tableId) || !string.Equals(typeName, "Bit", StringComparison.OrdinalIgnoreCase)),
+					// a stored Yes/No cannot hold NULL - LibRed stores False, as ACE does - yet LibRed reports a table
+					// column's declared nullability; OLE DB and ODBC report every Yes/No column, view ones included,
+					// as not nullable
+					IsNullable  = c.Field<bool>("IS_NULLABLE") && !string.Equals(typeName, "Bit", StringComparison.OrdinalIgnoreCase),
 					IsIdentity  = c.Field<bool>("IS_AUTOINCREMENT"),
 					// a length of 0 is reported for the unbounded types, and a precision for every numeric;
 					// carrying either where the type cannot spell it would put it in the scaffolded type name

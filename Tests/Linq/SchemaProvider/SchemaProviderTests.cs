@@ -498,8 +498,27 @@ namespace Tests.SchemaProvider
 		{
 			using var db = GetDataConnection(context);
 
+			string[] views = ["LibRedSchemaTypesOuter", "LibRedSchemaTypesInner", "LibRedSchemaTypesPlain"];
+
+			// leftovers of an interrupted run
+			foreach (var view in views)
+			{
+				try
+				{
+					db.Execute($"DROP VIEW [{view}]");
+				}
+				catch (Exception)
+				{
+				}
+			}
+
 			db.DropTable<LibRedSchemaTypesTable>(throwExceptionIfNotExists: false);
+
 			db.Execute("CREATE TABLE [LibRedSchemaTypes] ([Id] INT, [Big] BIGINT, [Stamp] DATETIME2, [Flag] BIT NULL)");
+			// an outer join can read a Yes/No column as NULL, yet LibRed, OLE DB and ODBC all report it not nullable
+			db.Execute("CREATE VIEW [LibRedSchemaTypesOuter] AS SELECT [t].[Flag] FROM [LibRedSchemaTypes] [s] LEFT JOIN [LibRedSchemaTypes] [t] ON [s].[Id] = [t].[Big]");
+			db.Execute("CREATE VIEW [LibRedSchemaTypesInner] AS SELECT [t].[Flag] FROM [LibRedSchemaTypes] [s] INNER JOIN [LibRedSchemaTypes] [t] ON [s].[Id] = [t].[Big]");
+			db.Execute("CREATE VIEW [LibRedSchemaTypesPlain] AS SELECT [Flag] FROM [LibRedSchemaTypes]");
 
 			try
 			{
@@ -518,9 +537,22 @@ namespace Tests.SchemaProvider
 				columns["Stamp"].SystemType.ShouldBe(typeof(DateTime));
 				columns["Flag"].IsNullable.ShouldBeFalse();
 				columns["Flag"].MemberType.ShouldBe("bool");
+
+				foreach (var view in views)
+				{
+					var flag = schema.Tables
+						.Single(t => t.TableName == view)
+						.Columns
+						.Single(c => c.ColumnName == "Flag");
+
+					flag.IsNullable.ShouldBeFalse(view);
+					flag.MemberType.ShouldBe("bool", view);
+				}
 			}
 			finally
 			{
+				foreach (var view in views)
+					db.Execute($"DROP VIEW [{view}]");
 				db.DropTable<LibRedSchemaTypesTable>();
 			}
 		}
