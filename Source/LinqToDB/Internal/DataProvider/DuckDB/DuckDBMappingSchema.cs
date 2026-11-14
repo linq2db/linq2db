@@ -143,12 +143,13 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		{
 			sb.Append(CultureInfo.InvariantCulture, $"'{value.Hour:00}:{value.Minute:00}:{value.Second:00}");
 
-			if (value.Microsecond > 0)
+			var fraction = value.Ticks % TimeSpan.TicksPerSecond;
+			if (fraction > 0)
 			{
-				if (type.Type.Precision > 6 || type.Type.DataType == DataType.TimeTZ)
-					sb.Append(CultureInfo.InvariantCulture, $".{value.Microsecond:0000000}");
+				if (type.Type.Precision > 6)
+					sb.Append(CultureInfo.InvariantCulture, $".{fraction:0000000}");
 				else
-					sb.Append(CultureInfo.InvariantCulture, $".{value.Microsecond:000000}");
+					sb.Append(CultureInfo.InvariantCulture, $".{fraction / 10:000000}");
 			}
 
 			if (type.Type.DataType == DataType.TimeTZ)
@@ -204,7 +205,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 					sb.Append(CultureInfo.InvariantCulture, $"{(int)value.TotalDays} days ");
 
 				if (value < TimeSpan.Zero)
-					sb.Append(CultureInfo.InvariantCulture, $"{-value.Hours:00}:{-value.Minutes:00}:{-value.Seconds:00}");
+					sb.Append(CultureInfo.InvariantCulture, $"-{-value.Hours:00}:{-value.Minutes:00}:{-value.Seconds:00}");
 				else
 					sb.Append(CultureInfo.InvariantCulture, $"{value.Hours:00}:{value.Minutes:00}:{value.Seconds:00}");
 

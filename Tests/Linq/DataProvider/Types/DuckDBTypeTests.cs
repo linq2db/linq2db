@@ -169,9 +169,8 @@ namespace Tests.DataProvider
 			var max = BigInteger.Parse("340282366920938463463374607431768211455");
 
 			await TestType<BigInteger, BigInteger?>(context, new(typeof(BigInteger), DataType.UInt128), default, default);
-			// provider bug with Int128 ranges applied to UInt128 type
-			//await TestType<BigInteger, BigInteger?>(context, new(typeof(BigInteger), DataType.UInt128), min, max);
-			//await TestType<BigInteger, BigInteger?>(context, new(typeof(BigInteger), DataType.UInt128), max, min);
+			await TestType<BigInteger, BigInteger?>(context, new(typeof(BigInteger), DataType.UInt128), min, max);
+			await TestType<BigInteger, BigInteger?>(context, new(typeof(BigInteger), DataType.UInt128), max, min);
 		}
 
 		[Test]
@@ -183,8 +182,7 @@ namespace Tests.DataProvider
 			var min = BigInteger.Parse("-340282366920938463463374607431768211455340282366920938463463374607431768211455");
 			var max = BigInteger.Parse("340282366920938463463374607431768211455340282366920938463463374607431768211455");
 
-			// provider bug : reads garbage, fails to read or crash
-			//await TestType<BigInteger, BigInteger?>(context, new(typeof(BigInteger)), default, default, expectedParamCount: 0);
+			await TestType<BigInteger, BigInteger?>(context, new(typeof(BigInteger)), default, default, expectedParamCount: 0, testBulkCopyType: TestBulkCopyType);
 			await TestType<BigInteger, BigInteger?>(context, new(typeof(BigInteger)), min, max, expectedParamCount: 0, testBulkCopyType: TestBulkCopyType);
 			await TestType<BigInteger, BigInteger?>(context, new(typeof(BigInteger)), max, min, expectedParamCount: 0, testBulkCopyType: TestBulkCopyType);
 		}
@@ -381,29 +379,28 @@ namespace Tests.DataProvider
 			var max = new TimeSpan(0, 23, 59, 59, 999).Add(TimeSpan.FromTicks(9990)); // 23:59:59.999999
 
 			await TestType<TimeOnly, TimeOnly?>(context, new(typeof(TimeOnly)), default, default);
-			//await TestType<TimeOnly, TimeOnly?>(context, new(typeof(TimeOnly)), TimeOnly.MinValue, TimeOnly.FromTimeSpan(max));
+			await TestType<TimeOnly, TimeOnly?>(context, new(typeof(TimeOnly)), TimeOnly.MinValue, TimeOnly.FromTimeSpan(max));
 
 			await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan), DataType.Time), default, default);
 			await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan), DataType.Time), new TimeSpan(1, 2, 3), max);
 
 			var precision = 0;
 			await TestType<TimeOnly, TimeOnly?>(context, new DbDataType(typeof(TimeOnly)).WithPrecision(precision), default, default);
-			// provider incorrectly works with TimeOnly fractional second
-			//await TestType<TimeOnly, TimeOnly?>(context, new DbDataType(typeof(TimeOnly)).WithPrecision(precision), TimeOnly.MinValue, TimeOnly.FromTimeSpan(max));
+			await TestType<TimeOnly, TimeOnly?>(context, new DbDataType(typeof(TimeOnly)).WithPrecision(precision), TimeOnly.MinValue, TimeOnly.FromTimeSpan(max));
 
 			await TestType<TimeSpan, TimeSpan?>(context, new DbDataType(typeof(TimeSpan), DataType.Time).WithPrecision(precision), default, default);
 			await TestType<TimeSpan, TimeSpan?>(context, new DbDataType(typeof(TimeSpan), DataType.Time).WithPrecision(precision), new TimeSpan(1, 2, 3), max);
 
 			precision = 5;
 			await TestType<TimeOnly, TimeOnly?>(context, new DbDataType(typeof(TimeOnly)).WithPrecision(precision), default, default);
-			//await TestType<TimeOnly, TimeOnly?>(context, new DbDataType(typeof(TimeOnly)).WithPrecision(precision), TimeOnly.MinValue, TimeOnly.FromTimeSpan(max));
+			await TestType<TimeOnly, TimeOnly?>(context, new DbDataType(typeof(TimeOnly)).WithPrecision(precision), TimeOnly.MinValue, TimeOnly.FromTimeSpan(max));
 
 			await TestType<TimeSpan, TimeSpan?>(context, new DbDataType(typeof(TimeSpan), DataType.Time).WithPrecision(precision), default, default);
 			await TestType<TimeSpan, TimeSpan?>(context, new DbDataType(typeof(TimeSpan), DataType.Time).WithPrecision(precision), new TimeSpan(1, 2, 3), max);
 
 			precision = 6;
 			await TestType<TimeOnly, TimeOnly?>(context, new DbDataType(typeof(TimeOnly)).WithPrecision(precision), default, default);
-			//await TestType<TimeOnly, TimeOnly?>(context, new DbDataType(typeof(TimeOnly)).WithPrecision(precision), TimeOnly.MinValue, TimeOnly.FromTimeSpan(max));
+			await TestType<TimeOnly, TimeOnly?>(context, new DbDataType(typeof(TimeOnly)).WithPrecision(precision), TimeOnly.MinValue, TimeOnly.FromTimeSpan(max));
 
 			await TestType<TimeSpan, TimeSpan?>(context, new DbDataType(typeof(TimeSpan), DataType.Time).WithPrecision(precision), default, default);
 			await TestType<TimeSpan, TimeSpan?>(context, new DbDataType(typeof(TimeSpan), DataType.Time).WithPrecision(precision), new TimeSpan(1, 2, 3), max);
@@ -438,15 +435,15 @@ namespace Tests.DataProvider
 			// TIME + TZ
 			var max = new TimeSpan(0, 23, 59, 59, 999).Add(TimeSpan.FromTicks(9990)); // 23:59:59.999999
 
-			// TimeOnly handled incorrectly by provider
-			//await TestType<TimeOnly, TimeOnly?>(context, new(typeof(TimeOnly), DataType.TimeTZ), default, default);
-			//await TestType<TimeOnly, TimeOnly?>(context, new(typeof(TimeOnly), DataType.TimeTZ), TimeOnly.MinValue, TimeOnly.FromTimeSpan(max));
+			await TestType<TimeOnly, TimeOnly?>(context, new(typeof(TimeOnly), DataType.TimeTZ), default, default);
+			await TestType<TimeOnly, TimeOnly?>(context, new(typeof(TimeOnly), DataType.TimeTZ), TimeOnly.MinValue, TimeOnly.FromTimeSpan(max));
 
 			await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan), DataType.TimeTZ), default, default);
 			await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan), DataType.TimeTZ), new TimeSpan(1, 2, 3), max);
 
-			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset), DataType.TimeTZ), default, default);
-			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset), DataType.TimeTZ), new DateTimeOffset(1, 1, 1, 1, 2, 3, 456, 789, TimeSpan.FromMinutes(45)), new DateTimeOffset(1, 1, 1, 5, 2, 3, 456, 789, TimeSpan.FromMinutes(-45)));
+			// provider reads TIMETZ as DateTimeOffset dated 0001-01-02
+			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset), DataType.TimeTZ), default, default, getExpectedValue: v => v.AddDays(1), getExpectedNullableValue: v => v?.AddDays(1));
+			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset), DataType.TimeTZ), new DateTimeOffset(1, 1, 1, 1, 2, 3, 456, 789, TimeSpan.FromMinutes(45)), new DateTimeOffset(1, 1, 1, 5, 2, 3, 456, 789, TimeSpan.FromMinutes(-45)), getExpectedValue: v => v.AddDays(1), getExpectedNullableValue: v => v?.AddDays(1));
 		}
 
 		[Test]
@@ -458,13 +455,13 @@ namespace Tests.DataProvider
 
 			await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan)), small, default);
 			await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan)), large, small);
-			// provider bug: negative interval support missing
-			//await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan)), -large, -small);
-			//await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan)), TimeSpan.MinValue, TimeSpan.MaxValue);
+			await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan)), -large, -small);
+			// INTERVAL has microsecond precision
+			await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan)), TimeSpan.MinValue, TimeSpan.MaxValue, getExpectedValue: v => TimeSpan.FromTicks(v.Ticks / 10 * 10), getExpectedNullableValue: v => TimeSpan.FromTicks(v!.Value.Ticks / 10 * 10));
 
 			// native types
-			// provider bug: negative interval support missing
-			//await TestType<DuckDBInterval, DuckDBInterval?>(context, new DbDataType(typeof(DuckDBInterval)), new DuckDBInterval(123, 2, 123456789012), new DuckDBInterval(-2, 30, 212345678901), expectedParamCount: 0);
+			// provider appender converts DuckDBInterval to TimeSpan, which fails for non-zero months
+			await TestType<DuckDBInterval, DuckDBInterval?>(context, new DbDataType(typeof(DuckDBInterval)), new DuckDBInterval(123, 2, 123456789012), new DuckDBInterval(-2, 30, 212345678901), expectedParamCount: 0, testBulkCopyType: TestBulkCopyType);
 			await TestType<DuckDBInterval, DuckDBInterval?>(context, new DbDataType(typeof(DuckDBInterval)), new DuckDBInterval(0, 2, 23456789012), new DuckDBInterval(0, 30, 12345678901), expectedParamCount: 0);
 			await TestType<DuckDBInterval, DuckDBInterval?>(context, new DbDataType(typeof(DuckDBInterval)), new DuckDBInterval(0, 0, 56789012), new DuckDBInterval(0, 0, 56789012), expectedParamCount: 0);
 		}
@@ -608,17 +605,17 @@ namespace Tests.DataProvider
 			await TestType<DuckDBTimestamp, DuckDBTimestamp?>(context, new DbDataType(typeof(DuckDBTimestamp)).WithPrecision(precision), DuckDBTimestamp.NegativeInfinity, DuckDBTimestamp.PositiveInfinity, testBulkCopyType: TestBulkCopyType);
 			await TestType<DuckDBTimestamp, DuckDBTimestamp?>(context, new DbDataType(typeof(DuckDBTimestamp)).WithPrecision(precision), new DuckDBTimestamp(new DuckDBDateOnly(1677, 9, 21), new DuckDBTimeOnly(0, 12, 43, 145224)), new DuckDBTimestamp(new DuckDBDateOnly(2262, 4, 11), new DuckDBTimeOnly(23, 47, 16, 854775)));
 
-			// DuckDBTimestamp cannot be used with TIMESTAMP_NS - handles it like TIMESTAMP leading to bad data
-			//precision = 7;
-			//await TestType<DuckDBTimestamp, DuckDBTimestamp?>(context, new DbDataType(typeof(DuckDBTimestamp)).WithPrecision(precision), DuckDBTimestamp.NegativeInfinity, DuckDBTimestamp.PositiveInfinity, testBulkCopyType: TestBulkCopyType, expectedParamCount: 0);
+			// DuckDBTimestamp with TIMESTAMP_NS: infinities round-trip, finite values are handled like TIMESTAMP leading to bad data
+			precision = 7;
+			await TestType<DuckDBTimestamp, DuckDBTimestamp?>(context, new DbDataType(typeof(DuckDBTimestamp)).WithPrecision(precision), DuckDBTimestamp.NegativeInfinity, DuckDBTimestamp.PositiveInfinity, testBulkCopyType: TestBulkCopyType, expectedParamCount: 0);
 			//await TestType<DuckDBTimestamp, DuckDBTimestamp?>(context, new DbDataType(typeof(DuckDBTimestamp)).WithPrecision(precision), new DuckDBTimestamp(new DuckDBDateOnly(1677, 9, 21), new DuckDBTimeOnly(0, 12, 43, 145224)), new DuckDBTimestamp(new DuckDBDateOnly(2262, 4, 11), new DuckDBTimeOnly(23, 47, 16, 854775)), expectedParamCount: 0);
 
-			//precision = 8;
-			//await TestType<DuckDBTimestamp, DuckDBTimestamp?>(context, new DbDataType(typeof(DuckDBTimestamp)).WithPrecision(precision), DuckDBTimestamp.NegativeInfinity, DuckDBTimestamp.PositiveInfinity, testBulkCopyType: TestBulkCopyType, expectedParamCount: 0);
+			precision = 8;
+			await TestType<DuckDBTimestamp, DuckDBTimestamp?>(context, new DbDataType(typeof(DuckDBTimestamp)).WithPrecision(precision), DuckDBTimestamp.NegativeInfinity, DuckDBTimestamp.PositiveInfinity, testBulkCopyType: TestBulkCopyType, expectedParamCount: 0);
 			//await TestType<DuckDBTimestamp, DuckDBTimestamp?>(context, new DbDataType(typeof(DuckDBTimestamp)).WithPrecision(precision), new DuckDBTimestamp(new DuckDBDateOnly(1677, 9, 21), new DuckDBTimeOnly(0, 12, 43, 145224)), new DuckDBTimestamp(new DuckDBDateOnly(2262, 4, 11), new DuckDBTimeOnly(23, 47, 16, 854775)), expectedParamCount: 0);
 
-			//precision = 9;
-			//await TestType<DuckDBTimestamp, DuckDBTimestamp?>(context, new DbDataType(typeof(DuckDBTimestamp)).WithPrecision(precision), DuckDBTimestamp.NegativeInfinity, DuckDBTimestamp.PositiveInfinity, testBulkCopyType: TestBulkCopyType, expectedParamCount: 0);
+			precision = 9;
+			await TestType<DuckDBTimestamp, DuckDBTimestamp?>(context, new DbDataType(typeof(DuckDBTimestamp)).WithPrecision(precision), DuckDBTimestamp.NegativeInfinity, DuckDBTimestamp.PositiveInfinity, testBulkCopyType: TestBulkCopyType, expectedParamCount: 0);
 			//await TestType<DuckDBTimestamp, DuckDBTimestamp?>(context, new DbDataType(typeof(DuckDBTimestamp)).WithPrecision(precision), new DuckDBTimestamp(new DuckDBDateOnly(1677, 9, 21), new DuckDBTimeOnly(0, 12, 43, 145224)), new DuckDBTimestamp(new DuckDBDateOnly(2262, 4, 11), new DuckDBTimeOnly(23, 47, 16, 854775)), expectedParamCount: 0);
 		}
 
