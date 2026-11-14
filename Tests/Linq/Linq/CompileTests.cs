@@ -134,7 +134,7 @@ namespace Tests.Linq
 				query(db).ToList();
 		}
 
-		[Test, Order(100)]
+		[Test]
 		[NoBaselines("Multi-threading")]
 		public void ConcurrentTest1([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -165,7 +165,7 @@ namespace Tests.Linq
 				Assert.That(results[i, 1], Is.EqualTo(results[i, 0]));
 		}
 
-		[Test, Order(100)]
+		[Test]
 		[NoBaselines("Multi-threading")]
 		public void ConcurrentTestWithOptmization([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{

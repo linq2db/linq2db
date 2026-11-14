@@ -20,7 +20,6 @@ using Tests.Model;
 // sort order
 [TestFixture]
 [Category(TestCategory.Create)]
-[Order(-1)]
 // ReSharper disable once InconsistentNaming
 // ReSharper disable once TestClassNameSuffixWarning
 public class a_CreateData : TestBase
@@ -249,7 +248,7 @@ public class a_CreateData : TestBase
 		RunScript(script.ConfigString, script.Divider, script.Name, script.Action, script.Database);
 	}
 
-	[Test, Order(0)]
+	[Test]
 	public void CreateDatabase([CreateDatabaseSources] string context)
 	{
 		switch (context)

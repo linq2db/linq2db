@@ -75,7 +75,7 @@ namespace Tests.Common
 				await foreach (var elem in enumerable2)
 					array1.Add(elem);
 				Assert.That(array1, Is.EqualTo(new int[] { 0, 1, 2 }));
-				Assert.ThrowsAsync<InvalidOperationException>(async () =>
+				await Assert.ThrowsAsync<InvalidOperationException>(async () =>
 				{
 					await foreach (var _ in enumerable2) { }
 				});

@@ -86,8 +86,8 @@ namespace Tests.Exceptions
 
 			var n = 555;
 
-			var ex = Assert.Throws(
-					Is.AssignableTo<Exception>(),
+			// generic overload: NUnit 5.0.0's Catch(Action, string) matches the exact type
+			var ex = Assert.Catch<Exception>(
 					() =>
 						db.Parent.Insert(() => new Parent
 						{
@@ -97,8 +97,7 @@ namespace Tests.Exceptions
 					"Invalid object name 'Parent1'.")!;
 			Assert.That(ex.GetType().Name, Is.EqualTo("SqlException"));
 
-			ex = Assert.Throws(
-				Is.AssignableTo<Exception>(),
+			ex = Assert.Catch<Exception>(
 				() =>
 					db.Parent.Insert(() => new Parent
 					{

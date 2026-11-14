@@ -8,7 +8,6 @@ using Tests.Model;
 namespace Tests.xUpdate
 {
 	[TestFixture]
-	[Order(10000)]
 	public class BatchTests : TestBase
 	{
 		[Test]
