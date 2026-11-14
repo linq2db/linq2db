@@ -220,6 +220,7 @@ namespace Tests.Linq
 			}
 		}
 
+		// Query-cache test: provider-independent.
 		[Test]
 		[QueryCacheTest]
 		public void LambdaParameterBindingIsPartOfTheKey([IncludeDataSources(TestProvName.AllSQLite)] string context)
@@ -285,6 +286,7 @@ namespace Tests.Linq
 				.ShouldBe(missCount + 2);
 		}
 
+		// Query-cache test: provider-independent.
 		[Test]
 		[QueryCacheTest]
 		public void CompilerLambdaParameterBindingsAndAccessors([IncludeDataSources(TestProvName.AllSQLite)] string context)
@@ -372,6 +374,7 @@ namespace Tests.Linq
 				.ShouldBe(missCount + 3);
 		}
 
+		// Query-cache test: provider-independent.
 		[Test]
 		[QueryCacheTest]
 		public void CompilerLambdaShadowingIsPartOfTheKey([IncludeDataSources(TestProvName.AllSQLite)] string context)
@@ -418,6 +421,7 @@ namespace Tests.Linq
 				.ShouldBe(nestedMisses);
 		}
 
+		// Query-cache test: provider-independent.
 		[Test]
 		[QueryCacheTest]
 		public void CapturedQueryableInstanceHitsTheCache([IncludeDataSources(TestProvName.AllSQLite)] string context)

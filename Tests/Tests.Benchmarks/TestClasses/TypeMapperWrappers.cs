@@ -8,13 +8,9 @@ using LinqToDB.Internal.Expressions.Types;
 
 namespace LinqToDB.Benchmarks.TypeMapping
 {
-	public interface ITestClass
-	{
-	}
+	public interface ITestClass;
 
-	public interface ITestClass2
-	{
-	}
+	public interface ITestClass2;
 
 	namespace Original
 	{
