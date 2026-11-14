@@ -34,7 +34,7 @@ internal sealed class SqlCeProvider : DatabaseProviderBase
 		return "https://www.microsoft.com/en-us/download/details.aspx?id=30709";
 	}
 
-	public override void ClearAllPools(string providerName, string? connectionString)
+	public override void ClearAllPools(string providerName)
 	{
 		// connection pooling not supported by provider
 	}

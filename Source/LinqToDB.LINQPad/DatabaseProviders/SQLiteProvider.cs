@@ -51,7 +51,7 @@ internal sealed class SQLiteProvider : DatabaseProviderBase
 	// each client is touched from its own non-inlined method: the assembly is loaded when a method
 	// referencing its types is JIT-compiled, and only the packages of the provider the connection uses
 	// are provisioned (see GetNuGetPackages), so a shared body would load the one that is missing
-	public override void ClearAllPools(string providerName, string? connectionString)
+	public override void ClearAllPools(string providerName)
 	{
 		if (string.Equals(providerName, ProviderName.SQLiteClassic, StringComparison.Ordinal))
 			ClearClassicPools();

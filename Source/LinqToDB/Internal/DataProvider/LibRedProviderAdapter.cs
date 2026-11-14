@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Data.Common;
-using System.Linq.Expressions;
-using System.Reflection;
 using System.Threading;
 
-using LinqToDB.Common;
 using LinqToDB.Internal.Expressions.Types;
 
 namespace LinqToDB.Internal.DataProvider
@@ -16,6 +13,8 @@ namespace LinqToDB.Internal.DataProvider
 
 		public const string AssemblyName    = "LibRed.Ado";
 		public const string ClientNamespace = "LibRed.Data";
+
+		const string CoreAssemblyName = "LibRed.Core";
 
 		private LibRedProviderAdapter(
 			Type connectionType,
@@ -59,7 +58,6 @@ namespace LinqToDB.Internal.DataProvider
 		/// </summary>
 		public Action<string, bool>   CreateDatabase => _databaseManagement.Value.CreateDatabase;
 		public Action<string>         DropDatabase   => _databaseManagement.Value.DropDatabase;
-		public Action<DbConnection>   ClearPool      => _databaseManagement.Value.ClearPool;
 
 		public static LibRedProviderAdapter GetInstance()
 		{
@@ -99,45 +97,31 @@ namespace LinqToDB.Internal.DataProvider
 
 		static DatabaseManagement CreateDatabaseManagement(Type connectionType)
 		{
+			var coreAssembly = Common.Tools.TryLoadAssembly(CoreAssemblyName, null)
+				?? throw new InvalidOperationException($"Cannot load assembly {CoreAssemblyName}");
+
+			var collationType = coreAssembly.GetType("LibRed.Catalog.Collation", true)!;
+			var versionType   = coreAssembly.GetType("LibRed.Formats.JetVersion", true)!;
+
 			var typeMapper = new TypeMapper();
 			typeMapper.RegisterTypeWrapper<LibRedConnection>(connectionType);
+			typeMapper.RegisterTypeWrapper<Collation>(collationType);
+			typeMapper.RegisterTypeWrapper<JetVersion>(versionType);
 			typeMapper.FinalizeMappings();
 
-			// CreateDatabase(string connectionString, Collation? collation, JetVersion version): the TypeMapper cannot
-			// wrap the nullable Collation struct, so the call is built directly
-			var create = connectionType.GetMethod("CreateDatabase", BindingFlags.Public | BindingFlags.Static)
-				?? throw new InvalidOperationException($"{connectionType.FullName}.CreateDatabase not found");
-
-			var parameters       = create.GetParameters();
-			var versionType      = parameters[2].ParameterType;
-			var connectionString = Expression.Parameter(typeof(string), "connectionString");
-			var accdb            = Expression.Parameter(typeof(bool),   "accdb");
-
-			var createDatabase = Expression.Lambda<Action<string, bool>>(
-				Expression.Call(
-					create,
-					connectionString,
-					Expression.Default(parameters[1].ParameterType),
-					Expression.Condition(
-						accdb,
-						Expression.Constant(Enum.Parse(versionType, "Version12_2007"), versionType),
-						Expression.Constant(Enum.Parse(versionType, "Version4"),       versionType))),
-				connectionString,
-				accdb)
-				.CompileExpression();
+			var createAce = typeMapper.BuildAction<string>(typeMapper.MapActionLambda((string cs) => LibRedConnection.CreateDatabase(cs, null, JetVersion.Version12_2007)));
+			var createJet = typeMapper.BuildAction<string>(typeMapper.MapActionLambda((string cs) => LibRedConnection.CreateDatabase(cs, null, JetVersion.Version4)));
 
 			return new DatabaseManagement(
 				typeMapper.BuildFunc<string, bool>(typeMapper.MapLambda((string cs) => LibRedConnection.DatabaseExists(cs))),
-				createDatabase,
-				typeMapper.BuildAction<string>(typeMapper.MapActionLambda((string cs) => LibRedConnection.DropDatabase(cs))),
-				typeMapper.BuildAction<DbConnection>(typeMapper.MapActionLambda((LibRedConnection connection) => LibRedConnection.ClearPool(connection))));
+				(cs, accdb) => (accdb ? createAce : createJet)(cs),
+				typeMapper.BuildAction<string>(typeMapper.MapActionLambda((string cs) => LibRedConnection.DropDatabase(cs))));
 		}
 
 		sealed record DatabaseManagement(
 			Func  <string, bool> DatabaseExists,
 			Action<string, bool> CreateDatabase,
-			Action<string>       DropDatabase,
-			Action<DbConnection> ClearPool);
+			Action<string>       DropDatabase);
 
 		#region Wrappers
 
@@ -146,9 +130,26 @@ namespace LinqToDB.Internal.DataProvider
 		{
 			public LibRedConnection(string connectionString) => throw new NotSupportedException();
 
-			public static bool DatabaseExists(string connectionString)  => throw new NotSupportedException();
-			public static void DropDatabase  (string connectionString)  => throw new NotSupportedException();
-			public static void ClearPool     (LibRedConnection conn)    => throw new NotSupportedException();
+			public static bool DatabaseExists(string connectionString)                                        => throw new NotSupportedException();
+			public static void CreateDatabase(string connectionString, Collation? collation, JetVersion version) => throw new NotSupportedException();
+			public static void DropDatabase  (string connectionString)                                        => throw new NotSupportedException();
+		}
+
+		// LibRed.Catalog.Collation, in LibRed.Core
+		[Wrapper]
+		private struct Collation;
+
+		// LibRed.Formats.JetVersion, in LibRed.Core
+		[Wrapper]
+		private enum JetVersion
+		{
+			Version3       = 0,
+			Version4       = 1,
+			Version12_2007 = 2,
+			Version14_2010 = 3,
+			Version15_2013 = 4,
+			Version16_2016 = 5,
+			Version17_2019 = 6,
 		}
 
 		#endregion

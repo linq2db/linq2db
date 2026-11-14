@@ -194,7 +194,7 @@ internal static class DriverHelper
 		try
 		{
 			var settings = ConnectionSettings.Load(cxInfo);
-			DatabaseProviders.GetProvider(settings.Connection.Database).ClearAllPools(settings.Connection.Provider!, settings.Connection.GetFullConnectionString());
+			DatabaseProviders.GetProvider(settings.Connection.Database).ClearAllPools(settings.Connection.Provider!);
 		}
 		catch (Exception ex)
 		{

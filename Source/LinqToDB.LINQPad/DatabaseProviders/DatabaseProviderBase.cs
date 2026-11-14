@@ -35,9 +35,9 @@ internal abstract class DatabaseProviderBase(string database, string description
 	public virtual void                          Unload                       (                                        ) { }
 #endif
 
-	public abstract void               ClearAllPools      (string providerName, string? connectionString);
-	public abstract DateTime?          GetLastSchemaUpdate(ConnectionSettings settings                  );
-	public abstract DbProviderFactory? GetProviderFactory (string providerName                          );
+	public abstract void               ClearAllPools      (string providerName        );
+	public abstract DateTime?          GetLastSchemaUpdate(ConnectionSettings settings);
+	public abstract DbProviderFactory? GetProviderFactory (string providerName        );
 
 	/// <param name="providerName">Provider name.</param>
 	/// <param name="connectionString">Connection string must be resolved against password manager already.</param>

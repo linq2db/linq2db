@@ -26,7 +26,7 @@ internal sealed class InformixProvider : DatabaseProviderBase
 	public override IEnumerable<(string Id, string Version)> GetNuGetPackages(string providerName) => [DB2Provider.ClientPackage];
 #endif
 
-	public override void ClearAllPools(string providerName, string? connectionString)
+	public override void ClearAllPools(string providerName)
 	{
 		// Net.IBM.Data.Db2 10.x has no safe replacement: ReleaseObjectPool is obsolete-as-error there
 #if NETFRAMEWORK
