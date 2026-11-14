@@ -3555,5 +3555,147 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6310")]
+		public void JoinMethodWithNullComparer([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent.Join(db.Child, p => p.ParentID, c => c.ParentID, (p, c) => new { p.ParentID, c.ChildID }, comparer: null);
+
+			AssertQuery(query);
+		}
+
+		// The comparer is refused by JoinBuilder.CanBuildMethod before any SQL is built, so one provider covers it.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6310")]
+		public void JoinMethodWithComparerIsNotTranslated([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent.Join(db.Child, p => p.ParentID, c => c.ParentID, (p, c) => new { p.ParentID, c.ChildID }, EqualityComparer<int>.Default);
+
+			var act = () => query.ToArray();
+			act
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain("could not be converted to SQL");
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6311")]
+		public void JoinMethodLookalikeWithThreeGenericArguments([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = JoinLookalike.Join(db.Parent, db.Child, p => p.ParentID, c => c.ParentID, (p, c) => new { p.ParentID, c.ChildID });
+
+			var expected =
+				from p in Parent
+				join c in Child on p.ParentID equals c.ParentID
+				select new { p.ParentID, c.ChildID };
+
+			AreEqual(expected, query);
+		}
+
+		// Not an extension method, so it never competes with Queryable.Join in this namespace. Its three generic arguments match
+		// the .NET 11 tuple-returning Join, but it takes a result selector.
+		static class JoinLookalike
+		{
+			[IsQueryable]
+			public static IQueryable<TResult> Join<TOuter, TInner, TResult>(
+				IQueryable<TOuter> outer,
+				IQueryable<TInner> inner,
+				Expression<Func<TOuter, int>> outerKeySelector,
+				Expression<Func<TInner, int>> innerKeySelector,
+				Expression<Func<TOuter, TInner, TResult>> resultSelector)
+			{
+				var method = typeof(JoinLookalike)
+					.GetMethod(nameof(Join))!
+					.MakeGenericMethod(typeof(TOuter), typeof(TInner), typeof(TResult));
+
+				return outer.Provider.CreateQuery<TResult>(
+					Expression.Call(
+						method,
+						outer.Expression,
+						inner.Expression,
+						Expression.Quote(outerKeySelector),
+						Expression.Quote(innerKeySelector),
+						Expression.Quote(resultSelector)));
+			}
+		}
+
+#if NET11_0_OR_GREATER
+		// The comparer is refused by JoinBuilder.CanBuildMethod before any SQL is built, so one provider covers it.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6311")]
+		public void JoinMethodTupleOverloadWithComparerIsNotTranslated([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent.Join(db.Child, p => p.ParentID, c => c.ParentID, EqualityComparer<int>.Default);
+
+			var act = () => query.ToArray();
+			act
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain("could not be converted to SQL");
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6311")]
+		public void JoinMethodTupleOverload([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent.Join(db.Child, p => p.ParentID, c => c.ParentID);
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6311")]
+		public void JoinMethodTupleOverloadComposed([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Join(db.Child, p => p.ParentID, c => c.ParentID)
+				.Where(t => t.Inner.ChildID > 20)
+				.Select(t => new { t.Outer.ParentID, t.Outer.Value1, t.Inner.ChildID });
+
+			AssertQuery(query);
+		}
+
+		[ThrowsRequiresCorrelatedSubquery]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6311")]
+		public void JoinMethodEnumerableTupleOverload([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Where(p => p.Children
+					.Join(p.GrandChildren, c => (int?)c.ChildID, g => g.ChildID)
+					.Any(t => t.Inner.GrandChildID > 0));
+
+			AreEqual(ExpectedParentsWithJoinedGrandChildren(), query);
+		}
+
+		[ThrowsRequiresCorrelatedSubquery]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6310")]
+		public void JoinMethodEnumerableTupleOverloadWithNullComparer([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Where(p => p.Children
+					.Join(p.GrandChildren, c => (int?)c.ChildID, g => g.ChildID, comparer: null)
+					.Any(t => t.Inner.GrandChildID > 0));
+
+			AreEqual(ExpectedParentsWithJoinedGrandChildren(), query);
+		}
+
+		// The in-memory Parent rows carry no Children / GrandChildren, so the expected side spells the associations out.
+		IEnumerable<Parent> ExpectedParentsWithJoinedGrandChildren()
+			=> Parent.Where(p => Child
+				.Where(c => c.ParentID == p.ParentID)
+				.Join(GrandChild.Where(g => g.ParentID == p.ParentID), c => (int?)c.ChildID, g => g.ChildID, (c, g) => g)
+				.Any(g => g.GrandChildID > 0));
+#endif
 	}
 }
