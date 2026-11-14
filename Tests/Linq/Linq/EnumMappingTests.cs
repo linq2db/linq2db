@@ -3162,6 +3162,19 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void EqualsTypedRegisteredEnumOnColumnThrows([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var value = ApiGender.Female;
+
+			var query = db.Person
+				.Where(p => p.Gender.Equals(value));
+
+			Shouldly.Should.Throw<LinqToDBConvertException>(() => query.ToList());
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
 		public void ProjectedEnumCastChildReferencesParent([DataSources] string context)
 		{
 			using var db = GetDataContext(context, CreateApiGenderSchema());

@@ -4249,10 +4249,24 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		internal static readonly MethodInfo CheckEnumEqualsArgumentMethod = MemberHelper.MethodOfGeneric(() => CheckEnumEqualsArgument<DataType>(null));
 
-		// A column or other server-side value is compared as before; a constant is checked once here and stays a literal.
+		// A column or other server-side value is compared as before; a value whose static type is known is decided here; only an
+		// object-typed client value needs the check per execution, and a constant is checked once and stays a literal.
 		Expression GuardEnumEqualsValue(Expression value, Type enumType)
 		{
 			if (!Builder.CanBeEvaluatedOnClient(value))
+				return value;
+
+			var staticType = value.UnwrapConvertToObject().Type.UnwrapNullableType();
+
+			if (staticType.IsEnum)
+			{
+				if (staticType != enumType)
+					throw new LinqToDBConvertException($"Cannot convert a value of type '{staticType.FullName}' to type '{enumType.FullName}'");
+
+				return value;
+			}
+
+			if (staticType != typeof(object) && staticType != typeof(Enum) && staticType != typeof(ValueType))
 				return value;
 
 			if (Builder.CanBeConstant(value))
