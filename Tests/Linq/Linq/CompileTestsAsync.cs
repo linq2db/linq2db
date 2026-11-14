@@ -852,7 +852,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5842")]
-		public void ElementFormLoadWithHonorsCancellationAsync([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		public async Task ElementFormLoadWithHonorsCancellationAsync([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
 			var eager = CompiledQuery.Compile<ITestDataContext,int,CancellationToken,Task<Parent>>(static (db, id, token) =>
 				db.Parent
@@ -872,7 +872,7 @@ namespace Tests.Linq
 
 			using var db = GetDataContext(context);
 
-			Assert.ThrowsAsync<OperationCanceledException>(async () =>
+			await Assert.ThrowsAsync<OperationCanceledException>(async () =>
 			{
 				try
 				{
@@ -885,7 +885,7 @@ namespace Tests.Linq
 				}
 			});
 
-			Assert.ThrowsAsync<OperationCanceledException>(async () =>
+			await Assert.ThrowsAsync<OperationCanceledException>(async () =>
 			{
 				try
 				{

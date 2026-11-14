@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Async;
@@ -746,7 +747,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue4602([DataSources] string context)
+		public async Task Issue4602([DataSources] string context)
 		{
 			var ms = new MappingSchema();
 			ms.AddMetadataReader(new CustomMetadataReader());
@@ -755,7 +756,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable<DynamicParent>())
 			using (db.CreateLocalTable<DynamicChild>())
 			{
-				Assert.DoesNotThrowAsync(async () =>
+				await Assert.DoesNotThrowAsync(async () =>
 				{
 					await db.GetTable<DynamicParent>()
 						.Where(it => it.Child!.ID == 123)

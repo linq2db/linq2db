@@ -20,7 +20,6 @@ using Tests.Model;
 namespace Tests.xUpdate
 {
 	[TestFixture]
-	[Order(10000)]
 	public class BulkCopyTests : TestBase
 	{
 		// TODO: update Sybase.sql to use proper type for identity. now it uses INT for most of tables, which
@@ -254,7 +253,7 @@ namespace Tests.xUpdate
 					|| copyType == BulkCopyType.MultipleRows
 					|| copyType == BulkCopyType.ProviderSpecific))
 			{
-				var ex = Assert.CatchAsync(async () => await perform())!;
+				var ex = (await Assert.CatchAsync(async () => await perform()))!;
 				Assert.That(ex, Is.InstanceOf<LinqToDBException>());
 				Assert.That(ex.Message, Is.EqualTo("BulkCopyOptions.KeepIdentity = true is not supported by Firebird provider. If you use generators with triggers, you should disable triggers during BulkCopy execution manually."));
 				return false;
@@ -276,7 +275,7 @@ namespace Tests.xUpdate
 					|| (context.IsAnyOf(ProviderName.SapHanaOdbc) && copyType == BulkCopyType.ProviderSpecific))
 				&& keepIdentity == true)
 			{
-				var ex = Assert.CatchAsync(async () => await perform())!;
+				var ex = (await Assert.CatchAsync(async () => await perform()))!;
 				Assert.That(ex, Is.InstanceOf<LinqToDBException>());
 				Assert.That(ex.Message, Is.EqualTo("BulkCopyOptions.KeepIdentity = true is not supported by BulkCopyType.RowByRow mode"));
 				return false;

@@ -86,8 +86,7 @@ namespace Tests.Exceptions
 
 			var n = 555;
 
-			var ex = Assert.Throws(
-					Is.AssignableTo<Exception>(),
+			var ex = Assert.Catch(
 					() =>
 						db.Parent.Insert(() => new Parent
 						{
@@ -97,8 +96,7 @@ namespace Tests.Exceptions
 					"Invalid object name 'Parent1'.")!;
 			Assert.That(ex.GetType().Name, Is.EqualTo("SqlException"));
 
-			ex = Assert.Throws(
-				Is.AssignableTo<Exception>(),
+			ex = Assert.Catch(
 				() =>
 					db.Parent.Insert(() => new Parent
 					{

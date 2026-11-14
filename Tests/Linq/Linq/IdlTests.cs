@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Async;
@@ -502,7 +503,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCountWithOrderByAsync([IdlProviders] string context)
+		public async Task TestCountWithOrderByAsync([IdlProviders] string context)
 		{
 			using var db = GetDataContext(context);
 			var q1 = db.Person.OrderBy(x => x.ID);
@@ -511,8 +512,8 @@ namespace Tests.Linq
 					 join p2 in db.Person on p.ID equals p2.ID
 					 select p2;
 
-			Assert.DoesNotThrowAsync(() => q2.MaxAsync(x => x.ID));
-			Assert.DoesNotThrowAsync(() => q2.CountAsync());
+			await Assert.DoesNotThrowAsync(() => q2.MaxAsync(x => x.ID));
+			await Assert.DoesNotThrowAsync(() => q2.CountAsync());
 		}
 
 		[Obsolete("Remove test after API removed")]

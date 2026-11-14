@@ -193,9 +193,9 @@ namespace NUnit.ParallelByResource
 			}
 		}
 
-		public void CancelRun(bool force)
+		public void CancelRun()
 		{
-			_original.CancelRun(force);
+			_original.CancelRun();
 
 			CompleteLanes();
 		}

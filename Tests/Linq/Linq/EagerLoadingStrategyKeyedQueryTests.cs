@@ -1613,7 +1613,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Select_KeyedQuery_SingleAsync_MultipleParents_Throws(
+		public async Task Select_KeyedQuery_SingleAsync_MultipleParents_Throws(
 			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
@@ -1635,7 +1635,7 @@ namespace Tests.Linq
 				}
 			).WithKeyedLoadStrategy();
 
-			Assert.ThrowsAsync<InvalidOperationException>(async () => await query.SingleAsync());
+			await Assert.ThrowsAsync<InvalidOperationException>(async () => await query.SingleAsync());
 		}
 
 		[Test]

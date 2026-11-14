@@ -443,17 +443,17 @@ namespace Tests.Linq
 
 			await new SignalRDataContext(hubConnection, disposeHubConnection: true).DisposeAsync();
 
-			Assert.ThrowsAsync<ObjectDisposedException>(() => hubConnection.StartAsync());
+			await Assert.ThrowsAsync<ObjectDisposedException>(() => hubConnection.StartAsync());
 		}
 
 		[Test]
-		public void SignalRContextDisposesAnOwnedHubConnection_SyncDispose()
+		public async Task SignalRContextDisposesAnOwnedHubConnection_SyncDispose()
 		{
 			var hubConnection = BuildUnstartedHubConnection();
 
 			new SignalRDataContext(hubConnection, disposeHubConnection: true).Dispose();
 
-			Assert.ThrowsAsync<ObjectDisposedException>(() => hubConnection.StartAsync());
+			await Assert.ThrowsAsync<ObjectDisposedException>(() => hubConnection.StartAsync());
 		}
 
 		// A hub connection is long-lived and meant to be shared: SignalRDataContext(HubConnection) leaves it to
@@ -505,7 +505,7 @@ namespace Tests.Linq
 				_ = await client.GetInfoAsync(configuration);
 			}
 
-			var ex = Assert.ThrowsAsync<ObjectDisposedException>(() => client.GetInfoAsync(configuration));
+			var ex = await Assert.ThrowsAsync<ObjectDisposedException>(() => client.GetInfoAsync(configuration));
 
 			// a disposed HubConnection throws the same type; only the lease's refusal names the context
 			Assert.That(ex?.ObjectName, Does.Contain(nameof(TestSignalRDataContext)));
@@ -542,7 +542,7 @@ namespace Tests.Linq
 			{
 				connection = db.HubConnection;
 
-				Assert.CatchAsync(() => db.LeasedClient.ExecuteNonQueryAsync(db.ConfigurationString, "not a query"));
+				await Assert.CatchAsync(() => db.LeasedClient.ExecuteNonQueryAsync(db.ConfigurationString, "not a query"));
 			}
 
 			using (var db = (TestSignalRDataContext)GetDataContext(context, transport: RemoteTransport.SignalR))
@@ -550,7 +550,7 @@ namespace Tests.Linq
 				Assert.That(db.HubConnection, Is.Not.SameAs(connection));
 			}
 
-			Assert.ThrowsAsync<ObjectDisposedException>(() => connection.StartAsync());
+			await Assert.ThrowsAsync<ObjectDisposedException>(() => connection.StartAsync());
 		}
 
 		// The client constructor takes a client the caller built, so the connection inside it stays the
@@ -564,7 +564,7 @@ namespace Tests.Linq
 
 			// Nothing listens on the port, so starting fails either way - what matters is that it fails for
 			// that reason and not because the connection was disposed underneath its owner.
-			var error = Assert.CatchAsync(() => hubConnection.StartAsync());
+			var error = await Assert.CatchAsync(() => hubConnection.StartAsync());
 
 			Assert.That(error, Is.Not.InstanceOf<ObjectDisposedException>());
 		}

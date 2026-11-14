@@ -48,7 +48,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestConcurrentSelect([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
+		public async Task TestConcurrentSelect([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			var dbFactory = MyDB.CreateFactory(context, 1, TimeSpan.FromSeconds(1), LinqToDB.Common.Configuration.RetryPolicy.DefaultRandomFactor, LinqToDB.Common.Configuration.RetryPolicy.DefaultExponentialBase, LinqToDB.Common.Configuration.RetryPolicy.DefaultCoefficient);
 
@@ -67,7 +67,7 @@ namespace Tests.UserTests
 				var user1Task = db1.Users.FirstAsync();
 				var user2Task = db2.Users.FirstAsync();
 
-				Assert.DoesNotThrowAsync(() => Task.WhenAll(user1Task, user2Task));
+				await Assert.DoesNotThrowAsync(() => Task.WhenAll(user1Task, user2Task));
 				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(user1Task.Result, Is.Not.Null);
