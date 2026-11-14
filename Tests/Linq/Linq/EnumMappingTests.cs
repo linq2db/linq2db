@@ -2630,7 +2630,9 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 
-			query.ToSqlQuery().Parameters.ShouldBeEmpty();
+			var sql = query.ToSqlQuery();
+
+			sql.Parameters.ShouldBeEmpty();
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
@@ -2644,7 +2646,9 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 
-			query.ToSqlQuery().Parameters.ShouldBeEmpty();
+			var sql = query.ToSqlQuery();
+
+			sql.Parameters.ShouldBeEmpty();
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
@@ -3069,8 +3073,10 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context, CreateApiGenderSchema());
 
+			var none = Array.Empty<ApiGender>();
+
 			var query = empty
-				? db.Person.Where(p => Array.Empty<ApiGender>().Contains((ApiGender)(p.ID > 2 ? Gender.Male : Gender.Female)))
+				? db.Person.Where(p => none.Contains((ApiGender)(p.ID > 2 ? Gender.Male : Gender.Female)))
 				: db.Person.Where(p => new[] { ApiGender.Male, (ApiGender)p.Gender }.Contains((ApiGender)(p.ID > 2 ? Gender.Male : Gender.Female)));
 
 			AssertQuery(query);
@@ -3130,7 +3136,9 @@ namespace Tests.Linq
 					.OrderBy(id => id)
 					.ToArray();
 
-				query(db, gender).ShouldBe(expected);
+				var ids = query(db, gender);
+
+				ids.ShouldBe(expected);
 			}
 		}
 
@@ -3162,11 +3170,41 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
-		public void EqualsTypedRegisteredEnumOnColumnThrows([DataSources] string context)
+		public void EqualsTypedRegisteredEnumOnColumnComparesAsCast([DataSources] string context, [Values] bool mirrored)
 		{
 			using var db = GetDataContext(context, CreateApiGenderSchema());
 
 			var value = ApiGender.Female;
+
+			// C# answers false for another enum type; the value is compared as the numeric cast (Gender)value, on every provider.
+			var ids = (mirrored
+					? db.Person.Where(p => value.Equals(p.Gender))
+					: db.Person.Where(p => p.Gender.Equals(value)))
+				.Select(p => p.ID)
+				.OrderBy(id => id)
+				.ToArray();
+
+			var expected = Person
+				.Where(p => p.Gender == (Gender)value)
+				.Select(p => p.ID)
+				.OrderBy(id => id)
+				.ToArray();
+
+			ids.ShouldBe(expected);
+
+			ApiGender? none = null;
+
+			var count = db.Person.Count(p => p.Gender.Equals(none));
+
+			count.ShouldBe(0);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void EqualsInterfaceTypedRegisteredEnumOnColumnThrows([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			IComparable value = ApiGender.Female;
 
 			var query = db.Person
 				.Where(p => p.Gender.Equals(value));

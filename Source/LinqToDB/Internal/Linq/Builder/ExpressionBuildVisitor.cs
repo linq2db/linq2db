@@ -4146,9 +4146,10 @@ namespace LinqToDB.Internal.Linq.Builder
 				var argument = node.Arguments[0];
 
 				// The parameter converter sees only the column's enum, which also accepts an enum mapped onto it: the other side's static type decides.
-				if (argument.Type == typeof(object) && receiver.Type.UnwrapNullableType() is { IsEnum: true } receiverEnum)
+				if (receiver.Type.UnwrapNullableType() is { IsEnum: true } receiverEnum && !argument.Type.IsValueType && argument.Type.IsAssignableFrom(receiverEnum))
 					argument = GuardEnumEqualsValue(argument, receiverEnum);
-				else if (receiver.Type == typeof(object) && argument is UnaryExpression { NodeType: ExpressionType.Convert } convert && convert.Operand.Type.UnwrapNullableType() is { IsEnum: true } argumentEnum)
+				else if (argument is UnaryExpression { NodeType: ExpressionType.Convert } convert && convert.Operand.Type.UnwrapNullableType() is { IsEnum: true } argumentEnum
+					&& !receiver.Type.IsValueType && receiver.Type.IsAssignableFrom(argumentEnum))
 					receiver = GuardEnumEqualsValue(receiver, argumentEnum);
 
 				result = ConvertCompareExpression(ExpressionType.Equal, receiver, argument);
@@ -4249,24 +4250,16 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		internal static readonly MethodInfo CheckEnumEqualsArgumentMethod = MemberHelper.MethodOfGeneric(() => CheckEnumEqualsArgument<DataType>(null));
 
-		// A column or other server-side value is compared as before; a value whose static type is known is decided here; only an
-		// object-typed client value needs the check per execution, and a constant is checked once and stays a literal.
+		// Only a client value whose static type can hold a boxed enum of another type (object, Enum, ValueType, an interface
+		// enums implement) is checked; a constant once, here, so it stays a literal. Anything else is built as before.
 		Expression GuardEnumEqualsValue(Expression value, Type enumType)
 		{
 			if (!Builder.CanBeEvaluatedOnClient(value))
 				return value;
 
-			var staticType = value.UnwrapConvertToObject().Type.UnwrapNullableType();
+			var staticType = value.UnwrapConvertToObject().Type;
 
-			if (staticType.IsEnum)
-			{
-				if (staticType != enumType)
-					throw new LinqToDBConvertException($"Cannot convert a value of type '{staticType.FullName}' to type '{enumType.FullName}'");
-
-				return value;
-			}
-
-			if (staticType != typeof(object) && staticType != typeof(Enum) && staticType != typeof(ValueType))
+			if (staticType.UnwrapNullableType() == enumType || !staticType.IsAssignableFrom(enumType))
 				return value;
 
 			if (Builder.CanBeConstant(value))
