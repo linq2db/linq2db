@@ -303,9 +303,9 @@
       "displayName": "DuckDB.NET.Bindings.Full",
       "packageId": "DuckDB.NET.Bindings.Full",
       "versions": {
-        "net10.0": "1.5.5",
-        "net10.0-windows7.0": "1.5.5",
-        "net11.0": "1.5.5"
+        "net10.0": "1.5.6.1",
+        "net10.0-windows7.0": "1.5.6.1",
+        "net11.0": "1.5.6.1"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -329,9 +329,9 @@
       "displayName": "DuckDB.NET.Data.Full",
       "packageId": "DuckDB.NET.Data.Full",
       "versions": {
-        "net10.0": "1.5.5",
-        "net10.0-windows7.0": "1.5.5",
-        "net11.0": "1.5.5"
+        "net10.0": "1.5.6.1",
+        "net10.0-windows7.0": "1.5.6.1",
+        "net11.0": "1.5.6.1"
       },
       "license": "MIT",
       "licenseTexts": [

@@ -35,12 +35,12 @@ COMPONENTS
    https://github.com/ClickHouse/clickhouse-cs
    License: MIT  see [2]
 
-5. DuckDB.NET.Bindings.Full 1.5.5
+5. DuckDB.NET.Bindings.Full 1.5.6.1
    https://github.com/Giorgi/DuckDB.NET
    License: MIT  see [2]
    Copyright © 2020 - 2026 Giorgi Dalakishvili
 
-6. DuckDB.NET.Data.Full 1.5.5
+6. DuckDB.NET.Data.Full 1.5.6.1
    https://github.com/Giorgi/DuckDB.NET
    License: MIT  see [2]
    Copyright © 2020 - 2026 Giorgi Dalakishvili

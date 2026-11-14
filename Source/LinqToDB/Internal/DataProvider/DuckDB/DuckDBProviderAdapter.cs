@@ -196,14 +196,14 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		private static void BuildIntervalLiteral(StringBuilder sb, int months, int days, ulong microSeconds)
 		{
 			sb.Append('\'');
-			if (months > 0)
+			if (months != 0)
 			{
 				sb
 					.Append(months.ToString(CultureInfo.InvariantCulture))
 					.Append(months is 1 or -1 ? " month" : " months");
 			}
 
-			if (days > 0)
+			if (days != 0)
 			{
 				if (months != 0)
 					sb.Append(' ');
