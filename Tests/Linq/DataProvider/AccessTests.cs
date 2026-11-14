@@ -508,6 +508,41 @@ namespace Tests.DataProvider
 					.ShouldBe(ProviderName.AccessAceOleDb);
 		}
 
+		// LibRed has a single data provider, so UseAccess must not open a connection to probe for a version
+		[Test]
+		public void UseAccessLibRed([IncludeDataSources(TestProvName.AllAccessLibRed)] string context, [Values] bool accdb)
+		{
+			// a file of its own: the detector caches its probe per connection string
+			var name      = $"UseAccessLibRed.{context}.{(accdb ? "Ace" : "Jet")}";
+			var extension = accdb ? ".accdb" : ".mdb";
+			var opens     = 0;
+
+			AccessTools.CreateDatabase(name, AccessProvider.LibRed, deleteIfExists: true, version: accdb ? AccessVersion.Ace : AccessVersion.Jet);
+
+			try
+			{
+				// the callback sees the detector's probe connection as well as the DataConnection's own
+				var options = new DataOptions()
+					.UseAccess($"Data Source={name}{extension}", AccessProvider.LibRed)
+					.UseBeforeConnectionOpened(_ => opens++);
+
+				using (var db = new DataConnection(options))
+				{
+					db.DataProvider.Name
+						.ShouldBe(ProviderName.AccessLibRed);
+					db.Execute<int>("SELECT 1")
+						.ShouldBe(1);
+				}
+
+				opens
+					.ShouldBe(1);
+			}
+			finally
+			{
+				AccessTools.DropDatabase(name, AccessProvider.LibRed, extension);
+			}
+		}
+
 		[Test]
 		public void BulkCopyLinqTypes([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{

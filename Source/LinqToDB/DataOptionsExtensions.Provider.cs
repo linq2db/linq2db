@@ -468,7 +468,8 @@ namespace LinqToDB
 			     AccessProvider                      provider     = AccessProvider.AutoDetect,
 			     Func<AccessOptions, AccessOptions>? optionSetter = null)
 		{
-			options = AccessTools.ProviderDetector.CreateOptions(options, default, provider);
+			// LibRed has a single data provider, so there is no version to open a connection for
+			options = AccessTools.ProviderDetector.CreateOptions(options, provider == AccessProvider.LibRed ? AccessVersion.Ace : default, provider);
 			return optionSetter != null ? options.WithOptions(optionSetter) : options;
 		}
 
