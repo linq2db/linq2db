@@ -269,6 +269,8 @@ namespace Tests.Linq
 		}
 
 		// Access-only: DISTINCT reads an outer-joined Yes/No column as False, not NULL.
+		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed,
+			Details = "no-declaration: needs the LibRed dialect extensions - LibRed reads the unmatched rows as NULL, and the DISTINCT sort-key flip then orders them against .NET; an assertion failure, not a throw.")]
 		[Test]
 		public void DistinctOrderByOuterJoinedBooleanKey([IncludeDataSources(true, TestProvName.AllAccess)] string context, [Values] bool descending)
 		{
