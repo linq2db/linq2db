@@ -166,6 +166,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public bool ValidateSubqueries { get; }
 
+		public bool CombinedCommandsRequested { get; set; }
+
 		public readonly DataOptions DataOptions;
 
 		public ExpressionBuilder(
@@ -273,6 +275,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 
 				_query.SetHarvesters(harvesters);
+				_query.CombinedCommandsRequested = CombinedCommandsRequested;
 
 				expressions = FinalizeQueryCacheInformation((Query<T>)_query, harvesters);
 			}

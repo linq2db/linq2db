@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Data;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.ExpressionVisitors;
 using LinqToDB.Internal.Linq.Builder;
@@ -23,12 +24,12 @@ namespace LinqToDB.Internal.Linq
 		internal Func<IDataContext,IQueryExpressions,SqlCommandExecutionContext?,object?>                         GetElement      = null!;
 		internal Func<IDataContext,IQueryExpressions,SqlCommandExecutionContext?,CancellationToken,Task<object?>> GetElementAsync = null!;
 
-		// Eager-aware element selection (First/Single/…), set only by FirstSingleBuilder. Unlike GetElement, these route
+		// Eager-aware element selection (First/Single/…, and the one row of a scalar select). Unlike GetElement, these route
 		// through the combined eager engine (Query<T>.GetEagerEnumerable — one multi-result-set command when eligible,
 		// else the sequential harvesters + base enumerable) and take the single element, so First/Single batch their
 		// eager children the same way ToList()/foreach do. When set, the element execution paths use these INSTEAD of
 		// GetElement and skip the InitHarvesters pre-init (GetEagerEnumerable runs the harvesters itself). Null for
-		// scalar / ExecuteElement / non-query queries, which keep the pre-inited-harvesters GetElement path.
+		// aggregate / ExecuteElement / non-query queries, which keep the pre-inited-harvesters GetElement path.
 		internal Func<IDataContext,IQueryExpressions,object?[]?,object?>?                         GetEagerElement;
 		internal Func<IDataContext,IQueryExpressions,object?[]?,CancellationToken,Task<object?>>? GetEagerElementAsync;
 
@@ -181,6 +182,26 @@ namespace LinqToDB.Internal.Linq
 		// Exposes the harvester array to QueryRunner.TryGetCombinedEagerEnumerable so the main query and its combinable
 		// eager-load children can be assembled into one multi-result-set command.
 		internal Harvester[]? HarvestersArray => _harvesters;
+
+		// Set for a QueryBatch query: the call itself is the opt-in that LinqOptions.UseCombinedCommands otherwise
+		// stands for, so the combined gate does not consult the option for it.
+		internal bool CombinedCommandsRequested { get; set; }
+
+		// Query hints belong to one command, and a batch chooses its statements when it is built, before it can see them.
+		// The element entry points call this before the load transaction and the collections, which run before the row.
+		internal void ThrowIfQueryBatchHasQueryHints(IDataContext dataContext)
+		{
+			if (CombinedCommandsRequested && (dataContext.QueryHints.Count > 0 || dataContext.NextQueryHints.Count > 0))
+				throw new LinqToDBException(ErrorHelper.Error_QueryHints_In_QueryBatch);
+		}
+
+		// A batch sends its parts together, so a token cancelled before the call sends none of them. Other queries keep
+		// leaving the token to the provider.
+		internal void ThrowIfQueryBatchIsCancelled(CancellationToken cancellationToken)
+		{
+			if (CombinedCommandsRequested)
+				cancellationToken.ThrowIfCancellationRequested();
+		}
 
 		internal SqlCommandExecutionContext? InitHarvesters(IDataContext dc, IQueryExpressions expressions, object?[]? ps)
 		{
