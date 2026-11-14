@@ -133,6 +133,11 @@ namespace LinqToDB.Internal.DataProvider.Access
 			return adapter.CreateConnection(connectionString);
 		}
 
+		internal bool IsLibRed(ConnectionOptions options, AccessProvider provider)
+		{
+			return DetectProvider(options, provider) == AccessProvider.LibRed;
+		}
+
 		protected override AccessProvider DetectProvider(ConnectionOptions options, AccessProvider provider)
 		{
 			if (provider is AccessProvider.ODBC or AccessProvider.OleDb or AccessProvider.LibRed)

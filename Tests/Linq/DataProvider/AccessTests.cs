@@ -508,23 +508,30 @@ namespace Tests.DataProvider
 					.ShouldBe(ProviderName.AccessAceOleDb);
 		}
 
-		// LibRed has a single data provider, so UseAccess must not open a connection to probe for a version
+		// LibRed has a single data provider, so UseAccess must not open a connection to probe for a version, whether
+		// LibRed is passed to UseAccess or resolved from the provider name
 		[Test]
-		public void UseAccessLibRed([IncludeDataSources(TestProvName.AllAccessLibRed)] string context, [Values] bool accdb)
+		public void UseAccessLibRed([IncludeDataSources(TestProvName.AllAccessLibRed)] string context, [Values] bool accdb, [Values] bool byProviderName)
 		{
 			// a file of its own: the detector caches its probe per connection string
-			var name      = $"UseAccessLibRed.{context}.{(accdb ? "Ace" : "Jet")}";
-			var extension = accdb ? ".accdb" : ".mdb";
-			var opens     = 0;
+			var name             = $"UseAccessLibRed.{context}.{(accdb ? "Ace" : "Jet")}.{(byProviderName ? "Name" : "Argument")}";
+			var extension        = accdb ? ".accdb" : ".mdb";
+			var connectionString = $"Data Source={name}{extension}";
+			var opens            = 0;
 
 			AccessTools.CreateDatabase(name, AccessProvider.LibRed, deleteIfExists: true, version: accdb ? AccessVersion.Ace : AccessVersion.Jet);
 
 			try
 			{
+				var options = byProviderName
+					? new DataOptions()
+						.UseConnectionString(ProviderName.AccessLibRed, connectionString)
+						.UseAccess(o => o)
+					: new DataOptions()
+						.UseAccess(connectionString, AccessProvider.LibRed);
+
 				// the callback sees the detector's probe connection as well as the DataConnection's own
-				var options = new DataOptions()
-					.UseAccess($"Data Source={name}{extension}", AccessProvider.LibRed)
-					.UseBeforeConnectionOpened(_ => opens++);
+				options = options.UseBeforeConnectionOpened(_ => opens++);
 
 				using (var db = new DataConnection(options))
 				{
