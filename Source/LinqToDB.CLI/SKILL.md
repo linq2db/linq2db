@@ -142,7 +142,7 @@ The CLI package includes provider/runtime dependencies for these provider famili
 - Oracle Managed
 - Firebird
 - Sybase ASE
-- Microsoft Access ODBC/OLE DB bridge assemblies, and the managed LibRed engine (`LibRed.Ado`)
+- Microsoft Access ODBC/OLE DB bridge assemblies, and the managed LibRed engine (`LibRed.Ado`, a prerelease package)
 - ClickHouse
 - DuckDB
 - YDB

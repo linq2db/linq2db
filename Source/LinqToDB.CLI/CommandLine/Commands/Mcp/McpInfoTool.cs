@@ -42,7 +42,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			new("Firebird",       ["Firebird"],                        "Firebird SQL",                 true,  null),
 			new("Sybase ASE",     ["Sybase", "Sybase.Managed", "Sybase.Native"], "Sybase ASE T-SQL",    true,  null),
 			new("Microsoft Access", ["Access", "Access.Odbc", "Access.Jet.OleDb", "Access.Jet.Odbc", "Access.Ace.OleDb", "Access.Ace.Odbc"], "Microsoft Access SQL", true, "Requires the matching ODBC driver or OLE DB provider to be installed on the host."),
-			new("Microsoft Access (LibRed)", ["Access.LibRed"],        "Microsoft Access SQL",         true,  "Managed engine bundled with the tool; no ODBC driver or OLE DB provider install needed, on any OS."),
+			new("Microsoft Access (LibRed)", ["Access.LibRed"],        "Microsoft Access SQL",         true,  "Managed engine bundled with the tool (LibRed.Ado, a prerelease package); no ODBC driver or OLE DB provider install needed, on any OS."),
 			new("ClickHouse",     ["ClickHouse.Driver", "ClickHouse.Octonica", "ClickHouse.MySql"], "ClickHouse SQL", true, null),
 			new("DuckDB",         ["DuckDB"],                          "DuckDB SQL",                   true,  null),
 			new("YDB",            ["YDB"],                             "YDB SQL",                      true,  null),
