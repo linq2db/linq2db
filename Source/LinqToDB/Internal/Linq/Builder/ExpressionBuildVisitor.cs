@@ -5354,19 +5354,21 @@ namespace LinqToDB.Internal.Linq.Builder
 			return true;
 		}
 
-		// One client call, so the value is a single parameter of the target enum rather than a cast over the source's; a constant
-		// stays a literal.
-		Expression CastRegisteredEnum(Expression value, Type toEnum, bool nullable)
+		// One client call, so the value is a single parameter of the target enum rather than a cast over the source's. Only a
+		// literal folds: any other immutable value is not in the cache key, and a detached constant would be served to the next one.
+		static Expression CastRegisteredEnum(Expression value, Type toEnum, bool nullable)
 		{
 			var fromEnum = value.Type.UnwrapNullableType();
 
-			Expression cast = nullable
+			if (value.UnwrapConvert() is ConstantExpression { Value: var constant })
+			{
+				var converted = constant == null ? null : Enum.ToObject(toEnum, constant);
+				return Expression.Constant(converted, nullable ? toEnum.MakeNullable() : toEnum);
+			}
+
+			return nullable
 				? Expression.Call(CastNullableEnumMethod.MakeGenericMethod(fromEnum, toEnum), value.Type.IsNullableType ? value : Expression.Convert(value, fromEnum.MakeNullable()))
 				: Expression.Call(CastEnumMethod.MakeGenericMethod(fromEnum, toEnum), value);
-
-			return Builder.CanBeConstant(value)
-				? Expression.Constant(Builder.EvaluateExpression(cast), cast.Type)
-				: cast;
 		}
 
 		internal static readonly MethodInfo CastEnumMethod         = MemberHelper.MethodOfGeneric(() => CastEnum<DataType, DataType>(default));
@@ -5676,25 +5678,48 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		private ISqlPredicate? ConvertInPredicate(Expression value, Expression arr)
 		{
-			if (arr.Type.GetItemType() is { } itemType
-				&& TryGetRegisteredEnumCast(value, itemType, out var enumCast)
-				&& (arr is NewArrayExpression { NodeType: ExpressionType.NewArrayInit } items && items.Expressions.All(Builder.CanBeEvaluatedOnClient)
-					|| Builder.CanBeEvaluatedOnClient(arr)))
+			// A nullable list lifts the cast once more: (E?)(E)x.
+			var castValue = value is UnaryExpression { NodeType: ExpressionType.Convert, Method: null, Operand: UnaryExpression { Type.IsEnum: true } inner } lifted
+				&& lifted.Type == inner.Type.MakeNullable()
+					? inner
+					: value;
+
+			if (arr.Type.GetItemType() is { } itemType && TryGetRegisteredEnumCast(castValue, itemType, out var enumCast))
 			{
 				var sourceEnum = enumCast.Operand.Type.UnwrapNullableType();
 				var nullable   = itemType.IsNullableType || enumCast.Operand.Type.IsNullableType;
 				var sourceType = nullable ? sourceEnum.MakeNullable() : sourceEnum;
 
-				value = enumCast.Operand.Type == sourceType ? enumCast.Operand : Expression.Convert(enumCast.Operand, sourceType);
+				Expression? mapped = null;
 
 				if (arr is NewArrayExpression { NodeType: ExpressionType.NewArrayInit } inline)
 				{
-					arr = Expression.NewArrayInit(sourceType, inline.Expressions.Select(e => CastRegisteredEnum(e, sourceEnum, nullable)));
+					// An item cast the same way is read as its operand, a client item through the cast; anything else keeps the list as written.
+					var elements = new List<Expression>(inline.Expressions.Count);
+
+					foreach (var element in inline.Expressions)
+					{
+						if (TryGetRegisteredEnumCast(element, itemType, out var elementCast) && elementCast.Operand.Type.UnwrapNullableType() == sourceEnum)
+							elements.Add(elementCast.Operand.Type == sourceType ? elementCast.Operand : Expression.Convert(elementCast.Operand, sourceType));
+						else if (Builder.CanBeEvaluatedOnClient(element))
+							elements.Add(CastRegisteredEnum(element, sourceEnum, nullable));
+						else
+							break;
+					}
+
+					if (elements.Count == inline.Expressions.Count)
+						mapped = Expression.NewArrayInit(sourceType, elements);
 				}
-				else
+				else if (Builder.CanBeEvaluatedOnClient(arr))
 				{
 					var item = Expression.Parameter(itemType, "item");
-					arr = Expression.Call(Methods.Enumerable.Select.MakeGenericMethod(itemType, sourceType), arr, Expression.Lambda(Expression.Convert(item, sourceType), item));
+					mapped = Expression.Call(Methods.Enumerable.Select.MakeGenericMethod(itemType, sourceType), arr, Expression.Lambda(Expression.Convert(item, sourceType), item));
+				}
+
+				if (mapped != null)
+				{
+					arr   = mapped;
+					value = enumCast.Operand.Type == sourceType ? enumCast.Operand : Expression.Convert(enumCast.Operand, sourceType);
 				}
 			}
 

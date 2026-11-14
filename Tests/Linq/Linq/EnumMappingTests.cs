@@ -2938,11 +2938,12 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
-		public void DirectEnumCastOverParameterConditionalEqualParameter([DataSources] string context, [Values] bool inline)
+		public void DirectEnumCastOverParameterConditionalEqualParameter([DataSources] string context)
 		{
 			using var db = GetDataContext(context, CreateApiGenderSchema());
 
-			db.InlineParameters = inline;
+			// Inlined, all three values are evaluated beside each other: the fold sees two enum types.
+			db.InlineParameters = true;
 
 			var male   = Gender.Male;
 			var female = Gender.Female;
@@ -3014,6 +3015,148 @@ namespace Tests.Linq
 			var query = selected
 				.Concat(selected)
 				.Where(p => p.Gender == gender);
+
+			AssertQuery(query);
+		}
+
+		sealed record ApiGenderFilter(ApiGender Api)
+		{
+			public IQueryable<Person> Compared(ITestDataContext db) => db.Person.Where(p => (ApiGender)p.Gender == Api);
+			public IQueryable<Person> Listed  (ITestDataContext db) => db.Person.Where(p => new[] { Api }.Contains((ApiGender)(p.ID > 2 ? Gender.Male : Gender.Female)));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void DirectEnumCastComparedWithInstanceValue([DataSources] string context, [Values] bool listed)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			// An immutable value read off an instance is not in the cache key: each instance must send its own.
+			foreach (var api in new[] { ApiGender.Female, ApiGender.Male })
+			{
+				var filter = new ApiGenderFilter(api);
+
+				AssertQuery(listed ? filter.Listed(db) : filter.Compared(db));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void DirectEnumCastOverConstantConditionalContainsNullable([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var genders = new ApiGender?[] { ApiGender.Female };
+
+			var query = db.Person
+				.Where(p => genders.Contains((ApiGender)(p.ID > 2 ? Gender.Male : Gender.Female)));
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void DirectEnumCastContainsInlineArray([DataSources] string context, [Values] bool columnLess)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var query = columnLess
+				? db.Person.Where(p => new[] { ApiGender.Female, ApiGender.Unknown }.Contains((ApiGender)(p.ID > 2 ? Gender.Male : Gender.Female)))
+				: db.Person.Where(p => new[] { ApiGender.Female, ApiGender.Unknown }.Contains((ApiGender)p.Gender));
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void DirectEnumCastContainsInlineArrayEmptyOrMixed([DataSources] string context, [Values] bool empty)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var query = empty
+				? db.Person.Where(p => Array.Empty<ApiGender>().Contains((ApiGender)(p.ID > 2 ? Gender.Male : Gender.Female)))
+				: db.Person.Where(p => new[] { ApiGender.Male, (ApiGender)p.Gender }.Contains((ApiGender)(p.ID > 2 ? Gender.Male : Gender.Female)));
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void DirectEnumCastContainsOverColumn([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var genders = new[] { ApiGender.Female, ApiGender.Unknown };
+
+			var query = db.Person
+				.Where(p => genders.Contains((ApiGender)p.Gender));
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void DirectEnumCastOrderedComparisonMatchesColumn([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			// Both compare the stored values, not C#'s ordinals.
+			var cast = db.Person
+				.Where(p => (ApiGender)p.Gender > ApiGender.Female)
+				.Select(p => p.ID)
+				.OrderBy(id => id)
+				.ToArray();
+
+			var column = db.Person
+				.Where(p => p.Gender > Gender.Female)
+				.Select(p => p.ID)
+				.OrderBy(id => id)
+				.ToArray();
+
+			cast.ShouldBe(column);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void DirectEnumCastCompiledQuery([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var query = CompiledQuery.Compile((ITestDataContext dc, ApiGender gender) =>
+				dc.Person
+					.Where(p => (ApiGender)p.Gender == gender)
+					.Select(p => p.ID)
+					.OrderBy(id => id)
+					.ToArray());
+
+			foreach (var gender in new[] { ApiGender.Female, ApiGender.Male })
+			{
+				var expected = Person
+					.Where(p => (ApiGender)p.Gender == gender)
+					.Select(p => p.ID)
+					.OrderBy(id => id)
+					.ToArray();
+
+				query(db, gender).ShouldBe(expected);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void DirectEnumCastOverConstantConditionalWithObjectConverter([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderObjectParameterSchema());
+
+			var gender = ApiGender.Female;
+
+			var query = db.Person
+				.Where(p => (ApiGender)(p.ID > 2 ? Gender.Male : Gender.Female) == gender);
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void RegisteredEnumCastInsideConditionalEqualParameter([DataSources] string context, [Values] bool coalesce)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var gender = ApiGender.Female;
+
+			var query = coalesce
+				? db.Person.Where(p => ((ApiGender?)p.Gender ?? ApiGender.Male) == gender)
+				: db.Person.Where(p => (p.ID > 2 ? (ApiGender)p.Gender : ApiGender.Male) == gender);
 
 			AssertQuery(query);
 		}
