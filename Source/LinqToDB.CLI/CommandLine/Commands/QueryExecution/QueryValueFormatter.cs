@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.Globalization;
 using System.IO;
+using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -478,8 +479,24 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 					DuckDBDateOnly  date      => FormatDateOnly(date),
 					DuckDBTimeOnly  time      => FormatTimeOnly(time),
 					DuckDBTimestamp timestamp => FormatTimestamp(timestamp),
+					DuckDBDecimal   dec       => FormatDecimal(dec),
 					_                         => base.FormatValue(value, dataTypeName, actualFieldType),
 				};
+
+				// formatted from the unscaled value: DECIMAL(38,x) does not fit System.Decimal
+				static string FormatDecimal(DuckDBDecimal value)
+				{
+					var unscaled = value.Value.ToBigInteger();
+					var digits   = BigInteger.Abs(unscaled).ToString(CultureInfo.InvariantCulture);
+					var sign     = unscaled.Sign < 0 ? "-" : "";
+
+					if (value.Scale == 0)
+						return sign + digits;
+
+					digits = digits.PadLeft(value.Scale + 1, '0');
+
+					return sign + digits[..^value.Scale] + "." + digits[^value.Scale..];
+				}
 
 				static string FormatDateOnly(DuckDBDateOnly value)
 				{
