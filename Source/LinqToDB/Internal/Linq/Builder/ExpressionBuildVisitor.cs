@@ -5347,6 +5347,15 @@ namespace LinqToDB.Internal.Linq.Builder
 			return true;
 		}
 
+		// A nullable list lifts each cast once more: (E?)(E)x.
+		static Expression UnwrapLiftedEnumCast(Expression expression)
+		{
+			return expression is UnaryExpression { NodeType: ExpressionType.Convert, Method: null, Operand: UnaryExpression { Type.IsEnum: true } inner } lifted
+				&& lifted.Type == inner.Type.MakeNullable()
+					? inner
+					: expression;
+		}
+
 		bool TryCompareInRegisteredEnum(ref Expression cast, ref Expression value)
 		{
 			if (!TryGetRegisteredEnumCast(cast, value.Type, out var convert) || !Builder.CanBeEvaluatedOnClient(value))
@@ -5685,13 +5694,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		private ISqlPredicate? ConvertInPredicate(Expression value, Expression arr)
 		{
-			// A nullable list lifts the cast once more: (E?)(E)x.
-			var castValue = value is UnaryExpression { NodeType: ExpressionType.Convert, Method: null, Operand: UnaryExpression { Type.IsEnum: true } inner } lifted
-				&& lifted.Type == inner.Type.MakeNullable()
-					? inner
-					: value;
-
-			if (arr.Type.GetItemType() is { } itemType && TryGetRegisteredEnumCast(castValue, itemType, out var enumCast))
+			if (arr.Type.GetItemType() is { } itemType && TryGetRegisteredEnumCast(UnwrapLiftedEnumCast(value), itemType, out var enumCast))
 			{
 				var sourceEnum = enumCast.Operand.Type.UnwrapNullableType();
 				var nullable   = itemType.IsNullableType || enumCast.Operand.Type.IsNullableType;
@@ -5699,14 +5702,15 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				Expression? mapped = null;
 
-				if (arr is NewArrayExpression { NodeType: ExpressionType.NewArrayInit } inline)
+				// As below: a wrapped inline array is the same list unless it is a client value, which stays a parameter.
+				if ((arr as NewArrayExpression ?? (Builder.CanBeEvaluatedOnClient(arr) ? null : UnwrapInlineArray(arr))) is { NodeType: ExpressionType.NewArrayInit } inline)
 				{
 					// An item cast the same way is read as its operand, a client item through the cast; anything else keeps the list as written.
 					var elements = new List<Expression>(inline.Expressions.Count);
 
 					foreach (var element in inline.Expressions)
 					{
-						if (TryGetRegisteredEnumCast(element, itemType, out var elementCast) && elementCast.Operand.Type.UnwrapNullableType() == sourceEnum)
+						if (TryGetRegisteredEnumCast(UnwrapLiftedEnumCast(element), itemType, out var elementCast))
 							elements.Add(elementCast.Operand.Type == sourceType ? elementCast.Operand : Expression.Convert(elementCast.Operand, sourceType));
 						else if (Builder.CanBeEvaluatedOnClient(element))
 							elements.Add(CastRegisteredEnum(element, sourceEnum, nullable));

@@ -2960,6 +2960,23 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void DirectEnumCastOverParameterConditionalEqualParameterNotInlined(
+			// Firebird 2.5 cannot type a CASE of two parameters (-804 Data type unknown), on master as well.
+			[DataSources(TestProvName.AllFirebirdLess3)] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var male   = Gender.Male;
+			var female = Gender.Female;
+			var gender = ApiGender.Female;
+
+			var query = db.Person
+				.Where(p => (ApiGender)(p.ID > 2 ? male : female) == gender);
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
 		public void DirectEnumCastOverConstantConditionalWithLiteralConverter([DataSources] string context, [Values] bool inline)
 		{
 			var ms = CreateApiGenderSchema();
@@ -3078,6 +3095,20 @@ namespace Tests.Linq
 			var query = empty
 				? db.Person.Where(p => none.Contains((ApiGender)(p.ID > 2 ? Gender.Male : Gender.Female)))
 				: db.Person.Where(p => new[] { ApiGender.Male, (ApiGender)p.Gender }.Contains((ApiGender)(p.ID > 2 ? Gender.Male : Gender.Female)));
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void DirectEnumCastContainsMixedInlineArrayNullableOrWrapped([DataSources] string context, [Values] bool nullable)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var query = nullable
+				? db.Person.Where(p => new ApiGender?[] { ApiGender.Male, (ApiGender)p.Gender }.Contains((ApiGender)(p.ID > 2 ? Gender.Male : Gender.Female)))
+				: db.Person.Where(p => new[] { ApiGender.Male, (ApiGender)p.Gender }
+					.AsEnumerable()
+					.Contains((ApiGender)(p.ID > 2 ? Gender.Male : Gender.Female)));
 
 			AssertQuery(query);
 		}
