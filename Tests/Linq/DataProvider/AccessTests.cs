@@ -447,11 +447,10 @@ namespace Tests.DataProvider
 
 		// one file per context and format: the two LibRed configurations run in parallel lanes
 		[Test]
-		public void CreateDatabaseLibRed([IncludeDataSources(TestProvName.AllAccessLibRed)] string context, [Values] bool accdb)
+		public void CreateDatabaseLibRed([IncludeDataSources(TestProvName.AllAccessLibRed)] string context, [Values] AccessVersion version)
 		{
-			var name             = $"TestDatabase.{context}.{(accdb ? "Ace" : "Jet")}";
-			var extension        = accdb ? ".accdb" : ".mdb";
-			var version          = accdb ? AccessVersion.Ace : AccessVersion.Jet;
+			var name             = $"TestDatabase.{context}.{version}";
+			var extension        = version == AccessVersion.Ace ? ".accdb" : ".mdb";
 			var provider         = AccessTools.GetDataProvider(provider: AccessProvider.LibRed);
 			var options          = new DataOptions()
 				.UseConnectionString(provider, $"Data Source={name}{extension}");
