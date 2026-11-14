@@ -3662,7 +3662,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ThrowsRequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6311")]
 		public void JoinMethodEnumerableTupleOverload([DataSources] string context)
 		{
@@ -3676,7 +3676,7 @@ namespace Tests.Linq
 			AreEqual(ExpectedParentsWithJoinedGrandChildren(), query);
 		}
 
-		[ThrowsRequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6310")]
 		public void JoinMethodEnumerableTupleOverloadWithNullComparer([DataSources] string context)
 		{
