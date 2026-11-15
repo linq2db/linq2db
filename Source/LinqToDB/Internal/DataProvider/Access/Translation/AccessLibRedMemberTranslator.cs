@@ -40,6 +40,18 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 			return new AccessLibRedWindowFunctionsMemberTranslator();
 		}
 
+		protected override IMemberTranslator CreateAggregateFunctionsMemberTranslator()
+		{
+			return new AccessLibRedAggregateFunctionsMemberTranslator();
+		}
+
+		// LibRed takes DISTINCT inside an aggregate, which Jet does not
+		protected class AccessLibRedAggregateFunctionsMemberTranslator : AccessAggregateFunctionsMemberTranslator
+		{
+			protected override bool IsCountDistinctSupported       => true;
+			protected override bool IsAggregationDistinctSupported => true;
+		}
+
 		protected class AccessLibRedDateFunctionsTranslator : DateFunctionsTranslator
 		{
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)

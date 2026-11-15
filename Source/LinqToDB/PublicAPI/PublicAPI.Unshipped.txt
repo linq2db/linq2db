@@ -310,6 +310,8 @@ LinqToDB.Internal.DataProvider.Access.AccessLibRedSqlOptimizer.AccessLibRedSqlOp
 LinqToDB.Internal.DataProvider.Access.AccessMappingSchema.LibRedMappingSchema
 LinqToDB.Internal.DataProvider.Access.AccessMappingSchema.LibRedMappingSchema.LibRedMappingSchema() -> void
 LinqToDB.Internal.DataProvider.Access.Translation.AccessLibRedMemberTranslator
+LinqToDB.Internal.DataProvider.Access.Translation.AccessLibRedMemberTranslator.AccessLibRedAggregateFunctionsMemberTranslator
+LinqToDB.Internal.DataProvider.Access.Translation.AccessLibRedMemberTranslator.AccessLibRedAggregateFunctionsMemberTranslator.AccessLibRedAggregateFunctionsMemberTranslator() -> void
 LinqToDB.Internal.DataProvider.Access.Translation.AccessLibRedMemberTranslator.AccessLibRedDateFunctionsTranslator
 LinqToDB.Internal.DataProvider.Access.Translation.AccessLibRedMemberTranslator.AccessLibRedDateFunctionsTranslator.AccessLibRedDateFunctionsTranslator() -> void
 LinqToDB.Internal.DataProvider.Access.Translation.AccessLibRedMemberTranslator.AccessLibRedMathMemberTranslator
@@ -397,6 +399,8 @@ override LinqToDB.Internal.DataProvider.Access.AccessLibRedSqlExpressionConvertV
 override LinqToDB.Internal.DataProvider.Access.AccessLibRedSqlExpressionConvertVisitor.IsTickArithmeticSupported.get -> bool
 override LinqToDB.Internal.DataProvider.Access.AccessLibRedSqlOptimizer.CorrectExistsAndIn(LinqToDB.Internal.SqlQuery.SqlStatement! statement, LinqToDB.DataOptions! dataOptions, LinqToDB.Mapping.MappingSchema! mappingSchema) -> LinqToDB.Internal.SqlQuery.SqlStatement!
 override LinqToDB.Internal.DataProvider.Access.AccessLibRedSqlOptimizer.CreateConvertVisitor(bool allowModify) -> LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor!
+override LinqToDB.Internal.DataProvider.Access.Translation.AccessLibRedMemberTranslator.AccessLibRedAggregateFunctionsMemberTranslator.IsAggregationDistinctSupported.get -> bool
+override LinqToDB.Internal.DataProvider.Access.Translation.AccessLibRedMemberTranslator.AccessLibRedAggregateFunctionsMemberTranslator.IsCountDistinctSupported.get -> bool
 override LinqToDB.Internal.DataProvider.Access.Translation.AccessLibRedMemberTranslator.AccessLibRedDateFunctionsTranslator.TranslateDateTimeDateAdd(LinqToDB.Linq.Translation.ITranslationContext! translationContext, LinqToDB.Linq.Translation.TranslationFlags translationFlag, LinqToDB.Internal.SqlQuery.ISqlExpression! dateTimeExpression, LinqToDB.Internal.SqlQuery.ISqlExpression! increment, LinqToDB.Sql.DateParts datepart) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.DataProvider.Access.Translation.AccessLibRedMemberTranslator.AccessLibRedDateFunctionsTranslator.TranslateDateTimeDatePart(LinqToDB.Linq.Translation.ITranslationContext! translationContext, LinqToDB.Linq.Translation.TranslationFlags translationFlag, LinqToDB.Internal.SqlQuery.ISqlExpression! dateTimeExpression, LinqToDB.Sql.DateParts datepart) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.DataProvider.Access.Translation.AccessLibRedMemberTranslator.AccessLibRedDateFunctionsTranslator.TranslateUtcNow(LinqToDB.Linq.Translation.ITranslationContext! translationContext, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
@@ -415,6 +419,7 @@ override LinqToDB.Internal.DataProvider.Access.Translation.AccessLibRedMemberTra
 override LinqToDB.Internal.DataProvider.Access.Translation.AccessLibRedMemberTranslator.AccessLibRedWindowFunctionsMemberTranslator.IsVarianceSupported.get -> bool
 override LinqToDB.Internal.DataProvider.Access.Translation.AccessLibRedMemberTranslator.AccessLibRedWindowFunctionsMemberTranslator.IsWindowFilterSupported.get -> bool
 override LinqToDB.Internal.DataProvider.Access.Translation.AccessLibRedMemberTranslator.AccessLibRedWindowFunctionsMemberTranslator.VarianceFunctionName.get -> string!
+override LinqToDB.Internal.DataProvider.Access.Translation.AccessLibRedMemberTranslator.CreateAggregateFunctionsMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator!
 override LinqToDB.Internal.DataProvider.Access.Translation.AccessLibRedMemberTranslator.CreateDateMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator!
 override LinqToDB.Internal.DataProvider.Access.Translation.AccessLibRedMemberTranslator.CreateMathMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator!
 override LinqToDB.Internal.DataProvider.Access.Translation.AccessLibRedMemberTranslator.CreateStringMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator!
