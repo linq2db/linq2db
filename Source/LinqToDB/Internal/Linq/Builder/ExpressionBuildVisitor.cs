@@ -4146,8 +4146,10 @@ namespace LinqToDB.Internal.Linq.Builder
 				var argument = node.Arguments[0];
 
 				// The parameter converter sees only the column's enum, which also accepts an enum mapped onto it: the other side's type decides.
-				var receiverEnum = receiver.Type.UnwrapNullableType() is { IsEnum: true } re ? re : null;
-				var argumentEnum = argument is UnaryExpression { NodeType: ExpressionType.Convert } convert && convert.Operand.Type.UnwrapNullableType() is { IsEnum: true } ae ? ae : null;
+				// Two client values never meet the column's converter.
+				var guarded      = !(Builder.CanBeEvaluatedOnClient(receiver) && Builder.CanBeEvaluatedOnClient(argument));
+				var receiverEnum = guarded && receiver.Type.UnwrapNullableType() is { IsEnum: true } re ? re : null;
+				var argumentEnum = guarded && argument is UnaryExpression { NodeType: ExpressionType.Convert } convert && convert.Operand.Type.UnwrapNullableType() is { IsEnum: true } ae ? ae : null;
 
 				if (receiverEnum != null && !argument.Type.IsValueType && argument.Type.IsAssignableFrom(receiverEnum))
 					argument = GuardEnumEqualsValue(argument, receiverEnum);

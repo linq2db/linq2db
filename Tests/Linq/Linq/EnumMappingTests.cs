@@ -2576,7 +2576,7 @@ namespace Tests.Linq
 			var query = db.Person
 				.Where(p => p.Gender.Equals(value));
 
-			Shouldly.Should.Throw<LinqToDBConvertException>(() => query.ToList());
+			Assert.That(() => query.ToList(), Throws.TypeOf<LinqToDBConvertException>());
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
@@ -2590,7 +2590,7 @@ namespace Tests.Linq
 			var query = db.Person
 				.Where(p => p.Gender.Equals(value));
 
-			Shouldly.Should.Throw<LinqToDBConvertException>(() => query.ToList());
+			Assert.That(() => query.ToList(), Throws.TypeOf<LinqToDBConvertException>());
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
@@ -2603,7 +2603,7 @@ namespace Tests.Linq
 			var query = db.Person
 				.Where(p => value.Equals(p.Gender));
 
-			Shouldly.Should.Throw<LinqToDBConvertException>(() => query.ToList());
+			Assert.That(() => query.ToList(), Throws.TypeOf<LinqToDBConvertException>());
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
@@ -2961,7 +2961,7 @@ namespace Tests.Linq
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
 		public void DirectEnumCastOverParameterConditionalEqualParameterNotInlined(
-			// Firebird cannot type a CASE of two parameters (-804 Data type unknown), on master as well.
+			// Firebird 2.5 to 5 cannot type a CASE of two parameters (-804 Data type unknown); 2.5 refuses it on master as well.
 			[DataSources(TestProvName.AllFirebird)] string context)
 		{
 			using var db = GetDataContext(context, CreateApiGenderSchema());
@@ -3224,9 +3224,7 @@ namespace Tests.Linq
 				_                         => db.Person.Where(p => p.Gender.Equals(ApiGender.Female)),
 			};
 
-			var ex = Shouldly.Should.Throw<LinqToDBConvertException>(() => query.ToList());
-
-			ex.Message.ShouldContain("to type 'Tests.Model.Gender'");
+			Assert.That(() => query.ToList(), Throws.TypeOf<LinqToDBConvertException>().With.Message.Contains("to type 'Tests.Model.Gender'"));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
@@ -3240,7 +3238,7 @@ namespace Tests.Linq
 				? db.Person.Where(p => value.Equals(p.Gender))
 				: db.Person.Where(p => p.Gender.Equals(value));
 
-			Shouldly.Should.Throw<LinqToDBConvertException>(() => query.ToList());
+			Assert.That(() => query.ToList(), Throws.TypeOf<LinqToDBConvertException>());
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
@@ -3267,9 +3265,62 @@ namespace Tests.Linq
 				? db.Person.Where(p => value.Equals(p.Gender))
 				: db.Person.Where(p => p.Gender.Equals(value));
 
-			var ex = Shouldly.Should.Throw<LinqToDBConvertException>(() => query.ToList());
+			Assert.That(() => query.ToList(), Throws.TypeOf<LinqToDBConvertException>().With.Message.Contains("to type 'Tests.Model.Gender'"));
+		}
 
-			ex.Message.ShouldContain("to type 'Tests.Model.Gender'");
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void EqualsTypedRegisteredEnumCheckedPerExecution([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			ApiGender? value = null;
+
+			// One query, so the later executions are cache hits: the check runs on each value, not once at build.
+			var query = db.Person
+				.Where(p => p.Gender.Equals(value));
+
+			var rows = query.ToList();
+
+			rows.ShouldBeEmpty();
+
+			value = ApiGender.Female;
+
+			Assert.That(() => query.ToList(), Throws.TypeOf<LinqToDBConvertException>());
+
+			value = null;
+
+			rows = query.ToList();
+
+			rows.ShouldBeEmpty();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void EqualsColumnEnumOnRegisteredCastThrows([DataSources] string context, [Values] bool mirrored)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var value = Gender.Female;
+
+			// ApiGender.Equals(Gender) is false in C#, in either direction.
+			var query = mirrored
+				? db.Person.Where(p => value.Equals((ApiGender)p.Gender))
+				: db.Person.Where(p => ((ApiGender)p.Gender).Equals(value));
+
+			Assert.That(() => query.ToList(), Throws.TypeOf<LinqToDBConvertException>());
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void ProjectedEnumCastEqualsObjectMirrored([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			object gender = ApiGender.Female;
+
+			var query = db.Person
+				.Select(p => new { p.ID, Gender = (ApiGender)p.Gender })
+				.Where(p => gender.Equals(p.Gender));
+
+			AssertQuery(query);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
