@@ -206,13 +206,11 @@ namespace Tests.Linq
 
 			interceptor.Arm();
 
-			var exception = await Shouldly.Should.ThrowAsync<Exception>(() => db.GetTable<Person>()
-				.ToListAsync());
-
-			exception
-				.ShouldBeOfType<RpcException>()
-				.StatusCode
-				.ShouldBe(StatusCode.Cancelled);
+			await Assert.ThatAsync(
+				() => db.GetTable<Person>()
+					.ToListAsync(),
+				Throws.TypeOf<RpcException>()
+					.With.Property(nameof(RpcException.StatusCode)).EqualTo(StatusCode.Cancelled));
 
 			var released = await interceptor.Released.WaitAsync(Wait);
 

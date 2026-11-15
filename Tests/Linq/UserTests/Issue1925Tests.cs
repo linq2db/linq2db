@@ -71,12 +71,16 @@ namespace Tests.UserTests
 			// LibRed rejects the unterminated bracket as the Microsoft drivers do, with its own exception
 			else if (context.IsAnyOf(TestProvName.AllAccessLibRed))
 			{
-				Assert.Throws<ArgumentException>(() => table
-					.Where(r => Sql.Like(r.Value, "[0"))
-					.ToList());
-				Assert.Throws<ArgumentException>(() => table
-					.Where(r => Sql.Like(r.Value, asParamUnterm))
-					.ToList());
+				Assert.That(
+					() => table
+						.Where(r => Sql.Like(r.Value, "[0"))
+						.ToList(),
+					Throws.TypeOf<ArgumentException>());
+				Assert.That(
+					() => table
+						.Where(r => Sql.Like(r.Value, asParamUnterm))
+						.ToList(),
+					Throws.TypeOf<ArgumentException>());
 			}
 			else
 			{
