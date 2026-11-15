@@ -320,6 +320,7 @@ namespace LinqToDB.Internal.Linq
 				MethodCallExpression { Object: null, Method.IsGenericMethod: true, Arguments: [var argument] } call
 					when call.Method.GetGenericMethodDefinition() is var definition
 						&& (definition == ExpressionBuildVisitor.CheckEnumEqualsArgumentMethod
+							|| definition == ExpressionBuildVisitor.CheckTypedEnumEqualsArgumentMethod
 							|| definition == ExpressionBuildVisitor.CastEnumMethod
 							|| definition == ExpressionBuildVisitor.CastNullableEnumMethod) =>
 					SuggestParameterDisplayName(argument),

@@ -2961,8 +2961,8 @@ namespace Tests.Linq
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
 		public void DirectEnumCastOverParameterConditionalEqualParameterNotInlined(
-			// Firebird 2.5 cannot type a CASE of two parameters (-804 Data type unknown), on master as well.
-			[DataSources(TestProvName.AllFirebirdLess3)] string context)
+			// Firebird cannot type a CASE of two parameters (-804 Data type unknown), on master as well.
+			[DataSources(TestProvName.AllFirebird)] string context)
 		{
 			using var db = GetDataContext(context, CreateApiGenderSchema());
 
@@ -3200,47 +3200,89 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		public enum EqualsShape
+		{
+			Typed,
+			TypedAsObject,
+			Mirrored,
+			Constant,
+		}
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
-		public void EqualsTypedRegisteredEnumOnColumnComparesAsCast([DataSources] string context, [Values] bool mirrored)
+		public void EqualsTypedRegisteredEnumOnColumnThrows([DataSources] string context, [Values] EqualsShape shape)
 		{
 			using var db = GetDataContext(context, CreateApiGenderSchema());
 
 			var value = ApiGender.Female;
 
-			// C# answers false for another enum type; the value is compared as the numeric cast (Gender)value, on every provider.
-			var ids = (mirrored
-					? db.Person.Where(p => value.Equals(p.Gender))
-					: db.Person.Where(p => p.Gender.Equals(value)))
-				.Select(p => p.ID)
-				.OrderBy(id => id)
-				.ToArray();
+			// Gender.Equals(ApiGender) is false in C#, whatever the static type the value is spelled with.
+			var query = shape switch
+			{
+				EqualsShape.Typed         => db.Person.Where(p => p.Gender.Equals(value)),
+				EqualsShape.TypedAsObject => db.Person.Where(p => p.Gender.Equals((object)value)),
+				EqualsShape.Mirrored      => db.Person.Where(p => value.Equals(p.Gender)),
+				_                         => db.Person.Where(p => p.Gender.Equals(ApiGender.Female)),
+			};
 
-			var expected = Person
-				.Where(p => p.Gender == (Gender)value)
-				.Select(p => p.ID)
-				.OrderBy(id => id)
-				.ToArray();
+			var ex = Shouldly.Should.Throw<LinqToDBConvertException>(() => query.ToList());
 
-			ids.ShouldBe(expected);
-
-			ApiGender? none = null;
-
-			var count = db.Person.Count(p => p.Gender.Equals(none));
-
-			count.ShouldBe(0);
+			ex.Message.ShouldContain("to type 'Tests.Model.Gender'");
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
-		public void EqualsInterfaceTypedRegisteredEnumOnColumnThrows([DataSources] string context)
+		public void EqualsTypedUnmappedEnumOnColumnThrows([DataSources] string context, [Values] bool mirrored)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var value = UnmappedEnum.Value1;
+
+			var query = mirrored
+				? db.Person.Where(p => value.Equals(p.Gender))
+				: db.Person.Where(p => p.Gender.Equals(value));
+
+			Shouldly.Should.Throw<LinqToDBConvertException>(() => query.ToList());
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void EqualsNullTypedRegisteredEnumOnColumn([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			ApiGender? value = null;
+
+			var query = db.Person
+				.Where(p => p.Gender.Equals(value));
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void EqualsInterfaceTypedRegisteredEnumOnColumnThrows([DataSources] string context, [Values] bool mirrored)
 		{
 			using var db = GetDataContext(context, CreateApiGenderSchema());
 
 			IComparable value = ApiGender.Female;
 
+			var query = mirrored
+				? db.Person.Where(p => value.Equals(p.Gender))
+				: db.Person.Where(p => p.Gender.Equals(value));
+
+			var ex = Shouldly.Should.Throw<LinqToDBConvertException>(() => query.ToList());
+
+			ex.Message.ShouldContain("to type 'Tests.Model.Gender'");
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void EqualsInterfaceHoldingColumnEnum([DataSources] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			IComparable value = Gender.Female;
+
 			var query = db.Person
 				.Where(p => p.Gender.Equals(value));
 
-			Shouldly.Should.Throw<LinqToDBConvertException>(() => query.ToList());
+			AssertQuery(query);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]

@@ -4145,11 +4145,14 @@ namespace LinqToDB.Internal.Linq.Builder
 				var receiver = node.Object;
 				var argument = node.Arguments[0];
 
-				// The parameter converter sees only the column's enum, which also accepts an enum mapped onto it: the other side's static type decides.
-				if (receiver.Type.UnwrapNullableType() is { IsEnum: true } receiverEnum && !argument.Type.IsValueType && argument.Type.IsAssignableFrom(receiverEnum))
+				// The parameter converter sees only the column's enum, which also accepts an enum mapped onto it: the other side's type decides.
+				var receiverEnum = receiver.Type.UnwrapNullableType() is { IsEnum: true } re ? re : null;
+				var argumentEnum = argument is UnaryExpression { NodeType: ExpressionType.Convert } convert && convert.Operand.Type.UnwrapNullableType() is { IsEnum: true } ae ? ae : null;
+
+				if (receiverEnum != null && !argument.Type.IsValueType && argument.Type.IsAssignableFrom(receiverEnum))
 					argument = GuardEnumEqualsValue(argument, receiverEnum);
-				else if (argument is UnaryExpression { NodeType: ExpressionType.Convert } convert && convert.Operand.Type.UnwrapNullableType() is { IsEnum: true } argumentEnum
-					&& !receiver.Type.IsValueType && receiver.Type.IsAssignableFrom(argumentEnum))
+
+				if (argumentEnum != null && (receiverEnum != null || !receiver.Type.IsValueType && receiver.Type.IsAssignableFrom(argumentEnum)))
 					receiver = GuardEnumEqualsValue(receiver, argumentEnum);
 
 				result = ConvertCompareExpression(ExpressionType.Equal, receiver, argument);
@@ -4250,16 +4253,18 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		internal static readonly MethodInfo CheckEnumEqualsArgumentMethod = MemberHelper.MethodOfGeneric(() => CheckEnumEqualsArgument<DataType>(null));
 
-		// Only a client value whose static type can hold a boxed enum of another type (object, Enum, ValueType, an interface
-		// enums implement) is checked; a constant once, here, so it stays a literal. Anything else is built as before.
+		// A client value that is or can hold an enum of another type (a typed enum, object, Enum, ValueType, an interface enums
+		// implement) is checked per execution, so a null passes and any other enum fails as an unconvertible value does; a constant
+		// is checked once, here, and stays a literal. The receiver's own enum and anything else are built as before.
 		Expression GuardEnumEqualsValue(Expression value, Type enumType)
 		{
 			if (!Builder.CanBeEvaluatedOnClient(value))
 				return value;
 
-			var staticType = value.UnwrapConvertToObject().Type;
+			var operand    = value.UnwrapConvertToObject();
+			var underlying = operand.Type.UnwrapNullableType();
 
-			if (staticType.UnwrapNullableType() == enumType || !staticType.IsAssignableFrom(enumType))
+			if (underlying == enumType || !(underlying.IsEnum || !operand.Type.IsValueType && operand.Type.IsAssignableFrom(enumType)))
 				return value;
 
 			if (Builder.CanBeConstant(value))
@@ -4268,7 +4273,23 @@ namespace LinqToDB.Internal.Linq.Builder
 				return value;
 			}
 
+			// A typed enum keeps its own type, so a null is built as master builds it.
+			if (underlying.IsEnum)
+			{
+				var checkedOperand = Expression.Call(CheckTypedEnumEqualsArgumentMethod.MakeGenericMethod(operand.Type, enumType), operand);
+				return ReferenceEquals(operand, value) ? checkedOperand : Expression.Convert(checkedOperand, value.Type);
+			}
+
 			return Expression.Call(CheckEnumEqualsArgumentMethod.MakeGenericMethod(enumType), value);
+		}
+
+		internal static readonly MethodInfo CheckTypedEnumEqualsArgumentMethod = MemberHelper.MethodOfGeneric(() => CheckTypedEnumEqualsArgument<DataType, DataType>(default));
+
+		static TValue CheckTypedEnumEqualsArgument<TValue, TEnum>(TValue value)
+			where TEnum : struct, Enum
+		{
+			ThrowIfOtherEnum(value, typeof(TEnum));
+			return value;
 		}
 
 		static object? CheckEnumEqualsArgument<TEnum>(object? value)
