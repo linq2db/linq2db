@@ -23,8 +23,8 @@ namespace LinqToDB.Internal.DataProvider.Access
 		}
 
 		// LibRed counts milliseconds and has a 64-bit DateDiff_Big, which lifts the two limits the Access overrides exist for
-		protected override SqlIntervalUnit? FinestDateUnit             => SqlIntervalUnit.Millisecond;
-		public    override SqlIntervalUnit  IntervalResolution         => SqlIntervalUnit.Millisecond;
+		protected override SqlIntervalUnit? FinestDateUnit              => SqlIntervalUnit.Millisecond;
+		public    override SqlIntervalUnit  IntervalResolution          => SqlIntervalUnit.Millisecond;
 		public    override bool             CanLowerIntervalDifference  => true;
 		public    override bool             CanMeasureDifferenceInTicks => true;
 		public    override bool             CanLowerIntervalShift       => true;

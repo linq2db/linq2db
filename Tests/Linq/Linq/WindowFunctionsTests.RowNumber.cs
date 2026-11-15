@@ -172,7 +172,9 @@ namespace Tests.Linq
 				.Select(x => new
 				{
 					x.Id,
-					ByOrder = Sql.Window.RowNumber(f => f.OrderBy(x.NullableIntValue == null ? (bool?)null : x.NullableIntValue > 40).ThenBy(x.Id)),
+					ByOrder = Sql.Window.RowNumber(f => f
+						.OrderBy(x.NullableIntValue == null ? (bool?)null : x.NullableIntValue > 40)
+						.ThenBy(x.Id)),
 				})
 				.OrderBy(x => x.Id)
 				.ToList();
