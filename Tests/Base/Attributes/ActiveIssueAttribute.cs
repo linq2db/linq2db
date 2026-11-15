@@ -392,7 +392,20 @@ namespace Tests
 
 			TestResult ExecuteInner(TestExecutionContext context)
 			{
-				var testResult = innerCommand.Execute(context);
+				TestResult testResult;
+
+				try
+				{
+					testResult = innerCommand.Execute(context);
+				}
+				catch (Exception ex)
+				{
+					// A fixture without [SetUp]/[TearDown] has no command beneath this wrapper that turns the test's
+					// exception into a TestResult, so the exception reaches us instead of the decision code below.
+					// Record it here so a gated failure is still recognised and rewritten.
+					testResult = context.CurrentResult;
+					testResult.RecordException(ex);
+				}
 
 				// Attribute instances come from reflection, so a wrapper cannot recognise itself by reference. The
 				// marker is how an outer wrapper sees that an inner one already decided this case.

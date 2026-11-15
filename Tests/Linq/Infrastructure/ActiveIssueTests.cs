@@ -4,6 +4,8 @@ using LinqToDB;
 
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
+using NUnit.Framework.Internal;
+using NUnit.Framework.Internal.Commands;
 
 using Shouldly;
 
@@ -432,6 +434,75 @@ namespace Tests.Infrastructure
 
 			ActiveIssueAttribute.SelectGoverning([first, second], "SQLite.MS", false, out var ambiguous).ShouldNotBeNull();
 			ambiguous.ShouldBeTrue();
+		}
+
+		#endregion
+
+		#region Command wrapper — issue #6174
+
+		static class WithoutSetUpTearDown
+		{
+			[ActiveIssue(6174, ErrorMessage = "boom")]
+			public static void GatedFailure()
+			{
+				throw new InvalidOperationException("boom");
+			}
+
+			[ActiveIssue(6174, ErrorMessage = "another message")]
+			public static void GatedFailureWithAnotherMessage()
+			{
+				throw new InvalidOperationException("boom");
+			}
+
+		}
+
+		sealed class ThrowingCommand : TestCommand
+		{
+			public ThrowingCommand(Test test)
+				: base(test)
+			{
+			}
+
+			public override TestResult Execute(TestExecutionContext context)
+			{
+				// A fixture without [SetUp]/[TearDown] has no command beneath the wrapper that turns the test's
+				// exception into a TestResult, so this is how the exception reaches the attribute.
+				throw new InvalidOperationException("boom");
+			}
+		}
+
+		static TestExecutionContext BuildContext(string methodName)
+		{
+			var test = new TestMethod(new MethodWrapper(typeof(WithoutSetUpTearDown), methodName));
+
+			return new TestExecutionContext
+			{
+				CurrentTest   = test,
+				CurrentResult = test.MakeTestResult(),
+			};
+		}
+
+		[Test]
+		public void Execute_ThrownExceptionWithoutSetUpTearDown_IsInconclusive()
+		{
+			var context = BuildContext(nameof(WithoutSetUpTearDown.GatedFailure));
+
+			var result = new ActiveIssueAttribute(6174).Wrap(new ThrowingCommand(context.CurrentTest)).Execute(context);
+
+			result.ResultState.Status.ShouldBe(TestStatus.Inconclusive);
+			result.Message.ShouldContain("Known issue");
+			result.Message.ShouldContain("6174");
+		}
+
+		[Test]
+		public void Execute_ThrownExceptionWithoutSetUpTearDown_MismatchStaysFailure()
+		{
+			var context = BuildContext(nameof(WithoutSetUpTearDown.GatedFailureWithAnotherMessage));
+
+			var result = new ActiveIssueAttribute(6174).Wrap(new ThrowingCommand(context.CurrentTest)).Execute(context);
+
+			result.ResultState.Status.ShouldBe(TestStatus.Failed);
+			result.Message.ShouldContain("Expected");
 		}
 
 		#endregion
