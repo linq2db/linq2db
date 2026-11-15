@@ -2962,7 +2962,8 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
 		public void DirectEnumCastOverParameterConditionalEqualParameterNotInlined(
 			// Firebird 2.5 to 5 cannot type a CASE of two parameters (-804 Data type unknown); 2.5 refuses it on master as well.
-			[DataSources(TestProvName.AllFirebird)] string context)
+			// DB2 refuses it as an untyped parameter marker (SQL0418N).
+			[DataSources(TestProvName.AllFirebird, ProviderName.DB2)] string context)
 		{
 			using var db = GetDataContext(context, CreateApiGenderSchema());
 
@@ -3024,7 +3025,9 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
-		public void SelectedEnumParameterConcatCompared([DataSources] string context)
+		public void SelectedEnumParameterConcatCompared(
+			// Jet answers "Query is too complex" for a parameter projected through UNION ALL and filtered outside; master emits the same SQL.
+			[DataSources(TestProvName.AllAccessJet)] string context)
 		{
 			using var db = GetDataContext(context, CreateApiGenderSchema());
 
@@ -3268,7 +3271,7 @@ namespace Tests.Linq
 			Assert.That(() => query.ToList(), Throws.TypeOf<LinqToDBConvertException>().With.Message.Contains("to type 'Tests.Model.Gender'"));
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272"), QueryCacheTest]
 		public void EqualsTypedRegisteredEnumCheckedPerExecution([DataSources] string context)
 		{
 			using var db = GetDataContext(context, CreateApiGenderSchema());
@@ -3368,27 +3371,29 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		public enum MissingShape
-		{
-			EqualLiteral,
-			EqualParameter,
-			NotEqualParameter,
-		}
-
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
-		public void RegisteredEnumValueWithoutCounterpart([DataSources] string context, [Values] MissingShape shape)
+		public void RegisteredEnumValueWithoutCounterpart([DataSources] string context)
 		{
 			using var db = GetDataContext(context, CreateApiGenderSchema());
 
 			// An API value Gender has no member for: no row holds it.
+			var query = db.Person.Where(p => (ApiGender)p.Gender == (ApiGender)99);
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void RegisteredEnumValueWithoutCounterpartParameter(
+			// Firebird and DB2 type the parameter as the CHAR(1) column and refuse the unmapped '99' (string truncation), as master does for a plain Gender parameter.
+			[DataSources(TestProvName.AllFirebird, ProviderName.DB2)] string context, [Values] bool notEqual)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
 			var missing = (ApiGender)99;
 
-			var query = shape switch
-			{
-				MissingShape.EqualLiteral   => db.Person.Where(p => (ApiGender)p.Gender == (ApiGender)99),
-				MissingShape.EqualParameter => db.Person.Where(p => (ApiGender)p.Gender == missing),
-				_                           => db.Person.Where(p => (ApiGender)p.Gender != missing),
-			};
+			var query = notEqual
+				? db.Person.Where(p => (ApiGender)p.Gender != missing)
+				: db.Person.Where(p => (ApiGender)p.Gender == missing);
 
 			AssertQuery(query);
 		}
