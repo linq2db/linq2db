@@ -843,6 +843,80 @@ namespace Tests.Linq
 			query.Count().ShouldBe(1);
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2815")]
+		public void LeftJoinRemovedFromExistsSubquery()
+		{
+			using var db = GetDataConnection();
+
+			var query = db.Parent.Where(p => db.Child
+				.Where(c => c.ParentID == p.ParentID)
+				.SelectMany(
+					c => db.GrandChild.Where(g => g.ChildID == c.ChildID).DefaultIfEmpty(),
+					(c, g) => new { c, g })
+				.Any(x => x.c.ChildID > 0));
+
+			query.ToArray();
+
+			var exists = FindExists(query.GetSelectQuery());
+
+			exists.ShouldNotBeNull();
+			exists!.SubQuery.From.Tables[0].Joins.ShouldBeEmpty();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2815")]
+		public void LeftJoinKeptInExistsSubqueryWhenRightTableIsReferenced()
+		{
+			using var db = GetDataConnection();
+
+			var query = db.Parent.Where(p => db.Child
+				.Where(c => c.ParentID == p.ParentID)
+				.SelectMany(
+					c => db.GrandChild.Where(g => g.ChildID == c.ChildID).DefaultIfEmpty(),
+					(c, g) => new { c, g })
+				.Any(x => x.g!.ChildID > 0));
+
+			query.ToArray();
+
+			var exists = FindExists(query.GetSelectQuery());
+
+			exists.ShouldNotBeNull();
+			exists!.SubQuery.From.Tables[0].Joins.ShouldNotBeEmpty();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2815")]
+		public void LeftJoinRemovedFromNotExistsSubquery()
+		{
+			using var db = GetDataConnection();
+
+			var query = db.Parent.Where(p => !db.Child
+				.Where(c => c.ParentID == p.ParentID)
+				.SelectMany(
+					c => db.GrandChild.Where(g => g.ChildID == c.ChildID).DefaultIfEmpty(),
+					(c, g) => new { c, g })
+				.Any(x => x.c.ChildID > 0));
+
+			query.ToArray();
+
+			var exists = FindExists(query.GetSelectQuery());
+
+			exists.ShouldNotBeNull();
+			exists!.IsNot.ShouldBeTrue();
+			exists.SubQuery.From.Tables[0].Joins.ShouldBeEmpty();
+		}
+
+		static SqlPredicate.Exists? FindExists(IQueryElement element)
+		{
+			SqlPredicate.Exists? found = null;
+
+			element.Visit(e =>
+			{
+				if (e is SqlPredicate.Exists exists)
+					found = exists;
+			});
+
+			return found;
+		}
+
 		#endregion
 	}
 }

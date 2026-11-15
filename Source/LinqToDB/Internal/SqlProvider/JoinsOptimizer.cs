@@ -15,7 +15,24 @@ namespace LinqToDB.Internal.SqlProvider
 
 		public SqlStatement Optimize(SqlStatement statement, EvaluationContext evaluationContext)
 		{
-			RemoveUnusedLeftJoins(statement, evaluationContext);
+			// Inside an EXISTS subquery only row presence matters, so an outer join cannot change the
+			// result even when its cardinality is 1..N (issue #2815). Collect the subqueries first:
+			// removing joins while walking the tree would re-enter the visitor.
+			List<SelectQuery>? existsQueries = null;
+
+			statement.Visit(e =>
+			{
+				if (e is SqlPredicate.Exists exists)
+					(existsQueries ??= new()).Add(exists.SubQuery);
+			});
+
+			if (existsQueries != null)
+			{
+				foreach (var existsQuery in existsQueries)
+					RemoveUnusedLeftJoins(existsQuery, evaluationContext, ignoreJoinCardinality: true);
+			}
+
+			RemoveUnusedLeftJoins(statement, evaluationContext, ignoreJoinCardinality: false);
 
 			statement = RemoveDuplicateJoins(statement);
 
@@ -25,16 +42,16 @@ namespace LinqToDB.Internal.SqlProvider
 		/// <summary>
 		/// Removes left joins if they doesn't change query cardinality and joined tables not used in query.
 		/// </summary>
-		void RemoveUnusedLeftJoins(SqlStatement statement, EvaluationContext evaluationContext)
+		void RemoveUnusedLeftJoins(IQueryElement element, EvaluationContext evaluationContext, bool ignoreJoinCardinality)
 		{
-			statement.Visit((this_: this, statement, evaluationContext), static (ctx, e) =>
+			element.Visit((this_: this, statement: element, evaluationContext, ignoreJoinCardinality), static (ctx, e) =>
 			{
 				if (e is SqlTableSource source)
 				{
 					// detect unused LEFT joins that doesn't change query cardinality and remove them
 					for (var index = source.Joins.Count - 1; index >= 0; index--)
 					{
-						if (ctx.this_.CanRemoveLeftJoin(ctx.statement, source.Joins[index], ctx.evaluationContext))
+						if (ctx.this_.CanRemoveLeftJoin(ctx.statement, source.Joins[index], ctx.evaluationContext, ctx.ignoreJoinCardinality))
 							source.Joins.RemoveAt(index);
 					}
 				}
@@ -200,7 +217,7 @@ namespace LinqToDB.Internal.SqlProvider
 		}
 
 		#region Helpers
-		bool CanRemoveLeftJoin(SqlStatement statement, SqlJoinedTable join, EvaluationContext evaluationContext)
+		bool CanRemoveLeftJoin(IQueryElement statement, SqlJoinedTable join, EvaluationContext evaluationContext, bool ignoreJoinCardinality)
 		{
 			// left joins only
 			if (join.JoinType is not JoinType.Left)
@@ -226,7 +243,7 @@ namespace LinqToDB.Internal.SqlProvider
 				(e is SqlColumn column && column.Parent?.SourceID == sourceID)))
 				return false;
 
-			if (!IsLeftJoinCardinalityPreserved(join, evaluationContext))
+			if (!ignoreJoinCardinality && !IsLeftJoinCardinalityPreserved(join, evaluationContext))
 				return false;
 
 			return true;
