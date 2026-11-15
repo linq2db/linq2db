@@ -306,6 +306,12 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				}
 #endif
 			}
+#if SUPPORTS_DATEONLY
+			else if (value is TimeOnly to && type.DataType == DataType.TimeTZ)
+			{
+				value = DateTimeOffset.MinValue + to.ToTimeSpan();
+			}
+#endif
 			else if (value is DateTimeOffset dto && type.DataType == DataType.DateTime)
 			{
 				value = dto.DateTime;

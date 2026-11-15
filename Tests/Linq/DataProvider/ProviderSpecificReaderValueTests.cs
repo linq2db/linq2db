@@ -290,7 +290,9 @@ namespace Tests.DataProvider
 			{
 				AssertReadMatrix(conn, "CAST(123 AS INTEGER)"                         , typeof(int)                  , typeof(int)     , "123");
 				AssertReadMatrix(conn, "CAST(1234567890123 AS BIGINT)"                , typeof(long)                 , typeof(long)    , "1234567890123");
-				AssertReadMatrix(conn, "CAST(123.45 AS DECIMAL(10,2))"                , typeof(decimal)              , typeof(decimal) , "123.45");
+				AssertReadMatrix(conn, "CAST(123.45 AS DECIMAL(10,2))"                , typeof(DuckDBDecimal)        , typeof(decimal) , "123.45");
+				AssertReadMatrix(conn, "CAST(-0.05 AS DECIMAL(10,2))"                 , typeof(DuckDBDecimal)        , typeof(decimal) , "-0.05");
+				AssertReadMatrix(conn, "CAST('1234567890123456789012345678.0123456789' AS DECIMAL(38,10))", typeof(DuckDBDecimal), typeof(DuckDBDecimal), "1234567890123456789012345678.0123456789", providerSpecificOnly: true);
 				AssertReadMatrix(conn, "CAST(1.25 AS REAL)"                           , typeof(float)                , typeof(float)   , "1.25");
 				AssertReadMatrix(conn, "CAST(1.25 AS DOUBLE)"                         , typeof(double)               , typeof(double)  , "1.25");
 				AssertReadMatrix(conn, "CAST('text' AS VARCHAR(10))"                  , typeof(string)               , typeof(string)  , "text");
