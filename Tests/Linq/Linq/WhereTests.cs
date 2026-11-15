@@ -2624,7 +2624,7 @@ namespace Tests.Linq
 		public void InlineArrayMinMax([DataSources(
 			TestProvName.AllOracle,
 			TestProvName.AllSybase,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			TestProvName.AllMariaDB,
 			TestProvName.AllMySql57,
 			TestProvName.AllDB2,
