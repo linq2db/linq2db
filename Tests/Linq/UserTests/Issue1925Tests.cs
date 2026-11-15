@@ -58,14 +58,14 @@ namespace Tests.UserTests
 			if (context.IsAnyOf(TestProvName.AllAccessOleDb))
 			{
 #pragma warning disable CA1416 // windows-specific API
-				Assert.Throws<OleDbException>(() => table.Where(r => Sql.Like(r.Value, "[0")).ToList());
-				Assert.Throws<OleDbException>(() => table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList());
+				Assert.That(() => table.Where(r => Sql.Like(r.Value, "[0")).ToList(), Throws.TypeOf<OleDbException>());
+				Assert.That(() => table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList(), Throws.TypeOf<OleDbException>());
 #pragma warning disable CA1416
 			}
 			else if (context.IsAnyOf(TestProvName.AllAccessOdbc))
 			{
-				Assert.Throws<OdbcException>(() => table.Where(r => Sql.Like(r.Value, "[0")).ToList());
-				Assert.Throws<OdbcException>(() => table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList());
+				Assert.That(() => table.Where(r => Sql.Like(r.Value, "[0")).ToList(), Throws.TypeOf<OdbcException>());
+				Assert.That(() => table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList(), Throws.TypeOf<OdbcException>());
 			}
 			else
 			{

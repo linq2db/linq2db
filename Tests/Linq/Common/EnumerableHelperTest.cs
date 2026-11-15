@@ -37,10 +37,10 @@ namespace Tests.Common
 			{
 				var array1 = enumerable2.ToList();
 				Assert.That(array1, Is.EqualTo(new int[] { 0, 1, 2 }));
-				Assert.Throws<InvalidOperationException>(() =>
+				Assert.That(() =>
 				{
 					var array2 = enumerable2.ToList();
-				});
+				}, Throws.TypeOf<InvalidOperationException>());
 				return;
 			}
 		}
@@ -75,10 +75,10 @@ namespace Tests.Common
 				await foreach (var elem in enumerable2)
 					array1.Add(elem);
 				Assert.That(array1, Is.EqualTo(new int[] { 0, 1, 2 }));
-				await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+				await Assert.ThatAsync(async () =>
 				{
 					await foreach (var _ in enumerable2) { }
-				});
+				}, Throws.TypeOf<InvalidOperationException>());
 				return;
 			}
 		}

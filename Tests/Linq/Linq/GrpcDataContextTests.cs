@@ -138,14 +138,12 @@ namespace Tests.Linq
 			await interceptor.Entered.WaitAsync(Wait);
 			cts.Cancel();
 
-			var exception = await Assert.CatchAsync(() => query);
-
-			exception.ShouldBeOfType<OperationCanceledException>();
-			((OperationCanceledException)exception).CancellationToken.ShouldBe(cts.Token);
-			exception.InnerException
-				.ShouldBeOfType<RpcException>()
-				.StatusCode
-				.ShouldBe(StatusCode.Cancelled);
+			await Assert.ThatAsync(
+				() => query,
+				Throws.TypeOf<OperationCanceledException>()
+					.With.Property(nameof(OperationCanceledException.CancellationToken)).EqualTo(cts.Token)
+					.And.InnerException.TypeOf<RpcException>()
+					.And.InnerException.Property(nameof(RpcException.StatusCode)).EqualTo(StatusCode.Cancelled));
 
 			var released = await interceptor.Released.WaitAsync(Wait);
 
@@ -178,11 +176,11 @@ namespace Tests.Linq
 
 			async Task AssertCancelled(Func<Task> call)
 			{
-				var exception = await Assert.CatchAsync(call);
-
 				// grpc-dotnet itself throws it for a token cancelled before the call starts
-				exception.ShouldBeOfType<OperationCanceledException>();
-				((OperationCanceledException)exception).CancellationToken.ShouldBe(cts.Token);
+				await Assert.ThatAsync(
+					call,
+					Throws.TypeOf<OperationCanceledException>()
+						.With.Property(nameof(OperationCanceledException.CancellationToken)).EqualTo(cts.Token));
 			}
 		}
 
@@ -208,7 +206,7 @@ namespace Tests.Linq
 
 			interceptor.Arm();
 
-			var exception = await Assert.CatchAsync(() => db.GetTable<Person>()
+			var exception = await Shouldly.Should.ThrowAsync<Exception>(() => db.GetTable<Person>()
 				.ToListAsync());
 
 			exception
@@ -247,9 +245,7 @@ namespace Tests.Linq
 			await interceptor.Entered.WaitAsync(Wait);
 			cts.Cancel();
 
-			var exception = await Assert.CatchAsync(() => commit);
-
-			exception.ShouldBeOfType<OperationCanceledException>();
+			await Assert.ThatAsync(() => commit, Throws.TypeOf<OperationCanceledException>());
 
 			var released = await interceptor.Released.WaitAsync(Wait);
 

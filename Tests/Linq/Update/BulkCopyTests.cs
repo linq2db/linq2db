@@ -253,9 +253,8 @@ namespace Tests.xUpdate
 					|| copyType == BulkCopyType.MultipleRows
 					|| copyType == BulkCopyType.ProviderSpecific))
 			{
-				var ex = (await Assert.CatchAsync(async () => await perform()))!;
-				Assert.That(ex, Is.InstanceOf<LinqToDBException>());
-				Assert.That(ex.Message, Is.EqualTo("BulkCopyOptions.KeepIdentity = true is not supported by Firebird provider. If you use generators with triggers, you should disable triggers during BulkCopy execution manually."));
+				await Assert.ThatAsync(async () => await perform(),
+					Throws.InstanceOf<LinqToDBException>().With.Message.EqualTo("BulkCopyOptions.KeepIdentity = true is not supported by Firebird provider. If you use generators with triggers, you should disable triggers during BulkCopy execution manually."));
 				return false;
 			}
 
@@ -275,9 +274,8 @@ namespace Tests.xUpdate
 					|| (context.IsAnyOf(ProviderName.SapHanaOdbc) && copyType == BulkCopyType.ProviderSpecific))
 				&& keepIdentity == true)
 			{
-				var ex = (await Assert.CatchAsync(async () => await perform()))!;
-				Assert.That(ex, Is.InstanceOf<LinqToDBException>());
-				Assert.That(ex.Message, Is.EqualTo("BulkCopyOptions.KeepIdentity = true is not supported by BulkCopyType.RowByRow mode"));
+				await Assert.ThatAsync(async () => await perform(),
+					Throws.InstanceOf<LinqToDBException>().With.Message.EqualTo("BulkCopyOptions.KeepIdentity = true is not supported by BulkCopyType.RowByRow mode"));
 				return false;
 			}
 

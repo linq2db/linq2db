@@ -1775,11 +1775,12 @@ namespace Tests.Linq
 					TestField = 5
 				});
 
-				Assert.Throws<LinqToDBConvertException>(() =>
+				Assert.That(() =>
 					db.GetTable<UndefinedValueTest>()
 						.Select(r => new { r.Id, r.TestField })
 						.Where(r => r.Id == RID)
-						.ToList());
+						.ToList(),
+					Throws.TypeOf<LinqToDBConvertException>());
 			}
 		}
 

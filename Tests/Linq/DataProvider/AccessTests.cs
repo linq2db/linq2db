@@ -592,19 +592,19 @@ namespace Tests.DataProvider
 				}
 				else if (isParameter)
 				{
-					Assert.DoesNotThrow(() => db.ExecuteReader("SELECT DISTINCT ?", new DataParameter() { Value = value }));
-					Assert.DoesNotThrow(() => db.ExecuteReader("SELECT DISTINCT CVar(?)", new DataParameter() { Value = value }));
+					db.ExecuteReader("SELECT DISTINCT ?", new DataParameter() { Value = value });
+					db.ExecuteReader("SELECT DISTINCT CVar(?)", new DataParameter() { Value = value });
 				}
 				else if (hasValue)
 				{
-					Assert.DoesNotThrow(() => db.ExecuteReader("SELECT DISTINCT 3"));
-					Assert.DoesNotThrow(() => db.ExecuteReader("SELECT DISTINCT CVar(3)"));
+					db.ExecuteReader("SELECT DISTINCT 3");
+					db.ExecuteReader("SELECT DISTINCT CVar(3)");
 
 				}
 				else
 				{
-					Assert.DoesNotThrow(() => db.ExecuteReader("SELECT DISTINCT NULL"));
-					Assert.DoesNotThrow(() => db.ExecuteReader("SELECT DISTINCT CVar(NULL)"));
+					db.ExecuteReader("SELECT DISTINCT NULL");
+					db.ExecuteReader("SELECT DISTINCT CVar(NULL)");
 				}
 			}
 		}

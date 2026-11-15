@@ -26,10 +26,11 @@ namespace Tests.UserTests
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<TestClass>())
 			{ 
-				await Assert.ThrowsAsync<InvalidOperationException>(() => db.GetTable<TestClass>()
+				await Assert.ThatAsync(() => db.GetTable<TestClass>()
 					.Where(x => x.Id == 0)
 					.Select(x => x.Value)
-					.MaxAsync());
+					.MaxAsync(),
+					Throws.TypeOf<InvalidOperationException>());
 
 				var value1 = await db.GetTable<TestClass>()
 					.Where(x => x.Id == 0)

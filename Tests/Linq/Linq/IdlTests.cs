@@ -297,10 +297,12 @@ namespace Tests.Linq
 				Assert.That(db.Patient.Where(x => x.PersonID < 0).Max(x => (int?)x.PersonID), Is.Null);
 			}
 
-			Assert.Catch<InvalidOperationException>(
-				() => db.Patient.Where(x => x.PersonID < 0).Select(x => x.PersonID).Max());
-			Assert.Catch<InvalidOperationException>(
-				() => db.Patient.Where(x => x.PersonID < 0).Max(x => x.PersonID));
+			Assert.That(
+				() => db.Patient.Where(x => x.PersonID < 0).Select(x => x.PersonID).Max(),
+				Throws.InstanceOf<InvalidOperationException>());
+			Assert.That(
+				() => db.Patient.Where(x => x.PersonID < 0).Max(x => x.PersonID),
+				Throws.InstanceOf<InvalidOperationException>());
 		}
 
 		[Test]
@@ -498,8 +500,8 @@ namespace Tests.Linq
 					 join p2 in db.Person on p.ID equals p2.ID
 					 select p2;
 
-			Assert.DoesNotThrow(() => q2.Max(x => x.ID));
-			Assert.DoesNotThrow(() => q2.Count());
+			q2.Max(x => x.ID);
+			q2.Count();
 		}
 
 		[Test]
@@ -512,8 +514,8 @@ namespace Tests.Linq
 					 join p2 in db.Person on p.ID equals p2.ID
 					 select p2;
 
-			await Assert.DoesNotThrowAsync(() => q2.MaxAsync(x => x.ID));
-			await Assert.DoesNotThrowAsync(() => q2.CountAsync());
+			await q2.MaxAsync(x => x.ID);
+			await q2.CountAsync();
 		}
 
 		[Obsolete("Remove test after API removed")]
@@ -561,12 +563,12 @@ namespace Tests.Linq
 				if (useUpdateWithTarget)
 				{
 					// this failed for MySql and SQLite but works with MS SQL
-					Assert.DoesNotThrow(() => parents.Update(db.Parent, x => new Parent { Value1 = 5 }));
+					parents.Update(db.Parent, x => new Parent { Value1 = 5 });
 				}
 				else
 				{
 					// this works with MySql but failed for SQLite and MS SQL
-					Assert.DoesNotThrow(() => parents.Set(x => x.Value1, 5).Update());
+					parents.Set(x => x.Value1, 5).Update();
 				}
 			}
 			finally
@@ -594,12 +596,12 @@ namespace Tests.Linq
 				if (useUpdateWithTarget)
 				{
 					// this failed for MySql and SQLite but works with MS SQL
-					Assert.DoesNotThrow(() => parents.Update(q => q, x => new Parent { Value1 = 5 }));
+					parents.Update(q => q, x => new Parent { Value1 = 5 });
 				}
 				else
 				{
 					// this works with MySql but failed for SQLite and MS SQL
-					Assert.DoesNotThrow(() => parents.Set(x => x.Value1, 5).Update());
+					parents.Set(x => x.Value1, 5).Update();
 				}
 			}
 			finally

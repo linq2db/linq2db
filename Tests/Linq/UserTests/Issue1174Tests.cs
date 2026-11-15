@@ -67,7 +67,7 @@ namespace Tests.UserTests
 				var user1Task = db1.Users.FirstAsync();
 				var user2Task = db2.Users.FirstAsync();
 
-				await Assert.DoesNotThrowAsync(() => Task.WhenAll(user1Task, user2Task));
+				await Task.WhenAll(user1Task, user2Task);
 				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(user1Task.Result, Is.Not.Null);

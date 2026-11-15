@@ -86,25 +86,24 @@ namespace Tests.Exceptions
 
 			var n = 555;
 
-			// generic overload: NUnit 5.0.0's Catch(Action, string) matches the exact type
-			var ex = Assert.Catch<Exception>(
+			var ex = Shouldly.Should.Throw<Exception>(
 					() =>
 						db.Parent.Insert(() => new Parent
 						{
 							ParentID = n,
 							Value1   = n
 						}),
-					"Invalid object name 'Parent1'.")!;
+					"Invalid object name 'Parent1'.");
 			Assert.That(ex.GetType().Name, Is.EqualTo("SqlException"));
 
-			ex = Assert.Catch<Exception>(
+			ex = Shouldly.Should.Throw<Exception>(
 				() =>
 					db.Parent.Insert(() => new Parent
 					{
 						ParentID = n,
 						Value1 = n
 					}),
-				"Invalid object name 'Parent1'.")!;
+				"Invalid object name 'Parent1'.");
 			Assert.That(ex.GetType().Name, Is.EqualTo("SqlException"));
 
 			db.Parent.Delete(p => p.ParentID == n);

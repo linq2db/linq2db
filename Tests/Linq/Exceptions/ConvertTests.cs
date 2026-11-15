@@ -16,8 +16,9 @@ namespace Tests.Exceptions
 		[Test]
 		public void ConvertToEnum1()
 		{
-			Assert.Throws<LinqToDBConvertException>(
+			Assert.That(
 				() => ConvertTo<Enum1>.From(1),
+				Throws.TypeOf<LinqToDBConvertException>(),
 				"Mapping ambiguity. MapValue(1) attribute is defined for both 'Tests.Exceptions.ConvertTest+Enum1.Value1' and 'Tests.Exceptions.ConvertTest+Enum1.Value2'.");
 		}
 	}

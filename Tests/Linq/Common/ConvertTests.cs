@@ -447,11 +447,13 @@ namespace Tests.Common
 		{
 			var cf = new MappingSchema("1").GetConverter<Enum10,Enum11>()!;
 
-			Assert.Throws<LinqToDBConvertException>(
+			Assert.That(
 				() => cf(Enum10.Value2),
+				Throws.TypeOf<LinqToDBConvertException>(),
 				"Mapping ambiguity. 'Tests.Common.ConvertTest+Enum10.Value1' can be mapped to either 'Tests.Common.ConvertTest+Enum11.Value2' or 'Tests.Common.ConvertTest+Enum11.Value3'.");
-			Assert.Throws<LinqToDBConvertException>(
+			Assert.That(
 				() => cf(Enum10.Value1),
+				Throws.TypeOf<LinqToDBConvertException>(),
 				"Mapping ambiguity. 'Tests.Common.ConvertTest+Enum10.Value1' can be mapped to either 'Tests.Common.ConvertTest+Enum11.Value2' or 'Tests.Common.ConvertTest+Enum11.Value3'.");
 		}
 
@@ -494,8 +496,9 @@ namespace Tests.Common
 		[Test]
 		public void ConvertToEnum14()
 		{
-			Assert.Throws<LinqToDBConvertException>(
+			Assert.That(
 				() => ConvertTo<Enum13>.From(Enum12.Value2),
+				Throws.TypeOf<LinqToDBConvertException>(),
 				"Mapping ambiguity. 'Tests.Common.ConvertTest+Enum12.Value2' can be mapped to either 'Tests.Common.ConvertTest+Enum13.Value1' or 'Tests.Common.ConvertTest+Enum13.Value3'.");
 		}
 

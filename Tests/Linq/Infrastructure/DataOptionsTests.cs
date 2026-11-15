@@ -693,8 +693,9 @@ namespace Tests.Infrastructure
 		public void TryUseConfigurationStringTest()
 		{
 			using var db = new TestDataConnection();
-			Assert.Throws<LinqToDBException>(
+			Assert.That(
 				() => { using (db.UseOptions(o => o.UseConfiguration("new config"))) { } },
+				Throws.TypeOf<LinqToDBException>(),
 				"ConfigurationString cannot be changed.");
 		}
 
@@ -702,8 +703,9 @@ namespace Tests.Infrastructure
 		public void TryUseConnectionStringTest()
 		{
 			using var db = new TestDataConnection();
-			Assert.Throws<LinqToDBException>(
+			Assert.That(
 				() => { using (db.UseOptions(o => o.UseConnectionString("new config"))) { } },
+				Throws.TypeOf<LinqToDBException>(),
 				"ConnectionString cannot be changed.");
 	}
 
@@ -711,8 +713,9 @@ namespace Tests.Infrastructure
 		public void TryUseProviderNameTest()
 		{
 			using var db = new TestDataConnection();
-			Assert.Throws<LinqToDBException>(
+			Assert.That(
 				() => { using (db.UseOptions(o => o.UseProvider("new provider"))) { } },
+				Throws.TypeOf<LinqToDBException>(),
 				"ProviderName cannot be changed.");
 }
 
@@ -720,8 +723,9 @@ namespace Tests.Infrastructure
 		public void TryWithDbConnectionTest()
 		{
 			using var db = new TestDataConnection();
-			Assert.Throws<LinqToDBException>(
+			Assert.That(
 				() => { using (db.UseOptions(o => o.WithOptions<ConnectionOptions>(co => co.WithDbConnection(db.OpenDbConnection())))) { } },
+				Throws.TypeOf<LinqToDBException>(),
 				"DbConnection cannot be changed.");
 		}
 
@@ -732,8 +736,9 @@ namespace Tests.Infrastructure
 
 			db.BeginTransaction();
 
-			Assert.Throws<LinqToDBException>(
+			Assert.That(
 				() => { using (db.UseOptions(o => o.WithOptions<ConnectionOptions>(co => co.WithDbTransaction(db.Transaction!)))) { } },
+				Throws.TypeOf<LinqToDBException>(),
 				"DbTransaction cannot be changed.");
 		}
 
@@ -741,8 +746,9 @@ namespace Tests.Infrastructure
 		public void TryWithDisposeConnectionTest()
 		{
 			using var db = new TestDataConnection();
-			Assert.Throws<LinqToDBException>(
+			Assert.That(
 				() => { using (db.UseOptions(o => o.WithOptions<ConnectionOptions>(co => co.WithDisposeConnection(true)))) { } },
+				Throws.TypeOf<LinqToDBException>(),
 				"DisposeConnection cannot be changed.");
 		}
 
@@ -750,8 +756,9 @@ namespace Tests.Infrastructure
 		public void TryUseDataProviderTest()
 		{
 			using var db = new TestDataConnection();
-			Assert.Throws<LinqToDBException>(
+			Assert.That(
 				() => { using (db.UseOptions(o => o.UseSqlServer(SqlServerVersion.v2022, SqlServerProvider.MicrosoftDataSqlClient))) { } },
+				Throws.TypeOf<LinqToDBException>(),
 				"DataProvider cannot be changed.");
 		}
 
@@ -759,8 +766,9 @@ namespace Tests.Infrastructure
 		public void TryUseDataProviderFactoryTest()
 		{
 			using var db = new TestDataConnection();
-			Assert.Throws<LinqToDBException>(
+			Assert.That(
 				() => { using (db.UseOptions(o => o.UseSqlServer("connection string"))) { } },
+				Throws.TypeOf<LinqToDBException>(),
 				"DataProviderFactory cannot be changed.");
 		}
 
@@ -768,8 +776,9 @@ namespace Tests.Infrastructure
 		public void TryWithConnectionFactoryTest()
 		{
 			using var db = new TestDataConnection();
-			Assert.Throws<LinqToDBException>(
+			Assert.That(
 				() => { using (db.UseOptions(o => o.WithOptions<ConnectionOptions>(co => co.WithConnectionFactory(_ => db.OpenDbConnection())))) { } },
+				Throws.TypeOf<LinqToDBException>(),
 				"ConnectionFactory cannot be changed.");
 		}
 
@@ -777,8 +786,9 @@ namespace Tests.Infrastructure
 		public void TryWithOnEntityDescriptorCreatedTest()
 		{
 			using var db = new TestDataConnection();
-			Assert.Throws<LinqToDBException>(
+			Assert.That(
 				() => { using (db.UseOptions(o => o.WithOptions<ConnectionOptions>(co => co.WithOnEntityDescriptorCreated((schema, descriptor) => { })))) { } },
+				Throws.TypeOf<LinqToDBException>(),
 				"OnEntityDescriptorCreated cannot be changed.");
 		}
 

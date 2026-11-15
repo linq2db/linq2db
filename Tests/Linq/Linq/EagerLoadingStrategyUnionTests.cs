@@ -3478,7 +3478,7 @@ namespace Tests.Linq
 				}
 			).WithUnionLoadStrategy();
 
-			await Assert.ThrowsAsync<InvalidOperationException>(async () => await query.SingleAsync());
+			await Assert.ThatAsync(async () => await query.SingleAsync(), Throws.TypeOf<InvalidOperationException>());
 		}
 
 		#endregion

@@ -319,7 +319,7 @@ namespace Tests.Linq
 
 			var result = q1.FirstOrDefault()!;
 
-			Assert.DoesNotThrow(() => result.p.Children.Single().Parent!.Children.Single());
+			result.p.Children.Single().Parent!.Children.Single();
 		}
 
 		// LoadWith12 through a hand-built IndexExpression in place of the compiler's get_Item call; Access is excluded
@@ -346,7 +346,7 @@ namespace Tests.Linq
 
 			var result = query.FirstOrDefault()!;
 
-			Shouldly.Should.NotThrow(() => result.Children.Single().Parent!.Children.Single());
+			result.Children.Single().Parent!.Children.Single();
 		}
 
 		[Test]

@@ -872,7 +872,7 @@ namespace Tests.Linq
 
 			using var db = GetDataContext(context);
 
-			await Assert.ThrowsAsync<OperationCanceledException>(async () =>
+			await Assert.ThatAsync(async () =>
 			{
 				try
 				{
@@ -883,9 +883,9 @@ namespace Tests.Linq
 					// normalizes TaskCanceledException, which the assert above would not match
 					throw new OperationCanceledException();
 				}
-			});
+			}, Throws.TypeOf<OperationCanceledException>());
 
-			await Assert.ThrowsAsync<OperationCanceledException>(async () =>
+			await Assert.ThatAsync(async () =>
 			{
 				try
 				{
@@ -896,7 +896,7 @@ namespace Tests.Linq
 					// normalizes TaskCanceledException, which the assert above would not match
 					throw new OperationCanceledException();
 				}
-			});
+			}, Throws.TypeOf<OperationCanceledException>());
 		}
 
 		[ActiveIssue(3266, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "The LINQ expression could not be converted to SQL.",

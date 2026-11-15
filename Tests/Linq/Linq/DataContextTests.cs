@@ -165,7 +165,7 @@ namespace Tests.Linq
 		public void ProviderConnectionStringConstructorTest1([DataSources(false, TestProvName.AllAccess, ProviderName.SapHanaOdbc)] string context)
 		{
 			using var db = (TestDataConnection)GetDataContext(context);
-			Assert.Throws<LinqToDBException>(() => new DataContext(new DataOptions().UseConnectionString("BAD", db.ConnectionString!)));
+			Assert.That(() => new DataContext(new DataOptions().UseConnectionString("BAD", db.ConnectionString!)), Throws.TypeOf<LinqToDBException>());
 
 		}
 		[Test]

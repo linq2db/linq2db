@@ -2231,7 +2231,7 @@ namespace Tests.Linq
 				group c1 by c1.ParentID into c2
 				select c2.Key;
 
-			Assert.DoesNotThrow(() => query2.ToArray());
+			query2.ToArray();
 
 			var orderItems = query2.GetSelectQuery().OrderBy.Items;
 			using (Assert.EnterMultipleScope())
@@ -2250,7 +2250,7 @@ namespace Tests.Linq
 				orderby c.ChildID
 				select c;
 
-			Assert.DoesNotThrow(() => query.Count());
+			query.Count();
 		}
 
 		[Test]
@@ -2262,7 +2262,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select new { c, p };
 
-			Assert.DoesNotThrow(() => query.Count());
+			query.Count();
 		}
 
 		[Test]
@@ -2273,21 +2273,18 @@ namespace Tests.Linq
 						join c in db.Child.OrderBy(c => c.ChildID) on p.ParentID equals c.ParentID
 						select new { c, p };
 
-			Assert.DoesNotThrow(() => query.Count());
+			query.Count();
 		}
 
 		void CheckGuardedQuery<TKey, TEntity>(IQueryable<IGrouping<TKey, TEntity>> grouping)
 			where TKey : notnull
 		{
-			Assert.Throws<LinqToDBException>(() =>
+			Assert.That(() =>
 			{
 				grouping.ToDictionary(_ => _.Key, _ => _.ToList());
-			});
+			}, Throws.TypeOf<LinqToDBException>());
 
-			Assert.DoesNotThrow(() =>
-			{
-				grouping.DisableGuard().ToDictionary(_ => _.Key, _ => _.ToList());
-			});
+			grouping.DisableGuard().ToDictionary(_ => _.Key, _ => _.ToList());
 		}
 
 		[Test]
@@ -2319,20 +2316,17 @@ namespace Tests.Linq
 			CheckGuardedQuery(db.Person.GroupBy(_ => _.Gender));
 			CheckGuardedQuery(db.Person.GroupBy(_ => _));
 
-			Assert.Throws<LinqToDBException>(() =>
+			Assert.That(() =>
 			{
 				db.Person
 					.GroupBy(_ => _)
 					.ToList();
-			});
+			}, Throws.TypeOf<LinqToDBException>());
 
-			Assert.DoesNotThrow(() =>
-			{
-				db.Person
-					.GroupBy(_ => _)
-					.DisableGuard()
-					.ToList();
-			});
+			db.Person
+				.GroupBy(_ => _)
+				.DisableGuard()
+				.ToList();
 		}
 
 		[Test]
@@ -2595,7 +2589,7 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
 			{
-				Assert.Throws<LinqToDBException>(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()));
+				Assert.That(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()), Throws.TypeOf<LinqToDBException>());
 			}
 
 			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
@@ -2614,7 +2608,7 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
 			{
-				Assert.Throws<LinqToDBException>(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()));
+				Assert.That(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()), Throws.TypeOf<LinqToDBException>());
 			}
 
 			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
@@ -2628,7 +2622,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
 			{
-				Assert.Throws<LinqToDBException>(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()));
+				Assert.That(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()), Throws.TypeOf<LinqToDBException>());
 			}
 
 			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false).UseDisableQueryCache(true)))

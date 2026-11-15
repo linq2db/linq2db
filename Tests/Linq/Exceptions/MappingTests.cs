@@ -16,7 +16,7 @@ namespace Tests.Exceptions
 		{
 			using var db = GetDataContext(context);
 			var q = from p in db.Person where p.Name == "123" select p;
-			Assert.Throws<LinqToDBException>(() => q.ToList());
+			Assert.That(() => q.ToList(), Throws.TypeOf<LinqToDBException>());
 		}
 
 		[Table(Name="Person")]
@@ -30,7 +30,7 @@ namespace Tests.Exceptions
 		public void MapIgnore2([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
-			Assert.Throws<LinqToDBException>(() => db.GetTable<TestPerson1>().FirstOrDefault(_ => _.FirstName == null));
+			Assert.That(() => db.GetTable<TestPerson1>().FirstOrDefault(_ => _.FirstName == null), Throws.TypeOf<LinqToDBException>());
 		}
 
 		enum Enum4
@@ -43,12 +43,14 @@ namespace Tests.Exceptions
 		[Test]
 		public void ConvertFromEnum()
 		{
-			Assert.Throws<LinqToDBConvertException>(
+			Assert.That(
 				() => ConvertTo<int>.From(Enum4.Value1),
+				Throws.TypeOf<LinqToDBConvertException>(),
 				"Inconsistent mapping. 'Tests.Exceptions.Mapping+Enum4.Value2' does not have MapValue(<System.Int32>) attribute.");
 
-			Assert.Throws<LinqToDBConvertException>(
+			Assert.That(
 				() => ConvertTo<int>.From(Enum4.Value2),
+				Throws.TypeOf<LinqToDBConvertException>(),
 				"Inconsistent mapping. 'Tests.Exceptions.Mapping+Enum4.Value2' does not have MapValue(<System.Int32>) attribute.");
 		}
 	}
