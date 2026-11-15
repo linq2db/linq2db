@@ -2619,6 +2619,39 @@ namespace Tests.Linq
 			var result2 = query2.ToArray();
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6304")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		public void InlineArrayMinMax([DataSources(
+			TestProvName.AllOracle,
+			TestProvName.AllSybase,
+			TestProvName.AllAccess,
+			TestProvName.AllMariaDB,
+			TestProvName.AllMySql57,
+			TestProvName.AllDB2,
+			TestProvName.AllFirebird5Plus,
+			TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var max = db.Person
+				.Where(p => new[] { p.ID, 2 }.Max() == 2)
+				.Select(p => p.ID)
+				.ToList();
+
+			var min = db.Person
+				.Where(p => new[] { p.ID, 2 }.Min() == 2)
+				.Select(p => p.ID)
+				.ToList();
+
+			max
+				.OrderBy(i => i)
+				.ShouldBe([1, 2]);
+
+			min
+				.OrderBy(i => i)
+				.ShouldBe([2, 3, 4]);
+		}
+
 		// A top-level OR in WHERE is printed one operand per line, the layout users snapshot in their own SQL baselines.
 		[Test]
 		public void TopLevelOrPrintsOneOperandPerLine([IncludeDataSources(TestProvName.AllSQLite)] string context)

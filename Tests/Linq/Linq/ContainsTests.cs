@@ -361,6 +361,9 @@ namespace Tests.Linq
 			Assert.That(result[0].ID, Is.EqualTo(4));
 		}
 
+		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "System.InvalidCastException",
+			ErrorMessage = "cannot be read as a number",
+			Details = "no-issue: an alpha.2 -> alpha.3 regression, measured against both packages - comparing a text column against a numeric literal (=, IN, NOT IN) now coerces the text to a number and throws on any non-numeric value, where alpha.2 evaluated it and ACE accepts it. LibRed.Ado 11.0.0-alpha.3 to beta.1; re-check when a newer LibRed ships.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2608")]
 		public void Issue2608Test([DataSources(TestProvName.AllSapHana)] string context)
 		{
@@ -460,6 +463,40 @@ namespace Tests.Linq
 			var res = db.Person.Where(p => ids == null || ids.Contains(p.ID) || !ids.Any()).Count();
 
 			Assert.That(res, Is.EqualTo(expected));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6067")]
+		public void ArrayContainsValueType([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var ids = new[] { 1, 2, 3 };
+
+			var items = db.Person
+				.Where(p => ids.Contains(p.ID))
+				.Select(p => p.ID)
+				.ToList();
+
+			items
+				.OrderBy(i => i)
+				.ShouldBe([1, 2, 3]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6067")]
+		public void ArrayContainsReferenceType([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var names = new[] { "John", "Jane" };
+
+			var items = db.Person
+				.Where(p => names.Contains(p.FirstName))
+				.Select(p => p.FirstName)
+				.ToList();
+
+			items
+				.OrderBy(i => i)
+				.ShouldBe(["Jane", "John"]);
 		}
 
 		[Test]
