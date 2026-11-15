@@ -460,14 +460,43 @@ namespace Tests.Linq
 			AssertQueryWithinDelta(even);
 		}
 
-		// Access spells % as MOD, which binds tighter than + and -, so a sum or difference operand needs its own parentheses.
+		// Access spells % as MOD, which binds tighter than + and - and evaluates left to right, so a sum, a difference or
+		// another MOD as its operand needs its own parentheses.
 		[Test]
 		public void ModuloOperandKeepsItsGrouping([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
-			AssertQuery(db.Types.OrderBy(p => p.ID).Select(p => Sql.AsSql((p.ID + 5) % 3)));
-			AssertQuery(db.Types.OrderBy(p => p.ID).Select(p => Sql.AsSql((100 - p.ID) % 3)));
+			var sum = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((p.ID + 5) % 3));
+
+			AssertQuery(sum);
+
+			var difference = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((100 - p.ID) % 3));
+
+			AssertQuery(difference);
+
+			var moduloOfDifference = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(100 - p.ID % 3));
+
+			AssertQuery(moduloOfDifference);
+
+			var nestedModulo = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((p.ID + 20) % ((p.ID * 5 + 3) % 5)));
+
+			AssertQuery(nestedModulo);
+
+			var moduloOfProduct = db.Types
+				.Where(p => p.ID > 0)
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((p.ID + 20) % (p.ID * 3)));
+
+			AssertQuery(moduloOfProduct);
 		}
 
 		// A non-constant precision must not cost the value its fractional digits.
