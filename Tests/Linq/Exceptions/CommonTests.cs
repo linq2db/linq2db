@@ -92,9 +92,9 @@ namespace Tests.Exceptions
 						{
 							ParentID = n,
 							Value1   = n
-						}),
-					"Invalid object name 'Parent1'.");
+						}));
 			Assert.That(ex.GetType().Name, Is.EqualTo("SqlException"));
+			Assert.That(ex.Message,        Is.EqualTo("Invalid object name 'Parent1'."));
 
 			ex = Shouldly.Should.Throw<Exception>(
 				() =>
@@ -102,9 +102,9 @@ namespace Tests.Exceptions
 					{
 						ParentID = n,
 						Value1 = n
-					}),
-				"Invalid object name 'Parent1'.");
+					}));
 			Assert.That(ex.GetType().Name, Is.EqualTo("SqlException"));
+			Assert.That(ex.Message,        Is.EqualTo("Invalid object name 'Parent1'."));
 
 			db.Parent.Delete(p => p.ParentID == n);
 		}

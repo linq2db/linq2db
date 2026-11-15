@@ -27,8 +27,7 @@ namespace Tests.Exceptions
 						{
 							Taxonomy = "...",
 						}),
-				Throws.TypeOf<LinqToDBException>(),
-				"InsertOrUpdate method requires the 'Doctor' table to have a primary key.");
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("InsertOrUpdate method requires the 'Doctor' table to have a primary key."));
 		}
 
 		[Test]
@@ -48,8 +47,7 @@ namespace Tests.Exceptions
 						{
 							Diagnosis = "...",
 						}),
-				Throws.TypeOf<LinqToDBException>(),
-				"InsertOrUpdate method requires the 'Patient.PersonID' field to be included in the insert setter.");
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("InsertOrUpdate method requires the 'Patient.PersonID' field to be included in the insert setter."));
 		}
 	}
 }

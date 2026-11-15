@@ -298,7 +298,7 @@ namespace Tests.Linq
 			Assert.That(() =>
 				{
 					db.SelectQuery(() => Sql.AsSql(1 as int?)).First();
-				}, Throws.TypeOf<LinqToDBException>(), "The LINQ expression '(1 as int?)' could not be converted to SQL.")
+				}, Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("The LINQ expression '(1 as int?)' could not be converted to SQL."))
 			;
 		}
 

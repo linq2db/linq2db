@@ -45,13 +45,11 @@ namespace Tests.Exceptions
 		{
 			Assert.That(
 				() => ConvertTo<int>.From(Enum4.Value1),
-				Throws.TypeOf<LinqToDBConvertException>(),
-				"Inconsistent mapping. 'Tests.Exceptions.Mapping+Enum4.Value2' does not have MapValue(<System.Int32>) attribute.");
+				Throws.TypeOf<LinqToDBConvertException>().With.Message.EqualTo("Inconsistent mapping. 'Tests.Exceptions.MappingTests+Enum4.Value2' does not have MapValue(<System.Int32>) attribute."));
 
 			Assert.That(
 				() => ConvertTo<int>.From(Enum4.Value2),
-				Throws.TypeOf<LinqToDBConvertException>(),
-				"Inconsistent mapping. 'Tests.Exceptions.Mapping+Enum4.Value2' does not have MapValue(<System.Int32>) attribute.");
+				Throws.TypeOf<LinqToDBConvertException>().With.Message.EqualTo("Inconsistent mapping. 'Tests.Exceptions.MappingTests+Enum4.Value2' does not have MapValue(<System.Int32>) attribute."));
 		}
 	}
 }
