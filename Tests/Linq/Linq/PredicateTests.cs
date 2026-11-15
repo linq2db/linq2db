@@ -205,6 +205,7 @@ namespace Tests.Linq
 
 		// Supported: ClickHouse, Firebird3+, MySQL, PostgreSQL
 		[Test(Description = "<PREDICATE> IS [NOT] UNKNOWN")]
+		[ThrowsForProvider("LibRed.Sql.Parsing.SqlParseException", TestProvName.AllAccessLibRed)]
 		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb)]
 		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative)]
 		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, TestProvName.AllAccessOdbc)]
@@ -341,6 +342,7 @@ namespace Tests.Linq
 
 		// Supported: Firebird3+
 		[Test(Description = "<PREDICATE> <>/= UNKNOWN")]
+		[ThrowsForProvider("System.InvalidOperationException", TestProvName.AllAccessLibRed)]
 		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb)]
 		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative)]
 		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, TestProvName.AllAccessOdbc)]
@@ -520,6 +522,7 @@ namespace Tests.Linq
 		// Supported: MySQL
 		// ClickHouse: tracked by https://github.com/ClickHouse/ClickHouse/issues/58145
 		[Test(Description = "<A> <=> <B>")]
+		[ThrowsForProvider("LibRed.Sql.Parsing.SqlParseException", TestProvName.AllAccessLibRed)]
 		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb)]
 		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative)]
 		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, TestProvName.AllAccessOdbc)]
@@ -559,6 +562,7 @@ namespace Tests.Linq
 
 		// Supported: SQLite
 		[Test(Description = "<A> IS <B>")]
+		[ThrowsForProvider("LibRed.Sql.Parsing.SqlParseException", TestProvName.AllAccessLibRed)]
 		[ThrowsForProvider("FirebirdSql.Data.FirebirdClient.FbException", TestProvName.AllFirebird)]
 		[ThrowsForProvider("ClickHouse.Driver.ClickHouseServerException", ProviderName.ClickHouseDriver)]
 		[ThrowsForProvider("MySqlConnector.MySqlException", ProviderName.ClickHouseMySql, TestProvName.AllMySqlConnector)]
@@ -601,6 +605,7 @@ namespace Tests.Linq
 		// Supported: DB2, Oracle
 		// Firebird: doesn't work for NULLs
 		[Test(Description = "DECODE function")]
+		[ThrowsForProvider("System.NotSupportedException", TestProvName.AllAccessLibRed)]
 		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb)]
 		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative)]
 		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, TestProvName.AllAccessOdbc)]
