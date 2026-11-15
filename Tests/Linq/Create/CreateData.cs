@@ -16,8 +16,8 @@ using NUnit.Framework;
 using Tests;
 using Tests.Model;
 
-// for unknown reason order doesn't help on ubuntu 18, so namespace were removed and class name changed to be first in
-// sort order
+// No namespace and the `a_` prefix make this fixture sort first, so a serial run executes `CreateDatabase` before
+// the other tests (parallel runs wait on it through `CustomTestContext.EnsureDatabaseReady`); don't rename or move it.
 [TestFixture]
 [Category(TestCategory.Create)]
 // ReSharper disable once InconsistentNaming
