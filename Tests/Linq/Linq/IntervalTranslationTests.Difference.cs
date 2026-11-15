@@ -1014,6 +1014,59 @@ namespace Tests.Linq
 			row.Milliseconds.ShouldBe(expected.Milliseconds);
 		}
 
+		/// <summary>
+		/// The millisecond component over spans whose millisecond count no 32-bit integer holds.
+		/// </summary>
+		/// <remarks>
+		/// A provider that forms the component by shifting the start by the whole elapsed millisecond count shifts it by
+		/// more than <see cref="int.MaxValue"/> once the span passes about twenty-five days. Both spans are past that, the
+		/// longer one past sixty-eight years as well, and the short span keeps a component broken outright from passing
+		/// as one that merely reaches far.
+		/// </remarks>
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ErrorMessage = ErrorHelper.Error_Interval_ComponentBelowResolution)]
+		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
+		public void MillisecondComponentHoldsPastTheRangeOfItsCounter([DataSources] string context, [Values(1, -1)] int direction)
+		{
+			// Whole multiples of ten milliseconds: a datetime type that stores 1/300 s (SQL CE, SQL Server's datetime) holds
+			// them exactly, so the stored value and the server's count cannot disagree by a rounding step.
+			var earlier = new DateTime(1970, 1, 2, 0, 0, 0);
+			var spans   = new[]
+			{
+				new DateTime(1970, 2, 3, 4, 5, 6, 780) - earlier,
+				new DateTime(2045, 6, 5, 4, 3, 2, 340) - earlier,
+				TimeSpan.FromMilliseconds(125_250),
+			};
+
+			// The guard against the case quietly ceasing to test anything: shorter, these spans stop crossing the range.
+			spans[0].TotalMilliseconds.ShouldBeGreaterThan((double)int.MaxValue);
+			spans[1].TotalSeconds.ShouldBeGreaterThan((double)int.MaxValue);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			for (var i = 0; i < spans.Length; i++)
+			{
+				var start = direction > 0 ? earlier : earlier + spans[i];
+				var end   = direction > 0 ? earlier + spans[i] : earlier;
+
+				db.Insert(new EventRow { Id = i + 1, StartedOn = start, FinishedOn = end });
+			}
+
+			var stored = t
+				.OrderBy(r => r.Id)
+				.Select(r => new { r.StartedOn, r.FinishedOn })
+				.ToList();
+
+			var milliseconds = t
+				.OrderBy(r => r.Id)
+				.Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).Milliseconds))
+				.ToList();
+
+			for (var i = 0; i < spans.Length; i++)
+				milliseconds[i].ShouldBe((stored[i].FinishedOn - stored[i].StartedOn).Milliseconds);
+		}
+
 		[Table]
 		sealed class ClosedPeriodRow
 		{
