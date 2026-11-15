@@ -3283,6 +3283,8 @@ namespace Tests.Linq
 
 			rows.ShouldBeEmpty();
 
+			var misses = query.GetCacheMissCount();
+
 			value = ApiGender.Female;
 
 			Assert.That(() => query.ToList(), Throws.TypeOf<LinqToDBConvertException>());
@@ -3292,6 +3294,171 @@ namespace Tests.Linq
 			rows = query.ToList();
 
 			rows.ShouldBeEmpty();
+
+			var missesAfter = query.GetCacheMissCount();
+
+			missesAfter.ShouldBe(misses);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void EqualsOfTwoClientEnums([DataSources] string context, [Values] bool mirrored)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var api    = ApiGender.Female;
+			var gender = Gender.Female;
+
+			// Neither side meets a column: the comparison is built as on master.
+			var query = mirrored
+				? db.Person.Where(p => gender.Equals((object)api))
+				: db.Person.Where(p => api.Equals(gender));
+
+			AssertQuery(query);
+		}
+
+		enum ShuffledGender
+		{
+			Female,
+			Other,
+			Male,
+			Unknown,
+		}
+
+		public enum ShuffledShape
+		{
+			ProjectedConstant,
+			ProjectedParameter,
+			ProjectedEqualsObject,
+			ProjectedContains,
+			ProjectedInlineArray,
+			DirectParameter,
+			DirectInlineArray,
+			ColumnLessParameter,
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void ShuffledRegisteredEnumComparesAsNumericCast([DataSources] string context, [Values] ShuffledShape shape)
+		{
+			var ms = new MappingSchema();
+
+			ms.SetDefaultFromEnumType(typeof(ShuffledGender), typeof(Gender));
+
+			using var db = GetDataContext(context, ms);
+
+			// Neither names nor ordinals match Gender's: ShuffledGender.Female is 0, the numeric cast of Gender.Male.
+			var    value  = ShuffledGender.Female;
+			object boxed  = ShuffledGender.Female;
+			var    values = new[] { ShuffledGender.Female };
+
+			var projected = db.Person
+				.Select(p => new { p.ID, Gender = (ShuffledGender)p.Gender });
+
+			var query = shape switch
+			{
+				ShuffledShape.ProjectedConstant     => projected.Where(p => p.Gender == ShuffledGender.Female),
+				ShuffledShape.ProjectedParameter    => projected.Where(p => p.Gender == value),
+				ShuffledShape.ProjectedEqualsObject => projected.Where(p => p.Gender.Equals(boxed)),
+				ShuffledShape.ProjectedContains     => projected.Where(p => values.Contains(p.Gender)),
+				ShuffledShape.ProjectedInlineArray  => projected.Where(p => new[] { ShuffledGender.Female }.Contains(p.Gender)),
+				ShuffledShape.DirectParameter       => db.Person.Where(p => (ShuffledGender)p.Gender == value).Select(p => new { p.ID, Gender = (ShuffledGender)p.Gender }),
+				ShuffledShape.DirectInlineArray     => db.Person.Where(p => new[] { ShuffledGender.Female }.Contains((ShuffledGender)p.Gender)).Select(p => new { p.ID, Gender = (ShuffledGender)p.Gender }),
+				_                                   => db.Person.Where(p => (ShuffledGender)(p.ID > 2 ? Gender.Male : Gender.Female) == value).Select(p => new { p.ID, Gender = (ShuffledGender)p.Gender }),
+			};
+
+			AssertQuery(query);
+		}
+
+		public enum MissingShape
+		{
+			EqualLiteral,
+			EqualParameter,
+			NotEqualParameter,
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void RegisteredEnumValueWithoutCounterpart([DataSources] string context, [Values] MissingShape shape)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			// An API value Gender has no member for: no row holds it.
+			var missing = (ApiGender)99;
+
+			var query = shape switch
+			{
+				MissingShape.EqualLiteral   => db.Person.Where(p => (ApiGender)p.Gender == (ApiGender)99),
+				MissingShape.EqualParameter => db.Person.Where(p => (ApiGender)p.Gender == missing),
+				_                           => db.Person.Where(p => (ApiGender)p.Gender != missing),
+			};
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void RegisteredEnumValueWithoutCounterpartInList(
+			// ClickHouse's FixedString(1) column refuses the unmapped item, written as '99' (TOO_LARGE_STRING_SIZE).
+			[DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var values = new[] { ApiGender.Female, (ApiGender)99 };
+
+			var query = db.Person
+				.Where(p => values.Contains((ApiGender)p.Gender));
+
+			AssertQuery(query);
+		}
+
+		sealed class ConvertedGenderRow
+		{
+			[PrimaryKey]
+			public int    Id     { get; set; }
+			public Gender Gender { get; set; }
+		}
+
+		sealed record EqualsHolder(object Value)
+		{
+			public IQueryable<Person>             OnPerson   (ITestDataContext db)            => db.Person.Where(p => p.Gender.Equals(Value));
+			public IQueryable<ConvertedGenderRow> OnConverted(IQueryable<ConvertedGenderRow> t) => t.Where(r => r.Gender.Equals(Value));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void EqualsInstanceValueCheckedPerInstance([DataSources] string context, [Values] bool converted)
+		{
+			var ms     = CreateApiGenderSchema();
+			var entity = new FluentMappingBuilder(ms).Entity<ConvertedGenderRow>();
+
+			entity.Property(e => e.Gender)
+				.HasDataType(DataType.VarChar)
+				.HasLength(20)
+				.HasConversion(v => v.ToString(), v => Enum.Parse<Gender>(v));
+
+			entity.Build();
+
+			using var db    = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable(new[]
+			{
+				new ConvertedGenderRow { Id = 1, Gender = Gender.Male   },
+				new ConvertedGenderRow { Id = 2, Gender = Gender.Female },
+			});
+
+			// The value is read off a constant instance: a second instance with another enum must be checked, not served the first build.
+			var first = new EqualsHolder(Gender.Female);
+
+			var ids = converted
+				? first.OnConverted(table).Select(r => r.Id).ToArray()
+				: first.OnPerson(db).Select(p => p.ID).ToArray();
+
+			var expected = converted
+				? new[] { 2 }
+				: Person.Where(p => p.Gender == Gender.Female).Select(p => p.ID).ToArray();
+
+			ids.ShouldBe(expected, ignoreOrder: true);
+
+			var second = new EqualsHolder(ApiGender.Female);
+
+			Assert.That(
+				() => converted ? second.OnConverted(table).ToArray().Length : second.OnPerson(db).ToArray().Length,
+				Throws.TypeOf<LinqToDBConvertException>());
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
