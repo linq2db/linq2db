@@ -4304,7 +4304,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		static void ThrowIfOtherEnum(object? value, Type enumType)
 		{
 			if (value is Enum && value.GetType() != enumType)
-				throw new LinqToDBConvertException($"Cannot convert value '{value}: {value.GetType().FullName}' to type '{enumType.FullName}'");
+				throw new LinqToDBConvertException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Error_CannotConvertValue, value, value.GetType().FullName, enumType.FullName));
 		}
 
 		ISqlPredicate ConvertExpressionToPredicate(ISqlExpression sqlExpression, bool withNull = false, bool forceEquality = false)

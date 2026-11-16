@@ -9,6 +9,7 @@ using System.Threading;
 
 using LinqToDB.Common;
 using LinqToDB.Expressions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Mapping;
@@ -27,7 +28,7 @@ namespace LinqToDB.Internal.Conversion
 			}
 			catch (Exception ex)
 			{
-				throw new LinqToDBConvertException($"Cannot convert value '{value}: {value.GetType().FullName}' to type '{conversionType.FullName}'", ex);
+				throw new LinqToDBConvertException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Error_CannotConvertValue, value, value.GetType().FullName, conversionType.FullName), ex);
 			}
 		}
 

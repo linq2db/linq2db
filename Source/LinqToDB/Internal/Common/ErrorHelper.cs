@@ -27,6 +27,7 @@
 		public const string Error_DistinctByRequiresOrderBy        = "DistinctBy requires at least one ordering key.";
 		public const string Error_LinqToDBQueryExpected            = "Linq To DB query expected";
 		public const string Error_EnumerationNotStarted            = "Enumeration not started.";
+		public const string Error_CannotConvertValue               = "Cannot convert value '{0}: {1}' to type '{2}'";
 
 		public const string Error_WindowFunctionsInSearchCondition                = "Window functions cannot be used in search condition.";
 		public const string Error_WindowFunction_PercentRank                      = "PERCENT_RANK is not supported by current provider.";
