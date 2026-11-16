@@ -102,10 +102,11 @@ namespace LinqToDB.Internal.DataProvider.Access
 		}
 
 		// ^ evaluates left to right, and Wrap leaves an equal-precedence right operand bare. Decided here, not at
-		// translation, because the convert visitor drops the numeric casts that can hide a nested power until now.
+		// translation, because the convert visitor drops the numeric casts that can hide a nested power until now;
+		// a nullability wrapper (Sql.AsNotNull) survives to here and renders as its operand.
 		protected override void BuildBinaryExpression(SqlBinaryExpression expr)
 		{
-			if (expr is { Operation: "^", Expr2: SqlBinaryExpression { Operation: "^" } })
+			if (expr is { Operation: "^" } && QueryHelper.UnwrapNullablity(expr.Expr2) is SqlBinaryExpression { Operation: "^" })
 			{
 				BuildExpression(GetPrecedence(expr), expr.Expr1);
 				StringBuilder.Append(" ^ (");

@@ -585,6 +585,14 @@ namespace Tests.Linq
 				.Select(p => Sql.AsSql(Sql.Power(2m, Sql.Power((decimal)(p.ID % 3 + 1), 2m))));
 
 			AssertQuery(decimalPowerAsExponent);
+
+			// a nullability wrapper around the exponent reaches the builder and renders as its operand
+			var notNullPowerAsExponent = db.Parent
+				.Where(p => p.Value1 != null)
+				.OrderBy(p => p.ParentID)
+				.Select(p => Sql.AsSql(Sql.Power(2.0, Sql.AsNotNull(Sql.Power((double?)(p.Value1 % 3 + 1), 2.0)))));
+
+			AssertQuery(notNullPowerAsExponent);
 		}
 
 		// A non-constant precision must not cost the value its fractional digits.
