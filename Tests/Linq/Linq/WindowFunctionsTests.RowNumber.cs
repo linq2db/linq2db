@@ -212,7 +212,12 @@ namespace Tests.Linq
 			// Id 9 is the only row whose NullableBoolValue is NULL, so it is alone in its partition.
 			// Access booleans cannot be NULL.
 			if (!context.IsAnyOf(TestProvName.AllAccess))
-				result.Single(r => r.Id == 9).PartitionNullable.ShouldBe(1);
+			{
+				result
+					.Single(r => r.Id == 9)
+					.PartitionNullable
+					.ShouldBe(1);
+			}
 		}
 
 		// Value assertion (not just SQL shape): ROW_NUMBER and SUM OVER (PARTITION BY ...) over deterministic

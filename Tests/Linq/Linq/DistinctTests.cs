@@ -358,8 +358,12 @@ namespace Tests.Linq
 
 			var expected = (flipOnly
 					? descending
-						? source.OrderBy(r => r.Value != null).ThenByDescending(r => r.Value)
-						: source.OrderBy(r => r.Value == null).ThenBy(r => r.Value)
+						? source
+							.OrderBy(r => r.Value != null)
+							.ThenByDescending(r => r.Value)
+						: source
+							.OrderBy(r => r.Value == null)
+							.ThenBy(r => r.Value)
 					: descending
 						? source.OrderByDescending(r => r.Value)
 						: source.OrderBy(r => r.Value))
