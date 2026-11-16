@@ -5377,6 +5377,43 @@ namespace LinqToDB.Internal.Linq.Builder
 					: expression;
 		}
 
+		// An item cast the same way is read as its operand, a client item through the cast; anything else keeps the list as written.
+		NewArrayExpression? MapRegisteredEnumItems(NewArrayExpression inline, Type itemType, Type sourceEnum, bool nullable)
+		{
+			var sourceType = nullable ? sourceEnum.MakeNullable() : sourceEnum;
+			var elements   = new List<Expression>(inline.Expressions.Count);
+
+			foreach (var element in inline.Expressions)
+			{
+				if (TryGetRegisteredEnumCast(UnwrapLiftedEnumCast(element), itemType, out var elementCast))
+					elements.Add(elementCast.Operand.Type == sourceType ? elementCast.Operand : Expression.Convert(elementCast.Operand, sourceType));
+				else if (Builder.CanBeEvaluatedOnClient(element))
+					elements.Add(CastRegisteredEnum(element, sourceEnum, nullable));
+				else
+					return null;
+			}
+
+			return Expression.NewArrayInit(sourceType, elements);
+		}
+
+		UnaryExpression? FindRegisteredEnumCastItem(NewArrayExpression inline, Type itemType, out bool nullableOperand)
+		{
+			UnaryExpression? found = null;
+
+			nullableOperand = false;
+
+			foreach (var element in inline.Expressions)
+			{
+				if (TryGetRegisteredEnumCast(UnwrapLiftedEnumCast(element), itemType, out var cast))
+				{
+					found           ??= cast;
+					nullableOperand  |= cast.Operand.Type.IsNullableType;
+				}
+			}
+
+			return found;
+		}
+
 		bool TryCompareInRegisteredEnum(ref Expression cast, ref Expression value)
 		{
 			if (!TryGetRegisteredEnumCast(cast, value.Type, out var convert) || !Builder.CanBeEvaluatedOnClient(value))
@@ -5715,6 +5752,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		private ISqlPredicate? ConvertInPredicate(Expression value, Expression arr)
 		{
+			// As below: a wrapped inline array is the same list unless it is a client value, which stays a parameter.
+			var mappableInline = arr as NewArrayExpression ?? (Builder.CanBeEvaluatedOnClient(arr) ? null : UnwrapInlineArray(arr));
+
 			if (arr.Type.GetItemType() is { } itemType && TryGetRegisteredEnumCast(UnwrapLiftedEnumCast(value), itemType, out var enumCast))
 			{
 				var sourceEnum = enumCast.Operand.Type.UnwrapNullableType();
@@ -5723,24 +5763,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				Expression? mapped = null;
 
-				// As below: a wrapped inline array is the same list unless it is a client value, which stays a parameter.
-				if ((arr as NewArrayExpression ?? (Builder.CanBeEvaluatedOnClient(arr) ? null : UnwrapInlineArray(arr))) is { NodeType: ExpressionType.NewArrayInit } inline)
+				if (mappableInline is { NodeType: ExpressionType.NewArrayInit })
 				{
-					// An item cast the same way is read as its operand, a client item through the cast; anything else keeps the list as written.
-					var elements = new List<Expression>(inline.Expressions.Count);
-
-					foreach (var element in inline.Expressions)
-					{
-						if (TryGetRegisteredEnumCast(UnwrapLiftedEnumCast(element), itemType, out var elementCast))
-							elements.Add(elementCast.Operand.Type == sourceType ? elementCast.Operand : Expression.Convert(elementCast.Operand, sourceType));
-						else if (Builder.CanBeEvaluatedOnClient(element))
-							elements.Add(CastRegisteredEnum(element, sourceEnum, nullable));
-						else
-							break;
-					}
-
-					if (elements.Count == inline.Expressions.Count)
-						mapped = Expression.NewArrayInit(sourceType, elements);
+					mapped = MapRegisteredEnumItems(mappableInline, itemType, sourceEnum, nullable);
 				}
 				else if (Builder.CanBeEvaluatedOnClient(arr))
 				{
@@ -5754,12 +5779,50 @@ namespace LinqToDB.Internal.Linq.Builder
 					value = enumCast.Operand.Type == sourceType ? enumCast.Operand : Expression.Convert(enumCast.Operand, sourceType);
 				}
 			}
+			// The mirrored list, a client value searched among items that hold the cast: the value takes the items' terms.
+			else if (mappableInline is { NodeType: ExpressionType.NewArrayInit }
+				&& Builder.CanBeEvaluatedOnClient(value)
+				&& FindRegisteredEnumCastItem(mappableInline, value.Type, out var nullableOperand) is { } itemCast)
+			{
+				var sourceEnum = itemCast.Operand.Type.UnwrapNullableType();
+				var nullable   = value.Type.IsNullableType || nullableOperand;
+
+				if (MapRegisteredEnumItems(mappableInline, value.Type, sourceEnum, nullable) is { } mapped)
+				{
+					arr   = mapped;
+					value = CastRegisteredEnum(value, sourceEnum, nullable);
+				}
+			}
+
+			// A client enum searched among column items of another enum (a registered cast read through a projection) takes the
+			// column's terms, as a compared value does. Every other list keeps building the value on its own.
+			ColumnDescriptor? besideDescriptor = null;
+			ISqlExpression?   besideSql        = null;
+
+			if (value.Type.UnwrapNullableType() is { IsEnum: true } valueEnum
+				&& mappableInline is { NodeType: ExpressionType.NewArrayInit }
+				&& Builder.CanBeEvaluatedOnClient(value)
+				&& mappableInline.Expressions.FirstOrDefault(e => !Builder.CanBeEvaluatedOnClient(e)) is { } columnItem)
+			{
+				using (UsingBuildFlags(_buildFlags | BuildFlags.ForKeys))
+				{
+					if (Visit(columnItem) is SqlPlaceholderExpression itemPlaceholder
+						&& QueryHelper.GetColumnDescriptorForComparedValue(itemPlaceholder.Sql) is { MemberType: var memberType } itemDescriptor
+						&& memberType.UnwrapNullableType() is { IsEnum: true } columnEnum
+						&& columnEnum != valueEnum)
+					{
+						besideDescriptor = itemDescriptor;
+						besideSql        = itemPlaceholder.Sql;
+					}
+				}
+			}
 
 			ISqlExpression? expr = null;
 
 			Expression builtExpr;
 
 			using (UsingBuildFlags(_buildFlags | BuildFlags.ForKeys))
+			using (besideDescriptor != null ? UsingColumnDescriptorBeside(besideDescriptor, besideSql!) : null)
 			{
 				builtExpr = Visit(value);
 			}
@@ -5786,7 +5849,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (UnwrapInlineArray(arr) is { NodeType: ExpressionType.NewArrayInit } inlineArray && !Builder.CanBeEvaluatedOnClient(arr))
 				arr = inlineArray;
 
-			using (UsingColumnDescriptorBeside(QueryHelper.GetColumnDescriptorForComparedValue(expr), expr))
+			// The client items of a list taken in a column item's terms take them too.
+			using (besideDescriptor != null
+				? UsingColumnDescriptorBeside(besideDescriptor, besideSql!)
+				: UsingColumnDescriptorBeside(QueryHelper.GetColumnDescriptorForComparedValue(expr), expr))
 			{
 				switch (arr.NodeType)
 				{

@@ -3681,6 +3681,36 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void DirectEnumCastMirroredInlineArrayContains([DataSources] string context, [Values] bool projected, [Values] bool mixed)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			// Mixed, the list also holds a client item; searched for Male, it matches every row only if that item is mapped too.
+			var api = mixed ? ApiGender.Male : ApiGender.Female;
+
+			// The list holds the cast and the client value is searched in it, so the value takes the items' terms.
+			var query = projected
+				? mixed
+					? db.Person
+						.Select(p => new { p.ID, Gender = (ApiGender)p.Gender })
+						.Where(p => new[] { p.Gender, ApiGender.Male }.Contains(api))
+						.Select(p => p.ID)
+					: db.Person
+						.Select(p => new { p.ID, Gender = (ApiGender)p.Gender })
+						.Where(p => new[] { p.Gender }.Contains(api))
+						.Select(p => p.ID)
+				: mixed
+					? db.Person
+						.Where(p => new[] { (ApiGender)p.Gender, ApiGender.Male }.Contains(api))
+						.Select(p => p.ID)
+					: db.Person
+						.Where(p => new[] { (ApiGender)p.Gender }.Contains(api))
+						.Select(p => p.ID);
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
 		public void ProjectedEnumCastEmitsNoSqlCast([DataSources] string context)
 		{
 			using var db = GetDataContext(context, CreateApiGenderSchema());
