@@ -461,7 +461,7 @@ namespace Tests.Linq
 		}
 
 		// Access spells % as MOD, which binds tighter than + and - and evaluates left to right, so a sum, a difference or
-		// another MOD as its operand needs its own parentheses.
+		// another MOD as its operand needs its own parentheses; ^ binds tighter still, so a MOD operand of ^ needs them too.
 		[Test]
 		public void ModuloOperandKeepsItsGrouping([DataSources] string context)
 		{
@@ -497,6 +497,56 @@ namespace Tests.Linq
 				.Select(p => Sql.AsSql((p.ID + 20) % (p.ID * 3)));
 
 			AssertQuery(moduloOfProduct);
+
+			var powerOfModulo = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Math.Pow(p.ID % 3, 2)));
+
+			AssertQuery(powerOfModulo);
+
+			var moduloAsExponent = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Math.Pow(2, p.ID % 3)));
+
+			AssertQuery(moduloAsExponent);
+		}
+
+		// Access evaluates ^ before every other arithmetic operator, negation included, so a product, a sum, a difference or
+		// a negation as its operand needs its own parentheses.
+		[Test]
+		public void PowerOperandKeepsItsGrouping([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var powerOfProduct = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Math.Pow(p.ID * 2, 2)));
+
+			AssertQuery(powerOfProduct);
+
+			var powerOfSum = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Math.Pow(p.ID + 1, 2)));
+
+			AssertQuery(powerOfSum);
+
+			var powerOfDifference = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Math.Pow(100 - p.ID, 2)));
+
+			AssertQuery(powerOfDifference);
+
+			var powerOfNegation = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Math.Pow(-p.ID, 2)));
+
+			AssertQuery(powerOfNegation);
+
+			var negatedPower = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(-Math.Pow(p.ID, 2)));
+
+			AssertQuery(negatedPower);
 		}
 
 		// A non-constant precision must not cost the value its fractional digits.

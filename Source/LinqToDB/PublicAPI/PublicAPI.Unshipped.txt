@@ -348,6 +348,7 @@ static LinqToDB.DataProvider.Access.AccessTools.CreateDatabase(string! databaseN
 static LinqToDB.DataProvider.Access.AccessTools.DropDatabase(string! databaseName, LinqToDB.DataProvider.Access.AccessProvider provider, string? extension = null) -> void
 LinqToDB.Internal.DataProvider.LibRedProviderAdapter.CreateDatabase.get -> System.Action<string!, bool>!
 static LinqToDB.Internal.DataProvider.LibRedProviderAdapter.GetInstance() -> LinqToDB.Internal.DataProvider.LibRedProviderAdapter!
+static LinqToDB.Internal.DataProvider.Translation.SqlExpressionFactoryExtensions.Binary(this LinqToDB.Linq.Translation.ISqlExpressionFactory! factory, LinqToDB.DbDataType dbDataType, LinqToDB.Internal.SqlQuery.ISqlExpression! x, string! operation, LinqToDB.Internal.SqlQuery.ISqlExpression! y, int precedence) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 *REMOVED*LinqToDB.Internal.Expressions.TagExpression
 *REMOVED*LinqToDB.Internal.Expressions.TagExpression.InnerExpression.get -> System.Linq.Expressions.Expression!
 *REMOVED*LinqToDB.Internal.Expressions.TagExpression.Tag.get -> object!
