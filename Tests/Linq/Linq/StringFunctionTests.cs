@@ -61,8 +61,8 @@ namespace Tests.Linq
 		public void Like()
 		{
 #if !NETFRAMEWORK
-			Assert.Throws<ServerSideOnlyException>(() => Sql.Like(null, null));
-			Assert.Throws<ServerSideOnlyException>(() => Sql.Like(null, null, null));
+			Assert.That(() => Sql.Like(null, null), Throws.TypeOf<ServerSideOnlyException>());
+			Assert.That(() => Sql.Like(null, null, null), Throws.TypeOf<ServerSideOnlyException>());
 #else
 			Assert.Pass("We don't test server-side method here.");
 #endif
@@ -204,7 +204,7 @@ namespace Tests.Linq
 		public void Stuff2Fail()
 		{
 			var expression = Enumerable.Empty<string>();
-			Assert.Throws<ServerSideOnlyException>(() => Sql.Stuff(expression, 1, 1, "")); // ServerSideOnly
+			Assert.That(() => Sql.Stuff(expression, 1, 1, ""), Throws.TypeOf<ServerSideOnlyException>()); // ServerSideOnly
 		}
 
 		[Test]

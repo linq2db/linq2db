@@ -443,17 +443,21 @@ namespace Tests.Linq
 			if (isLinqService)
 			{
 #if NETFRAMEWORK
-				var fe = Assert.Throws<FaultException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
+				Assert.That(
+					() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList(),
+					Throws.TypeOf<FaultException>().With.Message.Contains("firstname").IgnoreCase);
 #else
-				var fe = Assert.Throws<Grpc.Core.RpcException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
+				Assert.That(
+					() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList(),
+					Throws.TypeOf<Grpc.Core.RpcException>().With.Message.Contains("firstname").IgnoreCase);
 #endif
-				Assert.That(fe.Message.ToLowerInvariant(), Does.Contain("firstname"));
 			}
 			else
 			{
-				var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
 				// field name casing depends on database
-				Assert.That(ex.ColumnName!.ToLowerInvariant(), Is.EqualTo("firstname"));
+				Assert.That(
+					() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList(),
+					Throws.TypeOf<LinqToDBConvertException>().With.Property(nameof(LinqToDBConvertException.ColumnName)).EqualTo("firstname").IgnoreCase);
 			}
 		}
 
@@ -463,8 +467,9 @@ namespace Tests.Linq
 			GetProviderName(context, out var isLinqService);
 
 			using var db = GetDataContext(context, suppressSequentialAccess: true);
-			var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.BadEnum }).ToList())!;
-			Assert.That(ex.ColumnName!.ToLowerInvariant(), Is.EqualTo("lastname"));
+			Assert.That(
+				() => db.GetTable<BadMapping>().Select(_ => new { _.BadEnum }).ToList(),
+				Throws.TypeOf<LinqToDBConvertException>().With.Property(nameof(LinqToDBConvertException.ColumnName)).EqualTo("lastname").IgnoreCase);
 		}
 
 #region Records
@@ -2022,9 +2027,9 @@ namespace Tests.Linq
 			using var db = GetDataContext(context, Issue5540Schema());
 			using var tb = db.CreateLocalTable<Issue5540Entity>();
 
-			var ex = Assert.Throws<LinqToDB.LinqToDBException>(
-				() => tb.Where(e => e.Items.Any(i => i.Code == "X")).ToList());
-			Assert.That(ex!.Message, Does.Contain(nameof(Issue5540JsonEach)));
+			Assert.That(
+				() => tb.Where(e => e.Items.Any(i => i.Code == "X")).ToList(),
+				Throws.TypeOf<LinqToDB.LinqToDBException>().With.Message.Contains(nameof(Issue5540JsonEach)));
 		}
 
 		#endregion

@@ -127,7 +127,7 @@ namespace Tests.Linq
 						where t.Flags.HasFlag(StringMappedFlagsEnum.Flag1)
 						select t;
 
-			Assert.Throws<LinqToDBException>(() => query.ToArray());
+			Assert.That(() => query.ToArray(), Throws.TypeOf<LinqToDBException>());
 		}
 
 		[Flags]
@@ -168,7 +168,7 @@ namespace Tests.Linq
 						where t.Flags.HasFlag(ConverterMappedFlagsEnum.Flag1)
 						select t;
 
-			Assert.Throws<LinqToDBException>(() => query.ToArray());
+			Assert.That(() => query.ToArray(), Throws.TypeOf<LinqToDBException>());
 		}
 
 		[Test]
@@ -183,7 +183,7 @@ namespace Tests.Linq
 						where value.HasFlag(t.Flags)
 						select t;
 
-			Assert.Throws<LinqToDBException>(() => query.ToArray());
+			Assert.That(() => query.ToArray(), Throws.TypeOf<LinqToDBException>());
 		}
 
 		static int Count1(Parent p) { return p.Children.Count(c => c.ChildID > 0); }

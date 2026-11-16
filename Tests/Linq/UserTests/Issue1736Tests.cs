@@ -198,7 +198,7 @@ namespace Tests.UserTests.Issue1736
 				var baseQry = baseQry1.Union(baseQry2);
 				baseQry = baseQry.Where(cr => cr.IR.Quantity > cr.RefQty);
 
-				Assert.DoesNotThrow(() => baseQry.ToList());
+				baseQry.ToList();
 			}
 		}
 	}

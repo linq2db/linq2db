@@ -3022,7 +3022,7 @@ namespace Tests.Linq
 
 			// ClientOnlyDouble(e.Value1) depends on row data and has no SQL mapping: it cannot be translated and must
 			// throw, never silently becoming a client-side post-filter - even with PreferClientCalculation on.
-			Assert.Throws<LinqToDBException>(() => table.Where(e => ClientOnlyDouble(e.Value1) == 20).ToArray());
+			Assert.That(() => table.Where(e => ClientOnlyDouble(e.Value1) == 20).ToArray(), Throws.TypeOf<LinqToDBException>());
 		}
 
 		[Test]

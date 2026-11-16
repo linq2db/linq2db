@@ -3753,12 +3753,12 @@ namespace Tests.DataProvider
 				{
 					// Another devart bug: explicit + internal transaction doesn't produce error...
 					if (withTransaction && withInternalTransaction && !context.IsAnyOf(TestProvName.AllOracleDevart))
-						Assert.Throws<InvalidOperationException>(() =>
+						Assert.That(() =>
 						{
 							table.BulkCopy(
 								new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific, UseInternalTransaction = withInternalTransaction },
 								Enumerable.Range(1, 10).Select(id => new BulkCopyTable { Id = id }));
-						});
+						}, Throws.TypeOf<InvalidOperationException>());
 					else
 					{
 						table.BulkCopy(
