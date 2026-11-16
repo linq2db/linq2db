@@ -748,8 +748,8 @@ namespace Tests.Mapping
 				var obj = new GetterSetterVsStorageMethodsConflict { Id = 5 };
 				obj.Values.Add("Name", "test_name");
 
-				Assert.Throws<LinqToDBException>(() => db.Insert(obj));
-				Assert.Throws<LinqToDBException>(() => db.GetTable<GetterSetterVsStorageMethodsConflict>().ToList());
+				Assert.That(() => db.Insert(obj), Throws.TypeOf<LinqToDBException>());
+				Assert.That(() => db.GetTable<GetterSetterVsStorageMethodsConflict>().ToList(), Throws.TypeOf<LinqToDBException>());
 			}
 		}
 
@@ -887,8 +887,8 @@ namespace Tests.Mapping
 				var obj = new MultipleGetterSetterMethods { Id = 5 };
 				obj.Values.Add("Name", "test_name");
 
-				Assert.Throws<LinqToDBException>(() => db.Insert(obj));
-				Assert.Throws<LinqToDBException>(() => db.GetTable<MultipleGetterSetterMethods>().ToList());
+				Assert.That(() => db.Insert(obj), Throws.TypeOf<LinqToDBException>());
+				Assert.That(() => db.GetTable<MultipleGetterSetterMethods>().ToList(), Throws.TypeOf<LinqToDBException>());
 			}
 		}
 
@@ -907,8 +907,8 @@ namespace Tests.Mapping
 				var obj = new NoGetterSetterMethods { Id = 5 };
 				obj.Values.Add("Name", "test_name");
 
-				Assert.Throws<LinqToDBException>(() => db.Insert(obj));
-				Assert.Throws<LinqToDBException>(() => db.GetTable<NoGetterSetterMethods>().ToList());
+				Assert.That(() => db.Insert(obj), Throws.TypeOf<LinqToDBException>());
+				Assert.That(() => db.GetTable<NoGetterSetterMethods>().ToList(), Throws.TypeOf<LinqToDBException>());
 			}
 		}
 

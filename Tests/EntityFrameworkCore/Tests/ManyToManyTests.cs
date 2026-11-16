@@ -233,9 +233,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		{
 			using var ctx = CreateContext(provider);
 
-			var ex = Assert.Catch(() => ctx.Docs.Where(d => d.PrimaryLabels.Any()).ToLinqToDB().ToList());
+			var ex = Shouldly.Should.Throw<Exception>(() => ctx.Docs.Where(d => d.PrimaryLabels.Any()).ToLinqToDB().ToList());
 
-			Assert.That(ex!.ToString(), Does.Contain("implicit many-to-many"));
+			Assert.That(ex.ToString(), Does.Contain("implicit many-to-many"));
 		}
 
 		#endregion

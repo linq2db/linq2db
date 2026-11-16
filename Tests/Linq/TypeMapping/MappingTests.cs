@@ -535,7 +535,7 @@ namespace Tests.TypeMapping
 				var str1 = wrapper.GetOtherAnother(5).OtherStrProp;
 				Assert.That(str1, Is.EqualTo("OtherAnotherStrValue5"));
 
-				Assert.Throws<NotImplementedException>(() => wrapper.GetOther(10));
+				Assert.That(() => wrapper.GetOther(10), Throws.TypeOf<NotImplementedException>());
 			}
 
 			[Test]

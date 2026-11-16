@@ -14,7 +14,6 @@ using Tests.Model;
 namespace Tests.xUpdate
 {
 	[TestFixture]
-	[Order(10000)]
 	[Obsolete("Tests for obsolete API. Will be removed with API under question.")]
 	public class OldMergeTests : TestBase
 	{

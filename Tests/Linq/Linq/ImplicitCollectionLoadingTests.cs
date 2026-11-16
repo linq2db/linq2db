@@ -37,8 +37,9 @@ namespace Tests.Linq
 			var query = from p in db.Parent
 						select new { p.ParentID, p.Children };
 
-			var ex = Assert.Throws<LinqToDBException>(() => query.ToList());
-			ex.Message.ShouldContain("LoadWith");
+			Assert.That(
+				() => query.ToList(),
+				Throws.TypeOf<LinqToDBException>().With.Message.Contains("LoadWith").IgnoreCase);
 		}
 
 		[Test]
@@ -49,7 +50,7 @@ namespace Tests.Linq
 			var query = from p in db.Parent
 						select new { p.ParentID, p.Children };
 
-			Assert.DoesNotThrow(() => query.ToList());
+			query.ToList();
 		}
 
 		[Test]
@@ -83,21 +84,21 @@ namespace Tests.Linq
 							  select new { p.ParentID, p.Children })
 				.WithUnionLoadStrategy();
 
-			Assert.DoesNotThrow(() => queryUnion.ToList());
+			queryUnion.ToList();
 
 			var queryKeyed = (from p in db.Parent
 							  orderby p.ParentID
 							  select new { p.ParentID, p.Children })
 				.WithKeyedLoadStrategy();
 
-			Assert.DoesNotThrow(() => queryKeyed.ToList());
+			queryKeyed.ToList();
 
 			var querySeparate = (from p in db.Parent
 								 orderby p.ParentID
 								 select new { p.ParentID, p.Children })
 				.WithSeparateLoadStrategy();
 
-			Assert.DoesNotThrow(() => querySeparate.ToList());
+			querySeparate.ToList();
 		}
 
 		[Test]
@@ -138,8 +139,9 @@ namespace Tests.Linq
 			var query = from p in db.Parent
 						select new { p.ParentID, p.Children };
 
-			var ex = Assert.Throws<LinqToDBException>(() => query.ToList());
-			ex.Message.ShouldContain("LoadWith");
+			Assert.That(
+				() => query.ToList(),
+				Throws.TypeOf<LinqToDBException>().With.Message.Contains("LoadWith").IgnoreCase);
 		}
 	}
 }

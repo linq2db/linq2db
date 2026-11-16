@@ -729,16 +729,16 @@ namespace Tests.Linq
 		public void SkipTakeWithTies([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataContext(context);
-			Assert.Throws<LinqToDBException>(() => db.Person.Skip(1).Take(() => 50, TakeHints.WithTies | TakeHints.Percent).Select(_ => _).ToList());
+			Assert.That(() => db.Person.Skip(1).Take(() => 50, TakeHints.WithTies | TakeHints.Percent).Select(_ => _).ToList(), Throws.TypeOf<LinqToDBException>());
 
-			Assert.Throws<LinqToDBException>(() => db.Person.Take(() => 50, TakeHints.WithTies | TakeHints.Percent).Skip(1).Select(_ => _).ToList());
+			Assert.That(() => db.Person.Take(() => 50, TakeHints.WithTies | TakeHints.Percent).Skip(1).Select(_ => _).ToList(), Throws.TypeOf<LinqToDBException>());
 		}
 
 		[Test]
 		public void TakeWithHintsFails([IncludeDataSources(ProviderName.SqlCe, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
-			Assert.Throws<LinqToDBException>(() => db.Parent.Take(10, TakeHints.Percent).ToList());
+			Assert.That(() => db.Parent.Take(10, TakeHints.Percent).ToList(), Throws.TypeOf<LinqToDBException>());
 		}
 
 		[ActiveIssue("https://github.com/ydb-platform/ydb/issues/46197", Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "dq_opt_phy_finalizing.cpp",
