@@ -548,17 +548,26 @@ namespace Tests.Linq
 
 			AssertQuery(negatedPower);
 
-			var negativeBase = db.Types
-				.OrderBy(p => p.ID)
-				.Select(p => Sql.AsSql(Math.Pow(-2, p.ID % 3 + 1)));
-
-			AssertQuery(negativeBase);
-
 			var negativeExponent = db.Types
 				.OrderBy(p => p.ID)
 				.Select(p => Sql.AsSql(Math.Pow(p.ID, -1)));
 
 			AssertQuery(negativeExponent);
+		}
+
+		[Test]
+		[ActiveIssue(6341, Configuration = TestProvName.AllFirebird, ErrorTypeName = "FirebirdSql.Data.FirebirdClient.FbException",
+			ErrorMessage = "Base for POWER cannot be negative if exponent is not an integral value",
+			Details = "Firebird refuses a negative base when the exponent is cast to DOUBLE PRECISION, whatever its value.")]
+		public void PowerOfNegativeBaseKeepsItsGrouping([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var negativeBase = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Math.Pow(-2, p.ID % 3 + 1)));
+
+			AssertQuery(negativeBase);
 		}
 
 		// Access evaluates ^ left to right, so a power as the exponent needs its own parentheses.
