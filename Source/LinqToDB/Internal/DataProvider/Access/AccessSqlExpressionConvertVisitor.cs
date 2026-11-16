@@ -537,6 +537,9 @@ namespace LinqToDB.Internal.DataProvider.Access
 				SqlBinaryExpression(var type, var ex1, "%", var ex2) => new SqlBinaryExpression(type, ex1, "MOD", ex2, Precedence.Multiplicative),
 				SqlBinaryExpression(var type, var ex1, "&", var ex2) => new SqlBinaryExpression(type, ex1, "BAND", ex2, Precedence.Bitwise),
 				SqlBinaryExpression(var type, var ex1, "|", var ex2) => new SqlBinaryExpression(type, ex1, "BOR", ex2, Precedence.Bitwise - 1),
+				// C# XOR only: a power reaches here as ^ too, at Precedence.Unary + 1 (MathMemberTranslator.Power).
+				// BXOR binds looser than BOR in Access, so it sits below it.
+				SqlBinaryExpression(var type, var ex1, "^", var ex2) { Precedence: Precedence.Bitwise } => new SqlBinaryExpression(type, ex1, "BXOR", ex2, Precedence.Bitwise - 2),
 				_ => base.ConvertSqlBinaryExpression(element),
 			};
 		}

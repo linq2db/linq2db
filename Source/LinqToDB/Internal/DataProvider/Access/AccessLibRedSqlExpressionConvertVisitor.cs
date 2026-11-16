@@ -1,6 +1,5 @@
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlQuery;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Access
 {
@@ -44,16 +43,6 @@ namespace LinqToDB.Internal.DataProvider.Access
 			return part == null
 				? null
 				: Factory.Function(Factory.GetDbDataType(typeof(long)), "DateDiff_Big", Factory.Value(part), start, end);
-		}
-
-		// Access reads ^ as a power; LibRed has the bitwise operator Jet lacks
-		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
-		{
-			return element switch
-			{
-				SqlBinaryExpression(var type, var ex1, "^", var ex2) => new SqlBinaryExpression(type, ex1, "BXOR", ex2, Precedence.Bitwise - 1),
-				_ => base.ConvertSqlBinaryExpression(element),
-			};
 		}
 	}
 }

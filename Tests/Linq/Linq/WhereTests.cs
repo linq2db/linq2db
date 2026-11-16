@@ -215,21 +215,65 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void BinaryXor([DataSources(TestProvName.AllNativeAccess)] string context)
+		public void BinaryXor([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			TestOneJohn(from p in db.Person where (p.ID ^ 2) == 3 select p);
 		}
 
+		[ActiveIssue(6243, Configurations = [ProviderName.SqlCe, TestProvName.AllSqlServer], ErrorMessage = "Count equal to 2{0}But was:{1}0",
+			Details = "T-SQL evaluates | and ^ left to right at one level, and the XOR operand of | is emitted without parentheses. Measured on SqlCe; SQL Server has no | / ^ arm either and emits the same SQL.")]
 		[Test]
-		public void BinaryAnd([DataSources(TestProvName.AllNativeAccess)] string context)
+		public void BinaryXorUnderOr([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			AreEqual(
+				   Person.Where(p => (p.ID | (p.ID ^ 1)) == p.ID),
+				db.Person.Where(p => (p.ID | (p.ID ^ 1)) == p.ID));
+		}
+
+		[Test]
+		public void BinaryXorOverOr([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			AreEqual(
+				   Person.Where(p => ((p.ID ^ 1) | 2) == 3),
+				db.Person.Where(p => ((p.ID ^ 1) | 2) == 3));
+		}
+
+		// Access only: BXOR sits below BAND there, so a BAND operand of BXOR is emitted bare; the other providers' bitwise
+		// grouping is #6243's
+		[Test]
+		public void BinaryAndLeftOfXor([IncludeDataSources(true, TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			AreEqual(
+				   Person.Where(p => ((p.ID & 3) ^ 1) == 0),
+				db.Person.Where(p => ((p.ID & 3) ^ 1) == 0));
+		}
+
+		[Test]
+		public void BinaryAndRightOfXor([IncludeDataSources(true, TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			AreEqual(
+				   Person.Where(p => (p.ID ^ (p.ID & 1)) == 0),
+				db.Person.Where(p => (p.ID ^ (p.ID & 1)) == 0));
+		}
+
+		[Test]
+		public void BinaryAnd([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			TestOneJohn(from p in db.Person where (p.ID & 3) == 1 select p);
 		}
 
 		[Test]
-		public void BinaryOr([DataSources(TestProvName.AllNativeAccess)] string context)
+		public void BinaryOr([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
