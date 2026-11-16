@@ -3426,7 +3426,7 @@ namespace Tests.Linq
 			public IQueryable<ConvertedGenderRow> OnConverted(IQueryable<ConvertedGenderRow> t) => t.Where(r => r.Gender.Equals(Value));
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272"), QueryCacheTest]
 		public void EqualsInstanceValueCheckedPerInstance([DataSources] string context, [Values] bool converted)
 		{
 			var ms     = CreateApiGenderSchema();
@@ -3450,20 +3450,27 @@ namespace Tests.Linq
 			var first = new EqualsHolder(Gender.Female);
 
 			var ids = converted
-				? first.OnConverted(table).Select(r => r.Id).ToArray()
-				: first.OnPerson(db).Select(p => p.ID).ToArray();
+				? first.OnConverted(table)
+					.Select(r => r.Id)
+				: first.OnPerson(db)
+					.Select(p => p.ID);
 
-			var expected = converted
-				? new[] { 2 }
-				: Person.Where(p => p.Gender == Gender.Female).Select(p => p.ID).ToArray();
+			AssertQuery(ids);
 
-			ids.ShouldBe(expected, ignoreOrder: true);
+			var misses = ids.GetCacheMissCount();
 
 			var second = new EqualsHolder(ApiGender.Female);
 
-			Assert.That(
-				() => converted ? second.OnConverted(table).ToArray().Length : second.OnPerson(db).ToArray().Length,
-				Throws.TypeOf<LinqToDBConvertException>());
+			var others = converted
+				? second.OnConverted(table)
+					.Select(r => r.Id)
+				: second.OnPerson(db)
+					.Select(p => p.ID);
+
+			Assert.That(() => others.ToArray(), Throws.TypeOf<LinqToDBConvertException>());
+
+			// The second instance is served the first build, so the check has to run per execution.
+			others.GetCacheMissCount().ShouldBe(misses);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]

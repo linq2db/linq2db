@@ -4254,8 +4254,9 @@ namespace LinqToDB.Internal.Linq.Builder
 		internal static readonly MethodInfo CheckEnumEqualsArgumentMethod = MemberHelper.MethodOfGeneric(() => CheckEnumEqualsArgument<DataType>(null));
 
 		// A client value that is or can hold an enum of another type (a typed enum, object, Enum, ValueType, an interface enums
-		// implement) is checked per execution, so a null passes and any other enum fails as an unconvertible value does; a constant
-		// is checked once, here, and stays a literal. The receiver's own enum and anything else are built as before.
+		// implement) is checked per execution, so a null passes and any other enum fails as an unconvertible value does; a literal
+		// is checked once, here, and stays a literal. Any other immutable value (one read off a constant instance) is not in the
+		// cache key, so it is checked per execution too. The receiver's own enum and anything else are built as before.
 		Expression GuardEnumEqualsValue(Expression value, Type enumType)
 		{
 			if (!Builder.CanBeEvaluatedOnClient(value))
@@ -4267,9 +4268,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (underlying == enumType || !(underlying.IsEnum || !operand.Type.IsValueType && operand.Type.IsAssignableFrom(enumType)))
 				return value;
 
-			if (Builder.CanBeConstant(value))
+			if (value.UnwrapConvert() is ConstantExpression { Value: var literal })
 			{
-				ThrowIfOtherEnum(Builder.EvaluateExpression(value), enumType);
+				ThrowIfOtherEnum(literal, enumType);
 				return value;
 			}
 
