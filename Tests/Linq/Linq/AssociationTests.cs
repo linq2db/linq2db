@@ -735,9 +735,9 @@ namespace Tests.Linq
 			// we want to make sure the conversion is not possible because we want to bypass
 			// that conversion if the setter value parameter type (IEnumerable<Child> in this case)
 			// does not match the member type (ChildrenContainer<Child> in this case)
-			Assert.Throws<LinqToDB.Common.LinqToDBConvertException>(() =>
+			Assert.That(() =>
 				db.MappingSchema.ChangeType(new List<Child>(0), typeof(ChildrenContainer<Child>)),
-				"List<Child> should not be convertible to ChildrenContainer<Child>");
+				Throws.TypeOf<LinqToDB.Common.LinqToDBConvertException>(), "List<Child> should not be convertible to ChildrenContainer<Child>");
 
 			var value = db.GetTable<Issue3975TestClass>().LoadWith(x => x.Children).First();
 

@@ -135,7 +135,7 @@ namespace Tests.Linq
 					where sq.Sum > 0
 					select sq;
 
-			Assert.DoesNotThrow(() => _ = q.ToList());
+			_ = q.ToList();
 		}
 
 		[Test]

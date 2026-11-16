@@ -86,8 +86,8 @@ namespace Tests.Linq
 			using (var db = (DataConnection)GetDataContext(context))
 			using (db.CreateLocalTable<ExpressionTestClass>())
 			{
-				Assert.Throws<LinqToDBException>(() => _ = db.Select(() => Functions.DateFuncFail(db, new ExpressionTestsFakeType())));
-				Assert.Throws<LinqToDBException>(() => _ = db.Select(() => Functions.DateExprKindFail(db, "now", new ExpressionTestsFakeType())));
+				Assert.That(() => _ = db.Select(() => Functions.DateFuncFail(db, new ExpressionTestsFakeType())), Throws.TypeOf<LinqToDBException>());
+				Assert.That(() => _ = db.Select(() => Functions.DateExprKindFail(db, "now", new ExpressionTestsFakeType())), Throws.TypeOf<LinqToDBException>());
 			}
 		}
 

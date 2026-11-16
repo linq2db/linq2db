@@ -25,17 +25,14 @@ namespace Tests.UserTests
 			var criteria = Enumerable.Range(0, 3).Select(i => new {RECORDNAME = i, KEYNUMB = i})
 					.ToArray();
 
-			Assert.DoesNotThrow(() =>
+			_ = table.Select(a => new
 			{
-				_ = table.Select(a => new
-				{
-					Alert = a,
-					Key = new { RECORDNAME = a.Id, KEYNUMB = a.NullValue.GetValueOrDefault() }
-				})
-					.Where(a => criteria.Contains(a.Key))
-					.Select(a => a.Alert)
-					.ToList();
-			});
+				Alert = a,
+				Key = new { RECORDNAME = a.Id, KEYNUMB = a.NullValue.GetValueOrDefault() }
+			})
+				.Where(a => criteria.Contains(a.Key))
+				.Select(a => a.Alert)
+				.ToList();
 		}
 	}
 }

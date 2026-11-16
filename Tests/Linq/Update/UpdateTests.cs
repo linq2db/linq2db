@@ -23,7 +23,6 @@ using Tests.Model;
 namespace Tests.xUpdate
 {
 	[TestFixture]
-//	[Order(10000)]
 	public class UpdateTests : TestBase
 	{
 		[Test]
@@ -2165,8 +2164,9 @@ namespace Tests.xUpdate
 			using var db = GetDataContext(context);
 			var query = db.Person.AsUpdatable();
 
-			var ex = Assert.Throws<LinqToDBException>(() => query.Update())!;
-			Assert.That(ex.Message, Is.EqualTo("Update query has no setters defined."));
+			Assert.That(
+				() => query.Update(),
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("Update query has no setters defined."));
 		}
 
 		[Test]

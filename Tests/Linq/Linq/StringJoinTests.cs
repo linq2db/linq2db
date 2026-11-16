@@ -468,7 +468,7 @@ namespace Tests.Linq
 					Result = string.Join(", ", data.Select(x => x.NullableValue).Where(x => x != null))
 				};
 
-			Assert.DoesNotThrow(() => _ = query.ToList());
+			_ = query.ToList();
 		}
 
 		[ThrowsCannotBeConverted(TestProvName.AllNativeAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)]

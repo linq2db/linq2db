@@ -1767,7 +1767,7 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable(SelectExpressionTable.Data);
-			Assert.Throws<InvalidOperationException>(() => table.Take(1).Select(_ => Wrap3(new Guid("b3d9b51c89f9442a893bcd8a6f667d37")) != Wrap3(new Guid("61efdcd4659d41e8910c506a9c2f31c5"))).SingleOrDefault());
+			Assert.That(() => table.Take(1).Select(_ => Wrap3(new Guid("b3d9b51c89f9442a893bcd8a6f667d37")) != Wrap3(new Guid("61efdcd4659d41e8910c506a9c2f31c5"))).SingleOrDefault(), Throws.TypeOf<InvalidOperationException>());
 		}
 
 		[Test]

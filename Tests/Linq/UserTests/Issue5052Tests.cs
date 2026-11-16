@@ -108,10 +108,7 @@ namespace Tests.UserTests
 					}
 				);
 
-			Shouldly.Should.NotThrow(
-				() => query.ToList(),
-				"Projection should not throw an exception."
-			);
+			query.ToList();
 		}
 	}
 }

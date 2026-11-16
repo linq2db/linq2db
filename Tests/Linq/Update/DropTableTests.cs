@@ -9,7 +9,6 @@ using NUnit.Framework;
 namespace Tests.xUpdate
 {
 	[TestFixture]
-	[Order(10000)]
 	public class DropTableTests : TestBase
 	{
 		sealed class DropTableTest
@@ -37,8 +36,7 @@ namespace Tests.xUpdate
 			Assert.That(data[0].ID, Is.EqualTo(123));
 
 			// check that table dropped
-			var exception = Assert.Catch(() => table.ToList());
-			Assert.That(exception, Is.Not.Null);
+			Assert.That(() => table.ToList(), Throws.Exception);
 		}
 
 		sealed class DropTableTestID
@@ -70,8 +68,7 @@ namespace Tests.xUpdate
 				}));
 
 			// check that table dropped
-			var exception = Assert.Catch(() => table.ToList());
-			Assert.That(exception, Is.Not.Null);
+			Assert.That(() => table.ToList(), Throws.Exception);
 		}
 
 		[Test]
@@ -103,8 +100,7 @@ namespace Tests.xUpdate
 			var sql = db.LastQuery!;
 
 			// check that table dropped
-			var exception = Assert.Catch(() => table.ToList());
-			Assert.That(exception, Is.InstanceOf<Exception>());
+			Assert.That(() => table.ToList(), Throws.Exception);
 
 			// TODO: we need better assertion here
 			// Right now we just check generated sql query, not that it is

@@ -26,7 +26,6 @@ using Tests.Model;
 namespace Tests.xUpdate
 {
 	[TestFixture]
-	[Order(10000)]
 	public class InsertTests : TestBase
 	{
 		[Test]
@@ -1158,7 +1157,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertOrReplaceWithIdentity()
 		{
-			Assert.Throws<LinqToDBException>(() =>
+			Assert.That(() =>
 			{
 				using var db = new DataConnection();
 				var p = new Person()
@@ -1168,7 +1167,7 @@ namespace Tests.xUpdate
 				};
 
 				db.InsertOrReplace(p);
-			});
+			}, Throws.TypeOf<LinqToDBException>());
 		}
 
 		[Test]
@@ -1943,8 +1942,9 @@ namespace Tests.xUpdate
 			using var db = GetDataContext(context);
 			var vi = db.Person.AsValueInsertable();
 
-			var ex = Assert.Throws<LinqToDBException>(() => vi.Insert())!;
-			Assert.That(ex.Message, Is.EqualTo("Insert query has no setters defined."));
+			Assert.That(
+				() => vi.Insert(),
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("Insert query has no setters defined."));
 		}
 
 		class InsertEntity

@@ -1665,8 +1665,9 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable<BaseClass>();
 
-			Assert.Throws<LinqToDBException>(
-				() => db.GetTable<BaseClass>().Insert(() => new UnmappedChild { Id = 1, Code = 1, UnmappedField = 5 }));
+			Assert.That(
+				() => db.GetTable<BaseClass>().Insert(() => new UnmappedChild { Id = 1, Code = 1, UnmappedField = 5 }),
+				Throws.TypeOf<LinqToDBException>());
 
 			Assert.That(db.GetTable<BaseClass>().Count(), Is.Zero);
 		}

@@ -95,12 +95,12 @@ namespace Tests.Linq
 		public void Test_Null([DataSources(NOT_SUPPORTED)] string context)
 		{
 			using var db = GetDataContext(context);
-			Assert.Throws<ArgumentNullException>(() =>
+			Assert.That(() =>
 			{
 				var query =
 					from x in db.Person.TagQuery(null!)
 					select x;
-			});
+			}, Throws.TypeOf<ArgumentNullException>());
 		}
 
 		[Test]
