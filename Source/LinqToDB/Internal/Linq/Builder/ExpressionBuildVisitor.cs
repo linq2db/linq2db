@@ -5430,19 +5430,23 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		// One client call, so the value is a single parameter of the target enum rather than a cast over the source's. Only a
 		// literal folds: any other immutable value is not in the cache key, and a detached constant would be served to the next one.
+		// A Sql.Constant / Sql.Parameter request is moved onto the cast value, which is what reaches the statement.
 		static Expression CastRegisteredEnum(Expression value, Type toEnum, bool nullable)
 		{
-			var fromEnum = value.Type.UnwrapNullableType();
-
-			if (value.UnwrapConvert() is ConstantExpression { Value: var constant })
+			return ExpressionHelpers.MoveValueMarkerOutside(value, unmarked =>
 			{
-				var converted = constant == null ? null : Enum.ToObject(toEnum, constant);
-				return Expression.Constant(converted, nullable ? toEnum.MakeNullable() : toEnum);
-			}
+				var fromEnum = unmarked.Type.UnwrapNullableType();
 
-			return nullable
-				? Expression.Call(CastNullableEnumMethod.MakeGenericMethod(fromEnum, toEnum), value.Type.IsNullableType ? value : Expression.Convert(value, fromEnum.MakeNullable()))
-				: Expression.Call(CastEnumMethod.MakeGenericMethod(fromEnum, toEnum), value);
+				if (unmarked.UnwrapConvert() is ConstantExpression { Value: var constant })
+				{
+					var converted = constant == null ? null : Enum.ToObject(toEnum, constant);
+					return Expression.Constant(converted, nullable ? toEnum.MakeNullable() : toEnum);
+				}
+
+				return nullable
+					? Expression.Call(CastNullableEnumMethod.MakeGenericMethod(fromEnum, toEnum), unmarked.Type.IsNullableType ? unmarked : Expression.Convert(unmarked, fromEnum.MakeNullable()))
+					: Expression.Call(CastEnumMethod.MakeGenericMethod(fromEnum, toEnum), unmarked);
+			});
 		}
 
 		internal static readonly MethodInfo CastEnumMethod         = MemberHelper.MethodOfGeneric(() => CastEnum<DataType, DataType>(default));

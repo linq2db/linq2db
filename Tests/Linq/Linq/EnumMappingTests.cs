@@ -3711,6 +3711,31 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void DirectEnumCastComparedWithValueMarker([DataSources] string context, [Values] bool constant, [Values] bool inList)
+		{
+			using var db = GetDataContext(context, CreateApiGenderSchema());
+
+			var api = ApiGender.Female;
+
+			var query = constant
+				? inList
+					? db.Person.Where(p => new[] { Sql.Constant(api) }.Contains((ApiGender)p.Gender))
+					: db.Person.Where(p => (ApiGender)p.Gender == Sql.Constant(api))
+				: inList
+					? db.Person.Where(p => new[] { Sql.Parameter(api) }.Contains((ApiGender)p.Gender))
+					: db.Person.Where(p => (ApiGender)p.Gender == Sql.Parameter(api));
+
+			AssertQuery(query);
+
+			var sql = query.ToSqlQuery();
+
+			if (constant)
+				sql.Parameters.ShouldBeEmpty();
+			else if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				sql.Parameters.ShouldNotBeEmpty();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
 		public void ProjectedEnumCastEmitsNoSqlCast([DataSources] string context)
 		{
 			using var db = GetDataContext(context, CreateApiGenderSchema());
