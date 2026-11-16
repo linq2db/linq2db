@@ -265,6 +265,25 @@ namespace Tests.Linq
 				db.Person.Where(p => (p.ID ^ (p.ID & 1)) == 0));
 		}
 
+		// Access lowers ~x to -1 - x, which needs its own grouping of a compound operand
+		[Test]
+		public void BitwiseNotKeepsOperandGrouping([IncludeDataSources(true, TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var notOfSum = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(~(p.ID + 1)));
+
+			AssertQuery(notOfSum);
+
+			var notOfAnd = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(~(p.ID & 3)));
+
+			AssertQuery(notOfAnd);
+		}
+
 		[Test]
 		public void BinaryAnd([DataSources] string context)
 		{
