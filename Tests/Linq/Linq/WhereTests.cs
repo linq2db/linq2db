@@ -308,6 +308,31 @@ namespace Tests.Linq
 				.Select(p => Sql.AsSql(~(p.ID & 3)));
 
 			AssertQuery(notOfAnd);
+
+			// the lowered -1 - x is emitted bare as an operand of BAND / BOR, which Access binds below -
+			var notLeftOfAnd = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(~(p.ID + 1) & 3));
+
+			AssertQuery(notLeftOfAnd);
+
+			var notRightOfAnd = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((p.ID + 6) & ~(p.ID + 1)));
+
+			AssertQuery(notRightOfAnd);
+
+			var notLeftOfOr = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(~(p.ID + 1) | 2));
+
+			AssertQuery(notLeftOfOr);
+
+			var notRightOfOr = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(p.ID | ~(p.ID + 1)));
+
+			AssertQuery(notRightOfOr);
 		}
 
 		[Test]
