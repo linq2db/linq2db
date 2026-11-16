@@ -68,7 +68,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 		public override bool CanLowerIntervalPart => true;
 
 		/// <summary>
-		/// No tick count from Access at all.
+		/// No tick count from Jet or ACE at all (see <see cref="IsTickArithmeticSupported"/>).
 		/// </summary>
 		/// <remarks>
 		/// <c>DateDiff</c> hands back a 32-bit count, and scaling seconds to ticks overflows it after about three
@@ -94,7 +94,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 		public override bool CanLowerIntervalShift => false;
 
 		/// <summary>
-		/// No shift by an interval either, for the reason <see cref="ElapsedTicks"/> gives.
+		/// No shift by an interval on Jet or ACE either, for the reason <see cref="ElapsedTicks"/> gives.
 		/// </summary>
 		/// <remarks>
 		/// The amount reaches a shift as a tick count whatever it was built from, and that is the one number Access
