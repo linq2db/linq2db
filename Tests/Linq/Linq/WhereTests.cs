@@ -221,16 +221,17 @@ namespace Tests.Linq
 			TestOneJohn(from p in db.Person where (p.ID ^ 2) == 3 select p);
 		}
 
-		[ActiveIssue(6243, Configurations = [ProviderName.SqlCe, TestProvName.AllSqlServer], ErrorMessage = "Count equal to 2{0}But was:{1}0",
-			Details = "T-SQL evaluates | and ^ left to right at one level, and the XOR operand of | is emitted without parentheses. Measured on SqlCe; SQL Server has no | / ^ arm either and emits the same SQL.")]
+		[ActiveIssue(6243, Configurations = [ProviderName.SqlCe, TestProvName.AllSqlServer, TestProvName.AllSybase], ErrorMessage = "Count equal to 2{0}But was:{1}0",
+			Details = "T-SQL evaluates | and ^ left to right at one level, and the XOR operand of | is emitted without parentheses. Measured on SqlCe and Sybase (CI); SQL Server has no | / ^ arm either and emits the same SQL.")]
 		[Test]
 		public void BinaryXorUnderOr([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
-			AreEqual(
-				   Person.Where(p => (p.ID | (p.ID ^ 1)) == p.ID),
-				db.Person.Where(p => (p.ID | (p.ID ^ 1)) == p.ID));
+			var query = db.Person
+				.Where(p => (p.ID | (p.ID ^ 1)) == p.ID);
+
+			AssertQuery(query);
 		}
 
 		[Test]
@@ -238,9 +239,10 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			AreEqual(
-				   Person.Where(p => ((p.ID ^ 1) | 2) == 3),
-				db.Person.Where(p => ((p.ID ^ 1) | 2) == 3));
+			var query = db.Person
+				.Where(p => ((p.ID ^ 1) | 2) == 3);
+
+			AssertQuery(query);
 		}
 
 		// Access only: BXOR sits below BAND and BOR there, so a BAND or BOR operand of BXOR, and a BAND operand of BOR, is
@@ -250,9 +252,10 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			AreEqual(
-				   Person.Where(p => ((p.ID & 3) ^ 1) == 0),
-				db.Person.Where(p => ((p.ID & 3) ^ 1) == 0));
+			var query = db.Person
+				.Where(p => ((p.ID & 3) ^ 1) == 0);
+
+			AssertQuery(query);
 		}
 
 		[Test]
@@ -260,9 +263,10 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			AreEqual(
-				   Person.Where(p => (p.ID ^ (p.ID & 1)) == 0),
-				db.Person.Where(p => (p.ID ^ (p.ID & 1)) == 0));
+			var query = db.Person
+				.Where(p => (p.ID ^ (p.ID & 1)) == 0);
+
+			AssertQuery(query);
 		}
 
 		[Test]
