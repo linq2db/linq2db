@@ -243,8 +243,8 @@ namespace Tests.Linq
 				db.Person.Where(p => ((p.ID ^ 1) | 2) == 3));
 		}
 
-		// Access only: BXOR sits below BAND there, so a BAND operand of BXOR is emitted bare; the other providers' bitwise
-		// grouping is #6243's
+		// Access only: BXOR sits below BAND and BOR there, so a BAND or BOR operand of BXOR, and a BAND operand of BOR, is
+		// emitted bare; the other providers' bitwise grouping is #6243's
 		[Test]
 		public void BinaryAndLeftOfXor([IncludeDataSources(true, TestProvName.AllAccess)] string context)
 		{
@@ -263,6 +263,28 @@ namespace Tests.Linq
 			AreEqual(
 				   Person.Where(p => (p.ID ^ (p.ID & 1)) == 0),
 				db.Person.Where(p => (p.ID ^ (p.ID & 1)) == 0));
+		}
+
+		[Test]
+		public void BinaryOrRightOfXor([IncludeDataSources(true, TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.Where(p => (p.ID ^ (p.ID | 1)) == 0);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void BinaryAndUnderOr([IncludeDataSources(true, TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.Where(p => (p.ID | (p.ID & 1)) == p.ID);
+
+			AssertQuery(query);
 		}
 
 		// Access lowers ~x to -1 - x, which needs its own grouping of a compound operand
