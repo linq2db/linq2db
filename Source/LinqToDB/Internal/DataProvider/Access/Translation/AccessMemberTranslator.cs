@@ -216,6 +216,10 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 			// Access evaluates ^ before negation, * / and MOD, so an operand built from any of them needs its own parentheses
 			protected virtual ISqlExpression Power(ISqlExpressionFactory factory, DbDataType type, ISqlExpression x, ISqlExpression y)
 			{
+				// ^ evaluates left to right, and Wrap leaves an equal-precedence right operand bare
+				if (y is SqlBinaryExpression { Operation: "^" })
+					y = new SqlExpression(factory.GetDbDataType(y), "({0})", LinqToDB.SqlQuery.Precedence.Unary + 1, y);
+
 				return factory.Binary(type, x, "^", y, LinqToDB.SqlQuery.Precedence.Unary + 1);
 			}
 

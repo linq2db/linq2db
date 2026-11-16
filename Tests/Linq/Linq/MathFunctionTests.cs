@@ -549,6 +549,25 @@ namespace Tests.Linq
 			AssertQuery(negatedPower);
 		}
 
+		// Access evaluates ^ left to right, so a power as the exponent needs its own parentheses.
+		[Test]
+		public void PowerOfPowerKeepsItsGrouping([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var powerAsExponent = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Math.Pow(2, Math.Pow(p.ID % 3 + 1, 2))));
+
+			AssertQuery(powerAsExponent);
+
+			var powerAsBase = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Math.Pow(Math.Pow(p.ID % 3 + 1, 2), 3)));
+
+			AssertQuery(powerAsBase);
+		}
+
 		// A non-constant precision must not cost the value its fractional digits.
 		// DuckDB rejects ROUND(DECIMAL, INTEGER) with a non-constant precision.
 		// Expected comes from the in-memory rows: Sybase's values arrive through double, so on .NET 11 a loaded

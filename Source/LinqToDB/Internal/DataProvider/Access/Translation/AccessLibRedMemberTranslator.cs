@@ -21,20 +21,6 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 			return new AccessLibRedStringMemberTranslator();
 		}
 
-		protected override IMemberTranslator CreateMathMemberTranslator()
-		{
-			return new AccessLibRedMathMemberTranslator();
-		}
-
-		// Power rather than ^, which LibRed's convert visitor maps to BXOR
-		protected class AccessLibRedMathMemberTranslator : MathMemberTranslator
-		{
-			protected override ISqlExpression Power(ISqlExpressionFactory factory, DbDataType type, ISqlExpression x, ISqlExpression y)
-			{
-				return factory.Function(type, "Power", x, y);
-			}
-		}
-
 		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
 		{
 			return new AccessLibRedWindowFunctionsMemberTranslator();
