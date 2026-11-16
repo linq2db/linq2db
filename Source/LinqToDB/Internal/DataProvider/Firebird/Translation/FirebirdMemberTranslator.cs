@@ -33,6 +33,30 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 			return new GuidMemberTranslator();
 		}
 
+		protected override IMemberTranslator CreateMathMemberTranslator()
+		{
+			return new FirebirdMathMemberTranslator();
+		}
+
+		protected class FirebirdMathMemberTranslator : MathMemberTranslatorBase
+		{
+			// Sql.RoundToEven(double) rounds through decimal, as Math.Round does not.
+			protected override ISqlExpression? TranslateSqlRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
+			{
+				if (methodCall.Arguments[0].Type == typeof(decimal?))
+					return base.TranslateSqlRoundToEven(translationContext, methodCall, value, precision);
+
+				return RoundThroughDecimal(translationContext, value, v => base.TranslateSqlRoundToEven(translationContext, methodCall, v, precision));
+			}
+
+			protected override ISqlExpression? TranslateTruncate(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value)
+			{
+				var factory = translationContext.ExpressionFactory;
+
+				return factory.Function(factory.GetDbDataType(methodCall.Type), "Trunc", value, factory.Value(0));
+			}
+		}
+
 		protected class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertMoney(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
