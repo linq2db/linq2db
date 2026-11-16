@@ -2880,6 +2880,37 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void DirectEnumCastOverParameterConditionalUsesEnumConverterInlined([DataSources] string context)
+		{
+			var ms = CreateApiGenderSchema();
+
+			// The converter keeps the comparison from being rewritten into Gender's terms, so the inlined fold meets two enum types.
+			ms.SetConverter<ApiGender, DataParameter>(value => new DataParameter(null, value == ApiGender.Female ? "M" : "F", DataType.VarChar));
+
+			using var db = GetDataContext(context, ms);
+
+			db.InlineParameters = true;
+
+			var male   = Gender.Male;
+			var female = Gender.Female;
+			var gender = ApiGender.Female;
+
+			var ids = db.Person
+				.Where(p => (ApiGender)(p.ID > 2 ? male : female) == gender)
+				.Select(p => p.ID)
+				.OrderBy(id => id)
+				.ToArray();
+
+			var expected = Person
+				.Where(p => p.ID > 2)
+				.Select(p => p.ID)
+				.OrderBy(id => id)
+				.ToArray();
+
+			ids.ShouldBe(expected);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
 		public void EnumConditionalWithValueToSqlConverterEqualParameter([DataSources] string context, [Values] bool inline)
 		{
 			var ms = new MappingSchema();
@@ -2946,7 +2977,7 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context, CreateApiGenderSchema());
 
-			// Inlined, all three values are evaluated beside each other: the fold sees two enum types.
+			// Inlined, all three values are evaluated beside each other and the CASE folds; the compared value arrives already cast to Gender.
 			db.InlineParameters = true;
 
 			var male   = Gender.Male;
@@ -2962,7 +2993,7 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
 		public void DirectEnumCastOverParameterConditionalEqualParameterNotInlined(
 			// Firebird 2.5 to 5 cannot type a CASE of two parameters (-804 Data type unknown); 2.5 refuses it on master as well.
-			// DB2 refuses it as an untyped parameter marker (SQL0418N).
+			// DB2 refuses it as an untyped parameter marker (SQL0418N). Tracked as #6335.
 			[DataSources(TestProvName.AllFirebird, ProviderName.DB2)] string context)
 		{
 			using var db = GetDataContext(context, CreateApiGenderSchema());
@@ -2982,7 +3013,7 @@ namespace Tests.Linq
 		{
 			var ms = CreateApiGenderSchema();
 
-			// The parameter's provider value is 'F' while the kept literals stay Gender: nothing to fold.
+			// The compared value arrives as a Gender, like the literals the converter keeps, so inlined they fold as client values.
 			SetGenderLiteralConverter(ms);
 
 			using var db = GetDataContext(context, ms);
@@ -3026,7 +3057,7 @@ namespace Tests.Linq
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
 		public void SelectedEnumParameterConcatCompared(
-			// Jet answers "Query is too complex" for a parameter projected through UNION ALL and filtered outside; master emits the same SQL.
+			// Jet answers "Query is too complex" for a parameter projected through UNION ALL and filtered outside; master emits the same SQL on ACE.
 			[DataSources(TestProvName.AllAccessJet)] string context)
 		{
 			using var db = GetDataContext(context, CreateApiGenderSchema());
@@ -3363,9 +3394,15 @@ namespace Tests.Linq
 				ShuffledShape.ProjectedEqualsObject => projected.Where(p => p.Gender.Equals(boxed)),
 				ShuffledShape.ProjectedContains     => projected.Where(p => values.Contains(p.Gender)),
 				ShuffledShape.ProjectedInlineArray  => projected.Where(p => new[] { ShuffledGender.Female }.Contains(p.Gender)),
-				ShuffledShape.DirectParameter       => db.Person.Where(p => (ShuffledGender)p.Gender == value).Select(p => new { p.ID, Gender = (ShuffledGender)p.Gender }),
-				ShuffledShape.DirectInlineArray     => db.Person.Where(p => new[] { ShuffledGender.Female }.Contains((ShuffledGender)p.Gender)).Select(p => new { p.ID, Gender = (ShuffledGender)p.Gender }),
-				_                                   => db.Person.Where(p => (ShuffledGender)(p.ID > 2 ? Gender.Male : Gender.Female) == value).Select(p => new { p.ID, Gender = (ShuffledGender)p.Gender }),
+				ShuffledShape.DirectParameter       => db.Person
+					.Where(p => (ShuffledGender)p.Gender == value)
+					.Select(p => new { p.ID, Gender = (ShuffledGender)p.Gender }),
+				ShuffledShape.DirectInlineArray     => db.Person
+					.Where(p => new[] { ShuffledGender.Female }.Contains((ShuffledGender)p.Gender))
+					.Select(p => new { p.ID, Gender = (ShuffledGender)p.Gender }),
+				_                                   => db.Person
+					.Where(p => (ShuffledGender)(p.ID > 2 ? Gender.Male : Gender.Female) == value)
+					.Select(p => new { p.ID, Gender = (ShuffledGender)p.Gender }),
 			};
 
 			AssertQuery(query);
@@ -3384,7 +3421,7 @@ namespace Tests.Linq
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
 		public void RegisteredEnumValueWithoutCounterpartParameter(
-			// Firebird and DB2 type the parameter as the CHAR(1) column and refuse the unmapped '99' (string truncation), as master does for a plain Gender parameter.
+			// Firebird and DB2 type the parameter as the CHAR(1) column and refuse the unmapped '99' (string truncation); master Firebird does the same for a plain Gender parameter.
 			[DataSources(TestProvName.AllFirebird, ProviderName.DB2)] string context, [Values] bool notEqual)
 		{
 			using var db = GetDataContext(context, CreateApiGenderSchema());
@@ -3740,6 +3777,22 @@ namespace Tests.Linq
 				sql.Parameters.ShouldBeEmpty();
 			else if (!context.IsAnyOf(TestProvName.AllClickHouse))
 				sql.Parameters.ShouldNotBeEmpty();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
+		public void EnumConditionalEqualInlinedParameterWithoutRegistration([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// No SetDefaultFromEnumType: the inlined parameter's enum still compares with the mapped CASE literals.
+			db.InlineParameters = true;
+
+			var gender = Gender.Female;
+
+			var query = db.Person
+				.Where(p => (p.ID > 2 ? Gender.Female : Gender.Male) == gender);
+
+			AssertQuery(query);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6272")]
