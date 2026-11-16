@@ -101,6 +101,22 @@ namespace LinqToDB.Internal.DataProvider.Access
 				.Append(expr.IsNot ? '0' : '1');
 		}
 
+		// ^ evaluates left to right, and Wrap leaves an equal-precedence right operand bare. Decided here, not at
+		// translation, because the convert visitor drops the numeric casts that can hide a nested power until now.
+		protected override void BuildBinaryExpression(SqlBinaryExpression expr)
+		{
+			if (expr is { Operation: "^", Expr2: SqlBinaryExpression { Operation: "^" } })
+			{
+				BuildExpression(GetPrecedence(expr), expr.Expr1);
+				StringBuilder.Append(" ^ (");
+				BuildExpression(expr.Expr2);
+				StringBuilder.Append(')');
+				return;
+			}
+
+			base.BuildBinaryExpression(expr);
+		}
+
 		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery,
 			SqlUpdateClause                                    updateClause)
 		{

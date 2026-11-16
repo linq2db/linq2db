@@ -376,6 +376,7 @@ static LinqToDB.Internal.Extensions.ReflectionExtensions.GetConstructorEx(this S
 static LinqToDB.Internal.Extensions.ReflectionExtensions.GetMethodCoercing(this System.Type! type, string! name, params System.Type![]! types) -> System.Reflection.MethodInfo?
 static LinqToDB.Internal.Extensions.ReflectionExtensions.GetMethodEx(this System.Type! type, string! name, int genericParametersCount, System.Reflection.BindingFlags bindingFlags, params System.Type![]! types) -> System.Reflection.MethodInfo?
 static LinqToDB.Internal.Extensions.ReflectionExtensions.GetMethodEx(this System.Type! type, string! name, System.Reflection.BindingFlags bindingFlags, params System.Type![]! types) -> System.Reflection.MethodInfo?
+override LinqToDB.Internal.DataProvider.Access.AccessSqlBuilderBase.BuildBinaryExpression(LinqToDB.Internal.SqlQuery.SqlBinaryExpression! expr) -> void
 override LinqToDB.Internal.DataProvider.Access.AccessLibRedSqlBuilder.BuildIsDistinctPredicate(LinqToDB.Internal.SqlQuery.SqlPredicate.IsDistinct! expr) -> void
 override LinqToDB.Internal.DataProvider.Access.AccessLibRedSqlBuilder.BuildSkipFirst(LinqToDB.Internal.SqlQuery.SelectQuery! selectQuery) -> void
 override LinqToDB.Internal.DataProvider.Access.AccessLibRedSqlBuilder.IsCaseExpressionSupported.get -> bool

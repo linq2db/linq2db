@@ -547,6 +547,18 @@ namespace Tests.Linq
 				.Select(p => Sql.AsSql(-Math.Pow(p.ID, 2)));
 
 			AssertQuery(negatedPower);
+
+			var negativeBase = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Math.Pow(-2, p.ID % 3 + 1)));
+
+			AssertQuery(negativeBase);
+
+			var negativeExponent = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Math.Pow(p.ID, -1)));
+
+			AssertQuery(negativeExponent);
 		}
 
 		// Access evaluates ^ left to right, so a power as the exponent needs its own parentheses.
@@ -566,6 +578,13 @@ namespace Tests.Linq
 				.Select(p => Sql.AsSql(Math.Pow(Math.Pow(p.ID % 3 + 1, 2), 3)));
 
 			AssertQuery(powerAsBase);
+
+			// a decimal power reaches the exponent wrapped in casts that Access drops only after translation
+			var decimalPowerAsExponent = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Sql.Power(2m, Sql.Power((decimal)(p.ID % 3 + 1), 2m))));
+
+			AssertQuery(decimalPowerAsExponent);
 		}
 
 		// A non-constant precision must not cost the value its fractional digits.
