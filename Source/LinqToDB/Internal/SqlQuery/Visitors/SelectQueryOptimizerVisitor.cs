@@ -1523,7 +1523,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return newJoinType;
 		}
 
-		bool OptimizeApplyJoin(SqlJoinedTable joinTable, bool doNotEmulate)
+		bool OptimizeApplyJoin(SelectQuery parentQuery, SqlJoinedTable joinTable, bool doNotEmulate)
 		{
 			var joinSource = joinTable.Table;
 
@@ -1661,6 +1661,32 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				if (QueryHelper.IsDependsOnOuterSources(sql, whereToIgnore))
 					return optimized;
 
+				// #6326: a projection that references a sibling source of the parent FROM is out of scope in a
+				// plain join. Usually a later pass merges the joined query into the parent and the reference
+				// becomes valid again, but a DoNotRemove query (AsSubQuery) or a set operation is never merged,
+				// so it has to stay an APPLY. CrossApply hoists projections that depend on outer sources only
+				// (see below), so there only a projection that mixes sibling and own sources blocks the
+				// conversion - except for a set operation, where nothing is hoisted.
+				var siblingSources = sql.DoNotRemove || sql.HasSetOperators
+					? QueryHelper.EnumerateAccessibleSources(parentQuery)
+						.Where(s => s != parentQuery && !accessible.Contains(s, QueryElement.ReferenceComparer))
+						.ToList()
+					: [];
+
+				if (siblingSources.Count > 0)
+				{
+					var hoistsOuterOnly = joinTable.JoinType == JoinType.CrossApply && !sql.HasSetOperators;
+
+					foreach (var column in sql.Select.Columns)
+					{
+						if (QueryHelper.IsDependsOnSources(column.Expression, siblingSources)
+							&& (!hoistsOuterOnly || QueryHelper.IsDependsOnSources(column.Expression, accessible)))
+						{
+							return optimized;
+						}
+					}
+				}
+
 				var searchCondition = new List<ISqlPredicate>();
 
 				var predicates = sql.Where.SearchCondition.Predicates;
@@ -1782,8 +1808,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				// and drop the column, mirroring the column inlining done in OptimizeJoinSubQueries. Sound only for
 				// CrossApply (-> INNER JOIN): the joined row exists only when matched, so the hoisted outer value
 				// is always correct. OuterApply/Full/Right (-> LEFT/FULL/RIGHT JOIN) must keep the projection NULL
-				// when there is no matching row, so they are left untouched.
-				if (joinTable.JoinType == JoinType.CrossApply)
+				// when there is no matching row, so they are left untouched. A set operation is left untouched too:
+				// the column belongs to every branch, the expression only to the first one.
+				if (joinTable.JoinType == JoinType.CrossApply && !sql.HasSetOperators)
 				{
 					for (var hi = sql.Select.Columns.Count - 1; hi >= 0; hi--)
 					{
@@ -2650,6 +2677,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			var moveConditionToQuery = joinTable.JoinType is JoinType.Inner or JoinType.CrossApply;
 
+			List<SqlColumn>? nullGuarded = null;
+
 			if (joinTable.JoinType != JoinType.Inner)
 			{
 				// #6208: joins lifted under an APPLY render flat after it (no ON to group them) or as LATERAL ((...)),
@@ -2709,18 +2738,33 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						return false;
 				}
 
-				// Check that all columns in sub-query are allowed to move up
-				NullabilityContext? nullabilityContext = null;
+				// Check that all columns in sub-query are allowed to move up. Once lifted out of an outer join, a column
+				// is evaluated on the NULL-extended row when nothing matches, so it has to come out NULL there as it
+				// would inside the subquery - "can be NULL" is not enough (`CASE WHEN x IS NULL THEN 'a' END`). Such a
+				// column is lifted behind a NULL guard (below); a joined source that never comes back empty needs none.
+				var checkNullPropagation = joinTable.JoinType != JoinType.CrossApply
+					&& !(joinTable.Condition.IsTrue && IsNeverEmpty(subQuery));
+
+				NullabilityContext?    nullabilityContext = null;
+				List<ISqlTableSource>? ownSources         = null;
 				foreach (var c in subQuery.Select.Columns)
 				{
 					var columnExpression = QueryHelper.UnwrapCast(c.Expression);
 					if (columnExpression is not (SqlField or SqlCteTableField or SqlColumn or SqlRowExpression))
 					{
 						nullabilityContext ??= NullabilityContext.GetContext(subQuery);
+
 						if (!c.Expression.CanBeNullable(nullabilityContext))
 						{
 							if (QueryHelper.IsDependsOn(selectQuery, c, [joinTable]))
 								return false;
+						}
+						else if (checkNullPropagation)
+						{
+							ownSources ??= QueryHelper.EnumerateAccessibleSources(subQuery).ToList();
+
+							if (!IsNullPropagating(c.Expression, ownSources) && QueryHelper.IsDependsOn(selectQuery, c, [joinTable]))
+								(nullGuarded ??= []).Add(c);
 						}
 					}
 				}
@@ -2735,8 +2779,36 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (joinTable.IsSubqueryExpression && !(subQuery.From.Tables is [{ Joins: var joins }] && joins.TrueForAll(QueryHelper.IsLimitedToOneRecord)))
 				return false;
 
+			ISqlExpression? notNullMarker = null;
+
+			if (nullGuarded != null)
+			{
+				notNullMarker = GetNotNullMarker(subQuery.From.Tables[0].Source);
+
+				if (notNullMarker == null)
+					return false;
+			}
+
 			// Actual modification starts from this point
 			//
+
+			if (nullGuarded != null)
+			{
+				// NULL when the outer join found no row, as the column was inside the subquery
+				foreach (var column in nullGuarded)
+				{
+					var dbType = QueryHelper.GetDbDataType(column.Expression, _mappingSchema);
+					var type   = dbType.SystemType;
+
+					if (!type.IsNullableOrReferenceType)
+						type = type.AsNullable();
+
+					column.Expression = new SqlConditionExpression(
+						new SqlPredicate.IsNull(notNullMarker!, false),
+						new SqlValue(dbType.WithSystemType(type), null),
+						column.Expression);
+				}
+			}
 
 			if (subQuery.HasWhere)
 			{
@@ -2779,6 +2851,109 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				joinTable.Table.UniqueKeys.AddRange(subQueryTableSource.UniqueKeys);
 
 			return true;
+		}
+
+		// True when the query yields at least one row whatever the outer row is: no filter, no limit, no set
+		// operation, and either no FROM, an aggregate without GROUP BY, or a single source that never comes back empty.
+		static bool IsNeverEmpty(SelectQuery query)
+		{
+			if (query.HasWhere || query.HasHaving || query.HasGroupBy || query.HasSetOperators
+				|| query.Select.SkipValue != null || query.Select.TakeValue != null)
+			{
+				return false;
+			}
+
+			if (QueryHelper.IsAggregationQuery(query))
+				return true;
+
+			return query.From.Tables switch
+			{
+				[]                                                => true,
+				[{ HasJoins: false, Source: SelectQuery source }] => IsNeverEmpty(source),
+				_                                                 => false,
+			};
+		}
+
+		// An expression of the source that is never NULL on a row the source returns: a non-nullable field, or a
+		// non-nullable column of a subquery - added as a constant when the subquery has none.
+		static ISqlExpression? GetNotNullMarker(ISqlTableSource source)
+		{
+			switch (source)
+			{
+				case SqlTable table:
+					return table.Fields.Find(static f => f is { IsPrimaryKey: true, CanBeNull: false })
+						?? table.Fields.Find(static f => !f.CanBeNull);
+
+				case SelectQuery { HasSetOperators: false } query:
+				{
+					var nullabilityContext = NullabilityContext.GetContext(query);
+
+					foreach (var column in query.Select.Columns)
+					{
+						if (!column.Expression.CanBeNullable(nullabilityContext))
+							return column;
+					}
+
+					return query.Select.AddNewColumn(new SqlValue(1));
+				}
+
+				default:
+					return null;
+			}
+		}
+
+		// True when the expression is NULL whenever every column of ownSources is NULL - the NULL-extended row of an
+		// outer join over them. Follows the null-propagation rules of ReduceIsNullExpressionVisitor; a conditional
+		// qualifies when each branch it can take does. Anything not provably NULL there (a constant, an outer
+		// reference, a predicate, an impure function) is false.
+		static bool IsNullPropagating(ISqlExpression expression, List<ISqlTableSource> ownSources)
+		{
+			if (expression.IsNullValue)
+				return true;
+
+			return expression switch
+			{
+				SqlField         { Table:  { } table  } => ownSources.Contains(table,  QueryElement.ReferenceComparer),
+				SqlCteTableField { Table:  { } table  } => ownSources.Contains(table,  QueryElement.ReferenceComparer),
+				SqlColumn        { Parent: { } parent } => ownSources.Contains(parent, QueryElement.ReferenceComparer),
+
+				SqlNullabilityExpression nullability => IsNullPropagating(nullability.SqlExpression, ownSources),
+				SqlCastExpression        cast        => IsNullPropagating(cast.Expression,          ownSources),
+				SqlUnaryExpression       unary       => IsNullPropagating(unary.Expr,               ownSources),
+
+				SqlBinaryExpression { Operation: "+" or "-" or "*" or "/" or "%" or "&" or "||" } binary =>
+					IsNullPropagating(binary.Expr1, ownSources) || IsNullPropagating(binary.Expr2, ownSources),
+
+				SqlConcatExpression { PreserveNull: true } concat =>
+					concat.Expressions.Any(e => IsNullPropagating(e, ownSources)),
+
+				SqlConditionExpression condition =>
+					IsNullPropagating(condition.TrueValue, ownSources) && IsNullPropagating(condition.FalseValue, ownSources),
+
+				SqlCaseExpression caseExpression =>
+					caseExpression.Cases.All(c => IsNullPropagating(c.ResultExpression, ownSources))
+					&& (caseExpression.ElseExpression == null || IsNullPropagating(caseExpression.ElseExpression, ownSources)),
+
+				SqlCoalesceExpression coalesce =>
+					coalesce.Expressions.All(e => IsNullPropagating(e, ownSources)),
+
+				SqlParameterizedExpressionBase { IsAggregate: false, IsPure: true, Parameters: var parameters } function =>
+					function.NullabilityType switch
+					{
+						ParametersNullabilityType.IfAnyParameterNullable       => parameters.Any(p => IsNullPropagating(p, ownSources)),
+						ParametersNullabilityType.IfAllParametersNullable      => parameters.Length > 0 && parameters.All(p => IsNullPropagating(p, ownSources)),
+						ParametersNullabilityType.SameAsFirstParameter         => parameters.Length > 0 && IsNullPropagating(parameters[0], ownSources),
+						ParametersNullabilityType.SameAsSecondParameter        => parameters.Length > 1 && IsNullPropagating(parameters[1], ownSources),
+						ParametersNullabilityType.SameAsThirdParameter         => parameters.Length > 2 && IsNullPropagating(parameters[2], ownSources),
+						ParametersNullabilityType.SameAsLastParameter          => parameters.Length > 0 && IsNullPropagating(parameters[^1], ownSources),
+						ParametersNullabilityType.SameAsFirstOrSecondParameter =>
+							(parameters.Length > 0 && IsNullPropagating(parameters[0], ownSources))
+							|| (parameters.Length > 1 && IsNullPropagating(parameters[1], ownSources)),
+						_ => false,
+					},
+
+				_ => false,
+			};
 		}
 
 		protected internal override IQueryElement VisitSqlFromClause(SqlFromClause element)
@@ -3312,7 +3487,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 					if (join.JoinType is JoinType.CrossApply or JoinType.OuterApply or JoinType.FullApply or JoinType.RightApply)
 					{
-						if (OptimizeApplyJoin(join, doNotEmulate: true))
+						if (OptimizeApplyJoin(selectQuery, join, doNotEmulate: true))
 						{
 							isModified = true;
 						}
@@ -3342,7 +3517,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 					if (_isColumnsOptimized && join.JoinType is JoinType.CrossApply or JoinType.OuterApply or JoinType.FullApply or JoinType.RightApply)
 					{
-						if (OptimizeApplyJoin(join, doNotEmulate: false))
+						if (OptimizeApplyJoin(selectQuery, join, doNotEmulate: false))
 						{
 							isModified = true;
 						}
@@ -3546,6 +3721,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		static bool IsLimitedToOneRecord(SelectQuery parentQuery, SelectQuery selectQuery, EvaluationContext context)
 		{
+			// every branch of a set operation contributes rows, whatever limits the first branch
+			if (selectQuery.HasSetOperators)
+				return false;
+
 			if (selectQuery.Select.TakeValue != null &&
 			    selectQuery.Select.TakeValue.TryEvaluateExpression(context, out var takeValue))
 			{
@@ -3558,11 +3737,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (QueryHelper.IsAggregationQuery(selectQuery))
 				return true;
 
-			if (selectQuery.Select.Columns.Count == 1)
-			{
-				if (selectQuery.Select.From.Tables.Count == 0)
-					return true;
-			}
+			// a query without FROM yields at most one row, whatever its column count (#6326)
+			if (selectQuery.Select.From.Tables.Count == 0)
+				return true;
 
 			if (selectQuery.HasWhere)
 			{
@@ -3789,7 +3966,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return false;
 
 			// do not move to subquery expression if update table in the query.
-			if (_updateTable != null && joinQuery.HasElement(_updateTable))
+			// a query without FROM only correlates to the updated table, it does not select from it (#6326)
+			if (_updateTable != null && !joinQuery.HasNoTables && joinQuery.HasElement(_updateTable))
 				return false;
 
 			if (!joinQuery.HasNoTables)

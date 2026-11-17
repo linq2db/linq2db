@@ -555,5 +555,68 @@ namespace Tests.xUpdate
 			// list and the rhs — that must not appear.
 			LastQuery!.ShouldNotContain(") =");
 		}
+
+		[Table]
+		sealed class UpdateRowDiagnostic
+		{
+			[PrimaryKey] public int     Id           { get; set; }
+			[Column]     public int     Status       { get; set; }
+			[Column]     public string? ErrorMessage { get; set; }
+			[Column]     public int?    Field1       { get; set; }
+			[Column]     public int?    Field2       { get; set; }
+		}
+
+		[Table]
+		sealed class UpdateRowCheck
+		{
+			[PrimaryKey] public int  Id     { get; set; }
+			[Column]     public int? Field1 { get; set; }
+			[Column]     public int? Field2 { get; set; }
+		}
+
+		// The SelectQuery is correlated to the check row and to the updated row; kept as its own query by AsSubQuery,
+		// it must not become a plain LEFT JOIN referencing them out of scope.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6326")]
+		public void UpdateFromSubqueryRowCorrelatedSelectQuery([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL95Plus, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
+		{
+			using var db          = GetDataContext(context);
+			using var diagnostics = db.CreateLocalTable(
+			[
+				new UpdateRowDiagnostic { Id = 1, Status = 0, Field1 = 1, Field2 = 2 },
+				new UpdateRowDiagnostic { Id = 2, Status = 0, Field1 = 1, Field2 = 3 },
+				new UpdateRowDiagnostic { Id = 3, Status = 1, Field1 = 5, Field2 = 5 },
+			]);
+			using var checks      = db.CreateLocalTable([new UpdateRowCheck { Id = 1, Field1 = 1, Field2 = 2 }]);
+
+			var updated = diagnostics
+				.Where(d => d.Status == 0)
+				.Set(
+					d => Sql.Row(d.Status, d.ErrorMessage),
+					d => (
+						from c in checks
+						from error in db.SelectQuery(() =>
+								c.Field1.IsDistinctFrom(d.Field1) || c.Field2.IsDistinctFrom(d.Field2)
+									? "bad"
+									: null)
+							.AsSubQuery()
+							.DefaultIfEmpty()
+						select Sql.Row(error != null ? 5 : 3, (string?)error)
+					).Single())
+				.Update();
+
+			updated.ShouldBe(2);
+
+			var rows = diagnostics
+				.OrderBy(d => d.Id)
+				.Select(d => new { d.Id, d.Status, d.ErrorMessage })
+				.ToArray();
+
+			rows.ShouldBe(
+			[
+				new { Id = 1, Status = 3, ErrorMessage = (string?)null  },
+				new { Id = 2, Status = 5, ErrorMessage = (string?)"bad" },
+				new { Id = 3, Status = 1, ErrorMessage = (string?)null  },
+			]);
+		}
 	}
 }
