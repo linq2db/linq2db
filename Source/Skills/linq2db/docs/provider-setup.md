@@ -106,6 +106,7 @@ All providers require the `linq2db` NuGet package. The ADO.NET driver is install
 | `ProviderName.AccessJetOdbc` | `"Access.Jet.Odbc"` |
 | `ProviderName.AccessAceOleDb` | `"Access.Ace.OleDb"` |
 | `ProviderName.AccessAceOdbc` | `"Access.Ace.Odbc"` |
+| `ProviderName.AccessLibRed` | `"Access.LibRed"` |
 
 **Configuration**
 
@@ -140,15 +141,19 @@ UseAccess(string connectionString,
 | `AutoDetect` | Detect provider automatically (default) |
 | `OleDb` | OLE DB provider |
 | `ODBC` | ODBC provider |
+| `LibRed` | Managed LibRed engine (`LibRed.Ado`), any OS, .NET 10+ |
 
 **NuGet packages**
 
 ```
 linq2db
 System.Data.OleDb          # Windows only
+LibRed.Ado                 # AccessProvider.LibRed: managed, any OS, .NET 10+ (prerelease)
 ```
 
-> ⚠️ Access is Windows-only. OLE DB is not available on Linux or macOS.
+> ⚠️ The OLE DB and ODBC providers are Windows-only. On Linux or macOS use
+> `UseAccess(connectionString, AccessProvider.LibRed)`; LibRed keeps no `.ldb`/`.laccdb` lock
+> file, so do not open the same database file from several processes at once.
 
 ---
 

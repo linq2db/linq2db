@@ -245,7 +245,7 @@ is a separate concern, backed by `System.Configuration.ConfigurationManager`:
 - On **`net462`**, this is already compiled into `linq2db.dll` - `DataConnection.DefaultSettings`
   lazily resolves to `LinqToDBSection.Instance` automatically, so `app.config` is read with no
   extra package or startup code.
-- On **`netstandard2.0`/`net8.0`+**, add the **`linq2db.Compat`** NuGet package and opt in
+- On **`netstandard2.0`/`net10.0`+**, add the **`linq2db.Compat`** NuGet package and opt in
   explicitly at startup:
 
 ```csharp

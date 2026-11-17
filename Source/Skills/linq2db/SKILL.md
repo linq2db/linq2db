@@ -50,7 +50,7 @@ version. It lies next to the assembly in the restored NuGet package:
   (the `NUGET_PACKAGES` environment variable overrides it).
 - `<version>` - the `linq2db` version the project references (its `PackageReference`, or the
   resolved version in the project's `project.assets.json`).
-- `<tfm>` - the folder closest to the project's target framework: `net10.0`, `net9.0`, `net8.0`,
+- `<tfm>` - the folder closest to the project's target framework: `net11.0`, `net10.0`,
   `netstandard2.0` or `net462`.
 
 When this skill is read from the package itself rather than from a copy in the project, the same
