@@ -118,6 +118,20 @@ namespace LinqToDB.Internal.DataProvider.Access
 			base.BuildBinaryExpression(expr);
 		}
 
+		// Access lexes "-2 ^ x" as (-2) ^ x, so a negated power keeps its own parentheses
+		protected override void BuildUnaryExpression(SqlUnaryExpression expr)
+		{
+			if (expr.Operation == SqlUnaryOperation.Negation && QueryHelper.UnwrapNullablity(expr.Expr) is SqlBinaryExpression { Operation: "^" })
+			{
+				StringBuilder.Append("-(");
+				BuildExpression(expr.Expr);
+				StringBuilder.Append(')');
+				return;
+			}
+
+			base.BuildUnaryExpression(expr);
+		}
+
 		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery,
 			SqlUpdateClause                                    updateClause)
 		{

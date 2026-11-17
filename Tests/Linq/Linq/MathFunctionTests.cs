@@ -553,6 +553,13 @@ namespace Tests.Linq
 				.Select(p => Sql.AsSql(Math.Pow(p.ID, -1)));
 
 			AssertQuery(negativeExponent);
+
+			// Access reads -2 ^ x as (-2) ^ x, so a negated power with a literal base needs its own parentheses
+			var negatedLiteralBase = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(-Math.Pow(2, p.ID)));
+
+			AssertQuery(negatedLiteralBase);
 		}
 
 		[Test]
