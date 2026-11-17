@@ -29,13 +29,13 @@ namespace LinqToDB
 		/// <para>
 		/// The statements are combined whatever <see cref="LinqOptions.UseCombinedCommands"/> is set to;
 		/// <see cref="LinqOptions.UseDbBatch"/> chooses how they are sent. When the context or the provider cannot send them as
-		/// one command, they run one after another and the results are the same.
+		/// one command, they run one after another.
 		/// </para>
 		/// <para>
-		/// When the selector reads a collection, the statements run in a transaction unless the caller already holds one or a
-		/// <c>TransactionScope</c> is active; beginning and committing it are round trips of their own,
-		/// so only a selector that reads scalars alone takes one round trip. A remote context opens no such transaction: it reads
-		/// each part with a call of its own, so the parts can see different states of the data.
+		/// When the selector reads a collection, the statements run in a transaction unless the caller already holds one, a
+		/// <c>TransactionScope</c> is active or the provider has no transactions; beginning and committing it are round trips of
+		/// their own. A remote context opens no such transaction and sends each statement with a call of its own, so the
+		/// statements can read different states of the data.
 		/// </para>
 		/// <para>
 		/// The collection statements run before the shared statement that reads the scalars, whatever order the selector
