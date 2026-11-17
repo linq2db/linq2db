@@ -3,6 +3,8 @@ variables:
 
 trigger: none
 pr:
+  # a PR status change (draft -> ready) must not cancel the run in flight
+  autoCancel: false
   branches:
     include:
     - '*'

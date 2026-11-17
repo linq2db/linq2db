@@ -123,6 +123,50 @@ namespace LinqToDB.DataProvider.Access
 				_ => CreateAccessDB(connectionString));
 		}
 
+		/// <summary>
+		/// Creates new Access database file using the specified provider.
+		/// </summary>
+		/// <param name="databaseName">Name of database to create.</param>
+		/// <param name="provider">Provider to create the file with. <see cref="AccessProvider.LibRed"/> uses the managed
+		/// LibRed engine and works on any OS; any other value uses ADOX with the Access OLE DB provider, as
+		/// <see cref="CreateDatabase(string, bool, AccessVersion)"/> does.</param>
+		/// <param name="deleteIfExists">If <see langword="true"/>, existing database will be removed before create.</param>
+		/// <param name="version">Database format when <paramref name="databaseName"/> has no extension:
+		/// <see cref="AccessVersion.Ace"/> creates an <c>.accdb</c> file, any other value an <c>.mdb</c> one. With any provider
+		/// other than <see cref="AccessProvider.LibRed"/> it also selects the OLE DB engine (ACE or Jet), as
+		/// <see cref="CreateDatabase(string, bool, AccessVersion)"/> does. Default value: <see cref="AccessVersion.Ace"/>.</param>
+		public static void CreateDatabase(string databaseName, AccessProvider provider, bool deleteIfExists = false, AccessVersion version = AccessVersion.Ace)
+		{
+			if (provider != AccessProvider.LibRed)
+			{
+				CreateDatabase(databaseName, deleteIfExists, version);
+				return;
+			}
+
+			ArgumentNullException.ThrowIfNull(databaseName);
+
+			databaseName = databaseName.Trim();
+
+			var defaultExtension = version == AccessVersion.Ace ? ".accdb" : ".mdb";
+
+			// add extension if not specified
+			if (!databaseName.EndsWith(".mdb", StringComparison.OrdinalIgnoreCase) && !databaseName.EndsWith(".accdb", StringComparison.OrdinalIgnoreCase))
+				databaseName += defaultExtension;
+
+			var adapter          = LibRedProviderAdapter.GetInstance();
+			var connectionString = $"Data Source={databaseName}";
+
+			if (adapter.DatabaseExists(connectionString))
+			{
+				if (!deleteIfExists)
+					return;
+
+				adapter.DropDatabase(connectionString);
+			}
+
+			adapter.CreateDatabase(connectionString, databaseName.EndsWith(".accdb", StringComparison.OrdinalIgnoreCase));
+		}
+
 		[SecuritySafeCritical]
 		private static void CreateAccessDB(string connectionString)
 		{
@@ -140,6 +184,37 @@ namespace LinqToDB.DataProvider.Access
 			ArgumentNullException.ThrowIfNull(databaseName);
 
 			DataTools.DropFileDatabase(databaseName, extension ?? ".mdb");
+		}
+
+		/// <summary>
+		/// Removes database file by database name using the specified provider.
+		/// </summary>
+		/// <param name="databaseName">Name of database to remove.</param>
+		/// <param name="provider">Provider the file was used with. <see cref="AccessProvider.LibRed"/> drops it through the
+		/// LibRed engine; any other value deletes the file, as <see cref="DropDatabase(string, string?)"/> does.</param>
+		/// <param name="extension">File extension to try when no file named <paramref name="databaseName"/> exists.
+		/// Default value: <c>.mdb</c>.</param>
+		public static void DropDatabase(string databaseName, AccessProvider provider, string? extension = null)
+		{
+			if (provider != AccessProvider.LibRed)
+			{
+				DropDatabase(databaseName, extension);
+				return;
+			}
+
+			ArgumentNullException.ThrowIfNull(databaseName);
+
+			databaseName = databaseName.Trim();
+			extension  ??= ".mdb";
+
+			if (!File.Exists(databaseName) && !databaseName.EndsWith(extension, StringComparison.OrdinalIgnoreCase))
+				databaseName += extension;
+
+			var adapter          = LibRedProviderAdapter.GetInstance();
+			var connectionString = $"Data Source={databaseName}";
+
+			if (adapter.DatabaseExists(connectionString))
+				adapter.DropDatabase(connectionString);
 		}
 
 		#endregion

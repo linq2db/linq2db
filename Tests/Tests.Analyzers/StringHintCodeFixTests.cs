@@ -26,7 +26,7 @@ namespace Tests.Analyzers
 			{
 				TestCode                  = source,
 				FixedCode                 = fixedSource,
-				ReferenceAssemblies       = ReferenceAssemblies.Net.Net80,
+				ReferenceAssemblies       = TestReferenceAssemblies.Default,
 				CodeActionEquivalenceKey  = equivalenceKey,
 			};
 

@@ -13,6 +13,8 @@ using LinqToDB.Tools.EntityServices;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests.Model;
 
 namespace Tests.Linq
@@ -132,7 +134,7 @@ namespace Tests.Linq
 				query(db).ToList();
 		}
 
-		[Test, Order(100)]
+		[Test]
 		[NoBaselines("Multi-threading")]
 		public void ConcurrentTest1([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -163,7 +165,7 @@ namespace Tests.Linq
 				Assert.That(results[i, 1], Is.EqualTo(results[i, 0]));
 		}
 
-		[Test, Order(100)]
+		[Test]
 		[NoBaselines("Multi-threading")]
 		public void ConcurrentTestWithOptmization([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -262,6 +264,75 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 				Assert.That(query(db, 2).ToList(), Has.Count.EqualTo(2));
+		}
+
+		// A compiled query carries its arguments in an object?[] array that is threaded through the
+		// execution context; LoadWith children run their own queries and must see those same compiled
+		// arguments. Regression guard for folding the parameters array into SqlCommandExecutionContext:
+		// here the one context carries both the compiled args AND the eager-load (harvester) results.
+		[Test]
+		public void CompiledQueryWithEagerLoad([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool combinedCommands)
+		{
+			var query = CompiledQuery.Compile((ITestDataContext db, int id) =>
+				db.Parent
+					.LoadWith(p => p.Children)
+					.Where(p => p.ParentID == id));
+
+			using var db = GetDataContext(context, o => o.UseCombinedCommands(combinedCommands));
+
+			foreach (var id in new[] { 1, 2 })
+			{
+				var parent = query(db, id)
+					.ToList()
+					.Single();
+
+				var childIds = parent.Children
+					.Select(c => c.ChildID)
+					.OrderBy(x => x)
+					.ToList();
+
+				var expectedChildIds = db.Child
+					.Where(c => c.ParentID == id)
+					.Select(c => c.ChildID)
+					.OrderBy(x => x)
+					.ToList();
+
+				parent.ParentID.ShouldBe(id);
+				childIds.ShouldBe(expectedChildIds);
+			}
+		}
+
+		[Test]
+		public async Task CompiledQueryWithEagerLoadAsync([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool combinedCommands)
+		{
+			var query = CompiledQuery.Compile((ITestDataContext db, int id) =>
+				db.Parent
+					.LoadWith(p => p.Children)
+					.Where(p => p.ParentID == id));
+
+			using var db = GetDataContext(context, o => o.UseCombinedCommands(combinedCommands));
+
+			foreach (var id in new[] { 1, 2 })
+			{
+				var parents = await query(db, id)
+					.ToListAsync();
+
+				var parent = parents.Single();
+
+				var childIds = parent.Children
+					.Select(c => c.ChildID)
+					.OrderBy(x => x)
+					.ToList();
+
+				var expectedChildIds = db.Child
+					.Where(c => c.ParentID == id)
+					.Select(c => c.ChildID)
+					.OrderBy(x => x)
+					.ToList();
+
+				parent.ParentID.ShouldBe(id);
+				childIds.ShouldBe(expectedChildIds);
+			}
 		}
 
 		[Test]
@@ -521,6 +592,28 @@ namespace Tests.Linq
 			}
 		}
 
+		// ForEachUntilAsync had no coverage anywhere in the suite, which is how ExpressionQuery.GetForEachUntilAsync came
+		// to be the one enumeration path never reworked alongside its siblings. It still passes the bare Preambles field,
+		// which nothing on this path assigns — and since the compiled-query argument array was folded out of
+		// GetResultEnumerable's signature and into that carrier, a compiled query reaching this path finds no execution
+		// context at all.
+		[Test]
+		public async Task CompiledQuery_ForEachUntilAsync([DataSources] string context)
+		{
+			var query = CompiledQuery.Compile((ITestDataContext db, int id) =>
+				db.Parent.Where(p => p.ParentID == id));
+
+			using var db = GetDataContext(context);
+
+			var seen = new List<int>();
+
+			// Returning false keeps the enumeration going, so this walks every matching row.
+			await query(db, 1)
+				.ForEachUntilAsync(p => { seen.Add(p.ParentID); return false; });
+
+			seen.ShouldBe([1]);
+		}
+
 		[Test]
 		public async Task MaxTestAsync([DataSources] string context)
 		{
@@ -709,15 +802,13 @@ namespace Tests.Linq
 
 			using var db = GetDataContext(context);
 
-			var ex = Assert.Throws<LinqToDBException>(() => query(db, 1));
-
-			using (Assert.EnterMultipleScope())
-			{
-				// Both halves matter: the declared type is what tells the reader which annotation to change,
-				// and the advice is what tells them what to change it to.
-				Assert.That(ex!.Message, Contains.Substring("ILoadWithQueryable"));
-				Assert.That(ex.Message,  Contains.Substring("IQueryable<T>"));
-			}
+			// Both halves matter: the declared type is what tells the reader which annotation to change,
+			// and the advice is what tells them what to change it to.
+			Assert.That(
+				() => query(db, 1),
+				Throws.TypeOf<LinqToDBException>()
+					.With.Message.Contains("ILoadWithQueryable")
+					.And.Message.Contains("IQueryable<T>"));
 		}
 
 		[Table]
@@ -1020,9 +1111,9 @@ namespace Tests.Linq
 			// values in the compiled table's cache key, the way materialised dependent arguments already are.
 			// The type alone does not identify the decline - LinqToDBException is what a mapping, provider or
 			// unrelated build failure raises too, so the message is what pins it to the builder.
-			var ex = Assert.Throws<LinqToDBException>(() => query(db, 1).ToList());
-
-			Assert.That(ex!.Message, Contains.Substring("could not be converted to SQL."));
+			Assert.That(
+				() => query(db, 1).ToList(),
+				Throws.TypeOf<LinqToDBException>().With.Message.Contains("could not be converted to SQL."));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/5844#issuecomment-5538235961")]

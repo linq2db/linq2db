@@ -11,7 +11,5 @@
 	/// A context instance can also accept interceptors through <see cref="IDataContext.AddInterceptor(IInterceptor)"/>.
 	/// A single interceptor object can implement multiple interceptor interfaces.
 	/// </remarks>
-	public interface IInterceptor
-	{
-	}
+	public interface IInterceptor;
 }

@@ -67,7 +67,7 @@ namespace Tests.LinqToDB.CLI
 					File.Exists(Path.Combine(repo.Root, root, "linq2db-cli", "SKILL.md")).ShouldBeTrue();
 				}
 
-				var manifest = JsonDocument.Parse(File.ReadAllText(Path.Combine(repo.Root, ".agents", "skills", "linq2db", LibraryManifestFile))).RootElement;
+				var manifest = JsonElement.Parse(File.ReadAllText(Path.Combine(repo.Root, ".agents", "skills", "linq2db", LibraryManifestFile)));
 				manifest.GetProperty("skill").  GetString().ShouldBe("linq2db");
 				manifest.GetProperty("version").GetString().ShouldBe("5.0.0");
 				manifest.GetProperty("source"). GetString().ShouldBe("package");
@@ -668,7 +668,7 @@ namespace Tests.LinqToDB.CLI
 			foreach (var root in new[] { ".agents", ".claude" })
 			{
 				var skill = Path.Combine(repo.Root, root, "skills", "linq2db");
-				var files = JsonDocument.Parse(File.ReadAllText(Path.Combine(skill, LibraryManifestFile))).RootElement.GetProperty("files").EnumerateObject().Select(p => p.Name);
+				var files = JsonElement.Parse(File.ReadAllText(Path.Combine(skill, LibraryManifestFile))).GetProperty("files").EnumerateObject().Select(p => p.Name);
 
 				foreach (var file in files)
 					File.Exists(Path.Combine(skill, file.Replace('/', Path.DirectorySeparatorChar))).ShouldBeTrue(file);
@@ -1100,7 +1100,7 @@ namespace Tests.LinqToDB.CLI
 				File.ReadAllText(edited).ShouldEndWith("my edit\n");
 				// the unchanged recorded files are gone, and the marker still lists what is left
 				File.Exists(Path.Combine(repo.Root, ".agents", "skills", "linq2db", "docs", "crud", "crud-update.md")).ShouldBeFalse();
-				JsonDocument.Parse(File.ReadAllText(Path.Combine(repo.Root, ".agents", "skills", "linq2db", LibraryManifestFile))).RootElement
+				JsonElement.Parse(File.ReadAllText(Path.Combine(repo.Root, ".agents", "skills", "linq2db", LibraryManifestFile)))
 					.GetProperty("files").EnumerateObject().Select(p => p.Name).ShouldBe(["SKILL.md"]);
 				// the other destination is handled regardless
 				Directory.Exists(Path.Combine(repo.Root, ".claude", "skills", "linq2db")).ShouldBeFalse();
@@ -1554,7 +1554,7 @@ namespace Tests.LinqToDB.CLI
 				result.Output.  ShouldContain("dotnet-package-skills will skip this folder. To let it manage the skill, run 'dotnet linq2db skill uninstall', then 'dotnet-package-skills install'.");
 				// only the destination with a record of the other tool gets the hint
 				result.Output.  ShouldNotContain("dotnet-package-skills will skip these");
-				JsonDocument.Parse(File.ReadAllText(Path.Combine(destination, "linq2db", LibraryManifestFile))).RootElement.GetProperty("version").GetString().ShouldBe("5.1.0");
+				JsonElement.Parse(File.ReadAllText(Path.Combine(destination, "linq2db", LibraryManifestFile))).GetProperty("version").GetString().ShouldBe("5.1.0");
 				File.ReadAllText(Path.Combine(destination, ".dotnet-package-skills.json")).ShouldBe(recordBefore);
 			}
 		}
@@ -1630,7 +1630,7 @@ namespace Tests.LinqToDB.CLI
 
 			if (append && File.Exists(path))
 			{
-				foreach (var existing in JsonDocument.Parse(File.ReadAllText(path)).RootElement.GetProperty("packages").GetProperty(package).GetProperty("versions").GetProperty(version).GetProperty("skills").EnumerateArray())
+				foreach (var existing in JsonElement.Parse(File.ReadAllText(path)).GetProperty("packages").GetProperty(package).GetProperty("versions").GetProperty(version).GetProperty("skills").EnumerateArray())
 					skills.Add(existing.GetString()!);
 			}
 

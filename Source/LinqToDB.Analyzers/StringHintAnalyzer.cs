@@ -121,7 +121,7 @@ namespace LinqToDB.Analyzers
 		/// <inheritdoc/>
 		public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics
 		{
-			get { return ImmutableArray.Create(Rule); }
+			get { return [Rule]; }
 		}
 
 		/// <inheritdoc/>

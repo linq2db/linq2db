@@ -213,6 +213,13 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 
 		protected class MathMemberTranslator : MathMemberTranslatorBase
 		{
+			// Access evaluates ^ before negation, * / and MOD, so an operand built from any of them needs its own parentheses
+			protected virtual ISqlExpression Power(ISqlExpressionFactory factory, DbDataType type, ISqlExpression x, ISqlExpression y)
+			{
+				// a right-nested power is grouped by AccessSqlBuilderBase.BuildBinaryExpression, a negated one by BuildUnaryExpression
+				return factory.Binary(type, x, "^", y, LinqToDB.SqlQuery.Precedence.Unary + 1);
+			}
+
 			protected override ISqlExpression? TranslateRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
 			{
 				var factory   = translationContext.ExpressionFactory;
@@ -288,7 +295,7 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 
 					// Calculate 10 ^ [Precision]
 					var ten   = factory.Value(valueType, 10);
-					var power = factory.Binary(valueType, ten, "^", precision);
+					var power = Power(factory, valueType, ten, precision);
 
 					// [Value] * (10 ^ [Precision])
 					var scaled = factory.Multiply(valueType, value, power);
@@ -333,7 +340,7 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 					yValue = factory.Cast(yValue, xType);
 				}
 
-				var result = factory.Binary(yType, xValue, "^", yValue);
+				var result = Power(factory, yType, xValue, yValue);
 
 				if (!resultType.EqualsDbOnly(xType))
 				{

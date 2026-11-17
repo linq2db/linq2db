@@ -67,7 +67,7 @@ namespace LinqToDB.Mapping
 		/// Compares two expressions during expression tree comparison.
 		/// Has to be overriden if specific comparison required.
 		/// </summary>
-		/// <param name="context"></param>
+		/// <param name="context">Comparison state. Pass it unchanged to <paramref name="comparer"/>.</param>
 		/// <param name="expr1"></param>
 		/// <param name="expr2"></param>
 		/// <param name="comparer">Default function for comparing expressions.</param>

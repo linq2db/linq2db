@@ -146,7 +146,7 @@ namespace Tests.Analyzers
 			source.AppendLine("\t}");
 			source.AppendLine("}");
 
-			var references = await ReferenceAssemblies.Net.Net80.ResolveAsync(LanguageNames.CSharp, CancellationToken.None);
+			var references = await TestReferenceAssemblies.Default.ResolveAsync(LanguageNames.CSharp, CancellationToken.None);
 
 			var compilation = CSharpCompilation.Create(
 				"HintCatalog",
@@ -241,10 +241,10 @@ namespace Tests.Analyzers
 			Assert.That(problems, Is.Empty);
 
 			// The well-known cases, as a guard against the lookup going quiet as a whole.
-			Assert.That(mappings, Has.Some.Matches<Mapping>(m => m.Helper == "WithNoLock"        && m.Provider == "SQL Server"));
-			Assert.That(mappings, Has.Some.Matches<Mapping>(m => m.Helper == "WithNoLock"        && m.Provider == "SQL Server CE"));
-			Assert.That(mappings, Has.Some.Matches<Mapping>(m => m.Helper == "WithNoLockInScope" && m.Provider == "SQL Server"));
-			Assert.That(mappings, Has.Some.Matches<Mapping>(m => m.Helper == "OptionRecompile"   && m.Provider == "SQL Server"));
+			Assert.That(mappings, Has.Some.Matches<Mapping>(m => m?.Helper == "WithNoLock"        && m.Provider == "SQL Server"));
+			Assert.That(mappings, Has.Some.Matches<Mapping>(m => m?.Helper == "WithNoLock"        && m.Provider == "SQL Server CE"));
+			Assert.That(mappings, Has.Some.Matches<Mapping>(m => m?.Helper == "WithNoLockInScope" && m.Provider == "SQL Server"));
+			Assert.That(mappings, Has.Some.Matches<Mapping>(m => m?.Helper == "OptionRecompile"   && m.Provider == "SQL Server"));
 		}
 
 		// A helper named by the convention that takes more than the receiver, e.g. SqlServerHints.WithIndex(table, name).

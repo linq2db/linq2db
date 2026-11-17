@@ -13,6 +13,9 @@ namespace LinqToDB.Interceptors
 	/// <remarks>
 	/// Derive from this class when overriding only selected command interception methods.
 	/// For callback timing and return-value contracts, see <see cref="ICommandInterceptor"/>.
+	/// Registering a command interceptor disables DbBatch-based command batching — combined multi-statement execution
+	/// (for example eager loading) falls back to a single semicolon-concatenated command so the interceptor still
+	/// observes execution. See <see cref="LinqToDB.LinqOptions.UseDbBatch"/>.
 	/// </remarks>
 	public abstract class CommandInterceptor : ICommandInterceptor
 	{

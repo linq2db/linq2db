@@ -16,6 +16,10 @@ namespace LinqToDB.Interceptors
 	/// Only execution methods that return <see cref="Option{T}"/> can suppress provider command execution.
 	/// Register implementations through <see cref="DataOptionsExtensions.UseInterceptor(DataOptions, IInterceptor)"/>
 	/// or <see cref="DataOptionsExtensions.UseInterceptors(DataOptions, System.Collections.Generic.IEnumerable{IInterceptor})"/>.
+	/// Registering an <see cref="ICommandInterceptor"/> disables DbBatch-based command batching: combined
+	/// multi-statement execution (for example eager loading run as one round-trip) falls back to a single
+	/// semicolon-concatenated command so the interceptor still observes execution. See
+	/// <see cref="LinqToDB.LinqOptions.UseDbBatch"/>.
 	/// </remarks>
 	public interface ICommandInterceptor : IInterceptor
 	{

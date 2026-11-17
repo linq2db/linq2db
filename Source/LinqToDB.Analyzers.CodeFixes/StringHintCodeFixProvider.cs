@@ -38,7 +38,7 @@ namespace LinqToDB.Analyzers.CodeFixes
 		/// <inheritdoc/>
 		public override ImmutableArray<string> FixableDiagnosticIds
 		{
-			get { return ImmutableArray.Create(StringHintAnalyzer.DiagnosticId); }
+			get { return [StringHintAnalyzer.DiagnosticId]; }
 		}
 
 		/// <inheritdoc/>

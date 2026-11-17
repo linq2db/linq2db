@@ -146,7 +146,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 					{
 						Name        = "linq2db.cli",
 						Title       = serverConfiguration.Title,
-						Version     = GetType().Assembly.GetName().Version?.ToString() ?? "unknown",
+						Version     = typeof(McpCommand).Assembly.GetName().Version?.ToString() ?? "unknown",
 						Description = serverConfiguration.Description,
 					};
 					serverOptions.ServerInstructions = serverConfiguration.Instructions;

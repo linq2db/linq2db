@@ -531,7 +531,7 @@ namespace Tests.DataProvider
 					where folder2.Caption == "dewde"
 					select folder;
 
-				Assert.DoesNotThrow(() => folders.ToList());
+				folders.ToList();
 			}
 		}
 

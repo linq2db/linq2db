@@ -81,7 +81,7 @@ namespace LinqToDB
 		/// <param name="name">Database name.</param>
 		/// <returns>Table-like query source with the overridden database name.</returns>
 		/// <remarks>
-		/// Provider support: Access, DB2, MySQL, PostgreSQL, SAP HANA, SQLite, Informix, SQL Server, Sybase ASE.
+		/// Provider support: Access (not the LibRed flavour), DB2, MySQL, PostgreSQL, SAP HANA, SQLite, Informix, SQL Server, Sybase ASE.
 		/// <para>
 		/// Requires schema name (see <see cref="SchemaName{T}(ITable{T}, string)"/>): DB2, SAP HANA, PostgreSQL.
 		/// </para>
