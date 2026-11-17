@@ -439,7 +439,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Creates a batch that collects reads from any number of call sites and runs them in one round trip, as one
+		/// Creates a batch that collects reads from any number of call sites and runs them as one command, as one
 		/// <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/> call. See <see cref="QueryBatchBuilder"/>.
 		/// </summary>
 		/// <example>

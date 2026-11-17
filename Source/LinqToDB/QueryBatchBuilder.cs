@@ -14,7 +14,7 @@ using LinqToDB.Internal.Linq.Builder;
 namespace LinqToDB
 {
 	/// <summary>
-	/// Collects reads from any number of call sites, runs them in one round trip as one
+	/// Collects reads from any number of call sites, runs them as one command, as one
 	/// <see cref="LinqExtensions.QueryBatch{T}(IDataContext, Expression{Func{T}})"/> call, and hands each value to its setter.
 	/// Created by <see cref="LinqExtensions.CreateQueryBatch(IDataContext)"/>.
 	/// </summary>
