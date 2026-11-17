@@ -2858,6 +2858,13 @@ namespace LinqToDB.Internal.Linq.Builder
 
 								if (enumMappingType != null)
 								{
+									if (_buildPurpose is BuildPurpose.Sql
+									    && _buildFlags.HasFlag(BuildFlags.ForKeys)
+									    && enumMappingType.UnwrapNullableType() == node.Operand.Type.UnwrapNullableType())
+									{
+										return Visit(placeholder.WithType(node.Type));
+									}
+
 									if (TryCastTo(placeholder, enumMappingType, node.Type, out casted))
 									{
 										return Visit(casted);
@@ -4135,7 +4142,22 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (node is { Method.Name: "Equals", Object: { }, Arguments.Count: 1 })
 			{
-				result = ConvertCompareExpression(ExpressionType.Equal, node.Object, node.Arguments[0]);
+				var receiver = node.Object;
+				var argument = node.Arguments[0];
+
+				// The parameter converter sees only the column's enum, which also accepts an enum mapped onto it: the other side's type decides.
+				// Two client values never meet the column's converter.
+				var guarded      = !(Builder.CanBeEvaluatedOnClient(receiver) && Builder.CanBeEvaluatedOnClient(argument));
+				var receiverEnum = guarded && receiver.Type.UnwrapNullableType() is { IsEnum: true } re ? re : null;
+				var argumentEnum = guarded && argument is UnaryExpression { NodeType: ExpressionType.Convert } convert && convert.Operand.Type.UnwrapNullableType() is { IsEnum: true } ae ? ae : null;
+
+				if (receiverEnum != null && !argument.Type.IsValueType && argument.Type.IsAssignableFrom(receiverEnum))
+					argument = GuardEnumEqualsValue(argument, receiverEnum);
+
+				if (argumentEnum != null && (receiverEnum != null || !receiver.Type.IsValueType && receiver.Type.IsAssignableFrom(argumentEnum)))
+					receiver = GuardEnumEqualsValue(receiver, argumentEnum);
+
+				result = ConvertCompareExpression(ExpressionType.Equal, receiver, argument);
 				return !IsSame(result, node);
 			}
 
@@ -4227,6 +4249,62 @@ namespace LinqToDB.Internal.Linq.Builder
 			var corrected = Builder.UpdateNesting(BuildContext.SelectQuery, expression);
 
 			return corrected;
+		}
+
+		internal static readonly MethodInfo CheckEnumEqualsArgumentMethod = MemberHelper.MethodOfGeneric(() => CheckEnumEqualsArgument<DataType>(null));
+
+		// A client value that is or can hold an enum of another type (a typed enum, object, Enum, ValueType, an interface enums
+		// implement) is checked per execution, so a null passes and any other enum fails as an unconvertible value does; a literal
+		// is checked once, here, and stays a literal. Any other immutable value (one read off a constant instance) is not in the
+		// cache key, so it is checked per execution too. The receiver's own enum and anything else are built as before.
+		Expression GuardEnumEqualsValue(Expression value, Type enumType)
+		{
+			if (!Builder.CanBeEvaluatedOnClient(value))
+				return value;
+
+			var operand    = value.UnwrapConvertToObject();
+			var underlying = operand.Type.UnwrapNullableType();
+
+			if (underlying == enumType || !(underlying.IsEnum || !operand.Type.IsValueType && operand.Type.IsAssignableFrom(enumType)))
+				return value;
+
+			if (value.UnwrapConvert() is ConstantExpression { Value: var literal })
+			{
+				ThrowIfOtherEnum(literal, enumType);
+				return value;
+			}
+
+			// A typed enum keeps its own type, so a null is built as master builds it.
+			if (underlying.IsEnum)
+			{
+				var checkedOperand = Expression.Call(CheckTypedEnumEqualsArgumentMethod.MakeGenericMethod(operand.Type, enumType), operand);
+				return ReferenceEquals(operand, value) ? checkedOperand : Expression.Convert(checkedOperand, value.Type);
+			}
+
+			return Expression.Call(CheckEnumEqualsArgumentMethod.MakeGenericMethod(enumType), value);
+		}
+
+		internal static readonly MethodInfo CheckTypedEnumEqualsArgumentMethod = MemberHelper.MethodOfGeneric(() => CheckTypedEnumEqualsArgument<DataType, DataType>(default));
+
+		static TValue CheckTypedEnumEqualsArgument<TValue, TEnum>(TValue value)
+			where TEnum : struct, Enum
+		{
+			ThrowIfOtherEnum(value, typeof(TEnum));
+			return value;
+		}
+
+		static object? CheckEnumEqualsArgument<TEnum>(object? value)
+			where TEnum : struct, Enum
+		{
+			ThrowIfOtherEnum(value, typeof(TEnum));
+			return value;
+		}
+
+		// TEnum.Equals(object) is false for a boxed enum of another type: fail as an unconvertible value does, instead of matching through the column's enum.
+		static void ThrowIfOtherEnum(object? value, Type enumType)
+		{
+			if (value is Enum && value.GetType() != enumType)
+				throw new LinqToDBConvertException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Error_CannotConvertValue, value, value.GetType().FullName, enumType.FullName));
 		}
 
 		ISqlPredicate ConvertExpressionToPredicate(ISqlExpression sqlExpression, bool withNull = false, bool forceEquality = false)
@@ -4640,6 +4718,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			// operands it is looking for.
 			left  = CollapseNullableConvert(left);
 			right = CollapseNullableConvert(right);
+
+			if (!TryCompareInRegisteredEnum(ref left, ref right))
+				TryCompareInRegisteredEnum(ref right, ref left);
 
 			if (BuildContext == null)
 				throw new InvalidOperationException();
@@ -5267,6 +5348,125 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		#region ConvertEnumConversion
 
+		// (E)x with E registered onto x's enum by SetDefaultFromEnumType, and with no parameter converter of its own: a value of E
+		// compared with it is written in x's terms, as C#'s numeric cast reads it.
+		bool TryGetRegisteredEnumCast(Expression cast, Type? valueType, [NotNullWhen(true)] out UnaryExpression? convert)
+		{
+			convert = cast as UnaryExpression;
+
+			if (convert is not { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked, Method: null }
+				|| convert.Operand.Type.UnwrapNullableType() is not { IsEnum: true } sourceEnum
+				|| convert.Type.UnwrapNullableType() is not { IsEnum: true } targetEnum
+				|| sourceEnum == targetEnum
+				|| valueType?.UnwrapNullableType() != targetEnum
+				|| Converter.GetDefaultMappingFromEnumType(MappingSchema, targetEnum)?.UnwrapNullableType() != sourceEnum
+				|| MappingSchema.GetConvertExpression(targetEnum, typeof(DataParameter), false, false) != null)
+			{
+				convert = null;
+				return false;
+			}
+
+			return true;
+		}
+
+		// A nullable list lifts each cast once more: (E?)(E)x.
+		static Expression UnwrapLiftedEnumCast(Expression expression)
+		{
+			return expression is UnaryExpression { NodeType: ExpressionType.Convert, Method: null, Operand: UnaryExpression { Type.IsEnum: true } inner } lifted
+				&& lifted.Type == inner.Type.MakeNullable()
+					? inner
+					: expression;
+		}
+
+		// An item cast the same way is read as its operand, a client item through the cast; anything else keeps the list as written.
+		NewArrayExpression? MapRegisteredEnumItems(NewArrayExpression inline, Type itemType, Type sourceEnum, bool nullable)
+		{
+			var sourceType = nullable ? sourceEnum.MakeNullable() : sourceEnum;
+			var elements   = new List<Expression>(inline.Expressions.Count);
+
+			foreach (var element in inline.Expressions)
+			{
+				if (TryGetRegisteredEnumCast(UnwrapLiftedEnumCast(element), itemType, out var elementCast))
+					elements.Add(elementCast.Operand.Type == sourceType ? elementCast.Operand : Expression.Convert(elementCast.Operand, sourceType));
+				else if (Builder.CanBeEvaluatedOnClient(element))
+					elements.Add(CastRegisteredEnum(element, sourceEnum, nullable));
+				else
+					return null;
+			}
+
+			return Expression.NewArrayInit(sourceType, elements);
+		}
+
+		UnaryExpression? FindRegisteredEnumCastItem(NewArrayExpression inline, Type itemType, out bool nullableOperand)
+		{
+			UnaryExpression? found = null;
+
+			nullableOperand = false;
+
+			foreach (var element in inline.Expressions)
+			{
+				if (TryGetRegisteredEnumCast(UnwrapLiftedEnumCast(element), itemType, out var cast))
+				{
+					found           ??= cast;
+					nullableOperand  |= cast.Operand.Type.IsNullableType;
+				}
+			}
+
+			return found;
+		}
+
+		bool TryCompareInRegisteredEnum(ref Expression cast, ref Expression value)
+		{
+			if (!TryGetRegisteredEnumCast(cast, value.Type, out var convert) || !Builder.CanBeEvaluatedOnClient(value))
+				return false;
+
+			var sourceEnum = convert.Operand.Type.UnwrapNullableType();
+			var nullable   = value.Type.IsNullableType || convert.Operand.Type.IsNullableType;
+
+			cast  = !nullable || convert.Operand.Type.IsNullableType ? convert.Operand : Expression.Convert(convert.Operand, sourceEnum.MakeNullable());
+			value = CastRegisteredEnum(value, sourceEnum, nullable);
+
+			return true;
+		}
+
+		// One client call, so the value is a single parameter of the target enum rather than a cast over the source's. Only a
+		// literal folds: any other immutable value is not in the cache key, and a detached constant would be served to the next one.
+		// A Sql.Constant / Sql.Parameter request is moved onto the cast value, which is what reaches the statement.
+		static Expression CastRegisteredEnum(Expression value, Type toEnum, bool nullable)
+		{
+			return ExpressionHelpers.MoveValueMarkerOutside(value, unmarked =>
+			{
+				var fromEnum = unmarked.Type.UnwrapNullableType();
+
+				if (unmarked.UnwrapConvert() is ConstantExpression { Value: var constant })
+				{
+					var converted = constant == null ? null : Enum.ToObject(toEnum, constant);
+					return Expression.Constant(converted, nullable ? toEnum.MakeNullable() : toEnum);
+				}
+
+				return nullable
+					? Expression.Call(CastNullableEnumMethod.MakeGenericMethod(fromEnum, toEnum), unmarked.Type.IsNullableType ? unmarked : Expression.Convert(unmarked, fromEnum.MakeNullable()))
+					: Expression.Call(CastEnumMethod.MakeGenericMethod(fromEnum, toEnum), unmarked);
+			});
+		}
+
+		internal static readonly MethodInfo CastEnumMethod         = MemberHelper.MethodOfGeneric(() => CastEnum<DataType, DataType>(default));
+		internal static readonly MethodInfo CastNullableEnumMethod = MemberHelper.MethodOfGeneric(() => CastNullableEnum<DataType, DataType>(default));
+
+		static TTo CastEnum<TFrom, TTo>(TFrom value)
+			where TFrom : struct, Enum
+			where TTo   : struct, Enum
+		{
+			return (TTo)Enum.ToObject(typeof(TTo), value);
+		}
+
+		static TTo? CastNullableEnum<TFrom, TTo>(TFrom? value)
+			where TFrom : struct, Enum
+			where TTo   : struct, Enum
+		{
+			return value == null ? null : CastEnum<TFrom, TTo>(value.Value);
+		}
+
 		ISqlPredicate? ConvertEnumConversion(Expression left, SqlPredicate.Operator op, Expression right)
 		{
 			Expression value;
@@ -5325,6 +5525,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						return new SqlPredicate.IsNull(operandSql, op == SqlPredicate.Operator.NotEqual);
 					}
+
+					// A constant of an enum mapped onto the operand's enum has no map value of its own: the regular compare converts it through the column.
+					if (origValue is Enum && Converter.GetDefaultMappingFromEnumType(MappingSchema, origValue.GetType())?.UnwrapNullableType() == type.UnwrapNullableType())
+						return null;
 
 					var mapValue  = origValue;
 
@@ -5553,11 +5757,77 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		private ISqlPredicate? ConvertInPredicate(Expression value, Expression arr)
 		{
+			// As below: a wrapped inline array is the same list unless it is a client value, which stays a parameter.
+			var mappableInline = arr as NewArrayExpression ?? (Builder.CanBeEvaluatedOnClient(arr) ? null : UnwrapInlineArray(arr));
+
+			if (arr.Type.GetItemType() is { } itemType && TryGetRegisteredEnumCast(UnwrapLiftedEnumCast(value), itemType, out var enumCast))
+			{
+				var sourceEnum = enumCast.Operand.Type.UnwrapNullableType();
+				var nullable   = itemType.IsNullableType || enumCast.Operand.Type.IsNullableType;
+				var sourceType = nullable ? sourceEnum.MakeNullable() : sourceEnum;
+
+				Expression? mapped = null;
+
+				if (mappableInline is { NodeType: ExpressionType.NewArrayInit })
+				{
+					mapped = MapRegisteredEnumItems(mappableInline, itemType, sourceEnum, nullable);
+				}
+				else if (Builder.CanBeEvaluatedOnClient(arr))
+				{
+					var item = Expression.Parameter(itemType, "item");
+					mapped = Expression.Call(Methods.Enumerable.Select.MakeGenericMethod(itemType, sourceType), arr, Expression.Lambda(Expression.Convert(item, sourceType), item));
+				}
+
+				if (mapped != null)
+				{
+					arr   = mapped;
+					value = enumCast.Operand.Type == sourceType ? enumCast.Operand : Expression.Convert(enumCast.Operand, sourceType);
+				}
+			}
+			// The mirrored list, a client value searched among items that hold the cast: the value takes the items' terms.
+			else if (mappableInline is { NodeType: ExpressionType.NewArrayInit }
+				&& Builder.CanBeEvaluatedOnClient(value)
+				&& FindRegisteredEnumCastItem(mappableInline, value.Type, out var nullableOperand) is { } itemCast)
+			{
+				var sourceEnum = itemCast.Operand.Type.UnwrapNullableType();
+				var nullable   = value.Type.IsNullableType || nullableOperand;
+
+				if (MapRegisteredEnumItems(mappableInline, value.Type, sourceEnum, nullable) is { } mapped)
+				{
+					arr   = mapped;
+					value = CastRegisteredEnum(value, sourceEnum, nullable);
+				}
+			}
+
+			// A client enum searched among column items of another enum (a registered cast read through a projection) takes the
+			// column's terms, as a compared value does. Every other list keeps building the value on its own.
+			ColumnDescriptor? besideDescriptor = null;
+			ISqlExpression?   besideSql        = null;
+
+			if (value.Type.UnwrapNullableType() is { IsEnum: true } valueEnum
+				&& mappableInline is { NodeType: ExpressionType.NewArrayInit }
+				&& Builder.CanBeEvaluatedOnClient(value)
+				&& mappableInline.Expressions.FirstOrDefault(e => !Builder.CanBeEvaluatedOnClient(e)) is { } columnItem)
+			{
+				using (UsingBuildFlags(_buildFlags | BuildFlags.ForKeys))
+				{
+					if (Visit(columnItem) is SqlPlaceholderExpression itemPlaceholder
+						&& QueryHelper.GetColumnDescriptorForComparedValue(itemPlaceholder.Sql) is { MemberType: var memberType } itemDescriptor
+						&& memberType.UnwrapNullableType() is { IsEnum: true } columnEnum
+						&& columnEnum != valueEnum)
+					{
+						besideDescriptor = itemDescriptor;
+						besideSql        = itemPlaceholder.Sql;
+					}
+				}
+			}
+
 			ISqlExpression? expr = null;
 
 			Expression builtExpr;
 
 			using (UsingBuildFlags(_buildFlags | BuildFlags.ForKeys))
+			using (besideDescriptor != null ? UsingColumnDescriptorBeside(besideDescriptor, besideSql!) : null)
 			{
 				builtExpr = Visit(value);
 			}
@@ -5584,7 +5854,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (UnwrapInlineArray(arr) is { NodeType: ExpressionType.NewArrayInit } inlineArray && !Builder.CanBeEvaluatedOnClient(arr))
 				arr = inlineArray;
 
-			using (UsingColumnDescriptorBeside(QueryHelper.GetColumnDescriptorForComparedValue(expr), expr))
+			// The client items of a list taken in a column item's terms take them too.
+			using (besideDescriptor != null
+				? UsingColumnDescriptorBeside(besideDescriptor, besideSql!)
+				: UsingColumnDescriptorBeside(QueryHelper.GetColumnDescriptorForComparedValue(expr), expr))
 			{
 				switch (arr.NodeType)
 				{
