@@ -3931,6 +3931,28 @@ namespace Tests.Linq
 			}
 		}
 
+		static int NotTranslatable(int id) => id * 7;
+
+		// A detached child whose query fails to build reports its error, not a NullReferenceException on execution.
+		[Test]
+		public void DetachedChildThatFailsToBuildReportsItsError([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Select(p => new
+				{
+					p.ParentID,
+					Ids = db.Child
+						.Select(c => Sql.AsSql(NotTranslatable(c.ChildID)))
+						.ToList(),
+				});
+
+			var error = Shouldly.Should.Throw<LinqToDBException>(() => query.ToList());
+
+			error.Message.ShouldContain("could not be converted to SQL");
+		}
+
 		static FormattableString DetachedInList(string tableName, IEnumerable<int> values)
 		{
 			var arguments = values

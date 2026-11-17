@@ -143,7 +143,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				join.JoinedTable.SqlQueryExtensions = jhc.Extensions;
 			}
 
-			if (buildInfo.Parent == null && !builder.IsSupportedSubquery(sequence, collection, out var errorMessage))
+			if (buildInfo.Parent == null && !builder.IsSupportedSubquery(sequence, collection, loadedSeparately: false, out var errorMessage))
 			{
 				collection.Detach();
 				return BuildSequenceResult.Error(methodCall, errorMessage);

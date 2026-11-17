@@ -314,7 +314,7 @@ namespace Tests.Linq
 		// render of untouched statements renders.
 		[Test]
 		public void CombinedRenderAfterSequentialRunMatchesFreshRender(
-			[IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySql)] string context)
+			[IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySqlConnector)] string context)
 		{
 			var traces  = new List<string>();
 			var options = new DataOptions()

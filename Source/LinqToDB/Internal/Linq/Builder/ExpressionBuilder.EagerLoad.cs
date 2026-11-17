@@ -411,7 +411,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			query.Init(sequence);
 			query.SetParametersAccessors(_parametersContext.CurrentSqlParameters.ToList());
 
-			BuildQuery(query, sequence, queryParameter, ref harvesters!, []);
+			if (!BuildQuery(query, sequence, queryParameter, ref harvesters!, []))
+				return query.ErrorExpression!;
 
 			var idx       = harvesters.Count;
 			var harvester = new DetachedHarvester<T>(query);

@@ -6,6 +6,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.MySql;
 using LinqToDB.Interceptors;
 
 using NUnit.Framework;
@@ -86,6 +87,37 @@ namespace Tests.xUpdate
 			var on  = InsertOrReplaceRoundTrips(context, combinedCommands: true,  out var combining);
 
 			AssertCollapsed(off, on, combining);
+		}
+
+		// A MySql.Data connection string can refuse several statements in one command, so that connector runs the steps separately.
+		[Test]
+		public void InsertWithIdentity_MySqlDataRunsSequentially(
+			[IncludeDataSources(TestProvName.AllMySql80)] string context,
+			[Values("", ";AllowBatch=false")] string option)
+		{
+			var options = new DataOptions()
+				.UseMySql(GetConnectionString(context) + option, MySqlVersion.MySql80, MySqlProvider.MySqlData)
+				.UseCombinedCommands(true);
+
+			using var db      = new TestDataConnection(options);
+			using var cleanup = new DeletePerson(db);
+
+			var counter = new CommandCounter();
+			db.AddInterceptor(counter);
+
+			var id = db.Person.InsertWithIdentity(() => new Person
+			{
+				FirstName = "John",
+				LastName  = "Shepard",
+				Gender    = Gender.Male
+			});
+
+			counter.Count.ShouldBe(2);
+
+			db.Person
+				.Single(p => p.ID == Convert.ToInt32(id))
+				.LastName
+				.ShouldBe("Shepard");
 		}
 
 		// Query hints apply to one command, so a run that carries one executes the INSERT and the identity SELECT separately,
