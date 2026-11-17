@@ -599,21 +599,23 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
-				from p in Parent
-				group p by p.ParentID into g
-				where g.Key != 3
+				from p in Person
+				group p by p.FirstName into g
+				where Sql.NotBetween(g.Sum(i => i.ID), 2, 3)
 				select new
 				{
 					g.Key,
-					Sum = g.Sum(i => i.Value1) ?? 0,
+					Sum    = g.Sum(i => i.ID),
+					Length = (int?)g.Sum(i => i.LastName.Length),
 				},
-				from p in db.Parent
-				group p by p.ParentID into g
-				where g.Key != 3
+				from p in db.Person
+				group p by p.FirstName into g
+				where Sql.NotBetween(g.Sum(i => i.ID), 2, 3)
 				select new
 				{
 					g.Key,
-					Sum = g.MySum(i => i.Value1) ?? 0,
+					Sum    = g.MySum(i => i.ID),
+					Length = g.MySum(i => Sql.Length(i.LastName)),
 				});
 		}
 

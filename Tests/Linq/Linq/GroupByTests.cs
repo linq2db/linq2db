@@ -4096,7 +4096,7 @@ namespace Tests.Linq
 			var query =
 				from p in db.Person
 				group p.ID by new { p.FirstName } into g
-				where g.Sum().NotBetween(2, 3)
+				where Sql.NotBetween(g.Sum(), 2, 3)
 				select Sql.Length(g.Key.FirstName);
 
 			AssertQuery(query, EqualityComparer<int?>.Default);
@@ -4110,11 +4110,12 @@ namespace Tests.Linq
 			var query =
 				from p in db.Person
 				group p by new { p.FirstName } into g
-				where g.Sum(x => x.ID).NotBetween(2, 3)
+				where Sql.NotBetween(g.Sum(x => x.ID), 2, 3)
 				select new
 				{
 					KeyLength = Sql.Length(g.Key.FirstName),
 					MaxLength = Sql.Length(g.Max(x => x.LastName)),
+					KeyRange  = Sql.Between(g.Key.FirstName, "A", "K"),
 				};
 
 			AssertQuery(query);
@@ -4128,10 +4129,43 @@ namespace Tests.Linq
 			var query =
 				from p in db.Person
 				group p.ID by p.FirstName into g
-				where g.Sum().NotBetween(2, 3)
+				where Sql.NotBetween(g.Sum(), 2, 3)
 				select Sql.Length(g.Key);
 
 			AssertQuery(query, EqualityComparer<int?>.Default);
+		}
+
+		[Table]
+		sealed class BinaryGroupItem
+		{
+			[PrimaryKey] public int     Id    { get; set; }
+			[Column]     public string? Name  { get; set; }
+			[Column]     public byte[]? Value { get; set; }
+
+			public static readonly BinaryGroupItem[] Data =
+			[
+				new() { Id = 1, Name = "a", Value = [1, 2]    },
+				new() { Id = 4, Name = "a", Value = [1, 2, 3] },
+				new() { Id = 2, Name = "b", Value = [7]       },
+			];
+		}
+
+		// The placement is engine behaviour, the same on every provider; MAX over a binary column is not portable.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6325")]
+		public void GroupByFilterWithFunctionOfBinaryAggregate([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(BinaryGroupItem.Data);
+
+			var query =
+				from r in tb
+				group r by r.Name into g
+				where Sql.NotBetween(g.Sum(x => x.Id), 2, 3)
+				select Sql.Length(g.Max(x => x.Value));
+
+			var lengths = query.ToArray();
+
+			lengths.ShouldBe([3]);
 		}
 	}
 }
