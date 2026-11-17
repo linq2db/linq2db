@@ -239,7 +239,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWith8([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void LoadWith8([DataSources(TestProvName.AllNativeAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			var q =
@@ -254,7 +254,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWith9([DataSources(TestProvName.AllAccess)] string context)
+		public void LoadWith9([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			var q =
@@ -306,7 +306,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWith12([DataSources(TestProvName.AllAccess)] string context)
+		public void LoadWith12([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			var q1 =
@@ -325,7 +325,7 @@ namespace Tests.Linq
 		// LoadWith12 through a hand-built IndexExpression in place of the compiler's get_Item call; Access is excluded
 		// as it is for LoadWith12.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5879")]
-		public void LoadWithHandBuiltIndexer([DataSources(TestProvName.AllAccess)] string context)
+		public void LoadWithHandBuiltIndexer([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1181,7 +1181,7 @@ namespace Tests.Linq
 				.ToList();
 		}
 
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllAccess, TestProvName.AllFirebirdLess3, TestProvName.AllMySql57, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllNativeAccess, TestProvName.AllFirebirdLess3, TestProvName.AllMySql57, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6208")]
 		public void ThenLoadNullableJoinedAssociationKeepsUnmatchedRows([DataSources] string context)
 		{
@@ -1200,7 +1200,7 @@ namespace Tests.Linq
 				.ShouldBe(LinkedParentExpected());
 		}
 
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllAccess, TestProvName.AllFirebirdLess3, TestProvName.AllMySql57, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllNativeAccess, TestProvName.AllFirebirdLess3, TestProvName.AllMySql57, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6208")]
 		public void SelectNullableJoinedAssociationKeepsUnmatchedRows([DataSources] string context)
 		{
@@ -1222,7 +1222,7 @@ namespace Tests.Linq
 				.ShouldBe(LinkedParentExpected());
 		}
 
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllAccess, TestProvName.AllFirebirdLess3, TestProvName.AllMySql57, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllNativeAccess, TestProvName.AllFirebirdLess3, TestProvName.AllMySql57, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6208")]
 		public void SelectRequiredJoinedAssociationKeepsOnlyMatchedRows([DataSources] string context)
 		{
@@ -1249,7 +1249,7 @@ namespace Tests.Linq
 		}
 
 		[ThrowsForProvider("DuckDB.NET.Data.DuckDBException", TestProvName.AllDuckDB, ErrorMessage = "Not implemented Error: Non-inner join on correlated columns not supported")]
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllAccess, TestProvName.AllFirebirdLess3, TestProvName.AllMySql57, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllNativeAccess, TestProvName.AllFirebirdLess3, TestProvName.AllMySql57, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[ActiveIssue(6224, Configurations = [TestProvName.AllSQLite], ErrorMessage = "no such column: c_1.ParentID")]
 		[ActiveIssue(6224, Configurations = [TestProvName.AllDB2, TestProvName.AllInformix], ErrorMessage = "An ON clause")]
 		[ActiveIssue(6224, Configurations = [TestProvName.AllMariaDB], ErrorMessage = "Unknown column 'c_1.ParentID' in 'ON'")]

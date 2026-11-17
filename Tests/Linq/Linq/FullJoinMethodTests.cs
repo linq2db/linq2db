@@ -13,7 +13,7 @@ namespace Tests.Linq
 		[Test]
 		public void FullJoinSimple([DataSources(
 			TestProvName.AllSQLite,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase)] string context)
@@ -29,7 +29,7 @@ namespace Tests.Linq
 		[Test]
 		public void FullJoinUnmatchedOnBothSides([DataSources(
 			TestProvName.AllSQLite,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase)] string context)
@@ -51,7 +51,7 @@ namespace Tests.Linq
 		[Test]
 		public void FullJoinEntities([DataSources(
 			TestProvName.AllSQLite,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase)] string context)
@@ -73,7 +73,7 @@ namespace Tests.Linq
 		[Test]
 		public void FullJoinWithCompositeKey([DataSources(
 			TestProvName.AllSQLite,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase)] string context)
@@ -93,7 +93,7 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6311")]
 		public void FullJoinTupleOverload([DataSources(
 			TestProvName.AllSQLite,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase)] string context)
@@ -110,7 +110,7 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6311")]
 		public void FullJoinTupleOverloadComposed([DataSources(
 			TestProvName.AllSQLite,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase)] string context)

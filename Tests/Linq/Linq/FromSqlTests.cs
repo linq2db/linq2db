@@ -1898,7 +1898,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
-		public void UnreferencedExprArgumentIsNotSent([DataSources(TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.Informix)] string context)
+		public void UnreferencedExprArgumentIsNotSent([DataSources(TestProvName.AllNativeAccess, TestProvName.AllSapHana, ProviderName.Informix)] string context)
 		{
 			using var db = GetDataContext(context);
 

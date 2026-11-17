@@ -1309,7 +1309,7 @@ namespace Tests.Linq
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllYdb,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.Firebird25,
 			TestProvName.AllMySql57,
 			// doesn't support LAG with 3 parameters
@@ -1354,7 +1354,7 @@ namespace Tests.Linq
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllYdb,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.Firebird25,
 			TestProvName.AllMySql57,
 			// doesn't support 3-rd parameter for LEAD
@@ -1505,7 +1505,7 @@ namespace Tests.Linq
 			TestProvName.AllSqlServer2008Minus,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.Firebird25,
 			TestProvName.AllMySql57)] string context)
 		{
@@ -1544,7 +1544,7 @@ namespace Tests.Linq
 			TestProvName.AllSqlServer2008Minus,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.Firebird25,
 			TestProvName.AllMySql57)] string context)
 		{
@@ -1587,7 +1587,7 @@ namespace Tests.Linq
 			TestProvName.AllInformix,
 			ProviderName.SqlCe,
 			TestProvName.AllYdb,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.Firebird25,
 			TestProvName.AllSQLite,
 			TestProvName.AllSapHana,
@@ -1602,6 +1602,7 @@ namespace Tests.Linq
 			var q =
 					from p in db.GetTable<Position>()
 					where p.Group == @group
+					orderby p.Order descending
 					select new
 					{
 						Id         = p.Id,
@@ -1653,7 +1654,7 @@ namespace Tests.Linq
 			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.Firebird25,
 			TestProvName.AllInformix,
 			TestProvName.AllOracle,
@@ -1704,7 +1705,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Issue2842Test1([DataSources(
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.Firebird25,
 			TestProvName.AllMySql57,
 			ProviderName.SqlCe,
@@ -1750,7 +1751,7 @@ namespace Tests.Linq
 		// the rows the LEFT JOIN did not match.
 		[Test]
 		public void Issue5123Test([DataSources(
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.Firebird25,
 			TestProvName.AllMySql57,
 			ProviderName.SqlCe,
@@ -1791,7 +1792,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Issue2842Test2([DataSources(
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.Firebird25,
 			TestProvName.AllMySql57,
 			ProviderName.SqlCe,
@@ -1816,7 +1817,7 @@ namespace Tests.Linq
 			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.Firebird25,
 			TestProvName.AllInformix,
 			TestProvName.AllOracle,
@@ -1873,7 +1874,7 @@ namespace Tests.Linq
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllYdb,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.Firebird25,
 			TestProvName.AllMySql57,
 			// doesn't support 3-rd parameter for LEAD
@@ -1906,7 +1907,7 @@ namespace Tests.Linq
 			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.Firebird25,
 			TestProvName.AllMySql57)] string context)
 		{
@@ -2015,7 +2016,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3373")]
-		public void Issue3373Test([DataSources(TestProvName.AllMySql57, ProviderName.Firebird25, TestProvName.AllSqlServer2008Minus, TestProvName.AllSybase, TestProvName.AllAccess, ProviderName.Firebird, ProviderName.SqlCe)] string context)
+		public void Issue3373Test([DataSources(TestProvName.AllMySql57, ProviderName.Firebird25, TestProvName.AllSqlServer2008Minus, TestProvName.AllSybase, TestProvName.AllNativeAccess, ProviderName.Firebird, ProviderName.SqlCe)] string context)
 		{
 			using var db = GetDataContext(context);
 

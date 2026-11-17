@@ -877,7 +877,7 @@ namespace Tests.Linq
 		// the compiler-built form does, the hand-built one must do the same.
 		// Eager-load path over Children; Access is excluded as for LoadWith12.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5879")]
-		public void HandBuiltIndexerOverAssociation([DataSources(TestProvName.AllAccess)] string context)
+		public void HandBuiltIndexerOverAssociation([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 

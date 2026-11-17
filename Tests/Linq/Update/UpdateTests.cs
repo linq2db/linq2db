@@ -945,7 +945,7 @@ namespace Tests.xUpdate
 		public void UpdateAssociation5(
 			[DataSources(
 				false,
-				TestProvName.AllAccess,
+				TestProvName.AllNativeAccess,
 				TestProvName.AllClickHouse,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
@@ -1166,7 +1166,7 @@ namespace Tests.xUpdate
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void TestUpdateSkipTakeNotOrdered(
 			[DataSources(
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			TestProvName.AllSqlServer2012Plus // needs fake order by for FETCH
@@ -1200,7 +1200,7 @@ namespace Tests.xUpdate
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void TestUpdateSkipTakeOrdered(
 			[DataSources(
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			TestProvName.AllClickHouse,
 			TestProvName.AllSybase
 			)]
@@ -1261,7 +1261,7 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void UpdateSetSelect([DataSources(
-			TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllInformix, ProviderName.SqlCe)]
+			TestProvName.AllNativeAccess, TestProvName.AllClickHouse, TestProvName.AllInformix, ProviderName.SqlCe)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -1547,7 +1547,7 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void TestUpdateFromJoinOld([DataSources(
-			TestProvName.AllAccess, // access doesn't have Replace mapping
+			TestProvName.AllNativeAccess, // access doesn't have Replace mapping
 			TestProvName.AllClickHouse,
 			ProviderName.SqlCe,
 			TestProvName.AllInformix)] string context)
@@ -1589,7 +1589,7 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void TestUpdateFromJoin([DataSources(
-			TestProvName.AllAccess, // access doesn't have Replace mapping
+			TestProvName.AllNativeAccess, // access doesn't have Replace mapping
 			TestProvName.AllClickHouse,
 			ProviderName.SqlCe,
 			TestProvName.AllInformix)] string context)
@@ -1631,7 +1631,7 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void TestUpdateFromJoinDifferentTableOld([DataSources(
-			TestProvName.AllAccess, // access doesn't have Replace mapping
+			TestProvName.AllNativeAccess, // access doesn't have Replace mapping
 			TestProvName.AllClickHouse,
 			ProviderName.SqlCe,
 			TestProvName.AllInformix)] string context)
@@ -1675,7 +1675,7 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void TestUpdateFromJoinDifferentTable([DataSources(
-			TestProvName.AllAccess, // access doesn't have Replace mapping
+			TestProvName.AllNativeAccess, // access doesn't have Replace mapping
 			TestProvName.AllClickHouse,
 			ProviderName.SqlCe,
 			TestProvName.AllInformix)] string context)
