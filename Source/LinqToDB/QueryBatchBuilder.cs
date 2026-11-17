@@ -21,7 +21,7 @@ namespace LinqToDB
 	/// <remarks>
 	/// <para>
 	/// Every part is read as a part of that call, so its rules apply: where the context and its provider can combine
-	/// statements the batch is sent as one command, otherwise its statements run one after another with the same results;
+	/// statements the batch is sent as one command, otherwise its statements run one after another;
 	/// <c>First()</c> and <c>Single()</c> inside a part throw when they find no row; see
 	/// <see cref="LinqExtensions.QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
 	/// </para>

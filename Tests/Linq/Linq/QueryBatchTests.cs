@@ -2744,8 +2744,8 @@ namespace Tests.Linq
 				.ShouldBe(PageIds(1, 2));
 		}
 
-		// A remote context runs the parts one by one on the server, where the client counts no readers; Access refuses the
-		// FROM-less subquery.
+		// A remote context runs the statements one after another on the server, where the client counts no readers; Access
+		// refuses the FROM-less subquery.
 		[Test]
 		public void ExplicitBatchSendsOneCommand([DataSources(false, NoFromlessSubquery)] string context, [Values] bool useCombinedCommands)
 		{
