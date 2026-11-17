@@ -423,7 +423,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return resultExpression;
 		}
 
-		static Type BuildValueTupleType(Type[] types)
+		internal static Type BuildValueTupleType(Type[] types)
 		{
 			if (types.Length == 0)
 				throw new ArgumentException("Cannot build ValueTuple for 0 fields.", nameof(types));
@@ -441,7 +441,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return typeof(ValueTuple<,,,,,,,>).MakeGenericType(topTypes);
 		}
 
-		static Expression BuildValueTupleNew(Type tupleType, Expression[] args)
+		internal static Expression BuildValueTupleNew(Type tupleType, Expression[] args)
 		{
 			if (args.Length <= 7)
 			{
