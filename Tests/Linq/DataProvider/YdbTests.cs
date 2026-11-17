@@ -234,7 +234,7 @@ namespace Tests.DataProvider
 				DtVal = now
 			};
 
-			Assert.DoesNotThrow(() => db.Insert(entity), "Insert should not throw any exceptions.");
+			db.Insert(entity); // Insert should not throw any exceptions.
 
 			var result = table.SingleOrDefault(e => e.IntVal == 42);
 			Assert.That(result, Is.Not.Null, "A record with IntVal = 42 should exist in the table.");

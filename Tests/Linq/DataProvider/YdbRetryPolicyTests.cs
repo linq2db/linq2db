@@ -36,7 +36,7 @@ namespace Tests.DataProvider
 		{
 			var count = 0;
 
-			Assert.Throws(Is.SameAs(ex), () => policy.Execute(() => { count++; throw ex; }));
+			Assert.That(() => policy.Execute(() => { count++; throw ex; }), Throws.Exception.SameAs(ex));
 
 			return count;
 		}

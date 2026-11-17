@@ -484,17 +484,17 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			using var ctx = new SQLServerNorthwindContext(optionsBuilder.Options);
 			ctx.Database.EnsureCreated();
 
-			Assert.Throws<LinqToDBForEFToolsException>(() =>
+			Assert.That(() =>
 			{
 				ctx.Products.ToLinqToDB().ToArray();
-			});
+			}, Throws.TypeOf<LinqToDBForEFToolsException>());
 
-			Assert.Throws<LinqToDBForEFToolsException>(() =>
+			Assert.That(() =>
 			{
 				ctx.Products
 					.Where(so => so.ProductId == -1)
 					.Delete();
-			});
+			}, Throws.TypeOf<LinqToDBForEFToolsException>());
 		}
 
 		[Test]
@@ -818,11 +818,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				var query = from p in ctx.Products
 							select SQLServerNorthwindContext.ProcessLong(commandExecutionTime);
 
-				var exception = Assert.Throws<Microsoft.Data.SqlClient.SqlException>(() =>
+				Assert.That(() =>
 					{
 						var result = query.ToLinqToDB().First();
-					})!;
-				Assert.That(timeoutErrorCode, Is.EqualTo(exception.Number));
+					},
+					Throws.TypeOf<Microsoft.Data.SqlClient.SqlException>().With.Property(nameof(Microsoft.Data.SqlClient.SqlException.Number)).EqualTo(timeoutErrorCode));
 			}
 			finally
 			{

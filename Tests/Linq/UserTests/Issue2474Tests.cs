@@ -92,7 +92,7 @@ namespace Tests.UserTests
 						.LoadWith(n => n.Status)
 					where n.StatusType == 2
 					select n;
-				Assert.DoesNotThrow(() => _ = q.ToList());
+				_ = q.ToList();
 			}
 		}
 	}
