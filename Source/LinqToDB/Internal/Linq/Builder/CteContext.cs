@@ -39,7 +39,11 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			CteClause     = default!;
 			CteExpression = default!;
+
+			_creationOrderByScope = builder.CurrentOrderByScope;
 		}
+
+		readonly IDisposable? _creationOrderByScope;
 
 		readonly Dictionary<Expression, SqlPlaceholderExpression>                               _knownMap     = new(ExpressionEqualityComparer.Instance);
 		readonly Dictionary<Expression, (SqlCteField field, SqlPlaceholderExpression placeholder)> _fieldsMap    = new(ExpressionEqualityComparer.Instance);
@@ -58,6 +62,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (_isRecursiveCall)
 				return;
+
+			// The body is built on first use, so the ordering current here is never one its builders may touch. Its own ordering
+			// leads the sequence when the CTE is in that sequence's chain (read under the scope that created it); on a joined side
+			// it is dropped, unless no other ordering exists.
+			using var orderByScope = Builder.IsolateOrderBy(
+				publishOnDispose: Builder.CurrentOrderBy is not { Count: > 0 } || Builder.IsWithinOrderByScope(_creationOrderByScope));
 
 			var thisRef = new ContextRefExpression(ElementType, this);
 
