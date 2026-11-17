@@ -836,7 +836,7 @@ namespace Tests.Linq
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5193")]
 		[ThrowsRequiresCorrelatedSubquery]
-		[ThrowsRequiredOuterJoins(TestProvName.AllAccess, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllOracle11)]
+		[ThrowsRequiredOuterJoins(TestProvName.AllNativeAccess, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllOracle11)]
 		public void IncorrectNesting([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -868,7 +868,7 @@ namespace Tests.Linq
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5193")]
 		[ThrowsRequiresCorrelatedSubquery]
-		[ThrowsRequiredOuterJoins(TestProvName.AllAccess, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllOracle11)]
+		[ThrowsRequiredOuterJoins(TestProvName.AllNativeAccess, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllOracle11)]
 		public void IncorrectNesting_Merged([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1183,7 +1183,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5972")]
-		public void Issue5972_Int64([DataSources(TestProvName.AllAccess)] string context)
+		public void Issue5972_Int64([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1200,7 +1200,7 @@ namespace Tests.Linq
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5972")]
 		[ActiveIssue(5973, Configuration = ProviderName.InformixDB2)]
-		public void Issue5972_Int64Parameter([DataSources(TestProvName.AllAccess)] string context)
+		public void Issue5972_Int64Parameter([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1237,7 +1237,7 @@ namespace Tests.Linq
 		[ActiveIssue(5973, Configuration = ProviderName.InformixDB2)]
 		[ActiveIssue(5973, Configuration = TestProvName.AllFirebird, ErrorMessage = "Value was either too large or too small for an Int64")]
 		[ActiveIssue(5973, Configuration = ProviderName.SQLiteMS,    ErrorMessage = "Arithmetic operation resulted in an overflow")]
-		public void Issue5972_UInt64Parameter([DataSources(TestProvName.AllAccess)] string context)
+		public void Issue5972_UInt64Parameter([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 

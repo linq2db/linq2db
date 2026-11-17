@@ -119,7 +119,7 @@ namespace Tests.xUpdate
 		[TestCaseSource(nameof(_nullParameterCases))]
 		public void MergeApiNullParameter(Action action)
 		{
-			Assert.Throws<ArgumentNullException>(action);
+			Assert.That(action, Throws.TypeOf<ArgumentNullException>());
 		}
 
 		sealed class FakeMergeSource<TTarget, TSource> : IMergeableSource<TTarget, TSource>;

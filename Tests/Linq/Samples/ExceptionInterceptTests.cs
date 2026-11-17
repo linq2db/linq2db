@@ -94,11 +94,11 @@ namespace Tests.Samples
 		public void StandardExceptionExecuteReader([IncludeDataSources(TestProvName.AllSQLiteClassic)]
 			string context)
 		{
-			Assert.Throws<SQLiteException>(() =>
+			Assert.That(() =>
 			{
 				using var db = GetDataContext(context);
 				db.GetTable<TestTable>().ToList();
-			});
+			}, Throws.TypeOf<SQLiteException>());
 		}
 
 		[Test]
@@ -108,11 +108,11 @@ namespace Tests.Samples
 
 			ret.Intercept = (ex) => new DivideByZeroException("Intercepted exception", ex);
 
-			Assert.Throws<DivideByZeroException>(() =>
+			Assert.That(() =>
 			{
 				using var db = GetDataContext(context, o => o.UseRetryPolicy(ret));
 				db.GetTable<TestTable>().ToList();
-			});
+			}, Throws.TypeOf<DivideByZeroException>());
 		}
 	}
 }

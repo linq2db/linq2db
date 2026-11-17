@@ -112,8 +112,7 @@ namespace Tests.UserTests
 			table.Insert(() => new ValueItem { Value = 123 });
 
 			IQueryable<I1313_Derived>? query = null;
-			Assert.DoesNotThrow(() =>
-				query =
+			query =
 					from row in table
 					select new I1313_Derived
 					{
@@ -122,8 +121,7 @@ namespace Tests.UserTests
 						ChangeFieldType = 2,
 						ChangeToField = 3,
 						ChangePropType = 4,
-					}
-			);
+					};
 
 			// Ensure the expected records are returned
 			var records = query!.ToArray();
