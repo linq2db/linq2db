@@ -21,7 +21,7 @@ namespace LinqToDB
 	public static partial class LinqExtensions
 	{
 		/// <summary>
-		/// Runs several reads in one round trip and returns their results. Every sequence the selector reads
+		/// Runs several reads as one command and returns their results. Every sequence the selector reads
 		/// (<c>ToList()</c>, <c>ToArray()</c>) becomes a statement of its own, every scalar it reads becomes part of one shared
 		/// statement, and all statements are sent to the database as one command.
 		/// </summary>
@@ -30,6 +30,12 @@ namespace LinqToDB
 		/// The statements are combined whatever <see cref="LinqOptions.UseCombinedCommands"/> is set to;
 		/// <see cref="LinqOptions.UseDbBatch"/> chooses how they are sent. When the context or the provider cannot send them as
 		/// one command, they run one after another and the results are the same.
+		/// </para>
+		/// <para>
+		/// When the selector reads a collection, the statements run in a transaction unless the caller already holds one or a
+		/// <see cref="System.Transactions.TransactionScope"/> is active; beginning and committing it are round trips of their own,
+		/// so only a selector that reads scalars alone takes one round trip. A remote context opens no such transaction: it reads
+		/// each part with a call of its own, so the parts can see different states of the data.
 		/// </para>
 		/// <para>
 		/// The collection statements run before the shared statement that reads the scalars, whatever order the selector
@@ -80,7 +86,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Runs several reads in one round trip asynchronously and returns their results.
+		/// Runs several reads as one command asynchronously and returns their results.
 		/// See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
 		/// </summary>
 		/// <typeparam name="T">Type of result.</typeparam>
@@ -108,7 +114,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Runs two reads in one round trip. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
+		/// Runs two reads as one command. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
 		/// </summary>
 		/// <typeparam name="T1">Type of the first result.</typeparam>
 		/// <typeparam name="T2">Type of the second result.</typeparam>
@@ -126,7 +132,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Runs three reads in one round trip. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
+		/// Runs three reads as one command. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
 		/// </summary>
 		/// <typeparam name="T1">Type of the first result.</typeparam>
 		/// <typeparam name="T2">Type of the second result.</typeparam>
@@ -147,7 +153,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Runs four reads in one round trip. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
+		/// Runs four reads as one command. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
 		/// </summary>
 		/// <typeparam name="T1">Type of the first result.</typeparam>
 		/// <typeparam name="T2">Type of the second result.</typeparam>
@@ -171,7 +177,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Runs five reads in one round trip. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
+		/// Runs five reads as one command. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
 		/// </summary>
 		/// <typeparam name="T1">Type of the first result.</typeparam>
 		/// <typeparam name="T2">Type of the second result.</typeparam>
@@ -198,7 +204,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Runs six reads in one round trip. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
+		/// Runs six reads as one command. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
 		/// </summary>
 		/// <typeparam name="T1">Type of the first result.</typeparam>
 		/// <typeparam name="T2">Type of the second result.</typeparam>
@@ -228,7 +234,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Runs seven reads in one round trip. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
+		/// Runs seven reads as one command. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
 		/// </summary>
 		/// <typeparam name="T1">Type of the first result.</typeparam>
 		/// <typeparam name="T2">Type of the second result.</typeparam>
@@ -261,7 +267,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Runs two reads in one round trip asynchronously. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
+		/// Runs two reads as one command asynchronously. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
 		/// </summary>
 		/// <typeparam name="T1">Type of the first result.</typeparam>
 		/// <typeparam name="T2">Type of the second result.</typeparam>
@@ -282,7 +288,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Runs three reads in one round trip asynchronously. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
+		/// Runs three reads as one command asynchronously. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
 		/// </summary>
 		/// <typeparam name="T1">Type of the first result.</typeparam>
 		/// <typeparam name="T2">Type of the second result.</typeparam>
@@ -306,7 +312,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Runs four reads in one round trip asynchronously. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
+		/// Runs four reads as one command asynchronously. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
 		/// </summary>
 		/// <typeparam name="T1">Type of the first result.</typeparam>
 		/// <typeparam name="T2">Type of the second result.</typeparam>
@@ -333,7 +339,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Runs five reads in one round trip asynchronously. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
+		/// Runs five reads as one command asynchronously. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
 		/// </summary>
 		/// <typeparam name="T1">Type of the first result.</typeparam>
 		/// <typeparam name="T2">Type of the second result.</typeparam>
@@ -363,7 +369,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Runs six reads in one round trip asynchronously. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
+		/// Runs six reads as one command asynchronously. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
 		/// </summary>
 		/// <typeparam name="T1">Type of the first result.</typeparam>
 		/// <typeparam name="T2">Type of the second result.</typeparam>
@@ -396,7 +402,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Runs seven reads in one round trip asynchronously. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
+		/// Runs seven reads as one command asynchronously. See <see cref="QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.
 		/// </summary>
 		/// <typeparam name="T1">Type of the first result.</typeparam>
 		/// <typeparam name="T2">Type of the second result.</typeparam>
