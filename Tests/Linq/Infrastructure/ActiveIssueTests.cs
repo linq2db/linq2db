@@ -453,7 +453,6 @@ namespace Tests.Infrastructure
 			{
 				throw new InvalidOperationException("boom");
 			}
-
 		}
 
 		sealed class ThrowingCommand : TestCommand
@@ -503,6 +502,15 @@ namespace Tests.Infrastructure
 
 			result.ResultState.Status.ShouldBe(TestStatus.Failed);
 			result.Message.ShouldContain("Expected");
+		}
+
+		[Test]
+		public void ThrowsWhen_ExpectsException_MatchesDeclaredValue()
+		{
+			var attribute = new ThrowsWhenAttribute("provider", typeof(InvalidOperationException), "boom");
+
+			attribute.ExpectsException("boom").ShouldBeTrue();
+			attribute.ExpectsException("stop").ShouldBeFalse();
 		}
 
 		#endregion
