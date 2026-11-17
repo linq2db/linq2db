@@ -33,7 +33,7 @@ namespace LinqToDB
 		/// </para>
 		/// <para>
 		/// When the selector reads a collection, the statements run in a transaction unless the caller already holds one or a
-		/// <see cref="System.Transactions.TransactionScope"/> is active; beginning and committing it are round trips of their own,
+		/// <c>TransactionScope</c> is active; beginning and committing it are round trips of their own,
 		/// so only a selector that reads scalars alone takes one round trip. A remote context opens no such transaction: it reads
 		/// each part with a call of its own, so the parts can see different states of the data.
 		/// </para>
