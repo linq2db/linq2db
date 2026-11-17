@@ -909,7 +909,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConditionNullTest([DataSources(TestProvName.AllAccess)] string context)
+		public void ConditionNullTest([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1202,12 +1202,12 @@ namespace Tests.Linq
 			using var rawTable = db.CreateLocalTable(TableWithConverterValueRaw.TestData);
 			var       table    = db.GetTable<TableWithConverterValue>();
 
-			Assert.Throws<LinqToDBException>(() =>
+			Assert.That(() =>
 				_ = table
 					.Where(x => x.Id == 1)
 					.Set(x => Sql.Row(x.Test1, x.Test2), x => Sql.Row(true, x.Test2))
-					.Update()
-			);
+					.Update(),
+				Throws.TypeOf<LinqToDBException>());
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5351")]

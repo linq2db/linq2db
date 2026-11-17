@@ -48,7 +48,5 @@ namespace LinqToDB.Linq
 	[PublicAPI]
 	public interface IEntityInsertSpec<TTarget>
 		: IEntityInsertSpec<TTarget, IEntityInsertSpec<TTarget>>
-		where TTarget : notnull
-	{
-	}
+		where TTarget : notnull;
 }

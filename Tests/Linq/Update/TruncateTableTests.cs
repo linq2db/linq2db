@@ -16,7 +16,6 @@ using Shouldly;
 namespace Tests.xUpdate
 {
 	[TestFixture]
-	[Order(10000)]
 	public class TruncateTableTests : TestBase
 	{
 		[Table]

@@ -364,6 +364,7 @@ namespace Tests.Linq
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedShiftProviders, ErrorMessage = ErrorHelper.Error_Interval_Shift)]
 		[ThrowsCannotBeConverted(ShiftRefusedWhileBuildingProviders)]
+		[ThrowsForProvider(typeof(LinqToDBException), DeclaredMoneyDurationProviders, ErrorMessage = ErrorHelper.Error_Interval_Operation)]
 		public void ADateShiftsByAComputedDuration([DataSources(false)] string context)
 		{
 			var taken  = TimeSpan.FromHours(1);
@@ -402,6 +403,7 @@ namespace Tests.Linq
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedShiftProviders, ErrorMessage = ErrorHelper.Error_Interval_Shift)]
 		[ThrowsCannotBeConverted(ShiftRefusedWhileBuildingProviders + "," + UnsupportedDifferenceProviders)]
+		[ThrowsForProvider(typeof(LinqToDBException), DeclaredMoneyDurationProviders, ErrorMessage = ErrorHelper.Error_Interval_Operation)]
 		public void ADateShiftsByAComputedDurationInSql([DataSources(false)] string context)
 		{
 			var taken  = TimeSpan.FromHours(1);
@@ -464,6 +466,7 @@ namespace Tests.Linq
 		/// </remarks>
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), NoTickTotalProviders, ErrorMessage = ErrorHelper.Error_Interval_Operation)]
+		[ThrowsForProvider(typeof(LinqToDBException), DeclaredMoneyDurationProviders, ErrorMessage = ErrorHelper.Error_Interval_Operation)]
 		public void DurationsInDifferentUnitsCombineAsDurations([DataSources] string context, [Values] bool inSql)
 		{
 			var value = TimeSpan.FromMinutes(90);
@@ -571,6 +574,7 @@ namespace Tests.Linq
 		/// </remarks>
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), NoTickTotalProviders, ErrorMessage = ErrorHelper.Error_Interval_Operation)]
+		[ThrowsForProvider(typeof(LinqToDBException), DeclaredMoneyDurationProviders, ErrorMessage = ErrorHelper.Error_Interval_Operation)]
 		public void ADifferenceAndADeclaredDurationCombineAsDurations([DataSources(false)] string context)
 		{
 			var taken  = TimeSpan.FromHours(1);
@@ -611,6 +615,7 @@ namespace Tests.Linq
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), NoTickTotalProviders, ErrorMessage = ErrorHelper.Error_Interval_Operation)]
 		[ThrowsCannotBeConverted(UnsupportedDifferenceProviders)]
+		[ThrowsForProvider(typeof(LinqToDBException), DeclaredMoneyDurationProviders, ErrorMessage = ErrorHelper.Error_Interval_Operation)]
 		public void ADifferenceAndADeclaredDurationCombineInSql([DataSources(false)] string context)
 		{
 			var taken  = TimeSpan.FromHours(1);

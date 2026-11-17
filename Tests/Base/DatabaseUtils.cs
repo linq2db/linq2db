@@ -25,6 +25,8 @@ namespace Tests
 						switch (TestExternals.Configuration, fileName)
 						{
 							case ("Access.Data", "TestData.mdb"):
+							case ("Access.LibRed.Mdb.Data", "TestData.LibRed.mdb"):
+							case ("Access.LibRed.Accdb.Data", "TestData.LibRed.accdb"):
 							case ("SqlCe.Data", "TestData.sdf"):
 							case ("SQLite.Classic.Data", "TestData.sqlite"):
 							case ("SQLite.MS.Data", "TestData.MS.sqlite"):

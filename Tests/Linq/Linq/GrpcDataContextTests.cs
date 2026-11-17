@@ -138,14 +138,12 @@ namespace Tests.Linq
 			await interceptor.Entered.WaitAsync(Wait);
 			cts.Cancel();
 
-			var exception = Assert.CatchAsync(() => query);
-
-			exception.ShouldBeOfType<OperationCanceledException>();
-			((OperationCanceledException)exception).CancellationToken.ShouldBe(cts.Token);
-			exception.InnerException
-				.ShouldBeOfType<RpcException>()
-				.StatusCode
-				.ShouldBe(StatusCode.Cancelled);
+			await Assert.ThatAsync(
+				() => query,
+				Throws.TypeOf<OperationCanceledException>()
+					.With.Property(nameof(OperationCanceledException.CancellationToken)).EqualTo(cts.Token)
+					.And.InnerException.TypeOf<RpcException>()
+					.And.InnerException.Property(nameof(RpcException.StatusCode)).EqualTo(StatusCode.Cancelled));
 
 			var released = await interceptor.Released.WaitAsync(Wait);
 
@@ -155,7 +153,7 @@ namespace Tests.Linq
 		// Every call made with a token that is already cancelled fails the same way, without reaching the server -
 		// ExecuteBatchAsync included, which used to send the batch without the token.
 		[Test]
-		public void CancelledTokenThrowsOperationCanceled([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public async Task CancelledTokenThrowsOperationCanceled([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			if (!context.IsRemote()) Assert.Ignore("Skip non-remote context");
 
@@ -170,19 +168,19 @@ namespace Tests.Linq
 			ILinqService client        = new GrpcLinqServiceClient(channel);
 			var          configuration = context.StripRemote();
 
-			AssertCancelled(() => client.GetInfoAsync        (configuration,          cts.Token));
-			AssertCancelled(() => client.ExecuteNonQueryAsync(configuration, "query", cts.Token));
-			AssertCancelled(() => client.ExecuteScalarAsync  (configuration, "query", cts.Token));
-			AssertCancelled(() => client.ExecuteReaderAsync  (configuration, "query", cts.Token));
-			AssertCancelled(() => client.ExecuteBatchAsync   (configuration, "query", cts.Token));
+			await AssertCancelled(() => client.GetInfoAsync        (configuration,          cts.Token));
+			await AssertCancelled(() => client.ExecuteNonQueryAsync(configuration, "query", cts.Token));
+			await AssertCancelled(() => client.ExecuteScalarAsync  (configuration, "query", cts.Token));
+			await AssertCancelled(() => client.ExecuteReaderAsync  (configuration, "query", cts.Token));
+			await AssertCancelled(() => client.ExecuteBatchAsync   (configuration, "query", cts.Token));
 
-			void AssertCancelled(Func<Task> call)
+			async Task AssertCancelled(Func<Task> call)
 			{
-				var exception = Assert.CatchAsync(call);
-
 				// grpc-dotnet itself throws it for a token cancelled before the call starts
-				exception.ShouldBeOfType<OperationCanceledException>();
-				((OperationCanceledException)exception).CancellationToken.ShouldBe(cts.Token);
+				await Assert.ThatAsync(
+					call,
+					Throws.TypeOf<OperationCanceledException>()
+						.With.Property(nameof(OperationCanceledException.CancellationToken)).EqualTo(cts.Token));
 			}
 		}
 
@@ -208,13 +206,11 @@ namespace Tests.Linq
 
 			interceptor.Arm();
 
-			var exception = Assert.CatchAsync(() => db.GetTable<Person>()
-				.ToListAsync());
-
-			exception
-				.ShouldBeOfType<RpcException>()
-				.StatusCode
-				.ShouldBe(StatusCode.Cancelled);
+			await Assert.ThatAsync(
+				() => db.GetTable<Person>()
+					.ToListAsync(),
+				Throws.TypeOf<RpcException>()
+					.With.Property(nameof(RpcException.StatusCode)).EqualTo(StatusCode.Cancelled));
 
 			var released = await interceptor.Released.WaitAsync(Wait);
 
@@ -247,9 +243,7 @@ namespace Tests.Linq
 			await interceptor.Entered.WaitAsync(Wait);
 			cts.Cancel();
 
-			var exception = Assert.CatchAsync(() => commit);
-
-			exception.ShouldBeOfType<OperationCanceledException>();
+			await Assert.ThatAsync(() => commit, Throws.TypeOf<OperationCanceledException>());
 
 			var released = await interceptor.Released.WaitAsync(Wait);
 

@@ -686,12 +686,9 @@ namespace Tests.Linq
 			var query = (from u in db.Person
 				select u).AsSqlServer().OptionMaxDop(1);
 
-			Assert.DoesNotThrow(() =>
-			{
-				var command = query.ToSqlQuery();
+			var command = query.ToSqlQuery();
 
-				TestContext.Out.WriteLine(command.Sql);
-			});
+			TestContext.Out.WriteLine(command.Sql);
 		}
 	}
 }

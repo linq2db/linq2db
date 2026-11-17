@@ -86,27 +86,25 @@ namespace Tests.Exceptions
 
 			var n = 555;
 
-			var ex = Assert.Throws(
-					Is.AssignableTo<Exception>(),
+			var ex = Shouldly.Should.Throw<Exception>(
 					() =>
 						db.Parent.Insert(() => new Parent
 						{
 							ParentID = n,
 							Value1   = n
-						}),
-					"Invalid object name 'Parent1'.")!;
+						}));
 			Assert.That(ex.GetType().Name, Is.EqualTo("SqlException"));
+			Assert.That(ex.Message,        Is.EqualTo("Invalid object name 'Parent1'."));
 
-			ex = Assert.Throws(
-				Is.AssignableTo<Exception>(),
+			ex = Shouldly.Should.Throw<Exception>(
 				() =>
 					db.Parent.Insert(() => new Parent
 					{
 						ParentID = n,
 						Value1 = n
-					}),
-				"Invalid object name 'Parent1'.")!;
+					}));
 			Assert.That(ex.GetType().Name, Is.EqualTo("SqlException"));
+			Assert.That(ex.Message,        Is.EqualTo("Invalid object name 'Parent1'."));
 
 			db.Parent.Delete(p => p.ParentID == n);
 		}
