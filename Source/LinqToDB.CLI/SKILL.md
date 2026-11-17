@@ -494,25 +494,37 @@ Guardrails:
 - User-provided SQL must contain exactly one statement. This restriction applies to SQL text passed through `--sql`, `--sql-file`, or MCP tool input.
 - The CLI may execute provider-specific setup commands internally, such as lock timeout configuration, before executing the user-provided SQL. Those internal commands are not part of the user SQL contract.
 - A single-statement contract keeps result formatting predictable and avoids ambiguous multi-result or partially destructive batches.
-- Single-statement user SQL is a hard command contract for all providers. SQL Server is checked with ScriptDom AST; other providers currently use a generic best-effort validator until provider-specific parsers are added.
+- Single-statement user SQL is a hard command contract for all providers. SQL Server, Sybase ASE and SQL Server Compact are checked by a small grammar of their SQL dialect; other providers use a generic best-effort validator for now.
 - If an agent needs to execute several independent operations, it should run several separate command or tool calls.
 - Multi-statement workflows that rely on session state, such as temporary tables, are not supported yet.
 - `query` is intended for read-oriented SQL. DML, DDL, `EXEC`, procedure calls, transaction control, permission changes, and administrative commands are rejected before execution.
 - If the SQL guard cannot confidently classify SQL as read-only, `query` rejects it.
 - `query` accepts only a statement whose first keyword is `SELECT` or `WITH`. Other genuinely read-only forms are refused by design, including `VALUES`, `TABLE`, `EXPLAIN`, `SHOW`, `DESCRIBE`, and read-only `PRAGMA` statements. Rewrite the request as a `SELECT` where the provider allows it rather than retrying the rejected form.
 - Locking reads spelled `SELECT ... FOR UPDATE` are refused because `UPDATE` is a rejected keyword. Other locking reads are not detected: PostgreSQL and MySQL `FOR SHARE` and `FOR KEY SHARE`, MySQL `LOCK IN SHARE MODE`, and SQL Server table hints such as `WITH (UPDLOCK, HOLDLOCK, XLOCK)` are accepted, so the guard does not guarantee a lock-free read.
-- On providers checked by the generic validator, an unquoted identifier that matches a rejected keyword, for example a table named `merge` or a column named `call`, is refused as well. Quote such identifiers using the provider's identifier quoting so they are not read as keywords. SQL Server is checked with the T-SQL parser instead, so only identifiers that are also T-SQL reserved words, such as `merge`, are refused there.
+- On SQL Server and Sybase ASE, statements need no separator, so an unquoted identifier that matches a T-SQL statement word, for example a column named `open`, `close` or `load`, is refused anywhere in the query. Quote it, for example `[open]`. On SQL Server Compact only DML words and `INTO` are refused in the middle of a statement. On providers checked by the generic validator, an unquoted identifier that matches a rejected keyword, for example a table named `merge` or a column named `call`, is refused as well. Quote such identifiers using the provider's identifier quoting so they are not read as keywords.
+- Session `SET` options that a driver keeps on a pooled connection may not precede a query: on Sybase ASE none may, and on SQL Server `SET TRANSACTION ISOLATION LEVEL` may not.
 - `execute` requires the selected configuration profile to set `enableExecute` to `true`.
 - `linq2db_execute` is not registered by default. Start MCP with `--enable-execute-tool` to publish it, and still use a profile with `enableExecute: true`.
 - When write-capable SQL is executed, the command writes a diagnostic notice to stderr without including SQL text or credentials.
-- The read-only SQL guard is a guardrail, not a security boundary. Use restricted database accounts as the primary protection.
-- The read-only SQL guard classifies statement shape. It cannot detect side effects performed by functions or expressions inside an accepted `SELECT`, including provider built-ins or user-defined functions that modify state.
-- The strongest protection against agent mistakes is to execute SQL using a database account with limited permissions appropriate for the task. For read-only agent queries, prefer a read-only account. For development workflows that need DDL/DML, prefer a dedicated disposable database or a restricted development account.
+- The read-only check of `query` and `linq2db_query` is a safety net against mistakes: it stops SQL that a user or
+  an agent sends by accident and that would change data or schema — a pasted `UPDATE` or `DELETE`, DDL,
+  `SELECT … INTO`, a data-modifying `WITH`, a script of several statements, a call that advances a sequence. A few
+  harmless session `SET` options and linq2db's own parameter declarations may precede the query. When `execute` is
+  disabled, `query` also refuses the known, documented ways to write from a single read statement, so an agent
+  cannot use `query` instead. It does not defeat text crafted to be read differently by the check and by the
+  server, and it cannot see what user-defined functions, procedures or views do when an accepted `SELECT` calls
+  them.
+- Real protection is on the database side: connect with a login that can only read, or open the database in a
+  read-only mode where the provider has one (for example `Mode=ReadOnly` for SQLite, `ACCESS_MODE=READ_ONLY` for
+  DuckDB, `Options=-c default_transaction_read_only=on` for PostgreSQL, a `readonly=1` profile for ClickHouse,
+  `Mode=Read` for Access). SQL Server, Sybase ASE, MySQL and Oracle offer no read-only switch in the connection
+  string for an ordinary database: use a read-only login. For workflows that need DDL or DML, use a disposable database or a
+  restricted development account.
 
 Agent responsibility:
 
 - The agent is responsible for keeping user-provided SQL to one statement and choosing explicit aliases when column names could be duplicated.
-- In generated SQL string literals, escape an apostrophe using the standard doubled form (`''`), not backslash escaping (`\'`). Provider SQL modes differ, so the conservative query guard can reject ambiguous backslash-escaped text.
+- In generated SQL string literals, escape an apostrophe using the standard doubled form (`''`).
 - The agent is responsible for choosing an output format appropriate to the task. Use `json-table` when duplicate column names or column metadata matter.
 - The agent is responsible for setting provider-specific connection timeout keywords in the connection string when connection establishment must be bounded.
 - The agent must treat guardrails as mistake-prevention aids, not as a security boundary.

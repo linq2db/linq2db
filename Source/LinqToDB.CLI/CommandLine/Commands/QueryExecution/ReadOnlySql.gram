@@ -1,0 +1,520 @@
+// The read-only check of linq2db-cli `query` and the single-statement check of `execute`.
+//
+// What this is: a safety net against mistakes. It refuses the known, documented ways in which one
+// read statement written in ordinary SQL changes data, schema or server state, and a script of
+// several statements. It is not a security boundary: it does not try to defeat text crafted to be
+// lexed one way here and another way by the server, and it cannot see what a user-defined function,
+// procedure or view does.
+//
+// One grammar serves every provider. Providers differ in how they lex a handful of characters, and
+// SQL Server and Sybase ASE run statements that follow each other without a separator; `Dialect`
+// names those behaviour classes, and each publication below reads the text the way its class does.
+// Every list (statement words, the write-route list, session options) is the same for all classes.
+
+Dialect = "TSql" | "Ase" | "Bracket" | "MySql" | "Ydb" | "Informix" | "Standard"
+
+// The conditions, named for the behaviour rather than for providers.
+Unseparated      = "TSql" | "Ase"              // a statement may follow another without a separator
+Brackets         = "TSql" | "Ase" | "Bracket"  // [x] is a quoted identifier
+HashComment      = "MySql"                     // # starts a comment to the end of the line
+BackslashStrings = "MySql" | "Ydb"             // \ escapes the next character inside '…', "…" and `…`
+
+// What the driver keeps when it hands a pooled connection out again: an option set before one query would stay set
+// for the queries that follow on that connection, so it may not precede a query.
+SessionKept      = "Ase"                       // AseClient resets no session option
+IsolationKept    = "TSql" | "Ase"              // SqlClient resets every allowed option but the transaction isolation level
+
+wordboundary = Lex.WordChar
+
+trivia = { (Lex.Space | Lex.LineComment | Lex.BlockComment | Lex.HashLine | Lex.BraceComment)* }
+
+// ---------------------------------------------------------------------------------------------
+// Publications
+
+parse Script with (Dialect = "TSql")      as CheckTSql
+parse Script with (Dialect = "Ase")       as CheckAse
+parse Script with (Dialect = "Bracket")   as CheckBracket
+parse Script with (Dialect = "MySql")     as CheckMySql
+parse Script with (Dialect = "Ydb")       as CheckYdb
+parse Script with (Dialect = "Informix")  as CheckInformix
+parse Script with (Dialect = "Standard")  as CheckStandard
+
+parse SingleScript with (Dialect = "TSql")      as SingleTSql
+parse SingleScript with (Dialect = "Ase")       as SingleAse
+parse SingleScript with (Dialect = "Bracket")   as SingleBracket
+parse SingleScript with (Dialect = "MySql")     as SingleMySql
+parse SingleScript with (Dialect = "Ydb")       as SingleYdb
+parse SingleScript with (Dialect = "Informix")  as SingleInformix
+parse SingleScript with (Dialect = "Standard")  as SingleStandard
+
+// Names what stands where a check above stopped. It reads every class's lexing at once, which is
+// enough to name a word, a quote or a separator.
+parse Finding as DescribeRefusal
+
+// ---------------------------------------------------------------------------------------------
+// Query mode: `Preamble? SessionSet* Query ';'? eof`
+
+Script = Sep? & Prefix & Query & Tail
+
+// linq2db logs a command's parameters as DECLARE/SET lines before it; a few harmless session
+// options may follow. Each item is checked whole before it is read, so a refusal points at its start.
+Prefix       = { (PreambleItem & Sep?)* } & { (SessionSet & Sep?)* }
+PreambleItem = ?=PreambleDeclare ~ PreambleDeclare
+             | ?=PreambleSet ~ PreambleSet
+SessionSet   = ?=(SessionSetBody ~ ?=SetEnd) ~ SessionSetBody & when Dialect is not SessionKept
+
+Sep  = ';' & (';' & "")*
+Tail = (?=(Sep & GoLine? & eof) ~ Sep)? & GoLine? & eof
+
+// A batch separator of the client tools; on the server the word is an alias at most.
+GoLine = "go"i & Sep? & when Dialect is Unseparated
+
+Query = QueryHead & { (TopItem & "")* }
+
+QueryHead = "select"i
+          | "with"i & CteList & "select"i & when Dialect is Unseparated
+          | ?!WithRoutine ~ "with"i & when Dialect is not Unseparated
+          | Group
+
+CteList    = CteDef & (',' & CteDef)*
+CteDef     = CteName & Group & ("as"i & Group)?
+           | CteName & "as"i & Group
+CteName    = Name | Lex.DoubleQuoted | Lex.Bracketed
+
+// SQL Server and ASE run a statement that follows another without a separator, so at the top level
+// a SELECT is only the continuation of a set operation, and a WITH that opens a common table
+// expression is a second statement. Inside brackets a SELECT is a subquery.
+TopItem = SetOperation
+        | ?!TopStatementStart ~ Item & when Dialect is Unseparated
+        | Item & when Dialect is not Unseparated
+
+SetOperation      = SetOperator & "select"i
+SetOperator       = ("union"i | "except"i | "intersect"i) & ("all"i | "distinct"i)?
+                  | "minus"i
+TopStatementStart = "select"i
+                  | CteStart
+                  | "throw"i & (Lex.Number | Variable | ';' | eof)        // THROW writes nothing, but it is a statement
+                  | TLabel
+CteStart          = "with"i & CteName & Group? & "as"i & '('
+
+Item  = Group | Atom
+Group = '(' & { (Item & "")* } & ')'
+
+Atom = Quoted
+     | RowsFetch
+     | Name
+     | Variable
+     | TempName
+     | Lex.Number
+     | Sym
+
+Quoted = Lex.EString
+       | Lex.QString
+       | Lex.String
+       | Lex.DollarString
+       | Lex.YdbRawString
+       | ?!QuotedRefusal ~ (Lex.DoubleQuoted | Lex.Backticked | Lex.Bracketed)
+
+// OFFSET … ROWS FETCH NEXT is a clause of a SELECT, not the cursor statement FETCH.
+RowsFetch = ("rows"i | "row"i) & "fetch"i
+
+Name     = ?!Refusal ~ Lex.Word
+Variable = '@' ~ '@'? ~ Lex.Word
+         | '$' ~ Lex.Word
+TempName = '#' ~ '#'? ~ Lex.Word & when Dialect is Unseparated
+
+Sym = Lex.ExecutableCommentOpen
+    | ?!"/*" ~ ?!SequenceDot ~ Lex.SymChar
+    | '[' & when Dialect is not Brackets
+    | '{' & when Dialect is not "Informix"
+
+// ---------------------------------------------------------------------------------------------
+// What is refused where a name is read. Every class reads the same lists; only the T-SQL
+// statement words are limited to the class whose statements need no separator.
+
+Refusal = ?!Exempt ~ Refused
+
+Exempt = Lex.CallExemptWord & '('                     // REPLACE(…), INSERT(…), TRUNCATE(…), LEFT(…) are functions
+       | "merge"i & ("join"i | "union"i)              // a join or union hint: INNER MERGE JOIN, OPTION (MERGE UNION)
+       | "use"i & ("hint"i | "plan"i | "model"i)      // a query hint: OPTION (USE HINT('…'))
+
+Refused = Lex.DmlWord
+        | Lex.IntoWord
+        | Lex.TSqlStatementWord & when Dialect is Unseparated
+        | TSqlStatementPair & when Dialect is Unseparated
+        | WriteRoute
+        | SequenceCall
+        | WithRoutine
+
+// Statements of two words whose first word is an ordinary name elsewhere.
+TSqlStatementPair = "enable"i & "trigger"i
+                  | "disable"i & "trigger"i
+                  | "send"i & "on"i & "conversation"i
+                  | "move"i & "conversation"i
+                  | "get"i & "conversation"i & "group"i
+                  | "end"i & "conversation"i
+
+WriteRoute = Lex.RouteFunction & '('
+           | Lex.RoutePackage & '.'
+           | "sysadmin"i & ':' & (RouteOwner & '.')? & ("task"i | "admin"i)
+RouteOwner = Lex.Word | Lex.DoubleQuoted
+
+QuotedRefusal = Lex.QuotedRouteFunction & '('
+              | Lex.QuotedRoutePackage & '.'
+
+SequenceCall = "next"i & "value"i & "for"i
+             | "nextval"i & ("for"i | '(')
+             | "setval"i & '('
+             | "gen_id"i & '(' & ?!(GeneratorName & ',' & '0' & ')')   // GEN_ID(g, 0) reads a generator
+GeneratorName = Lex.Word | Lex.DoubleQuoted
+SequenceDot   = '.' & "nextval"i
+
+// Oracle's inline PL/SQL; a common table expression named `function` stays a CTE.
+WithRoutine = "with"i & ("function"i | "procedure"i) & ?!("as"i | '(')
+
+// ---------------------------------------------------------------------------------------------
+// The parameter preamble linq2db logs before a command:
+//   DECLARE @p Integer(4) -- Int32
+//   SET     @p = 1
+
+PreambleDeclare = "declare"i & ValueLine.Declared ~ ?=SetEnd
+PreambleSet     = "set"i & ValueLine.Assigned ~ ?=SetEnd
+
+Param = ['@' | '$'] ~ Lex.Word
+
+// A declared type is words, quoted names, numbers and their brackets; never a table, a cursor or a
+// statement.
+TypeToken = ?!TypeStop ~ Lex.Word
+          | Lex.DoubleQuoted
+          | Lex.Bracketed
+          | Lex.Number
+          | ['.' | '-' | '<' | '>' | '[' | ']']
+          | '(' & { ((TypeToken | ',') & "")* } & ')'
+TypeStop  = Lex.DmlWord | Lex.IntoWord | Lex.TSqlStatementWord | "select"i | "with"i | "table"i | "cursor"i
+
+// A value is checked like a query, without subqueries, and without a comma outside brackets:
+// MySQL reads `SET @p = 1, GLOBAL x = 2` as two assignments.
+// It ends at the end of its line, unless a bracket or a string is still open: linq2db writes one assignment a line,
+// and a statement that follows may begin with any name.
+namespace ValueLine
+{
+	trivia = { (Lex.InlineSpace | Lex.LineComment)* }
+
+	Declared = Param & "as"i? & Type?
+	Assigned = Param & '=' & Value
+	         | Param & '=' ~ ?=(Lex.InlineSpace? ~ (eol | eof))     // linq2db logs a table-valued parameter without a value
+	Value    = { (ValueItem & "")+ }
+	Type     = { (TypeToken & "")+ }
+}
+ValueItem  = ValueGroup
+           | ?!(',' | ValueStop) ~ Atom
+ValueInner = ValueGroup
+           | ?!([')' | ']' | '}'] | ValueStop) ~ Atom
+ValueGroup = '(' & { (ValueInner & "")* } & ')'
+           | '[' & { (ValueInner & "")* } & ']' & when Dialect is not Brackets
+           | '{' & { (ValueInner & "")* } & '}' & when Dialect is not "Informix"
+ValueStop  = "select"i | "with"i | "set"i | "declare"i
+
+// What may follow a SET: the end of its line, or on the same line a separator or the next statement.
+SetEnd     = Lex.InlineSpace? ~ (eol | eof | ';' | "--")
+           | Lex.InlineSpace? ~ SetEndSame
+SetEndSame = StatementWord
+
+StatementWord = "select"i | "with"i | "set"i | "declare"i | "values"i | "call"i
+              | Lex.DmlWord | Lex.TSqlStatementWord
+
+// ---------------------------------------------------------------------------------------------
+// Session options that may precede a query. Every value set is closed; anything else is refused.
+// GLOBAL, PERSIST, PERSIST_ONLY, @@global. and @@persist. are not scope words here, so they fail.
+
+SessionSetBody = "set"i & ("session"i | "local"i)? & SessionOption
+               | "set"i & '@' ~ '@' ~ "session"i ~ '.' ~ SessionOption
+
+SessionOption = TSqlSwitch & OnOff
+              | "statistics"i & ("io"i | "time"i) & OnOff
+              | "transaction"i & "isolation"i & "level"i & IsolationLevel & when Dialect is not IsolationKept
+              | "dateformat"i & DateFormat
+              | "datefirst"i & Lex.Number
+              | "language"i & ('N' ~ Lex.String | Lex.Word | Lex.String | Lex.Bracketed)
+              | PgSwitch & Assign & OnOff
+              | PgOption & Assign & SimpleValue
+              | "time"i & "zone"i & (SimpleValue | "local"i)
+              | "search_path"i & Assign & PathItem & (',' & PathItem)*
+              | MySqlOption & Assign & SimpleValue
+              | "names"i & (Lex.Word | Lex.String | "default"i) & ("collate"i & (Lex.Word | Lex.String))?
+
+TSqlSwitch = "nocount"i | "ansi_nulls"i | "ansinull"i | "ansi_padding"i | "ansi_warnings"i
+           | "ansi_null_dflt_on"i | "ansi_null_dflt_off"i | "arithabort"i | "arithignore"i
+           | "concat_null_yields_null"i | "numeric_roundabort"i | "quoted_identifier"i
+
+// PostgreSQL planner switches, by name: a wildcard would admit every future enable_* setting.
+PgSwitch = "enable_seqscan"i | "enable_indexscan"i | "enable_bitmapscan"i | "enable_hashjoin"i
+         | "enable_mergejoin"i | "enable_nestloop"i | "enable_hashagg"i | "enable_sort"i
+         | "enable_material"i | "enable_indexonlyscan"i | "enable_tidscan"i
+         | "enable_partitionwise_join"i | "enable_partitionwise_aggregate"i | "enable_parallel_hash"i
+         | "enable_parallel_append"i | "enable_memoize"i | "enable_incremental_sort"i
+         | "enable_presorted_aggregate"i | "enable_gathermerge"i | "enable_async_append"i
+         | "enable_partition_pruning"i | "jit"i
+
+PgOption = "datestyle"i | "intervalstyle"i | "timezone"i | "extra_float_digits"i | "application_name"i
+         | "client_min_messages"i | "bytea_output"i | "statement_timeout"i | "work_mem"i
+
+MySqlOption = "time_zone"i | "max_execution_time"i | "max_statement_time"i | "group_concat_max_len"i
+            | "div_precision_increment"i | "optimizer_switch"i
+
+IsolationLevel = "read"i & ("uncommitted"i | "committed"i)
+               | "repeatable"i & "read"i
+               | "serializable"i
+               | "snapshot"i
+               | ['0'..'3'] ~ ?!Lex.WordChar
+
+DateFormat = "mdy"i | "dmy"i | "ymd"i | "ydm"i | "myd"i | "dym"i
+
+OnOff       = "on"i | "off"i | "true"i | "false"i | "yes"i | "no"i | "default"i | ['0' | '1'] ~ ?!Lex.WordChar
+Assign      = '=' | "to"i | ':' ~ '='
+SimpleValue = ['-' | '+']? ~ Lex.Number ~ ('.' ~ Lex.Number)? ~ Lex.Word?
+            | Lex.String
+            | 'N' ~ Lex.String
+            | Lex.DoubleQuoted
+            | Name
+PathItem    = Lex.Word | Lex.DoubleQuoted | Lex.String
+
+// ---------------------------------------------------------------------------------------------
+// Execute mode: the same prefix, then one statement.
+
+SingleScript = Sep? & Prefix & Statement & SingleTail & when Dialect is not Unseparated
+             | Sep? & Prefix & TStatement & Tail & when Dialect is Unseparated
+
+SingleTail = (?=(Sep & eof) ~ Sep)? & eof
+
+// Outside T-SQL a statement ends only at a separator.
+Statement = { (AnyItem & "")+ }
+AnyItem   = AnyGroup | AnyAtom
+AnyGroup  = '(' & { (AnyItem & "")* } & ')'
+AnyAtom   = Quoted | Lex.Word | Variable | TempName | Lex.Number | Sym
+
+// T-SQL: a statement word at the top level starts the next statement, unless it is a clause of the
+// statement being read. Modules take the rest of the batch; IF, WHILE and blocks take their bodies.
+TStatement = TModule
+           | "if"i & TCondition & TBody & ("else"i & TBody)?
+           | "while"i & TCondition & TBody
+           | "begin"i & "try"i & TBlockBody & "end"i & "try"i & Sep? & "begin"i & "catch"i & TBlockBody & "end"i & "catch"i
+           | "begin"i & ?!TBeginStatement ~ TBlockBody & "end"i
+           | "with"i & CteList & (TSelect | TInsert | TUpdate | TDelete | TMerge)
+           | TSelect | TInsert | TUpdate | TDelete | TMerge | TGrant | TAlter | TDeclare
+           | (?!TBlockEnd ~ Lex.Word | Lex.Bracketed | Lex.DoubleQuoted) & { (TItem & "")* }
+           | AnyGroup & { (TSelectItem & "")* }
+TBlockEnd  = "else"i | "end"i & ?!"conversation"i
+
+TBeginStatement = "tran"i | "transaction"i | "distributed"i | "dialog"i | "conversation"i | "try"i | "catch"i
+TBlockBody      = { (TStatement & Sep?)* }
+TBody           = TStatement & Sep?
+TCondition      = { (TItem & "")+ }
+
+TModule = ("create"i & ("or"i & ("alter"i | "replace"i))? | "alter"i) & ("proc"i | "procedure"i | "function"i | "trigger"i | "view"i)
+        & (?!"go"i ~ TModuleItem & "")*
+TModuleItem = AnyItem | ';'
+
+TSelect = "select"i & { (TSelectItem & "")* }
+TSelectItem = SetOperation | TItem
+TInsert = "insert"i & { (?!TInsertValues ~ TItem & "")* }
+        & (TInsertValues & { (TItem & "")* } | TSelect | "with"i & CteList & TSelect | ("exec"i | "execute"i) & { (TItem & "")* })?
+TInsertValues = "values"i | "default"i & "values"i
+TUpdate = "update"i & { (?!"set"i ~ TItem & "")* } & ("set"i & { (TItem & "")* })?
+TDelete = "delete"i & { (TItem & "")* }
+TMerge  = "merge"i & { (("update"i | "insert"i | "delete"i | "set"i | TItem) & "")* }
+TGrant  = ("grant"i | "deny"i | "revoke"i) & { ((?!("on"i | "to"i | "from"i) ~ AnyAtom | AnyGroup) & "")* } & { (TItem & "")* }
+TAlter  = "alter"i & { (("add"i | "drop"i | "alter"i | "set"i | ("enable"i | "disable"i) & "trigger"i | TItem) & "")* }
+TDeclare = "declare"i & { (?!"for"i ~ TItem & "")* } & ("for"i & TSelect & { (TItem & "")* })?
+
+// One item of a T-SQL statement: anything but the start of another statement at this level.
+TItem = AnyGroup
+      | TCase
+      | TAttached
+      | ?!TStop ~ AnyAtom
+TCase = "case"i & { ((TCase | AnyGroup | ?!"end"i ~ AnyAtom) & "")* } & "end"i
+
+// Statement words that are clauses of the statement around them.
+TAttached = RowsFetch
+          | "merge"i & ("join"i | "union"i)
+          | Lex.CallExemptWord & ?='('
+          | "on"i & ("delete"i | "update"i)
+          | "for"i & ("update"i | "delete"i)
+          | "if"i & "not"i? & "exists"i & ?!'('
+          | ("to"i | "from"i) & "disk"i
+          | "use"i & ("hint"i | "plan"i | "model"i)
+
+// THROW and a label write nothing, so a query may hold them; as statements they still separate two others.
+TStop = Lex.TSqlStatementWord | "select"i | CteStart | "else"i | "end"i | "throw"i | TSqlStatementPair | TLabel
+TLabel = Lex.Word & ':' ~ ?!':'
+
+// ---------------------------------------------------------------------------------------------
+// Naming what stands at a refusal
+
+Finding : @string = f: FindingKind & Lex.Rest => @(f)
+
+FindingKind : @string
+	= ';'                                                                         => @("separator|;")
+	| w: ("select"i | "with"i)                                                    => @("statement|" + w)
+	| "set"i & '@' ~ '@' ~ s: ("global"i | "persist"i) ~ '.'                      => @("scope|@@" + s)
+	| "set"i & s: ("global"i | "persist_only"i | "persist"i)                      => @("scope|" + s)
+	| "set"i & p: Param                                                           => @("assignment|" + p)
+	| "set"i & ("session"i | "local"i)? & n: Lex.Word                             => @("option|" + n)
+	| "set"i & '@' ~ '@' ~ "session"i ~ '.' ~ n: Lex.Word                          => @("option|" + n)
+	| "declare"i & p: Param                                                       => @("declaration|" + p)
+	| s: SequenceText                                                             => @("sequence|" + s)
+	| w: WithRoutineText                                                          => @("routine|" + w)
+	| n: Lex.RouteFunction & '('                                                  => @("function|" + n)
+	| n: Lex.RoutePackage & '.'                                                   => @("package|" + n)
+	| n: QuotedRouteName & '('                                                   => @("function|" + n)
+	| n: QuotedRoutePackageName & '.'                                             => @("package|" + n)
+	| "sysadmin"i & ':' & (RouteOwner & '.')? & n: ("task"i | "admin"i)          => @("function|sysadmin:" + n)
+	| w: TSqlStatementPairText                                                    => @("statement|" + w)
+	| w: Lex.IntoWord                                                             => @("into|" + w)
+	| w: Lex.DmlWord                                                              => @("statement|" + w)
+	| w: Lex.TSqlStatementWord                                                    => @("statement|" + w)
+	| q: CompleteQuoted                                                           => @("other|" + q)
+	| "/*"                                                                        => @("unterminated|/*")
+	| q: ['\'' | '"' | '`' | '[' | '$' | '{']                                     => @("unterminated|" + q)
+	| eof                                                                         => @("end|")
+	| w: Lex.Word                                                                 => @("other|" + w)
+	| c: any                                                                      => @("other|" + c)
+
+SequenceText          = "next"i & "value"i & "for"i | "nextval"i & ("for"i | '(') | "setval"i & '(' | "gen_id"i & '(' | '.' & "nextval"i
+WithRoutineText       = "with"i & ("function"i | "procedure"i)
+TSqlStatementPairText = TSqlStatementPair
+QuotedRouteName       = Lex.QuotedRouteFunction
+QuotedRoutePackageName = Lex.QuotedRoutePackage
+CompleteQuoted        = Lex.EString | Lex.QString | Lex.String | Lex.DollarString | Lex.DoubleQuoted | Lex.Backticked | Lex.Bracketed
+
+// ---------------------------------------------------------------------------------------------
+// Lexing. Character by character; the conditions are the only lexical differences between classes.
+
+namespace Lex
+{
+	trivia = none
+
+	WordStart = [\p{L} | \p{M} | '_']
+	WordChar  = [\p{L} | \p{M} | \p{Nd} | '_' | '$']
+	Word      = { WordStart & WordChar* }
+	Number    = { ['0'..'9']+ }
+	SymChar   = [^ \p{L} | \p{M} | \p{Nd} | '_' | ' ' | '\t'..'\r' | '\u0085' | \p{Zs} | \p{Zl} | \p{Zp}
+	             | '\'' | '"' | '`' | '(' | ')' | ';' | '[' | '{']
+	Rest      = any*
+
+	Space        = [' ' | '\t'..'\r' | '\u0085' | \p{Zs} | \p{Zl} | \p{Zp}]+
+	InlineSpace  = { [' ' | '\t' | \p{Zs}]+ }
+	LineComment  = "--" & [^ '\r' | '\n']*
+	BlockComment = ?!ExecutableCommentOpen & Std.Nested("/*", "*/")
+	HashLine     = '#' & [^ '\r' | '\n']* & when Dialect is HashComment
+	BraceComment = '{' & [^ '}']* & '}' & when Dialect is "Informix"
+
+	// MySQL and MariaDB run what stands inside /*! … */ and /*M! … */, so it is read as code.
+	ExecutableCommentOpen = "/*!" & ['0'..'9']* | "/*M!"i & ['0'..'9']*
+
+	String       = { '\'' & { StringChar }* & '\'' }
+	StringChar   = "''" | '\\' & any & when Dialect is BackslashStrings | '\\' & when Dialect is not BackslashStrings | [^ '\'' | '\\']
+	EString      = { ['E' | 'e'] & '\'' & ("''" | '\\' & any | [^ '\'' | '\\'])* & '\'' }
+	DollarString = { '$' & $tag: (DollarTag?) & '$' & (?!('$' & $tag & '$') & any)* & '$' & $tag & '$' }
+	DollarTag    = [\p{L} | '_'] & [\p{L} | \p{Nd} | '_']*
+	QString      = { ['n' | 'N']? & ['q' | 'Q'] & '\''
+	                 & ( '[' & (?!"]'" & any)* & "]'"
+	                   | '{' & (?!"}'" & any)* & "}'"
+	                   | '(' & (?!")'" & any)* & ")'"
+	                   | '<' & (?!">'" & any)* & ">'"
+	                   | $d: [^ ' ' | '\t' | '\r' | '\n' | '[' | '{' | '(' | '<'] & (?!($d & '\'') & any)* & $d & '\'' ) }
+	DoubleQuoted = { '"' & { DoubleQuotedChar }* & '"' }
+	DoubleQuotedChar = "\"\"" | '\\' & any & when Dialect is BackslashStrings | '\\' & when Dialect is not BackslashStrings | [^ '"' | '\\']
+	Backticked   = { '`' & { BacktickedChar }* & '`' }
+	BacktickedChar = "``" | '\\' & any & when Dialect is BackslashStrings | '\\' & when Dialect is not BackslashStrings | [^ '`' | '\\']
+	Bracketed    = { '[' & ("]]" | [^ ']'])* & ']' } & when Dialect is Brackets
+	YdbRawString = { "@@" & (?!"@@" & any)* & "@@" } & when Dialect is "Ydb"
+
+	// Words that are functions when a bracket follows them.
+	CallExemptWord = ("replace"i | "insert"i | "truncate"i | "left"i) & ?!WordChar
+
+	DmlWord  = ("insert"i | "update"i | "delete"i | "merge"i | "upsert"i | "replace"i) & ?!WordChar
+	IntoWord = "into"i & ?!WordChar
+
+	// Statement keywords of SQL Server and Sybase ASE.
+	//   https://learn.microsoft.com/sql/t-sql/statements/statements
+	//   https://learn.microsoft.com/sql/t-sql/language-elements/control-of-flow
+	//   https://learn.microsoft.com/sql/t-sql/language-elements/reserved-keywords-transact-sql
+	//   https://infocenter.sybase.com/help/topic/com.sybase.infocenter.dc36272.1600/doc/html/title.html (ASE 16 Reference Manual: Commands)
+	// Left out because a SELECT uses them: ELSE and END (CASE … ELSE … END), THROW (writes nothing).
+	TSqlStatementWord = ( "add"i | "alter"i | "backup"i | "begin"i | "break"i | "bulk"i
+	                    | "checkpoint"i | "close"i | "commit"i | "connect"i | "continue"i | "create"i
+	                    | "dbcc"i | "deallocate"i | "declare"i | "delete"i | "deny"i | "disconnect"i
+	                    | "disk"i | "drop"i | "dump"i | "execute"i | "exec"i | "fetch"i | "goto"i
+	                    | "grant"i | "if"i | "insert"i | "kill"i | "load"i | "lock"i | "merge"i
+	                    | "mount"i | "online"i | "open"i | "prepare"i | "print"i | "quiesce"i
+	                    | "raiserror"i | "readtext"i | "receive"i | "reconfigure"i | "remove"i
+	                    | "reorg"i | "restore"i | "return"i | "revert"i | "revoke"i | "rollback"i
+	                    | "save"i | "setuser"i | "set"i | "shutdown"i | "transfer"i | "truncate"i
+	                    | "unmount"i | "updatetext"i | "update"i | "use"i | "waitfor"i | "while"i
+	                    | "writetext"i ) & ?!WordChar
+
+	// The write-route list: built-in functions, packages and schemas through which a single read
+	// statement can change data or server state on some database. A same-named function of another
+	// database or of a user is refused too.
+	//   SQL Server  https://learn.microsoft.com/sql/t-sql/functions/openquery-transact-sql (and OPENROWSET, OPENDATASOURCE)
+	//   Sybase ASE  https://infocenter.sybase.com/help/topic/com.sybase.infocenter.dc36271.1600/doc/html/title.html (Reference Manual: Building Blocks, functions)
+	//   PostgreSQL  https://www.postgresql.org/docs/current/functions-admin.html
+	//               https://www.postgresql.org/docs/current/lo-funcs.html
+	//               https://www.postgresql.org/docs/current/dblink.html
+	//               https://www.postgresql.org/docs/current/adminpack.html
+	//               https://github.com/citusdata/pg_cron
+	//   MySQL       https://dev.mysql.com/doc/refman/8.4/en/loadable-function-reference.html
+	//   Oracle      https://docs.oracle.com/en/database/oracle/oracle-database/23/arpls/
+	//   DB2         https://www.ibm.com/docs/en/db2/11.5?topic=routines-built-in-modules
+	//   Firebird    https://firebirdsql.org/file/documentation/chunk/en/refdocs/fblangref50/fblangref50-functions-scalar.html
+	//   Informix    https://www.ibm.com/docs/en/informix-servers/14.10?topic=functions-smart-large-object
+	//               https://www.ibm.com/docs/en/informix-servers/14.10?topic=api-sql-administration-functions
+	//   SQLite      https://www.sqlite.org/lang_corefunc.html#load_extension
+	//   ClickHouse  https://clickhouse.com/docs/sql-reference/table-functions
+	//   Access      https://learn.microsoft.com/office/vba/language/reference/functions-visual-basic-for-applications
+	// A name ending in * stands for every name that begins so.
+	RouteFunction = ( "openquery"i | "openrowset"i | "opendatasource"i
+	                | "reserve_identity"i | "set_appcontext"i | "rm_appcontext"i | "lct_admin"i
+	                | "set_config"i | "lo_import"i | "lo_export"i | "lo_unlink"i | "lo_create"i | "lo_creat"i
+	                | "lo_from_bytea"i | "lo_put"i | "lowrite"i | "lo_truncate"i
+	                | "dblink"i & WordChar*                                     // dblink*
+	                | "pg_notify"i | "pg_stat_statements_reset"i
+	                | "pg_wal_replay_"i & WordChar*                             // pg_wal_replay_*
+	                | "pg_log_backend_memory_contexts"i
+	                | "brin_summarize_new_values"i | "brin_summarize_range"i | "brin_desummarize_range"i
+	                | "gin_clean_pending_list"i
+	                | "pg_terminate_backend"i | "pg_cancel_backend"i | "pg_reload_conf"i | "pg_rotate_logfile"i
+	                | "pg_stat_reset"i & WordChar*                              // pg_stat_reset*
+	                | "pg_switch_wal"i | "pg_create_restore_point"i
+	                | "pg_backup_"i & WordChar*                                 // pg_backup_*
+	                | "pg_"i & (?!"replication_slot"i & WordChar)* & "replication_slot"i & WordChar*   // pg_*replication_slot*
+	                | "pg_replication_origin_"i & WordChar*                     // pg_replication_origin_*
+	                | "pg_logical_emit_message"i | "pg_promote"i | "pg_import_system_collations"i
+	                | "pg_file_write"i | "pg_file_rename"i | "pg_file_unlink"i
+	                | "pg_background_"i & WordChar*                             // pg_background_*
+	                | "asynchronous_connection_failover_"i & WordChar*          // asynchronous_connection_failover_*
+	                | "group_replication_"i & WordChar*                         // group_replication_*
+	                | "keyring_key_"i & WordChar*                               // keyring_key_*
+	                | "version_tokens_set"i | "version_tokens_edit"i | "version_tokens_delete"i
+	                | "audit_log_"i & WordChar*                                 // audit_log_*
+	                | "sys_exec"i | "sys_eval"i
+	                | "rdb$set_context"i
+	                | "lotofile"i | "locopy"i
+	                | "load_extension"i
+	                | "url"i | "urlcluster"i | "remote"i | "remotesecure"i | "cluster"i | "clusterallreplicas"i
+	                | "mysql"i | "postgresql"i | "mongodb"i | "redis"i | "jdbc"i | "odbc"i | "executable"i
+	                | "shell"i | "kill"i | "filecopy"i | "mkdir"i | "rmdir"i | "savesetting"i | "deletesetting"i
+	                | "setattr"i | "createobject"i | "getobject"i | "sendkeys"i | "callbyname"i | "chdir"i
+	                | "chdrive"i ) & ?!WordChar
+
+	// Packages, modules and schemas: any part of a name followed by a dot.
+	RoutePackage = ( "dbms_pipe"i | "dbms_scheduler"i | "dbms_job"i | "dbms_sql"i | "dbms_sys_sql"i
+	               | "dbms_xmlstore"i | "dbms_aq"i | "dbms_ddl"i | "dbms_alert"i
+	               | "utl_file"i | "utl_smtp"i | "utl_mail"i | "utl_tcp"i
+	               | "rdb$profiler"i
+	               | "cron"i ) & ?!WordChar
+
+	QuotedRouteFunction = '"' & RouteFunction & '"' | '`' & RouteFunction & '`' | '[' & RouteFunction & ']' & when Dialect is Brackets
+	QuotedRoutePackage  = '"' & RoutePackage & '"' | '`' & RoutePackage & '`' | '[' & RoutePackage & ']' & when Dialect is Brackets
+}

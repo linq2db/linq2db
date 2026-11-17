@@ -94,6 +94,12 @@ namespace LinqToDB.CommandLine.Commands.Help
 			environment.Out.WriteLine("Description:");
 			environment.Out.WriteLine("        {0}", command.Help);
 
+			if (command.Remarks != null)
+			{
+				environment.Out.WriteLine();
+				environment.Out.WriteLine("        {0}", command.Remarks);
+			}
+
 			environment.Out.WriteLine();
 			environment.Out.WriteLine("Options:");
 

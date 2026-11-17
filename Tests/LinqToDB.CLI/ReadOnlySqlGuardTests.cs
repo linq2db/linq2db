@@ -1,0 +1,829 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+
+using LinqToDB.CommandLine.Commands.QueryExecution;
+
+using NUnit.Framework;
+
+using Shouldly;
+
+namespace Tests.LinqToDB.CLI
+{
+	/// <summary>
+	/// The read-only and single-statement checks generated from <c>ReadOnlySql.gram</c>, called per behaviour class so
+	/// that classes no provider is routed to yet are covered as well.
+	/// </summary>
+	[TestFixture]
+	public sealed class ReadOnlySqlGuardTests
+	{
+		const string TSql     = "TSql";
+		const string Ase      = "Ase";
+		const string Bracket  = "Bracket";
+		const string MySql    = "MySql";
+		const string Ydb      = "Ydb";
+		const string Informix = "Informix";
+		const string Standard = "Standard";
+
+		static readonly string[] _classes = [TSql, Ase, Bracket, MySql, Ydb, Informix, Standard];
+
+		static bool Check(string dialect, string sql)
+		{
+			return dialect switch
+			{
+				TSql     => ReadOnlySqlGrammar.TryCheckTSql    (sql, out _),
+				Ase      => ReadOnlySqlGrammar.TryCheckAse     (sql, out _),
+				Bracket  => ReadOnlySqlGrammar.TryCheckBracket (sql, out _),
+				MySql    => ReadOnlySqlGrammar.TryCheckMySql   (sql, out _),
+				Ydb      => ReadOnlySqlGrammar.TryCheckYdb     (sql, out _),
+				Informix => ReadOnlySqlGrammar.TryCheckInformix(sql, out _),
+				Standard => ReadOnlySqlGrammar.TryCheckStandard(sql, out _),
+				_        => throw new ArgumentOutOfRangeException(nameof(dialect)),
+			};
+		}
+
+		static bool Single(string dialect, string sql)
+		{
+			return dialect switch
+			{
+				TSql     => ReadOnlySqlGrammar.TrySingleTSql    (sql, out _),
+				Ase      => ReadOnlySqlGrammar.TrySingleAse     (sql, out _),
+				Bracket  => ReadOnlySqlGrammar.TrySingleBracket (sql, out _),
+				MySql    => ReadOnlySqlGrammar.TrySingleMySql   (sql, out _),
+				Ydb      => ReadOnlySqlGrammar.TrySingleYdb     (sql, out _),
+				Informix => ReadOnlySqlGrammar.TrySingleInformix(sql, out _),
+				Standard => ReadOnlySqlGrammar.TrySingleStandard(sql, out _),
+				_        => throw new ArgumentOutOfRangeException(nameof(dialect)),
+			};
+		}
+
+		// What the query command decides: the read-only check, which admits a single statement only.
+		static bool Query(string dialect, string sql)
+		{
+			return Check(dialect, sql);
+		}
+
+		static void AssertQuery(string sql, bool expected, params string[] dialects)
+		{
+			using (Assert.EnterMultipleScope())
+			{
+				foreach (var dialect in dialects.Length == 0 ? _classes : dialects)
+					Query(dialect, sql).ShouldBe(expected, $"{dialect}: {sql}");
+			}
+		}
+
+		#region Seams
+
+		[TestCase("select a delete")]
+		[TestCase("select a from t delete t")]
+		[TestCase("select a /**/delete")]
+		[TestCase("select a into x")]
+		[TestCase("select 'it''s' into x")]
+		public void SeamRefused(string sql)
+		{
+			AssertQuery(sql, false);
+		}
+
+		[TestCase("select x = 1")]
+		[TestCase("select (select 1)")]
+		[TestCase("select a  ,b")]
+		[TestCase("select deleted, UpdatedAt, intox from t")]
+		[TestCase("select a from t with (nolock)")]
+		[TestCase("select top 5 with ties a from t order by a")]
+		[TestCase("select replace(a,'x','y')")]
+		public void SeamAccepted(string sql)
+		{
+			AssertQuery(sql, true);
+		}
+
+		#endregion
+
+		#region Conditions: the same text read differently by class
+
+		[Test]
+		public void BracketsAreQuotedIdentifiersOnlyWhereTheyAre()
+		{
+			AssertQuery("select [delete] from t",   true,  TSql, Ase, Bracket);
+			AssertQuery("select [delete] from t",   false, MySql, Ydb, Informix, Standard);
+			AssertQuery("select arr[nextval('s')]", false, MySql, Ydb, Informix, Standard);
+			AssertQuery("select arr[1] from t",     true,  MySql, Ydb, Informix, Standard);
+		}
+
+		[Test]
+		public void BackslashEscapesOnlyWhereTheyAre()
+		{
+			AssertQuery("select 'C:\\', 1",  true,  TSql, Ase, Bracket, Informix, Standard);
+			AssertQuery("select 'C:\\', 1",  false, MySql, Ydb);
+			AssertQuery("select 'it\\'s', 1", true,  MySql, Ydb);
+			AssertQuery("select 'it\\'s', 1", false, TSql, Ase, Bracket, Informix, Standard);
+		}
+
+		[Test]
+		public void HashCommentsOnlyInMySql()
+		{
+			AssertQuery("select 1 # delete",                          true,  MySql);
+			AssertQuery("select 1 # delete",                          false, TSql, Ase, Bracket, Ydb, Informix, Standard);
+			AssertQuery("select data #> '{a}', nextval('s') from t", false, Standard);
+			AssertQuery("select data #> '{a}' from t",               true,  Standard);
+			AssertQuery("select * from #t",                           true,  TSql, Ase);
+		}
+
+		[Test]
+		public void BraceCommentsOnlyInInformix()
+		{
+			AssertQuery("select {'k': nextval('s')}", false, Standard, TSql, MySql);
+			AssertQuery("select {'k': nextval('s')}", true,  Informix);
+			AssertQuery("select {'k': 1}",            true,  Standard);
+		}
+
+		[Test]
+		public void RawStringsOnlyInYdb()
+		{
+			AssertQuery("select @@ delete @@", true,  Ydb);
+			AssertQuery("select @@ delete @@", false, TSql, MySql, Standard);
+			AssertQuery("select @@version, 1", true,  TSql, Ase);
+		}
+
+		[Test]
+		public void StatementWordsAnywhereOnlyWhereStatementsNeedNoSeparator()
+		{
+			AssertQuery("select call, open, close from t", true,  Bracket, MySql, Ydb, Informix, Standard);
+			AssertQuery("select call, open, close from t", false, TSql, Ase);
+			AssertQuery("select 1 drop table t",           false, TSql, Ase);
+		}
+
+		[TestCase("select 1 /* a /* b */ from t")]
+		[TestCase("select 1 /*! , nextval(s) */")]
+		[TestCase("select 1 /*M! , nextval(s) */")]
+		[TestCase("select 1 /* unterminated")]
+		public void CommentsReadAlikeEverywhere(string sql)
+		{
+			AssertQuery(sql, false);
+		}
+
+		[TestCase("select 'a' /* x */ from t -- y")]
+		[TestCase("select 1 /* a /* b */ c */ from t")]
+		[TestCase("select $$ delete $$, $x$ insert $x$")]
+		[TestCase("select q'[ delete ]', Q'{ x }', nq'< y >', NQ'! z !'")]
+		[TestCase("select E'it\\'s delete', N'x', X'0F', U&'d\\0061ta'")]
+		[TestCase("select \"delete\", `update` from t")]
+		[TestCase("select V$SESSION.SID, RDB$GET_CONTEXT('SYSTEM', 'DB_NAME') from t")]
+		[TestCase("select имя, n\u0303ame from таблица")]
+		[TestCase("select\u00A0a\u2003from\u2028t")]
+		public void QuoteFormsReadAlikeEverywhere(string sql)
+		{
+			AssertQuery(sql, true, Bracket, Ydb, Informix, Standard);
+		}
+
+		#endregion
+
+		#region Lists
+
+		// One name per entry; a name ending in a wildcard is stood for by one it covers.
+		static readonly string[] _routeFunctions =
+		[
+			"openquery", "openrowset", "opendatasource",
+			"reserve_identity", "set_appcontext", "rm_appcontext", "lct_admin",
+			"set_config", "lo_import", "lo_export", "lo_unlink", "lo_create", "lo_creat", "lo_from_bytea", "lo_put", "lowrite",
+			"lo_truncate", "dblink", "dblink_exec", "dblink_send_query", "pg_notify", "pg_stat_statements_reset",
+			"pg_wal_replay_pause", "pg_log_backend_memory_contexts", "brin_summarize_new_values", "brin_summarize_range",
+			"brin_desummarize_range", "gin_clean_pending_list", "pg_terminate_backend", "pg_cancel_backend", "pg_reload_conf",
+			"pg_rotate_logfile", "pg_stat_reset", "pg_stat_reset_shared", "pg_switch_wal", "pg_create_restore_point",
+			"pg_backup_start", "pg_create_logical_replication_slot", "pg_drop_replication_slot", "pg_replication_origin_create",
+			"pg_logical_emit_message", "pg_promote", "pg_import_system_collations", "pg_file_write", "pg_file_rename",
+			"pg_file_unlink", "pg_background_launch",
+			"asynchronous_connection_failover_add_source", "group_replication_set_as_primary", "keyring_key_store",
+			"version_tokens_set", "version_tokens_edit", "version_tokens_delete", "audit_log_filter_set_filter", "sys_exec",
+			"sys_eval",
+			"RDB$SET_CONTEXT",
+			"LOTOFILE", "LOCOPY",
+			"load_extension",
+			"url", "urlCluster", "remote", "remoteSecure", "cluster", "clusterAllReplicas", "mysql", "postgresql", "mongodb",
+			"redis", "jdbc", "odbc", "executable",
+			"Shell", "Kill", "FileCopy", "MkDir", "RmDir", "SaveSetting", "DeleteSetting", "SetAttr", "CreateObject",
+			"GetObject", "SendKeys", "CallByName", "ChDir", "ChDrive",
+		];
+
+		static readonly string[] _routePackages =
+		[
+			"DBMS_PIPE", "DBMS_SCHEDULER", "DBMS_JOB", "DBMS_SQL", "DBMS_SYS_SQL", "DBMS_XMLSTORE", "DBMS_AQ", "DBMS_DDL",
+			"DBMS_ALERT", "UTL_FILE", "UTL_SMTP", "UTL_MAIL", "UTL_TCP", "RDB$PROFILER", "cron",
+		];
+
+		[Test]
+		public void WriteRouteFunctions()
+		{
+			foreach (var name in _routeFunctions)
+			{
+				AssertQuery($"select {name}(1)",          false);
+				AssertQuery($"select s.{name}(1)",        false);
+				AssertQuery($"select \"{name}\"(1)",      false);
+				AssertQuery($"select {name} from t",      true, name is "Kill" ? [Bracket, MySql, Ydb, Informix, Standard] : _classes);
+				AssertQuery($"select [{name}](1) from t", false, TSql, Ase, Bracket);
+			}
+		}
+
+		[Test]
+		public void WriteRoutePackages()
+		{
+			foreach (var name in _routePackages)
+			{
+				AssertQuery($"select {name}.f('p')",     false);
+				AssertQuery($"select \"{name}\".\"F\"(1)", false);
+				AssertQuery($"select x from {name}.job", false);
+				AssertQuery($"select {name} from t",     true);
+			}
+		}
+
+		[Test]
+		public void InformixAdministrationPair()
+		{
+			AssertQuery("select sysadmin:task('x')",           false);
+			AssertQuery("select sysadmin:informix.admin('x')", false);
+			AssertQuery("select task('x'), admin from t",      true);
+		}
+
+		[TestCase("select next value for s")]
+		[TestCase("select NEXT  VALUE\nFOR dbo.s")]
+		[TestCase("select nextval for s from t")]
+		[TestCase("select s.nextval from dual")]
+		[TestCase("select \"S\".NEXTVAL from dual")]
+		[TestCase("select nextval('s')")]
+		[TestCase("select setval('s', 1)")]
+		[TestCase("select gen_id(g, 1) from rdb$database")]
+		[TestCase("select gen_id(g, 00) from rdb$database")]
+		[TestCase("select GEN_ID(\"G\", -1) from rdb$database")]
+		public void SequenceCallsRefused(string sql)
+		{
+			AssertQuery(sql, false);
+		}
+
+		[TestCase("select gen_id(g, 0) from rdb$database")]
+		[TestCase("select GEN_ID(\"G\" , 0 ) from rdb$database")]
+		[TestCase("select nextval, next, value from t")]
+		[TestCase("select currval('s')")]
+		public void SequenceReadsAccepted(string sql)
+		{
+			AssertQuery(sql, true);
+		}
+
+		// Options whose value set is closed. The transaction isolation level is kept by SqlClient on a pooled connection,
+		// and AseClient keeps every option, so those classes refuse what the driver would carry to the next query.
+		static readonly string[] _sessionOptions =
+		[
+			"SET NOCOUNT ON", "SET ANSI_NULLS OFF", "SET ANSINULL ON", "SET ANSI_PADDING ON", "SET ANSI_WARNINGS ON",
+			"SET ANSI_NULL_DFLT_ON ON", "SET ANSI_NULL_DFLT_OFF OFF", "SET ARITHABORT ON", "SET ARITHIGNORE OFF",
+			"SET CONCAT_NULL_YIELDS_NULL ON", "SET NUMERIC_ROUNDABORT OFF", "SET QUOTED_IDENTIFIER ON", "SET DATEFORMAT dmy",
+			"SET DATEFIRST 1", "SET LANGUAGE us_english", "SET LANGUAGE N'British'", "SET STATISTICS IO ON",
+			"SET STATISTICS TIME OFF",
+			"SET DateStyle = 'ISO, MDY'", "SET IntervalStyle TO postgres", "SET TimeZone = 'UTC'", "SET TIME ZONE 'UTC'",
+			"SET TIME ZONE LOCAL", "SET extra_float_digits = 3", "SET application_name = 'cli'",
+			"SET client_min_messages TO warning", "SET bytea_output = 'hex'", "SET statement_timeout = '5s'",
+			"SET work_mem = '64MB'", "SET jit = off", "SET search_path TO a, \"$user\", public", "SET SESSION search_path = a",
+			"SET LOCAL statement_timeout = 1000",
+			"SET enable_seqscan = off", "SET enable_indexscan TO on", "SET enable_bitmapscan = false", "SET enable_hashjoin = off",
+			"SET enable_mergejoin = off", "SET enable_nestloop = off", "SET enable_hashagg = off", "SET enable_sort = off",
+			"SET enable_material = off", "SET enable_indexonlyscan = off", "SET enable_tidscan = off",
+			"SET enable_partitionwise_join = on", "SET enable_partitionwise_aggregate = on", "SET enable_parallel_hash = off",
+			"SET enable_parallel_append = off", "SET enable_memoize = off", "SET enable_incremental_sort = off",
+			"SET enable_presorted_aggregate = off", "SET enable_gathermerge = off", "SET enable_async_append = off",
+			"SET enable_partition_pruning = off",
+			"SET time_zone = '+00:00'", "SET SESSION max_execution_time = 1000", "SET @@session.max_statement_time = 1",
+			"SET group_concat_max_len = 100000", "SET div_precision_increment = 8",
+			"SET optimizer_switch = 'index_merge=off,mrr=on'", "SET NAMES utf8mb4", "SET NAMES 'utf8mb4' COLLATE utf8mb4_bin",
+		];
+
+		static readonly string[] _isolationLevels =
+		[
+			"SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED", "SET TRANSACTION ISOLATION LEVEL READ COMMITTED",
+			"SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ", "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE",
+			"SET TRANSACTION ISOLATION LEVEL SNAPSHOT", "SET TRANSACTION ISOLATION LEVEL 1",
+		];
+
+		[Test]
+		public void SessionOptionsAloneAndStacked()
+		{
+			string[] keeping   = [TSql, Bracket, MySql, Ydb, Informix, Standard];
+			string[] isolation = [Bracket, MySql, Ydb, Informix, Standard];
+
+			foreach (var option in _sessionOptions)
+			{
+				AssertQuery($"{option}\nselect 1",  true,  keeping);
+				AssertQuery($"{option};\nselect 1", true,  keeping);
+				AssertQuery($"{option}\nselect 1",  false, Ase);
+			}
+
+			foreach (var option in _isolationLevels)
+			{
+				AssertQuery($"{option};\nselect 1", true,  isolation);
+				AssertQuery($"{option};\nselect 1", false, TSql, Ase);
+			}
+
+			AssertQuery(string.Join(";\n", _sessionOptions) + ";\nselect 1",                         true, keeping);
+			AssertQuery(string.Join("\n",  _sessionOptions.Concat(_isolationLevels)) + "\nselect 1", true, isolation);
+		}
+
+		[TestCase("SET ROWCOUNT 5")]
+		[TestCase("SET TEXTSIZE 100")]
+		[TestCase("SET sql_select_limit = 1")]
+		[TestCase("SET IDENTITY_INSERT t ON")]
+		[TestCase("SET NOCOUNT ON, XACT_ABORT ON")]
+		[TestCase("SET NOCOUNT MAYBE")]
+		[TestCase("SET enable_external_access = true")]
+		[TestCase("SET enable_anything = off")]
+		[TestCase("SET GLOBAL max_connections = 1")]
+		[TestCase("SET PERSIST max_connections = 1")]
+		[TestCase("SET PERSIST_ONLY max_connections = 1")]
+		[TestCase("SET @@global.read_only = 0")]
+		[TestCase("SET @@persist.max_connections = 1")]
+		[TestCase("SET SESSION AUTHORIZATION u")]
+		[TestCase("SET ROLE r")]
+		[TestCase("SET TRANSACTION ISOLATION LEVEL READ COMMITTED, READ WRITE")]
+		[TestCase("SET TRANSACTION ISOLATION LEVEL READ COMMITTED READ WRITE")]
+		[TestCase("SET TRANSACTION READ WRITE")]
+		[TestCase("SET search_path = a, GLOBAL max_connections = 5")]
+		[TestCase("SET time_zone = '+00:00', GLOBAL max_connections = 5")]
+		[TestCase("SET @p = 1, GLOBAL max_connections = 777")]
+		[TestCase("SET @q = 2, @@global.max_connections = 778")]
+		[TestCase("SET @r = 3, PERSIST max_connections = 779")]
+		[TestCase("SET @p = 1\n, GLOBAL max_connections = 777")]
+		[TestCase("SET @p = (select 1)")]
+		[TestCase("SET @p = 1 + (select max(a) from t)")]
+		[TestCase("SET @p = nextval('s')")]
+		[TestCase("SET @@p = 1")]
+		[TestCase("DECLARE @t TABLE (a int)")]
+		[TestCase("DECLARE @c CURSOR")]
+		[TestCase("DECLARE @p Int DELETE t")]
+		public void PrefixRefused(string prefix)
+		{
+			AssertQuery(prefix + "\nselect 1", false);
+			AssertQuery(prefix + ";\nselect 1", false);
+		}
+
+		[TestCase("select 1; SET NOCOUNT ON")]
+		[TestCase("select 1; SET @p = 1")]
+		[TestCase("select 1 SET NOCOUNT ON")]
+		public void SetAfterQueryRefused(string sql)
+		{
+			AssertQuery(sql, false, sql.Contains(';', StringComparison.Ordinal) ? _classes : [TSql, Ase]);
+		}
+
+		[TestCase("SET search_path = a, b")]
+		[TestCase("SET @p = ', '")]
+		[TestCase("SET @p = 1\n-- comment\n")]
+		public void PrefixAccepted(string prefix)
+		{
+			AssertQuery(prefix + "\nselect 1", true, TSql, Bracket, Standard);
+		}
+
+		#endregion
+
+		#region Preamble
+
+		[TestCase("DECLARE @id Integer -- Int32\nSET @id = 1")]
+		[TestCase("DECLARE $Has  -- Boolean\nSET $Has = True")]
+		[TestCase("DECLARE @p  -- Int64\nSET @p = NULL")]
+		[TestCase("DECLARE $Name Text(6) -- String\nSET $Name = 'Manuel'u")]
+		[TestCase("DECLARE @PersonID Integer(4) -- Int32")]
+		[TestCase("DECLARE @p DateTime2\nSET @p = DATETIME2FROMPARTS(2020, 1, 1, 0, 0, 0, 0, 7)")]
+		[TestCase("DECLARE @p Udt -- Object\nSET @p = LINESTRING (100 100, 20 180, 180 180)")]
+		[TestCase("DECLARE @hid Udt -- Object\nSET @hid = /1/3/")]
+		[TestCase("DECLARE @p NVarChar(4000) -- String\nSET @p = N'%[[]0%'")]
+		[TestCase("DECLARE @p NVarChar(4000) -- String\nSET @p = N'first line\nsecond line'")]
+		[TestCase("DECLARE @p Decimal(18, 2)\nSET @p = -1.5E+10")]
+		[TestCase("DECLARE @table [dbo].[TestTableType] -- Structured -- Object\nSET @table = ")]
+		[TestCase("DECLARE $p AS Int32\nSET $p = 1")]
+		[TestCase("SET @p = 1\nDECLARE @q Int\nSET @q = 2\nDECLARE @r Int")]
+		[TestCase("DECLARE @p Int;\nSET @p = 1;")]
+		public void PreambleAccepted(string preamble)
+		{
+			AssertQuery(preamble + "\nSELECT [t].[a] FROM [t] WHERE [t].[a] = @p", true, TSql, Ase, Bracket);
+			AssertQuery(preamble + "\nSELECT t.a FROM t WHERE t.a = @p",           true);
+			AssertQuery(preamble + "\n;WITH c AS (select 1 a) select a from c",    true);
+		}
+
+		[Test]
+		public void PrefixBeforeOtherStatementsInExecuteMode()
+		{
+			foreach (var dialect in _classes)
+			{
+				using (Assert.EnterMultipleScope())
+				{
+					Single(dialect, "DECLARE @p Int -- Int32\nSET @p = 1\nUPDATE t SET a = @p").ShouldBeTrue(dialect);
+					Single(dialect, "SET @p = 0\n[dbo].[p]").ShouldBeTrue(dialect);
+					Single(dialect, "SET @p = 0\nexec p").ShouldBeTrue(dialect);
+					Single(dialect, "update t set a = 1").ShouldBeTrue(dialect);
+					Single(dialect, "update t set a = 1;").ShouldBeTrue(dialect);
+					Single(dialect, ";update t set a = 1").ShouldBeTrue(dialect);
+					Single(dialect, "update t set a = 1; delete t").ShouldBeFalse(dialect);
+					Single(dialect, "DECLARE @p Int\nSET @p = 1\nupdate t set a = @p; delete t").ShouldBeFalse(dialect);
+				}
+			}
+		}
+
+		#endregion
+
+		#region One statement
+
+		[TestCase(";WITH c AS (select 1 a) select a from c")]
+		[TestCase(";;select 1;;")]
+		[TestCase("select 1 union all select 2 except select 3 intersect select 4")]
+		[TestCase("(select 1) union (select 2)")]
+		[TestCase("with c as (select 1 a), d (b) as (select 2) select * from c, d")]
+		[TestCase("with xmlnamespaces ('urn:x' as x) select 1")]
+		public void OneStatementAccepted(string sql)
+		{
+			AssertQuery(sql, true);
+		}
+
+		[TestCase("select 1; select 2")]
+		[TestCase("select 1; delete t")]
+		[TestCase("select 1 ;\n;select 2")]
+		public void SeparatedStatementsRefused(string sql)
+		{
+			AssertQuery(sql, false);
+		}
+
+		[TestCase("select 1 select 2")]
+		[TestCase("select a from t\nselect b from u")]
+		[TestCase("(select 1) select 2")]
+		[TestCase("with c as (select 1 a) select a from c with d as (select 2 b) select b from d")]
+		[TestCase("select a from t with c as (select 1) select 1")]
+		[TestCase("select 1 throw 50000, 'x', 1")]
+		[TestCase("select 1 l:")]
+		[TestCase("select * from t receive * from q")]
+		[TestCase("select 1 get conversation group @g from q")]
+		[TestCase("select 1 move conversation @h to @g")]
+		[TestCase("select 1 send on conversation @h")]
+		[TestCase("select 1 end conversation @h")]
+		[TestCase("select 1 enable trigger tr on t")]
+		[TestCase("select 1 disable trigger tr on t")]
+		public void UnseparatedStatementsRefusedInTSql(string sql)
+		{
+			AssertQuery(sql, false, TSql, Ase);
+		}
+
+		[TestCase("select get, move, send, receiver from t")]
+		[TestCase("select case when a = 1 then 'x' else 'y' end from t")]
+		[TestCase("select iif(a = 1, 1, 0), openjson, openxml from t")]
+		[TestCase("select a from t order by a offset 5 rows fetch next 5 rows only")]
+		[TestCase("select a from t order by a offset 1 row fetch first 1 row only")]
+		[TestCase("select a from t inner merge join u on 1 = 1 option (merge join, merge union, use hint('DISABLE_OPTIMIZER_ROWGOAL'))")]
+		[TestCase("select a from t with (nolock) union all select b from u with (index (ix))")]
+		[TestCase("select a, count(*) from t group by a with rollup")]
+		[TestCase("select * from t for xml path('r'), root('x')")]
+		[TestCase("select REPLACE (a, 'x', 'y'), LEFT(a, 1) from t")]
+		[TestCase("select * from #t join ##g on 1 = 1")]
+		[TestCase("select 1\nGO")]
+		[TestCase("select 1;\ngo\n")]
+		public void TSqlQueryAccepted(string sql)
+		{
+			AssertQuery(sql, true, TSql, Ase);
+		}
+
+		[TestCase("select 1\nGO\nselect 2")]
+		[TestCase("select 1\nGO\ndelete t")]
+		[TestCase("select 1\nGO 5\nselect 2")]
+		public void GoFollowedByStatementRefused(string sql)
+		{
+			AssertQuery(sql, false, TSql, Ase);
+		}
+
+		#endregion
+
+		#region Refused anywhere
+
+		[TestCase("update t set a = 1")]
+		[TestCase("select * from t for update")]
+		[TestCase("select * from t for no key update")]
+		[TestCase("with c as (select 1) update t set a = 1")]
+		[TestCase("with c as (select 1) delete from t")]
+		[TestCase("with c as (select 1) insert into t select * from c")]
+		[TestCase("with c as (select 1) upsert into t select * from c")]
+		[TestCase("with c as (select 1) merge into t using c on 1 = 1 when matched then delete")]
+		[TestCase("select * from t where exists (delete from u returning *)")]
+		[TestCase("select delete (1)")]
+		[TestCase("select update (1)")]
+		[TestCase("select merge (1)")]
+		[TestCase("replace into t values (1)")]
+		[TestCase("select 1 replace into t values (1)")]
+		[TestCase("select * into t2 from t")]
+		[TestCase("select * from t into outfile '/tmp/x'")]
+		[TestCase("select * from t union select * into z from u")]
+		[TestCase("with function f(x number) return number is begin return x; end; select f(1) from dual")]
+		[TestCase("with procedure p is begin null; end; select 1 from dual")]
+		[TestCase("select dblink_send_query('c', 'insert into t values (1)')")]
+		[TestCase("select 1delete from t")]
+		public void RefusedEverywhere(string sql)
+		{
+			AssertQuery(sql, false);
+		}
+
+		[TestCase("with function as (select 1 a) select a from function")]
+		[TestCase("with function (a) as (select 1) select a from function")]
+		[TestCase("select insert('abc', 1, 1, 'x'), truncate(1.5, 0), left('a', 1) from t")]
+		public void FunctionShapesAccepted(string sql)
+		{
+			AssertQuery(sql, true, Bracket, MySql, Ydb, Informix, Standard);
+		}
+
+		[TestCase("call p()")]
+		[TestCase("exec p")]
+		[TestCase("begin select 1 end")]
+		[TestCase("commit")]
+		[TestCase("declare x int")]
+		[TestCase("create table t (a int)")]
+		[TestCase("pragma writable_schema = 1")]
+		[TestCase("copy t to '/tmp/x'")]
+		[TestCase("values (1)")]
+		[TestCase("")]
+		[TestCase("  -- nothing\n")]
+		public void FirstWordMustBeSelectWithOrBracket(string sql)
+		{
+			AssertQuery(sql, false);
+		}
+
+		#endregion
+
+		#region Execute mode, T-SQL
+
+		[TestCase("CREATE PROCEDURE p AS SELECT 1; SELECT 2; UPDATE t SET a = 1")]
+		[TestCase("CREATE OR ALTER VIEW v AS SELECT 1 AS a\nGO")]
+		[TestCase("IF NOT EXISTS (SELECT 1 FROM t) CREATE TABLE t (a int)")]
+		[TestCase("IF @x = 1 SELECT 1 ELSE IF @x = 2 SELECT 2 ELSE BEGIN UPDATE t SET a = 1; DELETE u END")]
+		[TestCase("WHILE @i < 10 BEGIN SET @i = @i + 1 END")]
+		[TestCase("BEGIN TRY UPDATE t SET a = 1 END TRY BEGIN CATCH SELECT ERROR_MESSAGE() END CATCH")]
+		[TestCase("INSERT INTO t (a) SELECT a FROM u UNION ALL SELECT b FROM v")]
+		[TestCase("INSERT t EXEC p")]
+		[TestCase("INSERT INTO t DEFAULT VALUES")]
+		[TestCase("INSERT INTO t (a) OUTPUT inserted.a INTO @t VALUES (1)")]
+		[TestCase("UPDATE t SET a = 1 OUTPUT deleted.a FROM t JOIN u ON t.id = u.id WHERE u.b = 2")]
+		[TestCase("DELETE t FROM t JOIN u ON t.id = u.id WHERE u.b = 2")]
+		[TestCase("MERGE INTO t USING u ON t.id = u.id WHEN MATCHED THEN UPDATE SET a = u.a WHEN NOT MATCHED THEN INSERT (a) VALUES (u.a) WHEN NOT MATCHED BY SOURCE THEN DELETE OUTPUT $action;")]
+		[TestCase("WITH c AS (SELECT 1 a) UPDATE t SET a = c.a FROM c")]
+		[TestCase("SELECT * INTO #t FROM t")]
+		[TestCase("ALTER TABLE t ADD c int")]
+		[TestCase("ALTER TABLE t DROP COLUMN c")]
+		[TestCase("ALTER TABLE t ENABLE TRIGGER ALL")]
+		[TestCase("ALTER DATABASE CURRENT SET READ_COMMITTED_SNAPSHOT ON")]
+		[TestCase("ALTER TABLE t ADD CONSTRAINT fk FOREIGN KEY (a) REFERENCES u (b) ON DELETE CASCADE ON UPDATE NO ACTION")]
+		[TestCase("DROP TABLE IF EXISTS t")]
+		[TestCase("GRANT SELECT, INSERT, UPDATE, DELETE ON t TO u")]
+		[TestCase("DECLARE c CURSOR FOR SELECT a FROM t FOR UPDATE OF a")]
+		[TestCase("BACKUP DATABASE d TO DISK = 'x' WITH INIT")]
+		[TestCase("UPDATE t SET a = CASE WHEN b = 1 THEN 1 ELSE 2 END WHERE c = 3")]
+		[TestCase("[dbo].[p]")]
+		[TestCase("sp_dboption d, 'x', 'true'")]
+		[TestCase(";UPDATE t SET a = 1;\nGO")]
+		[TestCase("SELECT a FROM t ORDER BY a OFFSET 1 ROWS FETCH NEXT 1 ROWS ONLY")]
+		public void TSqlExecuteOneStatement(string sql)
+		{
+			using (Assert.EnterMultipleScope())
+			{
+				Single(TSql, sql).ShouldBeTrue();
+				Single(Ase,  sql).ShouldBeTrue();
+			}
+		}
+
+		[TestCase("update t set a=1 delete u")]
+		[TestCase("UPDATE t SET a = 1 SELECT 1")]
+		[TestCase("INSERT INTO t VALUES (1) SELECT SCOPE_IDENTITY()")]
+		[TestCase("INSERT INTO t SELECT 1 SELECT 2")]
+		[TestCase("BEGIN TRAN UPDATE t SET a = 1 COMMIT")]
+		[TestCase("DECLARE @x int SET @x = (SELECT 1) SELECT @x")]
+		[TestCase("UPDATE t SET a = 1\nIF @@ROWCOUNT = 0\nBEGIN INSERT INTO t (a) VALUES (1) END")]
+		[TestCase("CREATE TABLE t (a int) GRANT SELECT ON t TO u")]
+		[TestCase("CREATE PROCEDURE p AS SELECT 1\nGO\nEXEC p")]
+		[TestCase("select 1; select 2")]
+		[TestCase("select 1\nGO\nselect 2")]
+		[TestCase("EXEC p THROW 50000, 'x', 1")]
+		[TestCase("EXEC p\nl:")]
+		[TestCase("SET NOCOUNT ON\nUPDATE t SET a = 1 SET NOCOUNT OFF")]
+		public void TSqlExecuteSeveralStatements(string sql)
+		{
+			using (Assert.EnterMultipleScope())
+			{
+				Single(TSql, sql).ShouldBeFalse();
+				Single(Ase,  sql).ShouldBeFalse();
+			}
+		}
+
+		#endregion
+
+		#region Independent T-SQL corpus
+
+		// Every statement form below was put after a query as "select 1 <form>" and as "select * from t" + LF + "<form>",
+		// and each text was read once by Microsoft's T-SQL parser (ScriptDom), which no longer ships with the CLI. The file
+		// keeps that parser's verdicts: "split" is a SELECT and a statement of another kind, "selects" two SELECTs, "one"
+		// a single statement and "error" a text it refused.
+		static IEnumerable<(string Verdict, string Sql)> ReadCorpus(string file)
+		{
+			var path = Path.Combine(TestContext.CurrentContext.TestDirectory, "ReadOnlySql", file);
+
+			foreach (var line in File.ReadLines(path))
+			{
+				if (line.Length == 0 || line.StartsWith('#'))
+					continue;
+
+				var parts = line.Split('\t', 3);
+
+				yield return (parts[0], "select 1 " + parts[2]);
+				yield return (parts[1], "select * from t\n" + parts[2]);
+			}
+		}
+
+		[Test]
+		public void TSqlCorpusSecondStatementsRefused()
+		{
+			var rows = ReadCorpus("TSqlStatements.txt").ToList();
+
+			rows.Count(r => r.Verdict == "split").ShouldBeGreaterThan(400);
+
+			using (Assert.EnterMultipleScope())
+			{
+				foreach (var (verdict, sql) in rows)
+				{
+					if (verdict is "split")
+						Query(TSql, sql).ShouldBeFalse(sql);
+
+					if (verdict is "split" or "selects")
+						Single(TSql, sql).ShouldBeFalse(sql);
+				}
+			}
+		}
+
+		// Sybase ASE: the commands chapter of the ASE reference, each of which must be refused after a query.
+		[Test]
+		public void AseCommandsRefused()
+		{
+			var rows = ReadCorpus("AseCommands.txt").ToList();
+
+			rows.Count.ShouldBeGreaterThan(150);
+
+			using (Assert.EnterMultipleScope())
+			{
+				foreach (var (_, sql) in rows)
+					Query(Ase, sql).ShouldBeFalse(sql);
+			}
+		}
+
+		#endregion
+
+		#region Messages and routing
+
+		[TestCase("SqlServer",        "select 1 delete t",                      "Query is not read-only: statement word DELETE at 1:10.")]
+		[TestCase("SqlServer.2019",   "select a\n  into x from t",              "Query is not read-only: INTO at 2:3.")]
+		[TestCase("SqlServer",        "select * from openquery(s, 'x')",        "Query is not read-only: function OPENQUERY at 1:15 is on the write-route list.")]
+		[TestCase("SqlServer",        "select dbms_pipe.send_message('p')",     "Query is not read-only: DBMS_PIPE at 1:8 is on the write-route list.")]
+		[TestCase("SqlServer",        "select next value for s",                "Query is not read-only: sequence call NEXT VALUE FOR at 1:8.")]
+		[TestCase("SqlServer",        "SET ROWCOUNT 5\nselect 1",               "Query is not read-only: session option ROWCOUNT at 1:1 is not allowed.")]
+		[TestCase("SqlServer",        "SET @p = (select 1)\nselect 1",          "Query is not read-only: parameter assignment SET @p at 1:1 is not allowed.")]
+		[TestCase("SqlServer",        "DECLARE @t TABLE (a int)\nselect 1",     "Query is not read-only: parameter declaration DECLARE @t at 1:1 is not allowed.")]
+		[TestCase("SqlServer",        "exec dbo.DoWork",                        "Query is not read-only: statement word EXEC at 1:1.")]
+		[TestCase("SqlServer",        "select 1 /* open",                       "Query is not valid SQL")]
+		[TestCase("Sybase.Managed",   "select open from t",                     "Query is not read-only: statement word OPEN at 1:8.")]
+		[TestCase("SqlCe",            "select [open] from t delete t",          "Query is not read-only: statement word DELETE at 1:22.")]
+		[TestCase("SqlCe",            "call p()",                               "Only SELECT queries are allowed: unexpected 'call' at 1:1.")]
+		public void QueryMessages(string provider, string sql, string message)
+		{
+			var result = ReadOnlySqlGuard.Validate(provider, sql);
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.IsAllowed.ShouldBeFalse();
+				result.Error!.   ShouldContain(message);
+			}
+		}
+
+		[TestCase("SqlServer", "select 1 select 2",                 "Only single SQL statement is allowed: more than one statement at 1:10.")]
+		[TestCase("SqlServer", "update t set a = 1\ndelete u",      "Only single SQL statement is allowed: more than one statement at 2:1.")]
+		[TestCase("SqlCe",     "update t set a = 1; delete u",      "Only single SQL statement is allowed: more than one statement at 1:19.")]
+		[TestCase("Sybase",    "select 'unterminated",              "Query is not valid SQL")]
+		public void SingleStatementMessages(string provider, string sql, string message)
+		{
+			var result = ReadOnlySqlGuard.ValidateSingleStatement(provider, sql);
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.IsAllowed.ShouldBeFalse();
+				result.Error!.   ShouldContain(message);
+			}
+		}
+
+		[Test]
+		public void ProvidersMapToTheirClass()
+		{
+			using (Assert.EnterMultipleScope())
+			{
+				ReadOnlySqlGuard.Validate("SqlServer.2022.MS", "select [delete] from t").IsAllowed.ShouldBeTrue();
+				ReadOnlySqlGuard.Validate("SqlServer.2022.MS", "select open from t").    IsAllowed.ShouldBeFalse();
+				ReadOnlySqlGuard.Validate("Sybase",            "select open from t").    IsAllowed.ShouldBeFalse();
+				ReadOnlySqlGuard.Validate("Sybase.Managed",    "SET NOCOUNT ON select 1").IsAllowed.ShouldBeFalse();
+				ReadOnlySqlGuard.Validate("SqlServer",         "SET NOCOUNT ON select 1").IsAllowed.ShouldBeTrue();
+				ReadOnlySqlGuard.Validate("SqlCe",             "select open from t").    IsAllowed.ShouldBeTrue();
+				ReadOnlySqlGuard.Validate("SqlCe",             "select [delete] from t").IsAllowed.ShouldBeTrue();
+
+				// Providers without a grammar class keep the generic validator for now.
+				ReadOnlySqlGuard.Validate("SQLite", "select 1 # x").IsAllowed.ShouldBeFalse();
+				ReadOnlySqlGuard.Validate("SQLite", "select 1 # x").Error!.ShouldContain("ambiguous SQL syntax");
+			}
+		}
+
+		#endregion
+
+		#region Threads and depth
+
+		[Test]
+		public void ParallelChecksAgree()
+		{
+			var texts = new List<string>();
+
+			foreach (var name in _routeFunctions)
+			{
+				texts.Add($"select {name}(1)");
+				texts.Add($"select {name} from t");
+			}
+
+			texts.AddRange(_sessionOptions.Select(o => o + "\nselect 1"));
+			texts.Add("select " + new string('(', 3000) + "1" + new string(')', 3000));
+
+			var expected = texts.Select(t => _classes.Select(c => Query(c, t)).ToArray()).ToArray();
+			var mismatch = 0;
+
+			Parallel.For(0, 16, new ParallelOptions { MaxDegreeOfParallelism = 16 }, _ =>
+			{
+				for (var repeat = 0; repeat < 5; repeat++)
+				{
+					for (var i = 0; i < texts.Count; i++)
+					{
+						for (var c = 0; c < _classes.Length; c++)
+						{
+							if (Query(_classes[c], texts[i]) != expected[i][c])
+								System.Threading.Interlocked.Increment(ref mismatch);
+						}
+					}
+				}
+			});
+
+			mismatch.ShouldBe(0);
+		}
+
+		[Test]
+		public void NestingIsReadInLinearTime()
+		{
+			static string Nested(int depth)
+			{
+				return "select " + new string('(', depth) + "1" + new string(')', depth);
+			}
+
+			static double Best(string sql)
+			{
+				var best = double.MaxValue;
+
+				for (var i = 0; i < 20; i++)
+				{
+					var watch = Stopwatch.StartNew();
+
+					ReadOnlySqlGrammar.TryCheckTSql(sql, out _).ShouldBeTrue();
+
+					best = Math.Min(best, watch.Elapsed.TotalMilliseconds);
+				}
+
+				return best;
+			}
+
+			var shallow = Nested(1_000);
+			var deep    = Nested(10_000);
+
+			Best(shallow);
+			Best(deep);
+
+			(Best(deep) / Best(shallow)).ShouldBeLessThanOrEqualTo(15);
+
+			ReadOnlySqlGrammar.TryCheckTSql(deep + ")", out _).ShouldBeFalse();
+		}
+
+		[Test]
+		public void NestingBeyondTheStackLimitIsRefusedCleanly()
+		{
+			// The same grammar compiled with one extra stack, so that a modest depth runs out of them.
+			var shallow = new ReadOnlySqlGuard.SqlDialect(
+				sql => ShallowReadOnlySqlGrammar.TryCheckTSql (sql, out _), sql => ShallowReadOnlySqlGrammar.TryCheckTSql (sql).Position,
+				sql => ShallowReadOnlySqlGrammar.TrySingleTSql(sql, out _), sql => ShallowReadOnlySqlGrammar.TrySingleTSql(sql).Position);
+
+			var sql    = "select " + new string('(', 1_000_000) + "1" + new string(')', 1_000_000);
+			var result = ReadOnlySqlGuard.Validate(shallow, sql, false);
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.IsAllowed.ShouldBeFalse();
+				result.Error.    ShouldBe("Query is nested too deeply to be checked.");
+			}
+		}
+
+		#endregion
+	}
+}

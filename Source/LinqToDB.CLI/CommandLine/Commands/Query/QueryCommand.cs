@@ -20,6 +20,9 @@ namespace LinqToDB.CommandLine.Commands.Query
 
 		public static CliCommand Instance { get; } = new QueryCommand();
 
+		public override string? Remarks =>
+			"The read-only check of `query` and `linq2db_query` is a safety net against mistakes: it stops SQL that a user or an agent sends by accident and that would change data or schema — a pasted `UPDATE` or `DELETE`, DDL, `SELECT … INTO`, a data-modifying `WITH`, a script of several statements, a call that advances a sequence. A few harmless session `SET` options and linq2db's own parameter declarations may precede the query.";
+
 		QueryCommand()
 			: base(
 				"query",

@@ -11,6 +11,12 @@
 		<Compile Remove="$(MSBuildThisFileDirectory)..\..\Source\Shared\*.cs" />
 
 		<ProjectReference Include="..\..\Source\LinqToDB.CLI\LinqToDB.CLI.csproj" />
+
+		<!-- The CLI's read-only SQL grammar, compiled once more here with a small stack limit (ShallowReadOnlySqlGrammar). -->
+		<PackageReference Include="DotGram" PrivateAssets="all" ExcludeAssets="runtime" />
+		<AdditionalFiles  Include="..\..\Source\LinqToDB.CLI\CommandLine\Commands\QueryExecution\ReadOnlySql.gram" Link="ReadOnlySql.gram" />
+
+		<None Include="ReadOnlySql\*.txt" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 
 	<ItemGroup>

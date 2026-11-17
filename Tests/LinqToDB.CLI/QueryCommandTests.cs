@@ -529,7 +529,7 @@ namespace Tests.LinqToDB.CLI
 			using (Assert.EnterMultipleScope())
 			{
 				result.IsAllowed.ShouldBe(false);
-				result.Error!.   ShouldContain("UpdateStatement");
+				result.Error!.   ShouldContain("statement word UPDATE at 1:1");
 			}
 		}
 
@@ -556,7 +556,7 @@ namespace Tests.LinqToDB.CLI
 			using (Assert.EnterMultipleScope())
 			{
 				result.IsAllowed.ShouldBe(false);
-				result.Error!.   ShouldContain("EXECUTE is not allowed");
+				result.Error!.   ShouldContain("statement word EXEC at 1:1");
 			}
 		}
 
@@ -570,7 +570,7 @@ namespace Tests.LinqToDB.CLI
 			using (Assert.EnterMultipleScope())
 			{
 				result.IsAllowed.ShouldBe(false);
-				result.Error!.   ShouldContain("SELECT INTO is not allowed");
+				result.Error!.   ShouldContain("INTO at 1:10");
 			}
 		}
 
@@ -586,7 +586,7 @@ namespace Tests.LinqToDB.CLI
 			using (Assert.EnterMultipleScope())
 			{
 				result.IsAllowed.ShouldBe(false);
-				result.Error!.   ShouldContain("OPENQUERY, OPENROWSET, and OPENDATASOURCE are not allowed");
+				result.Error!.   ShouldContain("is on the write-route list");
 			}
 		}
 

@@ -54,6 +54,10 @@ namespace LinqToDB.CommandLine.Commands
 		/// </summary>
 		public string                              Help         { get; }
 		/// <summary>
+		/// Gets additional text printed after the description in the command's own help, or <c>null</c>.
+		/// </summary>
+		public virtual string?                     Remarks      => null;
+		/// <summary>
 		/// Gets command examples.
 		/// </summary>
 		public IReadOnlyCollection<CommandExample> Examples     { get; }

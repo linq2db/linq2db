@@ -91,10 +91,20 @@
 		<!-- The tool assembly is not a referenceable library API. -->
 		<PackageReference Remove="Microsoft.CodeAnalysis.PublicApiAnalyzers" />
 
+		<!-- The tests call the generated SQL check parsers of every dialect class, including classes no provider uses yet. -->
+		<InternalsVisibleTo Include="linq2db.CLI.Tests" />
+
 		<EmbeddedResource Include="Template.tt" LogicalName="LinqToDB.CLI.Template.tt" />
 		<EmbeddedResource Include="SKILL.md"     LogicalName="LinqToDB.CLI.SKILL.md"   />
 
 		<ProjectReference Include="..\LinqToDB.Scaffold\LinqToDB.Scaffold.csproj" />
+
+		<!--
+		Generates the parser behind the read-only SQL check at build time. Nothing of the package ships: the
+		generated code is compiled into this assembly.
+		-->
+		<PackageReference Include="DotGram" PrivateAssets="all" ExcludeAssets="runtime" />
+		<AdditionalFiles  Include="CommandLine\Commands\QueryExecution\ReadOnlySql.gram" />
 
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
 		<PackageReference Include="Microsoft.Extensions.DependencyModel" />
@@ -107,7 +117,6 @@
 		<PackageReference Include="Microsoft.Data.SQLite" />
 		<PackageReference Include="Microsoft.Data.SqlClient" />
 		<PackageReference Include="Microsoft.SqlServer.Types" />
-		<PackageReference Include="Microsoft.SqlServer.TransactSql.ScriptDom" />
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
 		<PackageReference Include="MySqlConnector" />
 		<PackageReference Include="Oracle.ManagedDataAccess.Core" />

@@ -414,13 +414,9 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 		async Task<QueryExecutionResult> ExecuteValidatedDatabaseLoop(DataOptions dataOptions, IDataProvider dataProvider, string sql, TextWriter outputWriter, CancellationToken cancellationToken)
 		{
-			var singleStatementResult = ReadOnlySqlGuard.ValidateSingleStatement(dataProvider, sql);
-
-			if (!singleStatementResult.IsAllowed)
-				return new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, singleStatementResult.Error, false);
-
 			if (_settings.Mode == QueryExecutionMode.Query)
 			{
+				// The read-only check covers the single-statement contract too, and names the more specific reason.
 				var guardResult = ReadOnlySqlGuard.Validate(dataProvider, sql);
 
 				if (!guardResult.IsAllowed)
@@ -428,6 +424,11 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			}
 			else
 			{
+				var singleStatementResult = ReadOnlySqlGuard.ValidateSingleStatement(dataProvider, sql);
+
+				if (!singleStatementResult.IsAllowed)
+					return new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, singleStatementResult.Error, false);
+
 				await _settings.DiagnosticWriter.WriteLineAsync(
 					string.Create(
 						CultureInfo.InvariantCulture,

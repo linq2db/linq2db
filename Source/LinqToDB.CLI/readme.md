@@ -102,7 +102,7 @@ Available commands:
 - `dotnet linq2db help <command>`: prints help for a specific command
 - `dotnet linq2db scaffold <options>`: performs database model scaffolding
 - `dotnet linq2db template [-o template_path]`: creates base T4 template file for scaffolding customization code
-- `dotnet linq2db query <options>`: executes a single read-only SQL query and writes JSON, JSON table, or CSV output
+- `dotnet linq2db query <options>`: executes a single read-only SQL query and writes JSON, JSON table, or CSV output. The read-only check of `query` and `linq2db_query` is a safety net against mistakes: it stops SQL that a user or an agent sends by accident and that would change data or schema — a pasted `UPDATE` or `DELETE`, DDL, `SELECT … INTO`, a data-modifying `WITH`, a script of several statements, a call that advances a sequence. A few harmless session `SET` options and linq2db's own parameter declarations may precede the query.
 - `dotnet linq2db execute <options>`: executes a single write-capable SQL statement when the selected trusted profile has `enableExecute` set to `true`
 - `dotnet linq2db schema <options>`: reads provider-aware database object metadata and writes JSON output
 - `dotnet linq2db config-init <options>`: creates or updates a query/MCP JSON configuration profile

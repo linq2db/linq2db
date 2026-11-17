@@ -1,0 +1,245 @@
+# T-SQL statement forms, each put after a query as "select 1 <form>" (first column) and as "select * from t" + LF + "<form>"
+# (second column), with the verdict Microsoft's T-SQL parser (ScriptDom 180.140.0, TSql170Parser) gave each text:
+#   split   - a SELECT followed by a statement of another kind
+#   selects - a SELECT followed by another SELECT
+#   one     - a single statement
+#   error   - a text the parser refused
+# Columns are separated by a tab.
+split	split	throw 50000, 'x', 1
+error	error	send on conversation @h
+split	split	receive * from q
+error	error	move conversation @h to @g
+error	error	get conversation group @g from q
+split	split	enable trigger tr on t
+split	split	disable trigger tr on t
+split	split	enable trigger all on t
+split	error	with x as (select 1 a) delete from t
+split	split	waitfor delay '00:00:01'
+split	split	waitfor time '22:00'
+split	split	end conversation @h
+split	split	begin dialog @h from service s to service 't'
+split	split	begin conversation timer (@h) timeout = 5
+split	split	truncate table t
+split	split	checkpoint
+split	split	kill 55
+split	split	kill query notification subscription all
+split	split	kill stats job 3
+split	split	reconfigure
+split	split	reconfigure with override
+split	split	shutdown
+split	split	shutdown with nowait
+split	split	dbcc checkdb
+split	split	dbcc freeproccache
+split	split	use master
+split	split	print 'x'
+split	split	raiserror('x',16,1)
+split	split	return
+split	split	return 1
+split	split	break
+split	split	continue
+split	split	goto l
+split	split	l:
+split	split	revert
+split	split	setuser
+split	split	setuser 'u'
+split	split	execute as user = 'u'
+split	split	execute as login = 'l'
+split	split	commit
+split	split	commit tran
+split	split	commit transaction x
+split	split	rollback
+split	split	rollback tran x
+split	split	save tran x
+split	split	save transaction x
+split	split	begin tran
+split	split	begin transaction x
+split	split	begin distributed transaction
+split	split	open c
+split	split	close c
+split	split	fetch next from c
+split	split	fetch next from c into @x
+split	split	deallocate c
+split	split	declare c cursor for select 1
+split	split	declare @x int
+split	split	declare @t table (a int)
+split	split	set nocount on
+split	split	set @x = 1
+split	split	set identity_insert t on
+split	split	set transaction isolation level serializable
+split	split	set rowcount 5
+split	split	set textsize 10
+split	split	set showplan_all on
+split	split	set context_info 0x01
+split	split	set deadlock_priority low
+split	split	set lock_timeout 5
+split	split	set statistics xml on
+split	split	if 1=1 select 2
+split	split	if 1=1 delete t
+split	split	if exists (select 1) drop table t
+split	split	while 1=0 delete t
+split	split	begin delete t end
+split	split	begin try delete t end try begin catch select 1 end catch
+split	split	bulk insert t from 'f'
+split	split	backup database d to disk='x'
+split	split	backup log d to disk='x'
+split	split	restore database d from disk='x'
+split	split	restore log d from disk='x'
+split	split	restore verifyonly from disk='x'
+split	split	alter table t add c int
+split	split	alter table t drop column c
+split	split	alter table t alter column c bigint
+split	split	alter table t switch to u
+split	split	alter table t nocheck constraint all
+split	split	alter index i on t rebuild
+split	split	alter index all on t reorganize
+split	split	alter database d set offline
+split	split	alter database current set read_only
+split	split	alter database scoped configuration set maxdop = 1
+error	error	alter view v as select 1
+error	error	alter procedure p as select 1
+error	error	alter function f() returns int as begin return 1 end
+error	error	alter trigger tr on t after insert as select 1
+split	split	alter login l disable
+split	split	alter user u with name = v
+split	split	alter role r add member u
+split	split	alter schema s transfer t
+split	split	alter sequence s restart
+split	split	alter authorization on object::t to u
+split	split	alter server configuration set process affinity cpu = auto
+split	split	alter availability group g failover
+split	split	alter partition function pf() split range (1)
+split	split	alter partition scheme ps next used fg
+split	split	alter queue q with status = off
+split	split	alter fulltext index on t enable
+split	split	alter master key regenerate with encryption by password = 'p'
+split	split	alter certificate c with private key (decryption by password = 'p')
+split	split	alter assembly a with permission_set = safe
+split	split	alter resource governor reconfigure
+split	split	alter workload group g with (importance = low)
+split	split	alter event session s on server state = start
+split	split	alter server audit a with (state = on)
+split	split	alter database audit specification s with (state = on)
+split	split	alter xml schema collection c add 'x'
+split	split	alter external data source d set location = 'x'
+split	split	alter column encryption key k add value (column_master_key = m, algorithm = 'RSA_OAEP', encrypted_value = 0x01)
+split	split	drop table t
+split	split	drop table if exists t
+split	split	drop view v
+split	split	drop procedure p
+split	split	drop function f
+split	split	drop trigger tr
+split	split	drop index i on t
+split	split	drop schema s
+split	split	drop type ty
+split	split	drop sequence s
+split	split	drop synonym sy
+split	split	drop statistics t.s
+split	split	drop login l
+split	split	drop user u
+split	split	drop role r
+split	split	drop database d
+split	split	drop default d
+split	split	drop rule r
+split	split	drop assembly a
+split	split	drop certificate c
+split	split	drop master key
+split	split	drop queue q
+split	split	drop service s
+split	split	drop fulltext index on t
+split	split	drop xml schema collection c
+split	split	drop external table et
+split	split	drop partition function pf
+split	split	drop partition scheme ps
+split	split	create table t(a int)
+split	split	create table #t(a int)
+error	error	create view v as select 1
+error	error	create procedure p as select 1
+error	error	create proc p as select 1
+error	error	create or alter procedure p as select 1
+error	error	create function f() returns int as begin return 1 end
+error	error	create trigger tr on t after insert as select 1
+split	split	create index i on t(a)
+split	split	create unique clustered index i on t(a)
+split	split	create nonclustered columnstore index i on t(a)
+split	split	create statistics s on t(a)
+error	error	create schema s
+split	split	create type ty from int
+split	split	create sequence s start with 1
+split	split	create synonym sy for t
+split	split	create login l with password = 'p'
+split	split	create user u for login l
+split	split	create role r
+split	split	create database d
+error	error	create default d as 1
+error	error	create rule r as @x > 0
+split	split	create assembly a from 0x00
+split	split	create certificate c with subject = 's'
+split	split	create master key encryption by password = 'p'
+split	split	create symmetric key k with algorithm = aes_256 encryption by password = 'p'
+split	split	create asymmetric key k with algorithm = rsa_2048
+split	split	create queue q
+split	split	create service s on queue q
+split	split	create contract c (m sent by any)
+split	split	create message type m
+split	split	create route r with address = 'local'
+split	split	create endpoint e as tcp (listener_port = 5022) for tsql()
+split	split	create fulltext catalog c
+split	split	create fulltext index on t(a) key index i
+split	split	create xml schema collection c as 'x'
+split	split	create external data source d with (location = 'x')
+split	split	create external table et (a int) with (location = 'x', data_source = d, file_format = f)
+split	split	create external file format f with (format_type = delimitedtext)
+split	split	create partition function pf (int) as range left for values (1)
+split	split	create partition scheme ps as partition pf all to ([primary])
+split	split	create server audit a to file (filepath = 'x')
+split	split	create database audit specification s for server audit a
+split	split	create event session s on server add event sqlserver.sql_batch_completed
+split	split	create resource pool p
+split	split	create workload group g
+split	split	create credential c with identity = 'i'
+split	split	create database scoped credential c with identity = 'i'
+split	split	create column master key m with (key_store_provider_name = 'p', key_path = 'k')
+split	split	create availability group g for database d replica on 's' with (endpoint_url = 'tcp://s:5022', availability_mode = synchronous_commit, failover_mode = manual)
+split	split	create spatial index i on t(g)
+split	split	create xml index i on t(x) using xml index p for path
+split	split	create selective xml index i on t(x) for (p = '/a')
+split	split	grant select on t to u
+split	split	grant execute to u
+split	split	deny select on t to u
+split	split	revoke select on t from u
+split	split	add signature to p by certificate c
+split	split	add sensitivity classification to t.c with (label = 'x')
+split	split	drop signature from p by certificate c
+split	split	drop sensitivity classification from t.c
+split	split	open symmetric key k decryption by password = 'p'
+split	split	close symmetric key k
+split	split	open master key decryption by password = 'p'
+split	split	close master key
+split	split	close all symmetric keys
+split	split	backup certificate c to file = 'f'
+split	split	backup master key to file = 'f' encryption by password = 'p'
+split	split	backup service master key to file = 'f' encryption by password = 'p'
+split	split	restore master key from file = 'f' decryption by password = 'p' encryption by password = 'p'
+split	split	update statistics t
+split	split	update t set a=1
+split	split	delete t
+split	split	delete from t where a = 1
+split	split	insert t values(1)
+split	split	insert into t values(1)
+split	split	insert into t select 1
+split	split	insert into t exec p
+split	split	insert into t default values
+split	split	merge t using u on 1=1 when matched then delete;
+split	split	merge into t using u on 1=1 when not matched then insert (a) values (1);
+split	split	exec p
+split	split	execute p
+split	split	exec ('select 1')
+split	split	execute sp_executesql N'select 1'
+one	one	p
+error	error	dbo.p 1
+split	split	readtext t.c @p 0 1
+split	split	writetext t.c @p 'x'
+split	split	updatetext t.c @p 0 null 'x'
+selects	selects	select 2
+selects	selects	select * into t2 from t
+selects	error	with c as (select 1 a) select * from c

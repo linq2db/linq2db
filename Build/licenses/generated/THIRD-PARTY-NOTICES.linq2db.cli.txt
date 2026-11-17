@@ -11,7 +11,7 @@ redistributed inside this artifact; they are NOT covered by that MIT license and
 subject to their own terms, reproduced in full below.
 
 Artifact:   linq2db.cli
-Components: 102
+Components: 101
 
 --------------------------------------------------------------------------------------------------
 COMPONENTS
@@ -346,176 +346,171 @@ COMPONENTS
    License: MIT  see [3]
    © Microsoft Corporation. All rights reserved.
 
-67. Microsoft.SqlServer.TransactSql.ScriptDom 180.140.0
-   https://github.com/microsoft/SqlScriptDOM
-   License: MIT  see [3]
-   © Microsoft Corporation. All rights reserved.
-
-68. Microsoft.SqlServer.Types 170.1000.7
+67. Microsoft.SqlServer.Types 170.1000.7
    https://learn.microsoft.com/dotnet/api/microsoft.sqlserver.types
    License: Microsoft Software License Terms - Microsoft System CLR Types for Microsoft SQL Server 2022  see [10]
    Copyright (c) Microsoft Corporation.
    The bundled binary is version 170.1000.7, whose embedded license.md is the MICROSOFT SQL SERVER VNEXT COMMUNITY PREVIEW pre-release text: its term ended 09/30/2022, it grants installation "solely to internally evaluate it and provide feedback to Microsoft", and it contains no DISTRIBUTABLE CODE section or any distribution grant. That appears to be a packaging error on a stable release - 160.1000.6 of the same package carries ordinary MICROSOFT SOFTWARE LICENSE TERMS for MICROSOFT SYSTEM CLR TYPES FOR MICROSOFT SQL SERVER 2022, with an explicit DISTRIBUTABLE CODE grant covering third-party distribution. Reported to Microsoft. The terms reproduced here are the 160.1000.6 ones, which is what we understand to have been intended for this package; the text Microsoft actually attached to 170.1000.7 is the pre-release one described above.
 
-69. ModelContextProtocol 2.4.0
+68. ModelContextProtocol 2.4.0
    https://csharp.sdk.modelcontextprotocol.io/
    License: Apache-2.0  see [1]
    © Model Context Protocol a Series of LF Projects, LLC.
 
-70. ModelContextProtocol.Core 2.4.0
+69. ModelContextProtocol.Core 2.4.0
    https://csharp.sdk.modelcontextprotocol.io/
    License: Apache-2.0  see [1]
    © Model Context Protocol a Series of LF Projects, LLC.
 
-71. Mono.TextTemplating 3.0.0
+70. Mono.TextTemplating 3.0.0
    https://github.com/mono/t4
    License: MIT  see [3]
 
-72. MySqlConnector 3.0.0
+71. MySqlConnector 3.0.0
    https://mysqlconnector.net/
    License: MIT  see [3]
    Copyright 2016–2026 Bradley Grainger
 
-73. NodaTime net10.0: 3.2.3, net10.0-windows7.0: 3.2.3, net11.0: 3.2.3, net462: 3.2.2, net472: 3.2.2
+72. NodaTime net10.0: 3.2.3, net10.0-windows7.0: 3.2.3, net11.0: 3.2.3, net462: 3.2.2, net472: 3.2.2
    https://nodatime.org/
    License: Apache-2.0  see [1]
 
-74. Npgsql net10.0: 10.0.3, net10.0-windows7.0: 10.0.3, net11.0: 10.0.3, net462: 8.0.9, net472: 8.0.9
+73. Npgsql net10.0: 10.0.3, net10.0-windows7.0: 10.0.3, net11.0: 10.0.3, net462: 8.0.9, net472: 8.0.9
    https://github.com/npgsql/npgsql
    License: PostgreSQL  see [11]
    Copyright 2025 © The Npgsql Development Team
 
-75. Octonica.ClickHouseClient 4.1.6
+74. Octonica.ClickHouseClient 4.1.6
    https://github.com/Octonica/ClickHouseClient
    License: Apache-2.0  see [1]
    © 2019 – 2026 Octonica
 
-76. Oracle.ManagedDataAccess.Core 23.26.400
+75. Oracle.ManagedDataAccess.Core 23.26.400
    https://www.oracle.com/database/technologies/appdev/dotnet.html
    License: Oracle Free Distribution, Hosting, and Use Terms and Conditions  see [12]
    Copyright © 2026, Oracle and/or its affiliates
 
-77. Portable.BouncyCastle 1.9.0
+76. Portable.BouncyCastle 1.9.0
    https://www.bouncycastle.org/csharp/
    License: MIT  see [13]
    © 2000-2021 Legion of the Bouncy Castle Inc.
 
-78. SQLitePCLRaw.bundle_e_sqlite3 2.1.13
+77. SQLitePCLRaw.bundle_e_sqlite3 2.1.13
    License: Apache-2.0  see [1]
    Copyright 2014-2024 SourceGear, LLC
 
-79. SQLitePCLRaw.core 2.1.13
+78. SQLitePCLRaw.core 2.1.13
    License: Apache-2.0  see [1]
    Copyright 2014-2024 SourceGear, LLC
 
-80. SQLitePCLRaw.lib.e_sqlite3 net10.0: 2.1.13, net10.0-windows7.0: 3.53.3, net11.0: 2.1.13, net462: 3.53.3, net472: 3.53.3
+79. SQLitePCLRaw.lib.e_sqlite3 net10.0: 2.1.13, net10.0-windows7.0: 3.53.3, net11.0: 2.1.13, net462: 3.53.3, net472: 3.53.3
    License: Apache-2.0  see [1]
    Copyright 2014-2024 SourceGear, LLC
 
-81. SQLitePCLRaw.provider.e_sqlite3 2.1.13
+80. SQLitePCLRaw.provider.e_sqlite3 2.1.13
    License: Apache-2.0  see [1]
    Copyright 2014-2024 SourceGear, LLC
 
-82. System.CodeDom 6.0.0
+81. System.CodeDom 6.0.0
    https://dot.net/
    License: MIT  see [14]
    © Microsoft Corporation. All rights reserved.
 
-83. System.Collections.Immutable net462: 9.0.10, net472: 10.0.3
+82. System.Collections.Immutable net462: 9.0.10, net472: 10.0.3
    https://dot.net/
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-84. System.Configuration.ConfigurationManager 10.0.15
+83. System.Configuration.ConfigurationManager 10.0.15
    https://dot.net/
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-85. System.Data.Odbc 10.0.15
+84. System.Data.Odbc 10.0.15
    https://dot.net/
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-86. System.Data.OleDb 10.0.15
+85. System.Data.OleDb 10.0.15
    https://dot.net/
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-87. System.Diagnostics.DiagnosticSource 10.0.15
+86. System.Diagnostics.DiagnosticSource 10.0.15
    https://dot.net/
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-88. System.Diagnostics.EventLog net10.0: 10.0.15, net11.0: 11.0.0
+87. System.Diagnostics.EventLog net10.0: 10.0.15, net11.0: 11.0.0
    https://dot.net/
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-89. System.Diagnostics.PerformanceCounter 10.0.15
+88. System.Diagnostics.PerformanceCounter 10.0.15
    https://dot.net/
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-90. System.DirectoryServices.Protocols 8.0.2
+89. System.DirectoryServices.Protocols 8.0.2
    https://dot.net/
    License: MIT  see [15]
    © Microsoft Corporation. All rights reserved.
 
-91. System.Formats.Asn1 net462: 8.0.1, net472: 10.0.15
+90. System.Formats.Asn1 net462: 8.0.1, net472: 10.0.15
    https://dot.net/
    License: MIT  see [15]
    © Microsoft Corporation. All rights reserved.
 
-92. System.IdentityModel.Tokens.Jwt 8.16.0
+91. System.IdentityModel.Tokens.Jwt 8.16.0
    https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet
    License: MIT  see [3]
    © Microsoft Corporation. All rights reserved.
 
-93. System.IO.Pipelines 10.0.9
+92. System.IO.Pipelines 10.0.9
    https://dot.net/
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-94. System.Reflection.Metadata 10.0.1
+93. System.Reflection.Metadata 10.0.1
    https://dot.net/
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-95. System.Security.Cryptography.Pkcs net10.0: 10.0.15, net11.0: 10.0.15, net462: 8.0.1, net472: 10.0.15
+94. System.Security.Cryptography.Pkcs net10.0: 10.0.15, net11.0: 10.0.15, net462: 8.0.1, net472: 10.0.15
    https://dot.net/
    License: MIT  see [7]
    © Microsoft Corporation. All rights reserved.
 
-96. System.Security.Cryptography.ProtectedData 10.0.15
+95. System.Security.Cryptography.ProtectedData 10.0.15
    https://dot.net/
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-97. System.Security.Permissions 4.5.0
+96. System.Security.Permissions 4.5.0
    https://dot.net/
    License: MIT  see [3] [16]
    © Microsoft Corporation.  All rights reserved.
 
-98. System.Text.Encodings.Web 10.0.9
+97. System.Text.Encodings.Web 10.0.9
    https://dot.net/
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-99. System.Text.Json 10.0.9
+98. System.Text.Json 10.0.9
    https://dot.net/
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-100. System.Threading.RateLimiting net10.0: 9.0.18, net10.0-windows7.0: 9.0.18, net11.0: 9.0.18, net462: 8.0.0, net472: 8.0.0
+99. System.Threading.RateLimiting net10.0: 9.0.18, net10.0-windows7.0: 9.0.18, net11.0: 9.0.18, net462: 8.0.0, net472: 8.0.0
    https://dot.net/
    License: MIT  see [7]
    © Microsoft Corporation. All rights reserved.
 
-101. Ydb.Protos 1.4.0
+100. Ydb.Protos 1.4.0
    https://github.com/ydb-platform/ydb-dotnet-genproto
    License: Apache-2.0  see [1]
 
-102. Ydb.Sdk 0.38.0
+101. Ydb.Sdk 0.38.0
    https://github.com/ydb-platform/ydb-dotnet-sdk
    License: Apache-2.0  see [1]
 
@@ -774,7 +769,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 --------------------------------------------------------------------------------------------------
 
 [3] mit.txt
-    Applies to: ClickHouse.Driver, DuckDB.NET.Bindings.Full, DuckDB.NET.Data.Full, Humanizer.Core, LibRed.Ado, LibRed.Core, LibRed.Engine, LibRed.Sql, Microsoft.CodeAnalysis.CSharp, Microsoft.CodeAnalysis.Common, Microsoft.Data.SqlClient, Microsoft.Data.SqlClient.Extensions.Abstractions, Microsoft.Data.SqlClient.Internal.Logging, Microsoft.Data.Sqlite.Core, Microsoft.Extensions.AI.Abstractions, Microsoft.IO.RecyclableMemoryStream, Microsoft.IdentityModel.Abstractions, Microsoft.IdentityModel.JsonWebTokens, Microsoft.IdentityModel.Logging, Microsoft.IdentityModel.Protocols, Microsoft.IdentityModel.Protocols.OpenIdConnect, Microsoft.IdentityModel.Tokens, Microsoft.SqlServer.Server, Microsoft.SqlServer.TransactSql.ScriptDom, Mono.TextTemplating, MySqlConnector, System.IdentityModel.Tokens.Jwt, System.Security.Permissions
+    Applies to: ClickHouse.Driver, DuckDB.NET.Bindings.Full, DuckDB.NET.Data.Full, Humanizer.Core, LibRed.Ado, LibRed.Core, LibRed.Engine, LibRed.Sql, Microsoft.CodeAnalysis.CSharp, Microsoft.CodeAnalysis.Common, Microsoft.Data.SqlClient, Microsoft.Data.SqlClient.Extensions.Abstractions, Microsoft.Data.SqlClient.Internal.Logging, Microsoft.Data.Sqlite.Core, Microsoft.Extensions.AI.Abstractions, Microsoft.IO.RecyclableMemoryStream, Microsoft.IdentityModel.Abstractions, Microsoft.IdentityModel.JsonWebTokens, Microsoft.IdentityModel.Logging, Microsoft.IdentityModel.Protocols, Microsoft.IdentityModel.Protocols.OpenIdConnect, Microsoft.IdentityModel.Tokens, Microsoft.SqlServer.Server, Mono.TextTemplating, MySqlConnector, System.IdentityModel.Tokens.Jwt, System.Security.Permissions
 
 MIT License
 

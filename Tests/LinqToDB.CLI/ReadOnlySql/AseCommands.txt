@@ -1,0 +1,106 @@
+# Sybase ASE commands, from the commands chapter of the ASE 16 reference
+# (https://infocenter.sybase.com/help/topic/com.sybase.infocenter.dc36272.1600/doc/html/title.html),
+# each put after a query as "select 1 <form>" and as "select * from t" + LF + "<form>". Every such text must be refused.
+# The first two columns hold ScriptDom's verdict for the same texts, for reference only: it does not read ASE.
+# Columns are separated by a tab.
+error	error	dump database d to '/tmp/d.dmp'
+error	error	dump transaction d to '/tmp/t.dmp'
+error	error	dump tran d with truncate_only
+error	error	load database d from '/tmp/d.dmp'
+error	error	load transaction d from '/tmp/t.dmp'
+error	error	disk init name = 'dev', physname = '/tmp/dev.dat', size = '10M'
+error	error	disk mirror name = 'dev', mirror = '/tmp/m.dat'
+error	error	disk refit
+error	error	disk reinit name = 'dev', physname = '/tmp/dev.dat', size = '10M'
+error	error	disk remirror name = 'dev'
+error	error	disk resize name = 'dev', size = '10M'
+error	error	disk unmirror name = 'dev'
+error	error	mount database all from '/tmp/m.xml'
+error	error	unmount database d to '/tmp/m.xml'
+error	error	quiesce database tag hold d
+error	error	online database d
+error	error	lock table t in exclusive mode
+error	error	reorg rebuild t
+error	error	reorg compact t
+error	error	prepare transaction
+error	error	connect to s
+one	one	disconnect
+error	error	remove java class c
+error	error	transfer table t to '/tmp/t.dat'
+split	split	setuser 'u'
+error	error	set role r on
+error	error	set proxy u
+error	error	set chained on
+error	error	delete statistics t
+error	error	update all statistics t
+error	error	update index statistics t
+error	error	update table statistics t
+error	error	truncate lob t (c)
+error	error	deallocate locator 0x01
+error	error	deallocate cursor c
+split	split	declare c cursor for select 1
+split	split	open c
+split	split	fetch c
+split	split	close c
+split	split	checkpoint
+split	split	shutdown
+split	split	kill 12
+split	split	reconfigure
+split	split	dbcc checkdb(d)
+split	split	use master
+split	split	print 'x'
+error	error	raiserror 20001 'x'
+split	split	return
+split	split	break
+split	split	continue
+split	split	goto l
+split	split	waitfor delay '00:00:01'
+split	split	begin tran
+split	split	commit tran
+split	split	rollback tran
+error	error	rollback trigger
+split	split	save tran x
+split	split	begin delete t end
+split	split	if 1=1 delete t
+split	split	while 1=0 delete t
+split	split	create table t(a int)
+error	error	create proc p as select 1
+error	error	create view v as select 1
+split	split	create index i on t(a)
+error	error	create default d as 1
+error	error	create rule r as @x > 0
+error	error	create trigger tr on t for insert as select 1
+error	error	create schema authorization u
+split	split	create database d
+error	error	create login l with password p
+split	split	create role r
+error	error	create service s with userdb as select 1
+error	error	create function f() returns int as return 1
+error	error	create encryption key k
+error	error	create plan 'select 1' '(use plan)'
+error	error	create thread pool tp with thread count = 1
+error	error	create archive database a on default with scratch_database = s
+error	error	create precomputed result set r as select 1
+split	split	alter table t add c int null
+error	error	alter database d log on default = '10M'
+error	error	alter role r add passwd 'p'
+error	error	alter login l modify password 'p'
+error	error	alter encryption key k with passwd 'p'
+error	error	alter thread pool tp with thread count = 2
+error	error	alter precomputed result set r refresh
+split	split	drop table t
+split	split	drop proc p
+split	split	drop database d
+split	split	drop login l
+split	split	drop role r
+error	error	drop thread pool tp
+error	error	drop plan 1
+split	split	grant select on t to u
+split	split	revoke select on t from u
+split	split	exec sp_who
+split	split	execute sp_who
+split	split	insert t values (1)
+split	split	update t set a = 1
+split	split	delete t
+error	error	merge into t using u on t.a = u.a when matched then delete
+selects	selects	select * into t2 from t

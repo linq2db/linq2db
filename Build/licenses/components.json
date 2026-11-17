@@ -1955,28 +1955,6 @@
       ]
     },
     {
-      "id": "microsoft.sqlserver.transactsql.scriptdom",
-      "displayName": "Microsoft.SqlServer.TransactSql.ScriptDom",
-      "packageId": "Microsoft.SqlServer.TransactSql.ScriptDom",
-      "versions": {
-        "net10.0": "180.140.0",
-        "net11.0": "180.140.0"
-      },
-      "license": "MIT",
-      "licenseTexts": [
-        "mit.txt"
-      ],
-      "copyright": "© Microsoft Corporation. All rights reserved.",
-      "projectUrl": "https://github.com/microsoft/SqlScriptDOM",
-      "redistribution": "permitted",
-      "files": [
-        "Microsoft.SqlServer.TransactSql.ScriptDom.dll"
-      ],
-      "artifacts": [
-        "linq2db.cli"
-      ]
-    },
-    {
       "id": "microsoft.sqlserver.types",
       "displayName": "Microsoft.SqlServer.Types",
       "packageId": "Microsoft.SqlServer.Types",

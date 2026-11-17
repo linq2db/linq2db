@@ -97,6 +97,7 @@
 
 	<ItemGroup Label="Build: Analyzers and Tools">
 		<PackageVersion Include="AsyncFixer"                                            Version="2.1.0"                        />
+		<PackageVersion Include="DotGram"                                               Version="0.3.0"                        />
 		<PackageVersion Include="DotNet.ReproducibleBuilds"                             Version="2.0.5"                        />
 		<PackageVersion Include="Lindhart.Analyser.MissingAwaitWarning"                 Version="4.0.0-beta"                   />
 		<PackageVersion Include="Meziantou.Analyzer"                                    Version="3.0.339"                      />
@@ -160,7 +161,6 @@
 		<PackageVersion Include="Microsoft.Data.SqlClient"                              Version="7.1.1"                        />
 		<PackageVersion Include="Microsoft.Data.Sqlite"                                 Version="$(Net10Latest)"               />
 		<PackageVersion Include="Microsoft.SqlServer.Compact"                           Version="4.0.8876.1"                   />
-		<PackageVersion Include="Microsoft.SqlServer.TransactSql.ScriptDom"             Version="180.140.0"                    />
 		<PackageVersion Include="Microsoft.SqlServer.Types"                             Version="170.1000.7"                   />
 		<PackageVersion Include="MySqlConnector"                                        Version="3.0.0"                        />
 		<PackageVersion Include="MySql.Data"                                            Version="26.10.0"                      />
