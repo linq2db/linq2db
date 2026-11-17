@@ -1290,6 +1290,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			var rootContext     = context;
 			var rootSelectQuery = context.SelectQuery;
 
+			// Over a grouping, a function of its rows is an aggregate, while a function of the values it reads - a key, an
+			// aggregate's result - is calculated where those values are read. Not marked as one, a call is taken for a function of
+			// the rows when it is a function of a set (above), takes the rows (a sequence or a per-row lambda) or takes nothing at
+			// all: a raw SQL aggregate such as COUNT(*).
+			var readsGroupRows = isSetFunction || IsSetFunctionCall(expr) || !HasArguments(expr);
+
 			var root = GetAggregationRootContext(expr);
 			if (root != null)
 			{
@@ -1315,7 +1321,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						}
 						else if (current is GroupByBuilder.GroupByContext)
 						{
-							findAggregationRoot = true;
+							findAggregationRoot = readsGroupRows;
 							break;
 						}
 						else
@@ -1338,9 +1344,15 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
-			if (rootContext is GroupByBuilder.GroupByContext groupBy)
+			// A function of the grouping's rows is calculated by the GROUP BY query, and its arguments are nested up to that query:
+			// nested up to the grouping's own query, which reads the GROUP BY query as a subquery, an argument would be a column of
+			// the GROUP BY query read from inside it.
+			SelectQuery? argumentsQuery = null;
+
+			if (readsGroupRows && rootContext is GroupByBuilder.GroupByContext groupBy)
 			{
 				rootSelectQuery = groupBy.SubQuery.SelectQuery;
+				argumentsQuery  = rootSelectQuery;
 			}
 
 			Expression           transformed;
@@ -1355,14 +1367,14 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				translatedToSql = new HashSet<Expression>(Utils.ObjectReferenceEqualityComparer<Expression>.Default);
 
-				transformed = attr.GetExpression((buildVisitor: this, context: rootContext, translatedToSql, argumentsAreOperands),
+				transformed = attr.GetExpression((buildVisitor: this, context: rootContext, argumentsQuery, translatedToSql, argumentsAreOperands),
 					Builder.DataContext,
 					Builder,
 					rootSelectQuery,
 					expr,
 					static (context, e, descriptor, inline) =>
 					{
-						var result = context.buildVisitor.ConvertToExtensionSql(context.context, e, descriptor, inline);
+						var result = context.buildVisitor.ConvertToExtensionSql(context.context, e, descriptor, inline, context.argumentsQuery);
 
 						if (result is SqlPlaceholderExpression placeholder)
 						{
@@ -1411,8 +1423,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			return expr;
 		}
 
-		public Expression ConvertToExtensionSql(IBuildContext context, Expression expression, ColumnDescriptor? columnDescriptor, bool? inlineParameters)
+		/// <param name="nestUpTo">The query the converted argument is nested up to; <paramref name="context"/>'s query when <see langword="null"/>.</param>
+		public Expression ConvertToExtensionSql(IBuildContext context, Expression expression, ColumnDescriptor? columnDescriptor, bool? inlineParameters, SelectQuery? nestUpTo = null)
 		{
+			var nestingQuery        = nestUpTo ?? context.SelectQuery;
 			var translationModifier = context.TranslationModifier;
 			if (inlineParameters == true)
 				translationModifier = translationModifier.WithInlineParameters(true);
@@ -1432,7 +1446,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					var body = lambda.GetBody(contextRefExpression);
 
-					return BuildSqlExpression(context, body);
+					return Builder.UpdateNesting(nestingQuery, BuildExpression(context, body, BuildPurpose.Sql));
 				}
 
 				if (unwrapped is ContextRefExpression contextRef)
@@ -1448,7 +1462,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							result = placeholder.WithType(expression.Type);
 						}
 
-						result = Builder.UpdateNesting(context, result);
+						result = Builder.UpdateNesting(nestingQuery, result);
 
 						return result;
 					}
@@ -1458,7 +1472,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 				else
 				{
-					var converted = BuildSqlExpression(context, expression);
+					var converted = Builder.UpdateNesting(nestingQuery, BuildExpression(context, expression, BuildPurpose.Sql));
 
 					if (converted is SqlPlaceholderExpression or SqlErrorExpression)
 					{
@@ -6239,6 +6253,19 @@ namespace LinqToDB.Internal.Linq.Builder
 					|| typeof(LambdaExpression).IsAssignableFrom(type)
 					|| type != typeof(string) && typeof(IEnumerable).IsAssignableFrom(type);
 			}
+		}
+
+		/// <summary>
+		/// Whether a call reads any value: an argument, or the instance it is called on.
+		/// </summary>
+		static bool HasArguments(Expression expression)
+		{
+			return expression switch
+			{
+				MethodCallExpression call   => call.Object != null || call.Arguments.Count > 0,
+				MemberExpression     member => member.Expression != null,
+				_                           => true,
+			};
 		}
 
 		// BuildArrayAggregationFunction reads an inline array through these wrappers as the same list of values. Its chain

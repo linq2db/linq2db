@@ -594,6 +594,29 @@ namespace Tests.Linq
 				});
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6325")]
+		public void CustomAggregateWithGroupFilter([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in Parent
+				group p by p.ParentID into g
+				where g.Key != 3
+				select new
+				{
+					g.Key,
+					Sum = g.Sum(i => i.Value1) ?? 0,
+				},
+				from p in db.Parent
+				group p by p.ParentID into g
+				where g.Key != 3
+				select new
+				{
+					g.Key,
+					Sum = g.MySum(i => i.Value1) ?? 0,
+				});
+		}
+
 		[Test]
 		public void GetValueOrDefault([DataSources] string context)
 		{

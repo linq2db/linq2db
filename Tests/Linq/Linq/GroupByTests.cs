@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
@@ -4085,6 +4086,52 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 			Assert.That(query.GetSelectQuery().Select.OrderBy.IsEmpty, Is.Not.True);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6325")]
+		public void GroupByPredicateExtensionFilterWithServerSideProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Person
+				group p.ID by new { p.FirstName } into g
+				where g.Sum().NotBetween(2, 3)
+				select Sql.Length(g.Key.FirstName);
+
+			AssertQuery(query, EqualityComparer<int?>.Default);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6325")]
+		public void GroupByFilterWithFunctionsOfGroupValues([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Person
+				group p by new { p.FirstName } into g
+				where g.Sum(x => x.ID).NotBetween(2, 3)
+				select new
+				{
+					KeyLength = Sql.Length(g.Key.FirstName),
+					MaxLength = Sql.Length(g.Max(x => x.LastName)),
+				};
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6325")]
+		public void GroupByScalarKeyFilterWithServerSideProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Person
+				group p.ID by p.FirstName into g
+				where g.Sum().NotBetween(2, 3)
+				select Sql.Length(g.Key);
+
+			AssertQuery(query, EqualityComparer<int?>.Default);
 		}
 	}
 }
