@@ -16,6 +16,38 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			Registration.RegisterMethod<int, int?>(value => Sql.ToNullable(value), TranslateToNullableMethod, isGenericTypeMatch: true);
 			Registration.RegisterMethod<int, int>(value  => Sql.AsNullable(value), TranslateAsNullableMethod, isGenericTypeMatch: true);
+
+			Registration.RegisterMethod<int, int, int, bool>((value,    low, high) => Sql.Between(value, low, high),    TranslateBetweenMethod,    isGenericTypeMatch: true);
+			Registration.RegisterMethod<int?, int?, int?, bool>((value, low, high) => Sql.Between(value, low, high),    TranslateBetweenMethod,    isGenericTypeMatch: true);
+			Registration.RegisterMethod<int, int, int, bool>((value,    low, high) => Sql.NotBetween(value, low, high), TranslateNotBetweenMethod, isGenericTypeMatch: true);
+			Registration.RegisterMethod<int?, int?, int?, bool>((value, low, high) => Sql.NotBetween(value, low, high), TranslateNotBetweenMethod, isGenericTypeMatch: true);
+		}
+
+		Expression? TranslateBetweenMethod(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			return TranslateBetween(translationContext, methodCall, isNot: false);
+		}
+
+		Expression? TranslateNotBetweenMethod(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			return TranslateBetween(translationContext, methodCall, isNot: true);
+		}
+
+		static Expression? TranslateBetween(ITranslationContext translationContext, MethodCallExpression methodCall, bool isNot)
+		{
+			// The operands are translated where the call stands, so a value the query has already read (an aggregate of a
+			// grouping, a column of a subquery) is read from there. An operand without SQL form declines the call.
+			// A column the call's result is assigned to or compared with types that boolean result, not the operands.
+			using var disposable = translationContext.UsingColumnDescriptor(null);
+
+			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out var value)
+				|| !translationContext.TranslateToSqlExpression(methodCall.Arguments[1], out var low)
+				|| !translationContext.TranslateToSqlExpression(methodCall.Arguments[2], out var high))
+				return null;
+
+			var searchCondition = translationContext.ExpressionFactory.SearchCondition().Add(new SqlPredicate.Between(value, isNot, low, high));
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, searchCondition, methodCall);
 		}
 
 		Expression? TranslateToNullableMethod(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
