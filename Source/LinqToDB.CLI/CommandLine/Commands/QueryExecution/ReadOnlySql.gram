@@ -52,16 +52,26 @@ parse SingleScript with (Dialect = "Standard")  as SingleStandard
 parse Finding as DescribeRefusal
 
 // ---------------------------------------------------------------------------------------------
-// Query mode: `Preamble? SessionSet* Query ';'? eof`
+// Query mode: `Preamble? SessionSet* TempStatement* Query TempDrop* ';'? eof`
+// The value says whether the script writes temporary tables; TempStatement and TempDrop are T-SQL only.
 
-Script = Sep? & Prefix & Query & Tail
+// A plain query is tried first, so that checking one never reads the temporary-table rules.
+Script : @bool = Sep? & Prefix & b: Body                                       => @(b)
+
+Body : @bool = Query & Tail                                                    => @(false)
+             | t: TempPart & Query & d: DropPart & Tail                        => @(t || d)
+
+TempPart : @bool = (TempStatement & Sep?)+                                     => @(true)
+                 | ""                                                          => @(false)
+DropPart : @bool = (Sep? & TempDrop)+                                          => @(true)
+                 | ""                                                          => @(false)
 
 // linq2db logs a command's parameters as DECLARE/SET lines before it; a few harmless session
 // options may follow. Each item is checked whole before it is read, so a refusal points at its start.
 Prefix       = { (PreambleItem & Sep?)* } & { (SessionSet & Sep?)* }
 PreambleItem = ?=PreambleDeclare ~ PreambleDeclare
              | ?=PreambleSet ~ PreambleSet
-SessionSet   = ?=(SessionSetBody ~ ?=SetEnd) ~ SessionSetBody & when Dialect is not SessionKept
+SessionSet   = when Dialect is not SessionKept & ?=(SessionSetBody ~ ?=SetEnd) ~ SessionSetBody
 
 Sep  = ';' & (';' & "")*
 Tail = (?=(Sep & GoLine? & eof) ~ Sep)? & GoLine? & eof
@@ -224,6 +234,68 @@ StatementWord = "select"i | "with"i | "set"i | "declare"i | "values"i | "call"i
               | Lex.DmlWord | Lex.TSqlStatementWord
 
 // ---------------------------------------------------------------------------------------------
+// SQL Server and ASE: statements that fill temporary tables may precede the query, and DROP TABLE of
+// them may follow it. Each write word is followed directly by a temporary table (#t) or a table
+// variable (@t); any other target is refused, and so is ##global, tempdb..x and OUTPUT without INTO.
+// Everything else of the query check applies to every statement. A temporary table lives only as
+// long as the session; the CLI never hands such a session to the next call (see the executor).
+
+// The condition stands first: a class without these scripts refuses at the statement's first word, not after it.
+TempStatement = when Dialect is Unseparated
+              & (TempSelectInto | TempInsert | TempUpdate | TempDelete | TempTruncate | TempCreateTable | TempCreateIndex | TempDeclare)
+
+TempSelectInto  = TempWith? & "select"i & { (TempItem & "")* } & "into"i & TempTable & { (TempItem & "")* }
+TempInsert      = TempWith? & "insert"i & "into"i? & TempTarget & { (?!InsertValues ~ TempItem & "")* }
+                & (InsertValues & { (TempItem & "")* } | "select"i & { (TempItem & "")* })
+TempUpdate      = TempWith? & "update"i & TempTarget & { (TempItem & "")* } & "set"i & { (TempItem & "")* }
+TempDelete      = TempWith? & "delete"i & "from"i? & TempTarget & { (TempItem & "")* }
+TempTruncate    = "truncate"i & "table"i & TempTable
+TempCreateTable = "create"i & "table"i & TempTable & { (TempItem & "")* }
+TempCreateIndex = "create"i & "unique"i? & ("clustered"i | "nonclustered"i)? & "index"i & IndexName & "on"i & TempTable
+                & { (TempItem & "")* }
+TempDeclare     = "declare"i & TableVariable & "as"i? & "table"i & TempGroup
+TempDrop        = when Dialect is Unseparated & "drop"i & "table"i & ("if"i & "exists"i)? & TempTable & (',' & TempTable)*
+
+TempWith      = "with"i & TempCteDef & (',' & TempCteDef)*
+TempCteDef    = ?!QuotedSigil ~ CteDef
+TempTarget    = TempTable | TableVariable
+InsertValues  = "values"i | "default"i & "values"i
+TempTable     = '#' ~ ?!'#' ~ Lex.Word ~ ?!'.'
+TableVariable = '@' ~ ?!'@' ~ Lex.Word ~ ?!'.'
+IndexName     = Lex.Word | Lex.Bracketed | Lex.DoubleQuoted
+
+// OUTPUT returns rows unless INTO sends them to a temporary table or a table variable.
+OutputInto = "output"i & { (?!TopStatementStart ~ TempPiece & "")* } & "into"i & TempTarget & TempGroup?
+
+TempItem  = OutputInto
+          | SetOperation
+          | ?!TopStatementStart ~ ?!"output"i ~ TempPiece
+
+// UPDATE #t … FROM perm #t writes perm: the target names the alias. So inside these statements a
+// name that starts with # or @ (also quoted) never stands where an alias does: after AS, after a
+// table or column name, or after a bracketed expression.
+// The two alternatives of TempPiece begin with different characters, and TempLeaf commits: a choice
+// left open at every level of brackets would make deep nesting cost the square of its depth.
+TempPiece = TempGroup & ?!'#'
+          | TempLeaf
+TempLeaf  = { RowsFetch
+            | "as"i & ?!['#' | '@']
+            | AliasHead & ?!'#'
+            | ?!("as"i | AliasHead | QuotedSigil) ~ Atom }
+TempGroup = '(' & { (TempPiece & "")* } & ')'
+
+AliasHead   = ?!AliasStop ~ Name
+            | ?!QuotedSigil ~ ?!QuotedRefusal ~ (Lex.DoubleQuoted | Lex.Bracketed)
+QuotedSigil = ['[' | '"'] ~ ['#' | '@']
+
+// Words after which a #name is an operand or a table, not an alias.
+AliasStop = "from"i | "join"i | "apply"i | "on"i | "table"i | "select"i | "where"i | "and"i | "or"i | "not"i
+          | "by"i | "when"i | "then"i | "else"i | "end"i | "case"i | "in"i | "is"i | "exists"i | "having"i
+          | "distinct"i | "all"i | "any"i | "some"i | "top"i | "percent"i | "ties"i | "union"i | "except"i
+          | "intersect"i | "between"i | "like"i | "escape"i | "values"i | "using"i | "over"i | "output"i
+          | "as"i
+
+// ---------------------------------------------------------------------------------------------
 // Session options that may precede a query. Every value set is closed; anything else is refused.
 // GLOBAL, PERSIST, PERSIST_ONLY, @@global. and @@persist. are not scope words here, so they fail.
 
@@ -231,8 +303,9 @@ SessionSetBody = "set"i & ("session"i | "local"i)? & SessionOption
                | "set"i & '@' ~ '@' ~ "session"i ~ '.' ~ SessionOption
 
 SessionOption = TSqlSwitch & OnOff
+              | ("rowcount"i | "textsize"i) & Lex.Number
               | "statistics"i & ("io"i | "time"i) & OnOff
-              | "transaction"i & "isolation"i & "level"i & IsolationLevel & when Dialect is not IsolationKept
+              | when Dialect is not IsolationKept & "transaction"i & "isolation"i & "level"i & IsolationLevel
               | "dateformat"i & DateFormat
               | "datefirst"i & Lex.Number
               | "language"i & ('N' ~ Lex.String | Lex.Word | Lex.String | Lex.Bracketed)
@@ -282,8 +355,10 @@ PathItem    = Lex.Word | Lex.DoubleQuoted | Lex.String
 // ---------------------------------------------------------------------------------------------
 // Execute mode: the same prefix, then one statement.
 
-SingleScript = Sep? & Prefix & Statement & SingleTail & when Dialect is not Unseparated
-             | Sep? & Prefix & TStatement & Tail & when Dialect is Unseparated
+// The conditions stand first, so that each class reads the text only its own way.
+SingleScript = when Dialect is not Unseparated & Sep? & Prefix & Statement & SingleTail
+             | when Dialect is "TSql" & Sep? & Prefix & TStatement & Tail
+             | when Dialect is "Ase" & Sep? & Prefix & AseStatement & Tail
 
 SingleTail = (?=(Sep & eof) ~ Sep)? & eof
 
@@ -292,6 +367,12 @@ Statement = { (AnyItem & "")+ }
 AnyItem   = AnyGroup | AnyAtom
 AnyGroup  = '(' & { (AnyItem & "")* } & ')'
 AnyAtom   = Quoted | Lex.Word | Variable | TempName | Lex.Number | Sym
+
+// ASE: statements are counted by ';', as the CLI always did there, and by a GO that ends its line (a batch
+// separator of the client tools that the driver does not understand). linq2db's own ASE commands run several
+// statements in one text, such as an upsert's UPDATE, IF and INSERT.
+AseStatement = { (?!AseGo ~ AnyItem & "")+ }
+AseGo        = "go"i ~ ?!Lex.WordChar ~ Lex.InlineSpace? ~ (eol | eof | ';' | "--")
 
 // T-SQL: a statement word at the top level starts the next statement, unless it is a clause of the
 // statement being read. Modules take the rest of the batch; IF, WHILE and blocks take their bodies.

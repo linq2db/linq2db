@@ -272,8 +272,10 @@ namespace Tests.LinqToDB.CLI
 
 		// Options whose value set is closed. The transaction isolation level is kept by SqlClient on a pooled connection,
 		// and AseClient keeps every option, so those classes refuse what the driver would carry to the next query.
+		// SqlClient resets ROWCOUNT and TEXTSIZE when it hands a pooled connection out again.
 		static readonly string[] _sessionOptions =
 		[
+			"SET ROWCOUNT 5", "SET TEXTSIZE 100",
 			"SET NOCOUNT ON", "SET ANSI_NULLS OFF", "SET ANSINULL ON", "SET ANSI_PADDING ON", "SET ANSI_WARNINGS ON",
 			"SET ANSI_NULL_DFLT_ON ON", "SET ANSI_NULL_DFLT_OFF OFF", "SET ARITHABORT ON", "SET ARITHIGNORE OFF",
 			"SET CONCAT_NULL_YIELDS_NULL ON", "SET NUMERIC_ROUNDABORT OFF", "SET QUOTED_IDENTIFIER ON", "SET DATEFORMAT dmy",
@@ -326,8 +328,8 @@ namespace Tests.LinqToDB.CLI
 			AssertQuery(string.Join("\n",  _sessionOptions.Concat(_isolationLevels)) + "\nselect 1", true, isolation);
 		}
 
-		[TestCase("SET ROWCOUNT 5")]
-		[TestCase("SET TEXTSIZE 100")]
+		[TestCase("SET ROWCOUNT @n")]
+		[TestCase("SET TEXTSIZE -1x")]
 		[TestCase("SET sql_select_limit = 1")]
 		[TestCase("SET IDENTITY_INSERT t ON")]
 		[TestCase("SET NOCOUNT ON, XACT_ABORT ON")]
@@ -354,13 +356,20 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("SET @p = 1 + (select max(a) from t)")]
 		[TestCase("SET @p = nextval('s')")]
 		[TestCase("SET @@p = 1")]
-		[TestCase("DECLARE @t TABLE (a int)")]
 		[TestCase("DECLARE @c CURSOR")]
 		[TestCase("DECLARE @p Int DELETE t")]
 		public void PrefixRefused(string prefix)
 		{
 			AssertQuery(prefix + "\nselect 1", false);
 			AssertQuery(prefix + ";\nselect 1", false);
+		}
+
+		// A table variable is a temporary table of SQL Server and ASE scripts; elsewhere it is no parameter.
+		[Test]
+		public void TableVariableOnlyInTSql()
+		{
+			AssertQuery("DECLARE @t TABLE (a int)\nselect 1", true,  TSql, Ase);
+			AssertQuery("DECLARE @t TABLE (a int)\nselect 1", false, Bracket, MySql, Ydb, Informix, Standard);
 		}
 
 		[TestCase("select 1; SET NOCOUNT ON")]
@@ -550,10 +559,8 @@ namespace Tests.LinqToDB.CLI
 
 		#region Execute mode, T-SQL
 
-		[TestCase("CREATE PROCEDURE p AS SELECT 1; SELECT 2; UPDATE t SET a = 1")]
 		[TestCase("CREATE OR ALTER VIEW v AS SELECT 1 AS a\nGO")]
 		[TestCase("IF NOT EXISTS (SELECT 1 FROM t) CREATE TABLE t (a int)")]
-		[TestCase("IF @x = 1 SELECT 1 ELSE IF @x = 2 SELECT 2 ELSE BEGIN UPDATE t SET a = 1; DELETE u END")]
 		[TestCase("WHILE @i < 10 BEGIN SET @i = @i + 1 END")]
 		[TestCase("BEGIN TRY UPDATE t SET a = 1 END TRY BEGIN CATCH SELECT ERROR_MESSAGE() END CATCH")]
 		[TestCase("INSERT INTO t (a) SELECT a FROM u UNION ALL SELECT b FROM v")]
@@ -588,26 +595,246 @@ namespace Tests.LinqToDB.CLI
 			}
 		}
 
-		[TestCase("update t set a=1 delete u")]
-		[TestCase("UPDATE t SET a = 1 SELECT 1")]
-		[TestCase("INSERT INTO t VALUES (1) SELECT SCOPE_IDENTITY()")]
-		[TestCase("INSERT INTO t SELECT 1 SELECT 2")]
-		[TestCase("BEGIN TRAN UPDATE t SET a = 1 COMMIT")]
-		[TestCase("DECLARE @x int SET @x = (SELECT 1) SELECT @x")]
-		[TestCase("UPDATE t SET a = 1\nIF @@ROWCOUNT = 0\nBEGIN INSERT INTO t (a) VALUES (1) END")]
-		[TestCase("CREATE TABLE t (a int) GRANT SELECT ON t TO u")]
-		[TestCase("CREATE PROCEDURE p AS SELECT 1\nGO\nEXEC p")]
-		[TestCase("select 1; select 2")]
-		[TestCase("select 1\nGO\nselect 2")]
-		[TestCase("EXEC p THROW 50000, 'x', 1")]
-		[TestCase("EXEC p\nl:")]
-		[TestCase("SET NOCOUNT ON\nUPDATE t SET a = 1 SET NOCOUNT OFF")]
-		public void TSqlExecuteSeveralStatements(string sql)
+		// A module or a block holds statements separated by ';'. SQL Server reads it as one statement; ASE counts the
+		// separators, as the CLI always did there.
+		[TestCase("CREATE PROCEDURE p AS SELECT 1; SELECT 2; UPDATE t SET a = 1")]
+		[TestCase("IF @x = 1 SELECT 1 ELSE IF @x = 2 SELECT 2 ELSE BEGIN UPDATE t SET a = 1; DELETE u END")]
+		public void TSqlExecuteSeparatorsInsideOneStatement(string sql)
+		{
+			using (Assert.EnterMultipleScope())
+			{
+				Single(TSql, sql).ShouldBeTrue();
+				Single(Ase,  sql).ShouldBeFalse();
+			}
+		}
+
+		// SQL Server counts statements by the kind of each; ASE by ';' and GO only, so ASE takes the unseparated rows.
+		[TestCase("update t set a=1 delete u",                                              true)]
+		[TestCase("UPDATE t SET a = 1 SELECT 1",                                            true)]
+		[TestCase("INSERT INTO t VALUES (1) SELECT SCOPE_IDENTITY()",                       true)]
+		[TestCase("INSERT INTO t SELECT 1 SELECT 2",                                        true)]
+		[TestCase("BEGIN TRAN UPDATE t SET a = 1 COMMIT",                                   true)]
+		[TestCase("DECLARE @x int SET @x = (SELECT 1) SELECT @x",                           true)]
+		[TestCase("UPDATE t SET a = 1\nIF @@ROWCOUNT = 0\nBEGIN INSERT INTO t (a) VALUES (1) END", true)]
+		[TestCase("CREATE TABLE t (a int) GRANT SELECT ON t TO u",                          true)]
+		[TestCase("CREATE PROCEDURE p AS SELECT 1\nGO\nEXEC p",                             false)]
+		[TestCase("select 1; select 2",                                                     false)]
+		[TestCase("select 1\nGO\nselect 2",                                                 false)]
+		[TestCase("select 1\ngo -- end of batch\nselect 2",                                 false)]
+		[TestCase("update t set a = 1\nGO;\ndelete u",                                      false)]
+		[TestCase("EXEC p THROW 50000, 'x', 1",                                             true)]
+		[TestCase("EXEC p\nl:",                                                             true)]
+		[TestCase("SET NOCOUNT ON\nUPDATE t SET a = 1 SET NOCOUNT OFF",                     true)]
+		public void TSqlExecuteSeveralStatements(string sql, bool oneOnAse)
 		{
 			using (Assert.EnterMultipleScope())
 			{
 				Single(TSql, sql).ShouldBeFalse();
-				Single(Ase,  sql).ShouldBeFalse();
+				Single(Ase,  sql).ShouldBe(oneOnAse);
+			}
+		}
+
+		// linq2db's own ASE commands: several statements in one text, without separators.
+		[TestCase("DECLARE @Value Integer -- Int32\nSET     @Value = 10\nDECLARE @ID Integer -- Int32\nSET     @ID = 5\n\nUPDATE\n\t[TestDataCore]..[Issue681Table]\nSET\n\t[Value] = @Value\nFROM\n\t[TestDataCore]..[Issue681Table] [t1]\nWHERE\n\t[t1].[ID] = @ID\n\nIF @@ROWCOUNT = 0\nBEGIN\n\tINSERT INTO [TestDataCore]..[Issue681Table]\n\t(\n\t\t[ID],\n\t\t[Value]\n\t)\n\tVALUES\n\t(\n\t\t@ID,\n\t\t@Value\n\t)\nEND\n")]
+		[TestCase("DECLARE @Has Bit -- Boolean\nSET     @Has = 1\n\nINSERT INTO [Issue1438]\n(\n\t[Has]\n)\nVALUES\n(\n\t@Has\n)\n\nSELECT @@IDENTITY\n")]
+		[TestCase("SET IDENTITY_INSERT [TableWithIdentity] ON\nMERGE INTO [TableWithIdentity] [Target]\nUSING (\n\tSELECT 1 AS [Id], 2 AS [Value_1]) [Source]\n(\n\t[Id],\n\t[Value_1]\n)\nON ([Target].[Id] = [Source].[Id])\n\nWHEN MATCHED THEN\nUPDATE\nSET\n\t[Value] = [Source].[Value_1]\n\nWHEN NOT MATCHED THEN\nINSERT\n(\n\t[Id],\n\t[Value]\n)\nVALUES\n(\n\t123,\n\t321\n)\nSET IDENTITY_INSERT [TableWithIdentity] OFF\n")]
+		[TestCase("insert into t values (1)\nselect go, ago, gone from t")]
+		public void AseExecuteCountsSeparatorsOnly(string sql)
+		{
+			using (Assert.EnterMultipleScope())
+			{
+				Single(Ase, sql).ShouldBeTrue();
+				ReadOnlySqlGuard.ValidateSingleStatement("Sybase.Managed", sql).IsAllowed.ShouldBeTrue();
+			}
+		}
+
+		#endregion
+
+		#region Temporary-table scripts (SQL Server and ASE)
+
+		static bool WritesTemporaryTables(string dialect, string sql)
+		{
+			var writes = false;
+
+			var accepted = dialect switch
+			{
+				TSql => ReadOnlySqlGrammar.TryCheckTSql(sql, out writes),
+				Ase  => ReadOnlySqlGrammar.TryCheckAse (sql, out writes),
+				_    => throw new ArgumentOutOfRangeException(nameof(dialect)),
+			};
+
+			accepted.ShouldBeTrue($"{dialect}: {sql}");
+
+			return writes;
+		}
+
+		[TestCase("select a, b into #t from t where a > 1\nselect * from #t")]
+		[TestCase("SELECT a INTO #t FROM t;\nSELECT a FROM #t;")]
+		[TestCase("select a into #t from t union all select b from u\nselect * from #t\nGO")]
+		[TestCase("with c as (select 1 a) select a into #t from c\nselect * from #t")]
+		[TestCase("create table #t (id int not null primary key, name nvarchar(50) collate Latin1_General_CI_AS default N'x', d decimal(18, 2) null)\ninsert into #t (id, name) select id, name from t with (nolock)\nselect * from #t")]
+		[TestCase("CREATE TABLE #t (a int IDENTITY(1, 1), b varchar(10), INDEX ix_b (b))\nINSERT #t (b) VALUES ('x'), ('y')\nSELECT * FROM #t")]
+		[TestCase("create table #t (a int)\ncreate unique clustered index ix on #t (a)\ncreate index [ix 2] on #t (a) include (a) where a > 0 with (fillfactor = 80)\nselect a from #t")]
+		[TestCase("insert into #t default values\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t set a = a + 1 where a in (select b from u)\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t with (rowlock) set a = u.b from #t join u on u.id = #t.a where #t.a > @p\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t set #t.a = x.b from #t as t1 cross apply (select top 1 b from u) as x\nselect * from #t")]
+		[TestCase("select a into #t from t\ndelete from #t where a is null\ndelete #t from #t join u on u.a = #t.a\nselect * from #t")]
+		[TestCase("select a into #t from t\ntruncate table #t\nselect * from #t")]
+		[TestCase("DECLARE @t TABLE (a int primary key)\nINSERT INTO @t (a) SELECT a FROM t\nSELECT a FROM @t")]
+		[TestCase("DECLARE @t AS TABLE (a int)\nDECLARE @log TABLE (a int)\nINSERT @t (a) OUTPUT inserted.a INTO @log (a) VALUES (1)\nUPDATE @t SET a = 2 OUTPUT deleted.a, inserted.a INTO @log\nDELETE @t OUTPUT deleted.a INTO #gone WHERE a = 2\nSELECT * FROM @log")]
+		[TestCase("DECLARE @p Int -- Int32\nSET @p = 1\nSELECT a INTO #t FROM t WHERE a = @p\nSELECT * FROM #t")]
+		[TestCase("select a into #t from t\nselect * from #t\ndrop table #t")]
+		[TestCase("select a into #t from t; select a into #u from t;\nselect * from #t, #u;\ndrop table if exists #t, #u;")]
+		[TestCase("with c as (select 1 a) insert into #t select a from c\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t set a = 1 where a = (select max(b) from u order by b offset 0 rows fetch next 1 rows only)\nselect * from #t")]
+		public void TempScriptsAccepted(string sql)
+		{
+			using (Assert.EnterMultipleScope())
+			{
+				WritesTemporaryTables(TSql, sql).ShouldBeTrue(sql);
+				WritesTemporaryTables(Ase,  sql).ShouldBeTrue(sql);
+			}
+		}
+
+		[TestCase("select * from #t")]
+		[TestCase("select a from t #x")]
+		[TestCase("select a #n from t as #x")]
+		[TestCase("DECLARE @p Int\nSET @p = 1\nselect * from t where a = @p")]
+		public void QueriesWriteNoTemporaryTables(string sql)
+		{
+			using (Assert.EnterMultipleScope())
+			{
+				WritesTemporaryTables(TSql, sql).ShouldBeFalse(sql);
+				WritesTemporaryTables(Ase,  sql).ShouldBeFalse(sql);
+			}
+		}
+
+		[TestCase("select a into #t from t\nselect * from #t")]
+		[TestCase("create table #t (a int)\nselect * from #t")]
+		[TestCase("insert @t values (1)\nselect * from @t")]
+		public void TempScriptsOnlyInTSql(string sql)
+		{
+			AssertQuery(sql, false, Bracket, MySql, Ydb, Informix, Standard);
+		}
+
+		// ASE takes no session option even when the call's connection is closed afterwards.
+		[Test]
+		public void SessionOptionBeforeTempScriptOnlyOnSqlServer()
+		{
+			const string sql = "SET NOCOUNT ON\nselect a into #t from t\nselect * from #t";
+
+			using (Assert.EnterMultipleScope())
+			{
+				WritesTemporaryTables(TSql, sql).ShouldBeTrue();
+				Query(Ase, sql).ShouldBeFalse();
+			}
+		}
+
+		// Each write word must be followed directly by a temporary table or a table variable.
+		[TestCase("insert into t values (1)\nselect 1")]
+		[TestCase("insert t select 1\nselect 1")]
+		[TestCase("insert into ##g values (1)\nselect 1")]
+		[TestCase("insert into tempdb..x values (1)\nselect 1")]
+		[TestCase("insert into tempdb.dbo.x values (1)\nselect 1")]
+		[TestCase("insert into [#t] values (1)\nselect 1")]
+		[TestCase("insert into \"#t\" values (1)\nselect 1")]
+		[TestCase("insert into #t.x values (1)\nselect 1")]
+		[TestCase("insert into @@t values (1)\nselect 1")]
+		[TestCase("insert #t exec p\nselect * from #t")]
+		[TestCase("insert #t execute ('select 1')\nselect * from #t")]
+		[TestCase("insert #t select 1 delete t\nselect * from #t")]
+		[TestCase("insert #t select 1 into t2\nselect * from #t")]
+		[TestCase("insert #t (a) values (next value for s)\nselect * from #t")]
+		[TestCase("insert #t select * from openquery(s, 'x')\nselect * from #t")]
+		[TestCase("update t set a = 1\nselect 1")]
+		[TestCase("update top (1) #t set a = 1\nselect 1")]
+		[TestCase("update #t set a = 1 from t #t\nselect * from #t")]
+		[TestCase("update #t set a = 1 from t as #t\nselect * from #t")]
+		[TestCase("update #t set a = 1 from t [#t]\nselect * from #t")]
+		[TestCase("update #t set a = 1 from t \"#t\"\nselect * from #t")]
+		[TestCase("update #t set a = 1 from (select * from t) #t\nselect * from #t")]
+		[TestCase("update #t set a = 1 from #u join (t #t join u on 1 = 1) on 1 = 1\nselect * from #t")]
+		[TestCase("update @t set a = 1 from t as @t\nselect * from @t")]
+		[TestCase("with [#t] as (select * from t) update #t set a = 1\nselect 1")]
+		[TestCase("with c as (select * from t) update c set a = 1\nselect 1")]
+		[TestCase("update #t set a = 1 output inserted.a\nselect * from #t")]
+		[TestCase("update #t set a = 1 output inserted.a select b into #u from t\nselect * from #t")]
+		[TestCase("update #t set a = 1 output inserted.a into t\nselect * from #t")]
+		[TestCase("update #t set a = 1 output inserted.a into dbo.t\nselect * from #t")]
+		[TestCase("update #t set a = 1 where a = (delete from t)\nselect * from #t")]
+		[TestCase("delete t\nselect 1")]
+		[TestCase("delete from t where a = 1\nselect 1")]
+		[TestCase("delete #t from t #t\nselect * from #t")]
+		[TestCase("delete #t output deleted.*\nselect 1")]
+		[TestCase("truncate table t\nselect 1")]
+		[TestCase("truncate table ##g\nselect 1")]
+		[TestCase("create table t (a int)\nselect 1")]
+		[TestCase("create table ##g (a int)\nselect 1")]
+		[TestCase("create table tempdb..x (a int)\nselect 1")]
+		[TestCase("create table #t (a int default (next value for s))\nselect 1")]
+		[TestCase("create index ix on t (a)\nselect 1")]
+		[TestCase("create index ix on ##g (a)\nselect 1")]
+		[TestCase("create view v as select 1\nselect 1")]
+		[TestCase("create procedure #p as select 1\nselect 1")]
+		[TestCase("select a into t2 from t\nselect 1")]
+		[TestCase("select a into ##g from t\nselect 1")]
+		[TestCase("select a into tempdb..x from t\nselect 1")]
+		[TestCase("select a into #t from t into #u\nselect 1")]
+		[TestCase("merge #t using t on 1 = 1 when matched then delete;\nselect * from #t")]
+		[TestCase("merge into #t using t on 1 = 1 when not matched then insert values (1);\nselect * from #t")]
+		[TestCase("declare @t table (a int) insert @t values (1) select * from @t select 2")]
+		[TestCase("select a into #t from t\nselect * from #t\nselect * from #t")]
+		[TestCase("select a into #t from t\nselect * from #t\ninsert #t values (1)")]
+		[TestCase("select a into #t from t\nselect * from #t\ndrop table t")]
+		[TestCase("select a into #t from t\nselect * from #t\ndrop table ##g")]
+		[TestCase("select a into #t from t\nselect * from #t\ndrop table #t, t")]
+		[TestCase("select a into #t from t\nselect * from #t\ndrop view #t")]
+		[TestCase("select a into #t from t\nselect * from #t\ndrop table #t\nselect 1")]
+		[TestCase("select a into #t from t")]
+		[TestCase("create table #t (a int)")]
+		[TestCase("select a into #t from t\nexec p\nselect * from #t")]
+		[TestCase("select a into #t from t\nSET ROWCOUNT 1\nselect * from #t")]
+		[TestCase("select a into #t from t\nalter table #t add b int\nselect * from #t")]
+		[TestCase("select a into #t from t\nbegin tran\nselect * from #t")]
+		public void TempScriptsRefused(string sql)
+		{
+			AssertQuery(sql, false, TSql, Ase);
+		}
+
+		[Test]
+		public void TempScriptsRouteToAnUnpooledConnectionOnAseOnly()
+		{
+			const string temp  = "select a into #t from t\nselect * from #t";
+			const string plain = "select * from t";
+
+			var sqlServerTemp  = ReadOnlySqlGuard.Validate("SqlServer.2022", temp);
+			var sqlServerPlain = ReadOnlySqlGuard.Validate("SqlServer.2022", plain);
+			var aseTemp        = ReadOnlySqlGuard.Validate("Sybase.Managed", temp);
+			var asePlain       = ReadOnlySqlGuard.Validate("Sybase.Managed", plain);
+			var aseExecute     = ReadOnlySqlGuard.ValidateSingleStatement("Sybase", "update t set a = 1");
+			var sqlExecute     = ReadOnlySqlGuard.ValidateSingleStatement("SqlServer", "update t set a = 1");
+
+			using (Assert.EnterMultipleScope())
+			{
+				sqlServerTemp. IsAllowed.                 ShouldBeTrue();
+				sqlServerTemp. WritesTemporaryTables.     ShouldBeTrue();
+				sqlServerTemp. RequiresUnpooledConnection.ShouldBeFalse();
+
+				sqlServerPlain.WritesTemporaryTables.     ShouldBeFalse();
+				sqlServerPlain.RequiresUnpooledConnection.ShouldBeFalse();
+
+				aseTemp.       IsAllowed.                 ShouldBeTrue();
+				aseTemp.       WritesTemporaryTables.     ShouldBeTrue();
+				aseTemp.       RequiresUnpooledConnection.ShouldBeTrue();
+
+				asePlain.      IsAllowed.                 ShouldBeTrue();
+				asePlain.      RequiresUnpooledConnection.ShouldBeFalse();
+
+				// Execute admits any statement, and so any session state.
+				aseExecute.    IsAllowed.                 ShouldBeTrue();
+				aseExecute.    RequiresUnpooledConnection.ShouldBeTrue();
+				sqlExecute.    RequiresUnpooledConnection.ShouldBeFalse();
 			}
 		}
 
@@ -679,9 +906,16 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("SqlServer",        "select * from openquery(s, 'x')",        "Query is not read-only: function OPENQUERY at 1:15 is on the write-route list.")]
 		[TestCase("SqlServer",        "select dbms_pipe.send_message('p')",     "Query is not read-only: DBMS_PIPE at 1:8 is on the write-route list.")]
 		[TestCase("SqlServer",        "select next value for s",                "Query is not read-only: sequence call NEXT VALUE FOR at 1:8.")]
-		[TestCase("SqlServer",        "SET ROWCOUNT 5\nselect 1",               "Query is not read-only: session option ROWCOUNT at 1:1 is not allowed.")]
-		[TestCase("SqlServer",        "SET @p = (select 1)\nselect 1",          "Query is not read-only: parameter assignment SET @p at 1:1 is not allowed.")]
-		[TestCase("SqlServer",        "DECLARE @t TABLE (a int)\nselect 1",     "Query is not read-only: parameter declaration DECLARE @t at 1:1 is not allowed.")]
+		[TestCase("SqlServer",        "SET XACT_ABORT ON\nselect 1",            "Query is not read-only: session option XACT_ABORT at 1:1 is not allowed.")]
+		[TestCase("Sybase.Managed",   "SET ROWCOUNT 5\nselect 1",               "Query is not read-only: session option ROWCOUNT at 1:1 is not allowed.")]
+		[TestCase("SqlServer",        "SET @p = (select 1)\nselect 1",          "Parameter assignment SET @p at 1:1 is not a plain value.")]
+		[TestCase("SqlCe",            "DECLARE @t TABLE (a int)\nselect 1",     "Query is not read-only: parameter declaration DECLARE @t at 1:1 is not allowed.")]
+		[TestCase("SqlServer",        "DECLARE @c CURSOR\nselect 1",            "Query is not read-only: parameter declaration DECLARE @c at 1:1 is not allowed.")]
+		[TestCase("SqlServer",        "update t set a = 1\nselect * from t",    "Query is not read-only: statement word UPDATE at 1:1.")]
+		[TestCase("SqlServer",        "select a into t2 from t\nselect 1",      "Query is not read-only: INTO at 1:10.")]
+		[TestCase("Sybase.Managed",   "insert ##g values (1)\nselect 1",        "Query is not read-only: statement word INSERT at 1:1.")]
+		[TestCase("SqlServer",        "update #t set a = 1 from t #t\nselect 1", "Only SELECT queries are allowed: unexpected '#t' at 1:28. In a script that writes temporary tables, a name that starts with # may not stand where an alias does.")]
+		[TestCase("SqlServer",        "create table ##g (a int)\nselect 1",     "Query is not read-only: statement word CREATE at 1:1.")]
 		[TestCase("SqlServer",        "exec dbo.DoWork",                        "Query is not read-only: statement word EXEC at 1:1.")]
 		[TestCase("SqlServer",        "select 1 /* open",                       "Query is not valid SQL")]
 		[TestCase("Sybase.Managed",   "select open from t",                     "Query is not read-only: statement word OPEN at 1:8.")]
@@ -779,29 +1013,28 @@ namespace Tests.LinqToDB.CLI
 				return "select " + new string('(', depth) + "1" + new string(')', depth);
 			}
 
-			static double Best(string sql)
+			static double Time(string sql)
 			{
-				var best = double.MaxValue;
+				var watch = Stopwatch.StartNew();
 
-				for (var i = 0; i < 20; i++)
-				{
-					var watch = Stopwatch.StartNew();
+				ReadOnlySqlGrammar.TryCheckTSql(sql, out _).ShouldBeTrue();
 
-					ReadOnlySqlGrammar.TryCheckTSql(sql, out _).ShouldBeTrue();
-
-					best = Math.Min(best, watch.Elapsed.TotalMilliseconds);
-				}
-
-				return best;
+				return watch.Elapsed.TotalMilliseconds;
 			}
 
-			var shallow = Nested(1_000);
-			var deep    = Nested(10_000);
+			var shallow     = Nested(1_000);
+			var deep        = Nested(10_000);
+			var bestShallow = double.MaxValue;
+			var bestDeep    = double.MaxValue;
 
-			Best(shallow);
-			Best(deep);
+			// The two depths are timed in turn, so that both are measured at the same stage of tiered compilation.
+			for (var i = 0; i < 40; i++)
+			{
+				bestShallow = Math.Min(bestShallow, Time(shallow));
+				bestDeep    = Math.Min(bestDeep,    Time(deep));
+			}
 
-			(Best(deep) / Best(shallow)).ShouldBeLessThanOrEqualTo(15);
+			(bestDeep / bestShallow).ShouldBeLessThanOrEqualTo(15);
 
 			ReadOnlySqlGrammar.TryCheckTSql(deep + ")", out _).ShouldBeFalse();
 		}
@@ -811,7 +1044,7 @@ namespace Tests.LinqToDB.CLI
 		{
 			// The same grammar compiled with one extra stack, so that a modest depth runs out of them.
 			var shallow = new ReadOnlySqlGuard.SqlDialect(
-				sql => ShallowReadOnlySqlGrammar.TryCheckTSql (sql, out _), sql => ShallowReadOnlySqlGrammar.TryCheckTSql (sql).Position,
+				ShallowReadOnlySqlGrammar.TryCheckTSql,                     sql => ShallowReadOnlySqlGrammar.TryCheckTSql (sql).Position,
 				sql => ShallowReadOnlySqlGrammar.TrySingleTSql(sql, out _), sql => ShallowReadOnlySqlGrammar.TrySingleTSql(sql).Position);
 
 			var sql    = "select " + new string('(', 1_000_000) + "1" + new string(')', 1_000_000);

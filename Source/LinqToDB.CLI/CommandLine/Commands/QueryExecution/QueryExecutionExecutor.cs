@@ -414,20 +414,22 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 		async Task<QueryExecutionResult> ExecuteValidatedDatabaseLoop(DataOptions dataOptions, IDataProvider dataProvider, string sql, TextWriter outputWriter, CancellationToken cancellationToken)
 		{
+			SqlGuardResult guardResult;
+
 			if (_settings.Mode == QueryExecutionMode.Query)
 			{
 				// The read-only check covers the single-statement contract too, and names the more specific reason.
-				var guardResult = ReadOnlySqlGuard.Validate(dataProvider, sql);
+				guardResult = ReadOnlySqlGuard.Validate(dataProvider, sql);
 
 				if (!guardResult.IsAllowed)
 					return new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, guardResult.Error, false);
 			}
 			else
 			{
-				var singleStatementResult = ReadOnlySqlGuard.ValidateSingleStatement(dataProvider, sql);
+				guardResult = ReadOnlySqlGuard.ValidateSingleStatement(dataProvider, sql);
 
-				if (!singleStatementResult.IsAllowed)
-					return new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, singleStatementResult.Error, false);
+				if (!guardResult.IsAllowed)
+					return new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, guardResult.Error, false);
 
 				await _settings.DiagnosticWriter.WriteLineAsync(
 					string.Create(
@@ -435,10 +437,22 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 						$"Executing write-capable SQL because profile '{_settings.Profile}' has enableExecute=true. Provider: {_settings.Provider}."));
 			}
 
-			return await ExecuteDatabaseLoop(dataOptions, dataProvider, sql, outputWriter, cancellationToken);
+			if (guardResult.RequiresUnpooledConnection && dataOptions.ConnectionOptions.ConnectionString is { } connectionString)
+				dataOptions = dataOptions.UseConnectionString(dataProvider, WithoutPooling(connectionString));
+
+			// The count a temporary-table script returns is that of its writes to the temporary tables, not of the query.
+			return await ExecuteDatabaseLoop(dataOptions, dataProvider, sql, outputWriter, !guardResult.WritesTemporaryTables, cancellationToken);
 		}
 
-		async Task<QueryExecutionResult> ExecuteDatabaseLoop(DataOptions dataOptions, IDataProvider dataProvider, string sql, TextWriter outputWriter, CancellationToken cancellationToken)
+		// The driver closes a connection opened without pooling when it is released, so the session state the call leaves
+		// dies with it, while the pooled connections stay untouched. AseClient's ClearPool does nothing, so this is the way
+		// to drop one connection. Appended last, the key overrides an earlier Pooling key.
+		static string WithoutPooling(string connectionString)
+		{
+			return connectionString.TrimEnd().TrimEnd(';') + ";Pooling=false";
+		}
+
+		async Task<QueryExecutionResult> ExecuteDatabaseLoop(DataOptions dataOptions, IDataProvider dataProvider, string sql, TextWriter outputWriter, bool reportRecordsAffected, CancellationToken cancellationToken)
 		{
 			// Open a connection and apply optional provider-specific session setup before user SQL execution.
 			//
@@ -581,7 +595,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 					rowCount++;
 				}
 
-				var recordsAffected = GetRecordsAffected(reader);
+				var recordsAffected = reportRecordsAffected ? GetRecordsAffected(reader) : null;
 
 				// Close the selected output format.
 				//

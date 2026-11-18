@@ -11,18 +11,42 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 	public static class ReadOnlySqlGuard
 	{
 		/// <summary>
+		/// The read-only check of one behaviour class: whether the text passes, and whether it writes temporary tables.
+		/// </summary>
+		internal delegate bool ScriptCheck(string sql, out bool writesTemporaryTables);
+
+		/// <summary>
 		/// How a provider's SQL text is read: the two checks generated for the behaviour class of its dialect. Each
 		/// answers whether the text passes, and where it was refused when it does not.
 		/// </summary>
 		internal sealed class SqlDialect(
-			Func<string, bool> check,
+			ScriptCheck        check,
 			Func<string, long> checkRefusedAt,
 			Func<string, bool> single,
-			Func<string, long> singleRefusedAt)
+			Func<string, long> singleRefusedAt,
+			bool               poolKeepsSessionState = false)
 		{
+			/// <summary>
+			/// The provider's driver hands a pooled connection out again with the session state the previous call left
+			/// (temporary tables, session options), so a call that may leave some must not return its connection to the
+			/// pool.
+			/// </summary>
+			public bool PoolKeepsSessionState { get; } = poolKeepsSessionState;
+
+			public bool Check(string sql, bool singleStatement, out bool writesTemporaryTables)
+			{
+				if (singleStatement)
+				{
+					writesTemporaryTables = false;
+					return single(sql);
+				}
+
+				return check(sql, out writesTemporaryTables);
+			}
+
 			public bool Check(string sql, bool singleStatement)
 			{
-				return singleStatement ? single(sql) : check(sql);
+				return Check(sql, singleStatement, out _);
 			}
 
 			public long RefusedAt(string sql, bool singleStatement)
@@ -32,18 +56,20 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		}
 
 		// SQL Server and Sybase ASE run statements that follow each other without a separator. ASE is a class of its own
-		// because its driver keeps session options on a pooled connection.
+		// because its driver keeps session state on a pooled connection: AseClient resets nothing when a connection
+		// returns to the pool.
 		static readonly SqlDialect _tsql = new(
-			sql => ReadOnlySqlGrammar.TryCheckTSql (sql, out _), sql => ReadOnlySqlGrammar.TryCheckTSql (sql).Position,
+			ReadOnlySqlGrammar.TryCheckTSql,                     sql => ReadOnlySqlGrammar.TryCheckTSql (sql).Position,
 			sql => ReadOnlySqlGrammar.TrySingleTSql(sql, out _), sql => ReadOnlySqlGrammar.TrySingleTSql(sql).Position);
 
 		static readonly SqlDialect _ase = new(
-			sql => ReadOnlySqlGrammar.TryCheckAse (sql, out _), sql => ReadOnlySqlGrammar.TryCheckAse (sql).Position,
-			sql => ReadOnlySqlGrammar.TrySingleAse(sql, out _), sql => ReadOnlySqlGrammar.TrySingleAse(sql).Position);
+			ReadOnlySqlGrammar.TryCheckAse,                      sql => ReadOnlySqlGrammar.TryCheckAse (sql).Position,
+			sql => ReadOnlySqlGrammar.TrySingleAse(sql, out _),  sql => ReadOnlySqlGrammar.TrySingleAse(sql).Position,
+			poolKeepsSessionState: true);
 
 		// [x] is a quoted identifier.
 		static readonly SqlDialect _bracket = new(
-			sql => ReadOnlySqlGrammar.TryCheckBracket (sql, out _), sql => ReadOnlySqlGrammar.TryCheckBracket (sql).Position,
+			ReadOnlySqlGrammar.TryCheckBracket,                     sql => ReadOnlySqlGrammar.TryCheckBracket (sql).Position,
 			sql => ReadOnlySqlGrammar.TrySingleBracket(sql, out _), sql => ReadOnlySqlGrammar.TrySingleBracket(sql).Position);
 
 		// The only place that knows providers: a provider name maps, by its longest matching prefix, to the way its SQL
@@ -119,8 +145,13 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 			try
 			{
-				if (dialect.Check(sql, singleStatement))
-					return SqlGuardResult.Allowed;
+				if (dialect.Check(sql, singleStatement, out var writesTemporaryTables))
+				{
+					// Execute mode admits any statement, and so any session state.
+					return SqlGuardResult.Accepted(
+						writesTemporaryTables,
+						dialect.PoolKeepsSessionState && (singleStatement || writesTemporaryTables));
+				}
 
 				refusedAt = dialect.RefusedAt(sql, singleStatement);
 			}
@@ -156,7 +187,9 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 					var (candidateKind, candidateText) = Describe(sql, candidate);
 
 					// The SELECT or WITH that opens the query is no culprit.
-					var opensQuery = string.Equals(candidateKind, "statement", StringComparison.Ordinal) && sql.AsSpan(0, candidate).Trim().TrimStart(';').IsEmpty;
+					var opensQuery = string.Equals(candidateKind, "statement", StringComparison.Ordinal)
+						&& (string.Equals(candidateText, "select", StringComparison.OrdinalIgnoreCase) || string.Equals(candidateText, "with", StringComparison.OrdinalIgnoreCase))
+						&& sql.AsSpan(0, candidate).Trim().TrimStart(';').IsEmpty;
 
 					if (candidateKind is not ("other" or "end") && !opensQuery)
 					{
@@ -222,8 +255,11 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				"routine"     => SqlGuardResult.Rejected($"Query is not read-only: inline routine {upper} at {at}."),
 				"scope"       => SqlGuardResult.Rejected($"Query is not read-only: session option scope {upper} at {at} is not allowed."),
 				"option"      => SqlGuardResult.Rejected($"Query is not read-only: session option {upper} at {at} is not allowed. Only listed session options with one plain value may precede the query."),
-				"assignment"  => SqlGuardResult.Rejected($"Query is not read-only: parameter assignment SET {text} at {at} is not allowed. A parameter takes one plain value: no subquery, no comma outside brackets."),
+				"assignment"  => SqlGuardResult.Rejected($"Parameter assignment SET {text} at {at} is not a plain value. A parameter takes one plain value: no subquery, no comma outside brackets."),
 				"declaration" => SqlGuardResult.Rejected($"Query is not read-only: parameter declaration DECLARE {text} at {at} is not allowed. A parameter type may not be a table, a cursor or a statement."),
+				// What stops at a #name is a temporary table where an alias stands (UPDATE #t … FROM t #t).
+				_ when text.Length > 1 && text[0] == '#'
+				              => SqlGuardResult.Rejected($"Only SELECT queries are allowed: unexpected '{text}' at {at}. In a script that writes temporary tables, a name that starts with # may not stand where an alias does."),
 				_             => SqlGuardResult.Rejected($"Only SELECT queries are allowed: unexpected '{text}' at {at}."),
 			};
 		}
@@ -235,6 +271,17 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		{
 			if (position >= sql.Length)
 				return ("end", string.Empty);
+
+			// The description reads every class's lexing at once, so it would take # for the start of a MySQL comment.
+			if (sql[position] == '#')
+			{
+				var end = position + 1;
+
+				while (end < sql.Length && (sql[end] == '#' || IsWordChar(sql[end])))
+					end++;
+
+				return ("other", sql.Substring(position, end - position));
+			}
 
 			var description = ReadOnlySqlGrammar.TryDescribeRefusal(sql.Substring(position));
 
