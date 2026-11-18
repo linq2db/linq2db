@@ -417,3 +417,7 @@ type FSharpQueryExpressionInterceptor private () =
                 FSharpRewriteVisitor(args.DataContext.MappingSchema).Visit expression
             else
                 expression
+
+    // A single stateless instance: its rewrites depend on the query alone.
+    interface IInterceptorCacheKey with
+        member _.CacheKey = null

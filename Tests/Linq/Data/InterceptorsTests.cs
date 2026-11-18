@@ -12,6 +12,7 @@ using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Expressions;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Interceptors;
@@ -1451,6 +1452,27 @@ namespace Tests.Data
 			.Build()
 			.MappingSchema;
 
+		static readonly MappingSchema _personNamedFilterSchema = new FluentMappingBuilder(new MappingSchema())
+			.Entity<Person>()
+				.HasQueryFilter("positive", p => p.ID > 0)
+				.HasQueryFilter("bounded",  p => p.ID < 1000)
+			.Build()
+			.MappingSchema;
+
+		static readonly MappingSchema _personLowHighFilterSchema = new FluentMappingBuilder(new MappingSchema())
+			.Entity<Person>()
+				.HasQueryFilter("low",  p => p.ID <= 2)
+				.HasQueryFilter("high", p => p.ID >= 3)
+			.Build()
+			.MappingSchema;
+
+		static readonly MappingSchema _personNamedFuncFilterSchema = new FluentMappingBuilder(new MappingSchema())
+			.Entity<Person>()
+				.HasQueryFilter("positive", (q, dc) => q.Where(p => p.ID > 0))
+				.HasQueryFilter("bounded",  (q, dc) => q.Where(p => p.ID < 1000))
+			.Build()
+			.MappingSchema;
+
 		/// <summary>
 		/// Appends <c>Where(p => p.ID &lt;= Limit)</c> to the expression of the given kind. The limit is read from the
 		/// interceptor instance, as a per-tenant interceptor reads its tenant id.
@@ -1504,22 +1526,115 @@ namespace Tests.Data
 		}
 
 		/// <summary>
-		/// Filters by tenant at the QueryFilter stage and keys the cache by the tenant value itself.
+		/// <see cref="TenantLimitInterceptor"/> without <see cref="IInterceptorCacheKey"/>.
 		/// </summary>
-		sealed class KeyedTenantLimitInterceptor(int tenant) : IQueryExpressionInterceptor, IInterceptorCacheKey
+		sealed class UnkeyedTenantLimitInterceptor(ExpressionKind kind, int? tenant) : IQueryExpressionInterceptor
 		{
-			readonly PersonLimitInterceptor _limit = new(ExpressionKind.QueryFilter, tenant);
-
-			public string? CacheKey => tenant.ToString(System.Globalization.CultureInfo.InvariantCulture);
+			readonly PersonLimitInterceptor? _limit = tenant == null ? null : new PersonLimitInterceptor(kind, tenant.Value);
 
 			public Expression ProcessExpression(Expression expression, QueryExpressionArgs args)
 			{
+				return _limit?.ProcessExpression(expression, args) ?? expression;
+			}
+		}
+
+		/// <summary>
+		/// <see cref="UnkeyedTenantLimitInterceptor"/> at the query filter stage, applied only to a filter chain that contains
+		/// the "bounded" filter of <see cref="_personNamedFilterSchema"/>.
+		/// </summary>
+		sealed class BoundedChainTenantInterceptor(int? tenant) : IQueryExpressionInterceptor
+		{
+			readonly PersonLimitInterceptor? _limit = tenant == null ? null : new PersonLimitInterceptor(ExpressionKind.QueryFilter, tenant.Value);
+
+			public Expression ProcessExpression(Expression expression, QueryExpressionArgs args)
+			{
+				if (_limit == null || expression.Find(static e => e.NodeType == ExpressionType.LessThan) == null)
+					return expression;
+
 				return _limit.ProcessExpression(expression, args);
+			}
+		}
+
+		/// <summary>
+		/// Appends <c>Where(p => p.ID &lt;= 2)</c> at its stage once after being armed, and counts the calls of that stage.
+		/// </summary>
+		sealed class ArmOnceInterceptor(ExpressionKind kind) : IQueryExpressionInterceptor
+		{
+			public bool Armed { get; set; }
+			public int  Calls { get; private set; }
+
+			public Expression ProcessExpression(Expression expression, QueryExpressionArgs args)
+			{
+				if (args.Kind != kind || !typeof(IQueryable<Person>).IsAssignableFrom(expression.Type))
+					return expression;
+
+				Calls++;
+
+				if (!Armed)
+					return expression;
+
+				Armed = false;
+
+				var p    = Expression.Parameter(typeof(Person), "p");
+				var body = Expression.LessThanOrEqual(Expression.Field(p, nameof(Model.Person.ID)), Expression.Constant(2));
+
+				return Expression.Call(
+					typeof(Queryable),
+					nameof(Queryable.Where),
+					[typeof(Person)],
+					expression,
+					Expression.Quote(Expression.Lambda<Func<Person, bool>>(body, p)));
+			}
+		}
+
+		sealed class Bound(int value)
+		{
+			public int Value => value;
+		}
+
+		/// <summary>
+		/// Appends <c>Where(p => p.ID &gt;= Low &amp;&amp; p.ID &lt;= High)</c> to the query filter. Equal bounds are equal
+		/// values at build time, which the translator may merge into one parameter.
+		/// </summary>
+		sealed class PersonRangeInterceptor(int low, int high) : IQueryExpressionInterceptor
+		{
+			readonly Bound _low  = new(low);
+			readonly Bound _high = new(high);
+
+			public Expression ProcessExpression(Expression expression, QueryExpressionArgs args)
+			{
+				if (args.Kind != ExpressionKind.QueryFilter || !typeof(IQueryable<Person>).IsAssignableFrom(expression.Type))
+					return expression;
+
+				var p    = Expression.Parameter(typeof(Person), "p");
+				var id   = Expression.Field(p, nameof(Model.Person.ID));
+				var body = Expression.AndAlso(
+					Expression.GreaterThanOrEqual(id, Expression.Property(Expression.Constant(_low),  nameof(Bound.Value))),
+					Expression.LessThanOrEqual   (id, Expression.Property(Expression.Constant(_high), nameof(Bound.Value))));
+
+				return Expression.Call(
+					typeof(Queryable),
+					nameof(Queryable.Where),
+					[typeof(Person)],
+					expression,
+					Expression.Quote(Expression.Lambda<Func<Person, bool>>(body, p)));
 			}
 		}
 
 		static readonly Func<IDataContext, IQueryable<Person>> _compiledPersons =
 			CompiledQuery.Compile((IDataContext db) => db.GetTable<Person>());
+
+		static readonly Func<IDataContext, int> _compiledPersonCount =
+			CompiledQuery.Compile((IDataContext db) => db.GetTable<Person>().Count());
+
+		static readonly Func<IDataContext, IQueryable<Person>> _compiledPersonsTwice =
+			CompiledQuery.Compile((IDataContext db) => db.GetTable<Person>().Concat(db.GetTable<Person>()));
+
+		static readonly Func<IDataContext, int, IQueryable<Person>> _compiledPersonsFrom =
+			CompiledQuery.Compile((IDataContext db, int minId) => db.GetTable<Person>().Where(p => p.ID >= minId));
+
+		static readonly Func<IDataContext, string[], IQueryable<Person>> _compiledPersonsIgnoring =
+			CompiledQuery.Compile((IDataContext db, string[] ignored) => db.GetTable<Person>().IgnoreFilters(ignored));
 
 		/// <summary>
 		/// Materializes <see cref="Person.FirstName"/> as a constant.
@@ -1577,9 +1692,12 @@ namespace Tests.Data
 				.ToArray();
 		}
 
-		static DataContext CreateFilteredDataContext(string context)
+		static DataContext CreateFilteredDataContext(string context, bool disableQueryCache = false)
 		{
-			return new DataContext(new DataOptions().UseConfiguration(context).UseMappingSchema(_personFilterSchema));
+			return new DataContext(new DataOptions()
+				.UseConfiguration(context)
+				.UseMappingSchema(_personFilterSchema)
+				.UseDisableQueryCache(disableQueryCache));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
@@ -1679,30 +1797,394 @@ namespace Tests.Data
 			ShouldReturnIds(admin,   ExpectedIds(),  "admin");
 		}
 
-		// A compiled query is cached by the configuration ID alone: interceptor instances that read different values into
-		// the query filter are told apart by a key per value.
+		// A compiled query reuses its query by the configuration ID, which does not tell interceptor instances apart: a query
+		// filter they rewrite is checked against the executing context first.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
-		public void QueryExpression_CacheKey_SeparatesCompiledQueries([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void QueryExpression_SameTypeInstances_CompiledQuery([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			Query.ClearCaches();
 
-			IDataContext Create(int tenant) => GetDataContext(context, o => o
+			IDataContext Create(int limit) => GetDataContext(context, o => o
 				.UseMappingSchema(_personFilterSchema)
-				.UseInterceptor(new KeyedTenantLimitInterceptor(tenant)));
+				.UseInterceptor(new PersonLimitInterceptor(ExpressionKind.QueryFilter, limit)));
 
+			using var limit2 = Create(2);
+			using var limit3 = Create(3);
+
+			ShouldReturnIds(_compiledPersons(limit2), ExpectedIds(2), "limit 2");
+			ShouldReturnIds(_compiledPersons(limit3), ExpectedIds(3), "limit 3");
+			ShouldReturnIds(_compiledPersons(limit2), ExpectedIds(2), "limit 2 again");
+
+			var counts = new[]
+			{
+				_compiledPersonCount(limit2),
+				_compiledPersonCount(limit3),
+			};
+
+			counts.ShouldBe([ExpectedIds(2).Length, ExpectedIds(3).Length]);
+		}
+
+		// Values equal when the query was built may share one parameter; another context whose values differ must not reuse
+		// that query, compiled or not.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
+		public void QueryExpression_MergedParameters_NotReusedForOtherValues(
+			[IncludeDataSources(true, TestProvName.AllSQLite)] string context,
+			[Values]                                           bool   compiled)
+		{
+			Query.ClearCaches();
+
+			IDataContext Create(int low, int high) => GetDataContext(context, o => o
+				.UseMappingSchema(_personFilterSchema)
+				.UseInterceptor(new PersonRangeInterceptor(low, high)));
+
+			IQueryable<Person> Persons(IDataContext db) => compiled ? _compiledPersons(db) : db.GetTable<Person>();
+
+			int[] Expected(int low, int high) => ExpectedIds(high)
+				.Where(id => id >= low)
+				.ToArray();
+
+			using var single = Create(2, 2);
+			using var range  = Create(1, 3);
+
+			ShouldReturnIds(Persons(single), Expected(2, 2), "2..2");
+			ShouldReturnIds(Persons(range),  Expected(1, 3), "1..3");
+		}
+
+		// Two references to one table with different active filter sets in one query: the interceptor rewrites one of the
+		// two filter chains, and only for a tenant.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
+		public void QueryExpression_DifferentFilterSetsOnOneTable(
+			[IncludeDataSources(true, TestProvName.AllSQLite)] string context,
+			[Values]                                           bool   funcFilters,
+			[Values]                                           bool   adminFirst)
+		{
+			Query.ClearCaches();
+
+			var ms = funcFilters ? _personNamedFuncFilterSchema : _personNamedFilterSchema;
+
+			IDataContext Create(int? tenant) => GetDataContext(context, o => o
+				.UseMappingSchema(ms)
+				.UseInterceptor(new BoundedChainTenantInterceptor(tenant)));
+
+			static IQueryable<Person> BothChains(IDataContext db)
+			{
+				return db.GetTable<Person>()
+					.IgnoreFilters(["bounded"])
+					.Concat(db.GetTable<Person>().IgnoreFilters(["positive"]));
+			}
+
+			int[] Expected(int limit) => ExpectedIds()
+				.Concat(ExpectedIds(limit))
+				.OrderBy(id => id)
+				.ToArray();
+
+			using var admin   = Create(null);
+			using var tenant2 = Create(2);
+
+			if (adminFirst)
+				ShouldReturnIds(BothChains(admin), Expected(int.MaxValue), "admin first");
+
+			ShouldReturnIds(BothChains(tenant2), Expected(2),            "tenant 2");
+			ShouldReturnIds(BothChains(admin),   Expected(int.MaxValue), "admin");
+		}
+
+		// Two references to one table with the same filter set in one query: each takes the executing context's value.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
+		public void QueryExpression_SameFilterSetReferencedTwice(
+			[IncludeDataSources(true, TestProvName.AllSQLite)] string context,
+			[Values]                                           bool   compiled)
+		{
+			Query.ClearCaches();
+
+			IDataContext Create(int limit) => GetDataContext(context, o => o
+				.UseMappingSchema(_personFilterSchema)
+				.UseInterceptor(new PersonLimitInterceptor(ExpressionKind.QueryFilter, limit)));
+
+			IQueryable<Person> Twice(IDataContext db) => compiled
+				? _compiledPersonsTwice(db)
+				: db.GetTable<Person>().Concat(db.GetTable<Person>());
+
+			int[] Expected(int limit) => ExpectedIds(limit)
+				.Concat(ExpectedIds(limit))
+				.OrderBy(id => id)
+				.ToArray();
+
+			using var limit2 = Create(2);
+			using var limit3 = Create(3);
+
+			ShouldReturnIds(Twice(limit2), Expected(2), "limit 2");
+			ShouldReturnIds(Twice(limit3), Expected(3), "limit 3");
+			ShouldReturnIds(Twice(limit2), Expected(2), "limit 2 again");
+		}
+
+		// The query filter stage of an interceptor without IInterceptorCacheKey runs once when the query is built, and the
+		// rewrite it returns is used.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
+		public void QueryExpression_WithoutCacheKey_QueryFilterStageRunsOnceOnBuild([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			Query.ClearCaches();
+
+			using var db = GetDataConnection(context, o => o.UseMappingSchema(_personFilterSchema));
+
+			var interceptor = new ArmOnceInterceptor(ExpressionKind.QueryFilter) { Armed = true };
+
+			db.AddInterceptor(interceptor);
+
+			ShouldReturnIds(db, ExpectedIds(2), "armed");
+
+			interceptor.Calls.ShouldBe(1, "stage calls");
+		}
+
+		// Without IInterceptorCacheKey, instances of one type that differ in whether they rewrite the query are told apart by
+		// checking their rewrites again when a query is reused.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
+		public void QueryExpression_WithoutCacheKey_ConditionalRewriteNotShared(
+			[IncludeDataSources(true, TestProvName.AllSQLite)]                   string         context,
+			[Values(ExpressionKind.ExposedQuery, ExpressionKind.QueryFilter)] ExpressionKind kind,
+			[Values]                                                             bool           adminFirst)
+		{
+			Query.ClearCaches();
+
+			IDataContext Create(int? tenant) => GetDataContext(context, o => o
+				.UseMappingSchema(_personFilterSchema)
+				.UseInterceptor(new UnkeyedTenantLimitInterceptor(kind, tenant)));
+
+			using var admin   = Create(null);
 			using var tenant2 = Create(2);
 			using var tenant3 = Create(3);
 
+			if (adminFirst)
+				ShouldReturnIds(admin, ExpectedIds(), "admin first");
+
+			ShouldReturnIds(tenant2, ExpectedIds(2), "tenant 2");
+			ShouldReturnIds(admin,   ExpectedIds(),  "admin");
+			ShouldReturnIds(tenant3, ExpectedIds(3), "tenant 3 after admin");
+		}
+
+		// The same for a compiled query, which applies the query filter stage only.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
+		public void QueryExpression_WithoutCacheKey_ConditionalRewriteNotShared_CompiledQuery(
+			[IncludeDataSources(true, TestProvName.AllSQLite)] string context,
+			[Values]                                           bool   adminFirst)
+		{
+			Query.ClearCaches();
+
+			IDataContext Create(int? tenant) => GetDataContext(context, o => o
+				.UseMappingSchema(_personFilterSchema)
+				.UseInterceptor(new UnkeyedTenantLimitInterceptor(ExpressionKind.QueryFilter, tenant)));
+
+			using var admin   = Create(null);
+			using var tenant2 = Create(2);
+			using var tenant3 = Create(3);
+
+			if (adminFirst)
+				ShouldReturnIds(_compiledPersons(admin), ExpectedIds(), "admin first");
+
 			ShouldReturnIds(_compiledPersons(tenant2), ExpectedIds(2), "tenant 2");
-			ShouldReturnIds(_compiledPersons(tenant3), ExpectedIds(3), "tenant 3");
-			ShouldReturnIds(_compiledPersons(tenant2), ExpectedIds(2), "tenant 2 again");
+			ShouldReturnIds(_compiledPersons(admin),   ExpectedIds(),  "admin");
+			ShouldReturnIds(_compiledPersons(tenant3), ExpectedIds(3), "tenant 3 after admin");
+		}
+
+		// Contexts alternating on one compiled query that need different queries for it: each keeps its own built query
+		// instead of rebuilding on every switch.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
+		public void QueryExpression_WithoutCacheKey_CompiledQueryAlternatingContexts([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			Query.ClearCaches();
+
+			IDataContext Create(int? tenant) => GetDataContext(context, o => o
+				.UseMappingSchema(_personFilterSchema)
+				.UseInterceptor(new UnkeyedTenantLimitInterceptor(ExpressionKind.QueryFilter, tenant)));
+
+			using var admin   = Create(null);
+			using var tenant2 = Create(2);
+
+			var adminInfo  = _compiledPersons(admin).GetCompiledQueryInfo();
+			var tenantInfo = _compiledPersons(tenant2).GetCompiledQueryInfo();
+
+			adminInfo.ShouldNotBeSameAs(tenantInfo);
+
+			for (var i = 0; i < 3; i++)
+			{
+				var adminQuery  = _compiledPersons(admin);
+				var tenantQuery = _compiledPersons(tenant2);
+
+				adminQuery.GetCompiledQueryInfo().ShouldBeSameAs(adminInfo, $"admin, round {i}");
+				tenantQuery.GetCompiledQueryInfo().ShouldBeSameAs(tenantInfo, $"tenant 2, round {i}");
+
+				ShouldReturnIds(adminQuery,  ExpectedIds(),  $"admin, round {i}");
+				ShouldReturnIds(tenantQuery, ExpectedIds(2), $"tenant 2, round {i}");
+			}
+
+			// with an argument: the query the tenant finds among the others its context needs reads it as well
+			foreach (var minId in new[] { 2, 1, 3 })
+			{
+				ShouldReturnIds(_compiledPersonsFrom(admin,   minId), ExpectedIds().Where(id => id >= minId).ToArray(),  $"admin from {minId}");
+				ShouldReturnIds(_compiledPersonsFrom(tenant2, minId), ExpectedIds(2).Where(id => id >= minId).ToArray(), $"tenant 2 from {minId}");
+			}
+		}
+
+		// The same with a [SqlQueryDependent] argument, which selects the query by value: a query the tenant needs for one
+		// value must not serve it for another.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
+		public void QueryExpression_WithoutCacheKey_CompiledQueryAlternatingContexts_DependentArgument([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			Query.ClearCaches();
+
+			IDataContext Create(int? tenant) => GetDataContext(context, o => o
+				.UseMappingSchema(_personLowHighFilterSchema)
+				.UseInterceptor(new UnkeyedTenantLimitInterceptor(ExpressionKind.QueryFilter, tenant)));
+
+			using var admin   = Create(null);
+			using var tenant3 = Create(3);
+
+			IQueryable<Person> Ignoring(IDataContext db, string key) => _compiledPersonsIgnoring(db, [key]);
+
+			var low  = ExpectedIds(2);
+			var high = ExpectedIds().Where(id => id >= 3).ToArray();
+
+			for (var i = 0; i < 2; i++)
+			{
+				ShouldReturnIds(Ignoring(admin,   "high"), low,  $"admin, low, round {i}");
+				ShouldReturnIds(Ignoring(admin,   "low"),  high, $"admin, high, round {i}");
+				ShouldReturnIds(Ignoring(tenant3, "low"),  high.Where(id => id <= 3).ToArray(), $"tenant 3, high, round {i}");
+				ShouldReturnIds(Ignoring(tenant3, "high"), low,  $"tenant 3, low, round {i}");
+			}
+		}
+
+		// The same IQueryable executed after its interceptor was replaced by another instance of the same type, without
+		// IInterceptorCacheKey, which rewrites where the first one did not.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
+		public void QueryExpression_SameQueryable_InstanceReplacedWithoutCacheKey(
+			[IncludeDataSources(false, TestProvName.AllSQLite)]                                      string         context,
+			[Values(ExpressionKind.Query, ExpressionKind.ExposedQuery, ExpressionKind.QueryFilter)] ExpressionKind kind,
+			[Values]                                                                                 bool           viaDataContext)
+		{
+			Query.ClearCaches();
+
+			using IDataContext db = viaDataContext
+				? CreateFilteredDataContext(context)
+				: GetDataConnection(context, o => o.UseMappingSchema(_personFilterSchema));
+
+			var unchanged = new UnkeyedTenantLimitInterceptor(kind, null);
+			var limiting  = new UnkeyedTenantLimitInterceptor(kind, 2);
+			var query     = db.GetTable<Person>();
+
+			db.AddInterceptor(unchanged);
+
+			ShouldReturnIds(query, ExpectedIds(), "unchanged");
+
+			db.RemoveInterceptor(unchanged);
+			db.AddInterceptor(limiting);
+
+			ShouldReturnIds(query, ExpectedIds(2), "replaced");
+		}
+
+		// The same IQueryable executed again keeps its query while an interceptor without IInterceptorCacheKey leaves it
+		// unchanged, and not once the interceptor rewrites it.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
+		public void QueryExpression_SameQueryable_WithoutCacheKey_KeepsQueryUntilRewritten(
+			[IncludeDataSources(false, TestProvName.AllSQLite)]                  string         context,
+			[Values(ExpressionKind.Query, ExpressionKind.ExposedQuery)]         ExpressionKind kind,
+			[Values]                                                             bool           viaDataContext)
+		{
+			Query.ClearCaches();
+
+			using IDataContext db = viaDataContext
+				? new DataContext(new DataOptions().UseConfiguration(context))
+				: GetDataConnection(context);
+
+			var unchanged = new UnkeyedTenantLimitInterceptor(kind, null);
+			var query     = db.GetTable<Person>();
+
+			db.AddInterceptor(unchanged);
+
+			ShouldReturnIds(query, ExpectedIds(), "first");
+
+			var info = query.GetCompiledQueryInfo();
+
+			ShouldReturnIds(query, ExpectedIds(), "again");
+
+			query.GetCompiledQueryInfo().ShouldBeSameAs(info, "kept");
+
+			db.RemoveInterceptor(unchanged);
+			db.AddInterceptor(new UnkeyedTenantLimitInterceptor(kind, 2));
+
+			ShouldReturnIds(query, ExpectedIds(2), "rewritten");
+		}
+
+		// Each stage of an interceptor without IInterceptorCacheKey runs once per execution, and a rewrite it returns is used,
+		// also when the IQueryable executed again kept its query.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
+		public void QueryExpression_WithoutCacheKey_StagesRunOncePerExecution(
+			[IncludeDataSources(false, TestProvName.AllSQLite)]          string         context,
+			[Values(ExpressionKind.Query, ExpressionKind.ExposedQuery)] ExpressionKind kind,
+			[Values]                                                     bool           sameQueryable)
+		{
+			Query.ClearCaches();
+
+			using var db = GetDataConnection(context);
+
+			var interceptor = new ArmOnceInterceptor(kind);
+			var query       = db.GetTable<Person>();
+
+			db.AddInterceptor(interceptor);
+
+			ShouldReturnIds(query, ExpectedIds(), "unarmed");
+
+			interceptor.Armed = true;
+
+			var calls = interceptor.Calls;
+
+			ShouldReturnIds(sameQueryable ? query : db.GetTable<Person>(), ExpectedIds(2), "armed");
+
+			(interceptor.Calls - calls).ShouldBe(1, "stage calls");
+		}
+
+		// The IQueryable a compiled query returns, executed again after the context's query interceptor changed: one of
+		// another type added, or the instance replaced by another of the same type, without IInterceptorCacheKey, that
+		// rewrites where the first one did not.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
+		public void QueryExpression_SameCompiledQueryable_InterceptorChanged(
+			[IncludeDataSources(false, TestProvName.AllSQLite)] string context,
+			[Values]                                            bool   sameType,
+			[Values]                                            bool   viaDataContext)
+		{
+			Query.ClearCaches();
+
+			using IDataContext db = viaDataContext
+				? CreateFilteredDataContext(context)
+				: GetDataConnection(context, o => o.UseMappingSchema(_personFilterSchema));
+
+			var unchanged = new UnkeyedTenantLimitInterceptor(ExpressionKind.QueryFilter, null);
+
+			if (sameType)
+				db.AddInterceptor(unchanged);
+
+			var query = _compiledPersonsFrom(db, 2);
+
+			int[] Expected(int limit) => ExpectedIds(limit)
+				.Where(id => id >= 2)
+				.ToArray();
+
+			ShouldReturnIds(query, Expected(int.MaxValue), "before");
+
+			if (sameType)
+				db.RemoveInterceptor(unchanged);
+
+			db.AddInterceptor(new UnkeyedTenantLimitInterceptor(ExpressionKind.QueryFilter, 3));
+
+			ShouldReturnIds(query, Expected(3), "after");
 		}
 
 		/// <summary>
-		/// Leaves every expression unchanged and counts the query filters it is asked to rewrite.
+		/// Leaves every expression unchanged and counts the query filters it is asked to rewrite. Declares
+		/// <see cref="IInterceptorCacheKey"/>, so its rewrites are trusted to depend on its type and key only.
 		/// </summary>
-		sealed class FilterCallCounter : IQueryExpressionInterceptor
+		sealed class FilterCallCounter : IQueryExpressionInterceptor, IInterceptorCacheKey
 		{
+			public string? CacheKey => null;
+
 			public int QueryFilterCalls { get; private set; }
 
 			public Expression ProcessExpression(Expression expression, QueryExpressionArgs args)
@@ -1714,7 +2196,8 @@ namespace Tests.Data
 			}
 		}
 
-		// An interceptor that leaves the query filters unchanged sees them when the query is built, not on every cache hit.
+		// An interceptor with IInterceptorCacheKey that leaves the query filters unchanged sees them when the query is built,
+		// not on every cache hit.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
 		public void QueryExpression_UnchangedQueryFilter_NotReevaluatedOnCacheHit([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
@@ -1734,19 +2217,20 @@ namespace Tests.Data
 			counter.QueryFilterCalls.ShouldBe(1);
 		}
 
-		// The same IQueryable executed while an interceptor is added and removed: the query it keeps and its own tree must
-		// not outlive the change.
+		// The same IQueryable executed while an interceptor is added and removed, with the query cache on or off: the query it
+		// keeps and its own tree must not outlive the change.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
 		public void QueryExpression_SameQueryableAcrossAddAndRemove(
 			[IncludeDataSources(false, TestProvName.AllSQLite)]                                      string         context,
 			[Values(ExpressionKind.Query, ExpressionKind.ExposedQuery, ExpressionKind.QueryFilter)] ExpressionKind kind,
-			[Values]                                                                                 bool           viaDataContext)
+			[Values]                                                                                 bool           viaDataContext,
+			[Values]                                                                                 bool           disableQueryCache)
 		{
 			Query.ClearCaches();
 
 			IDataContext Create() => viaDataContext
-				? CreateFilteredDataContext(context)
-				: GetDataConnection(context, o => o.UseMappingSchema(_personFilterSchema));
+				? CreateFilteredDataContext(context, disableQueryCache)
+				: GetDataConnection(context, o => o.UseMappingSchema(_personFilterSchema).UseDisableQueryCache(disableQueryCache));
 
 			using var db    = Create();
 			using var other = Create();
@@ -1771,7 +2255,8 @@ namespace Tests.Data
 		}
 
 		// An interceptor added inside a UseOptions / UseMappingSchema scope stays registered after it, so the
-		// configuration ID saved at the scope start must not come back.
+		// configuration ID saved at the scope start must not come back: it would find the query built before the
+		// interceptor, whose query filter has nothing to check again.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
 		public void QueryExpression_AddInterceptorInsideScope(
 			[IncludeDataSources(false, TestProvName.AllSQLite)] string context,
@@ -1793,7 +2278,7 @@ namespace Tests.Data
 			// no query inside the scope: the ID it saved is then the last one computed
 			using (mappingSchemaScope ? db.UseMappingSchema(new MappingSchema()) : db.UseOptions(o => o.UseCommandTimeout(123)))
 			{
-				db.AddInterceptor(new PersonLimitInterceptor(ExpressionKind.ExposedQuery, 2));
+				db.AddInterceptor(new PersonLimitInterceptor(ExpressionKind.QueryFilter, 2));
 			}
 
 			ShouldReturnIds(db,    ExpectedIds(2), "after");

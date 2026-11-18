@@ -39,7 +39,9 @@ namespace LinqToDB.EntityFrameworkCore
 		private static readonly ConstructorInfo TupleConstructor =
 			MemberHelper.ConstructorOf(() => new Tuple<InternalEntityEntry?, bool>(null, false));
 
-		sealed class ExpressionInterceptor : IQueryExpressionInterceptor
+		private static readonly Func<Expression, IDataContext, DbContext?, IModel?, bool, Expression> DefaultTransformFunc = LinqToDBForEFTools.TransformExpression;
+
+		class ExpressionInterceptor : IQueryExpressionInterceptor
 		{
 			private readonly LinqToDBForEFToolsDataConnection _dataConnection;
 			public ExpressionInterceptor(LinqToDBForEFToolsDataConnection dataConnection)
@@ -50,6 +52,17 @@ namespace LinqToDB.EntityFrameworkCore
 			{
 				return _dataConnection.ProcessExpression(expression, args);
 			}
+		}
+
+		// The default implementation's rewrite depends on the EF model, part of the mapping schema; DbContext values
+		// become parameters. A custom implementation or transform function may depend on more.
+		sealed class DefaultExpressionInterceptor : ExpressionInterceptor, IInterceptorCacheKey
+		{
+			public DefaultExpressionInterceptor(LinqToDBForEFToolsDataConnection dataConnection) : base(dataConnection)
+			{
+			}
+
+			string? IInterceptorCacheKey.CacheKey => null;
 		}
 
 		/// <summary>
@@ -80,10 +93,18 @@ namespace LinqToDB.EntityFrameworkCore
 			_transformFunc   = transformFunc;
 			CopyDatabaseProperties();
 
-			AddInterceptor(new ExpressionInterceptor(this));
+			AddInterceptor(IsDefaultTransform(transformFunc)
+				? new DefaultExpressionInterceptor(this)
+				: new ExpressionInterceptor(this));
 
 			if (LinqToDBForEFTools.EnableChangeTracker)
 				AddInterceptor(this);
+		}
+
+		static bool IsDefaultTransform(Func<Expression, IDataContext, DbContext?, IModel?, bool, Expression>? transformFunc)
+		{
+			return transformFunc == null
+				|| (Equals(transformFunc, DefaultTransformFunc) && LinqToDBForEFTools.Implementation.GetType() == typeof(LinqToDBForEFToolsImplDefault));
 		}
 
 		/// <summary>

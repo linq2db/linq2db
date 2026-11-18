@@ -76,6 +76,29 @@ namespace LinqToDB.Internal.Interceptors
 		}
 
 		/// <summary>
+		/// Whether the context has a query interceptor that does not implement <see cref="IInterceptorCacheKey"/>. Its
+		/// rewrites are not trusted to depend on its type and key only, so they are checked again when a query is reused.
+		/// </summary>
+		public static bool HasUntrustedQueryInterceptor(this IDataContext dataContext)
+		{
+			if (dataContext is not IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } interceptor })
+				return false;
+
+			if (interceptor is AggregatedInterceptor<IQueryExpressionInterceptor> aggregated)
+			{
+				foreach (var item in aggregated.Interceptors)
+				{
+					if (item is not IInterceptorCacheKey)
+						return true;
+				}
+
+				return false;
+			}
+
+			return interceptor is not IInterceptorCacheKey;
+		}
+
+		/// <summary>
 		/// Adds the registered interceptors that take part in query translation, so that a query cached for one context
 		/// is not reused by a context with other translation interceptors: their types, and the
 		/// <see cref="IInterceptorCacheKey.CacheKey"/> of those that implement it. Not instances: per-context instances of

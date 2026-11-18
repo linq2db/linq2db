@@ -82,10 +82,23 @@ namespace LinqToDB.Internal.Linq
 			if (!result)
 				return false;
 
-			var runtimeExpressions = new RuntimeExpressionsContainer(expressions.MainExpression);
+			return Revalidate(dataContext, expressions.MainExpression, compiledParameters: null, out matchedQueryExpressions);
+		}
+
+		/// <summary>
+		/// The part of <see cref="Compare"/> that does not follow from the main expression: re-evaluates the dynamic
+		/// expression accessors for <paramref name="dataContext"/> and runs the value comparisons. On success returns the
+		/// expressions to run the query with.
+		/// </summary>
+		/// <param name="compiledParameters">Arguments of a compiled query; <see langword="null"/> otherwise.</param>
+		internal bool Revalidate(IDataContext dataContext, Expression mainExpression, object?[]? compiledParameters, [NotNullWhen(true)] out IQueryExpressions? matchedQueryExpressions)
+		{
+			bool result;
+
+			var runtimeExpressions = new RuntimeExpressionsContainer(mainExpression);
 			matchedQueryExpressions = runtimeExpressions;
 
-			if (CompareInfo.DynamicAccessors != null)
+			if (CompareInfo!.DynamicAccessors != null)
 			{
 				List<(int, Expression)>? testedExpressions = null;
 
@@ -113,8 +126,8 @@ namespace LinqToDB.Internal.Linq
 			{
 				foreach (var (main, other) in CompareInfo.ComparisionFunctions)
 				{
-					var value1 = main(matchedQueryExpressions, dataContext, null);
-					var value2 = other(matchedQueryExpressions, dataContext, null);
+					var value1 = main(matchedQueryExpressions, dataContext, compiledParameters);
+					var value2 = other(matchedQueryExpressions, dataContext, compiledParameters);
 					result = ExpressionEqualityComparer.CompareValues(value1, value2);
 
 					if (!result)

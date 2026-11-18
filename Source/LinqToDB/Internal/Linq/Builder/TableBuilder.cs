@@ -143,14 +143,15 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (builder.DataContext is IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } interceptor })
 				{
 					var exposedFilter = filteredExpression;
-					var rewritten     = interceptor.ProcessExpression(exposedFilter, new QueryExpressionArgs(builder.DataContext, exposedFilter, QueryExpressionArgs.ExpressionKind.QueryFilter));
 
 					// The interceptor instance is not part of the cache key, so a rewrite is registered as a dynamic accessor: a
 					// cache hit runs the executing context's interceptor on the same filters again and compares the result.
-					// An interceptor that leaves the filters unchanged costs nothing.
-					if (!ReferenceEquals(rewritten, exposedFilter))
+					// An interceptor with IInterceptorCacheKey that leaves the filters unchanged costs nothing; one without it
+					// may rewrite them for another instance of its type.
+					if (builder.DataContext.HasUntrustedQueryInterceptor()
+						|| !ReferenceEquals(interceptor.ProcessExpression(exposedFilter, new QueryExpressionArgs(builder.DataContext, exposedFilter, QueryExpressionArgs.ExpressionKind.QueryFilter)), exposedFilter))
 					{
-						filteredExpression = builder.ParametersContext.RegisterDynamicExpressionAccessor(tableExpression, builder.DataContext, mappingSchema, (dc, _) =>
+						filteredExpression = builder.ParametersContext.RegisterDynamicExpressionAccessor(GetFilterAccessorKey(tableExpression, activeFilters), builder.DataContext, mappingSchema, (dc, _) =>
 							dc is IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } current }
 								? current.ProcessExpression(exposedFilter, new QueryExpressionArgs(dc, exposedFilter, QueryExpressionArgs.ExpressionKind.QueryFilter))
 								: exposedFilter);
@@ -167,7 +168,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					activeKeys.Add(entry.FilterKey);
 
 				// Closure should capture mappingSchema, entityType and tableExpression only. Used in EqualsToVisitor
-				filteredExpression = builder.ParametersContext.RegisterDynamicExpressionAccessor(tableExpression, builder.DataContext, mappingSchema, (dc, ms) =>
+				filteredExpression = builder.ParametersContext.RegisterDynamicExpressionAccessor(GetFilterAccessorKey(tableExpression, activeFilters), builder.DataContext, mappingSchema, (dc, ms) =>
 				{
 					var ed = ms.GetEntityDescriptor(entityType, dc.Options.ConnectionOptions.OnEntityDescriptorCreated);
 
@@ -210,6 +211,20 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			return filteredExpression;
+		}
+
+		// References to one table can differ by their active filter set (IgnoreFilters with keys), which gives another filter
+		// chain, so the set is part of the key of the dynamic accessor registered for a reference.
+		static Expression GetFilterAccessorKey(Expression tableExpression, List<EntityQueryFilter> activeFilters)
+		{
+			var items = new Expression[activeFilters.Count + 1];
+
+			items[0] = Expression.Convert(tableExpression, typeof(object));
+
+			for (var i = 0; i < activeFilters.Count; i++)
+				items[i + 1] = Expression.Constant(activeFilters[i].FilterKey, typeof(object));
+
+			return Expression.NewArrayInit(typeof(object), items);
 		}
 
 		// Builds the Where-lambda for a single query filter: substitutes the data-context parameter with the

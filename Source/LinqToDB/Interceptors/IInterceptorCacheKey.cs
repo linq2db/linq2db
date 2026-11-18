@@ -1,10 +1,16 @@
 ﻿namespace LinqToDB.Interceptors
 {
 	/// <summary>
-	/// Implemented by a query translation interceptor, such as <see cref="IQueryExpressionInterceptor"/>, whose
-	/// instances of one type translate queries differently. A query translated for one context is reused by another
-	/// context only when their interceptors are of the same types and return equal keys.
+	/// Implemented by a query translation interceptor, such as <see cref="IQueryExpressionInterceptor"/>, to declare that
+	/// its instances translate queries alike when they return equal keys. A query translated for one context is then
+	/// reused for another context whose interceptors are of the same types and return equal keys, without checking their
+	/// rewrites again.
 	/// </summary>
+	/// <remarks>
+	/// Every distinct key gets its own translated queries in the query cache, so an interceptor returns keys from a small
+	/// set. An <see cref="Internal.Interceptors.IEntityBindingInterceptor"/> that does not implement this interface is treated as translating
+	/// queries alike for all its instances.
+	/// </remarks>
 	public interface IInterceptorCacheKey
 	{
 		/// <summary>
