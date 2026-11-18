@@ -141,7 +141,21 @@ namespace LinqToDB.Internal.Linq.Builder
 				filteredExpression = ExpressionBuilder.ExposeExpression(filteredExpression, builder.DataContext, builder.OptimizationContext, builder.ParameterValues, optimizeConditions: true, compactBinary: true);
 
 				if (builder.DataContext is IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } interceptor })
-					filteredExpression = interceptor.ProcessExpression(filteredExpression, new QueryExpressionArgs(builder.DataContext, filteredExpression, QueryExpressionArgs.ExpressionKind.QueryFilter));
+				{
+					var exposedFilter = filteredExpression;
+					var rewritten     = interceptor.ProcessExpression(exposedFilter, new QueryExpressionArgs(builder.DataContext, exposedFilter, QueryExpressionArgs.ExpressionKind.QueryFilter));
+
+					// The interceptor instance is not part of the cache key, so a rewrite is registered as a dynamic accessor: a
+					// cache hit runs the executing context's interceptor on the same filters again and compares the result.
+					// An interceptor that leaves the filters unchanged costs nothing.
+					if (!ReferenceEquals(rewritten, exposedFilter))
+					{
+						filteredExpression = builder.ParametersContext.RegisterDynamicExpressionAccessor(tableExpression, builder.DataContext, mappingSchema, (dc, _) =>
+							dc is IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } current }
+								? current.ProcessExpression(exposedFilter, new QueryExpressionArgs(dc, exposedFilter, QueryExpressionArgs.ExpressionKind.QueryFilter))
+								: exposedFilter);
+					}
+				}
 			}
 			else
 			{

@@ -84,6 +84,10 @@ namespace LinqToDB
 			if (addToOptions)
 				Options = Options.UseInterceptor(interceptor);
 
+			// translation interceptors are part of the configuration ID
+			if (interceptor.IsTranslationInterceptor())
+				_configurationID = null;
+
 			switch (interceptor)
 			{
 				case ICommandInterceptor          cm: Add(ref _commandInterceptor,          cm); break;
@@ -129,6 +133,9 @@ namespace LinqToDB
 			Options = Options.RemoveInterceptor(interceptor);
 
 			this.RemoveInterceptorImpl(interceptor);
+
+			if (interceptor.IsTranslationInterceptor())
+				_configurationID = null;
 		}
 	}
 }

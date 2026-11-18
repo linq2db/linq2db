@@ -50,6 +50,7 @@ namespace LinqToDB.Internal.Linq
 			SqlOptimizer     = dataContext.GetSqlOptimizer(dataContext.Options);
 			SqlProviderFlags = dataContext.SqlProviderFlags;
 			DataOptions      = dataContext.Options;
+			ConfigurationID  = dataContext.ConfigurationID;
 		}
 
 		#endregion
@@ -64,6 +65,10 @@ namespace LinqToDB.Internal.Linq
 		internal readonly ISqlOptimizer    SqlOptimizer;
 		internal readonly SqlProviderFlags SqlProviderFlags;
 		internal readonly DataOptions      DataOptions;
+		/// <summary>
+		/// Configuration ID of the context the query was built for.
+		/// </summary>
+		internal readonly int              ConfigurationID;
 
 		protected internal bool Compare(IDataContext dataContext, IQueryExpressions expressions, [NotNullWhen(true)] out IQueryExpressions? matchedQueryExpressions)
 		{

@@ -174,7 +174,16 @@ namespace LinqToDB.Internal.Linq
 					// therefore on every execution. Keying the cache on the pre-interception tree would let a hit
 					// skip the rewrite, but only by retaining both trees - one to match on, one to run.
 					if (dataContext is IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } interceptor })
-						expr = interceptor.ProcessExpression(expr, new QueryExpressionArgs(dataContext, expr, QueryExpressionArgs.ExpressionKind.Query));
+					{
+						var intercepted = interceptor.ProcessExpression(expr, new QueryExpressionArgs(dataContext, expr, QueryExpressionArgs.ExpressionKind.Query));
+
+						// the rewritten tree belongs to the current interceptors: an IQueryable must not keep it in place
+						// of its own tree, nor the query built for it
+						if (!ReferenceEquals(intercepted, expr))
+							dependsOnParameters = true;
+
+						expr = intercepted;
+					}
 				}
 
 				dataOptions = dataContext.Options;

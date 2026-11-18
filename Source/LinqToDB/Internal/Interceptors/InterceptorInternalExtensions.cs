@@ -1,6 +1,7 @@
 ﻿using System;
 
 using LinqToDB.Interceptors;
+using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Internal.Interceptors
 {
@@ -62,6 +63,61 @@ namespace LinqToDB.Internal.Interceptors
 					break;
 				default:
 					throw new InvalidOperationException($"AddInterceptor for '{typeof(T).Name}' is not implemented.");
+			}
+		}
+
+		/// <summary>
+		/// Whether the interceptor takes part in query translation, so that registering or removing it changes the
+		/// context configuration ID.
+		/// </summary>
+		public static bool IsTranslationInterceptor(this IInterceptor interceptor)
+		{
+			return interceptor is IQueryExpressionInterceptor or IEntityBindingInterceptor;
+		}
+
+		/// <summary>
+		/// Adds the registered interceptors that take part in query translation, so that a query cached for one context
+		/// is not reused by a context with other translation interceptors: their types, and the
+		/// <see cref="IInterceptorCacheKey.CacheKey"/> of those that implement it. Not instances: per-context instances of
+		/// one interceptor type keep sharing cached queries.
+		/// </summary>
+		public static IdentifierBuilder AddTranslationInterceptors(this IdentifierBuilder builder, IInterceptable interceptable)
+		{
+			Add(builder, (interceptable as IInterceptable<IQueryExpressionInterceptor>)?.Interceptor);
+			Add(builder, (interceptable as IInterceptable<IEntityBindingInterceptor>)?.Interceptor);
+
+			return builder;
+
+			static void Add<T>(IdentifierBuilder builder, T? interceptor)
+				where T : class, IInterceptor
+			{
+				if (interceptor is AggregatedInterceptor<T> aggregated)
+				{
+					foreach (var item in aggregated.Interceptors)
+					{
+						AddInterceptor(builder, item);
+					}
+				}
+				else
+				{
+					AddInterceptor(builder, interceptor);
+				}
+			}
+
+			static void AddInterceptor(IdentifierBuilder builder, IInterceptor? interceptor)
+			{
+				builder.Add(interceptor?.GetType());
+
+				if (interceptor is IInterceptorCacheKey cacheKey)
+				{
+					var key = cacheKey.CacheKey;
+
+					// the length first: a key that contains the segment separator cannot then read as further segments
+					builder.Add(key?.Length ?? -1);
+
+					if (key != null)
+						builder.Add(key);
+				}
 			}
 		}
 

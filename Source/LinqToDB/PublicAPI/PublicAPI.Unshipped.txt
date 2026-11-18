@@ -56,6 +56,8 @@
 *REMOVED*virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.Convert(LinqToDB.Internal.SqlProvider.OptimizationContext! optimizationContext, LinqToDB.Internal.SqlQuery.NullabilityContext! nullabilityContext, LinqToDB.Internal.SqlQuery.IQueryElement! element, bool visitQueries) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 *REMOVED*virtual LinqToDB.Internal.SqlProvider.SqlExpressionOptimizerVisitor.Optimize(LinqToDB.Internal.SqlQuery.EvaluationContext! evaluationContext, LinqToDB.Internal.SqlQuery.NullabilityContext! nullabilityContext, LinqToDB.Internal.SqlQuery.Visitors.SqlQueryVisitor.IVisitorTransformationInfo? transformationInfo, LinqToDB.DataOptions! dataOptions, LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.Internal.SqlQuery.IQueryElement! element, bool visitQueries, bool reducePredicates) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 abstract LinqToDB.Internal.DataProvider.DB2.DB2DmlService.Version.get -> LinqToDB.DataProvider.DB2.DB2Version
+LinqToDB.Interceptors.IInterceptorCacheKey
+LinqToDB.Interceptors.IInterceptorCacheKey.CacheKey.get -> string?
 LinqToDB.Internal.DataProvider.BasicDmlService
 LinqToDB.Internal.DataProvider.BasicDmlService.BasicDmlService() -> void
 LinqToDB.Internal.DataProvider.DB2.DB2DmlService

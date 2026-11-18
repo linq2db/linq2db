@@ -332,6 +332,7 @@ namespace LinqToDB.Remote
 						.Add(_msID = ((IConfigurationID)MappingSchema).ConfigurationID)
 						.Add(Options)
 						.Add(GetType())
+						.AddTranslationInterceptors(this)
 						.CreateID();
 				}
 
@@ -777,8 +778,6 @@ namespace LinqToDB.Remote
 			if (((IConfigurationID)prevOptions).ConfigurationID == ((IConfigurationID)newOptions).ConfigurationID)
 				return null;
 
-			var configurationID = _configurationID;
-
 			Options          = newOptions;
 			_configurationID = null;
 
@@ -787,7 +786,8 @@ namespace LinqToDB.Remote
 			action += () =>
 			{
 				Options          = prevOptions;
-				_configurationID = configurationID;
+				// not restored: an interceptor added or removed inside the scope changes it
+				_configurationID = null;
 			};
 
 			return new DisposableAction(action);
@@ -796,15 +796,15 @@ namespace LinqToDB.Remote
 		/// <inheritdoc cref="IDataContext.UseMappingSchema"/>
 		public IDisposable? UseMappingSchema(MappingSchema mappingSchema)
 		{
-			var oldSchema       = MappingSchema;
-			var configurationID = _configurationID;
+			var oldSchema = MappingSchema;
 
 			AddMappingSchema(mappingSchema);
 
 			return new DisposableAction(() =>
 			{
 				((IDataContext)this).SetMappingSchema(oldSchema);
-				_configurationID = configurationID;
+				// not restored: an interceptor added or removed inside the scope changes it
+				_configurationID = null;
 			});
 		}
 	}

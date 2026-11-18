@@ -30,6 +30,10 @@ namespace LinqToDB.Data
 			CheckAndThrowOnDisposed();
 
 			this.AddInterceptorImpl(interceptor);
+
+			// translation interceptors are part of the configuration ID
+			if (interceptor.IsTranslationInterceptor())
+				_configurationID = null;
 		}
 
 		public Action<IInterceptor>? OnRemoveInterceptor { get; set; }
@@ -40,6 +44,10 @@ namespace LinqToDB.Data
 			CheckAndThrowOnDisposed();
 
 			this.RemoveInterceptorImpl(interceptor);
+
+			if (interceptor.IsTranslationInterceptor())
+				_configurationID = null;
+
 			OnRemoveInterceptor?.Invoke(interceptor);
 		}
 	}

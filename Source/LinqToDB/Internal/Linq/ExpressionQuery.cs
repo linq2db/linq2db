@@ -98,7 +98,11 @@ namespace LinqToDB.Internal.Linq
 
 			if (cache && Info != null)
 			{
-				return Info;
+				// the context configuration (interceptors included) may have changed since the query was kept
+				if (Info.ConfigurationID == DataContext.ConfigurationID)
+					return Info;
+
+				Info = null;
 			}
 
 			var info = Query<T>.GetQuery(DataContext, ref expression, out dependsOnParameters);
