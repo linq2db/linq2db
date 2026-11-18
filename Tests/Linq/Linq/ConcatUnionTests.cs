@@ -3179,6 +3179,7 @@ namespace Tests.Linq
 		// A set operation over FROM-less selects yields one row per branch. Taken for a single row, the joined union
 		// becomes a scalar subquery, which returns the first branch only or fails at runtime.
 		[Test]
+		[ThrowsCannotBeConverted(TestProvName.AllNativeAccess, TestProvName.AllYdb)]
 		public void SelectManyDefaultIfEmptyOverFromlessUnionKeepsAllRows([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -3202,6 +3203,9 @@ namespace Tests.Linq
 		// Each branch of a correlated set operation contributes its own row. Lifting the first branch's correlated
 		// column into the parent replaces every branch's value with it. The union stays correlated, so it needs APPLY.
 		[Test]
+		[ThrowsForProvider("FirebirdSql.Data.FirebirdClient.FbException", ProviderName.Firebird4, ErrorMessage = "no current record for fetch operation")]
+		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative, ErrorMessage = "SET operator in LATERAL")]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, ErrorMessage = "SET operator in LATERAL")]
 		public void SelectManyOverCorrelatedFromlessUnionKeepsEachBranchValue([IncludeDataSources(TestProvName.WithApplyJoin)] string context)
 		{
 			using var db = GetDataContext(context);

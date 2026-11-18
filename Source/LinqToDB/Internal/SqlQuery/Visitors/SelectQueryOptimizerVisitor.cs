@@ -2857,11 +2857,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		// operation, and either no FROM, an aggregate without GROUP BY, or a single source that never comes back empty.
 		static bool IsNeverEmpty(SelectQuery query)
 		{
-			if (query.HasWhere || query.HasHaving || query.HasGroupBy || query.HasSetOperators
-				|| query.Select.SkipValue != null || query.Select.TakeValue != null)
-			{
+			if (query.HasWhere || query.HasHaving || query.HasGroupBy || query.HasSetOperators || query.IsLimited)
 				return false;
-			}
 
 			if (QueryHelper.IsAggregationQuery(query))
 				return true;
@@ -2875,8 +2872,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		}
 
 		// An expression of the source that is never NULL on a row the source returns: a non-nullable field, or a
-		// non-nullable column of a subquery - added as a constant when the subquery has none.
-		static ISqlExpression? GetNotNullMarker(ISqlTableSource source)
+		// subquery column referencing one - projected from the subquery's main source when it has none. A constant
+		// column is the last resort: Access and Oracle 11 do not NULL-extend a constant of an outer-joined subquery.
+		ISqlExpression? GetNotNullMarker(ISqlTableSource source)
 		{
 			switch (source)
 			{
@@ -2890,9 +2888,25 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 					foreach (var column in query.Select.Columns)
 					{
-						if (!column.Expression.CanBeNullable(nullabilityContext))
+						if (QueryHelper.UnwrapNullablity(column.Expression) is SqlField or SqlColumn
+							&& !column.Expression.CanBeNullable(nullabilityContext))
+						{
 							return column;
+						}
 					}
+
+					// a new column must not change the rows: no DISTINCT, grouping or aggregate, and every row has to
+					// come with a row of the main source
+					if (!query.IsDistinct && !query.HasGroupBy && !QueryHelper.IsAggregationQuery(query)
+						&& query.From.Tables is [{ Source: var mainSource } mainTable, ..]
+						&& mainTable.Joins.TrueForAll(static j => j.JoinType is not (JoinType.Full or JoinType.Right or JoinType.FullApply or JoinType.RightApply))
+						&& GetNotNullMarker(mainSource) is { } sourceMarker)
+					{
+						return query.Select.AddNewColumn(sourceMarker);
+					}
+
+					if (_providerFlags.IsAccessBuggyLeftJoinConstantNullability)
+						return null;
 
 					return query.Select.AddNewColumn(new SqlValue(1));
 				}
@@ -3738,7 +3752,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return true;
 
 			// a query without FROM yields at most one row, whatever its column count (#6326)
-			if (selectQuery.Select.From.Tables.Count == 0)
+			if (selectQuery.HasNoTables)
 				return true;
 
 			if (selectQuery.HasWhere)
@@ -4081,6 +4095,20 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					}
 				}
 
+			}
+
+			// a never-empty FROM-less query without an aggregate is exactly one row: its columns are the expressions
+			// themselves, no subquery needed (Access rejects a FROM-less subquery)
+			if (join.Condition.IsTrue && joinQuery.HasNoTables && IsNeverEmpty(joinQuery) && !QueryHelper.IsAggregationQuery(joinQuery))
+			{
+				foreach (var column in joinQuery.Select.Columns)
+				{
+					NotifyReplaced(column.Expression, column);
+				}
+
+				isModified = true;
+
+				return true;
 			}
 
 			// moving whole join to subquery

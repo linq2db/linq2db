@@ -330,6 +330,8 @@ namespace Tests.Linq
 		// inlined where APPLY is unsupported: as a plain LEFT JOIN it would reference those sources out of scope. Without
 		// AsSubQuery it is inlined everywhere.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6326")]
+		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative, ErrorMessage = "SET operator in LATERAL")]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, ErrorMessage = "SET operator in LATERAL")]
 		public void CorrelatedSelectQueryDefaultIfEmpty([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
