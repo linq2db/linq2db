@@ -155,7 +155,7 @@ namespace Tests.DataProvider
 
 			// test select (not really as it is broken badly in provider)
 			// IsDBNull fails with exception, so we cannot fix it easily
-			Assert.Throws<OverflowException>(() => tb.Single());
+			Assert.That(() => tb.Single(), Throws.TypeOf<OverflowException>());
 			//var records = tb.OrderBy(_ => _.Id).ToArray();
 			//Assert.AreEqual(1, records[0].Id);
 			//Assert.AreEqual(value1, records[0].Decimal);
@@ -181,7 +181,7 @@ namespace Tests.DataProvider
 
 			// test select (not really as it is broken badly in provider)
 			// IsDBNull fails with exception, so we cannot fix it easily
-			Assert.Throws<OverflowException>(() => tb.Single());
+			Assert.That(() => tb.Single(), Throws.TypeOf<OverflowException>());
 			//var records = tb.OrderBy(_ => _.Id).ToArray();
 			//Assert.AreEqual(1, records[0].Id);
 			//Assert.AreEqual(value1, records[0].Decimal);
@@ -194,7 +194,7 @@ namespace Tests.DataProvider
 			tb.Delete();
 			db.BulkCopy(new BulkCopyOptions() { BulkCopyType = bulkCopyType }, new[] { testRecord1, testRecord2 });
 
-			Assert.Throws<OverflowException>(() => tb.Single());
+			Assert.That(() => tb.Single(), Throws.TypeOf<OverflowException>());
 			//records = tb.OrderBy(_ => _.Id).ToArray();
 			//Assert.AreEqual(1, records[0].Id);
 			//Assert.AreEqual(value1, records[0].Decimal);

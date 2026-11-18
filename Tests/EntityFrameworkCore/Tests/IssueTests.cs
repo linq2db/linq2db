@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -1092,6 +1093,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5364")]
+		[NoBaselines("connection-leak stress: 300 identical commands")]
 		public void TestImplicitConnectionManagement([EFDataSources] string provider, [Values] ImplicitLeakPath path)
 		{
 			// Reproduces #5364 for every implicit ToLinqToDB() entry point that creates a linq2db
@@ -1100,7 +1102,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			// (default 100) the next command throws. After the fix each path sets CloseAfterUse, so the
 			// connection is released per command.
 			// Baseline capture is disabled: the loop emits 300 identical statements with no diagnostic value.
-			using var noBaseline = new DisableBaseline("connection-leak stress: 300 identical commands");
 
 			var contexts = new List<IssueContextBase>();
 
@@ -1338,12 +1339,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5976")]
 		public void Issue5976_ConcatConvertedDates(
-#if NET8_0
-			// EF8 registers the NodaTime plugin process-wide, so useNodaTime: false cannot keep #5981 out
-			[EFDataSources(TestProvName.AllPostgreSQL)] string provider)
-#else
 			[EFDataSources] string provider)
-#endif
 		{
 			using var ctx = CreateContext(provider, useNodaTime: false);
 			Issue5975Seed(ctx);
@@ -1385,6 +1381,346 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			rows[0].FromDate.ShouldBe(Issue5975Stored);
 			rows[1].FromDate.ShouldBeNull();
+		}
+
+		#endregion
+
+		#region Issue 6181
+
+		static void Issue6181Seed(IssueContextBase ctx)
+		{
+			ctx.Issue6181TableTwos.ToLinqToDBTable().Delete();
+			ctx.Issue6181TableOnes.ToLinqToDBTable().Delete();
+
+			var one = new Issue6181TableOne { Id = 1, Name = "ONE", CreatedOn = Issue5975Stored, ChainedOn = Issue5975Stored, FromDate = Issue5975Stored, ToDate = Issue5975Stored.AddDays(2) };
+
+			ctx.AddRange(
+				one,
+				new Issue6181TableTwo { Id = 1, Code = "TWO", FromDate = Issue5975Stored.AddDays(1),  ToDate = Issue5975Stored.AddDays(3),  OtherDate = Issue5975Stored, ChainedDate = Issue5975Stored.AddDays(1), TableOne = one },
+				new Issue6181TableTwo { Id = 2, Code = "OLD", FromDate = Issue5975Stored.AddDays(-1), ToDate = Issue5975Stored.AddDays(-2), TableOne = one });
+
+			ctx.SaveChanges();
+			ResetChangeTracker(ctx);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void Issue6181_CompareGroupedDateWithNullableDate(
+			[EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider, useNodaTime: false);
+			Issue6181Seed(ctx);
+
+			var query =
+				from t2 in ctx.Issue6181TableTwos
+				join t1 in (
+					from tt1 in ctx.Issue6181TableOnes
+					group tt1 by tt1.Id into g
+					select new
+					{
+						Id           = g.Key,
+						MinCreatedOn = g.Min(x => x.CreatedOn),
+						ToDate       = g.Max(x => x.ToDate),
+					}
+				) on t2.TableOneId equals t1.Id into t1j
+				from t1 in t1j.DefaultIfEmpty()
+				where t2.FromDate >= t1.MinCreatedOn
+				select new
+				{
+					t2.Code,
+					FromDate = (DateTime?)t1.MinCreatedOn,
+					t1.ToDate,
+				};
+
+			var result = query
+				.ToLinqToDB()
+				.ToList()
+				.ShouldHaveSingleItem();
+
+			result.Code.ShouldBe("TWO");
+			result.FromDate.ShouldBe(Issue5975Stored);
+			result.ToDate.ShouldBe(Issue5975Stored.AddDays(2));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void Issue6181_WindowFunctionOrderedByDateComparison(
+			[EFDataSources(TestProvName.AllMySql57)] string provider)
+		{
+			using var ctx = CreateContext(provider, useNodaTime: false);
+			Issue6181Seed(ctx);
+
+			var since = Issue5975Stored.AddDays(-1);
+
+			var query =
+				from t2 in ctx.Issue6181TableTwos
+				join t1 in ctx.Issue6181TableOnes on t2.TableOneId equals t1.Id into t1j
+				from t1 in t1j.DefaultIfEmpty()
+				where t1.Name == "ONE" && t1.CreatedOn >= since
+				select new
+				{
+					t2.TableOneId,
+					t2.Code,
+					t1.CreatedOn,
+					CalculatedBoolProperty = t1.CreatedOn <= t2.ToDate ? false : true,
+				};
+
+			query = query.ToLinqToDB();
+
+			var query2 =
+				from q in query
+				join t1 in ctx.Issue6181TableOnes on q.TableOneId equals t1.Id into t1j
+				from t1 in t1j.DefaultIfEmpty()
+				where q.CreatedOn >= t1.CreatedOn
+				select new
+				{
+					q.TableOneId,
+					q.Code,
+					RowNumValidity = Sql.Ext.RowNumber()
+						.Over()
+						.PartitionBy(q.Code)
+						.OrderBy(t1.Name)
+						.ThenBy(q.CalculatedBoolProperty)
+						.ThenByDesc(t1.FromDate)
+						.ToValue(),
+				};
+
+			query2 = query2.ToLinqToDB();
+
+			var finalQuery =
+				from q in query2
+				where q.RowNumValidity == 1
+				group q by new { q.TableOneId, q.Code } into g
+				select new
+				{
+					g.Key.Code,
+					Count = g.Count(),
+				};
+
+			var results = finalQuery
+				.ToLinqToDB()
+				.ToList()
+				.OrderBy(r => r.Code)
+				.ToList();
+
+			results
+				.Select(r => r.Code)
+				.ShouldBe(["OLD", "TWO"]);
+
+			results
+				.Select(r => r.Count)
+				.ShouldBe([1, 1]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void Issue6181_DelegatingToAnotherConversionIsRefused(
+			[EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider, useNodaTime: false);
+			Issue6181Seed(ctx);
+
+			var query =
+				from t2 in ctx.Issue6181TableTwos
+				join t1 in ctx.Issue6181TableOnes on t2.TableOneId equals t1.Id
+				where t2.OtherDate >= t1.CreatedOn
+				select t2.Code;
+
+			var refusal = string.Format(
+				CultureInfo.InvariantCulture,
+				LinqToDB.Internal.Common.ErrorHelper.Error_ValueConverter_DivergentOperands,
+				nameof(Issue6181TableTwo.OtherDate),
+				nameof(Issue6181TableOne.CreatedOn));
+
+			var compared = () => query
+				.ToLinqToDB()
+				.ToList();
+
+			compared
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain(refusal);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void Issue6181_DelegatingThroughAnUnsetHolderMaps(
+			[EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider, useNodaTime: false);
+			Issue6181Seed(ctx);
+
+			ctx.Issue6181TableTwos
+				.ToLinqToDB()
+				.OrderBy(r => r.Id)
+				.Select(r => r.Code)
+				.ToList()
+				.ShouldBe(["TWO", "OLD"]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void Issue6181_DelegatingToAnOverridingConverterIsRefused(
+			[EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider, useNodaTime: false);
+			Issue6181Seed(ctx);
+
+			var query =
+				from t2 in ctx.Issue6181TableTwos
+				join t1 in ctx.Issue6181TableOnes on t2.TableOneId equals t1.Id
+				where t2.OverriddenDate >= t1.CreatedOn
+				select t2.Code;
+
+			var refusal = string.Format(
+				CultureInfo.InvariantCulture,
+				LinqToDB.Internal.Common.ErrorHelper.Error_ValueConverter_DivergentOperands,
+				nameof(Issue6181TableTwo.OverriddenDate),
+				nameof(Issue6181TableOne.CreatedOn));
+
+			var compared = () => query
+				.ToLinqToDB()
+				.ToList();
+
+			compared
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain(refusal);
+		}
+
+#if !NETFRAMEWORK
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void Issue6181_DelegatingToATypedOverridingConverterIsRefused(
+			[EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider, useNodaTime: false);
+			Issue6181Seed(ctx);
+
+			var query =
+				from t2 in ctx.Issue6181TableTwos
+				join t1 in ctx.Issue6181TableOnes on t2.TableOneId equals t1.Id
+				where t2.TypedOverriddenDate >= t1.CreatedOn
+				select t2.Code;
+
+			var refusal = string.Format(
+				CultureInfo.InvariantCulture,
+				LinqToDB.Internal.Common.ErrorHelper.Error_ValueConverter_DivergentOperands,
+				nameof(Issue6181TableTwo.TypedOverriddenDate),
+				nameof(Issue6181TableOne.CreatedOn));
+
+			var compared = () => query
+				.ToLinqToDB()
+				.ToList();
+
+			compared
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain(refusal);
+		}
+#endif
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void Issue6181_NestedDelegationCompares(
+			[EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider, useNodaTime: false);
+			Issue6181Seed(ctx);
+
+			var query =
+				from t2 in ctx.Issue6181TableTwos
+				join t1 in ctx.Issue6181TableOnes on t2.TableOneId equals t1.Id
+				where t2.ChainedDate >= t1.ChainedOn
+				select t2.Code;
+
+			query
+				.ToLinqToDB()
+				.ToList()
+				.ShouldBe(["TWO"]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void Issue6181_DelegatedArgumentIsEvaluatedOnce(
+			[EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider, useNodaTime: false);
+			Issue6181Seed(ctx);
+
+			Issue6181ShouldEvaluateArgumentOncePerConversion(() => ctx.Issue6181TableTwos
+				.ToLinqToDBTable()
+				.Where(r => r.Id == 1)
+				.Set(r => r.CountedDate, (DateTime?)Issue5975Stored)
+				.Update());
+
+			ctx.Issue6181TableTwos
+				.ToLinqToDB()
+				.Where(r => r.Id == 1)
+				.Select(r => r.CountedDate)
+				.Single()
+				.ShouldBe(Issue5975Stored);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void Issue6181_DelegatedArgumentIsEvaluatedBeforeAConditionalTarget(
+			[EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider, useNodaTime: false);
+			Issue6181Seed(ctx);
+
+			Issue6181ShouldEvaluateArgumentOncePerConversion(() => ctx.Issue6181TableTwos
+				.ToLinqToDBTable()
+				.Where(r => r.Id == 1)
+				.Set(r => r.GatedDate, (DateTime?)Issue5975Stored)
+				.Update());
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void Issue6181_DelegatedUserDefinedConversionIsEvaluatedOnce(
+			[EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider, useNodaTime: false);
+			Issue6181Seed(ctx);
+
+			Issue6181ShouldEvaluateArgumentOncePerConversion(() => ctx.Issue6181TableTwos
+				.ToLinqToDBTable()
+				.Where(r => r.Id == 1)
+				.Set(r => r.CastDate, new Issue6181Stamp(Issue5975Stored))
+				.Update());
+
+			ctx.Issue6181TableTwos
+				.ToLinqToDB()
+				.Where(r => r.Id == 1)
+				.Select(r => r.CastDate)
+				.Single()!
+				.Value
+				.ShouldBe(Issue5975Stored);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void Issue6181_DelegatedFieldArgumentIsReadBeforeTheTarget(
+			[EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider, useNodaTime: false);
+			Issue6181Seed(ctx);
+
+			IssueContextBase.Issue6181WithClock(() => Issue6181ShouldEvaluateArgumentOncePerConversion(() => ctx.Issue6181TableTwos
+				.ToLinqToDBTable()
+				.Where(r => r.Id == 1)
+				.Set(r => r.ClockDate, (DateTime?)Issue5975Stored)
+				.Update()));
+		}
+
+		static void Issue6181ShouldEvaluateArgumentOncePerConversion(Action write)
+		{
+			var counts = new IssueContextBase.Issue6181Counts();
+
+			IssueContextBase.Issue6181Counting.Value = counts;
+
+			try
+			{
+				write();
+			}
+			finally
+			{
+				IssueContextBase.Issue6181Counting.Value = null;
+			}
+
+			counts.Conversions.ShouldBeGreaterThan(0);
+			counts.Arguments.ShouldBe(counts.Conversions);
 		}
 
 		#endregion

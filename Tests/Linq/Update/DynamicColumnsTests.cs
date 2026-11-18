@@ -11,7 +11,6 @@ using Tests.Model;
 namespace Tests.xUpdate
 {
 	[TestFixture]
-	[Order(10000)]
 	public class DynamicColumnsTests : TestBase
 	{
 		// Introduced to ensure that we process not only constants in column names

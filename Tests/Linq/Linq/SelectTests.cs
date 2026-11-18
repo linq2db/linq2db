@@ -302,7 +302,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MutiplySelect12([DataSources(false, TestProvName.AllAccess, TestProvName.AllDB2)] string context)
+		public void MutiplySelect12([DataSources(false, TestProvName.AllNativeAccess, TestProvName.AllDB2)] string context)
 		{
 			using var db = GetDataContext(context);
 			var q =
@@ -1393,7 +1393,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
 		public void SelectWithIndexer([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1407,7 +1407,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
 		public void SelectWithIndexerAfterGroupBy([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1423,7 +1423,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_OrderByRequiredForIndexing)]
-		public void SelectWithIndexerNoOrder([DataSources(TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase)] string context)
+		public void SelectWithIndexerNoOrder([DataSources(TestProvName.AllNativeAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1435,7 +1435,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
 		public void SelectWithIndexerOrderByNulls(
 			[DataSources] string context,
 			[Values(Sql.NullsPosition.First, Sql.NullsPosition.Last)] Sql.NullsPosition nulls,
@@ -1451,6 +1451,29 @@ namespace Tests.Linq
 			var query = ordered
 				.ThenBy(p => p.ID)
 				.Select((p, idx) => new { p.ID, Index = idx })
+				.Where(x => x.Index >= 0);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
+		public void SelectWithIndexerAfterGroupJoin([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// The ordering is placed before the GroupJoin; the index must still be numbered by it.
+			var groupJoin =
+				from p in db.Parent.OrderByDescending(x => x.ParentID)
+				join c in db.Child on p.ParentID equals c.ParentID into cs
+				select new
+				{
+					p.ParentID,
+					Cnt = cs.Count(),
+				};
+
+			var query = groupJoin
+				.Select((x, idx) => new { x.ParentID, Index = idx })
 				.Where(x => x.Index >= 0);
 
 			AssertQuery(query);
@@ -1744,7 +1767,7 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable(SelectExpressionTable.Data);
-			Assert.Throws<InvalidOperationException>(() => table.Take(1).Select(_ => Wrap3(new Guid("b3d9b51c89f9442a893bcd8a6f667d37")) != Wrap3(new Guid("61efdcd4659d41e8910c506a9c2f31c5"))).SingleOrDefault());
+			Assert.That(() => table.Take(1).Select(_ => Wrap3(new Guid("b3d9b51c89f9442a893bcd8a6f667d37")) != Wrap3(new Guid("61efdcd4659d41e8910c506a9c2f31c5"))).SingleOrDefault(), Throws.TypeOf<InvalidOperationException>());
 		}
 
 		[Test]
@@ -1920,7 +1943,7 @@ namespace Tests.Linq
 		public void SequentialAccessTest_CacheKey([DataSources] string context)
 		{
 			// Warm the query cache for this configuration with OptimizeForSequentialAccess OFF (random column-access plan).
-			// Exception: on the SqlServer .SA lane the factory forces the option ON for every context, so the warm-up there
+			// Exception: on the SqlServer.CS lane the factory forces the option ON for every context, so the warm-up there
 			// is already a sequential-access plan and the divergence below is exercised by the other [DataSources] providers.
 			using (var db = GetDataContext(context))
 				AreEqual(InheritanceParent, db.InheritanceParent);

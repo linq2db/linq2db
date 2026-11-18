@@ -21,8 +21,8 @@ namespace Tests.UserTests
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable<T1351Model>();
-			Assert.DoesNotThrow(() => table.Where(_ => _.TestField == 0).ToArray(), "Compare `sbyte`");
-			Assert.DoesNotThrow(() => table.Where(_ => _.TestNullable != 1).ToArray(), "Compare `sbyte?` to non-null");
+			table.Where(_ => _.TestField == 0).ToArray(); // Compare `sbyte`
+			table.Where(_ => _.TestNullable != 1).ToArray(); // Compare `sbyte?` to non-null
 		}
 	}
 }

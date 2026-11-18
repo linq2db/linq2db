@@ -77,7 +77,10 @@ namespace LinqToDB.Internal.Linq.Builder
 						table = lw.RegisterContext as ILoadWithContext;
 				}
 
-				var path = SequenceHelper.PrepareBody(selector, sequence);
+				// ThenLoad's parameter is the previously loaded entity, which belongs to no context (#6207).
+				var path = string.Equals(methodCall.Method.Name, "ThenLoad", StringComparison.Ordinal)
+					? selector.Body
+					: SequenceHelper.PrepareBody(selector, sequence);
 
 				var extractResult = ExtractAssociations(builder, table, path, null);
 

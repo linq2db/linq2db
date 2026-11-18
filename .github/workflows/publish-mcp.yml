@@ -34,8 +34,6 @@ jobs:
   publish:
     name: Publish to MCP Registry
     runs-on: ubuntu-24.04
-    # A prerelease must not claim the registry version. A manual dispatch is always deliberate.
-    if: ${{ github.event_name == 'workflow_dispatch' || !github.event.release.prerelease }}
     timeout-minutes: 40
 
     env:

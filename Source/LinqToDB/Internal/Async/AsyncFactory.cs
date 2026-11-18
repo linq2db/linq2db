@@ -298,7 +298,7 @@ namespace LinqToDB.Internal.Async
 			var valueTaskType = typeof(ValueTask);
 
 			// constructor = <<< new ValueTask(Task task) >>>
-			var constructor = valueTaskType.GetConstructor(new Type[] { taskType })!;
+			var constructor = valueTaskType.GetConstructorEx(new Type[] { taskType })!;
 
 			// return new ValueTask(body);
 			return Expression.New(constructor, body);
@@ -319,7 +319,7 @@ namespace LinqToDB.Internal.Async
 			var valueTaskType = typeof(ValueTask<>).MakeGenericType(dataType);
 
 			// constructor = <<< new ValueTask<TResult>(Task<TResult> task) >>>
-			var constructor = valueTaskType.GetConstructor(new Type[] { taskType })!;
+			var constructor = valueTaskType.GetConstructorEx(new Type[] { taskType })!;
 
 			// return new ValueTask<TResult>(body);
 			return Expression.New(constructor, body);
