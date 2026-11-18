@@ -106,37 +106,37 @@ COMPONENTS
    License: MIT  see [3]
    Copyright © 2017-2026 CirrusRed
 
-19. Microsoft.Bcl.Cryptography net10.0: 9.0.18, net10.0-windows7.0: 9.0.18, net11.0: 9.0.18, net462: 8.0.0, net472: 10.0.15
+19. Microsoft.Bcl.Cryptography net10.0: 9.0.21, net10.0-windows7.0: 9.0.21, net11.0: 9.0.21, net462: 8.0.0, net472: 10.0.15
    https://dot.net/
    License: MIT  see [7]
    © Microsoft Corporation. All rights reserved.
 
-20. Microsoft.CodeAnalysis.Common net10.0: 5.9.0, net10.0-windows7.0: 4.13.0, net11.0: 5.9.0, net472: 5.9.0
+20. Microsoft.CodeAnalysis.Common net10.0: 5.12.0, net10.0-windows7.0: 4.13.0, net11.0: 5.12.0, net472: 5.12.0
    https://github.com/dotnet/roslyn
    License: MIT  see [3]
    © Microsoft Corporation. All rights reserved.
 
-21. Microsoft.CodeAnalysis.CSharp net10.0: 5.9.0, net10.0-windows7.0: 4.13.0, net11.0: 5.9.0, net472: 5.9.0
+21. Microsoft.CodeAnalysis.CSharp net10.0: 5.12.0, net10.0-windows7.0: 4.13.0, net11.0: 5.12.0, net472: 5.12.0
    https://github.com/dotnet/roslyn
    License: MIT  see [3]
    © Microsoft Corporation. All rights reserved.
 
-22. Microsoft.Data.SqlClient 7.1.1
+22. Microsoft.Data.SqlClient 7.1.2
    https://aka.ms/sqlclientproject
    License: MIT  see [3]
    © Microsoft Corporation. All rights reserved.
 
-23. Microsoft.Data.SqlClient.Extensions.Abstractions 7.1.1
+23. Microsoft.Data.SqlClient.Extensions.Abstractions 7.1.2
    https://aka.ms/sqlclientproject
    License: MIT  see [3]
    © Microsoft Corporation. All rights reserved.
 
-24. Microsoft.Data.SqlClient.Internal.Logging 7.1.1
+24. Microsoft.Data.SqlClient.Internal.Logging 7.1.2
    https://aka.ms/sqlclientproject
    License: MIT  see [3]
    © Microsoft Corporation. All rights reserved.
 
-25. Microsoft.Data.SqlClient.SNI.runtime 7.1.0
+25. Microsoft.Data.SqlClient.SNI.runtime 7.1.2
    https://aka.ms/sqlclientproject
    License: Microsoft Software License Terms (Distributable Code)  see [8]
    © Microsoft Corporation. All rights reserved.
@@ -151,12 +151,12 @@ COMPONENTS
    License: MIT  see [3]
    © Microsoft Corporation. All rights reserved.
 
-28. Microsoft.Extensions.Caching.Abstractions net10.0: 10.0.14, net10.0-windows7.0: 9.0.18, net462: 8.0.0, net472: 8.0.0
+28. Microsoft.Extensions.Caching.Abstractions net10.0: 10.0.14, net10.0-windows7.0: 9.0.21, net462: 8.0.0, net472: 8.0.0
    https://dot.net/
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-29. Microsoft.Extensions.Caching.Memory net10.0: 9.0.18, net10.0-windows7.0: 9.0.18, net11.0: 9.0.18, net462: 8.0.1, net472: 8.0.1
+29. Microsoft.Extensions.Caching.Memory net10.0: 9.0.21, net10.0-windows7.0: 9.0.21, net11.0: 9.0.21, net462: 8.0.1, net472: 8.0.1
    https://dot.net/
    License: MIT  see [7]
    © Microsoft Corporation. All rights reserved.
@@ -346,7 +346,7 @@ COMPONENTS
    License: MIT  see [3]
    © Microsoft Corporation. All rights reserved.
 
-67. Microsoft.SqlServer.TransactSql.ScriptDom 180.140.0
+67. Microsoft.SqlServer.TransactSql.ScriptDom 180.154.0
    https://github.com/microsoft/SqlScriptDOM
    License: MIT  see [3]
    © Microsoft Corporation. All rights reserved.
@@ -390,7 +390,7 @@ COMPONENTS
    License: Apache-2.0  see [1]
    © 2019 – 2026 Octonica
 
-76. Oracle.ManagedDataAccess.Core 23.26.400
+76. Oracle.ManagedDataAccess.Core 23.26.401
    https://www.oracle.com/database/technologies/appdev/dotnet.html
    License: Oracle Free Distribution, Hosting, and Use Terms and Conditions  see [12]
    Copyright © 2026, Oracle and/or its affiliates
@@ -421,7 +421,7 @@ COMPONENTS
    License: MIT  see [14]
    © Microsoft Corporation. All rights reserved.
 
-83. System.Collections.Immutable net462: 9.0.10, net472: 10.0.3
+83. System.Collections.Immutable net462: 9.0.10, net472: 10.0.10
    https://dot.net/
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
@@ -476,12 +476,12 @@ COMPONENTS
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-94. System.Reflection.Metadata 10.0.1
+94. System.Reflection.Metadata 10.0.10
    https://dot.net/
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-95. System.Security.Cryptography.Pkcs net10.0: 10.0.15, net11.0: 10.0.15, net462: 8.0.1, net472: 10.0.15
+95. System.Security.Cryptography.Pkcs net10.0: 10.0.15, net11.0: 10.0.15, net462: 8.0.2, net472: 10.0.15
    https://dot.net/
    License: MIT  see [7]
    © Microsoft Corporation. All rights reserved.
@@ -506,7 +506,7 @@ COMPONENTS
    License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-100. System.Threading.RateLimiting net10.0: 9.0.18, net10.0-windows7.0: 9.0.18, net11.0: 9.0.18, net462: 8.0.0, net472: 8.0.0
+100. System.Threading.RateLimiting net10.0: 9.0.21, net10.0-windows7.0: 9.0.21, net11.0: 9.0.21, net462: 8.0.0, net472: 8.0.0
    https://dot.net/
    License: MIT  see [7]
    © Microsoft Corporation. All rights reserved.

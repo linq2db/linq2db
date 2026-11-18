@@ -99,9 +99,9 @@
 		<PackageVersion Include="AsyncFixer"                                            Version="2.1.0"                        />
 		<PackageVersion Include="DotNet.ReproducibleBuilds"                             Version="2.0.5"                        />
 		<PackageVersion Include="Lindhart.Analyser.MissingAwaitWarning"                 Version="4.0.0-beta"                   />
-		<PackageVersion Include="Meziantou.Analyzer"                                    Version="3.0.339"                      />
-		<PackageVersion Include="Meziantou.Polyfill"                                    Version="1.0.171"                      />
-		<PackageVersion Include="Microsoft.CodeAnalysis.Analyzers"                      Version="5.9.0"                        />
+		<PackageVersion Include="Meziantou.Analyzer"                                    Version="3.0.341"                      />
+		<PackageVersion Include="Meziantou.Polyfill"                                    Version="1.0.173"                      />
+		<PackageVersion Include="Microsoft.CodeAnalysis.Analyzers"                      Version="5.12.0"                       />
 		<!--Shipped analyzer package (linq2db.Analyzers) targets the Roslyn bundled with the LOWEST supported .NET SDK's first feature band (.NET 10 => 10.0.1xx => Roslyn 5.0) for broad IDE reach; bump only when that SDK is dropped. Measured mapping: 10.0.2xx ships 5.3 and 10.0.4xx ships 5.9. Kept separate from the runtime pin below; CentralPackageTransitivePinningEnabled=false so the transitive CodeAnalysis assemblies don't clash.-->
 		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces"              Version="5.0.0"                        />
 		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers"             Version="5.6.0"                        />
@@ -120,7 +120,7 @@
 
 	<ItemGroup Label="Released Dependencies">
 		<PackageVersion Include="Humanizer.Core"                                        Version="3.0.10"                       />
-		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp"                         Version="5.9.0"                        />
+		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp"                         Version="5.12.0"                       />
 		<PackageVersion Include="Microsoft.Extensions.DependencyModel"                  Version="$(Net10Latest)"               />
 		<PackageVersion Include="Microsoft.Extensions.Hosting"                          Version="$(BandLatestForNuget)"         Condition="'$(BandLatestForNuget)'!=''" />
 		<PackageVersion Include="ModelContextProtocol"                                  Version="2.4.0"                        />
@@ -157,10 +157,10 @@
 		<!--<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"                   Version="2.5.0"                 />-->
 		<PackageVersion Include="FirebirdSql.Data.FirebirdClient"                       Version="10.3.4"                       />
 		<PackageVersion Include="IBM.Data.DB.Provider"                                  Version="11.5.9000.4"                  />
-		<PackageVersion Include="Microsoft.Data.SqlClient"                              Version="7.1.1"                        />
+		<PackageVersion Include="Microsoft.Data.SqlClient"                              Version="7.1.2"                        />
 		<PackageVersion Include="Microsoft.Data.Sqlite"                                 Version="$(Net10Latest)"               />
 		<PackageVersion Include="Microsoft.SqlServer.Compact"                           Version="4.0.8876.1"                   />
-		<PackageVersion Include="Microsoft.SqlServer.TransactSql.ScriptDom"             Version="180.140.0"                    />
+		<PackageVersion Include="Microsoft.SqlServer.TransactSql.ScriptDom"             Version="180.154.0"                    />
 		<PackageVersion Include="Microsoft.SqlServer.Types"                             Version="170.1000.7"                   />
 		<PackageVersion Include="MySqlConnector"                                        Version="3.0.0"                        />
 		<PackageVersion Include="MySql.Data"                                            Version="26.10.0"                      />
@@ -175,8 +175,8 @@
 		<PackageVersion Include="Npgsql.NodaTime"                                       Version="10.0.3"                       Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
 		<PackageVersion Include="Octonica.ClickHouseClient"                             Version="4.1.6"                        />
 		<PackageVersion Include="Oracle.ManagedDataAccess"                              Version="21.24.0"                      />
-		<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="23.26.400"                    />
-		<PackageVersion Include="Sap.Data.Hana.Net.v10.0"                               Version="2.30.27"                      Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
+		<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="23.26.401"                    />
+		<PackageVersion Include="Sap.Data.Hana.Net.v10.0"                               Version="2.30.32"                      Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
 		<PackageVersion Include="System.Data.Odbc"                                      Version="$(Net10Latest)"               />
 		<!--tests override this via VersionOverride, see $(OleDbTestsVersion) above-->
 		<PackageVersion Include="System.Data.OleDb"                                     Version="$(Net10Latest)"               />
@@ -216,7 +216,7 @@
 		<PackageVersion Include="NUnit.Analyzers"                                       Version="4.15.0"                       />
 		<PackageVersion Include="NUnit3TestAdapter"                                     Version="6.3.1"                        />
 		<!--Roslyn analyzer/code-fix unit-test harness for Tests/Tests.Analyzers and Tests/Tests.Analyzers.Internal.
-		    The latter overrides Microsoft.CodeAnalysis.CSharp.Workspaces to 5.9.0, matching the Roslyn CodeGenerators
+		    The latter overrides Microsoft.CodeAnalysis.CSharp.Workspaces to 5.12.0, matching the Roslyn CodeGenerators
 		    builds against; the 5.0.0 pin on that package in "Build: Analyzers and Tools" above is the shipped
 		    analyzer package's consumer floor and must stay put.-->
 		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing"        Version="1.1.4"                        />
@@ -233,7 +233,7 @@
 		<!--net11 cannot sit below linq2db.FSharp's net11 floor, $(FSharpCoreForNuget)-->
 		<PackageVersion Include="FSharp.Core"                                           Version="10.1.404"                     Condition="'$(TargetFramework)'!='net11.0'" />
 		<PackageVersion Include="FSharp.Core"                                           Version="11.0.101"                     Condition="'$(TargetFramework)'=='net11.0'" />
-		<PackageVersion Include="LinqKit"                                               Version="1.4.1"                        />
+		<PackageVersion Include="LinqKit"                                               Version="1.4.2"                        />
 
 		<PackageVersion Include="Microsoft.Extensions.Logging.Console"                 Version="$(LegacyNetPackageLatest)"    Condition="'$(BandLatest)'==''" />
 		<PackageVersion Include="Microsoft.Extensions.Logging.Console"                  Version="$(BandLatest)"                Condition="'$(BandLatest)'!=''" />
@@ -242,10 +242,9 @@
 		<PackageVersion Include="Pomelo.EntityFrameworkCore.MySql"                      Version="3.2.7"                        Condition="'$(TargetFramework)'=='net462'"  />
 		<!--Pomelo's newest line is EF Core 9; Microting is a maintained fork of it that ships an EF Core 10 line.
 		    Its versions track EF Core patch numbers 1:1, so keep this in step with $(BandLatest) - or, when
-		    Microting lags, at the newest release whose own dependency floors $(BandLatest) already satisfies.
-		    Its EF Core 11 line is a preview so far; move to the release once it ships.-->
+		    Microting lags, at the newest release whose own dependency floors $(BandLatest) already satisfies.-->
 		<PackageVersion Include="Microting.EntityFrameworkCore.MySql"                   Version="10.0.14"                      Condition="'$(TargetFramework)'=='net10.0'" />
-		<PackageVersion Include="Microting.EntityFrameworkCore.MySql"                   Version="11.0.0-preview.1"             Condition="'$(TargetFramework)'=='net11.0'" />
+		<PackageVersion Include="Microting.EntityFrameworkCore.MySql"                   Version="11.0.0"                       Condition="'$(TargetFramework)'=='net11.0'" />
 		<!--numbered independently of the runtime band, so these stay explicit rather than reading $(BandLatest).
 		    The net11 row needs the EF11 test project's direct EF pins: Npgsql's 11.0.0-rc.3 hard-pins
 		    Microsoft.EntityFrameworkCore [11.0.0-rc.3.26522.148], the release candidate of $(BandLatest).

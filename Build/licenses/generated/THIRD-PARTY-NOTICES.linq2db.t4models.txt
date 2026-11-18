@@ -11,7 +11,7 @@ redistributed inside this artifact; they are NOT covered by that MIT license and
 subject to their own terms, reproduced in full below.
 
 Artifact:   linq2db.t4models
-Components: 29
+Components: 30
 
 --------------------------------------------------------------------------------------------------
 COMPONENTS
@@ -52,113 +52,118 @@ COMPONENTS
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-8. Microsoft.Extensions.Http net10.0: 10.0.8, net10.0-windows7.0: 10.0.8, net11.0: 10.0.8, net462: 10.0.0, net472: 10.0.0
+8. Microsoft.Bcl.Memory 10.0.15
    https://dot.net/
    License: MIT  see [5]
    © Microsoft Corporation. All rights reserved.
 
-9. Microsoft.Extensions.Logging.Abstractions 10.0.15
+9. Microsoft.Extensions.Http net10.0: 10.0.8, net10.0-windows7.0: 10.0.8, net11.0: 10.0.8, net462: 10.0.0, net472: 10.0.0
    https://dot.net/
    License: MIT  see [5]
    © Microsoft Corporation. All rights reserved.
 
-10. Microsoft.SqlServer.Server 1.0.0
+10. Microsoft.Extensions.Logging.Abstractions 10.0.15
+   https://dot.net/
+   License: MIT  see [5]
+   © Microsoft Corporation. All rights reserved.
+
+11. Microsoft.SqlServer.Server 1.0.0
    https://aka.ms/sqlclientproject
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-11. Microsoft.SqlServer.Types 170.1000.7
+12. Microsoft.SqlServer.Types 170.1000.7
    https://learn.microsoft.com/dotnet/api/microsoft.sqlserver.types
    License: Microsoft Software License Terms - Microsoft System CLR Types for Microsoft SQL Server 2022  see [6]
    Copyright (c) Microsoft Corporation.
    The bundled binary is version 170.1000.7, whose embedded license.md is the MICROSOFT SQL SERVER VNEXT COMMUNITY PREVIEW pre-release text: its term ended 09/30/2022, it grants installation "solely to internally evaluate it and provide feedback to Microsoft", and it contains no DISTRIBUTABLE CODE section or any distribution grant. That appears to be a packaging error on a stable release - 160.1000.6 of the same package carries ordinary MICROSOFT SOFTWARE LICENSE TERMS for MICROSOFT SYSTEM CLR TYPES FOR MICROSOFT SQL SERVER 2022, with an explicit DISTRIBUTABLE CODE grant covering third-party distribution. Reported to Microsoft. The terms reproduced here are the 160.1000.6 ones, which is what we understand to have been intended for this package; the text Microsoft actually attached to 170.1000.7 is the pre-release one described above.
 
-12. Microsoft Visual C++ 9.0 Runtime (required by SQL Server Compact natives) 9.0
+13. Microsoft Visual C++ 9.0 Runtime (required by SQL Server Compact natives) 9.0
    https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist
    License: Microsoft Software License Terms - Microsoft SQL Server Compact 4.0 SP1 (section 1b)  see [7] [8]
    Copyright (c) Microsoft Corporation
    Shipped inside the native folders of the Microsoft.SqlServer.Compact package. Its own README_ENU.txt states these are not SQL Server Compact files and refers to section 1b of the SQL Server Compact 4.0 licence terms, which is the document reproduced for the SQL CE component.
 
-13. MySqlConnector 3.0.0
+14. MySqlConnector 3.0.0
    https://mysqlconnector.net/
    License: MIT  see [2]
    Copyright 2016–2026 Bradley Grainger
 
-14. Net.IBM.Data.Db2 10.0.0.400
+15. Net.IBM.Data.Db2 10.0.0.400
    License: IBM International Program License Agreement - Redistributables  see [9]
    Copyright(c) 2025 IBM Corporation. All rights reserved
    IBM grants redistribution of the Redistributables in object-code form only as part of a value-added application developed using the Program. linq2db satisfies all three limbs: the client is bundled inside linq2db scaffolding packages and the LINQPad driver rather than offered standalone, those packages are our own application built using the client, and only compiled assemblies and native libraries are shipped - no IBM source.
 
-15. NodaTime net10.0: 3.2.3, net10.0-windows7.0: 3.2.3, net11.0: 3.2.3, net462: 3.2.2, net472: 3.2.2
+16. NodaTime net10.0: 3.2.3, net10.0-windows7.0: 3.2.3, net11.0: 3.2.3, net462: 3.2.2, net472: 3.2.2
    https://nodatime.org/
    License: Apache-2.0  see [1]
 
-16. Npgsql net10.0: 10.0.3, net10.0-windows7.0: 10.0.3, net11.0: 10.0.3, net462: 8.0.9, net472: 8.0.9
+17. Npgsql net10.0: 10.0.3, net10.0-windows7.0: 10.0.3, net11.0: 10.0.3, net462: 8.0.9, net472: 8.0.9
    https://github.com/npgsql/npgsql
    License: PostgreSQL  see [10]
    Copyright 2025 © The Npgsql Development Team
 
-17. Oracle.ManagedDataAccess.Core 23.26.400
+18. Oracle.ManagedDataAccess.Core 23.26.401
    https://www.oracle.com/database/technologies/appdev/dotnet.html
    License: Oracle Free Distribution, Hosting, and Use Terms and Conditions  see [11]
    Copyright © 2026, Oracle and/or its affiliates
 
-18. Microsoft SQL Server Compact 4.0 4.0.8876.1
+19. Microsoft SQL Server Compact 4.0 4.0.8876.1
    NuGet package: Microsoft.SqlServer.Compact
    https://www.nuget.org/packages/Microsoft.SqlServer.Compact
    License: Microsoft Software License Terms - Microsoft SQL Server Compact 4.0 SP1  see [8]
    Copyright (c) Microsoft Corporation
    Terms sourced from SQLCE_EULA_ENU.rtf as shipped in the package; the copy here is a plain-text rendering of that RTF, which is also published at http://www.microsoft.com/web/webpi/eula/SQLCE_SP1_EULA_ENU.rtf. Section 2a grants Distributable Code rights - "you are permitted to distribute in programs you develop", "You may copy and distribute the object code form of code listed in REDIST.TXT files" and "Third Party Distribution" - subject to adding significant primary functionality, which linq2db scaffolding does.
 
-19. SQLitePCLRaw.lib.e_sqlite3 net10.0: 2.1.13, net10.0-windows7.0: 3.53.3, net11.0: 2.1.13, net462: 3.53.3, net472: 3.53.3
+20. SQLitePCLRaw.lib.e_sqlite3 net10.0: 2.1.13, net10.0-windows7.0: 3.53.3, net11.0: 2.1.13, net462: 3.53.3, net472: 3.53.3
    License: Apache-2.0  see [1]
    Copyright 2014-2024 SourceGear, LLC
 
-20. System.Buffers 4.6.1
+21. System.Buffers 4.6.1
    https://github.com/dotnet/maintenance-packages
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-21. System.Collections.Immutable net462: 9.0.10, net472: 10.0.3
+22. System.Collections.Immutable net462: 9.0.10, net472: 10.0.10
    https://dot.net/
    License: MIT  see [5]
    © Microsoft Corporation. All rights reserved.
 
-22. System.Data.Odbc 10.0.15
+23. System.Data.Odbc 10.0.15
    https://dot.net/
    License: MIT  see [5]
    © Microsoft Corporation. All rights reserved.
 
-23. System.Data.SQLite 2.0.4
+24. System.Data.SQLite 2.0.4
    License: Public Domain
    Public Domain
 
-24. System.Diagnostics.DiagnosticSource 10.0.15
+25. System.Diagnostics.DiagnosticSource 10.0.15
    https://dot.net/
    License: MIT  see [5]
    © Microsoft Corporation. All rights reserved.
 
-25. System.Memory 4.6.3
+26. System.Memory 4.6.3
    https://github.com/dotnet/maintenance-packages
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-26. System.Runtime.CompilerServices.Unsafe 6.1.2
+27. System.Runtime.CompilerServices.Unsafe 6.1.2
    https://github.com/dotnet/maintenance-packages
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-27. System.Text.Json 10.0.9
+28. System.Text.Json 10.0.9
    https://dot.net/
    License: MIT  see [5]
    © Microsoft Corporation. All rights reserved.
 
-28. System.Threading.Channels 10.0.3
+29. System.Threading.Channels 10.0.3
    https://dot.net/
    License: MIT  see [5]
    © Microsoft Corporation. All rights reserved.
 
-29. System.Threading.Tasks.Extensions 4.6.3
+30. System.Threading.Tasks.Extensions 4.6.3
    https://github.com/dotnet/maintenance-packages
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
@@ -841,7 +846,7 @@ db2odbcr64.dll.2.manifest
 --------------------------------------------------------------------------------------------------
 
 [5] notices-6d15e10a.txt
-    Applies to: Microsoft.Bcl.AsyncInterfaces, Microsoft.Extensions.Http, Microsoft.Extensions.Logging.Abstractions, System.Collections.Immutable, System.Data.Odbc, System.Diagnostics.DiagnosticSource, System.Text.Json, System.Threading.Channels
+    Applies to: Microsoft.Bcl.AsyncInterfaces, Microsoft.Bcl.Memory, Microsoft.Extensions.Http, Microsoft.Extensions.Logging.Abstractions, System.Collections.Immutable, System.Data.Odbc, System.Diagnostics.DiagnosticSource, System.Text.Json, System.Threading.Channels
 
 .NET Runtime uses third-party libraries or other resources that may be
 distributed under licenses different than the .NET Runtime software.
