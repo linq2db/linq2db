@@ -12,7 +12,9 @@
 		<BaselineVersion>6.0.0</BaselineVersion>
 		<EF3BaselineVersion>3.28.0</EF3BaselineVersion>
 		<EF10BaselineVersion>10.0.0</EF10BaselineVersion>
-		<!--EF11 has no shipped version yet; the project disables package validation until it does-->
+		<EF11BaselineVersion>11.0.0</EF11BaselineVersion>
+		<IdentityBaselineVersion>6.6.0</IdentityBaselineVersion>
+		<RemoteHttpClientServerBaselineVersion>6.2.0</RemoteHttpClientServerBaselineVersion>
 
 		<!--don't remove it! WPF doesn't work with non-4-component versions-->
 		<AssemblyVersion>$(Version).0</AssemblyVersion>
