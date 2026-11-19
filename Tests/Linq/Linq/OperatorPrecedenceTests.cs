@@ -7,6 +7,7 @@ using System.Reflection;
 
 using LinqToDB;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
@@ -128,6 +129,31 @@ namespace Tests.Linq
 			("NegParam", _ => Expression.Field(Expression.Constant(_negativeHolder), nameof(Holder.Value)), true),
 		];
 
+		[Sql.Expression("{0} + {1}", Precedence = Precedence.Additive,       ServerSideOnly = true)]
+		static int TemplateAdd(int x, int y) => x + y;
+
+		[Sql.Expression("{0} - {1}", Precedence = Precedence.Subtraction,    ServerSideOnly = true)]
+		static int TemplateSub(int x, int y) => x - y;
+
+		[Sql.Expression("{0} * {1}", Precedence = Precedence.Multiplicative, ServerSideOnly = true)]
+		static int TemplateMul(int x, int y) => x * y;
+
+		[Sql.Expression("{0} / {1}", Precedence = Precedence.Multiplicative, ServerSideOnly = true)]
+		static int TemplateDiv(int x, int y) => x / y;
+
+		// a precedence between two constants maps to the nearest one (Additive)
+		[Sql.Expression("{0} + {1}", Precedence = Precedence.Additive + 1,   ServerSideOnly = true)]
+		static int TemplateAddOffset(int x, int y) => x + y;
+
+		static readonly (string Name, MethodInfo Method)[] Templates =
+		[
+			("TAdd",       typeof(OperatorPrecedenceTests).GetMethod(nameof(TemplateAdd),       BindingFlags.NonPublic | BindingFlags.Static)!),
+			("TSub",       typeof(OperatorPrecedenceTests).GetMethod(nameof(TemplateSub),       BindingFlags.NonPublic | BindingFlags.Static)!),
+			("TMul",       typeof(OperatorPrecedenceTests).GetMethod(nameof(TemplateMul),       BindingFlags.NonPublic | BindingFlags.Static)!),
+			("TDiv",       typeof(OperatorPrecedenceTests).GetMethod(nameof(TemplateDiv),       BindingFlags.NonPublic | BindingFlags.Static)!),
+			("TAddOffset", typeof(OperatorPrecedenceTests).GetMethod(nameof(TemplateAddOffset), BindingFlags.NonPublic | BindingFlags.Static)!),
+		];
+
 		public static readonly string[] Parents =
 		[
 			"Add", "Sub", "Mul", "Div", "Mod", "And", "Or", "Xor",
@@ -165,6 +191,17 @@ namespace Tests.Linq
 					// transparent wrapper around the child
 					yield return new Cell($"{parent}(AsNotNull({q}(a,b)),c)", Op(p, Expression.Call(AsNotNullMethod.MakeGenericMethod(typeof(int)), Op(qt, A, B)), C), Op(qt, A, Op(p, B, C)));
 					yield return new Cell($"{parent}(a,AsNotNull({q}(b,c)))", Op(p, A, Expression.Call(AsNotNullMethod.MakeGenericMethod(typeof(int)), Op(qt, B, C))), Op(qt, Op(p, A, B), C));
+				}
+
+				// a raw "/" template divides as floating point on some dialects (DuckDB), so it is no bitwise operand
+				foreach (var (t, method) in Templates.Where(x => x.Name != "TDiv" || p is not (ExpressionType.And or ExpressionType.Or or ExpressionType.ExclusiveOr)))
+				{
+					// a template is opaque: its declared class decides how it groups as an operand
+					yield return new Cell($"{parent}({t}(a,b),c)", Op(p, Expression.Call(method, A, B), C), null);
+					yield return new Cell($"{parent}(a,{t}(b,c))", Op(p, A, Expression.Call(method, B, C)), null);
+					// a template ending in a negative literal: the minus must not reach over the parent
+					// (-6 divides every A exactly)
+					yield return new Cell($"{parent}({t}(a,NegLit),c)", Op(p, Expression.Call(method, A, Expression.Constant(-6)), C), null);
 				}
 
 				foreach (var pre in Prefixes)

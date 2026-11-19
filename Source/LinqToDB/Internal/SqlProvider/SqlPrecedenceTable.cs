@@ -171,8 +171,10 @@ namespace LinqToDB.Internal.SqlProvider
 			if (child.Level != parent.Level)
 				return child.Level < parent.Level;
 
+			// an operand with no operator identity (a template) may end in anything, so an equal-level one is
+			// parenthesized on either side
 			if (!rightOperand)
-				return parent.Associativity == SqlAssociativity.None;
+				return parent.Associativity == SqlAssociativity.None || childKey == null;
 
 			return !(sameOperator && parent.Associative);
 		}

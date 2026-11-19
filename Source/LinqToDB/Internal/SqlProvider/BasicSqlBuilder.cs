@@ -4391,7 +4391,9 @@ namespace LinqToDB.Internal.SqlProvider
 
 				if (inQuotes)
 				{
-					if (c == '\'')
+					if (c == '\\' && LiteralBackslashEscapes)
+						i++;
+					else if (c == '\'')
 					{
 						if (i + 1 < sb.Length && sb[i + 1] == '\'')
 							i++;
@@ -4434,6 +4436,12 @@ namespace LinqToDB.Internal.SqlProvider
 			return (SqlOperatorPrecedence.Primary, null);
 		}
 
+		/// <summary>
+		/// Whether this dialect's string literals escape a quote with a backslash (<c>'it\'s'</c>), which the literal
+		/// classification must skip.
+		/// </summary>
+		protected virtual bool LiteralBackslashEscapes => false;
+
 		static ISqlExpression UnwrapTransparent(ISqlExpression expr)
 		{
 			while (true)
@@ -4445,6 +4453,10 @@ namespace LinqToDB.Internal.SqlProvider
 						continue;
 					case SqlInlinedBase inlined:
 						expr = inlined.InlinedValue;
+						continue;
+					// a cast marker over an inlined value renders the bare literal (BuildSqlParameterCastExpression)
+					case SqlParameterCastExpression { Parameter.IsQueryParameter: false } parameterCast:
+						expr = parameterCast.Parameter;
 						continue;
 					case SqlExpression { Parameters.Length: 1 } e when string.Equals(e.Expr, "{0}", StringComparison.Ordinal):
 						expr = e.Parameters[0];
