@@ -2,22 +2,38 @@
 //
 // What this is: a safety net against mistakes. It refuses the known, documented ways in which one
 // read statement written in ordinary SQL changes data, schema or server state, and a script of
-// several statements. It is not a security boundary: it does not try to defeat text crafted to be
-// lexed one way here and another way by the server, and it cannot see what a user-defined function,
+// several statements. It is not a security boundary: it cannot see what a user-defined function,
 // procedure or view does.
 //
-// One grammar serves every provider. Providers differ in how they lex a handful of characters, and
-// SQL Server and Sybase ASE run statements that follow each other without a separator; `Dialect`
-// names those behaviour classes, and each publication below reads the text the way its class does.
+// One grammar serves every provider. Providers differ in how they lex strings, quoted names and
+// comments, and SQL Server and Sybase ASE run statements that follow each other without a separator;
+// `Dialect` names those behaviour classes, and each publication below reads the text the way the
+// servers of its class do. Each class reads only the quote and comment forms of its own servers: a
+// form of another dialect (q'…', E'…', $$…$$, /*! … */) is code or a comment there, as it is to the
+// server, so it cannot hide a statement from the check. Where the servers of one class read a text differently
+// (nested comments, E'…' with a backslash, q'…' with a quote inside), the text is refused.
 // Every list (statement words, the write-route list, session options) is the same for all classes.
 
-Dialect = "TSql" | "Ase" | "Bracket" | "MySql" | "Ydb" | "Informix" | "Standard"
+Dialect = "TSql" | "Ase" | "Bracket" | "MySql" | "Ydb" | "Informix" | "Postgres" | "Standard"
 
 // The conditions, named for the behaviour rather than for providers.
 Unseparated      = "TSql" | "Ase"              // a statement may follow another without a separator
 Brackets         = "TSql" | "Ase" | "Bracket"  // [x] is a quoted identifier
 HashComment      = "MySql"                     // # starts a comment to the end of the line
-BackslashStrings = "MySql" | "Ydb"             // \ escapes the next character inside '…', "…" and `…`
+BackslashStrings = "MySql" | "Ydb"             // \ escapes the next character inside '…' and "…"
+BacktickNames    = "MySql" | "Ydb" | "Bracket" // `…` quotes a name (MySQL, MariaDB, ClickHouse, YQL, SQLite); a symbol elsewhere
+NestedComments   = "TSql" | "Ase" | "Postgres" // /* */ nest; in the other classes some servers nest them and others do not
+FlatComments     = "Bracket" | "Ydb" | "Informix" | "Standard"
+// MySQL and MariaDB read -- as a comment only before a space or a control character (--1 is minus minus one),
+// ClickHouse always; they run what stands in /*! … */ by version; ClickHouse reads $$…$$ as a string, MySQL as code.
+SpacedDash       = "MySql"
+ExecutableComments = "MySql"
+// PostgreSQL and DuckDB read E'…' with backslash escapes and $tag$…$tag$ as a string.
+PostgresStrings  = "Postgres"
+// Oracle and Firebird read q'x…x' as a string; DB2, SAP HANA and the providers no class names read a name and a plain
+// string, as they do for E'…', and $$ as code.
+MixedQuotes      = "Standard"
+DollarRefused    = "Standard" | "MySql"
 
 // What the driver keeps when it hands a pooled connection out again: an option set before one query would stay set
 // for the queries that follow on that connection, so it may not precede a query.
@@ -37,6 +53,7 @@ parse Script with (Dialect = "Bracket")   as CheckBracket
 parse Script with (Dialect = "MySql")     as CheckMySql
 parse Script with (Dialect = "Ydb")       as CheckYdb
 parse Script with (Dialect = "Informix")  as CheckInformix
+parse Script with (Dialect = "Postgres")  as CheckPostgres
 parse Script with (Dialect = "Standard")  as CheckStandard
 
 parse SingleScript with (Dialect = "TSql")      as SingleTSql
@@ -45,6 +62,7 @@ parse SingleScript with (Dialect = "Bracket")   as SingleBracket
 parse SingleScript with (Dialect = "MySql")     as SingleMySql
 parse SingleScript with (Dialect = "Ydb")       as SingleYdb
 parse SingleScript with (Dialect = "Informix")  as SingleInformix
+parse SingleScript with (Dialect = "Postgres")  as SinglePostgres
 parse SingleScript with (Dialect = "Standard")  as SingleStandard
 
 // Names what stands where a check above stopped. It reads every class's lexing at once, which is
@@ -110,7 +128,9 @@ CteStart          = "with"i & CteName & Group? & "as"i & '('
 Item  = Group | Atom
 Group = '(' & { (Item & "")* } & ')'
 
-Atom = Quoted
+Atom = ?!Lex.MixedQuote ~ AtomBody
+AtomBody
+     = Quoted
      | RowsFetch
      | Name
      | Variable
@@ -118,10 +138,9 @@ Atom = Quoted
      | Lex.Number
      | Sym
 
-Quoted = Lex.EString
-       | Lex.QString
-       | Lex.String
-       | Lex.DollarString
+Quoted = Lex.String
+       | Lex.EString & when Dialect is PostgresStrings
+       | Lex.DollarString & when Dialect is PostgresStrings
        | Lex.YdbRawString
        | ?!QuotedRefusal ~ (Lex.DoubleQuoted | Lex.Backticked | Lex.Bracketed)
 
@@ -133,8 +152,7 @@ Variable = '@' ~ '@'? ~ Lex.Word
          | '$' ~ Lex.Word
 TempName = '#' ~ '#'? ~ Lex.Word & when Dialect is Unseparated
 
-Sym = Lex.ExecutableCommentOpen
-    | ?!"/*" ~ ?!SequenceDot ~ Lex.SymChar
+Sym = ?!"/*" ~ ?!SequenceDot ~ ?!Lex.UnspacedDash ~ Lex.SymChar
     | '[' & when Dialect is not Brackets
     | '{' & when Dialect is not "Informix"
 
@@ -190,7 +208,7 @@ WithRoutine = "with"i & ("function"i | "procedure"i) & ?!("as"i | '(')
 PreambleDeclare = "declare"i & ValueLine.Declared ~ ?=SetEnd
 PreambleSet     = "set"i & ValueLine.Assigned ~ ?=SetEnd
 
-Param = ['@' | '$'] ~ Lex.Word
+Param = ?!Lex.MixedQuote ~ ['@' | '$'] ~ Lex.Word
 
 // A declared type is words, quoted names, numbers and their brackets; never a table, a cursor or a
 // statement.
@@ -382,7 +400,7 @@ SingleTail = (?=(Sep & eof) ~ Sep)? & eof
 Statement = { (AnyItem & "")+ }
 AnyItem   = AnyGroup | AnyAtom
 AnyGroup  = '(' & { (AnyItem & "")* } & ')'
-AnyAtom   = Quoted | Lex.Word | Variable | TempName | Lex.Number | Sym
+AnyAtom   = ?!Lex.MixedQuote ~ (Quoted | Lex.Word | Variable | TempName | Lex.Number | Sym)
 
 // ASE: statements are counted by ';', as the CLI always did there, and by a GO line (a batch separator of the
 // client tools that the driver does not understand). linq2db's own ASE commands run several statements in one
@@ -504,17 +522,41 @@ namespace Lex
 	// SQL Server ends a token at every control character and at U+200B too.
 	Space        = ['\u0000'..' ' | '\u0085' | '\u200B' | \p{Zs} | \p{Zl} | \p{Zp}]+
 	InlineSpace  = { [' ' | '\t' | \p{Zs}]+ }
-	LineComment  = "--" & [^ '\r' | '\n']*
-	BlockComment = ?!ExecutableCommentOpen & Std.Nested("/*", "*/")
+	LineComment  = "--" & [^ '\r' | '\n']* & when Dialect is not SpacedDash
+	             | "--" & ?=(['\u0000'..' '] | eof) & [^ '\r' | '\n']* & when Dialect is SpacedDash
+	UnspacedDash = "--" & when Dialect is SpacedDash
+	// One reading per class, so the alternatives never overlap.
+	BlockComment = { NestedComment | FlatComment | MySqlComment }
+	NestedComment = Std.Nested("/*", "*/") & when Dialect is NestedComments
+	FlatComment   = FlatBody & when Dialect is FlatComments
+	MySqlComment  = ?!ExecutableCommentOpen & FlatBody & when Dialect is ExecutableComments
+	// A comment that holds /* ends at its first */ on some servers and later on others, so it is no comment here.
+	FlatBody      = "/*" & (?!"*/" & ?!"/*" & any)* & "*/"
 	HashLine     = '#' & [^ '\r' | '\n']* & when Dialect is HashComment
 	BraceComment = '{' & [^ '}']* & '}' & when Dialect is "Informix"
 
-	// MySQL and MariaDB run what stands inside /*! … */ and /*M! … */, so it is read as code.
+	// MySQL and MariaDB run what stands inside /*! … */ and /*M! … */ when the server's version is at least the number;
+	// it is refused in their class. Elsewhere it is a comment.
 	ExecutableCommentOpen = "/*!" & ['0'..'9']* | "/*M!"i & ['0'..'9']*
 
 	String       = { '\'' & { StringChar }* & '\'' }
 	StringChar   = "''" | '\\' & any & when Dialect is BackslashStrings | '\\' & when Dialect is not BackslashStrings | [^ '\'' | '\\']
 	EString      = { ['E' | 'e'] & '\'' & ("''" | '\\' & any | [^ '\'' | '\\'])* & '\'' }
+
+	// Forms that some servers of a class read as a string and others as code. Each starts a token.
+	MixedQuote      = (EStringEscape | QStringQuote) & when Dialect is MixedQuotes
+	                | DollarOpen & when Dialect is DollarRefused
+	                | ?!(EString | DollarString) & (['E' | 'e'] & '\'' | DollarOpen) & when Dialect is PostgresStrings   // open: never a name and a plain string
+	// E'…' whose plain reading holds a backslash: there the two readings end the string at different quotes.
+	EStringEscape   = ['E' | 'e'] & '\'' & ("''" | [^ '\'' | '\\'])* & '\\'
+	// q'x…x' with a quote inside: the plain reading ends the string at that quote.
+	QStringQuote    = ['n' | 'N']? & ['q' | 'Q'] & '\''
+	                & ( '[' & (?!"]'" & [^ '\''])* & '\''
+	                  | '{' & (?!"}'" & [^ '\''])* & '\''
+	                  | '(' & (?!")'" & [^ '\''])* & '\''
+	                  | '<' & (?!">'" & [^ '\''])* & '\''
+	                  | $d: [^ ' ' | '\t' | '\r' | '\n' | '[' | '{' | '(' | '<'] & (?!($d & '\'') & [^ '\''])* & '\'' )
+	DollarOpen      = '$' & DollarTag? & '$'
 	DollarString = { '$' & $tag: (DollarTag?) & '$' & (?!('$' & $tag & '$') & any)* & '$' & $tag & '$' }
 	DollarTag    = [\p{L} | '_'] & [\p{L} | \p{Nd} | '_']*
 	QString      = { ['n' | 'N']? & ['q' | 'Q'] & '\''
@@ -525,8 +567,10 @@ namespace Lex
 	                   | $d: [^ ' ' | '\t' | '\r' | '\n' | '[' | '{' | '(' | '<'] & (?!($d & '\'') & any)* & $d & '\'' ) }
 	DoubleQuoted = { '"' & { DoubleQuotedChar }* & '"' }
 	DoubleQuotedChar = "\"\"" | '\\' & any & when Dialect is BackslashStrings | '\\' & when Dialect is not BackslashStrings | [^ '"' | '\\']
-	Backticked   = { '`' & { BacktickedChar }* & '`' }
-	BacktickedChar = "``" | '\\' & any & when Dialect is BackslashStrings | '\\' & when Dialect is not BackslashStrings | [^ '`' | '\\']
+	Backticked   = { '`' & { BacktickedChar }* & '`' } & when Dialect is BacktickNames
+	// YQL and ClickHouse escape with a backslash inside backticks, MySQL does not: a backslash there is refused in the
+	// MySQL class.
+	BacktickedChar = "``" | '\\' & any & when Dialect is "Ydb" | '\\' & when Dialect is "Bracket" | [^ '`' | '\\']
 	Bracketed    = { '[' & ("]]" | [^ ']'])* & ']' } & when Dialect is Brackets
 	YdbRawString = { "@@" & (?!"@@" & any)* & "@@" } & when Dialect is "Ydb"
 

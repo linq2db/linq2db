@@ -31,9 +31,10 @@ namespace Tests.LinqToDB.CLI
 		const string MySql    = "MySql";
 		const string Ydb      = "Ydb";
 		const string Informix = "Informix";
+		const string Postgres = "Postgres";
 		const string Standard = "Standard";
 
-		static readonly string[] _classes = [TSql, Ase, Bracket, MySql, Ydb, Informix, Standard];
+		static readonly string[] _classes = [TSql, Ase, Bracket, MySql, Ydb, Informix, Postgres, Standard];
 
 		static bool Check(string dialect, string sql)
 		{
@@ -45,6 +46,7 @@ namespace Tests.LinqToDB.CLI
 				MySql    => ReadOnlySqlGrammar.TryCheckMySql   (sql, out _),
 				Ydb      => ReadOnlySqlGrammar.TryCheckYdb     (sql, out _),
 				Informix => ReadOnlySqlGrammar.TryCheckInformix(sql, out _),
+				Postgres => ReadOnlySqlGrammar.TryCheckPostgres(sql, out _),
 				Standard => ReadOnlySqlGrammar.TryCheckStandard(sql, out _),
 				_        => throw new ArgumentOutOfRangeException(nameof(dialect)),
 			};
@@ -66,6 +68,7 @@ namespace Tests.LinqToDB.CLI
 				MySql    => ReadOnlySqlGrammar.TrySingleMySql   (sql, out _),
 				Ydb      => ReadOnlySqlGrammar.TrySingleYdb     (sql, out _),
 				Informix => ReadOnlySqlGrammar.TrySingleInformix(sql, out _),
+				Postgres => ReadOnlySqlGrammar.TrySinglePostgres(sql, out _),
 				Standard => ReadOnlySqlGrammar.TrySingleStandard(sql, out _),
 				_        => throw new ArgumentOutOfRangeException(nameof(dialect)),
 			};
@@ -118,75 +121,99 @@ namespace Tests.LinqToDB.CLI
 		public void BracketsAreQuotedIdentifiersOnlyWhereTheyAre()
 		{
 			AssertQuery("select [delete] from t",   true,  TSql, Ase, Bracket);
-			AssertQuery("select [delete] from t",   false, MySql, Ydb, Informix, Standard);
-			AssertQuery("select arr[nextval('s')]", false, MySql, Ydb, Informix, Standard);
-			AssertQuery("select arr[1] from t",     true,  MySql, Ydb, Informix, Standard);
+			AssertQuery("select [delete] from t",   false, MySql, Ydb, Informix, Postgres, Standard);
+			AssertQuery("select arr[nextval('s')]", false, MySql, Ydb, Informix, Postgres, Standard);
+			AssertQuery("select arr[1] from t",     true,  MySql, Ydb, Informix, Postgres, Standard);
 		}
 
 		[Test]
 		public void BackslashEscapesOnlyWhereTheyAre()
 		{
-			AssertQuery("select 'C:\\', 1",  true,  TSql, Ase, Bracket, Informix, Standard);
+			AssertQuery("select 'C:\\', 1",  true,  TSql, Ase, Bracket, Informix, Postgres, Standard);
 			AssertQuery("select 'C:\\', 1",  false, MySql, Ydb);
 			AssertQuery("select 'it\\'s', 1", true,  MySql, Ydb);
-			AssertQuery("select 'it\\'s', 1", false, TSql, Ase, Bracket, Informix, Standard);
+			AssertQuery("select 'it\\'s', 1", false, TSql, Ase, Bracket, Informix, Postgres, Standard);
 		}
 
 		[Test]
 		public void HashCommentsOnlyInMySql()
 		{
 			AssertQuery("select 1 # delete",                          true,  MySql);
-			AssertQuery("select 1 # delete",                          false, TSql, Ase, Bracket, Ydb, Informix, Standard);
-			AssertQuery("select data #> '{a}', nextval('s') from t", false, Standard);
-			AssertQuery("select data #> '{a}' from t",               true,  Standard);
+			AssertQuery("select 1 # delete",                          false, TSql, Ase, Bracket, Ydb, Informix, Postgres, Standard);
+			AssertQuery("select data #> '{a}', nextval('s') from t", false, Postgres, Standard);
+			AssertQuery("select data #> '{a}' from t",               true,  Postgres, Standard);
 			AssertQuery("select * from #t",                           true,  TSql, Ase);
 		}
 
 		[Test]
 		public void BraceCommentsOnlyInInformix()
 		{
-			AssertQuery("select {'k': nextval('s')}", false, Standard, TSql, MySql);
+			AssertQuery("select {'k': nextval('s')}", false, Postgres, Standard, TSql, MySql);
 			AssertQuery("select {'k': nextval('s')}", true,  Informix);
-			AssertQuery("select {'k': 1}",            true,  Standard);
+			AssertQuery("select {'k': 1}",            true,  Postgres, Standard);
 		}
 
 		[Test]
 		public void RawStringsOnlyInYdb()
 		{
 			AssertQuery("select @@ delete @@", true,  Ydb);
-			AssertQuery("select @@ delete @@", false, TSql, MySql, Standard);
+			AssertQuery("select @@ delete @@", false, TSql, MySql, Postgres, Standard);
 			AssertQuery("select @@version, 1", true,  TSql, Ase);
 		}
 
 		[Test]
 		public void StatementWordsAnywhereOnlyWhereStatementsNeedNoSeparator()
 		{
-			AssertQuery("select call, open, close from t", true,  Bracket, MySql, Ydb, Informix, Standard);
+			AssertQuery("select call, open, close from t", true,  Bracket, MySql, Ydb, Informix, Postgres, Standard);
 			AssertQuery("select call, open, close from t", false, TSql, Ase);
 			AssertQuery("select 1 drop table t",           false, TSql, Ase);
 		}
 
 		[TestCase("select 1 /* a /* b */ from t")]
-		[TestCase("select 1 /*! , nextval(s) */")]
-		[TestCase("select 1 /*M! , nextval(s) */")]
 		[TestCase("select 1 /* unterminated")]
-		public void CommentsReadAlikeEverywhere(string sql)
+		public void UnterminatedCommentsRefusedEverywhere(string sql)
 		{
 			AssertQuery(sql, false);
 		}
 
-		[TestCase("select 'a' /* x */ from t -- y")]
-		[TestCase("select 1 /* a /* b */ c */ from t")]
-		[TestCase("select $$ delete $$, $x$ insert $x$")]
-		[TestCase("select q'[ delete ]', Q'{ x }', nq'< y >', NQ'! z !'")]
-		[TestCase("select E'it\\'s delete', N'x', X'0F', U&'d\\0061ta'")]
-		[TestCase("select \"delete\", `update` from t")]
-		[TestCase("select V$SESSION.SID, RDB$GET_CONTEXT('SYSTEM', 'DB_NAME') from t")]
-		[TestCase("select имя, n\u0303ame from таблица")]
-		[TestCase("select\u00A0a\u2003from\u2028t")]
-		public void QuoteFormsReadAlikeEverywhere(string sql)
+		// Each class reads the strings, quoted names and comments of its own servers only. A form of another dialect is
+		// code there, as it is to the server; where the servers of one class read a text differently, it is refused.
+		// The second argument lists the classes that accept the text; every other class refuses it.
+		[TestCase("select 'a' /* x */ from t -- y",                   "TSql Ase Bracket MySql Ydb Informix Postgres Standard")]
+		[TestCase("select 1 /* a /* b */ c */ from t",                "TSql Ase Postgres")]                         // nested on these servers; flat on MySQL, Oracle, Firebird, SQLite
+		[TestCase("select 1 /*! , nextval(s) */ from t",              "TSql Ase Bracket Ydb Informix Postgres Standard")] // MySQL runs it by version
+		[TestCase("select 1 /*M! , nextval(s) */ from t",             "TSql Ase Bracket Ydb Informix Postgres Standard")]
+		[TestCase("select $$ delete $$",                              "Postgres")]
+		[TestCase("select $$ x $$, $t$ it's $t$",                     "Postgres")]
+		[TestCase("select $$ x $$",                                   "TSql Ase Bracket Ydb Informix Postgres")]   // code where $$ is no string; ClickHouse and PostgreSQL-like servers of the other two classes read a string
+		[TestCase("select E'it\\'s delete'",                        "MySql Ydb Postgres")]                        // one string under backslash escapes
+		[TestCase("select E'x', N'x', X'0F', U&'d\\0061ta'",        "TSql Ase Bracket MySql Ydb Informix Postgres Standard")]
+		[TestCase("select E'C:\\' from t",                          "TSql Ase Bracket Informix")]                 // Postgres reads an open string; Standard: the readings differ
+		[TestCase("select q'[ delete ]', Q'{ x }', nq'< y >' from t", "TSql Ase Bracket MySql Ydb Informix Postgres Standard")] // the same string under both readings
+		[TestCase("select q'[' || x || ']' from t",                   "TSql Ase Bracket MySql Ydb Informix Postgres")] // Oracle and Firebird: one string
+		[TestCase("select \"delete\", `update` from t",              "Bracket MySql Ydb")]               // a backtick is no symbol in the other classes
+		[TestCase("select `a\\` from t",                            "Bracket")]                         // MySQL ends the name at the backtick, ClickHouse escapes it
+		[TestCase("select 1 --1\n from t",                           "TSql Ase Bracket Ydb Informix Postgres Standard")] // MySQL: minus minus one; ClickHouse: a comment
+		[TestCase("select 1 -- x\n from t",                          "TSql Ase Bracket MySql Ydb Informix Postgres Standard")]
+		[TestCase("select 1 --",                                      "TSql Ase Bracket MySql Ydb Informix Postgres Standard")]
+		[TestCase("select 1 # delete\n from t",                      "MySql")]
+		[TestCase("select 'C:\\' from t",                           "TSql Ase Bracket Informix Postgres Standard")]
+		[TestCase("select 'it\\'s', \"it\\\"s\" from t",       "MySql Ydb")]
+		[TestCase("select [delete] from t",                           "TSql Ase Bracket")]
+		[TestCase("select {delete} from t",                           "Informix")]
+		[TestCase("select @@x delete @@ from t",                      "Ydb")]
+		[TestCase("select V$SESSION.SID, RDB$GET_CONTEXT('SYSTEM', 'DB_NAME') from t", "TSql Ase Bracket MySql Ydb Informix Postgres Standard")]
+		[TestCase("select имя, n\u0303ame from таблица",             "TSql Ase Bracket MySql Ydb Informix Postgres Standard")]
+		[TestCase("select\u00A0a\u2003from\u2028t",                "TSql Ase Bracket MySql Ydb Informix Postgres Standard")]
+		public void QuoteAndCommentFormsPerClass(string sql, string accepting)
 		{
-			AssertQuery(sql, true, Bracket, Ydb, Informix, Standard);
+			var accepted = accepting.Split(' ');
+
+			using (Assert.EnterMultipleScope())
+			{
+				foreach (var dialect in _classes)
+					Query(dialect, sql).ShouldBe(accepted.Contains(dialect), $"{dialect}: {sql}");
+			}
 		}
 
 		#endregion
@@ -232,7 +259,7 @@ namespace Tests.LinqToDB.CLI
 				AssertQuery($"select {name}(1)",          false);
 				AssertQuery($"select s.{name}(1)",        false);
 				AssertQuery($"select \"{name}\"(1)",      false);
-				AssertQuery($"select {name} from t",      true, name is "Kill" ? [Bracket, MySql, Ydb, Informix, Standard] : _classes);
+				AssertQuery($"select {name} from t",      true, name is "Kill" ? [Bracket, MySql, Ydb, Informix, Postgres, Standard] : _classes);
 				AssertQuery($"select [{name}](1) from t", false, TSql, Ase, Bracket);
 			}
 		}
@@ -319,8 +346,8 @@ namespace Tests.LinqToDB.CLI
 		[Test]
 		public void SessionOptionsAloneAndStacked()
 		{
-			string[] keeping   = [TSql, Bracket, MySql, Ydb, Informix, Standard];
-			string[] isolation = [Bracket, MySql, Ydb, Informix, Standard];
+			string[] keeping   = [TSql, Bracket, MySql, Ydb, Informix, Postgres, Standard];
+			string[] isolation = [Bracket, MySql, Ydb, Informix, Postgres, Standard];
 
 			foreach (var option in _sessionOptions)
 			{
@@ -380,7 +407,7 @@ namespace Tests.LinqToDB.CLI
 		public void TableVariableOnlyInTSql()
 		{
 			AssertQuery("DECLARE @t TABLE (a int)\nselect 1", true,  TSql, Ase);
-			AssertQuery("DECLARE @t TABLE (a int)\nselect 1", false, Bracket, MySql, Ydb, Informix, Standard);
+			AssertQuery("DECLARE @t TABLE (a int)\nselect 1", false, Bracket, MySql, Ydb, Informix, Postgres, Standard);
 		}
 
 		[TestCase("select 1; SET NOCOUNT ON")]
@@ -396,7 +423,7 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("SET @p = 1\n-- comment\n")]
 		public void PrefixAccepted(string prefix)
 		{
-			AssertQuery(prefix + "\nselect 1", true, TSql, Bracket, Standard);
+			AssertQuery(prefix + "\nselect 1", true, TSql, Bracket, Postgres, Standard);
 		}
 
 		#endregion
@@ -547,7 +574,7 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("select insert('abc', 1, 1, 'x'), truncate(1.5, 0), left('a', 1) from t")]
 		public void FunctionShapesAccepted(string sql)
 		{
-			AssertQuery(sql, true, Bracket, MySql, Ydb, Informix, Standard);
+			AssertQuery(sql, true, Bracket, MySql, Ydb, Informix, Postgres, Standard);
 		}
 
 		[TestCase("call p()")]
@@ -744,7 +771,7 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("insert @t values (1)\nselect * from @t")]
 		public void TempScriptsOnlyInTSql(string sql)
 		{
-			AssertQuery(sql, false, Bracket, MySql, Ydb, Informix, Standard);
+			AssertQuery(sql, false, Bracket, MySql, Ydb, Informix, Postgres, Standard);
 		}
 
 		// ASE takes no session option even when the call's connection is closed afterwards.
@@ -1199,6 +1226,10 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("Sybase.Managed",   "select open from t",                     "Query is not read-only: statement word OPEN at 1:8.")]
 		[TestCase("SqlCe",            "select [open] from t delete t",          "Query is not read-only: statement word DELETE at 1:22.")]
 		[TestCase("SqlCe",            "call p()",                               "Only SELECT queries are allowed: unexpected 'call' at 1:1.")]
+		[TestCase("SqlCe",            "select 1 /* a /* b */ c */ from t",      "Query is not accepted: the comment at 1:10 holds /*; databases that nest comments")]
+		[TestCase("SqlServer",        "select 1 a /*! ' */ update t set a = 1 --'", "Query is not read-only: statement word UPDATE at 1:21.")]
+		[TestCase("SqlServer",        "select q'[', 1 b from (select 1 q) z update t set a = 7 --]'", "Query is not read-only: statement word UPDATE at 1:38.")]
+		[TestCase("SqlServer",        "select E'\\', 1 b from (select 1 E) z update t set a = 8 --'", "Only SELECT queries are allowed: unexpected")]
 		public void QueryMessages(string provider, string sql, string message)
 		{
 			var result = ReadOnlySqlGuard.Validate(provider, sql);

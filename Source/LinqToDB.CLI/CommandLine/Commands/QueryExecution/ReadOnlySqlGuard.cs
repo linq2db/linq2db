@@ -189,6 +189,17 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 					return SqlGuardResult.Rejected($"Only SELECT queries are allowed: unexpected '{quotedText}' at {Location(sql, position - 1)}. In a script that writes temporary tables, a quoted name must begin with an ASCII letter, a digit, _ or $.");
 			}
 
+			// The describer reads comments the way the servers that nest them do; a class whose servers disagree refuses at
+			// the comment itself.
+			if (sql.AsSpan(position).StartsWith("/*", StringComparison.Ordinal))
+			{
+				if (sql.AsSpan(position).StartsWith("/*!", StringComparison.Ordinal) || sql.AsSpan(position).StartsWith("/*M!", StringComparison.OrdinalIgnoreCase))
+					return SqlGuardResult.Rejected($"Query is not accepted: the executable comment at {Location(sql, position)} runs or not depending on the server version.");
+
+				if (sql.IndexOf("*/", position + 2, StringComparison.Ordinal) >= 0)
+					return SqlGuardResult.Rejected($"Query is not accepted: the comment at {Location(sql, position)} holds /*; databases that nest comments and databases that end a comment at its first */ read it differently.");
+			}
+
 			var (kind, text) = Describe(sql, position);
 
 			if (kind is "other")
