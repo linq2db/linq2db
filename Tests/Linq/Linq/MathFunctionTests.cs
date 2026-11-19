@@ -24,7 +24,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Acos([DataSources(TestProvName.AllAccess)] string context)
+		public void Acos([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -33,7 +33,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Asin([DataSources(TestProvName.AllAccess)] string context)
+		public void Asin([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -51,7 +51,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Atan2([DataSources(TestProvName.AllAccess)] string context)
+		public void Atan2([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -458,6 +458,157 @@ namespace Tests.Linq
 				select Sql.AsSql(Sql.RoundToEven(p.MoneyValue, 5) + p.MoneyValue);
 
 			AssertQueryWithinDelta(even);
+		}
+
+		// Access spells % as MOD, which binds tighter than + and - and evaluates left to right, so a sum, a difference or
+		// another MOD as its operand needs its own parentheses; ^ binds tighter still, so a MOD operand of ^ needs them too.
+		[Test]
+		public void ModuloOperandKeepsItsGrouping([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var sum = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((p.ID + 5) % 3));
+
+			AssertQuery(sum);
+
+			var difference = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((100 - p.ID) % 3));
+
+			AssertQuery(difference);
+
+			var moduloOfDifference = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(100 - p.ID % 3));
+
+			AssertQuery(moduloOfDifference);
+
+			var nestedModulo = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((p.ID + 20) % ((p.ID * 5 + 3) % 5)));
+
+			AssertQuery(nestedModulo);
+
+			var moduloOfProduct = db.Types
+				.Where(p => p.ID > 0)
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((p.ID + 20) % (p.ID * 3)));
+
+			AssertQuery(moduloOfProduct);
+
+			var powerOfModulo = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Math.Pow(p.ID % 3, 2)));
+
+			AssertQuery(powerOfModulo);
+
+			var moduloAsExponent = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Math.Pow(2, p.ID % 3)));
+
+			AssertQuery(moduloAsExponent);
+		}
+
+		// Access evaluates ^ before every other arithmetic operator, negation included, so a product, a sum, a difference or
+		// a negation as its operand needs its own parentheses.
+		[Test]
+		public void PowerOperandKeepsItsGrouping([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var powerOfProduct = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Math.Pow(p.ID * 2, 2)));
+
+			AssertQuery(powerOfProduct);
+
+			var powerOfSum = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Math.Pow(p.ID + 1, 2)));
+
+			AssertQuery(powerOfSum);
+
+			var powerOfDifference = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Math.Pow(100 - p.ID, 2)));
+
+			AssertQuery(powerOfDifference);
+
+			var powerOfNegation = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Math.Pow(-p.ID, 2)));
+
+			AssertQuery(powerOfNegation);
+
+			var negatedPower = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(-Math.Pow(p.ID, 2)));
+
+			AssertQuery(negatedPower);
+
+			var negativeExponent = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Math.Pow(p.ID, -1)));
+
+			AssertQuery(negativeExponent);
+
+			// Access reads -2 ^ x as (-2) ^ x, so a negated power with a literal base needs its own parentheses
+			var negatedLiteralBase = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(-Math.Pow(2, p.ID)));
+
+			AssertQuery(negatedLiteralBase);
+		}
+
+		[Test]
+		[ActiveIssue(6341, Configuration = TestProvName.AllFirebird, ErrorTypeName = "FirebirdSql.Data.FirebirdClient.FbException",
+			ErrorMessage = "Base for POWER cannot be negative if exponent is not an integral value",
+			Details = "Firebird refuses a negative base when the exponent is cast to DOUBLE PRECISION, whatever its value.")]
+		public void PowerOfNegativeBaseKeepsItsGrouping([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var negativeBase = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Math.Pow(-2, p.ID % 3 + 1)));
+
+			AssertQuery(negativeBase);
+		}
+
+		// Access evaluates ^ left to right, so a power as the exponent needs its own parentheses.
+		[Test]
+		public void PowerOfPowerKeepsItsGrouping([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var powerAsExponent = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Math.Pow(2, Math.Pow(p.ID % 3 + 1, 2))));
+
+			AssertQuery(powerAsExponent);
+
+			var powerAsBase = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Math.Pow(Math.Pow(p.ID % 3 + 1, 2), 3)));
+
+			AssertQuery(powerAsBase);
+
+			// a decimal power reaches the exponent wrapped in casts that Access drops only after translation
+			var decimalPowerAsExponent = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(Sql.Power(2m, Sql.Power((decimal)(p.ID % 3 + 1), 2m))));
+
+			AssertQuery(decimalPowerAsExponent);
+
+			// a nullability wrapper around the exponent reaches the builder and renders as its operand
+			var notNullPowerAsExponent = db.Parent
+				.Where(p => p.Value1 != null)
+				.OrderBy(p => p.ParentID)
+				.Select(p => Sql.AsSql(Sql.Power(2.0, Sql.AsNotNull(Sql.Power((double?)(p.Value1 % 3 + 1), 2.0)))));
+
+			AssertQuery(notNullPowerAsExponent);
 		}
 
 		// A non-constant precision must not cost the value its fractional digits.

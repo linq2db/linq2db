@@ -139,13 +139,13 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 
 					if (parentMember == null)
-						throw new LinqToDBException($"Association key '{parentName}' not found for type '{parentType}.");
+						throw new LinqToDBException($"Association key '{parentName}' not found for type '{parentType}'.");
 
 					var childName = association.OtherKey[i];
 					var childMember = childMembers.Find(m => string.Equals(m.MemberInfo.Name, childName, StringComparison.Ordinal));
 
 					if (childMember == null)
-						throw new LinqToDBException($"Association key '{childName}' not found for type '{objectType}.");
+						throw new LinqToDBException($"Association key '{childName}' not found for type '{objectType}'.");
 
 					var current = ExpressionBuilder.Equal(builder.MappingSchema,
 						Expression.MakeMemberAccess(currentParentParam, parentMember.MemberInfo),

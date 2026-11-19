@@ -196,9 +196,9 @@ namespace Tests.Identity
 			await store.CreateAsync(user);
 
 			// removing things that don't exist is a no-op, not an error
-			await Shouldly.Should.NotThrowAsync(() => store.RemoveLoginAsync(user, "missing", "missing"));
-			await Shouldly.Should.NotThrowAsync(() => store.RemoveTokenAsync(user, "missing", "missing", default));
-			await Shouldly.Should.NotThrowAsync(() => store.RemoveClaimsAsync(user, new[] { new Claim("none", "none") }));
+			await store.RemoveLoginAsync(user, "missing", "missing");
+			await store.RemoveTokenAsync(user, "missing", "missing", default);
+			await store.RemoveClaimsAsync(user, new[] { new Claim("none", "none") });
 		}
 	}
 }

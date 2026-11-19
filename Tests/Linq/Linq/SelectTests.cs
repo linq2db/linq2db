@@ -302,7 +302,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MutiplySelect12([DataSources(false, TestProvName.AllAccess, TestProvName.AllDB2)] string context)
+		public void MutiplySelect12([DataSources(false, TestProvName.AllNativeAccess, TestProvName.AllDB2)] string context)
 		{
 			using var db = GetDataContext(context);
 			var q =
@@ -1393,7 +1393,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
 		public void SelectWithIndexer([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1407,7 +1407,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
 		public void SelectWithIndexerAfterGroupBy([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1423,7 +1423,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_OrderByRequiredForIndexing)]
-		public void SelectWithIndexerNoOrder([DataSources(TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase)] string context)
+		public void SelectWithIndexerNoOrder([DataSources(TestProvName.AllNativeAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1435,7 +1435,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
 		public void SelectWithIndexerOrderByNulls(
 			[DataSources] string context,
 			[Values(Sql.NullsPosition.First, Sql.NullsPosition.Last)] Sql.NullsPosition nulls,
@@ -1457,7 +1457,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
 		public void SelectWithIndexerAfterGroupJoin([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1767,7 +1767,7 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable(SelectExpressionTable.Data);
-			Assert.Throws<InvalidOperationException>(() => table.Take(1).Select(_ => Wrap3(new Guid("b3d9b51c89f9442a893bcd8a6f667d37")) != Wrap3(new Guid("61efdcd4659d41e8910c506a9c2f31c5"))).SingleOrDefault());
+			Assert.That(() => table.Take(1).Select(_ => Wrap3(new Guid("b3d9b51c89f9442a893bcd8a6f667d37")) != Wrap3(new Guid("61efdcd4659d41e8910c506a9c2f31c5"))).SingleOrDefault(), Throws.TypeOf<InvalidOperationException>());
 		}
 
 		[Test]

@@ -684,9 +684,9 @@ namespace Tests.Linq
 
 			var query3 = query1.OrderBy(_ => _.ChildID);
 
-			Assert.DoesNotThrow(() => query1.ToArray());
-			Assert.DoesNotThrow(() => query2.ToArray());
-			Assert.DoesNotThrow(() => query3.ToArray());
+			query1.ToArray();
+			query2.ToArray();
+			query3.ToArray();
 		}
 
 		[Test]

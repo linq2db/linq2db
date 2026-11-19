@@ -356,8 +356,9 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			// we use external parameter p in GetChildrenFiltered parameter expression
 			// Sequence 'GetChildrenFiltered(value(Tests.Linq.ParameterTests+<>c__DisplayClass18_0).db, c => (c.ChildID != p.ParentID))' cannot be converted to SQL.
-			Assert.Throws<LinqToDBException>(()
-				=> db.Parent.Where(p => GetChildrenFiltered(db, c => c.ChildID != p.ParentID).Select(c => c.ParentID).Contains(p.ParentID)).ToList());
+			Assert.That(()
+				=> db.Parent.Where(p => GetChildrenFiltered(db, c => c.ChildID != p.ParentID).Select(c => c.ParentID).Contains(p.ParentID)).ToList(),
+				Throws.TypeOf<LinqToDBException>());
 		}
 
 		private static bool ChildFilter(Model.Child c) => c.ChildID != 5;
@@ -2016,7 +2017,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullableComparisonAsSetValue([DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		public void NullableComparisonAsSetValue([DataSources(TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var data = new[]
 			{
@@ -2042,7 +2043,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullableComparisonAsConditionalSetValue([DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		public void NullableComparisonAsConditionalSetValue([DataSources(TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var data = new[]
 			{
@@ -2078,7 +2079,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullableComparisonAsConditionalElseSetValue([DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		public void NullableComparisonAsConditionalElseSetValue([DataSources(TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			var data = new[]
 			{

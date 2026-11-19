@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.Linq.Builder
@@ -24,13 +25,45 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (call.Method.DeclaringType == typeof(LinqExtensions) || !call.IsQueryable)
 				return false;
 
-#if NET11_0_OR_GREATER
-			// Queryable.FullJoin has no comparer-less overload: its comparer is an optional parameter, so it is always 6 arguments
-			if (call.Arguments.Count == 6)
-				return call is { Method.Name: nameof(Queryable.FullJoin), Arguments: [.., ConstantExpression { Value: null }] };
-#endif
+			// outer, inner, two key selectors, the result selector (absent on the tuple-returning overloads), then an optional
+			// comparer, which translates only when null, i.e. the default one
+			var selectorCount = IsTupleJoin(call) ? 0 : 1;
+			var arguments     = call.Arguments;
 
-			return call.Arguments.Count == 5;
+			if (arguments.Count == 5 + selectorCount)
+			{
+				if (arguments[4 + selectorCount] is not ConstantExpression { Value: null })
+					return false;
+			}
+			else if (arguments.Count != 4 + selectorCount)
+				return false;
+
+			return selectorCount == 0 || arguments[4].Unwrap() is LambdaExpression;
+		}
+
+		// .NET 11 Join<TOuter, TInner, TKey>(outer, inner, outerKeySelector, innerKeySelector, comparer) and its LeftJoin /
+		// RightJoin / FullJoin siblings return (TOuter Outer, TInner Inner) instead of taking a result selector. An [IsQueryable]
+		// method of the same name can have three generic arguments too, so the declaring type is part of the check.
+		static bool IsTupleJoin(MethodCallExpression call)
+			=> call.Method.IsGenericMethod
+			&& call.Method.GetGenericArguments().Length == 3
+			&& (call.Method.DeclaringType == typeof(Queryable) || call.Method.DeclaringType == typeof(Enumerable));
+
+		static LambdaExpression BuildTupleSelector(MethodCallExpression methodCall, LambdaExpression outerKeyLambda, LambdaExpression innerKeyLambda)
+		{
+			var types     = methodCall.Method.GetGenericArguments();
+			var tupleType = typeof(ValueTuple<,>).MakeGenericType(types[0], types[1]);
+			var outer     = Expression.Parameter(types[0], outerKeyLambda.Parameters[0].Name);
+			var inner     = Expression.Parameter(types[1], innerKeyLambda.Parameters[0].Name);
+
+			return Expression.Lambda(
+				Expression.New(
+					tupleType.GetConstructorEx(types[0], types[1])!,
+					[outer, inner],
+					tupleType.GetField(nameof(ValueTuple<,>.Item1))!,
+					tupleType.GetField(nameof(ValueTuple<,>.Item2))!),
+				outer,
+				inner);
 		}
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -119,7 +152,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (extensions != null)
 				join.SqlQueryExtensions = extensions;
 
-			var selector = methodCall.Arguments[4].UnwrapLambda();
+			var selector = IsTupleJoin(methodCall)
+				? BuildTupleSelector(methodCall, outerKeyLambda, innerKeyLambda)
+				: methodCall.Arguments[4].UnwrapLambda();
 
 			outerContext.SetAlias(selector.Parameters[0].Name);
 			innerContext.SetAlias(selector.Parameters[1].Name);

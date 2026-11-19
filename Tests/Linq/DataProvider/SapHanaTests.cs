@@ -769,7 +769,7 @@ namespace Tests.DataProvider
 			// ODBC provider doesn't support spatial types
 			// https://github.com/dotnet/runtime/issues/40707
 			using var db = GetDataContext(context);
-			Assert.Throws<ArgumentException>(() => db.GetTable<AllTypesGeo>().ToArray());
+			Assert.That(() => db.GetTable<AllTypesGeo>().ToArray(), Throws.TypeOf<ArgumentException>());
 		}
 
 		[Test]

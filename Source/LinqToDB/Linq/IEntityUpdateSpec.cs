@@ -53,7 +53,5 @@ namespace LinqToDB.Linq
 	[PublicAPI]
 	public interface IEntityUpdateSpec<TTarget>
 		: IEntityUpdateSpec<TTarget, IEntityUpdateSpec<TTarget>>
-		where TTarget : notnull
-	{
-	}
+		where TTarget : notnull;
 }

@@ -127,7 +127,7 @@ namespace Tests.Linq
 						where t.Flags.HasFlag(StringMappedFlagsEnum.Flag1)
 						select t;
 
-			Assert.Throws<LinqToDBException>(() => query.ToArray());
+			Assert.That(() => query.ToArray(), Throws.TypeOf<LinqToDBException>());
 		}
 
 		[Flags]
@@ -168,7 +168,7 @@ namespace Tests.Linq
 						where t.Flags.HasFlag(ConverterMappedFlagsEnum.Flag1)
 						select t;
 
-			Assert.Throws<LinqToDBException>(() => query.ToArray());
+			Assert.That(() => query.ToArray(), Throws.TypeOf<LinqToDBException>());
 		}
 
 		[Test]
@@ -183,7 +183,7 @@ namespace Tests.Linq
 						where value.HasFlag(t.Flags)
 						select t;
 
-			Assert.Throws<LinqToDBException>(() => query.ToArray());
+			Assert.That(() => query.ToArray(), Throws.TypeOf<LinqToDBException>());
 		}
 
 		static int Count1(Parent p) { return p.Children.Count(c => c.ChildID > 0); }
@@ -1192,7 +1192,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "Tests regression introduced in 3.5.2")]
-		public void ComparisonTest2([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void ComparisonTest2([DataSources(TestProvName.AllNativeAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			var left  = GetQuery(db, 0);
@@ -1268,9 +1268,7 @@ namespace Tests.Linq
 
 		static class Issue5040
 		{
-			public interface IBaseEntity
-			{
-			}
+			public interface IBaseEntity;
 
 			public interface IEntityWithPermissions : IBaseEntity
 			{

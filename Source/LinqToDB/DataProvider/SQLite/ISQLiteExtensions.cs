@@ -1,6 +1,4 @@
 ﻿namespace LinqToDB.DataProvider.SQLite
 {
-	public interface ISQLiteExtensions
-	{
-	}
+	public interface ISQLiteExtensions;
 }

@@ -12,7 +12,7 @@ namespace Tests.Infrastructure
 {
 	/// <summary>
 	/// The default comparer <c>AssertQuery</c> and <c>AreEqualWithComparer</c> fall back to when no comparer is passed.
-	/// A failed comparison is observed through NUnit's <c>Assert.Throws</c>: it runs the delegate in an isolated
+	/// A failed comparison is observed through NUnit's <c>Throws</c> constraint: it runs the delegate in an isolated
 	/// context, so the recorded assertion failure does not fail the enclosing test. Shouldly's <c>Should.Throw</c> does not.
 	/// </summary>
 	[TestFixture]
@@ -29,7 +29,7 @@ namespace Tests.Infrastructure
 			var query = db.Person
 				.Select(p => Shifted(p.ID));
 
-			Assert.Throws<AssertionException>(() => AssertQuery(query));
+			Assert.That(() => AssertQuery(query), Throws.TypeOf<AssertionException>());
 		}
 
 		[Test]
@@ -47,22 +47,22 @@ namespace Tests.Infrastructure
 		[Test]
 		public void Scalars_DifferentValues_Fail()
 		{
-			Assert.Throws<AssertionException>(() => AreEqualWithComparer(new[] { 1 }, new[] { 2 }));
-			Assert.Throws<AssertionException>(() => AreEqualWithComparer(new[] { Guid.NewGuid() }, new[] { Guid.NewGuid() }));
-			Assert.Throws<AssertionException>(() => AreEqualWithComparer(new[] { true }, new[] { false }));
-			Assert.Throws<AssertionException>(() => AreEqualWithComparer(new[] { Gender.Male }, new[] { Gender.Female }));
+			Assert.That(() => AreEqualWithComparer(new[] { 1 }, new[] { 2 }), Throws.TypeOf<AssertionException>());
+			Assert.That(() => AreEqualWithComparer(new[] { Guid.NewGuid() }, new[] { Guid.NewGuid() }), Throws.TypeOf<AssertionException>());
+			Assert.That(() => AreEqualWithComparer(new[] { true }, new[] { false }), Throws.TypeOf<AssertionException>());
+			Assert.That(() => AreEqualWithComparer(new[] { Gender.Male }, new[] { Gender.Female }), Throws.TypeOf<AssertionException>());
 		}
 
 		[Test]
 		public void String_SameLengthDifferentValue_Fails()
 		{
-			Assert.Throws<AssertionException>(() => AreEqualWithComparer(new[] { "ab" }, new[] { "cd" }));
+			Assert.That(() => AreEqualWithComparer(new[] { "ab" }, new[] { "cd" }), Throws.TypeOf<AssertionException>());
 		}
 
 		[Test]
 		public void NullableScalar_ComparesByValue()
 		{
-			Assert.Throws<AssertionException>(() => AreEqualWithComparer(new int?[] { 1, null }, new int?[] { 2, null }));
+			Assert.That(() => AreEqualWithComparer(new int?[] { 1, null }, new int?[] { 2, null }), Throws.TypeOf<AssertionException>());
 
 			AreEqualWithComparer(new int?[] { 1, null }, new int?[] { null, 1 });
 		}
@@ -80,7 +80,7 @@ namespace Tests.Infrastructure
 			AreEqualWithComparer(new[] { 2.5m }, new[] { 2.50m });
 			AreEqualWithComparer(new decimal?[] { 2.5m, null }, new decimal?[] { 2.50m, null });
 
-			Assert.Throws<AssertionException>(() => AreEqualWithComparer(new[] { 2.5m }, new[] { 2.6m }));
+			Assert.That(() => AreEqualWithComparer(new[] { 2.5m }, new[] { 2.6m }), Throws.TypeOf<AssertionException>());
 		}
 
 		[Test]
@@ -89,8 +89,8 @@ namespace Tests.Infrastructure
 			AreEqualWithComparer(new[] { new List<int> { 1, 2 } }, new[] { new List<int> { 1, 2 } });
 			AreEqualWithComparer(new[] { new byte[] { 1, 2 } }, new[] { new byte[] { 1, 2 } });
 
-			Assert.Throws<AssertionException>(() => AreEqualWithComparer(new[] { new byte[] { 1, 2 } }, new[] { new byte[] { 1, 3 } }));
-			Assert.Throws<AssertionException>(() => AreEqualWithComparer(new[] { new[] { 1, 2 } }, new[] { new[] { 2, 1 } }));
+			Assert.That(() => AreEqualWithComparer(new[] { new byte[] { 1, 2 } }, new[] { new byte[] { 1, 3 } }), Throws.TypeOf<AssertionException>());
+			Assert.That(() => AreEqualWithComparer(new[] { new[] { 1, 2 } }, new[] { new[] { 2, 1 } }), Throws.TypeOf<AssertionException>());
 		}
 
 		[Test]
@@ -98,7 +98,7 @@ namespace Tests.Infrastructure
 		{
 			AreEqualWithComparer(new IEnumerable<int>[] { new[] { 1, 2 } }, new IEnumerable<int>[] { new List<int> { 1, 2 } });
 
-			Assert.Throws<AssertionException>(() => AreEqualWithComparer(new IEnumerable<int>[] { new[] { 1, 2 } }, new IEnumerable<int>[] { new[] { 1, 3 } }));
+			Assert.That(() => AreEqualWithComparer(new IEnumerable<int>[] { new[] { 1, 2 } }, new IEnumerable<int>[] { new[] { 1, 3 } }), Throws.TypeOf<AssertionException>());
 		}
 
 		sealed class Node(params Node[] children) : IEnumerable<Node>
@@ -115,13 +115,13 @@ namespace Tests.Infrastructure
 		{
 			AreEqualWithComparer(new[] { new Node(new Node()) }, new[] { new Node(new Node()) });
 
-			Assert.Throws<AssertionException>(() => AreEqualWithComparer(new[] { new Node(new Node()) }, new[] { new Node(new Node(), new Node()) }));
+			Assert.That(() => AreEqualWithComparer(new[] { new Node(new Node()) }, new[] { new Node(new Node(), new Node()) }), Throws.TypeOf<AssertionException>());
 		}
 
 		[Test]
 		public void Entity_ComparesMembers()
 		{
-			Assert.Throws<AssertionException>(() => AreEqualWithComparer(new[] { new Person(1, "John") }, new[] { new Person(1, "Jane") }));
+			Assert.That(() => AreEqualWithComparer(new[] { new Person(1, "John") }, new[] { new Person(1, "Jane") }), Throws.TypeOf<AssertionException>());
 
 			AreEqualWithComparer(new[] { new Person(1, "John") }, new[] { new Person(1, "John") });
 		}
@@ -132,7 +132,7 @@ namespace Tests.Infrastructure
 			var utc   = new DateTime(2020, 1, 2, 3, 4, 5, DateTimeKind.Utc);
 			var local = DateTime.SpecifyKind(utc, DateTimeKind.Local);
 
-			Assert.Throws<AssertionException>(() => AreEqualWithComparer(new[] { utc }, new[] { local }));
+			Assert.That(() => AreEqualWithComparer(new[] { utc }, new[] { local }), Throws.TypeOf<AssertionException>());
 
 			AreEqualWithComparer(new DateTime?[] { utc }, new DateTime?[] { local });
 		}

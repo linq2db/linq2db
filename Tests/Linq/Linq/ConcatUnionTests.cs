@@ -483,7 +483,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Union52([DataSources(TestProvName.AllAccess, TestProvName.AllInformix)] string context)
+		public void Union52([DataSources(TestProvName.AllNativeAccess, TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -495,7 +495,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Union521([DataSources(TestProvName.AllAccess, TestProvName.AllInformix)] string context)
+		public void Union521([DataSources(TestProvName.AllNativeAccess, TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -509,7 +509,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Union522([DataSources(TestProvName.AllAccess, TestProvName.AllInformix)] string context)
+		public void Union522([DataSources(TestProvName.AllNativeAccess, TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -521,7 +521,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Union523([DataSources(TestProvName.AllAccess, TestProvName.AllInformix)] string context)
+		public void Union523([DataSources(TestProvName.AllNativeAccess, TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -532,7 +532,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Union53([DataSources(TestProvName.AllAccess, TestProvName.AllInformix)] string context)
+		public void Union53([DataSources(TestProvName.AllNativeAccess, TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -960,7 +960,7 @@ namespace Tests.Linq
 			AreEqual(expected, actual);
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllAccess, ErrorMessage = "This operation is not allowed in subqueries.",
+		[ActiveIssue(Configuration = TestProvName.AllNativeAccess, ErrorMessage = "This operation is not allowed in subqueries.",
 			Details = "no-issue: UNION in a subquery is not supported by Access; supporting it means transforming the shape, and nothing tracks that.")]
 		[Test]
 		public void ConcatInAny([DataSources] string context)
