@@ -707,6 +707,38 @@ namespace Tests.LinqToDB.CLI
 			}
 		}
 
+		[Test]
+		public async Task NewCredentialsModeIsNotWarmedUp()
+		{
+			// new-credentials keeps the process account's local identity, so there is nothing to preload, and a warm-up
+			// would authenticate to the server with the credentials this mode replaces.
+			//
+			var database = CreateSqliteDatabase();
+			var provider = new CountingWarmUpProvider();
+
+			DataConnection.AddDataProvider(provider);
+
+			try
+			{
+				var environment = new TestCliEnvironment();
+
+				var result = await RunCli(environment, "query", "--provider", provider.Name, "--connection-string", $"Data Source={database};Pooling=False", "--user", "user", "--password", "secret", "--impersonate", "--impersonate-mode", "new-credentials", "--sql", "select Id from Person");
+
+				var session = environment.ImpersonationSessions.ShouldHaveSingleItem();
+
+				using (Assert.EnterMultipleScope())
+				{
+					result.ExitCode.             ShouldBe(0, result.Error);
+					session.Mode.                ShouldBe(WindowsImpersonationMode.NewCredentials);
+					provider.OpensOutsideSession.ShouldBe(0);
+				}
+			}
+			finally
+			{
+				File.Delete(database);
+			}
+		}
+
 		/// <summary>
 		/// SQLite provider that counts the connections opened outside an impersonation session (the warm-ups).
 		/// </summary>

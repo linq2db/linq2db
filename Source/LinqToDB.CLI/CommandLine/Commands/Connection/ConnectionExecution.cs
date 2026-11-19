@@ -23,6 +23,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		/// from disk is loaded first, under the original process account: external provider assemblies, whatever the
 		/// client loads to open a connection (a warm-up connection is opened and closed, its errors ignored), the
 		/// tool's assemblies and their references, and satellite resources (see <see cref="ImpersonationPreload"/>).
+		/// Not with <see cref="WindowsImpersonationMode.NewCredentials"/>, which keeps the local identity.
 		/// </para>
 		/// <para>
 		/// Resolving the provider can open a connection to detect the server version. That is database work, so with
@@ -44,7 +45,12 @@ namespace LinqToDB.CommandLine.Commands.Connection
 
 			try
 			{
-				await ImpersonationPreload.RunAsync(settings, cancellationToken);
+				// With new-credentials the token keeps the process account's local identity and changes only the
+				// credentials used for outbound network access, so everything is still read from disk as the process
+				// account, and a warm-up would authenticate to the server with the very credentials this mode replaces.
+				//
+				if (settings.ImpersonateMode != WindowsImpersonationMode.NewCredentials)
+					await ImpersonationPreload.RunAsync(settings, cancellationToken);
 
 				var dataProvider = await session.RunAsync(() => Task.FromResult(DataConnection.GetDataProvider(settings.Provider, settings.ConnectionString)));
 
