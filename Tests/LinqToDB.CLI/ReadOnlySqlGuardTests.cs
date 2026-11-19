@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
+using LinqToDB;
 using LinqToDB.CommandLine.Commands.QueryExecution;
+using LinqToDB.DataProvider.Sybase;
 
 using NUnit.Framework;
 
@@ -639,6 +642,9 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("DECLARE @Has Bit -- Boolean\nSET     @Has = 1\n\nINSERT INTO [Issue1438]\n(\n\t[Has]\n)\nVALUES\n(\n\t@Has\n)\n\nSELECT @@IDENTITY\n")]
 		[TestCase("SET IDENTITY_INSERT [TableWithIdentity] ON\nMERGE INTO [TableWithIdentity] [Target]\nUSING (\n\tSELECT 1 AS [Id], 2 AS [Value_1]) [Source]\n(\n\t[Id],\n\t[Value_1]\n)\nON ([Target].[Id] = [Source].[Id])\n\nWHEN MATCHED THEN\nUPDATE\nSET\n\t[Value] = [Source].[Value_1]\n\nWHEN NOT MATCHED THEN\nINSERT\n(\n\t[Id],\n\t[Value]\n)\nVALUES\n(\n\t123,\n\t321\n)\nSET IDENTITY_INSERT [TableWithIdentity] OFF\n")]
 		[TestCase("insert into t values (1)\nselect go, ago, gone from t")]
+		[TestCase("select a, go\nfrom t")]
+		[TestCase("select a, go -- a column\nfrom t")]
+		[TestCase("select a /* x */ go\nfrom t\nGO")]
 		public void AseExecuteCountsSeparatorsOnly(string sql)
 		{
 			using (Assert.EnterMultipleScope())
@@ -688,6 +694,12 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("select a into #t from t; select a into #u from t;\nselect * from #t, #u;\ndrop table if exists #t, #u;")]
 		[TestCase("with c as (select 1 a) insert into #t select a from c\nselect * from #t")]
 		[TestCase("select a into #t from t\nupdate #t set a = 1 where a = (select max(b) from u order by b offset 0 rows fetch next 1 rows only)\nselect * from #t")]
+		[TestCase("select a into #t from t\nselect top 1 with ties #t.a into #u from #t order by a\nselect * from #u")]
+		[TestCase("select a into #t from t\nselect top (2) percent #t.a into #u from #t order by a\nselect * from #u")]
+		[TestCase("select a into #t from t\ninsert #u select top @n #t.a from #t\nselect * from #u")]
+		[TestCase("select a into #t from t\nupdate #t set a = 1 from u cross apply #t outer apply #v where u.a = #t.a\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t set a = case when #t.a > 1 then #t.a else -#t.a end, b = #t.a * 2 from #t where #t.a between 1 and #t.b or not #t.a like 'x%'\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t set a = 1 from #t join #u on #u.a = #t.a where exists (select 1 from #v where #v.a in (#t.a, 2))\nselect * from #t")]
 		public void TempScriptsAccepted(string sql)
 		{
 			using (Assert.EnterMultipleScope())
@@ -766,6 +778,21 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("delete t\nselect 1")]
 		[TestCase("delete from t where a = 1\nselect 1")]
 		[TestCase("delete #t from t #t\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t set a = 1 from dbo.ties #t\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t set a = 1 from apply #t\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t set a = 1 from #u join dbo.using #t on 1 = 1\nselect * from #t")]
+		[TestCase("select a into #t from t\ndelete #t from dbo.ties #t\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t set a = 1 from t for system_time as of '2020-01-01' #t\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t set a = 1 from t for system_time as of @d #t\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t set a = 1 from t for system_time all #t\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t set a = 1 from t for system_time from 1 to 2 #t\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t set a = 1 from t tablesample (10 percent) #t\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t set a = 1 from ##g #t\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t set a = 1 from @v #t\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t set a = 1 from [dbo].[t] #t\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t set a = 1 from {oj t left outer join u on 1 = 1} #t\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t set a = 1 from t with ties #t\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t set a = 1 from 1 #t\nselect * from #t")]
 		[TestCase("delete #t output deleted.*\nselect 1")]
 		[TestCase("truncate table t\nselect 1")]
 		[TestCase("truncate table ##g\nselect 1")]
@@ -835,6 +862,31 @@ namespace Tests.LinqToDB.CLI
 				aseExecute.    IsAllowed.                 ShouldBeTrue();
 				aseExecute.    RequiresUnpooledConnection.ShouldBeTrue();
 				sqlExecute.    RequiresUnpooledConnection.ShouldBeFalse();
+			}
+		}
+
+		// The flag alone keeps nothing out of the pool: the connection string the call opens with must carry it.
+		[Test]
+		public void UnpooledRouteReachesTheConnectionString()
+		{
+			const string connectionString = "Data Source=ase;Port=5000;Pooling=true;";
+
+			var provider = SybaseTools.GetDataProvider(SybaseProvider.DataAction);
+			var options  = new DataOptions().UseConnectionString(provider, connectionString);
+
+			var temp    = QueryExecutionExecutor.RouteConnection(options, provider, ReadOnlySqlGuard.Validate("Sybase.Managed", "select a into #t from t\nselect * from #t"));
+			var execute = QueryExecutionExecutor.RouteConnection(options, provider, ReadOnlySqlGuard.ValidateSingleStatement("Sybase.Managed", "update t set a = 1"));
+			var plain   = QueryExecutionExecutor.RouteConnection(options, provider, ReadOnlySqlGuard.Validate("Sybase.Managed", "select * from t"));
+
+			using (Assert.EnterMultipleScope())
+			{
+				temp.   ConnectionOptions.ConnectionString.ShouldBe("Data Source=ase;Port=5000;Pooling=true;Pooling=false");
+				temp.   ConnectionOptions.DataProvider.ShouldBeSameAs(provider);
+				execute.ConnectionOptions.ConnectionString.ShouldBe(temp.ConnectionOptions.ConnectionString);
+				plain.  ShouldBeSameAs(options);
+
+				// The appended key is the one a connection-string parser keeps.
+				new DbConnectionStringBuilder { ConnectionString = temp.ConnectionOptions.ConnectionString }["Pooling"].ShouldBe("false");
 			}
 		}
 

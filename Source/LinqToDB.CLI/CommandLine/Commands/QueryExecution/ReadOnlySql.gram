@@ -272,28 +272,35 @@ TempItem  = OutputInto
           | ?!TopStatementStart ~ ?!"output"i ~ TempPiece
 
 // UPDATE #t … FROM perm #t writes perm: the target names the alias. So inside these statements a
-// name that starts with # or @ (also quoted) never stands where an alias does: after AS, after a
-// table or column name, or after a bracketed expression.
+// name that starts with # stands only where it is a table or an operand: after a word of TempStop, a
+// TOP clause, a bracket, a comma, a dot or an operator. After anything else (a name, a quoted name, a
+// literal, a variable, another #name, a closing bracket) it would be an alias, and it is refused. A
+// name that starts with @ is refused after AS, and a quoted [#…], "#…", [@…] or "@…" anywhere.
 // The two alternatives of TempPiece begin with different characters, and TempLeaf commits: a choice
 // left open at every level of brackets would make deep nesting cost the square of its depth.
 TempPiece = TempGroup & ?!'#'
           | TempLeaf
-TempLeaf  = { RowsFetch
-            | "as"i & ?!['#' | '@']
-            | AliasHead & ?!'#'
-            | ?!("as"i | AliasHead | QuotedSigil) ~ Atom }
+// TempClosed is atomic, so that a refused #name cannot make it read less and leave the rest to TempStop.
+TempLeaf  = { "as"i & ?!['#' | '@']
+            | TempStop
+            | "top"i & (Lex.Number | Variable | TempGroup) & "percent"i? & ("with"i & "ties"i)?
+            | ?!"as"i ~ { TempClosed } & ?!'#'
+            | ?!'}' ~ Sym }
 TempGroup = '(' & { (TempPiece & "")* } & ')'
 
-AliasHead   = ?!AliasStop ~ Name
-            | ?!QuotedSigil ~ ?!QuotedRefusal ~ (Lex.DoubleQuoted | Lex.Bracketed)
+TempClosed  = "system_time"i & "all"i                     // FOR SYSTEM_TIME ALL ends a table source
+            | ?!QuotedSigil ~ (Quoted | RowsFetch | Name | Variable | TempName | Lex.Number)
+            | '}'
 QuotedSigil = ['[' | '"'] ~ ['#' | '@']
 
-// Words after which a #name is an operand or a table, not an alias.
-AliasStop = "from"i | "join"i | "apply"i | "on"i | "table"i | "select"i | "where"i | "and"i | "or"i | "not"i
-          | "by"i | "when"i | "then"i | "else"i | "end"i | "case"i | "in"i | "is"i | "exists"i | "having"i
-          | "distinct"i | "all"i | "any"i | "some"i | "top"i | "percent"i | "ties"i | "union"i | "except"i
-          | "intersect"i | "between"i | "like"i | "escape"i | "values"i | "using"i | "over"i | "output"i
-          | "as"i
+// Words after which a #name is an operand or a table, not an alias. Each is reserved in T-SQL, so it
+// never names a table or stands as an alias; APPLY is not reserved and counts only after CROSS or OUTER,
+// TIES only in the TOP clause above.
+TempStop = "from"i | "join"i | "on"i | "table"i | "select"i | "where"i | "and"i | "or"i | "not"i
+         | "by"i | "when"i | "then"i | "else"i | "end"i | "case"i | "in"i | "is"i | "exists"i | "having"i
+         | "distinct"i | "all"i | "any"i | "some"i | "percent"i | "union"i | "except"i
+         | "intersect"i | "between"i | "like"i | "escape"i | "values"i | "over"i | "output"i
+         | ("cross"i | "outer"i) & "apply"i
 
 // ---------------------------------------------------------------------------------------------
 // Session options that may precede a query. Every value set is closed; anything else is refused.
@@ -368,10 +375,12 @@ AnyItem   = AnyGroup | AnyAtom
 AnyGroup  = '(' & { (AnyItem & "")* } & ')'
 AnyAtom   = Quoted | Lex.Word | Variable | TempName | Lex.Number | Sym
 
-// ASE: statements are counted by ';', as the CLI always did there, and by a GO that ends its line (a batch
-// separator of the client tools that the driver does not understand). linq2db's own ASE commands run several
-// statements in one text, such as an upsert's UPDATE, IF and INSERT.
-AseStatement = { (?!AseGo ~ AnyItem & "")+ }
+// ASE: statements are counted by ';', as the CLI always did there, and by a GO line (a batch separator of the
+// client tools that the driver does not understand). linq2db's own ASE commands run several statements in one
+// text, such as an upsert's UPDATE, IF and INSERT. A GO that does not begin its line is a name: each item takes
+// one that follows it on the same line.
+AseStatement = { (?!AseGo ~ AnyItem ~ AseNameGo? & "")+ }
+AseNameGo    = { (Lex.InlineSpace | Lex.BlockComment)* ~ "go"i ~ ?!Lex.WordChar }
 AseGo        = "go"i ~ ?!Lex.WordChar ~ Lex.InlineSpace? ~ (eol | eof | ';' | "--")
 
 // T-SQL: a statement word at the top level starts the next statement, unless it is a clause of the

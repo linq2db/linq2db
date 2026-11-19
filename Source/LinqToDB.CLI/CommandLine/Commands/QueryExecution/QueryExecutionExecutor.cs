@@ -437,11 +437,17 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 						$"Executing write-capable SQL because profile '{_settings.Profile}' has enableExecute=true. Provider: {_settings.Provider}."));
 			}
 
-			if (guardResult.RequiresUnpooledConnection && dataOptions.ConnectionOptions.ConnectionString is { } connectionString)
-				dataOptions = dataOptions.UseConnectionString(dataProvider, WithoutPooling(connectionString));
-
 			// The count a temporary-table script returns is that of its writes to the temporary tables, not of the query.
-			return await ExecuteDatabaseLoop(dataOptions, dataProvider, sql, outputWriter, !guardResult.WritesTemporaryTables, cancellationToken);
+			return await ExecuteDatabaseLoop(RouteConnection(dataOptions, dataProvider, guardResult), dataProvider, sql, outputWriter, !guardResult.WritesTemporaryTables, cancellationToken);
+		}
+
+		// The options the call runs with: a connection of its own when the guard says the pool must not keep its session.
+		internal static DataOptions RouteConnection(DataOptions dataOptions, IDataProvider dataProvider, SqlGuardResult guardResult)
+		{
+			if (guardResult.RequiresUnpooledConnection && dataOptions.ConnectionOptions.ConnectionString is { } connectionString)
+				return dataOptions.UseConnectionString(dataProvider, WithoutPooling(connectionString));
+
+			return dataOptions;
 		}
 
 		// The driver closes a connection opened without pooling when it is released, so the session state the call leaves
