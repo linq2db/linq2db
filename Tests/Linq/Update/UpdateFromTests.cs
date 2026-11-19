@@ -564,7 +564,7 @@ namespace Tests.xUpdate
 
 		[Test(Description = "Tests that client/duplicate columns not removed (v6.2.0 regression)")]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedUpdate)]
-		public void UpdateFromWithDuplicateSubqueryColumn_SingleOrDefault([DataSources(TestProvName.AllSqlCe, TestProvName.AllAccess)] string context)
+		public void UpdateFromWithDuplicateSubqueryColumn_SingleOrDefault([DataSources(TestProvName.AllSqlCe, TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<InsertFromWithConstantsTable>();
@@ -592,7 +592,7 @@ namespace Tests.xUpdate
 		[Test(Description = "Tests that client/duplicate columns not removed (v6.2.0 regression)")]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedUpdate)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
-		public void UpdateFromWithDuplicateSubqueryColumn_FirstOrDefault([DataSources(TestProvName.AllSqlCe, TestProvName.AllAccess)] string context)
+		public void UpdateFromWithDuplicateSubqueryColumn_FirstOrDefault([DataSources(TestProvName.AllSqlCe, TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<InsertFromWithConstantsTable>();
@@ -710,8 +710,8 @@ namespace Tests.xUpdate
 		[ActiveIssue(2815, Configuration = TestProvName.AllClickHouse, ErrorTypeName = "LinqToDB.LinqToDBException",
 			ErrorMessage = "Feature not supported by database: Correlated UPDATE",
 			Details = "ClickHouse is refused by linq2db before any SQL is sent, so it is the one provider here with a stable message. Does not collide with the co-sited ThrowsRequiresCorrelatedSubquery(simple: true), which covers YDB only.")]
-		[ActiveIssue(2815, Configurations = [ TestProvName.AllSqlServer, TestProvName.AllSQLite, ProviderName.SqlCe, TestProvName.AllPostgreSQL, TestProvName.AllOracle11, TestProvName.AllMySql, TestProvName.AllDuckDB, TestProvName.AllAccess ],
-			Details = "no-declaration: one mechanism - the generated UPDATE references a table that is not in scope for it - reported eight ways: 'The multi-part identifier \"u.Id\" could not be bound', 'no such column: Issue2815Table1.Id', 'Unknown column u.Id in on clause', ORA-00904 invalid identifier, 42P01 invalid reference to FROM-clause entry, a SqlCe parse error, a DuckDB binder error, and Access splitting between an ODBC 42000 and an OleDb 'Syntax error in JOIN operation'.")]
+		[ActiveIssue(2815, Configurations = [ TestProvName.AllSqlServer, TestProvName.AllSQLite, ProviderName.SqlCe, TestProvName.AllPostgreSQL, TestProvName.AllOracle11, TestProvName.AllMySql, TestProvName.AllDuckDB, TestProvName.AllNativeAccess ],
+			Details = "no-declaration: one mechanism - the generated UPDATE references a table that is not in scope for it - reported eight ways: 'The multi-part identifier \"u.Id\" could not be bound', 'no such column: Issue2815Table1.Id', 'Unknown column u.Id in on clause', ORA-00904 invalid identifier, 42P01 invalid reference to FROM-clause entry, a SqlCe parse error, a DuckDB binder error, and Access splitting between an ODBC 42000 and an OleDb 'Syntax error in JOIN operation'. LibRed parses the form and is excluded.")]
 		[Obsolete("Remove test after API removed")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2815")]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
@@ -746,7 +746,7 @@ namespace Tests.xUpdate
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2815")]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedUpdate)]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		public void Issue2815Test2([DataSources(false, ProviderName.SqlCe, TestProvName.AllAccess)] string context)
+		public void Issue2815Test2([DataSources(false, ProviderName.SqlCe, TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t1 = db.CreateLocalTable(Issue2815Table1.Data);

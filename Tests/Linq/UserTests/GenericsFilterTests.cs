@@ -16,14 +16,14 @@ namespace Tests.UserTests
 		public void WhenPredicateFactoryIsGeneric([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var predicate = ById<Firm>(0);
-			Assert.DoesNotThrow(() => CheckPredicate(predicate, context));
+			CheckPredicate(predicate, context);
 		}
 
 		[Test]
 		public void WhenPredicateFactoryIsNotGeneric([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var predicate = ById(0);
-			Assert.DoesNotThrow(() => CheckPredicate(predicate, context));
+			CheckPredicate(predicate, context);
 		}
 
 		Expression<Func<T, bool>> ById<T>(int foobar)

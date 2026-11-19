@@ -35,14 +35,14 @@
 		"linq2db.Remote.SignalR.Server"
 	],
 	"metadata": [
-		// The four EntityFrameworkCore entries all build an assembly named `linq2db.EntityFrameworkCore`,
+		// The three EntityFrameworkCore entries all build an assembly named `linq2db.EntityFrameworkCore`,
 		// so they cannot be told apart by assembly name. Each uses `assemblyUidOverride` instead, which
 		// names the entry rather than the assembly. That works here only because nothing else in this
 		// project references the EF Core packages: a reference into them from another entry could not say
-		// which of the four versions it meant.
+		// which of the three versions it meant.
 		//
 		// docfx documents one target framework per project, the first one unless `TargetFramework` is set.
-		// Entries whose project targets net10.0 set it, so the site shows the API of current .NET rather than
+		// Entries whose project targets net11.0 set it, so the site shows the API of current .NET rather than
 		// of .NET Framework. The property is global, so it reaches every referenced project as well; the two
 		// netstandard2.0 analyzer projects they all reference keep their own framework through
 		// TreatAsLocalProperty (https://github.com/dotnet/docfx/issues/10772).
@@ -56,7 +56,7 @@
 				}
 			],
 			"properties": {
-				"TargetFramework": "net10.0"
+				"TargetFramework": "net11.0"
 			},
 			"filter": "filter.yml",
 			"output": "api/linq2db"
@@ -71,7 +71,7 @@
 				}
 			],
 			"properties": {
-				"TargetFramework": "net10.0"
+				"TargetFramework": "net11.0"
 			},
 			"filter": "filter.yml",
 			"output": "api/linq2db.extensions"
@@ -86,7 +86,7 @@
 				}
 			],
 			"properties": {
-				"TargetFramework": "net10.0"
+				"TargetFramework": "net11.0"
 			},
 			"filter": "filter.yml",
 			"output": "api/linq2db.compat"
@@ -127,7 +127,7 @@
 				}
 			],
 			"properties": {
-				"TargetFramework": "net10.0"
+				"TargetFramework": "net11.0"
 			},
 			"filter": "filter.yml",
 			"output": "api/linq2db.remote.grpc"
@@ -154,7 +154,7 @@
 				}
 			],
 			"properties": {
-				"TargetFramework": "net10.0"
+				"TargetFramework": "net11.0"
 			},
 			"filter": "filter.yml",
 			"output": "api/linq2db.tools"
@@ -169,7 +169,7 @@
 				}
 			],
 			"properties": {
-				"TargetFramework": "net10.0"
+				"TargetFramework": "net11.0"
 			},
 			"filter": "filter.yml",
 			"output": "api/linq2db.scaffold"
@@ -191,32 +191,6 @@
 			"src": [
 				{
 					"files": [
-						"Source/LinqToDB.EntityFrameworkCore/LinqToDB.EntityFrameworkCore.EF8.csproj"
-					],
-					"src": "../.."
-				}
-			],
-			"filter": "filter.yml",
-			"output": "api/linq2db.efcore.8",
-			"assemblyUidOverride": "linq2db.EntityFrameworkCore.EF8"
-		},
-		{
-			"src": [
-				{
-					"files": [
-						"Source/LinqToDB.EntityFrameworkCore/LinqToDB.EntityFrameworkCore.EF9.csproj"
-					],
-					"src": "../.."
-				}
-			],
-			"filter": "filter.yml",
-			"output": "api/linq2db.efcore.9",
-			"assemblyUidOverride": "linq2db.EntityFrameworkCore.EF9"
-		},
-		{
-			"src": [
-				{
-					"files": [
 						"Source/LinqToDB.EntityFrameworkCore/LinqToDB.EntityFrameworkCore.EF10.csproj"
 					],
 					"src": "../.."
@@ -230,13 +204,26 @@
 			"src": [
 				{
 					"files": [
+						"Source/LinqToDB.EntityFrameworkCore/LinqToDB.EntityFrameworkCore.EF11.csproj"
+					],
+					"src": "../.."
+				}
+			],
+			"filter": "filter.yml",
+			"output": "api/linq2db.efcore.11",
+			"assemblyUidOverride": "linq2db.EntityFrameworkCore.EF11"
+		},
+		{
+			"src": [
+				{
+					"files": [
 						"Source/LinqToDB.Identity/LinqToDB.Identity.csproj"
 					],
 					"src": "../.."
 				}
 			],
 			"properties": {
-				"TargetFramework": "net10.0"
+				"TargetFramework": "net11.0"
 			},
 			"filter": "filter.yml",
 			"output": "api/linq2db.identity"
@@ -251,7 +238,7 @@
 				}
 			],
 			"properties": {
-				"TargetFramework": "net10.0"
+				"TargetFramework": "net11.0"
 			},
 			"filter": "filter.yml",
 			"output": "api/linq2db.remote.httpclient.client"
@@ -266,7 +253,7 @@
 				}
 			],
 			"properties": {
-				"TargetFramework": "net10.0"
+				"TargetFramework": "net11.0"
 			},
 			"filter": "filter.yml",
 			"output": "api/linq2db.remote.httpclient.server"
@@ -281,7 +268,7 @@
 				}
 			],
 			"properties": {
-				"TargetFramework": "net10.0"
+				"TargetFramework": "net11.0"
 			},
 			"filter": "filter.yml",
 			"output": "api/linq2db.remote.signalr.client"
@@ -296,7 +283,7 @@
 				}
 			],
 			"properties": {
-				"TargetFramework": "net10.0"
+				"TargetFramework": "net11.0"
 			},
 			"filter": "filter.yml",
 			"output": "api/linq2db.remote.signalr.server"

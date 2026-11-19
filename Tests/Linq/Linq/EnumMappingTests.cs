@@ -1248,7 +1248,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestFlagEnum([DataSources(TestProvName.AllAccess)] string context)
+		public void TestFlagEnum([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable<TestTable5>();
@@ -1775,11 +1775,12 @@ namespace Tests.Linq
 					TestField = 5
 				});
 
-				Assert.Throws<LinqToDBConvertException>(() =>
+				Assert.That(() =>
 					db.GetTable<UndefinedValueTest>()
 						.Select(r => new { r.Id, r.TestField })
 						.Where(r => r.Id == RID)
-						.ToList());
+						.ToList(),
+					Throws.TypeOf<LinqToDBConvertException>());
 			}
 		}
 

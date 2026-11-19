@@ -483,7 +483,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Union52([DataSources(TestProvName.AllAccess, TestProvName.AllInformix)] string context)
+		public void Union52([DataSources(TestProvName.AllNativeAccess, TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -495,7 +495,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Union521([DataSources(TestProvName.AllAccess, TestProvName.AllInformix)] string context)
+		public void Union521([DataSources(TestProvName.AllNativeAccess, TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -509,7 +509,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Union522([DataSources(TestProvName.AllAccess, TestProvName.AllInformix)] string context)
+		public void Union522([DataSources(TestProvName.AllNativeAccess, TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -521,7 +521,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Union523([DataSources(TestProvName.AllAccess, TestProvName.AllInformix)] string context)
+		public void Union523([DataSources(TestProvName.AllNativeAccess, TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -532,7 +532,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Union53([DataSources(TestProvName.AllAccess, TestProvName.AllInformix)] string context)
+		public void Union53([DataSources(TestProvName.AllNativeAccess, TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -960,7 +960,7 @@ namespace Tests.Linq
 			AreEqual(expected, actual);
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllAccess, ErrorMessage = "This operation is not allowed in subqueries.",
+		[ActiveIssue(Configuration = TestProvName.AllNativeAccess, ErrorMessage = "This operation is not allowed in subqueries.",
 			Details = "no-issue: UNION in a subquery is not supported by Access; supporting it means transforming the shape, and nothing tracks that.")]
 		[Test]
 		public void ConcatInAny([DataSources] string context)
@@ -2758,14 +2758,14 @@ namespace Tests.Linq
 				.Concat(t.Select(r => 1.004m))
 				.ToArray();
 
-			values.ShouldBe([1.00m, 1.004m], ignoreOrder: true);
+			AreEqualWithinDelta([1.00m, 1.004m], values);
 
 			var conditional = t
 				.Select(r => r.Id > 0 ? r.Value : r.Value + 1)
 				.Concat(t.Select(r => 1.004m))
 				.ToArray();
 
-			conditional.ShouldBe([1.00m, 1.004m], ignoreOrder: true);
+			AreEqualWithinDelta([1.00m, 1.004m], conditional);
 		}
 
 		sealed class FineDecimalRow
@@ -2792,7 +2792,7 @@ namespace Tests.Linq
 				.Concat(t.Select(r => 1.000000000005m))
 				.ToArray();
 
-			values.ShouldBe([1.000000000005m, 1.000000000005m]);
+			AreEqualWithinDelta([1.000000000005m, 1.000000000005m], values);
 		}
 
 		sealed class WideDecimalRow

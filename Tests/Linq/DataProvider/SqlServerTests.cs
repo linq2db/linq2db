@@ -1467,7 +1467,7 @@ namespace Tests.DataProvider
 
 			var sqlDecimal = db.Execute<SqlDecimal>("SELECT CAST('12345678901234567890123456789.123456789' AS decimal(38, 9))");
 
-			Assert.Throws<OverflowException>(() => _ = sqlDecimal.Value);
+			Assert.That(() => _ = sqlDecimal.Value, Throws.TypeOf<OverflowException>());
 		}
 
 		[Test]

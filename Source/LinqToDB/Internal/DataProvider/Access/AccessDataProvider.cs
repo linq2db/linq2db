@@ -24,6 +24,11 @@ namespace LinqToDB.Internal.DataProvider.Access
 	sealed class AccessAceOleDbDataProvider() : AccessDataProvider(ProviderName.AccessAceOleDb, AccessVersion.Ace, AccessProvider.OleDb);
 	sealed class AccessJetODBCDataProvider()  : AccessDataProvider(ProviderName.AccessJetOdbc , AccessVersion.Jet, AccessProvider.ODBC );
 	sealed class AccessAceODBCDataProvider()  : AccessDataProvider(ProviderName.AccessAceOdbc , AccessVersion.Ace, AccessProvider.ODBC );
+
+	// One provider for both file formats: the engine is the same for MDB and ACCDB, and AccessVersion
+	// only selects the member translator, whose Jet arm exists because Microsoft's JET driver has no
+	// REPLACE — LibRed has it against an MDB file.
+	sealed class AccessLibRedDataProvider() : AccessDataProvider(ProviderName.AccessLibRed, AccessVersion.Ace, AccessProvider.LibRed);
 #pragma warning restore MA0048 // File name must match type name
 
 	public abstract class AccessDataProvider : DynamicDataProviderBase<AccessProviderAdapter>
@@ -52,7 +57,8 @@ namespace LinqToDB.Internal.DataProvider.Access
 			// should be: provider == AccessProvider.ODBC
 			// but OleDb provider has some issues with complex queries
 			// see TestPositionedParameters test
-			SqlProviderFlags.IsParameterOrderDependent                             = true;
+			// LibRed binds parameters by name, so the same name may be referenced more than once in one statement
+			SqlProviderFlags.IsParameterOrderDependent                             = provider != AccessProvider.LibRed;
 			SqlProviderFlags.IsUpdateFromSupported                                 = false;
 			SqlProviderFlags.IsWindowFunctionsSupported                            = false;
 			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel                    = 1;
@@ -66,10 +72,31 @@ namespace LinqToDB.Internal.DataProvider.Access
 			SqlProviderFlags.IsSubqueryExpressionInsidePredicateSupported          = false;
 			SqlProviderFlags.IsSubqueryJoinOnOuterReferenceSupported               = false;
 
+			// LibRed's engine accepts a superset of Jet SQL
+			if (provider == AccessProvider.LibRed)
+			{
+				SqlProviderFlags.IsWindowFunctionsSupported       = true;
+				SqlProviderFlags.IsSkipSupported                  = true;
+				SqlProviderFlags.IsSubQuerySkipSupported          = true;
+				SqlProviderFlags.AcceptsTakeAsParameter           = true;
+				SqlProviderFlags.IsApplyJoinSupported             = true;
+				SqlProviderFlags.IsCrossJoinSupported             = true;
+				SqlProviderFlags.IsSupportsJoinWithoutCondition   = true;
+				SqlProviderFlags.IsDistinctSetOperationsSupported = true;
+				SqlProviderFlags.IsDistinctFromSupported          = true;
+				SqlProviderFlags.TakeHintsSupported               = TakeHints.Percent | TakeHints.WithTies;
+			}
+
 			if (provider == AccessProvider.OleDb)
 			{
 				SetCharField("DBTYPE_WCHAR", (r, i) => r.GetString(i).TrimEnd(' '));
 				SetCharFieldToType<char>("DBTYPE_WCHAR", DataTools.GetCharExpression);
+			}
+			else if (provider == AccessProvider.LibRed)
+			{
+				// LibRed names the store type as the engine spells it
+				SetCharField("Char", (r, i) => r.GetString(i).TrimEnd(' '));
+				SetCharFieldToType<char>("Char", DataTools.GetCharExpression);
 			}
 			else
 			{
@@ -84,7 +111,9 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 			SetProviderField<DbDataReader, TimeSpan, DateTime>((r, i) => r.GetDateTime(i) - new DateTime(1899, 12, 30));
 
-			_sqlOptimizer = new AccessSqlOptimizer(SqlProviderFlags);
+			_sqlOptimizer = provider == AccessProvider.LibRed
+				? new AccessLibRedSqlOptimizer(SqlProviderFlags)
+				: new AccessSqlOptimizer(SqlProviderFlags);
 		}
 
 		private  AccessVersion  Version  { get; }
@@ -94,6 +123,9 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 		protected override IMemberTranslator CreateMemberTranslator()
 		{
+			if (Provider == AccessProvider.LibRed)
+				return new AccessLibRedMemberTranslator();
+
 			return Version == AccessVersion.Jet
 				? new AccessJetMemberTranslator()
 				: new AccessMemberTranslator();
@@ -103,9 +135,12 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
-			return Provider == AccessProvider.OleDb
-				? new AccessOleDbSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags)
-				: new AccessODBCSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
+			return Provider switch
+			{
+				AccessProvider.OleDb  => new AccessOleDbSqlBuilder (this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+				AccessProvider.LibRed => new AccessLibRedSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+				_                     => new AccessODBCSqlBuilder  (this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+			};
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -117,16 +152,20 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 		public override ISchemaProvider GetSchemaProvider()
 		{
-			return Provider == AccessProvider.OleDb
-				? new AccessOleDbSchemaProvider(this)
-				: new AccessODBCSchemaProvider();
+			return Provider switch
+			{
+				AccessProvider.OleDb  => new AccessOleDbSchemaProvider(this),
+				AccessProvider.LibRed => new AccessLibRedSchemaProvider(),
+				_                     => new AccessODBCSchemaProvider(),
+			};
 		}
 
 		public override IQueryParametersNormalizer GetQueryParameterNormalizer()
 		{
-			return Provider == AccessProvider.OleDb
-				? base.GetQueryParameterNormalizer()
-				: NoopQueryParametersNormalizer.Instance;
+			// ODBC has no parameter names at all; both other flavours emit @name placeholders
+			return Provider == AccessProvider.ODBC
+				? NoopQueryParametersNormalizer.Instance
+				: base.GetQueryParameterNormalizer();
 		}
 
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
@@ -164,6 +203,18 @@ namespace LinqToDB.Internal.DataProvider.Access
 							value = unchecked((int)checked((uint)ulongValue));
 						break;
 				}
+			}
+			else if (Provider == AccessProvider.LibRed && value is bool b)
+			{
+				// LibRed binds a bool to an integer column as -1 (and overflows a Byte); ACE binds 1, and a
+				// parameter predicate compares the stored value exactly
+				value = dataType.DataType switch
+				{
+					DataType.Byte  => b ? (byte)1  : (byte)0,
+					DataType.Int16 => b ? (short)1 : (short)0,
+					DataType.Int32 => b ? 1 : 0,
+					_              => value,
+				};
 			}
 
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
@@ -206,7 +257,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 					case DataType.NText     : parameter.DbType = DbType.String; return;
 				}
 			}
-			else
+			else if (Provider == AccessProvider.ODBC)
 			{
 				// https://docs.microsoft.com/en-us/sql/odbc/microsoft/microsoft-access-data-types?view=sql-server-ver15
 				// https://docs.microsoft.com/en-us/sql/odbc/microsoft/data-type-limitations?view=sql-server-ver15
@@ -297,6 +348,8 @@ namespace LinqToDB.Internal.DataProvider.Access
 			public static readonly MappingSchema AceOleDbMappingSchema  = new AccessMappingSchema.AceOleDbMappingSchema();
 			public static readonly MappingSchema AceOdbcDbMappingSchema = new AccessMappingSchema.AceOdbcDbMappingSchema();
 
+			public static readonly MappingSchema LibRedMappingSchema = new AccessMappingSchema.LibRedMappingSchema();
+
 			public static MappingSchema Get(AccessVersion version, AccessProvider provider)
 			{
 				return (version, provider) switch
@@ -305,6 +358,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 					(AccessVersion.Ace, AccessProvider.OleDb) => AceOleDbMappingSchema,
 					(AccessVersion.Jet, AccessProvider.ODBC)  => JetOdbcDbMappingSchema,
 					(AccessVersion.Ace, AccessProvider.ODBC)  => AceOdbcDbMappingSchema,
+					(_                , AccessProvider.LibRed) => LibRedMappingSchema,
 					_                                         => throw new InvalidOperationException(),
 				};
 			}

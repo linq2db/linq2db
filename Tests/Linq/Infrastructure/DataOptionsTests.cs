@@ -693,36 +693,36 @@ namespace Tests.Infrastructure
 		public void TryUseConfigurationStringTest()
 		{
 			using var db = new TestDataConnection();
-			Assert.Throws<LinqToDBException>(
+			Assert.That(
 				() => { using (db.UseOptions(o => o.UseConfiguration("new config"))) { } },
-				"ConfigurationString cannot be changed.");
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("Option 'ConfigurationString' cannot be changed for context dynamically."));
 		}
 
 		[Test]
 		public void TryUseConnectionStringTest()
 		{
 			using var db = new TestDataConnection();
-			Assert.Throws<LinqToDBException>(
+			Assert.That(
 				() => { using (db.UseOptions(o => o.UseConnectionString("new config"))) { } },
-				"ConnectionString cannot be changed.");
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("Option 'ConnectionString' cannot be changed for context dynamically."));
 	}
 
 		[Test]
 		public void TryUseProviderNameTest()
 		{
 			using var db = new TestDataConnection();
-			Assert.Throws<LinqToDBException>(
+			Assert.That(
 				() => { using (db.UseOptions(o => o.UseProvider("new provider"))) { } },
-				"ProviderName cannot be changed.");
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("Option 'ProviderName' cannot be changed for context dynamically."));
 }
 
 		[Test]
 		public void TryWithDbConnectionTest()
 		{
 			using var db = new TestDataConnection();
-			Assert.Throws<LinqToDBException>(
+			Assert.That(
 				() => { using (db.UseOptions(o => o.WithOptions<ConnectionOptions>(co => co.WithDbConnection(db.OpenDbConnection())))) { } },
-				"DbConnection cannot be changed.");
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("Option 'DbConnection' cannot be changed for context dynamically."));
 		}
 
 		[Test]
@@ -732,54 +732,72 @@ namespace Tests.Infrastructure
 
 			db.BeginTransaction();
 
-			Assert.Throws<LinqToDBException>(
+			Assert.That(
 				() => { using (db.UseOptions(o => o.WithOptions<ConnectionOptions>(co => co.WithDbTransaction(db.Transaction!)))) { } },
-				"DbTransaction cannot be changed.");
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("Option 'DbTransaction' cannot be changed for context dynamically."));
 		}
 
 		[Test]
 		public void TryWithDisposeConnectionTest()
 		{
 			using var db = new TestDataConnection();
-			Assert.Throws<LinqToDBException>(
+			Assert.That(
 				() => { using (db.UseOptions(o => o.WithOptions<ConnectionOptions>(co => co.WithDisposeConnection(true)))) { } },
-				"DisposeConnection cannot be changed.");
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("Option 'DisposeConnection' cannot be changed for context dynamically."));
 		}
 
 		[Test]
 		public void TryUseDataProviderTest()
 		{
 			using var db = new TestDataConnection();
-			Assert.Throws<LinqToDBException>(
+			Assert.That(
 				() => { using (db.UseOptions(o => o.UseSqlServer(SqlServerVersion.v2022, SqlServerProvider.MicrosoftDataSqlClient))) { } },
-				"DataProvider cannot be changed.");
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("Option 'DataProvider' cannot be changed for context dynamically."));
 		}
 
 		[Test]
 		public void TryUseDataProviderFactoryTest()
 		{
 			using var db = new TestDataConnection();
-			Assert.Throws<LinqToDBException>(
-				() => { using (db.UseOptions(o => o.UseSqlServer("connection string"))) { } },
-				"DataProviderFactory cannot be changed.");
+			Assert.That(
+				() => { using (db.UseOptions(o => o.WithOptions<ConnectionOptions>(co => co.WithDataProviderFactory(_ => db.DataProvider)))) { } },
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("Option 'DataProviderFactory' cannot be changed for context dynamically."));
 		}
 
 		[Test]
 		public void TryWithConnectionFactoryTest()
 		{
 			using var db = new TestDataConnection();
-			Assert.Throws<LinqToDBException>(
+			Assert.That(
 				() => { using (db.UseOptions(o => o.WithOptions<ConnectionOptions>(co => co.WithConnectionFactory(_ => db.OpenDbConnection())))) { } },
-				"ConnectionFactory cannot be changed.");
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("Option 'ConnectionFactory' cannot be changed for context dynamically."));
 		}
 
 		[Test]
 		public void TryWithOnEntityDescriptorCreatedTest()
 		{
 			using var db = new TestDataConnection();
-			Assert.Throws<LinqToDBException>(
+			Assert.That(
 				() => { using (db.UseOptions(o => o.WithOptions<ConnectionOptions>(co => co.WithOnEntityDescriptorCreated((schema, descriptor) => { })))) { } },
-				"OnEntityDescriptorCreated cannot be changed.");
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("Option 'OnEntityDescriptorCreated' cannot be changed for context dynamically."));
+		}
+
+		[Test]
+		public void TryUseConnectionStringDataContextTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = new DataContext(context);
+			Assert.That(
+				() => { using (db.UseOptions(o => o.UseConnectionString("new config"))) { } },
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("Option 'ConnectionString' cannot be changed for context dynamically."));
+		}
+
+		[Test]
+		public void TryUseConnectionStringContextTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			Assert.That(
+				() => { using (db.UseOptions(o => o.UseConnectionString("new config"))) { } },
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("Option 'ConnectionString' cannot be changed for context dynamically."));
 		}
 
 		[Test]

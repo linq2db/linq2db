@@ -1,0 +1,8 @@
+{
+	"Azure.TestJob": {
+		"Providers": [
+			"SqlServer.2012",
+			"SqlServer.2012.MS"
+		]
+	}
+}

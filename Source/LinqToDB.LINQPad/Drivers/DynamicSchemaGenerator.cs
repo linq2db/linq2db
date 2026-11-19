@@ -97,7 +97,7 @@ internal static class DynamicSchemaGenerator
 		options.DataModel.HasUntypedOptionsConstructor       = false;
 		options.DataModel.HasTypedOptionsConstructor         = false;
 		options.DataModel.ContextClassName                   = contextName;
-		options.DataModel.BaseContextClass                   = "LinqToDB.LINQPad.LINQPadDataConnection";
+		options.DataModel.BaseContextClass                   = "LinqToDB.Data.DataConnection";
 		options.DataModel.GenerateAssociations               = true;
 		options.DataModel.GenerateAssociationExtensions      = false;
 		options.DataModel.AssociationCollectionType          = "System.Collections.Generic.List<>";
@@ -173,7 +173,7 @@ internal static class DynamicSchemaGenerator
 			dataModel,
 			MetadataBuilders.GetMetadataBuilder(generator.Language, MetadataSource.Attributes),
 			new ProviderSpecificStructsEqualityFixer(generator.Language),
-			new DataModelAugmentor(language, language.TypeParser.Parse<LINQPadDataConnection>(), settings.Connection.CommandTimeout));
+			new DataModelAugmentor(language, language.TypeParser.Parse<DataConnection>(), settings.Connection.CommandTimeout));
 
 		// IMPORTANT:
 		// real identifiers from generated code set to data model only after this line (GenerateSourceCode call)
