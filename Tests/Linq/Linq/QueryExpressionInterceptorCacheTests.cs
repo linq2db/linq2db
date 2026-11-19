@@ -612,8 +612,8 @@ namespace Tests.Linq
 		}
 
 		// Contexts that differ only by the value their interceptor instance reads from itself share one query, also when
-		// the query references the filtered table more than once, and the cached query does not keep the interceptor of
-		// the context that built it alive.
+		// the query references the filtered table more than once. The IsAlive check only guards that an interceptor added
+		// through AddInterceptor is not kept by the cached query; it holds without the shared-accessor mapping as well.
 		[Test, QueryCacheTest]
 		public void SeveralReferencesShareCachedQuery([IncludeDataSources(ProviderName.SQLiteMS)] string context, [Values] bool join)
 		{
