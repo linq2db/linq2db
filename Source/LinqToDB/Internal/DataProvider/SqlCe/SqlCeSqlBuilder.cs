@@ -28,6 +28,8 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 			return new SqlCeSqlBuilder(this);
 		}
 
+		protected override SqlPrecedenceTable PrecedenceTable => SqlServer.SqlServerSqlBuilder.TransactSqlPrecedence;
+
 		protected override string? FirstFormat(SelectQuery selectQuery)
 		{
 			return selectQuery.Select.SkipValue == null ? "TOP ({0})" : null;

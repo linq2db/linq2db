@@ -221,8 +221,6 @@ namespace Tests.Linq
 			TestOneJohn(from p in db.Person where (p.ID ^ 2) == 3 select p);
 		}
 
-		[ActiveIssue(6243, Configurations = [ProviderName.SqlCe, TestProvName.AllSqlServer, TestProvName.AllSybase], ErrorMessage = "Count equal to 2{0}But was:{1}0",
-			Details = "T-SQL evaluates | and ^ left to right at one level, and the XOR operand of | is emitted without parentheses. Measured on SqlCe and Sybase (CI); SQL Server has no | / ^ arm either and emits the same SQL.")]
 		[Test]
 		public void BinaryXorUnderOr([DataSources] string context)
 		{

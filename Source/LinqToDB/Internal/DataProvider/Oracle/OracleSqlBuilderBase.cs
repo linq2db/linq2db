@@ -20,6 +20,31 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		protected override ConcatBuildStyle ConcatStyle => ConcatBuildStyle.Pipes;
 
+		// https://docs.oracle.com/en/database/oracle/oracle-database/23/sqlrf/About-SQL-Operators.html: prefix + - > * / >
+		// binary + -, || (one level, left to right) > comparisons
+		static readonly SqlPrecedenceTable _precedenceTable = CreatePrecedenceTable();
+
+		static SqlPrecedenceTable CreatePrecedenceTable()
+		{
+			const int arithmetic = SqlPrecedenceTable.ArithmeticGroup | SqlPrecedenceTable.PrefixGroup;
+
+			var prefix   = new SqlOperatorPrecedence(Precedence.Unary,    SqlAssociativity.Left, false, arithmetic);
+			var additive = new SqlOperatorPrecedence(Precedence.Additive, SqlAssociativity.Left, false, arithmetic);
+
+			return SqlPrecedenceTable.Default.With(
+				(SqlPrecedenceKeys.Negation,        prefix),
+				(SqlPrecedenceKeys.NegativeLiteral, prefix),
+				("*",                               new(Precedence.Multiplicative, SqlAssociativity.Left, false, arithmetic)),
+				("/",                               new(Precedence.Multiplicative, SqlAssociativity.Left, false, arithmetic)),
+				("+",                               additive),
+				("-",                               additive),
+				(SqlPrecedenceKeys.Concatenation,   additive with { Associative = true }),
+				(SqlPrecedenceKeys.Class(Precedence.Unary),       prefix),
+				(SqlPrecedenceKeys.Class(Precedence.Concatenate), additive));
+		}
+
+		protected override SqlPrecedenceTable PrecedenceTable => _precedenceTable;
+
 		protected OracleSqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
