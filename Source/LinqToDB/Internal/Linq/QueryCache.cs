@@ -106,6 +106,9 @@ namespace LinqToDB.Internal.Linq
 			public readonly int        ConfigurationID;
 			public readonly QueryFlags Flags;
 			public readonly int        ChainHash;
+			// Compared by reference. Compiled queries of one shape share the chain hash, and without it each one's queries
+			// would push the others' out of a shared bucket.
+			public readonly object?    CompiledSource;
 
 			readonly int _hash;
 
@@ -114,20 +117,23 @@ namespace LinqToDB.Internal.Linq
 				Type       contextType,
 				int        configurationID,
 				QueryFlags flags,
-				int        chainHash)
+				int        chainHash,
+				object?    compiledSource)
 			{
 				ResultType      = resultType;
 				ContextType     = contextType;
 				ConfigurationID = configurationID;
 				Flags           = flags;
 				ChainHash       = chainHash;
+				CompiledSource  = compiledSource;
 
 				_hash = HashCode.Combine(
 					resultType,
 					contextType,
 					configurationID,
 					(int)flags,
-					chainHash);
+					chainHash,
+					compiledSource == null ? 0 : RuntimeHelpers.GetHashCode(compiledSource));
 			}
 
 			public bool Equals(CacheKey other)
@@ -136,7 +142,8 @@ namespace LinqToDB.Internal.Linq
 					&& Flags           == other.Flags
 					&& ChainHash       == other.ChainHash
 					&& ResultType      == other.ResultType
-					&& ContextType     == other.ContextType;
+					&& ContextType     == other.ContextType
+					&& ReferenceEquals(CompiledSource, other.CompiledSource);
 			}
 
 			public override bool Equals([NotNullWhen(true)] object? obj) => obj is CacheKey other && Equals(other);
@@ -322,9 +329,12 @@ namespace LinqToDB.Internal.Linq
 			[NotNullWhen(true)] out Query?                query,
 			[NotNullWhen(true)] out IQueryExpressions?    matchedExpressions)
 		{
-			return TryFind(resultType, dataContext, expressions, queryFlags, compiledParameters: null, compiledCacheKey: null, out query, out matchedExpressions);
+			return TryFind(resultType, dataContext, expressions, queryFlags, compiledSource: null, compiledParameters: null, compiledCacheKey: null, out query, out matchedExpressions);
 		}
 
+		/// <param name="compiledSource">
+		/// The compiled query source the queries are kept for, which gets buckets of its own; <see langword="null"/> otherwise.
+		/// </param>
 		/// <param name="compiledParameters">
 		/// Arguments of a compiled query, which the value comparisons of its cached queries read; <see langword="null"/> otherwise.
 		/// </param>
@@ -336,6 +346,7 @@ namespace LinqToDB.Internal.Linq
 			IDataContext                                  dataContext,
 			IQueryExpressions                             expressions,
 			QueryFlags                                    queryFlags,
+			object?                                       compiledSource,
 			object?[]?                                    compiledParameters,
 			object?                                       compiledCacheKey,
 			[NotNullWhen(true)] out Query?                query,
@@ -354,7 +365,7 @@ namespace LinqToDB.Internal.Linq
 				return false;
 			}
 
-			var key = BuildKey(resultType, dataContext, expressions, queryFlags);
+			var key = BuildKey(resultType, dataContext, expressions, queryFlags, compiledSource);
 
 			if (!_cache.TryGetValue(key, out var bucket))
 				return false;
@@ -408,9 +419,12 @@ namespace LinqToDB.Internal.Linq
 			IQueryExpressions expressions,
 			QueryFlags        queryFlags)
 		{
-			TryAdd(resultType, dataContext, query, expressions, queryFlags, compiledParameters: null);
+			TryAdd(resultType, dataContext, query, expressions, queryFlags, compiledSource: null, compiledParameters: null);
 		}
 
+		/// <param name="compiledSource">
+		/// The compiled query source the query is kept for, which gets buckets of its own; <see langword="null"/> otherwise.
+		/// </param>
 		/// <param name="compiledParameters">
 		/// Arguments of a compiled query, which the value comparisons of its cached queries read; <see langword="null"/> otherwise.
 		/// The query's <see cref="Query.CompiledCacheKey"/> tells which call it was built for.
@@ -421,6 +435,7 @@ namespace LinqToDB.Internal.Linq
 			Query             query,
 			IQueryExpressions expressions,
 			QueryFlags        queryFlags,
+			object?           compiledSource,
 			object?[]?        compiledParameters)
 		{
 			var now = Stopwatch.GetTimestamp();
@@ -440,7 +455,7 @@ namespace LinqToDB.Internal.Linq
 			if (baseTimeoutTicks <= 0)
 				return;
 
-			var key = BuildKey(resultType, dataContext, expressions, queryFlags);
+			var key = BuildKey(resultType, dataContext, expressions, queryFlags, compiledSource);
 
 			while (true)
 			{
@@ -538,7 +553,8 @@ namespace LinqToDB.Internal.Linq
 			Type              resultType,
 			IDataContext      dataContext,
 			IQueryExpressions expressions,
-			QueryFlags        queryFlags)
+			QueryFlags        queryFlags,
+			object?           compiledSource)
 		{
 			// InlineParameters and HasEntityServiceInterceptor are already encoded in queryFlags
 			// by QueryFlagsHelper.GetQueryFlags — they don't need separate CacheKey fields.
@@ -549,7 +565,8 @@ namespace LinqToDB.Internal.Linq
 				dataContext.GetType(),
 				dataContext.ConfigurationID,
 				queryFlags,
-				chainHash);
+				chainHash,
+				compiledSource);
 		}
 
 		/// <summary>
@@ -1139,7 +1156,7 @@ namespace LinqToDB.Internal.Linq
 		/// <summary>Per-bucket entry count for the supplied lookup key shape.</summary>
 		public int CountEntriesInBucket(Type resultType, IDataContext dataContext, IQueryExpressions expressions, QueryFlags queryFlags)
 		{
-			var key = BuildKey(resultType, dataContext, expressions, queryFlags);
+			var key = BuildKey(resultType, dataContext, expressions, queryFlags, compiledSource: null);
 			return _cache.TryGetValue(key, out var bucket) ? Volatile.Read(ref bucket.Entries).Length : 0;
 		}
 
@@ -1152,7 +1169,7 @@ namespace LinqToDB.Internal.Linq
 		/// </summary>
 		public bool TrySimulateHits(Type resultType, IDataContext dataContext, IQueryExpressions expressions, QueryFlags queryFlags, int hits)
 		{
-			var key = BuildKey(resultType, dataContext, expressions, queryFlags);
+			var key = BuildKey(resultType, dataContext, expressions, queryFlags, compiledSource: null);
 
 			if (!_cache.TryGetValue(key, out var bucket))
 				return false;

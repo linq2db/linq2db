@@ -2092,6 +2092,42 @@ namespace Tests.Data
 			}
 		}
 
+		// Many compiled queries of one shape: the queries one of them keeps for its contexts do not push out another's.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
+		public void QueryExpression_WithoutCacheKey_ManyCompiledQueriesOfOneShape([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			Query.ClearCaches();
+
+			IDataContext Create(int? tenant) => GetDataContext(context, o => o
+				.UseMappingSchema(_personFilterSchema)
+				.UseInterceptor(new UnkeyedTenantLimitInterceptor(ExpressionKind.QueryFilter, tenant)));
+
+			using var admin   = Create(null);
+			using var tenant2 = Create(2);
+
+			var compiled = Enumerable.Range(0, 20)
+				.Select(_ => CompiledQuery.Compile((IDataContext db) => db.GetTable<Person>()))
+				.ToArray();
+
+			var tenantInfos = new object[compiled.Length];
+
+			for (var i = 0; i < compiled.Length; i++)
+			{
+				ShouldReturnIds(compiled[i](admin), ExpectedIds(), $"admin, query {i}");
+
+				tenantInfos[i] = compiled[i](tenant2).GetCompiledQueryInfo();
+			}
+
+			for (var i = 0; i < compiled.Length; i++)
+			{
+				var query = compiled[i](tenant2);
+
+				query.GetCompiledQueryInfo().ShouldBeSameAs(tenantInfos[i], $"query {i}");
+
+				ShouldReturnIds(query, ExpectedIds(2), $"tenant 2, query {i}");
+			}
+		}
+
 		// The same with a [SqlQueryDependent] argument, which selects the query by value: a query the tenant needs for one
 		// value must not serve it for another.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]

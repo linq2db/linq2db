@@ -92,7 +92,7 @@ namespace LinqToDB.Internal.Linq
 
 				// The executing context's query interceptor needs another query for this fold site. Such variants go to the
 				// query cache, which keeps several for one key and compares them with the context.
-				if (QueryCache.Default.TryFind(typeof(T), dataContext, cached.CompiledExpressions!, queryFlags, parameterValues, cacheKey, out var variant, out var matched))
+				if (QueryCache.Default.TryFind(typeof(T), dataContext, cached.CompiledExpressions!, queryFlags, this, parameterValues, cacheKey, out var variant, out var matched))
 				{
 					expressions = matched;
 					unseenSlots = null;
@@ -121,7 +121,7 @@ namespace LinqToDB.Internal.Linq
 			{
 				query.CompiledCacheKey = cacheKey;
 
-				QueryCache.Default.TryAdd(typeof(T), dataContext, query, expressions, queryFlags, parameterValues);
+				QueryCache.Default.TryAdd(typeof(T), dataContext, query, expressions, queryFlags, this, parameterValues);
 			}
 			else
 			{
