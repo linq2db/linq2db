@@ -370,7 +370,7 @@ credentials cli init --store <keyring|gpg|vault|local> [--output <file>] [--conf
   that profile's (section 2). For `set` and `remove` the record is the profile's `credentials`, or `--credentials`; only
   `linq2db/` records are managed.
 - `list` and `clear` work on one store; `clear` asks for confirmation unless `--force` is given.
-- Before version 6.6 `--profile` named the record (`--profile prod` meant `linq2db/prod`); use
+- Before version 6.7 `--profile` named the record (`--profile prod` meant `linq2db/prod`); use
   `--credentials linq2db/<name>` for that now. `list` printed the name without the `linq2db/` prefix in a `PROFILE`
   column; it now prints the full record name in a `RECORD` column. Every command now prints the store it uses on
   `stderr` (`Using <store> (<source>).`), also when it succeeds; a script that treats any `stderr` output as a failure

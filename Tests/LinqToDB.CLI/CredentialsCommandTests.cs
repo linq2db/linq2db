@@ -471,7 +471,7 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("remove", TestName = "OldProfileSpellingForRemoveNamesTheCredentialsOption")]
 		public async Task OldProfileSpellingNamesTheCredentialsOption(string operation)
 		{
-			// A 6.5 command line: --profile named the record linq2db/<name>.
+			// A 6.6 command line: --profile named the record linq2db/<name>.
 			var environment = new TestCliEnvironment();
 
 			var (exitCode, _, error) = operation == "set"
@@ -485,12 +485,12 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("linq2db/a//b",    TestName = "CredentialManagerRecordWithEmptySegmentCanBeRemoved")]
 		[TestCase("linq2db/../prod", TestName = "CredentialManagerRecordWithDotDotSegmentCanBeRemoved")]
 		[TestCase("linq2db/a/./b",   TestName = "CredentialManagerRecordWithDotSegmentCanBeRemoved")]
-		public async Task CredentialManagerRecordFromVersion65CanBeRemoved(string target)
+		public async Task CredentialManagerRecordFromVersion66CanBeRemoved(string target)
 		{
 			if (!OperatingSystem.IsWindows())
-				Assert.Ignore("Before 6.6 records were stored only in Windows Credential Manager.");
+				Assert.Ignore("Before 6.7 records were stored only in Windows Credential Manager.");
 
-			// 6.5 accepted these names (credentials set --profile a//b); the record must stay manageable one by one.
+			// 6.6 accepted these names (credentials set --profile a//b); the record must stay manageable one by one.
 			var environment = new TestCliEnvironment();
 			environment.Credentials.Add(target, ("u", "p"));
 			environment.Credentials.Add("linq2db/other", ("u", "p"));
