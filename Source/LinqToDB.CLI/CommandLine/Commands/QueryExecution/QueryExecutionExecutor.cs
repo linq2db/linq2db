@@ -421,14 +421,14 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				// The read-only check covers the single-statement contract too, and names the more specific reason.
 				guardResult = ReadOnlySqlGuard.Validate(dataProvider, sql, dataOptions.ConnectionOptions.ConnectionString);
 
-				if (!guardResult.IsAllowed)
+				if (!guardResult.IsAllowed && !guardResult.AwaitsServerCharset)
 					return new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, guardResult.Error, false);
 			}
 			else
 			{
 				guardResult = ReadOnlySqlGuard.ValidateSingleStatement(dataProvider, sql, dataOptions.ConnectionOptions.ConnectionString);
 
-				if (!guardResult.IsAllowed)
+				if (!guardResult.IsAllowed && !guardResult.AwaitsServerCharset)
 					return new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, guardResult.Error, false);
 
 				await _settings.DiagnosticWriter.WriteLineAsync(
@@ -437,28 +437,70 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 						$"Executing write-capable SQL because profile '{_settings.Profile}' has enableExecute=true. Provider: {_settings.Provider}."));
 			}
 
+			var (routedOptions, routeError) = RouteConnection(dataOptions, dataProvider, guardResult);
+
+			if (routedOptions == null)
+				return new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, routeError, false);
+
 			// The count a temporary-table script returns is that of its writes to the temporary tables, not of the query.
-			return await ExecuteDatabaseLoop(RouteConnection(dataOptions, dataProvider, guardResult), dataProvider, sql, outputWriter, !guardResult.WritesTemporaryTables, cancellationToken);
+			return await ExecuteDatabaseLoop(routedOptions, dataProvider, sql, outputWriter, !guardResult.WritesTemporaryTables, guardResult.AwaitsServerCharset, cancellationToken);
 		}
 
 		// The options the call runs with: a connection of its own when the guard says the pool must not keep its session.
-		internal static DataOptions RouteConnection(DataOptions dataOptions, IDataProvider dataProvider, SqlGuardResult guardResult)
+		// No options, and the reason, when the driver would not read the connection string so.
+		internal static (DataOptions? Options, string? Error) RouteConnection(DataOptions dataOptions, IDataProvider dataProvider, SqlGuardResult guardResult)
 		{
-			if (guardResult.RequiresUnpooledConnection && dataOptions.ConnectionOptions.ConnectionString is { } connectionString)
-				return dataOptions.UseConnectionString(dataProvider, WithoutPooling(connectionString));
+			if (!guardResult.RequiresUnpooledConnection || dataOptions.ConnectionOptions.ConnectionString is not { } connectionString)
+				return (dataOptions, null);
 
-			return dataOptions;
+			var unpooled = WithoutPooling(connectionString);
+
+			if (DriverReadsPooling(dataProvider, unpooled) == true)
+			{
+				return (null, "The call needs a connection of its own (it writes temporary tables, or runs in execute mode), but the driver would read this connection string with pooling on: it stops reading at a key with an empty value or a value with a doubled quote, and a Pooling key before that point decides. Remove such keys or that Pooling key.");
+			}
+
+			return (dataOptions.UseConnectionString(dataProvider, unpooled), null);
 		}
 
 		// The driver closes a connection opened without pooling when it is released, so the session state the call leaves
 		// dies with it, while the pooled connections stay untouched. AseClient's ClearPool does nothing, so this is the way
-		// to drop one connection. Appended last, the key overrides an earlier Pooling key.
+		// to drop one connection. AseClient's tokeniser stops at the first item it cannot read (a key with an empty value,
+		// a value with a doubled quote) and drops the rest, so the key goes first as well as last, where it overrides an
+		// earlier Pooling key for a parser that reads the whole string.
 		static string WithoutPooling(string connectionString)
 		{
-			return connectionString.TrimEnd().TrimEnd(';') + ";Pooling=false";
+			return "Pooling=false;" + connectionString.Trim().Trim(';') + ";Pooling=false";
 		}
 
-		async Task<QueryExecutionResult> ExecuteDatabaseLoop(DataOptions dataOptions, IDataProvider dataProvider, string sql, TextWriter outputWriter, bool reportRecordsAffected, CancellationToken cancellationToken)
+		// Whether AdoNetCore.AseClient would pool a connection opened with this connection string, as its own parser reads
+		// it (an internal type, reached by reflection; when it is gone the answer is "pooled", so the call is refused).
+		// Null for other drivers, whose parsing is not known here, and for a string the driver refuses (it opens nothing).
+		static bool? DriverReadsPooling(IDataProvider dataProvider, string connectionString)
+		{
+			if (!dataProvider.Name.StartsWith(ProviderName.SybaseManaged, StringComparison.OrdinalIgnoreCase))
+				return null;
+
+			var parse = typeof(AdoNetCore.AseClient.AseConnection).Assembly
+				.GetType("AdoNetCore.AseClient.Internal.ConnectionParameters")?
+				.GetMethodEx("Parse", BindingFlags.Public | BindingFlags.Static, typeof(string));
+
+			if (parse == null)
+				return true;
+
+			try
+			{
+				var parameters = parse.InvokeExt(null, [connectionString]);
+
+				return parameters?.GetType().GetProperty("Pooling")?.GetValue(parameters) as bool? ?? true;
+			}
+			catch (Exception ex) when (ex is ArgumentException or FormatException or OverflowException)
+			{
+				return null;
+			}
+		}
+
+		async Task<QueryExecutionResult> ExecuteDatabaseLoop(DataOptions dataOptions, IDataProvider dataProvider, string sql, TextWriter outputWriter, bool reportRecordsAffected, bool checkServerCharset, CancellationToken cancellationToken)
 		{
 			// Open a connection and apply optional provider-specific session setup before user SQL execution.
 			//
@@ -467,6 +509,20 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 			try
 			{
+				// The text holds characters outside ASCII, and the driver sends it in the character set the server named at
+				// login (ASE): the check needs that set, which the server reports for the session.
+				if (checkServerCharset)
+				{
+					var serverCharset    = await dataConnection.ExecuteAsync<string?>("select @@client_csname", cancellationToken) ?? string.Empty;
+					var connectionString = dataOptions.ConnectionOptions.ConnectionString;
+					var recheck          = _settings.Mode == QueryExecutionMode.Query
+						? ReadOnlySqlGuard.Validate(dataProvider, sql, connectionString, serverCharset)
+						: ReadOnlySqlGuard.ValidateSingleStatement(dataProvider, sql, connectionString, serverCharset);
+
+					if (!recheck.IsAllowed)
+						return new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, recheck.Error, false);
+				}
+
 				var lockTimeoutCommand = GetLockTimeoutCommand(dataProvider, _settings.LockTimeout);
 
 				if (lockTimeoutCommand != null)

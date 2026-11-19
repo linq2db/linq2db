@@ -1024,7 +1024,7 @@ namespace Tests.LinqToDB.CLI
 				}
 
 				ReadOnlySqlGuard.Validate("Sybase.Managed", sql).IsAllowed.ShouldBeFalse();
-				ReadOnlySqlGuard.Validate("Sybase.Managed", sql, "Data Source=h;Port=5000;Charset=utf8").IsAllowed.ShouldBeTrue();
+				ReadOnlySqlGuard.Validate("Sybase.Managed", sql, serverCharset: "utf8").IsAllowed.ShouldBeTrue();
 			}
 		}
 
@@ -1111,21 +1111,78 @@ namespace Tests.LinqToDB.CLI
 				.IsAllowed.ShouldBeFalse();
 		}
 
-		// The server names the character set at login; only Charset=utf8 makes the driver send what the text holds.
-		[TestCase(null,                                          "select '\u00E9' a",              false)]
-		[TestCase("Data Source=h;Port=5000;",                    "select 'e' a",                   true)]
-		[TestCase("Data Source=h;Port=5000;Charset=utf8",        "select '\u00E9' a",              true)]
-		[TestCase("Data Source=h;Port=5000; charset = UTF-8 ",   "select '\u2019', N'\u0418' a",   true)]
-		[TestCase("Data Source=h;Port=5000;Charset=iso_1",       "select '\u00E9' a",              false)]
-		[TestCase("Data Source=h;Port=5000;Charset=ascii_8",     "select '\u00E9' a",              false)]
-		[TestCase("Data Source=h;Port=5000;Charset=no-such-set", "select '\u00E9' a",              false)]
-		[TestCase("not a connection string",                     "select '\u00E9' a",              false)]
-		public void AseCharsetOfTheConnection(string? connectionString, string sql, bool accepted)
+		// The server names the character set at login, and only that answer counts: before it, a text outside ASCII awaits
+		// it (refused, with the routing of the call that would run); after it, only utf8 carries such a text unchanged.
+		[TestCase(null,     "select '\u00E9' a",                false)]
+		[TestCase("utf8",   "select '\u00E9' a",                true)]
+		[TestCase("UTF8",   "select '\u2019', N'\u0418' a",      true)]
+		[TestCase("utf8",   "select 1 a \uFF55\uFF50\uFF44\uFF41\uFF54\uFF45 t \uFF53\uFF45\uFF54 a = 2", true)]  // names to both sides; the server cannot convert them (live: an error, nothing written)
+		[TestCase("iso_1",  "select '\u00E9' a",                false)]
+		[TestCase("utf-8",  "select '\u00E9' a",                false)] // ASE has no set of that name
+		[TestCase("",       "select '\u00E9' a",                false)]
+		[TestCase("iso_1",  "select 'e' a",                     true)]
+		public void AseServerCharset(string? serverCharset, string sql, bool accepted)
 		{
 			using (Assert.EnterMultipleScope())
 			{
-				ReadOnlySqlGuard.Validate("Sybase.Managed", sql, connectionString).IsAllowed.ShouldBe(accepted);
-				ReadOnlySqlGuard.ValidateSingleStatement("Sybase.Managed", sql, connectionString).IsAllowed.ShouldBe(accepted);
+				ReadOnlySqlGuard.Validate("Sybase.Managed", sql, serverCharset: serverCharset).IsAllowed.ShouldBe(accepted);
+				ReadOnlySqlGuard.ValidateSingleStatement("Sybase.Managed", sql, serverCharset: serverCharset).IsAllowed.ShouldBe(accepted);
+				ReadOnlySqlGuard.Validate("Sybase", sql, serverCharset: serverCharset).IsAllowed.ShouldBe(accepted);   // SAP's driver
+			}
+		}
+
+		[Test]
+		public void AseAwaitingServerCharsetKeepsTheRouting()
+		{
+			var temp    = ReadOnlySqlGuard.Validate("Sybase.Managed", "select a into #t from t\nselect '\u00E9' e, a from #t");
+			var plain   = ReadOnlySqlGuard.Validate("Sybase.Managed", "select '\u00E9' e");
+			var refused = ReadOnlySqlGuard.Validate("Sybase.Managed", "select '\u00E9' e delete t");
+
+			using (Assert.EnterMultipleScope())
+			{
+				temp.IsAllowed.ShouldBeFalse();
+				temp.AwaitsServerCharset.ShouldBeTrue();
+				temp.WritesTemporaryTables.ShouldBeTrue();
+				temp.RequiresUnpooledConnection.ShouldBeTrue();
+				plain.AwaitsServerCharset.ShouldBeTrue();
+				plain.RequiresUnpooledConnection.ShouldBeFalse();
+				plain.Error!.ShouldContain("is outside ASCII.");
+
+				// A text the check refuses for another reason is refused at once.
+				refused.AwaitsServerCharset.ShouldBeFalse();
+				refused.Error!.ShouldContain("statement word DELETE");
+
+				// SQL Server's driver sends UTF-16: nothing to ask.
+				ReadOnlySqlGuard.Validate("SqlServer.2022", "select '\u00E9' e").IsAllowed.ShouldBeTrue();
+			}
+		}
+
+		// AdoNetCore.AseClient reads a connection string with its own tokeniser, which stops at a key with an empty value
+		// or a value with a doubled quote and drops the rest; the server then answers with its own set. Each row wrote a
+		// table live through the CLI or the driver (ASE 16.1). The connection string decides nothing; the server's answer does.
+		const string AseBase = "Data Source=localhost;Port=5000;Database=tempdb;Uid=sa;Password=myPassword;";
+
+		[TestCase(AseBase + "Application Name=;Charset=utf8",           "select 1 a \uFF55\uFF50\uFF44\uFF41\uFF54\uFF45 tempdb..wt \uFF53\uFF45\uFF54 a = 2")]
+		[TestCase(AseBase + "Application Name=;Charset=utf8",           "select 'a\u2019, 1 b update tempdb..wt set a = 7 --' c")]
+		[TestCase(AseBase + "Charset=;Charset=utf8",                    "select 'a\u2019, 1 b update tempdb..wt set a = 7 --' c")]
+		[TestCase(AseBase + "Application Name=\"a\"\"b\";Charset=utf8", "select 'a\u2019, 1 b update tempdb..wt set a = 7 --' c")]
+		[TestCase(AseBase + "Application Name='a''b';Charset=utf8",     "select 'a\u2019, 1 b update tempdb..wt set a = 7 --' c")]
+		[TestCase(AseBase + "X=;Charset=utf8;",                         "select 1 a \uFF55\uFF50\uFF44\uFF41\uFF54\uFF45 tempdb..wt \uFF53\uFF45\uFF54 a = 2")]
+		public void AseCharsetReadAsTheServerGrantedIt(string connectionString, string sql)
+		{
+			using (Assert.EnterMultipleScope())
+			{
+				// Before login: refused, awaiting the server's answer.
+				ReadOnlySqlGuard.Validate("Sybase.Managed", sql, connectionString).IsAllowed.ShouldBeFalse();
+				ReadOnlySqlGuard.ValidateSingleStatement("Sybase.Managed", sql, connectionString).IsAllowed.ShouldBeFalse();
+
+				// After login the server answered iso_1, as it did live: refused, and the message says why utf8 was not granted.
+				var result = ReadOnlySqlGuard.Validate("Sybase.Managed", sql, connectionString, "iso_1");
+
+				result.IsAllowed.ShouldBeFalse();
+				result.AwaitsServerCharset.ShouldBeFalse();
+				result.Error!.ShouldContain("the server named the character set 'iso_1' for this connection");
+				result.Error!.ShouldContain("The connection string asks for Charset=utf8, but the server did not grant it");
 			}
 		}
 
@@ -1134,7 +1191,7 @@ namespace Tests.LinqToDB.CLI
 		[Test]
 		public void AseUtf8UnpairedSurrogateRefused()
 		{
-			var result = ReadOnlySqlGuard.Validate("Sybase.Managed", "select 'a" + (char)0xD800 + "' a", "Data Source=h;Port=5000;Charset=utf8");
+			var result = ReadOnlySqlGuard.Validate("Sybase.Managed", "select 'a" + (char)0xD800 + "' a", serverCharset: "utf8");
 
 			using (Assert.EnterMultipleScope())
 			{
@@ -1247,13 +1304,13 @@ namespace Tests.LinqToDB.CLI
 			var provider = SybaseTools.GetDataProvider(SybaseProvider.DataAction);
 			var options  = new DataOptions().UseConnectionString(provider, connectionString);
 
-			var temp    = QueryExecutionExecutor.RouteConnection(options, provider, ReadOnlySqlGuard.Validate("Sybase.Managed", "select a into #t from t\nselect * from #t"));
-			var execute = QueryExecutionExecutor.RouteConnection(options, provider, ReadOnlySqlGuard.ValidateSingleStatement("Sybase.Managed", "update t set a = 1"));
-			var plain   = QueryExecutionExecutor.RouteConnection(options, provider, ReadOnlySqlGuard.Validate("Sybase.Managed", "select * from t"));
+			var temp    = QueryExecutionExecutor.RouteConnection(options, provider, ReadOnlySqlGuard.Validate("Sybase.Managed", "select a into #t from t\nselect * from #t")).Options!;
+			var execute = QueryExecutionExecutor.RouteConnection(options, provider, ReadOnlySqlGuard.ValidateSingleStatement("Sybase.Managed", "update t set a = 1")).Options!;
+			var plain   = QueryExecutionExecutor.RouteConnection(options, provider, ReadOnlySqlGuard.Validate("Sybase.Managed", "select * from t")).Options!;
 
 			using (Assert.EnterMultipleScope())
 			{
-				temp.   ConnectionOptions.ConnectionString.ShouldBe("Data Source=ase;Port=5000;Pooling=true;Pooling=false");
+				temp.   ConnectionOptions.ConnectionString.ShouldBe("Pooling=false;Data Source=ase;Port=5000;Pooling=true;Pooling=false");
 				temp.   ConnectionOptions.DataProvider.ShouldBeSameAs(provider);
 				execute.ConnectionOptions.ConnectionString.ShouldBe(temp.ConnectionOptions.ConnectionString);
 				plain.  ShouldBeSameAs(options);
@@ -1261,6 +1318,124 @@ namespace Tests.LinqToDB.CLI
 				// The appended key is the one a connection-string parser keeps.
 				new DbConnectionStringBuilder { ConnectionString = temp.ConnectionOptions.ConnectionString }["Pooling"].ShouldBe("false");
 			}
+		}
+
+		// AdoNetCore.AseClient stops reading at a key with an empty value or a value with a doubled quote, so a key appended
+		// after one would not count: the route puts Pooling=false first as well, and the driver's own parser decides. A
+		// Pooling=true before such a key cannot be overridden, and the call is refused.
+		const string AseRouteBase = "Data Source=ase;Port=5000;Database=tempdb;Uid=sa;Password=p;";
+
+		[TestCase(AseRouteBase,                                    true)]
+		[TestCase(AseRouteBase + "X=;Charset=utf8",                true)]
+		[TestCase(AseRouteBase + "Application Name='a''b';Pooling=true", true)]
+		[TestCase(AseRouteBase + "Pooling=true",                   true)]
+		[TestCase(AseRouteBase + "Pooling=true;X=;",               false)]
+		[TestCase(AseRouteBase + "Pooling=true;Application Name=\"a\"\"b\";", false)]
+		public void UnpooledRouteAsTheDriverReadsIt(string connectionString, bool routed)
+		{
+			var provider = SybaseTools.GetDataProvider(SybaseProvider.DataAction);
+			var options  = new DataOptions().UseConnectionString(provider, connectionString);
+			var (routedOptions, error) = QueryExecutionExecutor.RouteConnection(options, provider, ReadOnlySqlGuard.Validate("Sybase.Managed", "select a into #t from t\nselect * from #t"));
+
+			using (Assert.EnterMultipleScope())
+			{
+				(routedOptions != null).ShouldBe(routed);
+
+				if (routed)
+					DriverReadsPooling(routedOptions!.ConnectionOptions.ConnectionString!).ShouldBeFalse();
+				else
+					error!.ShouldContain("the driver would read this connection string with pooling on");
+			}
+		}
+
+		// --user and --password go into the {0}/{1} template as one value each, so they cannot add keys. Each row is read
+		// by DbConnectionStringBuilder and by AdoNetCore.AseClient's own parser: both see the password as given and no
+		// other key.
+		[TestCase("myPassword;X=;Charset=utf8", "\"myPassword;X=;Charset=utf8\"")]
+		[TestCase("a=b",                        "\"a=b\"")]
+		[TestCase("it's",                       "\"it's\"")]
+		[TestCase("say \"x\"",                 "'say \"x\"'")]
+		[TestCase(" padded ",                   "\" padded \"")]
+		[TestCase("plain",                      "plain")]
+		[TestCase("Pooling=true;Charset=utf8",  "\"Pooling=true;Charset=utf8\"")]
+		public void CredentialsCannotAddKeys(string password, string written)
+		{
+			const string template = "Data Source=ase;Port=5000;Database=tempdb;Uid={0};Password={1};Pooling=false";
+
+			var connectionString = global::LinqToDB.CommandLine.Commands.Connection.ConnectionSettingsResolver.FormatCredentials(template, "sa", password, out var error)!;
+
+			using (Assert.EnterMultipleScope())
+			{
+				error.ShouldBeNull();
+				connectionString.ShouldBe($"Data Source=ase;Port=5000;Database=tempdb;Uid=sa;Password={written};Pooling=false");
+
+				var builder = new DbConnectionStringBuilder { ConnectionString = connectionString };
+
+				builder["Password"].ShouldBe(password);
+				builder.ContainsKey("Charset").ShouldBeFalse();
+				builder["Pooling"].ShouldBe("false");
+
+				var parameters = DriverParameters(connectionString);
+
+				parameters.GetType().GetProperty("Password")!.GetValue(parameters).ShouldBe(password);
+				parameters.GetType().GetProperty("Charset")!.GetValue(parameters).ShouldBeNull();
+				parameters.GetType().GetProperty("Pooling")!.GetValue(parameters).ShouldBe(false);
+			}
+		}
+
+		[TestCase("Uid={0};Password={1};",     "sa", "a'b\"c", "both kinds of quote")]
+		[TestCase("Uid={0};Password=\"{1}\";", "sa", "a\"b",   "holds the quote (\")")]
+		[TestCase("Uid={0};Password='{1}';",   "sa", "a'b",    "holds the quote (')")]
+		[TestCase("Uid={0};Password={1};",     "s;a", "p",     null)]
+		[TestCase("Uid={0};Password=\"{1}\";", "sa", "p;q",    null)]
+		public void CredentialsThatCannotBeWritten(string template, string user, string password, string? message)
+		{
+			var connectionString = global::LinqToDB.CommandLine.Commands.Connection.ConnectionSettingsResolver.FormatCredentials(template, user, password, out var error);
+
+			using (Assert.EnterMultipleScope())
+			{
+				if (message == null)
+				{
+					error.ShouldBeNull();
+
+					var builder = new DbConnectionStringBuilder { ConnectionString = connectionString! };
+
+					builder["Uid"].ShouldBe(user);
+					builder["Password"].ShouldBe(password);
+				}
+				else
+				{
+					connectionString.ShouldBeNull();
+					error!.ShouldContain(message);
+				}
+			}
+		}
+
+		// An empty value stays empty, as before: DbConnectionStringBuilder drops the key, AdoNetCore.AseClient stops reading
+		// there. What the driver then does not read decides nothing the check relies on (the server's character set is asked
+		// after login, and the unpooled route is confirmed by the driver's own parser).
+		[Test]
+		public void EmptyCredentialStaysEmpty()
+		{
+			global::LinqToDB.CommandLine.Commands.Connection.ConnectionSettingsResolver.FormatCredentials("Uid={0};Password={1};", "sa", "", out var error)
+				.ShouldBe("Uid=sa;Password=;");
+			error.ShouldBeNull();
+		}
+
+		static object DriverParameters(string connectionString)
+		{
+			var parse = typeof(AdoNetCore.AseClient.AseConnection).Assembly.GetType("AdoNetCore.AseClient.Internal.ConnectionParameters")!.GetMethod("Parse")!;
+
+			return parse.Invoke(null, [connectionString])!;
+		}
+
+		// The driver's own reading of Pooling (an internal type of AdoNetCore.AseClient).
+		static bool DriverReadsPooling(string connectionString)
+		{
+			var parse      = typeof(AdoNetCore.AseClient.AseConnection).Assembly.GetType("AdoNetCore.AseClient.Internal.ConnectionParameters")!.GetMethod("Parse")!;
+			var parameters = parse.Invoke(null, [connectionString])!;
+
+			return (bool)parameters.GetType().GetProperty("Pooling")!.GetValue(parameters)!;
 		}
 
 		// The executor opens the call's connection with the routed options, not with the ones it was given.
@@ -1285,14 +1460,14 @@ namespace Tests.LinqToDB.CLI
 			new DbConnectionStringBuilder { ConnectionString = opening.ConnectionString }["Pooling"].ShouldBe(pooling);
 		}
 
-		// The executor checks the text against the connection it opens: without Charset=utf8 a character outside ASCII stops
-		// the call at the check, and nothing opens; with it the connection opens.
-		[TestCase("Data Source=ase;Port=5000;",              false)]
-		[TestCase("Data Source=ase;Port=5000;Charset=utf8;", true)]
-		public async Task ExecutorChecksTheCharsetOfItsConnection(string connectionString, bool opens)
+		// The server's character set is known only after login, so a text outside ASCII on ASE opens the connection (and asks
+		// the server, live in the report) whatever the connection string says; a text the check refuses for another reason
+		// opens nothing.
+		[TestCase("Data Source=ase;Port=5000;",              "select '\u00E9' a",          true)]
+		[TestCase("Data Source=ase;Port=5000;Charset=utf8;", "select '\u00E9' a",          true)]
+		[TestCase("Data Source=ase;Port=5000;Charset=utf8;", "select '\u00E9' a delete t", false)]
+		public async Task ExecutorAsksTheServerForItsCharset(string connectionString, string sql, bool opens)
 		{
-			const string sql = "select '\u00E9' a";
-
 			var provider = SybaseTools.GetDataProvider(SybaseProvider.DataAction);
 			var opening  = new OpeningRecorder();
 			var options  = new DataOptions().UseConnectionString(provider, connectionString).UseInterceptor(opening);
@@ -1311,8 +1486,7 @@ namespace Tests.LinqToDB.CLI
 			{
 				var result = await executor.ExecuteValidatedDatabaseLoop(options, provider, sql, TextWriter.Null, CancellationToken.None);
 
-				result.Error.ShouldNotBeNull();
-				result.Error.ShouldContain("character U+00E9 at 1:9 is outside ASCII. The Sybase ASE driver sends the text in the character set the server names at login, which may replace such a character by another; to send characters outside ASCII, set Charset=utf8 in the connection string.");
+				result.Error!.ShouldContain("statement word DELETE");
 				opening.ConnectionString.ShouldBeNull();
 			}
 		}
@@ -1417,7 +1591,7 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("SqlServer",        "create table ##g (a int)\nselect 1",     "Query is not read-only: statement word CREATE at 1:1.")]
 		[TestCase("SqlServer",        "select a into #t from t\nupdate #t set a = 1 from t [\uFF03t]\nselect 1", "Only SELECT queries are allowed: unexpected '[\uFF03t]' at 2:28. In a script that writes temporary tables, a quoted name must begin with an ASCII letter, a digit, _ or $.")]
 		[TestCase("SqlServer",        "declare @v table (a int)\nupdate @v set a = 1 from t \u0640@v\nselect 1", "Only SELECT queries are allowed: character U+0640 at 2:28. A script that writes temporary tables accepts non-ASCII characters only inside string literals ('...', N'...') and comments; names, quoted names included, must be ASCII.")]
-		[TestCase("Sybase.Managed",   "select a into #t from t\nupdate #t set a = 1 from t \u3007#t\nselect 1",   "Query is not accepted: character U+3007 at 2:28 is outside ASCII.")]
+		[TestCase("Sybase.Managed",   "select a into #t from t\nupdate #t set a = 1 from t \u3007#t\nselect 1",   "Only SELECT queries are allowed: character U+3007 at 2:28. A script that writes temporary tables accepts non-ASCII characters only")]
 		[TestCase("Sybase.Managed",   "select 1 a --\r'\nupdate t set a = 3 --'",   "Query is not read-only: statement word UPDATE at 2:1.")]
 		[TestCase("SqlServer",        "select a into #t from t -- \U0001F600\nselect [\U0001F600] from #t", "Only SELECT queries are allowed: character U+1F600 at 2:9.")]
 		[TestCase("SqlServer",        "select a into #t from t\nupdate #t set a = 1 from t\u200B#t\nselect 1", "Only SELECT queries are allowed: unexpected '#t' at 2:28. In a script that writes temporary tables, a name that starts with # may not stand where an alias does.")]

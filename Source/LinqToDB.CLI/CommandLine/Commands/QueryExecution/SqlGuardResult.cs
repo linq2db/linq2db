@@ -21,6 +21,13 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		/// </summary>
 		internal bool RequiresUnpooledConnection { get; private init; }
 
+		/// <summary>
+		/// The text passes every rule but one that needs the server: the character set it names at login (ASE). The
+		/// result is a refusal until the caller has read that set and checked again; the routing above already holds for
+		/// the call that would run.
+		/// </summary>
+		internal bool AwaitsServerCharset { get; private init; }
+
 		/// <summary>Indicates whether SQL passed validation.</summary>
 		public bool IsAllowed { get; }
 
@@ -36,6 +43,16 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		internal static SqlGuardResult Rejected(string error)
 		{
 			return new(false, error);
+		}
+
+		internal static SqlGuardResult AwaitingServerCharset(string error, SqlGuardResult provisional)
+		{
+			return new(false, error)
+			{
+				AwaitsServerCharset        = true,
+				WritesTemporaryTables      = provisional.WritesTemporaryTables,
+				RequiresUnpooledConnection = provisional.RequiresUnpooledConnection,
+			};
 		}
 
 		internal static SqlGuardResult Accepted(bool writesTemporaryTables, bool requiresUnpooledConnection)

@@ -128,13 +128,24 @@ namespace LinqToDB.CommandLine.Commands.Connection
 
 			try
 			{
-				connectionString = string.Format(CultureInfo.InvariantCulture, connectionString, user, password);
+				// The template must hold no placeholder but {0} and {1}.
+				_ = string.Format(CultureInfo.InvariantCulture, connectionString, string.Empty, string.Empty);
 			}
 			catch (FormatException ex)
 			{
 				_environment.Error.WriteLine($"Invalid connection string format: {ex.Message} Use '{{0}}' for user, '{{1}}' for password, and escape literal braces as '{{{{' and '}}}}'.");
 				return null;
 			}
+
+			var formatted = FormatCredentials(connectionString, user, password, out var formatError);
+
+			if (formatted == null)
+			{
+				_environment.Error.WriteLine(formatError);
+				return null;
+			}
+
+			connectionString = formatted;
 
 			if (impersonate && (user == null || password == null))
 			{
@@ -294,6 +305,74 @@ namespace LinqToDB.CommandLine.Commands.Connection
 				result.Append(value);
 				return true;
 			}
+		}
+
+		// The user name and password go into the connection string as one value each: quoted when they hold a separator, a
+		// quote, an equals sign or leading or trailing space, so that a value cannot end its item and add keys of its own
+		// (Charset, Pooling, Data Source). Inside quotes the template wrote itself ("{1}" or '{1}') a value may not hold that
+		// quote. A value with both quote kinds cannot be written so that every driver reads it as one value
+		// (AdoNetCore.AseClient knows no doubled quote), and is refused. An empty value stays empty, as before.
+		internal static string? FormatCredentials(string template, string? user, string? password, out string? error)
+		{
+			error = null;
+
+			var rewritten = template
+				.Replace("\"{0}\"", "\"{2}\"", StringComparison.Ordinal)
+				.Replace("'{0}'",   "'{3}'",   StringComparison.Ordinal)
+				.Replace("\"{1}\"", "\"{4}\"", StringComparison.Ordinal)
+				.Replace("'{1}'",   "'{5}'",   StringComparison.Ordinal);
+
+			var values = new (string? Value, string Name, char Quote)[]
+			{
+				(user,     "user",     '\0'),
+				(password, "password", '\0'),
+				(user,     "user",     '"'),
+				(user,     "user",     '\''),
+				(password, "password", '"'),
+				(password, "password", '\''),
+			};
+
+			var arguments = new object[values.Length];
+
+			for (var i = 0; i < values.Length; i++)
+			{
+				var (value, name, quote) = values[i];
+
+				arguments[i] = string.Empty;
+
+				if (!rewritten.Contains("{" + i.ToString(CultureInfo.InvariantCulture) + "}", StringComparison.Ordinal) || string.IsNullOrEmpty(value))
+					continue;
+
+				if (quote != '\0')
+				{
+					if (value.Contains(quote, StringComparison.Ordinal))
+					{
+						error = $"The {name} holds the quote ({quote}) that encloses it in the connection string, so it would end the value there. Use a template without those quotes: the CLI quotes values itself.";
+						return null;
+					}
+
+					arguments[i] = value;
+				}
+				else if (value.AsSpan().IndexOfAny(";'\"=") < 0 && value.Trim().Length == value.Length)
+				{
+					arguments[i] = value;
+				}
+				else if (!value.Contains('"', StringComparison.Ordinal))
+				{
+					arguments[i] = "\"" + value + "\"";
+				}
+				else if (!value.Contains('\'', StringComparison.Ordinal))
+				{
+					arguments[i] = "'" + value + "'";
+				}
+				else
+				{
+					error = $"The {name} holds both kinds of quote (' and \"), so it cannot be put into the connection string as one value that every driver reads alike.";
+					return null;
+				}
+			}
+
+			return string.Format(CultureInfo.InvariantCulture, rewritten, arguments);
 		}
 	}
 }
