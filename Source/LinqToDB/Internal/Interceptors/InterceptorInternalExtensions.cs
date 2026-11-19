@@ -67,6 +67,15 @@ namespace LinqToDB.Internal.Interceptors
 		}
 
 		/// <summary>
+		/// Whether <paramref name="interceptor"/> takes part in query translation and so in the configuration id
+		/// (see <see cref="AddTranslationInterceptors"/>).
+		/// </summary>
+		public static bool IsTranslationInterceptor(IInterceptor interceptor)
+		{
+			return interceptor is IQueryExpressionInterceptor or IEntityBindingInterceptor;
+		}
+
+		/// <summary>
 		/// Adds the types of the registered interceptors that take part in query translation, so that a context does
 		/// not reuse a query cached for a context with other interceptor types. Only the types are added, so that
 		/// per-request instances keep sharing the cached query. For <see cref="IQueryExpressionInterceptor"/> the
