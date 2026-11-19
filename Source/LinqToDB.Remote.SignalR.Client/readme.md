@@ -44,7 +44,7 @@ Cancelling a query (the `CancellationToken` of `ToListAsync` and other async met
 the database. Calls are never re-sent after a lost connection. Synchronous APIs block a thread, which Blazor
 WebAssembly does not support: use the async ones there.
 
-The hub protocol changed in 6.6.0: this client needs a 6.6.0 or later server. (A 6.6.0 server still serves older
+The hub protocol changed in 6.7.0: this client needs a 6.7.0 or later server. (A 6.7.0 server still serves older
 clients.)
 
 ## Other Transports

@@ -426,7 +426,7 @@ namespace Tests.Remote
 			service.MaxConcurrency.ShouldBe(1);
 		}
 
-		// Options registered in the services apply to a hub written before 6.6.0, which does not pass them to its
+		// Options registered in the services apply to a hub written before 6.7.0, which does not pass them to its
 		// base constructor, on every server.
 		[Test]
 		public async Task RegisteredOptionsApplyToAHubWithoutAnOptionsConstructor()
@@ -862,9 +862,9 @@ namespace Tests.Remote
 
 		#endregion
 
-		#region Clients older than 6.6.0
+		#region Clients older than 6.7.0
 
-		// A client older than 6.6.0 calls the hub's original methods by name, as plain invocations; a 6.6.0 server
+		// A client older than 6.7.0 calls the hub's original methods by name, as plain invocations; a 6.7.0 server
 		// still serves it.
 		[Test]
 		public async Task OldClientRoundTrips()
@@ -963,7 +963,7 @@ namespace Tests.Remote
 			}
 		}
 
-		// A 6.6.0 client never reaches an override of an obsolete method, so the hub refuses its calls instead of bypassing
+		// A 6.7.0 client never reaches an override of an obsolete method, so the hub refuses its calls instead of bypassing
 		// the override; an old client still goes through the override.
 		[Test]
 		public async Task HubOverridingAnObsoleteMethodRefusesNewClients()
@@ -1034,7 +1034,7 @@ namespace Tests.Remote
 			}
 		}
 
-		// The remote context of a client older than 6.6.0: every call is a plain invocation of the method of the same name.
+		// The remote context of a client older than 6.7.0: every call is a plain invocation of the method of the same name.
 		sealed class OldClientContext(HubConnection hubConnection) : RemoteDataContextBase(new DataOptions().UseConfiguration(Configuration))
 		{
 			protected override ILinqService GetClient()
