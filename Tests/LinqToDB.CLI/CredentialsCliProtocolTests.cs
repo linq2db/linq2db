@@ -458,6 +458,35 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public void MixedCaseRecordNamesAreNeitherListedNorErased()
+		{
+			// Every other verb lower-cases a linq2db/ target, so a record created by another tool as linq2db/Prod could not
+			// be read or removed by the name list would show; it is reported as ignored instead.
+			var runner = new FakeRunner()
+				.Answer(Ok + "\ntarget=linq2db/ok\nusername=u\n\ntarget=linq2db/Prod\nusername=x\n")
+				.Answer(Ok + "\ntarget=linq2db/ok\nusername=u\n\ntarget=linq2db/Prod\nusername=x\n")
+				.Answer(Ok);
+
+			Store(runner)
+				.TryList(out var profiles, out var diagnostics, out var error)
+				.ShouldBeTrue(error);
+
+			profiles.ShouldBe([new CredentialProfile("ok", "u")]);
+
+			diagnostics
+				.ShouldHaveSingleItem()
+				.ShouldContain("listed 1 record(s) under 'linq2db/'");
+
+			Store(runner)
+				.TryClear(out var count, out error)
+				.ShouldBeTrue(error);
+
+			count.ShouldBe(1);
+
+			runner.Calls[2].Request.ShouldBe("protocol=1\nverb=erase\ntarget=linq2db/ok\n");
+		}
+
+		[Test]
 		public void CountUsesList()
 		{
 			var runner = new FakeRunner().Answer(Ok + "\ntarget=linq2db/a\nusername=u\n\ntarget=other\nusername=x\n");

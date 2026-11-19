@@ -163,13 +163,14 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 
 		string IgnoredMessage(int ignored)
 		{
-			return $"Credentials CLI '{Name}' listed {ignored.ToString(CultureInfo.InvariantCulture)} record(s) under '{CredentialTargets.Prefix}' whose names credentials set would refuse (an empty, '.' or '..' segment, a control character); they are not listed and never erased.";
+			return $"Credentials CLI '{Name}' listed {ignored.ToString(CultureInfo.InvariantCulture)} record(s) under '{CredentialTargets.Prefix}' whose names credentials set would refuse (an empty, '.' or '..' segment, a control character, upper-case letters: linq2db records are lower case); they are not listed and never erased.";
 		}
 
 		/// <summary>
-		/// Lists linq2db's own records. A target under <c>linq2db/</c> that is not a valid record name is skipped and counted
-		/// in <paramref name="ignored"/>: it was not written by this client, and a store may resolve it to a path outside
-		/// <c>linq2db/</c> (<c>linq2db/../x</c>), which clear would then erase.
+		/// Lists linq2db's own records. A target under <c>linq2db/</c> that is not a valid record name in its normalized
+		/// (lower-case) form is skipped and counted in <paramref name="ignored"/>: it was not written by this client, a store
+		/// may resolve it to a path outside <c>linq2db/</c> (<c>linq2db/../x</c>), which clear would then erase, and a
+		/// mixed-case name could not be read or removed by the name it is listed under.
 		/// </summary>
 		bool TryListTargets(out List<(string Target, string User)> entries, out int ignored, out string? error)
 		{
@@ -201,7 +202,10 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 				if (!target.StartsWith(CredentialTargets.Prefix, StringComparison.Ordinal) || target.Length == CredentialTargets.Prefix.Length)
 					continue;
 
-				if (!CredentialTargets.TryNormalize(target, out _, out _))
+				// A target whose normalized form differs (upper-case letters) cannot be addressed: every other verb sends
+				// the normalized form, so remove and read would not find it, and clear would erase a record no other verb reaches.
+				if (!CredentialTargets.TryNormalize(target, out var normalized, out _)
+					|| !string.Equals(normalized, target, StringComparison.Ordinal))
 				{
 					ignored++;
 					continue;

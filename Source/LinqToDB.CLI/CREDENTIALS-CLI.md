@@ -228,9 +228,11 @@ Answer (standard output): line 1 `protocol=<N>`, line 2 `status=<ok|not-found|un
   programs after `--`.
 - `credentials list`, the count shown by `credentials clear`, and `credentials clear` itself use only the `list`
   records whose target starts with `linq2db/`; the client never erases any other target. A `list` target under
-  `linq2db/` that `credentials set` would refuse (an empty, `.` or `..` segment) is ignored, with a note: a store could
-  resolve `linq2db/../x` outside `linq2db/`. A program must not print a value with a line break or another control
-  character (a user name written by someone else could otherwise forge records); it fails instead.
+  `linq2db/` that `credentials set` would refuse (an empty, `.` or `..` segment) or that is not in lower case is ignored,
+  with a note: a store could resolve `linq2db/../x` outside `linq2db/`, and every other verb sends the lower-case form,
+  so `linq2db/Prod` could not be read or removed by the name it would be listed under. A program must not print a value
+  with a line break or another control character (a user name written by someone else could otherwise forge records);
+  it fails instead.
 
 ## 9. Verbs and answers
 
