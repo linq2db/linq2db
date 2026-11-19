@@ -157,7 +157,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 
 		string IgnoredMessage(int ignored)
 		{
-			return $"Credentials CLI '{Name}' listed {ignored.ToString(CultureInfo.InvariantCulture)} record(s) under '{CredentialTargets.Prefix}' whose names credentials set would refuse (an empty, '.' or '..' segment, a control character, upper-case letters: linq2db records are lower case); they are not listed and never erased.";
+			return $"Credentials CLI '{Name}' listed {ignored.ToString(CultureInfo.InvariantCulture)} record(s) under '{CredentialTargets.Prefix}' whose names credentials set would refuse (an empty, '.' or '..' segment, a control character) or that are not lower case (every other verb sends the lower-case name); they are not listed and never erased.";
 		}
 
 		/// <summary>

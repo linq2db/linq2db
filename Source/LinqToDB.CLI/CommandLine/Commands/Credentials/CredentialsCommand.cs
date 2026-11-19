@@ -632,13 +632,17 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 				}
 
 				// The store the profile used before, when init changes it: a profile without 'credentialsCli' uses the OS default.
+				// The values are compared as the stores they name (@gpg and the default gpg script's path are one store), and
+				// the previous one is shown as a value that names that store from any directory.
 				var previous = existing == null
 					? isWindows ? CredentialStoreSelector.CredentialManager : CredentialStoreSelector.Local
 					: existing is JsonValue previousValue && previousValue.TryGetValue<string>(out var previousString) ? previousString : existing.ToJsonString();
 
-				if (!string.Equals(previous, recorded, StringComparison.Ordinal))
+				var configDirectory = Path.GetDirectoryName(Path.GetFullPath(configFile))!;
+
+				if (!string.Equals(GetStoreIdentity(previous, configDirectory, directory, isWindows), GetStoreIdentity(recorded, configDirectory, directory, isWindows), StringComparison.Ordinal))
 				{
-					previousStore   = previous;
+					previousStore   = ToPortableStoreValue(previous, configDirectory, isWindows);
 					previousDefault = existing == null;
 				}
 
@@ -800,6 +804,48 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 			}
 
 			return StatusCodes.SUCCESS;
+		}
+
+		/// <summary>
+		/// A configured store value as a value that names the same store from any directory: <c>credentialsCli</c> resolves a
+		/// relative program path against the configuration's directory, <c>--credentials-cli</c> against the current one, so
+		/// such a path is made absolute. Reserved values, program names looked up on <c>PATH</c> and values that do not parse
+		/// are kept as written.
+		/// </summary>
+		static string ToPortableStoreValue(string value, string configDirectory, bool isWindows)
+		{
+			var trimmed = value.Trim();
+
+			if (trimmed.StartsWith('@') || !CredentialsCliCommandResolver.TryParseCommandLine(trimmed, out var program, out var arguments, out _))
+				return trimmed;
+
+			if (!CredentialsCliCommandResolver.HasDirectory(program, isWindows) || CredentialsCliCommandResolver.IsRooted(program, isWindows))
+				return trimmed;
+
+			var path   = Path.GetFullPath(Path.Combine(configDirectory, program));
+			var quoted = path.IndexOfAny([' ', '\t']) >= 0 ? $"\"{path}\"" : path;
+
+			return arguments.Length == 0 ? quoted : $"{quoted} {arguments}";
+		}
+
+		/// <summary>
+		/// What a configured store value names, for comparing two values: the reserved script values become their script's
+		/// full path, a command line its full program path and arguments.
+		/// </summary>
+		static string GetStoreIdentity(string value, string configDirectory, string credentialsDirectory, bool isWindows)
+		{
+			var trimmed = value.Trim();
+
+			if (trimmed is CredentialStoreSelector.Keyring or CredentialStoreSelector.Gpg or CredentialStoreSelector.Vault)
+				return Path.GetFullPath(Path.Combine(credentialsDirectory, CredentialStoreSelector.GetScriptFileName(trimmed.Substring(1)))) + "\n";
+
+			if (trimmed.StartsWith('@') || !CredentialsCliCommandResolver.TryParseCommandLine(trimmed, out var program, out var arguments, out _))
+				return trimmed;
+
+			if (CredentialsCliCommandResolver.HasDirectory(program, isWindows))
+				program = Path.GetFullPath(Path.Combine(configDirectory, program));
+
+			return program + "\n" + arguments;
 		}
 
 		static async ValueTask<bool> RestoreConfiguration(ICliEnvironment environment, string configFile, string? previousContent)

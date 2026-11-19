@@ -383,7 +383,9 @@ credentials cli init --store <keyring|gpg|vault|local> [--output <file>] [--conf
   --config <file> [--profile <p>] --user <user>`; the old ones stay in the previous store until removed there
   (`credentials list --credentials-cli <old>`, then `credentials remove --credentials-cli <old> --credentials
   linq2db/<name>`; `clear` removes every `linq2db/` record of that store, including those other configurations use).
-  `init --config` prints a note naming the previous store when it changes it.
+  A relative program path in `credentialsCli` is relative to the configuration's directory, but in `--credentials-cli`
+  to the current directory, so give `<old>` as an absolute path. `init --config` prints a note naming the previous
+  store, with such a path made absolute, when it changes it.
 - To return a profile to the default for the operating system (section 2), remove its `credentialsCli` (and the one in
   `default` when it inherits that); on Windows `@credential-manager` names Credential Manager explicitly.
 - Before version 6.7 `--profile` named the record (`--profile prod` meant `linq2db/prod`); use

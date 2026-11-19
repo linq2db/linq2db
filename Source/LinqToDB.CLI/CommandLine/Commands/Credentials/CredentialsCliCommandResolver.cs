@@ -297,7 +297,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 			return dot > nameStart && dot < path.Length - 1 ? path.Substring(dot) : null;
 		}
 
-		static bool HasDirectory(string program, bool isWindows)
+		internal static bool HasDirectory(string program, bool isWindows)
 		{
 			return program.Contains('/', StringComparison.Ordinal) || (isWindows && (program.Contains('\\', StringComparison.Ordinal) || program.Contains(':', StringComparison.Ordinal)));
 		}

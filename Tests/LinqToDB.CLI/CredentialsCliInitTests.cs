@@ -525,6 +525,44 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task ChangingFromARelativeProgramNamesItByItsFullPath()
+		{
+			// credentialsCli resolves ./old.sh against the configuration's directory, --credentials-cli against the current
+			// one, so the note gives the program's full path.
+			RequirePosix();
+
+			var environment = CreateEnvironment();
+			environment.Files.Add("sub/cfg.json", """{ "default": { "credentialsCli": "./old.sh --mount db" } }""");
+
+			var (exitCode, _, error) = await RunCli(environment, "credentials", "cli", "init", "--store", "gpg", "--config", "sub/cfg.json", "--force");
+
+			var program = Path.GetFullPath("sub/old.sh");
+
+			exitCode.ShouldBe(0, error);
+			error.ShouldContain($"note: the configuration used the store '{program} --mount db' before; its records were not moved.");
+		}
+
+		[Test]
+		public async Task TheDefaultScriptNamedByItsPathIsTheSameStore()
+		{
+			RequirePosix();
+
+			var environment = CreateEnvironment();
+			var script      = Path.Combine(_directory, "credentials-gpg.sh");
+
+			environment.Files.Add("cfg.json", $$"""{ "default": { "credentialsCli": "{{script}}" } }""");
+
+			var (exitCode, _, error) = await RunCli(environment, "credentials", "cli", "init", "--store", "gpg", "--config", "cfg.json", "--force");
+
+			exitCode.ShouldBe(0, error);
+
+			RecordedValue(environment, "cfg.json")
+				.ShouldBe("@gpg");
+
+			error.ShouldNotContain("were not moved");
+		}
+
+		[Test]
 		public async Task LocalStoreOverTheDefaultLocalStoreSaysNothingAboutRecords()
 		{
 			RequirePosix();
