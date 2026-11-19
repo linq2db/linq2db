@@ -9,6 +9,7 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Expressions.ExpressionVisitors;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Internal.Linq.Builder;
@@ -67,16 +68,29 @@ namespace LinqToDB.Internal.Linq
 
 			DynamicAccessors ??= new(ExpressionEqualityComparer.Instance);
 
-			if (!DynamicAccessors.ContainsKey(forExpression))
+			if (!DynamicAccessors.TryGetValue(forExpression, out var info))
 			{
-				var info = new DynamicExpressionInfo(_generator.GetNext(), result, mappingSchema, accessorFunc);
+				info = new DynamicExpressionInfo(_generator.GetNext(), result, mappingSchema, accessorFunc);
 				DynamicAccessors.Add(forExpression, info);
 
-				var newRoot = Expression.Call(RootPath, nameof(IQueryExpressions.GetQueryExpression), Type.EmptyTypes, Expression.Constant(info.ExpressionId));
-				AccessorsMapping.Add(info.ExpressionId, result.GetExpressionAccessors(newRoot));
+				AccessorsMapping.Add(info.ExpressionId, result.GetExpressionAccessors(GetDynamicExpressionRoot(info.ExpressionId)));
+			}
+			else if (!ReferenceEquals(info.Used, result) && info.Used.EqualsTo(result))
+			{
+				// Another reference with the same key gets a new tree of the same shape. Its constants map to the same paths,
+				// so that they are read from the executing context, as the first reference's are, instead of kept as built.
+				var mapping = AccessorsMapping[info.ExpressionId];
+
+				foreach (var pair in result.GetExpressionAccessors(GetDynamicExpressionRoot(info.ExpressionId)))
+					mapping.TryAdd(pair.Key, pair.Value);
 			}
 
 			return result;
+		}
+
+		Expression GetDynamicExpressionRoot(int expressionId)
+		{
+			return Expression.Call(RootPath, nameof(IQueryExpressions.GetQueryExpression), Type.EmptyTypes, Expression.Constant(expressionId));
 		}
 
 		public bool GetAccessorExpression(Expression expression, [NotNullWhen(true)] out Expression? accessor)

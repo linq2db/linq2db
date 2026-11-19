@@ -1791,6 +1791,54 @@ namespace Tests.Data
 			misses.ShouldBe(1);
 		}
 
+		// The same for a query that references the filtered table more than once: every reference reads the value of the
+		// executing context's interceptor.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
+		public void QueryExpression_SameTypeInstances_SeveralReferences_ShareCachedQuery(
+			[IncludeDataSources(true, TestProvName.AllSQLite)] string context,
+			[Values]                                           bool   join)
+		{
+			Query.ClearCaches();
+
+			var missCount = Query<Person>.CacheMissCount;
+
+			for (var limit = 1; limit <= 3; limit++)
+			{
+				using var db = GetDataContext(context, o => o
+					.UseMappingSchema(_personFilterSchema)
+					.UseInterceptor(new PersonLimitInterceptor(ExpressionKind.QueryFilter, limit)));
+
+				IQueryable<Person> query;
+				int[]              expected;
+
+				if (join)
+				{
+					query =
+						from a in db.GetTable<Person>()
+						join b in db.GetTable<Person>() on a.ID equals b.ID
+						select b;
+
+					expected = ExpectedIds(limit);
+				}
+				else
+				{
+					query = db.GetTable<Person>()
+						.Concat(db.GetTable<Person>());
+
+					expected = ExpectedIds(limit)
+						.Concat(ExpectedIds(limit))
+						.OrderBy(id => id)
+						.ToArray();
+				}
+
+				ShouldReturnIds(query, expected, $"limit {limit}");
+			}
+
+			var misses = Query<Person>.CacheMissCount - missCount;
+
+			misses.ShouldBe(1);
+		}
+
 		// Instances of one type that differ in whether they rewrite the query at all tell the cache apart through
 		// IInterceptorCacheKey.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
