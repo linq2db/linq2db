@@ -412,7 +412,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			}
 		}
 
-		async Task<QueryExecutionResult> ExecuteValidatedDatabaseLoop(DataOptions dataOptions, IDataProvider dataProvider, string sql, TextWriter outputWriter, CancellationToken cancellationToken)
+		internal async Task<QueryExecutionResult> ExecuteValidatedDatabaseLoop(DataOptions dataOptions, IDataProvider dataProvider, string sql, TextWriter outputWriter, CancellationToken cancellationToken)
 		{
 			SqlGuardResult guardResult;
 

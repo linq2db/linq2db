@@ -169,7 +169,17 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			// begins, inside it (INTERSECT reads the INT of INTO), a few tokens past it (a word is read whole before the
 			// check after it fails), or the end of the text. So the construct is looked for at that position, then at the
 			// starts of the few tokens before it.
-			position = AlignToWordStart(sql, position);
+			position = SkipSeparators(sql, AlignToWordStart(sql, position));
+
+			// In a temporary-table script a quoted name must begin with an ASCII letter, a digit, _ or $ (the grammar's
+			// UnsafeQuoted), and the parsers stop at its first character. The whole name is named.
+			if (position > 0 && position < sql.Length && sql[position - 1] is '[' or '"' && !IsSafeQuotedStart(sql[position]))
+			{
+				var (quotedKind, quotedText) = Describe(sql, position - 1);
+
+				if (quotedKind is "other" && quotedText.Length > 2 && quotedText[0] == sql[position - 1])
+					return SqlGuardResult.Rejected($"Only SELECT queries are allowed: unexpected '{quotedText}' at {Location(sql, position - 1)}. In a script that writes temporary tables, a quoted name must begin with an ASCII letter, a digit, _ or $.");
+			}
 
 			var (kind, text) = Describe(sql, position);
 
@@ -260,6 +270,9 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				// What stops at a #name is a temporary table where an alias stands (UPDATE #t … FROM t #t).
 				_ when text.Length > 1 && text[0] == '#'
 				              => SqlGuardResult.Rejected($"Only SELECT queries are allowed: unexpected '{text}' at {at}. In a script that writes temporary tables, a name that starts with # may not stand where an alias does."),
+				// The server reads a name and an @ right after it as one name, which may equal the target (U+0640 is ignored, so U+0640@v equals @v).
+				_ when text.StartsWith('@') && position > 0 && IsWordChar(sql[position - 1])
+				              => SqlGuardResult.Rejected($"Only SELECT queries are allowed: unexpected '{text}' at {at}. In a script that writes temporary tables, a name may not run into a following @."),
 				_             => SqlGuardResult.Rejected($"Only SELECT queries are allowed: unexpected '{text}' at {at}."),
 			};
 		}
@@ -300,7 +313,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		{
 			var i = position;
 
-			while (i > 0 && char.IsWhiteSpace(sql[i - 1]))
+			while (i > 0 && IsSeparator(sql[i - 1]))
 				i--;
 
 			if (i == 0)
@@ -357,6 +370,26 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				start++;
 
 			return start;
+		}
+
+		// A refusal that stops at a separator names what follows it.
+		static int SkipSeparators(string sql, int position)
+		{
+			while (position < sql.Length && IsSeparator(sql[position]))
+				position++;
+
+			return position;
+		}
+
+		// The characters the grammar reads as space (Lex.Space).
+		static bool IsSeparator(char c)
+		{
+			return c <= ' ' || c == (char)0x200B || char.IsWhiteSpace(c);
+		}
+
+		static bool IsSafeQuotedStart(char c)
+		{
+			return char.IsAsciiLetterOrDigit(c) || c is '_' or '$';
 		}
 
 		static bool IsWordChar(char c)

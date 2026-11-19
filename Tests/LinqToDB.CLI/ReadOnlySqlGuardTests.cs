@@ -4,11 +4,13 @@ using System.Data.Common;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.CommandLine.Commands.QueryExecution;
 using LinqToDB.DataProvider.Sybase;
+using LinqToDB.Interceptors;
 
 using NUnit.Framework;
 
@@ -700,6 +702,10 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("select a into #t from t\nupdate #t set a = 1 from u cross apply #t outer apply #v where u.a = #t.a\nselect * from #t")]
 		[TestCase("select a into #t from t\nupdate #t set a = case when #t.a > 1 then #t.a else -#t.a end, b = #t.a * 2 from #t where #t.a between 1 and #t.b or not #t.a like 'x%'\nselect * from #t")]
 		[TestCase("select a into #t from t\nupdate #t set a = 1 from #t join #u on #u.a = #t.a where exists (select 1 from #v where #v.a in (#t.a, 2))\nselect * from #t")]
+		[TestCase("INSERT INTO #t\n(\n\t[Id],\n\t[Name]\n)\nSELECT\n\t[t1].[PersonID],\n\t[t1].[FirstName]\nFROM\n\t[dbo].[Person] [t1]\n\t\tINNER JOIN [Doctor] [d] ON [d].[PersonID] = [t1].[PersonID]\nSELECT [t1].[Id] FROM #t [t1]")]
+		[TestCase("select x.[a] as [x], \"b\" as \"Total Count\", [_y$1] into #t from dbo.t as [x]\nupdate #t set a = 1 from #t join dbo.u [t1] on [t1].a = #t.a\nselect * from #t")]
+		[TestCase("select a into #t from dbo.[output]\nupdate #t set a = 1 from #t join (dbo.output o join #u v on 1 = 1) on 1 = 1\nselect * from #t")]
+		[TestCase("select \u0418\u043C\u044F, [t1].a into #t from t [t1]\nselect * from #t")]
 		public void TempScriptsAccepted(string sql)
 		{
 			using (Assert.EnterMultipleScope())
@@ -793,6 +799,31 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("select a into #t from t\nupdate #t set a = 1 from {oj t left outer join u on 1 = 1} #t\nselect * from #t")]
 		[TestCase("select a into #t from t\nupdate #t set a = 1 from t with ties #t\nselect * from #t")]
 		[TestCase("select a into #t from t\nupdate #t set a = 1 from 1 #t\nselect * from #t")]
+		// The server compares the target with an alias, a table or a CTE under the database collation: U+FF03 and U+FF20
+		// equal # and @, U+FEFF, U+200D and U+0640 are ignored. A quoted name must begin with an ASCII letter, a digit,
+		// _ or $, and a name may not run into a # or @, which the server reads as part of it.
+		[TestCase("select a into #t from t\nupdate #t set a = 42 from dbo.real [\uFF03t]\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t set a = 42 from dbo.real \"\uFF03t\"\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t set a = 42 from dbo.real as [\uFF03t]\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t set a = 42 from dbo.real [\uFF03\uFF54]\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t set a = 42 from #u join dbo.real [\uFF03t] on 1 = 1\nselect * from #t")]
+		[TestCase("select a into #t from t\ndelete #t from dbo.real [\uFF03t]\nselect * from #t")]
+		[TestCase("declare @v table (a int)\nupdate @v set a = 42 from dbo.real [\uFF20v]\nselect * from @v")]
+		[TestCase("select a into #t from t\nupdate #t set a = 42 from dbo.real [\uFEFF#t]\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t set a = 42 from dbo.real [\u200D#t]\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t set a = 42 from (select a from dbo.real) [\uFF03t]\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t set a = 42 from dbo.[\uFF03t]\nselect * from #t")]
+		[TestCase("with [\uFF03t] as (select a from dbo.real) update #t set a = 42\nselect 1")]
+		[TestCase("select a into #t from t\nupdate #t set a = 42 from dbo.real [ t1]\nselect * from #t")]
+		[TestCase("select [\u0418\u043C\u044F] into #t from t\nselect * from #t")]
+		[TestCase("declare @v table (a int)\nupdate @v set a = 42 from dbo.real \u0640@v\nselect * from @v")]
+		[TestCase("declare @v table (a int)\nupdate @v set a = 42 from dbo.real as \u0640@v\nselect * from @v")]
+		[TestCase("declare @v table (a int)\nupdate @v set a = 42 from (select a from dbo.real) \u0640@v\nselect * from @v")]
+		[TestCase("select a into #t from t\nupdate #t set a = 42 from dbo.real \u0640#t\nselect * from #t")]
+		// OUTPUT is not reserved: dbo.output is a table, and a bracketed join exposes its alias to the target.
+		[TestCase("select a into #t from t\nupdate #t set a = 42 from #u join (dbo.output #t join #u v on 1 = 1) on 1 = 1\nselect * from #t")]
+		[TestCase("select a into #t from t\ndelete #t from #u join (dbo.output #t join #u v on 1 = 1) on 1 = 1\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t set a = 42 from #u join (output #t join #u v on 1 = 1) on 1 = 1\nselect * from #t")]
 		[TestCase("delete #t output deleted.*\nselect 1")]
 		[TestCase("truncate table t\nselect 1")]
 		[TestCase("truncate table ##g\nselect 1")]
@@ -827,6 +858,32 @@ namespace Tests.LinqToDB.CLI
 		public void TempScriptsRefused(string sql)
 		{
 			AssertQuery(sql, false, TSql, Ase);
+		}
+
+		// The server ends a token at every control character and at U+200B, so a #name after one stands where an alias
+		// does. The character is passed as a number: a filtered test run silently skips some cases whose name holds one.
+		[TestCase(0x00)]
+		[TestCase(0x01)]
+		[TestCase(0x08)]
+		[TestCase(0x0E)]
+		[TestCase(0x1C)]
+		[TestCase(0x1F)]
+		[TestCase(0x200B)]
+		public void TempScriptSeparators(int code)
+		{
+			var c = (char)code;
+
+			using (Assert.EnterMultipleScope())
+			{
+				WritesTemporaryTables(TSql, $"select a into #t from t\nupdate #t set a = 1 from #t{c}join #u{c}on{c}#u.a = #t.a\nselect * from #t").ShouldBeTrue();
+
+				foreach (var dialect in new[] { TSql, Ase })
+				{
+					Query(dialect, $"select a into #t from t\nupdate #t set a = 42 from dbo.real{c}#t\nselect * from #t").   ShouldBeFalse(dialect);
+					Query(dialect, $"select a into #t from t\nupdate #t set a = 42 from dbo.real as{c}#t\nselect * from #t").ShouldBeFalse(dialect);
+					Query(dialect, $"declare @v table (a int)\nupdate @v set a = 42 from dbo.real{c}\u0640@v\nselect * from @v").ShouldBeFalse(dialect);
+				}
+			}
 		}
 
 		[Test]
@@ -887,6 +944,48 @@ namespace Tests.LinqToDB.CLI
 
 				// The appended key is the one a connection-string parser keeps.
 				new DbConnectionStringBuilder { ConnectionString = temp.ConnectionOptions.ConnectionString }["Pooling"].ShouldBe("false");
+			}
+		}
+
+		// The executor opens the call's connection with the routed options, not with the ones it was given.
+		[TestCase(false, "select a into #t from t\nselect * from #t", "false")]
+		[TestCase(true,  "update t set a = 1",                       "false")]
+		[TestCase(false, "select * from t",                          "true")]
+		public async Task ExecutorOpensTheRoutedConnection(bool execute, string sql, string pooling)
+		{
+			var mode     = execute ? QueryExecutionMode.Execute : QueryExecutionMode.Query;
+			var provider = SybaseTools.GetDataProvider(SybaseProvider.DataAction);
+			var opening  = new OpeningRecorder();
+			var options  = new DataOptions().UseConnectionString(provider, "Data Source=ase;Port=5000;Pooling=true;").UseInterceptor(opening);
+			var settings = new QueryExecutionSettings(
+				"ase", "Sybase.Managed", null, null, null, "Data Source=ase;Port=5000;Pooling=true;", null, null, 0, null, "json", null, false,
+				mode, execute, TextWriter.Null, false, default, sql);
+
+			await Assert.ThatAsync(
+				() => new QueryExecutionExecutor(settings).ExecuteValidatedDatabaseLoop(options, provider, sql, TextWriter.Null, CancellationToken.None),
+				Throws.TypeOf<InvalidOperationException>().With.Message.EqualTo(OpeningRecorder.StopMessage));
+
+			opening.ConnectionString.ShouldNotBeNull();
+			new DbConnectionStringBuilder { ConnectionString = opening.ConnectionString }["Pooling"].ShouldBe(pooling);
+		}
+
+		// Records the connection string a connection opens with, and stops the call before it reaches a server.
+		sealed class OpeningRecorder : ConnectionInterceptor
+		{
+			public const string StopMessage = "Stopped before the server.";
+
+			public string? ConnectionString { get; private set; }
+
+			public override void ConnectionOpening(ConnectionEventData eventData, DbConnection connection)
+			{
+				ConnectionString = connection.ConnectionString;
+				throw new InvalidOperationException(StopMessage);
+			}
+
+			public override Task ConnectionOpeningAsync(ConnectionEventData eventData, DbConnection connection, CancellationToken cancellationToken)
+			{
+				ConnectionString = connection.ConnectionString;
+				throw new InvalidOperationException(StopMessage);
 			}
 		}
 
@@ -968,6 +1067,9 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("Sybase.Managed",   "insert ##g values (1)\nselect 1",        "Query is not read-only: statement word INSERT at 1:1.")]
 		[TestCase("SqlServer",        "update #t set a = 1 from t #t\nselect 1", "Only SELECT queries are allowed: unexpected '#t' at 1:28. In a script that writes temporary tables, a name that starts with # may not stand where an alias does.")]
 		[TestCase("SqlServer",        "create table ##g (a int)\nselect 1",     "Query is not read-only: statement word CREATE at 1:1.")]
+		[TestCase("SqlServer",        "select a into #t from t\nupdate #t set a = 1 from t [\uFF03t]\nselect 1", "Only SELECT queries are allowed: unexpected '[\uFF03t]' at 2:28. In a script that writes temporary tables, a quoted name must begin with an ASCII letter, a digit, _ or $.")]
+		[TestCase("SqlServer",        "declare @v table (a int)\nupdate @v set a = 1 from t \u0640@v\nselect 1", "Only SELECT queries are allowed: unexpected '@' at 2:29. In a script that writes temporary tables, a name may not run into a following @.")]
+		[TestCase("SqlServer",        "select a into #t from t\nupdate #t set a = 1 from t\u200B#t\nselect 1", "Only SELECT queries are allowed: unexpected '#t' at 2:28. In a script that writes temporary tables, a name that starts with # may not stand where an alias does.")]
 		[TestCase("SqlServer",        "exec dbo.DoWork",                        "Query is not read-only: statement word EXEC at 1:1.")]
 		[TestCase("SqlServer",        "select 1 /* open",                       "Query is not valid SQL")]
 		[TestCase("Sybase.Managed",   "select open from t",                     "Query is not read-only: statement word OPEN at 1:8.")]
