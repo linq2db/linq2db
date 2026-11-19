@@ -26,6 +26,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 	/// read from disk while impersonating.
 	/// </summary>
 	/// <remarks>
+	/// <para>
 	/// The impersonated identity may have no rights on this machine at all: it may not be able to read the tool's
 	/// installation folder, the .NET installation (a per-user install lives in the user profile) or the provider's
 	/// folder. Code that runs in the session loads assemblies lazily (the JIT loads an assembly on the first method
@@ -33,6 +34,13 @@ namespace LinqToDB.CommandLine.Commands.Connection
 	/// error messages and reads application configuration files on the client's first use. The preload opens a
 	/// connection with the command's own provider and connection string, so that the client loads what connecting
 	/// needs, and loads the managed code that running the command needs beyond that.
+	/// </para>
+	/// <para>
+	/// The shipped tool impersonates only on Windows. The rules for other systems (native library names with a
+	/// <c>lib</c> prefix and <c>.so</c> / <c>.dylib</c> suffixes, loading through <see cref="NativeLibrary"/>) are
+	/// kept so that the preload runs, and is tested, on every OS: the tests replace the Windows session with one that
+	/// records what is loaded inside it.
+	/// </para>
 	/// </remarks>
 	public static partial class ImpersonationPreload
 	{
@@ -91,7 +99,9 @@ namespace LinqToDB.CommandLine.Commands.Connection
 
 		/// <summary>
 		/// Static methods by which a connection type that is not in <see cref="_poolingKeywords"/> shows that its client
-		/// pools connections (System.Data.Odbc, System.Data.OleDb, Ydb).
+		/// may pool connections by means the tool does not turn off (System.Data.Odbc, System.Data.OleDb, Ydb). A client
+		/// that declares one without pooling (LibRed's <c>ClearPool</c> is kept for API parity) is skipped as well; it
+		/// only loses the warm-up.
 		/// </summary>
 		static readonly string[] _poolMethods = ["ClearPool", "ClearPools", "ClearAllPools", "ReleaseObjectPool"];
 
