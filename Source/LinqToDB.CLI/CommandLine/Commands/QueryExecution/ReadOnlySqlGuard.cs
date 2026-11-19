@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.Data.Common;
 using System.Globalization;
+using System.Text;
 
 using LinqToDB.DataProvider;
 
@@ -24,8 +27,24 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			Func<string, long> checkRefusedAt,
 			Func<string, bool> single,
 			Func<string, long> singleRefusedAt,
-			bool               poolKeepsSessionState = false)
+			bool               poolKeepsSessionState = false,
+			bool               crEndsLineComment     = true,
+			Func<string?, IReadOnlyList<Encoding>>? wireEncodings = null)
 		{
+			/// <summary>
+			/// A carriage return that no line feed follows ends a <c>--</c> comment on the server.
+			/// </summary>
+			public bool CrEndsLineComment { get; } = crEndsLineComment;
+
+			/// <summary>
+			/// The encodings the driver may send the command text in, for a connection string; none when it sends the text
+			/// as UTF-16, as it stands.
+			/// </summary>
+			public IReadOnlyList<Encoding> WireEncodings(string? connectionString)
+			{
+				return wireEncodings?.Invoke(connectionString) ?? [];
+			}
+
 			/// <summary>
 			/// The provider's driver hands a pooled connection out again with the session state the previous call left
 			/// (temporary tables, session options), so a call that may leave some must not return its connection to the
@@ -65,7 +84,9 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		static readonly SqlDialect _ase = new(
 			ReadOnlySqlGrammar.TryCheckAse,                      sql => ReadOnlySqlGrammar.TryCheckAse (sql).Position,
 			sql => ReadOnlySqlGrammar.TrySingleAse(sql, out _),  sql => ReadOnlySqlGrammar.TrySingleAse(sql).Position,
-			poolKeepsSessionState: true);
+			poolKeepsSessionState: true,
+			crEndsLineComment:     false,
+			wireEncodings:         AseWireEncodings);
 
 		// [x] is a quoted identifier.
 		static readonly SqlDialect _bracket = new(
@@ -90,6 +111,14 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		}
 
 		/// <summary>
+		/// Validates read-only SQL as the server receives it over a connection with this connection string.
+		/// </summary>
+		internal static SqlGuardResult Validate(IDataProvider provider, string sql, string? connectionString)
+		{
+			return Validate(provider.Name, sql, connectionString);
+		}
+
+		/// <summary>
 		/// Validates that SQL contains a single statement.
 		/// </summary>
 		public static SqlGuardResult ValidateSingleStatement(IDataProvider provider, string sql)
@@ -97,7 +126,17 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			return ValidateSingleStatement(provider.Name, sql);
 		}
 
-		internal static SqlGuardResult Validate(string providerName, string sql)
+		/// <summary>
+		/// Validates that SQL contains a single statement, as the server receives it over a connection with this
+		/// connection string.
+		/// </summary>
+		internal static SqlGuardResult ValidateSingleStatement(IDataProvider provider, string sql, string? connectionString)
+		{
+			return ValidateSingleStatement(provider.Name, sql, connectionString);
+		}
+
+		// Without a connection string the driver's defaults apply.
+		internal static SqlGuardResult Validate(string providerName, string sql, string? connectionString = null)
 		{
 			var dialect = FindDialect(providerName);
 
@@ -105,10 +144,10 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				return GenericReadOnlySqlGuard.Validate(sql);
 
 			// The read-only check admits a single statement only, so it holds the single-statement check.
-			return Validate(dialect, sql, false);
+			return Validate(dialect, sql, false, connectionString);
 		}
 
-		internal static SqlGuardResult ValidateSingleStatement(string providerName, string sql)
+		internal static SqlGuardResult ValidateSingleStatement(string providerName, string sql, string? connectionString = null)
 		{
 			// Single-statement execution is a hard query command contract. Providers with a dialect grammar get it from
 			// the grammar; other providers use generic best-effort validation.
@@ -116,7 +155,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 			return dialect == null
 				? GenericReadOnlySqlGuard.ValidateSingleStatement(sql)
-				: Validate(dialect, sql, true);
+				: Validate(dialect, sql, true, connectionString);
 		}
 
 		static SqlDialect? FindDialect(string providerName)
@@ -136,10 +175,25 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			return found;
 		}
 
-		internal static SqlGuardResult Validate(SqlDialect dialect, string sql, bool singleStatement)
+		internal static SqlGuardResult Validate(SqlDialect dialect, string sql, bool singleStatement, string? connectionString = null)
 		{
 			if (string.IsNullOrWhiteSpace(sql))
 				return SqlGuardResult.Rejected("Query is empty.");
+
+			// The check reads the text the server receives. A driver that encodes it in a narrower character set
+			// replaces what that set does not hold, often by a lookalike (U+2019 by ', a fullwidth letter by its ASCII
+			// letter), so such a text is refused at the first character that does not survive the trip.
+			// Every character set a driver may choose holds ASCII, so an ASCII text is the same on both sides.
+			if (!Ascii.IsValid(sql))
+			{
+				foreach (var encoding in dialect.WireEncodings(connectionString))
+				{
+					var changed = FindTranscoded(sql, encoding, out var received);
+
+					if (changed >= 0)
+						return RejectTranscoded(sql, changed, received, encoding);
+				}
+			}
 
 			long refusedAt;
 
@@ -149,7 +203,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				{
 					if (writesTemporaryTables)
 					{
-						var nonAscii = FindNonAsciiCode(sql);
+						var nonAscii = FindNonAsciiCode(sql, dialect.CrEndsLineComment);
 
 						if (nonAscii >= 0)
 							return RejectNonAscii(sql, nonAscii);
@@ -302,7 +356,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		// code. The text is read the way the server reads T-SQL: '...' with '' inside, -- to the end of the line, nested
 		// /* */, [...] with ]] inside and "..." with "" inside (a name, or a string under QUOTED_IDENTIFIER OFF).
 		// Returns the position of the first other character, or -1.
-		internal static int FindNonAsciiCode(string sql)
+		internal static int FindNonAsciiCode(string sql, bool crEndsLineComment)
 		{
 			var i = 0;
 
@@ -316,7 +370,8 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				}
 				else if (c == '-' && i + 1 < sql.Length && sql[i + 1] == '-')
 				{
-					while (i < sql.Length && sql[i] is not ('\r' or '\n'))
+					// SQL Server ends -- at a carriage return too, ASE at a line feed only.
+					while (i < sql.Length && sql[i] != '\n' && !(crEndsLineComment && sql[i] == '\r'))
 						i++;
 				}
 				else if (c == '/' && i + 1 < sql.Length && sql[i + 1] == '*')
@@ -406,6 +461,105 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			}
 
 			return i;
+		}
+
+		// AdoNetCore.AseClient sends the command text in the character set the server names at login: the one the connection
+		// string asks for with Charset=, or the server's own when it asks for none (iso_1 on a default ASE installation).
+		// It maps the name as below and encodes with .NET's encoder for it, which replaces what the set does not hold. The
+		// server may answer with its own set even when the connection asks for another, so the text must survive iso_1
+		// and the set asked for.
+		static IReadOnlyList<Encoding> AseWireEncodings(string? connectionString)
+		{
+			var latin1    = Encoding.GetEncoding("ISO-8859-1");
+			var encodings = new List<Encoding> { latin1 };
+			var requested = AseEncoding(RequestedCharset(connectionString));
+
+			if (requested != null && requested.CodePage != latin1.CodePage)
+				encodings.Add(requested);
+
+			return encodings;
+		}
+
+		static string? RequestedCharset(string? connectionString)
+		{
+			if (string.IsNullOrEmpty(connectionString))
+				return null;
+
+			try
+			{
+				var builder = new DbConnectionStringBuilder { ConnectionString = connectionString };
+
+				return builder.TryGetValue("Charset", out var value) ? Convert.ToString(value, CultureInfo.InvariantCulture) : null;
+			}
+			catch (ArgumentException)
+			{
+				return null;
+			}
+		}
+
+		// AseClient's own names first; any other goes to Encoding.GetEncoding, and a name .NET does not know fails the
+		// connection in the driver, so it adds nothing to check here.
+		static Encoding? AseEncoding(string? charset)
+		{
+			if (string.IsNullOrWhiteSpace(charset))
+				return null;
+
+			switch (charset.Trim().ToLowerInvariant())
+			{
+				case "iso_1" or "iso 8859-1" or "iso88591":
+					return Encoding.GetEncoding("ISO-8859-1");
+				case "ascii_8":
+					return Encoding.ASCII;
+				case "utf-8" or "utf8":
+					return Encoding.UTF8;
+			}
+
+			try
+			{
+				return Encoding.GetEncoding(charset.Trim());
+			}
+			catch (ArgumentException)
+			{
+				return null;
+			}
+		}
+
+		// The position of the first character (or surrogate pair) the encoding does not carry unchanged, with what arrives
+		// in its place; -1 when the whole text survives.
+		static int FindTranscoded(string sql, Encoding encoding, out string received)
+		{
+			received = string.Empty;
+
+			if (string.Equals(encoding.GetString(encoding.GetBytes(sql)), sql, StringComparison.Ordinal))
+				return -1;
+
+			for (var i = 0; i < sql.Length; i++)
+			{
+				var length = char.IsHighSurrogate(sql[i]) && i + 1 < sql.Length && char.IsLowSurrogate(sql[i + 1]) ? 2 : 1;
+				var text   = sql.Substring(i, length);
+				var back   = encoding.GetString(encoding.GetBytes(text));
+
+				if (!string.Equals(back, text, StringComparison.Ordinal))
+				{
+					received = back;
+					return i;
+				}
+
+				i += length - 1;
+			}
+
+			return -1;
+		}
+
+		static SqlGuardResult RejectTranscoded(string sql, int position, string received, Encoding encoding)
+		{
+			var code = char.IsHighSurrogate(sql[position]) && position + 1 < sql.Length && char.IsLowSurrogate(sql[position + 1])
+				? char.ConvertToUtf32(sql[position], sql[position + 1])
+				: sql[position];
+
+			return SqlGuardResult.Rejected(string.Create(
+				CultureInfo.InvariantCulture,
+				$"Query is not accepted: character U+{code:X4} at {Location(sql, position)} reaches the server as '{received}'. The driver sends the text in {encoding.WebName}, which does not hold it; write the text in that character set."));
 		}
 
 		static SqlGuardResult RejectNonAscii(string sql, int position)

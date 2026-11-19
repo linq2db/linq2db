@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -40,8 +41,8 @@ namespace Tests.LinqToDB.CLI
 		{
 			return dialect switch
 			{
-				TSql     => TempScriptAscii(ReadOnlySqlGrammar.TryCheckTSql(sql, out var writesTSql), writesTSql, sql),
-				Ase      => TempScriptAscii(ReadOnlySqlGrammar.TryCheckAse (sql, out var writesAse),  writesAse,  sql),
+				TSql     => TempScriptAscii(ReadOnlySqlGrammar.TryCheckTSql(sql, out var writesTSql), writesTSql, sql, true),
+				Ase      => TempScriptAscii(ReadOnlySqlGrammar.TryCheckAse (sql, out var writesAse),  writesAse,  sql, false),
 				Bracket  => ReadOnlySqlGrammar.TryCheckBracket (sql, out _),
 				MySql    => ReadOnlySqlGrammar.TryCheckMySql   (sql, out _),
 				Ydb      => ReadOnlySqlGrammar.TryCheckYdb     (sql, out _),
@@ -53,9 +54,9 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		// The guard reads a script that writes temporary tables as ASCII only outside string literals and comments.
-		static bool TempScriptAscii(bool accepted, bool writesTemporaryTables, string sql)
+		static bool TempScriptAscii(bool accepted, bool writesTemporaryTables, string sql, bool crEndsLineComment)
 		{
-			return accepted && (!writesTemporaryTables || ReadOnlySqlGuard.FindNonAsciiCode(sql) < 0);
+			return accepted && (!writesTemporaryTables || ReadOnlySqlGuard.FindNonAsciiCode(sql, crEndsLineComment) < 0);
 		}
 
 		static bool Single(string dialect, string sql)
@@ -130,9 +131,14 @@ namespace Tests.LinqToDB.CLI
 		public void BackslashEscapesOnlyWhereTheyAre()
 		{
 			AssertQuery("select 'C:\\', 1",  true,  TSql, Ase, Bracket, Informix, Postgres, Standard);
-			AssertQuery("select 'C:\\', 1",  false, MySql, Ydb);
-			AssertQuery("select 'it\\'s', 1", true,  MySql, Ydb);
+			AssertQuery("select 'C:\\', 1",  false, Ydb);
+			AssertQuery("select 'it\\'s', 1", true,  Ydb);
 			AssertQuery("select 'it\\'s', 1", false, TSql, Ase, Bracket, Informix, Postgres, Standard);
+
+			// MySQL's sql_mode decides what a backslash does there.
+			AssertQuery("select 'C:\\', 1",  false, MySql);
+			AssertQuery("select 'it\\'s', 1", false, MySql);
+			AssertQuery("select E'it\\'s', U&'d\\0061ta', \"a\\b\", 1", true, Postgres);
 		}
 
 		[Test]
@@ -186,8 +192,8 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("select $$ delete $$",                              "Postgres")]
 		[TestCase("select $$ x $$, $t$ it's $t$",                     "Postgres")]
 		[TestCase("select $$ x $$",                                   "TSql Ase Bracket Ydb Informix Postgres")]   // code where $$ is no string; ClickHouse and PostgreSQL-like servers of the other two classes read a string
-		[TestCase("select E'it\\'s delete'",                        "MySql Ydb Postgres")]                        // one string under backslash escapes
-		[TestCase("select E'x', N'x', X'0F', U&'d\\0061ta'",        "TSql Ase Bracket MySql Ydb Informix Postgres Standard")]
+		[TestCase("select E'it\\'s delete'",                        "Ydb Postgres")]                        // one string under backslash escapes
+		[TestCase("select E'x', N'x', X'0F', U&'d\\0061ta'",        "TSql Ase Bracket Ydb Informix Postgres Standard")]
 		[TestCase("select E'C:\\' from t",                          "TSql Ase Bracket Informix")]                 // Postgres reads an open string; Standard: the readings differ
 		[TestCase("select q'[ delete ]', Q'{ x }', nq'< y >' from t", "TSql Ase Bracket MySql Ydb Informix Postgres Standard")] // the same string under both readings
 		[TestCase("select q'[' || x || ']' from t",                   "TSql Ase Bracket MySql Ydb Informix Postgres")] // Oracle and Firebird: one string
@@ -198,7 +204,7 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("select 1 --",                                      "TSql Ase Bracket MySql Ydb Informix Postgres Standard")]
 		[TestCase("select 1 # delete\n from t",                      "MySql")]
 		[TestCase("select 'C:\\' from t",                           "TSql Ase Bracket Informix Postgres Standard")]
-		[TestCase("select 'it\\'s', \"it\\\"s\" from t",       "MySql Ydb")]
+		[TestCase("select 'it\\'s', \"it\\\"s\" from t",       "Ydb")]
 		[TestCase("select [delete] from t",                           "TSql Ase Bracket")]
 		[TestCase("select {delete} from t",                           "Informix")]
 		[TestCase("select @@x delete @@ from t",                      "Ydb")]
@@ -707,7 +713,7 @@ namespace Tests.LinqToDB.CLI
 			accepted.ShouldBeTrue($"{dialect}: {sql}");
 
 			if (writes)
-				ReadOnlySqlGuard.FindNonAsciiCode(sql).ShouldBe(-1, $"{dialect}: {sql}");
+				ReadOnlySqlGuard.FindNonAsciiCode(sql, dialect == TSql).ShouldBe(-1, $"{dialect}: {sql}");
 
 			return writes;
 		}
@@ -858,7 +864,7 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("select a into #t from t\nupdate #t set a = 42 from dbo.real [x\u00E9]\nselect * from #t")]
 		[TestCase("select a into #t from t\nupdate #t set a = 42 from dbo.real \"it's \u00E9\"\nselect * from #t")]
 		[TestCase("select a into #t from t\nupdate #t set a = 42 from dbo.real [it's \u3007]#t\nselect * from #t")]
-		[TestCase("select a into #t from t\nupdate #t set a = 42 from dbo.real r -- x\r\u3007#t\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t set a = 42 from dbo.real r -- x\r\n\u3007#t\nselect * from #t")]
 		[TestCase("select a into #t from t\nupdate #t set a = 42 from dbo.real r /* x */ \u3007#t\nselect * from #t")]
 		[TestCase("select a into #t from t\nupdate #t set a = 42 from dbo.real \u00A0#t\nselect * from #t")]
 		[TestCase("select a into #t from t\nupdate #t set a = 42 from dbo.real \u007F#t\nselect * from #t")]
@@ -995,7 +1001,7 @@ namespace Tests.LinqToDB.CLI
 						result.Error.ShouldContain($"at 2:{position - sql.IndexOf('\n', StringComparison.Ordinal)}.", customMessage: $"{provider} {label}");
 				}
 
-				ReadOnlySqlGuard.FindNonAsciiCode(sql).ShouldBe(position, label);
+				ReadOnlySqlGuard.FindNonAsciiCode(sql, true).ShouldBe(position, label);
 			}
 		}
 
@@ -1007,13 +1013,17 @@ namespace Tests.LinqToDB.CLI
 		{
 			using (Assert.EnterMultipleScope())
 			{
-				foreach (var provider in new[] { "SqlServer.2022", "Sybase.Managed", "SqlCe" })
+				// The ASE driver sends the text in iso_1, which holds none of these characters but U+00E9.
+				foreach (var provider in new[] { "SqlServer.2022", "SqlCe" })
 				{
 					var result = ReadOnlySqlGuard.Validate(provider, sql);
 
 					result.IsAllowed.ShouldBeTrue($"{provider}: {result.Error}");
 					result.WritesTemporaryTables.ShouldBeFalse(provider);
 				}
+
+				ReadOnlySqlGuard.Validate("Sybase.Managed", sql).IsAllowed.ShouldBeFalse();
+				ReadOnlySqlGuard.Validate("Sybase.Managed", "select [\u00C9t\u00E9], \u00E9t\u00E9 from t").IsAllowed.ShouldBeTrue();
 			}
 		}
 
@@ -1032,8 +1042,149 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("select 'open \u00E9", -1)]
 		public void NonAsciiCodeIsFoundOutsideLiteralsAndComments(string sql, int expected)
 		{
-			ReadOnlySqlGuard.FindNonAsciiCode(sql).ShouldBe(expected);
+			ReadOnlySqlGuard.FindNonAsciiCode(sql, true).ShouldBe(expected);
 		}
+
+		// ASE ends -- at a line feed only, so a lone carriage return stays inside the comment there.
+		[TestCase("select 1 a into #t -- x\r\u00E9", -1)]
+		[TestCase("select 1 a into #t -- x\r\n\u00E9", 25)]
+		public void NonAsciiCodeOnAseReadsCommentsToLineFeed(string sql, int expected)
+		{
+			ReadOnlySqlGuard.FindNonAsciiCode(sql, false).ShouldBe(expected);
+		}
+
+		#region The text the server receives
+
+		// AdoNetCore.AseClient sends the command text in the connection's character set (iso_1 unless the server or
+		// Charset= names another) through .NET's encoder, which replaces what the set does not hold, often by a lookalike:
+		// U+2019 by ', U+FF02 by ", U+FF0A by *, U+2010 by -, a fullwidth letter by its ASCII letter. Each of these texts
+		// wrote a table live on ASE 16.1 through the CLI or the driver. Code points are numbers, so a filtered run keeps them.
+		[TestCase(0x2019)] // RIGHT SINGLE QUOTATION MARK
+		[TestCase(0x02BC)] // MODIFIER LETTER APOSTROPHE
+		[TestCase(0xFF07)] // FULLWIDTH APOSTROPHE
+		[TestCase(0x2032)] // PRIME
+		public void AseBestFitQuoteEndsLiteral(int code)
+		{
+			var sql    = "select 'a" + (char)code + ", 1 b update tempdb..wt set a = 7 --' c";
+			var result = ReadOnlySqlGuard.Validate("Sybase.Managed", sql);
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.IsAllowed.ShouldBeFalse(code.ToString("X4", CultureInfo.InvariantCulture));
+				result.Error!.ShouldContain(string.Create(CultureInfo.InvariantCulture, $"character U+{code:X4} at 1:10 reaches the server as '''."), customMessage: result.Error);
+
+				// SqlClient sends UTF-16: SQL Server reads the character inside the literal, as the check does.
+				ReadOnlySqlGuard.Validate("SqlServer.2022", "select 'a" + (char)code + "' c").IsAllowed.ShouldBeTrue();
+			}
+		}
+
+		[Test]
+		public void AseBestFitFullwidthKeywords()
+		{
+			static string Fullwidth(string word)
+			{
+				return string.Concat(word.Select(c => (char)(0xFF41 + c - 'a')));
+			}
+
+			ReadOnlySqlGuard.Validate("Sybase.Managed", "select 1 a " + Fullwidth("update") + " tempdb..wt " + Fullwidth("set") + " a = 2")
+				.IsAllowed.ShouldBeFalse();
+		}
+
+		[TestCase(0x201D, "select \"a{0}, 1 b update tempdb..wt set a = 8 --\" c")]
+		[TestCase(0xFF02, "select \"a{0}, 1 b update tempdb..wt set a = 8 --\" c")]
+		[TestCase(0xFF0A, "select 1 a /* {0}/ update tempdb..wt set a = 9 -- */")]
+		[TestCase(0xFF0F, "select 1 a /* *{0} update tempdb..wt set a = 9 -- */")]
+		[TestCase(0x2010, "select 1 a {0}{0} '\nupdate tempdb..wt set a = 6 --'")]
+		[TestCase(0x2013, "select 1 a {0}{0} '\nupdate tempdb..wt set a = 6 --'")]
+		public void AseBestFitOtherForms(int code, string format)
+		{
+			ReadOnlySqlGuard.Validate("Sybase.Managed", string.Format(CultureInfo.InvariantCulture, format, (char)code))
+				.IsAllowed.ShouldBeFalse(code.ToString("X4", CultureInfo.InvariantCulture));
+		}
+
+		// The ASCII rule of temporary-table scripts lets a character stand inside a literal; on ASE it would end it.
+		[Test]
+		public void AseTempScriptAsciiRuleSidestepped()
+		{
+			ReadOnlySqlGuard.Validate("Sybase.Managed", "select a into #t from tempdb..wt\nselect 'x\u2019 update tempdb..wt set a = 5 --' c from #t")
+				.IsAllowed.ShouldBeFalse();
+		}
+
+		// The character set the connection asks for is checked as well as iso_1, which the server may answer with.
+		[TestCase(null,                                          "select '\u00E9' a", true)]
+		[TestCase("Data Source=h;Port=5000;Charset=utf8",        "select '\u00E9' a", true)]
+		[TestCase("Data Source=h;Port=5000;Charset=utf8",        "select '\u2019' a", false)]
+		[TestCase("Data Source=h;Port=5000;Charset=ascii_8",     "select '\u00E9' a", false)]
+		[TestCase("Data Source=h;Port=5000;charset = ISO_1",     "select '\u00E9' a", true)]
+		[TestCase("Data Source=h;Port=5000;Charset=no-such-set", "select '\u00E9' a", true)]
+		[TestCase("not a connection string",                     "select '\u00E9' a", true)]
+		public void AseCharsetOfTheConnection(string? connectionString, string sql, bool accepted)
+		{
+			using (Assert.EnterMultipleScope())
+			{
+				ReadOnlySqlGuard.Validate("Sybase.Managed", sql, connectionString).IsAllowed.ShouldBe(accepted);
+				ReadOnlySqlGuard.ValidateSingleStatement("Sybase.Managed", sql, connectionString).IsAllowed.ShouldBe(accepted);
+			}
+		}
+
+		// ASE, MySQL, MariaDB, SQLite and ClickHouse end -- (and MySQL #) at a line feed only; SQL Server and PostgreSQL
+		// at a carriage return too. Each refused text wrote a table live on the servers named.
+		[Test]
+		public void AseLoneCarriageReturnDoesNotEndComment()
+		{
+			using (Assert.EnterMultipleScope())
+			{
+				ReadOnlySqlGuard.Validate("Sybase.Managed", "select 1 a --\r'\nupdate tempdb..wt set a = 3 --'")
+					.IsAllowed.ShouldBeFalse();
+				ReadOnlySqlGuard.Validate("Sybase.Managed", "select a into #t from tempdb..wt\nselect a from #t --\r'\nupdate tempdb..wt set a = 4 --'")
+					.IsAllowed.ShouldBeFalse();
+
+				// SQL Server ends the comment at the carriage return, and the string runs to the end of the text.
+				ReadOnlySqlGuard.Validate("SqlServer.2022", "select 1 a --\r'\nupdate tempdb..wt set a = 3 --'").IsAllowed.ShouldBeTrue();
+			}
+		}
+
+		[TestCase("select 1 a #\r'\n; update wt set a = 2; -- '")]
+		[TestCase("select 1 a -- \r'\n; update wt set a = 2; -- '")]
+		public void MySqlLoneCarriageReturnDoesNotEndComment(string sql)
+		{
+			ReadOnlySqlGrammar.TryCheckMySql(sql, out _).ShouldBeFalse();
+		}
+
+		[Test]
+		public void BracketLoneCarriageReturnDoesNotEndComment()
+		{
+			using (Assert.EnterMultipleScope())
+			{
+				ReadOnlySqlGrammar.TryCheckBracket("select 1 a --\r'\n; update wt set a = 3; --'", out _).ShouldBeFalse();
+				ReadOnlySqlGrammar.TryCheckBracket("select 1 a --\r\n from t", out _).ShouldBeTrue();
+			}
+		}
+
+		// MySQL and MariaDB read no backslash escape under NO_BACKSLASH_ESCAPES and "…" as a name under ANSI_QUOTES; the
+		// check cannot see sql_mode, so a backslash in either is refused. Each wrote live under that mode.
+		[TestCase("select 'a\\', 1 b; update wt set a = 3; -- '")]
+		[TestCase("select 1 as \"a\\\", 1 b; update wt set a = 4; -- \"")]
+		public void MySqlModesRefused(string sql)
+		{
+			ReadOnlySqlGrammar.TryCheckMySql(sql, out _).ShouldBeFalse();
+		}
+
+		// PostgreSQL's dollar-quote tag takes any character outside ASCII. live, psql on PostgreSQL 17: wt 6.
+		[TestCase(0x20AC)]
+		[TestCase(0x0301)]
+		public void PostgresDollarTagNonLetter(int code)
+		{
+			var tag = code == 0x0301 ? "a" + (char)code : ((char)code).ToString();
+
+			using (Assert.EnterMultipleScope())
+			{
+				ReadOnlySqlGrammar.TryCheckPostgres("select $" + tag + "$ ' $" + tag + "$; update wt set a = 6; -- '", out _).ShouldBeFalse();
+				ReadOnlySqlGrammar.TryCheckPostgres("select $" + tag + "$ ' $" + tag + "$ a", out _).ShouldBeTrue();
+			}
+		}
+
+		#endregion
 
 		[Test]
 		public void TempScriptsRouteToAnUnpooledConnectionOnAseOnly()
@@ -1116,6 +1267,38 @@ namespace Tests.LinqToDB.CLI
 
 			opening.ConnectionString.ShouldNotBeNull();
 			new DbConnectionStringBuilder { ConnectionString = opening.ConnectionString }["Pooling"].ShouldBe(pooling);
+		}
+
+		// The executor checks the text against the character set of the connection it opens: ascii_8 holds no U+00E9, so the
+		// call stops at the check and opens nothing; without the key, iso_1 holds it and the connection opens.
+		[TestCase("Data Source=ase;Port=5000;Charset=ascii_8;", false)]
+		[TestCase("Data Source=ase;Port=5000;",                 true)]
+		public async Task ExecutorChecksTheCharsetOfItsConnection(string connectionString, bool opens)
+		{
+			const string sql = "select '\u00E9' a";
+
+			var provider = SybaseTools.GetDataProvider(SybaseProvider.DataAction);
+			var opening  = new OpeningRecorder();
+			var options  = new DataOptions().UseConnectionString(provider, connectionString).UseInterceptor(opening);
+			var settings = new QueryExecutionSettings(
+				"ase", "Sybase.Managed", null, null, null, connectionString, null, null, 0, null, "json", null, false,
+				QueryExecutionMode.Query, false, TextWriter.Null, false, default, sql);
+			var executor = new QueryExecutionExecutor(settings);
+
+			if (opens)
+			{
+				await Assert.ThatAsync(
+					() => executor.ExecuteValidatedDatabaseLoop(options, provider, sql, TextWriter.Null, CancellationToken.None),
+					Throws.TypeOf<InvalidOperationException>().With.Message.EqualTo(OpeningRecorder.StopMessage));
+			}
+			else
+			{
+				var result = await executor.ExecuteValidatedDatabaseLoop(options, provider, sql, TextWriter.Null, CancellationToken.None);
+
+				result.Error.ShouldNotBeNull();
+				result.Error.ShouldContain("character U+00E9 at 1:9 reaches the server as '?'. The driver sends the text in us-ascii");
+				opening.ConnectionString.ShouldBeNull();
+			}
 		}
 
 		// Records the connection string a connection opens with, and stops the call before it reaches a server.
@@ -1218,7 +1401,7 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("SqlServer",        "create table ##g (a int)\nselect 1",     "Query is not read-only: statement word CREATE at 1:1.")]
 		[TestCase("SqlServer",        "select a into #t from t\nupdate #t set a = 1 from t [\uFF03t]\nselect 1", "Only SELECT queries are allowed: unexpected '[\uFF03t]' at 2:28. In a script that writes temporary tables, a quoted name must begin with an ASCII letter, a digit, _ or $.")]
 		[TestCase("SqlServer",        "declare @v table (a int)\nupdate @v set a = 1 from t \u0640@v\nselect 1", "Only SELECT queries are allowed: character U+0640 at 2:28. A script that writes temporary tables accepts non-ASCII characters only inside string literals ('...', N'...') and comments; names, quoted names included, must be ASCII.")]
-		[TestCase("Sybase.Managed",   "select a into #t from t\nupdate #t set a = 1 from t \u3007#t\nselect 1",   "Only SELECT queries are allowed: character U+3007 at 2:28. A script that writes temporary tables accepts")]
+		[TestCase("Sybase.Managed",   "select a into #t from t\nupdate #t set a = 1 from t \u3007#t\nselect 1",   "Query is not accepted: character U+3007 at 2:28 reaches the server as '?'. The driver sends the text in iso-8859-1")]
 		[TestCase("SqlServer",        "select a into #t from t -- \U0001F600\nselect [\U0001F600] from #t", "Only SELECT queries are allowed: character U+1F600 at 2:9.")]
 		[TestCase("SqlServer",        "select a into #t from t\nupdate #t set a = 1 from t\u200B#t\nselect 1", "Only SELECT queries are allowed: unexpected '#t' at 2:28. In a script that writes temporary tables, a name that starts with # may not stand where an alias does.")]
 		[TestCase("SqlServer",        "exec dbo.DoWork",                        "Query is not read-only: statement word EXEC at 1:1.")]

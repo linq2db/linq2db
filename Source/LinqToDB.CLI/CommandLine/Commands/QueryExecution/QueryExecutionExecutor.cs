@@ -419,14 +419,14 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			if (_settings.Mode == QueryExecutionMode.Query)
 			{
 				// The read-only check covers the single-statement contract too, and names the more specific reason.
-				guardResult = ReadOnlySqlGuard.Validate(dataProvider, sql);
+				guardResult = ReadOnlySqlGuard.Validate(dataProvider, sql, dataOptions.ConnectionOptions.ConnectionString);
 
 				if (!guardResult.IsAllowed)
 					return new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, guardResult.Error, false);
 			}
 			else
 			{
-				guardResult = ReadOnlySqlGuard.ValidateSingleStatement(dataProvider, sql);
+				guardResult = ReadOnlySqlGuard.ValidateSingleStatement(dataProvider, sql, dataOptions.ConnectionOptions.ConnectionString);
 
 				if (!guardResult.IsAllowed)
 					return new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, guardResult.Error, false);

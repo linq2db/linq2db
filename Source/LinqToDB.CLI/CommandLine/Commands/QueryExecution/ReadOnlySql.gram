@@ -20,7 +20,19 @@ Dialect = "TSql" | "Ase" | "Bracket" | "MySql" | "Ydb" | "Informix" | "Postgres"
 Unseparated      = "TSql" | "Ase"              // a statement may follow another without a separator
 Brackets         = "TSql" | "Ase" | "Bracket"  // [x] is a quoted identifier
 HashComment      = "MySql"                     // # starts a comment to the end of the line
-BackslashStrings = "MySql" | "Ydb"             // \ escapes the next character inside '…' and "…"
+BackslashStrings = "Ydb"                       // \ escapes the next character inside '…' and "…"
+// A backslash inside '…' and "…" is refused in the MySQL class: MySQL and MariaDB escape with it unless sql_mode has
+// NO_BACKSLASH_ESCAPES (and read "…" as a name under ANSI_QUOTES), and the check cannot see sql_mode. Elsewhere it is an
+// ordinary character. PostgreSQL: standard_conforming_strings is assumed on (the default since 9.1), as linq2db's own
+// SQL needs (its schema queries and bytea literals hold backslashes in '…'); a database or role that turns it off is
+// outside what the check reads.
+PlainBackslash   = "TSql" | "Ase" | "Bracket" | "Informix" | "Postgres" | "Standard"
+NamePlainBackslash = "TSql" | "Ase" | "Bracket" | "Informix" | "Postgres" | "Standard"
+// Where -- ends: at CR or LF on SQL Server and PostgreSQL, at LF only on ASE, MySQL, MariaDB and ClickHouse. In the
+// other classes a CR that no LF follows is refused inside a line comment: SQLite ends there at LF only, the others are
+// not verified.
+CrEndsComment    = "TSql" | "Postgres"
+CrRefused        = "Bracket" | "Ydb" | "Informix" | "Standard"
 BacktickNames    = "MySql" | "Ydb" | "Bracket" // `…` quotes a name (MySQL, MariaDB, ClickHouse, YQL, SQLite); a symbol elsewhere
 NestedComments   = "TSql" | "Ase" | "Postgres" // /* */ nest; in the other classes some servers nest them and others do not
 FlatComments     = "Bracket" | "Ydb" | "Informix" | "Standard"
@@ -33,7 +45,6 @@ PostgresStrings  = "Postgres"
 // Oracle and Firebird read q'x…x' as a string; DB2, SAP HANA and the providers no class names read a name and a plain
 // string, as they do for E'…', and $$ as code.
 MixedQuotes      = "Standard"
-DollarRefused    = "Standard" | "MySql"
 
 // What the driver keeps when it hands a pooled connection out again: an option set before one query would stay set
 // for the queries that follow on that connection, so it may not precede a query.
@@ -141,6 +152,7 @@ AtomBody
 Quoted = Lex.String
        | Lex.EString & when Dialect is PostgresStrings
        | Lex.DollarString & when Dialect is PostgresStrings
+       | Lex.UString & when Dialect is PostgresStrings
        | Lex.YdbRawString
        | ?!QuotedRefusal ~ (Lex.DoubleQuoted | Lex.Backticked | Lex.Bracketed)
 
@@ -152,7 +164,8 @@ Variable = '@' ~ '@'? ~ Lex.Word
          | '$' ~ Lex.Word
 TempName = '#' ~ '#'? ~ Lex.Word & when Dialect is Unseparated
 
-Sym = ?!"/*" ~ ?!SequenceDot ~ ?!Lex.UnspacedDash ~ Lex.SymChar
+// -- is a comment in every class, or refused where it is not one (MySQL's --1, a line comment the class refuses).
+Sym = ?!"/*" ~ ?!"--" ~ ?!SequenceDot ~ Lex.SymChar
     | '[' & when Dialect is not Brackets
     | '{' & when Dialect is not "Informix"
 
@@ -522,9 +535,12 @@ namespace Lex
 	// SQL Server ends a token at every control character and at U+200B too.
 	Space        = ['\u0000'..' ' | '\u0085' | '\u200B' | \p{Zs} | \p{Zl} | \p{Zp}]+
 	InlineSpace  = { [' ' | '\t' | \p{Zs}]+ }
-	LineComment  = "--" & [^ '\r' | '\n']* & when Dialect is not SpacedDash
-	             | "--" & ?=(['\u0000'..' '] | eof) & [^ '\r' | '\n']* & when Dialect is SpacedDash
-	UnspacedDash = "--" & when Dialect is SpacedDash
+	// One reading per class, so the alternatives never overlap.
+	LineComment  = { CrLineComment | LfLineComment | MySqlLineComment | StrictLineComment }
+	CrLineComment     = "--" & [^ '\r' | '\n']* & when Dialect is CrEndsComment
+	LfLineComment     = "--" & [^ '\n']* & when Dialect is "Ase"
+	MySqlLineComment  = "--" & ?=(['\u0000'..' '] | eof) & [^ '\n']* & when Dialect is SpacedDash
+	StrictLineComment = "--" & [^ '\r' | '\n']* & ?!('\r' & ?!'\n') & when Dialect is CrRefused
 	// One reading per class, so the alternatives never overlap.
 	BlockComment = { NestedComment | FlatComment | MySqlComment }
 	NestedComment = Std.Nested("/*", "*/") & when Dialect is NestedComments
@@ -532,7 +548,7 @@ namespace Lex
 	MySqlComment  = ?!ExecutableCommentOpen & FlatBody & when Dialect is ExecutableComments
 	// A comment that holds /* ends at its first */ on some servers and later on others, so it is no comment here.
 	FlatBody      = "/*" & (?!"*/" & ?!"/*" & any)* & "*/"
-	HashLine     = '#' & [^ '\r' | '\n']* & when Dialect is HashComment
+	HashLine     = '#' & [^ '\n']* & when Dialect is HashComment
 	BraceComment = '{' & [^ '}']* & '}' & when Dialect is "Informix"
 
 	// MySQL and MariaDB run what stands inside /*! … */ and /*M! … */ when the server's version is at least the number;
@@ -540,12 +556,16 @@ namespace Lex
 	ExecutableCommentOpen = "/*!" & ['0'..'9']* | "/*M!"i & ['0'..'9']*
 
 	String       = { '\'' & { StringChar }* & '\'' }
-	StringChar   = "''" | '\\' & any & when Dialect is BackslashStrings | '\\' & when Dialect is not BackslashStrings | [^ '\'' | '\\']
+	StringChar   = "''" | '\\' & any & when Dialect is BackslashStrings | '\\' & when Dialect is PlainBackslash | [^ '\'' | '\\']
 	EString      = { ['E' | 'e'] & '\'' & ("''" | '\\' & any | [^ '\'' | '\\'])* & '\'' }
+	// PostgreSQL's U&'…': a backslash starts a Unicode escape, never a quote, and the form is an error unless
+	// standard_conforming_strings is on.
+	UString      = { ['U' | 'u'] & '&' & '\'' & ("''" | [^ '\''])* & '\'' }
 
 	// Forms that some servers of a class read as a string and others as code. Each starts a token.
 	MixedQuote      = (EStringEscape | QStringQuote) & when Dialect is MixedQuotes
-	                | DollarOpen & when Dialect is DollarRefused
+	                | DollarOpen & when Dialect is "Standard"
+	                | '$' & [^ '$' | '\r' | '\n']* & '$' & when Dialect is "MySql"   // ClickHouse reads $…$ on one line as a heredoc
 	                | ?!(EString | DollarString) & (['E' | 'e'] & '\'' | DollarOpen) & when Dialect is PostgresStrings   // open: never a name and a plain string
 	// E'…' whose plain reading holds a backslash: there the two readings end the string at different quotes.
 	EStringEscape   = ['E' | 'e'] & '\'' & ("''" | [^ '\'' | '\\'])* & '\\'
@@ -558,7 +578,8 @@ namespace Lex
 	                  | $d: [^ ' ' | '\t' | '\r' | '\n' | '[' | '{' | '(' | '<'] & (?!($d & '\'') & [^ '\''])* & '\'' )
 	DollarOpen      = '$' & DollarTag? & '$'
 	DollarString = { '$' & $tag: (DollarTag?) & '$' & (?!('$' & $tag & '$') & any)* & '$' & $tag & '$' }
-	DollarTag    = [\p{L} | '_'] & [\p{L} | \p{Nd} | '_']*
+	// PostgreSQL's tag: an ASCII letter, _ or any character outside ASCII, then those or an ASCII digit.
+	DollarTag    = (['A'..'Z' | 'a'..'z' | '_'] | [^ '\u0000'..'\u007F']) & (['A'..'Z' | 'a'..'z' | '0'..'9' | '_'] | [^ '\u0000'..'\u007F'])*
 	QString      = { ['n' | 'N']? & ['q' | 'Q'] & '\''
 	                 & ( '[' & (?!"]'" & any)* & "]'"
 	                   | '{' & (?!"}'" & any)* & "}'"
@@ -566,7 +587,7 @@ namespace Lex
 	                   | '<' & (?!">'" & any)* & ">'"
 	                   | $d: [^ ' ' | '\t' | '\r' | '\n' | '[' | '{' | '(' | '<'] & (?!($d & '\'') & any)* & $d & '\'' ) }
 	DoubleQuoted = { '"' & { DoubleQuotedChar }* & '"' }
-	DoubleQuotedChar = "\"\"" | '\\' & any & when Dialect is BackslashStrings | '\\' & when Dialect is not BackslashStrings | [^ '"' | '\\']
+	DoubleQuotedChar = "\"\"" | '\\' & any & when Dialect is BackslashStrings | '\\' & when Dialect is NamePlainBackslash | [^ '"' | '\\']
 	Backticked   = { '`' & { BacktickedChar }* & '`' } & when Dialect is BacktickNames
 	// YQL and ClickHouse escape with a backslash inside backticks, MySQL does not: a backslash there is refused in the
 	// MySQL class.
