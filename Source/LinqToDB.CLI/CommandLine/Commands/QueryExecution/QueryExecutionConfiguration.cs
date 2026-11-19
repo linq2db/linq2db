@@ -14,7 +14,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 	/// The root object contains optional "default" and named profiles.
 	/// Named profiles inherit values from the "default" profile when it exists because it is applied first.
 	/// </summary>
-	internal sealed class QueryExecutionConfiguration
+	public sealed class QueryExecutionConfiguration
 	{
 		/// <summary>
 		/// Optional non-secret profile description for agents and humans.

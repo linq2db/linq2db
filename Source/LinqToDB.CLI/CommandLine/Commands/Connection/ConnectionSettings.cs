@@ -7,7 +7,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 	/// <summary>
 	/// Fully resolved trusted database connection settings shared by query and schema execution.
 	/// </summary>
-	internal sealed record ConnectionSettings(
+	public sealed record ConnectionSettings(
 		string  Profile,
 		string  Provider,
 		string? ProviderLocation,

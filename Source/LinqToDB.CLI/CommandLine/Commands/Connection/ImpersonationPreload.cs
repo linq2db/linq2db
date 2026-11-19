@@ -33,7 +33,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 	/// connection with the command's own provider and connection string, so that the client loads what connecting
 	/// needs, and loads the managed code that running the command needs beyond that.
 	/// </remarks>
-	internal static partial class ImpersonationPreload
+	public static partial class ImpersonationPreload
 	{
 		/// <summary>
 		/// How long the command waits for the warm-up connection. Some clients open synchronously or ignore
@@ -41,17 +41,17 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		/// not to connect, so the bound is short; it still leaves time for the network and TLS round trips that
 		/// precede login, where clients load their authentication libraries.
 		/// </summary>
-		internal static TimeSpan WarmUpTimeout { get; set; } = TimeSpan.FromSeconds(5);
+		public static TimeSpan WarmUpTimeout { get; set; } = TimeSpan.FromSeconds(5);
 
 		/// <summary>
 		/// How long a warm-up that failed is not tried again for the same client and connection string. While the process
 		/// account cannot connect, a long-lived process (the MCP server) then makes one failed attempt as that account per
 		/// minute, not one per request, and still retries after a transient failure.
 		/// </summary>
-		internal static TimeSpan RetryDelay { get; set; } = TimeSpan.FromMinutes(1);
+		public static TimeSpan RetryDelay { get; set; } = TimeSpan.FromMinutes(1);
 
 		/// <summary>The clock for <see cref="RetryDelay"/>; only its monotonic timestamps are used (replaced by tests).</summary>
-		internal static TimeProvider TimeProvider { get; set; } = TimeProvider.System;
+		public static TimeProvider TimeProvider { get; set; } = TimeProvider.System;
 
 		/// <summary>
 		/// Pooling keywords of the connection string, by connection type, for clients that pool connections.
@@ -243,7 +243,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		/// Returns a task that completes when every warm-up of <paramref name="connectionType"/> that is running now has
 		/// ended and, if it failed, removed its entry (for tests).
 		/// </summary>
-		internal static Task WhenWarmUpsEnded(Type connectionType)
+		public static Task WhenWarmUpsEnded(Type connectionType)
 		{
 			lock (_lock)
 			{
