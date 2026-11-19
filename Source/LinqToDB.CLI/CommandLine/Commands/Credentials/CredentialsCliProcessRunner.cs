@@ -58,12 +58,6 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 
 		public string DisplayName => _settings.DisplayName;
 
-		public string Describe()
-		{
-			var program = TryResolve(out var path, out _) ? path : _settings.Program;
-			return _settings.Arguments.Length == 0 ? program : $"{program} {_settings.Arguments}";
-		}
-
 		public CredentialsCliRunResult Run(string verb, byte[] request)
 		{
 			// ICredentialStore is synchronous; the program's pipes are pumped asynchronously underneath.

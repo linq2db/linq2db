@@ -39,12 +39,6 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 			_runner = runner;
 		}
 
-		/// <summary>The resolved program and arguments (or the configured value when the program cannot be resolved), for diagnostics.</summary>
-		public string Describe()
-		{
-			return _runner.Describe();
-		}
-
 		string Name => _runner.DisplayName;
 
 		public bool TryRead(string target, out string? user, out string? password, out string? error)

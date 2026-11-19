@@ -10,9 +10,6 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		/// <summary>The credentials CLI as configured, for messages.</summary>
 		string DisplayName { get; }
 
-		/// <summary>Resolved program path and arguments for diagnostics, or the configured value when it cannot be resolved.</summary>
-		string Describe();
-
 		CredentialsCliRunResult Run(string verb, byte[] request);
 	}
 }

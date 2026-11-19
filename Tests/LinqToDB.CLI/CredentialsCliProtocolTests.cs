@@ -28,11 +28,6 @@ namespace Tests.LinqToDB.CLI
 
 			public string DisplayName => "fake-cli";
 
-			public string Describe()
-			{
-				return "/fake/cli";
-			}
-
 			public FakeRunner Answer(string output, int exitCode = 0, string errorOutput = "")
 			{
 				return Answer(Encoding.UTF8.GetBytes(output), exitCode, errorOutput);
