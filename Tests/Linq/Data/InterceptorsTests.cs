@@ -17,6 +17,7 @@ using LinqToDB.Interceptors;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Interceptors;
 using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -1637,6 +1638,25 @@ namespace Tests.Data
 			CompiledQuery.Compile((IDataContext db, string[] ignored) => db.GetTable<Person>().IgnoreFilters(ignored));
 
 		/// <summary>
+		/// <c>field IN (values)</c> with the values inlined when the query is translated: a
+		/// <see cref="SqlQueryDependentAttribute"/> argument that is a collection but not an array.
+		/// </summary>
+		[Sql.Extension("{field} IN ({values, ', '})", IsPredicate = true, BuilderType = typeof(InValuesBuilder), ServerSideOnly = true)]
+		static bool InValues([ExprParameter] int field, [SqlQueryDependent] List<int> values) => throw new ServerSideOnlyException(nameof(InValues));
+
+		sealed class InValuesBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqlExtensionBuilder builder)
+			{
+				foreach (var value in builder.GetValue<List<int>>("values"))
+					builder.AddParameter("values", new SqlValue(value));
+			}
+		}
+
+		static readonly Func<IDataContext, List<int>, IQueryable<Person>> _compiledPersonsIn =
+			CompiledQuery.Compile((IDataContext db, List<int> ids) => db.GetTable<Person>().Where(p => InValues(p.ID, ids)));
+
+		/// <summary>
 		/// Materializes <see cref="Person.FirstName"/> as a constant.
 		/// </summary>
 		sealed class FirstNameBindingInterceptor : EntityBindingInterceptor
@@ -2049,6 +2069,37 @@ namespace Tests.Data
 				ShouldReturnIds(Ignoring(admin,   "low"),  high, $"admin, high, round {i}");
 				ShouldReturnIds(Ignoring(tenant3, "low"),  high.Where(id => id <= 3).ToArray(), $"tenant 3, high, round {i}");
 				ShouldReturnIds(Ignoring(tenant3, "high"), low,  $"tenant 3, low, round {i}");
+			}
+		}
+
+		// The same with a [SqlQueryDependent] argument that is a collection but not an array: the query a tenant needs for
+		// one list must not serve it for another.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
+		public void QueryExpression_WithoutCacheKey_CompiledQueryAlternatingContexts_CollectionArgument([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			Query.ClearCaches();
+
+			IDataContext Create(int? tenant) => GetDataContext(context, o => o
+				.UseMappingSchema(_personFilterSchema)
+				.UseInterceptor(new UnkeyedTenantLimitInterceptor(ExpressionKind.QueryFilter, tenant)));
+
+			using var admin   = Create(null);
+			using var tenant3 = Create(3);
+
+			int[] Expected(List<int> ids, int limit = int.MaxValue)
+			{
+				return ExpectedIds(limit)
+					.Where(ids.Contains)
+					.ToArray();
+			}
+
+			for (var i = 0; i < 2; i++)
+			{
+				foreach (var ids in new[] { new List<int> { 1, 2 }, new List<int> { 3, 4 } })
+				{
+					ShouldReturnIds(_compiledPersonsIn(admin,   ids), Expected(ids),    $"admin, [{string.Join(", ", ids)}], round {i}");
+					ShouldReturnIds(_compiledPersonsIn(tenant3, ids), Expected(ids, 3), $"tenant 3, [{string.Join(", ", ids)}], round {i}");
+				}
 			}
 		}
 

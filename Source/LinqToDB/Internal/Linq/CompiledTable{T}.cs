@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -63,20 +64,18 @@ namespace LinqToDB.Internal.Linq
 			}
 		}
 
-		// Queries kept for one cache key, which does not tell query interceptor instances apart: contexts whose interceptors
-		// need different queries each keep their own instead of rebuilding on every switch.
-		const int MaxQueriesPerKey = 4;
-
 		Query<T> GetInfo(IDataContext dataContext, object?[] parameterValues, int[] indexes, out int[]? unseenSlots, out IQueryExpressions expressions)
 		{
-			var cacheKey =
+			var queryFlags = dataContext.GetQueryFlags();
+
+			IStructuralEquatable cacheKey =
 				(
 					operation: "CT",
 					configurationID: dataContext.ConfigurationID,
 					// Identity of this fold site, not a structural comparison: the cache is global per T,
 					// and one compiled query can fold more than one table of the same type.
 					table      : this,
-					queryFlags : dataContext.GetQueryFlags(),
+					queryFlags : queryFlags,
 					dependent  : GetDependentArgumentValues(indexes, parameterValues)
 				);
 
@@ -84,14 +83,21 @@ namespace LinqToDB.Internal.Linq
 
 			if (cached != null)
 			{
-				foreach (var candidate in cached)
+				if (TryReuse(cached, dataContext, parameterValues, out expressions))
 				{
-					if (TryReuse(candidate, dataContext, parameterValues, out expressions))
-					{
-						unseenSlots = null;
+					unseenSlots = null;
 
-						return candidate;
-					}
+					return cached;
+				}
+
+				// The executing context's query interceptor needs another query for this fold site. Such variants go to the
+				// query cache, which keeps several for one key and compares them with the context.
+				if (QueryCache.Default.TryFind(typeof(T), dataContext, cached.CompiledExpressions!, queryFlags, parameterValues, cacheKey, out var variant, out var matched))
+				{
+					expressions = matched;
+					unseenSlots = null;
+
+					return (Query<T>)variant;
 				}
 			}
 
@@ -111,21 +117,19 @@ namespace LinqToDB.Internal.Linq
 				return query;
 			}
 
-			// Newest first; the oldest drops out past the limit. A concurrent publish for the same key may drop the other
-			// thread's query, which only costs a rebuild.
-			var count   = cached == null ? 0 : Math.Min(cached.Length, MaxQueriesPerKey - 1);
-			var queries = new Query<T>[count + 1];
-
-			queries[0] = query;
-
-			if (count > 0)
-				Array.Copy(cached!, 0, queries, 1, count);
-
-			using (var entry = QueryRunner.Cache<T>.QueryCache.CreateEntry(cacheKey))
+			if (cached != null)
 			{
+				query.CompiledCacheKey = cacheKey;
+
+				QueryCache.Default.TryAdd(typeof(T), dataContext, query, expressions, queryFlags, parameterValues);
+			}
+			else
+			{
+				using var entry = QueryRunner.Cache<T>.QueryCache.CreateEntry(cacheKey);
+
 				entry.SlidingExpiration = dataContext.Options.LinqOptions.CacheSlidingExpirationOrDefault;
 				entry.Size              = 1;
-				entry.Value             = queries;
+				entry.Value             = query;
 			}
 
 			unseenSlots = null;

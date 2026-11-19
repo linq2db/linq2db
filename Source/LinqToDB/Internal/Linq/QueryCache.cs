@@ -12,11 +12,11 @@ namespace LinqToDB.Internal.Linq
 	/// <summary>
 	/// Global LINQ query cache.
 	/// Buckets queries by a shallow composite key, then verifies candidates inside each bucket
-	/// via <see cref="Query.Compare"/>.
+	/// via <see cref="Query.Compare(IDataContext, IQueryExpressions, out IQueryExpressions)"/>.
 	/// </summary>
 	/// <remarks>
 	/// Lookup is O(1) at the bucket-map level. Inside each bucket, candidates are still verified
-	/// with the original <see cref="Query.Compare"/> equality check.
+	/// with the original <see cref="Query.Compare(IDataContext, IQueryExpressions, out IQueryExpressions)"/> equality check.
 	///
 	/// Expiration:
 	/// - Each entry stores its own base timeout, captured from the context that created it.
@@ -322,6 +322,25 @@ namespace LinqToDB.Internal.Linq
 			[NotNullWhen(true)] out Query?                query,
 			[NotNullWhen(true)] out IQueryExpressions?    matchedExpressions)
 		{
+			return TryFind(resultType, dataContext, expressions, queryFlags, compiledParameters: null, compiledCacheKey: null, out query, out matchedExpressions);
+		}
+
+		/// <param name="compiledParameters">
+		/// Arguments of a compiled query, which the value comparisons of its cached queries read; <see langword="null"/> otherwise.
+		/// </param>
+		/// <param name="compiledCacheKey">
+		/// Cache key of the compiled query call, which a query kept for it must have been built for; <see langword="null"/> otherwise.
+		/// </param>
+		internal bool TryFind(
+			Type                                          resultType,
+			IDataContext                                  dataContext,
+			IQueryExpressions                             expressions,
+			QueryFlags                                    queryFlags,
+			object?[]?                                    compiledParameters,
+			object?                                       compiledCacheKey,
+			[NotNullWhen(true)] out Query?                query,
+			[NotNullWhen(true)] out IQueryExpressions?    matchedExpressions)
+		{
 			query              = null;
 			matchedExpressions = null;
 
@@ -358,7 +377,7 @@ namespace LinqToDB.Internal.Linq
 				if (IsExpired(entry, now))
 					continue;
 
-				if (entry.Query.Compare(dataContext, expressions, out var matched))
+				if (entry.Query.Compare(dataContext, expressions, compiledParameters, compiledCacheKey, out var matched))
 				{
 					// Refresh on a real match: Compare may have taken non-trivial time, and
 					// RecordAccess wants a fresh `now` for LastAccessTicks / deadline extension.
@@ -388,6 +407,21 @@ namespace LinqToDB.Internal.Linq
 			Query             query,
 			IQueryExpressions expressions,
 			QueryFlags        queryFlags)
+		{
+			TryAdd(resultType, dataContext, query, expressions, queryFlags, compiledParameters: null);
+		}
+
+		/// <param name="compiledParameters">
+		/// Arguments of a compiled query, which the value comparisons of its cached queries read; <see langword="null"/> otherwise.
+		/// The query's <see cref="Query.CompiledCacheKey"/> tells which call it was built for.
+		/// </param>
+		internal void TryAdd(
+			Type              resultType,
+			IDataContext      dataContext,
+			Query             query,
+			IQueryExpressions expressions,
+			QueryFlags        queryFlags,
+			object?[]?        compiledParameters)
 		{
 			var now = Stopwatch.GetTimestamp();
 
@@ -443,7 +477,7 @@ namespace LinqToDB.Internal.Linq
 
 						// No QueryFlags check: flags are pinned by the bucket key, so every
 						// surviving entry already shares this add's QueryFlags.
-						if (existing.Query.Compare(dataContext, expressions, out _))
+						if (existing.Query.Compare(dataContext, expressions, compiledParameters, query.CompiledCacheKey, out _))
 						{
 							duplicate = existing;
 						}
