@@ -184,7 +184,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				if (!argType.IsUnsignedType())
 				{
 					var expr = new SqlCastExpression(element.Expr, argType.ToUnsigned(), null, false);
-					return new SqlUnaryExpression(element.Type, expr, element.Operation, element.Precedence);
+					return new SqlUnaryExpression(element.Type, expr, element.Operation);
 				}
 			}
 
@@ -210,7 +210,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 					or DataType.VarBinary
 					or DataType.Blob:
 				{
-					return new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence);
+					return new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2);
 				}
 
 				case "&" or "|" or "^":
@@ -221,7 +221,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 					var expr2     = expr2Type.IsUnsignedType() ? element.Expr2 : new SqlCastExpression(element.Expr2, expr2Type.ToUnsigned(), null, false);
 
 					if (expr1 != element.Expr1 || expr2 != element.Expr2)
-						return new SqlBinaryExpression(element.SystemType, expr1, element.Operation, expr2, element.Precedence);
+						return new SqlBinaryExpression(element.SystemType, expr1, element.Operation, expr2);
 
 					break;
 				}
@@ -245,15 +245,15 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			var doubleType = MappingSchema.GetDbDataType(typeof(double));
 
 			if (IsFloating(t1) && IsDecimal(t2))
-				return new SqlBinaryExpression(element.SystemType, element.Expr1, element.Operation, new SqlCastExpression(element.Expr2, doubleType, null), element.Precedence);
+				return new SqlBinaryExpression(element.SystemType, element.Expr1, element.Operation, new SqlCastExpression(element.Expr2, doubleType, null));
 
 			if (IsDecimal(t1) && IsFloating(t2))
-				return new SqlBinaryExpression(element.SystemType, new SqlCastExpression(element.Expr1, doubleType, null), element.Operation, element.Expr2, element.Precedence);
+				return new SqlBinaryExpression(element.SystemType, new SqlCastExpression(element.Expr1, doubleType, null), element.Operation, element.Expr2);
 
 			// a double stored as Decimal beside another Decimal operand (a column, or a literal typed by one): the C# expression
 			// computes in Double, while YQL Decimal arithmetic keeps the operands' scale and refuses differing Decimal types
 			if (IsDecimal(t1) && IsDecimal(t2) && element.SystemType.UnwrappedNullableType is var type && (type == typeof(double) || type == typeof(float)))
-				return new SqlBinaryExpression(element.SystemType, new SqlCastExpression(element.Expr1, doubleType, null), element.Operation, new SqlCastExpression(element.Expr2, doubleType, null), element.Precedence);
+				return new SqlBinaryExpression(element.SystemType, new SqlCastExpression(element.Expr1, doubleType, null), element.Operation, new SqlCastExpression(element.Expr2, doubleType, null));
 
 			return element;
 		}
@@ -355,13 +355,11 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 				var seconds = new SqlBinaryExpression(intType,
 					new SqlBinaryExpression(intType,
-						new SqlBinaryExpression(intType, Component(0), "*", new SqlValue(intType, 3600), Precedence.Multiplicative),
+						new SqlBinaryExpression(intType, Component(0), "*", new SqlValue(intType, 3600)),
 						"+",
-						new SqlBinaryExpression(intType, Component(1), "*", new SqlValue(intType, 60), Precedence.Multiplicative),
-						Precedence.Additive),
+						new SqlBinaryExpression(intType, Component(1), "*", new SqlValue(intType, 60))),
 					"+",
-					Component(2),
-					Precedence.Additive);
+					Component(2));
 
 				return new SqlFunction(cast.ToType, "DateTime::IntervalFromSeconds", canBeNull, seconds);
 			}

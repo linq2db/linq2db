@@ -121,7 +121,6 @@ namespace LinqToDB.Internal.DataProvider.Access
 			return SqlPrecedenceTable.Default.With(
 				(SqlPrecedenceKeys.Negation,        prefix),
 				(SqlPrecedenceKeys.NegativeLiteral, prefix with { Level = Precedence.Unary + 6 }),
-				("^",                               power),
 				(SqlPrecedenceKeys.Power,           power),
 				("*",                               new(Precedence.Multiplicative,     SqlAssociativity.Left, false, arithmetic)),
 				("/",                               new(Precedence.Multiplicative,     SqlAssociativity.Left, false, arithmetic)),
@@ -136,6 +135,29 @@ namespace LinqToDB.Internal.DataProvider.Access
 		}
 
 		protected override SqlPrecedenceTable PrecedenceTable => _precedenceTable;
+
+		static bool IsPower(ISqlExpression expr) =>
+			expr is SqlFunction { Parameters.Length: 2 } func && string.Equals(func.Name, "Power", StringComparison.OrdinalIgnoreCase);
+
+		// Access has no Power function: a power renders as the ^ operator
+		protected override void BuildFunction(SqlFunction func)
+		{
+			if (IsPower(func))
+			{
+				BuildInfixExpression(func.Parameters[0], "^", func.Parameters[1], PrecedenceTable[SqlPrecedenceKeys.Power], SqlPrecedenceKeys.Power);
+				return;
+			}
+
+			base.BuildFunction(func);
+		}
+
+		protected override (SqlOperatorPrecedence Precedence, string? Key) ResolvePrecedence(ISqlExpression expr)
+		{
+			if (IsPower(QueryHelper.UnwrapNullablity(expr)))
+				return (PrecedenceTable[SqlPrecedenceKeys.Power], SqlPrecedenceKeys.Power);
+
+			return base.ResolvePrecedence(expr);
+		}
 
 		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery,
 			SqlUpdateClause                                    updateClause)

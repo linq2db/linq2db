@@ -2666,8 +2666,7 @@ namespace LinqToDB.Internal.SqlProvider
 							element.Type,
 							element.Expr1,
 							"-",
-							expr2,
-							element.Precedence);
+							expr2);
 					}
 
 					break;
@@ -2681,8 +2680,7 @@ namespace LinqToDB.Internal.SqlProvider
 							element.Type,
 							element.Expr1,
 							"+",
-							expr2,
-							element.Precedence);
+							expr2);
 					}
 
 					break;
@@ -2695,8 +2693,7 @@ namespace LinqToDB.Internal.SqlProvider
 						return new SqlUnaryExpression(
 							element.Type,
 							element.Expr1,
-							SqlUnaryOperation.Negation,
-							Precedence.Unary);
+							SqlUnaryOperation.Negation);
 					}
 
 					if (element.Expr1 is SqlValue { Value: -1 })
@@ -2704,8 +2701,7 @@ namespace LinqToDB.Internal.SqlProvider
 						return new SqlUnaryExpression(
 							element.Type,
 							element.Expr2,
-							SqlUnaryOperation.Negation,
-							Precedence.Unary);
+							SqlUnaryOperation.Negation);
 					}
 
 					break;
@@ -2718,8 +2714,7 @@ namespace LinqToDB.Internal.SqlProvider
 						return new SqlUnaryExpression(
 							element.Type,
 							element.Expr1,
-							SqlUnaryOperation.Negation,
-							Precedence.Unary);
+							SqlUnaryOperation.Negation);
 					}
 
 					break;
@@ -3173,7 +3168,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		public ISqlExpression Add(ISqlExpression expr1, ISqlExpression expr2, Type type)
 		{
-			return new SqlBinaryExpression(type, expr1, "+", expr2, Precedence.Additive);
+			return new SqlBinaryExpression(type, expr1, "+", expr2);
 		}
 
 		public ISqlExpression Add<T>(ISqlExpression expr1, ISqlExpression expr2)
@@ -3193,7 +3188,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		public ISqlExpression Sub(ISqlExpression expr1, ISqlExpression expr2, Type type)
 		{
-			return new SqlBinaryExpression(type, expr1, "-", expr2, Precedence.Subtraction);
+			return new SqlBinaryExpression(type, expr1, "-", expr2);
 		}
 
 		public ISqlExpression Sub<T>(ISqlExpression expr1, ISqlExpression expr2)
@@ -3213,7 +3208,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		public ISqlExpression Mul(ISqlExpression expr1, ISqlExpression expr2, Type type)
 		{
-			return new SqlBinaryExpression(type, expr1, "*", expr2, Precedence.Multiplicative);
+			return new SqlBinaryExpression(type, expr1, "*", expr2);
 		}
 
 		public ISqlExpression Mul<T>(ISqlExpression expr1, ISqlExpression expr2)
@@ -3228,7 +3223,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		public ISqlExpression Div(ISqlExpression expr1, ISqlExpression expr2, Type type)
 		{
-			return new SqlBinaryExpression(type, expr1, "/", expr2, Precedence.Multiplicative);
+			return new SqlBinaryExpression(type, expr1, "/", expr2);
 		}
 
 		public ISqlExpression Div<T>(ISqlExpression expr1, ISqlExpression expr2)

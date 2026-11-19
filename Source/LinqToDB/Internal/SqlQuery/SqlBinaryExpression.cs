@@ -8,17 +8,16 @@ namespace LinqToDB.Internal.SqlQuery
 {
 	public sealed class SqlBinaryExpression : SqlExpressionBase
 	{
-		public SqlBinaryExpression(DbDataType dbDataType, ISqlExpression expr1, string operation, ISqlExpression expr2, int precedence = LinqToDB.SqlQuery.Precedence.Unknown)
+		public SqlBinaryExpression(DbDataType dbDataType, ISqlExpression expr1, string operation, ISqlExpression expr2)
 		{
 			Expr1      = expr1     ?? throw new ArgumentNullException(nameof(expr1));
 			Operation  = operation ?? throw new ArgumentNullException(nameof(operation));
 			Expr2      = expr2     ?? throw new ArgumentNullException(nameof(expr2));
 			Type       = dbDataType;
-			Precedence = precedence;
 		}
 
-		public SqlBinaryExpression(Type systemType, ISqlExpression expr1, string operation, ISqlExpression expr2, int precedence = LinqToDB.SqlQuery.Precedence.Unknown)
-			: this(new DbDataType(systemType), expr1, operation, expr2, precedence)
+		public SqlBinaryExpression(Type systemType, ISqlExpression expr1, string operation, ISqlExpression expr2)
+			: this(new DbDataType(systemType), expr1, operation, expr2)
 		{
 		}
 
@@ -49,7 +48,19 @@ namespace LinqToDB.Internal.SqlQuery
 		public DbDataType Type { get; }
 
 		public override Type SystemType => Type.SystemType;
-		public override int  Precedence { get; }
+
+		/// <summary>
+		/// The class of this operator on the <see cref="LinqToDB.SqlQuery.Precedence"/> scale. Dialect precedence is
+		/// decided by the SQL builder's precedence table, not by this value.
+		/// </summary>
+		public override int  Precedence => Operation switch
+		{
+			"+" or "-"                                         => LinqToDB.SqlQuery.Precedence.Additive,
+			"*" or "/" or "%" or "//" or "MOD" or "DIV"        => LinqToDB.SqlQuery.Precedence.Multiplicative,
+			"&" or "|" or "^" or "#" or "BAND" or "BOR" or "BXOR" => LinqToDB.SqlQuery.Precedence.Bitwise,
+			"||"                                               => LinqToDB.SqlQuery.Precedence.Concatenate,
+			_                                                  => LinqToDB.SqlQuery.Precedence.Unknown,
+		};
 
 		int?                   _hashCode;
 

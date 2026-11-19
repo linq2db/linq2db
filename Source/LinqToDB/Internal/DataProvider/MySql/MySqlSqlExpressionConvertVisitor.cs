@@ -83,17 +83,6 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			return base.ConvertConversion(cast);
 		}
 
-		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
-		{
-			return element switch
-			{
-				// | has lower priority than & in MySQL...
-				SqlBinaryExpression(var type, var ex1, "|", var ex2) when element.Precedence == Precedence.Bitwise
-					=> new SqlBinaryExpression(type, ex1, "|", ex2, Precedence.Bitwise - 1),
-				_ => base.ConvertSqlBinaryExpression(element),
-			};
-		}
-
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
 		{
 			var caseSensitive = predicate.CaseSensitive.EvaluateBoolExpression(EvaluationContext);

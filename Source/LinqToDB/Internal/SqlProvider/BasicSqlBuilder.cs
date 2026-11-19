@@ -4615,9 +4615,18 @@ namespace LinqToDB.Internal.SqlProvider
 
 			var (precedence, key) = ResolvePrecedence(expr);
 
-			BuildOperand(precedence, key, rightOperand: false, expr.Expr1);
+			BuildInfixExpression(expr.Expr1, op, expr.Expr2, precedence, key);
+		}
+
+		/// <summary>
+		/// Renders <c>left op right</c>, parenthesizing each operand against <paramref name="precedence"/> by its side.
+		/// For a provider that renders a non-operator node (a function) as an infix operator.
+		/// </summary>
+		protected void BuildInfixExpression(ISqlExpression left, string op, ISqlExpression right, SqlOperatorPrecedence precedence, string? key)
+		{
+			BuildOperand(precedence, key, rightOperand: false, left);
 			StringBuilder.Append(' ').Append(op).Append(' ');
-			BuildOperand(precedence, key, rightOperand: true, expr.Expr2);
+			BuildOperand(precedence, key, rightOperand: true, right);
 		}
 
 		/// <summary>

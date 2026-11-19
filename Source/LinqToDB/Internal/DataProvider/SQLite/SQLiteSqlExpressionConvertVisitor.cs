@@ -154,9 +154,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 									predicate.Expr1,
 									new SqlUnaryExpression(
 										typeof(int),
-										Factory.Length(predicate.Expr2), SqlUnaryOperation.Negation,
-										Precedence.Unary
-									)
+										Factory.Length(predicate.Expr2), SqlUnaryOperation.Negation)
 								),
 								SqlPredicate.Operator.Equal,
 								predicate.Expr2, null);

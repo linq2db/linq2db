@@ -626,8 +626,7 @@ namespace LinqToDB
 
 				var startExpr = new SqlBinaryExpression(lengthExpr.SystemType!,
 					new SqlFunction(QueryHelper.GetDbDataType(lengthExpr, builder.Mapping), "LEN", stringExpr), "-",
-					new SqlBinaryExpression(lengthExpr.SystemType!, lengthExpr, "-", new SqlValue(1), Precedence.Subtraction),
-					Precedence.Subtraction);
+					new SqlBinaryExpression(lengthExpr.SystemType!, lengthExpr, "-", new SqlValue(1)));
 
 				builder.ResultExpression = new SqlFunction(QueryHelper.GetDbDataType(stringExpr, builder.Mapping), "SUBSTRING", canBeNull: true, stringExpr, startExpr, lengthExpr);
 			}
