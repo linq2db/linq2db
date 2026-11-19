@@ -213,7 +213,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		// Key of the dynamic accessor registered for one filtered table reference. References to one table can differ by
 		// their active filter set (IgnoreFilters with keys), and each set produces a different filter chain, so the set
-		// is part of the key. References with the same set share one accessor: they produce the same chain.
+		// is part of the key. References with the same set share one accessor: they produce the same chain, and the
+		// values a later reference's chain carries (an interceptor instance, a closure) are mapped to that accessor too.
 		static Expression GetFilterAccessorKey(Expression tableExpression, List<EntityQueryFilter> activeFilters)
 		{
 			var items = new Expression[activeFilters.Count + 1];
