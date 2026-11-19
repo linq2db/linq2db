@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -39,8 +39,33 @@ namespace Tests.Linq
 		[
 			new() { Id = 1, A = 48, B = 4, C = 2, N = 3,    S = "x" },
 			new() { Id = 2, A = 90, B = 6, C = 3, N = null, S = "y" },
-			new() { Id = 3, A = 7,  B = 5, C = 3, N = 1,    S = "z" },
+			new() { Id = 3, A = 72, B = 6, C = 2, N = 1,    S = "z" },
 		];
+
+		// integer division semantics differ by provider (Access divides as floating point); a cell whose correct
+		// grouping divides inexactly is skipped, so a red cell means grouping and nothing else
+		sealed class ExactDivisionVisitor : ExpressionVisitor
+		{
+			public static readonly ExactDivisionVisitor Instance = new();
+
+			static readonly MethodInfo _exactDivide = typeof(ExactDivisionVisitor).GetMethod(nameof(ExactDivide), BindingFlags.NonPublic | BindingFlags.Static)!;
+
+			static int ExactDivide(int x, int y)
+			{
+				if (y == 0 || x % y != 0)
+					throw new ArithmeticException("inexact division");
+
+				return x / y;
+			}
+
+			protected override Expression VisitBinary(BinaryExpression node)
+			{
+				if (node.NodeType == ExpressionType.Divide && node.Type == typeof(int))
+					return Expression.Call(_exactDivide, Visit(node.Left), Visit(node.Right));
+
+				return base.VisitBinary(node);
+			}
+		}
 
 		sealed class Holder
 		{
@@ -281,14 +306,23 @@ namespace Tests.Linq
 			{
 				try
 				{
-					expected[i] = Evaluate(cell.Body, Rows[i]);
-
-					if (cell.Misparse != null && !differs)
-						differs = !Same(expected[i], Evaluate(cell.Misparse, Rows[i]));
+					expected[i] = Evaluate(ExactDivisionVisitor.Instance.Visit(cell.Body), Rows[i]);
 				}
-				catch (TargetInvocationException ex) when (ex.InnerException is DivideByZeroException or OverflowException)
+				catch (TargetInvocationException ex) when (ex.InnerException is ArithmeticException)
 				{
 					return null;
+				}
+
+				if (cell.Misparse != null && !differs)
+				{
+					try
+					{
+						differs = !Same(expected[i], Evaluate(cell.Misparse, Rows[i]));
+					}
+					catch (TargetInvocationException ex) when (ex.InnerException is ArithmeticException)
+					{
+						differs = true;
+					}
 				}
 			}
 
