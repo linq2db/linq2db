@@ -459,11 +459,16 @@ namespace Tests.LinqToDB.CLI
 			error.ShouldContain("Enter them again with: dotnet linq2db credentials set --config cfg.json [--profile <profile>] --user <user>.");
 			error.ShouldContain("dotnet linq2db credentials remove --credentials-cli @local --credentials linq2db/<name> removes one.");
 
-			// The same store again changes nothing, so there is no note.
+			// The same store again changes nothing, so there is no note (the environment keeps the earlier output).
+			var earlier = error.Length;
+
 			(exitCode, _, error) = await RunCli(environment, "credentials", "cli", "init", "--store", "gpg", "--config", "cfg.json", "--force");
 
 			exitCode.ShouldBe(0, error);
-			error.ShouldNotContain("were not moved");
+
+			error
+				.Substring(earlier)
+				.ShouldNotContain("were not moved");
 		}
 
 		[Test]
