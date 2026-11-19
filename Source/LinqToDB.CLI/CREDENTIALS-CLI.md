@@ -116,6 +116,10 @@ loses the passwords; do not commit them. Default on Linux and macOS.
   no directory, and a read finds nothing.
 - `credentials.dat` without `credentials.key` is an error for every operation, and no new key is created then; delete
   `credentials.dat` and enter the passwords again.
+- To start over with a new key (for example after a backup holding both files leaked) or to remove the store, delete
+  `credentials.key`, `credentials.dat` and `credentials.lock` from the credentials directory; the next
+  `credentials set` creates a new key, and the passwords must be entered again. `credentials clear` keeps the key, and
+  uninstalling the tool does not remove this directory.
 - On Linux and macOS a key or data file that is a symbolic link or accessible by other users is refused
   (`chmod 600 <file>`); files created by another user (for example with `sudo`) show as access denied.
 - The first `credentials set` that creates the store while it is the Linux/macOS default says so on standard error.
@@ -168,13 +172,15 @@ unchanged as its argument string, followed by the verb as one more argument:
   `%NAME%` in them is expanded, and `&`, `|`, `^`, `<` and `>` outside quotes are `cmd.exe` syntax, not text. `cmd.exe`
   has no backslash escape for `"`; keep arguments of a batch file simple, or run the program the batch file runs.
 - Run a script through its interpreter:
-  - PowerShell: `"credentialsCli": "pwsh -NoProfile -File \"C:\\Tools\\vault.ps1\" -Mount db"`. The execution policy and
-    the console encoding are the script's business: set UTF-8 on both streams, as the example below does.
+  - PowerShell 7 (`pwsh`, on Windows, Linux and macOS):
+    `"credentialsCli": "pwsh -NoProfile -File /home/me/cli/vault.ps1 -Mount db"` (on Windows `\"C:\\Tools\\vault.ps1\"`).
+    The execution policy and the console encoding are the script's business: set UTF-8 on both streams, as the example
+    below does.
   - C# file-based app: `"credentialsCli": "dotnet run --file /home/me/cli/vault.cs --"`.
   - Python: `"credentialsCli": "python3 /home/me/cli/vault.py"`.
 
 ```powershell
-# vault.ps1: the start of a PowerShell credentials CLI
+# vault.ps1: the start of a PowerShell 7 (pwsh) credentials CLI
 param([string] $Mount, [string] $Verb)
 $utf8 = [System.Text.UTF8Encoding]::new($false)
 [Console]::InputEncoding  = $utf8
@@ -372,6 +378,14 @@ credentials cli init --store <keyring|gpg|vault|local> [--output <file>] [--conf
   that profile's (section 2). For `set` and `remove` the record is the profile's `credentials`, or `--credentials`; only
   `linq2db/` records are managed.
 - `list` and `clear` work on one store; `clear` asks for confirmation unless `--force` is given.
+- Changing the store: records are never moved from one store to another. After a profile names a different store
+  (`credentials cli init --config`, or an edited `credentialsCli`), enter its records again with `credentials set
+  --config <file> [--profile <p>] --user <user>`; the old ones stay in the previous store until removed there
+  (`credentials list --credentials-cli <old>`, then `credentials remove --credentials-cli <old> --credentials
+  linq2db/<name>`; `clear` removes every `linq2db/` record of that store, including those other configurations use).
+  `init --config` prints a note naming the previous store when it changes it.
+- To return a profile to the default for the operating system (section 2), remove its `credentialsCli` (and the one in
+  `default` when it inherits that); on Windows `@credential-manager` names Credential Manager explicitly.
 - Before version 6.7 `--profile` named the record (`--profile prod` meant `linq2db/prod`); use
   `--credentials linq2db/<name>` for that now. `list` printed the name without the `linq2db/` prefix in a `PROFILE`
   column; it now prints the full record name in a `RECORD` column. Every command now prints the store it uses on
@@ -433,6 +447,10 @@ dotnet linq2db credentials cli init --store local --config .agents/linq2db-query
   together: if the configuration cannot be written, the script is left as it was; if the script cannot be put in place,
   the configuration is restored. Without `--config`, `init` prints how to name the store.
 - On Windows only `--store local` is available; Windows Credential Manager is the default there.
+- Each script starts with a `template revision` line. A later version of the tool may ship a fixed template; an existing
+  script is never updated by itself. To upgrade, compare yours with the current template
+  (`credentials cli init --store <store> --output <temporary file>`) and merge, or replace it with `--force`, which
+  loses your edits.
 
 ## 16. Example credentials CLI
 
