@@ -524,8 +524,9 @@ namespace Tests.LinqToDB.CLI
 
 			if (pwsh == null)
 			{
-				if (OperatingSystem.IsWindows() && (Environment.GetEnvironmentVariable("GITHUB_ACTIONS") != null || Environment.GetEnvironmentVariable("TF_BUILD") != null))
-					Assert.Fail("pwsh is required on Windows CI for the PowerShell credentials CLI row.");
+				// Every CI image has pwsh (PowerShell 7 runs on Windows, Linux and macOS), so a missing one is a failure there.
+				if (Environment.GetEnvironmentVariable("GITHUB_ACTIONS") != null || Environment.GetEnvironmentVariable("TF_BUILD") != null)
+					Assert.Fail("pwsh is required on CI for the PowerShell credentials CLI row.");
 
 				Assert.Ignore("pwsh is not installed.");
 			}

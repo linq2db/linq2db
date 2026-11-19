@@ -261,7 +261,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 
 			var (what, commandLine) = extension switch
 			{
-				".ps1" => ("a PowerShell script through PowerShell", $"pwsh -NoProfile -File {quoted}"),
+				".ps1" => ("a PowerShell script through pwsh",       $"pwsh -NoProfile -File {quoted}"),
 				".py"  => ("a Python script through Python",         $"python {quoted}"),
 				".cs"  => ("a C# file-based app through dotnet",     $"dotnet run --file {quoted} --"),
 				_      => (null, null),
