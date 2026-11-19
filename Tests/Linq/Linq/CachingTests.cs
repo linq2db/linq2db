@@ -12,6 +12,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests.DataProvider;
 
 using Tests.Model;
@@ -234,11 +236,12 @@ namespace Tests.Linq
 				Assert.That(sql, Contains.Substring("WITH TIES"));
 		}
 
-		[ActiveIssue(4266, ErrorMessage = "Assert.That(query.GetCacheMissCount(), Is.EqualTo(currentMiss + 1))",
-			Details = "the collection parameter does not take part in the cache key, so a query that should miss is reused - #4266's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), QueryCacheTest]
 		public void TestExtensionCollectionParameterSameQuery([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
+			// the miss counts below need a query no earlier test cached
+			LinqToDB.Internal.Linq.Query.ClearCaches();
+
 			using var db = GetDataContext(context);
 
 			db.Execute("IF EXISTS (SELECT * FROM sys.types WHERE name = 'IntTableType') DROP TYPE IntTableType");
@@ -272,11 +275,12 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(4266, ErrorMessage = "Expected and result lists are different",
-			Details = "the reused query answers with the previous collection's rows - the wrong-results half of #4266.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), QueryCacheTest]
 		public void TestExtensionCollectionParameterEqualQuery([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
+			// the miss counts below need a query no earlier test cached
+			LinqToDB.Internal.Linq.Query.ClearCaches();
+
 			using var db = GetDataContext(context);
 
 			db.Execute("IF EXISTS (SELECT * FROM sys.types WHERE name = 'IntTableType') DROP TYPE IntTableType");
@@ -314,6 +318,127 @@ namespace Tests.Linq
 			{
 				db.Execute("IF EXISTS (SELECT * FROM sys.types WHERE name = 'IntTableType') DROP TYPE IntTableType");
 			}
+		}
+
+		[Sql.Extension("{field} IN ({values, ', '})", IsPredicate = true, BuilderType = typeof(InlineValuesBuilder), ServerSideOnly = true)]
+		static bool InValues([ExprParameter] int field, [SqlQueryDependent] IEnumerable<int> values) => throw new ServerSideOnlyException(nameof(InValues));
+
+		// The values are inlined: the SQL depends on them.
+		sealed class InlineValuesBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqlExtensionBuilder builder)
+			{
+				foreach (var value in builder.GetValue<IEnumerable<int>>("values"))
+					builder.AddParameter("values", new SqlValue(value));
+			}
+		}
+
+		int[] ExpectedPersonIds(IEnumerable<int> ids)
+		{
+			return Person
+				.Select(p => p.ID)
+				.Where(ids.Contains)
+				.OrderBy(id => id)
+				.ToArray();
+		}
+
+		static int[] PersonIdsIn(ITestDataContext db, IEnumerable<int> ids)
+		{
+			var query =
+				from p in db.Person
+				where InValues(p.ID, ids)
+				select p.ID;
+
+			return query
+				.AsEnumerable()
+				.OrderBy(id => id)
+				.ToArray();
+		}
+
+		// A [SqlQueryDependent] collection that is not an array: the query built for one collection must not answer for
+		// another. PostgreSQL maps such a list as a scalar (an array type), the other providers do not.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), QueryCacheTest]
+		public void SqlQueryDependentCollection_OtherValues([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			foreach (var ids in new[] { new List<int> { 1, 2 }, new List<int> { 3, 4 }, new List<int> { 1, 2 } })
+			{
+				PersonIdsIn(db, ids)
+					.ShouldBe(ExpectedPersonIds(ids), $"[{string.Join(", ", ids)}]");
+			}
+		}
+
+		// The same collection - a list or an array - changed in place after the query was built.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), QueryCacheTest]
+		public void SqlQueryDependentCollection_ChangedInPlace(
+			[IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllPostgreSQL)] string context,
+			[Values]                                                                       bool   sameQueryable,
+			[Values]                                                                       bool   array)
+		{
+			using var db = GetDataContext(context);
+
+			IList<int> ids = array ? new[] { 1, 2 } : new List<int> { 1, 2 };
+
+			var query =
+				from p in db.Person
+				where InValues(p.ID, ids)
+				select p.ID;
+
+			query
+				.AsEnumerable()
+				.OrderBy(id => id)
+				.ToArray()
+				.ShouldBe(ExpectedPersonIds(ids), "before the change");
+
+			ids[0] = 3;
+			ids[1] = 4;
+
+			if (!sameQueryable)
+			{
+				query =
+					from p in db.Person
+					where InValues(p.ID, ids)
+					select p.ID;
+			}
+
+			query
+				.AsEnumerable()
+				.OrderBy(id => id)
+				.ToArray()
+				.ShouldBe(ExpectedPersonIds(ids), "after the change");
+		}
+
+		static readonly Func<IDataContext, IList<int>, IQueryable<int>> _compiledPersonIdsIn =
+			CompiledQuery.Compile((IDataContext db, IList<int> ids) =>
+				from p in db.GetTable<Person>()
+				where InValues(p.ID, ids)
+				select p.ID);
+
+		// The same through a compiled query, whose cache key holds the argument itself.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), QueryCacheTest]
+		public void SqlQueryDependentCollection_ChangedInPlace_CompiledQuery(
+			[IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllPostgreSQL)] string context,
+			[Values]                                                                       bool   array)
+		{
+			using var db = GetDataContext(context);
+
+			IList<int> ids = array ? new[] { 1, 2 } : new List<int> { 1, 2 };
+
+			_compiledPersonIdsIn(db, ids)
+				.AsEnumerable()
+				.OrderBy(id => id)
+				.ToArray()
+				.ShouldBe(ExpectedPersonIds(ids), "before the change");
+
+			ids[0] = 3;
+			ids[1] = 4;
+
+			_compiledPersonIdsIn(db, ids)
+				.AsEnumerable()
+				.OrderBy(id => id)
+				.ToArray()
+				.ShouldBe(ExpectedPersonIds(ids), "after the change");
 		}
 
 		[Sql.Extension("{field} IN (select * from {values})", IsPredicate = true, BuilderType = typeof(InExtExpressionItemBuilder), ServerSideOnly = true)]

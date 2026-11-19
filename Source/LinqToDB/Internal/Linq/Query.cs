@@ -152,6 +152,15 @@ namespace LinqToDB.Internal.Linq
 				}
 			}
 
+			if (CompareInfo.DependentValueChecks != null)
+			{
+				foreach (var check in CompareInfo.DependentValueChecks)
+				{
+					if (!check.Attribute.ObjectsEqual(check.Value, check.Current(matchedQueryExpressions, dataContext, compiledParameters)))
+						return false;
+				}
+			}
+
 			return true;
 		}
 
