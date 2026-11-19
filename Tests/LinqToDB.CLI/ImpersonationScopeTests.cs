@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -716,6 +717,157 @@ namespace Tests.LinqToDB.CLI
 				{
 					if (RecordingImpersonationSession.Current == null)
 						Interlocked.Increment(ref provider._opensOutsideSession);
+
+					base.Open();
+				}
+			}
+		}
+
+		[Test]
+		public async Task ClientThatPoolsByOtherMeansIsNotWarmedUp()
+		{
+			// ODBC, OLE DB and YDB pool connections without a pooling keyword the tool turns off; their connection types
+			// declare a static method that clears the pool. A warm-up would leave a connection opened as the process
+			// account in that pool, where the impersonated work could get it.
+			//
+			var database = CreateSqliteDatabase();
+			var provider = new PoolMethodWarmUpProvider();
+
+			DataConnection.AddDataProvider(provider);
+
+			try
+			{
+				var result = await RunCli(new TestCliEnvironment(), "query", "--provider", provider.Name, "--connection-string", $"Data Source={database}", "--user", "user", "--password", "secret", "--impersonate", "--sql", "select Id from Person");
+
+				using (Assert.EnterMultipleScope())
+				{
+					result.ExitCode.             ShouldBe(0, result.Error);
+					provider.ConnectionsOutside. ShouldBeGreaterThan(0);
+					provider.OpensOutsideSession.ShouldBe(0);
+				}
+			}
+			finally
+			{
+				File.Delete(database);
+			}
+		}
+
+		/// <summary>
+		/// SQLite provider that, outside an impersonation session, creates connections of a type that is not a known
+		/// client and declares a static <c>ClearPool</c>, as a client that pools by other means than a keyword does, and
+		/// counts their opens. In the session it creates ordinary SQLite connections.
+		/// </summary>
+		sealed class PoolMethodWarmUpProvider() : SQLiteDataProvider("PoolMethodWarmUpTest", SQLiteProvider.Microsoft)
+		{
+			int _connectionsOutside;
+			int _opensOutsideSession;
+
+			public int ConnectionsOutside  => Volatile.Read(ref _connectionsOutside);
+			public int OpensOutsideSession => Volatile.Read(ref _opensOutsideSession);
+
+			protected override DbConnection CreateConnectionInternal(string connectionString)
+			{
+				if (RecordingImpersonationSession.Current != null)
+					return base.CreateConnectionInternal(connectionString);
+
+				Interlocked.Increment(ref _connectionsOutside);
+
+				return new PoolMethodConnection(this);
+			}
+
+			sealed class PoolMethodConnection(PoolMethodWarmUpProvider provider) : DbConnection
+			{
+				[System.Diagnostics.CodeAnalysis.AllowNull]
+				public override string ConnectionString { get; set; } = "";
+				public override string Database      => "";
+				public override string DataSource    => "";
+				public override string ServerVersion => "";
+				public override ConnectionState State => ConnectionState.Closed;
+
+				public static void ClearPool(PoolMethodConnection connection)
+				{
+				}
+
+				public override void Open()
+				{
+					Interlocked.Increment(ref provider._opensOutsideSession);
+
+					throw new InvalidOperationException("The warm-up opened a connection of a client that pools by other means.");
+				}
+
+				public override void Close()
+				{
+				}
+
+				public override void ChangeDatabase(string databaseName)
+				{
+					throw new NotSupportedException();
+				}
+
+				protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel)
+				{
+					throw new NotSupportedException();
+				}
+
+				protected override DbCommand CreateDbCommand()
+				{
+					throw new NotSupportedException();
+				}
+			}
+		}
+
+		[Test]
+		public async Task WarmUpOfDerivedClientIsNotPooled()
+		{
+			// A connection type derived from a known client's pools as that client does, so its pooling keyword is
+			// turned off too, even when the connection string does not name it.
+			//
+			var database = CreateSqliteDatabase();
+			var provider = new DerivedClientWarmUpProvider();
+
+			DataConnection.AddDataProvider(provider);
+
+			try
+			{
+				var result = await RunCli(new TestCliEnvironment(), "query", "--provider", provider.Name, "--connection-string", $"Data Source={database}", "--user", "user", "--password", "secret", "--impersonate", "--sql", "select Id from Person");
+
+				var warmUp  = provider.ConnectionStringsOutsideSession.ShouldHaveSingleItem();
+				var pooling = new DbConnectionStringBuilder { ConnectionString = warmUp }["Pooling"];
+
+				using (Assert.EnterMultipleScope())
+				{
+					result.ExitCode.ShouldBe(0, result.Error);
+					pooling.        ShouldBe("false");
+				}
+			}
+			finally
+			{
+				Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+				File.Delete(database);
+			}
+		}
+
+		/// <summary>
+		/// SQLite provider whose connection type derives from <see cref="Microsoft.Data.Sqlite.SqliteConnection"/> and records the connection
+		/// strings of the connections opened outside an impersonation session (the warm-ups).
+		/// </summary>
+		sealed class DerivedClientWarmUpProvider() : SQLiteDataProvider("DerivedClientWarmUpTest", SQLiteProvider.Microsoft)
+		{
+			readonly ConcurrentQueue<string> _connectionStringsOutsideSession = new();
+
+			public IReadOnlyCollection<string> ConnectionStringsOutsideSession => _connectionStringsOutsideSession;
+
+			protected override DbConnection CreateConnectionInternal(string connectionString)
+			{
+				return new DerivedConnection(this, connectionString);
+			}
+
+			sealed class DerivedConnection(DerivedClientWarmUpProvider provider, string connectionString) : Microsoft.Data.Sqlite.SqliteConnection(connectionString)
+			{
+				public override void Open()
+				{
+					if (RecordingImpersonationSession.Current == null)
+						provider._connectionStringsOutsideSession.Enqueue(ConnectionString);
 
 					base.Open();
 				}

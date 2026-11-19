@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -148,7 +149,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 
 			var connectionType = dataProvider == null ? null : TryGetConnectionType(dataProvider, settings.ConnectionString);
 
-			if (connectionType != null && _sharedStateClients.Contains(connectionType.FullName!))
+			if (connectionType != null && IsOrDerivesFrom(_sharedStateClients, connectionType))
 			{
 				// Not warmed up; its native libraries are loaded without opening anything.
 				//
@@ -318,10 +319,10 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		/// </summary>
 		static string? TryGetWarmUpConnectionString(Type type, string connectionString)
 		{
-			var hasPoolingKeyword = _poolingKeywords.TryGetValue(type.FullName!, out var poolingKeyword);
-			var hasNoCreate       = _noCreateSettings.TryGetValue(type.FullName!, out var noCreate);
+			var hasPoolingKeyword = TryGetByType(_poolingKeywords,  type, out var poolingKeyword);
+			var hasNoCreate       = TryGetByType(_noCreateSettings, type, out var noCreate);
 
-			if (!hasPoolingKeyword && Array.Exists(type.GetMethods(BindingFlags.Public | BindingFlags.Static), method => _poolMethods.Contains(method.Name, StringComparer.Ordinal)))
+			if (!hasPoolingKeyword && Array.Exists(type.GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy), method => _poolMethods.Contains(method.Name, StringComparer.Ordinal)))
 				return null;
 
 			if (!hasPoolingKeyword && !hasNoCreate)
@@ -343,6 +344,37 @@ namespace LinqToDB.CommandLine.Commands.Connection
 			{
 				return null;
 			}
+		}
+
+		/// <summary>
+		/// Looks up <paramref name="type"/>, or the nearest of its base types, by full name: a connection type derived from
+		/// a known client's connection pools (or creates files) as that client does.
+		/// </summary>
+		static bool TryGetByType<TValue>(Dictionary<string, TValue> map, Type type, [MaybeNullWhen(false)] out TValue value)
+		{
+			for (var current = type; current != null; current = current.BaseType)
+			{
+				if (current.FullName != null && map.TryGetValue(current.FullName, out value))
+					return true;
+			}
+
+			value = default;
+			return false;
+		}
+
+		/// <summary>
+		/// Returns whether <paramref name="names"/> holds the full name of <paramref name="type"/> or of one of its base
+		/// types: a connection type derived from a known client's connection shares state as that client does.
+		/// </summary>
+		static bool IsOrDerivesFrom(HashSet<string> names, Type type)
+		{
+			for (var current = type; current != null; current = current.BaseType)
+			{
+				if (current.FullName != null && names.Contains(current.FullName))
+					return true;
+			}
+
+			return false;
 		}
 
 		static string Hash(string value)
