@@ -798,7 +798,7 @@ namespace LinqToDB.Remote
 		/// <inheritdoc cref="IDataContext.UseMappingSchema"/>
 		public IDisposable? UseMappingSchema(MappingSchema mappingSchema)
 		{
-			var oldSchema       = MappingSchema;
+			var oldSchema           = MappingSchema;
 			var configurationID     = _configurationID;
 			var interceptorsVersion = _interceptorsVersion;
 
