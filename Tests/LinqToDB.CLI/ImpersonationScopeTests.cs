@@ -173,7 +173,9 @@ namespace Tests.LinqToDB.CLI
 				//
 				opens.Sessions.Count.ShouldBe(3);
 				opens.Sessions[0].ShouldBeNull();
-				opens.Sessions.Skip(1).ShouldAllBe(s => s == session);
+				opens.Sessions
+					.Skip(1)
+					.ShouldAllBe(s => s == session);
 			}
 		}
 
@@ -292,7 +294,9 @@ namespace Tests.LinqToDB.CLI
 
 				try
 				{
-					await process.WaitForExitAsync().WaitAsync(TimeSpan.FromMinutes(2));
+					await process
+						.WaitForExitAsync()
+						.WaitAsync(TimeSpan.FromMinutes(2));
 				}
 				catch (TimeoutException)
 				{
@@ -387,7 +391,9 @@ namespace Tests.LinqToDB.CLI
 
 				session.Runs.Count.ShouldBe(2);
 
-				session.Runs.SelectMany(static r => r.LoadedInside).ShouldBeEmpty();
+				session.Runs
+					.SelectMany(static r => r.LoadedInside)
+					.ShouldBeEmpty();
 				session.Runs.SelectMany(static r => r.NativeModulesLoadedInside)
 					.Where(m => shippedDirectories.Any(d => m.StartsWith(d, StringComparison.OrdinalIgnoreCase)))
 					.Where(m => !readableDirectories.Any(d => m.StartsWith(d, StringComparison.OrdinalIgnoreCase)))
@@ -397,7 +403,9 @@ namespace Tests.LinqToDB.CLI
 				{
 					// Native SQLite is loaded before provider resolution starts.
 					//
-					session.Runs[0].NativeModulesAtEntry.Any(IsSqliteNative).ShouldBeTrue();
+					session.Runs[0].NativeModulesAtEntry
+						.Any(IsSqliteNative)
+						.ShouldBeTrue();
 				}
 
 				if (coldCase.EndsWith(", de-DE", StringComparison.Ordinal))
@@ -603,7 +611,9 @@ namespace Tests.LinqToDB.CLI
 
 			static int CountOpenHandles(string path)
 			{
-				return Directory.GetFiles("/proc/self/fd").Count(fd => new FileInfo(fd).LinkTarget == path);
+				return Directory
+					.GetFiles("/proc/self/fd")
+					.Count(fd => new FileInfo(fd).LinkTarget == path);
 			}
 		}
 
@@ -1258,7 +1268,10 @@ namespace Tests.LinqToDB.CLI
 		{
 			var fileName     = Path.Combine(TestContext.CurrentContext.WorkDirectory, $"impersonation-{Guid.NewGuid():N}.db");
 			var dataProvider = DataConnection.GetDataProvider("SQLite", $"Data Source={fileName};Pooling=False")!;
-			using var db     = new DataConnection(new DataOptions().UseConnectionString(dataProvider, $"Data Source={fileName};Pooling=False"));
+			var options      = new DataOptions()
+				.UseConnectionString(dataProvider, $"Data Source={fileName};Pooling=False");
+
+			using var db = new DataConnection(options);
 
 			db.Execute("""
 				create table Person
@@ -1284,7 +1297,9 @@ namespace Tests.LinqToDB.CLI
 
 		private static async Task<CliResult> RunCli(TestCliEnvironment environment, params string[] arguments)
 		{
-			var exitCode = await new LinqToDBCliController().Execute(arguments, environment).ConfigureAwait(false);
+			var exitCode = await new LinqToDBCliController()
+				.Execute(arguments, environment)
+				.ConfigureAwait(false);
 
 			return new CliResult(exitCode, environment.Output, environment.ErrorOutput);
 		}

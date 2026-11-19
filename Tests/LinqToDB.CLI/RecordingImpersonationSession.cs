@@ -36,7 +36,10 @@ namespace Tests.LinqToDB.CLI
 
 			var run = new ImpersonatedRun(
 				errorOutput(),
-				AppDomain.CurrentDomain.GetAssemblies().Select(static a => a.GetName().Name!).ToHashSet(StringComparer.Ordinal),
+				AppDomain.CurrentDomain
+					.GetAssemblies()
+					.Select(static a => a.GetName().Name!)
+					.ToHashSet(StringComparer.Ordinal),
 				GetNativeModules());
 
 			lock (Runs)
@@ -59,7 +62,10 @@ namespace Tests.LinqToDB.CLI
 				// Process-wide, so this can include modules another thread loaded meanwhile; tests that check it
 				// run one command at a time.
 				//
-				run.NativeModulesLoadedInside.UnionWith(GetNativeModules().Except(run.NativeModulesAtEntry, StringComparer.OrdinalIgnoreCase));
+				var loadedInside = GetNativeModules()
+					.Except(run.NativeModulesAtEntry, StringComparer.OrdinalIgnoreCase);
+
+				run.NativeModulesLoadedInside.UnionWith(loadedInside);
 			}
 
 			void OnAssemblyLoad(object? sender, AssemblyLoadEventArgs args)
@@ -97,7 +103,10 @@ namespace Tests.LinqToDB.CLI
 
 			using var process = Process.GetCurrentProcess();
 
-			return process.Modules.Cast<ProcessModule>().Select(static m => m.FileName).ToHashSet(StringComparer.OrdinalIgnoreCase);
+			return process.Modules
+				.Cast<ProcessModule>()
+				.Select(static m => m.FileName)
+				.ToHashSet(StringComparer.OrdinalIgnoreCase);
 		}
 
 		[DllImport("/usr/lib/libSystem.dylib", EntryPoint = "_dyld_image_count")]
