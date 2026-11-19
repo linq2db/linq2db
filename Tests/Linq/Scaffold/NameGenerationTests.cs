@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Text;
 
 using LinqToDB.Naming;
@@ -116,25 +115,19 @@ namespace Tests.Scaffold
 
 		[TestCase("user_id", false, "UserId")]
 		[TestCase("user_id", true,  "userId")]
+		[TestCase("Item_Id", true,  "itemId")]
+		[TestCase("Item",    true,  "item")]
+		[TestCase("ID_ITEM", true,  "idItem")]
 		[TestCase("id",      false, "Id")]
-		[TestCase("id",      true,  "id")]
 		[TestCase("item",    false, "Item")]
 		public void ToValidNameIgnoresCurrentCulture(string name, bool isParameter, string expected)
 		{
-			var current = CultureInfo.CurrentCulture;
-			try
-			{
-				// the dotted and dotless "i" are mapped differently by the Turkish culture
-				CultureInfo.CurrentCulture = new CultureInfo("tr-TR");
+			// the dotted and dotless "i" are mapped differently by the Turkish culture
+			using var _ = new CultureRegion("tr-TR");
 
-				var generator = new TestModelGenerator { IsParameter = isParameter };
+			var generator = new TestModelGenerator { IsParameter = isParameter };
 
-				generator.ToValidNameDefault(name, true).ShouldBe(expected);
-			}
-			finally
-			{
-				CultureInfo.CurrentCulture = current;
-			}
+			generator.ToValidNameDefault(name, true).ShouldBe(expected);
 		}
 	}
 }
