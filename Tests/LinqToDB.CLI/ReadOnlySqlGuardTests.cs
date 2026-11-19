@@ -1013,7 +1013,8 @@ namespace Tests.LinqToDB.CLI
 		{
 			using (Assert.EnterMultipleScope())
 			{
-				// The ASE driver sends the text in iso_1, which holds none of these characters but U+00E9.
+				// The ASE driver sends the text in the character set the server names at login; outside ASCII it needs
+				// Charset=utf8.
 				foreach (var provider in new[] { "SqlServer.2022", "SqlCe" })
 				{
 					var result = ReadOnlySqlGuard.Validate(provider, sql);
@@ -1023,7 +1024,7 @@ namespace Tests.LinqToDB.CLI
 				}
 
 				ReadOnlySqlGuard.Validate("Sybase.Managed", sql).IsAllowed.ShouldBeFalse();
-				ReadOnlySqlGuard.Validate("Sybase.Managed", "select [\u00C9t\u00E9], \u00E9t\u00E9 from t").IsAllowed.ShouldBeTrue();
+				ReadOnlySqlGuard.Validate("Sybase.Managed", sql, "Data Source=h;Port=5000;Charset=utf8").IsAllowed.ShouldBeTrue();
 			}
 		}
 
@@ -1071,7 +1072,7 @@ namespace Tests.LinqToDB.CLI
 			using (Assert.EnterMultipleScope())
 			{
 				result.IsAllowed.ShouldBeFalse(code.ToString("X4", CultureInfo.InvariantCulture));
-				result.Error!.ShouldContain(string.Create(CultureInfo.InvariantCulture, $"character U+{code:X4} at 1:10 reaches the server as '''."), customMessage: result.Error);
+				result.Error!.ShouldContain(string.Create(CultureInfo.InvariantCulture, $"character U+{code:X4} at 1:10 is outside ASCII."), customMessage: result.Error);
 
 				// SqlClient sends UTF-16: SQL Server reads the character inside the literal, as the check does.
 				ReadOnlySqlGuard.Validate("SqlServer.2022", "select 'a" + (char)code + "' c").IsAllowed.ShouldBeTrue();
@@ -1110,20 +1111,35 @@ namespace Tests.LinqToDB.CLI
 				.IsAllowed.ShouldBeFalse();
 		}
 
-		// The character set the connection asks for is checked as well as iso_1, which the server may answer with.
-		[TestCase(null,                                          "select '\u00E9' a", true)]
-		[TestCase("Data Source=h;Port=5000;Charset=utf8",        "select '\u00E9' a", true)]
-		[TestCase("Data Source=h;Port=5000;Charset=utf8",        "select '\u2019' a", false)]
-		[TestCase("Data Source=h;Port=5000;Charset=ascii_8",     "select '\u00E9' a", false)]
-		[TestCase("Data Source=h;Port=5000;charset = ISO_1",     "select '\u00E9' a", true)]
-		[TestCase("Data Source=h;Port=5000;Charset=no-such-set", "select '\u00E9' a", true)]
-		[TestCase("not a connection string",                     "select '\u00E9' a", true)]
+		// The server names the character set at login; only Charset=utf8 makes the driver send what the text holds.
+		[TestCase(null,                                          "select '\u00E9' a",              false)]
+		[TestCase("Data Source=h;Port=5000;",                    "select 'e' a",                   true)]
+		[TestCase("Data Source=h;Port=5000;Charset=utf8",        "select '\u00E9' a",              true)]
+		[TestCase("Data Source=h;Port=5000; charset = UTF-8 ",   "select '\u2019', N'\u0418' a",   true)]
+		[TestCase("Data Source=h;Port=5000;Charset=iso_1",       "select '\u00E9' a",              false)]
+		[TestCase("Data Source=h;Port=5000;Charset=ascii_8",     "select '\u00E9' a",              false)]
+		[TestCase("Data Source=h;Port=5000;Charset=no-such-set", "select '\u00E9' a",              false)]
+		[TestCase("not a connection string",                     "select '\u00E9' a",              false)]
 		public void AseCharsetOfTheConnection(string? connectionString, string sql, bool accepted)
 		{
 			using (Assert.EnterMultipleScope())
 			{
 				ReadOnlySqlGuard.Validate("Sybase.Managed", sql, connectionString).IsAllowed.ShouldBe(accepted);
 				ReadOnlySqlGuard.ValidateSingleStatement("Sybase.Managed", sql, connectionString).IsAllowed.ShouldBe(accepted);
+			}
+		}
+
+		// UTF-8 carries every character but an unpaired surrogate, which the encoder replaces by U+FFFD. Built in code: an
+		// attribute argument does not keep one.
+		[Test]
+		public void AseUtf8UnpairedSurrogateRefused()
+		{
+			var result = ReadOnlySqlGuard.Validate("Sybase.Managed", "select 'a" + (char)0xD800 + "' a", "Data Source=h;Port=5000;Charset=utf8");
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.IsAllowed.ShouldBeFalse();
+				result.Error!.ShouldContain("character U+D800 at 1:10 reaches the server as '\uFFFD'. The driver sends the text in utf-8");
 			}
 		}
 
@@ -1269,10 +1285,10 @@ namespace Tests.LinqToDB.CLI
 			new DbConnectionStringBuilder { ConnectionString = opening.ConnectionString }["Pooling"].ShouldBe(pooling);
 		}
 
-		// The executor checks the text against the character set of the connection it opens: ascii_8 holds no U+00E9, so the
-		// call stops at the check and opens nothing; without the key, iso_1 holds it and the connection opens.
-		[TestCase("Data Source=ase;Port=5000;Charset=ascii_8;", false)]
-		[TestCase("Data Source=ase;Port=5000;",                 true)]
+		// The executor checks the text against the connection it opens: without Charset=utf8 a character outside ASCII stops
+		// the call at the check, and nothing opens; with it the connection opens.
+		[TestCase("Data Source=ase;Port=5000;",              false)]
+		[TestCase("Data Source=ase;Port=5000;Charset=utf8;", true)]
 		public async Task ExecutorChecksTheCharsetOfItsConnection(string connectionString, bool opens)
 		{
 			const string sql = "select '\u00E9' a";
@@ -1296,7 +1312,7 @@ namespace Tests.LinqToDB.CLI
 				var result = await executor.ExecuteValidatedDatabaseLoop(options, provider, sql, TextWriter.Null, CancellationToken.None);
 
 				result.Error.ShouldNotBeNull();
-				result.Error.ShouldContain("character U+00E9 at 1:9 reaches the server as '?'. The driver sends the text in us-ascii");
+				result.Error.ShouldContain("character U+00E9 at 1:9 is outside ASCII. The Sybase ASE driver sends the text in the character set the server names at login, which may replace such a character by another; to send characters outside ASCII, set Charset=utf8 in the connection string.");
 				opening.ConnectionString.ShouldBeNull();
 			}
 		}
@@ -1401,7 +1417,8 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("SqlServer",        "create table ##g (a int)\nselect 1",     "Query is not read-only: statement word CREATE at 1:1.")]
 		[TestCase("SqlServer",        "select a into #t from t\nupdate #t set a = 1 from t [\uFF03t]\nselect 1", "Only SELECT queries are allowed: unexpected '[\uFF03t]' at 2:28. In a script that writes temporary tables, a quoted name must begin with an ASCII letter, a digit, _ or $.")]
 		[TestCase("SqlServer",        "declare @v table (a int)\nupdate @v set a = 1 from t \u0640@v\nselect 1", "Only SELECT queries are allowed: character U+0640 at 2:28. A script that writes temporary tables accepts non-ASCII characters only inside string literals ('...', N'...') and comments; names, quoted names included, must be ASCII.")]
-		[TestCase("Sybase.Managed",   "select a into #t from t\nupdate #t set a = 1 from t \u3007#t\nselect 1",   "Query is not accepted: character U+3007 at 2:28 reaches the server as '?'. The driver sends the text in iso-8859-1")]
+		[TestCase("Sybase.Managed",   "select a into #t from t\nupdate #t set a = 1 from t \u3007#t\nselect 1",   "Query is not accepted: character U+3007 at 2:28 is outside ASCII.")]
+		[TestCase("Sybase.Managed",   "select 1 a --\r'\nupdate t set a = 3 --'",   "Query is not read-only: statement word UPDATE at 2:1.")]
 		[TestCase("SqlServer",        "select a into #t from t -- \U0001F600\nselect [\U0001F600] from #t", "Only SELECT queries are allowed: character U+1F600 at 2:9.")]
 		[TestCase("SqlServer",        "select a into #t from t\nupdate #t set a = 1 from t\u200B#t\nselect 1", "Only SELECT queries are allowed: unexpected '#t' at 2:28. In a script that writes temporary tables, a name that starts with # may not stand where an alias does.")]
 		[TestCase("SqlServer",        "exec dbo.DoWork",                        "Query is not read-only: statement word EXEC at 1:1.")]

@@ -29,7 +29,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			Func<string, long> singleRefusedAt,
 			bool               poolKeepsSessionState = false,
 			bool               crEndsLineComment     = true,
-			Func<string?, IReadOnlyList<Encoding>>? wireEncodings = null)
+			Func<string?, IReadOnlyList<Encoding>?>? wireEncodings = null)
 		{
 			/// <summary>
 			/// A carriage return that no line feed follows ends a <c>--</c> comment on the server.
@@ -37,12 +37,13 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			public bool CrEndsLineComment { get; } = crEndsLineComment;
 
 			/// <summary>
-			/// The encodings the driver may send the command text in, for a connection string; none when it sends the text
-			/// as UTF-16, as it stands.
+			/// The encodings the driver sends the command text in, for a connection string: none when it sends the text as
+			/// UTF-16, as it stands; <see langword="null"/> when the server picks the character set at login, so only ASCII
+			/// is known to arrive unchanged.
 			/// </summary>
-			public IReadOnlyList<Encoding> WireEncodings(string? connectionString)
+			public IReadOnlyList<Encoding>? WireEncodings(string? connectionString)
 			{
-				return wireEncodings?.Invoke(connectionString) ?? [];
+				return wireEncodings == null ? [] : wireEncodings(connectionString);
 			}
 
 			/// <summary>
@@ -186,12 +187,21 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			// Every character set a driver may choose holds ASCII, so an ASCII text is the same on both sides.
 			if (!Ascii.IsValid(sql))
 			{
-				foreach (var encoding in dialect.WireEncodings(connectionString))
+				var encodings = dialect.WireEncodings(connectionString);
+
+				if (encodings == null)
+				{
+					var position = sql.AsSpan().IndexOfAnyExceptInRange((char)0, (char)0x7F);
+
+					return RejectUnknownCharset(sql, position, dialect.CrEndsLineComment);
+				}
+
+				foreach (var encoding in encodings)
 				{
 					var changed = FindTranscoded(sql, encoding, out var received);
 
 					if (changed >= 0)
-						return RejectTranscoded(sql, changed, received, encoding);
+						return RejectTranscoded(sql, changed, received, encoding, dialect.CrEndsLineComment);
 				}
 			}
 
@@ -206,7 +216,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 						var nonAscii = FindNonAsciiCode(sql, dialect.CrEndsLineComment);
 
 						if (nonAscii >= 0)
-							return RejectNonAscii(sql, nonAscii);
+							return RejectNonAscii(sql, nonAscii, dialect.CrEndsLineComment);
 					}
 
 					// Execute mode admits any statement, and so any session state.
@@ -240,7 +250,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				var (quotedKind, quotedText) = Describe(sql, position - 1);
 
 				if (quotedKind is "other" && quotedText.Length > 2 && quotedText[0] == sql[position - 1])
-					return SqlGuardResult.Rejected($"Only SELECT queries are allowed: unexpected '{quotedText}' at {Location(sql, position - 1)}. In a script that writes temporary tables, a quoted name must begin with an ASCII letter, a digit, _ or $.");
+					return SqlGuardResult.Rejected($"Only SELECT queries are allowed: unexpected '{quotedText}' at {Location(sql, position - 1, dialect.CrEndsLineComment)}. In a script that writes temporary tables, a quoted name must begin with an ASCII letter, a digit, _ or $.");
 			}
 
 			// The describer reads comments the way the servers that nest them do; a class whose servers disagree refuses at
@@ -248,10 +258,10 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			if (sql.AsSpan(position).StartsWith("/*", StringComparison.Ordinal))
 			{
 				if (sql.AsSpan(position).StartsWith("/*!", StringComparison.Ordinal) || sql.AsSpan(position).StartsWith("/*M!", StringComparison.OrdinalIgnoreCase))
-					return SqlGuardResult.Rejected($"Query is not accepted: the executable comment at {Location(sql, position)} runs or not depending on the server version.");
+					return SqlGuardResult.Rejected($"Query is not accepted: the executable comment at {Location(sql, position, dialect.CrEndsLineComment)} runs or not depending on the server version.");
 
 				if (sql.IndexOf("*/", position + 2, StringComparison.Ordinal) >= 0)
-					return SqlGuardResult.Rejected($"Query is not accepted: the comment at {Location(sql, position)} holds /*; databases that nest comments and databases that end a comment at its first */ read it differently.");
+					return SqlGuardResult.Rejected($"Query is not accepted: the comment at {Location(sql, position, dialect.CrEndsLineComment)} holds /*; databases that nest comments and databases that end a comment at its first */ read it differently.");
 			}
 
 			var (kind, text) = Describe(sql, position);
@@ -303,7 +313,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				}
 			}
 
-			var at = Location(sql, position);
+			var at = Location(sql, position, dialect.CrEndsLineComment);
 
 			switch (kind)
 			{
@@ -464,20 +474,14 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		}
 
 		// AdoNetCore.AseClient sends the command text in the character set the server names at login: the one the connection
-		// string asks for with Charset=, or the server's own when it asks for none (iso_1 on a default ASE installation).
-		// It maps the name as below and encodes with .NET's encoder for it, which replaces what the set does not hold. The
-		// server may answer with its own set even when the connection asks for another, so the text must survive iso_1
-		// and the set asked for.
-		static IReadOnlyList<Encoding> AseWireEncodings(string? connectionString)
+		// string asks for with Charset=, or the server's own when it asks for none. It encodes with .NET's encoder for that
+		// set, which replaces what the set does not hold, often by a lookalike. Which set the server names is known only
+		// after login, so only ASCII, which every set holds, is known to arrive unchanged. With Charset=utf8 the driver
+		// sends UTF-8, which carries every character but an unpaired surrogate, and the server converts it or reports an
+		// error; nothing is replaced on the way.
+		static IReadOnlyList<Encoding>? AseWireEncodings(string? connectionString)
 		{
-			var latin1    = Encoding.GetEncoding("ISO-8859-1");
-			var encodings = new List<Encoding> { latin1 };
-			var requested = AseEncoding(RequestedCharset(connectionString));
-
-			if (requested != null && requested.CodePage != latin1.CodePage)
-				encodings.Add(requested);
-
-			return encodings;
+			return RequestedCharset(connectionString)?.Trim().ToLowerInvariant() is "utf8" or "utf-8" ? [Encoding.UTF8] : null;
 		}
 
 		static string? RequestedCharset(string? connectionString)
@@ -490,33 +494,6 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				var builder = new DbConnectionStringBuilder { ConnectionString = connectionString };
 
 				return builder.TryGetValue("Charset", out var value) ? Convert.ToString(value, CultureInfo.InvariantCulture) : null;
-			}
-			catch (ArgumentException)
-			{
-				return null;
-			}
-		}
-
-		// AseClient's own names first; any other goes to Encoding.GetEncoding, and a name .NET does not know fails the
-		// connection in the driver, so it adds nothing to check here.
-		static Encoding? AseEncoding(string? charset)
-		{
-			if (string.IsNullOrWhiteSpace(charset))
-				return null;
-
-			switch (charset.Trim().ToLowerInvariant())
-			{
-				case "iso_1" or "iso 8859-1" or "iso88591":
-					return Encoding.GetEncoding("ISO-8859-1");
-				case "ascii_8":
-					return Encoding.ASCII;
-				case "utf-8" or "utf8":
-					return Encoding.UTF8;
-			}
-
-			try
-			{
-				return Encoding.GetEncoding(charset.Trim());
 			}
 			catch (ArgumentException)
 			{
@@ -551,26 +528,36 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			return -1;
 		}
 
-		static SqlGuardResult RejectTranscoded(string sql, int position, string received, Encoding encoding)
+		static SqlGuardResult RejectUnknownCharset(string sql, int position, bool crIsLineBreak)
 		{
-			var code = char.IsHighSurrogate(sql[position]) && position + 1 < sql.Length && char.IsLowSurrogate(sql[position + 1])
-				? char.ConvertToUtf32(sql[position], sql[position + 1])
-				: sql[position];
-
 			return SqlGuardResult.Rejected(string.Create(
 				CultureInfo.InvariantCulture,
-				$"Query is not accepted: character U+{code:X4} at {Location(sql, position)} reaches the server as '{received}'. The driver sends the text in {encoding.WebName}, which does not hold it; write the text in that character set."));
+				$"Query is not accepted: character U+{CodePointAt(sql, position):X4} at {Location(sql, position, crIsLineBreak)} is outside ASCII. The Sybase ASE driver sends the text in the character set the server names at login, which may replace such a character by another; to send characters outside ASCII, set Charset=utf8 in the connection string."));
 		}
 
-		static SqlGuardResult RejectNonAscii(string sql, int position)
+		static int CodePointAt(string sql, int position)
 		{
-			var code = char.IsHighSurrogate(sql[position]) && position + 1 < sql.Length && char.IsLowSurrogate(sql[position + 1])
+			return char.IsHighSurrogate(sql[position]) && position + 1 < sql.Length && char.IsLowSurrogate(sql[position + 1])
 				? char.ConvertToUtf32(sql[position], sql[position + 1])
 				: sql[position];
+		}
+
+		static SqlGuardResult RejectTranscoded(string sql, int position, string received, Encoding encoding, bool crIsLineBreak)
+		{
+			var code = CodePointAt(sql, position);
 
 			return SqlGuardResult.Rejected(string.Create(
 				CultureInfo.InvariantCulture,
-				$"Only SELECT queries are allowed: character U+{code:X4} at {Location(sql, position)}. A script that writes temporary tables accepts non-ASCII characters only inside string literals ('...', N'...') and comments; names, quoted names included, must be ASCII."));
+				$"Query is not accepted: character U+{code:X4} at {Location(sql, position, crIsLineBreak)} reaches the server as '{received}'. The driver sends the text in {encoding.WebName}, which does not hold it; write the text in that character set."));
+		}
+
+		static SqlGuardResult RejectNonAscii(string sql, int position, bool crIsLineBreak)
+		{
+			var code = CodePointAt(sql, position);
+
+			return SqlGuardResult.Rejected(string.Create(
+				CultureInfo.InvariantCulture,
+				$"Only SELECT queries are allowed: character U+{code:X4} at {Location(sql, position, crIsLineBreak)}. A script that writes temporary tables accepts non-ASCII characters only inside string literals ('...', N'...') and comments; names, quoted names included, must be ASCII."));
 		}
 
 		const int MaxStepsBack     = 3;
@@ -698,14 +685,15 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			return string.Join(' ', text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
 		}
 
-		static string Location(string sql, int position)
+		// A carriage return alone breaks a line only where the server reads it so (it ends a -- comment there too).
+		static string Location(string sql, int position, bool crIsLineBreak)
 		{
 			var line      = 1;
 			var lineStart = 0;
 
 			for (var i = 0; i < position; i++)
 			{
-				if (sql[i] == '\r')
+				if (sql[i] == '\r' && crIsLineBreak)
 				{
 					line++;
 
