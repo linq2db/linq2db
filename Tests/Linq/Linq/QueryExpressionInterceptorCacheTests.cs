@@ -1,11 +1,15 @@
-using System;
+﻿using System;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
 using LinqToDB.Interceptors;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Interceptors;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;
 
@@ -139,7 +143,28 @@ namespace Tests.Linq
 
 		static int[] Run(IDataContext db)
 		{
-			return db.GetTable<CacheItem>().ToArray().Select(e => e.Id).OrderBy(i => i).ToArray();
+			return db
+				.GetTable<CacheItem>()
+				.ToArray()
+				.Select(e => e.Id)
+				.OrderBy(i => i)
+				.ToArray();
+		}
+
+		static CacheItem[] Items(int count)
+		{
+			return Enumerable
+				.Range(1, count)
+				.Select(i => new CacheItem { Id = i })
+				.ToArray();
+		}
+
+		// A DataConnection with the mapping schema and the interceptor set in its options.
+		DataConnection Connect(string context, MappingSchema ms, IInterceptor interceptor)
+		{
+			return GetDataConnection(context, o => o
+				.UseMappingSchema(ms)
+				.UseInterceptor(interceptor));
 		}
 
 		static (int[] a, int[] b) RunBoth(IDataContext a, IDataContext b, bool aFirst)
@@ -166,7 +191,7 @@ namespace Tests.Linq
 			Query.ClearCaches();
 
 			using var setup = GetDataContext(context, o => o.UseMappingSchema(_lambdaFilterSchema));
-			using var t     = setup.CreateLocalTable(Enumerable.Range(1, 4).Select(i => new CacheItem { Id = i }));
+			using var t     = setup.CreateLocalTable(Items(4));
 
 			using var a = GetDataContext(context, o => o.UseMappingSchema(_lambdaFilterSchema));
 			a.AddInterceptor(new LimitFilterInterceptor(2));
@@ -187,10 +212,10 @@ namespace Tests.Linq
 			Query.ClearCaches();
 
 			using var setup = GetDataConnection(context, o => o.UseMappingSchema(_lambdaFilterSchema));
-			using var t     = setup.CreateLocalTable(Enumerable.Range(1, 4).Select(i => new CacheItem { Id = i }));
+			using var t     = setup.CreateLocalTable(Items(4));
 
-			using var a = GetDataConnection(context, o => o.UseMappingSchema(_lambdaFilterSchema).UseInterceptor(new LimitFilterInterceptor(2)));
-			using var b = GetDataConnection(context, o => o.UseMappingSchema(_lambdaFilterSchema).UseInterceptor(new LimitFilterInterceptor(3)));
+			using var a = Connect(context, _lambdaFilterSchema, new LimitFilterInterceptor(2));
+			using var b = Connect(context, _lambdaFilterSchema, new LimitFilterInterceptor(3));
 
 			var (resA, resB) = RunBoth(a, b, aFirst);
 
@@ -208,7 +233,7 @@ namespace Tests.Linq
 			Query.ClearCaches();
 
 			using var setup = GetDataConnection(context, o => o.UseMappingSchema(_lambdaFilterSchema));
-			using var t     = setup.CreateLocalTable(Enumerable.Range(1, 4).Select(i => new CacheItem { Id = i }));
+			using var t     = setup.CreateLocalTable(Items(4));
 
 			for (var limit = 1; limit <= 4; limit++)
 			{
@@ -218,10 +243,15 @@ namespace Tests.Linq
 				var query = db.GetTable<CacheItem>();
 				var misses = query.GetCacheMissCount();
 
-				Run(db).ShouldBe(Enumerable.Range(1, limit).ToArray());
+				Run(db)
+					.ShouldBe(Enumerable.Range(1, limit).ToArray());
 
 				if (limit > 1)
-					query.GetCacheMissCount().ShouldBe(misses, $"limit {limit}");
+				{
+					query
+						.GetCacheMissCount()
+						.ShouldBe(misses, $"limit {limit}");
+				}
 			}
 		}
 
@@ -253,7 +283,7 @@ namespace Tests.Linq
 				var interceptor = new FilterInterceptor(argsKind, mode.Value);
 
 				if (viaOptions)
-					return GetDataConnection(context, o => o.UseMappingSchema(ms).UseInterceptor(interceptor));
+					return Connect(context, ms, interceptor);
 
 				var dc = GetDataConnection(context, o => o.UseMappingSchema(ms));
 				dc.AddInterceptor(interceptor);
@@ -263,7 +293,7 @@ namespace Tests.Linq
 			Query.ClearCaches();
 
 			using var setup = GetDataConnection(context, o => o.UseMappingSchema(ms));
-			using var table = setup.CreateLocalTable(Enumerable.Range(1, 4).Select(i => new CacheItem { Id = i }));
+			using var table = setup.CreateLocalTable(Items(4));
 
 			using var dbA = Create(modeA);
 			using var dbB = Create(modeB);
@@ -288,14 +318,18 @@ namespace Tests.Linq
 			Query.ClearCaches();
 
 			using var setup = GetDataConnection(context, o => o.UseMappingSchema(ms));
-			using var table = setup.CreateLocalTable(Enumerable.Range(1, 4).Select(i => new CacheItem { Id = i }));
+			using var table = setup.CreateLocalTable(Items(4));
 
-			var options = new DataOptions().UseConfiguration(context).UseMappingSchema(ms);
+			var options = new DataOptions()
+				.UseConfiguration(context)
+				.UseMappingSchema(ms);
 
 			using var dbA = new DataContext(options);
 			using var dbB = new DataContext(options);
 
-			_ = dbA.GetTable<CacheItem>().Count(e => e.Id < 0);
+			_ = dbA
+				.GetTable<CacheItem>()
+				.Count(e => e.Id < 0);
 
 			dbA.AddInterceptor(new FilterInterceptor(QueryExpressionArgs.ExpressionKind.QueryFilter, Mode.Le2));
 
@@ -308,30 +342,134 @@ namespace Tests.Linq
 			}
 		}
 
+		// The context a test runs on: a DataContext, or the data source's own context - a DataConnection, or a remote
+		// context for a remote data source.
+		IDataContext CreateContext(string context, MappingSchema ms, bool viaDataContext)
+		{
+			if (!viaDataContext)
+				return GetDataContext(context, o => o.UseMappingSchema(ms));
+
+			if (context.IsRemote())
+				Assert.Ignore("A DataContext is a local context; the remote data source runs the remote context.");
+
+			return new DataContext(new DataOptions()
+				.UseConfiguration(context)
+				.UseMappingSchema(ms));
+		}
+
 		[Test, QueryCacheTest]
-		public void RemoveInterceptor([IncludeDataSources(ProviderName.SQLiteMS)] string context, [Values] bool viaDataContext)
+		public void RemoveInterceptor([IncludeDataSources(true, ProviderName.SQLiteMS)] string context, [Values] bool viaDataContext)
 		{
 			var ms = _lambdaFilterSchema;
 
 			Query.ClearCaches();
 
-			using var setup = GetDataConnection(context, o => o.UseMappingSchema(ms));
-			using var table = setup.CreateLocalTable(Enumerable.Range(1, 4).Select(i => new CacheItem { Id = i }));
-
-			using IDataContext db = viaDataContext
-				? new DataContext(new DataOptions().UseConfiguration(context).UseMappingSchema(ms))
-				: GetDataConnection(context, o => o.UseMappingSchema(ms));
+			using var setup = GetDataContext(context, o => o.UseMappingSchema(ms));
+			using var table = setup.CreateLocalTable(Items(4));
+			using var db    = CreateContext(context, ms, viaDataContext);
 
 			var interceptor = new FilterInterceptor(QueryExpressionArgs.ExpressionKind.QueryFilter, Mode.Le2);
 
-			Run(db).ShouldBe([1, 2, 3, 4]);
+			Run(db)
+				.ShouldBe([1, 2, 3, 4]);
 
 			db.AddInterceptor(interceptor);
-			Run(db).ShouldBe([1, 2]);
+
+			Run(db)
+				.ShouldBe([1, 2]);
 
 			db.RemoveInterceptor(interceptor);
-			Run(db).ShouldBe([1, 2, 3, 4]);
+
+			Run(db)
+				.ShouldBe([1, 2, 3, 4]);
 		}
+
+		// Materializes CacheItem.Id multiplied by ten. Its rewrite is built into the query and is not re-checked when a
+		// cached query is reused: only its type in the configuration id keeps the queries apart.
+		sealed class TenfoldIdInterceptor : EntityBindingInterceptor
+		{
+			public override SqlGenericConstructorExpression ConvertConstructorExpression(SqlGenericConstructorExpression expression)
+			{
+				if (expression.ObjectType != typeof(CacheItem))
+					return expression;
+
+				var assignments = expression.Assignments
+					.Select(a => a.MemberInfo.Name == nameof(CacheItem.Id) ? a.WithExpression(Expression.Multiply(a.Expression, Expression.Constant(10))) : a)
+					.ToList();
+
+				return expression.ReplaceAssignments(assignments.AsReadOnly());
+			}
+		}
+
+		// An entity binding interceptor added and removed after the context's configuration id has been computed.
+		[Test, QueryCacheTest]
+		public void AddAndRemoveEntityBindingInterceptor([IncludeDataSources(true, ProviderName.SQLiteMS)] string context, [Values] bool viaDataContext)
+		{
+			Query.ClearCaches();
+
+			using var setup = GetDataContext(context);
+			using var table = setup.CreateLocalTable(Items(4));
+			using var db    = CreateContext(context, _noFilterSchema, viaDataContext);
+
+			var interceptor = new TenfoldIdInterceptor();
+
+			Run(db)
+				.ShouldBe([1, 2, 3, 4]);
+
+			db.AddInterceptor(interceptor);
+
+			Run(db)
+				.ShouldBe([10, 20, 30, 40], "after AddInterceptor");
+
+			db.RemoveInterceptor(interceptor);
+
+			Run(db)
+				.ShouldBe([1, 2, 3, 4], "after RemoveInterceptor");
+		}
+
+		// An interceptor that takes no part in query translation leaves the configuration id as it is: the queries that
+		// follow it are found in the cache.
+		[Test, QueryCacheTest]
+		public void CommandInterceptorKeepsCachedQuery([IncludeDataSources(ProviderName.SQLiteMS)] string context, [Values] bool viaDataContext)
+		{
+			Query.ClearCaches();
+
+			using var setup = GetDataConnection(context);
+			using var table = setup.CreateLocalTable(Items(4));
+			using var db    = CreateContext(context, _noFilterSchema, viaDataContext);
+
+			Run(db)
+				.ShouldBe([1, 2, 3, 4]);
+
+			var missesBefore = Query<CacheItem>.CacheMissCount;
+			var commands     = 0;
+
+			Func<CommandEventData, DbCommand, DbCommand> onCommand = (_, command) =>
+			{
+				commands++;
+				return command;
+			};
+
+			if (db is DataContext dataContext)
+				dataContext.OnNextCommandInitialized(onCommand);
+			else if (db is DataConnection dataConnection)
+				dataConnection.OnNextCommandInitialized(onCommand);
+
+			Run(db)
+				.ShouldBe([1, 2, 3, 4], "with the command interceptor");
+
+			Run(db)
+				.ShouldBe([1, 2, 3, 4], "after the command interceptor removed itself");
+
+			using (Assert.EnterMultipleScope())
+			{
+				commands.ShouldBe(1);
+
+				(Query<CacheItem>.CacheMissCount - missesBefore)
+					.ShouldBe(0);
+			}
+		}
+
 		// Adds Where(e => e.Id <= 2) or Where(e => e.Id > 2) only to a filter chain that contains a "<" comparison.
 		sealed class ChainFilterInterceptor(Mode mode) : IQueryExpressionInterceptor
 		{
@@ -381,15 +519,21 @@ namespace Tests.Linq
 			Query.ClearCaches();
 
 			using var setup = GetDataConnection(context, o => o.UseMappingSchema(ms));
-			using var table = setup.CreateLocalTable(Enumerable.Range(1, 4).Select(i => new CacheItem { Id = i }));
+			using var table = setup.CreateLocalTable(Items(4));
 
-			using var a = GetDataConnection(context, o => o.UseMappingSchema(ms).UseInterceptor(new ChainFilterInterceptor(Mode.Le2)));
-			using var b = GetDataConnection(context, o => o.UseMappingSchema(ms).UseInterceptor(new ChainFilterInterceptor(Mode.Gt2)));
+			using var a = Connect(context, ms, new ChainFilterInterceptor(Mode.Le2));
+			using var b = Connect(context, ms, new ChainFilterInterceptor(Mode.Gt2));
 
 			static int[] RunConcat(IDataContext db)
 			{
-				return db.GetTable<CacheItem>().IgnoreFilters(["hi"])
-					.Concat(db.GetTable<CacheItem>().IgnoreFilters(["lo"]))
+				var low = db
+					.GetTable<CacheItem>()
+					.IgnoreFilters(["lo"]);
+
+				return db
+					.GetTable<CacheItem>()
+					.IgnoreFilters(["hi"])
+					.Concat(low)
 					.Select(e => e.Id)
 					.ToArray()
 					.OrderBy(i => i)
@@ -416,6 +560,28 @@ namespace Tests.Linq
 			}
 		}
 
+		// Two references to the filtered table: a self-join or a concatenation.
+		static IQueryable<int> SeveralReferences(IDataContext db, bool join)
+		{
+			if (join)
+			{
+				return
+					from x in db.GetTable<CacheItem>()
+					from y in db.GetTable<CacheItem>()
+					where y.Id >= x.Id
+					select y.Id;
+			}
+
+			var second = db
+				.GetTable<CacheItem>()
+				.Select(e => e.Id);
+
+			return db
+				.GetTable<CacheItem>()
+				.Select(e => e.Id)
+				.Concat(second);
+		}
+
 		// Several references to one table with the same filter set: every reference takes the executing context's value.
 		[Test, QueryCacheTest]
 		public void SeveralReferencesToOneTable([IncludeDataSources(ProviderName.SQLiteMS)] string context, [Values] bool join)
@@ -423,26 +589,82 @@ namespace Tests.Linq
 			Query.ClearCaches();
 
 			using var setup = GetDataConnection(context, o => o.UseMappingSchema(_lambdaFilterSchema));
-			using var t     = setup.CreateLocalTable(Enumerable.Range(1, 4).Select(i => new CacheItem { Id = i }));
+			using var t     = setup.CreateLocalTable(Items(4));
 
 			int[] RunQuery(int limit)
 			{
-				using var db = GetDataConnection(context, o => o.UseMappingSchema(_lambdaFilterSchema).UseInterceptor(new LimitFilterInterceptor(limit)));
+				using var db = Connect(context, _lambdaFilterSchema, new LimitFilterInterceptor(limit));
 
-				var query = join
-					? from x in db.GetTable<CacheItem>()
-					  from y in db.GetTable<CacheItem>().Where(y => y.Id >= x.Id)
-					  select y.Id
-					: db.GetTable<CacheItem>().Select(e => e.Id).Concat(db.GetTable<CacheItem>().Select(e => e.Id));
-
-				return query.ToArray().OrderBy(i => i).ToArray();
+				return SeveralReferences(db, join)
+					.ToArray()
+					.OrderBy(i => i)
+					.ToArray();
 			}
 
 			using (Assert.EnterMultipleScope())
 			{
-				RunQuery(2).ShouldBe(join ? [1, 2, 2] : [1, 1, 2, 2], "limit 2");
-				RunQuery(3).ShouldBe(join ? [1, 2, 2, 3, 3, 3] : [1, 1, 2, 2, 3, 3], "limit 3");
+				RunQuery(2)
+					.ShouldBe(join ? [1, 2, 2] : [1, 1, 2, 2], "limit 2");
+
+				RunQuery(3)
+					.ShouldBe(join ? [1, 2, 2, 3, 3, 3] : [1, 1, 2, 2, 3, 3], "limit 3");
 			}
+		}
+
+		// Contexts that differ only by the value their interceptor instance reads from itself share one query, also when
+		// the query references the filtered table more than once, and the cached query does not keep the interceptor of
+		// the context that built it alive.
+		[Test, QueryCacheTest]
+		public void SeveralReferencesShareCachedQuery([IncludeDataSources(ProviderName.SQLiteMS)] string context, [Values] bool join)
+		{
+			const int Contexts = 5;
+
+			Query.ClearCaches();
+
+			using var setup = GetDataConnection(context, o => o.UseMappingSchema(_lambdaFilterSchema));
+			using var t     = setup.CreateLocalTable(Items(Contexts));
+
+			var missesBefore = Query<int>.CacheMissCount;
+			var wrongRows    = 0;
+
+			var firstInterceptor = RunSeveralReferences(context, join, 1, ref wrongRows);
+
+			for (var limit = 2; limit <= Contexts; limit++)
+				RunSeveralReferences(context, join, limit, ref wrongRows);
+
+			var misses = Query<int>.CacheMissCount - missesBefore;
+
+			GC.Collect();
+			GC.WaitForPendingFinalizers();
+			GC.Collect();
+
+			using (Assert.EnterMultipleScope())
+			{
+				wrongRows.ShouldBe(0);
+				misses.ShouldBe(1);
+				firstInterceptor.IsAlive.ShouldBeFalse("the cached query keeps the interceptor of the context that built it alive");
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		WeakReference RunSeveralReferences(string context, bool join, int limit, ref int wrongRows)
+		{
+			var interceptor = new LimitFilterInterceptor(limit);
+
+			// added at runtime, not through the options: a query keeps the options of the context that built it
+			using (var db = GetDataConnection(context, o => o.UseMappingSchema(_lambdaFilterSchema)))
+			{
+				db.AddInterceptor(interceptor);
+
+				var count = SeveralReferences(db, join)
+					.ToArray()
+					.Length;
+
+				if (count != (join ? limit * (limit + 1) / 2 : limit * 2))
+					wrongRows++;
+			}
+
+			return new WeakReference(interceptor);
 		}
 
 		sealed class LimitConnection(DataOptions options, int limit) : DataConnection(options)
@@ -456,7 +678,10 @@ namespace Tests.Linq
 			.MappingSchema;
 
 		static readonly Func<DataConnection, IQueryable<CacheItem>> _compiledTable  = CompiledQuery.Compile((DataConnection db) => db.GetTable<CacheItem>());
-		static readonly Func<DataConnection, int>                   _compiledCount  = CompiledQuery.Compile((DataConnection db) => db.GetTable<CacheItem>().Count());
+
+		static readonly Func<DataConnection, int>                   _compiledCount  = CompiledQuery.Compile((DataConnection db) => db
+			.GetTable<CacheItem>()
+			.Count());
 
 		// A compiled query must not reuse the filter value of the context it was first built for.
 		[Test, QueryCacheTest]
@@ -465,30 +690,48 @@ namespace Tests.Linq
 			Query.ClearCaches();
 
 			using var setup = GetDataConnection(context, o => o.UseMappingSchema(_lambdaFilterSchema));
-			using var t     = setup.CreateLocalTable(Enumerable.Range(1, 4).Select(i => new CacheItem { Id = i }));
+			using var t     = setup.CreateLocalTable(Items(4));
 
-			using var a = GetDataConnection(context, o => o.UseMappingSchema(_lambdaFilterSchema).UseInterceptor(new LimitFilterInterceptor(2)));
-			using var b = GetDataConnection(context, o => o.UseMappingSchema(_lambdaFilterSchema).UseInterceptor(new LimitFilterInterceptor(3)));
+			using var a = Connect(context, _lambdaFilterSchema, new LimitFilterInterceptor(2));
+			using var b = Connect(context, _lambdaFilterSchema, new LimitFilterInterceptor(3));
 
 			using (Assert.EnterMultipleScope())
 			{
 				if (count)
 				{
-					_compiledCount(a).ShouldBe(2, "context A");
-					_compiledCount(b).ShouldBe(3, "context B");
-					_compiledCount(a).ShouldBe(2, "context A again");
+					_compiledCount(a)
+						.ShouldBe(2, "context A");
+
+					_compiledCount(b)
+						.ShouldBe(3, "context B");
+
+					_compiledCount(a)
+						.ShouldBe(2, "context A again");
 				}
 				else
 				{
 					var queryA = _compiledTable(a);
 					var queryB = _compiledTable(b);
 
-					queryA.ToArray().Length.ShouldBe(2, "context A");
-					queryB.ToArray().Length.ShouldBe(3, "context B");
-					_compiledTable(a).ToArray().Length.ShouldBe(2, "context A again");
+					queryA
+						.ToArray()
+						.Length
+						.ShouldBe(2, "context A");
+
+					queryB
+						.ToArray()
+						.Length
+						.ShouldBe(3, "context B");
+
+					_compiledTable(a)
+						.ToArray()
+						.Length
+						.ShouldBe(2, "context A again");
 
 					// the contexts differ only by a value: they share one built query
-					queryB.GetCompiledQueryInfo().ShouldBeSameAs(queryA.GetCompiledQueryInfo());
+					queryB
+						.GetCompiledQueryInfo()
+						.ShouldBeSameAs(queryA.GetCompiledQueryInfo());
 				}
 			}
 		}
@@ -500,9 +743,11 @@ namespace Tests.Linq
 			Query.ClearCaches();
 
 			using var setup = GetDataConnection(context, o => o.UseMappingSchema(_contextFuncFilterSchema));
-			using var t     = setup.CreateLocalTable(Enumerable.Range(1, 4).Select(i => new CacheItem { Id = i }));
+			using var t     = setup.CreateLocalTable(Items(4));
 
-			var options = new DataOptions().UseConfiguration(context).UseMappingSchema(_contextFuncFilterSchema);
+			var options = new DataOptions()
+				.UseConfiguration(context)
+				.UseMappingSchema(_contextFuncFilterSchema);
 
 			using var a = new LimitConnection(options, 2);
 			using var b = new LimitConnection(options, 3);
@@ -511,13 +756,23 @@ namespace Tests.Linq
 			{
 				if (count)
 				{
-					_compiledCount(a).ShouldBe(2, "context A");
-					_compiledCount(b).ShouldBe(3, "context B");
+					_compiledCount(a)
+						.ShouldBe(2, "context A");
+
+					_compiledCount(b)
+						.ShouldBe(3, "context B");
 				}
 				else
 				{
-					_compiledTable(a).ToArray().Length.ShouldBe(2, "context A");
-					_compiledTable(b).ToArray().Length.ShouldBe(3, "context B");
+					_compiledTable(a)
+						.ToArray()
+						.Length
+						.ShouldBe(2, "context A");
+
+					_compiledTable(b)
+						.ToArray()
+						.Length
+						.ShouldBe(3, "context B");
 				}
 			}
 		}
@@ -531,66 +786,82 @@ namespace Tests.Linq
 		// An interceptor added inside a UseOptions / UseMappingSchema scope stays registered after the scope ends.
 		[Test, QueryCacheTest]
 		public void AddInterceptorInsideScope(
-			[IncludeDataSources(ProviderName.SQLiteMS)] string context,
-			[Values]                                    Scope  scope,
-			[Values]                                    bool   viaDataContext,
-			[Values]                                    bool   queryInsideScope)
+			[IncludeDataSources(true, ProviderName.SQLiteMS)] string context,
+			[Values]                                          Scope  scope,
+			[Values]                                          bool   viaDataContext,
+			[Values]                                          bool   queryInsideScope)
 		{
 			var ms = _lambdaFilterSchema;
 
 			Query.ClearCaches();
 
-			using var setup = GetDataConnection(context, o => o.UseMappingSchema(ms));
-			using var table = setup.CreateLocalTable(Enumerable.Range(1, 4).Select(i => new CacheItem { Id = i }));
+			using var setup = GetDataContext(context, o => o.UseMappingSchema(ms));
+			using var table = setup.CreateLocalTable(Items(4));
+			using var db    = CreateContext(context, ms, viaDataContext);
 
-			using IDataContext db = viaDataContext
-				? new DataContext(new DataOptions().UseConfiguration(context).UseMappingSchema(ms))
-				: GetDataConnection(context, o => o.UseMappingSchema(ms));
+			Run(db)
+				.ShouldBe([1, 2, 3, 4]);
 
-			Run(db).ShouldBe([1, 2, 3, 4]);
+			IDisposable? scopeHandle;
 
-			using (scope == Scope.UseOptions
-				? db.UseOptions(o => o.UseCommandTimeout(17))
-				: db.UseMappingSchema(new MappingSchema()))
+			if (scope == Scope.UseOptions)
+				scopeHandle = db.UseOptions(o => o.UseCommandTimeout(17));
+			else
+				scopeHandle = db.UseMappingSchema(new MappingSchema());
+
+			using (scopeHandle)
 			{
 				db.AddInterceptor(new LimitFilterInterceptor(2));
 
 				if (queryInsideScope)
-					Run(db).ShouldBe([1, 2], "inside scope");
+				{
+					Run(db)
+						.ShouldBe([1, 2], "inside scope");
+				}
 			}
 
-			Run(db).ShouldBe([1, 2], "after scope");
+			Run(db)
+				.ShouldBe([1, 2], "after scope");
 		}
 
 		// An IQueryable executed again after AddInterceptor must not reuse the query it cached for itself.
 		[Test, QueryCacheTest]
 		public void ReuseQueryableAfterAddInterceptor(
-			[IncludeDataSources(ProviderName.SQLiteMS)] string context,
-			[Values(Kind.Query, Kind.ExposedQuery, Kind.QueryFilterLambda)] Kind kind,
-			[Values]                                    bool   viaDataContext)
+			[IncludeDataSources(true, ProviderName.SQLiteMS)]                string context,
+			[Values(Kind.Query, Kind.ExposedQuery, Kind.QueryFilterLambda)] Kind   kind,
+			[Values]                                                        bool   viaDataContext)
 		{
 			var ms = kind == Kind.QueryFilterLambda ? _lambdaFilterSchema : _noFilterSchema;
 
 			Query.ClearCaches();
 
-			using var setup = GetDataConnection(context, o => o.UseMappingSchema(ms));
-			using var table = setup.CreateLocalTable(Enumerable.Range(1, 4).Select(i => new CacheItem { Id = i }));
-
-			using IDataContext db = viaDataContext
-				? new DataContext(new DataOptions().UseConfiguration(context).UseMappingSchema(ms))
-				: GetDataConnection(context, o => o.UseMappingSchema(ms));
+			using var setup = GetDataContext(context, o => o.UseMappingSchema(ms));
+			using var table = setup.CreateLocalTable(Items(4));
+			using var db    = CreateContext(context, ms, viaDataContext);
 
 			var interceptor = new FilterInterceptor(ToArgsKind(kind), Mode.Le2);
 			var query       = db.GetTable<CacheItem>();
 
-			query.ToArray().Length.ShouldBe(4);
+			query
+				.ToArray()
+				.Length
+				.ShouldBe(4);
 
 			db.AddInterceptor(interceptor);
-			query.ToArray().Length.ShouldBe(2, "after AddInterceptor");
+
+			query
+				.ToArray()
+				.Length
+				.ShouldBe(2, "after AddInterceptor");
 
 			db.RemoveInterceptor(interceptor);
-			query.ToArray().Length.ShouldBe(4, "after RemoveInterceptor");
+
+			query
+				.ToArray()
+				.Length
+				.ShouldBe(4, "after RemoveInterceptor");
 		}
+
 		sealed class Box(int value)
 		{
 			public int Value => value;
@@ -628,16 +899,20 @@ namespace Tests.Linq
 			Query.ClearCaches();
 
 			using var setup = GetDataConnection(context, o => o.UseMappingSchema(_lambdaFilterSchema));
-			using var t     = setup.CreateLocalTable(Enumerable.Range(1, 4).Select(i => new CacheItem { Id = i }));
+			using var t     = setup.CreateLocalTable(Items(4));
 
-			using var a = GetDataConnection(context, o => o.UseMappingSchema(_lambdaFilterSchema).UseInterceptor(new RangeFilterInterceptor(2, 2)));
-			using var b = GetDataConnection(context, o => o.UseMappingSchema(_lambdaFilterSchema).UseInterceptor(new RangeFilterInterceptor(1, 3)));
+			using var a = Connect(context, _lambdaFilterSchema, new RangeFilterInterceptor(2, 2));
+			using var b = Connect(context, _lambdaFilterSchema, new RangeFilterInterceptor(1, 3));
 
 			int[] RunQuery(DataConnection db)
 			{
 				var query = compiled ? _compiledTable(db) : db.GetTable<CacheItem>();
 
-				return query.ToArray().Select(e => e.Id).OrderBy(i => i).ToArray();
+				return query
+					.ToArray()
+					.Select(e => e.Id)
+					.OrderBy(i => i)
+					.ToArray();
 			}
 
 			int[] resA, resB;
@@ -657,8 +932,12 @@ namespace Tests.Linq
 			{
 				resA.ShouldBe([2], "context A");
 				resB.ShouldBe([1, 2, 3], "context B");
-				_compiledCount(a).ShouldBe(1, "context A, compiled count");
-				_compiledCount(b).ShouldBe(3, "context B, compiled count");
+
+				_compiledCount(a)
+					.ShouldBe(1, "context A, compiled count");
+
+				_compiledCount(b)
+					.ShouldBe(3, "context B, compiled count");
 			}
 		}
 
@@ -674,11 +953,8 @@ namespace Tests.Linq
 			Query.ClearCaches();
 
 			using var setup = GetDataConnection(context, o => o.UseMappingSchema(ms));
-			using var table = setup.CreateLocalTable(Enumerable.Range(1, 4).Select(i => new CacheItem { Id = i }));
-
-			using IDataContext db = viaDataContext
-				? new DataContext(new DataOptions().UseConfiguration(context).UseMappingSchema(ms))
-				: GetDataConnection(context, o => o.UseMappingSchema(ms));
+			using var table = setup.CreateLocalTable(Items(4));
+			using var db    = CreateContext(context, ms, viaDataContext);
 
 			var unchanged = new FilterInterceptor(ToArgsKind(kind), Mode.Unchanged);
 			var limiting  = new FilterInterceptor(ToArgsKind(kind), Mode.Le2);
@@ -687,15 +963,26 @@ namespace Tests.Linq
 
 			var query = db.GetTable<CacheItem>();
 
-			query.ToArray().Length.ShouldBe(4);
+			query
+				.ToArray()
+				.Length
+				.ShouldBe(4);
 
 			db.RemoveInterceptor(unchanged);
 			db.AddInterceptor(limiting);
 
 			using (Assert.EnterMultipleScope())
 			{
-				query.ToArray().Length.ShouldBe(2, "same IQueryable");
-				db.GetTable<CacheItem>().ToArray().Length.ShouldBe(2, "new IQueryable");
+				query
+					.ToArray()
+					.Length
+					.ShouldBe(2, "same IQueryable");
+
+				db
+					.GetTable<CacheItem>()
+					.ToArray()
+					.Length
+					.ShouldBe(2, "new IQueryable");
 			}
 		}
 
@@ -706,20 +993,30 @@ namespace Tests.Linq
 			Query.ClearCaches();
 
 			using var setup = GetDataConnection(context, o => o.UseMappingSchema(_lambdaFilterSchema));
-			using var t     = setup.CreateLocalTable(Enumerable.Range(1, 4).Select(i => new CacheItem { Id = i }));
+			using var t     = setup.CreateLocalTable(Items(4));
 
 			using var db = GetDataConnection(context, o => o.UseMappingSchema(_lambdaFilterSchema));
 
 			var query = _compiledTable(db);
 
-			query.ToArray().Length.ShouldBe(4);
+			query
+				.ToArray()
+				.Length
+				.ShouldBe(4);
 
 			db.AddInterceptor(new LimitFilterInterceptor(3));
 
 			using (Assert.EnterMultipleScope())
 			{
-				query.ToArray().Length.ShouldBe(3, "same IQueryable");
-				_compiledTable(db).ToArray().Length.ShouldBe(3, "new compiled IQueryable");
+				query
+					.ToArray()
+					.Length
+					.ShouldBe(3, "same IQueryable");
+
+				_compiledTable(db)
+					.ToArray()
+					.Length
+					.ShouldBe(3, "new compiled IQueryable");
 			}
 		}
 
@@ -731,13 +1028,16 @@ namespace Tests.Linq
 			Query.ClearCaches();
 
 			using var setup = GetDataConnection(context, o => o.UseMappingSchema(_lambdaFilterSchema));
-			using var t     = setup.CreateLocalTable(Enumerable.Range(1, 4).Select(i => new CacheItem { Id = i }));
+			using var t     = setup.CreateLocalTable(Items(4));
 
-			using var a = GetDataConnection(context, o => o.UseMappingSchema(_lambdaFilterSchema).UseInterceptor(new FilterInterceptor(QueryExpressionArgs.ExpressionKind.QueryFilter, Mode.Le2)));
-			using var b = GetDataConnection(context, o => o.UseMappingSchema(_lambdaFilterSchema).UseInterceptor(new FilterInterceptor(QueryExpressionArgs.ExpressionKind.QueryFilter, Mode.Gt2)));
+			using var a = Connect(context, _lambdaFilterSchema, new FilterInterceptor(QueryExpressionArgs.ExpressionKind.QueryFilter, Mode.Le2));
+			using var b = Connect(context, _lambdaFilterSchema, new FilterInterceptor(QueryExpressionArgs.ExpressionKind.QueryFilter, Mode.Gt2));
 
-			var infoA = _compiledTable(a).GetCompiledQueryInfo();
-			var infoB = _compiledTable(b).GetCompiledQueryInfo();
+			var infoA = _compiledTable(a)
+				.GetCompiledQueryInfo();
+
+			var infoB = _compiledTable(b)
+				.GetCompiledQueryInfo();
 
 			infoA.ShouldNotBeSameAs(infoB);
 
@@ -748,13 +1048,31 @@ namespace Tests.Linq
 
 				using (Assert.EnterMultipleScope())
 				{
-					queryA.GetCompiledQueryInfo().ShouldBeSameAs(infoA, $"A, round {i}");
-					queryB.GetCompiledQueryInfo().ShouldBeSameAs(infoB, $"B, round {i}");
-					queryA.ToArray().Select(e => e.Id).OrderBy(id => id).ToArray().ShouldBe([1, 2], $"A, round {i}");
-					queryB.ToArray().Select(e => e.Id).OrderBy(id => id).ToArray().ShouldBe([3, 4], $"B, round {i}");
+					queryA
+						.GetCompiledQueryInfo()
+						.ShouldBeSameAs(infoA, $"A, round {i}");
+
+					queryB
+						.GetCompiledQueryInfo()
+						.ShouldBeSameAs(infoB, $"B, round {i}");
+
+					queryA
+						.ToArray()
+						.Select(e => e.Id)
+						.OrderBy(id => id)
+						.ToArray()
+						.ShouldBe([1, 2], $"A, round {i}");
+
+					queryB
+						.ToArray()
+						.Select(e => e.Id)
+						.OrderBy(id => id)
+						.ToArray()
+						.ShouldBe([3, 4], $"B, round {i}");
 				}
 			}
 		}
+
 		// An IQueryable executed again after RemoveInterceptor, with the query cache disabled.
 		[Test, QueryCacheTest]
 		public void ReuseQueryableWithQueryCacheDisabled(
@@ -767,11 +1085,16 @@ namespace Tests.Linq
 			Query.ClearCaches();
 
 			using var setup = GetDataConnection(context, o => o.UseMappingSchema(ms));
-			using var table = setup.CreateLocalTable(Enumerable.Range(1, 4).Select(i => new CacheItem { Id = i }));
+			using var table = setup.CreateLocalTable(Items(4));
 
 			using IDataContext db = viaDataContext
-				? new DataContext(new DataOptions().UseConfiguration(context).UseMappingSchema(ms).UseDisableQueryCache(true))
-				: GetDataConnection(context, o => o.UseMappingSchema(ms).UseDisableQueryCache(true));
+				? new DataContext(new DataOptions()
+					.UseConfiguration(context)
+					.UseMappingSchema(ms)
+					.UseDisableQueryCache(true))
+				: GetDataConnection(context, o => o
+					.UseMappingSchema(ms)
+					.UseDisableQueryCache(true));
 
 			var interceptor = new FilterInterceptor(ToArgsKind(kind), Mode.Le2);
 
@@ -779,11 +1102,17 @@ namespace Tests.Linq
 
 			var query = db.GetTable<CacheItem>();
 
-			query.ToArray().Length.ShouldBe(2);
+			query
+				.ToArray()
+				.Length
+				.ShouldBe(2);
 
 			db.RemoveInterceptor(interceptor);
 
-			query.ToArray().Length.ShouldBe(4, "after RemoveInterceptor");
+			query
+				.ToArray()
+				.Length
+				.ShouldBe(4, "after RemoveInterceptor");
 		}
 
 		// Returns its input until Active is set, then adds Where(e => e.Id <= 2) at its stage.
@@ -815,11 +1144,8 @@ namespace Tests.Linq
 			Query.ClearCaches();
 
 			using var setup = GetDataConnection(context, o => o.UseMappingSchema(ms));
-			using var table = setup.CreateLocalTable(Enumerable.Range(1, 4).Select(i => new CacheItem { Id = i }));
-
-			using IDataContext db = viaDataContext
-				? new DataContext(new DataOptions().UseConfiguration(context).UseMappingSchema(ms))
-				: GetDataConnection(context, o => o.UseMappingSchema(ms));
+			using var table = setup.CreateLocalTable(Items(4));
+			using var db    = CreateContext(context, ms, viaDataContext);
 
 			var interceptor = new ToggleInterceptor(ToArgsKind(kind));
 
@@ -827,14 +1153,25 @@ namespace Tests.Linq
 
 			var query = db.GetTable<CacheItem>();
 
-			query.ToArray().Length.ShouldBe(4);
+			query
+				.ToArray()
+				.Length
+				.ShouldBe(4);
 
 			interceptor.Active = true;
 
 			using (Assert.EnterMultipleScope())
 			{
-				query.ToArray().Length.ShouldBe(2, "same IQueryable");
-				db.GetTable<CacheItem>().ToArray().Length.ShouldBe(2, "new IQueryable");
+				query
+					.ToArray()
+					.Length
+					.ShouldBe(2, "same IQueryable");
+
+				db
+					.GetTable<CacheItem>()
+					.ToArray()
+					.Length
+					.ShouldBe(2, "new IQueryable");
 			}
 		}
 
@@ -847,7 +1184,7 @@ namespace Tests.Linq
 			Query.ClearCaches();
 
 			using var setup = GetDataConnection(context, o => o.UseMappingSchema(ms));
-			using var table = setup.CreateLocalTable(Enumerable.Range(1, 4).Select(i => new CacheItem { Id = i }));
+			using var table = setup.CreateLocalTable(Items(4));
 
 			using var db = GetDataConnection(context, o => o.UseMappingSchema(ms));
 
@@ -855,15 +1192,27 @@ namespace Tests.Linq
 
 			var query = db.GetTable<CacheItem>();
 
-			query.ToArray().Length.ShouldBe(4);
+			query
+				.ToArray()
+				.Length
+				.ShouldBe(4);
 
 			var info = query.GetCompiledQueryInfo();
 
-			query.ToArray().Length.ShouldBe(4);
-			query.GetCompiledQueryInfo().ShouldBeSameAs(info);
+			query
+				.ToArray()
+				.Length
+				.ShouldBe(4);
+
+			query
+				.GetCompiledQueryInfo()
+				.ShouldBeSameAs(info);
 		}
+
 		static readonly Func<IDataContext, Type[], IQueryable<CacheItem>> _compiledIgnoreFilters =
-			CompiledQuery.Compile((IDataContext db, Type[] types) => db.GetTable<CacheItem>().IgnoreFilters(types));
+			CompiledQuery.Compile((IDataContext db, Type[] types) => db
+				.GetTable<CacheItem>()
+				.IgnoreFilters(types));
 
 		static readonly MappingSchema _upToTwoFilterSchema = new FluentMappingBuilder(new MappingSchema())
 			.Entity<CacheItem>().HasQueryFilter(e => e.Id <= 2)
@@ -878,7 +1227,7 @@ namespace Tests.Linq
 			Query.ClearCaches();
 
 			using var setup = GetDataConnection(context, o => o.UseMappingSchema(_upToTwoFilterSchema));
-			using var t     = setup.CreateLocalTable(Enumerable.Range(1, 4).Select(i => new CacheItem { Id = i }));
+			using var t     = setup.CreateLocalTable(Items(4));
 
 			using var db = GetDataConnection(context, o => o.UseMappingSchema(_upToTwoFilterSchema));
 
@@ -886,11 +1235,19 @@ namespace Tests.Linq
 			var query = _compiledIgnoreFilters(db, types);
 
 			if (!beforeFirstRun)
-				query.ToArray().Length.ShouldBe(4);
+			{
+				query
+					.ToArray()
+					.Length
+					.ShouldBe(4);
+			}
 
 			types[0] = typeof(string);
 
-			query.ToArray().Length.ShouldBe(2, "after the argument changed");
+			query
+				.ToArray()
+				.Length
+				.ShouldBe(2, "after the argument changed");
 		}
 
 		// Adds Where(e => e.Id <= 2) at its stage once after being armed; records every call.
@@ -898,7 +1255,7 @@ namespace Tests.Linq
 		{
 			readonly FilterInterceptor _filter = new(kind, Mode.Le2);
 
-			public bool                                          Armed { get; set; }
+			public bool                                                                Armed { get; set; }
 			public System.Collections.Generic.List<QueryExpressionArgs.ExpressionKind> Calls { get; } = [];
 
 			public Expression ProcessExpression(Expression expression, QueryExpressionArgs args)
@@ -927,11 +1284,8 @@ namespace Tests.Linq
 			Query.ClearCaches();
 
 			using var setup = GetDataConnection(context, o => o.UseMappingSchema(ms));
-			using var table = setup.CreateLocalTable(Enumerable.Range(1, 4).Select(i => new CacheItem { Id = i }));
-
-			using IDataContext db = viaDataContext
-				? new DataContext(new DataOptions().UseConfiguration(context).UseMappingSchema(ms))
-				: GetDataConnection(context, o => o.UseMappingSchema(ms));
+			using var table = setup.CreateLocalTable(Items(4));
+			using var db    = CreateContext(context, ms, viaDataContext);
 
 			var interceptor = new ArmOnceInterceptor(ToArgsKind(kind));
 
@@ -939,19 +1293,28 @@ namespace Tests.Linq
 
 			var query = db.GetTable<CacheItem>();
 
-			query.ToArray().Length.ShouldBe(4);
+			query
+				.ToArray()
+				.Length
+				.ShouldBe(4);
 
 			interceptor.Armed = true;
 			interceptor.Calls.Clear();
 
-			var rows = (sameQueryable ? query : db.GetTable<CacheItem>()).ToArray().Length;
+			var rows = (sameQueryable ? query : db.GetTable<CacheItem>())
+				.ToArray()
+				.Length;
 
 			using (Assert.EnterMultipleScope())
 			{
 				rows.ShouldBe(2);
-				interceptor.Calls.Count(k => k == ToArgsKind(kind)).ShouldBe(1, string.Join(", ", interceptor.Calls));
+
+				interceptor.Calls
+					.Count(k => k == ToArgsKind(kind))
+					.ShouldBe(1, string.Join(", ", interceptor.Calls));
 			}
 		}
+
 		// IEquatable<T>.Equals deliberately disagrees with the inherited field-wise Equals(object): the query cache must
 		// keep comparing such a value the way it always did.
 #pragma warning disable CA1067 // the test needs IEquatable<T>.Equals and Equals(object) to differ
@@ -990,11 +1353,15 @@ namespace Tests.Linq
 
 			var value = new LooseValue(1);
 
-			db.Select(() => Bake(value)).ShouldBe(1);
+			db
+				.Select(() => Bake(value))
+				.ShouldBe(1);
 
 			value = new LooseValue(11);
 
-			db.Select(() => Bake(value)).ShouldBe(11);
+			db
+				.Select(() => Bake(value))
+				.ShouldBe(11);
 		}
 
 		sealed class SumBuilder : Sql.IExtensionCallBuilder
@@ -1023,20 +1390,27 @@ namespace Tests.Linq
 
 			System.Collections.Immutable.ImmutableArray<int>? values = System.Collections.Immutable.ImmutableArray.Create(1);
 
-			db.Select(() => BakeSum(values)).ShouldBe(1);
+			db
+				.Select(() => BakeSum(values))
+				.ShouldBe(1);
 
 			var misses = Query<int>.CacheMissCount;
 
 			values = System.Collections.Immutable.ImmutableArray.Create(1);
 
-			db.Select(() => BakeSum(values)).ShouldBe(1);
+			db
+				.Select(() => BakeSum(values))
+				.ShouldBe(1);
 
 			Query<int>.CacheMissCount.ShouldBe(misses);
 
 			values = System.Collections.Immutable.ImmutableArray.Create(2, 3);
 
-			db.Select(() => BakeSum(values)).ShouldBe(5);
+			db
+				.Select(() => BakeSum(values))
+				.ShouldBe(5);
 		}
+
 		[Table]
 		sealed class TenantItem
 		{
@@ -1112,12 +1486,6 @@ namespace Tests.Linq
 			.Build()
 			.MappingSchema;
 
-		/// <summary>
-		/// How many queries the cache keeps when every context has its own interceptor instance carrying a tenant id,
-		/// compared with the same filter written by hand. Instances are not part of the cache key: a tenant id read from
-		/// the instance or from a closure becomes a parameter and all tenants share one query; a raw constant is a literal
-		/// in the SQL and every tenant gets its own query, exactly as a literal written into a query by hand.
-		/// </summary>
 		// The entry count is a diagnostics hook of the cache, present only in BUGCHECK builds.
 		static int CountCacheEntries()
 		{
@@ -1128,6 +1496,12 @@ namespace Tests.Linq
 #endif
 		}
 
+		/// <summary>
+		/// How many queries the cache keeps when every context has its own interceptor instance carrying a tenant id,
+		/// compared with the same filter written by hand. Instances are not part of the cache key: a tenant id read from
+		/// the instance or from a closure becomes a parameter and all tenants share one query; a raw constant is a literal
+		/// in the SQL and every tenant gets its own query, exactly as a literal written into a query by hand.
+		/// </summary>
 		[Test, QueryCacheTest]
 		public void TenantFilterCacheEntries(
 			[IncludeDataSources(ProviderName.SQLiteMS)] string      context,
@@ -1139,7 +1513,12 @@ namespace Tests.Linq
 			Query.ClearCaches();
 
 			using var setup = GetDataConnection(context, o => o.UseMappingSchema(_tenantSchema));
-			using var table = setup.CreateLocalTable(Enumerable.Range(1, Tenants).Select(i => new TenantItem { Id = i, TenantId = i }));
+
+			var items = Enumerable
+				.Range(1, Tenants)
+				.Select(i => new TenantItem { Id = i, TenantId = i });
+
+			using var table = setup.CreateLocalTable(items);
 
 			var kind = stage switch
 			{
@@ -1156,9 +1535,11 @@ namespace Tests.Linq
 			{
 				using var db = stage == TenantStage.HandWritten
 					? GetDataConnection(context, o => o.UseMappingSchema(_tenantSchema))
-					: GetDataConnection(context, o => o.UseMappingSchema(_tenantSchema).UseInterceptor(new TenantInterceptor(kind, shape, tenant)));
+					: Connect(context, _tenantSchema, new TenantInterceptor(kind, shape, tenant));
 
-				var query = db.GetTable<TenantItem>().AsQueryable();
+				var query = db
+					.GetTable<TenantItem>()
+					.AsQueryable();
 
 				if (stage == TenantStage.HandWritten)
 					query = query.Provider.CreateQuery<TenantItem>(AddTenantFilter(query.Expression, shape, new TenantOwner(tenant)));
