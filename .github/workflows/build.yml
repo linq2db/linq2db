@@ -45,9 +45,9 @@ env:
   TEST_RETRY_ARGS: --retry-failed-tests 2 --retry-failed-tests-max-tests 5
 
 jobs:
-  # Release build + pack + the two pre-publish package gates. Windows because the solution targets
-  # net462. Nothing is published from here - publishing stays on Azure Pipelines - so the artifacts
-  # exist for inspection and for the LINQPad .lpx.
+  # Release build + pack + the pre-publish package gates. Windows because the solution targets
+  # net462. On a `release` push, publish-nuget pushes this job's `nugets` artifact to nuget.org;
+  # otherwise the artifacts exist for inspection and for the LINQPad .lpx.
   build:
     name: Build and pack
     runs-on: windows-2025
@@ -160,6 +160,62 @@ jobs:
           name: linq2db_linqpad_lpx
           path: .build/lpx
           if-no-files-found: error
+
+  # nuget.org Trusted Publishing: no stored key. The OIDC token is exchanged for a ~1 h API key bound to
+  # the nuget.org policy (repo linq2db/linq2db, workflow build.yml, environment nuget-org). The
+  # environment's `release`-only deployment-branch rule is what stops a PR run that edits this file from
+  # minting a key, since the policy matches the workflow file name, not the ref.
+  #
+  # `needs` mirrors what gated Azure's nuget-job: its build_job also built Examples and ran the analyzer
+  # tests and the single-file smoke test.
+  publish-nuget:
+    name: Publish to nuget.org
+    needs: [build, examples, analyzer-tests, singlefile-smoke]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/release'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    environment: nuget-org
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: nugets
+          path: nugets
+
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          dotnet-version: 10.x
+
+      # The exchange is NuGet/login@v1.2.0's (src/index.ts), inlined because the repository allows only
+      # GitHub-owned actions. NUGET_USER is the nuget.org profile of the policy's creator, not the
+      # package-owning org. --skip-duplicate makes re-running this job the recovery for a partial publish.
+      - name: Push packages
+        shell: pwsh
+        env:
+          NUGET_USER: ${{ vars.NUGET_USER }}
+        run: |
+          if (-not $env:NUGET_USER) { throw 'Repository variable NUGET_USER is not set.' }
+
+          $audience = [uri]::EscapeDataString('https://www.nuget.org')
+          $oidc = Invoke-RestMethod -Uri "$env:ACTIONS_ID_TOKEN_REQUEST_URL&audience=$audience" `
+            -Headers @{ Authorization = "Bearer $env:ACTIONS_ID_TOKEN_REQUEST_TOKEN" }
+          "::add-mask::$($oidc.value)"
+
+          $body = @{ username = $env:NUGET_USER; tokenType = 'ApiKey' } | ConvertTo-Json -Compress
+          $key = (Invoke-RestMethod -Method Post -Uri 'https://www.nuget.org/api/v2/token' -ContentType 'application/json' `
+            -Headers @{ Authorization = "Bearer $($oidc.value)"; 'User-Agent' = 'linq2db-publish' } -Body $body).apiKey
+          if (-not $key) { throw 'Token exchange returned no apiKey.' }
+          "::add-mask::$key"
+
+          $failed = @()
+          foreach ($p in Get-ChildItem nugets -Recurse -Filter *.nupkg -File) {
+            dotnet nuget push $p.FullName --source https://api.nuget.org/v3/index.json --api-key $key --skip-duplicate --timeout 600
+            if ($LASTEXITCODE -ne 0) { $failed += $p.Name }
+          }
+          if ($failed) { "::error::Failed to publish: $($failed -join ', ')"; exit 1 }
 
   # Windows because Examples has net462 projects (Examples/**/*.csproj: net462 and the latest TFM).
   examples:
