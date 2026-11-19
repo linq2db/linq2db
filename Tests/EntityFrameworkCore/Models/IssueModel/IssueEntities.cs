@@ -60,8 +60,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		T Id { get; set; }
 	}
 
-	public interface IIssue4624EntityWithId : IIssue4624EntityWithIdBase<int>
-	{ }
+	public interface IIssue4624EntityWithId : IIssue4624EntityWithIdBase<int>;
 
 	public partial class Issue4624ItemTicketDate
 	{

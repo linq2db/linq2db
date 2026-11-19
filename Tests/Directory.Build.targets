@@ -1,0 +1,11 @@
+<Project>
+	<Import Project="$(MSBuildThisFileDirectory)\..\Directory.Build.targets" />
+
+	<!-- A netfx exe with no explicit platform evaluates as x86, and linq2db.Providers.props picks the x86 IBM drivers from
+	     that, but the SDK's AdjustDefaultPlatformTargetForNetFrameworkExeWithNoNativeCopyLocalItems compiles it AnyCPU
+	     unless some package drags in Microsoft.NETCore.Platforms. Run as 64-bit, the host cannot load those drivers and
+	     NUnit discovers zero tests. Keep the process 32-bit whatever the package graph holds. -->
+	<PropertyGroup Condition=" '$(TargetFramework)' == '$(NetFxTargetFramework)' and '$(OutputType)' == 'Exe' and '$(PlatformTarget)' == 'x86' ">
+		<Prefer32Bit>true</Prefer32Bit>
+	</PropertyGroup>
+</Project>

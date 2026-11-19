@@ -33,7 +33,6 @@
 		<PackageReference Include="Microsoft.AspNetCore.SignalR" />
 
 		<!--vulnerable transient dependencies-->
-		<PackageReference Include="Microsoft.AspNetCore.Server.Kestrel.Core" />
 		<PackageReference Include="Microsoft.AspNetCore.Http.Connections" />
 		<PackageReference Include="Microsoft.AspNetCore.WebUtilities" />
 	</ItemGroup>
@@ -43,6 +42,11 @@
 
 		<PackageReference Include="protobuf-net.Grpc.AspNetCore" />
 		<PackageReference Include="MiniProfiler.Minimal" />
+	</ItemGroup>
+
+	<!-- From net11 that framework supplies it, so the Tests-wide pin is pruned and fails a net11-only restore (NU1510). -->
+	<ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net11.0'))">
+		<PackageReference Remove="System.Security.Cryptography.Pkcs" />
 	</ItemGroup>
 
 </Project>

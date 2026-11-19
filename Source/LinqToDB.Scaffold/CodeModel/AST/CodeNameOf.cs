@@ -12,7 +12,7 @@
 
 		// TODO: makes sense to introduce new marker interface (e.g. INameOfArgument) to limit allowed expressions
 		/// <summary>
-		/// <c>nameof</c> argument.
+		/// <see langword="nameof"/> argument.
 		/// </summary>
 		public ICodeExpression Expression { get; }
 

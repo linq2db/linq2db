@@ -12,11 +12,13 @@ namespace LinqToDB.Internal.DataProvider.Access
 {
 	public sealed class AccessProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly Lock _oledbSyncRoot = new ();
-		private static readonly Lock _odbcSyncRoot  = new ();
+		private static readonly Lock _oledbSyncRoot  = new ();
+		private static readonly Lock _odbcSyncRoot   = new ();
+		private static readonly Lock _libRedSyncRoot = new ();
 
 		private static AccessProviderAdapter? _oledbProvider;
 		private static AccessProviderAdapter? _odbcProvider;
+		private static AccessProviderAdapter? _libRedProvider;
 
 		private AccessProviderAdapter(OleDbProviderAdapter adapter)
 		{
@@ -45,6 +47,16 @@ namespace LinqToDB.Internal.DataProvider.Access
 			GetOdbcDbType = adapter.GetDbType;
 		}
 
+		private AccessProviderAdapter(LibRedProviderAdapter adapter)
+		{
+			ConnectionType     = adapter.ConnectionType;
+			DataReaderType     = adapter.DataReaderType;
+			ParameterType      = adapter.ParameterType;
+			CommandType        = adapter.CommandType;
+			TransactionType    = adapter.TransactionType;
+			_connectionFactory = adapter.CreateConnection;
+		}
+
 		#region IDynamicProviderAdapter
 
 		public Type ConnectionType  { get; }
@@ -70,8 +82,9 @@ namespace LinqToDB.Internal.DataProvider.Access
 		{
 			return provider switch
 			{
-				AccessProvider.ODBC  => GetOdbcAdapter(),
-				AccessProvider.OleDb => GetOledbAdapter(),
+				AccessProvider.ODBC   => GetOdbcAdapter(),
+				AccessProvider.OleDb  => GetOledbAdapter(),
+				AccessProvider.LibRed => GetLibRedAdapter(),
 				_ => throw new InvalidOperationException($"Unsupported provider type: {provider}"),
 			};
 
@@ -95,6 +108,17 @@ namespace LinqToDB.Internal.DataProvider.Access
 				}
 
 				return _oledbProvider;
+			}
+
+			static AccessProviderAdapter GetLibRedAdapter()
+			{
+				if (_libRedProvider == null)
+				{
+					lock (_libRedSyncRoot)
+						_libRedProvider ??= new AccessProviderAdapter(LibRedProviderAdapter.GetInstance());
+				}
+
+				return _libRedProvider;
 			}
 		}
 	}

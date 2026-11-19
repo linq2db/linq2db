@@ -2244,11 +2244,10 @@ namespace Tests.DataProvider
 					intervalDataType2 = TimeSpan.FromDays(3),
 				});
 
-				Assert.DoesNotThrow(
-					() => db.GetTable<Issue1429Table>().Insert(() => new Issue1429Table()
+				db.GetTable<Issue1429Table>().Insert(() => new Issue1429Table()
 					{
 						timeDataType = TimeSpan.FromDays(3)
-					}));
+					});
 			}
 			finally
 			{

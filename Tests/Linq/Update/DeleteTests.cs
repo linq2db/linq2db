@@ -18,7 +18,6 @@ using Tests.Model;
 namespace Tests.xUpdate
 {
 	[TestFixture]
-	[Order(10000)]
 	public class DeleteTests : TestBase
 	{
 		[Test]
@@ -421,7 +420,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void DeleteOrdered([DataSources(
-				TestProvName.AllAccess,
+				TestProvName.AllNativeAccess,
 				TestProvName.AllClickHouse,
 				ProviderName.SqlCe,
 				TestProvName.AllYdb,

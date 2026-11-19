@@ -25,8 +25,6 @@
 		    pinning the current band.-->
 		<PackageReference Include="Microsoft.EntityFrameworkCore" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
-		<!--EF Core SqlServer 11.0.0 needs Pkcs >= 10.0.13, above the Tests-wide vulnerability floor (NU1605)-->
-		<PackageReference Update="System.Security.Cryptography.Pkcs" VersionOverride="$(BandLatest)" />
 	</ItemGroup>
 
 </Project>

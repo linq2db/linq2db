@@ -71,7 +71,7 @@ namespace Tests.Linq
 
 		// Access's two drivers word it differently but share the phrase, and the WCF wrapper carries it too, so
 		// one message-only attribute covers all sixteen Access cases. SqlCe words it its own way.
-		[ActiveIssue(3691, Configuration = TestProvName.AllAccess, ErrorMessage = "Syntax error in field definition.",
+		[ActiveIssue(3691, Configuration = TestProvName.AllNativeAccess, ErrorMessage = "Syntax error in field definition.",
 			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The DDL built from the System.Data.Linq metadata is not valid on Access.")]
 		[ActiveIssue(3691, Configuration = ProviderName.SqlCe, ErrorMessage = "There was an error parsing the query.",
 			Details = "as the Access half.")]

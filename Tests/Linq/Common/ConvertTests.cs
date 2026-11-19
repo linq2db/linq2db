@@ -447,12 +447,12 @@ namespace Tests.Common
 		{
 			var cf = new MappingSchema("1").GetConverter<Enum10,Enum11>()!;
 
-			Assert.Throws<LinqToDBConvertException>(
+			Assert.That(
 				() => cf(Enum10.Value2),
-				"Mapping ambiguity. 'Tests.Common.ConvertTest+Enum10.Value1' can be mapped to either 'Tests.Common.ConvertTest+Enum11.Value2' or 'Tests.Common.ConvertTest+Enum11.Value3'.");
-			Assert.Throws<LinqToDBConvertException>(
+				Throws.TypeOf<LinqToDBConvertException>().With.Message.EqualTo("Mapping ambiguity. 'Tests.Common.ConvertTests+Enum10.Value1' can be mapped to either 'Tests.Common.ConvertTests+Enum11.Value2' or 'Tests.Common.ConvertTests+Enum11.Value3'."));
+			Assert.That(
 				() => cf(Enum10.Value1),
-				"Mapping ambiguity. 'Tests.Common.ConvertTest+Enum10.Value1' can be mapped to either 'Tests.Common.ConvertTest+Enum11.Value2' or 'Tests.Common.ConvertTest+Enum11.Value3'.");
+				Throws.TypeOf<LinqToDBConvertException>().With.Message.EqualTo("Mapping ambiguity. 'Tests.Common.ConvertTests+Enum10.Value1' can be mapped to either 'Tests.Common.ConvertTests+Enum11.Value2' or 'Tests.Common.ConvertTests+Enum11.Value3'."));
 		}
 
 		[Test]
@@ -494,9 +494,9 @@ namespace Tests.Common
 		[Test]
 		public void ConvertToEnum14()
 		{
-			Assert.Throws<LinqToDBConvertException>(
+			Assert.That(
 				() => ConvertTo<Enum13>.From(Enum12.Value2),
-				"Mapping ambiguity. 'Tests.Common.ConvertTest+Enum12.Value2' can be mapped to either 'Tests.Common.ConvertTest+Enum13.Value1' or 'Tests.Common.ConvertTest+Enum13.Value3'.");
+				Throws.TypeOf<LinqToDBConvertException>().With.Message.EqualTo("Mapping ambiguity. 'Tests.Common.ConvertTests+Enum12.Value2' can be mapped to either 'Tests.Common.ConvertTests+Enum13.Value1' or 'Tests.Common.ConvertTests+Enum13.Value3'."));
 		}
 
 		enum Enum14

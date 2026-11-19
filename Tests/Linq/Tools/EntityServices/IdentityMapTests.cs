@@ -97,7 +97,7 @@ namespace Tests.Tools.EntityServices
 		{
 			using var db = new DataConnection();
 			using var map = new IdentityMap(db);
-			Assert.Throws<LinqToDBConvertException>(() => map.GetEntity<Person>(new { ID1 = 1 }));
+			Assert.That(() => map.GetEntity<Person>(new { ID1 = 1 }), Throws.TypeOf<LinqToDBConvertException>());
 		}
 
 		[Test]
