@@ -34,6 +34,8 @@ namespace LinqToDB.Internal.Remote
 			SetConvertExpression<DateTimeOffset, string>(value => $"{value.Ticks.ToString(CultureInfo.InvariantCulture)}:{value.Offset.Ticks.ToString(CultureInfo.InvariantCulture)}");
 #if SUPPORTS_DATEONLY
 			SetConvertExpression<DateOnly      , string>(value => value.DayNumber.ToString(CultureInfo.InvariantCulture));
+			// the round-trip form keeps every tick and is what TimeOnly.Parse on an older peer reads
+			SetConvertExpression<TimeOnly      , string>(value => value.ToString("O", CultureInfo.InvariantCulture));
 #endif
 			SetConvertExpression<Guid          , string>(value => value.ToString("N"));
 			SetConvertExpression<TimeSpan      , string>(value => value.Ticks.ToString(CultureInfo.InvariantCulture));
@@ -61,6 +63,7 @@ namespace LinqToDB.Internal.Remote
 			SetConvertExpression<string, DateTimeOffset>(value => StringToDateTimeOffset(value));
 #if SUPPORTS_DATEONLY
 			SetConvertExpression<string, DateOnly      >(value => DateOnly.FromDayNumber(int.Parse(value, CultureInfo.InvariantCulture)));
+			SetConvertExpression<string, TimeOnly      >(value => TimeOnly.Parse(value, CultureInfo.InvariantCulture));
 #endif
 			SetConvertExpression<string, Guid          >(value => Guid.Parse(value));
 			SetConvertExpression<string, TimeSpan      >(value => TimeSpan.FromTicks(long.Parse(value, CultureInfo.InvariantCulture)));
