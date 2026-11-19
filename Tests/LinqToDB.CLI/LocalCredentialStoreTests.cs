@@ -64,6 +64,34 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public void StoreOverAnExistingRecordReplacesIt()
+		{
+			CreateStore()
+				.TryStore("Project-A/Prod", "u1", "p1", out var error)
+				.ShouldBeTrue(error);
+
+			// A new instance reads the file again; the second name differs only in case, so it is the same record.
+			CreateStore()
+				.TryStore("project-a/prod", "u2", "p2", out error)
+				.ShouldBeTrue(error);
+
+			var reader = CreateStore();
+
+			reader
+				.TryRead("linq2db/project-a/prod", out var user, out var password, out error)
+				.ShouldBeTrue(error);
+
+			user.    ShouldBe("u2");
+			password.ShouldBe("p2");
+
+			reader
+				.TryGetCount(out var count, out error)
+				.ShouldBeTrue(error);
+
+			count.ShouldBe(1);
+		}
+
+		[Test]
 		public void RoundTrip()
 		{
 			var store = CreateStore();
