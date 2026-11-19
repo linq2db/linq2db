@@ -277,10 +277,13 @@ TempItem  = OutputInto
 // literal, a variable, another #name, a closing bracket) it would be an alias, and it is refused. A
 // name that starts with @ is refused after AS.
 // The server compares the target with an alias, a table or a common table expression under the
-// database collation, which ignores some characters (U+0640, U+FEFF, …) and folds others (U+FF03 to #).
-// So a quoted name must begin with a character that every collation weighs and that equals neither
-// # nor @: an ASCII letter, a digit, _ or $. And a name may not run into a following # or @, which
-// the server reads as part of it (U+0640 and @v make one name there, equal to @v).
+// database collation, which ignores some characters (U+0640, U+FEFF, control characters, …) and folds
+// others (U+FF03 to #). It also reads more characters into a name than the guard's lexing does. So
+// outside string literals and comments these scripts are ASCII only (ReadOnlySqlGuard checks that once
+// a script is accepted here), and a quoted name must begin with a character that every collation
+// weighs and that equals neither # nor @: an ASCII letter, a digit, _ or $. An ASCII name that runs
+// into a # or @ (x#t, x@v) is one name to the server, and its first character keeps it apart from the
+// target.
 // The two alternatives of TempPiece begin with different characters, and TempLeaf commits: a choice
 // left open at every level of brackets would make deep nesting cost the square of its depth.
 TempPiece = TempGroup & ?!'#'
@@ -289,7 +292,7 @@ TempPiece = TempGroup & ?!'#'
 TempLeaf  = { "as"i & ?!['#' | '@']
             | TempStop
             | "top"i & (Lex.Number | Variable | TempGroup) & "percent"i? & ("with"i & "ties"i)?
-            | ?!"as"i ~ { TempClosed } ~ ?!['#' | '@'] & ?!'#'
+            | ?!"as"i ~ { TempClosed } & ?!'#'
             | ?!'}' ~ Sym }
 TempGroup = '(' & { (TempPiece & "")* } & ')'
 

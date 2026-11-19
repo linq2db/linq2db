@@ -39,8 +39,8 @@ namespace Tests.LinqToDB.CLI
 		{
 			return dialect switch
 			{
-				TSql     => ReadOnlySqlGrammar.TryCheckTSql    (sql, out _),
-				Ase      => ReadOnlySqlGrammar.TryCheckAse     (sql, out _),
+				TSql     => TempScriptAscii(ReadOnlySqlGrammar.TryCheckTSql(sql, out var writesTSql), writesTSql, sql),
+				Ase      => TempScriptAscii(ReadOnlySqlGrammar.TryCheckAse (sql, out var writesAse),  writesAse,  sql),
 				Bracket  => ReadOnlySqlGrammar.TryCheckBracket (sql, out _),
 				MySql    => ReadOnlySqlGrammar.TryCheckMySql   (sql, out _),
 				Ydb      => ReadOnlySqlGrammar.TryCheckYdb     (sql, out _),
@@ -48,6 +48,12 @@ namespace Tests.LinqToDB.CLI
 				Standard => ReadOnlySqlGrammar.TryCheckStandard(sql, out _),
 				_        => throw new ArgumentOutOfRangeException(nameof(dialect)),
 			};
+		}
+
+		// The guard reads a script that writes temporary tables as ASCII only outside string literals and comments.
+		static bool TempScriptAscii(bool accepted, bool writesTemporaryTables, string sql)
+		{
+			return accepted && (!writesTemporaryTables || ReadOnlySqlGuard.FindNonAsciiCode(sql) < 0);
 		}
 
 		static bool Single(string dialect, string sql)
@@ -673,6 +679,9 @@ namespace Tests.LinqToDB.CLI
 
 			accepted.ShouldBeTrue($"{dialect}: {sql}");
 
+			if (writes)
+				ReadOnlySqlGuard.FindNonAsciiCode(sql).ShouldBe(-1, $"{dialect}: {sql}");
+
 			return writes;
 		}
 
@@ -705,7 +714,9 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("INSERT INTO #t\n(\n\t[Id],\n\t[Name]\n)\nSELECT\n\t[t1].[PersonID],\n\t[t1].[FirstName]\nFROM\n\t[dbo].[Person] [t1]\n\t\tINNER JOIN [Doctor] [d] ON [d].[PersonID] = [t1].[PersonID]\nSELECT [t1].[Id] FROM #t [t1]")]
 		[TestCase("select x.[a] as [x], \"b\" as \"Total Count\", [_y$1] into #t from dbo.t as [x]\nupdate #t set a = 1 from #t join dbo.u [t1] on [t1].a = #t.a\nselect * from #t")]
 		[TestCase("select a into #t from dbo.[output]\nupdate #t set a = 1 from #t join (dbo.output o join #u v on 1 = 1) on 1 = 1\nselect * from #t")]
-		[TestCase("select \u0418\u043C\u044F, [t1].a into #t from t [t1]\nselect * from #t")]
+		// Outside ASCII only inside string literals and comments, which the server never reads as names.
+		[TestCase("select a into #t from t where b = N'\u0418\u043C\u044F \uFF03t' -- \u0418\u043C\u044F \u0640#t\nselect * from #t /* \u3007#t /* \u200D */ \uFEFF */")]
+		[TestCase("select a, 'it''s \uFF03t' b into #t from t\nupdate #t set a = 1 from #t where b like N'%\u3007%'\nselect * from #t")]
 		public void TempScriptsAccepted(string sql)
 		{
 			using (Assert.EnterMultipleScope())
@@ -800,8 +811,8 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("select a into #t from t\nupdate #t set a = 1 from t with ties #t\nselect * from #t")]
 		[TestCase("select a into #t from t\nupdate #t set a = 1 from 1 #t\nselect * from #t")]
 		// The server compares the target with an alias, a table or a CTE under the database collation: U+FF03 and U+FF20
-		// equal # and @, U+FEFF, U+200D and U+0640 are ignored. A quoted name must begin with an ASCII letter, a digit,
-		// _ or $, and a name may not run into a # or @, which the server reads as part of it.
+		// equal # and @, U+FEFF, U+200D and U+0640 are ignored. Outside string literals and comments such a script is ASCII
+		// only, and a quoted name must begin with an ASCII letter, a digit, _ or $.
 		[TestCase("select a into #t from t\nupdate #t set a = 42 from dbo.real [\uFF03t]\nselect * from #t")]
 		[TestCase("select a into #t from t\nupdate #t set a = 42 from dbo.real \"\uFF03t\"\nselect * from #t")]
 		[TestCase("select a into #t from t\nupdate #t set a = 42 from dbo.real as [\uFF03t]\nselect * from #t")]
@@ -816,6 +827,16 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("with [\uFF03t] as (select a from dbo.real) update #t set a = 42\nselect 1")]
 		[TestCase("select a into #t from t\nupdate #t set a = 42 from dbo.real [ t1]\nselect * from #t")]
 		[TestCase("select [\u0418\u043C\u044F] into #t from t\nselect * from #t")]
+		[TestCase("select \u0418\u043C\u044F, [t1].a into #t from t [t1]\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t set a = 42 from dbo.real [x\u00E9]\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t set a = 42 from dbo.real \"it's \u00E9\"\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t set a = 42 from dbo.real [it's \u3007]#t\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t set a = 42 from dbo.real r -- x\r\u3007#t\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t set a = 42 from dbo.real r /* x */ \u3007#t\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t set a = 42 from dbo.real \u00A0#t\nselect * from #t")]
+		[TestCase("select a into #t from t\nupdate #t set a = 42 from dbo.real \u007F#t\nselect * from #t")]
+		[TestCase("DECLARE @\u0640p Int\nselect a into #t from t\nselect * from #t")]
+		[TestCase("select a into #t from t\nselect * from #t\ndrop table #\u3007")]
 		[TestCase("declare @v table (a int)\nupdate @v set a = 42 from dbo.real \u0640@v\nselect * from @v")]
 		[TestCase("declare @v table (a int)\nupdate @v set a = 42 from dbo.real as \u0640@v\nselect * from @v")]
 		[TestCase("declare @v table (a int)\nupdate @v set a = 42 from (select a from dbo.real) \u0640@v\nselect * from @v")]
@@ -861,7 +882,8 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		// The server ends a token at every control character and at U+200B, so a #name after one stands where an alias
-		// does. The character is passed as a number: a filtered test run silently skips some cases whose name holds one.
+		// does. U+200B is outside ASCII, so a script that writes temporary tables may not hold it at all. The character is
+		// passed as a number: a filtered test run silently skips some cases whose name holds one.
 		[TestCase(0x00)]
 		[TestCase(0x01)]
 		[TestCase(0x08)]
@@ -875,7 +897,12 @@ namespace Tests.LinqToDB.CLI
 
 			using (Assert.EnterMultipleScope())
 			{
-				WritesTemporaryTables(TSql, $"select a into #t from t\nupdate #t set a = 1 from #t{c}join #u{c}on{c}#u.a = #t.a\nselect * from #t").ShouldBeTrue();
+				var separated = $"select a into #t from t\nupdate #t set a = 1 from #t{c}join #u{c}on{c}#u.a = #t.a\nselect * from #t";
+
+				if (code < 0x80)
+					WritesTemporaryTables(TSql, separated).ShouldBeTrue();
+				else
+					Query(TSql, separated).ShouldBeFalse();
 
 				foreach (var dialect in new[] { TSql, Ase })
 				{
@@ -884,6 +911,101 @@ namespace Tests.LinqToDB.CLI
 					Query(dialect, $"declare @v table (a int)\nupdate @v set a = 42 from dbo.real{c}\u0640@v\nselect * from @v").ShouldBeFalse(dialect);
 				}
 			}
+		}
+
+		// SQL Server reads format characters (Cf), letter numbers (Nl) and Ethiopic digits (No) into a name, and the
+		// default collations ignore them: after U+0640 (an ignorable letter) or on their own they make an alias equal to
+		// #t or @v, and the statement writes the permanent table. Each of these wrote dbo.real live through the CLI. The
+		// script is refused at the character, whatever its class. Code points are numbers, so a filtered run keeps them.
+		[TestCase(0x200D)] // ZERO WIDTH JOINER
+		[TestCase(0x200E)] // LEFT-TO-RIGHT MARK
+		[TestCase(0x200F)] // RIGHT-TO-LEFT MARK
+		[TestCase(0xFEFF)] // ZERO WIDTH NO-BREAK SPACE
+		[TestCase(0x2060)] // WORD JOINER
+		[TestCase(0x1369)] // ETHIOPIC DIGIT ONE
+		[TestCase(0x180E)] // MONGOLIAN VOWEL SEPARATOR
+		[TestCase(0x202E)] // RIGHT-TO-LEFT OVERRIDE
+		[TestCase(0x06DD)] // ARABIC END OF AYAH
+		[TestCase(0xFFF9)] // INTERLINEAR ANNOTATION ANCHOR
+		public void TempScriptIgnorableInsideAliasRefused(int code)
+		{
+			var x = "\u0640" + (char)code;
+
+			AssertTempScriptRefusedAt(code, $"select a into #t from dbo.real\nupdate #t set a = 42 from dbo.real {x}#t\nselect a from #t",     x);
+			AssertTempScriptRefusedAt(code, $"select a into #t from dbo.real\ndelete #t from dbo.real as {x}#t\nselect a from #t",         x);
+			AssertTempScriptRefusedAt(code, $"declare @v table (a int)\nupdate @v set a = 42 from dbo.real {x}@v\nselect a from @v",       x);
+			AssertTempScriptRefusedAt(code, $"select a into #t from dbo.real\nupdate #t set a = 42 from dbo.real {(char)code}#t\nselect a from #t", ((char)code).ToString());
+		}
+
+		[TestCase(0x3007)] // IDEOGRAPHIC NUMBER ZERO
+		[TestCase(0x3038)] // HANGZHOU NUMERAL TEN
+		[TestCase(0x16EE)] // RUNIC ARLAUG SYMBOL
+		public void TempScriptLetterNumberAliasRefused(int code)
+		{
+			var x = ((char)code).ToString();
+
+			AssertTempScriptRefusedAt(code, $"select a into #t from dbo.real\nupdate #t set a = 42 from dbo.real {x}#t\nselect a from #t", x);
+			AssertTempScriptRefusedAt(code, $"select a into #t from dbo.real\ndelete #t from dbo.real {x}#t\nselect a from #t",         x);
+			AssertTempScriptRefusedAt(code, $"declare @v table (a int)\nupdate @v set a = 42 from dbo.real {x}@v\nselect a from @v",   x);
+		}
+
+		static void AssertTempScriptRefusedAt(int code, string sql, string first)
+		{
+			var position = sql.IndexOf(first, StringComparison.Ordinal);
+			var label    = code.ToString("X4", System.Globalization.CultureInfo.InvariantCulture);
+
+			using (Assert.EnterMultipleScope())
+			{
+				foreach (var provider in new[] { "SqlServer.2022", "Sybase.Managed" })
+				{
+					var result = ReadOnlySqlGuard.Validate(provider, sql);
+
+					result.IsAllowed.ShouldBeFalse($"{provider} {label}");
+
+					// The grammar may refuse such a text first (a #name after a symbol it reads); once it accepts the
+					// script, the refusal names the first non-ASCII character.
+					if (result.Error!.Contains("non-ASCII", StringComparison.Ordinal))
+						result.Error.ShouldContain($"at 2:{position - sql.IndexOf('\n', StringComparison.Ordinal)}.", customMessage: $"{provider} {label}");
+				}
+
+				ReadOnlySqlGuard.FindNonAsciiCode(sql).ShouldBe(position, label);
+			}
+		}
+
+		// A plain query, which writes no temporary table, keeps reading names outside ASCII; so do other providers.
+		[TestCase("select \u0418\u043C\u044F, [\u0421\u0443\u043C\u043C\u0430], \"\u00E9\" from dbo.\u0417\u0430\u043A\u0430\u0437\u044B \u0437")]
+		[TestCase("select a from dbo.real \u3007")]
+		[TestCase("select #t.a from #t \u0640\u200D join dbo.real r on 1 = 1")]
+		public void PlainQueriesKeepNonAsciiNames(string sql)
+		{
+			using (Assert.EnterMultipleScope())
+			{
+				foreach (var provider in new[] { "SqlServer.2022", "Sybase.Managed", "SqlCe" })
+				{
+					var result = ReadOnlySqlGuard.Validate(provider, sql);
+
+					result.IsAllowed.ShouldBeTrue($"{provider}: {result.Error}");
+					result.WritesTemporaryTables.ShouldBeFalse(provider);
+				}
+			}
+		}
+
+		// The server's reading of literals and comments: '' inside a string, -- to the end of the line, nested /* */,
+		// and quoted names, whose content is code.
+		[TestCase("select 'it''s \u00E9' a into #t", -1)]
+		[TestCase("select N'\u00E9' a into #t -- \u00E9", -1)]
+		[TestCase("select 1 a into #t /* \u00E9 /* \u00E9 */ \u00E9 */", -1)]
+		[TestCase("select 1 a into #t /* \u00E9 /* */ */ \u00E9", 33)]
+		[TestCase("select 1 [it's \u00E9] into #t -- '", 15)]
+		[TestCase("select 1 [a]]\u00E9] into #t", 13)]
+		[TestCase("select 1 \"a\"\"\u00E9\" into #t", 13)]
+		[TestCase("select 1 a into #t -- x\r\u00E9", 24)]
+		[TestCase("select 1 a into #t\u0001\t\u007E", -1)]
+		[TestCase("select 1 a into #t\u007F", 18)]
+		[TestCase("select 'open \u00E9", -1)]
+		public void NonAsciiCodeIsFoundOutsideLiteralsAndComments(string sql, int expected)
+		{
+			ReadOnlySqlGuard.FindNonAsciiCode(sql).ShouldBe(expected);
 		}
 
 		[Test]
@@ -1068,7 +1190,9 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("SqlServer",        "update #t set a = 1 from t #t\nselect 1", "Only SELECT queries are allowed: unexpected '#t' at 1:28. In a script that writes temporary tables, a name that starts with # may not stand where an alias does.")]
 		[TestCase("SqlServer",        "create table ##g (a int)\nselect 1",     "Query is not read-only: statement word CREATE at 1:1.")]
 		[TestCase("SqlServer",        "select a into #t from t\nupdate #t set a = 1 from t [\uFF03t]\nselect 1", "Only SELECT queries are allowed: unexpected '[\uFF03t]' at 2:28. In a script that writes temporary tables, a quoted name must begin with an ASCII letter, a digit, _ or $.")]
-		[TestCase("SqlServer",        "declare @v table (a int)\nupdate @v set a = 1 from t \u0640@v\nselect 1", "Only SELECT queries are allowed: unexpected '@' at 2:29. In a script that writes temporary tables, a name may not run into a following @.")]
+		[TestCase("SqlServer",        "declare @v table (a int)\nupdate @v set a = 1 from t \u0640@v\nselect 1", "Only SELECT queries are allowed: character U+0640 at 2:28. A script that writes temporary tables accepts non-ASCII characters only inside string literals ('...', N'...') and comments; names, quoted names included, must be ASCII.")]
+		[TestCase("Sybase.Managed",   "select a into #t from t\nupdate #t set a = 1 from t \u3007#t\nselect 1",   "Only SELECT queries are allowed: character U+3007 at 2:28. A script that writes temporary tables accepts")]
+		[TestCase("SqlServer",        "select a into #t from t -- \U0001F600\nselect [\U0001F600] from #t", "Only SELECT queries are allowed: character U+1F600 at 2:9.")]
 		[TestCase("SqlServer",        "select a into #t from t\nupdate #t set a = 1 from t\u200B#t\nselect 1", "Only SELECT queries are allowed: unexpected '#t' at 2:28. In a script that writes temporary tables, a name that starts with # may not stand where an alias does.")]
 		[TestCase("SqlServer",        "exec dbo.DoWork",                        "Query is not read-only: statement word EXEC at 1:1.")]
 		[TestCase("SqlServer",        "select 1 /* open",                       "Query is not valid SQL")]

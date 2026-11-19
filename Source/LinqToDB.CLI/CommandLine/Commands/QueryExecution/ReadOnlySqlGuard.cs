@@ -147,6 +147,14 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			{
 				if (dialect.Check(sql, singleStatement, out var writesTemporaryTables))
 				{
+					if (writesTemporaryTables)
+					{
+						var nonAscii = FindNonAsciiCode(sql);
+
+						if (nonAscii >= 0)
+							return RejectNonAscii(sql, nonAscii);
+					}
+
 					// Execute mode admits any statement, and so any session state.
 					return SqlGuardResult.Accepted(
 						writesTemporaryTables,
@@ -270,11 +278,134 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				// What stops at a #name is a temporary table where an alias stands (UPDATE #t … FROM t #t).
 				_ when text.Length > 1 && text[0] == '#'
 				              => SqlGuardResult.Rejected($"Only SELECT queries are allowed: unexpected '{text}' at {at}. In a script that writes temporary tables, a name that starts with # may not stand where an alias does."),
-				// The server reads a name and an @ right after it as one name, which may equal the target (U+0640 is ignored, so U+0640@v equals @v).
-				_ when text.StartsWith('@') && position > 0 && IsWordChar(sql[position - 1])
-				              => SqlGuardResult.Rejected($"Only SELECT queries are allowed: unexpected '{text}' at {at}. In a script that writes temporary tables, a name may not run into a following @."),
 				_             => SqlGuardResult.Rejected($"Only SELECT queries are allowed: unexpected '{text}' at {at}."),
 			};
+		}
+
+		// SQL Server matches the target of UPDATE/DELETE #t (or @v) against the aliases, table names and common table
+		// expressions of the statement under the database collation. Collations ignore some characters (U+0640, U+200D,
+		// U+FEFF, ...) and fold others (U+FF03 equals #), and the server reads characters into a name that the guard
+		// reads as symbols (U+3007, U+200E, U+1369, ...): such a name can equal the target, and the statement writes the
+		// permanent table it aliases. No list of those characters is complete or stable across server versions, so a
+		// script that writes temporary tables is ASCII only outside string literals and comments; quoted names count as
+		// code. The text is read the way the server reads T-SQL: '...' with '' inside, -- to the end of the line, nested
+		// /* */, [...] with ]] inside and "..." with "" inside (a name, or a string under QUOTED_IDENTIFIER OFF).
+		// Returns the position of the first other character, or -1.
+		internal static int FindNonAsciiCode(string sql)
+		{
+			var i = 0;
+
+			while (i < sql.Length)
+			{
+				var c = sql[i];
+
+				if (c == '\'')
+				{
+					i = SkipQuoted(sql, i, '\'');
+				}
+				else if (c == '-' && i + 1 < sql.Length && sql[i + 1] == '-')
+				{
+					while (i < sql.Length && sql[i] is not ('\r' or '\n'))
+						i++;
+				}
+				else if (c == '/' && i + 1 < sql.Length && sql[i + 1] == '*')
+				{
+					i = SkipBlockComment(sql, i);
+				}
+				else if (c is '[' or '"')
+				{
+					var end = SkipQuoted(sql, i, c == '[' ? ']' : '"');
+
+					for (var j = i + 1; j < end; j++)
+					{
+						if (!IsAsciiCode(sql[j]))
+							return j;
+					}
+
+					i = end;
+				}
+				else
+				{
+					if (!IsAsciiCode(c))
+						return i;
+
+					i++;
+				}
+			}
+
+			return -1;
+		}
+
+		// Printable ASCII, and the control characters the grammar reads as space.
+		static bool IsAsciiCode(char c)
+		{
+			return c < 0x7F;
+		}
+
+		// The position after the closing character of a quoted span that starts at the position; a doubled closing
+		// character stands for itself. An unterminated span runs to the end of the text.
+		static int SkipQuoted(string sql, int start, char close)
+		{
+			var i = start + 1;
+
+			while (i < sql.Length)
+			{
+				if (sql[i] == close)
+				{
+					if (i + 1 < sql.Length && sql[i + 1] == close)
+					{
+						i += 2;
+						continue;
+					}
+
+					return i + 1;
+				}
+
+				i++;
+			}
+
+			return i;
+		}
+
+		// The position after a block comment that starts at the position; block comments nest, as in the grammar.
+		static int SkipBlockComment(string sql, int start)
+		{
+			var depth = 0;
+			var i     = start;
+
+			while (i < sql.Length)
+			{
+				if (sql[i] == '/' && i + 1 < sql.Length && sql[i + 1] == '*')
+				{
+					depth++;
+					i += 2;
+				}
+				else if (sql[i] == '*' && i + 1 < sql.Length && sql[i + 1] == '/')
+				{
+					depth--;
+					i += 2;
+
+					if (depth == 0)
+						return i;
+				}
+				else
+				{
+					i++;
+				}
+			}
+
+			return i;
+		}
+
+		static SqlGuardResult RejectNonAscii(string sql, int position)
+		{
+			var code = char.IsHighSurrogate(sql[position]) && position + 1 < sql.Length && char.IsLowSurrogate(sql[position + 1])
+				? char.ConvertToUtf32(sql[position], sql[position + 1])
+				: sql[position];
+
+			return SqlGuardResult.Rejected(string.Create(
+				CultureInfo.InvariantCulture,
+				$"Only SELECT queries are allowed: character U+{code:X4} at {Location(sql, position)}. A script that writes temporary tables accepts non-ASCII characters only inside string literals ('...', N'...') and comments; names, quoted names included, must be ASCII."));
 		}
 
 		const int MaxStepsBack     = 3;
