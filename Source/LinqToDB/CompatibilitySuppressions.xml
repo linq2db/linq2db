@@ -947,6 +947,20 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlQuery.SqlBinaryExpression.#ctor(LinqToDB.DbDataType,LinqToDB.Internal.SqlQuery.ISqlExpression,System.String,LinqToDB.Internal.SqlQuery.ISqlExpression,System.Int32)</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlQuery.SqlBinaryExpression.#ctor(System.Type,LinqToDB.Internal.SqlQuery.ISqlExpression,System.String,LinqToDB.Internal.SqlQuery.ISqlExpression,System.Int32)</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.SqlQuery.SqlCteTable.#ctor(LinqToDB.Internal.SqlQuery.SqlCteTable,System.Collections.Generic.IEnumerable{LinqToDB.Internal.SqlQuery.SqlField},LinqToDB.Internal.SqlQuery.CteClause)</Target>
     <Left>lib/net10.0/linq2db.dll</Left>
     <Right>lib/net10.0/linq2db.dll</Right>
@@ -1081,6 +1095,20 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.SqlQuery.SqlSearchCondition.IsTrue</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlQuery.SqlSelectClause.Expr``1(LinqToDB.Internal.SqlQuery.ISqlExpression,System.String,LinqToDB.Internal.SqlQuery.ISqlExpression,System.Int32)</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlQuery.SqlSelectClause.Expr``1(System.String,LinqToDB.Internal.SqlQuery.ISqlExpression,System.String,LinqToDB.Internal.SqlQuery.ISqlExpression,System.Int32)</Target>
     <Left>lib/net10.0/linq2db.dll</Left>
     <Right>lib/net10.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -1955,6 +1983,20 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlQuery.SqlBinaryExpression.#ctor(LinqToDB.DbDataType,LinqToDB.Internal.SqlQuery.ISqlExpression,System.String,LinqToDB.Internal.SqlQuery.ISqlExpression,System.Int32)</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlQuery.SqlBinaryExpression.#ctor(System.Type,LinqToDB.Internal.SqlQuery.ISqlExpression,System.String,LinqToDB.Internal.SqlQuery.ISqlExpression,System.Int32)</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.SqlQuery.SqlCteTable.#ctor(LinqToDB.Internal.SqlQuery.SqlCteTable,System.Collections.Generic.IEnumerable{LinqToDB.Internal.SqlQuery.SqlField},LinqToDB.Internal.SqlQuery.CteClause)</Target>
     <Left>lib/net462/linq2db.dll</Left>
     <Right>lib/net462/linq2db.dll</Right>
@@ -2089,6 +2131,20 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.SqlQuery.SqlSearchCondition.IsTrue</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlQuery.SqlSelectClause.Expr``1(LinqToDB.Internal.SqlQuery.ISqlExpression,System.String,LinqToDB.Internal.SqlQuery.ISqlExpression,System.Int32)</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlQuery.SqlSelectClause.Expr``1(System.String,LinqToDB.Internal.SqlQuery.ISqlExpression,System.String,LinqToDB.Internal.SqlQuery.ISqlExpression,System.Int32)</Target>
     <Left>lib/net462/linq2db.dll</Left>
     <Right>lib/net462/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -2975,6 +3031,20 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlQuery.SqlBinaryExpression.#ctor(LinqToDB.DbDataType,LinqToDB.Internal.SqlQuery.ISqlExpression,System.String,LinqToDB.Internal.SqlQuery.ISqlExpression,System.Int32)</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlQuery.SqlBinaryExpression.#ctor(System.Type,LinqToDB.Internal.SqlQuery.ISqlExpression,System.String,LinqToDB.Internal.SqlQuery.ISqlExpression,System.Int32)</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.SqlQuery.SqlCteTable.#ctor(LinqToDB.Internal.SqlQuery.SqlCteTable,System.Collections.Generic.IEnumerable{LinqToDB.Internal.SqlQuery.SqlField},LinqToDB.Internal.SqlQuery.CteClause)</Target>
     <Left>lib/netstandard2.0/linq2db.dll</Left>
     <Right>lib/netstandard2.0/linq2db.dll</Right>
@@ -3109,6 +3179,20 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.SqlQuery.SqlSearchCondition.IsTrue</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlQuery.SqlSelectClause.Expr``1(LinqToDB.Internal.SqlQuery.ISqlExpression,System.String,LinqToDB.Internal.SqlQuery.ISqlExpression,System.Int32)</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlQuery.SqlSelectClause.Expr``1(System.String,LinqToDB.Internal.SqlQuery.ISqlExpression,System.String,LinqToDB.Internal.SqlQuery.ISqlExpression,System.Int32)</Target>
     <Left>lib/netstandard2.0/linq2db.dll</Left>
     <Right>lib/netstandard2.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
