@@ -48,12 +48,14 @@ namespace Tests.LinqToDB.CLI
 				return 42;
 			});
 
+			var after = GetThreadTokenId();
+
 			using (Assert.EnterMultipleScope())
 			{
 				result.ShouldBe(42);
 				seen.  Count.ShouldBe(3);
 				seen.  ShouldAllBe(id => id == tokenId);
-				GetThreadTokenId().ShouldBeNull();
+				after. ShouldBeNull();
 			}
 		}
 
@@ -71,10 +73,12 @@ namespace Tests.LinqToDB.CLI
 				throw new InvalidOperationException("Expected.");
 			}));
 
+			var after = GetThreadTokenId();
+
 			using (Assert.EnterMultipleScope())
 			{
-				inside.            ShouldBe(tokenId);
-				GetThreadTokenId().ShouldBeNull();
+				inside.ShouldBe(tokenId);
+				after. ShouldBeNull();
 			}
 		}
 
@@ -90,7 +94,8 @@ namespace Tests.LinqToDB.CLI
 				return 0;
 			}));
 
-			GetThreadTokenId().ShouldBeNull();
+			GetThreadTokenId()
+				.ShouldBeNull();
 		}
 
 		[Test]
@@ -130,6 +135,8 @@ namespace Tests.LinqToDB.CLI
 
 			await Task.WhenAll(firstRun, secondRun);
 
+			var after = GetThreadTokenId();
+
 			using (Assert.EnterMultipleScope())
 			{
 				firstTokenId.ShouldNotBe(secondTokenId);
@@ -137,8 +144,22 @@ namespace Tests.LinqToDB.CLI
 				secondSeen.  Count.ShouldBe(3);
 				firstSeen.   ShouldAllBe(id => id == firstTokenId);
 				secondSeen.  ShouldAllBe(id => id == secondTokenId);
-				GetThreadTokenId().ShouldBeNull();
+				after.       ShouldBeNull();
 			}
+		}
+
+		[Test]
+		public void DisposeReleasesTheToken()
+		{
+			// The session owns the logon token; a long-running MCP server would leak one handle per command otherwise.
+			//
+			var session = CreateSession(out _, out var token);
+
+			token.IsClosed.ShouldBeFalse();
+
+			session.Dispose();
+
+			token.IsClosed.ShouldBeTrue();
 		}
 
 		sealed class DisposalProbe(List<long?> seen) : IAsyncDisposable
@@ -152,12 +173,18 @@ namespace Tests.LinqToDB.CLI
 
 		static WindowsImpersonationSession CreateSession(out long tokenId)
 		{
+			return CreateSession(out tokenId, out _);
+		}
+
+		static WindowsImpersonationSession CreateSession(out long tokenId, out SafeAccessTokenHandle token)
+		{
 			using var current = WindowsIdentity.GetCurrent(TokenAccessLevels.Duplicate | TokenAccessLevels.Query);
 
 			if (!DuplicateToken(current.AccessToken, SecurityImpersonation, out var duplicate))
 				throw new Win32Exception(Marshal.GetLastWin32Error());
 
 			tokenId = GetTokenId(duplicate);
+			token   = duplicate;
 
 			return new WindowsImpersonationSession(duplicate);
 		}
