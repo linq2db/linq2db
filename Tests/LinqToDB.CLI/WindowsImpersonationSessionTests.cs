@@ -153,7 +153,7 @@ namespace Tests.LinqToDB.CLI
 		{
 			// The session owns the logon token; a long-running MCP server would leak one handle per command otherwise.
 			//
-			var session = CreateSession(out _, out var token);
+			using var session = CreateSession(out _, out var token);
 
 			token.IsClosed.ShouldBeFalse();
 
