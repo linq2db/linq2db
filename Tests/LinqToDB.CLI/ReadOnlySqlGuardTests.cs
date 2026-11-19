@@ -1024,7 +1024,7 @@ namespace Tests.LinqToDB.CLI
 				}
 
 				ReadOnlySqlGuard.Validate("Sybase.Managed", sql).IsAllowed.ShouldBeFalse();
-				ReadOnlySqlGuard.Validate("Sybase.Managed", sql, serverCharset: "utf8").IsAllowed.ShouldBeTrue();
+				ReadOnlySqlGuard.Validate("Sybase.Managed", sql, serverCharset: "utf8", driverEncoding: "utf-8").IsAllowed.ShouldBeTrue();
 			}
 		}
 
@@ -1125,9 +1125,31 @@ namespace Tests.LinqToDB.CLI
 		{
 			using (Assert.EnterMultipleScope())
 			{
-				ReadOnlySqlGuard.Validate("Sybase.Managed", sql, serverCharset: serverCharset).IsAllowed.ShouldBe(accepted);
-				ReadOnlySqlGuard.ValidateSingleStatement("Sybase.Managed", sql, serverCharset: serverCharset).IsAllowed.ShouldBe(accepted);
-				ReadOnlySqlGuard.Validate("Sybase", sql, serverCharset: serverCharset).IsAllowed.ShouldBe(accepted);   // SAP's driver
+				ReadOnlySqlGuard.Validate("Sybase.Managed", sql, serverCharset: serverCharset, driverEncoding: "utf-8").IsAllowed.ShouldBe(accepted);
+				ReadOnlySqlGuard.ValidateSingleStatement("Sybase.Managed", sql, serverCharset: serverCharset, driverEncoding: "utf-8").IsAllowed.ShouldBe(accepted);
+				ReadOnlySqlGuard.Validate("Sybase", sql, serverCharset: serverCharset, driverEncoding: "utf-8").IsAllowed.ShouldBe(accepted);   // SAP's driver
+			}
+		}
+
+		// The driver fixes its encoder at login. A login script's set char_convert utf8 makes the server report utf8 while
+		// the driver still best-fits into iso_1 (live: the U+2019 and fullwidth probes wrote a table through the CLI). Both
+		// must say UTF-8; a driver the CLI cannot read (SAP's) counts as not UTF-8.
+		[TestCase("utf-8",      true)]
+		[TestCase("iso-8859-1", false)]
+		[TestCase("us-ascii",   false)]
+		[TestCase(null,         false)]
+		public void AseDriverEncoderMustBeUtf8Too(string? driverEncoding, bool accepted)
+		{
+			const string sql = "select 'a\u2019, 1 b update tempdb..wt set a = 7 --' c";
+
+			var result = ReadOnlySqlGuard.Validate("Sybase.Managed", sql, serverCharset: "utf8", driverEncoding: driverEncoding);
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.IsAllowed.ShouldBe(accepted);
+
+				if (!accepted)
+					result.Error!.ShouldContain("The server reports utf8 for this session, but the driver sends the text");
 			}
 		}
 
@@ -1191,7 +1213,7 @@ namespace Tests.LinqToDB.CLI
 		[Test]
 		public void AseUtf8UnpairedSurrogateRefused()
 		{
-			var result = ReadOnlySqlGuard.Validate("Sybase.Managed", "select 'a" + (char)0xD800 + "' a", serverCharset: "utf8");
+			var result = ReadOnlySqlGuard.Validate("Sybase.Managed", "select 'a" + (char)0xD800 + "' a", serverCharset: "utf8", driverEncoding: "utf-8");
 
 			using (Assert.EnterMultipleScope())
 			{
@@ -1362,7 +1384,7 @@ namespace Tests.LinqToDB.CLI
 		{
 			const string template = "Data Source=ase;Port=5000;Database=tempdb;Uid={0};Password={1};Pooling=false";
 
-			var connectionString = global::LinqToDB.CommandLine.Commands.Connection.ConnectionSettingsResolver.FormatCredentials(template, "sa", password, out var error)!;
+			var connectionString = global::LinqToDB.CommandLine.Commands.Connection.ConnectionSettingsResolver.FormatCredentials(template, "sa", password, false, out var error)!;
 
 			using (Assert.EnterMultipleScope())
 			{
@@ -1390,7 +1412,7 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("Uid={0};Password=\"{1}\";", "sa", "p;q",    null)]
 		public void CredentialsThatCannotBeWritten(string template, string user, string password, string? message)
 		{
-			var connectionString = global::LinqToDB.CommandLine.Commands.Connection.ConnectionSettingsResolver.FormatCredentials(template, user, password, out var error);
+			var connectionString = global::LinqToDB.CommandLine.Commands.Connection.ConnectionSettingsResolver.FormatCredentials(template, user, password, false, out var error);
 
 			using (Assert.EnterMultipleScope())
 			{
@@ -1417,9 +1439,79 @@ namespace Tests.LinqToDB.CLI
 		[Test]
 		public void EmptyCredentialStaysEmpty()
 		{
-			global::LinqToDB.CommandLine.Commands.Connection.ConnectionSettingsResolver.FormatCredentials("Uid={0};Password={1};", "sa", "", out var error)
+			global::LinqToDB.CommandLine.Commands.Connection.ConnectionSettingsResolver.FormatCredentials("Uid={0};Password={1};", "sa", "", false, out var error)
 				.ShouldBe("Uid=sa;Password=;");
 			error.ShouldBeNull();
+		}
+
+		// The placeholder must be the whole value of its key: inside a longer value the quotes the CLI adds are not where a
+		// parser looks for them, and the value adds keys (live: a --user logged in as sa with Charset and Application Name
+		// of its own). The same for template quotes that do not enclose it tightly.
+		[TestCase("Data Source=h;Port=5000;Uid=DOMAIN\\{0};Password={1};Database=d")]
+		[TestCase("Data Source=h;Port=5000;Uid=s{0};Password={1};Database=d")]
+		[TestCase("Data Source=h;Port=5000;Uid={0}@srv;Password={1};Database=d")]
+		[TestCase("Data Source=h;Uid={0};Password=pre{1};")]
+		[TestCase("Data Source=h;Uid={0};Password=\" {1}\";")]
+		[TestCase("Data Source=h;Uid={0};Password=\"{1} \";")]
+		[TestCase("Data Source=h;Uid={0};Password=' {1}';")]
+		[TestCase("Data Source=h;Uid={0};Password={{{1}}};")]
+		[TestCase("Data Source=h;Uid={0};{1}=x;")]
+		[TestCase("Data Source=h;Uid={0};Password=a={1};")]
+		[TestCase("Data Source=h;Uid={0};{1}")]
+		[TestCase("Data Source=h;Uid={0:x};Password={1};")]
+		public void PlaceholderMustBeTheWholeValue(string template)
+		{
+			var result = global::LinqToDB.CommandLine.Commands.Connection.ConnectionSettingsResolver.FormatCredentials(template, "x;Charset=iso_1;Z=a", "pw;Application Name=EVIL", false, out var error);
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.ShouldBeNull();
+				error.ShouldNotBeNull();
+			}
+		}
+
+		[TestCase("Uid={0};Password={1};",       "Uid=\"u;x\";Password=\"p;q\";")]
+		[TestCase("Uid = {0} ;Password=\"{1}\";", "Uid = \"u;x\" ;Password=\"p;q\";")]
+		[TestCase("Uid={0};Password='{1}'",      "Uid=\"u;x\";Password='p;q'")]
+		[TestCase("Application Name=\"a;b={{0}}\";Uid={0};Password={1}", "Application Name=\"a;b={0}\";Uid=\"u;x\";Password=\"p;q\"")]
+		public void PlaceholderAsTheWholeValue(string template, string expected)
+		{
+			global::LinqToDB.CommandLine.Commands.Connection.ConnectionSettingsResolver.FormatCredentials(template, "u;x", "p;q", false, out var error)
+				.ShouldBe(expected, error);
+		}
+
+		// ODBC quotes with {...} and doubles a closing brace; " and ' are ordinary characters there, so a template quote
+		// encloses nothing and is refused. System.Data.Odbc's own parser reads each value as one.
+		[TestCase("Driver={{Microsoft Access Driver (*.mdb, *.accdb)}};Dbq=/x.accdb;Uid=admin;Pwd={1};", "a;Dbq=/evil.accdb", "Pwd={a;Dbq=/evil.accdb};")]
+		[TestCase("Driver={{Microsoft Access Driver (*.mdb, *.accdb)}};Dbq=/x.accdb;Uid=admin;Pwd={1};", "{a;Dbq=/evil}",     "Pwd={{a;Dbq=/evil}}};")]
+		[TestCase("Driver={{Microsoft Access Driver (*.mdb, *.accdb)}};Dbq=/x.accdb;Uid=admin;Pwd={1};", "a}b;c",             "Pwd={a}}b;c};")]
+		[TestCase("Driver={{Microsoft Access Driver (*.mdb, *.accdb)}};Dbq=/x.accdb;Uid=admin;Pwd={{{1}}};", "a}b;c",         "Pwd={a}}b;c};")]
+		[TestCase("Driver={{Microsoft Access Driver (*.mdb, *.accdb)}};Dbq=/x.accdb;Uid=admin;Pwd={1};", "plain",             "Pwd=plain;")]
+		public void OdbcValuesQuotedWithBraces(string template, string password, string expectedTail)
+		{
+			var connectionString = global::LinqToDB.CommandLine.Commands.Connection.ConnectionSettingsResolver.FormatCredentials(template, "admin", password, true, out var error)!;
+
+			using (Assert.EnterMultipleScope())
+			{
+				error.ShouldBeNull();
+				connectionString.ShouldEndWith(expectedTail);
+
+				// The ODBC builder keeps a braced value as written, braces included; the driver manager unquotes it. What
+				// counts here: Pwd is one value and no key was added.
+				var builder = new System.Data.Odbc.OdbcConnectionStringBuilder(connectionString);
+
+				builder["Pwd"].ShouldBe(expectedTail.Substring(4, expectedTail.Length - 5));
+				builder["Dbq"].ShouldBe("/x.accdb");
+				builder.Count.ShouldBe(4);
+			}
+		}
+
+		[TestCase("Driver={{x}};Pwd=\"{1}\";")]
+		[TestCase("Driver={{x}};Pwd='{1}';")]
+		public void OdbcTemplateQuotesRefused(string template)
+		{
+			global::LinqToDB.CommandLine.Commands.Connection.ConnectionSettingsResolver.FormatCredentials(template, "u", "a;b", true, out var error).ShouldBeNull();
+			error.ShouldNotBeNull();
 		}
 
 		static object DriverParameters(string connectionString)

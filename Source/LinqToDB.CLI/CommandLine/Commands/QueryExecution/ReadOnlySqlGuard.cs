@@ -110,9 +110,9 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		/// <summary>
 		/// Validates read-only SQL as the server receives it over a connection with this connection string.
 		/// </summary>
-		internal static SqlGuardResult Validate(IDataProvider provider, string sql, string? connectionString, string? serverCharset = null)
+		internal static SqlGuardResult Validate(IDataProvider provider, string sql, string? connectionString, string? serverCharset = null, string? driverEncoding = null)
 		{
-			return Validate(provider.Name, sql, connectionString, serverCharset);
+			return Validate(provider.Name, sql, connectionString, serverCharset, driverEncoding);
 		}
 
 		/// <summary>
@@ -127,14 +127,15 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		/// Validates that SQL contains a single statement, as the server receives it over a connection with this
 		/// connection string.
 		/// </summary>
-		internal static SqlGuardResult ValidateSingleStatement(IDataProvider provider, string sql, string? connectionString, string? serverCharset = null)
+		internal static SqlGuardResult ValidateSingleStatement(IDataProvider provider, string sql, string? connectionString, string? serverCharset = null, string? driverEncoding = null)
 		{
-			return ValidateSingleStatement(provider.Name, sql, connectionString, serverCharset);
+			return ValidateSingleStatement(provider.Name, sql, connectionString, serverCharset, driverEncoding);
 		}
 
-		// serverCharset is the character set the server named for the connection (ASE's @@client_csname), read after login;
-		// null before login. The connection string only shapes the message.
-		internal static SqlGuardResult Validate(string providerName, string sql, string? connectionString = null, string? serverCharset = null)
+		// serverCharset is the character set the server reports for the session (ASE's @@client_csname) and driverEncoding the
+		// web name of the encoder the driver sends the text with (fixed at login); both are read after login, null before.
+		// The connection string only shapes the message.
+		internal static SqlGuardResult Validate(string providerName, string sql, string? connectionString = null, string? serverCharset = null, string? driverEncoding = null)
 		{
 			var dialect = FindDialect(providerName);
 
@@ -142,10 +143,10 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				return GenericReadOnlySqlGuard.Validate(sql);
 
 			// The read-only check admits a single statement only, so it holds the single-statement check.
-			return Validate(dialect, sql, false, connectionString, serverCharset);
+			return Validate(dialect, sql, false, connectionString, serverCharset, driverEncoding);
 		}
 
-		internal static SqlGuardResult ValidateSingleStatement(string providerName, string sql, string? connectionString = null, string? serverCharset = null)
+		internal static SqlGuardResult ValidateSingleStatement(string providerName, string sql, string? connectionString = null, string? serverCharset = null, string? driverEncoding = null)
 		{
 			// Single-statement execution is a hard query command contract. Providers with a dialect grammar get it from
 			// the grammar; other providers use generic best-effort validation.
@@ -153,7 +154,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 			return dialect == null
 				? GenericReadOnlySqlGuard.ValidateSingleStatement(sql)
-				: Validate(dialect, sql, true, connectionString, serverCharset);
+				: Validate(dialect, sql, true, connectionString, serverCharset, driverEncoding);
 		}
 
 		static SqlDialect? FindDialect(string providerName)
@@ -173,7 +174,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			return found;
 		}
 
-		internal static SqlGuardResult Validate(SqlDialect dialect, string sql, bool singleStatement, string? connectionString = null, string? serverCharset = null)
+		internal static SqlGuardResult Validate(SqlDialect dialect, string sql, bool singleStatement, string? connectionString = null, string? serverCharset = null, string? driverEncoding = null)
 		{
 			if (string.IsNullOrWhiteSpace(sql))
 				return SqlGuardResult.Rejected("Query is empty.");
@@ -189,7 +190,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 				if (serverCharset == null)
 				{
-					var provisional = Validate(dialect, sql, singleStatement, connectionString, Utf8CharsetName);
+					var provisional = Validate(dialect, sql, singleStatement, connectionString, Utf8CharsetName, Encoding.UTF8.WebName);
 
 					return provisional.IsAllowed
 						? SqlGuardResult.AwaitingServerCharset(UnknownCharsetMessage(sql, position, dialect.CrEndsLineComment), provisional)
@@ -198,6 +199,12 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 				if (!string.Equals(serverCharset.Trim(), Utf8CharsetName, StringComparison.OrdinalIgnoreCase))
 					return RejectServerCharset(sql, position, serverCharset, connectionString, dialect.CrEndsLineComment);
+
+				// The driver fixes its encoder at login and does not follow a later change of the session's set (a login
+				// script's set char_convert utf8 makes the server report utf8 while the driver still best-fits into iso_1).
+				// So the bytes are UTF-8 only when the driver says so too.
+				if (!string.Equals(driverEncoding, Encoding.UTF8.WebName, StringComparison.OrdinalIgnoreCase))
+					return RejectDriverEncoding(sql, position, driverEncoding, dialect.CrEndsLineComment);
 
 				var changed = FindTranscoded(sql, Encoding.UTF8, out var received);
 
@@ -528,6 +535,13 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			return string.Create(
 				CultureInfo.InvariantCulture,
 				$"Query is not accepted: character U+{CodePointAt(sql, position):X4} at {Location(sql, position, crIsLineBreak)} is outside ASCII. The Sybase ASE driver sends the text in the character set the server names at login, which may replace such a character by another; to send characters outside ASCII, set Charset=utf8 in the connection string.");
+		}
+
+		static SqlGuardResult RejectDriverEncoding(string sql, int position, string? driverEncoding, bool crIsLineBreak)
+		{
+			return SqlGuardResult.Rejected(string.Create(
+				CultureInfo.InvariantCulture,
+				$"Query is not accepted: character U+{CodePointAt(sql, position):X4} at {Location(sql, position, crIsLineBreak)} is outside ASCII. The server reports utf8 for this session, but the driver sends the text {(driverEncoding == null ? "in an encoding the CLI cannot read" : $"in {driverEncoding}")}: it fixes its encoder at login, and the set changed after it (a login script or trigger), so the driver may replace such a character by another. Set Charset=utf8 in the connection string, so that the session starts with utf8."));
 		}
 
 		static SqlGuardResult RejectServerCharset(string sql, int position, string serverCharset, string? connectionString, bool crIsLineBreak)

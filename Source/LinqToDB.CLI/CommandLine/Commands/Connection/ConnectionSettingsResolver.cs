@@ -137,7 +137,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 				return null;
 			}
 
-			var formatted = FormatCredentials(connectionString, user, password, out var formatError);
+			var formatted = FormatCredentials(connectionString, user, password, providerName.Contains("Odbc", StringComparison.OrdinalIgnoreCase), out var formatError);
 
 			if (formatted == null)
 			{
@@ -307,72 +307,237 @@ namespace LinqToDB.CommandLine.Commands.Connection
 			}
 		}
 
-		// The user name and password go into the connection string as one value each: quoted when they hold a separator, a
-		// quote, an equals sign or leading or trailing space, so that a value cannot end its item and add keys of its own
-		// (Charset, Pooling, Data Source). Inside quotes the template wrote itself ("{1}" or '{1}') a value may not hold that
-		// quote. A value with both quote kinds cannot be written so that every driver reads it as one value
-		// (AdoNetCore.AseClient knows no doubled quote), and is refused. An empty value stays empty, as before.
-		internal static string? FormatCredentials(string template, string? user, string? password, out string? error)
+		// The user name and password go into the connection string as one value each, so that a value cannot end its item
+		// and add keys of its own (Charset, Pooling, Data Source, Dbq). That holds only where the placeholder is the whole
+		// value of its key: Key={1}, or quoted by the template tightly (Key="{1}", Key='{1}'; ODBC: Key={{{1}}}). A
+		// placeholder inside a longer value or a key, or with space inside the template's quotes, is refused. A bare value
+		// is quoted when it holds a separator, a quote, a brace, an equals sign or outer space: "…" (or '…' when it holds a
+		// double quote; both kinds are refused, since AdoNetCore.AseClient knows no doubled quote); ODBC drivers quote with
+		// {…} and double a closing brace. In the template's own quotes a value may not hold that quote. An empty value stays
+		// empty.
+		internal static string? FormatCredentials(string template, string? user, string? password, bool odbc, out string? error)
 		{
 			error = null;
 
-			var rewritten = template
-				.Replace("\"{0}\"", "\"{2}\"", StringComparison.Ordinal)
-				.Replace("'{0}'",   "'{3}'",   StringComparison.Ordinal)
-				.Replace("\"{1}\"", "\"{4}\"", StringComparison.Ordinal)
-				.Replace("'{1}'",   "'{5}'",   StringComparison.Ordinal);
+			// The template with {{ and }} read and each placeholder replaced by a mark that holds its index.
+			const char UserMark     = '\u0001';
+			const char PasswordMark = '\u0002';
 
-			var values = new (string? Value, string Name, char Quote)[]
+			if (template.AsSpan().IndexOfAny(UserMark, PasswordMark) >= 0)
 			{
-				(user,     "user",     '\0'),
-				(password, "password", '\0'),
-				(user,     "user",     '"'),
-				(user,     "user",     '\''),
-				(password, "password", '"'),
-				(password, "password", '\''),
-			};
+				error = "The connection string holds a control character the CLI uses for the {0} and {1} placeholders.";
+				return null;
+			}
 
-			var arguments = new object[values.Length];
+			var text = new StringBuilder(template.Length);
 
-			for (var i = 0; i < values.Length; i++)
+			for (var i = 0; i < template.Length; i++)
 			{
-				var (value, name, quote) = values[i];
+				var c = template[i];
 
-				arguments[i] = string.Empty;
-
-				if (!rewritten.Contains("{" + i.ToString(CultureInfo.InvariantCulture) + "}", StringComparison.Ordinal) || string.IsNullOrEmpty(value))
-					continue;
-
-				if (quote != '\0')
+				if (c is '{' or '}' && i + 1 < template.Length && template[i + 1] == c)
 				{
-					if (value.Contains(quote, StringComparison.Ordinal))
+					text.Append(c);
+					i++;
+				}
+				else if (c == '{')
+				{
+					var close = template.IndexOf('}', i);
+					var name  = close < 0 ? null : template.Substring(i + 1, close - i - 1);
+
+					if (name is not ("0" or "1"))
 					{
-						error = $"The {name} holds the quote ({quote}) that encloses it in the connection string, so it would end the value there. Use a template without those quotes: the CLI quotes values itself.";
+						error = $"The connection string placeholder '{template.Substring(i, close < 0 ? template.Length - i : close - i + 1)}' is not supported: use {{0}} for user and {{1}} for password, with no format.";
 						return null;
 					}
 
-					arguments[i] = value;
-				}
-				else if (value.AsSpan().IndexOfAny(";'\"=") < 0 && value.Trim().Length == value.Length)
-				{
-					arguments[i] = value;
-				}
-				else if (!value.Contains('"', StringComparison.Ordinal))
-				{
-					arguments[i] = "\"" + value + "\"";
-				}
-				else if (!value.Contains('\'', StringComparison.Ordinal))
-				{
-					arguments[i] = "'" + value + "'";
+					text.Append(string.Equals(name, "0", StringComparison.Ordinal) ? UserMark : PasswordMark);
+					i = close;
 				}
 				else
 				{
-					error = $"The {name} holds both kinds of quote (' and \"), so it cannot be put into the connection string as one value that every driver reads alike.";
-					return null;
+					text.Append(c);
 				}
 			}
 
-			return string.Format(CultureInfo.InvariantCulture, rewritten, arguments);
+			var unescaped = text.ToString();
+			var contexts  = new char[unescaped.Length];
+
+			// A mark no item reads as its value (after the last key, say) stays unread, and is refused below.
+			const char Unread = '\uFFFF';
+
+			Array.Fill(contexts, Unread);
+
+			// Read the items as a connection-string parser does, and note for each mark whether it is a whole value: bare
+			// ('\0'), or the whole content of a quoted one (the quote, or '{' for ODBC braces).
+			var position = 0;
+
+			while (position < unescaped.Length)
+			{
+				var end = unescaped.IndexOf('=', position);
+
+				if (end < 0)
+					break;
+
+				for (var k = position; k < end; k++)
+				{
+					if (unescaped[k] is UserMark or PasswordMark)
+						return NotWholeValue(out error);
+				}
+
+				var start = end + 1;
+
+				while (start < unescaped.Length && unescaped[start] is ' ' or '\t')
+					start++;
+
+				var quote = start < unescaped.Length ? unescaped[start] : '\0';
+				var close = quote switch
+				{
+					'"' or '\'' when !odbc => QuotedEnd(unescaped, start, quote, quote),
+					'{' when odbc          => QuotedEnd(unescaped, start, '{', '}'),
+					_                      => -1,
+				};
+
+				int next;
+
+				if (close >= 0)
+				{
+					// Key="…": a mark is the whole content, or none of it.
+					var inside = close - start - 1;
+
+					for (var k = start + 1; k < close; k++)
+					{
+						if (unescaped[k] is UserMark or PasswordMark)
+						{
+							if (inside != 1)
+								return NotWholeValue(out error);
+
+							contexts[k] = quote;
+						}
+					}
+
+					next = unescaped.IndexOf(';', close);
+				}
+				else
+				{
+					next = unescaped.IndexOf(';', start);
+
+					var valueEnd = next < 0 ? unescaped.Length : next;
+					var value    = unescaped.AsSpan(start, valueEnd - start).TrimEnd();
+
+					for (var k = start; k < valueEnd; k++)
+					{
+						if (unescaped[k] is UserMark or PasswordMark)
+						{
+							if (value.Length != 1)
+								return NotWholeValue(out error);
+
+							contexts[k] = '\0';
+						}
+					}
+				}
+
+				if (next < 0)
+					break;
+
+				position = next + 1;
+			}
+
+			var result = new StringBuilder(unescaped.Length);
+
+			for (var i = 0; i < unescaped.Length; i++)
+			{
+				var c = unescaped[i];
+
+				if (c is not (UserMark or PasswordMark))
+				{
+					result.Append(c);
+					continue;
+				}
+
+				if (contexts[i] == Unread)
+					return NotWholeValue(out error);
+
+				var (value, name) = c == UserMark ? (user, "user") : (password, "password");
+				var written       = Write(value ?? string.Empty, name, contexts[i], odbc, out error);
+
+				if (written == null)
+					return null;
+
+				result.Append(written);
+			}
+
+			return result.ToString();
+
+			static string? NotWholeValue(out string? error)
+			{
+				error = "The connection string must hold {0} and {1} as the whole value of a key (Key={1}, Key=\"{1}\" or Key='{1}', with no space inside the quotes; ODBC: Key={1} or Key={{{1}}}): a placeholder inside a longer value or a key would let the user name or password add keys of its own.";
+				return null;
+			}
+		}
+
+		// The position of the quote that closes a quoted value starting at the position (a doubled closing quote stands for
+		// itself), or -1 when it does not close.
+		// A value that holds one of these is quoted.
+		static readonly System.Buffers.SearchValues<char> _quotedCharacters = System.Buffers.SearchValues.Create(";'\"={}");
+
+		static int QuotedEnd(string text, int start, char open, char close)
+		{
+			for (var i = start + 1; i < text.Length; i++)
+			{
+				if (text[i] != close)
+					continue;
+
+				if (i + 1 < text.Length && text[i + 1] == close)
+				{
+					i++;
+					continue;
+				}
+
+				return i;
+			}
+
+			return -1;
+		}
+
+		static string? Write(string value, string name, char context, bool odbc, out string? error)
+		{
+			error = null;
+
+			if (value.Length == 0)
+				return value;
+
+			switch (context)
+			{
+				case '{':
+					return value.Replace("}", "}}", StringComparison.Ordinal);
+
+				case '"' or '\'':
+					if (value.Contains(context, StringComparison.Ordinal))
+					{
+						error = $"The {name} holds the quote ({context}) that encloses it in the connection string, so it would end the value there. Use a template without those quotes: the CLI quotes values itself.";
+						return null;
+					}
+
+					return value;
+			}
+
+			var needsQuotes = value.AsSpan().IndexOfAny(_quotedCharacters) >= 0 || value.Trim().Length != value.Length;
+
+			if (!needsQuotes)
+				return value;
+
+			if (odbc)
+				return "{" + value.Replace("}", "}}", StringComparison.Ordinal) + "}";
+
+			if (!value.Contains('"', StringComparison.Ordinal))
+				return "\"" + value + "\"";
+
+			if (!value.Contains('\'', StringComparison.Ordinal))
+				return "'" + value + "'";
+
+			error = $"The {name} holds both kinds of quote (' and \"), so it cannot be put into the connection string as one value that every driver reads alike.";
+			return null;
 		}
 	}
 }

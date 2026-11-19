@@ -473,6 +473,20 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			return "Pooling=false;" + connectionString.Trim().Trim(';') + ";Pooling=false";
 		}
 
+		// The encoder AdoNetCore.AseClient sends the session's command texts with: chosen once, from the set the server names at
+		// login (AseConnection._internal._environment.Encoding, internal, reached by reflection). Null for another driver
+		// (SAP's) or when the fields are gone; then no text outside ASCII runs.
+		internal static Encoding? DriverEncoding(DbConnection? connection)
+		{
+			if (connection is not AdoNetCore.AseClient.AseConnection)
+				return null;
+
+			var session     = typeof(AdoNetCore.AseClient.AseConnection).GetField("_internal", BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(connection);
+			var environment = session?.GetType().GetField("_environment", BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(session);
+
+			return environment?.GetType().GetProperty("Encoding")?.GetValue(environment) as Encoding;
+		}
+
 		// Whether AdoNetCore.AseClient would pool a connection opened with this connection string, as its own parser reads
 		// it (an internal type, reached by reflection; when it is gone the answer is "pooled", so the call is refused).
 		// Null for other drivers, whose parsing is not known here, and for a string the driver refuses (it opens nothing).
@@ -514,10 +528,11 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				if (checkServerCharset)
 				{
 					var serverCharset    = await dataConnection.ExecuteAsync<string?>("select @@client_csname", cancellationToken) ?? string.Empty;
+					var driverEncoding   = DriverEncoding(dataConnection.TryGetDbConnection())?.WebName;
 					var connectionString = dataOptions.ConnectionOptions.ConnectionString;
 					var recheck          = _settings.Mode == QueryExecutionMode.Query
-						? ReadOnlySqlGuard.Validate(dataProvider, sql, connectionString, serverCharset)
-						: ReadOnlySqlGuard.ValidateSingleStatement(dataProvider, sql, connectionString, serverCharset);
+						? ReadOnlySqlGuard.Validate(dataProvider, sql, connectionString, serverCharset, driverEncoding)
+						: ReadOnlySqlGuard.ValidateSingleStatement(dataProvider, sql, connectionString, serverCharset, driverEncoding);
 
 					if (!recheck.IsAllowed)
 						return new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, recheck.Error, false);
