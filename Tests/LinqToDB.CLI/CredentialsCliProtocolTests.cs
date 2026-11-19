@@ -526,7 +526,7 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[TestCase("TOPSEC",          TestName = "TruncatedErrorRedactsPasswordPrefixAtTheCut")]
-		[TestCase("TOPSEC�",    TestName = "TruncatedErrorRedactsPasswordPrefixBeforeSplitCharacter")]
+		[TestCase("TOPSEC\uFFFD",    TestName = "TruncatedErrorRedactsPasswordPrefixBeforeSplitCharacter")]
 		public void TruncatedErrorRedactsPasswordPrefix(string tail)
 		{
 			// Standard error was cut at its length limit in the middle of the echoed password.

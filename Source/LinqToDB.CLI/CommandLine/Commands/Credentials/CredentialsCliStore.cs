@@ -356,7 +356,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 				return false;
 			}
 
-			if (text.Length > 0 && text[0] == '﻿')
+			if (text.Length > 0 && text[0] == '\uFEFF')
 				text = text.Substring(1);
 
 			if (text.Length == 0)
@@ -483,7 +483,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 			if (truncated)
 			{
 				// The cut can also split a multi-byte character, which decodes as U+FFFD.
-				var end = text.TrimEnd('�');
+				var end = text.TrimEnd('\uFFFD');
 
 				for (var length = Math.Min(secret.Length - 1, end.Length); length > 0; length--)
 				{

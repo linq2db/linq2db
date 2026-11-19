@@ -41,7 +41,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		const int TagSize   = 16;
 
 		/// <summary>Magic and format version; also the associated data of the encryption.</summary>
-		static readonly byte[] _header = [(byte)'L', (byte)'2', (byte)'D', (byte)'B', (byte)'L', (byte)'C', (byte)'S', 1];
+		static ReadOnlySpan<byte> Header => "L2DBLCS\x01"u8;
 
 		static readonly byte[] _keyEntropy = SHA256.HashData(Encoding.UTF8.GetBytes("linq2db local store key v1"));
 
@@ -431,30 +431,30 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 
 			var data = ReadAllBytesShared(DataPath, DataFileOpenedForRead);
 
-			if (data.Length < _header.Length || !data.AsSpan(0, _header.Length - 1).SequenceEqual(_header.AsSpan(0, _header.Length - 1)))
+			if (data.Length < Header.Length || !data.AsSpan(0, Header.Length - 1).SequenceEqual(Header[..^1]))
 				return $"'{DataPath}' is not a linq2db local store file, or it is truncated.";
 
-			if (data[_header.Length - 1] != _header[^1])
-				return $"'{DataPath}' has format version {data[_header.Length - 1].ToString(CultureInfo.InvariantCulture)}, which this linq2db-cli does not read.";
+			if (data[Header.Length - 1] != Header[^1])
+				return $"'{DataPath}' has format version {data[Header.Length - 1].ToString(CultureInfo.InvariantCulture)}, which this linq2db-cli does not read.";
 
-			if (data.Length < _header.Length + NonceSize + TagSize)
+			if (data.Length < Header.Length + NonceSize + TagSize)
 				return $"'{DataPath}' is truncated: it is shorter than its header, nonce and tag.";
 
 			if (!TryGetKey(create: false, out var key, out var keyError))
 				return keyError;
 
-			var plaintext = new byte[data.Length - _header.Length - NonceSize - TagSize];
+			var plaintext = new byte[data.Length - Header.Length - NonceSize - TagSize];
 
 			try
 			{
 				using (var aes = new AesGcm(key, TagSize))
 				{
 					aes.Decrypt(
-						data.AsSpan(_header.Length, NonceSize),
-						data.AsSpan(_header.Length + NonceSize + TagSize),
-						data.AsSpan(_header.Length + NonceSize, TagSize),
+						data.AsSpan(Header.Length, NonceSize),
+						data.AsSpan(Header.Length + NonceSize + TagSize),
+						data.AsSpan(Header.Length + NonceSize, TagSize),
 						plaintext,
-						_header);
+						Header);
 				}
 
 				entries = Deserialize(plaintext);
@@ -598,21 +598,21 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		string? Save(Dictionary<string, (string User, string Password)> entries, byte[] key)
 		{
 			var plaintext = Serialize(entries);
-			var data      = new byte[_header.Length + NonceSize + TagSize + plaintext.Length];
+			var data      = new byte[Header.Length + NonceSize + TagSize + plaintext.Length];
 
 			try
 			{
-				_header.CopyTo(data, 0);
-				RandomNumberGenerator.Fill(data.AsSpan(_header.Length, NonceSize));
+				Header.CopyTo(data);
+				RandomNumberGenerator.Fill(data.AsSpan(Header.Length, NonceSize));
 
 				using var aes = new AesGcm(key, TagSize);
 
 				aes.Encrypt(
-					data.AsSpan(_header.Length, NonceSize),
+					data.AsSpan(Header.Length, NonceSize),
 					plaintext,
-					data.AsSpan(_header.Length + NonceSize + TagSize),
-					data.AsSpan(_header.Length + NonceSize, TagSize),
-					_header);
+					data.AsSpan(Header.Length + NonceSize + TagSize),
+					data.AsSpan(Header.Length + NonceSize, TagSize),
+					Header);
 			}
 			finally
 			{
