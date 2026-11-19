@@ -47,7 +47,8 @@ namespace Tests.LinqToDB.CLI
 
 		static async Task<(int ExitCode, string Output, string Error)> RunCli(TestCliEnvironment environment, params string[] args)
 		{
-			var exitCode = await new global::LinqToDB.CommandLine.LinqToDBCliController().Execute(args, environment);
+			var exitCode = await new global::LinqToDB.CommandLine.LinqToDBCliController()
+				.Execute(args, environment);
 			return (exitCode, environment.Output, environment.ErrorOutput);
 		}
 
@@ -80,14 +81,24 @@ namespace Tests.LinqToDB.CLI
 			output.ShouldContain($"It is used only when named: --credentials-cli @{store}, or \"credentialsCli\": \"@{store}\" in a configuration profile.");
 			output.ShouldContain($"Check it: dotnet linq2db credentials list --credentials-cli @{store}");
 			error. ShouldContain($"Warning: '{tool}' was not found on PATH.");
-			File.ReadAllText(script).ShouldBe(CredentialsCliTemplates.Get(store));
+			File
+				.ReadAllText(script)
+				.ShouldBe(CredentialsCliTemplates.Get(store));
 
 			// The header names the template revision, so an installed copy can be compared with a newer template.
-			File.ReadAllText(script).ShouldContain("\n# linq2db-cli template revision: 1\n", Case.Sensitive);
+			File
+				.ReadAllText(script)
+				.ShouldContain("\n# linq2db-cli template revision: 1\n", Case.Sensitive);
 
-			File.GetUnixFileMode(script).    ShouldBe(Owner700);
-			File.GetUnixFileMode(_directory).ShouldBe(Owner700);
-			Directory.GetFiles(_directory, "*.tmp").ShouldBeEmpty();
+			File
+				.GetUnixFileMode(script)
+				.ShouldBe(Owner700);
+			File
+				.GetUnixFileMode(_directory)
+				.ShouldBe(Owner700);
+			Directory
+				.GetFiles(_directory, "*.tmp")
+				.ShouldBeEmpty();
 		}
 
 		[Test]
@@ -110,9 +121,15 @@ namespace Tests.LinqToDB.CLI
 			output.ShouldContain("Check it: dotnet linq2db credentials list --config cfg.json");
 
 			var json = JsonNode.Parse(environment.Files["cfg.json"])!;
-			json["default"]!["credentialsCli"]!.GetValue<string>().ShouldBe("@gpg");
-			json["default"]!["maxRows"]!.GetValue<int>().ShouldBe(10);
-			json["dev"]!["provider"]!.GetValue<string>().ShouldBe("SQLite");
+			json["default"]!["credentialsCli"]!
+				.GetValue<string>()
+				.ShouldBe("@gpg");
+			json["default"]!["maxRows"]!
+				.GetValue<int>()
+				.ShouldBe(10);
+			json["dev"]!["provider"]!
+				.GetValue<string>()
+				.ShouldBe("SQLite");
 		}
 
 		[TestCase("h.sh",         false, TestName = "OutputPathIsRecordedAsWritten")]
@@ -127,8 +144,11 @@ namespace Tests.LinqToDB.CLI
 			var (exitCode, _, error) = await RunCli(environment, "credentials", "cli", "init", "--store", "keyring", "-o", script, "--config", "new.json");
 
 			exitCode.ShouldBe(0, error);
-			RecordedValue(environment, "new.json").ShouldBe(quoted ? $"\"{script}\"" : script);
-			File.GetUnixFileMode(script).ShouldBe(Owner700);
+			RecordedValue(environment, "new.json")
+				.ShouldBe(quoted ? $"\"{script}\"" : script);
+			File
+				.GetUnixFileMode(script)
+				.ShouldBe(Owner700);
 		}
 
 		[TestCase("shared",       TestName = "OutputInWorldWritableDirectoryIsRefused")]
@@ -153,7 +173,9 @@ namespace Tests.LinqToDB.CLI
 
 			exitCode.ShouldBe(-3);
 			error.ShouldContain($"its path goes through '{shared}', which every user can write to without the sticky bit");
-			File.Exists(script).ShouldBeFalse();
+			File
+				.Exists(script)
+				.ShouldBeFalse();
 		}
 
 		[Test]
@@ -178,7 +200,9 @@ namespace Tests.LinqToDB.CLI
 
 			exitCode.ShouldBe(-3);
 			error.ShouldContain($"its path goes through '{shared}', which every user can write to without the sticky bit");
-			File.Exists(Path.Combine(real, "h.sh")).ShouldBeFalse();
+			File
+				.Exists(Path.Combine(real, "h.sh"))
+				.ShouldBeFalse();
 		}
 
 		[Test]
@@ -199,7 +223,9 @@ namespace Tests.LinqToDB.CLI
 			Directory.CreateSymbolicLink(Path.Combine(safe, "link"), Path.Combine(safe, "jump", "..", "private"));
 			File.SetUnixFileMode(shared, Owner700 | UnixFileMode.GroupRead | UnixFileMode.GroupWrite | UnixFileMode.GroupExecute | UnixFileMode.OtherRead | UnixFileMode.OtherWrite | UnixFileMode.OtherExecute);
 
-			CredentialsDirectory.GetRealPath(Path.Combine(safe, "link")).ShouldBe(CredentialsDirectory.GetRealPath(Path.Combine(shared, "private")));
+			CredentialsDirectory
+				.GetRealPath(Path.Combine(safe, "link"))
+				.ShouldBe(CredentialsDirectory.GetRealPath(Path.Combine(shared, "private")));
 
 			var script = Path.Combine(safe, "link", "h.sh");
 
@@ -207,7 +233,9 @@ namespace Tests.LinqToDB.CLI
 
 			exitCode.ShouldBe(-3);
 			error.ShouldContain($"its path goes through '{shared}', which every user can write to without the sticky bit");
-			File.Exists(Path.Combine(shared, "private", "h.sh")).ShouldBeFalse();
+			File
+				.Exists(Path.Combine(shared, "private", "h.sh"))
+				.ShouldBeFalse();
 		}
 
 		[Test]
@@ -229,7 +257,9 @@ namespace Tests.LinqToDB.CLI
 
 			exitCode.ShouldBe(-3);
 			error.ShouldContain($"its path goes through '{shared}', which every user can write to without the sticky bit");
-			File.Exists(Path.Combine(real, "h.sh")).ShouldBeFalse();
+			File
+				.Exists(Path.Combine(real, "h.sh"))
+				.ShouldBeFalse();
 		}
 
 		[Test]
@@ -250,9 +280,14 @@ namespace Tests.LinqToDB.CLI
 			var (exitCode, _, error) = await RunCli(environment, "credentials", "cli", "init", "--store", "gpg", "-o", safe + "/jump/../h.sh", "--config", "cfg.json");
 
 			exitCode.ShouldBe(0, error);
-			File.Exists(Path.Combine(safe, "h.sh")).ShouldBeTrue();
-			File.Exists(Path.Combine(shared, "h.sh")).ShouldBeFalse();
-			RecordedValue(environment, "cfg.json").ShouldBe(Path.Combine(safe, "h.sh"));
+			File
+				.Exists(Path.Combine(safe, "h.sh"))
+				.ShouldBeTrue();
+			File
+				.Exists(Path.Combine(shared, "h.sh"))
+				.ShouldBeFalse();
+			RecordedValue(environment, "cfg.json")
+				.ShouldBe(Path.Combine(safe, "h.sh"));
 		}
 
 		[Test]
@@ -277,8 +312,12 @@ namespace Tests.LinqToDB.CLI
 
 			exitCode.ShouldBe(0, error);
 			output.ShouldContain($"Created '{script}'");
-			File.Exists(script).ShouldBeTrue();
-			Directory.Exists(Path.Combine(other, "creds")).ShouldBeFalse();
+			File
+				.Exists(script)
+				.ShouldBeTrue();
+			Directory
+				.Exists(Path.Combine(other, "creds"))
+				.ShouldBeFalse();
 		}
 
 		[TestCase(UnixFileMode.GroupWrite, true,  TestName = "OutputInGroupWritableDirectoryWarns")]
@@ -295,7 +334,9 @@ namespace Tests.LinqToDB.CLI
 			var (exitCode, _, error) = await RunCli(CreateEnvironment(), "credentials", "cli", "init", "--store", "gpg", "-o", script);
 
 			exitCode.ShouldBe(0, error);
-			File.Exists(script).ShouldBeTrue();
+			File
+				.Exists(script)
+				.ShouldBeTrue();
 
 			if (warns)
 				error.ShouldContain($"Warning: '{directory}' is writable by its group");
@@ -335,14 +376,20 @@ namespace Tests.LinqToDB.CLI
 			(exitCode, _, error) = await RunCli(CreateEnvironment(), "credentials", "cli", "init", "--store", "gpg");
 			exitCode.ShouldBe(-3);
 			error.ShouldContain($"'{script}' already exists. Use '--force' to replace it with the template (edits to it are lost). To use the existing script as it is, name it yourself: --credentials-cli @gpg, or");
-			File.ReadAllText(script).ShouldBe("edited");
+			File
+				.ReadAllText(script)
+				.ShouldBe("edited");
 
 			string output;
 			(exitCode, output, error) = await RunCli(CreateEnvironment(), "credentials", "cli", "init", "--store", "gpg", "--force");
 			exitCode.ShouldBe(0, error);
 			output.ShouldContain($"Replaced '{script}'");
-			File.ReadAllText(script).ShouldBe(CredentialsCliTemplates.Get("gpg"));
-			File.GetUnixFileMode(script).ShouldBe(Owner700);
+			File
+				.ReadAllText(script)
+				.ShouldBe(CredentialsCliTemplates.Get("gpg"));
+			File
+				.GetUnixFileMode(script)
+				.ShouldBe(Owner700);
 		}
 
 		[TestCase(true,  TestName = "GroupWritableParentOfTheCredentialsDirectoryWarns")]
@@ -417,7 +464,9 @@ namespace Tests.LinqToDB.CLI
 
 			exitCode.ShouldBe(-3);
 			error.ShouldContain($"'{script}' already exists. Use '--force' to replace it");
-			File.ReadAllText(script).ShouldBe("edited");
+			File
+				.ReadAllText(script)
+				.ShouldBe("edited");
 			environment.Files["cfg.json"].ShouldBe(Config);
 		}
 
@@ -433,13 +482,17 @@ namespace Tests.LinqToDB.CLI
 
 			exitCode.ShouldBe(-3);
 			error.ShouldContain("already sets 'credentialsCli' to \"/opt/vault-cli\". Use '--force' to replace it.");
-			File.Exists(Path.Combine(_directory, "credentials-keyring.sh")).ShouldBeFalse();
-			RecordedValue(environment, "cfg.json").ShouldBe("/opt/vault-cli");
+			File
+				.Exists(Path.Combine(_directory, "credentials-keyring.sh"))
+				.ShouldBeFalse();
+			RecordedValue(environment, "cfg.json")
+				.ShouldBe("/opt/vault-cli");
 
 			(exitCode, _, error) = await RunCli(environment, "credentials", "cli", "init", "--store", "keyring", "--config", "cfg.json", "--force");
 
 			exitCode.ShouldBe(0, error);
-			RecordedValue(environment, "cfg.json").ShouldBe("@keyring");
+			RecordedValue(environment, "cfg.json")
+				.ShouldBe("@keyring");
 			error.ShouldContain("note: the configuration used the store '/opt/vault-cli' before; its records were not moved.");
 			error.ShouldContain("dotnet linq2db credentials list --credentials-cli /opt/vault-cli shows them");
 		}
@@ -508,11 +561,17 @@ namespace Tests.LinqToDB.CLI
 			error.ShouldContain("Cannot write configuration file 'cfg.json': disk full");
 
 			if (existingScript)
-				File.ReadAllText(script).ShouldBe("old");
+				File
+					.ReadAllText(script)
+					.ShouldBe("old");
 			else
-				File.Exists(script).ShouldBeFalse();
+				File
+					.Exists(script)
+					.ShouldBeFalse();
 
-			Directory.GetFiles(_directory, ".*.tmp").ShouldBeEmpty();
+			Directory
+				.GetFiles(_directory, ".*.tmp")
+				.ShouldBeEmpty();
 			environment.Files["cfg.json"].ShouldContain("\"maxRows\": 10");
 			environment.Files["cfg.json"].ShouldNotContain("credentialsCli");
 		}
@@ -544,11 +603,17 @@ namespace Tests.LinqToDB.CLI
 			environment.Files["cfg.json"].ShouldBe(original);
 
 			if (existingScript)
-				File.ReadAllText(script).ShouldBe("old");
+				File
+					.ReadAllText(script)
+					.ShouldBe("old");
 			else
-				File.Exists(script).ShouldBeFalse();
+				File
+					.Exists(script)
+					.ShouldBeFalse();
 
-			Directory.GetFiles(_directory, ".*.tmp").ShouldBeEmpty();
+			Directory
+				.GetFiles(_directory, ".*.tmp")
+				.ShouldBeEmpty();
 		}
 
 		[Test]
@@ -565,7 +630,9 @@ namespace Tests.LinqToDB.CLI
 			exitCode.ShouldBe(-3);
 			error.ShouldContain("was restored");
 			environment.Files.ShouldNotContainKey("new.json");
-			File.Exists(script).ShouldBeFalse();
+			File
+				.Exists(script)
+				.ShouldBeFalse();
 		}
 
 		[Test]
@@ -580,11 +647,17 @@ namespace Tests.LinqToDB.CLI
 			output.ShouldContain(OperatingSystem.IsWindows()
 				? "It is used only when named: --credentials-cli @local"
 				: "local is already the default store on this OS; nothing needs to name it.");
-			File.Exists(Path.Combine(_directory, "credentials.key")).ShouldBeTrue();
-			File.Exists(Path.Combine(_directory, "credentials.dat")).ShouldBeFalse();
+			File
+				.Exists(Path.Combine(_directory, "credentials.key"))
+				.ShouldBeTrue();
+			File
+				.Exists(Path.Combine(_directory, "credentials.dat"))
+				.ShouldBeFalse();
 
 			if (!OperatingSystem.IsWindows())
-				File.GetUnixFileMode(_directory).ShouldBe(Owner700);
+				File
+					.GetUnixFileMode(_directory)
+					.ShouldBe(Owner700);
 
 			var key = File.ReadAllBytes(Path.Combine(_directory, "credentials.key"));
 
@@ -592,7 +665,9 @@ namespace Tests.LinqToDB.CLI
 
 			exitCode.ShouldBe(0, error);
 			output.ShouldContain("already exists; its key was kept.");
-			File.ReadAllBytes(Path.Combine(_directory, "credentials.key")).ShouldBe(key);
+			File
+				.ReadAllBytes(Path.Combine(_directory, "credentials.key"))
+				.ShouldBe(key);
 		}
 
 		[Test]
@@ -604,7 +679,8 @@ namespace Tests.LinqToDB.CLI
 
 			exitCode.ShouldBe(0, error);
 			output.ShouldContain("Recorded \"credentialsCli\": \"@local\" in profile 'default' of 'cfg.json'.");
-			RecordedValue(environment, "cfg.json").ShouldBe("@local");
+			RecordedValue(environment, "cfg.json")
+				.ShouldBe("@local");
 		}
 
 		[Test]
@@ -618,7 +694,9 @@ namespace Tests.LinqToDB.CLI
 
 			exitCode.ShouldBe(-3);
 			error.ShouldContain("disk full");
-			File.Exists(Path.Combine(_directory, "credentials.key")).ShouldBeTrue();
+			File
+				.Exists(Path.Combine(_directory, "credentials.key"))
+				.ShouldBeTrue();
 		}
 
 		[Test]
@@ -635,7 +713,9 @@ namespace Tests.LinqToDB.CLI
 
 			exitCode.ShouldBe(-3);
 			error.ShouldContain("credentials.key' is missing");
-			File.Exists(Path.Combine(_directory, "credentials.key")).ShouldBeFalse();
+			File
+				.Exists(Path.Combine(_directory, "credentials.key"))
+				.ShouldBeFalse();
 		}
 
 		[Test]
@@ -659,7 +739,9 @@ namespace Tests.LinqToDB.CLI
 
 			exitCode.ShouldBe(-1);
 			error.ShouldContain("generated sh script for Linux and macOS");
-			Directory.Exists(_directory).ShouldBeFalse();
+			Directory
+				.Exists(_directory)
+				.ShouldBeFalse();
 		}
 
 		[TestCase(new[] { "credentials", "cli", "init" },                                          "Option '--store' must be specified for credentials cli init: keyring", TestName = "InitRequiresStore")]

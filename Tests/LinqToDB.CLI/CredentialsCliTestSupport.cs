@@ -39,7 +39,11 @@ namespace Tests.LinqToDB.CLI
 
 		public static string CreateTempDirectory()
 		{
-			var directory = Path.Combine(Root, Guid.NewGuid().ToString("N"));
+			var name = Guid
+				.NewGuid()
+				.ToString("N");
+
+			var directory = Path.Combine(Root, name);
 			CreatePrivateDirectory(directory);
 			return directory;
 		}
@@ -74,7 +78,11 @@ namespace Tests.LinqToDB.CLI
 			if (OperatingSystem.IsWindows())
 			{
 				var path = Path.Combine(directory, name + ".cmd");
-				File.WriteAllText(path, cmd.Replace("\r\n", "\n", StringComparison.Ordinal).Replace("\n", "\r\n", StringComparison.Ordinal));
+				var crlf = cmd
+					.Replace("\r\n", "\n",   StringComparison.Ordinal)
+					.Replace("\n",   "\r\n", StringComparison.Ordinal);
+
+				File.WriteAllText(path, crlf);
 				return path;
 			}
 			else
@@ -121,7 +129,10 @@ namespace Tests.LinqToDB.CLI
 					return _secretHelperPath;
 
 				var content = File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "CredentialsCli", "secrethelper.cs"));
-				var hash    = Convert.ToHexString(SHA256.HashData(content)).Substring(0, 16).ToLowerInvariant();
+				var hash    = Convert
+					.ToHexString(SHA256.HashData(content))
+					.Substring(0, 16)
+					.ToLowerInvariant();
 				var dir     = Path.Combine(Root, $"secrethelper-{hash}");
 				var source  = Path.Combine(dir, "secrethelper.cs");
 

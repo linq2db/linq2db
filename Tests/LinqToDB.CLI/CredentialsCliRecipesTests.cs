@@ -170,7 +170,10 @@ namespace Tests.LinqToDB.CLI
 		{
 			var document = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "CredentialsCli", "CREDENTIALS-CLI.md"))
 				.Replace("\r\n", "\n", StringComparison.Ordinal);
-			var blocks   = Regex.Matches(document, "```sh\n(.*?)```", RegexOptions.Singleline, TimeSpan.FromSeconds(10)).Select(static match => match.Groups[1].Value).ToArray();
+			var blocks   = Regex
+				.Matches(document, "```sh\n(.*?)```", RegexOptions.Singleline, TimeSpan.FromSeconds(10))
+				.Select(static match => match.Groups[1].Value)
+				.ToArray();
 			var fetch    = new Dictionary<string, string>(StringComparer.Ordinal);
 
 			foreach (var block in blocks.Where(static block => block.StartsWith("# fetch: ", StringComparison.Ordinal)))
@@ -241,7 +244,9 @@ namespace Tests.LinqToDB.CLI
 				case "Bitwarden":
 				{
 					var directory = Directory.CreateDirectory(Path.Combine(_state, "bw")).FullName;
-					var id        = Guid.NewGuid().ToString();
+					var id        = Guid
+						.NewGuid()
+						.ToString();
 					File.WriteAllText(Path.Combine(directory, id + ".json"), JsonSerializer.Serialize(new { id, type = 1, name = "linq2db/" + name, login = new { username = user, password } }));
 					break;
 				}
@@ -274,7 +279,10 @@ namespace Tests.LinqToDB.CLI
 		[Test]
 		public void DocumentHasAFetchForEveryStore()
 		{
-			ReadDocument().Fetch.Keys.ShouldBe(["Azure Key Vault", "1Password", "AWS Secrets Manager", "Bitwarden", "KeePassXC"], ignoreOrder: true);
+			ReadDocument()
+				.Fetch
+				.Keys
+				.ShouldBe(["Azure Key Vault", "1Password", "AWS Secrets Manager", "Bitwarden", "KeePassXC"], ignoreOrder: true);
 		}
 
 		[TestCase("Azure Key Vault")]
@@ -289,7 +297,9 @@ namespace Tests.LinqToDB.CLI
 			var name = RecordName(store);
 			Seed(store, name, HostileUser, HostilePassword);
 
-			CreateStore(store).TryRead("linq2db/" + name, out var user, out var password, out var error).ShouldBeTrue(error);
+			CreateStore(store)
+				.TryRead("linq2db/" + name, out var user, out var password, out var error)
+				.ShouldBeTrue(error);
 			user.    ShouldBe(HostileUser);
 			password.ShouldBe(HostilePassword);
 		}
@@ -306,7 +316,9 @@ namespace Tests.LinqToDB.CLI
 			var name = RecordName(store);
 			Seed(store, name, null, "pw");
 
-			CreateStore(store).TryRead("linq2db/" + name, out var user, out var password, out var error).ShouldBeTrue(error);
+			CreateStore(store)
+				.TryRead("linq2db/" + name, out var user, out var password, out var error)
+				.ShouldBeTrue(error);
 			user.    ShouldBe(string.Empty);
 			password.ShouldBe("pw");
 		}
@@ -320,8 +332,12 @@ namespace Tests.LinqToDB.CLI
 		{
 			RequireTools(store);
 
-			CreateStore(store).TryRead("linq2db/" + RecordName(store), out _, out _, out var error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain("was not found by credentials CLI");
+			CreateStore(store)
+				.TryRead("linq2db/" + RecordName(store), out _, out _, out var error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain("was not found by credentials CLI");
 		}
 
 		[Test]
@@ -331,8 +347,12 @@ namespace Tests.LinqToDB.CLI
 
 			Seed("Bitwarden", "project-a/prod-replica", "replica", "replica-password");
 
-			CreateStore("Bitwarden").TryRead("linq2db/project-a/prod", out _, out _, out var error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain("was not found by credentials CLI");
+			CreateStore("Bitwarden")
+				.TryRead("linq2db/project-a/prod", out _, out _, out var error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain("was not found by credentials CLI");
 		}
 
 		[Test]
@@ -344,7 +364,9 @@ namespace Tests.LinqToDB.CLI
 			Seed("Bitwarden", "project-a/prod-replica", "replica", "replica-password");
 			Seed("Bitwarden", "PROJECT-A/PROD-2",       "other",   "other-password");
 
-			CreateStore("Bitwarden").TryRead("linq2db/project-a/prod", out var user, out var password, out var error).ShouldBeTrue(error);
+			CreateStore("Bitwarden")
+				.TryRead("linq2db/project-a/prod", out var user, out var password, out var error)
+				.ShouldBeTrue(error);
 			user.    ShouldBe("app");
 			password.ShouldBe("prod-password");
 		}
@@ -356,7 +378,9 @@ namespace Tests.LinqToDB.CLI
 
 			Seed("Bitwarden", "Project-A/Prod", "app", "prod-password");
 
-			CreateStore("Bitwarden").TryRead("linq2db/project-a/prod", out var user, out var password, out var error).ShouldBeTrue(error);
+			CreateStore("Bitwarden")
+				.TryRead("linq2db/project-a/prod", out var user, out var password, out var error)
+				.ShouldBeTrue(error);
 			user.    ShouldBe("app");
 			password.ShouldBe("prod-password");
 		}
@@ -369,8 +393,12 @@ namespace Tests.LinqToDB.CLI
 			Seed("Bitwarden", "project-a/prod", "a", "first-password");
 			Seed("Bitwarden", "project-a/prod", "b", "second-password");
 
-			CreateStore("Bitwarden").TryRead("linq2db/project-a/prod", out _, out _, out var error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain("more than one login item is named linq2db/project-a/prod");
+			CreateStore("Bitwarden")
+				.TryRead("linq2db/project-a/prod", out _, out _, out var error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain("more than one login item is named linq2db/project-a/prod");
 		}
 
 		[TestCase("Azure Key Vault",     "az keyvault secret show failed: ERROR: Please run 'az login'")]
@@ -385,8 +413,12 @@ namespace Tests.LinqToDB.CLI
 			Seed(store, RecordName(store), "u", "a-long-password");
 			File.WriteAllText(Path.Combine(_state, "fail"), string.Empty);
 
-			CreateStore(store).TryRead("linq2db/" + RecordName(store), out _, out _, out var error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain(message);
+			CreateStore(store)
+				.TryRead("linq2db/" + RecordName(store), out _, out _, out var error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain(message);
 		}
 
 		[TestCase("Azure Key Vault")]
@@ -399,9 +431,13 @@ namespace Tests.LinqToDB.CLI
 			var runner = CredentialsCliTestSupport.CreateRunner(WriteProgram(store));
 
 			foreach (var verb in new[] { "store", "erase", "list" })
-				Encoding.UTF8.GetString(runner.Run(verb, CredentialsCliTestSupport.Request("protocol=1", $"verb={verb}", "target=linq2db/a", "username=u", "password=p")).Output).ShouldBe("protocol=1\nstatus=unsupported\n");
+				Encoding.UTF8
+					.GetString(runner.Run(verb, CredentialsCliTestSupport.Request("protocol=1", $"verb={verb}", "target=linq2db/a", "username=u", "password=p")).Output)
+					.ShouldBe("protocol=1\nstatus=unsupported\n");
 
-			Encoding.UTF8.GetString(runner.Run("get", CredentialsCliTestSupport.Request("protocol=2", "verb=get", "target=linq2db/a")).Output).ShouldBe("protocol=1\nstatus=unsupported\n");
+			Encoding.UTF8
+				.GetString(runner.Run("get", CredentialsCliTestSupport.Request("protocol=2", "verb=get", "target=linq2db/a")).Output)
+				.ShouldBe("protocol=1\nstatus=unsupported\n");
 		}
 
 		[TestCase("Azure Key Vault")]
@@ -442,7 +478,8 @@ namespace Tests.LinqToDB.CLI
 
 		static string? FindOnPath(string name)
 		{
-			foreach (var directory in (Environment.GetEnvironmentVariable("PATH") ?? string.Empty).Split(':'))
+			foreach (var directory in (Environment.GetEnvironmentVariable("PATH") ?? string.Empty)
+				.Split(':'))
 			{
 				if (directory.Length > 0 && File.Exists(Path.Combine(directory, name)))
 					return Path.Combine(directory, name);

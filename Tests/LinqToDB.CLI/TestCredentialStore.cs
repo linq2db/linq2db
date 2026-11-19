@@ -68,7 +68,10 @@ namespace Tests.LinqToDB.CLI
 
 		public bool TryClear(out int removedCount, out string? error)
 		{
-			var targets = Credentials.Keys.Where(static target => target.StartsWith("linq2db/", StringComparison.Ordinal)).Order(StringComparer.Ordinal).ToArray();
+			var targets = Credentials.Keys
+				.Where(static target => target.StartsWith("linq2db/", StringComparison.Ordinal))
+				.Order(StringComparer.Ordinal)
+				.ToArray();
 
 			removedCount = 0;
 

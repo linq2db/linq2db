@@ -57,10 +57,16 @@ namespace Tests.LinqToDB.CLI
 
 			store.KeyInstalled = () => File.WriteAllBytes(KeyPath, new byte[32]);
 
-			store.TryStore("a", "user", "secret", out var error).ShouldBeFalse();
+			store
+				.TryStore("a", "user", "secret", out var error)
+				.ShouldBeFalse();
 
-			error.ShouldNotBeNull().ShouldContain($"'{KeyPath}' was replaced by another process while it was being created");
-			File.Exists(DataPath).ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain($"'{KeyPath}' was replaced by another process while it was being created");
+			File
+				.Exists(DataPath)
+				.ShouldBeFalse();
 		}
 
 		[Test]
@@ -96,56 +102,90 @@ namespace Tests.LinqToDB.CLI
 		{
 			var store = CreateStore();
 
-			store.TryStore("Project-A/Prod", " DOMAIN\\reader ", "  p'a\"s=é ✓ ", out var error).ShouldBeTrue(error);
+			store
+				.TryStore("Project-A/Prod", " DOMAIN\\reader ", "  p'a\"s=é ✓ ", out var error)
+				.ShouldBeTrue(error);
 			store.KeyCreated.ShouldBeTrue();
-			store.TryStore("b", "other", string.Empty, out error).ShouldBeTrue(error);
+			store
+				.TryStore("b", "other", string.Empty, out error)
+				.ShouldBeTrue(error);
 			store.KeyCreated.ShouldBeFalse();
 
 			var reader = CreateStore();
 
-			reader.TryRead("LINQ2DB/project-a/prod", out var user, out var password, out error).ShouldBeTrue(error);
+			reader
+				.TryRead("LINQ2DB/project-a/prod", out var user, out var password, out error)
+				.ShouldBeTrue(error);
 			user.    ShouldBe(" DOMAIN\\reader ");
 			password.ShouldBe("  p'a\"s=é ✓ ");
 
-			reader.TryList(out var records, out var diagnostics, out error).ShouldBeTrue(error);
+			reader
+				.TryList(out var records, out var diagnostics, out error)
+				.ShouldBeTrue(error);
 			records.    ShouldBe([new CredentialProfile("b", "other"), new CredentialProfile("project-a/prod", " DOMAIN\\reader ")]);
 			diagnostics.ShouldBeEmpty();
 
-			reader.TryGetCount(out var count, out error).ShouldBeTrue(error);
+			reader
+				.TryGetCount(out var count, out error)
+				.ShouldBeTrue(error);
 			count.ShouldBe(2);
 
-			reader.TryRemove("PROJECT-A/prod", out var removed, out error).ShouldBeTrue(error);
+			reader
+				.TryRemove("PROJECT-A/prod", out var removed, out error)
+				.ShouldBeTrue(error);
 			removed.ShouldBeTrue();
-			reader.TryRemove("project-a/prod", out removed, out error).ShouldBeTrue(error);
+			reader
+				.TryRemove("project-a/prod", out removed, out error)
+				.ShouldBeTrue(error);
 			removed.ShouldBeFalse();
 
-			reader.TryRead("linq2db/project-a/prod", out _, out _, out error).ShouldBeFalse();
+			reader
+				.TryRead("linq2db/project-a/prod", out _, out _, out error)
+				.ShouldBeFalse();
 			error.ShouldBe($"Credential target 'linq2db/project-a/prod' was not found in the local store ({_directory}).");
 
-			reader.TryClear(out var cleared, out error).ShouldBeTrue(error);
+			reader
+				.TryClear(out var cleared, out error)
+				.ShouldBeTrue(error);
 			cleared.ShouldBe(1);
 
 			// Clear keeps the key.
-			File.Exists(KeyPath).ShouldBeTrue();
-			reader.TryGetCount(out count, out error).ShouldBeTrue(error);
+			File
+				.Exists(KeyPath)
+				.ShouldBeTrue();
+			reader
+				.TryGetCount(out count, out error)
+				.ShouldBeTrue(error);
 			count.ShouldBe(0);
 		}
 
 		[Test]
 		public void FilesAreNotReadableAsText()
 		{
-			CreateStore().TryStore("a", "visible-user", "visible-password", out var error).ShouldBeTrue(error);
+			CreateStore()
+				.TryStore("a", "visible-user", "visible-password", out var error)
+				.ShouldBeTrue(error);
 
 			var data = File.ReadAllBytes(DataPath);
 
-			System.Text.Encoding.UTF8.GetString(data).ShouldNotContain("visible");
-			data.Take(7).ShouldBe("L2DBLCS"u8.ToArray());
+			System.Text.Encoding.UTF8
+				.GetString(data)
+				.ShouldNotContain("visible");
+			data
+				.Take(7)
+				.ShouldBe("L2DBLCS"u8.ToArray());
 
 			// On Windows the key file holds the DPAPI-protected key, not the raw 32 bytes.
 			if (OperatingSystem.IsWindows())
-				File.ReadAllBytes(KeyPath).Length.ShouldBeGreaterThan(32);
+				File
+					.ReadAllBytes(KeyPath)
+					.Length
+					.ShouldBeGreaterThan(32);
 			else
-				File.ReadAllBytes(KeyPath).Length.ShouldBe(32);
+				File
+					.ReadAllBytes(KeyPath)
+					.Length
+					.ShouldBe(32);
 		}
 
 		[Test]
@@ -154,12 +194,22 @@ namespace Tests.LinqToDB.CLI
 			if (OperatingSystem.IsWindows())
 				Assert.Ignore("Unix file modes.");
 
-			CreateStore().TryStore("a", "u", "p", out var error).ShouldBeTrue(error);
+			CreateStore()
+				.TryStore("a", "u", "p", out var error)
+				.ShouldBeTrue(error);
 
-			File.GetUnixFileMode(_directory).ShouldBe(Owner700);
-			File.GetUnixFileMode(KeyPath).   ShouldBe(Owner600);
-			File.GetUnixFileMode(DataPath).  ShouldBe(Owner600);
-			File.GetUnixFileMode(LockPath).  ShouldBe(Owner600);
+			File
+				.GetUnixFileMode(_directory)
+				.ShouldBe(Owner700);
+			File
+				.GetUnixFileMode(KeyPath)
+				.ShouldBe(Owner600);
+			File
+				.GetUnixFileMode(DataPath)
+				.ShouldBe(Owner600);
+			File
+				.GetUnixFileMode(LockPath)
+				.ShouldBe(Owner600);
 		}
 
 		[Test]
@@ -167,22 +217,36 @@ namespace Tests.LinqToDB.CLI
 		{
 			var store = CreateStore();
 
-			store.TryRead("linq2db/a", out _, out _, out var error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain("was not found in the local store");
+			store
+				.TryRead("linq2db/a", out _, out _, out var error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain("was not found in the local store");
 
-			store.TryList(out var records, out _, out error).ShouldBeTrue(error);
+			store
+				.TryList(out var records, out _, out error)
+				.ShouldBeTrue(error);
 			records.ShouldBeEmpty();
 
-			store.TryGetCount(out var count, out error).ShouldBeTrue(error);
+			store
+				.TryGetCount(out var count, out error)
+				.ShouldBeTrue(error);
 			count.ShouldBe(0);
 
-			store.TryRemove("a", out var removed, out error).ShouldBeTrue(error);
+			store
+				.TryRemove("a", out var removed, out error)
+				.ShouldBeTrue(error);
 			removed.ShouldBeFalse();
 
-			store.TryClear(out count, out error).ShouldBeTrue(error);
+			store
+				.TryClear(out count, out error)
+				.ShouldBeTrue(error);
 			count.ShouldBe(0);
 
-			Directory.Exists(_directory).ShouldBeFalse();
+			Directory
+				.Exists(_directory)
+				.ShouldBeFalse();
 		}
 
 		[Test]
@@ -193,13 +257,19 @@ namespace Tests.LinqToDB.CLI
 			if (!OperatingSystem.IsWindows())
 				File.SetUnixFileMode(_directory, Owner700);
 
-			CreateStore().TryList(out var records, out _, out var error).ShouldBeTrue(error);
+			CreateStore()
+				.TryList(out var records, out _, out var error)
+				.ShouldBeTrue(error);
 			records.ShouldBeEmpty();
 
-			CreateStore().TryRemove("a", out var removed, out error).ShouldBeTrue(error);
+			CreateStore()
+				.TryRemove("a", out var removed, out error)
+				.ShouldBeTrue(error);
 			removed.ShouldBeFalse();
 
-			Directory.EnumerateFileSystemEntries(_directory).ShouldBeEmpty();
+			Directory
+				.EnumerateFileSystemEntries(_directory)
+				.ShouldBeEmpty();
 		}
 
 		[Test]
@@ -207,33 +277,65 @@ namespace Tests.LinqToDB.CLI
 		{
 			var store = CreateStore();
 
-			store.TryStore("a", "u", "p", out var error).ShouldBeTrue(error);
+			store
+				.TryStore("a", "u", "p", out var error)
+				.ShouldBeTrue(error);
 			File.Delete(KeyPath);
 
 			const string message = "credentials.key' is missing; the stored entries cannot be decrypted";
 
-			store.TryRead("linq2db/a", out _, out _, out error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain(message);
+			store
+				.TryRead("linq2db/a", out _, out _, out error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain(message);
 
-			store.TryList(out _, out _, out error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain(message);
+			store
+				.TryList(out _, out _, out error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain(message);
 
-			store.TryGetCount(out _, out error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain(message);
+			store
+				.TryGetCount(out _, out error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain(message);
 
-			store.TryRemove("a", out _, out error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain(message);
+			store
+				.TryRemove("a", out _, out error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain(message);
 
-			store.TryClear(out _, out error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain(message);
+			store
+				.TryClear(out _, out error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain(message);
 
-			store.TryStore("b", "u", "p", out error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain(message);
+			store
+				.TryStore("b", "u", "p", out error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain(message);
 
-			store.TryInitialize(out error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain(message);
+			store
+				.TryInitialize(out error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain(message);
 
-			File.Exists(KeyPath).ShouldBeFalse();
+			File
+				.Exists(KeyPath)
+				.ShouldBeFalse();
 		}
 
 		[Test]
@@ -241,42 +343,64 @@ namespace Tests.LinqToDB.CLI
 		{
 			var store = CreateStore();
 
-			store.TryInitialize(out var error).ShouldBeTrue(error);
+			store
+				.TryInitialize(out var error)
+				.ShouldBeTrue(error);
 			store.KeyCreated.ShouldBeTrue();
-			File.Exists(DataPath).ShouldBeFalse();
+			File
+				.Exists(DataPath)
+				.ShouldBeFalse();
 
 			var key = File.ReadAllBytes(KeyPath);
 
-			store.TryInitialize(out error).ShouldBeTrue(error);
+			store
+				.TryInitialize(out error)
+				.ShouldBeTrue(error);
 			store.KeyCreated.ShouldBeFalse();
-			File.ReadAllBytes(KeyPath).ShouldBe(key);
+			File
+				.ReadAllBytes(KeyPath)
+				.ShouldBe(key);
 		}
 
 		[Test]
 		public void TamperedCiphertextIsAnError()
 		{
-			CreateStore().TryStore("a", "u", "p", out var error).ShouldBeTrue(error);
+			CreateStore()
+				.TryStore("a", "u", "p", out var error)
+				.ShouldBeTrue(error);
 
 			var data = File.ReadAllBytes(DataPath);
 			data[^1] ^= 0x01;
 			File.WriteAllBytes(DataPath, data);
 
-			CreateStore().TryRead("linq2db/a", out _, out _, out error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain("cannot be decrypted");
-			error.ShouldNotBeNull().ShouldNotContain("not found");
+			CreateStore()
+				.TryRead("linq2db/a", out _, out _, out error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain("cannot be decrypted");
+			error
+				.ShouldNotBeNull()
+				.ShouldNotContain("not found");
 		}
 
 		[Test]
 		public void WrongMagicIsAnError()
 		{
-			CreateStore().TryStore("a", "u", "p", out var error).ShouldBeTrue(error);
+			CreateStore()
+				.TryStore("a", "u", "p", out var error)
+				.ShouldBeTrue(error);
 
 			var data = File.ReadAllBytes(DataPath);
 			data[0] = (byte)'X';
 			File.WriteAllBytes(DataPath, data);
 
-			CreateStore().TryList(out _, out _, out error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain("is not a linq2db local store file");
+			CreateStore()
+				.TryList(out _, out _, out error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain("is not a linq2db local store file");
 		}
 
 		[TestCase(7,  "is not a linq2db local store file, or it is truncated", TestName = "MagicOnlyDataFileIsAnError")]
@@ -284,31 +408,52 @@ namespace Tests.LinqToDB.CLI
 		[TestCase(3,  "is not a linq2db local store file, or it is truncated", TestName = "ShortDataFileIsAnError")]
 		public void TruncatedDataFileIsAnError(int length, string message)
 		{
-			CreateStore().TryStore("a", "u", "p", out var error).ShouldBeTrue(error);
+			CreateStore()
+				.TryStore("a", "u", "p", out var error)
+				.ShouldBeTrue(error);
 
-			File.WriteAllBytes(DataPath, File.ReadAllBytes(DataPath).Take(length).ToArray());
+			var truncated = File
+				.ReadAllBytes(DataPath)
+				.Take(length)
+				.ToArray();
+
+			File.WriteAllBytes(DataPath, truncated);
 
 			foreach (var store in new[] { CreateStore(), CreateStore() })
 			{
-				store.TryRead("linq2db/a", out _, out _, out error).ShouldBeFalse();
-				error.ShouldNotBeNull().ShouldContain(message);
+				store
+					.TryRead("linq2db/a", out _, out _, out error)
+					.ShouldBeFalse();
+				error
+					.ShouldNotBeNull()
+					.ShouldContain(message);
 
-				store.TryStore("b", "u", "p", out error).ShouldBeFalse();
-				error.ShouldNotBeNull().ShouldContain(message);
+				store
+					.TryStore("b", "u", "p", out error)
+					.ShouldBeFalse();
+				error
+					.ShouldNotBeNull()
+					.ShouldContain(message);
 			}
 		}
 
 		[Test]
 		public void UnknownVersionIsAnError()
 		{
-			CreateStore().TryStore("a", "u", "p", out var error).ShouldBeTrue(error);
+			CreateStore()
+				.TryStore("a", "u", "p", out var error)
+				.ShouldBeTrue(error);
 
 			var data = File.ReadAllBytes(DataPath);
 			data[7] = 2;
 			File.WriteAllBytes(DataPath, data);
 
-			CreateStore().TryRead("linq2db/a", out _, out _, out error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain("has format version 2");
+			CreateStore()
+				.TryRead("linq2db/a", out _, out _, out error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain("has format version 2");
 		}
 
 		[Test]
@@ -317,11 +462,17 @@ namespace Tests.LinqToDB.CLI
 			if (OperatingSystem.IsWindows())
 				Assert.Ignore("The Windows key file is DPAPI-protected.");
 
-			CreateStore().TryStore("a", "u", "p", out var error).ShouldBeTrue(error);
+			CreateStore()
+				.TryStore("a", "u", "p", out var error)
+				.ShouldBeTrue(error);
 			File.WriteAllBytes(KeyPath, new byte[16]);
 
-			CreateStore().TryRead("linq2db/a", out _, out _, out error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain("is not a valid key (16 bytes instead of 32)");
+			CreateStore()
+				.TryRead("linq2db/a", out _, out _, out error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain("is not a valid key (16 bytes instead of 32)");
 		}
 
 		[Test]
@@ -330,11 +481,17 @@ namespace Tests.LinqToDB.CLI
 			if (!OperatingSystem.IsWindows())
 				Assert.Ignore("DPAPI.");
 
-			CreateStore().TryStore("a", "u", "p", out var error).ShouldBeTrue(error);
+			CreateStore()
+				.TryStore("a", "u", "p", out var error)
+				.ShouldBeTrue(error);
 			File.WriteAllBytes(KeyPath, new byte[64]);
 
-			CreateStore().TryRead("linq2db/a", out _, out _, out error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain("the key belongs to another Windows user or machine");
+			CreateStore()
+				.TryRead("linq2db/a", out _, out _, out error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain("the key belongs to another Windows user or machine");
 		}
 
 		[TestCase("credentials.dat")]
@@ -344,12 +501,16 @@ namespace Tests.LinqToDB.CLI
 			if (OperatingSystem.IsWindows())
 				Assert.Ignore("Unix file modes.");
 
-			CreateStore().TryStore("a", "u", "p", out var error).ShouldBeTrue(error);
+			CreateStore()
+				.TryStore("a", "u", "p", out var error)
+				.ShouldBeTrue(error);
 
 			var path = Path.Combine(_directory, file);
 			File.SetUnixFileMode(path, Owner600 | UnixFileMode.GroupRead | UnixFileMode.OtherRead);
 
-			CreateStore().TryRead("linq2db/a", out _, out _, out error).ShouldBeFalse();
+			CreateStore()
+				.TryRead("linq2db/a", out _, out _, out error)
+				.ShouldBeFalse();
 			error.ShouldBe($"'{path}' is accessible by other users. Run: chmod 600 '{path}'");
 		}
 
@@ -360,7 +521,9 @@ namespace Tests.LinqToDB.CLI
 			if (OperatingSystem.IsWindows())
 				Assert.Ignore("POSIX symbolic links.");
 
-			CreateStore().TryStore("a", "u", "p", out var error).ShouldBeTrue(error);
+			CreateStore()
+				.TryStore("a", "u", "p", out var error)
+				.ShouldBeTrue(error);
 
 			var path   = Path.Combine(_directory, file);
 			var target = Path.Combine(_root, file + ".elsewhere");
@@ -368,8 +531,12 @@ namespace Tests.LinqToDB.CLI
 			File.Move(path, target);
 			File.CreateSymbolicLink(path, target);
 
-			CreateStore().TryRead("linq2db/a", out _, out _, out error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain("is a symbolic link");
+			CreateStore()
+				.TryRead("linq2db/a", out _, out _, out error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain("is a symbolic link");
 		}
 
 		[Test]
@@ -378,16 +545,26 @@ namespace Tests.LinqToDB.CLI
 			if (OperatingSystem.IsWindows())
 				Assert.Ignore("Unix file modes.");
 
-			CreateStore().TryStore("a", "u", "p", out var error).ShouldBeTrue(error);
+			CreateStore()
+				.TryStore("a", "u", "p", out var error)
+				.ShouldBeTrue(error);
 			File.SetUnixFileMode(_directory, (UnixFileMode)0b111_111_111);
 
 			try
 			{
-				CreateStore().TryRead("linq2db/a", out _, out _, out error).ShouldBeFalse();
-				error.ShouldNotBeNull().ShouldContain("chmod 700");
+				CreateStore()
+					.TryRead("linq2db/a", out _, out _, out error)
+					.ShouldBeFalse();
+				error
+					.ShouldNotBeNull()
+					.ShouldContain("chmod 700");
 
-				CreateStore().TryStore("b", "u", "p", out error).ShouldBeFalse();
-				error.ShouldNotBeNull().ShouldContain("chmod 700");
+				CreateStore()
+					.TryStore("b", "u", "p", out error)
+					.ShouldBeFalse();
+				error
+					.ShouldNotBeNull()
+					.ShouldContain("chmod 700");
 			}
 			finally
 			{
@@ -410,13 +587,19 @@ namespace Tests.LinqToDB.CLI
 			{
 				var store = new LocalCredentialStore(Path.Combine(shared, "credentials"), _root);
 
-				store.TryStore("a", "u", "p", out var error).ShouldBeFalse();
-				error.ShouldNotBeNull().ShouldContain($"is inside '{shared}', which every user can write to without the sticky bit");
+				store
+					.TryStore("a", "u", "p", out var error)
+					.ShouldBeFalse();
+				error
+					.ShouldNotBeNull()
+					.ShouldContain($"is inside '{shared}', which every user can write to without the sticky bit");
 
 				// With the sticky bit others cannot rename or delete what they do not own.
 				File.SetUnixFileMode(shared, (UnixFileMode)0b111_111_111 | UnixFileMode.StickyBit);
 
-				store.TryStore("a", "u", "p", out error).ShouldBeTrue(error);
+				store
+					.TryStore("a", "u", "p", out error)
+					.ShouldBeTrue(error);
 			}
 			finally
 			{
@@ -435,7 +618,9 @@ namespace Tests.LinqToDB.CLI
 			Directory.CreateDirectory(config);
 			File.SetUnixFileMode(config, (UnixFileMode)0b111_111_101);
 
-			new LocalCredentialStore(Path.Combine(config, "linq2db"), _root).TryStore("a", "u", "p", out var error).ShouldBeTrue(error);
+			new LocalCredentialStore(Path.Combine(config, "linq2db"), _root)
+				.TryStore("a", "u", "p", out var error)
+				.ShouldBeTrue(error);
 		}
 
 		[Test]
@@ -456,8 +641,12 @@ namespace Tests.LinqToDB.CLI
 
 			try
 			{
-				new LocalCredentialStore(Path.Combine(link, "credentials"), _root).TryStore("a", "u", "p", out var error).ShouldBeFalse();
-				error.ShouldNotBeNull().ShouldContain($"is inside '{shared}', which every user can write to without the sticky bit");
+				new LocalCredentialStore(Path.Combine(link, "credentials"), _root)
+					.TryStore("a", "u", "p", out var error)
+					.ShouldBeFalse();
+				error
+					.ShouldNotBeNull()
+					.ShouldContain($"is inside '{shared}', which every user can write to without the sticky bit");
 			}
 			finally
 			{
@@ -484,8 +673,12 @@ namespace Tests.LinqToDB.CLI
 
 			try
 			{
-				new LocalCredentialStore(Path.Combine(link, "credentials"), _root).TryStore("a", "u", "p", out var error).ShouldBeFalse();
-				error.ShouldNotBeNull().ShouldContain($"is inside '{shared}', which every user can write to without the sticky bit");
+				new LocalCredentialStore(Path.Combine(link, "credentials"), _root)
+					.TryStore("a", "u", "p", out var error)
+					.ShouldBeFalse();
+				error
+					.ShouldNotBeNull()
+					.ShouldContain($"is inside '{shared}', which every user can write to without the sticky bit");
 			}
 			finally
 			{
@@ -501,7 +694,9 @@ namespace Tests.LinqToDB.CLI
 
 			// A store mounted read-only (here: files and directory without write permission): reading only locks, so it
 			// needs no write access; writing fails at once instead of waiting for the lock.
-			CreateStore().TryStore("a", "u", "p", out var error).ShouldBeTrue(error);
+			CreateStore()
+				.TryStore("a", "u", "p", out var error)
+				.ShouldBeTrue(error);
 
 			const UnixFileMode ReadOnly = UnixFileMode.UserRead;
 
@@ -512,7 +707,9 @@ namespace Tests.LinqToDB.CLI
 
 			try
 			{
-				CreateStore().TryRead("linq2db/a", out var user, out var password, out error).ShouldBeTrue(error);
+				CreateStore()
+					.TryRead("linq2db/a", out var user, out var password, out error)
+					.ShouldBeTrue(error);
 				user.    ShouldBe("u");
 				password.ShouldBe("p");
 
@@ -520,9 +717,13 @@ namespace Tests.LinqToDB.CLI
 				{
 					var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
-					CreateStore(TimeSpan.FromSeconds(3)).TryStore("b", "u", "p", out error).ShouldBeFalse();
+					CreateStore(TimeSpan.FromSeconds(3))
+						.TryStore("b", "u", "p", out error)
+						.ShouldBeFalse();
 					stopwatch.Elapsed.ShouldBeLessThan(TimeSpan.FromSeconds(3));
-					error.ShouldNotBeNull().ShouldNotContain("another linq2db-cli process");
+					error
+						.ShouldNotBeNull()
+						.ShouldNotContain("another linq2db-cli process");
 				}
 			}
 			finally
@@ -542,21 +743,31 @@ namespace Tests.LinqToDB.CLI
 			File.SetUnixFileMode(target.FullName, Owner700);
 			Directory.CreateSymbolicLink(_directory, target.FullName);
 
-			CreateStore().TryStore("a", "u", "p", out var error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain("is a symbolic link");
+			CreateStore()
+				.TryStore("a", "u", "p", out var error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain("is a symbolic link");
 		}
 
 		[Test]
 		public void LockTimeoutNamesTheLockFile()
 		{
-			CreateStore().TryStore("a", "u", "p", out var error).ShouldBeTrue(error);
+			CreateStore()
+				.TryStore("a", "u", "p", out var error)
+				.ShouldBeTrue(error);
 
 			using (new FileStream(LockPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
 			{
-				CreateStore(TimeSpan.FromMilliseconds(300)).TryRead("linq2db/a", out _, out _, out error).ShouldBeFalse();
+				CreateStore(TimeSpan.FromMilliseconds(300))
+					.TryRead("linq2db/a", out _, out _, out error)
+					.ShouldBeFalse();
 			}
 
-			error.ShouldNotBeNull().ShouldContain($"held '{LockPath}' for more than");
+			error
+				.ShouldNotBeNull()
+				.ShouldContain($"held '{LockPath}' for more than");
 		}
 
 		[Test]
@@ -564,7 +775,9 @@ namespace Tests.LinqToDB.CLI
 		{
 			// The lock path cannot be opened for a reason other than another holder (here a dangling symbolic link, standing
 			// for a read-only or failing file system): no wait for the lock timeout, and no blame on another process.
-			CreateStore().TryStore("a", "u", "p", out var error).ShouldBeTrue(error);
+			CreateStore()
+				.TryStore("a", "u", "p", out var error)
+				.ShouldBeTrue(error);
 			File.Delete(LockPath);
 
 			try
@@ -579,18 +792,24 @@ namespace Tests.LinqToDB.CLI
 			var timeout   = TimeSpan.FromSeconds(3);
 			var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
-			CreateStore(timeout).TryStore("b", "u", "p", out error).ShouldBeFalse();
+			CreateStore(timeout)
+				.TryStore("b", "u", "p", out error)
+				.ShouldBeFalse();
 
 			stopwatch.Stop();
 
-			error.ShouldNotBeNull().ShouldNotContain("another linq2db-cli process");
+			error
+				.ShouldNotBeNull()
+				.ShouldNotContain("another linq2db-cli process");
 			stopwatch.Elapsed.ShouldBeLessThan(timeout);
 		}
 
 		[Test]
 		public void StaleTemporaryFilesAreDeleted()
 		{
-			CreateStore().TryStore("a", "u", "p", out var error).ShouldBeTrue(error);
+			CreateStore()
+				.TryStore("a", "u", "p", out var error)
+				.ShouldBeTrue(error);
 
 			var stale = Path.Combine(_directory, "credentials.dat.0123456789abcdef.tmp");
 			var fresh = Path.Combine(_directory, "credentials.key.fedcba9876543210.tmp");
@@ -599,10 +818,16 @@ namespace Tests.LinqToDB.CLI
 			File.WriteAllText(fresh, "x");
 			File.SetLastWriteTimeUtc(stale, DateTime.UtcNow.AddMinutes(-5));
 
-			CreateStore().TryStore("b", "u", "p", out error).ShouldBeTrue(error);
+			CreateStore()
+				.TryStore("b", "u", "p", out error)
+				.ShouldBeTrue(error);
 
-			File.Exists(stale).ShouldBeFalse();
-			File.Exists(fresh).ShouldBeTrue();
+			File
+				.Exists(stale)
+				.ShouldBeFalse();
+			File
+				.Exists(fresh)
+				.ShouldBeTrue();
 		}
 
 		[Test]
@@ -611,7 +836,9 @@ namespace Tests.LinqToDB.CLI
 			// A store whose lock file is gone (deleted by hand): a reader runs without the lock, so a writer can replace the
 			// data file while the reader holds it open. Elsewhere a rename over an open file succeeds at once; on Windows it
 			// fails while the reader's handle is open, and the writer retries the rename until the read is done.
-			CreateStore().TryStore("seed", "u", "p", out var error).ShouldBeTrue(error);
+			CreateStore()
+				.TryStore("seed", "u", "p", out var error)
+				.ShouldBeTrue(error);
 			File.Delete(LockPath);
 
 			var timeout = TimeSpan.FromSeconds(30);
@@ -669,7 +896,9 @@ namespace Tests.LinqToDB.CLI
 
 			try
 			{
-				reader.TryGetCount(out count, out error).ShouldBeTrue(error);
+				reader
+					.TryGetCount(out count, out error)
+					.ShouldBeTrue(error);
 			}
 			finally
 			{
@@ -680,7 +909,9 @@ namespace Tests.LinqToDB.CLI
 
 			var written = writing.ShouldNotBeNull("the reader did not open the data file");
 
-			written.Wait(timeout).ShouldBeTrue("the writer did not finish");
+			written
+				.Wait(timeout)
+				.ShouldBeTrue("the writer did not finish");
 			written.Result.ShouldBeNull();
 
 			if (OperatingSystem.IsWindows())
@@ -693,7 +924,9 @@ namespace Tests.LinqToDB.CLI
 				failures.ShouldBe(0);
 			}
 
-			CreateStore().TryGetCount(out count, out error).ShouldBeTrue(error);
+			CreateStore()
+				.TryGetCount(out count, out error)
+				.ShouldBeTrue(error);
 			count.ShouldBe(2);
 		}
 
@@ -702,21 +935,26 @@ namespace Tests.LinqToDB.CLI
 		{
 			// Two store instances on two threads: the lock (flock on Unix, a sharing violation on Windows) serializes them
 			// within one process as it does across processes.
-			CreateStore().TryInitialize(out var error).ShouldBeTrue(error);
+			CreateStore()
+				.TryInitialize(out var error)
+				.ShouldBeTrue(error);
 
 			const int perWriter = 25;
 
 			var errors  = new System.Collections.Concurrent.ConcurrentQueue<string>();
-			var writers = Enumerable.Range(0, 2).Select(writer => Task.Run(() =>
-			{
-				var store = CreateStore(TimeSpan.FromSeconds(30));
-
-				for (var i = 0; i < perWriter; i++)
+			var writers = Enumerable
+				.Range(0, 2)
+				.Select(writer => Task.Run(() =>
 				{
-					if (!store.TryStore($"w{writer}/{i}", "u", $"p{writer}-{i}", out var storeError))
-						errors.Enqueue(storeError!);
-				}
-			})).ToArray();
+					var store = CreateStore(TimeSpan.FromSeconds(30));
+
+					for (var i = 0; i < perWriter; i++)
+					{
+						if (!store.TryStore($"w{writer}/{i}", "u", $"p{writer}-{i}", out var storeError))
+							errors.Enqueue(storeError!);
+					}
+				}))
+				.ToArray();
 
 			// A reader running alongside the writers (on Windows a reader holding the data file open would make a writer's
 			// replace fail).
@@ -731,19 +969,27 @@ namespace Tests.LinqToDB.CLI
 				}
 			});
 
-			Task.WaitAll([.. writers, reader], TimeSpan.FromSeconds(120)).ShouldBeTrue("the writers did not finish");
+			Task
+				.WaitAll([.. writers, reader], TimeSpan.FromSeconds(120))
+				.ShouldBeTrue("the writers did not finish");
 
 			errors.ShouldBeEmpty();
 
 			var check = CreateStore();
 
-			check.TryGetCount(out var count, out error).ShouldBeTrue(error);
+			check
+				.TryGetCount(out var count, out error)
+				.ShouldBeTrue(error);
 			count.ShouldBe(2 * perWriter);
 
-			check.TryRead("linq2db/w1/24", out _, out var password, out error).ShouldBeTrue(error);
+			check
+				.TryRead("linq2db/w1/24", out _, out var password, out error)
+				.ShouldBeTrue(error);
 			password.ShouldBe("p1-24");
 
-			Directory.EnumerateFiles(_directory, "*.tmp").ShouldBeEmpty();
+			Directory
+				.EnumerateFiles(_directory, "*.tmp")
+				.ShouldBeEmpty();
 		}
 	}
 }

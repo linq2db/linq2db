@@ -51,13 +51,20 @@ namespace Tests.LinqToDB.CLI
 				$"{{ printf 'argc=%s\\n' \"$#\"; printf 'arg=%s\\n' \"$1\"; printf 'interactive=%s\\n' \"$LINQ2DB_CREDENTIAL_INTERACTIVE\"; printf 'nologo=%s\\n' \"$DOTNET_NOLOGO\"; cat; }} > '{record}'\nprintf 'protocol=1\\nstatus=ok\\nusername=u\\npassword=p\\n'\n",
 				$"@echo off\r\n(echo arg=%1& echo extra=%2& echo interactive=%LINQ2DB_CREDENTIAL_INTERACTIVE%& echo nologo=%DOTNET_NOLOGO%& more) > \"{record}\"\r\necho protocol=1\r\necho status=ok\r\necho username=u\r\necho password=p\r\n");
 
-			var result = CredentialsCliTestSupport.CreateRunner(helper).Run("get", CredentialsCliTestSupport.Request("protocol=1", "verb=get", "target=linq2db/a"));
+			var result = CredentialsCliTestSupport
+				.CreateRunner(helper)
+				.Run("get", CredentialsCliTestSupport.Request("protocol=1", "verb=get", "target=linq2db/a"));
 
 			result.Failure.ShouldBeNull();
 			result.ExitCode.ShouldBe(0);
-			Encoding.UTF8.GetString(result.Output).Replace("\r", string.Empty, StringComparison.Ordinal).ShouldBe("protocol=1\nstatus=ok\nusername=u\npassword=p\n");
+			Encoding.UTF8
+				.GetString(result.Output)
+				.Replace("\r", string.Empty, StringComparison.Ordinal)
+				.ShouldBe("protocol=1\nstatus=ok\nusername=u\npassword=p\n");
 
-			var recorded = File.ReadAllText(record).Replace("\r", string.Empty, StringComparison.Ordinal);
+			var recorded = File
+				.ReadAllText(record)
+				.Replace("\r", string.Empty, StringComparison.Ordinal);
 
 			recorded.ShouldContain("arg=get\n");
 			recorded.ShouldContain("interactive=0\n");
@@ -85,11 +92,16 @@ namespace Tests.LinqToDB.CLI
 				? BuildArgumentEchoProgram()
 				: Script("argv-helper", "for a in \"$@\"; do printf '[%s]\\n' \"$a\"; done\n", string.Empty);
 
-			var result = CredentialsCliTestSupport.CreateRunner(program, arguments: "\"a b\" c\\\"d e").Run("store", CredentialsCliTestSupport.Request("protocol=1", "verb=store"));
+			var result = CredentialsCliTestSupport
+				.CreateRunner(program, arguments: "\"a b\" c\\\"d e")
+				.Run("store", CredentialsCliTestSupport.Request("protocol=1", "verb=store"));
 
 			result.Failure.ShouldBeNull();
 			result.ExitCode.ShouldBe(0, result.ErrorOutput);
-			Encoding.UTF8.GetString(result.Output).Replace("\r", string.Empty, StringComparison.Ordinal).ShouldBe("[a b]\n[c\"d]\n[e]\n[store]\n");
+			Encoding.UTF8
+				.GetString(result.Output)
+				.Replace("\r", string.Empty, StringComparison.Ordinal)
+				.ShouldBe("[a b]\n[c\"d]\n[e]\n[store]\n");
 		}
 
 		[Test]
@@ -100,10 +112,15 @@ namespace Tests.LinqToDB.CLI
 
 			var helper = Script("argv-helper", string.Empty, "@echo off\r\necho [%~1]\r\necho [%~2]\r\necho [%~3]\r\n");
 
-			var result = CredentialsCliTestSupport.CreateRunner(helper, arguments: "\"a b\" c").Run("store", CredentialsCliTestSupport.Request("protocol=1", "verb=store"));
+			var result = CredentialsCliTestSupport
+				.CreateRunner(helper, arguments: "\"a b\" c")
+				.Run("store", CredentialsCliTestSupport.Request("protocol=1", "verb=store"));
 
 			result.ExitCode.ShouldBe(0, result.ErrorOutput);
-			Encoding.UTF8.GetString(result.Output).Replace("\r", string.Empty, StringComparison.Ordinal).ShouldBe("[a b]\n[c]\n[store]\n");
+			Encoding.UTF8
+				.GetString(result.Output)
+				.Replace("\r", string.Empty, StringComparison.Ordinal)
+				.ShouldBe("[a b]\n[c]\n[store]\n");
 		}
 
 		static readonly System.Threading.Lock _argumentEchoLock = new();
@@ -117,7 +134,10 @@ namespace Tests.LinqToDB.CLI
 		/// </summary>
 		static string BuildArgumentEchoProgram()
 		{
-			var hash       = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(ArgumentEchoSource))).Substring(0, 16).ToLowerInvariant();
+			var hash       = Convert
+				.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(ArgumentEchoSource)))
+				.Substring(0, 16)
+				.ToLowerInvariant();
 			var directory  = Path.Combine(CredentialsCliTestSupport.Root, $"argecho-{hash}");
 			var source     = Path.Combine(directory, "argecho.cs");
 			var output     = Path.Combine(directory, "bin");
@@ -151,7 +171,9 @@ namespace Tests.LinqToDB.CLI
 				var buildOutput = process.StandardOutput.ReadToEndAsync();
 				var buildErrors = process.StandardError.ReadToEndAsync();
 
-				process.WaitForExit(TimeSpan.FromSeconds(300)).ShouldBeTrue("dotnet build of the argument echo program timed out");
+				process
+					.WaitForExit(TimeSpan.FromSeconds(300))
+					.ShouldBeTrue("dotnet build of the argument echo program timed out");
 				process.ExitCode.ShouldBe(0, buildOutput.Result + buildErrors.Result);
 
 				return executable;
@@ -166,9 +188,14 @@ namespace Tests.LinqToDB.CLI
 				"printf 'protocol=1\\nstatus=ok\\nusername=%s\\npassword=p\\n' \"$LINQ2DB_CREDENTIAL_INTERACTIVE\"\n",
 				"@echo off\r\necho protocol=1\r\necho status=ok\r\necho username=%LINQ2DB_CREDENTIAL_INTERACTIVE%\r\necho password=p\r\n");
 
-			var result = CredentialsCliTestSupport.CreateRunner(helper, interactive: true).Run("get", CredentialsCliTestSupport.Request("protocol=1"));
+			var result = CredentialsCliTestSupport
+				.CreateRunner(helper, interactive: true)
+				.Run("get", CredentialsCliTestSupport.Request("protocol=1"));
 
-			Encoding.UTF8.GetString(result.Output).Replace("\r", string.Empty, StringComparison.Ordinal).ShouldContain("username=1\n");
+			Encoding.UTF8
+				.GetString(result.Output)
+				.Replace("\r", string.Empty, StringComparison.Ordinal)
+				.ShouldContain("username=1\n");
 		}
 
 		[Test]
@@ -181,7 +208,9 @@ namespace Tests.LinqToDB.CLI
 
 			var store = new CredentialsCliStore(CredentialsCliTestSupport.CreateRunner(helper));
 
-			store.TryRead("linq2db/a", out _, out _, out var error).ShouldBeFalse();
+			store
+				.TryRead("linq2db/a", out _, out _, out var error)
+				.ShouldBeFalse();
 
 			error.ShouldBe($"Credentials CLI '{helper}' failed with exit code 3: the keyring is locked");
 		}
@@ -197,7 +226,9 @@ namespace Tests.LinqToDB.CLI
 
 			var store = new CredentialsCliStore(CredentialsCliTestSupport.CreateRunner(helper));
 
-			store.TryStore("a", "u", Secret, out var error).ShouldBeFalse();
+			store
+				.TryStore("a", "u", Secret, out var error)
+				.ShouldBeFalse();
 
 			error.ShouldBe($"Credentials CLI '{helper}' failed with exit code 1: password=***");
 		}
@@ -212,7 +243,9 @@ namespace Tests.LinqToDB.CLI
 			var helper = Script("cut-helper", "i=0\nwhile [ $i -lt 4090 ]; do printf '\\n' >&2; i=$((i + 1)); done\nsed -n 's/^password=//p' >&2\nexit 1\n", string.Empty);
 			var store  = new CredentialsCliStore(CredentialsCliTestSupport.CreateRunner(helper));
 
-			store.TryStore("a", "u", "TOPSECRETVALUE", out var error).ShouldBeFalse();
+			store
+				.TryStore("a", "u", "TOPSECRETVALUE", out var error)
+				.ShouldBeFalse();
 
 			error.ShouldBe($"Credentials CLI '{helper}' failed with exit code 1: ***");
 		}
@@ -228,7 +261,9 @@ namespace Tests.LinqToDB.CLI
 			var helper = Script("wide-helper", "printf 'echo: ' >&2\nsed -n 's/^password=//p' >&2\nexit 1\n", string.Empty);
 			var store  = new CredentialsCliStore(CredentialsCliTestSupport.CreateRunner(helper));
 
-			store.TryStore("a", "u", "TOPSECRET" + new string('v', 5000), out var error).ShouldBeFalse();
+			store
+				.TryStore("a", "u", "TOPSECRET" + new string('v', 5000), out var error)
+				.ShouldBeFalse();
 
 			error.ShouldBe($"Credentials CLI '{helper}' failed with exit code 1: echo: ***");
 		}
@@ -258,7 +293,9 @@ namespace Tests.LinqToDB.CLI
 
 				stopwatch.Stop();
 
-				result.Failure.ShouldNotBeNull().ShouldContain("without reading its whole request");
+				result.Failure
+					.ShouldNotBeNull()
+					.ShouldContain("without reading its whole request");
 				stopwatch.Elapsed.ShouldBeLessThan(TimeSpan.FromSeconds(20));
 			}
 			finally
@@ -279,12 +316,22 @@ namespace Tests.LinqToDB.CLI
 
 			try
 			{
-				runner.Run("get", CredentialsCliTestSupport.Request("protocol=1")).Failure.ShouldNotBeNull().ShouldContain("left a background process holding its output open");
+				runner
+					.Run("get", CredentialsCliTestSupport.Request("protocol=1"))
+					.Failure
+					.ShouldNotBeNull()
+					.ShouldContain("left a background process holding its output open");
 				RecordChild(pidFile);
 				File.Delete(pidFile);
 
-				runner.Run("get", CredentialsCliTestSupport.Request("protocol=1")).Failure.ShouldNotBeNull().ShouldContain("did not answer recently");
-				File.Exists(pidFile).ShouldBeFalse();
+				runner
+					.Run("get", CredentialsCliTestSupport.Request("protocol=1"))
+					.Failure
+					.ShouldNotBeNull()
+					.ShouldContain("did not answer recently");
+				File
+					.Exists(pidFile)
+					.ShouldBeFalse();
 			}
 			finally
 			{
@@ -297,7 +344,14 @@ namespace Tests.LinqToDB.CLI
 
 		void RecordChild(string pidFile)
 		{
-			if (File.Exists(pidFile) && int.TryParse(File.ReadAllText(pidFile).Trim(), System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var pid))
+			if (!File.Exists(pidFile))
+				return;
+
+			var text = File
+				.ReadAllText(pidFile)
+				.Trim();
+
+			if (int.TryParse(text, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var pid))
 				_children.Add(pid);
 		}
 
@@ -327,9 +381,13 @@ namespace Tests.LinqToDB.CLI
 			var line   = new string('e', 300);
 			var helper = Script("long-helper", $"printf '%s\\n' '{line}' >&2\nexit 1\n", $"@echo off\r\necho {line} 1>&2\r\nexit /b 1\r\n");
 
-			var result = CredentialsCliTestSupport.CreateRunner(helper).Run("get", CredentialsCliTestSupport.Request("protocol=1"));
+			var result = CredentialsCliTestSupport
+				.CreateRunner(helper)
+				.Run("get", CredentialsCliTestSupport.Request("protocol=1"));
 
-			CredentialsCliProcessRunner.GetFirstLine(result.ErrorOutput).ShouldBe(new string('e', 200) + "...");
+			CredentialsCliProcessRunner
+				.GetFirstLine(result.ErrorOutput)
+				.ShouldBe(new string('e', 200) + "...");
 		}
 
 		[Test]
@@ -348,7 +406,10 @@ namespace Tests.LinqToDB.CLI
 
 			result.Failure.ShouldBeNull();
 			result.ExitCode.ShouldBe(0);
-			Encoding.UTF8.GetString(result.Output).Replace("\r", string.Empty, StringComparison.Ordinal).ShouldBe("username=u\npassword=p\n");
+			Encoding.UTF8
+				.GetString(result.Output)
+				.Replace("\r", string.Empty, StringComparison.Ordinal)
+				.ShouldBe("username=u\npassword=p\n");
 		}
 
 		[Test]
@@ -368,8 +429,16 @@ namespace Tests.LinqToDB.CLI
 				Timeout = TimeSpan.FromSeconds(10),
 			};
 
-			slow.Run("get", CredentialsCliTestSupport.Request("protocol=1")).Failure.ShouldNotBeNull().ShouldContain("did not answer within");
-			slow.Run("get", CredentialsCliTestSupport.Request("protocol=1")).Failure.ShouldNotBeNull().ShouldContain("did not answer recently");
+			slow
+				.Run("get", CredentialsCliTestSupport.Request("protocol=1"))
+				.Failure
+				.ShouldNotBeNull()
+				.ShouldContain("did not answer within");
+			slow
+				.Run("get", CredentialsCliTestSupport.Request("protocol=1"))
+				.Failure
+				.ShouldNotBeNull()
+				.ShouldContain("did not answer recently");
 
 			var result = fast.Run("get", CredentialsCliTestSupport.Request("protocol=1"));
 
@@ -393,7 +462,9 @@ namespace Tests.LinqToDB.CLI
 
 			stopwatch.Stop();
 
-			result.Failure.ShouldNotBeNull().ShouldContain("wrote more than 1048576 bytes to standard output");
+			result.Failure
+				.ShouldNotBeNull()
+				.ShouldContain("wrote more than 1048576 bytes to standard output");
 			stopwatch.Elapsed.ShouldBeLessThan(TimeSpan.FromSeconds(30));
 		}
 
@@ -418,20 +489,34 @@ namespace Tests.LinqToDB.CLI
 
 			stopwatch.Stop();
 
-			result.Failure.ShouldNotBeNull().ShouldContain("did not answer within 2 seconds");
+			result.Failure
+				.ShouldNotBeNull()
+				.ShouldContain("did not answer within 2 seconds");
 			stopwatch.Elapsed.ShouldBeLessThan(TimeSpan.FromSeconds(20));
 
 			// The fail-fast window: the helper is not started again.
 			File.Delete(marker);
 
-			runner.Run("get", CredentialsCliTestSupport.Request("protocol=1")).Failure.ShouldNotBeNull().ShouldContain("did not answer recently");
-			File.Exists(marker).ShouldBeFalse();
+			runner
+				.Run("get", CredentialsCliTestSupport.Request("protocol=1"))
+				.Failure
+				.ShouldNotBeNull()
+				.ShouldContain("did not answer recently");
+			File
+				.Exists(marker)
+				.ShouldBeFalse();
 
 			// After the window it is started again.
 			clock.Advance(TimeSpan.FromSeconds(61));
 
-			runner.Run("get", CredentialsCliTestSupport.Request("protocol=1")).Failure.ShouldNotBeNull().ShouldContain("did not answer within");
-			File.Exists(marker).ShouldBeTrue();
+			runner
+				.Run("get", CredentialsCliTestSupport.Request("protocol=1"))
+				.Failure
+				.ShouldNotBeNull()
+				.ShouldContain("did not answer within");
+			File
+				.Exists(marker)
+				.ShouldBeTrue();
 		}
 
 		[Test]
@@ -459,15 +544,21 @@ namespace Tests.LinqToDB.CLI
 				InteractiveTimeout = TimeSpan.FromSeconds(30),
 			}.Run("get", CredentialsCliTestSupport.Request("protocol=1"));
 
-			nonInteractive.Failure.ShouldNotBeNull().ShouldContain("did not answer within 1 seconds");
+			nonInteractive.Failure
+				.ShouldNotBeNull()
+				.ShouldContain("did not answer within 1 seconds");
 		}
 
 		[Test]
 		public void MissingHelperIsReported()
 		{
-			var result = CredentialsCliTestSupport.CreateRunner(Path.Combine(_directory, "missing-helper.exe")).Run("get", []);
+			var result = CredentialsCliTestSupport
+				.CreateRunner(Path.Combine(_directory, "missing-helper.exe"))
+				.Run("get", []);
 
-			result.Failure.ShouldNotBeNull().ShouldContain("was not found");
+			result.Failure
+				.ShouldNotBeNull()
+				.ShouldContain("was not found");
 		}
 
 		[Test]
@@ -479,11 +570,15 @@ namespace Tests.LinqToDB.CLI
 			var directory = Directory.CreateDirectory(Path.Combine(_directory, "h (x) y")).FullName;
 			var helper    = CredentialsCliTestSupport.WriteScript(directory, "helper & co", string.Empty, "@echo off\r\necho protocol=1\r\necho status=ok\r\necho username=%~1-%2\r\necho password=p\r\n");
 
-			var result = CredentialsCliTestSupport.CreateRunner(helper, arguments: "\"--vault x\"").Run("get", CredentialsCliTestSupport.Request("protocol=1"));
+			var result = CredentialsCliTestSupport
+				.CreateRunner(helper, arguments: "\"--vault x\"")
+				.Run("get", CredentialsCliTestSupport.Request("protocol=1"));
 
 			result.Failure.ShouldBeNull();
 			result.ExitCode.ShouldBe(0, result.ErrorOutput);
-			Encoding.UTF8.GetString(result.Output).ShouldContain("username=--vault x-get");
+			Encoding.UTF8
+				.GetString(result.Output)
+				.ShouldContain("username=--vault x-get");
 		}
 
 		[Test]
@@ -495,9 +590,13 @@ namespace Tests.LinqToDB.CLI
 			var helper = Script("noexec-helper", "printf 'protocol=1\\nstatus=ok\\n'\n", string.Empty);
 			File.SetUnixFileMode(helper, UnixFileMode.UserRead | UnixFileMode.UserWrite);
 
-			var result = CredentialsCliTestSupport.CreateRunner(helper).Run("get", []);
+			var result = CredentialsCliTestSupport
+				.CreateRunner(helper)
+				.Run("get", []);
 
-			result.Failure.ShouldNotBeNull().ShouldContain("A script needs the execute bit (chmod u+x) and a '#!' line");
+			result.Failure
+				.ShouldNotBeNull()
+				.ShouldContain("A script needs the execute bit (chmod u+x) and a '#!' line");
 		}
 
 		[Test]
@@ -510,9 +609,13 @@ namespace Tests.LinqToDB.CLI
 			File.WriteAllText(helper, "printf 'protocol=1\\nstatus=ok\\n'\n");
 			File.SetUnixFileMode(helper, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
 
-			var result = CredentialsCliTestSupport.CreateRunner(helper).Run("get", []);
+			var result = CredentialsCliTestSupport
+				.CreateRunner(helper)
+				.Run("get", []);
 
-			result.Failure.ShouldNotBeNull().ShouldContain("'#!' line");
+			result.Failure
+				.ShouldNotBeNull()
+				.ShouldContain("'#!' line");
 		}
 
 		[Test]
@@ -546,14 +649,22 @@ namespace Tests.LinqToDB.CLI
 
 			const string password = "pä ss wörd ✓ 密码";
 
-			store.TryStore("ps", "üser", password, out var error).ShouldBeTrue(error);
-			store.TryRead("linq2db/ps", out var user, out var readPassword, out error).ShouldBeTrue(error);
+			store
+				.TryStore("ps", "üser", password, out var error)
+				.ShouldBeTrue(error);
+			store
+				.TryRead("linq2db/ps", out var user, out var readPassword, out error)
+				.ShouldBeTrue(error);
 
 			user.        ShouldBe("üser");
 			readPassword.ShouldBe(password);
 
-			store.TryRead("linq2db/other", out _, out _, out error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain("was not found by credentials CLI");
+			store
+				.TryRead("linq2db/other", out _, out _, out error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain("was not found by credentials CLI");
 		}
 
 		/// <summary>A PowerShell credentials CLI keeping entries in the JSON file named by its -Store argument.</summary>
@@ -610,19 +721,27 @@ namespace Tests.LinqToDB.CLI
 				var buildOutput = process.StandardOutput.ReadToEndAsync();
 				var buildErrors = process.StandardError.ReadToEndAsync();
 
-				process.WaitForExit(TimeSpan.FromSeconds(300)).ShouldBeTrue("dotnet build of the example timed out");
+				process
+					.WaitForExit(TimeSpan.FromSeconds(300))
+					.ShouldBeTrue("dotnet build of the example timed out");
 				process.ExitCode.ShouldBe(0, buildOutput.Result + buildErrors.Result);
 			}
 
 			var executable = Path.Combine(output, OperatingSystem.IsWindows() ? "secrethelper.exe" : "secrethelper");
 			var file       = Path.Combine(_directory, "built.json");
 
-			CredentialsCliSettings.TryCreate($"\"{executable}\"", null, out var settings, out var error).ShouldBeTrue(error);
+			CredentialsCliSettings
+				.TryCreate($"\"{executable}\"", null, out var settings, out var error)
+				.ShouldBeTrue(error);
 
 			var store = new CredentialsCliStore(new CredentialsCliProcessRunner(settings, false, new Dictionary<string, string?> { ["SECRETHELPER_FILE"] = file }));
 
-			store.TryStore("built", "u", "p w", out error).ShouldBeTrue(error);
-			store.TryRead("linq2db/built", out var user, out var password, out error).ShouldBeTrue(error);
+			store
+				.TryStore("built", "u", "p w", out error)
+				.ShouldBeTrue(error);
+			store
+				.TryRead("linq2db/built", out var user, out var password, out error)
+				.ShouldBeTrue(error);
 
 			user.    ShouldBe("u");
 			password.ShouldBe("p w");
@@ -630,7 +749,8 @@ namespace Tests.LinqToDB.CLI
 
 		static string? FindOnPath(string name)
 		{
-			foreach (var directory in (Environment.GetEnvironmentVariable("PATH") ?? string.Empty).Split(Path.PathSeparator))
+			foreach (var directory in (Environment.GetEnvironmentVariable("PATH") ?? string.Empty)
+				.Split(Path.PathSeparator))
 			{
 				if (directory.Length > 0 && File.Exists(Path.Combine(directory, name)))
 					return Path.Combine(directory, name);

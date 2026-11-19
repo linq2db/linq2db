@@ -132,7 +132,11 @@ namespace Tests.LinqToDB.CLI
 			result.ExitCode.ShouldBe(0, result.Error);
 
 			using var json = JsonDocument.Parse(environment.Files[".agents/linq2db-query.json"]);
-			json.RootElement.GetProperty("default").GetProperty("credentialsCli").GetString().ShouldBe(value);
+			json.RootElement
+				.GetProperty("default")
+				.GetProperty("credentialsCli")
+				.GetString()
+				.ShouldBe(value);
 		}
 
 		[TestCase("",               TestName = "ConfigInitRejectsEmptyCredentialsCli")]

@@ -26,7 +26,9 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("h a \"b",                               "h",                         "a \"b",                     TestName = "CommandLineUnbalancedQuoteInArgumentsIsTheProgramsBusiness")]
 		public void CommandLineSplitsTheFirstWord(string commandLine, string program, string arguments)
 		{
-			CredentialsCliCommandResolver.TryParseCommandLine(commandLine, out var parsedProgram, out var parsedArguments, out var error).ShouldBeTrue(error);
+			CredentialsCliCommandResolver
+				.TryParseCommandLine(commandLine, out var parsedProgram, out var parsedArguments, out var error)
+				.ShouldBeTrue(error);
 
 			parsedProgram.  ShouldBe(program);
 			parsedArguments.ShouldBe(arguments);
@@ -41,9 +43,13 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("h\nget",              "control characters",             TestName = "CommandLineControlCharacter")]
 		public void CommandLineErrors(string commandLine, string message)
 		{
-			CredentialsCliCommandResolver.TryParseCommandLine(commandLine, out _, out _, out var error).ShouldBeFalse();
+			CredentialsCliCommandResolver
+				.TryParseCommandLine(commandLine, out _, out _, out var error)
+				.ShouldBeFalse();
 
-			error.ShouldNotBeNull().ShouldContain(message);
+			error
+				.ShouldNotBeNull()
+				.ShouldContain(message);
 		}
 
 		static bool Resolve(string command, bool isWindows, string? path, string? pathExt, IEnumerable<string> files, out string resolved, out string? error, string? baseDirectory = null)
@@ -55,7 +61,8 @@ namespace Tests.LinqToDB.CLI
 		[Test]
 		public void PosixBareNameSearchesPathInOrder()
 		{
-			Resolve("helper", false, "/usr/local/bin:/usr/bin", null, ["/usr/bin/helper", "/usr/local/bin/helper"], out var resolved, out var error).ShouldBeTrue(error);
+			Resolve("helper", false, "/usr/local/bin:/usr/bin", null, ["/usr/bin/helper", "/usr/local/bin/helper"], out var resolved, out var error)
+				.ShouldBeTrue(error);
 
 			resolved.ShouldBe("/usr/local/bin/helper");
 		}
@@ -63,7 +70,8 @@ namespace Tests.LinqToDB.CLI
 		[Test]
 		public void PosixEmptyAndRelativePathEntriesAreSkipped()
 		{
-			Resolve("helper", false, ":.:bin:/opt/bin", null, ["helper", "./helper", "bin/helper"], out _, out var error).ShouldBeFalse();
+			Resolve("helper", false, ":.:bin:/opt/bin", null, ["helper", "./helper", "bin/helper"], out _, out var error)
+				.ShouldBeFalse();
 
 			error.ShouldBe("Credentials CLI program 'helper' was not found (looked up on PATH; the current directory is never searched).");
 		}
@@ -74,7 +82,8 @@ namespace Tests.LinqToDB.CLI
 			if (OperatingSystem.IsWindows())
 				Assert.Ignore("POSIX paths are normalized with the host's path rules.");
 
-			Resolve("/opt/h/helper.sh", false, null, null, ["/opt/h/helper.sh"], out var resolved, out var error).ShouldBeTrue(error);
+			Resolve("/opt/h/helper.sh", false, null, null, ["/opt/h/helper.sh"], out var resolved, out var error)
+				.ShouldBeTrue(error);
 
 			resolved.ShouldBe("/opt/h/helper.sh");
 		}
@@ -85,7 +94,8 @@ namespace Tests.LinqToDB.CLI
 			if (OperatingSystem.IsWindows())
 				Assert.Ignore("POSIX paths are normalized with the host's path rules.");
 
-			Resolve("helpers/../h.sh", false, null, null, ["/cfg/h.sh"], out var resolved, out var error, "/cfg").ShouldBeTrue(error);
+			Resolve("helpers/../h.sh", false, null, null, ["/cfg/h.sh"], out var resolved, out var error, "/cfg")
+				.ShouldBeTrue(error);
 
 			resolved.ShouldBe("/cfg/h.sh");
 		}
@@ -96,7 +106,8 @@ namespace Tests.LinqToDB.CLI
 			if (OperatingSystem.IsWindows())
 				Assert.Ignore("POSIX paths are normalized with the host's path rules.");
 
-			Resolve("/opt/missing", false, null, null, [], out _, out var error).ShouldBeFalse();
+			Resolve("/opt/missing", false, null, null, [], out _, out var error)
+				.ShouldBeFalse();
 
 			error.ShouldBe("Credentials CLI program '/opt/missing' was not found (looked for '/opt/missing').");
 		}
@@ -109,10 +120,15 @@ namespace Tests.LinqToDB.CLI
 			if (OperatingSystem.IsWindows())
 				Assert.Ignore("POSIX paths are normalized with the host's path rules.");
 
-			Resolve(program, false, "/bin", null, [], out _, out var error, "/cfg").ShouldBeFalse();
+			Resolve(program, false, "/bin", null, [], out _, out var error, "/cfg")
+				.ShouldBeFalse();
 
-			error.ShouldNotBeNull().ShouldContain("'~', '$HOME' and '%VAR%' are not expanded");
-			error.ShouldNotBeNull().ShouldContain(program.Contains('/', StringComparison.Ordinal) ? "looked for '/cfg/" : "looked up on PATH");
+			error
+				.ShouldNotBeNull()
+				.ShouldContain("'~', '$HOME' and '%VAR%' are not expanded");
+			error
+				.ShouldNotBeNull()
+				.ShouldContain(program.Contains('/', StringComparison.Ordinal) ? "looked for '/cfg/" : "looked up on PATH");
 		}
 
 		[TestCase("")]
@@ -120,15 +136,19 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("he\nlper")]
 		public void InvalidCommandIsRefused(string command)
 		{
-			Resolve(command, false, "/bin", null, [], out _, out var error).ShouldBeFalse();
+			Resolve(command, false, "/bin", null, [], out _, out var error)
+				.ShouldBeFalse();
 
-			error.ShouldNotBeNull().ShouldContain("non-empty path or file name without control characters");
+			error
+				.ShouldNotBeNull()
+				.ShouldContain("non-empty path or file name without control characters");
 		}
 
 		[Test]
 		public void WindowsBareNameUsesPathExtOrder()
 		{
-			Resolve("helper", true, @"C:\Tools;C:\Other", ".BAT;.EXE", [@"C:\Tools\helper.exe", @"C:\Tools\helper.bat"], out var resolved, out var error).ShouldBeTrue(error);
+			Resolve("helper", true, @"C:\Tools;C:\Other", ".BAT;.EXE", [@"C:\Tools\helper.exe", @"C:\Tools\helper.bat"], out var resolved, out var error)
+				.ShouldBeTrue(error);
 
 			resolved.ShouldBe(@"C:\Tools\helper.bat");
 		}
@@ -136,7 +156,8 @@ namespace Tests.LinqToDB.CLI
 		[Test]
 		public void WindowsPathExtIsFilteredToRunnableExtensions()
 		{
-			Resolve("helper", true, @"C:\Tools", ".VBS;.PS1;.CMD", [@"C:\Tools\helper.vbs", @"C:\Tools\helper.ps1", @"C:\Tools\helper.cmd"], out var resolved, out var error).ShouldBeTrue(error);
+			Resolve("helper", true, @"C:\Tools", ".VBS;.PS1;.CMD", [@"C:\Tools\helper.vbs", @"C:\Tools\helper.ps1", @"C:\Tools\helper.cmd"], out var resolved, out var error)
+				.ShouldBeTrue(error);
 
 			resolved.ShouldBe(@"C:\Tools\helper.cmd");
 		}
@@ -144,7 +165,8 @@ namespace Tests.LinqToDB.CLI
 		[Test]
 		public void WindowsDefaultPathExt()
 		{
-			Resolve("docker-credential-wincred", true, @"C:\Program Files\Docker\bin", null, [@"C:\Program Files\Docker\bin\docker-credential-wincred.exe"], out var resolved, out var error).ShouldBeTrue(error);
+			Resolve("docker-credential-wincred", true, @"C:\Program Files\Docker\bin", null, [@"C:\Program Files\Docker\bin\docker-credential-wincred.exe"], out var resolved, out var error)
+				.ShouldBeTrue(error);
 
 			resolved.ShouldBe(@"C:\Program Files\Docker\bin\docker-credential-wincred.exe");
 		}
@@ -152,7 +174,8 @@ namespace Tests.LinqToDB.CLI
 		[Test]
 		public void WindowsExplicitExtension()
 		{
-			Resolve("helper.cmd", true, @"C:\Tools", null, [@"C:\Tools\helper.cmd", @"C:\Tools\helper.cmd.exe"], out var resolved, out var error).ShouldBeTrue(error);
+			Resolve("helper.cmd", true, @"C:\Tools", null, [@"C:\Tools\helper.cmd", @"C:\Tools\helper.cmd.exe"], out var resolved, out var error)
+				.ShouldBeTrue(error);
 
 			resolved.ShouldBe(@"C:\Tools\helper.cmd");
 		}
@@ -160,7 +183,8 @@ namespace Tests.LinqToDB.CLI
 		[Test]
 		public void WindowsQuotedPathEntry()
 		{
-			Resolve("helper", true, "\"C:\\My Tools\"", null, [@"C:\My Tools\helper.exe"], out var resolved, out var error).ShouldBeTrue(error);
+			Resolve("helper", true, "\"C:\\My Tools\"", null, [@"C:\My Tools\helper.exe"], out var resolved, out var error)
+				.ShouldBeTrue(error);
 
 			resolved.ShouldBe(@"C:\My Tools\helper.exe");
 		}
@@ -168,7 +192,8 @@ namespace Tests.LinqToDB.CLI
 		[Test]
 		public void WindowsRelativePathEntryIsSkipped()
 		{
-			Resolve("helper", true, @"tools;;C:\Bin", null, [@"tools\helper.exe"], out _, out var error).ShouldBeFalse();
+			Resolve("helper", true, @"tools;;C:\Bin", null, [@"tools\helper.exe"], out _, out var error)
+				.ShouldBeFalse();
 
 			error.ShouldBe("Credentials CLI program 'helper' was not found (looked up on PATH; the current directory is never searched).");
 		}
@@ -179,10 +204,15 @@ namespace Tests.LinqToDB.CLI
 		[TestCase(@"C:\Tools\helper.sh",   "through its interpreter",                 TestName = "WindowsShellScriptSuggestsAnInterpreter")]
 		public void WindowsUnsupportedExtensionSuggestsTheInterpreter(string command, string hint)
 		{
-			Resolve(command, true, @"C:\Tools", null, [@"C:\Tools\helper.ps1", @"C:\Tools\helper.sh", @"C:\Tools\helper.py"], out _, out var error).ShouldBeFalse();
+			Resolve(command, true, @"C:\Tools", null, [@"C:\Tools\helper.ps1", @"C:\Tools\helper.sh", @"C:\Tools\helper.py"], out _, out var error)
+				.ShouldBeFalse();
 
-			error.ShouldNotBeNull().ShouldContain("is not a valid application on Windows");
-			error.ShouldNotBeNull().ShouldContain(hint);
+			error
+				.ShouldNotBeNull()
+				.ShouldContain("is not a valid application on Windows");
+			error
+				.ShouldNotBeNull()
+				.ShouldContain(hint);
 		}
 
 		[Test]
@@ -191,7 +221,8 @@ namespace Tests.LinqToDB.CLI
 			if (!OperatingSystem.IsWindows())
 				Assert.Ignore("Windows paths are normalized with the host's path rules.");
 
-			Resolve(@"C:\Tools\helper", true, null, null, [@"C:\Tools\helper.cmd"], out var resolved, out var error).ShouldBeTrue(error);
+			Resolve(@"C:\Tools\helper", true, null, null, [@"C:\Tools\helper.cmd"], out var resolved, out var error)
+				.ShouldBeTrue(error);
 
 			resolved.ShouldBe(@"C:\Tools\helper.cmd");
 		}
@@ -249,7 +280,7 @@ namespace Tests.LinqToDB.CLI
 			{
 				var script = CredentialsCliTestSupport.WriteScript(directory, "real-helper", "exit 0\n", "@exit /b 0\r\n");
 
-				CredentialsCliCommandResolver.TryResolve(
+				var found = CredentialsCliCommandResolver.TryResolve(
 					Path.GetFileNameWithoutExtension(script) + (OperatingSystem.IsWindows() ? string.Empty : ".sh"),
 					null,
 					OperatingSystem.IsWindows(),
@@ -257,7 +288,9 @@ namespace Tests.LinqToDB.CLI
 					null,
 					File.Exists,
 					out var resolved,
-					out var error).ShouldBeTrue(error);
+					out var error);
+
+				found.ShouldBeTrue(error);
 
 				resolved.ShouldBe(script, StringCompareShould.IgnoreCase);
 			}

@@ -72,7 +72,8 @@ namespace Tests.LinqToDB.CLI
 
 		static async Task<(int ExitCode, string Output, string Error)> RunCli(TestCliEnvironment environment, params string[] args)
 		{
-			var exitCode = await new global::LinqToDB.CommandLine.LinqToDBCliController().Execute(args, environment);
+			var exitCode = await new global::LinqToDB.CommandLine.LinqToDBCliController()
+				.Execute(args, environment);
 			return (exitCode, environment.Output, environment.ErrorOutput);
 		}
 
@@ -123,39 +124,67 @@ namespace Tests.LinqToDB.CLI
 			const string user     = " DOMAIN\\o'neil \"x\" ";
 			const string password = "  p'a\"s$HOME`id`$(id)=é  ";
 
-			store.TryRead("linq2db/a", out _, out _, out var error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain("was not found by credentials CLI 'example'");
+			store
+				.TryRead("linq2db/a", out _, out _, out var error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain("was not found by credentials CLI 'example'");
 
-			store.TryStore("A", user, password, out error).ShouldBeTrue(error);
-			store.TryStore("b", "other", string.Empty, out error).ShouldBeTrue(error);
+			store
+				.TryStore("A", user, password, out error)
+				.ShouldBeTrue(error);
+			store
+				.TryStore("b", "other", string.Empty, out error)
+				.ShouldBeTrue(error);
 
-			store.TryRead("LINQ2DB/a", out var readUser, out var readPassword, out error).ShouldBeTrue(error);
+			store
+				.TryRead("LINQ2DB/a", out var readUser, out var readPassword, out error)
+				.ShouldBeTrue(error);
 			readUser.    ShouldBe(user);
 			readPassword.ShouldBe(password);
 
-			store.TryRead("linq2db/b", out readUser, out readPassword, out error).ShouldBeTrue(error);
+			store
+				.TryRead("linq2db/b", out readUser, out readPassword, out error)
+				.ShouldBeTrue(error);
 			readUser.    ShouldBe("other");
 			readPassword.ShouldBe(string.Empty);
 
-			store.TryList(out var profiles, out var diagnostics, out error).ShouldBeTrue(error);
+			store
+				.TryList(out var profiles, out var diagnostics, out error)
+				.ShouldBeTrue(error);
 			profiles.   ShouldBe([new CredentialProfile("a", user), new CredentialProfile("b", "other")]);
 			diagnostics.ShouldBeEmpty();
 
-			store.TryStore("a", "replaced", "p2", out error).ShouldBeTrue(error);
-			store.TryRead("linq2db/a", out readUser, out readPassword, out error).ShouldBeTrue(error);
+			store
+				.TryStore("a", "replaced", "p2", out error)
+				.ShouldBeTrue(error);
+			store
+				.TryRead("linq2db/a", out readUser, out readPassword, out error)
+				.ShouldBeTrue(error);
 			readUser.    ShouldBe("replaced");
 			readPassword.ShouldBe("p2");
 
-			store.TryRemove("a", out var removed, out error).ShouldBeTrue(error);
+			store
+				.TryRemove("a", out var removed, out error)
+				.ShouldBeTrue(error);
 			removed.ShouldBeTrue();
-			store.TryRemove("a", out removed, out error).ShouldBeTrue(error);
+			store
+				.TryRemove("a", out removed, out error)
+				.ShouldBeTrue(error);
 			removed.ShouldBeFalse();
 
-			store.TryClear(out var count, out error).ShouldBeTrue(error);
+			store
+				.TryClear(out var count, out error)
+				.ShouldBeTrue(error);
 			count.ShouldBe(1);
 
-			System.Text.Encoding.UTF8.GetString(runner.Run("rename", CredentialsCliTestSupport.Request("protocol=1", "verb=rename")).Output).ShouldBe("protocol=1\nstatus=unsupported\n");
-			System.Text.Encoding.UTF8.GetString(runner.Run("get",    CredentialsCliTestSupport.Request("protocol=2", "verb=get")).Output).ShouldBe("protocol=1\nstatus=unsupported\n");
+			System.Text.Encoding.UTF8
+				.GetString(runner.Run("rename", CredentialsCliTestSupport.Request("protocol=1", "verb=rename")).Output)
+				.ShouldBe("protocol=1\nstatus=unsupported\n");
+			System.Text.Encoding.UTF8
+				.GetString(runner.Run("get",    CredentialsCliTestSupport.Request("protocol=2", "verb=get")).Output)
+				.ShouldBe("protocol=1\nstatus=unsupported\n");
 		}
 
 		[Test]
@@ -172,7 +201,9 @@ namespace Tests.LinqToDB.CLI
 			exitCode.ShouldBe(0, error);
 			error. ShouldContain("(option).");
 			output.ShouldContain("Removed 2 linq2db credential record(s)");
-			File.ReadAllText(_storeFile).ShouldNotContain("linq2db/");
+			File
+				.ReadAllText(_storeFile)
+				.ShouldNotContain("linq2db/");
 		}
 
 		[Test]
@@ -331,7 +362,9 @@ namespace Tests.LinqToDB.CLI
 
 			var configDirectory = Directory.CreateDirectory(Path.Combine(_directory, "cfg")).FullName;
 			var wrapper         = CreateWrapper();
-			var relative        = Path.GetRelativePath(configDirectory, wrapper).Replace('\\', '/');
+			var relative        = Path
+				.GetRelativePath(configDirectory, wrapper)
+				.Replace('\\', '/');
 			var config          = Path.Combine(configDirectory, "query.json");
 
 			var environment = CreateEnvironment();
@@ -371,13 +404,17 @@ namespace Tests.LinqToDB.CLI
 			result.ExitCode.ShouldBe(0, result.Error);
 			result.Error. ShouldContain($"Using the local store ({directory}, default for this OS).");
 			result.Output.ShouldContain("No linq2db credential records in the local store.");
-			Directory.Exists(directory).ShouldBeFalse();
+			Directory
+				.Exists(directory)
+				.ShouldBeFalse();
 
 			result = await RunCliProcess(environment, "query", "--provider", "SQLite", "--connection-string", "Data Source={0}", "--credentials", "linq2db/missing", "--sql", "select 1");
 
 			result.ExitCode.ShouldBe(-1);
 			result.Error.ShouldContain($"Credential target 'linq2db/missing' was not found in the local store ({directory}).");
-			Directory.Exists(directory).ShouldBeFalse();
+			Directory
+				.Exists(directory)
+				.ShouldBeFalse();
 		}
 
 		[Test]
@@ -397,7 +434,8 @@ namespace Tests.LinqToDB.CLI
 						"enableExecute": true
 					}
 				}
-				""").ConfigureAwait(false);
+				""")
+				.ConfigureAwait(false);
 
 			// The server, and the example it starts with "dotnet run", inherit the store location. Tests run sequentially.
 			var previous = Environment.GetEnvironmentVariable("SECRETHELPER_FILE");
@@ -415,7 +453,8 @@ namespace Tests.LinqToDB.CLI
 
 				var execute = await server.CallTool("linq2db_execute", new JsonObject { ["sql"] = "create table T (Id int)" });
 
-				ReadToolText(execute).ShouldNotContain("Credential");
+				ReadToolText(execute)
+					.ShouldNotContain("Credential");
 			}
 			finally
 			{
@@ -440,7 +479,9 @@ namespace Tests.LinqToDB.CLI
 			// The schema tool builds its connection options apart from the query and execute tools.
 			var schema = await server.CallTool("linq2db_schema", new JsonObject { ["detailLevel"] = "names" });
 
-			ReadResponseResult<McpTestCallToolResult>(schema).IsError.ShouldNotBe(true, ReadToolText(schema));
+			ReadResponseResult<McpTestCallToolResult>(schema)
+				.IsError
+				.ShouldNotBe(true, ReadToolText(schema));
 		}
 
 		[Test]
@@ -459,7 +500,8 @@ namespace Tests.LinqToDB.CLI
 
 			var response = await server.CallTool("linq2db_query", new JsonObject { ["sql"] = "select 1 as Value" });
 
-			ReadToolErrorText(response).ShouldContain("failed with exit code 1: the store is locked");
+			ReadToolErrorText(response)
+				.ShouldContain("failed with exit code 1: the store is locked");
 		}
 	}
 }

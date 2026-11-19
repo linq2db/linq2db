@@ -18,7 +18,8 @@ namespace Tests.LinqToDB.CLI
 		static async Task<string> Run(params string[] args)
 		{
 			var environment = new TestCliEnvironment();
-			var exitCode    = await new global::LinqToDB.CommandLine.LinqToDBCliController().Execute(args, environment);
+			var exitCode    = await new global::LinqToDB.CommandLine.LinqToDBCliController()
+				.Execute(args, environment);
 
 			exitCode.ShouldBe(0, environment.ErrorOutput);
 			return environment.Output;
@@ -73,7 +74,9 @@ namespace Tests.LinqToDB.CLI
 			var document  = File.ReadAllText(Path.Combine(directory, "CREDENTIALS-CLI.md"));
 
 			document.ShouldContain("(CredentialsCli/secrethelper.cs)");
-			File.Exists(Path.Combine(directory, "secrethelper.cs")).ShouldBeTrue();
+			File
+				.Exists(Path.Combine(directory, "secrethelper.cs"))
+				.ShouldBeTrue();
 
 			foreach (var text in new[] { "`get`", "`store`", "`erase`", "`list`", "status=unsupported", "status=not-found", "protocol=2", "LINQ2DB_CREDENTIAL_INTERACTIVE", "@local", "@credential-manager", "@keyring", "@gpg", "@vault", "LINQ2DB_CREDENTIALS_DIR" })
 				document.ShouldContain(text);

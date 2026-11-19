@@ -351,7 +351,9 @@ namespace Tests.LinqToDB.CLI
 				output.  ShouldBe($"Stored linq2db/a for u in the local store.{Environment.NewLine}");
 				error.   ShouldContain($"Using the local store ({store}, default for this OS).");
 				error.   ShouldContain($"Created the local store in {store}: an encrypted file and its key, readable only by you; a copy of both opens it. For the desktop keyring or GPG: dotnet linq2db credentials cli init --store keyring|gpg");
-				File.Exists(Path.Combine(store, "credentials.key")).ShouldBeTrue();
+				File
+					.Exists(Path.Combine(store, "credentials.key"))
+					.ShouldBeTrue();
 
 				// The notice is shown once: the key exists now.
 				environment = new TestCliEnvironment { UseRealLocalStore = true };

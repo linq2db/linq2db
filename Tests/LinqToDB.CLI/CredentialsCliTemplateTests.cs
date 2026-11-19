@@ -275,23 +275,37 @@ namespace Tests.LinqToDB.CLI
 		{
 			var cli = CreateStore(store, interactive: true);
 
-			cli.TryStore(HostileTarget.Substring("linq2db/".Length), HostileUser, HostilePassword, out var error).ShouldBeTrue(error);
+			cli
+				.TryStore(HostileTarget.Substring("linq2db/".Length), HostileUser, HostilePassword, out var error)
+				.ShouldBeTrue(error);
 
-			cli.TryRead(HostileTarget, out var user, out var password, out error).ShouldBeTrue(error);
+			cli
+				.TryRead(HostileTarget, out var user, out var password, out error)
+				.ShouldBeTrue(error);
 			user.    ShouldBe(HostileUser);
 			password.ShouldBe(HostilePassword);
 
-			cli.TryList(out var profiles, out _, out error).ShouldBeTrue(error);
+			cli
+				.TryList(out var profiles, out _, out error)
+				.ShouldBeTrue(error);
 			profiles.ShouldBe([new CredentialProfile(HostileTarget.Substring("linq2db/".Length), HostileUser)]);
 
-			cli.TryRemove(HostileTarget.Substring("linq2db/".Length), out var removed, out error).ShouldBeTrue(error);
+			cli
+				.TryRemove(HostileTarget.Substring("linq2db/".Length), out var removed, out error)
+				.ShouldBeTrue(error);
 			removed.ShouldBeTrue();
 
-			cli.TryRemove(HostileTarget.Substring("linq2db/".Length), out removed, out error).ShouldBeTrue(error);
+			cli
+				.TryRemove(HostileTarget.Substring("linq2db/".Length), out removed, out error)
+				.ShouldBeTrue(error);
 			removed.ShouldBeFalse();
 
-			cli.TryRead(HostileTarget, out _, out _, out error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain("was not found by credentials CLI");
+			cli
+				.TryRead(HostileTarget, out _, out _, out error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain("was not found by credentials CLI");
 
 			ArgvLog.ShouldNotContain("p'a\"s");
 			ArgvLog.ShouldNotContain("$(id)=é");
@@ -304,14 +318,22 @@ namespace Tests.LinqToDB.CLI
 		{
 			var cli = CreateStore(store, interactive: true);
 
-			cli.TryStore("a", "first",  "p1", out var error).ShouldBeTrue(error);
-			cli.TryStore("a", "second", "p2", out error).ShouldBeTrue(error);
+			cli
+				.TryStore("a", "first",  "p1", out var error)
+				.ShouldBeTrue(error);
+			cli
+				.TryStore("a", "second", "p2", out error)
+				.ShouldBeTrue(error);
 
-			cli.TryRead("linq2db/a", out var user, out var password, out error).ShouldBeTrue(error);
+			cli
+				.TryRead("linq2db/a", out var user, out var password, out error)
+				.ShouldBeTrue(error);
 			user.    ShouldBe("second");
 			password.ShouldBe("p2");
 
-			cli.TryList(out var profiles, out _, out error).ShouldBeTrue(error);
+			cli
+				.TryList(out var profiles, out _, out error)
+				.ShouldBeTrue(error);
 			profiles.ShouldBe([new CredentialProfile("a", "second")]);
 		}
 
@@ -322,13 +344,19 @@ namespace Tests.LinqToDB.CLI
 		{
 			var cli = CreateStore(store, interactive: true);
 
-			cli.TryStore("empty", "u", string.Empty, out var error).ShouldBeTrue(error);
+			cli
+				.TryStore("empty", "u", string.Empty, out var error)
+				.ShouldBeTrue(error);
 
-			cli.TryRead("linq2db/empty", out var user, out var password, out error).ShouldBeTrue(error);
+			cli
+				.TryRead("linq2db/empty", out var user, out var password, out error)
+				.ShouldBeTrue(error);
 			user.    ShouldBe("u");
 			password.ShouldBe(string.Empty);
 
-			cli.TryGetCount(out var count, out error).ShouldBeTrue(error);
+			cli
+				.TryGetCount(out var count, out error)
+				.ShouldBeTrue(error);
 			count.ShouldBe(1);
 		}
 
@@ -339,13 +367,21 @@ namespace Tests.LinqToDB.CLI
 		{
 			var cli = CreateStore(store, interactive: true);
 
-			cli.TryStore("a", "u", "p", out var error).ShouldBeTrue(error);
-			cli.TryStore("b", "u", "p", out error).ShouldBeTrue(error);
+			cli
+				.TryStore("a", "u", "p", out var error)
+				.ShouldBeTrue(error);
+			cli
+				.TryStore("b", "u", "p", out error)
+				.ShouldBeTrue(error);
 
-			cli.TryClear(out var count, out error).ShouldBeTrue(error);
+			cli
+				.TryClear(out var count, out error)
+				.ShouldBeTrue(error);
 			count.ShouldBe(2);
 
-			cli.TryGetCount(out count, out error).ShouldBeTrue(error);
+			cli
+				.TryGetCount(out count, out error)
+				.ShouldBeTrue(error);
 			count.ShouldBe(0);
 		}
 
@@ -358,13 +394,19 @@ namespace Tests.LinqToDB.CLI
 			// the user name.
 			var cli = CreateStore(store, interactive: true);
 
-			cli.TryStore("a", "app=reader", "user: TOPSECRET", out var error).ShouldBeTrue(error);
+			cli
+				.TryStore("a", "app=reader", "user: TOPSECRET", out var error)
+				.ShouldBeTrue(error);
 
-			cli.TryRead("linq2db/a", out var user, out var password, out error).ShouldBeTrue(error);
+			cli
+				.TryRead("linq2db/a", out var user, out var password, out error)
+				.ShouldBeTrue(error);
 			user.    ShouldBe("app=reader");
 			password.ShouldBe("user: TOPSECRET");
 
-			cli.TryList(out var profiles, out _, out error).ShouldBeTrue(error);
+			cli
+				.TryList(out var profiles, out _, out error)
+				.ShouldBeTrue(error);
 			profiles.ShouldBe([new CredentialProfile("a", "app=reader")]);
 		}
 
@@ -374,44 +416,76 @@ namespace Tests.LinqToDB.CLI
 			// An item another program wrote with service=linq2db-cli: its attribute lines must not turn into records to erase.
 			var cli = CreateStore("keyring", interactive: true);
 
-			cli.TryStore("a", "u", "p", out var error).ShouldBeTrue(error);
+			cli
+				.TryStore("a", "u", "p", out var error)
+				.ShouldBeTrue(error);
 
-			var item = Directory.GetDirectories(Path.Combine(_state, "items")).Single();
+			var item = Directory
+				.GetDirectories(Path.Combine(_state, "items"))
+				.Single();
 			File.WriteAllText(Path.Combine(item, "user"), "u\nattribute.target = linq2db/../outside\nattribute.user = x");
 
-			cli.TryList(out _, out _, out error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain("has an attribute with a line break");
+			cli
+				.TryList(out _, out _, out error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain("has an attribute with a line break");
 
-			cli.TryClear(out _, out error).ShouldBeFalse();
+			cli
+				.TryClear(out _, out error)
+				.ShouldBeFalse();
 			ArgvLog.ShouldNotContain("outside");
 		}
 
 		[Test]
 		public void SecretToolLockedKeyringIsAFailureNotNotFound()
 		{
-			CreateStore("keyring", interactive: true).TryStore("a", "u", "p", out var error).ShouldBeTrue(error);
+			CreateStore("keyring", interactive: true)
+				.TryStore("a", "u", "p", out var error)
+				.ShouldBeTrue(error);
 			File.Delete(Path.Combine(_state, "argv.log"));
 
 			var cli = CreateStore("keyring");
 
 			File.WriteAllText(Path.Combine(_state, "locked"), string.Empty);
 
-			cli.TryRead("linq2db/a", out _, out _, out error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain("failed with exit code 1: the keyring is locked");
+			cli
+				.TryRead("linq2db/a", out _, out _, out error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain("failed with exit code 1: the keyring is locked");
 
-			cli.TryRemove("a", out _, out error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain("the keyring is locked");
+			cli
+				.TryRemove("a", out _, out error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain("the keyring is locked");
 
-			cli.TryList(out _, out _, out error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain("the keyring is locked");
+			cli
+				.TryList(out _, out _, out error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain("the keyring is locked");
 
-			cli.TryStore("b", "u", "p", out error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain("failed with exit code 1");
+			cli
+				.TryStore("b", "u", "p", out error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain("failed with exit code 1");
 
 			// Nobody can answer an unlock prompt: none is raised, not even by storing a new record.
 			ArgvLog.ShouldNotContain("--unlock");
-			File.Exists(Path.Combine(_state, "prompted")).ShouldBeFalse();
-			File.Exists(Path.Combine(_state, "locked")).ShouldBeTrue();
+			File
+				.Exists(Path.Combine(_state, "prompted"))
+				.ShouldBeFalse();
+			File
+				.Exists(Path.Combine(_state, "locked"))
+				.ShouldBeTrue();
 		}
 
 		[Test]
@@ -420,31 +494,53 @@ namespace Tests.LinqToDB.CLI
 			// secret-tool store writes to the default collection and prompts when it is locked; without a prompt the script
 			// cannot tell. Here the record is in another, unlocked collection while the default one is locked: neither a
 			// new record nor an update may be stored without a user to answer.
-			CreateStore("keyring", interactive: true).TryStore("a", "u", "p", out var error).ShouldBeTrue(error);
+			CreateStore("keyring", interactive: true)
+				.TryStore("a", "u", "p", out var error)
+				.ShouldBeTrue(error);
 
-			var item = Directory.GetDirectories(Path.Combine(_state, "items")).Single();
+			var item = Directory
+				.GetDirectories(Path.Combine(_state, "items"))
+				.Single();
 			File.WriteAllText(Path.Combine(item, "collection"), "other");
 			File.WriteAllText(Path.Combine(_state, "locked"), string.Empty);
 
 			var cli = CreateStore("keyring");
 
 			// The record in the unlocked collection stays readable.
-			cli.TryRead("linq2db/a", out _, out var password, out error).ShouldBeTrue(error);
+			cli
+				.TryRead("linq2db/a", out _, out var password, out error)
+				.ShouldBeTrue(error);
 			password.ShouldBe("p");
 
 			// A password long enough for the client to remove it from standard error and show the reason.
-			cli.TryStore("b", "u", "secret-value", out error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain("run credentials set from a terminal");
+			cli
+				.TryStore("b", "u", "secret-value", out error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain("run credentials set from a terminal");
 
-			cli.TryStore("a", "u", "secret-value", out error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain("run credentials set from a terminal");
+			cli
+				.TryStore("a", "u", "secret-value", out error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain("run credentials set from a terminal");
 
-			File.Exists(Path.Combine(_state, "prompted")).ShouldBeFalse();
-			File.Exists(Path.Combine(_state, "locked")).ShouldBeTrue();
+			File
+				.Exists(Path.Combine(_state, "prompted"))
+				.ShouldBeFalse();
+			File
+				.Exists(Path.Combine(_state, "locked"))
+				.ShouldBeTrue();
 
 			// From a terminal the prompt is raised and answered.
-			CreateStore("keyring", interactive: true).TryStore("b", "u", "secret-value", out error).ShouldBeTrue(error);
-			File.Exists(Path.Combine(_state, "prompted")).ShouldBeTrue();
+			CreateStore("keyring", interactive: true)
+				.TryStore("b", "u", "secret-value", out error)
+				.ShouldBeTrue(error);
+			File
+				.Exists(Path.Combine(_state, "prompted"))
+				.ShouldBeTrue();
 		}
 
 		[Test]
@@ -454,11 +550,15 @@ namespace Tests.LinqToDB.CLI
 			// raised (the fake unlocks on --unlock, as a user answering it does).
 			var cli = CreateStore("keyring", interactive: true);
 
-			cli.TryStore("a", "u", "p", out var error).ShouldBeTrue(error);
+			cli
+				.TryStore("a", "u", "p", out var error)
+				.ShouldBeTrue(error);
 
 			File.WriteAllText(Path.Combine(_state, "locked"), string.Empty);
 
-			cli.TryRead("linq2db/a", out var user, out var password, out error).ShouldBeTrue(error);
+			cli
+				.TryRead("linq2db/a", out var user, out var password, out error)
+				.ShouldBeTrue(error);
 			user.    ShouldBe("u");
 			password.ShouldBe("p");
 
@@ -470,16 +570,26 @@ namespace Tests.LinqToDB.CLI
 		{
 			var cli = CreateStore("gpg");
 
-			cli.TryStore("a", "u", "p", out var error).ShouldBeTrue(error);
+			cli
+				.TryStore("a", "u", "p", out var error)
+				.ShouldBeTrue(error);
 
 			File.WriteAllText(Path.Combine(_state, "fail"), string.Empty);
 
-			cli.TryRead("linq2db/a", out _, out _, out error).ShouldBeFalse();
+			cli
+				.TryRead("linq2db/a", out _, out _, out error)
+				.ShouldBeFalse();
 			// The backend's own message comes first on standard error, before the script's summary line.
-			error.ShouldNotBeNull().ShouldContain("failed with exit code 1: gpg: decryption failed: No pinentry");
+			error
+				.ShouldNotBeNull()
+				.ShouldContain("failed with exit code 1: gpg: decryption failed: No pinentry");
 
-			cli.TryList(out _, out _, out error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain("failed with exit code 1");
+			cli
+				.TryList(out _, out _, out error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain("failed with exit code 1");
 		}
 
 		[Test]
@@ -489,9 +599,15 @@ namespace Tests.LinqToDB.CLI
 
 			File.WriteAllText(Path.Combine(_state, "readonly"), string.Empty);
 
-			cli.TryStore("a", "u", "secret-value", out var error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain("failed with exit code 1: mkdir: Permission denied");
-			error.ShouldNotBeNull().ShouldNotContain("secret-value");
+			cli
+				.TryStore("a", "u", "secret-value", out var error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain("failed with exit code 1: mkdir: Permission denied");
+			error
+				.ShouldNotBeNull()
+				.ShouldNotContain("secret-value");
 		}
 
 		[Test]
@@ -512,8 +628,12 @@ namespace Tests.LinqToDB.CLI
 		{
 			var runner = CreateRunner(store);
 
-			Encoding.UTF8.GetString(runner.Run("rename", CredentialsCliTestSupport.Request("protocol=1", "verb=rename")).Output).ShouldBe("protocol=1\nstatus=unsupported\n");
-			Encoding.UTF8.GetString(runner.Run("get",    CredentialsCliTestSupport.Request("protocol=2", "verb=get")).Output).ShouldBe("protocol=1\nstatus=unsupported\n");
+			Encoding.UTF8
+				.GetString(runner.Run("rename", CredentialsCliTestSupport.Request("protocol=1", "verb=rename")).Output)
+				.ShouldBe("protocol=1\nstatus=unsupported\n");
+			Encoding.UTF8
+				.GetString(runner.Run("get",    CredentialsCliTestSupport.Request("protocol=2", "verb=get")).Output)
+				.ShouldBe("protocol=1\nstatus=unsupported\n");
 		}
 
 		[TestCase("keyring")]
@@ -529,14 +649,22 @@ namespace Tests.LinqToDB.CLI
 				return Encoding.UTF8.GetString(result.Output);
 			}
 
-			Answer("get", "target=linq2db/a").ShouldBe("protocol=1\nstatus=not-found\n");
-			Answer("erase", "target=linq2db/a").ShouldBe("protocol=1\nstatus=not-found\n");
-			Answer("list").ShouldBe("protocol=1\nstatus=ok\n");
-			Answer("store", "target=linq2db/a", "username=u", "password=p").ShouldBe("protocol=1\nstatus=ok\n");
-			Answer("get", "target=linq2db/a").ShouldBe("protocol=1\nstatus=ok\nusername=u\npassword=p\n");
-			Answer("store", "target=linq2db/b", "username=v", "password=q").ShouldBe("protocol=1\nstatus=ok\n");
-			Answer("list").ShouldBe("protocol=1\nstatus=ok\n\ntarget=linq2db/a\nusername=u\n\ntarget=linq2db/b\nusername=v\n");
-			Answer("erase", "target=linq2db/a").ShouldBe("protocol=1\nstatus=ok\n");
+			Answer("get", "target=linq2db/a")
+				.ShouldBe("protocol=1\nstatus=not-found\n");
+			Answer("erase", "target=linq2db/a")
+				.ShouldBe("protocol=1\nstatus=not-found\n");
+			Answer("list")
+				.ShouldBe("protocol=1\nstatus=ok\n");
+			Answer("store", "target=linq2db/a", "username=u", "password=p")
+				.ShouldBe("protocol=1\nstatus=ok\n");
+			Answer("get", "target=linq2db/a")
+				.ShouldBe("protocol=1\nstatus=ok\nusername=u\npassword=p\n");
+			Answer("store", "target=linq2db/b", "username=v", "password=q")
+				.ShouldBe("protocol=1\nstatus=ok\n");
+			Answer("list")
+				.ShouldBe("protocol=1\nstatus=ok\n\ntarget=linq2db/a\nusername=u\n\ntarget=linq2db/b\nusername=v\n");
+			Answer("erase", "target=linq2db/a")
+				.ShouldBe("protocol=1\nstatus=ok\n");
 
 			// A failing backend: the answer is still framed, as an error. Non-interactive: a keyring would be unlocked by a
 			// user answering the prompt.
@@ -547,12 +675,16 @@ namespace Tests.LinqToDB.CLI
 			var failed = runner.Run("get", CredentialsCliTestSupport.Request("protocol=1", "verb=get", "target=linq2db/b"));
 
 			failed.ExitCode.ShouldBe(1);
-			Encoding.UTF8.GetString(failed.Output).ShouldBe("protocol=1\nstatus=error\n");
+			Encoding.UTF8
+				.GetString(failed.Output)
+				.ShouldBe("protocol=1\nstatus=error\n");
 
 			failed = runner.Run("list", CredentialsCliTestSupport.Request("protocol=1", "verb=list"));
 
 			failed.ExitCode.ShouldBe(1);
-			Encoding.UTF8.GetString(failed.Output).ShouldBe("protocol=1\nstatus=error\n");
+			Encoding.UTF8
+				.GetString(failed.Output)
+				.ShouldBe("protocol=1\nstatus=error\n");
 		}
 
 		[Test]
@@ -560,19 +692,33 @@ namespace Tests.LinqToDB.CLI
 		{
 			var cli = CreateStore("vault");
 
-			cli.TryStore("a/b/c", "u1", "p1", out var error).ShouldBeTrue(error);
-			cli.TryStore("a/d",   "u2", "p2", out error).ShouldBeTrue(error);
-			cli.TryStore("e",     "u3", "p3", out error).ShouldBeTrue(error);
+			cli
+				.TryStore("a/b/c", "u1", "p1", out var error)
+				.ShouldBeTrue(error);
+			cli
+				.TryStore("a/d",   "u2", "p2", out error)
+				.ShouldBeTrue(error);
+			cli
+				.TryStore("e",     "u3", "p3", out error)
+				.ShouldBeTrue(error);
 
-			File.Exists(Path.Combine(_state, "vault", "secret", "linq2db", "a", "b", "c", ".secret")).ShouldBeTrue();
+			File
+				.Exists(Path.Combine(_state, "vault", "secret", "linq2db", "a", "b", "c", ".secret"))
+				.ShouldBeTrue();
 
-			cli.TryList(out var profiles, out _, out error).ShouldBeTrue(error);
+			cli
+				.TryList(out var profiles, out _, out error)
+				.ShouldBeTrue(error);
 			profiles.ShouldBe([new CredentialProfile("a/b/c", "u1"), new CredentialProfile("a/d", "u2"), new CredentialProfile("e", "u3")], ignoreOrder: true);
 
-			cli.TryRemove("a/b/c", out var removed, out error).ShouldBeTrue(error);
+			cli
+				.TryRemove("a/b/c", out var removed, out error)
+				.ShouldBeTrue(error);
 			removed.ShouldBeTrue();
 
-			cli.TryList(out profiles, out _, out error).ShouldBeTrue(error);
+			cli
+				.TryList(out profiles, out _, out error)
+				.ShouldBeTrue(error);
 			profiles.ShouldBe([new CredentialProfile("a/d", "u2"), new CredentialProfile("e", "u3")], ignoreOrder: true);
 		}
 
@@ -586,14 +732,20 @@ namespace Tests.LinqToDB.CLI
 
 			var cli = CreateStore("vault");
 
-			cli.TryRead("linq2db/nouser", out var user, out var password, out var error).ShouldBeTrue(error);
+			cli
+				.TryRead("linq2db/nouser", out var user, out var password, out var error)
+				.ShouldBeTrue(error);
 			user.    ShouldBe(string.Empty);
 			password.ShouldBe("pw");
 
 			File.Delete(Path.Combine(item, ".password"));
 
-			cli.TryRead("linq2db/nouser", out _, out _, out error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain("has no password field");
+			cli
+				.TryRead("linq2db/nouser", out _, out _, out error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain("has no password field");
 		}
 
 		[Test]
@@ -604,14 +756,24 @@ namespace Tests.LinqToDB.CLI
 			var names = new[] { "a b", " lead", "x<y>&z\"q\\r♨" };
 
 			foreach (var name in names)
-				cli.TryStore(name, "u", "p", out var storeError).ShouldBeTrue(storeError);
+				cli
+					.TryStore(name, "u", "p", out var storeError)
+					.ShouldBeTrue(storeError);
 
-			cli.TryList(out var profiles, out _, out var error).ShouldBeTrue(error);
-			profiles.Select(static profile => profile.Name).ShouldBe(names, ignoreOrder: true);
+			cli
+				.TryList(out var profiles, out _, out var error)
+				.ShouldBeTrue(error);
+			profiles
+				.Select(static profile => profile.Name)
+				.ShouldBe(names, ignoreOrder: true);
 
-			cli.TryClear(out var count, out error).ShouldBeTrue(error);
+			cli
+				.TryClear(out var count, out error)
+				.ShouldBeTrue(error);
 			count.ShouldBe(3);
-			Directory.Exists(Path.Combine(_state, "vault", "secret", "linq2db")).ShouldBeFalse();
+			Directory
+				.Exists(Path.Combine(_state, "vault", "secret", "linq2db"))
+				.ShouldBeFalse();
 		}
 
 		[Test]
@@ -620,22 +782,34 @@ namespace Tests.LinqToDB.CLI
 			// "vault kv delete" of the latest KV version 2 version leaves the metadata and the older, recoverable versions.
 			var cli = CreateStore("vault");
 
-			cli.TryStore("a", "u", "p", out var error).ShouldBeTrue(error);
+			cli
+				.TryStore("a", "u", "p", out var error)
+				.ShouldBeTrue(error);
 
 			var item = Path.Combine(_state, "vault", "secret", "linq2db", "a");
 			File.Delete(Path.Combine(item, ".username"));
 			File.Delete(Path.Combine(item, ".password"));
 			File.WriteAllText(Path.Combine(item, ".deleted"), string.Empty);
 
-			cli.TryRead("linq2db/a", out _, out _, out error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain("was not found by credentials CLI");
+			cli
+				.TryRead("linq2db/a", out _, out _, out error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain("was not found by credentials CLI");
 
-			cli.TryList(out var profiles, out _, out error).ShouldBeTrue(error);
+			cli
+				.TryList(out var profiles, out _, out error)
+				.ShouldBeTrue(error);
 			profiles.ShouldBe([new CredentialProfile("a", string.Empty)]);
 
-			cli.TryRemove("a", out var removed, out error).ShouldBeTrue(error);
+			cli
+				.TryRemove("a", out var removed, out error)
+				.ShouldBeTrue(error);
 			removed.ShouldBeTrue();
-			Directory.Exists(item).ShouldBeFalse();
+			Directory
+				.Exists(item)
+				.ShouldBeFalse();
 		}
 
 		[Test]
@@ -644,17 +818,29 @@ namespace Tests.LinqToDB.CLI
 			// Written by someone else with write access to the path: a list must not turn it into a record to erase.
 			var cli = CreateStore("vault");
 
-			cli.TryStore("evil", "u", "secret-value", out var error).ShouldBeTrue(error);
+			cli
+				.TryStore("evil", "u", "secret-value", out var error)
+				.ShouldBeTrue(error);
 			File.WriteAllText(Path.Combine(_state, "vault", "secret", "linq2db", "evil", ".username"), "x\n\ntarget=linq2db/../outside\nusername=y");
 
-			cli.TryList(out _, out _, out error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain("the user name of linq2db/evil holds a control character");
+			cli
+				.TryList(out _, out _, out error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain("the user name of linq2db/evil holds a control character");
 
-			cli.TryClear(out _, out error).ShouldBeFalse();
+			cli
+				.TryClear(out _, out error)
+				.ShouldBeFalse();
 			ArgvLog.ShouldNotContain("outside");
 
-			cli.TryRead("linq2db/evil", out _, out _, out error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain("holds a control character");
+			cli
+				.TryRead("linq2db/evil", out _, out _, out error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain("holds a control character");
 		}
 
 		[TestCase("[\n  \"a\\nb\"\n]",     TestName = "VaultKeyWithEscapedLineBreakIsRefused")]
@@ -665,8 +851,12 @@ namespace Tests.LinqToDB.CLI
 		{
 			File.WriteAllText(Path.Combine(_state, "list.json"), json);
 
-			CreateStore("vault").TryList(out _, out _, out var error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain("with a control character, or output that is not a JSON array of strings");
+			CreateStore("vault")
+				.TryList(out _, out _, out var error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain("with a control character, or output that is not a JSON array of strings");
 		}
 
 		[Test]
@@ -674,7 +864,8 @@ namespace Tests.LinqToDB.CLI
 		{
 			// The script is POSIX sh: telling a missing record from a failure must not need a grep extension such as \|
 			// alternation in a basic regular expression.
-			var grep = FindOnPath("grep").ShouldNotBeNull();
+			var grep = FindOnPath("grep")
+				.ShouldNotBeNull();
 
 			WriteExecutable(Path.Combine(_bin, "grep"), $$"""
 				#!/bin/sh
@@ -688,10 +879,16 @@ namespace Tests.LinqToDB.CLI
 
 			var cli = CreateStore("vault");
 
-			cli.TryRead("linq2db/missing", out _, out _, out var error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain("was not found by credentials CLI");
+			cli
+				.TryRead("linq2db/missing", out _, out _, out var error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain("was not found by credentials CLI");
 
-			cli.TryRemove("missing", out var removed, out error).ShouldBeTrue(error);
+			cli
+				.TryRemove("missing", out var removed, out error)
+				.ShouldBeTrue(error);
 			removed.ShouldBeFalse();
 		}
 
@@ -700,8 +897,12 @@ namespace Tests.LinqToDB.CLI
 		{
 			File.WriteAllText(Path.Combine(_state, "fail"), string.Empty);
 
-			CreateStore("vault").TryRead("linq2db/a", out _, out _, out var error).ShouldBeFalse();
-			error.ShouldNotBeNull().ShouldContain("vault kv get failed: Error making API request. Code: 403. Errors: * permission denied");
+			CreateStore("vault")
+				.TryRead("linq2db/a", out _, out _, out var error)
+				.ShouldBeFalse();
+			error
+				.ShouldNotBeNull()
+				.ShouldContain("vault kv get failed: Error making API request. Code: 403. Errors: * permission denied");
 		}
 
 		[TestCase("keyring")]
@@ -740,7 +941,8 @@ namespace Tests.LinqToDB.CLI
 
 		static string? FindOnPath(string name)
 		{
-			foreach (var directory in (Environment.GetEnvironmentVariable("PATH") ?? string.Empty).Split(':'))
+			foreach (var directory in (Environment.GetEnvironmentVariable("PATH") ?? string.Empty)
+				.Split(':'))
 			{
 				if (directory.Length > 0 && File.Exists(Path.Combine(directory, name)))
 					return Path.Combine(directory, name);
