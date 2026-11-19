@@ -81,6 +81,10 @@ namespace Tests.LinqToDB.CLI
 			output.ShouldContain($"Check it: dotnet linq2db credentials list --credentials-cli @{store}");
 			error. ShouldContain($"Warning: '{tool}' was not found on PATH.");
 			File.ReadAllText(script).ShouldBe(CredentialsCliTemplates.Get(store));
+
+			// The header names the template revision, so an installed copy can be compared with a newer template.
+			File.ReadAllText(script).ShouldContain("\n# linq2db-cli template revision: 1\n", Case.Sensitive);
+
 			File.GetUnixFileMode(script).    ShouldBe(Owner700);
 			File.GetUnixFileMode(_directory).ShouldBe(Owner700);
 			Directory.GetFiles(_directory, "*.tmp").ShouldBeEmpty();
@@ -436,6 +440,43 @@ namespace Tests.LinqToDB.CLI
 
 			exitCode.ShouldBe(0, error);
 			RecordedValue(environment, "cfg.json").ShouldBe("@keyring");
+			error.ShouldContain("note: the configuration used the store '/opt/vault-cli' before; its records were not moved.");
+			error.ShouldContain("dotnet linq2db credentials list --credentials-cli /opt/vault-cli shows them");
+		}
+
+		[Test]
+		public async Task ChangingFromTheDefaultStoreSaysRecordsAreNotMoved()
+		{
+			RequirePosix();
+
+			var environment = CreateEnvironment();
+			environment.Files.Add("cfg.json", """{ "default": { "maxRows": 10 } }""");
+
+			var (exitCode, _, error) = await RunCli(environment, "credentials", "cli", "init", "--store", "gpg", "--config", "cfg.json");
+
+			exitCode.ShouldBe(0, error);
+			error.ShouldContain("note: the configuration used the store '@local' (the default for this OS) before; its records were not moved.");
+			error.ShouldContain("Enter them again with: dotnet linq2db credentials set --config cfg.json [--profile <profile>] --user <user>.");
+			error.ShouldContain("dotnet linq2db credentials remove --credentials-cli @local --credentials linq2db/<name> removes one.");
+
+			// The same store again changes nothing, so there is no note.
+			(exitCode, _, error) = await RunCli(environment, "credentials", "cli", "init", "--store", "gpg", "--config", "cfg.json", "--force");
+
+			exitCode.ShouldBe(0, error);
+			error.ShouldNotContain("were not moved");
+		}
+
+		[Test]
+		public async Task LocalStoreOverTheDefaultLocalStoreSaysNothingAboutRecords()
+		{
+			RequirePosix();
+
+			var environment = CreateEnvironment();
+
+			var (exitCode, _, error) = await RunCli(environment, "credentials", "cli", "init", "--store", "local", "--config", "cfg.json");
+
+			exitCode.ShouldBe(0, error);
+			error.ShouldNotContain("were not moved");
 		}
 
 		[TestCase(false, TestName = "ConfigWriteFailureLeavesNoNewScript")]

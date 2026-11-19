@@ -19,7 +19,8 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 {
 	/// <summary>
 	/// Manages linq2db credential records in the selected credential store (the built-in local store, Windows Credential
-	/// Manager, or a credentials CLI), and creates the generated <c>keyring</c>/<c>gpg</c> scripts.
+	/// Manager, or a credentials CLI), and sets up a store with <c>cli init</c>: the generated <c>keyring</c>,
+	/// <c>gpg</c> or <c>vault</c> script, or the local store.
 	/// </summary>
 	sealed class CredentialsCommand : CliCommand
 	{
@@ -597,6 +598,8 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 			// Validate the configuration change before anything is written.
 			JsonObject? root            = null;
 			string?     previousContent = null;
+			string?     previousStore   = null;
+			var         previousDefault = false;
 
 			if (configFile != null)
 			{
@@ -626,6 +629,17 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 				{
 					await environment.Error.WriteLineAsync($"Configuration file '{configFile}' profile '{QueryExecutionDefaults.DefaultProfileName}' already sets 'credentialsCli' to {existing.ToJsonString()}. Use '--force' to replace it.");
 					return StatusCodes.EXPECTED_ERROR;
+				}
+
+				// The store the profile used before, when init changes it: a profile without 'credentialsCli' uses the OS default.
+				var previous = existing == null
+					? isWindows ? CredentialStoreSelector.CredentialManager : CredentialStoreSelector.Local
+					: existing is JsonValue previousValue && previousValue.TryGetValue<string>(out var previousString) ? previousString : existing.ToJsonString();
+
+				if (!string.Equals(previous, recorded, StringComparison.Ordinal))
+				{
+					previousStore   = previous;
+					previousDefault = existing == null;
 				}
 
 				if (root[QueryExecutionDefaults.DefaultProfileName] is not JsonObject defaultProfile)
@@ -751,6 +765,16 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 			{
 				await environment.Out.WriteLineAsync($"Recorded \"credentialsCli\": {JsonSerializer.Serialize(recorded)} in profile '{QueryExecutionDefaults.DefaultProfileName}' of '{configFile}'.");
 				await environment.Out.WriteLineAsync($"Check it: {CommandName} list --config {ShellQuote(configFile, isWindows)}");
+
+				if (previousStore != null)
+				{
+					// Records are not copied between stores: that would carry every password through the tool in plain text.
+					await environment.Error.WriteLineAsync(
+						$"note: the configuration used the store '{previousStore}'{(previousDefault ? " (the default for this OS)" : null)} before; its records were not moved. "
+						+ $"Enter them again with: {CommandName} set --config {ShellQuote(configFile, isWindows)} [--profile <profile>] --user <user>. "
+						+ $"The old ones stay in '{previousStore}': {CommandName} list --credentials-cli {ShellQuote(previousStore, isWindows)} shows them, "
+						+ $"and {CommandName} remove --credentials-cli {ShellQuote(previousStore, isWindows)} --credentials linq2db/<name> removes one.");
+				}
 			}
 			else
 			{
