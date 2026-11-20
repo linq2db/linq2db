@@ -1182,7 +1182,8 @@ namespace Tests.LinqToDB.CLI
 			{
 				result.ExitCode.ShouldBe(0, result.Error);
 				result.Output.  ShouldContain("handled there");
-				Regex.Count(result.Output, "removed:").ShouldBe(2);
+				// one skill folder, removed once through the real destination
+				Regex.Count(result.Output, "removed:").ShouldBe(1);
 				Directory.Exists(Path.Combine(repo.Root, ".agents", "skills", "linq2db")).ShouldBeFalse();
 			}
 		}
