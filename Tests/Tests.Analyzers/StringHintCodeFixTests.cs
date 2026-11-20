@@ -946,5 +946,47 @@ namespace Tests.Analyzers
 					test.CodeFixTestBehaviors         |= CodeFixTestBehaviors.SkipFixAllCheck;
 				});
 		}
+	
+		// Each occurrence adds the same using; Fix-All merges them into one.
+		[Test]
+		public async Task FixAllAddsTheUsingOnce()
+		{
+			await VerifyAsync(
+				"""
+				using LinqToDB;
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var a = t.[|TableHint("NOLOCK")|];
+						var b = t.[|With("READPAST")|];
+					}
+				}
+				""",
+				"""
+				using LinqToDB;
+				using LinqToDB.DataProvider.SqlServer;
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var a = t.AsSqlServer().WithNoLock();
+						var b = t.AsSqlServer().WithReadPast();
+					}
+				}
+				""",
+				SqlServerRestrictedKey,
+				static test =>
+				{
+					test.NumberOfIncrementalIterations = 2;
+					test.NumberOfFixAllIterations      = 1;
+				});
+		}
 	}
 }
