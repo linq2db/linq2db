@@ -7,6 +7,7 @@ using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
@@ -104,11 +105,13 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		{
 			using var sqlite = new ProviderSplitContext(
 				new DbContextOptionsBuilder<ProviderSplitContext>()
+					.ConfigureWarnings(w => w.Ignore(CoreEventId.ManyServiceProvidersCreatedWarning))
 					.UseSqlite("Data Source=:memory:")
 					.Options);
 
 			using var sqlServer = new ProviderSplitContext(
 				new DbContextOptionsBuilder<ProviderSplitContext>()
+					.ConfigureWarnings(w => w.Ignore(CoreEventId.ManyServiceProvidersCreatedWarning))
 					.UseSqlServer("Server=.;Database=MappingSchemaCacheTests;Integrated Security=SSPI;TrustServerCertificate=true")
 					.Options);
 
@@ -144,11 +147,13 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		{
 			using var plain = new ProviderSplitContext(
 				new DbContextOptionsBuilder<ProviderSplitContext>()
+					.ConfigureWarnings(w => w.Ignore(CoreEventId.ManyServiceProvidersCreatedWarning))
 					.UseSqlite("Data Source=:memory:")
 					.Options);
 
 			using var customized = new ProviderSplitContext(
 				new DbContextOptionsBuilder<ProviderSplitContext>()
+					.ConfigureWarnings(w => w.Ignore(CoreEventId.ManyServiceProvidersCreatedWarning))
 					.UseSqlite("Data Source=:memory:")
 					.ReplaceService<IModelCustomizer, RenamingModelCustomizer>()
 					.Options);
