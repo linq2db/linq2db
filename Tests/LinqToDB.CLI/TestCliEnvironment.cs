@@ -114,9 +114,6 @@ namespace Tests.LinqToDB.CLI
 			return InputLines.TryDequeue(out var line) ? line : null;
 		}
 
-		/// <summary>Called when an impersonated run starts, before anything runs in it.</summary>
-		public Action? ImpersonatedRunStarting { get; init; }
-
 		/// <summary>Thrown by <see cref="StartImpersonation"/> instead of starting a session, to simulate a failed logon.</summary>
 		public Exception? StartImpersonationException { get; init; }
 
@@ -128,7 +125,7 @@ namespace Tests.LinqToDB.CLI
 			if (StartImpersonationException != null)
 				throw StartImpersonationException;
 
-			var session = new RecordingImpersonationSession(user, password, mode, _error.ToString, ImpersonatedRunStarting);
+			var session = new RecordingImpersonationSession(user, password, mode, _error.ToString);
 
 			lock (ImpersonationSessions)
 				ImpersonationSessions.Add(session);
