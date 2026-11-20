@@ -277,7 +277,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							if (memberType.IsValueType ||
 								!memberType.IsSameOrParentOf(providerValueGetter.Type))
 							{
-								var convertLambda = MappingSchema.GetConvertExpression(providerValueGetter.Type, memberType, checkNull: true, createDefault: false);
+								var convertLambda = mappingSchema.GetConvertExpression(providerValueGetter.Type, memberType, checkNull: true, createDefault: false);
 								if (convertLambda != null)
 								{
 									providerValueGetter = InternalExtensions.ApplyLambdaToExpression(convertLambda, providerValueGetter);
@@ -291,7 +291,7 @@ namespace LinqToDB.Internal.Linq.Builder
 									? memberType.MakeNullable()
 									: memberType;
 
-								var convertLambda   = MappingSchema.GenerateSafeConvert(providerValueGetter.Type, toType);
+								var convertLambda   = mappingSchema.GenerateSafeConvert(providerValueGetter.Type, toType);
 								providerValueGetter = InternalExtensions.ApplyLambdaToExpression(convertLambda, providerValueGetter);
 							}
 						}
@@ -324,7 +324,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						{
 							LambdaExpression? convertExpr = null;
 							if (buildParameterType == BuildParameterType.Default
-								&& !HasDbMapping(MappingSchema, providerValueGetter.Type, out convertExpr))
+								&& !HasDbMapping(mappingSchema, providerValueGetter.Type, out convertExpr))
 							{
 								if (!doNotCheckCompatibility)
 									return null;
@@ -335,11 +335,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 							providerValueGetter = convertExpr != null
 								? InternalExtensions.ApplyLambdaToExpression(convertExpr, providerValueGetter)
-								: ColumnDescriptor.ApplyConversions(MappingSchema, providerValueGetter, paramDataType, null, true);
+								: ColumnDescriptor.ApplyConversions(mappingSchema, providerValueGetter, paramDataType, null, true);
 						}
 						else
 						{
-							providerValueGetter = ColumnDescriptor.ApplyConversions(MappingSchema, providerValueGetter, paramDataType, null, true);
+							providerValueGetter = ColumnDescriptor.ApplyConversions(mappingSchema, providerValueGetter, paramDataType, null, true);
 						}
 					}
 				}

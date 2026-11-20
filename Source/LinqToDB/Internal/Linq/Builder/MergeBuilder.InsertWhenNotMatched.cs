@@ -41,7 +41,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					// build setters like QueryRunner.Insert
 
 					setterExpression = builder.BuildFullEntityExpression(
-						builder.MappingSchema, mergeContext.SourceContext.SourcePropAccess,
+						mergeContext.MappingSchema, mergeContext.SourceContext.SourcePropAccess,
 						mergeContext.SourceContext.SourceContextRef.Type, ProjectFlags.SQL,
 						EntityConstructorBase.FullEntityPurpose.Insert);
 				}

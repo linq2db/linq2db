@@ -82,7 +82,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					? selector.Body
 					: SequenceHelper.PrepareBody(selector, sequence);
 
-				var extractResult = ExtractAssociations(builder, table, path, null);
+				var extractResult = ExtractAssociations(builder, (table as IBuildContext)?.MappingSchema ?? sequence.MappingSchema, table, path, null);
 
 				if (extractResult == null)
 					throw new LinqToDBException($"Unable to retrieve properties path for LoadWith/ThenLoad. Path: '{selector}'");
@@ -143,7 +143,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return BuildSequenceResult.FromContext(loadWithSequence);
 		}
 
-		static (ILoadWithContext? context, LoadWithMember[] info)? ExtractAssociations(ExpressionBuilder builder, ILoadWithContext? parentContext, Expression expression, Expression? stopExpression)
+		static (ILoadWithContext? context, LoadWithMember[] info)? ExtractAssociations(ExpressionBuilder builder, MappingSchema mappingSchema, ILoadWithContext? parentContext, Expression expression, Expression? stopExpression)
 		{
 			var currentExpression = expression;
 
@@ -167,7 +167,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				filterExpression = lambda;
 			}
 
-			var (context, members) = GetAssociations(builder, parentContext, currentExpression, stopExpression);
+			var (context, members) = GetAssociations(builder, mappingSchema, parentContext, currentExpression, stopExpression);
 			if (context == null)
 				return default;
 
@@ -178,10 +178,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			return (context, loadWithInfos);
 		}
 
-		static (ILoadWithContext? context, List<MemberInfo> members) GetAssociations(ExpressionBuilder builder, ILoadWithContext? parentContext, Expression expression, Expression? stopExpression)
+		static (ILoadWithContext? context, List<MemberInfo> members) GetAssociations(ExpressionBuilder builder, MappingSchema mappingSchema, ILoadWithContext? parentContext, Expression expression, Expression? stopExpression)
 		{
 			ILoadWithContext? context    = parentContext;
 			MemberInfo?       lastMember = null;
+			var               pathSchema = GetPathMappingSchema(builder, expression, mappingSchema);
 
 			var members = new List<MemberInfo>();
 			var stop    = false;
@@ -252,7 +253,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						var mexpr         = (MemberExpression)expression;
 						lastMember        = mexpr.Member;
-						var isAssociation = builder.IsAssociation(expression, out var associationMember);
+						var isAssociation = ExpressionBuilder.IsAssociation(pathSchema, expression, out var associationMember);
 
 						if (!isAssociation)
 						{
@@ -313,6 +314,49 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			return (context ?? parentContext, members);
+		}
+
+		/// <summary>
+		/// The handle a path starts from decides all of its associations, and after a join that is not the sequence. A path
+		/// with no context at its root (<c>ThenLoad</c>'s parameter) keeps <paramref name="fallback"/>.
+		/// </summary>
+		static MappingSchema GetPathMappingSchema(ExpressionBuilder builder, Expression path, MappingSchema fallback)
+		{
+			var links   = new Stack<Expression>();
+			var current = path.UnwrapConvert();
+
+			while (true)
+			{
+				var next = current switch
+				{
+					MemberExpression { Expression: { } owner }                 => owner,
+					BinaryExpression { NodeType: ExpressionType.ArrayIndex } a => a.Left,
+					MethodCallExpression { Object: { } instance }              => instance,
+					MethodCallExpression { Arguments.Count: > 0 } call         => call.Arguments[0],
+					_                                                          => null,
+				};
+
+				if (next == null)
+					break;
+
+				links.Push(current);
+				current = next.UnwrapConvert();
+			}
+
+			if (current is not ContextRefExpression root)
+				return fallback;
+
+			// A nested projection's member is no handle itself, so the walk goes on to the member that is.
+			foreach (var link in links)
+			{
+				if (link is not MemberExpression)
+					break;
+
+				if (builder.BuildTraverseExpression(link).UnwrapConvert() is ContextRefExpression resolved)
+					root = resolved;
+			}
+
+			return root.BuildContext.MappingSchema;
 		}
 
 		static LoadWithEntity MergeLoadWith(LoadWithEntity loadWith, LoadWithMember[] defined)

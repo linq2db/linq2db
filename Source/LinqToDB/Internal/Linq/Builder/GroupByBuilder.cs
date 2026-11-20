@@ -386,7 +386,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					// (the Value1 over-fetch). A scalar key stays Sql too — under Expand a bare scalar comes
 					// back as an unresolved column reference, breaking eager-load correlation
 					// (detail.Where(d => d.X == g.Key)).
-					var keyPurpose = flags.IsExpand() && flags.IsMemberRoot() && !Builder.MappingSchema.IsScalarType(Body.Type)
+					var keyPurpose = flags.IsExpand() && flags.IsMemberRoot() && !MappingSchema.IsScalarType(Body.Type)
 						? BuildPurpose.Expand
 						: BuildPurpose.Sql;
 
