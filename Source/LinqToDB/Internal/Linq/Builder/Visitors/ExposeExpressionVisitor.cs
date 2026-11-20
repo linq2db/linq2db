@@ -348,7 +348,14 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				if (memberInfo == null)
 					memberInfo = MemberHelper.GetMemberInfo(node);
 
-				return Expression.MakeMemberAccess(entity, memberInfo);
+				var memberAccess = Expression.MakeMemberAccess(entity, memberInfo);
+
+				// Sql.Property<T> may request a value type other than the member's own (decimal? over a decimal member).
+				// A reference T keeps the plain member access: callers use e.g. Sql.Property<object> over an int member.
+				if (memberAccess.Type != node.Type && node.Type.IsValueType)
+					return Expression.Convert(memberAccess, node.Type);
+
+				return memberAccess;
 			}
 
 			Expression HandleInvoke(MethodCallExpression node, LambdaExpression invokeLambda)
