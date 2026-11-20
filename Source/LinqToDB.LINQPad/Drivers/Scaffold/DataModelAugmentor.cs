@@ -52,7 +52,13 @@ internal sealed class DataModelAugmentor(
 				.Parameter(providerParam)
 				.Parameter(assemblyPathParam)
 				.Parameter(connectionStringParam)
-				.Base(providerParam.Reference, assemblyPathParam.Reference, connectionStringParam.Reference);
+				.Base(_ast.Call(
+					new CodeTypeReference(languageProvider.TypeParser.Parse(typeof(LINQPadContextOptions))),
+					_ast.Name(nameof(LINQPadContextOptions.Create)),
+					languageProvider.TypeParser.Parse<DataOptions>(),
+					providerParam.Reference,
+					assemblyPathParam.Reference,
+					connectionStringParam.Reference));
 
 			// set default CommandTimeout from LINQPad connection settings
 			if (commandTimeout != null)

@@ -42,7 +42,7 @@ COMPONENTS
    License: PostgreSQL  see [3]
    Copyright 2025 © The Npgsql Development Team
 
-6. System.Collections.Immutable net462: 9.0.10, net472: 10.0.3
+6. System.Collections.Immutable net462: 9.0.10, net472: 10.0.10
    https://dot.net/
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
