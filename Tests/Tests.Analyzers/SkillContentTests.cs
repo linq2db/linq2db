@@ -209,33 +209,80 @@ namespace Tests.Analyzers
 
 		// Package layout read by NuGet's dotnet-package-skills tool: skills/<skill name>/SKILL.md, one folder per skill.
 		// Only the linq2db package carries the skill: provider and integration packages depend on it, and the same skill
-		// name from two packages is a collision in that tool.
+		// name from two packages is a collision in that tool. Every item that can place a file in a package is read -
+		// any item type with a PackagePath, in projects, .props and .targets files under Source/ and NuGet/ and at the
+		// repository root, and <file target> in a .nuspec.
 		[Test]
 		public void OnlyTheLinq2dbPackagePacksTheSkill()
 		{
-			var source   = Path.Combine(GetRepositoryRoot(), "Source");
+			var root     = GetRepositoryRoot();
 			var packed   = new Dictionary<string, string>(StringComparer.Ordinal);
 			var carriers = new List<string>();
 
-			foreach (var project in Directory.EnumerateFiles(source, "*.csproj", SearchOption.AllDirectories))
+			foreach (var file in GetPackagingFiles(root))
 			{
-				foreach (var item in XDocument.Load(project).Descendants("None"))
+				foreach (var (packagePath, include) in GetPackagePaths(file))
 				{
-					var path = (string?)item.Attribute("PackagePath");
-
-					if (path == null || !path.StartsWith("skills/", StringComparison.Ordinal))
+					if (!packagePath.StartsWith("skills/", StringComparison.OrdinalIgnoreCase))
 						continue;
 
-					carriers.Add(Path.GetFileNameWithoutExtension(project));
-					packed[path] = ((string)item.Attribute("Include")!).Replace('\\', '/');
+					var carrier = Path
+						.GetRelativePath(root, file)
+						.Replace('\\', '/');
+
+					carriers.Add(carrier);
+					packed[packagePath] = include.Replace('\\', '/');
 				}
 			}
 
 			Assert.Multiple(() =>
 			{
-				Assert.That(carriers.Distinct(), Is.EqualTo(new[] { "LinqToDB" }));
+				Assert.That(carriers.Distinct(), Is.EqualTo(new[] { "Source/LinqToDB/LinqToDB.csproj" }));
 				Assert.That(packed, Is.EqualTo(new Dictionary<string, string> { ["skills/linq2db/%(RecursiveDir)%(Filename)%(Extension)"] = "../Skills/linq2db/**/*.md" }));
 			});
+		}
+
+		static IEnumerable<string> GetPackagingFiles(string root)
+		{
+			string[] patterns = ["*.csproj", "*.props", "*.targets", "*.nuspec"];
+
+			foreach (var pattern in patterns)
+			{
+				foreach (var file in Directory.EnumerateFiles(root, pattern, SearchOption.TopDirectoryOnly))
+					yield return file;
+
+				foreach (var folder in new[] { "Source", "NuGet" })
+					foreach (var file in Directory.EnumerateFiles(Path.Combine(root, folder), pattern, SearchOption.AllDirectories))
+						yield return file;
+			}
+		}
+
+		// (package path, source) pairs; element and attribute names are matched without the MSBuild / nuspec namespace.
+		static IEnumerable<(string PackagePath, string Include)> GetPackagePaths(string file)
+		{
+			foreach (var element in XDocument.Load(file).Descendants())
+			{
+				var packagePath = element.Attribute("PackagePath")?.Value;
+				var include     = element.Attribute("Include")?.Value ?? element.Attribute("Update")?.Value;
+
+				if (packagePath is null && string.Equals(element.Name.LocalName, "file", StringComparison.Ordinal))
+				{
+					packagePath = element.Attribute("target")?.Value;
+					include     = element.Attribute("src")?.Value;
+				}
+
+				if (packagePath is null)
+					continue;
+
+				foreach (var path in packagePath.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+				{
+					var normalized = path
+						.Replace('\\', '/')
+						.TrimStart('/');
+
+					yield return (normalized, include ?? string.Empty);
+				}
+			}
 		}
 
 		static int EstimateTokens(long bytes)
