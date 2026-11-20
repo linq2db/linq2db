@@ -31,8 +31,9 @@ skills/
 
 `references/hints.md` is named in the message of analyzer L2DB2001 (`StringHintAnalyzer.GuidePath`); keep that path.
 
-The skill folder is named after the package id (`linq2db`), as NuGet recommends: skills of all packages share one
-folder in a repository. Only the `linq2db` package carries the skill. Provider and integration packages do not:
+The skill folder is the lowercased package id (`linq2db`). NuGet recommends prefixing every skill folder with it
+(`skills/linq2db-<skill-name>/` for any further skill), since skills of all packages share one folder in a
+repository. Only the `linq2db` package carries the skill. Provider and integration packages do not:
 they depend on `linq2db`, and the same skill name from two packages is a collision for `dotnet-package-skills`.
 
 Frontmatter: `name` (equals the folder name), `description` and `license`, all from the specification. There is no

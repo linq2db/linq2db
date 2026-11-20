@@ -29,5 +29,5 @@ db.GetTable<Ticket>().OrderBy(t => t.DueDate, Sql.NullsPosition.Last);
 - 6.5 `db.UpdateOptimisticWithRefresh(entity)` (`LinqToDB.Concurrency`) also refreshes the entity's version
   column, so the instance can be updated again.
 - 6.6 `UseCombinedCommands(true)` sends an eager load in one round trip.
-- 6.6 a nullable comparison used as a value is `false` when an operand is `NULL` (databases with a boolean
-  type); an eager load outside a transaction reads all parent rows before returning the first one.
+- 6.6 a nullable comparison used as a value (`IsOne = p.Value1 == 1`) is `false`, not `NULL`, when an operand is
+  `NULL`; an eager load outside a transaction reads all parent rows before returning the first one.

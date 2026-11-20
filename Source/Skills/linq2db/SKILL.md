@@ -28,7 +28,8 @@ description: Guidance for LINQ to DB (linq2db), the .NET LINQ-to-SQL library, ma
 
 1. **`[Table]` maps only attributed members.** With `[Table]`, a property without `[Column]`,
    `[PrimaryKey]` or `[Identity]` is silently not mapped (`IsColumnAttributeRequired` defaults to true).
-   Without `[Table]`, all public properties map by name.
+   Without `[Table]`, every public property or field of a scalar type (not an entity or a collection) maps by
+   name.
 2. **Lifetime.** Build `DataOptions` and a custom `MappingSchema` once: options that get a new schema,
    interceptor or delegate per call miss the query cache. Temp tables and session state need one open
    connection: use `DataConnection` (a `DataContext` only with `SetKeepConnectionAlive(true)`). A
@@ -62,5 +63,5 @@ Other areas have no reference file yet; use `linq2db.xml`.
 
 `linq2db.xml` in the restored package (`<global-packages>/linq2db/<version>/lib/<tfm>/linq2db.xml`; from a
 skill read inside the package, `../../lib/<tfm>/linq2db.xml`) has the signatures and remarks for this
-version. Search it by member name. Provider hint helpers and `AsXxx()` markers are not in it. Do not use
+version. Search it by member name. Most provider hint helpers and `AsXxx()` markers are not in it. Do not use
 `LinqToDB.Internal.*` types in application code.

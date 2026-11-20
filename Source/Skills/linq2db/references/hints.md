@@ -19,12 +19,13 @@ db.GetTable<Order>().Where(o => o.Total > 100).AsSqlServer().OptionRecompile()  
 | `AsSQLite()` | `IndexedByHint("IX")`, `NotIndexedHint()` |
 | `AsSqlCe()`, `AsAccess()`, `AsYdb()` | `WithNoLock()`; `WithOwnerAccessOption()`; `DistinctHint()` |
 
-- The helpers and markers are not in `linq2db.xml`. Derived names can be wrong (MySQL `NO_ICP` is
-  `NoIcpHint()`): confirm a name by compiling it.
+- Most helpers and markers have no entry in `linq2db.xml` (ClickHouse's helpers do). Derived names can be wrong
+  (MySQL `NO_ICP` is `NoIcpHint()`): confirm a name by compiling it.
 - On a bare `ITable<T>` the marker returns the table type, which has only table helpers. For query, join and
   scope helpers call the marker on a query (after `.Where(...)` or `.AsQueryable()`).
 - Scope forms apply a table hint to every table of the query they are called on: `WithNoLockInScope()`,
-  `FullInScopeHint()`. Call them after the joins. Tables reached only from the final `Select` do not get it.
+  `FullInScopeHint()`. Call them after the joins. Known limitation (issue #4321): tables joined only through an
+  association in the final `Select` do not get the hint.
 - Hints for several providers can be chained; only the active provider's hints are emitted.
 - DB2, Firebird, Informix, SAP HANA, Sybase ASE and DuckDB have no hint helpers.
 
