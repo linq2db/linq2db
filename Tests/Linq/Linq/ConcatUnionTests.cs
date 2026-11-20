@@ -3175,5 +3175,53 @@ namespace Tests.Linq
 
 			AssertQuery(Compare(objects, nulls, operation));
 		}
+
+		// A set operation over FROM-less selects yields one row per branch. Taken for a single row, the joined union
+		// becomes a scalar subquery, which returns the first branch only or fails at runtime.
+		[Test]
+		[ThrowsCannotBeConverted(TestProvName.AllNativeAccess, TestProvName.AllYdb)]
+		public void SelectManyDefaultIfEmptyOverFromlessUnionKeepsAllRows([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				from x in db.SelectQuery(() => 1)
+					.Concat(db.SelectQuery(() => 2))
+					.DefaultIfEmpty()
+				select new { p.ParentID, X = x };
+
+			// stated explicitly: an AssertQuery oracle would evaluate the inner union through the same translation
+			var expected =
+				from p in Parent
+				from x in new[] { 1, 2 }
+				select new { p.ParentID, X = x };
+
+			AreEqual(expected, query);
+		}
+
+		// Each branch of a correlated set operation contributes its own row. Lifting the first branch's correlated
+		// column into the parent replaces every branch's value with it. The union stays correlated, so it needs APPLY.
+		[Test]
+		[ThrowsForProvider("FirebirdSql.Data.FirebirdClient.FbException", ProviderName.Firebird4, ErrorMessage = "no current record for fetch operation")]
+		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative, ErrorMessage = "SET operator in LATERAL")]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, ErrorMessage = "SET operator in LATERAL")]
+		public void SelectManyOverCorrelatedFromlessUnionKeepsEachBranchValue([IncludeDataSources(TestProvName.WithApplyJoin)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				from x in db.SelectQuery(() => p.Value1)
+					.Concat(db.SelectQuery(() => (int?)7))
+				select new { p.ParentID, X = x };
+
+			var expected =
+				from p in Parent
+				from x in new[] { p.Value1, (int?)7 }
+				select new { p.ParentID, X = x };
+
+			AreEqual(expected, query);
+		}
 	}
 }

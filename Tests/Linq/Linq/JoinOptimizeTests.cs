@@ -844,5 +844,39 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		#region Outer join projection hoisting
+
+		// A conditional projection of an outer-joined source reads NULL for an outer row without a match. Lifting the
+		// projection out of the joined subquery evaluates it over the NULL-extended row instead, where `Value1 IS NULL`
+		// holds, so the last parent (no ParentID + 1) reads "none".
+		[Test]
+		public void OuterJoinedConditionalProjectionReadsNullWithoutMatch([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var plain =
+				from p in db.Parent
+				from x in db.Parent
+					.Where(q => q.ParentID == p.ParentID + 1)
+					.Select(q => q.Value1 == null ? "none" : null)
+					.DefaultIfEmpty()
+				select new { p.ParentID, X = x };
+
+			AssertQuery(plain);
+
+			var subQuery =
+				from p in db.Parent
+				from x in db.Parent
+					.Where(q => q.ParentID == p.ParentID + 1)
+					.Select(q => q.Value1 == null ? "none" : null)
+					.AsSubQuery()
+					.DefaultIfEmpty()
+				select new { p.ParentID, X = x };
+
+			AssertQuery(subQuery);
+		}
+
+		#endregion
 	}
 }

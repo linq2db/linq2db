@@ -326,5 +326,42 @@ namespace Tests.Linq
 		}
 		#endregion
 
+		// A SelectQuery kept as its own query by AsSubQuery and correlated to sibling sources has to stay an APPLY, or be
+		// inlined where APPLY is unsupported: as a plain LEFT JOIN it would reference those sources out of scope. Without
+		// AsSubQuery it is inlined everywhere.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6326")]
+		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative, ErrorMessage = "SET operator in LATERAL")]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, ErrorMessage = "SET operator in LATERAL")]
+		public void CorrelatedSelectQueryDefaultIfEmpty([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var subQuery =
+				from p in db.Parent
+				from c in db.Child
+				where c.ParentID == p.ParentID
+				from error in db.SelectQuery(() =>
+						c.ChildID.IsDistinctFrom(p.ParentID * 10 + 1) || p.Value1.IsDistinctFrom(c.ParentID)
+							? "bad"
+							: null)
+					.AsSubQuery()
+					.DefaultIfEmpty()
+				select new { c.ChildID, Status = error != null ? 5 : 3, Error = error };
+
+			AssertQuery(subQuery);
+
+			var inlined =
+				from p in db.Parent
+				from c in db.Child
+				where c.ParentID == p.ParentID
+				from error in db.SelectQuery(() =>
+						c.ChildID.IsDistinctFrom(p.ParentID * 10 + 1) || p.Value1.IsDistinctFrom(c.ParentID)
+							? "bad"
+							: null)
+					.DefaultIfEmpty()
+				select new { c.ChildID, Status = error != null ? 5 : 3, Error = error };
+
+			AssertQuery(inlined);
+		}
 	}
 }
