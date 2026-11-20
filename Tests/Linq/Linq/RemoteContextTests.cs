@@ -307,6 +307,32 @@ namespace Tests.Linq
 			}
 		}
 
+#if SUPPORTS_DATEONLY
+		[Table]
+		sealed class TimeOnlyRow
+		{
+			[PrimaryKey] public int      Id   { get; set; }
+			[Column]     public TimeOnly Time { get; set; }
+		}
+
+		[Test]
+		// SQLite cannot read a TimeOnly column back on a direct connection either
+		public void TimeOnlyKeepsSecondsAndFractions([IncludeDataSources(true, TestProvName.AllDuckDB)] string context)
+		{
+			var early = new TimeOnly(10, 30, 20);
+			var late  = new TimeOnly(10, 30, 45, 123, 456);
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<TimeOnlyRow>();
+
+			db.Insert(new TimeOnlyRow { Id = 1, Time = early });
+			db.Insert(new TimeOnlyRow { Id = 2, Time = late  });
+
+			table.OrderBy(r => r.Id).Select(r => r.Time).ToArray().ShouldBe([early, late]);
+			table.Where(r => r.Time == late).Select(r => r.Id).ToArray().ShouldBe([2]);
+		}
+#endif
+
 		[Table]
 		sealed class CombinedOptionRow
 		{
