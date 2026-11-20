@@ -141,7 +141,7 @@ server version on (`WithForceScan`, `WithSnapshot`, `OptionNoPerformanceSpool` a
 are not offered: on an older server the rewrite would drop a hint the string still emits. A tables-in-scope or query hint on a
 table goes through `AsQueryable()` first, since `AsSqlServer()` on a table yields the table form.
 
-The message ends with the path of the hints guide inside the `linq2db` package (`skills/linq2db/references/hints.md`). To have that guide in the repository for an agent, copy the package's skills into `.agents/skills/` with NuGet's `dotnet-package-skills install` (guide: `.agents/skills/linq2db/references/hints.md`).
+Against linq2db 6.7 or later, the first version that ships it, the message ends with the path of the hints guide inside the `linq2db` package (`skills/linq2db/references/hints.md`); against an older linq2db it does not cite the guide. To have that guide in the repository for an agent, copy the package's skills into `.agents/skills/` with NuGet's `dotnet-package-skills install` (guide: `.agents/skills/linq2db/references/hints.md`).
 
 ## Configuration
 

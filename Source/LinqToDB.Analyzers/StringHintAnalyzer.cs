@@ -45,6 +45,15 @@ namespace LinqToDB.Analyzers
 		/// <summary>Relative path of the hints guide inside the linq2db package, cited by the message.</summary>
 		public const string GuidePath = "skills/linq2db/references/hints.md";
 
+		/// <summary>
+		/// The message's last sentence, citing <see cref="GuidePath"/>. Left out when the referenced linq2db is older than
+		/// <see cref="FirstVersionWithGuide"/>, whose package has no such file.
+		/// </summary>
+		public const string GuideSentence = " linq2db ships usage guidance for hints in its package: " + GuidePath;
+
+		/// <summary>The first linq2db version whose package carries <see cref="GuidePath"/>.</summary>
+		public static Version FirstVersionWithGuide { get; } = new(6, 7, 0, 0);
+
 		/// <summary><see cref="Diagnostic.Properties"/> key: number of typed rewrites offered.</summary>
 		public const string FixCountKey = "FixCount";
 
@@ -97,15 +106,16 @@ namespace LinqToDB.Analyzers
 
 		static readonly LocalizableString Title = "String hint has a typed equivalent";
 
-		const string MessageFormat = "Hint '{0}' has a typed equivalent: {1}. linq2db ships usage guidance for hints in its package: " + GuidePath;
+		// {2} is GuideSentence or, against a linq2db older than the guide, empty.
+		const string MessageFormat = "Hint '{0}' has a typed equivalent: {1}.{2}";
 
 		const string Description =
 			"A hint passed as text to TableHint, With, TablesInScopeHint or QueryHint has a typed helper that emits the same SQL. " +
 			"The typed helper is checked by the compiler and emits only on its own provider, while the generic text overloads emit their text for every provider the query runs on. " +
 			"When the call binds a provider's own string overload (after AsSqlServer() and the like) the rewrite is exact. When it binds a generic overload the rewrite also restricts the hint to the chosen provider. Helpers that emit their hint only from some database version on are not offered.";
 
-		// RS1032 wants a multi-sentence message to end with a period. This one ends with the guide's package path
-		// instead, so the path can be copied as is; a trailing period would read as part of the file name.
+		// RS1032 wants a multi-sentence message to end with a period. With the guide sentence it ends with the guide's
+		// package path instead, so the path can be copied as is; a trailing period would read as part of the file name.
 #pragma warning disable RS1032
 		internal static readonly DiagnosticDescriptor Rule = new(
 			id:                 DiagnosticId,
@@ -138,7 +148,9 @@ namespace LinqToDB.Analyzers
 				if (linqExtensions is null || tableType is null)
 					return;
 
-				var analyzer = new CompilationAnalyzer(linqExtensions, tableType);
+				// The package of a linq2db older than the guide has no skills folder, so its message does not cite one.
+				var guide    = linqExtensions.ContainingAssembly.Identity.Version >= FirstVersionWithGuide ? GuideSentence : string.Empty;
+				var analyzer = new CompilationAnalyzer(linqExtensions, tableType, guide);
 
 				startContext.RegisterOperationAction(analyzer.AnalyzeInvocation, OperationKind.Invocation);
 			});
@@ -432,12 +444,14 @@ namespace LinqToDB.Analyzers
 		{
 			readonly INamedTypeSymbol  _linqExtensions;
 			readonly INamedTypeSymbol  _tableType;
+			readonly string            _guide;
 			readonly Lazy<HintCatalog> _catalog;
 
-			public CompilationAnalyzer(INamedTypeSymbol linqExtensions, INamedTypeSymbol tableType)
+			public CompilationAnalyzer(INamedTypeSymbol linqExtensions, INamedTypeSymbol tableType, string guide)
 			{
 				_linqExtensions = linqExtensions;
 				_tableType      = tableType;
+				_guide          = guide;
 				_catalog        = new Lazy<HintCatalog>(() => HintCatalog.Build(linqExtensions.ContainingAssembly, tableType), LazyThreadSafetyMode.ExecutionAndPublication);
 			}
 
@@ -564,7 +578,8 @@ namespace LinqToDB.Analyzers
 					GetLocation(invocation),
 					properties.ToImmutable(),
 					hint.Trim(),
-					equivalents.ToString()));
+					equivalents.ToString(),
+					_guide));
 			}
 
 			// From the method name to the end of the argument list: the hint call alone, not the chain in front of it.

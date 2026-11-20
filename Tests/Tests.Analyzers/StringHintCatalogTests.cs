@@ -508,8 +508,7 @@ namespace Tests.Analyzers
 		[Test]
 		public void GuidePathInTheMessageExistsInTheSkillFolder()
 		{
-			var message = new StringHintAnalyzer().SupportedDiagnostics[0].MessageFormat.ToString(CultureInfo.InvariantCulture);
-			var match   = Regex.Match(message, @"skills/(?<path>[A-Za-z0-9_./-]+\.md)");
+			var match = Regex.Match(StringHintAnalyzer.GuideSentence, @"skills/(?<path>[A-Za-z0-9_./-]+\.md)");
 
 			Assert.That(match.Success, Is.True, "the message cites a skill file");
 			Assert.That(match.Value, Is.EqualTo(StringHintAnalyzer.GuidePath));

@@ -42,7 +42,7 @@ namespace Tests.Analyzers
 		{
 			return new DiagnosticResult(StringHintAnalyzer.DiagnosticId, DiagnosticSeverity.Info)
 				.WithLocation(location)
-				.WithArguments(hint, equivalents);
+				.WithArguments(hint, equivalents, StringHintAnalyzer.GuideSentence);
 		}
 
 		const string NoLockOnGenericTable = "AsSqlServer().WithNoLock() for SQL Server, AsSqlCe().WithNoLock() for SQL Server CE";
@@ -301,9 +301,80 @@ namespace Tests.Analyzers
 			var descriptor = new StringHintAnalyzer().SupportedDiagnostics[0];
 			var message    = descriptor.MessageFormat.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
-			Assert.That(message, Does.StartWith("Hint '{0}' has a typed equivalent: {1}."));
-			Assert.That(message, Does.EndWith(StringHintAnalyzer.GuidePath));
+			Assert.That(message, Is.EqualTo("Hint '{0}' has a typed equivalent: {1}.{2}"));
+			Assert.That(StringHintAnalyzer.GuideSentence, Does.EndWith(StringHintAnalyzer.GuidePath));
 			Assert.That(descriptor.DefaultSeverity, Is.EqualTo(DiagnosticSeverity.Info));
+		}
+
+		// A stand-in for a linq2db of the given version: the rule reads its hints off whatever assembly declares
+		// LinqToDB.LinqExtensions, so a snippet that declares the few types it needs is enough.
+		static string OldLinqToDB(string version)
+		{
+			return $$"""
+				[assembly: System.Reflection.AssemblyVersion("{{version}}")]
+
+				namespace LinqToDB
+				{
+					public interface ITable<T> : System.Linq.IQueryable<T> { }
+
+					public static class LinqExtensions
+					{
+						public static ITable<T> TableHint<T>(this ITable<T> table, string hint) { return table; }
+					}
+				}
+
+				namespace LinqToDB.DataProvider.SqlServer
+				{
+					public interface ISqlServerSpecificTable<T> : ITable<T> { }
+
+					public static class SqlServerSpecificExtensions
+					{
+						public static ISqlServerSpecificTable<T> AsSqlServer<T>(this ITable<T> table) { return null!; }
+					}
+
+					public static class SqlServerHints
+					{
+						public static class Table
+						{
+							public const string NoLock = "NoLock";
+						}
+
+						public static ISqlServerSpecificTable<T> WithNoLock<T>(this ISqlServerSpecificTable<T> table) { return table; }
+					}
+				}
+
+				class Row { }
+
+				class C
+				{
+					void M(LinqToDB.ITable<Row> t)
+					{
+						LinqToDB.LinqExtensions.{|#0:TableHint(t, "NOLOCK")|};
+					}
+				}
+				""";
+		}
+
+		// The package of a linq2db released before the guide has no skills folder: the message must not send the reader
+		// to a file that is not there.
+		[Test]
+		public async Task MessageOmitsTheGuideBeforeItsFirstVersion()
+		{
+			await Verify.VerifyWithoutLinqToDBAsync(
+				OldLinqToDB("6.6.0.0"),
+				new DiagnosticResult(StringHintAnalyzer.DiagnosticId, DiagnosticSeverity.Info)
+					.WithLocation(0)
+					.WithArguments("NOLOCK", "AsSqlServer().WithNoLock() for SQL Server", string.Empty));
+		}
+
+		[Test]
+		public async Task MessageCitesTheGuideFromItsFirstVersion()
+		{
+			await Verify.VerifyWithoutLinqToDBAsync(
+				OldLinqToDB("6.7.0.0"),
+				new DiagnosticResult(StringHintAnalyzer.DiagnosticId, DiagnosticSeverity.Info)
+					.WithLocation(0)
+					.WithArguments("NOLOCK", "AsSqlServer().WithNoLock() for SQL Server", StringHintAnalyzer.GuideSentence));
 		}
 	}
 }
