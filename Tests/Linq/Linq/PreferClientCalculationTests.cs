@@ -155,6 +155,39 @@ namespace Tests.Linq
 			(query.GetSelectQuery().Find(e => e is SqlFunction { Name: "ABS" }) == null).ShouldBe(preferClient);
 		}
 
+		// Where a projection is computed is engine behaviour, the same on every provider.
+		[Test]
+		public void BetweenStaysInSql([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
+
+			var query =
+				from e in table
+				select new
+				{
+					e.Id,
+					InRange = Sql.Between(e.Value1, 15, 25),
+					Bucket  = Sql.NotBetween(e.Value1, 15, 25) ? "out" : "in",
+				};
+
+			AssertQuery(query);
+
+			// A member translation stays in SQL whatever the option; Between being server-side only keeps the conditional over
+			// it in SQL too.
+			var selectQuery = query.GetSelectQuery();
+
+			selectQuery
+				.Find(e => e is SqlPredicate.Between { IsNot: false })
+				.ShouldNotBeNull();
+			selectQuery
+				.Find(e => e is SqlPredicate.Between { IsNot: true })
+				.ShouldNotBeNull();
+			selectQuery
+				.Find(e => e is SqlConditionExpression or SqlCaseExpression)
+				.ShouldNotBeNull();
+		}
+
 		[Test]
 		public void ToNullableOverMissingLeftJoinReturnsNull([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
 		{

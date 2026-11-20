@@ -10,6 +10,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests.Model;
 
 // ReSharper disable UnusedMember.Local
@@ -657,6 +659,223 @@ namespace Tests.Linq
 				from p in db.Parent
 				where p.ParentID.Between(1, 10)
 				select p);
+		}
+
+		[Test]
+		public void BetweenOfNullableValueProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				select new
+				{
+					p.ParentID,
+					InRange    = Sql.Between(p.Value1, 1, 3),
+					OutOfRange = Sql.NotBetween(p.Value1, 1, 3),
+				};
+
+			AssertQuery(query);
+
+			var selectQuery = query.GetSelectQuery();
+
+			selectQuery
+				.Find(e => e is SqlPredicate.Between { IsNot: false })
+				.ShouldNotBeNull();
+			selectQuery
+				.Find(e => e is SqlPredicate.Between { IsNot: true })
+				.ShouldNotBeNull();
+		}
+
+		[Test]
+		public void BetweenOfOptionalRowValue([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				join c in db.Child on p.ParentID equals c.ParentID into cs
+				from c in cs.DefaultIfEmpty()
+				where p.ParentID == 5
+				select new
+				{
+					c.ChildID,
+					InRange         = Sql.Between(c.ChildID, 0, 100),
+					OutOfRange      = Sql.NotBetween(c.ChildID, 0, 100),
+					NullableInRange = Sql.Between((int?)c.ChildID, 0, 100),
+				};
+
+			// Parent 5 has no children. The non-nullable operand is read as the projection reads ChildID, as 0, the same as
+			// `c.ChildID >= 0 && c.ChildID <= 100`; the nullable one keeps the NULL. AssertQuery reads both as 0, so the
+			// values are asserted directly.
+			var row = query.Single();
+
+			row
+				.ChildID
+				.ShouldBe(0);
+			row
+				.InRange
+				.ShouldBeTrue();
+			row
+				.OutOfRange
+				.ShouldBeFalse();
+			row
+				.NullableInRange
+				.ShouldBeFalse();
+		}
+
+		// Where the call is built is engine behaviour, the same on every provider.
+		[Test]
+		public void BetweenOfClientValues([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			int  value   = 2;
+			int? noValue = null;
+
+			var query =
+				from p in db.Parent
+				where p.ParentID == 1
+				select new
+				{
+					p.ParentID,
+					InRange = Sql.Between(value, 1, 3),
+					Negated = !Sql.Between(noValue, 1, 3) ? "a" : "b",
+				};
+
+			// Between is server-side only: over client values it is still SQL BETWEEN, where a NULL operand is unknown, so
+			// the negation is unknown too and the conditional takes its else branch.
+			var row = query.Single();
+
+			row
+				.InRange
+				.ShouldBeTrue();
+			row
+				.Negated
+				.ShouldBe("b");
+
+			query
+				.GetSelectQuery()
+				.Find(e => e is SqlPredicate.Between)
+				.ShouldNotBeNull();
+		}
+
+		[Table]
+		sealed class BetweenTargetRow
+		{
+			[PrimaryKey] public int  Id    { get; set; }
+			[Column]     public int  Value { get; set; }
+			[Column]     public bool Flag  { get; set; }
+
+			[Column(Length = 1), ValueConverter(ConverterType = typeof(YesNoConverter))]
+			public bool YesNo { get; set; }
+
+			[Column(Length = 1), ValueConverter(ConverterType = typeof(YesNoConverter))]
+			public bool Marked { get; set; }
+
+			public static readonly BetweenTargetRow[] Data =
+			[
+				new() { Id = 1, Value = 2 },
+				new() { Id = 2, Value = 5 },
+			];
+		}
+
+		sealed class YesNoConverter() : ValueConverter<bool, string>(b => b ? "Y" : "N", s => s == "Y", false);
+
+		// Which descriptor types the bounds is engine behaviour, and the AST check decides it on any provider.
+		[Test]
+		public void BetweenProjectedIntoConvertedColumn([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(BetweenTargetRow.Data);
+
+			var low  = 1;
+			var high = 3;
+
+			var query =
+				from r in table
+				orderby r.Id
+				select new BetweenTargetRow
+				{
+					Id     = r.Id,
+					Value  = r.Value,
+					Flag   = Sql.Between(r.Value, low, high),
+					YesNo  = Sql.Between(r.Value, low, high),
+					Marked = Sql.NotBetween(r.Value, 1, 3),
+				};
+
+			query
+				.ToArray()
+				.Select(r => new { r.Id, r.Flag, r.YesNo, r.Marked })
+				.ShouldBe(new[]
+				{
+					new { Id = 1, Flag = true,  YesNo = true,  Marked = false },
+					new { Id = 2, Flag = false, YesNo = false, Marked = true  },
+				});
+
+			// The column the result is assigned to types that result, not the bounds: a constant bound stays a literal rather
+			// than becoming a value of the converted column.
+			query
+				.GetSelectQuery()
+				.Find(e => e is SqlPredicate.Between { IsNot: true, Expr2: SqlValue, Expr3: SqlValue })
+				.ShouldNotBeNull();
+		}
+
+		// Which descriptor types the bounds is engine behaviour, and the SQL check decides it on any provider.
+		[Test]
+		public void BetweenSetIntoConvertedColumn([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(BetweenTargetRow.Data);
+
+			table
+				.Set(r => r.Marked, r => Sql.Between(r.Value, 4, 6))
+				.Update();
+
+			// A constant bound stays a literal rather than becoming a value of the column the result is set to.
+			GetCurrentBaselines()
+				.ShouldContain("BETWEEN 4 AND 6");
+
+			table
+				.OrderBy(r => r.Id)
+				.Select(r => new { r.Id, r.Marked })
+				.ToArray()
+				.ShouldBe(new[]
+				{
+					new { Id = 1, Marked = false },
+					new { Id = 2, Marked = true  },
+				});
+		}
+
+		static int ClientOnlyDouble(int value) => value * 2;
+
+		// No SQL is built for a call with an operand that has no SQL form, so the provider does not matter.
+		[Test]
+		public void BetweenOfClientOnlyValue([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				select new
+				{
+					p.ParentID,
+					InRange = Sql.Between(ClientOnlyDouble(p.ParentID), 3, 8),
+				};
+
+			AssertQuery(query);
+
+			var filtered =
+				from p in db.Parent
+				where Sql.Between(ClientOnlyDouble(p.ParentID), 3, 8)
+				select p.ParentID;
+
+			var act = () => filtered.ToList();
+
+			act
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain("could not be converted to SQL");
 		}
 
 		[Test]

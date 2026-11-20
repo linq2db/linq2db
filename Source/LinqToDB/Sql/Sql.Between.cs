@@ -1,55 +1,39 @@
 ﻿using System;
 
-using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Mapping;
 
 namespace LinqToDB
 {
 	partial class Sql
 	{
-		[Extension("", "", PreferServerSide = true, IsPredicate = true, BuilderType = typeof(BetweenBuilder))]
+		// Translated by SqlFunctionsMemberTranslatorBase. Server-side only: a call whose operands are all client values still
+		// becomes SQL BETWEEN, with SQL's NULL semantics.
+		[ServerSideOnly]
 		public static bool Between<T>(this T value, T low, T high)
 			where T : IComparable
 		{
 			return value != null && value.CompareTo(low) >= 0 && value.CompareTo(high) <= 0;
 		}
 
-		[Extension("", "", PreferServerSide = true, IsPredicate = true, BuilderType = typeof(BetweenBuilder))]
+		[ServerSideOnly]
 		public static bool Between<T>(this T? value, T? low, T? high)
 			where T : struct, IComparable
 		{
 			return value != null && value.Value.CompareTo(low) >= 0 && value.Value.CompareTo(high) <= 0;
 		}
 
-		[Extension("", "", PreferServerSide = true, IsPredicate = true, BuilderType = typeof(NotBetweenBuilder))]
+		[ServerSideOnly]
 		public static bool NotBetween<T>(this T value, T low, T high)
 			where T : IComparable
 		{
 			return value != null && (value.CompareTo(low) < 0 || value.CompareTo(high) > 0);
 		}
 
-		[Extension("", "", PreferServerSide = true, IsPredicate = true, BuilderType = typeof(NotBetweenBuilder))]
+		[ServerSideOnly]
 		public static bool NotBetween<T>(this T? value, T? low, T? high)
 			where T : struct, IComparable
 		{
 			return value != null && (value.Value.CompareTo(low) < 0 || value.Value.CompareTo(high) > 0);
-		}
-
-		private sealed class BetweenBuilder : IExtensionCallBuilder
-		{
-			public void Build(ISqlExtensionBuilder builder)
-			{
-				var args = Array.ConvertAll(builder.Arguments, x => builder.ConvertExpressionToSql(x)!);
-				builder.ResultExpression = new SqlSearchCondition(false, canBeUnknown: null, new SqlPredicate.Between(args[0], false, args[1], args[2]));
-			}
-		}
-
-		private sealed class NotBetweenBuilder : IExtensionCallBuilder
-		{
-			public void Build(ISqlExtensionBuilder builder)
-			{
-				var args = Array.ConvertAll(builder.Arguments, x => builder.ConvertExpressionToSql(x)!);
-				builder.ResultExpression = new SqlSearchCondition(false, canBeUnknown: null, new SqlPredicate.Between(args[0], true, args[1], args[2]));
-			}
 		}
 	}
 }
