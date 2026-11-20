@@ -781,5 +781,127 @@ namespace Tests.Analyzers
 				""",
 				SqlServerRestrictedKey);
 		}
+	
+		// With no using in the file, the new directive goes below the file header: a #define after it would not compile.
+		[Test]
+		public async Task FirstUsingGoesBelowTheFileHeader()
+		{
+			await VerifyAsync(
+				"""
+				// File header.
+				#define LOCAL_SYMBOL
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var r = t.[|TableHint("NOLOCK")|];
+					}
+				}
+				""",
+				"""
+				// File header.
+				#define LOCAL_SYMBOL
+
+				using LinqToDB.DataProvider.SqlServer;
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var r = t.AsSqlServer().WithNoLock();
+					}
+				}
+				""",
+				SqlServerRestrictedKey,
+				static test =>
+				{
+					test.TestState.Sources.Add(("/0/GlobalUsings.cs", "global using LinqToDB;"));
+					test.FixedState.Sources.Add(("/0/GlobalUsings.cs", "global using LinqToDB;"));
+				});
+		}
+
+		// Usings grouped by blank lines: a System namespace joins the System group, not the group after it.
+		[Test]
+		public async Task NewUsingJoinsItsOwnGroup()
+		{
+			await VerifyAsync(
+				"""
+				using System;
+
+				using LinqToDB;
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var r = t.[|TablesInScopeHint("NOLOCK")|];
+					}
+				}
+				""",
+				"""
+				using System;
+				using System.Linq;
+
+				using LinqToDB;
+				using LinqToDB.DataProvider.SqlServer;
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var r = t.AsQueryable().AsSqlServer().WithNoLockInScope();
+					}
+				}
+				""",
+				SqlServerRestrictedKey);
+		}
+	
+		// A doc comment on the first declaration stays on it.
+		[Test]
+		public async Task FirstUsingGoesAboveTheFirstDeclarationsDocComment()
+		{
+			await VerifyAsync(
+				"""
+				/// <summary>A row.</summary>
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var r = t.[|TableHint("NOLOCK")|];
+					}
+				}
+				""",
+				"""
+				using LinqToDB.DataProvider.SqlServer;
+
+				/// <summary>A row.</summary>
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var r = t.AsSqlServer().WithNoLock();
+					}
+				}
+				""",
+				SqlServerRestrictedKey,
+				static test =>
+				{
+					test.TestState.Sources.Add(("/0/GlobalUsings.cs", "global using LinqToDB;"));
+					test.FixedState.Sources.Add(("/0/GlobalUsings.cs", "global using LinqToDB;"));
+				});
+		}
 	}
 }

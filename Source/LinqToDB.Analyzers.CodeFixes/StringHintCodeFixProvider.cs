@@ -436,22 +436,87 @@ namespace LinqToDB.Analyzers.CodeFixes
 				}
 			}
 
+			if (usings.Count == 0 && unit.Externs.Count == 0)
+			{
+				// The first using of the file goes below the file header (comments, #nullable, #define), with a blank line
+				// before the code that follows; trivia that belongs to the first declaration (a doc comment) stays on it.
+				var firstToken = unit.GetFirstToken(includeZeroWidth: true);
+				var trivia     = firstToken.LeadingTrivia;
+				var headerEnd  = GetHeaderEnd(trivia);
+
+				directive = directive.WithLeadingTrivia(trivia.Take(headerEnd));
+				unit      = unit.ReplaceToken(firstToken, firstToken.WithLeadingTrivia(new[] { endOfLine }.Concat(trivia.Skip(headerEnd))));
+
+				return unit.WithUsings(usings.Add(directive));
+			}
+
 			if (index < usings.Count)
 			{
-				// Take over the leading trivia (blank-line grouping) of the directive it is inserted in front of.
 				var next = usings[index];
 
-				directive = directive.WithLeadingTrivia(next.GetLeadingTrivia());
-				usings    = usings.Replace(next, next.WithoutLeadingTrivia());
+				// Usings grouped by blank lines (System first): a directive that sorts last in the previous group stays
+				// there, after that group's last directive, and the next group keeps its leading blank line.
+				var joinsPreviousGroup = index > firstLocal
+					&& IsSystemNamespace(ns) == IsSystemDirective(usings[index - 1])
+					&& IsSystemNamespace(ns) != IsSystemDirective(next);
+
+				if (!joinsPreviousGroup)
+				{
+					// Take over the leading trivia (blank-line grouping, file header) of the directive it goes in front of.
+					directive = directive.WithLeadingTrivia(next.GetLeadingTrivia());
+					usings    = usings.Replace(next, next.WithoutLeadingTrivia());
+				}
 			}
 
 			return unit.WithUsings(usings.Insert(index, directive));
 		}
 
+		// The file header is the leading trivia up to its last blank line or preprocessor directive.
+		static int GetHeaderEnd(SyntaxTriviaList trivia)
+		{
+			var end       = 0;
+			var lineEmpty = true;
+
+			for (var i = 0; i < trivia.Count; i++)
+			{
+				var item = trivia[i];
+
+				if (item.IsDirective)
+				{
+					// A directive's trivia includes its end of line.
+					end       = i + 1;
+					lineEmpty = true;
+				}
+				else if (item.IsKind(SyntaxKind.EndOfLineTrivia))
+				{
+					if (lineEmpty)
+						end = i + 1;
+
+					lineEmpty = true;
+				}
+				else if (!item.IsKind(SyntaxKind.WhitespaceTrivia))
+				{
+					lineEmpty = false;
+				}
+			}
+
+			return end;
+		}
+
+		static bool IsSystemDirective(UsingDirectiveSyntax directive)
+		{
+			return directive.Name is { } name && IsSystemNamespace(GetNamespaceText(name));
+		}
+
+		static bool IsSystemNamespace(string name)
+		{
+			return string.Equals(name, "System", StringComparison.Ordinal) || name.StartsWith("System.", StringComparison.Ordinal);
+		}
+
 		// System first, then ordinal: the order the repository and `dotnet format` keep.
 		static string Normalize(string name)
 		{
-			return string.Equals(name, "System", StringComparison.Ordinal) || name.StartsWith("System.", StringComparison.Ordinal) ? "0" + name : "1" + name;
+			return IsSystemNamespace(name) ? "0" + name : "1" + name;
 		}
 
 		static bool IsSorted(SyntaxList<UsingDirectiveSyntax> usings)
