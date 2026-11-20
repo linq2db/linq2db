@@ -428,7 +428,7 @@ namespace LinqToDB.Analyzers.CodeFixes
 				for (var i = firstLocal; i < usings.Count; i++)
 				{
 					if (usings[i].Alias is null && usings[i].StaticKeyword == default && usings[i].Name is { } name
-						&& string.CompareOrdinal(Normalize(name.ToString()), Normalize(ns)) > 0)
+						&& string.CompareOrdinal(Normalize(GetNamespaceText(name)), Normalize(ns)) > 0)
 					{
 						index = i;
 						break;
@@ -463,7 +463,7 @@ namespace LinqToDB.Analyzers.CodeFixes
 				if (directive.GlobalKeyword != default || directive.Alias is not null || directive.StaticKeyword != default || directive.Name is null)
 					continue;
 
-				var current = Normalize(directive.Name.ToString());
+				var current = Normalize(GetNamespaceText(directive.Name));
 
 				if (previous is not null && string.CompareOrdinal(previous, current) > 0)
 					return false;
@@ -475,7 +475,7 @@ namespace LinqToDB.Analyzers.CodeFixes
 		}
 
 		// Imported if a using directive in scope at the position - in this file, an enclosing namespace, or a global
-		// using anywhere in the compilation - names the namespace.
+		// using anywhere in the compilation - names the namespace, with or without a leading `global::`.
 		static bool IsImported(SemanticModel model, int position, string ns)
 		{
 			var token = model.SyntaxTree.GetRoot().FindToken(position);
@@ -490,7 +490,7 @@ namespace LinqToDB.Analyzers.CodeFixes
 				};
 
 				foreach (var directive in usings)
-					if (directive.Alias is null && directive.StaticKeyword == default && string.Equals(directive.Name?.ToString(), ns, StringComparison.Ordinal))
+					if (directive.Alias is null && directive.StaticKeyword == default && NamesNamespace(directive, ns))
 						return true;
 			}
 
@@ -501,11 +501,27 @@ namespace LinqToDB.Analyzers.CodeFixes
 
 				foreach (var directive in unit.Usings)
 					if (directive.GlobalKeyword != default && directive.Alias is null && directive.StaticKeyword == default
-						&& string.Equals(directive.Name?.ToString(), ns, StringComparison.Ordinal))
+						&& NamesNamespace(directive, ns))
 						return true;
 			}
 
 			return false;
+		}
+
+		static bool NamesNamespace(UsingDirectiveSyntax directive, string ns)
+		{
+			return directive.Name is { } name && string.Equals(GetNamespaceText(name), ns, StringComparison.Ordinal);
+		}
+
+		// The namespace a using directive names, without the `global::` alias qualifier the SDK writes in front of
+		// implicit and <Using> imports (GlobalUsings.g.cs: `global using global::System.Linq;`).
+		static string GetNamespaceText(NameSyntax name)
+		{
+			const string GlobalPrefix = "global::";
+
+			var text = name.ToString();
+
+			return text.StartsWith(GlobalPrefix, StringComparison.Ordinal) ? text.Substring(GlobalPrefix.Length) : text;
 		}
 	}
 }

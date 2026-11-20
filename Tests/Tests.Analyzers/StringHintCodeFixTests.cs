@@ -699,5 +699,87 @@ namespace Tests.Analyzers
 
 			await VerifyAsync(source, source, SqlServerRestrictedKey);
 		}
+	
+		// The SDK writes implicit and <Using> imports to GlobalUsings.g.cs as `global using global::X;`.
+		[Test]
+		public async Task SdkGlobalUsingsWithTheGlobalAliasAreNotAddedAgain()
+		{
+			const string globalUsings = """
+				global using global::System.Linq;
+				global using global::LinqToDB.DataProvider.SqlServer;
+				""";
+
+			await VerifyAsync(
+				"""
+				using LinqToDB;
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var r = t.[|TablesInScopeHint("NOLOCK")|];
+					}
+				}
+				""",
+				"""
+				using LinqToDB;
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var r = t.AsQueryable().AsSqlServer().WithNoLockInScope();
+					}
+				}
+				""",
+				SqlServerRestrictedKey,
+				test =>
+				{
+					test.TestState.Sources.Add(("/0/GlobalUsings.g.cs", globalUsings));
+					test.FixedState.Sources.Add(("/0/GlobalUsings.g.cs", globalUsings));
+				});
+		}
+
+		[Test]
+		public async Task LocalUsingWithTheGlobalAliasIsNotAddedAgain()
+		{
+			await VerifyAsync(
+				"""
+				using global::System.Linq;
+
+				using LinqToDB;
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var r = t.[|TablesInScopeHint("NOLOCK")|];
+					}
+				}
+				""",
+				"""
+				using global::System.Linq;
+
+				using LinqToDB;
+				using LinqToDB.DataProvider.SqlServer;
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var r = t.AsQueryable().AsSqlServer().WithNoLockInScope();
+					}
+				}
+				""",
+				SqlServerRestrictedKey);
+		}
 	}
 }
