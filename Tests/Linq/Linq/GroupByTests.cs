@@ -4135,6 +4135,50 @@ namespace Tests.Linq
 			AssertQuery(query, EqualityComparer<int?>.Default);
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6325")]
+		public void GroupByScalarKeyFilterWithExtensionsOfKey([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from c in db.Child
+				group c by c.ParentID into g
+				where Sql.NotBetween(g.Count(), 2, 3)
+				select new
+				{
+					g.Key,
+					Doubled = Sql.Expr<int>($"{g.Key} * 2"),
+					InRange = Sql.Between(g.Key, 2, 4),
+				};
+
+			var expected =
+				from c in Child
+				group c by c.ParentID into g
+				where g.Count() < 2 || g.Count() > 3
+				select new
+				{
+					g.Key,
+					Doubled = g.Key * 2,
+					InRange = g.Key >= 2 && g.Key <= 4,
+				};
+
+			AreEqual(expected, query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6325")]
+		public void GroupByHavingWithFunctionsOfGroupValues([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Person
+				group p by p.FirstName into g
+				where Sql.Lower(g.Key) == "john" || Sql.Length(g.Max(x => x.LastName)) > 6
+				select new { g.Key, Count = g.Count() };
+
+			AssertQuery(query);
+		}
+
 		[Table]
 		sealed class BinaryGroupItem
 		{

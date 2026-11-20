@@ -605,8 +605,9 @@ namespace Tests.Linq
 				select new
 				{
 					g.Key,
-					Sum    = g.Sum(i => i.ID),
-					Length = (int?)g.Sum(i => i.LastName.Length),
+					Sum       = g.Sum(i => i.ID),
+					Length    = (int?)g.Sum(i => i.LastName.Length),
+					KeyLength = (int?)g.Sum(i => i.ID + g.Key.Length),
 				},
 				from p in db.Person
 				group p by p.FirstName into g
@@ -614,8 +615,9 @@ namespace Tests.Linq
 				select new
 				{
 					g.Key,
-					Sum    = g.MySum(i => i.ID),
-					Length = g.MySum(i => Sql.Length(i.LastName)),
+					Sum       = g.MySum(i => i.ID),
+					Length    = g.MySum(i => Sql.Length(i.LastName)),
+					KeyLength = g.MySum(i => i.ID + Sql.Length(g.Key)),
 				});
 		}
 

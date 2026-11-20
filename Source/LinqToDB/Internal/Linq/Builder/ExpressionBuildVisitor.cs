@@ -1347,15 +1347,18 @@ namespace LinqToDB.Internal.Linq.Builder
 			// A function of the grouping's rows is calculated by the GROUP BY query, and its arguments are nested up to that query:
 			// nested up to the grouping's own query, which reads the GROUP BY query as a subquery, an argument would be a column of
 			// the GROUP BY query read from inside it. A per-row lambda reads a row of the grouping, not the grouping, so its body is
-			// built in the grouping's element context, as an extension chain over a grouping builds it.
-			SelectQuery?   argumentsQuery = null;
-			IBuildContext? rowContext     = null;
+			// built in the grouping's element context, as an extension chain over a grouping builds it. An argument reads the
+			// grouping itself, not the select wrapper above it: read through the wrapper, a key is a column of the GROUP BY query.
+			SelectQuery?                   argumentsQuery = null;
+			IBuildContext?                 rowContext     = null;
+			GroupByBuilder.GroupByContext? grouping       = null;
 
 			if (readsGroupRows && rootContext is GroupByBuilder.GroupByContext groupBy)
 			{
 				rootSelectQuery = groupBy.SubQuery.SelectQuery;
 				argumentsQuery  = rootSelectQuery;
 				rowContext      = groupBy.Element;
+				grouping        = groupBy;
 			}
 
 			Expression           transformed;
@@ -1370,7 +1373,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				translatedToSql = new HashSet<Expression>(Utils.ObjectReferenceEqualityComparer<Expression>.Default);
 
-				transformed = attr.GetExpression((buildVisitor: this, context: rootContext, rowContext, argumentsQuery, translatedToSql, argumentsAreOperands),
+				transformed = attr.GetExpression((buildVisitor: this, context: rootContext, rowContext, argumentsQuery, grouping, translatedToSql, argumentsAreOperands),
 					Builder.DataContext,
 					Builder,
 					rootSelectQuery,
@@ -1381,7 +1384,9 @@ namespace LinqToDB.Internal.Linq.Builder
 							? context.rowContext
 							: context.context;
 
-						var result = context.buildVisitor.ConvertToExtensionSql(argumentContext, e, descriptor, inline, context.argumentsQuery);
+						var argument = context.grouping != null ? ReadGroupingDirectly(e, context.grouping) : e;
+
+						var result = context.buildVisitor.ConvertToExtensionSql(argumentContext, argument, descriptor, inline, context.argumentsQuery);
 
 						if (result is SqlPlaceholderExpression placeholder)
 						{
@@ -1428,6 +1433,30 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			return expr;
+		}
+
+		/// <summary>
+		/// Replaces a reference to <paramref name="grouping"/> through the select wrappers above it with a reference to the grouping.
+		/// </summary>
+		static Expression ReadGroupingDirectly(Expression expression, GroupByBuilder.GroupByContext grouping)
+		{
+			return expression.Transform(grouping, static (grouping, e) =>
+			{
+				if (e is ContextRefExpression contextRef)
+				{
+					var current = contextRef.BuildContext;
+
+					while (current is SubQueryContext { IsSelectWrapper: true } wrapper)
+					{
+						current = wrapper.SubQuery;
+
+						if (current == grouping)
+							return contextRef.WithContext(grouping);
+					}
+				}
+
+				return e;
+			});
 		}
 
 		/// <param name="nestUpTo">The query the converted argument is nested up to; <paramref name="context"/>'s query when <see langword="null"/>.</param>
