@@ -213,7 +213,19 @@ namespace Tests
 				}
 
 				// If no, execute the test normally
-				var testResult = innerCommand.Execute(context);
+				TestResult testResult;
+
+				try
+				{
+					testResult = innerCommand.Execute(context);
+				}
+				catch (Exception ex)
+				{
+					// A fixture without [SetUp]/[TearDown] has no command beneath this wrapper that turns the test's
+					// exception into a TestResult, so the exception reaches us instead of the code below.
+					testResult = context.CurrentResult;
+					testResult.RecordException(ex);
+				}
 
 				// Check if the parameter value matches the expected value
 				if (expectsException)
