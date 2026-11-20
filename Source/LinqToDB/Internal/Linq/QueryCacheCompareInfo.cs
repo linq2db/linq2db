@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq.Expressions;
 
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Linq
@@ -20,7 +21,70 @@ namespace LinqToDB.Internal.Linq
 		public delegate Expression ExpressionAccessorFunc(IDataContext dataContext,      MappingSchema mappingSchema);
 		public delegate object?    ValueAccessorFunc(IQueryExpressions queryExpressions, IDataContext  dataContext, object?[]? compiledParameters);
 
-		public sealed record DynamicExpressionInfo(int ExpressionId, Expression Used, MappingSchema MappingSchema, ExpressionAccessorFunc AccessorFunc);
+		public sealed record DynamicExpressionInfo(int ExpressionId, Expression Key, int KeyHashCode, Expression Used, MappingSchema MappingSchema, ExpressionAccessorFunc AccessorFunc);
+
+		/// <summary>
+		/// The dynamic accessors evaluated for one context in one cache lookup. The queries cached for one shape register their
+		/// accessors under the same keys, and a key stands for one function of the context, as it does within a query: each
+		/// runs once per lookup, not once per cached query. Results are kept only after <see cref="Enable"/>, which a lookup
+		/// calls when it may compare more than one cached query.
+		/// </summary>
+		public struct DynamicAccessorResults
+		{
+			bool                                                    _enabled;
+			DynamicExpressionInfo?                                  _firstInfo;
+			Expression?                                             _firstResult;
+			List<(DynamicExpressionInfo info, Expression result)>? _more;
+
+			public void Enable()
+			{
+				_enabled = true;
+			}
+
+			public Expression Get(IDataContext dataContext, DynamicExpressionInfo info)
+			{
+				if (!_enabled)
+					return info.AccessorFunc(dataContext, info.MappingSchema);
+
+				if (_firstInfo != null)
+				{
+					if (IsSameAccessor(_firstInfo, info))
+						return _firstResult!;
+
+					if (_more != null)
+					{
+						foreach (var (evaluated, result) in _more)
+						{
+							if (IsSameAccessor(evaluated, info))
+								return result;
+						}
+					}
+				}
+
+				var current = info.AccessorFunc(dataContext, info.MappingSchema);
+
+				if (_firstInfo == null)
+				{
+					_firstInfo   = info;
+					_firstResult = current;
+				}
+				else
+				{
+					(_more ??= new()).Add((info, current));
+				}
+
+				return current;
+			}
+
+			static bool IsSameAccessor(DynamicExpressionInfo x, DynamicExpressionInfo y)
+			{
+				return ReferenceEquals(x, y)
+					|| x.KeyHashCode == y.KeyHashCode
+					&& x.AccessorFunc.Method == y.AccessorFunc.Method
+					&& x.MappingSchema.Equals(y.MappingSchema)
+					&& ExpressionEqualityComparer.Instance.Equals(x.Key, y.Key);
+			}
+		}
 
 		/// <summary>
 		/// The value a <see cref="SqlQueryDependentAttribute"/> argument had when the query was built, for an argument the

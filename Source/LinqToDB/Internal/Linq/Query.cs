@@ -70,28 +70,19 @@ namespace LinqToDB.Internal.Linq
 		/// </summary>
 		internal readonly int              ConfigurationID;
 
-		/// <summary>
-		/// Cache key of the compiled query call this query was built for, when it is kept in the query cache as a variant of
-		/// a compiled query; <see langword="null"/> otherwise.
-		/// </summary>
-		internal object? CompiledCacheKey;
-
 		protected internal bool Compare(IDataContext dataContext, IQueryExpressions expressions, [NotNullWhen(true)] out IQueryExpressions? matchedQueryExpressions)
 		{
-			return Compare(dataContext, expressions, compiledParameters: null, compiledCacheKey: null, out matchedQueryExpressions);
+			var dynamicAccessorResults = new QueryCacheCompareInfo.DynamicAccessorResults();
+
+			return Compare(dataContext, expressions, ref dynamicAccessorResults, out matchedQueryExpressions);
 		}
 
-		/// <param name="compiledParameters">Arguments of a compiled query; <see langword="null"/> otherwise.</param>
-		/// <param name="compiledCacheKey">Cache key of the compiled query call; <see langword="null"/> otherwise.</param>
-		internal bool Compare(IDataContext dataContext, IQueryExpressions expressions, object?[]? compiledParameters, object? compiledCacheKey, [NotNullWhen(true)] out IQueryExpressions? matchedQueryExpressions)
+		/// <param name="dynamicAccessorResults">The dynamic accessors already evaluated in the lookup this comparison is part of.</param>
+		internal bool Compare(IDataContext dataContext, IQueryExpressions expressions, ref QueryCacheCompareInfo.DynamicAccessorResults dynamicAccessorResults, [NotNullWhen(true)] out IQueryExpressions? matchedQueryExpressions)
 		{
 			matchedQueryExpressions = null;
 
 			if (CompareInfo == null)
-				return false;
-
-			// The tree compares some argument values as placeholders; the key of a compiled query call compares them all.
-			if (!Equals(CompiledCacheKey, compiledCacheKey))
 				return false;
 
 			var result = CompareInfo.MainExpression.EqualsTo(expressions.MainExpression);
@@ -99,7 +90,7 @@ namespace LinqToDB.Internal.Linq
 			if (!result)
 				return false;
 
-			return Revalidate(dataContext, expressions.MainExpression, compiledParameters, out matchedQueryExpressions);
+			return Revalidate(dataContext, expressions.MainExpression, compiledParameters: null, ref dynamicAccessorResults, out matchedQueryExpressions);
 		}
 
 		/// <summary>
@@ -108,7 +99,8 @@ namespace LinqToDB.Internal.Linq
 		/// runs the value comparisons. On success returns the expressions to run the query with.
 		/// </summary>
 		/// <param name="compiledParameters">Arguments of a compiled query; <see langword="null"/> otherwise.</param>
-		internal bool Revalidate(IDataContext dataContext, Expression mainExpression, object?[]? compiledParameters, [NotNullWhen(true)] out IQueryExpressions? matchedQueryExpressions)
+		/// <param name="dynamicAccessorResults">The dynamic accessors already evaluated in the lookup this check is part of.</param>
+		internal bool Revalidate(IDataContext dataContext, Expression mainExpression, object?[]? compiledParameters, ref QueryCacheCompareInfo.DynamicAccessorResults dynamicAccessorResults, [NotNullWhen(true)] out IQueryExpressions? matchedQueryExpressions)
 		{
 			bool result;
 
@@ -121,7 +113,7 @@ namespace LinqToDB.Internal.Linq
 
 				foreach (var da in CompareInfo.DynamicAccessors)
 				{
-					var current = da.AccessorFunc(dataContext, da.MappingSchema);
+					var current = dynamicAccessorResults.Get(dataContext, da);
 					result = da.Used.EqualsTo(current);
 					if (!result)
 						return false;

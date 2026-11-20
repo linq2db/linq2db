@@ -106,9 +106,6 @@ namespace LinqToDB.Internal.Linq
 			public readonly int        ConfigurationID;
 			public readonly QueryFlags Flags;
 			public readonly int        ChainHash;
-			// Compared by reference. Compiled queries of one shape share the chain hash, and without it each one's queries
-			// would push the others' out of a shared bucket.
-			public readonly object?    CompiledSource;
 
 			readonly int _hash;
 
@@ -117,23 +114,20 @@ namespace LinqToDB.Internal.Linq
 				Type       contextType,
 				int        configurationID,
 				QueryFlags flags,
-				int        chainHash,
-				object?    compiledSource)
+				int        chainHash)
 			{
 				ResultType      = resultType;
 				ContextType     = contextType;
 				ConfigurationID = configurationID;
 				Flags           = flags;
 				ChainHash       = chainHash;
-				CompiledSource  = compiledSource;
 
 				_hash = HashCode.Combine(
 					resultType,
 					contextType,
 					configurationID,
 					(int)flags,
-					chainHash,
-					compiledSource == null ? 0 : RuntimeHelpers.GetHashCode(compiledSource));
+					chainHash);
 			}
 
 			public bool Equals(CacheKey other)
@@ -142,8 +136,7 @@ namespace LinqToDB.Internal.Linq
 					&& Flags           == other.Flags
 					&& ChainHash       == other.ChainHash
 					&& ResultType      == other.ResultType
-					&& ContextType     == other.ContextType
-					&& ReferenceEquals(CompiledSource, other.CompiledSource);
+					&& ContextType     == other.ContextType;
 			}
 
 			public override bool Equals([NotNullWhen(true)] object? obj) => obj is CacheKey other && Equals(other);
@@ -329,29 +322,6 @@ namespace LinqToDB.Internal.Linq
 			[NotNullWhen(true)] out Query?                query,
 			[NotNullWhen(true)] out IQueryExpressions?    matchedExpressions)
 		{
-			return TryFind(resultType, dataContext, expressions, queryFlags, compiledSource: null, compiledParameters: null, compiledCacheKey: null, out query, out matchedExpressions);
-		}
-
-		/// <param name="compiledSource">
-		/// The compiled query source the queries are kept for, which gets buckets of its own; <see langword="null"/> otherwise.
-		/// </param>
-		/// <param name="compiledParameters">
-		/// Arguments of a compiled query, which the value comparisons of its cached queries read; <see langword="null"/> otherwise.
-		/// </param>
-		/// <param name="compiledCacheKey">
-		/// Cache key of the compiled query call, which a query kept for it must have been built for; <see langword="null"/> otherwise.
-		/// </param>
-		internal bool TryFind(
-			Type                                          resultType,
-			IDataContext                                  dataContext,
-			IQueryExpressions                             expressions,
-			QueryFlags                                    queryFlags,
-			object?                                       compiledSource,
-			object?[]?                                    compiledParameters,
-			object?                                       compiledCacheKey,
-			[NotNullWhen(true)] out Query?                query,
-			[NotNullWhen(true)] out IQueryExpressions?    matchedExpressions)
-		{
 			query              = null;
 			matchedExpressions = null;
 
@@ -365,7 +335,7 @@ namespace LinqToDB.Internal.Linq
 				return false;
 			}
 
-			var key = BuildKey(resultType, dataContext, expressions, queryFlags, compiledSource);
+			var key = BuildKey(resultType, dataContext, expressions, queryFlags);
 
 			if (!_cache.TryGetValue(key, out var bucket))
 				return false;
@@ -374,6 +344,11 @@ namespace LinqToDB.Internal.Linq
 				return false;
 
 			var entries = Volatile.Read(ref bucket.Entries);
+
+			var dynamicAccessorResults = new QueryCacheCompareInfo.DynamicAccessorResults();
+
+			if (entries.Length > 1)
+				dynamicAccessorResults.Enable();
 
 			for (var i = 0; i < entries.Length; i++)
 			{
@@ -388,7 +363,7 @@ namespace LinqToDB.Internal.Linq
 				if (IsExpired(entry, now))
 					continue;
 
-				if (entry.Query.Compare(dataContext, expressions, compiledParameters, compiledCacheKey, out var matched))
+				if (entry.Query.Compare(dataContext, expressions, ref dynamicAccessorResults, out var matched))
 				{
 					// Refresh on a real match: Compare may have taken non-trivial time, and
 					// RecordAccess wants a fresh `now` for LastAccessTicks / deadline extension.
@@ -419,25 +394,6 @@ namespace LinqToDB.Internal.Linq
 			IQueryExpressions expressions,
 			QueryFlags        queryFlags)
 		{
-			TryAdd(resultType, dataContext, query, expressions, queryFlags, compiledSource: null, compiledParameters: null);
-		}
-
-		/// <param name="compiledSource">
-		/// The compiled query source the query is kept for, which gets buckets of its own; <see langword="null"/> otherwise.
-		/// </param>
-		/// <param name="compiledParameters">
-		/// Arguments of a compiled query, which the value comparisons of its cached queries read; <see langword="null"/> otherwise.
-		/// The query's <see cref="Query.CompiledCacheKey"/> tells which call it was built for.
-		/// </param>
-		internal void TryAdd(
-			Type              resultType,
-			IDataContext      dataContext,
-			Query             query,
-			IQueryExpressions expressions,
-			QueryFlags        queryFlags,
-			object?           compiledSource,
-			object?[]?        compiledParameters)
-		{
 			var now = Stopwatch.GetTimestamp();
 
 			MaybeSweepGlobal(now);
@@ -455,7 +411,7 @@ namespace LinqToDB.Internal.Linq
 			if (baseTimeoutTicks <= 0)
 				return;
 
-			var key = BuildKey(resultType, dataContext, expressions, queryFlags, compiledSource);
+			var key = BuildKey(resultType, dataContext, expressions, queryFlags);
 
 			while (true)
 			{
@@ -481,6 +437,11 @@ namespace LinqToDB.Internal.Linq
 					var survivors = new List<Entry>(current.Length + 1);
 					Entry? duplicate = null;
 
+					var dynamicAccessorResults = new QueryCacheCompareInfo.DynamicAccessorResults();
+
+					if (current.Length > 1)
+						dynamicAccessorResults.Enable();
+
 					for (var i = 0; i < current.Length; i++)
 					{
 						var existing = current[i];
@@ -492,7 +453,7 @@ namespace LinqToDB.Internal.Linq
 
 						// No QueryFlags check: flags are pinned by the bucket key, so every
 						// surviving entry already shares this add's QueryFlags.
-						if (existing.Query.Compare(dataContext, expressions, compiledParameters, query.CompiledCacheKey, out _))
+						if (existing.Query.Compare(dataContext, expressions, ref dynamicAccessorResults, out _))
 						{
 							duplicate = existing;
 						}
@@ -553,8 +514,7 @@ namespace LinqToDB.Internal.Linq
 			Type              resultType,
 			IDataContext      dataContext,
 			IQueryExpressions expressions,
-			QueryFlags        queryFlags,
-			object?           compiledSource)
+			QueryFlags        queryFlags)
 		{
 			// InlineParameters and HasEntityServiceInterceptor are already encoded in queryFlags
 			// by QueryFlagsHelper.GetQueryFlags — they don't need separate CacheKey fields.
@@ -565,8 +525,7 @@ namespace LinqToDB.Internal.Linq
 				dataContext.GetType(),
 				dataContext.ConfigurationID,
 				queryFlags,
-				chainHash,
-				compiledSource);
+				chainHash);
 		}
 
 		/// <summary>
@@ -1156,7 +1115,7 @@ namespace LinqToDB.Internal.Linq
 		/// <summary>Per-bucket entry count for the supplied lookup key shape.</summary>
 		public int CountEntriesInBucket(Type resultType, IDataContext dataContext, IQueryExpressions expressions, QueryFlags queryFlags)
 		{
-			var key = BuildKey(resultType, dataContext, expressions, queryFlags, compiledSource: null);
+			var key = BuildKey(resultType, dataContext, expressions, queryFlags);
 			return _cache.TryGetValue(key, out var bucket) ? Volatile.Read(ref bucket.Entries).Length : 0;
 		}
 
@@ -1169,7 +1128,7 @@ namespace LinqToDB.Internal.Linq
 		/// </summary>
 		public bool TrySimulateHits(Type resultType, IDataContext dataContext, IQueryExpressions expressions, QueryFlags queryFlags, int hits)
 		{
-			var key = BuildKey(resultType, dataContext, expressions, queryFlags, compiledSource: null);
+			var key = BuildKey(resultType, dataContext, expressions, queryFlags);
 
 			if (!_cache.TryGetValue(key, out var bucket))
 				return false;

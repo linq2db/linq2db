@@ -70,7 +70,7 @@ namespace LinqToDB.Internal.Linq
 
 			if (!DynamicAccessors.TryGetValue(forExpression, out var info))
 			{
-				info = new DynamicExpressionInfo(_generator.GetNext(), result, mappingSchema, accessorFunc);
+				info = new DynamicExpressionInfo(_generator.GetNext(), forExpression, ExpressionEqualityComparer.Instance.GetHashCode(forExpression), result, mappingSchema, accessorFunc);
 				DynamicAccessors.Add(forExpression, info);
 
 				AccessorsMapping.Add(info.ExpressionId, result.GetExpressionAccessors(GetDynamicExpressionRoot(info.ExpressionId)));

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -64,18 +63,20 @@ namespace LinqToDB.Internal.Linq
 			}
 		}
 
+		// Queries kept for one cache key, which does not tell query interceptor instances apart: contexts whose interceptors
+		// need different queries each keep their own instead of rebuilding on every switch.
+		const int MaxQueriesPerKey = 4;
+
 		Query<T> GetInfo(IDataContext dataContext, object?[] parameterValues, int[] indexes, out int[]? unseenSlots, out IQueryExpressions expressions)
 		{
-			var queryFlags = dataContext.GetQueryFlags();
-
-			IStructuralEquatable cacheKey =
+			var cacheKey =
 				(
 					operation: "CT",
 					configurationID: dataContext.ConfigurationID,
 					// Identity of this fold site, not a structural comparison: the cache is global per T,
 					// and one compiled query can fold more than one table of the same type.
 					table      : this,
-					queryFlags : queryFlags,
+					queryFlags : dataContext.GetQueryFlags(),
 					dependent  : GetDependentArgumentValues(indexes, parameterValues)
 				);
 
@@ -83,21 +84,20 @@ namespace LinqToDB.Internal.Linq
 
 			if (cached != null)
 			{
-				if (TryReuse(cached, dataContext, parameterValues, out expressions))
+				// Queries of one key share the exposed tree, so only the dynamic accessors tell them apart.
+				var dynamicAccessorResults = new QueryCacheCompareInfo.DynamicAccessorResults();
+
+				if (cached.Length > 1)
+					dynamicAccessorResults.Enable();
+
+				foreach (var candidate in cached)
 				{
-					unseenSlots = null;
+					if (TryReuse(candidate, dataContext, parameterValues, ref dynamicAccessorResults, out expressions))
+					{
+						unseenSlots = null;
 
-					return cached;
-				}
-
-				// The executing context's query interceptor needs another query for this fold site. Such variants go to the
-				// query cache, which keeps several for one key and compares them with the context.
-				if (QueryCache.Default.TryFind(typeof(T), dataContext, cached.CompiledExpressions!, queryFlags, this, parameterValues, cacheKey, out var variant, out var matched))
-				{
-					expressions = matched;
-					unseenSlots = null;
-
-					return (Query<T>)variant;
+						return candidate;
+					}
 				}
 			}
 
@@ -117,19 +117,21 @@ namespace LinqToDB.Internal.Linq
 				return query;
 			}
 
-			if (cached != null)
-			{
-				query.CompiledCacheKey = cacheKey;
+			// Newest first; the oldest drops out past the limit. A concurrent publish for the same key may drop the other
+			// thread's query, which only costs a rebuild.
+			var count   = cached == null ? 0 : Math.Min(cached.Length, MaxQueriesPerKey - 1);
+			var queries = new Query<T>[count + 1];
 
-				QueryCache.Default.TryAdd(typeof(T), dataContext, query, expressions, queryFlags, this, parameterValues);
-			}
-			else
-			{
-				using var entry = QueryRunner.Cache<T>.QueryCache.CreateEntry(cacheKey);
+			queries[0] = query;
 
+			if (count > 0)
+				Array.Copy(cached!, 0, queries, 1, count);
+
+			using (var entry = QueryRunner.Cache<T>.QueryCache.CreateEntry(cacheKey))
+			{
 				entry.SlidingExpiration = dataContext.Options.LinqOptions.CacheSlidingExpirationOrDefault;
 				entry.Size              = 1;
-				entry.Value             = query;
+				entry.Value             = queries;
 			}
 
 			unseenSlots = null;
@@ -140,14 +142,14 @@ namespace LinqToDB.Internal.Linq
 		// The key does not tell query interceptor instances apart: with a query interceptor, the dynamic accessors (a query
 		// filter it rewrote) are re-evaluated for the executing context first, as the query cache does, and their results
 		// supply the parameter values. Without one, the query is reused as it is.
-		static bool TryReuse(Query<T> query, IDataContext dataContext, object?[] parameterValues, out IQueryExpressions expressions)
+		static bool TryReuse(Query<T> query, IDataContext dataContext, object?[] parameterValues, ref QueryCacheCompareInfo.DynamicAccessorResults dynamicAccessorResults, out IQueryExpressions expressions)
 		{
 			expressions = query.CompiledExpressions!;
 
 			if (query.CompareInfo?.DynamicAccessors == null || dataContext is not IInterceptable<IQueryExpressionInterceptor> { Interceptor: not null })
 				return true;
 
-			if (!query.Revalidate(dataContext, expressions.MainExpression, parameterValues, out var matched))
+			if (!query.Revalidate(dataContext, expressions.MainExpression, parameterValues, ref dynamicAccessorResults, out var matched))
 				return false;
 
 			expressions = matched;

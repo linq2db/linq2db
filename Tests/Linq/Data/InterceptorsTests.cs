@@ -2352,6 +2352,79 @@ namespace Tests.Data
 			counter.QueryFilterCalls.ShouldBe(1);
 		}
 
+		/// <summary>
+		/// Appends <c>Where(p => p.ID &lt;= limit)</c> to the query filter with the limit inlined, so that each limit gets a
+		/// query of its own, and counts the query filters it is asked to rewrite.
+		/// </summary>
+		sealed class InlinedLimitFilterInterceptor(int limit) : IQueryExpressionInterceptor
+		{
+			public int QueryFilterCalls { get; private set; }
+
+			public Expression ProcessExpression(Expression expression, QueryExpressionArgs args)
+			{
+				if (args.Kind != ExpressionKind.QueryFilter || !typeof(IQueryable<Person>).IsAssignableFrom(expression.Type))
+					return expression;
+
+				QueryFilterCalls++;
+
+				var p    = Expression.Parameter(typeof(Person), "p");
+				var body = Expression.LessThanOrEqual(Expression.Field(p, nameof(Model.Person.ID)), Expression.Constant(limit));
+
+				return Expression.Call(
+					typeof(Queryable),
+					nameof(Queryable.Where),
+					[typeof(Person)],
+					expression,
+					Expression.Quote(Expression.Lambda<Func<Person, bool>>(body, p)));
+			}
+		}
+
+		// The cache keeps a query per tenant when a query interceptor inlines the tenant into the query filter. A lookup
+		// rewrites the filter once for the executing context, not once per cached query it compares.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
+		public void QueryExpression_QueryFilterRewrittenOncePerLookup(
+			[IncludeDataSources(false, TestProvName.AllSQLite)] string context,
+			[Values]                                            bool   compiled)
+		{
+			Query.ClearCaches();
+
+			var interceptors = Enumerable.Range(1, 4)
+				.Select(limit => new InlinedLimitFilterInterceptor(limit))
+				.ToArray();
+
+			var contexts = interceptors
+				.Select(interceptor => GetDataConnection(context, o => o
+					.UseMappingSchema(_personFilterSchema)
+					.UseInterceptor(interceptor)))
+				.ToArray();
+
+			// a scalar, so that each execution makes one lookup
+			int PersonCount(IDataContext db) => compiled ? _compiledPersonCount(db) : db.GetTable<Person>().Count();
+
+			try
+			{
+				for (var round = 0; round < 2; round++)
+				{
+					for (var i = 0; i < contexts.Length; i++)
+					{
+						var calls = interceptors[i].QueryFilterCalls;
+
+						PersonCount(contexts[i]).ShouldBe(ExpectedIds(i + 1).Length, $"round {round}, limit {i + 1}");
+
+						if (round > 0)
+							(interceptors[i].QueryFilterCalls - calls).ShouldBe(1, $"query filter calls, limit {i + 1}");
+					}
+				}
+			}
+			finally
+			{
+				foreach (var db in contexts)
+				{
+					db.Dispose();
+				}
+			}
+		}
+
 		// The same IQueryable executed while an interceptor is added and removed, with the query cache on or off: the query it
 		// keeps and its own tree must not outlive the change.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
