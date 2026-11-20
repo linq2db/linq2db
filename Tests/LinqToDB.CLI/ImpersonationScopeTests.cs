@@ -381,7 +381,10 @@ namespace Tests.LinqToDB.CLI
 		{
 			var fileName     = Path.Combine(TestContext.CurrentContext.WorkDirectory, $"impersonation-{Guid.NewGuid():N}.db");
 			var dataProvider = DataConnection.GetDataProvider("SQLite", $"Data Source={fileName};Pooling=False")!;
-			using var db     = new DataConnection(new DataOptions().UseConnectionString(dataProvider, $"Data Source={fileName};Pooling=False"));
+			var options      = new DataOptions()
+				.UseConnectionString(dataProvider, $"Data Source={fileName};Pooling=False");
+
+			using var db = new DataConnection(options);
 
 			db.Execute("""
 				create table Person
@@ -407,7 +410,9 @@ namespace Tests.LinqToDB.CLI
 
 		private static async Task<CliResult> RunCli(TestCliEnvironment environment, params string[] arguments)
 		{
-			var exitCode = await new LinqToDBCliController().Execute(arguments, environment).ConfigureAwait(false);
+			var exitCode = await new LinqToDBCliController()
+				.Execute(arguments, environment)
+				.ConfigureAwait(false);
 
 			return new CliResult(exitCode, environment.Output, environment.ErrorOutput);
 		}
