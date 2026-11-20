@@ -15,13 +15,15 @@
 		<Description>LINQ to DB Remote HttpClient package provides server classes to query database remotely using HttpClient.</Description>
 		<Product>$(Title)</Product>
 
-		<EnablePackageValidation>false</EnablePackageValidation>
+		<PackageValidationBaselineVersion>$(RemoteHttpClientServerBaselineVersion)</PackageValidationBaselineVersion>
 
 		<PackageTags>$(PackageTags);HttpClient;RemoteLinq</PackageTags>
 	</PropertyGroup>
 
 	<ItemGroup Label="Nuget">
 		<None Include="readme.md" Pack="true" PackagePath="readme.md" />
+		<!--dropped in 6.6.0 with ToolTargetFrameworks-->
+		<PackageValidationBaselineFrameworkToIgnore Include="net8.0;net9.0" />
 	</ItemGroup>
 
 	<ItemGroup>
