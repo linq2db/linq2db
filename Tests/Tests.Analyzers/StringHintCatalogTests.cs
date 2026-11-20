@@ -30,6 +30,8 @@ using Microsoft.CodeAnalysis.Testing;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Analyzers
 {
 	/// <summary>
@@ -53,8 +55,9 @@ namespace Tests.Analyzers
 		];
 
 		// Providers whose ADO.NET client cannot be loaded by this test process, so SQL cannot be generated for them.
-		// SQL Server CE's client is .NET Framework only. Its typed helpers come from the same template as SQL Server's
-		// and both providers emit table hints through the same builder.
+		// SQL Server CE's client needs the native Microsoft.SqlServer.Compact binaries, which run on Windows only. Its
+		// typed helpers come from the same template as SQL Server's and both providers emit table hints through the same
+		// builder.
 		static readonly string[] ProvidersWithoutSqlGeneration =
 		{
 			"SqlCe",
@@ -148,7 +151,14 @@ namespace Tests.Analyzers
 			{
 				var receiver = call.Scope == "TableHint" ? "t" : "q";
 
-				source.Append("\t\t").Append(receiver).Append('.').Append(call.Scope).Append('(').Append(Literal(call.Value)).AppendLine(");");
+				source
+					.Append("\t\t")
+					.Append(receiver)
+					.Append('.')
+					.Append(call.Scope)
+					.Append('(')
+					.Append(Literal(call.Value))
+					.AppendLine(");");
 				lines.Add(call);
 			}
 
@@ -163,8 +173,12 @@ namespace Tests.Analyzers
 				references.Add(MetadataReference.CreateFromFile(typeof(Sql).Assembly.Location)),
 				new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
-			var errors = compilation.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToList();
-			Assert.That(errors, Is.Empty, "catalog snippet must compile");
+			var errors = compilation
+				.GetDiagnostics()
+				.Where(d => d.Severity == DiagnosticSeverity.Error)
+				.ToList();
+
+			errors.ShouldBeEmpty("catalog snippet must compile");
 
 			var diagnostics = await compilation
 				.WithAnalyzers([new StringHintAnalyzer()])
@@ -174,7 +188,7 @@ namespace Tests.Analyzers
 
 			foreach (var diagnostic in diagnostics)
 			{
-				Assert.That(diagnostic.Id, Is.EqualTo(StringHintAnalyzer.DiagnosticId));
+				diagnostic.Id.ShouldBe(StringHintAnalyzer.DiagnosticId);
 
 				var (scope, value) = lines[diagnostic.Location.GetLineSpan().StartLinePosition.Line - firstLine];
 				var count = int.Parse(diagnostic.Properties[StringHintAnalyzer.FixCountKey]!, CultureInfo.InvariantCulture);
@@ -209,7 +223,7 @@ namespace Tests.Analyzers
 		{
 			var constants = GetConstants();
 
-			Assert.That(constants, Has.Count.GreaterThan(100), "hint constants found by reflection");
+			constants.Count.ShouldBeGreaterThan(100, "hint constants found by reflection");
 
 			var mappings = await RunAnalyzerAsync(AllCalls(constants));
 			var gated    = GetVersionGatedMappings(constants);
@@ -218,7 +232,8 @@ namespace Tests.Analyzers
 			foreach (var constant in constants)
 			{
 				var ns     = "LinqToDB.DataProvider." + constant.Provider;
-				var scopes = ScopesOf(constant.ClassName).ToList();
+				var scopes = ScopesOf(constant.ClassName)
+					.ToList();
 				var mapped = mappings.Any(m =>
 					string.Equals(m.Namespace, ns, StringComparison.Ordinal)
 					&& scopes.Contains(m.Scope, StringComparer.Ordinal)
@@ -238,22 +253,31 @@ namespace Tests.Analyzers
 			}
 
 			// Every helper the rule names must exist, be public and take the receiver only.
-			foreach (var (ns, helper, asMethod) in mappings.Select(m => (m.Namespace, m.Helper, m.AsMethod)).Distinct())
+			var named = mappings
+				.Select(m => (m.Namespace, m.Helper, m.AsMethod))
+				.Distinct();
+
+			foreach (var (ns, helper, asMethod) in named)
 			{
 				if (FindHelper(ns, helper) is null)
 					problems.Add(ns + "." + helper + ": named by the rule but not found");
 
-				if (asMethod.Length > 0 && !FindMethods(ns, asMethod).Any())
+				var asMethods = asMethod.Length > 0
+					? FindMethods(ns, asMethod)
+					: null;
+
+				if (asMethods is not null && !asMethods.Any())
 					problems.Add(ns + "." + asMethod + ": named by the rule but not found");
 			}
 
-			Assert.That(problems, Is.Empty);
+			problems.ShouldBeEmpty();
 
 			// The well-known cases, as a guard against the lookup going quiet as a whole.
-			Assert.That(mappings, Has.Some.Matches<Mapping>(m => m?.Helper == "WithNoLock"        && m.Provider == "SQL Server"));
-			Assert.That(mappings, Has.Some.Matches<Mapping>(m => m?.Helper == "WithNoLock"        && m.Provider == "SQL Server CE"));
-			Assert.That(mappings, Has.Some.Matches<Mapping>(m => m?.Helper == "WithNoLockInScope" && m.Provider == "SQL Server"));
-			Assert.That(mappings, Has.Some.Matches<Mapping>(m => m?.Helper == "OptionRecompile"   && m.Provider == "SQL Server"));
+			mappings.ShouldSatisfyAllConditions(
+				() => mappings.ShouldContain(m => m.Helper == "WithNoLock"        && m.Provider == "SQL Server"),
+				() => mappings.ShouldContain(m => m.Helper == "WithNoLock"        && m.Provider == "SQL Server CE"),
+				() => mappings.ShouldContain(m => m.Helper == "WithNoLockInScope" && m.Provider == "SQL Server"),
+				() => mappings.ShouldContain(m => m.Helper == "OptionRecompile"   && m.Provider == "SQL Server"));
 		}
 
 		// A helper named by the convention that takes more than the receiver, e.g. SqlServerHints.WithIndex(table, name).
@@ -265,7 +289,9 @@ namespace Tests.Analyzers
 				"With" + constant.Name, constant.Name + "Hint", "With" + constant.Name + "InScope", constant.Name + "InScopeHint", "Option" + constant.Name,
 			};
 
-			return names.Any(n => FindMethods(ns, n).Any(m => m.GetParameters().Length > 1));
+			return names
+				.SelectMany(n => FindMethods(ns, n))
+				.Any(m => m.GetParameters().Length > 1);
 		}
 
 		static IEnumerable<MethodInfo> FindMethods(string ns, string name)
@@ -278,10 +304,11 @@ namespace Tests.Analyzers
 
 		static MethodInfo? FindHelper(string ns, string name, Type? receiverDefinition = null)
 		{
-			return FindMethods(ns, name).FirstOrDefault(m =>
-				m.IsGenericMethodDefinition
-				&& m.GetParameters().Length == 1
-				&& (receiverDefinition is null || m.GetParameters()[0].ParameterType.GetGenericTypeDefinition() == receiverDefinition));
+			return FindMethods(ns, name)
+				.FirstOrDefault(m =>
+					m.IsGenericMethodDefinition
+					&& m.GetParameters().Length == 1
+					&& (receiverDefinition is null || m.GetParameters()[0].ParameterType.GetGenericTypeDefinition() == receiverDefinition));
 		}
 
 		// Every dialect version of a provider: a typed helper can be gated on the server version while the string
@@ -318,10 +345,16 @@ namespace Tests.Analyzers
 				var ns       = "LinqToDB.DataProvider." + provider;
 				var helper   = FindHelper(ns, name);
 
-				Assert.That(helper, Is.Not.Null, entry + ": listed as version-gated but not found");
+				helper.ShouldNotBeNull(entry + ": listed as version-gated but not found");
 
-				var receiver = helper!.GetParameters()[0].ParameterType.GetGenericTypeDefinition();
-				var isTable  = receiver.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ITable<>));
+				var receiver = helper
+					.GetParameters()[0]
+					.ParameterType
+					.GetGenericTypeDefinition();
+
+				var isTable = receiver
+					.GetInterfaces()
+					.Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ITable<>));
 
 				string scope, constantName;
 
@@ -338,11 +371,12 @@ namespace Tests.Analyzers
 
 				var constant = constants.FirstOrDefault(c => string.Equals(c.Provider, provider, StringComparison.Ordinal) && string.Equals(c.Name, constantName, StringComparison.Ordinal));
 
-				Assert.That(constant, Is.Not.Null, entry + ": no constant " + constantName);
+				constant.ShouldNotBeNull(entry + ": no constant " + constantName);
 
-				var asMethod = FindMethods(ns, "As" + provider).First(m => m.ReturnType.GetGenericTypeDefinition() == receiver);
+				var asMethod = FindMethods(ns, "As" + provider)
+					.First(m => m.ReturnType.GetGenericTypeDefinition() == receiver);
 
-				result.Add(new Mapping(scope, constant!.Value, provider, ns, asMethod.Name, name));
+				result.Add(new Mapping(scope, constant.Value, provider, ns, asMethod.Name, name));
 			}
 
 			return result;
@@ -352,13 +386,22 @@ namespace Tests.Analyzers
 		// of the typed helper, for one mapping on one provider version.
 		static (string StringSql, string? SpecificSql, string? TypedSql) GenerateSql(Mapping mapping, Func<IDataProvider> factory)
 		{
-			using var db = new DataConnection(new DataOptions().UseConnectionString(factory(), "Server=fake"));
+			using var db = new DataConnection(new DataOptions()
+				.UseConnectionString(factory(), "Server=fake"));
 
 			var tableScope  = mapping.Scope == "TableHint";
 			var receiverDef = tableScope ? typeof(ITable<>) : typeof(IQueryable<>);
-			object source   = tableScope ? db.GetTable<Row>() : db.GetTable<Row>().Where(r => r.Id > 0);
+			object source   = tableScope
+				? db.GetTable<Row>()
+				: db
+					.GetTable<Row>()
+					.Where(r => r.Id > 0);
 
-			var stringSql = Sql(GenericStringOverload(mapping.Scope, receiverDef).MakeGenericMethod(typeof(Row)).Invoke(null, new[] { source, mapping.Value })!);
+			var stringQuery = GenericStringOverload(mapping.Scope, receiverDef)
+				.MakeGenericMethod(typeof(Row))
+				.Invoke(null, new[] { source, mapping.Value })!;
+
+			var stringSql = Sql(stringQuery);
 
 			var asMethod = FindMethods(mapping.Namespace, mapping.AsMethod)
 				.Single(m => m.GetParameters().Length == 1 && m.GetParameters()[0].ParameterType.GetGenericTypeDefinition() == receiverDef)
@@ -370,17 +413,24 @@ namespace Tests.Analyzers
 			if (helper is null)
 				return (stringSql, null, null);
 
-			var typedSql = Sql(helper.MakeGenericMethod(typeof(Row)).Invoke(null, new[] { specific })!);
+			var typedQuery = helper
+				.MakeGenericMethod(typeof(Row))
+				.Invoke(null, new[] { specific })!;
 
-			var specificOverload = FindMethods(mapping.Namespace, mapping.Scope).FirstOrDefault(m =>
-				m.GetGenericArguments().Length == 1
-				&& m.GetParameters().Length == 2
-				&& m.GetParameters()[1].ParameterType == typeof(string)
-				&& m.GetParameters()[0].ParameterType.GetGenericTypeDefinition() == asMethod.ReturnType.GetGenericTypeDefinition());
+			var typedSql = Sql(typedQuery);
+
+			var specificOverload = FindMethods(mapping.Namespace, mapping.Scope)
+				.FirstOrDefault(m =>
+					m.GetGenericArguments().Length == 1
+					&& m.GetParameters().Length == 2
+					&& m.GetParameters()[1].ParameterType == typeof(string)
+					&& m.GetParameters()[0].ParameterType.GetGenericTypeDefinition() == asMethod.ReturnType.GetGenericTypeDefinition());
 
 			var specificSql = specificOverload is null
 				? null
-				: Sql(specificOverload.MakeGenericMethod(typeof(Row)).Invoke(null, new[] { specific, mapping.Value })!);
+				: Sql(specificOverload
+					.MakeGenericMethod(typeof(Row))
+					.Invoke(null, new[] { specific, mapping.Value })!);
 
 			return (stringSql, specificSql, typedSql);
 		}
@@ -392,22 +442,29 @@ namespace Tests.Analyzers
 
 		static MethodInfo GenericStringOverload(string name, Type receiverDefinition)
 		{
-			return typeof(LinqExtensions).GetMethods(BindingFlags.Public | BindingFlags.Static).Single(m =>
-				string.Equals(m.Name, name, StringComparison.Ordinal)
-				&& m.GetGenericArguments().Length == 1
-				&& m.GetParameters().Length == 2
-				&& m.GetParameters()[0].ParameterType.GetGenericTypeDefinition() == receiverDefinition
-				&& m.GetParameters()[1].ParameterType == typeof(string));
+			return typeof(LinqExtensions)
+				.GetMethods(BindingFlags.Public | BindingFlags.Static)
+				.Single(m =>
+					string.Equals(m.Name, name, StringComparison.Ordinal)
+					&& m.GetGenericArguments().Length == 1
+					&& m.GetParameters().Length == 2
+					&& m.GetParameters()[0].ParameterType.GetGenericTypeDefinition() == receiverDefinition
+					&& m.GetParameters()[1].ParameterType == typeof(string));
 		}
 
 		static string Escape(string sql)
 		{
-			return sql.Replace("\r", "\\r", StringComparison.Ordinal).Replace("\n", "\\n\n", StringComparison.Ordinal).Replace("\t", "\\t", StringComparison.Ordinal);
+			return sql
+				.Replace("\r", "\\r", StringComparison.Ordinal)
+				.Replace("\n", "\\n\n", StringComparison.Ordinal)
+				.Replace("\t", "\\t", StringComparison.Ordinal);
 		}
 
 		static string Sql(object query)
 		{
-			return ((IQueryable<Row>)query).ToSqlQuery().Sql;
+			return ((IQueryable<Row>)query)
+				.ToSqlQuery()
+				.Sql;
 		}
 
 		// For every mapping the rule reports: the string hint on a generic receiver, the same string on the provider's
@@ -419,14 +476,19 @@ namespace Tests.Analyzers
 		{
 			var mappings = await RunAnalyzerAsync(AllCalls(GetConstants()));
 
-			var providers = mappings.Select(ProviderOf).Distinct(StringComparer.Ordinal).OrderBy(p => p, StringComparer.Ordinal).ToList();
+			var providers = mappings
+				.Select(ProviderOf)
+				.Distinct(StringComparer.Ordinal)
+				.OrderBy(p => p, StringComparer.Ordinal)
+				.ToList();
 
 			// A provider that gains typed hints must be added to DataProviders (or, if its client cannot load here,
 			// to ProvidersWithoutSqlGeneration) rather than be skipped quietly.
-			Assert.That(
-				providers.Where(p => !DataProviders.ContainsKey(p) && !ProvidersWithoutSqlGeneration.Contains(p, StringComparer.Ordinal)),
-				Is.Empty,
-				"providers with typed hints but no SQL generation in this test");
+			var uncovered = providers
+				.Where(p => !DataProviders.ContainsKey(p) && !ProvidersWithoutSqlGeneration.Contains(p, StringComparer.Ordinal))
+				.ToList();
+
+			uncovered.ShouldBeEmpty("providers with typed hints but no SQL generation in this test");
 
 			var problems = new List<string>();
 			var checkedCount = 0;
@@ -463,11 +525,15 @@ namespace Tests.Analyzers
 				}
 			}
 
-			foreach (var group in mappings.GroupBy(ProviderOf).OrderBy(g => g.Key, StringComparer.Ordinal))
+			var groups = mappings
+				.GroupBy(ProviderOf)
+				.OrderBy(g => g.Key, StringComparer.Ordinal);
+
+			foreach (var group in groups)
 				TestContext.Out.WriteLine($"{group.Key}: {group.Count()} mappings{(DataProviders.ContainsKey(group.Key) ? "" : " (SQL not generated)")}");
 
-			Assert.That(problems, Is.Empty);
-			Assert.That(checkedCount, Is.GreaterThan(500), "mapping x version comparisons");
+			problems.ShouldBeEmpty();
+			checkedCount.ShouldBeGreaterThan(500, "mapping x version comparisons");
 		}
 
 		// The other direction: every helper withheld as version-gated must really differ from the string on some
@@ -477,7 +543,7 @@ namespace Tests.Analyzers
 		{
 			var gated = GetVersionGatedMappings(GetConstants());
 
-			Assert.That(gated, Has.Count.EqualTo(StringHintAnalyzer.VersionGatedHelpers.Length));
+			gated.Count.ShouldBe(StringHintAnalyzer.VersionGatedHelpers.Length);
 
 			foreach (var mapping in gated)
 			{
@@ -487,7 +553,7 @@ namespace Tests.Analyzers
 					return !string.Equals(stringSql, typedSql, StringComparison.Ordinal);
 				});
 
-				Assert.That(differs, Is.True, $"{mapping.Namespace}.{mapping.Helper} emits the same SQL as the string on every version");
+				differs.ShouldBeTrue($"{mapping.Namespace}.{mapping.Helper} emits the same SQL as the string on every version");
 			}
 		}
 
@@ -496,7 +562,7 @@ namespace Tests.Analyzers
 		{
 			var mappings = await RunAnalyzerAsync([("TableHint", "FORCESCAN"), ("QueryHint", "NO_PERFORMANCE_SPOOL"), ("TablesInScopeHint", "SNAPSHOT")]);
 
-			Assert.That(mappings, Is.Empty);
+			mappings.ShouldBeEmpty();
 		}
 
 		// A table receiver needs AsQueryable() before the provider call to reach the query form of a scope helper;
@@ -504,12 +570,24 @@ namespace Tests.Analyzers
 		[Test]
 		public void InScopeRewriteOnATableReceiverProducesTheSameSql()
 		{
-			using var db = new DataConnection(new DataOptions().UseConnectionString(SqlServerTools.GetDataProvider(SqlServerVersion.v2022, SqlServerProvider.MicrosoftDataSqlClient), "Server=fake"));
+			using var db = new DataConnection(new DataOptions()
+				.UseConnectionString(SqlServerTools.GetDataProvider(SqlServerVersion.v2022, SqlServerProvider.MicrosoftDataSqlClient), "Server=fake"));
 
-			var stringSql = db.GetTable<Row>().TablesInScopeHint("NoLock").ToSqlQuery().Sql;
-			var typedSql  = db.GetTable<Row>().AsQueryable().AsSqlServer().WithNoLockInScope().ToSqlQuery().Sql;
+			var stringSql = db
+				.GetTable<Row>()
+				.TablesInScopeHint("NoLock")
+				.ToSqlQuery()
+				.Sql;
 
-			Assert.That(typedSql, Is.EqualTo(stringSql));
+			var typedSql  = db
+				.GetTable<Row>()
+				.AsQueryable()
+				.AsSqlServer()
+				.WithNoLockInScope()
+				.ToSqlQuery()
+				.Sql;
+
+			typedSql.ShouldBe(stringSql);
 		}
 
 		// The rule's scope is the constant classes above; the readme states the same boundary.
@@ -545,8 +623,8 @@ namespace Tests.Analyzers
 				.Order(StringComparer.Ordinal)
 				.ToList();
 
-			Assert.That(unlisted, Is.Empty, "hint constant classes in neither ConstantClasses nor OutOfScopeConstantClasses");
-			Assert.That(owners, Is.EqualTo(ProvidersWithTopLevelConstants));
+			unlisted.ShouldBeEmpty("hint constant classes in neither ConstantClasses nor OutOfScopeConstantClasses");
+			owners.ShouldBe(ProvidersWithTopLevelConstants);
 		}
 
 		static bool HasStringConstants(Type type)
@@ -563,13 +641,19 @@ namespace Tests.Analyzers
 		{
 			var match = Regex.Match(StringHintAnalyzer.GuideSentence, @"skills/(?<path>[A-Za-z0-9_./-]+\.md)");
 
-			Assert.That(match.Success, Is.True, "the message cites a skill file");
-			Assert.That(match.Value, Is.EqualTo(StringHintAnalyzer.GuidePath));
+			match.Success.ShouldBeTrue("the message cites a skill file");
+			match.Value.ShouldBe(StringHintAnalyzer.GuidePath);
 
 			var root = FindRepositoryRoot();
-			var file = Path.Combine(new[] { root, "Source", "Skills" }.Concat(match.Groups["path"].Value.Split('/')).ToArray());
+			var parts = new[] { root, "Source", "Skills" }
+				.Concat(match.Groups["path"].Value.Split('/'))
+				.ToArray();
 
-			Assert.That(File.Exists(file), Is.True, file);
+			var file = Path.Combine(parts);
+
+			File
+				.Exists(file)
+				.ShouldBeTrue(file);
 		}
 
 		static string FindRepositoryRoot()
@@ -579,9 +663,9 @@ namespace Tests.Analyzers
 			while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "linq2db.slnx")))
 				directory = directory.Parent;
 
-			Assert.That(directory, Is.Not.Null, "repository root (linq2db.slnx) above " + AppContext.BaseDirectory);
+			directory.ShouldNotBeNull("repository root (linq2db.slnx) above " + AppContext.BaseDirectory);
 
-			return directory!.FullName;
+			return directory.FullName;
 		}
 	}
 }

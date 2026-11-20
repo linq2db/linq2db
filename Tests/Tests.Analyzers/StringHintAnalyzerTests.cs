@@ -7,6 +7,8 @@ using Microsoft.CodeAnalysis.Testing;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Verify = Tests.Analyzers.AnalyzerVerifier<LinqToDB.Analyzers.StringHintAnalyzer>;
 
 namespace Tests.Analyzers
@@ -301,9 +303,9 @@ namespace Tests.Analyzers
 			var descriptor = new StringHintAnalyzer().SupportedDiagnostics[0];
 			var message    = descriptor.MessageFormat.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
-			Assert.That(message, Is.EqualTo("Hint '{0}' has a typed equivalent: {1}.{2}"));
-			Assert.That(StringHintAnalyzer.GuideSentence, Does.EndWith(StringHintAnalyzer.GuidePath));
-			Assert.That(descriptor.DefaultSeverity, Is.EqualTo(DiagnosticSeverity.Info));
+			message.ShouldBe("Hint '{0}' has a typed equivalent: {1}.{2}");
+			StringHintAnalyzer.GuideSentence.ShouldEndWith(StringHintAnalyzer.GuidePath);
+			descriptor.DefaultSeverity.ShouldBe(DiagnosticSeverity.Info);
 		}
 
 		// A stand-in for a linq2db of the given version: the rule reads its hints off whatever assembly declares

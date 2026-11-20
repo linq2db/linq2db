@@ -8,6 +8,8 @@ using System.Xml.Linq;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Analyzers
 {
 	/// <summary>
@@ -49,11 +51,12 @@ namespace Tests.Analyzers
 			var file   = Path.Combine(GetSkillDirectory(), "SKILL.md");
 			var length = GetLength(file);
 
-			Assert.Multiple(() =>
-			{
-				Assert.That(EstimateTokens(length), Is.LessThanOrEqualTo(SkillMaxTokens), $"SKILL.md: {length} bytes");
-				Assert.That(File.ReadAllLines(file), Has.Length.LessThanOrEqualTo(SkillMaxLines), "SKILL.md lines");
-			});
+			var lines = File.ReadAllLines(file);
+
+			lines.ShouldSatisfyAllConditions(
+				() => EstimateTokens(length)
+					.ShouldBeLessThanOrEqualTo(SkillMaxTokens, $"SKILL.md: {length} bytes"),
+				() => lines.Length.ShouldBeLessThanOrEqualTo(SkillMaxLines, "SKILL.md lines"));
 		}
 
 		[Test]
@@ -70,15 +73,18 @@ namespace Tests.Analyzers
 					failures.Add($"{GetRelativePath(file)}: about {tokens} tokens ({length} bytes), budget {ReferenceMaxTokens}");
 			}
 
-			Assert.That(failures, Is.Empty);
+			failures.ShouldBeEmpty();
 		}
 
 		[Test]
 		public void WholeSkillFitsTheBudget()
 		{
-			var length = Directory.GetFiles(GetSkillDirectory(), "*", SearchOption.AllDirectories).Sum(GetLength);
+			var length = Directory
+				.GetFiles(GetSkillDirectory(), "*", SearchOption.AllDirectories)
+				.Sum(GetLength);
 
-			Assert.That(EstimateTokens(length), Is.LessThanOrEqualTo(TotalMaxTokens), $"whole skill: {length} bytes");
+			EstimateTokens(length)
+				.ShouldBeLessThanOrEqualTo(TotalMaxTokens, $"whole skill: {length} bytes");
 		}
 
 		[Test]
@@ -86,11 +92,11 @@ namespace Tests.Analyzers
 		{
 			var lines = File.ReadAllLines(Path.Combine(GetSkillDirectory(), "SKILL.md"));
 
-			Assert.That(lines[0], Is.EqualTo("---"), "SKILL.md must start with YAML frontmatter");
+			lines[0].ShouldBe("---", "SKILL.md must start with YAML frontmatter");
 
 			var end = Array.IndexOf(lines, "---", 1);
 
-			Assert.That(end, Is.GreaterThan(1), "SKILL.md frontmatter is not closed with '---'");
+			end.ShouldBeGreaterThan(1, "SKILL.md frontmatter is not closed with '---'");
 
 			var fields = new Dictionary<string, string>(StringComparer.Ordinal);
 
@@ -98,23 +104,33 @@ namespace Tests.Analyzers
 			{
 				var separator = lines[i].IndexOf(':', StringComparison.Ordinal);
 
-				Assert.That(separator, Is.GreaterThan(0), $"frontmatter line {i + 1} is not a plain 'key: value' pair: {lines[i]}");
+				separator.ShouldBeGreaterThan(0, $"frontmatter line {i + 1} is not a plain 'key: value' pair: {lines[i]}");
 
-				fields.Add(lines[i].Substring(0, separator), lines[i].Substring(separator + 1).Trim());
+				var value = lines[i]
+					.Substring(separator + 1)
+					.Trim();
+
+				fields.Add(lines[i].Substring(0, separator), value);
 			}
 
-			Assert.Multiple(() =>
-			{
-				Assert.That(fields.Keys, Is.SubsetOf(_specFields), "frontmatter fields outside the Agent Skills specification");
-				Assert.That(fields["name"], Is.EqualTo(SkillName), "'name' must equal the skill folder name");
-				Assert.That(_nameRegex.IsMatch(fields["name"]), Is.True, "'name': lower-case words joined by single hyphens");
-				Assert.That(fields["description"], Is.Not.Empty);
-				Assert.That(fields["description"], Has.Length.LessThanOrEqualTo(DescriptionMaxCharacters));
+			var name        = fields["name"];
+			var description = fields["description"];
 
-				// a plain YAML scalar: these sequences would end or reinterpret it
-				Assert.That(fields["description"], Does.Not.Contain(": ").And.Not.Contain(" #"));
-				Assert.That(fields["description"], Does.Not.StartWith("\"").And.Not.StartWith("'").And.Not.StartWith(">").And.Not.StartWith("|"));
-			});
+			// a plain YAML scalar: ": " and " #" would end or reinterpret it, and so would a leading quote, '>' or '|'
+			fields.ShouldSatisfyAllConditions(
+				() => fields.Keys.ShouldBeSubsetOf(_specFields, "frontmatter fields outside the Agent Skills specification"),
+				() => name.ShouldBe(SkillName, "'name' must equal the skill folder name"),
+				() => _nameRegex
+					.IsMatch(name)
+					.ShouldBeTrue("'name': lower-case words joined by single hyphens"),
+				() => description.ShouldNotBeEmpty(),
+				() => description.Length.ShouldBeLessThanOrEqualTo(DescriptionMaxCharacters),
+				() => description.ShouldNotContain(": "),
+				() => description.ShouldNotContain(" #"),
+				() => description.ShouldNotStartWith("\""),
+				() => description.ShouldNotStartWith("'"),
+				() => description.ShouldNotStartWith(">"),
+				() => description.ShouldNotStartWith("|"));
 		}
 
 		[Test]
@@ -122,15 +138,33 @@ namespace Tests.Analyzers
 		{
 			var directory = GetSkillDirectory();
 			var text      = File.ReadAllText(Path.Combine(directory, "SKILL.md"));
-			var linked    = _linkRegex.Matches(text).Select(static m => m.Groups["target"].Value).ToHashSet(StringComparer.Ordinal);
+			var linked    = _linkRegex
+				.Matches(text)
+				.Select(static m => m.Groups["target"].Value)
+				.ToHashSet(StringComparer.Ordinal);
 
-			Assert.Multiple(() =>
-			{
-				Assert.That(Directory.GetDirectories(directory).Select(Path.GetFileName), Is.EqualTo(new[] { ReferenceFolder }));
-				Assert.That(Directory.GetDirectories(Path.Combine(directory, ReferenceFolder)), Is.Empty);
-				Assert.That(Directory.GetFiles(directory, "*", SearchOption.AllDirectories).Where(static f => !f.EndsWith(".md", StringComparison.Ordinal)), Is.Empty);
-				Assert.That(GetReferences().Select(GetRelativePath).Where(r => !linked.Contains(r)), Is.Empty, "references that SKILL.md does not link");
-			});
+			var folders = Directory
+				.GetDirectories(directory)
+				.Select(Path.GetFileName)
+				.ToList();
+
+			var nestedFolders = Directory.GetDirectories(Path.Combine(directory, ReferenceFolder));
+
+			var nonMarkdown = Directory
+				.GetFiles(directory, "*", SearchOption.AllDirectories)
+				.Where(static f => !f.EndsWith(".md", StringComparison.Ordinal))
+				.ToList();
+
+			var unlinked = GetReferences()
+				.Select(GetRelativePath)
+				.Where(r => !linked.Contains(r))
+				.ToList();
+
+			folders.ShouldSatisfyAllConditions(
+				() => folders.ShouldBe(new[] { ReferenceFolder }),
+				() => nestedFolders.ShouldBeEmpty(),
+				() => nonMarkdown.ShouldBeEmpty(),
+				() => unlinked.ShouldBeEmpty("references that SKILL.md does not link"));
 		}
 
 		// The skill is read from the package and from copies in a repository (.agents/skills/linq2db), so links stay inside
@@ -143,14 +177,17 @@ namespace Tests.Analyzers
 
 			foreach (var file in Directory.GetFiles(root, "*.md", SearchOption.AllDirectories))
 			{
-				foreach (Match match in _linkRegex.Matches(_fenceRegex.Replace(File.ReadAllText(file), string.Empty)))
+				var prose = _fenceRegex.Replace(File.ReadAllText(file), string.Empty);
+
+				foreach (Match match in _linkRegex.Matches(prose))
 				{
 					var target = match.Groups["target"].Value;
 
 					if (target.StartsWith("https://", StringComparison.Ordinal) || target.StartsWith("http://", StringComparison.Ordinal))
 						continue;
 
-					var resolved = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(file)!, target.Replace('/', Path.DirectorySeparatorChar)));
+					var relative = target.Replace('/', Path.DirectorySeparatorChar);
+					var resolved = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(file)!, relative));
 
 					if (!resolved.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.Ordinal))
 						failures.Add($"{GetRelativePath(file)}: '{target}' leaves the skill folder");
@@ -159,7 +196,7 @@ namespace Tests.Analyzers
 				}
 			}
 
-			Assert.That(failures, Is.Empty);
+			failures.ShouldBeEmpty();
 		}
 
 		[Test]
@@ -178,7 +215,7 @@ namespace Tests.Analyzers
 				}
 			}
 
-			Assert.That(failures, Is.Empty);
+			failures.ShouldBeEmpty();
 		}
 
 		[Test]
@@ -204,7 +241,7 @@ namespace Tests.Analyzers
 				}
 			}
 
-			Assert.That(failures, Is.Empty);
+			failures.ShouldBeEmpty();
 		}
 
 		// Package layout read by NuGet's dotnet-package-skills tool: skills/<skill name>/SKILL.md, one folder per skill.
@@ -235,11 +272,18 @@ namespace Tests.Analyzers
 				}
 			}
 
-			Assert.Multiple(() =>
+			var expected = new Dictionary<string, string>
 			{
-				Assert.That(carriers.Distinct(), Is.EqualTo(new[] { "Source/LinqToDB/LinqToDB.csproj" }));
-				Assert.That(packed, Is.EqualTo(new Dictionary<string, string> { ["skills/linq2db/%(RecursiveDir)%(Filename)%(Extension)"] = "../Skills/linq2db/**/*.md" }));
-			});
+				["skills/linq2db/%(RecursiveDir)%(Filename)%(Extension)"] = "../Skills/linq2db/**/*.md",
+			};
+
+			var distinctCarriers = carriers
+				.Distinct()
+				.ToList();
+
+			packed.ShouldSatisfyAllConditions(
+				() => distinctCarriers.ShouldBe(new[] { "Source/LinqToDB/LinqToDB.csproj" }),
+				() => packed.ShouldBe(expected));
 		}
 
 		static IEnumerable<string> GetPackagingFiles(string root)
@@ -260,7 +304,9 @@ namespace Tests.Analyzers
 		// (package path, source) pairs; element and attribute names are matched without the MSBuild / nuspec namespace.
 		static IEnumerable<(string PackagePath, string Include)> GetPackagePaths(string file)
 		{
-			foreach (var element in XDocument.Load(file).Descendants())
+			foreach (var element in XDocument
+				.Load(file)
+				.Descendants())
 			{
 				var packagePath = element.Attribute("PackagePath")?.Value;
 				var include     = element.Attribute("Include")?.Value ?? element.Attribute("Update")?.Value;
@@ -293,21 +339,30 @@ namespace Tests.Analyzers
 		/// <summary>UTF-8 length of the file with CRLF counted as LF.</summary>
 		static long GetLength(string file)
 		{
-			return Encoding.UTF8.GetByteCount(File.ReadAllText(file).Replace("\r\n", "\n", StringComparison.Ordinal));
+			var text = File
+				.ReadAllText(file)
+				.Replace("\r\n", "\n", StringComparison.Ordinal);
+
+			return Encoding.UTF8.GetByteCount(text);
 		}
 
 		static List<string> GetReferences()
 		{
-			var files = Directory.GetFiles(Path.Combine(GetSkillDirectory(), ReferenceFolder), "*.md").OrderBy(static f => f, StringComparer.Ordinal).ToList();
+			var files = Directory
+				.GetFiles(Path.Combine(GetSkillDirectory(), ReferenceFolder), "*.md")
+				.OrderBy(static f => f, StringComparer.Ordinal)
+				.ToList();
 
-			Assert.That(files, Is.Not.Empty);
+			files.ShouldNotBeEmpty();
 
 			return files;
 		}
 
 		static string GetRelativePath(string file)
 		{
-			return Path.GetRelativePath(GetSkillDirectory(), file).Replace('\\', '/');
+			return Path
+				.GetRelativePath(GetSkillDirectory(), file)
+				.Replace('\\', '/');
 		}
 
 		static string GetSkillDirectory()
@@ -322,9 +377,9 @@ namespace Tests.Analyzers
 			while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "linq2db.slnx")))
 				directory = directory.Parent;
 
-			Assert.That(directory, Is.Not.Null, "repository root (linq2db.slnx) above " + AppContext.BaseDirectory);
+			directory.ShouldNotBeNull("repository root (linq2db.slnx) above " + AppContext.BaseDirectory);
 
-			return directory!.FullName;
+			return directory.FullName;
 		}
 	}
 }

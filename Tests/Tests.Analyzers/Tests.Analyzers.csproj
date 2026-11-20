@@ -19,6 +19,7 @@
 	<ItemGroup>
 		<PackageReference Include="NUnit" />
 		<PackageReference Include="NUnit3TestAdapter" />
+		<PackageReference Include="Shouldly" />
 		<PackageReference Include="Microsoft.Testing.Platform.MSBuild" />
 		<PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" />
