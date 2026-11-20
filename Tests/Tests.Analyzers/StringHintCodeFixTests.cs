@@ -24,7 +24,7 @@ namespace Tests.Analyzers
 		const string SqlCeRestrictedKey     = StringHintAnalyzer.DiagnosticId + "|SQL Server CE|restricted";
 
 		// The fix is chosen by its equivalence key (one per provider), so a generic receiver's provider choice is explicit.
-		static Task VerifyAsync(string source, string fixedSource, string equivalenceKey, Action<CSharpCodeFixTest<StringHintAnalyzer, StringHintCodeFixProvider, DefaultVerifier>>? configure = null)
+		static Task VerifyAsync(string source, string fixedSource, string? equivalenceKey, Action<CSharpCodeFixTest<StringHintAnalyzer, StringHintCodeFixProvider, DefaultVerifier>>? configure = null)
 		{
 			var test = new CSharpCodeFixTest<StringHintAnalyzer, StringHintCodeFixProvider, DefaultVerifier>
 			{
@@ -901,6 +901,49 @@ namespace Tests.Analyzers
 				{
 					test.TestState.Sources.Add(("/0/GlobalUsings.cs", "global using LinqToDB;"));
 					test.FixedState.Sources.Add(("/0/GlobalUsings.cs", "global using LinqToDB;"));
+				});
+		}
+	
+		// Fixed one after the other, the second hint already sits on the provider's receiver after the first rewrite, so
+		// it binds the provider's own overload and the exact rewrite adds no second AsSqlServer().
+		[Test]
+		public async Task ChainedHintsFixedOneAfterAnotherShareOneAsCall()
+		{
+			await VerifyAsync(
+				"""
+				using LinqToDB;
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var r = t.[|TableHint("NOLOCK")|].[|TableHint("READPAST")|];
+					}
+				}
+				""",
+				"""
+				using LinqToDB;
+				using LinqToDB.DataProvider.SqlServer;
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var r = t.AsSqlServer().WithNoLock().WithReadPast();
+					}
+				}
+				""",
+				null,
+				static test =>
+				{
+					// The first action of each step: SQL Server's restricting rewrite, then the exact one.
+					test.CodeActionIndex               = 0;
+					test.NumberOfIncrementalIterations = 2;
+					test.CodeFixTestBehaviors         |= CodeFixTestBehaviors.SkipFixAllCheck;
 				});
 		}
 	}
