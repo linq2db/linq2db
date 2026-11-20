@@ -25,15 +25,17 @@ The files in `docs/` are optional references for single topics; open one only wh
 ## Architecture
 
 - `DataOptions` holds the provider, connection string, mapping schema and every option. It is immutable;
-  build it once (singleton or `static readonly`) and pass it to each context: building it does
-  initialization work, and per-call instances defeat caching.
-- `DataConnection` is a unit of work bound to one ADO.NET connection, opened on first use and kept until
+  build it once (singleton or `static readonly`) and pass it to each context. Each new instance recomputes
+  its configuration id, and options that take a new `MappingSchema`, interceptor or delegate per call get a
+  new id and miss the query cache.
+- `DataConnection` is a session over one ADO.NET connection, opened on first use and kept until
   `Dispose`. Use it for transactions (`BeginTransaction`), temp tables and anything that needs session
   state. `DataContext` opens and closes a connection per command unless `SetKeepConnectionAlive(true)` or a
-  transaction keeps it open. Both implement `IDataContext`; create one per unit of work and dispose it.
+  transaction keeps it open. Both implement `IDataContext`; create one per operation (request, job) and dispose it.
 - `MappingSchema` describes entities: attributes (`[Table]`, `[Column]`, `[PrimaryKey]`, `[Identity]`,
   `[NotColumn]`, `[Association]`) or `FluentMappingBuilder`. Without attributes, public properties map by
-  name. Create a custom schema once at startup and attach it with `UseMappingSchema`; a new schema per
+  name. With `[Table]`, only members that carry `[Column]`, `[PrimaryKey]` or `[Identity]` are mapped
+  (`IsColumnAttributeRequired` defaults to true): a property without one is silently ignored. Create a custom schema once at startup and attach it with `UseMappingSchema`; a new schema per
   context throws away its caches.
 - A query goes: `ITable<T>` / `IQueryable<T>` expression tree, then a SQL AST, then the optimizer, then the
   provider's SQL builder, then a compiled reader that materializes rows. The translated query is cached by
@@ -75,7 +77,7 @@ The files in `docs/` are optional references for single topics; open one only wh
 | `AsNoTracking()` | not needed, nothing is tracked |
 | `FromSqlRaw` / `FromSqlInterpolated` | `db.FromSql<T>($"... {value}")`: interpolated values become parameters |
 | migrations, `EnsureCreated` | none; `db.CreateTable<T>()` and `CreateTempTable` are for tests and temp data |
-| options built per `DbContext` | one `DataOptions` for the application, one context per unit of work |
+| options built per `DbContext` | one `DataOptions` for the application, one context per operation |
 | `TransactionScope` around an open context | create the scope before the connection opens, or use `db.BeginTransaction()` |
 | client evaluation in `Where` / `OrderBy` | keep those translatable; map a .NET method with `[ExpressionMethod]` or `[Sql.Expression]` |
 
@@ -111,8 +113,9 @@ The files in `docs/` are optional references for single topics; open one only wh
 
 These APIs postdate most model training data. Examples are in [docs/recent-changes.md](docs/recent-changes.md).
 
-- 6.4 `Sql.Window.*` window functions (`Sql.Window.RowNumber(w => w.PartitionBy(...).OrderBy(...))`); the
-  `Sql.Ext.*().Over()` chains still work, analyzer L2DB1001 migrates them.
+- 6.4 full `Sql.Window.*` API (`Sql.Window.RowNumber(w => w.PartitionBy(...).OrderBy(...))`, offset,
+  value and statistical functions, frames, `Filter`); `Sql.Ext.*().Over()` chains still work, analyzer
+  L2DB1001 migrates them.
 - 6.4 eager-loading strategies `WithKeyedLoadStrategy()` / `WithUnionLoadStrategy()` per query, or
   `UseDefaultEagerLoadingStrategy(EagerLoadingStrategy.KeyedQuery)` globally.
 - 6.4 keyed query filters: `HasQueryFilter("key", ...)` in fluent mapping, `IgnoreFilters(["key"])` per query.
@@ -122,14 +125,15 @@ These APIs postdate most model training data. Examples are in [docs/recent-chang
 - 6.4 `Sql.NewGuid7()` and `Guid.CreateVersion7()` for UUIDv7 values.
 - 6.4 `UsePreferClientCalculation(true)`: the final projection computes on the client what does not need SQL.
 - 6.4 query cache is bounded; `DistinctBy` emits `DISTINCT ON` on PostgreSQL and DuckDB.
-- 6.5 `[Duration(DurationUnit.Second)]` on a `TimeSpan` column stored as a number; `TimeSpan` arithmetic and
-  date differences then translate.
+- 6.5 `[Duration(DurationUnit.Second)]` on a `TimeSpan` column stored as a number; `TimeSpan` comparisons
+  and arithmetic on it then translate. Separately, a date difference now measures elapsed time.
 - 6.5 `db.UpdateOptimisticWithRefresh(entity)` (`LinqToDB.Concurrency`) updates and refreshes the
   concurrency token on the entity.
 - 6.5 chained `*InScope` table hints stack instead of keeping only the innermost.
 - 6.6 `UseCombinedCommands(true)` sends an eager load (and on SQLite/MySQL an identity insert) in one round trip.
 - 6.6 .NET 11 tuple-returning `Join` / `LeftJoin` / `RightJoin` / `FullJoin` overloads translate.
-- 6.6 behaviour: a nullable comparison used as a value is `false` when an operand is `NULL`; an eager load
+- 6.6 behaviour: a nullable comparison used as a value is `false` when an operand is `NULL` (on databases
+  with a boolean type); an eager load
   outside a transaction reads all main rows before returning the first one.
 - 6.6 packages target `net462`, `netstandard2.0`, `net10.0`, `net11.0`.
 - 6.7 analyzer L2DB2001: a text hint with a typed helper gets a code fix to that helper.
@@ -141,4 +145,5 @@ version. It lies next to the assembly in the restored package:
 `<global-packages>/linq2db/<version>/lib/<tfm>/linq2db.xml` (`dotnet nuget locals global-packages --list`
 prints the folder; from a skill read inside the package it is `../../lib/<tfm>/linq2db.xml`). Search it by
 member name; do not read it whole. Member ids look like `M:LinqToDB.LinqExtensions.LoadWith``2(...)`.
+Provider hint helpers and `AsXxx()` markers are not in it; see [docs/hints.md](docs/hints.md).
 Do not use `LinqToDB.Internal.*` types in application code.

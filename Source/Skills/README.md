@@ -83,9 +83,8 @@ Two installers can fill a repository, and a destination (`.agents/skills`, `.cla
 ## Size budget
 
 The skill is loaded into the agent's context: the `description` always, `SKILL.md` when the skill is
-activated, a reference when the agent opens it. Budgets, in estimated tokens (UTF-8 bytes / 3.5, rounded
-up; English Markdown with code runs at about 3.5 to 4.5 bytes per token in current tokenizers, so the
-estimate errs high):
+activated, a reference when the agent opens it. Budgets, in estimated tokens (UTF-8 bytes with LF line
+endings / 3.5, rounded up; an estimate, not the count of a particular tokenizer):
 
 | Part | Budget |
 | --- | --- |

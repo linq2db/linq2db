@@ -20,8 +20,8 @@ namespace Tests.LinqToDB.CLI
 	[TestFixture]
 	public sealed class SkillBudgetTests
 	{
-		// Token estimate: UTF-8 bytes / 3.5, rounded up. English Markdown with code runs at about 3.5 to 4.5 bytes per token
-		// in current tokenizers, so the estimate errs on the high side and needs no tokenizer of any particular model.
+		// Token estimate: UTF-8 bytes with LF line endings / 3.5, rounded up. It is an estimate, not the count of any particular
+		// tokenizer; CRLF is counted as LF so that a Windows checkout measures the same as a Linux one.
 		private const double BytesPerToken = 3.5;
 
 		private const int DescriptionMaxCharacters = 600;
@@ -41,13 +41,13 @@ namespace Tests.LinqToDB.CLI
 		[Test]
 		public void SkillMdFitsTheBudget()
 		{
-			var file  = Path.Combine(GetSkillDirectory(), "SKILL.md");
-			var bytes = File.ReadAllBytes(file);
-			var lines = File.ReadAllLines(file);
+			var file   = Path.Combine(GetSkillDirectory(), "SKILL.md");
+			var length = GetLength(file);
+			var lines  = File.ReadAllLines(file);
 
 			using (Assert.EnterMultipleScope())
 			{
-				EstimateTokens(bytes.Length).ShouldBeLessThanOrEqualTo(SkillMaxTokens, $"SKILL.md: {bytes.Length} bytes");
+				EstimateTokens(length).ShouldBeLessThanOrEqualTo(SkillMaxTokens, $"SKILL.md: {length} bytes");
 				lines.Length.ShouldBeLessThanOrEqualTo(SkillMaxLines, "SKILL.md lines");
 			}
 		}
@@ -59,7 +59,7 @@ namespace Tests.LinqToDB.CLI
 
 			foreach (var file in GetReferences())
 			{
-				var length = new FileInfo(file).Length;
+				var length = GetLength(file);
 				var tokens = EstimateTokens(length);
 
 				if (tokens > ReferenceMaxTokens)
@@ -72,7 +72,7 @@ namespace Tests.LinqToDB.CLI
 		[Test]
 		public void WholeSkillFitsTheBudget()
 		{
-			var length = Directory.GetFiles(GetSkillDirectory(), "*", SearchOption.AllDirectories).Sum(static f => new FileInfo(f).Length);
+			var length = Directory.GetFiles(GetSkillDirectory(), "*", SearchOption.AllDirectories).Sum(GetLength);
 
 			EstimateTokens(length).ShouldBeLessThanOrEqualTo(TotalMaxTokens, $"whole skill: {length} bytes");
 		}
@@ -173,6 +173,12 @@ namespace Tests.LinqToDB.CLI
 		private static int EstimateTokens(long bytes)
 		{
 			return (int)Math.Ceiling(bytes / BytesPerToken);
+		}
+
+		/// <summary>UTF-8 length of the file with CRLF counted as LF.</summary>
+		private static long GetLength(string file)
+		{
+			return Encoding.UTF8.GetByteCount(File.ReadAllText(file).Replace("\r\n", "\n", StringComparison.Ordinal));
 		}
 
 		private static List<string> GetReferences()

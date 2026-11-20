@@ -26,14 +26,18 @@ var orders = db.GetTable<Order>()
 | PostgreSQL | `PostgreSQL` | `AsPostgreSQL()` | query only: `ForUpdateHint()`, `ForUpdateSkipLockedHint()`, `ForShareHint()`, `SubQueryTableHint(...)` |
 | ClickHouse | `ClickHouse` | `AsClickHouse()` | table `FinalHint()`; query `SettingsHint("...")`; join `JoinAnyHint()`, `JoinGlobalHint()` |
 | SQLite | `SQLite` | `AsSQLite()` | table `IndexedByHint("IX")`, `NotIndexedHint()` |
-| SQL CE | `SqlCe` | `AsSqlCe()` | table `WithNoLock()`, `WithRowLock()`, `WithIndex("IX")` |
+| SQL CE | `SqlCe` | `AsSqlCe()` | table only: `WithNoLock()`, `WithRowLock()`, `WithIndex("IX")` |
 | Access | `Access` | `AsAccess()` | query `WithOwnerAccessOption()` |
-| YDB | `Ydb` | `AsYdb()` | query `DistinctHint(...)`, `UniqueHint(...)` |
+| YDB | `Ydb` | `AsYdb()` | query `DistinctHint(...)`, `UniqueHint(...)` (also on a plain query, without the marker) |
 
 Names follow the SQL keyword, but the shape differs by provider: SQL Server and SQL CE table hints are
-`With<Hint>()` and query hints `Option<Hint>()`; Oracle, MySQL, PostgreSQL and ClickHouse use `<Hint>Hint()`.
-The list above shows examples, not the full set. Do not build a name by concatenation and assume it
-exists: confirm it in `linq2db.xml` or by compiling.
+`With<Hint>()`, SQL Server query hints `Option<Hint>()`; Oracle, MySQL, PostgreSQL and ClickHouse use the
+keyword in PascalCase plus `Hint` (`USE_NL` is `UseNLHint()`, `INDEX_FFS` is `IndexFFSHint()`, but MySQL
+`NO_ICP` is `NoIcpHint()`), so a derived name can be wrong.
+
+The list above shows examples, not the full set. The typed helpers and the `AsXxx()` markers have no XML
+documentation, so `linq2db.xml` does not list them: a search finds nothing even for `WithNoLock`. Confirm
+a name by compiling it.
 
 Other providers (DB2, Firebird, Informix, SAP HANA, Sybase ASE, DuckDB) have no typed table or query
 hint helpers; do not expect text hints in their SQL either, and check the output.
@@ -64,9 +68,10 @@ When no typed helper exists, the generic methods take provider-defined SQL text:
 Hint text is SQL, not a parameter: never build it from user input. Write the hint itself, not its
 wrapper: SQL Server puts table hints in `WITH (...)` and query hints in `OPTION (...)` for you.
 
-The analyzer L2DB2001 reports a text hint that has a typed equivalent (`TableHint("NOLOCK")` on SQL
-Server) and offers a code fix that rewrites it to the helper. On a generic table or query the fix offers
-one rewrite per provider.
+The analyzer L2DB2001 reports a text hint without arguments that has a typed equivalent
+(`TableHint("NOLOCK")` on SQL Server), names the helper, and offers a code fix that rewrites the call; on a
+generic table or query it offers one rewrite per provider. Its severity is Info: it shows in an IDE, not in
+`dotnet build` output, unless `.editorconfig` raises it (`dotnet_diagnostic.L2DB2001.severity = warning`).
 
 ## Scope
 

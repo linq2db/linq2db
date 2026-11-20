@@ -112,7 +112,7 @@ namespace LinqToDB.Analyzers
 			title:              Title,
 			messageFormat:      MessageFormat,
 			category:           "LinqToDB",
-			defaultSeverity:    DiagnosticSeverity.Warning,
+			defaultSeverity:    DiagnosticSeverity.Info,
 			isEnabledByDefault: true,
 			description:        Description,
 			helpLinkUri:        "https://github.com/linq2db/linq2db/wiki/L2DB2001");

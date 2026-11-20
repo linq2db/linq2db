@@ -40,7 +40,7 @@ namespace Tests.Analyzers
 
 		static DiagnosticResult Expected(string hint, string equivalents, int location = 0)
 		{
-			return new DiagnosticResult(StringHintAnalyzer.DiagnosticId, DiagnosticSeverity.Warning)
+			return new DiagnosticResult(StringHintAnalyzer.DiagnosticId, DiagnosticSeverity.Info)
 				.WithLocation(location)
 				.WithArguments(hint, equivalents);
 		}
@@ -303,7 +303,7 @@ namespace Tests.Analyzers
 
 			Assert.That(message, Does.StartWith("Hint '{0}' has a typed equivalent: {1}."));
 			Assert.That(message, Does.EndWith(StringHintAnalyzer.GuidePath));
-			Assert.That(descriptor.DefaultSeverity, Is.EqualTo(DiagnosticSeverity.Warning));
+			Assert.That(descriptor.DefaultSeverity, Is.EqualTo(DiagnosticSeverity.Info));
 		}
 	}
 }
