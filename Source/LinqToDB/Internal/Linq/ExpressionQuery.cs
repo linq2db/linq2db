@@ -130,16 +130,25 @@ namespace LinqToDB.Internal.Linq
 		}
 
 		// The IQueryable a compiled query returned keeps its query while the context configuration is the one it was built
-		// for, no argument selects it by value, and no query interceptor may rewrite its query filters differently: the
-		// configuration ID does not tell interceptor instances apart. Otherwise the compiled query resolves it again for the
-		// current context and arguments.
+		// for and no argument selects it by value. The configuration ID does not tell query interceptor instances apart, so
+		// with one, the query filters it rewrote are checked against the executing interceptor first. Otherwise the compiled
+		// query resolves it again for the current context and arguments.
 		Query<T> GetCompiledQuery(ICompiledQuerySource<T> source, Query<T> info, ref IQueryExpressions expression)
 		{
-			if (info.ConfigurationID == DataContext.ConfigurationID
-				&& !source.HasDependentArguments
-				&& (info.CompareInfo?.DynamicAccessors == null || DataContext is not IInterceptable<IQueryExpressionInterceptor> { Interceptor: not null }))
+			if (info.ConfigurationID == DataContext.ConfigurationID && !source.HasDependentArguments)
 			{
-				return info;
+				if (info.CompareInfo?.DynamicAccessors == null || DataContext is not IInterceptable<IQueryExpressionInterceptor> { Interceptor: not null })
+					return info;
+
+				var dynamicAccessorResults = new QueryCacheCompareInfo.DynamicAccessorResults();
+
+				if (info.Revalidate(DataContext, info.CompiledExpressions!.MainExpression, Parameters, ref dynamicAccessorResults, out var matched))
+				{
+					CompiledExpressions = matched;
+					expression          = matched;
+
+					return info;
+				}
 			}
 
 			info = source.GetInfo(DataContext, Parameters!, out var compiled);
