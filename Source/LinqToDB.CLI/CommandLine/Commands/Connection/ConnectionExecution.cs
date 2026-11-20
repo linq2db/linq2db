@@ -18,26 +18,34 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		/// resolved Windows user.
 		/// </summary>
 		/// <remarks>
-		/// External provider assemblies are loaded first, under the original process account. Resolving the provider can
-		/// open a connection to detect the server version. That is database work, so with impersonation it runs as the
-		/// impersonated identity.
+		/// <para>
+		/// The impersonated identity may not be able to read anything on this machine, so everything that is loaded
+		/// from disk is loaded first, under the original process account: external provider assemblies, whatever the
+		/// client loads to open a connection (a warm-up connection is opened and closed, its errors ignored), the
+		/// tool's assemblies and their references, and satellite resources (see <see cref="ImpersonationPreload"/>).
+		/// </para>
+		/// <para>
+		/// Resolving the provider can open a connection to detect the server version. That is database work, so with
+		/// impersonation it runs as the impersonated identity, after the preload.
+		/// </para>
 		/// </remarks>
 		public static async Task<ConnectionExecutionResult<ConnectionScope>> OpenAsync(ICliEnvironment environment, ConnectionSettings settings, CancellationToken cancellationToken)
 		{
-			cancellationToken.ThrowIfCancellationRequested();
-
 			if (!ExternalProviderLoader.LoadExternalProvider(settings.Provider, settings.ProviderLocation, out var error))
 				return new ConnectionExecutionResult<ConnectionScope>(StatusCodes.EXPECTED_ERROR, error, null);
 
 			if (!settings.Impersonate)
 				return CreateScope(settings, DataConnection.GetDataProvider(settings.Provider, settings.ConnectionString), null);
 
-			// Logging on only returns a token: nothing runs as the impersonated user before the session runs it.
+			// Logging on only returns a token: nothing runs as the impersonated user before the session runs it. Logging
+			// on first reports a failed logon (or an unsupported platform) without paying for the preload.
 			//
 			var session = environment.StartImpersonation(settings.User!, settings.Password!, settings.ImpersonateMode);
 
 			try
 			{
+				await ImpersonationPreload.RunAsync(settings, cancellationToken);
+
 				var dataProvider = await session.RunAsync(() => Task.FromResult(DataConnection.GetDataProvider(settings.Provider, settings.ConnectionString)));
 
 				var result = CreateScope(settings, dataProvider, session);
