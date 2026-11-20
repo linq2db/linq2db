@@ -29,7 +29,7 @@ skills/
       ...
 ```
 
-`references/hints.md` is named in the message of analyzer L2DB2001 (`StringHintAnalyzer.GuidePath`); keep that path.
+`references/hints.md` is named in the message of analyzer L2DB1005 (`StringHintAnalyzer.GuidePath`); keep that path.
 
 The skill folder is the lowercased package id (`linq2db`). NuGet recommends prefixing every skill folder with it
 (`skills/linq2db-<skill-name>/` for any further skill), since skills of all packages share one folder in a

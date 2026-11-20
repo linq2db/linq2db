@@ -36,6 +36,6 @@ When no typed helper exists: `TableHint("...")` / `With("...")` and `IndexHint("
 text is SQL: never build it from user input, and write the hint without its `WITH (...)` / `OPTION (...)`
 wrapper.
 
-Analyzer L2DB2001 reports a text hint without arguments that has a typed equivalent and offers a code fix.
+Analyzer L2DB1005 reports a text hint without arguments that has a typed equivalent and offers a code fix.
 Its severity is Info: it shows in an IDE, not in `dotnet build` output, unless `.editorconfig` sets
-`dotnet_diagnostic.L2DB2001.severity = warning`.
+`dotnet_diagnostic.L2DB1005.severity = warning`.

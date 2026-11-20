@@ -35,7 +35,7 @@ using Shouldly;
 namespace Tests.Analyzers
 {
 	/// <summary>
-	/// Checks L2DB2001's typed-hint lookup against the real linq2db assembly rather than against snippets: every hint
+	/// Checks L2DB1005's typed-hint lookup against the real linq2db assembly rather than against snippets: every hint
 	/// constant must be found by the naming convention (so a template change breaks this test instead of silently
 	/// narrowing the rule), and every string-to-typed mapping the rule reports must produce the same SQL.
 	/// </summary>

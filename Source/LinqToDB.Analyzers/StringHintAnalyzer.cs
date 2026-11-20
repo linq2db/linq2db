@@ -40,7 +40,7 @@ namespace LinqToDB.Analyzers
 	public sealed class StringHintAnalyzer : DiagnosticAnalyzer
 	{
 		/// <summary>Diagnostic id for the string hint with a typed equivalent rule.</summary>
-		public const string DiagnosticId = "L2DB2001";
+		public const string DiagnosticId = "L2DB1005";
 
 		/// <summary>Relative path of the hints guide inside the linq2db package, cited by the message.</summary>
 		public const string GuidePath = "skills/linq2db/references/hints.md";
@@ -128,7 +128,7 @@ namespace LinqToDB.Analyzers
 			defaultSeverity:    DiagnosticSeverity.Info,
 			isEnabledByDefault: true,
 			description:        Description,
-			helpLinkUri:        "https://github.com/linq2db/linq2db/wiki/L2DB2001");
+			helpLinkUri:        "https://github.com/linq2db/linq2db/wiki/L2DB1005");
 #pragma warning restore RS1032
 
 		/// <inheritdoc/>

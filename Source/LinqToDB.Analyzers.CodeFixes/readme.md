@@ -28,7 +28,7 @@ than the runtime it runs against degrades to silence rather than to a broken fix
 | [L2DB1002](https://github.com/linq2db/linq2db/wiki/L2DB1002) | Info | An `==` / `!=` against a `[Duration]` column compares a duration the declared unit cannot represent, so the comparison is degenerate — it can never match, or always does. Reported only; no code fix. |
 | [L2DB1003](https://github.com/linq2db/linq2db/wiki/L2DB1003) | Info | A throw-only stub that nothing declares server-side-only. A code fix adds the marker. |
 | [L2DB1004](https://github.com/linq2db/linq2db/wiki/L2DB1004) | Info | A server-side-only stub throwing something other than `ServerSideOnlyException`. A code fix replaces it. |
-| [L2DB2001](https://github.com/linq2db/linq2db/wiki/L2DB2001) | Info | A hint passed as text (`TableHint("NOLOCK")`, `With`, `TablesInScopeHint`, `QueryHint`) has a typed provider helper that emits the same SQL (`AsSqlServer().WithNoLock()`). A code fix rewrites the call; on a generic receiver it offers one rewrite per provider, each restricting the hint to that provider. |
+| [L2DB1005](https://github.com/linq2db/linq2db/wiki/L2DB1005) | Info | A hint passed as text (`TableHint("NOLOCK")`, `With`, `TablesInScopeHint`, `QueryHint`) has a typed provider helper that emits the same SQL (`AsSqlServer().WithNoLock()`). A code fix rewrites the call; on a generic receiver it offers one rewrite per provider, each restricting the hint to that provider. |
 
 ### L2DB1001 — migrate `Sql.Ext` window functions to `Sql.Window`
 
@@ -109,17 +109,17 @@ On a member carrying several configuration-scoped `Sql.*` attributes, the code f
 on one of them, which is enough to satisfy the rule — but the runtime resolves the attribute per
 configuration, so add it to the rest by hand if the member should be server-side-only on every provider.
 
-### L2DB2001 — a string hint that has a typed equivalent
+### L2DB1005 — a string hint that has a typed equivalent
 
 ```csharp
-// L2DB2001: Hint 'NOLOCK' has a typed equivalent: AsSqlServer().WithNoLock() for SQL Server,
+// L2DB1005: Hint 'NOLOCK' has a typed equivalent: AsSqlServer().WithNoLock() for SQL Server,
 //           AsSqlCe().WithNoLock() for SQL Server CE.
 var q1 = db.Person.TableHint("NOLOCK");
 
 // code fix (SQL Server)
 var q1 = db.Person.AsSqlServer().WithNoLock();
 
-// L2DB2001: Hint 'RECOMPILE' has a typed equivalent: OptionRecompile().
+// L2DB1005: Hint 'RECOMPILE' has a typed equivalent: OptionRecompile().
 var q2 = db.Person.Where(p => p.Id > 0).AsSqlServer().QueryHint("RECOMPILE");
 
 // code fix

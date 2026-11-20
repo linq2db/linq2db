@@ -281,7 +281,7 @@ namespace Tests.Analyzers
 		{
 			await Verify.VerifyAsync(
 				Source("""t.TableHint("NOLOCK");"""),
-				"root = true\n\n[*]\ndotnet_diagnostic.L2DB2001.severity = none\n");
+				"root = true\n\n[*]\ndotnet_diagnostic.L2DB1005.severity = none\n");
 		}
 
 		[Test]
@@ -289,9 +289,9 @@ namespace Tests.Analyzers
 		{
 			await Verify.VerifyAsync(Source(
 				"""
-				#pragma warning disable L2DB2001
+				#pragma warning disable L2DB1005
 				t.TableHint("NOLOCK");
-				#pragma warning restore L2DB2001
+				#pragma warning restore L2DB1005
 				"""));
 		}
 

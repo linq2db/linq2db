@@ -5,4 +5,4 @@
 
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
-L2DB2001 | LinqToDB | Info | StringHintAnalyzer, [documentation](https://github.com/linq2db/linq2db/wiki/L2DB2001)
+L2DB1005 | LinqToDB | Info | StringHintAnalyzer, [documentation](https://github.com/linq2db/linq2db/wiki/L2DB1005)

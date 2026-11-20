@@ -19,7 +19,7 @@ using Microsoft.CodeAnalysis.Operations;
 namespace LinqToDB.Analyzers.CodeFixes
 {
 	/// <summary>
-	/// Code fix for <see cref="StringHintAnalyzer"/> (<c>L2DB2001</c>): replaces a string hint call with the typed
+	/// Code fix for <see cref="StringHintAnalyzer"/> (<c>L2DB1005</c>): replaces a string hint call with the typed
 	/// helper the diagnostic names, inserting the provider's <c>As*()</c> call where the receiver is not already of
 	/// the provider's type, and importing the provider namespace.
 	/// </summary>
