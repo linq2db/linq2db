@@ -43,7 +43,7 @@ namespace LinqToDB.Analyzers
 		public const string DiagnosticId = "L2DB2001";
 
 		/// <summary>Relative path of the hints guide inside the linq2db package, cited by the message.</summary>
-		public const string GuidePath = "skills/linq2db/docs/hints.md";
+		public const string GuidePath = "skills/linq2db/references/hints.md";
 
 		/// <summary><see cref="Diagnostic.Properties"/> key: number of typed rewrites offered.</summary>
 		public const string FixCountKey = "FixCount";

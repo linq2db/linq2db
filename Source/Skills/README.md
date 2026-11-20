@@ -9,11 +9,15 @@ These files are package content, not maintainer documentation and not library so
 
 ## Layout
 
+The layout follows the [Agent Skills specification](https://agentskills.io/specification) and the package layout
+that NuGet's `dotnet-package-skills` tool reads: one folder per skill under `skills/` in the package, each with a
+`SKILL.md`.
+
 | Path | Role |
 | --- | --- |
 | `README.md` | This file (maintainers only; not packed). |
 | `linq2db/SKILL.md` | Skill entry point: what linq2db is, its architecture, the traps that most often produce wrong code, a pointer to recent changes, and the table of references. |
-| `linq2db/docs/<area>.md` | Optional references, one area each, opened only when a task needs them. One level: no subfolders. |
+| `linq2db/references/<area>.md` | Optional references, one area each, opened only when a task needs them. One level: no subfolders. |
 
 `Source/LinqToDB/LinqToDB.csproj` packs `linq2db/**/*.md` into the package as:
 
@@ -21,39 +25,26 @@ These files are package content, not maintainer documentation and not library so
 skills/
   linq2db/
     SKILL.md
-    docs/
+    references/
       ...
 ```
 
-`docs/hints.md` is named in the message of analyzer L2DB2001 (`StringHintAnalyzer.GuidePath`); keep that path.
+`references/hints.md` is named in the message of analyzer L2DB2001 (`StringHintAnalyzer.GuidePath`); keep that path.
 
-Only the `linq2db` package carries skills. Provider metapackages and integration packages do not: they depend on
-`linq2db`, and a second copy under the same skill name would collide.
+The skill folder is named after the package id (`linq2db`), as NuGet recommends: skills of all packages share one
+folder in a repository. Only the `linq2db` package carries the skill. Provider and integration packages do not:
+they depend on `linq2db`, and the same skill name from two packages is a collision for `dotnet-package-skills`.
+
+Frontmatter: `name` (equals the folder name), `description` and `license`, all from the specification. There is no
+version field: the specification has none at the top level, the package version is already part of the path the skill
+is read from, and `dotnet-package-skills` records the version of every skill it copies.
 
 The skill is used from one of two places:
 
 - the restored package, `<global-packages>/linq2db/<version>/skills/linq2db/`;
-- a copy in the consuming repository, `.agents/skills/linq2db/` or `.claude/skills/linq2db/`
-  (made by `dotnet linq2db skill install` or by hand; the command comes with the `linq2db.cli` tool, installed or run
-  without installing as `dnx linq2db.cli skill install`, or by Microsoft's beta `dotnet-package-skills` tool, see below).
-
-Two installers can fill a repository, and a destination (`.agents/skills`, `.claude/skills`) should have one of them:
-
-- `dotnet linq2db skill install` writes `linq2db` into both destinations and records its files in
-  `.linq2db-skill.json` inside the skill folder. It reads, and never writes, the
-  `.dotnet-package-skills.json` of a destination: a folder listed there is left unchanged (even with `--force`), and
-  `--check` fails when the recorded linq2db version differs from the project's. When it owns a folder in a destination
-  that has such a file, it prints how to hand the folder over (`dotnet linq2db skill uninstall`, then `dotnet-package-skills install`).
-- `dotnet linq2db skill uninstall` removes what the first installer wrote, in both destinations: only folders with a
-  `.linq2db-skill.json`, and inside them only files that still match the record; edited or added files are kept
-  (non-zero exit; `--force` also removes edited recorded files, never files it did not install). Folders owned by
-  `dotnet-package-skills`, folders without the marker, and everything in a destination whose
-  `.dotnet-package-skills.json` cannot be read are left alone.
-- `dotnet-package-skills install` (beta) copies the skills of the direct `PackageReference` packages into one
-  destination per run (`.agents/skills`; run again with `-d .claude/skills`), records them in
-  `.dotnet-package-skills.json`, and skips a non-empty folder it did not install. Because it reads direct references
-  only, a project that gets `linq2db` transitively (provider or integration packages) uses
-  `dotnet-package-skills install -p linq2db@<version>`.
+- a copy in the consuming repository, made by `dotnet-package-skills install` (`.agents/skills/linq2db/` by default,
+  `--destination .claude/skills` for Claude Code). The tool reads the project's direct package references; when
+  `linq2db` comes through another package, `dotnet-package-skills install --package linq2db@<version>`.
 
 ## Rules for skill content
 
@@ -68,7 +59,7 @@ Two installers can fill a repository, and a destination (`.agents/skills`, `.cla
   the frame of `SKILL.md` (what linq2db is and its architecture), which stays.
   Outside the frame, add a line for an error that agents make without it (an API they do not know, a
   habit from another ORM that is wrong here, a semantic they get wrong), and drop lines that no longer
-  prevent one. APIs that postdate model training data go to `docs/recent-changes.md`.
+  prevent one. APIs that postdate model training data go to `references/recent-changes.md`.
 - State rules plainly. Do not mark files as required or tell the reader to read everything first:
   agents then load every reference for every task.
 - Verify every API name, signature and version against the code before writing it.
@@ -87,15 +78,15 @@ else goes to one reference file per area:
 
 | Area | File |
 | --- | --- |
-| Mapping: attributes, fluent mapping, `MappingSchema`, DDL-sensitive columns | `docs/mapping.md` |
-| Queries: joins, grouping, CTEs, window functions, translatable methods, null semantics | `docs/queries.md` |
-| Writes: insert, update, delete, `Merge`, `Upsert`, `BulkCopy`, optimistic concurrency | `docs/writes.md` |
-| Eager loading: associations, `LoadWith`, strategies | `docs/eager-loading.md` |
-| Configuration and lifetime: `DataOptions`, contexts, transactions, temp tables, interceptors | `docs/configuration.md` |
-| Providers: setup, driver packages, capabilities | `docs/providers.md` |
-| Raw SQL and extensions: `FromSql`, `[Sql.Expression]`, `[ExpressionMethod]`, member translators | `docs/sql-extensions.md` |
-| Hints | `docs/hints.md` (exists) |
-| APIs that postdate model training data | `docs/recent-changes.md` (exists) |
+| Mapping: attributes, fluent mapping, `MappingSchema`, DDL-sensitive columns | `references/mapping.md` |
+| Queries: joins, grouping, CTEs, window functions, translatable methods, null semantics | `references/queries.md` |
+| Writes: insert, update, delete, `Merge`, `Upsert`, `BulkCopy`, optimistic concurrency | `references/writes.md` |
+| Eager loading: associations, `LoadWith`, strategies | `references/eager-loading.md` |
+| Configuration and lifetime: `DataOptions`, contexts, transactions, temp tables, interceptors | `references/configuration.md` |
+| Providers: setup, driver packages, capabilities | `references/providers.md` |
+| Raw SQL and extensions: `FromSql`, `[Sql.Expression]`, `[ExpressionMethod]`, member translators | `references/sql-extensions.md` |
+| Hints | `references/hints.md` (exists) |
+| APIs that postdate model training data | `references/recent-changes.md` (exists) |
 
 A file exists only when it has content. A finding (from blind checks of agents with and without the skill,
 or from a review) goes into the file of its area; the first finding for an area creates the file and adds
@@ -112,7 +103,7 @@ endings / 3.5, rounded up; an estimate, not the count of a particular tokenizer)
 | --- | --- |
 | `description` | 500 characters |
 | `SKILL.md` | 2,000 tokens and 500 lines |
-| each file in `docs/` | 1,500 tokens |
+| each file in `references/` | 1,500 tokens |
 | the whole skill | 6,000 tokens |
 
 The budgets leave room to grow: `SKILL.md` is about 1,100 tokens, so the frame plus a few more traps and
@@ -122,7 +113,6 @@ about five more area files next to the current 2,300 tokens.
 A budget is raised in the PR that needs it, with the reason (for example, a measured agent error that the
 extra text prevents).
 
-`Tests/LinqToDB.CLI/SkillBudgetTests.cs` checks the budgets, the frontmatter, the single level of `docs/`,
-that `SKILL.md` links every reference, and the absence of a BOM. `Tests/LinqToDB.CLI/SkillInstallCommandTests.cs`
-checks, on the files `dotnet linq2db skill install` writes, the frontmatter, that every relative link
-inside the skill resolves, and the copy-safe paths.
+`Tests/Tests.Analyzers/SkillContentTests.cs` checks the budgets, the frontmatter, the single level of `references/`,
+that `SKILL.md` links every reference, that relative links resolve inside the skill, the absence of a BOM, and that
+only the `linq2db` package packs `skills/`.

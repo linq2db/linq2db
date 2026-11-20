@@ -2,18 +2,10 @@
 
 <!--
 Note for AI coding agents: this package contains an Agent Skill for linq2db that matches this package
-version: skills/linq2db/SKILL.md, with references in skills/linq2db/docs/. After restore it is in the
-NuGet global packages folder, next to this README: <global-packages>/linq2db/<version>/skills/linq2db/
-(default ~/.nuget/packages on Linux and macOS, %UserProfile%\.nuget\packages on Windows;
-`dotnet nuget locals global-packages --list` prints the folder). A user who wants an agent to load it
-as a skill can copy the skills/linq2db folder into the project's .agents/skills/ (or .claude/skills/,
-.github/skills/), or let the linq2db.cli tool do it: `dnx linq2db.cli skill install` (.NET 10 SDK, nothing
-to install), or `dotnet tool install -g linq2db.cli` followed by `dotnet linq2db skill install`. The command
-is not available just by referencing this package; it needs linq2db.cli. Microsoft's beta dotnet-package-skills
-tool can install the skill too: it reads direct PackageReference items only, so when linq2db arrives
-transitively (a provider or integration package) run `dotnet-package-skills install -p linq2db@<version>`;
-it writes one destination per run, so run it again with `-d .claude/skills` for Claude Code. Use one
-installer per destination.
+version: skills/linq2db/SKILL.md, with references in skills/linq2db/references/. After restore it is in the
+NuGet global packages folder, next to this file: <global-packages>/linq2db/<version>/skills/linq2db/
+(`dotnet nuget locals global-packages --list` prints the folder). See "Agent Skill" below for how a user
+copies it into a repository.
 -->
 
 [![License](https://img.shields.io/github/license/linq2db/linq2db)](MIT-LICENSE.txt)
@@ -44,6 +36,7 @@ installer per destination.
   - [Merge](#merge)
   - [Window (Analytic) Functions](#window-analytic-functions)
 - [Analyzers](#analyzers)
+- [Agent Skill](#agent-skill)
 - [MiniProfiler](#miniprofiler)
 - [More](#more)
 
@@ -758,6 +751,21 @@ Turn all of them off for a project:
 ```
 
 To run the rules against an older linq2db — sizing and applying a migration before upgrading — reference `linq2db.Analyzers` directly; it carries no `linq2db` dependency, so it composes with any version. See its [readme](https://www.nuget.org/packages/linq2db.Analyzers).
+
+## Agent Skill
+
+The package carries an [Agent Skill](https://agentskills.io/) for coding agents (Claude Code, Codex, GitHub Copilot,
+Cursor and others): `skills/linq2db/`, written for this package version. After restore it is in the NuGet
+global-packages folder, `<global-packages>/linq2db/<version>/skills/linq2db/`. Agents read skills from the
+repository, so copy it there with NuGet's `dotnet-package-skills` tool:
+
+```sh
+dotnet tool install --global dotnet-package-skills --prerelease
+dotnet-package-skills install                                  # skills of the direct package references
+dotnet-package-skills install --package linq2db@<version>      # when linq2db comes through another package
+```
+
+It writes `.agents/skills/linq2db/`; add `--destination .claude/skills` for Claude Code.
 
 ## MiniProfiler
 

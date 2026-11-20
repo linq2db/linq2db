@@ -1,5 +1,6 @@
 ---
 name: linq2db
+license: MIT
 description: Guidance for LINQ to DB (linq2db), the .NET LINQ-to-SQL library, matching the package version it ships in. Use when writing, reviewing or debugging C# code that uses linq2db or the LinqToDB namespaces (DataConnection, DataContext, DataOptions, mapping, ITable<T> queries, inserts, updates, hints), or when moving code from Entity Framework to linq2db.
 ---
 
@@ -46,14 +47,14 @@ description: Guidance for LINQ to DB (linq2db), the .NET LINQ-to-SQL library, ma
 
 APIs added in 6.4 and later postdate most model training data: window functions, eager-loading strategies,
 keyed query filters, `Upsert`, `NULLS FIRST/LAST`, durations, combined commands. See
-[docs/recent-changes.md](docs/recent-changes.md).
+[references/recent-changes.md](references/recent-changes.md).
 
 ## References
 
 | Area | File |
 |---|---|
-| Hints (typed provider helpers, text hints) | [docs/hints.md](docs/hints.md) |
-| APIs added in 6.4 and later | [docs/recent-changes.md](docs/recent-changes.md) |
+| Hints (typed provider helpers, text hints) | [references/hints.md](references/hints.md) |
+| APIs added in 6.4 and later | [references/recent-changes.md](references/recent-changes.md) |
 
 Other areas have no reference file yet; use `linq2db.xml`.
 

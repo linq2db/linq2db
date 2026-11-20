@@ -42,30 +42,6 @@ namespace Tests.LinqToDB.CLI
 			}
 		}
 
-		[Test]
-		public async Task SkillRejectsOptionsWithoutInstall()
-		{
-			var result = await RunCli("skill", "--check");
-
-			using (Assert.EnterMultipleScope())
-			{
-				result.ExitCode.ShouldBe(-1);
-				result.Error.   ShouldContain("supported only with 'install'");
-			}
-		}
-
-		[Test]
-		public async Task SkillInstallRejectsExtraArguments()
-		{
-			var result = await RunCli("skill", "install", "query");
-
-			using (Assert.EnterMultipleScope())
-			{
-				result.ExitCode.ShouldBe(-1);
-				result.Error.   ShouldContain("doesn't accept arguments");
-			}
-		}
-
 		private static async Task<CliResult> RunCli(params string[] arguments)
 		{
 			var environment = new TestCliEnvironment();

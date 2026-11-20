@@ -712,6 +712,8 @@ Use `dotnet linq2db help` for general help and `dotnet linq2db help <command>` f
 
 Use `dotnet linq2db skill` to print this agent-oriented Markdown document to stdout.
 
+The command has no options and doesn't accept arguments.
+
 Use this command when an agent needs current instructions for using linq2db CLI from the installed tool instead of relying on repository files or external documentation.
 
 To add the current tool-provided skill to this solution, run one of the following commands from the repository root.
@@ -727,28 +729,5 @@ cmd.exe:
 ```cmd
 mkdir ".\.agents\skills\linq2db-cli" 2>nul & dotnet linq2db skill > ".\.agents\skills\linq2db-cli\SKILL.md"
 ```
-
-Use `dotnet linq2db skill install [--project <project file or directory>] [--root <directory>] [--check] [--force]` to add the `linq2db` agent skill (guidance for writing code with the linq2db library) to a repository (it needs the `linq2db.cli` tool, which referencing the `linq2db` package does not provide; without installing the tool, run it as `dnx linq2db.cli skill install [options]` with the .NET 10 SDK). It writes a real copy into both `.agents/skills/linq2db/` (Codex, GitHub Copilot, Cursor, Gemini, Junie and others) and `.claude/skills/linq2db/` (Claude Code). The skill is taken from the linq2db NuGet package version the project references (the project must be restored; the package's assets file is located through MSBuild), so the guidance matches the API in use. When the package carries no skill, or no restored project references linq2db, the copy embedded in the tool is used and a warning says so when its version differs.
-
-The `linq2db` package also carries the skill (`skills/linq2db/`), so Microsoft's beta `dotnet-package-skills` tool can install it as well. It reads direct `PackageReference` items only, so a project that gets `linq2db` transitively (through a provider package or an EF Core or ASP.NET integration package) uses `dotnet-package-skills install -p linq2db@<version>` or this command. It writes one destination per run (`.agents/skills` by default; run it again with `-d .claude/skills` for Claude Code) and records what it installed in `.dotnet-package-skills.json` there. Use one installer per destination:
-
-- This command only reads `.dotnet-package-skills.json`. A skill folder listed there is left unchanged, even with `--force`; `--check` accepts it when the recorded linq2db version equals the version the project uses and fails when it differs. When that file cannot be read (invalid, or a newer format version), ownership is unknown and every folder this command did not install is left unchanged.
-- `dotnet-package-skills` skips a folder it did not install. After this command installs a skill into a destination that has a `.dotnet-package-skills.json`, it prints how to hand the folder over: run `dotnet linq2db skill uninstall`, then `dotnet-package-skills install`.
-
-Options:
-
-- `--project` is a project file or a directory to search for projects (default: current directory). Multi-targeted projects are supported. The project is evaluated with `dotnet msbuild`, which is stopped after 120 seconds (override with the `LINQ2DB_CLI_MSBUILD_TIMEOUT_SECONDS` environment variable). Projects that reference different linq2db versions are an error; name the one to use.
-- `--root` is the repository root that receives `.agents/` and `.claude/` (default: the git work tree root above the project, else the project directory).
-- `--check` writes nothing and exits with a non-zero code when an installed skill is missing, stale or edited. Use it in CI.
-- `--force` overwrites files that were edited locally or that the tool did not install.
-
-Each installed skill directory gets a `.linq2db-skill.json` manifest with a hash per file; hashes ignore CRLF versus LF, so a checkout that normalises line endings does not count as an edit. A later install replaces only files listed in the manifest that are unchanged, and refuses to continue (writing nothing) when a skill directory has no manifest or one of its files was edited, unless `--force` is passed. Files the tool did not install are never touched, and the manifest lists only files the tool wrote. The command refuses to write or delete through symbolic links or junctions, and rejects package or manifest paths that would leave the skill directory. The command never edits `AGENTS.md` or `CLAUDE.md`; when neither mentions the skill it prints a short block that can be pasted into `AGENTS.md`.
-
-Use `dotnet linq2db skill uninstall [--project <project file or directory>] [--root <directory>] [--force]` to remove what `skill install` wrote, from both `.agents/skills/` and `.claude/skills/`:
-
-- Only `linq2db` folders that carry a `.linq2db-skill.json` marker are touched, and inside them only files that still match the recorded hash. The marker is removed last, then the folder when it is empty.
-- Edited recorded files and files that were added to the folder are kept: the command prints `kept <folder>: <n> file(s) changed or added; remove by hand` and exits with a non-zero code. `--force` also removes recorded files that were edited; it never removes a file this tool did not install.
-- Folders managed by `dotnet-package-skills` (listed in its `.dotnet-package-skills.json`), folders without the marker, and every folder of a destination whose `.dotnet-package-skills.json` cannot be read are left unchanged and reported. A destination that is a link to the other one is handled once; other links are skipped and reported.
-- With nothing installed it prints `Nothing to uninstall.` and exits with 0. `AGENTS.md` and `CLAUDE.md` are never edited (`skill install` only prints a block to paste).
 
 Keep this document synchronized with command behavior. When a command option, configuration rule, execute policy, or agent workflow changes, update `SKILL.md` and the `skill` command tests in the same change.
