@@ -63,7 +63,10 @@ namespace LinqToDB.Analyzers
 		/// </summary>
 		public const string GenericOverloadKey = "GenericOverload";
 
-		/// <summary>Per-rewrite property key prefixes; the rewrite index is appended (<c>Fix0.Helper</c>, ...).</summary>
+		/// <summary>
+		/// Per-rewrite property key suffixes, appended to <c>Fix</c> plus the rewrite index (<c>Fix0.Helper</c>, ...).
+		/// This one: the display name of the provider the rewrite targets.
+		/// </summary>
 		public const string FixProviderKey    = ".Provider";
 		/// <summary>Namespace that declares the typed helper (and its <c>As*</c> method).</summary>
 		public const string FixNamespaceKey   = ".Namespace";
