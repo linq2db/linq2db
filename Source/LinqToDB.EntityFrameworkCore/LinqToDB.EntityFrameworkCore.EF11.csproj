@@ -8,8 +8,6 @@
 		<!--don't remove it! WPF doesn't work with non-4-component versions-->
 		<AssemblyVersion>$(EF11Version).0</AssemblyVersion>
 		<DefineConstants>EF11;EF10_OR_GREATER;$(DefineConstants)</DefineConstants>
-		<!--no shipped version to validate against yet; re-enable with $(EF11BaselineVersion) after the first release-->
-		<EnablePackageValidation>false</EnablePackageValidation>
 	</PropertyGroup>
 
 	<PropertyGroup Label="Nuget">
@@ -20,6 +18,7 @@
 
 		<PackageVersion>$(Version)</PackageVersion>
 		<PackageVersion Condition=" '$(ApplyVersionSuffix)' == 'true' ">$(PackageVersion)$(VersionSuffix)</PackageVersion>
+		<PackageValidationBaselineVersion>$(EF11BaselineVersion)</PackageValidationBaselineVersion>
 
 		<PackageTags>$(PackageTags);entity-framework-core;EntityFrameworkCore;EFCore</PackageTags>
 	</PropertyGroup>
