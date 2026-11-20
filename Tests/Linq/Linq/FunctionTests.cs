@@ -594,6 +594,33 @@ namespace Tests.Linq
 				});
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6325")]
+		public void CustomAggregateWithGroupFilter([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in Person
+				group p by p.FirstName into g
+				where Sql.NotBetween(g.Sum(i => i.ID), 2, 3)
+				select new
+				{
+					g.Key,
+					Sum       = g.Sum(i => i.ID),
+					Length    = (int?)g.Sum(i => i.LastName.Length),
+					KeyLength = (int?)g.Sum(i => i.ID + g.Key.Length),
+				},
+				from p in db.Person
+				group p by p.FirstName into g
+				where Sql.NotBetween(g.Sum(i => i.ID), 2, 3)
+				select new
+				{
+					g.Key,
+					Sum       = g.MySum(i => i.ID),
+					Length    = g.MySum(i => Sql.Length(i.LastName)),
+					KeyLength = g.MySum(i => i.ID + Sql.Length(g.Key)),
+				});
+		}
+
 		[Test]
 		public void GetValueOrDefault([DataSources] string context)
 		{
