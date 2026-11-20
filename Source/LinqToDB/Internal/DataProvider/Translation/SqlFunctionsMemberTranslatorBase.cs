@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq.Expressions;
 
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.SqlQuery;
@@ -40,14 +41,32 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			// A column the call's result is assigned to or compared with types that boolean result, not the operands.
 			using var disposable = translationContext.UsingColumnDescriptor(null);
 
-			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out var value)
-				|| !translationContext.TranslateToSqlExpression(methodCall.Arguments[1], out var low)
-				|| !translationContext.TranslateToSqlExpression(methodCall.Arguments[2], out var high))
-				return null;
+			ISqlExpression? value, low, high;
+
+			// The value is compared with each bound, so each pair is typed as the operands of that comparison, `>=` or `<=`, are.
+			using (UsingComparisonDescriptor(translationContext, methodCall.Arguments[0], methodCall.Arguments[1]))
+			{
+				if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out value)
+					|| !translationContext.TranslateToSqlExpression(methodCall.Arguments[1], out low))
+					return null;
+			}
+
+			using (UsingComparisonDescriptor(translationContext, methodCall.Arguments[0], methodCall.Arguments[2]))
+			{
+				if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[2], out high))
+					return null;
+			}
 
 			var searchCondition = translationContext.ExpressionFactory.SearchCondition().Add(new SqlPredicate.Between(value, isNot, low, high));
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, searchCondition, methodCall);
+		}
+
+		static IDisposable? UsingComparisonDescriptor(ITranslationContext translationContext, Expression left, Expression right)
+		{
+			return translationContext is IComparedValueTranslationContext comparedValueContext
+				? comparedValueContext.UsingComparisonDescriptor(left, right)
+				: null;
 		}
 
 		Expression? TranslateToNullableMethod(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)

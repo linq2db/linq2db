@@ -306,6 +306,25 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			return newElement;
 		}
 
+		/// <summary>
+		/// A BETWEEN over dates is written as its two comparisons, which <see cref="ConvertExprExprPredicate"/> brings to one
+		/// form: SQLite compares dates as text, so a BETWEEN would compare a date with a timestamp as written.
+		/// </summary>
+		protected internal override IQueryElement VisitBetweenPredicate(SqlPredicate.Between predicate)
+		{
+			var newElement = base.VisitBetweenPredicate(predicate);
+
+			if (newElement is SqlPredicate.Between between
+				&& (   IsDateTime(QueryHelper.GetDbDataType(between.Expr1, MappingSchema))
+					|| IsDateTime(QueryHelper.GetDbDataType(between.Expr2, MappingSchema))
+					|| IsDateTime(QueryHelper.GetDbDataType(between.Expr3, MappingSchema))))
+			{
+				return Visit(Optimize(NotifyReplaced(ConvertBetweenPredicate(between), between)));
+			}
+
+			return newElement;
+		}
+
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
 		{
 			var underlying = cast.SystemType.ToUnderlying();
