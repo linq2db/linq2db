@@ -44,7 +44,8 @@ namespace LinqToDB.Analyzers.CodeFixes
 		/// <inheritdoc/>
 		public override FixAllProvider GetFixAllProvider()
 		{
-			// Fix-All applies the action the user picked (one provider, via its equivalence key) to every occurrence.
+			// Fix-All applies the action the user picked (one provider, via its equivalence key) to every occurrence of the
+			// same kind: an exact rewrite never pulls in a restricting one, nor the other way round (GetEquivalenceKey).
 			return WellKnownFixAllProviders.BatchFixer;
 		}
 
@@ -73,9 +74,19 @@ namespace LinqToDB.Analyzers.CodeFixes
 					CodeAction.Create(
 						title,
 						ct => ApplyAsync(context.Document, diagnostic, captured, ct),
-						equivalenceKey: StringHintAnalyzer.DiagnosticId + "|" + fix.Provider),
+						equivalenceKey: GetEquivalenceKey(fix)),
 					diagnostic);
 			}
+		}
+
+		// An exact rewrite (a provider's own string overload) and a restricting one (a generic overload, whose rewrite stops
+		// the hint on every other provider) get different keys, so Fix-All started from an exact rewrite, whose title names
+		// no restriction, never restricts a generic call, and a restricting Fix-All stays among generic calls.
+		static string GetEquivalenceKey(Fix fix)
+		{
+			var key = StringHintAnalyzer.DiagnosticId + "|" + fix.Provider;
+
+			return fix.GenericOverload ? key + "|restricted" : key;
 		}
 
 		sealed class Fix
