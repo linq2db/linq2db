@@ -46,4 +46,4 @@ When performing a code review, **comment on formatting only when it is clearly p
 `Source/Skills/linq2db/` is an Agent Skill that ships in the `linq2db` package (`SKILL.md` plus references in `docs/`). When reviewing a pull request, flag as a comment, unless the PR already updates the skill:
 
 - a public API, option, default or behaviour that the skill names is renamed, removed or changed;
-- a new public API that replaces a common pattern (query, DML, mapping, configuration) has no line under "Recent changes" in `SKILL.md`.
+- a new public API that replaces a common pattern (query, DML, mapping, configuration) has no entry in `Source/Skills/linq2db/docs/recent-changes.md`.

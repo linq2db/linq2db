@@ -24,11 +24,11 @@ namespace Tests.LinqToDB.CLI
 		// tokenizer; CRLF is counted as LF so that a Windows checkout measures the same as a Linux one.
 		private const double BytesPerToken = 3.5;
 
-		private const int DescriptionMaxCharacters = 600;
-		private const int SkillMaxTokens           = 3_500;
+		private const int DescriptionMaxCharacters = 500;
+		private const int SkillMaxTokens           = 2_000;
 		private const int SkillMaxLines            = 500;
-		private const int ReferenceMaxTokens       = 2_500;
-		private const int TotalMaxTokens           = 18_000;
+		private const int ReferenceMaxTokens       = 1_500;
+		private const int TotalMaxTokens           = 6_000;
 
 		private const string SkillName       = "linq2db";
 		private const string ReferenceFolder = "docs";
