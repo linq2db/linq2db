@@ -98,6 +98,10 @@ namespace Tests.Linq
 			.GetMethods()
 			.Single(m => m.Name == nameof(Enumerable.Contains) && m.GetParameters().Length == 2)
 			.MakeGenericMethod(typeof(int));
+		static readonly MethodInfo DistinctMethod  = typeof(Sql)
+			.GetMethods()
+			.Single(m => m.Name == nameof(Sql.IsDistinctFrom) && m.GetParameters()[1].ParameterType == m.GetGenericArguments()[0])
+			.MakeGenericMethod(typeof(int?));
 		static readonly MethodInfo RunCellMethod   = typeof(OperatorPrecedenceTests).GetMethod(nameof(RunCell), BindingFlags.NonPublic | BindingFlags.Static)!;
 
 		static readonly (string Name, ExpressionType Type)[] IntOps =
@@ -306,6 +310,9 @@ namespace Tests.Linq
 						yield return new Cell($"IsNull({q}(a,n))",        Flag(Expression.Equal(Expression.MakeBinary(qt, Expression.Convert(A, typeof(int?)), N), Expression.Constant(null, typeof(int?)))), null);
 						yield return new Cell($"Like(Concat(s,{q}(a,b)))", Flag(Expression.Call(Concat(S, Op(qt, A, B)), StartsWithMethod, Expression.Constant("x5"))), null);
 						yield return new Cell($"NotAnd({q}(a,b))",        Flag(Expression.AndAlso(Expression.Not(Expression.GreaterThan(Op(qt, A, B), C)), Expression.LessThan(B, A))), null);
+						// a nullable operand keeps IS DISTINCT FROM from simplifying to <> (DECODE on Oracle)
+						yield return new Cell($"Distinct({q}(a,b),n)",    Flag(Expression.Call(DistinctMethod, Expression.Convert(Op(qt, A, B), typeof(int?)), N)), null);
+						yield return new Cell($"Distinct(n,{q}(a,b))",    Flag(Expression.Call(DistinctMethod, N, Expression.Convert(Op(qt, A, B), typeof(int?)))), null);
 					}
 
 					foreach (var pre in Prefixes)

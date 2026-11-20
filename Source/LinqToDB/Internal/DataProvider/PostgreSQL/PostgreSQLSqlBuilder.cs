@@ -466,14 +466,19 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 		// https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-PRECEDENCE: :: > prefix + - > ^ > * / % > + - >
 		// any other operator (|| # & | and prefix ~, one level, left to right) > BETWEEN IN LIKE > comparisons > IS
-		static readonly SqlPrecedenceTable _precedenceTable = CreatePrecedenceTable();
+		static readonly SqlPrecedenceTable _precedenceTable = CreatePrecedenceTable(Precedence.Comparison + 5);
 
-		static SqlPrecedenceTable CreatePrecedenceTable()
+		// before 9.5, IS [NOT] NULL / IS DISTINCT FROM bind tighter than any other operator, so `a | b IS NULL` reads
+		// `a | (b IS NULL)`; any other operator is parenthesized under every predicate there
+		// https://www.postgresql.org/docs/9.4/sql-syntax-lexical.html#SQL-PRECEDENCE
+		internal static SqlPrecedenceTable PrecedenceTable94 { get; } = CreatePrecedenceTable(Precedence.Comparison - 1);
+
+		static SqlPrecedenceTable CreatePrecedenceTable(int otherLevel)
 		{
 			const int arithmetic = SqlPrecedenceTable.ArithmeticGroup | SqlPrecedenceTable.PrefixGroup;
 
 			var prefix = new SqlOperatorPrecedence(Precedence.Unary,          SqlAssociativity.Left, false, arithmetic);
-			var other  = new SqlOperatorPrecedence(Precedence.Comparison + 5, SqlAssociativity.Left, true,  arithmetic);
+			var other  = new SqlOperatorPrecedence(otherLevel,                SqlAssociativity.Left, true,  arithmetic);
 			var match  = new SqlOperatorPrecedence(Precedence.Comparison + 2, SqlAssociativity.None, false, SqlPrecedenceTable.AllGroups);
 
 			return SqlPrecedenceTable.Default.With(
