@@ -130,7 +130,10 @@ The generic text overloads on `LinqExtensions` emit their text on every provider
 helper is checked by the compiler and emits only on its own provider. The rule reports a constant hint text
 (case and surrounding blanks ignored) that a provider's typed helper emits as is, for `TableHint`, `With`,
 `TablesInScopeHint` and `QueryHint`. Hints that take a value, an index name or a table id, and text no typed
-helper produces, are not reported.
+helper produces, are not reported. Neither are join hints (`JoinHint("LOOP")`, which SQL Server's `JoinLoopHint()`
+and ClickHouse's join helpers would replace), sub-query hints (`SubQueryHint("FOR UPDATE")`, MySQL's
+`ForUpdateHint()`), and the PostgreSQL and YDB hints: the rule covers `TableHint`, `With`, `TablesInScopeHint` and
+`QueryHint` only.
 
 When the call binds a provider's own string overload (`AsSqlServer().TableHint("NOLOCK")`) the rewrite is exact.
 When it binds a generic overload — including `AsSqlServer().With("NOLOCK")`, since only the generic `With`

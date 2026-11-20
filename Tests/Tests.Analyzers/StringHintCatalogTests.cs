@@ -62,6 +62,15 @@ namespace Tests.Analyzers
 
 		static readonly string[] ConstantClasses = { "Table", "Query", "Hint" };
 
+		// Hint constants the rule deliberately leaves out. Join hints (SQL Server, ClickHouse) attach to the join's table
+		// or to the query by position, and MySQL's sub-query locks go through a builder of their own that comments some of
+		// them out on MariaDB, so each needs its own SQL-equivalence check before it can be offered. PostgreSQL and YDB
+		// declare their constants on the *Hints type itself, and their helpers take arguments. A new class of constants
+		// fails EveryHintConstantClassIsInOrOutOfScope until it is put in one list or the other.
+		static readonly string[] OutOfScopeConstantClasses = { "Join", "SubQuery" };
+
+		static readonly string[] ProvidersWithTopLevelConstants = { "PostgreSQL", "Ydb" };
+
 		[Table("Row")]
 		public sealed class Row
 		{
@@ -501,6 +510,50 @@ namespace Tests.Analyzers
 			var typedSql  = db.GetTable<Row>().AsQueryable().AsSqlServer().WithNoLockInScope().ToSqlQuery().Sql;
 
 			Assert.That(typedSql, Is.EqualTo(stringSql));
+		}
+
+		// The rule's scope is the constant classes above; the readme states the same boundary.
+		[Test]
+		public void EveryHintConstantClassIsInOrOutOfScope()
+		{
+			var unlisted      = new List<string>();
+			var topLevelOwner = new List<string>();
+
+			foreach (var type in typeof(Sql).Assembly.GetExportedTypes())
+			{
+				if (type.Namespace is null
+					|| !type.Namespace.StartsWith("LinqToDB.DataProvider.", StringComparison.Ordinal)
+					|| !type.IsAbstract || !type.IsSealed
+					|| !type.Name.EndsWith("Hints", StringComparison.Ordinal))
+					continue;
+
+				var provider = type.Namespace.Substring("LinqToDB.DataProvider.".Length);
+
+				if (HasStringConstants(type))
+					topLevelOwner.Add(provider);
+
+				foreach (var nested in type.GetNestedTypes(BindingFlags.Public))
+				{
+					if (HasStringConstants(nested)
+						&& !ConstantClasses.Contains(nested.Name, StringComparer.Ordinal)
+						&& !OutOfScopeConstantClasses.Contains(nested.Name, StringComparer.Ordinal))
+						unlisted.Add(provider + "." + nested.Name);
+				}
+			}
+
+			var owners = topLevelOwner
+				.Order(StringComparer.Ordinal)
+				.ToList();
+
+			Assert.That(unlisted, Is.Empty, "hint constant classes in neither ConstantClasses nor OutOfScopeConstantClasses");
+			Assert.That(owners, Is.EqualTo(ProvidersWithTopLevelConstants));
+		}
+
+		static bool HasStringConstants(Type type)
+		{
+			return type
+				.GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly)
+				.Any(static f => f.IsLiteral && f.FieldType == typeof(string));
 		}
 
 		// The message cites the hints guide by its path inside the package; the skill folder in the source tree is
