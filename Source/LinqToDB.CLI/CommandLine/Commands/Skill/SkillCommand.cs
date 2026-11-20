@@ -12,7 +12,7 @@ using LinqToDB.CommandLine.Options;
 namespace LinqToDB.CommandLine.Commands.Skill
 {
 	/// <summary>
-	/// Prints agent-oriented Markdown instructions for linq2db CLI usage, or installs the linq2db agent skills into a repository.
+	/// Prints agent-oriented Markdown instructions for linq2db CLI usage, or installs the linq2db agent skill into a repository.
 	/// </summary>
 	internal sealed class SkillCommand : CliCommand
 	{
@@ -68,10 +68,10 @@ namespace LinqToDB.CommandLine.Commands.Skill
 				true,
 				false,
 				"[install|uninstall] [options]",
-				"print agent instructions in Markdown format, or install or remove the linq2db agent skills of a repository",
+				"print agent instructions in Markdown format, or install or remove the linq2db agent skill of a repository",
 				[
 					new("dotnet linq2db skill",                                              "prints the linq2db CLI skill as Markdown"),
-					new("dotnet linq2db skill install",                                      "installs the linq2db and linq2db-cli skills into .agents/skills and .claude/skills of the current repository"),
+					new("dotnet linq2db skill install",                                      "installs the linq2db skill into .agents/skills and .claude/skills of the current repository"),
 					new("dotnet linq2db skill install --project src/App/App.csproj",        "takes the library skill from the linq2db version that project references"),
 					new("dotnet linq2db skill install --check",                              "exits with a non-zero code when installed skills are missing, stale or edited"),
 					new("dotnet linq2db skill uninstall",                                    "removes the files that 'skill install' wrote (edited and added files are kept); folders managed by dotnet-package-skills are never touched"),
@@ -112,7 +112,7 @@ namespace LinqToDB.CommandLine.Commands.Skill
 
 			if (unknownArgs.Count > 1 || (unknownArgs.Count == 1 && !isUninstall && !string.Equals(unknownArgs.Single(), InstallOperation, StringComparison.Ordinal)))
 			{
-				await environment.Error.WriteLineAsync($"Command '{Name}' doesn't accept arguments. Use '{Name} {InstallOperation}' to install the skills or '{Name} {UninstallOperation}' to remove them.");
+				await environment.Error.WriteLineAsync($"Command '{Name}' doesn't accept arguments. Use '{Name} {InstallOperation}' to install the skill or '{Name} {UninstallOperation}' to remove it.");
 				return StatusCodes.INVALID_ARGUMENTS;
 			}
 
@@ -218,10 +218,9 @@ namespace LinqToDB.CommandLine.Commands.Skill
 				return StatusCodes.EXPECTED_ERROR;
 			}
 
-			SkillBundle   library;
-			SkillBundle[] bundles;
-			var           plans   = new List<SkillInstallPlan>();
-			var           skipped = 0;
+			SkillBundle library;
+			var         plans   = new List<SkillInstallPlan>();
+			var         skipped = 0;
 
 			try
 			{
@@ -253,25 +252,17 @@ namespace LinqToDB.CommandLine.Commands.Skill
 						await environment.Error.WriteLineAsync($"Warning: the project uses linq2db {linq2db.Version}, but the installed skill describes linq2db {library.Version}.");
 				}
 
-				// the linq2db-cli skill always comes from the copy embedded in the tool, never from the package: it describes
-				// the options of the tool that is running, and it is the only copy that cannot be older than that tool
-				bundles = [library, SkillSource.GetCliSkill()];
-
 				var (destinations, linkSkipped) = await ResolveDestinations(environment, root);
 
 				skipped += linkSkipped;
 
 				foreach (var destination in destinations)
 				{
-					var relative         = Path.GetRelativePath(root, destination);
-					var destinationPlans = new List<SkillInstallPlan>();
+					var relative = Path.GetRelativePath(root, destination);
 
 					try
 					{
-						foreach (var bundle in bundles)
-							destinationPlans.Add(SkillInstaller.Analyze(bundle, root, Path.Combine(destination, bundle.Name)));
-
-						plans.AddRange(destinationPlans);
+						plans.Add(SkillInstaller.Analyze(library, root, Path.Combine(destination, library.Name)));
 					}
 					catch (InvalidOperationException ex)
 					{
@@ -287,7 +278,7 @@ namespace LinqToDB.CommandLine.Commands.Skill
 				return StatusCodes.EXPECTED_ERROR;
 			}
 
-			await environment.Out.WriteLineAsync($"linq2db skill: {library.Origin}; linq2db-cli skill: {bundles[1].Origin}.");
+			await environment.Out.WriteLineAsync($"linq2db skill: {library.Origin}.");
 
 			return check
 				? await Check(environment, root, plans, found.Count > 0 ? found[0].Version : null, skipped)
@@ -312,25 +303,22 @@ namespace LinqToDB.CommandLine.Commands.Skill
 
 			foreach (var destination in destinations)
 			{
-				foreach (var name in new[] { SkillSource.LibrarySkillName, SkillSource.CliSkillName })
-				{
-					var directory = Path.Combine(destination, name);
+				var directory = Path.Combine(destination, SkillSource.LibrarySkillName);
 
-					try
-					{
-						plans.Add(SkillUninstaller.Analyze(name, root, directory));
-					}
-					catch (InvalidOperationException ex)
-					{
-						// a link inside the folder: that folder is skipped, the others are still handled
-						await environment.Error.WriteLineAsync($"  skipped: {Path.GetRelativePath(root, directory)}: {ex.Message}");
-						skipped++;
-					}
-					catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-					{
-						await environment.Error.WriteLineAsync($"  skipped: cannot read {Path.GetRelativePath(root, directory)}: {ex.Message}");
-						skipped++;
-					}
+				try
+				{
+					plans.Add(SkillUninstaller.Analyze(SkillSource.LibrarySkillName, root, directory));
+				}
+				catch (InvalidOperationException ex)
+				{
+					// a link inside the folder: that folder is skipped, the others are still handled
+					await environment.Error.WriteLineAsync($"  skipped: {Path.GetRelativePath(root, directory)}: {ex.Message}");
+					skipped++;
+				}
+				catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+				{
+					await environment.Error.WriteLineAsync($"  skipped: cannot read {Path.GetRelativePath(root, directory)}: {ex.Message}");
+					skipped++;
 				}
 			}
 
@@ -644,7 +632,6 @@ namespace LinqToDB.CommandLine.Commands.Skill
 			await environment.Out.WriteLineAsync("## linq2db");
 			await environment.Out.WriteLineAsync();
 			await environment.Out.WriteLineAsync("Before writing or reviewing code that uses linq2db, read `.agents/skills/linq2db/SKILL.md`.");
-			await environment.Out.WriteLineAsync("To inspect a database with the `dotnet linq2db` tool, read `.agents/skills/linq2db-cli/SKILL.md`.");
 		}
 
 		private static string FindRepositoryRoot(string directory)

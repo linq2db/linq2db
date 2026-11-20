@@ -31,18 +31,6 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
-		public async Task SkillPrintsMarkdownWithoutFrontmatter()
-		{
-			var result = await RunCli("skill");
-
-			using (Assert.EnterMultipleScope())
-			{
-				result.Output.ShouldNotStartWith("---");
-				result.Output.ShouldNotContain("name: linq2db-cli");
-			}
-		}
-
-		[Test]
 		public async Task SkillRejectsArguments()
 		{
 			var result = await RunCli("skill", "query");
