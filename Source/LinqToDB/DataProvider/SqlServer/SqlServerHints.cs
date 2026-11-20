@@ -137,9 +137,6 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#region SqlServerSpecific Hints
 
-		/// <summary>
-		/// Adds a SQL Server index hint.
-		/// </summary>
 		[ExpressionMethod(nameof(WithIndexImpl))]
 		public static ISqlServerSpecificTable<TSource> WithIndex<TSource>(this ISqlServerSpecificTable<TSource> table, string indexName)
 			where TSource : notnull
@@ -153,9 +150,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			return (table, indexName) => table.TableHint(Table.Index, indexName);
 		}
 
-		/// <summary>
-		/// Adds a SQL Server index hint.
-		/// </summary>
 		[ExpressionMethod(nameof(WithIndex2Impl))]
 		public static ISqlServerSpecificTable<TSource> WithIndex<TSource>(this ISqlServerSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -196,10 +190,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		/// <summary>
-		/// Adds a SQL Server table hint.
-		/// For all tables already present in the current query scope, use <c>WithForceSeekInScope</c> on <c>ISqlServerSpecificQueryable&lt;TSource&gt;</c>.
-		/// </summary>
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TableHint, typeof(WithForceSeekExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
@@ -221,9 +211,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			return new SqlServerSpecificTable<TSource>(newTable);
 		}
 
-		/// <summary>
-		/// Adds a SQL Server table hint.
-		/// </summary>
 		[ExpressionMethod(nameof(WithSpatialWindowMaxCellsImpl))]
 		public static ISqlServerSpecificTable<TSource> WithSpatialWindowMaxCells<TSource>(this ISqlServerSpecificTable<TSource> table, int cells)
 			where TSource : notnull
@@ -259,9 +246,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		/// <summary>
-		/// Adds a SQL Server <c>OPTIMIZE FOR</c> query option.
-		/// </summary>
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.QueryHint, typeof(ParamsExtensionBuilder), "OPTIMIZE FOR")]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
@@ -280,17 +264,6 @@ namespace LinqToDB.DataProvider.SqlServer
 					Expression.NewArrayInit(typeof(string), values.Select(Expression.Constant)))));
 		}
 
-		/// <summary>
-		/// Adds a SQL Server <c>USE HINT</c> query option.
-		/// </summary>
-		/// <remarks>
-		/// SQL Server defines a large and version-dependent set of <c>USE HINT</c> names.
-		/// LinqToDB intentionally exposes <c>OptionUseHint</c> as the provider-specific
-		/// family API instead of providing typed helpers for every SQL Server <c>USE HINT</c>
-		/// value. Use typed SQL Server option helpers when they exist for a concrete SQL
-		/// feature; use this method for SQL Server <c>USE HINT</c> values that do not have
-		/// a dedicated typed helper.
-		/// </remarks>
 		[LinqTunnel, Pure, IsQueryable]
 //		[Sql.QueryExtension(ProviderName.SqlServer2016, Sql.QueryExtensionScope.QueryHint, typeof(ParamsExtensionBuilder), "USE HINT")]
 		[Sql.QueryExtension(ProviderName.SqlServer2017, Sql.QueryExtensionScope.QueryHint, typeof(ParamsExtensionBuilder), "USE HINT")]
@@ -338,15 +311,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		/// <summary>
-		/// Adds a SQL Server <c>TABLE HINT</c> query option for a table identified by <c>TableID</c>.
-		/// </summary>
-		/// <remarks>
-		/// Use <c>TableID</c> on the table source and pass the matching <c>Sql.SqlID</c> value
-		/// so LinqToDB can resolve the exact SQL table alias generated for the query. The
-		/// <c>values</c> argument contains SQL Server table hint names; choose those names
-		/// from SQL Server documentation or existing application requirements.
-		/// </remarks>
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer2008, Sql.QueryExtensionScope.QueryHint, typeof(TableParamsExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2012, Sql.QueryExtensionScope.QueryHint, typeof(TableParamsExtensionBuilder))]
@@ -459,9 +423,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			return new SqlServerSpecificTable<TSource>(newTable);
 		}
 
-		/// <summary>
-		/// Adds a SQL Server table hint.
-		/// </summary>
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer2012, Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2014, Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]

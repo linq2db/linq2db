@@ -23,9 +23,6 @@ using PN = LinqToDB.ProviderName;
 
 namespace LinqToDB
 {
-	/// <summary>
-	/// SQL helper methods and attributes used by LinqToDB query translation.
-	/// </summary>
 	[PublicAPI]
 	public static partial class Sql
 	{

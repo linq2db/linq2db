@@ -23,10 +23,6 @@ namespace LinqToDB
 	/// <summary>
 	/// Set of extensions for <see cref="DataOptions"/>.
 	/// </summary>
-	/// <remarks>
-	/// Extension methods in this type are composable configuration operations that return a new <see cref="DataOptions"/> instance.
-	/// They do not execute database commands.
-	/// </remarks>
 	[PublicAPI]
 	public static partial class DataOptionsExtensions
 	{
@@ -1155,12 +1151,11 @@ namespace LinqToDB
 		/// Adds <see cref="IInterceptor" /> instances to those registered on the context.
 		/// </para>
 		/// <para>
-		/// Interceptors can observe or modify supported LinqToDB operation stages.
-		/// Command execution interceptors can suppress provider execution when their contract returns an explicit result.
+		/// Interceptors can be used to view, change, or suppress operations taken by <c>linq2db</c>.
 		/// See the specific implementations of <see cref="IInterceptor" /> for details. For example, 'ICommandInterceptor'.
 		/// </para>
 		/// <para>
-		/// A single interceptor instance can implement multiple different interceptor interfaces. It will be registered as
+		/// A single interceptor instance can implement multiple different interceptor interfaces. I will be registered as
 		/// an interceptor for all interfaces that it implements.
 		/// </para>
 		/// <para>
@@ -1196,8 +1191,7 @@ namespace LinqToDB
 		/// Adds <see cref="IInterceptor" /> instances to those registered on the context.
 		/// </para>
 		/// <para>
-		/// Interceptors can observe or modify supported LinqToDB operation stages.
-		/// Command execution interceptors can suppress provider execution when their contract returns an explicit result.
+		/// Interceptors can be used to view, change, or suppress operations taken by <c>linq2db</c>.
 		/// See the specific implementations of <see cref="IInterceptor" /> for details. For example, 'ICommandInterceptor'.
 		/// </para>
 		/// <para>
@@ -1233,8 +1227,7 @@ namespace LinqToDB
 		/// Adds <see cref="IInterceptor" /> instance to those registered on the context.
 		/// </para>
 		/// <para>
-		/// Interceptors can observe or modify supported LinqToDB operation stages.
-		/// Command execution interceptors can suppress provider execution when their contract returns an explicit result.
+		/// Interceptors can be used to view, change, or suppress operations taken by <c>linq2db</c>.
 		/// See the specific implementations of <see cref="IInterceptor" /> for details. For example, 'ICommandInterceptor'.
 		/// </para>
 		/// <para>
@@ -1290,10 +1283,7 @@ namespace LinqToDB
 		/// Adds <see cref="IMemberTranslator" /> instance to those registered on the context.
 		/// </para>
 		/// <para>
-		/// Translators can be used to translate .NET member expressions into SQL expressions during query translation.
-		/// This is the low-level extensibility point behind provider or application-specific method translation.
-		/// Prefer <c>[Sql.Expression]</c>, <c>[Sql.Function]</c>, or <c>[ExpressionMethod]</c> for simpler cases;
-		/// use <see cref="IMemberTranslator"/> when you need direct access to translation context and SQL-expression creation.
+		/// Translators can be used translate member expressions to SQL expressions.
 		/// </para>
 		/// </summary>
 		/// <param name="options"></param>
@@ -1319,8 +1309,7 @@ namespace LinqToDB
 		/// Adds collection <see cref="IMemberTranslator" /> instance to those registered on the context.
 		/// </para>
 		/// <para>
-		/// Translators can be used to translate .NET member expressions into SQL expressions during query translation.
-		/// Registration order matters when multiple translators can handle the same member.
+		/// Translators can be used translate member expressions to SQL expressions.
 		/// </para>
 		/// </summary>
 		/// <param name="options"></param>
@@ -1438,9 +1427,6 @@ namespace LinqToDB
 		/// </summary>
 		/// <param name="traceLevel">Trace level to use.</param>
 		/// <param name="onTrace">Callback, may not be called depending on the trace level.</param>
-		/// <remarks>
-		/// This is the main diagnostics entry point for inspecting generated SQL and runtime execution behavior.
-		/// </remarks>
 		/// <returns>The builder instance so calls can be chained.</returns>
 		[Pure]
 		public static DataOptions UseTracing(this DataOptions options, TraceLevel traceLevel, Action<TraceInfo> onTrace)
@@ -1540,10 +1526,6 @@ namespace LinqToDB
 		/// <summary>
 		/// Uses retry policy.
 		/// </summary>
-		/// <remarks>
-		/// Use when the application supplies its own <see cref="IRetryPolicy"/> implementation.
-		/// Retry is opt-in; without this or a retry-policy factory, commands execute without automatic retries.
-		/// </remarks>
 		[Pure]
 		public static DataOptions UseRetryPolicy(this DataOptions options, IRetryPolicy retryPolicy)
 		{
@@ -1553,10 +1535,6 @@ namespace LinqToDB
 		/// <summary>
 		/// Uses default retry policy factory.
 		/// </summary>
-		/// <remarks>
-		/// Registers the built-in retry policy factory for transient failures.
-		/// Adjust retry behavior further with <see cref="UseMaxRetryCount"/>, <see cref="UseMaxDelay"/>, and related retry options.
-		/// </remarks>
 		[Pure]
 		public static DataOptions UseDefaultRetryPolicyFactory(this DataOptions options)
 		{

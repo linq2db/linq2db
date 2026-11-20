@@ -10,10 +10,6 @@ namespace LinqToDB.DataProvider.SqlCe
 {
 	public static partial class SqlCeHints
 	{
-		/// <summary>
-		/// Adds a SQL CE <c>HOLDLOCK</c> table hint.
-		/// For all tables already present in the current query scope, use <c>WithHoldLockInScope</c> on <c>ISqlCeSpecificQueryable&lt;TSource&gt;</c>.
-		/// </summary>
 		[ExpressionMethod(ProviderName.SqlCe, nameof(WithHoldLockTableImpl))]
 		public static ISqlCeSpecificTable<TSource> WithHoldLock<TSource>(this ISqlCeSpecificTable<TSource> table)
 			where TSource : notnull
@@ -27,9 +23,6 @@ namespace LinqToDB.DataProvider.SqlCe
 			return table => TableHint(table, Table.HoldLock);
 		}
 
-		/// <summary>
-		/// Adds a SQL CE <c>HOLDLOCK</c> table hint to tables in the current query scope.
-		/// </summary>
 		[ExpressionMethod(ProviderName.SqlCe, nameof(WithHoldLockQueryImpl))]
 		public static ISqlCeSpecificQueryable<TSource> WithHoldLockInScope<TSource>(this ISqlCeSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -43,10 +36,6 @@ namespace LinqToDB.DataProvider.SqlCe
 			return query => TablesInScopeHint(query, Table.HoldLock);
 		}
 
-		/// <summary>
-		/// Adds a SQL CE <c>NOLOCK</c> table hint.
-		/// For all tables already present in the current query scope, use <c>WithNoLockInScope</c> on <c>ISqlCeSpecificQueryable&lt;TSource&gt;</c>.
-		/// </summary>
 		[ExpressionMethod(ProviderName.SqlCe, nameof(WithNoLockTableImpl))]
 		public static ISqlCeSpecificTable<TSource> WithNoLock<TSource>(this ISqlCeSpecificTable<TSource> table)
 			where TSource : notnull
@@ -60,9 +49,6 @@ namespace LinqToDB.DataProvider.SqlCe
 			return table => TableHint(table, Table.NoLock);
 		}
 
-		/// <summary>
-		/// Adds a SQL CE <c>NOLOCK</c> table hint to tables in the current query scope.
-		/// </summary>
 		[ExpressionMethod(ProviderName.SqlCe, nameof(WithNoLockQueryImpl))]
 		public static ISqlCeSpecificQueryable<TSource> WithNoLockInScope<TSource>(this ISqlCeSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -76,10 +62,6 @@ namespace LinqToDB.DataProvider.SqlCe
 			return query => TablesInScopeHint(query, Table.NoLock);
 		}
 
-		/// <summary>
-		/// Adds a SQL CE <c>PAGLOCK</c> table hint.
-		/// For all tables already present in the current query scope, use <c>WithPagLockInScope</c> on <c>ISqlCeSpecificQueryable&lt;TSource&gt;</c>.
-		/// </summary>
 		[ExpressionMethod(ProviderName.SqlCe, nameof(WithPagLockTableImpl))]
 		public static ISqlCeSpecificTable<TSource> WithPagLock<TSource>(this ISqlCeSpecificTable<TSource> table)
 			where TSource : notnull
@@ -93,9 +75,6 @@ namespace LinqToDB.DataProvider.SqlCe
 			return table => TableHint(table, Table.PagLock);
 		}
 
-		/// <summary>
-		/// Adds a SQL CE <c>PAGLOCK</c> table hint to tables in the current query scope.
-		/// </summary>
 		[ExpressionMethod(ProviderName.SqlCe, nameof(WithPagLockQueryImpl))]
 		public static ISqlCeSpecificQueryable<TSource> WithPagLockInScope<TSource>(this ISqlCeSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -109,10 +88,6 @@ namespace LinqToDB.DataProvider.SqlCe
 			return query => TablesInScopeHint(query, Table.PagLock);
 		}
 
-		/// <summary>
-		/// Adds a SQL CE <c>ROWLOCK</c> table hint.
-		/// For all tables already present in the current query scope, use <c>WithRowLockInScope</c> on <c>ISqlCeSpecificQueryable&lt;TSource&gt;</c>.
-		/// </summary>
 		[ExpressionMethod(ProviderName.SqlCe, nameof(WithRowLockTableImpl))]
 		public static ISqlCeSpecificTable<TSource> WithRowLock<TSource>(this ISqlCeSpecificTable<TSource> table)
 			where TSource : notnull
@@ -126,9 +101,6 @@ namespace LinqToDB.DataProvider.SqlCe
 			return table => TableHint(table, Table.RowLock);
 		}
 
-		/// <summary>
-		/// Adds a SQL CE <c>ROWLOCK</c> table hint to tables in the current query scope.
-		/// </summary>
 		[ExpressionMethod(ProviderName.SqlCe, nameof(WithRowLockQueryImpl))]
 		public static ISqlCeSpecificQueryable<TSource> WithRowLockInScope<TSource>(this ISqlCeSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -142,10 +114,6 @@ namespace LinqToDB.DataProvider.SqlCe
 			return query => TablesInScopeHint(query, Table.RowLock);
 		}
 
-		/// <summary>
-		/// Adds a SQL CE <c>TABLOCK</c> table hint.
-		/// For all tables already present in the current query scope, use <c>WithTabLockInScope</c> on <c>ISqlCeSpecificQueryable&lt;TSource&gt;</c>.
-		/// </summary>
 		[ExpressionMethod(ProviderName.SqlCe, nameof(WithTabLockTableImpl))]
 		public static ISqlCeSpecificTable<TSource> WithTabLock<TSource>(this ISqlCeSpecificTable<TSource> table)
 			where TSource : notnull
@@ -159,9 +127,6 @@ namespace LinqToDB.DataProvider.SqlCe
 			return table => TableHint(table, Table.TabLock);
 		}
 
-		/// <summary>
-		/// Adds a SQL CE <c>TABLOCK</c> table hint to tables in the current query scope.
-		/// </summary>
 		[ExpressionMethod(ProviderName.SqlCe, nameof(WithTabLockQueryImpl))]
 		public static ISqlCeSpecificQueryable<TSource> WithTabLockInScope<TSource>(this ISqlCeSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -175,10 +140,6 @@ namespace LinqToDB.DataProvider.SqlCe
 			return query => TablesInScopeHint(query, Table.TabLock);
 		}
 
-		/// <summary>
-		/// Adds a SQL CE <c>UPDLOCK</c> table hint.
-		/// For all tables already present in the current query scope, use <c>WithUpdLockInScope</c> on <c>ISqlCeSpecificQueryable&lt;TSource&gt;</c>.
-		/// </summary>
 		[ExpressionMethod(ProviderName.SqlCe, nameof(WithUpdLockTableImpl))]
 		public static ISqlCeSpecificTable<TSource> WithUpdLock<TSource>(this ISqlCeSpecificTable<TSource> table)
 			where TSource : notnull
@@ -192,9 +153,6 @@ namespace LinqToDB.DataProvider.SqlCe
 			return table => TableHint(table, Table.UpdLock);
 		}
 
-		/// <summary>
-		/// Adds a SQL CE <c>UPDLOCK</c> table hint to tables in the current query scope.
-		/// </summary>
 		[ExpressionMethod(ProviderName.SqlCe, nameof(WithUpdLockQueryImpl))]
 		public static ISqlCeSpecificQueryable<TSource> WithUpdLockInScope<TSource>(this ISqlCeSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -208,10 +166,6 @@ namespace LinqToDB.DataProvider.SqlCe
 			return query => TablesInScopeHint(query, Table.UpdLock);
 		}
 
-		/// <summary>
-		/// Adds a SQL CE <c>XLOCK</c> table hint.
-		/// For all tables already present in the current query scope, use <c>WithXLockInScope</c> on <c>ISqlCeSpecificQueryable&lt;TSource&gt;</c>.
-		/// </summary>
 		[ExpressionMethod(ProviderName.SqlCe, nameof(WithXLockTableImpl))]
 		public static ISqlCeSpecificTable<TSource> WithXLock<TSource>(this ISqlCeSpecificTable<TSource> table)
 			where TSource : notnull
@@ -225,9 +179,6 @@ namespace LinqToDB.DataProvider.SqlCe
 			return table => TableHint(table, Table.XLock);
 		}
 
-		/// <summary>
-		/// Adds a SQL CE <c>XLOCK</c> table hint to tables in the current query scope.
-		/// </summary>
 		[ExpressionMethod(ProviderName.SqlCe, nameof(WithXLockQueryImpl))]
 		public static ISqlCeSpecificQueryable<TSource> WithXLockInScope<TSource>(this ISqlCeSpecificQueryable<TSource> query)
 			where TSource : notnull
