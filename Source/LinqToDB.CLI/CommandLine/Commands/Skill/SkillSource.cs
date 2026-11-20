@@ -8,13 +8,12 @@ using System.Reflection;
 namespace LinqToDB.CommandLine.Commands.Skill
 {
 	/// <summary>
-	/// Produces the skills to install: the library skill from the linq2db NuGet package or from the copy embedded
-	/// in the tool, and the tool's own skill.
+	/// Produces the skill to install: the library skill from the linq2db NuGet package or from the copy embedded
+	/// in the tool.
 	/// </summary>
 	internal static class SkillSource
 	{
 		public const string LibrarySkillName = "linq2db";
-		public const string CliSkillName     = "linq2db-cli";
 
 		private const string EmbeddedLibraryPrefix = "LinqToDB.CLI.skill-linq2db/";
 
@@ -33,21 +32,6 @@ namespace LinqToDB.CommandLine.Commands.Skill
 
 				return plus >= 0 ? version.Substring(0, plus) : version;
 			}
-		}
-
-		/// <summary>
-		/// The skill of this tool. It is taken from the copy embedded in the tool even though the linq2db package ships the
-		/// same file: the text documents the options of the tool version that runs, and a package of another version
-		/// would describe another tool.
-		/// </summary>
-		public static SkillBundle GetCliSkill()
-		{
-			return new SkillBundle(
-				CliSkillName,
-				ToolVersion,
-				true,
-				"embedded in the tool",
-				[new SkillFile("SKILL.md", SkillResource.ReadRawBytes())]);
 		}
 
 		public static SkillBundle GetEmbeddedLibrarySkill()

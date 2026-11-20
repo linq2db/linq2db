@@ -1,11 +1,4 @@
----
-name: linq2db-cli
-description: Use when you need to look at a real database from the command line or over MCP with the dotnet linq2db tool (linq2db.cli) - list connection profiles, read table and column metadata, run read-only SQL queries, check actual data, create a query configuration, or store database credentials. Covers the query, schema, execute, config-init, credentials, mcp and skill commands, supported database providers and SQL dialects, and the safety rules for write-capable SQL.
----
-
 # linq2db CLI Agent Skill
-
-This skill needs the `linq2db.cli` tool; referencing the `linq2db` package does not provide it. If `dotnet linq2db` is not available, ask the user before installing the tool (`dotnet tool install -g linq2db.cli`) or running it without installing (`dnx linq2db.cli ...`, .NET 10 SDK). When the tool is available, the output of `dotnet linq2db skill` is authoritative for that tool version; options and behavior may differ from this copy, which can come from another version.
 
 Use `dotnet linq2db` to run linq2db command-line tools.
 
@@ -717,16 +710,27 @@ Use `dotnet linq2db help` for general help and `dotnet linq2db help <command>` f
 
 ## Skill Command
 
-Use `dotnet linq2db skill` to print this agent-oriented Markdown document to stdout (without the YAML frontmatter that skill loaders read).
+Use `dotnet linq2db skill` to print this agent-oriented Markdown document to stdout.
 
 Use this command when an agent needs current instructions for using linq2db CLI from the installed tool instead of relying on repository files or external documentation.
 
-Use `dotnet linq2db skill install [--project <project file or directory>] [--root <directory>] [--check] [--force]` to add the agent skills to a repository (it needs the `linq2db.cli` tool, which referencing the `linq2db` package does not provide; without installing the tool, run it as `dnx linq2db.cli skill install [options]` with the .NET 10 SDK). It installs two skills, each as a real copy in both `.agents/skills/<name>/` (Codex, GitHub Copilot, Cursor, Gemini, Junie and others) and `.claude/skills/<name>/` (Claude Code):
+To add the current tool-provided skill to this solution, run one of the following commands from the repository root.
 
-- `linq2db`: guidance for writing code with the linq2db library. It is taken from the linq2db NuGet package version the project references (the project must be restored; the package's assets file is located through MSBuild), so the guidance matches the API in use. When the package carries no skill, or no restored project references linq2db, the copy embedded in the tool is used and a warning says so when its version differs.
-- `linq2db-cli`: this document, always taken from the tool, never from the package, so it describes the tool that runs.
+PowerShell:
 
-The `linq2db` package also carries both skills (`skills/linq2db/` and `skills/linq2db-cli/`), so Microsoft's beta `dotnet-package-skills` tool can install them as well. It reads direct `PackageReference` items only, so a project that gets `linq2db` transitively (through a provider package or an EF Core or ASP.NET integration package) uses `dotnet-package-skills install -p linq2db@<version>` or this command. It writes one destination per run (`.agents/skills` by default; run it again with `-d .claude/skills` for Claude Code) and records what it installed in `.dotnet-package-skills.json` there. Use one installer per destination:
+```powershell
+New-Item -ItemType Directory -Force ".\.agents\skills\linq2db-cli" | Out-Null; dotnet linq2db skill > ".\.agents\skills\linq2db-cli\SKILL.md"
+```
+
+cmd.exe:
+
+```cmd
+mkdir ".\.agents\skills\linq2db-cli" 2>nul & dotnet linq2db skill > ".\.agents\skills\linq2db-cli\SKILL.md"
+```
+
+Use `dotnet linq2db skill install [--project <project file or directory>] [--root <directory>] [--check] [--force]` to add the `linq2db` agent skill (guidance for writing code with the linq2db library) to a repository (it needs the `linq2db.cli` tool, which referencing the `linq2db` package does not provide; without installing the tool, run it as `dnx linq2db.cli skill install [options]` with the .NET 10 SDK). It writes a real copy into both `.agents/skills/linq2db/` (Codex, GitHub Copilot, Cursor, Gemini, Junie and others) and `.claude/skills/linq2db/` (Claude Code). The skill is taken from the linq2db NuGet package version the project references (the project must be restored; the package's assets file is located through MSBuild), so the guidance matches the API in use. When the package carries no skill, or no restored project references linq2db, the copy embedded in the tool is used and a warning says so when its version differs.
+
+The `linq2db` package also carries the skill (`skills/linq2db/`), so Microsoft's beta `dotnet-package-skills` tool can install it as well. It reads direct `PackageReference` items only, so a project that gets `linq2db` transitively (through a provider package or an EF Core or ASP.NET integration package) uses `dotnet-package-skills install -p linq2db@<version>` or this command. It writes one destination per run (`.agents/skills` by default; run it again with `-d .claude/skills` for Claude Code) and records what it installed in `.dotnet-package-skills.json` there. Use one installer per destination:
 
 - This command only reads `.dotnet-package-skills.json`. A skill folder listed there is left unchanged, even with `--force`; `--check` accepts it when the recorded linq2db version equals the version the project uses and fails when it differs. When that file cannot be read (invalid, or a newer format version), ownership is unknown and every folder this command did not install is left unchanged.
 - `dotnet-package-skills` skips a folder it did not install. After this command installs a skill into a destination that has a `.dotnet-package-skills.json`, it prints how to hand the folder over: run `dotnet linq2db skill uninstall`, then `dotnet-package-skills install`.
@@ -742,7 +746,7 @@ Each installed skill directory gets a `.linq2db-skill.json` manifest with a hash
 
 Use `dotnet linq2db skill uninstall [--project <project file or directory>] [--root <directory>] [--force]` to remove what `skill install` wrote, from both `.agents/skills/` and `.claude/skills/`:
 
-- Only the `linq2db` and `linq2db-cli` folders that carry a `.linq2db-skill.json` marker are touched, and inside them only files that still match the recorded hash. The marker is removed last, then the folder when it is empty.
+- Only `linq2db` folders that carry a `.linq2db-skill.json` marker are touched, and inside them only files that still match the recorded hash. The marker is removed last, then the folder when it is empty.
 - Edited recorded files and files that were added to the folder are kept: the command prints `kept <folder>: <n> file(s) changed or added; remove by hand` and exits with a non-zero code. `--force` also removes recorded files that were edited; it never removes a file this tool did not install.
 - Folders managed by `dotnet-package-skills` (listed in its `.dotnet-package-skills.json`), folders without the marker, and every folder of a destination whose `.dotnet-package-skills.json` cannot be read are left unchanged and reported. A destination that is a link to the other one is handled once; other links are skipped and reported.
 - With nothing installed it prints `Nothing to uninstall.` and exits with 0. `AGENTS.md` and `CLAUDE.md` are never edited (`skill install` only prints a block to paste).
