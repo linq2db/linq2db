@@ -1,1 +1,5 @@
 ﻿#nullable enable
+LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLMappingSchema.PostgreSQL11MappingSchema
+LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLMappingSchema.PostgreSQL11MappingSchema.PostgreSQL11MappingSchema() -> void
+LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLMappingSchema.PostgreSQL12MappingSchema
+LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLMappingSchema.PostgreSQL12MappingSchema.PostgreSQL12MappingSchema() -> void
