@@ -545,5 +545,159 @@ namespace Tests.Analyzers
 					test.FixedState.MarkupHandling = MarkupMode.Allow;
 				});
 		}
+	
+		// A generic overload returns ITable<T> / IQueryable<T>, the typed helper the provider's type. A var local written
+		// again after its declaration keeps the original type, or the later assignment would no longer compile.
+		[Test]
+		public async Task ReassignedVarLocalKeepsTheQueryType()
+		{
+			await VerifyAsync(
+				"""
+				using System.Linq;
+
+				using LinqToDB;
+
+				class Row { public int Id { get; set; } }
+
+				class C
+				{
+					void M(IQueryable<Row> source, bool f)
+					{
+						var q = source.[|QueryHint("RECOMPILE")|];
+
+						if (f)
+							q = q.Where(x => x.Id > 0);
+					}
+				}
+				""",
+				"""
+				using System.Linq;
+
+				using LinqToDB;
+				using LinqToDB.DataProvider.SqlServer;
+
+				class Row { public int Id { get; set; } }
+
+				class C
+				{
+					void M(IQueryable<Row> source, bool f)
+					{
+						IQueryable<Row> q = source.AsSqlServer().OptionRecompile();
+
+						if (f)
+							q = q.Where(x => x.Id > 0);
+					}
+				}
+				""",
+				SqlServerRestrictedKey);
+		}
+
+		[Test]
+		public async Task ReassignedVarLocalKeepsTheTableType()
+		{
+			await VerifyAsync(
+				"""
+				using LinqToDB;
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t, ITable<Row> other)
+					{
+						var r = (t.[|TableHint("NOLOCK")|]);
+						Use(ref r);
+						r = other;
+					}
+
+					static void Use(ref ITable<Row> table)
+					{
+					}
+				}
+				""",
+				"""
+				using LinqToDB;
+				using LinqToDB.DataProvider.SqlServer;
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t, ITable<Row> other)
+					{
+						ITable<Row> r = (t.AsSqlServer().WithNoLock());
+						Use(ref r);
+						r = other;
+					}
+
+					static void Use(ref ITable<Row> table)
+					{
+					}
+				}
+				""",
+				SqlServerRestrictedKey);
+		}
+
+		// The exact rewrite keeps the provider's type, so nothing changes around it.
+		[Test]
+		public async Task ReassignedVarLocalOfAnExactRewriteStaysVar()
+		{
+			await VerifyAsync(
+				"""
+				using LinqToDB;
+				using LinqToDB.DataProvider.SqlServer;
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var r = t.AsSqlServer().[|TableHint("NOLOCK")|];
+						r = t.AsSqlServer();
+					}
+				}
+				""",
+				"""
+				using LinqToDB;
+				using LinqToDB.DataProvider.SqlServer;
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var r = t.AsSqlServer().WithNoLock();
+						r = t.AsSqlServer();
+					}
+				}
+				""",
+				SqlServerKey);
+		}
+
+		// An anonymous element type cannot be written out, so no restricting rewrite is offered for a reassigned local.
+		[Test]
+		public async Task ReassignedVarLocalOfAnAnonymousTypeGetsNoRestrictingRewrite()
+		{
+			const string source = """
+				using System.Linq;
+
+				using LinqToDB;
+
+				class Row { public int Id { get; set; } }
+
+				class C
+				{
+					void M(IQueryable<Row> source)
+					{
+						var q = source.Select(x => new { x.Id }).[|QueryHint("RECOMPILE")|];
+						q = q.Where(x => x.Id > 0);
+					}
+				}
+				""";
+
+			await VerifyAsync(source, source, SqlServerRestrictedKey);
+		}
 	}
 }

@@ -136,7 +136,7 @@ When the call binds a provider's own string overload (`AsSqlServer().TableHint("
 When it binds a generic overload — including `AsSqlServer().With("NOLOCK")`, since only the generic `With`
 exists — it also restricts the hint to the provider you pick, which is what you want when the query only ever
 runs there, and a change of behaviour if the same query also runs on another database that accepted the text.
-Each fix title says which provider it restricts the hint to. Typed helpers that emit their hint only from some
+Each fix title says which provider it restricts the hint to. Such a rewrite also changes the call's type to the provider's query or table type; a `var` local that is assigned again later is given the original type, so the later assignment still compiles (or, for an anonymous element type, the rewrite is not offered). Typed helpers that emit their hint only from some
 server version on (`WithForceScan`, `WithSnapshot`, `OptionNoPerformanceSpool` and a few other SQL Server ones)
 are not offered: on an older server the rewrite would drop a hint the string still emits. A tables-in-scope or query hint on a
 table goes through `AsQueryable()` first, since `AsSqlServer()` on a table yields the table form.

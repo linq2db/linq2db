@@ -59,10 +59,21 @@ namespace LinqToDB.Analyzers.CodeFixes
 
 			var diagnostic = context.Diagnostics[0];
 
-			if (FindInvocation(root, diagnostic) is null)
+			if (FindInvocation(root, diagnostic) is not { } invocation)
 				return;
 
-			foreach (var fix in ReadFixes(diagnostic))
+			var fixes = ReadFixes(diagnostic);
+
+			// A restricting rewrite changes the call's type; when that type is not expressible, it is not offered.
+			if (fixes.Count > 0 && fixes[0].GenericOverload)
+			{
+				var model = await context.Document.GetSemanticModelAsync(context.CancellationToken).ConfigureAwait(false);
+
+				if (model is null || GetVarLocalRetype(invocation, model, context.CancellationToken) is { Blocked: true })
+					return;
+			}
+
+			foreach (var fix in fixes)
 			{
 				var title = fix.GenericOverload
 					? string.Format(CultureInfo.InvariantCulture, "Use {0} typed hint {1}() (applies to {0} only)", fix.Provider, fix.Helper)
@@ -171,7 +182,23 @@ namespace LinqToDB.Analyzers.CodeFixes
 			if (replacement is null)
 				return document;
 
-			var newRoot = root.ReplaceNode(invocation, replacement.WithTriviaFrom(invocation));
+			replacement = replacement.WithTriviaFrom(invocation);
+
+			SyntaxNode newRoot;
+
+			if (fix.GenericOverload && GetVarLocalRetype(invocation, model, cancellationToken) is { } retype)
+			{
+				if (retype.Blocked)
+					return document;
+
+				newRoot = root.ReplaceNodes(
+					new SyntaxNode[] { invocation, retype.VarType },
+					(original, _) => original == invocation ? replacement : retype.ExplicitType.WithTriviaFrom(retype.VarType));
+			}
+			else
+			{
+				newRoot = root.ReplaceNode(invocation, replacement);
+			}
 
 			if (newRoot is CompilationUnitSyntax unit)
 			{
@@ -186,6 +213,115 @@ namespace LinqToDB.Analyzers.CodeFixes
 			}
 
 			return document.WithSyntaxRoot(newRoot);
+		}
+
+		sealed class VarLocalRetype
+		{
+			public VarLocalRetype(TypeSyntax varType, TypeSyntax explicitType, bool blocked)
+			{
+				VarType      = varType;
+				ExplicitType = explicitType;
+				Blocked      = blocked;
+			}
+
+			public TypeSyntax VarType      { get; }
+			public TypeSyntax ExplicitType { get; }
+			public bool       Blocked      { get; }
+		}
+
+		// A generic overload returns ITable<T> / IQueryable<T>, the typed helper the provider's own type. When the call
+		// initializes a `var` local that is written again after its declaration (`q = q.Where(...)`), the new type would
+		// break that write, so the local keeps the original type, written out. Null when nothing has to change; blocked
+		// when the type cannot be written (an anonymous element type).
+		static VarLocalRetype? GetVarLocalRetype(InvocationExpressionSyntax invocation, SemanticModel model, CancellationToken cancellationToken)
+		{
+			SyntaxNode value = invocation;
+
+			while (value.Parent is ParenthesizedExpressionSyntax parenthesized)
+				value = parenthesized;
+
+			if (value.Parent is not EqualsValueClauseSyntax { Parent: VariableDeclaratorSyntax { Parent: VariableDeclarationSyntax { Type.IsVar: true } declaration } declarator })
+				return null;
+
+			if (model.GetDeclaredSymbol(declarator, cancellationToken) is not ILocalSymbol local
+				|| !IsWrittenAfterDeclaration(local, declarator, model, cancellationToken))
+				return null;
+
+			var type = model.GetTypeInfo(invocation, cancellationToken).Type;
+
+			if (type is null || type.TypeKind == TypeKind.Error || ContainsAnonymousType(type))
+				return new VarLocalRetype(declaration.Type, declaration.Type, blocked: true);
+
+			var explicitType = SyntaxFactory.ParseTypeName(type.ToMinimalDisplayString(model, declaration.Type.SpanStart));
+
+			return new VarLocalRetype(declaration.Type, explicitType, blocked: false);
+		}
+
+		static bool IsWrittenAfterDeclaration(ILocalSymbol local, VariableDeclaratorSyntax declarator, SemanticModel model, CancellationToken cancellationToken)
+		{
+			var scope = declarator.FirstAncestorOrSelf<BlockSyntax>() ?? (SyntaxNode)declarator.SyntaxTree.GetRoot(cancellationToken);
+
+			foreach (var identifier in scope.DescendantNodes().OfType<IdentifierNameSyntax>())
+			{
+				if (!string.Equals(identifier.Identifier.ValueText, local.Name, StringComparison.Ordinal) || !IsWriteTarget(identifier))
+					continue;
+
+				if (SymbolEqualityComparer.Default.Equals(model.GetSymbolInfo(identifier, cancellationToken).Symbol, local))
+					return true;
+			}
+
+			return false;
+		}
+
+		// An assignment target (simple, compound, `??=`, or an element of a deconstruction), a ref / out argument, a
+		// `ref` alias, or an increment.
+		static bool IsWriteTarget(ExpressionSyntax identifier)
+		{
+			SyntaxNode node = identifier;
+
+			while (node.Parent is ParenthesizedExpressionSyntax)
+				node = node.Parent;
+
+			switch (node.Parent)
+			{
+				case AssignmentExpressionSyntax assignment when assignment.Left == node:
+				case RefExpressionSyntax:
+				case PrefixUnaryExpressionSyntax  { RawKind: (int)SyntaxKind.PreIncrementExpression or (int)SyntaxKind.PreDecrementExpression }:
+				case PostfixUnaryExpressionSyntax { RawKind: (int)SyntaxKind.PostIncrementExpression or (int)SyntaxKind.PostDecrementExpression }:
+					return true;
+				case ArgumentSyntax argument when !argument.RefKindKeyword.IsKind(SyntaxKind.None) && !argument.RefKindKeyword.IsKind(SyntaxKind.InKeyword):
+					return true;
+				case ArgumentSyntax { Parent: TupleExpressionSyntax tuple }:
+					// (q, x) = ...: climb the nested tuples to the assignment.
+					SyntaxNode outer = tuple;
+
+					while (outer.Parent is ArgumentSyntax { Parent: TupleExpressionSyntax parentTuple })
+						outer = parentTuple;
+
+					return outer.Parent is AssignmentExpressionSyntax deconstruction && deconstruction.Left == outer;
+				default:
+					return false;
+			}
+		}
+
+		static bool ContainsAnonymousType(ITypeSymbol type)
+		{
+			if (type.IsAnonymousType)
+				return true;
+
+			switch (type)
+			{
+				case INamedTypeSymbol named:
+					foreach (var argument in named.TypeArguments)
+						if (ContainsAnonymousType(argument))
+							return true;
+
+					return false;
+				case IArrayTypeSymbol array:
+					return ContainsAnonymousType(array.ElementType);
+				default:
+					return false;
+			}
 		}
 
 		static ExpressionSyntax? BuildReplacement(InvocationExpressionSyntax invocation, SemanticModel model, Fix fix, CancellationToken cancellationToken)
