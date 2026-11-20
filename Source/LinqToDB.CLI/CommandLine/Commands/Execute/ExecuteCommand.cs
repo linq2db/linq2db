@@ -87,7 +87,7 @@ namespace LinqToDB.CommandLine.Commands.Execute
 			var output = CommandOutput.Create(environment, settings.OutputFile);
 			await using var _ = output;
 
-			var result = await new QueryExecutionExecutor(settings).Execute(output.Writer, cancellationToken);
+			var result = await new QueryExecutionExecutor(environment, settings).Execute(output.Writer, cancellationToken);
 
 			if (result.Error != null)
 			{
