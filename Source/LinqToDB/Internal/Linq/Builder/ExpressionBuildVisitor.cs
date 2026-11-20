@@ -258,6 +258,24 @@ namespace LinqToDB.Internal.Linq.Builder
 			return UsingSuggestedDescriptor(SuggestColumnDescriptor(descriptor, expr));
 		}
 
+		/// <summary>
+		/// Types what is built within as a comparison between <paramref name="left"/> and <paramref name="right"/> types its
+		/// operands.
+		/// </summary>
+		internal IDisposable UsingComparisonDescriptor(IBuildContext? buildContext, Expression left, Expression right)
+		{
+			SuggestedDescriptor suggested;
+
+			// A comparison looks its operands up while it builds SQL.
+			using (UsingBuildContext(buildContext))
+			using (UsingBuildPurpose(BuildPurpose.Sql))
+			{
+				suggested = SuggestColumnDescriptor(left, right);
+			}
+
+			return UsingSuggestedDescriptor(suggested);
+		}
+
 		StateHolder<(ColumnDescriptor? Current, SuggestedDescriptor Suggested)> UsingSuggestedDescriptor(SuggestedDescriptor suggested)
 		{
 			return new StateHolder<(ColumnDescriptor? Current, SuggestedDescriptor Suggested)>(this, (suggested.Descriptor, suggested),
@@ -5876,7 +5894,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		#endregion
 
-		sealed class TranslationContext : ITranslationContext
+		sealed class TranslationContext : ITranslationContext, IComparedValueTranslationContext
 		{
 			sealed class SqlExpressionFactory : ISqlExpressionFactory
 			{
@@ -6102,6 +6120,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			public IDisposable UsingColumnDescriptor(ColumnDescriptor? columnDescriptor)
 			{
 				return Visitor.UsingColumnDescriptor(columnDescriptor);
+			}
+
+			public IDisposable UsingComparisonDescriptor(Expression left, Expression right)
+			{
+				return Visitor.UsingComparisonDescriptor(CurrentContext, left, right);
 			}
 
 			public IDisposable UsingCurrentAggregationContext(Expression basedOn)
