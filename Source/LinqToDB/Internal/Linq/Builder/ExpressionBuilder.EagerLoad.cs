@@ -657,8 +657,6 @@ namespace LinqToDB.Internal.Linq.Builder
 					// Commit the attempt and apply any deferred query-level effects.
 					_eagerLoadState                = attempt;
 					LastEagerLoadFallbackChain     = fallbackChain;
-					if (attempt.QueryFinalizedRequested)
-						_query.IsFinalized = true;
 
 					// Single-query CteUnion (parent branch inlined into carrier) reconstructs from
 					// path-based carrier slots — ToColumns must be skipped. All other modes (harvester-only

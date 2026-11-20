@@ -304,7 +304,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			using (ActivityService.Start(ActivityID.FinalizeQuery))
 			{
-				if (!query.IsFinalized)
+				if (!query.IsFinalized && _eagerLoadState?.QueryFinalizedRequested != true)
 				{
 					var queryInfo = query.QueryInfo;
 
