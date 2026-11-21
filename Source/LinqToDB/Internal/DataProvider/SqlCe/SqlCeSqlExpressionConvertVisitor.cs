@@ -132,8 +132,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 							typeof(int),
 							PseudoFunctions.MakeCast(element.Expr1, new DbDataType(typeof(int), DataType.Int32)),
 							element.Operation,
-							element.Expr2,
-							element.Precedence);
+							element.Expr2);
 					}
 
 					break;

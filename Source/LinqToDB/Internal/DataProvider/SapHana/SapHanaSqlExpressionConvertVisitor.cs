@@ -26,6 +26,27 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			return Factory.Function(Factory.GetDbDataType(typeof(long)), "Nano100_Between", element.Start, element.End);
 		}
 
+		/// <summary>
+		/// The division cast to its integer type: SAP HANA's <c>/</c> returns a decimal even between two integers,
+		/// and a decimal cast to an integer truncates toward zero.
+		/// </summary>
+		/// <remarks>
+		/// <see cref="ulong"/> is left as it is: its cast target is a bare <c>DECIMAL</c>, which keeps the fraction.
+		/// The inner division is typed <see cref="decimal"/>, which is what it is, so it is not taken for an integer
+		/// division again; the cast is mandatory, or the optimizer drops it as a cast to the type the node claims.
+		/// </remarks>
+		protected override ISqlExpression? IntegerDivide(DbDataType type, ISqlExpression dividend, ISqlExpression divisor)
+		{
+			var integerType = type.SystemType.ToUnderlying();
+
+			if (integerType == typeof(ulong))
+				return null;
+
+			var division = Factory.Div(Factory.GetDbDataType(typeof(decimal)), dividend, divisor);
+
+			return Factory.Cast(division, Factory.GetDbDataType(integerType).WithSystemType(type.SystemType), true);
+		}
+
 		#region LIKE
 
 		// https://help.sap.com/viewer/4fe29514fd584807ac9f2a04f6754767/2.0.01/en-US/20fa17f375191014a4d8d8cbfddfe340.html

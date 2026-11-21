@@ -15,18 +15,17 @@ namespace LinqToDB.Internal.DataProvider.Access
 		}
 
 		/// <summary>
-		/// Access has no <c>FLOOR</c> or <c>CEILING</c>, but its <c>Fix</c> is exactly truncation toward zero -
-		/// the semantic the base composes those two functions to reach.
+		/// <c>Fix</c> of the division: Access divides as floating point even between two integers, and <c>Fix</c>
+		/// is exactly truncation toward zero.
 		/// </summary>
 		/// <remarks>
 		/// <c>Int</c> would be wrong here: it rounds down, so <c>Int(-2.5)</c> is -3 where CLR integer division
-		/// gives -2. Access division is floating, so no cast is needed before <c>Fix</c>.
+		/// gives -2. The inner division is typed <see cref="double"/>, which is what it is, so it is not taken for
+		/// an integer division again.
 		/// </remarks>
-		protected override ISqlExpression TruncateDivide(ISqlExpression value, long divisor)
+		protected override ISqlExpression? IntegerDivide(DbDataType type, ISqlExpression dividend, ISqlExpression divisor)
 		{
-			var longType = Factory.GetDbDataType(typeof(long));
-
-			return Factory.Function(longType, "Fix", Factory.Div(longType, value, Factory.Value(longType, divisor)));
+			return Factory.Function(type, "Fix", Factory.Div(Factory.GetDbDataType(typeof(double)), dividend, divisor));
 		}
 
 		/// <summary>
@@ -490,7 +489,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 		public override ISqlExpression ConvertSqlUnaryExpression(SqlUnaryExpression element)
 		{
 			if (element.Operation is SqlUnaryOperation.BitwiseNegation)
-				return new SqlBinaryExpression(element.Type, new SqlValue(-1), "-", element.Expr, Precedence.Subtraction);
+				return new SqlBinaryExpression(element.Type, new SqlValue(-1), "-", element.Expr);
 
 			return base.ConvertSqlUnaryExpression(element);
 		}
@@ -534,12 +533,11 @@ namespace LinqToDB.Internal.DataProvider.Access
 		{
 			return element switch
 			{
-				SqlBinaryExpression(var type, var ex1, "%", var ex2) => new SqlBinaryExpression(type, ex1, "MOD", ex2, Precedence.Multiplicative),
-				SqlBinaryExpression(var type, var ex1, "&", var ex2) => new SqlBinaryExpression(type, ex1, "BAND", ex2, Precedence.Bitwise),
-				SqlBinaryExpression(var type, var ex1, "|", var ex2) => new SqlBinaryExpression(type, ex1, "BOR", ex2, Precedence.Bitwise - 1),
-				// C# XOR only: a power reaches here as ^ too, at Precedence.Unary + 1 (MathMemberTranslator.Power).
-				// BXOR binds looser than BOR in Access, so it sits below it.
-				SqlBinaryExpression(var type, var ex1, "^", var ex2) { Precedence: Precedence.Bitwise } => new SqlBinaryExpression(type, ex1, "BXOR", ex2, Precedence.Bitwise - 2),
+				SqlBinaryExpression(var type, var ex1, "%", var ex2) => new SqlBinaryExpression(type, ex1, "MOD", ex2),
+				SqlBinaryExpression(var type, var ex1, "&", var ex2) => new SqlBinaryExpression(type, ex1, "BAND", ex2),
+				SqlBinaryExpression(var type, var ex1, "|", var ex2) => new SqlBinaryExpression(type, ex1, "BOR", ex2),
+				// a power is a Power function here (MathMemberTranslator.Power), so ^ is always C# XOR
+				SqlBinaryExpression(var type, var ex1, "^", var ex2) => new SqlBinaryExpression(type, ex1, "BXOR", ex2),
 				_ => base.ConvertSqlBinaryExpression(element),
 			};
 		}

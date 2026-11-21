@@ -47,6 +47,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		}
 
 		protected override ConcatBuildStyle ConcatStyle => ConcatBuildStyle.Pipes;
+		protected override bool LiteralBackslashEscapes => true;
 
 		// YQL allows a derived column list only on VALUES, not on a scalar/raw-SQL subquery source
 		// (SupportsColumnAliasesInSource stays true so VALUES columns keep their names).

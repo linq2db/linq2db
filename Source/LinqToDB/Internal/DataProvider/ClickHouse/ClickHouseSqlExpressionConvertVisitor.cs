@@ -26,11 +26,9 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		/// <summary>
 		/// <c>intDiv</c>, because ClickHouse's <c>/</c> produces a float even between two integers.
 		/// </summary>
-		protected override ISqlExpression TruncateDivide(ISqlExpression value, long divisor)
+		protected override ISqlExpression? IntegerDivide(DbDataType type, ISqlExpression dividend, ISqlExpression divisor)
 		{
-			var longType = Factory.GetDbDataType(typeof(long));
-
-			return Factory.Function(longType, "intDiv", value, Factory.Value(longType, divisor));
+			return Factory.Function(type, "intDiv", dividend, divisor);
 		}
 
 		/// <inheritdoc />
@@ -237,11 +235,8 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 						rewrite = true;
 					}
 
-					// Precedence carried over from the operand being rebuilt. Left unstated it defaults to Unknown,
-					// which the renderer reads as binding loosest - bracketing this node wherever it sits, while
-					// wrapping nothing beneath it.
 					if (rewrite)
-						return PseudoFunctions.MakeCast(new SqlBinaryExpression(typeof(double), left, "%", right, element.Precedence), QueryHelper.GetDbDataType(element, MappingSchema), new SqlDataType(new DbDataType(typeof(double), DataType.Double)));
+						return PseudoFunctions.MakeCast(new SqlBinaryExpression(typeof(double), left, "%", right), QueryHelper.GetDbDataType(element, MappingSchema), new SqlDataType(new DbDataType(typeof(double), DataType.Double)));
 
 					break;
 				}

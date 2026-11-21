@@ -2058,19 +2058,39 @@ namespace LinqToDB.Internal.SqlProvider
 		}
 
 		/// <summary>
-		/// Integer division truncating toward zero.
+		/// Integer division truncating toward zero, as CLR integer division is, or <see langword="null"/> when the
+		/// dialect's <c>/</c> already is that between two integers.
 		/// </summary>
 		/// <remarks>
-		/// The default is the division itself, which is what dividing two integers means in SQL and matches CLR
-		/// integer division on negatives. A provider whose division is not integral overrides it - MySQL and
-		/// DuckDB return a fraction, Access has no integer division at all - and so does one whose truncation is
-		/// spelled its own way.
+		/// Called for every <c>/</c> whose result and operands are all integer types, and by
+		/// <see cref="TruncateDivide"/>. A provider whose <c>/</c> returns a fraction between two integers overrides
+		/// it. The result is re-visited, so it must not itself be an integer-typed <c>/</c>: a function, a
+		/// template, another operator, or a <c>/</c> typed fractional under a truncating function or cast.
+		/// </remarks>
+		protected virtual ISqlExpression? IntegerDivide(DbDataType type, ISqlExpression dividend, ISqlExpression divisor)
+		{
+			return null;
+		}
+
+		/// <summary>
+		/// Integer division of an interval component by a constant, truncating toward zero.
+		/// </summary>
+		/// <remarks>
+		/// Goes through <see cref="IntegerDivide"/>; overridden only where an interval needs more than that.
 		/// </remarks>
 		protected virtual ISqlExpression TruncateDivide(ISqlExpression value, long divisor)
 		{
-			var longType = Factory.GetDbDataType(typeof(long));
+			var longType     = Factory.GetDbDataType(typeof(long));
+			var divisorValue = Factory.Value(longType, divisor);
 
-			return Factory.Div(longType, value, Factory.Value(longType, divisor));
+			return IntegerDivide(longType, value, divisorValue) ?? Factory.Div(longType, value, divisorValue);
+		}
+
+		static bool IsIntegerDivision(SqlBinaryExpression element)
+		{
+			return element.SystemType?.IsIntegerType == true
+				&& element.Expr1.SystemType?.IsIntegerType == true
+				&& element.Expr2.SystemType?.IsIntegerType == true;
 		}
 
 		/// <summary>
@@ -2666,8 +2686,7 @@ namespace LinqToDB.Internal.SqlProvider
 							element.Type,
 							element.Expr1,
 							"-",
-							expr2,
-							element.Precedence);
+							expr2);
 					}
 
 					break;
@@ -2681,8 +2700,7 @@ namespace LinqToDB.Internal.SqlProvider
 							element.Type,
 							element.Expr1,
 							"+",
-							expr2,
-							element.Precedence);
+							expr2);
 					}
 
 					break;
@@ -2695,8 +2713,7 @@ namespace LinqToDB.Internal.SqlProvider
 						return new SqlUnaryExpression(
 							element.Type,
 							element.Expr1,
-							SqlUnaryOperation.Negation,
-							Precedence.Unary);
+							SqlUnaryOperation.Negation);
 					}
 
 					if (element.Expr1 is SqlValue { Value: -1 })
@@ -2704,8 +2721,7 @@ namespace LinqToDB.Internal.SqlProvider
 						return new SqlUnaryExpression(
 							element.Type,
 							element.Expr2,
-							SqlUnaryOperation.Negation,
-							Precedence.Unary);
+							SqlUnaryOperation.Negation);
 					}
 
 					break;
@@ -2718,9 +2734,11 @@ namespace LinqToDB.Internal.SqlProvider
 						return new SqlUnaryExpression(
 							element.Type,
 							element.Expr1,
-							SqlUnaryOperation.Negation,
-							Precedence.Unary);
+							SqlUnaryOperation.Negation);
 					}
+
+					if (IsIntegerDivision(element) && IntegerDivide(element.Type, element.Expr1, element.Expr2) is { } divided)
+						return divided;
 
 					break;
 				}
@@ -3173,7 +3191,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		public ISqlExpression Add(ISqlExpression expr1, ISqlExpression expr2, Type type)
 		{
-			return new SqlBinaryExpression(type, expr1, "+", expr2, Precedence.Additive);
+			return new SqlBinaryExpression(type, expr1, "+", expr2);
 		}
 
 		public ISqlExpression Add<T>(ISqlExpression expr1, ISqlExpression expr2)
@@ -3193,7 +3211,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		public ISqlExpression Sub(ISqlExpression expr1, ISqlExpression expr2, Type type)
 		{
-			return new SqlBinaryExpression(type, expr1, "-", expr2, Precedence.Subtraction);
+			return new SqlBinaryExpression(type, expr1, "-", expr2);
 		}
 
 		public ISqlExpression Sub<T>(ISqlExpression expr1, ISqlExpression expr2)
@@ -3213,7 +3231,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		public ISqlExpression Mul(ISqlExpression expr1, ISqlExpression expr2, Type type)
 		{
-			return new SqlBinaryExpression(type, expr1, "*", expr2, Precedence.Multiplicative);
+			return new SqlBinaryExpression(type, expr1, "*", expr2);
 		}
 
 		public ISqlExpression Mul<T>(ISqlExpression expr1, ISqlExpression expr2)
@@ -3228,7 +3246,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		public ISqlExpression Div(ISqlExpression expr1, ISqlExpression expr2, Type type)
 		{
-			return new SqlBinaryExpression(type, expr1, "/", expr2, Precedence.Multiplicative);
+			return new SqlBinaryExpression(type, expr1, "/", expr2);
 		}
 
 		public ISqlExpression Div<T>(ISqlExpression expr1, ISqlExpression expr2)

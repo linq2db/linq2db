@@ -101,35 +101,62 @@ namespace LinqToDB.Internal.DataProvider.Access
 				.Append(expr.IsNot ? '0' : '1');
 		}
 
-		// ^ evaluates left to right, and Wrap leaves an equal-precedence right operand bare. Decided here, not at
-		// translation, because the convert visitor drops the numeric casts that can hide a nested power until now;
-		// a nullability wrapper (Sql.AsNotNull) survives to here and renders as its operand.
-		protected override void BuildBinaryExpression(SqlBinaryExpression expr)
-		{
-			if (expr is { Operation: "^" } && QueryHelper.UnwrapNullablity(expr.Expr2) is SqlBinaryExpression { Operation: "^" })
-			{
-				BuildExpression(GetPrecedence(expr), expr.Expr1);
-				StringBuilder.Append(" ^ (");
-				BuildExpression(expr.Expr2);
-				StringBuilder.Append(')');
-				return;
-			}
+		// Access: ^ (power, left to right) > prefix minus > * / > MOD > + -; but a numeric literal after a minus is lexed
+		// as one negative token, so "-2 ^ x" is (-2) ^ x while "-[c] ^ 2" is -([c] ^ 2). Prefix minus and ^ are
+		// therefore unordered: each is parenthesized under the other. BAND > BOR > BXOR are ordered among themselves
+		// only. BETWEEN takes its operands unparenthesized only when they are primary: an arithmetic bound changes the
+		// result.
+		const int AccessBitwiseGroup = 8;
+		const int AccessPowerGroup   = 16;
 
-			base.BuildBinaryExpression(expr);
+		static readonly SqlPrecedenceTable _precedenceTable = CreatePrecedenceTable();
+
+		static SqlPrecedenceTable CreatePrecedenceTable()
+		{
+			const int arithmetic = SqlPrecedenceTable.ArithmeticGroup | SqlPrecedenceTable.PrefixGroup | AccessPowerGroup;
+
+			var prefix = new SqlOperatorPrecedence(Precedence.Unary + 4, SqlAssociativity.Left, false, SqlPrecedenceTable.PrefixGroup);
+			var power  = new SqlOperatorPrecedence(Precedence.Unary + 5, SqlAssociativity.Left, false, AccessPowerGroup);
+
+			return SqlPrecedenceTable.Default.With(
+				(SqlPrecedenceKeys.Negation,        prefix),
+				(SqlPrecedenceKeys.NegativeLiteral, prefix with { Level = Precedence.Unary + 6 }),
+				(SqlPrecedenceKeys.Power,           power),
+				("*",                               new(Precedence.Multiplicative,     SqlAssociativity.Left, false, arithmetic)),
+				("/",                               new(Precedence.Multiplicative,     SqlAssociativity.Left, false, arithmetic)),
+				("MOD",                             new(Precedence.Multiplicative - 10, SqlAssociativity.Left, false, arithmetic)),
+				("+",                               new(Precedence.Additive,           SqlAssociativity.Left, false, arithmetic)),
+				("-",                               new(Precedence.Additive,           SqlAssociativity.Left, false, arithmetic)),
+				("BAND",                            new(Precedence.Bitwise,            SqlAssociativity.Left, true,  AccessBitwiseGroup)),
+				("BOR",                             new(Precedence.Bitwise - 1,        SqlAssociativity.Left, true,  AccessBitwiseGroup)),
+				("BXOR",                            new(Precedence.Bitwise - 2,        SqlAssociativity.Left, true,  AccessBitwiseGroup)),
+				(SqlPrecedenceKeys.Between,         new(Precedence.Primary - 1,        SqlAssociativity.None, false, SqlPrecedenceTable.AllGroups)),
+				(SqlPrecedenceKeys.Class(Precedence.Unary), prefix));
 		}
 
-		// Access lexes "-2 ^ x" as (-2) ^ x, so a negated power keeps its own parentheses
-		protected override void BuildUnaryExpression(SqlUnaryExpression expr)
+		protected override SqlPrecedenceTable PrecedenceTable => _precedenceTable;
+
+		static bool IsPower(ISqlExpression expr) =>
+			expr is SqlFunction { Parameters.Length: 2 } func && string.Equals(func.Name, "Power", StringComparison.OrdinalIgnoreCase);
+
+		// Access has no Power function: a power renders as the ^ operator
+		protected override void BuildFunction(SqlFunction func)
 		{
-			if (expr.Operation == SqlUnaryOperation.Negation && QueryHelper.UnwrapNullablity(expr.Expr) is SqlBinaryExpression { Operation: "^" })
+			if (IsPower(func))
 			{
-				StringBuilder.Append("-(");
-				BuildExpression(expr.Expr);
-				StringBuilder.Append(')');
+				BuildInfixExpression(func.Parameters[0], "^", func.Parameters[1], PrecedenceTable[SqlPrecedenceKeys.Power], SqlPrecedenceKeys.Power);
 				return;
 			}
 
-			base.BuildUnaryExpression(expr);
+			base.BuildFunction(func);
+		}
+
+		protected override (SqlOperatorPrecedence Precedence, string? Key) ResolvePrecedence(ISqlExpression expr)
+		{
+			if (IsPower(QueryHelper.UnwrapNullablity(expr)))
+				return (PrecedenceTable[SqlPrecedenceKeys.Power], SqlPrecedenceKeys.Power);
+
+			return base.ResolvePrecedence(expr);
 		}
 
 		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery,

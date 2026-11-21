@@ -28,6 +28,12 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		// https://learn.microsoft.com/en-us/sql/t-sql/language-elements/string-concatenation-pipes-transact-sql
 		protected override ConcatBuildStyle ConcatStyle => ConcatBuildStyle.Pipes;
 
+		// the precedence of `||` among the T-SQL operators is not documented: keep it unordered (parenthesized)
+		static readonly SqlPrecedenceTable _precedenceTable = TransactSqlPrecedence.With(
+			(SqlPrecedenceKeys.Concatenation, SqlPrecedenceTable.Default[SqlPrecedenceKeys.Concatenation]));
+
+		protected override SqlPrecedenceTable PrecedenceTable => _precedenceTable;
+
 		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
 			if (type.DataType == DataType.Json)

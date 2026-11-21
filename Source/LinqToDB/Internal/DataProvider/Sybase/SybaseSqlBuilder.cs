@@ -44,6 +44,15 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 		// https://infocenter.sybase.com/help/topic/com.sybase.infocenter.dc32300.1600/doc/html/san1390612110949.html
 		protected override ConcatBuildStyle ConcatStyle => ConcatBuildStyle.Pipes;
 
+		// T-SQL operator precedence; the place of `||` among the operators is not documented, so it stays unordered.
+		// ASE rejects a prefix minus directly over `~` (`-~x`), so the two are unordered with each other.
+		static readonly SqlPrecedenceTable _precedenceTable = SqlServer.SqlServerSqlBuilder.TransactSqlPrecedence.With(
+			(SqlPrecedenceKeys.Concatenation,   SqlPrecedenceTable.Default[SqlPrecedenceKeys.Concatenation]),
+			(SqlPrecedenceKeys.Negation,        SqlServer.SqlServerSqlBuilder.TransactSqlPrecedence[SqlPrecedenceKeys.Negation]        with { Groups = SqlPrecedenceTable.PrefixGroup }),
+			(SqlPrecedenceKeys.BitwiseNegation, SqlServer.SqlServerSqlBuilder.TransactSqlPrecedence[SqlPrecedenceKeys.BitwiseNegation] with { Groups = SqlPrecedenceTable.ArithmeticGroup }));
+
+		protected override SqlPrecedenceTable PrecedenceTable => _precedenceTable;
+
 		protected override void BuildSqlConcatExpression(SqlConcatExpression element)
 		{
 			// Sybase ASE `||` (like `+`) does NOT propagate NULL — `'A' || NULL` returns `'A'`,

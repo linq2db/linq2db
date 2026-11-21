@@ -106,15 +106,9 @@ namespace LinqToDB.Internal.SqlQuery
 			return this;
 		}
 
-		public SqlSelectClause Expr<T>(ISqlExpression expr1, string operation, ISqlExpression expr2, int priority)
+		public SqlSelectClause Expr<T>(string alias, ISqlExpression expr1, string operation, ISqlExpression expr2)
 		{
-			AddOrFindColumn(new SqlColumn(SelectQuery, new SqlBinaryExpression(typeof(T), expr1, operation, expr2, priority)));
-			return this;
-		}
-
-		public SqlSelectClause Expr<T>(string alias, ISqlExpression expr1, string operation, ISqlExpression expr2, int priority)
-		{
-			AddOrFindColumn(new SqlColumn(SelectQuery, new SqlBinaryExpression(typeof(T), expr1, operation, expr2, priority), alias));
+			AddOrFindColumn(new SqlColumn(SelectQuery, new SqlBinaryExpression(typeof(T), expr1, operation, expr2), alias));
 			return this;
 		}
 

@@ -29,6 +29,42 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 		protected override bool IsOverRequiredWithinGroup => true;
 
+		/// <summary>
+		/// T-SQL operator precedence (SQL Server, SQL CE, Sybase ASE): <c>~</c> &gt; <c>* / %</c> &gt;
+		/// <c>+ -</c> (binary and prefix), <c>&amp; ^ |</c> and <c>+</c> concatenation, one level left to right &gt;
+		/// comparisons. A prefix minus after an operator reaches over <c>* / %</c> but not over <c>+ -</c>
+		/// (measured: <c>100 / - 10 * 5</c> is -2, <c>2 * - 3 + 4</c> is -2).
+		/// </summary>
+		internal static SqlPrecedenceTable TransactSqlPrecedence { get; } = CreateTransactSqlPrecedence();
+
+		static SqlPrecedenceTable CreateTransactSqlPrecedence()
+		{
+			const int arithmetic = SqlPrecedenceTable.ArithmeticGroup | SqlPrecedenceTable.PrefixGroup;
+
+			var additive = new SqlOperatorPrecedence(Precedence.Additive, SqlAssociativity.Left, false, arithmetic);
+			var bitwise  = additive with { Associative = true };
+
+			return SqlPrecedenceTable.Default
+				.With(
+					("*",                               new SqlOperatorPrecedence(Precedence.Multiplicative, SqlAssociativity.Left, false, arithmetic)),
+					("/",                               new SqlOperatorPrecedence(Precedence.Multiplicative, SqlAssociativity.Left, false, arithmetic)),
+					("%",                               new SqlOperatorPrecedence(Precedence.Multiplicative, SqlAssociativity.Left, false, arithmetic)),
+					("+",                               additive),
+					("-",                               additive),
+					("&",                               bitwise),
+					("^",                               bitwise),
+					("|",                               bitwise),
+					(SqlPrecedenceKeys.Negation,        additive),
+					(SqlPrecedenceKeys.NegativeLiteral, additive),
+					(SqlPrecedenceKeys.BitwiseNegation, new SqlOperatorPrecedence(Precedence.Unary, SqlAssociativity.Left, false, arithmetic)),
+					(SqlPrecedenceKeys.Concatenation,   bitwise),
+					(SqlPrecedenceKeys.Class(Precedence.Unary),   additive),
+					(SqlPrecedenceKeys.Class(Precedence.Bitwise), additive))
+				.WithPrefixReachesEqualLevel(false);
+		}
+
+		protected override SqlPrecedenceTable PrecedenceTable => TransactSqlPrecedence;
+
 		protected override string? FirstFormat(SelectQuery selectQuery)
 		{
 			return selectQuery.Select.SkipValue == null ? "TOP ({0})" : null;

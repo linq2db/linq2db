@@ -3123,8 +3123,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 								element.SystemType,
 								expr1,
 								element.Operation,
-								expr2,
-								element.Precedence),
+								expr2),
 							element);
 					}
 
@@ -3161,8 +3160,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						return NotifyReplaced(new SqlUnaryExpression(
 								element.SystemType,
 								expr,
-								element.Operation,
-								element.Precedence),
+								element.Operation),
 							element);
 					}
 

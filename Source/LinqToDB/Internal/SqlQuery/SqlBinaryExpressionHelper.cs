@@ -329,13 +329,13 @@ namespace LinqToDB.Internal.SqlQuery
 			return _operationTypes.TryGetValue((left, operation, right), out var type) ? type : null;
 		}
 
-		public static SqlBinaryExpression CreateWithTypeInferred(Type defaultType, ISqlExpression expr1, string operation, ISqlExpression expr2, int precedence = Precedence.Unknown)
+		public static SqlBinaryExpression CreateWithTypeInferred(Type defaultType, ISqlExpression expr1, string operation, ISqlExpression expr2)
 		{
 			var type = expr1.SystemType == null || expr2.SystemType == null
 				? defaultType
 				: (TryGetBinaryType(expr1.SystemType, operation, expr2.SystemType) ?? defaultType);
 
-			return new SqlBinaryExpression(type, expr1, operation, expr2, precedence);
+			return new SqlBinaryExpression(type, expr1, operation, expr2);
 		}
 	}
 }

@@ -133,7 +133,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
 		public static ISqlExpression Div(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, ISqlExpression y)
 		{
-			return new SqlBinaryExpression(dbDataType, x, "/", y, Precedence.Multiplicative);
+			return new SqlBinaryExpression(dbDataType, x, "/", y);
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
@@ -146,7 +146,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
 		public static ISqlExpression Multiply(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, ISqlExpression y)
 		{
-			return new SqlBinaryExpression(dbDataType, x, "*", y, Precedence.Multiplicative);
+			return new SqlBinaryExpression(dbDataType, x, "*", y);
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
@@ -167,25 +167,25 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
 		public static ISqlExpression BitNot(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression v)
 		{
-			return new SqlUnaryExpression(dbDataType, v, SqlUnaryOperation.BitwiseNegation, Precedence.Bitwise);
+			return new SqlUnaryExpression(dbDataType, v, SqlUnaryOperation.BitwiseNegation);
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
 		public static ISqlExpression Negate(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression v)
 		{
-			return new SqlUnaryExpression(dbDataType, v, SqlUnaryOperation.Negation, Precedence.Unary);
+			return new SqlUnaryExpression(dbDataType, v, SqlUnaryOperation.Negation);
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
 		public static ISqlExpression BitAnd(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, ISqlExpression y)
 		{
-			return new SqlBinaryExpression(dbDataType, x, "&", y, precedence: Precedence.Bitwise);
+			return new SqlBinaryExpression(dbDataType, x, "&", y);
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
 		public static ISqlExpression Sub(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, ISqlExpression y)
 		{
-			return new SqlBinaryExpression(dbDataType, x, "-", y, Precedence.Subtraction);
+			return new SqlBinaryExpression(dbDataType, x, "-", y);
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
@@ -194,21 +194,16 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (dbDataType.SystemType == typeof(string))
 				throw new InvalidOperationException("String concatenation must use factory.Concat(...) so it produces SqlConcatExpression. factory.Add is for numeric / temporal arithmetic only.");
 
-			return new SqlBinaryExpression(dbDataType, x, "+", y, Precedence.Additive);
-		}
-
-		public static ISqlExpression Binary(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, string operation, ISqlExpression y)
-		{
-			return factory.Binary(dbDataType, x, operation, y, Precedence.Additive);
+			return new SqlBinaryExpression(dbDataType, x, "+", y);
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
-		public static ISqlExpression Binary(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, string operation, ISqlExpression y, int precedence)
+		public static ISqlExpression Binary(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, string operation, ISqlExpression y)
 		{
 			if (dbDataType.SystemType == typeof(string) && (string.Equals(operation, "+", StringComparison.Ordinal) || string.Equals(operation, "||", StringComparison.Ordinal)))
 				throw new InvalidOperationException("String concatenation must use factory.Concat(...) so it produces SqlConcatExpression. factory.Binary is for non-concat operations.");
 
-			return new SqlBinaryExpression(dbDataType, x, operation, y, precedence);
+			return new SqlBinaryExpression(dbDataType, x, operation, y);
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
@@ -294,7 +289,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
 		public static ISqlExpression Mod(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, ISqlExpression value)
 		{
-			return new SqlBinaryExpression(dbDataType, x, "%", value, Precedence.Multiplicative);
+			return new SqlBinaryExpression(dbDataType, x, "%", value);
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
