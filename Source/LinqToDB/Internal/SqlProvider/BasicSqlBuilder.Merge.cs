@@ -309,6 +309,13 @@ namespace LinqToDB.Internal.SqlProvider
 				if (row.Count == 0)
 				{
 					StringBuilder.Append('1');
+
+					// add aliases only for first row
+					if (RequiresConstantColumnAliases || i == 0)
+					{
+						StringBuilder.Append(" AS ");
+						Convert(StringBuilder, "Unused", ConvertType.NameToQueryField);
+					}
 				}
 				else
 				{

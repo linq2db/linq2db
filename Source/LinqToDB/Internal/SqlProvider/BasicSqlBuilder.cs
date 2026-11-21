@@ -2124,9 +2124,13 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			StringBuilder.Append("SELECT ");
 
-			// a source without columns still needs a select list, as in BuildValues
+			// a source without columns still needs a select list, as in BuildValues, and a name for it
+			// for providers that don't name the source's columns in a derived column list
 			if (valuesTable.Fields.Count == 0)
-				StringBuilder.Append('1');
+			{
+				StringBuilder.Append("1 ");
+				Convert(StringBuilder, "Unused", ConvertType.NameToQueryField);
+			}
 
 			for (var i = 0; i < valuesTable.Fields.Count; i++)
 			{
