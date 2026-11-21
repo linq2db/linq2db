@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
@@ -841,6 +842,286 @@ namespace Tests.Linq
 			rows[0].Qty.ShouldBe(5);
 
 			query.Count().ShouldBe(1);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2815")]
+		public void LeftJoinRemovedFromExistsSubquery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var query = db.Parent.Where(p => db.Child
+				.Where(c => c.ParentID == p.ParentID)
+				.SelectMany(
+					c => db.GrandChild.Where(g => g.ChildID == c.ChildID).DefaultIfEmpty(),
+					(c, g) => new { c, g })
+				.Any(x => x.c.ChildID > 0));
+
+			var expected = Parent
+				.Where(p => Child
+					.Where(c => c.ParentID == p.ParentID)
+					.SelectMany(
+						c => GrandChild.Where(g => g.ChildID == c.ChildID).DefaultIfEmpty(),
+						(c, g) => new { c, g })
+					.Any(x => x.c.ChildID > 0))
+				.Select(p => p.ParentID)
+				.OrderBy(id => id)
+				.ToArray();
+
+			query.Select(p => p.ParentID).OrderBy(id => id).ToArray().ShouldBe(expected);
+
+			var exists = FindExists(query.GetSelectQuery());
+
+			exists.ShouldNotBeNull();
+			exists!.SubQuery.From.Tables[0].Joins.ShouldBeEmpty();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2815")]
+		public void LeftJoinKeptInExistsSubqueryWhenRightTableIsReferenced([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var query = db.Parent.Where(p => db.Child
+				.Where(c => c.ParentID == p.ParentID)
+				.SelectMany(
+					c => db.GrandChild.Where(g => g.ChildID == c.ChildID).DefaultIfEmpty(),
+					(c, g) => new { c, g })
+				.Any(x => x.g!.ChildID > 0));
+
+			var expected = Parent
+				.Where(p => Child
+					.Where(c => c.ParentID == p.ParentID)
+					.SelectMany(
+						c => GrandChild.Where(g => g.ChildID == c.ChildID).DefaultIfEmpty(),
+						(c, g) => new { c, g })
+					.Any(x => x.g != null))
+				.Select(p => p.ParentID)
+				.OrderBy(id => id)
+				.ToArray();
+
+			query.Select(p => p.ParentID).OrderBy(id => id).ToArray().ShouldBe(expected);
+
+			var exists = FindExists(query.GetSelectQuery());
+
+			exists.ShouldNotBeNull();
+			exists!.SubQuery.From.Tables[0].Joins.ShouldNotBeEmpty();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2815")]
+		public void LeftJoinRemovedFromNotExistsSubquery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var query = db.Parent.Where(p => !db.Child
+				.Where(c => c.ParentID == p.ParentID)
+				.SelectMany(
+					c => db.GrandChild.Where(g => g.ChildID == c.ChildID).DefaultIfEmpty(),
+					(c, g) => new { c, g })
+				.Any(x => x.c.ChildID > 0));
+
+			var expected = Parent
+				.Where(p => !Child
+					.Where(c => c.ParentID == p.ParentID)
+					.SelectMany(
+						c => GrandChild.Where(g => g.ChildID == c.ChildID).DefaultIfEmpty(),
+						(c, g) => new { c, g })
+					.Any(x => x.c.ChildID > 0))
+				.Select(p => p.ParentID)
+				.OrderBy(id => id)
+				.ToArray();
+
+			query.Select(p => p.ParentID).OrderBy(id => id).ToArray().ShouldBe(expected);
+
+			var exists = FindExists(query.GetSelectQuery());
+
+			exists.ShouldNotBeNull();
+			exists!.IsNot.ShouldBeTrue();
+			exists.SubQuery.From.Tables[0].Joins.ShouldBeEmpty();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2815")]
+		public void LeftJoinKeptInNestedSubqueryOfExists([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			// The COUNT subquery inside the EXISTS WHERE observes the number of joined rows,
+			// so the cardinality-free removal must not descend into it.
+			var query = db.Parent.Where(p => db.Child.Where(c => c.ParentID == p.ParentID &&
+				(
+					from c2 in db.Child
+					where c2.ChildID == c.ChildID
+					from g in db.GrandChild.LeftJoin(g => g.ChildID == c2.ChildID)
+					select c2
+				).Count() > 1).Any());
+
+			var expected = Parent
+				.Where(p => Child.Where(c => c.ParentID == p.ParentID &&
+					(
+						from c2 in Child
+						where c2.ChildID == c.ChildID
+						from g in GrandChild.Where(g => g.ChildID == c2.ChildID).DefaultIfEmpty()
+						select c2
+					).Count() > 1).Any())
+				.Select(p => p.ParentID)
+				.OrderBy(id => id)
+				.ToArray();
+
+			query.Select(p => p.ParentID).OrderBy(id => id).ToArray().ShouldBe(expected);
+			expected.ShouldNotBeEmpty();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2815")]
+		public void LeftJoinKeptInGroupedDerivedTableOfExists([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			// The grouped derived table inside the EXISTS FROM counts the joined rows.
+			var query = db.Parent.Where(p =>
+				(
+					from x in
+						from c in db.Child
+						from g in db.GrandChild.LeftJoin(g => g.ChildID == c.ChildID)
+						group c by c.ParentID into gr
+						select new { gr.Key, Cnt = gr.Count() }
+					where x.Key == p.ParentID && x.Cnt > 2
+					select x
+				).Any());
+
+			var expected = Parent
+				.Where(p =>
+					(
+						from x in
+							from c in Child
+							from g in GrandChild.Where(g => g.ChildID == c.ChildID).DefaultIfEmpty()
+							group c by c.ParentID into gr
+							select new { gr.Key, Cnt = gr.Count() }
+						where x.Key == p.ParentID && x.Cnt > 2
+						select x
+					).Any())
+				.Select(p => p.ParentID)
+				.OrderBy(id => id)
+				.ToArray();
+
+			query.Select(p => p.ParentID).OrderBy(id => id).ToArray().ShouldBe(expected);
+			expected.ShouldNotBeEmpty();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2815")]
+		public void LeftJoinKeptInGroupedExistsSubquery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			// GROUP BY/HAVING counts the joined rows, so the EXISTS subquery cannot drop the join.
+			var query = db.Parent.Where(p =>
+				(
+					from c in db.Child
+					where c.ParentID == p.ParentID
+					from g in db.GrandChild.LeftJoin(g => g.ChildID == c.ChildID)
+					group c by c.ParentID into gr
+					where gr.Count() > 2
+					select gr.Key
+				).Any());
+
+			var expected = Parent
+				.Where(p =>
+					(
+						from c in Child
+						where c.ParentID == p.ParentID
+						from g in GrandChild.Where(g => g.ChildID == c.ChildID).DefaultIfEmpty()
+						group c by c.ParentID into gr
+						where gr.Count() > 2
+						select gr.Key
+					).Any())
+				.Select(p => p.ParentID)
+				.OrderBy(id => id)
+				.ToArray();
+
+			query.Select(p => p.ParentID).OrderBy(id => id).ToArray().ShouldBe(expected);
+			expected.ShouldNotBeEmpty();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2815")]
+		public void LeftJoinKeptInOffsetExistsSubquery([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			// OFFSET makes the row count observable; SQLite rejects Skip in a subquery, hence PostgreSQL-only.
+			var query = db.Parent.Where(p =>
+				(
+					from c in db.Child
+					where c.ParentID == p.ParentID
+					from g in db.GrandChild.LeftJoin(g => g.ChildID == c.ChildID)
+					select c
+				).Skip(3).Any());
+
+			var expected = Parent
+				.Where(p => Child
+					.Where(c => c.ParentID == p.ParentID)
+					.SelectMany(c => GrandChild.Where(g => g.ChildID == c.ChildID).DefaultIfEmpty(), (c, g) => c)
+					.Skip(3)
+					.Any())
+				.Select(p => p.ParentID)
+				.OrderBy(id => id)
+				.ToArray();
+
+			query.Select(p => p.ParentID).OrderBy(id => id).ToArray().ShouldBe(expected);
+			expected.ShouldNotBeEmpty();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2815")]
+		public void LeftJoinKeptInSetOperationExistsSubquery([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			// EXCEPT ALL compares multisets, so the duplicated rows produced by the join matter.
+			// PostgreSQL only: providers without native EXCEPT ALL get an inexact emulation.
+			var query = db.Parent.Where(p =>
+				(
+					from c in db.Child
+					where c.ParentID == p.ParentID
+					from g in db.GrandChild.LeftJoin(g => g.ChildID == c.ChildID)
+					select c.ChildID
+				)
+				.ExceptAll(db.Child.Where(c => c.ParentID == p.ParentID).Select(c => c.ChildID))
+				.Any());
+
+			var expected = Parent
+				.Where(p => HasExceptAllRows(
+					Child
+						.Where(c => c.ParentID == p.ParentID)
+						.SelectMany(c => GrandChild.Where(g => g.ChildID == c.ChildID).DefaultIfEmpty(), (c, g) => c.ChildID),
+					Child.Where(c => c.ParentID == p.ParentID).Select(c => c.ChildID)))
+				.Select(p => p.ParentID)
+				.OrderBy(id => id)
+				.ToArray();
+
+			query.Select(p => p.ParentID).OrderBy(id => id).ToArray().ShouldBe(expected);
+			expected.ShouldNotBeEmpty();
+		}
+
+		static bool HasExceptAllRows(IEnumerable<int> first, IEnumerable<int> second)
+		{
+			var counts = first.GroupBy(x => x).ToDictionary(g => g.Key, g => g.Count());
+
+			foreach (var item in second)
+			{
+				if (counts.TryGetValue(item, out var count) && count > 0)
+					counts[item] = count - 1;
+			}
+
+			return counts.Values.Any(count => count > 0);
+		}
+
+		static SqlPredicate.Exists? FindExists(IQueryElement element)
+		{
+			SqlPredicate.Exists? found = null;
+
+			element.Visit(e =>
+			{
+				if (e is SqlPredicate.Exists exists)
+					found = exists;
+			});
+
+			return found;
 		}
 
 		#endregion

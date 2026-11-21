@@ -15,7 +15,24 @@ namespace LinqToDB.Internal.SqlProvider
 
 		public SqlStatement Optimize(SqlStatement statement, EvaluationContext evaluationContext)
 		{
-			RemoveUnusedLeftJoins(statement, evaluationContext);
+			// Inside an EXISTS subquery only row presence matters, so an outer join cannot change the
+			// result even when its cardinality is 1..N (issue #2815). Collect the subqueries first:
+			// removing joins while walking the tree would re-enter the visitor.
+			List<SelectQuery>? existsQueries = null;
+
+			statement.Visit(e =>
+			{
+				if (e is SqlPredicate.Exists exists && CanIgnoreJoinCardinality(exists.SubQuery))
+					(existsQueries ??= new()).Add(exists.SubQuery);
+			});
+
+			if (existsQueries != null)
+			{
+				foreach (var existsQuery in existsQueries)
+					RemoveUnusedJoinsFromExistsSubquery(existsQuery, evaluationContext);
+			}
+
+			RemoveUnusedLeftJoins(statement, evaluationContext, ignoreJoinCardinality: false);
 
 			statement = RemoveDuplicateJoins(statement);
 
@@ -23,18 +40,57 @@ namespace LinqToDB.Internal.SqlProvider
 		}
 
 		/// <summary>
-		/// Removes left joins if they doesn't change query cardinality and joined tables not used in query.
+		/// Removes unused LEFT joins of the EXISTS subquery's own FROM clause without the cardinality
+		/// check: the EXISTS test only observes whether at least one row is produced. Nested queries
+		/// (derived tables, scalar subqueries in WHERE) are left to the ordinary pass, because they
+		/// can observe the number of joined rows.
 		/// </summary>
-		void RemoveUnusedLeftJoins(SqlStatement statement, EvaluationContext evaluationContext)
+		void RemoveUnusedJoinsFromExistsSubquery(SelectQuery existsQuery, EvaluationContext evaluationContext)
 		{
-			statement.Visit((this_: this, statement, evaluationContext), static (ctx, e) =>
+			foreach (var source in existsQuery.From.Tables)
+			{
+				for (var index = source.Joins.Count - 1; index >= 0; index--)
+				{
+					if (CanRemoveLeftJoin(existsQuery, source.Joins[index], evaluationContext, ignoreJoinCardinality: true))
+						source.Joins.RemoveAt(index);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Returns false when the query's result depends on the number of rows its joins produce:
+		/// grouping, HAVING, OFFSET, set operators or aggregates/window functions in the projection
+		/// all make more than row presence observable.
+		/// </summary>
+		static bool CanIgnoreJoinCardinality(SelectQuery query)
+		{
+			if (query.HasGroupBy || query.HasHaving || query.HasSetOperators || query.Select.SkipValue != null)
+				return false;
+
+			foreach (var column in query.Select.Columns)
+			{
+				if (QueryHelper.ContainsAggregationOrWindowFunction(column.Expression))
+					return false;
+			}
+
+			return true;
+		}
+
+		/// <summary>
+		/// Removes left joins if they doesn't change query cardinality and joined tables not used in query.
+		/// With <paramref name="ignoreJoinCardinality"/> also removes joins that can multiply rows
+		/// (used for EXISTS subqueries, where only row presence is observed).
+		/// </summary>
+		void RemoveUnusedLeftJoins(IQueryElement element, EvaluationContext evaluationContext, bool ignoreJoinCardinality)
+		{
+			element.Visit((this_: this, statement: element, evaluationContext, ignoreJoinCardinality), static (ctx, e) =>
 			{
 				if (e is SqlTableSource source)
 				{
 					// detect unused LEFT joins that doesn't change query cardinality and remove them
 					for (var index = source.Joins.Count - 1; index >= 0; index--)
 					{
-						if (ctx.this_.CanRemoveLeftJoin(ctx.statement, source.Joins[index], ctx.evaluationContext))
+						if (ctx.this_.CanRemoveLeftJoin(ctx.statement, source.Joins[index], ctx.evaluationContext, ctx.ignoreJoinCardinality))
 							source.Joins.RemoveAt(index);
 					}
 				}
@@ -200,7 +256,7 @@ namespace LinqToDB.Internal.SqlProvider
 		}
 
 		#region Helpers
-		bool CanRemoveLeftJoin(SqlStatement statement, SqlJoinedTable join, EvaluationContext evaluationContext)
+		bool CanRemoveLeftJoin(IQueryElement statement, SqlJoinedTable join, EvaluationContext evaluationContext, bool ignoreJoinCardinality)
 		{
 			// left joins only
 			if (join.JoinType is not JoinType.Left)
@@ -226,7 +282,7 @@ namespace LinqToDB.Internal.SqlProvider
 				(e is SqlColumn column && column.Parent?.SourceID == sourceID)))
 				return false;
 
-			if (!IsLeftJoinCardinalityPreserved(join, evaluationContext))
+			if (!ignoreJoinCardinality && !IsLeftJoinCardinalityPreserved(join, evaluationContext))
 				return false;
 
 			return true;
