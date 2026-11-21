@@ -2,7 +2,7 @@
 {
 	/// <summary>
 	/// Implemented by a query translation interceptor, such as <see cref="IQueryExpressionInterceptor"/>, to declare that
-	/// its instances translate queries alike when they return equal keys. A query translated for one context is then
+	/// its instances translate queries the same way when they return equal keys. A query translated for one context is then
 	/// reused for another context whose interceptors are of the same types and return equal keys.
 	/// </summary>
 	/// <remarks>
@@ -13,8 +13,8 @@
 	public interface IInterceptorCacheKey
 	{
 		/// <summary>
-		/// Identifies how this instance translates queries. Instances that translate a query differently return
-		/// different keys. The key does not change while the interceptor is registered.
+		/// Identifies how this instance translates queries. Instances that translate a query differently, the values they
+		/// insert into it included, return different keys. The key does not change while the interceptor is registered.
 		/// </summary>
 		string? CacheKey { get; }
 	}

@@ -140,24 +140,23 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				filteredExpression = ExpressionBuilder.ExposeExpression(filteredExpression, builder.DataContext, builder.OptimizationContext, builder.ParameterValues, optimizeConditions: true, compactBinary: true);
 
-				if (builder.DataContext is IInterceptable<IQueryExpressionInterceptor> { Interceptor: not null })
+				if (builder.DataContext is IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } interceptor })
 				{
-					var exposedFilter = filteredExpression;
-
-					Expression Rewrite(IDataContext dc) => dc is IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } interceptor }
-						? interceptor.ProcessExpression(exposedFilter, new QueryExpressionArgs(dc, exposedFilter, QueryExpressionArgs.ExpressionKind.QueryFilter))
-						: exposedFilter;
-
-					// The interceptor instance is not part of the cache key, so a rewrite is registered as a dynamic accessor: a
-					// cache hit runs the executing context's interceptor on the same filters again and compares the result.
-					// An interceptor with IInterceptorCacheKey that leaves the filters unchanged costs nothing; one without it
-					// may rewrite them for another instance of its type.
-					var untrusted = builder.DataContext.HasUntrustedQueryInterceptor();
-					var rewritten = untrusted ? null : Rewrite(builder.DataContext);
-
-					if (untrusted || !ReferenceEquals(rewritten, exposedFilter))
+					if (builder.DataContext.HasUntrustedQueryInterceptor())
 					{
-						filteredExpression = builder.ParametersContext.RegisterDynamicExpressionAccessor(GetFilterAccessorKey(tableExpression, activeFilters), builder.DataContext, mappingSchema, (dc, _) => Rewrite(dc), rewritten);
+						var exposedFilter = filteredExpression;
+
+						// An interceptor without IInterceptorCacheKey may rewrite the filters differently for another instance of
+						// its type, which the cache key does not tell apart: the rewrite is registered as a dynamic accessor, which a
+						// cache hit runs for the executing context's interceptor and compares.
+						filteredExpression = builder.ParametersContext.RegisterDynamicExpressionAccessor(GetFilterAccessorKey(tableExpression, activeFilters), builder.DataContext, mappingSchema, (dc, _) =>
+							dc is IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } current }
+								? current.ProcessExpression(exposedFilter, new QueryExpressionArgs(dc, exposedFilter, QueryExpressionArgs.ExpressionKind.QueryFilter))
+								: exposedFilter);
+					}
+					else
+					{
+						filteredExpression = interceptor.ProcessExpression(filteredExpression, new QueryExpressionArgs(builder.DataContext, filteredExpression, QueryExpressionArgs.ExpressionKind.QueryFilter));
 					}
 				}
 			}

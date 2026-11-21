@@ -45,14 +45,15 @@ namespace LinqToDB.Internal.Linq
 
 		internal IQueryExpressions? CompiledExpressions;
 
-		// A query built for a compiled query is kept under a key that does not tell query interceptor instances apart: with a
-		// query interceptor, the dynamic accessors (a query filter it rewrote) are re-evaluated for the executing context first,
-		// as the query cache does, and their results supply the parameter values. Without one, the query is reused as it is.
+		// A query built for a compiled query is kept under a key that does not tell query interceptor instances apart. An
+		// interceptor without IInterceptorCacheKey may rewrite what the dynamic accessors return differently for each instance:
+		// they are re-evaluated for the executing context first, as the query cache does, and their results supply the
+		// parameter values. Otherwise the query is reused as it is.
 		internal bool TryReuse(IDataContext dataContext, object?[]? parameterValues, ref QueryCacheCompareInfo.DynamicAccessorResults dynamicAccessorResults, out IQueryExpressions expressions)
 		{
 			expressions = CompiledExpressions!;
 
-			if (CompareInfo?.DynamicAccessors == null || dataContext is not IInterceptable<IQueryExpressionInterceptor> { Interceptor: not null })
+			if (CompareInfo?.DynamicAccessors == null || !dataContext.HasUntrustedQueryInterceptor())
 				return true;
 
 			if (!Revalidate(dataContext, expressions.MainExpression, parameterValues, ref dynamicAccessorResults, out var matched))

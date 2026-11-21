@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
@@ -1512,13 +1513,13 @@ namespace Tests.Data
 
 		/// <summary>
 		/// Filters by tenant at the given stage; the admin (no tenant) leaves the query unchanged. The cache key tells the
-		/// two translations apart, while the tenant value stays a parameter of the shared query.
+		/// tenants' translations apart.
 		/// </summary>
 		sealed class TenantLimitInterceptor(ExpressionKind kind, int? tenant) : IQueryExpressionInterceptor, IInterceptorCacheKey
 		{
 			readonly PersonLimitInterceptor? _limit = tenant == null ? null : new PersonLimitInterceptor(kind, tenant.Value);
 
-			public string? CacheKey => _limit == null ? null : "tenant";
+			public string? CacheKey => tenant?.ToString(CultureInfo.InvariantCulture);
 
 			public Expression ProcessExpression(Expression expression, QueryExpressionArgs args)
 			{
@@ -1839,8 +1840,7 @@ namespace Tests.Data
 			misses.ShouldBe(1);
 		}
 
-		// Instances of one type that differ in whether they rewrite the query at all tell the cache apart through
-		// IInterceptorCacheKey.
+		// Instances of one type that translate the query differently tell the cache apart through IInterceptorCacheKey.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
 		public void QueryExpression_CacheKey_SeparatesInstances(
 			[IncludeDataSources(true, TestProvName.AllSQLite)]                   string         context,
@@ -2319,6 +2319,28 @@ namespace Tests.Data
 			counter.QueryFilterCalls.ShouldBe(1);
 		}
 
+		// A compiled query is reused as it is when the context's interceptor declares IInterceptorCacheKey: a query filter
+		// given as a function is not built again on every call.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
+		public void QueryExpression_UnchangedFuncFilter_CompiledQueryReusedAsIs([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			Query.ClearCaches();
+
+			var counter = new FilterCallCounter();
+			var count   = CompiledQuery.Compile((IDataContext db) => db.GetTable<Person>().Count());
+
+			using var db = GetDataConnection(context, o => o
+				.UseMappingSchema(_personNamedFuncFilterSchema)
+				.UseInterceptor(counter));
+
+			for (var i = 0; i < 3; i++)
+			{
+				count(db).ShouldBe(ExpectedIds().Length, $"call {i}");
+			}
+
+			counter.QueryFilterCalls.ShouldBe(1);
+		}
+
 		/// <summary>
 		/// Appends <c>Where(p => p.ID &lt;= limit)</c> to the query filter with the limit inlined, so that each limit gets a
 		/// query of its own, and counts the query filters it is asked to rewrite.
@@ -2399,7 +2421,7 @@ namespace Tests.Data
 		{
 			readonly InlinedLimitFilterInterceptor _inner = new(limit);
 
-			public string? CacheKey => "inlined";
+			public string? CacheKey => limit.ToString(CultureInfo.InvariantCulture);
 
 			public int QueryFilterCalls => _inner.QueryFilterCalls;
 
@@ -2409,10 +2431,10 @@ namespace Tests.Data
 			}
 		}
 
-		// One context executing a query: a query interceptor that rewrites the query filter is asked to rewrite it once per
-		// execution, the execution that builds the query included, with or without IInterceptorCacheKey.
+		// One context executing a query: a query interceptor that rewrites the query filter is asked to rewrite it once when
+		// the query is built, and, without IInterceptorCacheKey, once more on every cache hit.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
-		public void QueryExpression_RewrittenQueryFilterOncePerExecution(
+		public void QueryExpression_RewrittenQueryFilterCalls(
 			[IncludeDataSources(false, TestProvName.AllSQLite)] string context,
 			[Values]                                            bool   keyed)
 		{
@@ -2435,7 +2457,7 @@ namespace Tests.Data
 
 				db.GetTable<Person>().Count().ShouldBe(ExpectedIds(3).Length, $"execution {i}");
 
-				(QueryFilterCalls() - calls).ShouldBe(1, $"query filter calls, execution {i}");
+				(QueryFilterCalls() - calls).ShouldBe(keyed && i > 0 ? 0 : 1, $"query filter calls, execution {i}");
 			}
 		}
 

@@ -56,11 +56,11 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// <param name="forExpression">Expression which is used as key to do not generate duplicate comparers.</param>
 		/// <param name="dataContext">DataContext which is used to execute <paramref name="accessorFunc"/>.</param>
 		/// <param name="accessorFunc">Function, which will used for retrieving current expression during cache comparison.</param>
-		/// <param name="result">Result of <paramref name="accessorFunc"/> for <paramref name="dataContext"/>, when the caller already has it.</param>
 		/// <returns>Result of execution of accessorFunc</returns>
-		public Expression RegisterDynamicExpressionAccessor(Expression forExpression, IDataContext dataContext, MappingSchema mappingSchema, QueryCacheCompareInfo.ExpressionAccessorFunc accessorFunc, Expression? result = null)
+		public Expression RegisterDynamicExpressionAccessor(Expression forExpression, IDataContext dataContext, MappingSchema mappingSchema, QueryCacheCompareInfo.ExpressionAccessorFunc accessorFunc)
 		{
-			return CacheManager.RegisterDynamicExpressionAccessor(forExpression, dataContext, mappingSchema, accessorFunc, result);
+			var result = CacheManager.RegisterDynamicExpressionAccessor(forExpression, dataContext, mappingSchema, accessorFunc);
+			return result;
 		}
 
 		internal void RegisterNonQueryParameter(SqlParameter parameter)
