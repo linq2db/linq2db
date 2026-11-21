@@ -49,6 +49,40 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		protected override ConcatBuildStyle ConcatStyle => ConcatBuildStyle.Pipes;
 		protected override bool LiteralBackslashEscapes => true;
 
+		// https://ydb.tech/docs/en/yql/reference/syntax/expressions: unary + - ~ > || > * / % > + - > ?? > shifts and
+		// & | ^ (one level) > comparisons; || binds tighter than *
+		static readonly SqlPrecedenceTable _precedenceTable = CreatePrecedenceTable();
+
+		static SqlPrecedenceTable CreatePrecedenceTable()
+		{
+			const int arithmetic = SqlPrecedenceTable.ArithmeticGroup | SqlPrecedenceTable.PrefixGroup;
+
+			var prefix         = new SqlOperatorPrecedence(Precedence.Unary,              SqlAssociativity.Left, false, arithmetic);
+			var concatenation  = new SqlOperatorPrecedence(Precedence.Multiplicative + 5, SqlAssociativity.Left, true,  arithmetic);
+			var multiplicative = new SqlOperatorPrecedence(Precedence.Multiplicative,     SqlAssociativity.Left, false, arithmetic);
+			var additive       = new SqlOperatorPrecedence(Precedence.Additive,           SqlAssociativity.Left, false, arithmetic);
+			var bitwise        = new SqlOperatorPrecedence(Precedence.Comparison + 5,     SqlAssociativity.Left, true,  arithmetic);
+
+			return SqlPrecedenceTable.Default.With(
+				(SqlPrecedenceKeys.Negation,        prefix),
+				(SqlPrecedenceKeys.NegativeLiteral, prefix),
+				(SqlPrecedenceKeys.BitwiseNegation, prefix),
+				(SqlPrecedenceKeys.Concatenation,   concatenation),
+				("*",                               multiplicative),
+				("/",                               multiplicative),
+				("%",                               multiplicative),
+				("+",                               additive),
+				("-",                               additive),
+				("&",                               bitwise),
+				("|",                               bitwise),
+				("^",                               bitwise),
+				(SqlPrecedenceKeys.Class(Precedence.Unary),       prefix),
+				(SqlPrecedenceKeys.Class(Precedence.Bitwise),     bitwise with { Associative = false }),
+				(SqlPrecedenceKeys.Class(Precedence.Concatenate), concatenation with { Associative = false }));
+		}
+
+		protected override SqlPrecedenceTable PrecedenceTable => _precedenceTable;
+
 		// YQL allows a derived column list only on VALUES, not on a scalar/raw-SQL subquery source
 		// (SupportsColumnAliasesInSource stays true so VALUES columns keep their names).
 		protected override bool SupportsColumnAliasesInScalarSource => false;
