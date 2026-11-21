@@ -195,7 +195,8 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		{
 			var dbType = Factory.GetDbDataType(type);
 
-			return Factory.Expression(dbType, Precedence.Primary, "BitCast({0} AS {1})", expression, new SqlDataType(dbType));
+			// nullable when its operand is, or a NULL operand makes "x IS NULL" fold to false
+			return new SqlExpression(dbType, "BitCast({0} AS {1})", Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, expression, new SqlDataType(dbType));
 		}
 
 		// a signed operand of a signed operator of the given width: widened by value first, then reinterpreted
