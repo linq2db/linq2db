@@ -2461,6 +2461,34 @@ namespace Tests.Data
 			}
 		}
 
+		// A compiled query that returns an IQueryable, without IInterceptorCacheKey: the call and the first enumeration are
+		// one execution, which rewrites the query filter once, built or reused; each further enumeration rewrites it once more.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
+		public void QueryExpression_CompiledQueryable_QueryFilterRewrittenOncePerExecution([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			Query.ClearCaches();
+
+			var interceptor = new InlinedLimitFilterInterceptor(3);
+
+			using var db = GetDataConnection(context, o => o
+				.UseMappingSchema(_personFilterSchema)
+				.UseInterceptor(interceptor));
+
+			for (var i = 0; i < 2; i++)
+			{
+				var calls = interceptor.QueryFilterCalls;
+				var query = _compiledPersons(db);
+
+				ShouldReturnIds(query, ExpectedIds(3), $"call {i}");
+
+				(interceptor.QueryFilterCalls - calls).ShouldBe(1, $"query filter calls, call {i}");
+
+				ShouldReturnIds(query, ExpectedIds(3), $"call {i}, enumerated again");
+
+				(interceptor.QueryFilterCalls - calls).ShouldBe(2, $"query filter calls, call {i}, enumerated again");
+			}
+		}
+
 		// The same IQueryable executed while an interceptor is added and removed, with the query cache on or off: the query it
 		// keeps and its own tree must not outlive the change.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]

@@ -46,6 +46,11 @@ namespace LinqToDB.Internal.Linq
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		internal ICompiledQuerySource<T>? CompiledSource;
 
+		// Set by the compiled query call that resolved Info: the call and the first execution are one execution, so that
+		// execution does not check the query against the context again.
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		internal bool CompiledChecked;
+
 		// A compiled table hands over the container its Info's accessors were built against. Rebuilding one from
 		// the main expression alone carries no dynamic entries, and an accessor rooted at one - which a query
 		// filter closing over a value produces - then has nothing to resolve. Only for enumerating this query as
@@ -128,8 +133,19 @@ namespace LinqToDB.Internal.Linq
 		// Otherwise the compiled query resolves it again for the current context and arguments.
 		Query<T> GetCompiledQuery(ICompiledQuerySource<T> source, Query<T> info, ref IQueryExpressions expression)
 		{
+			var isChecked = CompiledChecked;
+
+			CompiledChecked = false;
+
 			if (info.ConfigurationID == DataContext.ConfigurationID && !source.HasDependentArguments)
 			{
+				if (isChecked)
+				{
+					expression = CompiledExpressions!;
+
+					return info;
+				}
+
 				var dynamicAccessorResults = new QueryCacheCompareInfo.DynamicAccessorResults(memoize: false);
 
 				if (info.TryReuse(DataContext, Parameters, ref dynamicAccessorResults, out var reused))

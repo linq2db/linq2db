@@ -203,6 +203,7 @@ namespace LinqToDB.Internal.Linq
 				Parameters          = parameters,
 				CompiledExpressions = expressions,
 				CompiledSource      = this,
+				CompiledChecked     = true,
 			};
 		}
 
