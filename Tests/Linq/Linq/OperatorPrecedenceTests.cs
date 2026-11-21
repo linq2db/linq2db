@@ -568,8 +568,9 @@ namespace Tests.Linq
 
 			var sql = query.ToSqlQuery();
 
+			// OleDb names its placeholders, ODBC writes ?: both bind by position
 			var placeholders = Regex
-				.Matches(sql.Sql, @"@\w+")
+				.Matches(sql.Sql, @"@\w+|\?")
 				.Cast<Match>()
 				.Select(m => m.Value.TrimStart('@'))
 				.ToList();
@@ -582,7 +583,12 @@ namespace Tests.Linq
 				.Count
 				.ShouldBe(2);
 
-			placeholders.ShouldBe(names);
+			placeholders
+				.Count
+				.ShouldBe(names.Count, sql.Sql);
+
+			if (!placeholders.Contains("?"))
+				placeholders.ShouldBe(names);
 		}
 
 		// the subquery brings its own parentheses; the prefix operator must not add a second pair

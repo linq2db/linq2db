@@ -588,18 +588,19 @@ namespace Tests.Linq
 
 			AssertQuery(text);
 
-			// a division with a fractional operand stays fractional
+			// a division with a fractional operand stays fractional (within a relative delta: Sybase's decimal division
+			// is off in the last digits)
 			var fractionalDouble = db.Types
 				.OrderBy(p => p.ID)
 				.Select(p => Sql.AsSql(p.ID / 2.0));
 
-			AssertQuery(fractionalDouble);
+			AssertQueryWithinDelta(fractionalDouble);
 
 			var fractionalDecimal = db.Types
 				.OrderBy(p => p.ID)
 				.Select(p => Sql.AsSql((decimal)p.ID / 2));
 
-			AssertQuery(fractionalDecimal);
+			AssertQueryWithinDelta(fractionalDecimal);
 		}
 
 		// Access evaluates ^ before every other arithmetic operator, negation included, so a product, a sum, a difference or
