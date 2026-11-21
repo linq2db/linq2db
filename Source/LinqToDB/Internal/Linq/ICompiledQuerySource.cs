@@ -7,7 +7,7 @@ namespace LinqToDB.Internal.Linq
 	{
 		/// <summary>
 		/// Whether an argument selects the query by value (<see cref="LinqToDB.Mapping.SqlQueryDependentAttribute"/>), which the caller may
-		/// change in the argument array.
+		/// change in place after the call.
 		/// </summary>
 		bool HasDependentArguments { get; }
 

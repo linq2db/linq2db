@@ -162,6 +162,19 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
+		// A data type given as a function selects the cached query by the type the function returns: a lambda gives a
+		// new delegate to every query.
+		sealed class SqlTypeFunctionAttribute : SqlQueryDependentAttribute
+		{
+			public override bool ObjectsEqual(object? obj1, object? obj2)
+			{
+				if (obj1 is Func<SqlType> func1 && obj2 is Func<SqlType> func2)
+					return ReferenceEquals(func1, func2) || Equals(func1(), func2());
+
+				return base.ObjectsEqual(obj1, obj2);
+			}
+		}
+
 		#region Cast
 
 		/// <summary>
@@ -187,7 +200,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="ServerSideOnlyException" />
 		[Sql.Extension(ProviderName.SqlServer, "CAST({expression} as {data_type})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
 		[return: NotNullIfNotNull(nameof(expression))]
-		public static T Cast<T>([ExprParameter] object? expression, [SqlQueryDependent] Func<SqlType<T>> data_type)
+		public static T Cast<T>([ExprParameter] object? expression, [SqlTypeFunction] Func<SqlType<T>> data_type)
 			=> throw new ServerSideOnlyException(nameof(Cast));
 
 		/// <summary>
@@ -229,7 +242,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="ServerSideOnlyException" />
 		[Sql.Extension(ProviderName.SqlServer, "CONVERT({data_type}, {expression})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
 		[return: NotNullIfNotNull(nameof(expression))]
-		public static T Convert<T>([SqlQueryDependent] Func<SqlType<T>> data_type, [ExprParameter] object? expression)
+		public static T Convert<T>([SqlTypeFunction] Func<SqlType<T>> data_type, [ExprParameter] object? expression)
 			=> throw new ServerSideOnlyException(nameof(Convert));
 
 		/// <summary>
@@ -267,7 +280,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="ServerSideOnlyException" />
 		[Sql.Extension(ProviderName.SqlServer, "CONVERT({data_type}, {expression}, {style})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
 		[return: NotNullIfNotNull(nameof(expression))]
-		public static T Convert<T>([SqlQueryDependent] Func<SqlType<T>> data_type, [ExprParameter] object? expression, [SqlQueryDependent, ExprParameter] int style)
+		public static T Convert<T>([SqlTypeFunction] Func<SqlType<T>> data_type, [ExprParameter] object? expression, [SqlQueryDependent, ExprParameter] int style)
 			=> throw new ServerSideOnlyException(nameof(Convert));
 
 		/// <summary>
@@ -307,7 +320,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns the result of the expression, translated to the requested data type.</returns>
 		/// <exception cref="ServerSideOnlyException" />
 		[Sql.Extension(ProviderName.SqlServer, "PARSE({string_value} as {data_type})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
-		public static T Parse<T>([ExprParameter] string string_value, [SqlQueryDependent] Func<SqlType<T>> data_type)
+		public static T Parse<T>([ExprParameter] string string_value, [SqlTypeFunction] Func<SqlType<T>> data_type)
 			=> throw new ServerSideOnlyException(nameof(Parse));
 
 		/// <summary>
@@ -344,7 +357,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns the result of the expression, translated to the requested data type.</returns>
 		/// <exception cref="ServerSideOnlyException" />
 		[Sql.Extension(ProviderName.SqlServer, "PARSE({string_value} as {data_type} USING {culture})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
-		public static T Parse<T>([ExprParameter] string string_value, [SqlQueryDependent] Func<SqlType<T>> data_type, [ExprParameter, SqlQueryDependent] string culture)
+		public static T Parse<T>([ExprParameter] string string_value, [SqlTypeFunction] Func<SqlType<T>> data_type, [ExprParameter, SqlQueryDependent] string culture)
 			=> throw new ServerSideOnlyException(nameof(Parse));
 
 		/// <summary>
@@ -386,7 +399,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="ServerSideOnlyException" />
 		[Sql.Extension(ProviderName.SqlServer, "TRY_CAST({expression} as {data_type})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
 		[return: NotNullIfNotNull(nameof(expression))]
-		public static T TryCast<T>([ExprParameter] object? expression, [SqlQueryDependent] Func<SqlType<T>> data_type)
+		public static T TryCast<T>([ExprParameter] object? expression, [SqlTypeFunction] Func<SqlType<T>> data_type)
 			=> throw new ServerSideOnlyException(nameof(TryCast));
 
 		/// <summary>
@@ -428,7 +441,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="ServerSideOnlyException" />
 		[Sql.Extension(ProviderName.SqlServer, "TRY_CONVERT({data_type}, {expression})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
 		[return: NotNullIfNotNull(nameof(expression))]
-		public static T TryConvert<T>([SqlQueryDependent] Func<SqlType<T>> data_type, [ExprParameter] object? expression)
+		public static T TryConvert<T>([SqlTypeFunction] Func<SqlType<T>> data_type, [ExprParameter] object? expression)
 			=> throw new ServerSideOnlyException(nameof(TryConvert));
 
 		/// <summary>
@@ -466,7 +479,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="ServerSideOnlyException" />
 		[Sql.Extension(ProviderName.SqlServer, "TRY_CONVERT({data_type}, {expression}, {style})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
 		[return: NotNullIfNotNull(nameof(expression))]
-		public static T TryConvert<T>([SqlQueryDependent] Func<SqlType<T>> data_type, [ExprParameter] object? expression, [SqlQueryDependent, ExprParameter] int style)
+		public static T TryConvert<T>([SqlTypeFunction] Func<SqlType<T>> data_type, [ExprParameter] object? expression, [SqlQueryDependent, ExprParameter] int style)
 			=> throw new ServerSideOnlyException(nameof(TryConvert));
 
 		/// <summary>
@@ -508,7 +521,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="ServerSideOnlyException" />
 		[Sql.Extension(ProviderName.SqlServer, "TRY_PARSE({string_value} as {data_type})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
 		[return: NotNullIfNotNull(nameof(string_value))]
-		public static T TryParse<T>([ExprParameter] string string_value, [SqlQueryDependent] Func<SqlType<T>> data_type)
+		public static T TryParse<T>([ExprParameter] string string_value, [SqlTypeFunction] Func<SqlType<T>> data_type)
 			=> throw new ServerSideOnlyException(nameof(TryParse));
 
 		/// <summary>
@@ -548,7 +561,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="ServerSideOnlyException" />
 		[Sql.Extension(ProviderName.SqlServer, "TRY_PARSE({string_value} as {data_type} USING {culture})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
 		[return: NotNullIfNotNull(nameof(string_value))]
-		public static T TryParse<T>([ExprParameter] string string_value, [SqlQueryDependent] Func<SqlType<T>> data_type, [ExprParameter, SqlQueryDependent] string culture)
+		public static T TryParse<T>([ExprParameter] string string_value, [SqlTypeFunction] Func<SqlType<T>> data_type, [ExprParameter, SqlQueryDependent] string culture)
 			=> throw new ServerSideOnlyException(nameof(TryParse));
 
 		/// <summary>

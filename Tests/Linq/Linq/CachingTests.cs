@@ -469,6 +469,41 @@ namespace Tests.Linq
 			(Names(10).GetCacheMissCount() - missCount).ShouldBe(2);
 		}
 
+		// The same for a data type given as a function - a method group or a lambda: every query creates the delegate
+		// anew, and functions that return equal types share one cached query.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), QueryCacheTest]
+		public void SqlQueryDependentObject_EqualSqlTypeFunctionsShareQuery([Values] bool lambda)
+		{
+			LinqToDB.Internal.Linq.Query.ClearCaches();
+
+			// SQL generation only: nothing connects
+			using var db = new DataConnection(new DataOptions().UseSqlServer("Server=.", SqlServerVersion.v2019, SqlServerProvider.MicrosoftDataSqlClient));
+
+			IQueryable<string?> Names(bool unicode)
+			{
+				if (lambda)
+				{
+					return unicode
+						? from p in db.GetTable<Person>() select SqlFn.Cast(p.FirstName, () => SqlType.NVarChar())
+						: from p in db.GetTable<Person>() select SqlFn.Cast(p.FirstName, () => SqlType.VarChar());
+				}
+
+				return unicode
+					? from p in db.GetTable<Person>() select SqlFn.Cast(p.FirstName, SqlType.NVarChar)
+					: from p in db.GetTable<Person>() select SqlFn.Cast(p.FirstName, SqlType.VarChar);
+			}
+
+			var missCount = Names(false).GetCacheMissCount();
+
+			foreach (var unicode in new[] { false, false, true, false })
+			{
+				Names(unicode).ToSqlQuery().Sql
+					.ShouldContain(unicode ? " as nvarchar)" : " as varchar)");
+			}
+
+			(Names(false).GetCacheMissCount() - missCount).ShouldBe(2);
+		}
+
 		[Sql.Extension("{field} IN (select * from {values})", IsPredicate = true, BuilderType = typeof(InExtExpressionItemBuilder), ServerSideOnly = true)]
 		private static bool InExt<T>([ExprParameter] T field, [SqlQueryDependent] IEnumerable<T> values) where T : struct, IEquatable<int>
 		{

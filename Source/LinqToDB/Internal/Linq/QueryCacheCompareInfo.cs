@@ -83,7 +83,7 @@ namespace LinqToDB.Internal.Linq
 
 		/// <summary>
 		/// The value a <see cref="SqlQueryDependentAttribute"/> argument had when the query was built, for an argument the
-		/// cached tree holds as a placeholder; <paramref name="Current"/> reads the argument of the tree being looked up.
+		/// cached tree does not compare by value; <paramref name="Current"/> reads the argument of the tree being looked up.
 		/// </summary>
 		public sealed record DependentValueCheck(object? Value, ValueAccessorFunc Current, SqlQueryDependentAttribute Attribute);
 
