@@ -1059,5 +1059,68 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
+
+		sealed class MemberlessRow;
+
+		// a VALUES source over an element type with no mapped members has no columns: the empty-source /
+		// header row and the derived column list need a placeholder column, like the VALUES rows have
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6102")]
+		public void MemberlessElementCrossJoin([DataSources(TestProvName.AllClickHouse, TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values(0, 1, 2)] int count)
+		{
+			var rows = Enumerable
+				.Range(0, count)
+				.Select(_ => new MemberlessRow())
+				.ToList();
+
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Person
+				from r in rows
+				select p.ID;
+
+			var result = query
+				.ToArray();
+
+			result.Length.ShouldBe(Person.Count() * count);
+		}
+
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6102")]
+		public void MemberlessElementCorrelatedAny([DataSources(TestProvName.AllClickHouse, TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values(0, 1)] int count)
+		{
+			var rows = Enumerable
+				.Range(0, count)
+				.Select(_ => new MemberlessRow())
+				.ToList();
+
+			using var db = GetDataContext(context);
+
+			var result = db.Person
+				.Where(p => rows.AsQueryable().Any(r => p.ID > 0))
+				.Select(p => p.ID)
+				.ToArray();
+
+			result.Length.ShouldBe(count == 0 ? 0 : Person.Count());
+		}
+
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6102")]
+		public void MemberlessElementCorrelatedCount([DataSources(TestProvName.AllClickHouse, TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values(0, 1, 2)] int count)
+		{
+			var rows = Enumerable
+				.Range(0, count)
+				.Select(_ => new MemberlessRow())
+				.ToList();
+
+			using var db = GetDataContext(context);
+
+			var result = db.Person
+				.Where(p => rows.Count(r => p.ID > 0) == count)
+				.Select(p => p.ID)
+				.ToArray();
+
+			result.Length.ShouldBe(Person.Count());
+		}
 	}
 }
