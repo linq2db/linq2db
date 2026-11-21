@@ -10,7 +10,7 @@ namespace LinqToDB.Internal.Linq
 	{
 		public Expression MainExpression { get; }
 
-		public QueryCacheCompareInfo(Expression mainExpression, List<DynamicExpressionInfo>? dynamicAccessors, List<(ValueAccessorFunc main, ValueAccessorFunc other)>? comparisionFunctions, List<DependentValueCheck>? dependentValueChecks)
+		public QueryCacheCompareInfo(Expression mainExpression, List<DynamicExpressionInfo>? dynamicAccessors, List<ValueCompareFunc>? comparisionFunctions, List<DependentValueCheck>? dependentValueChecks)
 		{
 			MainExpression       = mainExpression;
 			DynamicAccessors     = dynamicAccessors;
@@ -20,6 +20,7 @@ namespace LinqToDB.Internal.Linq
 
 		public delegate Expression ExpressionAccessorFunc(IDataContext dataContext,      MappingSchema mappingSchema);
 		public delegate object?    ValueAccessorFunc(IQueryExpressions queryExpressions, IDataContext  dataContext, object?[]? compiledParameters);
+		public delegate bool       ValueCompareFunc(IQueryExpressions queryExpressions, IDataContext  dataContext, object?[]? compiledParameters);
 
 		public sealed record DynamicExpressionInfo(int ExpressionId, Expression Key, int KeyHashCode, Expression Used, MappingSchema MappingSchema, ExpressionAccessorFunc AccessorFunc);
 
@@ -93,9 +94,9 @@ namespace LinqToDB.Internal.Linq
 		public readonly List<DynamicExpressionInfo>? DynamicAccessors;
 
 		/// <summary>
-		/// Contains functions for retrieving values for comparison.
+		/// Contains functions comparing a value the query was built with against the current one (typed, without boxing value types).
 		/// </summary>
-		public readonly List<(ValueAccessorFunc main, ValueAccessorFunc other)>?  ComparisionFunctions;
+		public readonly List<ValueCompareFunc>?  ComparisionFunctions;
 
 		/// <summary>
 		/// Contains <see cref="SqlQueryDependentAttribute"/> argument values the main expression does not compare.

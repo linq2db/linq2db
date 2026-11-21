@@ -133,13 +133,9 @@ namespace LinqToDB.Internal.Linq
 
 			if (CompareInfo.ComparisionFunctions != null)
 			{
-				foreach (var (main, other) in CompareInfo.ComparisionFunctions)
+				foreach (var compare in CompareInfo.ComparisionFunctions)
 				{
-					var value1 = main(matchedQueryExpressions, dataContext, compiledParameters);
-					var value2 = other(matchedQueryExpressions, dataContext, compiledParameters);
-					result = ExpressionEqualityComparer.CompareValues(value1, value2);
-
-					if (!result)
+					if (!compare(matchedQueryExpressions, dataContext, compiledParameters))
 						return false;
 				}
 			}
