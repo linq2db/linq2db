@@ -15,18 +15,17 @@ namespace LinqToDB.Internal.DataProvider.Access
 		}
 
 		/// <summary>
-		/// Access has no <c>FLOOR</c> or <c>CEILING</c>, but its <c>Fix</c> is exactly truncation toward zero -
-		/// the semantic the base composes those two functions to reach.
+		/// <c>Fix</c> of the division: Access divides as floating point even between two integers, and <c>Fix</c>
+		/// is exactly truncation toward zero.
 		/// </summary>
 		/// <remarks>
 		/// <c>Int</c> would be wrong here: it rounds down, so <c>Int(-2.5)</c> is -3 where CLR integer division
-		/// gives -2. Access division is floating, so no cast is needed before <c>Fix</c>.
+		/// gives -2. The inner division is typed <see cref="double"/>, which is what it is, so it is not taken for
+		/// an integer division again.
 		/// </remarks>
-		protected override ISqlExpression TruncateDivide(ISqlExpression value, long divisor)
+		protected override ISqlExpression? IntegerDivide(DbDataType type, ISqlExpression dividend, ISqlExpression divisor)
 		{
-			var longType = Factory.GetDbDataType(typeof(long));
-
-			return Factory.Function(longType, "Fix", Factory.Div(longType, value, Factory.Value(longType, divisor)));
+			return Factory.Function(type, "Fix", Factory.Div(Factory.GetDbDataType(typeof(double)), dividend, divisor));
 		}
 
 		/// <summary>

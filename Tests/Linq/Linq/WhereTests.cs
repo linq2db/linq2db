@@ -333,6 +333,90 @@ namespace Tests.Linq
 			AssertQuery(notRightOfOr);
 		}
 
+		// a signed C# bitwise result is signed: MySQL and YDB compute the operators unsigned, so a negative operand or
+		// result must not come back as a large positive number (or as NULL, for a negative YDB operand)
+		[Test]
+		public void SignedBitwiseResults([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var not = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(~p.ID));
+
+			AssertQuery(not);
+
+			var notWide = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(~(long)p.ID));
+
+			AssertQuery(notWide);
+
+			var notShort = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(~p.SmallIntValue));
+
+			AssertQuery(notShort);
+
+			var orNegative = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(p.ID | -5));
+
+			AssertQuery(orNegative);
+
+			var xorNegativeWide = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((long)p.ID ^ -6L));
+
+			AssertQuery(xorNegativeWide);
+
+			var andNegativeNullable = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((int?)p.ID & -3));
+
+			AssertQuery(andNegativeNullable);
+
+			var andThenSubtract = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((p.ID & 6) - 10));
+
+			AssertQuery(andThenSubtract);
+
+			var negatedAnd = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(-(p.ID & 6)));
+
+			AssertQuery(negatedAnd);
+
+			var mixedWidths = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql((long)p.ID & (p.ID - 10)));
+
+			AssertQuery(mixedWidths);
+		}
+
+		// one CAST(... AS SIGNED) per operator: a cast that matched its own output again would nest without end
+		[Test]
+		public void SignedBitwiseIsCastOncePerOperator([IncludeDataSources(TestProvName.AllMySql)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(~(p.ID | -5) & 7));
+
+			AssertQuery(query);
+
+			var sql = query
+				.ToSqlQuery()
+				.Sql;
+
+			sql
+				.Split(["CAST("], StringSplitOptions.None)
+				.Length
+				.ShouldBe(4, sql);
+		}
+
 		[Test]
 		public void BinaryAnd([DataSources] string context)
 		{
