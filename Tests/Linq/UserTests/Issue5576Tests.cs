@@ -70,9 +70,6 @@ namespace Tests.UserTests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5576")]
-		[ActiveIssue(5611, Configuration = TestProvName.AllSQLite, ErrorTypeName = "Shouldly.ShouldAssertException",
-			ErrorMessage = "should be{0}5m{1}but was",
-			Details = "SQLite renders decimal division as integer division: CAST(int AS Decimal) keeps NUMERIC/integer affinity")]
 		public void LeftJoinLocalClassWithDecimalArithmetic([DataSources(TestProvName.AllNativeAccess, ProviderName.DB2, TestProvName.AllInformix)] string context)
 		{
 			using var db    = GetDataContext(context);
