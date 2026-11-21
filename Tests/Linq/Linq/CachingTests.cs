@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SqlQuery;
 using LinqToDB.Mapping;
@@ -439,6 +440,33 @@ namespace Tests.Linq
 				.OrderBy(id => id)
 				.ToArray()
 				.ShouldBe(ExpectedPersonIds(ids), "after the change");
+		}
+
+		// A [SqlQueryDependent] object: a SqlType is created anew by every query, and equal types share one cached query.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), QueryCacheTest]
+		public void SqlQueryDependentObject_EqualSqlTypesShareQuery()
+		{
+			LinqToDB.Internal.Linq.Query.ClearCaches();
+
+			// SQL generation only: nothing connects
+			using var db = new DataConnection(new DataOptions().UseSqlServer("Server=.", SqlServerVersion.v2019, SqlServerProvider.MicrosoftDataSqlClient));
+
+			IQueryable<string?> Names(int size)
+			{
+				return
+					from p in db.GetTable<Person>()
+					select SqlFn.Cast(p.FirstName, SqlType.VarChar(size));
+			}
+
+			var missCount = Names(10).GetCacheMissCount();
+
+			foreach (var size in new[] { 10, 10, 20, 10 })
+			{
+				Names(size).ToSqlQuery().Sql
+					.ShouldContain($"varchar({size})");
+			}
+
+			(Names(10).GetCacheMissCount() - missCount).ShouldBe(2);
 		}
 
 		[Sql.Extension("{field} IN (select * from {values})", IsPredicate = true, BuilderType = typeof(InExtExpressionItemBuilder), ServerSideOnly = true)]

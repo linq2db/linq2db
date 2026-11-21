@@ -1,3 +1,5 @@
 ﻿#nullable enable
 LinqToDB.Interceptors.IInterceptorCacheKey
 LinqToDB.Interceptors.IInterceptorCacheKey.CacheKey.get -> string?
+override LinqToDB.DataProvider.SqlServer.SqlType.Equals(object? obj) -> bool
+override LinqToDB.DataProvider.SqlServer.SqlType.GetHashCode() -> int
