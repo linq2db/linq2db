@@ -4,12 +4,15 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Linq
 {
@@ -526,6 +529,105 @@ namespace Tests.Linq
 
 			if (RecordVerdicts && failures.Count > 0)
 				TestContext.Out.WriteLine(string.Join(Environment.NewLine, failures));
+		}
+
+		// Access binds parameters by position and names every occurrence apart, so an operand rendered twice (once to
+		// classify it, once for real) would add a parameter the SQL does not reference in that order
+		[Test]
+		public void PositionalParametersRenderOnce([IncludeDataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows);
+
+			var p1 = 7;
+			var p2 = 3;
+			var p3 = -5;
+
+			var query = table
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					Neg  = Sql.AsSql(-(r.A + p1)),
+					Cast = Sql.AsSql((long)(r.A * p2)),
+					Diff = Sql.AsSql(-(r.A - Sql.ToSql(p3))),
+				});
+
+			var expected = Rows
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					Neg  = -(r.A + p1),
+					Cast = (long)(r.A * p2),
+					Diff = -(r.A - p3),
+				})
+				.ToList();
+
+			query
+				.ToList()
+				.ShouldBe(expected);
+
+			var sql = query.ToSqlQuery();
+
+			var placeholders = Regex
+				.Matches(sql.Sql, @"@\w+")
+				.Cast<Match>()
+				.Select(m => m.Value.TrimStart('@'))
+				.ToList();
+
+			var names = sql.Parameters
+				.Select(p => p.Name!.TrimStart('@'))
+				.ToList();
+
+			names
+				.Count
+				.ShouldBe(2);
+
+			placeholders.ShouldBe(names);
+		}
+
+		// the subquery brings its own parentheses; the prefix operator must not add a second pair
+		[Test]
+		public void PrefixOverScalarSubqueryHasOneParenthesisPair([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows);
+
+			var query = table
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					Neg = Sql.AsSql(-table.Where(x => x.Id <= r.Id).Max(x => x.A)),
+					Not = Sql.AsSql(~table.Where(x => x.Id <= r.Id).Max(x => x.B)),
+				});
+
+			var expected = Rows
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					Neg = -Rows.Where(x => x.Id <= r.Id).Max(x => x.A),
+					Not = ~Rows.Where(x => x.Id <= r.Id).Max(x => x.B),
+				})
+				.ToList();
+
+			query
+				.ToList()
+				.ShouldBe(expected);
+
+			var sql = query
+				.ToSqlQuery()
+				.Sql;
+
+			Regex
+				.IsMatch(sql, @"-\(\s*SELECT")
+				.ShouldBeTrue(sql);
+
+			Regex
+				.IsMatch(sql, @"~\(\s*SELECT")
+				.ShouldBeTrue(sql);
+
+			Regex
+				.IsMatch(sql, @"[-~]\(\s*\(\s*SELECT")
+				.ShouldBeFalse(sql);
 		}
 	}
 }
