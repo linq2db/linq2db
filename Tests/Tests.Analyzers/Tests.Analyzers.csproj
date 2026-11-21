@@ -19,6 +19,7 @@
 	<ItemGroup>
 		<PackageReference Include="NUnit" />
 		<PackageReference Include="NUnit3TestAdapter" />
+		<PackageReference Include="Shouldly" />
 		<PackageReference Include="Microsoft.Testing.Platform.MSBuild" />
 		<PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" />
@@ -26,6 +27,14 @@
 		<!-- Pin the testing SDK's transitive Roslyn (whose floor is an ancient netfx-only 1.0.1) up to a
 		     modern line so it restores (avoids NU1701). Matches the analyzer's Roslyn baseline. -->
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
+
+		<!-- ADO.NET clients, loaded only to generate provider SQL without a database (L2DB1005's typed-hint SQL
+		     equivalence test). No connection is ever opened. -->
+		<PackageReference Include="Microsoft.Data.SqlClient" />
+		<PackageReference Include="Microsoft.Data.Sqlite" />
+		<PackageReference Include="MySqlConnector" />
+		<PackageReference Include="Oracle.ManagedDataAccess.Core" />
+		<PackageReference Include="System.Data.Odbc" />
 
 	</ItemGroup>
 
