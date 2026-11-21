@@ -418,6 +418,6 @@ type FSharpQueryExpressionInterceptor private () =
             else
                 expression
 
-    // A single stateless instance: its rewrites depend on the query alone.
+    // A single stateless instance: its rewrites depend on the query and the mapping schema alone.
     interface IInterceptorCacheKey with
         member _.CacheKey = null

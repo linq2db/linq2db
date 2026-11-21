@@ -1998,9 +1998,8 @@ namespace LinqToDB.Data
 
 			return new DisposableAction(() =>
 			{
+				// resets the configuration ID, which is not restored: an interceptor added or removed inside the scope changes it
 				((IDataContext)this).SetMappingSchema(oldSchema);
-				// not restored: an interceptor added or removed inside the scope changes it
-				_configurationID = null;
 			});
 		}
 	}
