@@ -22,14 +22,14 @@ namespace LinqToDB.Internal.SqlProvider
 
 			statement.Visit(e =>
 			{
-				if (e is SqlPredicate.Exists exists)
+				if (e is SqlPredicate.Exists exists && CanIgnoreJoinCardinality(exists.SubQuery))
 					(existsQueries ??= new()).Add(exists.SubQuery);
 			});
 
 			if (existsQueries != null)
 			{
 				foreach (var existsQuery in existsQueries)
-					RemoveUnusedLeftJoins(existsQuery, evaluationContext, ignoreJoinCardinality: true);
+					RemoveUnusedJoinsFromExistsSubquery(existsQuery, evaluationContext);
 			}
 
 			RemoveUnusedLeftJoins(statement, evaluationContext, ignoreJoinCardinality: false);
@@ -40,7 +40,46 @@ namespace LinqToDB.Internal.SqlProvider
 		}
 
 		/// <summary>
+		/// Removes unused LEFT joins of the EXISTS subquery's own FROM clause without the cardinality
+		/// check: the EXISTS test only observes whether at least one row is produced. Nested queries
+		/// (derived tables, scalar subqueries in WHERE) are left to the ordinary pass, because they
+		/// can observe the number of joined rows.
+		/// </summary>
+		void RemoveUnusedJoinsFromExistsSubquery(SelectQuery existsQuery, EvaluationContext evaluationContext)
+		{
+			foreach (var source in existsQuery.From.Tables)
+			{
+				for (var index = source.Joins.Count - 1; index >= 0; index--)
+				{
+					if (CanRemoveLeftJoin(existsQuery, source.Joins[index], evaluationContext, ignoreJoinCardinality: true))
+						source.Joins.RemoveAt(index);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Returns false when the query's result depends on the number of rows its joins produce:
+		/// grouping, HAVING, OFFSET, set operators or aggregates/window functions in the projection
+		/// all make more than row presence observable.
+		/// </summary>
+		static bool CanIgnoreJoinCardinality(SelectQuery query)
+		{
+			if (query.HasGroupBy || query.HasHaving || query.HasSetOperators || query.Select.SkipValue != null)
+				return false;
+
+			foreach (var column in query.Select.Columns)
+			{
+				if (QueryHelper.ContainsAggregationOrWindowFunction(column.Expression))
+					return false;
+			}
+
+			return true;
+		}
+
+		/// <summary>
 		/// Removes left joins if they doesn't change query cardinality and joined tables not used in query.
+		/// With <paramref name="ignoreJoinCardinality"/> also removes joins that can multiply rows
+		/// (used for EXISTS subqueries, where only row presence is observed).
 		/// </summary>
 		void RemoveUnusedLeftJoins(IQueryElement element, EvaluationContext evaluationContext, bool ignoreJoinCardinality)
 		{
