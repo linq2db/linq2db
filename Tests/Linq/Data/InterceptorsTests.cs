@@ -2526,6 +2526,77 @@ namespace Tests.Data
 			ShouldReturnIds(other, ExpectedIds(2), "other context with the interceptor");
 		}
 
+		/// <summary>
+		/// Appends <c>Where(p => p.ID &lt;= Limit)</c> at the query stage, with the limit read from the interceptor instance
+		/// and declared in the cache key, and counts the calls of that stage.
+		/// </summary>
+		sealed class KeyedQueryStageLimitInterceptor(int limit) : IQueryExpressionInterceptor, IInterceptorCacheKey
+		{
+			public string? CacheKey => limit.ToString(CultureInfo.InvariantCulture);
+
+			public int Limit      => limit;
+			public int QueryCalls { get; private set; }
+
+			public Expression ProcessExpression(Expression expression, QueryExpressionArgs args)
+			{
+				if (args.Kind != ExpressionKind.Query || !typeof(IQueryable<Person>).IsAssignableFrom(expression.Type))
+					return expression;
+
+				QueryCalls++;
+
+				var p    = Expression.Parameter(typeof(Person), "p");
+				var body = Expression.LessThanOrEqual(
+					Expression.Field(p, nameof(Model.Person.ID)),
+					Expression.Property(Expression.Constant(this), nameof(Limit)));
+
+				return Expression.Call(
+					typeof(Queryable),
+					nameof(Queryable.Where),
+					[typeof(Person)],
+					expression,
+					Expression.Quote(Expression.Lambda<Func<Person, bool>>(body, p)));
+			}
+		}
+
+		// The same IQueryable executed again under an interceptor with IInterceptorCacheKey that rewrites at the query stage:
+		// it keeps the query built for the rewrite, not the rewritten tree, which must not outlive the interceptor.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
+		public void QueryExpression_SameQueryable_CacheKey_QueryStageRunsOnce(
+			[IncludeDataSources(false, TestProvName.AllSQLite)] string context,
+			[Values]                                            bool   viaDataContext,
+			[Values]                                            bool   disableQueryCache)
+		{
+			Query.ClearCaches();
+
+			using IDataContext db = viaDataContext
+				? CreateFilteredDataContext(context, disableQueryCache)
+				: GetDataConnection(context, o => o.UseMappingSchema(_personFilterSchema).UseDisableQueryCache(disableQueryCache));
+
+			var limit2 = new KeyedQueryStageLimitInterceptor(2);
+			var limit3 = new KeyedQueryStageLimitInterceptor(3);
+
+			// FromSql: a query that an IQueryable keeps between executions, which the filtered table is not
+			var query  = db.FromSql<Person>("SELECT * FROM Person");
+
+			db.AddInterceptor(limit2);
+
+			for (var i = 0; i < 3; i++)
+			{
+				ShouldReturnIds(query, ExpectedIds(2), $"limit 2, enumeration {i}");
+			}
+
+			limit2.QueryCalls.ShouldBe(1, "query stage calls");
+
+			db.RemoveInterceptor(limit2);
+			db.AddInterceptor(limit3);
+
+			ShouldReturnIds(query, ExpectedIds(3), "another key");
+
+			db.RemoveInterceptor(limit3);
+
+			ShouldReturnIds(query, ExpectedIds(), "removed");
+		}
+
 		// An interceptor added inside a UseOptions / UseMappingSchema scope stays registered after it, so the
 		// configuration ID saved at the scope start must not come back: it would find the query built before the
 		// interceptor, whose query filter has nothing to check again.

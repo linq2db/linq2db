@@ -51,7 +51,8 @@ namespace LinqToDB.Internal.Linq
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		internal bool CompiledChecked;
 
-		// A compiled table hands over the container its Info's accessors were built against. Rebuilding one from
+		// A compiled table hands over the container its Info's accessors were built against, and a query kept with a query
+		// interceptor's rewrite keeps the rewritten one beside Info (see GetQuery). Rebuilding one from
 		// the main expression alone carries no dynamic entries, and an accessor rooted at one - which a query
 		// filter closing over a value produces - then has nothing to resolve. Only for enumerating this query as
 		// it is: a composed expression is a different tree and gets its own container.
@@ -112,18 +113,39 @@ namespace LinqToDB.Internal.Linq
 
 				// the context configuration (interceptors included) may have changed since the query was kept
 				if (Info.ConfigurationID == DataContext.ConfigurationID)
+				{
+					if (CompiledExpressions != null)
+					{
+						expression          = CompiledExpressions;
+						dependsOnParameters = true;
+					}
+
 					return Info;
+				}
 
 				Info = null;
+
+				if (CompiledExpressions != null)
+				{
+					CompiledExpressions = null;
+					expression          = new RuntimeExpressionsContainer(Expression);
+				}
 			}
 
-			var info = Query<T>.GetQuery(DataContext, ref expression, out dependsOnParameters);
+			var info = Query<T>.GetQuery(DataContext, ref expression, out dependsOnParameters, out var isRewritten);
 
 			// a query interceptor without IInterceptorCacheKey may rewrite the query differently on another execution
 			if (cache && info.CompareInfo?.IsFastComparable == true && !dependsOnParameters && !DataContext.HasUntrustedQueryInterceptor())
 			{
 				Info = info;
+
+				// The query runs with the interceptor's rewrite, which is kept beside it: Expression stays the caller's tree,
+				// so that it outlives the interceptor.
+				if (isRewritten)
+					CompiledExpressions = expression;
 			}
+
+			dependsOnParameters |= isRewritten;
 
 			return info;
 		}

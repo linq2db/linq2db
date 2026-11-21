@@ -186,7 +186,20 @@ namespace LinqToDB.Internal.Linq
 
 		public static Query<T> GetQuery(IDataContext dataContext, ref IQueryExpressions expressions, out bool dependsOnParameters)
 		{
+			var query = GetQuery(dataContext, ref expressions, out dependsOnParameters, out var isRewritten);
+
+			dependsOnParameters |= isRewritten;
+
+			return query;
+		}
+
+		/// <param name="isRewritten">The returned expressions carry a query interceptor's rewrite: the query may be kept
+		/// together with them, but they must not replace the tree the caller holds, which has to outlive the interceptor.</param>
+		internal static Query<T> GetQuery(IDataContext dataContext, ref IQueryExpressions expressions, out bool dependsOnParameters, out bool isRewritten)
+		{
 			using var mt = ActivityService.Start(ActivityID.GetQueryTotal);
+
+			isRewritten = false;
 
 			ExpressionTreeOptimizationContext optimizationContext;
 			DataOptions                       dataOptions;
@@ -220,9 +233,9 @@ namespace LinqToDB.Internal.Linq
 						var intercepted = interceptor.ProcessExpression(expr, new QueryExpressionArgs(dataContext, expr, QueryExpressionArgs.ExpressionKind.Query));
 
 						// the rewritten tree belongs to the current interceptors: an IQueryable must not keep it in place
-						// of its own tree, nor the query built for it
+						// of its own tree
 						if (!ReferenceEquals(intercepted, expr))
-							dependsOnParameters = true;
+							isRewritten = true;
 
 						expr = intercepted;
 					}
@@ -265,7 +278,7 @@ namespace LinqToDB.Internal.Linq
 				// without the query cache too: the exposed tree may carry the query interceptor's rewrite, which the IQueryable
 				// must not keep in place of its own tree
 				if (isExposed && !useCache && dataContext is IInterceptable<IQueryExpressionInterceptor> { Interceptor: not null })
-					dependsOnParameters = true;
+					isRewritten = true;
 
 				if (isExposed && useCache)
 				{
