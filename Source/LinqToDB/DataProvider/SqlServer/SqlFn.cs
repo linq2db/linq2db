@@ -7,6 +7,7 @@ using System.Reflection;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Expressions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -172,6 +173,23 @@ namespace LinqToDB.DataProvider.SqlServer
 					return ReferenceEquals(func1, func2) || Equals(func1(), func2());
 
 				return base.ObjectsEqual(obj1, obj2);
+			}
+
+			// A lambda is not evaluated as a whole: it would stay in the cached tree without the values it reads, and be
+			// compiled and called for every cache lookup. Its body is evaluated instead, and a function that returns the
+			// result takes its place.
+			public override Expression PrepareForCache(Expression expression, IExpressionEvaluator evaluator)
+			{
+				if (expression is LambdaExpression { Parameters.Count: 0 } lambda
+					&& evaluator.CanBeEvaluated(lambda.Body)
+					&& evaluator.Evaluate(lambda.Body) is SqlType sqlType
+					&& sqlType.ToFunction() is { } function
+					&& expression.Type.IsInstanceOfType(function))
+				{
+					return Expression.Constant(function, expression.Type);
+				}
+
+				return base.PrepareForCache(expression, evaluator);
 			}
 		}
 

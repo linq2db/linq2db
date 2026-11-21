@@ -504,6 +504,38 @@ namespace Tests.Linq
 			(Names(false).GetCacheMissCount() - missCount).ShouldBe(2);
 		}
 
+		// The same for a lambda that reads a variable, which changes between the queries: each query takes the type the
+		// function returns when the query runs.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), QueryCacheTest]
+		public void SqlQueryDependentObject_SqlTypeFunctionReadsVariable()
+		{
+			LinqToDB.Internal.Linq.Query.ClearCaches();
+
+			// SQL generation only: nothing connects
+			using var db = new DataConnection(new DataOptions().UseSqlServer("Server=.", SqlServerVersion.v2019, SqlServerProvider.MicrosoftDataSqlClient));
+
+			var size = 10;
+
+			IQueryable<string?> Names()
+			{
+				return
+					from p in db.GetTable<Person>()
+					select SqlFn.Cast(p.FirstName, () => SqlType.VarChar(size));
+			}
+
+			var missCount = Names().GetCacheMissCount();
+
+			foreach (var newSize in new[] { 10, 10, 20, 10 })
+			{
+				size = newSize;
+
+				Names().ToSqlQuery().Sql
+					.ShouldContain($"varchar({newSize})");
+			}
+
+			(Names().GetCacheMissCount() - missCount).ShouldBe(2);
+		}
+
 		[Sql.Extension("{field} IN (select * from {values})", IsPredicate = true, BuilderType = typeof(InExtExpressionItemBuilder), ServerSideOnly = true)]
 		private static bool InExt<T>([ExprParameter] T field, [SqlQueryDependent] IEnumerable<T> values) where T : struct, IEquatable<int>
 		{

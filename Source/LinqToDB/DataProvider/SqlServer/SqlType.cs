@@ -32,6 +32,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			return StringComparer.Ordinal.GetHashCode(_dataType);
 		}
 
+		// A function that returns this instance: SqlFn puts it in place of a data type given as a lambda.
+		internal virtual Delegate? ToFunction() => null;
+
 		sealed class SqlExpressionAttribute(string name) : Sql.ExpressionAttribute(ProviderName.SqlServer, name);
 
 		// Exact numerics
@@ -129,5 +132,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			: base(dataType)
 		{
 		}
+
+		internal override Delegate ToFunction() => new Func<SqlType<T>>(() => this);
 	}
 }
