@@ -2102,6 +2102,10 @@ namespace LinqToDB.Internal.SqlProvider
 			{
 				StringBuilder.Append(OpenParens);
 
+				// a source without columns renders a placeholder column, which needs a name too
+				if (valuesTable.Fields.Count == 0)
+					Convert(StringBuilder, "Unused", ConvertType.NameToQueryField);
+
 				var first = true;
 				foreach (var field in valuesTable.Fields)
 				{
@@ -2119,6 +2123,11 @@ namespace LinqToDB.Internal.SqlProvider
 		protected void BuildEmptyValues(SqlValuesTable valuesTable, bool useTypedExpression = true)
 		{
 			StringBuilder.Append("SELECT ");
+
+			// a source without columns still needs a select list, as in BuildValues
+			if (valuesTable.Fields.Count == 0)
+				StringBuilder.Append('1');
+
 			for (var i = 0; i < valuesTable.Fields.Count; i++)
 			{
 				if (i > 0)
