@@ -176,16 +176,51 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			return base.VisitInSubQueryPredicate(predicate);
 		}
 
+		// YQL bitwise operators take unsigned operands only. A signed operand is reinterpreted with BitCast rather
+		// than converted with CAST, which yields NULL for a negative value, and a signed result is reinterpreted
+		// back. The operator inside is then unsigned on both sides, so it is not rewritten again.
+		static Type? UnsignedOf(Type type)
+		{
+			return type.ToUnderlying() switch
+			{
+				var t when t == typeof(sbyte) => typeof(byte),
+				var t when t == typeof(short) => typeof(ushort),
+				var t when t == typeof(int)   => typeof(uint),
+				var t when t == typeof(long)  => typeof(ulong),
+				_                             => null,
+			};
+		}
+
+		ISqlExpression BitCast(ISqlExpression expression, Type type)
+		{
+			var dbType = Factory.GetDbDataType(type);
+
+			return Factory.Expression(dbType, Precedence.Primary, "BitCast({0} AS {1})", expression, new SqlDataType(dbType));
+		}
+
+		// a signed operand of a signed operator of the given width: widened by value first, then reinterpreted
+		ISqlExpression? UnsignedOperand(ISqlExpression operand, Type resultType, Type unsignedType)
+		{
+			var operandType = operand.SystemType?.ToUnderlying();
+
+			if (operandType == null || UnsignedOf(operandType) == null)
+				return null;
+
+			var widened = operandType == resultType ? operand : Factory.Cast(operand, Factory.GetDbDataType(resultType), true);
+
+			return BitCast(widened, unsignedType);
+		}
+
 		public override ISqlExpression ConvertSqlUnaryExpression(SqlUnaryExpression element)
 		{
-			if (element.Operation is SqlUnaryOperation.BitwiseNegation)
+			if (element.Operation is SqlUnaryOperation.BitwiseNegation
+				&& element.SystemType?.ToUnderlying() is { } resultType
+				&& UnsignedOf(resultType) is { } unsignedType
+				&& UnsignedOperand(element.Expr, resultType, unsignedType) is { } operand)
 			{
-				var argType = QueryHelper.GetDbDataType(element.Expr, MappingSchema);
-				if (!argType.IsUnsignedType())
-				{
-					var expr = new SqlCastExpression(element.Expr, argType.ToUnsigned(), null, false);
-					return new SqlUnaryExpression(element.Type, expr, element.Operation, element.Precedence);
-				}
+				var negation = new SqlUnaryExpression(Factory.GetDbDataType(unsignedType), operand, element.Operation, element.Precedence);
+
+				return BitCast(negation, resultType);
 			}
 
 			return base.ConvertSqlUnaryExpression(element);
@@ -213,17 +248,18 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 					return new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence);
 				}
 
-				case "&" or "|" or "^":
+				case "&" or "|" or "^"
+					when element.SystemType?.ToUnderlying() is { } resultType && UnsignedOf(resultType) is { } unsignedType:
 				{
-					var expr1Type = QueryHelper.GetDbDataType(element.Expr1, MappingSchema);
-					var expr2Type = QueryHelper.GetDbDataType(element.Expr2, MappingSchema);
-					var expr1     = expr1Type.IsUnsignedType() ? element.Expr1 : new SqlCastExpression(element.Expr1, expr1Type.ToUnsigned(), null, false);
-					var expr2     = expr2Type.IsUnsignedType() ? element.Expr2 : new SqlCastExpression(element.Expr2, expr2Type.ToUnsigned(), null, false);
+					var expr1 = UnsignedOperand(element.Expr1, resultType, unsignedType);
+					var expr2 = UnsignedOperand(element.Expr2, resultType, unsignedType);
 
-					if (expr1 != element.Expr1 || expr2 != element.Expr2)
-						return new SqlBinaryExpression(element.SystemType, expr1, element.Operation, expr2, element.Precedence);
+					if (expr1 == null && expr2 == null)
+						break;
 
-					break;
+					var operation = new SqlBinaryExpression(unsignedType, expr1 ?? element.Expr1, element.Operation, expr2 ?? element.Expr2, element.Precedence);
+
+					return BitCast(operation, resultType);
 				}
 			}
 

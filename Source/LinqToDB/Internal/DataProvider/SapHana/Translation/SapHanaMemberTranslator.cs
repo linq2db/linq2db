@@ -128,7 +128,6 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 			{
 				var factory       = translationContext.ExpressionFactory;
 				var dateType      = factory.GetDbDataType(dateTimeExpression);
-				var incrementType = factory.GetDbDataType(increment);
 
 				var number = increment;
 
@@ -178,7 +177,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 					case Sql.DateParts.Millisecond:
 					{
 						function = "Add_Seconds";
-						number   = factory.Div(incrementType, number, 1000);
+						number   = factory.Div(factory.GetDbDataType(typeof(double)), number, 1000);
 						break;
 					}
 					default:

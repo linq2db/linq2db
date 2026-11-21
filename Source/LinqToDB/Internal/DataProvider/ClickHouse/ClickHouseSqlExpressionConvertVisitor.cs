@@ -26,11 +26,9 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		/// <summary>
 		/// <c>intDiv</c>, because ClickHouse's <c>/</c> produces a float even between two integers.
 		/// </summary>
-		protected override ISqlExpression TruncateDivide(ISqlExpression value, long divisor)
+		protected override ISqlExpression? IntegerDivide(DbDataType type, ISqlExpression dividend, ISqlExpression divisor)
 		{
-			var longType = Factory.GetDbDataType(typeof(long));
-
-			return Factory.Function(longType, "intDiv", value, Factory.Value(longType, divisor));
+			return Factory.Function(type, "intDiv", dividend, divisor);
 		}
 
 		/// <inheritdoc />
