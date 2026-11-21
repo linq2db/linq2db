@@ -8,7 +8,6 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Data;
-using LinqToDB.Interceptors;
 using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
@@ -101,27 +100,22 @@ namespace LinqToDB.Internal.Linq
 		{
 			dependsOnParameters = false;
 
-			Expression? queryStageResult   = null;
-			Expression? exposedStageResult = null;
-
 			if (cache && Info != null)
 			{
 				if (CompiledSource != null)
 					return GetCompiledQuery(CompiledSource, Info, ref expression);
 
 				// the context configuration (interceptors included) may have changed since the query was kept
-				if (Info.ConfigurationID == DataContext.ConfigurationID
-					&& !IsRewrittenByUntrustedInterceptor(expression.MainExpression, out queryStageResult, out exposedStageResult))
-				{
+				if (Info.ConfigurationID == DataContext.ConfigurationID)
 					return Info;
-				}
 
 				Info = null;
 			}
 
-			var info = Query<T>.GetQuery(DataContext, ref expression, out dependsOnParameters, queryStageResult, exposedStageResult);
+			var info = Query<T>.GetQuery(DataContext, ref expression, out dependsOnParameters);
 
-			if (cache && info.CompareInfo?.IsFastComparable == true && !dependsOnParameters)
+			// a query interceptor without IInterceptorCacheKey may rewrite the query differently on another execution
+			if (cache && info.CompareInfo?.IsFastComparable == true && !dependsOnParameters && !DataContext.HasUntrustedQueryInterceptor())
 			{
 				Info = info;
 			}
@@ -130,22 +124,18 @@ namespace LinqToDB.Internal.Linq
 		}
 
 		// The IQueryable a compiled query returned keeps its query while the context configuration is the one it was built
-		// for and no argument selects it by value. The configuration ID does not tell query interceptor instances apart, so
-		// with one, the query filters it rewrote are checked against the executing interceptor first. Otherwise the compiled
-		// query resolves it again for the current context and arguments.
+		// for, no argument selects it by value, and the query still matches the executing context's query interceptor.
+		// Otherwise the compiled query resolves it again for the current context and arguments.
 		Query<T> GetCompiledQuery(ICompiledQuerySource<T> source, Query<T> info, ref IQueryExpressions expression)
 		{
 			if (info.ConfigurationID == DataContext.ConfigurationID && !source.HasDependentArguments)
 			{
-				if (info.CompareInfo?.DynamicAccessors == null || DataContext is not IInterceptable<IQueryExpressionInterceptor> { Interceptor: not null })
-					return info;
+				var dynamicAccessorResults = new QueryCacheCompareInfo.DynamicAccessorResults(memoize: false);
 
-				var dynamicAccessorResults = new QueryCacheCompareInfo.DynamicAccessorResults();
-
-				if (info.Revalidate(DataContext, info.CompiledExpressions!.MainExpression, Parameters, ref dynamicAccessorResults, out var matched))
+				if (info.TryReuse(DataContext, Parameters, ref dynamicAccessorResults, out var reused))
 				{
-					CompiledExpressions = matched;
-					expression          = matched;
+					CompiledExpressions = reused;
+					expression          = reused;
 
 					return info;
 				}
@@ -158,29 +148,6 @@ namespace LinqToDB.Internal.Linq
 			expression          = compiled;
 
 			return info;
-		}
-
-		// A query is kept only for a tree the Query and ExposedQuery stages left unchanged. An interceptor without
-		// IInterceptorCacheKey may rewrite it on another execution: both stages run again, as they would on the way to the
-		// query cache, and their results go on to it when they rewrite, so each stage still runs once per execution.
-		bool IsRewrittenByUntrustedInterceptor(Expression expression, out Expression? queryStageResult, out Expression? exposedStageResult)
-		{
-			queryStageResult   = null;
-			exposedStageResult = null;
-
-			if (!DataContext.HasUntrustedQueryInterceptor())
-				return false;
-
-			var interceptor = ((IInterceptable<IQueryExpressionInterceptor>)DataContext).Interceptor!;
-
-			queryStageResult = interceptor.ProcessExpression(expression, new QueryExpressionArgs(DataContext, expression, QueryExpressionArgs.ExpressionKind.Query));
-
-			if (!ReferenceEquals(queryStageResult, expression))
-				return true;
-
-			exposedStageResult = interceptor.ProcessExpression(expression, new QueryExpressionArgs(DataContext, expression, QueryExpressionArgs.ExpressionKind.ExposedQuery));
-
-			return !ReferenceEquals(exposedStageResult, expression);
 		}
 
 		async Task<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken)

@@ -2215,41 +2215,8 @@ namespace Tests.Data
 			ShouldReturnIds(query, ExpectedIds(2), "replaced");
 		}
 
-		// The same IQueryable executed again keeps its query while an interceptor without IInterceptorCacheKey leaves it
-		// unchanged, and not once the interceptor rewrites it.
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
-		public void QueryExpression_SameQueryable_WithoutCacheKey_KeepsQueryUntilRewritten(
-			[IncludeDataSources(false, TestProvName.AllSQLite)]                  string         context,
-			[Values(ExpressionKind.Query, ExpressionKind.ExposedQuery)]         ExpressionKind kind,
-			[Values]                                                             bool           viaDataContext)
-		{
-			Query.ClearCaches();
-
-			using IDataContext db = viaDataContext
-				? new DataContext(new DataOptions().UseConfiguration(context))
-				: GetDataConnection(context);
-
-			var unchanged = new UnkeyedTenantLimitInterceptor(kind, null);
-			var query     = db.GetTable<Person>();
-
-			db.AddInterceptor(unchanged);
-
-			ShouldReturnIds(query, ExpectedIds(), "first");
-
-			var info = query.GetCompiledQueryInfo();
-
-			ShouldReturnIds(query, ExpectedIds(), "again");
-
-			query.GetCompiledQueryInfo().ShouldBeSameAs(info, "kept");
-
-			db.RemoveInterceptor(unchanged);
-			db.AddInterceptor(new UnkeyedTenantLimitInterceptor(kind, 2));
-
-			ShouldReturnIds(query, ExpectedIds(2), "rewritten");
-		}
-
 		// Each stage of an interceptor without IInterceptorCacheKey runs once per execution, and a rewrite it returns is used,
-		// also when the IQueryable executed again kept its query.
+		// also when the same IQueryable is executed again.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
 		public void QueryExpression_WithoutCacheKey_StagesRunOncePerExecution(
 			[IncludeDataSources(false, TestProvName.AllSQLite)]          string         context,
@@ -2422,6 +2389,53 @@ namespace Tests.Data
 				{
 					db.Dispose();
 				}
+			}
+		}
+
+		/// <summary>
+		/// <see cref="InlinedLimitFilterInterceptor"/> with <see cref="IInterceptorCacheKey"/>.
+		/// </summary>
+		sealed class KeyedInlinedLimitFilterInterceptor(int limit) : IQueryExpressionInterceptor, IInterceptorCacheKey
+		{
+			readonly InlinedLimitFilterInterceptor _inner = new(limit);
+
+			public string? CacheKey => "inlined";
+
+			public int QueryFilterCalls => _inner.QueryFilterCalls;
+
+			public Expression ProcessExpression(Expression expression, QueryExpressionArgs args)
+			{
+				return _inner.ProcessExpression(expression, args);
+			}
+		}
+
+		// One context executing a query: a query interceptor that rewrites the query filter is asked to rewrite it once per
+		// execution, the execution that builds the query included, with or without IInterceptorCacheKey.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
+		public void QueryExpression_RewrittenQueryFilterOncePerExecution(
+			[IncludeDataSources(false, TestProvName.AllSQLite)] string context,
+			[Values]                                            bool   keyed)
+		{
+			Query.ClearCaches();
+
+			var unkeyedInterceptor = new InlinedLimitFilterInterceptor(3);
+			var keyedInterceptor   = new KeyedInlinedLimitFilterInterceptor(3);
+
+			IQueryExpressionInterceptor interceptor = keyed ? keyedInterceptor : unkeyedInterceptor;
+
+			int QueryFilterCalls() => keyed ? keyedInterceptor.QueryFilterCalls : unkeyedInterceptor.QueryFilterCalls;
+
+			using var db = GetDataConnection(context, o => o
+				.UseMappingSchema(_personFilterSchema)
+				.UseInterceptor(interceptor));
+
+			for (var i = 0; i < 3; i++)
+			{
+				var calls = QueryFilterCalls();
+
+				db.GetTable<Person>().Count().ShouldBe(ExpectedIds(3).Length, $"execution {i}");
+
+				(QueryFilterCalls() - calls).ShouldBe(1, $"query filter calls, execution {i}");
 			}
 		}
 

@@ -5,10 +5,8 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Interceptors;
 using LinqToDB.Internal.Cache;
 using LinqToDB.Internal.Common;
-using LinqToDB.Internal.Interceptors;
 using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.SqlProvider;
 
@@ -85,14 +83,11 @@ namespace LinqToDB.Internal.Linq
 			if (cached != null)
 			{
 				// Queries of one key share the exposed tree, so only the dynamic accessors tell them apart.
-				var dynamicAccessorResults = new QueryCacheCompareInfo.DynamicAccessorResults();
-
-				if (cached.Length > 1)
-					dynamicAccessorResults.Enable();
+				var dynamicAccessorResults = new QueryCacheCompareInfo.DynamicAccessorResults(memoize: cached.Length > 1);
 
 				foreach (var candidate in cached)
 				{
-					if (TryReuse(candidate, dataContext, parameterValues, ref dynamicAccessorResults, out expressions))
+					if (candidate.TryReuse(dataContext, parameterValues, ref dynamicAccessorResults, out expressions))
 					{
 						unseenSlots = null;
 
@@ -137,24 +132,6 @@ namespace LinqToDB.Internal.Linq
 			unseenSlots = null;
 
 			return query;
-		}
-
-		// The key does not tell query interceptor instances apart: with a query interceptor, the dynamic accessors (a query
-		// filter it rewrote) are re-evaluated for the executing context first, as the query cache does, and their results
-		// supply the parameter values. Without one, the query is reused as it is.
-		static bool TryReuse(Query<T> query, IDataContext dataContext, object?[] parameterValues, ref QueryCacheCompareInfo.DynamicAccessorResults dynamicAccessorResults, out IQueryExpressions expressions)
-		{
-			expressions = query.CompiledExpressions!;
-
-			if (query.CompareInfo?.DynamicAccessors == null || dataContext is not IInterceptable<IQueryExpressionInterceptor> { Interceptor: not null })
-				return true;
-
-			if (!query.Revalidate(dataContext, expressions.MainExpression, parameterValues, ref dynamicAccessorResults, out var matched))
-				return false;
-
-			expressions = matched;
-
-			return true;
 		}
 
 		Query<T> BuildQuery(IDataContext dataContext, object?[] parameterValues, out int[] materializedSlots)

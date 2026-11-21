@@ -60,11 +60,13 @@ namespace LinqToDB.Internal.Linq
 		/// <param name="forExpression">Expression which is used as key to do not generate duplicate comparers.</param>
 		/// <param name="dataContext">DataContext which is used to execute <paramref name="accessorFunc"/>.</param>
 		/// <param name="accessorFunc">Function, which will used for retrieving current expression during cache comparison.</param>
+		/// <param name="result">Result of <paramref name="accessorFunc"/> for <paramref name="dataContext"/>, when the caller already has it.</param>
 		/// <returns>Result of execution of accessorFunc</returns>
 		public Expression RegisterDynamicExpressionAccessor(Expression forExpression, IDataContext dataContext, MappingSchema mappingSchema,
-			ExpressionAccessorFunc           accessorFunc)
+			ExpressionAccessorFunc           accessorFunc,
+			Expression?                      result = null)
 		{
-			var result = accessorFunc(dataContext, mappingSchema);
+			result ??= accessorFunc(dataContext, mappingSchema);
 
 			DynamicAccessors ??= new(ExpressionEqualityComparer.Instance);
 

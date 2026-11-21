@@ -26,24 +26,19 @@ namespace LinqToDB.Internal.Linq
 		/// <summary>
 		/// The dynamic accessors evaluated for one context in one cache lookup. The queries cached for one shape register their
 		/// accessors under the same keys, and a key stands for one function of the context, as it does within a query: each
-		/// runs once per lookup, not once per cached query. Results are kept only after <see cref="Enable"/>, which a lookup
-		/// calls when it may compare more than one cached query.
+		/// runs once per lookup, not once per cached query. A lookup keeps the results only when it may compare more than one
+		/// cached query.
 		/// </summary>
-		public struct DynamicAccessorResults
+		public struct DynamicAccessorResults(bool memoize)
 		{
-			bool                                                    _enabled;
+			readonly bool                                           _memoize = memoize;
 			DynamicExpressionInfo?                                  _firstInfo;
 			Expression?                                             _firstResult;
 			List<(DynamicExpressionInfo info, Expression result)>? _more;
 
-			public void Enable()
-			{
-				_enabled = true;
-			}
-
 			public Expression Get(IDataContext dataContext, DynamicExpressionInfo info)
 			{
-				if (!_enabled)
+				if (!_memoize)
 					return info.AccessorFunc(dataContext, info.MappingSchema);
 
 				if (_firstInfo != null)

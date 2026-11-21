@@ -345,10 +345,7 @@ namespace LinqToDB.Internal.Linq
 
 			var entries = Volatile.Read(ref bucket.Entries);
 
-			var dynamicAccessorResults = new QueryCacheCompareInfo.DynamicAccessorResults();
-
-			if (entries.Length > 1)
-				dynamicAccessorResults.Enable();
+			var dynamicAccessorResults = new QueryCacheCompareInfo.DynamicAccessorResults(memoize: entries.Length > 1);
 
 			for (var i = 0; i < entries.Length; i++)
 			{
@@ -437,10 +434,7 @@ namespace LinqToDB.Internal.Linq
 					var survivors = new List<Entry>(current.Length + 1);
 					Entry? duplicate = null;
 
-					var dynamicAccessorResults = new QueryCacheCompareInfo.DynamicAccessorResults();
-
-					if (current.Length > 1)
-						dynamicAccessorResults.Enable();
+					var dynamicAccessorResults = new QueryCacheCompareInfo.DynamicAccessorResults(memoize: current.Length > 1);
 
 					for (var i = 0; i < current.Length; i++)
 					{

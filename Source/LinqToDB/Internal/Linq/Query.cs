@@ -72,7 +72,7 @@ namespace LinqToDB.Internal.Linq
 
 		protected internal bool Compare(IDataContext dataContext, IQueryExpressions expressions, [NotNullWhen(true)] out IQueryExpressions? matchedQueryExpressions)
 		{
-			var dynamicAccessorResults = new QueryCacheCompareInfo.DynamicAccessorResults();
+			var dynamicAccessorResults = new QueryCacheCompareInfo.DynamicAccessorResults(memoize: false);
 
 			return Compare(dataContext, expressions, ref dynamicAccessorResults, out matchedQueryExpressions);
 		}
