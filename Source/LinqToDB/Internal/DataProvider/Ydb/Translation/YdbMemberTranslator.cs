@@ -379,8 +379,15 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 					// ListConcat(AsList(t.Value3, t.Value1, t.Value2), ' -> ')
 
 					var arrayDataType = factory.GetDbDataType(typeof(string[]));
+					var stringType    = factory.GetDbDataType(typeof(string));
 
-					var param = factory.Function(arrayDataType, "AsList", values);
+					// AsList needs one common item type ("Cannot infer common type for Utf8 and Int32"), so a non-string
+					// item of string.Join(sep, object[]) is converted to text first
+					var items = values
+						.Select(v => v.SystemType?.ToUnderlying() == typeof(string) ? v : factory.Cast(v, stringType))
+						.ToArray();
+
+					var param = factory.Function(arrayDataType, "AsList", items);
 
 					param = factory.Function(arrayDataType, "ListNotNull", param);
 
