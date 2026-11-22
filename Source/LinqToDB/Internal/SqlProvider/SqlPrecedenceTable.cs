@@ -108,6 +108,29 @@ namespace LinqToDB.Internal.SqlProvider
 		}
 
 		/// <summary>
+		/// A copy of this table with the arithmetic order every dialect shares: prefix <c>-</c> above <c>* / %</c> above
+		/// <c>+ -</c>, left to right. Other operators keep this table's entries.
+		/// </summary>
+		internal SqlPrecedenceTable WithOrderedArithmetic()
+		{
+			const int arithmetic = ArithmeticGroup | PrefixGroup;
+
+			var prefix         = new SqlOperatorPrecedence(Precedence.Unary,          SqlAssociativity.Left, false, arithmetic);
+			var multiplicative = new SqlOperatorPrecedence(Precedence.Multiplicative, SqlAssociativity.Left, false, arithmetic);
+			var additive       = new SqlOperatorPrecedence(Precedence.Additive,       SqlAssociativity.Left, false, arithmetic);
+
+			return With(
+				(SqlPrecedenceKeys.Negation,        prefix),
+				(SqlPrecedenceKeys.NegativeLiteral, prefix),
+				("*",                               multiplicative),
+				("/",                               multiplicative),
+				("%",                               multiplicative),
+				("+",                               additive),
+				("-",                               additive),
+				(SqlPrecedenceKeys.Class(Precedence.Unary), prefix));
+		}
+
+		/// <summary>
 		/// A copy of this table with <see cref="PrefixReachesEqualLevel"/> set to <paramref name="value"/>.
 		/// </summary>
 		public SqlPrecedenceTable WithPrefixReachesEqualLevel(bool value) =>

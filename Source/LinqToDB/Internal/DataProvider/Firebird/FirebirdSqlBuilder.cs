@@ -25,8 +25,9 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		protected override ConcatBuildStyle ConcatStyle => ConcatBuildStyle.Pipes;
 
-		// Firebird binds `||` tighter than every arithmetic operator, unary minus included
-		static readonly SqlPrecedenceTable _precedenceTable = SqlPrecedenceTable.Default.With(
+		// Firebird language reference, operator precedence: || > arithmetic (unary + -, then * /, then + -) > comparisons;
+		// || binds tighter than every arithmetic operator, unary minus included. Bitwise operators are functions.
+		static readonly SqlPrecedenceTable _precedenceTable = SqlPrecedenceTable.Default.WithOrderedArithmetic().With(
 			(SqlPrecedenceKeys.Concatenation, new SqlOperatorPrecedence(Precedence.Unary + 1, SqlAssociativity.Left, true, SqlPrecedenceTable.ArithmeticGroup | SqlPrecedenceTable.PrefixGroup)));
 
 		protected override SqlPrecedenceTable PrecedenceTable => _precedenceTable;

@@ -23,6 +23,13 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 		protected override ConcatBuildStyle ConcatStyle => ConcatBuildStyle.Pipes;
 
+		// https://www.ibm.com/docs/en/db2/11.5.x?topic=elements-expressions: prefix + - > * / % and || (one level) > + -,
+		// operators of one level left to right. Bitwise operators are functions.
+		static readonly SqlPrecedenceTable _precedenceTable = SqlPrecedenceTable.Default.WithOrderedArithmetic().With(
+			(SqlPrecedenceKeys.Concatenation, new SqlOperatorPrecedence(Precedence.Multiplicative, SqlAssociativity.Left, true, SqlPrecedenceTable.ArithmeticGroup | SqlPrecedenceTable.PrefixGroup)));
+
+		protected override SqlPrecedenceTable PrecedenceTable => _precedenceTable;
+
 		// DB2 null-treatment placement is per function:
 		//  - FIRST_VALUE/LAST_VALUE/LAG/LEAD take it as a quoted string argument: FUNC(.., 'IGNORE NULLS').
 		//    (LAG/LEAD require offset + default to precede it — see BuildSqlExtendedFunction below.)

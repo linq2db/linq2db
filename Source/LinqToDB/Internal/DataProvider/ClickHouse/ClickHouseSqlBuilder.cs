@@ -35,26 +35,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		// https://clickhouse.com/docs/sql-reference/operators: * / % (12) > + - (11), left to right, PostgreSQL's order;
 		// unary minus above both. Bitwise operators, ~ and concatenation are functions here.
-		static readonly SqlPrecedenceTable _precedenceTable = CreatePrecedenceTable();
-
-		static SqlPrecedenceTable CreatePrecedenceTable()
-		{
-			const int arithmetic = SqlPrecedenceTable.ArithmeticGroup | SqlPrecedenceTable.PrefixGroup;
-
-			var prefix         = new SqlOperatorPrecedence(Precedence.Unary,          SqlAssociativity.Left, false, arithmetic);
-			var multiplicative = new SqlOperatorPrecedence(Precedence.Multiplicative, SqlAssociativity.Left, false, arithmetic);
-			var additive       = new SqlOperatorPrecedence(Precedence.Additive,       SqlAssociativity.Left, false, arithmetic);
-
-			return SqlPrecedenceTable.Default.With(
-				(SqlPrecedenceKeys.Negation,        prefix),
-				(SqlPrecedenceKeys.NegativeLiteral, prefix),
-				("*",                               multiplicative),
-				("/",                               multiplicative),
-				("%",                               multiplicative),
-				("+",                               additive),
-				("-",                               additive),
-				(SqlPrecedenceKeys.Class(Precedence.Unary), prefix));
-		}
+		static readonly SqlPrecedenceTable _precedenceTable = SqlPrecedenceTable.Default.WithOrderedArithmetic();
 
 		protected override SqlPrecedenceTable PrecedenceTable => _precedenceTable;
 
