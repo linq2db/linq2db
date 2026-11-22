@@ -1094,8 +1094,44 @@ namespace LinqToDB.EntityFrameworkCore
 
 			if (converted is SqlFunctionExpression or SqlFragmentExpression)
 				result.Precedence = Precedence.Primary;
+			else if (NpgsqlBinaryPrecedence(converted) is { } precedence)
+				result.Precedence = precedence;
 
 			return result;
+		}
+
+		// An Npgsql binary operator template takes its operator's class, so a nested operator template passed as its
+		// argument is bracketed by the builder (#6390): PostgreSQL's order is AT TIME ZONE above * above + -, and every
+		// other Npgsql operator (@> <@ && << @@ ? ...) is "any other operator", which the PostgreSQL table holds at the
+		// Bitwise class.
+		static int? NpgsqlBinaryPrecedence(Expression expression)
+		{
+#if EF31
+			if (expression.GetType().GetProperty("Operator")?.GetValue(expression) is not string operatorText
+				|| expression.GetType().GetProperty("Left") == null)
+				return null;
+
+			return operatorText switch
+			{
+				"AT TIME ZONE" => Precedence.Primary,
+				"*"            => Precedence.Multiplicative,
+				"+" or "-"     => Precedence.Additive,
+				_              => Precedence.Bitwise,
+			};
+#else
+			if (!string.Equals(expression.GetType().Name, PgBinaryExpressionName, StringComparison.Ordinal))
+				return null;
+
+			var operatorType = string.Format(CultureInfo.InvariantCulture, "{0}", expression.GetType().GetProperty("OperatorType")!.GetValue(expression));
+
+			return operatorType switch
+			{
+				"AtTimeZone"                  => Precedence.Primary,
+				"RangeIntersect"              => Precedence.Multiplicative,
+				"RangeUnion" or "RangeExcept" => Precedence.Additive,
+				_                             => Precedence.Bitwise,
+			};
+#endif
 		}
 
 		private static Expression UnwrapConverted(Expression expr)
