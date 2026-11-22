@@ -1881,6 +1881,34 @@ namespace Tests.Linq
 #endif
 
 		[Table]
+		public sealed class Issue6400Table
+		{
+			[PrimaryKey] public int     Id      { get; set; }
+			[Column]     public string  Version { get; set; } = null!;
+		}
+
+		[Test]
+		public void Issue6400BoxedNumberComparedWithStringColumn([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values("de-DE", "sv-SE")] string culture)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(new[]
+			{
+				new Issue6400Table { Id = 1, Version = "1.5" },
+				new Issue6400Table { Id = 2, Version = "-5"  },
+				new Issue6400Table { Id = 3, Version = "3"   },
+			});
+
+			// de-DE formats 1.5 as "1,5" and sv-SE formats -5 with U+2212 MINUS SIGN
+			using var _ = new CultureRegion(culture);
+
+			List<object> hidden = [1.5, -5];
+			tb.Where(r => !hidden.Contains(r.Version)).Select(r => r.Id).ToArray().ShouldBe([3]);
+
+			object version = 1.5;
+			tb.Where(r => r.Version.Equals(version)).Select(r => r.Id).ToArray().ShouldBe([1]);
+		}
+
+		[Table]
 		public sealed class Issue4371Table
 		{
 			[Column(DataType = DataType.VarChar)] public DateTime?       ColumnDT  { get; set; }
