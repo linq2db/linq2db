@@ -1829,6 +1829,18 @@ namespace Tests.Linq
 				}
 			}
 
+		// the millisecond count of a span past 2^31 ms compares on the server without overflowing
+		[Test]
+		public void DateDiffMillisecondOfLongSpanInPredicate([IncludeDataSources(true, TestProvName.AllSapHana)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var count = db.Types
+				.Count(t => Sql.DateDiff(Sql.DateParts.Millisecond, t.DateTimeValue, t.DateTimeValue.AddDays(30)) > 1000);
+
+			count.ShouldBe(Types.Count());
+		}
+
 		#endregion
 
 		#region MakeDateTime

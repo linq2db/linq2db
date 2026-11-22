@@ -267,8 +267,9 @@ namespace LinqToDB
 				};
 
 				ISqlExpression func = new SqlFunction(dbType, funcName, startdate, endDate);
+				// the count is BIGINT: an int-typed division would be cast to INTEGER, which overflows past 2^31 ms
 				if (divider != 1)
-					func = builder.Div(func, divider);
+					func = builder.Div<long>(func, new SqlValue(divider));
 
 				builder.ResultExpression = func;
 			}
