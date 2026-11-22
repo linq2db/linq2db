@@ -135,6 +135,33 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			return newElement;
 		}
 
+		/// <summary>
+		/// The <c>BETWEEN</c> twin of <see cref="ConvertExprExprPredicate"/>: with a date beside a timestamp, the predicate is written
+		/// as its two comparisons, so each casts its date side to <c>datetime</c> as a comparison does.
+		/// </summary>
+		protected internal override IQueryElement VisitBetweenPredicate(SqlPredicate.Between predicate)
+		{
+			var newElement = base.VisitBetweenPredicate(predicate);
+
+			if (newElement is SqlPredicate.Between between)
+			{
+				var valueType = QueryHelper.GetDbDataType(between.Expr1, MappingSchema);
+
+				if (   ComparesDateWithTimestamp(valueType, QueryHelper.GetDbDataType(between.Expr2, MappingSchema))
+					|| ComparesDateWithTimestamp(valueType, QueryHelper.GetDbDataType(between.Expr3, MappingSchema)))
+				{
+					return Visit(Optimize(NotifyReplaced(ConvertBetweenPredicate(between), between)));
+				}
+			}
+
+			return newElement;
+
+			static bool ComparesDateWithTimestamp(DbDataType left, DbDataType right)
+			{
+				return (left.DataType == DataType.Date && IsTimestamp(right)) || (right.DataType == DataType.Date && IsTimestamp(left));
+			}
+		}
+
 		static bool IsTimestamp(DbDataType type)
 		{
 			return type.DataType is DataType.DateTime or DataType.DateTime2 or DataType.SmallDateTime;

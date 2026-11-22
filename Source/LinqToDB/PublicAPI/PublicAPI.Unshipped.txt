@@ -1,1 +1,3 @@
 ﻿#nullable enable
+override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlExpressionConvertVisitor.VisitBetweenPredicate(LinqToDB.Internal.SqlQuery.SqlPredicate.Between! predicate) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+override LinqToDB.Internal.DataProvider.Sybase.SybaseSqlExpressionConvertVisitor.VisitBetweenPredicate(LinqToDB.Internal.SqlQuery.SqlPredicate.Between! predicate) -> LinqToDB.Internal.SqlQuery.IQueryElement!

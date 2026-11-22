@@ -863,7 +863,10 @@ namespace Tests.Linq
 			[Column(Length = 5), ValueConverter(ConverterType = typeof(PaddedConverter))]
 			public int High { get; set; }
 
-			[Column(DataType = DataType.Int64), Duration(DurationUnit.Second)]
+			// Access has no 64-bit integer and keeps a duration as money.
+			[Column(DataType = DataType.Int64)]
+			[Column(Configuration = ProviderName.Access, DataType = DataType.Money)]
+			[Duration(DurationUnit.Second)]
 			public TimeSpan Elapsed { get; set; }
 
 			public static readonly BetweenConvertedRow[] Data =
@@ -995,8 +998,8 @@ namespace Tests.Linq
 		static readonly DateTime BetweenDayHigh = new(2020, 1, 3, 0, 30, 0);
 
 		// Whatever a provider makes of a bound beside a date column, `Between` answers as `>=` / `<=` do in the same query: beside
-		// a stored column, a value computed from one, an optional row's column, a subquery's value and a timestamp column, with
-		// constant and parameter bounds, in a projection and in a filter.
+		// a stored column, a value computed from one, an optional row's column and a timestamp column, with constant and
+		// parameter bounds, in a projection and in a filter.
 		[Test]
 		public void BetweenOfDateColumn([DataSources] string context)
 		{
@@ -1026,8 +1029,6 @@ namespace Tests.Linq
 						OutsideConstantCompared = r.Day < BetweenDayLow || r.Day > BetweenDayHigh,
 						OutsideOptional         = Sql.NotBetween(d!.Day, BetweenDayLow, BetweenDayHigh),
 						OutsideOptionalCompared = d!.Day < BetweenDayLow || d!.Day > BetweenDayHigh,
-						Subquery                = Sql.Between(table.Where(x => x.Id == r.Id).Max(x => x.Day), low, high),
-						SubqueryCompared        = table.Where(x => x.Id == r.Id).Max(x => x.Day) >= low && table.Where(x => x.Id == r.Id).Max(x => x.Day) <= high,
 						Stamp                   = Sql.Between(r.Stamp, low, high),
 						StampCompared           = r.Stamp >= low && r.Stamp <= high,
 					}
@@ -1043,7 +1044,6 @@ namespace Tests.Linq
 				&& r.Outside         == r.OutsideCompared
 				&& r.OutsideConstant == r.OutsideConstantCompared
 				&& r.OutsideOptional == r.OutsideOptionalCompared
-				&& r.Subquery        == r.SubqueryCompared
 				&& r.Stamp           == r.StampCompared);
 
 			table
@@ -1069,6 +1069,35 @@ namespace Tests.Linq
 						.Select(r => r.Id)
 						.OrderBy(id => id)
 						.ToArray());
+		}
+
+		[Test]
+		[ThrowsRequiresCorrelatedSubquery]
+		public void BetweenOfDateSubquery([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(BetweenDayRow.Data);
+
+			var low  = BetweenDayLow;
+			var high = BetweenDayHigh;
+
+			var rows =
+				(
+					from r in table
+					select new
+					{
+						InRange         = Sql.Between(table.Where(x => x.Id == r.Id).Max(x => x.Day), low, high),
+						InRangeCompared = table.Where(x => x.Id == r.Id).Max(x => x.Day) >= low && table.Where(x => x.Id == r.Id).Max(x => x.Day) <= high,
+						Outside         = Sql.NotBetween(table.Where(x => x.Id == r.Id).Max(x => x.Day), low, high),
+						OutsideCompared = table.Where(x => x.Id == r.Id).Max(x => x.Day) < low || table.Where(x => x.Id == r.Id).Max(x => x.Day) > high,
+					}
+				)
+				.ToArray();
+
+			rows.Length.ShouldBe(2);
+			rows.ShouldAllBe(r =>
+				r.InRange    == r.InRangeCompared
+				&& r.Outside == r.OutsideCompared);
 		}
 
 		static int ClientOnlyDouble(int value) => value * 2;
