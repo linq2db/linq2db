@@ -17,6 +17,8 @@ open System
 open System.Collections.Generic
 open System.Linq
 open System.Linq.Expressions
+open System.Runtime.CompilerServices
+open System.Runtime.InteropServices
 open System.Threading
 open System.Threading.Tasks
 
@@ -26,43 +28,373 @@ type TestDataDB (options : DataOptions<TestDataDB>) =
     static do
         let mutable builder = FluentMappingBuilder(TestDataDB.ContextSchema)
 
-        builder.Entity<AllType>().HasAttribute(TableAttribute("AllTypes")).Member((fun e -> e.Id)).HasAttribute(ColumnAttribute("ID", DataType = DataType.Int64, DbType = "INTEGER", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)).Member((fun e -> e.BigintDataType)).HasAttribute(ColumnAttribute("bigintDataType", DataType = DataType.Int64, DbType = "bigint")).Member((fun e -> e.NumericDataType)).HasAttribute(ColumnAttribute("numericDataType", DataType = DataType.Decimal, DbType = "numeric")).Member((fun e -> e.BitDataType)).HasAttribute(ColumnAttribute("bitDataType", DataType = DataType.Boolean, DbType = "bit")).Member((fun e -> e.SmallintDataType)).HasAttribute(ColumnAttribute("smallintDataType", DataType = DataType.Int16, DbType = "smallint")).Member((fun e -> e.DecimalDataType)).HasAttribute(ColumnAttribute("decimalDataType", DataType = DataType.Decimal, DbType = "decimal")).Member((fun e -> e.IntDataType)).HasAttribute(ColumnAttribute("intDataType", DataType = DataType.Int32, DbType = "INT")).Member((fun e -> e.TinyintDataType)).HasAttribute(ColumnAttribute("tinyintDataType", DataType = DataType.Byte, DbType = "tinyint")).Member((fun e -> e.MoneyDataType)).HasAttribute(ColumnAttribute("moneyDataType", DataType = DataType.Decimal, DbType = "money")).Member((fun e -> e.FloatDataType)).HasAttribute(ColumnAttribute("floatDataType", DataType = DataType.Double, DbType = "float")).Member((fun e -> e.RealDataType)).HasAttribute(ColumnAttribute("realDataType", DataType = DataType.Double, DbType = "REAL")).Member((fun e -> e.DatetimeDataType)).HasAttribute(ColumnAttribute("datetimeDataType", DataType = DataType.DateTime2, DbType = "datetime")).Member((fun e -> e.CharDataType)).HasAttribute(ColumnAttribute("charDataType", DataType = DataType.NVarChar, DbType = "char(1)", Length = 1)).Member((fun e -> e.Char20DataType)).HasAttribute(ColumnAttribute("char20DataType", DataType = DataType.NVarChar, DbType = "char(20)", Length = 20)).Member((fun e -> e.VarcharDataType)).HasAttribute(ColumnAttribute("varcharDataType", DataType = DataType.NVarChar, DbType = "varchar(20)", Length = 20)).Member((fun e -> e.TextDataType)).HasAttribute(ColumnAttribute("textDataType", DataType = DataType.NVarChar, DbType = "TEXT")).Member((fun e -> e.NcharDataType)).HasAttribute(ColumnAttribute("ncharDataType", DataType = DataType.NVarChar, DbType = "nchar(20)", Length = 20)).Member((fun e -> e.NvarcharDataType)).HasAttribute(ColumnAttribute("nvarcharDataType", DataType = DataType.NVarChar, DbType = "nvarchar(20)", Length = 20)).Member((fun e -> e.NtextDataType)).HasAttribute(ColumnAttribute("ntextDataType", DataType = DataType.NVarChar, DbType = "ntext")).Member((fun e -> e.BinaryDataType)).HasAttribute(ColumnAttribute("binaryDataType", DataType = DataType.VarBinary, DbType = "binary")).Member((fun e -> e.VarbinaryDataType)).HasAttribute(ColumnAttribute("varbinaryDataType", DataType = DataType.VarBinary, DbType = "varbinary")).Member((fun e -> e.ImageDataType)).HasAttribute(ColumnAttribute("imageDataType", DataType = DataType.VarBinary, DbType = "image")).Member((fun e -> e.UniqueidentifierDataType)).HasAttribute(ColumnAttribute("uniqueidentifierDataType", DataType = DataType.Guid, DbType = "uniqueidentifier")).Member((fun e -> box (e.ObjectDataType))).HasAttribute(ColumnAttribute("objectDataType", DataType = DataType.Variant, DbType = "Object")) |> ignore
+        builder
+            .Entity<AllType>()
+                .HasAttribute(TableAttribute("AllTypes"))
+                .Member((fun e -> e.Id))
+                    .HasAttribute(ColumnAttribute("ID", DataType = DataType.Int64, DbType = "INTEGER", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true))
+                .Member((fun e -> e.BigintDataType))
+                    .HasAttribute(ColumnAttribute("bigintDataType", DataType = DataType.Int64, DbType = "bigint"))
+                .Member((fun e -> e.NumericDataType))
+                    .HasAttribute(ColumnAttribute("numericDataType", DataType = DataType.Decimal, DbType = "numeric"))
+                .Member((fun e -> e.BitDataType))
+                    .HasAttribute(ColumnAttribute("bitDataType", DataType = DataType.Boolean, DbType = "bit"))
+                .Member((fun e -> e.SmallintDataType))
+                    .HasAttribute(ColumnAttribute("smallintDataType", DataType = DataType.Int16, DbType = "smallint"))
+                .Member((fun e -> e.DecimalDataType))
+                    .HasAttribute(ColumnAttribute("decimalDataType", DataType = DataType.Decimal, DbType = "decimal"))
+                .Member((fun e -> e.IntDataType))
+                    .HasAttribute(ColumnAttribute("intDataType", DataType = DataType.Int32, DbType = "INT"))
+                .Member((fun e -> e.TinyintDataType))
+                    .HasAttribute(ColumnAttribute("tinyintDataType", DataType = DataType.Byte, DbType = "tinyint"))
+                .Member((fun e -> e.MoneyDataType))
+                    .HasAttribute(ColumnAttribute("moneyDataType", DataType = DataType.Decimal, DbType = "money"))
+                .Member((fun e -> e.FloatDataType))
+                    .HasAttribute(ColumnAttribute("floatDataType", DataType = DataType.Double, DbType = "float"))
+                .Member((fun e -> e.RealDataType))
+                    .HasAttribute(ColumnAttribute("realDataType", DataType = DataType.Double, DbType = "REAL"))
+                .Member((fun e -> e.DatetimeDataType))
+                    .HasAttribute(ColumnAttribute("datetimeDataType", DataType = DataType.DateTime2, DbType = "datetime"))
+                .Member((fun e -> e.CharDataType))
+                    .HasAttribute(ColumnAttribute("charDataType", DataType = DataType.NVarChar, DbType = "char(1)", Length = 1))
+                .Member((fun e -> e.Char20DataType))
+                    .HasAttribute(ColumnAttribute("char20DataType", DataType = DataType.NVarChar, DbType = "char(20)", Length = 20))
+                .Member((fun e -> e.VarcharDataType))
+                    .HasAttribute(ColumnAttribute("varcharDataType", DataType = DataType.NVarChar, DbType = "varchar(20)", Length = 20))
+                .Member((fun e -> e.TextDataType))
+                    .HasAttribute(ColumnAttribute("textDataType", DataType = DataType.NVarChar, DbType = "TEXT"))
+                .Member((fun e -> e.NcharDataType))
+                    .HasAttribute(ColumnAttribute("ncharDataType", DataType = DataType.NVarChar, DbType = "nchar(20)", Length = 20))
+                .Member((fun e -> e.NvarcharDataType))
+                    .HasAttribute(ColumnAttribute("nvarcharDataType", DataType = DataType.NVarChar, DbType = "nvarchar(20)", Length = 20))
+                .Member((fun e -> e.NtextDataType))
+                    .HasAttribute(ColumnAttribute("ntextDataType", DataType = DataType.NVarChar, DbType = "ntext"))
+                .Member((fun e -> e.BinaryDataType))
+                    .HasAttribute(ColumnAttribute("binaryDataType", DataType = DataType.VarBinary, DbType = "binary"))
+                .Member((fun e -> e.VarbinaryDataType))
+                    .HasAttribute(ColumnAttribute("varbinaryDataType", DataType = DataType.VarBinary, DbType = "varbinary"))
+                .Member((fun e -> e.ImageDataType))
+                    .HasAttribute(ColumnAttribute("imageDataType", DataType = DataType.VarBinary, DbType = "image"))
+                .Member((fun e -> e.UniqueidentifierDataType))
+                    .HasAttribute(ColumnAttribute("uniqueidentifierDataType", DataType = DataType.Guid, DbType = "uniqueidentifier"))
+                .Member((fun e -> e.ObjectDataType))
+                    .HasAttribute(ColumnAttribute("objectDataType", DataType = DataType.Variant, DbType = "Object")) |> ignore
 
-        builder.Entity<Child>().HasAttribute(TableAttribute("Child")).Member((fun e -> e.ParentId)).HasAttribute(ColumnAttribute("ParentID", DataType = DataType.Int32, DbType = "INT")).Member((fun e -> e.ChildId)).HasAttribute(ColumnAttribute("ChildID", DataType = DataType.Int32, DbType = "INT")) |> ignore
+        builder
+            .Entity<Child>()
+                .HasAttribute(TableAttribute("Child"))
+                .Member((fun e -> e.ParentId))
+                    .HasAttribute(ColumnAttribute("ParentID", DataType = DataType.Int32, DbType = "INT"))
+                .Member((fun e -> e.ChildId))
+                    .HasAttribute(ColumnAttribute("ChildID", DataType = DataType.Int32, DbType = "INT")) |> ignore
 
-        builder.Entity<Doctor>().HasAttribute(TableAttribute("Doctor")).Member((fun e -> e.PersonId)).HasAttribute(ColumnAttribute("PersonID", DataType = DataType.Int64, DbType = "INTEGER", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)).Member((fun e -> e.Taxonomy)).HasAttribute(ColumnAttribute("Taxonomy", CanBeNull = false, DataType = DataType.NVarChar, DbType = "nvarchar(50)", Length = 50)).Member((fun e -> e.FkDoctor0)).HasAttribute(AssociationAttribute(CanBeNull = false, ThisKey = "PersonId", OtherKey = "PersonId")) |> ignore
+        builder
+            .Entity<Doctor>()
+                .HasAttribute(TableAttribute("Doctor"))
+                .Member((fun e -> e.PersonId))
+                    .HasAttribute(ColumnAttribute("PersonID", DataType = DataType.Int64, DbType = "INTEGER", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true))
+                .Member((fun e -> e.Taxonomy))
+                    .HasAttribute(ColumnAttribute("Taxonomy", CanBeNull = false, DataType = DataType.NVarChar, DbType = "nvarchar(50)", Length = 50))
+                .Member((fun e -> e.FkDoctor0))
+                    .HasAttribute(AssociationAttribute(CanBeNull = false, ThisKey = "PersonId", OtherKey = "PersonId")) |> ignore
 
-        builder.Entity<Dual>().HasAttribute(TableAttribute("Dual")).Member((fun e -> e.Dummy)).HasAttribute(ColumnAttribute("Dummy", DataType = DataType.NVarChar, DbType = "VARCHAR(10)", Length = 10)) |> ignore
+        builder
+            .Entity<Dual>()
+                .HasAttribute(TableAttribute("Dual"))
+                .Member((fun e -> e.Dummy))
+                    .HasAttribute(ColumnAttribute("Dummy", DataType = DataType.NVarChar, DbType = "VARCHAR(10)", Length = 10)) |> ignore
 
-        builder.Entity<FkTestPosition>().HasAttribute(TableAttribute("FKTestPosition")).Member((fun e -> e.Company)).HasAttribute(ColumnAttribute("Company", DataType = DataType.Int64, DbType = "INTEGER", IsPrimaryKey = true, PrimaryKeyOrder = 0)).Member((fun e -> e.Department)).HasAttribute(ColumnAttribute("Department", DataType = DataType.Int64, DbType = "INTEGER", IsPrimaryKey = true, PrimaryKeyOrder = 1)).Member((fun e -> e.PositionId)).HasAttribute(ColumnAttribute("PositionID", DataType = DataType.Int64, DbType = "INTEGER", IsPrimaryKey = true, PrimaryKeyOrder = 2)).Member((fun e -> e.Name)).HasAttribute(ColumnAttribute("Name", CanBeNull = false, DataType = DataType.NVarChar, DbType = "nvarchar(50)", Length = 50)) |> ignore
+        builder
+            .Entity<FkTestPosition>()
+                .HasAttribute(TableAttribute("FKTestPosition"))
+                .Member((fun e -> e.Company))
+                    .HasAttribute(ColumnAttribute("Company", DataType = DataType.Int64, DbType = "INTEGER", IsPrimaryKey = true, PrimaryKeyOrder = 0))
+                .Member((fun e -> e.Department))
+                    .HasAttribute(ColumnAttribute("Department", DataType = DataType.Int64, DbType = "INTEGER", IsPrimaryKey = true, PrimaryKeyOrder = 1))
+                .Member((fun e -> e.PositionId))
+                    .HasAttribute(ColumnAttribute("PositionID", DataType = DataType.Int64, DbType = "INTEGER", IsPrimaryKey = true, PrimaryKeyOrder = 2))
+                .Member((fun e -> e.Name))
+                    .HasAttribute(ColumnAttribute("Name", CanBeNull = false, DataType = DataType.NVarChar, DbType = "nvarchar(50)", Length = 50)) |> ignore
 
-        builder.Entity<ForeignKeyTable>().HasAttribute(TableAttribute("ForeignKeyTable")).Member((fun e -> e.PrimaryKeyTableId)).HasAttribute(ColumnAttribute("PrimaryKeyTableID", DataType = DataType.Int64, DbType = "INTEGER")).Member((fun e -> e.Name)).HasAttribute(ColumnAttribute("Name", CanBeNull = false, DataType = DataType.NVarChar, DbType = "nvarchar(50)", Length = 50)).Member((fun e -> e.PrimaryKeyTable)).HasAttribute(AssociationAttribute(CanBeNull = false, ThisKey = "PrimaryKeyTableId", OtherKey = "Id")) |> ignore
+        builder
+            .Entity<ForeignKeyTable>()
+                .HasAttribute(TableAttribute("ForeignKeyTable"))
+                .Member((fun e -> e.PrimaryKeyTableId))
+                    .HasAttribute(ColumnAttribute("PrimaryKeyTableID", DataType = DataType.Int64, DbType = "INTEGER"))
+                .Member((fun e -> e.Name))
+                    .HasAttribute(ColumnAttribute("Name", CanBeNull = false, DataType = DataType.NVarChar, DbType = "nvarchar(50)", Length = 50))
+                .Member((fun e -> e.PrimaryKeyTable))
+                    .HasAttribute(AssociationAttribute(CanBeNull = false, ThisKey = "PrimaryKeyTableId", OtherKey = "Id")) |> ignore
 
-        builder.Entity<GrandChild>().HasAttribute(TableAttribute("GrandChild")).Member((fun e -> e.ParentId)).HasAttribute(ColumnAttribute("ParentID", DataType = DataType.Int32, DbType = "INT")).Member((fun e -> e.ChildId)).HasAttribute(ColumnAttribute("ChildID", DataType = DataType.Int32, DbType = "INT")).Member((fun e -> e.GrandChildId)).HasAttribute(ColumnAttribute("GrandChildID", DataType = DataType.Int32, DbType = "INT")) |> ignore
+        builder
+            .Entity<GrandChild>()
+                .HasAttribute(TableAttribute("GrandChild"))
+                .Member((fun e -> e.ParentId))
+                    .HasAttribute(ColumnAttribute("ParentID", DataType = DataType.Int32, DbType = "INT"))
+                .Member((fun e -> e.ChildId))
+                    .HasAttribute(ColumnAttribute("ChildID", DataType = DataType.Int32, DbType = "INT"))
+                .Member((fun e -> e.GrandChildId))
+                    .HasAttribute(ColumnAttribute("GrandChildID", DataType = DataType.Int32, DbType = "INT")) |> ignore
 
-        builder.Entity<InheritanceChild>().HasAttribute(TableAttribute("InheritanceChild")).Member((fun e -> e.InheritanceChildId)).HasAttribute(ColumnAttribute("InheritanceChildId", DataType = DataType.Int64, DbType = "INTEGER")).Member((fun e -> e.InheritanceParentId)).HasAttribute(ColumnAttribute("InheritanceParentId", DataType = DataType.Int64, DbType = "INTEGER")).Member((fun e -> e.TypeDiscriminator)).HasAttribute(ColumnAttribute("TypeDiscriminator", DataType = DataType.Int64, DbType = "INTEGER")).Member((fun e -> e.Name)).HasAttribute(ColumnAttribute("Name", DataType = DataType.NVarChar, DbType = "nvarchar(50)", Length = 50)) |> ignore
+        builder
+            .Entity<InheritanceChild>()
+                .HasAttribute(TableAttribute("InheritanceChild"))
+                .Member((fun e -> e.InheritanceChildId))
+                    .HasAttribute(ColumnAttribute("InheritanceChildId", DataType = DataType.Int64, DbType = "INTEGER"))
+                .Member((fun e -> e.InheritanceParentId))
+                    .HasAttribute(ColumnAttribute("InheritanceParentId", DataType = DataType.Int64, DbType = "INTEGER"))
+                .Member((fun e -> e.TypeDiscriminator))
+                    .HasAttribute(ColumnAttribute("TypeDiscriminator", DataType = DataType.Int64, DbType = "INTEGER"))
+                .Member((fun e -> e.Name))
+                    .HasAttribute(ColumnAttribute("Name", DataType = DataType.NVarChar, DbType = "nvarchar(50)", Length = 50)) |> ignore
 
-        builder.Entity<InheritanceParent>().HasAttribute(TableAttribute("InheritanceParent")).Member((fun e -> e.InheritanceParentId)).HasAttribute(ColumnAttribute("InheritanceParentId", DataType = DataType.Int64, DbType = "INTEGER")).Member((fun e -> e.TypeDiscriminator)).HasAttribute(ColumnAttribute("TypeDiscriminator", DataType = DataType.Int64, DbType = "INTEGER")).Member((fun e -> e.Name)).HasAttribute(ColumnAttribute("Name", DataType = DataType.NVarChar, DbType = "nvarchar(50)", Length = 50)) |> ignore
+        builder
+            .Entity<InheritanceParent>()
+                .HasAttribute(TableAttribute("InheritanceParent"))
+                .Member((fun e -> e.InheritanceParentId))
+                    .HasAttribute(ColumnAttribute("InheritanceParentId", DataType = DataType.Int64, DbType = "INTEGER"))
+                .Member((fun e -> e.TypeDiscriminator))
+                    .HasAttribute(ColumnAttribute("TypeDiscriminator", DataType = DataType.Int64, DbType = "INTEGER"))
+                .Member((fun e -> e.Name))
+                    .HasAttribute(ColumnAttribute("Name", DataType = DataType.NVarChar, DbType = "nvarchar(50)", Length = 50)) |> ignore
 
-        builder.Entity<LinqDataType>().HasAttribute(TableAttribute("LinqDataTypes")).Member((fun e -> e.Id)).HasAttribute(ColumnAttribute("ID", DataType = DataType.Int32, DbType = "INT")).Member((fun e -> e.MoneyValue)).HasAttribute(ColumnAttribute("MoneyValue", DataType = DataType.Decimal, DbType = "decimal(10,4)", Precision = 10, Scale = 4)).Member((fun e -> e.DateTimeValue)).HasAttribute(ColumnAttribute("DateTimeValue", DataType = DataType.DateTime2, DbType = "datetime")).Member((fun e -> e.DateTimeValue2)).HasAttribute(ColumnAttribute("DateTimeValue2", DataType = DataType.DateTime2, DbType = "datetime2")).Member((fun e -> e.BoolValue)).HasAttribute(ColumnAttribute("BoolValue", DataType = DataType.Boolean, DbType = "boolean")).Member((fun e -> e.GuidValue)).HasAttribute(ColumnAttribute("GuidValue", DataType = DataType.Guid, DbType = "uniqueidentifier")).Member((fun e -> e.BinaryValue)).HasAttribute(ColumnAttribute("BinaryValue", DataType = DataType.VarBinary, DbType = "binary(5000)", Length = 5000)).Member((fun e -> e.SmallIntValue)).HasAttribute(ColumnAttribute("SmallIntValue", DataType = DataType.Int16, DbType = "smallint")).Member((fun e -> e.IntValue)).HasAttribute(ColumnAttribute("IntValue", DataType = DataType.Int32, DbType = "INT")).Member((fun e -> e.BigIntValue)).HasAttribute(ColumnAttribute("BigIntValue", DataType = DataType.Int64, DbType = "bigint")).Member((fun e -> e.StringValue)).HasAttribute(ColumnAttribute("StringValue", DataType = DataType.NVarChar, DbType = "nvarchar(50)", Length = 50)) |> ignore
+        builder
+            .Entity<LinqDataType>()
+                .HasAttribute(TableAttribute("LinqDataTypes"))
+                .Member((fun e -> e.Id))
+                    .HasAttribute(ColumnAttribute("ID", DataType = DataType.Int32, DbType = "INT"))
+                .Member((fun e -> e.MoneyValue))
+                    .HasAttribute(ColumnAttribute("MoneyValue", DataType = DataType.Decimal, DbType = "decimal(10,4)", Precision = 10, Scale = 4))
+                .Member((fun e -> e.DateTimeValue))
+                    .HasAttribute(ColumnAttribute("DateTimeValue", DataType = DataType.DateTime2, DbType = "datetime"))
+                .Member((fun e -> e.DateTimeValue2))
+                    .HasAttribute(ColumnAttribute("DateTimeValue2", DataType = DataType.DateTime2, DbType = "datetime2"))
+                .Member((fun e -> e.BoolValue))
+                    .HasAttribute(ColumnAttribute("BoolValue", DataType = DataType.Boolean, DbType = "boolean"))
+                .Member((fun e -> e.GuidValue))
+                    .HasAttribute(ColumnAttribute("GuidValue", DataType = DataType.Guid, DbType = "uniqueidentifier"))
+                .Member((fun e -> e.BinaryValue))
+                    .HasAttribute(ColumnAttribute("BinaryValue", DataType = DataType.VarBinary, DbType = "binary(5000)", Length = 5000))
+                .Member((fun e -> e.SmallIntValue))
+                    .HasAttribute(ColumnAttribute("SmallIntValue", DataType = DataType.Int16, DbType = "smallint"))
+                .Member((fun e -> e.IntValue))
+                    .HasAttribute(ColumnAttribute("IntValue", DataType = DataType.Int32, DbType = "INT"))
+                .Member((fun e -> e.BigIntValue))
+                    .HasAttribute(ColumnAttribute("BigIntValue", DataType = DataType.Int64, DbType = "bigint"))
+                .Member((fun e -> e.StringValue))
+                    .HasAttribute(ColumnAttribute("StringValue", DataType = DataType.NVarChar, DbType = "nvarchar(50)", Length = 50)) |> ignore
 
-        builder.Entity<Parent>().HasAttribute(TableAttribute("Parent")).Member((fun e -> e.ParentId)).HasAttribute(ColumnAttribute("ParentID", DataType = DataType.Int32, DbType = "INT")).Member((fun e -> e.Value1)).HasAttribute(ColumnAttribute("Value1", DataType = DataType.Int32, DbType = "INT")) |> ignore
+        builder
+            .Entity<Parent>()
+                .HasAttribute(TableAttribute("Parent"))
+                .Member((fun e -> e.ParentId))
+                    .HasAttribute(ColumnAttribute("ParentID", DataType = DataType.Int32, DbType = "INT"))
+                .Member((fun e -> e.Value1))
+                    .HasAttribute(ColumnAttribute("Value1", DataType = DataType.Int32, DbType = "INT")) |> ignore
 
-        builder.Entity<Patient>().HasAttribute(TableAttribute("Patient")).Member((fun e -> e.PersonId)).HasAttribute(ColumnAttribute("PersonID", DataType = DataType.Int64, DbType = "INTEGER", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)).Member((fun e -> e.Diagnosis)).HasAttribute(ColumnAttribute("Diagnosis", CanBeNull = false, DataType = DataType.NVarChar, DbType = "nvarchar(256)", Length = 256)).Member((fun e -> e.FkPatient0)).HasAttribute(AssociationAttribute(CanBeNull = false, ThisKey = "PersonId", OtherKey = "PersonId")) |> ignore
+        builder
+            .Entity<Patient>()
+                .HasAttribute(TableAttribute("Patient"))
+                .Member((fun e -> e.PersonId))
+                    .HasAttribute(ColumnAttribute("PersonID", DataType = DataType.Int64, DbType = "INTEGER", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true))
+                .Member((fun e -> e.Diagnosis))
+                    .HasAttribute(ColumnAttribute("Diagnosis", CanBeNull = false, DataType = DataType.NVarChar, DbType = "nvarchar(256)", Length = 256))
+                .Member((fun e -> e.FkPatient0))
+                    .HasAttribute(AssociationAttribute(CanBeNull = false, ThisKey = "PersonId", OtherKey = "PersonId")) |> ignore
 
-        builder.Entity<Person>().HasAttribute(TableAttribute("Person")).Member((fun e -> e.PersonId)).HasAttribute(ColumnAttribute("PersonID", DataType = DataType.Int64, DbType = "INTEGER", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)).Member((fun e -> e.FirstName)).HasAttribute(ColumnAttribute("FirstName", CanBeNull = false, DataType = DataType.NVarChar, DbType = "nvarchar(50)", Length = 50)).Member((fun e -> e.LastName)).HasAttribute(ColumnAttribute("LastName", CanBeNull = false, DataType = DataType.NVarChar, DbType = "nvarchar(50)", Length = 50)).Member((fun e -> e.MiddleName)).HasAttribute(ColumnAttribute("MiddleName", DataType = DataType.NVarChar, DbType = "nvarchar(50)", Length = 50)).Member((fun e -> e.Gender)).HasAttribute(ColumnAttribute("Gender", DataType = DataType.NVarChar, DbType = "char(1)", Length = 1)).Member((fun e -> e.Doctor)).HasAttribute(AssociationAttribute(ThisKey = "PersonId", OtherKey = "PersonId")).Member((fun e -> e.Patient)).HasAttribute(AssociationAttribute(ThisKey = "PersonId", OtherKey = "PersonId")) |> ignore
+        builder
+            .Entity<Person>()
+                .HasAttribute(TableAttribute("Person"))
+                .Member((fun e -> e.PersonId))
+                    .HasAttribute(ColumnAttribute("PersonID", DataType = DataType.Int64, DbType = "INTEGER", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true))
+                .Member((fun e -> e.FirstName))
+                    .HasAttribute(ColumnAttribute("FirstName", CanBeNull = false, DataType = DataType.NVarChar, DbType = "nvarchar(50)", Length = 50))
+                .Member((fun e -> e.LastName))
+                    .HasAttribute(ColumnAttribute("LastName", CanBeNull = false, DataType = DataType.NVarChar, DbType = "nvarchar(50)", Length = 50))
+                .Member((fun e -> e.MiddleName))
+                    .HasAttribute(ColumnAttribute("MiddleName", DataType = DataType.NVarChar, DbType = "nvarchar(50)", Length = 50))
+                .Member((fun e -> e.Gender))
+                    .HasAttribute(ColumnAttribute("Gender", DataType = DataType.NVarChar, DbType = "char(1)", Length = 1))
+                .Member((fun e -> e.Doctor))
+                    .HasAttribute(AssociationAttribute(ThisKey = "PersonId", OtherKey = "PersonId"))
+                .Member((fun e -> e.Patient))
+                    .HasAttribute(AssociationAttribute(ThisKey = "PersonId", OtherKey = "PersonId")) |> ignore
 
-        builder.Entity<PrimaryKeyTable>().HasAttribute(TableAttribute("PrimaryKeyTable")).Member((fun e -> e.Id)).HasAttribute(ColumnAttribute("ID", DataType = DataType.Int64, DbType = "INTEGER", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)).Member((fun e -> e.Name)).HasAttribute(ColumnAttribute("Name", CanBeNull = false, DataType = DataType.NVarChar, DbType = "nvarchar(50)", Length = 50)).Member((fun e -> e.ForeignKeyTables)).HasAttribute(AssociationAttribute(ThisKey = "Id", OtherKey = "PrimaryKeyTableId")) |> ignore
+        builder
+            .Entity<PrimaryKeyTable>()
+                .HasAttribute(TableAttribute("PrimaryKeyTable"))
+                .Member((fun e -> e.Id))
+                    .HasAttribute(ColumnAttribute("ID", DataType = DataType.Int64, DbType = "INTEGER", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true))
+                .Member((fun e -> e.Name))
+                    .HasAttribute(ColumnAttribute("Name", CanBeNull = false, DataType = DataType.NVarChar, DbType = "nvarchar(50)", Length = 50))
+                .Member((fun e -> e.ForeignKeyTables))
+                    .HasAttribute(AssociationAttribute(ThisKey = "Id", OtherKey = "PrimaryKeyTableId")) |> ignore
 
-        builder.Entity<TestT4Casing>().HasAttribute(TableAttribute("TEST_T4_CASING")).Member((fun e -> e.AllCaps)).HasAttribute(ColumnAttribute("ALL_CAPS", DataType = DataType.Int32, DbType = "INT")).Member((fun e -> e.Caps)).HasAttribute(ColumnAttribute("CAPS", DataType = DataType.Int32, DbType = "INT")).Member((fun e -> e.PascalCase)).HasAttribute(ColumnAttribute("PascalCase", DataType = DataType.Int32, DbType = "INT")).Member((fun e -> e.PascalSnakeCase)).HasAttribute(ColumnAttribute("Pascal_Snake_Case", DataType = DataType.Int32, DbType = "INT")).Member((fun e -> e.PascalCaseSnakeCase)).HasAttribute(ColumnAttribute("PascalCase_Snake_Case", DataType = DataType.Int32, DbType = "INT")).Member((fun e -> e.SnakeCase)).HasAttribute(ColumnAttribute("snake_case", DataType = DataType.Int32, DbType = "INT")).Member((fun e -> e.CamelCase)).HasAttribute(ColumnAttribute("camelCase", DataType = DataType.Int32, DbType = "INT")) |> ignore
+        builder
+            .Entity<TestT4Casing>()
+                .HasAttribute(TableAttribute("TEST_T4_CASING"))
+                .Member((fun e -> e.AllCaps))
+                    .HasAttribute(ColumnAttribute("ALL_CAPS", DataType = DataType.Int32, DbType = "INT"))
+                .Member((fun e -> e.Caps))
+                    .HasAttribute(ColumnAttribute("CAPS", DataType = DataType.Int32, DbType = "INT"))
+                .Member((fun e -> e.PascalCase))
+                    .HasAttribute(ColumnAttribute("PascalCase", DataType = DataType.Int32, DbType = "INT"))
+                .Member((fun e -> e.PascalSnakeCase))
+                    .HasAttribute(ColumnAttribute("Pascal_Snake_Case", DataType = DataType.Int32, DbType = "INT"))
+                .Member((fun e -> e.PascalCaseSnakeCase))
+                    .HasAttribute(ColumnAttribute("PascalCase_Snake_Case", DataType = DataType.Int32, DbType = "INT"))
+                .Member((fun e -> e.SnakeCase))
+                    .HasAttribute(ColumnAttribute("snake_case", DataType = DataType.Int32, DbType = "INT"))
+                .Member((fun e -> e.CamelCase))
+                    .HasAttribute(ColumnAttribute("camelCase", DataType = DataType.Int32, DbType = "INT")) |> ignore
 
-        builder.Entity<TestIdentity>().HasAttribute(TableAttribute("TestIdentity")).Member((fun e -> e.Id)).HasAttribute(ColumnAttribute("ID", DataType = DataType.Int64, DbType = "INTEGER", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)) |> ignore
+        builder
+            .Entity<TestIdentity>()
+                .HasAttribute(TableAttribute("TestIdentity"))
+                .Member((fun e -> e.Id))
+                    .HasAttribute(ColumnAttribute("ID", DataType = DataType.Int64, DbType = "INTEGER", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)) |> ignore
 
-        builder.Entity<TestMerge1>().HasAttribute(TableAttribute("TestMerge1")).Member((fun e -> e.Id)).HasAttribute(ColumnAttribute("Id", DataType = DataType.Int64, DbType = "INTEGER")).Member((fun e -> e.Field1)).HasAttribute(ColumnAttribute("Field1", DataType = DataType.Int64, DbType = "INTEGER")).Member((fun e -> e.Field2)).HasAttribute(ColumnAttribute("Field2", DataType = DataType.Int64, DbType = "INTEGER")).Member((fun e -> e.Field3)).HasAttribute(ColumnAttribute("Field3", DataType = DataType.Int64, DbType = "INTEGER")).Member((fun e -> e.Field4)).HasAttribute(ColumnAttribute("Field4", DataType = DataType.Int64, DbType = "INTEGER")).Member((fun e -> e.Field5)).HasAttribute(ColumnAttribute("Field5", DataType = DataType.Int64, DbType = "INTEGER")).Member((fun e -> e.FieldInt64)).HasAttribute(ColumnAttribute("FieldInt64", DataType = DataType.Int64, DbType = "BIGINT")).Member((fun e -> e.FieldBoolean)).HasAttribute(ColumnAttribute("FieldBoolean", DataType = DataType.Boolean, DbType = "BIT")).Member((fun e -> e.FieldString)).HasAttribute(ColumnAttribute("FieldString", DataType = DataType.NVarChar, DbType = "VARCHAR(20)", Length = 20)).Member((fun e -> e.FieldNString)).HasAttribute(ColumnAttribute("FieldNString", DataType = DataType.NVarChar, DbType = "NVARCHAR(20)", Length = 20)).Member((fun e -> e.FieldChar)).HasAttribute(ColumnAttribute("FieldChar", DataType = DataType.NVarChar, DbType = "CHAR(1)", Length = 1)).Member((fun e -> e.FieldNChar)).HasAttribute(ColumnAttribute("FieldNChar", DataType = DataType.NVarChar, DbType = "NCHAR(1)", Length = 1)).Member((fun e -> e.FieldFloat)).HasAttribute(ColumnAttribute("FieldFloat", DataType = DataType.Double, DbType = "FLOAT(24)")).Member((fun e -> e.FieldDouble)).HasAttribute(ColumnAttribute("FieldDouble", DataType = DataType.Double, DbType = "FLOAT(53)")).Member((fun e -> e.FieldDateTime)).HasAttribute(ColumnAttribute("FieldDateTime", DataType = DataType.DateTime2, DbType = "DATETIME")).Member((fun e -> e.FieldBinary)).HasAttribute(ColumnAttribute("FieldBinary", DataType = DataType.VarBinary, DbType = "VARBINARY(20)", Length = 20)).Member((fun e -> e.FieldGuid)).HasAttribute(ColumnAttribute("FieldGuid", DataType = DataType.Guid, DbType = "UNIQUEIDENTIFIER")).Member((fun e -> e.FieldDate)).HasAttribute(ColumnAttribute("FieldDate", DataType = DataType.Date, DbType = "DATE")).Member((fun e -> e.FieldEnumString)).HasAttribute(ColumnAttribute("FieldEnumString", DataType = DataType.NVarChar, DbType = "VARCHAR(20)", Length = 20)).Member((fun e -> e.FieldEnumNumber)).HasAttribute(ColumnAttribute("FieldEnumNumber", DataType = DataType.Int32, DbType = "INT")) |> ignore
+        builder
+            .Entity<TestMerge1>()
+                .HasAttribute(TableAttribute("TestMerge1"))
+                .Member((fun e -> e.Id))
+                    .HasAttribute(ColumnAttribute("Id", DataType = DataType.Int64, DbType = "INTEGER"))
+                .Member((fun e -> e.Field1))
+                    .HasAttribute(ColumnAttribute("Field1", DataType = DataType.Int64, DbType = "INTEGER"))
+                .Member((fun e -> e.Field2))
+                    .HasAttribute(ColumnAttribute("Field2", DataType = DataType.Int64, DbType = "INTEGER"))
+                .Member((fun e -> e.Field3))
+                    .HasAttribute(ColumnAttribute("Field3", DataType = DataType.Int64, DbType = "INTEGER"))
+                .Member((fun e -> e.Field4))
+                    .HasAttribute(ColumnAttribute("Field4", DataType = DataType.Int64, DbType = "INTEGER"))
+                .Member((fun e -> e.Field5))
+                    .HasAttribute(ColumnAttribute("Field5", DataType = DataType.Int64, DbType = "INTEGER"))
+                .Member((fun e -> e.FieldInt64))
+                    .HasAttribute(ColumnAttribute("FieldInt64", DataType = DataType.Int64, DbType = "BIGINT"))
+                .Member((fun e -> e.FieldBoolean))
+                    .HasAttribute(ColumnAttribute("FieldBoolean", DataType = DataType.Boolean, DbType = "BIT"))
+                .Member((fun e -> e.FieldString))
+                    .HasAttribute(ColumnAttribute("FieldString", DataType = DataType.NVarChar, DbType = "VARCHAR(20)", Length = 20))
+                .Member((fun e -> e.FieldNString))
+                    .HasAttribute(ColumnAttribute("FieldNString", DataType = DataType.NVarChar, DbType = "NVARCHAR(20)", Length = 20))
+                .Member((fun e -> e.FieldChar))
+                    .HasAttribute(ColumnAttribute("FieldChar", DataType = DataType.NVarChar, DbType = "CHAR(1)", Length = 1))
+                .Member((fun e -> e.FieldNChar))
+                    .HasAttribute(ColumnAttribute("FieldNChar", DataType = DataType.NVarChar, DbType = "NCHAR(1)", Length = 1))
+                .Member((fun e -> e.FieldFloat))
+                    .HasAttribute(ColumnAttribute("FieldFloat", DataType = DataType.Double, DbType = "FLOAT(24)"))
+                .Member((fun e -> e.FieldDouble))
+                    .HasAttribute(ColumnAttribute("FieldDouble", DataType = DataType.Double, DbType = "FLOAT(53)"))
+                .Member((fun e -> e.FieldDateTime))
+                    .HasAttribute(ColumnAttribute("FieldDateTime", DataType = DataType.DateTime2, DbType = "DATETIME"))
+                .Member((fun e -> e.FieldBinary))
+                    .HasAttribute(ColumnAttribute("FieldBinary", DataType = DataType.VarBinary, DbType = "VARBINARY(20)", Length = 20))
+                .Member((fun e -> e.FieldGuid))
+                    .HasAttribute(ColumnAttribute("FieldGuid", DataType = DataType.Guid, DbType = "UNIQUEIDENTIFIER"))
+                .Member((fun e -> e.FieldDate))
+                    .HasAttribute(ColumnAttribute("FieldDate", DataType = DataType.Date, DbType = "DATE"))
+                .Member((fun e -> e.FieldEnumString))
+                    .HasAttribute(ColumnAttribute("FieldEnumString", DataType = DataType.NVarChar, DbType = "VARCHAR(20)", Length = 20))
+                .Member((fun e -> e.FieldEnumNumber))
+                    .HasAttribute(ColumnAttribute("FieldEnumNumber", DataType = DataType.Int32, DbType = "INT")) |> ignore
 
-        builder.Entity<TestMerge2>().HasAttribute(TableAttribute("TestMerge2")).Member((fun e -> e.Id)).HasAttribute(ColumnAttribute("Id", DataType = DataType.Int64, DbType = "INTEGER")).Member((fun e -> e.Field1)).HasAttribute(ColumnAttribute("Field1", DataType = DataType.Int64, DbType = "INTEGER")).Member((fun e -> e.Field2)).HasAttribute(ColumnAttribute("Field2", DataType = DataType.Int64, DbType = "INTEGER")).Member((fun e -> e.Field3)).HasAttribute(ColumnAttribute("Field3", DataType = DataType.Int64, DbType = "INTEGER")).Member((fun e -> e.Field4)).HasAttribute(ColumnAttribute("Field4", DataType = DataType.Int64, DbType = "INTEGER")).Member((fun e -> e.Field5)).HasAttribute(ColumnAttribute("Field5", DataType = DataType.Int64, DbType = "INTEGER")).Member((fun e -> e.FieldInt64)).HasAttribute(ColumnAttribute("FieldInt64", DataType = DataType.Int64, DbType = "BIGINT")).Member((fun e -> e.FieldBoolean)).HasAttribute(ColumnAttribute("FieldBoolean", DataType = DataType.Boolean, DbType = "BIT")).Member((fun e -> e.FieldString)).HasAttribute(ColumnAttribute("FieldString", DataType = DataType.NVarChar, DbType = "VARCHAR(20)", Length = 20)).Member((fun e -> e.FieldNString)).HasAttribute(ColumnAttribute("FieldNString", DataType = DataType.NVarChar, DbType = "NVARCHAR(20)", Length = 20)).Member((fun e -> e.FieldChar)).HasAttribute(ColumnAttribute("FieldChar", DataType = DataType.NVarChar, DbType = "CHAR(1)", Length = 1)).Member((fun e -> e.FieldNChar)).HasAttribute(ColumnAttribute("FieldNChar", DataType = DataType.NVarChar, DbType = "NCHAR(1)", Length = 1)).Member((fun e -> e.FieldFloat)).HasAttribute(ColumnAttribute("FieldFloat", DataType = DataType.Double, DbType = "FLOAT(24)")).Member((fun e -> e.FieldDouble)).HasAttribute(ColumnAttribute("FieldDouble", DataType = DataType.Double, DbType = "FLOAT(53)")).Member((fun e -> e.FieldDateTime)).HasAttribute(ColumnAttribute("FieldDateTime", DataType = DataType.DateTime2, DbType = "DATETIME")).Member((fun e -> e.FieldBinary)).HasAttribute(ColumnAttribute("FieldBinary", DataType = DataType.VarBinary, DbType = "VARBINARY(20)", Length = 20)).Member((fun e -> e.FieldGuid)).HasAttribute(ColumnAttribute("FieldGuid", DataType = DataType.Guid, DbType = "UNIQUEIDENTIFIER")).Member((fun e -> e.FieldDate)).HasAttribute(ColumnAttribute("FieldDate", DataType = DataType.Date, DbType = "DATE")).Member((fun e -> e.FieldEnumString)).HasAttribute(ColumnAttribute("FieldEnumString", DataType = DataType.NVarChar, DbType = "VARCHAR(20)", Length = 20)).Member((fun e -> e.FieldEnumNumber)).HasAttribute(ColumnAttribute("FieldEnumNumber", DataType = DataType.Int32, DbType = "INT")) |> ignore
+        builder
+            .Entity<TestMerge2>()
+                .HasAttribute(TableAttribute("TestMerge2"))
+                .Member((fun e -> e.Id))
+                    .HasAttribute(ColumnAttribute("Id", DataType = DataType.Int64, DbType = "INTEGER"))
+                .Member((fun e -> e.Field1))
+                    .HasAttribute(ColumnAttribute("Field1", DataType = DataType.Int64, DbType = "INTEGER"))
+                .Member((fun e -> e.Field2))
+                    .HasAttribute(ColumnAttribute("Field2", DataType = DataType.Int64, DbType = "INTEGER"))
+                .Member((fun e -> e.Field3))
+                    .HasAttribute(ColumnAttribute("Field3", DataType = DataType.Int64, DbType = "INTEGER"))
+                .Member((fun e -> e.Field4))
+                    .HasAttribute(ColumnAttribute("Field4", DataType = DataType.Int64, DbType = "INTEGER"))
+                .Member((fun e -> e.Field5))
+                    .HasAttribute(ColumnAttribute("Field5", DataType = DataType.Int64, DbType = "INTEGER"))
+                .Member((fun e -> e.FieldInt64))
+                    .HasAttribute(ColumnAttribute("FieldInt64", DataType = DataType.Int64, DbType = "BIGINT"))
+                .Member((fun e -> e.FieldBoolean))
+                    .HasAttribute(ColumnAttribute("FieldBoolean", DataType = DataType.Boolean, DbType = "BIT"))
+                .Member((fun e -> e.FieldString))
+                    .HasAttribute(ColumnAttribute("FieldString", DataType = DataType.NVarChar, DbType = "VARCHAR(20)", Length = 20))
+                .Member((fun e -> e.FieldNString))
+                    .HasAttribute(ColumnAttribute("FieldNString", DataType = DataType.NVarChar, DbType = "NVARCHAR(20)", Length = 20))
+                .Member((fun e -> e.FieldChar))
+                    .HasAttribute(ColumnAttribute("FieldChar", DataType = DataType.NVarChar, DbType = "CHAR(1)", Length = 1))
+                .Member((fun e -> e.FieldNChar))
+                    .HasAttribute(ColumnAttribute("FieldNChar", DataType = DataType.NVarChar, DbType = "NCHAR(1)", Length = 1))
+                .Member((fun e -> e.FieldFloat))
+                    .HasAttribute(ColumnAttribute("FieldFloat", DataType = DataType.Double, DbType = "FLOAT(24)"))
+                .Member((fun e -> e.FieldDouble))
+                    .HasAttribute(ColumnAttribute("FieldDouble", DataType = DataType.Double, DbType = "FLOAT(53)"))
+                .Member((fun e -> e.FieldDateTime))
+                    .HasAttribute(ColumnAttribute("FieldDateTime", DataType = DataType.DateTime2, DbType = "DATETIME"))
+                .Member((fun e -> e.FieldBinary))
+                    .HasAttribute(ColumnAttribute("FieldBinary", DataType = DataType.VarBinary, DbType = "VARBINARY(20)", Length = 20))
+                .Member((fun e -> e.FieldGuid))
+                    .HasAttribute(ColumnAttribute("FieldGuid", DataType = DataType.Guid, DbType = "UNIQUEIDENTIFIER"))
+                .Member((fun e -> e.FieldDate))
+                    .HasAttribute(ColumnAttribute("FieldDate", DataType = DataType.Date, DbType = "DATE"))
+                .Member((fun e -> e.FieldEnumString))
+                    .HasAttribute(ColumnAttribute("FieldEnumString", DataType = DataType.NVarChar, DbType = "VARCHAR(20)", Length = 20))
+                .Member((fun e -> e.FieldEnumNumber))
+                    .HasAttribute(ColumnAttribute("FieldEnumNumber", DataType = DataType.Int32, DbType = "INT")) |> ignore
 
-        builder.Entity<AllTypesView>().HasAttribute(TableAttribute("AllTypesView", IsView = true)).Member((fun e -> e.Id)).HasAttribute(ColumnAttribute("ID", DataType = DataType.Int64, DbType = "INTEGER", IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)).Member((fun e -> e.BigintDataType)).HasAttribute(ColumnAttribute("bigintDataType", DataType = DataType.Int64, DbType = "bigint")).Member((fun e -> e.NumericDataType)).HasAttribute(ColumnAttribute("numericDataType", DataType = DataType.Decimal, DbType = "numeric")).Member((fun e -> e.BitDataType)).HasAttribute(ColumnAttribute("bitDataType", DataType = DataType.Boolean, DbType = "bit")).Member((fun e -> e.SmallintDataType)).HasAttribute(ColumnAttribute("smallintDataType", DataType = DataType.Int16, DbType = "smallint")).Member((fun e -> e.DecimalDataType)).HasAttribute(ColumnAttribute("decimalDataType", DataType = DataType.Decimal, DbType = "decimal")).Member((fun e -> e.IntDataType)).HasAttribute(ColumnAttribute("intDataType", DataType = DataType.Int32, DbType = "INT")).Member((fun e -> e.TinyintDataType)).HasAttribute(ColumnAttribute("tinyintDataType", DataType = DataType.Byte, DbType = "tinyint")).Member((fun e -> e.MoneyDataType)).HasAttribute(ColumnAttribute("moneyDataType", DataType = DataType.Decimal, DbType = "money")).Member((fun e -> e.FloatDataType)).HasAttribute(ColumnAttribute("floatDataType", DataType = DataType.Double, DbType = "float")).Member((fun e -> e.RealDataType)).HasAttribute(ColumnAttribute("realDataType", DataType = DataType.Double, DbType = "REAL")).Member((fun e -> e.DatetimeDataType)).HasAttribute(ColumnAttribute("datetimeDataType", DataType = DataType.DateTime2, DbType = "datetime")).Member((fun e -> e.CharDataType)).HasAttribute(ColumnAttribute("charDataType", DataType = DataType.NVarChar, DbType = "char(1)", Length = 1)).Member((fun e -> e.Char20DataType)).HasAttribute(ColumnAttribute("char20DataType", DataType = DataType.NVarChar, DbType = "char(20)", Length = 20)).Member((fun e -> e.VarcharDataType)).HasAttribute(ColumnAttribute("varcharDataType", DataType = DataType.NVarChar, DbType = "varchar(20)", Length = 20)).Member((fun e -> e.TextDataType)).HasAttribute(ColumnAttribute("textDataType", DataType = DataType.NVarChar, DbType = "TEXT")).Member((fun e -> e.NcharDataType)).HasAttribute(ColumnAttribute("ncharDataType", DataType = DataType.NVarChar, DbType = "nchar(20)", Length = 20)).Member((fun e -> e.NvarcharDataType)).HasAttribute(ColumnAttribute("nvarcharDataType", DataType = DataType.NVarChar, DbType = "nvarchar(20)", Length = 20)).Member((fun e -> e.NtextDataType)).HasAttribute(ColumnAttribute("ntextDataType", DataType = DataType.NVarChar, DbType = "ntext")).Member((fun e -> e.BinaryDataType)).HasAttribute(ColumnAttribute("binaryDataType", DataType = DataType.VarBinary, DbType = "binary")).Member((fun e -> e.VarbinaryDataType)).HasAttribute(ColumnAttribute("varbinaryDataType", DataType = DataType.VarBinary, DbType = "varbinary")).Member((fun e -> e.ImageDataType)).HasAttribute(ColumnAttribute("imageDataType", DataType = DataType.VarBinary, DbType = "image")).Member((fun e -> e.UniqueidentifierDataType)).HasAttribute(ColumnAttribute("uniqueidentifierDataType", DataType = DataType.Guid, DbType = "uniqueidentifier")).Member((fun e -> box (e.ObjectDataType))).HasAttribute(ColumnAttribute("objectDataType", DataType = DataType.Variant, DbType = "Object")).Member((fun e -> e.Number)).HasAttribute(ColumnAttribute("Number", DataType = DataType.Int64, DbType = "INTEGER")) |> ignore
+        builder
+            .Entity<AllTypesView>()
+                .HasAttribute(TableAttribute("AllTypesView", IsView = true))
+                .Member((fun e -> e.Id))
+                    .HasAttribute(ColumnAttribute("ID", DataType = DataType.Int64, DbType = "INTEGER", IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true))
+                .Member((fun e -> e.BigintDataType))
+                    .HasAttribute(ColumnAttribute("bigintDataType", DataType = DataType.Int64, DbType = "bigint"))
+                .Member((fun e -> e.NumericDataType))
+                    .HasAttribute(ColumnAttribute("numericDataType", DataType = DataType.Decimal, DbType = "numeric"))
+                .Member((fun e -> e.BitDataType))
+                    .HasAttribute(ColumnAttribute("bitDataType", DataType = DataType.Boolean, DbType = "bit"))
+                .Member((fun e -> e.SmallintDataType))
+                    .HasAttribute(ColumnAttribute("smallintDataType", DataType = DataType.Int16, DbType = "smallint"))
+                .Member((fun e -> e.DecimalDataType))
+                    .HasAttribute(ColumnAttribute("decimalDataType", DataType = DataType.Decimal, DbType = "decimal"))
+                .Member((fun e -> e.IntDataType))
+                    .HasAttribute(ColumnAttribute("intDataType", DataType = DataType.Int32, DbType = "INT"))
+                .Member((fun e -> e.TinyintDataType))
+                    .HasAttribute(ColumnAttribute("tinyintDataType", DataType = DataType.Byte, DbType = "tinyint"))
+                .Member((fun e -> e.MoneyDataType))
+                    .HasAttribute(ColumnAttribute("moneyDataType", DataType = DataType.Decimal, DbType = "money"))
+                .Member((fun e -> e.FloatDataType))
+                    .HasAttribute(ColumnAttribute("floatDataType", DataType = DataType.Double, DbType = "float"))
+                .Member((fun e -> e.RealDataType))
+                    .HasAttribute(ColumnAttribute("realDataType", DataType = DataType.Double, DbType = "REAL"))
+                .Member((fun e -> e.DatetimeDataType))
+                    .HasAttribute(ColumnAttribute("datetimeDataType", DataType = DataType.DateTime2, DbType = "datetime"))
+                .Member((fun e -> e.CharDataType))
+                    .HasAttribute(ColumnAttribute("charDataType", DataType = DataType.NVarChar, DbType = "char(1)", Length = 1))
+                .Member((fun e -> e.Char20DataType))
+                    .HasAttribute(ColumnAttribute("char20DataType", DataType = DataType.NVarChar, DbType = "char(20)", Length = 20))
+                .Member((fun e -> e.VarcharDataType))
+                    .HasAttribute(ColumnAttribute("varcharDataType", DataType = DataType.NVarChar, DbType = "varchar(20)", Length = 20))
+                .Member((fun e -> e.TextDataType))
+                    .HasAttribute(ColumnAttribute("textDataType", DataType = DataType.NVarChar, DbType = "TEXT"))
+                .Member((fun e -> e.NcharDataType))
+                    .HasAttribute(ColumnAttribute("ncharDataType", DataType = DataType.NVarChar, DbType = "nchar(20)", Length = 20))
+                .Member((fun e -> e.NvarcharDataType))
+                    .HasAttribute(ColumnAttribute("nvarcharDataType", DataType = DataType.NVarChar, DbType = "nvarchar(20)", Length = 20))
+                .Member((fun e -> e.NtextDataType))
+                    .HasAttribute(ColumnAttribute("ntextDataType", DataType = DataType.NVarChar, DbType = "ntext"))
+                .Member((fun e -> e.BinaryDataType))
+                    .HasAttribute(ColumnAttribute("binaryDataType", DataType = DataType.VarBinary, DbType = "binary"))
+                .Member((fun e -> e.VarbinaryDataType))
+                    .HasAttribute(ColumnAttribute("varbinaryDataType", DataType = DataType.VarBinary, DbType = "varbinary"))
+                .Member((fun e -> e.ImageDataType))
+                    .HasAttribute(ColumnAttribute("imageDataType", DataType = DataType.VarBinary, DbType = "image"))
+                .Member((fun e -> e.UniqueidentifierDataType))
+                    .HasAttribute(ColumnAttribute("uniqueidentifierDataType", DataType = DataType.Guid, DbType = "uniqueidentifier"))
+                .Member((fun e -> e.ObjectDataType))
+                    .HasAttribute(ColumnAttribute("objectDataType", DataType = DataType.Variant, DbType = "Object"))
+                .Member((fun e -> e.Number))
+                    .HasAttribute(ColumnAttribute("Number", DataType = DataType.Int64, DbType = "INTEGER")) |> ignore
 
         builder.Build() |> ignore
     static member ContextSchema with get() : MappingSchema = _ContextSchema
@@ -158,258 +490,258 @@ type AllType =
     override this.Equals (obj : obj | null) : bool = _equalityComparer.Equals(this, (match box obj with :? AllType as value -> value | _ -> Unchecked.defaultof<AllType>))
 
 
-[<System.Runtime.CompilerServices.Extension>]
+[<Extension>]
 type ExtensionMethods =
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member Find (table : ITable<AllType>, id : int64) : AllType | null = table.FirstOrDefault((fun e -> e.Id = id))
 
-    [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<AllType>, id : int64, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<AllType | null> = table.FirstOrDefaultAsync((fun e -> e.Id = id), cancellationToken)
+    [<Extension>]
+    static member FindAsync (table : ITable<AllType>, id : int64, [<Optional>] cancellationToken : CancellationToken) : Task<AllType | null> = table.FirstOrDefaultAsync((fun e -> e.Id = id), cancellationToken)
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member FindQuery (table : ITable<AllType>, id : int64) : IQueryable<AllType> = table.Where((fun e -> e.Id = id))
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member Find (table : ITable<AllType>, record : AllType) : AllType | null = table.FirstOrDefault((fun e -> e.Id = record.Id))
 
-    [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<AllType>, record : AllType, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<AllType | null> = table.FirstOrDefaultAsync((fun e -> e.Id = record.Id), cancellationToken)
+    [<Extension>]
+    static member FindAsync (table : ITable<AllType>, record : AllType, [<Optional>] cancellationToken : CancellationToken) : Task<AllType | null> = table.FirstOrDefaultAsync((fun e -> e.Id = record.Id), cancellationToken)
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member FindQuery (table : ITable<AllType>, record : AllType) : IQueryable<AllType> = table.Where((fun e -> e.Id = record.Id))
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member FindAllType (db : TestDataDB, id : int64) : AllType | null = db.GetTable<AllType>().FirstOrDefault((fun e -> e.Id = id))
 
-    [<System.Runtime.CompilerServices.Extension>]
-    static member FindAllTypeAsync (db : TestDataDB, id : int64, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<AllType | null> = db.GetTable<AllType>().FirstOrDefaultAsync((fun e -> e.Id = id), cancellationToken)
+    [<Extension>]
+    static member FindAllTypeAsync (db : TestDataDB, id : int64, [<Optional>] cancellationToken : CancellationToken) : Task<AllType | null> = db.GetTable<AllType>().FirstOrDefaultAsync((fun e -> e.Id = id), cancellationToken)
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member FindAllTypeQuery (db : TestDataDB, id : int64) : IQueryable<AllType> = db.GetTable<AllType>().Where((fun e -> e.Id = id))
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member Find (db : TestDataDB, record : AllType) : AllType | null = db.GetTable<AllType>().FirstOrDefault((fun e -> e.Id = record.Id))
 
-    [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : AllType, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<AllType | null> = db.GetTable<AllType>().FirstOrDefaultAsync((fun e -> e.Id = record.Id), cancellationToken)
+    [<Extension>]
+    static member FindAsync (db : TestDataDB, record : AllType, [<Optional>] cancellationToken : CancellationToken) : Task<AllType | null> = db.GetTable<AllType>().FirstOrDefaultAsync((fun e -> e.Id = record.Id), cancellationToken)
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member FindQuery (db : TestDataDB, record : AllType) : IQueryable<AllType> = db.GetTable<AllType>().Where((fun e -> e.Id = record.Id))
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member Find (table : ITable<Doctor>, personId : int64) : Doctor | null = table.FirstOrDefault((fun e -> e.PersonId = personId))
 
-    [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<Doctor>, personId : int64, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Doctor | null> = table.FirstOrDefaultAsync((fun e -> e.PersonId = personId), cancellationToken)
+    [<Extension>]
+    static member FindAsync (table : ITable<Doctor>, personId : int64, [<Optional>] cancellationToken : CancellationToken) : Task<Doctor | null> = table.FirstOrDefaultAsync((fun e -> e.PersonId = personId), cancellationToken)
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member FindQuery (table : ITable<Doctor>, personId : int64) : IQueryable<Doctor> = table.Where((fun e -> e.PersonId = personId))
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member Find (table : ITable<Doctor>, record : Doctor) : Doctor | null = table.FirstOrDefault((fun e -> e.PersonId = record.PersonId))
 
-    [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<Doctor>, record : Doctor, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Doctor | null> = table.FirstOrDefaultAsync((fun e -> e.PersonId = record.PersonId), cancellationToken)
+    [<Extension>]
+    static member FindAsync (table : ITable<Doctor>, record : Doctor, [<Optional>] cancellationToken : CancellationToken) : Task<Doctor | null> = table.FirstOrDefaultAsync((fun e -> e.PersonId = record.PersonId), cancellationToken)
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member FindQuery (table : ITable<Doctor>, record : Doctor) : IQueryable<Doctor> = table.Where((fun e -> e.PersonId = record.PersonId))
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member FindDoctor (db : TestDataDB, personId : int64) : Doctor | null = db.GetTable<Doctor>().FirstOrDefault((fun e -> e.PersonId = personId))
 
-    [<System.Runtime.CompilerServices.Extension>]
-    static member FindDoctorAsync (db : TestDataDB, personId : int64, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Doctor | null> = db.GetTable<Doctor>().FirstOrDefaultAsync((fun e -> e.PersonId = personId), cancellationToken)
+    [<Extension>]
+    static member FindDoctorAsync (db : TestDataDB, personId : int64, [<Optional>] cancellationToken : CancellationToken) : Task<Doctor | null> = db.GetTable<Doctor>().FirstOrDefaultAsync((fun e -> e.PersonId = personId), cancellationToken)
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member FindDoctorQuery (db : TestDataDB, personId : int64) : IQueryable<Doctor> = db.GetTable<Doctor>().Where((fun e -> e.PersonId = personId))
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member Find (db : TestDataDB, record : Doctor) : Doctor | null = db.GetTable<Doctor>().FirstOrDefault((fun e -> e.PersonId = record.PersonId))
 
-    [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : Doctor, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Doctor | null> = db.GetTable<Doctor>().FirstOrDefaultAsync((fun e -> e.PersonId = record.PersonId), cancellationToken)
+    [<Extension>]
+    static member FindAsync (db : TestDataDB, record : Doctor, [<Optional>] cancellationToken : CancellationToken) : Task<Doctor | null> = db.GetTable<Doctor>().FirstOrDefaultAsync((fun e -> e.PersonId = record.PersonId), cancellationToken)
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member FindQuery (db : TestDataDB, record : Doctor) : IQueryable<Doctor> = db.GetTable<Doctor>().Where((fun e -> e.PersonId = record.PersonId))
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member Find (table : ITable<FkTestPosition>, company : int64, department : int64, positionId : int64) : FkTestPosition | null = table.FirstOrDefault((fun e -> e.Company = company && e.Department = department && e.PositionId = positionId))
 
-    [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<FkTestPosition>, company : int64, department : int64, positionId : int64, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<FkTestPosition | null> = table.FirstOrDefaultAsync((fun e -> e.Company = company && e.Department = department && e.PositionId = positionId), cancellationToken)
+    [<Extension>]
+    static member FindAsync (table : ITable<FkTestPosition>, company : int64, department : int64, positionId : int64, [<Optional>] cancellationToken : CancellationToken) : Task<FkTestPosition | null> = table.FirstOrDefaultAsync((fun e -> e.Company = company && e.Department = department && e.PositionId = positionId), cancellationToken)
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member FindQuery (table : ITable<FkTestPosition>, company : int64, department : int64, positionId : int64) : IQueryable<FkTestPosition> = table.Where((fun e -> e.Company = company && e.Department = department && e.PositionId = positionId))
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member Find (table : ITable<FkTestPosition>, record : FkTestPosition) : FkTestPosition | null = table.FirstOrDefault((fun e -> e.Company = record.Company && e.Department = record.Department && e.PositionId = record.PositionId))
 
-    [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<FkTestPosition>, record : FkTestPosition, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<FkTestPosition | null> = table.FirstOrDefaultAsync((fun e -> e.Company = record.Company && e.Department = record.Department && e.PositionId = record.PositionId), cancellationToken)
+    [<Extension>]
+    static member FindAsync (table : ITable<FkTestPosition>, record : FkTestPosition, [<Optional>] cancellationToken : CancellationToken) : Task<FkTestPosition | null> = table.FirstOrDefaultAsync((fun e -> e.Company = record.Company && e.Department = record.Department && e.PositionId = record.PositionId), cancellationToken)
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member FindQuery (table : ITable<FkTestPosition>, record : FkTestPosition) : IQueryable<FkTestPosition> = table.Where((fun e -> e.Company = record.Company && e.Department = record.Department && e.PositionId = record.PositionId))
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member FindFkTestPosition (db : TestDataDB, company : int64, department : int64, positionId : int64) : FkTestPosition | null = db.GetTable<FkTestPosition>().FirstOrDefault((fun e -> e.Company = company && e.Department = department && e.PositionId = positionId))
 
-    [<System.Runtime.CompilerServices.Extension>]
-    static member FindFkTestPositionAsync (db : TestDataDB, company : int64, department : int64, positionId : int64, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<FkTestPosition | null> = db.GetTable<FkTestPosition>().FirstOrDefaultAsync((fun e -> e.Company = company && e.Department = department && e.PositionId = positionId), cancellationToken)
+    [<Extension>]
+    static member FindFkTestPositionAsync (db : TestDataDB, company : int64, department : int64, positionId : int64, [<Optional>] cancellationToken : CancellationToken) : Task<FkTestPosition | null> = db.GetTable<FkTestPosition>().FirstOrDefaultAsync((fun e -> e.Company = company && e.Department = department && e.PositionId = positionId), cancellationToken)
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member FindFkTestPositionQuery (db : TestDataDB, company : int64, department : int64, positionId : int64) : IQueryable<FkTestPosition> = db.GetTable<FkTestPosition>().Where((fun e -> e.Company = company && e.Department = department && e.PositionId = positionId))
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member Find (db : TestDataDB, record : FkTestPosition) : FkTestPosition | null = db.GetTable<FkTestPosition>().FirstOrDefault((fun e -> e.Company = record.Company && e.Department = record.Department && e.PositionId = record.PositionId))
 
-    [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : FkTestPosition, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<FkTestPosition | null> = db.GetTable<FkTestPosition>().FirstOrDefaultAsync((fun e -> e.Company = record.Company && e.Department = record.Department && e.PositionId = record.PositionId), cancellationToken)
+    [<Extension>]
+    static member FindAsync (db : TestDataDB, record : FkTestPosition, [<Optional>] cancellationToken : CancellationToken) : Task<FkTestPosition | null> = db.GetTable<FkTestPosition>().FirstOrDefaultAsync((fun e -> e.Company = record.Company && e.Department = record.Department && e.PositionId = record.PositionId), cancellationToken)
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member FindQuery (db : TestDataDB, record : FkTestPosition) : IQueryable<FkTestPosition> = db.GetTable<FkTestPosition>().Where((fun e -> e.Company = record.Company && e.Department = record.Department && e.PositionId = record.PositionId))
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member Find (table : ITable<Patient>, personId : int64) : Patient | null = table.FirstOrDefault((fun e -> e.PersonId = personId))
 
-    [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<Patient>, personId : int64, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Patient | null> = table.FirstOrDefaultAsync((fun e -> e.PersonId = personId), cancellationToken)
+    [<Extension>]
+    static member FindAsync (table : ITable<Patient>, personId : int64, [<Optional>] cancellationToken : CancellationToken) : Task<Patient | null> = table.FirstOrDefaultAsync((fun e -> e.PersonId = personId), cancellationToken)
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member FindQuery (table : ITable<Patient>, personId : int64) : IQueryable<Patient> = table.Where((fun e -> e.PersonId = personId))
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member Find (table : ITable<Patient>, record : Patient) : Patient | null = table.FirstOrDefault((fun e -> e.PersonId = record.PersonId))
 
-    [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<Patient>, record : Patient, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Patient | null> = table.FirstOrDefaultAsync((fun e -> e.PersonId = record.PersonId), cancellationToken)
+    [<Extension>]
+    static member FindAsync (table : ITable<Patient>, record : Patient, [<Optional>] cancellationToken : CancellationToken) : Task<Patient | null> = table.FirstOrDefaultAsync((fun e -> e.PersonId = record.PersonId), cancellationToken)
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member FindQuery (table : ITable<Patient>, record : Patient) : IQueryable<Patient> = table.Where((fun e -> e.PersonId = record.PersonId))
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member FindPatient (db : TestDataDB, personId : int64) : Patient | null = db.GetTable<Patient>().FirstOrDefault((fun e -> e.PersonId = personId))
 
-    [<System.Runtime.CompilerServices.Extension>]
-    static member FindPatientAsync (db : TestDataDB, personId : int64, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Patient | null> = db.GetTable<Patient>().FirstOrDefaultAsync((fun e -> e.PersonId = personId), cancellationToken)
+    [<Extension>]
+    static member FindPatientAsync (db : TestDataDB, personId : int64, [<Optional>] cancellationToken : CancellationToken) : Task<Patient | null> = db.GetTable<Patient>().FirstOrDefaultAsync((fun e -> e.PersonId = personId), cancellationToken)
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member FindPatientQuery (db : TestDataDB, personId : int64) : IQueryable<Patient> = db.GetTable<Patient>().Where((fun e -> e.PersonId = personId))
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member Find (db : TestDataDB, record : Patient) : Patient | null = db.GetTable<Patient>().FirstOrDefault((fun e -> e.PersonId = record.PersonId))
 
-    [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : Patient, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Patient | null> = db.GetTable<Patient>().FirstOrDefaultAsync((fun e -> e.PersonId = record.PersonId), cancellationToken)
+    [<Extension>]
+    static member FindAsync (db : TestDataDB, record : Patient, [<Optional>] cancellationToken : CancellationToken) : Task<Patient | null> = db.GetTable<Patient>().FirstOrDefaultAsync((fun e -> e.PersonId = record.PersonId), cancellationToken)
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member FindQuery (db : TestDataDB, record : Patient) : IQueryable<Patient> = db.GetTable<Patient>().Where((fun e -> e.PersonId = record.PersonId))
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member Find (table : ITable<Person>, personId : int64) : Person | null = table.FirstOrDefault((fun e -> e.PersonId = personId))
 
-    [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<Person>, personId : int64, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Person | null> = table.FirstOrDefaultAsync((fun e -> e.PersonId = personId), cancellationToken)
+    [<Extension>]
+    static member FindAsync (table : ITable<Person>, personId : int64, [<Optional>] cancellationToken : CancellationToken) : Task<Person | null> = table.FirstOrDefaultAsync((fun e -> e.PersonId = personId), cancellationToken)
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member FindQuery (table : ITable<Person>, personId : int64) : IQueryable<Person> = table.Where((fun e -> e.PersonId = personId))
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member Find (table : ITable<Person>, record : Person) : Person | null = table.FirstOrDefault((fun e -> e.PersonId = record.PersonId))
 
-    [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<Person>, record : Person, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Person | null> = table.FirstOrDefaultAsync((fun e -> e.PersonId = record.PersonId), cancellationToken)
+    [<Extension>]
+    static member FindAsync (table : ITable<Person>, record : Person, [<Optional>] cancellationToken : CancellationToken) : Task<Person | null> = table.FirstOrDefaultAsync((fun e -> e.PersonId = record.PersonId), cancellationToken)
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member FindQuery (table : ITable<Person>, record : Person) : IQueryable<Person> = table.Where((fun e -> e.PersonId = record.PersonId))
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member FindPerson (db : TestDataDB, personId : int64) : Person | null = db.GetTable<Person>().FirstOrDefault((fun e -> e.PersonId = personId))
 
-    [<System.Runtime.CompilerServices.Extension>]
-    static member FindPersonAsync (db : TestDataDB, personId : int64, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Person | null> = db.GetTable<Person>().FirstOrDefaultAsync((fun e -> e.PersonId = personId), cancellationToken)
+    [<Extension>]
+    static member FindPersonAsync (db : TestDataDB, personId : int64, [<Optional>] cancellationToken : CancellationToken) : Task<Person | null> = db.GetTable<Person>().FirstOrDefaultAsync((fun e -> e.PersonId = personId), cancellationToken)
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member FindPersonQuery (db : TestDataDB, personId : int64) : IQueryable<Person> = db.GetTable<Person>().Where((fun e -> e.PersonId = personId))
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member Find (db : TestDataDB, record : Person) : Person | null = db.GetTable<Person>().FirstOrDefault((fun e -> e.PersonId = record.PersonId))
 
-    [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : Person, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<Person | null> = db.GetTable<Person>().FirstOrDefaultAsync((fun e -> e.PersonId = record.PersonId), cancellationToken)
+    [<Extension>]
+    static member FindAsync (db : TestDataDB, record : Person, [<Optional>] cancellationToken : CancellationToken) : Task<Person | null> = db.GetTable<Person>().FirstOrDefaultAsync((fun e -> e.PersonId = record.PersonId), cancellationToken)
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member FindQuery (db : TestDataDB, record : Person) : IQueryable<Person> = db.GetTable<Person>().Where((fun e -> e.PersonId = record.PersonId))
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member Find (table : ITable<PrimaryKeyTable>, id : int64) : PrimaryKeyTable | null = table.FirstOrDefault((fun e -> e.Id = id))
 
-    [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<PrimaryKeyTable>, id : int64, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PrimaryKeyTable | null> = table.FirstOrDefaultAsync((fun e -> e.Id = id), cancellationToken)
+    [<Extension>]
+    static member FindAsync (table : ITable<PrimaryKeyTable>, id : int64, [<Optional>] cancellationToken : CancellationToken) : Task<PrimaryKeyTable | null> = table.FirstOrDefaultAsync((fun e -> e.Id = id), cancellationToken)
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member FindQuery (table : ITable<PrimaryKeyTable>, id : int64) : IQueryable<PrimaryKeyTable> = table.Where((fun e -> e.Id = id))
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member Find (table : ITable<PrimaryKeyTable>, record : PrimaryKeyTable) : PrimaryKeyTable | null = table.FirstOrDefault((fun e -> e.Id = record.Id))
 
-    [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<PrimaryKeyTable>, record : PrimaryKeyTable, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PrimaryKeyTable | null> = table.FirstOrDefaultAsync((fun e -> e.Id = record.Id), cancellationToken)
+    [<Extension>]
+    static member FindAsync (table : ITable<PrimaryKeyTable>, record : PrimaryKeyTable, [<Optional>] cancellationToken : CancellationToken) : Task<PrimaryKeyTable | null> = table.FirstOrDefaultAsync((fun e -> e.Id = record.Id), cancellationToken)
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member FindQuery (table : ITable<PrimaryKeyTable>, record : PrimaryKeyTable) : IQueryable<PrimaryKeyTable> = table.Where((fun e -> e.Id = record.Id))
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member FindPrimaryKeyTable (db : TestDataDB, id : int64) : PrimaryKeyTable | null = db.GetTable<PrimaryKeyTable>().FirstOrDefault((fun e -> e.Id = id))
 
-    [<System.Runtime.CompilerServices.Extension>]
-    static member FindPrimaryKeyTableAsync (db : TestDataDB, id : int64, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PrimaryKeyTable | null> = db.GetTable<PrimaryKeyTable>().FirstOrDefaultAsync((fun e -> e.Id = id), cancellationToken)
+    [<Extension>]
+    static member FindPrimaryKeyTableAsync (db : TestDataDB, id : int64, [<Optional>] cancellationToken : CancellationToken) : Task<PrimaryKeyTable | null> = db.GetTable<PrimaryKeyTable>().FirstOrDefaultAsync((fun e -> e.Id = id), cancellationToken)
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member FindPrimaryKeyTableQuery (db : TestDataDB, id : int64) : IQueryable<PrimaryKeyTable> = db.GetTable<PrimaryKeyTable>().Where((fun e -> e.Id = id))
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member Find (db : TestDataDB, record : PrimaryKeyTable) : PrimaryKeyTable | null = db.GetTable<PrimaryKeyTable>().FirstOrDefault((fun e -> e.Id = record.Id))
 
-    [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : PrimaryKeyTable, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<PrimaryKeyTable | null> = db.GetTable<PrimaryKeyTable>().FirstOrDefaultAsync((fun e -> e.Id = record.Id), cancellationToken)
+    [<Extension>]
+    static member FindAsync (db : TestDataDB, record : PrimaryKeyTable, [<Optional>] cancellationToken : CancellationToken) : Task<PrimaryKeyTable | null> = db.GetTable<PrimaryKeyTable>().FirstOrDefaultAsync((fun e -> e.Id = record.Id), cancellationToken)
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member FindQuery (db : TestDataDB, record : PrimaryKeyTable) : IQueryable<PrimaryKeyTable> = db.GetTable<PrimaryKeyTable>().Where((fun e -> e.Id = record.Id))
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member Find (table : ITable<TestIdentity>, id : int64) : TestIdentity | null = table.FirstOrDefault((fun e -> e.Id = id))
 
-    [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<TestIdentity>, id : int64, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TestIdentity | null> = table.FirstOrDefaultAsync((fun e -> e.Id = id), cancellationToken)
+    [<Extension>]
+    static member FindAsync (table : ITable<TestIdentity>, id : int64, [<Optional>] cancellationToken : CancellationToken) : Task<TestIdentity | null> = table.FirstOrDefaultAsync((fun e -> e.Id = id), cancellationToken)
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member FindQuery (table : ITable<TestIdentity>, id : int64) : IQueryable<TestIdentity> = table.Where((fun e -> e.Id = id))
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member Find (table : ITable<TestIdentity>, record : TestIdentity) : TestIdentity | null = table.FirstOrDefault((fun e -> e.Id = record.Id))
 
-    [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<TestIdentity>, record : TestIdentity, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TestIdentity | null> = table.FirstOrDefaultAsync((fun e -> e.Id = record.Id), cancellationToken)
+    [<Extension>]
+    static member FindAsync (table : ITable<TestIdentity>, record : TestIdentity, [<Optional>] cancellationToken : CancellationToken) : Task<TestIdentity | null> = table.FirstOrDefaultAsync((fun e -> e.Id = record.Id), cancellationToken)
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member FindQuery (table : ITable<TestIdentity>, record : TestIdentity) : IQueryable<TestIdentity> = table.Where((fun e -> e.Id = record.Id))
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member FindTestIdentity (db : TestDataDB, id : int64) : TestIdentity | null = db.GetTable<TestIdentity>().FirstOrDefault((fun e -> e.Id = id))
 
-    [<System.Runtime.CompilerServices.Extension>]
-    static member FindTestIdentityAsync (db : TestDataDB, id : int64, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TestIdentity | null> = db.GetTable<TestIdentity>().FirstOrDefaultAsync((fun e -> e.Id = id), cancellationToken)
+    [<Extension>]
+    static member FindTestIdentityAsync (db : TestDataDB, id : int64, [<Optional>] cancellationToken : CancellationToken) : Task<TestIdentity | null> = db.GetTable<TestIdentity>().FirstOrDefaultAsync((fun e -> e.Id = id), cancellationToken)
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member FindTestIdentityQuery (db : TestDataDB, id : int64) : IQueryable<TestIdentity> = db.GetTable<TestIdentity>().Where((fun e -> e.Id = id))
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member Find (db : TestDataDB, record : TestIdentity) : TestIdentity | null = db.GetTable<TestIdentity>().FirstOrDefault((fun e -> e.Id = record.Id))
 
-    [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : TestIdentity, [<System.Runtime.InteropServices.Optional>] cancellationToken : CancellationToken) : Task<TestIdentity | null> = db.GetTable<TestIdentity>().FirstOrDefaultAsync((fun e -> e.Id = record.Id), cancellationToken)
+    [<Extension>]
+    static member FindAsync (db : TestDataDB, record : TestIdentity, [<Optional>] cancellationToken : CancellationToken) : Task<TestIdentity | null> = db.GetTable<TestIdentity>().FirstOrDefaultAsync((fun e -> e.Id = record.Id), cancellationToken)
 
-    [<System.Runtime.CompilerServices.Extension>]
+    [<Extension>]
     static member FindQuery (db : TestDataDB, record : TestIdentity) : IQueryable<TestIdentity> = db.GetTable<TestIdentity>().Where((fun e -> e.Id = record.Id))
 
 

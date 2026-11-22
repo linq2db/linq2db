@@ -69,7 +69,7 @@ namespace LinqToDB.CommandLine.Commands.Template
 
 			Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
 
-			using var template = GetType().Assembly.GetManifestResourceStream("LinqToDB.CLI.Template.tt")!;
+			using var template = typeof(TemplateCommand).Assembly.GetManifestResourceStream("LinqToDB.CLI.Template.tt")!;
 			using var file     = File.Create(fullPath);
 
 			await template.CopyToAsync(file, cancellationToken);

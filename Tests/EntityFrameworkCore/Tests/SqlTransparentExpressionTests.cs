@@ -22,7 +22,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var nested   = reader!.GetNestedType("SqlTransparentExpression", BindingFlags.NonPublic);
 			Assert.That(nested, Is.Not.Null, "SqlTransparentExpression nested type not found — class layout changed.");
 
-			Assert.DoesNotThrow(() => RuntimeHelpers.RunClassConstructor(nested!.TypeHandle));
+			RuntimeHelpers.RunClassConstructor(nested!.TypeHandle);
 		}
 	}
 }

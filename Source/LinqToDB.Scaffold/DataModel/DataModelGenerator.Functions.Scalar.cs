@@ -36,6 +36,7 @@ namespace LinqToDB.DataModel
 
 			var region = context.AddScalarFunctionRegion(function.Method.Name);
 			var method = context.DefineMethod(region.Methods(false), function.Method);
+			method.SetModifiers(method.Method.Attributes | Modifiers.SqlTranslated);
 
 			// scalar functions cannot be used outside of query context, so we throw exception from method
 			var body = method.Body().Append(

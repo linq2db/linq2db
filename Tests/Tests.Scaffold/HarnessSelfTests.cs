@@ -66,6 +66,34 @@ namespace Tests.Scaffold
 		}
 
 		[Test]
+		public void FSharpFloorLanguageVersionChecked()
+		{
+			// accessor-level access modifiers on an auto-property need F# 10
+			var result = FSharpCompiler.Compile(
+				"SelfTest_FSharpFloor_" + Guid.NewGuid().ToString("N"),
+				[new SourceFile("Floor.fs", "namespace Floor\n\ntype C() =\n    member val X = 0 with public get, private set\n")],
+				nullable: true);
+
+			result.Success.ShouldBeFalse();
+			result.Failures.ShouldContain(d => d.Severity == CompileDiagnosticSeverity.Error && d.Message.StartsWith("[langversion:9.0]"));
+			result.Failures.ShouldNotContain(d => d.Message.StartsWith("[langversion:latest]"));
+		}
+
+		[Test]
+		public void FSharpLatestLanguageVersionChecked()
+		{
+			// F# 11 reads [NotNullIfNotNull] on ExpressionVisitor.Visit, so nonNull over its result is FS3262
+			var result = FSharpCompiler.Compile(
+				"SelfTest_FSharpLatest_" + Guid.NewGuid().ToString("N"),
+				[new SourceFile("Latest.fs", "namespace Latest\n\nopen System.Linq.Expressions\n\nmodule M =\n    let f (v : ExpressionVisitor) (x : Expression) = v.Visit(x) |> nonNull\n")],
+				nullable: true);
+
+			result.Success.ShouldBeFalse();
+			result.Failures.ShouldContain(d => d.Id == "FS3262" && d.Message.StartsWith("[langversion:latest]"));
+			result.Failures.ShouldNotContain(d => d.Message.StartsWith("[langversion:9.0]"));
+		}
+
+		[Test]
 		[ActiveIssue(1, ErrorMessage = "expected failure")]
 		public void ActiveIssueHoldsOnDeclaredFailure()
 		{

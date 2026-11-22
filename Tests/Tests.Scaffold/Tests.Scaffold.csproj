@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<AssemblyName>linq2db.Tests.Scaffold</AssemblyName>
 		<RootNamespace>Tests.Scaffold</RootNamespace>
-		<TargetFramework>net10.0</TargetFramework>
+		<TargetFramework>$(LatestTargetFramework)</TargetFramework>
 		<TargetFrameworks></TargetFrameworks>
 		<OutputType>Exe</OutputType>
 		<EnableNUnitRunner>true</EnableNUnitRunner>

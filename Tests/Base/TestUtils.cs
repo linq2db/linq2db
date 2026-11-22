@@ -29,6 +29,26 @@ namespace Tests
 		private static int _cnt;
 
 		/// <summary>
+		/// Returns the repository root — the nearest directory above the test assembly that holds <c>linq2db.slnx</c> —
+		/// or <see langword="null"/> when there is none or the walk fails. Callers choose their own fallback.
+		/// </summary>
+		public static string? TryFindRepoRoot()
+		{
+			try
+			{
+				for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir != null; dir = dir.Parent)
+					if (File.Exists(Path.Combine(dir.FullName, "linq2db.slnx")))
+						return dir.FullName;
+			}
+			catch
+			{
+				// an unreadable ancestor directory ends the walk
+			}
+
+			return null;
+		}
+
+		/// <summary>
 		/// Returns unique per-testrun sequence number.
 		/// E.g. it can be used to generate unique table names for tests to workaround Firebird's
 		/// issues with DDL operations.
@@ -367,12 +387,10 @@ namespace Tests
 		{
 #if NETFRAMEWORK
 			return "NETFX";
-#elif NET8_0
-			return "NET80";
-#elif NET9_0
-			return "NET90";
 #elif NET10_0
 			return "NET100";
+#elif NET11_0
+			return "NET110";
 #else
 #error Unknown framework
 #endif

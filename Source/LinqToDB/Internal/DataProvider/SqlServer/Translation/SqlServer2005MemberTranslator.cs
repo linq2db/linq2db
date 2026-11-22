@@ -1,6 +1,4 @@
-﻿using System.Linq.Expressions;
-
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
@@ -19,11 +17,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 			return new SqlServer2005DateFunctionsTranslator();
 		}
 
-		protected class SqlTypes2005Translation : SqlTypesTranslation
-		{
-			protected override Expression? ConvertDate(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
-				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.DateTime));
-		}
+		protected class SqlTypes2005Translation : SqlTypesTranslation;
 
 		protected class SqlServer2005DateFunctionsTranslator : SqlServerDateFunctionsTranslator
 		{

@@ -5,7 +5,5 @@
 	/// </summary>
 	/// <typeparam name="TSource">Table record type.</typeparam>
 	public interface IYdbSpecificTable<out TSource> : ITable<TSource>
-		where TSource : notnull
-	{
-	}
+		where TSource : notnull;
 }

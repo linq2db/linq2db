@@ -61,6 +61,34 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task FSharpScaffoldWritesFSharpFile()
+		{
+			var output = Path.Combine(TestContext.CurrentContext.WorkDirectory, $"scaffold-{Guid.NewGuid():N}");
+
+			try
+			{
+				var result = await RunCli("scaffold", "-p", "SQLite", "-c", "Data Source=:memory:", "-o", output, "--target-language", "f#");
+
+				result.ExitCode.ShouldBe(0, result.Error);
+
+				var files = Directory.GetFiles(output);
+
+				files.ShouldHaveSingleItem();
+
+				var extension = Path.GetExtension(files[0]);
+				var code      = File.ReadAllText(files[0]);
+
+				extension.ShouldBe(".fs");
+				code.ShouldContain("namespace rec ");
+			}
+			finally
+			{
+				if (Directory.Exists(output))
+					Directory.Delete(output, true);
+			}
+		}
+
+		[Test]
 		public async Task HelpShowsSupportedLanguages()
 		{
 			var result = await RunCli("help", "scaffold");
@@ -76,7 +104,9 @@ namespace Tests.LinqToDB.CLI
 		private static async Task<CliResult> RunCli(params string[] arguments)
 		{
 			var environment = new TestCliEnvironment();
-			var exitCode    = await new LinqToDBCliController().Execute(arguments, environment).ConfigureAwait(false);
+			var exitCode    = await new LinqToDBCliController()
+				.Execute(arguments, environment)
+				.ConfigureAwait(false);
 
 			return new CliResult(exitCode, environment.Output, environment.ErrorOutput);
 		}

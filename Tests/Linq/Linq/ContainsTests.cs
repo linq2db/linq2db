@@ -190,7 +190,7 @@ namespace Tests.Linq
 		// It is the only DB that returns 1 for `WHERE Int NOT IN (null, null)`
 		// Nope, Access is not alone anymore
 		[Test]
-		public void AllNullsLikeClr([DataSources(TestProvName.AllAccess)] string context)
+		public void AllNullsLikeClr([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			AllNulls(context, withNullCompares: true);
 		}
@@ -202,7 +202,7 @@ namespace Tests.Linq
 		// The two sibling LikeSql gates below carry the same declaration for the same reason.
 		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/38439", Configuration = TestProvName.AllClickHouse, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was")]
 		[Test]
-		public void AllNullsLikeSql([DataSources(TestProvName.AllAccess)] string context)
+		public void AllNullsLikeSql([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			AllNulls(context, withNullCompares: false);
 		}
@@ -225,14 +225,14 @@ namespace Tests.Linq
 		// It is the only DB that returns 1 for `WHERE Enum NOT IN (null, null)`
 		// Nope, Access is not alone anymore
 		[Test]
-		public void AllNullsEnumLikeClr([DataSources(TestProvName.AllAccess)] string context)
+		public void AllNullsEnumLikeClr([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			AllNullsEnum(context, withNullCompares: true);
 		}
 
 		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/38439", Configuration = TestProvName.AllClickHouse, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was")]
 		[Test]
-		public void AllNullsEnumLikeSql([DataSources(TestProvName.AllAccess)] string context)
+		public void AllNullsEnumLikeSql([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			AllNullsEnum(context, withNullCompares: false);
 		}
@@ -255,14 +255,14 @@ namespace Tests.Linq
 		// It is the only DB that returns 1 for `WHERE CEnum NOT IN (null, null)`
 		// Nope, Access is not alone anymore
 		[Test]
-		public void AllNullsCEnumLikeClr([DataSources(TestProvName.AllAccess)] string context)
+		public void AllNullsCEnumLikeClr([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			AllNullsCEnum(context, withNullCompares: true);
 		}
 
 		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/38439", Configuration = TestProvName.AllClickHouse, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was")]
 		[Test]
-		public void AllNullsCEnumLikeSql([DataSources(TestProvName.AllAccess)] string context)
+		public void AllNullsCEnumLikeSql([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			AllNullsCEnum(context, withNullCompares: false);
 		}
@@ -361,6 +361,9 @@ namespace Tests.Linq
 			Assert.That(result[0].ID, Is.EqualTo(4));
 		}
 
+		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "System.InvalidCastException",
+			ErrorMessage = "cannot be read as a number",
+			Details = "no-issue: an alpha.2 -> alpha.3 regression, measured against both packages - comparing a text column against a numeric literal (=, IN, NOT IN) now coerces the text to a number and throws on any non-numeric value, where alpha.2 evaluated it and ACE accepts it. LibRed.Ado 11.0.0-alpha.3 to beta.1; re-check when a newer LibRed ships.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2608")]
 		public void Issue2608Test([DataSources(TestProvName.AllSapHana)] string context)
 		{
@@ -462,9 +465,43 @@ namespace Tests.Linq
 			Assert.That(res, Is.EqualTo(expected));
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6067")]
+		public void ArrayContainsValueType([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var ids = new[] { 1, 2, 3 };
+
+			var items = db.Person
+				.Where(p => ids.Contains(p.ID))
+				.Select(p => p.ID)
+				.ToList();
+
+			items
+				.OrderBy(i => i)
+				.ShouldBe([1, 2, 3]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6067")]
+		public void ArrayContainsReferenceType([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var names = new[] { "John", "Jane" };
+
+			var items = db.Person
+				.Where(p => names.Contains(p.FirstName))
+				.Select(p => p.FirstName)
+				.ToList();
+
+			items
+				.OrderBy(i => i)
+				.ShouldBe(["Jane", "John"]);
+		}
+
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		public void ContainsSubqueryTest([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void ContainsSubqueryTest([DataSources(TestProvName.AllNativeAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -480,6 +517,251 @@ namespace Tests.Linq
 				select a.ParentID;
 
 			AssertQuery(query);
+		}
+
+		sealed class ScaledDecimalRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Decimal, Precision = 18, Scale = 2)]
+			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Decimal64, Precision = 18, Scale = 2)]
+			public decimal Value { get; set; }
+		}
+
+		/// <summary>
+		/// A captured value finer than an aggregated column's scale is compared as written, not narrowed to the column's
+		/// scale: MAX is a computed value with no stored scale to match.
+		/// </summary>
+		/// <remarks>
+		/// SqlCe is left out because it compares a decimal literal at the other side's scale (#6062).
+		/// </remarks>
+		[Test]
+		public void CapturedListBesideAggregateKeepsValueScale([DataSources(TestProvName.AllSqlCe)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new ScaledDecimalRow { Id = 1, Value = 1.00m } });
+
+			var finer = new[] { 1.004m };
+
+			var count = t
+				.GroupBy(r => r.Id)
+				.Count(g => finer.Contains(g.Max(r => r.Value)));
+
+			count.ShouldBe(0);
+		}
+
+		sealed class ComputedDecimalRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Decimal, Precision = 18, Scale = 12)]
+			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Decimal64, Precision = 18, Scale = 12)]
+			public decimal Fine { get; set; }
+
+			[Column(DataType = DataType.Decimal, Precision = 18, Scale = 2)]
+			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Decimal64, Precision = 18, Scale = 2)]
+			public decimal Wide { get; set; }
+		}
+
+		/// <summary>
+		/// A list beside a computed decimal - captured or written inline - keeps the digits the computed value's own type
+		/// holds, and agrees with <c>==</c>.
+		/// </summary>
+		/// <remarks>
+		/// The rounded arm asserts agreement rather than a count, because the rounded value's type is the provider's.
+		/// SqlCe is left out because it compares a decimal literal at the other side's scale (#6062).
+		/// </remarks>
+		[Test]
+		public void ListBesideComputedDecimalKeepsDigits([DataSources(TestProvName.AllSqlCe)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new ComputedDecimalRow { Id = 1, Fine = 1.000000000005m, Wide = 12345678901234.50m } });
+
+			var fine = new[] { 1.000000000005m };
+			var wide = new[] { 12345678901234.50m };
+
+			var fineCaptured = t.Count(r => fine.Contains(Math.Abs(r.Fine)));
+
+			fineCaptured.ShouldBe(1);
+
+			var fineInline = t
+				.Count(r => Math.Abs(r.Fine).In(1.000000000005m));
+
+			fineInline.ShouldBe(1);
+
+			var wideCaptured = t.Count(r => wide.Contains(Math.Abs(r.Wide)));
+
+			wideCaptured.ShouldBe(1);
+
+			var wideInline = t
+				.Count(r => Math.Abs(r.Wide).In(12345678901234.50m));
+
+			wideInline.ShouldBe(1);
+
+			var finer = new[] { 1.004m };
+
+			var roundedEqual = t.Count(r => Math.Round(r.Fine, 2) == 1.004m);
+
+			var roundedCaptured = t.Count(r => finer.Contains(Math.Round(r.Fine, 2)));
+
+			var roundedInline = t
+				.Count(r => Math.Round(r.Fine, 2).In(1.004m));
+
+			roundedCaptured.ShouldBe(roundedEqual);
+			roundedInline.ShouldBe(roundedEqual);
+		}
+
+#if SUPPORTS_DATEONLY
+		sealed class DateOnlyRow
+		{
+			[PrimaryKey] public int      Id  { get; set; }
+			[Column]     public DateOnly Day { get; set; }
+		}
+
+		/// <summary>
+		/// A captured <see cref="DateOnly"/> list beside an aggregate over a <see cref="DateOnly"/> column matches the day.
+		/// </summary>
+		[Test]
+		public void CapturedDateOnlyListBesideAggregate([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new DateOnlyRow { Id = 1, Day = new DateOnly(2026, 6, 1) } });
+
+			var days = new[] { new DateOnly(2026, 6, 1) };
+
+			var count = t
+				.GroupBy(r => r.Id)
+				.Count(g => days.Contains(g.Max(r => r.Day)));
+
+			count.ShouldBe(1);
+		}
+#endif
+
+		sealed class DayRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Date)]
+			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Date32)]
+			public DateTime Day { get; set; }
+		}
+
+		/// <summary>
+		/// A captured list beside an aggregate over a date column matches the day at midnight and not a time within it.
+		/// </summary>
+		[Test]
+		public void CapturedListBesideAggregateOfADateColumn([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new DayRow { Id = 1, Day = new DateTime(2026, 6, 1) } });
+
+			var midnight = new[] { new DateTime(2026, 6, 1) };
+			var withTime = new[] { new DateTime(2026, 6, 1, 10, 0, 0) };
+
+			var atMidnight = t
+				.GroupBy(r => r.Id)
+				.Count(g => midnight.Contains(g.Max(r => r.Day)));
+
+			atMidnight.ShouldBe(1);
+
+			var atTime = t
+				.GroupBy(r => r.Id)
+				.Count(g => withTime.Contains(g.Max(r => r.Day)));
+
+			atTime.ShouldBe(0);
+		}
+
+		sealed class OffsetRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.DateTime)]
+			public DateTimeOffset Value { get; set; }
+		}
+
+		/// <summary>
+		/// A captured <see cref="DateTimeOffset"/> list beside an aggregate over a whole-second column matches a whole-second
+		/// value and not a sub-second one.
+		/// </summary>
+		/// <remarks>
+		/// ClickHouse only: it is where the operand is widened to <c>DateTime64</c> for the list, which refused these shapes
+		/// with <c>Type mismatch in IN or VALUES section</c> before.
+		/// </remarks>
+		[Test]
+		public void CapturedDateTimeOffsetListBesideAggregate([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new OffsetRow { Id = 1, Value = new DateTimeOffset(2026, 6, 1, 10, 0, 0, TimeSpan.Zero) } });
+
+			var whole = new[] { new DateTimeOffset(2026, 6, 1, 10, 0, 0, TimeSpan.Zero) };
+			var half  = new[] { new DateTimeOffset(2026, 6, 1, 10, 0, 0, 500, TimeSpan.Zero) };
+
+			var atWhole = t
+				.GroupBy(r => r.Id)
+				.Count(g => whole.Contains(g.Max(r => r.Value)));
+
+			atWhole.ShouldBe(1);
+
+			var atHalf = t
+				.GroupBy(r => r.Id)
+				.Count(g => half.Contains(g.Max(r => r.Value)));
+
+			atHalf.ShouldBe(0);
+		}
+
+		sealed class PrefixConverter() : ValueConverter<string?, string?>(v => v == null ? null : "x:" + v, v => v == null ? null : v.Substring(2), true);
+
+		[Table]
+		sealed class PrefixedCode
+		{
+			[PrimaryKey]                                                                                                 public int     Id   { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 20), ValueConverter(ConverterType = typeof(PrefixConverter))] public string? Code { get; set; }
+		}
+
+		/// <summary>
+		/// A value searched in a projected cast of a converted column goes through the column's converter, also when the
+		/// cast changes the database type.
+		/// </summary>
+		[Test]
+		public void SequenceContainsCastOfConvertedColumn([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new PrefixedCode { Id = 1, Code = "A" } });
+
+			table
+				.Select(t => Sql.Convert(Sql.Types.NVarChar(40), t.Code))
+				.Contains("A")
+				.ShouldBeTrue();
+		}
+
+		[Table]
+		sealed class PrefixedCodeWithTitle
+		{
+			[PrimaryKey]                                                                                                public int     Id    { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 20), ValueConverter(ConverterType = typeof(PrefixConverter))] public string? Code  { get; set; }
+			[Column(DataType = DataType.NVarChar, Length = 20)]                                                         public string? Title { get; set; }
+		}
+
+		/// <summary>
+		/// A value searched in a projected concatenation of a converted non-Unicode column and a Unicode one goes
+		/// through the converter the projection is read through.
+		/// </summary>
+		[Test]
+		public void SequenceContainsConcatOfConvertedAndUnicodeColumn([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new PrefixedCodeWithTitle { Id = 1, Code = "A", Title = "T" } });
+
+			var concatenated = table
+				.Select(t => t.Code + t.Title);
+
+			concatenated
+				.Single()
+				.ShouldBe("AT");
+
+			concatenated
+				.Contains("AT")
+				.ShouldBeTrue();
 		}
 	}
 }

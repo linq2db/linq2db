@@ -631,7 +631,8 @@ namespace LinqToDB.DataModel
 		}
 
 		// TODO: handle F# option values in DataParameter and Converter by mapping infrastructure instead of generating
-		// conversions (BuildProcedureParameterValue, BuildChangeTypeTo)
+		// conversions (BuildProcedureParameterValue, BuildChangeTypeTo); function wrappers avoid options instead
+		// (Modifiers.SqlTranslated) - https://github.com/linq2db/linq2db/issues/6443
 
 		/// <summary>
 		/// Generates <c>DataParameter</c> value for procedure parameter.

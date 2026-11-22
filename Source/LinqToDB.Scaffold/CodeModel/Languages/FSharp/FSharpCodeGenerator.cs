@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 
 namespace LinqToDB.CodeModel
 {
@@ -92,6 +93,14 @@ namespace LinqToDB.CodeModel
 		private readonly HashSet<CodeIdentifier> _recordNames = new();
 		// static auto-properties of the current class rendered over a `static let` backing value
 		private HashSet<CodeProperty>?     _staticBackedProperties;
+		// signature of a Modifiers.SqlTranslated method: its values reach SQL without a column mapping, which an F#
+		// option cannot cross (https://github.com/linq2db/linq2db/issues/6443)
+		private bool                       _currentIsSqlTranslated;
+		// set right before a SqlTranslated signature type is rendered; consumed by the top-level RenderType only,
+		// so generic arguments (aggregate selectors over option columns) keep options
+		private bool                       _optionFreeTopLevel;
+		// namespaces the renderer itself references (short attribute names, Nullable<T>), merged into the opens
+		private readonly HashSet<string>   _rendererOpens = new(StringComparer.Ordinal);
 
 		public FSharpCodeGenerator(
 			ILanguageProvider                                                      languageProvider,
@@ -238,7 +247,9 @@ namespace LinqToDB.CodeModel
 
 			// F# converts a value to obj implicitly only when overload resolution has already fixed the expected
 			// type, which a single argument to an overloaded method (ComparerBuilder key selector) doesn't
-			var boxBody = ReturnsObject(method.TargetType);
+			// a body already typed obj is not boxed: in an auto-quoted lambda `box` is an Operators.Box call between the
+			// lambda and the member a fluent mapping reads from it
+			var boxBody = ReturnsObject(method.TargetType) && !ReturnsObjectAlready(method.Body);
 			if (boxBody)
 				Write("box (");
 
@@ -248,6 +259,12 @@ namespace LinqToDB.CodeModel
 				Write(')');
 
 			Write(")");
+		}
+
+		private bool ReturnsObjectAlready(CodeBlock? body)
+		{
+			return body?.Items is [CodeReturn { Expression: { } value }]
+				&& string.Equals(_languageProvider.GetAlias(value.Type.WithNullability(false)), "obj", StringComparison.Ordinal);
 		}
 
 		// Func<..., object> or Expression<Func<..., object>>
@@ -423,7 +440,7 @@ namespace LinqToDB.CodeModel
 			// `member this.`.
 			if (_currentIsExtensionType && method.Attributes.HasFlag(Modifiers.Extension))
 			{
-				WriteLine("[<System.Runtime.CompilerServices.Extension>]");
+				WriteExtensionAttribute();
 				Write("static member ");
 				WriteAccessibility(method.Attributes);
 				WriteIdentifier(method.Name.Name);
@@ -454,6 +471,9 @@ namespace LinqToDB.CodeModel
 				Write('>');
 			}
 
+			var oldIsSqlTranslated = _currentIsSqlTranslated;
+			_currentIsSqlTranslated = method.Attributes.HasFlag(Modifiers.SqlTranslated);
+
 			Write(" (");
 			WriteDelimitedList(method.Parameters, ", ", false);
 			Write(")");
@@ -461,8 +481,12 @@ namespace LinqToDB.CodeModel
 			if (method.ReturnType != null)
 			{
 				Write(" : ");
+				_optionFreeTopLevel = _currentIsSqlTranslated;
 				Visit(method.ReturnType);
+				_optionFreeTopLevel = false;
 			}
+
+			_currentIsSqlTranslated = oldIsSqlTranslated;
 
 			Write(" =");
 
@@ -484,13 +508,13 @@ namespace LinqToDB.CodeModel
 					break;
 				case CodeDefault { Type.Type.IsValueType: true }:
 					// [<Optional>] without a value passes default(T) for value types (e.g. CancellationToken)
-					Write("[<System.Runtime.InteropServices.Optional>] ");
+					Write($"[<{InteropAttribute("Optional")}>] ");
 					break;
 				case CodeDefault:
-					Write("[<System.Runtime.InteropServices.Optional; System.Runtime.InteropServices.DefaultParameterValue(null)>] ");
+					Write($"[<{InteropAttribute("Optional")}; {InteropAttribute("DefaultParameterValue")}(null)>] ");
 					break;
 				default:
-					Write("[<System.Runtime.InteropServices.Optional; System.Runtime.InteropServices.DefaultParameterValue(");
+					Write($"[<{InteropAttribute("Optional")}; {InteropAttribute("DefaultParameterValue")}(");
 					Visit(parameter.DefaultValue);
 					Write(")>] ");
 					break;
@@ -508,9 +532,35 @@ namespace LinqToDB.CodeModel
 
 			if (refType != null)
 				Write(refType);
+			_optionFreeTopLevel = _currentIsSqlTranslated;
 			Visit(parameter.Type);
+			_optionFreeTopLevel = false;
 			if (refType != null)
 				Write('>');
+		}
+
+		private void WriteExtensionAttribute()
+		{
+			WriteLine($"[<{AttributeName("System.Runtime.CompilerServices", "Extension")}>]");
+		}
+
+		private string InteropAttribute(string name) => AttributeName("System.Runtime.InteropServices", name);
+
+		/// <summary>
+		/// Short attribute name when nothing generated shadows it (F# resolves <c>[&lt;X&gt;]</c> as <c>XAttribute</c>
+		/// first, so only a generated <c>XAttribute</c> type does); its namespace is then merged into the opens.
+		/// </summary>
+		private string AttributeName(string @namespace, string name)
+		{
+			var typeName = name + "Attribute";
+
+			foreach (var scope in _scopedTypes.Values)
+				foreach (var type in scope)
+					if (string.Equals(type.Name, typeName, StringComparison.Ordinal))
+						return $"{@namespace}.{name}";
+
+			_rendererOpens.Add(@namespace);
+			return name;
 		}
 
 		protected override void Visit(CodeXmlComment doc)
@@ -584,8 +634,20 @@ namespace LinqToDB.CodeModel
 				if (call.Extension)
 					Visit(call.Parameters[0]);
 				else
+				{
 					Visit(call.Callee!);
 
+					// a module's methods are rendered in its Extensions type (see WriteModule)
+					if (call.Callee is CodeTypeReference { Type: var calleeType } && _moduleTypes.Contains(calleeType))
+					{
+						Write('.');
+						WriteIdentifier(SchemaExtensionsTypeName);
+					}
+				}
+
+				// chained calls (fluent mapping) go one per line, as in C#; a leading-dot continuation line indented
+				// past the expression start continues the expression
+				WriteTrivia(call.WrapTrivia);
 				Write('.');
 			}
 			else if (call.Callee != null && call.Callee.ElementType == CodeElementType.This)
@@ -605,6 +667,9 @@ namespace LinqToDB.CodeModel
 			Write('(');
 			WriteDelimitedList(call.Extension ? call.Parameters.Skip(1) : call.Parameters, ", ", false);
 			Write(')');
+
+			if (hasCallee)
+				UndoTrivia(call.WrapTrivia);
 		}
 
 		protected override void Visit(CodeReturn statement)
@@ -748,7 +813,7 @@ namespace LinqToDB.CodeModel
 			DecreaseIdent();
 		}
 
-		// nullable scalar types are rendered as 'T option
+		// nullable scalar types are rendered as 'T option; FluentMetadataBuilder.DefaultArgType mirrors this predicate
 		private bool IsOptionType(IType type)
 		{
 			return type.IsNullable && (type.IsValueType || string.Equals(_languageProvider.GetAlias(type.WithNullability(false)), "string", StringComparison.Ordinal));
@@ -815,28 +880,72 @@ namespace LinqToDB.CodeModel
 			WriteLine();
 			WriteLine();
 
-			// emit file-level imports right after the namespace declaration
-			if (_fileImports != null)
-			{
-				VisitList(_fileImports);
-				WriteLine();
-				_fileImports = null;
-			}
+			var imports  = _fileImports;
+			_fileImports = null;
 
 			// F# forbids nested type definitions, so every type - including result-set records that the
 			// scaffolder nests inside the extensions class - is emitted flat at namespace level. `namespace rec`
 			// makes declaration order irrelevant, and intra-class references stay unqualified so they resolve to
 			// the lifted top-level type.
-			var first = true;
-			foreach (var type in EnumerateAllClasses(@namespace.Members))
+			// The body is rendered first: the opens it needs beyond the file imports (short attribute names,
+			// Nullable<T>) are known only once it has been written.
+			var body = BuildFragment(() =>
 			{
-				if (!first)
-					WriteLine();
-				first = false;
-				Visit(type);
-			}
+				var first = true;
+				foreach (var type in EnumerateAllClasses(@namespace.Members))
+				{
+					if (!first)
+						WriteLine();
+					first = false;
+					Visit(type);
+				}
+			});
+
+			// emit file-level imports right after the namespace declaration
+			WriteOpens(imports);
+			WriteUnindented(body);
 
 			_currentScope.RemoveRange(_currentScope.Count - @namespace.Name.Count, @namespace.Name.Count);
+		}
+
+		private void WriteOpens(IReadOnlyList<CodeImport>? imports)
+		{
+			var opens = new SortedDictionary<string, CodeImport?>(StringComparer.Ordinal);
+
+			if (imports != null)
+			{
+				foreach (var import in imports)
+				{
+					var key = new StringBuilder();
+					foreach (var part in import.Namespace)
+					{
+						if (key.Length > 0)
+							key.Append('.');
+						key.Append(part.Name);
+					}
+
+					opens[key.ToString()] = import;
+				}
+			}
+
+			foreach (var @namespace in _rendererOpens)
+				if (!opens.ContainsKey(@namespace))
+					opens.Add(@namespace, null);
+
+			_rendererOpens.Clear();
+
+			if (opens.Count == 0)
+				return;
+
+			foreach (var open in opens)
+			{
+				if (open.Value != null)
+					Visit(open.Value);
+				else
+					WriteLine($"open {open.Key}");
+			}
+
+			WriteLine();
 		}
 
 		protected override void Visit(CodeClass @class)
@@ -866,7 +975,7 @@ namespace LinqToDB.CodeModel
 			WriteCustomAttributes(@class.CustomAttributes, false);
 
 			if (isExtensionType)
-				WriteLine("[<System.Runtime.CompilerServices.Extension>]");
+				WriteExtensionAttribute();
 
 			// entity records can contain non-comparable fields (obj, byte[], collection/entity associations);
 			// F# would otherwise try to derive structural comparison and fail (FS1178). Structural equality is
@@ -1059,7 +1168,7 @@ namespace LinqToDB.CodeModel
 				if (!first)
 					WriteLine();
 
-				WriteLine("[<System.Runtime.CompilerServices.Extension>]");
+				WriteExtensionAttribute();
 				Write("type ");
 				WriteIdentifier(SchemaExtensionsTypeName);
 				WriteLine(" =");
@@ -1626,7 +1735,7 @@ namespace LinqToDB.CodeModel
 
 		/// <summary>
 		/// Renders an async method body as an F# <c>task { }</c> computation expression, translating
-		/// <c>await</c>ed calls to <c>let!</c> / <c>return!</c> bindings.
+		/// awaited calls to <c>let!</c> / <c>return!</c> bindings.
 		/// </summary>
 		private void WriteTaskBody(CodeBlock? statements)
 		{
@@ -1753,10 +1862,35 @@ namespace LinqToDB.CodeModel
 		/// </summary>
 		private void RenderType(IType type, CodeIdentifier? nameOverride, bool typeOnlyContext)
 		{
+			var optionFree      = _optionFreeTopLevel;
+			_optionFreeTopLevel = false;
+
 			var isOption = IsOptionType(type);
 			var nullable = type.IsNullable;
 			if (nullable)
 				type = type.WithNullability(false);
+
+			// a SqlTranslated signature: the value reaches SQL with no column mapping, so it is passed as the
+			// provider-known Nullable<T> / nullable string instead of an option
+			if (isOption && optionFree)
+			{
+				if (type.IsValueType)
+				{
+					_rendererOpens.Add("System");
+					RenderTypeName(
+						new GenericType([new CodeIdentifier("System", true)], new CodeIdentifier("Nullable", true), true, false, [type], true),
+						null,
+						typeOnlyContext);
+				}
+				else
+				{
+					RenderTypeName(type, nameOverride, typeOnlyContext);
+					if (_useNRT)
+						Write(" | null");
+				}
+
+				return;
+			}
 
 			RenderTypeName(type, nameOverride, typeOnlyContext);
 

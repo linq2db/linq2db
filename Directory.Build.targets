@@ -1,0 +1,30 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+	<!-- .targets, not .props: a props file is evaluated before the project body, so $(TargetFramework)
+	     is empty there for a project that declares a single TargetFramework in its own body, and the
+	     condition silently never fires. Build without it with -p:UseRuntimeAsync=false -t:Rebuild:
+	     $(Features) is not a CoreCompile input, so without -t:Rebuild the previous binary is reused.
+	     Mono, the default browser-wasm runtime, cannot run runtime-async methods. -->
+	<PropertyGroup>
+		<UseRuntimeAsync Condition=" '$(UseRuntimeAsync)' == '' and ('$(BrowserWasmAssetBuild)' == 'true' or '$(RuntimeIdentifier)' == 'browser-wasm') ">false</UseRuntimeAsync>
+		<UseRuntimeAsync Condition=" '$(UseRuntimeAsync)' == '' ">true</UseRuntimeAsync>
+		<Features Condition=" '$(UseRuntimeAsync)' == 'true' and $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net11.0')) ">$(Features);runtime-async=on</Features>
+	</PropertyGroup>
+
+	<!-- A package a browser app can load carries a second net11.0 build, without runtime-async. NuGet selects
+	     runtimes/browser-wasm by RID: a net11.0-browser asset is never chosen by a plain net11.0 + browser-wasm app. -->
+	<PropertyGroup Condition=" '$(PackBrowserWasmAsset)' == 'true' and '$(BrowserWasmAssetBuild)' != 'true' and $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net11.0')) ">
+		<TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);AddBrowserWasmAssetToPackage</TargetsForTfmSpecificContentInPackage>
+	</PropertyGroup>
+
+	<Target Name="AddBrowserWasmAssetToPackage">
+		<MSBuild Projects="$(MSBuildProjectFullPath)" Targets="Build" Properties="TargetFramework=$(TargetFramework);BrowserWasmAssetBuild=true">
+			<Output TaskParameter="TargetOutputs" ItemName="_BrowserWasmAsset" />
+		</MSBuild>
+
+		<ItemGroup>
+			<TfmSpecificPackageFile Include="@(_BrowserWasmAsset)" PackagePath="runtimes/browser-wasm/lib/$(TargetFramework)/" />
+		</ItemGroup>
+	</Target>
+
+</Project>

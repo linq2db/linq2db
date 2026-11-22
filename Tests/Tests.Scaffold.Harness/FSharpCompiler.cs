@@ -27,7 +27,14 @@ namespace Tests.Scaffold.Harness
 		static readonly Lock _sync = new();
 
 		/// <summary>
-		/// Compiles sources (in specified order) to assembly and loads it, or writes it to <paramref name="outputPath"/> without loading.
+		/// Every source is compiled with each of these <c>--langversion</c> values: the floor generated code targets
+		/// (F# 9 nullness), then the newest the referenced compiler supports. The first one produces the assembly.
+		/// </summary>
+		public static IReadOnlyList<string> LanguageVersions { get; } = ["9.0", "latest"];
+
+		/// <summary>
+		/// Compiles sources (in specified order) with each of <see cref="LanguageVersions"/> to assembly and loads it, or
+		/// writes it to <paramref name="outputPath"/> without loading.
 		/// </summary>
 		/// <param name="nullable">Enables nullness checking (<c>--checknulls+</c>), as F# projects with <c>Nullable=enable</c>.</param>
 		public static CompileResult Compile(string assemblyName, IReadOnlyList<SourceFile> sources, bool nullable, IReadOnlyCollection<string>? allowedWarnings = null, string? outputPath = null)
@@ -44,8 +51,32 @@ namespace Tests.Scaffold.Harness
 				})
 				.ToList();
 
-			var output = outputPath ?? Path.Combine(directory, assemblyName + ".dll");
+			var output      = outputPath ?? Path.Combine(directory, assemblyName + ".dll");
+			var diagnostics = new List<CompileDiagnostic>();
+			var emitted     = true;
 
+			for (var i = 0; i < LanguageVersions.Count; i++)
+			{
+				var langVersion = LanguageVersions[i];
+				var target      = i == 0 ? output : Path.Combine(directory, langVersion, assemblyName + ".dll");
+
+				Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+
+				var versionDiagnostics = Compile(files, target, langVersion, nullable);
+
+				diagnostics.AddRange(versionDiagnostics);
+				emitted &= versionDiagnostics.TrueForAll(static d => d.Severity != CompileDiagnosticSeverity.Error) && File.Exists(target);
+			}
+
+			var assembly = emitted && outputPath == null
+				? AssemblyLoadContext.Default.LoadFromStream(new MemoryStream(File.ReadAllBytes(output)))
+				: null;
+
+			return new CompileResult(sources, diagnostics, allowedWarnings ?? [], emitted, assembly);
+		}
+
+		static List<CompileDiagnostic> Compile(List<string> files, string output, string langVersion, bool nullable)
+		{
 			var argv = new List<string>
 			{
 				"fsc.exe",
@@ -53,7 +84,7 @@ namespace Tests.Scaffold.Harness
 				"--target:library",
 				"--noframework",
 				"--targetprofile:netcore",
-				"--langversion:9.0",
+				"--langversion:" + langVersion,
 				"--optimize-",
 				"--debug-",
 				"--nologo",
@@ -74,7 +105,7 @@ namespace Tests.Scaffold.Harness
 				.Select(d => new CompileDiagnostic(
 					d.Severity == FSharpDiagnosticSeverity.Error ? CompileDiagnosticSeverity.Error : CompileDiagnosticSeverity.Warning,
 					d.ErrorNumberText,
-					d.Message,
+					$"[langversion:{langVersion}] {d.Message}",
 					Path.GetFileName(d.FileName),
 					d.StartLine,
 					d.StartColumn + 1))
@@ -82,15 +113,9 @@ namespace Tests.Scaffold.Harness
 
 			// compiler aborts with exception after reporting errors
 			if (exception != null && diagnostics.TrueForAll(static d => d.Severity != CompileDiagnosticSeverity.Error))
-				throw new InvalidOperationException("F# compiler failed", exception.Value);
+				throw new InvalidOperationException($"F# compiler failed (langversion:{langVersion})", exception.Value);
 
-			var emitted = diagnostics.TrueForAll(static d => d.Severity != CompileDiagnosticSeverity.Error) && File.Exists(output);
-
-			var assembly = emitted && outputPath == null
-				? AssemblyLoadContext.Default.LoadFromStream(new MemoryStream(File.ReadAllBytes(output)))
-				: null;
-
-			return new CompileResult(sources, diagnostics, allowedWarnings ?? [], emitted, assembly);
+			return diagnostics;
 		}
 	}
 }

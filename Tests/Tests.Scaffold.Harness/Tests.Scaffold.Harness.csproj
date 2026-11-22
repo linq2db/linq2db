@@ -3,8 +3,8 @@
 	<PropertyGroup>
 		<AssemblyName>linq2db.Tests.Scaffold.Harness</AssemblyName>
 		<RootNamespace>Tests.Scaffold.Harness</RootNamespace>
-		<TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
-		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">net10.0</TargetFrameworks>
+		<TargetFrameworks>$(ToolTargetFrameworks)</TargetFrameworks>
+		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">$(LatestTargetFramework)</TargetFrameworks>
 		<SatelliteResourceLanguages>en</SatelliteResourceLanguages>
 	</PropertyGroup>
 

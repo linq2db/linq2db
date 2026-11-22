@@ -132,4 +132,9 @@ Invoke-Scaffold -Provider 'SQLite' -Connection $SQLiteConnection `
     -Namespace 'Tests.FSharp.Scaffold.SQLiteFluent' -OutputSubfolder 'SQLiteFluent' `
     -ExtraOptions @('--nrt', 'true', '--metadata', 'fluent')
 
+# fluent mapping over a database with functions: their mapping self-calls pass typed default arguments
+Invoke-Scaffold -Provider 'SQLServer' -Connection $SqlServerConnection `
+    -Namespace 'Tests.FSharp.Scaffold.SqlServerFluent' -OutputSubfolder 'SqlServerFluent' `
+    -ExtraOptions @('--nrt', 'true', '--metadata', 'fluent', '--mssql-enable-return-value-parameter', 'true')
+
 Write-Host 'Done. Review the git diff and build Tests.FSharp.Scaffold.fsproj + Tests.FSharp.Scaffold.NoNrt.fsproj to validate.'

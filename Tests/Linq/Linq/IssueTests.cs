@@ -40,6 +40,10 @@ namespace Tests.Linq
 
 		// https://github.com/linq2db/linq2db/issues/42
 		//
+#if NET11_0_OR_GREATER
+		[ActiveIssue(Configuration = TestProvName.AllSybase, ErrorMessage = "Assert.That(t2.BoolValue, Is.EqualTo(t1.BoolValue))",
+			Details = "https://github.com/DataAction/AdoNetCore.AseClient/issues/240. AdoNetCore.AseClient returns DECIMAL through a double on .NET 11, so the round-tripped MoneyValue carries 28 decimals and the UPDATE linq2db builds from it declares `@MoneyValue Decimal(29, 28)`, which does not persist - BoolValue comes back unflipped. The same driver and query return an exact decimal on .NET 10.")]
+#endif
 		[Test]
 		public void Issue42Test([DataSources] string context)
 		{
@@ -832,7 +836,7 @@ namespace Tests.Linq
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5193")]
 		[ThrowsRequiresCorrelatedSubquery]
-		[ThrowsRequiredOuterJoins(TestProvName.AllAccess, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllOracle11)]
+		[ThrowsRequiredOuterJoins(TestProvName.AllNativeAccess, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllOracle11)]
 		public void IncorrectNesting([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -864,7 +868,7 @@ namespace Tests.Linq
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5193")]
 		[ThrowsRequiresCorrelatedSubquery]
-		[ThrowsRequiredOuterJoins(TestProvName.AllAccess, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllOracle11)]
+		[ThrowsRequiredOuterJoins(TestProvName.AllNativeAccess, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllOracle11)]
 		public void IncorrectNesting_Merged([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1179,7 +1183,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5972")]
-		public void Issue5972_Int64([DataSources(TestProvName.AllAccess)] string context)
+		public void Issue5972_Int64([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1196,7 +1200,7 @@ namespace Tests.Linq
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5972")]
 		[ActiveIssue(5973, Configuration = ProviderName.InformixDB2)]
-		public void Issue5972_Int64Parameter([DataSources(TestProvName.AllAccess)] string context)
+		public void Issue5972_Int64Parameter([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1213,7 +1217,7 @@ namespace Tests.Linq
 		[ActiveIssue(5973, Configuration = TestProvName.AllSybase,        ErrorMessage = "Arithmetic overflow during explicit conversion")]
 		[ActiveIssue(5973, Configuration = TestProvName.AllFirebird4Plus, ErrorMessage = "numeric overflow")]
 		[ActiveIssue(5973, Configuration = TestProvName.AllFirebirdLess4, ErrorMessage = "Token unknown")]
-		[ActiveIssue(5973, Configuration = TestProvName.AllPostgreSQL,    SkipForNonLinqService = true, RequiresBaselines = true, ErrorMessage = "Baselines for remote context doesn't match direct access baselines")]
+		[ActiveIssue(5973, Configuration = TestProvName.AllPostgreSQL,    BaselinesMismatch = true)]
 		public void Issue5972_UInt64([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1233,7 +1237,7 @@ namespace Tests.Linq
 		[ActiveIssue(5973, Configuration = ProviderName.InformixDB2)]
 		[ActiveIssue(5973, Configuration = TestProvName.AllFirebird, ErrorMessage = "Value was either too large or too small for an Int64")]
 		[ActiveIssue(5973, Configuration = ProviderName.SQLiteMS,    ErrorMessage = "Arithmetic operation resulted in an overflow")]
-		public void Issue5972_UInt64Parameter([DataSources(TestProvName.AllAccess)] string context)
+		public void Issue5972_UInt64Parameter([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
