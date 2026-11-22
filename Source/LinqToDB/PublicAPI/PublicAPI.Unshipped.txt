@@ -1,3 +1,7 @@
 ﻿#nullable enable
+*REMOVED*LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSql15Builder
+*REMOVED*LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSql15Builder.PostgreSQLSql15Builder(LinqToDB.DataProvider.IDataProvider? provider, LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions, LinqToDB.Internal.SqlProvider.ISqlOptimizer! sqlOptimizer, LinqToDB.Internal.SqlProvider.SqlProviderFlags! sqlProviderFlags) -> void
+*REMOVED*override LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSql15Builder.BuildInsertOrUpdateQuery(LinqToDB.Internal.SqlQuery.SqlInsertOrUpdateStatement! insertOrUpdate) -> void
+*REMOVED*override LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSql15Builder.CreateSqlBuilder() -> LinqToDB.Internal.SqlProvider.ISqlBuilder!
 override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlExpressionConvertVisitor.VisitBetweenPredicate(LinqToDB.Internal.SqlQuery.SqlPredicate.Between! predicate) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.Internal.DataProvider.Sybase.SybaseSqlExpressionConvertVisitor.VisitBetweenPredicate(LinqToDB.Internal.SqlQuery.SqlPredicate.Between! predicate) -> LinqToDB.Internal.SqlQuery.IQueryElement!
