@@ -2,11 +2,16 @@
 
 [![License](https://img.shields.io/github/license/linq2db/linq2db)](MIT-LICENSE.txt)
 
+> **Licensing.** The MIT license this package declares covers LINQ to DB's own code. To run the T4
+> templates the package also carries database client assemblies in its `tools` folder; those are
+> third-party software and remain under their own terms, reproduced in the package's
+> `THIRD-PARTY-NOTICES.txt`.
+
 Also check command-line scaffolding tool: [linq2db.cli](https://www.nuget.org/packages/linq2db.cli).
 
 This nuget package contains database scaffolding T4 templates to generate POCO classes from your database.
 
-You can read about T4 templates options [here](https://linq2db.github.io/articles/T4.html). Demonstration video could be found [here](https://linq2db.github.io/articles/general/Video.html).
+You can read about T4 templates options [here](https://linq2db.github.io/articles/t4.html). Demonstration video could be found [here](https://linq2db.github.io/articles/general/video.html).
 
 ## Important
 

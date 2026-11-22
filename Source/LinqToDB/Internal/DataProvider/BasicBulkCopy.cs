@@ -373,10 +373,13 @@ namespace LinqToDB.Internal.DataProvider
 			int                                       maxParameters,
 			int                                       maxSqlLength)
 		{
+			var adjustedMaxParameters = helper.Options.BulkCopyOptions.MaxParametersForBatch ?? maxParameters;
+
 			var adjustedBatchSize = helper.Options.BulkCopyOptions.UseParameters
-				? Math.Min(helper.BatchSize,
-					helper.Options.BulkCopyOptions.MaxParametersForBatch.GetValueOrDefault(maxParameters) / helper.Columns.Length)
+				? Math.Min(helper.BatchSize, adjustedMaxParameters / helper.Columns.Length)
 				: helper.BatchSize;
+
+			var adjustedMaxSqlLength = helper.Options.BulkCopyOptions.MaxSqlLengthForBatch ?? maxSqlLength;
 
 			prepFunction(helper);
 
@@ -385,8 +388,8 @@ namespace LinqToDB.Internal.DataProvider
 				helper.LastRowParameterIndex = helper.ParameterIndex;
 				helper.LastRowStringIndex    = helper.StringBuilder.Length;
 				addFunction(helper, item!, from);
-				var needRemove = helper.Parameters.Count > maxParameters ||
-				                 helper.StringBuilder.Length > maxSqlLength;
+				var needRemove = helper.Parameters.Count > adjustedMaxParameters ||
+				                 helper.StringBuilder.Length > adjustedMaxSqlLength;
 				var isSingle = helper.CurrentCount == 1;
 				if (helper.CurrentCount >= adjustedBatchSize || needRemove)
 				{
@@ -437,9 +440,13 @@ namespace LinqToDB.Internal.DataProvider
 			int                                         maxParameters,
 			int                                         maxSqlLength)
 		{
+			var adjustedMaxParameters = helper.Options.BulkCopyOptions.MaxParametersForBatch ?? maxParameters;
+
 			var adjustedBatchSize = helper.Options.BulkCopyOptions.UseParameters
-				? Math.Min(helper.BatchSize, helper.Options.BulkCopyOptions.MaxParametersForBatch.GetValueOrDefault(maxParameters) / helper.Columns.Length)
+				? Math.Min(helper.BatchSize, adjustedMaxParameters / helper.Columns.Length)
 				: helper.BatchSize;
+
+			var adjustedMaxSqlLength = helper.Options.BulkCopyOptions.MaxSqlLengthForBatch ?? maxSqlLength;
 
 			prepFunction(helper);
 
@@ -449,8 +456,8 @@ namespace LinqToDB.Internal.DataProvider
 				helper.LastRowStringIndex    = helper.StringBuilder.Length;
 				addFunction(helper, item!, from);
 
-				var needRemove = helper.Parameters.Count     > maxParameters ||
-				                 helper.StringBuilder.Length > maxSqlLength;
+				var needRemove = helper.Parameters.Count     > adjustedMaxParameters ||
+				                 helper.StringBuilder.Length > adjustedMaxSqlLength;
 				var isSingle = helper.CurrentCount == 1;
 				if (helper.CurrentCount >= adjustedBatchSize || needRemove)
 				{
@@ -518,9 +525,13 @@ namespace LinqToDB.Internal.DataProvider
 			int                                         maxParameters,
 			int                                         maxSqlLength)
 		{
+			var adjustedMaxParameters = helper.Options.BulkCopyOptions.MaxParametersForBatch ?? maxParameters;
+
 			var adjustedBatchSize = helper.Options.BulkCopyOptions.UseParameters
-				? Math.Min(helper.BatchSize, helper.Options.BulkCopyOptions.MaxParametersForBatch.GetValueOrDefault(maxParameters) / helper.Columns.Length)
+				? Math.Min(helper.BatchSize, adjustedMaxParameters / helper.Columns.Length)
 				: helper.BatchSize;
+
+			var adjustedMaxSqlLength = helper.Options.BulkCopyOptions.MaxSqlLengthForBatch ?? maxSqlLength;
 
 			prepFunction(helper);
 
@@ -530,8 +541,8 @@ namespace LinqToDB.Internal.DataProvider
 				helper.LastRowStringIndex    = helper.StringBuilder.Length;
 				addFunction(helper, item!, from);
 
-				var needRemove = helper.Parameters.Count     > maxParameters ||
-				                 helper.StringBuilder.Length > maxSqlLength;
+				var needRemove = helper.Parameters.Count     > adjustedMaxParameters ||
+				                 helper.StringBuilder.Length > adjustedMaxSqlLength;
 				var isSingle = helper.CurrentCount == 1;
 				if (helper.CurrentCount >= adjustedBatchSize || needRemove)
 				{

@@ -112,7 +112,7 @@ namespace LinqToDB.Remote
 				var db = CreateDataContext(configuration);
 				await using var _1 = db.ConfigureAwait(false);
 
-				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
+				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, db.MappingSchema, db.Options, queryData);
 
 				ValidateQuery(query);
 
@@ -144,7 +144,7 @@ namespace LinqToDB.Remote
 				var db = CreateDataContext(configuration);
 				await using var _1 = db.ConfigureAwait(false);
 
-				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
+				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, db.MappingSchema, db.Options, queryData);
 
 				ValidateQuery(query);
 
@@ -207,7 +207,7 @@ namespace LinqToDB.Remote
 				var db = CreateDataContext(configuration);
 				await using var _1 = db.ConfigureAwait(false);
 
-				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
+				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, db.MappingSchema, db.Options, queryData);
 
 				ValidateQuery(query);
 
@@ -242,8 +242,8 @@ namespace LinqToDB.Remote
 				var db = CreateDataContext(configuration);
 				await using var _1 = db.ConfigureAwait(false);
 
-				var data    = LinqServiceSerializer.DeserializeStringArray(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
-				var queries = data.Select(r => LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, r)).ToArray();
+				var data    = LinqServiceSerializer.DeserializeStringArray(SerializationMappingSchema, db.MappingSchema, db.Options, queryData);
+				var queries = data.Select(r => LinqServiceSerializer.Deserialize(SerializationMappingSchema, db.MappingSchema, db.Options, r)).ToArray();
 
 				foreach (var query in queries)
 					ValidateQuery(query);

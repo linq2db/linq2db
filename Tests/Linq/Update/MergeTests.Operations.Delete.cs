@@ -112,16 +112,14 @@ namespace Tests.xUpdate
 
 			var table = GetTarget(db);
 
-			var exception = Assert.Catch(
+			Assert.That(
 					() => table
 					.Merge()
 					.Using(GetSource1(db).Select(_ => new TestMapping1() { Id = _.Id, Field1 = _.Field1 }))
 					.OnTargetKey()
 					.DeleteWhenMatchedAnd((t, s) => s.Field2 == 4)
-					.Merge())!;
-
-			Assert.That(exception, Is.InstanceOf<LinqToDBException>());
-			Assert.That(exception.Message, Does.EndWith(".Field2' could not be converted to SQL."));
+					.Merge(),
+					Throws.InstanceOf<LinqToDBException>().With.Message.EndsWith(".Field2' could not be converted to SQL."));
 		}
 
 		[Test]
@@ -198,16 +196,14 @@ namespace Tests.xUpdate
 
 			var table = GetTarget(db);
 
-			var exception = Assert.Catch(
+			Assert.That(
 					() => table
 					.Merge()
 					.Using(GetSource1(db).Select(_ => new TestMapping1() { Id = _.Id, Field1 = _.Field1 }))
 					.On((t, s) => s.Field2 == 3)
 					.DeleteWhenMatched()
-					.Merge())!;
-
-			Assert.That(exception, Is.InstanceOf<LinqToDBException>());
-			Assert.That(exception.Message, Does.EndWith(".Field2' could not be converted to SQL."));
+					.Merge(),
+					Throws.InstanceOf<LinqToDBException>().With.Message.EndsWith(".Field2' could not be converted to SQL."));
 		}
 
 		[Test]
@@ -369,7 +365,7 @@ namespace Tests.xUpdate
 
 			var rows = table
 					.Merge()
-					.Using(GetSource2(db).ToList().Select(_ => new
+					.Using(GetSource2(db).ToList().OrderBy(r => r.OtherId).Select(_ => new
 					{
 						update = _.OtherId,
 						Update = _.OtherField1,
@@ -403,16 +399,14 @@ namespace Tests.xUpdate
 
 			var table = GetTarget(db);
 
-			var exception = Assert.Catch(
+			Assert.That(
 					() => table
 						.Merge()
 						.Using(table.Select(_ => new TestMapping1() { Field1 = _.Field1 }))
 						.OnTargetKey()
 						.DeleteWhenMatched()
-						.Merge())!;
-
-			Assert.That(exception, Is.InstanceOf<LinqToDBException>());
-			Assert.That(exception.Message, Does.EndWith(".Id' could not be converted to SQL."));
+						.Merge(),
+					Throws.InstanceOf<LinqToDBException>().With.Message.EndsWith(".Id' could not be converted to SQL."));
 		}
 	}
 }

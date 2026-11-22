@@ -754,8 +754,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		// PostgreSQL 9.4+ (FILTER clause)
-		public void Aggregates3([DataSources(TestProvName.AllClickHouse, TestProvName.AllPostgreSQL93Minus)] string context)
+		public void Aggregates3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -785,8 +784,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		// PostgreSQL 9.4+ (FILTER clause)
-		public void Aggregates4([DataSources(TestProvName.AllClickHouse, TestProvName.AllPostgreSQL93Minus)] string context)
+		public void Aggregates4([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -808,8 +806,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		// PostgreSQL 9.4+ (FILTER clause)
-		public void Aggregates5([DataSources(ProviderName.SqlCe, TestProvName.AllPostgreSQL93Minus)] string context)
+		public void Aggregates5([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -863,10 +860,9 @@ namespace Tests.Linq
 			};
 		}
 
-		[ThrowsCannotBeConverted([TestProvName.AllAccess])]
+		[ThrowsCannotBeConverted([TestProvName.AllNativeAccess])]
 		[Test]
-		// PostgreSQL 9.4+ (FILTER clause)
-		public void AggregateOnGroupReachedThroughLet([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
+		public void AggregateOnGroupReachedThroughLet([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(AggregationData.Data);
@@ -896,9 +892,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		// PostgreSQL 9.4+ (FILTER clause)
-		public void CountInGroup([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		public void CountInGroup([DataSources] string context)
 		{
 			var data = AggregationData.Data;
 
@@ -933,9 +928,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		// PostgreSQL 9.4+ (FILTER clause)
-		public void SumInGroup([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		public void SumInGroup([DataSources] string context)
 		{
 			var data = AggregationData.Data;
 
@@ -961,9 +955,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		// PostgreSQL 9.4+ (FILTER clause)
-		public void MinInGroup([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		public void MinInGroup([DataSources] string context)
 		{
 			var data = AggregationData.Data;
 
@@ -989,9 +982,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		// PostgreSQL 9.4+ (FILTER clause)
-		public void MaxInGroup([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		public void MaxInGroup([DataSources] string context)
 		{
 			var data = AggregationData.Data;
 
@@ -1017,9 +1009,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		// PostgreSQL 9.4+ (FILTER clause)
-		public void AverageInGroup([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		public void AverageInGroup([DataSources] string context)
 		{
 			var data = AggregationData.Data;
 
@@ -1198,7 +1189,7 @@ namespace Tests.Linq
 						}
 					on new { t1.ID, t1.DateTimeValue } equals new { t2.ID, t2.DateTimeValue }
 					select t1.MoneyValue
-				)
+				).Within(FloatingPointDeltaPercent).Percent
 			);
 		}
 
@@ -1259,8 +1250,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		// PostgreSQL 9.4+ (FILTER clause)
-		public void GroupByAssociation102([DataSources(TestProvName.AllClickHouse, TestProvName.AllPostgreSQL93Minus)] string context)
+		public void GroupByAssociation102([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1280,8 +1270,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		// PostgreSQL 9.4+ (FILTER clause)
-		public void GroupByAssociation1022([DataSources(ProviderName.SqlCe, TestProvName.AllPostgreSQL93Minus)] string context)
+		public void GroupByAssociation1022([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1299,8 +1288,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		// PostgreSQL 9.4+ (FILTER clause)
-		public void GroupByAssociation1023([DataSources(ProviderName.SqlCe, TestProvName.AllPostgreSQL93Minus)] string context)
+		public void GroupByAssociation1023([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1323,8 +1311,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		// PostgreSQL 9.4+ (FILTER clause)
-		public void GroupByAssociation1024([DataSources(ProviderName.SqlCe, TestProvName.AllPostgreSQL93Minus)] string context)
+		public void GroupByAssociation1024([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1463,14 +1450,17 @@ namespace Tests.Linq
 		{
 			using var db = new NorthwindDB(new DataOptions().UseConfiguration(context).UseGuardGrouping(false));
 			var dd = GetNorthwindAsList(context);
+			// The comparison is inside the grouping key, so a tolerance on the asserted booleans cannot reach
+			// it: .NET 11 converts the provider's double average to decimal exactly, so the raw average no
+			// longer equals the constant. Rounding to the constant's own scale restores that on both sides.
 			AreEqual(
 				(
 					from c in dd.Customer
-					group c by c.Orders.Count > 0 && c.Orders.Average(o => o.Freight) == 33.25m
+					group c by c.Orders.Count > 0 && Math.Round(c.Orders.Average(o => o.Freight), 2) == 33.25m
 				).ToList().Select(k => k.Key),
 				(
 					from c in db.Customer
-					group c by c.Orders.Average(o => o.Freight) == 33.25m
+					group c by Math.Round(c.Orders.Average(o => o.Freight), 2) == 33.25m
 				).ToList().Select(k => k.Key)
 			);
 		}
@@ -1594,8 +1584,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		// PostgreSQL 9.4+ (FILTER clause)
-		public void Scalar3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse, TestProvName.AllPostgreSQL93Minus)] string context)
+		public void Scalar3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1609,8 +1598,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		// PostgreSQL 9.4+ (FILTER clause)
-		public void Scalar4([DataSources(ProviderName.SqlCe, TestProvName.AllPostgreSQL93Minus)] string context)
+		public void Scalar4([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1626,8 +1614,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		// PostgreSQL 9.4+ (FILTER clause)
-		public void Scalar41([DataSources(ProviderName.SqlCe, TestProvName.AllPostgreSQL93Minus)] string context)
+		public void Scalar41([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1675,8 +1662,7 @@ namespace Tests.Linq
 		//}
 
 		[Test]
-		// PostgreSQL 9.4+ (FILTER clause)
-		public void Scalar6([DataSources(ProviderName.SqlCe, TestProvName.AllPostgreSQL93Minus)] string context)
+		public void Scalar6([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1720,8 +1706,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		// PostgreSQL 9.4+ (FILTER clause)
-		public void Scalar9([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse, TestProvName.AllPostgreSQL93Minus)] string context)
+		public void Scalar9([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1734,8 +1719,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		// PostgreSQL 9.4+ (FILTER clause)
-		public void Scalar10([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse, TestProvName.AllPostgreSQL93Minus)] string context)
+		public void Scalar10([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1847,7 +1831,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void InnerQuery([DataSources(ProviderName.SqlCe, TestProvName.AllSapHana, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1991,7 +1975,7 @@ namespace Tests.Linq
 		public void GroupByDate1([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			AreEqual(
+			AreEqualWithinDelta(
 				from t in Types
 				group t by new { t.DateTimeValue.Month, t.DateTimeValue.Year } into grp
 				select new
@@ -2014,7 +1998,7 @@ namespace Tests.Linq
 		public void GroupByDate2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			AreEqual(
+			AreEqualWithinDelta(
 				from t in Types2
 				group t by new { t.DateTimeValue!.Value.Month, t.DateTimeValue.Value.Year } into grp
 				select new
@@ -2049,7 +2033,7 @@ namespace Tests.Linq
 
 			var result = query.ToList();
 
-			AreEqual(
+			AreEqualWithinDelta(
 				from t in Types2
 				group t by new { Date = Sql.MakeDateTime(t.DateTimeValue!.Value.Year, t.DateTimeValue.Value.Month, 1) } into grp
 				select new
@@ -2098,7 +2082,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void FirstGroupBy([DataSources] string context)
 		{
 			using var db = GetDataContext(context, o => o.UseGuardGrouping(false));
@@ -2218,7 +2202,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinGroupBy2([DataSources(TestProvName.AllAccess)] string context)
+		public void JoinGroupBy2([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -2247,7 +2231,7 @@ namespace Tests.Linq
 				group c1 by c1.ParentID into c2
 				select c2.Key;
 
-			Assert.DoesNotThrow(() => query2.ToArray());
+			query2.ToArray();
 
 			var orderItems = query2.GetSelectQuery().OrderBy.Items;
 			using (Assert.EnterMultipleScope())
@@ -2266,7 +2250,7 @@ namespace Tests.Linq
 				orderby c.ChildID
 				select c;
 
-			Assert.DoesNotThrow(() => query.Count());
+			query.Count();
 		}
 
 		[Test]
@@ -2278,7 +2262,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select new { c, p };
 
-			Assert.DoesNotThrow(() => query.Count());
+			query.Count();
 		}
 
 		[Test]
@@ -2289,21 +2273,18 @@ namespace Tests.Linq
 						join c in db.Child.OrderBy(c => c.ChildID) on p.ParentID equals c.ParentID
 						select new { c, p };
 
-			Assert.DoesNotThrow(() => query.Count());
+			query.Count();
 		}
 
 		void CheckGuardedQuery<TKey, TEntity>(IQueryable<IGrouping<TKey, TEntity>> grouping)
 			where TKey : notnull
 		{
-			Assert.Throws<LinqToDBException>(() =>
+			Assert.That(() =>
 			{
 				grouping.ToDictionary(_ => _.Key, _ => _.ToList());
-			});
+			}, Throws.TypeOf<LinqToDBException>());
 
-			Assert.DoesNotThrow(() =>
-			{
-				grouping.DisableGuard().ToDictionary(_ => _.Key, _ => _.ToList());
-			});
+			grouping.DisableGuard().ToDictionary(_ => _.Key, _ => _.ToList());
 		}
 
 		[Test]
@@ -2335,20 +2316,17 @@ namespace Tests.Linq
 			CheckGuardedQuery(db.Person.GroupBy(_ => _.Gender));
 			CheckGuardedQuery(db.Person.GroupBy(_ => _));
 
-			Assert.Throws<LinqToDBException>(() =>
+			Assert.That(() =>
 			{
 				db.Person
 					.GroupBy(_ => _)
 					.ToList();
-			});
+			}, Throws.TypeOf<LinqToDBException>());
 
-			Assert.DoesNotThrow(() =>
-			{
-				db.Person
-					.GroupBy(_ => _)
-					.DisableGuard()
-					.ToList();
-			});
+			db.Person
+				.GroupBy(_ => _)
+				.DisableGuard()
+				.ToList();
 		}
 
 		[Test]
@@ -2369,7 +2347,7 @@ namespace Tests.Linq
 		[Sql.Expression("{0}", ServerSideOnly = true)]
 		private static int Noop(int value)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(Noop));
 		}
 
 		[Test]
@@ -2397,7 +2375,7 @@ namespace Tests.Linq
 
 		[Test]
 		// Sybase is not listed: DataSources excludes it below, so it never runs this test.
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Issue672Test([DataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
@@ -2428,8 +2406,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		// PostgreSQL 9.4+ (FILTER clause)
-		public void Issue680Test([DataSources(false, TestProvName.AllPostgreSQL93Minus)] string context)
+		public void Issue680Test([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
 			using var table = db.CreateLocalTable<Issue680Table>();
@@ -2544,8 +2521,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		// PostgreSQL 9.4+ (FILTER clause)
-		public void Issue1078Test([DataSources(TestProvName.AllClickHouse, TestProvName.AllPostgreSQL93Minus)] string context)
+		public void Issue1078Test([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable(Issue1078Table.TestData);
@@ -2590,8 +2566,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		// PostgreSQL 9.4+ (FILTER clause)
-		public void Issue1198Test([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
+		public void Issue1198Test([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable<Issue1192Table>();
@@ -2614,7 +2589,7 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
 			{
-				Assert.Throws<LinqToDBException>(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()));
+				Assert.That(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()), Throws.TypeOf<LinqToDBException>());
 			}
 
 			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
@@ -2633,7 +2608,7 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
 			{
-				Assert.Throws<LinqToDBException>(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()));
+				Assert.That(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()), Throws.TypeOf<LinqToDBException>());
 			}
 
 			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
@@ -2647,7 +2622,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
 			{
-				Assert.Throws<LinqToDBException>(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()));
+				Assert.That(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()), Throws.TypeOf<LinqToDBException>());
 			}
 
 			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false).UseDisableQueryCache(true)))
@@ -2725,7 +2700,7 @@ namespace Tests.Linq
 
 		[Test]
 		// PostgreSQL 9.4+ (make_timestamp)
-		public void Issue3761Test1([DataSources(TestProvName.AllYdb, TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2005, TestProvName.AllSybase, TestProvName.AllPostgreSQL93Minus)] string context)
+		public void Issue3761Test1([DataSources(TestProvName.AllYdb, TestProvName.AllNativeAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2005, TestProvName.AllSybase, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable<Issue3761Table>();
@@ -2750,7 +2725,7 @@ namespace Tests.Linq
 
 		[Test]
 		// PostgreSQL 9.4+ (make_timestamp); GROUPING SETS 9.5+
-		public void Issue3761Test2([DataSources(TestProvName.AllYdb, TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2005, TestProvName.AllPostgreSQL93Minus)] string context)
+		public void Issue3761Test2([DataSources(TestProvName.AllYdb, TestProvName.AllNativeAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2005, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable<Issue3761Table>();
@@ -2957,7 +2932,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue4098([DataSources(TestProvName.AllAccess)] string context)
+		public void Issue4098([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -3229,19 +3204,19 @@ namespace Tests.Linq
 		[Sql.Expression("(COUNT_BIG(*) * 100E0 / SUM(COUNT_BIG(*)) OVER())", ServerSideOnly = true, IsAggregate = true)]
 		private static double CountPercentsAggregate()
 		{
-			throw new InvalidOperationException("This function should be used only in database code");
+			throw new ServerSideOnlyException(nameof(CountPercentsAggregate));
 		}
 
 		[Sql.Expression("(COUNT_BIG(*) * 100E0 / SUM(COUNT_BIG(*)) OVER())", ServerSideOnly = true, IsWindowFunction = true)]
 		private static double CountPercentsWindow()
 		{
-			throw new InvalidOperationException("This function should be used only in database code");
+			throw new ServerSideOnlyException(nameof(CountPercentsWindow));
 		}
 
 		[Sql.Expression("(COUNT_BIG(*) * 100E0 / SUM(COUNT_BIG(*)) OVER())", ServerSideOnly = true)]
 		private static double CountPercentsNoAggregate()
 		{
-			throw new InvalidOperationException("This function should be used only in database code");
+			throw new ServerSideOnlyException(nameof(CountPercentsNoAggregate));
 		}
 
 		[Test]
@@ -3592,7 +3567,7 @@ namespace Tests.Linq
 		[Sql.Expression("COUNT_BIG(*) * 100E0 / SUM(COUNT_BIG(*)) OVER()", ServerSideOnly = true, Precedence = Precedence.Multiplicative, IsWindowFunction = true)]
 		static double CountPercents()
 		{
-			throw new InvalidOperationException("This function should be used only in database code");
+			throw new ServerSideOnlyException(nameof(CountPercents));
 		}
 
 		[Sql.Expression("DATEPART(minute, {0} AT TIME ZONE {1})", ServerSideOnly = true, IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
@@ -3896,7 +3871,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InsertFirstFromGroup([DataSources(false, TestProvName.AllFirebird, TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		public void InsertFirstFromGroup([DataSources(false, TestProvName.AllFirebird, TestProvName.AllMySql57, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -4035,7 +4010,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ThrowsRequiredOuterJoins(TestProvName.AllAccess, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3, TestProvName.AllSybase)]
+		[ThrowsRequiredOuterJoins(TestProvName.AllNativeAccess, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3, TestProvName.AllSybase)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5317")]
 		public void Issue5317Test([DataSources] string context)
 		{

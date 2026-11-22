@@ -1,73 +1,67 @@
 <#
-ensure-baselines-branch.ps1 — idempotently ensure the per-run baselines branch
-exists on the linq2db.baselines repository.
+ensure-baselines-branch.ps1 - resolve the per-run baselines branch name, and rebase
+that branch onto its base when an earlier run left it behind. The base is baselines master,
+or for a stacked PR the parent's baselines branch (baselines-base.ps1).
 
-Shared by two callers in the test pipeline:
+Called once per run by create_baselines_branch, as:
 
-  * create_baselines_branch (central, runs once): -Rebase -EmitOutputs.
-    Creates the branch if missing, rebases it onto baselines master when it
-    already exists but is behind, and exports the branch name / head hash /
-    new-branch flag as task output variables.
+  pwsh ... -PrId "$(source_pr_id)" -BaselinesMaster "$(baselines_master)" -Rebase -EmitOutputs
 
-  * test_{windows,linux,macos}_job (self-heal, before their clone): ensure-only.
-    Re-creates the branch at the recorded -BaseHash if a previous completed run
-    deleted it (empty branch cleanup) — without this a "rerun failed jobs"
-    restart fails because create_baselines_branch is not re-run, so its branch
-    was already removed by create_baselines_pr (see build 21555).
+It does not create the branch. A test leg creates it by pushing, and only if it has
+baselines to push, so a run that changes none leaves no branch behind. That is what
+removed the end-of-run create_baselines_pr job, whose only remaining duty would have
+been deleting the empty branch and which cost a fresh agent acquisition - 78 min on
+build 23009 - for 0.3 min of work.
 
-The branch creation is race-tolerant: when several test jobs self-heal a missing
-branch in parallel, only one wins the ref creation; the losers detect the branch
-now exists (by re-querying) and proceed.
+What is left here is the one case the legs cannot handle: a branch left by an earlier
+run of the same PR that has fallen behind baselines master. Every leg then bases its
+clone on that stale branch (checkout-baselines.ps1), so it is rebased onto master here,
+once, before any leg starts. A conflict - another PR's baselines merged first - is resolved
+to master's side (Invoke-BaselinesRebase); the legs then regenerate this PR's own baselines.
 
 Reads the auth token from the GITHUB_TOKEN environment variable (= BASELINES_GH_PAT).
 The rebase path also needs git identity via EMAIL / GIT_AUTHOR_NAME / GIT_COMMITTER_NAME.
 
-Usage:
-
-  central:   pwsh ... -PrId "$(source_pr_id)" -BaselinesMaster "$(baselines_master)" -Rebase -EmitOutputs
-  self-heal: pwsh ... -Branch "$(baselines_branch)" -BaselinesMaster "$(baselines_master)" -BaseHash "$(baselines_head)"
-
 Parameters:
-  -Branch           resolved branch name (e.g. baselines/pr_1234). When empty it is derived from -PrId.
   -PrId             source pull request number; empty => baselines/default branch.
   -BaselinesMaster  baselines repo default branch (master). Required.
-  -BaseHash         hash to create the branch from when it is missing. Empty => baselines master HEAD.
-  -Rebase           rebase an existing branch onto baselines master when it is behind (central job only).
-  -EmitOutputs      export baselines_branch / baselines_head / baselines_new_branch task outputs (central job only).
+  -Rebase           rebase an existing branch onto baselines master when it is behind.
+  -EmitOutputs      export the baselines_branch task output the test jobs read.
 #>
 
 param(
-    [string] $Branch = '',
     [string] $PrId = '',
     [Parameter(Mandatory = $true)][string] $BaselinesMaster,
-    [string] $BaseHash = '',
     [switch] $Rebase,
     [switch] $EmitOutputs
 )
 
 $orgName       = "linq2db"
 $baselinesRepo = "linq2db.baselines"
-$baselinesRepoUrl = "https://${Env:GITHUB_TOKEN}@github.com/${orgName}/${baselinesRepo}.git"
+# The reads below pass -c http.proactiveAuth=basic because git sends credentials only after a 401
+# challenge, and github never challenges an anonymous read of a public repository - so without it the
+# token here is inert and the read is subject to github's unauthenticated-download throttle. The
+# credential also has to be complete - user:token, not token alone, or git asks for the password it is
+# missing.
+$baselinesRepoUrl = "https://x-access-token:${Env:GITHUB_TOKEN}@github.com/${orgName}/${baselinesRepo}.git"
 
-# Resolve branch name (derive from PR id when not passed explicitly)
-if (-not $Branch) {
-    if ($PrId) {
-        $Branch = "baselines/pr_${PrId}"
-    } else {
-        $Branch = "baselines/default"
-    }
+# Resolve the branch name from the PR id
+if ($PrId) {
+    $Branch = "baselines/pr_${PrId}"
+} else {
+    $Branch = "baselines/default"
 }
 Write-Host "Baselines branch name: ${Branch}"
 
-function Get-RemoteHash([string]$ref, [switch]$Heads) {
+# Runs from the test scripts artifact, where Build/CI/baselines-base.ps1 lands next to this file.
+. "$PSScriptRoot/baselines-base.ps1"
+$base = Get-BaselinesBase -PrId $PrId -BaselinesMaster $BaselinesMaster -RepoUrl $baselinesRepoUrl -Org $orgName
+
+function Get-RemoteHash([string]$ref) {
     # @(...) keeps a single-line answer an array. Without it PowerShell hands back a bare string for
     # one match and a string[] for several, so a length test means "characters" in the first case and
     # "lines" in the second — and a legitimate multi-ref answer reads as "not found".
-    if ($Heads) {
-        $out = @(git ls-remote --heads $baselinesRepoUrl $ref)
-    } else {
-        $out = @(git ls-remote $baselinesRepoUrl $ref)
-    }
+    $out = @(git -c http.proactiveAuth=basic ls-remote --heads $baselinesRepoUrl $ref)
     if ($LASTEXITCODE -ne 0) {
         Write-Host "ls-remote for '${ref}' failed with code ${LASTEXITCODE}"
         exit 1
@@ -79,89 +73,86 @@ function Get-RemoteHash([string]$ref, [switch]$Heads) {
     return ($line -split '\s+')[0]
 }
 
-$branchHash  = Get-RemoteHash $Branch -Heads
-$newBranch   = 0
+$branchHash = Get-RemoteHash $Branch
 
 if (-not $branchHash) {
-    Write-Host "Baselines branch not found, creating it"
-
-    # Create from the recorded base hash when supplied (keeps create_baselines_pr's
-    # no-new-commits detection valid across restarts even if master advanced),
-    # otherwise from current baselines master HEAD.
-    if ($BaseHash) {
-        $createHash = $BaseHash
-    } else {
-        $createHash = Get-RemoteHash $BaselinesMaster
-        if (-not $createHash) {
-            Write-Host "Baselines repo HEAD not found for '${BaselinesMaster}'"
-            exit 1
-        }
-    }
-
-    Write-Host "Creating new baselines branch ${Branch} at ${createHash}..."
-    $output = gh api /repos/$orgName/$baselinesRepo/git/refs -i -F ref=refs/heads/$Branch -F sha=$createHash
-    Write-Host "Create command output: ${output}"
-
-    if ($LASTEXITCODE -eq 0 -and ($output -match "201 Created")) {
-        Write-Host "Baselines branch created"
-        $newBranch  = 1
-        $branchHash = $createHash
-    } else {
-        # Creation failed — a sibling job may have created the branch concurrently.
-        Write-Host "Branch creation did not return 201, re-checking whether it now exists"
-        $branchHash = Get-RemoteHash $Branch -Heads
-        if (-not $branchHash) {
-            Write-Host "Failed to create branch and it does not exist. Error code ${LASTEXITCODE}"
-            exit 1
-        }
-        Write-Host "Baselines branch already exists (created by a concurrent job)"
-    }
+    Write-Host "Baselines branch does not exist - the first test leg with baselines to push creates it"
 } else {
     Write-Host "Baselines branch already exists"
 
     if ($Rebase) {
         Write-Host "Checking if rebase required"
-        $masterHash = Get-RemoteHash $BaselinesMaster
-        if (-not $masterHash) {
-            Write-Host "Baselines repo HEAD not found for '${BaselinesMaster}'"
+        # Ask whether the branch is already on top of master, rather than comparing the two head
+        # hashes: a branch carrying even one baselines commit is by construction ahead of master, so
+        # the hashes always differ and the clone below ran on every re-run of a baseline-carrying PR.
+        # That clone is the whole repository - 343541 files, ~420 Mb - and it sits in the serial
+        # prefix every test leg waits on: 2.3 min for the job on build 23050 against 0.25 min on
+        # 23068, where no branch existed. "ahead" means there is nothing to rebase onto.
+        $status = gh api /repos/$orgName/$baselinesRepo/compare/${base}...${Branch} --jq .status
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Compare request for '${base}...${Branch}' failed with code ${LASTEXITCODE}"
             exit 1
         }
-        if ($branchHash -eq $masterHash) {
-            Write-Host "Baselines branch already based on HEAD, no rebase required"
+        Write-Host "Baselines branch is '${status}' relative to ${base}"
+        if ($status -eq 'ahead' -or $status -eq 'identical') {
+            Write-Host "Baselines branch already based on ${base}, no rebase required"
         } else {
-            Write-Host "Baselines head is ${branchHash}, but master is ${masterHash}, trying to rebase on current HEAD"
-            git clone $baselinesRepoUrl baselines
+            Write-Host "Baselines head is ${branchHash} and the branch is '${status}', trying to rebase on current HEAD"
+            git clone -c http.proactiveAuth=basic $baselinesRepoUrl baselines
             if ($LASTEXITCODE -ne 0) {
                 Write-Host "Failed to clone baselines repository. Error code ${LASTEXITCODE}"
                 exit 1
             }
             cd baselines
-            git checkout origin/$Branch
-            if ($LASTEXITCODE -ne 0) {
-                Write-Host "Failed to checkout baselines branch origin/${Branch}. Error code ${LASTEXITCODE}"
-                exit 1
-            }
-            git rebase origin/$BaselinesMaster
-            if ($LASTEXITCODE -ne 0) {
-                Write-Host "Failed to rebase baselines PR on origin/${BaselinesMaster}. Delete branch and re-run tests. Error code ${LASTEXITCODE}"
-                exit 1
-            }
-            git push -f origin HEAD:$Branch
-            if ($LASTEXITCODE -ne 0) {
-                Write-Host "Failed to push rebased baselines. Error code ${LASTEXITCODE}"
-                exit 1
+            # GitHub legs started by the same `/azp run` push here while this job clones and rebases; a
+            # plain -f deleted what they landed in that window (#5673). So the push is leased on the
+            # tip this attempt rebased, and a moved tip is fetched and rebased again.
+            $attempts = 5
+            for ($attempt = 1; ; $attempt++) {
+                git checkout -q --detach origin/$Branch
+                if ($LASTEXITCODE -ne 0) {
+                    Write-Host "Failed to checkout baselines branch origin/${Branch}. Error code ${LASTEXITCODE}"
+                    exit 1
+                }
+                $leased = git rev-parse HEAD
+                if (-not (Invoke-BaselinesRebase -Onto origin/$base)) {
+                    Write-Host "Failed to rebase baselines PR on origin/${base} even with conflicts resolved to its side. Delete branch and re-run tests."
+                    exit 1
+                }
+                $output = git push --force-with-lease=refs/heads/${Branch}:${leased} origin HEAD:refs/heads/$Branch 2>&1
+                if ($LASTEXITCODE -eq 0) {
+                    break
+                }
+                if ($attempt -ge $attempts) {
+                    # Not "delete the branch": that discards every provider's baselines on the PR.
+                    Write-Host "Failed to push rebased baselines after ${attempts} attempts - the branch kept moving or the push kept failing. Re-run this job. Last output: ${output}"
+                    exit 1
+                }
+                if ("$output" -match '\[rejected\]|stale info') {
+                    Write-Host "Baselines branch moved since ${leased}, fetching and rebasing again. Output: ${output}"
+                } else {
+                    # a server or transport failure: back off rather than add load, as push-baselines.ps1 does
+                    $delay = [int][math]::Pow(2, $attempt)
+                    Write-Host "Push failed, retrying in ${delay}s. Output: ${output}"
+                    Start-Sleep -Seconds $delay
+                }
+                $output = git fetch origin $Branch $base 2>&1
+                if ($LASTEXITCODE -ne 0) {
+                    Write-Host "Failed to fetch ${Branch} and ${base}. Error code ${LASTEXITCODE}, output: ${output}"
+                    exit 1
+                }
             }
             Write-Host "Baselines PR was rebased on HEAD"
+            $branchHash = git rev-parse HEAD
             cd ..
-            $branchHash = $masterHash
         }
     }
+
+    Update-BaselinesPrBase -Branch $Branch -Base $base -Org $orgName -BaselinesRepo $baselinesRepo
 }
 
 Write-Host "Baselines branch head hash: ${branchHash}"
 
 if ($EmitOutputs) {
     echo "##vso[task.setvariable variable=baselines_branch;isOutput=true]${Branch}"
-    echo "##vso[task.setvariable variable=baselines_head;isOutput=true]${branchHash}"
-    echo "##vso[task.setvariable variable=baselines_new_branch;isOutput=true]${newBranch}"
 }

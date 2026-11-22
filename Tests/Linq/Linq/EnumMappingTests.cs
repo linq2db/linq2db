@@ -1248,7 +1248,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestFlagEnum([DataSources(TestProvName.AllAccess)] string context)
+		public void TestFlagEnum([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable<TestTable5>();
@@ -1775,11 +1775,12 @@ namespace Tests.Linq
 					TestField = 5
 				});
 
-				Assert.Throws<LinqToDBConvertException>(() =>
+				Assert.That(() =>
 					db.GetTable<UndefinedValueTest>()
 						.Select(r => new { r.Id, r.TestField })
 						.Where(r => r.Id == RID)
-						.ToList());
+						.ToList(),
+					Throws.TypeOf<LinqToDBConvertException>());
 			}
 		}
 
@@ -1798,7 +1799,7 @@ namespace Tests.Linq
 		}
 
 		[Sql.Expression("{0} = {1}", InlineParameters = true, ServerSideOnly = true, IsPredicate = true)]
-		private static bool SomeComparison(string? column, Issue1622Enum value) => throw new InvalidOperationException();
+		private static bool SomeComparison(string? column, Issue1622Enum value) => throw new ServerSideOnlyException(nameof(SomeComparison));
 
 		[Test]
 		public void Issue1622Test([DataSources] string context)

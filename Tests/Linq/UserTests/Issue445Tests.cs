@@ -86,10 +86,10 @@ namespace Tests.UserTests
 		[Test]
 		public void ObjectDisposedException1([IssueContextSource] string context)
 		{
-			Assert.Throws<ObjectDisposedException>(() =>
+			Assert.That(() =>
 			{
 				AreEqual(Person.Where(_ => _.ID == 1), GetPersonsFromDisposed1(context));
-			});
+			}, Throws.TypeOf<ObjectDisposedException>());
 		}
 
 		IEnumerable<Person> GetPersonsFromDisposed3(string context)
@@ -101,10 +101,10 @@ namespace Tests.UserTests
 		[Test]
 		public void ObjectDisposedException3([IssueContextSource] string context)
 		{
-			Assert.Throws<ObjectDisposedException>(() =>
+			Assert.That(() =>
 			{
 				AreEqual(Person.Where(_ => _.ID == 1), GetPersonsFromDisposed3(context));
-			});
+			}, Throws.TypeOf<ObjectDisposedException>());
 		}
 
 		IEnumerable<Person> GetPersonsFromDisposed2(string context)
@@ -122,19 +122,17 @@ namespace Tests.UserTests
 
 		[Test]
 		[Explicit("Too slow")]
+		[NoBaselines("Output depends on pool size")]
 		public void ConnectionPoolException1([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (new DisableBaseline("Output depends on pool size"))
+			Assert.That(() =>
 			{
-				Assert.Throws<InvalidOperationException>(() =>
+				for (var i = 0; i < 1000; i++)
 				{
-					for (var i = 0; i < 1000; i++)
-					{
-						var db = GetDataContext(context);
-						AreEqual(Person.Where(_ => _.ID == 1), db.GetTable<Person>().Where(_ => _.ID == 1));
-					}
-				});
-			}
+					var db = GetDataContext(context);
+					AreEqual(Person.Where(_ => _.ID == 1), db.GetTable<Person>().Where(_ => _.ID == 1));
+				}
+			}, Throws.TypeOf<InvalidOperationException>());
 		}
 	}
 }

@@ -1,10 +1,15 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<RootNamespace>LinqToDB.CommandLine</RootNamespace>
 		<AssemblyName>dotnet-linq2db</AssemblyName>
-		<TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
-		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">net10.0</TargetFrameworks>
+		<TargetFrameworks>$(ToolTargetFrameworks)</TargetFrameworks>
+		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">$(LatestTargetFramework)</TargetFrameworks>
+		<!--.NET 11 added TextWriter.WriteLineAsync(string, CancellationToken), so CA2016 asks the console
+		    writes here to forward their token - on net11 only. The argument is a compile error on net10.0,
+		    which this tool also targets, and Meziantou.Polyfill does not offer the overload yet. Drop this
+		    once it does, or when net10.0 is dropped; the ~54 call sites then become a real improvement.-->
+		<NoWarn Condition="'$(TargetFramework)'=='net11.0'">$(NoWarn);CA2016</NoWarn>
 		<OutputType>Exe</OutputType>
 		<GenerateDocumentationFile>false</GenerateDocumentationFile>
 		<SignAssembly>False</SignAssembly>
@@ -60,6 +65,26 @@
 	<ItemGroup Label="Nuget">
 		<None Include="readme.md"             Pack="true" PackagePath="readme.md"        />
 		<None Include="..\..\Nuget\icon.png"  Pack="true" PackagePath="icon.png"         />
+
+		<!--
+		Two items, because a tool package needs the notices in two places and Pack alone reaches only one
+		of them. PackAsTool publishes the whole dependency closure into tools/<tfm>/<rid>/, so this package
+		physically redistributes ~90 third-party components that its MIT expression does not cover.
+
+		 * Pack="true"                -> the package root, next to readme.md. Each RID sub-package is a full
+		                                 Pack, so this lands in all of them and in the pointer package.
+		 * CopyToPublishDirectory     -> the tool payload. The RID payload is literally $(PublishDir)/**/*
+		                                 (Microsoft.NET.PackTool.targets), so the file has to reach publish
+		                                 output to end up beside the installed tool. Pack="true" does not
+		                                 put anything in publish output.
+
+		Generated from Build/licenses/components.json; see Build/licenses/README.md.
+		-->
+		<None Include="..\..\Build\licenses\generated\THIRD-PARTY-NOTICES.linq2db.cli.txt"
+		      Pack="true" PackagePath="THIRD-PARTY-NOTICES.txt" Visible="false" />
+		<None Include="..\..\Build\licenses\generated\THIRD-PARTY-NOTICES.linq2db.cli.txt"
+		      Link="THIRD-PARTY-NOTICES.txt" Pack="false" Visible="false"
+		      CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -94,5 +119,9 @@
 		<PackageReference Include="Octonica.ClickHouseClient" />
 		<PackageReference Include="DuckDB.NET.Data.Full" />
 		<PackageReference Include="Ydb.Sdk" />
+		<PackageReference Include="LibRed.Ado" />
+
+		<!--transitive vulnerable packages: the tool bundles its dependencies, so consumers can't pin them-->
+		<PackageReference Include="System.Security.Cryptography.Pkcs" />
 	</ItemGroup>
 </Project>

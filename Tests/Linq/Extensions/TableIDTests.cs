@@ -13,11 +13,11 @@ namespace Tests.Extensions
 		[Sql.Expression("'*** {0} ***'", ServerSideOnly = true, CanBeNull = false)]
 		static string PrintSqlID(Sql.SqlID id)
 		{
-			throw new NotImplementedException();
+			throw new ServerSideOnlyException(nameof(PrintSqlID));
 		}
 
 		[Test]
-		public void TableTest([DataSources(TestProvName.AllAccess)] string context)
+		public void TableTest([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 

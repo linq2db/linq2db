@@ -197,13 +197,18 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return new SqlBinaryExpression(dbDataType, x, "+", y, Precedence.Additive);
 		}
 
-		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
 		public static ISqlExpression Binary(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, string operation, ISqlExpression y)
+		{
+			return factory.Binary(dbDataType, x, operation, y, Precedence.Additive);
+		}
+
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
+		public static ISqlExpression Binary(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, string operation, ISqlExpression y, int precedence)
 		{
 			if (dbDataType.SystemType == typeof(string) && (string.Equals(operation, "+", StringComparison.Ordinal) || string.Equals(operation, "||", StringComparison.Ordinal)))
 				throw new InvalidOperationException("String concatenation must use factory.Concat(...) so it produces SqlConcatExpression. factory.Binary is for non-concat operations.");
 
-			return new SqlBinaryExpression(dbDataType, x, operation, y, Precedence.Additive);
+			return new SqlBinaryExpression(dbDataType, x, operation, y, precedence);
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
@@ -287,9 +292,15 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
+		public static ISqlExpression Mod(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, ISqlExpression value)
+		{
+			return new SqlBinaryExpression(dbDataType, x, "%", value, Precedence.Multiplicative);
+		}
+
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
 		public static ISqlExpression Mod(this ISqlExpressionFactory factory, ISqlExpression x, ISqlExpression value)
 		{
-			return new SqlBinaryExpression(factory.GetDbDataType(x).SystemType, x, "%", value);
+			return factory.Mod(factory.GetDbDataType(x), x, value);
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
@@ -344,7 +355,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			SqlKeepClause? keepClause = null,
 			Sql.Nulls nullTreatment = Sql.Nulls.None,
 			Sql.From fromPosition = Sql.From.None,
-			bool isWindowFunction = false
+			bool isWindowFunction = false,
+			SqlArgumentDomain argumentDomain = SqlArgumentDomain.None
 		)
 		{
 			return new SqlExtendedFunction(dataType, functionName, arguments, argumentsNullability,
@@ -360,7 +372,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				keepClause: keepClause,
 				nullTreatment: nullTreatment,
 				fromPosition: fromPosition,
-				isWindowFunction: isWindowFunction);
+				isWindowFunction: isWindowFunction,
+				argumentDomain: argumentDomain);
 		}
 
 		#region String functions
@@ -383,7 +396,57 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		public static ISqlExpression Replace(this ISqlExpressionFactory factory, ISqlExpression expression, ISqlExpression oldSubString, ISqlExpression newSubstring)
 		{
 			var valueType = factory.GetDbDataType(expression);
-			return factory.Function(valueType, PseudoFunctions.REPLACE, expression, factory.EnsureType(oldSubString, valueType), factory.EnsureType(newSubstring, valueType));
+			return factory.Function(valueType, PseudoFunctions.REPLACE, expression, EnsureReplaceArgumentType(factory, oldSubString, valueType), EnsureReplaceArgumentType(factory, newSubstring, valueType));
+		}
+
+		// An argument is brought to the value's type only when the cast changes nothing it holds: not when it is Unicode
+		// beside a non-Unicode value, which loses every character outside the value's code page; not when the value is
+		// shorter than the argument or the argument's length is unknown, which cuts its tail; and not to a fixed-length
+		// value, which pads it.
+		static ISqlExpression EnsureReplaceArgumentType(ISqlExpressionFactory factory, ISqlExpression argument, DbDataType valueType)
+		{
+			if (AsNonUnicodeAsciiLiteral(argument, valueType) is { } literal)
+				return literal;
+
+			var argumentType = factory.GetDbDataType(argument);
+
+			var losesCharacters = valueType.DataType is DataType.Char or DataType.VarChar or DataType.Text
+				&& QueryHelper.IsUnicode(argumentType.DataType);
+
+			var losesTail = valueType.Length != null && (argumentType.Length == null || argumentType.Length > valueType.Length);
+
+			var padsTail = valueType.DataType is DataType.Char or DataType.NChar;
+
+			return losesCharacters || losesTail || padsTail ? argument : factory.EnsureType(argument, valueType);
+		}
+
+		// An ASCII-only literal reads the same in every code page, so beside a non-Unicode value it stays non-Unicode: a
+		// Unicode one would turn the result Unicode, which SQL Server cuts at 4000 characters instead of 8000.
+		internal static SqlValue? AsNonUnicodeAsciiLiteral(ISqlExpression argument, DbDataType valueType)
+		{
+			if (valueType.DataType is not (DataType.Char or DataType.VarChar or DataType.Text)
+				|| argument is not SqlValue { ValueType.DataType: not (DataType.Char or DataType.VarChar or DataType.Text) } literal)
+				return null;
+
+			var isAscii = literal.Value switch
+			{
+				string text => IsAscii(text),
+				char   c    => c < 0x80,
+				_           => false,
+			};
+
+			return isAscii ? new SqlValue(literal.ValueType.WithDataType(DataType.VarChar), literal.Value) : null;
+
+			static bool IsAscii(string text)
+			{
+				foreach (var c in text)
+				{
+					if (c >= 0x80)
+						return false;
+				}
+
+				return true;
+			}
 		}
 
 		#endregion
@@ -419,9 +482,64 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.Equal, expr2, factory.DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null);
 		}
 
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
+		public static ISqlPredicate NotEqual(this ISqlExpressionFactory factory, ISqlExpression expr1, ISqlExpression expr2, bool? unknownValue)
+		{
+			return new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.NotEqual, expr2, unknownValue);
+		}
+
 		public static ISqlPredicate NotEqual(this ISqlExpressionFactory factory, ISqlExpression expr1, ISqlExpression expr2)
 		{
 			return new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.NotEqual, expr2, factory.DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null);
+		}
+
+		/// <summary>
+		/// An ordering comparison, saying what an operand that is absent makes of it.
+		/// </summary>
+		/// <param name="unknownValue">
+		/// What the comparison answers when an operand is absent and the answer has to be one of the two - or
+		/// <see langword="null"/> to leave it the third thing SQL has, which a <c>WHERE</c> reads as no and a value
+		/// position keeps as absent.
+		/// </param>
+		/// <remarks>
+		/// There is no reading that suits every caller, which is why this is asked for rather than assumed. A
+		/// comparison written as a filter wants the language's reading - a value that is not there is neither above
+		/// nor below anything, so <see langword="false"/>. A comparison written as the test of a
+		/// <see cref="Condition(ISqlExpressionFactory, ISqlPredicate, ISqlExpression, ISqlExpression)"/> often wants
+		/// the opposite, because <c>CASE</c> reads the third answer as no and would hand back the other branch's
+		/// value where the absence should have carried through; <see langword="true"/> steers it to the branch that
+		/// carries it.
+		/// <para>
+		/// The overload without this parameter picks the second reading for <c>&gt;=</c> and <c>&lt;=</c> and the
+		/// first for <c>&gt;</c> and <c>&lt;</c>. That is worth knowing before using it as a filter: taken as a
+		/// filter, the second reading lets a row whose value is absent through.
+		/// </para>
+		/// </remarks>
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
+		public static ISqlPredicate Greater(this ISqlExpressionFactory factory, ISqlExpression expr1, ISqlExpression expr2, bool? unknownValue)
+		{
+			return new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.Greater, expr2, unknownValue);
+		}
+
+		/// <inheritdoc cref="Greater(ISqlExpressionFactory, ISqlExpression, ISqlExpression, bool?)"/>
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
+		public static ISqlPredicate GreaterOrEqual(this ISqlExpressionFactory factory, ISqlExpression expr1, ISqlExpression expr2, bool? unknownValue)
+		{
+			return new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.GreaterOrEqual, expr2, unknownValue);
+		}
+
+		/// <inheritdoc cref="Greater(ISqlExpressionFactory, ISqlExpression, ISqlExpression, bool?)"/>
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
+		public static ISqlPredicate Less(this ISqlExpressionFactory factory, ISqlExpression expr1, ISqlExpression expr2, bool? unknownValue)
+		{
+			return new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.Less, expr2, unknownValue);
+		}
+
+		/// <inheritdoc cref="Greater(ISqlExpressionFactory, ISqlExpression, ISqlExpression, bool?)"/>
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
+		public static ISqlPredicate LessOrEqual(this ISqlExpressionFactory factory, ISqlExpression expr1, ISqlExpression expr2, bool? unknownValue)
+		{
+			return new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.LessOrEqual, expr2, unknownValue);
 		}
 
 		public static ISqlPredicate Greater(this ISqlExpressionFactory factory, ISqlExpression expr1, ISqlExpression expr2)

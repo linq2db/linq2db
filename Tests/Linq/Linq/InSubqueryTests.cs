@@ -24,14 +24,14 @@ namespace Tests.Linq
 		static bool UseInQuery<T>(T? value, bool compareNullsAsValues)
 			where T: struct
 		{
-			throw new NotImplementedException();
+			throw new ServerSideOnlyException(nameof(UseInQuery));
 		}
 
 		[ExpressionMethod(nameof(UseInQueryImpl))]
 		static bool UseInQuery<T>(T value, bool compareNullsAsValues)
 			where T: struct
 		{
-			throw new NotImplementedException();
+			throw new ServerSideOnlyException(nameof(UseInQuery));
 		}
 
 		static Expression<Func<T?, bool, bool>> UseInQueryNullableImpl<T>()
@@ -123,7 +123,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InWithSkipTest([DataSources(TestProvName.AllSybase, TestProvName.AllAccess, TestProvName.AllSQLite, TestProvName.AllYdb)] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
+		public void InWithSkipTest([DataSources(TestProvName.AllSybase, TestProvName.AllNativeAccess, TestProvName.AllSQLite, TestProvName.AllYdb)] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
 
@@ -136,7 +136,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InWithSkipTakeTest([DataSources(TestProvName.AllSybase, TestProvName.AllAccess)] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
+		public void InWithSkipTakeTest([DataSources(TestProvName.AllSybase, TestProvName.AllNativeAccess)] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
 
@@ -191,7 +191,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ContainsTest([DataSources(TestProvName.AllAccess)] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
+		public void ContainsTest([DataSources(TestProvName.AllNativeAccess)] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
 

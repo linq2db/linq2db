@@ -818,7 +818,7 @@ namespace Tests.UserTests
 					where item.Parent!.Parent!.SfcBo == sfcBo
 					select item;
 
-				Assert.DoesNotThrow(() => query.ToArray());
+				query.ToArray();
 			}
 		}
 

@@ -137,12 +137,6 @@ namespace LinqToDB.Internal.SqlProvider
 		public bool        IsCountSubQuerySupported       { get; set; }
 
 		/// <summary>
-		/// Indicates that provider requires explicit output parameter for insert with identity queries to get identity from database.
-		/// Default (set by <see cref="DataProviderBase"/>): <see langword="false"/>.
-		/// </summary>
-		[DataMember(Order = 18)]
-		public bool        IsIdentityParameterRequired    { get; set; }
-		/// <summary>
 		/// Indicates support for OUTER/CROSS APPLY.
 		/// Default (set by <see cref="DataProviderBase"/>): <see langword="false"/>.
 		/// </summary>
@@ -461,6 +455,19 @@ namespace LinqToDB.Internal.SqlProvider
 		public bool SupportsBooleanType { get; set; } = true;
 
 		/// <summary>
+		/// Indicates that provider accepts a predicate directly as a value operand of an aggregate or window
+		/// function — as a function argument (<c>COUNT(x = 1)</c>) or as an <c>OVER (PARTITION BY ...)</c> key.
+		/// This is narrower than <see cref="SupportsBooleanType"/>: a provider may have a usable boolean type,
+		/// and accept a predicate as a value in the select list, <c>GROUP BY</c> and <c>ORDER BY</c>, yet still
+		/// reject it in these positions (Informix). When <see langword="false"/>, such a predicate is folded into
+		/// a <c>CASE</c> expression. It does not affect window <c>ORDER BY</c> / <c>WITHIN GROUP</c> / <c>KEEP</c>
+		/// keys, which follow <see cref="SupportsBooleanType"/> only.
+		/// Default value: <see langword="true"/>.
+		/// </summary>
+		[DataMember(Order = 79), DefaultValue(true)]
+		public bool SupportsPredicateInFunctionValuePosition { get; set; } = true;
+
+		/// <summary>
 		/// Provider supports nested joins
 		/// <code>
 		/// A JOIN (B JOIN C ON ?) ON ?
@@ -552,7 +559,11 @@ namespace LinqToDB.Internal.SqlProvider
 		public bool IsOrderBySubQuerySupported { get; set; } = true;
 
 		/// <summary>
-		/// When disabled, all conditions from INNER JOIN ON moved to WHERE except conjunction of equality predicates.
+		/// When disabled, an AND-joined ON clause has each predicate that is not a plain equality of two non-literal
+		/// expressions moved out of ON: for an INNER JOIN it goes to WHERE; for a LEFT JOIN one depending only on the
+		/// outer side goes to WHERE, one depending only on the joined subtree is pushed into a wrapped derived table,
+		/// and one referencing both join inputs has to stay in ON. An ON clause that is itself a disjunction is left
+		/// untouched.
 		/// <code>
 		/// FROM T1 INNER JOIN T2 ON t1.field1 == t2.field1 AND t1.field2 == t2.field2 AND t1.field3 > 10
 		/// -- with flag:
@@ -701,6 +712,99 @@ namespace LinqToDB.Internal.SqlProvider
 		[DataMember(Order = 75)]
 		public bool IsDistinctOnSupported { get; set; }
 
+		/// <summary>
+		/// Provider's <c>UPDATE … OUTPUT</c> / <c>RETURNING</c> returns the new (post-update) values as a result set of
+		/// the rows the statement actually updated — so an <c>UPDATE</c> matching no row returns no rows.
+		/// <para>
+		/// This is narrower than "the provider has some form of UPDATE output". A provider whose <c>RETURNING</c> is a
+		/// singleton, yielding one record whatever the statement matched, does <b>not</b> qualify: a zero-row update is
+		/// then indistinguishable from a one-row update. Firebird before v5 behaves that way and is therefore
+		/// <see langword="false"/> here even though it can return new values for a matched row.
+		/// </para>
+		/// <para>
+		/// Used by <see cref="LinqToDB.Concurrency.ConcurrencyExtensions"/>'s <c>UpdateOptimisticWithRefresh</c>
+		/// overloads to read the regenerated optimistic-lock value back in the same statement, and to take the number
+		/// of returned rows as the affected-row count. When <see langword="false"/> the value is read with a follow-up
+		/// <c>SELECT</c> instead, gated on <see cref="IsAffectedRowsCountSupported"/>.
+		/// </para>
+		/// Default: <see langword="false"/>.
+		/// </summary>
+		[DataMember(Order = 77), DefaultValue(false)]
+		public bool IsUpdateOutputRowsSupported { get; set; }
+
+		/// <summary>
+		/// Provider reports the number of affected rows from <c>INSERT</c> / <c>UPDATE</c> / <c>DELETE</c> / <c>MERGE</c> execution.
+		/// Used by <see cref="LinqToDB.Concurrency.ConcurrencyExtensions"/>'s <c>UpdateOptimisticWithRefresh</c>
+		/// overloads: when <see langword="false"/> the affected-row count is unreliable, so — unless the provider
+		/// also supports UPDATE <c>OUTPUT</c> / <c>RETURNING</c> — the optimistic-concurrency result cannot be
+		/// reported and the operation throws.
+		/// Default: <see langword="true"/>.
+		/// </summary>
+		[DataMember(Order = 78), DefaultValue(true)]
+		public bool IsAffectedRowsCountSupported { get; set; } = true;
+
+		/// <summary>
+		/// Indicates that the provider accepts several statements in one command — a <c>DbBatch</c>, or one command text
+		/// with the statements separated by <c>;</c> — and executes them in order, so contiguous scenario steps can share one
+		/// round-trip. On its own it allows at most one result-producing statement per combined command (e.g. an identity
+		/// INSERT followed by its identity SELECT); reading several result sets from one command additionally requires
+		/// <see cref="IsMultipleResultSetsSupported"/>. Enabled conservatively per provider. Default: <see langword="false"/>.
+		/// </summary>
+		// Out of sequence on purpose: 79 went to master's SupportsPredicateInFunctionValuePosition while this branch was
+		// open, and both sides picked "the next free number" from the same base. Order must be unique across the contract
+		// - a duplicate makes protobuf-net throw while building it, which surfaces as every LinqService call failing on
+		// the first GetConfigurationInfo. Master's number stays put because it ships first; this one moved.
+		[DataMember(Order = 83)]
+		public bool IsMultiStatementBatchSupported { get; set; }
+
+		/// <summary>
+		/// Indicates that a combined command returns one result set per result-producing statement, in statement order
+		/// (walked via <c>NextResult</c>), so several result-producing scenario steps can be harvested from one command —
+		/// e.g. eager loading's main query and its child collections in one round-trip. Has no effect unless
+		/// <see cref="IsMultiStatementBatchSupported"/> is also set. Enabled conservatively per provider.
+		/// Default: <see langword="false"/>.
+		/// </summary>
+		[DataMember(Order = 80)]
+		public bool IsMultipleResultSetsSupported { get; set; }
+
+		/// <summary>
+		/// Maximum length, in characters, of one combined multi-statement command's SQL text, applied when the combined
+		/// eager-loading render (<see cref="IsMultiStatementBatchSupported"/>) merges child statements into a single
+		/// command: once the rendered SQL reaches this length, the next statement starts a new command. It is a soft cap —
+		/// the statement that crosses it stays in its command, and a single statement is never split — and it counts
+		/// characters, not bytes, so set it well under the provider's command / batch / packet size limit, with room for
+		/// multi-byte SQL. <c>0</c> makes every statement its own command on that path. It does <b>not</b> apply to the DML
+		/// scenario render, whose groups are bounded by <see cref="MaxStatementsPerCombinedGroup"/> alone — a merged DML
+		/// group never exceeds a couple of steps. Default (set by <see cref="DataProviderBase"/>): 60000 — under the
+		/// common 64&#160;KB floor, safe for any provider until tuned.
+		/// </summary>
+		// Researched provider ceilings (pick a value below these when enabling IsMultiStatementBatchSupported for one):
+		//   SQL Server 65536 x packet (256 MB @ 4 KB, 32 MB @ min) · MySQL/MariaDB max_allowed_packet (16-64 MB, min 4) ·
+		//   SQLite 1 GB · PostgreSQL ~1 GB · SAP HANA ~2 GB · DB2 LUW ~2 MB · ClickHouse max_query_size (~1 MB) ·
+		//   Oracle ~64 KB · Firebird 64 KB (<3.0) / 10 MB (3.0+) · Informix 64 KB (SQLi) / 2 MB (DRDA) · Sybase ASE ~64 KB.
+		[DataMember(Order = 81)]
+		public int MaxCombinedCommandLength { get; set; }
+
+		/// <summary>
+		/// Maximum number of scenario steps merged into one combined multi-statement command. When the combined engine
+		/// (<see cref="IsMultiStatementBatchSupported"/> + <see cref="IsMultipleResultSetsSupported"/>) groups steps, a run
+		/// longer than this splits across several commands (round-trips), so a wide eager-load fan-out never produces one
+		/// oversized command. Complements <see cref="MaxCombinedCommandLength"/> (which caps by SQL length). Must be at
+		/// least 1. Default (set by <see cref="DataProviderBase"/>): 32 — a few KB of SQL, well under provider batch /
+		/// parameter limits, while still collapsing the common N+1 case to a single round-trip.
+		/// </summary>
+		[DataMember(Order = 82)]
+		public int MaxStatementsPerCombinedGroup { get; set; }
+
+		/// <summary>
+		/// Maximum number of parameters one semicolon-concatenated combined command may carry. The combined eager-loading
+		/// render starts a new command before a statement whose parameters would take the command past this; a single
+		/// statement is never split. A <c>DbBatch</c> command gives each statement its own parameters and is not bounded
+		/// by it. Default (set by <see cref="DataProviderBase"/>): <see cref="int.MaxValue"/>.
+		/// </summary>
+		[DataMember(Order = 84)]
+		public int MaxCombinedCommandParameters { get; set; }
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || (AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null);
@@ -716,7 +820,7 @@ namespace LinqToDB.Internal.SqlProvider
 			if (TakeHintsSupported == null)
 				return false;
 
-			return (TakeHintsSupported.Value & hints) == hints;
+			return TakeHintsSupported.Value.HasFlag(hints);
 		}
 
 		#region Equality
@@ -740,7 +844,6 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsSubQueryOrderBySupported                           .GetHashCode()
 				^ IsUnionAllOrderBySupported                           .GetHashCode()
 				^ IsCountSubQuerySupported                             .GetHashCode()
-				^ IsIdentityParameterRequired                          .GetHashCode()
 				^ IsApplyJoinSupported                                 .GetHashCode()
 				^ IsCrossApplyJoinSupportsCondition                    .GetHashCode()
 				^ IsOuterApplyJoinSupportsCondition                    .GetHashCode()
@@ -775,6 +878,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsAccessBuggyLeftJoinConstantNullability             .GetHashCode()
 				^ SupportsPredicatesComparison                         .GetHashCode()
 				^ SupportsBooleanType                                  .GetHashCode()
+				^ SupportsPredicateInFunctionValuePosition             .GetHashCode()
 				^ IsDerivedTableOrderBySupported                       .GetHashCode()
 				^ IsUpdateTakeSupported                                .GetHashCode()
 				^ IsUpdateSkipTakeSupported                            .GetHashCode()
@@ -800,6 +904,13 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsNullsOrderingSupported                             .GetHashCode()
 				^ DefaultNullsOrdering                                 .GetHashCode()
 				^ IsDistinctOnSupported                                .GetHashCode()
+				^ IsUpdateOutputRowsSupported                          .GetHashCode()
+				^ IsAffectedRowsCountSupported                         .GetHashCode()
+				^ IsMultiStatementBatchSupported                       .GetHashCode()
+				^ IsMultipleResultSetsSupported                        .GetHashCode()
+				^ MaxCombinedCommandLength                             .GetHashCode()
+				^ MaxStatementsPerCombinedGroup                        .GetHashCode()
+				^ MaxCombinedCommandParameters                         .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
 	}
 
@@ -821,7 +932,6 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsSubQueryOrderBySupported                            == other.IsSubQueryOrderBySupported
 				&& IsUnionAllOrderBySupported                            == other.IsUnionAllOrderBySupported
 				&& IsCountSubQuerySupported                              == other.IsCountSubQuerySupported
-				&& IsIdentityParameterRequired                           == other.IsIdentityParameterRequired
 				&& IsApplyJoinSupported                                  == other.IsApplyJoinSupported
 				&& IsCrossApplyJoinSupportsCondition                     == other.IsCrossApplyJoinSupportsCondition
 				&& IsOuterApplyJoinSupportsCondition                     == other.IsOuterApplyJoinSupportsCondition
@@ -856,6 +966,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsAccessBuggyLeftJoinConstantNullability              == other.IsAccessBuggyLeftJoinConstantNullability
 				&& SupportsPredicatesComparison                          == other.SupportsPredicatesComparison
 				&& SupportsBooleanType                                   == other.SupportsBooleanType
+				&& SupportsPredicateInFunctionValuePosition              == other.SupportsPredicateInFunctionValuePosition
 				&& IsDerivedTableOrderBySupported                        == other.IsDerivedTableOrderBySupported
 				&& IsUpdateTakeSupported                                 == other.IsUpdateTakeSupported
 				&& IsUpdateSkipTakeSupported                             == other.IsUpdateSkipTakeSupported
@@ -881,6 +992,13 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsNullsOrderingSupported                              == other.IsNullsOrderingSupported
 				&& DefaultNullsOrdering                                  == other.DefaultNullsOrdering
 				&& IsDistinctOnSupported                                 == other.IsDistinctOnSupported
+				&& IsUpdateOutputRowsSupported                           == other.IsUpdateOutputRowsSupported
+				&& IsAffectedRowsCountSupported                          == other.IsAffectedRowsCountSupported
+				&& IsMultiStatementBatchSupported                        == other.IsMultiStatementBatchSupported
+				&& IsMultipleResultSetsSupported                         == other.IsMultipleResultSetsSupported
+				&& MaxCombinedCommandLength                              == other.MaxCombinedCommandLength
+				&& MaxStatementsPerCombinedGroup                         == other.MaxStatementsPerCombinedGroup
+				&& MaxCombinedCommandParameters                          == other.MaxCombinedCommandParameters
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
 		#endregion

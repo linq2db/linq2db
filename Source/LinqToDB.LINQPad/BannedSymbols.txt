@@ -1,0 +1,1 @@
+T:System.Windows.MessageBox;use LinqToDB.LINQPad.Notification: LINQPad renders driver WPF only from ShowConnectionDialog (Avalonia XPF on macOS), touching it anywhere else fails to load PresentationFramework

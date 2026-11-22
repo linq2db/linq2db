@@ -68,6 +68,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			SqlProviderFlags.OutputInsertUseSpecialTable        = true;
 			SqlProviderFlags.OutputUpdateUseSpecialTables       = true;
 			SqlProviderFlags.OutputMergeUseSpecialTables        = true;
+			SqlProviderFlags.IsUpdateOutputRowsSupported        = true;
 			SqlProviderFlags.IsApplyJoinSupported               = true;
 			SqlProviderFlags.TakeHintsSupported                 = TakeHints.Percent | TakeHints.WithTies;
 			SqlProviderFlags.IsCommonTableExpressionsSupported  = true;
@@ -80,6 +81,15 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			// 1024 is the per-table/view limit, which would abandon CteUnion for 1025-4096-column carriers.
 			SqlProviderFlags.MaxColumnCount                     = 4096;
 			SqlProviderFlags.DefaultNullsOrdering               = NullsDefaultOrdering.Smallest; // SQL Server sorts NULL as the smallest value
+
+			// SQL Server runs multiple statements in one command and returns their result sets in order (NextResult),
+			// so eager loading combines the main query + child collections into one multi-result-set round-trip.
+			SqlProviderFlags.IsMultiStatementBatchSupported     = true;
+			SqlProviderFlags.IsMultipleResultSetsSupported      = true;
+			// Batch limit is 65536 x network packet size (>= 32 MB even at the 512 B minimum packet); 8 MB is a safe cap.
+			SqlProviderFlags.MaxCombinedCommandLength           = 8_000_000;
+			// A request carries at most 2100 parameters, and sp_executesql takes two of them for the statement and its parameter list.
+			SqlProviderFlags.MaxCombinedCommandParameters       = 2098;
 
 			// SqlServer 2005 emits InsertOrUpdate as UPDATE + IF @@ROWCOUNT=0 INSERT (single statement);
 			// it can't carry an extra predicate on the UPDATE branch. 2008+ go through MERGE which can.
@@ -204,7 +214,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					ReaderExpressions[new ReaderInfo { ToType = typeof(float[]), ProviderFieldType = typeof(SqlString) }]
 						= Expression.Lambda(
 							Expression.Call(
-								jsonSerializerType.GetMethod("Deserialize", [typeof(string), jsonSerializerOptionsType]).MakeGenericMethod(typeof(float[])),
+								jsonSerializerType.GetMethodEx("Deserialize", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static, typeof(string), jsonSerializerOptionsType)!.MakeGenericMethod(typeof(float[])),
 								Expression.Call(dataReaderParameter, "GetString", null, indexParameter),
 								Expression.Constant(null, jsonSerializerOptionsType)),
 							dataReaderParameter,

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -6,11 +6,16 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.DataProvider.SQLite;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -21,23 +26,19 @@ using Tests.Model;
 namespace Tests.xUpdate
 {
 	[TestFixture]
-	[Order(10000)]
 	public class InsertTests : TestBase
 	{
-#if AZURE
-		[ActiveIssue("Error from Azure runs (db encoding issue?): FbException : Malformed string", Configuration = TestProvName.AllFirebird)]
-#endif
 		[Test]
+		[NoBaselines("Client-side Guid generation", Configurations = [TestProvName.AllSapHana, TestProvName.AllYdb, TestProvName.AllAccessLibRed])]
 		public void DistinctInsert1(
 			[DataSources(
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllPostgreSQL12Minus,
 				TestProvName.AllSQLite,
-				TestProvName.AllAccess)]
+				TestProvName.AllNativeAccess)]
 			string context)
 		{
-			using var _ = context.IsAnyOf(TestProvName.AllSapHana, TestProvName.AllYdb) ? new DisableBaseline("Client-side Guid generation") : null;
 			using var db = GetDataContext(context);
 			db.BeginTransaction();
 
@@ -66,20 +67,17 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if AZURE
-		[ActiveIssue("Error from Azure runs (db encoding issue?): FbException : Malformed string", Configuration = TestProvName.AllFirebird)]
-#endif
 		[Test]
+		[NoBaselines("Client-side Guid generation", Configurations = [TestProvName.AllSapHana, TestProvName.AllYdb, TestProvName.AllAccessLibRed])]
 		public void DistinctInsert2(
 			[DataSources(
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllPostgreSQL12Minus,
 				TestProvName.AllSQLite,
-				TestProvName.AllAccess)]
+				TestProvName.AllNativeAccess)]
 			string context)
 		{
-			using var _ = context.IsAnyOf(TestProvName.AllSapHana, TestProvName.AllYdb) ? new DisableBaseline("Client-side Guid generation") : null;
 			using var db = GetDataContext(context);
 			try
 			{
@@ -1159,7 +1157,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertOrReplaceWithIdentity()
 		{
-			Assert.Throws<LinqToDBException>(() =>
+			Assert.That(() =>
 			{
 				using var db = new DataConnection();
 				var p = new Person()
@@ -1169,7 +1167,7 @@ namespace Tests.xUpdate
 				};
 
 				db.InsertOrReplace(p);
-			});
+			}, Throws.TypeOf<LinqToDBException>());
 		}
 
 		[Test]
@@ -1449,7 +1447,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void Insert14([DataSources(
 			ProviderName.SqlCe,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			TestProvName.AllClickHouse,
 			TestProvName.AllSqlServer2005,
 			TestProvName.AllSybase)]
@@ -1511,7 +1509,8 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ActiveIssue(5595, Configuration = TestProvName.AllYdb, Details = "C# non-nullable string semantics aren't carried through translation: the computed (GetLength + idx).ToString() value is inferred nullable (Optional<Utf8>) and YDB rejects it into the non-null LastName column.")]
+		[ActiveIssue(5595, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Failed to convert type: Struct<'FirstName'",
+			Details = "C# non-nullable string semantics aren't carried through translation: the computed (GetLength + idx).ToString() value is inferred nullable (Optional<Utf8>) and YDB rejects it into the non-null LastName column.")]
 		public void Insert16([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1542,7 +1541,7 @@ namespace Tests.xUpdate
 		// see https://github.com/linq2db/linq2db/pull/2954#issuecomment-821798021
 		[Test]
 		public void InsertDefault([DataSources(
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			TestProvName.AllFirebirdLess4,
 			TestProvName.AllInformix,
 			TestProvName.AllSapHana,
@@ -1943,8 +1942,9 @@ namespace Tests.xUpdate
 			using var db = GetDataContext(context);
 			var vi = db.Person.AsValueInsertable();
 
-			var ex = Assert.Throws<LinqToDBException>(() => vi.Insert())!;
-			Assert.That(ex.Message, Is.EqualTo("Insert query has no setters defined."));
+			Assert.That(
+				() => vi.Insert(),
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("Insert query has no setters defined."));
 		}
 
 		class InsertEntity
@@ -2420,9 +2420,27 @@ namespace Tests.xUpdate
 			[Column] public string? Text { get; set; }
 		}
 
-		[ActiveIssue(
-			Details = "Update test to test different RetrieveIdentity modes for all providers with sequences",
-			Configurations = [TestProvName.AllFirebird, TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllPostgreSQL, ProviderName.SqlCe, TestProvName.AllSapHana, TestProvName.AllYdb, TestProvName.AllDuckDB])]
+		// Every named provider does fail, in two groups. Access, Firebird and HANA never reach the database -
+		// linq2db refuses KeepIdentity up front, by mode for Access and HANA and by provider name for Firebird.
+		// The rest do reach it and the identity value collides, each server saying so in its own words.
+		[ActiveIssue(4702, Configurations = [TestProvName.AllAccess, TestProvName.AllSapHana],
+			ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "BulkCopyOptions.KeepIdentity = true is not supported by BulkCopyType.RowByRow mode",
+			Details = "no-issue: Update test to test different RetrieveIdentity modes for all providers with sequences")]
+		[ActiveIssue(4702, Configuration = TestProvName.AllFirebird, ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "BulkCopyOptions.KeepIdentity = true is not supported by Firebird provider",
+			Details = "no-issue: as above, but Firebird is refused by name before the RowByRow check is reached.")]
+		[ActiveIssue(4702, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "Npgsql.PostgresException",
+			ErrorMessage = "23505: duplicate key value violates unique constraint \"PK_Issue4702Table\"",
+			Details = "no-issue: as above; the identity value is written rather than generated, so the key collides.")]
+		[ActiveIssue(4702, Configuration = TestProvName.AllDuckDB, ErrorTypeName = "DuckDB.NET.Data.DuckDBException",
+			ErrorMessage = "Constraint Error: Duplicate key", Details = "no-issue: as the PostgreSQL half.")]
+		[ActiveIssue(4702, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			ErrorMessage = "SQL0798N{0}A value cannot be specified for column", Details = "no-issue: as the PostgreSQL half; DB2 rejects the explicit value outright.")]
+		[ActiveIssue(4702, Configuration = ProviderName.SqlCe, ErrorTypeName = "System.Data.SqlServerCe.SqlCeException",
+			ErrorMessage = "A duplicate value cannot be inserted into a unique index.", Details = "no-issue: as the PostgreSQL half.")]
+		[ActiveIssue(4702, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException",
+			ErrorMessage = "Status: PreconditionFailed", Details = "no-issue: as the PostgreSQL half.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4702")]
 		public void Issue4702Test([DataSources(false)] string context, [Values] bool useSequence)
 		{
@@ -2457,7 +2475,8 @@ namespace Tests.xUpdate
 			TestProvName.AllOracleDevart,
 			TestProvName.AllSqlServer2012Plus,
 			TestProvName.AllClickHouse,
-			TestProvName.AllPostgreSQL)] string context)
+			// PostgreSQL < 10 fails with "unknown to text" conversion on the coalesced untyped literal
+			TestProvName.AllPostgreSQL10Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Thing>();
@@ -2499,7 +2518,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test(Description = "Tests that client/duplicate columns not removed (v6.2.0 regression)")]
-		public void InsertFromWithSubqueryColumn_Same([DataSources(TestProvName.AllSqlCe, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllSqlServer2005, TestProvName.AllSybase)] string context)
+		public void InsertFromWithSubqueryColumn_Same([DataSources(TestProvName.AllSqlCe, TestProvName.AllNativeAccess, TestProvName.AllClickHouse, TestProvName.AllSqlServer2005, TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<InsertFromWithConstantsTable>();
@@ -2522,7 +2541,7 @@ namespace Tests.xUpdate
 
 		[Test(Description = "Tests that client/duplicate columns not removed (v6.2.0 regression)")]
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
-		public void InsertFromWithSubqueryColumn_Different([DataSources(TestProvName.AllSqlCe, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllSqlServer2005)] string context)
+		public void InsertFromWithSubqueryColumn_Different([DataSources(TestProvName.AllSqlCe, TestProvName.AllNativeAccess, TestProvName.AllClickHouse, TestProvName.AllSqlServer2005)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<InsertFromWithConstantsTable>();
@@ -2546,7 +2565,7 @@ namespace Tests.xUpdate
 
 		[Test(Description = "Tests that client/duplicate columns not removed (v6.2.0 regression)")]
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
-		public void InsertFromWithSubqueryColumn_DifferentWithDuplicate([DataSources(TestProvName.AllSqlCe, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllSqlServer2005)] string context)
+		public void InsertFromWithSubqueryColumn_DifferentWithDuplicate([DataSources(TestProvName.AllSqlCe, TestProvName.AllNativeAccess, TestProvName.AllClickHouse, TestProvName.AllSqlServer2005)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<InsertFromWithConstantsTable>();
@@ -2567,6 +2586,65 @@ namespace Tests.xUpdate
 				Value3 = tb.Where(r => r.Id == id2).Select(r => r.Value4).SingleOrDefault(),
 				Value4 = "string 2",
 			});
+		}
+
+		[Table]
+		sealed class ArchivableDocument
+		{
+			[PrimaryKey] public int    Id         { get; set; }
+			[Column    ] public string Title      { get; set; } = null!;
+			[Column    ] public bool   IsArchived { get; set; }
+		}
+
+		// Emulates InsertOrReplace with an UPDATE followed by an INSERT, as a provider without a native upsert does.
+		sealed class NoNativeUpsertSQLiteProvider : SQLiteDataProvider
+		{
+			public NoNativeUpsertSQLiteProvider() : base("SQLite.NoNativeUpsert.ArchiveGuard", SQLiteProvider.Microsoft)
+			{
+				SqlProviderFlags.IsInsertOrUpdateSupported = false;
+			}
+		}
+
+		// Archived documents are read-only: every UPDATE this connection runs skips them.
+		sealed class ArchiveGuardConnection(DataOptions options) : DataConnection(options)
+		{
+			protected override SqlStatement ProcessQuery(SqlStatement statement, EvaluationContext context)
+			{
+				if (statement is SqlUpdateStatement update)
+				{
+					var isArchived = ((SqlTable)update.Update.Table!).FindFieldByMemberName(nameof(ArchivableDocument.IsArchived))!;
+
+					update.SelectQuery.Where
+						.EnsureConjunction()
+						.AddEqual(isArchived, new SqlValue(false), CompareNulls.LikeSql);
+				}
+
+				return base.ProcessQuery(statement, context);
+			}
+		}
+
+		// ProcessQuery is the shipped hook for rewriting every statement a connection runs, so the UPDATE an emulated
+		// InsertOrReplace runs has to reach it like any other.
+		[Test]
+		public void EmulatedInsertOrReplace_UpdateGoesThroughProcessQuery()
+		{
+			using var db = new ArchiveGuardConnection(new DataOptions()
+				.UseConnectionString(new NoNativeUpsertSQLiteProvider(), "Data Source=:memory:"));
+
+			using var documents = db.CreateLocalTable(new[]
+			{
+				new ArchivableDocument { Id = 1, Title = "Signed contract", IsArchived = true },
+			});
+
+			Action replace = () => db.InsertOrReplace(new ArchivableDocument { Id = 1, Title = "Edited", IsArchived = true });
+
+			// the guarded UPDATE matches nothing, so the emulation goes on to INSERT a key that already exists
+			replace.ShouldThrow<Microsoft.Data.Sqlite.SqliteException>();
+
+			documents
+				.Single()
+				.Title
+				.ShouldBe("Signed contract");
 		}
 	}
 }

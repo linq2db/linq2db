@@ -137,7 +137,7 @@ namespace Tests.Linq
 		[Test]
 		public void ToSqlQuery_WithParametersDeduplication([DataSources] string context, [Values] bool inlineParameters)
 		{
-			using var _ = context.IsAnyOf(TestProvName.AllAccessOleDb) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
+			using var _ = !inlineParameters && context.IsAnyOf(TestProvName.AllAccessOleDb, ProviderName.SapHanaNative) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
 
 			using var db = GetDataContext(context);
 
@@ -686,12 +686,9 @@ namespace Tests.Linq
 			var query = (from u in db.Person
 				select u).AsSqlServer().OptionMaxDop(1);
 
-			Assert.DoesNotThrow(() =>
-			{
-				var command = query.ToSqlQuery();
+			var command = query.ToSqlQuery();
 
-				TestContext.Out.WriteLine(command.Sql);
-			});
+			TestContext.Out.WriteLine(command.Sql);
 		}
 	}
 }

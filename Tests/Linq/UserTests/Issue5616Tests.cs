@@ -42,7 +42,7 @@ namespace Tests.UserTests
 		[Sql.Extension("count_if({predicate})", IsAggregate = true, ServerSideOnly = true)]
 		private static long CountIf<TSource>(IEnumerable<TSource> src, [ExprParameter] Expression<Func<TSource, bool>> predicate)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(CountIf));
 		}
 
 		// A built-in aggregate (Average) in one UNION ALL branch, a constant in the other.

@@ -1,0 +1,4 @@
+- name: Using MapValueAttribute
+  href: using-mapvalue-attribute-to-control-mapping.md
+- name: Setup Custom Conversions
+  href: teach-linq2db-convert-custom-net-code-to-sql.md

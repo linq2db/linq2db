@@ -56,7 +56,7 @@ namespace Tests.Linq
 		[ExpressionMethod(nameof(ToUserSearchResultImpl))]
 		public static UserSearchResult ToUserSearchResult(this User u)
 		{
-			throw new NotImplementedException();
+			throw new ServerSideOnlyException(nameof(ToUserSearchResult));
 		}
 
 		private static Expression<Func<User, UserSearchResult>> ToUserSearchResultImpl()

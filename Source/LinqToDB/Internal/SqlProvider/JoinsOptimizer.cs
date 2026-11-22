@@ -64,7 +64,7 @@ namespace LinqToDB.Internal.SqlProvider
 							if (!childJoins.TrueForAll(join => join.JoinType is JoinType.Inner or JoinType.Left or JoinType.CrossApply or JoinType.OuterApply))
 								continue;
 
-							for (var cj = childJoins.Count - 1; cj >= 0; cj--)
+							nextChildJoin: for (var cj = childJoins.Count - 1; cj >= 0; cj--)
 							{
 								var child = childJoins[cj];
 
@@ -111,18 +111,11 @@ namespace LinqToDB.Internal.SqlProvider
 								}
 
 								// check if any remaining (not moved) sibling depends on this child's sources
-								var hasDependentSibling = false;
 								for (var k = cj + 1; k < childJoins.Count; k++)
 								{
 									if (QueryHelper.IsDependsOnSources(childJoins[k], currentJoinSources))
-									{
-										hasDependentSibling = true;
-										break;
-									}
+										continue nextChildJoin;
 								}
-
-								if (hasDependentSibling)
-									continue;
 
 								if (parent.JoinType == JoinType.Left)
 								{
@@ -378,7 +371,12 @@ namespace LinqToDB.Internal.SqlProvider
 					var fields = result[i] = new ISqlExpression[keyset.Count];
 
 					for (var j = 0; j < keyset.Count; j++)
-						fields[j] = GetUnderlyingFieldOrColumn(keyset[j]) ?? throw new InvalidOperationException($"Cannot get field for {keyset[j]}");
+					{
+						// A keyset element is not always reducible to a field/column: DISTINCT projections and
+						// GROUP BY items may hold arbitrary expressions (e.g. GROUP BY Substring(Code, 1, 3)).
+						// Keep such an element as is - it still matches against the expression behind a column.
+						fields[j] = GetUnderlyingFieldOrColumn(keyset[j]) ?? keyset[j];
+					}
 				}
 
 				return result;

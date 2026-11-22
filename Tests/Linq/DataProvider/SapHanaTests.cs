@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data.Linq;
 using System.Linq;
 using System.Reflection;
@@ -13,6 +13,8 @@ using LinqToDB.DataProvider.SapHana;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -238,7 +240,10 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		[ActiveIssue("Binary literal regression", Configuration = CurrentProvider)]
+		[ActiveIssue(Configuration = ProviderName.SapHanaOdbc, ErrorTypeName = "System.Data.Odbc.OdbcException", ErrorMessage = "cannot use parameter variable",
+			Details = "no-issue: binary literal regression - the value reaches HANA as a parameter in a position it refuses. The gate's own wording says \"literal\", and the server's complaint is about a parameter variable, so the two agree on the shape even though nothing tracks it.")]
+		[ActiveIssue(Configuration = ProviderName.SapHanaNative, ErrorType = typeof(LinqToDBConvertException), ErrorMessage = "Mapping of column",
+			Details = "no-issue: probed server limit - HANA types a bare parameter in the select list as VARCHAR whatever its bound type, so the native client returns the binary value as a string and the byte[] read fails.")]
 		public void TestBinaryParameterSelect([IncludeDataSources(CurrentProvider)] string context)
 		{
 			var arr1 = new byte[] { 46, 127, 0, 5 };
@@ -652,7 +657,10 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssue("Calculation view missing in database", Configuration = CurrentProvider)]
+		[ActiveIssue(Configuration = ProviderName.SapHanaOdbc, ErrorTypeName = "System.Data.Odbc.OdbcException", ErrorMessage = "invalid table name",
+			Details = "no-issue: the calculation view this queries is not provisioned in the test database - the server reports it cannot find FIT/CA_PARAM_TEST in schema _SYS_BIC. An environment gap, and the gate's prose says so.")]
+		[ActiveIssue(Configuration = ProviderName.SapHanaNative, ErrorTypeName = "Sap.Data.Hana.HanaException", ErrorMessage = "invalid table name",
+			Details = "no-issue: the calculation view this queries is not provisioned in the test database - the server reports it cannot find FIT/CA_PARAM_TEST in schema _SYS_BIC. An environment gap, and the gate's prose says so.")]
 		[Test]
 		public void CalculationViewLinqQuery([IncludeDataSources(CurrentProvider)] string context)
 		{
@@ -761,7 +769,7 @@ namespace Tests.DataProvider
 			// ODBC provider doesn't support spatial types
 			// https://github.com/dotnet/runtime/issues/40707
 			using var db = GetDataContext(context);
-			Assert.Throws<ArgumentException>(() => db.GetTable<AllTypesGeo>().ToArray());
+			Assert.That(() => db.GetTable<AllTypesGeo>().ToArray(), Throws.TypeOf<ArgumentException>());
 		}
 
 		[Test]
@@ -801,24 +809,35 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Test]
+		public void ClientProviderNameResolvesToNativeProvider(
+			[IncludeDataSources(ProviderName.SapHanaNative)] string context,
+			[Values("Sap.Data.Hana.Net.v8.0", "Sap.Data.Hana.Net.v10.0")] string providerName)
+		{
+			var provider = DataConnection.GetDataProvider(providerName, GetConnectionString(context));
+
+			provider.ShouldNotBeNull();
+			provider.Name.ShouldBe(ProviderName.SapHanaNative);
+		}
+
 		static class SapHanaModuleFunctions
 		{
 			[Sql.Function("TEST_FUNCTION", ServerSideOnly = true)]
 			public static int TestFunction(int param)
 			{
-				throw new InvalidOperationException("Scalar function cannot be called outside of query");
+				throw new ServerSideOnlyException(nameof(TestFunction));
 			}
 
 			[Sql.Function("TEST_PACKAGE1:TEST_FUNCTION", ServerSideOnly = true)]
 			public static int TestFunctionP1(int param)
 			{
-				throw new InvalidOperationException("Scalar function cannot be called outside of query");
+				throw new ServerSideOnlyException(nameof(TestFunctionP1));
 			}
 
 			[Sql.Function("TEST_PACKAGE2:TEST_FUNCTION", ServerSideOnly = true)]
 			public static int TestFunctionP2(int param)
 			{
-				throw new InvalidOperationException("Scalar function cannot be called outside of query");
+				throw new ServerSideOnlyException(nameof(TestFunctionP2));
 			}
 
 			[Sql.TableFunction("TEST_TABLE_FUNCTION", argIndices: new[] { 1 })]
@@ -843,6 +862,34 @@ namespace Tests.DataProvider
 			{
 				public int O { get; set; }
 			}
+		}
+
+		[Table]
+		sealed class NoIdentityTable
+		{
+			[Column] public int     Id    { get; set; }
+			[Column] public string? Value { get; set; }
+		}
+
+		// SAP HANA harvests an identity insert with SELECT CURRENT_IDENTITY_VALUE(), which is SESSION-scoped: without a
+		// guard, InsertWithIdentity against a table carrying no identity column returns a value left over from an
+		// unrelated earlier insert (or NULL on a fresh session) instead of failing. The guard lives in
+		// SapHanaDmlService.BuildCommandScenario, which runs on the default path — LinqOptions.UseCombinedCommands gates
+		// only how steps are grouped into commands, not whether the scenario is built.
+		//
+		// Every sibling provider carries the same check (Firebird, Oracle, PostgreSQL, YDB, DuckDB, BasicSqlBuilder) and
+		// nothing in the suite covered any of them, which is how SAP HANA's went missing unnoticed.
+		[Test]
+		public void InsertWithIdentity_NoIdentityColumn_Throws([IncludeDataSources(TestProvName.AllSapHana)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<NoIdentityTable>();
+
+			Action act = () => tb.InsertWithIdentity(() => new NoIdentityTable { Id = 1, Value = "value" });
+
+			var ex = act.ShouldThrow<LinqToDBException>();
+
+			ex.Message.ShouldContain("Identity field must be defined", Case.Sensitive);
 		}
 	}
 }

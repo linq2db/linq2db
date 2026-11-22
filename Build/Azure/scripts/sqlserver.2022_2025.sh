@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# SQL Server 2022 (host port 1422) and 2025 (host port 1425) run as concurrent lanes in one job.
+# Each SQL Server listens on 1433 inside its container; the host port differentiates them.
+
+. "$(dirname "$0")/mssql-wait.sh"
+
+docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=Password12!' -p 1422:1433 -h mssql2022 --name=mssql2022 -d linq2db/linq2db:mssql-2022
+docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=Password12!' -p 1425:1433 -h mssql2025 --name=mssql2025 -d linq2db/linq2db:mssql-2025
+docker ps -a
+
+wait_or_recreate mssql2022 1422 linq2db/linq2db:mssql-2022 || exit 1
+wait_or_recreate mssql2025 1425 linq2db/linq2db:mssql-2025 || exit 1
+
+for c in mssql2022 mssql2025; do
+    docker exec $c /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q 'CREATE DATABASE TestData;'
+    docker exec $c /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q 'CREATE DATABASE TestDataMS;'
+    # test-DB perf: SIMPLE recovery + delayed durability cut transaction-log-flush cost on the write-heavy suite
+    docker exec $c /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q 'ALTER DATABASE TestData SET RECOVERY SIMPLE; ALTER DATABASE TestData SET DELAYED_DURABILITY = FORCED;'
+    docker exec $c /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q 'ALTER DATABASE TestDataMS SET RECOVERY SIMPLE; ALTER DATABASE TestDataMS SET DELAYED_DURABILITY = FORCED;'
+done

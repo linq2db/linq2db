@@ -1,4 +1,4 @@
-﻿#if EF8
+#if EF_FSHARP
 using System;
 using System.Linq;
 
@@ -23,9 +23,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			return new FSharpContext.AppDbContext(options);
 		}
 
-		protected override DbContextOptionsBuilder<FSharpContext.AppDbContext> ProviderSetup(string provider, string connectionString, DbContextOptionsBuilder<FSharpContext.AppDbContext> optionsBuilder)
+		protected override DbContextOptionsBuilder<FSharpContext.AppDbContext> ProviderSetup(string provider, string connectionString, DbContextOptionsBuilder<FSharpContext.AppDbContext> optionsBuilder, bool useNodaTime)
 		{
-			var builder = base.ProviderSetup(provider, connectionString, optionsBuilder);
+			var builder = base.ProviderSetup(provider, connectionString, optionsBuilder, useNodaTime);
 
 			FSharpExtensions.WithFSharp(builder);
 			return builder;
@@ -52,12 +52,13 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			public int? ValueN { get; set; }
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/260")]
 		public void Issue4646TestLinqToDB([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 			using var db = ctx.CreateLinqToDBConnection();
+
+			db.GetTable<Issue4646Table>().Delete();
 
 			FSharpTestMethods.Issue4646TestLinqToDB(ctx);
 
@@ -74,6 +75,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		{
 			using var ctx = CreateContext(provider);
 			using var db = ctx.CreateLinqToDBConnection();
+
+			db.GetTable<Issue4646Table>().Delete();
 
 			FSharpTestMethods.Issue4646TestEF(ctx);
 			ctx.SaveChanges();

@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
@@ -14,6 +17,8 @@ using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 
 using Shouldly;
+
+using Tests.Model;
 
 namespace Tests.Linq
 {
@@ -133,7 +138,7 @@ namespace Tests.Linq
 
 		[Sql.Extension("{value1} = {value2}", ServerSideOnly = true, IsPredicate = true, Precedence = Precedence.Comparison)]
 		static bool AnyEquality<T>([ExprParameter] T value1, [ExprParameter] T value2)
-			=> throw new NotImplementedException();
+			=> throw new ServerSideOnlyException(nameof(AnyEquality));
 
 		private static MappingSchema CreateMappingSchema()
 		{
@@ -429,6 +434,55 @@ namespace Tests.Linq
 			var selectResult = query.Concat(query).ToArray();
 
 			selectResult.Length.ShouldBe(20);
+		}
+
+		/// <summary>
+		/// A set operation distincts the value the condition chose, not the columns it chose between.
+		/// </summary>
+		/// <remarks>
+		/// The sibling above concatenates, so leaving the choice on the client costs nothing but columns. Here the
+		/// branches meet under a UNION, and a choice the database never made is a choice DISTINCT cannot see: ten
+		/// rows come back, one per pairing of the columns the rows were assembled from, where three values were
+		/// asked for. The two arms carry one conversion spelled against a nullable member and against a plain one.
+		/// </remarks>
+		[Test]
+		public void UnionDistinctsTheValueTheConditionChose([DataSources(false)] string context)
+		{
+			var ms = CreateMappingSchema();
+
+			var testData = MainClass.TestData();
+			using var db = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable(testData);
+			var query = from t1 in table
+						select new
+						{
+							Converted = t1.EnumNullable != null ? t1.EnumNullable : t1.Enum,
+						};
+
+			var selectResult = query.Union(query).ToArray();
+
+			selectResult.Length.ShouldBe(3);
+		}
+
+		/// <summary>
+		/// A condition between two converted columns is answered where the rows are, so it can filter.
+		/// </summary>
+		/// <remarks>
+		/// A projection that cannot be folded still has somewhere to go - the client reads both columns and chooses
+		/// per row. A predicate has not: the choice has to be made in SQL or not at all.
+		/// </remarks>
+		[Test]
+		public void WhereChoosesBetweenTwoConvertedColumns([DataSources(false)] string context)
+		{
+			var ms = CreateMappingSchema();
+
+			var testData = MainClass.TestData();
+			using var db = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable(testData);
+
+			var count = table.Count(t => (t.EnumNullable != null ? t.EnumNullable : t.Enum) == EnumValue.Value1);
+
+			count.ShouldBe(4);
 		}
 
 		[Test]
@@ -835,7 +889,27 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConditionNullTest([DataSources(TestProvName.AllAccess)] string context)
+		public void Issue3830OrderByTest([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Issue3830TestTable.TestData);
+
+			var expected = Issue3830TestTable.TestData
+				.OrderBy(r => r.Bool1)
+				.ThenBy(r => r.Id)
+				.Select(r => r.Id)
+				.ToArray();
+
+			table
+				.OrderBy(r => r.Bool1)
+				.ThenBy(r => r.Id)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
+		[Test]
+		public void ConditionNullTest([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1089,7 +1163,7 @@ namespace Tests.Linq
 		}
 
 		[Sql.Expression("({0} > 0)", ServerSideOnly = true, IsPredicate = true)]
-		static bool Issue5505IsPositive(int x) => throw new InvalidOperationException();
+		static bool Issue5505IsPositive(int x) => throw new ServerSideOnlyException(nameof(Issue5505IsPositive));
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5505")]
 		public void UpdateValuesWithUnrelatedFunctionConversion([DataSources] string context, [Values] bool inline)
@@ -1128,12 +1202,12 @@ namespace Tests.Linq
 			using var rawTable = db.CreateLocalTable(TableWithConverterValueRaw.TestData);
 			var       table    = db.GetTable<TableWithConverterValue>();
 
-			Assert.Throws<LinqToDBException>(() =>
+			Assert.That(() =>
 				_ = table
 					.Where(x => x.Id == 1)
 					.Set(x => Sql.Row(x.Test1, x.Test2), x => Sql.Row(true, x.Test2))
-					.Update()
-			);
+					.Update(),
+				Throws.TypeOf<LinqToDBException>());
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5351")]
@@ -1323,7 +1397,1348 @@ namespace Tests.Linq
 				Assert.That(res[1].IntStructRequiredWithNull?.Value, Is.EqualTo(1));
 				Assert.That(res[1].IntStructNullableWithNull?.Value, Is.EqualTo(1));
 			}
+		}
 
+		[Table]
+		sealed class ScaledRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			// Access has no 64-bit integer type, so it stores the count as CURRENCY - which carries one exactly.
+			// The storage type is a provider detail here: what is under test is that the conversion survives.
+			[Column(DataType = DataType.Int64)]
+			[Column(Configuration = ProviderName.Access, DataType = DataType.Money)]
+			public TimeSpan Span { get; set; }
+		}
+
+		/// <summary>
+		/// A converted column keeps its conversion when it is read through a set operation.
+		/// </summary>
+		/// <remarks>
+		/// The conversion is not applied by the SQL - it is applied when the row is materialised, by walking the
+		/// column expression back to the descriptor that carries it. A provider that wraps a set-operation column
+		/// breaks that walk unless the wrapper is transparent to it, and then the stored number is read raw: this
+		/// one stores seconds, so losing the conversion reads ninety minutes as fifty-four hundred ticks.
+		/// <para>
+		/// Informix is the provider that does the wrapping, in <c>NVL(x, NULL)</c>, to stop its driver typing the
+		/// column from the first branch alone. Nothing here is provider-specific though, and the assertion is the
+		/// same everywhere.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void ConversionSurvivesASetOperation([DataSources] string context)
+		{
+			var value = TimeSpan.FromMinutes(90);
+			var ms    = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<ScaledRow>()
+					.Property(e => e.Span)
+						.HasConversion(
+							ts => ts.Ticks / TimeSpan.TicksPerSecond,
+							v  => TimeSpan.FromTicks(v * TimeSpan.TicksPerSecond))
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var t  = db.CreateLocalTable<ScaledRow>();
+
+			db.Insert(new ScaledRow { Id = 1, Span = value });
+
+			var rows = t
+				.Select(r => new { Source = 1, r.Span })
+				.Concat(t.Select(r => new { Source = 2, r.Span }))
+				.OrderBy(r => r.Source)
+				.ToList();
+
+			rows.Count.ShouldBe(2);
+			rows.Select(r => r.Span).ShouldBe([value, value]);
+		}
+
+		sealed class SeparatelyDeclaredRowA
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Int64)]
+			[Column(Configuration = ProviderName.Access, DataType = DataType.Money)]
+			public TimeSpan Span { get; set; }
+		}
+
+		sealed class SeparatelyDeclaredRowB
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Int64)]
+			[Column(Configuration = ProviderName.Access, DataType = DataType.Money)]
+			public TimeSpan Span { get; set; }
+		}
+
+		/// <summary>
+		/// Two columns declaring the same conversion separately are read the same way, and the comparison that
+		/// establishes it does not depend on how the conversion spells its nullability.
+		/// </summary>
+		/// <remarks>
+		/// The sibling above pairs a column with itself, so the two descriptors are one object and the comparison
+		/// short-circuits on identity before looking at either conversion. Declared twice they are two objects that
+		/// behave alike, which is what the comparison exists to recognise - and the only shape that reaches it.
+		/// <para>
+		/// Nullable storage under a non-nullable member is what makes the parameter and the value it stands for
+		/// disagree: the conversion reads <c>v.Value</c>, so substituting a bare <see cref="long"/> for a
+		/// <c>long?</c> parameter asks for a member that type does not have. That threw
+		/// <em>Property 'Int64 Value' is not defined for type 'System.Int64'</em> while the query was still being
+		/// built. The nullable-member spelling of the same thing failed the other way, silently: its conversion is
+		/// wrapped in a nullability cast, and stripping the cast used to abandon the substitution underneath it, so
+		/// two identical conversions compared unequal.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void SeparatelyDeclaredConversionsAreReadTheSameWay([DataSources] string context)
+		{
+			var value = TimeSpan.FromMinutes(90);
+			var ms    = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<SeparatelyDeclaredRowA>()
+					.Property(e => e.Span)
+						.HasConversion(ts => (long?)ts.Ticks, v => TimeSpan.FromTicks(v!.Value))
+				.Entity<SeparatelyDeclaredRowB>()
+					.Property(e => e.Span)
+						.HasConversion(ts => (long?)ts.Ticks, v => TimeSpan.FromTicks(v!.Value))
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var a  = db.CreateLocalTable<SeparatelyDeclaredRowA>();
+			using var b  = db.CreateLocalTable<SeparatelyDeclaredRowB>();
+
+			db.Insert(new SeparatelyDeclaredRowA { Id = 1, Span = value });
+			db.Insert(new SeparatelyDeclaredRowB { Id = 2, Span = value });
+
+			var rows = a
+				.Select(r => new { r.Id, r.Span })
+				.Concat(b.Select(r => new { r.Id, r.Span }))
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			rows.Count.ShouldBe(2);
+			rows.Select(r => r.Span).ShouldBe([value, value]);
+		}
+
+		/// <summary>
+		/// Two columns whose conversions are the same conversion, declared once each rather than shared, meeting in
+		/// one comparison.
+		/// </summary>
+		/// <remarks>
+		/// The refusal below rests on a comparison of what two conversions do, and that comparison answers "no" when
+		/// it cannot tell - so anything it fails to recognise is a query that used to work and now throws. Two
+		/// separately declared instances of one conversion are the shape where that would bite, and the only one
+		/// reaching the expression comparison at all: paired with itself a column is one descriptor object, and
+		/// identity settles it before either conversion is looked at.
+		/// </remarks>
+		[Test]
+		public void SeparatelyDeclaredConversionsStillCompare([DataSources] string context)
+		{
+			var value = TimeSpan.FromMinutes(90);
+			var ms    = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<SeparatelyDeclaredRowA>()
+					.Property(e => e.Span)
+						.HasConversion(ts => (long?)ts.Ticks, v => TimeSpan.FromTicks(v!.Value))
+				.Entity<SeparatelyDeclaredRowB>()
+					.Property(e => e.Span)
+						.HasConversion(ts => (long?)ts.Ticks, v => TimeSpan.FromTicks(v!.Value))
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var a  = db.CreateLocalTable<SeparatelyDeclaredRowA>();
+			using var b  = db.CreateLocalTable<SeparatelyDeclaredRowB>();
+
+			db.Insert(new SeparatelyDeclaredRowA { Id = 1, Span = value });
+			db.Insert(new SeparatelyDeclaredRowB { Id = 2, Span = value });
+
+			var matched =
+				(from x in a
+				 from y in b
+				 where x.Span == y.Span
+				 select x.Id)
+				.ToArray();
+
+			matched.ShouldBe([1]);
+		}
+
+		sealed class BlankPaddedCharConverter : ValueConverter<char?, char>
+		{
+			public BlankPaddedCharConverter() : base(
+				x => (!x.HasValue || x == default || x == '\0') ? ' ' : x.Value,
+				x => char.IsLetterOrDigit(x) ? x : null,
+				true)
+			{
+			}
+		}
+
+		[Table]
+		sealed class SharedConverterRowA
+		{
+			[PrimaryKey                                                   ] public int   Id   { get; set; }
+			[ValueConverter(ConverterType = typeof(BlankPaddedCharConverter))]
+			[Column(Length = 1)                                           ] public char? Code { get; set; }
+		}
+
+		[Table]
+		sealed class SharedConverterRowB
+		{
+			[PrimaryKey                                                   ] public int   Id   { get; set; }
+			[ValueConverter(ConverterType = typeof(BlankPaddedCharConverter))]
+			[Column(Length = 1)                                           ] public char? Code { get; set; }
+		}
+
+		/// <summary>
+		/// Two columns naming the same converter class get one converter instance each, and still combine in a set
+		/// operation.
+		/// </summary>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6052")]
+		public void SetOperationOverColumnsSharingAConverterClass([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var a  = db.CreateLocalTable([new SharedConverterRowA { Id = 1, Code = 'A' }, new SharedConverterRowA { Id = 2, Code = null }]);
+			using var b  = db.CreateLocalTable([new SharedConverterRowB { Id = 3, Code = 'B' }]);
+
+			var rows = a
+				.Select(r => new { r.Id, r.Code })
+				.Union(b.Select(r => new { r.Id, r.Code }))
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			rows.Select(r => r.Code).ShouldBe(['A', null, 'B']);
+		}
+
+		#region Issue 5975 / 5976
+
+		static DateTime Issue5975ToStore  (DateTime v) => v.AddHours(1);
+		static DateTime Issue5975FromStore(DateTime v) => v.AddHours(-1);
+
+		[Table]
+		sealed class Issue5975Row
+		{
+			[PrimaryKey] public int       Id    { get; set; }
+			[Column]     public DateTime  Plain { get; set; }
+			[Column]     public DateTime? Date  { get; set; }
+		}
+
+		static MappingSchema Issue5975MappingSchema()
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<Issue5975Row>()
+					.Property(e => e.Plain)
+						.HasConversion(v => Issue5975ToStore(v), v => Issue5975FromStore(v))
+					.Property(e => e.Date)
+						.HasConversion(
+							v => v != null ? (DateTime?)Issue5975ToStore(v.Value) : null,
+							v => v != null ? (DateTime?)Issue5975FromStore(v.Value) : null)
+				.Build();
+
+			return ms;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5975")]
+		public void InsertServerSideValueIntoClientConvertedColumn([DataSources] string context)
+		{
+			using var db = GetDataContext(context, Issue5975MappingSchema());
+			using var t  = db.CreateLocalTable<Issue5975Row>();
+
+			t.Insert(() => new Issue5975Row { Id = 1, Plain = Sql.CurrentTimestamp, Date = Sql.CurrentTimestamp });
+
+			var row = t.Single();
+			row.Date.ShouldNotBeNull();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5975")]
+		public void UpdateServerSideValueIntoClientConvertedColumn([DataSources] string context)
+		{
+			var stored = new DateTime(2020, 1, 1, 10, 0, 0);
+			var test   = new DateTime(2026, 6, 6, 1, 1, 1);
+
+			using var db = GetDataContext(context, Issue5975MappingSchema());
+			using var t  = db.CreateLocalTable(
+			[
+				new Issue5975Row { Id = 1, Plain = stored, Date = stored },
+				new Issue5975Row { Id = 2, Plain = stored, Date = null   },
+			]);
+
+			t.Update(x => new Issue5975Row { Date = x.Date != null ? test : Sql.DateAdd(Sql.DateParts.Day, 1, x.Plain) });
+
+			var rows = t.OrderBy(r => r.Id).ToArray();
+
+			rows[0].Date.ShouldBe(test);
+			rows[1].Date.ShouldNotBeNull();
+		}
+
+		/// <summary>
+		/// A column converted on a plain member and one converted on a nullable member compare when the two
+		/// conversions are one conversion, spelled once for each.
+		/// </summary>
+		/// <remarks>
+		/// The nullable spelling guards the conversion with <c>v != null ? … : null</c>. A converter that does not
+		/// handle nulls is never handed one, so the guard is not part of what it does to a stored value, and the
+		/// two spellings must not be refused as divergent.
+		/// </remarks>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void PlainAndNullableSpellingsOfOneConversionCompare([DataSources] string context)
+		{
+			var value = new DateTime(2020, 1, 1, 10, 0, 0);
+
+			using var db = GetDataContext(context, Issue5975MappingSchema());
+			using var t  = db.CreateLocalTable(
+			[
+				new Issue5975Row { Id = 1, Plain = value, Date = value             },
+				new Issue5975Row { Id = 2, Plain = value, Date = value.AddDays(1) },
+				new Issue5975Row { Id = 3, Plain = value, Date = null              },
+			]);
+
+			t
+				.Where(r => r.Plain == r.Date)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([1]);
+
+			t
+				.Where(r => r.Plain < r.Date)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([2]);
+		}
+
+		public enum NullableConversionSpelling
+		{
+			NullOnTheLeft,
+			HasValue,
+			EqualsNull,
+			NotHasValue,
+			DefaultForNull,
+			NewForNull,
+			GetValueOrDefault,
+			UnguardedValue,
+		}
+
+		static MappingSchema NullableSpellingMappingSchema(
+			Expression<Func<DateTime?, DateTime?>> toStore,
+			Expression<Func<DateTime?, DateTime?>> fromStore)
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<Issue5975Row>()
+					.Property(e => e.Plain)
+						.HasConversion(v => Issue5975ToStore(v), v => Issue5975FromStore(v))
+					.Property(e => e.Date)
+						.HasConversion(toStore, fromStore)
+				.Build();
+
+			return ms;
+		}
+
+		static MappingSchema NullableSpellingMappingSchema(NullableConversionSpelling spelling)
+		{
+			return spelling switch
+			{
+				NullableConversionSpelling.NullOnTheLeft => NullableSpellingMappingSchema(
+					v => null != v ? (DateTime?)Issue5975ToStore(v.Value)   : null,
+					v => null != v ? (DateTime?)Issue5975FromStore(v.Value) : null),
+
+				NullableConversionSpelling.HasValue => NullableSpellingMappingSchema(
+					v => v.HasValue ? (DateTime?)Issue5975ToStore(v.Value)   : null,
+					v => v.HasValue ? (DateTime?)Issue5975FromStore(v.Value) : null),
+
+				NullableConversionSpelling.EqualsNull => NullableSpellingMappingSchema(
+					v => v == null ? null : (DateTime?)Issue5975ToStore(v.Value),
+					v => v == null ? null : (DateTime?)Issue5975FromStore(v.Value)),
+
+				NullableConversionSpelling.NotHasValue => NullableSpellingMappingSchema(
+					v => !v.HasValue ? null : (DateTime?)Issue5975ToStore(v.Value),
+					v => !v.HasValue ? null : (DateTime?)Issue5975FromStore(v.Value)),
+
+				NullableConversionSpelling.DefaultForNull => NullableSpellingMappingSchema(
+					v => v != null ? Issue5975ToStore(v.Value)   : default(DateTime?),
+					v => v != null ? Issue5975FromStore(v.Value) : default(DateTime?)),
+
+				NullableConversionSpelling.NewForNull => NullableSpellingMappingSchema(
+					v => v != null ? Issue5975ToStore(v.Value)   : new DateTime?(),
+					v => v != null ? Issue5975FromStore(v.Value) : new DateTime?()),
+
+				NullableConversionSpelling.GetValueOrDefault => NullableSpellingMappingSchema(
+					v => Issue5975ToStore(v.GetValueOrDefault()),
+					v => Issue5975FromStore(v.GetValueOrDefault())),
+
+				NullableConversionSpelling.UnguardedValue => NullableSpellingMappingSchema(
+					v => Issue5975ToStore(v!.Value),
+					v => Issue5975FromStore(v!.Value)),
+
+				_ => throw new ArgumentOutOfRangeException(nameof(spelling)),
+			};
+		}
+
+		/// <summary>
+		/// Every way of writing the conversion against a nullable member that only sets a null aside is the
+		/// conversion its plain-member twin performs.
+		/// </summary>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void NullableSpellingsOfOneConversionCompare([DataSources] string context, [Values] NullableConversionSpelling spelling)
+		{
+			var value = new DateTime(2020, 1, 1, 10, 0, 0);
+
+			using var db = GetDataContext(context, NullableSpellingMappingSchema(spelling));
+			using var t  = db.CreateLocalTable(
+			[
+				new Issue5975Row { Id = 1, Plain = value, Date = value             },
+				new Issue5975Row { Id = 2, Plain = value, Date = value.AddDays(1) },
+				new Issue5975Row { Id = 3, Plain = value, Date = null              },
+			]);
+
+			t
+				.Where(r => r.Plain == r.Date)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([1]);
+		}
+
+		/// <summary>
+		/// A conditional choosing between the plain and the nullable spelling of one conversion is one SQL value read
+		/// through one of them, and a NULL from the nullable branch stays NULL.
+		/// </summary>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void ConditionalOverPlainAndNullableSpellingsReadsNull([DataSources] string context)
+		{
+			var value  = new DateTime(2020, 1, 1, 10, 0, 0);
+			var value2 = value.AddDays(1);
+
+			using var db = GetDataContext(context, Issue5975MappingSchema());
+			using var t  = db.CreateLocalTable(
+			[
+				new Issue5975Row { Id = 1, Plain = value, Date = value2 },
+				new Issue5975Row { Id = 2, Plain = value, Date = null   },
+				new Issue5975Row { Id = 3, Plain = value, Date = value2 },
+			]);
+
+			t
+				.OrderBy(r => r.Id)
+				.Select(r => Sql.AsSql(r.Id == 1 ? (DateTime?)r.Plain : r.Date))
+				.ToArray()
+				.ShouldBe([value, null, value2]);
+		}
+
+		[Table]
+		sealed class TicksConversionRow
+		{
+			[PrimaryKey] public int       Id    { get; set; }
+			[Column]     public DateTime  Plain { get; set; }
+			[Column]     public DateTime? Date  { get; set; }
+		}
+
+		static MappingSchema TicksConversionMappingSchema()
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<TicksConversionRow>()
+					.Property(e => e.Plain)
+						.HasConversion(v => v.Ticks, v => new DateTime(v))
+					.Property(e => e.Date)
+						.HasConversion(
+							v => v != null ? (long?)v.Value.Ticks : null,
+							v => v != null ? (DateTime?)new DateTime(v.Value) : null)
+				.Build();
+
+			return ms;
+		}
+
+		/// <summary>
+		/// The plain and the nullable spelling of one conversion compare, and share one reading, when the conversion
+		/// changes the stored type as well.
+		/// </summary>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void PlainAndNullableSpellingsOfOneTypeChangingConversionCompare([DataSources(TestProvName.AllAccess)] string context)
+		{
+			var value  = new DateTime(2020, 1, 1, 10, 0, 0);
+			var value2 = value.AddDays(1);
+
+			using var db = GetDataContext(context, TicksConversionMappingSchema());
+			using var t  = db.CreateLocalTable(
+			[
+				new TicksConversionRow { Id = 1, Plain = value,  Date = value  },
+				new TicksConversionRow { Id = 2, Plain = value,  Date = value2 },
+				new TicksConversionRow { Id = 3, Plain = value2, Date = null   },
+			]);
+
+			t
+				.Where(r => r.Plain == r.Date)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([1]);
+
+			t
+				.Where(r => r.Plain < r.Date)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([2]);
+
+			// the nullable arm first, so the plain value is read through the nullable conversion
+			t
+				.OrderBy(r => r.Id)
+				.Select(r => Sql.AsSql(r.Id != 1 ? r.Date : (DateTime?)r.Plain))
+				.ToArray()
+				.ShouldBe([value, value2, null]);
+		}
+
+		[Table]
+		sealed class ReferenceConversionRow
+		{
+			[PrimaryKey] public int     Id      { get; set; }
+			[Column]     public string  Plain   { get; set; } = null!;
+			[Column]     public string? Guarded { get; set; }
+		}
+
+		/// <summary>
+		/// The null guard of a reference-typed conversion is set aside just as a nullable one's is.
+		/// </summary>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void ReferenceSpellingsOfOneConversionCompare([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<ReferenceConversionRow>()
+					.Property(e => e.Plain)
+						.HasConversion(v => "#" + v, v => v.Substring(1))
+					.Property(e => e.Guarded)
+						.HasConversion(v => v != null ? "#" + v : null, v => v != null ? v.Substring(1) : null)
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var t  = db.CreateLocalTable(
+			[
+				new ReferenceConversionRow { Id = 1, Plain = "a", Guarded = "a"  },
+				new ReferenceConversionRow { Id = 2, Plain = "a", Guarded = "b"  },
+				new ReferenceConversionRow { Id = 3, Plain = "a", Guarded = null },
+			]);
+
+			t
+				.Where(r => r.Plain == r.Guarded)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([1]);
+		}
+
+		static readonly Func<DateTime, DateTime> DelegateToStore   = Issue5975ToStore;
+		static readonly Func<DateTime, DateTime> DelegateFromStore = Issue5975FromStore;
+		static readonly Func<DateTime, DateTime> OtherToStore      = v => v.AddHours(2);
+		static readonly Func<DateTime, DateTime> OtherFromStore    = v => v.AddHours(-2);
+
+		static Expression<Func<DateTime, DateTime>> PlainInvoking(Func<DateTime, DateTime> convert)
+			=> v => convert(v);
+
+		static Expression<Func<DateTime?, DateTime?>> GuardedInvoking(Func<DateTime, DateTime> convert)
+			=> v => v != null ? (DateTime?)convert(v.Value) : null;
+
+		static MappingSchema DelegateMappingSchema(Func<DateTime, DateTime> toStore, Func<DateTime, DateTime> fromStore)
+			=> DelegateMappingSchema(DelegateToStore, DelegateFromStore, toStore, fromStore);
+
+		static MappingSchema DelegateMappingSchema(
+			Func<DateTime, DateTime> plainToStore,
+			Func<DateTime, DateTime> plainFromStore,
+			Func<DateTime, DateTime> guardedToStore,
+			Func<DateTime, DateTime> guardedFromStore)
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<Issue5975Row>()
+					.Property(e => e.Plain)
+						.HasConversion(PlainInvoking(plainToStore), PlainInvoking(plainFromStore))
+					.Property(e => e.Date)
+						.HasConversion(GuardedInvoking(guardedToStore), GuardedInvoking(guardedFromStore))
+				.Build();
+
+			return ms;
+		}
+
+		static Func<DateTime, DateTime> AddingHours(int hours) => v => v.AddHours(hours);
+
+		/// <summary>
+		/// Two conversions invoking one captured delegate are one conversion, though each holds it in a closure of its
+		/// own.
+		/// </summary>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void ConversionsInvokingOneDelegateCompare([DataSources] string context)
+		{
+			var value = new DateTime(2020, 1, 1, 10, 0, 0);
+
+			using var db = GetDataContext(context, DelegateMappingSchema(DelegateToStore, DelegateFromStore));
+			using var t  = db.CreateLocalTable(
+			[
+				new Issue5975Row { Id = 1, Plain = value, Date = value             },
+				new Issue5975Row { Id = 2, Plain = value, Date = value.AddDays(1) },
+			]);
+
+			t
+				.Where(r => r.Plain == r.Date)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([1]);
+		}
+
+		static MappingSchema CapturedHoursMappingSchema(int hours)
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<SchemaScopedConversionRow>()
+					.Property(e => e.Value)
+						.HasConversion(v => v.AddHours(hours), v => v.AddHours(-hours))
+				.Build();
+
+			return ms;
+		}
+
+		/// <summary>
+		/// Two schemas whose conversions differ only in a captured value each keep their own conversion.
+		/// </summary>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void SchemasConvertingOneMemberThroughACapturedValueStayApart([DataSources] string context)
+		{
+			var value = new DateTime(2020, 1, 1, 10, 0, 0);
+
+			using var writer = GetDataContext(context, CapturedHoursMappingSchema(3));
+			using var t      = CreateCommittedTable(writer, value);
+
+			using var reader = GetDataContext(context, CapturedHoursMappingSchema(4));
+
+			reader
+				.GetTable<SchemaScopedConversionRow>()
+				.Single()
+				.Value
+				.ShouldBe(value.AddHours(-1));
+		}
+
+		[Table]
+		sealed class SchemaScopedConversionRow
+		{
+			[PrimaryKey] public int      Id    { get; set; }
+			[Column]     public DateTime Value { get; set; }
+		}
+
+		// Access commits an implicit transaction asynchronously, so a second connection could read the table before the row lands
+		static TempTable<SchemaScopedConversionRow> CreateCommittedTable(ITestDataContext writer, DateTime value)
+		{
+			var table = writer.CreateLocalTable<SchemaScopedConversionRow>();
+
+			// a remote context has no transaction, so a traced commit would make the direct and remote baselines differ
+			using (new DisableBaseline("test setup"))
+			using (var tr = writer.BeginTransaction())
+			{
+				writer.Insert(new SchemaScopedConversionRow { Id = 1, Value = value });
+				tr?.Commit();
+			}
+
+			return table;
+		}
+
+		static MappingSchema SchemaScopedConversionMappingSchema(
+			Expression<Func<DateTime, DateTime>> toStore,
+			Expression<Func<DateTime, DateTime>> fromStore)
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<SchemaScopedConversionRow>()
+					.Property(e => e.Value)
+						.HasConversion(toStore, fromStore)
+				.Build();
+
+			return ms;
+		}
+
+		/// <summary>
+		/// Two schemas converting one member differently each keep their own conversion.
+		/// </summary>
+		/// <remarks>
+		/// A schema's identity is built from its mapping attributes, so an attribute that does not say which
+		/// conversion it carries gives both schemas one identity, and whichever reaches the mapping caches first
+		/// converts for both.
+		/// </remarks>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void SchemasConvertingOneMemberDifferentlyStayApart([DataSources] string context)
+		{
+			var value = new DateTime(2020, 1, 1, 10, 0, 0);
+
+			using var writer = GetDataContext(context, SchemaScopedConversionMappingSchema(v => v.AddHours(1), v => v.AddHours(-1)));
+			using var t      = CreateCommittedTable(writer, value);
+
+			using var reader = GetDataContext(context, SchemaScopedConversionMappingSchema(v => v.AddHours(2), v => v.AddHours(-2)));
+
+			reader
+				.GetTable<SchemaScopedConversionRow>()
+				.Single()
+				.Value
+				.ShouldBe(value.AddHours(-1));
+		}
+
+		public enum DivergentNullableConversion
+		{
+			OtherConversion,
+			ReversedGuard,
+			OtherDelegate,
+			OneLambdaTwoClosures,
+		}
+
+		/// <summary>
+		/// A null guard is set aside only when what is left is the plain member's conversion: a guard around
+		/// another conversion, or one that answers null for a value, is still refused.
+		/// </summary>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void NullableSpellingOfAnotherConversionIsRefused([DataSources] string context, [Values] DivergentNullableConversion divergence)
+		{
+			var ms = divergence switch
+			{
+				DivergentNullableConversion.OtherConversion => NullableSpellingMappingSchema(
+					v => v != null ? (DateTime?)v.Value.AddHours(2)  : null,
+					v => v != null ? (DateTime?)v.Value.AddHours(-2) : null),
+
+				DivergentNullableConversion.ReversedGuard => NullableSpellingMappingSchema(
+					v => v != null ? null : (DateTime?)Issue5975ToStore(v.GetValueOrDefault()),
+					v => v != null ? null : (DateTime?)Issue5975FromStore(v.GetValueOrDefault())),
+
+				DivergentNullableConversion.OtherDelegate => DelegateMappingSchema(OtherToStore, OtherFromStore),
+
+				// one lambda, so one method, but two delegates: which closure each reads is not known to be the same
+				DivergentNullableConversion.OneLambdaTwoClosures => DelegateMappingSchema(
+					AddingHours(1), AddingHours(-1),
+					AddingHours(1), AddingHours(-1)),
+
+				_ => throw new ArgumentOutOfRangeException(nameof(divergence)),
+			};
+
+			using var db = GetDataContext(context, ms);
+			using var t  = db.CreateLocalTable<Issue5975Row>();
+
+			var compared = () => t
+				.Where(r => r.Plain == r.Date)
+				.ToArray();
+
+			var refusal = string.Format(
+				CultureInfo.InvariantCulture,
+				ErrorHelper.Error_ValueConverter_DivergentOperands,
+				nameof(Issue5975Row.Plain),
+				nameof(Issue5975Row.Date));
+
+			compared
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain(refusal);
+		}
+
+		/// <summary>
+		/// A reference type that answers its own null test: <see cref="HasValue"/> and the equality operators treat an
+		/// instance without a value as null.
+		/// </summary>
+		sealed class CountOption
+		{
+			public CountOption(bool hasValue, int value)
+			{
+				HasValue = hasValue;
+				Value    = value;
+			}
+
+			public bool HasValue { get; }
+			public int  Value    { get; }
+
+			static bool IsEmpty(CountOption? option) => option is null || !option.HasValue;
+
+			public static bool operator ==(CountOption? left, CountOption? right)
+				=> IsEmpty(left) ? IsEmpty(right) : !IsEmpty(right) && left!.Value == right!.Value;
+
+			public static bool operator !=(CountOption? left, CountOption? right) => !(left == right);
+
+			public override bool Equals(object? obj) => obj is CountOption other && this == other;
+
+			public override int GetHashCode() => IsEmpty(this) ? 0 : Value.GetHashCode();
+		}
+
+		[Table]
+		sealed class CountOptionRow
+		{
+			[PrimaryKey] public int          Id      { get; set; }
+			[Column]     public CountOption  Plain   { get; set; } = null!;
+			[Column]     public CountOption? Guarded { get; set; }
+		}
+
+		public enum OwnNullTest
+		{
+			HasValueMember,
+			EqualityOperator,
+		}
+
+		/// <summary>
+		/// A null test a reference type answers itself is not set aside: it can answer null for an instance, which
+		/// the converter is handed, so the guarded conversion stores something else for it.
+		/// </summary>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void OwnNullTestOfAReferenceTypeIsRefused([DataSources] string context, [Values] OwnNullTest nullTest)
+		{
+			Expression<Func<CountOption?, int?>> guarded = nullTest switch
+			{
+				OwnNullTest.HasValueMember   => v => v!.HasValue ? (int?)v.Value : null,
+				OwnNullTest.EqualityOperator => v => v != null ? (int?)v.Value : null,
+				_                            => throw new ArgumentOutOfRangeException(nameof(nullTest)),
+			};
+
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<CountOptionRow>()
+					.Property(e => e.Plain)
+						.HasConversion(v => (int?)v.Value, v => new CountOption(true, v.GetValueOrDefault()))
+					.Property(e => e.Guarded)
+						.HasConversion(guarded, v => new CountOption(true, v.GetValueOrDefault()))
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var t  = db.CreateLocalTable<CountOptionRow>();
+
+			var compared = () => t
+				.Where(r => r.Plain == r.Guarded)
+				.ToArray();
+
+			var refusal = string.Format(
+				CultureInfo.InvariantCulture,
+				ErrorHelper.Error_ValueConverter_DivergentOperands,
+				nameof(CountOptionRow.Plain),
+				nameof(CountOptionRow.Guarded));
+
+			compared
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain(refusal);
+		}
+
+		/// <summary>
+		/// A value type whose equality, declared on its nullable form, treats a zero count as null.
+		/// </summary>
+		readonly struct SentinelCount : IEquatable<SentinelCount>
+		{
+			public SentinelCount(int value) => Value = value;
+
+			public int Value { get; }
+
+			static bool IsNull(SentinelCount? count) => count.GetValueOrDefault().Value == 0;
+
+			public static bool operator ==(SentinelCount? left, SentinelCount? right)
+				=> IsNull(left) ? IsNull(right) : !IsNull(right) && left.GetValueOrDefault().Value == right.GetValueOrDefault().Value;
+
+			public static bool operator !=(SentinelCount? left, SentinelCount? right) => !(left == right);
+
+			public bool Equals(SentinelCount other) => this == other;
+
+			public override bool Equals(object? obj) => obj is SentinelCount other && Equals(other);
+
+			public override int GetHashCode() => IsNull(this) ? 0 : Value.GetHashCode();
+		}
+
+		[Table]
+		sealed class SentinelCountRow
+		{
+			[PrimaryKey] public int            Id      { get; set; }
+			[Column]     public SentinelCount  Plain   { get; set; }
+			[Column]     public SentinelCount? Guarded { get; set; }
+		}
+
+		/// <summary>
+		/// A null comparison on a nullable value type is set aside only when it is lifted: an operator declared on the
+		/// nullable form itself can answer null for a value, so the guarded conversion stores something else for it.
+		/// </summary>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void NonLiftedNullComparisonOfAValueTypeIsRefused([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<SentinelCountRow>()
+					.Property(e => e.Plain)
+						.HasConversion(v => (int?)v.Value, v => new SentinelCount(v.GetValueOrDefault()))
+					.Property(e => e.Guarded)
+						.HasConversion(
+							v => v != null ? (int?)v.Value.Value : null,
+							v => v != null ? (SentinelCount?)new SentinelCount(v.Value) : null)
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var t  = db.CreateLocalTable<SentinelCountRow>();
+
+			var compared = () => t
+				.Where(r => r.Plain == r.Guarded)
+				.ToArray();
+
+			var refusal = string.Format(
+				CultureInfo.InvariantCulture,
+				ErrorHelper.Error_ValueConverter_DivergentOperands,
+				nameof(SentinelCountRow.Plain),
+				nameof(SentinelCountRow.Guarded));
+
+			compared
+				.ShouldThrow<LinqToDBException>()
+				.Message
+				.ShouldContain(refusal);
+		}
+
+		[Table]
+		sealed class Issue5976RowA
+		{
+			[PrimaryKey] public int       Id   { get; set; }
+			[Column]     public DateTime? Date { get; set; }
+		}
+
+		[Table]
+		sealed class Issue5976RowB
+		{
+			[PrimaryKey] public int       Id   { get; set; }
+			[Column]     public DateTime? Date { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5976")]
+		public void SetOperationOverNullableConversionsWithLiftedComparison([DataSources] string context)
+		{
+			var value = new DateTime(2020, 1, 1, 10, 0, 0);
+			var ms    = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<Issue5976RowA>()
+					.Property(e => e.Date)
+						.HasConversion(
+							v => v != null ? (DateTime?)Issue5975ToStore(v.Value) : null,
+							v => v != null ? (DateTime?)Issue5975FromStore(v.Value) : null)
+				.Entity<Issue5976RowB>()
+					.Property(e => e.Date)
+						.HasConversion(
+							v => v != null ? (DateTime?)Issue5975ToStore(v.Value) : null,
+							v => v != null ? (DateTime?)Issue5975FromStore(v.Value) : null)
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var a  = db.CreateLocalTable([new Issue5976RowA { Id = 1, Date = value }]);
+			using var b  = db.CreateLocalTable([new Issue5976RowB { Id = 2, Date = value }]);
+
+			var rows = a
+				.Select(r => new { r.Id, r.Date })
+				.Concat(b.Select(r => new { r.Id, r.Date }))
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			rows.Count.ShouldBe(2);
+			rows.Select(r => r.Date).ShouldBe([value, value]);
+		}
+
+		[Table]
+		sealed class Issue5976RowC
+		{
+			[PrimaryKey] public int      Id   { get; set; }
+			[Column]     public DateTime Date { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5976")]
+		public void SetOperationOverNullableAndPlainConversions([DataSources] string context)
+		{
+			var value = new DateTime(2020, 1, 1, 10, 0, 0);
+			var ms    = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<Issue5976RowA>()
+					.Property(e => e.Date)
+						.HasConversion(
+							v => v != null ? (DateTime?)Issue5975ToStore(v.Value) : null,
+							v => v != null ? (DateTime?)Issue5975FromStore(v.Value) : null)
+				.Entity<Issue5976RowC>()
+					.Property(e => e.Date)
+						.HasConversion(v => Issue5975ToStore(v), v => Issue5975FromStore(v))
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var a  = db.CreateLocalTable([new Issue5976RowA { Id = 1, Date = value }]);
+			using var c  = db.CreateLocalTable([new Issue5976RowC { Id = 2, Date = value }]);
+
+			var rows = a
+				.Select(r => new { r.Id, r.Date })
+				.Concat(c.Select(r => new { r.Id, Date = (DateTime?)r.Date }))
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			rows.Count.ShouldBe(2);
+			rows.Select(r => r.Date).ShouldBe([value, value]);
+		}
+
+		/// <summary>
+		/// The plain-member branch first, so the set operation's column is read through the plain conversion, and a
+		/// NULL in the nullable branch that this reading has to leave alone.
+		/// </summary>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6181")]
+		public void SetOperationOverPlainAndNullableConversionsReadsNull([DataSources] string context)
+		{
+			var value = new DateTime(2020, 1, 1, 10, 0, 0);
+			var ms    = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<Issue5976RowA>()
+					.Property(e => e.Date)
+						.HasConversion(
+							v => v != null ? (DateTime?)Issue5975ToStore(v.Value) : null,
+							v => v != null ? (DateTime?)Issue5975FromStore(v.Value) : null)
+				.Entity<Issue5976RowC>()
+					.Property(e => e.Date)
+						.HasConversion(v => Issue5975ToStore(v), v => Issue5975FromStore(v))
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var c  = db.CreateLocalTable([new Issue5976RowC { Id = 1, Date = value }]);
+			using var a  = db.CreateLocalTable(
+			[
+				new Issue5976RowA { Id = 2, Date = value },
+				new Issue5976RowA { Id = 3, Date = null  },
+			]);
+
+			var rows = c
+				.Select(r => new { r.Id, Date = (DateTime?)r.Date })
+				.Concat(a.Select(r => new { r.Id, r.Date }))
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			rows
+				.Select(r => r.Date)
+				.ShouldBe([value, value, null]);
+		}
+
+		#endregion
+
+		[Table]
+		sealed class DivergentConversionRow
+		{
+			[PrimaryKey] public int Id      { get; set; }
+
+			// One CLR type, one storage type, two conversions that disagree about what the stored number is. Both
+			// are lossless and neither is unusual on its own; nothing but the conversions says they differ.
+			[Column    ] public int Doubled { get; set; }
+			[Column    ] public int Tripled { get; set; }
+
+			// No conversion, which disagrees with either of them just as sharply: what this column stores is the
+			// value, and what they store is not.
+			[Column    ] public int Plain   { get; set; }
+		}
+
+		/// <summary>
+		/// An operator between two columns whose value converters do not agree about what a stored value counts.
+		/// </summary>
+		/// <remarks>
+		/// A conversion is not arithmetic on the SQL side, so an operator between two columns runs on the numbers
+		/// they happen to be stored as: ten doubled and ten tripled add to fifty, which is then read back through
+		/// one of the two conversions and answers twenty-five for a sum the CLR puts at twenty. Compared, the same
+		/// two numbers answer no rows where the CLR answers one.
+		/// <para>
+		/// Not a duration problem - the pairing that reported it holds two <see cref="TimeSpan"/> columns counting
+		/// different units, but the shape is any two columns of one type whose converters disagree, and integers
+		/// scaled by two and by three are the smallest form of it.
+		/// </para>
+		/// <para>
+		/// A column carrying no conversion at all is refused against a converted one on the same terms, and it is
+		/// the commoner half of the shape: what it stores is the value itself and what the other stores is not, so
+		/// an operator between them counts neither. Nothing about that pairing looks unusual in the query text,
+		/// which is what makes it worth refusing rather than answering in the storage domain.
+		/// </para>
+		/// <para>
+		/// Refused only where the answer has to come from the database. A projection reads each column on its own
+		/// terms and the reader combines them, which is exact - and the two controls beside it are the pairings that
+		/// were never in doubt: a column with itself, and a column with a plain value, which is written down through
+		/// that column's own conversion and so arrives in its terms.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void DivergentConversionsRefuseToCombine([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<DivergentConversionRow>()
+					.Property(e => e.Doubled)
+						.HasConversion(v => v * 2, p => p / 2)
+					.Property(e => e.Tripled)
+						.HasConversion(v => v * 3, p => p / 3)
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var t  = db.CreateLocalTable<DivergentConversionRow>();
+
+			db.Insert(new DivergentConversionRow { Id = 1, Doubled = 10, Tripled = 10, Plain = 10 });
+
+			string Refusal(string member1, string member2)
+			{
+				return string.Format(
+					CultureInfo.InvariantCulture,
+					ErrorHelper.Error_ValueConverter_DivergentOperands,
+					member1,
+					member2);
+			}
+
+			var combined = () => t
+				.Select(r => Sql.AsSql(r.Doubled + r.Tripled))
+				.ToArray();
+
+			var compared = () => t
+				.Where(r => r.Doubled == r.Tripled)
+				.ToArray();
+
+			var unconverted = () => t
+				.Select(r => Sql.AsSql(r.Doubled + r.Plain))
+				.ToArray();
+
+			combined   .ShouldThrow<LinqToDBException>().Message.ShouldContain(Refusal(nameof(DivergentConversionRow.Doubled), nameof(DivergentConversionRow.Tripled)));
+			compared   .ShouldThrow<LinqToDBException>().Message.ShouldContain(Refusal(nameof(DivergentConversionRow.Doubled), nameof(DivergentConversionRow.Tripled)));
+			unconverted.ShouldThrow<LinqToDBException>().Message.ShouldContain(Refusal(nameof(DivergentConversionRow.Doubled), nameof(DivergentConversionRow.Plain)));
+
+			var row = t
+				.Select(r => new
+				{
+					Divergent   = r.Doubled + r.Tripled,
+					Unmapped    = r.Doubled + r.Plain,
+					SameColumn  = Sql.AsSql(r.Doubled + r.Doubled),
+					NoConverter = Sql.AsSql(r.Plain   + r.Plain),
+					PlainValue  = Sql.AsSql(r.Doubled + 5),
+				})
+				.Single();
+
+			row.Divergent.ShouldBe(20);
+			row.Unmapped.ShouldBe(20);
+			row.SameColumn.ShouldBe(20);
+			row.NoConverter.ShouldBe(20);
+			row.PlainValue.ShouldBe(15);
+
+			t.Count(r => r.Doubled == 10).ShouldBe(1);
+		}
+
+		sealed class StorageTransparentConverter : ValueConverter<int, int>, IStorageTransparentConverter
+		{
+			public StorageTransparentConverter() : base(v => v, p => p, false)
+			{
+			}
+		}
+
+		[Table]
+		sealed class StorageTransparentRow
+		{
+			[PrimaryKey] public int Id     { get; set; }
+			[Column, ValueConverter(ConverterType = typeof(StorageTransparentConverter))]
+			             public int Marked { get; set; }
+			[Column    ] public int Plain  { get; set; }
+		}
+
+		/// <summary>
+		/// A converter marked as storing the value unchanged is not refused against a column without conversion.
+		/// </summary>
+		[Test]
+		public void StorageTransparentConversionCombines([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<StorageTransparentRow>();
+
+			db.Insert(new StorageTransparentRow { Id = 1, Marked = 5, Plain = 5 });
+			db.Insert(new StorageTransparentRow { Id = 2, Marked = 6, Plain = 7 });
+
+			var ids = t
+				.Where(r => r.Marked == r.Plain)
+				.Select(r => r.Id)
+				.ToArray();
+
+			ids.ShouldBe([1]);
+
+			var sums = t
+				.OrderBy(r => r.Id)
+				.Select(r => Sql.AsSql(r.Marked + r.Plain))
+				.ToArray();
+
+			sums.ShouldBe([10, 13]);
+		}
+
+		sealed class ScaledValueRow
+		{
+			[PrimaryKey] public int Id    { get; set; }
+			[Column    ] public int Value { get; set; }
+
+			public static readonly ScaledValueRow[] Data =
+			{
+				new() { Id = 1, Value = 10 },
+				new() { Id = 2, Value = 20 },
+				new() { Id = 3, Value = 30 },
+			};
+		}
+
+		/// <summary>
+		/// A count over a column carrying a conversion answers how many rows there are, not a value of that column.
+		/// </summary>
+		/// <remarks>
+		/// The descriptor walk treats a single-argument aggregate as transparent, which is right for <c>MIN</c>,
+		/// <c>MAX</c> and <c>SUM</c> - they answer in the operand's own domain - and wrong for <c>COUNT</c>, which
+		/// answers in a type of its own. The type guard meant to separate them compares the result type with the
+		/// column's <em>member</em> type, so it cannot tell the two apart once that type is already <see cref="int"/>.
+		/// <para>
+		/// The conversion is deliberately <see langword="int"/> to <see langword="int"/> and lossy in a visible way: one mapping to a
+		/// different provider type would be stopped by that guard and hide the defect. Halving is what makes it
+		/// show - a running count of 1, 2, 3 came back as 0, 1, 1.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void CountOverAConvertedColumnIsNotConverted([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllPostgreSQL)] string context)
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<ScaledValueRow>()
+					.Property(e => e.Value)
+						.HasConversion(v => v * 2, p => p / 2)
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var t  = db.CreateLocalTable(ScaledValueRow.Data);
+
+			var counted = t
+				.OrderBy(r => r.Id)
+				.Select(r => Sql.Window.Count(r.Value, w => w.OrderBy(r.Id)))
+				.ToArray();
+
+			counted.ShouldBe([1, 2, 3]);
+
+			// The aggregates that do answer in the column's own domain still read through the conversion.
+			t.Max(r => r.Value).ShouldBe(30);
+			t.Min(r => r.Value).ShouldBe(10);
+		}
+
+		sealed class TimesHundredConverter() : ValueConverter<int, int>(v => v * 100, v => v / 100, false);
+
+		[Table]
+		sealed class ConvertedAmount
+		{
+			[PrimaryKey]                                                             public int Id    { get; set; }
+			[Column]                                                                 public int Group { get; set; }
+			[Column, ValueConverter(ConverterType = typeof(TimesHundredConverter))] public int Cents { get; set; }
+		}
+
+		/// <summary>
+		/// A value compared with a <c>SUM</c> over a converted column goes through the column's converter.
+		/// </summary>
+		[Test]
+		public void SumOfConvertedColumnComparedWithValue([DataSources] string context)
+		{
+			var total = 7;
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new ConvertedAmount[]
+			{
+				new() { Id = 1, Group = 1, Cents = 3 },
+				new() { Id = 2, Group = 1, Cents = 4 },
+				new() { Id = 3, Group = 2, Cents = 5 },
+			});
+
+			var count = table
+				.GroupBy(x => x.Group)
+				.Where(g => g.Sum(x => x.Cents) == total)
+				.Count();
+
+			count.ShouldBe(1);
+		}
+
+		/// <summary>
+		/// A value added to, subtracted from or taken as a modulus of a converted column or its <c>SUM</c> goes
+		/// through the column's converter; a factor or divisor does not.
+		/// </summary>
+		[Test]
+		public void ArithmeticWithConvertedColumn([DataSources] string context)
+		{
+			var operand = 2;
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new ConvertedAmount[]
+			{
+				new() { Id = 1, Group = 1, Cents = 3 },
+				new() { Id = 2, Group = 1, Cents = 4 },
+			});
+
+			var group = table.GroupBy(x => x.Group);
+			var row   = table.Where(x => x.Id == 1);
+
+			group
+				.Select(g => g.Sum(x => x.Cents) * operand)
+				.Single()
+				.ShouldBe(14);
+
+			group
+				.Select(g => operand * g.Sum(x => x.Cents))
+				.Single()
+				.ShouldBe(14);
+
+			group
+				.Select(g => g.Sum(x => x.Cents) / operand)
+				.Single()
+				.ShouldBe(3);
+
+			group
+				.Select(g => g.Sum(x => x.Cents) % operand)
+				.Single()
+				.ShouldBe(1);
+
+			group
+				.Select(g => g.Sum(x => x.Cents) + operand)
+				.Single()
+				.ShouldBe(9);
+
+			row
+				.Select(x => x.Cents * operand)
+				.Single()
+				.ShouldBe(6);
+
+			row
+				.Select(x => x.Cents % operand)
+				.Single()
+				.ShouldBe(1);
+
+			row
+				.Select(x => x.Cents + operand)
+				.Single()
+				.ShouldBe(5);
+
+			row
+				.Select(x => x.Cents - operand)
+				.Single()
+				.ShouldBe(1);
+		}
+
+		/// <summary>
+		/// A value searched in a projected <c>SUM</c> over a converted column goes through the column's converter.
+		/// </summary>
+		[Test]
+		public void SequenceContainsSumOfConvertedColumn([DataSources] string context)
+		{
+			var total = 7;
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new ConvertedAmount[]
+			{
+				new() { Id = 1, Group = 1, Cents = 3 },
+				new() { Id = 2, Group = 1, Cents = 4 },
+				new() { Id = 3, Group = 2, Cents = 5 },
+			});
+
+			var count = table
+				.Count(t => table
+					.GroupBy(x => x.Group)
+					.Select(g => g.Sum(x => x.Cents))
+					.Contains(total));
+
+			count.ShouldBe(3);
 		}
 	}
 }

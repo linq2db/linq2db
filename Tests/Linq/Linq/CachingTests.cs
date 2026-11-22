@@ -32,7 +32,7 @@ namespace Tests.Linq
 		[Sql.Extension("{funcName}({fieldName})", BuilderType = typeof(AggregateFuncBuilder), ServerSideOnly = true)]
 		static double AggregateFunc([SqlQueryDependent] string funcName, [SqlQueryDependent] string fieldName)
 		{
-			throw new NotImplementedException();
+			throw new ServerSideOnlyException(nameof(AggregateFunc));
 		}
 
 		[Test]
@@ -105,14 +105,15 @@ namespace Tests.Linq
 				// SQL Server doesn't support AVG(time)
 				//"AVG",
 				"COUNT"
-			)] string funcName,
-			[Values(
-				nameof(ALLTYPE.TIMEDATATYPE)
-			)] string fieldName)
+			)] string funcName)
 		{
+			const string fieldName = "timeDataType";
+
 			using var db = GetDataContext(context);
 			var query =
-					from t in db.GetTable<ALLTYPE>()
+					from t in db
+						.GetTable<ALLTYPE>()
+						.TableName("AllTypes")
 					from c in db.GetTable<Child>()
 					select new
 					{
@@ -211,7 +212,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void TakeHint(
-			[IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context,
+			[IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse, TestProvName.AllAccessLibRed)] string context,
 			[Values(TakeHints.Percent, TakeHints.WithTies, TakeHints.Percent | TakeHints.WithTies)] TakeHints takeHint)
 		{
 			if (takeHint.HasFlag(TakeHints.Percent) && context.IsAnyOf(TestProvName.AllClickHouse))
@@ -233,7 +234,8 @@ namespace Tests.Linq
 				Assert.That(sql, Contains.Substring("WITH TIES"));
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(4266, ErrorMessage = "Assert.That(query.GetCacheMissCount(), Is.EqualTo(currentMiss + 1))",
+			Details = "the collection parameter does not take part in the cache key, so a query that should miss is reused - #4266's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), QueryCacheTest]
 		public void TestExtensionCollectionParameterSameQuery([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -270,7 +272,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(4266, ErrorMessage = "Expected and result lists are different",
+			Details = "the reused query answers with the previous collection's rows - the wrong-results half of #4266.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), QueryCacheTest]
 		public void TestExtensionCollectionParameterEqualQuery([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -316,7 +319,7 @@ namespace Tests.Linq
 		[Sql.Extension("{field} IN (select * from {values})", IsPredicate = true, BuilderType = typeof(InExtExpressionItemBuilder), ServerSideOnly = true)]
 		private static bool InExt<T>([ExprParameter] T field, [SqlQueryDependent] IEnumerable<T> values) where T : struct, IEquatable<int>
 		{
-			throw new NotImplementedException();
+			throw new ServerSideOnlyException(nameof(InExt));
 		}
 
 		public sealed class InExtExpressionItemBuilder : Sql.IExtensionCallBuilder
@@ -352,10 +355,10 @@ namespace Tests.Linq
 		}
 
 		[Sql.Extension("{field} IN (select * from {values})", IsPredicate = true, ServerSideOnly = true)]
-		private static bool InExtClass<T>([ExprParameter] T field, [ExprParameter] IntArrayClass values) where T : struct, IEquatable<int> => throw new NotImplementedException();
+		private static bool InExtClass<T>([ExprParameter] T field, [ExprParameter] IntArrayClass values) where T : struct, IEquatable<int> => throw new ServerSideOnlyException(nameof(InExtClass));
 
 		[Sql.Extension("{field} IN (select * from {values})", IsPredicate = true, ServerSideOnly = true)]
-		private static bool InExtStruct<T>([ExprParameter] T field, [ExprParameter] IntArrayStruct values) where T : struct, IEquatable<int> => throw new NotImplementedException();
+		private static bool InExtStruct<T>([ExprParameter] T field, [ExprParameter] IntArrayStruct values) where T : struct, IEquatable<int> => throw new ServerSideOnlyException(nameof(InExtStruct));
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), QueryCacheTest]
 		public void Issue4266Test_Class([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)

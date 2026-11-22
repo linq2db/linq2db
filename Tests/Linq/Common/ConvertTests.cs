@@ -9,6 +9,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 // ReSharper disable UnusedMember.Local
 // ReSharper disable InconsistentNaming
 
@@ -29,7 +31,10 @@ namespace Tests.Common
 			}
 		}
 
-		[Test]
+		// NonParallelizable: mutates the process-global Common.Convert<TFrom,TTo> converter, which
+		// Sql.Convert / ConvertTo read across all tests - would corrupt concurrent conversion-sensitive
+		// tests under parallel execution. Restored in a finally so a failed assertion can't leak it.
+		[Test, NonParallelizable]
 		public void SetExpression()
 		{
 			try
@@ -142,6 +147,24 @@ namespace Tests.Common
 			}
 		}
 
+#if NET8_0_OR_GREATER
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6077")]
+		public void DateOnlyToDateTime()
+		{
+			ConvertTo<DateTime>
+				.From(new DateOnly(2012, 12, 12))
+				.ShouldBe(new DateTime(2012, 12, 12));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6077")]
+		public void DateOnlyToString()
+		{
+			ConvertTo<string>
+				.From(new DateOnly(2012, 12, 12))
+				.ShouldBe("2012-12-12");
+		}
+#endif
+
 		[Test]
 		public void ParseChar()
 		{
@@ -152,7 +175,10 @@ namespace Tests.Common
 			}
 		}
 
-		[Test]
+		// NonParallelizable: mutates the process-global Common.Convert<TFrom,TTo> converter, which
+		// Sql.Convert / ConvertTo read across all tests - would corrupt concurrent conversion-sensitive
+		// tests under parallel execution. Restored in a finally so a failed assertion can't leak it.
+		[Test, NonParallelizable]
 		public void ToStringTest()
 		{
 			try
@@ -421,12 +447,12 @@ namespace Tests.Common
 		{
 			var cf = new MappingSchema("1").GetConverter<Enum10,Enum11>()!;
 
-			Assert.Throws<LinqToDBConvertException>(
+			Assert.That(
 				() => cf(Enum10.Value2),
-				"Mapping ambiguity. 'Tests.Common.ConvertTest+Enum10.Value1' can be mapped to either 'Tests.Common.ConvertTest+Enum11.Value2' or 'Tests.Common.ConvertTest+Enum11.Value3'.");
-			Assert.Throws<LinqToDBConvertException>(
+				Throws.TypeOf<LinqToDBConvertException>().With.Message.EqualTo("Mapping ambiguity. 'Tests.Common.ConvertTests+Enum10.Value1' can be mapped to either 'Tests.Common.ConvertTests+Enum11.Value2' or 'Tests.Common.ConvertTests+Enum11.Value3'."));
+			Assert.That(
 				() => cf(Enum10.Value1),
-				"Mapping ambiguity. 'Tests.Common.ConvertTest+Enum10.Value1' can be mapped to either 'Tests.Common.ConvertTest+Enum11.Value2' or 'Tests.Common.ConvertTest+Enum11.Value3'.");
+				Throws.TypeOf<LinqToDBConvertException>().With.Message.EqualTo("Mapping ambiguity. 'Tests.Common.ConvertTests+Enum10.Value1' can be mapped to either 'Tests.Common.ConvertTests+Enum11.Value2' or 'Tests.Common.ConvertTests+Enum11.Value3'."));
 		}
 
 		[Test]
@@ -468,9 +494,9 @@ namespace Tests.Common
 		[Test]
 		public void ConvertToEnum14()
 		{
-			Assert.Throws<LinqToDBConvertException>(
+			Assert.That(
 				() => ConvertTo<Enum13>.From(Enum12.Value2),
-				"Mapping ambiguity. 'Tests.Common.ConvertTest+Enum12.Value2' can be mapped to either 'Tests.Common.ConvertTest+Enum13.Value1' or 'Tests.Common.ConvertTest+Enum13.Value3'.");
+				Throws.TypeOf<LinqToDBConvertException>().With.Message.EqualTo("Mapping ambiguity. 'Tests.Common.ConvertTests+Enum12.Value2' can be mapped to either 'Tests.Common.ConvertTests+Enum13.Value1' or 'Tests.Common.ConvertTests+Enum13.Value3'."));
 		}
 
 		enum Enum14

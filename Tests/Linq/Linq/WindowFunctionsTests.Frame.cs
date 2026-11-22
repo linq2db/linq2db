@@ -111,7 +111,9 @@ namespace Tests.Linq
 		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Firebird3, TestProvName.AllSapHana, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameRange)]
 		public void FrameRangeValue([SupportsAnalyticFunctionsContext(
 			// SQL Server does not support RANGE with value offsets
-			TestProvName.AllSqlServer)] string context)
+			TestProvName.AllSqlServer,
+			// PostgreSQL < 11 supports RANGE frames only with UNBOUNDED (value offsets need PG 11+)
+			TestProvName.AllPostgreSQL10Minus)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -255,7 +257,9 @@ namespace Tests.Linq
 		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Firebird3, TestProvName.AllSapHana, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameRange)]
 		public void FrameRangeValuesShortcut([SupportsAnalyticFunctionsContext(
 			// SQL Server does not support RANGE with value offsets
-			TestProvName.AllSqlServer)] string context)
+			TestProvName.AllSqlServer,
+			// PostgreSQL < 11 supports RANGE frames only with UNBOUNDED (value offsets need PG 11+)
+			TestProvName.AllPostgreSQL10Minus)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -293,15 +297,16 @@ namespace Tests.Linq
 				from t in table
 				select Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.NullableDoubleValue, Sql.NullsPosition.Last).RangeBetween.ValuePreceding(1).And.ValueFollowing(2));
 
-			var ex = Assert.Throws<LinqToDBException>(() => emulated.ToList());
-			ex!.Message.ShouldContain("NULLS ordering is emulated");
+			Assert.That(
+				() => emulated.ToList(),
+				Throws.TypeOf<LinqToDBException>().With.Message.Contains("NULLS ordering is emulated").IgnoreCase);
 
 			// Control: identical frame, non-nullable single key => no NULLS emulation => translates and runs.
 			var control =
 				from t in table
 				select Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RangeBetween.ValuePreceding(1).And.ValueFollowing(2));
 
-			Assert.DoesNotThrow(() => control.ToList());
+			control.ToList();
 		}
 
 	}

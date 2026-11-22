@@ -1,9 +1,11 @@
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Linq
 {
@@ -360,6 +362,46 @@ namespace Tests.Linq
 			_ = query.ToList();
 		}
 
+		// A window function whose whole call — argument and window definition — references no table column is still
+		// server-side: without the ServerSideOnly marker the enclosing comparison looked client-evaluable and was
+		// folded into a query parameter, so the throwing stub was invoked at execution time (issue #5782).
+		[Test]
+		public void FunctionWithoutColumnReference([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data     = WindowFunctionTestEntity.Seed();
+			var rowCount = data.Length;
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					CountAll   = Sql.Window.Count(w => w),
+					CountConst = Sql.Window.Count(1, w => w),
+					SumConst   = Sql.Window.Sum(1, w => w),
+					// Left out when this test was written because it emitted ORDER BY 1, which SQL Server rejects
+					// with error 5308. A constant sort key no longer reaches any dialect, so it needs no gate.
+					RowNumConst = Sql.Window.RowNumber(w => w.OrderBy(1)),
+					AllRows    = Sql.Window.Count(w => w) == rowCount     && Sql.Window.Sum(t.IntValue, w => w) > 0,
+					WrongCount = Sql.Window.Count(w => w) == rowCount + 1 && Sql.Window.Sum(t.IntValue, w => w) > 0,
+				};
+
+			var result = query.ToList();
+
+			result.Count.ShouldBe(data.Length);
+			result.ShouldAllBe(r => r.CountAll   == data.Length);
+			result.ShouldAllBe(r => r.CountConst == data.Length);
+			result.ShouldAllBe(r => r.SumConst   == data.Length);
+			result.ShouldAllBe(r => r.AllRows);
+			result.ShouldAllBe(r => !r.WrongCount);
+
+			// Every row ties on the constant key, so the numbering is arbitrary but still a complete 1..N.
+			result.Select(r => r.RowNumConst)
+				.OrderBy(n => n)
+				.ShouldBe(Enumerable.Range(1, data.Length).Select(n => (long)n));
+		}
+
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_LeadLag)]
 		public void LeadLagDifferentTypes([SupportsAnalyticFunctionsContext] string context)
@@ -379,6 +421,241 @@ namespace Tests.Linq
 				};
 
 			_ = query.ToList();
+		}
+
+		// A window function projected by one Select and then used inside another window's PARTITION BY. The inner
+		// value is computed over the inner query's row set, so it has to reach the outer window as a column of a
+		// subquery - inlined, it nests one window function inside another, which no provider accepts.
+		[Test]
+		public void WindowFunctionOverWindowFunctionColumn([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var numbered =
+				from t in table
+				select new
+				{
+					t.Id,
+					RowNum    = Sql.Window.RowNumber(w => w.OrderBy(t.Id)),
+					CatRowNum = Sql.Window.RowNumber(w => w.PartitionBy(t.CategoryId).OrderBy(t.Id)),
+				};
+
+			var query =
+				from t in numbered
+				select new
+				{
+					t.RowNum,
+					t.CatRowNum,
+					OverRowNum = Sql.Window.RowNumber(w => w.PartitionBy(t.RowNum).OrderBy(t.Id)),
+					OverCatNum = Sql.Window.RowNumber(w => w.PartitionBy(t.CatRowNum).OrderBy(t.Id)),
+				};
+
+			var result = query.ToList();
+
+			result.Count.ShouldBe(data.Length);
+
+			// RowNum is unique per row, so partitioning by it leaves single-row partitions.
+			result.Select(r => r.RowNum)
+				.OrderBy(n => n)
+				.ShouldBe(Enumerable.Range(1, data.Length).Select(n => (long)n));
+
+			result.ShouldAllBe(r => r.OverRowNum == 1);
+
+			// CatRowNum repeats across categories, so each of its partitions must still number 1..size exactly once.
+			foreach (var partition in result.GroupBy(r => r.CatRowNum))
+			{
+				partition.Select(r => r.OverCatNum)
+					.OrderBy(n => n)
+					.ShouldBe(Enumerable.Range(1, partition.Count()).Select(n => (long)n));
+			}
+		}
+
+		// Same shape, with the outer window supplied by DefineWindow/UseWindow rather than the fluent chain.
+		[Test]
+		public void WindowFunctionOverWindowFunctionColumnWithDefinedWindow([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var numbered =
+				from t in table
+				select new
+				{
+					t.Id,
+					RowNum = Sql.Window.RowNumber(w => w.OrderBy(t.Id)),
+				};
+
+			var query =
+				from t in numbered
+				let wnd = Sql.Window.DefineWindow(w => w.PartitionBy(t.RowNum).OrderBy(t.Id))
+				select new
+				{
+					t.RowNum,
+					OverRowNum = Sql.Window.RowNumber(w => w.UseWindow(wnd)),
+				};
+
+			var result = query.ToList();
+
+			result.Select(r => r.RowNum)
+				.OrderBy(n => n)
+				.ShouldBe(Enumerable.Range(1, data.Length).Select(n => (long)n));
+
+			result.ShouldAllBe(r => r.OverRowNum == 1);
+		}
+
+		// A window value read through `join … into` is computed over the sequence that defined it, so it can be
+		// filtered after the join instead of landing in the outer WHERE.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6182")]
+		public void RowNumberFilteredAfterGroupJoinDefaultIfEmpty([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			// Id is unique, so neither left join multiplies the rows.
+			var query =
+				from t in table
+				join o in table on t.CategoryId equals o.Id into oj
+				from o in oj.DefaultIfEmpty()
+				select new
+				{
+					t.Id,
+					t.CategoryId,
+					o.Name,
+					Rank = Sql.Window.RowNumber(w => w.PartitionBy(t.CategoryId).OrderByDesc(t.Id)),
+				};
+
+			var result =
+				from q in query
+				join o in table on q.CategoryId equals o.Id into oj
+				from o in oj.DefaultIfEmpty()
+				where q.Rank <= 1
+				select new
+				{
+					q.Id,
+					q.CategoryId,
+					q.Name,
+				};
+
+			var expected =
+				from t in data
+				group t by t.CategoryId into g
+				select new
+				{
+					Id         = g.Max(t => t.Id),
+					CategoryId = g.Key,
+					data.Single(o => o.Id == g.Key).Name,
+				};
+
+			AreEqual(expected, result);
+		}
+
+		// The left join multiplies the ranked rows; every row must still carry its own rank, not a number computed
+		// over the joined rows.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6182")]
+		public void RowNumberProjectedAfterMultiplyingGroupJoin([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query =
+				from t in table
+				select new
+				{
+					t.Id,
+					t.CategoryId,
+					Rank = Sql.Window.RowNumber(w => w.OrderBy(t.Id)),
+				};
+
+			var result =
+				(
+					from q in query
+					join o in table on q.CategoryId equals o.CategoryId into oj
+					from o in oj.DefaultIfEmpty()
+					select new
+					{
+						q.Id,
+						q.Rank,
+						OtherId = o.Id,
+					}
+				)
+				.ToList();
+
+			var ranks = data
+				.OrderBy(t => t.Id)
+				.Select((t, i) => new { t.Id, t.CategoryId, Rank = i + 1L })
+				.ToList();
+
+			// Every row matches at least itself, so the left join never produces a null side here.
+			var expected =
+				(
+					from r in ranks
+					join o in data on r.CategoryId equals o.CategoryId
+					select new
+					{
+						r.Id,
+						r.Rank,
+						OtherId = o.Id,
+					}
+				)
+				.OrderBy(r => r.Id)
+				.ThenBy(r => r.OtherId)
+				.ToList();
+
+			result
+				.OrderBy(r => r.Id)
+				.ThenBy(r => r.OtherId)
+				.ToList()
+				.ShouldBe(expected);
+		}
+
+		// The same filter directly after `join … into`, with no SelectMany between the join and the WHERE.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6182")]
+		[ThrowsRequiresCorrelatedSubquery]
+		public void RowNumberFilteredAfterGroupJoin([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query =
+				from t in table
+				select new
+				{
+					t.Id,
+					t.CategoryId,
+					Rank = Sql.Window.RowNumber(w => w.PartitionBy(t.CategoryId).OrderByDesc(t.Id)),
+				};
+
+			var result =
+				from q in query
+				join o in table on q.CategoryId equals o.CategoryId into oj
+				where q.Rank <= 1
+				select new
+				{
+					q.Id,
+					Cnt = oj.Count(),
+				};
+
+			var expected =
+				from t in data
+				group t by t.CategoryId into g
+				select new
+				{
+					Id  = g.Max(t => t.Id),
+					Cnt = g.Count(),
+				};
+
+			AreEqual(expected, result);
 		}
 	}
 }

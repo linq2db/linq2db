@@ -409,7 +409,7 @@ internal sealed class ModelProviderInterceptor(ConnectionSettings settings, ISql
 
 	private static string GetParameterNameEscaped(ParameterData param)
 	{
-		return $"{(param.Direction == ParameterDirection.Out ? "out " : param.Direction == ParameterDirection.Ref ? "ref " : null)}{CSharpUtils.EscapeIdentifier(param.Name)}";
+		return $"{(param.Direction == ParameterDirection.Out ? "out var " : param.Direction == ParameterDirection.Ref ? "ref " : null)}{CSharpUtils.EscapeIdentifier(param.Name)}";
 	}
 
 	private ExplorerItem PopulateTableFunctions(List<TableFunctionData> functions)

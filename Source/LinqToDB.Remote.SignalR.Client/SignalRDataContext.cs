@@ -11,7 +11,7 @@ namespace LinqToDB.Remote.SignalR
 	public class SignalRDataContext : RemoteDataContextBase
 	{
 		readonly SignalRLinqServiceClient _client;
-		readonly bool                     _dispose;
+		readonly HubConnection?           _ownedHubConnection;
 
 		#region Init
 
@@ -25,23 +25,42 @@ namespace LinqToDB.Remote.SignalR
 		public SignalRDataContext(SignalRLinqServiceClient client, Func<DataOptions,DataOptions>? optionBuilder = null)
 			: base(optionBuilder == null ? _defaultDataOptions : optionBuilder(_defaultDataOptions))
 		{
-			_client  = client;
-			_dispose = false;
+			_client = client;
 		}
 
 		/// <summary>
-		/// Creates instance of http-based remote data context.
+		/// Creates instance of Signal/R-based remote data context over a hub connection the caller owns.
+		/// The context never stops or disposes <paramref name="hubConnection"/>, so one connection can serve
+		/// any number of contexts.
 		/// </summary>
-		/// <param name="optionBuilder"></param>
+		/// <param name="hubConnection">Hub connection to use. The caller starts it and disposes it.</param>
+		/// <param name="optionBuilder">Optional data options configuration callback.</param>
 		public SignalRDataContext(HubConnection hubConnection, Func<DataOptions,DataOptions>? optionBuilder = null)
+			: this(hubConnection, disposeHubConnection: false, optionBuilder)
+		{
+		}
+
+		/// <summary>
+		/// Creates instance of Signal/R-based remote data context over a hub connection.
+		/// </summary>
+		/// <param name="hubConnection">Hub connection to use.</param>
+		/// <param name="disposeHubConnection">
+		/// When <see langword="true"/>, the context takes ownership of <paramref name="hubConnection"/> and disposes
+		/// it when the context is disposed. When <see langword="false"/>, the caller keeps ownership.
+		/// </param>
+		/// <param name="optionBuilder">Optional data options configuration callback.</param>
+		public SignalRDataContext(HubConnection hubConnection, bool disposeHubConnection, Func<DataOptions,DataOptions>? optionBuilder = null)
 			: this(new SignalRLinqServiceClient(hubConnection), optionBuilder)
 		{
-			_dispose = true;
+			if (disposeHubConnection)
+				_ownedHubConnection = hubConnection;
 		}
 
 		#endregion
 
 		#region Overrides
+
+		protected override bool OwnsClient => false;
 
 		protected override ILinqService GetClient()
 		{
@@ -50,11 +69,29 @@ namespace LinqToDB.Remote.SignalR
 
 		protected override string ContextIDPrefix => "SignalRRemoteLinqService";
 
+		public override void Dispose()
+		{
+			base.Dispose();
+
+			if (_ownedHubConnection != null)
+				Task.Run(DisposeOwnedHubConnectionAsync).GetAwaiter().GetResult();
+		}
+
+		// HubConnection offers no synchronous disposal, and Task.Run keeps the wait off the caller's
+		// synchronization context. A method rather than a lambda because DisposeAsync returns Task on
+		// net462/netstandard2.0 and ValueTask from net8.0 on, so a lambda is reducible on the former only
+		// (IDE0200) while being required on the latter. That same split makes MA0215 fire on the former
+		// only: returning the task directly compiles there and does not on net8.0+.
+#pragma warning disable MA0215 // Return the task instead of awaiting it
+		async Task DisposeOwnedHubConnectionAsync() => await _ownedHubConnection!.DisposeAsync().ConfigureAwait(false);
+#pragma warning restore MA0215
+
 		public override async ValueTask DisposeAsync()
 		{
-			if (_dispose)
-				await _client.DisposeAsync().ConfigureAwait(false);
 			await base.DisposeAsync().ConfigureAwait(false);
+
+			if (_ownedHubConnection != null)
+				await _ownedHubConnection.DisposeAsync().ConfigureAwait(false);
 		}
 
 		#endregion

@@ -2,7 +2,5 @@
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	public interface IPostgreSQLSpecificQueryable<out TSource> : IQueryable<TSource>
-	{
-	}
+	public interface IPostgreSQLSpecificQueryable<out TSource> : IQueryable<TSource>;
 }

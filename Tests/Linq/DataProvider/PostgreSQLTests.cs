@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.Linq;
@@ -321,6 +321,66 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<DateTime>("SELECT :p", DataParameter.Date("p", dateTime)), Is.EqualTo(dateTime));
 				Assert.That(conn.Execute<DateTime?>("SELECT :p", new DataParameter("p", dateTime, DataType.Date)), Is.EqualTo(dateTime));
 			}
+		}
+
+		[Table]
+		sealed class TimeColumnTable
+		{
+			[PrimaryKey]                 public int      Id   { get; set; }
+			[Column(DbType = "time")]    public TimeSpan Time { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6077")]
+		public void ReadTimeAsTimeSpanScalar([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db
+				.Execute<TimeSpan>("SELECT Cast('12:12:12' as time)")
+				.ShouldBe(new TimeSpan(12, 12, 12));
+
+			db
+				.Execute<TimeSpan?>("SELECT Cast('12:12:12' as time)")
+				.ShouldBe(new TimeSpan(12, 12, 12));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6077")]
+		public void ReadTimeAsTimeSpanEntity([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable([new TimeColumnTable { Id = 1, Time = new TimeSpan(12, 12, 12) }]);
+
+			table
+				.Single()
+				.Time
+				.ShouldBe(new TimeSpan(12, 12, 12));
+		}
+
+#if NET8_0_OR_GREATER
+		// net462 tests run Npgsql 8, which returns DateTime for date, so the string carries a time part there.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6077")]
+		public void ReadDateAsString([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db
+				.Execute<string>("SELECT Cast('2012-12-12' as date)")
+				.ShouldBe("2012-12-12");
+		}
+#endif
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6077")]
+		public void ReadTimeAsDateTime([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db
+				.Execute<DateTime>("SELECT Cast('12:12:12' as time)")
+				.ShouldBe(new DateTime(1, 1, 1, 12, 12, 12));
+
+			db
+				.Execute<DateTime?>("SELECT Cast('12:12:12' as time)")
+				.ShouldBe(new DateTime(1, 1, 1, 12, 12, 12));
 		}
 
 		/// <summary>
@@ -1199,6 +1259,11 @@ namespace Tests.DataProvider
 			public string Value = null!;
 		}
 
+		// Does committed (non-transactional) writes to SequenceTest1 and the sequence sequencetestseq, and
+		// asserts exact sequence values 1..40 - so nothing else may touch them while it runs. Both are
+		// scoped to one database, and every test against a database runs on that database's lane, so no
+		// concurrent test can reach them: this needs no NonParallelizable. Different PostgreSQL versions are
+		// different databases.
 		[Test]
 		public void BulkCopyRetrieveSequences(
 			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
@@ -1379,7 +1444,10 @@ namespace Tests.DataProvider
 			Assert.That(result, Is.EqualTo(124));
 		}
 
-		[ActiveIssue("Functionality not implemented yet")]
+		// Fragment stops before the system type: that renders as an assembly-qualified name carrying the assembly
+		// version, which would stop matching at the next version bump.
+		[ActiveIssue(ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "Database column type cannot be determined automatically and must be specified explicitly for system type",
+			Details = "no-issue: functionality not implemented yet - a dynamic record function's column types cannot be inferred.")]
 		[Test]
 		public void TestDynamicRecordFunction([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
@@ -1399,7 +1467,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssue("Functionality not implemented yet")]
+		[ActiveIssue(ErrorTypeName = "System.ArgumentException", ErrorMessage = "is a generic method definition",
+			Details = "no-issue: Functionality not implemented yet - the builder is handed the open generic method definition and never closes it. Nothing on the tracker covers it.")]
 		[Test]
 		public void TestDynamicTableFunction([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
@@ -1484,73 +1553,67 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Output (datetime format) is culture-/system-dependent")]
 		public void TestCustomType([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
-			using (var db = GetDataContext(context, CreateRangesMapping()))
-			using (var table = db.CreateLocalTable<TableWithDateRanges>())
+			using var db = GetDataContext(context, CreateRangesMapping());
+			using var table = db.CreateLocalTable<TableWithDateRanges>();
+			var date = TestData.DateTimeUtc;
+			var range1 = new SomeRange<DateTime>(date, null);
+			var range2 = new SomeRange<DateTime>(date.AddDays(1), null);
+			db.Insert(new TableWithDateRanges
 			{
-				var date = TestData.DateTimeUtc;
-				var range1 = new SomeRange<DateTime>(date, null);
-				var range2 = new SomeRange<DateTime>(date.AddDays(1), null);
-				db.Insert(new TableWithDateRanges
-				{
-					SimpleRange       = range1,
-					RangeWithTimeZone = range2,
-				});
-			}
+				SimpleRange       = range1,
+				RangeWithTimeZone = range2,
+			});
 		}
 
 		[Test]
+		[NoBaselines("Output (datetime format) is culture-/system-dependent")]
 		public void TestCustomTypeBulkCopy([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
-			using (var db = (DataConnection)GetDataContext(context, CreateRangesMapping()))
-			using (var table = db.CreateLocalTable<TableWithDateRanges>())
+			using var db = (DataConnection)GetDataContext(context, CreateRangesMapping());
+			using var table = db.CreateLocalTable<TableWithDateRanges>();
+			var date = TestData.DateTimeUtc;
+
+			var items = Enumerable.Range(1, 100).Select(i =>
 			{
-				var date = TestData.DateTimeUtc;
-
-				var items = Enumerable.Range(1, 100).Select(i =>
+				var range1 = new SomeRange<DateTime>(date.AddDays(i), date.AddDays(i + 1));
+				var range2 = new SomeRange<DateTime>(date.AddDays(i), date.AddDays(i + 1));
+				return new TableWithDateRanges
 				{
-					var range1 = new SomeRange<DateTime>(date.AddDays(i), date.AddDays(i + 1));
-					var range2 = new SomeRange<DateTime>(date.AddDays(i), date.AddDays(i + 1));
-					return new TableWithDateRanges
-					{
-						SimpleRange = range1,
-						RangeWithTimeZone = range2,
-					};
-				});
+					SimpleRange = range1,
+					RangeWithTimeZone = range2,
+				};
+			});
 
-				db.BulkCopy(items);
+			db.BulkCopy(items);
 
-				var loadedItems = table.ToArray();
-			}
+			var loadedItems = table.ToArray();
 		}
 
 		[Test]
+		[NoBaselines("Output (datetime format) is culture-/system-dependent")]
 		public async Task TestCustomTypeBulkCopyAsync([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
-			using (var db = (DataConnection)GetDataContext(context, CreateRangesMapping()))
-			using (var table = db.CreateLocalTable<TableWithDateRanges>())
+			using var db = (DataConnection)GetDataContext(context, CreateRangesMapping());
+			using var table = db.CreateLocalTable<TableWithDateRanges>();
+			var date = TestData.DateTimeUtc;
+
+			var items = Enumerable.Range(1, 100).Select(i =>
 			{
-				var date = TestData.DateTimeUtc;
-
-				var items = Enumerable.Range(1, 100).Select(i =>
+				var range1 = new SomeRange<DateTime>(date.AddDays(i), date.AddDays(i + 1));
+				var range2 = new SomeRange<DateTime>(date.AddDays(i), date.AddDays(i + 1));
+				return new TableWithDateRanges
 				{
-					var range1 = new SomeRange<DateTime>(date.AddDays(i), date.AddDays(i + 1));
-					var range2 = new SomeRange<DateTime>(date.AddDays(i), date.AddDays(i + 1));
-					return new TableWithDateRanges
-					{
-						SimpleRange = range1,
-						RangeWithTimeZone = range2,
-					};
-				});
+					SimpleRange = range1,
+					RangeWithTimeZone = range2,
+				};
+			});
 
-				await db.BulkCopyAsync(items);
+			await db.BulkCopyAsync(items);
 
-				var loadedItems = table.ToArray();
-			}
+			var loadedItems = table.ToArray();
 		}
 
 		[Table]
@@ -1868,6 +1931,56 @@ namespace Tests.DataProvider
 			}
 		}
 
+		sealed class BulkCopyTimeoutTable
+		{
+			[Column] public int     Id    { get; set; }
+			[Column] public string? Value { get; set; }
+		}
+
+		public enum BulkCopyTimeoutMode
+		{
+			Sync,
+			Async,
+			AsyncEnumerable,
+		}
+
+		[Test]
+		public async Task BulkCopyTimeoutAppliesToAllBatches(
+			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
+			[Values]                                         BulkCopyTimeoutMode mode,
+			[Values(5, 15)]                                  int rows)
+		{
+			var connectionString = new NpgsqlConnectionStringBuilder(GetConnectionString(context)) { CommandTimeout = 1 }.ConnectionString;
+
+			using var db    = (DataConnection)GetDataContext(context, o => o.UseConnectionString(GetDataProvider(context), connectionString));
+			using var table = db.CreateLocalTable<BulkCopyTimeoutTable>(tableOptions: TableOptions.IsTemporary);
+
+			// each COPY statement outlives the 1s connection command timeout
+			db.Execute("CREATE FUNCTION pg_temp.bulkcopy_timeout_slow() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN PERFORM pg_sleep(1.5); RETURN NULL; END $$");
+			db.Execute($"CREATE TRIGGER bulkcopy_timeout_slow_trg AFTER INSERT ON \"{nameof(BulkCopyTimeoutTable)}\" FOR EACH STATEMENT EXECUTE PROCEDURE pg_temp.bulkcopy_timeout_slow()");
+
+			var options = new BulkCopyOptions { BulkCopyType = BulkCopyType.ProviderSpecific, BulkCopyTimeout = 0, MaxBatchSize = 10 };
+			var items   = Enumerable.Range(1, rows).Select(i => new BulkCopyTimeoutTable { Id = i, Value = "x" }).ToList();
+
+			switch (mode)
+			{
+				case BulkCopyTimeoutMode.Sync           : table.BulkCopy(options, items);                                 break;
+				case BulkCopyTimeoutMode.Async          : await table.BulkCopyAsync(options, items);                      break;
+				case BulkCopyTimeoutMode.AsyncEnumerable: await table.BulkCopyAsync(options, AsAsyncEnumerable(items));   break;
+			}
+
+			table.Count().ShouldBe(rows);
+
+			static async IAsyncEnumerable<BulkCopyTimeoutTable> AsAsyncEnumerable(IEnumerable<BulkCopyTimeoutTable> source)
+			{
+				foreach (var item in source)
+				{
+					await Task.Yield();
+					yield return item;
+				}
+			}
+		}
+
 		public class NpgsqlTableWithDateRanges
 		{
 			[Column]
@@ -1888,121 +2001,115 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[NoBaselines("Output (datetime format) is culture-/system-dependent")]
 		public void TestRange([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<NpgsqlTableWithDateRanges>())
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<NpgsqlTableWithDateRanges>();
+			var range1 = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), true, new DateTime(2000, 3, 3), true);
+			var range2 = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), false, new DateTime(2000, 3, 3), false);
+			var range3 = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3, 4, 5, 6), new DateTime(2000, 4, 3, 4, 5, 6));
+			var range4 = new NpgsqlRange<DateTime>(new DateTime(2000, 4, 3, 4, 5, 6, DateTimeKind.Utc), new DateTime(2000, 5, 3, 4, 5, 6, DateTimeKind.Utc));
+			db.Insert(new NpgsqlTableWithDateRanges
 			{
-				var range1 = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), true, new DateTime(2000, 3, 3), true);
-				var range2 = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), false, new DateTime(2000, 3, 3), false);
-				var range3 = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3, 4, 5, 6), new DateTime(2000, 4, 3, 4, 5, 6));
-				var range4 = new NpgsqlRange<DateTime>(new DateTime(2000, 4, 3, 4, 5, 6, DateTimeKind.Utc), new DateTime(2000, 5, 3, 4, 5, 6, DateTimeKind.Utc));
-				db.Insert(new NpgsqlTableWithDateRanges
-				{
-					DateRangeInclusive = range1,
-					DateRangeExclusive = range2,
-					TSRange            = range3,
-					TSTZRange          = range4,
-				});
+				DateRangeInclusive = range1,
+				DateRangeExclusive = range2,
+				TSRange            = range3,
+				TSTZRange          = range4,
+			});
 
-				var record = table.Single();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(record.DateRangeInclusive, Is.EqualTo(new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), true, new DateTime(2000, 3, 4), false)));
-					Assert.That(record.DateRangeExclusive, Is.EqualTo(new NpgsqlRange<DateTime>(new DateTime(2000, 2, 4), true, new DateTime(2000, 3, 3), false)));
-					Assert.That(record.TSRange, Is.EqualTo(range3));
-					Assert.That(record.TSTZRange, Is.EqualTo(range4));
-				}
+			var record = table.Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(record.DateRangeInclusive, Is.EqualTo(new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), true, new DateTime(2000, 3, 4), false)));
+				Assert.That(record.DateRangeExclusive, Is.EqualTo(new NpgsqlRange<DateTime>(new DateTime(2000, 2, 4), true, new DateTime(2000, 3, 3), false)));
+				Assert.That(record.TSRange, Is.EqualTo(range3));
+				Assert.That(record.TSTZRange, Is.EqualTo(range4));
 			}
 		}
 
 		[Test]
+		[NoBaselines("Output (datetime format) is culture-/system-dependent")]
 		public void TestRangeBulkCopy([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
-			using (var db    = (DataConnection)GetDataContext(context))
-			using (var table = db.CreateLocalTable<NpgsqlTableWithDateRanges>())
-			{
-				var items = Enumerable.Range(1, 100)
-					.Select(i =>
+			using var db    = (DataConnection)GetDataContext(context);
+			using var table = db.CreateLocalTable<NpgsqlTableWithDateRanges>();
+			var items = Enumerable.Range(1, 100)
+				.Select(i =>
+				{
+					return new NpgsqlTableWithDateRanges
 					{
-						return new NpgsqlTableWithDateRanges
-						{
-							Id                 = i,
-							DateRangeInclusive = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), true, new DateTime(2000, 3, 3), true),
-							DateRangeExclusive = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), false, new DateTime(2000, 3, 3), false),
-							TSRange            = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 2, 3, 4, 5, 6), true, new DateTime(2000 + i, 4, 3, 4, 5, 6), true),
-							TSTZRange          = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 4, 3, 4, 5, 6, DateTimeKind.Utc), true, new DateTime(2000 + i, 5, 3, 4, 5, 6, DateTimeKind.Utc), true),
-						};
-					})
-					.ToArray();
+						Id                 = i,
+						DateRangeInclusive = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), true, new DateTime(2000, 3, 3), true),
+						DateRangeExclusive = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), false, new DateTime(2000, 3, 3), false),
+						TSRange            = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 2, 3, 4, 5, 6), true, new DateTime(2000 + i, 4, 3, 4, 5, 6), true),
+						TSTZRange          = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 4, 3, 4, 5, 6, DateTimeKind.Utc), true, new DateTime(2000 + i, 5, 3, 4, 5, 6, DateTimeKind.Utc), true),
+					};
+				})
+				.ToArray();
 
-				db.BulkCopy(items);
+			db.BulkCopy(items);
 
-				var records = table.OrderBy(_ => _.Id).ToArray();
+			var records = table.OrderBy(_ => _.Id).ToArray();
 
-				Assert.That(records, Has.Length.EqualTo(100));
+			Assert.That(records, Has.Length.EqualTo(100));
 
-				AreEqual(
-					items.Select(t => new
-					{
-						t.Id,
-						// date range read back as lower-inclusive, upper-exclusive and
-						// NpgsqlRange Equals implementation cannot compare equal ranges if they use different flags or bounds types
-						// so we need to convert original values
-						// https://github.com/npgsql/npgsql/blob/dev/src/Npgsql/NpgsqlTypes/NpgsqlRange.cs#L304
-						DateRangeInclusive = new NpgsqlRange<DateTime>(t.DateRangeInclusive.LowerBound, true, t.DateRangeInclusive.UpperBound.AddDays(1), false),
-						DateRangeExclusive = new NpgsqlRange<DateTime>(t.DateRangeExclusive.LowerBound.AddDays(1), true, t.DateRangeExclusive.UpperBound, false),
-						t.TSRange,
-						t.TSTZRange
-					}),
-					records.Select(t => new { t.Id, t.DateRangeInclusive, t.DateRangeExclusive, t.TSRange, t.TSTZRange }));
-			}
+			AreEqual(
+				items.Select(t => new
+				{
+					t.Id,
+					// date range read back as lower-inclusive, upper-exclusive and
+					// NpgsqlRange Equals implementation cannot compare equal ranges if they use different flags or bounds types
+					// so we need to convert original values
+					// https://github.com/npgsql/npgsql/blob/dev/src/Npgsql/NpgsqlTypes/NpgsqlRange.cs#L304
+					DateRangeInclusive = new NpgsqlRange<DateTime>(t.DateRangeInclusive.LowerBound, true, t.DateRangeInclusive.UpperBound.AddDays(1), false),
+					DateRangeExclusive = new NpgsqlRange<DateTime>(t.DateRangeExclusive.LowerBound.AddDays(1), true, t.DateRangeExclusive.UpperBound, false),
+					t.TSRange,
+					t.TSTZRange
+				}),
+				records.Select(t => new { t.Id, t.DateRangeInclusive, t.DateRangeExclusive, t.TSRange, t.TSTZRange }));
 		}
 
 		[Test]
+		[NoBaselines("Output (datetime format) is culture-/system-dependent")]
 		public async Task TestRangeBulkCopyAsync([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
-			using (var db = (DataConnection)GetDataContext(context))
-			using (var table = db.CreateLocalTable<NpgsqlTableWithDateRanges>())
-			{
-				var items = Enumerable.Range(1, 100)
-					.Select(i =>
+			using var db = (DataConnection)GetDataContext(context);
+			using var table = db.CreateLocalTable<NpgsqlTableWithDateRanges>();
+			var items = Enumerable.Range(1, 100)
+				.Select(i =>
+				{
+					return new NpgsqlTableWithDateRanges
 					{
-						return new NpgsqlTableWithDateRanges
-						{
-							Id                 = i,
-							DateRangeInclusive = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), true, new DateTime(2000, 3, 3), true),
-							DateRangeExclusive = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), false, new DateTime(2000, 3, 3), false),
-							TSRange            = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 2, 3, 4, 5, 6), true, new DateTime(2000 + i, 4, 3, 4, 5, 6), true),
-							TSTZRange          = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 4, 3, 4, 5, 6, DateTimeKind.Utc), true, new DateTime(2000 + i, 5, 3, 4, 5, 6, DateTimeKind.Utc), true),
-						};
-					})
-					.ToArray();
+						Id                 = i,
+						DateRangeInclusive = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), true, new DateTime(2000, 3, 3), true),
+						DateRangeExclusive = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), false, new DateTime(2000, 3, 3), false),
+						TSRange            = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 2, 3, 4, 5, 6), true, new DateTime(2000 + i, 4, 3, 4, 5, 6), true),
+						TSTZRange          = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 4, 3, 4, 5, 6, DateTimeKind.Utc), true, new DateTime(2000 + i, 5, 3, 4, 5, 6, DateTimeKind.Utc), true),
+					};
+				})
+				.ToArray();
 
-				await db.BulkCopyAsync(items);
+			await db.BulkCopyAsync(items);
 
-				var records = await table.OrderBy(_ => _.Id).ToArrayAsync();
+			var records = await table.OrderBy(_ => _.Id).ToArrayAsync();
 
-				Assert.That(records, Has.Length.EqualTo(100));
+			Assert.That(records, Has.Length.EqualTo(100));
 
-				AreEqual(
-					items.Select(t => new
-					{
-						t.Id,
-						// date range read back as lower-inclusive, upper-exclusive and
-						// NpgsqlRange Equals implementation cannot compare equal ranges if they use different flags or bounds types
-						// so we need to convert original values
-						// https://github.com/npgsql/npgsql/blob/dev/src/Npgsql/NpgsqlTypes/NpgsqlRange.cs#L304
-						DateRangeInclusive = new NpgsqlRange<DateTime>(t.DateRangeInclusive.LowerBound, true, t.DateRangeInclusive.UpperBound.AddDays(1), false),
-						DateRangeExclusive = new NpgsqlRange<DateTime>(t.DateRangeExclusive.LowerBound.AddDays(1), true, t.DateRangeExclusive.UpperBound, false),
-						t.TSRange,
-						t.TSTZRange
-					}),
-					records.Select(t => new { t.Id, t.DateRangeInclusive, t.DateRangeExclusive, t.TSRange, t.TSTZRange }));
-			}
+			AreEqual(
+				items.Select(t => new
+				{
+					t.Id,
+					// date range read back as lower-inclusive, upper-exclusive and
+					// NpgsqlRange Equals implementation cannot compare equal ranges if they use different flags or bounds types
+					// so we need to convert original values
+					// https://github.com/npgsql/npgsql/blob/dev/src/Npgsql/NpgsqlTypes/NpgsqlRange.cs#L304
+					DateRangeInclusive = new NpgsqlRange<DateTime>(t.DateRangeInclusive.LowerBound, true, t.DateRangeInclusive.UpperBound.AddDays(1), false),
+					DateRangeExclusive = new NpgsqlRange<DateTime>(t.DateRangeExclusive.LowerBound.AddDays(1), true, t.DateRangeExclusive.UpperBound, false),
+					t.TSRange,
+					t.TSTZRange
+				}),
+				records.Select(t => new { t.Id, t.DateRangeInclusive, t.DateRangeExclusive, t.TSRange, t.TSTZRange }));
 		}
 
 		sealed class ScalarResult<T>
@@ -2137,11 +2244,10 @@ namespace Tests.DataProvider
 					intervalDataType2 = TimeSpan.FromDays(3),
 				});
 
-				Assert.DoesNotThrow(
-					() => db.GetTable<Issue1429Table>().Insert(() => new Issue1429Table()
+				db.GetTable<Issue1429Table>().Insert(() => new Issue1429Table()
 					{
 						timeDataType = TimeSpan.FromDays(3)
-					}));
+					});
 			}
 			finally
 			{
@@ -2218,7 +2324,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(3352, ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "42883: function test_parameter_typing",
+			Details = "the overload cannot be resolved because the parameters are not typed - #3352's subject. The fragment stops before the argument list, which the server spells out in full.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3352")]
 		public void FunctionParameterTyping([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
@@ -2261,7 +2368,7 @@ $function$
 		[Sql.Function(ServerSideOnly = true)]
 		static short? test_parameter_typing(short? input1, int? input2, long? input3, decimal? input4, float? input5, double? input6)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(test_parameter_typing));
 		}
 
 		[Table]
@@ -2782,9 +2889,10 @@ $function$
 		#region issue 4250
 
 		[Sql.Expression("{point1} <-> {point2}", ServerSideOnly = true)]
-		static double Distance([ExprParameter] NpgsqlPoint? point1, [ExprParameter] NpgsqlPoint? point2) => throw new NotImplementedException();
+		static double Distance([ExprParameter] NpgsqlPoint? point1, [ExprParameter] NpgsqlPoint? point2) => throw new ServerSideOnlyException(nameof(Distance));
 
-		[ActiveIssue]
+		[ActiveIssue(4250, ErrorTypeName = "System.FormatException", ErrorMessage = "The input string 'point1' was not in a correct format.",
+			Details = "a named parameter inside Sql.Expression is read as a format placeholder - #4250's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4250")]
 		public void Issue4250Test([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
@@ -2798,7 +2906,7 @@ $function$
 		#region issue 4348
 
 		[Sql.Expression("{0} @> '[{1}]'", ServerSideOnly = true, IsPredicate = true, InlineParameters = true)]
-		static bool JsonContains(string? json, int value) => throw new NotImplementedException();
+		static bool JsonContains(string? json, int value) => throw new ServerSideOnlyException(nameof(JsonContains));
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4348")]
 		public void Issue4348Test1([IncludeDataSources(true, TestProvName.AllPostgreSQL95Plus)] string context)
@@ -2841,7 +2949,8 @@ $function$
 		// - from Pg* attributes
 		// - schema tables
 		// - using npgsql-specific naming conventions
-		[ActiveIssue]
+		[ActiveIssue("https://github.com/npgsql/npgsql/issues/4780", ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "42704: type \"enum\" does not exist",
+			Details = "the enum's PostgreSQL type name is not known to us, so the column is rendered against a type literally called \"enum\". Needs the pg-specific metadata provider described above. The 4780 in these names is npgsql's issue, not linq2db's - linq2db 4780 is an unrelated merged PR.")]
 		[Test(Description = "https://github.com/npgsql/npgsql/issues/4780")]
 		public void Issue4780Test1([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] bool inline)
 		{
@@ -2881,7 +2990,8 @@ $function$
 			}
 		}
 
-		[ActiveIssue]
+		[ActiveIssue("https://github.com/npgsql/npgsql/issues/4780", ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "42704: type \"enum\" does not exist",
+			Details = "as Issue4780Test1 - the enum's PostgreSQL type name is not known to us, so the column is rendered against a type literally called \"enum\".")]
 		[Test(Description = "https://github.com/npgsql/npgsql/issues/4780")]
 		public void Issue4780Test2([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] bool inline)
 		{
@@ -2942,7 +3052,8 @@ $function$
 
 		#region Issue 2796
 
-		[ActiveIssue(SkipForNonLinqService = true)]
+		[ActiveIssue(2796, SkipForNonLinqService = true, ErrorTypeName = "System.ArgumentException", ErrorMessage = "Cannot write DateTime with",
+			Details = "the tstzrange's DateTime kind does not survive the remote transport - #2796's mapping gap, remote only.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2796")]
 		public void Issue2796Test1([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
@@ -2961,7 +3072,8 @@ $function$
 			Assert.That(res.RangeMappedAsDateTime, Is.EqualTo(record.RangeMappedAsDateTime));
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(2796, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException", ErrorMessage = "Cannot convert value{0}NpgsqlTypes.NpgsqlRange",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. One attribute covers both transports: the remote message carries the inner type name, which is what Matches looks for there.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2796")]
 		public void Issue2796Test2([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
@@ -3074,10 +3186,10 @@ $function$
 		}
 
 		[Sql.Extension("", BuilderType = typeof(Issue5549CoalesceBuilder), ServerSideOnly = true)]
-		static NodaTime.Instant? Issue5549CoalesceBuilt(NodaTime.Instant? obj1, NodaTime.Instant obj2) => throw new NotImplementedException();
+		static NodaTime.Instant? Issue5549CoalesceBuilt(NodaTime.Instant? obj1, NodaTime.Instant obj2) => throw new ServerSideOnlyException(nameof(Issue5549CoalesceBuilt));
 
 		[Sql.Expression("coalesce({0},{1})", ServerSideOnly = true)]
-		static NodaTime.Instant? Issue5549CoalesceRaw(NodaTime.Instant? obj1, NodaTime.Instant obj2) => throw new NotImplementedException();
+		static NodaTime.Instant? Issue5549CoalesceRaw(NodaTime.Instant? obj1, NodaTime.Instant obj2) => throw new ServerSideOnlyException(nameof(Issue5549CoalesceRaw));
 
 		// Npgsql NodaTime plugin handles Instant at the ADO layer; linq2db has no built-in DataType for it.
 		(NpgsqlDataSource DataSource, IDataProvider Provider) Issue5549Setup(string context)
@@ -3276,13 +3388,13 @@ $function$
 		[Sql.Function("test_avg", ServerSideOnly = true, IsAggregate = true, ArgIndices = new[] { 1 })]
 		public static double CustomAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double>> value)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(CustomAvg));
 		}
 
 		[Sql.Function("test_avg", ServerSideOnly = true, IsAggregate = true, ArgIndices = new[] { 1 })]
 		public static double? CustomAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> value)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(CustomAvg));
 		}
 	}
 
@@ -3299,7 +3411,7 @@ $function$
 		public static object AddIfNotExists(string value)
 		{
 			// this function has void return type in pg, but we use object in C# to make it usable
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(AddIfNotExists));
 		}
 
 		[Sql.TableFunction("TestTableFunctionSchema")]
@@ -3314,7 +3426,7 @@ $function$
 		[Sql.Function("\"TestFunctionParameters\"", ServerSideOnly = true)]
 		public static TestParametersResult TestParameters(int? param1, int? param2)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(TestParameters));
 		}
 
 		[Sql.TableFunction("TestTableFunction")]
@@ -3336,19 +3448,19 @@ $function$
 		[Sql.Function("\"TestScalarFunction\"", ServerSideOnly = true)]
 		public static string TestScalarFunction(int? param)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(TestScalarFunction));
 		}
 
 		[Sql.Function("\"TestSingleOutParameterFunction\"", ServerSideOnly = true)]
 		public static int? TestSingleOutParameterFunction(int? param)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(TestSingleOutParameterFunction));
 		}
 
 		[Sql.Function("jsonb_to_record", ServerSideOnly = true)]
 		public static TRecord DynamicRecordFunction<TRecord>(string json)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(DynamicRecordFunction));
 		}
 
 		[Sql.TableFunction("jsonb_to_recordset")]
@@ -3363,7 +3475,7 @@ $function$
 		[Sql.Function("unnest", 0, IsAggregate = true, ServerSideOnly = true, Precedence = Precedence.Primary)]
 		public static T Unnest<T>(T[] array)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(Unnest));
 		}
 
 		public class TestScalarTableFunctionResult

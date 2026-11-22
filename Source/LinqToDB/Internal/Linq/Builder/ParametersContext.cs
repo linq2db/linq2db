@@ -9,6 +9,7 @@ using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Internal.Reflection;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -40,6 +41,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			ExpressionBuilder.QueryExpressionContainerParam,
 			ExpressionConstants.DataContextParam,
 			ExpressionBuilder.ParametersParam,
+			ExpressionBuilder.ExecutionContextParam,
 		};
 
 		public readonly List<ParameterAccessor>           CurrentSqlParameters = new();
@@ -151,19 +153,21 @@ namespace LinqToDB.Internal.Linq.Builder
 				CacheManager.RegisterParameterEntry(expr, entry);
 			else
 			{
-				if (context?.Builder != null && mappingSchema.IsScalarType(expr.Type))
-				{
-					try
-					{
-						CacheManager.RegisterParameterEntry(expr, entry, context.Builder.EvaluateExpression, out finalParameterId);
-					}
-					catch
-					{
-						return null;
-					}
-				}
-				else
-					CacheManager.RegisterParameterEntry(expr, entry, null, out finalParameterId);
+				// The evaluator lets registration confirm that two occurrences of the same expression really
+				// produce the same value before they share a parameter. That check matters for every kind of
+				// value, so supply it whenever a builder is available - including collection parameters of an
+				// IN predicate, where two calls returning different collections must not be merged. The
+				// by-parameter-path-name lookup, on the other hand, compares occurrences that are not
+				// structurally equal and stays limited to scalars.
+				Func<Expression, object?>? evaluator = context?.Builder != null ? context.Builder.EvaluateExpression : null;
+
+				var allowNameLookup = evaluator != null && mappingSchema.IsScalarType(expr.Type);
+
+				// No try/catch here: registration handles an occurrence it cannot evaluate by leaving the two
+				// parameters separate, so a throw from the user's own expression is never turned into "this is
+				// not a parameter" - which the caller would report as "the LINQ expression could not be
+				// converted to SQL", hiding the real cause. The exception surfaces from the accessor instead.
+				CacheManager.RegisterParameterEntry(expr, entry, evaluator, allowNameLookup, out finalParameterId);
 			}
 
 			_parametersById ??= new();
@@ -520,7 +524,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			// see #820
 			clientAccessorExpression = CorrectAccessorExpression(clientAccessorExpression, dataContext);
 
-			var clientValueMapper = Expression.Lambda<Func<IQueryExpressions,IDataContext?,object?[]?,object?>>(
+			var clientValueMapper = Expression.Lambda<Func<IQueryExpressions,IDataContext?,object?[]?,SqlCommandExecutionContext?,object?>>(
 				Expression.Convert(clientAccessorExpression, typeof(object)), AccessorParameters);
 
 			var clientValueFunc = clientValueMapper.CompileExpression();

@@ -12,13 +12,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 using Tests.Model;
+using Tests.Model.Remote;
 using Tests.Model.Remote.HttpContext;
 
 namespace Tests.Remote.ServerContainer
 {
 	internal sealed class HttpServerContainer : ServerContainerBase<ITestLinqService>
 	{
-		private static string GetServiceUrl(int port) => $"http://localhost:{port}";
+		private static string GetServiceUrl(int port) => $"http://{RemoteHost.Loopback}:{port}";
 
 		protected override ITestLinqService StartHost(int port, Func<string?, MappingSchema?, DataConnection> connectionFactory)
 		{

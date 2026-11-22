@@ -295,10 +295,10 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			Assert.Throws<LinqToDBException> (() =>
+			Assert.That(() =>
 				{
 					db.SelectQuery(() => Sql.AsSql(1 as int?)).First();
-				}, "The LINQ expression '(1 as int?)' could not be converted to SQL.")
+				}, Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("The LINQ expression '(1 as int?)' could not be converted to SQL."))
 			;
 		}
 

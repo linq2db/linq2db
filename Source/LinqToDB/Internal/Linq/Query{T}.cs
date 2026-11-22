@@ -1,11 +1,15 @@
 ﻿using System;
+using System.Data.Common;
 using System.Diagnostics;
 using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Interceptors;
 using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.Logging;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Linq;
 using LinqToDB.Metrics;
 
@@ -27,10 +31,10 @@ namespace LinqToDB.Internal.Linq
 		{
 			var statement = parseContext.GetResultStatement();
 
-			Queries.Add(new QueryInfo
+			QueryInfo = new QueryInfo
 			{
 				Statement          = statement,
-			});
+			};
 		}
 
 		#endregion
@@ -41,7 +45,43 @@ namespace LinqToDB.Internal.Linq
 
 		internal IQueryExpressions? CompiledExpressions;
 
-		internal Func<IDataContext,IQueryExpressions,object?[]?,object?[]?,IResultEnumerable<T>> GetResultEnumerable = null!;
+		internal Func<IDataContext,IQueryExpressions,SqlCommandExecutionContext?,IResultEnumerable<T>> GetResultEnumerable = null!;
+
+		// Set only for combinable SELECT queries (see SetRunQuery): materializes this query's rows from an
+		// externally-opened reader already positioned at its result set — used by combined multi-result-set eager loading
+		// so N child collection queries run as one command and each result set is mapped by its own query's mapper.
+		internal Func<IDataContext,IQueryExpressions,SqlCommandExecutionContext?,DbDataReader,IResultEnumerable<T>>? GetResultFromReader;
+
+		// Centralizes the eager-load enumerable decision shared by the ExpressionQuery enumeration paths: use the combined
+		// multi-result-set executor when eligible, else the sequential InitHarvesters + GetResultEnumerable path. Returns the
+		// harvesters and whether the combined path was taken, so the caller sets its Preambles field ONLY for the sequential
+		// path — the combined enumerable owns its harvesters, and GetForEachUntilAsync relies on Preambles being untouched there.
+		internal (IResultEnumerable<T> Enumerable, SqlCommandExecutionContext? Preambles, bool Combined) GetEagerEnumerable(
+			IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters)
+		{
+			var combined = QueryRunner.TryGetCombinedEagerEnumerable<T>(this, dataContext, expressions, parameters);
+
+			if (combined != null)
+				return (combined, null, true);
+
+			var harvesters = InitHarvesters(dataContext, expressions, parameters);
+
+			return (GetResultEnumerable(dataContext, expressions, harvesters), harvesters, false);
+		}
+
+		// Async sibling of GetEagerEnumerable.
+		internal async Task<(IResultEnumerable<T> Enumerable, SqlCommandExecutionContext? Preambles, bool Combined)> GetEagerEnumerableAsync(
+			IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, CancellationToken cancellationToken)
+		{
+			var combined = QueryRunner.TryGetCombinedEagerEnumerable<T>(this, dataContext, expressions, parameters);
+
+			if (combined != null)
+				return (combined, null, true);
+
+			var harvesters = await InitHarvestersAsync(dataContext, expressions, parameters, cancellationToken).ConfigureAwait(false);
+
+			return (GetResultEnumerable(dataContext, expressions, harvesters), harvesters, false);
+		}
 
 		#endregion
 
@@ -130,6 +170,9 @@ namespace LinqToDB.Internal.Linq
 					if (dataContext is IExpressionPreprocessor preprocessor)
 						expr = preprocessor.ProcessExpression(expr);
 
+					// The cache key below is built from the rewritten tree, so this runs before the lookup and
+					// therefore on every execution. Keying the cache on the pre-interception tree would let a hit
+					// skip the rewrite, but only by retaining both trees - one to match on, one to run.
 					if (dataContext is IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } interceptor })
 						expr = interceptor.ProcessExpression(expr, new QueryExpressionArgs(dataContext, expr, QueryExpressionArgs.ExpressionKind.Query));
 				}

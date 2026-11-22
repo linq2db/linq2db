@@ -33,9 +33,17 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 		bool                              _optimizeConditions;
 		bool                              _compactBinary;
 		bool                              _isSingleConvert;
+		List<int>?                        _materializedArgumentSlots;
 
 		public IDataContext  DataContext   => _dataContext;
 		public MappingSchema MappingSchema => _dataContext.MappingSchema;
+
+		/// <summary>
+		/// Argument-array slots whose values this pass baked into the tree. Expansion can create a
+		/// <see cref="SqlQueryDependentAttribute"/> position that did not exist before it ran, so a caller
+		/// caching the result cannot know these up front - it has to be told which ones were used.
+		/// </summary>
+		public int[] MaterializedArgumentSlots => _materializedArgumentSlots is null ? [] : _materializedArgumentSlots.ToArray();
 
 		Stack<ReadOnlyCollection<ParameterExpression>>? _allowedParameters;
 
@@ -68,6 +76,9 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			_optimizeConditions  = default;
 			_compactBinary       = false;
 			_isSingleConvert     = false;
+
+			_materializedArgumentSlots = null;
+			_parameterValues           = null;
 
 			_allowedParameters?.Clear();
 
@@ -146,6 +157,11 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				return Visit(newNode);
 			}
 
+			if (ConvertRawSqlString(node) is { } formattableCall)
+			{
+				return Visit(formattableCall);
+			}
+
 			var dependentParameters = SqlQueryDependentAttributeHelper.GetQueryDependentAttributes(node.Method);
 
 			if (dependentParameters != null)
@@ -179,7 +195,28 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 						var argument = arguments[i];
 						if (argument.NodeType != ExpressionType.Constant)
 						{
-							var newArgument = attr.PrepareForCache(argument, this);
+							var newArgument = attr is SqlQueryDependentFormatAttribute
+								? PrepareFormattableString(argument)
+								: attr.PrepareForCache(argument, this);
+
+							// A dependent argument taken from a compiled query's own arguments cannot be
+							// evaluated while ps is a free parameter, so it would reach the SQL as a parameter
+							// and never take part in the query's identity. Its value is that identity, so
+							// materialise it here; CompiledTable carries the same values in its cache key.
+							// Resolved against newArgument rather than argument: PrepareForCache rebuilds a
+							// params array when any element folds, and leaves the ps-reading elements in place.
+							if (_parameterValues != null && attr is not SqlQueryDependentFormatAttribute)
+							{
+								var resolved = ResolveCompiledQueryArguments(newArgument);
+
+								if (!ReferenceEquals(resolved, newArgument) && IsCompilable(resolved))
+								{
+									RecordMaterializedArgumentSlots(newArgument);
+
+									newArgument = Expression.Constant(EvaluateExpression(resolved), argument.Type);
+								}
+							}
+
 							if (newArgument.Type != argument.Type)
 								newArgument = Expression.Convert(newArgument, argument.Type);
 
@@ -198,6 +235,85 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				}
 
 				return node;
+			}
+
+			// FromSql(sql, parameters) and Sql.Expr(sql, parameters) are their FormattableString overloads over
+			// FormattableStringFactory.Create(sql.Format, parameters), so both overloads reach the cache in one shape.
+			MethodCallExpression? ConvertRawSqlString(MethodCallExpression node)
+			{
+				if (!node.Method.IsGenericMethod)
+					return null;
+
+				var definition = node.Method.GetGenericMethodDefinition();
+
+				MethodInfo formattableMethod;
+
+				if (definition == Methods.LinqToDB.FromSqlRaw)
+					formattableMethod = Methods.LinqToDB.FromSqlFormattable;
+				else if (definition == Methods.LinqToDB.SqlExt.ExprRaw)
+					formattableMethod = Methods.LinqToDB.SqlExt.ExprFormattable;
+				else
+					return null;
+
+				// sql and parameters are the last two arguments of both methods
+				var sql       = node.Arguments[^2];
+				var arguments = node.Arguments.Take(node.Arguments.Count - 2).ToList();
+
+				// a format read from a compiled query's arguments is resolved later, with the FormattableString's format
+				arguments.Add(IsCompilable(sql)
+					? FormattableStringHelper.CreateExpression(((RawSqlString)EvaluateExpression(sql)!).Format, node.Arguments[^1])
+					: FormattableStringHelper.CreateExpression(Expression.Property(sql, nameof(RawSqlString.Format)), node.Arguments[^1]));
+
+				return Expression.Call(formattableMethod.MakeGenericMethod(node.Method.GetGenericArguments()), arguments);
+			}
+
+			// Only the format shapes the SQL, so only the format is evaluated; the arguments stay
+			// expressions and become parameters as they would in the outer query.
+			Expression PrepareFormattableString(Expression argument)
+			{
+				if (FormattableStringHelper.TrySplit(argument, out var format, out var arguments))
+				{
+					if (format.NodeType == ExpressionType.Constant)
+						return argument;
+
+					var resolvedFormat = ResolveCompiledQueryArguments(format);
+
+					if (!IsCompilable(resolvedFormat))
+						return argument;
+
+					if (!ReferenceEquals(resolvedFormat, format))
+						RecordMaterializedArgumentSlots(format);
+
+					return FormattableStringHelper.CreateExpression((string)EvaluateExpression(resolvedFormat)!, arguments);
+				}
+
+				var resolvedArgument = ResolveCompiledQueryArguments(argument);
+
+				if (IsCompilable(resolvedArgument) && EvaluateExpression(resolvedArgument) is FormattableString formattable)
+				{
+					// Outside a compiled query expose runs per execution, so the values can be baked.
+					if (_parameterValues == null)
+						return FormattableStringHelper.CreateExpression(formattable);
+
+					if (!ReferenceEquals(resolvedArgument, argument))
+						RecordMaterializedArgumentSlots(argument);
+
+					// A compiled query reuses this build for any Equals-equal argument values (1.0m and 1.00m, one
+					// instant at two offsets) and for every value of a captured array it does not key on, so the
+					// values are read from the argument expression rather than baked.
+					var source = FormattableStringHelper.GetArgumentsExpression(argument, out var fromArray);
+
+					// A null argument has no type to read it as. It is read, and fails to translate as on master, only from
+					// a closure-captured array, which master read per call. A keyed source bakes it, and so does a captured
+					// FormattableString, which master baked whole. A source that also reads a captured value (args ?? captured)
+					// is not keyed on that value.
+					var keyed = !ReferenceEquals(ResolveCompiledQueryArguments(source), source)
+						&& source.Find(static e => e is MemberExpression { Expression: null or ConstantExpression }) == null;
+
+					return FormattableStringHelper.CreateExpression(formattable, source, readNulls: fromArray && !keyed);
+				}
+
+				return argument;
 			}
 
 			Expression HandleSqlProperty(MethodCallExpression node)
@@ -265,11 +381,8 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 							var evaluated = EvaluateExpression(argument);
 							if (evaluated is Expression evaluatedExpr)
 							{
-								if (evaluatedArgs == null)
-								{
-									evaluatedArgs ??= node.Arguments.ToArray();
-									evaluatedArgs[i] = evaluatedExpr;
-								}
+								evaluatedArgs ??= node.Arguments.ToArray();
+								evaluatedArgs[i] = evaluatedExpr;
 							}
 						}
 					}
@@ -323,6 +436,56 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 					expr = new ChangeTypeExpression(expr, node.Type);
 
 				return expr;
+			}
+
+			return null;
+		}
+
+		void RecordMaterializedArgumentSlots(Expression materialized)
+		{
+			materialized.Visit(this, static (visitor, e) =>
+			{
+				if (e is BinaryExpression { NodeType: ExpressionType.ArrayIndex } arrayIndex
+					&& arrayIndex.Left == ExpressionBuilder.ParametersParam
+					&& arrayIndex.Right is ConstantExpression { Value: int idx })
+				{
+					visitor._materializedArgumentSlots ??= new List<int>();
+
+					if (!visitor._materializedArgumentSlots.Contains(idx))
+						visitor._materializedArgumentSlots.Add(idx);
+				}
+			});
+		}
+
+		// Substitutes the compiled query's argument array with its values, so an expression reading them can be
+		// evaluated. Returns the expression unchanged when it reads nothing from the array.
+		Expression ResolveCompiledQueryArguments(Expression expression)
+		{
+			if (_parameterValues == null)
+				return expression;
+
+			return expression.Transform(_parameterValues, static (values, e) =>
+				e == ExpressionBuilder.ParametersParam ? Expression.Constant(values, e.Type) : e)!;
+		}
+
+		// Recognises the shape CompileQuery leaves for a compiled query's own parameters - Convert(ps[i], T) -
+		// and resolves it only when that slot actually holds the data context.
+		IDataContext? GetCompiledQueryRootContext(Expression expression)
+		{
+			if (_parameterValues == null)
+				return null;
+
+			var expr = expression;
+
+			if (expr is UnaryExpression { NodeType: ExpressionType.Convert } convert)
+				expr = convert.Operand;
+
+			if (expr is BinaryExpression { NodeType: ExpressionType.ArrayIndex } arrayIndex
+				&& arrayIndex.Left == ExpressionBuilder.ParametersParam
+				&& arrayIndex.Right is ConstantExpression { Value: int idx }
+				&& idx >= 0 && idx < _parameterValues.Length)
+			{
+				return _parameterValues[idx] as IDataContext;
 			}
 
 			return null;
@@ -400,6 +563,18 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 					if (mc.IsQueryable)
 					{
+						// Only the root argument is resolved out of the argument array; the remaining ones keep
+						// their ps[i] parameters, so no call's parameter values are baked into the cached tree.
+						if (GetCompiledQueryRootContext(mc.Arguments[0]) is { } rootContext)
+						{
+							var rootArgs = mc.Arguments.ToArray();
+
+							rootArgs[0] = SqlQueryRootExpression.Create(rootContext, mc.Arguments[0].Type);
+							converted   = mc.Update(mc.Object, rootArgs);
+
+							return true;
+						}
+
 						if (mc.Arguments[0] is MemberExpression or ConstantExpression)
 						{
 							if (IsCompilable(mc))
@@ -426,8 +601,14 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 							}
 						}
 
-						converted = mc;
-						return false;
+						// A user method carrying the IsQueryable marker reaches here: the branches above did not
+						// apply, and the builder has no builder for it either, so on the compiled path it still
+						// needs the expansion below. Everything else exits as before.
+						if (mc.IsBuiltInQueryable || _parameterValues == null)
+						{
+							converted = mc;
+							return false;
+						}
 					}
 				}
 
@@ -437,10 +618,76 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 					return !ExpressionEqualityComparer.Instance.Equals(converted, node);
 				}
+
+				// A method the builder does not know, held non-evaluable by the compiled query's argument array.
+				// Expanding it over that source leaves those reads in the tree. Confined to the compiled path:
+				// an ordinary query reaches the same shapes through association and ExpressionMethod expansion,
+				// where the call is left in the tree for the builder to report as it is on master.
+				// A method whose body reconstructs its own call - every As<Provider>() entry point does - expands
+				// to a node equal to this one, and accepting it would re-enter Visit on the same shape forever.
+				if (_parameterValues != null && node is MethodCallExpression call && !call.IsBuiltInQueryable
+					&& ExpandOverSource(call) is { } expanded
+					&& !ExpressionEqualityComparer.Instance.Equals(expanded, node))
+				{
+					converted = expanded;
+
+					return true;
+				}
 			}
 
 			converted = node;
 			return false;
+		}
+
+		// Expands a call by invoking it over a query built on its own source expression as-is. The source is never
+		// evaluated, so whatever it references - a compiled query's argument array, for one - survives into the
+		// returned tree. Same shape AssociationHelper and TableBuilder use to apply user filter functions.
+		Expression? ExpandOverSource(MethodCallExpression call)
+		{
+			if (!call.Method.IsStatic || call.Arguments.Count == 0)
+				return null;
+
+			var source      = call.Arguments[0];
+			var elementType = typeof(IQueryable<>).GetGenericType(source.Type)?.GetGenericArguments()[0];
+
+			if (elementType == null)
+				return null;
+
+			var args = call.Arguments.ToArray();
+
+			for (var i = 1; i < args.Length; i++)
+			{
+				// A quote is left as it is: it evaluates to its own operand, so whatever the lambda closes over -
+				// the argument array included - stays inside it instead of being folded to a value.
+				if (args[i] is UnaryExpression { NodeType: ExpressionType.Quote })
+					continue;
+
+				// Anything else is folded to a value by the invocation below and baked into the cached tree,
+				// where nothing reads it again - so only an already-literal argument can take part.
+				if (args[i] is not ConstantExpression)
+					return null;
+			}
+
+			var expandedSource = ExpressionQueryImpl.CreateQuery(elementType, DataContext, source);
+
+			// ExpressionQueryImpl<T> is only an IQueryable<T>, so a source declared narrower cannot hold one.
+			// ITable<T> is the common case and Table<T> satisfies it; anything narrower still declines, which
+			// leaves the call in the tree for the builder to report instead of letting Expression.Constant throw.
+			if (!source.Type.IsInstanceOfType(expandedSource))
+			{
+				var tableType = typeof(Table<>).MakeGenericType(elementType);
+
+				if (!source.Type.IsAssignableFrom(tableType))
+					return null;
+
+				expandedSource = ActivatorExt.CreateInstance<IQueryable>(tableType, DataContext, source);
+			}
+
+			args[0] = Expression.Constant(expandedSource, source.Type);
+
+			// Evaluated without the visitor's ps substitution: that one rewrites the array parameter inside the
+			// quote too, which would bind the expansion to the invocation that first built the cached query.
+			return call.Update(call.Object, args).EvaluateExpression() is IQueryable expanded ? expanded.Expression : null;
 		}
 
 		Expression ConvertIQueryable(Expression expression)
@@ -646,64 +893,6 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				return expr;
 			}
 
-			if (node.Member.DeclaringType == typeof(TimeSpan) && node.Expression != null)
-			{
-				switch (node.Expression.NodeType)
-				{
-					case ExpressionType.Subtract:
-					case ExpressionType.SubtractChecked:
-
-						Sql.DateParts datePart;
-
-						switch (node.Member.Name)
-						{
-							case "TotalMilliseconds": datePart = Sql.DateParts.Millisecond; break;
-							case "TotalSeconds"     : datePart = Sql.DateParts.Second;      break;
-							case "TotalMinutes"     : datePart = Sql.DateParts.Minute;      break;
-							case "TotalHours"       : datePart = Sql.DateParts.Hour;        break;
-							case "TotalDays"        : datePart = Sql.DateParts.Day;         break;
-							default                 : return null;
-						}
-
-						var ex = (BinaryExpression)node.Expression;
-						if (ex.Left.Type == typeof(DateTime)
-							&& ex.Right.Type == typeof(DateTime))
-						{
-							var method = MemberHelper.MethodOf(
-										() => Sql.DateDiff(Sql.DateParts.Day, DateTime.MinValue, DateTime.MinValue));
-
-							var call   =
-										Expression.Convert(
-											Expression.Call(
-												null,
-												method,
-												Expression.Constant(datePart),
-												Expression.Convert(ex.Right, typeof(DateTime?)),
-												Expression.Convert(ex.Left,  typeof(DateTime?))),
-											typeof(double));
-
-							return call;
-						}
-						else
-						{
-							var method = MemberHelper.MethodOf(
-										() => Sql.DateDiff(Sql.DateParts.Day, DateTimeOffset.MinValue, DateTimeOffset.MinValue));
-
-							var call =
-								Expression.Convert(
-									Expression.Call(
-										null,
-										method,
-										Expression.Constant(datePart),
-										Expression.Convert(ex.Right, typeof(DateTimeOffset?)),
-										Expression.Convert(ex.Left, typeof(DateTimeOffset?))),
-									typeof(double));
-
-							return call;
-						}
-				}
-			}
-
 			return null;
 		}
 
@@ -802,6 +991,11 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 		protected override Expression VisitBinary(BinaryExpression node)
 		{
+			// An assignment target must stay writeable, so VisitIndex's getter rewrite cannot apply to it
+			// (the dynamic-column setter built in EntityDescriptor assigns through the storage indexer).
+			if (node.NodeType == ExpressionType.Assign && node.Left is IndexExpression index)
+				return node.Update(base.VisitIndex(index), node.Conversion, Visit(node.Right));
+
 			if (node.Method != null)
 			{
 				var convertedMember = _memberConverter.Convert(node, _convertContext, out var handled);
@@ -863,6 +1057,26 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			_compactBinary = save;
 
 			return newNode;
+		}
+
+		// The compiler never emits IndexExpression, so it is rewritten into the compiler's shape for the same source
+		// (ArrayIndex, Array.Get or the indexer getter call). It survives only as an Assign target (VisitBinary) and in
+		// branches expose leaves unvisited (#6138), which is what PathVisitor's and EqualsToVisitor's Index arms are for.
+		protected override Expression VisitIndex(IndexExpression node)
+		{
+			if (node.Indexer == null)
+			{
+				if (node.Arguments.Count == 1)
+					return Visit(Expression.ArrayIndex(node.Object!, node.Arguments[0]));
+
+				return Visit(Expression.ArrayIndex(node.Object!, node.Arguments));
+			}
+
+			var getter = node.Indexer.GetGetMethod(true);
+			if (getter != null)
+				return Visit(Expression.Call(node.Object, getter, node.Arguments));
+
+			return base.VisitIndex(node);
 		}
 
 		protected override Expression VisitNew(NewExpression node)

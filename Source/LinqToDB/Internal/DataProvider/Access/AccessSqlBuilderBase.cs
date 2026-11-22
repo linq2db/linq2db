@@ -22,35 +22,6 @@ namespace LinqToDB.Internal.DataProvider.Access
 		{
 		}
 
-		public override int CommandCount(SqlStatement statement)
-		{
-			return statement switch
-			{
-				SqlTruncateTableStatement { ResetIdentity: true, Table.IdentityFields.Count: var count } => count + 1,
-				SqlTruncateTableStatement                                                                => 1,
-
-				_ => statement.NeedsIdentity ? 2 : 1,
-			};
-		}
-
-		protected override void BuildCommand(SqlStatement statement, int commandNumber)
-		{
-			if (statement is SqlTruncateTableStatement trun)
-			{
-				var field = trun.Table!.IdentityFields[commandNumber - 1];
-
-				StringBuilder.Append("ALTER TABLE ");
-				BuildObjectName(StringBuilder, trun.Table.TableName, ConvertType.NameToQueryTable, true, trun.Table.TableOptions);
-				StringBuilder.Append(" ALTER COLUMN ");
-				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
-				StringBuilder.AppendLine(" COUNTER(1, 1)");
-			}
-			else
-			{
-				StringBuilder.AppendLine("SELECT @@IDENTITY");
-			}
-		}
-
 		public override    bool IsNestedJoinSupported         => false;
 		public override    bool WrapJoinCondition             => true;
 		protected override bool IsValuesSyntaxSupported       => false;
@@ -85,6 +56,18 @@ namespace LinqToDB.Internal.DataProvider.Access
 				//
 				var type = sqlValue.ValueType.SystemType.UnwrapNullableType();
 
+				// A converted column carries its model type here while the database only ever sees the stored one,
+				// and what goes into the statement has to be something the provider can bind. A duration declared
+				// in seconds is a number to Access, and default(TimeSpan) is not a value its driver can take - so
+				// the type that decides the default is the stored one whenever the declaration names it.
+				if (sqlValue.ValueType.DataType != DataType.Undefined)
+				{
+					var storedType = SqlDataType.GetDataType(sqlValue.ValueType.DataType).Type.SystemType;
+
+					if (storedType != typeof(object))
+						type = storedType.UnwrapNullableType();
+				}
+
 				object? defaultValue;
 				if (type == typeof(string))
 					defaultValue = "";
@@ -118,22 +101,62 @@ namespace LinqToDB.Internal.DataProvider.Access
 				.Append(expr.IsNot ? '0' : '1');
 		}
 
+		// ^ evaluates left to right, and Wrap leaves an equal-precedence right operand bare. Decided here, not at
+		// translation, because the convert visitor drops the numeric casts that can hide a nested power until now;
+		// a nullability wrapper (Sql.AsNotNull) survives to here and renders as its operand.
+		protected override void BuildBinaryExpression(SqlBinaryExpression expr)
+		{
+			if (expr is { Operation: "^" } && QueryHelper.UnwrapNullablity(expr.Expr2) is SqlBinaryExpression { Operation: "^" })
+			{
+				BuildExpression(GetPrecedence(expr), expr.Expr1);
+				StringBuilder.Append(" ^ (");
+				BuildExpression(expr.Expr2);
+				StringBuilder.Append(')');
+				return;
+			}
+
+			base.BuildBinaryExpression(expr);
+		}
+
+		// Access lexes "-2 ^ x" as (-2) ^ x, so a negated power keeps its own parentheses
+		protected override void BuildUnaryExpression(SqlUnaryExpression expr)
+		{
+			if (expr.Operation == SqlUnaryOperation.Negation && QueryHelper.UnwrapNullablity(expr.Expr) is SqlBinaryExpression { Operation: "^" })
+			{
+				StringBuilder.Append("-(");
+				BuildExpression(expr.Expr);
+				StringBuilder.Append(')');
+				return;
+			}
+
+			base.BuildUnaryExpression(expr);
+		}
+
 		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery,
 			SqlUpdateClause                                    updateClause)
 		{
+			var fromPosition = StringBuilder.Length;
 			base.BuildFromClause(statement, selectQuery);
-			StringBuilder.Remove(0, 4).Insert(0, "UPDATE");
+			StringBuilder.Remove(fromPosition, 4).Insert(fromPosition, "UPDATE");
 			base.BuildUpdateSet(selectQuery, updateClause);
 		}
 
+		protected virtual bool IsCaseExpressionSupported => false;
+
 		protected override void BuildSqlCaseExpression(SqlCaseExpression caseExpression)
 		{
-			BuildExpression(ConvertCaseToConditions(caseExpression, 0));
+			if (IsCaseExpressionSupported)
+				base.BuildSqlCaseExpression(caseExpression);
+			else
+				BuildExpression(ConvertCaseToConditions(caseExpression, 0));
 		}
 
 		protected override void BuildSqlConditionExpression(SqlConditionExpression conditionExpression)
 		{
-			BuildSqlConditionExpressionAsFunction("IIF", conditionExpression);
+			if (IsCaseExpressionSupported)
+				base.BuildSqlConditionExpression(conditionExpression);
+			else
+				BuildSqlConditionExpressionAsFunction("IIF", conditionExpression);
 		}
 
 		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
@@ -234,10 +257,12 @@ namespace LinqToDB.Internal.DataProvider.Access
 			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		}
 
+		protected virtual bool IsCommentSupported => false;
+
 		protected override StringBuilder BuildSqlComment(StringBuilder sb, SqlComment comment)
 		{
 			// comments not supported by Access
-			return sb;
+			return IsCommentSupported ? base.BuildSqlComment(sb, comment) : sb;
 		}
 
 		protected override void BuildSubQueryExtensions(SqlStatement statement)
@@ -287,7 +312,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 				return;
 			}
 
-			var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+			var paramValue = parameter.GetParameterValue(RenderContext.EvaluationContext.ParameterValues);
 
 			// 1. Single parameter loose precision when used with CVar
 			// 2. Only CVar accepts NULL

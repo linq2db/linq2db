@@ -11,8 +11,30 @@ namespace Tests.Linq
 {
 	partial class WindowFunctionsTests
 	{
+		// KEEP (DENSE_RANK FIRST/LAST ORDER BY ...) items are SqlWindowOrderItem, same as OVER (ORDER BY): a
+		// boolean sort key is a value position and has to be folded.
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer, TestProvName.AllClickHouse, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllDuckDB, TestProvName.AllFirebird3Plus, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllInformix, TestProvName.AllPostgreSQL, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_Keep)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer, TestProvName.AllClickHouse, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllDuckDB, TestProvName.AllFirebird3Plus, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllInformix, TestProvName.AllPostgreSQL, ProviderName.Ydb, TestProvName.AllAccessLibRed, ErrorMessage = ErrorHelper.Error_WindowFunction_Keep)]
+		public void KeepWithBooleanOrderBy([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					t.CategoryId,
+					MinFirst = Sql.Window.Min(t.IntValue, f => f.KeepFirst().OrderBy(t.IntValue == 20).PartitionBy(t.CategoryId)),
+					MaxLast  = Sql.Window.Max(t.IntValue, f => f.KeepLast().OrderBy(t.NullableIntValue != null).PartitionBy(t.CategoryId)),
+				};
+
+			_ = query.ToList();
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer, TestProvName.AllClickHouse, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllDuckDB, TestProvName.AllFirebird3Plus, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllInformix, TestProvName.AllPostgreSQL, ProviderName.Ydb, TestProvName.AllAccessLibRed, ErrorMessage = ErrorHelper.Error_WindowFunction_Keep)]
 		public void KeepFirstBasic([SupportsAnalyticFunctionsContext] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
@@ -44,7 +66,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer, TestProvName.AllClickHouse, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllDuckDB, TestProvName.AllFirebird3Plus, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllInformix, TestProvName.AllPostgreSQL, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_Keep)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer, TestProvName.AllClickHouse, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllDuckDB, TestProvName.AllFirebird3Plus, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllInformix, TestProvName.AllPostgreSQL, ProviderName.Ydb, TestProvName.AllAccessLibRed, ErrorMessage = ErrorHelper.Error_WindowFunction_Keep)]
 		public void KeepWithMultipleOrderBy([SupportsAnalyticFunctionsContext] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
@@ -62,7 +84,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer, TestProvName.AllClickHouse, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllDuckDB, TestProvName.AllFirebird3Plus, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllInformix, TestProvName.AllPostgreSQL, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_Keep)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer, TestProvName.AllClickHouse, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllDuckDB, TestProvName.AllFirebird3Plus, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllInformix, TestProvName.AllPostgreSQL, ProviderName.Ydb, TestProvName.AllAccessLibRed, ErrorMessage = ErrorHelper.Error_WindowFunction_Keep)]
 		public void KeepWithoutPartition([SupportsAnalyticFunctionsContext] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
@@ -81,7 +103,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer, TestProvName.AllClickHouse, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllDuckDB, TestProvName.AllFirebird3Plus, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllInformix, TestProvName.AllPostgreSQL, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_Keep)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer, TestProvName.AllClickHouse, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllDuckDB, TestProvName.AllFirebird3Plus, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllInformix, TestProvName.AllPostgreSQL, ProviderName.Ydb, TestProvName.AllAccessLibRed, ErrorMessage = ErrorHelper.Error_WindowFunction_Keep)]
 		public void KeepAllAggregates([SupportsAnalyticFunctionsContext] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();

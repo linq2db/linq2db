@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
@@ -17,6 +18,142 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 	{
 		public OracleSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)
 		{
+		}
+
+		// A zone-less literal beside a TIMESTAMP WITH TIME ZONE column is converted in the session's zone (and a DateTime one is first
+		// moved by ToUniversalTime), so the default of a DateTime mapped to DateTimeOffset is written with its offset.
+		public override ISqlExpression ConvertDefaultValue(SqlDefaultValueExpression expression)
+		{
+			return expression.Value is DateTime dateTime && expression.Type.DataType == DataType.DateTimeOffset
+				? new SqlValue(expression.Type.WithSystemType(typeof(DateTimeOffset)), new DateTimeOffset(dateTime.Ticks, TimeSpan.Zero))
+				: base.ConvertDefaultValue(expression);
+		}
+
+		/// <summary>
+		/// Oracle's <c>TRUNC</c> already is truncation toward zero, the semantic the base composes <c>FLOOR</c>
+		/// and <c>CEILING</c> to reach - and Oracle spells the second one <c>CEIL</c>, so that composition does
+		/// not even parse here.
+		/// </summary>
+		protected override ISqlExpression TruncateDivide(ISqlExpression value, long divisor)
+		{
+			var longType = Factory.GetDbDataType(typeof(long));
+
+			return Factory.Function(longType, "Trunc", Factory.Div(longType, value, Factory.Value(longType, divisor)));
+		}
+
+		/// <inheritdoc />
+		public override bool CanLowerIntervalDifference => true;
+
+		/// <summary>
+		/// The operands are narrowed to six fractional digits before they are subtracted, so a component below the
+		/// microsecond is identically zero rather than merely imprecise, and is declined instead.
+		/// </summary>
+		/// <remarks>
+		/// <see cref="AsTimestamp"/> casts to <see cref="DataType.DateTime2"/> with no precision, which renders as a
+		/// bare <c>timestamp</c> - six digits - so the sub-microsecond tick cannot survive the subtraction whatever
+		/// the column holds. Declaring the floor makes the member fall back to .NET, which answers it from the two
+		/// dates, rather than depending on what the driver happens to round-trip.
+		/// </remarks>
+		public override SqlIntervalUnit IntervalResolution => SqlIntervalUnit.Microsecond;
+
+		/// <summary>
+		/// Elapsed ticks summed field by field out of the interval two timestamps subtract to.
+		/// </summary>
+		/// <remarks>
+		/// Both operands are cast to <c>timestamp</c> first: subtracting Oracle <c>date</c> values yields a number
+		/// of days instead, and a date carries no fraction of a second to lose. Field by field rather than through
+		/// the day count, because that count is a floating number of days and cannot carry a tick over a long
+		/// range - the same reason the existing <c>DateDiff</c> lowering decomposes its millisecond form.
+		/// <para>
+		/// Fields of a negative interval are all negative, so the sum needs no sign handling.
+		/// </para>
+		/// </remarks>
+		protected override ISqlExpression? ElapsedTicks(SqlIntervalDifferenceExpression element)
+		{
+			var longType   = Factory.GetDbDataType(typeof(long));
+			var doubleType = Factory.GetDbDataType(typeof(double));
+			var elapsed    = Factory.Sub(Factory.GetDbDataType(typeof(TimeSpan)), AsTimestamp(element.End), AsTimestamp(element.Start));
+
+			var seconds = Factory.Cast(
+				Factory.Function(doubleType, "Round",
+					Factory.Multiply(doubleType, Extract("Second", elapsed, doubleType), (double)TimeSpan.TicksPerSecond)),
+				longType, true);
+
+			return Factory.Add(longType, WholeField(elapsed, "Day", TimeSpan.TicksPerDay),
+				Factory.Add(longType, WholeField(elapsed, "Hour", TimeSpan.TicksPerHour),
+					Factory.Add(longType, WholeField(elapsed, "Minute", TimeSpan.TicksPerMinute), seconds)));
+		}
+
+		/// <inheritdoc />
+		/// <remarks>
+		/// Lowered below without going through <c>FinestDateUnit</c>: Oracle adds a native <c>INTERVAL DAY TO
+		/// SECOND</c> to a timestamp directly, built from the tick count through <c>NUMTODSINTERVAL</c>.
+		/// </remarks>
+		public override bool CanLowerIntervalShift => true;
+
+		/// <summary>
+		/// Shifts by the whole days and the seconds left over, each through <c>NUMTODSINTERVAL</c>, added natively.
+		/// </summary>
+		/// <remarks>
+		/// Split in two because <c>NUMTODSINTERVAL</c> refuses an amount of 2<sup>31</sup> or more of its unit, which
+		/// a second count reaches after 68 years; a day count does not reach it at all. Both parts are exact
+		/// <c>NUMBER</c> arithmetic on the tick count and carry its sign, so the seconds keep their fraction down to
+		/// the tick.
+		/// <para>
+		/// A <see cref="DateTime"/> is cast to <c>timestamp(7)</c> first, whatever its mapping declares. The result of
+		/// adding an interval to a <c>date</c> is a <c>date</c>, which has no fraction of a second to keep, and a
+		/// <c>date</c> column mapped as a plain <see cref="DateTime"/> is not declared as one. The cast is mandatory,
+		/// so it is not dropped as a no-op for a value already believed to be a timestamp, and seven digits keep the
+		/// tick of a value that already is one.
+		/// </para>
+		/// </remarks>
+		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
+		{
+			var longType     = Factory.GetDbDataType(typeof(long));
+			var decimalType  = Factory.GetDbDataType(typeof(decimal));
+			var stringType   = Factory.GetDbDataType(typeof(string));
+			var intervalType = Factory.GetDbDataType(typeof(TimeSpan));
+
+			var ticks    = element.IsSubtract ? Factory.Multiply(longType, element.Interval, -1L) : element.Interval;
+			var days     = TruncateDivide(ticks, TimeSpan.TicksPerDay);
+			var seconds  = Factory.Div(decimalType, TruncateRemainder(ticks, TimeSpan.TicksPerDay), Factory.Value(longType, TimeSpan.TicksPerSecond));
+			var interval = Factory.Add(intervalType,
+				Factory.Function(intervalType, "NumToDSInterval", days,    Factory.Value(stringType, "DAY")),
+				Factory.Function(intervalType, "NumToDSInterval", seconds, Factory.Value(stringType, "SECOND")));
+
+			var temporal     = element.Temporal;
+			var temporalType = Factory.GetDbDataType(temporal);
+
+			if (temporalType.SystemType.ToUnderlying() == typeof(DateTime))
+			{
+				temporalType = new DbDataType(temporalType.SystemType, DataType.DateTime2, null, null, 7, null);
+				temporal     = Factory.Cast(temporal, temporalType, true);
+			}
+
+			return Factory.Add(temporalType, temporal, interval);
+		}
+
+		ISqlExpression WholeField(ISqlExpression elapsed, string part, long ticksPerUnit)
+		{
+			var longType = Factory.GetDbDataType(typeof(long));
+
+			return Factory.Multiply(longType,
+				Factory.Cast(Extract(part, elapsed, Factory.GetDbDataType(typeof(double))), longType, true),
+				ticksPerUnit);
+		}
+
+		/// <summary>
+		/// <c>EXTRACT</c> as a function node. Its argument uses the standard <c>field FROM value</c> form, which is
+		/// not a comma-separated argument list.
+		/// </summary>
+		ISqlExpression Extract(string part, ISqlExpression value, DbDataType resultType)
+		{
+			return Factory.Function(resultType, "Extract", Factory.Expression(resultType, $"{part} From {{0}}", value));
+		}
+
+		ISqlExpression AsTimestamp(ISqlExpression value)
+		{
+			return Factory.Cast(value, Factory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.DateTime2));
 		}
 
 		#region LIKE
@@ -376,5 +513,16 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 			return FloorBeforeConvert(cast);
 		}
+
+		/// <summary>
+		/// Every ranking function, plus <c>LAG</c>/<c>LEAD</c>, plus any frame - all of them <c>ORA-30485: missing
+		/// ORDER BY expression in the window specification</c>. Unlike SQL Server, Oracle is content to leave
+		/// <c>FIRST_VALUE</c>/<c>LAST_VALUE</c> unordered, and an unframed aggregate is unconstrained.
+		/// </summary>
+		protected override bool IsWindowOrderByRequired(SqlExtendedFunction func)
+			=> base.IsWindowOrderByRequired(func)
+				|| func.FrameClause != null
+				|| IsOrderDependentWindowFunction(func.FunctionName)
+				|| func.FunctionName is "NTILE";
 	}
 }

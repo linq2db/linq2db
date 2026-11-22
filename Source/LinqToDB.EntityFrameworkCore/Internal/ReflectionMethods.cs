@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -25,7 +25,7 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 #endif
 
 		public static readonly MethodInfo IgnoreQueryFiltersMethodInfo = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.IgnoreQueryFilters());
-#if EF10
+#if EF10_OR_GREATER
 		public static readonly MethodInfo IgnoreQueryFiltersByKeyMethodInfo = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.IgnoreQueryFilters(default(IReadOnlyCollection<string>)!));
 #endif
 		public static readonly MethodInfo IncludeMethodInfo            = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.Include(o => o));

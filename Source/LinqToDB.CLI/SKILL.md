@@ -98,7 +98,7 @@ dotnet linq2db credentials remove --profile project-a/production-read
 dotnet linq2db credentials clear
 ```
 
-- `set` prompts for and confirms the password without echo. It creates or replaces `linq2db/<profile>`.
+- `set` prompts for and confirms the password. Typed and pasted characters are echoed as `*`; `Backspace` removes one character and `Esc` or `Ctrl+U` clears the entry. It creates or replaces `linq2db/<profile>`.
 - `list` returns profile names and users; it never returns passwords.
 - `remove` removes one named profile.
 - `clear` removes all linq2db profiles after interactive confirmation. `--force` skips confirmation.
@@ -122,7 +122,7 @@ The CLI can use provider/runtime dependencies bundled with the CLI package and s
 - Oracle Managed
 - Firebird
 - Sybase ASE
-- Microsoft Access through its ODBC or OLE DB provider variants
+- Microsoft Access through its ODBC or OLE DB provider variants, or the managed LibRed engine on any OS
 - ClickHouse
 - DuckDB
 - YDB
@@ -142,7 +142,7 @@ The CLI package includes provider/runtime dependencies for these provider famili
 - Oracle Managed
 - Firebird
 - Sybase ASE
-- Microsoft Access ODBC/OLE DB bridge assemblies
+- Microsoft Access ODBC/OLE DB bridge assemblies, and the managed LibRed engine (`LibRed.Ado`, a prerelease package)
 - ClickHouse
 - DuckDB
 - YDB

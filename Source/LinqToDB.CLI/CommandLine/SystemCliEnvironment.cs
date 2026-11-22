@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Text;
 
 using LinqToDB.CommandLine.Commands.Credentials;
 
@@ -88,33 +87,11 @@ namespace LinqToDB.CommandLine
 				return false;
 			}
 
-			Error.Write(prompt);
-
-			var value = new StringBuilder();
-
-			while (true)
-			{
-				var key = Console.ReadKey(true);
-
-				if (key.Key == ConsoleKey.Enter)
-				{
-					Error.WriteLine();
-					secret = value.ToString();
-					error  = null;
-					return true;
-				}
-
-				if (key.Key == ConsoleKey.Backspace)
-				{
-					if (value.Length > 0)
-						value.Length--;
-
-					continue;
-				}
-
-				if (!char.IsControl(key.KeyChar))
-					value.Append(key.KeyChar);
-			}
+			// Masking writes "\b" and "*" to the same stream as the prompt; suppress it when that
+			// stream is a file rather than a terminal.
+			secret = SecretConsoleReader.Read(prompt, static () => Console.ReadKey(true), Error, mask: !Console.IsErrorRedirected);
+			error  = null;
+			return true;
 		}
 
 		public ICredentialStore CredentialStore { get; } = WindowsCredentialStore.Instance;

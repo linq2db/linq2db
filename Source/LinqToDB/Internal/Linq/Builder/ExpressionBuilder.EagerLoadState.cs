@@ -14,7 +14,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		sealed class EagerLoadState
 		{
 			/// <summary>Set by ProcessEagerLoadingKeyedQuery to signal BuildQuery that buffer materialization is needed.</summary>
-			public bool HasKeyedQueryPreambles;
+			public bool HasKeyedQueryHarvesters;
 
 			/// <summary>True when <see cref="CteUnionInfo"/> holds a single-query CteUnion setup.</summary>
 			public bool HasCteUnionQuery;
@@ -31,7 +31,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			/// <summary>
 			/// Reason this attempt failed (if it failed). Set by strategy entry points before they
-			/// return <c>null</c>; left at <see cref="EagerLoadFallbackReason.None"/> on success.
+			/// return <see langword="null"/>; left at <see cref="EagerLoadFallbackReason.None"/> on success.
 			/// Recorded into <see cref="LastEagerLoadFallbackChain"/> by the dispatcher when an attempt
 			/// is discarded — diagnostic-only, the dispatcher does not branch on this value.
 			/// </summary>

@@ -1,8 +1,0 @@
-﻿{
-	"NET100.Azure": {
-		"Providers": [
-			// posgresql 13
-			"PostgreSQL.13"
-		]
-	}
-}

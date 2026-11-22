@@ -241,6 +241,12 @@ namespace LinqToDB.Remote
 
 			public bool IsTableNotFoundException(Exception exception)
 				=> ProviderService.IsTableNotFoundException(exception);
+
+			public Internal.SqlProvider.SqlCommandScenario? BuildCommandScenario(Internal.SqlQuery.SqlStatement statement, Internal.SqlProvider.SqlProviderFlags flags, Linq.Translation.ISqlExpressionFactory factory)
+				=> ProviderService.BuildCommandScenario(statement, flags, factory);
+
+			public Internal.SqlProvider.SqlCommandGroupPlan PlanScenario(Internal.SqlProvider.SqlCommandScenario scenario, Internal.SqlProvider.SqlProviderFlags flags)
+				=> ProviderService.PlanScenario(scenario, flags);
 		}
 
 		ConfigurationInfo? _configurationInfo;
@@ -305,7 +311,8 @@ namespace LinqToDB.Remote
 				}
 				finally
 				{
-					await DisposeClientAsync(client).ConfigureAwait(false);
+					if (OwnsClient)
+						await DisposeClientAsync(client).ConfigureAwait(false);
 				}
 			}
 		}
@@ -320,6 +327,14 @@ namespace LinqToDB.Remote
 			// preload _configurationInfo asynchronously if needed
 			return PreloadConfigurationInfoAsync(cancellationToken);
 		}
+
+		/// <summary>
+		/// Whether an instance returned by <see cref="GetClient"/> belongs to its caller, which disposes it
+		/// when done with it. Override to return <see langword="false"/> when <see cref="GetClient"/> hands
+		/// out an instance whose lifetime is managed elsewhere - a client shared by every query cannot be
+		/// disposed after one of them.
+		/// </summary>
+		protected virtual bool OwnsClient => true;
 
 		protected abstract ILinqService GetClient();
 		protected abstract string       ContextIDPrefix { get; }
@@ -505,7 +520,7 @@ namespace LinqToDB.Remote
 					{
 						return Expression.Lambda<Func<ISqlBuilder>>(
 							Expression.New(
-								key.SqlProviderType.GetConstructor(new[]
+								key.SqlProviderType.GetConstructorEx(new[]
 								{
 									typeof(IDataProvider),
 									typeof(MappingSchema),
@@ -541,7 +556,7 @@ namespace LinqToDB.Remote
 					static key =>
 					{
 						var p = Expression.Parameter(typeof(DataOptions));
-						var c = key.SqlOptimizerType.GetConstructor(new[] {typeof(SqlProviderFlags)});
+						var c = key.SqlOptimizerType.GetConstructorEx(new[] {typeof(SqlProviderFlags)});
 
 						if (c != null)
 							return Expression
@@ -554,7 +569,7 @@ namespace LinqToDB.Remote
 						return Expression
 							.Lambda<Func<DataOptions, ISqlOptimizer>>(
 								Expression.New(
-									key.SqlOptimizerType.GetConstructor(new[] {typeof(SqlProviderFlags), typeof(DataOptions)}) 
+									key.SqlOptimizerType.GetConstructorEx(new[] {typeof(SqlProviderFlags), typeof(DataOptions)})
 										?? throw new InvalidOperationException($"Constructor for type '{key.SqlOptimizerType.Name}' not found."),
 									Expression.Constant(key.SqlProviderFlags),
 									p
@@ -602,7 +617,9 @@ namespace LinqToDB.Remote
 				}
 				finally
 				{
-					await DisposeClientAsync(client).ConfigureAwait(false);
+					if (OwnsClient)
+						await DisposeClientAsync(client).ConfigureAwait(false);
+
 					_queryBatch = null;
 				}
 			}
@@ -702,16 +719,16 @@ namespace LinqToDB.Remote
 				// For ConnectionOptions we reapply only mapping schema and connection interceptor.
 				// Connection string, configuration, data provider, etc. are not reapplyable.
 				//
-				if (!string.Equals(options.ConfigurationString, previousOptions?.ConfigurationString, StringComparison.Ordinal))       throw new LinqToDBException($"Option '{nameof(options.ConfigurationString)} cannot be changed for context dynamically.");
-				if (!string.Equals(options.ConnectionString, previousOptions?.ConnectionString, StringComparison.Ordinal))          throw new LinqToDBException($"Option '{nameof(options.ConnectionString)} cannot be changed for context dynamically.");
-				if (!string.Equals(options.ProviderName, previousOptions?.ProviderName, StringComparison.Ordinal))              throw new LinqToDBException($"Option '{nameof(options.ProviderName)} cannot be changed for context dynamically.");
-				if (options.DbConnection              != previousOptions?.DbConnection)              throw new LinqToDBException($"Option '{nameof(options.DbConnection)} cannot be changed for context dynamically.");
-				if (options.DbTransaction             != previousOptions?.DbTransaction)             throw new LinqToDBException($"Option '{nameof(options.DbTransaction)} cannot be changed for context dynamically.");
-				if (options.DisposeConnection         != previousOptions?.DisposeConnection)         throw new LinqToDBException($"Option '{nameof(options.DisposeConnection)} cannot be changed for context dynamically.");
-				if (options.DataProvider              != previousOptions?.DataProvider)              throw new LinqToDBException($"Option '{nameof(options.DataProvider)} cannot be changed for context dynamically.");
-				if (options.ConnectionFactory         != previousOptions?.ConnectionFactory)         throw new LinqToDBException($"Option '{nameof(options.ConnectionFactory)} cannot be changed for context dynamically.");
-				if (options.DataProviderFactory       != previousOptions?.DataProviderFactory)       throw new LinqToDBException($"Option '{nameof(options.DataProviderFactory)} cannot be changed for context dynamically.");
-				if (options.OnEntityDescriptorCreated != previousOptions?.OnEntityDescriptorCreated) throw new LinqToDBException($"Option '{nameof(options.OnEntityDescriptorCreated)} cannot be changed for context dynamically.");
+				if (!string.Equals(options.ConfigurationString, previousOptions?.ConfigurationString, StringComparison.Ordinal))       throw new LinqToDBException($"Option '{nameof(options.ConfigurationString)}' cannot be changed for context dynamically.");
+				if (!string.Equals(options.ConnectionString, previousOptions?.ConnectionString, StringComparison.Ordinal))          throw new LinqToDBException($"Option '{nameof(options.ConnectionString)}' cannot be changed for context dynamically.");
+				if (!string.Equals(options.ProviderName, previousOptions?.ProviderName, StringComparison.Ordinal))              throw new LinqToDBException($"Option '{nameof(options.ProviderName)}' cannot be changed for context dynamically.");
+				if (options.DbConnection              != previousOptions?.DbConnection)              throw new LinqToDBException($"Option '{nameof(options.DbConnection)}' cannot be changed for context dynamically.");
+				if (options.DbTransaction             != previousOptions?.DbTransaction)             throw new LinqToDBException($"Option '{nameof(options.DbTransaction)}' cannot be changed for context dynamically.");
+				if (options.DisposeConnection         != previousOptions?.DisposeConnection)         throw new LinqToDBException($"Option '{nameof(options.DisposeConnection)}' cannot be changed for context dynamically.");
+				if (options.DataProvider              != previousOptions?.DataProvider)              throw new LinqToDBException($"Option '{nameof(options.DataProvider)}' cannot be changed for context dynamically.");
+				if (options.ConnectionFactory         != previousOptions?.ConnectionFactory)         throw new LinqToDBException($"Option '{nameof(options.ConnectionFactory)}' cannot be changed for context dynamically.");
+				if (options.DataProviderFactory       != previousOptions?.DataProviderFactory)       throw new LinqToDBException($"Option '{nameof(options.DataProviderFactory)}' cannot be changed for context dynamically.");
+				if (options.OnEntityDescriptorCreated != previousOptions?.OnEntityDescriptorCreated) throw new LinqToDBException($"Option '{nameof(options.OnEntityDescriptorCreated)}' cannot be changed for context dynamically.");
 
 				Action? action = null;
 

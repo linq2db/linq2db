@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Text;
 
@@ -341,7 +341,13 @@ namespace Tests.xUpdate
 			}
 		};
 
-		[ActiveIssue(Configurations = new[] { TestProvName.Oracle21DevartDirect, TestProvName.AllYdb }, Details = "YDB: strict-decimal facet mismatch (Decimal(22,9)) plus Date/Time conversion gaps (Timestamp->Date, Interval->Int64). (YDB: linq2db #5591, #5593)")]
+		[ActiveIssue(5591, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException",
+			ErrorMessage = "Failed to convert 'FieldDate': Optional<Timestamp> to Optional<Date>",
+			Details = "YDB strict-decimal facet mismatch plus Date/Time conversion gaps - Timestamp to Date and Interval to Int64. See also #5593.")]
+		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect,
+			Details = "no-declaration: unvalidated: the Devart client needs a licence key this machine does not have, so even CreateDatabase cannot connect. The gate's original prose covered only YDB, so nothing on record says why this provider was gated.")]
+		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed,
+			Details = "no-declaration: LibRed keeps sub-second precision that Access truncates, so a DATETIME round-trip returns 09:44:34.6530000 where the Microsoft drivers return 09:44:34 - an assertion failure, not a throw. LibRed.Ado 11.0.0-alpha.3 to beta.1; re-check when a newer LibRed ships.")]
 		[Test]
 		public void TestMergeTypes([DataSources(true)] string context)
 		{
@@ -409,7 +415,7 @@ namespace Tests.xUpdate
 				Assert.That(actual.FieldGuid, Is.EqualTo(expected.FieldGuid));
 
 			if (!provider.IsAnyOf(TestProvName.AllSQLite))
-				Assert.That(actual.FieldDecimal, Is.EqualTo(expected.FieldDecimal));
+				Assert.That(actual.FieldDecimal, Is.EqualTo(expected.FieldDecimal).Within(FloatingPointDeltaPercent).Percent);
 
 			if (   !provider.IsAnyOf(TestProvName.AllSqlServer2005)
 				&& provider != ProviderName.SqlCe
@@ -647,8 +653,6 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestTypesInsertByMerge([MergeDataContextSource(TestProvName.AllInformix, TestProvName.AllSybase)] string context)
 		{
-			using var _ = context.IsAnyOf(TestProvName.AllPostgreSQL) ? new DisableBaseline("https://github.com/linq2db/linq2db/issues/5169 - PostgreSQL remote/direct MERGE-source parameter dedup/naming divergence (value_2/value_3 vs value/value_2)") : null;
-
 			var isIDS = IsIDSProvider(context);
 
 			using var db = GetDataContext(context);

@@ -7,13 +7,16 @@ using System.Reflection;
 using LinqToDB.Data;
 
 using Microsoft.Data.SqlClient;
-using Microsoft.SqlServer.Types;
 
 #if NETFRAMEWORK
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+
+using Microsoft.SqlServer.Types;
 #else
+using LINQPad.Extensibility.DataContext;
+
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.SqlServer;
 #endif
@@ -62,7 +65,11 @@ If you have errors displaying types from Microsoft.SqlServer.Types assembly, add
 	{
 	}
 
+#if NETFRAMEWORK
 	private static readonly IReadOnlyList<Assembly> _additionalAssemblies = [typeof(SqlHierarchyId).Assembly];
+#else
+	private static IReadOnlyList<Assembly>? _additionalAssemblies;
+#endif
 
 	public override void ClearAllPools(string providerName)
 	{
@@ -71,8 +78,44 @@ If you have errors displaying types from Microsoft.SqlServer.Types assembly, add
 
 	public override IReadOnlyCollection<Assembly> GetAdditionalReferences(string providerName)
 	{
+#if NETFRAMEWORK
 		return _additionalAssemblies;
+#else
+		// spatial types package is provisioned only for SQL Server connections, so the assembly cannot be
+		// referenced from a static field - that would load it for a connection to any other database too
+		if (_additionalAssemblies == null)
+		{
+			try
+			{
+				_additionalAssemblies = [DataContextDriver.LoadAssemblySafely("Microsoft.SqlServer.Types.dll")];
+			}
+			catch (Exception ex)
+			{
+				// the model just compiles without spatial types, so don't interrupt the user - and don't
+				// cache the failure, a later call may succeed
+				Notification.Log(ex, "Failed to load Microsoft.SqlServer.Types assembly.");
+
+				return [];
+			}
+		}
+
+		return _additionalAssemblies;
+#endif
 	}
+
+#if !NETFRAMEWORK
+	public override IEnumerable<(string Id, string Version)> GetNuGetPackages(string providerName)
+	{
+		yield return ("Microsoft.Data.SqlClient", NuGetPackageVersions.Microsoft_Data_SqlClient);
+
+		// Microsoft's spatial types need SqlServerSpatial*.dll, shipped for Windows only, so other systems get
+		// the managed reimplementation instead. Both provide the Microsoft.SqlServer.Types assembly, and neither
+		// is referenced at compile time by this build, so linq2db and LINQPad load whichever one is provisioned.
+		yield return Platform.IsWindows
+			? ("Microsoft.SqlServer.Types"        , NuGetPackageVersions.Microsoft_SqlServer_Types)
+			: ("dotMorten.Microsoft.SqlServer.Types", NuGetPackageVersions.dotMorten_Microsoft_SqlServer_Types);
+	}
+#endif
 
 	public override DateTime? GetLastSchemaUpdate(ConnectionSettings settings)
 	{

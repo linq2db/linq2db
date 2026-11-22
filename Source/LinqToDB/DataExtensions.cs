@@ -11,13 +11,16 @@ using JetBrains.Annotations;
 using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.Expressions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.Options;
+using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB
@@ -1441,24 +1444,6 @@ namespace LinqToDB
 
 		#region FromSql
 
-		static Expression GenerateArray(object?[] arguments)
-		{
-			var argumentsExpr = Expression.NewArrayInit(typeof(object), arguments.Select(p =>
-			{
-				if (p == null)
-					return Expression.Constant(null, typeof(object));
-				
-				var argumentType    = p.GetType();
-				var valueExpression = SequenceHelper.WrapAsParameter(Expression.Constant(p, argumentType));
-				if (valueExpression.Type != typeof(object))
-					valueExpression = Expression.Convert(valueExpression, typeof(object));
-
-				return valueExpression;
-			}));
-
-			return argumentsExpr;
-		}
-
 		/// <summary>
 		///     <para>
 		///         Creates a LINQ query based on an interpolated string representing a SQL query.
@@ -1481,26 +1466,18 @@ namespace LinqToDB
 		/// <returns> An <see cref="IQueryable{T}" /> representing the raw SQL query. </returns>
 		[StringFormatMethod("sql")]
 		public static IQueryable<TEntity> FromSql<TEntity>(
-			this IDataContext dataContext,
-			FormattableString sql)
+			this                      IDataContext      dataContext,
+			[SqlQueryDependentFormat] FormattableString sql)
 		{
 			ArgumentNullException.ThrowIfNull(dataContext);
 			ArgumentNullException.ThrowIfNull(sql);
-
-			var arguments = sql.GetArguments();
-			var methodInfo = MethodHelper.GetMethodInfo(System.Runtime.CompilerServices.FormattableStringFactory.Create,
-				sql.Format, arguments);
-			var argumentsExpr = GenerateArray(arguments);
-
-			var formattableStringExpr =
-				Expression.Call(null, methodInfo, Expression.Constant(sql.Format), argumentsExpr);
 
 			return new ExpressionQueryImpl<TEntity>(
 				dataContext,
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(FromSql<TEntity>, dataContext, sql),
-					SqlQueryRootExpression.Create(dataContext), formattableStringExpr));
+					SqlQueryRootExpression.Create(dataContext), FormattableStringHelper.CreateExpression(sql)));
 		}
 
 		/// <summary>
@@ -1531,26 +1508,18 @@ namespace LinqToDB
 		/// <returns> An <see cref="IQueryable{T}" /> representing the raw SQL query. </returns>
 		[StringFormatMethod("sql")]
 		public static IQueryable<TEntity> FromSqlScalar<TEntity>(
-			this                     IDataContext      dataContext,
-			FormattableString sql)
+			this                      IDataContext      dataContext,
+			[SqlQueryDependentFormat] FormattableString sql)
 		{
 			ArgumentNullException.ThrowIfNull(dataContext);
 			ArgumentNullException.ThrowIfNull(sql);
-
-			var arguments = sql.GetArguments();
-			var methodInfo = MethodHelper.GetMethodInfo(System.Runtime.CompilerServices.FormattableStringFactory.Create,
-				sql.Format, arguments);
-			var argumentsExpr = GenerateArray(arguments);
-
-			var formattableStringExpr =
-				Expression.Call(null, methodInfo, Expression.Constant(sql.Format), argumentsExpr);
 
 			return new ExpressionQueryImpl<TEntity>(
 				dataContext,
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(FromSqlScalar<TEntity>, dataContext, sql),
-					SqlQueryRootExpression.Create(dataContext), formattableStringExpr));
+					SqlQueryRootExpression.Create(dataContext), FormattableStringHelper.CreateExpression(sql)));
 		}
 
 		/// <summary>
@@ -1566,6 +1535,9 @@ namespace LinqToDB
 		///         attack. You can include parameter place holders in the SQL query string and then supply parameter values as additional
 		///         arguments. Any parameter values you supply will automatically be converted to a DbParameter -
 		///         <code>context.FromSql&lt;Blogs&gt;("SELECT * FROM [dbo].[SearchBlogs]({0})", userSuppliedSearchTerm);</code>
+		///         When the SQL contains <c>{n}</c> placeholders, a value none of them references is not sent, unless it is a
+		///         <see cref="DataParameter"/> (bound by its name or position) or the provider binds parameters by position
+		///         (Access, SAP HANA, Informix IFX).
 		///     </para>
 		///     <para>
 		///         This overload also accepts DbParameter instances as parameter values.
@@ -1586,14 +1558,12 @@ namespace LinqToDB
 		{
 			ArgumentNullException.ThrowIfNull(dataContext);
 
-			var paramsExpr = GenerateArray(parameters);
-
 			return new ExpressionQueryImpl<TEntity>(
 				dataContext,
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(FromSql<TEntity>, dataContext, sql, parameters),
-					SqlQueryRootExpression.Create(dataContext), Expression.Constant(sql), paramsExpr));
+					Methods.LinqToDB.FromSqlFormattable.MakeGenericMethod(typeof(TEntity)),
+					SqlQueryRootExpression.Create(dataContext), FormattableStringHelper.CreateExpression(sql.Format, FormattableStringHelper.CreateArgumentsExpression(parameters))));
 		}
 
 		#endregion

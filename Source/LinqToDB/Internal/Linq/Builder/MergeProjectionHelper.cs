@@ -39,7 +39,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			[NotNullWhen(true)] out  Expression?                                                      projection,
 			[NotNullWhen(true)] out  List<(SqlPlaceholderExpression placeholder, Expression[] path)>? foundPlaceholders,
 			[NotNullWhen(true)] out  List<SqlEagerLoadExpression>?                                    foundEager,
-			[NotNullWhen(false)] out SqlErrorExpression?                                              error)
+			[NotNullWhen(false)] out SqlErrorExpression?                                              error,
+			Type?                                                                                     readAs = null)
 		{
 			var current = path;
 			do
@@ -73,7 +74,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				current = projected;
 			} while (true);
 
-			var pathBuilder = new ExpressionPathVisitor();
+			var pathBuilder = new ExpressionPathVisitor(readAs);
 			var withPath    = pathBuilder.ProcessExpression(current);
 
 			foundPlaceholders = pathBuilder.FoundPlaceholders;
@@ -205,13 +206,15 @@ namespace LinqToDB.Internal.Linq.Builder
 				return true;
 			}
 
-			if (projection1 is SqlPathExpression && IsNullValueOrSqlNull(projection2))
+			// A branch with nothing at this place selects NULL into every column the other branch reads there, so a
+			// projection that reads such a row as null reads the rows of both branches.
+			if (IsNullValueOrSqlNull(projection2) && ReadsNullColumnsAsNull(projection1))
 			{
 				merged = projection1;
 				return true;
 			}
 
-			if (projection2 is SqlPathExpression && IsNullValueOrSqlNull(projection1))
+			if (IsNullValueOrSqlNull(projection1) && ReadsNullColumnsAsNull(projection2))
 			{
 				merged = projection2;
 				return true;
@@ -249,6 +252,20 @@ namespace LinqToDB.Internal.Linq.Builder
 			return false;
 		}
 
+		/// <summary>
+		/// Whether a projection reads a row whose columns are all NULL as null: a column, or a value chosen against null
+		/// by testing a column for NULL.
+		/// </summary>
+		static bool ReadsNullColumnsAsNull(Expression projection)
+		{
+			if (projection is SqlPathExpression)
+				return true;
+
+			return projection is ConditionalExpression { Test: BinaryExpression { NodeType: ExpressionType.Equal or ExpressionType.NotEqual } test } conditional
+				&& test.Left is SqlPathExpression && test.Right.IsNullValue
+				&& IsNullValueOrSqlNull(test.NodeType == ExpressionType.Equal ? conditional.IfTrue : conditional.IfFalse);
+		}
+
 		#region Nested class
 
 		sealed class ExpressionOptimizerVisitor : ExpressionVisitorBase
@@ -274,9 +291,21 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			Stack<Expression> _stack = new();
 
-			bool _isDictionary;
-			bool _insideLambda;
-			bool _isStep2;
+			bool  _isDictionary;
+			bool  _insideLambda;
+			bool  _isStep2;
+			Type? _constructedAs;
+
+			// The type the whole projection is read as, when the caller knows it. A set operation does: both
+			// branches are read as its element type, whether or not the branch happens to carry a conversion
+			// saying so - C# lets `baseQuery.Concat(derivedQuery)` bind through IEnumerable<T> covariance with
+			// no conversion node anywhere. See issue #5683.
+			readonly Type? _readAs;
+
+			public ExpressionPathVisitor(Type? readAs = null)
+			{
+				_readAs = readAs;
+			}
 
 			public List<(SqlPlaceholderExpression placeholder, Expression[] path)> FoundPlaceholders { get; } = new();
 
@@ -284,11 +313,13 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public Expression ProcessExpression(Expression expression)
 			{
-				_isStep2 = false;
+				_isStep2       = false;
+				_constructedAs = _readAs;
 
 				var result = Visit(expression);
 
-				_isStep2 = true;
+				_isStep2       = true;
+				_constructedAs = _readAs;
 
 				result = Visit(result);
 
@@ -364,10 +395,39 @@ namespace LinqToDB.Internal.Linq.Builder
 				return result;
 			}
 
+			protected override Expression VisitUnary(UnaryExpression node)
+			{
+				// A branch that projects a derived type casts it to the type the projection is read as. The
+				// place a value occupies has to be named by that shared type - keyed by the constructed type
+				// instead, a base-typed branch and a derived-typed one would occupy different places and never
+				// pair up, so a set operation would pad both apart into columns of their own. See issue #5683.
+				if (SequenceHelper.IsConstructorBranch(node, out var constructor)
+				    && node.Type.IsAssignableFrom(constructor.Type))
+				{
+					var saveConstructedAs = _constructedAs;
+
+					// Through a chain of conversions it is the outermost one that says how the value is read.
+					_constructedAs ??= node.Type;
+
+					var result = base.VisitUnary(node);
+
+					_constructedAs = saveConstructedAs;
+
+					return result;
+				}
+
+				return base.VisitUnary(node);
+			}
+
 			public override Expression VisitSqlGenericConstructorExpression(SqlGenericConstructorExpression node)
 			{
+				// Only the constructor the conversion wraps is read as the converted type; anything constructed
+				// inside its assignments names itself.
+				var constructedAs = _constructedAs ?? node.Type;
+				_constructedAs = null;
+
 				_stack.Push(Expression.Constant("construct"));
-				_stack.Push(Expression.Constant(node.Type));
+				_stack.Push(Expression.Constant(constructedAs));
 
 				if (node.Assignments.Count > 0)
 				{

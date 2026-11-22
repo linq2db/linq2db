@@ -1,4 +1,8 @@
-﻿using LinqToDB.DataProvider.SqlServer;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+
+using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
@@ -9,6 +13,192 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 {
 	public class SqlServerSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
+		/// <summary>
+		/// <c>DATEDIFF_BIG</c> counts nanoseconds, and <c>datetime2</c> stores 100ns, so the leftover of a total
+		/// is exact. It is only ever applied to a sub-unit window, well inside the roughly 292 years at which the
+		/// nanosecond form would overflow.
+		/// </summary>
+		/// <remarks>
+		/// The nanosecond datepart arrived with <c>datetime2</c> in 2008 - <c>DATEADD</c> on 2005 answers <em>is not
+		/// a recognized dateadd option</em> - so that version counts in milliseconds instead, which is as fine as its
+		/// own <c>datetime</c> resolves anyway. Version-checked here rather than overridden on the 2005 visitor,
+		/// because the 2008 one derives from it and would inherit the wrong answer.
+		/// </remarks>
+		protected override SqlIntervalUnit? FinestDateUnit =>
+			_sqlServerVersion >= SqlServerVersion.v2008 ? SqlIntervalUnit.Nanosecond : SqlIntervalUnit.Millisecond;
+
+		/// <summary>
+		/// On 2005 the measurement stops at the millisecond, so a component asked for below one is identically zero
+		/// rather than merely imprecise - declined for the reason SQL CE and Sybase decline it.
+		/// </summary>
+		public override SqlIntervalUnit IntervalResolution =>
+			_sqlServerVersion >= SqlServerVersion.v2008 ? SqlIntervalUnit.Tick : SqlIntervalUnit.Millisecond;
+
+		static string? DatePartName(SqlIntervalUnit unit)
+		{
+			return unit switch
+			{
+				SqlIntervalUnit.Nanosecond  => "nanosecond",
+				SqlIntervalUnit.Day         => "day",
+				SqlIntervalUnit.Hour        => "hour",
+				SqlIntervalUnit.Minute      => "minute",
+				SqlIntervalUnit.Second      => "second",
+				SqlIntervalUnit.Millisecond => "millisecond",
+				SqlIntervalUnit.Microsecond => "microsecond",
+				_                           => null,
+			};
+		}
+
+		protected override ISqlExpression? ShiftDate(SqlIntervalUnit unit, ISqlExpression amount, ISqlExpression date)
+		{
+			var part = DatePartName(unit);
+			if (part == null)
+				return null;
+
+			// The amount is cast down: DATEADD takes a 32-bit number, and an amount computed from a tick count
+			// arrives here as BIGINT even when its value is small - which SQL Server rejects as an overflow rather
+			// than narrowing on its own.
+			return Factory.Function(Factory.GetDbDataType(date), "DateAdd",
+				Factory.NotNullExpression(Factory.GetDbDataType(typeof(string)), part),
+				Factory.Cast(amount, Factory.GetDbDataType(typeof(int)), true),
+				date);
+		}
+
+		protected override ISqlExpression? CountDateBoundaries(SqlIntervalUnit unit, ISqlExpression start, ISqlExpression end)
+		{
+			var part = DatePartName(unit);
+			if (part == null)
+				return null;
+
+			var partName = Factory.NotNullExpression(Factory.GetDbDataType(typeof(string)), part);
+
+			// DateDiff_Big, not DateDiff: the 32-bit form overflows at about 24 days in milliseconds. Counting
+			// whole units keeps the number small, but the caller may ask for a fine unit over a long range.
+			if (_sqlServerVersion >= SqlServerVersion.v2016)
+				return Factory.Function(Factory.GetDbDataType(typeof(long)), "DateDiff_Big", partName, start, end);
+
+			// Before 2016 there is only the 32-bit form, so every window counted here is kept short enough for its
+			// unit - see ElapsedTicks. The count is widened because the arithmetic built on it is not: a day count
+			// scaled to ticks is past the INT range long before the day count itself is.
+			return Factory.Cast(
+				Factory.Function(Factory.GetDbDataType(typeof(int)), "DateDiff", partName, start, end),
+				Factory.GetDbDataType(typeof(long)), true);
+		}
+
+		/// <summary>
+		/// Before 2016 the base decomposition cannot be used as it is once the finest unit is the nanosecond: it
+		/// counts the remainder after whole days in that unit, and a day is 8.64e13 nanoseconds against the
+		/// roughly 2.1e9 a 32-bit <c>DATEDIFF</c> holds. The remainder is split once more instead - whole seconds
+		/// within it, then the nanoseconds within the last second, at most 1e9 - so every count stays in range and
+		/// the result stays exact at the 100ns <c>datetime2</c> stores.
+		/// </summary>
+		/// <remarks>
+		/// Each count is the raw boundary count, measured from exactly where the previous shift landed, so an
+		/// overshoot at one step returns as a negative remainder at the next and the parts telescope, as in the base.
+		/// That needs the second shift to be exact, which two storage types do not give: <c>DATEADD</c> refuses a
+		/// second on a <c>date</c>, and rounds a <c>smalldatetime</c> to the minute. So the anchor is widened to
+		/// <c>datetime2</c> first, which holds either of them exactly - whatever the mapping declares, since that is
+		/// not what the column stores: a <c>date</c> column mapped as a plain <see cref="DateTime"/> is typed
+		/// <c>datetime2</c> here.
+		/// </remarks>
+		protected override ISqlExpression? ElapsedTicks(SqlIntervalDifferenceExpression element)
+		{
+			if (_sqlServerVersion >= SqlServerVersion.v2016 || FinestDateUnit != SqlIntervalUnit.Nanosecond)
+				return base.ElapsedTicks(element);
+
+			var days = CountDateBoundaries(SqlIntervalUnit.Day, element.Start, element.End);
+			if (days == null)
+				return null;
+
+			var dayAnchor = ShiftDate(SqlIntervalUnit.Day, days, element.Start);
+			if (dayAnchor == null)
+				return null;
+
+			dayAnchor = AsDateTime2(dayAnchor);
+
+			var seconds = CountDateBoundaries(SqlIntervalUnit.Second, dayAnchor, element.End);
+			if (seconds == null)
+				return null;
+
+			var secondAnchor = ShiftDate(SqlIntervalUnit.Second, seconds, dayAnchor);
+			if (secondAnchor == null)
+				return null;
+
+			var nanoseconds = CountDateBoundaries(SqlIntervalUnit.Nanosecond, secondAnchor, element.End);
+			if (nanoseconds == null)
+				return null;
+
+			var longType = Factory.GetDbDataType(typeof(long));
+
+			// Scaled in factors that each fit in 32 bits, for the reason the base gives: a wider literal may be read
+			// as a decimal and take the whole expression with it.
+			var dayTicks = Factory.Multiply(longType,
+				Factory.Multiply(longType, days, (long)TimeSpan.TicksPerDay / TimeSpan.TicksPerSecond),
+				TimeSpan.TicksPerSecond);
+
+			var secondTicks = Factory.Multiply(longType, seconds, TimeSpan.TicksPerSecond);
+
+			var remainderTicks = Factory.Div(longType, nanoseconds, Factory.Value(longType, 100L));
+
+			return Factory.Add(longType, Factory.Add(longType, dayTicks, secondTicks), remainderTicks);
+		}
+
+		/// <summary>
+		/// Shifts as the base does - days, then seconds, then the rest in the finest unit - over the value widened to
+		/// <c>datetime2</c> first, or to <c>datetime</c> on 2005.
+		/// </summary>
+		/// <remarks>
+		/// <c>DATEADD</c> refuses the nanosecond the last step adds on a <c>date</c>, a <c>smalldatetime</c> and a
+		/// <c>datetime</c> - the common type before 2008, and what <c>GETDATE()</c> returns - and the first two would
+		/// not hold the time of day it adds anyway. The widening is applied whatever the mapping declares, for the
+		/// reason <see cref="ElapsedTicks"/> gives. 2005 has no <c>datetime2</c> and counts in milliseconds, which
+		/// <c>DATEADD</c> takes on a <c>datetime</c>; a <c>smalldatetime</c> is still widened there, since it keeps
+		/// no seconds and would round the result to the minute.
+		/// </remarks>
+		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
+		{
+			var widened = _sqlServerVersion >= SqlServerVersion.v2008
+				? AsDateTime2(element.Temporal)
+				: Widened(element.Temporal, DataType.DateTime);
+
+			return base.LowerTemporalArithmetic(
+				new SqlTemporalArithmeticExpression(widened, element.Interval, element.IsSubtract, element.Type));
+		}
+
+		/// <summary>
+		/// A date/time value cast to <c>datetime2</c>, which holds every other SQL Server date/time type exactly; a
+		/// zoned one as it is.
+		/// </summary>
+		ISqlExpression AsDateTime2(ISqlExpression value)
+		{
+			return Widened(value, DataType.DateTime2);
+		}
+
+		/// <summary>
+		/// A date/time value cast to <paramref name="target"/>; a zoned one as it is.
+		/// </summary>
+		/// <remarks>
+		/// The target is built from the CLR type alone, so no <c>DbType</c> of the mapping rides along and renders the
+		/// cast as the type it was meant to leave. The cast is mandatory: the declared type is not what the column
+		/// stores, and the optimizer would drop a cast it believes is a no-op. A <c>datetimeoffset</c> is not cast,
+		/// because <c>DATEADD</c> is exact on it and a cast would lose the offset.
+		/// </remarks>
+		ISqlExpression Widened(ISqlExpression value, DataType target)
+		{
+			var type = QueryHelper.GetDbDataType(value, MappingSchema);
+
+			if (type.DataType == DataType.DateTimeOffset || type.SystemType.ToUnderlying() != typeof(DateTime))
+				return value;
+
+			return Factory.Cast(value, new DbDataType(type.SystemType, target), true);
+		}
+
+		/// <summary>
+		/// Every version counts elapsed time: 2016 and later through <c>DATEDIFF_BIG</c>, earlier ones through the
+		/// 32-bit <c>DATEDIFF</c> over windows kept short enough for it.
+		/// </summary>
+		public override bool CanLowerIntervalDifference => true;
+
 		readonly SqlServerVersion _sqlServerVersion;
 
 		public SqlServerSqlExpressionConvertVisitor(bool allowModify, SqlServerVersion sqlServerVersion) : base(allowModify)
@@ -49,7 +239,226 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			if (operands != null)
 				element = new SqlConcatExpression(element.PreserveNull, operands);
 
+			if (WidenLongNonUnicodeBesideUnicode(element.Expressions, concatenation: true) is { } widened)
+				element = new SqlConcatExpression(element.PreserveNull, widened);
+
 			return base.ConvertConcat(element);
+		}
+
+		// A Unicode operand turns the concatenation nvarchar, and SQL Server then cuts a non-Unicode operand longer than
+		// 4000 characters when converting it, and the running result at 4000 characters until an operand of a MAX type
+		// joins it. So such an operand is cast to NVarChar(Max) itself, and when the operands before the first MAX one
+		// can still add up to more, so is the leftmost one that is not a literal, which makes every step MAX. A Unicode
+		// argument turns REPLACE nvarchar too, but its result is not the sum of its arguments: only the first cast applies.
+		ISqlExpression[]? WidenLongNonUnicodeBesideUnicode(ISqlExpression[] expressions, bool concatenation)
+		{
+			var shapes        = new StringOperandShape[expressions.Length];
+			var hasUnicode    = false;
+			var hasNonUnicode = false;
+
+			for (var i = 0; i < shapes.Length; i++)
+			{
+				shapes[i] = MeasureStringOperand(expressions[i]);
+
+				hasUnicode    |= shapes[i].Unicode;
+				hasNonUnicode |= shapes[i].NonUnicode;
+			}
+
+			if (!hasUnicode || !hasNonUnicode)
+				return null;
+
+			var maxType = new DbDataType(typeof(string), DataType.NVarChar, null, -1);
+
+			ISqlExpression[]? operands = null;
+
+			for (var i = 0; i < shapes.Length; i++)
+			{
+				if (shapes[i] is { Unicode: false, Length: > 4000 } && expressions[i] is not SqlValue)
+				{
+					operands    ??= (ISqlExpression[])expressions.Clone();
+					operands[i] =   PseudoFunctions.MakeCast(operands[i], maxType);
+					shapes[i]   =   shapes[i] with { Length = null };
+				}
+			}
+
+			if (!concatenation)
+				return operands;
+
+			var length = 0L;
+
+			foreach (var shape in shapes)
+			{
+				if (shape.Length == null)
+					break;
+
+				length += shape.Length.Value;
+			}
+
+			if (length > 4000)
+			{
+				var first = Array.FindIndex(expressions, e => e is not SqlValue);
+
+				if (first >= 0 && shapes[first].Length != null)
+				{
+					operands        ??= (ISqlExpression[])expressions.Clone();
+					operands[first] =   PseudoFunctions.MakeCast(operands[first], maxType);
+				}
+			}
+
+			return operands;
+		}
+
+		readonly record struct StringOperandShape(bool Unicode, bool NonUnicode, long? Length);
+
+		// Looks through the nodes that have no string type of their own - a nested concatenation, a subquery column, a
+		// condition - since the string default (NVarChar) would count them as Unicode, and a condition's first branch
+		// is not its type on SQL Server. A null length is a MAX type; a parameter or an operand of unknown length counts
+		// as one character, as its value is not known here.
+		StringOperandShape MeasureStringOperand(ISqlExpression expr)
+		{
+			switch (expr)
+			{
+				case SqlConcatExpression concat:
+					return Combine(concat.Expressions, sum: true);
+				case SqlColumn column:
+					return MeasureStringOperand(column.Expression);
+				case SqlNullabilityExpression nullability:
+					return MeasureStringOperand(nullability.SqlExpression);
+				case SqlCoalesceExpression coalesce:
+					return Combine(coalesce.Expressions, sum: false);
+				// The base visitor lowers a coalesce to this function, typed from its first operand, before the
+				// concatenation around it is measured.
+				case SqlFunction { Name: "Coalesce" } coalesceFunction:
+					return Combine(coalesceFunction.Parameters, sum: false);
+				// These return their first argument's type and at most its length, but are typed by their method's
+				// return type, the string default.
+				case SqlFunction { Parameters: [var argument, ..] } function when _typePreservingFunctions.Contains(function.Name):
+					return MeasureStringOperand(argument);
+				// REPLACE holds its value's data, nvarchar when any argument is Unicode, whatever type it was declared with, so
+				// one over a parameter or an untyped function is not taken for an expression of unknown type.
+				case SqlFunction { Name: "Replace", Parameters: [var value, ..] } replace:
+				{
+					var shape = MeasureStringOperand(value);
+
+					if (!shape.Unicode && Array.Exists(replace.Parameters, p => MeasureStringOperand(p).Unicode))
+						shape = shape with { Unicode = true };
+
+					return replace.Type.Length > 0 ? shape with { Length = replace.Type.Length } : shape;
+				}
+				case SqlConditionExpression condition:
+					return Combine([condition.TrueValue, condition.FalseValue], sum: false);
+				case SqlCaseExpression caseExpression:
+				{
+					var branches = new List<ISqlExpression>(caseExpression.Cases.Count + 1);
+
+					foreach (var item in caseExpression.Cases)
+						branches.Add(item.ResultExpression);
+
+					if (caseExpression.ElseExpression != null)
+						branches.Add(caseExpression.ElseExpression);
+
+					return Combine(branches, sum: false);
+				}
+			}
+
+			var type       = QueryHelper.GetDbDataType(expr, MappingSchema);
+			var unicode    = QueryHelper.IsUnicode(type.DataType);
+			var nonUnicode = !unicode;
+
+			// A string function returns its first argument's type, while its declared type was copied at translation, before
+			// that argument could turn Unicode here (a REPLACE with a Unicode argument).
+			if (!unicode && type.DataType is DataType.Char or DataType.VarChar or DataType.Text
+				&& expr is SqlFunction { Parameters: [var first, ..] } && MeasureStringOperand(first) is { Unicode: true } firstShape)
+				(unicode, nonUnicode) = (true, firstShape.NonUnicode);
+
+			// Any other function or expression typed only by the string default is judged by its string arguments.
+			if (type == MappingSchema.GetDbDataType(typeof(string)))
+			{
+				switch (expr)
+				{
+					case SqlFunction function:
+						return MeasureByStringArguments(function.Parameters);
+					case SqlExpression expression:
+						return MeasureByStringArguments(expression.Parameters);
+				}
+			}
+
+			if (type.Length == null && GetDbTypeLength(type.DbType) is { } dbTypeLength)
+				type = type.WithLength(dbTypeLength);
+
+			long? length = expr switch
+			{
+				SqlValue { Value: string value }               => value.Length,
+				SqlParameter                                   => 1,
+				_ when type.Length == -1                       => null,
+				_ when type.Length > 0                         => type.Length,
+				_                                              => 1,
+			};
+
+			return new(unicode, nonUnicode, length);
+		}
+
+		static readonly HashSet<string> _typePreservingFunctions = new(StringComparer.OrdinalIgnoreCase)
+		{
+			"Upper", "Lower", "LTrim", "RTrim", "Trim", "Left", "Right", "Reverse", PseudoFunctions.TO_UPPER, PseudoFunctions.TO_LOWER,
+		};
+
+		// A column mapped with only a DbType has its length there: `varchar(3000)` is 3000, `varchar(max)` is -1.
+		static int? GetDbTypeLength(string? dbType)
+		{
+			if (dbType == null)
+				return null;
+
+			var open  = dbType.IndexOf('(', StringComparison.Ordinal);
+			var close = dbType.IndexOf(')', StringComparison.Ordinal);
+
+			if (open < 0 || close < open)
+				return null;
+
+			var value = dbType.Substring(open + 1, close - open - 1).Trim();
+
+			if (value.Equals("max", StringComparison.OrdinalIgnoreCase))
+				return -1;
+
+			return int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var length) && length > 0 ? length : null;
+		}
+
+		// With no Unicode argument such a function counts as the longest non-Unicode value short of MAX, since it can outgrow
+		// its arguments (SPACE, STUFF), and with only Unicode ones as the longest of them, a MAX one as 4000 since the function
+		// need not return MAX (JSON_VALUE). With both it is Unicode unless its longest argument is too long for nvarchar or a
+		// MAX one: ISNULL returns its varchar value, which is then cast on its own.
+		StringOperandShape MeasureByStringArguments(ISqlExpression[] arguments)
+		{
+			var shape = Combine(Array.FindAll(arguments, a => QueryHelper.GetDbDataType(a, MappingSchema).IsTextType()), sum: false);
+
+			return shape switch
+			{
+				{ Unicode: false }    => new(Unicode: false, NonUnicode: true,  Length: 8000),
+				{ NonUnicode: false } => shape with { Length = shape.Length ?? 4000 },
+				{ Length: <= 4000 }   => shape,
+				_                     => new(Unicode: false, NonUnicode: true,  Length: shape.Length ?? 8000),
+			};
+		}
+
+		StringOperandShape Combine(IEnumerable<ISqlExpression> operands, bool sum)
+		{
+			var   unicode    = false;
+			var   nonUnicode = false;
+			long? length     = 0;
+
+			foreach (var operand in operands)
+			{
+				var shape = MeasureStringOperand(operand);
+
+				unicode    |= shape.Unicode;
+				nonUnicode |= shape.NonUnicode;
+
+				length = length == null || shape.Length == null
+					? null
+					: sum ? length + shape.Length : Math.Max(length.Value, shape.Length.Value);
+			}
+
+			return new(unicode, nonUnicode, length);
 		}
 
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
@@ -131,11 +540,15 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 					if (type1 == typeof(double) || type1 == typeof(float))
 					{
+						// Precedence stated so this reads like every other remainder. Left unstated it takes the
+						// constructor default and the renderer brackets it, which is how a float % on this provider
+						// came to be parenthesised while the generated ones no longer are.
 						return new SqlBinaryExpression(
 							element.Expr2.SystemType!,
 							new SqlFunction(MappingSchema.GetDbDataType(typeof(int)), "Convert", SqlDataType.Int32, element.Expr1),
 							element.Operation,
-							element.Expr2);
+							element.Expr2,
+							Precedence.Multiplicative);
 					}
 
 					break;
@@ -179,9 +592,65 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 					return Factory.Sub(func.Type, valueLength, Factory.Value(func.Type, 1));
 	}
+
+				case PseudoFunctions.REPLACE:
+				{
+					var parameters = WidenLongNonUnicodeBesideUnicode(func.Parameters, concatenation: false) ?? func.Parameters;
+					var type       = func.Type;
+
+					// A Unicode argument turns REPLACE nvarchar. A value of unknown length takes the nvarchar(4000) the server
+					// returns, which an enclosing concatenation measures rather than counting it as one character.
+					if (type.DataType is DataType.Char or DataType.VarChar && Array.Exists(func.Parameters, p => MeasureStringOperand(p).Unicode))
+					{
+						var length = ReferenceEquals(parameters[0], func.Parameters[0]) ? type.Length ?? 4000 : -1;
+
+						type = new DbDataType(typeof(string), DataType.NVarChar, null, length);
+					}
+
+					if (!ReferenceEquals(parameters, func.Parameters) || type != func.Type)
+					{
+						func = new SqlFunction(type, func.Name, func.Flags, func.NullabilityType, func.CanBeNullNullable, parameters)
+						{
+							DoNotOptimize = func.DoNotOptimize,
+						};
+					}
+
+					break;
+				}
 }
 
 			return base.ConvertSqlFunction(func);
+		}
+
+		public override ISqlExpression ConvertDefaultValue(SqlDefaultValueExpression expression)
+		{
+			var least   = LeastDate(expression.Type);
+			var lowered = (least == null ? null : RaiseDefaultDate(expression, least.Value)) ?? base.ConvertDefaultValue(expression);
+
+			// date, datetime2 and every type with a least date write a DateTimeOffset through LocalDateTime, which moves with the
+			// time zone, clamped or not.
+			return lowered is SqlValue { Value: DateTimeOffset dateTimeOffset } && (least != null || expression.Type.DataType is DataType.Date or DataType.DateTime2)
+				? new SqlValue(expression.Type.WithSystemType(typeof(DateTime)), dateTimeOffset.DateTime)
+				: lowered;
+		}
+
+		// The least date of the type the mapping schema's converters write a date as, where it is later than 0001-01-01: a text
+		// type is a string, date and datetime2 hold 0001-01-01 from 2008 on and so does the datetimeoffset an offset outside the
+		// datetime family is written as, and everything else is written as datetime.
+		DateTime? LeastDate(DbDataType type)
+		{
+			var v2008Plus = _sqlServerVersion >= SqlServerVersion.v2008;
+
+			return type.DataType switch
+			{
+				DataType.Char or DataType.VarChar or DataType.Text or DataType.NChar or DataType.NVarChar or DataType.NText => null,
+
+				DataType.SmallDateTime                                                             => new DateTime(1900, 1, 1),
+				DataType.DateTime                                                                  => new DateTime(1753, 1, 1),
+				DataType.Date or DataType.DateTime2 when v2008Plus                                 => null,
+				_ when v2008Plus && type.SystemType.UnwrapNullableType() == typeof(DateTimeOffset) => null,
+				_                                                                                  => new DateTime(1753, 1, 1),
+			};
 		}
 
 		protected override ISqlExpression WrapColumnExpression(ISqlExpression expr)
@@ -208,5 +677,16 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 			return base.WrapColumnExpression(expr);
 		}
+
+		/// <summary>
+		/// Every ranking function and every one that reads a neighbouring row - <c>The function 'ROW_NUMBER' must
+		/// have an OVER clause with ORDER BY</c> - and any frame at all, which is <c>Incorrect syntax near 'ROWS'</c>
+		/// without one. An unframed aggregate is exempt: <c>SUM(x) OVER ()</c> is valid.
+		/// </summary>
+		protected override bool IsWindowOrderByRequired(SqlExtendedFunction func)
+			=> base.IsWindowOrderByRequired(func)
+				|| func.FrameClause != null
+				|| IsOrderDependentWindowFunction(func.FunctionName)
+				|| func.FunctionName is "NTILE" or "FIRST_VALUE" or "LAST_VALUE";
 	}
 }

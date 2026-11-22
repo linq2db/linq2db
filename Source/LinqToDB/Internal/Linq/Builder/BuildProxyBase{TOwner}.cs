@@ -73,7 +73,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var translated = Builder.BuildExpression(BuildContext, currentExpression, buildFlags: buildFlags);
 
-			if (!(flags.IsExpression() && !flags.IsForSetProjection())) 
+			if (!flags.IsExpression() || flags.IsForSetProjection())
 			{
 				if (ExpressionEqualityComparer.Instance.Equals(translated, currentExpression))
 					return path;
@@ -127,9 +127,8 @@ namespace LinqToDB.Internal.Linq.Builder
 						var assignment = generic.Assignments[i];
 
 						var newExpression = ProcessTranslated(
-						assignment.Expression,
-							toPath == null ? toPath : Expression.MakeMemberAccess(toPath, assignment.MemberInfo)
-						);
+							assignment.Expression,
+							toPath == null ? null : SequenceHelper.MemberPath(toPath, assignment.MemberInfo));
 
 						if (!ReferenceEquals(assignment.Expression, newExpression))
 						{
@@ -158,7 +157,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						{
 							if (parameter.MemberInfo != null)
 							{
-								paramAccess = Expression.MakeMemberAccess(toPath, parameter.MemberInfo);
+								paramAccess = SequenceHelper.MemberPath(toPath, parameter.MemberInfo);
 							}
 							else
 							{
@@ -211,11 +210,10 @@ namespace LinqToDB.Internal.Linq.Builder
 					return HandleTranslated(toPath, placeholder);
 				}
 
-				case { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked }:
+				case UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked or ExpressionType.TypeAs } conversion:
 				{
-					var unary = (UnaryExpression)expression;
-					var processed = ProcessTranslated(unary.Operand, toPath);
-					return unary.Update(processed);
+					var processed = ProcessTranslated(conversion.Operand, toPath == null ? null : SequenceHelper.ConvertBack(toPath, conversion));
+					return conversion.Update(processed);
 				}
 
 				case SqlAdjustTypeExpression adjust:
@@ -234,14 +232,17 @@ namespace LinqToDB.Internal.Linq.Builder
 					return defaultIfEmptyExpression.Update(processed, notNull.AsReadOnly());
 				}
 
-				case ConditionalExpression { IfTrue: SqlGenericConstructorExpression, IfFalse: SqlGenericConstructorExpression } conditional:
+				case ConditionalExpression conditional when SequenceHelper.IsConstructorBranch(conditional.IfTrue) && SequenceHelper.IsConstructorBranch(conditional.IfFalse):
 				{
 					// A set operation merges its two projections into `test ? proj1 : proj2` (both
 					// constructors). Propagate toPath into each branch (as with a plain constructor's
 					// assignments) so a member surviving as a conditional keeps its tracking path and
 					// resolves against the owner's fields. Restricted to constructor branches so scalar /
 					// DefaultIfEmpty conditionals (e.g. in eager-load key queries) are left to the generic
-					// visitor. The test is a predicate, not a projected value. See issue #5457.
+					// visitor. A branch may be Convert-wrapped when the two projections have differing but
+					// assignable types (SetOperationBuilder.MakeCondition unifies them) - the conversion case
+					// above reads toPath back as the operand's type and rebuilds the conversion. The test is a
+					// predicate, not a projected value. See issues #5457 and #5683.
 					var test    = ProcessTranslated(conditional.Test, null);
 					var ifTrue  = ProcessTranslated(conditional.IfTrue, toPath);
 					var ifFalse = ProcessTranslated(conditional.IfFalse, toPath);

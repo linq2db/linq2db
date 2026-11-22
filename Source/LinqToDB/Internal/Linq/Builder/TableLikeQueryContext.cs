@@ -268,12 +268,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (projectedPath is SqlErrorExpression)
 				projectedPath = path;
 
-			if (!ReferenceEquals(projectedPath, path))
-			{
-				if (flags.IsRoot())
-					return path;
-			}
-
 			var subqueryPath        = projectedPath;
 			var correctedPath       = subqueryPath;
 
@@ -413,9 +407,6 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 
 				var sqlExpr = Builder.BuildExpression(clonedTargetContext, correctedPath);
-
-				if (!flags.IsSql())
-					return sqlExpr;
 
 				sqlExpr = Builder.UpdateNesting(clonedTargetContext, sqlExpr);
 

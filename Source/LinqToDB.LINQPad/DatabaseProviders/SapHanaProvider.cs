@@ -4,6 +4,8 @@ using System.Data.Common;
 using System.Data.Odbc;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 using LinqToDB.Data;
 using LinqToDB.Internal.Common;
@@ -26,17 +28,70 @@ internal sealed class SapHanaProvider : DatabaseProviderBase
 	public SapHanaProvider()
 		: base(ProviderName.SapHana, "SAP HANA", _providers)
 	{
+#if !NETFRAMEWORK
+		AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
+
+		if (AppDomain.CurrentDomain.GetAssemblies().Any(PointToPackageNatives))
+			AppDomain.CurrentDomain.AssemblyLoad -= OnAssemblyLoad;
+#endif
 	}
+
+	// SAP publishes no Windows ARM64 client (native or ODBC); an x64 LINQPad under emulation keeps it
+	public override bool IsPlatformSupported => !(Platform.IsWindows && RuntimeInformation.ProcessArchitecture == Architecture.Arm64);
+
+#if !NETFRAMEWORK
+	private const string NativeClientPackage = "Sap.Data.Hana.Net.v10.0";
+
+	public override IEnumerable<(string Id, string Version)> GetNuGetPackages(string providerName)
+	{
+		if (string.Equals(providerName, ProviderName.SapHanaOdbc, StringComparison.Ordinal))
+			return [("System.Data.Odbc", NuGetPackageVersions.System_Data_Odbc)];
+
+		if (string.Equals(providerName, ProviderName.SapHanaNative, StringComparison.Ordinal))
+			return [(NativeClientPackage, NuGetPackageVersions.Sap_Data_Hana_Net_v10_0)];
+
+		return [];
+	}
+
+	// SAP's client searches for libadonetHDB around its own assembly and then in HDBDOTNETCORE, which a client
+	// installation sets machine-wide to its own native - rejected by the client's exact version check. The
+	// provisioned package keeps its natives in runtimes/ two levels up, so the process value is pointed there
+	// before HanaConnection's type initializer runs that search; a failed one is sticky for the process.
+	// true only once the variable is set: a copy without package natives (an installed client's dll referenced
+	// by a static context) must not end the subscription before the provisioned copy loads
+	private static bool PointToPackageNatives(Assembly assembly)
+	{
+		if (assembly.FullName?.StartsWith(NativeClientPackage + ",", StringComparison.Ordinal) != true || string.IsNullOrEmpty(assembly.Location))
+			return false;
+
+		var nativePath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(assembly.Location)!, "..", "..", "runtimes", RuntimeInformation.RuntimeIdentifier, "native"));
+
+		if (!Directory.Exists(nativePath))
+			return false;
+
+		Environment.SetEnvironmentVariable("HDBDOTNETCORE", nativePath);
+		return true;
+	}
+
+	private static void OnAssemblyLoad(object? sender, AssemblyLoadEventArgs args)
+	{
+		if (PointToPackageNatives(args.LoadedAssembly))
+			AppDomain.CurrentDomain.AssemblyLoad -= OnAssemblyLoad;
+	}
+#endif
 
 	public override string? GetProviderDownloadUrl(string? providerName)
 	{
 		return "https://tools.hana.ondemand.com/#hanatools";
 	}
 
+	// the ODBC client is touched from its own non-inlined method: the assembly is loaded when a method
+	// referencing its types is JIT-compiled, and the native variant does not provision System.Data.Odbc
+	// (see GetNuGetPackages), so a shared body would load it for that variant too
 	public override void ClearAllPools(string providerName)
 	{
 		if (string.Equals(providerName, ProviderName.SapHanaOdbc, StringComparison.Ordinal))
-			OdbcConnection.ReleaseObjectPool();
+			ReleaseOdbcPool();
 		else if (string.Equals(providerName, ProviderName.SapHanaNative, StringComparison.Ordinal))
 		{
 			foreach (var assemblyName in SapHanaProviderAdapter.UnmanagedAssemblyNames)
@@ -47,6 +102,9 @@ internal sealed class SapHanaProvider : DatabaseProviderBase
 		}
 	}
 
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static void ReleaseOdbcPool() => OdbcConnection.ReleaseObjectPool();
+
 	public override DateTime? GetLastSchemaUpdate(ConnectionSettings settings)
 	{
 		using var db = new LINQPadDataConnection(settings);
@@ -56,7 +114,7 @@ internal sealed class SapHanaProvider : DatabaseProviderBase
 	public override DbProviderFactory? GetProviderFactory(string providerName)
 	{
 		if (string.Equals(providerName, ProviderName.SapHanaOdbc, StringComparison.Ordinal))
-			return OdbcFactory.Instance;
+			return GetOdbcFactory();
 
 		foreach (var assemblyName in SapHanaProviderAdapter.UnmanagedAssemblyNames)
 		{
@@ -70,65 +128,6 @@ internal sealed class SapHanaProvider : DatabaseProviderBase
 		return null;
 	}
 
-#if !NETFRAMEWORK
-	public override bool IsProviderPathSupported(string providerName)
-	{
-		return string.Equals(providerName, ProviderName.SapHanaNative, StringComparison.Ordinal);
-	}
-
-	public override IEnumerable<string> GetProviderAssemblyNames(string providerName)
-	{
-		if (string.Equals(providerName, ProviderName.SapHanaNative, StringComparison.Ordinal))
-		{
-			foreach (var assemblyName in SapHanaProviderAdapter.UnmanagedAssemblyNames)
-			{
-				yield return $"{assemblyName}.dll";
-			}
-		}
-	}
-
-	public override string? TryGetDefaultPath(string providerName)
-	{
-		if (string.Equals(providerName, ProviderName.SapHanaNative, StringComparison.Ordinal))
-		{
-			var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-
-			if (!string.IsNullOrEmpty(programFiles))
-			{
-				foreach (var assemblyName in SapHanaProviderAdapter.UnmanagedAssemblyNames)
-				{
-					var version = assemblyName.Substring(assemblyName.IndexOf(".v", StringComparison.Ordinal) + 1);
-
-					var path = Path.Combine(programFiles, $"sap\\hdbclient\\dotnetcore\\{version}\\{assemblyName}.dll");
-
-					if (File.Exists(path))
-						return path;
-				}
-			}
-		}
-
-		return null;
-	}
-
-	private static bool _factoryRegistered;
-	public override void RegisterProviderFactory(string providerName, string providerPath)
-	{
-		if (string.Equals(providerName, ProviderName.SapHanaNative, StringComparison.Ordinal) && !_factoryRegistered)
-		{
-			if (!File.Exists(providerPath))
-				throw new LinqToDBLinqPadException($"Cannot find SAP HANA provider assembly at '{providerPath}'");
-
-			try
-			{
-				var sapHanaAssembly = Assembly.LoadFrom(providerPath);
-				DbProviderFactories.RegisterFactory("Sap.Data.Hana", sapHanaAssembly.GetType("Sap.Data.Hana.HanaFactory")!);
-				_factoryRegistered = true;
-			}
-			catch (Exception ex)
-			{
-				throw new LinqToDBLinqPadException($"Failed to initialize SAP HANA provider factory: ({ex.GetType().Name}) {ex.Message}");
-			}
-		}
-	}
-#endif
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static DbProviderFactory GetOdbcFactory() => OdbcFactory.Instance;
 }

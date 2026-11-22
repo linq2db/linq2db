@@ -1,8 +1,0 @@
-﻿{
-	"NET100.Azure": {
-		"Providers": [
-			"Access.Ace.OleDb",
-			"Access.Ace.Odbc"
-		]
-	}
-}

@@ -221,7 +221,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			[MethodImpl(MethodImplOptions.NoInlining)]
 			static WeakReference BuildReaderAndDiscardModel()
 			{
+#pragma warning disable EF1001 // Internal EF Core API usage.
 				var model = new Model();
+#pragma warning restore EF1001 // Internal EF Core API usage.
 
 				LinqToDBForEFTools.GetMetadataReader(model, null);
 

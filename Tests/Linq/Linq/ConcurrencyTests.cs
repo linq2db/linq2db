@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -305,6 +305,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("guid used")]
 		public void TestGuid([DataSources] string context)
 		{
 			var skipCnt = !context.SupportsRowcount();
@@ -317,7 +318,6 @@ namespace Tests.Linq
 						.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.Guid))
 				.Build();
 
-			using var _   = new DisableBaseline("guid used");
 			using var db  = GetDataContext(context, ms);
 			using var t   = db.CreateLocalTable<ConcurrencyTable<Guid>>();
 
@@ -382,6 +382,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("guid used")]
 		public void TestGuidString([DataSources] string context)
 		{
 			var skipCnt = !context.SupportsRowcount();
@@ -395,7 +396,6 @@ namespace Tests.Linq
 						.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.Guid))
 				.Build();
 
-			using var _   = new DisableBaseline("guid used");
 			using var db  = GetDataContext(context, ms);
 			using var t   = db.CreateLocalTable<ConcurrencyTable<string>>();
 
@@ -460,8 +460,10 @@ namespace Tests.Linq
 		}
 
 		// https://github.com/ClickHouse/ClickHouse/issues/38790
-		[ActiveIssue(Configurations = new[] { ProviderName.ClickHouseMySql })]
+		[ActiveIssue(Configurations = new[] { ProviderName.ClickHouseMySql }, ErrorMessage = "Assert.That(data[0].Stamp, Is.EqualTo(record.Stamp))",
+			Details = "no-issue: see the ClickHouse/ClickHouse#38790 link above; the gate itself has never named an issue")]
 		[Test]
+		[NoBaselines("guid used")]
 		public void TestGuidBinary([DataSources(TestProvName.AllInformix)] string context)
 		{
 			var skipCnt = !context.SupportsRowcount();
@@ -476,7 +478,6 @@ namespace Tests.Linq
 						.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.Guid))
 				.Build();
 
-			using var _   = new DisableBaseline("guid used");
 			using var db  = GetDataContext(context, ms);
 			using var t   = db.CreateLocalTable<ConcurrencyTable<byte[]>>();
 
@@ -541,6 +542,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("guid used")]
 		public async ValueTask TestTestGuidAsync([DataSources] string context)
 		{
 			var skipCnt = !context.SupportsRowcount();
@@ -553,7 +555,6 @@ namespace Tests.Linq
 						.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.Guid))
 				.Build();
 
-			using var _   = new DisableBaseline("guid used");
 			using var db  = GetDataContext(context, ms);
 			using var t   = db.CreateLocalTable<ConcurrencyTable<Guid>>();
 
@@ -618,6 +619,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("random data used")]
 		public void TestCustomStrategy([DataSources] string context)
 		{
 			var skipCnt = !context.SupportsRowcount();
@@ -630,7 +632,6 @@ namespace Tests.Linq
 						.HasAttribute(new CustomConcurrencyPropertyAttribute())
 				.Build();
 
-			using var _   = new DisableBaseline("random data used");
 			using var db  = GetDataContext(context, ms);
 			using var t   = db.CreateLocalTable<ConcurrencyTable<string>>();
 
@@ -695,6 +696,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("random data used")]
 		public async ValueTask TestCustomStrategyAsync([DataSources] string context)
 		{
 			var skipCnt = !context.SupportsRowcount();
@@ -707,7 +709,6 @@ namespace Tests.Linq
 						.HasAttribute(new CustomConcurrencyPropertyAttribute())
 				.Build();
 
-			using var _   = new DisableBaseline("random data used");
 			using var db  = GetDataContext(context, ms);
 			using var t   = db.CreateLocalTable<ConcurrencyTable<string>>();
 
@@ -772,6 +773,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("timestamp used")]
 		public void TestDbStrategy([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
 			var skipCnt = !context.SupportsRowcount();
@@ -786,7 +788,6 @@ namespace Tests.Linq
 						.HasDataType(DataType.Timestamp)
 				.Build();
 
-			using var _   = new DisableBaseline("timestamp used");
 			using var db  = GetDataContext(context, ms);
 			using var t   = db.CreateLocalTable<ConcurrencyTable<byte[]>>();
 
@@ -850,6 +851,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("timestamp used")]
 		public async ValueTask TestDbStrategyAsync([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
 			var skipCnt = !context.SupportsRowcount();
@@ -864,7 +866,6 @@ namespace Tests.Linq
 						.HasDataType(DataType.Timestamp)
 				.Build();
 
-			using var _   = new DisableBaseline("timestamp used");
 			using var db  = GetDataContext(context, ms);
 			using var t   = db.CreateLocalTable<ConcurrencyTable<byte[]>>();
 
@@ -928,6 +929,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("timestamp used")]
 		public void TestFilterExtension([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
 			var skipCnt = !context.SupportsRowcount();
@@ -942,7 +944,6 @@ namespace Tests.Linq
 						.HasDataType(DataType.Timestamp)
 				.Build();
 
-			using var _   = new DisableBaseline("timestamp used");
 			using var db  = GetDataContext(context, ms);
 			using var t   = db.CreateLocalTable<ConcurrencyTable<byte[]>>();
 
@@ -1020,13 +1021,13 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("raw SQL + concurrency stress")]
 		public void ParallelExecutionDoesNotCorruptAliases([IncludeDataSources(false, TestProvName.AllPostgreSQL, TestProvName.AllSQLite)] string context)
 		{
 			// CA1846: net462 has no span-based int.Parse overload, so Substring is required (the rule fires only on the modern TFMs).
 			// MA0173: the Interlocked.CompareExchange below captures the first thrown exception; it is not lazy initialization.
 #pragma warning disable CA1846 // Prefer 'AsSpan' over 'Substring'
 #pragma warning disable MA0173 // Use LazyInitializer.EnsureInitialize
-			using var _ = new DisableBaseline("raw SQL + concurrency stress");
 
 			var fields = typeof(AliasRaceRow).GetFields();
 

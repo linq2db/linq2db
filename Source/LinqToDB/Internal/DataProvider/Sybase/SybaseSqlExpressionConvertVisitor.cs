@@ -1,4 +1,7 @@
-﻿using LinqToDB.Internal.Extensions;
+﻿using System;
+
+using LinqToDB.Internal.DataProvider.Translation;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 
@@ -13,6 +16,70 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 		// could be enabled if we add SP03 version support (also IsDistinctFromSupported should be enabled)
 		//protected override bool SupportsDistinctAsExistsIntersect => true;
 
+		/// <inheritdoc />
+		public override bool CanLowerIntervalDifference => true;
+
+		/// <summary>
+		/// <c>DATEDIFF</c> counts milliseconds, finer than the three-and-a-third that an ASE <c>datetime</c>
+		/// stores, so the remainder that completes an elapsed count is exact.
+		/// </summary>
+		protected override SqlIntervalUnit? FinestDateUnit => SqlIntervalUnit.Millisecond;
+
+		/// <summary>
+		/// The measurement stops there as well, so a component asked for below the millisecond is identically zero
+		/// rather than merely imprecise - the count it is taken from was rounded to a coarser unit first.
+		/// </summary>
+		/// <remarks>
+		/// Declared for the reason SQLite declares the same limit: declining while the expression is still being
+		/// built leaves the member to .NET, which holds both dates and answers exactly. The three-and-a-third
+		/// millisecond step above is what makes a stored difference carry a sub-millisecond part at all, so
+		/// answering zero would be a wrong number rather than a coarse one.
+		/// </remarks>
+		public override SqlIntervalUnit IntervalResolution => SqlIntervalUnit.Millisecond;
+
+		static string? DatePartName(SqlIntervalUnit unit)
+		{
+			return unit switch
+			{
+				SqlIntervalUnit.Day         => "day",
+				SqlIntervalUnit.Hour        => "hour",
+				SqlIntervalUnit.Minute      => "minute",
+				SqlIntervalUnit.Second      => "second",
+				SqlIntervalUnit.Millisecond => "millisecond",
+				_                           => null,
+			};
+		}
+
+		protected override ISqlExpression? ShiftDate(SqlIntervalUnit unit, ISqlExpression amount, ISqlExpression date)
+		{
+			var part = DatePartName(unit);
+
+			return part == null
+				? null
+				: Factory.Function(Factory.GetDbDataType(date), "DateAdd",
+					Factory.NotNullExpression(Factory.GetDbDataType(typeof(string)), part), amount, date);
+		}
+
+		/// <summary>
+		/// Boundary counting through <c>DATEDIFF</c>, which the tick decomposition turns into elapsed time.
+		/// </summary>
+		/// <remarks>
+		/// The count is a 32-bit value, so asking it for milliseconds across more than about twenty-four days
+		/// overflows. Nothing does: the whole part is counted in days and the millisecond count only ever spans the
+		/// remainder of one, which is 86,400,000 at most.
+		/// </remarks>
+		protected override ISqlExpression? CountDateBoundaries(SqlIntervalUnit unit, ISqlExpression start, ISqlExpression end)
+		{
+			var part = DatePartName(unit);
+
+			return part == null
+				? null
+				: Factory.Cast(
+					Factory.Function(Factory.GetDbDataType(typeof(int)), "DateDiff",
+						Factory.NotNullExpression(Factory.GetDbDataType(typeof(string)), part), start, end),
+					Factory.GetDbDataType(typeof(long)), true);
+		}
+
 		#region LIKE
 
 		private static readonly string[] SybaseCharactersToEscape = {"_", "%", "[", "]", "^"};
@@ -20,6 +87,58 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 		public override string[] LikeCharactersToEscape => SybaseCharactersToEscape;
 
 		#endregion
+
+		public override IQueryElement ConvertExprExprPredicate(SqlPredicate.ExprExpr predicate)
+		{
+			var leftType  = QueryHelper.GetDbDataType(predicate.Expr1, MappingSchema);
+			var rightType = QueryHelper.GetDbDataType(predicate.Expr2, MappingSchema);
+
+			// ASE compares a date with a datetime as a date, dropping the time part
+			if (leftType.DataType == DataType.Date && IsTimestamp(rightType))
+				predicate = new SqlPredicate.ExprExpr(PseudoFunctions.MakeMandatoryCast(predicate.Expr1, new DbDataType(leftType.SystemType, DataType.DateTime), null), predicate.Operator, predicate.Expr2, predicate.UnknownAsValue);
+			else if (rightType.DataType == DataType.Date && IsTimestamp(leftType))
+				predicate = new SqlPredicate.ExprExpr(predicate.Expr1, predicate.Operator, PseudoFunctions.MakeMandatoryCast(predicate.Expr2, new DbDataType(rightType.SystemType, DataType.DateTime), null), predicate.UnknownAsValue);
+
+			return base.ConvertExprExprPredicate(predicate);
+		}
+
+		/// <summary>
+		/// The <c>IN</c> twin of <see cref="ConvertExprExprPredicate"/>: a date operand is cast to <c>datetime</c> when a value
+		/// in the list is a timestamp, or may be one - the values of a captured collection beside a computed operand keep
+		/// their own type when written; beside a timestamp operand, each date value is cast to <c>datetime</c>.
+		/// </summary>
+		protected internal override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
+		{
+			var newElement = base.VisitInListPredicate(predicate);
+
+			if (newElement is not SqlPredicate.InList inList)
+				return newElement;
+
+			var operandType = QueryHelper.GetDbDataType(inList.Expr1, MappingSchema);
+
+			if (operandType.DataType == DataType.Date
+				&& (inList.Values.Exists(v => IsTimestamp(QueryHelper.GetDbDataType(v, MappingSchema)))
+					|| (inList.Values is [SqlParameter] && inList.Expr1.SystemType?.ToUnderlying() == typeof(DateTime) && !QueryHelper.IsStoredColumn(inList.Expr1))))
+			{
+				return new SqlPredicate.InList(PseudoFunctions.MakeMandatoryCast(inList.Expr1, new DbDataType(operandType.SystemType, DataType.DateTime), null), inList.WithNull, inList.IsNot, inList.Values);
+			}
+
+			if (IsTimestamp(operandType) && inList.Values is not [SqlParameter] && inList.Values.Exists(v => QueryHelper.GetDbDataType(v, MappingSchema).DataType == DataType.Date))
+			{
+				var values = inList.Values.ConvertAll(v => QueryHelper.GetDbDataType(v, MappingSchema) is { DataType: DataType.Date } valueType
+					? PseudoFunctions.MakeMandatoryCast(v, new DbDataType(valueType.SystemType, DataType.DateTime), null)
+					: v);
+
+				return new SqlPredicate.InList(inList.Expr1, inList.WithNull, inList.IsNot, values);
+			}
+
+			return newElement;
+		}
+
+		static bool IsTimestamp(DbDataType type)
+		{
+			return type.DataType is DataType.DateTime or DataType.DateTime2 or DataType.SmallDateTime;
+		}
 
 		protected internal override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
 		{
@@ -34,6 +153,42 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			}
 
 			return result;
+		}
+
+		static bool IsDate(Type type)
+		{
+#if SUPPORTS_DATEONLY
+			if (type == typeof(DateOnly))
+				return true;
+#endif
+
+			return type == typeof(DateTime) || type == typeof(DateTimeOffset);
+		}
+
+		// Sybase writes a date as an untyped string, which takes the type of the column beside it: cast to the mapped type, a
+		// physical column narrower than its mapping is promoted rather than handed a date it cannot hold. A mapped type ASE does
+		// not spell - an offset, a rowversion timestamp - is cast to datetime, which ASE reads an offset through.
+		static SqlCastExpression ConvertDefaultDate(SqlDefaultValueExpression expression)
+		{
+			var least = expression.Type.DataType switch
+			{
+				DataType.SmallDateTime => new DateTime(1900, 1, 1),
+				DataType.Date          => default(DateTime?),
+				_                      => new DateTime(1753, 1, 1),
+			};
+
+			var value = (least == null ? null : RaiseDefaultDate(expression, least.Value)) ?? new SqlValue(expression.Type, expression.Value);
+
+			var dataType = expression.Type.DataType is DataType.DateTime or DataType.DateTime2 or DataType.SmallDateTime or DataType.Date or DataType.Time
+				? expression.Type.DataType
+				: DataType.DateTime;
+
+			return new SqlCastExpression(value, new DbDataType(expression.Type.SystemType, dataType), null, isMandatory: true);
+		}
+
+		public override ISqlExpression ConvertDefaultValue(SqlDefaultValueExpression expression)
+		{
+			return IsDate(expression.Type.SystemType) ? ConvertDefaultDate(expression) : base.ConvertDefaultValue(expression);
 		}
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)

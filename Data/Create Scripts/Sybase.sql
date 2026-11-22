@@ -4,6 +4,10 @@ DROP DATABASE {DBNAME}
 GO
 CREATE DATABASE {DBNAME} ON default = '102400K'
 GO
+sp_dboption {DBNAME}, 'trunc log on chkpt', 'true'
+GO
+sp_dboption {DBNAME}, 'abort tran on log full', 'true'
+GO
 USE {DBNAME}
 GO
 sp_configure 'enable unicode normalization', 0

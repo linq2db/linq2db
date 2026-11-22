@@ -33,6 +33,11 @@ public sealed class LinqToDBStaticDriver : StaticDataContextDriver
 	/// <inheritdoc/>
 	public override bool ShowConnectionDialog(IConnectionInfo cxInfo, ConnectionDialogOptions dialogOptions) => DriverHelper.ShowConnectionDialog(cxInfo, false);
 
+#if !NETFRAMEWORK
+	/// <inheritdoc/>
+	public override void OverrideDriverDependencies(DriverDependencyInfo dependencyInfo) => DriverHelper.OverrideDriverDependencies(dependencyInfo, false);
+#endif
+
 	/// <inheritdoc/>
 	public override List<ExplorerItem> GetSchema(IConnectionInfo cxInfo, Type? customType)
 	{
@@ -45,7 +50,7 @@ public sealed class LinqToDBStaticDriver : StaticDataContextDriver
 		}
 		catch (Exception ex)
 		{
-			Notification.Error($"{ex}\n{ex.StackTrace}", "Schema Load Error");
+			Notification.Error(ex, "Failed to load data model schema.", "Schema Load Error");
 			throw;
 		}
 	}

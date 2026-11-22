@@ -10,6 +10,7 @@ using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Reflection;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
@@ -77,9 +78,33 @@ namespace LinqToDB.Internal.Linq.Builder
 					_constructedAssignments ??= new(ExpressionEqualityComparer.Instance);
 					if (!_constructedAssignments.TryGetValue(node, out var assignmentPair))
 					{
-						var variable = _generator.AssignToVariable(Expression.Default(node.Type));
-						var assign   = Expression.Assign(variable, Expression.Coalesce(variable, constructed));
+						// A non-nullable struct is memoized through Nullable<T>, so the variable can still read as unassigned.
+						var variableType = node.Type.MakeNullable();
+						var lifted       = variableType != node.Type;
+						var variable     = _generator.AssignToVariable(Expression.Default(variableType));
+						Expression assign;
+
+						if (SequenceHelper.HasContextRef(constructed))
+						{
+							// Keep unresolved context references visible to subsequent builder passes.
+							assign = Expression.Assign(variable, Expression.Coalesce(variable, Lift(constructed)));
+						}
+						else
+						{
+							// Keep a single copy of a potentially large constructor tree while preserving lazy,
+							// branch-specific construction at each use site.
+							var factory = _generator.AssignToVariable(Expression.Lambda(constructed));
+							assign = Expression.Assign(variable, Expression.Coalesce(variable, Lift(Expression.Invoke(factory))));
+						}
+
+						if (lifted)
+							assign = Expression.Convert(assign, node.Type);
+
+						Expression Lift(Expression value) =>
+							lifted ? Expression.Convert(value, variableType) : value;
+
 						assignmentPair = (variable, assign);
+
 						_constructedAssignments.Add(node, assignmentPair);
 					}
 
@@ -111,7 +136,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			Expression TranslateExpression(Expression local)
 			{
-				var translated = _context.Builder.BuildSqlExpression(_context, local, buildPurpose : BuildPurpose.Expression, buildFlags : BuildFlags.ForceDefaultIfEmpty);
+				var translated = _context.Builder.BuildSqlExpression(_context, local, buildPurpose : BuildPurpose.Expression, buildFlags : BuildFlags.ForceDefaultIfEmpty | BuildFlags.ValueOfProjection);
 
 				var lambdaResolver = new LambdaResolveVisitor(_context, BuildPurpose.Expression, false);
 				translated = lambdaResolver.Visit(translated);
@@ -169,7 +194,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		/// <summary>
-		/// Set while eager-load processing recursively builds a preamble sub-query, so the nested
+		/// Set while eager-load processing recursively builds a harvester sub-query, so the nested
 		/// <see cref="FinalizeProjection{T}"/> calls skip the <c>ImplicitCollectionLoading</c> guard —
 		/// those loads were already validated on the top-level query.
 		/// </summary>
@@ -180,11 +205,11 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// strategy-determined finalizer (e.g. <c>ToColumns</c> for Default/KeyedQuery, identity for CteUnion).
 		/// </summary>
 		Expression FinalizeProjection<T>(
-			IBuildContext       context,
-			Expression          expression,
-			ParameterExpression queryParameter,
-			ref List<Preamble>? preambles,
-			Expression[]        previousKeys)
+			IBuildContext        context,
+			Expression           expression,
+			ParameterExpression  queryParameter,
+			ref List<Harvester>? harvesters,
+			Expression[]         previousKeys)
 		{
 			if (expression.NodeType == ExpressionType.Default)
 				return expression;
@@ -195,7 +220,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				// Strict mode: reject implicit collection eager loads (those not explicitly marked via LoadWith/ThenLoad).
 				// A per-query With*LoadStrategy marker sets a strategy on the context modifier and opts the whole query in.
-				// Guarded only for the top-level user query — the recursive preamble sub-query builds that
+				// Guarded only for the top-level user query — the recursive harvester sub-query builds that
 				// eager-load processing performs (below) re-build already-authorized loads (e.g. a LoadWith
 				// load-function's nested collection) and would otherwise re-trip the guard without marker context.
 				new ImplicitEagerLoadGuardVisitor().Visit(postProcessed);
@@ -206,7 +231,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			try
 			{
-				var correctedEager = CompleteEagerLoadingExpressions(postProcessed, context, queryParameter, ref preambles, previousKeys, out var finalizer);
+				var correctedEager = CompleteEagerLoadingExpressions(postProcessed, context, queryParameter, ref harvesters, previousKeys, out var finalizer);
 
 				if (SequenceHelper.HasError(correctedEager))
 					return correctedEager;
@@ -382,15 +407,55 @@ namespace LinqToDB.Internal.Linq.Builder
 			return new SqlErrorExpression(expression);
 		}
 
-		public void RegisterExtensionAccessors(Expression expression)
+		/// <summary>
+		/// Registers extension member/arguments, which are not translated into SQL, for by-value comparison during query
+		/// cache lookup. Extension builder may read such value to generate SQL, which makes it a part of the query shape.
+		/// </summary>
+		/// <param name="expression">Extension member or method call expression.</param>
+		/// <param name="translatedToSql">Expressions, translated into SQL while extension was built.</param>
+		public void RegisterExtensionAccessors(Expression expression, HashSet<Expression> translatedToSql)
 		{
 			void Register(Expression expr)
 			{
-				if (!MappingSchema.IsScalarType(expr.Type) && CanBeEvaluatedOnClient(expr))
+				// Translated value is passed to the database as a parameter (or registered as SqlValue by
+				// ParametersContext), so it is already compared through its own accessor.
+				//
+				if (IsTranslatedToSql(expr) || !CanBeEvaluatedOnClient(expr))
+					return;
+
+				// A constant the cache key keeps is already compared there, structurally and for free. Registering it
+				// would replace it with a placeholder and move that comparison onto a compiled accessor instead.
+				//
+				if (expr is ConstantExpression constant && !ExpressionCacheHelpers.ShouldRemoveConstantFromCache(constant, MappingSchema))
+					return;
+
+				var value = EvaluateExpression(expr);
+				ParametersContext.MarkAsValue(expr, value);
+			}
+
+			bool IsTranslatedToSql(Expression expr)
+			{
+				if (translatedToSql.Contains(expr))
+					return true;
+
+				// builders may request conversion of unwrapped argument
+				var unwrapped = expr.UnwrapConvert();
+				if (!ReferenceEquals(unwrapped, expr) && translatedToSql.Contains(unwrapped))
+					return true;
+
+				// params/array arguments are translated element-wise
+				if (expr is NewArrayExpression { Expressions.Count: > 0 } array)
 				{
-					var value = EvaluateExpression(expr);
-					ParametersContext.MarkAsValue(expr, value);
+					foreach (var element in array.Expressions)
+					{
+						if (!translatedToSql.Contains(element))
+							return false;
+					}
+
+					return true;
 				}
+
+				return false;
 			}
 
 			// Extensions may have instance reference. Try to register them as parameterized to disallow caching objects in Expression Tree
@@ -545,6 +610,30 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var simplified = expression.Transform(e =>
 			{
+				// A widening cast to a nullable type is written by the compiler as a numeric conversion followed by the lift.
+				// Read through the numeric conversion first, a NULL column would already be default(T) when it is lifted.
+				//
+				// The conversion carries no method when the runtime widens the value itself (long, double, float), and the
+				// type's own conversion operator when it does not - decimal is the one CLR numeric whose widening is written
+				// that way. An operator belonging to some other type is a conversion of its own and is not read through.
+				if (e is UnaryExpression
+					{
+						NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked,
+						Method: null,
+						Operand: UnaryExpression
+						{
+							NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked,
+							Operand: SqlPlaceholderExpression liftedPlaceholder,
+						} numeric,
+					} lift
+					&& lift.Type.IsNullableType
+					&& lift.Type.UnwrapNullableType() == numeric.Type
+					&& !liftedPlaceholder.Type.IsNullableOrReferenceType
+					&& (numeric.Method == null || numeric.Method.DeclaringType == numeric.Type))
+				{
+					return liftedPlaceholder.WithType(lift.Type);
+				}
+
 				if (e is UnaryExpression
 					{
 						NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked,
@@ -655,7 +744,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return toRead;
 		}
 
-		public Expression<Func<IQueryRunner,IDataContext,DbDataReader,IQueryExpressions, object?[]?,object?[]?,T>> BuildMapper<T>(SelectQuery query, Expression expr)
+		public Expression<Func<IQueryRunner,IDataContext,DbDataReader,IQueryExpressions, object?[]?,SqlCommandExecutionContext?,T>> BuildMapper<T>(SelectQuery query, Expression expr)
 		{
 			var type = typeof(T);
 
@@ -672,13 +761,13 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var mappingBody = expressionGenerator.Build();
 
-			var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,DbDataReader,IQueryExpressions,object?[]?,object?[]?,T>>(mappingBody,
+			var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,DbDataReader,IQueryExpressions,object?[]?,SqlCommandExecutionContext?,T>>(mappingBody,
 				QueryRunnerParam,
 				ExpressionConstants.DataContextParam,
 				DataReaderParam,
 				QueryExpressionContainerParam,
 				ParametersParam,
-				PreambleParam);
+				ExecutionContextParam);
 
 			return mapper;
 		}

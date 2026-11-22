@@ -66,7 +66,7 @@ namespace Tests.Infrastructure
 			{
 				using var db = new TestDataConnection(options => options.UseTracing(ti => s1 = ti.SqlText));
 
-				_child = db.Child.ToList();
+				_ = db.Child.ToList();
 
 				Assert.That(s1, Is.Not.Null);
 			}
@@ -76,7 +76,7 @@ namespace Tests.Infrastructure
 
 				using var db = new TestDataConnection();
 
-				_child = db.Child.ToList();
+				_ = db.Child.ToList();
 
 				Assert.That(s1, Is.Null);
 			}
@@ -89,7 +89,7 @@ namespace Tests.Infrastructure
 
 			using var db = new TestDataConnection();
 
-			_child = db.Child.ToList();
+			_ = db.Child.ToList();
 
 			Assert.That(s1, Is.Null);
 
@@ -101,7 +101,7 @@ namespace Tests.Infrastructure
 				.UseMappingSchema(db.MappingSchema)
 				.UseTracing(ti => s1 = ti.SqlText));
 
-			_child = db1.Child.ToList();
+			_ = db1.Child.ToList();
 
 			Assert.That(s1, Is.Not.Null);
 		}
@@ -308,16 +308,33 @@ namespace Tests.Infrastructure
 			public int Id { get; }
 		}
 
+		static readonly System.Threading.Lock _entityDescriptorCreatedSync = new();
+
 		[Test]
 		public void OnEntityDescriptorCreatedTest([DataSources(false)] string context)
+		{
+			// MappingSchema.EntityDescriptorCreatedCallback is a single process-wide slot and this test
+			// runs one case per provider: without serializing the cases, one case's install replaces
+			// another's handler mid-run and its finally clears the slot underneath it.
+			lock (_entityDescriptorCreatedSync)
+			{
+				OnEntityDescriptorCreatedTestBody(context);
+			}
+		}
+
+		void OnEntityDescriptorCreatedTestBody(string context)
 		{
 			MappingSchema.ClearCache();
 			var globalTriggered = false;
 			var localTriggrered = false;
+			// while the handler is installed it fires for every schema, including those of tests running
+			// concurrently - only descriptors built by this case's own context count as a trigger
+			MappingSchema? caseSchema = null;
 
-			MappingSchema.EntityDescriptorCreatedCallback = (_, _) =>
+			MappingSchema.EntityDescriptorCreatedCallback = (mappingSchema, _) =>
 			{
-				globalTriggered = true;
+				if (ReferenceEquals(mappingSchema, caseSchema))
+					globalTriggered = true;
 			};
 
 			try
@@ -326,6 +343,7 @@ namespace Tests.Infrastructure
 				// global handler set
 				using (var db = GetDataContext(context))
 				{
+					caseSchema = db.MappingSchema;
 					_ = db.GetTable<EntityDescriptorTable>().ToSqlQuery();
 				}
 
@@ -344,6 +362,7 @@ namespace Tests.Infrastructure
 					localTriggrered = true;
 				})))
 				{
+					caseSchema = db.MappingSchema;
 					_ = db.GetTable<EntityDescriptorTable>().ToSqlQuery();
 				}
 
@@ -358,6 +377,7 @@ namespace Tests.Infrastructure
 				// descriptor cached
 				using (var db = GetDataContext(context))
 				{
+					caseSchema = db.MappingSchema;
 					_ = db.GetTable<EntityDescriptorTable>().ToSqlQuery();
 				}
 
@@ -370,6 +390,7 @@ namespace Tests.Infrastructure
 				// cache miss
 				using (var db = GetDataContext(context, new MappingSchema("name1")))
 				{
+					caseSchema = db.MappingSchema;
 					_ = db.GetTable<EntityDescriptorTable>().ToSqlQuery();
 				}
 
@@ -672,36 +693,36 @@ namespace Tests.Infrastructure
 		public void TryUseConfigurationStringTest()
 		{
 			using var db = new TestDataConnection();
-			Assert.Throws<LinqToDBException>(
+			Assert.That(
 				() => { using (db.UseOptions(o => o.UseConfiguration("new config"))) { } },
-				"ConfigurationString cannot be changed.");
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("Option 'ConfigurationString' cannot be changed for context dynamically."));
 		}
 
 		[Test]
 		public void TryUseConnectionStringTest()
 		{
 			using var db = new TestDataConnection();
-			Assert.Throws<LinqToDBException>(
+			Assert.That(
 				() => { using (db.UseOptions(o => o.UseConnectionString("new config"))) { } },
-				"ConnectionString cannot be changed.");
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("Option 'ConnectionString' cannot be changed for context dynamically."));
 	}
 
 		[Test]
 		public void TryUseProviderNameTest()
 		{
 			using var db = new TestDataConnection();
-			Assert.Throws<LinqToDBException>(
+			Assert.That(
 				() => { using (db.UseOptions(o => o.UseProvider("new provider"))) { } },
-				"ProviderName cannot be changed.");
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("Option 'ProviderName' cannot be changed for context dynamically."));
 }
 
 		[Test]
 		public void TryWithDbConnectionTest()
 		{
 			using var db = new TestDataConnection();
-			Assert.Throws<LinqToDBException>(
+			Assert.That(
 				() => { using (db.UseOptions(o => o.WithOptions<ConnectionOptions>(co => co.WithDbConnection(db.OpenDbConnection())))) { } },
-				"DbConnection cannot be changed.");
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("Option 'DbConnection' cannot be changed for context dynamically."));
 		}
 
 		[Test]
@@ -711,54 +732,72 @@ namespace Tests.Infrastructure
 
 			db.BeginTransaction();
 
-			Assert.Throws<LinqToDBException>(
+			Assert.That(
 				() => { using (db.UseOptions(o => o.WithOptions<ConnectionOptions>(co => co.WithDbTransaction(db.Transaction!)))) { } },
-				"DbTransaction cannot be changed.");
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("Option 'DbTransaction' cannot be changed for context dynamically."));
 		}
 
 		[Test]
 		public void TryWithDisposeConnectionTest()
 		{
 			using var db = new TestDataConnection();
-			Assert.Throws<LinqToDBException>(
+			Assert.That(
 				() => { using (db.UseOptions(o => o.WithOptions<ConnectionOptions>(co => co.WithDisposeConnection(true)))) { } },
-				"DisposeConnection cannot be changed.");
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("Option 'DisposeConnection' cannot be changed for context dynamically."));
 		}
 
 		[Test]
 		public void TryUseDataProviderTest()
 		{
 			using var db = new TestDataConnection();
-			Assert.Throws<LinqToDBException>(
+			Assert.That(
 				() => { using (db.UseOptions(o => o.UseSqlServer(SqlServerVersion.v2022, SqlServerProvider.MicrosoftDataSqlClient))) { } },
-				"DataProvider cannot be changed.");
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("Option 'DataProvider' cannot be changed for context dynamically."));
 		}
 
 		[Test]
 		public void TryUseDataProviderFactoryTest()
 		{
 			using var db = new TestDataConnection();
-			Assert.Throws<LinqToDBException>(
-				() => { using (db.UseOptions(o => o.UseSqlServer("connection string"))) { } },
-				"DataProviderFactory cannot be changed.");
+			Assert.That(
+				() => { using (db.UseOptions(o => o.WithOptions<ConnectionOptions>(co => co.WithDataProviderFactory(_ => db.DataProvider)))) { } },
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("Option 'DataProviderFactory' cannot be changed for context dynamically."));
 		}
 
 		[Test]
 		public void TryWithConnectionFactoryTest()
 		{
 			using var db = new TestDataConnection();
-			Assert.Throws<LinqToDBException>(
+			Assert.That(
 				() => { using (db.UseOptions(o => o.WithOptions<ConnectionOptions>(co => co.WithConnectionFactory(_ => db.OpenDbConnection())))) { } },
-				"ConnectionFactory cannot be changed.");
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("Option 'ConnectionFactory' cannot be changed for context dynamically."));
 		}
 
 		[Test]
 		public void TryWithOnEntityDescriptorCreatedTest()
 		{
 			using var db = new TestDataConnection();
-			Assert.Throws<LinqToDBException>(
+			Assert.That(
 				() => { using (db.UseOptions(o => o.WithOptions<ConnectionOptions>(co => co.WithOnEntityDescriptorCreated((schema, descriptor) => { })))) { } },
-				"OnEntityDescriptorCreated cannot be changed.");
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("Option 'OnEntityDescriptorCreated' cannot be changed for context dynamically."));
+		}
+
+		[Test]
+		public void TryUseConnectionStringDataContextTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = new DataContext(context);
+			Assert.That(
+				() => { using (db.UseOptions(o => o.UseConnectionString("new config"))) { } },
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("Option 'ConnectionString' cannot be changed for context dynamically."));
+		}
+
+		[Test]
+		public void TryUseConnectionStringContextTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			Assert.That(
+				() => { using (db.UseOptions(o => o.UseConnectionString("new config"))) { } },
+				Throws.TypeOf<LinqToDBException>().With.Message.EqualTo("Option 'ConnectionString' cannot be changed for context dynamically."));
 		}
 
 		[Test]
@@ -801,7 +840,11 @@ namespace Tests.Infrastructure
 			new DataOptions().UseDefaultNullsPosition(Sql.NullsPosition.First).SqlOptions.DefaultNullsPosition.ShouldBe(Sql.NullsPosition.First);
 		}
 
-		[Test]
+		// NonParallelizable: the subject of this test is the process-global setter itself, so unlike
+		// WithDefaultNullsPositionTest above it cannot be expressed against a local DataOptions. The
+		// save/restore below bounds the mutation in time but does not isolate it - while it is in effect,
+		// any concurrent lane building a DataOptions inherits NULLS LAST.
+		[Test, NonParallelizable]
 		public void ConfigurationSqlDefaultNullsPositionTest()
 		{
 			// MIN006: the process-global static getter/setter, and its propagation to freshly-built DataOptions.
@@ -816,6 +859,63 @@ namespace Tests.Infrastructure
 			finally
 			{
 				Configuration.Sql.DefaultNullsPosition = saved;
+			}
+		}
+
+		[Test]
+		public void WithCombinedCommandsTest()
+		{
+			// Each option is set by one `with` and must survive the copy constructor of the next.
+			var combined = new LinqOptions()
+				.WithDbBatch(true)
+				.WithCombinedCommands(true);
+
+			combined.UseCombinedCommands.ShouldBeTrue();
+			combined.UseDbBatch.ShouldBeTrue();
+
+			var concatenated = combined.WithDbBatch(false);
+
+			concatenated.UseDbBatch.ShouldBeFalse();
+			concatenated.UseCombinedCommands.ShouldBeTrue();
+
+			new DataOptions()
+				.UseCombinedCommands(true)
+				.LinqOptions
+				.UseCombinedCommands
+				.ShouldBeTrue();
+
+			new DataOptions()
+				.UseDbBatch(false)
+				.LinqOptions
+				.UseDbBatch
+				.ShouldBeFalse();
+		}
+
+		// NonParallelizable for the same reason as ConfigurationSqlDefaultNullsPositionTest: the subject is the
+		// process-global setter, and while it is in effect any concurrent lane building a DataOptions combines commands.
+		[Test, NonParallelizable]
+		public void ConfigurationLinqCombinedCommandsTest()
+		{
+			var savedCombined = Configuration.Linq.UseCombinedCommands;
+			var savedBatch    = Configuration.Linq.UseDbBatch;
+
+			try
+			{
+				Configuration.Linq.UseCombinedCommands = true;
+				Configuration.Linq.UseDbBatch          = false;
+
+				Configuration.Linq.Options.UseCombinedCommands.ShouldBeTrue();
+				Configuration.Linq.Options.UseDbBatch.ShouldBeFalse();
+
+				var options = new DataOptions().LinqOptions;
+
+				options.UseCombinedCommands.ShouldBeTrue();
+				options.UseDbBatch.ShouldBeFalse();
+			}
+			finally
+			{
+				Configuration.Linq.UseCombinedCommands = savedCombined;
+				Configuration.Linq.UseDbBatch          = savedBatch;
 			}
 		}
 	}

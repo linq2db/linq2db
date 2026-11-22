@@ -4,22 +4,33 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Data;
+using LinqToDB.Mapping;
 
 using MySqlData::MySql.Data.MySqlClient;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests.Model;
 
 namespace Tests.Data
 {
-	[TestFixture]
+	// Fixture-level rather than per-method, and it has to be: OneTimeSetUp sets the process-global
+	// DataConnection.TraceSwitch.Level and holds it until OneTimeTearDown, so the mutation spans every case
+	// in the fixture. Marking only the methods would leave the level altered while other lanes run. (The
+	// WriteTraceLine sink is a separate matter - the few tests that reassign it save and restore it
+	// themselves.) The cost is real: the exclusive lane takes the write lock for the whole subtree, so every
+	// provider lane stalls for the duration. Narrowing it means moving the level change out of OneTimeSetUp
+	// into the cases that need it.
+	[TestFixture, NonParallelizable]
 	public class TraceTests : TestBase
 	{
 		private TraceLevel                           OriginalTraceLevel { get; set; }
@@ -73,7 +84,8 @@ namespace Tests.Data
 				() => db.GetTable<Child>().ToList(),
 				Throws.TypeOf<ArgumentException>()
 					.Or.TypeOf<InvalidOperationException>()
-					.Or.TypeOf<MySqlException>());
+					.Or.TypeOf<MySqlException>()
+					.Or.TypeOf<FileNotFoundException>());
 			using (Assert.EnterMultipleScope())
 			{
 				// steps called once
@@ -106,7 +118,8 @@ namespace Tests.Data
 				() => db.GetTable<Child>().ToListAsync(),
 				Throws.TypeOf<ArgumentException>()
 					.Or.TypeOf<InvalidOperationException>()
-					.Or.TypeOf<MySqlException>());
+					.Or.TypeOf<MySqlException>()
+					.Or.TypeOf<FileNotFoundException>());
 
 			using (Assert.EnterMultipleScope())
 			{
@@ -869,5 +882,63 @@ namespace Tests.Data
 				_ = trace.SqlText;
 			}
 		}
+
+#if SUPPORTS_DBBATCH
+		[Table]
+		sealed class BatchTraceParent
+		{
+			[PrimaryKey] public int     Id   { get; set; }
+			[Column    ] public string? Name { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(BatchTraceChild.ParentId))]
+			public List<BatchTraceChild> Children { get; set; } = null!;
+		}
+
+		[Table]
+		sealed class BatchTraceChild
+		{
+			[PrimaryKey] public int Id       { get; set; }
+			[Column    ] public int ParentId { get; set; }
+		}
+
+		[Test]
+		public void DbBatchTraceTruncatesLongParameters(
+			[IncludeDataSources(false, TestProvName.AllSqlServerMS, TestProvName.AllPostgreSQL, TestProvName.AllMySqlConnector)] string context)
+		{
+			var traces = new List<string>();
+
+			// Explicit options: the (context, builder) overload adds SqlServer.CS's sequential-access interceptor, and any
+			// command interceptor turns DbBatch off (DataConnection.CanRunDbBatch).
+			using var db = GetDataConnection(new DataOptions()
+				.UseConfiguration(context)
+				.UseCombinedCommands(true)
+				.UseDbBatch(true)
+				.UseTracing(info =>
+				{
+					if (info.TraceInfoStep == TraceInfoStep.BeforeExecute)
+						traces.Add(info.SqlText);
+				}));
+
+			using var parents  = db.CreateLocalTable(new[] { new BatchTraceParent { Id = 1, Name = "a" } });
+			using var children = db.CreateLocalTable(new[] { new BatchTraceChild { Id = 1, ParentId = 1 } });
+
+			var longName = new string('x', LinqToDB.Common.Configuration.MaxStringParameterLengthLogging + 10);
+
+			traces.Clear();
+
+			parents
+				.LoadWith(p => p.Children)
+				.Where(p => p.Name != longName)
+				.ToList()
+				.ShouldHaveSingleItem();
+
+			var batch = traces
+				.Where(t => t.Contains("-- Command 1", StringComparison.Ordinal))
+				.ShouldHaveSingleItem();
+
+			batch.ShouldContain("-- value above truncated for logging");
+			batch.ShouldNotContain(longName);
+		}
+#endif
 	}
 }

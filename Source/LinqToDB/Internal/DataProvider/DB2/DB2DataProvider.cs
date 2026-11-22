@@ -139,6 +139,10 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			return new DB2IdentifierService();
 		}
 
+		protected override IDmlService CreateDmlService() => Version == DB2Version.zOS
+			? new DB2zOSDmlService()
+			: new DB2LUWDmlService();
+
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
 			return Version == DB2Version.zOS ?

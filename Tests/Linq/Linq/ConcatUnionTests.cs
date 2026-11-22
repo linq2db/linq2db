@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -482,7 +483,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Union52([DataSources(TestProvName.AllAccess, TestProvName.AllInformix)] string context)
+		public void Union52([DataSources(TestProvName.AllNativeAccess, TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -494,7 +495,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Union521([DataSources(TestProvName.AllAccess, TestProvName.AllInformix)] string context)
+		public void Union521([DataSources(TestProvName.AllNativeAccess, TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -508,7 +509,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Union522([DataSources(TestProvName.AllAccess, TestProvName.AllInformix)] string context)
+		public void Union522([DataSources(TestProvName.AllNativeAccess, TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -520,7 +521,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Union523([DataSources(TestProvName.AllAccess, TestProvName.AllInformix)] string context)
+		public void Union523([DataSources(TestProvName.AllNativeAccess, TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -531,7 +532,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Union53([DataSources(TestProvName.AllAccess, TestProvName.AllInformix)] string context)
+		public void Union53([DataSources(TestProvName.AllNativeAccess, TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -959,7 +960,8 @@ namespace Tests.Linq
 			AreEqual(expected, actual);
 		}
 
-		[ActiveIssue("UNION in subquery not supported by Access. We should transform it if we want to support such cases", Configuration = TestProvName.AllAccess)]
+		[ActiveIssue(Configuration = TestProvName.AllNativeAccess, ErrorMessage = "This operation is not allowed in subqueries.",
+			Details = "no-issue: UNION in a subquery is not supported by Access; supporting it means transforming the shape, and nothing tracks that.")]
 		[Test]
 		public void ConcatInAny([DataSources] string context)
 		{
@@ -1049,7 +1051,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("type !=/== type parsing is not supported currently")]
+		[ActiveIssue(ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "Type.op_Equality",
+			Details = "no-issue: type !=/== type parsing is not supported currently. The fragment is the operator the translator names when it gives up, which is stable across the two providers this gate covers.")]
 		[Test]
 		public void TestConcatInheritance2([IncludeDataSources(TestProvName.AllSQLiteClassic, TestProvName.AllClickHouse)] string context)
 		{
@@ -1554,7 +1557,7 @@ namespace Tests.Linq
 				dc2.LastQuery!.ShouldNotContain("N'");
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllDB2])]
+		[ActiveIssue(3360, Configurations = [TestProvName.AllDB2], ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "SQL0604N")]
 		[Test(Description = "Test that we type literal/parameter in set query column properly")]
 		public void Issue3360_TypeByOtherQuery_AllProviders([DataSources] string context)
 		{
@@ -1586,7 +1589,7 @@ namespace Tests.Linq
 				dc2.LastQuery!.ShouldNotContain("N'");
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllDB2])]
+		[ActiveIssue(3360, Configurations = [TestProvName.AllDB2], ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "SQL0604N")]
 		[Test(Description = "Test that non-sqlserver providers work too")]
 		public void Issue3360_TypeByProjectionProperty_AllProviders([DataSources] string context)
 		{
@@ -1636,7 +1639,8 @@ namespace Tests.Linq
 
 		private record Issue3360NullsRecord(int Id, byte? Byte, byte? ByteN, Guid? Guid, Guid? GuidN, InvalidColumnIndexMappingEnum1? Enum, InvalidColumnIndexMappingEnum2? EnumN, bool? Bool, bool? BoolN);
 
-		[ActiveIssue(Configuration = TestProvName.AllSybase, Details = "Update BoolN handling for sybase")]
+		[ActiveIssue(Configuration = TestProvName.AllSybase, ErrorTypeName = "AdoNetCore.AseClient.AseException", ErrorMessage = "does not allow null",
+			Details = "no-issue: a Sybase BIT column cannot hold NULL, so a bool? column cannot be created or compared against null. Update BoolN handling for sybase.")]
 		[Test(Description = "null literals in first query")]
 		public void Issue3360_NullsInAnchor([DataSources] string context)
 		{
@@ -1681,7 +1685,10 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllSybase, Details = "Update BoolN handling for sybase")]
+		// Only the direct transport fails: over LinqService the seed insert goes through and the query answers.
+		[ActiveIssue(Configuration = TestProvName.AllSybase, SkipForLinqService = true,
+			ErrorTypeName = "AdoNetCore.AseClient.AseException", ErrorMessage = "does not allow null values.",
+			Details = "no-issue: a Sybase BIT column cannot hold NULL, so the seed row with a null bool? cannot be inserted. Update BoolN handling for sybase.")]
 		[Test(Description = "double columns in first query")]
 		public void Issue3360_DoubleColumnSelection([DataSources] string context)
 		{
@@ -1722,7 +1729,11 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllSybase, TestProvName.AllSQLite])]
+		// SQLite was gated here too and now passes on all four of its cases, so only the Sybase half is left - and
+		// there, as in Issue3360_DoubleColumnSelection, only the direct transport fails.
+		[ActiveIssue(Configuration = TestProvName.AllSybase, SkipForLinqService = true,
+			ErrorTypeName = "AdoNetCore.AseClient.AseException", ErrorMessage = "does not allow null values.",
+			Details = "no-issue: a Sybase BIT column cannot hold NULL, so the seed row with a null bool? cannot be inserted. Update BoolN handling for sybase.")]
 		[Test(Description = "null literals in first query")]
 		public void Issue3360_LiteralsInFirstQuery([DataSources] string context)
 		{
@@ -2495,7 +2506,8 @@ namespace Tests.Linq
 				=> (b, cl) => b.Contract.IdClient == cl.Id;
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(4620, ErrorTypeName = "System.ArgumentException", ErrorMessage = "Interface not found.",
+			Details = "a union over associations of several classes implementing one interface cannot resolve it - #4620's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4620")]
 		public void Issue4620Test1([DataSources] string context)
 		{
@@ -2557,5 +2569,611 @@ namespace Tests.Linq
 			}
 		}
 		#endregion
+
+		#region Asymmetric branches
+
+		sealed class ConvertedFlagRow
+		{
+			[PrimaryKey] public int   Id   { get; set; }
+			[Column    ] public bool? Flag { get; set; }
+
+			public static readonly ConvertedFlagRow[] Data =
+			{
+				new() { Id = 1, Flag = true  },
+				new() { Id = 2, Flag = false },
+			};
+		}
+
+		/// <summary>
+		/// A branch supplying a plain <c>NULL</c> where the other reads a column through a conversion.
+		/// </summary>
+		/// <remarks>
+		/// The branches are deliberately not the same query. Every other set-operation test here unions a query with
+		/// itself, so both sides carry the same descriptor and agree by reference alone - which is exactly the shape
+		/// that cannot catch a divergence check reading too much into an absent descriptor. A <c>NULL</c> is stored
+		/// in no terms and read through no conversion, so it cannot disagree with what the other branch declares.
+		/// </remarks>
+		[Test]
+		public void UnionPadsAConvertedColumnWithNull([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<ConvertedFlagRow>()
+					.Property(e => e.Flag)
+						.HasConversion(v => v == true ? 'Y' : 'N', p => (bool?)(p == 'Y'))
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var t  = db.CreateLocalTable(ConvertedFlagRow.Data);
+
+			var withValue = t.Select(x => new { x.Id, x.Flag });
+			var withNull  = t.Select(x => new { x.Id, Flag = (bool?)null });
+
+			var result = withValue.Union(withNull).ToArray();
+
+			result.Length.ShouldBe(4);
+			result.Count(r => r.Flag == null).ShouldBe(2);
+			result.Single(r => r.Id == 1 && r.Flag != null).Flag.ShouldBe(true);
+			result.Single(r => r.Id == 2 && r.Flag != null).Flag.ShouldBe(false);
+		}
+
+		/// <summary>
+		/// A branch supplying a constant where the other reads a column through a conversion is refused rather than
+		/// compared on unequal terms.
+		/// </summary>
+		/// <remarks>
+		/// The companion to the <c>NULL</c> case above, and the one that behaves differently. A <c>NULL</c> is stored
+		/// in no terms and read through none, so it cannot disagree with what the other branch declares. A constant
+		/// has terms of its own and no descriptor to state them, and a set operation other than <c>UNION ALL</c>
+		/// decides which rows survive by comparing values in the database - where a raw <see langword="true"/> and a column
+		/// written as <c>'Y'</c> are two different values.
+		/// <para>
+		/// Which is what that comparison did: before this the query answered two rows where the CLR says one, the
+		/// constant and the column each coming back through the converter as though they had matched nothing. A
+		/// refusal replaces a wrong answer here rather than a right one, so the loud form is the improvement.
+		/// </para>
+		/// <para>
+		/// What neither form does is convert the constant through the column's descriptor and answer the single
+		/// correct row. That is a design question about descriptor-less branches rather than a defect in the
+		/// refusal, and it is left open.
+		/// </para>
+		/// <para>
+		/// Asked of every operation that compares, not only of <c>Union</c>, because the refusal is decided by a
+		/// single equality against <c>UnionAll</c> - so the four others reach it by construction, and the message
+		/// names the operation it refused. <c>ExceptAll</c> and <c>IntersectAll</c> are the pair worth having:
+		/// they are the ones a reader most expects to behave like <c>UnionAll</c>, and the ones where reading each
+		/// branch on its own terms inside a multiset difference would answer a wrong row set rather than refuse.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void SetOperationRefusesAConstantBranchAgainstAConvertedColumn(
+			[DataSources] string context,
+			[Values(
+				SetOperation.Union,
+				SetOperation.Except,
+				SetOperation.ExceptAll,
+				SetOperation.Intersect,
+				SetOperation.IntersectAll)]
+			SetOperation operation)
+		{
+			static IQueryable<T> Combine<T>(IQueryable<T> first, IQueryable<T> second, SetOperation operation)
+			{
+				return operation switch
+				{
+					SetOperation.Union        => first.Union(second),
+					SetOperation.Except       => first.Except(second),
+					SetOperation.ExceptAll    => first.ExceptAll(second),
+					SetOperation.Intersect    => first.Intersect(second),
+					SetOperation.IntersectAll => first.IntersectAll(second),
+					_                         => throw new InvalidOperationException($"Unhandled set operation {operation}."),
+				};
+			}
+
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<ConvertedFlagRow>()
+					.Property(e => e.Flag)
+						.HasConversion(v => v == true ? 'Y' : 'N', p => (bool?)(p == 'Y'))
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var t  = db.CreateLocalTable(ConvertedFlagRow.Data);
+
+			var fromColumn   = t.Select(x => new { x.Id, x.Flag });
+			var fromConstant = t.Select(x => new { x.Id, Flag = (bool?)true });
+
+			var combined = () => Combine(fromColumn, fromConstant, operation).ToArray();
+
+			var refusal = combined.ShouldThrow<LinqToDBException>();
+
+			refusal.Message.ShouldContain("in different terms");
+			refusal.Message.ShouldContain(operation.ToString());
+		}
+
+		/// <summary>
+		/// The one set operation that has no comparison to get wrong.
+		/// </summary>
+		/// <remarks>
+		/// <c>UNION ALL</c> hands every row back and reads each on its own branch's terms, so a branch supplying a
+		/// constant where the other reads a converted column is kept apart rather than refused. The control for the
+		/// refusal above, and the reason that refusal is keyed on this operation alone.
+		/// </remarks>
+		[Test]
+		public void UnionAllReadsAConstantBranchOnItsOwnTerms([DataSources(TestProvName.AllSybase)] string context)
+		{
+			// Not asked of Sybase, and the reason is the same gap seen from the other side: the constant is emitted
+			// as the value it is rather than through the column's conversion, so it arrives as BIT against a column
+			// stored as a character - which that provider rejects outright instead of comparing. Where the storage
+			// tolerates both, the rows come back read on their own branch's terms.
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<ConvertedFlagRow>()
+					.Property(e => e.Flag)
+						.HasConversion(v => v == true ? 'Y' : 'N', p => (bool?)(p == 'Y'))
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var t  = db.CreateLocalTable(ConvertedFlagRow.Data);
+
+			var fromColumn   = t.Select(x => new { x.Id, x.Flag });
+			var fromConstant = t.Select(x => new { x.Id, Flag = (bool?)true });
+
+			var all = fromColumn.UnionAll(fromConstant).ToArray();
+
+			all.Length.ShouldBe(4);
+			all.Count(r => r.Flag == true).ShouldBe(3);
+			all.Count(r => r.Flag == false).ShouldBe(1);
+		}
+
+		#endregion
+
+		sealed class ScaledDecimalRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Decimal, Precision = 18, Scale = 2)]
+			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Decimal64, Precision = 18, Scale = 2)]
+			public decimal Value { get; set; }
+		}
+
+		/// <summary>
+		/// A literal branch finer than an aggregated column's scale keeps its digits: MAX is a computed value with no
+		/// stored scale to match.
+		/// </summary>
+		/// <remarks>
+		/// YDB refuses to union <c>Decimal(18,2)</c> with the different decimal type the literal is written with, on master too.
+		/// </remarks>
+		[Test]
+		public void LiteralBesideAggregateKeepsValueScale([DataSources(TestProvName.AllYdb)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new ScaledDecimalRow { Id = 1, Value = 1.00m } });
+
+			var values = t
+				.GroupBy(r => r.Id)
+				.Select(g => g.Max(r => r.Value))
+				.Concat(t.Select(r => 1.004m))
+				.ToArray();
+
+			AreEqualWithinDelta([1.00m, 1.004m], values);
+
+			var conditional = t
+				.Select(r => r.Id > 0 ? r.Value : r.Value + 1)
+				.Concat(t.Select(r => 1.004m))
+				.ToArray();
+
+			AreEqualWithinDelta([1.00m, 1.004m], conditional);
+		}
+
+		sealed class FineDecimalRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Decimal, Precision = 18, Scale = 12)]
+			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Decimal64, Precision = 18, Scale = 12)]
+			public decimal Value { get; set; }
+		}
+
+		/// <summary>
+		/// A literal branch beside a computed decimal finer than the provider's default decimal keeps both branches'
+		/// digits.
+		/// </summary>
+		[Test]
+		public void LiteralBesideComputedDecimalKeepsOperandScale([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new FineDecimalRow { Id = 1, Value = 1.000000000005m } });
+
+			var values = t
+				.Select(r => Math.Abs(r.Value))
+				.Concat(t.Select(r => 1.000000000005m))
+				.ToArray();
+
+			AreEqualWithinDelta([1.000000000005m, 1.000000000005m], values);
+		}
+
+		sealed class WideDecimalRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Decimal, Precision = 18, Scale = 2)]
+			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Decimal64, Precision = 18, Scale = 2)]
+			public decimal Value { get; set; }
+		}
+
+		/// <summary>
+		/// A finer literal branch beside a computed decimal with many integer digits keeps both branches' values, in either
+		/// branch order, when the two fit one decimal type.
+		/// </summary>
+		/// <remarks>
+		/// SqlCe is left out: it types the column by the first branch alone, so a computed <c>Decimal(18,2)</c> narrows the
+		/// literal whatever it is cast to. YDB refuses to union two different decimal types.
+		/// </remarks>
+		[Test]
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb, ErrorMessage = "Mismatch type of sequences being extended")]
+		public void FinerLiteralBesideWideComputedDecimalKeepsBothValues([IncludeDataSources(TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllDuckDB, TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new WideDecimalRow { Id = 1, Value = 12345678901234.50m } });
+
+			var fitting = t
+				.Select(r => Math.Abs(r.Value))
+				.Concat(t.Select(r => 1.0000000000005m))
+				.ToArray();
+
+			fitting.ShouldBe([12345678901234.50m, 1.0000000000005m], ignoreOrder: true);
+
+			var fittingLiteralFirst = t
+				.Select(r => 1.0000000000005m)
+				.Concat(t.Select(r => Math.Abs(r.Value)))
+				.ToArray();
+
+			fittingLiteralFirst.ShouldBe([12345678901234.50m, 1.0000000000005m], ignoreOrder: true);
+		}
+
+		/// <summary>
+		/// A literal branch too fine to share a decimal type with a computed decimal with many integer digits keeps both
+		/// branches' values.
+		/// </summary>
+		/// <remarks>
+		/// The providers here other than ClickHouse render a literal's precision in the set operation's cast. The literal
+		/// needs more digits than any of them allows beside the column's integer part, so it is written with its own; the
+		/// result type is then the server's. ClickHouse renders only the decimal family and scale, and moves the literal up
+		/// to <c>Decimal128</c> instead. ClickHouse.Driver up to 1.5.0 reads that <c>Decimal128</c> without dropping its
+		/// trailing zeros first, and overflows <see cref="decimal"/> (clickhouse-cs #647). YDB refuses to union two different
+		/// decimal types, as in <see cref="FinerLiteralBesideWideComputedDecimalKeepsBothValues"/>.
+		/// </remarks>
+		[Test]
+		[ThrowsForProvider(typeof(OverflowException), ProviderName.ClickHouseDriver, ErrorMessage = "Value cannot be represented as System.Decimal")]
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb, ErrorMessage = "Mismatch type of sequences being extended")]
+		public void TooFineLiteralBesideWideComputedDecimalKeepsBothValues([IncludeDataSources(TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllDuckDB, TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new WideDecimalRow { Id = 1, Value = 12345678901234.50m } });
+
+			var ownFacets = t
+				.Select(r => Math.Abs(r.Value))
+				.Concat(t.Select(r => 1.00000000000000005m))
+				.ToArray();
+
+			ownFacets.ShouldBe([12345678901234.50m, 1.00000000000000005m], ignoreOrder: true);
+		}
+
+		/// <inheritdoc cref="TooFineLiteralBesideWideComputedDecimalKeepsBothValues"/>
+		[Test]
+		[ThrowsForProvider(typeof(OverflowException), ProviderName.ClickHouseDriver, ErrorMessage = "Value cannot be represented as System.Decimal")]
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb, ErrorMessage = "Mismatch type of sequences being extended")]
+		public void TooFineLiteralFirstBesideWideComputedDecimalKeepsBothValues([IncludeDataSources(TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllDuckDB, TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new WideDecimalRow { Id = 1, Value = 12345678901234.50m } });
+
+			var ownFacetsLiteralFirst = t
+				.Select(r => 1.00000000000000005m)
+				.Concat(t.Select(r => Math.Abs(r.Value)))
+				.ToArray();
+
+			ownFacetsLiteralFirst.ShouldBe([12345678901234.50m, 1.00000000000000005m], ignoreOrder: true);
+		}
+
+		readonly record struct ParentValue(int Id, int? Value);
+
+		abstract record ValueHolder(ParentValue Info);
+		sealed record LowHolder(ParentValue Info) : ValueHolder(Info);
+		sealed record HighHolder(ParentValue Info) : ValueHolder(Info);
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6068")]
+		public void ConcatStructReferencedTwice([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent.Where(p => p.ParentID < 4)
+				.Select(p => new { p.ParentID, Info = new ParentValue(p.ParentID, p.Value1) })
+				.Concat(db.Parent.Where(p => p.ParentID >= 4)
+					.Select(p => new { p.ParentID, Info = new ParentValue(p.ParentID, p.Value1) }))
+				.Select(m => new { First = m.Info, Second = m.Info });
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6068")]
+		public void ConcatStructInBothConditionalBranches([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent.Where(p => p.ParentID < 4)
+				.Select(p => new { p.ParentID, Info = new ParentValue(p.ParentID, p.Value1) })
+				.Concat(db.Parent.Where(p => p.ParentID >= 4)
+					.Select(p => new { p.ParentID, Info = new ParentValue(p.ParentID, p.Value1) }))
+				.Select(m => m.ParentID < 4 ? new LowHolder(m.Info) : (ValueHolder)new HighHolder(m.Info));
+
+			AssertQuery(query);
+		}
+
+		static IQueryable<T> UnionOrConcat<T>(IQueryable<T> objects, IQueryable<T> nulls, bool union, bool nullFirst)
+		{
+			var (first, second) = nullFirst ? (nulls, objects) : (objects, nulls);
+
+			return union ? first.Union(second) : first.Concat(second);
+		}
+
+		public enum ComparingSetOperation
+		{
+			Intersect,
+			IntersectNullFirst,
+			Except,
+		}
+
+		static IQueryable<T> Compare<T>(IQueryable<T> objects, IQueryable<T> nulls, ComparingSetOperation operation)
+		{
+			return operation switch
+			{
+				ComparingSetOperation.Intersect          => objects.Intersect(nulls),
+				ComparingSetOperation.IntersectNullFirst => nulls.Intersect(objects),
+				ComparingSetOperation.Except             => objects.Except(nulls),
+				_                                        => throw new ArgumentOutOfRangeException(nameof(operation)),
+			};
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6156")]
+		public void JoinedEntityAgainstNullBranch([DataSources] string context, [Values] bool union, [Values] bool nullFirst)
+		{
+			using var db = GetDataContext(context);
+
+			var objects =
+				from p in db.Parent
+				from c in db.Child
+					.Where(c => c.ParentID == p.ParentID)
+					.DefaultIfEmpty()
+				select new { p.ParentID, Child = c };
+
+			var nulls =
+				from p in db.Parent
+				select new { p.ParentID, Child = (Child?)null };
+
+			AssertQuery(UnionOrConcat(objects, nulls, union, nullFirst));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6156")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		public void JoinedEntityAgainstNullBranchCompared([DataSources] string context, [Values] ComparingSetOperation operation)
+		{
+			using var db = GetDataContext(context);
+
+			var objects =
+				from p in db.Parent
+				from c in db.Child
+					.Where(c => c.ParentID == p.ParentID)
+					.DefaultIfEmpty()
+				select new { p.ParentID, Child = c };
+
+			var nulls =
+				from p in db.Parent
+				select new { p.ParentID, Child = (Child?)null };
+
+			AssertQuery(Compare(objects, nulls, operation));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6156")]
+		public void NestedSetAgainstNullBranch([DataSources] string context, [Values] bool joined, [Values] bool innerUnion, [Values] bool innerNullFirst, [Values] bool outerNullFirst)
+		{
+			using var db = GetDataContext(context);
+
+			var objects = joined
+				? from p in db.Parent
+				  from c in db.Child
+					  .Where(c => c.ParentID == p.ParentID)
+					  .DefaultIfEmpty()
+				  select new { p.ParentID, Child = (Child?)c }
+				: db.Parent.Select(p => new { p.ParentID, Child = (Child?)new Child { ParentID = p.ParentID, ChildID = p.ParentID + 100 } });
+
+			var nulls =
+				from p in db.Parent
+				select new { p.ParentID, Child = (Child?)null };
+
+			var inner = UnionOrConcat(objects, nulls, innerUnion, innerNullFirst);
+
+			AssertQuery(UnionOrConcat(inner, nulls, union: true, outerNullFirst));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6156")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		public void NestedSetAgainstNullBranchCompared([DataSources] string context, [Values] bool innerUnion, [Values] bool innerNullFirst, [Values(ComparingSetOperation.Intersect, ComparingSetOperation.Except)] ComparingSetOperation operation)
+		{
+			using var db = GetDataContext(context);
+
+			var objects =
+				from p in db.Parent
+				from c in db.Child
+					.Where(c => c.ParentID == p.ParentID)
+					.DefaultIfEmpty()
+				select new { p.ParentID, Child = (Child?)c };
+
+			var nulls =
+				from p in db.Parent
+				select new { p.ParentID, Child = (Child?)null };
+
+			var inner = UnionOrConcat(objects, nulls, innerUnion, innerNullFirst);
+
+			AssertQuery(Compare(inner, nulls, operation));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6156")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		// Informix fails when EXCEPT compares a NULL constant with a NOT NULL column read through a set-operation derived table.
+		[ThrowsForProvider("IBM.Data.Db2.DB2Exception", TestProvName.AllInformix, ErrorMessage = "unexpected null pointer encountered",
+			AlsoWhenParameter = "operation", AlsoWhenValue = ComparingSetOperation.Except)]
+		public void NestedSetOfNewObjectsAgainstNullBranchCompared([DataSources] string context, [Values] bool innerUnion, [Values] bool innerNullFirst, [Values(ComparingSetOperation.Intersect, ComparingSetOperation.Except)] ComparingSetOperation operation)
+		{
+			using var db = GetDataContext(context);
+
+			var objects = db.Parent.Select(p => new { p.ParentID, Child = (Child?)new Child { ParentID = p.ParentID, ChildID = p.ParentID + 100 } });
+
+			var nulls =
+				from p in db.Parent
+				select new { p.ParentID, Child = (Child?)null };
+
+			var inner = UnionOrConcat(objects, nulls, innerUnion, innerNullFirst);
+
+			AssertQuery(Compare(inner, nulls, operation));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6156")]
+		public void JoinedEntityMemberAfterConcat([DataSources] string context, [Values] bool nullFirst)
+		{
+			using var db = GetDataContext(context);
+
+			var objects =
+				from p in db.Parent
+				from c in db.Child
+					.Where(c => c.ParentID == p.ParentID)
+					.DefaultIfEmpty()
+				select new { p.ParentID, Child = c };
+
+			var nulls =
+				from p in db.Parent
+				select new { p.ParentID, Child = (Child?)null };
+
+			AssertQuery(UnionOrConcat(objects, nulls, union: false, nullFirst)
+				.Select(x => new { x.ParentID, Id = x.Child == null ? -1 : x.Child.ChildID }));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6156")]
+		public void JoinedEntityNullTestAfterConcat([DataSources] string context, [Values] bool nullFirst)
+		{
+			using var db = GetDataContext(context);
+
+			var objects =
+				from p in db.Parent
+				from c in db.Child
+					.Where(c => c.ParentID == p.ParentID)
+					.DefaultIfEmpty()
+				select new { p.ParentID, Child = c };
+
+			var nulls =
+				from p in db.Parent
+				select new { p.ParentID, Child = (Child?)null };
+
+			AssertQuery(UnionOrConcat(objects, nulls, false, nullFirst).Where(x => x.Child == null).Select(x => x.ParentID));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6156")]
+		public void AssociationAgainstNullBranch([DataSources] string context, [Values] bool union, [Values] bool nullFirst)
+		{
+			using var db = GetDataContext(context);
+
+			var objects = db.Person
+				.Select(p => new { p.ID, p.Patient });
+
+			var nulls = db.Person
+				.Select(p => new { p.ID, Patient = (Patient?)null });
+
+			// AssertQuery's expected side does not navigate associations, so the expected rows are written out.
+			var expectedObjects = Person
+				.Select(p => new { p.ID, Patient = (Patient?)Patient.FirstOrDefault(t => t.PersonID == p.ID) })
+				.AsQueryable();
+
+			var expectedNulls = Person
+				.Select(p => new { p.ID, Patient = (Patient?)null })
+				.AsQueryable();
+
+			AreEqual(
+				UnionOrConcat(expectedObjects, expectedNulls, union, nullFirst),
+				UnionOrConcat(objects, nulls, union, nullFirst));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6156")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		public void AssociationAgainstNullBranchCompared([DataSources] string context, [Values] ComparingSetOperation operation)
+		{
+			using var db = GetDataContext(context);
+
+			var objects = db.Person
+				.Select(p => new { p.ID, p.Patient });
+
+			var nulls = db.Person
+				.Select(p => new { p.ID, Patient = (Patient?)null });
+
+			// AssertQuery's expected side does not navigate associations, so the expected rows are written out.
+			var expectedObjects = Person
+				.Select(p => new { p.ID, Patient = (Patient?)Patient.FirstOrDefault(t => t.PersonID == p.ID) })
+				.AsQueryable();
+
+			var expectedNulls = Person
+				.Select(p => new { p.ID, Patient = (Patient?)null })
+				.AsQueryable();
+
+			AreEqual(
+				Compare(expectedObjects, expectedNulls, operation),
+				Compare(objects, nulls, operation));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6156")]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		public void FirstOrDefaultAgainstNullBranch([DataSources] string context, [Values] bool union, [Values] bool nullFirst)
+		{
+			using var db = GetDataContext(context);
+
+			var objects = db.Parent
+				.Select(p => new
+				{
+					p.ParentID,
+					Child = (Child?)db.Child
+						.Where(c => c.ParentID == p.ParentID)
+						.OrderBy(c => c.ChildID)
+						.FirstOrDefault(),
+				});
+
+			var nulls = db.Parent
+				.Select(p => new { p.ParentID, Child = (Child?)null });
+
+			AssertQuery(UnionOrConcat(objects, nulls, union, nullFirst));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6156")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		public void FirstOrDefaultAgainstNullBranchCompared([DataSources] string context, [Values] ComparingSetOperation operation)
+		{
+			using var db = GetDataContext(context);
+
+			var objects = db.Parent
+				.Select(p => new
+				{
+					p.ParentID,
+					Child = (Child?)db.Child
+						.Where(c => c.ParentID == p.ParentID)
+						.OrderBy(c => c.ChildID)
+						.FirstOrDefault(),
+				});
+
+			var nulls = db.Parent
+				.Select(p => new { p.ParentID, Child = (Child?)null });
+
+			AssertQuery(Compare(objects, nulls, operation));
+		}
 	}
 }

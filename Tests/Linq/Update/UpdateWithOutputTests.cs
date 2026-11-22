@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,6 +9,8 @@ using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.xUpdate
 {
 	[TestFixture]
@@ -17,9 +19,10 @@ namespace Tests.xUpdate
 		private const string FeatureUpdateOutputWithOldSingle                      = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllPostgreSQL18Plus}";
 		private const string FeatureUpdateOutputWithOldSingleNoAlternateRewrite    = $"{TestProvName.AllSqlServer},{TestProvName.AllPostgreSQL18Plus}";
 		private const string FeatureUpdateOutputWithOldMultiple                    = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllPostgreSQL18Plus}";
-		private const string FeatureUpdateOutputWithoutOldSingle                   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite},{TestProvName.AllYdb}";
+		private const string FeatureUpdateOutputWithoutOldSingle                   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite},{TestProvName.AllYdb},{TestProvName.AllDuckDB}";
 		private const string FeatureUpdateOutputWithoutOldSingleNoAlternateRewrite = $"{TestProvName.AllSqlServer},{TestProvName.AllPostgreSQL},{TestProvName.AllYdb}";
-		private const string FeatureUpdateOutputWithoutOldMultiple                 = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite},{TestProvName.AllYdb}";
+		private const string FeatureUpdateOutputWithoutOldMultiple                 = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite},{TestProvName.AllYdb},{TestProvName.AllDuckDB}";
+		private const string FeatureUpdateOutputWithoutOldMultipleWithExpressions  = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite},{TestProvName.AllDuckDB}";
 		private const string FeatureUpdateOutputInto                               = $"{TestProvName.AllSqlServer}";
 
 		sealed class UpdateOutputComparer<T> : IEqualityComparer<UpdateOutput<T>>
@@ -63,6 +66,56 @@ namespace Tests.xUpdate
 			return Enumerable.Range(1, 9).Select(i =>
 					new TableWithData { Id = i, Value = -i, ValueStr = "Str" + i.ToString() })
 				.ToArray();
+		}
+
+		[Test]
+		public void UpdateWithNullableComparisonInOutput([IncludeDataSources(true, FeatureUpdateOutputWithoutOldMultipleWithExpressions)] string context)
+		{
+			var data = GetSourceData()
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value, ValueStr = s.Id % 2 == 0 ? null : s.ValueStr })
+				.ToArray();
+
+			using var db     = GetDataContext(context);
+			using var target = db.CreateLocalTable(data);
+
+			// C# reads NULL != "Str1" as true, so the output must not be NULL for the rows with no ValueStr
+			var expected = data
+				.Select(t => new { t.Id, IsOther = t.ValueStr != "Str1" })
+				.ToArray();
+
+			var output = target
+				.UpdateWithOutput(
+					t => new DestinationTable { Id = t.Id, Value = t.Value + 1, ValueStr = t.ValueStr },
+					(deleted, inserted) => new { inserted.Id, IsOther = inserted.ValueStr != "Str1" })
+				.OrderBy(r => r.Id)
+				.ToArray();
+
+			output.ShouldBe(expected);
+		}
+
+		[Test]
+		public void UpdateWithConditionalNullableComparisonInOutput([IncludeDataSources(true, FeatureUpdateOutputWithoutOldMultipleWithExpressions)] string context, [Values] bool flag)
+		{
+			var data = GetSourceData()
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value, ValueStr = s.Id % 2 == 0 ? null : s.ValueStr })
+				.ToArray();
+
+			using var db     = GetDataContext(context);
+			using var target = db.CreateLocalTable(data);
+
+			var expected = data
+				.Select(t => new { t.Id, IsOther = flag ? (bool?)(t.ValueStr != "Str1") : null })
+				.ToArray();
+
+			// Sql.AsSql keeps the condition a parameter, so the conditional is only resolved once its value is known
+			var output = target
+				.UpdateWithOutput(
+					t => new DestinationTable { Id = t.Id, Value = t.Value + 1, ValueStr = t.ValueStr },
+					(deleted, inserted) => new { inserted.Id, IsOther = Sql.AsSql(flag) ? (bool?)(inserted.ValueStr != "Str1") : null })
+				.OrderBy(r => r.Id)
+				.ToArray();
+
+			output.ShouldBe(expected);
 		}
 
 		#region Update against ITable<T> target
@@ -2916,7 +2969,8 @@ namespace Tests.xUpdate
 			[Column              ] public int TestId { get; set; }
 		}
 
-		[ActiveIssue("YDB: cannot insert a row consisting only of an auto-generated key", Configuration = TestProvName.AllYdb)]
+		[ActiveIssue(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "into_values_source: alternative is not implemented yet",
+			Details = "no-issue: YDB cannot insert a row consisting only of an auto-generated key")]
 		[Test]
 		public void Issue3697Test([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
 		{

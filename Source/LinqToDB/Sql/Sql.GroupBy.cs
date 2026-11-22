@@ -1,3 +1,5 @@
+using LinqToDB.Mapping;
+
 namespace LinqToDB
 {
 	partial class Sql
@@ -5,9 +7,12 @@ namespace LinqToDB
 		public interface IGroupBy
 		{
 			public bool None { get; }
-			public T Rollup<T>(T rollupKey);
-			public T Cube<T>(T cubeKey);
-			public T GroupingSets<T>(T setsExpression);
+
+			// Marked on the interface, not on GroupByImpl: Sql.GroupBy is typed IGroupBy, so every call
+			// binds the interface method and that is the MemberInfo the runtime reads the attribute from.
+			[ServerSideOnly] public T Rollup<T>(T rollupKey);
+			[ServerSideOnly] public T Cube<T>(T cubeKey);
+			[ServerSideOnly] public T GroupingSets<T>(T setsExpression);
 		}
 
 		sealed class GroupByImpl : IGroupBy

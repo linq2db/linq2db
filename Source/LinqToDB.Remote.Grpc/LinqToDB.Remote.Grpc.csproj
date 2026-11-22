@@ -5,9 +5,13 @@
 		<RootNamespace>LinqToDB.Remote.Grpc</RootNamespace>
 
 		<IsAotCompatible Condition=" $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) ">true</IsAotCompatible>
+
+		<!--PBN9001 is protobuf-net's own notice that the [ProtoGrpc] generator is in use; required by it.-->
+		<NoWarn>$(NoWarn);PBN9001</NoWarn>
 	</PropertyGroup>
 
 	<PropertyGroup Label="Nuget">
+		<PackBrowserWasmAsset>true</PackBrowserWasmAsset>
 		<Title>LINQ to DB remote data context over gRPC</Title>
 		<Description>LINQ to DB Remote gRPC package provides client and server classes to query database remotely using gRPC.</Description>
 		<Product>$(Title)</Product>

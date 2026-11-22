@@ -39,7 +39,7 @@ namespace Tests.UserTests
 			public List<HospitalSetting> Settings { get; set; } = null!;
 
 			[ExpressionMethod(nameof(GetSettingValueImpl))]
-			public string? GetSettingValue(string settingId) => throw new System.NotImplementedException();
+			public string? GetSettingValue(string settingId) => throw new ServerSideOnlyException(nameof(GetSettingValue));
 
 			static Expression<Func<Hospital, string, string?>> GetSettingValueImpl()
 			{
@@ -50,7 +50,7 @@ namespace Tests.UserTests
 			}
 
 			[ExpressionMethod(nameof(GetUserNumberMaxValueImpl))]
-			public int GetUserNumberMaxValue() => throw new System.NotImplementedException();
+			public int GetUserNumberMaxValue() => throw new ServerSideOnlyException(nameof(GetUserNumberMaxValue));
 
 			static Expression<Func<Hospital, int>> GetUserNumberMaxValueImpl()
 			{
@@ -61,7 +61,7 @@ namespace Tests.UserTests
 		[ExpressionMethod(nameof(FormatUserFromUserNumberImpl))]
 		static string FormatUserNumber(User user)
 		{
-			throw new System.NotImplementedException();
+			throw new ServerSideOnlyException(nameof(FormatUserNumber));
 		}
 
 		static Expression<Func<User, string>> FormatUserFromUserNumberImpl()

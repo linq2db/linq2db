@@ -758,6 +758,8 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 				Append(options.LinqOptions.PreferExistsForScalar);
 				Append(options.SqlOptions.EnableConstantExpressionInOrderBy);
 				Append(options.SqlOptions.GenerateFinalAliases);
+				Append(options.LinqOptions.UseCombinedCommands);
+				Append(options.LinqOptions.UseDbBatch);
 			}
 
 			public string Serialize(
@@ -873,6 +875,16 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 								var elemType = t.GetItemType()!;
 								GetType(GetArrayType(elemType));
 							}
+
+							break;
+						}
+
+					case QueryElementType.SqlDefaultValueExpression :
+						{
+							var defaultValue = (SqlDefaultValueExpression)e;
+
+							GetType(defaultValue.Type.SystemType);
+							GetType(defaultValue.Value?.GetType());
 
 							break;
 						}
@@ -1062,6 +1074,17 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 
 							Append(elem.ValueType);
 							var type  = elem.Value?.GetType() ?? elem.ValueType.SystemType;
+							Append(type, elem.Value);
+
+							break;
+						}
+
+					case QueryElementType.SqlDefaultValueExpression :
+						{
+							var elem = (SqlDefaultValueExpression)e;
+
+							Append(elem.Type);
+							var type  = elem.Value?.GetType() ?? elem.Type.SystemType;
 							Append(type, elem.Value);
 
 							break;
@@ -1789,6 +1812,51 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						break;
 					}
 
+					case QueryElementType.SqlInterval:
+					{
+						var elem = (SqlIntervalExpression)e;
+						Append(elem.Type);
+						Append(elem.Value);
+						Append((int)elem.IntervalType.Domain);
+						Append((int)elem.IntervalType.Resolution);
+						Append(elem.IntervalType.IsSigned);
+						break;
+					}
+
+					case QueryElementType.SqlIntervalDifference:
+					{
+						var elem = (SqlIntervalDifferenceExpression)e;
+						Append(elem.Type);
+						Append(elem.Start);
+						Append(elem.End);
+						Append((int)elem.IntervalType.Domain);
+						Append((int)elem.IntervalType.Resolution);
+						Append(elem.IntervalType.IsSigned);
+						break;
+					}
+
+					case QueryElementType.SqlIntervalPart:
+					{
+						var elem = (SqlIntervalPartExpression)e;
+						Append(elem.Type);
+						Append(elem.Interval);
+						Append((int)elem.Unit);
+						Append((int)elem.Kind);
+						// -1 stands for "nothing encloses it" - Days does not wrap.
+						Append(elem.Within is { } within ? (int)within : -1);
+						break;
+					}
+
+					case QueryElementType.SqlTemporalArithmetic:
+					{
+						var elem = (SqlTemporalArithmeticExpression)e;
+						Append(elem.Type);
+						Append(elem.Temporal);
+						Append(elem.Interval);
+						Append(elem.IsSubtract);
+						break;
+					}
+
 					case QueryElementType.SqlCondition:
 					{
 						var elem = (SqlConditionExpression)e;
@@ -1863,6 +1931,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						Append((int)elem.NullTreatment);
 						Append((int)elem.FromPosition);
 						Append(elem.IsWindowFunction);
+						Append((int)elem.ArgumentDomain);
 						break;
 					}
 
@@ -1910,6 +1979,12 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						Append(elem.OrderBy);
 						break;
 					}
+
+					case QueryElementType.SqlObjectNameExpression:
+					case QueryElementType.SqlRawStatement:
+						// Produced server-side during scenario render; never present in a client-serialized statement.
+						// Make that explicit instead of falling through to the generic "not implemented" message.
+						throw new InvalidOperationException($"{e.ElementType} is produced during server-side render and is not remote-serializable.");
 
 					default:
 						throw new InvalidOperationException($"Serialize not implemented for element {e.ElementType}");
@@ -1970,9 +2045,14 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 				var preferExistsForScalar         = ReadBool();
 				var enableConstantExprInOrderBy   = ReadBool();
 				var generateFinalAliases          = ReadBool();
+				var useCombinedCommands           = ReadBool();
+				var useDbBatch                    = ReadBool();
 
 				options = options
-					.WithOptions<LinqOptions>(lo => lo.WithPreferExistsForScalar(preferExistsForScalar))
+					.WithOptions<LinqOptions>(lo => lo
+						.WithPreferExistsForScalar(preferExistsForScalar)
+						.WithCombinedCommands(useCombinedCommands)
+						.WithDbBatch(useDbBatch))
 					.WithOptions<SqlOptions>(so =>
 						so.WithEnableConstantExpressionInOrderBy(enableConstantExprInOrderBy)
 							.WithGenerateFinalAliases(generateFinalAliases)
@@ -2219,6 +2299,16 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							var value         = ReadValue(ReadType()!);
 
 							obj = new SqlValue(dbDataType, value);
+
+							break;
+						}
+
+					case QueryElementType.SqlDefaultValueExpression :
+						{
+							var dbDataType    = ReadDbDataType();
+							var value         = ReadValue(ReadType()!);
+
+							obj = new SqlDefaultValueExpression(dbDataType, value);
 
 							break;
 						}
@@ -3045,6 +3135,59 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						break;
 					}
 
+					// Field order here must mirror the writer's exactly - the stream carries no field names.
+					case QueryElementType.SqlInterval:
+					{
+						var dataType   = ReadDbDataType();
+						var value      = Read<ISqlExpression>();
+						var domain     = (SqlIntervalDomain)ReadInt();
+						var resolution = (SqlIntervalUnit)ReadInt();
+						var isSigned   = ReadBool();
+
+						obj = new SqlIntervalExpression(value!, dataType, new SqlIntervalType(domain, resolution, isSigned));
+
+						break;
+					}
+
+					case QueryElementType.SqlIntervalDifference:
+					{
+						var dataType   = ReadDbDataType();
+						var start      = Read<ISqlExpression>();
+						var end        = Read<ISqlExpression>();
+						var domain     = (SqlIntervalDomain)ReadInt();
+						var resolution = (SqlIntervalUnit)ReadInt();
+						var isSigned   = ReadBool();
+
+						obj = new SqlIntervalDifferenceExpression(start!, end!, dataType, new SqlIntervalType(domain, resolution, isSigned));
+
+						break;
+					}
+
+					case QueryElementType.SqlIntervalPart:
+					{
+						var dataType = ReadDbDataType();
+						var interval = Read<ISqlExpression>();
+						var unit     = (SqlIntervalUnit)ReadInt();
+						var kind     = (SqlIntervalPartKind)ReadInt();
+						var within   = ReadInt();
+
+						obj = new SqlIntervalPartExpression(interval!, unit, kind, dataType, within < 0 ? null : (SqlIntervalUnit)within);
+
+						break;
+					}
+
+					case QueryElementType.SqlTemporalArithmetic:
+					{
+						var dataType = ReadDbDataType();
+						var temporal = Read<ISqlExpression>();
+						var interval = Read<ISqlExpression>();
+						var subtract = ReadBool();
+
+						obj = new SqlTemporalArithmeticExpression(temporal!, interval!, subtract, dataType);
+
+						break;
+					}
+
 					case QueryElementType.SqlCondition:
 					{
 						var condition = Read<ISqlPredicate>();
@@ -3126,10 +3269,12 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						var nullTreatment               = (Sql.Nulls)ReadInt();
 						var fromPosition                = (Sql.From)ReadInt();
 						var isWindowFunction            = ReadBool();
+						var argumentDomain              = (SqlArgumentDomain)ReadInt();
 
 						obj = new SqlExtendedFunction(functionType, name, arguments, argumentsNullability, withinGroup : withinGroup, partitionBy : partitionBy, orderBy : orderBy,
 							frameClause : frame, filter: filter, isAggregate : isAggregate, canBeNull: canBeNull, canBeNullInAggregationQuery: canBeNullInAggregationQuery, canBeAffectedByOrderBy: canBeAffectedByOrderBy,
-							keepClause: keepClause, nullTreatment: nullTreatment, fromPosition: fromPosition, isWindowFunction: isWindowFunction);
+							keepClause: keepClause, nullTreatment: nullTreatment, fromPosition: fromPosition, isWindowFunction: isWindowFunction,
+							argumentDomain: argumentDomain);
 
 						break;
 					}
@@ -3188,6 +3333,10 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 
 						break;
 					}
+
+					case QueryElementType.SqlObjectNameExpression:
+					case QueryElementType.SqlRawStatement:
+						throw new InvalidOperationException($"{(QueryElementType)type} is produced during server-side render and is not remote-serializable.");
 
 					default:
 						throw new InvalidOperationException($"Parse not implemented for element {(QueryElementType)type}");

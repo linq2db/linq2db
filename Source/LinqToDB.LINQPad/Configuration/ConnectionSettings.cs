@@ -112,30 +112,40 @@ internal sealed class ConnectionSettings
 	/// </summary>
 	public void Save(IConnectionInfo cxInfo)
 	{
-		// encrypt sencondary connection string manually
+		// encrypt secondary connection string manually, but restore the plain value afterwards: the dialog
+		// saves before testing a connection and again on OK, and encrypting the live value twice corrupts it
+		var secondaryConnectionString = Connection.SecondaryConnectionString;
+
 		if (Connection.EncryptConnectionString && Connection.SecondaryConnectionString != null)
 			Connection.SecondaryConnectionString = cxInfo.Encrypt(Connection.SecondaryConnectionString);
 
-		// save data, stored in predefined IConnectionInfo properties to them
-		cxInfo.DatabaseInfo.CustomCxString        = Connection.ConnectionString;
-		cxInfo.DatabaseInfo.Provider              = Connection.ProviderFactory;
-		cxInfo.DatabaseInfo.EncryptCustomCxString = Connection.EncryptConnectionString;
-		cxInfo.DatabaseInfo.DbVersion             = Connection.DbVersion;
-		cxInfo.DatabaseInfo.Database              = Connection.DatabaseName;
-		cxInfo.DatabaseInfo.Server                = Connection.Server;
+		try
+		{
+			// save data, stored in predefined IConnectionInfo properties to them
+			cxInfo.DatabaseInfo.CustomCxString        = Connection.ConnectionString;
+			cxInfo.DatabaseInfo.Provider              = Connection.ProviderFactory;
+			cxInfo.DatabaseInfo.EncryptCustomCxString = Connection.EncryptConnectionString;
+			cxInfo.DatabaseInfo.DbVersion             = Connection.DbVersion;
+			cxInfo.DatabaseInfo.Database              = Connection.DatabaseName;
+			cxInfo.DatabaseInfo.Server                = Connection.Server;
 
-		cxInfo.DynamicSchemaOptions.NoPluralization  = !Scaffold.Pluralize;
-		cxInfo.DynamicSchemaOptions.NoCapitalization = !Scaffold.Capitalize;
+			cxInfo.DynamicSchemaOptions.NoPluralization  = !Scaffold.Pluralize;
+			cxInfo.DynamicSchemaOptions.NoCapitalization = !Scaffold.Capitalize;
 
-		cxInfo.DisplayName                       = Connection.DisplayName;
-		cxInfo.IsProduction                      = Connection.IsProduction;
-		cxInfo.Persist                           = Connection.Persistent;
-		cxInfo.AppConfigPath                     = StaticContext.ConfigurationPath;
-		cxInfo.CustomTypeInfo.CustomTypeName     = StaticContext.ContextTypeName;
-		cxInfo.CustomTypeInfo.CustomAssemblyPath = StaticContext.ContextAssemblyPath;
+			cxInfo.DisplayName                       = Connection.DisplayName;
+			cxInfo.IsProduction                      = Connection.IsProduction;
+			cxInfo.Persist                           = Connection.Persistent;
+			cxInfo.AppConfigPath                     = StaticContext.ConfigurationPath;
+			cxInfo.CustomTypeInfo.CustomTypeName     = StaticContext.ContextTypeName;
+			cxInfo.CustomTypeInfo.CustomAssemblyPath = StaticContext.ContextAssemblyPath;
 
-		var json = JsonSerializer.Serialize(this, _jsonOptions);
-		SetString(cxInfo, SETTINGS_NODE, json);
+			var json = JsonSerializer.Serialize(this, _jsonOptions);
+			SetString(cxInfo, SETTINGS_NODE, json);
+		}
+		finally
+		{
+			Connection.SecondaryConnectionString = secondaryConnectionString;
+		}
 	}
 
 	/// <summary>
@@ -274,6 +284,9 @@ internal sealed class ConnectionSettings
 
 			// https://github.com/linq2db/linq2db.LINQPad/issues/89
 			settings.Scaffold.AsIsNames = !isNew;
+
+			// enabled for new connections only to not break existing queries
+			settings.Scaffold.SqlServerReturnValue = isNew;
 
 			// ignored options:
 			// useCustomFormatter - removed in v5
@@ -508,6 +521,11 @@ internal sealed class ConnectionSettings
 		public bool ClickHouseFixedStringAsString { get; set; }
 
 		/// <summary>
+		/// Expose SQL Server procedure return value as trailing <c>out</c> parameter.
+		/// </summary>
+		public bool SqlServerReturnValue { get; set; }
+
+		/// <summary>
 		/// Enables pluralization context table property name and collection-type association property name.
 		/// Stored in <see cref="IDynamicSchemaOptions.NoPluralization"/>.
 		/// </summary>
@@ -573,5 +591,12 @@ internal sealed class ConnectionSettings
 		/// </summary>
 		[JsonIgnore]
 		public string? ContextAssemblyPath { get; set; }
+
+		/// <summary>
+		/// Optional database the context connects to, used only to limit which database clients LINQPad
+		/// downloads for this connection. A static context selects its provider itself, so this cannot be
+		/// detected: when not set, the clients of every database are provisioned.
+		/// </summary>
+		public string? Database { get; set; }
 	}
 }

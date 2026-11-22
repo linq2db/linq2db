@@ -67,7 +67,17 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			_isRecursiveCall = true;
 
+			// A CTE body is its own scope: tables built here must not join an enclosing
+			// TablesInScopeHint, which would otherwise reach them whenever the body happens to be
+			// built before that scope closes.
+			//
+			var prevTablesInScope = Builder.TablesInScope;
+
+			Builder.TablesInScope = null;
+
 			var cteInnerQueryContext = Builder.BuildSequence(cteBuildInfo);
+
+			Builder.TablesInScope = prevTablesInScope;
 
 			CteInnerQueryContext = cteInnerQueryContext;
 			CteClause.Body       = cteInnerQueryContext.SelectQuery;

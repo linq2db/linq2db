@@ -19,7 +19,7 @@ Already cloned? `git submodule update --init`, then `git -C .claude switch maste
 
 **Restart your agent after populating the submodule.** Claude Code resolves the `CLAUDE.md` import set — the always-loaded project instructions — **once, at session start**, and does not re-read it when `.claude/` appears. A session that was already open while the submodule was empty keeps running with no project instructions however many files land on disk afterwards. Skill discovery *may* refresh mid-session, but it isn't guaranteed to, so don't rely on either: restart is the only way to be sure the session matches what's on disk.
 
-`core.hooksPath .githooks` is what keeps the corpus current and safe: `post-checkout` / `post-merge` / `post-rewrite` fast-forward `.claude/` to the agents repo's tip (skipping any checkout with uncommitted corpus edits), and `pre-commit` refuses two things that would otherwise slip in unnoticed — a `.claude` submodule-pointer bump, and edits to the root `AGENTS.md` / `CLAUDE.md` pointers. Both are overridable with `git commit --no-verify` when deliberate.
+`core.hooksPath .githooks` is what keeps the corpus current and safe: `post-checkout` / `post-merge` / `post-rewrite` **populate** `.claude/` when it has no working copy — so a new `git worktree add` comes up with the corpus already in place — and otherwise fast-forward it to the agents repo's tip (skipping any checkout with uncommitted corpus edits), and `pre-commit` refuses two things that would otherwise slip in unnoticed — a `.claude` submodule-pointer bump, and edits to the root `AGENTS.md` / `CLAUDE.md` pointers. Both are overridable with `git commit --no-verify` when deliberate.
 
 **Editing the instructions:** commit inside `.claude/` and push to the agents repo (`git -C .claude commit`, `git -C .claude push`). Corpus changes never land on a linq2db branch.
 
@@ -82,7 +82,9 @@ Custom debugging symbols:
 
 #### Test projects
 
-Tests targets: `net462`, `net8.0`, `net9.0`, `net10.0`. In general we test 3 configurations: lowest supported .NET Framework, lowest supported .NET version, highest supported .NET version.
+Tests targets: `net462`, `net10.0`, `net11.0`. In general we test 3 configurations: lowest supported .NET Framework, lowest supported .NET version, highest supported .NET version.
+
+The target-framework lists live in `Build/TargetFrameworks.props` - `ModernTargetFrameworks` and `LatestTargetFramework` there, plus one band row in `Directory.Packages.props`, are the only lines a new .NET release has to touch; every project's `TargetFrameworks` derives from them.
 
 Custom symbols:
 
@@ -95,12 +97,12 @@ You can use solution to build and run tests. Also you can build whole solution o
 * `.\Build.cmd` - builds all the projects in the solution for Debug, Release and Azure configurations
 * `.\Compile.cmd` - builds LinqToDB project for Debug and Release configurations
 * `.\Clean.cmd` - cleanups solution projects for Debug, Release and Azure configurations
-* `.\Test.cmd` - builds and runs tests with `Debug` configuration for all supported TFMs and produces a `trx` report. Parameters supported to change build configuration and executed TFMs, plus extra arguments forwarded to the test runner
+* `.\Test.cmd` - builds and runs tests with `Debug` configuration for all supported TFMs and produces a `trx` report. Parameters are `<configuration> <net462> <net10.0> <net11.0> <extra args>`, where each TFM flag is `1` (run) or `0` (skip) and the extra arguments are forwarded to the test runner
 
-Example of running `Release` build tests for `net9.0` only:
+Example of running `Release` build tests for `net11.0` only:
 
 ```cmd
-test.cmd Release 0 0 1 0
+test.cmd Release 0 0 1
 ```
 
 ### Different platforms support
@@ -142,6 +144,16 @@ public class Test: TestBase
 }
 ```
 
+### Test-run environment variables
+
+Optional switches, read once when the test assembly starts. All are unset by default.
+
+| Variable | Effect |
+|---|---|
+| `L2DB_TEST_QUERYCACHE` | Maximum number of entries kept in the query cache. Defaults to `100` on x86 and .NET Framework legs, where the 32-bit address space is the binding constraint, and to the library default (10000) everywhere else. Raise it if a test asserting exact cache miss counts sees its entries trimmed. |
+| `L2DB_ASSERT_STATE` | Set to `1` to compare the shared test tables (`Person`, `Patient`, `Doctor`, `Parent`, `Child`, `GrandChild`, `Inheritance*`, `Types2`) with their expected contents after every test, so a test that leaves data behind fails in its own teardown with `SMOrc` instead of breaking whatever runs next. Off by default because the comparison is slow. |
+| `L2DB_PARALLEL_DIAG` | Set to `1` to trace how the parallel dispatcher routes each test - which lane it goes to, when the globally-exclusive lane takes and releases the write lock and for how long, and any test whose lane failed to run it. Off by default because it logs per work item. Use it when a run hangs or a test appears to have run on the wrong lane, which is not diagnosable after the fact. See `MaxParallelLanes` below to cap or disable lane concurrency. |
+
 ### Configure data providers for tests
 
 `DataSourcesAttribute` generates tests for each enabled data provider. Configuration is taken
@@ -164,7 +176,7 @@ The `[User]DataProviders.json` is a regular JSON file:
     {
         // base configuration to inherit settings from
         // Inheritance rules:
-        // - DefaultConfiguration, TraceLevel, Providers - use value from base configuration only if it is not defined in current configuration
+        // - DefaultConfiguration, TraceLevel, Providers, MaxParallelLanes - use value from base configuration only if it is not defined in current configuration
         // - Connections - merge current and base connection strings
         "BasedOn"              : "LocalConnectionStrings",
 
@@ -180,6 +192,12 @@ The `[User]DataProviders.json` is a regular JSON file:
         // Supported values: Off, Error, Warning, Info, Verbose
         // Default level: Info
         "TraceLevel"           : "Error",
+
+        // (optional) how many provider lanes the parallel test dispatcher runs at once. Tests are
+        // parallelized across databases and serialized within one, so this caps how many databases are
+        // exercised concurrently. Left unset it is 2 x processor count. Set it to 1 to run the lanes one
+        // at a time, which is how to tell a real failure from one caused by parallel execution.
+        // "MaxParallelLanes"  : 1,
                                 
         // list of database providers, enabled for current test configuration
         "Providers"            :
@@ -217,52 +235,30 @@ The `[User]DataProviders.json` is a regular JSON file:
 
     },
 
-    // .net 8.0 test configuration
-    "NET80" :
-    {
-        "BasedOn"              : "LocalConnectionStrings",
-        "Providers"            :
-        [
-            "SQLite.MS",
-            "Northwind.SQLite.MS",
-            "SqlServer.2014",
-            "SqlServer.2012",
-            "SqlServer.2008",
-            "SqlServer.2005",
-            "SqlServer.Azure",
-            "Firebird.5",
-            "MySql.8.0",
-            "MariaDB.11",
-            "PostgreSQL",
-            "SqlServer.Northwind",
-            "TestNoopProvider"
-        ]
-    },
-
-    // .net 9.0 test configuration
-    "NET90" :
-    {
-        "BasedOn"              : "LocalConnectionStrings",
-        "Providers"            :
-        [
-            "SQLite.MS",
-            "Northwind.SQLite.MS",
-            "SqlServer.2014",
-            "SqlServer.2012",
-            "SqlServer.2008",
-            "SqlServer.2005",
-            "SqlServer.Azure",
-            "Firebird.5",
-            "MySql.8.0",
-            "MariaDB.11",
-            "PostgreSQL",
-            "SqlServer.Northwind",
-            "TestNoopProvider"
-        ]
-    },
-
     // .net 10.0 test configuration
     "NET100" :
+    {
+        "BasedOn"              : "LocalConnectionStrings",
+        "Providers"            :
+        [
+            "SQLite.MS",
+            "Northwind.SQLite.MS",
+            "SqlServer.2014",
+            "SqlServer.2012",
+            "SqlServer.2008",
+            "SqlServer.2005",
+            "SqlServer.Azure",
+            "Firebird.5",
+            "MySql.8.0",
+            "MariaDB.11",
+            "PostgreSQL",
+            "SqlServer.Northwind",
+            "TestNoopProvider"
+        ]
+    },
+
+    // .net 11.0 test configuration
+    "NET110" :
     {
         "BasedOn"              : "LocalConnectionStrings",
         "Providers"            :
@@ -314,9 +310,8 @@ We do run builds and tests with:
 * [Azure Pipelines](https://dev.azure.com/linq2db/linq2db/_build?definitionId=3) [pipelines/default.yml](https://github.com/linq2db/linq2db/blob/master/Build/Azure/pipelines/default.yml).
 It builds solution, generate and publish nugets and runs tests for:
   * .NET Framework 4.6.2
-  * .NET 8 (Windows, Linux and MacOS)
-  * .NET 9 (Windows, Linux and MacOS)
   * .NET 10 (Windows, Linux and MacOS)
+  * .NET 11 (Windows, Linux and MacOS)
 For more details check [readme](https://github.com/linq2db/linq2db/blob/master/Build/Azure/README.md)
 
 CI builds are done for all branches and PRs.
@@ -347,6 +342,8 @@ In general you should follow simple rules:
 * Code style should match exising code
 * There should be no compilation warnings (will fail CI builds)
 * Do not add new features without tests
+* Put a regression test in the fixture that owns the behaviour, or in a new fixture named for it (`Tests/Linq/<Area>/<Behaviour>Tests.cs`), with the issue in `[Test(Description = "<url>")]`. Do not add new `Issue<N>Tests.cs` fixtures or extend existing ones
+* In new test code, put one call per line in a method chain, for both LINQ queries and assertions
 * Avoid direct pushes to `master` and `release` branches
 * To fix some issue or implement new feature create new branch and make pull request after you are ready to merge or create pull request as `work-in-progress` pull request. Merge your PR only after contributors' review.
 * bugfix branches must use `issue/<issue_id>` naming format

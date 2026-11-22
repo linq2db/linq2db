@@ -65,7 +65,7 @@ namespace LinqToDB
 		[Extension("{array, ', '}", ServerSideOnly = true)]
 		internal static T[] Spread<T>([ExprParameter] T[] array)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(Spread));
 		}
 
 		// Nullability annotator, handled by SqlFunctionsMemberTranslatorBase so it always stays server-side.
@@ -155,6 +155,7 @@ namespace LinqToDB
 		/// <param name="propertyName">Name of the property.</param>
 		/// <returns></returns>
 		/// <exception cref="ServerSideOnlyException">'Property' is only server-side method.</exception>
+		[ServerSideOnly]
 		public static T Property<T>(object? entity, [SqlQueryDependent] string propertyName)
 			=> throw new ServerSideOnlyException(nameof(Property));
 
@@ -460,20 +461,29 @@ namespace LinqToDB
 			return str.Substring(index, maxAllowedLength);
 		}
 
+		// Registered to TranslateLike for every provider, so these are server-side-only in fact. The marker is
+		// scoped to the TFMs whose body is a stub: on netfx the body is real, and marking it there would stop a
+		// query client-folding a call that currently works.
+#if !NETFRAMEWORK
+		[ServerSideOnly]
+#endif
 		public static bool Like(string? matchExpression, string? pattern)
 		{
 #if !NETFRAMEWORK
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(Like));
 #else
 			return matchExpression != null && pattern != null &&
 				System.Data.Linq.SqlClient.SqlMethods.Like(matchExpression, pattern);
 #endif
 		}
 
+#if !NETFRAMEWORK
+		[ServerSideOnly]
+#endif
 		public static bool Like(string? matchExpression, string? pattern, char? escapeCharacter)
 		{
 #if !NETFRAMEWORK
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(Like));
 #else
 			return matchExpression != null && pattern != null && escapeCharacter != null &&
 				System.Data.Linq.SqlClient.SqlMethods.Like(matchExpression, pattern, escapeCharacter.Value);
@@ -557,6 +567,7 @@ namespace LinqToDB
 		[Function(                              IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(PN.ClickHouse, "reverseUTF8", IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(PN.Ydb,   "Unicode::Reverse", IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.AccessLibRed, "StrReverse", IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Reverse(string? str)
 		{
 			if (string.IsNullOrEmpty(str)) return str;
@@ -1045,9 +1056,11 @@ namespace LinqToDB
 		[Expression(PN.SQLite,     "1/TAN({0})", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static double?  Cot    (double?  value) { return value == null ? null : (double?)Math.Cos(value.Value) / Math.Sin(value.Value); }
 
+		internal const decimal DecimalPI = 3.1415926535897932384626433833m;
+
 		// YQL has no DEGREES; compute via Math::Pi(). Cast the argument to Double so it does not mix with the literal/Pi.
 		[Expression(PN.Ydb, "CAST({0} AS Double) * 180.0 / Math::Pi()", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static decimal? Degrees(decimal? value) => value == null ? null : (value.Value * 180m / (decimal)Math.PI);
+		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static decimal? Degrees(decimal? value) => value == null ? null : (value.Value * 180m / DecimalPI);
 		[Expression(PN.Ydb, "CAST({0} AS Double) * 180.0 / Math::Pi()", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static double?  Degrees(double?  value) => value == null ? null : (value.Value * 180 / Math.PI);
 		[Expression(PN.Ydb, "CAST({0} AS Double) * 180.0 / Math::Pi()", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]

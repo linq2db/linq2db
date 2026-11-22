@@ -47,6 +47,9 @@ namespace Tests.UserTests
 			[ExpressionMethod(nameof(IsHouseMultiLevelExpression), IsColumn = true)]
 			public bool IsHouseMultiLevel { get; set; }
 
+			[ExpressionMethod(nameof(HasNoLevelsExpression), IsColumn = true)]
+			public bool HasNoLevels { get; set; }
+
 			private static Expression<Func<Pet3001, House3001>> HouseExpression()
 			{
 				return entity => entity.Person.House;
@@ -57,6 +60,8 @@ namespace Tests.UserTests
 				// Replacing code below to entity.Parent.House.Levels > 1 will make column work
 				return entity => entity.House.Levels > 1;
 			}
+
+			private static Expression<Func<Pet3001, bool>> HasNoLevelsExpression() => entity => entity.House.Levels < 1;
 		}
 
 		[Test]
@@ -73,6 +78,26 @@ namespace Tests.UserTests
 				.First();
 
 			data.IsHouseMultiLevel.ShouldBeTrue();
+		}
+
+		[Test]
+		public void TestExpressionAssociationMissingHouse([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool preferClient)
+		{
+			using var db          = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var houseTable  = db.CreateLocalTable(new[] {new House3001  {Id = 1, Levels   = 2}});
+			using var personTable = db.CreateLocalTable(new[] {new Person3001 {Id = 1, HouseId  = 1}, new Person3001 {Id = 2, HouseId  = 99}});
+			using var petTable    = db.CreateLocalTable(new[] {new Pet3001    {Id = 1, PersonId = 1}, new Pet3001    {Id = 2, PersonId = 2}});
+
+			var data = petTable
+				.OrderBy(x => x.Id)
+				.Select(x => new {x.Id, x.IsHouseMultiLevel, x.HasNoLevels})
+				.ToList();
+
+			data.Select(x => (x.Id, x.IsHouseMultiLevel, x.HasNoLevels)).ShouldBe(new[] {(1, true, false), (2, false, true)});
+
+			// A predicate keeps SQL NULL, so a missing house satisfies neither filter, unlike the projection.
+			petTable.Where(x => x.HasNoLevels).Select(x => x.Id).ToList().ShouldBeEmpty();
+			petTable.Where(x => x.IsHouseMultiLevel).Select(x => x.Id).ToList().ShouldBe(new[] {1});
 		}
 	}
 }

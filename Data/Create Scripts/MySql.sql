@@ -321,13 +321,13 @@ CREATE TABLE `AllTypesNoYear`
 )
 GO
 
-DROP SCHEMA IF EXISTS test_schema
+DROP SCHEMA IF EXISTS `test_schema_{DBNAME}`
 GO
 
-CREATE SCHEMA test_schema
+CREATE SCHEMA `test_schema_{DBNAME}`
 GO
 
-CREATE TABLE test_schema.TestSameName
+CREATE TABLE `test_schema_{DBNAME}`.TestSameName
 (
 	ID int NOT NULL PRIMARY KEY
 )

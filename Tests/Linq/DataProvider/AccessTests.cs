@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data.Linq;
 using System.Globalization;
 using System.IO;
@@ -9,11 +9,15 @@ using System.Xml.Linq;
 
 using LinqToDB;
 using LinqToDB.Common;
+using LinqToDB.Configuration;
 using LinqToDB.Data;
+using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Access;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -399,6 +403,11 @@ namespace Tests.DataProvider
 			public int Id;
 		}
 
+		// The two OLE DB contexts this runs for do not share a file: AccessTools.CreateDatabase appends
+		// .mdb for Jet and .accdb for ACE, and DropDatabase removes the matching extension. So there is no
+		// filename clash to serialize against, despite what the NonParallelizable here used to claim. The
+		// remaining question is whether concurrent ADOX create/drop conflicts inside the ACE and Jet
+		// engines, which share one engine core - if the Access legs go red here, that is the reason.
 		[Test]
 		public void CreateDatabase([IncludeDataSources(TestProvName.AllAccessOleDb)] string context)
 		{
@@ -434,6 +443,110 @@ namespace Tests.DataProvider
 
 			AccessTools.DropDatabase("TestDatabase", expectedExtension);
 			Assert.That(File.Exists(expectedName), Is.False);
+		}
+
+		// one file per context and format: the two LibRed configurations run in parallel lanes
+		[Test]
+		public void CreateDatabaseLibRed([IncludeDataSources(TestProvName.AllAccessLibRed)] string context, [Values] AccessVersion version)
+		{
+			var name             = $"TestDatabase.{context}.{version}";
+			var extension        = version == AccessVersion.Ace ? ".accdb" : ".mdb";
+			var provider         = AccessTools.GetDataProvider(provider: AccessProvider.LibRed);
+			var options          = new DataOptions()
+				.UseConnectionString(provider, $"Data Source={name}{extension}");
+
+			AccessTools.CreateDatabase(name, AccessProvider.LibRed, deleteIfExists: true, version: version);
+			File.Exists(name + extension)
+				.ShouldBeTrue();
+
+			using (var db = new DataConnection(options))
+				db.CreateTable<SqlCeTests.CreateTableTest>();
+
+			// without deleteIfExists the file is kept, table included
+			AccessTools.CreateDatabase(name, AccessProvider.LibRed, version: version);
+
+			using (var db = new DataConnection(options))
+				db.DropTable<SqlCeTests.CreateTableTest>();
+
+			using (var db = new DataConnection(options))
+				db.CreateTable<SqlCeTests.CreateTableTest>();
+
+			// with deleteIfExists an existing file is replaced, so the table can be created again
+			AccessTools.CreateDatabase(name, AccessProvider.LibRed, deleteIfExists: true, version: version);
+
+			using (var db = new DataConnection(options))
+			{
+				db.CreateTable<SqlCeTests.CreateTableTest>();
+				db.DropTable<SqlCeTests.CreateTableTest>();
+			}
+
+			AccessTools.DropDatabase(name, AccessProvider.LibRed, extension);
+			File.Exists(name + extension)
+				.ShouldBeFalse();
+		}
+
+		// the factory a .config <dataProvider> entry names; it is internal, so it is reached by name as a configuration
+		// would. Limited to the LibRed contexts, the only ones where LibRed.Ado is referenced
+		[Test]
+		public void FactoryResolvesAssemblyName([IncludeDataSources(TestProvName.AllAccessLibRed)] string context)
+		{
+			var factory = (IDataProviderFactory)Activator.CreateInstance(typeof(AccessTools).Assembly.GetType("LinqToDB.DataProvider.Access.AccessFactory", true)!, nonPublic: true)!;
+
+			string Resolve(string assemblyName) => factory
+				.GetDataProvider([new NamedValue { Name = "assemblyName", Value = assemblyName }, new NamedValue { Name = "version", Value = "ACE" }])
+				.Name;
+
+			Resolve("LibRed.Ado")
+				.ShouldBe(ProviderName.AccessLibRed);
+			Resolve("System.Data.Odbc")
+				.ShouldBe(ProviderName.AccessAceOdbc);
+
+			// OLE DB exists on Windows only
+			if (OperatingSystem.IsWindows())
+				Resolve("System.Data.OleDb")
+					.ShouldBe(ProviderName.AccessAceOleDb);
+		}
+
+		// LibRed has a single data provider, so UseAccess must not open a connection to probe for a version, whether
+		// LibRed is passed to UseAccess or resolved from the provider name
+		[Test]
+		public void UseAccessLibRed([IncludeDataSources(TestProvName.AllAccessLibRed)] string context, [Values] bool accdb, [Values] bool byProviderName)
+		{
+			// a file of its own: the detector caches its probe per connection string
+			var name             = $"UseAccessLibRed.{context}.{(accdb ? "Ace" : "Jet")}.{(byProviderName ? "Name" : "Argument")}";
+			var extension        = accdb ? ".accdb" : ".mdb";
+			var connectionString = $"Data Source={name}{extension}";
+			var opens            = 0;
+
+			AccessTools.CreateDatabase(name, AccessProvider.LibRed, deleteIfExists: true, version: accdb ? AccessVersion.Ace : AccessVersion.Jet);
+
+			try
+			{
+				var options = byProviderName
+					? new DataOptions()
+						.UseConnectionString(ProviderName.AccessLibRed, connectionString)
+						.UseAccess(o => o)
+					: new DataOptions()
+						.UseAccess(connectionString, AccessProvider.LibRed);
+
+				// the callback sees the detector's probe connection as well as the DataConnection's own
+				options = options.UseBeforeConnectionOpened(_ => opens++);
+
+				using (var db = new DataConnection(options))
+				{
+					db.DataProvider.Name
+						.ShouldBe(ProviderName.AccessLibRed);
+					db.Execute<int>("SELECT 1")
+						.ShouldBe(1);
+				}
+
+				opens
+					.ShouldBe(1);
+			}
+			finally
+			{
+				AccessTools.DropDatabase(name, AccessProvider.LibRed, extension);
+			}
 		}
 
 		[Test]
@@ -585,19 +698,19 @@ namespace Tests.DataProvider
 				}
 				else if (isParameter)
 				{
-					Assert.DoesNotThrow(() => db.ExecuteReader("SELECT DISTINCT ?", new DataParameter() { Value = value }));
-					Assert.DoesNotThrow(() => db.ExecuteReader("SELECT DISTINCT CVar(?)", new DataParameter() { Value = value }));
+					db.ExecuteReader("SELECT DISTINCT ?", new DataParameter() { Value = value });
+					db.ExecuteReader("SELECT DISTINCT CVar(?)", new DataParameter() { Value = value });
 				}
 				else if (hasValue)
 				{
-					Assert.DoesNotThrow(() => db.ExecuteReader("SELECT DISTINCT 3"));
-					Assert.DoesNotThrow(() => db.ExecuteReader("SELECT DISTINCT CVar(3)"));
+					db.ExecuteReader("SELECT DISTINCT 3");
+					db.ExecuteReader("SELECT DISTINCT CVar(3)");
 
 				}
 				else
 				{
-					Assert.DoesNotThrow(() => db.ExecuteReader("SELECT DISTINCT NULL"));
-					Assert.DoesNotThrow(() => db.ExecuteReader("SELECT DISTINCT CVar(NULL)"));
+					db.ExecuteReader("SELECT DISTINCT NULL");
+					db.ExecuteReader("SELECT DISTINCT CVar(NULL)");
 				}
 			}
 		}
@@ -663,18 +776,10 @@ namespace Tests.DataProvider
 
 		#region Issue 3893
 		// use characters from https://learn.microsoft.com/en-us/office/troubleshoot/access/error-using-special-characters
+		// Split three ways by what Access actually does with each identifier: a gate cannot target a ValueSource
+		// argument, and one gate over all 33 marked the 21 that work as failing.
 		private static readonly string[] _identifiers =
 		[
-			" leading_space",
-			"char `",
-			"char !",
-			"char .",
-			"char ]",
-			"char [",
-			"char \r",
-			"char \t",
-			"char \b",
-			"char \n",
 			"char >",
 			"char <",
 			"char *",
@@ -692,17 +797,56 @@ namespace Tests.DataProvider
 			"char %",
 			"char $",
 			"char ;",
-			"char ?",
-			"char {",
 			"char }",
 			"char -",
 			"char ~",
 			"char |",
 		];
 
-		[ActiveIssue]
+		private static readonly string[] _identifiersRejected =
+		[
+			" leading_space",
+			"char `",
+			"char !",
+			"char .",
+			"char ]",
+			"char [",
+			"char \r",
+			"char \t",
+			"char \b",
+			"char \n",
+		];
+
+		// These two divide the drivers: OleDb accepts both, ODBC rejects 'char ?' by name and reads 'char {'
+		// back as something else.
+		private static readonly string[] _identifiersRejectedByOdbc =
+		[
+			"char ?",
+			"char {",
+		];
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3893")]
 		public void Issue3893Test([IncludeDataSources(TestProvName.AllAccess)] string context, [ValueSource(nameof(_identifiers))] string columName)
+		{
+			Issue3893TestCore(context, columName);
+		}
+
+		[ActiveIssue(3893, Details = "no-declaration: Access rejects these outright, but not uniformly enough to declare: most give \"'<name>' is not a valid name\" through both drivers, while the control characters produce 'Syntax error in field definition' and one an ODBC 'COUNT field incorrect'. LibRed raises an ArgumentException naming the column, except for the brackets, which its lexer refuses outright.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3893")]
+		public void Issue3893Test_Rejected([IncludeDataSources(TestProvName.AllAccess)] string context, [ValueSource(nameof(_identifiersRejected))] string columName)
+		{
+			Issue3893TestCore(context, columName);
+		}
+
+		[ActiveIssue(3893, Configuration = TestProvName.AllAccessOdbc,
+			Details = "no-declaration: the two arms fail differently and neither can be targeted by argument: 'char ?' is rejected by name, while 'char {' is created and then read back under a different name, so it fails the assertion rather than throwing. OleDb accepts both, which is why this is scoped to the ODBC driver - both of them, Jet as well as ACE.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3893")]
+		public void Issue3893Test_RejectedByOdbc([IncludeDataSources(TestProvName.AllAccess)] string context, [ValueSource(nameof(_identifiersRejectedByOdbc))] string columName)
+		{
+			Issue3893TestCore(context, columName);
+		}
+
+		void Issue3893TestCore(string context, string columName)
 		{
 			var builder = new FluentMappingBuilder(new MappingSchema())
 				.Entity<Issue3893Table>()
@@ -750,10 +894,146 @@ namespace Tests.DataProvider
 		{
 			using var db = GetDataContext(context);
 
-			Assert.That(() => db.GetTable<AllTypesTable>().Select(r => Sql.AsSql(Sql.AsNotNull(r.DateTime!.Value).Date)).ToArray(),
-				Throws.Exception);
+			var query = db.GetTable<AllTypesTable>()
+				.Select(r => Sql.AsSql(Sql.AsNotNull(r.DateTime!.Value).Date));
+
+			// the Microsoft drivers reject DateValue over the NULL row; LibRed evaluates it
+			if (context.IsAnyOf(TestProvName.AllAccessLibRed))
+				query
+					.ToArray()
+					.ShouldNotBeEmpty();
+			else
+				Assert.That(() => query.ToArray(), Throws.Exception);
 		}
 
 		#endregion
+
+		[Table("BoolAsIntegerTable")]
+		sealed class BoolAsIntegerTable
+		{
+			[PrimaryKey                       ] public int  Id        { get; set; }
+			[Column(DataType = DataType.Byte) ] public bool ByteFlag  { get; set; }
+			[Column(DataType = DataType.Int16)] public bool Int16Flag { get; set; }
+			[Column(DataType = DataType.Int32)] public bool Int32Flag { get; set; }
+		}
+
+		[Table("BoolAsIntegerTable")]
+		sealed class BoolAsIntegerRawTable
+		{
+			[PrimaryKey] public int   Id        { get; set; }
+			[Column    ] public byte  ByteFlag  { get; set; }
+			[Column    ] public short Int16Flag { get; set; }
+			[Column    ] public int   Int32Flag { get; set; }
+		}
+
+		// True is -1 in Access SQL, but a bool bound to an integer column is stored as 1 by every driver, so a parameter
+		// compare against it finds the row
+		[Test]
+		public void BoolStoredAsInteger([IncludeDataSources(true, TestProvName.AllAccess)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<BoolAsIntegerTable>();
+
+			db.Insert(new BoolAsIntegerTable { Id = 1, ByteFlag = true,  Int16Flag = true,  Int32Flag = true  });
+			db.Insert(new BoolAsIntegerTable { Id = 2, ByteFlag = false, Int16Flag = false, Int32Flag = false });
+
+			db.GetTable<BoolAsIntegerRawTable>()
+				.OrderBy(r => r.Id)
+				.ToArray()
+				.Select(r => (r.Id, r.ByteFlag, r.Int16Flag, r.Int32Flag))
+				.ToArray()
+				.ShouldBe([(1, (byte)1, (short)1, 1), (2, (byte)0, (short)0, 0)]);
+
+			table
+				.OrderBy(r => r.Id)
+				.ToArray()
+				.Select(r => (r.Id, r.ByteFlag, r.Int16Flag, r.Int32Flag))
+				.ToArray()
+				.ShouldBe([(1, true, true, true), (2, false, false, false)]);
+
+			var flag = true;
+
+			table
+				.Where(r => r.ByteFlag == flag)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([1]);
+
+			table
+				.Where(r => r.Int16Flag == flag)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([1]);
+
+			table
+				.Where(r => r.Int32Flag == flag)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([1]);
+		}
+
+		[Table]
+		sealed class LongTextTable
+		{
+			[PrimaryKey                       ] public int     Id    { get; set; }
+			[Column(DataType = DataType.NText)] public string? Value { get; set; }
+		}
+
+		[Table]
+		sealed class LongAnsiTextTable
+		{
+			[PrimaryKey                      ] public int     Id    { get; set; }
+			[Column(DataType = DataType.Text)] public string? Value { get; set; }
+		}
+
+		// past the 255 characters a Text parameter can carry; the second row shares the first 300 characters, so '='
+		// has to compare the whole memo value, not a prefix
+		[Test]
+		public void LongTextParameter([IncludeDataSources(true, TestProvName.AllAccess)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<LongTextTable>();
+
+			var value = new string('x', 1000);
+			var other = new string('x', 300) + new string('y', 700);
+
+			db.Insert(new LongTextTable { Id = 1, Value = value });
+			db.Insert(new LongTextTable { Id = 2, Value = other });
+
+			table
+				.Single(r => r.Id == 1)
+				.Value
+				.ShouldBe(value);
+
+			table
+				.Where(r => r.Value == value)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([1]);
+		}
+
+		[Test]
+		public void LongAnsiTextParameter([IncludeDataSources(true, TestProvName.AllAccess)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<LongAnsiTextTable>();
+
+			var value = new string('x', 1000);
+			var other = new string('x', 300) + new string('y', 700);
+
+			db.Insert(new LongAnsiTextTable { Id = 1, Value = value });
+			db.Insert(new LongAnsiTextTable { Id = 2, Value = other });
+
+			table
+				.Single(r => r.Id == 1)
+				.Value
+				.ShouldBe(value);
+
+			table
+				.Where(r => r.Value == value)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([1]);
+		}
 	}
 }

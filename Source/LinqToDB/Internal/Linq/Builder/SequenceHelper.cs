@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 using LinqToDB;
 using LinqToDB.Expressions;
@@ -12,11 +13,255 @@ using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Mapping;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
 	internal static class SequenceHelper
 	{
+		/// <summary>
+		/// Whether two stored values are handed to the reader on the same terms, so one reading can serve both.
+		/// </summary>
+		/// <remarks>
+		/// A conversion is not arithmetic on the SQL side, so bringing two values that carry different ones into a
+		/// single value loses the difference: whichever conversion the result is read through is right for at most
+		/// one of them. Callers that only know one side decide for themselves what an unknown means - here both
+		/// sides are known.
+		/// <para>
+		/// The declared duration unit is compared rather than the converter derived from it: two columns declaring
+		/// the same unit get equivalent converters that are not the same object. That substitution is sound because
+		/// a declared unit is the only thing that can define the stored form - <see cref="ColumnDescriptor"/> refuses
+		/// a column that states a unit and carries a hand-written converter as well, so equal units cannot hide
+		/// unequal conversions.
+		/// </para>
+		/// </remarks>
+		public static bool ReadTheSameWay(ColumnDescriptor descriptor1, ColumnDescriptor descriptor2)
+		{
+			if (descriptor1.DurationUnit != null || descriptor2.DurationUnit != null)
+				return descriptor1.DurationUnit == descriptor2.DurationUnit;
+
+			return ConvertTheSameWay(descriptor1.ValueConverter, descriptor2.ValueConverter);
+		}
+
+		/// <summary>
+		/// Whether two value converters carry a value between the model and the database on the same terms.
+		/// </summary>
+		/// <remarks>
+		/// Compared by what they do rather than by which object they are, so the same conversion declared twice
+		/// counts as one: two entities that each say <c>HasConversion(ts =&gt; ts.Ticks, v =&gt; TimeSpan.FromTicks(v))</c>
+		/// get converters that are equal in every way except identity, and treating those as different would keep
+		/// apart two columns that are interchangeable.
+		/// <para>
+		/// A converter built from delegates rather than expressions holds them as opaque constants, so two of those
+		/// compare equal only when they hold the same delegate, however alike they behave. That is the safe direction
+		/// to be wrong in: the answer is used to decide whether one reading can serve both values, and "no" costs a
+		/// column or a refusal while "yes" would silently read one value through the other's conversion.
+		/// </para>
+		/// </remarks>
+		public static bool ConvertTheSameWay(IValueConverter? converter1, IValueConverter? converter2)
+		{
+			converter1 = StoredConversion(converter1);
+			converter2 = StoredConversion(converter2);
+
+			// Covers both being absent, and the far more common case of one descriptor reached along two paths.
+			if (ReferenceEquals(converter1, converter2))
+				return true;
+
+			if (converter1 == null || converter2 == null)
+				return false;
+
+			return converter1.HandlesNulls == converter2.HandlesNulls
+				&& ConversionsMatch(converter1.FromProviderExpression, converter2.FromProviderExpression, converter1.HandlesNulls)
+				&& ConversionsMatch(converter1.ToProviderExpression,   converter2.ToProviderExpression,   converter1.HandlesNulls);
+		}
+
+		/// <summary>
+		/// The converter that defines the stored form of a value, or <see langword="null"/> when the value is stored
+		/// as is (no converter or <see cref="IStorageTransparentConverter"/>).
+		/// </summary>
+		public static IValueConverter? StoredConversion(IValueConverter? converter)
+		{
+			return converter is IStorageTransparentConverter ? null : converter;
+		}
+
+		/// <summary>
+		/// Whether two conversion lambdas carry the same value across, disregarding which of them speaks in terms of
+		/// a nullable type.
+		/// </summary>
+		/// <remarks>
+		/// The same conversion declared on a nullable property and on a plain one produces lambdas that differ only
+		/// in where <c>Nullable&lt;&gt;</c> appears - the delegate types differ, and the body carries an extra
+		/// conversion to reach the declared type. Compared as they stand they are never equal, which would keep
+		/// apart two columns that hold the same thing.
+		/// <para>
+		/// Nulls themselves are not what is being compared here: whether a converter is prepared to see one is
+		/// already settled by <see cref="IValueConverter.HandlesNulls"/>, and a NULL read is decided by the column's
+		/// nullability rather than by the conversion.
+		/// </para>
+		/// <para>
+		/// A converter that does not handle nulls is never handed one - the column reader and writer test for NULL
+		/// around it - so a null guard in its body (<c>v != null ? F(v.Value) : null</c>) and the <c>.Value</c>
+		/// it reads never take part in what it stores, and are set aside before the bodies are compared.
+		/// </para>
+		/// </remarks>
+		static bool ConversionsMatch(LambdaExpression lambda1, LambdaExpression lambda2, bool handlesNulls)
+		{
+			if (ExpressionEqualityComparer.Instance.Equals(lambda1, lambda2))
+				return true;
+
+			if (lambda1.Parameters.Count != 1 || lambda2.Parameters.Count != 1)
+				return false;
+
+			var parameter1 = lambda1.Parameters[0];
+			var parameter2 = lambda2.Parameters[0];
+
+			if (parameter1.Type.UnwrapNullableType()    != parameter2.Type.UnwrapNullableType()
+				|| lambda1.ReturnType.UnwrapNullableType() != lambda2.ReturnType.UnwrapNullableType())
+			{
+				return false;
+			}
+
+			var common = Expression.Parameter(parameter1.Type.UnwrapNullableType(), "p");
+
+			var source1 = handlesNulls ? lambda1.Body : WithoutNullGuard(lambda1.Body, parameter1);
+			var source2 = handlesNulls ? lambda2.Body : WithoutNullGuard(lambda2.Body, parameter2);
+
+			// The unwrapped parameter is what makes the two spellings of one conversion meet: standing for a
+			// nullable value it leaves nothing behind that the plainly-typed side has no counterpart for. Some
+			// bodies cannot be rebuilt around it - one that reads a member only Nullable<> has, or hands the value
+			// to something that expects one - and then both sides keep the nullability they were written in, which
+			// leaves them comparable to each other rather than to nothing.
+			if (!TryCanonicalize(source1, parameter1, common, !handlesNulls, out var body1)
+				|| !TryCanonicalize(source2, parameter2, common, !handlesNulls, out var body2))
+			{
+				// stripping a nullability cast can still leave a node whose operands no longer agree
+				if (!TryCanonicalize(source1, parameter1, AsWrittenIn(parameter1, common), false, out body1)
+					|| !TryCanonicalize(source2, parameter2, AsWrittenIn(parameter2, common), false, out body2))
+				{
+					return false;
+				}
+			}
+
+			return ExpressionEqualityComparer.Instance.Equals(body1, body2);
+
+			static Expression AsWrittenIn(ParameterExpression parameter, ParameterExpression common)
+				=> parameter.Type == common.Type ? common : Expression.Convert(common, parameter.Type);
+		}
+
+		/// <summary>
+		/// The branch of a conversion body that runs for a value, when the body only sets a null
+		/// <paramref name="parameter"/> - nullable or of a reference type - aside: <c>v != null ? X : null</c>,
+		/// <c>v.HasValue ? X : null</c> and their mirrored forms reduce to <c>X</c>. Any other body is returned as
+		/// written.
+		/// </summary>
+		static Expression WithoutNullGuard(Expression body, ParameterExpression parameter)
+		{
+			if (!parameter.Type.IsNullableOrReferenceType || body is not ConditionalExpression conditional)
+				return body;
+
+			bool? valueWhenTrue = conditional.Test switch
+			{
+				BinaryExpression { NodeType: ExpressionType.NotEqual } test when ComparesWithNull(test)                     => true,
+				BinaryExpression { NodeType: ExpressionType.Equal    } test when ComparesWithNull(test)                     => false,
+				MemberExpression test when IsHasValue(test)                                                                => true,
+				UnaryExpression { NodeType: ExpressionType.Not, Operand: MemberExpression test } when IsHasValue(test) => false,
+				_                                                                                                          => null,
+			};
+
+			if (valueWhenTrue == null)
+				return body;
+
+			var (value, other) = valueWhenTrue.Value
+				? (conditional.IfTrue,  conditional.IfFalse)
+				: (conditional.IfFalse, conditional.IfTrue);
+
+			return IsNull(other) ? value : body;
+
+			// a user-defined operator or HasValue of a reference type can answer null for an instance the converter is
+			// handed; a lifted operator never sees a null operand
+			bool ComparesWithNull(BinaryExpression test)
+				=> (test.Method == null || test.IsLifted || test.Method.DeclaringType?.Assembly == typeof(object).Assembly)
+				&& (ReferenceEquals(test.Left, parameter) && IsNull(test.Right)
+				|| ReferenceEquals(test.Right, parameter) && IsNull(test.Left));
+
+			bool IsHasValue(MemberExpression test)
+				=> parameter.Type.IsNullableType && test is { Member.Name: nameof(Nullable<>.HasValue) } && ReferenceEquals(test.Expression, parameter);
+
+			static bool IsNull(Expression expression)
+			{
+				return expression.UnwrapConvert() is { } unwrapped
+					&& (unwrapped.IsNullValue || unwrapped is NewExpression { Arguments.Count: 0, Type.IsNullableType: true });
+			}
+		}
+
+		/// <summary>
+		/// Rewrites a conversion body around <paramref name="replacement"/>, reporting whether the body survives it
+		/// rather than throwing when it does not.
+		/// </summary>
+		static bool TryCanonicalize(Expression body, ParameterExpression parameter, Expression replacement, bool unwrapValue, [NotNullWhen(true)] out Expression? result)
+		{
+			try
+			{
+				result = Canonicalize(body, parameter, replacement, unwrapValue);
+				return true;
+			}
+			catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+			{
+				// Rebuilding an access against a type that does not have it - Property 'Int64 Value' is not
+				// defined for type 'System.Int64' - or a lifted operator around an operand that is no longer
+				// nullable says this body is written in terms of its own nullability.
+				result = null;
+				return false;
+			}
+		}
+
+		/// <summary>
+		/// Rewrites a conversion body so that two of them can be told apart by what they compute rather than by the
+		/// nullability they were written against: the parameter becomes a shared one, and a conversion that only
+		/// puts a value into or takes it out of <c>Nullable&lt;&gt;</c> is dropped. With
+		/// <paramref name="unwrapValue"/>, reading the value out of a nullable parameter (<c>v.Value</c>,
+		/// <c>v.GetValueOrDefault()</c>) becomes the plain replacement too.
+		/// </summary>
+		static Expression Canonicalize(Expression body, ParameterExpression parameter, Expression replacement, bool unwrapValue)
+		{
+			unwrapValue = unwrapValue && parameter.Type.IsNullableType && !replacement.Type.IsNullableType;
+
+			return body.Transform(e =>
+			{
+				if (ReferenceEquals(e, parameter))
+					return replacement;
+
+				if (unwrapValue
+					&& (e is MemberExpression { Member.Name: nameof(Nullable<>.Value) } member && ReferenceEquals(member.Expression, parameter)
+					|| e is MethodCallExpression { Method.Name: nameof(Nullable<>.GetValueOrDefault), Arguments.Count: 0 } call && ReferenceEquals(call.Object, parameter)))
+				{
+					return replacement;
+				}
+
+				// A captured delegate is compared by which delegate it is, not by the closure holding it, so two
+				// converters invoking one delegate compare equal however each of them captured it.
+				if (e is InvocationExpression { Expression: MemberExpression target } invocation
+					&& target.TryEvaluateCapturedValue(out var function)
+					&& function is Delegate)
+				{
+					return Expression.Invoke(
+						Expression.Constant(function, target.Type),
+						invocation.Arguments.Select(a => Canonicalize(a, parameter, replacement, unwrapValue)));
+				}
+
+				if (e is UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked, Method: null } unary
+					&& unary.Type.UnwrapNullableType() == unary.Operand.Type.UnwrapNullableType())
+				{
+					// Recursed rather than returned: the transform does not descend into a node the callback
+					// replaced, so the parameter anywhere under a stripped conversion would keep its own
+					// identity and two bodies that differ only there would compare unequal.
+					return Canonicalize(unary.Operand, parameter, replacement, unwrapValue);
+				}
+
+				return e;
+			});
+		}
+
 		public static Expression PrepareBody(LambdaExpression lambda, params IBuildContext[] sequences)
 		{
 			var body = lambda.Parameters.Count == 0
@@ -116,6 +361,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					if (expr is ContextRefExpression refExpression)
 						return refExpression.WithType(type);
+					if (expr is SqlErrorExpression errorExpression)
+						return errorExpression.WithType(type);
 					return Expression.Convert(expr, type);
 				}
 
@@ -131,7 +378,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (expression == null)
 				return null;
 
-			if (toPath is not (ContextRefExpression or MemberExpression))
+			if (toPath.UnwrapConvert() is not (ContextRefExpression or MemberExpression))
 				return expression;
 
 			switch (expression)
@@ -141,30 +388,17 @@ namespace LinqToDB.Internal.Linq.Builder
 					List<SqlGenericConstructorExpression.Assignment>? assignments = null;
 					List<SqlGenericConstructorExpression.Parameter>?  parameters  = null;
 
-					var contextRef = toPath as ContextRefExpression;
-
 					for (int i = 0; i < generic.Assignments.Count; i++)
 					{
 						var assignment = generic.Assignments[i];
 
-						var currentPath = toPath;
-
-						var applicable = true;
-						if (assignment.MemberInfo.DeclaringType != null)
-						{
-							applicable = assignment.MemberInfo.DeclaringType.IsAssignableFrom(currentPath.Type);
-							if (applicable)
-								currentPath = EnsureType(currentPath, assignment.MemberInfo.DeclaringType);
-						}
-
-						if (!applicable)
+						if (assignment.MemberInfo.DeclaringType?.IsAssignableFrom(toPath.Type) == false)
 						{
 							assignments?.Add(assignment);
 							continue;
 						}
 
-						var memberTrackingPath = Expression.MakeMemberAccess(currentPath, assignment.MemberInfo);
-						var newExpression = CorrectTrackingPath(builder, assignment.Expression, memberTrackingPath);
+						var newExpression = CorrectTrackingPath(builder, assignment.Expression, MemberPath(toPath, assignment.MemberInfo));
 
 						if (!ReferenceEquals(assignment.Expression, newExpression))
 						{
@@ -191,13 +425,11 @@ namespace LinqToDB.Internal.Linq.Builder
 					for (var i = 0; i < generic.Parameters.Count; i++)
 					{
 						var parameter     = generic.Parameters[i];
-						var currentPath   = toPath;
 						var newExpression = parameter.Expression;
 
 						if (parameter.MemberInfo != null)
 						{
-							var memberTrackingPath = Expression.MakeMemberAccess(currentPath, parameter.MemberInfo);
-							newExpression = CorrectTrackingPath(builder, parameter.Expression, memberTrackingPath);
+							newExpression = CorrectTrackingPath(builder, parameter.Expression, MemberPath(toPath, parameter.MemberInfo));
 						}
 
 						if (!ReferenceEquals(parameter.Expression, newExpression))
@@ -261,15 +493,15 @@ namespace LinqToDB.Internal.Linq.Builder
 					return placeholder.WithTrackingPath(toPath);
 				}
 
+				// Only what can become the value at toPath is relabelled: an outer-joined value, the branches of a
+				// conditional, either side of a coalesce and the operand of a conversion. The not-null columns that tell
+				// whether an outer-joined row was found, a conditional's test and the operands of any other operation are
+				// values of their own.
 				case SqlDefaultIfEmptyExpression defaultIfEmptyExpression:
 				{
-					var newExpr = defaultIfEmptyExpression.Update(
+					return defaultIfEmptyExpression.Update(
 						CorrectTrackingPath(builder, defaultIfEmptyExpression.InnerExpression, toPath),
-						defaultIfEmptyExpression.NotNullExpressions.Select(n => CorrectTrackingPath(builder, n, toPath))
-							.ToList().AsReadOnly()
-					);
-
-					return newExpr;
+						defaultIfEmptyExpression.NotNullExpressions.Select(n => NameAfterPath(n, toPath)).ToList().AsReadOnly());
 				}
 
 				case ConstantExpression:
@@ -278,20 +510,23 @@ namespace LinqToDB.Internal.Linq.Builder
 				case ConditionalExpression conditional:
 				{
 					return conditional.Update(
-						CorrectTrackingPath(builder, conditional.Test, toPath),
+						NameAfterPath(conditional.Test, toPath),
 						CorrectTrackingPath(builder, conditional.IfTrue, toPath),
 						CorrectTrackingPath(builder, conditional.IfFalse, toPath));
 				}
 
-				case BinaryExpression binary:
+				case BinaryExpression { NodeType: ExpressionType.Coalesce } coalesce:
 				{
-					return binary.Update(CorrectTrackingPath(builder, binary.Left, toPath), binary.Conversion, CorrectTrackingPath(builder, binary.Right, toPath));
+					return coalesce.Update(CorrectTrackingPath(builder, coalesce.Left, toPath), coalesce.Conversion, CorrectTrackingPath(builder, coalesce.Right, toPath));
 				}
 
-				case UnaryExpression unary:
+				case UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked or ExpressionType.TypeAs } conversion:
 				{
-					return unary.Update(CorrectTrackingPath(builder, unary.Operand, toPath));
+					return conversion.Update(CorrectTrackingPath(builder, conversion.Operand, ConvertBack(toPath, conversion)));
 				}
+
+				case BinaryExpression or UnaryExpression:
+					return NameAfterPath(expression, toPath);
 
 				/*
 				if (expression is MemberExpression eme && eme.Expression is ContextRefExpression && toPath is MemberExpression && expression.Type == toPath.Type)
@@ -303,6 +538,55 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			return expression;
+		}
+
+		/// <summary>
+		/// Names the columns of a value that only feeds the one at <paramref name="toPath"/> (a conditional's test, an operand)
+		/// after the member at <paramref name="toPath"/>, when they have no name of their own. Their tracking paths are left alone.
+		/// </summary>
+		static Expression NameAfterPath(Expression expression, Expression toPath)
+		{
+			if (toPath.UnwrapConvert() is not MemberExpression { Member.Name: var name })
+				return expression;
+
+			return expression.Transform(name, static (name, e) =>
+				e is SqlPlaceholderExpression { TrackingPath: not MemberExpression, Path: not MemberExpression } placeholder && string.IsNullOrEmpty(placeholder.Alias)
+					? placeholder.WithAlias(name)
+					: e);
+		}
+
+		/// <summary>
+		/// Turns a <paramref name="path"/> to the result of <paramref name="conversion"/> into a path to its operand.
+		/// </summary>
+		/// <remarks>
+		/// The operand's members are declared on the operand's type, so they can only be read from a path of that type.
+		/// A conversion that widens the operand, to <c>T?</c>, a base class or an interface, is read back with a cast to
+		/// the operand's type. Any other conversion leaves the path as it is.
+		/// </remarks>
+		internal static Expression ConvertBack(Expression path, UnaryExpression conversion)
+		{
+			var from = conversion.Operand.Type;
+			var to   = conversion.Type;
+
+			var widens = path.Type == to && to != from && to.IsAssignableFrom(from);
+
+			return widens ? EnsureType(path, from) : path;
+		}
+
+		/// <summary>
+		/// The tracking path of <paramref name="member"/> of the value at <paramref name="path"/>.
+		/// </summary>
+		/// <remarks>
+		/// The member is read through a path of the type that declares it, so it gets one path however the value was
+		/// typed on the way: a member declared on <c>Base</c> reads as <c>Ref&lt;Base&gt;.M</c> from
+		/// <c>Ref&lt;Derived&gt;</c> too. Tracking paths are matched as keys, by a CTE's recursive fields among others.
+		/// </remarks>
+		internal static MemberExpression MemberPath(Expression path, MemberInfo member)
+		{
+			if (member.DeclaringType != null)
+				path = EnsureType(path, member.DeclaringType);
+
+			return Expression.MakeMemberAccess(path, member);
 		}
 
 		public static Expression ReplacePlaceholdersPathByTrackingPath(Expression expression)
@@ -318,381 +602,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			});
 
 			return transformed;
-		}
-
-		[return: NotNullIfNotNull(nameof(expression))]
-		public static Expression? RemapToNewPathSimple(ExpressionBuilder builder, Expression? expression, Expression toPath, ProjectFlags flags)
-		{
-			if (expression == null)
-				return null;
-
-			if (toPath is not (ContextRefExpression or MemberExpression or SqlGenericParamAccessExpression))
-				return expression;
-
-			if (expression is SqlGenericConstructorExpression generic)
-			{
-				List<SqlGenericConstructorExpression.Assignment>? assignments = null;
-				List<SqlGenericConstructorExpression.Parameter>?  parameters  = null;
-
-				var contextRef = toPath as ContextRefExpression;
-
-				for (int i = 0; i < generic.Assignments.Count; i++)
-				{
-					var assignment = generic.Assignments[i];
-
-					var currentPath = toPath;
-					if (contextRef != null 
-						&& assignment.MemberInfo.DeclaringType != null 
-						&& !assignment.MemberInfo.DeclaringType.IsAssignableFrom(contextRef.Type))
-					{
-						currentPath = contextRef.WithType(assignment.MemberInfo.DeclaringType);
-					}
-
-					var memberPath = Expression.MakeMemberAccess(currentPath, assignment.MemberInfo);
-					var parsed     = builder.ParseGenericConstructor(assignment.Expression, flags, null);
-
-					Expression newExpression = memberPath;
-					if (parsed is SqlGenericConstructorExpression { Assignments.Count: > 0 } genericParsed)
-					{
-						newExpression = RemapToNewPathSimple(builder, assignment.Expression, memberPath, flags);
-					}
-					else if (parsed is SqlErrorExpression)
-					{
-						newExpression = assignment.Expression;
-					}
-
-					if (!ReferenceEquals(assignment.Expression, newExpression))
-					{
-						if (assignments == null)
-						{
-							assignments = new();
-							for (int j = 0; j < i; j++)
-							{
-								assignments.Add(generic.Assignments[j]);
-							}
-						}
-
-						assignments.Add(assignment.WithExpression(newExpression));
-					}
-					else
-						assignments?.Add(assignment);
-				}
-
-				for (int i = 0; i < generic.Parameters.Count; i++)
-				{
-					var parameter = generic.Parameters[i];
-
-					var currentPath = toPath;
-					if (contextRef != null
-						&& parameter.MemberInfo?.DeclaringType != null
-						&& !parameter.MemberInfo.DeclaringType.IsAssignableFrom(contextRef.Type))
-					{
-						currentPath = contextRef.WithType(parameter.MemberInfo.DeclaringType);
-					}
-
-					Expression newExpression;
-
-					if (parameter.Expression is SqlErrorExpression)
-					{
-						newExpression = parameter.Expression;
-					}
-					else if (parameter.MemberInfo != null)
-					{
-						newExpression = Expression.MakeMemberAccess(currentPath, parameter.MemberInfo);
-					}
-					else
-					{
-						var paramAccess = new SqlGenericParamAccessExpression(currentPath, parameter.ParameterInfo);
-
-						newExpression = paramAccess;
-					}
-
-					if (!ReferenceEquals(parameter.Expression, newExpression))
-					{
-						if (parameters == null)
-						{
-							parameters = new();
-							for (int j = 0; j < i; j++)
-							{
-								parameters.Add(generic.Parameters[j]);
-							}
-						}
-
-						parameters.Add(parameter.WithExpression(newExpression));
-					}
-					else
-						parameters?.Add(parameter);
-				}
-
-				if (assignments != null)
-				{
-					generic = generic.ReplaceAssignments(assignments.AsReadOnly());
-				}
-
-				if (parameters != null)
-				{
-					generic = generic.ReplaceParameters(parameters.AsReadOnly());
-				}
-
-				generic = generic.WithConstructionRoot(toPath);
-
-				return generic;
-			}
-
-			if (expression is NewExpression or MemberInitExpression)
-			{
-				var parsed = builder.ParseGenericConstructor(expression, ProjectFlags.SQL, null);
-				if (parsed is SqlGenericConstructorExpression { Assignments.Count: > 0 } genericParsed)
-					return RemapToNewPathSimple(builder, parsed, toPath, flags);
-			}
-
-			/*
-			if (expression is MemberExpression && toPath is MemberExpression && expression.Type == toPath.Type)
-				return toPath;
-
-			if (expression is ContextRefExpression && toPath is ContextRefExpression && expression.Type == toPath.Type)
-				return toPath;
-				*/
-
-			return expression;
-		}
-
-		[return: NotNullIfNotNull(nameof(expression))]
-		public static Expression? RemapToNewPath(ExpressionBuilder builder, Expression? expression, Expression toPath, ProjectFlags flags)
-		{
-			if (expression == null)
-				return null;
-
-			if (toPath is not (ContextRefExpression or MemberExpression or SqlGenericParamAccessExpression))
-				return expression;
-
-			switch (expression)
-			{
-				case SqlGenericConstructorExpression generic:
-				{
-					List<SqlGenericConstructorExpression.Assignment>? assignments = null;
-					List<SqlGenericConstructorExpression.Parameter>?  parameters  = null;
-
-					var contextRef = toPath as ContextRefExpression;
-
-					for (int i = 0; i < generic.Assignments.Count; i++)
-					{
-						var assignment = generic.Assignments[i];
-
-						var currentPath = toPath;
-						if (contextRef != null
-							&& assignment.MemberInfo.DeclaringType != null
-							&& !assignment.MemberInfo.DeclaringType.IsAssignableFrom(contextRef.Type))
-						{
-							currentPath = contextRef.WithType(assignment.MemberInfo.DeclaringType);
-						}
-
-						var newExpression = RemapToNewPath(
-							builder,
-							assignment.Expression,
-							Expression.MakeMemberAccess(currentPath, assignment.MemberInfo), flags
-						);
-
-						if (!ReferenceEquals(assignment.Expression, newExpression))
-						{
-							if (assignments == null)
-							{
-								assignments = new();
-								for (int j = 0; j < i; j++)
-								{
-									assignments.Add(generic.Assignments[j]);
-								}
-							}
-
-							assignments.Add(assignment.WithExpression(newExpression));
-						}
-						else
-							assignments?.Add(assignment);
-					}
-
-					for (int i = 0; i < generic.Parameters.Count; i++)
-					{
-						var parameter = generic.Parameters[i];
-
-						var currentPath = toPath;
-						if (contextRef != null
-							&& parameter.MemberInfo?.DeclaringType != null
-							&& !parameter.MemberInfo.DeclaringType.IsAssignableFrom(contextRef.Type))
-						{
-							currentPath = contextRef.WithType(parameter.MemberInfo.DeclaringType);
-						}
-
-						var paramAccess = new SqlGenericParamAccessExpression(currentPath, parameter.ParameterInfo);
-
-						var newExpression = RemapToNewPath(builder, parameter.Expression, paramAccess, flags);
-
-						if (!ReferenceEquals(parameter.Expression, newExpression))
-						{
-							if (parameters == null)
-							{
-								parameters = new();
-								for (int j = 0; j < i; j++)
-								{
-									parameters.Add(generic.Parameters[j]);
-								}
-							}
-
-							parameters.Add(parameter.WithExpression(newExpression));
-						}
-						else
-							parameters?.Add(parameter);
-					}
-
-					if (assignments != null)
-					{
-						generic = generic.ReplaceAssignments(assignments.AsReadOnly());
-					}
-
-					if (parameters != null)
-					{
-						generic = generic.ReplaceParameters(parameters.AsReadOnly());
-					}
-
-					generic = generic.WithConstructionRoot(toPath);
-
-					return generic;
-				}
-
-				case NewExpression or MemberInitExpression:
-				{
-					return RemapToNewPath(builder, builder.ParseGenericConstructor(expression, ProjectFlags.SQL, null), toPath, flags);
-				}
-
-				case SqlPlaceholderExpression placeholder:
-				{
-					if (placeholder.Sql.IsNullValue)
-						return Expression.Default(placeholder.Type);
-
-					if (placeholder.Type == toPath.Type)
-					{
-						return toPath;
-					}
-
-					if (IsSpecialProperty(expression, out var propType, out var propName))
-					{
-						Expression newExpr = CreateSpecialProperty(toPath, propType, propName);
-						if (placeholder.Type != newExpr.Type)
-						{
-							newExpr = Expression.Convert(newExpr, placeholder.Type);
-						}
-
-						return newExpr;
-					}
-
-					if (placeholder.Path is MemberExpression me && me.Expression?.Type == toPath.Type)
-					{
-						var newExpr = (Expression)Expression.MakeMemberAccess(toPath, me.Member);
-						if (placeholder.Type != newExpr.Type)
-						{
-							newExpr = Expression.Convert(newExpr, placeholder.Type);
-						}
-
-						return newExpr;
-					}
-
-					return RemapToNewPath(builder, placeholder.TrackingPath, toPath, flags)!;
-				}
-
-				case BinaryExpression binary when toPath.Type != binary.Type:
-				{
-					var left  = binary.Left;
-					var right = binary.Right;
-
-					if (left is SqlPlaceholderExpression)
-					{
-						left = RemapToNewPath(builder, left, toPath, flags);
-					}
-
-					if (right is SqlPlaceholderExpression)
-					{
-						right = RemapToNewPath(builder, right, toPath, flags);
-					}
-
-					if (left.Type != right.Type)
-					{
-						var newLeft  = left.UnwrapConvert();
-						var newRight = right.UnwrapConvert();
-
-						if (newLeft.Type != newRight.Type)
-						{
-							if (!ReferenceEquals(left, newLeft))
-								newLeft = Expression.Convert(newLeft, newRight.Type);
-							else
-								newRight = Expression.Convert(newRight, newLeft.Type);
-						}
-
-						left = newLeft;
-						right = newRight;
-					}
-
-					return binary.Update(left, binary.Conversion, right);
-				}
-
-				case ConditionalExpression conditional:
-				{
-					var newTest  = RemapToNewPath(builder, conditional.Test,    toPath, flags);
-					var newTrue  = RemapToNewPath(builder, conditional.IfTrue,  toPath, flags);
-					var newFalse = RemapToNewPath(builder, conditional.IfFalse, toPath, flags);
-
-					if (newTrue.Type != expression.Type)
-						newTrue = Expression.Convert(newTrue, expression.Type);
-
-					if (newFalse.Type != expression.Type)
-						newFalse = Expression.Convert(newFalse, expression.Type);
-
-					return conditional.Update(newTest, newTrue, newFalse);
-				}
-
-				case { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked }:
-				{
-					var unary = (UnaryExpression)expression;
-					return unary.Update(RemapToNewPath(builder, unary.Operand, toPath, flags));
-				}
-
-				case MethodCallExpression mc:
-				{
-					return mc.Update(mc.Object, mc.Arguments.Select(a => RemapToNewPath(builder, a, toPath, flags)));
-				}
-
-				case SqlAdjustTypeExpression adjust:
-				{
-					return adjust.Update(RemapToNewPath(builder, adjust.Expression, toPath, flags));
-				}
-
-				case SqlEagerLoadExpression eager:
-					return eager;
-
-				case DefaultExpression or DefaultValueExpression:
-					return expression;
-			}
-
-			if (flags.IsExpression())
-			{
-				if (expression is DefaultValueExpression)
-				{
-					return expression;
-				}
-
-				if (!expression.Type.IsValueType)
-				{
-					if (expression is DefaultExpression)
-					{
-						return expression;
-					}
-
-					if (expression is ConstantExpression constant && constant.Value == null)
-					{
-						return expression;
-					}
-				}
-			}
-
-			return toPath;
 		}
 
 		#region ReplaceContext
@@ -885,6 +794,26 @@ namespace LinqToDB.Internal.Linq.Builder
 				return UnwrapDefaultIfEmpty(defaultIfEmptyExpression.InnerExpression);
 
 			return expression;
+		}
+
+		/// <summary>
+		/// Whether the expression projects a constructed object, seen through a <c>Convert</c> / <c>ConvertChecked</c>
+		/// chain carrying no conversion operator, or a <c>SqlAdjustTypeExpression</c>. A set operation unifies branch
+		/// projections of differing but assignable types by converting one of them, so a branch is a constructor with
+		/// a conversion in front of it as often as a bare one. A <c>TypeAs</c> is <b>not</b> one of the node kinds
+		/// seen through here - it is rewritten into a conversion earlier, while the projection is built.
+		/// </summary>
+		public static bool IsConstructorBranch(Expression expression)
+		{
+			return IsConstructorBranch(expression, out _);
+		}
+
+		/// <inheritdoc cref="IsConstructorBranch(Expression)"/>
+		public static bool IsConstructorBranch(Expression expression, [NotNullWhen(true)] out SqlGenericConstructorExpression? constructor)
+		{
+			constructor = expression.UnwrapConvert() as SqlGenericConstructorExpression;
+
+			return constructor != null;
 		}
 
 		public static Expression UnwrapProxy(Expression expression)

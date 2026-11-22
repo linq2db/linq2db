@@ -124,6 +124,11 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			return new SybaseIdentifierService();
 		}
 
+		protected override IDmlService CreateDmlService()
+		{
+			return new SybaseDmlService();
+		}
+
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
 			return new SybaseSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);

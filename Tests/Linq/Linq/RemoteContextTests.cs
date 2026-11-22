@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
@@ -9,9 +13,17 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Internal.DataProvider.SQLite;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Mapping;
 using LinqToDB.Remote;
+using LinqToDB.Remote.SignalR;
+
+using Microsoft.AspNetCore.SignalR.Client;
 
 using NUnit.Framework;
+
+using Shouldly;
+
+using Tests.Model.Remote.SignalR;
 
 namespace Tests.Linq
 {
@@ -190,6 +202,480 @@ namespace Tests.Linq
 			foreach (var flag in originalFlags.CustomFlags)
 			{
 				Assert.That(remoteFlags.CustomFlags, Does.Contain(flag));
+			}
+		}
+
+		// The remote runner obtains its client lazily and must dispose it, once per runner. It used to assign
+		// _client = GetClient() unconditionally on every execute, so a runner that executed twice overwrote -
+		// and leaked - the first client; InsertOrReplace's two-query plan was the shape that drove it.
+		// That plan is gone: the UPDATE-then-INSERT emulation is now rebuilt server-side from the scenario
+		// (DmlServiceBase.BuildInsertOrUpdateScenario), so one operation is one execute and no product path
+		// puts two executes on one runner. Counting creates against disposes over two operations still catches
+		// a runner that fails to dispose, but it can no longer tell `=` from `??=`.
+		[Test]
+		public async Task RemoteRunnerDisposesEveryClientItObtained()
+		{
+			// A file, not ":memory:": linq2db opens and closes a connection per query, and an unshared
+			// in-memory SQLite database dies with the connection that created it, taking the table with it.
+			var databasePath = Path.Combine(Path.GetTempPath(), $"linq2db-remote-client-lifetime-{Guid.NewGuid():N}.sqlite");
+
+			try
+			{
+				// SQLite has a native upsert, and with it InsertOrReplace compiles to a single statement.
+				// Turning the flag off selects the UPDATE-then-INSERT emulation instead, which is the shape
+				// every provider without native support (Access among them) really uses.
+				var provider = new NoNativeUpsertSqliteProvider();
+
+				await using var backend = new DataConnection(new DataOptions()
+					.UseConnectionString($"Data Source={databasePath}")
+					.UseDataProvider(provider));
+
+				await backend.CreateTableAsync<ClientLifetimeEntity>();
+
+				await using var context = new CountingRemoteDataContext(backend);
+
+				// Two operations, so more than one runner obtains a client: the insert branch, then the
+				// update branch against the row it just wrote.
+				await context.InsertOrReplaceAsync(new ClientLifetimeEntity { Id = 1, Value = "first"  });
+				await context.InsertOrReplaceAsync(new ClientLifetimeEntity { Id = 1, Value = "second" });
+
+				context.ShouldSatisfyAllConditions(
+					c => c.NonQueryExecutions.ShouldBe(2,                     "both InsertOrReplace operations must reach the backend - the test no longer exercises the path it was written for"),
+					c => c.ClientsCreated    .ShouldBeGreaterThanOrEqualTo(2, "each runner obtains its own client - with fewer there is nothing to leak and nothing to assert"),
+					c => c.ClientsDisposed   .ShouldBe(c.ClientsCreated,      "every client the runner obtained must be disposed"));
+			}
+			finally
+			{
+				try
+				{
+					// Scoped to this database's pool - the suite runs provider lanes in parallel, and
+					// ClearAllPools would drop every other SQLite pool in the process along with it.
+					using (var pooled = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={databasePath}"))
+						Microsoft.Data.Sqlite.SqliteConnection.ClearPool(pooled);
+
+					File.Delete(databasePath);
+				}
+				catch
+				{
+					// best-effort: a temp file left behind is not worth failing the test over
+				}
+			}
+		}
+
+		// The mirror case: OwnsClient == false says the client belongs to the context, so neither the
+		// configuration preload nor the query runner may dispose it - one shared client has to survive every
+		// query made through the context, not just the first.
+		[Test]
+		public async Task RemoteRunnerLeavesAContextOwnedClientAlive()
+		{
+			var databasePath = Path.Combine(Path.GetTempPath(), $"linq2db-remote-shared-client-{Guid.NewGuid():N}.sqlite");
+
+			try
+			{
+				var provider = new NoNativeUpsertSqliteProvider();
+
+				await using var backend = new DataConnection(new DataOptions()
+					.UseConnectionString($"Data Source={databasePath}")
+					.UseDataProvider(provider));
+
+				await backend.CreateTableAsync<ClientLifetimeEntity>();
+
+				await using var context = new SharedClientRemoteDataContext(backend);
+
+				await context.InsertOrReplaceAsync(new ClientLifetimeEntity { Id = 1, Value = "first" });
+
+				context.ShouldSatisfyAllConditions(
+					c => c.NonQueryExecutions.ShouldBe(1, "the InsertOrReplace did not reach the backend - the test no longer exercises the path it was written for"),
+					c => c.ClientsCreated    .ShouldBe(1, "the one shared client must be handed to every caller"),
+					c => c.ClientsDisposed   .ShouldBe(0, "a client the context owns must outlive the runner that used it"));
+			}
+			finally
+			{
+				try
+				{
+					// Scoped to this database's pool - the suite runs provider lanes in parallel, and
+					// ClearAllPools would drop every other SQLite pool in the process along with it.
+					using (var pooled = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={databasePath}"))
+						Microsoft.Data.Sqlite.SqliteConnection.ClearPool(pooled);
+
+					File.Delete(databasePath);
+				}
+				catch
+				{
+					// best-effort: a temp file left behind is not worth failing the test over
+				}
+			}
+		}
+
+		[Table]
+		sealed class CombinedOptionRow
+		{
+			[PrimaryKey, Identity] public int     Id    { get; set; }
+			[Column              ] public string? Value { get; set; }
+		}
+
+		// The server's connection keeps the default options; the client sets both switches, and the server must run the
+		// insert the way the client asked.
+		[Test]
+		[UsesRemoteContext]
+		public void CombinedCommandOptionsReachTheServer(
+			[IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllMySqlConnector)] string context,
+			[Values] bool combined,
+			[Values] bool useDbBatch)
+		{
+			var executed = new List<string>();
+
+			using var db = GetServerContainer()
+				.CreateContext(
+					(_, o) => o
+						.UseConfiguration(context)
+						.UseCombinedCommands(combined)
+						.UseDbBatch(useDbBatch),
+					(configuration, _) => new DataConnection(new DataOptions()
+						.UseConfiguration(configuration)
+						.UseTracing(TraceLevel.Info, info =>
+						{
+							if (info.TraceInfoStep == TraceInfoStep.BeforeExecute
+								&& info.Operation is TraceOperation.ExecuteNonQuery or TraceOperation.ExecuteScalar or TraceOperation.ExecuteReader)
+								executed.Add(info.SqlText);
+						})));
+
+			using var table = db.CreateLocalTable<CombinedOptionRow>();
+
+			executed.Clear();
+
+			var id       = db.InsertWithInt32Identity(new CombinedOptionRow { Value = "a" });
+			var commands = executed.ToList();
+			var row      = table.Single(r => r.Id == id);
+
+			row.Value.ShouldBe("a");
+
+#if SUPPORTS_DBBATCH
+			var batch = combined && useDbBatch && context.IsAnyOf(TestProvName.AllMySqlConnector);
+#else
+			var batch = false;
+#endif
+
+			commands.Count.ShouldBe(combined ? 1 : 2);
+			commands
+				.Any(c => c.Contains("-- Command 1", StringComparison.Ordinal))
+				.ShouldBe(batch);
+		}
+
+		// The server's connection turns DbBatch off; the client asks for it. The insert follows the client's options,
+		// so it renders as a DbBatch, and the server must still be able to execute what it rendered.
+		[Test]
+		[UsesRemoteContext]
+		public void CombinedCommandClientDbBatchRunsWhenServerDisablesIt(
+			[IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllMySqlConnector)] string context)
+		{
+			var executed = new List<string>();
+
+			using var db = GetServerContainer()
+				.CreateContext(
+					(_, o) => o
+						.UseConfiguration(context)
+						.UseCombinedCommands(true)
+						.UseDbBatch(true),
+					(configuration, _) => new DataConnection(new DataOptions()
+						.UseConfiguration(configuration)
+						.UseDbBatch(false)
+						.UseTracing(TraceLevel.Info, info =>
+						{
+							if (info.TraceInfoStep == TraceInfoStep.BeforeExecute
+								&& info.Operation is TraceOperation.ExecuteNonQuery or TraceOperation.ExecuteScalar or TraceOperation.ExecuteReader)
+								executed.Add(info.SqlText);
+						})));
+
+			using var table = db.CreateLocalTable<CombinedOptionRow>();
+
+			executed.Clear();
+
+			var id       = db.InsertWithInt32Identity(new CombinedOptionRow { Value = "a" });
+			var commands = executed.ToList();
+			var row      = table.Single(r => r.Id == id);
+
+			row.Value.ShouldBe("a");
+
+#if SUPPORTS_DBBATCH
+			var batch = context.IsAnyOf(TestProvName.AllMySqlConnector);
+#else
+			var batch = false;
+#endif
+
+			commands.Count.ShouldBe(1);
+			commands
+				.Any(c => c.Contains("-- Command 1", StringComparison.Ordinal))
+				.ShouldBe(batch);
+		}
+
+		[Table]
+		sealed class ConfigurationScopedColumnRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 3)]
+			[Column(Configuration = ProviderName.ClickHouse)]
+			public DateTime Value { get; set; }
+		}
+
+		// The server re-resolves every deserialized column against a mapping schema of its own, so a
+		// configuration-scoped attribute has to survive that step exactly as it does in a direct context.
+		[Test]
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "10:11:12.1234560")]
+		public void ConfigurationScopedColumnAttributeAppliesOnTheServer([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			var value = new DateTime(2026, 6, 1, 10, 11, 12).AddTicks(1234567);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<ConfigurationScopedColumnRow>();
+
+			db.Insert(new ConfigurationScopedColumnRow { Id = 1, Value = value });
+
+			t.Single().Value.ShouldBe(value);
+		}
+
+		// With disposeHubConnection: true the caller hands the connection over, so the context disposes it.
+		[Test]
+		public async Task SignalRContextDisposesAnOwnedHubConnection()
+		{
+			var hubConnection = BuildUnstartedHubConnection();
+
+			await new SignalRDataContext(hubConnection, disposeHubConnection: true).DisposeAsync();
+
+			await Assert.ThatAsync(() => hubConnection.StartAsync(), Throws.TypeOf<ObjectDisposedException>());
+		}
+
+		[Test]
+		public async Task SignalRContextDisposesAnOwnedHubConnection_SyncDispose()
+		{
+			var hubConnection = BuildUnstartedHubConnection();
+
+			new SignalRDataContext(hubConnection, disposeHubConnection: true).Dispose();
+
+			await Assert.ThatAsync(() => hubConnection.StartAsync(), Throws.TypeOf<ObjectDisposedException>());
+		}
+
+		// A hub connection is long-lived and meant to be shared: SignalRDataContext(HubConnection) leaves it to
+		// the caller, so disposing one context must not break another context on the same connection.
+		[Test]
+		public async Task SignalRContextLeavesACallerSuppliedHubConnectionAlone([Values] bool syncDispose)
+		{
+			var hubConnection = BuildUnstartedHubConnection();
+
+			var first  = new SignalRDataContext(hubConnection);
+			var second = new SignalRDataContext(hubConnection, disposeHubConnection: false);
+
+			if (syncDispose)
+			{
+				first.Dispose();
+				second.Dispose();
+			}
+			else
+			{
+				await first.DisposeAsync();
+				await second.DisposeAsync();
+			}
+
+			// Nothing listens on the port, so starting fails either way - what matters is that it fails for
+			// that reason and not because a context disposed the connection underneath its owner.
+			var error = await Shouldly.Should.ThrowAsync<Exception>(() => hubConnection.StartAsync());
+
+			error.ShouldNotBeOfType<ObjectDisposedException>();
+
+			await hubConnection.DisposeAsync();
+		}
+
+		// The SignalR test context leases a pooled hub connection for its lifetime. A client it handed out
+		// must stop working when the context is disposed, rather than reach the connection that the pool
+		// gives to the next context.
+		[Test]
+		public async Task SignalRTestContextClientStopsAtDispose([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			if (!context.IsRemote()) Assert.Ignore("Skip non-remote context");
+
+			ILinqService client;
+			string?      configuration;
+
+			using (var db = (TestSignalRDataContext)GetDataContext(context, transport: RemoteTransport.SignalR))
+			{
+				client        = db.LeasedClient;
+				configuration = db.ConfigurationString;
+
+				_ = await client.GetInfoAsync(configuration);
+			}
+
+			// a disposed HubConnection throws the same type; only the lease's refusal names the context
+			await Assert.ThatAsync(
+				() => client.GetInfoAsync(configuration),
+				Throws.TypeOf<ObjectDisposedException>().With.Property(nameof(ObjectDisposedException.ObjectName)).Contains(nameof(TestSignalRDataContext)));
+		}
+
+		[Test]
+		public async Task SignalRTestContextReusesConnectionAfterCleanDispose([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			if (!context.IsRemote()) Assert.Ignore("Skip non-remote context");
+
+			HubConnection connection;
+
+			await using (var db = (TestSignalRDataContext)GetDataContext(context, transport: RemoteTransport.SignalR))
+			{
+				connection = db.HubConnection;
+
+				_ = await db.LeasedClient.GetInfoAsync(db.ConfigurationString);
+			}
+
+			await using (var db = (TestSignalRDataContext)GetDataContext(context, transport: RemoteTransport.SignalR))
+			{
+				Assert.That(db.HubConnection, Is.SameAs(connection));
+			}
+		}
+
+		[Test]
+		public async Task SignalRTestContextDiscardsConnectionAfterFailedCall([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			if (!context.IsRemote()) Assert.Ignore("Skip non-remote context");
+
+			HubConnection connection;
+
+			using (var db = (TestSignalRDataContext)GetDataContext(context, transport: RemoteTransport.SignalR))
+			{
+				connection = db.HubConnection;
+
+				await Assert.ThatAsync(() => db.LeasedClient.ExecuteNonQueryAsync(db.ConfigurationString, "not a query"), Throws.Exception);
+			}
+
+			using (var db = (TestSignalRDataContext)GetDataContext(context, transport: RemoteTransport.SignalR))
+			{
+				Assert.That(db.HubConnection, Is.Not.SameAs(connection));
+			}
+
+			await Assert.ThatAsync(() => connection.StartAsync(), Throws.TypeOf<ObjectDisposedException>());
+		}
+
+		// The client constructor takes a client the caller built, so the connection inside it stays the
+		// caller's: disposing the context must not touch it.
+		[Test]
+		public async Task SignalRContextLeavesACallerSuppliedClientAlone()
+		{
+			var hubConnection = BuildUnstartedHubConnection();
+
+			await new SignalRDataContext(new SignalRLinqServiceClient(hubConnection)).DisposeAsync();
+
+			// Nothing listens on the port, so starting fails either way - what matters is that it fails for
+			// that reason and not because the connection was disposed underneath its owner.
+			var error = await Shouldly.Should.ThrowAsync<Exception>(() => hubConnection.StartAsync());
+
+			Assert.That(error, Is.Not.InstanceOf<ObjectDisposedException>());
+		}
+
+		// Never started and pointed at a port nothing listens on: these tests only ever observe whether the
+		// connection was disposed, so no server is needed.
+		static HubConnection BuildUnstartedHubConnection()
+			=> new HubConnectionBuilder().WithUrl("http://localhost:1/linq2db").Build();
+
+		[Table]
+		sealed class ClientLifetimeEntity
+		{
+			[PrimaryKey] public int     Id    { get; set; }
+			[Column]     public string? Value { get; set; }
+		}
+
+		sealed class NoNativeUpsertSqliteProvider : SQLiteDataProvider
+		{
+			public NoNativeUpsertSqliteProvider() : base("SQLite.NoNativeUpsert", SQLiteProvider.Microsoft)
+			{
+				SqlProviderFlags.IsInsertOrUpdateSupported = false;
+			}
+		}
+
+		// Serves the remote protocol in-process, straight off a real database, so the test exercises the
+		// actual runner/serialization path rather than a mock of it. Only the client's lifetime is
+		// instrumented.
+		// Hands out one client for the whole context and declares it context-owned, so neither the preload nor
+		// the runner disposes it.
+		sealed class SharedClientRemoteDataContext : CountingRemoteDataContext
+		{
+			ILinqService? _client;
+
+			public SharedClientRemoteDataContext(DataConnection backend) : base(backend, "Test.SharedClientRemote")
+			{
+			}
+
+			protected override bool OwnsClient => false;
+
+			protected override ILinqService GetClient() => _client ??= base.GetClient();
+		}
+
+		class CountingRemoteDataContext : RemoteDataContextBase
+		{
+			readonly DataOptions _backendOptions;
+			readonly string      _configuration;
+
+			// RemoteDataContextBase caches ConfigurationInfo process-wide keyed on ConfigurationString, so a
+			// context left without one writes SQLite-with-upsert-disabled under the key every configuration-less
+			// remote context shares. The name resolves to nothing - BackendLinqService ignores it.
+			public CountingRemoteDataContext(DataConnection backend, string configuration = "Test.CountingRemote")
+				: base(new DataOptions().UseConfiguration(configuration))
+			{
+				_backendOptions = backend.Options;
+				_configuration  = configuration;
+			}
+
+			public int ClientsCreated     { get; private set; }
+			public int ClientsDisposed    { get; private set; }
+			public int NonQueryExecutions { get; private set; }
+
+			protected override string ContextIDPrefix => _configuration;
+
+			protected override ILinqService GetClient()
+			{
+				ClientsCreated++;
+
+				return new CountingClient(this, new BackendLinqService(_backendOptions) { AllowUpdates = true });
+			}
+
+			// LinqService's own CreateDataContext builds a DataConnection from a *configuration name*; this
+			// test has no registered configuration, only an explicit set of options, so it has to be pointed
+			// at them directly.
+			sealed class BackendLinqService : LinqService
+			{
+				readonly DataOptions _options;
+
+				public BackendLinqService(DataOptions options)
+				{
+					_options = options;
+				}
+
+				public override DataConnection CreateDataContext(string? configuration) => new (_options);
+			}
+
+			sealed class CountingClient : ILinqService, IDisposable
+			{
+				readonly CountingRemoteDataContext _owner;
+				readonly ILinqService              _inner;
+
+				public CountingClient(CountingRemoteDataContext owner, ILinqService inner)
+				{
+					_owner = owner;
+					_inner = inner;
+				}
+
+				public string? RemoteClientTag { get => _inner.RemoteClientTag; set => _inner.RemoteClientTag = value; }
+
+				public void Dispose() => _owner.ClientsDisposed++;
+
+				public Task<int> ExecuteNonQueryAsync(string? configuration, string queryData, CancellationToken cancellationToken = default)
+				{
+					_owner.NonQueryExecutions++;
+
+					return _inner.ExecuteNonQueryAsync(configuration, queryData, cancellationToken);
+				}
+
+				public Task<LinqServiceInfo> GetInfoAsync        (string? configuration, CancellationToken cancellationToken = default) => _inner.GetInfoAsync(configuration, cancellationToken);
+				public Task<string?>         ExecuteScalarAsync  (string? configuration, string queryData, CancellationToken cancellationToken = default) => _inner.ExecuteScalarAsync(configuration, queryData, cancellationToken);
+				public Task<string>          ExecuteReaderAsync  (string? configuration, string queryData, CancellationToken cancellationToken = default) => _inner.ExecuteReaderAsync(configuration, queryData, cancellationToken);
+				public Task<int>             ExecuteBatchAsync   (string? configuration, string queryData, CancellationToken cancellationToken = default) => _inner.ExecuteBatchAsync(configuration, queryData, cancellationToken);
 			}
 		}
 	}

@@ -127,7 +127,7 @@ namespace Tests.Linq
 						where t.Flags.HasFlag(StringMappedFlagsEnum.Flag1)
 						select t;
 
-			Assert.Throws<LinqToDBException>(() => query.ToArray());
+			Assert.That(() => query.ToArray(), Throws.TypeOf<LinqToDBException>());
 		}
 
 		[Flags]
@@ -168,7 +168,7 @@ namespace Tests.Linq
 						where t.Flags.HasFlag(ConverterMappedFlagsEnum.Flag1)
 						select t;
 
-			Assert.Throws<LinqToDBException>(() => query.ToArray());
+			Assert.That(() => query.ToArray(), Throws.TypeOf<LinqToDBException>());
 		}
 
 		[Test]
@@ -183,7 +183,7 @@ namespace Tests.Linq
 						where value.HasFlag(t.Flags)
 						select t;
 
-			Assert.Throws<LinqToDBException>(() => query.ToArray());
+			Assert.That(() => query.ToArray(), Throws.TypeOf<LinqToDBException>());
 		}
 
 		static int Count1(Parent p) { return p.Children.Count(c => c.ChildID > 0); }
@@ -222,6 +222,59 @@ namespace Tests.Linq
 
 			using var db = GetDataContext(context, new MappingSchema(nameof(MapMember3)));
 			AreEqual(Parent.Select(p => Count3(p, n)), db.Parent.Select(p => Count3(p, n)));
+		}
+
+		class MapMemberBaseCalculator
+		{
+			protected readonly int Offset = 100;
+
+			public long Calc(long value) => value + Offset;
+		}
+
+		sealed class MapMemberDerivedCalculator : MapMemberBaseCalculator
+		{
+			public int Calc(int value) => value + Offset;
+		}
+
+		[Test]
+		public void MapMemberOnBaseOverloadWithWiderParameter([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			Expressions.MapMember<MapMemberBaseCalculator,long,long>(nameof(MapMemberOnBaseOverloadWithWiderParameter), (c, v) => c.Calc(v), (c, v) => v + 100);
+
+			var calculator = new MapMemberDerivedCalculator();
+
+			using var db = GetDataContext(context, new MappingSchema(nameof(MapMemberOnBaseOverloadWithWiderParameter)));
+
+			var ids = db.Parent
+				.Where(p => calculator.Calc(p.ParentID) == 101)
+				.Select(p => p.ParentID)
+				.ToArray();
+
+			ids.ShouldBe([1]);
+		}
+
+		abstract class SqlExpressionBaseCalculator
+		{
+			[Sql.Expression("{0} + 100", ServerSideOnly = true)]
+			public static long Calc(long value) => throw new ServerSideOnlyException(nameof(Calc));
+		}
+
+		sealed class SqlExpressionDerivedCalculator : SqlExpressionBaseCalculator
+		{
+			public static int Calc(int value) => throw new ServerSideOnlyException(nameof(Calc));
+		}
+
+		[Test]
+		public void SqlExpressionOnBaseOverloadWithWiderParameter([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var ids = db.Parent
+				.Where(p => SqlExpressionDerivedCalculator.Calc(p.ParentID) == 101)
+				.Select(p => p.ParentID)
+				.ToArray();
+
+			ids.ShouldBe([1]);
 		}
 
 		[ExpressionMethod(nameof(Count4Expression))]
@@ -323,7 +376,7 @@ namespace Tests.Linq
 		[ExpressionMethod(nameof(Expression8))]
 		static IQueryable<Parent> GetParent(ITestDataContext db, Child ch)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(GetParent));
 		}
 
 		static Expression<Func<ITestDataContext, Child, IQueryable<Parent>>> Expression8()
@@ -394,7 +447,7 @@ namespace Tests.Linq
 		[ExpressionMethod("GetBoolExpression1")]
 		static bool GetBool1<T>(T obj)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(GetBool1));
 		}
 
 		static Expression<Func<T,bool>> GetBoolExpression1<T>()
@@ -418,7 +471,7 @@ namespace Tests.Linq
 		[ExpressionMethod("GetBoolExpression2_{0}")]
 		static bool GetBool2<T>(T obj)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(GetBool2));
 		}
 
 		static Expression<Func<Parent,bool>> GetBoolExpression2_Parent()
@@ -443,7 +496,7 @@ namespace Tests.Linq
 			[ExpressionMethod(nameof(GetBoolExpression3))]
 			public static bool GetBool3(Parent? obj)
 			{
-				throw new InvalidOperationException();
+				throw new ServerSideOnlyException(nameof(GetBool3));
 			}
 
 			static Expression<Func<Parent?,bool>> GetBoolExpression3()
@@ -467,7 +520,7 @@ namespace Tests.Linq
 		[ExpressionMethod(nameof(AssociationExpression))]
 		static IEnumerable<GrandChild> GrandChildren(Parent p)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(GrandChildren));
 		}
 
 		static Expression<Func<Parent,IEnumerable<GrandChild>>> AssociationExpression()
@@ -828,13 +881,13 @@ namespace Tests.Linq
 		[Sql.Expression("COALESCE({0}, {0})", ServerSideOnly = true)]
 		private static int? Noop(int? value)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(Noop));
 		}
 
 		[ExpressionMethod(nameof(Func2Expr))]
 		private static int? FirstIfNullOrSecondAsNumber(string? value, string intValue)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(FirstIfNullOrSecondAsNumber));
 		}
 
 		private static Expression<Func<string, string, int?>> Func2Expr()
@@ -845,7 +898,7 @@ namespace Tests.Linq
 		[Sql.Expression("CASE WHEN {0} IS NULL THEN NULL ELSE CAST({1} AS INT) END", ServerSideOnly = true)]
 		private static int? Func3(string value, string intValue)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(Func3));
 		}
 
 		#region issue 2688
@@ -887,7 +940,7 @@ namespace Tests.Linq
 		[ExpressionMethod(nameof(GetTernaryExpressionValue1Expr))]
 		private static int? GetTernaryExpressionValue1(int? value)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(GetTernaryExpressionValue1));
 		}
 
 		private static Expression<Func<int?, int?>> GetTernaryExpressionValue1Expr()
@@ -899,7 +952,7 @@ namespace Tests.Linq
 		[ExpressionMethod(nameof(GetTernaryExpressionValue2Expr))]
 		private static int? GetTernaryExpressionValue2(int? value)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(GetTernaryExpressionValue2));
 		}
 
 		private static Expression<Func<int?, int?>> GetTernaryExpressionValue2Expr()
@@ -911,7 +964,7 @@ namespace Tests.Linq
 		[ExpressionMethod(nameof(GetTernaryExpressionValue3Expr))]
 		private static int? GetTernaryExpressionValue3(int? value)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(GetTernaryExpressionValue3));
 		}
 
 		private static Expression<Func<int?, int?>> GetTernaryExpressionValue3Expr()
@@ -923,7 +976,7 @@ namespace Tests.Linq
 		[ExpressionMethod(nameof(GetTernaryExpressionValue4Expr))]
 		private static int? GetTernaryExpressionValue4(int? value)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(GetTernaryExpressionValue4));
 		}
 
 		private static Expression<Func<int?, int?>> GetTernaryExpressionValue4Expr()
@@ -935,7 +988,7 @@ namespace Tests.Linq
 		[ExpressionMethod(nameof(GetTernaryExpressionValue5Expr))]
 		private static int? GetTernaryExpressionValue5(int? value)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(GetTernaryExpressionValue5));
 		}
 
 		private static Expression<Func<int?, int?>> GetTernaryExpressionValue5Expr()
@@ -948,7 +1001,7 @@ namespace Tests.Linq
 		[Sql.Function("COALESCE", ServerSideOnly = true)]
 		private static int GetTernaryExpressionValueFunction(int value, int defaultValue)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(GetTernaryExpressionValueFunction));
 		}
 		#endregion
 
@@ -984,7 +1037,7 @@ namespace Tests.Linq
 		private static TJsonProp JsonExtractPathText<TColumn, TJsonProp>(
 			TColumn field,
 			Expression<Func<TColumn, TJsonProp>> path)
-			=> throw new InvalidOperationException();
+			=> throw new ServerSideOnlyException(nameof(JsonExtractPathText));
 
 		private static Expression<Func<TColumn, Expression<Func<TColumn, TJsonProp>>, TJsonProp>>
 			JsonExtractPathExpression<TColumn, TJsonProp>()
@@ -994,7 +1047,7 @@ namespace Tests.Linq
 
 		[Sql.Expression("{0}::json #>> {1}", ServerSideOnly = true, IsPredicate = true)]
 		private static TJsonProp JsonExtractPathText<TColumn, TJsonProp>(TColumn left, string right)
-			=> throw new InvalidOperationException();
+			=> throw new ServerSideOnlyException(nameof(JsonExtractPathText));
 
 		private static string JsonPath<TColumn, TJsonProp>(Expression<Func<TColumn, TJsonProp>> extractor) => "'{json, text}'";
 		#endregion
@@ -1094,16 +1147,16 @@ namespace Tests.Linq
 		}
 
 		[Sql.Expression("{0}", ServerSideOnly = true, IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
-		private static int? Function2(int? Value) => throw new InvalidOperationException();
+		private static int? Function2(int? Value) => throw new ServerSideOnlyException(nameof(Function2));
 
 		[ExpressionMethod(nameof(Function1LeftExpr))]
-		private static int? Function1Left(int? value) => throw new InvalidOperationException();
+		private static int? Function1Left(int? value) => throw new ServerSideOnlyException(nameof(Function1Left));
 
 		[ExpressionMethod(nameof(Function1RightExpr))]
-		private static int? Function1Right(int? value) => throw new InvalidOperationException();
+		private static int? Function1Right(int? value) => throw new ServerSideOnlyException(nameof(Function1Right));
 
 		[Sql.Expression("CAST(N'SHOULD NOT BE CALLED' AS INT)", ServerSideOnly = true)]
-		private static int Fail(int value) => throw new InvalidOperationException();
+		private static int Fail(int value) => throw new ServerSideOnlyException(nameof(Fail));
 
 		private static Expression<Func<int?, int?>> Function1LeftExpr()
 		{
@@ -1139,7 +1192,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "Tests regression introduced in 3.5.2")]
-		public void ComparisonTest2([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void ComparisonTest2([DataSources(TestProvName.AllNativeAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			var left  = GetQuery(db, 0);
@@ -1182,7 +1235,7 @@ namespace Tests.Linq
 		{
 			[ExpressionMethod(nameof(ToServiceProjectionExpr))]
 			public static Issue4613ServiceProjection ToServiceProjection(Issue4613Service serv)
-				=> throw new NotImplementedException();
+				=> throw new ServerSideOnlyException(nameof(ToServiceProjection));
 
 			static Expression<Func<Issue4613Service, Issue4613ServiceProjection>> ToServiceProjectionExpr()
 				=> (serv) => new Issue4613ServiceProjection { IdContract = serv.IdContract };
@@ -1215,9 +1268,7 @@ namespace Tests.Linq
 
 		static class Issue5040
 		{
-			public interface IBaseEntity
-			{
-			}
+			public interface IBaseEntity;
 
 			public interface IEntityWithPermissions : IBaseEntity
 			{

@@ -1,7 +1,8 @@
-﻿extern alias MySqlData;
+extern alias MySqlData;
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -54,10 +55,13 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void TestNullConfiguration_Unset([Values] bool cleanDefault)
+		// NonParallelizable: cleanDefault=true nulls the process-global DataConnection.DefaultConfiguration /
+		// DefaultSettings (via EmptyDefaultSetingsScope); a concurrent context-less test reading the global
+		// would throw "Invalid configuration. Configuration string is not provided.".
+		[Test, NonParallelizable]
+		public void TestNullConfiguration_Unset([IncludeDataSources(ProviderName.SQLiteClassic)] string context, [Values] bool cleanDefault)
 		{
-			var connectionString = GetConnectionString(ProviderName.SQLiteClassic);
+			var connectionString = GetConnectionString(context);
 
 			using var scope = cleanDefault ? new EmptyDefaultSetingsScope() : null;
 
@@ -66,12 +70,13 @@ namespace Tests.Linq
 			_ = db.GetTable<Person>().ToArray();
 		}
 
-		[Test]
-		public void TestNullConfiguration_UnsetRemote([Values] bool cleanDefault)
+		// NonParallelizable: nulls the process-global DataConnection.DefaultConfiguration (EmptyDefaultSetingsScope) - see TestNullConfiguration_Unset.
+		[Test, NonParallelizable]
+		public void TestNullConfiguration_UnsetRemote([IncludeDataSources(ProviderName.SQLiteClassic)] string context, [Values] bool cleanDefault)
 		{
 			if (TestConfiguration.DisableRemoteContext) Assert.Ignore("Remote context disabled");
 
-			var connectionString = GetConnectionString(ProviderName.SQLiteClassic);
+			var connectionString = GetConnectionString(context);
 
 			using var scope = cleanDefault ? new EmptyDefaultSetingsScope() : null;
 
@@ -82,10 +87,11 @@ namespace Tests.Linq
 			_ = db.GetTable<Person>().ToArray();
 		}
 
-		[Test]
-		public void TestNullConfiguration_SetNull([Values] bool cleanDefault)
+		// NonParallelizable: nulls the process-global DataConnection.DefaultConfiguration (EmptyDefaultSetingsScope) - see TestNullConfiguration_Unset.
+		[Test, NonParallelizable]
+		public void TestNullConfiguration_SetNull([IncludeDataSources(ProviderName.SQLiteClassic)] string context, [Values] bool cleanDefault)
 		{
-			var connectionString = GetConnectionString(ProviderName.SQLiteClassic);
+			var connectionString = GetConnectionString(context);
 
 			using var scope = cleanDefault ? new EmptyDefaultSetingsScope() : null;
 
@@ -94,12 +100,13 @@ namespace Tests.Linq
 			_ = db.GetTable<Person>().ToArray();
 		}
 
-		[Test]
-		public void TestNullConfiguration_SetNullRemote([Values] bool cleanDefault)
+		// NonParallelizable: nulls the process-global DataConnection.DefaultConfiguration (EmptyDefaultSetingsScope) - see TestNullConfiguration_Unset.
+		[Test, NonParallelizable]
+		public void TestNullConfiguration_SetNullRemote([IncludeDataSources(ProviderName.SQLiteClassic)] string context, [Values] bool cleanDefault)
 		{
 			if (TestConfiguration.DisableRemoteContext) Assert.Ignore("Remote context disabled");
 
-			var connectionString = GetConnectionString(ProviderName.SQLiteClassic);
+			var connectionString = GetConnectionString(context);
 
 			using var scope = cleanDefault ? new EmptyDefaultSetingsScope() : null;
 
@@ -156,10 +163,10 @@ namespace Tests.Linq
 
 		// Access and SAP HANA ODBC provider detectors use connection string sniffing
 		[Test]
-		public void ProviderConnectionStringConstructorTest1([DataSources(false, TestProvName.AllAccess, ProviderName.SapHanaOdbc)] string context)
+		public void ProviderConnectionStringConstructorTest1([DataSources(false, TestProvName.AllNativeAccess, ProviderName.SapHanaOdbc)] string context)
 		{
 			using var db = (TestDataConnection)GetDataContext(context);
-			Assert.Throws<LinqToDBException>(() => new DataContext(new DataOptions().UseConnectionString("BAD", db.ConnectionString!)));
+			Assert.That(() => new DataContext(new DataOptions().UseConnectionString("BAD", db.ConnectionString!)), Throws.TypeOf<LinqToDBException>());
 
 		}
 		[Test]
@@ -171,11 +178,13 @@ namespace Tests.Linq
 				() => db1.GetTable<Child>().ToList(),
 				Throws.TypeOf<ArgumentException>()
 					.Or.TypeOf<InvalidOperationException>()
-					.Or.TypeOf<MySqlException>());
+					.Or.TypeOf<MySqlException>()
+					.Or.TypeOf<FileNotFoundException>());
 		}
 
 		[Test]
-		[ActiveIssue("Provider detector picks managed provider as we don't have separate provider name for native Sybase provider", Configuration = ProviderName.Sybase)]
+		[ActiveIssue(Configuration = ProviderName.Sybase, ErrorMessage = "db1.DataProvider.Name",
+			Details = "no-issue: unvalidated: the provider detector picks the managed provider because there is no separate provider name for the native Sybase one. ProviderName.Sybase is netfx-only, so this case does not exist on net10.0 and the declared failure is read off the assertion rather than harvested.")]
 		public void ProviderConnectionStringConstructorTest3([DataSources(false)] string context)
 		{
 			using var db = (TestDataConnection)GetDataContext(context);

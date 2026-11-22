@@ -16,22 +16,28 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.SqlProvider
 {
-	public class SqlExpressionConvertVisitor : SqlQueryVisitor
+	/// <summary>
+	/// Lowers the SQL AST into provider-concrete form, and — by deriving from <see cref="SqlExpressionOptimizerVisitor"/> —
+	/// optimizes each node in the same traversal. Every <c>VisitXxx</c> here calls <c>base.VisitXxx</c> first, so a node's
+	/// children are visited and the node is optimized before it is lowered.
+	/// <para>
+	/// That is why the render pipeline needs only ONE pass: <see cref="OptimizationContext.OptimizeAndConvertAll"/> calls
+	/// <see cref="Convert"/> and nothing else. Optimization over the <b>un-lowered</b> AST (the rules that match abstract
+	/// nodes — nested case-conversion collapse, coalesce flattening, <c>SqlCompareToExpression</c>) already happened during
+	/// query build, in <c>SelectQueryOptimizerVisitor</c>.
+	/// </para>
+	/// </summary>
+	public class SqlExpressionConvertVisitor : SqlExpressionOptimizerVisitor
 	{
-		protected bool VisitQueries;
-
-		protected bool IsInsidePredicate { get; private set; }
-
 		protected OptimizationContext OptimizationContext = default!;
-		protected NullabilityContext  NullabilityContext  = default!;
-		protected ISqlExpressionFactory Factory => OptimizationContext.Factory;
 
-		protected EvaluationContext EvaluationContext => OptimizationContext.EvaluationContext;
-		protected DataOptions DataOptions => OptimizationContext.DataOptions;
-		protected MappingSchema MappingSchema => OptimizationContext.MappingSchema;
-		protected SqlProviderFlags SqlProviderFlags => OptimizationContext.SqlProviderFlags;
+		bool              _finishingDeferred;
+		FoldCopyVisitor? _foldCopyVisitor;
 
-		public SqlExpressionConvertVisitor(bool allowModify) : base(allowModify ? VisitMode.Modify : VisitMode.Transform, null)
+		protected ISqlExpressionFactory Factory          => OptimizationContext.Factory;
+		protected SqlProviderFlags      SqlProviderFlags => OptimizationContext.SqlProviderFlags;
+
+		public SqlExpressionConvertVisitor(bool allowModify) : base(allowModify)
 		{
 		}
 
@@ -40,18 +46,29 @@ namespace LinqToDB.Internal.SqlProvider
 		protected virtual bool SupportsDistinctAsExistsIntersect => false;
 		protected virtual bool SupportsNullIf => true;
 
-		public virtual IQueryElement Convert(OptimizationContext optimizationContext, NullabilityContext nullabilityContext, IQueryElement element, bool visitQueries)
+		/// <summary>
+		/// Whether a boolean SET value is always folded into a CASE, for a provider whose SET value cannot be a predicate.
+		/// </summary>
+		protected virtual bool ForceConvertSetValue => false;
+
+		/// <summary>
+		/// Optimize-and-lower entry point: the whole render-time pipeline in one traversal.
+		/// </summary>
+		public virtual IQueryElement Convert(OptimizationContext optimizationContext, NullabilityContext nullabilityContext, IQueryElement element)
 		{
 			Cleanup();
 
 			OptimizationContext = optimizationContext;
-			NullabilityContext = nullabilityContext;
-			VisitQueries = visitQueries;
-			SetTransformationInfo(optimizationContext.TransformationInfoConvert);
 
-			var newElement = ProcessElement(element);
+			InitState(
+				optimizationContext.EvaluationContext,
+				nullabilityContext,
+				optimizationContext.TransformationInfoConvert,
+				optimizationContext.DataOptions,
+				optimizationContext.MappingSchema,
+				visitQueries: true);
 
-			return newElement;
+			return ProcessElement(element);
 		}
 
 		public override void Cleanup()
@@ -59,43 +76,74 @@ namespace LinqToDB.Internal.SqlProvider
 			base.Cleanup();
 
 			OptimizationContext = default!;
-			NullabilityContext = default!;
-			VisitQueries = default;
-			IsInsidePredicate = false;
+			_finishingDeferred  = false;
 		}
 
-		[return: NotNullIfNotNull(nameof(element))]
-		public override IQueryElement? Visit(IQueryElement? element)
+		protected internal override IQueryElement VisitSqlValuesTable(SqlValuesTable element)
 		{
-			if (element == null)
-				return element;
-
-			var saveIsInsidePredicate = IsInsidePredicate;
-
-			if (element is not SqlNullabilityExpression and not ISqlPredicate)
+			// A client-enumerable values source (a MERGE source built from an in-memory sequence) defers its
+			// rows to render time (SqlValuesTable.BuildRows runs the value builders). Materialize them here in
+			// the whole-query convert - once execution parameter values are available - so the convert converts
+			// each value (e.g. parameterizes the query-parameter values the merge-source type check inspects)
+			// and the builder later renders already-converted rows without converting anything itself.
+			if (element.Rows == null && element.ValueBuilders != null && EvaluationContext.ParameterValues != null)
 			{
-				IsInsidePredicate = false;
+				var materialized = element.BuildRows(EvaluationContext).ToList();
+
+				switch (GetVisitMode(element))
+				{
+					case VisitMode.Modify:
+						element.Rows = materialized;
+						break;
+
+					case VisitMode.Transform:
+					{
+						var rows      = VisitListOfLists(materialized, VisitMode.Transform);
+						var source    = Visit(element.Source) as ISqlExpression;
+						var newFields = CopyFields(element.Fields);
+						var newTable  = new SqlValuesTable(source, element.ValueBuilders, newFields, rows);
+
+						return NotifyReplaced(newTable, element);
+					}
+				}
 			}
 
-			var newElement = base.Visit(element);
+			return base.VisitSqlValuesTable(element);
+		}
 
-			IsInsidePredicate = saveIsInsidePredicate;
+		// NOTE: the IsInsidePredicate save/restore that used to live in a Visit override here is inherited from
+		// SqlExpressionOptimizerVisitor.Visit — the two were byte-identical apart from the field name.
 
-			return newElement;
+		/// <summary>
+		/// The column's nullability for the value <paramref name="newExpression"/> its visit produced. The column still holds the
+		/// expression it had before the visit, so a conditional the visit collapsed to a non-null branch would otherwise keep
+		/// reporting the dropped NULL branch.
+		/// </summary>
+		bool CanColumnValueBeNull(SqlColumn column, ISqlExpression expression, ISqlExpression newExpression)
+		{
+			if (!column.CanBeNullable(NullabilityContext))
+				return false;
+
+			if (ReferenceEquals(newExpression, expression) || column.Parent == null || column.Parent.HasSetOperators)
+				return true;
+
+			return NullabilityContext.CanBeNullSource(column.Parent) == true || newExpression.CanBeNullable(NullabilityContext);
 		}
 
 		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
 		{
+			var saveDeferPredicateReduce = BeginDeferPredicateReduce();
 			var newElement = base.VisitSqlColumnExpression(column, expression);
+			DeferPredicateReduce = saveDeferPredicateReduce;
 
-			newElement = WrapBooleanExpression(newElement, includeFields: false, withNull: column.CanBeNullable(NullabilityContext));
+			newElement = FoldValuePredicate(newElement, includeFields: false, withNull: CanColumnValueBeNull(column, expression, newElement));
 			if (!ReferenceEquals(newElement, expression))
-				expression = (ISqlExpression)Visit(Optimize(newElement));
+				expression = (ISqlExpression)VisitFinishing(newElement);
 
 			newElement = WrapColumnExpression(expression);
 			if (!ReferenceEquals(newElement, expression))
 			{
-				expression = (ISqlExpression)Visit(Optimize(newElement));
+				expression = (ISqlExpression)Visit(newElement);
 			}
 
 			return expression;
@@ -103,12 +151,14 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected internal override IQueryElement VisitSqlOutputClause(SqlOutputClause element)
 		{
+			var saveDeferPredicateReduce = BeginDeferPredicateReduce();
 			var result = (SqlOutputClause)base.VisitSqlOutputClause(element);
+			DeferPredicateReduce = saveDeferPredicateReduce;
 
 			if (result.OutputColumns == null)
 				return result;
 
-			var newElements = VisitElements(result.OutputColumns, GetVisitMode(element), e => WrapBooleanExpression(e, includeFields : false));
+			var newElements = VisitElements(result.OutputColumns, GetVisitMode(element), e => FoldValuePredicate(e, includeFields : false));
 			if (!ReferenceEquals(newElements, result.OutputColumns))
 			{
 				return new SqlOutputClause()
@@ -122,12 +172,21 @@ namespace LinqToDB.Internal.SqlProvider
 			return result;
 		}
 
+		protected override ISqlExpression? VisitConditionalResult(ISqlExpression? expression)
+		{
+			var saveDeferPredicateReduce = BeginDeferPredicateReduce();
+			var result                   = base.VisitConditionalResult(expression);
+			DeferPredicateReduce         = saveDeferPredicateReduce;
+
+			return result;
+		}
+
 		protected internal override IQueryElement VisitSqlConditionExpression(SqlConditionExpression element)
 		{
 			var newElement = base.VisitSqlConditionExpression(element);
 
 			if (!ReferenceEquals(newElement, element))
-				return Visit(newElement);
+				return VisitReplacement(newElement);
 
 			newElement = ConvertSqlCondition(element);
 
@@ -166,7 +225,7 @@ namespace LinqToDB.Internal.SqlProvider
 			var newElement = base.VisitSqlCaseExpression(element);
 
 			if (!ReferenceEquals(newElement, element))
-				return Visit(newElement);
+				return VisitReplacement(newElement);
 
 			newElement = ConvertSqlCaseExpression(element);
 
@@ -184,13 +243,132 @@ namespace LinqToDB.Internal.SqlProvider
 				return selectQuery;
 
 			var saveNullabilityContext = NullabilityContext;
-			NullabilityContext = NullabilityContext.WithJoinSource(selectQuery);
+			// Push the query onto the nullability scope, matching SqlExpressionOptimizerVisitor.VisitSqlQuery. This used to
+			// call WithJoinSource, which is the helper for evaluating a JOIN condition (it excludes the joined source from the
+			// nullable-sources check) — it does not enter a query scope, so `Queries` never grew past the root and every
+			// CanBeNull the convert asked was answered under a different regime than the optimizer's.
+			NullabilityContext = NullabilityContext.WithQuery(selectQuery);
 
 			var newQuery = base.VisitSqlQuery(selectQuery);
 
 			NullabilityContext = saveNullabilityContext;
 
 			return newQuery;
+		}
+
+		protected internal override IQueryElement VisitSqlSelectClause(SqlSelectClause element)
+		{
+			var result = base.VisitSqlSelectClause(element);
+
+			// Finalize paging (TAKE/SKIP) into render-ready form as part of the whole-query convert, so the SQL builder
+			// renders it without calling the optimizer.
+			if (result is not SqlSelectClause select || (select.TakeValue == null && select.SkipValue == null))
+				return result;
+
+			var (take, skip) = ResolveSkipTakeValues(select, element.SelectQuery);
+
+			if (ReferenceEquals(take, select.TakeValue) && ReferenceEquals(skip, select.SkipValue))
+				return result;
+
+			// Write the resolved values back respecting the visit mode of the clause BASE handed back — not of the one it was
+			// given. GetVisitMode answers "may I mutate this in place", and it says Modify for an element we created: base
+			// registers the fresh clause as ours when it replaces it during a Transform pass, so the resolved TAKE/SKIP go
+			// straight in and the clause keeps the column expressions base just converted. Only an unchanged, still-shared
+			// clause comes back as Transform and needs a fresh instance.
+			//
+			// Asking GetVisitMode(element) was the bug: IsReplaced() means "is this an element WE created", and the ORIGINAL
+			// clause never is — so a Transform pass always fell through to the rebuild branch, which reconstructs the clause
+			// from element.Columns and discards every column expression base had converted. A boolean column folded to a literal
+			// came back out as its raw search condition and rendered as a bare `1 = 1` in the projection — a syntax error on
+			// providers with no boolean type (Sybase, DB2, Informix, Access).
+			switch (GetVisitMode(select))
+			{
+				case VisitMode.Modify:
+				{
+					select.TakeValue = take;
+					select.SkipValue = skip;
+
+					return select;
+				}
+
+				case VisitMode.Transform:
+				{
+					// base returned the shared source clause unchanged — build a new one instead of mutating it
+					// (mirroring base's reconstruction, which re-parents the columns).
+					var newColumns = new SqlColumn[element.Columns.Count];
+
+					for (var i = 0; i < newColumns.Length; i++)
+					{
+						var column = element.Columns[i];
+						newColumns[i] = new SqlColumn(element.SelectQuery, column.Expression, column.RawAlias);
+						NotifyReplaced(newColumns[i], column);
+					}
+
+					var distinctOn = element.DistinctOn != null ? new List<ISqlExpression>(element.DistinctOn) : null;
+
+					return NotifyReplaced(
+						new SqlSelectClause(element.IsDistinct, distinctOn, take, element.TakeHints, skip, newColumns) { OptimizeDistinct = element.OptimizeDistinct },
+						element);
+				}
+
+				default:
+					// ReadOnly (not used by the convert visitor) — do not alter the tree.
+					return result;
+			}
+		}
+
+		/// <summary>
+		/// Computes the render-ready TAKE/SKIP for <paramref name="select"/> without mutating it: optimizes each value, then
+		/// per provider flags either evaluates it to a literal (<see cref="SqlValue"/>) or mints a <c>take</c>/<c>skip</c>
+		/// <see cref="SqlParameter"/>. A value/parameter is already resolved and returned unchanged (repeated visits are idempotent).
+		/// </summary>
+		(ISqlExpression? take, ISqlExpression? skip) ResolveSkipTakeValues(SqlSelectClause select, SelectQuery selectQuery)
+		{
+			var nullability = NullabilityContext.GetContext(selectQuery);
+
+			var takeExpr = OptimizationContext.Optimize(select.TakeValue, nullability);
+			var skipExpr = OptimizationContext.Optimize(select.SkipValue, nullability);
+
+			if (takeExpr != null)
+			{
+				var supportsParameter = SqlProviderFlags.GetAcceptsTakeAsParameterFlag(selectQuery);
+
+				if (supportsParameter)
+				{
+					if (takeExpr.ElementType is not QueryElementType.SqlParameter and not QueryElementType.SqlValue)
+					{
+						var takeValue = takeExpr.EvaluateExpression(EvaluationContext)!;
+						takeExpr = new SqlParameter(new DbDataType(takeValue.GetType()), "take", takeValue)
+						{
+							IsQueryParameter = DataOptions.LinqOptions.ParameterizeTakeSkip && !QueryHelper.NeedParameterInlining(takeExpr),
+						};
+					}
+				}
+				else if (takeExpr.ElementType != QueryElementType.SqlValue)
+					takeExpr = new SqlValue(takeExpr.EvaluateExpression(EvaluationContext)!);
+			}
+
+			if (skipExpr != null)
+			{
+				var supportsParameter = SqlProviderFlags.GetIsSkipSupportedFlag(select.TakeValue)
+										&& SqlProviderFlags.AcceptsTakeAsParameter;
+
+				if (supportsParameter)
+				{
+					if (skipExpr.ElementType is not QueryElementType.SqlParameter and not QueryElementType.SqlValue)
+					{
+						var skipValue = skipExpr.EvaluateExpression(EvaluationContext)!;
+						skipExpr = new SqlParameter(new DbDataType(skipValue.GetType()), "skip", skipValue)
+						{
+							IsQueryParameter = DataOptions.LinqOptions.ParameterizeTakeSkip && !QueryHelper.NeedParameterInlining(skipExpr),
+						};
+					}
+				}
+				else if (skipExpr.ElementType != QueryElementType.SqlValue)
+					skipExpr = new SqlValue(skipExpr.EvaluateExpression(EvaluationContext)!);
+			}
+
+			return (takeExpr, skipExpr);
 		}
 
 		protected internal override IQueryElement VisitExprPredicate(SqlPredicate.Expr predicate)
@@ -228,7 +406,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 			if (!ReferenceEquals(newResult, result))
 			{
-				result = Visit(Optimize(newResult));
+				result = Visit(Optimize(NotifyReplaced(newResult, result)));
 			}
 
 			return result;
@@ -263,15 +441,41 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			var saveInner    = predicate.Predicate;
 
-			var saveInsidePredicate = IsInsidePredicate;
-			IsInsidePredicate = true;
-			var newPredicate = base.VisitNotPredicate(predicate);
-			IsInsidePredicate = saveInsidePredicate;
+			// The inner predicate is inverted before it is reduced: NOT (x IS TRUE) becomes x IS FALSE, not NOT (x = 1).
+			// Also while finishing: a NOT a finish produces (a reduced NOT IN) gets the same text as one in a WHERE.
+			var saveInsidePredicate      = IsInsidePredicate;
+			IsInsidePredicate            = true;
+			var saveDeferPredicateReduce = DeferPredicateReduce;
+			DeferPredicateReduce         = true;
+			var newPredicate             = base.VisitNotPredicate(predicate);
+			DeferPredicateReduce         = saveDeferPredicateReduce;
+			IsInsidePredicate            = saveInsidePredicate;
 
 			if (!ReferenceEquals(newPredicate, predicate) || !ReferenceEquals(saveInner, predicate.Predicate))
 			{
 				newPredicate = Optimize(newPredicate);
 				return Visit(newPredicate);
+			}
+
+			if (!DeferPredicateReduce && newPredicate is SqlPredicate.Not notPredicate)
+			{
+				var inner             = notPredicate.Predicate;
+				var saveFinishing     = _finishingDeferred;
+				_finishingDeferred    = true;
+				var reducedInner      = VisitNotOperand(notPredicate);
+				_finishingDeferred    = saveFinishing;
+
+				// Checked on the result, not on a changed reference: a Modify-mode reduce rewrites the operand in place.
+				if (reducedInner.CanInvert(NullabilityContext))
+					return Visit(reducedInner.Invert(NullabilityContext));
+
+				if (!ReferenceEquals(reducedInner, inner))
+				{
+					if (GetVisitMode(notPredicate) == VisitMode.Transform)
+						return new SqlPredicate.Not(reducedInner);
+
+					notPredicate.Modify(reducedInner);
+				}
 			}
 
 			return newPredicate;
@@ -297,32 +501,176 @@ namespace LinqToDB.Internal.SqlProvider
 			return element;
 		}
 
+		protected internal override IQueryElement VisitSqlDefaultValueExpression(SqlDefaultValueExpression element)
+		{
+			var newElement = ConvertDefaultValue(element);
+
+			if (!ReferenceEquals(newElement, element))
+				return Visit(Optimize(newElement));
+
+			return element;
+		}
+
+		/// <summary>
+		/// Re-visits <paramref name="element"/>. Kept for source compatibility with provider convert visitors that call it.
+		/// <para>
+		/// This used to spin up a full sub-traversal on the <i>shared</i> optimizer instance (a <c>ProcessElement</c> walk
+		/// plus its <c>Replacer</c> fix-up walk) and the caller then re-visited the same subtree with the convert — three
+		/// traversals where one does. Now that this visitor IS an optimizer, <c>Visit</c> optimizes and lowers in one
+		/// pass, so the whole round-trip collapses to a single re-visit.
+		/// </para>
+		/// </summary>
 		protected IQueryElement Optimize(IQueryElement element)
 		{
-			return OptimizationContext.OptimizerVisitor.Optimize(EvaluationContext, NullabilityContext, OptimizationContext.TransformationInfo, DataOptions, OptimizationContext.MappingSchema, element, VisitQueries, reducePredicates: false);
+			return Visit(element);
 		}
 
 		protected internal override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
 		{
-			var saveInsidePredicate = IsInsidePredicate;
-			IsInsidePredicate = true;
-			var newElement          = base.VisitExprExprPredicate(predicate);
-			IsInsidePredicate = saveInsidePredicate;
+			// base is the optimizer: it visits the children and optimizes this node (it also owns the IsInsidePredicate
+			// save/restore, so IsInsidePredicate is back to the enclosing value by the time we read it below).
+			// Operands are value slots: ConvertExprExprPredicate decides whether a predicate operand becomes a CASE first.
+			// A provider with boolean values that compares predicates folds one only against a boolean value, so its operands
+			// reduce at once, unless the comparison itself is deferred (a NOT or a value slot still has to decide on it). A
+			// folding comparison keeps its operand unreduced: it becomes the predicate in this comparison's place.
+			var deferOperands            = DeferPredicateReduce || (!_finishingDeferred && (!SqlProviderFlags.SupportsBooleanType || !SqlProviderFlags.SupportsPredicatesComparison || FoldsToPredicateOperand(predicate)));
+			var saveDeferPredicateReduce = DeferPredicateReduce;
+			DeferPredicateReduce         = deferOperands;
+			var newElement               = base.VisitExprExprPredicate(predicate);
+			DeferPredicateReduce         = saveDeferPredicateReduce;
 
 			if (!ReferenceEquals(newElement, predicate))
-			{
-				return Visit(Optimize(newElement));
-			}
+				return Visit(newElement);
 
 			var newPredicate = ConvertExprExprPredicate(predicate);
 
 			if (!ReferenceEquals(newPredicate, predicate))
+				return Visit(NotifyReplaced(newPredicate, predicate));
+
+			if (deferOperands)
 			{
-				newPredicate = Optimize(newPredicate);
-				newPredicate = Visit(newPredicate);
+				// Visited again so the comparison is optimized over its reduced operands.
+				if (FinishDeferredOperands(ref predicate))
+					return VisitFinishing(predicate);
 			}
 
-			return newPredicate;
+			if (DeferPredicateReduce)
+				return predicate;
+
+			// The CompareNulls null-guard reduce. It is LOWERING, not optimization — it has to see the converted predicate,
+			// which is why it used to run in a separate late pass gated by a `reducePredicates` flag (and why relocating that
+			// pass cost 13 cross-provider regressions). Here it runs in the same traversal, immediately after this node is
+			// converted, and Visit re-enters to lower whatever it rewrites the predicate into.
+			var reduced = ReduceExprExprPredicate(predicate);
+
+			if (!ReferenceEquals(reduced, predicate))
+				return Visit(reduced);
+
+			return predicate;
+		}
+
+		// The fold in SqlExpressionOptimizerVisitor.VisitExprExprPredicate: a predicate compared with a known boolean value.
+		bool FoldsToPredicateOperand(SqlPredicate.ExprExpr predicate)
+		{
+			return predicate is { Operator: SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual, UnknownAsValue: null }
+				&& (predicate.Expr1 is ISqlPredicate && QueryHelper.GetBoolValue(predicate.Expr2, EvaluationContext) != null
+					|| predicate.Expr2 is ISqlPredicate && QueryHelper.GetBoolValue(predicate.Expr1, EvaluationContext) != null);
+		}
+
+		/// <summary>
+		/// Reduces the predicate operands <see cref="ConvertExprExprPredicate"/> left unwrapped, in the context the reduce had
+		/// before it was deferred: nested in a predicate.
+		/// </summary>
+		bool FinishDeferredOperands(ref SqlPredicate.ExprExpr predicate)
+		{
+			var saveInsidePredicate = IsInsidePredicate;
+			IsInsidePredicate = true;
+			var expr1 = FinishDeferredPredicate(predicate.Expr1);
+			var expr2 = FinishDeferredPredicate(predicate.Expr2);
+			IsInsidePredicate = saveInsidePredicate;
+
+			if (ReferenceEquals(expr1, predicate.Expr1) && ReferenceEquals(expr2, predicate.Expr2))
+				return false;
+
+			if (GetVisitMode(predicate) == VisitMode.Modify)
+			{
+				predicate.Expr1 = expr1;
+				predicate.Expr2 = expr2;
+			}
+			else
+			{
+				predicate = (SqlPredicate.ExprExpr)NotifyReplaced(new SqlPredicate.ExprExpr(expr1, predicate.Operator, expr2, predicate.UnknownAsValue, predicate.NotNullableExpr1, predicate.NotNullableExpr2), predicate);
+			}
+
+			return true;
+		}
+
+		/// <summary>
+		/// Reduces a predicate a value slot visited with <see cref="SqlExpressionOptimizerVisitor.DeferPredicateReduce"/> set and
+		/// did not fold into a CASE. A folded one was already reduced as a condition by the fold's own visit.
+		/// </summary>
+		ISqlExpression FinishDeferredPredicate(ISqlExpression expression)
+		{
+			if (!QueryHelper.UnwrapNullablity(expression).IsPredicate())
+				return expression;
+
+			var saveDeferPredicateReduce = DeferPredicateReduce;
+			DeferPredicateReduce = false;
+			var finished = (ISqlExpression)VisitFinishing(expression);
+			DeferPredicateReduce = saveDeferPredicateReduce;
+
+			return finished;
+		}
+
+		/// <summary>
+		/// Visits a subtree whose fold decisions were already made: nothing in it is deferred again, so nested comparisons and
+		/// NOTs are re-visited once rather than once per enclosing level.
+		/// </summary>
+		IQueryElement VisitFinishing(IQueryElement element)
+		{
+			var saveFinishing  = _finishingDeferred;
+			_finishingDeferred = true;
+			var result         = Visit(element);
+			_finishingDeferred = saveFinishing;
+
+			return result;
+		}
+
+		/// <summary>
+		/// Folds a value slot's predicate into a CASE where the provider needs it, and otherwise reduces it in place.
+		/// </summary>
+		protected ISqlExpression FoldValuePredicate(ISqlExpression expression, bool includeFields, bool forceConvert = false, bool withNull = true)
+		{
+			return FinishDeferredPredicate(WrapBooleanExpression(expression, includeFields, forceConvert, withNull));
+		}
+
+		/// <summary>
+		/// Turns <see cref="SqlExpressionOptimizerVisitor.DeferPredicateReduce"/> on for a value slot's visit and returns the
+		/// value to restore afterwards. A finish re-visit defers nothing: its fold decisions were made on the first visit.
+		/// </summary>
+		bool BeginDeferPredicateReduce()
+		{
+			var save = DeferPredicateReduce;
+			if (!_finishingDeferred)
+				DeferPredicateReduce = true;
+			return save;
+		}
+
+		protected internal override IQueryElement VisitIsTruePredicate(SqlPredicate.IsTrue predicate)
+		{
+			var newElement = base.VisitIsTruePredicate(predicate);
+
+			if (newElement is not SqlPredicate.IsTrue isTrue || DeferPredicateReduce)
+				return newElement;
+
+			// Same story as VisitExprExprPredicate: the null-guard reduce is lowering, so it runs here rather than in the
+			// optimizer, over converted structure.
+			var reduced = ReduceIsTruePredicate(isTrue);
+
+			if (!ReferenceEquals(reduced, isTrue))
+				return Visit(reduced);
+
+			return isTrue;
 		}
 
 		protected internal override IQueryElement VisitSqlCompareToExpression(SqlCompareToExpression element)
@@ -340,7 +688,7 @@ namespace LinqToDB.Internal.SqlProvider
 				],
 				new SqlValue(-1));
 
-			return Visit(Optimize(caseExpression));
+			return Visit(Optimize(NotifyReplaced(caseExpression, element)));
 		}
 
 		protected internal override IQueryElement VisitIsDistinctPredicate(SqlPredicate.IsDistinct predicate)
@@ -358,7 +706,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 				if (!ReferenceEquals(converted, predicate))
 				{
-					return Visit(Optimize(converted));
+					return Visit(Optimize(NotifyReplaced(converted, predicate)));
 				}
 			}
 
@@ -416,7 +764,7 @@ namespace LinqToDB.Internal.SqlProvider
 				var newPredicate = ConvertRowExprExpr(predicate, EvaluationContext);
 				if (!ReferenceEquals(newPredicate, predicate))
 				{
-					return Visit(Optimize(newPredicate));
+					return Visit(Optimize(NotifyReplaced(newPredicate, predicate)));
 				}
 			}
 
@@ -550,12 +898,18 @@ namespace LinqToDB.Internal.SqlProvider
 			if (!ReferenceEquals(newElement, predicate))
 				return Visit(newElement);
 
+			// Same story as VisitExprExprPredicate: the null-item reduce is lowering, so it runs here rather than in the optimizer.
+			var reduced = DeferPredicateReduce ? predicate : ReduceInListPredicate(predicate);
+
+			if (!ReferenceEquals(reduced, predicate))
+				return Visit(reduced);
+
 			if (predicate.Expr1.ElementType == QueryElementType.SqlRow)
 			{
 				var converted = ConvertRowInList(predicate);
 				if (!ReferenceEquals(converted, predicate))
 				{
-					converted = (ISqlPredicate)Optimize(converted);
+					converted = (ISqlPredicate)Optimize(NotifyReplaced(converted, predicate));
 					converted = (ISqlPredicate)Visit(converted);
 					return converted;
 				}
@@ -875,7 +1229,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 			newElement = ConvertSqlFunction(element);
 			if (!ReferenceEquals(newElement, element))
-				return Visit(Optimize(newElement));
+				return Visit(Optimize(NotifyReplaced(newElement, element)));
 
 			return element;
 		}
@@ -889,9 +1243,162 @@ namespace LinqToDB.Internal.SqlProvider
 
 			newElement = ConvertSqlExtendedFunction(element);
 			if (!ReferenceEquals(newElement, element))
+				return Visit(Optimize(NotifyReplaced(newElement, element)));
+
+			// After the provider had its say, so a renamed function is normalized under the name it will be
+			// emitted with. Idempotent - a re-visit of the rewritten node finds nothing left to change.
+			newElement = NormalizeWindowOrderBy(element);
+			if (!ReferenceEquals(newElement, element))
 				return Visit(Optimize(newElement));
 
 			return element;
+		}
+
+		protected internal override IQueryElement VisitSqlFunctionArgument(SqlFunctionArgument element)
+		{
+			var saveDeferPredicateReduce = BeginDeferPredicateReduce();
+			var newElement = (SqlFunctionArgument)base.VisitSqlFunctionArgument(element);
+			DeferPredicateReduce = saveDeferPredicateReduce;
+
+			// Arguments are value positions, so a predicate passed as one (COUNT(x.Id == 2), LAG(x.Id == 2), ...)
+			// has to be folded into a value, like ORDER BY / PARTITION BY items are.
+			//
+			var wrapped = FoldValuePredicate(newElement.Expression, includeFields : false, forceConvert : !SqlProviderFlags.SupportsPredicateInFunctionValuePosition);
+
+			if (!ReferenceEquals(wrapped, newElement.Expression))
+			{
+				if (GetVisitMode(newElement) == VisitMode.Modify)
+				{
+					newElement.Modify(wrapped, newElement.Suffix);
+				}
+				else
+				{
+					newElement = new SqlFunctionArgument(wrapped, newElement.Modifier, newElement.Suffix);
+				}
+			}
+
+			return newElement;
+		}
+
+		/// <summary>
+		/// Brings a window's <c>ORDER BY</c> to a form every dialect accepts.
+		/// </summary>
+		/// <remarks>
+		/// A sort key that holds the same value for every row orders nothing - all rows tie - so it is dropped, the
+		/// same treatment <see cref="BasicSqlBuilder.BuildOrderByClause"/> gives a statement's <c>ORDER BY</c>. That
+		/// alone settles the dialects that refuse a constant there (SQL Server and SAP HANA reject any constant;
+		/// MySQL 8 reads an integer one as a legacy column position), because none of them ever sees one inside
+		/// <c>OVER</c>. Only that ordering is rewritten here: the same node's <c>WITHIN GROUP</c> and <c>KEEP</c>
+		/// order lists are built elsewhere and still carry a constant through verbatim.
+		/// <para>
+		/// Dropping can empty the clause, which is a problem of its own: on some providers a ranking function needs
+		/// an <c>ORDER BY</c>, and so does a frame. <see cref="IsWindowOrderByRequired"/> says
+		/// when that is the case, and the first key the caller wrote comes back wrapped by
+		/// <see cref="WrapWindowOrderByConstant"/> - keeping the value, the direction and the NULLS position it was
+		/// given - rather than being replaced by an invented one. Only a window that arrived with no <c>ORDER BY</c>
+		/// at all has nothing to carry over, and that one gets a plain <c>1</c>; <c>Sql.Window.DefineWindow</c> with
+		/// only a <c>PARTITION BY</c> reaches a ranking function that way.
+		/// </para>
+		/// </remarks>
+		protected ISqlExpression NormalizeWindowOrderBy(SqlExtendedFunction func)
+		{
+			if (!func.IsWindowFunction)
+				return func;
+
+			var orderBy = func.OrderBy;
+
+			var kept = orderBy == null || orderBy.TrueForAll(static i => !QueryHelper.IsConstantFast(i.Expression))
+				? orderBy
+				: orderBy.Where(static i => !QueryHelper.IsConstantFast(i.Expression)).ToList();
+
+			if (kept is not { Count: > 0 } && IsWindowOrderByRequired(func))
+			{
+				// Where the stand-in cannot be parsed, the caller's key is what keeps the clause alive, so the node
+				// is left exactly as it came - which is also what keeps this rewrite a fixed point, since a constant
+				// handed back unwrapped would be dropped again on the next pass.
+				if (orderBy is { Count: > 0 } && !CanWrapWindowOrderByConstant)
+					return func;
+
+				// Every row ties on a constant, so the first key decides the whole clause - the ones behind it never
+				// get to break a tie, and are the only part actually dropped here.
+				var original = orderBy is { Count: > 0 } ? orderBy[0] : null;
+
+				kept =
+				[
+					new SqlWindowOrderItem(
+						WrapWindowOrderByConstant(original?.Expression ?? new SqlValue(1)),
+						original?.IsDescending  ?? false,
+						original?.NullsPosition ?? Sql.NullsPosition.None),
+				];
+			}
+
+			if (ReferenceEquals(kept, orderBy))
+				return func;
+
+			return func.WithOrderBy(kept is { Count: > 0 } ? kept : null);
+		}
+
+		/// <summary>
+		/// Whether the provider insists on an <c>ORDER BY</c> inside this function's <c>OVER</c> clause. The default
+		/// is <see langword="false"/>: standard SQL leaves the ordering optional, and most providers follow it.
+		/// </summary>
+		/// <remarks>
+		/// Two things are answered here. <c>ROW_NUMBER</c>, from the flag that already states this very thing for the
+		/// row-number paging emulation. And a frame whose boundaries are read off the sort key - a <c>GROUPS</c> frame,
+		/// or a <c>RANGE</c> frame with a value offset - which the standard defines in terms of that key, so every
+		/// dialect enforces it and no provider may opt out. Which <em>functions</em> carry the requirement is another
+		/// matter entirely: providers disagree, so that part is left to the overrides, and PostgreSQL, SQLite, DuckDB,
+		/// Firebird, YDB and MySQL 8 add nothing at all. YDB in particular must stay that way, since it cannot parse a
+		/// scalar subquery as a sort key - it is safe here only because it rejects <c>RANGE</c> and <c>GROUPS</c> frames
+		/// at translation, so the frame arm below can never fire for it.
+		/// </remarks>
+		protected virtual bool IsWindowOrderByRequired(SqlExtendedFunction func)
+			=> (!SqlProviderFlags.IsRowNumberWithoutOrderBySupported && func.FunctionName is "ROW_NUMBER")
+				|| func.FrameClause is { FrameType: SqlFrameClause.FrameTypeKind.Groups }
+					or { FrameType: SqlFrameClause.FrameTypeKind.Range, Start.BoundaryType: SqlFrameBoundary.FrameBoundaryType.Offset }
+					or { FrameType: SqlFrameClause.FrameTypeKind.Range, End.BoundaryType  : SqlFrameBoundary.FrameBoundaryType.Offset };
+
+		/// <summary>
+		/// The window functions no provider will order implicitly: a rank has to know what it is ranking, and
+		/// <c>LAG</c>/<c>LEAD</c> have to know which row counts as the neighbour. Every provider that enforces an
+		/// <c>ORDER BY</c> requirement at all covers at least these.
+		/// </summary>
+		/// <remarks>
+		/// <c>NTILE</c> and <c>FIRST_VALUE</c>/<c>LAST_VALUE</c> are deliberately left out, because providers genuinely
+		/// disagree on them: SQL Server and SAP HANA demand an ordering for all three, Oracle, DB2 and Informix for
+		/// <c>NTILE</c> alone, ClickHouse for <c>NTILE</c> and nothing else, MariaDB for none of them. So is
+		/// <c>ROW_NUMBER</c>, which <see cref="IsWindowOrderByRequired"/> answers from a provider flag. Each override
+		/// adds the ones its own dialect needs.
+		/// </remarks>
+		protected static bool IsOrderDependentWindowFunction(string functionName)
+			=> functionName is "RANK" or "DENSE_RANK" or "PERCENT_RANK" or "CUME_DIST" or "LAG" or "LEAD";
+
+		/// <summary>
+		/// Whether the scalar subquery <see cref="WrapWindowOrderByConstant"/> builds is parseable as a window sort
+		/// key here. DuckDB is the exception: it takes one in a plain window but not inside a <c>RANGE</c> frame,
+		/// and it accepts the bare constant there instead, so it keeps the caller's key rather than the stand-in.
+		/// </summary>
+		protected virtual bool CanWrapWindowOrderByConstant => true;
+
+		/// <summary>
+		/// Restates a constant window sort key as a scalar subquery, for a provider that demands an <c>ORDER BY</c>
+		/// but refuses a constant one.
+		/// </summary>
+		/// <remarks>
+		/// <c>(SELECT 1)</c> is constant in value but is not a constant <em>expression</em>, and that is the
+		/// distinction the strict dialects draw: it is the documented T-SQL spelling of "no meaningful ordering",
+		/// and Oracle and SAP HANA take it too, once their builders supply the dummy <c>FROM</c> a table-less query
+		/// needs there. Wrapping rather than substituting keeps whatever the caller passed - <c>OrderBy(5)</c> stays
+		/// a 5, and a captured local stays the parameter it became instead of vanishing from the command.
+		/// <see cref="SelectQuery.DoNotRemove"/> stops query optimization from folding the subquery away.
+		/// </remarks>
+		protected virtual ISqlExpression WrapWindowOrderByConstant(ISqlExpression expression)
+		{
+			var query = new SelectQuery { DoNotRemove = true };
+
+			query.Select.AddNewColumn(expression);
+
+			return query;
 		}
 
 		protected internal override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
@@ -916,7 +1423,7 @@ namespace LinqToDB.Internal.SqlProvider
 			newElement = ConvertSqlExpression(element);
 			if (!ReferenceEquals(newElement, element))
 			{
-				newElement = Visit(Optimize(newElement));
+				newElement = Visit(Optimize(NotifyReplaced(newElement, element)));
 			}
 
 			return newElement;
@@ -932,7 +1439,7 @@ namespace LinqToDB.Internal.SqlProvider
 			newElement = ConvertLikePredicate(predicate);
 			if (!ReferenceEquals(newElement, predicate))
 			{
-				newElement = Visit(Optimize(newElement));
+				newElement = Visit(Optimize(NotifyReplaced(newElement, predicate)));
 			}
 
 			return newElement;
@@ -948,7 +1455,7 @@ namespace LinqToDB.Internal.SqlProvider
 			newElement = ConvertSqlBinaryExpression(element);
 			if (!ReferenceEquals(newElement, element))
 			{
-				newElement = Visit(Optimize(newElement));
+				newElement = Visit(Optimize(NotifyReplaced(newElement, element)));
 			}
 
 			return newElement;
@@ -964,7 +1471,7 @@ namespace LinqToDB.Internal.SqlProvider
 			newElement = ConvertSqlUnaryExpression(element);
 			if (!ReferenceEquals(newElement, element))
 			{
-				newElement = Visit(Optimize(newElement));
+				newElement = Visit(Optimize(NotifyReplaced(newElement, element)));
 			}
 
 			return newElement;
@@ -980,7 +1487,7 @@ namespace LinqToDB.Internal.SqlProvider
 			newElement = element.GetSqlExpression(EvaluationContext);
 			if (!ReferenceEquals(newElement, element))
 			{
-				newElement = Visit(Optimize(newElement));
+				newElement = Visit(Optimize(NotifyReplaced(newElement, element)));
 			}
 
 			return newElement;
@@ -996,7 +1503,7 @@ namespace LinqToDB.Internal.SqlProvider
 			newElement = element.GetSqlExpression(EvaluationContext);
 			if (!ReferenceEquals(newElement, element))
 			{
-				newElement = Visit(Optimize(newElement));
+				newElement = Visit(Optimize(NotifyReplaced(newElement, element)));
 			}
 
 			return newElement;
@@ -1011,7 +1518,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 			if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Between) && QueryHelper.UnwrapNullablity(predicate.Expr1) is SqlRowExpression)
 			{
-				return Visit(Optimize(ConvertBetweenPredicate(predicate)));
+				return Visit(Optimize(NotifyReplaced(ConvertBetweenPredicate(predicate), predicate)));
 			}
 
 			return newElement;
@@ -1026,6 +1533,10 @@ namespace LinqToDB.Internal.SqlProvider
 
 			if (!ReferenceEquals(newPredicate, predicate))
 				return Visit(newPredicate);
+
+			var reconciled = ReconcileDurationUnits(predicate);
+			if (reconciled != null)
+				return Visit(reconciled);
 
 			var doNotSupportCorrelatedSubQueries = SqlProviderFlags.SupportedCorrelatedSubqueriesLevel == 0;
 
@@ -1068,9 +1579,11 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected internal override IQueryElement VisitSqlOrderByItem(SqlOrderByItem element)
 		{
+			var saveDeferPredicateReduce = BeginDeferPredicateReduce();
 			var newElement = (SqlOrderByItem)base.VisitSqlOrderByItem(element);
+			DeferPredicateReduce = saveDeferPredicateReduce;
 
-			var wrapped = WrapBooleanExpression(newElement.Expression, includeFields : false);
+			var wrapped = FoldValuePredicate(newElement.Expression, includeFields : false);
 
 			if (!ReferenceEquals(wrapped, newElement.Expression))
 			{
@@ -1087,9 +1600,34 @@ namespace LinqToDB.Internal.SqlProvider
 			return newElement;
 		}
 
+		protected internal override IQueryElement VisitSqlWindowOrderItem(SqlWindowOrderItem element)
+		{
+			var saveDeferPredicateReduce = BeginDeferPredicateReduce();
+			var newElement = (SqlWindowOrderItem)base.VisitSqlWindowOrderItem(element);
+			DeferPredicateReduce = saveDeferPredicateReduce;
+
+			var wrapped = FoldValuePredicate(newElement.Expression, includeFields : false);
+
+			if (!ReferenceEquals(wrapped, newElement.Expression))
+			{
+				if (GetVisitMode(newElement) == VisitMode.Modify)
+				{
+					newElement.Modify(wrapped);
+				}
+				else
+				{
+					newElement = new SqlWindowOrderItem(wrapped, newElement.IsDescending, newElement.NullsPosition);
+				}
+			}
+
+			return newElement;
+		}
+
 		protected internal override IQueryElement VisitSqlSetExpression(SqlSetExpression element)
 		{
+			var saveDeferPredicateReduce = BeginDeferPredicateReduce();
 			var newElement = (SqlSetExpression)base.VisitSqlSetExpression(element);
+			DeferPredicateReduce = saveDeferPredicateReduce;
 
 			while (newElement.Column is SqlCastExpression cast)
 			{
@@ -1107,7 +1645,7 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 			}
 
-			var wrapped = newElement.Expression == null ? null : WrapBooleanExpression(newElement.Expression, includeFields : false, withNull: newElement.Column.CanBeNullable(NullabilityContext));
+			var wrapped = newElement.Expression == null ? null : FoldValuePredicate(newElement.Expression, includeFields : false, forceConvert: ForceConvertSetValue, withNull: newElement.Column.CanBeNullable(NullabilityContext));
 
 			if (!ReferenceEquals(wrapped, newElement.Expression))
 			{
@@ -1128,9 +1666,428 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected override ISqlExpression VisitSqlGroupByItem(ISqlExpression element)
 		{
+			var saveDeferPredicateReduce = BeginDeferPredicateReduce();
 			var newItem = base.VisitSqlGroupByItem(element);
+			DeferPredicateReduce = saveDeferPredicateReduce;
 
-			return WrapBooleanExpression(newItem, includeFields: false);
+			return FoldValuePredicate(newItem, includeFields: false);
+		}
+
+		protected override ISqlExpression VisitSqlExtendedFunctionPartition(SqlExtendedFunction function, ISqlExpression partition)
+		{
+			var saveDeferPredicateReduce = BeginDeferPredicateReduce();
+			var newItem = base.VisitSqlExtendedFunctionPartition(function, partition);
+			DeferPredicateReduce = saveDeferPredicateReduce;
+
+			return FoldValuePredicate(newItem, includeFields: false, forceConvert: !SqlProviderFlags.SupportsPredicateInFunctionValuePosition);
+		}
+
+		/// <summary>
+		/// A cast is re-derived on each visit rather than replayed from the transformation map: its conversion is
+		/// frequently lowered and then reduced further, so a replayed intermediate would resurface in its un-reduced form.
+		/// </summary>
+		protected override bool IsReplaceable(IQueryElement element) => element is not SqlCastExpression;
+
+		/// <remarks>
+		/// Over integral storage an interval is its stored amount, so the node simply disappears here. The read path
+		/// turns the amount back into a <see cref="TimeSpan"/> through the operand's column descriptor, which
+		/// <see cref="QueryHelper.GetColumnDescriptor(ISqlExpression)"/> reaches by looking through this node.
+		/// <para>
+		/// Which makes reaching that descriptor an invariant rather than a convenience: past this point the SQL value
+		/// no longer says what unit it counts, so whatever wraps or rewrites it - a cast, a function, a projection
+		/// into a derived table, a branch of a set operation - has to leave the descriptor reachable from the result.
+		/// Where it does not, the statement stays valid and the value is read through the wrong conversion, which is
+		/// the one failure the lowering cannot see for itself. <see cref="BasicSqlBuilder"/> refuses this node rather
+		/// than rendering its operand for the same reason: a provider that never lowered it away should say so, not
+		/// quietly emit a bare number where a duration was meant.
+		/// </para>
+		/// </remarks>
+		protected internal override IQueryElement VisitSqlIntervalExpression(SqlIntervalExpression element)
+		{
+			return Visit(element.Value);
+		}
+
+		/// <summary>
+		/// Whether an elapsed date difference can be lowered to a value here.
+		/// </summary>
+		/// <remarks>
+		/// Declared beside the lowering it describes, and read by the member translator through
+		/// <c>ITranslationContext.ProviderFlags</c>. The translator has to ask before it builds anything, because
+		/// a difference it does not build stays an ordinary .NET subtraction and is computed on materialisation -
+		/// and by the time this visitor runs, the read expression is already bound to its columns, so there is no
+		/// going back.
+		/// </remarks>
+		public virtual bool CanLowerIntervalDifference => false;
+
+		/// <summary>
+		/// Whether a member of an elapsed date difference can be lowered. Defaults to whatever the difference
+		/// itself can do.
+		/// </summary>
+		/// <remarks>
+		/// Separate because one provider has only this half: Access counts elapsed units well enough to answer
+		/// <c>TotalHours</c>, but its <c>DateDiff</c> is a 32-bit count that overflows once scaled to ticks, so
+		/// the interval never becomes a value there.
+		/// </remarks>
+		public virtual bool CanLowerIntervalPart => CanLowerIntervalDifference;
+
+		/// <summary>
+		/// The finest unit this provider can actually resolve when it measures elapsed time. Defaults to
+		/// <see cref="SqlIntervalUnit.Tick"/> - no loss.
+		/// </summary>
+		/// <remarks>
+		/// Distinct from <see cref="FinestDateUnit"/>, which names the finest unit the provider's own difference
+		/// function counts in. A provider may measure elapsed time some other way and still be limited: SQLite goes
+		/// through <c>julianday</c>, whose double holds about 47 microseconds of a Julian day number, so its
+		/// measurement is rounded to the millisecond however the value is stored.
+		/// <para>
+		/// Read by the member translator, which declines to build a <em>component</em> in a unit finer than this.
+		/// Such a component is not merely less precise - it is identically zero, because the count it is taken
+		/// from was rounded to a coarser unit first. Declining leaves the member to .NET, which has both dates and
+		/// can answer exactly.
+		/// </para>
+		/// </remarks>
+		public virtual SqlIntervalUnit IntervalResolution => SqlIntervalUnit.Tick;
+
+		/// <summary>
+		/// Whether an elapsed date difference can become a tick count here. Defaults to yes.
+		/// </summary>
+		/// <remarks>
+		/// A provider answering no has no way to reach a unit finer than <see cref="IntervalResolution"/> at all:
+		/// <see cref="ElapsedTicks"/> leaves it nothing to divide, and its own difference function cannot name such
+		/// a unit either. Access is the case - its <c>DateDiff</c> is a 32-bit count that overflows once scaled to
+		/// ticks.
+		/// <para>
+		/// Read by the member translator, which declines to build a <em>total</em> in a unit finer than the
+		/// resolution when this is false. Left to be built, that node reaches the SQL builder, which can only
+		/// throw - and a throw there takes with it the projection's fall back to .NET, the one place the member can
+		/// still be answered exactly. A total is otherwise left alone, because a coarser measurement makes one
+		/// quantised rather than meaningless, which is why this is asked rather than the resolution alone.
+		/// </para>
+		/// </remarks>
+		public virtual bool CanMeasureDifferenceInTicks => true;
+
+		/// <summary>
+		/// Whether <see cref="LowerTemporalArithmetic"/> can express a date shifted by an interval at all.
+		/// </summary>
+		/// <remarks>
+		/// Read by the member translator so a declared duration added to a date is declined while the expression is
+		/// still being built, rather than reaching the builder as a node nothing can render - a refusal there has no
+		/// client-side fallback left. The default follows what the base implementation needs: it spends the amount
+		/// through <see cref="ShiftDate"/> at <see cref="FinestDateUnit"/>, so a provider that names no finest unit
+		/// cannot lower one.
+		/// <para>
+		/// Only the <em>declared</em> half is declined early. A shift by a computed difference is left to be built,
+		/// because <c>start + (end - start)</c> cancels against the difference it came from and asks the provider
+		/// for nothing - refusing it here would sink a query that works everywhere.
+		/// </para>
+		/// </remarks>
+		public virtual bool CanLowerIntervalShift => FinestDateUnit != null;
+
+		protected internal override IQueryElement VisitSqlTemporalArithmeticExpression(SqlTemporalArithmeticExpression element)
+		{
+			var lowered = LowerTemporalArithmetic(element);
+			// Optimized before it is visited, like every other rewrite here: the statement-level optimizer has already
+			// run, so the redundant casts a lowering builds would otherwise stay in the SQL - and a remote query, which is
+			// optimized again on the server, would drop them and render differently from the same query run directly.
+			if (lowered != null)
+				return Visit(Optimize(lowered));
+
+			return base.VisitSqlTemporalArithmeticExpression(element);
+		}
+
+		/// <summary>
+		/// Lowers a date/time value shifted by an interval.
+		/// </summary>
+		/// <remarks>
+		/// There is no default. A provider with a native interval type applies the operator directly; one that
+		/// lowered the interval to a tick count has to spend that count through its own <c>DATEADD</c>, whose
+		/// argument is usually a 32-bit integer and so cannot take ticks in one step.
+		/// <para>
+		/// Left alone, the node reaches the builder and is refused by name. That is the point of it existing: the
+		/// generic binary handling would otherwise put a plain operator between a date and a number, which a
+		/// database evaluates into something that still looks like a date.
+		/// </para>
+		/// </remarks>
+		/// <returns><see langword="null"/> when the provider cannot express the shift.</returns>
+		protected virtual ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
+		{
+			if (FinestDateUnit is not { } finest)
+				return null;
+
+			if (!SqlIntervalUnits.TryGetTicksRatio(finest, out var ticksPerFine, out var fineDenominator))
+				return null;
+
+			var longType = Factory.GetDbDataType(typeof(long));
+			var ticks    = element.IsSubtract ? Factory.Multiply(longType, element.Interval, -1L) : element.Interval;
+
+			// Days, then seconds within the day, then the sub-second part in the finest unit the provider counts.
+			// Split this way because DATEADD and its equivalents take a 32-bit amount: a tick count overflows it
+			// within minutes, while a day count covers millennia and each remainder is bounded by its own unit.
+			var days      = TruncateDivide(ticks, TimeSpan.TicksPerDay);
+			var seconds   = TruncateDivide(TruncateRemainder(ticks, TimeSpan.TicksPerDay), TimeSpan.TicksPerSecond);
+			var remainder = TruncateRemainder(ticks, TimeSpan.TicksPerSecond);
+
+			// A fine unit may be finer than a tick, in which case the remainder scales up rather than divides.
+			var fine = fineDenominator != 1
+				? Factory.Multiply(longType, remainder, fineDenominator)
+				: TruncateDivide(remainder, ticksPerFine);
+
+			var shifted = ShiftDate(SqlIntervalUnit.Day, days, element.Temporal);
+			if (shifted == null)
+				return null;
+
+			shifted = ShiftDate(SqlIntervalUnit.Second, seconds, shifted);
+			if (shifted == null)
+				return null;
+
+			return ShiftDate(finest, fine, shifted);
+		}
+
+		protected internal override IQueryElement VisitSqlIntervalDifferenceExpression(SqlIntervalDifferenceExpression element)
+		{
+			var lowered = LowerIntervalDifference(element);
+			if (lowered != null)
+				return Visit(Optimize(lowered));
+
+			return base.VisitSqlIntervalDifferenceExpression(element);
+		}
+
+		/// <summary>
+		/// Lowers <c>End - Start</c> into the elapsed time as a value, in whatever form the read path turns back
+		/// into a <see cref="TimeSpan"/>.
+		/// </summary>
+		/// <remarks>
+		/// Over integral storage that form is the tick count, which is the default. A provider with a native
+		/// interval type overrides this to produce one instead - the value is the same duration either way, and
+		/// which representation is used is exactly the provider's business.
+		/// </remarks>
+		/// <returns><see langword="null"/> when the provider has no exact form, leaving the expression untranslated.</returns>
+		protected virtual ISqlExpression? LowerIntervalDifference(SqlIntervalDifferenceExpression element)
+		{
+			return ElapsedTicks(element);
+		}
+
+		/// <summary>
+		/// Elapsed ticks between two date/time values, exactly.
+		/// </summary>
+		/// <remarks>
+		/// The one quantity that has to be a tick count rather than any equivalent duration, because
+		/// <see cref="TimeSpan.Ticks"/> asks for it by name. Unlike the other members it is not a count of whole
+		/// units that anchoring can correct, so a provider answers it or does not - one that cannot produce it
+		/// <em>exactly</em>, at the resolution its own date type stores, returns <see langword="null"/> rather than
+		/// approximating.
+		/// <para>
+		/// The default derives it from the counting primitives, so a provider that has those needs nothing more:
+		/// whole elapsed days, plus the remainder counted in <see cref="FinestDateUnit"/>. Neither part can
+		/// overflow - the day count is small for any range a <see cref="TimeSpan"/> can hold, and the remainder is
+		/// measured across a window shorter than one day - which is what makes this preferable to counting the
+		/// whole range in a fine unit. A provider with a single exact expression for the difference overrides it
+		/// with that instead.
+		/// </para>
+		/// </remarks>
+		/// <returns><see langword="null"/> when the provider has no exact form, leaving the expression untranslated.</returns>
+		protected virtual ISqlExpression? ElapsedTicks(SqlIntervalDifferenceExpression element)
+		{
+			if (FinestDateUnit is not { } finest)
+				return null;
+
+			if (!SqlIntervalUnits.TryGetTicksRatio(finest, out var ticksPerFine, out var fineDenominator))
+				return null;
+
+			// Deliberately the raw boundary count, uncorrected: whatever it lands on, the remainder is measured
+			// from that exact point, so an overshoot comes back as a negative remainder of the same size and the
+			// two telescope. Correcting it here would only duplicate the count through a CASE for no gain.
+			//
+			// Days, not seconds, and the choice is what makes the whole CLR range reachable. A shift takes a
+			// 32-bit amount on the providers that come through here, so the anchor's unit sets the ceiling: in
+			// seconds that is 2^31 seconds, which is 68 years - close enough to ordinary that a person's age
+			// crosses it - while in days it is far past what a date can hold. Nothing else grows in exchange: the
+			// remainder spans at most one day, so counting it even in nanoseconds stays four orders below the
+			// 64-bit limit, and the whole part reaches about 3.2e18 ticks against a limit of 9.2e18.
+			var days = CountDateBoundaries(SqlIntervalUnit.Day, element.Start, element.End);
+			if (days == null)
+				return null;
+
+			var anchor = ShiftDate(SqlIntervalUnit.Day, days, element.Start);
+			if (anchor == null)
+				return null;
+
+			var remainder = CountDateBoundaries(finest, anchor, element.End);
+			if (remainder == null)
+				return null;
+
+			var longType = Factory.GetDbDataType(typeof(long));
+
+			// A fine unit may be finer than a tick - a nanosecond is a hundredth of one - so the ratio is applied
+			// as a fraction. Plain division, not the truncating helper: the count is a whole number of ticks by
+			// construction, so no rounding rule can disagree about the result.
+			if (ticksPerFine != 1)
+				remainder = Factory.Multiply(longType, remainder, ticksPerFine);
+
+			if (fineDenominator != 1)
+				remainder = Factory.Div(longType, remainder, Factory.Value(longType, fineDenominator));
+
+			// Scaled in two steps rather than by the tick count of a day directly, and the reason is the type a
+			// literal takes rather than arithmetic: 864000000000 is past the 32-bit range, and a provider that
+			// reads such a literal as decimal makes the whole product decimal with it - the value stays right and
+			// arrives as the wrong CLR type, which the reader then refuses. Both factors here fit in 32 bits, so
+			// the product stays integral wherever the day count already is.
+			var wholeTicks = Factory.Multiply(longType,
+				Factory.Multiply(longType, days, (long)TimeSpan.TicksPerDay / TimeSpan.TicksPerSecond),
+				TimeSpan.TicksPerSecond);
+
+			return Factory.Add(longType, wholeTicks, remainder);
+		}
+
+		/// <summary>
+		/// Shifts a date/time value by a whole number of units - the provider's <c>DATEADD</c>.
+		/// </summary>
+		/// <remarks>
+		/// Must be exact: the anchor correction in <see cref="IntervalLowering"/> shifts by a computed count and
+		/// compares the result against the original, so an approximate shift would produce an off-by-one count.
+		/// </remarks>
+		protected virtual ISqlExpression? ShiftDate(SqlIntervalUnit unit, ISqlExpression amount, ISqlExpression date)
+		{
+			return null;
+		}
+
+		/// <summary>
+		/// Counts unit boundaries crossed between two date/time values - the provider's <c>DATEDIFF</c>.
+		/// </summary>
+		/// <remarks>
+		/// Boundary counting, not elapsed time. It is deliberately the wrong answer on its own: it is the cheap
+		/// starting estimate that the anchor correction turns into the elapsed count, and being a count of whole
+		/// units it cannot overflow the way a fine-grained difference over the same range would.
+		/// </remarks>
+		protected virtual ISqlExpression? CountDateBoundaries(SqlIntervalUnit unit, ISqlExpression start, ISqlExpression end)
+		{
+			return null;
+		}
+
+		/// <summary>
+		/// Finest unit this provider can count date boundaries in, used for the fractional part of a
+		/// <c>Total*</c> member. <see langword="null"/> means totals of a date difference are not supported.
+		/// </summary>
+		/// <remarks>
+		/// Only ever applied to a window shorter than one of the requested units, so it cannot overflow however
+		/// far apart the two dates are - which is what makes a total expressible at all. Taking the whole
+		/// difference in this unit would overflow: a century in ticks is more than <see cref="long"/> holds.
+		/// </remarks>
+		protected virtual SqlIntervalUnit? FinestDateUnit => null;
+
+		/// <summary>
+		/// Whether <see cref="ElapsedTicks"/> is fine enough to answer the individual members, or only the
+		/// difference taken as a whole. Defaults to yes.
+		/// </summary>
+		/// <remarks>
+		/// A tick count answers every member with far less SQL, but only where it resolves what the provider
+		/// stores. Access counts seconds while an OLE Automation date holds fractions of one, so its count can sit
+		/// a second from the truth - enough to move <c>Hours</c> across a boundary - and counting each unit with
+		/// the correction against the actual dates stays exact there. The tick count still answers the difference
+		/// itself, which has no other form.
+		/// </remarks>
+		protected virtual bool ElapsedTicksResolveMembers => true;
+
+		protected internal override IQueryElement VisitSqlIntervalPartExpression(SqlIntervalPartExpression element)
+		{
+			// Lower before visiting children: the child interval carries the unit this needs, and visiting it
+			// first would unwrap it to a bare amount.
+			var lowered = LowerIntervalPart(element);
+			if (lowered != null)
+				return Visit(Optimize(lowered));
+
+			return base.VisitSqlIntervalPartExpression(element);
+		}
+
+		/// <summary>
+		/// Lowers an interval part to SQL. The default uses <see cref="IntervalLowering"/>'s integral-storage
+		/// strategy; providers with a native interval type override this to use it instead.
+		/// </summary>
+		/// <returns><see langword="null"/> when the part cannot be produced exactly, leaving it untranslated.</returns>
+		protected virtual ISqlExpression? LowerIntervalPart(SqlIntervalPartExpression element)
+		{
+			// A part of a computed difference is answered by counting elapsed units directly. .NET defines the
+			// member as _ticks / TicksPerUnit, and the anchor count reproduces that quotient exactly - forming a
+			// tick count first would only reintroduce the overflow and precision limits it exists to avoid.
+			// Unwrap first: the translator's placeholder may carry a nullability wrapper around the difference.
+			if (QueryHelper.UnwrapNullablity(element.Interval) is SqlIntervalDifferenceExpression difference)
+			{
+				// Ticks is the exception: it is the whole difference, not a count of units, so counting cannot
+				// answer it. It is the same quantity the provider produces for a bare difference over integral
+				// storage.
+				if (element is { Unit: SqlIntervalUnit.Tick, Kind: SqlIntervalPartKind.Total })
+				{
+					var ticks = ElapsedTicks(difference);
+
+					return ticks == null ? null : Factory.Cast(ticks, element.Type);
+				}
+
+				// Every member follows from the tick count, and .NET defines them that way, so where the count is
+				// fine enough this is both the shorter SQL and the closer reading of the CLR.
+				if (ElapsedTicksResolveMembers && ElapsedTicks(difference) is { } exact)
+					return IntervalLowering.FromTicks(Factory, exact, element, TruncateDivide, TruncateRemainder);
+
+				// The two ask for different counts. A component is the whole number itself, so it needs the
+				// corrected one - nothing follows it to absorb an overshoot. A total is followed by its leftover,
+				// which is measured from wherever the anchor landed and cancels the overshoot, so it takes the raw
+				// count and leaves the correction out of the expression entirely.
+				if (element.Kind == SqlIntervalPartKind.Component)
+				{
+					var whole = IntervalLowering.ElapsedUnits(Factory, difference, element.Unit, CountDateBoundaries, ShiftDate);
+
+					if (whole != null)
+						return Factory.Cast(IntervalLowering.WrapComponent(Factory, whole, element.Unit, element.Within, TruncateRemainder), element.Type);
+				}
+				else
+				{
+					var total = IntervalLowering.ElapsedTotal(
+						Factory, difference, element.Unit, FinestDateUnit, CountDateBoundaries, ShiftDate);
+
+					if (total != null)
+						return Factory.Cast(total, element.Type);
+				}
+
+				// Counting could not reach this unit either. A coarse tick count still beats leaving the member
+				// untranslated, which is what it would have been before any of this existed.
+				var elapsed = ElapsedTicks(difference);
+
+				return elapsed == null ? null : IntervalLowering.FromTicks(Factory, elapsed, element, TruncateDivide, TruncateRemainder);
+			}
+
+			return IntervalLowering.LowerPart(Factory, element, TruncateDivide, TruncateRemainder);
+		}
+
+		/// <summary>
+		/// Integer division truncating toward zero.
+		/// </summary>
+		/// <remarks>
+		/// The default is the division itself, which is what dividing two integers means in SQL and matches CLR
+		/// integer division on negatives. A provider whose division is not integral overrides it - MySQL and
+		/// DuckDB return a fraction, Access has no integer division at all - and so does one whose truncation is
+		/// spelled its own way.
+		/// </remarks>
+		protected virtual ISqlExpression TruncateDivide(ISqlExpression value, long divisor)
+		{
+			var longType = Factory.GetDbDataType(typeof(long));
+
+			return Factory.Div(longType, value, Factory.Value(longType, divisor));
+		}
+
+		/// <summary>
+		/// Remainder of the same truncating division, which is what <c>%</c> means on integers in most databases
+		/// and what the CLR operator means.
+		/// </summary>
+		/// <remarks>
+		/// Kept separate from <see cref="TruncateDivide"/> because composing it out of one - as
+		/// <c>value - trunc(value / divisor) * divisor</c> - repeats the value three times, and the components of
+		/// an interval nest two of these, so the repetition multiplies. A provider whose remainder disagrees on
+		/// negatives, or that spells it as a function, overrides this.
+		/// </remarks>
+		protected virtual ISqlExpression TruncateRemainder(ISqlExpression value, long divisor)
+		{
+			var longType = Factory.GetDbDataType(typeof(long));
+
+			return Factory.Mod(longType, value, Factory.Value(longType, divisor));
 		}
 
 		protected internal override IQueryElement VisitSqlCastExpression(SqlCastExpression element)
@@ -1143,7 +2100,11 @@ namespace LinqToDB.Internal.SqlProvider
 			var converted = ConvertConversion(element);
 			if (!ReferenceEquals(converted, element))
 			{
-				return Visit(Optimize(converted));
+				// Register the conversion so it is written into the transformation cache: otherwise only the
+				// base operand-reconstruction is recorded and a second Visit of the same cast (e.g. an
+				// InsertOrUpdate's projection column and its SET clause carry the same cast) is served the
+				// un-converted reconstruction from the cache instead of this refined result.
+				return Visit(Optimize(NotifyReplaced(converted, element)));
 			}
 
 			return element;
@@ -1151,9 +2112,11 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected internal override IQueryElement VisitSqlCoalesceExpression(SqlCoalesceExpression element)
 		{
+			var saveDeferPredicateReduce = BeginDeferPredicateReduce();
 			var newElement = base.VisitSqlCoalesceExpression(element);
+			DeferPredicateReduce = saveDeferPredicateReduce;
 			if (!ReferenceEquals(newElement, element))
-				return Visit(newElement);
+				return VisitReplacement(newElement);
 
 			var wrappedElement = WrapBooleanCoalesceItems(element, newElement);
 			if (wrappedElement != null)
@@ -1162,7 +2125,7 @@ namespace LinqToDB.Internal.SqlProvider
 			var converted = ConvertCoalesce(element);
 
 			if (!ReferenceEquals(converted, element))
-				return Visit(Optimize(converted));
+				return Visit(Optimize(NotifyReplaced(converted, element)));
 
 			return element;
 		}
@@ -1176,7 +2139,7 @@ namespace LinqToDB.Internal.SqlProvider
 			var converted = ConvertConcat(element);
 
 			if (!ReferenceEquals(converted, element))
-				return Visit(Optimize(converted));
+				return Visit(Optimize(NotifyReplaced(converted, element)));
 
 			return element;
 		}
@@ -1188,7 +2151,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 			for (var i = 0; i < element.Expressions.Length; i++)
 			{
-				var wrapped = WrapBooleanExpression(element.Expressions[i], includeFields : false, forceConvert: forceConvert);
+				var wrapped = FoldValuePredicate(element.Expressions[i], includeFields : false, forceConvert: forceConvert);
 
 				if (!ReferenceEquals(wrapped, element.Expressions[i]))
 				{
@@ -1338,7 +2301,7 @@ namespace LinqToDB.Internal.SqlProvider
 				// infinite re-entry loop: `SqlExpressionOptimizerVisitor.VisitSqlCoalesceExpression`
 				// collapses `Coalesce(non_null, '')` straight back to `non_null` (the '' fallback
 				// is unreachable), so a wrapped non-nullable operand would re-appear as a "naked"
-				// operand on the next `Visit(Optimize(converted))` pass and get wrapped again.
+				// operand on the next `Visit(converted)` pass and get wrapped again.
 				// The remaining idempotence check (`IsConcatCoalesceWrap`) handles nullable
 				// operands whose Coalesce wrap survived the optimizer pass (the base
 				// `VisitSqlCoalesceExpression` lowers it to `SqlFunction("Coalesce", _, '')`).
@@ -1420,37 +2383,9 @@ namespace LinqToDB.Internal.SqlProvider
 			};
 		}
 
-		public virtual ISqlExpression ConvertSqlExpression(SqlExpression element)
-		{
-			return element;
-		}
+		public virtual ISqlExpression ConvertSqlExpression(SqlExpression element) => element;
 
-		public virtual ISqlExpression ConvertSqlExtendedFunction(SqlExtendedFunction func)
-		{
-			switch (func.FunctionName)
-			{
-				case "MAX":
-				case "MIN":
-				{
-					if (func.SystemType == typeof(bool) || func.SystemType == typeof(bool?))
-					{
-						if (func.Arguments[0].Expression is not ISqlPredicate predicate)
-						{
-							predicate = new SqlPredicate.Expr(func.Arguments[0].Expression);
-						}
-
-						var argument = func.Arguments[0].WithExpression(new SqlConditionExpression(predicate, new SqlValue(1), new SqlValue(0)));
-						var newFunc  = func.WithArguments(new[] { argument }, func.ArgumentsNullability);
-						newFunc = newFunc.WithType(MappingSchema.GetDbDataType(typeof(int)));
-						return newFunc;
-					}
-
-					break;
-				}
-			}
-
-			return func;
-		}
+		public virtual ISqlExpression ConvertSqlExtendedFunction(SqlExtendedFunction func) => func;
 
 		public virtual ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
@@ -1484,6 +2419,37 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 
 			return func;
+		}
+
+		/// <summary>
+		/// Writes the default a reader substitutes for a NULL: as its value here, and as the least value of the column's type where a
+		/// provider's type cannot hold it.
+		/// </summary>
+		/// <param name="expression">The default to write.</param>
+		/// <returns>The expression the default is written as.</returns>
+		public virtual ISqlExpression ConvertDefaultValue(SqlDefaultValueExpression expression)
+		{
+			// TODO: #5999 - once the mapping schema holds a default per database type, take it from there and drop the provider overrides.
+			return new SqlValue(expression.Type, expression.Value);
+		}
+
+		/// <summary>
+		/// The default's value raised to <paramref name="least"/> when it is an earlier date, otherwise <see langword="null"/>.
+		/// </summary>
+		private protected static SqlValue? RaiseDefaultDate(SqlDefaultValueExpression expression, DateTime least)
+		{
+			// At offset zero a DateTimeOffset reads the same through DateTime and UtcDateTime, whichever one a provider writes.
+			object? raised = expression.Value switch
+			{
+				DateTime       dateTime       when dateTime                < least => least,
+				DateTimeOffset dateTimeOffset when dateTimeOffset.DateTime < least => new DateTimeOffset(least, TimeSpan.Zero),
+#if SUPPORTS_DATEONLY
+				DateOnly       dateOnly       when dateOnly < DateOnly.FromDateTime(least) => DateOnly.FromDateTime(least),
+#endif
+				_ => null,
+			};
+
+			return raised == null ? null : new SqlValue(expression.Type, raised);
 		}
 
 		public virtual ISqlPredicate ConvertLikePredicate(SqlPredicate.Like predicate)
@@ -1549,6 +2515,81 @@ namespace LinqToDB.Internal.SqlProvider
 			return selectQuery;
 		}
 
+		/// <summary>
+		/// Brings a membership test between two declared durations to common terms, or returns <see langword="null"/>
+		/// when there is nothing to reconcile.
+		/// </summary>
+		/// <remarks>
+		/// A comparison is reconciled while it is translated, because both operands are still expressions there. A
+		/// membership test is not: it becomes a predicate over one expression and a sub-query, and the two numbers
+		/// are then compared as they stand - 1800 against 18000000000 is the same ninety minutes written twice.
+		/// Neither value is known while the query is built, so no conversion of a constant can bridge them.
+		/// <para>
+		/// Both sides go to ticks rather than one side to the other's unit: converting the test down to a coarser
+		/// unit would truncate it, and a duration that the column cannot represent would then match a stored value
+		/// it does not equal.
+		/// </para>
+		/// <para>
+		/// The sub-query is cloned before its column is rewritten unless this visitor owns it outright, the same
+		/// query-level check <see cref="ConvertToExists"/> applies for the same reason - it may be shared, and a
+		/// statement reached through the query cache must not be edited in place. Only the query is checked here:
+		/// a transformed query always has its own columns.
+		/// </para>
+		/// </remarks>
+		ISqlPredicate? ReconcileDurationUnits(SqlPredicate.InSubQuery predicate)
+		{
+			if (predicate.SubQuery.Select.Columns is not [var singleColumn])
+				return null;
+
+			var testDescriptor   = QueryHelper.GetColumnDescriptor(predicate.Expr1);
+			var columnDescriptor = QueryHelper.GetColumnDescriptor(singleColumn.Expression);
+
+			if (testDescriptor?.DurationUnit is not { } testUnit || columnDescriptor?.DurationUnit is not { } columnUnit || testUnit == columnUnit)
+				return null;
+
+			// The two meet in the finer of their units, not in ticks. Either way the coarser one is the one that
+			// moves - a coarser unit converts into a finer exactly, while the other direction has a remainder to
+			// drop - so the finer column keeps the amount it was stored as and stays a column an index can be
+			// walked by, and only one side is multiplied rather than both.
+			//
+			// Ticks are the fallback and were the whole rule before: they are finer than every unit a column can be
+			// declared in but one, so meeting there is nearly always safe and is simply further than the two need to
+			// go. The exception is DurationUnit.Nanosecond, which is finer still - a tick is a hundred of them - so
+			// the meeting below can land under a tick, and no lowering takes a sub-tick amount. What reaches the
+			// builder then is a node it refuses, and the refusal it gives names an interval member although this is
+			// a membership test. Recorded rather than worked around: bringing such a column to any coarser unit is
+			// the division that DurationUnit.Nanosecond documents as unavailable, so there is no meeting to move to.
+			var meeting = SqlIntervalUnits.IsFinerThan(SqlIntervalType.ToIntervalUnit(columnUnit), SqlIntervalType.ToIntervalUnit(testUnit))
+				? columnUnit
+				: testUnit;
+
+			var subQuery = predicate.SubQuery;
+
+			if (GetVisitMode(subQuery) == VisitMode.Transform)
+				subQuery = subQuery.CloneQuery();
+
+			var subQueryColumn = subQuery.Select.Columns[0];
+
+			subQueryColumn.Expression = TotalIn(subQueryColumn.Expression, columnDescriptor, columnUnit, meeting);
+
+			return new SqlPredicate.InSubQuery(
+				TotalIn(predicate.Expr1, testDescriptor, testUnit, meeting),
+				predicate.IsNot,
+				subQuery,
+				predicate.DoNotConvert);
+		}
+
+		/// <summary>
+		/// A declared duration counted in <paramref name="meeting"/> rather than in the unit it is stored as. Where
+		/// the two are the same the count is the stored amount, and the column is left as it is.
+		/// </summary>
+		ISqlExpression TotalIn(ISqlExpression expression, ColumnDescriptor descriptor, DurationUnit unit, DurationUnit meeting)
+		{
+			var interval = new SqlIntervalExpression(expression, descriptor.GetDbDataType(true), SqlIntervalType.ForDuration(unit));
+
+			return new SqlIntervalPartExpression(interval, SqlIntervalType.ToIntervalUnit(meeting), SqlIntervalPartKind.Total, Factory.GetDbDataType(typeof(long)));
+		}
+
 		ISqlPredicate ConvertToExists(SqlPredicate.InSubQuery inPredicate)
 		{
 			ISqlExpression[] testExpressions;
@@ -1566,11 +2607,12 @@ namespace LinqToDB.Internal.SqlProvider
 			if (inPredicate.SubQuery.Where.SearchCondition.IsOr)
 				throw new InvalidOperationException("Not expected root SearchCondition.");
 
-			if (GetVisitMode(subQuery) == VisitMode.Transform || subQuery.Where.SearchCondition.IsOr)
-			{
-				subQuery = subQuery.CloneQuery();
-				subQuery.Where.EnsureConjunction();
-			}
+			// This rewrite CLEARS subQuery.Select.Columns and injects correlation predicates into subQuery.Where below.
+			// Cloning was gated on GetVisitMode(subQuery) == Transform, but Modify is not licence: it is also returned for a
+			// subquery this pass created that still SHARES structure with the cached statement, and the writes below then
+			// reach the cache. Always clone — the rewrite is destructive.
+			subQuery = subQuery.CloneQuery();
+			subQuery.Where.EnsureConjunction();
 
 			subQuery = WrapIfNeeded(subQuery);
 
@@ -1707,8 +2749,8 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual ISqlExpression ConvertSqlCondition(SqlConditionExpression element)
 		{
-			var trueValue  = WrapBooleanExpression(element.TrueValue, includeFields : false);
-			var falseValue = WrapBooleanExpression(element.FalseValue, includeFields : false);
+			var trueValue  = FoldValuePredicate(element.TrueValue, includeFields : false);
+			var falseValue = FoldValuePredicate(element.FalseValue, includeFields : false);
 
 			if (!ReferenceEquals(trueValue, element.TrueValue) || !ReferenceEquals(falseValue, element.FalseValue))
 			{
@@ -1722,7 +2764,7 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			if (element.ElseExpression != null)
 			{
-				var elseExpression = WrapBooleanExpression(element.ElseExpression, includeFields : true);
+				var elseExpression = FoldValuePredicate(element.ElseExpression, includeFields : true);
 
 				if (!ReferenceEquals(elseExpression, element.ElseExpression))
 				{
@@ -1735,7 +2777,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual SqlCaseExpression.CaseItem ConvertCaseItem(SqlCaseExpression.CaseItem newElement)
 		{
-			var resultExpr = WrapBooleanExpression(newElement.ResultExpression, includeFields : true);
+			var resultExpr = FoldValuePredicate(newElement.ResultExpression, includeFields : true);
 
 			if (!ReferenceEquals(resultExpr, newElement.ResultExpression))
 			{
@@ -1752,7 +2794,9 @@ namespace LinqToDB.Internal.SqlProvider
 			{
 				var unwrapped = QueryHelper.UnwrapNullablity(expr);
 
-				var wrap = includeFields && unwrapped.ElementType is QueryElementType.Column or QueryElementType.SqlField or QueryElementType.SqlCteTableField;
+				var wrap           = includeFields && unwrapped.ElementType is QueryElementType.Column or QueryElementType.SqlField or QueryElementType.SqlCteTableField;
+				var unknownAsFalse = false;
+
 				if (!wrap && unwrapped.IsPredicate())
 				{
 					if (unwrapped.TryEvaluateExpression(EvaluationContext, out var res))
@@ -1767,7 +2811,12 @@ namespace LinqToDB.Internal.SqlProvider
 						}
 					}
 
-					wrap = !SqlProviderFlags.SupportsBooleanType || (!withNull && unwrapped.CanBeNullableOrUnknown(NullabilityContext, withoutUnknownErased: true)) || forceConvert;
+					// UNKNOWN would reach the slot as NULL, where the slot cannot hold one or the predicate is never NULL in C#
+					// (a LikeClr comparison of nullable operands).
+					unknownAsFalse = unwrapped.CanBeNullableOrUnknown(NullabilityContext, withoutUnknownErased: true)
+						&& (!withNull || !unwrapped.CanBeNullableOrUnknown(NullabilityContext, withoutUnknownErased: false));
+
+					wrap = !SqlProviderFlags.SupportsBooleanType || unknownAsFalse || forceConvert;
 				}
 
 				if (wrap)
@@ -1786,18 +2835,20 @@ namespace LinqToDB.Internal.SqlProvider
 					{
 						var toType = QueryHelper.GetDbDataType(expr, MappingSchema);
 
+						// Each item reduces its own copy: reducing one in place would leave the other, and any other slot holding
+						// the same instance (an UPDATE's SET value is also a column of its inner query), folding a reduced predicate.
 						expr = new SqlCaseExpression(
 							toType,
 							new SqlCaseExpression.CaseItem[]
 							{
-								new(predicate, trueValue),
-								new(new SqlPredicate.Not(predicate), falseValue),
+								new(CopyForFold(predicate), trueValue),
+								new(NegateForFold(CopyForFold(predicate)), falseValue),
 							},
 							new SqlValue(toType, null));
 					}
-					else if (!withNull || !SqlProviderFlags.SupportsBooleanType || forceConvert)
+					else if (!withNull || unknownAsFalse || !SqlProviderFlags.SupportsBooleanType || forceConvert)
 					{
-						expr = new SqlConditionExpression(predicate, trueValue, falseValue);
+						expr = new SqlConditionExpression(CopyForFold(predicate), trueValue, falseValue);
 					}
 
 					expr = (ISqlExpression)Visit(expr);
@@ -1805,6 +2856,39 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 
 			return expr;
+		}
+
+		/// <summary>
+		/// The false item of the three-valued fold: the predicate is FALSE, so an UNKNOWN still reaches ELSE NULL. A plain
+		/// <see cref="SqlPredicate.Not"/> would be inverted with C# semantics, which counts NULL as not true.
+		/// </summary>
+		static ISqlPredicate NegateForFold(ISqlPredicate predicate)
+		{
+			return predicate switch
+			{
+				SqlPredicate.IsTrue isTrue                                      => new SqlPredicate.IsTrue(isTrue.Expr1, isTrue.TrueValue, isTrue.FalseValue, isTrue.WithNull, !isTrue.IsNot),
+				SqlSearchCondition { Predicates: [SqlPredicate.IsTrue single] } => NegateForFold(single),
+				_                                                               => new SqlPredicate.Not(predicate),
+			};
+		}
+
+		ISqlPredicate CopyForFold(ISqlPredicate predicate)
+		{
+			_foldCopyVisitor ??= new FoldCopyVisitor();
+
+			var copy = (ISqlPredicate)_foldCopyVisitor.Clone(predicate, static e => e is not (SqlFieldBase or SqlColumn or ISqlTableSource));
+			_foldCopyVisitor.Cleanup();
+
+			return copy;
+		}
+
+		/// <summary>
+		/// Copies a predicate for a fold without entering its subqueries: a subquery reduces the same way whichever fold reaches
+		/// it first, and copying one would leave the copies sharing its table sources.
+		/// </summary>
+		sealed class FoldCopyVisitor : SqlQueryCloneVisitor
+		{
+			protected internal override IQueryElement VisitSqlQuery(SelectQuery selectQuery) => selectQuery;
 		}
 
 		protected virtual ISqlExpression WrapColumnExpression(ISqlExpression expr)
@@ -2194,10 +3278,36 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected ISqlExpression ConvertCoalesceToBinaryFunc(SqlCoalesceExpression coalesce, string funcName, bool supportsParameters = true)
 		{
-			var last = coalesce.Expressions[^1];
+			var count = coalesce.Expressions.Length;
+
+			// An inlined parameter renders its bound value, so a non-null one decides the result and the operands after
+			// it are dead. Inlining makes the statement parameter-dependent, so this is re-decided on every execution.
+			if (!supportsParameters)
+			{
+				for (var i = 0; i < count - 1; i++)
+				{
+					var parameter = coalesce.Expressions[i] switch
+					{
+						SqlParameter p                                  => p,
+						SqlParameterCastExpression { Parameter: var p } => p,
+						_                                               => null,
+					};
+
+					if (parameter != null && parameter.GetParameterValue(EvaluationContext.ParameterValues).ProviderValue != null)
+					{
+						count = i + 1;
+						break;
+					}
+				}
+			}
+
+			var last = coalesce.Expressions[count - 1];
 			MarkParameters(last);
 
-			for (int i = coalesce.Expressions.Length - 2; i >= 0; i--)
+			if (count == 1)
+				return last;
+
+			for (int i = count - 2; i >= 0; i--)
 			{
 				var param = coalesce.Expressions[i];
 				MarkParameters(param);
