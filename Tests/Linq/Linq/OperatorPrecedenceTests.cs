@@ -635,5 +635,125 @@ namespace Tests.Linq
 				.IsMatch(sql, @"[-~]\(\s*\(\s*SELECT")
 				.ShouldBeFalse(sql);
 		}
+
+		// two minus signs side by side start a comment: a prefix minus over a negative literal, an inlined negative
+		// parameter or an operator chain that starts with one must keep them apart
+		[Test]
+		public void NegationNeverRendersAComment([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows);
+
+			db.InlineParameters = true;
+
+			var p = -5;
+
+			var query = table
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					NegatedProductOfNegative = Sql.AsSql(-(p * r.A)),
+					NegatedProductByNegative = Sql.AsSql(-(r.A * p)),
+					NegatedDifference        = Sql.AsSql(-(r.A - p)),
+					NegatedLiteralPlus       = Sql.AsSql(-Sql.ToSql(p) + r.A),
+					NegatedNegation          = Sql.AsSql(-(-r.A + r.B)),
+				});
+
+			var expected = Rows
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					NegatedProductOfNegative = -(p * r.A),
+					NegatedProductByNegative = -(r.A * p),
+					NegatedDifference        = -(r.A - p),
+					NegatedLiteralPlus       = -p + r.A,
+					NegatedNegation          = -(-r.A + r.B),
+				})
+				.ToList();
+
+			query
+				.ToList()
+				.ShouldBe(expected);
+
+			var sql = query
+				.ToSqlQuery()
+				.Sql;
+
+			sql.ShouldNotContain("--", Case.Sensitive, sql);
+		}
+
+		// an inlined negative or exponent literal renders as a primary operand of a product and under a prefix minus
+		[Test]
+		public void NegativeLiteralOperands([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows);
+
+			var negativeDecimal = -5.5m;
+			var negativeDouble  = -5.5d;
+			var small           = 1e-7d;
+
+			var productOfNegativeDecimal = table
+				.OrderBy(r => r.Id)
+				.Select(r => Sql.AsSql(r.A * Sql.ToSql(negativeDecimal)));
+
+			AssertQueryWithinDelta(productOfNegativeDecimal);
+
+			var negatedNegativeDecimal = table
+				.OrderBy(r => r.Id)
+				.Select(r => Sql.AsSql(-Sql.ToSql(negativeDecimal) * r.B));
+
+			AssertQueryWithinDelta(negatedNegativeDecimal);
+
+			var productOfNegativeDouble = table
+				.OrderBy(r => r.Id)
+				.Select(r => Sql.AsSql(r.A * Sql.ToSql(negativeDouble)));
+
+			AssertQueryWithinDelta(productOfNegativeDouble);
+
+			var productOfExponent = table
+				.OrderBy(r => r.Id)
+				.Select(r => Sql.AsSql(r.A * Sql.ToSql(small)));
+
+			AssertQueryWithinDelta(productOfExponent);
+		}
+
+		// clauses of the grouping rule that a value comparison cannot see: a right operand of the same operator keeps
+		// its brackets unless the operator is associative, and a left-associative chain renders bare
+		[Test]
+		public void ShapesTheMatrixCannotReachRenderAsSpecified([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows);
+
+			string SqlOf(Expression<Func<PrecedenceRow, int>> selector)
+			{
+				return table
+					.Select(selector)
+					.ToSqlQuery()
+					.Sql;
+			}
+
+			SqlOf(r => Sql.AsSql(r.A + (r.B + r.C)))
+				.ShouldContain("[r].[A] + ([r].[B] + [r].[C])");
+
+			SqlOf(r => Sql.AsSql(r.A * (r.B * r.C)))
+				.ShouldContain("[r].[A] * ([r].[B] * [r].[C])");
+
+			SqlOf(r => Sql.AsSql(r.A & (r.B & r.C)))
+				.ShouldContain("[r].[A] & [r].[B] & [r].[C]");
+
+			SqlOf(r => Sql.AsSql(r.A + r.B - r.C))
+				.ShouldContain("[r].[A] + [r].[B] - [r].[C]");
+
+			SqlOf(r => Sql.AsSql(r.A - r.B - r.C))
+				.ShouldContain("[r].[A] - [r].[B] - [r].[C]");
+
+			SqlOf(r => Sql.AsSql(r.A * r.B * r.C))
+				.ShouldContain("[r].[A] * [r].[B] * [r].[C]");
+
+			SqlOf(r => Sql.AsSql(r.A / r.B * r.C))
+				.ShouldContain("[r].[A] / [r].[B] * [r].[C]");
+		}
 	}
 }
