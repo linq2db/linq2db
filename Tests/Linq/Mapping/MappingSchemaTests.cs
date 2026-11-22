@@ -1,18 +1,24 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.DataProvider;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Conversion;
 using LinqToDB.Mapping;
 using LinqToDB.Metadata;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Mapping
 {
@@ -400,6 +406,105 @@ namespace Tests.Mapping
 				tasks[i] = Task.Run(() => ms.GetConvertExpression(typeof(string), typeof(int)));
 
 			Task.WaitAll(tasks);
+		}
+
+		// Every <Provider>Tools.GetDataProvider(<enums>…) combination, so a new version or client value is covered without editing this list.
+		static IEnumerable<TestCaseData> ProviderFactoryCases()
+		{
+			var toolsTypes = typeof(ProviderName).Assembly
+				.GetExportedTypes()
+				.Where(t => t is { IsAbstract: true, IsSealed: true }
+					&& t.Namespace?.StartsWith("LinqToDB.DataProvider.", StringComparison.Ordinal) == true
+					&& t.Name.EndsWith("Tools", StringComparison.Ordinal))
+				.OrderBy(t => t.Name, StringComparer.Ordinal);
+
+			foreach (var type in toolsTypes)
+			{
+				var factory = type.GetMethod("GetDataProvider", BindingFlags.Public | BindingFlags.Static);
+
+				if (factory == null)
+					continue;
+
+				var parameters = factory.GetParameters();
+				var enumValues = parameters
+					.TakeWhile(p => p.ParameterType.IsEnum)
+					.Select(p => Enum
+						.GetValues(p.ParameterType)
+						.Cast<object>()
+						.Where(v => !string.Equals(v.ToString(), "AutoDetect", StringComparison.Ordinal))
+						.ToArray())
+					.ToList();
+
+				IEnumerable<object[]> combinations = [[]];
+
+				foreach (var values in enumValues)
+					combinations = combinations.SelectMany(c => values.Select(v => (object[])[..c, v]));
+
+				foreach (var combination in combinations)
+				{
+					var arguments = combination
+						.Concat(parameters.Skip(combination.Length).Select(p => p.DefaultValue))
+						.ToArray();
+
+					yield return new TestCaseData(factory, arguments)
+						.SetArgDisplayNames([type.Name, ..combination.Select(v => v.ToString()!)]);
+				}
+			}
+		}
+
+		static string? MissingDriver(Exception? ex)
+		{
+			for (; ex != null; ex = ex.InnerException)
+				if ((ex is InvalidOperationException && ex.Message.StartsWith("Cannot load assembly", StringComparison.Ordinal))
+					|| ex is BadImageFormatException or DllNotFoundException or FileNotFoundException or FileLoadException)
+					return ex.Message;
+
+			return null;
+		}
+
+		[Table]
+		sealed class ProviderScopedTable
+		{
+			[Column] public int Id { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6137")]
+		[TestCaseSource(nameof(ProviderFactoryCases))]
+		public void ProviderNameScopedMappingApplies(MethodInfo factory, object?[] arguments)
+		{
+			IDataProvider provider;
+
+			try
+			{
+				provider = (IDataProvider)factory.Invoke(null, arguments)!;
+			}
+			catch (TargetInvocationException ex) when (MissingDriver(ex) is { } missing)
+			{
+				// Which clients load depends on the runtime and on native installs; each runs where its driver does.
+				Assert.Ignore(missing);
+				return;
+			}
+
+			provider.MappingSchema
+				.ConfigurationList
+				.ShouldContain(provider.Name);
+
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<ProviderScopedTable>(provider.Name)
+				.HasTableName("scoped")
+				.Build();
+
+			using var db = new DataConnection(new DataOptions()
+				.UseConnectionString(provider, "Server=localhost")
+				.UseMappingSchema(ms));
+
+			db.MappingSchema
+				.GetEntityDescriptor(typeof(ProviderScopedTable))
+				.Name
+				.Name
+				.ShouldBe("scoped");
 		}
 	}
 }
