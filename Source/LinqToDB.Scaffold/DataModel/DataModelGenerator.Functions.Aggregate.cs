@@ -27,6 +27,7 @@ namespace LinqToDB.DataModel
 			var method = context.DefineMethod(
 				context.AddAggregateFunctionRegion(aggregate.Method.Name).Methods(false),
 				aggregate.Method);
+			method.SetModifiers(method.Method.Attributes | Modifiers.SqlTranslated);
 
 			// aggregates cannot be used outside of query context, so we throw exception from method
 			var body = method

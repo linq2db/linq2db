@@ -49,6 +49,8 @@ namespace Tests.Scaffold
 				Assert.That(source, Does.Contain("FluentMappingBuilder(TestDataContext.ContextSchema)"));
 				Assert.That(source, Does.Contain("static member ContextSchema with get() : MappingSchema = _ContextSchema"));
 				Assert.That(source, Does.Not.Contain("static member val ContextSchema"));
+				// one call per line, as in C#
+				Assert.That(source, Does.Match(@"\n +builder\r?\n +\.Entity<TestTable>\(\)\r?\n +\.HasAttribute\(TableAttribute\(""TestTable""\)\)\r?\n +\.Member\("));
 			}
 		}
 
@@ -81,8 +83,8 @@ namespace Tests.Scaffold
 			options.DataModel.BaseEntityClass = "My.Namespace.BaseEntity";
 
 			Assert.That(
-				() => GenerateSource(options, columns: [new Column("Id", null, new DatabaseType("int", null, null, null), false, true, true, 0)]),
-				Throws.TypeOf<NotSupportedException>());
+				() => new Scaffolder(LanguageProviders.FSharp, HumanizerNameConverter.Instance, options, null),
+				Throws.TypeOf<NotSupportedException>().With.Message.Contains("My.Namespace.BaseEntity"));
 		}
 
 		[Test]
@@ -113,6 +115,7 @@ namespace Tests.Scaffold
 			}
 		}
 
+		// SQL Server: procedures and a non-default schema; SQLite: fluent metadata (NullableFlowAnalysis arm)
 		[Test]
 		public void DelegatingProviderMatchesFSharp([IncludeDataSources(TestProvName.SqlServer2022MS, ProviderName.SQLiteMS)] string context)
 		{
@@ -151,7 +154,11 @@ namespace Tests.Scaffold
 				MetadataBuilders.GetMetadataBuilder(scaffolder.Language, options.DataModel.Metadata),
 				new ProviderSpecificStructsEqualityFixer(scaffolder.Language));
 
-			return string.Join("\n", scaffolder.GenerateSourceCode(dataModel, files).Select(f => f.Code));
+			var code = scaffolder
+				.GenerateSourceCode(dataModel, files)
+				.Select(f => f.Code);
+
+			return string.Join("\n", code);
 		}
 
 		[Test]
@@ -168,6 +175,233 @@ namespace Tests.Scaffold
 				Assert.That(files[0], Does.Not.Contain("\t"));
 				Assert.That(files[0], Does.Contain("type TestDataContext (options : DataOptions<TestDataContext>) ="));
 				Assert.That(files[0], Does.Not.Contain("InitDataContext"));
+			}
+		}
+
+		[Test]
+		public void UnsupportedOptionsReset()
+		{
+			var options = FSharpOptions();
+			options.CodeGeneration.ClassPerFile                   = true;
+			options.DataModel.EntityClassIsPartial                = true;
+			options.DataModel.GenerateInitDataContextMethod       = true;
+			options.DataModel.GenerateStaticInitDataContextMethod = true;
+			options.DataModel.HasDefaultConstructor               = true;
+			options.DataModel.HasConfigurationConstructor         = true;
+			options.DataModel.HasUntypedOptionsConstructor        = true;
+			options.DataModel.HasTypedOptionsConstructor          = false;
+			options.DataModel.GenerateAssociationExtensions       = true;
+			options.DataModel.GenerateProceduresSchemaError       = true;
+
+			var files = GenerateFiles(options, columns: [new Column("Id", null, new DatabaseType("int", null, null, null), false, true, true, 0)]);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(files, Has.Length.EqualTo(1));
+				Assert.That(files[0], Does.Contain("type TestDataContext (options : DataOptions<TestDataContext>) ="));
+				Assert.That(options.CodeGeneration.ClassPerFile,                   Is.False);
+				Assert.That(options.DataModel.EntityClassIsPartial,                Is.False);
+				Assert.That(options.DataModel.GenerateInitDataContextMethod,       Is.False);
+				Assert.That(options.DataModel.GenerateStaticInitDataContextMethod, Is.False);
+				Assert.That(options.DataModel.HasDefaultConstructor,               Is.False);
+				Assert.That(options.DataModel.HasConfigurationConstructor,         Is.False);
+				Assert.That(options.DataModel.HasUntypedOptionsConstructor,        Is.False);
+				Assert.That(options.DataModel.HasTypedOptionsConstructor,          Is.True);
+				Assert.That(options.DataModel.GenerateAssociationExtensions,       Is.False);
+				Assert.That(options.DataModel.GenerateProceduresSchemaError,       Is.False);
+			}
+		}
+
+		[Test]
+		public void FunctionSignaturesWithoutOptions([Values(MetadataSource.Attributes, MetadataSource.FluentMapping)] MetadataSource metadata, [Values("dbo", "other")] string schema)
+		{
+			var options = FSharpOptions();
+			options.DataModel.Metadata = metadata;
+
+			var source = GenerateFunctionSource(options, functionSchema: schema);
+
+			// a non-default schema's functions live in its module's Extensions type and map through its context
+			var functions = schema == "dbo" ? "ExtensionMethods" : "OtherSchema.Extensions";
+			var context   = schema == "dbo" ? "TestDataContext"  : "OtherSchema.DataContext";
+
+			using (Assert.EnterMultipleScope())
+			{
+				// a column keeps its option
+				Assert.That(source, Does.Contain("Value : int option"));
+				// function values cross SQL with no column mapping (#6443)
+				Assert.That(source, Does.Contain("IntFunction (value : Nullable<int>) : Nullable<int>"));
+				Assert.That(source, Does.Contain("IntFunction (value : obj | null) : Nullable<int>"));
+				Assert.That(source, Does.Contain("TextFunction (value : string | null) : string | null"));
+				Assert.That(source, Does.Contain("RowsFunction (id : Nullable<int>)"));
+				Assert.That(source, Does.Not.Contain("defaultof<int option>"));
+				Assert.That(source, Does.Not.Contain("defaultof<string option>"));
+			}
+
+			if (metadata == MetadataSource.FluentMapping)
+			{
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(source, Does.Contain("IntFunction(Unchecked.defaultof<Nullable<int>>)"));
+					Assert.That(source, Does.Contain("IntFunction(Unchecked.defaultof<obj | null>)"));
+					Assert.That(source, Does.Contain("TextFunction(Unchecked.defaultof<string>)"));
+					Assert.That(source, Does.Contain("RowsFunction(Unchecked.defaultof<Nullable<int>>)"));
+					// F# has no lambda to LambdaExpression conversion: the typed HasAttribute<TContext> overload, unboxed
+					Assert.That(source, Does.Contain($"builder.HasAttribute<{context}>((fun ctx -> {functions}.IntFunction(Unchecked.defaultof<Nullable<int>>))"));
+					Assert.That(source, Does.Contain($"builder.HasAttribute<{context}>((fun ctx -> {functions}.IntFunction(Unchecked.defaultof<obj | null>))"));
+					Assert.That(source, Does.Contain($"builder.HasAttribute<{context}>((fun ctx -> {functions}.SumFunction<obj>("));
+					Assert.That(source, Does.Not.Contain("builder.HasAttribute((fun () ->"));
+					Assert.That(source, Does.Not.Contain("box ("));
+				}
+			}
+		}
+
+		[Test]
+		public void FluentObjectFunctionNotBoxed([Values("dbo", "other")] string schema)
+		{
+			var options = FSharpOptions();
+			options.DataModel.Metadata    = MetadataSource.FluentMapping;
+			options.Schema.LoadedObjects |= SchemaObjects.ScalarFunction;
+
+			// an unmapped database type maps to object
+			var function = new ScalarFunction(
+				new SqlObjectName("ObjectFunction", Schema: schema),
+				null,
+				[new Parameter("@value", null, new DatabaseType("int", null, null, null), true, LinqToDB.Schema.ParameterDirection.Input)],
+				new ScalarResult(null, new DatabaseType("unmapped_type", null, null, null), true));
+
+			var scaffolder = new Scaffolder(LanguageProviders.FSharp, HumanizerNameConverter.Instance, options, null);
+			var schemaProvider = new TestSchemaProvider([new Column("Id", null, new DatabaseType("int", null, null, null), false, true, true, 0)], [], null, "dbo", "TestTable", [], [function]);
+			var dataModel  = scaffolder.LoadDataModel(schemaProvider, TestTypeMappingProvider.Instance);
+			var provider   = SqlServerTools.GetDataProvider(SqlServerVersion.v2012, SqlServerProvider.MicrosoftDataSqlClient);
+			var files      = scaffolder.GenerateCodeModel(provider.CreateSqlBuilder(provider.MappingSchema, new DataOptions()), dataModel, MetadataBuilders.GetMetadataBuilder(scaffolder.Language, options.DataModel.Metadata));
+
+			var code = scaffolder
+				.GenerateSourceCode(dataModel, files)
+				.Select(f => f.Code);
+
+			var source = string.Join("\n", code);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(source, Does.Contain("ObjectFunction (value : Nullable<int>) : obj | null"));
+				// a schema function lives in the schema module's Extensions type and maps through the schema context
+				Assert.That(source, Does.Contain(schema == "dbo"
+					? "builder.HasAttribute<TestDataContext>((fun ctx -> ExtensionMethods.ObjectFunction(Unchecked.defaultof<Nullable<int>>)), "
+					: "builder.HasAttribute<OtherSchema.DataContext>((fun ctx -> OtherSchema.Extensions.ObjectFunction(Unchecked.defaultof<Nullable<int>>)), "));
+				Assert.That(source, Does.Not.Contain("box ("));
+			}
+		}
+
+		[Test]
+		public void AggregateSelectorKeepsOption()
+		{
+			var source = GenerateFunctionSource(FSharpOptions());
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(source, Does.Contain("Func<'TSource, int option>"));
+				Assert.That(source, Does.Match(@"SumFunction<'TSource> \(.*\) : Nullable<int> ="));
+			}
+		}
+
+		[Test]
+		public void ShortAttributeNamesOpenTheirNamespaces()
+		{
+			var options = FSharpOptions();
+			options.Schema.LoadedObjects             |= SchemaObjects.StoredProcedure;
+			options.DataModel.GenerateProcedureAsync  = true;
+
+			var procedure = new StoredProcedure(
+				new SqlObjectName("TestProcedure", Schema: "dbo"),
+				null,
+				[new Parameter("@value", null, new DatabaseType("int", null, null, null), true, LinqToDB.Schema.ParameterDirection.Input)],
+				null,
+				null,
+				new VoidResult());
+
+			var source = GenerateSource(
+				options,
+				columns    : [new Column("Id", null, new DatabaseType("int", null, null, null), false, true, true, 0)],
+				primaryKey : new PrimaryKey(null, ["Id"]),
+				procedures : [procedure]);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(source, Does.Match(@"\nopen System\.Runtime\.CompilerServices\r?\n"));
+				Assert.That(source, Does.Match(@"\nopen System\.Runtime\.InteropServices\r?\n"));
+				Assert.That(source, Does.Contain("[<Extension>]"));
+				Assert.That(source, Does.Contain("[<Optional>] cancellationToken"));
+				Assert.That(source, Does.Not.Contain("[<System.Runtime."));
+			}
+		}
+
+		[Test]
+		public void ShadowedAttributeNamesQualified([Values("dbo", "other")] string schema)
+		{
+			var options = FSharpOptions();
+			options.Schema.LoadedObjects             |= SchemaObjects.StoredProcedure;
+			options.DataModel.GenerateProcedureAsync  = true;
+			options.DataModel.EntityClassNameOptions = new() { Casing = NameCasing.None };
+
+			var procedure = new StoredProcedure(
+				new SqlObjectName("TestProcedure", Schema: "dbo"),
+				null,
+				[new Parameter("@value", null, new DatabaseType("int", null, null, null), true, LinqToDB.Schema.ParameterDirection.Input)],
+				null,
+				null,
+				new VoidResult());
+
+			Table[] shadowing =
+			[
+				new(new SqlObjectName("ExtensionAttribute"            , Schema: schema), null, [new Column("Id", null, new DatabaseType("int", null, null, null), false, true, true, 0)], null, new PrimaryKey(null, ["Id"])),
+				new(new SqlObjectName("OptionalAttribute"             , Schema: schema), null, [new Column("Id", null, new DatabaseType("int", null, null, null), false, true, true, 0)], null, null),
+				new(new SqlObjectName("DefaultParameterValueAttribute", Schema: schema), null, [new Column("Id", null, new DatabaseType("int", null, null, null), false, true, true, 0)], null, null),
+			];
+
+			var source = GenerateSource(options, procedures: [procedure], extraTables: shadowing);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(source, Does.Contain("[<System.Runtime.CompilerServices.Extension>]"));
+				Assert.That(source, Does.Contain("[<System.Runtime.InteropServices.Optional>] cancellationToken"));
+				Assert.That(source, Does.Not.Contain("[<Extension>]"));
+				Assert.That(source, Does.Not.Contain("open System.Runtime.CompilerServices"));
+			}
+		}
+
+		[Test]
+		public void AttributeNameNotShadowedByItsShortName()
+		{
+			var options = FSharpOptions();
+			options.DataModel.EntityClassNameOptions = new() { Casing = NameCasing.None };
+
+			var source = GenerateSource(
+				options,
+				columns    : [new Column("Id", null, new DatabaseType("int", null, null, null), false, true, true, 0)],
+				primaryKey : new PrimaryKey(null, ["Id"]),
+				tableName  : "Extension");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(source, Does.Contain("type Extension ="));
+				Assert.That(source, Does.Contain("[<Extension>]"));
+				Assert.That(source, Does.Match(@"\nopen System\.Runtime\.CompilerServices\r?\n"));
+			}
+		}
+
+		[Test]
+		public void ModuleExtensionsTypeOpensCompilerServices()
+		{
+			var options = FSharpOptions();
+			options.DataModel.GenerateFindExtensions = FindTypes.None;
+
+			var source = GenerateFunctionSource(options, functionSchema: "other");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(source, Does.Contain("module OtherSchema ="));
+				Assert.That(source, Does.Match(@"\[<Extension>\]\r?\n +type Extensions ="));
+				Assert.That(source, Does.Match(@"\nopen System\.Runtime\.CompilerServices\r?\n"));
 			}
 		}
 
@@ -393,10 +627,14 @@ namespace Tests.Scaffold
 				.SelectMany(ns => AllClasses(ns.Members))
 				.ToList();
 
+			var partialClasses = classes
+				.Where(static c => c.Attributes.HasFlag(Modifiers.Partial))
+				.Select(static c => c.Name.Name);
+
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(classes, Has.Count.GreaterThanOrEqualTo(6));
-				Assert.That(classes.Where(static c => c.Attributes.HasFlag(Modifiers.Partial)).Select(static c => c.Name.Name), Is.Empty);
+				Assert.That(partialClasses, Is.Empty);
 			}
 
 			static IEnumerable<CodeClass> AllClasses(IEnumerable<IMemberGroup> groups)
@@ -450,7 +688,8 @@ namespace Tests.Scaffold
 					| LanguageFeatures.MultipleConstructors
 					| LanguageFeatures.TabIndentation
 					| LanguageFeatures.MultipleFiles
-					| LanguageFeatures.ErrorDirective));
+					| LanguageFeatures.ErrorDirective
+					| LanguageFeatures.LambdaExpressionConversion));
 			}
 		}
 
@@ -484,7 +723,58 @@ namespace Tests.Scaffold
 				MetadataBuilders.GetMetadataBuilder(scaffolder.Language, options.DataModel.Metadata),
 				[new ProviderSpecificStructsEqualityFixer(scaffolder.Language), .. converters ?? []]);
 
-			return scaffolder.GenerateSourceCode(dataModel, files).Select(f => f.Code).ToArray();
+			return scaffolder
+				.GenerateSourceCode(dataModel, files)
+				.Select(f => f.Code)
+				.ToArray();
+		}
+
+		// nullable int / string scalar functions (one overloaded by parameter type), a table function and an aggregate
+		// over a nullable column, in schema `functionSchema`
+		static string GenerateFunctionSource(ScaffoldOptions options, string functionSchema = "dbo")
+		{
+			options.Schema.LoadedObjects |= SchemaObjects.ScalarFunction | SchemaObjects.TableFunction | SchemaObjects.AggregateFunction;
+
+			var intType  = new DatabaseType("int"     , null, null, null);
+			var textType = new DatabaseType("nvarchar", 50  , null, null);
+
+			ScalarFunction[] scalarFunctions =
+			[
+				new(new SqlObjectName("IntFunction" , Schema: functionSchema), null, [new Parameter("@value", null, intType , true, LinqToDB.Schema.ParameterDirection.Input)], new ScalarResult(null, intType , true)),
+				new(new SqlObjectName("IntFunction" , Schema: functionSchema), null, [new Parameter("@value", null, new DatabaseType("unmapped_type", null, null, null), true, LinqToDB.Schema.ParameterDirection.Input)], new ScalarResult(null, intType, true)),
+				new(new SqlObjectName("TextFunction", Schema: functionSchema), null, [new Parameter("@value", null, textType, true, LinqToDB.Schema.ParameterDirection.Input)], new ScalarResult(null, textType, true)),
+			];
+
+			TableFunction[] tableFunctions =
+			[
+				new(new SqlObjectName("RowsFunction", Schema: functionSchema), null, [new Parameter("@id", null, intType, true, LinqToDB.Schema.ParameterDirection.Input)], null, [new ResultColumn("Id", intType, false)]),
+			];
+
+			AggregateFunction[] aggregateFunctions =
+			[
+				new(new SqlObjectName("SumFunction", Schema: functionSchema), null, [new Parameter("@value", null, intType, true, LinqToDB.Schema.ParameterDirection.Input)], new ScalarResult(null, intType, true)),
+			];
+
+			var scaffolder = new Scaffolder(LanguageProviders.FSharp, HumanizerNameConverter.Instance, options, null);
+			var schema     = new TestSchemaProvider(
+				[new Column("Id", null, intType, false, true, true, 0), new Column("Value", null, intType, true, true, true, 1)],
+				[],
+				null,
+				"dbo",
+				"TestTable",
+				[],
+				scalarFunctions,
+				tableFunctions,
+				aggregateFunctions);
+			var dataModel  = scaffolder.LoadDataModel(schema, TestTypeMappingProvider.Instance);
+			var provider   = SqlServerTools.GetDataProvider(SqlServerVersion.v2012, SqlServerProvider.MicrosoftDataSqlClient);
+			var files      = scaffolder.GenerateCodeModel(provider.CreateSqlBuilder(provider.MappingSchema, new DataOptions()), dataModel, MetadataBuilders.GetMetadataBuilder(scaffolder.Language, options.DataModel.Metadata));
+
+			var code = scaffolder
+				.GenerateSourceCode(dataModel, files)
+				.Select(f => f.Code);
+
+			return string.Join("\n", code);
 		}
 
 		// renames identifiers in the code model, standing in for user code model converters
@@ -494,7 +784,7 @@ namespace Tests.Scaffold
 				=> string.Equals(identifier.Name, from, StringComparison.Ordinal) ? new CodeIdentifier(to, false) : identifier;
 		}
 
-		sealed class TestSchemaProvider(IReadOnlyCollection<Column> columns, IReadOnlyCollection<StoredProcedure> procedures, PrimaryKey? primaryKey, string tableSchema, string tableName, IReadOnlyCollection<Table> extraTables, IReadOnlyCollection<ScalarFunction>? scalarFunctions = null) : ISchemaProvider
+		sealed class TestSchemaProvider(IReadOnlyCollection<Column> columns, IReadOnlyCollection<StoredProcedure> procedures, PrimaryKey? primaryKey, string tableSchema, string tableName, IReadOnlyCollection<Table> extraTables, IReadOnlyCollection<ScalarFunction>? scalarFunctions = null, IReadOnlyCollection<TableFunction>? tableFunctions = null, IReadOnlyCollection<AggregateFunction>? aggregateFunctions = null) : ISchemaProvider
 		{
 			IEnumerable<Table> ISchemaProvider.GetTables()
 			{
@@ -508,9 +798,9 @@ namespace Tests.Scaffold
 			IEnumerable<View>              ISchemaProvider.GetViews()              => [];
 			IEnumerable<ForeignKey>        ISchemaProvider.GetForeignKeys()        => [];
 			IEnumerable<StoredProcedure>   ISchemaProvider.GetProcedures(bool withSchema, bool safeSchemaOnly) => procedures;
-			IEnumerable<TableFunction>     ISchemaProvider.GetTableFunctions()     => [];
+			IEnumerable<TableFunction>     ISchemaProvider.GetTableFunctions()     => tableFunctions ?? [];
 			IEnumerable<ScalarFunction>    ISchemaProvider.GetScalarFunctions()    => scalarFunctions ?? [];
-			IEnumerable<AggregateFunction> ISchemaProvider.GetAggregateFunctions() => [];
+			IEnumerable<AggregateFunction> ISchemaProvider.GetAggregateFunctions() => aggregateFunctions ?? [];
 			ISet<string>                   ISchemaProvider.GetDefaultSchemas()     => new HashSet<string>(["dbo"], StringComparer.Ordinal);
 			string?                        ISchemaProvider.DatabaseName            => null;
 			string?                        ISchemaProvider.ServerVersion           => null;

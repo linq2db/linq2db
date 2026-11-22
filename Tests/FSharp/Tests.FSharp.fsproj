@@ -32,6 +32,7 @@
 		<Compile Include="..\FSharp.Scaffold\SQLite\TestDataDB.fs" Link="Scaffold\SQLite.fs" />
 		<Compile Include="..\FSharp.Scaffold\SQLiteFluent\TestDataDB.fs" Link="Scaffold\SQLiteFluent.fs" />
 		<Compile Include="..\FSharp.Scaffold\SqlServer\TestDataDB.fs" Link="Scaffold\SqlServer.fs" />
+		<Compile Include="..\FSharp.Scaffold\SqlServerFluent\TestDataDB.fs" Link="Scaffold\SqlServerFluent.fs" />
 		<Compile Include="GeneratedCode.fs" />
 	</ItemGroup>
 

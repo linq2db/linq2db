@@ -148,26 +148,17 @@ namespace Tests.Linq
 			FSharp.GeneratedModel.TestGeneratedEntityRoundtrip(db);
 		}
 
-		[Test(Description = "the scaffolder's generated DataConnection context (DataOptions<T> ctor + GetTable member) works at runtime (#1553)")]
-		public void GeneratedShape_ContextTableAccess([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		[ActiveIssue(6443, ErrorMessage = "Microsoft.FSharp.Core.FSharpOption`1",
+			Details = "an option argument with no column descriptor is bound as the FSharpOption object: Microsoft.Data.Sqlite rejects it (no mapping to a provider type), System.Data.SQLite passes a non-number to abs and the 0.0 result cannot be read back as an option.")]
+		// SQLite: the built-in abs and json_each functions stand in for database functions
+		[Test(Description = "option arguments of hand-written F# scalar and table function wrappers reach the database as values")]
+		public void GeneratedShape_FunctionOptionArguments([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataConnection(context);
-			FSharp.GeneratedModel.TestGeneratedContextTableAccess(db);
+			FSharp.GeneratedModel.TestFunctionOptionArguments(db);
 		}
 
-		[Test(Description = "an option-typed argument of a generated stored-procedure wrapper reaches the database as its value (#1553)")]
-		public void GeneratedShape_OptionParameter([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
-		{
-			using var db = GetDataConnection(context);
-			FSharp.GeneratedModel.TestGeneratedOptionParameter(db);
-		}
-
-		[Test(Description = "a generated stored-procedure wrapper reads an output parameter value back into an option (#1553)")]
-		public void GeneratedShape_OptionReadBack()
-		{
-			FSharp.GeneratedModel.TestGeneratedOptionReadBack();
-		}
-
+		// SQLite: the linked model is the golden scaffolded from the SQLite TestData schema
 		[Test(Description = "queries, associations and Find methods of the scaffolder's generated F# model (#1553)")]
 		public void GeneratedCode_Queries([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -175,6 +166,7 @@ namespace Tests.Linq
 			FSharp.GeneratedCode.TestGeneratedQueries(db);
 		}
 
+		// SQLite: the linked model is the fluent golden scaffolded from the SQLite TestData schema
 		[Test(Description = "the scaffolder's generated F# fluent mapping (static initializer) is applied (#1553)")]
 		public void GeneratedCode_FluentMapping([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -182,11 +174,28 @@ namespace Tests.Linq
 			FSharp.GeneratedCode.TestGeneratedFluentMapping(db);
 		}
 
+		// SQL Server: calls the ExecuteProcIntParameters procedure through the SQL Server golden's wrapper
 		[Test(Description = "a generated F# stored-procedure wrapper accepts Some/None arguments and reads the output back (#1553)")]
 		public void GeneratedCode_ProcedureOptionParameters([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			using var db = GetDataConnection(context);
 			FSharp.GeneratedCode.TestGeneratedProcedureOptionParameters(db);
+		}
+
+		// SQL Server: calls the GetParentByID and ScalarFunction functions through the SQL Server golden's wrappers
+		[Test(Description = "generated F# scalar and table function wrappers pass their arguments to the database as values (#1553)")]
+		public void GeneratedCode_FunctionArguments([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.GeneratedCode.TestGeneratedFunctionArguments(db);
+		}
+
+		// SQL Server: calls the same functions through the fluent-mapped SQL Server golden
+		[Test(Description = "generated F# function wrappers of a fluent-mapped model pass their arguments to the database as values (#1553)")]
+		public void GeneratedCode_FluentFunctionArguments([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.GeneratedCode.TestGeneratedFluentFunctionArguments(db);
 		}
 
 		[Test(Description = "Auto 'T option mapping must not override an explicit fluent DataType on an option column (#195 follow-up)")]
@@ -198,6 +207,7 @@ namespace Tests.Linq
 			FSharp.OptionMappingPrecedence.VerifyExplicitDataTypePreserved(db);
 		}
 
+		// SQLite: the test reads the entity descriptor only, so one provider suffices
 		[Test(Description = "an option member without [<Column>] is still a column when the table requires column attributes")]
 		public void OptionMapping_UnattributedOptionIsColumn([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{

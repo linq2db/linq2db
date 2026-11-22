@@ -88,5 +88,11 @@ namespace LinqToDB.CodeModel
 		/// <see cref="Scaffold.DataModelOptions.GenerateProceduresSchemaError"/> option is disabled.
 		/// </summary>
 		ErrorDirective                    = 0x4000,
+		/// <summary>
+		/// Lambda converts to untyped <see cref="System.Linq.Expressions.LambdaExpression"/> parameter. Without it,
+		/// fluent mapping of scalar and aggregate functions uses <c>HasAttribute&lt;TContext&gt;</c> overload with typed
+		/// expression parameter.
+		/// </summary>
+		LambdaExpressionConversion        = 0x8000,
 	}
 }

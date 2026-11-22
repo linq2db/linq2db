@@ -1,5 +1,7 @@
 module Tests.FSharp.GeneratedModel
 
+open System.Linq
+
 open LinqToDB
 open LinqToDB.Data
 open LinqToDB.Mapping
@@ -9,10 +11,8 @@ open Tests
 
 // Mirrors the shape the CLI scaffolder emits for F# (issue #1553): an idiomatic record with
 // [<Table>]/[<Column>] attributes on fields (explicit DB column names + DataType), nullable columns as
-// 'T option, and a DataConnection-derived context with a DataOptions<T> primary constructor and GetTable
-// member accessors. These tests prove linq2db actually materializes and round-trips the generated shape at
-// runtime (UseFSharp() is applied by the test base), complementing the compile-only Tests.FSharp.Scaffold
-// baseline gate.
+// 'T option. The test proves linq2db materializes and round-trips that shape on every provider (UseFSharp()
+// is applied by the test base); the generated code itself runs in GeneratedCode.fs.
 
 [<Table("GeneratedScaffoldPerson")>]
 [<NoComparison>]
@@ -23,10 +23,6 @@ type GeneratedPerson =
         [<Column("MiddleName", DataType = DataType.NVarChar, Length = 50)>] MiddleName : string option
         [<Column("Age", DataType = DataType.Int32)>] Age : int option
     }
-
-type GeneratedScaffoldDb (options : DataOptions<GeneratedScaffoldDb>) =
-    inherit DataConnection(options.Options)
-    member this.People = this.GetTable<GeneratedPerson>()
 
 // Round-trips the generated record shape: explicitly [<Column>]-attributed fields with DB-name/property
 // divergence (PersonID -> Id), Some/None option columns, a non-null PK. None must read back as None (in
@@ -53,29 +49,34 @@ let TestGeneratedEntityRoundtrip (db : IDataContext) =
     Assert.That(r2.MiddleName, Is.EqualTo None)
     Assert.That(r2.Age, Is.EqualTo None)
 
-// Exercises the generated context type: constructed via its DataOptions<T> primary constructor and read
-// through the generated GetTable member accessor (create + read on the context's own connection).
-let TestGeneratedContextTableAccess (db : DataConnection) =
-    use ctx = new GeneratedScaffoldDb(new DataOptions<GeneratedScaffoldDb>(db.Options))
-    use _t = ctx.CreateLocalTable<GeneratedPerson>()
+// The generated function wrappers' shape (DataModelGenerator.Functions): nullable scalar parameters are 'T option and
+// reach the query expression unchanged (only stored-procedure wrappers unwrap them). SQLite built-ins stand in for
+// database functions.
+type GeneratedFunctionRow =
+    {
+        [<Column("key")>] Key : int64
+    }
 
-    ctx.Insert({ Id = 1; FirstName = "John"; MiddleName = Some "Q"; Age = Some 42 }) |> ignore
+type GeneratedFunctionsDb (options : DataOptions<GeneratedFunctionsDb>) =
+    inherit DataConnection(options.Options)
 
-    let people = ctx.People |> Seq.toList
-    Assert.That(people.Length, Is.EqualTo 1)
-    Assert.That(people.[0].MiddleName, Is.EqualTo(Some "Q"))
+    [<Sql.TableFunction("json_each")>]
+    member this.JsonEach (json : string option) : IQueryable<GeneratedFunctionRow> = this.QueryFromExpression<GeneratedFunctionRow>((fun () -> this.JsonEach(json)))
 
-// Mirrors the generated stored-procedure wrapper's parameter handling: an option-typed argument is unwrapped
-// into the DataParameter value, and an output parameter value is read back into an option.
-let TestGeneratedOptionParameter (db : DataConnection) =
-    let some : int option = Some 5
+    [<Sql.Function("abs", ServerSideOnly = true)>]
+    static member Abs (value : int option) : int option = raise (System.InvalidOperationException("Scalar function cannot be called outside of query"))
+
+let TestFunctionOptionArguments (db : DataConnection) =
+    use ctx = new GeneratedFunctionsDb(new DataOptions<GeneratedFunctionsDb>(db.Options))
+
+    let some : int option = Some -5
     let none : int option = None
-    Assert.That(db.Execute<int>("SELECT @p", [| DataParameter("@p", Option.toNullable(some), DataType.Int32) |]), Is.EqualTo 5)
-    Assert.That(db.Execute<System.Nullable<int>>("SELECT @p", [| DataParameter("@p", Option.toNullable(none), DataType.Int32) |]), Is.Null)
+    let json : string option = Some "[10,20,30]"
+    let noJson : string option = None
 
-let TestGeneratedOptionReadBack () =
-    Assert.That(LinqToDB.Common.Converter.ChangeTypeTo<int option>(box 7), Is.EqualTo(Some 7))
-    Assert.That(LinqToDB.Common.Converter.ChangeTypeTo<int option>(null), Is.EqualTo None)
-    Assert.That(LinqToDB.Common.Converter.ChangeTypeTo<int option>(box System.DBNull.Value), Is.EqualTo None)
-    Assert.That(LinqToDB.Common.Converter.ChangeTypeTo<string option>(box "x"), Is.EqualTo(Some "x"))
-    Assert.That(LinqToDB.Common.Converter.ChangeTypeTo<string option>(box System.DBNull.Value), Is.EqualTo None)
+    Assert.That(ctx.Select(fun () -> GeneratedFunctionsDb.Abs(some)), Is.EqualTo(Some 5))
+    Assert.That(ctx.Select(fun () -> GeneratedFunctionsDb.Abs(none)), Is.EqualTo(None : int option))
+    let rows   = ctx.JsonEach(json)
+    let noRows = ctx.JsonEach(noJson)
+    Assert.That(rows.Count(),   Is.EqualTo 3)
+    Assert.That(noRows.Count(), Is.EqualTo 0)

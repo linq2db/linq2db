@@ -220,6 +220,9 @@ F# generation emits idiomatic code:
 
 - entities as records with mapping attributes on fields;
 - nullable scalar columns as `'T option`;
+- nullable scalar parameters and results of scalar, table and aggregate function wrappers as `Nullable<T>` /
+  nullable strings, because their values reach the database without a column mapping
+  ([#6443](https://github.com/linq2db/linq2db/issues/6443)); stored procedure wrappers keep `'T option`;
 - a single generated `.fs` file per run (F# has no partial types and uses order-sensitive compilation);
 - with `--nrt true`, nullable reference members carry an F# 9 `| null` annotation (compile with
   `<Nullable>enable</Nullable>`); with `--nrt false` they are plain, unannotated references.
@@ -238,9 +241,9 @@ namespace sees the same shadowing (e.g. an entity named `Task` hides `System.Thr
 qualify such types itself.
 
 Some options apply to C# only (partial classes / methods, entity base class, association extension methods,
-data context constructor selection, multi-file output, xml-doc warning suppression); the `help scaffold` output
-shows a `Supported in:` line for such options, and specifying one together with `--target-language f#` is
-rejected. F# generation is not available in T4 template mode (`-t t4`).
+data context constructor selection, multi-file output, xml-doc warning suppression, procedure schema error
+directives); the `help scaffold` output shows a `Supported in:` line for such options, and specifying one together
+with `--target-language f#` is rejected. F# generation is not available in T4 template mode (`-t t4`).
 
 ## Licensing
 

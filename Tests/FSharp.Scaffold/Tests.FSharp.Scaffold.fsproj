@@ -12,6 +12,7 @@
   <PropertyGroup>
     <AssemblyName>linq2db.Tests.FSharp.Scaffold</AssemblyName>
     <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks></TargetFrameworks>
     <LangVersion>9</LangVersion>
     <WarningLevel>5</WarningLevel>
     <!-- F# 9 nullness on: the nrt=true baselines must be nullness-clean -->
@@ -28,6 +29,7 @@
     <Compile Include="SQLiteFluent\TestDataDB.fs" />
     <Compile Include="PostgreSQL\TestDataDB.fs" />
     <Compile Include="SqlServer\TestDataDB.fs" />
+    <Compile Include="SqlServerFluent\TestDataDB.fs" />
   </ItemGroup>
 
   <ItemGroup>
