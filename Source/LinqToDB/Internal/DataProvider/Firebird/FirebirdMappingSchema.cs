@@ -187,10 +187,16 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			if (fbo.IsLiteralEncodingSupported && NeedsEncoding(value))
 				MakeUtf8Literal(stringBuilder, Encoding.UTF8.GetBytes(new[] {value}));
 			else
-				stringBuilder
-					.Append('\'')
-					.Append(value == '\'' ? '\'' : value)
-					.Append('\'');
+			{
+				stringBuilder.Append('\'');
+
+				if (value == '\'')
+					stringBuilder.Append("''");
+				else
+					stringBuilder.Append(value);
+
+				stringBuilder.Append('\'');
+			}
 		}
 
 		static void MakeUtf8Literal(StringBuilder stringBuilder, byte[] bytes)

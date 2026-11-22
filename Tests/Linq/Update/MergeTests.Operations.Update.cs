@@ -409,7 +409,7 @@ namespace Tests.xUpdate
 
 			var table = GetTarget(db);
 
-			var exception = Assert.Catch(
+			Assert.That(
 					() => table
 					.Merge()
 					.Using(GetSource1(db).Select(_ => new TestMapping1() { Id = _.Id, Field1 = _.Field1 }))
@@ -420,10 +420,8 @@ namespace Tests.xUpdate
 						{
 							Field5 = t.Field5 + s.Field1
 						})
-					.Merge())!;
-
-			Assert.That(exception, Is.InstanceOf<LinqToDBException>());
-			Assert.That(exception.Message, Does.EndWith(".Field2' could not be converted to SQL."));
+					.Merge(),
+					Throws.InstanceOf<LinqToDBException>().With.Message.EndsWith(".Field2' could not be converted to SQL."));
 		}
 
 		[Test]
@@ -794,16 +792,14 @@ namespace Tests.xUpdate
 
 			var table = GetTarget(db);
 
-			var exception = Assert.Catch(
+			Assert.That(
 					() => table
 						.Merge()
 						.Using(table.Select(_ => new TestMapping1() { Id = _.Id, Field1 = _.Field1 }))
 						.OnTargetKey()
 						.UpdateWhenMatched()
-						.Merge())!;
-
-			Assert.That(exception, Is.InstanceOf<LinqToDBException>());
-			Assert.That(exception.Message, Does.EndWith("'source.Field2' could not be converted to SQL."));
+						.Merge(),
+					Throws.InstanceOf<LinqToDBException>().With.Message.EndsWith("'source.Field2' could not be converted to SQL."));
 		}
 
 		[Test]
@@ -814,7 +810,7 @@ namespace Tests.xUpdate
 
 			var table = GetTarget(db);
 
-			var exception = Assert.Catch(
+			Assert.That(
 					() => table
 						.Merge()
 						.Using(table.Select(_ => new TestMapping1() { Id = _.Id }))
@@ -824,10 +820,8 @@ namespace Tests.xUpdate
 							Id = s.Id,
 							Field1 = s.Field2
 						})
-						.Merge())!;
-
-			Assert.That(exception, Is.InstanceOf<LinqToDBException>());
-			Assert.That(exception.Message, Does.EndWith("s.Field2' could not be converted to SQL."));
+						.Merge(),
+					Throws.InstanceOf<LinqToDBException>().With.Message.EndsWith("s.Field2' could not be converted to SQL."));
 		}
 	}
 }

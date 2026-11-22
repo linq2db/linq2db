@@ -127,8 +127,8 @@ namespace LinqToDB.Linq.Translation
 			Registration.RegisterMethod(() => Sql.Window.Sum((long?)1L,     f => f.OrderBy(1)), TranslateSum);
 			Registration.RegisterMethod(() => Sql.Window.Sum((double)1.0,   f => f.OrderBy(1)), TranslateSum);
 			Registration.RegisterMethod(() => Sql.Window.Sum((double?)1.0,  f => f.OrderBy(1)), TranslateSum);
-			Registration.RegisterMethod(() => Sql.Window.Sum((decimal)1.0,  f => f.OrderBy(1)), TranslateSum);
-			Registration.RegisterMethod(() => Sql.Window.Sum((decimal?)1.0, f => f.OrderBy(1)), TranslateSum);
+			Registration.RegisterMethod(() => Sql.Window.Sum((decimal)1m,   f => f.OrderBy(1)), TranslateSum);
+			Registration.RegisterMethod(() => Sql.Window.Sum((decimal?)1m,  f => f.OrderBy(1)), TranslateSum);
 			Registration.RegisterMethod(() => Sql.Window.Sum((float)1f,     f => f.OrderBy(1)), TranslateSum);
 			Registration.RegisterMethod(() => Sql.Window.Sum((float?)1f,    f => f.OrderBy(1)), TranslateSum);
 			Registration.RegisterMethod(() => Sql.Window.Sum((short)1,      f => f.OrderBy(1)), TranslateSum);
@@ -145,8 +145,8 @@ namespace LinqToDB.Linq.Translation
 			Registration.RegisterMethod(() => Sql.Window.Average((long?)1L,     f => f.OrderBy(1)), TranslateAverage);
 			Registration.RegisterMethod(() => Sql.Window.Average((double)1.0,   f => f.OrderBy(1)), TranslateAverage);
 			Registration.RegisterMethod(() => Sql.Window.Average((double?)1.0,  f => f.OrderBy(1)), TranslateAverage);
-			Registration.RegisterMethod(() => Sql.Window.Average((decimal)1.0,  f => f.OrderBy(1)), TranslateAverage);
-			Registration.RegisterMethod(() => Sql.Window.Average((decimal?)1.0, f => f.OrderBy(1)), TranslateAverage);
+			Registration.RegisterMethod(() => Sql.Window.Average((decimal)1m,   f => f.OrderBy(1)), TranslateAverage);
+			Registration.RegisterMethod(() => Sql.Window.Average((decimal?)1m,  f => f.OrderBy(1)), TranslateAverage);
 			Registration.RegisterMethod(() => Sql.Window.Average((float)1f,     f => f.OrderBy(1)), TranslateAverage);
 			Registration.RegisterMethod(() => Sql.Window.Average((float?)1f,    f => f.OrderBy(1)), TranslateAverage);
 			Registration.RegisterMethod(() => Sql.Window.Average((short)1,      f => f.OrderBy(1)), TranslateAverage);
@@ -163,8 +163,8 @@ namespace LinqToDB.Linq.Translation
 			Registration.RegisterMethod(() => Sql.Window.Min((long?)1L,     f => f.OrderBy(1)), TranslateMin);
 			Registration.RegisterMethod(() => Sql.Window.Min((double)1.0,   f => f.OrderBy(1)), TranslateMin);
 			Registration.RegisterMethod(() => Sql.Window.Min((double?)1.0,  f => f.OrderBy(1)), TranslateMin);
-			Registration.RegisterMethod(() => Sql.Window.Min((decimal)1.0,  f => f.OrderBy(1)), TranslateMin);
-			Registration.RegisterMethod(() => Sql.Window.Min((decimal?)1.0, f => f.OrderBy(1)), TranslateMin);
+			Registration.RegisterMethod(() => Sql.Window.Min((decimal)1m,   f => f.OrderBy(1)), TranslateMin);
+			Registration.RegisterMethod(() => Sql.Window.Min((decimal?)1m,  f => f.OrderBy(1)), TranslateMin);
 			Registration.RegisterMethod(() => Sql.Window.Min((float)1f,     f => f.OrderBy(1)), TranslateMin);
 			Registration.RegisterMethod(() => Sql.Window.Min((float?)1f,    f => f.OrderBy(1)), TranslateMin);
 			Registration.RegisterMethod(() => Sql.Window.Min((short)1,      f => f.OrderBy(1)), TranslateMin);
@@ -181,8 +181,8 @@ namespace LinqToDB.Linq.Translation
 			Registration.RegisterMethod(() => Sql.Window.Max((long?)1L,     f => f.OrderBy(1)), TranslateMax);
 			Registration.RegisterMethod(() => Sql.Window.Max((double)1.0,   f => f.OrderBy(1)), TranslateMax);
 			Registration.RegisterMethod(() => Sql.Window.Max((double?)1.0,  f => f.OrderBy(1)), TranslateMax);
-			Registration.RegisterMethod(() => Sql.Window.Max((decimal)1.0,  f => f.OrderBy(1)), TranslateMax);
-			Registration.RegisterMethod(() => Sql.Window.Max((decimal?)1.0, f => f.OrderBy(1)), TranslateMax);
+			Registration.RegisterMethod(() => Sql.Window.Max((decimal)1m,   f => f.OrderBy(1)), TranslateMax);
+			Registration.RegisterMethod(() => Sql.Window.Max((decimal?)1m,  f => f.OrderBy(1)), TranslateMax);
 			Registration.RegisterMethod(() => Sql.Window.Max((float)1f,     f => f.OrderBy(1)), TranslateMax);
 			Registration.RegisterMethod(() => Sql.Window.Max((float?)1f,    f => f.OrderBy(1)), TranslateMax);
 			Registration.RegisterMethod(() => Sql.Window.Max((short)1,      f => f.OrderBy(1)), TranslateMax);
@@ -772,6 +772,12 @@ namespace LinqToDB.Linq.Translation
 			{
 				foreach (var argument in information.Arguments)
 				{
+					// LAG / LEAD answer their default in place of the first argument's value, which is read back through
+					// that argument's column, so the default is written in the column's terms.
+					using var defaultScope = arguments.Count == 2 && functionName is "LAG" or "LEAD"
+						? translationContext.UsingColumnDescriptor(QueryHelper.GetColumnDescriptor(arguments[0].Expression))
+						: null;
+
 					var translated = translationContext.Translate(argument.Expr);
 					if (translated is not SqlPlaceholderExpression placeholder)
 						return SqlErrorExpression.EnsureError(translated, methodCall.Type);
@@ -931,10 +937,9 @@ namespace LinqToDB.Linq.Translation
 				nullTreatment   : information.NullTreatment,
 				fromPosition    : information.FromPosition,
 				isWindowFunction: true,
-				// The same three names an ordinary aggregate builds, so they answer about their argument the same
-				// way here. Nothing reaches this with a declared duration today - the window aggregates are typed
-				// per overload and none takes a TimeSpan - but a name carrying two domains would make two otherwise
-				// identical nodes stop comparing equal.
+				// MIN, MAX and SUM answer about their argument the same way an ordinary aggregate does, since a name
+				// carrying two domains would make two otherwise identical nodes stop comparing equal. The value
+				// functions (LAG, FIRST_VALUE, ...) return the argument's own values.
 				argumentDomain  : SqlArgumentDomains.ForAggregate(functionName)
 			);
 

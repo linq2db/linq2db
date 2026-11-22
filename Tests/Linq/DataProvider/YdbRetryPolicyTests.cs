@@ -36,7 +36,7 @@ namespace Tests.DataProvider
 		{
 			var count = 0;
 
-			Assert.Throws(Is.SameAs(ex), () => policy.Execute(() => { count++; throw ex; }));
+			Assert.That(() => policy.Execute(() => { count++; throw ex; }), Throws.Exception.SameAs(ex));
 
 			return count;
 		}
@@ -51,7 +51,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Retries_JitterCodes([Values(
 			"Aborted", "Undetermined",
-			"Unavailable", "ClientTransportUnknown", "ClientTransportUnavailable",
+			"Unavailable", "ClientTransportUnknown", "ClientTransportUnavailable", "ClientTransportCancelled",
 			"Overloaded", "ClientTransportResourceExhausted")] string code)
 		{
 			Assert.That(RunCount(Policy(enableRetryIdempotence: true), YdbEx(code)), Is.EqualTo(MaxAttempts));

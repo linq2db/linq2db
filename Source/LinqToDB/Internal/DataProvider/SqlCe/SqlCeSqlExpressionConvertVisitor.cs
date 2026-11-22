@@ -286,6 +286,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 					break;
 				}
 
+				case DataType.Date:
 				case DataType.Time:
 				case DataType.DateTime:
 				{

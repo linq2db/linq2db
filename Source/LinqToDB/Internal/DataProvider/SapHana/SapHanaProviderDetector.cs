@@ -29,6 +29,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				case "Sap.Data.Hana.Net"                            :
 				case "Sap.Data.Hana.Net.v6.0"                       :
 				case "Sap.Data.Hana.Net.v8.0"                       :
+				case "Sap.Data.Hana.Net.v10.0"                      :
 				case ProviderName.SapHanaNative                     : return _hanaDataProvider.Value;
 				case ProviderName.SapHanaOdbc                       : return _hanaOdbcDataProvider.Value;
 				case ""                                             :
@@ -75,6 +76,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				case "Sap.Data.Hana.Net"                            :
 				case "Sap.Data.Hana.Net.v6.0"                       :
 				case "Sap.Data.Hana.Net.v8.0"                       :
+				case "Sap.Data.Hana.Net.v10.0"                      :
 				case ProviderName.SapHanaNative                     :
 					return SapHanaProvider.Unmanaged;
 

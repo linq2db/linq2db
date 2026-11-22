@@ -73,7 +73,7 @@ namespace Tests.UserTests
 		[ActiveIssue(5611, Configuration = TestProvName.AllSQLite, ErrorTypeName = "Shouldly.ShouldAssertException",
 			ErrorMessage = "should be{0}5m{1}but was",
 			Details = "SQLite renders decimal division as integer division: CAST(int AS Decimal) keeps NUMERIC/integer affinity")]
-		public void LeftJoinLocalClassWithDecimalArithmetic([DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context)
+		public void LeftJoinLocalClassWithDecimalArithmetic([DataSources(TestProvName.AllNativeAccess, ProviderName.DB2, TestProvName.AllInformix)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable<Campaign>();
