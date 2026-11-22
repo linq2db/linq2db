@@ -33,7 +33,7 @@ namespace Tests.Infrastructure
 	public class IdentifierLimitProbeTests : TestBase
 	{
 		/// <returns>
-		/// Length of the name the server reported back, or <c>null</c> when it rejected the statement.
+		/// Length of the name the server reported back, or <see langword="null"/> when it rejected the statement.
 		/// </returns>
 		static int? RoundTrip(DataConnection db, int length)
 		{

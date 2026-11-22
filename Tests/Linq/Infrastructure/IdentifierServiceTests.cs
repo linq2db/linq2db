@@ -34,7 +34,7 @@ namespace Tests.Infrastructure
 
 			// sizeDecrement is a count of characters to drop, and what is left has to fit
 			var kept = Japanese40.Length - sizeDecrement!.Value;
-			Encoding.UTF8.GetByteCount(Japanese40.Substring(0, kept)).ShouldBeLessThanOrEqualTo(63);
+			Encoding.UTF8.GetByteCount(Japanese40.ToCharArray(), 0, kept).ShouldBeLessThanOrEqualTo(63);
 		}
 
 		[Test]
@@ -50,7 +50,7 @@ namespace Tests.Infrastructure
 
 			var kept = twoByte.Length - sizeDecrement!.Value;
 			kept.ShouldBe(31);
-			Encoding.UTF8.GetByteCount(twoByte.Substring(0, kept)).ShouldBeLessThanOrEqualTo(63);
+			Encoding.UTF8.GetByteCount(twoByte.ToCharArray(), 0, kept).ShouldBeLessThanOrEqualTo(63);
 		}
 
 		[Test]
