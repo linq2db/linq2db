@@ -152,6 +152,14 @@ namespace Tests.Linq
 		[Sql.Expression("{0} + {1}", Precedence = Precedence.Additive + 1,   ServerSideOnly = true)]
 		static int TemplateAddOffset(int x, int y) => x + y;
 
+		// default (Primary) class: every operator argument is bracketed for it, as before the precedence table
+		[Sql.Expression(ProviderName.PostgreSQL, "{0}::text", ServerSideOnly = true)]
+		static string TemplateAsText(int x) => x.ToString(CultureInfo.InvariantCulture);
+
+		// an operator template declared Primary, as a user would write it
+		[Sql.Expression(ProviderName.PostgreSQL, "{0} AT TIME ZONE 'UTC'", ServerSideOnly = true)]
+		static DateTime TemplateAtUtc(DateTime x) => x;
+
 		static readonly (string Name, MethodInfo Method)[] Templates =
 		[
 			("TAdd",       typeof(OperatorPrecedenceTests).GetMethod(nameof(TemplateAdd),       BindingFlags.NonPublic | BindingFlags.Static)!),
@@ -716,6 +724,174 @@ namespace Tests.Linq
 				.Select(r => Sql.AsSql(r.A * Sql.ToSql(small)));
 
 			AssertQueryWithinDelta(productOfExponent);
+		}
+
+		// :: binds tighter than any operator: a Primary template keeps bracketing an operator argument, and the
+		// DateDiff templates bracket a placeholder under :: whatever level its argument has
+		[Test]
+		public void PostfixCastKeepsTemplateArgumentsGrouped([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows);
+
+			var start = new DateTime(2020, 6, 15, 12, 0, 0);
+			var end   = new DateTime(2023, 6, 15, 12, 0, 0);
+
+			var query = table
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					Text       = TemplateAsText(r.A + r.B),
+					YearsToUtc = Sql.DateDiff(Sql.DateParts.Year, start, TemplateAtUtc(end.AddDays(r.C))),
+					YearsOfUtc = Sql.DateDiff(Sql.DateParts.Year, TemplateAtUtc(start.AddDays(r.C)), end),
+				});
+
+			var expected = Rows
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					Text       = (r.A + r.B).ToString(CultureInfo.InvariantCulture),
+					YearsToUtc = (int?)3,
+					YearsOfUtc = (int?)3,
+				})
+				.ToList();
+
+			query
+				.ToList()
+				.ShouldBe(expected);
+		}
+
+		// a negative literal or an operator under a postfix :: cast keeps its brackets: -5.5::text reads -(5.5::text)
+		[Test]
+		public void PostfixCastKeepsNegativeOperandGrouped([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllInformix)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows);
+
+			db.InlineParameters = true;
+
+			var negativeDecimal = -5.5m;
+			var negativeInt     = -5;
+
+			var query = table
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					DecimalText = Sql.AsSql(Sql.ConvertTo<string>.From(Sql.ToSql(negativeDecimal))),
+					IntText     = Sql.AsSql(Sql.ConvertTo<string>.From(Sql.ToSql(negativeInt))),
+					NegatedText = Sql.AsSql(Sql.ConvertTo<string>.From(-r.C)),
+					SumText     = Sql.AsSql(Sql.ConvertTo<string>.From(r.A + r.B)),
+					ProductText = Sql.AsSql(Sql.ConvertTo<string>.From(r.A * r.B)),
+				});
+
+			var expected = Rows
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					DecimalText = "-5.5",
+					IntText     = "-5",
+					NegatedText = (-r.C).ToString(CultureInfo.InvariantCulture),
+					SumText     = (r.A + r.B).ToString(CultureInfo.InvariantCulture),
+					ProductText = (r.A * r.B).ToString(CultureInfo.InvariantCulture),
+				})
+				.ToList();
+
+			query
+				.ToList()
+				.ShouldBe(expected);
+		}
+
+		[Table]
+		sealed class ConcatRow
+		{
+			[PrimaryKey]          public int     Id { get; set; }
+			[Column(Length = 10)] public string? S  { get; set; }
+		}
+
+		// a concatenation binds tighter than a comparison on every dialect, so as its operand it renders bare
+		[Test]
+		public void ConcatOperandOfComparisonRendersBare([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new ConcatRow[]
+			{
+				new() { Id = 1, S = "a"  },
+				new() { Id = 2, S = null },
+			});
+
+			var value = "x";
+
+			var query = table
+				.Where(r => r.S + "x" == value)
+				.Select(r => r.Id);
+
+			query
+				.ToList()
+				.ShouldBe([2]);
+
+			var sql = query
+				.ToSqlQuery()
+				.Sql;
+
+			// the concatenation ends in its 'x' literal, so a closing bracket before = is one around it
+			Regex
+				.IsMatch(sql, @"\)\s*=")
+				.ShouldBeFalse(sql);
+		}
+
+		// a provider rewrites a non-integer remainder to cast its dividend; the rebuilt % keeps its right operand grouped
+		[Test]
+		public void NonIntegerRemainderKeepsItsGrouping([IncludeDataSources(true, TestProvName.AllSqlServer, ProviderName.SqlCe, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows);
+
+			var query = table
+				.OrderBy(r => r.Id)
+				.Select(r => Sql.AsSql((double)r.A % (r.B + r.C)));
+
+			var expected = Rows
+				.OrderBy(r => r.Id)
+				.Select(r => (double)r.A % (r.B + r.C))
+				.ToList();
+
+			query
+				.ToList()
+				.ShouldBe(expected);
+		}
+
+		// PostgreSQL has no operator adding one timestamp to another: base + (end - start) keeps its brackets
+		[Test]
+		public void IntervalDifferenceKeepsItsGrouping([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows);
+
+			var start = new DateTime(2020, 1, 1);
+			var end   = new DateTime(2020, 1, 11);
+
+			var plain = table
+				.OrderBy(r => r.Id)
+				.Select(r => Sql.AsSql(start.AddDays(r.A) + (end.AddDays(r.B) - start)));
+
+			plain
+				.ToList()
+				.ShouldBe(Rows
+					.OrderBy(r => r.Id)
+					.Select(r => start.AddDays(r.A) + (end.AddDays(r.B) - start))
+					.ToList());
+
+			// a shifted start is itself a sum: under the - it keeps its own brackets
+			var shifted = table
+				.OrderBy(r => r.Id)
+				.Select(r => Sql.AsSql(start.AddDays(r.A) + (end.AddDays(r.B) - start.AddDays(r.C))));
+
+			shifted
+				.ToList()
+				.ShouldBe(Rows
+					.OrderBy(r => r.Id)
+					.Select(r => start.AddDays(r.A) + (end.AddDays(r.B) - start.AddDays(r.C)))
+					.ToList());
 		}
 
 		// clauses of the grouping rule that a value comparison cannot see: a right operand of the same operator keeps
