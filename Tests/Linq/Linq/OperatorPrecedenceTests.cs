@@ -808,7 +808,7 @@ namespace Tests.Linq
 			[Column(Length = 10)] public string? S  { get; set; }
 		}
 
-		// a concatenation binds tighter than a comparison on every dialect, so as its operand it renders bare
+		// a concatenation binds tighter than a comparison, so where the table orders the two it renders bare as an operand
 		[Test]
 		public void ConcatOperandOfComparisonRendersBare([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL)] string context)
 		{
@@ -833,10 +833,14 @@ namespace Tests.Linq
 				.ToSqlQuery()
 				.Sql;
 
+			// the precedence of SQL Server 2025's || is undocumented, and before 9.5 PostgreSQL sorts every other operator
+			// below IS, which shares the comparison level: both keep the concatenation bracketed
+			var bracketed = context.IsAnyOf(TestProvName.AllSqlServer2025Plus, TestProvName.AllPostgreSQL93Minus);
+
 			// the concatenation ends in its 'x' literal, so a closing bracket before = is one around it
 			Regex
 				.IsMatch(sql, @"\)\s*=")
-				.ShouldBeFalse(sql);
+				.ShouldBe(bracketed, sql);
 		}
 
 		// a provider rewrites a non-integer remainder to cast its dividend; the rebuilt % keeps its right operand grouped
