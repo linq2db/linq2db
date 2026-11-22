@@ -1771,7 +1771,8 @@ namespace Tests.Linq
 		}
 
 		// A connection string can refuse several statements in one command, and connections share the provider instance,
-		// so MySql.Data runs them one after another on every route, whichever context runs them and whatever the string says.
+		// so without the option a batch on MySql.Data runs them one after another on every route, whichever context runs them
+		// and whatever the string says.
 		[Test]
 		public void MySqlDataRunsStatementsOneAfterAnother(
 			[IncludeDataSources(TestProvName.AllMySql80)] string context,
@@ -1816,11 +1817,13 @@ namespace Tests.Linq
 			trace.Readers.ShouldBe(2);
 		}
 
-		// The option on a query of its own takes the same way out.
+		// With the option MySql.Data combines as 6.6.0 did, a batch included; a connection string that refuses several
+		// statements in one command then fails, and the option off is the remedy.
 		[Test]
-		public void MySqlDataRunsCombinedCommandsOneAfterAnother(
+		public void MySqlDataCombinesWithTheOption(
 			[IncludeDataSources(TestProvName.AllMySql80)] string context,
-			[Values("", ";AllowBatch=false")] string option)
+			[Values("", ";AllowBatch=false")] string option,
+			[Values] bool batch)
 		{
 			using var db     = GetDataContext(context);
 			using var items  = db.CreateLocalTable(BatchItem.Seed);
@@ -1843,7 +1846,7 @@ namespace Tests.Linq
 
 			trace.Reset();
 
-			var rows = groupTable
+			Expression<Func<int>> load = () => groupTable
 				.OrderBy(g => g.Id)
 				.Select(g => new
 				{
@@ -1852,21 +1855,35 @@ namespace Tests.Linq
 						.Where(i => i.GroupId == g.Id)
 						.ToList(),
 				})
-				.ToList();
+				.ToList()
+				.Count;
 
-			rows.Count.ShouldBe(BatchGroup.Seed.Length);
-			trace.Readers.ShouldBe(2);
+			Func<int> run = batch
+				? () => target.QueryBatch(() => itemTable.Count(), load).Item2
+				: load.Compile();
+
+			if (option.Length > 0)
+			{
+				Shouldly.Should.Throw<DbException>(() => run());
+				return;
+			}
+
+			run()
+				.ShouldBe(BatchGroup.Seed.Length);
+			trace.Readers.ShouldBe(1);
 		}
 
 		[Test]
-		public void OnlyMySqlConnectorCombinesStatements(
+		public void MySqlDataSupportDependsOnTheConnection(
 			[Values(MySqlVersion.MySql57, MySqlVersion.MySql80, MySqlVersion.MariaDB10)] MySqlVersion version,
 			[Values(MySqlProvider.MySqlData, MySqlProvider.MySqlConnector)] MySqlProvider provider)
 		{
-			MySqlTools.GetDataProvider(version, provider)
-				.SqlProviderFlags
-				.IsMultiStatementBatchSupported
-				.ShouldBe(provider == MySqlProvider.MySqlConnector);
+			var flags = MySqlTools
+				.GetDataProvider(version, provider)
+				.SqlProviderFlags;
+
+			flags.IsMultiStatementBatchSupported.ShouldBeTrue();
+			flags.IsMultiStatementBatchConnectionDependent.ShouldBe(provider == MySqlProvider.MySqlData);
 		}
 
 		// A remote context runs each statement on a call of its own, on providers that combine on a direct connection.
@@ -2473,6 +2490,169 @@ namespace Tests.Linq
 			rows.Count.ShouldBe(4);
 		}
 
+		public enum FromlessShape
+		{
+			BatchCountAndPage,
+			SelectCount,
+			SelectFirstOrDefault,
+			SelectFirstOrDefaultEntity,
+			SelectInWhere,
+		}
+
+		// The shape the other tests keep off Access: it refuses a subquery in a SELECT without FROM, here and in db.Select,
+		// before any command, where the driver failed at execution.
+		[Test]
+		public void FromlessSubqueryIsRefused(
+			[IncludeDataSources(TestProvName.AllNativeAccess)] string context,
+			[Values] FromlessShape shape)
+		{
+			var trace = new CommandTrace();
+
+			using var db    = GetDataContext(context, Traced(trace));
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			trace.Reset();
+
+			Func<object?> run = shape switch
+			{
+				FromlessShape.BatchCountAndPage          => () => db.QueryBatch(
+					() => items.Count(),
+					() => items
+						.OrderBy(i => i.Id)
+						.Take(3)
+						.ToList()),
+				FromlessShape.SelectCount                => () => db.Select(() => new
+				{
+					Total = items.Count(),
+				}),
+				FromlessShape.SelectFirstOrDefault       => () => db.Select(() => items
+					.Select(i => i.Id)
+					.FirstOrDefault()),
+				FromlessShape.SelectFirstOrDefaultEntity => () => db.Select(() => items
+					.OrderBy(i => i.Id)
+					.FirstOrDefault()),
+				FromlessShape.SelectInWhere              => () => items
+					.Where(i => i.Id == db.Select(() => items.Max(x => x.Id)))
+					.Count(),
+				_                                        => throw new InvalidOperationException($"Unexpected shape {shape}."),
+			};
+
+			var error = Shouldly.Should.Throw<LinqToDBException>(() => run());
+
+			error.Message.ShouldContain(ErrorHelper.Error_Subquery_in_Fromless_Select);
+			trace.Readers.ShouldBe(0);
+		}
+
+		// Where the batch does not combine, the configured strategy reads a nested entity First with its marker too.
+		[Test]
+		public void NestedEntityReadThrowsUnderTheConfiguredStrategy(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context,
+			[Values(EagerLoadingStrategy.KeyedQuery, EagerLoadingStrategy.CteUnion)] EagerLoadingStrategy strategy)
+		{
+			using var db     = GetDataContext(context);
+			using var items  = db.CreateLocalTable(BatchItem.Seed);
+			using var groups = db.CreateLocalTable(BatchGroup.Seed);
+
+			var options = new DataOptions()
+				.UseConfiguration(context)
+				.UseDefaultEagerLoadingStrategy(strategy);
+
+			using var target = new ProcessingConnection(options);
+
+			var itemTable  = target.GetTable<BatchItem>();
+			var groupTable = target.GetTable<BatchGroup>();
+
+			Shouldly.Should.Throw<InvalidOperationException>(() => target.QueryBatch(
+				() => itemTable.Count(),
+				() => groupTable
+					.OrderBy(g => g.Id)
+					.Select(g => new
+					{
+						g.Id,
+						Item = itemTable
+							.Where(i => i.GroupId == g.Id && i.Id > 8)
+							.First(),
+					})
+					.ToList()));
+		}
+
+		// A compiled batch combines as the batch does, so a configured strategy costs it no extra command.
+		[Test]
+		public async Task CompiledQueryBatchCombines(
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllPostgreSQL)] string context,
+			[Values(EagerLoadingStrategy.KeyedQuery, EagerLoadingStrategy.CteUnion)] EagerLoadingStrategy strategy,
+			[Values] bool isAsync)
+		{
+			var compiled = CompiledQuery.Compile((IDataContext dc) => dc.QueryBatch(() => new
+			{
+				Total = dc
+					.GetTable<BatchGroup>()
+					.Count(),
+				Page  = dc.GetTable<BatchGroup>()
+					.OrderBy(g => g.Id)
+					.Select(g => new
+					{
+						g.Id,
+						Items = dc.GetTable<BatchItem>()
+							.Where(i => i.GroupId == g.Id)
+							.OrderBy(i => i.Id)
+							.Select(i => i.Id)
+							.ToList(),
+					})
+					.ToList(),
+			}));
+
+			var compiledAsync = CompiledQuery.Compile((IDataContext dc, CancellationToken token) => dc.QueryBatchAsync(() => new
+			{
+				Total = dc
+					.GetTable<BatchGroup>()
+					.Count(),
+				Page  = dc.GetTable<BatchGroup>()
+					.OrderBy(g => g.Id)
+					.Select(g => new
+					{
+						g.Id,
+						Items = dc.GetTable<BatchItem>()
+							.Where(i => i.GroupId == g.Id)
+							.OrderBy(i => i.Id)
+							.Select(i => i.Id)
+							.ToList(),
+					})
+					.ToList(),
+			}, token));
+
+			var trace = new CommandTrace();
+
+			using var db     = GetDataContext(context, o => Traced(trace)(o)
+				.UseDefaultEagerLoadingStrategy(strategy));
+			using var items  = db.CreateLocalTable(BatchItem.Seed);
+			using var groups = db.CreateLocalTable(BatchGroup.Seed);
+
+			trace.Reset();
+
+			var result = isAsync
+				? await compiledAsync(db, CancellationToken.None)
+				: compiled(db);
+
+			static string Row(int id, IEnumerable<int> ids) => $"{id}:{string.Join(",", ids)}";
+
+			var actual = result.Page
+				.Select(g => Row(g.Id, g.Items))
+				.ToArray();
+
+			var expected = BatchGroup.Seed
+				.OrderBy(g => g.Id)
+				.Select(g => Row(g.Id, BatchItem.Seed
+					.Where(i => i.GroupId == g.Id)
+					.OrderBy(i => i.Id)
+					.Select(i => i.Id)))
+				.ToArray();
+
+			result.Total.ShouldBe(BatchGroup.Seed.Length);
+			actual.ShouldBe(expected);
+			trace.Readers.ShouldBe(1);
+		}
+
 		// A compiled batch loads its collections before it reads the row, so the refusal must come first there too.
 		[Test]
 		public async Task CompiledQueryBatchRefusesPendingHints(
@@ -2561,20 +2741,54 @@ namespace Tests.Linq
 			outside.ShouldBe(expected);
 		}
 
-		// A batch is new API, so a First nested in one of its parts follows LINQ too.
+		public enum NestedRead
+		{
+			ScalarFirst,
+			EntityFirst,
+			EntitySingle,
+		}
+
+		// A batch is new API, so a First or Single nested in one of its parts follows LINQ too, for a value and for an entity.
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[ActiveIssue(6289, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "YdbDataReader was closed during transaction execution")]
-		public void NestedEmptyReadThrowsInsideTheBatch([DataSources(false, NoFromlessSubquery)] string context)
+		public void NestedEmptyReadThrowsInsideTheBatch(
+			[DataSources(false, NoFromlessSubquery)] string context,
+			[Values] NestedRead read)
 		{
 			using var db     = GetDataContext(context);
 			using var items  = db.CreateLocalTable(BatchItem.Seed);
 			using var groups = db.CreateLocalTable(BatchGroup.Seed);
 
-			var firsts = NestedFirsts(groups, items);
+			var empty = Shouldly.Should.Throw<InvalidOperationException>(() => Array
+				.Empty<int>()
+				.First());
 
-			var empty = Shouldly.Should.Throw<InvalidOperationException>(() => Array.Empty<int>().First());
-			var batch = ThrowOfTheBatch(() => db.QueryBatch(() => items.Count(), firsts));
+			var batch = read switch
+			{
+				NestedRead.ScalarFirst  => ThrowOfTheBatch(() => db.QueryBatch(() => items.Count(), NestedFirsts(groups, items))),
+				NestedRead.EntityFirst  => ThrowOfTheBatch(() => db.QueryBatch(() => items.Count(), () => groups
+					.OrderBy(g => g.Id)
+					.Select(g => new
+					{
+						g.Id,
+						Item = items
+							.Where(i => i.GroupId == g.Id && i.Id > 8)
+							.First(),
+					})
+					.ToList())),
+				NestedRead.EntitySingle => ThrowOfTheBatch(() => db.QueryBatch(() => items.Count(), () => groups
+					.OrderBy(g => g.Id)
+					.Select(g => new
+					{
+						g.Id,
+						Item = items
+							.Where(i => i.GroupId == g.Id && i.Id > 8)
+							.Single(),
+					})
+					.ToList())),
+				_                       => throw new InvalidOperationException($"Unexpected read {read}."),
+			};
 
 			batch.Message.ShouldBe(empty.Message);
 		}
@@ -2601,6 +2815,141 @@ namespace Tests.Linq
 			var batch = ThrowOfTheBatch(() => db.QueryBatch(part, () => items.ToList()));
 
 			batch.Message.ShouldBe(alone.Message);
+		}
+
+		// A statement tag inside a collection part goes to the statement that reads the scalars, as in db.Select; the
+		// collection's own statement carries none. Run one statement after another, so each is a reader of its own.
+		[Test]
+		public void TagInsideACollectionPartGoesToTheScalarStatement([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var trace = new CommandTrace();
+
+			var options = Traced(trace)(new DataOptions()
+				.UseConfiguration(context));
+
+			using var target = new ProcessingConnection(options);
+
+			var table = target.GetTable<BatchItem>();
+
+			trace.Reset();
+
+			target.QueryBatch(
+				() => table.Count(),
+				() => table
+					.TagQuery("page-tag")
+					.OrderBy(i => i.Id)
+					.Take(3)
+					.ToList());
+
+			trace.Texts.Count.ShouldBe(2);
+			trace.Texts
+				.Single(t => t.Contains("COUNT", StringComparison.Ordinal))
+				.ShouldContain("page-tag");
+			trace.Texts
+				.Single(t => !t.Contains("COUNT", StringComparison.Ordinal))
+				.ShouldNotContain("page-tag");
+		}
+
+		// More than seven parts, three of them collections among the scalars: each reads what it reads alone.
+		[Test]
+		public void WideSelectorReadsEveryPart([DataSources(false, NoFromlessSubquery)] string context)
+		{
+			var trace = new CommandTrace();
+
+			using var db     = GetDataContext(context, Traced(trace));
+			using var items  = db.CreateLocalTable(BatchItem.Seed);
+			using var groups = db.CreateLocalTable(BatchGroup.Seed);
+
+			trace.Reset();
+
+			var batch = db.QueryBatch(() => new
+			{
+				Total  = items.Count(),
+				First  = items
+					.OrderBy(i => i.Id)
+					.Take(3)
+					.Select(i => i.Id)
+					.ToList(),
+				MaxId  = items.Max(i => i.Id),
+				Groups = groups
+					.OrderBy(g => g.Id)
+					.Select(g => g.Id)
+					.ToList(),
+				Valued = items.Count(i => i.Value != null),
+				Last   = items
+					.OrderByDescending(i => i.Id)
+					.Take(2)
+					.Select(i => i.Id)
+					.ToList(),
+				MinId  = items.Min(i => i.Id),
+				Rows   = groups.Count(),
+			});
+
+			var readers = trace.Readers;
+
+			batch.Total.ShouldBe(items.Count());
+			batch.First.ShouldBe(items
+				.OrderBy(i => i.Id)
+				.Take(3)
+				.Select(i => i.Id)
+				.ToList());
+			batch.MaxId.ShouldBe(items.Max(i => i.Id));
+			batch.Groups.ShouldBe(groups
+				.OrderBy(g => g.Id)
+				.Select(g => g.Id)
+				.ToList());
+			batch.Valued.ShouldBe(items.Count(i => i.Value != null));
+			batch.Last.ShouldBe(items
+				.OrderByDescending(i => i.Id)
+				.Take(2)
+				.Select(i => i.Id)
+				.ToList());
+			batch.MinId.ShouldBe(items.Min(i => i.Id));
+			batch.Rows.ShouldBe(groups.Count());
+			readers.ShouldBe(db.UsesCombinedQueryBatch() ? 1 : 4);
+		}
+
+		// A batch larger than the provider's group of statements per command takes one more command.
+		[Test]
+		public void BatchOverTheStatementLimitTakesAnotherCommand([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var trace = new CommandTrace();
+
+			using var db    = GetDataContext(context, Traced(trace));
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var limit = db.SqlProviderFlags.MaxStatementsPerCombinedGroup;
+
+			// One collection per statement of the group: with the statement that reads the scalars, one more than it holds.
+			var parts = Enumerable
+				.Range(0, limit)
+				.Select(k => ((Expression<Func<List<int>>>)(() => items
+					.Where(i => i.Id >= k)
+					.Select(i => i.Id)
+					.ToList())).Body)
+				.ToList();
+
+			Expression<Func<int>> total = () => items.Count();
+
+			var selector = Expression.Lambda<Func<object[]>>(Expression.NewArrayInit(
+				typeof(object),
+				new[] { total.Body }
+					.Concat(parts)
+					.Select(e => Expression.Convert(e, typeof(object)))));
+
+			trace.Reset();
+
+			var result = db.QueryBatch(selector);
+
+			result[0].ShouldBe(BatchItem.Seed.Length);
+			((List<int>)result[1]).Count
+				.ShouldBe(BatchItem.Seed.Length);
+			((List<int>)result[2]).Count
+				.ShouldBe(BatchItem.Seed.Count(i => i.Id >= 1));
+			trace.Readers.ShouldBe(2);
 		}
 	}
 }

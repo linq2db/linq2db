@@ -161,6 +161,10 @@ LinqToDB.Internal.SqlProvider.SqlProviderFlags.MaxCombinedCommandLength.get -> i
 LinqToDB.Internal.SqlProvider.SqlProviderFlags.MaxCombinedCommandLength.set -> void
 LinqToDB.Internal.SqlProvider.SqlProviderFlags.MaxCombinedCommandParameters.get -> int
 LinqToDB.Internal.SqlProvider.SqlProviderFlags.MaxCombinedCommandParameters.set -> void
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsMultiStatementBatchConnectionDependent.get -> bool
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsMultiStatementBatchConnectionDependent.set -> void
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsFromRequiredForSubQueryColumn.get -> bool
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsFromRequiredForSubQueryColumn.set -> void
 LinqToDB.Internal.SqlProvider.SqlProviderFlags.MaxStatementsPerCombinedGroup.get -> int
 LinqToDB.Internal.SqlProvider.SqlProviderFlags.MaxStatementsPerCombinedGroup.set -> void
 LinqToDB.Internal.SqlProvider.SqlStepCondition
@@ -374,7 +378,8 @@ static LinqToDB.Internal.DataProvider.Translation.SqlExpressionFactoryExtensions
 *REMOVED*override LinqToDB.Internal.Expressions.TagExpression.Type.get -> System.Type!
 *REMOVED*virtual LinqToDB.Internal.Expressions.ExpressionVisitorBase.VisitTagExpression(LinqToDB.Internal.Expressions.TagExpression! node) -> System.Linq.Expressions.Expression!
 const LinqToDB.Internal.Common.ErrorHelper.Error_DynamicColumns_NoSetter = "Type '{0}' is materialized with dynamic column(s) {1}, but has no dynamic column setter. Add a member marked with DynamicColumnsStoreAttribute, or configure a setter through DynamicColumnAccessorAttribute or DynamicPropertyAccessors." -> string!
-const LinqToDB.Internal.Common.ErrorHelper.Error_QueryHints_In_QueryBatch = "QueryBatch does not support query hints." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_QueryHints_In_QueryBatch = "QueryBatch cannot run while the context has pending QueryHints or NextQueryHints." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_Subquery_in_Fromless_Select = "Provider does not support subqueries in a SELECT without a FROM clause." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_QueryBatch_TaskPart = "A query batch part cannot hold an expression that may create a task: it could run a separate query outside the batch." -> string!
 LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQLMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator
 LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQLMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator() -> void
