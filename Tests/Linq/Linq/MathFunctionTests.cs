@@ -602,6 +602,27 @@ namespace Tests.Linq
 			AssertQuery(fractionalDecimal);
 		}
 
+		// TimeOfDay divides integer nanoseconds by 100 in a division typed as a float: no integer division, so the
+		// ClickHouse / stays / and gains no intDiv
+		[Test]
+		public void FractionalDivisionOfIntegerOperandsStaysDivision([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Types
+				.OrderBy(p => p.ID)
+				.Select(p => Sql.AsSql(p.DateTimeValue.TimeOfDay));
+
+			AssertQuery(query);
+
+			var sql = query
+				.ToSqlQuery()
+				.Sql;
+
+			sql.ShouldContain("/ 100", Case.Sensitive, sql);
+			sql.ShouldNotContain("intDiv", Case.Insensitive, sql);
+		}
+
 		// Access evaluates ^ before every other arithmetic operator, negation included, so a product, a sum, a difference or
 		// a negation as its operand needs its own parentheses.
 		[Test]
