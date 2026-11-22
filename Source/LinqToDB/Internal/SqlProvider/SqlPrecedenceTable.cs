@@ -22,10 +22,16 @@ namespace LinqToDB.Internal.SqlProvider
 		public const int AllGroups       = ~0;
 
 		readonly Dictionary<string, SqlOperatorPrecedence> _entries;
+		// ForClass for every level from Unknown to Primary: it is asked for every non-operator operand of every render
+		readonly SqlOperatorPrecedence[]                   _byClass;
 
 		SqlPrecedenceTable(Dictionary<string, SqlOperatorPrecedence> entries)
 		{
 			_entries = entries;
+			_byClass = new SqlOperatorPrecedence[Precedence.Primary + 1];
+
+			for (var level = 0; level < _byClass.Length; level++)
+				_byClass[level] = this[SqlPrecedenceKeys.Class(NearestClass(level))];
 		}
 
 		static readonly int[] _classes =
@@ -155,13 +161,18 @@ namespace LinqToDB.Internal.SqlProvider
 			if (precedence > Precedence.Primary)
 				return new SqlOperatorPrecedence(precedence, SqlAssociativity.None, false, AllGroups);
 
+			return _byClass[Math.Max(precedence, Precedence.Unknown)];
+		}
+
+		static int NearestClass(int precedence)
+		{
 			var nearest = _classes[0];
 
 			foreach (var c in _classes)
 				if (Math.Abs(c - precedence) < Math.Abs(nearest - precedence) || (Math.Abs(c - precedence) == Math.Abs(nearest - precedence) && c > nearest))
 					nearest = c;
 
-			return this[SqlPrecedenceKeys.Class(nearest)];
+			return nearest;
 		}
 
 		/// <summary>
