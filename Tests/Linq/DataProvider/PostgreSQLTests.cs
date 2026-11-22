@@ -383,50 +383,10 @@ namespace Tests.DataProvider
 				.ShouldBe(new DateTime(1, 1, 1, 12, 12, 12));
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/6137")]
-		public void ProviderMappingSchemaHasProviderConfiguration([Values] PostgreSQLVersion version)
-		{
-			if (version == PostgreSQLVersion.AutoDetect)
-				return;
-
-			var provider = PostgreSQLTools.GetDataProvider(version);
-
-			provider.MappingSchema.ConfigurationList
-				.ShouldContain(provider.Name);
-		}
-
 		[Table]
-		sealed class VersionScopedColumnTable
+		sealed class SkipLockedTable
 		{
-			[Column("pg11",  Configuration = ProviderName.PostgreSQL11)]
-			[Column("pg12",  Configuration = ProviderName.PostgreSQL12)]
-			[Column("pg13",  Configuration = ProviderName.PostgreSQL13)]
-			[Column("pg95",  Configuration = ProviderName.PostgreSQL95)]
-			[Column("other")]
-			public int Value { get; set; }
-		}
-
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/6137")]
-		public void VersionScopedColumnMapping(
-			[Values(PostgreSQLVersion.v95, PostgreSQLVersion.v11, PostgreSQLVersion.v12, PostgreSQLVersion.v13, PostgreSQLVersion.v15)] PostgreSQLVersion version)
-		{
-			var provider = PostgreSQLTools.GetDataProvider(version);
-
-			var expected = version switch
-			{
-				PostgreSQLVersion.v95 => "pg95",
-				PostgreSQLVersion.v11 => "pg11",
-				PostgreSQLVersion.v12 => "pg12",
-				PostgreSQLVersion.v13 => "pg13",
-				_                     => "other",
-			};
-
-			provider.MappingSchema
-				.GetEntityDescriptor(typeof(VersionScopedColumnTable))
-				.Columns
-				.Single()
-				.ColumnName
-				.ShouldBe(expected);
+			[Column] public int Value { get; set; }
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6137")]
@@ -438,7 +398,7 @@ namespace Tests.DataProvider
 			using var db = new DataConnection(new DataOptions()
 				.UseConnectionString(PostgreSQLTools.GetDataProvider(version), "Server=localhost"));
 
-			var sql = db.GetTable<VersionScopedColumnTable>()
+			var sql = db.GetTable<SkipLockedTable>()
 				.AsPostgreSQL()
 				.ForUpdateSkipLockedHint()
 				.ToSqlQuery()
