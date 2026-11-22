@@ -155,6 +155,14 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			return ConvertSearchStringPredicateViaLike(predicate);
 		}
 
+		// MySQL 8 writes a DateTimeOffset as a literal with an offset, which the server reads in the session's time zone.
+		public override ISqlExpression ConvertDefaultValue(SqlDefaultValueExpression expression)
+		{
+			return expression.Value is DateTimeOffset dateTimeOffset
+				? new SqlValue(expression.Type.WithSystemType(typeof(DateTime)), dateTimeOffset.DateTime)
+				: base.ConvertDefaultValue(expression);
+		}
+
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
 			return func switch

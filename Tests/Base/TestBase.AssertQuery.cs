@@ -13,7 +13,6 @@ using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Mapping;
-using LinqToDB.Tools.Comparers;
 
 namespace Tests
 {
@@ -66,8 +65,62 @@ namespace Tests
 				return base.Visit(node);
 			}
 
+			static bool IsSqlNullabilityMarker(MethodInfo method)
+			{
+				return method.DeclaringType == typeof(Sql) && method.Name is nameof(Sql.ToNullable) or nameof(Sql.AsNullable);
+			}
+
+			// A member read through a conversion to a nullable type (Sql.AsNullable included, when it sits under one) or through
+			// Sql.ToNullable keeps the NULL of a missing object, as the database answers it: default(T) belongs only to a member
+			// read as a non-nullable value.
+			bool TryGuardNullableRead(Expression source, Expression read, [NotNullWhen(true)] out Expression? guarded)
+			{
+				while (source is UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked } convert && !convert.Type.IsNullableType)
+					source = convert.Operand;
+
+				if (source is MethodCallExpression { Arguments.Count: 1 } marker && IsSqlNullabilityMarker(marker.Method))
+					source = marker.Arguments[0];
+
+				if (source is MemberExpression { Expression: { } instance } member
+					&& member.Type.IsValueType
+					&& !member.Type.IsNullableType
+					&& CanBeNull(instance))
+				{
+					var checkedInstance = Visit(instance);
+
+					guarded = Expression.Condition(
+						Expression.Equal(checkedInstance, Expression.Constant(null, checkedInstance.Type)),
+						Expression.Constant(null, read.Type),
+						read);
+
+					return true;
+				}
+
+				guarded = null;
+				return false;
+			}
+
+			protected override Expression VisitUnary(UnaryExpression node)
+			{
+				if (node.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked
+					&& node.Type.IsNullableType
+					&& TryGuardNullableRead(node.Operand, node, out var guarded))
+				{
+					return guarded;
+				}
+
+				return base.VisitUnary(node);
+			}
+
 			protected override Expression VisitMethodCall(MethodCallExpression node)
 			{
+				if (node.Type.IsNullableType
+					&& IsSqlNullabilityMarker(node.Method)
+					&& TryGuardNullableRead(node.Arguments[0], node, out var guarded))
+				{
+					return guarded;
+				}
+
 				var newNode = node.Update(node.Object, VisitAndConvert<Expression>(node.Arguments, "VisitMethodCall"));
 
 				if (newNode.Object != null)
@@ -238,7 +291,7 @@ namespace Tests
 				var methodIfo = genericMethodInfo.MakeGenericMethod(mc.Method.GetGenericArguments());
 				if (methodIfo.GetParameters().Length == 3)
 				{
-					var equalityComparer = ComparerBuilder.GetEqualityComparer(elementType);
+					var equalityComparer = TestComparers.GetDefault(elementType);
 
 					var comparerExpr = Expression.Constant(equalityComparer,
 						typeof(IEqualityComparer<>).MakeGenericType(elementType));
@@ -464,7 +517,7 @@ namespace Tests
 
 			if (actual.Length > 0 || expected.Length > 0)
 			{
-				comparer ??= ComparerBuilder.GetEqualityComparer<T>();
+				comparer ??= TestComparers.GetDefault<T>();
 				AreEqual(expected, actual, comparer, allowEmpty: true);
 			}
 

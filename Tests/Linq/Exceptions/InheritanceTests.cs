@@ -14,7 +14,7 @@ namespace Tests.Exceptions
 		{
 			using var db = GetDataContext(context);
 			var q = from p in db.ParentInheritance2 select p;
-			Assert.Throws<LinqToDBException>(() => q.ToList());
+			Assert.That(() => q.ToList(), Throws.TypeOf<LinqToDBException>());
 		}
 	}
 }

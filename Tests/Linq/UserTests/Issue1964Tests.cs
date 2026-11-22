@@ -100,7 +100,7 @@ namespace Tests.UserTests
 						BranchPic = att.Url
 					};
 
-				Assert.DoesNotThrow(() => qry.ToList());
+				qry.ToList();
 			}
 		}
 	}

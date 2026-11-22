@@ -1,4 +1,6 @@
-﻿using LinqToDB.Internal.DataProvider.Translation;
+﻿using System;
+
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
@@ -86,6 +88,58 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 		#endregion
 
+		public override IQueryElement ConvertExprExprPredicate(SqlPredicate.ExprExpr predicate)
+		{
+			var leftType  = QueryHelper.GetDbDataType(predicate.Expr1, MappingSchema);
+			var rightType = QueryHelper.GetDbDataType(predicate.Expr2, MappingSchema);
+
+			// ASE compares a date with a datetime as a date, dropping the time part
+			if (leftType.DataType == DataType.Date && IsTimestamp(rightType))
+				predicate = new SqlPredicate.ExprExpr(PseudoFunctions.MakeMandatoryCast(predicate.Expr1, new DbDataType(leftType.SystemType, DataType.DateTime), null), predicate.Operator, predicate.Expr2, predicate.UnknownAsValue);
+			else if (rightType.DataType == DataType.Date && IsTimestamp(leftType))
+				predicate = new SqlPredicate.ExprExpr(predicate.Expr1, predicate.Operator, PseudoFunctions.MakeMandatoryCast(predicate.Expr2, new DbDataType(rightType.SystemType, DataType.DateTime), null), predicate.UnknownAsValue);
+
+			return base.ConvertExprExprPredicate(predicate);
+		}
+
+		/// <summary>
+		/// The <c>IN</c> twin of <see cref="ConvertExprExprPredicate"/>: a date operand is cast to <c>datetime</c> when a value
+		/// in the list is a timestamp, or may be one - the values of a captured collection beside a computed operand keep
+		/// their own type when written; beside a timestamp operand, each date value is cast to <c>datetime</c>.
+		/// </summary>
+		protected internal override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
+		{
+			var newElement = base.VisitInListPredicate(predicate);
+
+			if (newElement is not SqlPredicate.InList inList)
+				return newElement;
+
+			var operandType = QueryHelper.GetDbDataType(inList.Expr1, MappingSchema);
+
+			if (operandType.DataType == DataType.Date
+				&& (inList.Values.Exists(v => IsTimestamp(QueryHelper.GetDbDataType(v, MappingSchema)))
+					|| (inList.Values is [SqlParameter] && inList.Expr1.SystemType?.ToUnderlying() == typeof(DateTime) && !QueryHelper.IsStoredColumn(inList.Expr1))))
+			{
+				return new SqlPredicate.InList(PseudoFunctions.MakeMandatoryCast(inList.Expr1, new DbDataType(operandType.SystemType, DataType.DateTime), null), inList.WithNull, inList.IsNot, inList.Values);
+			}
+
+			if (IsTimestamp(operandType) && inList.Values is not [SqlParameter] && inList.Values.Exists(v => QueryHelper.GetDbDataType(v, MappingSchema).DataType == DataType.Date))
+			{
+				var values = inList.Values.ConvertAll(v => QueryHelper.GetDbDataType(v, MappingSchema) is { DataType: DataType.Date } valueType
+					? PseudoFunctions.MakeMandatoryCast(v, new DbDataType(valueType.SystemType, DataType.DateTime), null)
+					: v);
+
+				return new SqlPredicate.InList(inList.Expr1, inList.WithNull, inList.IsNot, values);
+			}
+
+			return newElement;
+		}
+
+		static bool IsTimestamp(DbDataType type)
+		{
+			return type.DataType is DataType.DateTime or DataType.DateTime2 or DataType.SmallDateTime;
+		}
+
 		protected internal override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
 		{
 			var result = base.VisitExistsPredicate(predicate);
@@ -99,6 +153,42 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			}
 
 			return result;
+		}
+
+		static bool IsDate(Type type)
+		{
+#if SUPPORTS_DATEONLY
+			if (type == typeof(DateOnly))
+				return true;
+#endif
+
+			return type == typeof(DateTime) || type == typeof(DateTimeOffset);
+		}
+
+		// Sybase writes a date as an untyped string, which takes the type of the column beside it: cast to the mapped type, a
+		// physical column narrower than its mapping is promoted rather than handed a date it cannot hold. A mapped type ASE does
+		// not spell - an offset, a rowversion timestamp - is cast to datetime, which ASE reads an offset through.
+		static SqlCastExpression ConvertDefaultDate(SqlDefaultValueExpression expression)
+		{
+			var least = expression.Type.DataType switch
+			{
+				DataType.SmallDateTime => new DateTime(1900, 1, 1),
+				DataType.Date          => default(DateTime?),
+				_                      => new DateTime(1753, 1, 1),
+			};
+
+			var value = (least == null ? null : RaiseDefaultDate(expression, least.Value)) ?? new SqlValue(expression.Type, expression.Value);
+
+			var dataType = expression.Type.DataType is DataType.DateTime or DataType.DateTime2 or DataType.SmallDateTime or DataType.Date or DataType.Time
+				? expression.Type.DataType
+				: DataType.DateTime;
+
+			return new SqlCastExpression(value, new DbDataType(expression.Type.SystemType, dataType), null, isMandatory: true);
+		}
+
+		public override ISqlExpression ConvertDefaultValue(SqlDefaultValueExpression expression)
+		{
+			return IsDate(expression.Type.SystemType) ? ConvertDefaultDate(expression) : base.ConvertDefaultValue(expression);
 		}
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)

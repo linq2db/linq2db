@@ -34,7 +34,7 @@ namespace LinqToDB.Analyzers
 			helpLinkUri:        "https://github.com/linq2db/linq2db/wiki/L2DB1001");
 
 		/// <inheritdoc/>
-		public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
+		public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => [Rule];
 
 		/// <inheritdoc/>
 		public override void Initialize(AnalysisContext context)

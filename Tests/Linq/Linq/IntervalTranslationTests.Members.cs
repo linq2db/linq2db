@@ -175,7 +175,7 @@ namespace Tests.Linq
 		/// </para>
 		/// </remarks>
 		[Test]
-		public void EachDeclaredUnitRoundTripsAndReads([DataSources(false, TestProvName.AllAccess)] string context)
+		public void EachDeclaredUnitRoundTripsAndReads([DataSources(false, TestProvName.AllNativeAccess, TestProvName.AccessLibRedMdb)] string context)
 		{
 			var days         = TimeSpan.FromHours(60);
 			var milliseconds = new TimeSpan(0, 1, 2, 3, 456);
@@ -225,7 +225,7 @@ namespace Tests.Linq
 		/// </para>
 		/// </remarks>
 		[Test]
-		public void AUnitFinerThanATickHasNoMembers([DataSources(false, TestProvName.AllAccess)] string context)
+		public void AUnitFinerThanATickHasNoMembers([DataSources(false, TestProvName.AllNativeAccess, TestProvName.AccessLibRedMdb)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable<UnitSpreadRow>();
@@ -310,6 +310,41 @@ namespace Tests.Linq
 			row.Hours.ShouldBe(value.Hours);
 			row.Minutes.ShouldBe(value.Minutes);
 			row.Seconds.ShouldBe(value.Seconds);
+		}
+
+		/// <summary>
+		/// The components of a stored duration whose count of seconds is past the 32-bit range.
+		/// </summary>
+		/// <remarks>
+		/// A count past 2<sup>31</sup> seconds, a little over 68 years, overflows wherever the count is narrowed to a
+		/// 32-bit integer on the way to a remainder - DB2 did, for a column whose model type is not an integer. Access
+		/// is not asked: its currency column cannot hold the same duration in ticks, and its <c>MOD</c> is 32-bit.
+		/// </remarks>
+		[Test]
+		public void ComponentOfALongStoredDurationMatchesClr([DataSources(TestProvName.AllAccess)] string context)
+		{
+			var value = TimeSpan.FromSeconds(3_000_000_005);
+
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<DurationRow>();
+			Seed(db, value);
+
+			var row = t
+				.Select(r => new
+				{
+					Days    = Sql.AsSql(r.InSeconds.Days),
+					Hours   = Sql.AsSql(r.InSeconds.Hours),
+					Minutes = Sql.AsSql(r.InSeconds.Minutes),
+					Seconds = Sql.AsSql(r.InSeconds.Seconds),
+				})
+				.Single();
+
+			row.Days.ShouldBe(value.Days);
+			row.Hours.ShouldBe(value.Hours);
+			row.Minutes.ShouldBe(value.Minutes);
+			row.Seconds.ShouldBe(value.Seconds);
+
+			t.Where(r => r.InSeconds.Seconds == value.Seconds).Select(r => r.Id).ToArray().ShouldBe([1]);
 		}
 
 #if NET8_0_OR_GREATER

@@ -280,7 +280,7 @@ namespace Cli.All.SqlServer
 			{
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -295,13 +295,13 @@ namespace Cli.All.SqlServer
 			return ret;
 		}
 
-		public static async Task<TestProcedureResults> TestProcedureAsync(this TestDataDB dataConnection, int @return, CancellationToken cancellationToken = default)
+		public static async Task<TestProcedureResults> TestProcedureAsync(this TestDataDB dataConnection, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,

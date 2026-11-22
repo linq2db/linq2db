@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -289,7 +289,7 @@ namespace Tests.Linq
 			TestProvName.AllSybase,
 			TestProvName.AllSQLite,
 			TestProvName.AllYdb,
-			TestProvName.AllAccess)]
+			TestProvName.AllNativeAccess)]
 			string context,
 			[Values] bool withParameters)
 		{
@@ -478,7 +478,7 @@ namespace Tests.Linq
 		public void SkipTake4([DataSources(
 			TestProvName.AllSQLite,
 			TestProvName.AllSybase,
-			TestProvName.AllAccess)]
+			TestProvName.AllNativeAccess)]
 			string context,
 			[Values] bool withParameters)
 		{
@@ -532,7 +532,7 @@ namespace Tests.Linq
 			ProviderName.SqlCe,
 			TestProvName.AllSybase,
 			TestProvName.AllSQLite,
-			TestProvName.AllAccess)]
+			TestProvName.AllNativeAccess)]
 			string context,
 			[Values] bool withParameters)
 		{
@@ -549,7 +549,7 @@ namespace Tests.Linq
 			ProviderName.SqlCe,
 			TestProvName.AllSybase,
 			TestProvName.AllSQLite,
-			TestProvName.AllAccess)]
+			TestProvName.AllNativeAccess)]
 			string context,
 			[Values] bool withParameters)
 		{
@@ -697,7 +697,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TakeWithTies([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] bool withParameters)
+		public void TakeWithTies([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllAccessLibRed)] string context, [Values] bool withParameters)
 		{
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
 			var q = db.Person.OrderBy(_ => _.FirstName).Take(50, TakeHints.WithTies | TakeHints.Percent).Select(_ => _);
@@ -712,7 +712,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TakeWithTies2([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] bool withParameters)
+		public void TakeWithTies2([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllAccessLibRed)] string context, [Values] bool withParameters)
 		{
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
 			var q = db.Person.OrderBy(_ => _.FirstName).Take(() => 50, TakeHints.WithTies | TakeHints.Percent).Select(_ => _);
@@ -729,19 +729,20 @@ namespace Tests.Linq
 		public void SkipTakeWithTies([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataContext(context);
-			Assert.Throws<LinqToDBException>(() => db.Person.Skip(1).Take(() => 50, TakeHints.WithTies | TakeHints.Percent).Select(_ => _).ToList());
+			Assert.That(() => db.Person.Skip(1).Take(() => 50, TakeHints.WithTies | TakeHints.Percent).Select(_ => _).ToList(), Throws.TypeOf<LinqToDBException>());
 
-			Assert.Throws<LinqToDBException>(() => db.Person.Take(() => 50, TakeHints.WithTies | TakeHints.Percent).Skip(1).Select(_ => _).ToList());
+			Assert.That(() => db.Person.Take(() => 50, TakeHints.WithTies | TakeHints.Percent).Skip(1).Select(_ => _).ToList(), Throws.TypeOf<LinqToDBException>());
 		}
 
 		[Test]
 		public void TakeWithHintsFails([IncludeDataSources(ProviderName.SqlCe, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
-			Assert.Throws<LinqToDBException>(() => db.Parent.Take(10, TakeHints.Percent).ToList());
+			Assert.That(() => db.Parent.Take(10, TakeHints.Percent).ToList(), Throws.TypeOf<LinqToDBException>());
 		}
 
-		[ActiveIssue("https://github.com/ydb-platform/ydb/issues/46197", Configuration = TestProvName.AllYdb, Details = "YDB 26.1.1.20 server optimizer assertion (dq_opt_phy_finalizing.cpp:540 'requirement false failed') on a LEFT JOIN of two LIMIT-ed UNION ALL subqueries; regression from the release's Shuffle Elimination.")]
+		[ActiveIssue("https://github.com/ydb-platform/ydb/issues/46197", Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "dq_opt_phy_finalizing.cpp",
+			Details = "YDB 26.1.1.20 server optimizer assertion (dq_opt_phy_finalizing.cpp:540 'requirement false failed') on a LEFT JOIN of two LIMIT-ed UNION ALL subqueries; regression from the release's Shuffle Elimination.")]
 		[Test]
 		public void TakeSkipJoin([DataSources(TestProvName.AllSybase)] string context, [Values] bool withParameters)
 		{
@@ -854,7 +855,7 @@ namespace Tests.Linq
 			{
 				if (ReferenceEquals(null, obj)) return false;
 				if (ReferenceEquals(this, obj)) return true;
-				if (obj.GetType() != GetType()) return false;
+				if (obj.GetType() != typeof(TakeSkipClass)) return false;
 				return Equals((TakeSkipClass)obj);
 			}
 

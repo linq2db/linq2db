@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Numerics;
 using System.Text;
 
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Mapping;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -60,9 +61,9 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		{
 			if (double.IsNaN(value))
 				sb.Append("'NaN'::DOUBLE");
-			else if (double.IsPositiveInfinity(value))
+			else if (FloatingPointHelper.IsPositiveInfinity(value))
 				sb.Append("'Infinity'::DOUBLE");
-			else if (double.IsNegativeInfinity(value))
+			else if (FloatingPointHelper.IsNegativeInfinity(value))
 				sb.Append("'-Infinity'::DOUBLE");
 			else
 				sb.AppendFormat(CultureInfo.InvariantCulture, "{0:G17}", value);
@@ -72,9 +73,9 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		{
 			if (float.IsNaN(value))
 				sb.Append("'NaN'::FLOAT");
-			else if (float.IsPositiveInfinity(value))
+			else if (FloatingPointHelper.IsPositiveInfinity(value))
 				sb.Append("'Infinity'::FLOAT");
-			else if (float.IsNegativeInfinity(value))
+			else if (FloatingPointHelper.IsNegativeInfinity(value))
 				sb.Append("'-Infinity'::FLOAT");
 			else
 			{
@@ -142,12 +143,13 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		{
 			sb.Append(CultureInfo.InvariantCulture, $"'{value.Hour:00}:{value.Minute:00}:{value.Second:00}");
 
-			if (value.Microsecond > 0)
+			var fraction = value.Ticks % TimeSpan.TicksPerSecond;
+			if (fraction > 0)
 			{
-				if (type.Type.Precision > 6 || type.Type.DataType == DataType.TimeTZ)
-					sb.Append(CultureInfo.InvariantCulture, $".{value.Microsecond:0000000}");
+				if (type.Type.Precision > 6)
+					sb.Append(CultureInfo.InvariantCulture, $".{fraction:0000000}");
 				else
-					sb.Append(CultureInfo.InvariantCulture, $".{value.Microsecond:000000}");
+					sb.Append(CultureInfo.InvariantCulture, $".{fraction / 10:000000}");
 			}
 
 			if (type.Type.DataType == DataType.TimeTZ)
@@ -199,11 +201,11 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			{
 				// INTERVAL for values outside TIME range
 				sb.Append("INTERVAL '");
-				if (value.TotalDays is >= 1 or <= -1)
-					sb.Append(CultureInfo.InvariantCulture, $"{(int)value.TotalDays} days ");
+				if (value.Days != 0)
+					sb.Append(CultureInfo.InvariantCulture, $"{value.Days} days ");
 
 				if (value < TimeSpan.Zero)
-					sb.Append(CultureInfo.InvariantCulture, $"{-value.Hours:00}:{-value.Minutes:00}:{-value.Seconds:00}");
+					sb.Append(CultureInfo.InvariantCulture, $"-{-value.Hours:00}:{-value.Minutes:00}:{-value.Seconds:00}");
 				else
 					sb.Append(CultureInfo.InvariantCulture, $"{value.Hours:00}:{value.Minutes:00}:{value.Seconds:00}");
 
@@ -310,6 +312,8 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			return nanosecond > 854775807;
 		}
 
-		internal static MappingSchema Instance { get; } = new DuckDBMappingSchema();
+		static readonly Lazy<MappingSchema> _instance = new (() => new DuckDBMappingSchema());
+
+		internal static MappingSchema Instance => _instance.Value;
 	}
 }

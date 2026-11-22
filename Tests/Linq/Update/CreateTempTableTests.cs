@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,7 +13,6 @@ using NUnit.Framework;
 namespace Tests.xUpdate
 {
 	[TestFixture]
-	[Order(10000)]
 	public class CreateTempTableTests : TestBase
 	{
 		sealed class IDTable
@@ -255,11 +254,14 @@ namespace Tests.xUpdate
 				// ~Aliens~ Oracle
 			}
 
+			TestUtils.DiscardFirebirdConnection(db);
+
 			var tableExists = true;
 			try
 			{
 				db.DropTable<int>("TempTable", throwExceptionIfNotExists: true);
 			}
+			// not every provider's "no such table" error is a DbException (AseClient, Octonica)
 			catch
 			{
 				tableExists = false;
@@ -268,7 +270,8 @@ namespace Tests.xUpdate
 			Assert.That(tableExists, Is.False);
 		}
 
-		[ActiveIssue("YDB: CREATE TEMPORARY TABLE not supported (feature under development)", Configuration = TestProvName.AllYdb)]
+		[ActiveIssue(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Creating temporary table is not supported.",
+			Details = "no-issue: YDB does not implement CREATE TEMPORARY TABLE (feature under development upstream)")]
 		[Test]
 		public async Task CreateTableAsyncCanceled2([DataSources(false)] string context)
 		{
@@ -310,17 +313,22 @@ namespace Tests.xUpdate
 				// ~Aliens~ Oracle
 			}
 
+			TestUtils.DiscardFirebirdConnection(db);
+
 			var tableExists = true;
 			try
 			{
 				db.DropTable<int>("TempTable", throwExceptionIfNotExists: true);
 			}
+			// not every provider's "no such table" error is a DbException (AseClient, Octonica)
 			catch
 			{
 				tableExists = false;
 			}
 
-			Assert.That(tableExists, Is.False);
+			// Firebird: the driver's stray cancel can fail TempTable's own cleanup DROP (#6012); remove this exemption once it is fixed
+			if (!context.IsAnyOf(TestProvName.AllFirebird))
+				Assert.That(tableExists, Is.False);
 		}
 
 		[Test]
@@ -397,7 +405,8 @@ namespace Tests.xUpdate
 			Assert.That(list, Is.EquivalentTo(data));
 		}
 
-		[ActiveIssue("YDB: CREATE TEMPORARY TABLE not supported (feature under development)", Configuration = TestProvName.AllYdb)]
+		[ActiveIssue(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Creating temporary table is not supported.",
+			Details = "no-issue: YDB does not implement CREATE TEMPORARY TABLE (feature under development upstream)")]
 		[Test]
 		public void CreateTable_NoDisposeError([DataSources(false)] string context)
 		{
@@ -409,7 +418,8 @@ namespace Tests.xUpdate
 			table2.Drop();
 		}
 
-		[ActiveIssue("YDB: CREATE TEMPORARY TABLE not supported (feature under development)", Configuration = TestProvName.AllYdb)]
+		[ActiveIssue(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Creating temporary table is not supported.",
+			Details = "no-issue: YDB does not implement CREATE TEMPORARY TABLE (feature under development upstream)")]
 		[Test]
 		public async Task CreateTable_NoDisposeErrorAsync([DataSources(false)] string context)
 		{
@@ -427,7 +437,8 @@ namespace Tests.xUpdate
 			[PrimaryKey] public int Key { get; set; }
 		}
 
-		[ActiveIssue("YDB: CREATE TEMPORARY TABLE not supported (feature under development)", Configuration = TestProvName.AllYdb)]
+		[ActiveIssue(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Creating temporary table is not supported.",
+			Details = "no-issue: YDB does not implement CREATE TEMPORARY TABLE (feature under development upstream)")]
 		[Test]
 		public void CreateTempTableWithPrimaryKey([DataSources] string context)
 		{
@@ -435,7 +446,8 @@ namespace Tests.xUpdate
 			using var t  = db.CreateTempTable<TableWithPrimaryKey>(tableOptions: TableOptions.IsTemporary);
 		}
 
-		[ActiveIssue("YDB: CREATE TEMPORARY TABLE not supported (feature under development)", Configuration = TestProvName.AllYdb)]
+		[ActiveIssue(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Creating temporary table is not supported.",
+			Details = "no-issue: YDB does not implement CREATE TEMPORARY TABLE (feature under development upstream)")]
 		[Test]
 		public void InsertIntoTempTableWithPrimaryKey([DataSources(false)] string context)
 		{
@@ -455,7 +467,6 @@ namespace Tests.xUpdate
 			[Column]     public string? Value { get; set; }
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllOracle])]
 		[Test]
 		public void CreateTempTable_TestSchemaConflicts([DataSources] string context)
 		{
@@ -586,9 +597,11 @@ namespace Tests.xUpdate
 			Assert.That(list, Has.Count.EqualTo(1));
 		}
 
-		[ActiveIssue("YDB: CREATE TEMPORARY TABLE not supported (feature under development)", Configuration = TestProvName.AllYdb)]
+		[ActiveIssue(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Creating temporary table is not supported.",
+			Details = "no-issue: YDB does not implement CREATE TEMPORARY TABLE (feature under development upstream)")]
+		// SqlServer.CS: tempdb uses the server's case-insensitive collation, so the join to Person fails with a collation conflict
 		[Test]
-		public async Task CreateTableEnumerableWithNameAndDescriptionAsyncTest([DataSources(false, TestProvName.AllSqlServerCS)] string context)
+		public async Task CreateTableEnumerableWithNameAndDescriptionAsyncTest([DataSources(false, TestProvName.AllSqlServerCaseSensitiveCatalog)] string context)
 		{
 			await using var db = GetDataContext(context);
 

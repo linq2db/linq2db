@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -979,7 +979,14 @@ namespace Tests.xUpdate
 		}
 		#endregion
 
-		[ActiveIssue]
+		// Blanket, plus the two providers that never get as far as the assertion: Firebird 2.5 and Informix reject
+		// the statement outright.
+		[ActiveIssue(4584, ErrorMessage = "Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(6))",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The merge emits fewer parameters than the source rows require - #4584's subject.")]
+		[ActiveIssue(4584, Configuration = TestProvName.AllFirebirdLess3, ErrorTypeName = "FirebirdSql.Data.FirebirdClient.FbException",
+			ErrorMessage = "Dynamic SQL Error", Details = "Firebird 2.5 refuses the generated statement before any parameter can be counted.")]
+		[ActiveIssue(4584, Configuration = ProviderName.InformixDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			ErrorMessage = "A syntax error has occurred.", Details = "as Firebird 2.5 - refused before the assertion is reached.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4584")]
 		public void Issue4584Test([MergeDataContextSource(false)] string context)
 		{
@@ -1089,10 +1096,11 @@ namespace Tests.xUpdate
 			];
 		}
 
-		// Current Sybase version cannot handle such queries and crash with generic error
-		[ActiveIssue(TestProvName.AllSybase, Details = "ASE is terminating this process")]
+		// Sybase excluded, not gated: this MERGE segfaults the ASE session ("Internal error: SIGSEGV happened"), and
+		// the dead connection goes back to the pool and fails whichever test draws it next. Last checked on
+		// ASE 16.1 SP00 PL01 (EBF 31157); re-test when the CI image moves to a newer ASE.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5181")]
-		public void UnusedSource_Query([MergeDataContextSource] string context)
+		public void UnusedSource_Query([MergeDataContextSource(TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(UnusedSourceTable.Data);

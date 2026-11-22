@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -142,7 +142,8 @@ namespace Tests.Linq
 		// unsuported case:
 		// we prefer member declared with "new" over interface implementation member for backward compatibility
 		// (see https://github.com/linq2db/linq2db/issues/4113)
-		[Test, ActiveIssue]
+		[Test, ActiveIssue(ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "could not be converted to SQL",
+			Details = "no-issue: an accepted limitation rather than a tracked defect - the comment above records the trade-off and cites #4113 as its justification, which is background for the choice and not a bug to fix.")]
 		public void Issue4031_Case04([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
 			Issue4031_Execute_TwoFields<Issue4031Case04>(context);
@@ -832,6 +833,135 @@ namespace Tests.Linq
 				.ToList();
 
 			result.ShouldBe(new[] { 1, 2 });
+		}
+
+		#endregion
+
+		#region Interface implemented through members of a base class that doesn't implement it
+
+		public interface IChildWithParent
+		{
+			int     ParentID { get; set; }
+			int     ChildID  { get; set; }
+			Parent? Parent   { get; set; }
+		}
+
+		public class ChildWithParentBase
+		{
+			[Column] public int ParentID { get; set; }
+			[Column] public int ChildID  { get; set; }
+
+			[Association(ThisKey = nameof(ParentID), OtherKey = nameof(Model.Parent.ParentID))]
+			public Parent? Parent { get; set; }
+		}
+
+		[Table("Child")]
+		public class ChildImplementingInterfaceViaBase : ChildWithParentBase, IChildWithParent;
+
+		static IQueryable<T> FilterByParentValue<T>(IQueryable<T> source, int value)
+			where T : IChildWithParent
+		{
+			return source.Where(c => c.Parent!.Value1 == value);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4773")]
+		public void AssociationViaBaseClass_FilterThroughInterfaceCast([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var source = db.GetTable<ChildImplementingInterfaceViaBase>() as IQueryable<IChildWithParent>;
+
+			var result = source
+				.Where (c => c.Parent!.Value1 == 1)
+				.Select(c => new { c.ParentID, c.ChildID })
+				.ToList();
+
+			var expected = Child
+				.Where (c => c.Parent!.Value1 == 1)
+				.Select(c => new { c.ParentID, c.ChildID });
+
+			result.ShouldBe(expected, ignoreOrder: true);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4773")]
+		public void AssociationViaBaseClass_FilterThroughGenericConstraint([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var result = FilterByParentValue(db.GetTable<ChildImplementingInterfaceViaBase>(), 1)
+				.Select(c => new { c.ParentID, c.ChildID })
+				.ToList();
+
+			var expected = Child
+				.Where (c => c.Parent!.Value1 == 1)
+				.Select(c => new { c.ParentID, c.ChildID });
+
+			result.ShouldBe(expected, ignoreOrder: true);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4773")]
+		public void AssociationViaBaseClass_ProjectThroughInterfaceCast([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var source = db.GetTable<ChildImplementingInterfaceViaBase>() as IQueryable<IChildWithParent>;
+
+			var result = source
+				.Select(c => new { c.ParentID, c.ChildID, c.Parent })
+				.ToList()
+				.Select(r => (r.ParentID, r.ChildID, r.Parent?.Value1));
+
+			var expected = Child
+				.Select(c => (c.ParentID, c.ChildID, c.Parent!.Value1));
+
+			result.ShouldBe(expected, ignoreOrder: true);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4773")]
+		public void AssociationViaBaseClass_LoadWithThroughInterfaceCast([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var source = db.GetTable<ChildImplementingInterfaceViaBase>() as IQueryable<IChildWithParent>;
+
+			var result = source
+				.LoadWith(c => c.Parent)
+				.ToList()
+				.Select(c => (c.ParentID, c.ChildID, c.Parent?.ParentID));
+
+			var expected = Child
+				.Select(c => (c.ParentID, c.ChildID, (int?)c.Parent!.ParentID));
+
+			result.ShouldBe(expected, ignoreOrder: true);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4773")]
+		public void AssociationViaBaseClass_FilteredLoadWithThroughInterfaceCast([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var source = db.GetTable<ChildImplementingInterfaceViaBase>() as IQueryable<IChildWithParent>;
+
+			var result = source
+				.LoadWith(c => c.Parent, q => q.Where(p => p.Value1 == 1))
+				.ToList()
+				.Select(c => (c.ParentID, c.ChildID, c.Parent?.ParentID));
+
+			var expected = Child
+				.Select(c => (c.ParentID, c.ChildID, c.Parent!.Value1 == 1 ? c.Parent.ParentID : (int?)null));
+
+			result.ShouldBe(expected, ignoreOrder: true);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4773")]
+		public void AssociationViaBaseClass_FindAssociationDescriptorByInterfaceMember()
+		{
+			var descriptor = new MappingSchema().GetEntityDescriptor(typeof(ChildImplementingInterfaceViaBase));
+			var member     = typeof(IChildWithParent).GetProperty(nameof(IChildWithParent.Parent))!;
+
+			descriptor
+				.FindAssociationDescriptor(member)
+				.ShouldNotBeNull();
 		}
 
 		#endregion

@@ -11,13 +11,13 @@ redistributed inside this artifact; they are NOT covered by that MIT license and
 subject to their own terms, reproduced in full below.
 
 Artifact:   linq2db.ClickHouse
-Components: 12
+Components: 13
 
 --------------------------------------------------------------------------------------------------
 COMPONENTS
 --------------------------------------------------------------------------------------------------
 
-1. ClickHouse.Driver net10.0: 1.3.0, net462: 0.9.0, net472: 0.9.0, net8.0: 1.3.0, net8.0-windows7.0: 1.3.0, net9.0: 1.3.0
+1. ClickHouse.Driver net10.0: 1.5.0, net10.0-windows7.0: 1.5.0, net11.0: 1.5.0, net462: 0.9.0, net472: 0.9.0
    https://github.com/ClickHouse/clickhouse-cs
    License: MIT  see [1]
 
@@ -26,51 +26,56 @@ COMPONENTS
    License: MIT  see [1]
    Copyright (c) .NET Foundation and Contributors
 
-3. Microsoft.Bcl.AsyncInterfaces 10.0.3
+3. Microsoft.Bcl.AsyncInterfaces 10.0.15
    https://dot.net/
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-4. Microsoft.Extensions.Http net10.0: 10.0.8, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.8, net8.0-windows7.0: 10.0.8, net9.0: 10.0.8
+4. Microsoft.Bcl.Memory 10.0.15
    https://dot.net/
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-5. Microsoft.Extensions.Logging.Abstractions net10.0: 10.0.10, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
+5. Microsoft.Extensions.Http net10.0: 10.0.8, net10.0-windows7.0: 10.0.8, net11.0: 10.0.8, net462: 10.0.0, net472: 10.0.0
    https://dot.net/
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-6. MySqlConnector 2.6.1
+6. Microsoft.Extensions.Logging.Abstractions 10.0.15
+   https://dot.net/
+   License: MIT  see [2]
+   © Microsoft Corporation. All rights reserved.
+
+7. MySqlConnector 3.0.0
    https://mysqlconnector.net/
    License: MIT  see [1]
    Copyright 2016–2026 Bradley Grainger
 
-7. NodaTime net10.0: 3.2.3, net462: 3.2.2, net472: 3.2.2, net8.0: 3.2.3, net8.0-windows7.0: 3.2.3, net9.0: 3.2.3
+8. NodaTime net10.0: 3.2.3, net10.0-windows7.0: 3.2.3, net11.0: 3.2.3, net462: 3.2.2, net472: 3.2.2
    https://nodatime.org/
    License: Apache-2.0  see [3]
 
-8. System.Buffers 4.6.1
+9. System.Buffers 4.6.1
    https://github.com/dotnet/maintenance-packages
    License: MIT  see [1]
    © Microsoft Corporation. All rights reserved.
 
-9. System.Diagnostics.DiagnosticSource net462: 10.0.3, net472: 10.0.3, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
+10. System.Diagnostics.DiagnosticSource 10.0.15
    https://dot.net/
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-10. System.Memory 4.6.3
+11. System.Memory 4.6.3
    https://github.com/dotnet/maintenance-packages
    License: MIT  see [1]
    © Microsoft Corporation. All rights reserved.
 
-11. System.Text.Json net462: 10.0.3, net472: 10.0.3, net8.0: 10.0.10, net8.0-windows7.0: 10.0.5, net9.0: 10.0.10
+12. System.Text.Json 10.0.9
    https://dot.net/
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-12. System.Threading.Tasks.Extensions 4.6.3
+13. System.Threading.Tasks.Extensions 4.6.3
    https://github.com/dotnet/maintenance-packages
    License: MIT  see [1]
    © Microsoft Corporation. All rights reserved.
@@ -105,7 +110,7 @@ SOFTWARE.
 --------------------------------------------------------------------------------------------------
 
 [2] notices-6d15e10a.txt
-    Applies to: Microsoft.Bcl.AsyncInterfaces, Microsoft.Extensions.Http, Microsoft.Extensions.Logging.Abstractions, System.Diagnostics.DiagnosticSource, System.Text.Json
+    Applies to: Microsoft.Bcl.AsyncInterfaces, Microsoft.Bcl.Memory, Microsoft.Extensions.Http, Microsoft.Extensions.Logging.Abstractions, System.Diagnostics.DiagnosticSource, System.Text.Json
 
 .NET Runtime uses third-party libraries or other resources that may be
 distributed under licenses different than the .NET Runtime software.

@@ -43,6 +43,10 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			return x.WithPrecisionScale(precision, scale);
 		}
 
+		// whether YQL holds the value as Decimal: a decimal mapped to Double or DyNumber has none of Decimal's casts
+		internal static bool IsDecimalStorage(DbDataType type)
+			=> type.DataType is DataType.Decimal or DataType.Money or DataType.SmallMoney;
+
 #if SUPPORTS_COMPOSITE_FORMAT
 		private static readonly CompositeFormat DATE_FORMAT         = CompositeFormat.Parse("Date('{0:yyyy-MM-dd}')");
 		private static readonly CompositeFormat DATE32_FORMAT       = CompositeFormat.Parse("Date32('{0:yyyy-MM-dd}')");
@@ -608,9 +612,9 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		private static void BuildFloatLiteral(StringBuilder sb, float value)
 		{
-			if (float.IsNegativeInfinity(value))
+			if (FloatingPointHelper.IsNegativeInfinity(value))
 				sb.Append("Float('-inf')");
-			else if (float.IsPositiveInfinity(value))
+			else if (FloatingPointHelper.IsPositiveInfinity(value))
 				sb.Append("Float('inf')");
 			else
 				sb.AppendFormat(CultureInfo.InvariantCulture, FLOAT_FORMAT, value);
@@ -618,9 +622,9 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		private static void BuildDoubleLiteral(StringBuilder sb, double value)
 		{
-			if (double.IsNegativeInfinity(value))
+			if (FloatingPointHelper.IsNegativeInfinity(value))
 				sb.Append("Double('-inf')");
-			else if (double.IsPositiveInfinity(value))
+			else if (FloatingPointHelper.IsPositiveInfinity(value))
 				sb.Append("Double('inf')");
 			else
 				sb.AppendFormat(CultureInfo.InvariantCulture, DOUBLE_FORMAT, value);

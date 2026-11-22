@@ -46,21 +46,13 @@ namespace Tests.UserTests
 			public Address? Reference2 { get; set; }
 		}
 
-		sealed class Root : Address
-		{
-		}
+		sealed class Root : Address;
 
-		sealed class Sub1 : Address
-		{
-		}
+		sealed class Sub1 : Address;
 
-		sealed class Sub2 : Address
-		{
-		}
+		sealed class Sub2 : Address;
 
-		sealed class Sub3 : Address
-		{
-		}
+		sealed class Sub3 : Address;
 
 		// Collects every place the mapper actually builds an Address, so the test can assert that no constructor
 		// body is emitted more than once. Counting occurrences (rather than distinct nodes) is the point: before

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Data.SQLite;
-using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
@@ -21,9 +20,6 @@ internal sealed class SQLiteProvider : DatabaseProviderBase
 #if NETFRAMEWORK
 	static SQLiteProvider()
 	{
-		// temporary, see SQLite.Runtime.props notes
-		Environment.SetEnvironmentVariable("PreLoadSQLite_BaseDirectory", Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "sds"));
-
 		// data adapter not implemented by MS provider
 		// https://github.com/dotnet/efcore/issues/13838
 		// but needed for linqpad 5 to run sql
@@ -46,7 +42,7 @@ internal sealed class SQLiteProvider : DatabaseProviderBase
 	public override IEnumerable<(string Id, string Version)> GetNuGetPackages(string providerName)
 	{
 		if (string.Equals(providerName, ProviderName.SQLiteClassic, StringComparison.Ordinal))
-			return [("System.Data.SQLite", NuGetPackageVersions.System_Data_SQLite), ("SourceGear.sqlite3", NuGetPackageVersions.SourceGear_sqlite3)];
+			return [("System.Data.SQLite", NuGetPackageVersions.System_Data_SQLite), ("SQLitePCLRaw.lib.e_sqlite3", NuGetPackageVersions.SQLitePCLRaw_lib_e_sqlite3)];
 
 		return [("Microsoft.Data.Sqlite", NuGetPackageVersions.Microsoft_Data_Sqlite), ("SQLitePCLRaw.lib.e_sqlite3", NuGetPackageVersions.SQLitePCLRaw_lib_e_sqlite3)];
 	}

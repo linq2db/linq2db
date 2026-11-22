@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
@@ -33,16 +33,16 @@ namespace LinqToDB.Internal.Interceptors
 			});
 		}
 
-		public async Task<Option<object?>> ExecuteScalarAsync(CommandEventData eventData, DbCommand command, Option<object?> result, CancellationToken cancellationToken)
+		public Task<Option<object?>> ExecuteScalarAsync(CommandEventData eventData, DbCommand command, Option<object?> result, CancellationToken cancellationToken)
 		{
-			return await Apply(async () =>
+			return Apply(async () =>
 			{
 				foreach (var interceptor in Interceptors)
 					await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInterceptorExecuteScalarAsync))
 						result = await interceptor.ExecuteScalarAsync(eventData, command, result, cancellationToken)
 							.ConfigureAwait(false);
 				return result;
-			}).ConfigureAwait(false);
+			});
 		}
 
 		public Option<int> ExecuteNonQuery(CommandEventData eventData, DbCommand command, Option<int> result)
@@ -56,16 +56,16 @@ namespace LinqToDB.Internal.Interceptors
 			});
 		}
 
-		public async Task<Option<int>> ExecuteNonQueryAsync(CommandEventData eventData, DbCommand command, Option<int> result, CancellationToken cancellationToken)
+		public Task<Option<int>> ExecuteNonQueryAsync(CommandEventData eventData, DbCommand command, Option<int> result, CancellationToken cancellationToken)
 		{
-			return await Apply(async () =>
+			return Apply(async () =>
 			{
 				foreach (var interceptor in Interceptors)
 					await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInterceptorExecuteNonQueryAsync))
 						result = await interceptor.ExecuteNonQueryAsync(eventData, command, result, cancellationToken)
 							.ConfigureAwait(false);
 				return result;
-			}).ConfigureAwait(false);
+			});
 		}
 
 		public Option<DbDataReader> ExecuteReader(CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, Option<DbDataReader> result)
@@ -79,16 +79,16 @@ namespace LinqToDB.Internal.Interceptors
 			});
 		}
 
-		public async Task<Option<DbDataReader>> ExecuteReaderAsync(CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, Option<DbDataReader> result, CancellationToken cancellationToken)
+		public Task<Option<DbDataReader>> ExecuteReaderAsync(CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, Option<DbDataReader> result, CancellationToken cancellationToken)
 		{
-			return await Apply(async () =>
+			return Apply(async () =>
 			{
 				foreach (var interceptor in Interceptors)
 					await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInterceptorExecuteReaderAsync))
 						result = await interceptor.ExecuteReaderAsync(eventData, command, commandBehavior, result, cancellationToken)
 							.ConfigureAwait(false);
 				return result;
-			}).ConfigureAwait(false);
+			});
 		}
 
 		public void AfterExecuteReader(CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, DbDataReader dataReader)
@@ -111,15 +111,15 @@ namespace LinqToDB.Internal.Interceptors
 			});
 		}
 
-		public async Task BeforeReaderDisposeAsync(CommandEventData eventData, DbCommand? command, DbDataReader dataReader)
+		public Task BeforeReaderDisposeAsync(CommandEventData eventData, DbCommand? command, DbDataReader dataReader)
 		{
-			await Apply(async () =>
+			return Apply(async () =>
 			{
 				foreach (var interceptor in Interceptors)
 					await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInterceptorBeforeReaderDisposeAsync))
 						await interceptor.BeforeReaderDisposeAsync(eventData, command, dataReader)
 							.ConfigureAwait(false);
-			}).ConfigureAwait(false);
+			});
 		}
 	}
 }

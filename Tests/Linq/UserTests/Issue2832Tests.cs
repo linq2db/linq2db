@@ -64,7 +64,6 @@ namespace Tests.UserTests
 			throw new ServerSideOnlyException(nameof(UtilsGreatestnotnull3));
 		}
 
-		[ActiveIssue(5590, Configuration = TestProvName.AllYdb, Details = "YDB does not support correlated subqueries (IsSupportedSimpleCorrelatedSubqueries=false); surfaces as a generic conversion error pending reason-propagation.")]
 		[Test]
 		public void TestIssue2832([DataSources] string context)
 		{
@@ -104,7 +103,9 @@ namespace Tests.UserTests
 
 			var sourcesCount = QueryHelper.EnumerateAccessibleSources(query.GetSelectQuery()).Count(s => s.ElementType == QueryElementType.SqlQuery);
 
-			Assert.That(sourcesCount, Is.LessThanOrEqualTo(2));
+			// YDB has no correlated-subquery support (SqlProviderFlags.IsSupportedSimpleCorrelatedSubqueries is
+			// false), so the optimizer cannot collapse these into the flat shape the other providers reach.
+			Assert.That(sourcesCount, Is.LessThanOrEqualTo(context.IsAnyOf(TestProvName.AllYdb) ? 5 : 2));
 		}
 	}
 }

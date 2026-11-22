@@ -17,7 +17,5 @@ namespace Tests
 	/// needs no marker - it runs globally exclusive, so no concurrent remote test exists to protect.
 	/// </remarks>
 	[AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]
-	public sealed class UsesRemoteContextAttribute : Attribute
-	{
-	}
+	public sealed class UsesRemoteContextAttribute : Attribute;
 }

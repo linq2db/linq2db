@@ -1,13 +1,25 @@
 ﻿#if !NETFRAMEWORK
 using System;
+using System.Net.Http;
 
 using LinqToDB;
 using LinqToDB.Remote.HttpClient.Client;
 
 namespace Tests.Model.Remote.HttpContext
 {
-	public class TestHttpContextDataContext(Uri baseAddress, Func<DataOptions, DataOptions>? optionBuilder = null) : HttpClientDataContext(baseAddress, "remote/linq2db", optionBuilder), ITestDataContext
+	public class TestHttpContextDataContext : HttpClientDataContext, ITestDataContext
 	{
+		// One HttpClient for every test context in the process, so requests reuse pooled
+		// connections instead of each context opening its own and leaving it in TIME_WAIT on
+		// dispose. It has no BaseAddress because test hosts listen on different ports: each
+		// context sends absolute request URIs to its own host.
+		static readonly HttpClient _httpClient = new();
+
+		public TestHttpContextDataContext(Uri baseAddress, Func<DataOptions, DataOptions>? optionBuilder = null)
+			: base(_httpClient, new Uri(baseAddress, "remote/linq2db").AbsoluteUri, optionBuilder)
+		{
+		}
+
 		public ITable<Person>                 Person                 => this.GetTable<Person>();
 		public ITable<ComplexPerson>          ComplexPerson          => this.GetTable<ComplexPerson>();
 		public ITable<Patient>                Patient                => this.GetTable<Patient>();

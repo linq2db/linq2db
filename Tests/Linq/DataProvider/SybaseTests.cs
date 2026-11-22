@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Linq;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
@@ -10,10 +11,14 @@ using System.Xml.Linq;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.Sybase;
+using LinqToDB.Internal.DataProvider.Sybase;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -35,6 +40,45 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<int>("SELECT @p1 + @p2", new { p1 = 2, p2 = 3 }), Is.EqualTo(5));
 				Assert.That(conn.Execute<int>("SELECT @p2 + @p1", new { p2 = 2, p1 = 3 }), Is.EqualTo(5));
 			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6177")]
+		public void GetDataProviderHonorsRequestedProvider([Values(SybaseProvider.DataAction, SybaseProvider.Unmanaged)] SybaseProvider provider)
+		{
+			if (provider == SybaseProvider.Unmanaged && !LinqToDB.Internal.Common.Tools.IsProviderAssemblyPresent(SybaseProviderAdapter.NativeAssemblyName))
+			{
+				// without its assembly the native provider cannot be created, and must not fall back to the managed one
+				Action getDataProvider = () => SybaseTools.GetDataProvider(provider);
+				Action useAse          = () => new DataOptions().UseAse(provider);
+
+				getDataProvider
+					.ShouldThrow<TargetInvocationException>()
+					.GetBaseException()
+					.Message
+					.ShouldContain(SybaseProviderAdapter.NativeAssemblyName);
+
+				useAse
+					.ShouldThrow<TargetInvocationException>()
+					.GetBaseException()
+					.Message
+					.ShouldContain(SybaseProviderAdapter.NativeAssemblyName);
+				return;
+			}
+
+			var expected = provider == SybaseProvider.Unmanaged ? ProviderName.Sybase : ProviderName.SybaseManaged;
+
+			SybaseTools
+				.GetDataProvider(provider)
+				.Name
+				.ShouldBe(expected);
+
+			new DataOptions()
+				.UseAse(provider)
+				.ConnectionOptions
+				.DataProvider
+				.ShouldNotBeNull()
+				.Name
+				.ShouldBe(expected);
 		}
 
 		static void TestType<T>(IDataContext connection, string dataTypeName, T value, string tableName = "AllTypes", bool convertToString = false)
@@ -1037,7 +1081,11 @@ namespace Tests.DataProvider
 					continue;
 				}
 
-				Assert.That(actualValue, Is.EqualTo(testValue),
+				var constraint = actualValue is decimal
+					? Is.EqualTo(testValue).Within(FloatingPointDeltaPercent).Percent
+					: Is.EqualTo(testValue);
+
+				Assert.That(actualValue, constraint,
 					actualValue is DateTimeOffset
 						? $"Column  : {column.MemberName} {actualValue:yyyy-MM-dd HH:mm:ss.fffffff zzz} {testValue:yyyy-MM-dd HH:mm:ss.fffffff zzz}"
 						: $"Column  : {column.MemberName}");
@@ -1100,5 +1148,23 @@ namespace Tests.DataProvider
 		}
 
 		#endregion
+
+		sealed class EmptyColumnNameTable
+		{
+			[Column("")] public int Value { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6023")]
+		public void EmptyColumnNameIsQuoted([IncludeDataSources(TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var sql = db.GetTable<EmptyColumnNameTable>()
+				.Select(x => x.Value)
+				.ToSqlQuery()
+				.Sql;
+
+			sql.ShouldContain(".[]");
+		}
 	}
 }

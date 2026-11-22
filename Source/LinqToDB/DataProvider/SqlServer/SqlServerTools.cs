@@ -53,7 +53,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		/// <summary>
 		/// Tries to load and register spatial types using provided path to types assembly (Microsoft.SqlServer.Types).
-		/// Also check https://linq2db.github.io/articles/FAQ.html#how-can-i-use-sql-server-spatial-types
+		/// Also check https://linq2db.github.io/articles/faq.html#how-can-i-use-sql-server-spatial-types
 		/// for additional required configuration steps.
 		/// </summary>
 		public static void ResolveSqlTypes(string path)
@@ -63,7 +63,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		/// <summary>
 		/// Registers spatial types assembly (Microsoft.SqlServer.Types).
-		/// Also check https://linq2db.github.io/articles/FAQ.html#how-can-i-use-sql-server-spatial-types
+		/// Also check https://linq2db.github.io/articles/faq.html#how-can-i-use-sql-server-spatial-types
 		/// for additional required configuration steps.
 		/// </summary>
 		public static void ResolveSqlTypes(Assembly assembly)

@@ -174,6 +174,214 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void DistinctOrderByBoolean([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Types
+				.Select(t => new { t.ID, t.BoolValue })
+				.Distinct()
+				.OrderBy(t => t.BoolValue)
+				.ThenBy(t => t.ID);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void DistinctOrderByNullableBoolean([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Types2
+				.Select(t => new { t.ID, t.BoolValue })
+				.Distinct()
+				.OrderBy(t => t.BoolValue)
+				.ThenBy(t => t.ID);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void GroupByNullableBooleanOrderByKey([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Types2
+				.GroupBy(t => t.BoolValue)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.OrderBy(g => g.Key);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void ConcatOrderByBoolean([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Types
+				.Select(t => new { t.ID, t.BoolValue })
+				.Concat(db.Types.Where(t => t.ID > 5).Select(t => new { t.ID, t.BoolValue }))
+				.OrderBy(t => t.BoolValue)
+				.ThenBy(t => t.ID);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void GroupByBooleanOrderByKey([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Types
+				.GroupBy(t => t.BoolValue)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.OrderBy(g => g.Key);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void DistinctOrderByBooleanSequence([DataSources] string context, [Values] bool descending)
+		{
+			using var db = GetDataContext(context);
+
+			var source = Types
+				.Select(t => new { t.ID, t.BoolValue })
+				.Distinct();
+
+			var query = db.Types
+				.Select(t => new { t.ID, t.BoolValue })
+				.Distinct();
+
+			var expected = (descending ? source.OrderByDescending(t => t.BoolValue) : source.OrderBy(t => t.BoolValue))
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray();
+
+			var ordered = descending ? query.OrderByDescending(t => t.BoolValue) : query.OrderBy(t => t.BoolValue);
+
+			ordered
+				.ThenBy(t => t.ID)
+				.Select(t => t.ID)
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
+		// Access-only: under DISTINCT Jet and ACE read an outer-joined Yes/No column as False, not NULL; LibRed reads NULL.
+		[Test]
+		public void DistinctOrderByOuterJoinedBooleanKey([IncludeDataSources(true, TestProvName.AllAccess)] string context, [Values] bool descending)
+		{
+			using var db = GetDataContext(context);
+
+			var unmatchedIsNull = context.IsAnyOf(TestProvName.AllAccessLibRed);
+
+			var source =
+				(
+					from p in Parent
+					join t in Types2 on p.ParentID + 8 equals t.ID into g
+					from t in g.DefaultIfEmpty()
+					select new { p.ParentID, BoolValue = unmatchedIsNull ? t?.BoolValue : (t?.BoolValue ?? false) }
+				)
+				.Distinct();
+
+			var query =
+				(
+					from p in db.Parent
+					join t in db.Types2 on p.ParentID + 8 equals t.ID into g
+					from t in g.DefaultIfEmpty()
+					select new { p.ParentID, BoolValue = t!.BoolValue }
+				)
+				.Distinct();
+
+			var expected = (descending ? source.OrderByDescending(r => r.BoolValue) : source.OrderBy(r => r.BoolValue))
+				.ThenBy(r => r.ParentID)
+				.Select(r => (r.ParentID, r.BoolValue))
+				.ToArray();
+
+			var ordered = descending ? query.OrderByDescending(r => r.BoolValue) : query.OrderBy(r => r.BoolValue);
+
+			ordered
+				.ThenBy(r => r.ParentID)
+				.ToArray()
+				.Select(r => (r.ParentID, r.BoolValue))
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
+		// Access-only: the other providers place NULL by their own DefaultNullsOrdering.
+		[Test]
+		public void DistinctOrderByNullableBooleanExpression([IncludeDataSources(true, TestProvName.AllAccess)] string context, [Values] bool descending)
+		{
+			using var db = GetDataContext(context);
+
+			var source = Types2
+				.Select(t => new { t.ID, Value = t.ID > 8 ? null : t.BoolValue })
+				.Distinct();
+
+			var query = db.Types2
+				.Select(t => new { t.ID, Value = t.ID > 8 ? null : t.BoolValue })
+				.Distinct();
+
+			var expected = (descending ? source.OrderByDescending(r => r.Value) : source.OrderBy(r => r.Value))
+				.ThenBy(r => r.ID)
+				.Select(r => (r.ID, r.Value))
+				.ToArray();
+
+			var ordered = descending ? query.OrderByDescending(r => r.Value) : query.OrderBy(r => r.Value);
+
+			ordered
+				.ThenBy(r => r.ID)
+				.ToArray()
+				.Select(r => (r.ID, r.Value))
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
+		// Access-only, pins a known Jet / ACE limitation: under DISTINCT a nullable key can only be flipped, not negated,
+		// so NULL sorts after True instead of before False. LibRed accepts the negation and keeps the .NET order.
+		[Test]
+		public void DistinctOrderByNullableBooleanSubQueryColumn([IncludeDataSources(true, TestProvName.AllAccess)] string context, [Values] bool descending)
+		{
+			using var db = GetDataContext(context);
+
+			var source = Types2
+				.Select(t => new { t.ID, Value = t.ID > 8 ? null : t.BoolValue })
+				.Distinct();
+
+			var query = db.Types2
+				.Select(t => new { t.ID, Value = t.ID > 8 ? null : t.BoolValue })
+				.AsSubQuery()
+				.Distinct();
+
+			var flipOnly = !context.IsAnyOf(TestProvName.AllAccessLibRed);
+
+			var expected = (flipOnly
+					? descending
+						? source
+							.OrderBy(r => r.Value != null)
+							.ThenByDescending(r => r.Value)
+						: source
+							.OrderBy(r => r.Value == null)
+							.ThenBy(r => r.Value)
+					: descending
+						? source.OrderByDescending(r => r.Value)
+						: source.OrderBy(r => r.Value))
+				.ThenBy(r => r.ID)
+				.Select(r => (r.ID, r.Value))
+				.ToArray();
+
+			var ordered = descending ? query.OrderByDescending(r => r.Value) : query.OrderBy(r => r.Value);
+
+			ordered
+				.ThenBy(r => r.ID)
+				.ToArray()
+				.Select(r => (r.ID, r.Value))
+				.ToArray()
+				.ShouldBe(expected);
+		}
+
+		[Test]
 		public void OrderByExpressionDistinct([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -342,7 +550,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AssociationAfterDistinctWithGroupBy([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void AssociationAfterDistinctWithGroupBy([DataSources(TestProvName.AllNativeAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -389,7 +597,7 @@ namespace Tests.Linq
 			AssertQuery(query2);
 		}
 
-		[ThrowsRequiredOuterJoins(TestProvName.AllAccess)]
+		[ThrowsRequiredOuterJoins(TestProvName.AllNativeAccess)]
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public void DistinctWithAssociationInSubquery([DataSources] string context)
@@ -611,7 +819,7 @@ namespace Tests.Linq
 		}
 
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllAccess], ErrorMessage = ErrorHelper.Error_Skip_in_Subquery)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllNativeAccess], ErrorMessage = ErrorHelper.Error_Skip_in_Subquery)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2943")]
 		public void OrderByDistinctSkipTakeFirst([DataSources] string context)
 		{
@@ -649,7 +857,7 @@ namespace Tests.Linq
 		}
 
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllYdb, TestProvName.AllAccess, TestProvName.AllSQLite], ErrorMessage = ErrorHelper.Error_Skip_in_Subquery)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllYdb, TestProvName.AllNativeAccess, TestProvName.AllSQLite], ErrorMessage = ErrorHelper.Error_Skip_in_Subquery)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2943")]
 		public void OrderByDistinctSkipFirst([DataSources] string context)
 		{

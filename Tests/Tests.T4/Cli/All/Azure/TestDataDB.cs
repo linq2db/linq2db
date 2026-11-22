@@ -1970,7 +1970,7 @@ namespace Cli.All.SqlServer.Azure
 			{
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -1982,13 +1982,13 @@ namespace Cli.All.SqlServer.Azure
 			return ret;
 		}
 
-		public static async Task<AddIssue792RecordResults> AddIssue792RecordAsync(this TestDataDB dataConnection, int @return, CancellationToken cancellationToken = default)
+		public static async Task<AddIssue792RecordResults> AddIssue792RecordAsync(this TestDataDB dataConnection, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -2017,7 +2017,7 @@ namespace Cli.All.SqlServer.Azure
 			{
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -2033,13 +2033,13 @@ namespace Cli.All.SqlServer.Azure
 			return ret;
 		}
 
-		public static async Task<DuplicateColumnNamesResults> DuplicateColumnNamesAsync(this TestDataDB dataConnection, int @return, CancellationToken cancellationToken = default)
+		public static async Task<DuplicateColumnNamesResults> DuplicateColumnNamesAsync(this TestDataDB dataConnection, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -2087,7 +2087,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -2100,7 +2100,7 @@ namespace Cli.All.SqlServer.Azure
 			return ret;
 		}
 
-		public static async Task<ExecuteProcIntParametersResults> ExecuteProcIntParametersAsync(this TestDataDB dataConnection, SqlInt32? input, SqlInt32? output, int @return, CancellationToken cancellationToken = default)
+		public static async Task<ExecuteProcIntParametersResults> ExecuteProcIntParametersAsync(this TestDataDB dataConnection, SqlInt32? input, SqlInt32? output, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
@@ -2115,7 +2115,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -2161,7 +2161,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -2183,7 +2183,7 @@ namespace Cli.All.SqlServer.Azure
 		/// <param name="input">
 		/// This is &lt;test&gt; procedure parameter!
 		/// </param>
-		public static async Task<ExecuteProcStringParametersResults> ExecuteProcStringParametersAsync(this TestDataDB dataConnection, SqlInt32? input, SqlInt32? output, int @return, CancellationToken cancellationToken = default)
+		public static async Task<ExecuteProcStringParametersResults> ExecuteProcStringParametersAsync(this TestDataDB dataConnection, SqlInt32? input, SqlInt32? output, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
@@ -2198,7 +2198,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -2237,7 +2237,7 @@ namespace Cli.All.SqlServer.Azure
 			{
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -2249,13 +2249,13 @@ namespace Cli.All.SqlServer.Azure
 			return ret;
 		}
 
-		public static async Task<Issue1897Results> Issue1897Async(this TestDataDB dataConnection, int @return, CancellationToken cancellationToken = default)
+		public static async Task<Issue1897Results> Issue1897Async(this TestDataDB dataConnection, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -2301,7 +2301,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -2315,7 +2315,7 @@ namespace Cli.All.SqlServer.Azure
 			return ret;
 		}
 
-		public static async Task<OutRefEnumTestResults> OutRefEnumTestAsync(this TestDataDB dataConnection, SqlString? str, SqlString? outputStr, SqlString? inputOutputStr, int @return, CancellationToken cancellationToken = default)
+		public static async Task<OutRefEnumTestResults> OutRefEnumTestAsync(this TestDataDB dataConnection, SqlString? str, SqlString? outputStr, SqlString? inputOutputStr, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
@@ -2338,7 +2338,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -2402,7 +2402,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -2418,7 +2418,7 @@ namespace Cli.All.SqlServer.Azure
 			return ret;
 		}
 
-		public static async Task<OutRefTestResults> OutRefTestAsync(this TestDataDB dataConnection, SqlInt32? id, SqlInt32? outputId, SqlInt32? inputOutputId, SqlString? str, SqlString? outputStr, SqlString? inputOutputStr, int @return, CancellationToken cancellationToken = default)
+		public static async Task<OutRefTestResults> OutRefTestAsync(this TestDataDB dataConnection, SqlInt32? id, SqlInt32? outputId, SqlInt32? inputOutputId, SqlString? str, SqlString? outputStr, SqlString? inputOutputStr, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
@@ -2455,7 +2455,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -2492,7 +2492,7 @@ namespace Cli.All.SqlServer.Azure
 			{
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -2504,13 +2504,13 @@ namespace Cli.All.SqlServer.Azure
 			return ret;
 		}
 
-		public static async Task<PatientSelectAllResults> PatientSelectAllAsync(this TestDataDB dataConnection, int @return, CancellationToken cancellationToken = default)
+		public static async Task<PatientSelectAllResults> PatientSelectAllAsync(this TestDataDB dataConnection, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -2559,7 +2559,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -2571,7 +2571,7 @@ namespace Cli.All.SqlServer.Azure
 			return ret;
 		}
 
-		public static async Task<PatientSelectByNameResults> PatientSelectByNameAsync(this TestDataDB dataConnection, SqlString? firstName, SqlString? lastName, int @return, CancellationToken cancellationToken = default)
+		public static async Task<PatientSelectByNameResults> PatientSelectByNameAsync(this TestDataDB dataConnection, SqlString? firstName, SqlString? lastName, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
@@ -2587,7 +2587,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -2631,7 +2631,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -2643,7 +2643,7 @@ namespace Cli.All.SqlServer.Azure
 			return ret;
 		}
 
-		public static async Task<PersonSearchResults> PersonSearchAsync(this TestDataDB dataConnection, SqlString? nameFilter, int @return, CancellationToken cancellationToken = default)
+		public static async Task<PersonSearchResults> PersonSearchAsync(this TestDataDB dataConnection, SqlString? nameFilter, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
@@ -2654,7 +2654,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -2687,7 +2687,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -2699,7 +2699,7 @@ namespace Cli.All.SqlServer.Azure
 			return ret;
 		}
 
-		public static async Task<PersonDeleteResults> PersonDeleteAsync(this TestDataDB dataConnection, SqlInt32? personId, int @return, CancellationToken cancellationToken = default)
+		public static async Task<PersonDeleteResults> PersonDeleteAsync(this TestDataDB dataConnection, SqlInt32? personId, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
@@ -2709,7 +2709,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -2758,7 +2758,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -2770,7 +2770,7 @@ namespace Cli.All.SqlServer.Azure
 			return ret;
 		}
 
-		public static async Task<PersonInsertResults> PersonInsertAsync(this TestDataDB dataConnection, SqlString? firstName, SqlString? lastName, SqlString? middleName, SqlString? gender, int @return, CancellationToken cancellationToken = default)
+		public static async Task<PersonInsertResults> PersonInsertAsync(this TestDataDB dataConnection, SqlString? firstName, SqlString? lastName, SqlString? middleName, SqlString? gender, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
@@ -2796,7 +2796,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -2855,7 +2855,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -2868,7 +2868,7 @@ namespace Cli.All.SqlServer.Azure
 			return ret;
 		}
 
-		public static async Task<PersonInsertOutputParameterResults> PersonInsertOutputParameterAsync(this TestDataDB dataConnection, SqlString? firstName, SqlString? lastName, SqlString? middleName, SqlString? gender, SqlInt32? personId, int @return, CancellationToken cancellationToken = default)
+		public static async Task<PersonInsertOutputParameterResults> PersonInsertOutputParameterAsync(this TestDataDB dataConnection, SqlString? firstName, SqlString? lastName, SqlString? middleName, SqlString? gender, SqlInt32? personId, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
@@ -2899,7 +2899,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -2930,7 +2930,7 @@ namespace Cli.All.SqlServer.Azure
 			{
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -2942,13 +2942,13 @@ namespace Cli.All.SqlServer.Azure
 			return ret;
 		}
 
-		public static async Task<PersonSelectAllResults> PersonSelectAllAsync(this TestDataDB dataConnection, int @return, CancellationToken cancellationToken = default)
+		public static async Task<PersonSelectAllResults> PersonSelectAllAsync(this TestDataDB dataConnection, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -2990,7 +2990,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -3002,7 +3002,7 @@ namespace Cli.All.SqlServer.Azure
 			return ret;
 		}
 
-		public static async Task<PersonSelectByKeyResults> PersonSelectByKeyAsync(this TestDataDB dataConnection, SqlInt32? id, int @return, CancellationToken cancellationToken = default)
+		public static async Task<PersonSelectByKeyResults> PersonSelectByKeyAsync(this TestDataDB dataConnection, SqlInt32? id, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
@@ -3012,7 +3012,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -3054,7 +3054,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -3066,7 +3066,7 @@ namespace Cli.All.SqlServer.Azure
 			return ret;
 		}
 
-		public static async Task<PersonSelectByKeyLowercaseResults> PersonSelectByKeyLowercaseAsync(this TestDataDB dataConnection, SqlInt32? id, int @return, CancellationToken cancellationToken = default)
+		public static async Task<PersonSelectByKeyLowercaseResults> PersonSelectByKeyLowercaseAsync(this TestDataDB dataConnection, SqlInt32? id, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
@@ -3076,7 +3076,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -3121,7 +3121,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -3133,7 +3133,7 @@ namespace Cli.All.SqlServer.Azure
 			return ret;
 		}
 
-		public static async Task<PersonSelectByNameResults> PersonSelectByNameAsync(this TestDataDB dataConnection, SqlString? firstName, SqlString? lastName, int @return, CancellationToken cancellationToken = default)
+		public static async Task<PersonSelectByNameResults> PersonSelectByNameAsync(this TestDataDB dataConnection, SqlString? firstName, SqlString? lastName, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
@@ -3149,7 +3149,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -3197,7 +3197,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -3209,7 +3209,7 @@ namespace Cli.All.SqlServer.Azure
 			return ret;
 		}
 
-		public static async Task<PersonSelectListByNameResults> PersonSelectListByNameAsync(this TestDataDB dataConnection, SqlString? firstName, SqlString? lastName, int @return, CancellationToken cancellationToken = default)
+		public static async Task<PersonSelectListByNameResults> PersonSelectListByNameAsync(this TestDataDB dataConnection, SqlString? firstName, SqlString? lastName, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
@@ -3225,7 +3225,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -3287,7 +3287,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -3299,7 +3299,7 @@ namespace Cli.All.SqlServer.Azure
 			return ret;
 		}
 
-		public static async Task<PersonUpdateResults> PersonUpdateAsync(this TestDataDB dataConnection, SqlInt32? personId, SqlString? firstName, SqlString? lastName, SqlString? middleName, SqlString? gender, int @return, CancellationToken cancellationToken = default)
+		public static async Task<PersonUpdateResults> PersonUpdateAsync(this TestDataDB dataConnection, SqlInt32? personId, SqlString? firstName, SqlString? lastName, SqlString? middleName, SqlString? gender, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
@@ -3329,7 +3329,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -3377,7 +3377,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -3392,7 +3392,7 @@ namespace Cli.All.SqlServer.Azure
 			return ret;
 		}
 
-		public static async Task<QueryProcMultipleParametersResults> QueryProcMultipleParametersAsync(this TestDataDB dataConnection, SqlInt32? input, SqlInt32? output1, SqlInt32? output2, SqlInt32? output3, int @return, CancellationToken cancellationToken = default)
+		public static async Task<QueryProcMultipleParametersResults> QueryProcMultipleParametersAsync(this TestDataDB dataConnection, SqlInt32? input, SqlInt32? output1, SqlInt32? output2, SqlInt32? output3, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
@@ -3417,7 +3417,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -3475,7 +3475,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -3489,7 +3489,7 @@ namespace Cli.All.SqlServer.Azure
 			return ret;
 		}
 
-		public static async Task<QueryProcParametersResults> QueryProcParametersAsync(this TestDataDB dataConnection, SqlInt32? input, SqlInt32? output1, SqlInt32? output2, int @return, CancellationToken cancellationToken = default)
+		public static async Task<QueryProcParametersResults> QueryProcParametersAsync(this TestDataDB dataConnection, SqlInt32? input, SqlInt32? output1, SqlInt32? output2, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
@@ -3509,7 +3509,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -3551,7 +3551,7 @@ namespace Cli.All.SqlServer.Azure
 			{
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -3566,13 +3566,13 @@ namespace Cli.All.SqlServer.Azure
 			return ret;
 		}
 
-		public static async Task<SelectImplicitColumnResults> SelectImplicitColumnAsync(this TestDataDB dataConnection, int @return, CancellationToken cancellationToken = default)
+		public static async Task<SelectImplicitColumnResults> SelectImplicitColumnAsync(this TestDataDB dataConnection, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -3613,7 +3613,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -3625,7 +3625,7 @@ namespace Cli.All.SqlServer.Azure
 			return ret;
 		}
 
-		public static async Task<TableTypeTestProcResults> TableTypeTestProcAsync(this TestDataDB dataConnection, DataTable? table, int @return, CancellationToken cancellationToken = default)
+		public static async Task<TableTypeTestProcResults> TableTypeTestProcAsync(this TestDataDB dataConnection, DataTable? table, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
@@ -3635,7 +3635,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -3674,7 +3674,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,
@@ -3686,7 +3686,7 @@ namespace Cli.All.SqlServer.Azure
 			return ret;
 		}
 
-		public static async Task<VariableResultsResults> VariableResultsAsync(this TestDataDB dataConnection, SqlBoolean? returnFullRow, int @return, CancellationToken cancellationToken = default)
+		public static async Task<VariableResultsResults> VariableResultsAsync(this TestDataDB dataConnection, SqlBoolean? returnFullRow, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
@@ -3696,7 +3696,7 @@ namespace Cli.All.SqlServer.Azure
 				},
 				new DataParameter("@return", null, LinqToDB.DataType.Int32)
 				{
-					Direction = ParameterDirection.Output,
+					Direction = ParameterDirection.ReturnValue,
 					DbType = "INT",
 					Size = 0,
 					Precision = 0,

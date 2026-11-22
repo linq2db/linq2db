@@ -199,7 +199,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				foreach (var ed in entityDescriptor.Associations)
 				{
-					if (ed.MemberInfo.EqualsTo(memberInfo))
+					if (ed.MemberInfo.EqualsTo(memberInfo, entityDescriptor.ObjectType))
 						return ed;
 				}
 
@@ -207,7 +207,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					foreach (var ed in MappingSchema.GetEntityDescriptor(m.Type).Associations)
 					{
-						if (ed.MemberInfo.EqualsTo(memberInfo))
+						if (ed.MemberInfo.EqualsTo(memberInfo, m.Type))
 							return ed;
 					}
 				}
@@ -247,7 +247,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				// without re-sorting (the source is already in the desired order from SQL).
 				var passThroughType = typeof(PassThroughOrderedCollection<>).MakeGenericType(elementType);
 				var enumerableType  = typeof(IEnumerable<>).MakeGenericType(elementType);
-				var ctor            = passThroughType.GetConstructor([enumerableType])!;
+				var ctor            = passThroughType.GetConstructorEx([enumerableType])!;
 				result = Expression.New(ctor, expression);
 			}
 			else if (!typeof(IQueryable<>).IsSameOrParentOf(desiredType) && !desiredType.IsArray)
@@ -275,7 +275,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (typeof(ITable<>).IsSameOrParentOf(desiredType))
 				{
 					var tableType = typeof(PersistentTable<>).MakeGenericType(elementType);
-					result = Expression.New(tableType.GetConstructor(new[] { result.Type })!,
+					result = Expression.New(tableType.GetConstructorEx(new[] { result.Type })!,
 						result);
 				}
 

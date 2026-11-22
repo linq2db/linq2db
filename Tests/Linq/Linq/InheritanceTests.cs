@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -713,7 +713,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Details = "Expression 'x.BaseValue' is not a Field. (Invalid mappings?)")]
+		[ActiveIssue(2429, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "The LINQ expression could not be converted to SQL.",
+			Details = "Expression 'x.BaseValue' is not a Field. (Invalid mappings?) - the overridden column property #2429 describes. That issue is closed; this shape is the residue.")]
 		[Test]
 		public void Issue2429PropertiesTest2([DataSources] string context)
 		{
@@ -734,7 +735,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Details = "Expression 'x.BaseValue' is not a Field. (Invalid mappings?)")]
+		[ActiveIssue(2429, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "The LINQ expression could not be converted to SQL.",
+			Details = "as Issue2429PropertiesTest2, through the method form.")]
 		[Test]
 		public void Issue2429MethodsTest2([DataSources] string context)
 		{
@@ -1157,7 +1159,8 @@ namespace Tests.Linq
 		}
 
 		// also exists in efcore tests
-		[ActiveIssue]
+		[ActiveIssue(4666, ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "Member 'System.String Type1EntityProp' not found in type",
+			Details = "merging into a TPH table cannot resolve the derived member - #4666's subject. The fragment stops before the type name.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4666")]
 		public void Issue4666Test([MergeDataContextSource] string context)
 		{
@@ -1351,7 +1354,9 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("Partial mapping is not supported for now")]
+		[ActiveIssue(ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Inheritance mapping is not defined for discriminator value '2'",
+			Details = "no-issue: Partial mapping is not supported for now")]
 		[Test]
 		public void TestSubTreeSelectionWithoutDefaultDiscriminator([DataSources] string context)
 		{
@@ -1386,7 +1391,15 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue]
+		// One cause, about twenty wordings: the discriminator column is never written, and every server rejects
+		// the NULL in its own phrasing - twelve distinct texts across the drivers, plus their remote wrappers.
+		// Declaring them individually would be a catalogue of vendor prose, so the blanket half declares nothing
+		// and only ClickHouse, which fails differently in kind, is declared.
+		[ActiveIssue(
+			Details = "no-declaration: the Code discriminator column is never written, so every server rejects the NULL - in about twenty different wordings, none of them shared. ClickHouse is the exception and has its own attribute.")]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Inheritance mapping is not defined for discriminator value '0'",
+			Details = "no-issue: ClickHouse fails a stage earlier and in kind - linq2db refuses the mapping rather than the server refusing the row.")]
 		[Test]
 		public void TestInsertIssue1([DataSources] string context)
 		{
@@ -1408,7 +1421,12 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue]
+		// 104 of the cases share one assertion; four providers never reach it because their server rejects the
+		// NULL first, each in its own words, so that half declares nothing.
+		[ActiveIssue(ErrorMessage = "Assert.That(result, Has.Length.EqualTo(3))",
+			Details = "no-issue: the rows inserted through the base table are not read back through the derived one.")]
+		[ActiveIssue(Configurations = [TestProvName.AllMariaDB, TestProvName.AllSapHana, TestProvName.AllSybase, TestProvName.AllYdb],
+			Details = "no-declaration: these four reject the NULL discriminator at the server before the assertion is reached, and each words it differently.")]
 		[Test]
 		public void TestInsertIssue2([DataSources] string context)
 		{
@@ -1614,7 +1632,9 @@ namespace Tests.Linq
 		}
 
 		// Raw SQL below, so SQLite only.
-		[ActiveIssue(5852)]
+		// No ErrorTypeName: the two SQLite drivers raise their own exception types and only the message is shared.
+		[ActiveIssue(5852, ErrorMessage = "no such column: GrandchildValue",
+			Details = "the shadowing member is not mapped onto the base table at all, so the column the insert should have written is never created - #5852's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5852")]
 		public void InsertShadowedMemberThroughBaseTable([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
@@ -1645,8 +1665,9 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable<BaseClass>();
 
-			Assert.Throws<LinqToDBException>(
-				() => db.GetTable<BaseClass>().Insert(() => new UnmappedChild { Id = 1, Code = 1, UnmappedField = 5 }));
+			Assert.That(
+				() => db.GetTable<BaseClass>().Insert(() => new UnmappedChild { Id = 1, Code = 1, UnmappedField = 5 }),
+				Throws.TypeOf<LinqToDBException>());
 
 			Assert.That(db.GetTable<BaseClass>().Count(), Is.Zero);
 		}

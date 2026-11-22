@@ -1,5 +1,6 @@
 ﻿using System;
 
+using LinqToDB.DataProvider.Ydb;
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
@@ -35,6 +36,86 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			var microseconds = Factory.Cast(Factory.Sub(intervalType, element.End, element.Start), longType, true);
 
 			return Factory.Multiply(longType, microseconds, TimeSpan.TicksPerMillisecond / 1000);
+		}
+
+		/// <inheritdoc />
+		/// <remarks>
+		/// Lowered below without going through <c>FinestDateUnit</c>: YQL adds a native <c>Interval</c> to a
+		/// <c>Timestamp</c>/<c>Datetime</c> directly, the same interval type <see cref="ElapsedTicks"/> already
+		/// reads a difference through.
+		/// </remarks>
+		public override bool CanLowerIntervalShift => true;
+
+		/// <summary>
+		/// Shifts by building a YQL <c>Interval</c> from the tick count (microsecond resolution - YDB's own) and
+		/// adding it natively.
+		/// </summary>
+		/// <remarks>
+		/// A <see cref="DateTime"/> is cast to <c>Timestamp</c> first, whatever its mapping declares: adding an
+		/// interval keeps the type of the date, and a <c>Date</c> or a <c>Datetime</c> hold no time of day and no
+		/// fraction of a second respectively, while a column of either mapped as a plain <see cref="DateTime"/> is not
+		/// declared as one. The target is built from the CLR type, so a mapped <c>DbType</c> does not render the cast
+		/// as the type it was meant to leave. The wide types go to <c>Timestamp64</c> instead: a <c>Timestamp</c> would
+		/// not hold their range, while a <c>Date32</c> or a <c>Datetime64</c> would drop the time as the narrow ones do.
+		/// <para>
+		/// The sum is optional in YQL, even over two values that cannot be absent, and an optional cannot be written
+		/// to a column that is not nullable. So it is cast to its own type, which the builder unwraps wherever the
+		/// value cannot be null.
+		/// </para>
+		/// </remarks>
+		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
+		{
+			var longType     = Factory.GetDbDataType(typeof(long));
+			var intervalType = Factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Interval);
+
+			var ticks        = element.IsSubtract ? Factory.Multiply(longType, element.Interval, -1L) : element.Interval;
+			var microseconds = Factory.Div(longType, ticks, TimeSpan.TicksPerMillisecond / 1000);
+			var interval     = Factory.Function(intervalType, "DateTime::IntervalFromMicroseconds", microseconds);
+
+			var temporal     = element.Temporal;
+			var temporalType = Factory.GetDbDataType(temporal);
+
+			if (temporalType.SystemType.ToUnderlying() == typeof(DateTime))
+			{
+				temporalType = new DbDataType(temporalType.SystemType, IsWide(temporal) ? DataType.Timestamp64 : DataType.DateTime2);
+				temporal     = Factory.Cast(temporal, temporalType, true);
+			}
+
+			return Factory.Cast(Factory.Add(temporalType, temporal, interval), temporalType, true);
+		}
+
+		/// <summary>
+		/// Whether a shifted value is one of the 64-bit date types.
+		/// </summary>
+		/// <remarks>
+		/// A shift is lowered before its operand, so in a chain the operand may still be a shift node, typed by the
+		/// CLR mapping alone. Its wideness is that of the value it shifts in turn: the inner shift lowers to a
+		/// <c>Timestamp64</c> for a wide value, which a cast to <c>Timestamp</c> here would not hold.
+		/// </remarks>
+		bool IsWide(ISqlExpression temporal)
+		{
+			if (QueryHelper.UnwrapNullablity(temporal) is SqlTemporalArithmeticExpression inner)
+				return IsWide(inner.Temporal);
+
+			return IsWideDateType(Factory.GetDbDataType(temporal));
+		}
+
+		/// <summary>
+		/// Whether the type is one of the 64-bit date types, whose range only a <c>Timestamp64</c> holds to the microsecond.
+		/// </summary>
+		/// <remarks>
+		/// Asked of the <c>DbType</c> too: a <see cref="DateTime"/> declared through it alone -
+		/// <c>[Column(DbType = "Timestamp64")]</c> - is otherwise typed as a plain timestamp.
+		/// </remarks>
+		static bool IsWideDateType(DbDataType type)
+		{
+			if (type.DataType is DataType.Date32 or DataType.DateTime64 or DataType.Timestamp64)
+				return true;
+
+			return type.DbType != null
+				&& (type.DbType.StartsWith("Date32",      StringComparison.OrdinalIgnoreCase)
+				||  type.DbType.StartsWith("Datetime64",  StringComparison.OrdinalIgnoreCase)
+				||  type.DbType.StartsWith("Timestamp64", StringComparison.OrdinalIgnoreCase));
 		}
 
 		// YQL has no NULLIF builtin. Keep the CASE WHEN a = b THEN NULL ELSE a END form (which YDB
@@ -150,16 +231,16 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		}
 
 		// Cast a Decimal operand to Double when the other operand is floating-point, so YQL accepts the
-		// mixed-type arithmetic. (Decimal/Decimal and floating/floating pairs are left untouched.)
+		// mixed-type arithmetic. (Floating/floating pairs, and Decimal/Decimal pairs with a decimal result, are left untouched.)
 		SqlBinaryExpression AlignFloatingDecimal(SqlBinaryExpression element)
 		{
 			var t1 = QueryHelper.GetDbDataType(element.Expr1, MappingSchema);
 			var t2 = QueryHelper.GetDbDataType(element.Expr2, MappingSchema);
 
-			static bool IsFloating(DbDataType t) => t.DataType is DataType.Double or DataType.Single
-				|| t.SystemType.UnwrappedNullableType == typeof(double) || t.SystemType.UnwrappedNullableType == typeof(float);
-			static bool IsDecimal(DbDataType t) => t.DataType == DataType.Decimal
-				|| t.SystemType.UnwrappedNullableType == typeof(decimal);
+			// by storage, not CLR type: a decimal stored as Double counted as both would have its cast to Double folded away
+			// and re-enter here forever, and a double stored as Decimal counted as floating would never be cast
+			static bool IsFloating(DbDataType t) => t.DataType is DataType.Double or DataType.Single;
+			static bool IsDecimal (DbDataType t) => YdbMappingSchema.IsDecimalStorage(t);
 
 			var doubleType = MappingSchema.GetDbDataType(typeof(double));
 
@@ -169,7 +250,27 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			if (IsDecimal(t1) && IsFloating(t2))
 				return new SqlBinaryExpression(element.SystemType, new SqlCastExpression(element.Expr1, doubleType, null), element.Operation, element.Expr2, element.Precedence);
 
+			// a double stored as Decimal beside another Decimal operand (a column, or a literal typed by one): the C# expression
+			// computes in Double, while YQL Decimal arithmetic keeps the operands' scale and refuses differing Decimal types
+			if (IsDecimal(t1) && IsDecimal(t2) && element.SystemType.UnwrappedNullableType is var type && (type == typeof(double) || type == typeof(float)))
+				return new SqlBinaryExpression(element.SystemType, new SqlCastExpression(element.Expr1, doubleType, null), element.Operation, new SqlCastExpression(element.Expr2, doubleType, null), element.Precedence);
+
 			return element;
+		}
+
+		// The mapping schema writes a date narrow, from 1970-01-01, as whatever type it is mapped to except the wide Date32 and,
+		// for a DateTime or DateTimeOffset only, Datetime64 and Timestamp64, which hold 0001-01-01.
+		public override ISqlExpression ConvertDefaultValue(SqlDefaultValueExpression expression)
+		{
+			var wide    = expression.Type.DataType is DataType.Date32
+				|| expression.Value is DateTime or DateTimeOffset && expression.Type.DataType is DataType.DateTime64 or DataType.Timestamp64;
+			var lowered = (wide ? null : RaiseDefaultDate(expression, new DateTime(1970, 1, 1)))
+				?? base.ConvertDefaultValue(expression);
+
+			// DateTz writes a DateTimeOffset through LocalDateTime, which moves with the time zone.
+			return lowered is SqlValue { Value: DateTimeOffset dateTimeOffset } && expression.Type.DataType == DataType.DateTz
+				? new SqlValue(expression.Type.WithSystemType(typeof(DateTime)), dateTimeOffset.DateTime)
+				: lowered;
 		}
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
@@ -274,8 +375,9 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				var fromType = QueryHelper.GetDbDataType(cast.Expression, MappingSchema);
 				var fromSys  = fromType.SystemType.UnwrappedNullableType;
 
-				if (fromType.DataType is DataType.Double or DataType.Single
+				if ((fromType.DataType is DataType.Double or DataType.Single
 					|| fromSys == typeof(double) || fromSys == typeof(float))
+					&& !YdbMappingSchema.IsDecimalStorage(fromType))
 				{
 					var stringType = MappingSchema.GetDbDataType(typeof(string)).WithDataType(DataType.NVarChar);
 					var viaString  = new SqlCastExpression(cast.Expression, stringType, null);
@@ -284,22 +386,63 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				}
 			}
 
-			// YQL CAST(<Decimal> AS <integer>) rounds, but C# (int)decimal truncates toward zero.
-			// CAST(<Double> AS <integer>) truncates, so route Decimal->integer casts through Double.
+			// YQL CAST(<Decimal> AS <integer>) rounds half-to-even, but C# (int)decimal truncates toward zero.
+			// The value is truncated in Decimal first: a Double holds every integer only up to 2^53. A Decimal with
+			// no integer digits truncates to 0, which Double gets exactly, and without parametrized Decimal types
+			// the Decimal casts below cannot be expressed, so both keep the Double route.
 			if (cast.ToType.SystemType.UnwrappedNullableType.IsIntegerType)
 			{
 				var fromType = QueryHelper.GetDbDataType(cast.Expression, MappingSchema);
 
-				if (fromType.DataType == DataType.Decimal || fromType.SystemType.UnwrappedNullableType == typeof(decimal))
+				if (YdbMappingSchema.IsDecimalStorage(fromType))
 				{
-					var doubleType = MappingSchema.GetDbDataType(typeof(double));
-					var viaDouble  = new SqlCastExpression(cast.Expression, doubleType, null);
+					var scale     = fromType.Scale     ?? YdbMappingSchema.DEFAULT_DECIMAL_SCALE;
+					var precision = fromType.Precision ?? YdbMappingSchema.DEFAULT_DECIMAL_PRECISION;
 
-					return base.ConvertConversion(new SqlCastExpression(viaDouble, cast.ToType, cast.FromType, cast.IsMandatory));
+					// already integral, and what a truncated value re-enters this visitor as
+					if (scale == 0)
+						return base.ConvertConversion(cast);
+
+					var truncated = scale < precision && DataOptions.FindOrDefault(YdbOptions.Default).UseParametrizedDecimal
+						? TruncateDecimal(cast.Expression, fromType)
+						: new SqlCastExpression(cast.Expression, MappingSchema.GetDbDataType(typeof(double)), null);
+
+					return base.ConvertConversion(new SqlCastExpression(truncated, cast.ToType, cast.FromType, cast.IsMandatory));
 				}
 			}
 
 			return base.ConvertConversion(cast);
+		}
+
+		// The scale-dropping CAST rounds half-to-even, so a result it moved away from zero is stepped back by one.
+		// The value passes through Decimal(35,1) first, as YQL refuses a CAST from Decimal(P,P), which a computed value
+		// can be, to Decimal(35,0); scale 1 keeps 34 integer digits, more than any Int64. That cast can round, but the
+		// result still lands on one of the value's two neighbouring integers, so comparing it with the value itself
+		// (YQL compares Decimals of different types) still picks the truncation. The casts are mandatory, since they are
+		// the truncation itself, and their types carry no DbType, which would be rendered in their place. They are typed decimal
+		// even for a double stored as Decimal, whose CLR type would send them through Text and their arithmetic to Double.
+		ISqlExpression TruncateDecimal(ISqlExpression value, DbDataType fromType)
+		{
+			var wideType = new DbDataType(typeof(decimal), DataType.Decimal, null, fromType.Length, YdbMappingSchema.MAX_DECIMAL_PRECISION, 1);
+			var intType  = new DbDataType(typeof(decimal), DataType.Decimal, null, fromType.Length, YdbMappingSchema.MAX_DECIMAL_PRECISION, 0);
+
+			var wide    = Factory.Cast(value,   wideType, true);
+			var rounded = Factory.Cast(wide,    intType,  true);
+			var back    = Factory.Cast(rounded, wideType, true);
+			var zero    = Factory.Value(wideType, 0m);
+			var one     = Factory.Value(intType,  1m);
+
+			return Factory.Condition(
+				Factory.SearchCondition()
+					.AddGreater(value, zero, CompareNulls.LikeSql)
+					.AddGreater(back, value, CompareNulls.LikeSql),
+				Factory.Sub(intType, rounded, one),
+				Factory.Condition(
+					Factory.SearchCondition()
+						.AddLess(value, zero, CompareNulls.LikeSql)
+						.AddLess(back, value, CompareNulls.LikeSql),
+					Factory.Add(intType, rounded, one),
+					rounded));
 		}
 
 		protected override ISqlExpression ConvertSqlCaseExpression(SqlCaseExpression element)

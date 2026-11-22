@@ -430,6 +430,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 					if (type == provider.Adapter.VectorDbType && provider.Adapter.SqlVectorType is not null)
 						return $"VECTOR({param.Size.ToString(NumberFormatInfo.InvariantInfo)})";
+					if (type == provider.Adapter.JsonDbType && provider.Adapter.SqlJsonType is not null)
+						return "Json";
 					return type.ToString();
 				}
 			}
@@ -548,7 +550,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				dataType = CorrectDecimalFacets(dataType, val);
 			else if (value is SqlParameter param)
 			{
-				var paramValue = param.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+				var paramValue = param.GetParameterValue(RenderContext.EvaluationContext.ParameterValues);
 
 				if (paramValue.ProviderValue is decimal decValue)
 					dataType = CorrectDecimalFacets(dataType, decValue);
