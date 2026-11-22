@@ -536,6 +536,129 @@ namespace Tests.Linq
 			(Names().GetCacheMissCount() - missCount).ShouldBe(2);
 		}
 
+		interface IPersonIdLimit
+		{
+			int Value { get; }
+		}
+
+		sealed class PersonIdLimit(int value) : IPersonIdLimit
+		{
+			public int Value => value;
+		}
+
+		sealed record PersonIdLimitWithEquals(int Value) : IPersonIdLimit;
+
+		// The limit is inlined: the SQL depends on it.
+		sealed class InlineLimitBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqlExtensionBuilder builder)
+			{
+				builder.AddParameter("limit", new SqlValue(builder.GetValue<IPersonIdLimit>("limit").Value));
+			}
+		}
+
+		[Sql.Extension("{field} <= {limit}", IsPredicate = true, BuilderType = typeof(InlineLimitBuilder), ServerSideOnly = true)]
+		static bool AtMost([ExprParameter] int field, [SqlQueryDependent] IPersonIdLimit limit) => throw new ServerSideOnlyException(nameof(AtMost));
+
+		// Limits 2, 2, 3, 2: with Equals a new instance each time, without it the same instance for the same limit.
+		static IPersonIdLimit[] PersonIdLimits(bool withEquals)
+		{
+			if (withEquals)
+			{
+				return [new PersonIdLimitWithEquals(2), new PersonIdLimitWithEquals(2), new PersonIdLimitWithEquals(3), new PersonIdLimitWithEquals(2)];
+			}
+
+			var two   = new PersonIdLimit(2);
+			var three = new PersonIdLimit(3);
+
+			return [two, two, three, two];
+		}
+
+		int[] ExpectedPersonIdsAtMost(int limit)
+		{
+			return Person
+				.Select(p => p.ID)
+				.Where(id => id <= limit)
+				.OrderBy(id => id)
+				.ToArray();
+		}
+
+		static int[] SortedIds(IQueryable<int> query)
+		{
+			return query
+				.AsEnumerable()
+				.OrderBy(id => id)
+				.ToArray();
+		}
+
+		// A [SqlQueryDependent] object of a user type: one without Equals compares by reference, one with Equals by value.
+		// The query built for one limit must not answer for another, and equal limits share one cached query.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), QueryCacheTest]
+		public void SqlQueryDependentObject_UserType(
+			[IncludeDataSources(true, TestProvName.AllSQLite)] string context,
+			[Values]                                           bool   withEquals)
+		{
+			LinqToDB.Internal.Linq.Query.ClearCaches();
+
+			using var db = GetDataContext(context);
+
+			IQueryable<int> PersonIdsAtMost(IPersonIdLimit limit)
+			{
+				return
+					from p in db.Person
+					where AtMost(p.ID, limit)
+					select p.ID;
+			}
+
+			var limits    = PersonIdLimits(withEquals);
+			var missCount = PersonIdsAtMost(limits[0]).GetCacheMissCount();
+
+			foreach (var limit in limits)
+			{
+				SortedIds(PersonIdsAtMost(limit))
+					.ShouldBe(ExpectedPersonIdsAtMost(limit.Value), $"limit {limit.Value}");
+			}
+
+			(PersonIdsAtMost(limits[0]).GetCacheMissCount() - missCount).ShouldBe(2);
+		}
+
+		static readonly Func<IDataContext, IPersonIdLimit, IQueryable<int>> _compiledPersonIdsAtMost =
+			CompiledQuery.Compile((IDataContext db, IPersonIdLimit limit) =>
+				from p in db.GetTable<Person>()
+				where AtMost(p.ID, limit)
+				select p.ID);
+
+		// The same through a compiled query, whose cache key holds the argument itself.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), QueryCacheTest]
+		public void SqlQueryDependentObject_UserType_CompiledQuery(
+			[IncludeDataSources(true, TestProvName.AllSQLite)] string context,
+			[Values]                                           bool   withEquals)
+		{
+			using var db = GetDataContext(context);
+
+			var queries = new Dictionary<int, object>();
+
+			foreach (var limit in PersonIdLimits(withEquals))
+			{
+				var query = _compiledPersonIdsAtMost(db, limit);
+				var info  = query.GetCompiledQueryInfo();
+
+				if (queries.TryGetValue(limit.Value, out var first))
+				{
+					info.ShouldBeSameAs(first, $"limit {limit.Value}");
+				}
+				else
+				{
+					queries.Add(limit.Value, info);
+				}
+
+				SortedIds(query)
+					.ShouldBe(ExpectedPersonIdsAtMost(limit.Value), $"limit {limit.Value}");
+			}
+
+			queries[3].ShouldNotBeSameAs(queries[2]);
+		}
+
 		[Sql.Extension("{field} IN (select * from {values})", IsPredicate = true, BuilderType = typeof(InExtExpressionItemBuilder), ServerSideOnly = true)]
 		private static bool InExt<T>([ExprParameter] T field, [SqlQueryDependent] IEnumerable<T> values) where T : struct, IEquatable<int>
 		{

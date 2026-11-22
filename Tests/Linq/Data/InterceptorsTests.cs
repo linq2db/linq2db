@@ -2067,21 +2067,28 @@ namespace Tests.Data
 			using var admin   = Create(null);
 			using var tenant2 = Create(2);
 
-			var adminInfo  = _compiledPersons(admin).GetCompiledQueryInfo();
-			var tenantInfo = _compiledPersons(tenant2).GetCompiledQueryInfo();
+			var adminQuery  = _compiledPersons(admin);
+			var tenantQuery = _compiledPersons(tenant2);
+
+			ShouldReturnIds(adminQuery,  ExpectedIds(),  "admin");
+			ShouldReturnIds(tenantQuery, ExpectedIds(2), "tenant 2");
+
+			// the query an IQueryable a compiled query returned runs with, read once it was enumerated
+			var adminInfo  = adminQuery.GetCompiledQueryInfo();
+			var tenantInfo = tenantQuery.GetCompiledQueryInfo();
 
 			adminInfo.ShouldNotBeSameAs(tenantInfo);
 
 			for (var i = 0; i < 3; i++)
 			{
-				var adminQuery  = _compiledPersons(admin);
-				var tenantQuery = _compiledPersons(tenant2);
-
-				adminQuery.GetCompiledQueryInfo().ShouldBeSameAs(adminInfo, $"admin, round {i}");
-				tenantQuery.GetCompiledQueryInfo().ShouldBeSameAs(tenantInfo, $"tenant 2, round {i}");
+				adminQuery  = _compiledPersons(admin);
+				tenantQuery = _compiledPersons(tenant2);
 
 				ShouldReturnIds(adminQuery,  ExpectedIds(),  $"admin, round {i}");
 				ShouldReturnIds(tenantQuery, ExpectedIds(2), $"tenant 2, round {i}");
+
+				adminQuery.GetCompiledQueryInfo().ShouldBeSameAs(adminInfo, $"admin, round {i}");
+				tenantQuery.GetCompiledQueryInfo().ShouldBeSameAs(tenantInfo, $"tenant 2, round {i}");
 			}
 
 			// with an argument: the query the tenant finds among the others its context needs reads it as well
@@ -2115,16 +2122,20 @@ namespace Tests.Data
 			{
 				ShouldReturnIds(compiled[i](admin), ExpectedIds(), $"admin, query {i}");
 
-				tenantInfos[i] = compiled[i](tenant2).GetCompiledQueryInfo();
+				var query = compiled[i](tenant2);
+
+				ShouldReturnIds(query, ExpectedIds(2), $"tenant 2, query {i}, first");
+
+				tenantInfos[i] = query.GetCompiledQueryInfo();
 			}
 
 			for (var i = 0; i < compiled.Length; i++)
 			{
 				var query = compiled[i](tenant2);
 
-				query.GetCompiledQueryInfo().ShouldBeSameAs(tenantInfos[i], $"query {i}");
-
 				ShouldReturnIds(query, ExpectedIds(2), $"tenant 2, query {i}");
+
+				query.GetCompiledQueryInfo().ShouldBeSameAs(tenantInfos[i], $"query {i}");
 			}
 		}
 
@@ -2243,14 +2254,15 @@ namespace Tests.Data
 			(interceptor.Calls - calls).ShouldBe(1, "stage calls");
 		}
 
-		// The IQueryable a compiled query returns, executed again after the context's query interceptor changed: one of
-		// another type added, or the instance replaced by another of the same type, without IInterceptorCacheKey, that
-		// rewrites where the first one did not.
+		// The IQueryable a compiled query returns, executed after the context's query interceptor changed - after its first
+		// enumeration, or between the call and the first enumeration: one of another type added, or the instance replaced by
+		// another of the same type, without IInterceptorCacheKey, that rewrites where the first one did not.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
 		public void QueryExpression_SameCompiledQueryable_InterceptorChanged(
 			[IncludeDataSources(false, TestProvName.AllSQLite)] string context,
 			[Values]                                            bool   sameType,
-			[Values]                                            bool   viaDataContext)
+			[Values]                                            bool   viaDataContext,
+			[Values]                                            bool   enumeratedFirst)
 		{
 			Query.ClearCaches();
 
@@ -2269,7 +2281,8 @@ namespace Tests.Data
 				.Where(id => id >= 2)
 				.ToArray();
 
-			ShouldReturnIds(query, Expected(int.MaxValue), "before");
+			if (enumeratedFirst)
+				ShouldReturnIds(query, Expected(int.MaxValue), "before");
 
 			if (sameType)
 				db.RemoveInterceptor(unchanged);
@@ -2277,6 +2290,43 @@ namespace Tests.Data
 			db.AddInterceptor(new UnkeyedTenantLimitInterceptor(ExpressionKind.QueryFilter, 3));
 
 			ShouldReturnIds(query, Expected(3), "after");
+		}
+
+		/// <summary>
+		/// Delegates to <see cref="Inner"/>, which can be replaced at any time; without one, leaves expressions unchanged.
+		/// </summary>
+		sealed class ReplaceableInterceptor : IQueryExpressionInterceptor
+		{
+			public IQueryExpressionInterceptor? Inner { get; set; }
+
+			public Expression ProcessExpression(Expression expression, QueryExpressionArgs args)
+			{
+				return Inner?.ProcessExpression(expression, args) ?? expression;
+			}
+		}
+
+		// The IQueryable a compiled query returns, enumerated after the context's query interceptor, without
+		// IInterceptorCacheKey, changed what it rewrites: each enumeration runs the query the interceptor produces then.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
+		public void QueryExpression_CompiledQueryable_InterceptorStateChanged([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			Query.ClearCaches();
+
+			var interceptor = new ReplaceableInterceptor();
+
+			using var db = GetDataConnection(context, o => o
+				.UseMappingSchema(_personFilterSchema)
+				.UseInterceptor(interceptor));
+
+			var query = _compiledPersons(db);
+
+			interceptor.Inner = new InlinedLimitFilterInterceptor(3);
+
+			ShouldReturnIds(query, ExpectedIds(3), "changed before the first enumeration");
+
+			interceptor.Inner = new InlinedLimitFilterInterceptor(2);
+
+			ShouldReturnIds(query, ExpectedIds(2), "changed before the second enumeration");
 		}
 
 		/// <summary>
@@ -2461,8 +2511,8 @@ namespace Tests.Data
 			}
 		}
 
-		// A compiled query that returns an IQueryable, without IInterceptorCacheKey: the call and the first enumeration are
-		// one execution, which rewrites the query filter once, built or reused; each further enumeration rewrites it once more.
+		// A compiled query that returns an IQueryable, without IInterceptorCacheKey: each enumeration rewrites the query
+		// filter once, when it checks the query for the context as it is then. A call that builds the query rewrites it too.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
 		public void QueryExpression_CompiledQueryable_QueryFilterRewrittenOncePerExecution([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
@@ -2476,16 +2526,17 @@ namespace Tests.Data
 
 			for (var i = 0; i < 2; i++)
 			{
+				var built = i == 0 ? 1 : 0;
 				var calls = interceptor.QueryFilterCalls;
 				var query = _compiledPersons(db);
 
 				ShouldReturnIds(query, ExpectedIds(3), $"call {i}");
 
-				(interceptor.QueryFilterCalls - calls).ShouldBe(1, $"query filter calls, call {i}");
+				(interceptor.QueryFilterCalls - calls).ShouldBe(built + 1, $"query filter calls, call {i}");
 
 				ShouldReturnIds(query, ExpectedIds(3), $"call {i}, enumerated again");
 
-				(interceptor.QueryFilterCalls - calls).ShouldBe(2, $"query filter calls, call {i}, enumerated again");
+				(interceptor.QueryFilterCalls - calls).ShouldBe(built + 2, $"query filter calls, call {i}, enumerated again");
 			}
 		}
 

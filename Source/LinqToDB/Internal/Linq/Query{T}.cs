@@ -45,6 +45,9 @@ namespace LinqToDB.Internal.Linq
 
 		internal IQueryExpressions? CompiledExpressions;
 
+		// The compiled query that built this query, through which the IQueryable a call of it returns resolves the query again.
+		internal ICompiledQuerySource<T>? CompiledSource;
+
 		// A query built for a compiled query is kept under a key that does not tell query interceptor instances apart. An
 		// interceptor without IInterceptorCacheKey may rewrite what the dynamic accessors return differently for each instance:
 		// they are re-evaluated for the executing context first, as the query cache does, and their results supply the

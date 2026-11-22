@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
@@ -7,6 +9,7 @@ using System.Threading.Tasks;
 
 using LinqToDB.Internal.Cache;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Interceptors;
 using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.SqlProvider;
 
@@ -65,9 +68,9 @@ namespace LinqToDB.Internal.Linq
 		// need different queries each keep their own instead of rebuilding on every switch.
 		const int MaxQueriesPerKey = 4;
 
-		Query<T> GetInfo(IDataContext dataContext, object?[] parameterValues, int[] indexes, out int[]? unseenSlots, out IQueryExpressions expressions)
+		IStructuralEquatable GetCacheKey(IDataContext dataContext, object?[] parameterValues, int[] indexes)
 		{
-			var cacheKey =
+			return
 				(
 					operation: "CT",
 					configurationID: dataContext.ConfigurationID,
@@ -77,6 +80,11 @@ namespace LinqToDB.Internal.Linq
 					queryFlags : dataContext.GetQueryFlags(),
 					dependent  : GetDependentArgumentValues(indexes, parameterValues)
 				);
+		}
+
+		Query<T> GetInfo(IDataContext dataContext, object?[] parameterValues, int[] indexes, out int[]? unseenSlots, out IQueryExpressions expressions)
+		{
+			var cacheKey = GetCacheKey(dataContext, parameterValues, indexes);
 
 			QueryRunner.Cache<T>.QueryCache.TryGetValue(cacheKey, out var cached);
 
@@ -164,6 +172,7 @@ namespace LinqToDB.Internal.Linq
 			}
 
 			query.CompiledExpressions = expressions;
+			query.CompiledSource      = this;
 
 			return query;
 		}
@@ -192,7 +201,20 @@ namespace LinqToDB.Internal.Linq
 
 		public IQueryable<T> Create(object[] parameters)
 		{
-			var db    = (IDataContext)parameters[0];
+			var db = (IDataContext)parameters[0];
+
+			// A query interceptor without IInterceptorCacheKey may rewrite differently by the time the IQueryable is
+			// enumerated: a kept query only lends its tree here, and without expressions handed over the first
+			// enumeration resolves the query.
+			if (db.HasUntrustedQueryInterceptor() && TryGetKept(db, parameters, out var kept))
+			{
+				return new Table<T>(db, kept.CompiledExpressions!.MainExpression)
+				{
+					Info       = kept,
+					Parameters = parameters,
+				};
+			}
+
 			var query = GetInfo(db, parameters, out var expressions);
 
 			// The exposed tree, not _expression: Info carries parameter accessors built against it, and a
@@ -202,9 +224,17 @@ namespace LinqToDB.Internal.Linq
 				Info                = query,
 				Parameters          = parameters,
 				CompiledExpressions = expressions,
-				CompiledSource      = this,
-				CompiledChecked     = true,
 			};
+		}
+
+		// The newest query kept for the cache key of this call, not checked against the context.
+		bool TryGetKept(IDataContext dataContext, object?[] parameterValues, [NotNullWhen(true)] out Query<T>? query)
+		{
+			QueryRunner.Cache<T>.QueryCache.TryGetValue(GetCacheKey(dataContext, parameterValues, _dependentArgumentIndexes), out var cached);
+
+			query = cached?[0];
+
+			return query != null;
 		}
 
 		public T Execute(object[] parameters)

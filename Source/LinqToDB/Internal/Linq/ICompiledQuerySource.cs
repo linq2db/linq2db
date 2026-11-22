@@ -1,7 +1,7 @@
 namespace LinqToDB.Internal.Linq
 {
 	/// <summary>
-	/// The compiled query an <see cref="ExpressionQuery{T}"/> was returned from.
+	/// The compiled query that built a <see cref="Query{T}"/>.
 	/// </summary>
 	interface ICompiledQuerySource<T>
 	{
