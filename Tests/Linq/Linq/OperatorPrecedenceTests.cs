@@ -26,7 +26,7 @@ namespace Tests.Linq
 	{
 		// true: every cell logs a message-free verdict line into the baseline and the test passes, so two baseline
 		// revisions can be compared cell by cell (master vs branch); false: every red cell fails the test.
-		const bool RecordVerdicts = true;
+		static bool RecordVerdicts => false;
 
 		[Table]
 		sealed class PrecedenceRow
