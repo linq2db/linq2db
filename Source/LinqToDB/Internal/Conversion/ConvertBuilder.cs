@@ -180,8 +180,9 @@ namespace LinqToDB.Internal.Conversion
 
 			var invariant = Expression.Property(null, typeof(CultureInfo), nameof(CultureInfo.InvariantCulture));
 
-			// object has no ToString(IFormatProvider): format a boxed number or date like the typed value would be,
-			// not with the parameterless ToString(), which uses the current culture ("1,5" under de-DE).
+			// object has no ToString(IFormatProvider): format a boxed value with the invariant culture instead of the
+			// parameterless ToString(), which uses the current culture ("1,5" under de-DE). Boxed dates do not go through
+			// the schema's DateTime/DateOnly converters.
 			if (from == typeof(object))
 				return Expression.Call(ConvertToStringObjectMethod, p, invariant);
 

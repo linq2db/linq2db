@@ -1884,7 +1884,7 @@ namespace Tests.Linq
 		public sealed class Issue6400Table
 		{
 			[PrimaryKey] public int     Id      { get; set; }
-			[Column]     public string  Version { get; set; } = null!;
+			[Column]     public string? Version { get; set; }
 		}
 
 		[Test]
@@ -1896,16 +1896,21 @@ namespace Tests.Linq
 				new Issue6400Table { Id = 1, Version = "1.5" },
 				new Issue6400Table { Id = 2, Version = "-5"  },
 				new Issue6400Table { Id = 3, Version = "3"   },
+				new Issue6400Table { Id = 4, Version = null  },
 			});
 
 			// de-DE formats 1.5 as "1,5" and sv-SE formats -5 with U+2212 MINUS SIGN
 			using var _ = new CultureRegion(culture);
 
-			List<object> hidden = [1.5, -5];
-			tb.Where(r => !hidden.Contains(r.Version)).Select(r => r.Id).ToArray().ShouldBe([3]);
+			List<object?> hidden = [1.5, -5];
+			tb.Where(r => !hidden.Contains(r.Version)).Select(r => r.Id).OrderBy(id => id).ToArray().ShouldBe([3, 4]);
 
 			object version = 1.5;
-			tb.Where(r => r.Version.Equals(version)).Select(r => r.Id).ToArray().ShouldBe([1]);
+			tb.Where(r => r.Version!.Equals(version)).Select(r => r.Id).ToArray().ShouldBe([1]);
+			tb.Where(r => Sql.Property<object>(r, nameof(Issue6400Table.Version)) != version).Select(r => r.Id).OrderBy(id => id).ToArray().ShouldBe([2, 3, 4]);
+
+			List<object?> shown = [1.5, null];
+			tb.Where(r => shown.Contains(Sql.Property<object>(r, nameof(Issue6400Table.Version)))).Select(r => r.Id).OrderBy(id => id).ToArray().ShouldBe([1, 4]);
 		}
 
 		[Table]
