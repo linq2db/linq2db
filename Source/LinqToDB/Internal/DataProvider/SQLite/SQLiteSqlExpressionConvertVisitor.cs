@@ -124,7 +124,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 				// CAST(x AS Decimal) - stores a whole number as INTEGER, so a decimal division would drop its fraction
 				// (#5611). A REAL dividend makes it a real division; a float operand already is one.
 				"/" when element.SystemType?.IsFloatType == true && !IsFloating(element.Expr1) && !IsFloating(element.Expr2) =>
-					new SqlBinaryExpression(element.Type, Factory.Cast(element.Expr1, Factory.GetDbDataType(typeof(double)), true), "/", element.Expr2),
+					new SqlBinaryExpression(element.Type, Factory.Cast(element.Expr1, Factory.GetDbDataType(typeof(double)), true), "/", element.Expr2, element.Precedence),
 
 				_ => base.ConvertSqlBinaryExpression(element),
 			};
