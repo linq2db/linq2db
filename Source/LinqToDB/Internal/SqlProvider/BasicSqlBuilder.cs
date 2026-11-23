@@ -4325,13 +4325,15 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </summary>
 		SqlOperatorPrecedence? _exposedPrefix;
 
-		void BuildOperand(SqlOperatorPrecedence parent, string? parentKey, bool rightOperand, ISqlExpression expr)
+		void BuildOperand(SqlOperatorPrecedence parent, string? parentKey, bool rightOperand, ISqlExpression expr, bool bothSides = false)
 		{
 			var dummy = false;
-			BuildOperand(parent, parentKey, rightOperand, expr, null, ref dummy);
+			BuildOperand(parent, parentKey, rightOperand, expr, null, ref dummy, bothSides);
 		}
 
-		void BuildOperand(SqlOperatorPrecedence parent, string? parentKey, bool rightOperand, ISqlExpression expr, string? alias, ref bool addAlias)
+		// bothSides: the operand sits between two operators of its parent (a middle item of a chain), so it is checked
+		// as a right and as a left operand
+		void BuildOperand(SqlOperatorPrecedence parent, string? parentKey, bool rightOperand, ISqlExpression expr, string? alias, ref bool addAlias, bool bothSides = false)
 		{
 			var (child, childKey) = ResolvePrecedence(expr);
 
@@ -4341,7 +4343,8 @@ namespace LinqToDB.Internal.SqlProvider
 			var templateArgument = _templateArgument;
 			_templateArgument    = false;
 
-			if (SqlPrecedenceTable.NeedsParentheses(child, childKey, parent, parentKey, rightOperand))
+			if (SqlPrecedenceTable.NeedsParentheses(child, childKey, parent, parentKey, rightOperand)
+				|| bothSides && SqlPrecedenceTable.NeedsParentheses(child, childKey, parent, parentKey, !rightOperand))
 			{
 				StringBuilder.Append('(');
 				BuildExpression(expr, true, true, alias, ref addAlias);
@@ -4370,7 +4373,9 @@ namespace LinqToDB.Internal.SqlProvider
 				if (string.Equals(literalKey, SqlPrecedenceKeys.NegativeLiteral, StringComparison.Ordinal))
 					_exposedPrefix = literal;
 
-				if (literalKey != null && SqlPrecedenceTable.NeedsParentheses(literal, literalKey, parent, parentKey, rightOperand))
+				if (literalKey != null
+					&& (SqlPrecedenceTable.NeedsParentheses(literal, literalKey, parent, parentKey, rightOperand)
+						|| bothSides && SqlPrecedenceTable.NeedsParentheses(literal, literalKey, parent, parentKey, !rightOperand)))
 				{
 					WrapRendered(len);
 					return;
@@ -4378,7 +4383,7 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 
 			// an anonymous parent (a predicate, a template placeholder) does not say what follows its operand
-			if ((!rightOperand || parentKey == null) && _exposedPrefix != null && PrecedenceTable.PrefixReaches(_exposedPrefix.Value, parent))
+			if ((!rightOperand || bothSides || parentKey == null) && _exposedPrefix != null && PrecedenceTable.PrefixReaches(_exposedPrefix.Value, parent))
 				WrapRendered(len);
 		}
 
@@ -4744,7 +4749,7 @@ namespace LinqToDB.Internal.SqlProvider
 			{
 				if (i > 0)
 					StringBuilder.Append(' ').Append(op).Append(' ');
-				BuildOperand(precedence, key, rightOperand: i > 0 && i == element.Expressions.Length - 1, element.Expressions[i]);
+				BuildOperand(precedence, key, rightOperand: i > 0, element.Expressions[i], bothSides: i > 0 && i < element.Expressions.Length - 1);
 			}
 		}
 
