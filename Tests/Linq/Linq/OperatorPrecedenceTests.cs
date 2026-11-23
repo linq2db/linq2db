@@ -858,7 +858,7 @@ namespace Tests.Linq
 
 		// a concatenation binds tighter than a comparison, so where the table orders the two it renders bare as an operand
 		[Test]
-		public void ConcatOperandOfComparisonRendersBare([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL)] string context)
+		public void ConcatOperandOfComparisonFollowsTheTable([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(new ConcatRow[]
