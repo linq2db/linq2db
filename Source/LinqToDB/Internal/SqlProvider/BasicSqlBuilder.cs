@@ -2778,13 +2778,13 @@ namespace LinqToDB.Internal.SqlProvider
 					var between    = (SqlPredicate.Between)predicate;
 					var precedence = PrecedenceTable[SqlPrecedenceKeys.Between];
 
-					BuildOperand(precedence, SqlPrecedenceKeys.Between, rightOperand: true, between.Expr1);
+					BuildOperand(precedence, SqlPrecedenceKeys.Between, rightOperand: false, between.Expr1);
 
 					if (between.IsNot)
 						StringBuilder.Append(" NOT");
 
 					StringBuilder.Append(" BETWEEN ");
-					BuildOperand(precedence, SqlPrecedenceKeys.Between, rightOperand: true, between.Expr2);
+					BuildOperand(precedence, SqlPrecedenceKeys.Between, rightOperand: false, between.Expr2);
 					StringBuilder.Append(" AND ");
 					BuildOperand(precedence, SqlPrecedenceKeys.Between, rightOperand: true, between.Expr3);
 
@@ -4377,7 +4377,8 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 			}
 
-			if (!rightOperand && _exposedPrefix != null && PrecedenceTable.PrefixReaches(_exposedPrefix.Value, parent))
+			// an anonymous parent (a predicate, a template placeholder) does not say what follows its operand
+			if ((!rightOperand || parentKey == null) && _exposedPrefix != null && PrecedenceTable.PrefixReaches(_exposedPrefix.Value, parent))
 				WrapRendered(len);
 		}
 
@@ -4743,7 +4744,7 @@ namespace LinqToDB.Internal.SqlProvider
 			{
 				if (i > 0)
 					StringBuilder.Append(' ').Append(op).Append(' ');
-				BuildOperand(precedence, key, rightOperand: i > 0, element.Expressions[i]);
+				BuildOperand(precedence, key, rightOperand: i > 0 && i == element.Expressions.Length - 1, element.Expressions[i]);
 			}
 		}
 

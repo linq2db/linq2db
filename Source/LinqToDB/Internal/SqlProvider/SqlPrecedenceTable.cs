@@ -197,16 +197,22 @@ namespace LinqToDB.Internal.SqlProvider
 			if (child.Level >= Precedence.Primary)
 				return false;
 
-			// a prefix operator after an infix one groups its operand by its own syntax; an operator after the parent
-			// is the exposed prefix's concern (PrefixReaches). An anonymous parent may be postfix (::), and under
-			// another prefix it stays bracketed: ~- or -- would lex as one token.
-			if (rightOperand && IsPrefix(childKey) && parentKey != null && !IsPrefix(parentKey))
-				return false;
-
 			var sameOperator = childKey != null && string.Equals(childKey, parentKey, StringComparison.Ordinal);
 
 			if (!sameOperator && (child.Groups & parent.Groups) == 0)
 				return true;
+
+			// a prefix operator after an infix one it is ordered with groups its operand by its own syntax; an operator
+			// after the parent is the exposed prefix's concern (PrefixReaches). An anonymous parent may be postfix (::),
+			// BETWEEN takes primary operands only, and under another prefix ~- or -- would lex as one token.
+			if (rightOperand
+				&& IsPrefix(childKey)
+				&& parentKey != null
+				&& !IsPrefix(parentKey)
+				&& !string.Equals(parentKey, SqlPrecedenceKeys.Between, StringComparison.Ordinal))
+			{
+				return false;
+			}
 
 			if (child.Level != parent.Level)
 				return child.Level < parent.Level;

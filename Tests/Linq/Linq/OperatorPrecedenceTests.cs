@@ -156,6 +156,10 @@ namespace Tests.Linq
 		[Sql.Expression(ProviderName.PostgreSQL, "{0}::text", ServerSideOnly = true)]
 		static string TemplateAsText(int x) => x.ToString(CultureInfo.InvariantCulture);
 
+		// a non-Primary template: an argument above its class is not bracketed for the class, only for the ::
+		[Sql.Expression(ProviderName.PostgreSQL, "{0} || {1}::text", Precedence = Precedence.Concatenate, ServerSideOnly = true)]
+		static string TemplateConcatText(string s, int x) => s + x.ToString(CultureInfo.InvariantCulture);
+
 		// an operator template declared Primary, as a user would write it
 		[Sql.Expression(ProviderName.PostgreSQL, "{0} AT TIME ZONE 'UTC'", ServerSideOnly = true)]
 		static DateTime TemplateAtUtc(DateTime x) => x;
@@ -271,6 +275,10 @@ namespace Tests.Linq
 						// the string column goes first: a non-string first item is a separate defect (#6200)
 						yield return new Cell($"Join(s,{q}(b,c),c)",      Expression.Call(JoinMethod, Expression.Constant(","), Expression.NewArrayInit(typeof(object), Box(S), Box(Op(qt, B, C)), Box(C))), null);
 						yield return new Cell($"Concat(s,Concat(s,{q}(a,b)))", Concat(S, Concat(S, Op(qt, A, B))), null);
+
+						// a middle item is followed by the concatenation operator
+						foreach (var pre in Prefixes.Where(x => x.Name is "Neg" or "Not"))
+							yield return new Cell($"Join(s,{pre.Name}({q}(b,c)),c)", Expression.Call(JoinMethod, Expression.Constant(","), Expression.NewArrayInit(typeof(object), Box(S), Box(Pre(pre, Op(qt, B, C))), Box(C))), null);
 					}
 
 					foreach (var pre in Prefixes)
@@ -308,6 +316,8 @@ namespace Tests.Linq
 					yield return new Cell("Pow(Neg(b),2)",         Expression.Call(PowMethod, ToDouble(Expression.Negate(B)), Expression.Constant(2.0)), Expression.Negate(Expression.Call(PowMethod, ToDouble(B), Expression.Constant(2.0))));
 					yield return new Cell("Neg(Pow(b,2))",         Expression.Negate(Expression.Call(PowMethod, ToDouble(B), Expression.Constant(2.0))), null);
 					yield return new Cell("Pow(c,Pow(c,c))",       Expression.Call(PowMethod, ToDouble(C), Expression.Call(PowMethod, ToDouble(C), ToDouble(C))), Expression.Call(PowMethod, Expression.Call(PowMethod, ToDouble(C), ToDouble(C)), ToDouble(C)));
+					// a power left operand ending in a prefix minus
+					yield return new Cell("Pow(Pow(c,Neg(b)),c)",  Expression.Call(PowMethod, Expression.Call(PowMethod, ToDouble(C), ToDouble(Expression.Negate(B))), ToDouble(C)), Expression.Call(PowMethod, ToDouble(C), Expression.Negate(Expression.Call(PowMethod, ToDouble(B), ToDouble(C)))));
 					yield return new Cell("Pow(AsNotNull(Add(b,c)),2)", Expression.Call(PowMethod, ToDouble(Expression.Call(AsNotNullMethod.MakeGenericMethod(typeof(int)), Op(ExpressionType.Add, B, C))), Expression.Constant(2.0)), null);
 					break;
 				}
@@ -327,7 +337,19 @@ namespace Tests.Linq
 						// a nullable operand keeps IS DISTINCT FROM from simplifying to <> (DECODE on Oracle)
 						yield return new Cell($"Distinct({q}(a,b),n)",    Flag(Expression.Call(DistinctMethod, Expression.Convert(Op(qt, A, B), typeof(int?)), N)), null);
 						yield return new Cell($"Distinct(n,{q}(a,b))",    Flag(Expression.Call(DistinctMethod, N, Expression.Convert(Op(qt, A, B), typeof(int?)))), null);
+
+						// an operand ending in a prefix operator: what follows it is the predicate's operator text
+						foreach (var pre in Prefixes.Where(x => x.Name is "Neg" or "Not"))
+						{
+							yield return new Cell($"IsNull({q}(a,{pre.Name}(n)))",     Flag(Expression.Equal(Expression.MakeBinary(qt, Expression.Convert(A, typeof(int?)), Pre(pre, N)), Expression.Constant(null, typeof(int?)))), null);
+							yield return new Cell($"Between({q}(a,{pre.Name}(b)),c,a)", Flag(Expression.Call(BetweenMethod, Op(qt, A, Pre(pre, B)), C, A)), null);
+						}
 					}
+
+					// a template placeholder followed by operator text in the template, fed an operand ending in a prefix
+					foreach (var (t, method) in Templates.Where(x => x.Name != "TDiv"))
+						foreach (var pre in Prefixes.Where(x => x.Name is "Neg" or "Not"))
+							yield return new Cell($"{t}(Mul(a,{pre.Name}(b)),c)", Expression.Call(method, Op(ExpressionType.Multiply, A, Pre(pre, B)), C), null);
 
 					foreach (var pre in Prefixes)
 					{
@@ -745,6 +767,7 @@ namespace Tests.Linq
 				.Select(r => new
 				{
 					Text       = TemplateAsText(r.A + r.B),
+					Joined     = TemplateConcatText(r.S, r.A * r.B),
 					Padded     = Sql.ZeroPad(r.A + r.B, 5),
 					YearsToUtc = Sql.DateDiff(Sql.DateParts.Year, start, TemplateAtUtc(end.AddDays(r.C))),
 					YearsOfUtc = Sql.DateDiff(Sql.DateParts.Year, TemplateAtUtc(start.AddDays(r.C)), end),
@@ -755,6 +778,7 @@ namespace Tests.Linq
 				.Select(r => new
 				{
 					Text       = (r.A + r.B).ToString(CultureInfo.InvariantCulture),
+					Joined     = r.S + (r.A * r.B).ToString(CultureInfo.InvariantCulture),
 					Padded     = (string?)(r.A + r.B).ToString("d5", CultureInfo.InvariantCulture),
 					YearsToUtc = (int?)3,
 					YearsOfUtc = (int?)3,
