@@ -4215,17 +4215,52 @@ namespace LinqToDB.Internal.SqlProvider
 				StringBuilder.Append(format);
 			else
 			{
-				var values = new object[parameters.Count];
+				var values   = new object[parameters.Count];
+				var hasCasts = format.Contains("}::", StringComparison.Ordinal);
 
 				for (var i = 0; i < values.Length; i++)
 				{
 					var value = parameters[i];
 
-					values[i] = WithStringBuilderBuildExpression(precedence, value);
+					values[i] = hasCasts && format.Contains(string.Concat("{", i.ToString(CultureInfo.InvariantCulture), "}::"), StringComparison.Ordinal)
+						? WithStringBuilderBuildCastOperand(value)
+						: WithStringBuilderBuildExpression(precedence, value);
 				}
 
 				StringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, values);
 			}
+		}
+
+		/// <summary>
+		/// Renders a template argument whose placeholder the template text puts under a postfix <c>::</c> cast, which
+		/// binds tighter than any operator: everything but a primary operand is bracketed, a negative literal and a
+		/// template included (a template may hide an operator, <c>{0} AT TIME ZONE 'UTC'</c>, declared primary).
+		/// </summary>
+		string WithStringBuilderBuildCastOperand(ISqlExpression expr)
+		{
+			using var sb = Pools.StringBuilder.Allocate();
+
+			var current          = StringBuilder;
+			var exposedPrefix    = _exposedPrefix;
+			var templateArgument = _templateArgument;
+
+			StringBuilder     = sb.Value;
+			_templateArgument = false;
+
+			if (UnwrapTransparent(expr) is SqlExpression or SqlFragment)
+			{
+				StringBuilder.Append('(');
+				BuildExpression(expr);
+				StringBuilder.Append(')');
+			}
+			else
+				BuildExpression(Precedence.Primary, expr);
+
+			StringBuilder     = current;
+			_exposedPrefix    = exposedPrefix;
+			_templateArgument = templateArgument;
+
+			return sb.Value.ToString();
 		}
 
 		static (string format, ISqlExpression[] values) OrderFormatValues(string format, ISqlExpression[] values)

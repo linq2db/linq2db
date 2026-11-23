@@ -197,6 +197,12 @@ namespace LinqToDB.Internal.SqlProvider
 			if (child.Level >= Precedence.Primary)
 				return false;
 
+			// a prefix operator after an infix one groups its operand by its own syntax; an operator after the parent
+			// is the exposed prefix's concern (PrefixReaches). An anonymous parent may be postfix (::), and under
+			// another prefix it stays bracketed: ~- or -- would lex as one token.
+			if (rightOperand && IsPrefix(childKey) && parentKey != null && !IsPrefix(parentKey))
+				return false;
+
 			var sameOperator = childKey != null && string.Equals(childKey, parentKey, StringComparison.Ordinal);
 
 			if (!sameOperator && (child.Groups & parent.Groups) == 0)
@@ -212,6 +218,11 @@ namespace LinqToDB.Internal.SqlProvider
 
 			return !(sameOperator && parent.Associative);
 		}
+
+		static bool IsPrefix(string? key) =>
+			string.Equals(key, SqlPrecedenceKeys.Negation,        StringComparison.Ordinal)
+			|| string.Equals(key, SqlPrecedenceKeys.NegativeLiteral, StringComparison.Ordinal)
+			|| string.Equals(key, SqlPrecedenceKeys.BitwiseNegation, StringComparison.Ordinal);
 
 		/// <summary>
 		/// Whether a prefix operator exposed at the end of a left operand reaches over its parent operator, so the

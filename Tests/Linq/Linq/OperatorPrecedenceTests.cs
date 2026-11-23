@@ -745,6 +745,7 @@ namespace Tests.Linq
 				.Select(r => new
 				{
 					Text       = TemplateAsText(r.A + r.B),
+					Padded     = Sql.ZeroPad(r.A + r.B, 5),
 					YearsToUtc = Sql.DateDiff(Sql.DateParts.Year, start, TemplateAtUtc(end.AddDays(r.C))),
 					YearsOfUtc = Sql.DateDiff(Sql.DateParts.Year, TemplateAtUtc(start.AddDays(r.C)), end),
 				});
@@ -754,6 +755,7 @@ namespace Tests.Linq
 				.Select(r => new
 				{
 					Text       = (r.A + r.B).ToString(CultureInfo.InvariantCulture),
+					Padded     = (string?)(r.A + r.B).ToString("d5", CultureInfo.InvariantCulture),
 					YearsToUtc = (int?)3,
 					YearsOfUtc = (int?)3,
 				})
@@ -762,6 +764,25 @@ namespace Tests.Linq
 			query
 				.ToList()
 				.ShouldBe(expected);
+
+			// a column under :: needs no brackets
+			var sql = table
+				.Select(r => Sql.ZeroPad(r.A, 5))
+				.ToSqlQuery()
+				.Sql;
+
+			sql.ShouldContain("Lpad(r.\"A\"::text", Case.Sensitive, sql);
+
+			// an inlined negative argument under :: is bracketed, although a template argument is not bracketed for it
+			// elsewhere (INTERVAL {0} DAY)
+			db.InlineParameters = true;
+
+			var negative = -5;
+
+			table
+				.Select(r => TemplateAsText(Sql.ToSql(negative)))
+				.First()
+				.ShouldBe("-5");
 		}
 
 		// a negative literal or an operator under a postfix :: cast keeps its brackets: -5.5::text reads -(5.5::text)
@@ -946,6 +967,50 @@ namespace Tests.Linq
 
 			predicate.ShouldContain("[r].[A] = [r].[B] OR", Case.Sensitive, predicate);
 			predicate.ShouldNotContain("([r].[A] = [r].[B])", Case.Sensitive, predicate);
+		}
+
+		// a prefix operator after an infix one renders bare; one that ends a left operand still keeps the operator
+		// after it from reaching into it
+		[Test]
+		public void PrefixRightOperandRendersBare([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows);
+
+			var query = table
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					Product = Sql.AsSql(r.A * -r.B),
+					Chain   = Sql.AsSql(r.A * -r.B * r.C),
+					Masked  = Sql.AsSql(r.A & ~r.B),
+				});
+
+			var expected = Rows
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					Product = r.A * -r.B,
+					Chain   = r.A * -r.B * r.C,
+					Masked  = r.A & ~r.B,
+				})
+				.ToList();
+
+			query
+				.ToList()
+				.ShouldBe(expected);
+
+			var sql = query
+				.ToSqlQuery()
+				.Sql;
+
+			Regex
+				.IsMatch(sql, @"\* \(-")
+				.ShouldBeFalse(sql);
+
+			Regex
+				.IsMatch(sql, @"& \(~")
+				.ShouldBeFalse(sql);
 		}
 	}
 }
