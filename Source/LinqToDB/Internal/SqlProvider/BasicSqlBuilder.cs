@@ -2846,7 +2846,9 @@ namespace LinqToDB.Internal.SqlProvider
 						}
 					}
 
-					BuildExpression(GetPrecedence(p), p.Expr1);
+					// the predicate takes its expression's precedence, so it is no parent of its own: its placement among
+					// other predicates is decided where it is built
+					BuildExpression(Precedence.Unknown, p.Expr1);
 
 					break;
 				}

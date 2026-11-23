@@ -160,6 +160,9 @@ namespace Tests.Linq
 		[Sql.Expression(ProviderName.PostgreSQL, "{0} AT TIME ZONE 'UTC'", ServerSideOnly = true)]
 		static DateTime TemplateAtUtc(DateTime x) => x;
 
+		[Sql.Expression("{0} = {1}", Precedence = Precedence.Comparison, IsPredicate = true, ServerSideOnly = true)]
+		static bool TemplateEquals(int x, int y) => x == y;
+
 		static readonly (string Name, MethodInfo Method)[] Templates =
 		[
 			("TAdd",       typeof(OperatorPrecedenceTests).GetMethod(nameof(TemplateAdd),       BindingFlags.NonPublic | BindingFlags.Static)!),
@@ -934,6 +937,15 @@ namespace Tests.Linq
 
 			SqlOf(r => Sql.AsSql(r.A / r.B * r.C))
 				.ShouldContain("[r].[A] / [r].[B] * [r].[C]");
+
+			// an expression predicate takes its expression's level: it is no parent that brackets it
+			var predicate = table
+				.Where(r => TemplateEquals(r.A, r.B) || r.C > 1)
+				.ToSqlQuery()
+				.Sql;
+
+			predicate.ShouldContain("[r].[A] = [r].[B] OR", Case.Sensitive, predicate);
+			predicate.ShouldNotContain("([r].[A] = [r].[B])", Case.Sensitive, predicate);
 		}
 	}
 }
