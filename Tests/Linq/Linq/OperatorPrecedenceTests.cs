@@ -276,9 +276,12 @@ namespace Tests.Linq
 						yield return new Cell($"Join(s,{q}(b,c),c)",      Expression.Call(JoinMethod, Expression.Constant(","), Expression.NewArrayInit(typeof(object), Box(S), Box(Op(qt, B, C)), Box(C))), null);
 						yield return new Cell($"Concat(s,Concat(s,{q}(a,b)))", Concat(S, Concat(S, Op(qt, A, B))), null);
 
-						// a middle item is followed by the concatenation operator
+						// a middle item is followed by the concatenation operator: one that is a prefix, and one that ends in one
 						foreach (var pre in Prefixes.Where(x => x.Name is "Neg" or "Not"))
 							yield return new Cell($"Join(s,{pre.Name}({q}(b,c)),c)", Expression.Call(JoinMethod, Expression.Constant(","), Expression.NewArrayInit(typeof(object), Box(S), Box(Pre(pre, Op(qt, B, C))), Box(C))), null);
+
+						foreach (var pre in Prefixes)
+							yield return new Cell($"Join(s,{q}(a,{pre.Name}(b)),c)", Expression.Call(JoinMethod, Expression.Constant(","), Expression.NewArrayInit(typeof(object), Box(S), Box(Op(qt, A, Pre(pre, B))), Box(C))), null, pre.Inline);
 					}
 
 					foreach (var pre in Prefixes)
@@ -343,6 +346,7 @@ namespace Tests.Linq
 						{
 							yield return new Cell($"IsNull({q}(a,{pre.Name}(n)))",     Flag(Expression.Equal(Expression.MakeBinary(qt, Expression.Convert(A, typeof(int?)), Pre(pre, N)), Expression.Constant(null, typeof(int?)))), null);
 							yield return new Cell($"Between({q}(a,{pre.Name}(b)),c,a)", Flag(Expression.Call(BetweenMethod, Op(qt, A, Pre(pre, B)), C, A)), null);
+							yield return new Cell($"Between(c,{q}(a,{pre.Name}(b)),a)", Flag(Expression.Call(BetweenMethod, C, Op(qt, A, Pre(pre, B)), A)), null);
 						}
 					}
 

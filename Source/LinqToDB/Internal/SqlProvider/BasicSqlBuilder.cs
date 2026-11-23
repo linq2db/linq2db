@@ -4361,9 +4361,13 @@ namespace LinqToDB.Internal.SqlProvider
 
 			_templateArgument = templateArgument;
 
-			// only an operator chain can end in an exposed prefix; a function call or CASE closes its own arguments
-			if (UnwrapTransparent(expr) is not (SqlBinaryExpression or SqlUnaryExpression or SqlConcatExpression))
+			// only an operator chain can end in an exposed prefix; a function call or CASE closes its own arguments, a
+			// concatenation rendered as CONCAT(...) included
+			if (UnwrapTransparent(expr) is not (SqlBinaryExpression or SqlUnaryExpression or SqlConcatExpression)
+				|| UnwrapTransparent(expr) is SqlConcatExpression && ConcatStyle == ConcatBuildStyle.Function)
+			{
 				_exposedPrefix = null;
+			}
 
 			// a literal states its shape only in the text it renders: a leading minus, an operator chain, a :: cast
 			if (IsLiteral(expr))
