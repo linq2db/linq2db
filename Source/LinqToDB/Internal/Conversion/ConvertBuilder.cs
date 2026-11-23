@@ -178,9 +178,19 @@ namespace LinqToDB.Internal.Conversion
 			if (to != typeof(string) || from.IsNullableType)
 				return null;
 
+			var invariant = Expression.Property(null, typeof(CultureInfo), nameof(CultureInfo.InvariantCulture));
+
+			// object has no ToString(IFormatProvider): format a boxed value with the invariant culture instead of the
+			// parameterless ToString(), which uses the current culture ("1,5" under de-DE). Boxed dates do not go through
+			// the schema's DateTime/DateOnly converters.
+			if (from == typeof(object))
+				return Expression.Call(ConvertToStringObjectMethod, p, invariant);
+
 			var mi = from.GetMethodEx("ToString", ToStringInvariantArgTypes);
-			return mi != null ? Expression.Call(p, mi, Expression.Property(null, typeof(CultureInfo), nameof(CultureInfo.InvariantCulture))) : null;
+			return mi != null ? Expression.Call(p, mi, invariant) : null;
 		}
+
+		static readonly MethodInfo ConvertToStringObjectMethod = MemberHelper.MethodOf(() => Convert.ToString((object?)null, (IFormatProvider?)null));
 
 		static Expression? GetToString(Type from, Type to, Expression p)
 		{
