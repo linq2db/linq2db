@@ -588,18 +588,19 @@ namespace Tests.Linq
 
 			AssertQuery(text);
 
-			// a division with a fractional operand stays fractional
+			// a division with a fractional operand stays fractional (within a relative delta: Sybase's decimal division
+			// is off in the last digits)
 			var fractionalDouble = db.Types
 				.OrderBy(p => p.ID)
 				.Select(p => Sql.AsSql(p.ID / 2.0));
 
-			AssertQuery(fractionalDouble);
+			AssertQueryWithinDelta(fractionalDouble);
 
 			var fractionalDecimal = db.Types
 				.OrderBy(p => p.ID)
 				.Select(p => Sql.AsSql((decimal)p.ID / 2));
 
-			AssertQuery(fractionalDecimal);
+			AssertQueryWithinDelta(fractionalDecimal);
 		}
 
 		// TimeOfDay divides integer nanoseconds by 100 in a division typed as a float: no integer division, so the

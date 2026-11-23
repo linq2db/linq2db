@@ -1265,7 +1265,8 @@ namespace Tests.Linq
 
 			var sql = result.ToSqlQuery().Sql;
 
-			Assert.That(sql, Is.Not.Contains("Convert").And.Not.Contains("Int(").And.Not.Contains("Cast"));
+			// YDB's BitCast is the bit reinterpretation its unsigned-only bitwise operators need, not a conversion of the enum
+			Assert.That(sql, Is.Not.Contains("Convert").And.Not.Contains("Int(").And.Not.Match("(?<!Bit)Cast"));
 		}
 
 		[Test]
