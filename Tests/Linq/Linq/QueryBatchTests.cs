@@ -3899,7 +3899,7 @@ namespace Tests.Linq
 
 		// The engine reads a captured context of the batch's configuration as the query's root, beside a collection part too.
 		// Traced keeps the remote pair out of the baselines.
-		[Test]
+		[Test, QueryCacheTest]
 		public void PartsReadThroughACapturedContext([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context, Traced(new CommandTrace()));
