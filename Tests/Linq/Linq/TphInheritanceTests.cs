@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 
 using LinqToDB;
@@ -5,6 +6,8 @@ using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Linq
 {
@@ -424,6 +427,49 @@ namespace Tests.Linq
 
 			var all = query.ToArray();
 			Assert.That(all, Has.Length.EqualTo(3));
+		}
+
+		[Test]
+		public void TPH_SiblingColumn_BulkCopy_TwoValueSiblings([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// One base-typed (mixed) copy: the Value column of the first type carries both other types' members
+			// as value siblings, so each row must be written from the member of its own runtime type.
+			using var tb = db.CreateLocalTable(new TphTriSharedBase[]
+			{
+				new TphTriSharedA { Id = 1, Kind = 1, Value = 10 },
+				new TphTriSharedB { Id = 2, Kind = 2, Value = 20 },
+				new TphTriSharedC { Id = 3, Kind = 3, Value = 30 },
+			});
+
+			var values = db.GetTable<TphTriSharedRaw>()
+				.OrderBy(r => r.Id)
+				.Select(r => r.Value)
+				.ToArray();
+
+			values.ShouldBe([10, 20, 30]);
+		}
+
+		[Table("TphTriShared")]
+		[InheritanceMapping(Code = 1, IsDefault = true, Type = typeof(TphTriSharedA))]
+		[InheritanceMapping(Code = 2, Type = typeof(TphTriSharedB))]
+		[InheritanceMapping(Code = 3, Type = typeof(TphTriSharedC))]
+		abstract class TphTriSharedBase
+		{
+			[Column(IsDiscriminator = true)] public int Kind { get; set; }
+			[PrimaryKey]                     public int Id   { get; set; }
+		}
+
+		sealed class TphTriSharedA : TphTriSharedBase { [Column("Value")] public int Value { get; set; } }
+		sealed class TphTriSharedB : TphTriSharedBase { [Column("Value")] public int Value { get; set; } }
+		sealed class TphTriSharedC : TphTriSharedBase { [Column("Value")] public int Value { get; set; } }
+
+		[Table("TphTriShared")]
+		sealed class TphTriSharedRaw
+		{
+			[PrimaryKey] public int Id    { get; set; }
+			[Column]     public int Value { get; set; }
 		}
 
 		[Table("TphDupCol")]
@@ -1641,6 +1687,103 @@ namespace Tests.Linq
 				new TphThingInteraction() { Id = 4, PersonId = 1, ThingId = 2 },
 			};
 		}
+		#endregion
+
+		#region Descriptor graph
+
+		// A mapping configuration of its own, so the test builds the hierarchy's descriptors in the order it chooses
+		// instead of taking them from the descriptor cache.
+		static MappingSchema ColdMappingSchema() => new($"{nameof(TphInheritanceTests)}-{Guid.NewGuid():N}");
+
+		[Test]
+		public void TPH_Descriptor_DerivedTypeFirst_BelongsToRootGraph()
+		{
+			var ms   = ColdMappingSchema();
+			var beta = ms.GetEntityDescriptor(typeof(TphThingBeta));
+			var root = ms.GetEntityDescriptor(typeof(TphThingBase));
+
+			var betaConcreteField = beta.Columns.Single(c => c.MemberName == nameof(TphThingBeta.ConcreteField));
+
+			beta.InheritanceRoot.ShouldBeSameAs(root);
+			root.Columns.ShouldContain(betaConcreteField);
+		}
+
+		[Test]
+		public void TPH_Descriptor_RootRebuild_KeepsPublishedGraph()
+		{
+			var ms   = ColdMappingSchema();
+			var root = ms.GetEntityDescriptor(typeof(TphThingBase));
+			var beta = ms.GetEntityDescriptor(typeof(TphThingBeta));
+
+			// another root descriptor of the same configuration, as a concurrent cache miss or an expired entry builds
+			var rebuilt = new EntityDescriptor(ms, typeof(TphThingBase), null);
+
+			var rootConcreteField    = root.Columns.Single(c => c.ColumnName == nameof(TphThingBeta.ConcreteField));
+			var rebuiltConcreteField = rebuilt.Columns.Single(c => c.ColumnName == nameof(TphThingBeta.ConcreteField));
+
+			beta.InheritanceRoot.ShouldBeSameAs(root);
+			rebuiltConcreteField.ShouldNotBeSameAs(rootConcreteField);
+			rootConcreteField.GetProviderValue(new TphThingIntermediateOne { ConcreteField = 5 }).ShouldBe(5);
+		}
+
+		[Test]
+		public void TPH_SiblingColumn_ProviderValue_DerivedTypeFirst()
+		{
+			var ms = ColdMappingSchema();
+
+			// the shared column's getter is built through the derived type before the root descriptor is requested
+			var betaConcreteField = ms.GetEntityDescriptor(typeof(TphThingBeta))
+				.Columns
+				.Single(c => c.MemberName == nameof(TphThingBeta.ConcreteField));
+
+			betaConcreteField.GetProviderValue(new TphThingBeta { ConcreteField = 4 }).ShouldBe(4);
+
+			var rootConcreteField = ms.GetEntityDescriptor(typeof(TphThingBase))
+				.Columns
+				.Single(c => c.ColumnName == nameof(TphThingBeta.ConcreteField));
+
+			rootConcreteField.GetProviderValue(new TphThingIntermediateOne { ConcreteField = 5 }).ShouldBe(5);
+		}
+
+		[Test]
+		public void TPH_SiblingColumn_BulkCopy_DerivedTypeFirst([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context, ColdMappingSchema());
+
+			// copying the derived type first builds the shared column's getter before anything requests the root
+			using var tbBeta = db.CreateLocalTable(new[] { new TphThingBeta { Id = 2, Type = 2, BaseField = 3, ConcreteField = 4 } });
+			using var tb     = db.CreateLocalTable(TphThingBase.TestData);
+
+			var concreteFields = db.GetTable<TphThingIntermediateOne>()
+				.Select(r => r.ConcreteField)
+				.ToArray();
+
+			concreteFields.ShouldBe([5]);
+		}
+
+		[Test]
+		public void TPH_Insert_DerivedTypeFirst_SuggestsDiscriminator([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context, ColdMappingSchema());
+			using var tb = db.CreateLocalTable<TphThingBeta>();
+
+			// Type is left unset: the value comes from the hierarchy's discriminator mapping
+			db.Insert(new TphThingBeta { Id = 2, BaseField = 3, ConcreteField = 4 });
+
+			var types = db.GetTable<TphThingBetaRaw>()
+				.Select(r => r.Type)
+				.ToArray();
+
+			types.ShouldBe([2]);
+		}
+
+		[Table("TphThingBeta")]
+		sealed class TphThingBetaRaw
+		{
+			[PrimaryKey] public int Id   { get; set; }
+			[Column]     public int Type { get; set; }
+		}
+
 		#endregion
 
 		#region TPH intermediate type (insert / DDL)

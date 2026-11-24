@@ -1876,6 +1876,16 @@ namespace LinqToDB.Mapping
 				static (o, context) =>
 				{
 					o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+
+					// A type mapped by an inheritance root is built by that root, as a part of the root's complete
+					// descriptor graph (see EntityDescriptor.InitInheritanceMapping), so it is never handed out before
+					// its hierarchy-level state is set. Its descriptor-created callback was invoked by the root.
+					if (EntityDescriptor.FindInheritanceRootType(context.mappingSchema, o.Key.entityType) is { } rootType
+						&& context.mappingSchema.GetEntityDescriptor(rootType, context.callback).TryGetInheritanceMember(o.Key.entityType, out var member))
+					{
+						return member;
+					}
+
 					var edNew = new EntityDescriptor(context.mappingSchema, o.Key.entityType, context.callback);
 					context.callback?.Invoke(context.mappingSchema, edNew);
 					return edNew;

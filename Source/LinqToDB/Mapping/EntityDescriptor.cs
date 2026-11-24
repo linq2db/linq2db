@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -25,9 +26,19 @@ namespace LinqToDB.Mapping
 		/// <param name="mappingSchema">Mapping schema, associated with descriptor.</param>
 		/// <param name="type">Mapping class type.</param>
 		public EntityDescriptor(MappingSchema mappingSchema, Type type, Action<MappingSchema, IEntityChangeDescriptor>? onEntityDescriptorCreated)
+			: this(mappingSchema, type, onEntityDescriptorCreated, inheritanceRoot: null)
 		{
-			MappingSchema = mappingSchema;
-			TypeAccessor  = TypeAccessor.GetAccessor(type);
+		}
+
+		/// <summary>
+		/// Creates the descriptor of a type mapped by <paramref name="inheritanceRoot"/>, as a part of the root's
+		/// descriptor graph (see <see cref="InitInheritanceMapping"/>).
+		/// </summary>
+		EntityDescriptor(MappingSchema mappingSchema, Type type, Action<MappingSchema, IEntityChangeDescriptor>? onEntityDescriptorCreated, EntityDescriptor? inheritanceRoot)
+		{
+			MappingSchema   = mappingSchema;
+			TypeAccessor    = TypeAccessor.GetAccessor(type);
+			InheritanceRoot = inheritanceRoot;
 
 			Init(onEntityDescriptorCreated);
 		}
@@ -186,6 +197,40 @@ namespace LinqToDB.Mapping
 		bool HasInheritanceMapping()
 		{
 			return TypeAccessor.Type.BaseType != null && MappingSchema.HasAttribute<InheritanceMappingAttribute>(TypeAccessor.Type.BaseType);
+		}
+
+		/// <summary>
+		/// Returns the root type of the inheritance hierarchy <paramref name="type"/> derives from - the topmost base
+		/// type of the unbroken chain of bases carrying <see cref="InheritanceMappingAttribute"/> - or <see langword="null"/>
+		/// when the direct base of <paramref name="type"/> carries none (the same test as <see cref="HasInheritanceMapping"/>).
+		/// </summary>
+		internal static Type? FindInheritanceRootType(MappingSchema mappingSchema, Type type)
+		{
+			Type? root = null;
+
+			for (var baseType = type.BaseType; baseType != null && mappingSchema.HasAttribute<InheritanceMappingAttribute>(baseType); baseType = baseType.BaseType)
+			{
+				root = baseType;
+			}
+
+			return root;
+		}
+
+		Dictionary<Type, EntityDescriptor>? _inheritanceMembers;
+
+		/// <summary>
+		/// Returns the descriptor this inheritance root built for <paramref name="type"/>, one of the types it maps.
+		/// </summary>
+		internal bool TryGetInheritanceMember(Type type, [NotNullWhen(true)] out EntityDescriptor? descriptor)
+		{
+			if (_inheritanceMembers != null && _inheritanceMembers.TryGetValue(type, out var found))
+			{
+				descriptor = found;
+				return true;
+			}
+
+			descriptor = null;
+			return false;
 		}
 
 		void InitQueryFilters()
@@ -508,13 +553,25 @@ namespace LinqToDB.Mapping
 				return false;
 			}
 
+			// The root builds the descriptors of the types it maps itself rather than taking them from the descriptor
+			// cache: it completes them with hierarchy-level state (InheritanceRoot, value siblings of the merged columns),
+			// and a cached descriptor is already reachable by other threads, which may have built lambdas from its state
+			// and may be building them right now. Graphs built here are private until this constructor returns; the cache
+			// hands out the mapped types' descriptors from the root's graph (see MappingSchema.GetEntityDescriptor).
+			var members  = new Dictionary<Type, EntityDescriptor>();
+			var callback = onEntityDescriptorCreated ?? MappingSchema.EntityDescriptorCreatedCallback;
+
+			Dictionary<ColumnDescriptor, List<ColumnDescriptor>>? valueSiblings = null;
+
 			foreach (var m in _inheritanceMappings)
 			{
-				if (m.Type == ObjectType)
+				// a type mapped under several discriminator codes is merged once
+				if (m.Type == ObjectType || members.ContainsKey(m.Type))
 					continue;
 
-				var ed = MappingSchema.GetEntityDescriptor(m.Type, onEntityDescriptorCreated);
-				ed.InheritanceRoot = this;
+				var ed = new EntityDescriptor(MappingSchema, m.Type, onEntityDescriptorCreated, inheritanceRoot: this);
+				callback?.Invoke(MappingSchema, ed);
+				members.Add(m.Type, ed);
 
 				foreach (var cd in ed.Columns)
 				{
@@ -539,7 +596,12 @@ namespace LinqToDB.Mapping
 						{
 							if (string.Equals(existing.ColumnName, cd.ColumnName, StringComparison.Ordinal))
 							{
-								existing.AddValueSibling(cd);
+								valueSiblings ??= new();
+
+								if (!valueSiblings.TryGetValue(existing, out var list))
+									valueSiblings.Add(existing, list = new());
+
+								list.Add(cd);
 								break;
 							}
 						}
@@ -547,6 +609,15 @@ namespace LinqToDB.Mapping
 				}
 			}
 
+			if (valueSiblings != null)
+			{
+				foreach (var pair in valueSiblings)
+				{
+					pair.Key.SetValueSiblings([.. pair.Value]);
+				}
+			}
+
+			_inheritanceMembers        = members;
 			_inheritanceSiblingColumns = siblingColumns == null ? [] : [.. siblingColumns];
 
 			var discriminator = Columns.FirstOrDefault(x => x.IsDiscriminator)
