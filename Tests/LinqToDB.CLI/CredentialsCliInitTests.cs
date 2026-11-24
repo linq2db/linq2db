@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 
@@ -719,6 +720,41 @@ namespace Tests.LinqToDB.CLI
 			output.ShouldContain("Recorded \"credentialsCli\": \"@local\" in profile 'default' of 'cfg.json'.");
 			RecordedValue(environment, "cfg.json")
 				.ShouldBe("@local");
+
+			// Windows Credential Manager is the default there, so recording @local changes the store; elsewhere it does not.
+			if (OperatingSystem.IsWindows())
+			{
+				error.ShouldContain("note: the configuration used the store '@credential-manager' (the default for this OS) before; its records were not moved.");
+				error.ShouldContain("dotnet linq2db credentials list --credentials-cli @credential-manager shows them");
+				error.ShouldContain("dotnet linq2db credentials remove --credentials-cli @credential-manager --credentials linq2db/<name> removes one.");
+			}
+			else
+			{
+				error.ShouldNotContain("were not moved");
+			}
+		}
+
+		[TestCase(@"\Tools\vault.cmd",  @"Tools\vault.cmd",   TestName = "ChangingFromARootRelativeProgramNamesTheProgramThatRan")]
+		[TestCase(@"D:tools\vault.cmd", @"D:tools\vault.cmd", TestName = "ChangingFromADriveRelativeProgramNamesTheProgramThatRan")]
+		public async Task ChangingFromAWindowsRelativeProgramNamesTheProgramThatRan(string configured, string underConfigDirectory)
+		{
+			// The resolver appends a path that is not fully qualified to the configuration's directory as written, so the note
+			// must name that program, not the one Path.Combine would pick (the current drive's root, or drive D:).
+			if (!OperatingSystem.IsWindows())
+				Assert.Ignore("Root- and drive-relative paths exist only on Windows.");
+
+			var environment = CreateEnvironment();
+			environment.Files.Add("sub/cfg.json", $$"""{ "default": { "credentialsCli": {{JsonSerializer.Serialize(configured)}} } }""");
+
+			var (exitCode, _, error) = await RunCli(environment, "credentials", "cli", "init", "--store", "local", "--config", "sub/cfg.json", "--force");
+
+			var program = Path.GetFullPath("sub") + @"\" + underConfigDirectory;
+
+			if (program.Contains(' ', StringComparison.Ordinal))
+				program = $"\"{program}\"";
+
+			exitCode.ShouldBe(0, error);
+			error.ShouldContain($"note: the configuration used the store '{program}' before; its records were not moved.");
 		}
 
 		[Test]

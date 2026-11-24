@@ -822,7 +822,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 			if (!CredentialsCliCommandResolver.HasDirectory(program, isWindows) || CredentialsCliCommandResolver.IsRooted(program, isWindows))
 				return trimmed;
 
-			var path   = Path.GetFullPath(Path.Combine(configDirectory, program));
+			var path   = CredentialsCliCommandResolver.GetProgramPath(program, configDirectory, isWindows);
 			var quoted = path.IndexOfAny([' ', '\t']) >= 0 ? $"\"{path}\"" : path;
 
 			return arguments.Length == 0 ? quoted : $"{quoted} {arguments}";
@@ -843,7 +843,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 				return trimmed;
 
 			if (CredentialsCliCommandResolver.HasDirectory(program, isWindows))
-				program = Path.GetFullPath(Path.Combine(configDirectory, program));
+				program = CredentialsCliCommandResolver.GetProgramPath(program, configDirectory, isWindows);
 
 			return program + "\n" + arguments;
 		}

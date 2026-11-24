@@ -227,6 +227,26 @@ namespace Tests.LinqToDB.CLI
 			resolved.ShouldBe(@"C:\Tools\helper.cmd");
 		}
 
+		[TestCase(@"tools\vault.cmd",   @"C:\cfg\proj\tools\vault.cmd",   TestName = "WindowsRelativeProgramPathIsUnderTheBaseDirectory")]
+		[TestCase(@"\Tools\vault.cmd",  @"C:\cfg\proj\Tools\vault.cmd",   TestName = "WindowsRootRelativeProgramPathIsUnderTheBaseDirectory")]
+		[TestCase(@"D:tools\vault.cmd", @"C:\cfg\proj\D:tools\vault.cmd", TestName = "WindowsDriveRelativeProgramPathIsUnderTheBaseDirectory")]
+		[TestCase(@"E:\vault.cmd",      @"E:\vault.cmd",                  TestName = "WindowsRootedProgramPathIsKept")]
+		public void WindowsProgramPathIsTheOneThatRuns(string program, string expected)
+		{
+			// Other code names a configured program by this path (the store-change note, the store comparison), so it must be
+			// the path the resolver runs.
+			var path = CredentialsCliCommandResolver.GetProgramPath(program, @"C:\cfg\proj", true);
+
+			Resolve(program, true, null, null, [path], out var resolved, out var error, @"C:\cfg\proj")
+				.ShouldBeTrue(error);
+
+			resolved.ShouldBe(path);
+
+			// Elsewhere the host cannot normalize a Windows path, so only the agreement above is checked.
+			if (OperatingSystem.IsWindows())
+				path.ShouldBe(expected);
+		}
+
 		static CredentialsCliCommandResolver.Launch GetLaunch(string path, string verb, bool isWindows, string arguments = "")
 		{
 			return CredentialsCliCommandResolver.GetLaunch(path, arguments, verb, isWindows, @"C:\Windows\System32");

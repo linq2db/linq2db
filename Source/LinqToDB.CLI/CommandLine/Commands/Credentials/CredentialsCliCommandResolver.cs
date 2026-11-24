@@ -107,18 +107,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 
 			if (HasDirectory(program, isWindows))
 			{
-				var path = program;
-
-				if (!IsRooted(path, isWindows))
-				{
-					var directory = baseDirectory ?? Directory.GetCurrentDirectory();
-					path = isWindows
-						? directory.TrimEnd('\\', '/') + "\\" + path
-						: directory.TrimEnd('/')       + "/"  + path;
-				}
-
-				if (!isWindows || OperatingSystem.IsWindows())
-					path = Path.GetFullPath(path);
+				var path = GetProgramPath(program, baseDirectory ?? Directory.GetCurrentDirectory(), isWindows);
 
 				if (TryFindFile(path, isWindows, extensions, fileExists, out resolvedPath))
 					return CheckExtension(program, resolvedPath, isWindows, out error);
@@ -300,6 +289,29 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		internal static bool HasDirectory(string program, bool isWindows)
 		{
 			return program.Contains('/', StringComparison.Ordinal) || (isWindows && (program.Contains('\\', StringComparison.Ordinal) || program.Contains(':', StringComparison.Ordinal)));
+		}
+
+		/// <summary>
+		/// The path of a program given with a directory part (<see cref="HasDirectory"/>). A path that is not rooted by
+		/// <see cref="IsRooted"/> is appended to <paramref name="baseDirectory"/> as written, so on Windows a root-relative
+		/// (<c>\tools\h.cmd</c>) or drive-relative (<c>D:h.cmd</c>) path stays under it. The result is normalized when the
+		/// host's path rules are the target OS's. Everything that names the program a configuration runs uses this.
+		/// </summary>
+		internal static string GetProgramPath(string program, string baseDirectory, bool isWindows)
+		{
+			var path = program;
+
+			if (!IsRooted(path, isWindows))
+			{
+				path = isWindows
+					? baseDirectory.TrimEnd('\\', '/') + "\\" + path
+					: baseDirectory.TrimEnd('/')       + "/"  + path;
+			}
+
+			if (!isWindows || OperatingSystem.IsWindows())
+				path = Path.GetFullPath(path);
+
+			return path;
 		}
 
 		internal static bool IsRooted(string path, bool isWindows)

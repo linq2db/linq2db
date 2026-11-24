@@ -449,8 +449,8 @@ dotnet linq2db credentials cli init --store local --config .agents/linq2db-query
   together: if the configuration cannot be written, the script is left as it was; if the script cannot be put in place,
   the configuration is restored. Without `--config`, `init` prints how to name the store.
 - On Windows only `--store local` is available; Windows Credential Manager is the default there.
-- Each script starts with a `template revision` line. A later version of the tool may ship a fixed template; an existing
-  script is never updated by itself. To upgrade, compare yours with the current template
+- Each script's header has a `# linq2db-cli template revision: <n>` line. A later version of the tool may ship a fixed
+  template; an existing script is never updated by itself. To upgrade, compare yours with the current template
   (`credentials cli init --store <store> --output <temporary file>`) and merge, or replace it with `--force`, which
   loses your edits.
 
