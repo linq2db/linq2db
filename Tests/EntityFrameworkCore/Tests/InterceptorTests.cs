@@ -4,6 +4,8 @@ using System.Linq.Expressions;
 using LinqToDB.EntityFrameworkCore.Tests.Interceptors;
 using LinqToDB.EntityFrameworkCore.Tests.Interceptors.Extensions;
 using LinqToDB.EntityFrameworkCore.Tests.Models.Northwind;
+using LinqToDB.Interceptors;
+using LinqToDB.Internal.Interceptors;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -163,6 +165,18 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 					expression,
 					Expression.Quote(Expression.Lambda(Expression.LessThanOrEqual(id, Expression.Constant(Limit.Value)), id)));
 			}
+		}
+
+		// The default implementation's query interceptor declares a cache key, so the queries it translates are shared
+		// as they are without it.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303")]
+		public void DefaultImplementationInterceptorHasCacheKey([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+			using var db  = ctx.CreateLinqToDBConnection();
+
+			((IInterceptable<IQueryExpressionInterceptor>)db).Interceptor
+				.ShouldBeAssignableTo<IInterceptorCacheKey>();
 		}
 
 		// A custom implementation is not trusted to rewrite queries alike for every context, so a query translated for

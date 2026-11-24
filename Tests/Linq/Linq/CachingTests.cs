@@ -443,13 +443,12 @@ namespace Tests.Linq
 		}
 
 		// A [SqlQueryDependent] object: a SqlType is created anew by every query, and equal types share one cached query.
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), QueryCacheTest]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5810"), QueryCacheTest]
 		public void SqlQueryDependentObject_EqualSqlTypesShareQuery()
 		{
 			LinqToDB.Internal.Linq.Query.ClearCaches();
 
-			// SQL generation only: nothing connects
-			using var db = new DataConnection(new DataOptions().UseSqlServer("Server=.", SqlServerVersion.v2019, SqlServerProvider.MicrosoftDataSqlClient));
+			using var db = SqlServerConnectionForSqlOnly();
 
 			IQueryable<string?> Names(int size)
 			{
@@ -458,61 +457,81 @@ namespace Tests.Linq
 					select SqlFn.Cast(p.FirstName, SqlType.VarChar(size));
 			}
 
-			var missCount = Names(10).GetCacheMissCount();
+			var query     = Names(10);
+			var missCount = query.GetCacheMissCount();
 
 			foreach (var size in new[] { 10, 10, 20, 10 })
 			{
-				Names(size).ToSqlQuery().Sql
+				Names(size)
+					.ToSqlQuery()
+					.Sql
 					.ShouldContain($"varchar({size})");
 			}
 
-			(Names(10).GetCacheMissCount() - missCount).ShouldBe(2);
+			(query.GetCacheMissCount() - missCount)
+				.ShouldBe(2);
 		}
 
 		// The same for a data type given as a function - a method group or a lambda: every query creates the delegate
 		// anew, and functions that return equal types share one cached query.
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), QueryCacheTest]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5810"), QueryCacheTest]
 		public void SqlQueryDependentObject_EqualSqlTypeFunctionsShareQuery([Values] bool lambda)
 		{
 			LinqToDB.Internal.Linq.Query.ClearCaches();
 
-			// SQL generation only: nothing connects
-			using var db = new DataConnection(new DataOptions().UseSqlServer("Server=.", SqlServerVersion.v2019, SqlServerProvider.MicrosoftDataSqlClient));
+			using var db = SqlServerConnectionForSqlOnly();
 
 			IQueryable<string?> Names(bool unicode)
 			{
 				if (lambda)
 				{
-					return unicode
-						? from p in db.GetTable<Person>() select SqlFn.Cast(p.FirstName, () => SqlType.NVarChar())
-						: from p in db.GetTable<Person>() select SqlFn.Cast(p.FirstName, () => SqlType.VarChar());
+					if (unicode)
+					{
+						return
+							from p in db.GetTable<Person>()
+							select SqlFn.Cast(p.FirstName, () => SqlType.NVarChar());
+					}
+
+					return
+						from p in db.GetTable<Person>()
+						select SqlFn.Cast(p.FirstName, () => SqlType.VarChar());
 				}
 
-				return unicode
-					? from p in db.GetTable<Person>() select SqlFn.Cast(p.FirstName, SqlType.NVarChar)
-					: from p in db.GetTable<Person>() select SqlFn.Cast(p.FirstName, SqlType.VarChar);
+				if (unicode)
+				{
+					return
+						from p in db.GetTable<Person>()
+						select SqlFn.Cast(p.FirstName, SqlType.NVarChar);
+				}
+
+				return
+					from p in db.GetTable<Person>()
+					select SqlFn.Cast(p.FirstName, SqlType.VarChar);
 			}
 
-			var missCount = Names(false).GetCacheMissCount();
+			var query     = Names(false);
+			var missCount = query.GetCacheMissCount();
 
 			foreach (var unicode in new[] { false, false, true, false })
 			{
-				Names(unicode).ToSqlQuery().Sql
+				Names(unicode)
+					.ToSqlQuery()
+					.Sql
 					.ShouldContain(unicode ? " as nvarchar)" : " as varchar)");
 			}
 
-			(Names(false).GetCacheMissCount() - missCount).ShouldBe(2);
+			(query.GetCacheMissCount() - missCount)
+				.ShouldBe(2);
 		}
 
 		// The same for a lambda that reads a variable, which changes between the queries: each query takes the type the
 		// function returns when the query runs.
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), QueryCacheTest]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5810"), QueryCacheTest]
 		public void SqlQueryDependentObject_SqlTypeFunctionReadsVariable()
 		{
 			LinqToDB.Internal.Linq.Query.ClearCaches();
 
-			// SQL generation only: nothing connects
-			using var db = new DataConnection(new DataOptions().UseSqlServer("Server=.", SqlServerVersion.v2019, SqlServerProvider.MicrosoftDataSqlClient));
+			using var db = SqlServerConnectionForSqlOnly();
 
 			var size = 10;
 
@@ -523,17 +542,30 @@ namespace Tests.Linq
 					select SqlFn.Cast(p.FirstName, () => SqlType.VarChar(size));
 			}
 
-			var missCount = Names().GetCacheMissCount();
+			var query     = Names();
+			var missCount = query.GetCacheMissCount();
 
 			foreach (var newSize in new[] { 10, 10, 20, 10 })
 			{
 				size = newSize;
 
-				Names().ToSqlQuery().Sql
+				Names()
+					.ToSqlQuery()
+					.Sql
 					.ShouldContain($"varchar({newSize})");
 			}
 
-			(Names().GetCacheMissCount() - missCount).ShouldBe(2);
+			(query.GetCacheMissCount() - missCount)
+				.ShouldBe(2);
+		}
+
+		// SQL generation only: nothing connects.
+		static DataConnection SqlServerConnectionForSqlOnly()
+		{
+			var options = new DataOptions()
+				.UseSqlServer("Server=.", SqlServerVersion.v2019, SqlServerProvider.MicrosoftDataSqlClient);
+
+			return new DataConnection(options);
 		}
 
 		interface IPersonIdLimit
@@ -611,7 +643,8 @@ namespace Tests.Linq
 			}
 
 			var limits    = PersonIdLimits(withEquals);
-			var missCount = PersonIdsAtMost(limits[0]).GetCacheMissCount();
+			var query     = PersonIdsAtMost(limits[0]);
+			var missCount = query.GetCacheMissCount();
 
 			foreach (var limit in limits)
 			{
@@ -619,7 +652,8 @@ namespace Tests.Linq
 					.ShouldBe(ExpectedPersonIdsAtMost(limit.Value), $"limit {limit.Value}");
 			}
 
-			(PersonIdsAtMost(limits[0]).GetCacheMissCount() - missCount).ShouldBe(2);
+			(query.GetCacheMissCount() - missCount)
+				.ShouldBe(2);
 		}
 
 		static readonly Func<IDataContext, IPersonIdLimit, IQueryable<int>> _compiledPersonIdsAtMost =
@@ -657,6 +691,52 @@ namespace Tests.Linq
 			}
 
 			queries[3].ShouldNotBeSameAs(queries[2]);
+		}
+
+		// IEquatable<T>.Equals deliberately disagrees with the inherited field-wise Equals(object).
+#pragma warning disable CA1067 // the test needs IEquatable<T>.Equals and Equals(object) to differ
+		readonly struct LooseValue(int n) : IEquatable<LooseValue>
+		{
+			public int N { get; } = n;
+
+			public bool Equals(LooseValue other)
+			{
+				return N % 10 == other.N % 10;
+			}
+		}
+#pragma warning restore CA1067
+
+		sealed class BakeBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqlExtensionBuilder builder)
+			{
+				builder.ResultExpression = new SqlValue(builder.GetValue<LooseValue>(0).N);
+			}
+		}
+
+		[Sql.Extension("", BuilderType = typeof(BakeBuilder), ServerSideOnly = true)]
+		static int Bake(LooseValue value) => throw new ServerSideOnlyException(nameof(Bake));
+
+		// A value an extension builder bakes into the SQL is compared by Equals(object), as it always was, not by
+		// IEquatable<T>.Equals.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
+		public void BakedStructValue_ComparedByEqualsObject([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			LinqToDB.Internal.Linq.Query.ClearCaches();
+
+			using var db = GetDataContext(context);
+
+			var value = new LooseValue(1);
+
+			db
+				.Select(() => Bake(value))
+				.ShouldBe(1);
+
+			value = new LooseValue(11);
+
+			db
+				.Select(() => Bake(value))
+				.ShouldBe(11);
 		}
 
 		[Sql.Extension("{field} IN (select * from {values})", IsPredicate = true, BuilderType = typeof(InExtExpressionItemBuilder), ServerSideOnly = true)]

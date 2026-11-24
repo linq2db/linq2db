@@ -1446,8 +1446,6 @@ namespace Tests.Data
 
 		#endregion
 
-		#region Translation interceptors and the query cache
-
 		static readonly MappingSchema _personFilterSchema = new FluentMappingBuilder(new MappingSchema())
 			.Entity<Person>()
 				.HasQueryFilter(p => p.ID > 0)
@@ -1627,16 +1625,24 @@ namespace Tests.Data
 			CompiledQuery.Compile((IDataContext db) => db.GetTable<Person>());
 
 		static readonly Func<IDataContext, int> _compiledPersonCount =
-			CompiledQuery.Compile((IDataContext db) => db.GetTable<Person>().Count());
+			CompiledQuery.Compile((IDataContext db) => db
+				.GetTable<Person>()
+				.Count());
 
 		static readonly Func<IDataContext, IQueryable<Person>> _compiledPersonsTwice =
-			CompiledQuery.Compile((IDataContext db) => db.GetTable<Person>().Concat(db.GetTable<Person>()));
+			CompiledQuery.Compile((IDataContext db) => db
+				.GetTable<Person>()
+				.Concat(db.GetTable<Person>()));
 
 		static readonly Func<IDataContext, int, IQueryable<Person>> _compiledPersonsFrom =
-			CompiledQuery.Compile((IDataContext db, int minId) => db.GetTable<Person>().Where(p => p.ID >= minId));
+			CompiledQuery.Compile((IDataContext db, int minId) => db
+				.GetTable<Person>()
+				.Where(p => p.ID >= minId));
 
 		static readonly Func<IDataContext, string[], IQueryable<Person>> _compiledPersonsIgnoring =
-			CompiledQuery.Compile((IDataContext db, string[] ignored) => db.GetTable<Person>().IgnoreFilters(ignored));
+			CompiledQuery.Compile((IDataContext db, string[] ignored) => db
+				.GetTable<Person>()
+				.IgnoreFilters(ignored));
 
 		/// <summary>
 		/// <c>field IN (values)</c> with the values inlined when the query is translated: a
@@ -1655,7 +1661,9 @@ namespace Tests.Data
 		}
 
 		static readonly Func<IDataContext, List<int>, IQueryable<Person>> _compiledPersonsIn =
-			CompiledQuery.Compile((IDataContext db, List<int> ids) => db.GetTable<Person>().Where(p => InValues(p.ID, ids)));
+			CompiledQuery.Compile((IDataContext db, List<int> ids) => db
+				.GetTable<Person>()
+				.Where(p => InValues(p.ID, ids)));
 
 		/// <summary>
 		/// Materializes <see cref="Person.FirstName"/> as a constant.
@@ -1970,7 +1978,9 @@ namespace Tests.Data
 
 			IQueryable<Person> Twice(IDataContext db) => compiled
 				? _compiledPersonsTwice(db)
-				: db.GetTable<Person>().Concat(db.GetTable<Person>());
+				: db
+					.GetTable<Person>()
+					.Concat(db.GetTable<Person>());
 
 			int[] Expected(int limit) => ExpectedIds(limit)
 				.Concat(ExpectedIds(limit))
@@ -2087,15 +2097,28 @@ namespace Tests.Data
 				ShouldReturnIds(adminQuery,  ExpectedIds(),  $"admin, round {i}");
 				ShouldReturnIds(tenantQuery, ExpectedIds(2), $"tenant 2, round {i}");
 
-				adminQuery.GetCompiledQueryInfo().ShouldBeSameAs(adminInfo, $"admin, round {i}");
-				tenantQuery.GetCompiledQueryInfo().ShouldBeSameAs(tenantInfo, $"tenant 2, round {i}");
+				adminQuery
+					.GetCompiledQueryInfo()
+					.ShouldBeSameAs(adminInfo, $"admin, round {i}");
+
+				tenantQuery
+					.GetCompiledQueryInfo()
+					.ShouldBeSameAs(tenantInfo, $"tenant 2, round {i}");
 			}
 
 			// with an argument: the query the tenant finds among the others its context needs reads it as well
 			foreach (var minId in new[] { 2, 1, 3 })
 			{
-				ShouldReturnIds(_compiledPersonsFrom(admin,   minId), ExpectedIds().Where(id => id >= minId).ToArray(),  $"admin from {minId}");
-				ShouldReturnIds(_compiledPersonsFrom(tenant2, minId), ExpectedIds(2).Where(id => id >= minId).ToArray(), $"tenant 2 from {minId}");
+				var adminExpected = ExpectedIds()
+					.Where(id => id >= minId)
+					.ToArray();
+
+				var tenantExpected = ExpectedIds(2)
+					.Where(id => id >= minId)
+					.ToArray();
+
+				ShouldReturnIds(_compiledPersonsFrom(admin,   minId), adminExpected,  $"admin from {minId}");
+				ShouldReturnIds(_compiledPersonsFrom(tenant2, minId), tenantExpected, $"tenant 2 from {minId}");
 			}
 		}
 
@@ -2135,7 +2158,9 @@ namespace Tests.Data
 
 				ShouldReturnIds(query, ExpectedIds(2), $"tenant 2, query {i}");
 
-				query.GetCompiledQueryInfo().ShouldBeSameAs(tenantInfos[i], $"query {i}");
+				query
+					.GetCompiledQueryInfo()
+					.ShouldBeSameAs(tenantInfos[i], $"query {i}");
 			}
 		}
 
@@ -2156,14 +2181,20 @@ namespace Tests.Data
 			IQueryable<Person> Ignoring(IDataContext db, string key) => _compiledPersonsIgnoring(db, [key]);
 
 			var low  = ExpectedIds(2);
-			var high = ExpectedIds().Where(id => id >= 3).ToArray();
+			var high = ExpectedIds()
+				.Where(id => id >= 3)
+				.ToArray();
+
+			var tenantHigh = high
+				.Where(id => id <= 3)
+				.ToArray();
 
 			for (var i = 0; i < 2; i++)
 			{
-				ShouldReturnIds(Ignoring(admin,   "high"), low,  $"admin, low, round {i}");
-				ShouldReturnIds(Ignoring(admin,   "low"),  high, $"admin, high, round {i}");
-				ShouldReturnIds(Ignoring(tenant3, "low"),  high.Where(id => id <= 3).ToArray(), $"tenant 3, high, round {i}");
-				ShouldReturnIds(Ignoring(tenant3, "high"), low,  $"tenant 3, low, round {i}");
+				ShouldReturnIds(Ignoring(admin,   "high"), low,        $"admin, low, round {i}");
+				ShouldReturnIds(Ignoring(admin,   "low"),  high,       $"admin, high, round {i}");
+				ShouldReturnIds(Ignoring(tenant3, "low"),  tenantHigh, $"tenant 3, high, round {i}");
+				ShouldReturnIds(Ignoring(tenant3, "high"), low,        $"tenant 3, low, round {i}");
 			}
 		}
 
@@ -2251,7 +2282,8 @@ namespace Tests.Data
 
 			ShouldReturnIds(sameQueryable ? query : db.GetTable<Person>(), ExpectedIds(2), "armed");
 
-			(interceptor.Calls - calls).ShouldBe(1, "stage calls");
+			(interceptor.Calls - calls)
+				.ShouldBe(1, "stage calls");
 		}
 
 		// The IQueryable a compiled query returns, executed after the context's query interceptor changed - after its first
@@ -2377,7 +2409,9 @@ namespace Tests.Data
 			Query.ClearCaches();
 
 			var counter = new FilterCallCounter();
-			var count   = CompiledQuery.Compile((IDataContext db) => db.GetTable<Person>().Count());
+			var count   = CompiledQuery.Compile((IDataContext db) => db
+				.GetTable<Person>()
+				.Count());
 
 			using var db = GetDataConnection(context, o => o
 				.UseMappingSchema(_personNamedFuncFilterSchema)
@@ -2385,7 +2419,8 @@ namespace Tests.Data
 
 			for (var i = 0; i < 3; i++)
 			{
-				count(db).ShouldBe(ExpectedIds().Length, $"call {i}");
+				count(db)
+					.ShouldBe(ExpectedIds().Length, $"call {i}");
 			}
 
 			counter.QueryFilterCalls.ShouldBe(1);
@@ -2438,7 +2473,11 @@ namespace Tests.Data
 				.ToArray();
 
 			// a scalar, so that each execution makes one lookup
-			int PersonCount(IDataContext db) => compiled ? _compiledPersonCount(db) : db.GetTable<Person>().Count();
+			int PersonCount(IDataContext db) => compiled
+				? _compiledPersonCount(db)
+				: db
+					.GetTable<Person>()
+					.Count();
 
 			try
 			{
@@ -2448,10 +2487,12 @@ namespace Tests.Data
 					{
 						var calls = interceptors[i].QueryFilterCalls;
 
-						PersonCount(contexts[i]).ShouldBe(ExpectedIds(i + 1).Length, $"round {round}, limit {i + 1}");
+						PersonCount(contexts[i])
+							.ShouldBe(ExpectedIds(i + 1).Length, $"round {round}, limit {i + 1}");
 
 						if (round > 0)
-							(interceptors[i].QueryFilterCalls - calls).ShouldBe(1, $"query filter calls, limit {i + 1}");
+							(interceptors[i].QueryFilterCalls - calls)
+								.ShouldBe(1, $"query filter calls, limit {i + 1}");
 					}
 				}
 			}
@@ -2505,9 +2546,13 @@ namespace Tests.Data
 			{
 				var calls = QueryFilterCalls();
 
-				db.GetTable<Person>().Count().ShouldBe(ExpectedIds(3).Length, $"execution {i}");
+				db
+					.GetTable<Person>()
+					.Count()
+					.ShouldBe(ExpectedIds(3).Length, $"execution {i}");
 
-				(QueryFilterCalls() - calls).ShouldBe(keyed && i > 0 ? 0 : 1, $"query filter calls, execution {i}");
+				(QueryFilterCalls() - calls)
+					.ShouldBe(keyed && i > 0 ? 0 : 1, $"query filter calls, execution {i}");
 			}
 		}
 
@@ -2532,11 +2577,13 @@ namespace Tests.Data
 
 				ShouldReturnIds(query, ExpectedIds(3), $"call {i}");
 
-				(interceptor.QueryFilterCalls - calls).ShouldBe(built + 1, $"query filter calls, call {i}");
+				(interceptor.QueryFilterCalls - calls)
+					.ShouldBe(built + 1, $"query filter calls, call {i}");
 
 				ShouldReturnIds(query, ExpectedIds(3), $"call {i}, enumerated again");
 
-				(interceptor.QueryFilterCalls - calls).ShouldBe(built + 2, $"query filter calls, call {i}, enumerated again");
+				(interceptor.QueryFilterCalls - calls)
+					.ShouldBe(built + 2, $"query filter calls, call {i}, enumerated again");
 			}
 		}
 
@@ -2553,7 +2600,9 @@ namespace Tests.Data
 
 			IDataContext Create() => viaDataContext
 				? CreateFilteredDataContext(context, disableQueryCache)
-				: GetDataConnection(context, o => o.UseMappingSchema(_personFilterSchema).UseDisableQueryCache(disableQueryCache));
+				: GetDataConnection(context, o => o
+					.UseMappingSchema(_personFilterSchema)
+					.UseDisableQueryCache(disableQueryCache));
 
 			using var db    = Create();
 			using var other = Create();
@@ -2621,7 +2670,9 @@ namespace Tests.Data
 
 			using IDataContext db = viaDataContext
 				? CreateFilteredDataContext(context, disableQueryCache)
-				: GetDataConnection(context, o => o.UseMappingSchema(_personFilterSchema).UseDisableQueryCache(disableQueryCache));
+				: GetDataConnection(context, o => o
+					.UseMappingSchema(_personFilterSchema)
+					.UseDisableQueryCache(disableQueryCache));
 
 			var limit2 = new KeyedQueryStageLimitInterceptor(2);
 			var limit3 = new KeyedQueryStageLimitInterceptor(3);
@@ -2653,15 +2704,18 @@ namespace Tests.Data
 		// interceptor, whose query filter has nothing to check again.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
 		public void QueryExpression_AddInterceptorInsideScope(
-			[IncludeDataSources(false, TestProvName.AllSQLite)] string context,
-			[Values]                                            bool   mappingSchemaScope,
-			[Values]                                            bool   viaDataContext)
+			[IncludeDataSources(true, TestProvName.AllSQLite)] string context,
+			[Values]                                           bool   mappingSchemaScope,
+			[Values]                                           bool   viaDataContext)
 		{
+			if (viaDataContext && context.IsRemote())
+				Assert.Inconclusive("A remote context has no DataContext arm");
+
 			Query.ClearCaches();
 
 			IDataContext Create() => viaDataContext
 				? CreateFilteredDataContext(context)
-				: GetDataConnection(context, o => o.UseMappingSchema(_personFilterSchema));
+				: GetDataContext(context, o => o.UseMappingSchema(_personFilterSchema));
 
 			// the same type and options: the configuration ID differs only by the interceptor
 			using var db    = Create();
@@ -2689,39 +2743,72 @@ namespace Tests.Data
 
 			intercepted.AddInterceptor(new FirstNameBindingInterceptor());
 
-			static string[] FirstNames(IDataContext db)
-			{
-				return db
-					.GetTable<Person>()
-					.AsEnumerable()
-					.OrderBy(p => p.ID)
-					.Select(p => p.FirstName)
-					.ToArray();
-			}
-
 			string[] interceptedNames, plainNames;
 
 			if (interceptedFirst)
 			{
-				interceptedNames = FirstNames(intercepted);
-				plainNames       = FirstNames(plain);
+				interceptedNames = PersonFirstNames(intercepted);
+				plainNames       = PersonFirstNames(plain);
 			}
 			else
 			{
-				plainNames       = FirstNames(plain);
-				interceptedNames = FirstNames(intercepted);
+				plainNames       = PersonFirstNames(plain);
+				interceptedNames = PersonFirstNames(intercepted);
 			}
 
-			var expected = Person
+			interceptedNames.ShouldAllBe(name => name == FirstNameBindingInterceptor.FirstName);
+			plainNames.ShouldBe(ExpectedFirstNames());
+		}
+
+		// An entity-binding interceptor added after the configuration ID is computed, and removed again: its rewrites are
+		// not checked when a query is reused, so the configuration ID alone keeps the queries apart.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
+		public void EntityBinding_AddAndRemoveInterceptor(
+			[IncludeDataSources(true, TestProvName.AllSQLite)] string context,
+			[Values]                                           bool   viaDataContext)
+		{
+			if (viaDataContext && context.IsRemote())
+				Assert.Inconclusive("A remote context has no DataContext arm");
+
+			Query.ClearCaches();
+
+			using IDataContext db = viaDataContext
+				? new DataContext(context)
+				: GetDataContext(context);
+
+			var interceptor = new FirstNameBindingInterceptor();
+
+			PersonFirstNames(db)
+				.ShouldBe(ExpectedFirstNames(), "before");
+
+			db.AddInterceptor(interceptor);
+
+			PersonFirstNames(db)
+				.ShouldAllBe(name => name == FirstNameBindingInterceptor.FirstName, "added");
+
+			db.RemoveInterceptor(interceptor);
+
+			PersonFirstNames(db)
+				.ShouldBe(ExpectedFirstNames(), "removed");
+		}
+
+		static string[] PersonFirstNames(IDataContext db)
+		{
+			return db
+				.GetTable<Person>()
+				.AsEnumerable()
 				.OrderBy(p => p.ID)
 				.Select(p => p.FirstName)
 				.ToArray();
-
-			interceptedNames.ShouldAllBe(name => name == FirstNameBindingInterceptor.FirstName);
-			plainNames.ShouldBe(expected);
 		}
 
-		#endregion
+		string[] ExpectedFirstNames()
+		{
+			return Person
+				.OrderBy(p => p.ID)
+				.Select(p => p.FirstName)
+				.ToArray();
+		}
 
 		#region IExceptionInterceptor
 		[Test]

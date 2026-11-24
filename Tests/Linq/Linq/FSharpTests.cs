@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.FSharp;
+using LinqToDB.Internal.Interceptors;
 
 using NUnit.Framework;
 
@@ -781,6 +782,15 @@ namespace Tests.Linq
 			var b = new DataOptions().UseFSharp();
 
 			a.ShouldBe(b);
+		}
+
+		// The harness applies UseFSharp to every context: its query interceptor declares a cache key, so the queries it
+		// translates are shared as they are without it.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303")]
+		public void UseFSharp_QueryInterceptorHasCacheKey()
+		{
+			FSharpQueryExpressionInterceptor.Instance
+				.ShouldBeAssignableTo<IInterceptorCacheKey>();
 		}
 	}
 }

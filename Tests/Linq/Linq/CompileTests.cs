@@ -1271,7 +1271,9 @@ namespace Tests.Linq
 			]);
 
 			var query = CompiledQuery.Compile<IDataContext,Type[],IQueryable<FilteredRow>>(
-				static (dc, types) => dc.GetTable<FilteredRow>().IgnoreFilters(types));
+				static (dc, types) => dc
+					.GetTable<FilteredRow>()
+					.IgnoreFilters(types));
 
 			var types     = new[] { typeof(FilteredRow) };
 			var queryable = query(db, types);
