@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -24,15 +25,8 @@ namespace Tests.UserTests
 		[ActiveIssue(Configuration = TestProvName.AllSybase, ErrorTypeName = "AdoNetCore.AseClient.AseException",
 			ErrorMessage = "The name 'required_field' is illegal in this context",
 			Details = "no-issue: Sybase rejects a column reference where it wants a constant. SqlCe was dropped from this gate - it passes, direct and remote.")]
-		[ActiveIssue(Configurations = [ProviderName.AccessAceOleDb, ProviderName.AccessAceOdbc],
-			ErrorMessage = "Query input must contain at least one table or query",
-			Details = "no-issue: both ACE drivers reject it with the same sentence, so one fragment covers OleDb and ODBC alike.")]
-		[ActiveIssue(Configuration = ProviderName.AccessJetOdbc, ErrorTypeName = "System.Data.Odbc.OdbcException",
-			ErrorMessage = "Reserved error (|); there is no message for this error.",
-			Details = "no-issue: as the ACE half, but Jet reports the same rejection without a message of its own.")]
-		[ActiveIssue(Configuration = ProviderName.AccessJetOleDb, ErrorTypeName = "System.Data.OleDb.OleDbException",
-			ErrorMessage = "Unspecified error",
-			Details = "no-issue: as the Jet ODBC half, in the OleDb driver's wording.")]
+		// Jet and ACE reject the subquery in the SELECT without FROM that the inserted value becomes; linq2db refuses it first.
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ErrorMessage = ErrorHelper.Error_Subquery_in_Fromless_Select)]
 		[Test]
 		public void TestInsert([DataSources(TestProvName.AllSqlServer2005, TestProvName.AllClickHouse)] string context)
 		{

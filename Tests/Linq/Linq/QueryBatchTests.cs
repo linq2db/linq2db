@@ -2749,8 +2749,10 @@ namespace Tests.Linq
 		}
 
 		// A batch is new API, so a First or Single nested in one of its parts follows LINQ too, for a value and for an entity.
+		// Sybase refuses the outer join a nested First needs; a nested Single translates there and throws as elsewhere.
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins, AlsoWhenParameter = "read", AlsoWhenValue = NestedRead.ScalarFirst)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins, AlsoWhenParameter = "read", AlsoWhenValue = NestedRead.EntityFirst)]
 		[ActiveIssue(6289, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "YdbDataReader was closed during transaction execution")]
 		public void NestedEmptyReadThrowsInsideTheBatch(
 			[DataSources(false, NoFromlessSubquery)] string context,
