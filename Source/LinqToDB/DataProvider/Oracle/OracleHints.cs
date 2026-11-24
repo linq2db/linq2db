@@ -241,6 +241,7 @@ namespace LinqToDB.DataProvider.Oracle
 		/// Apply to the outermost SELECT. Nested queries, CTE bodies, set operations, DISTINCT,
 		/// grouping and aggregates cannot be locked. Simple unordered Take/First/Single queries
 		/// use ROWNUM; ordered row limiting and Skip are not supported with row locks.
+		/// LoadWith may nest the hinted query and is then rejected by the outermost SELECT restriction.
 		/// A subsequent INSERT, UPDATE or DELETE omits the clause and uses that statement's own locks.
 		/// </remarks>
 		/// <typeparam name="TSource">Query record type.</typeparam>
@@ -269,6 +270,7 @@ namespace LinqToDB.DataProvider.Oracle
 		/// Apply to the outermost SELECT. Nested queries, CTE bodies, set operations, DISTINCT,
 		/// grouping and aggregates cannot be locked. Simple unordered Take/First/Single queries
 		/// use ROWNUM; ordered row limiting and Skip are not supported with row locks.
+		/// LoadWith may nest the hinted query and is then rejected by the outermost SELECT restriction.
 		/// A subsequent INSERT, UPDATE or DELETE omits the clause and uses that statement's own locks.
 		/// </remarks>
 		/// <typeparam name="TSource">Query record type.</typeparam>
@@ -295,9 +297,11 @@ namespace LinqToDB.DataProvider.Oracle
 		/// <summary>Adds a <c>FOR UPDATE SKIP LOCKED</c> row-locking clause to the query.</summary>
 		/// <remarks>
 		/// Apply to the outermost SELECT. Nested queries, CTE bodies, set operations, DISTINCT,
-		/// grouping and aggregates cannot be locked. Simple unordered Take/First/Single queries
-		/// use ROWNUM; ordered row limiting and Skip are not supported with row locks.
-		/// A subsequent INSERT, UPDATE or DELETE omits the clause and uses that statement's own locks.
+		/// grouping, aggregates and Skip are not supported. LoadWith may nest the hinted query and is then rejected.
+		/// Row limiting (Take, First, FirstOrDefault, Single and SingleOrDefault) throws LinqToDBException:
+		/// Oracle limits candidate rows before skipping locks, which could hide available unlocked rows.
+		/// Queries without a row limit are supported.
+		/// A subsequent INSERT, UPDATE or DELETE omits this clause and uses the statement's own locks.
 		/// </remarks>
 		/// <typeparam name="TSource">Query record type.</typeparam>
 		/// <param name="source">Query source.</param>
@@ -325,6 +329,7 @@ namespace LinqToDB.DataProvider.Oracle
 		/// Apply to the outermost SELECT. Nested queries, CTE bodies, set operations, DISTINCT,
 		/// grouping and aggregates cannot be locked. Simple unordered Take/First/Single queries
 		/// use ROWNUM; ordered row limiting and Skip are not supported with row locks.
+		/// LoadWith may nest the hinted query and is then rejected by the outermost SELECT restriction.
 		/// A subsequent INSERT, UPDATE or DELETE omits the clause and uses that statement's own locks.
 		/// </remarks>
 		/// <typeparam name="TSource">Query record type.</typeparam>

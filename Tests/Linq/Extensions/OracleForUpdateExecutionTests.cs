@@ -188,6 +188,44 @@ namespace Tests.Extensions
 			Assert.That(() => contended.ToArray(), Throws.Exception.With.Message.Contains("ORA-00054"));
 		}
 
+		// Keep row 1 locked while the second session reads all remaining unlocked rows.
+		[Test]
+		public void SkipLockedHonorsOtherTransaction([IncludeDataSources(TestProvName.AllOracle)] string context,
+			[Values] bool generic)
+		{
+			using var first = GetDataConnection(context);
+			using var second = GetDataConnection(context);
+			using var table = first.CreateLocalTable(Rows());
+			using var firstTransaction = first.BeginTransaction();
+			using var secondTransaction = second.BeginTransaction();
+
+			var locked = table
+				.Where(r => r.Id == 1)
+				.AsOracle()
+				.ForUpdateHint()
+				.ToArray();
+			locked.Length.ShouldBe(1);
+			var other = second
+				.GetTable<LockRow>()
+				.TableName(table.TableName);
+			var source = generic ? other
+				.SubQueryHint("FOR UPDATE SKIP LOCKED") : other
+				.AsQueryable()
+				.AsOracle()
+				.ForUpdateSkipLockedHint();
+			Assert.That(() => source.Take(2).ToArray(), Throws.TypeOf<LinqToDBException>().With.Message.Contains("SKIP LOCKED"));
+			Assert.That(() => source.First(), Throws.TypeOf<LinqToDBException>().With.Message.Contains("SKIP LOCKED"));
+			Assert.That(() => source.FirstOrDefault(), Throws.TypeOf<LinqToDBException>().With.Message.Contains("SKIP LOCKED"));
+			Assert.That(() => source.Single(), Throws.TypeOf<LinqToDBException>().With.Message.Contains("SKIP LOCKED"));
+			Assert.That(() => source.SingleOrDefault(), Throws.TypeOf<LinqToDBException>().With.Message.Contains("SKIP LOCKED"));
+			var rows = source.ToArray();
+			rows
+				.Select(r => r.Id)
+				.OrderBy(id => id)
+				.ToArray()
+				.ShouldBe(new[] { 2, 3, 4, 5 });
+		}
+
 		// Unsupported nesting must fail before invalid Oracle SQL is sent to the server.
 		[Test]
 		public void UnsupportedComposition([IncludeDataSources(TestProvName.AllOracle)] string context,

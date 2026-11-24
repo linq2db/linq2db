@@ -273,6 +273,66 @@ namespace Tests.Extensions
 		}
 
 		[Test]
+		public void SkipLockedLimits([Values(OracleVersion.v11, OracleVersion.v12)] OracleVersion version,
+			[Values] bool generic, [Values("Take", "First", "FirstOrDefault", "Single", "SingleOrDefault")] string operation)
+		{
+			using var db = CreateConnection(version);
+			var table = db.GetTable<LockRow>();
+			var source = generic ? table
+				.SubQueryHint("  for\tupdate skip\tlocked  ") : table
+				.AsQueryable()
+				.AsOracle()
+				.ForUpdateSkipLockedHint();
+			Expression<Func<object?>> expression = operation switch
+			{
+				"Take" => () => source.Take(2),
+				"First" => () => source.First(),
+				"FirstOrDefault" => () => source.FirstOrDefault(),
+				"Single" => () => source.Single(),
+				"SingleOrDefault" => () => source.SingleOrDefault(),
+				_ => throw new ArgumentOutOfRangeException(nameof(operation)),
+			};
+			Assert.That(() => source.Provider.CreateQuery<LockRow>(expression.Body).ToSqlQuery(),
+				Throws.TypeOf<LinqToDBException>().With.Message.Contains("SKIP LOCKED"));
+		}
+
+		[Test]
+		public void GenericSkipLockedLimits([Values(OracleVersion.v11, OracleVersion.v12)] OracleVersion version,
+			[Values("FOR UPDATE SKIP LOCKED /* tail */", "FOR UPDATE SKIP /* middle */ LOCKED -- tail", "FOR UPDATE OF \"SKIP\"\" LOCKED\" SKIP LOCKED")] string hint)
+		{
+			using var db = CreateConnection(version);
+			var table = db.GetTable<LockRow>();
+			foreach (var count in new[] { 0, 1, 5 })
+			{
+				Assert.That(() => table.SubQueryHint(hint).Take(count).ToSqlQuery(),
+					Throws.TypeOf<LinqToDBException>().With.Message.Contains("SKIP LOCKED"));
+				Assert.That(() => table.Take(count).SubQueryHint(hint).ToSqlQuery(),
+					Throws.TypeOf<LinqToDBException>().With.Message.Contains("SKIP LOCKED"));
+			}
+
+			var sql = table
+				.SubQueryHint(hint)
+				.ToSqlQuery()
+				.Sql;
+			sql.ShouldContain(hint);
+		}
+
+		[Test]
+		public void GenericLockColumnNames([Values(OracleVersion.v11, OracleVersion.v12)] OracleVersion version,
+			[Values("FOR UPDATE OF SKIP, LOCKED", "FOR UPDATE OF \"SKIP LOCKED\"", "FOR UPDATE OF \"SKIP\"\" LOCKED\"")] string hint)
+		{
+			using var db = CreateConnection(version);
+			var sql = db
+				.GetTable<LockRow>()
+				.SubQueryHint(hint)
+				.Take(1)
+				.ToSqlQuery()
+				.Sql;
+			sql.ShouldContain("ROWNUM");
+			sql.ShouldContain(hint);
+		}
+
+		[Test]
 		public void NegativeWait()
 		{
 			Assert.That(() => OracleHints.Wait(-1), Throws.TypeOf<System.ArgumentOutOfRangeException>());
@@ -351,7 +411,8 @@ namespace Tests.Extensions
 				.ToSqlQuery()
 				.Sql;
 			sql.ShouldContain("for\tupdate NOWAIT");
-			Assert.That(() => table.SubQueryHint("FOR SHARE").ToSqlQuery(), Throws.TypeOf<LinqToDBException>());
+			foreach (var hint in new[] { "FOR SHARE", "FOR KEY SHARE", "FOR NO KEY UPDATE" })
+				Assert.That(() => table.SubQueryHint(hint).ToSqlQuery(), Throws.TypeOf<LinqToDBException>().With.Message.Contains("Oracle only supports FOR UPDATE"));
 			Assert.That(() => table.SubQueryHint("/* FOR UPDATE */").ToSqlQuery(), Throws.TypeOf<LinqToDBException>());
 		}
 
