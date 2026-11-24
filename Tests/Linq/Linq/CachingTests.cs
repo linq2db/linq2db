@@ -377,6 +377,8 @@ namespace Tests.Linq
 			[Values]                                                                       bool   sameQueryable,
 			[Values]                                                                       bool   array)
 		{
+			LinqToDB.Internal.Linq.Query.ClearCaches();
+
 			using var db = GetDataContext(context);
 
 			IList<int> ids = array ? new[] { 1, 2 } : new List<int> { 1, 2 };
@@ -422,6 +424,8 @@ namespace Tests.Linq
 			[IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllPostgreSQL)] string context,
 			[Values]                                                                       bool   array)
 		{
+			LinqToDB.Internal.Linq.Query.ClearCaches();
+
 			using var db = GetDataContext(context);
 
 			IList<int> ids = array ? new[] { 1, 2 } : new List<int> { 1, 2 };
@@ -440,6 +444,64 @@ namespace Tests.Linq
 				.OrderBy(id => id)
 				.ToArray()
 				.ShouldBe(ExpectedPersonIds(ids), "after the change");
+		}
+
+		// The builder reads the values when the query is built and inlines their maximum.
+		sealed class MaxOfBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqlExtensionBuilder builder)
+			{
+				var values = builder.GetValue<IEnumerable<int>>("values");
+
+				builder.ResultExpression = new SqlValue(values.Max());
+			}
+		}
+
+		[Sql.Extension("", BuilderType = typeof(MaxOfBuilder), ServerSideOnly = true)]
+		static int MaxOf(IEnumerable<int> values) => throw new ServerSideOnlyException(nameof(MaxOf));
+
+		// An extension argument the builder reads - a list or an array - changed in place after the query was built.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6225"), QueryCacheTest]
+		public void ExtensionArgument_CollectionChangedInPlace(
+			[IncludeDataSources(true, TestProvName.AllSQLite)] string context,
+			[Values]                                           bool   array)
+		{
+			LinqToDB.Internal.Linq.Query.ClearCaches();
+
+			using var db = GetDataContext(context);
+
+			IList<int> values = array ? new[] { 1, 3 } : new List<int> { 1, 3 };
+
+			IQueryable<int> PersonIdsEqualToMax()
+			{
+				return
+					from p in db.Person
+					where p.ID == MaxOf(values)
+					select p.ID;
+			}
+
+			PersonIdsEqualToMax()
+				.ToArray()
+				.ShouldBe([3], "before the change");
+
+			values[1] = 2;
+
+			PersonIdsEqualToMax()
+				.ToArray()
+				.ShouldBe([2], "after the change");
+
+			// equal values in a new collection find the query built for them
+			var query     = PersonIdsEqualToMax();
+			var missCount = query.GetCacheMissCount();
+
+			values = array ? new[] { 1, 2 } : new List<int> { 1, 2 };
+
+			PersonIdsEqualToMax()
+				.ToArray()
+				.ShouldBe([2], "equal values");
+
+			(query.GetCacheMissCount() - missCount)
+				.ShouldBe(0);
 		}
 
 		// A [SqlQueryDependent] object: a SqlType is created anew by every query, and equal types share one cached query.

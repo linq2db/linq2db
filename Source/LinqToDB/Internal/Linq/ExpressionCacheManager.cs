@@ -764,15 +764,22 @@ namespace LinqToDB.Internal.Linq
 			return value is IEnumerable and not string and not IQueryable;
 		}
 
-		// The caller may change a collection in place after the build, so the check keeps a copy: an array of the same type,
-		// any other collection as an object array for the default comparison. A custom ObjectsEqual gets such a collection
-		// itself, as it may expect its type.
+		// A custom ObjectsEqual gets a collection other than an array itself, as it may expect its type.
 		static object GetDependentValueSnapshot(object value, SqlQueryDependentAttribute attribute)
+		{
+			return value is Array || attribute.GetType() == typeof(SqlQueryDependentAttribute)
+				? GetValueSnapshot(value)!
+				: value;
+		}
+
+		// The caller may change a collection in place after the build, so a comparison keeps a copy: an array of the same
+		// type, any other collection as an object array, which is compared by content.
+		static object? GetValueSnapshot(object? value)
 		{
 			if (value is Array array)
 				return array.Clone();
 
-			if (attribute.GetType() == typeof(SqlQueryDependentAttribute) && IsCollection(value))
+			if (value != null && IsCollection(value))
 				return ((IEnumerable)value).Cast<object?>().ToArray();
 
 			return value;
@@ -795,7 +802,7 @@ namespace LinqToDB.Internal.Linq
 		public void MarkAsValue(Expression expression, object? currentValue)
 		{
 			_byValueCompare ??= new();
-			_byValueCompare.Add((currentValue, expression));
+			_byValueCompare.Add((GetValueSnapshot(currentValue), expression));
 		}
 
 		public void RegisterSqlValue(Expression constantExpr, SqlValue value)
