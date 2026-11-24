@@ -68,10 +68,11 @@ namespace Tests.Linq
 
 		sealed class CommandTrace
 		{
-			public int          Readers;
-			public int          Begins;
-			public bool         AnyAsync;
-			public List<string> Texts = new();
+			public int                  Readers;
+			public int                  Begins;
+			public bool                 AnyAsync;
+			public List<string>         Texts      = new();
+			public List<TraceOperation> Operations = new();
 
 			public void Reset()
 			{
@@ -79,6 +80,7 @@ namespace Tests.Linq
 				Begins   = 0;
 				AnyAsync = false;
 				Texts.Clear();
+				Operations.Clear();
 			}
 		}
 
@@ -90,6 +92,12 @@ namespace Tests.Linq
 			{
 				if (ti.TraceInfoStep != TraceInfoStep.BeforeExecute)
 					return;
+
+				if (ti.Operation is TraceOperation.ExecuteReader or TraceOperation.ExecuteNonQuery or TraceOperation.ExecuteScalar
+					or TraceOperation.BeginTransaction or TraceOperation.CommitTransaction or TraceOperation.RollbackTransaction)
+				{
+					trace.Operations.Add(ti.Operation);
+				}
 
 				if (ti.Operation == TraceOperation.ExecuteReader)
 				{
@@ -1252,8 +1260,15 @@ namespace Tests.Linq
 					.Take(3)
 					.ToList());
 
-			// The load transaction is skipped where the provider has none.
-			trace.Begins.ShouldBe(((DataConnection)db).DataProvider.TransactionsSupported ? 1 : 0);
+			// The load transaction's begin and commit are operations of their own around the batch's command; a provider
+			// without transactions skips them.
+			TraceOperation[] readers = db.UsesCombinedQueryBatch()
+				? [TraceOperation.ExecuteReader]
+				: [TraceOperation.ExecuteReader, TraceOperation.ExecuteReader];
+
+			trace.Operations.ShouldBe(((DataConnection)db).DataProvider.TransactionsSupported
+				? [TraceOperation.BeginTransaction, .. readers, TraceOperation.CommitTransaction]
+				: readers);
 		}
 
 		// Whether a TransactionScope suppresses the load transaction is decided before any provider is involved.
