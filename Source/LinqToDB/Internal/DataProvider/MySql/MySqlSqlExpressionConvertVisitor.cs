@@ -107,7 +107,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
 		{
 			// | has lower priority than & in MySQL...
-			var precedence = element.Operation == "|" && element.Precedence == Precedence.Bitwise ? Precedence.Bitwise - 1 : element.Precedence;
+			var precedence = element.Operation is "|" && element.Precedence == Precedence.Bitwise ? Precedence.Bitwise - 1 : element.Precedence;
 
 			if (element.Operation is "&" or "|" or "^" && IsSignedInteger(element.SystemType))
 				return AsSigned(new SqlBinaryExpression(typeof(ulong), element.Expr1, element.Operation, element.Expr2, precedence), element.Type);
