@@ -3,6 +3,7 @@ LinqToDB.Remote.SignalR.ServiceConfigurationExtensions
 LinqToDB.Remote.SignalR.SignalRDataContext
 LinqToDB.Remote.SignalR.SignalRDataContext.SignalRDataContext(LinqToDB.Remote.SignalR.SignalRLinqServiceClient! client, System.Func<LinqToDB.DataOptions!, LinqToDB.DataOptions!>? optionBuilder = null) -> void
 LinqToDB.Remote.SignalR.SignalRDataContext.SignalRDataContext(Microsoft.AspNetCore.SignalR.Client.HubConnection! hubConnection, System.Func<LinqToDB.DataOptions!, LinqToDB.DataOptions!>? optionBuilder = null) -> void
+LinqToDB.Remote.SignalR.SignalRDataContext.SignalRDataContext(Microsoft.AspNetCore.SignalR.Client.HubConnection! hubConnection, bool disposeHubConnection, System.Func<LinqToDB.DataOptions!, LinqToDB.DataOptions!>? optionBuilder = null) -> void
 LinqToDB.Remote.SignalR.SignalRLinqServiceClient
 LinqToDB.Remote.SignalR.SignalRLinqServiceClient.DisposeAsync() -> System.Threading.Tasks.ValueTask
 LinqToDB.Remote.SignalR.SignalRLinqServiceClient.SignalRLinqServiceClient(Microsoft.AspNetCore.SignalR.Client.HubConnection! hubConnection) -> void

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- https://learn.microsoft.com/dotnet/fundamentals/package-validation/diagnostic-ids -->
+<Suppressions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Suppression>
+    <DiagnosticId>CP0007</DiagnosticId>
+    <Target>T:LinqToDB.Identity.IdentityDataConnection`8</Target>
+    <Left>lib/netstandard2.0/linq2db.Identity.dll</Left>
+    <Right>lib/net10.0/linq2db.Identity.dll</Right>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0007</DiagnosticId>
+    <Target>T:LinqToDB.Identity.IdentityDataContext`8</Target>
+    <Left>lib/netstandard2.0/linq2db.Identity.dll</Left>
+    <Right>lib/net10.0/linq2db.Identity.dll</Right>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0007</DiagnosticId>
+    <Target>T:LinqToDB.Identity.UserStore`9</Target>
+    <Left>lib/netstandard2.0/linq2db.Identity.dll</Left>
+    <Right>lib/net10.0/linq2db.Identity.dll</Right>
+  </Suppression>
+</Suppressions>

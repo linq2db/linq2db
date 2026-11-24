@@ -68,8 +68,10 @@ namespace Tests.Linq
 
 			using var db = GetDataContext(context);
 
-			query(db, 3).ShouldBe(Parent.Count(p => p.ParentID >= 3));
-			query(db, 5).ShouldBe(Parent.Count(p => p.ParentID >= 5));
+			query(db, 3)
+				.ShouldBe(Parent.Count(p => p.ParentID >= 3));
+			query(db, 5)
+				.ShouldBe(Parent.Count(p => p.ParentID >= 5));
 		}
 
 		[Test]

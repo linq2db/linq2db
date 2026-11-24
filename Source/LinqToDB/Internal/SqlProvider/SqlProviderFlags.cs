@@ -805,6 +805,22 @@ namespace LinqToDB.Internal.SqlProvider
 		[DataMember(Order = 84)]
 		public int MaxCombinedCommandParameters { get; set; }
 
+		/// <summary>
+		/// Indicates that <see cref="IsMultiStatementBatchSupported"/> holds only for some connection strings (MySql.Data with
+		/// <c>AllowBatch=false</c> rejects several statements in one command), so statements are combined only where
+		/// <see cref="LinqOptions.UseCombinedCommands"/> asks for it and never because a <c>QueryBatch</c> requests it.
+		/// Default: <see langword="false"/>.
+		/// </summary>
+		[DataMember(Order = 85)]
+		public bool IsMultiStatementBatchConnectionDependent { get; set; }
+
+		/// <summary>
+		/// Indicates that a subquery in a column needs its enclosing <c>SELECT</c> to have a <c>FROM</c> clause: the provider
+		/// rejects <c>SELECT (SELECT ...)</c> on its own. Default: <see langword="false"/>.
+		/// </summary>
+		[DataMember(Order = 86)]
+		public bool IsFromRequiredForSubQueryColumn { get; set; }
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || (AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null);
@@ -911,6 +927,8 @@ namespace LinqToDB.Internal.SqlProvider
 				^ MaxCombinedCommandLength                             .GetHashCode()
 				^ MaxStatementsPerCombinedGroup                        .GetHashCode()
 				^ MaxCombinedCommandParameters                         .GetHashCode()
+				^ IsMultiStatementBatchConnectionDependent             .GetHashCode()
+				^ IsFromRequiredForSubQueryColumn                      .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
 	}
 
@@ -999,6 +1017,8 @@ namespace LinqToDB.Internal.SqlProvider
 				&& MaxCombinedCommandLength                              == other.MaxCombinedCommandLength
 				&& MaxStatementsPerCombinedGroup                         == other.MaxStatementsPerCombinedGroup
 				&& MaxCombinedCommandParameters                          == other.MaxCombinedCommandParameters
+				&& IsMultiStatementBatchConnectionDependent              == other.IsMultiStatementBatchConnectionDependent
+				&& IsFromRequiredForSubQueryColumn                       == other.IsFromRequiredForSubQueryColumn
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
 		#endregion

@@ -20,6 +20,7 @@ LinqToDB.Remote.Grpc.Dto.GrpcString.Value.set -> void
 LinqToDB.Remote.Grpc.GrpcDataContext
 LinqToDB.Remote.Grpc.GrpcDataContext.Address.get -> string!
 LinqToDB.Remote.Grpc.GrpcDataContext.ChannelOptions.get -> Grpc.Net.Client.GrpcChannelOptions?
+LinqToDB.Remote.Grpc.GrpcDataContext.GrpcDataContext(Grpc.Net.Client.GrpcChannel! channel, System.Func<LinqToDB.DataOptions!, LinqToDB.DataOptions!>? optionBuilder = null) -> void
 LinqToDB.Remote.Grpc.GrpcDataContext.GrpcDataContext(string! address, Grpc.Net.Client.GrpcChannelOptions? channelOptions, System.Func<LinqToDB.DataOptions!, LinqToDB.DataOptions!>? optionBuilder = null) -> void
 LinqToDB.Remote.Grpc.GrpcDataContext.GrpcDataContext(string! address, System.Func<LinqToDB.DataOptions!, LinqToDB.DataOptions!>? optionBuilder = null) -> void
 LinqToDB.Remote.Grpc.GrpcLinqService
@@ -33,6 +34,8 @@ LinqToDB.Remote.Grpc.IGrpcLinqService.ExecuteReaderAsync(LinqToDB.Remote.Grpc.Dt
 LinqToDB.Remote.Grpc.IGrpcLinqService.ExecuteScalarAsync(LinqToDB.Remote.Grpc.Dto.GrpcConfigurationQuery! caq, ProtoBuf.Grpc.CallContext context = default(ProtoBuf.Grpc.CallContext)) -> System.Threading.Tasks.Task<LinqToDB.Remote.Grpc.Dto.GrpcString!>!
 LinqToDB.Remote.Grpc.IGrpcLinqService.GetInfoAsync(LinqToDB.Remote.Grpc.Dto.GrpcConfiguration! configuration, ProtoBuf.Grpc.CallContext context = default(ProtoBuf.Grpc.CallContext)) -> System.Threading.Tasks.Task<LinqToDB.Remote.LinqServiceInfo!>!
 override LinqToDB.Remote.Grpc.GrpcDataContext.ContextIDPrefix.get -> string!
+override LinqToDB.Remote.Grpc.GrpcDataContext.Dispose() -> void
+override LinqToDB.Remote.Grpc.GrpcDataContext.DisposeAsync() -> System.Threading.Tasks.ValueTask
 override LinqToDB.Remote.Grpc.GrpcDataContext.GetClient() -> LinqToDB.Remote.ILinqService!
 static LinqToDB.Remote.Grpc.Dto.GrpcInt.implicit operator LinqToDB.Remote.Grpc.Dto.GrpcInt!(int a) -> LinqToDB.Remote.Grpc.Dto.GrpcInt!
 static LinqToDB.Remote.Grpc.Dto.GrpcInt.implicit operator int(LinqToDB.Remote.Grpc.Dto.GrpcInt! a) -> int

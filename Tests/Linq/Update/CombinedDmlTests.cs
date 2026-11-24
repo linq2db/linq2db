@@ -89,9 +89,10 @@ namespace Tests.xUpdate
 			AssertCollapsed(off, on, combining);
 		}
 
-		// A MySql.Data connection string can refuse several statements in one command, so that connector runs the steps separately.
+		// With the option MySql.Data combines the steps as 6.6.0 did; a connection string that refuses several statements in one
+		// command then fails, and the option off is the remedy.
 		[Test]
-		public void InsertWithIdentity_MySqlDataRunsSequentially(
+		public void InsertWithIdentity_MySqlDataCombinesWithTheOption(
 			[IncludeDataSources(TestProvName.AllMySql80)] string context,
 			[Values("", ";AllowBatch=false")] string option)
 		{
@@ -105,14 +106,22 @@ namespace Tests.xUpdate
 			var counter = new CommandCounter();
 			db.AddInterceptor(counter);
 
-			var id = db.Person.InsertWithIdentity(() => new Person
+			Func<object> insert = () => db.Person.InsertWithIdentity(() => new Person
 			{
 				FirstName = "John",
 				LastName  = "Shepard",
 				Gender    = Gender.Male
 			});
 
-			counter.Count.ShouldBe(2);
+			if (option.Length > 0)
+			{
+				Shouldly.Should.Throw<DbException>(() => insert());
+				return;
+			}
+
+			var id = insert();
+
+			counter.Count.ShouldBe(1);
 
 			db.Person
 				.Single(p => p.ID == Convert.ToInt32(id))

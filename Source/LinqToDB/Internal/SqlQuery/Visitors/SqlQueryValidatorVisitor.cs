@@ -125,6 +125,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					return false;
 				}
 
+				if (_providerFlags.IsFromRequiredForSubQueryColumn && _parentQuery?.From.Tables.Count == 0)
+				{
+					errorMessage = ErrorHelper.Error_Subquery_in_Fromless_Select;
+					return false;
+				}
+
 				if (!_providerFlags.IsSubQueryTakeSupported && selectQuery.Select.TakeValue != null)
 				{
 					errorMessage = ErrorHelper.Error_Take_in_Subquery;

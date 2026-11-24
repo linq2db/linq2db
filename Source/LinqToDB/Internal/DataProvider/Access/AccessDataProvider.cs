@@ -71,6 +71,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 			SqlProviderFlags.IsSimpleCoalesceSupported                             = false;
 			SqlProviderFlags.IsSubqueryExpressionInsidePredicateSupported          = false;
 			SqlProviderFlags.IsSubqueryJoinOnOuterReferenceSupported               = false;
+			SqlProviderFlags.IsFromRequiredForSubQueryColumn                       = provider != AccessProvider.LibRed;
 
 			// LibRed's engine accepts a superset of Jet SQL
 			if (provider == AccessProvider.LibRed)
