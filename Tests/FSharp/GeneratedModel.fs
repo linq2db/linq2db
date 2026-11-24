@@ -49,9 +49,9 @@ let TestGeneratedEntityRoundtrip (db : IDataContext) =
     Assert.That(r2.MiddleName, Is.EqualTo None)
     Assert.That(r2.Age, Is.EqualTo None)
 
-// The generated function wrappers' shape (DataModelGenerator.Functions): nullable scalar parameters are 'T option and
-// reach the query expression unchanged (only stored-procedure wrappers unwrap them). SQLite built-ins stand in for
-// database functions.
+// A hand-written wrapper in the option shape generated function wrappers had before #6443: nullable scalar parameters
+// as 'T option, reaching the query expression unchanged. Generated wrappers take Nullable<T> instead (GeneratedCode.fs);
+// this pins #6443. SQLite built-ins stand in for database functions.
 type GeneratedFunctionRow =
     {
         [<Column("key")>] Key : int64
@@ -80,3 +80,76 @@ let TestFunctionOptionArguments (db : DataConnection) =
     let noRows = ctx.JsonEach(noJson)
     Assert.That(rows.Count(),   Is.EqualTo 3)
     Assert.That(noRows.Count(), Is.EqualTo 0)
+
+// Translation of an option column passed to a Nullable<T> / string | null function parameter: the column's .Value
+// converts to the parameter type at the call and translates to the bare column, NULL included. A translator
+// characterization over hand-written functions; the scaffolder's own scalar and table function wrappers are called
+// this way in GeneratedCode.fs. SQLite built-ins stand in for database functions.
+type NullableArgumentFunctions =
+    [<Sql.Function("abs", ServerSideOnly = true)>]
+    static member Abs (value : System.Nullable<int>) : System.Nullable<int> = raise (System.InvalidOperationException("Scalar function cannot be called outside of query"))
+
+    [<Sql.Function("length", ServerSideOnly = true)>]
+    static member Length (value : string | null) : System.Nullable<int> = raise (System.InvalidOperationException("Scalar function cannot be called outside of query"))
+
+let private insertOptionRows (db : IDataContext) =
+    db.Insert({ Id = 1; FirstName = "John"; MiddleName = Some "Quentin"; Age = Some -42 }) |> ignore
+    db.Insert({ Id = 2; FirstName = "Jane"; MiddleName = None;            Age = None })     |> ignore
+
+let TestOptionColumnValueAsFunctionArgument (db : IDataContext) =
+    use _t = db.CreateLocalTable<GeneratedPerson>()
+    insertOptionRows db
+
+    let people = db.GetTable<GeneratedPerson>()
+
+    let ages =
+        query { for p in people do
+                sortBy p.Id
+                select (p.Id, NullableArgumentFunctions.Abs(p.Age.Value)) }
+        |> Seq.toList
+    Assert.That(ages, Is.EqualTo<int * System.Nullable<int>>([ (1, System.Nullable 42); (2, System.Nullable()) ]))
+
+    let explicitNullable =
+        query { for p in people do
+                sortBy p.Id
+                select (p.Id, NullableArgumentFunctions.Abs(System.Nullable(p.Age.Value))) }
+        |> Seq.toList
+    Assert.That(explicitNullable, Is.EqualTo<int * System.Nullable<int>>([ (1, System.Nullable 42); (2, System.Nullable()) ]))
+
+    let lengths =
+        query { for p in people do
+                sortBy p.Id
+                select (p.Id, NullableArgumentFunctions.Length(p.MiddleName.Value)) }
+        |> Seq.toList
+    Assert.That(lengths, Is.EqualTo<int * System.Nullable<int>>([ (1, System.Nullable 7); (2, System.Nullable()) ]))
+
+    let filtered =
+        query { for p in people do
+                where (NullableArgumentFunctions.Abs(p.Age.Value) = System.Nullable 42)
+                select p.Id }
+        |> Seq.toList
+    Assert.That(filtered, Is.EqualTo<int>([ 1 ]))
+
+// https://github.com/linq2db/linq2db/issues/6452: Option.toNullable over an option column
+let TestOptionToNullableAsFunctionArgument (db : IDataContext) =
+    use _t = db.CreateLocalTable<GeneratedPerson>()
+    insertOptionRows db
+
+    let ages =
+        query { for p in db.GetTable<GeneratedPerson>() do
+                sortBy p.Id
+                select (p.Id, NullableArgumentFunctions.Abs(Option.toNullable p.Age)) }
+        |> Seq.toList
+    Assert.That(ages, Is.EqualTo<int * System.Nullable<int>>([ (1, System.Nullable 42); (2, System.Nullable()) ]))
+
+// https://github.com/linq2db/linq2db/issues/6452: Option.toObj over an option column
+let TestOptionToObjAsFunctionArgument (db : IDataContext) =
+    use _t = db.CreateLocalTable<GeneratedPerson>()
+    insertOptionRows db
+
+    let lengths =
+        query { for p in db.GetTable<GeneratedPerson>() do
+                sortBy p.Id
+                select (p.Id, NullableArgumentFunctions.Length(Option.toObj p.MiddleName)) }
+        |> Seq.toList
+    Assert.That(lengths, Is.EqualTo<int * System.Nullable<int>>([ (1, System.Nullable 7); (2, System.Nullable()) ]))

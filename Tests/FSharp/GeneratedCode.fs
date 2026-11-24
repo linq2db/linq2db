@@ -81,9 +81,18 @@ let TestGeneratedProcedureOptionParameters (db : DataConnection) =
     ctx.ExecuteProcIntParameters(None, &output, &ret) |> ignore
     Assert.That(output, Is.EqualTo None)
 
+// Parent.Value1 of the test data, sorted; read through ScalarFunction because an entity's provider-type option
+// columns (SqlInt32 option) are not auto-mapped (https://github.com/linq2db/linq2db/issues/6445)
+let private parentValue1 = [ None; None; Some 1; Some 1; Some 3; Some 5; Some 6 ]
+
+let private sortedValues (values : IQueryable<Nullable<SqlInt32>>) =
+    values
+    |> Seq.map (fun v -> Option.ofNullable v |> Option.map (fun (s : SqlInt32) -> s.Value))
+    |> Seq.sort
+    |> Seq.toList
+
 // generated function wrappers take and return Nullable<T>: their values reach SQL without a column mapping.
-// Rows are counted, not read: an entity's provider-type option columns (SqlInt32 option) are not auto-mapped
-// (https://github.com/linq2db/linq2db/issues/6445)
+// Rows are counted or passed through ScalarFunction, not read: see parentValue1
 let TestGeneratedFunctionArguments (db : DataConnection) =
     use ctx = new SqlServer.TestDataDB(new DataOptions<SqlServer.TestDataDB>(db.Options))
 
@@ -102,6 +111,18 @@ let TestGeneratedFunctionArguments (db : DataConnection) =
     let value = ctx.Select(fun () -> SqlServer.ExtensionMethods.ScalarFunction(Nullable(SqlInt32 7)))
     Assert.That(value, Is.EqualTo(Nullable(SqlInt32 7)))
 
+    // option columns passed through .Value: the bare column, NULL included (a constant argument would read 1 seven times)
+    let scalar =
+        query { for p in ctx.Parents do
+                select (SqlServer.ExtensionMethods.ScalarFunction(p.Value1.Value)) }
+    Assert.That(sortedValues scalar, Is.EqualTo<int option>(parentValue1))
+
+    let correlated =
+        query { for p in ctx.Parents do
+                for c in ctx.GetParentById(p.ParentId.Value) do
+                select (SqlServer.ExtensionMethods.ScalarFunction(c.Value1.Value)) }
+    Assert.That(sortedValues correlated, Is.EqualTo<int option>(parentValue1))
+
 // the same calls through the fluent-mapped model, whose mapping self-calls pass typed default arguments
 let TestGeneratedFluentFunctionArguments (db : DataConnection) =
     use ctx = new SqlServerFluent.TestDataDB(new DataOptions<SqlServerFluent.TestDataDB>(db.Options))
@@ -114,3 +135,14 @@ let TestGeneratedFluentFunctionArguments (db : DataConnection) =
 
     let value = ctx.Select(fun () -> SqlServerFluent.ExtensionMethods.ScalarFunction(Nullable(SqlInt32 7)))
     Assert.That(value, Is.EqualTo(Nullable(SqlInt32 7)))
+
+    let scalar =
+        query { for p in ctx.Parents do
+                select (SqlServerFluent.ExtensionMethods.ScalarFunction(p.Value1.Value)) }
+    Assert.That(sortedValues scalar, Is.EqualTo<int option>(parentValue1))
+
+    let correlated =
+        query { for p in ctx.Parents do
+                for c in ctx.GetParentById(p.ParentId.Value) do
+                select (SqlServerFluent.ExtensionMethods.ScalarFunction(c.Value1.Value)) }
+    Assert.That(sortedValues correlated, Is.EqualTo<int option>(parentValue1))

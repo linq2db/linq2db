@@ -152,10 +152,38 @@ namespace Tests.Linq
 			Details = "an option argument with no column descriptor is bound as the FSharpOption object: Microsoft.Data.Sqlite rejects it (no mapping to a provider type), System.Data.SQLite passes a non-number to abs and the 0.0 result cannot be read back as an option.")]
 		// SQLite: the built-in abs and json_each functions stand in for database functions
 		[Test(Description = "option arguments of hand-written F# scalar and table function wrappers reach the database as values")]
-		public void GeneratedShape_FunctionOptionArguments([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void HandWrittenOptionFunctionArguments([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataConnection(context);
 			FSharp.GeneratedModel.TestFunctionOptionArguments(db);
+		}
+
+		// SQLite: the built-in abs and length functions stand in for database functions
+		[Test(Description = "an F# option column passed through .Value to a Nullable<T> / string | null function parameter translates to the column")]
+		public void OptionColumnValueAsFunctionArgument([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.GeneratedModel.TestOptionColumnValueAsFunctionArgument(db);
+		}
+
+		[ActiveIssue(6452, ErrorMessage = "OptionModule.ToNullable",
+			Details = "Option.toNullable over an option column has no translation in LinqToDB.FSharp.")]
+		// SQLite: the built-in abs function stands in for a database function
+		[Test(Description = "Option.toNullable over an F# option column passed to a function parameter translates to the column")]
+		public void OptionToNullableAsFunctionArgument([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.GeneratedModel.TestOptionToNullableAsFunctionArgument(db);
+		}
+
+		[ActiveIssue(6452, ErrorMessage = "OptionModule.ToObj",
+			Details = "Option.toObj over an option column has no translation in LinqToDB.FSharp.")]
+		// SQLite: the built-in length function stands in for a database function
+		[Test(Description = "Option.toObj over an F# option column passed to a function parameter translates to the column")]
+		public void OptionToObjAsFunctionArgument([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.GeneratedModel.TestOptionToObjAsFunctionArgument(db);
 		}
 
 		// SQLite: the linked model is the golden scaffolded from the SQLite TestData schema
