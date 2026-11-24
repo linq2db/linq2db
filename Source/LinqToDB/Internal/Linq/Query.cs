@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Threading;
@@ -219,10 +220,12 @@ namespace LinqToDB.Internal.Linq
 			if (dc == null)
 				return null;
 
-			if (dataContext is DataContext ctx)
-				return new LoadTransaction(ctx.BeginTransaction(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel));
+			var isolationLevel = GetLoadIsolationLevel(dataContext, dc);
 
-			return new LoadTransaction(dc.BeginTransaction(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel));
+			if (dataContext is DataContext ctx)
+				return new LoadTransaction(ctx.BeginTransaction(isolationLevel));
+
+			return new LoadTransaction(dc.BeginTransaction(isolationLevel));
 		}
 
 		internal async Task<LoadTransaction?> StartLoadTransactionAsync(IDataContext dataContext, CancellationToken cancellationToken)
@@ -232,14 +235,22 @@ namespace LinqToDB.Internal.Linq
 			if (dc == null)
 				return null;
 
+			var isolationLevel = GetLoadIsolationLevel(dataContext, dc);
+
 			if (dataContext is DataContext ctx)
 				return new LoadTransaction(
-					await ctx.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken)
+					await ctx.BeginTransactionAsync(isolationLevel, cancellationToken)
 						.ConfigureAwait(false));
 
 			return new LoadTransaction(
-				await dc.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken)
+				await dc.BeginTransactionAsync(isolationLevel, cancellationToken)
 					.ConfigureAwait(false));
+		}
+
+		static IsolationLevel GetLoadIsolationLevel(IDataContext dataContext, DataConnection dc)
+		{
+			return dataContext.Options.LinqOptions.EagerLoadingIsolationLevel
+				?? dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel;
 		}
 
 		/// <summary>
@@ -312,6 +323,11 @@ namespace LinqToDB.Internal.Linq
 
 		DataConnection? GetTransactionOwner(IDataContext dataContext)
 		{
+			// The user opted out of the read-consistency transaction
+			//
+			if (!dataContext.Options.LinqOptions.UseEagerLoadingTransaction)
+				return null;
+
 			// Do not start implicit transaction if there is no harvesters
 			//
 			if (!IsAnyHarvesters())

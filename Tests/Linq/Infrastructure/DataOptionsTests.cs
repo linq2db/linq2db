@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -917,6 +918,156 @@ namespace Tests.Infrastructure
 				Configuration.Linq.UseCombinedCommands = savedCombined;
 				Configuration.Linq.UseDbBatch          = savedBatch;
 			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4053")]
+		public void EagerLoadingTransactionDefaults()
+		{
+			var linqOptions = new LinqOptions();
+
+			linqOptions.UseEagerLoadingTransaction.ShouldBeTrue();
+			linqOptions.EagerLoadingIsolationLevel.ShouldBeNull();
+
+			var fromDataOptions = new DataOptions().LinqOptions;
+
+			fromDataOptions.UseEagerLoadingTransaction.ShouldBeTrue();
+			fromDataOptions.EagerLoadingIsolationLevel.ShouldBeNull();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4053")]
+		public void WithEagerLoadingTransactionTest()
+		{
+			// Both values must survive the copy constructor of a later `with`. The transaction flag is checked while it is
+			// `true`, because a member the copy constructor skips comes back as default(bool), `false`.
+			var options = new LinqOptions()
+				.WithEagerLoadingIsolationLevel(IsolationLevel.ReadCommitted)
+				.WithDbBatch(false);
+
+			options.UseEagerLoadingTransaction.ShouldBeTrue();
+			options.EagerLoadingIsolationLevel.ShouldBe(IsolationLevel.ReadCommitted);
+
+			var withoutTransaction = options
+				.WithEagerLoadingTransaction(false)
+				.WithDbBatch(true);
+
+			withoutTransaction.UseEagerLoadingTransaction.ShouldBeFalse();
+			withoutTransaction.EagerLoadingIsolationLevel.ShouldBe(IsolationLevel.ReadCommitted);
+
+			new DataOptions()
+				.UseEagerLoadingTransaction(false)
+				.LinqOptions
+				.UseEagerLoadingTransaction
+				.ShouldBeFalse();
+
+			new DataOptions()
+				.UseEagerLoadingIsolationLevel(IsolationLevel.ReadCommitted)
+				.LinqOptions
+				.EagerLoadingIsolationLevel
+				.ShouldBe(IsolationLevel.ReadCommitted);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4053")]
+		public void EagerLoadingTransactionConfigurationIDTest()
+		{
+			var defaults      = new LinqOptions();
+			var off           = defaults.WithEagerLoadingTransaction(false);
+			var readCommitted = defaults.WithEagerLoadingIsolationLevel(IsolationLevel.ReadCommitted);
+			var serializable  = defaults.WithEagerLoadingIsolationLevel(IsolationLevel.Serializable);
+
+			var defaultsID      = ((IConfigurationID)defaults).ConfigurationID;
+			var offID           = ((IConfigurationID)off).ConfigurationID;
+			var readCommittedID = ((IConfigurationID)readCommitted).ConfigurationID;
+			var serializableID  = ((IConfigurationID)serializable).ConfigurationID;
+
+			offID.ShouldNotBe(defaultsID);
+			readCommittedID.ShouldNotBe(defaultsID);
+			serializableID.ShouldNotBe(readCommittedID);
+
+			off.ShouldNotBe(defaults);
+			readCommitted.ShouldNotBe(defaults);
+			serializable.ShouldNotBe(readCommitted);
+		}
+
+		// NonParallelizable for the same reason as ConfigurationLinqCombinedCommandsTest: the subject is the process-global
+		// setter, and while it is in effect any concurrent lane building a DataOptions loads without the transaction.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4053"), NonParallelizable]
+		public void ConfigurationLinqEagerLoadingTransactionTest()
+		{
+			var savedTransaction    = Configuration.Linq.UseEagerLoadingTransaction;
+			var savedIsolationLevel = Configuration.Linq.EagerLoadingIsolationLevel;
+
+			try
+			{
+				Configuration.Linq.UseEagerLoadingTransaction = false;
+				Configuration.Linq.EagerLoadingIsolationLevel = IsolationLevel.ReadCommitted;
+
+				Configuration.Linq.Options.UseEagerLoadingTransaction.ShouldBeFalse();
+				Configuration.Linq.Options.EagerLoadingIsolationLevel.ShouldBe(IsolationLevel.ReadCommitted);
+
+				var options = new DataOptions().LinqOptions;
+
+				options.UseEagerLoadingTransaction.ShouldBeFalse();
+				options.EagerLoadingIsolationLevel.ShouldBe(IsolationLevel.ReadCommitted);
+			}
+			finally
+			{
+				Configuration.Linq.UseEagerLoadingTransaction = savedTransaction;
+				Configuration.Linq.EagerLoadingIsolationLevel = savedIsolationLevel;
+			}
+		}
+
+		// Assemblies compiled against linq2db 6.6 call the 22-parameter constructor and Deconstruct. Looked up by reflection,
+		// because a positional C# call would bind the current constructor through its defaults if the shim were missing.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4053")]
+		public void LinqOptionsShimFor66Signature()
+		{
+			Type[] parameterTypes =
+			[
+				typeof(bool), typeof(bool), typeof(bool), typeof(bool), typeof(bool), typeof(bool),
+				typeof(CompareNulls), typeof(bool), typeof(bool), typeof(TimeSpan?), typeof(bool), typeof(bool),
+				typeof(bool), typeof(bool), typeof(bool), typeof(bool), typeof(UpsertEmulationPolicy),
+				typeof(EagerLoadingStrategy), typeof(ImplicitCollectionLoading),
+				typeof(bool), typeof(bool), typeof(bool),
+			];
+
+			// The last three (optimizeForSequentialAccess, useDbBatch, useCombinedCommands) differ pairwise, so a shim
+			// that forwards them out of order changes the result.
+			object?[] arguments =
+			[
+				false, false, false, false, false, true,
+				CompareNulls.LikeClr, true, false, TimeSpan.FromHours(1), true, true,
+				true, false, false, false, UpsertEmulationPolicy.Allow,
+				EagerLoadingStrategy.Default, ImplicitCollectionLoading.Allow,
+				true, false, true,
+			];
+
+			var constructor = typeof(LinqOptions)
+				.GetConstructor(parameterTypes);
+
+			constructor.ShouldNotBeNull();
+
+			var options = (LinqOptions)constructor.Invoke(arguments);
+
+			options.OptimizeForSequentialAccess.ShouldBeTrue();
+			options.UseDbBatch.ShouldBeFalse();
+			options.UseCombinedCommands.ShouldBeTrue();
+			options.UseEagerLoadingTransaction.ShouldBeTrue();
+			options.EagerLoadingIsolationLevel.ShouldBeNull();
+
+			var outParameterTypes = parameterTypes
+				.Select(t => t.MakeByRefType())
+				.ToArray();
+
+			var deconstruct = typeof(LinqOptions)
+				.GetMethod(nameof(LinqOptions.Deconstruct), outParameterTypes);
+
+			deconstruct.ShouldNotBeNull();
+
+			var values = new object?[parameterTypes.Length];
+
+			deconstruct.Invoke(options, values);
+
+			values.ShouldBe(arguments);
 		}
 	}
 }
