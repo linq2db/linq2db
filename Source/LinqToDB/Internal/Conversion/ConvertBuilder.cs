@@ -11,6 +11,7 @@ using LinqToDB.Common;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Reflection;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Conversion
@@ -184,13 +185,11 @@ namespace LinqToDB.Internal.Conversion
 			// parameterless ToString(), which uses the current culture ("1,5" under de-DE). Boxed dates do not go through
 			// the schema's DateTime/DateOnly converters.
 			if (from == typeof(object))
-				return Expression.Call(ConvertToStringObjectMethod, p, invariant);
+				return Expression.Call(Methods.System.Convert_ObjectToString, p, invariant);
 
 			var mi = from.GetMethodEx("ToString", ToStringInvariantArgTypes);
 			return mi != null ? Expression.Call(p, mi, invariant) : null;
 		}
-
-		static readonly MethodInfo ConvertToStringObjectMethod = MemberHelper.MethodOf(() => Convert.ToString((object?)null, (IFormatProvider?)null));
 
 		static Expression? GetToString(Type from, Type to, Expression p)
 		{
