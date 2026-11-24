@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Interceptors
+﻿using LinqToDB.Interceptors;
+
+namespace LinqToDB.Internal.Interceptors
 {
 	/// <summary>
 	/// Implemented by a query translation interceptor, such as <see cref="IQueryExpressionInterceptor"/>, to declare that
@@ -7,7 +9,7 @@
 	/// </summary>
 	/// <remarks>
 	/// Every distinct key gets its own translated queries in the query cache, so an interceptor returns keys from a small
-	/// set. An <see cref="Internal.Interceptors.IEntityBindingInterceptor"/> that does not implement this interface is treated as translating
+	/// set. An <see cref="IEntityBindingInterceptor"/> that does not implement this interface is treated as translating
 	/// queries alike for all its instances.
 	/// </remarks>
 	public interface IInterceptorCacheKey

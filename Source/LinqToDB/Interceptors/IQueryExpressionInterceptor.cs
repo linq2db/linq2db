@@ -6,8 +6,8 @@ namespace LinqToDB.Interceptors
 	/// Allows to modify Expression Tree before it is being translated.
 	/// </summary>
 	/// <remarks>
-	/// An interceptor that also implements <see cref="IInterceptorCacheKey"/> has its translated queries reused without
-	/// its rewrites being checked again.
+	/// An interceptor that also implements <see cref="Internal.Interceptors.IInterceptorCacheKey"/> has its translated
+	/// queries reused without its rewrites being checked again.
 	/// </remarks>
 	public interface IQueryExpressionInterceptor : IInterceptor
 	{
