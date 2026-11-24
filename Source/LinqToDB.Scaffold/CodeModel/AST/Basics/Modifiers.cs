@@ -91,9 +91,9 @@ namespace LinqToDB.CodeModel
 		/// <summary>
 		/// Marks a method whose calls are translated to SQL (scalar, table and aggregate function wrappers), so its
 		/// scalar parameter values and scalar result cross the SQL boundary without a column mapping. Only honored by
-		/// language generators that render nullable scalars as a wrapper type (F# renders such parameter and return
-		/// types as <c>Nullable&lt;T&gt;</c> / <c>string | null</c> instead of <c>'T option</c>); ignored by the C#
-		/// generator.
+		/// language generators that render nullable scalars as a wrapper type (F# renders a nullable scalar parameter or
+		/// return type itself as <c>Nullable&lt;T&gt;</c> / <c>string | null</c> instead of <c>'T option</c>; generic
+		/// arguments, such as an aggregate's value selector, keep <c>'T option</c>); ignored by the C# generator.
 		/// </summary>
 		SqlTranslated = 0x10000,
 	}

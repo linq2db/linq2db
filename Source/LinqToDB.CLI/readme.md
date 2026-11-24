@@ -224,7 +224,8 @@ F# generation emits idiomatic code:
   wrappers, as `Nullable<T>` / nullable strings, because their values reach the database without a column mapping
   ([#6443](https://github.com/linq2db/linq2db/issues/6443)); aggregate value selectors and stored procedure
   wrappers keep `'T option`. Pass an option column to such a parameter as `row.Column.Value`: it translates to the
-  column itself, NULL included (`Option.toNullable` / `Option.toObj` are not translated);
+  column itself, NULL included (`Option.toNullable` / `Option.toObj` are not translated yet,
+  [#6452](https://github.com/linq2db/linq2db/issues/6452));
 - a single generated `.fs` file per run (F# has no partial types and uses order-sensitive compilation);
 - with `--nrt true`, nullable reference members carry an F# 9 `| null` annotation (compile with
   `<Nullable>enable</Nullable>`); with `--nrt false` they are plain, unannotated references.
