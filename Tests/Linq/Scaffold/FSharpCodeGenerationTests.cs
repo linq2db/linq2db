@@ -259,8 +259,7 @@ namespace Tests.Scaffold
 		public void FluentObjectFunctionNotBoxed([Values("dbo", "other")] string schema)
 		{
 			var options = FSharpOptions();
-			options.DataModel.Metadata    = MetadataSource.FluentMapping;
-			options.Schema.LoadedObjects |= SchemaObjects.ScalarFunction;
+			options.DataModel.Metadata = MetadataSource.FluentMapping;
 
 			// an unmapped database type maps to object
 			var function = new ScalarFunction(
@@ -269,17 +268,7 @@ namespace Tests.Scaffold
 				[new Parameter("@value", null, new DatabaseType("int", null, null, null), true, LinqToDB.Schema.ParameterDirection.Input)],
 				new ScalarResult(null, new DatabaseType("unmapped_type", null, null, null), true));
 
-			var scaffolder = new Scaffolder(LanguageProviders.FSharp, HumanizerNameConverter.Instance, options, null);
-			var schemaProvider = new TestSchemaProvider([new Column("Id", null, new DatabaseType("int", null, null, null), false, true, true, 0)], [], null, "dbo", "TestTable", [], [function]);
-			var dataModel  = scaffolder.LoadDataModel(schemaProvider, TestTypeMappingProvider.Instance);
-			var provider   = SqlServerTools.GetDataProvider(SqlServerVersion.v2012, SqlServerProvider.MicrosoftDataSqlClient);
-			var files      = scaffolder.GenerateCodeModel(provider.CreateSqlBuilder(provider.MappingSchema, new DataOptions()), dataModel, MetadataBuilders.GetMetadataBuilder(scaffolder.Language, options.DataModel.Metadata));
-
-			var code = scaffolder
-				.GenerateSourceCode(dataModel, files)
-				.Select(f => f.Code);
-
-			var source = string.Join("\n", code);
+			var source = GenerateFunctionSource(options, schema, [function]);
 
 			using (Assert.EnterMultipleScope())
 			{
@@ -729,16 +718,16 @@ namespace Tests.Scaffold
 				.ToArray();
 		}
 
-		// nullable int / string scalar functions (one overloaded by parameter type), a table function and an aggregate
-		// over a nullable column, in schema `functionSchema`
-		static string GenerateFunctionSource(ScaffoldOptions options, string functionSchema = "dbo")
+		// nullable int / string scalar functions (one overloaded by parameter type) unless `scalarFunctions` replaces them,
+		// a table function and an aggregate over a nullable column, in schema `functionSchema`
+		static string GenerateFunctionSource(ScaffoldOptions options, string functionSchema = "dbo", ScalarFunction[]? scalarFunctions = null)
 		{
 			options.Schema.LoadedObjects |= SchemaObjects.ScalarFunction | SchemaObjects.TableFunction | SchemaObjects.AggregateFunction;
 
 			var intType  = new DatabaseType("int"     , null, null, null);
 			var textType = new DatabaseType("nvarchar", 50  , null, null);
 
-			ScalarFunction[] scalarFunctions =
+			scalarFunctions ??=
 			[
 				new(new SqlObjectName("IntFunction" , Schema: functionSchema), null, [new Parameter("@value", null, intType , true, LinqToDB.Schema.ParameterDirection.Input)], new ScalarResult(null, intType , true)),
 				new(new SqlObjectName("IntFunction" , Schema: functionSchema), null, [new Parameter("@value", null, new DatabaseType("unmapped_type", null, null, null), true, LinqToDB.Schema.ParameterDirection.Input)], new ScalarResult(null, intType, true)),

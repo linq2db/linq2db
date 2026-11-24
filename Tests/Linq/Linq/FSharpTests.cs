@@ -152,10 +152,18 @@ namespace Tests.Linq
 			Details = "an option argument with no column descriptor is bound as the FSharpOption object: Microsoft.Data.Sqlite rejects it (no mapping to a provider type), System.Data.SQLite passes a non-number to abs and the 0.0 result cannot be read back as an option.")]
 		// SQLite: the built-in abs and json_each functions stand in for database functions
 		[Test(Description = "option arguments of hand-written F# scalar and table function wrappers reach the database as values")]
-		public void GeneratedShape_FunctionOptionArguments([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void HandWrittenOptionFunctionArguments([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataConnection(context);
 			FSharp.GeneratedModel.TestFunctionOptionArguments(db);
+		}
+
+		// SQLite: the built-in abs and length functions stand in for database functions
+		[Test(Description = "option columns passed to F# function wrappers of the generated Nullable<T> shape through .Value (#1553)")]
+		public void GeneratedShape_FunctionColumnArguments([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.GeneratedModel.TestFunctionColumnArguments(db);
 		}
 
 		// SQLite: the linked model is the golden scaffolded from the SQLite TestData schema
