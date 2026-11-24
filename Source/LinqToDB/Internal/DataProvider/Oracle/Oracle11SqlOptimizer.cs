@@ -21,6 +21,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
+			OracleForUpdateHelper.PrepareStatement(statement, mappingSchema);
 			statement = base.TransformStatement(statement, dataOptions, mappingSchema);
 
 			switch (statement.QueryType)

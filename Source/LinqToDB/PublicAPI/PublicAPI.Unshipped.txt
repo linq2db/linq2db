@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 *REMOVED*LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSql15Builder
 *REMOVED*LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSql15Builder.PostgreSQLSql15Builder(LinqToDB.DataProvider.IDataProvider? provider, LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions, LinqToDB.Internal.SqlProvider.ISqlOptimizer! sqlOptimizer, LinqToDB.Internal.SqlProvider.SqlProviderFlags! sqlProviderFlags) -> void
 *REMOVED*override LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSql15Builder.BuildInsertOrUpdateQuery(LinqToDB.Internal.SqlQuery.SqlInsertOrUpdateStatement! insertOrUpdate) -> void
@@ -11,8 +11,8 @@ const LinqToDB.DataProvider.Oracle.OracleHints.ForUpdate = "FOR UPDATE" -> strin
 const LinqToDB.DataProvider.Oracle.OracleHints.NoWait = "NOWAIT" -> string!
 const LinqToDB.DataProvider.Oracle.OracleHints.SkipLocked = "SKIP LOCKED" -> string!
 static LinqToDB.DataProvider.Oracle.OracleHints.Wait(int seconds) -> string!
-static LinqToDB.DataProvider.Oracle.OracleHints.ForUpdateHint<TSource>(this LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>! source) -> LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>!
-static LinqToDB.DataProvider.Oracle.OracleHints.ForUpdateHint<TSource>(this LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>! source, string! lockingClause) -> LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>!
-static LinqToDB.DataProvider.Oracle.OracleHints.ForUpdateHint<TSource>(this LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>! source, params string![]! columns) -> LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>!
-static LinqToDB.DataProvider.Oracle.OracleHints.ForUpdateHint<TSource>(this LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>! source, string! lockingClause, params string![]! columns) -> LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>!
 override LinqToDB.Internal.DataProvider.Oracle.OracleSqlBuilderBase.BuildSubQueryExtensions(LinqToDB.Internal.SqlQuery.SqlStatement! statement) -> void
+static LinqToDB.DataProvider.Oracle.OracleHints.ForUpdateHint<TSource>(this LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>! source, params System.Linq.Expressions.Expression<System.Func<TSource, object?>!>![]! columns) -> LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>!
+static LinqToDB.DataProvider.Oracle.OracleHints.ForUpdateNoWaitHint<TSource>(this LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>! source, params System.Linq.Expressions.Expression<System.Func<TSource, object?>!>![]! columns) -> LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>!
+static LinqToDB.DataProvider.Oracle.OracleHints.ForUpdateSkipLockedHint<TSource>(this LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>! source, params System.Linq.Expressions.Expression<System.Func<TSource, object?>!>![]! columns) -> LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>!
+static LinqToDB.DataProvider.Oracle.OracleHints.ForUpdateWaitHint<TSource>(this LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>! source, int seconds, params System.Linq.Expressions.Expression<System.Func<TSource, object?>!>![]! columns) -> LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>!
