@@ -383,6 +383,38 @@ namespace Tests.DataProvider
 				.ShouldBe(new DateTime(1, 1, 1, 12, 12, 12));
 		}
 
+		[Table]
+		sealed class SkipLockedTable
+		{
+			[Column] public int Value { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6137")]
+		public void ForUpdateSkipLockedHintByVersion([Values] PostgreSQLVersion version)
+		{
+			if (version == PostgreSQLVersion.AutoDetect)
+				return;
+
+			using var db = new DataConnection(new DataOptions()
+				.UseConnectionString(PostgreSQLTools.GetDataProvider(version), "Server=localhost"));
+
+			var sql = db.GetTable<SkipLockedTable>()
+				.AsPostgreSQL()
+				.ForUpdateSkipLockedHint()
+				.ToSqlQuery()
+				.Sql;
+
+			if (version is PostgreSQLVersion.v92 or PostgreSQLVersion.v93)
+			{
+				sql.ShouldContain(PostgreSQLHints.ForUpdate);
+				sql.ShouldNotContain(PostgreSQLHints.SkipLocked);
+			}
+			else
+			{
+				sql.ShouldContain($"{PostgreSQLHints.ForUpdate} {PostgreSQLHints.SkipLocked}");
+			}
+		}
+
 		/// <summary>
 		/// Ensure we can pass data as Json parameter type and get
 		/// same value back out equivalent in value

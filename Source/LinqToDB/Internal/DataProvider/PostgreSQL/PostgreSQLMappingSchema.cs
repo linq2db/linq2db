@@ -212,6 +212,10 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 		public sealed class PostgreSQL95MappingSchema() : LockedMappingSchema(ProviderName.PostgreSQL95, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance);
 
+		public sealed class PostgreSQL11MappingSchema() : LockedMappingSchema(ProviderName.PostgreSQL11, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance);
+
+		public sealed class PostgreSQL12MappingSchema() : LockedMappingSchema(ProviderName.PostgreSQL12, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance);
+
 		public sealed class PostgreSQL13MappingSchema() : LockedMappingSchema(ProviderName.PostgreSQL13, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance);
 
 		public sealed class PostgreSQL15MappingSchema() : LockedMappingSchema(ProviderName.PostgreSQL15, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance);
