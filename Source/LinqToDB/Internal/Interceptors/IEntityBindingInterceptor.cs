@@ -8,6 +8,10 @@ namespace LinqToDB.Internal.Interceptors
 		/// <summary>
 		/// Converts <see cref="SqlGenericConstructorExpression"/> expression to new one if needed.
 		/// </summary>
+		/// <remarks>
+		/// Called only when a query is translated, never when a cached query is reused, so instances of one type that convert
+		/// differently implement <see cref="IInterceptorCacheKey"/>.
+		/// </remarks>
 		SqlGenericConstructorExpression ConvertConstructorExpression(SqlGenericConstructorExpression expression);
 	}
 }

@@ -9,8 +9,9 @@ namespace LinqToDB.Internal.Interceptors
 	/// </summary>
 	/// <remarks>
 	/// Every distinct key gets its own translated queries in the query cache, so an interceptor returns keys from a small
-	/// set. An <see cref="IEntityBindingInterceptor"/> that does not implement this interface is treated as translating
-	/// queries alike for all its instances.
+	/// set. A <see langword="null"/> key is a key like any other: an interceptor that returns it translates queries alike for
+	/// all its instances. An <see cref="IEntityBindingInterceptor"/> that does not implement this interface is treated as
+	/// translating queries alike for all its instances.
 	/// </remarks>
 	public interface IInterceptorCacheKey
 	{

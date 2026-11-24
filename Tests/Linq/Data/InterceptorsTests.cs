@@ -1587,6 +1587,25 @@ namespace Tests.Data
 			}
 		}
 
+		/// <summary>
+		/// Once armed, returns at its stage a new root call over the same arguments: a new tree equal to its input.
+		/// </summary>
+		sealed class CopyRootInterceptor(ExpressionKind kind) : IQueryExpressionInterceptor
+		{
+			public bool Armed  { get; set; }
+			public int  Copies { get; private set; }
+
+			public Expression ProcessExpression(Expression expression, QueryExpressionArgs args)
+			{
+				if (!Armed || args.Kind != kind || expression is not MethodCallExpression call)
+					return expression;
+
+				Copies++;
+
+				return Expression.Call(call.Object, call.Method, call.Arguments);
+			}
+		}
+
 		sealed class Bound(int value)
 		{
 			public int Value => value;
@@ -1944,9 +1963,14 @@ namespace Tests.Data
 
 			static IQueryable<Person> BothChains(IDataContext db)
 			{
-				return db.GetTable<Person>()
+				var positive = db
+					.GetTable<Person>()
+					.IgnoreFilters(["positive"]);
+
+				return db
+					.GetTable<Person>()
 					.IgnoreFilters(["bounded"])
-					.Concat(db.GetTable<Person>().IgnoreFilters(["positive"]));
+					.Concat(positive);
 			}
 
 			int[] Expected(int limit) => ExpectedIds()
@@ -2284,6 +2308,36 @@ namespace Tests.Data
 
 			(interceptor.Calls - calls)
 				.ShouldBe(1, "stage calls");
+		}
+
+		// An interceptor without IInterceptorCacheKey that returns a new tree equal to its input does not rewrite the query:
+		// the query cached for its input is used.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6303"), QueryCacheTest]
+		public void QueryExpression_WithoutCacheKey_EqualTreeUsesCachedQuery(
+			[IncludeDataSources(false, TestProvName.AllSQLite)]          string         context,
+			[Values(ExpressionKind.Query, ExpressionKind.ExposedQuery)] ExpressionKind kind)
+		{
+			Query.ClearCaches();
+
+			using var db = GetDataConnection(context);
+
+			var interceptor = new CopyRootInterceptor(kind);
+
+			db.AddInterceptor(interceptor);
+
+			ShouldReturnIds(db, ExpectedIds(), "input returned");
+
+			interceptor.Armed = true;
+
+			var missCount = Query<Person>.CacheMissCount;
+
+			ShouldReturnIds(db, ExpectedIds(), "copy returned");
+
+			(Query<Person>.CacheMissCount - missCount)
+				.ShouldBe(0, "cache misses");
+
+			interceptor.Copies
+				.ShouldBeGreaterThan(0, "copies");
 		}
 
 		// The IQueryable a compiled query returns, executed after the context's query interceptor changed - after its first

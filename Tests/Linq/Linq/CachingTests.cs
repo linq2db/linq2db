@@ -324,6 +324,13 @@ namespace Tests.Linq
 		[Sql.Extension("{field} IN ({values, ', '})", IsPredicate = true, BuilderType = typeof(InlineValuesBuilder), ServerSideOnly = true)]
 		static bool InValues([ExprParameter] int field, [SqlQueryDependent] IEnumerable<int> values) => throw new ServerSideOnlyException(nameof(InValues));
 
+		// A subclass that keeps the base comparison.
+		[AttributeUsage(AttributeTargets.Parameter)]
+		sealed class DerivedDependentAttribute : SqlQueryDependentAttribute;
+
+		[Sql.Extension("{field} IN ({values, ', '})", IsPredicate = true, BuilderType = typeof(InlineValuesBuilder), ServerSideOnly = true)]
+		static bool InValuesDerived([ExprParameter] int field, [DerivedDependent] IEnumerable<int> values) => throw new ServerSideOnlyException(nameof(InValuesDerived));
+
 		// The values are inlined: the SQL depends on them.
 		sealed class InlineValuesBuilder : Sql.IExtensionCallBuilder
 		{
@@ -370,12 +377,24 @@ namespace Tests.Linq
 			}
 		}
 
+		static IQueryable<int> PersonIdsInQuery(ITestDataContext db, IList<int> ids, bool derived)
+		{
+			return derived
+				? from p in db.Person
+				  where InValuesDerived(p.ID, ids)
+				  select p.ID
+				: from p in db.Person
+				  where InValues(p.ID, ids)
+				  select p.ID;
+		}
+
 		// The same collection - a list or an array - changed in place after the query was built.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), QueryCacheTest]
 		public void SqlQueryDependentCollection_ChangedInPlace(
 			[IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllPostgreSQL)] string context,
 			[Values]                                                                       bool   sameQueryable,
-			[Values]                                                                       bool   array)
+			[Values]                                                                       bool   array,
+			[Values]                                                                       bool   derived)
 		{
 			LinqToDB.Internal.Linq.Query.ClearCaches();
 
@@ -383,10 +402,7 @@ namespace Tests.Linq
 
 			IList<int> ids = array ? new[] { 1, 2 } : new List<int> { 1, 2 };
 
-			var query =
-				from p in db.Person
-				where InValues(p.ID, ids)
-				select p.ID;
+			var query = PersonIdsInQuery(db, ids, derived);
 
 			query
 				.AsEnumerable()
@@ -398,12 +414,7 @@ namespace Tests.Linq
 			ids[1] = 4;
 
 			if (!sameQueryable)
-			{
-				query =
-					from p in db.Person
-					where InValues(p.ID, ids)
-					select p.ID;
-			}
+				query = PersonIdsInQuery(db, ids, derived);
 
 			query
 				.AsEnumerable()
@@ -418,11 +429,18 @@ namespace Tests.Linq
 				where InValues(p.ID, ids)
 				select p.ID);
 
+		static readonly Func<IDataContext, IList<int>, IQueryable<int>> _compiledPersonIdsInDerived =
+			CompiledQuery.Compile((IDataContext db, IList<int> ids) =>
+				from p in db.GetTable<Person>()
+				where InValuesDerived(p.ID, ids)
+				select p.ID);
+
 		// The same through a compiled query, whose cache key holds the argument itself.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), QueryCacheTest]
 		public void SqlQueryDependentCollection_ChangedInPlace_CompiledQuery(
 			[IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllPostgreSQL)] string context,
-			[Values]                                                                       bool   array)
+			[Values]                                                                       bool   array,
+			[Values]                                                                       bool   derived)
 		{
 			LinqToDB.Internal.Linq.Query.ClearCaches();
 
@@ -430,7 +448,9 @@ namespace Tests.Linq
 
 			IList<int> ids = array ? new[] { 1, 2 } : new List<int> { 1, 2 };
 
-			_compiledPersonIdsIn(db, ids)
+			var compiled = derived ? _compiledPersonIdsInDerived : _compiledPersonIdsIn;
+
+			compiled(db, ids)
 				.AsEnumerable()
 				.OrderBy(id => id)
 				.ToArray()
@@ -439,7 +459,7 @@ namespace Tests.Linq
 			ids[0] = 3;
 			ids[1] = 4;
 
-			_compiledPersonIdsIn(db, ids)
+			compiled(db, ids)
 				.AsEnumerable()
 				.OrderBy(id => id)
 				.ToArray()

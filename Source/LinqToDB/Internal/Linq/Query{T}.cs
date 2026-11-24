@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Interceptors;
+using LinqToDB.Internal.Expressions.ExpressionVisitors;
 using LinqToDB.Internal.Interceptors;
 using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.Logging;
@@ -184,7 +185,8 @@ namespace LinqToDB.Internal.Linq
 
 			exposedStageResult = interceptor.ProcessExpression(expr, new QueryExpressionArgs(dataContext, expr, QueryExpressionArgs.ExpressionKind.ExposedQuery));
 
-			return !ReferenceEquals(exposedStageResult, expr);
+			// a new tree equal to expr leaves the found query valid
+			return !exposedStageResult.EqualsTo(expr);
 		}
 
 		public static Query<T> GetQuery(IDataContext dataContext, ref IQueryExpressions expressions, out bool dependsOnParameters)
@@ -236,11 +238,12 @@ namespace LinqToDB.Internal.Linq
 						var intercepted = interceptor.ProcessExpression(expr, new QueryExpressionArgs(dataContext, expr, QueryExpressionArgs.ExpressionKind.Query));
 
 						// the rewritten tree belongs to the current interceptors: an IQueryable must not keep it in place
-						// of its own tree
-						if (!ReferenceEquals(intercepted, expr))
+						// of its own tree; a new tree equal to expr is not a rewrite
+						if (!intercepted.EqualsTo(expr))
+						{
 							isRewritten = true;
-
-						expr = intercepted;
+							expr        = intercepted;
+						}
 					}
 				}
 

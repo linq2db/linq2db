@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -767,9 +769,18 @@ namespace LinqToDB.Internal.Linq
 		// A custom ObjectsEqual gets a collection other than an array itself, as it may expect its type.
 		static object GetDependentValueSnapshot(object value, SqlQueryDependentAttribute attribute)
 		{
-			return value is Array || attribute.GetType() == typeof(SqlQueryDependentAttribute)
+			return value is Array || !HasCustomObjectsEqual(attribute.GetType())
 				? GetValueSnapshot(value)!
 				: value;
+		}
+
+		static readonly ConcurrentDictionary<Type, bool> _customObjectsEqual = new();
+
+		static bool HasCustomObjectsEqual(Type attributeType)
+		{
+			return _customObjectsEqual.GetOrAdd(attributeType, static type =>
+				type.GetMethodEx(nameof(SqlQueryDependentAttribute.ObjectsEqual), BindingFlags.Public | BindingFlags.Instance, typeof(object), typeof(object))!
+					.DeclaringType != typeof(SqlQueryDependentAttribute));
 		}
 
 		// The caller may change a collection in place after the build, so a comparison keeps a copy: an array of the same
