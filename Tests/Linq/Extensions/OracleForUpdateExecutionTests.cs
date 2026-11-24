@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 using LinqToDB;
 using LinqToDB.DataProvider.Oracle;
@@ -105,9 +106,10 @@ namespace Tests.Extensions
 		{
 			using var db = GetDataConnection(context);
 			using var table = db.CreateLocalTable(Rows());
+			using var other = db.CreateLocalTable("OracleRowLocksOther", Rows());
 			using var transaction = db.BeginTransaction();
 			var query = (from left in table
-			             join right in table on left.Id equals right.Id
+			             join right in other on left.Id equals right.Id
 			             select new { left, right })
 				.AsOracle()
 				.ForUpdateHint(r => r.left.Id);
@@ -117,6 +119,13 @@ namespace Tests.Extensions
 			LastQuery
 				.ShouldNotBeNull()
 				.ShouldContain("FOR UPDATE OF ");
+			LastQuery
+				.ShouldNotBeNull()
+				.ShouldContain("JOIN");
+			var sql = LastQuery.ShouldNotBeNull();
+			var leftAlias = Regex.Match(sql, "\"OracleRowLocks\"\\s+([A-Za-z0-9_]+)").Groups[1].Value;
+			leftAlias.Length.ShouldBeGreaterThan(0);
+			sql.ShouldContain($"FOR UPDATE OF {leftAlias}.\"LockId\"");
 		}
 
 		// Root DML obtains its own row locks and cannot carry a SELECT locking suffix.
