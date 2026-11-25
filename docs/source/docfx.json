@@ -324,13 +324,13 @@
 			"_enableSearch": true,
 			"_disableNewTab": false,
 			"_gitContribute": {
-				"repo": "https://github.com/linq2db/docs",
+				"repo": "https://github.com/linq2db/linq2db",
 				"branch": "master"
 			}
 		},
 		"fileMetadata": {
 			"_disableContribution": {
-				"api/**/**.yml": true
+				"api/**": true
 			}
 		},
 		"fileMetadataFiles": [],
