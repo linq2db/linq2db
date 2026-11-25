@@ -144,14 +144,13 @@ namespace Tests.Remote
 
 			// Cancel only once the call has reached the server: the first call on a connection asks the hub for its size
 			// limit first, and a cancellation that lands there never reaches the service.
-			var call = CatchAsync(() => client.ExecuteReaderAsync(Configuration, "query", cts.Token));
+			var call = client.ExecuteReaderAsync(Configuration, "query", cts.Token);
 
 			(await service.WaitStartedAsync(WaitLimit)).ShouldBeTrue("the call did not reach the server");
 
 			cts.Cancel();
 
-			var error = await WithinLimit(call);
-			error.ShouldBeAssignableTo<OperationCanceledException>();
+			await Assert.ThatAsync(() => WithinLimit(call), Throws.InstanceOf<OperationCanceledException>());
 
 			(await service.WaitCancelledAsync(WaitLimit)).ShouldBeTrue("the server-side token did not fire");
 
@@ -188,13 +187,13 @@ namespace Tests.Remote
 
 			using var cts = new CancellationTokenSource();
 
-			var call = CatchAsync(() => client.ExecuteReaderAsync(Configuration, "query", cts.Token));
+			var call = client.ExecuteReaderAsync(Configuration, "query", cts.Token);
 
 			(await service.WaitStartedAsync(WaitLimit)).ShouldBeTrue("the call did not reach the server");
 
 			cts.Cancel();
 
-			(await WithinLimit(call)).ShouldBeAssignableTo<OperationCanceledException>();
+			await Assert.ThatAsync(() => WithinLimit(call), Throws.InstanceOf<OperationCanceledException>());
 			(await service.WaitFinishedAsync(WaitLimit)).ShouldBeTrue("the server call did not end");
 
 			service.Behavior = static (_, _) => Task.FromResult("next");
@@ -221,7 +220,7 @@ namespace Tests.Remote
 			(await service.WaitCancelledAsync(WaitLimit)).ShouldBeTrue("the server-side token did not fire on disconnect");
 
 			// No replay: the call fails, and the server ran it once.
-			(await WithinLimit(CatchAsync(() => call))).ShouldNotBeNull();
+			await Assert.ThatAsync(() => WithinLimit(call), Throws.Exception);
 			service.Calls.ShouldBe(1);
 		}
 
@@ -266,13 +265,13 @@ namespace Tests.Remote
 
 			using var cts = new CancellationTokenSource();
 
-			var call = CatchAsync(() => client.ExecuteReaderAsync(Configuration, "query", cts.Token));
+			var call = client.ExecuteReaderAsync(Configuration, "query", cts.Token);
 
 			(await WaitAsync(ScopedLinqService.Started.Task, WaitLimit)).ShouldBeTrue("the call did not reach the server");
 
 			cts.Cancel();
 
-			(await WithinLimit(call)).ShouldBeAssignableTo<OperationCanceledException>();
+			await Assert.ThatAsync(() => WithinLimit(call), Throws.InstanceOf<OperationCanceledException>());
 
 			(await WaitAsync(ScopedLinqService.Finished.Task, WaitLimit)).ShouldBeTrue("the operation did not finish");
 			ScopedLinqService.UsedAfterDispose.ShouldBeFalse("the scope was disposed while the operation was still running");
@@ -303,10 +302,9 @@ namespace Tests.Remote
 						Thread.Sleep(1);
 				};
 
-				var sw    = Stopwatch.StartNew();
-				var error = await CatchAsync(() => db.GetTable<ProbeRow>().ToListAsync(cts.Token));
+				var sw = Stopwatch.StartNew();
 
-				error.ShouldBeAssignableTo<OperationCanceledException>();
+				await Assert.ThatAsync(() => db.GetTable<ProbeRow>().ToListAsync(cts.Token), Throws.InstanceOf<OperationCanceledException>());
 
 				// Wait for the server to give up on the reader, then check it really stopped: one that kept reading
 				// would still be adding rows (at most one per millisecond, so a row-count bound alone cannot tell).
@@ -336,9 +334,8 @@ namespace Tests.Remote
 
 			await using var db = new InProcessRemoteContext(database);
 
-			var error = await CatchAsync(() => db.GetTable<ProbeRow>().ToListAsync(cts.Token));
+			await Assert.ThatAsync(() => db.GetTable<ProbeRow>().ToListAsync(cts.Token), Throws.InstanceOf<OperationCanceledException>());
 
-			error.ShouldBeAssignableTo<OperationCanceledException>();
 			database.RowsRead.ShouldBeLessThanOrEqualTo(4);
 		}
 
@@ -397,10 +394,7 @@ namespace Tests.Remote
 
 				var reader = (ChannelReader<string>)Activator.CreateInstance(readerType, operation, CancellationToken.None)!;
 
-				CatchAsync(async () => await reader.WaitToReadAsync())
-					.GetAwaiter()
-					.GetResult()
-					.ShouldBeOfType<InvalidOperationException>();
+				Assert.That(async () => await reader.WaitToReadAsync(), Throws.TypeOf<InvalidOperationException>());
 			}
 		}
 
@@ -514,7 +508,7 @@ namespace Tests.Remote
 			(await service.WaitStartedAsync(WaitLimit)).ShouldBeTrue();
 
 			using (var queued = new CancellationTokenSource(TimeSpan.FromMilliseconds(200)))
-				(await CatchAsync(() => client.ExecuteReaderAsync(Configuration, "second", queued.Token))).ShouldBeAssignableTo<OperationCanceledException>();
+				await Assert.ThatAsync(() => client.ExecuteReaderAsync(Configuration, "second", queued.Token), Throws.InstanceOf<OperationCanceledException>());
 
 			service.Calls.ShouldBe(1);
 
@@ -522,7 +516,7 @@ namespace Tests.Remote
 			service.Behavior = static (query, _) => Task.FromResult(query);
 
 			holder.Cancel();
-			(await WithinLimit(CatchAsync(() => running))).ShouldBeAssignableTo<OperationCanceledException>();
+			await Assert.ThatAsync(() => WithinLimit(running), Throws.InstanceOf<OperationCanceledException>());
 
 			(await WithinLimit(client.ExecuteReaderAsync(Configuration, "third"))).ShouldBe("third");
 			service.Calls.ShouldBe(2);
@@ -561,6 +555,7 @@ namespace Tests.Remote
 				queuedCts.Cancel();
 				holderCts.Cancel();
 
+				// Either outcome is fine for each call here: what counts is whether the queued call ran on the server.
 				await WithinLimit(CatchAsync(() => holder));
 				await WithinLimit(CatchAsync(() => queued));
 			}
@@ -573,11 +568,8 @@ namespace Tests.Remote
 		{
 			var options = new LinqToDBHubOptions();
 
-			Action perConnection = () => options.MaxConcurrentCallsPerConnection = 0;
-			Action global        = () => options.MaxConcurrentCalls              = -1;
-
-			perConnection.ShouldThrow<ArgumentOutOfRangeException>();
-			global.ShouldThrow<ArgumentOutOfRangeException>();
+			Assert.That(() => options.MaxConcurrentCallsPerConnection = 0, Throws.TypeOf<ArgumentOutOfRangeException>());
+			Assert.That(() => options.MaxConcurrentCalls              = -1, Throws.TypeOf<ArgumentOutOfRangeException>());
 
 			options.MaxConcurrentCallsPerConnection = null;
 			options.MaxConcurrentCalls              = null;
@@ -611,7 +603,7 @@ namespace Tests.Remote
 			(await service.WaitStartedAsync(WaitLimit)).ShouldBeTrue();
 
 			await first.DisposeAsync();
-			_ = await WithinLimit(CatchAsync(() => call));
+			await Assert.ThatAsync(() => WithinLimit(call), Throws.Exception);
 
 			release.SetResult(true);
 			(await service.WaitFinishedAsync(WaitLimit)).ShouldBeTrue();
@@ -696,12 +688,9 @@ namespace Tests.Remote
 			await using (Own(hubConnection))
 			await using (var db = CreateContext(hubConnection))
 			{
-				var error = await CatchAsync(() => db.InsertAsync(new Item { Id = 1, Value = new string('v', 5000) }));
-
-				error
-					.ShouldBeOfType<LinqToDBException>()
-					.Message
-					.ShouldContain("4096");
+				await Assert.ThatAsync(
+					() => db.InsertAsync(new Item { Id = 1, Value = new string('v', 5000) }),
+					Throws.TypeOf<LinqToDBException>().With.Message.Contains("4096"));
 
 				hubConnection.State.ShouldBe(HubConnectionState.Connected);
 				(await db.GetTable<Item>().CountAsync()).ShouldBe(0);
@@ -724,9 +713,10 @@ namespace Tests.Remote
 			var hubConnection = await host.ConnectAsync();
 			await using var owner = Own(hubConnection);
 
-			var error = await CatchAsync(() => ((ILinqService)new SignalRLinqServiceClient(hubConnection)).ExecuteNonQueryAsync(Configuration, queryData));
+			var client = (ILinqService)new SignalRLinqServiceClient(hubConnection);
 
-			error.ShouldBeOfType<LinqToDBException>();
+			await Assert.ThatAsync(() => client.ExecuteNonQueryAsync(Configuration, queryData), Throws.TypeOf<LinqToDBException>());
+
 			service.Calls.ShouldBe(0);
 			hubConnection.State.ShouldBe(HubConnectionState.Connected);
 		}
@@ -785,9 +775,10 @@ namespace Tests.Remote
 			var hubConnection = await host.ConnectAsync();
 			await using var owner = Own(hubConnection);
 
-			var error = await CatchAsync(() => ((ILinqService)new SignalRLinqServiceClient(hubConnection)).ExecuteNonQueryAsync(Configuration, queryData));
+			var client = (ILinqService)new SignalRLinqServiceClient(hubConnection);
 
-			error.ShouldBeOfType<LinqToDBException>(error?.ToString());
+			await Assert.ThatAsync(() => client.ExecuteNonQueryAsync(Configuration, queryData), Throws.TypeOf<LinqToDBException>());
+
 			service.Calls.ShouldBe(0);
 			hubConnection.State.ShouldBe(HubConnectionState.Connected);
 		}
@@ -855,10 +846,11 @@ namespace Tests.Remote
 			var hubConnection = await host.ConnectAsync();
 			await using var owner = Own(hubConnection);
 
-			var error = await WithinLimit(CatchAsync(() => ((ILinqService)new SignalRLinqServiceClient(hubConnection)).ExecuteNonQueryAsync(Configuration, queryData)));
+			var client = (ILinqService)new SignalRLinqServiceClient(hubConnection);
 
 			// Refused before sending: sent, it would close the connection.
-			error.ShouldBeOfType<LinqToDBException>(error?.ToString());
+			await Assert.ThatAsync(() => WithinLimit(client.ExecuteNonQueryAsync(Configuration, queryData)), Throws.TypeOf<LinqToDBException>());
+
 			hubConnection.State.ShouldBe(HubConnectionState.Connected);
 			service.Calls.ShouldBe(0);
 		}
@@ -893,12 +885,7 @@ namespace Tests.Remote
 			var service = new ScriptedLinqService { Behavior = static (_, _) => throw new InvalidOperationException("secret detail") };
 			using var host = TestHost.Start<ScriptedHub>(services => services.AddSingleton<ILinqService>(service));
 
-			var error = await CallAsync(host);
-
-			error
-				.ShouldBeOfType<HubException>()
-				.Message
-				.ShouldNotContain("secret detail");
+			await Assert.ThatAsync(() => CallAsync(host), Throws.TypeOf<HubException>().With.Message.Not.Contains("secret detail"));
 
 			service.Calls.ShouldBe(1);
 		}
@@ -913,28 +900,22 @@ namespace Tests.Remote
 				services.Configure<LinqToDBHubOptions>(o => o.TransferInternalExceptionToClient = true);
 			});
 
-			var error = await CallAsync(host);
-
 #if NETFRAMEWORK
 			// The legacy server drops the text of every error unless HubOptions.EnableDetailedErrors is set.
-			error
-				.ShouldBeOfType<HubException>()
-				.Message
-				.ShouldNotContain("secret detail");
+			await Assert.ThatAsync(() => CallAsync(host), Throws.TypeOf<HubException>().With.Message.Not.Contains("secret detail"));
 #else
-			error
-				.ShouldBeOfType<HubException>()
-				.Message
-				.ShouldContain("secret detail");
+			await Assert.ThatAsync(() => CallAsync(host), Throws.TypeOf<HubException>().With.Message.Contains("secret detail"));
 #endif
 		}
 
-		static async Task<Exception?> CallAsync(TestHost host)
+		static async Task CallAsync(TestHost host)
 		{
 			var hubConnection = await host.ConnectAsync();
 			await using var owner = Own(hubConnection);
 
-			return await WithinLimit(CatchAsync(() => ((ILinqService)new SignalRLinqServiceClient(hubConnection)).ExecuteReaderAsync(Configuration, "query")));
+			var client = (ILinqService)new SignalRLinqServiceClient(hubConnection);
+
+			await WithinLimit(client.ExecuteReaderAsync(Configuration, "query"));
 		}
 
 		#endregion
@@ -1059,15 +1040,15 @@ namespace Tests.Remote
 			var client = (ILinqService)new SignalRLinqServiceClient(hubConnection);
 
 			// Every call is refused, not only the one whose obsolete counterpart is overridden.
-			var nonQueryError = await WithinLimit(CatchAsync(() => client.ExecuteNonQueryAsync(Configuration, "query")));
-			var readerError   = await WithinLimit(CatchAsync(() => client.ExecuteReaderAsync(Configuration, "query")));
-
-			nonQueryError.ShouldBeOfType<HubException>();
-			readerError.ShouldBeOfType<HubException>();
-#if !NETFRAMEWORK
+#if NETFRAMEWORK
 			// The legacy server drops the text of every error unless HubOptions.EnableDetailedErrors is set.
-			nonQueryError.Message.ShouldContain("ObsoleteOverrideHub overrides ExecuteNonQueryAsync");
+			await Assert.ThatAsync(() => WithinLimit(client.ExecuteNonQueryAsync(Configuration, "query")), Throws.TypeOf<HubException>());
+#else
+			await Assert.ThatAsync(
+				() => WithinLimit(client.ExecuteNonQueryAsync(Configuration, "query")),
+				Throws.TypeOf<HubException>().With.Message.Contains("ObsoleteOverrideHub overrides ExecuteNonQueryAsync"));
 #endif
+			await Assert.ThatAsync(() => WithinLimit(client.ExecuteReaderAsync(Configuration, "query")), Throws.TypeOf<HubException>());
 
 			service.Calls.ShouldBe(0);
 			overrides.Count.ShouldBe(0);
@@ -1165,7 +1146,7 @@ namespace Tests.Remote
 
 			// Nothing listens yet: the first query fails to connect.
 			await using (var scope = provider.CreateAsyncScope())
-				(await CatchAsync(() => CountItemsAsync(scope.ServiceProvider))).ShouldNotBeNull();
+				await Assert.ThatAsync(() => CountItemsAsync(scope.ServiceProvider), Throws.Exception);
 
 			using var database = new SqliteDatabase();
 			using var host     = TestHost.Start<SqliteHub>(services => services.AddSingleton(database), port: port);
@@ -1314,9 +1295,7 @@ namespace Tests.Remote
 
 			foreach (var invalid in new[] { TimeSpan.Zero, TimeSpan.FromSeconds(-1), TimeSpan.FromMilliseconds(int.MaxValue + 1d), TimeSpan.MaxValue })
 			{
-				Action set = () => options.ConnectTimeout = invalid;
-
-				set.ShouldThrow<ArgumentOutOfRangeException>();
+				Assert.That(() => options.ConnectTimeout = invalid, Throws.TypeOf<ArgumentOutOfRangeException>());
 			}
 
 			options.ConnectTimeout = Timeout.InfiniteTimeSpan;
@@ -1345,7 +1324,7 @@ namespace Tests.Remote
 
 			await provider.DisposeAsync();
 
-			(await CatchAsync(() => connection.EnsureConnectedAsync())).ShouldBeOfType<ObjectDisposedException>();
+			await Assert.ThatAsync(() => connection.EnsureConnectedAsync(), Throws.TypeOf<ObjectDisposedException>());
 		}
 
 		// The synchronous Dispose stops the connection before it returns, and the connection is not started again.
@@ -1372,7 +1351,7 @@ namespace Tests.Remote
 			connection.HubConnection.State.ShouldBe(HubConnectionState.Disconnected);
 #endif
 			(await WaitAsync(closed.Task, WaitLimit)).ShouldBeTrue("the connection was not stopped");
-			(await CatchAsync(() => connection.EnsureConnectedAsync())).ShouldBeOfType<ObjectDisposedException>();
+			await Assert.ThatAsync(() => connection.EnsureConnectedAsync(), Throws.TypeOf<ObjectDisposedException>());
 
 			// A second disposal does nothing.
 			connection.Dispose();
@@ -1448,15 +1427,15 @@ namespace Tests.Remote
 					new Uri($"http://127.0.0.1:{port}{HubPath}"),
 					new LinqToDBSignalRClientOptions { ConnectTimeout = TimeSpan.FromSeconds(2) });
 
-				var first = CatchAsync(() => connection.EnsureConnectedAsync());
+				var first = connection.EnsureConnectedAsync();
 
 				// The second caller's own deadline is a second after the start's.
 				await Task.Delay(1000);
 
-				var second = CatchAsync(() => connection.EnsureConnectedAsync());
+				var second = connection.EnsureConnectedAsync();
 
-				(await first).ShouldBeOfType<TimeoutException>();
-				(await second).ShouldBeOfType<TimeoutException>();
+				await Assert.ThatAsync(() => first,  Throws.TypeOf<TimeoutException>());
+				await Assert.ThatAsync(() => second, Throws.TypeOf<TimeoutException>());
 				sw.Elapsed.ShouldBeLessThan(TimeSpan.FromSeconds(6), "the callers waited past the connect timeout");
 
 				// The timed-out start does not hold up the disposal either.
@@ -1491,7 +1470,7 @@ namespace Tests.Remote
 			if (withToken)
 				(await count).ShouldBe(0);
 			else
-				(await CatchAsync(() => count)).ShouldNotBeNull();
+				await Assert.ThatAsync(() => count, Throws.Exception);
 		}
 #endif
 
@@ -1592,7 +1571,7 @@ namespace Tests.Remote
 
 				const string SleepingQuery = "SELECT count(*)::int FROM pg_stat_activity WHERE state = 'active' AND query LIKE '%pg_sleep(10)%' AND pid <> pg_backend_pid()";
 
-				var query = CatchAsync(() => db.FromSql<SleepRow>("SELECT 1 AS \"Value\" FROM pg_sleep(10)").ToListAsync(cts.Token));
+				var query = db.FromSql<SleepRow>("SELECT 1 AS \"Value\" FROM pg_sleep(10)").ToListAsync(cts.Token);
 
 				// Cancel only once the command is really running in the database.
 				(await WaitForAsync(() => admin.Execute<int>(SleepingQuery) == 1, TimeSpan.FromSeconds(8))).ShouldBeTrue("the query never started in the database");
@@ -1601,7 +1580,7 @@ namespace Tests.Remote
 
 				cts.Cancel();
 
-				(await query).ShouldBeAssignableTo<OperationCanceledException>();
+				await Assert.ThatAsync(() => query, Throws.InstanceOf<OperationCanceledException>());
 				sw.Elapsed.ShouldBeLessThan(Prompt);
 
 				// Bounded by Prompt, not WaitLimit: the sleep would end by itself after 10 s.
@@ -1632,12 +1611,11 @@ namespace Tests.Remote
 			await using var db = new InProcessConfigurationContext(context);
 
 			// Rows trickle in at about one per millisecond, so the token fires while they are read.
-			var query = CatchAsync(() => db.FromSql<SleepRow>("SELECT g AS \"Value\", pg_sleep(0.001)::text AS \"Sleep\" FROM generate_series(1, 1000000) g").ToListAsync(cts.Token));
+			var query = db.FromSql<SleepRow>("SELECT g AS \"Value\", pg_sleep(0.001)::text AS \"Sleep\" FROM generate_series(1, 1000000) g").ToListAsync(cts.Token);
 
 			(await WaitAsync(query, TimeSpan.FromSeconds(20))).ShouldBeTrue("the server kept reading rows after the call was cancelled");
 
-			var error = await query;
-			error.ShouldBeAssignableTo<OperationCanceledException>(error?.ToString());
+			await Assert.ThatAsync(() => query, Throws.InstanceOf<OperationCanceledException>());
 		}
 
 		// A large result cancelled midway: the command is cancelled before its reader is disposed, the call fails with
@@ -1680,12 +1658,11 @@ namespace Tests.Remote
 
 			using var registration = cts.Token.Register(() => cancelledAt = sw.Elapsed);
 
-			var query = CatchAsync(() => rows.ToListAsync(cts.Token));
+			var query = rows.ToListAsync(cts.Token);
 
 			(await WaitAsync(query, WaitLimit)).ShouldBeTrue("the server kept reading rows after the call was cancelled");
 
-			var error = await query;
-			error.ShouldBeAssignableTo<OperationCanceledException>(error?.ToString());
+			await Assert.ThatAsync(() => query, Throws.InstanceOf<OperationCanceledException>());
 
 			(sw.Elapsed - cancelledAt).ShouldBeLessThan(Prompt, "the server read the rest of the result after the call was cancelled");
 
