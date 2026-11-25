@@ -2741,8 +2741,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				// Check that all columns in sub-query are allowed to move up. Once lifted out of an outer join, a column
 				// is evaluated on the NULL-extended row when nothing matches, so it has to come out NULL there as it
 				// would inside the subquery - "can be NULL" is not enough (`CASE WHEN x IS NULL THEN 'a' END`). Such a
-				// column is lifted behind a NULL guard (below); a joined source that never comes back empty needs none.
-				var checkNullPropagation = joinTable.JoinType != JoinType.CrossApply
+				// column is lifted behind a NULL guard (below); a joined source that never comes back empty needs none, and
+				// neither does the preserved side of a RIGHT join.
+				var checkNullPropagation = joinTable.JoinType is not (JoinType.CrossApply or JoinType.Right or JoinType.RightApply)
 					&& !(joinTable.Condition.IsTrue && IsNeverEmpty(subQuery));
 
 				NullabilityContext?    nullabilityContext = null;
@@ -2779,14 +2780,21 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (joinTable.IsSubqueryExpression && !(subQuery.From.Tables is [{ Joins: var joins }] && joins.TrueForAll(QueryHelper.IsLimitedToOneRecord)))
 				return false;
 
-			ISqlExpression? notNullMarker = null;
+			List<ISqlExpression>? rowMarkers = null;
 
 			if (nullGuarded != null)
 			{
-				notNullMarker = GetNotNullMarker(subQuery.From.Tables[0].Source);
+				if (GetMatchedRowMarker(selectQuery, joinTable, subQuery) is { } matchedRowMarker)
+				{
+					rowMarkers = [matchedRowMarker];
+				}
+				else
+				{
+					rowMarkers = [];
 
-				if (notNullMarker == null)
-					return false;
+					if (!TryGetRowMarkers(subQuery.From.Tables[0], rowMarkers))
+						rowMarkers = null;
+				}
 			}
 
 			// Actual modification starts from this point
@@ -2794,19 +2802,28 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (nullGuarded != null)
 			{
-				// NULL when the outer join found no row, as the column was inside the subquery
-				foreach (var column in nullGuarded)
+				// The subquery levels a marker could come from are merged by now, so the FROM gets one back as a subquery
+				// with a constant marker. Access does not NULL-extend that constant: there the columns are lifted unguarded.
+				// Oracle 11 does not either when it merges the wrapper over a table, and reads the column as without it.
+				if (rowMarkers == null && !_providerFlags.IsAccessBuggyLeftJoinConstantNullability)
+					rowMarkers = [WrapFromWithConstantMarker(subQuery)];
+
+				if (rowMarkers != null)
 				{
-					var dbType = QueryHelper.GetDbDataType(column.Expression, _mappingSchema);
-					var type   = dbType.SystemType;
+					// NULL when the outer join found no row, as the column was inside the subquery
+					foreach (var column in nullGuarded)
+					{
+						var dbType = QueryHelper.GetDbDataType(column.Expression, _mappingSchema);
+						var type   = dbType.SystemType;
 
-					if (!type.IsNullableOrReferenceType)
-						type = type.AsNullable();
+						if (!type.IsNullableOrReferenceType)
+							type = type.AsNullable();
 
-					column.Expression = new SqlConditionExpression(
-						new SqlPredicate.IsNull(notNullMarker!, false),
-						new SqlValue(dbType.WithSystemType(type), null),
-						column.Expression);
+						column.Expression = new SqlConditionExpression(
+							CreateNoRowPredicate(rowMarkers),
+							new SqlValue(dbType.WithSystemType(type), null),
+							column.Expression);
+					}
 				}
 			}
 
@@ -2871,9 +2888,125 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			};
 		}
 
+		// Markers of the sources a row of the table source always comes with: its main source, and each RIGHT or FULL
+		// joined source, which yields rows without it. A row exists when one of them is not NULL.
+		bool TryGetRowMarkers(SqlTableSource tableSource, List<ISqlExpression> rowMarkers)
+		{
+			if (GetNotNullMarker(tableSource.Source) is not { } marker)
+				return false;
+
+			rowMarkers.Add(marker);
+
+			foreach (var join in tableSource.Joins)
+			{
+				if (join.JoinType is JoinType.Right or JoinType.Full or JoinType.RightApply or JoinType.FullApply
+					&& !TryGetRowMarkers(join.Table, rowMarkers))
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		// A column of the joined query that the ON condition of a LEFT join compares by `=` with a value that is never
+		// NULL: a matched row has it, the NULL-extended row does not. Unlike a constant, every database NULL-extends it.
+		static ISqlExpression? GetMatchedRowMarker(SelectQuery selectQuery, SqlJoinedTable joinTable, SelectQuery subQuery)
+		{
+			if (joinTable.JoinType is not (JoinType.Left or JoinType.OuterApply))
+				return null;
+
+			var                 ownSources  = QueryHelper.EnumerateAccessibleSources(subQuery.From.Tables[0]).ToList();
+			NullabilityContext? nullability = null;
+
+			return FindMarker(joinTable.Condition) ?? FindMarker(subQuery.Where.SearchCondition);
+
+			ISqlExpression? FindMarker(SqlSearchCondition condition)
+			{
+				if (condition.IsOr)
+					return null;
+
+				foreach (var predicate in condition.Predicates)
+				{
+					if (predicate is SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } equal)
+					{
+						nullability ??= NullabilityContext.GetContext(selectQuery);
+
+						if (GetOwnColumn(equal.Expr1) is { } column1 && !equal.Expr2.CanBeNullable(nullability))
+							return column1;
+
+						if (GetOwnColumn(equal.Expr2) is { } column2 && !equal.Expr1.CanBeNullable(nullability))
+							return column2;
+					}
+				}
+
+				return null;
+			}
+
+			ISqlExpression? GetOwnColumn(ISqlExpression expression)
+			{
+				expression = QueryHelper.UnwrapNullablity(expression);
+
+				// a column of the joined query itself is lifted with it: its expression is what stays
+				if (expression is SqlColumn column && ReferenceEquals(column.Parent, subQuery))
+					expression = QueryHelper.UnwrapNullablity(column.Expression);
+
+				var isOwn = expression switch
+				{
+					SqlField         { Table:  { } table  } => ownSources.Contains(table,  QueryElement.ReferenceComparer),
+					SqlCteTableField { Table:  { } table  } => ownSources.Contains(table,  QueryElement.ReferenceComparer),
+					SqlColumn        { Parent: { } parent } sourceColumn =>
+						ownSources.Contains(parent, QueryElement.ReferenceComparer)
+						&& QueryHelper.UnwrapNullablity(sourceColumn.Expression) is SqlField or SqlCteTableField or SqlColumn,
+					_ => false,
+				};
+
+				return isOwn ? expression : null;
+			}
+		}
+
+		// The marker is not NULL on a row of its source, but it is on the NULL-extended row: it must not be taken for a
+		// non-nullable expression there.
+		static ISqlPredicate CreateNoRowPredicate(List<ISqlExpression> rowMarkers)
+		{
+			if (rowMarkers is [var marker])
+				return CreateIsNull(marker);
+
+			return new SqlSearchCondition(false, null, rowMarkers.Select(CreateIsNull));
+
+			static ISqlPredicate CreateIsNull(ISqlExpression marker)
+				=> new SqlPredicate.IsNull(SqlNullabilityExpression.ApplyNullability(marker, true), false);
+		}
+
+		// Moves the FROM of the query, joins included, into a subquery of its own and returns the constant column that
+		// subquery takes, NULL only on the NULL-extended row of an outer join over the query.
+		SqlColumn WrapFromWithConstantMarker(SelectQuery query)
+		{
+			var tableSource = query.From.Tables[0];
+			var wrapper     = new SelectQuery();
+
+			wrapper.From.Tables.Add(tableSource);
+			query.From.Tables[0] = new SqlTableSource(wrapper, tableSource.RawAlias);
+
+			var found = new HashSet<ISqlExpression>();
+
+			QueryHelper.CollectDependencies(_rootElement, QueryHelper.EnumerateAccessibleSources(tableSource), found, [wrapper]);
+
+			var toReplace = new Dictionary<IQueryElement, IQueryElement>(found.Count);
+
+			foreach (var expression in found)
+				toReplace.Add(expression, wrapper.Select.AddColumn(expression));
+
+			if (toReplace.Count > 0)
+				_rootElement.Replace(toReplace, wrapper);
+
+			return wrapper.Select.AddNewColumn(new SqlValue(1));
+		}
+
 		// An expression of the source that is never NULL on a row the source returns: a non-nullable field, or a
 		// subquery column referencing one - projected from the subquery's main source when it has none. A constant
-		// column is the last resort: Access and Oracle 11 do not NULL-extend a constant of an outer-joined subquery.
+		// column is the last resort: Access does not NULL-extend a constant of an outer-joined subquery, nor does
+		// Oracle 11 when it merges the subquery over a table.
 		ISqlExpression? GetNotNullMarker(ISqlTableSource source)
 		{
 			switch (source)
@@ -2882,18 +3015,31 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					return table.Fields.Find(static f => f is { IsPrimaryKey: true, CanBeNull: false })
 						?? table.Fields.Find(static f => !f.CanBeNull);
 
-				case SelectQuery { HasSetOperators: false } query:
+				case SqlCteTable { Cte.Body: { } cteBody } cteTable:
+				{
+					// the joins of the body decide whether a column of the CTE can be NULL
+					var cteNullability = NullabilityContext.GetContext(cteBody);
+
+					return cteTable.Fields.Find(f => !f.CanBeNullable(cteNullability));
+				}
+
+				case SelectQuery query:
 				{
 					var nullabilityContext = NullabilityContext.GetContext(query);
 
 					foreach (var column in query.Select.Columns)
 					{
+						// the column of a set operation has to be non-nullable in every branch, not only in the first one
 						if (QueryHelper.UnwrapNullablity(column.Expression) is SqlField or SqlColumn
-							&& !column.Expression.CanBeNullable(nullabilityContext))
+							&& !(query.HasSetOperators ? column : column.Expression).CanBeNullable(nullabilityContext))
 						{
 							return column;
 						}
 					}
+
+					// a column cannot be added to one branch of a set operation
+					if (query.HasSetOperators)
+						return null;
 
 					// a new column must not change the rows: no DISTINCT, grouping or aggregate, and every row has to
 					// come with a row of the main source
@@ -3980,8 +4126,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return false;
 
 			// do not move to subquery expression if update table in the query.
-			// a query without FROM only correlates to the updated table, it does not select from it (#6326)
-			if (_updateTable != null && !joinQuery.HasNoTables && joinQuery.HasElement(_updateTable))
+			if (_updateTable != null && joinQuery.HasElement(_updateTable))
 				return false;
 
 			if (!joinQuery.HasNoTables)
