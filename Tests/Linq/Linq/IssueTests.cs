@@ -38,38 +38,6 @@ namespace Tests.Linq
 			Assert.That(sql, Is.Not.Contains("INNER JOIN"));
 		}
 
-		// https://github.com/linq2db/linq2db/issues/42
-		//
-#if NET11_0_OR_GREATER
-		[ActiveIssue(Configuration = TestProvName.AllSybase, ErrorMessage = "Assert.That(t2.BoolValue, Is.EqualTo(t1.BoolValue))",
-			Details = "https://github.com/DataAction/AdoNetCore.AseClient/issues/240. AdoNetCore.AseClient returns DECIMAL through a double on .NET 11, so the round-tripped MoneyValue carries 28 decimals and the UPDATE linq2db builds from it declares `@MoneyValue Decimal(29, 28)`, which does not persist - BoolValue comes back unflipped. The same driver and query return an exact decimal on .NET 10.")]
-#endif
-		[Test]
-		public void Issue42Test([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			var saved = db.Types2.First(r => r.ID == 1);
-
-			var t1 = db.Types2.First(r => r.ID == 1);
-
-			t1.BoolValue = !t1.BoolValue;
-
-			db.Update(t1);
-
-			var t2 = db.Types2.First(r => r.ID == t1.ID);
-
-			Assert.That(t2.BoolValue, Is.EqualTo(t1.BoolValue));
-
-			t1.BoolValue = !t1.BoolValue;
-
-			db.Update(t1);
-
-			var current = db.Types2.First(r => r.ID == 1);
-
-			// If this test fails, Data for MathFunctionsTests will be corrupted.
-			current.ShouldBe(saved);
-		}
-
 		// https://github.com/linq2db/linq2db/issues/60
 		//
 		[Test]
@@ -601,71 +569,6 @@ namespace Tests.Linq
 						 select c;
 
 			AreEqual(expected, actual);
-		}
-
-		[Table]
-		private sealed class InsertIssueTest
-		{
-			[PrimaryKey] public int Pk { get; set; }
-			[Column] public short ID;
-
-			[Column] public int? intDataType;
-
-			[Association(ThisKey = nameof(ID), OtherKey = nameof(intDataType), CanBeNull = true)]
-			public IQueryable<InsertIssueTest> Association => throw new InvalidOperationException();
-
-			public static InsertIssueTest[] TestData =
-			[
-				new InsertIssueTest() { Pk = 1, ID = 0, intDataType = 0 },
-				new InsertIssueTest() { Pk = 2, ID = 0, intDataType = 0 },
-				new InsertIssueTest() { Pk = 3, ID = 1234, intDataType = 1234 },
-				new InsertIssueTest() { Pk = 4, ID = 1234, intDataType = 1234 },
-			];
-		}
-
-		[Test]
-		public void InsertFromSelectWithNullableFilter([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(InsertIssueTest.TestData);
-
-			Query(true);
-
-			Query(false);
-
-			var data = tb.ToArray();
-			Assert.That(data, Has.Length.EqualTo(5));
-			using (Assert.EnterMultipleScope())
-			{
-				Assert.That(data.Count(r => r.ID == 0 && r.intDataType == 0), Is.EqualTo(2));
-				Assert.That(data.Count(r => r.ID == 123 && r.intDataType == 1234), Is.EqualTo(1));
-				Assert.That(data.Count(r => r.ID == 1234 && r.intDataType == 1234), Is.EqualTo(2));
-			}
-
-			void Query(bool isNull)
-			{
-				var rows = db.GetTable<InsertIssueTest>()
-					.Where(_ => _.ID == GetId(isNull))
-					.SelectMany(_ => _.Association)
-					.Select(_ => _.ID)
-					.Distinct()
-					.Insert(
-						db.GetTable<InsertIssueTest>(),
-						_ => new InsertIssueTest()
-						{
-							Pk = _,
-							ID = 123,
-							intDataType = _
-						});
-
-				if (context.SupportsRowcount())
-					Assert.That(rows, Is.EqualTo(isNull ? 0 : 1));
-			}
-		}
-
-		private short? GetId(bool isNull)
-		{
-			return isNull ? (short?)null : 1234;
 		}
 
 		[Test]

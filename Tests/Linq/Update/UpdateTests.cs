@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB;
@@ -15,6 +16,8 @@ using NUnit.Framework;
 using Shouldly;
 
 using Tests.Model;
+
+using NotNullIfNotNullAttribute = System.Diagnostics.CodeAnalysis.NotNullIfNotNullAttribute;
 
 #region ReSharper disable
 // ReSharper disable ConvertToConstant.Local
@@ -666,8 +669,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test]
-		public void SetWithTernaryOperatorIssue([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3274")]
+		public void UpdateSetWithTernaryOperator([DataSources] string context)
 		{
 			Gender? nullableGender = Gender.Other;
 
@@ -1283,8 +1286,8 @@ namespace Tests.xUpdate
 			Assert.That(res, Is.EqualTo(1));
 		}
 
-		[Test]
-		public void UpdateIssue319Regression(
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/319")]
+		public void UpdateWithCountSubqueryAndLazyValue(
 			[DataSources(
 				TestProvName.AllClickHouse,
 				TestProvName.AllInformix,
@@ -1329,8 +1332,8 @@ namespace Tests.xUpdate
 			Details = "YDB rejects arithmetic on operands with mismatched decimal facets. Fixable by aligning precision and scale, postponed.")]
 		[ActiveIssue(Configuration = ProviderName.Sybase, ErrorMessage = "Null value is not allowed in BIT TYPE",
 			Details = "unvalidated: ProviderName.Sybase is the netfx-only native provider, so this case does not exist on net10.0 and the declared failure is carried over from the gate's own prose rather than harvested.")]
-		[Test]
-		public void UpdateIssue321Regression([DataSources(ProviderName.DB2, TestProvName.AllInformix, TestProvName.AllFirebird)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/321")]
+		public void UpdateArithmeticOperationOrder([DataSources(ProviderName.DB2, TestProvName.AllInformix, TestProvName.AllFirebird)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -2182,8 +2185,8 @@ namespace Tests.xUpdate
 				.Update();
 		}
 
-		[Test]
-		public void Issue4136Test([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4136")]
+		public void UpdateSetBooleanOrClosureExpression([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2380,6 +2383,508 @@ namespace Tests.xUpdate
 
 			if (db is DataConnection dc)
 				dc.LastQuery!.ShouldMatch(@"UPDATE\s+\[Child\]");
+		}
+
+#if NET11_0_OR_GREATER
+		[ActiveIssue(Configuration = TestProvName.AllSybase, ErrorMessage = "Assert.That(t2.BoolValue, Is.EqualTo(t1.BoolValue))",
+			Details = "https://github.com/DataAction/AdoNetCore.AseClient/issues/240. AdoNetCore.AseClient returns DECIMAL through a double on .NET 11, so the round-tripped MoneyValue carries 28 decimals and the UPDATE linq2db builds from it declares `@MoneyValue Decimal(29, 28)`, which does not persist - BoolValue comes back unflipped. The same driver and query return an exact decimal on .NET 10.")]
+#endif
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/42")]
+		public void UpdateBoolColumnRoundTrip([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var saved = db.Types2.First(r => r.ID == 1);
+
+			var t1 = db.Types2.First(r => r.ID == 1);
+
+			t1.BoolValue = !t1.BoolValue;
+
+			db.Update(t1);
+
+			var t2 = db.Types2.First(r => r.ID == t1.ID);
+
+			Assert.That(t2.BoolValue, Is.EqualTo(t1.BoolValue));
+
+			t1.BoolValue = !t1.BoolValue;
+
+			db.Update(t1);
+
+			var current = db.Types2.First(r => r.ID == 1);
+
+			// If this test fails, Data for MathFunctionsTests will be corrupted.
+			current.ShouldBe(saved);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1549")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		public void UpdateSetFromJoinedAndSubqueryValues([DataSources(TestProvName.AllNativeAccess, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<billing_Devtype>())
+			using (db.CreateLocalTable<billing_Device>())
+			using (db.CreateLocalTable<billing_DevReadingType>())
+			using (db.CreateLocalTable<billing_TempReading>())
+			{
+				var query =
+					from tr in db.GetTable<billing_TempReading>()
+					from drt in db.GetTable<billing_DevReadingType>().InnerJoin(drt =>
+						drt.Name == tr.ReadingTypeName && drt.DevTypeId == tr.Devtypeid)
+					select new
+					{
+						tr,
+						drt
+					};
+
+				query
+					.Set(p => p.tr.DevReadingTypeId, p => p.drt.Id)
+					.Set(p => p.tr.Responsibility, p => p.drt.Responsibility)
+					.Update();
+
+				db.GetTable<billing_TempReading>()
+					.Set(p => p.DevReadingTypeId,
+						u => db.GetTable<billing_DevReadingType>()
+							.Where(w => w.Name == u.ReadingTypeName && w.DevTypeId == u.Devtypeid).Select(s => s.Id)
+							.FirstOrDefault()
+					)
+					.Set(p => p.Responsibility,
+						u => db.GetTable<billing_DevReadingType>()
+							.Where(w => w.Name == u.ReadingTypeName && w.DevTypeId == u.Devtypeid)
+							.Select(s => s.Responsibility).FirstOrDefault()
+					)
+					.Update();
+
+				//					var devs = db.GetTable<billing_Device>().Join(db.GetTable<billing_Devtype>(), d => d.Devtypeid, dt => dt.Devtypeid, (d, dt) => new { d, dt });
+				//
+				//					db.GetTable<billing_TempReading>()
+				//						.Set(t => t.Devid, u => devs.Where(w => w.d.Sernum == u.DevSerNum && w.dt.GlobalType == u.DevGlobalType).Select(s => s.d.Devid).FirstOrDefault())
+				//						.Set(t => t.Devtypeid, u => devs.Where(w => w.d.Sernum == u.DevSerNum && w.dt.GlobalType == u.DevGlobalType).Select(s => s.dt.Devtypeid).FirstOrDefault())
+				//						.Update();
+
+			}
+		}
+
+		[Table(Name = "billing_devtypes")]
+		public partial class billing_Devtype
+		{
+			[Column("devtypeid"), PrimaryKey, Identity] public int Devtypeid   { get; set; } // integer
+			[Column("typename", Length = 50), NotNull]  public string Typename { get; set; } = null!; // character varying(255)
+			[Column(), NotNull]                         public int GlobalType  { get; set; } // integer
+
+			#region Associations
+
+			/// <summary>
+			/// FK_billing.DevReadingType_billing.devtypes_DevTypeId_BackReference
+			/// </summary>
+			[Association(ThisKey = "Devtypeid", OtherKey = "DevTypeId", CanBeNull = true)]
+			public IEnumerable<billing_DevReadingType> BillingDevReadingTypebillingdevtypesDevTypeIds { get; set; } = null!;
+
+			/// <summary>
+			/// fk_devices_devtypeid_devtypes_devtypeid_BackReference
+			/// </summary>
+			[Association(ThisKey = "Devtypeid", OtherKey = "Devtypeid", CanBeNull = true)]
+			public IEnumerable<billing_Device> Fkdevicesdevtypeiddevtypeids { get; set; } = null!;
+
+			#endregion
+		}
+
+		[Table(Name = "billing_devices")]
+		public partial class billing_Device
+		{
+			[Column("devid", Length = 50), PrimaryKey, NotNull] public string  Devid  { get; set; } = null!; // character varying(255)
+			[Column("sernum", Length = 50), Nullable]           public string? Sernum { get; set; } // character varying(255)
+
+			[Column("devtypeid"), NotNull]                      public int Devtypeid { get; set; } // integer
+
+			#region Associations
+
+			/// <summary>
+			/// FK_billing.TempReading_billing.devices_devid_BackReference
+			/// </summary>
+			[Association(ThisKey = "Devid", OtherKey = "Devid", CanBeNull = true)]
+			public IEnumerable<billing_TempReading> BillingTempReadingbillingdevicesdevids { get; set; } = null!;
+
+			/// <summary>
+			/// fk_devices_devtypeid_devtypes_devtypeid
+			/// </summary>
+			[Association(ThisKey = "Devtypeid", OtherKey = "Devtypeid", CanBeNull = false)]
+			public billing_Devtype Devtype { get; set; } = null!;
+
+			#endregion
+		}
+
+		// FB: default name hits 31-length limit for generator name (till FB 4.0)
+		[Table(Name = "billing_DevReadType", Configuration = ProviderName.Firebird25)]
+		[Table(Name = "billing_DevReadType", Configuration = ProviderName.Firebird3)]
+		[Table(Name = "billing_DevReadingType")]
+		public partial class billing_DevReadingType
+		{
+			[PrimaryKey, Identity]         public int Id             { get; set; } // integer
+			[Column, NotNull]              public int? DevTypeId     { get; set; } // integer
+			[Column(Length = 50), NotNull] public string Name        { get; set; } = null!; // text
+			[Column, NotNull]              public int Responsibility { get; set; } // integer
+
+			#region Associations
+
+			/// <summary>
+			/// FK_billing.TempReading_billing.DevReadingType_DevReadingTypeId_BackReference
+			/// </summary>
+			[Association(ThisKey = "Id", OtherKey = "DevReadingTypeId", CanBeNull = true)]
+			public IEnumerable<billing_TempReading> BillingTempReadingbillingDevReadingTypeDevReadingTypeIds { get; set; } = null!;
+
+			/// <summary>
+			/// FK_billing.DevReadingType_billing.devtypes_DevTypeId
+			/// </summary>
+			[Association(ThisKey = "DevTypeId", OtherKey = "Devtypeid", CanBeNull = true)]
+			public billing_Devtype? DevType { get; set; }
+			#endregion
+		}
+
+		[Table(Name = "billing_TempReading")]
+		public partial class billing_TempReading
+		{
+			[Column("id"), PrimaryKey, Identity]     public int Id                  { get; set; } // integer
+
+			[Column(Length = 50), NotNull]           public string DevSerNum        { get; set; } = null!; // text
+
+			[Column("devid", Length = 50), Nullable] public string? Devid           { get; set; } // character varying(255)
+			[Column("tsdevice"), NotNull]            public DateTime Ts             { get; set; } // timestamp (6) without time zone
+			[Column("value"), NotNull]               public decimal Value           { get; set; } // numeric(18,2)
+			[Column(), Nullable]                     public int? Devtypeid          { get; set; } // integer
+			[Column(), Nullable]                     public int? DevReadingTypeId   { get; set; } // integer
+			[Column(Length = 50), Nullable]          public string? ReadingTypeName { get; set; } // text
+			[Column(), NotNull]                      public int DevGlobalType       { get; set; } // integer
+			[Column(), NotNull]                      public int Responsibility      { get; set; } // integer
+
+			#region Associations
+
+			/// <summary>
+			/// FK_billing.TempReading_billing.devices_devid
+			/// </summary>
+			[Association(ThisKey = "Devid", OtherKey = "Devid", CanBeNull = true)]
+			public billing_Device? Dev { get; set; }
+
+			/// <summary>
+			/// FK_billing.TempReading_billing.DevReadingType_DevReadingTypeId
+			/// </summary>
+			[Association(ThisKey = "DevReadingTypeId", OtherKey = "Id", CanBeNull = true)]
+			public billing_DevReadingType? DevReadingType { get; set; }
+
+			#endregion
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2994")]
+		public void UpdateWhereAnyOverJoinedEntityEquality([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			var qryFlt = from p in db.Person
+						 join d in db.Doctor on p.FirstName equals d.Taxonomy
+						 join g in db.Doctor on p.LastName equals g.Taxonomy  // remove this and it also would work
+						 select new PersonDoctorsProjection { p = p, d = d };
+			var qry = db.Person.Where(x => qryFlt.Any(y => y.p == x)).Set(x => x.LastName, "a").Update();
+			//var qry = db.Person.Where(x => qryFlt.Any(y => y.p.ID == x.ID)).Set(x => x.LastName, "a").Update(); // workin
+			var sql = ((DataConnection)db).LastQuery;
+		}
+
+		public class PersonDoctorsProjection
+		{
+			public Model.Person? p { get; set; }
+			public Doctor? d { get; set; }
+			public Doctor? g { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5152")]
+		public void SetScalarTypeColumnViaToStringHasNoCast([DataSources(TestProvName.AllAccessJet)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<SpecialScalarSample>();
+
+			// CAST in setter lvalue
+			/* UPDATE
+				[SpecialScalarSample]
+			   SET
+				// !!!!
+				CAST([SpecialScalarSample].[MyString] AS NVarChar(4000)) = ... */
+			var queryBrokenSet = (from sample in table
+									  // I Have to cast with ToString() or use .Value so I can use string.Contains.
+								  where sample.MyString!.ToString().Contains(SpecialScalarString.Example)
+								  select sample)
+								  .Set(
+									sample => sample.MyString!.ToString(), // ToString() Or Value -> Broken Set Clause with cast. Works in Linq2db 5.
+									sample => sample.MyString!.ToString().Replace(";" + SpecialScalarString.Example, null).Replace(SpecialScalarString.Example, null))
+								  .Update();
+
+			if (db is DataConnection dc)
+			{
+				var lastQuery = dc.LastQuery?.ToLowerInvariant();
+				Assert.That(lastQuery, Does.Not.Contain("cast(").And.Not.Contain("cstr("));
+				// YQL uses "::" as a function-namespace separator (e.g. unicode::replaceall), not a cast.
+				if (!context.IsAnyOf(TestProvName.AllYdb))
+					Assert.That(lastQuery, Does.Not.Contain("::"));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5152")]
+		public void SetScalarTypeColumnWithCastedValueHasNoCast([DataSources(TestProvName.AllAccessJet)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<SpecialScalarSample>();
+
+			// Problem 2: This produces an Update-Statement with a correct Set Clause. But there are Casts everywhere, in the Where Statement and in the Value Part of the Set-Clause.
+			// This is also a performance Problem, because the Casts prevent the use of Indexes and casts the whole nvarchar-column to nvarchar again.
+			/* UPDATE
+				[SpecialScalarSample]
+			   SET
+				[SpecialScalarSample].[MyString] = CAST(Replace(Replace([SpecialScalarSample].[MyString], @param1, NULL), CAST(@param2 AS NVarChar(255)), NULL) AS NVarChar(Max)) 
+				WHERE
+				   CAST([SpecialScalarSample].[MyString] AS NVarChar(4000)) LIKE @param3 ESCAPE N'~'
+			 */
+			var queryWithCasts = (from sample in table
+								  // I Have to cast with ToString() or use .Value so I can use string.Contains.
+								  where sample.MyString!.ToString().Contains(SpecialScalarString.Example)
+								  select sample)
+								  .Set(
+									sample => sample.MyString,
+									sample => (SpecialScalarString)sample.MyString!.ToString().Replace(";" + SpecialScalarString.Example, null).Replace(SpecialScalarString.Example, null))
+								.Update();
+
+			if (db is DataConnection dc)
+			{
+				Assert.That(dc.LastQuery?.ToLowerInvariant(), Does.Not.Contain("cast(")
+					.And.Not.Contain("cstr("));
+
+				if (!context.IsAnyOf(TestProvName.AllYdb))
+					Assert.That(dc.LastQuery?.ToLowerInvariant(), Does.Not.Contain("::"));
+			}
+		}
+
+		[ScalarType]
+		public abstract class SpecialScalarBase : IConvertible, IEquatable<SpecialScalarBase>
+		{
+			[ExpressionMethod(nameof(ValueCast))]
+			public string Value { get; set; }
+
+			static Expression<Func<SpecialScalarBase, string>> ValueCast() => awl => awl.ToString();
+
+			protected SpecialScalarBase(string value)
+			{
+				ArgumentNullException.ThrowIfNull(value);
+
+				Value = value;
+			}
+
+			public static bool operator ==(SpecialScalarBase? leftSide, string? rightSide)
+				=> leftSide?.Value == rightSide;
+
+			public static bool operator !=(SpecialScalarBase? leftSide, string? rightSide)
+				=> leftSide?.Value != rightSide;
+
+			public override string ToString() => Value;
+
+			public override int GetHashCode() => Value.GetHashCode();
+
+			public override bool Equals(object? obj)
+			{
+				if (obj == null)
+					return false;
+
+				if (obj is string str)
+					return Value.Equals(str);
+
+				if (obj.GetType() == GetType())
+					return string.Equals(((SpecialScalarBase)obj).Value, Value);
+
+				return base.Equals(obj);
+			}
+
+			public bool Equals(SpecialScalarBase? obj)
+			{
+				if (obj == null && Value == null)
+					return true;
+
+				if (obj == null)
+					return false;
+
+				if (obj.GetType() != GetType())
+					return false;
+
+				return string.Equals(obj.Value, Value);
+			}
+
+			#region IConvertible
+
+			public TypeCode GetTypeCode() => TypeCode.String;
+
+			public string ToString(IFormatProvider? provider) => Value;
+
+			public object ToType(Type conversionType, IFormatProvider? provider)
+			{
+				if (conversionType.IsSubclassOf(typeof(SpecialScalarBase))
+					|| conversionType == typeof(SpecialScalarBase))
+				{
+					return this;
+				}
+
+				return Value;
+			}
+
+			public bool ToBoolean(IFormatProvider? provider) { throw new NotImplementedException(); }
+			public char ToChar(IFormatProvider? provider) { throw new NotImplementedException(); }
+			public sbyte ToSByte(IFormatProvider? provider) { throw new NotImplementedException(); }
+			public byte ToByte(IFormatProvider? provider) { throw new NotImplementedException(); }
+			public short ToInt16(IFormatProvider? provider) { throw new NotImplementedException(); }
+			public ushort ToUInt16(IFormatProvider? provider) { throw new NotImplementedException(); }
+			public int ToInt32(IFormatProvider? provider) { throw new NotImplementedException(); }
+			public uint ToUInt32(IFormatProvider? provider) { throw new NotImplementedException(); }
+			public long ToInt64(IFormatProvider? provider) { throw new NotImplementedException(); }
+			public ulong ToUInt64(IFormatProvider? provider) { throw new NotImplementedException(); }
+			public float ToSingle(IFormatProvider? provider) { throw new NotImplementedException(); }
+			public double ToDouble(IFormatProvider? provider) { throw new NotImplementedException(); }
+			public decimal ToDecimal(IFormatProvider? provider) { throw new NotImplementedException(); }
+			public DateTime ToDateTime(IFormatProvider? provider) { throw new NotImplementedException(); }
+			#endregion
+		}
+
+		[ScalarType]
+		public class SpecialScalarString : SpecialScalarBase
+		{
+			public const string Example = "Example";
+
+			public static ISet<SpecialScalarString> AllValues = new HashSet<SpecialScalarString>
+			{
+				new SpecialScalarString(Example)
+			};
+
+			public SpecialScalarString(string value)
+				: base(value)
+			{
+			}
+
+			[return: NotNullIfNotNull(nameof(value))]
+			public static implicit operator SpecialScalarString?(string? value)
+			{
+				if (value == null)
+					return null;
+
+				return AllValues.FirstOrDefault(a => string.Equals(a.Value, value, StringComparison.OrdinalIgnoreCase)) ?? new SpecialScalarString(value);
+			}
+
+			[return: NotNullIfNotNull(nameof(auswahlliste))]
+			public static implicit operator string?(SpecialScalarString? auswahlliste)
+				=> auswahlliste?.Value;
+		}
+
+		[Table]
+		class SpecialScalarSample
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.NVarChar, Length = 50)] public SpecialScalarString? MyString { get; set; }
+
+			[Column] public string? NormalString { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5340")]
+		public void UpdateWithOuterApplyInSubquery([IncludeDataSources(TestProvName.AllOracle23, TestProvName.AllPostgreSQL)] string context)
+		{
+			var outerData = new[]
+			{
+				new UpdateOuterTable { Id = 1, Field1 = 10, Field2 = 100 },
+				new UpdateOuterTable { Id = 2, Field1 = 20, Field2 = 200 }
+			};
+
+			var innerData = new[]
+			{
+				new UpdateInnerTable { Id = 1, Field3 = 100, Field4 = 1000 },
+				new UpdateInnerTable { Id = 2, Field3 = 200, Field4 = 2000 }
+			};
+
+			using var db = GetDataContext(context);
+
+			using (db.CreateLocalTable(outerData))
+			using (db.CreateLocalTable(innerData))
+			{
+				var affected = db.GetTable<UpdateOuterTable>()
+					.Set(
+						x => x.Field1,
+						x => (
+							from a in db.SelectQuery(() => 1)
+							from b in db.GetTable<UpdateInnerTable>()
+								.Where(y => x.Field2 == y.Field3)
+								.OrderBy(c => c.Field4)
+								.Select(c => c.Field4)
+								.Take(1)
+							select b
+						).Single())
+					.Update();
+
+				affected.ShouldBe(2);
+
+				var result = db.GetTable<UpdateOuterTable>().OrderBy(x => x.Id).ToArray();
+
+				result[0].Field1.ShouldBe(1000);
+				result[1].Field1.ShouldBe(2000);
+			}
+		}
+
+		[ThrowsRequiredOuterJoins(TestProvName.AllSybase)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5340")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		public void UpdateWithSubquery([DataSources(TestProvName.AllClickHouse, TestProvName.AllNativeAccess, TestProvName.AllSapHana, TestProvName.AllSqlCe)] string context)
+		{
+			var outerData = new[]
+			{
+				new UpdateOuterTable { Id = 1, Field1 = 10, Field2 = 100 },
+				new UpdateOuterTable { Id = 2, Field1 = 20, Field2 = 200 }
+			};
+
+			var innerData = new[]
+			{
+				new UpdateInnerTable { Id = 1, Field3 = 100, Field4 = 1000 },
+				new UpdateInnerTable { Id = 2, Field3 = 200, Field4 = 2000 }
+			};
+
+			using var db = GetDataContext(context);
+
+			using (db.CreateLocalTable(outerData))
+			using (db.CreateLocalTable(innerData))
+			{
+
+				var affected = db.GetTable<UpdateOuterTable>()
+					.Set(
+						x => x.Field1,
+						x => (
+							from b in db.GetTable<UpdateInnerTable>()
+								.Where(y => x.Field2 == y.Field3)
+								.OrderBy(c => c.Field4)
+								.Select(c => c.Field4)
+								.Take(1)
+							select b
+						).Single())
+					.Update();
+
+				affected.ShouldBe(2);
+
+				var result = db.GetTable<UpdateOuterTable>().OrderBy(x => x.Id).ToArray();
+
+				result[0].Field1.ShouldBe(1000);
+				result[1].Field1.ShouldBe(2000);
+			}
+		}
+
+		[Table]
+		public class UpdateOuterTable
+		{
+			[PrimaryKey] public int Id     { get; set; }
+			[Column]     public int Field1 { get; set; }
+			[Column]     public int Field2 { get; set; }
+		}
+
+		[Table]
+		public class UpdateInnerTable
+		{
+			[PrimaryKey] public int Id     { get; set; }
+			[Column]     public int Field3 { get; set; }
+			[Column]     public int Field4 { get; set; }
 		}
 	}
 }
