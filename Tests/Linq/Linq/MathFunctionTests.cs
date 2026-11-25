@@ -1295,7 +1295,7 @@ namespace Tests.Linq
 		// on the constant path, or YQL rejects the IF and the addition.
 		[ActiveIssue(6056, Configuration = TestProvName.AllYdb, SkipForNonLinqService = true,
 			ErrorTypeName = "Grpc.Core.RpcException", ErrorMessage = "Failed to convert type: Decimal(35,13) to Decimal(22,13)",
-			Details = "PrepareStatementForRemoting rebuilds the typed division with its CLR type only, so the server folds the non-mandatory narrowing cast")]
+			Details = "A Transform rebuild on the remote path gives the typed division its CLR type only, so the non-mandatory narrowing cast over it is folded")]
 		[Test]
 		public void Round29([IncludeDataSources(true, TestProvName.AllYdb)] string context)
 		{
@@ -1429,7 +1429,7 @@ namespace Tests.Linq
 
 		[ActiveIssue(6056, Configuration = TestProvName.AllYdb, SkipForNonLinqService = true,
 			ErrorTypeName = "Grpc.Core.RpcException", ErrorMessage = "Failed to convert type: Decimal(35,13) to Decimal(22,13)",
-			Details = "PrepareStatementForRemoting rebuilds the typed division with its CLR type only, so the server folds the non-mandatory narrowing cast")]
+			Details = "A Transform rebuild on the remote path gives the typed division its CLR type only, so the non-mandatory narrowing cast over it is folded")]
 		[Test]
 #pragma warning disable NUnit4001
 		public void Round31([IncludeDataSources(true, TestProvName.AllYdb)] string context, [Values(MidpointRounding.ToEven, MidpointRounding.AwayFromZero)] MidpointRounding mp)
@@ -1576,7 +1576,7 @@ namespace Tests.Linq
 
 		[ActiveIssue(6056, Configuration = TestProvName.AllYdb, SkipForNonLinqService = true,
 			ErrorTypeName = "Grpc.Core.RpcException", ErrorMessage = "Failed to convert type: Decimal(35,13) to Decimal(22,13)",
-			Details = "PrepareStatementForRemoting rebuilds the typed division with its CLR type only, so the server folds the non-mandatory narrowing cast")]
+			Details = "A Transform rebuild on the remote path gives the typed division its CLR type only, so the non-mandatory narrowing cast over it is folded")]
 		[Test]
 #pragma warning disable NUnit4001
 		public void Round34([IncludeDataSources(true, TestProvName.AllYdb)] string context, [Values(MidpointRounding.ToEven, MidpointRounding.AwayFromZero)] MidpointRounding mp)
