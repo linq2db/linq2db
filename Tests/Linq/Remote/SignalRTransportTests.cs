@@ -1649,7 +1649,13 @@ namespace Tests.Remote
 
 		static async Task<bool> WaitAsync(Task task, TimeSpan timeout)
 		{
-			return await Task.WhenAny(task, Task.Delay(timeout)) == task;
+			using var delay = new CancellationTokenSource();
+
+			var completed = await Task.WhenAny(task, Task.Delay(timeout, delay.Token)) == task;
+
+			delay.Cancel();
+
+			return completed;
 		}
 
 		// Fails the test, rather than hanging the run, when a call never finishes.
@@ -1906,7 +1912,13 @@ namespace Tests.Remote
 
 			static async Task<bool> Wait(Task task, TimeSpan timeout)
 			{
-				return await Task.WhenAny(task, Task.Delay(timeout)) == task;
+				using var delay = new CancellationTokenSource();
+
+				var completed = await Task.WhenAny(task, Task.Delay(timeout, delay.Token)) == task;
+
+				delay.Cancel();
+
+				return completed;
 			}
 
 			async Task<string> RunAsync(string query, CancellationToken cancellationToken)

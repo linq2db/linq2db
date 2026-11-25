@@ -179,10 +179,10 @@ namespace LinqToDB.Remote.SignalR
 				{
 					await HubConnection.StartAsync(timeout.Token).ConfigureAwait(false);
 				}
-				catch (OperationCanceledException) when (timeout.IsCancellationRequested)
+				catch (OperationCanceledException ex) when (timeout.IsCancellationRequested)
 				{
 					// Every caller sharing this start sees the same exception, whatever its own deadline.
-					throw new TimeoutException($"The Signal/R connection was not established within {_connectTimeout}.");
+					throw new TimeoutException($"The Signal/R connection was not established within {_connectTimeout}.", ex);
 				}
 
 #if !NET8_0_OR_GREATER

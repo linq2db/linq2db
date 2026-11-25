@@ -16,6 +16,8 @@ using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Http;
 #endif
 
+using LinqToDB.Internal.Extensions;
+
 namespace LinqToDB.Remote.SignalR
 {
 	/// <summary>
@@ -250,7 +252,7 @@ namespace LinqToDB.Remote.SignalR
 
 			foreach (var (name, parameters) in _legacyMethods)
 			{
-				var method = hubType.GetMethod(name, BindingFlags.Public | BindingFlags.Instance, null, parameters, null);
+				var method = hubType.GetMethodEx(name, BindingFlags.Public | BindingFlags.Instance, parameters);
 
 				if (method != null && method.DeclaringType != typeof(LinqToDBHub))
 					(names ??= []).Add(name);
