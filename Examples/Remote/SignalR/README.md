@@ -20,8 +20,8 @@ static async Task Main(string[] args)
 {
     var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
-    // Add linq2db Signal/R service. All contexts share one connection, which starts with the first query
-    // and is started again by the next query after it was lost.
+    // Add linq2db Signal/R service. All contexts of this registration share one connection, which starts with the
+    // first query and is started again by the next query after it was lost.
     //
     builder.Services.AddLinqToDBSignalRDataContext<IDemoDataModel>(
         new Uri(new Uri(builder.HostEnvironment.BaseAddress), "/hub/linq2db"),
@@ -43,8 +43,9 @@ static async Task Main(string[] args)
 }
 ```
 
-Cancelling a query (the `CancellationToken` of `ToListAsync` and other async methods) cancels it on the server
-and in the database. Queries are never sent again after a lost connection: they fail, and the application decides
+Cancelling a query (the `CancellationToken` of `ToListAsync` and other async methods) cancels it on the server: a
+running command is cancelled where the database provider supports it, and reading the result stops at the next row.
+Queries are never sent again after a lost connection: they fail, and the application decides
 whether to retry.
 
 ## Server

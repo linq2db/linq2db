@@ -24,8 +24,8 @@ namespace LinqToDB.Remote.SignalR
 	/// Signal/R hub that serves linq2db remote data contexts (<c>SignalRDataContext</c>).
 	/// <para>
 	/// Every remote call from a 6.7.0 or later client is a Signal/R streaming invocation, so cancelling the call on the
-	/// client, or losing the connection, cancels it on the server and in the database. Results are sent as one or more
-	/// stream items.
+	/// client, or losing the connection, cancels it on the server: a running command is cancelled where the database
+	/// provider supports it, and reading the result stops at the next row. Results are sent as one or more stream items.
 	/// </para>
 	/// <para>
 	/// To validate or authorize calls, decorate the <see cref="ILinqService"/> the hub uses
