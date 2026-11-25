@@ -313,16 +313,17 @@ namespace LinqToDB.Analyzers.CodeFixes
 		}
 
 		// A generic overload returns ITable<T> / IQueryable<T>, the typed helper the provider's own type, and so does every
-		// hint chained after it. The new type converts to the old one, so it only matters where C# infers a type from the
-		// expression. If the chain initializes a `var` local whose later use needs the original type, the local keeps it,
-		// written out (null when it cannot be written: an anonymous element type). If the chain itself sits in such a
-		// position, the rewrite is not offered (null). The check is syntactic and errs on the side of not offering.
+		// hint chained after it. The new type converts to the old one, so it only matters where the expression's own type
+		// is captured (CapturesType). If the chain initializes a `var` local whose later use needs the original type, the
+		// local keeps it, written out (null when it cannot be written: an anonymous element type). If the chain itself sits
+		// in such a position, the rewrite is not offered (null). The check reads the code and the symbols it binds to; it
+		// does not compile the rewritten code.
 		static Plan? PlanRestricting(InvocationExpressionSyntax invocation, SemanticModel model, CancellationToken cancellationToken)
 		{
 			var top = GetChainTop(invocation, model, cancellationToken);
 
 			if (GetVarDeclaration(top) is not { } declaration)
-				return InfersTypeFrom(top, model, cancellationToken) ? null : Plan.Keep;
+				return CapturesType(top, model, cancellationToken) ? null : Plan.Keep;
 
 			var (declarator, type) = declaration;
 
@@ -340,8 +341,9 @@ namespace LinqToDB.Analyzers.CodeFixes
 			return new Plan(type, SyntaxFactory.ParseTypeName(original.ToMinimalDisplayString(model, type.SpanStart)));
 		}
 
-		// The outermost expression whose type follows the call's: through parentheses and calls chained on it that return
-		// their receiver's type (another hint, `Where` on a query), but not past one that returns another type (`ToList()`).
+		// The outermost expression whose type follows the call's: through parentheses, calls chained on it that return
+		// their receiver's type (another hint, `Where` on a query) but not past one that returns another type
+		// (`ToList()`), and out of `?.` when the chain is the part after it.
 		static ExpressionSyntax GetChainTop(ExpressionSyntax expression, SemanticModel model, CancellationToken cancellationToken)
 		{
 			var node = expression;
@@ -354,15 +356,23 @@ namespace LinqToDB.Analyzers.CodeFixes
 						node = parenthesized;
 						break;
 					case MemberAccessExpressionSyntax memberAccess when memberAccess.Expression == node && memberAccess.Parent is InvocationExpressionSyntax chained && chained.Expression == memberAccess:
-						if (!SymbolEqualityComparer.Default.Equals(model.GetTypeInfo(chained, cancellationToken).Type, model.GetTypeInfo(node, cancellationToken).Type))
+						if (!HasSameType(chained, node, model, cancellationToken))
 							return node;
 
 						node = chained;
+						break;
+					case ConditionalAccessExpressionSyntax conditionalAccess when conditionalAccess.WhenNotNull == node || HasSameType(conditionalAccess, node, model, cancellationToken):
+						node = conditionalAccess;
 						break;
 					default:
 						return node;
 				}
 			}
+		}
+
+		static bool HasSameType(ExpressionSyntax a, ExpressionSyntax b, SemanticModel model, CancellationToken cancellationToken)
+		{
+			return SymbolEqualityComparer.Default.Equals(model.GetTypeInfo(a, cancellationToken).Type, model.GetTypeInfo(b, cancellationToken).Type);
 		}
 
 		static (VariableDeclaratorSyntax declarator, TypeSyntax type)? GetVarDeclaration(ExpressionSyntax expression)
@@ -373,36 +383,118 @@ namespace LinqToDB.Analyzers.CodeFixes
 			return null;
 		}
 
-		// A position where C# infers a type from the expression, so a different type of it can change or break the
-		// result: a branch of `?:` or `??`, a switch expression arm, an element of `new[]`, a tuple or an anonymous object,
-		// a lambda's result, or an argument of a generic method called without type arguments.
-		static bool InfersTypeFrom(ExpressionSyntax expression, SemanticModel model, CancellationToken cancellationToken)
+		// Whether the expression's own type is captured where it stands, so the provider's type would end up in another
+		// type or variable instead of converting to the one expected there: a branch of `?:` or `??`, a switch expression
+		// arm, an element of `new[]`, a tuple or an anonymous object, a value matched by `is var x` / `case var x`, the
+		// result of a lambda whose return type is inferred, an argument or `?.` / extension receiver bound to a parameter
+		// typed as a bare type parameter of a generic method (`Wrap<T>(this T value)`). A parameter of a type built on the
+		// type parameter (`IEnumerable<TInner>` of `Join`) infers the element type, which the provider's type keeps.
+		static bool CapturesType(ExpressionSyntax expression, SemanticModel model, CancellationToken cancellationToken)
 		{
-			switch (expression.Parent)
+			return expression.Parent switch
 			{
-				case ConditionalExpressionSyntax conditional:
-					return conditional.Condition != expression;
-				case BinaryExpressionSyntax binary:
-					return binary.IsKind(SyntaxKind.CoalesceExpression);
-				case SwitchExpressionArmSyntax arm:
-					return arm.Expression == expression;
-				case InitializerExpressionSyntax { Parent: ImplicitArrayCreationExpressionSyntax }:
-				case AnonymousObjectMemberDeclaratorSyntax:
-				case ArgumentSyntax { Parent: TupleExpressionSyntax }:
-					return true;
-				case AnonymousFunctionExpressionSyntax function:
-					return function.ExpressionBody == expression;
-				case ReturnStatementSyntax or YieldStatementSyntax:
-					return expression.Parent.FirstAncestorOrSelf<SyntaxNode>(n => n is AnonymousFunctionExpressionSyntax or LocalFunctionStatementSyntax or BaseMethodDeclarationSyntax or AccessorDeclarationSyntax) is AnonymousFunctionExpressionSyntax;
-				case ArgumentSyntax { Parent: ArgumentListSyntax { Parent: InvocationExpressionSyntax call } }:
-					if (call.Expression is GenericNameSyntax or MemberAccessExpressionSyntax { Name: GenericNameSyntax })
-						return false;
+				ConditionalExpressionSyntax conditional => conditional.Condition != expression,
+				BinaryExpressionSyntax binary           => binary.IsKind(SyntaxKind.CoalesceExpression),
+				SwitchExpressionArmSyntax arm           => arm.Expression == expression,
 
-					return model.GetSymbolInfo(call, cancellationToken).Symbol is not IMethodSymbol method
-						|| (method.ReducedFrom ?? method).IsGenericMethod;
+				InitializerExpressionSyntax { Parent: ImplicitArrayCreationExpressionSyntax } => true,
+				AnonymousObjectMemberDeclaratorSyntax                                         => true,
+				ArgumentSyntax { Parent: TupleExpressionSyntax }                              => true,
+
+				IsPatternExpressionSyntax isPattern     => isPattern.Expression == expression && DesignatesValue(isPattern.Pattern),
+				SwitchStatementSyntax switchStatement   => switchStatement.Sections.SelectMany(s => s.Labels).OfType<CasePatternSwitchLabelSyntax>().Any(l => DesignatesValue(l.Pattern)),
+				SwitchExpressionSyntax switchExpression => switchExpression.GoverningExpression == expression && switchExpression.Arms.Any(a => DesignatesValue(a.Pattern)),
+
+				AnonymousFunctionExpressionSyntax function => function.ExpressionBody == expression && InfersResultType(function, model, cancellationToken),
+				ReturnStatementSyntax or YieldStatementSyntax =>
+					expression.Parent.FirstAncestorOrSelf<SyntaxNode>(n => n is AnonymousFunctionExpressionSyntax or LocalFunctionStatementSyntax or BaseMethodDeclarationSyntax or AccessorDeclarationSyntax) is AnonymousFunctionExpressionSyntax lambda
+					&& InfersResultType(lambda, model, cancellationToken),
+
+				ArgumentSyntax argument => BindsToBareTypeParameter(argument, model, cancellationToken),
+
+				// A call chained on it that returns another type (GetChainTop stopped here): an extension method whose
+				// receiver is a bare type parameter infers it from the provider's type.
+				MemberAccessExpressionSyntax memberAccess when memberAccess.Expression == expression && memberAccess.Parent is InvocationExpressionSyntax call && call.Expression == memberAccess =>
+					model.GetSymbolInfo(call, cancellationToken).Symbol is IMethodSymbol { ReducedFrom: { } definition }
+					&& IsMethodTypeParameter(definition.Parameters[0].Type),
+
+				// t.TableHint("…")?.Call() returning another type: the call is not looked into, so it counts.
+				ConditionalAccessExpressionSyntax conditionalAccess => conditionalAccess.Expression == expression,
+
+				_ => false,
+			};
+		}
+
+		// `var x`, or a `var` designation of the whole value inside `and` / `or` / `not` / parentheses.
+		static bool DesignatesValue(PatternSyntax pattern)
+		{
+			return pattern switch
+			{
+				VarPatternSyntax                         => true,
+				DeclarationPatternSyntax declaration     => declaration.Type.IsVar,
+				ParenthesizedPatternSyntax parenthesized => DesignatesValue(parenthesized.Pattern),
+				BinaryPatternSyntax binary               => DesignatesValue(binary.Left) || DesignatesValue(binary.Right),
+				UnaryPatternSyntax unary                 => DesignatesValue(unary.Pattern),
+				_                                        => false,
+			};
+		}
+
+		// The lambda's return type is inferred: in a `var` local (natural type), or passed to a generic method whose
+		// delegate parameter returns a bare type parameter (`Select`'s `TResult`, not `SelectMany`'s `IEnumerable<TCollection>`).
+		static bool InfersResultType(AnonymousFunctionExpressionSyntax function, SemanticModel model, CancellationToken cancellationToken)
+		{
+			SyntaxNode node = function;
+
+			while (node.Parent is ParenthesizedExpressionSyntax)
+				node = node.Parent;
+
+			switch (node.Parent)
+			{
+				case EqualsValueClauseSyntax { Parent: VariableDeclaratorSyntax { Parent: VariableDeclarationSyntax declaration } }:
+					return declaration.Type.IsVar;
+				case ArgumentSyntax argument:
+					if (GetParameter(argument, model, cancellationToken) is not { } parameter)
+						return true;
+
+					var type = parameter.OriginalDefinition.Type;
+
+					// Expression<TDelegate>
+					if (type is INamedTypeSymbol { Name: "Expression", TypeArguments.Length: 1 } expressionType
+						&& string.Equals(expressionType.ContainingNamespace?.ToDisplayString(), "System.Linq.Expressions", StringComparison.Ordinal))
+						type = expressionType.TypeArguments[0];
+
+					return type is INamedTypeSymbol { DelegateInvokeMethod: { } invoke } && IsMethodTypeParameter(invoke.ReturnType);
 				default:
 					return false;
 			}
+		}
+
+		// An argument bound to a parameter typed as a bare type parameter of the method (or `params T[]`); also when the
+		// call does not bind, since nothing better is known.
+		static bool BindsToBareTypeParameter(ArgumentSyntax argument, SemanticModel model, CancellationToken cancellationToken)
+		{
+			if (argument.Parent is not ArgumentListSyntax { Parent: InvocationExpressionSyntax or BaseObjectCreationExpressionSyntax })
+				return false;
+
+			if (GetParameter(argument, model, cancellationToken) is not { } parameter)
+				return true;
+
+			var type = parameter.OriginalDefinition.Type;
+
+			if (parameter.IsParams && type is IArrayTypeSymbol array)
+				type = array.ElementType;
+
+			return IsMethodTypeParameter(type);
+		}
+
+		static IParameterSymbol? GetParameter(ArgumentSyntax argument, SemanticModel model, CancellationToken cancellationToken)
+		{
+			return model.GetOperation(argument, cancellationToken) is IArgumentOperation { Parameter: { } parameter } ? parameter : null;
+		}
+
+		static bool IsMethodTypeParameter(ITypeSymbol type)
+		{
+			return type is ITypeParameterSymbol { TypeParameterKind: TypeParameterKind.Method };
 		}
 
 		// Whether a use of the local needs its original type: a write to it, a use in a type-inferring position, or one
@@ -422,7 +514,7 @@ namespace LinqToDB.Analyzers.CodeFixes
 
 				var top = GetChainTop(identifier, model, cancellationToken);
 
-				if (GetVarDeclaration(top) is not null || InfersTypeFrom(top, model, cancellationToken))
+				if (GetVarDeclaration(top) is not null || CapturesType(top, model, cancellationToken))
 					return true;
 			}
 

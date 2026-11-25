@@ -1547,6 +1547,129 @@ namespace Tests.Analyzers
 				AddGlobalLinqToDBUsing);
 		}
 
+		// The chain after `?.` initializes a var local written later: the local keeps the original type.
+		[Test]
+		public async Task ConditionalAccessVarLocalWrittenLaterKeepsTheQueryType()
+		{
+			await VerifyAsync(
+				"""
+				using System.Linq;
+
+				using LinqToDB;
+
+				class Row { public int Id; }
+
+				class C
+				{
+					void M(IQueryable<Row> src)
+					{
+						var q = src?.Where(r => r.Id > 0).[|QueryHint("RECOMPILE")|];
+						q = src;
+					}
+				}
+				""",
+				"""
+				using System.Linq;
+
+				using LinqToDB;
+				using LinqToDB.DataProvider.SqlServer;
+
+				class Row { public int Id; }
+
+				class C
+				{
+					void M(IQueryable<Row> src)
+					{
+						IQueryable<Row> q = src?.Where(r => r.Id > 0).AsSqlServer().OptionRecompile();
+						q = src;
+					}
+				}
+				""",
+				SqlServerRestrictedKey);
+		}
+
+		// The receiver of an extension method typed as a bare type parameter, and a value matched by `is var x`, take
+		// the provider's type: no restricting rewrite.
+		[Test]
+		public async Task GenericReceiverAndVarPatternGetNoRestrictingRewrite()
+		{
+			const string source = """
+				using System.Collections.Generic;
+
+				using LinqToDB;
+
+				class Row { }
+
+				static class Ext
+				{
+					public static List<T> Wrap<T>(this T value)
+					{
+						return new List<T> { value };
+					}
+				}
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var l = t.[|TableHint("NOLOCK")|].Wrap();
+						l.Add(t);
+
+						if (t.[|TableHint("READPAST")|] is var x)
+							x = t;
+					}
+				}
+				""";
+
+			await VerifyAsync(source, source, SqlServerRestrictedKey);
+		}
+
+		// Join's inner sequence and SelectMany's collection selector infer the element type from IEnumerable<T>, which the
+		// provider's type keeps: the rewrite is offered.
+		[Test]
+		public async Task LinqOperatorArgumentsAreRewritten()
+		{
+			await VerifyAsync(
+				"""
+				using System.Linq;
+
+				using LinqToDB;
+
+				class Row { public int Id; }
+
+				class C
+				{
+					void M(IQueryable<Row> src, ITable<Row> t)
+					{
+						var j = src.Join(t.[|TableHint("NOLOCK")|], a => a.Id, b => b.Id, (a, b) => a);
+						var s = src.SelectMany(a => t.[|TableHint("READPAST")|], (a, b) => b);
+					}
+				}
+				""",
+				"""
+				using System.Linq;
+
+				using LinqToDB;
+				using LinqToDB.DataProvider.SqlServer;
+
+				class Row { public int Id; }
+
+				class C
+				{
+					void M(IQueryable<Row> src, ITable<Row> t)
+					{
+						var j = src.Join(t.AsSqlServer().WithNoLock(), a => a.Id, b => b.Id, (a, b) => a);
+						var s = src.SelectMany(a => t.AsSqlServer().WithReadPast(), (a, b) => b);
+					}
+				}
+				""",
+				SqlServerRestrictedKey,
+				static test =>
+				{
+					test.NumberOfIncrementalIterations = 2;
+				});
+		}
+
 		static void AddGlobalLinqToDBUsing(CSharpCodeFixTest<StringHintAnalyzer, StringHintCodeFixProvider, DefaultVerifier> test)
 		{
 			test.TestState.Sources.Add(("/0/GlobalUsings.cs", "global using LinqToDB;"));
