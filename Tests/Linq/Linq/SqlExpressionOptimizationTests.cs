@@ -24,8 +24,8 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6459")]
 		public void NestedBooleanConditionPreservesResult(
 			[Values] bool innerTrueValue,
-			[Values(true, false, null)] bool? outerTrueValue,
-			[Values(true, false, null)] bool? outerFalseValue,
+			[Values] bool? outerTrueValue,
+			[Values] bool? outerFalseValue,
 			[Values] bool conditionValue,
 			[Values] bool compareToTrue,
 			[Values] bool allowModify)
