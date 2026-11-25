@@ -919,6 +919,54 @@ namespace Tests.Linq
 				});
 		}
 
+		// The value is written once, in the form of the one bound that is a converted column.
+		[Test]
+		public void BetweenOfValueAndOneConvertedBound([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(BetweenConvertedRow.Data);
+
+			var value   = 42;
+			var elapsed = TimeSpan.FromSeconds(42);
+			var minimum = TimeSpan.FromSeconds(5);
+			var maximum = TimeSpan.FromSeconds(10);
+
+			table
+				.Where(r => Sql.NotBetween(elapsed, r.Elapsed, maximum))
+				.OrderBy(r => r.Id)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([1, 2, 3, 4]);
+
+			table
+				.Where(r => Sql.Between(elapsed, minimum, r.Elapsed))
+				.OrderBy(r => r.Id)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([4]);
+
+			table
+				.Where(r => Sql.Between(value, r.Low, 500))
+				.OrderBy(r => r.Id)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([1, 2, 3]);
+
+			table
+				.Where(r => Sql.Between(value, 5, r.High))
+				.OrderBy(r => r.Id)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([3, 4]);
+
+			table
+				.Where(r => Sql.NotBetween(value, 5, r.High))
+				.OrderBy(r => r.Id)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([1, 2]);
+		}
+
 		[Table]
 		sealed class BetweenTextRow
 		{
@@ -1069,6 +1117,46 @@ namespace Tests.Linq
 						.Select(r => r.Id)
 						.OrderBy(id => id)
 						.ToArray());
+		}
+
+		[Table]
+		sealed class BetweenTimeRow
+		{
+			[PrimaryKey] public int      Id    { get; set; }
+			[Column]     public TimeSpan Value { get; set; }
+
+			public static readonly BetweenTimeRow[] Data =
+			[
+				new() { Id = 1, Value = TimeSpan.FromHours(1) },
+				new() { Id = 2, Value = TimeSpan.FromHours(2) },
+				new() { Id = 3, Value = TimeSpan.FromHours(3) },
+				new() { Id = 4, Value = TimeSpan.FromHours(4) },
+			];
+		}
+
+		// System.Data.SQLite cannot bind a TimeSpan parameter.
+		[Test]
+		public void BetweenOfTimeColumn([IncludeDataSources(ProviderName.SQLiteMS)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(BetweenTimeRow.Data);
+
+			var low  = TimeSpan.FromMinutes(90);
+			var high = TimeSpan.FromHours(3);
+
+			table
+				.Where(r => Sql.Between(r.Value, low, high))
+				.OrderBy(r => r.Id)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([2, 3]);
+
+			table
+				.Where(r => Sql.NotBetween(r.Value, low, high))
+				.OrderBy(r => r.Id)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([1, 4]);
 		}
 
 		[Test]

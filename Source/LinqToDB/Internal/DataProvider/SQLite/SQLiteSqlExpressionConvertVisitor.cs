@@ -315,14 +315,20 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			var newElement = base.VisitBetweenPredicate(predicate);
 
 			if (newElement is SqlPredicate.Between between
-				&& (   IsDateTime(QueryHelper.GetDbDataType(between.Expr1, MappingSchema))
-					|| IsDateTime(QueryHelper.GetDbDataType(between.Expr2, MappingSchema))
-					|| IsDateTime(QueryHelper.GetDbDataType(between.Expr3, MappingSchema))))
+				&& (   IsDateOrTimestamp(QueryHelper.GetDbDataType(between.Expr1, MappingSchema))
+					|| IsDateOrTimestamp(QueryHelper.GetDbDataType(between.Expr2, MappingSchema))
+					|| IsDateOrTimestamp(QueryHelper.GetDbDataType(between.Expr3, MappingSchema))))
 			{
 				return Visit(Optimize(NotifyReplaced(ConvertBetweenPredicate(between), between)));
 			}
 
 			return newElement;
+
+			// A time of day stays a BETWEEN of its text: its comparisons cast it to Time, which keeps only the hour (#6410).
+			static bool IsDateOrTimestamp(DbDataType dbDataType)
+			{
+				return IsDateTime(dbDataType) && dbDataType.DataType != DataType.Time;
+			}
 		}
 
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)

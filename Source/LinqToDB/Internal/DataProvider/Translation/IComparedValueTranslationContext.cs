@@ -10,8 +10,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 	{
 		/// <summary>
 		/// Types what is translated within as a comparison between <paramref name="left"/> and <paramref name="right"/>
-		/// types its operands.
+		/// types its operands. When <paramref name="left"/> is also compared with <paramref name="otherRight"/> and only that
+		/// pair finds a column that stores values in a form of its own, both pairs are written in that form.
 		/// </summary>
-		IDisposable UsingComparisonDescriptor(Expression left, Expression right);
+		IDisposable UsingComparisonDescriptor(Expression left, Expression right, Expression? otherRight);
 	}
 }

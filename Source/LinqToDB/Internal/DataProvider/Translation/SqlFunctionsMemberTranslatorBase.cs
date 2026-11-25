@@ -44,14 +44,15 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			ISqlExpression? value, low, high;
 
 			// The value is compared with each bound, so each pair is typed as the operands of that comparison, `>=` or `<=`, are.
-			using (UsingComparisonDescriptor(translationContext, methodCall.Arguments[0], methodCall.Arguments[1]))
+			// The value is written once for both, so a pair without a converted column takes the other pair's.
+			using (UsingComparisonDescriptor(translationContext, methodCall.Arguments[0], methodCall.Arguments[1], methodCall.Arguments[2]))
 			{
 				if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out value)
 					|| !translationContext.TranslateToSqlExpression(methodCall.Arguments[1], out low))
 					return null;
 			}
 
-			using (UsingComparisonDescriptor(translationContext, methodCall.Arguments[0], methodCall.Arguments[2]))
+			using (UsingComparisonDescriptor(translationContext, methodCall.Arguments[0], methodCall.Arguments[2], methodCall.Arguments[1]))
 			{
 				if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[2], out high))
 					return null;
@@ -62,10 +63,10 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, searchCondition, methodCall);
 		}
 
-		static IDisposable? UsingComparisonDescriptor(ITranslationContext translationContext, Expression left, Expression right)
+		static IDisposable? UsingComparisonDescriptor(ITranslationContext translationContext, Expression left, Expression right, Expression otherRight)
 		{
 			return translationContext is IComparedValueTranslationContext comparedValueContext
-				? comparedValueContext.UsingComparisonDescriptor(left, right)
+				? comparedValueContext.UsingComparisonDescriptor(left, right, otherRight)
 				: null;
 		}
 
