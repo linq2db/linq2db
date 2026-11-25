@@ -107,8 +107,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		[GeneratedRegex(HintTokenPattern, RegexOptions.ExplicitCapture)]
 		private static partial Regex HintTokenRegex();
 #else
-		static readonly Regex _hintTokenRegex = new (HintTokenPattern, RegexOptions.ExplicitCapture);
-		static Regex HintTokenRegex() => _hintTokenRegex;
+		static Regex? _hintTokenRegex;
+		static Regex HintTokenRegex() => _hintTokenRegex ??= new(HintTokenPattern, RegexOptions.ExplicitCapture | RegexOptions.Compiled);
 #endif
 
 		static bool IsSkipLocked(SqlQueryExtension extension)
