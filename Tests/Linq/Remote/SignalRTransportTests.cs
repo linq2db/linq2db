@@ -140,9 +140,17 @@ namespace Tests.Remote
 
 			var client = (ILinqService)new SignalRLinqServiceClient(hubConnection);
 
-			using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(200));
+			using var cts = new CancellationTokenSource();
 
-			var error = await CatchAsync(() => client.ExecuteReaderAsync(Configuration, "query", cts.Token));
+			// Cancel only once the call has reached the server: the first call on a connection asks the hub for its size
+			// limit first, and a cancellation that lands there never reaches the service.
+			var call = CatchAsync(() => client.ExecuteReaderAsync(Configuration, "query", cts.Token));
+
+			(await service.WaitStartedAsync(WaitLimit)).ShouldBeTrue("the call did not reach the server");
+
+			cts.Cancel();
+
+			var error = await WithinLimit(call);
 			error.ShouldBeAssignableTo<OperationCanceledException>();
 
 			(await service.WaitCancelledAsync(WaitLimit)).ShouldBeTrue("the server-side token did not fire");
@@ -256,9 +264,15 @@ namespace Tests.Remote
 
 			var client = (ILinqService)new SignalRLinqServiceClient(hubConnection);
 
-			using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(200));
+			using var cts = new CancellationTokenSource();
 
-			(await CatchAsync(() => client.ExecuteReaderAsync(Configuration, "query", cts.Token))).ShouldBeAssignableTo<OperationCanceledException>();
+			var call = CatchAsync(() => client.ExecuteReaderAsync(Configuration, "query", cts.Token));
+
+			(await WaitAsync(ScopedLinqService.Started.Task, WaitLimit)).ShouldBeTrue("the call did not reach the server");
+
+			cts.Cancel();
+
+			(await WithinLimit(call)).ShouldBeAssignableTo<OperationCanceledException>();
 
 			(await WaitAsync(ScopedLinqService.Finished.Task, WaitLimit)).ShouldBeTrue("the operation did not finish");
 			ScopedLinqService.UsedAfterDispose.ShouldBeFalse("the scope was disposed while the operation was still running");
@@ -2032,12 +2046,14 @@ namespace Tests.Remote
 			static volatile bool _usedAfterDispose;
 			volatile        bool _disposed;
 
+			public static TaskCompletionSource<bool> Started  { get; private set; } = new();
 			public static TaskCompletionSource<bool> Finished { get; private set; } = new();
 			public static bool                       UsedAfterDispose => _usedAfterDispose;
 
 			public static void Reset()
 			{
 				_usedAfterDispose = false;
+				Started           = new(TaskCreationOptions.RunContinuationsAsynchronously);
 				Finished          = new(TaskCreationOptions.RunContinuationsAsynchronously);
 			}
 
@@ -2050,6 +2066,8 @@ namespace Tests.Remote
 
 			public async Task<string> ExecuteReaderAsync(string? configuration, string queryData, CancellationToken cancellationToken = default)
 			{
+				Started.TrySetResult(true);
+
 				try
 				{
 					await Task.Delay(Timeout.Infinite, cancellationToken);
