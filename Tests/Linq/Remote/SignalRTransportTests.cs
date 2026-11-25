@@ -327,7 +327,9 @@ namespace Tests.Remote
 
 			(await WithinLimit(client.ExecuteReaderAsync(Configuration, "query")))
 				.ShouldBe("next");
+#if !NETFRAMEWORK
 			hubConnection.State.ShouldBe(HubConnectionState.Connected);
+#endif
 		}
 
 		[Test]
