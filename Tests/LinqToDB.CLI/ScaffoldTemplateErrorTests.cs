@@ -52,6 +52,7 @@ namespace Tests.LinqToDB.CLI
 			finally
 			{
 				File.Delete(database);
+				Directory.Delete(folder, true);
 			}
 		}
 	}
