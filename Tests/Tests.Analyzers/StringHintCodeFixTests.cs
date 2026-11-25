@@ -1091,5 +1091,57 @@ namespace Tests.Analyzers
 					});
 				});
 		}
+
+		// Usings grouped by their first namespace segment: the new directive joins the LinqToDB group, and the group
+		// after it keeps its blank line.
+		[Test]
+		public async Task NewUsingJoinsItsOwnFirstSegmentGroup()
+		{
+			await VerifyAsync(
+				"""
+				using LinqToDB;
+				using LinqToDB.Data;
+
+				using Microsoft.Extensions.Logging;
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t, DataConnection db, Logger logger)
+					{
+						var r = t.[|TableHint("NOLOCK")|];
+					}
+				}
+
+				namespace Microsoft.Extensions.Logging
+				{
+					class Logger { }
+				}
+				""",
+				"""
+				using LinqToDB;
+				using LinqToDB.Data;
+				using LinqToDB.DataProvider.SqlServer;
+
+				using Microsoft.Extensions.Logging;
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t, DataConnection db, Logger logger)
+					{
+						var r = t.AsSqlServer().WithNoLock();
+					}
+				}
+
+				namespace Microsoft.Extensions.Logging
+				{
+					class Logger { }
+				}
+				""",
+				SqlServerRestrictedKey);
+		}
 	}
 }

@@ -454,11 +454,13 @@ namespace LinqToDB.Analyzers.CodeFixes
 			{
 				var next = usings[index];
 
-				// Usings grouped by blank lines (System first): a directive that sorts last in the previous group stays
-				// there, after that group's last directive, and the next group keeps its leading blank line.
+				// Usings grouped by blank lines (by first namespace segment, or System and the rest): a directive that sorts
+				// last in the previous group stays there, after that group's last directive, and the next group keeps its
+				// leading blank line.
+				var group              = GetGroup(ns);
 				var joinsPreviousGroup = index > firstLocal
-					&& IsSystemNamespace(ns) == IsSystemDirective(usings[index - 1])
-					&& IsSystemNamespace(ns) != IsSystemDirective(next);
+					&& string.Equals(group, GetGroup(usings[index - 1]), StringComparison.Ordinal)
+					&& !string.Equals(group, GetGroup(next), StringComparison.Ordinal);
 
 				if (!joinsPreviousGroup)
 				{
@@ -517,9 +519,18 @@ namespace LinqToDB.Analyzers.CodeFixes
 			return depth > 0 ? endAtOpen : end;
 		}
 
-		static bool IsSystemDirective(UsingDirectiveSyntax directive)
+		// The first segment of the namespace a directive names: usings grouped by it, or by System and the rest, have
+		// their group boundaries between different first segments.
+		static string? GetGroup(UsingDirectiveSyntax directive)
 		{
-			return directive.Name is { } name && IsSystemNamespace(GetNamespaceText(name));
+			return directive.Name is { } name ? GetGroup(GetNamespaceText(name)) : null;
+		}
+
+		static string GetGroup(string ns)
+		{
+			var dot = ns.IndexOf('.');
+
+			return dot < 0 ? ns : ns.Substring(0, dot);
 		}
 
 		static bool IsSystemNamespace(string name)
