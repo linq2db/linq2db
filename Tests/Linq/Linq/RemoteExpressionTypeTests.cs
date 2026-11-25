@@ -1,4 +1,4 @@
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Internal.SqlQuery;
@@ -9,15 +9,14 @@ using NUnit.Framework;
 
 using Shouldly;
 
-namespace Tests.UserTests
+namespace Tests.Linq
 {
 	/// <summary>
 	/// A typed <see cref="SqlBinaryExpression"/> must keep its <see cref="DbDataType"/> on the remote path, so the server
 	/// folds the same non-mandatory casts as the direct path.
-	/// https://github.com/linq2db/linq2db/issues/6055
 	/// </summary>
 	[TestFixture]
-	public class Issue6055Tests : TestBase
+	public class RemoteExpressionTypeTests : TestBase
 	{
 		[Table]
 		sealed class DecimalTable
@@ -28,7 +27,9 @@ namespace Tests.UserTests
 		}
 
 		// derived from the provider's decimal mapping: ClickHouse has no generic DataType.Decimal type name
-		static DbDataType Decimal10_2(MappingSchema mappingSchema) => mappingSchema.GetDbDataType(typeof(decimal)).WithPrecisionScale(10, 2);
+		static DbDataType Decimal10_2(MappingSchema mappingSchema) => mappingSchema
+			.GetDbDataType(typeof(decimal))
+			.WithPrecisionScale(10, 2);
 
 		// typed sum cast to its own type: the cast is redundant and must be folded
 		sealed class SameTypeCastBuilder : Sql.IExtensionCallBuilder
@@ -64,7 +65,7 @@ namespace Tests.UserTests
 		// CAST(...), PostgreSQL `::`, DB2 DECIMAL(x, p, s), ClickHouse toDecimalNN(x, s)
 		const string CastPattern = @"(?i)\bCAST\b|::|\bDecimal\(|\btoDecimal\d+\(";
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6055")]
 		public void RedundantCastIsFolded([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -83,7 +84,7 @@ namespace Tests.UserTests
 
 		// Access drops a cast to a decimal type on both paths (AccessSqlExpressionConvertVisitor.ConvertConversion),
 		// so there is no cast to lose
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6055")]
 		public void NarrowingCastIsKept([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -94,7 +95,8 @@ namespace Tests.UserTests
 				.Single()
 				.ShouldBe(3.75m);
 
-			GetCurrentBaselines().ShouldMatch(CastPattern);
+			GetCurrentBaselines()
+				.ShouldMatch(CastPattern);
 		}
 	}
 }
