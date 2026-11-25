@@ -1293,9 +1293,9 @@ namespace Tests.Linq
 
 		// Rounding a computed value must leave it in its inferred type, on every branch of a runtime precision's CASE and
 		// on the constant path, or YQL rejects the IF and the addition.
-		[ActiveIssue(6055, Configuration = TestProvName.AllYdb, SkipForNonLinqService = true,
+		[ActiveIssue(6056, Configuration = TestProvName.AllYdb, SkipForNonLinqService = true,
 			ErrorTypeName = "Grpc.Core.RpcException", ErrorMessage = "Failed to convert type: Decimal(35,13) to Decimal(22,13)",
-			Details = "LinqServiceSerializer drops SqlBinaryExpression's precision/scale, so the server folds the non-mandatory narrowing casts")]
+			Details = "PrepareStatementForRemoting rebuilds the typed division with its CLR type only, so the server folds the non-mandatory narrowing cast")]
 		[Test]
 		public void Round29([IncludeDataSources(true, TestProvName.AllYdb)] string context)
 		{
@@ -1351,9 +1351,6 @@ namespace Tests.Linq
 		// A computed Decimal is inferred Decimal(22,9), while YQL computes it in the operands' type (H + H is
 		// Decimal(20,12)), so a work type of the inferred scale would round its extra digits first. K, W and T sit on
 		// the work type's scale for their path, H13 on its integer digits.
-		[ActiveIssue(6055, Configuration = TestProvName.AllYdb, SkipForNonLinqService = true,
-			ErrorTypeName = "Grpc.Core.RpcException", ErrorMessage = "Value does not fit into decimal",
-			Details = "LinqServiceSerializer drops SqlBinaryExpression's precision/scale, so the server folds the narrowing cast and the result keeps the work type")]
 		[Test]
 #pragma warning disable NUnit4001
 		public void Round30([IncludeDataSources(true, TestProvName.AllYdb)] string context, [Values(MidpointRounding.ToEven, MidpointRounding.AwayFromZero)] MidpointRounding mp)
@@ -1430,9 +1427,9 @@ namespace Tests.Linq
 			sums.ShouldBe(expectedSums);
 		}
 
-		[ActiveIssue(6055, Configuration = TestProvName.AllYdb, SkipForNonLinqService = true,
+		[ActiveIssue(6056, Configuration = TestProvName.AllYdb, SkipForNonLinqService = true,
 			ErrorTypeName = "Grpc.Core.RpcException", ErrorMessage = "Failed to convert type: Decimal(35,13) to Decimal(22,13)",
-			Details = "LinqServiceSerializer drops SqlBinaryExpression's precision/scale, so the server folds the non-mandatory narrowing casts")]
+			Details = "PrepareStatementForRemoting rebuilds the typed division with its CLR type only, so the server folds the non-mandatory narrowing cast")]
 		[Test]
 #pragma warning disable NUnit4001
 		public void Round31([IncludeDataSources(true, TestProvName.AllYdb)] string context, [Values(MidpointRounding.ToEven, MidpointRounding.AwayFromZero)] MidpointRounding mp)
@@ -1577,9 +1574,9 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ActiveIssue(6055, Configuration = TestProvName.AllYdb, SkipForNonLinqService = true,
+		[ActiveIssue(6056, Configuration = TestProvName.AllYdb, SkipForNonLinqService = true,
 			ErrorTypeName = "Grpc.Core.RpcException", ErrorMessage = "Failed to convert type: Decimal(35,13) to Decimal(22,13)",
-			Details = "LinqServiceSerializer drops SqlBinaryExpression's precision/scale, so the server folds the non-mandatory narrowing casts")]
+			Details = "PrepareStatementForRemoting rebuilds the typed division with its CLR type only, so the server folds the non-mandatory narrowing cast")]
 		[Test]
 #pragma warning disable NUnit4001
 		public void Round34([IncludeDataSources(true, TestProvName.AllYdb)] string context, [Values(MidpointRounding.ToEven, MidpointRounding.AwayFromZero)] MidpointRounding mp)
@@ -1610,9 +1607,6 @@ namespace Tests.Linq
 			AssertQuery(query, ByNullableValue);
 		}
 
-		[ActiveIssue(6055, Configuration = TestProvName.AllYdb, SkipForNonLinqService = true,
-			ErrorTypeName = "Grpc.Core.RpcException", ErrorMessage = "Value does not fit into decimal",
-			Details = "LinqServiceSerializer drops SqlBinaryExpression's precision/scale, so the server folds the narrowing cast and the result keeps the work type")]
 		[Test]
 #pragma warning disable NUnit4001
 		public void Round35([IncludeDataSources(true, TestProvName.AllYdb)] string context, [Values(MidpointRounding.ToEven, MidpointRounding.AwayFromZero)] MidpointRounding mp)
