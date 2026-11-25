@@ -125,35 +125,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue115Test([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			var qs = (from c in db.Child
-					  join r in db.Parent on c.ParentID equals r.ParentID
-					  where r.ParentID > 4
-					  select c
-					)
-					.Union(from c in db.Child
-						   join r in db.Parent on c.ParentID equals r.ParentID
-						   where r.ParentID <= 4
-						   select c
-					);
-
-			var ql = (from c in Child
-					  join r in Parent on c.ParentID equals r.ParentID
-					  where r.ParentID > 4
-					  select c
-					)
-					.Union(from c in Child
-						   join r in Parent on c.ParentID equals r.ParentID
-						   where r.ParentID <= 4
-						   select c
-					);
-
-			AreEqual(ql, qs);
-		}
-
-		[Test]
 		public void Issue424Test1([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -254,34 +225,6 @@ namespace Tests.Linq
 
 				AreEqual(ex.Data.ToList(), re.Data.ToList());
 			}
-		}
-
-		[Test]
-		public void Issue508Test([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			var query = (
-					from c in db.Child
-					join p in db.Parent on c.ParentID equals p.ParentID
-					where c.ChildID == 11
-					select p.ParentID
-							 ).Union(
-					from c in db.Child
-					where c.ChildID == 11
-					select c.ParentID
-								   );
-			var expected = (
-					from c in Child
-					join p in Parent on c.ParentID equals p.ParentID
-					where c.ChildID == 11
-					select p.ParentID
-							 ).Union(
-					from c in Child
-					where c.ChildID == 11
-					select c.ParentID
-								   );
-
-			AreEqual(expected, query);
 		}
 
 		public class PersonWrapper

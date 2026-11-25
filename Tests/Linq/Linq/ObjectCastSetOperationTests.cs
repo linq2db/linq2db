@@ -7,17 +7,18 @@ using NUnit.Framework;
 
 using Shouldly;
 
-namespace Tests.UserTests
+namespace Tests.Linq
 {
 	[TestFixture]
-	public class Issue5916Tests : TestBase
+	public class ObjectCastSetOperationTests : TestBase
 	{
 		// AssertQuery's default comparer walks the members of `object`, finds none, and folds the empty set
 		// into an always-true equality - leaving only the row count, which is already right when members are
 		// dropped. Every object-typed query below is asserted with structural equality instead.
 		static IEqualityComparer<object> Structural => EqualityComparer<object>.Default;
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5916 - an (object)-cast set-operation branch must keep members evaluated client-side")]
+		// https://github.com/linq2db/linq2db/issues/5916 - an (object)-cast set-operation branch must keep members evaluated client-side
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5916")]
 		public void ConcatObjectCastKeepsClientSideMember([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -34,7 +35,8 @@ namespace Tests.UserTests
 			result.ShouldAllBe(x => x.GetType() != typeof(string));
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5916 - the (object)-cast form must read the same columns as the uncast form")]
+		// https://github.com/linq2db/linq2db/issues/5916 - the (object)-cast form must read the same columns as the uncast form
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5916")]
 		public void ConcatObjectCastSelectsSameColumnsAsUncast([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -54,7 +56,8 @@ namespace Tests.UserTests
 			cast.GetSelectQuery()!.Select.Columns.Count.ShouldBe(uncast.GetSelectQuery()!.Select.Columns.Count);
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5916 - differently shaped (object)-cast branches keep their own members")]
+		// https://github.com/linq2db/linq2db/issues/5916 - differently shaped (object)-cast branches keep their own members
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5916")]
 		public void ConcatObjectCastDifferentShapes([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -69,7 +72,8 @@ namespace Tests.UserTests
 			result.ShouldAllBe(x => x.GetType() != typeof(string));
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5916 - UnionAll behaves as Concat does")]
+		// https://github.com/linq2db/linq2db/issues/5916 - UnionAll behaves as Concat does
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5916")]
 		public void UnionAllObjectCastKeepsClientSideMember([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -84,7 +88,8 @@ namespace Tests.UserTests
 			result.ShouldAllBe(x => x.GetType() != typeof(string));
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5916 - the dropped member is not specific to a formatted key column: one computed from a translated expression (Length) is dropped too")]
+		// https://github.com/linq2db/linq2db/issues/5916 - the dropped member is not specific to a formatted key column: one computed from a translated expression (Length) is dropped too
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5916")]
 		public void ConcatObjectCastStringLengthClientSideMember([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -99,7 +104,8 @@ namespace Tests.UserTests
 			result.ShouldAllBe(x => x.GetType() != typeof(string));
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5916 - `as object` is rewritten into the same conversion and reaches the same site")]
+		// https://github.com/linq2db/linq2db/issues/5916 - `as object` is rewritten into the same conversion and reaches the same site
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5916")]
 		public void ConcatObjectCastThroughAs([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -114,7 +120,8 @@ namespace Tests.UserTests
 			result.ShouldAllBe(x => x.GetType() != typeof(string));
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5916 - the collapse is order-independent: a client-side member on the second operand is dropped too (the issue's case 6, recorded there as passing)")]
+		// https://github.com/linq2db/linq2db/issues/5916 - the collapse is order-independent: a client-side member on the second operand is dropped too (the issue's case 6, recorded there as passing)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5916")]
 		public void ConcatObjectCastClientSideMemberOnSecondOperand([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -129,7 +136,8 @@ namespace Tests.UserTests
 			result.ShouldAllBe(x => x.GetType() != typeof(string));
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5916 - control: every member translates, so nothing is at risk")]
+		// https://github.com/linq2db/linq2db/issues/5916 - control: every member translates, so nothing is at risk
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5916")]
 		public void ConcatObjectCastTranslatableMembers([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -144,7 +152,8 @@ namespace Tests.UserTests
 			result.ShouldAllBe(x => x.GetType() != typeof(string));
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5916 - control: a third member leaves more than one column standing")]
+		// https://github.com/linq2db/linq2db/issues/5916 - control: a third member leaves more than one column standing
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5916")]
 		public void ConcatObjectCastThreeMembers([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -159,7 +168,8 @@ namespace Tests.UserTests
 			result.ShouldAllBe(x => x.GetType() != typeof(string));
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5916 - control: the same projection outside a set operation")]
+		// https://github.com/linq2db/linq2db/issues/5916 - control: the same projection outside a set operation
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5916")]
 		public void SelectObjectCastClientSideMember([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -171,7 +181,8 @@ namespace Tests.UserTests
 			result.ShouldAllBe(x => x.GetType() != typeof(string));
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5916 - control: a bare column cast to object stays a single column")]
+		// https://github.com/linq2db/linq2db/issues/5916 - control: a bare column cast to object stays a single column
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5916")]
 		public void ConcatObjectCastScalarMember([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
