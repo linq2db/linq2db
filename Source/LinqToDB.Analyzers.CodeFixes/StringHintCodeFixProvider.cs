@@ -26,7 +26,10 @@ namespace LinqToDB.Analyzers.CodeFixes
 	/// <remarks>
 	/// On a generic receiver every provider that has the hint gets its own action, titled with the provider it
 	/// restricts the hint to: the string overload emitted the hint for every provider, the typed one emits it for
-	/// one. The rewrite targets are read from <see cref="Diagnostic.Properties"/>, as in the other code fixes here.
+	/// one. That rewrite also gives the call the provider's type, so text hints called on its result later bind the
+	/// provider's own overloads and are restricted too; the title says so. Where the new type breaks the code around
+	/// the call, the <c>var</c> local the call initializes keeps the original type, or the rewrite is not offered.
+	/// The rewrite targets are read from <see cref="Diagnostic.Properties"/>, as in the other code fixes here.
 	/// </remarks>
 	[ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(StringHintCodeFixProvider))]
 	[Shared]
@@ -59,35 +62,93 @@ namespace LinqToDB.Analyzers.CodeFixes
 
 			var diagnostic = context.Diagnostics[0];
 
-			if (FindInvocation(root, diagnostic) is not { } invocation)
+			if (FindInvocation(root, diagnostic) is null)
 				return;
 
-			var fixes = ReadFixes(diagnostic);
-
-			// A restricting rewrite changes the call's type; when that type is not expressible, it is not offered.
-			if (fixes.Count > 0 && fixes[0].GenericOverload)
+			foreach (var fix in ReadFixes(diagnostic))
 			{
-				var model = await context.Document.GetSemanticModelAsync(context.CancellationToken).ConfigureAwait(false);
+				if (fix.GenericOverload)
+				{
+					// A restricting rewrite changes the call's type, so it is offered only in a form that compiles.
+					var rewritten = await RewriteRestrictingAsync(context.Document, diagnostic, fix, context.CancellationToken).ConfigureAwait(false);
 
-				if (model is null || GetVarLocalRetype(invocation, model, context.CancellationToken) is { Blocked: true })
-					return;
+					if (rewritten is null)
+						continue;
+
+					context.RegisterCodeFix(
+						CodeAction.Create(
+							string.Format(CultureInfo.InvariantCulture, "Use {0} typed hint {1}() (applies to {0} only, as do text hints chained after it)", fix.Provider, fix.Helper),
+							_ => Task.FromResult(rewritten),
+							equivalenceKey: GetEquivalenceKey(fix)),
+						diagnostic);
+				}
+				else
+				{
+					var captured = fix;
+
+					context.RegisterCodeFix(
+						CodeAction.Create(
+							string.Format(CultureInfo.InvariantCulture, "Use typed hint {0}()", fix.Helper),
+							async ct => await RewriteAsync(context.Document, diagnostic, captured, retypeVarLocal: false, ct).ConfigureAwait(false) ?? context.Document,
+							equivalenceKey: GetEquivalenceKey(fix)),
+						diagnostic);
+				}
+			}
+		}
+
+		// The rewrite as is, if it adds no compile error around the call; otherwise with the `var` local the call
+		// initializes given the original type (`q = q.Where(...)` later, or `f ? q : table`, whose branches have no
+		// common type once q has the provider's); otherwise none.
+		static async Task<Document?> RewriteRestrictingAsync(Document document, Diagnostic diagnostic, Fix fix, CancellationToken cancellationToken)
+		{
+			var root  = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
+			var model = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
+
+			if (root is null || model is null || FindInvocation(root, diagnostic) is not { } invocation)
+				return null;
+
+			var errors = CountErrors(model.GetDiagnostics(GetCheckedScope(invocation)?.Span, cancellationToken));
+
+			foreach (var retypeVarLocal in new[] { false, true })
+			{
+				var rewritten = await RewriteAsync(document, diagnostic, fix, retypeVarLocal, cancellationToken).ConfigureAwait(false);
+
+				if (rewritten is null)
+					continue;
+
+				var newRoot  = await rewritten.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
+				var newModel = await rewritten.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
+
+				if (newRoot is null || newModel is null)
+					continue;
+
+				var scope = newRoot.GetAnnotatedNodes(CheckedScope).FirstOrDefault();
+
+				if (CountErrors(newModel.GetDiagnostics(scope?.Span, cancellationToken)) <= errors)
+					return rewritten;
 			}
 
-			foreach (var fix in fixes)
-			{
-				var title = fix.GenericOverload
-					? string.Format(CultureInfo.InvariantCulture, "Use {0} typed hint {1}() (applies to {0} only, as do text hints chained after it)", fix.Provider, fix.Helper)
-					: string.Format(CultureInfo.InvariantCulture, "Use typed hint {0}()", fix.Helper);
+			return null;
+		}
 
-				var captured = fix;
+		// A type change of the call can only break code inside its member (a local's type does not leave it); at top
+		// level, or outside a member body, the whole file is checked.
+		static readonly SyntaxAnnotation CheckedScope = new("L2DB1005.CheckedScope");
 
-				context.RegisterCodeFix(
-					CodeAction.Create(
-						title,
-						ct => ApplyAsync(context.Document, diagnostic, captured, ct),
-						equivalenceKey: GetEquivalenceKey(fix)),
-					diagnostic);
-			}
+		static MemberDeclarationSyntax? GetCheckedScope(SyntaxNode node)
+		{
+			return node.FirstAncestorOrSelf<MemberDeclarationSyntax>(m => m is BaseMethodDeclarationSyntax or BasePropertyDeclarationSyntax or BaseFieldDeclarationSyntax);
+		}
+
+		static int CountErrors(ImmutableArray<Diagnostic> diagnostics)
+		{
+			var count = 0;
+
+			foreach (var diagnostic in diagnostics)
+				if (diagnostic.Severity == DiagnosticSeverity.Error)
+					count++;
+
+			return count;
 		}
 
 		// An exact rewrite (a provider's own string overload) and a restricting one (a generic overload, whose rewrite stops
@@ -169,36 +230,54 @@ namespace LinqToDB.Analyzers.CodeFixes
 			return null;
 		}
 
-		static async Task<Document> ApplyAsync(Document document, Diagnostic diagnostic, Fix fix, CancellationToken cancellationToken)
+		// Null when the rewrite cannot be built, or the `var` local to retype is missing or has a type that cannot be
+		// written (an anonymous element type).
+		static async Task<Document?> RewriteAsync(Document document, Diagnostic diagnostic, Fix fix, bool retypeVarLocal, CancellationToken cancellationToken)
 		{
 			var root  = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
 			var model = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
 
 			if (root is null || model is null || FindInvocation(root, diagnostic) is not { } invocation)
-				return document;
+				return null;
 
 			var replacement = BuildReplacement(invocation, model, fix, cancellationToken);
 
 			if (replacement is null)
-				return document;
+				return null;
 
 			replacement = replacement.WithTriviaFrom(invocation);
 
-			SyntaxNode newRoot;
+			var nodes = new List<SyntaxNode> { invocation };
 
-			if (fix.GenericOverload && GetVarLocalRetype(invocation, model, cancellationToken) is { } retype)
-			{
-				if (retype.Blocked)
-					return document;
+			TypeSyntax? varType      = null;
+			TypeSyntax? explicitType = null;
 
-				newRoot = root.ReplaceNodes(
-					new SyntaxNode[] { invocation, retype.VarType },
-					(original, _) => original == invocation ? replacement : retype.ExplicitType.WithTriviaFrom(retype.VarType));
-			}
-			else
+			if (retypeVarLocal)
 			{
-				newRoot = root.ReplaceNode(invocation, replacement);
+				if (!TryGetVarLocalRetype(invocation, model, cancellationToken, out varType, out explicitType))
+					return null;
+
+				nodes.Add(varType);
 			}
+
+			// Marks the member around the call, where RewriteRestrictingAsync looks for new errors.
+			var scope = GetCheckedScope(invocation);
+
+			if (scope is not null)
+				nodes.Add(scope);
+
+			var newRoot = root.ReplaceNodes(
+				nodes,
+				(original, rewritten) =>
+				{
+					if (original == invocation)
+						return replacement;
+
+					if (original == varType)
+						return explicitType!.WithTriviaFrom(varType);
+
+					return rewritten.WithAdditionalAnnotations(CheckedScope);
+				});
 
 			if (newRoot is CompilationUnitSyntax unit)
 			{
@@ -215,93 +294,31 @@ namespace LinqToDB.Analyzers.CodeFixes
 			return document.WithSyntaxRoot(newRoot);
 		}
 
-		sealed class VarLocalRetype
-		{
-			public VarLocalRetype(TypeSyntax varType, TypeSyntax explicitType, bool blocked)
-			{
-				VarType      = varType;
-				ExplicitType = explicitType;
-				Blocked      = blocked;
-			}
-
-			public TypeSyntax VarType      { get; }
-			public TypeSyntax ExplicitType { get; }
-			public bool       Blocked      { get; }
-		}
-
 		// A generic overload returns ITable<T> / IQueryable<T>, the typed helper the provider's own type. When the call
-		// initializes a `var` local that is written again after its declaration (`q = q.Where(...)`), the new type would
-		// break that write, so the local keeps the original type, written out. Null when nothing has to change; blocked
-		// when the type cannot be written (an anonymous element type).
-		static VarLocalRetype? GetVarLocalRetype(InvocationExpressionSyntax invocation, SemanticModel model, CancellationToken cancellationToken)
+		// initializes a `var` local, the local can keep the original type, written out. False when the call initializes
+		// no `var` local, or the type cannot be written (an anonymous element type).
+		static bool TryGetVarLocalRetype(InvocationExpressionSyntax invocation, SemanticModel model, CancellationToken cancellationToken, out TypeSyntax varType, out TypeSyntax explicitType)
 		{
+			varType      = null!;
+			explicitType = null!;
+
 			SyntaxNode value = invocation;
 
 			while (value.Parent is ParenthesizedExpressionSyntax parenthesized)
 				value = parenthesized;
 
-			if (value.Parent is not EqualsValueClauseSyntax { Parent: VariableDeclaratorSyntax { Parent: VariableDeclarationSyntax { Type.IsVar: true } declaration } declarator })
-				return null;
-
-			if (model.GetDeclaredSymbol(declarator, cancellationToken) is not ILocalSymbol local
-				|| !IsWrittenAfterDeclaration(local, declarator, model, cancellationToken))
-				return null;
+			if (value.Parent is not EqualsValueClauseSyntax { Parent: VariableDeclaratorSyntax { Parent: VariableDeclarationSyntax { Type.IsVar: true } declaration } })
+				return false;
 
 			var type = model.GetTypeInfo(invocation, cancellationToken).Type;
 
 			if (type is null || type.TypeKind == TypeKind.Error || ContainsAnonymousType(type))
-				return new VarLocalRetype(declaration.Type, declaration.Type, blocked: true);
+				return false;
 
-			var explicitType = SyntaxFactory.ParseTypeName(type.ToMinimalDisplayString(model, declaration.Type.SpanStart));
+			varType      = declaration.Type;
+			explicitType = SyntaxFactory.ParseTypeName(type.ToMinimalDisplayString(model, declaration.Type.SpanStart));
 
-			return new VarLocalRetype(declaration.Type, explicitType, blocked: false);
-		}
-
-		static bool IsWrittenAfterDeclaration(ILocalSymbol local, VariableDeclaratorSyntax declarator, SemanticModel model, CancellationToken cancellationToken)
-		{
-			var scope = declarator.FirstAncestorOrSelf<BlockSyntax>() ?? (SyntaxNode)declarator.SyntaxTree.GetRoot(cancellationToken);
-
-			foreach (var identifier in scope.DescendantNodes().OfType<IdentifierNameSyntax>())
-			{
-				if (!string.Equals(identifier.Identifier.ValueText, local.Name, StringComparison.Ordinal) || !IsWriteTarget(identifier))
-					continue;
-
-				if (SymbolEqualityComparer.Default.Equals(model.GetSymbolInfo(identifier, cancellationToken).Symbol, local))
-					return true;
-			}
-
-			return false;
-		}
-
-		// An assignment target (simple, compound, `??=`, or an element of a deconstruction), a ref / out argument, a
-		// `ref` alias, or an increment.
-		static bool IsWriteTarget(ExpressionSyntax identifier)
-		{
-			SyntaxNode node = identifier;
-
-			while (node.Parent is ParenthesizedExpressionSyntax)
-				node = node.Parent;
-
-			switch (node.Parent)
-			{
-				case AssignmentExpressionSyntax assignment when assignment.Left == node:
-				case RefExpressionSyntax:
-				case PrefixUnaryExpressionSyntax  { RawKind: (int)SyntaxKind.PreIncrementExpression or (int)SyntaxKind.PreDecrementExpression }:
-				case PostfixUnaryExpressionSyntax { RawKind: (int)SyntaxKind.PostIncrementExpression or (int)SyntaxKind.PostDecrementExpression }:
-					return true;
-				case ArgumentSyntax argument when !argument.RefKindKeyword.IsKind(SyntaxKind.None) && !argument.RefKindKeyword.IsKind(SyntaxKind.InKeyword):
-					return true;
-				case ArgumentSyntax { Parent: TupleExpressionSyntax tuple }:
-					// (q, x) = ...: climb the nested tuples to the assignment.
-					SyntaxNode outer = tuple;
-
-					while (outer.Parent is ArgumentSyntax { Parent: TupleExpressionSyntax parentTuple })
-						outer = parentTuple;
-
-					return outer.Parent is AssignmentExpressionSyntax deconstruction && deconstruction.Left == outer;
-				default:
-					return false;
-			}
+			return true;
 		}
 
 		static bool ContainsAnonymousType(ITypeSymbol type)

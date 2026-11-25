@@ -1184,5 +1184,70 @@ namespace Tests.Analyzers
 						verifier.Equal("Use SQL Server typed hint WithNoLock() (applies to SQL Server only, as do text hints chained after it)", action.Title);
 				});
 		}
+
+		// A conditional with no target type takes the common type of its branches; the provider's type has none with a
+		// table, so the var local the conditional reads keeps the original type.
+		[Test]
+		public async Task VarLocalReadByAConditionalKeepsTheQueryType()
+		{
+			await VerifyAsync(
+				"""
+				using System.Linq;
+
+				using LinqToDB;
+
+				class Row { }
+
+				class C
+				{
+					void M(IQueryable<Row> source, ITable<Row> t, bool f)
+					{
+						var q = source.[|QueryHint("RECOMPILE")|];
+						var r = f ? q : t;
+					}
+				}
+				""",
+				"""
+				using System.Linq;
+
+				using LinqToDB;
+				using LinqToDB.DataProvider.SqlServer;
+
+				class Row { }
+
+				class C
+				{
+					void M(IQueryable<Row> source, ITable<Row> t, bool f)
+					{
+						IQueryable<Row> q = source.AsSqlServer().OptionRecompile();
+						var r = f ? q : t;
+					}
+				}
+				""",
+				SqlServerRestrictedKey);
+		}
+
+		// The call is a branch itself: no local can keep the type, so no restricting rewrite is offered.
+		[Test]
+		public async Task ConditionalBranchWithNoTargetTypeGetsNoRestrictingRewrite()
+		{
+			const string source = """
+				using System.Linq;
+
+				using LinqToDB;
+
+				class Row { }
+
+				class C
+				{
+					void M(IQueryable<Row> source, ITable<Row> t, bool f)
+					{
+						var r = f ? source.[|QueryHint("RECOMPILE")|] : t;
+					}
+				}
+				""";
+
+			await VerifyAsync(source, source, SqlServerRestrictedKey);
+		}
 	}
 }
