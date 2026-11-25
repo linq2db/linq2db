@@ -58,8 +58,8 @@ namespace LinqToDB.Remote.SignalR
 		/// (<see cref="Exception.ToString"/>), like the <c>transferInternalExceptionToClient</c> option of the gRPC
 		/// service; otherwise the client receives the generic Signal/R error message.
 		/// <para>
-		/// Only .NET 10+ servers pass the text on. The legacy (.NET Framework / .NET Standard) build, which .NET 8/9 servers
-		/// get, drops it unless <c>HubOptions.EnableDetailedErrors</c> is set, which exposes the errors of every hub method.
+		/// The Signal/R server of .NET Framework applications drops the text unless <c>HubOptions.EnableDetailedErrors</c>
+		/// is set, which exposes the errors of every hub method.
 		/// </para>
 		/// </summary>
 		public bool TransferInternalExceptionToClient { get; set; }

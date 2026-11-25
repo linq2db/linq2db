@@ -51,9 +51,10 @@ constructor reads the registered options from the connection's request services.
 .NET Standard) server has none for long polling connections, where such a hub uses the default options; pass the
 options to the base constructor to have them on every transport.
 
-`TransferInternalExceptionToClient` works on .NET 10+ servers. The legacy (.NET Framework / .NET Standard) build of
-this package, which .NET 8 and .NET 9 servers get too, reports no size limit to the client and drops error text
-unless `HubOptions.EnableDetailedErrors` is set, which exposes the errors of all hub methods.
+`TransferInternalExceptionToClient` has no effect on .NET Framework servers: their Signal/R server drops error text
+unless `HubOptions.EnableDetailedErrors` is set, which exposes the errors of all hub methods. The legacy
+(.NET Framework / .NET Standard) build of this package, which .NET 8 and .NET 9 servers get too, reports no size limit
+to the client.
 
 ## Other Transports
 
