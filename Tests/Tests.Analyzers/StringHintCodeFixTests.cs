@@ -1670,6 +1670,44 @@ namespace Tests.Analyzers
 				});
 		}
 
+		// A property pattern with a designation, a query's select clause and an async lambda's result capture the
+		// value's own type like `var`: no restricting rewrite.
+		[Test]
+		public async Task PatternDesignationSelectClauseAndAsyncLambdaGetNoRestrictingRewrite()
+		{
+			const string source = """
+				using System;
+				using System.Linq;
+				using System.Threading.Tasks;
+
+				using LinqToDB;
+
+				class Row { }
+
+				class C
+				{
+					async Task M(IQueryable<Row> src, ITable<Row> t)
+					{
+						if (t.[|TableHint("NOLOCK")|] is { } x)
+							x = t;
+
+						var q = from a in src select t.[|TableHint("READPAST")|];
+						q = src.Select(a => t);
+
+						var r = await RunAsync(async () => t.[|TableHint("UPDLOCK")|]);
+						r = t;
+					}
+
+					static async Task<T> RunAsync<T>(Func<Task<T>> f)
+					{
+						return await f();
+					}
+				}
+				""";
+
+			await VerifyAsync(source, source, SqlServerRestrictedKey);
+		}
+
 		static void AddGlobalLinqToDBUsing(CSharpCodeFixTest<StringHintAnalyzer, StringHintCodeFixProvider, DefaultVerifier> test)
 		{
 			test.TestState.Sources.Add(("/0/GlobalUsings.cs", "global using LinqToDB;"));

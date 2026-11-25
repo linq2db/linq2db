@@ -385,8 +385,8 @@ namespace LinqToDB.Analyzers.CodeFixes
 
 		// Whether the expression's own type is captured where it stands, so the provider's type would end up in another
 		// type or variable instead of converting to the one expected there: a branch of `?:` or `??`, a switch expression
-		// arm, an element of `new[]`, a tuple or an anonymous object, a value matched by `is var x` / `case var x`, the
-		// result of a lambda whose return type is inferred, an argument or `?.` / extension receiver bound to a parameter
+		// arm, an element of `new[]`, a tuple or an anonymous object, a value matched by `is var x` / `is { } x`, a query's
+		// `select` or `let`, the result of a lambda whose return type is inferred (also through an async lambda's Task<T>), an argument or `?.` / extension receiver bound to a parameter
 		// typed as a bare type parameter of a generic method (`Wrap<T>(this T value)`). A parameter of a type built on the
 		// type parameter (`IEnumerable<TInner>` of `Join`) infers the element type, which the provider's type keeps.
 		static bool CapturesType(ExpressionSyntax expression, SemanticModel model, CancellationToken cancellationToken)
@@ -402,6 +402,9 @@ namespace LinqToDB.Analyzers.CodeFixes
 				ArgumentSyntax { Parent: TupleExpressionSyntax }                              => true,
 
 				IsPatternExpressionSyntax isPattern     => isPattern.Expression == expression && DesignatesValue(isPattern.Pattern),
+
+				// Query syntax: `select` and `let` are the result of Select's lambda, whose TResult is inferred.
+				SelectClauseSyntax or LetClauseSyntax => true,
 				SwitchStatementSyntax switchStatement   => switchStatement.Sections.SelectMany(s => s.Labels).OfType<CasePatternSwitchLabelSyntax>().Any(l => DesignatesValue(l.Pattern)),
 				SwitchExpressionSyntax switchExpression => switchExpression.GoverningExpression == expression && switchExpression.Arms.Any(a => DesignatesValue(a.Pattern)),
 
@@ -425,7 +428,7 @@ namespace LinqToDB.Analyzers.CodeFixes
 			};
 		}
 
-		// `var x`, or a `var` designation of the whole value inside `and` / `or` / `not` / parentheses.
+		// `var x` or `{ } x` (a designation of the whole value with its own type), also inside `and` / `or` / `not` / parentheses.
 		static bool DesignatesValue(PatternSyntax pattern)
 		{
 			return pattern switch
@@ -435,6 +438,7 @@ namespace LinqToDB.Analyzers.CodeFixes
 				ParenthesizedPatternSyntax parenthesized => DesignatesValue(parenthesized.Pattern),
 				BinaryPatternSyntax binary               => DesignatesValue(binary.Left) || DesignatesValue(binary.Right),
 				UnaryPatternSyntax unary                 => DesignatesValue(unary.Pattern),
+				RecursivePatternSyntax recursive         => recursive.Type is null && recursive.Designation is SingleVariableDesignationSyntax,
 				_                                        => false,
 			};
 		}
@@ -463,7 +467,16 @@ namespace LinqToDB.Analyzers.CodeFixes
 						&& string.Equals(expressionType.ContainingNamespace?.ToDisplayString(), "System.Linq.Expressions", StringComparison.Ordinal))
 						type = expressionType.TypeArguments[0];
 
-					return type is INamedTypeSymbol { DelegateInvokeMethod: { } invoke } && IsMethodTypeParameter(invoke.ReturnType);
+					if (type is not INamedTypeSymbol { DelegateInvokeMethod: { } invoke })
+						return false;
+
+					// An async lambda's result is the argument of the delegate's Task<T> / ValueTask<T>.
+					var result = invoke.ReturnType;
+
+					if (function.AsyncKeyword != default && result is INamedTypeSymbol { Name: "Task" or "ValueTask", TypeArguments.Length: 1 } task)
+						result = task.TypeArguments[0];
+
+					return IsMethodTypeParameter(result);
 				default:
 					return false;
 			}
