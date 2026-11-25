@@ -40,6 +40,11 @@ await using (var db = new SignalRDataContext(connection))
 `SignalRDataContext(HubConnection)` leaves the connection to the caller, so one connection can serve any number of
 contexts. Use `SignalRDataContext(connection, disposeHubConnection: true)` to hand it over to the context.
 
+On .NET Framework / .NET Standard this package is built against the 1.x Signal/R client it depends on, and works with
+that version only: from 3.0 on, `HubConnection` is not binary compatible with it (`DisposeAsync` returns `ValueTask`),
+so keep `Microsoft.AspNetCore.SignalR.Client` at 1.x there. What this readme says about .NET Framework /
+.NET Standard describes that client.
+
 Cancelling a query (the `CancellationToken` of `ToListAsync` and other async methods) cancels it on the server: a
 running command is cancelled where the database provider supports it, and reading the result stops at the next row.
 Calls are never re-sent after a lost connection. Synchronous APIs block a thread, which Blazor

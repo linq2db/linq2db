@@ -17,6 +17,10 @@ namespace LinqToDB.Remote.SignalR
 	/// registers one as a singleton per registered context type, shared by all contexts of that type; use <see cref="SignalRLinqServiceClient(LinqToDBSignalRConnection)"/>
 	/// to use one without DI.
 	/// </para>
+	/// <para>
+	/// On .NET Framework / .NET Standard this class is built against the 1.x Signal/R client and works with that version
+	/// only: from 3.0 on, <see cref="Microsoft.AspNetCore.SignalR.Client.HubConnection"/> is not binary compatible with it.
+	/// </para>
 	/// </summary>
 	public sealed class LinqToDBSignalRConnection : IAsyncDisposable, IDisposable
 	{
