@@ -82,6 +82,28 @@ namespace Tests.Mapping
 			public int Id { get; set; }
 		}
 
+		[Table]
+		sealed class ColumnAttributeRequired
+		{
+			[Column]   public int     Id       { get; set; }
+			[Nullable] public int     Nullable { get; set; }
+			[NotNull]  public string  NotNull  { get; set; } = null!;
+			           public string? Plain    { get; set; }
+		}
+
+		[Test]
+		public void NullabilityAttributeMarksColumn()
+		{
+			var ms = new MappingSchema();
+			var e = ms.GetEntityDescriptor(typeof(ColumnAttributeRequired));
+			Check(e, new[]
+			{
+				("Nullable", 'C', true),
+				("NotNull",  'C', false),
+			});
+			e.Columns.ShouldNotContain(c => c.MemberName == nameof(ColumnAttributeRequired.Plain));
+		}
+
 		[Test]
 		public void InferFromMetadata()
 		{

@@ -130,7 +130,7 @@ type internal FSharpOptionMetadataReader() =
                 // length, etc.) are preserved - unlike deriving here from MappingSchema.Default, which has no
                 // provider context and would truncate them (#5645; e.g. 'decimal option' -> decimal(18,0)).
                 [|
-                    ColumnAttribute(CanBeNull = true) :> MappingAttribute
+                    NullableAttribute(true) :> MappingAttribute
                     ValueConverterAttribute(ValueConverter = FSharpOptionSupport.GetConverter mt) :> MappingAttribute
                 |]
             else
