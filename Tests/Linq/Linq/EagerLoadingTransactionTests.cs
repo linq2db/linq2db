@@ -55,17 +55,19 @@ namespace Tests.Linq
 			.UseEagerLoadingIsolationLevel(isolationLevel)
 			.UseTracing(TraceLevel.Info, ti =>
 			{
-				if (ti.TraceInfoStep != TraceInfoStep.BeforeExecute)
-					return;
-
-				if (ti.Operation is TraceOperation.ExecuteReader or TraceOperation.ExecuteNonQuery or TraceOperation.ExecuteScalar
-					or TraceOperation.BeginTransaction or TraceOperation.CommitTransaction or TraceOperation.RollbackTransaction)
+				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute
+					&& ti.Operation is TraceOperation.ExecuteReader or TraceOperation.ExecuteNonQuery or TraceOperation.ExecuteScalar
+						or TraceOperation.BeginTransaction or TraceOperation.CommitTransaction or TraceOperation.RollbackTransaction)
 				{
 					trace.Operations.Add(ti.Operation);
 
 					if (ti.Operation == TraceOperation.BeginTransaction)
 						trace.Begins.Add(ti.CommandText);
 				}
+
+				// The default handler feeds the harness's baselines
+				//
+				DataConnection.DefaultOnTraceConnection(ti);
 			});
 
 		static DataContext CreateDataContext(string context, OperationTrace trace, bool useTransaction, IsolationLevel? isolationLevel = null)
