@@ -828,6 +828,18 @@ namespace LinqToDB.Internal.Linq.Builder
 				return newNode;
 			}
 
+			// A stream part of an explicit query batch is loaded as a streamed eager load; one that the client could evaluate
+			// is left to the marker's body, which refuses it.
+			if (_buildPurpose is BuildPurpose.Expression && QueryBatchStreamMarker.IsMarker(node) && !Builder.CanBeEvaluatedOnClient(node))
+			{
+				// The batch writes both as constants (QueryBatchStreamMarker.MakePart).
+				var stream = new QueryBatchStreamInfo(
+					(int)((ConstantExpression)node.Arguments[1]).Value!,
+					(bool)((ConstantExpression)node.Arguments[2]).Value!);
+
+				return new SqlEagerLoadExpression(node.Arguments[0], null, stream, node.Type);
+			}
+
 			if (node.Method.DeclaringType == typeof(Sql))
 			{
 				switch (node.Method.Name)

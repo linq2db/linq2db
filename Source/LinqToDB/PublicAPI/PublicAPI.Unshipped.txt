@@ -30,13 +30,29 @@ static LinqToDB.LinqExtensions.CreateQueryBatch(this LinqToDB.IDataContext! data
 LinqToDB.QueryBatchBuilder
 LinqToDB.QueryBatchBuilder.AddRequest<T>(System.Linq.Expressions.Expression<System.Func<T>!>! query) -> LinqToDB.QueryBatchResult<T>!
 LinqToDB.QueryBatchBuilder.AddRequest<T>(System.Linq.Expressions.Expression<System.Func<T>!>! query, System.Action<T>! setter) -> void
+LinqToDB.QueryBatchBuilder.AddStreamRequest<T>(System.Linq.Expressions.Expression<System.Func<System.Linq.IQueryable<T>!>!>! query) -> LinqToDB.QueryBatchStream<T>!
+LinqToDB.QueryBatchBuilder.AddStreamRequest<T>(System.Linq.Expressions.Expression<System.Func<System.Linq.IQueryable<T>!>!>! query, System.Action<T>! onRow) -> void
+LinqToDB.QueryBatchBuilder.Dispose() -> void
+LinqToDB.QueryBatchBuilder.DisposeAsync() -> System.Threading.Tasks.ValueTask
 LinqToDB.QueryBatchBuilder.Execute() -> void
 LinqToDB.QueryBatchBuilder.ExecuteAsync(System.Threading.CancellationToken token = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 LinqToDB.QueryBatchResult<T>
 LinqToDB.QueryBatchResult<T>.Value.get -> T
+LinqToDB.QueryBatchStream<T>
+LinqToDB.QueryBatchStream<T>.AsAsyncEnumerable(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IAsyncEnumerable<T>!
+LinqToDB.QueryBatchStream<T>.AsEnumerable() -> System.Collections.Generic.IEnumerable<T>!
+LinqToDB.QueryBatchStream<T>.GetAsyncEnumerator(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IAsyncEnumerator<T>!
+LinqToDB.QueryBatchStream<T>.GetEnumerator() -> System.Collections.Generic.IEnumerator<T>!
 const LinqToDB.Internal.Common.ErrorHelper.Error_QueryHints_In_QueryBatch = "QueryBatch cannot run while the context has pending QueryHints or NextQueryHints." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_Subquery_in_Fromless_Select = "Provider does not support subqueries in a SELECT without a FROM clause." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_QueryBatch_TaskPart = "A query batch part cannot hold an expression that may create a task: it could run a separate query outside the batch." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_QueryBatch_NotExecuted = "The query batch has not been executed." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_QueryBatch_AlreadyExecuted = "The query batch has already been executed." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_QueryBatch_Running = "The query batch is being executed." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_QueryBatch_StreamsOpen = "The query batch has streams that are not read yet." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_QueryBatch_StreamNotReady = "The query batch stream cannot be read: its batch has not been executed." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_QueryBatch_StreamClosed = "The query batch stream is closed: its batch failed or was disposed before the stream was read to its end." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_QueryBatch_StreamWrongMode = "The query batch stream is read the way its batch ran: with foreach after Execute, with await foreach after ExecuteAsync." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_QueryBatch_StreamAlreadyRead = "The query batch stream has already been read, or was skipped by reading a later stream." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_QueryBatch_StreamCollectionPart = "A query batch stream part cannot load a collection." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_QueryBatch_StreamClientPart = "A query batch stream part must query the database, not a client-side sequence." -> string!

@@ -616,6 +616,11 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (e.NodeType != ExpressionType.Extension || e is not SqlEagerLoadExpression eagerLoad)
 						return e;
 
+					// A query batch stream has a harvester of its own whatever the strategy: it is read after the main row, so
+					// it shares nothing with a buffered load of the same sequence.
+					if (eagerLoad.Stream != null)
+						return ProcessStreamedEagerLoad(eagerLoad, queryParameter, localHarvesters);
+
 					if (cteUnionCache != null && cteUnionCache.TryGetValue(eagerLoad.SequenceExpression, out var cachedExpression))
 						return cachedExpression;
 

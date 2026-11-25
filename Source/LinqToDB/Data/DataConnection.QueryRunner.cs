@@ -529,7 +529,8 @@ namespace LinqToDB.Data
 			// as one DbCommand; a multi-statement command runs as a DbBatch (each statement its own parameter scope),
 			// attached to the reader wrapper so the batch is released when the reader is disposed. Returns the reader
 			// positioned at the first result set: the caller harvests each buffered result set, then for the command holding
-			// the main query streams the last result set — and owns the returned reader for the stream's lifetime.
+			// the main query streams the main's result set — and owns the returned reader for the stream's lifetime, or hands
+			// it, with the result sets after the main (an explicit batch's streams), to the batch's stream cursor.
 			internal static DataReaderWrapper ExecuteCombined(DataConnection dataConnection, CombinedCommand command, CommandBehavior commandBehavior)
 			{
 				var statements = command.Statements;
@@ -672,8 +673,8 @@ namespace LinqToDB.Data
 
 			// Shared combined-command harvest walk (sync): over one open reader, invokes the per-step harvest callback for the
 			// FIRST harvestCount entries of stepIndexes in order, then advances to the next result set for every
-			// result-producing step (a pure non-query step yields no result set, so no advance). A caller that streams the
-			// group's last step itself (the eager main) passes a count one short of the group instead of slicing the list.
+			// result-producing step (a pure non-query step yields no result set, so no advance). A caller that streams a step
+			// itself (the eager main) passes that step's position in the group as the count instead of slicing the list.
 			// DML harvests scalar / rows-affected into the execution context; eager loading plugs its own materializer in.
 			//
 			// "A pure non-query step yields no result set" is a DRIVER behaviour, not a SQL one, and no capability flag says
@@ -707,7 +708,7 @@ namespace LinqToDB.Data
 						// The last harvested step legitimately has nothing to advance to when the group carries no
 						// terminal, so only a shortfall with steps still pending is a real misalignment.
 						if (!advanced && k + 1 < harvestCount)
-							throw new InvalidOperationException("Combined command returned fewer result sets than the scenario planned.");
+							throw new InvalidOperationException(ErrorHelper.Error_CombinedCommand_FewerResultSets);
 					}
 				}
 			}
@@ -821,9 +822,10 @@ namespace LinqToDB.Data
 			// walks the groups in order and harvests each group's results into the context. A group for which isSingleton holds
 			// is dispatched to runSingleton (DML: a one-step group runs NonQuery/Scalar via ExecuteSingleStep; eager: a
 			// self-executing preamble runs its own query); every other group runs as one combined command via
-			// ExecuteCombinedHarvest with harvestCombined. When a group's last step is terminalStepIndex (the eager main), that
-			// group's earlier steps are harvested and the still-open reader is returned for the caller to stream (only the last
-			// group carries a terminal); otherwise every reader is disposed here and the method returns null. getCommand supplies
+			// ExecuteCombinedHarvest with harvestCombined. When a group carries terminalStepIndex (the eager main), the steps
+			// before it are harvested, the still-open reader positioned at the terminal is returned for the caller to stream, and
+			// terminalGroup reports the group's index; steps after the terminal (an explicit batch's streams) and later groups
+			// are left to the caller. Otherwise every reader is disposed here and the method returns null. getCommand supplies
 			// each combined group's physical command (DML builds it per group from the prepared query; eager already holds it).
 			internal static DataReaderWrapper? RunGroups(
 				DataConnection                              dataConnection,
@@ -833,7 +835,8 @@ namespace LinqToDB.Data
 				Func<SqlCommandGroup, bool>                 isSingleton,
 				Action<int, int>                            runSingleton,
 				Action<int, DbDataReader>                   harvestCombined,
-				int                                         terminalStepIndex)
+				int                                         terminalStepIndex,
+				Action<int>?                                terminalGroup = null)
 			{
 				for (var g = 0; g < groups.Count; g++)
 				{
@@ -845,21 +848,38 @@ namespace LinqToDB.Data
 						continue;
 					}
 
-					var stepIndexes     = group.StepIndexes;
-					var carriesTerminal = terminalStepIndex >= 0 && stepIndexes[stepIndexes.Count - 1] == terminalStepIndex;
-					// The terminal step (the eager main) is streamed by the caller, not harvested here, so stop one short of
-					// the group - expressed as a count so no sub-list is materialized per execution.
-					var harvestCount    = carriesTerminal ? stepIndexes.Count - 1 : stepIndexes.Count;
+					var stepIndexes      = group.StepIndexes;
+					var terminalPosition = IndexOfStep(stepIndexes, terminalStepIndex);
+					// The terminal step (the eager main) is streamed by the caller, not harvested here, so stop at it -
+					// expressed as a count so no sub-list is materialized per execution.
+					var harvestCount     = terminalPosition >= 0 ? terminalPosition : stepIndexes.Count;
 
 					var rd = ExecuteCombinedHarvest(dataConnection, getCommand(group, g), steps, stepIndexes, harvestCount, harvestCombined);
 
-					if (carriesTerminal)
+					if (terminalPosition >= 0)
+					{
+						terminalGroup?.Invoke(g);
 						return rd;
+					}
 
 					rd.Dispose();
 				}
 
 				return null;
+			}
+
+			static int IndexOfStep(IReadOnlyList<int> stepIndexes, int stepIndex)
+			{
+				if (stepIndex >= 0)
+				{
+					for (var i = 0; i < stepIndexes.Count; i++)
+					{
+						if (stepIndexes[i] == stepIndex)
+							return i;
+					}
+				}
+
+				return -1;
 			}
 
 			// Interpreter (sync). Walks the physical commands (each a group of steps) via the shared RunGroups: a singleton
@@ -951,7 +971,7 @@ namespace LinqToDB.Data
 						// The last harvested step legitimately has nothing to advance to when the group carries no
 						// terminal, so only a shortfall with steps still pending is a real misalignment.
 						if (!advanced && k + 1 < harvestCount)
-							throw new InvalidOperationException("Combined command returned fewer result sets than the scenario planned.");
+							throw new InvalidOperationException(ErrorHelper.Error_CombinedCommand_FewerResultSets);
 					}
 				}
 			}
@@ -984,7 +1004,8 @@ namespace LinqToDB.Data
 				Func<int, int, Task>                        runSingleton,
 				Func<int, DbDataReader, Task>               harvestCombined,
 				int                                         terminalStepIndex,
-				CancellationToken                           cancellationToken)
+				CancellationToken                           cancellationToken,
+				Action<int>?                                terminalGroup = null)
 			{
 				for (var g = 0; g < groups.Count; g++)
 				{
@@ -996,15 +1017,18 @@ namespace LinqToDB.Data
 						continue;
 					}
 
-					var stepIndexes     = group.StepIndexes;
-					var carriesTerminal = terminalStepIndex >= 0 && stepIndexes[stepIndexes.Count - 1] == terminalStepIndex;
+					var stepIndexes      = group.StepIndexes;
+					var terminalPosition = IndexOfStep(stepIndexes, terminalStepIndex);
 					// See the sync sibling: a count, not a sliced list, so the walk allocates nothing per execution.
-					var harvestCount    = carriesTerminal ? stepIndexes.Count - 1 : stepIndexes.Count;
+					var harvestCount     = terminalPosition >= 0 ? terminalPosition : stepIndexes.Count;
 
 					var rd = await ExecuteCombinedHarvestAsync(dataConnection, getCommand(group, g), steps, stepIndexes, harvestCount, harvestCombined, cancellationToken).ConfigureAwait(false);
 
-					if (carriesTerminal)
+					if (terminalPosition >= 0)
+					{
+						terminalGroup?.Invoke(g);
 						return rd;
+					}
 
 					await rd.DisposeAsync().ConfigureAwait(false);
 				}

@@ -32,6 +32,9 @@ namespace LinqToDB
 	{
 		bool _disposed;
 
+		// A query batch stream releases its connection lock only while the context is alive: disposing it closed the connection.
+		internal bool IsDisposed => _disposed;
+
 		#region .ctors
 
 		/// <summary>

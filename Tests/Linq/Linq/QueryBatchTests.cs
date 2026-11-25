@@ -4122,6 +4122,1074 @@ namespace Tests.Linq
 			total.ShouldBe(BatchItem.Seed.Length);
 		}
 
+		static int[] OrderedSeedIds()
+		{
+			return BatchItem.Seed
+				.Select(i => i.Id)
+				.OrderBy(id => id)
+				.ToArray();
+		}
+
+		// Every route: SQL Server, PostgreSQL, SQLite and MySQL read the handles from the batch's reader, the others from
+		// queries of their own; remote buffers. Access refuses the FROM-less batch row. Traced keeps the remote pair out of the
+		// baselines.
+		[Test]
+		public async Task StreamHandleReadsEachRow([DataSources(NoFromlessSubquery)] string context, [Values] bool isAsync)
+		{
+			using var db    = GetDataContext(context, Traced(new CommandTrace()));
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			await using var batch = db.CreateQueryBatch();
+
+			var total    = batch.AddRequest(() => items.Count());
+			var buffered = batch.AddRequest(() => items
+				.OrderBy(i => i.Id)
+				.ToList());
+			var first    = batch.AddStreamRequest(() => items.OrderBy(i => i.Id));
+			var second   = batch.AddStreamRequest(() => items.OrderBy(i => i.Id));
+
+			var firstIds  = new List<int>();
+			var secondIds = new List<int>();
+
+			if (isAsync)
+			{
+				await batch.ExecuteAsync();
+
+				await foreach (var item in first)
+				{
+					firstIds.Add(item.Id);
+				}
+
+				await foreach (var item in second)
+				{
+					secondIds.Add(item.Id);
+				}
+			}
+			else
+			{
+				batch.Execute();
+
+				foreach (var item in first)
+				{
+					firstIds.Add(item.Id);
+				}
+
+				foreach (var item in second)
+				{
+					secondIds.Add(item.Id);
+				}
+			}
+
+			total.Value.ShouldBe(BatchItem.Seed.Length);
+			Ids(buffered.Value)
+				.ShouldBe(OrderedSeedIds());
+			firstIds.ShouldBe(OrderedSeedIds());
+			secondIds.ShouldBe(OrderedSeedIds());
+		}
+
+		// As StreamHandleReadsEachRow, for the callback form: the results are set before the first row arrives.
+		[Test]
+		public async Task StreamCallbackReceivesEachRow([DataSources(NoFromlessSubquery)] string context, [Values] bool isAsync)
+		{
+			using var db    = GetDataContext(context, Traced(new CommandTrace()));
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var rows      = new List<int>();
+			var limited   = new List<int>();
+			var totalSeen = -1;
+			var limit     = 3;
+
+			var batch = db.CreateQueryBatch();
+			var total = batch.AddRequest(() => items.Count());
+
+			// The setter runs after every stream, so the stream below reads the limit from before Execute.
+			batch.AddRequest(() => items.Count(), v => limit = v);
+			batch.AddStreamRequest(
+				() => items.OrderBy(i => i.Id),
+				item =>
+				{
+					if (rows.Count == 0)
+						totalSeen = total.Value;
+
+					rows.Add(item.Id);
+				});
+			batch.AddStreamRequest(
+				() => items
+					.Where(i => i.Id <= limit)
+					.OrderBy(i => i.Id),
+				item => limited.Add(item.Id));
+
+			await Run(batch, isAsync);
+
+			rows.ShouldBe(OrderedSeedIds());
+			totalSeen.ShouldBe(BatchItem.Seed.Length);
+			limited.ShouldBe([1, 2, 3]);
+			limit.ShouldBe(BatchItem.Seed.Length);
+		}
+
+		[Table("BatchItem")]
+		sealed class CountingBatchItem
+		{
+			public static int Materialized;
+
+			int _id;
+
+			[Column, PrimaryKey]
+			public int Id
+			{
+				get => _id;
+				set
+				{
+					_id = value;
+					Interlocked.Increment(ref Materialized);
+				}
+			}
+		}
+
+		// Non-parallel: the counter is static.
+		[Test, NonParallelizable]
+		public async Task StreamIsOneCommandAndUnbuffered(
+			// The combining backends show one command and a handle read row by row; SqlCe shows that the callback of a stream
+			// run as its own query is fed row by row too.
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllSqlCe)] string context,
+			[Values] bool isAsync)
+		{
+			var trace = new CommandTrace();
+
+			using var db    = GetDataContext(context, Traced(trace));
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var counting        = db.GetTable<CountingBatchItem>();
+			var inFirstCallback = -1;
+
+			await using var batch = db.CreateQueryBatch();
+
+			var total = batch.AddRequest(() => items.Count());
+
+			batch.AddStreamRequest(
+				() => counting.OrderBy(i => i.Id),
+				_ =>
+				{
+					if (inFirstCallback < 0)
+						inFirstCallback = CountingBatchItem.Materialized;
+				});
+
+			var handle = batch.AddStreamRequest(() => counting.OrderBy(i => i.Id));
+
+			trace.Reset();
+			CountingBatchItem.Materialized = 0;
+
+			await Run(batch, isAsync);
+
+			var afterExecute = CountingBatchItem.Materialized;
+			int afterFirstRow;
+
+			if (isAsync)
+			{
+				await using var enumerator = handle.GetAsyncEnumerator();
+
+				var moved = await enumerator.MoveNextAsync();
+
+				moved.ShouldBeTrue();
+				afterFirstRow = CountingBatchItem.Materialized;
+			}
+			else
+			{
+				using var enumerator = handle.GetEnumerator();
+
+				var moved = enumerator.MoveNext();
+
+				moved.ShouldBeTrue();
+				afterFirstRow = CountingBatchItem.Materialized;
+			}
+
+			total.Value.ShouldBe(BatchItem.Seed.Length);
+			inFirstCallback.ShouldBe(1);
+
+			if (db.UsesCombinedQueryBatch())
+			{
+				trace.Readers.ShouldBe(1);
+				afterFirstRow.ShouldBe(afterExecute + 1);
+			}
+		}
+
+		static void ShouldRefuse<T>(QueryBatchStream<T> stream, string message)
+		{
+			Shouldly.Should
+				.Throw<InvalidOperationException>(stream.GetEnumerator)
+				.Message
+				.ShouldBe(message);
+		}
+
+		static int[] IdsAbove(int id)
+		{
+			return OrderedSeedIds()
+				.Where(i => i > id)
+				.ToArray();
+		}
+
+		// The handles' rules are the batch's own; SQLite reads them from its reader, SqlCe from buffers.
+		[Test]
+		public void StreamHandlesReadForward([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlCe)] string context)
+		{
+			using var db    = GetDataContext(context, Traced(new CommandTrace()));
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			using var batch = db.CreateQueryBatch();
+
+			var first  = batch.AddStreamRequest(() => items.OrderBy(i => i.Id));
+			var second = batch.AddStreamRequest(() => items.OrderBy(i => i.Id));
+			var third  = batch.AddStreamRequest(() => items
+				.Where(i => i.Id > 5)
+				.OrderBy(i => i.Id));
+
+			ShouldRefuse(first, ErrorHelper.Error_QueryBatch_StreamNotReady);
+
+			batch.Execute();
+
+			third.AsEnumerable()
+				.Select(i => i.Id)
+				.ToArray()
+				.ShouldBe(IdsAbove(5));
+
+			ShouldRefuse(first,  ErrorHelper.Error_QueryBatch_StreamAlreadyRead);
+			ShouldRefuse(second, ErrorHelper.Error_QueryBatch_StreamAlreadyRead);
+			ShouldRefuse(third,  ErrorHelper.Error_QueryBatch_StreamAlreadyRead);
+		}
+
+		// Decided before any row is read; SqlCe's handles are buffers and keep the rule.
+		[Test]
+		public async Task StreamReadModeFollowsTheRun([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlCe)] string context, [Values] bool isAsync)
+		{
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			await using var batch = db.CreateQueryBatch();
+
+			var handle = batch.AddStreamRequest(() => items.OrderBy(i => i.Id));
+			var ids    = new List<int>();
+
+			await Run(batch, isAsync);
+
+			if (isAsync)
+			{
+				ShouldRefuse(handle, ErrorHelper.Error_QueryBatch_StreamWrongMode);
+
+				await foreach (var item in handle)
+				{
+					ids.Add(item.Id);
+				}
+			}
+			else
+			{
+				Shouldly.Should
+					.Throw<InvalidOperationException>(() => handle.GetAsyncEnumerator())
+					.Message
+					.ShouldBe(ErrorHelper.Error_QueryBatch_StreamWrongMode);
+
+				foreach (var item in handle)
+				{
+					ids.Add(item.Id);
+				}
+			}
+
+			ids.ShouldBe(OrderedSeedIds());
+		}
+
+		sealed class OpenCounter : ConnectionInterceptor
+		{
+			public int Opened;
+
+			public override void ConnectionOpened(ConnectionEventData eventData, DbConnection connection)
+			{
+				Opened++;
+			}
+
+			public override Task ConnectionOpenedAsync(ConnectionEventData eventData, DbConnection connection, CancellationToken cancellationToken)
+			{
+				Opened++;
+				return Task.CompletedTask;
+			}
+		}
+
+		// A DataContext opens a connection per query and keeps the one a combined batch's unread stream holds: SQLite
+		// combines; SqlCe runs each stream inside Execute and holds nothing after it.
+		[Test]
+		public void StreamReleasesTheConnection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlCe)] string context)
+		{
+			using var setup = GetDataContext(context);
+			using var items = setup.CreateLocalTable(BatchItem.Seed);
+
+			var counter = new OpenCounter();
+			var db      = new DataContext(new DataOptions()
+				.UseConfiguration(context)
+				.UseInterceptor(counter));
+
+			var combined = db.UsesCombinedQueryBatch();
+			var batch    = db.CreateQueryBatch();
+			var handle   = batch.AddStreamRequest(() => db
+				.GetTable<BatchItem>()
+				.OrderBy(i => i.Id));
+
+			batch.Execute();
+
+			var afterExecute = counter.Opened;
+
+			db.GetTable<BatchItem>()
+				.Count()
+				.ShouldBe(BatchItem.Seed.Length);
+
+			Shouldly.Should
+				.Throw<InvalidOperationException>(() => batch.AddRequest(() => 1))
+				.Message
+				.ShouldBe(combined ? ErrorHelper.Error_QueryBatch_StreamsOpen : ErrorHelper.Error_QueryBatch_AlreadyExecuted);
+			counter.Opened.ShouldBe(combined ? afterExecute : afterExecute + 1);
+
+			handle.AsEnumerable()
+				.Count()
+				.ShouldBe(BatchItem.Seed.Length);
+
+			var afterRead = counter.Opened;
+
+			db.GetTable<BatchItem>()
+				.Count()
+				.ShouldBe(BatchItem.Seed.Length);
+			counter.Opened.ShouldBe(afterRead + 1);
+
+			// A batch disposed after its context releases nothing more and does not throw.
+			var second = db.CreateQueryBatch();
+			var unread = second.AddStreamRequest(() => db
+				.GetTable<BatchItem>()
+				.OrderBy(i => i.Id));
+
+			second.Execute();
+			db.Dispose();
+			second.Dispose();
+
+			if (combined)
+				ShouldRefuse(unread, ErrorHelper.Error_QueryBatch_StreamClosed);
+		}
+
+		// With callbacks only, no handle ends the reading: the last callback's rows release the reader inside Execute. A
+		// DataContext opens a connection per query, which shows it; only the combined route (SQLite) holds a reader.
+		[Test]
+		public async Task CallbackBatchReleasesTheConnection([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool isAsync)
+		{
+			using var setup = GetDataContext(context);
+			using var items = setup.CreateLocalTable(BatchItem.Seed);
+
+			var counter = new OpenCounter();
+
+			using var db = new DataContext(new DataOptions()
+				.UseConfiguration(context)
+				.UseInterceptor(counter));
+
+			var rows  = new List<int>();
+			var batch = db.CreateQueryBatch();
+
+			batch.AddStreamRequest(
+				() => db
+					.GetTable<BatchItem>()
+					.OrderBy(i => i.Id),
+				item => rows.Add(item.Id));
+
+			await Run(batch, isAsync);
+
+			var afterExecute = counter.Opened;
+
+			db.GetTable<BatchItem>()
+				.Count()
+				.ShouldBe(BatchItem.Seed.Length);
+			counter.Opened.ShouldBe(afterExecute + 1);
+			rows.ShouldBe(OrderedSeedIds());
+		}
+
+		// An entity First that finds nothing empties the batch row, which the batch's own Single refuses: no stream took the
+		// reader, so the failed run releases it. A DataContext opens a connection per query, which shows it; SQLite combines.
+		[Test]
+		public async Task EmptyBatchRowReleasesTheReader([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool isAsync)
+		{
+			using var setup = GetDataContext(context);
+			using var items = setup.CreateLocalTable(BatchItem.Seed);
+
+			var counter = new OpenCounter();
+
+			using var db = new DataContext(new DataOptions()
+				.UseConfiguration(context)
+				.UseInterceptor(counter));
+
+			var batch = db.CreateQueryBatch();
+			var first = batch.AddRequest(() => db
+				.GetTable<BatchItem>()
+				.First(i => i.Id > 100));
+
+			batch.AddStreamRequest(() => db
+				.GetTable<BatchItem>()
+				.OrderBy(i => i.Id));
+
+			var error = await RunAndFail(batch, isAsync);
+
+			error.ShouldBeOfType<InvalidOperationException>();
+
+			var afterFailure = counter.Opened;
+
+			db.GetTable<BatchItem>()
+				.Count()
+				.ShouldBe(BatchItem.Seed.Length);
+			counter.Opened.ShouldBe(afterFailure + 1);
+		}
+
+		// A handle read part-way cannot go on once a later one is read, even when it stands at its last row: SQLite reads both
+		// from the batch's reader, SqlCe from buffers, and both refuse it the same way.
+		[Test]
+		public async Task PartlyReadHandleStopsAtALaterOne([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlCe)] string context, [Values] bool isAsync, [Values] bool atLastRow)
+		{
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			await using var batch = db.CreateQueryBatch();
+
+			var first  = batch.AddStreamRequest(() => items.OrderBy(i => i.Id));
+			var second = batch.AddStreamRequest(() => items
+				.Where(i => i.Id > 5)
+				.OrderBy(i => i.Id));
+
+			await Run(batch, isAsync);
+
+			var rowsRead = atLastRow ? BatchItem.Seed.Length : 1;
+
+			Exception error;
+
+			if (isAsync)
+			{
+				await using var firstRows = first.GetAsyncEnumerator();
+
+				for (var k = 0; k < rowsRead; k++)
+				{
+					var moved = await firstRows.MoveNextAsync();
+
+					moved.ShouldBeTrue();
+				}
+
+				(await ReadAll(second, isAsync))
+					.Select(i => i.Id)
+					.ToArray()
+					.ShouldBe(IdsAbove(5));
+				error = await Shouldly.Should.ThrowAsync<InvalidOperationException>(async () => await firstRows.MoveNextAsync());
+			}
+			else
+			{
+				using var firstRows = first.GetEnumerator();
+
+				for (var k = 0; k < rowsRead; k++)
+				{
+					var moved = firstRows.MoveNext();
+
+					moved.ShouldBeTrue();
+				}
+
+				(await ReadAll(second, isAsync))
+					.Select(i => i.Id)
+					.ToArray()
+					.ShouldBe(IdsAbove(5));
+				error = Shouldly.Should.Throw<InvalidOperationException>(() => firstRows.MoveNext());
+			}
+
+			error.Message.ShouldBe(ErrorHelper.Error_QueryBatch_StreamAlreadyRead);
+		}
+
+		// An enumerator disposed before its first move takes nothing: an earlier handle is not skipped, and the handle itself
+		// is read afterwards. SQLite reads from the batch's reader, SqlCe from buffers.
+		[Test]
+		public async Task UnmovedEnumeratorTakesNothing([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlCe)] string context, [Values] bool isAsync)
+		{
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			await using var batch = db.CreateQueryBatch();
+
+			var first  = batch.AddStreamRequest(() => items.OrderBy(i => i.Id));
+			var second = batch.AddStreamRequest(() => items
+				.Where(i => i.Id > 5)
+				.OrderBy(i => i.Id));
+
+			await Run(batch, isAsync);
+
+			if (isAsync)
+			{
+				var unmoved = second.GetAsyncEnumerator();
+
+				await unmoved.DisposeAsync();
+			}
+			else
+			{
+				var unmoved = second.GetEnumerator();
+
+				unmoved.Dispose();
+			}
+
+			(await ReadAll(first, isAsync))
+				.Select(i => i.Id)
+				.ToArray()
+				.ShouldBe(OrderedSeedIds());
+			(await ReadAll(second, isAsync))
+				.Select(i => i.Id)
+				.ToArray()
+				.ShouldBe(IdsAbove(5));
+		}
+
+		// A batch disposed while a handle reads from its reader closes it: the enumeration stops at its next row with the
+		// closed text, not with the reader's own error. SQLite combines; where the batch buffers its handles it holds nothing
+		// after Execute and Dispose leaves them readable (StreamReleasesTheConnection).
+		[Test]
+		public async Task HandleStopsWhenItsBatchIsDisposed([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool isAsync)
+		{
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var batch  = db.CreateQueryBatch();
+			var handle = batch.AddStreamRequest(() => items.OrderBy(i => i.Id));
+
+			await Run(batch, isAsync);
+
+			Exception error;
+
+			if (isAsync)
+			{
+				await using var rows = handle.GetAsyncEnumerator();
+
+				var moved = await rows.MoveNextAsync();
+
+				moved.ShouldBeTrue();
+				await batch.DisposeAsync();
+				error = await Shouldly.Should.ThrowAsync<InvalidOperationException>(async () => await rows.MoveNextAsync());
+			}
+			else
+			{
+				using var rows = handle.GetEnumerator();
+
+				var moved = rows.MoveNext();
+
+				moved.ShouldBeTrue();
+				batch.Dispose();
+				error = Shouldly.Should.Throw<InvalidOperationException>(() => rows.MoveNext());
+			}
+
+			error.Message.ShouldBe(ErrorHelper.Error_QueryBatch_StreamClosed);
+		}
+
+		// A handle read whose token is cancelled ends the batch on both routes, before its first row, between rows and after
+		// its last row: the read throws and the handles not read yet are closed.
+		[Test]
+		public async Task CancelledHandleReadClosesTheBatch(
+			// SQLite, SQL Server and PostgreSQL read from the batch's reader (the servers in CI), SqlCe from buffers.
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllSqlCe)] string context,
+			// The rows read before the token is cancelled: none, one, every seeded row.
+			[Values(0, 1, 10)] int rowsRead)
+		{
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			await using var batch = db.CreateQueryBatch();
+
+			var first  = batch.AddStreamRequest(() => items.OrderBy(i => i.Id));
+			var second = batch.AddStreamRequest(() => items.OrderBy(i => i.Id));
+
+			await batch.ExecuteAsync();
+
+			using var cancellation = new CancellationTokenSource();
+
+			await using var rows = first.GetAsyncEnumerator(cancellation.Token);
+
+			for (var k = 0; k < rowsRead; k++)
+			{
+				var moved = await rows.MoveNextAsync();
+
+				moved.ShouldBeTrue();
+			}
+
+			cancellation.Cancel();
+
+			var error = await Shouldly.Should.ThrowAsync<Exception>(async () => await rows.MoveNextAsync());
+
+			error.ShouldBeAssignableTo<OperationCanceledException>();
+			ShouldRefuse(second, ErrorHelper.Error_QueryBatch_StreamClosed);
+		}
+
+		// A handle becomes readable once the execution has returned: a stream callback and a setter of the same batch are
+		// refused with the being-executed text, and the handle then reads every row. Decided by the batch, so the routes
+		// agree; SQLite combines, SqlCe does not.
+		[Test]
+		public async Task HandleCannotBeReadDuringExecute([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlCe)] string context, [Values] bool isAsync)
+		{
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			await using var batch = db.CreateQueryBatch();
+
+			QueryBatchStream<BatchItem>? handle = null;
+
+			Exception? fromCallback = null;
+			Exception? fromSetter   = null;
+
+			batch.AddStreamRequest(
+				() => items.OrderBy(i => i.Id),
+				_ => fromCallback ??= TryTake(handle!, isAsync));
+
+			handle = batch.AddStreamRequest(() => items
+				.Where(i => i.Id > 5)
+				.OrderBy(i => i.Id));
+
+			batch.AddRequest(() => items.Count(), _ => fromSetter = TryTake(handle!, isAsync));
+
+			await Run(batch, isAsync);
+
+			fromCallback.ShouldNotBeNull();
+			fromCallback.Message.ShouldBe(ErrorHelper.Error_QueryBatch_Running);
+			fromSetter.ShouldNotBeNull();
+			fromSetter.Message.ShouldBe(ErrorHelper.Error_QueryBatch_Running);
+			(await ReadAll(handle, isAsync))
+				.Select(i => i.Id)
+				.ToArray()
+				.ShouldBe(IdsAbove(5));
+		}
+
+		// Takes the handle's enumerator the way the batch ran and returns the refusal, if any.
+		static Exception? TryTake<T>(QueryBatchStream<T> stream, bool isAsync)
+		{
+			try
+			{
+				if (isAsync)
+					_ = stream.GetAsyncEnumerator();
+				else
+					_ = stream.GetEnumerator();
+
+				return null;
+			}
+			catch (InvalidOperationException ex)
+			{
+				return ex;
+			}
+		}
+
+		[Test]
+		public void StreamBeforeANestedCollectionStaysOneCommand(
+			// A batch combines with the Default strategy whatever is configured or marked on a part; a stream added before a
+			// nested collection keeps the run combined. SQLite combines.
+			[IncludeDataSources(TestProvName.AllSQLite)] string context,
+			[Values(EagerLoadingStrategy.KeyedQuery, EagerLoadingStrategy.CteUnion)] EagerLoadingStrategy strategy,
+			[Values] bool asMarker)
+		{
+			var trace  = new CommandTrace();
+			var traced = Traced(trace);
+
+			using var db = GetDataContext(context, o => asMarker
+				? traced(o)
+				: traced(o)
+					.UseDefaultEagerLoadingStrategy(strategy));
+
+			using var items  = db.CreateLocalTable(BatchItem.Seed);
+			using var groups = db.CreateLocalTable(BatchGroup.Seed);
+
+			using var batch = db.CreateQueryBatch();
+
+			var counts = groups
+				.OrderBy(g => g.Id)
+				.Select(g => new
+				{
+					g.Id,
+					Count = items
+						.Where(i => i.GroupId == g.Id)
+						.ToList()
+						.Count,
+				});
+
+			if (asMarker)
+				counts = strategy == EagerLoadingStrategy.KeyedQuery ? counts.WithKeyedLoadStrategy() : counts.WithUnionLoadStrategy();
+
+			var handle = batch.AddStreamRequest(() => items.OrderBy(i => i.Id));
+			var nested = batch.AddRequest(() => counts.ToList());
+
+			trace.Reset();
+			batch.Execute();
+
+			trace.Readers.ShouldBe(1);
+			nested.Value.Count.ShouldBe(BatchGroup.Seed.Length);
+			handle.AsEnumerable()
+				.Select(i => i.Id)
+				.ToArray()
+				.ShouldBe(OrderedSeedIds());
+		}
+
+		// Leaving the last handle early (First, a break) closes its enumerator, which releases the batch's reader; a
+		// DataContext shows it, SQLite combines.
+		[Test]
+		public async Task LastHandleLeftEarlyReleasesTheConnection([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool isAsync)
+		{
+			using var setup = GetDataContext(context);
+			using var items = setup.CreateLocalTable(BatchItem.Seed);
+
+			var counter = new OpenCounter();
+
+			using var db = new DataContext(new DataOptions()
+				.UseConfiguration(context)
+				.UseInterceptor(counter));
+
+			var batch  = db.CreateQueryBatch();
+			var handle = batch.AddStreamRequest(() => db
+				.GetTable<BatchItem>()
+				.OrderBy(i => i.Id));
+
+			await Run(batch, isAsync);
+
+			var firstRow = await ReadFirst(handle, isAsync);
+
+			firstRow.Id.ShouldBe(1);
+
+			var afterFirst = counter.Opened;
+
+			db.GetTable<BatchItem>()
+				.Count()
+				.ShouldBe(BatchItem.Seed.Length);
+			counter.Opened.ShouldBe(afterFirst + 1);
+			Shouldly.Should
+				.Throw<InvalidOperationException>(() => batch.AddRequest(() => 1))
+				.Message
+				.ShouldBe(ErrorHelper.Error_QueryBatch_AlreadyExecuted);
+		}
+
+		// A batch with a collection opens a read transaction (ReadsInOneTransaction); one with a stream reads while the
+		// caller's code runs, so it opens none.
+		[Test]
+		public void StreamBatchOpensNoTransaction([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllPostgreSQL)] string context)
+		{
+			var trace = new CommandTrace();
+
+			using var db    = GetDataContext(context, Traced(trace));
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var rows  = new List<int>();
+			var batch = db.CreateQueryBatch();
+			var page  = batch.AddRequest(() => items
+				.OrderBy(i => i.Id)
+				.Take(2)
+				.ToList());
+
+			batch.AddStreamRequest(() => items.OrderBy(i => i.Id), item => rows.Add(item.Id));
+
+			trace.Reset();
+			batch.Execute();
+
+			trace.Begins.ShouldBe(0);
+			Ids(page.Value)
+				.ShouldBe(PageIds(0, 2));
+			rows.ShouldBe(OrderedSeedIds());
+		}
+
+		// Read the way the batch ran.
+		static async Task<List<T>> ReadAll<T>(QueryBatchStream<T> stream, bool isAsync)
+		{
+			var rows = new List<T>();
+
+			if (isAsync)
+			{
+				await foreach (var row in stream)
+				{
+					rows.Add(row);
+				}
+			}
+			else
+			{
+				foreach (var row in stream)
+				{
+					rows.Add(row);
+				}
+			}
+
+			return rows;
+		}
+
+		// The first row, leaving the enumeration there.
+		static async Task<T> ReadFirst<T>(QueryBatchStream<T> stream, bool isAsync)
+		{
+			if (isAsync)
+			{
+				await foreach (var row in stream)
+				{
+					return row;
+				}
+			}
+			else
+			{
+				foreach (var row in stream)
+				{
+					return row;
+				}
+			}
+
+			throw new InvalidOperationException("The stream has no row.");
+		}
+
+		static async Task<Exception> RunAndFail(QueryBatchBuilder batch, bool isAsync)
+		{
+			return isAsync
+				? await Shouldly.Should.ThrowAsync<Exception>(() => batch.ExecuteAsync())
+				: Shouldly.Should.Throw<Exception>(batch.Execute);
+		}
+
+		// A failure before the results are set leaves the batch Pending; one after them ends the run with no setter run and
+		// every unread stream closed.
+		[Test]
+		public async Task StreamFailuresFollowTheDeliveryRule(
+			// SQLite combines, SqlCe runs each stream as its own query; SQL Server and PostgreSQL report a missing table at its
+			// own result set (CI).
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllSqlCe)] string context,
+			[Values] bool isAsync)
+		{
+			using var db    = GetDataContext(context, Traced(new CommandTrace()));
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			db.DropTable<BatchLater>(throwExceptionIfNotExists: false);
+
+			var combined = db.UsesCombinedQueryBatch();
+
+			// A strict First of the batch row: nothing delivered, Pending, and a retry streams.
+			var rows   = new List<int>();
+			var strict = db.CreateQueryBatch();
+			var first  = strict.AddRequest(() => items
+				.Where(i => i.Id > 100)
+				.Select(i => i.Id)
+				.First());
+
+			strict.AddStreamRequest(() => items.OrderBy(i => i.Id), item => rows.Add(item.Id));
+
+			var pending = strict.AddStreamRequest(() => items.OrderBy(i => i.Id));
+
+			var strictError = await RunAndFail(strict, isAsync);
+
+			strictError.ShouldBeOfType<InvalidOperationException>();
+			rows.ShouldBeEmpty();
+			ShouldRefuse(pending, ErrorHelper.Error_QueryBatch_StreamNotReady);
+
+			items.Insert(() => new BatchItem { Id = 101, GroupId = 1 });
+
+			await Run(strict, isAsync);
+
+			first.Value.ShouldBe(101);
+			rows.Count.ShouldBe(BatchItem.Seed.Length + 1);
+			await strict.DisposeAsync();
+
+			// A callback that throws on its second row: the results are set, no setter runs, the handle is closed.
+			var setters  = 0;
+			var throwing = db.CreateQueryBatch();
+			var total    = throwing.AddRequest(() => items.Count());
+
+			throwing.AddRequest(() => items.Count(), _ => setters++);
+			throwing.AddStreamRequest(
+				() => items.OrderBy(i => i.Id),
+				item =>
+				{
+					if (item.Id == 2)
+						throw new InvalidOperationException("The second row.");
+				});
+
+			var closed = throwing.AddStreamRequest(() => items.OrderBy(i => i.Id));
+
+			var throwingError = await RunAndFail(throwing, isAsync);
+
+			throwingError.Message.ShouldBe("The second row.");
+			total.Value.ShouldBe(BatchItem.Seed.Length + 1);
+			setters.ShouldBe(0);
+			ShouldRefuse(closed, ErrorHelper.Error_QueryBatch_StreamClosed);
+			Shouldly.Should
+				.Throw<InvalidOperationException>(throwing.Execute)
+				.Message
+				.ShouldBe(ErrorHelper.Error_QueryBatch_AlreadyExecuted);
+
+			// A handle stream over a missing table: combined, the setters have run and the enumeration fails, closing the
+			// handle after it; otherwise Execute fails before the setters. Either way the failure is the provider's, not a
+			// refusal of the batch or the stream.
+			var missing    = db.CreateQueryBatch();
+			var missingSet = 0;
+
+			missing.AddRequest(() => items.Count(), _ => missingSet++);
+
+			var broken = missing.AddStreamRequest(() => db.GetTable<BatchLater>());
+			var after  = missing.AddStreamRequest(() => items.OrderBy(i => i.Id));
+
+			Exception missingError;
+
+			if (combined)
+			{
+				await Run(missing, isAsync);
+
+				missingSet.ShouldBe(1);
+				missingError = await Shouldly.Should.ThrowAsync<Exception>(() => ReadAll(broken, isAsync));
+			}
+			else
+			{
+				missingError = await RunAndFail(missing, isAsync);
+
+				missingSet.ShouldBe(0);
+			}
+
+			missingError.ShouldNotBeAssignableTo<InvalidOperationException>();
+			missingError.ShouldNotBeAssignableTo<LinqToDBException>();
+			ShouldRefuse(after, ErrorHelper.Error_QueryBatch_StreamClosed);
+		}
+
+		// Statements past the provider's group take one more command: the streams after the batch row land in it.
+		[Test]
+		public async Task StreamsPastTheStatementLimit([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool isAsync)
+		{
+			var trace = new CommandTrace();
+
+			using var db    = GetDataContext(context, Traced(trace));
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var limit = db.SqlProviderFlags.MaxStatementsPerCombinedGroup;
+
+			await using var batch = db.CreateQueryBatch();
+
+			// One collection per statement of the group, beside the batch row: the group is full before the streams.
+			for (var k = 1; k < limit; k++)
+			{
+				var id = k;
+
+				batch.AddRequest(() => items
+					.Where(i => i.Id >= id)
+					.Select(i => i.Id)
+					.ToList());
+			}
+
+			var rows = new List<int>();
+
+			batch.AddStreamRequest(() => items.OrderBy(i => i.Id), item => rows.Add(item.Id));
+
+			var handle = batch.AddStreamRequest(() => items.OrderBy(i => i.Id));
+
+			trace.Reset();
+			await Run(batch, isAsync);
+
+			var handleIds = (await ReadAll(handle, isAsync))
+				.Select(i => i.Id)
+				.ToList();
+
+			rows.ShouldBe(OrderedSeedIds());
+			handleIds.ShouldBe(OrderedSeedIds());
+			trace.Readers.ShouldBe(2);
+		}
+
+		// The values a stream reads are those of Execute: bound before the batch row where it combines (SQLite), read by a
+		// query run inside Execute elsewhere (SqlCe); a hint added afterwards stays pending.
+		[Test]
+		public void StreamReadsTheValuesOfExecute([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlCe)] string context)
+		{
+			using var db    = GetDataContext(context, Traced(new CommandTrace()));
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			var minId = 5;
+
+			using var batch = db.CreateQueryBatch();
+
+			var handle = batch.AddStreamRequest(() => items
+				.Where(i => i.Id > minId)
+				.OrderBy(i => i.Id));
+
+			batch.Execute();
+
+			minId = 0;
+			db.NextQueryHints.Add("-- stream hint");
+
+			handle.AsEnumerable()
+				.Select(i => i.Id)
+				.ToArray()
+				.ShouldBe(IdsAbove(5));
+			db.NextQueryHints.ShouldBe(["-- stream hint"]);
+
+			db.NextQueryHints.Clear();
+		}
+
+		[Test]
+		public void StreamKindsKeepTheirOrder(
+			// Callbacks precede handles in the command whatever the add order. On SqlCe, where nothing combines, the configured
+			// KeyedQuery and CteUnion strategies keep the buffered collection and leave the streams alone.
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlCe)] string context,
+			[Values] EagerLoadingStrategy strategy)
+		{
+			using var db    = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(strategy));
+			using var items = db.CreateLocalTable(BatchItem.Seed);
+
+			using var batch = db.CreateQueryBatch();
+
+			var page  = batch.AddRequest(() => items
+				.OrderBy(i => i.Id)
+				.Take(3)
+				.ToList());
+			var a     = batch.AddStreamRequest(() => items.OrderBy(i => i.Id));
+			var rowsB = new List<int>();
+
+			batch.AddStreamRequest(() => items.OrderBy(i => i.Id), item => rowsB.Add(item.Id));
+
+			var c = batch.AddStreamRequest(() => items
+				.Where(i => i.Id > 5)
+				.OrderBy(i => i.Id));
+
+			batch.Execute();
+
+			rowsB.ShouldBe(OrderedSeedIds());
+			Ids(page.Value)
+				.ShouldBe(PageIds(0, 3));
+			a.AsEnumerable()
+				.Select(i => i.Id)
+				.ToArray()
+				.ShouldBe(OrderedSeedIds());
+			c.AsEnumerable()
+				.Select(i => i.Id)
+				.ToArray()
+				.ShouldBe(IdsAbove(5));
+		}
+
+		// Refused before any row is delivered: a collection inside a stream part while the batch is built, a client-side
+		// sequence by the marker when it is evaluated. One provider shows both.
+		[Test]
+		public void StreamPartsThatCannotStreamAreRefused([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var items  = db.CreateLocalTable(BatchItem.Seed);
+			using var groups = db.CreateLocalTable(BatchGroup.Seed);
+
+			var nested = db.CreateQueryBatch();
+
+			nested.AddStreamRequest(() => groups.Select(g => new
+			{
+				g.Id,
+				Items = items
+					.Where(i => i.GroupId == g.Id)
+					.ToList(),
+			}));
+
+			Shouldly.Should
+				.Throw<LinqToDBException>(nested.Execute)
+				.Message
+				.ShouldBe(ErrorHelper.Error_QueryBatch_StreamCollectionPart);
+
+			var list   = new[] { 1, 2, 3 };
+			var client = db.CreateQueryBatch();
+			var total  = client.AddRequest(() => items.Count());
+
+			client.AddStreamRequest(() => list.AsQueryable());
+
+			Shouldly.Should
+				.Throw<LinqToDBException>(client.Execute)
+				.Message
+				.ShouldBe(ErrorHelper.Error_QueryBatch_StreamClientPart);
+			Shouldly.Should
+				.Throw<InvalidOperationException>(() => total.Value)
+				.Message
+				.ShouldBe(ErrorHelper.Error_QueryBatch_NotExecuted);
+		}
+
 		static int ClientMinId(ITestDataContext db)
 		{
 			return db.Person is null ? 0 : 1;
