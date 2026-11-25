@@ -42,11 +42,5 @@ jobs:
       arguments: '-PackagesDir "$(Build.SourcesDirectory)/.build/nugets" -Source "https://pkgs.dev.azure.com/linq2db/0dcc414b-ea54-451e-a54f-d63f05367c4b/_packaging/967a4107-9788-41a4-9f6d-a2318aab1410/nuget/v3/index.json"'
     condition: and(succeeded(), eq(variables['Build.SourceBranchName'], variables['master_branch']))
 
-  - task: NuGetCommand@2
-    inputs:
-      command: 'push'
-      packagesToPush: '$(Build.SourcesDirectory)/.build/nugets/*.nupkg'
-      nuGetFeedType: 'external'
-      publishFeedCredentials: 'linq2db nuget.org feed'
-    displayName: Publish to Nuget.org
-    condition: and(succeeded(), eq(variables['Build.SourceBranchName'], variables['release_branch']))
+  # nuget.org publishing is .github/workflows/build.yml's publish-nuget job: Trusted Publishing has no
+  # Azure DevOps support (NuGet/NuGetGallery#10957).

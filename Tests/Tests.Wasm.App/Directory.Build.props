@@ -1,0 +1,12 @@
+<Project>
+	<Import Project="$(MSBuildThisFileDirectory)\..\Directory.Build.props" />
+
+	<PropertyGroup>
+		<WasmBundleMode Condition="'$(WasmBundleMode)' == ''">Debug</WasmBundleMode>
+		<WasmRuntime Condition="'$(WasmRuntime)' == ''">Mono</WasmRuntime>
+
+		<!-- One obj/bin per runtime and bundle mode, so a publish never reuses another bundle's trimmed output or runtime pack. -->
+		<!-- Must be set before the SDK derives BaseIntermediateOutputPath, hence here and not in the project. -->
+		<ArtifactsProjectName>$(MSBuildProjectName)_$(WasmRuntime)_$(WasmBundleMode)</ArtifactsProjectName>
+	</PropertyGroup>
+</Project>

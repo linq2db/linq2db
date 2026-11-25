@@ -413,6 +413,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("Client-side Guid generation", Configurations = [TestProvName.AllAccessLibRed])]
 		public void NewGuid1(
 			[DataSources(
 				ProviderName.DB2,
@@ -421,7 +422,7 @@ namespace Tests.Linq
 				TestProvName.AllPostgreSQL12Minus,
 				TestProvName.AllSQLite,
 				TestProvName.AllSapHana,
-				TestProvName.AllAccess)]
+				TestProvName.AllNativeAccess)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -436,7 +437,7 @@ namespace Tests.Linq
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllSQLite,
-				TestProvName.AllAccess)]
+				TestProvName.AllNativeAccess)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -488,16 +489,14 @@ namespace Tests.Linq
 		// Providers without a native generator fall back to client-side generation, embedding a
 		// random literal in the SQL — non-deterministic, so the baseline is disabled.
 		[Test]
+		[NoBaselines("Non-deterministic UUIDv7 value")]
 		public void NewGuid7_Emulated([DataSources(TestProvName.AllClickHouse, TestProvName.AllDuckDB, TestProvName.AllMariaDB, TestProvName.AllPostgreSQL18Plus)] string context)
 		{
-			using (new DisableBaseline("Non-deterministic UUIDv7 value"))
-			using (var db = GetDataContext(context))
-			{
-				var guid = (from p in db.Types select Sql.AsSql(Sql.NewGuid7())).First();
+			using var db = GetDataContext(context);
+			var guid = (from p in db.Types select Sql.AsSql(Sql.NewGuid7())).First();
 
-				Assert.That(guid, Is.Not.EqualTo(Guid.Empty));
-				Assert.That(GuidVersion(guid), Is.EqualTo(7));
-			}
+			Assert.That(guid, Is.Not.EqualTo(Guid.Empty));
+			Assert.That(GuidVersion(guid), Is.EqualTo(7));
 		}
 
 #if NET9_0_OR_GREATER
@@ -513,16 +512,14 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NoBaselines("Non-deterministic UUIDv7 value")]
 		public void CreateVersion7_Emulated([DataSources(TestProvName.AllClickHouse, TestProvName.AllDuckDB, TestProvName.AllMariaDB, TestProvName.AllPostgreSQL18Plus)] string context)
 		{
-			using (new DisableBaseline("Non-deterministic UUIDv7 value"))
-			using (var db = GetDataContext(context))
-			{
-				var guid = (from p in db.Types select Sql.AsSql(Guid.CreateVersion7())).First();
+			using var db = GetDataContext(context);
+			var guid = (from p in db.Types select Sql.AsSql(Guid.CreateVersion7())).First();
 
-				Assert.That(guid, Is.Not.EqualTo(Guid.Empty));
-				Assert.That(guid.Version, Is.EqualTo(7));
-			}
+			Assert.That(guid, Is.Not.EqualTo(Guid.Empty));
+			Assert.That(guid.Version, Is.EqualTo(7));
 		}
 #endif
 

@@ -21,6 +21,7 @@ using LinqToDB.Internal.DataProvider.MySql;
 using LinqToDB.Internal.DataProvider.PostgreSQL;
 using LinqToDB.Internal.DataProvider.SQLite;
 using LinqToDB.Internal.DataProvider.SqlServer;
+using LinqToDB.Internal.Extensions;
 
 using Microsoft.Data.SqlTypes;
 using Microsoft.SqlServer.Types;
@@ -947,12 +948,12 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 		static bool HasProviderSpecificReaderMethod(DbDataReader reader, string methodName)
 		{
-			return reader.GetType().GetMethod(methodName, BindingFlags.Public | BindingFlags.Instance, binder: null, types: [typeof(int)], modifiers: null) != null;
+			return reader.GetType().GetPublicInstanceMethodEx(methodName, typeof(int)) != null;
 		}
 
 		static object GetProviderSpecificReaderMethodValue(DbDataReader reader, int ordinal, string methodName)
 		{
-			var method = reader.GetType().GetMethod(methodName, BindingFlags.Public | BindingFlags.Instance, binder: null, types: [typeof(int)], modifiers: null)
+			var method = reader.GetType().GetPublicInstanceMethodEx(methodName, typeof(int))
 				?? throw new InvalidOperationException($"Provider-specific reader type '{reader.GetType().FullName}' doesn't contain '{methodName}' method.");
 
 			return method.InvokeExt(reader, [ordinal])

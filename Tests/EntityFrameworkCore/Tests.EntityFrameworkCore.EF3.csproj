@@ -4,6 +4,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net462</TargetFrameworks>
+		<DefineConstants>EF_MYSQL;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
 	
 	<ItemGroup>

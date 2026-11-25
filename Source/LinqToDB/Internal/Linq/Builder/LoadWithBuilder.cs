@@ -77,7 +77,10 @@ namespace LinqToDB.Internal.Linq.Builder
 						table = lw.RegisterContext as ILoadWithContext;
 				}
 
-				var path = SequenceHelper.PrepareBody(selector, sequence);
+				// ThenLoad's parameter is the previously loaded entity, which belongs to no context (#6207).
+				var path = string.Equals(methodCall.Method.Name, "ThenLoad", StringComparison.Ordinal)
+					? selector.Body
+					: SequenceHelper.PrepareBody(selector, sequence);
 
 				var extractResult = ExtractAssociations(builder, table, path, null);
 
@@ -248,8 +251,8 @@ namespace LinqToDB.Internal.Linq.Builder
 							break;
 
 						var mexpr         = (MemberExpression)expression;
-						var member        = lastMember = mexpr.Member;
-						var isAssociation = builder.IsAssociation(expression, out _);
+						lastMember        = mexpr.Member;
+						var isAssociation = builder.IsAssociation(expression, out var associationMember);
 
 						if (!isAssociation)
 						{
@@ -260,7 +263,8 @@ namespace LinqToDB.Internal.Linq.Builder
 							break;
 						}
 
-						members.Add(member);
+						// store the realized member: an interface member doesn't match the mapped association member
+						members.Add(associationMember!);
 
 						expression = mexpr.Expression!;
 

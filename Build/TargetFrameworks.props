@@ -1,0 +1,22 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+	<!-- Adding or dropping a .NET version is the two properties below, plus one band row in
+	     Directory.Packages.props. Every TFM list in the repo derives from them; a project that
+	     spells its own list out is opting out of that and must say why. -->
+	<PropertyGroup>
+		<ModernTargetFrameworks>net10.0;net11.0</ModernTargetFrameworks>
+		<LatestTargetFramework>net11.0</LatestTargetFramework>
+		<!--oldest supported .NET: what the shipped analyzers' Roslyn floor and the analyzer test host follow-->
+		<LowestSupportedTargetFramework>net10.0</LowestSupportedTargetFramework>
+
+		<NetFxTargetFramework>net462</NetFxTargetFramework>
+
+		<!-- shipped libraries: everything, including the two legacy surfaces -->
+		<LibraryTargetFrameworks>$(NetFxTargetFramework);netstandard2.0;$(ModernTargetFrameworks)</LibraryTargetFrameworks>
+		<!-- test projects: no netstandard2.0, it is not runnable -->
+		<TestTargetFrameworks>$(NetFxTargetFramework);$(ModernTargetFrameworks)</TestTargetFrameworks>
+		<!-- dotnet tools and ASP.NET-hosting projects: modern only -->
+		<ToolTargetFrameworks>$(ModernTargetFrameworks)</ToolTargetFrameworks>
+	</PropertyGroup>
+
+</Project>

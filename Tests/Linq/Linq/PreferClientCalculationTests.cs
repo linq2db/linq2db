@@ -789,7 +789,7 @@ namespace Tests.Linq
 		// A zero interval is outside the ratio's domain, as a zero divisor is. Option off only: with the option on the client
 		// divides by TimeSpan.Zero and answers Infinity. Access keeps a duration as money and refuses its tick total.
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_Interval_Member)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ErrorMessage = ErrorHelper.Error_Interval_Member)]
 		public void IntervalRatioOverMissedLeftJoinKeepsNull([DataSources] string context)
 		{
 			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(false));
@@ -1584,9 +1584,8 @@ namespace Tests.Linq
 				sqlOptimizer.CreateOptimizerVisitor(false),
 				sqlOptimizer.CreateConvertVisitor(false),
 				sqlOptimizer.CreateSqlExpressionFactory(dataProvider.MappingSchema, dataOptions),
-				isParameterOrderDepended      : false,
-				isAlreadyOptimizedAndConverted: false,
-				parametersNormalizerFactory   : static () => NoopQueryParametersNormalizer.Instance);
+				isParameterOrderDepended   : false,
+				parametersNormalizerFactory: static () => NoopQueryParametersNormalizer.Instance);
 
 			var defaultValue = new SqlDefaultValueExpression(new DbDataType(systemType, dataType), Activator.CreateInstance(systemType)!);
 
@@ -3023,7 +3022,7 @@ namespace Tests.Linq
 
 			// ClientOnlyDouble(e.Value1) depends on row data and has no SQL mapping: it cannot be translated and must
 			// throw, never silently becoming a client-side post-filter - even with PreferClientCalculation on.
-			Assert.Throws<LinqToDBException>(() => table.Where(e => ClientOnlyDouble(e.Value1) == 20).ToArray());
+			Assert.That(() => table.Where(e => ClientOnlyDouble(e.Value1) == 20).ToArray(), Throws.TypeOf<LinqToDBException>());
 		}
 
 		[Test]

@@ -59,6 +59,17 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			SqlProviderFlags.IsTakeWithInAllAnySomeSubquerySupported = false;
 			SqlProviderFlags.MaxColumnCount = 4096;
 
+			// MySQL runs multiple statements in one command and returns their result sets in order (NextResult),
+			// so eager loading combines the main query + child collections into one multi-result-set round-trip.
+			// Both connectors accept multi-statement text by default (MySqlConnector always; MySql.Data with its default
+			// AllowBatch=true). MySqlConnector also supports DbBatch, so with UseDbBatch on - the default - a combined group
+			// runs as a DbBatch there; MySql.Data has no DbBatch and always sends the concatenated text, so a MySql.Data
+			// connection string with AllowBatch=false rejects a combined command and needs UseCombinedCommands off.
+			SqlProviderFlags.IsMultiStatementBatchSupported = true;
+			SqlProviderFlags.IsMultipleResultSetsSupported  = true;
+			// Bounded by max_allowed_packet (server default 16-64 MB, minimum 4 MB); 1 MB stays safe if configured low.
+			SqlProviderFlags.MaxCombinedCommandLength       = 1_000_000;
+
 			// MySQL/MariaDB emit InsertOrUpdate as INSERT ... ON DUPLICATE KEY UPDATE, which
 			// has no WHERE clause on the UPDATE branch. Route Upsert.Update.When through
 			// the alternative UPDATE→INSERT emulation instead.
@@ -118,6 +129,11 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				MySqlVersion.MySql57   => new MySql57MemberTranslator(),
 				_                      => new MySqlMemberTranslator(),
 			};
+		}
+
+		protected override IDmlService CreateDmlService()
+		{
+			return new MySqlDmlService();
 		}
 
 		public override ISchemaProvider GetSchemaProvider()
