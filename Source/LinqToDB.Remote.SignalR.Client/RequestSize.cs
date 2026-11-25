@@ -59,8 +59,8 @@ namespace LinqToDB.Remote.SignalR
 		/// (OpenTelemetry, for example), and puts the activity's trace context into the message headers: traceparent,
 		/// tracestate and baggage, which the invocation activity inherits from <c>Activity.Current</c>. The
 		/// server counts them against its message size limit. Returns no less than they take, without knowing whether
-		/// the client will add them at all. Counted on .NET 8 too: a .NET 8 application can reference the 9+ client,
-		/// whose .NET Standard 2.1 build adds them.
+		/// the client will add them at all. Counted in the .NET 10+ build of this package. The .NET Standard build,
+		/// which .NET Framework and .NET 8/9 applications get, supports only the 1.x client, which adds no headers.
 		/// </summary>
 		static long EstimateHeaders()
 		{

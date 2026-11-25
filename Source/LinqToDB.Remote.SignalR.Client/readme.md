@@ -27,7 +27,8 @@ does not reconnect) starts it again. `InitSignalRAsync<T>()` does the same up fr
 With your own `HubConnection`:
 
 ```csharp
-// .NET 8+; on .NET Framework / .NET Standard HubConnection is not IAsyncDisposable: call DisposeAsync() yourself.
+// .NET 10+; with the 1.x client (.NET Framework, .NET Standard, .NET 8/9) HubConnection is not IAsyncDisposable:
+// call DisposeAsync() yourself.
 await using var connection = new HubConnectionBuilder().WithUrl(hubUrl).Build();
 await connection.StartAsync();
 
@@ -40,10 +41,11 @@ await using (var db = new SignalRDataContext(connection))
 `SignalRDataContext(HubConnection)` leaves the connection to the caller, so one connection can serve any number of
 contexts. Use `SignalRDataContext(connection, disposeHubConnection: true)` to hand it over to the context.
 
-On .NET Framework / .NET Standard this package is built against the 1.x Signal/R client it depends on, and works with
-that version only: from 3.0 on, `HubConnection` is not binary compatible with it (`DisposeAsync` returns `ValueTask`),
-so keep `Microsoft.AspNetCore.SignalR.Client` at 1.x there. What this readme says about .NET Framework /
-.NET Standard describes that client.
+On .NET Framework / .NET Standard, and in .NET 8 and .NET 9 applications (which get the .NET Standard build of this
+package), it is built against the 1.x Signal/R client it depends on, and works with that version only: from 3.0 on,
+`HubConnection` is not binary compatible with it (`DisposeAsync` returns `ValueTask`), so keep
+`Microsoft.AspNetCore.SignalR.Client` at 1.x there. What this readme says about .NET Framework / .NET Standard applies
+to .NET 8 and .NET 9 applications too: no size check before sending, no automatic reconnect.
 
 Cancelling a query (the `CancellationToken` of `ToListAsync` and other async methods) cancels it on the server: a
 running command is cancelled where the database provider supports it, and reading the result stops at the next row.

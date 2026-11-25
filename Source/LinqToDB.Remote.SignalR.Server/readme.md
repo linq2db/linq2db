@@ -16,7 +16,7 @@ builder.Services
     .AddSignalR()
     // The largest request the hub accepts (Signal/R default: 32 KB). A larger message closes the client's whole
     // connection, so size it to the largest expected query (long string parameters, large Contains lists, batches).
-    // .NET 8+ servers report it to the client, which refuses larger requests before sending them.
+    // .NET 10+ servers report it to the client, which refuses larger requests before sending them.
     .AddHubOptions<LinqToDBHub<IMyDataContext>>(o => o.MaximumReceiveMessageSize = 1024 * 1024);
 
 builder.Services.Configure<LinqToDBHubOptions>(o =>
@@ -27,7 +27,7 @@ builder.Services.Configure<LinqToDBHubOptions>(o =>
     o.MaxConcurrentCallsPerConnection = 8;
     // Optional limit across all connections.
     // o.MaxConcurrentCalls = 64;
-    // Send server error text to the client (.NET 8+ servers only; see below).
+    // Send server error text to the client (.NET 10+ servers only; see below).
     // o.TransferInternalExceptionToClient = true;
 });
 
@@ -51,8 +51,9 @@ constructor reads the registered options from the connection's request services.
 .NET Standard) server has none for long polling connections, where such a hub uses the default options; pass the
 options to the base constructor to have them on every transport.
 
-`TransferInternalExceptionToClient` works on .NET 8+ servers. The legacy (.NET Framework / .NET Standard) Signal/R
-server drops error text unless `HubOptions.EnableDetailedErrors` is set, which exposes the errors of all hub methods.
+`TransferInternalExceptionToClient` works on .NET 10+ servers. The legacy (.NET Framework / .NET Standard) build of
+this package, which .NET 8 and .NET 9 servers get too, reports no size limit to the client and drops error text
+unless `HubOptions.EnableDetailedErrors` is set, which exposes the errors of all hub methods.
 
 The hub protocol changed in 6.7.0. The hub still serves older clients through its obsolete `GetInfoAsync` /
 `Execute*Async` methods, with the same concurrency limits, but their calls are cancelled only by a lost connection and

@@ -19,7 +19,7 @@ namespace LinqToDB.Remote.SignalR
 
 		/// <summary>
 		/// Configures the hub connection builder after the URL is set: hub protocol, logging, reconnect policy and
-		/// so on. On .NET 8+ the connection is built with <c>WithAutomaticReconnect()</c>; a reconnect policy set
+		/// so on. On .NET 10+ the connection is built with <c>WithAutomaticReconnect()</c>; a reconnect policy set
 		/// here replaces it.
 		/// </summary>
 		public Action<IHubConnectionBuilder>? ConfigureConnection { get; set; }

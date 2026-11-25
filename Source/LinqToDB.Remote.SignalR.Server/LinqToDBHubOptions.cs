@@ -15,9 +15,10 @@ namespace LinqToDB.Remote.SignalR
 		/// on that connection wait for a free slot.
 		/// <para>
 		/// <see langword="null"/> (the default) keeps the behaviour of the hub's
-		/// <c>HubOptions.MaximumParallelInvocationsPerClient</c> (1 unless configured) on .NET 8+ servers,
-		/// and 1 on the legacy (.NET Framework / .NET Standard) server. A client application usually shares one
-		/// connection between all its contexts, so a value such as 8 lets their queries run in parallel.
+		/// <c>HubOptions.MaximumParallelInvocationsPerClient</c> (1 unless configured) on .NET 10+ servers,
+		/// and 1 on the legacy (.NET Framework / .NET Standard) build, which .NET 8/9 servers get. A client application
+		/// usually shares one connection between all its contexts, so a value such as 8 lets their queries run in
+		/// parallel.
 		/// </para>
 		/// </summary>
 		public int? MaxConcurrentCallsPerConnection
@@ -57,8 +58,8 @@ namespace LinqToDB.Remote.SignalR
 		/// (<see cref="Exception.ToString"/>), like the <c>transferInternalExceptionToClient</c> option of the gRPC
 		/// service; otherwise the client receives the generic Signal/R error message.
 		/// <para>
-		/// Only .NET 8+ servers pass the text on. The legacy (.NET Framework / .NET Standard) Signal/R server drops
-		/// it unless <c>HubOptions.EnableDetailedErrors</c> is set, which exposes the errors of every hub method.
+		/// Only .NET 10+ servers pass the text on. The legacy (.NET Framework / .NET Standard) build, which .NET 8/9 servers
+		/// get, drops it unless <c>HubOptions.EnableDetailedErrors</c> is set, which exposes the errors of every hub method.
 		/// </para>
 		/// </summary>
 		public bool TransferInternalExceptionToClient { get; set; }

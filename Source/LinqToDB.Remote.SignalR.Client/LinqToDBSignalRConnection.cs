@@ -18,8 +18,9 @@ namespace LinqToDB.Remote.SignalR
 	/// to use one without DI.
 	/// </para>
 	/// <para>
-	/// On .NET Framework / .NET Standard this class is built against the 1.x Signal/R client and works with that version
-	/// only: from 3.0 on, <see cref="Microsoft.AspNetCore.SignalR.Client.HubConnection"/> is not binary compatible with it.
+	/// On .NET Framework / .NET Standard, and in .NET 8/9 applications, which get the .NET Standard build, this class is
+	/// built against the 1.x Signal/R client and works with that version only: from 3.0 on,
+	/// <see cref="Microsoft.AspNetCore.SignalR.Client.HubConnection"/> is not binary compatible with it.
 	/// </para>
 	/// </summary>
 	public sealed class LinqToDBSignalRConnection : IAsyncDisposable, IDisposable
@@ -28,9 +29,9 @@ namespace LinqToDB.Remote.SignalR
 		readonly Lock     _sync = new();
 
 		// The legacy client has neither State nor reconnect events: there the wrapper tracks the state itself, from
-		// its own starts and the Closed event. On .NET 8+ the connection's own State is the truth: Signal/R raises
-		// Reconnecting/Reconnected/Closed asynchronously, so their order is not to be trusted, and they only wake
-		// waiters to look at the state again.
+		// its own starts and the Closed event. In the .NET 10+ build the connection's own State is the truth: Signal/R
+		// raises Reconnecting/Reconnected/Closed asynchronously, so their order is not to be trusted, and they only
+		// wake waiters to look at the state again.
 #if !NET8_0_OR_GREATER
 		volatile bool              _connected;
 #endif

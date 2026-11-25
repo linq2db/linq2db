@@ -13,7 +13,7 @@ namespace LinqToDB.Remote.SignalR
 	/// <para>
 	/// Every call is a Signal/R streaming invocation of <c>LinqToDBHub</c>: cancelling the call's token cancels it on
 	/// the server, and the result arrives as one or more stream items. A request larger than the hub accepts
-	/// (<c>HubOptions.MaximumReceiveMessageSize</c>, reported by .NET 8+ servers) fails with a
+	/// (<c>HubOptions.MaximumReceiveMessageSize</c>, reported by .NET 10+ servers) fails with a
 	/// <see cref="LinqToDBException"/> before it is sent, instead of closing the connection.
 	/// </para>
 	/// </summary>
