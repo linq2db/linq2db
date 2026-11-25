@@ -130,7 +130,7 @@ namespace LinqToDB
 				// Methods and indexers do not take part in that lookup.
 				if (typeof(TResult).GetField(name, BindingFlags.Public | BindingFlags.Instance) != null
 					|| typeof(TResult).GetProperties(BindingFlags.Public | BindingFlags.Instance).Any(p => string.Equals(p.Name, name, StringComparison.Ordinal) && p.GetIndexParameters().Length == 0))
-					throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.SelectDynamic.Error_DynamicColumnShadowsMember, name, typeof(TResult).Name));
+					throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.DynamicColumns.Error_DynamicColumnShadowsMember, name, typeof(TResult).Name));
 			}
 
 			var expr = Expression.Call(
@@ -168,6 +168,6 @@ namespace LinqToDB
 			Expression<Func<TSource, TResult>> staticSelector,
 			[SqlQueryDependent] string[]       names,
 			LambdaExpression[]                 cells)
-			=> throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.SelectDynamic.Error_QueryMarkerInvoked, nameof(SelectDynamicCore)));
+			=> throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Error_QueryMarkerInvoked, nameof(SelectDynamicCore)));
 	}
 }

@@ -20,7 +20,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		// by-value comparison, as extension builders do, so a changed value is a different query rather than a hit on the
 		// one built for the old value. A quoted lambda is passed through rather than compiled, so it may reference an
 		// enclosing lambda's parameter; what it reads becomes SQL.
-		internal static object? ReadArgument(ExpressionBuilder builder, Expression argument, string parameterName)
+		internal static object? ReadArgument(ExpressionBuilder builder, Expression argument, string? parameterName = null)
 		{
 			switch (argument)
 			{
@@ -45,8 +45,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			var value = argument.EvaluateExpression();
 
 			// Refused before it is enumerated: a query, or a deferred sequence that may run one, would run here, again at
-			// every cache lookup, and a compiled query would keep it, with its data context, in its cache key.
-			if (value is IQueryable || value is IEnumerable deferred and not string && !IsMaterialized(deferred))
+			// every cache lookup, and a compiled query would keep it, with its data context, in its cache key. Unpivot's
+			// arguments are arrays and names none.
+			if (parameterName != null && (value is IQueryable || value is IEnumerable deferred and not string && !IsMaterialized(deferred)))
 				throw new LinqToDBException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.SelectDynamic.Error_ArgumentIsAQuery, parameterName));
 
 			// Read once, so the call and the comparison see the same items however the sequence enumerates.

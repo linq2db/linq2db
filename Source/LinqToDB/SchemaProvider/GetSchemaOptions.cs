@@ -26,7 +26,7 @@ namespace LinqToDB.SchemaProvider
 		/// </summary>
 		public bool     GetProcedures  = true;
 		/// <summary>
-		/// Should linq2db use <see cref="string"/> for char(1) type or <see cref="char"/>. Default type: <see cref="char"/> (<c>false</c>).
+		/// Should linq2db use <see cref="string"/> for char(1) type or <see cref="char"/>. Default type: <see cref="char"/> (<see langword="false"/>).
 		/// </summary>
 		public bool     GenerateChar1AsString;
 		/// <summary>
@@ -77,7 +77,7 @@ namespace LinqToDB.SchemaProvider
 
 		/// <summary>
 		/// Optinal callback to filter loaded tables. receives object with table details and return boolean flag
-		/// to indicate that table should be loaded (<see langword="true" />) or skipped (<c>false</c>).
+		/// to indicate that table should be loaded (<see langword="true" />) or skipped (<see langword="false"/>).
 		/// </summary>
 		public Func<LoadTableData, bool>?     LoadTable;
 

@@ -365,7 +365,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestTernary1([DataSources(TestProvName.AllAccess, TestProvName.AllSQLite)] string context)
+		public void TestTernary1([DataSources(TestProvName.AllNativeAccess, TestProvName.AllSQLite)] string context)
 		{
 			var ids = new[] { 1, 5 };
 
@@ -385,7 +385,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestTernary2([DataSources(TestProvName.AllAccess, TestProvName.AllSQLite)] string context)
+		public void TestTernary2([DataSources(TestProvName.AllNativeAccess, TestProvName.AllSQLite)] string context)
 		{
 			var ids = new[] { 1, 5 };
 
@@ -735,9 +735,9 @@ namespace Tests.Linq
 			// we want to make sure the conversion is not possible because we want to bypass
 			// that conversion if the setter value parameter type (IEnumerable<Child> in this case)
 			// does not match the member type (ChildrenContainer<Child> in this case)
-			Assert.Throws<LinqToDB.Common.LinqToDBConvertException>(() =>
+			Assert.That(() =>
 				db.MappingSchema.ChangeType(new List<Child>(0), typeof(ChildrenContainer<Child>)),
-				"List<Child> should not be convertible to ChildrenContainer<Child>");
+				Throws.TypeOf<LinqToDB.Common.LinqToDBConvertException>(), "List<Child> should not be convertible to ChildrenContainer<Child>");
 
 			var value = db.GetTable<Issue3975TestClass>().LoadWith(x => x.Children).First();
 
@@ -745,7 +745,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestGenericAssociation1([DataSources(TestProvName.AllAccess, TestProvName.AllSQLite)] string context)
+		public void TestGenericAssociation1([DataSources(TestProvName.AllNativeAccess, TestProvName.AllSQLite)] string context)
 		{
 			var ids = new[] { 1, 5 };
 
@@ -765,7 +765,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestGenericAssociationRuntime([DataSources(TestProvName.AllAccess, TestProvName.AllSQLite)] string context)
+		public void TestGenericAssociationRuntime([DataSources(TestProvName.AllNativeAccess, TestProvName.AllSQLite)] string context)
 		{
 			var ids = new[] { 1, 5 };
 
@@ -1178,7 +1178,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue1614Test([DataSources(TestProvName.AllAccess)] string context)
+		public void Issue1614Test([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<User>())
@@ -1250,7 +1250,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		public void Issue1711Test1([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void Issue1711Test1([DataSources(TestProvName.AllNativeAccess, TestProvName.AccessLibRedMdb, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 			new FluentMappingBuilder(ms)
@@ -1272,7 +1272,7 @@ namespace Tests.Linq
 
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void Issue1711Test2([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void Issue1711Test2([DataSources(TestProvName.AllNativeAccess, TestProvName.AccessLibRedMdb, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 			new FluentMappingBuilder(ms)

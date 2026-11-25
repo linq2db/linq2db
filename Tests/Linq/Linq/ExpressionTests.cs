@@ -86,8 +86,8 @@ namespace Tests.Linq
 			using (var db = (DataConnection)GetDataContext(context))
 			using (db.CreateLocalTable<ExpressionTestClass>())
 			{
-				Assert.Throws<LinqToDBException>(() => _ = db.Select(() => Functions.DateFuncFail(db, new ExpressionTestsFakeType())));
-				Assert.Throws<LinqToDBException>(() => _ = db.Select(() => Functions.DateExprKindFail(db, "now", new ExpressionTestsFakeType())));
+				Assert.That(() => _ = db.Select(() => Functions.DateFuncFail(db, new ExpressionTestsFakeType())), Throws.TypeOf<LinqToDBException>());
+				Assert.That(() => _ = db.Select(() => Functions.DateExprKindFail(db, "now", new ExpressionTestsFakeType())), Throws.TypeOf<LinqToDBException>());
 			}
 		}
 
@@ -877,7 +877,7 @@ namespace Tests.Linq
 		// the compiler-built form does, the hand-built one must do the same.
 		// Eager-load path over Children; Access is excluded as for LoadWith12.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5879")]
-		public void HandBuiltIndexerOverAssociation([DataSources(TestProvName.AllAccess)] string context)
+		public void HandBuiltIndexerOverAssociation([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 

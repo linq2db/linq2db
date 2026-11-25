@@ -860,7 +860,7 @@ namespace Tests.Linq
 			};
 		}
 
-		[ThrowsCannotBeConverted([TestProvName.AllAccess])]
+		[ThrowsCannotBeConverted([TestProvName.AllNativeAccess])]
 		[Test]
 		public void AggregateOnGroupReachedThroughLet([DataSources] string context)
 		{
@@ -892,7 +892,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void CountInGroup([DataSources] string context)
 		{
 			var data = AggregationData.Data;
@@ -928,7 +928,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void SumInGroup([DataSources] string context)
 		{
 			var data = AggregationData.Data;
@@ -955,7 +955,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void MinInGroup([DataSources] string context)
 		{
 			var data = AggregationData.Data;
@@ -982,7 +982,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void MaxInGroup([DataSources] string context)
 		{
 			var data = AggregationData.Data;
@@ -1009,7 +1009,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void AverageInGroup([DataSources] string context)
 		{
 			var data = AggregationData.Data;
@@ -1189,7 +1189,7 @@ namespace Tests.Linq
 						}
 					on new { t1.ID, t1.DateTimeValue } equals new { t2.ID, t2.DateTimeValue }
 					select t1.MoneyValue
-				)
+				).Within(FloatingPointDeltaPercent).Percent
 			);
 		}
 
@@ -1450,14 +1450,17 @@ namespace Tests.Linq
 		{
 			using var db = new NorthwindDB(new DataOptions().UseConfiguration(context).UseGuardGrouping(false));
 			var dd = GetNorthwindAsList(context);
+			// The comparison is inside the grouping key, so a tolerance on the asserted booleans cannot reach
+			// it: .NET 11 converts the provider's double average to decimal exactly, so the raw average no
+			// longer equals the constant. Rounding to the constant's own scale restores that on both sides.
 			AreEqual(
 				(
 					from c in dd.Customer
-					group c by c.Orders.Count > 0 && c.Orders.Average(o => o.Freight) == 33.25m
+					group c by c.Orders.Count > 0 && Math.Round(c.Orders.Average(o => o.Freight), 2) == 33.25m
 				).ToList().Select(k => k.Key),
 				(
 					from c in db.Customer
-					group c by c.Orders.Average(o => o.Freight) == 33.25m
+					group c by Math.Round(c.Orders.Average(o => o.Freight), 2) == 33.25m
 				).ToList().Select(k => k.Key)
 			);
 		}
@@ -1828,7 +1831,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void InnerQuery([DataSources(ProviderName.SqlCe, TestProvName.AllSapHana, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1972,7 +1975,7 @@ namespace Tests.Linq
 		public void GroupByDate1([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			AreEqual(
+			AreEqualWithinDelta(
 				from t in Types
 				group t by new { t.DateTimeValue.Month, t.DateTimeValue.Year } into grp
 				select new
@@ -1995,7 +1998,7 @@ namespace Tests.Linq
 		public void GroupByDate2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			AreEqual(
+			AreEqualWithinDelta(
 				from t in Types2
 				group t by new { t.DateTimeValue!.Value.Month, t.DateTimeValue.Value.Year } into grp
 				select new
@@ -2030,7 +2033,7 @@ namespace Tests.Linq
 
 			var result = query.ToList();
 
-			AreEqual(
+			AreEqualWithinDelta(
 				from t in Types2
 				group t by new { Date = Sql.MakeDateTime(t.DateTimeValue!.Value.Year, t.DateTimeValue.Value.Month, 1) } into grp
 				select new
@@ -2079,7 +2082,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void FirstGroupBy([DataSources] string context)
 		{
 			using var db = GetDataContext(context, o => o.UseGuardGrouping(false));
@@ -2199,7 +2202,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinGroupBy2([DataSources(TestProvName.AllAccess)] string context)
+		public void JoinGroupBy2([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -2228,7 +2231,7 @@ namespace Tests.Linq
 				group c1 by c1.ParentID into c2
 				select c2.Key;
 
-			Assert.DoesNotThrow(() => query2.ToArray());
+			query2.ToArray();
 
 			var orderItems = query2.GetSelectQuery().OrderBy.Items;
 			using (Assert.EnterMultipleScope())
@@ -2247,7 +2250,7 @@ namespace Tests.Linq
 				orderby c.ChildID
 				select c;
 
-			Assert.DoesNotThrow(() => query.Count());
+			query.Count();
 		}
 
 		[Test]
@@ -2259,7 +2262,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select new { c, p };
 
-			Assert.DoesNotThrow(() => query.Count());
+			query.Count();
 		}
 
 		[Test]
@@ -2270,21 +2273,18 @@ namespace Tests.Linq
 						join c in db.Child.OrderBy(c => c.ChildID) on p.ParentID equals c.ParentID
 						select new { c, p };
 
-			Assert.DoesNotThrow(() => query.Count());
+			query.Count();
 		}
 
 		void CheckGuardedQuery<TKey, TEntity>(IQueryable<IGrouping<TKey, TEntity>> grouping)
 			where TKey : notnull
 		{
-			Assert.Throws<LinqToDBException>(() =>
+			Assert.That(() =>
 			{
 				grouping.ToDictionary(_ => _.Key, _ => _.ToList());
-			});
+			}, Throws.TypeOf<LinqToDBException>());
 
-			Assert.DoesNotThrow(() =>
-			{
-				grouping.DisableGuard().ToDictionary(_ => _.Key, _ => _.ToList());
-			});
+			grouping.DisableGuard().ToDictionary(_ => _.Key, _ => _.ToList());
 		}
 
 		[Test]
@@ -2316,20 +2316,17 @@ namespace Tests.Linq
 			CheckGuardedQuery(db.Person.GroupBy(_ => _.Gender));
 			CheckGuardedQuery(db.Person.GroupBy(_ => _));
 
-			Assert.Throws<LinqToDBException>(() =>
+			Assert.That(() =>
 			{
 				db.Person
 					.GroupBy(_ => _)
 					.ToList();
-			});
+			}, Throws.TypeOf<LinqToDBException>());
 
-			Assert.DoesNotThrow(() =>
-			{
-				db.Person
-					.GroupBy(_ => _)
-					.DisableGuard()
-					.ToList();
-			});
+			db.Person
+				.GroupBy(_ => _)
+				.DisableGuard()
+				.ToList();
 		}
 
 		[Test]
@@ -2378,7 +2375,7 @@ namespace Tests.Linq
 
 		[Test]
 		// Sybase is not listed: DataSources excludes it below, so it never runs this test.
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Issue672Test([DataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
@@ -2592,7 +2589,7 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
 			{
-				Assert.Throws<LinqToDBException>(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()));
+				Assert.That(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()), Throws.TypeOf<LinqToDBException>());
 			}
 
 			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
@@ -2611,7 +2608,7 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
 			{
-				Assert.Throws<LinqToDBException>(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()));
+				Assert.That(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()), Throws.TypeOf<LinqToDBException>());
 			}
 
 			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
@@ -2625,7 +2622,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
 			{
-				Assert.Throws<LinqToDBException>(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()));
+				Assert.That(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()), Throws.TypeOf<LinqToDBException>());
 			}
 
 			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false).UseDisableQueryCache(true)))
@@ -2703,7 +2700,7 @@ namespace Tests.Linq
 
 		[Test]
 		// PostgreSQL 9.4+ (make_timestamp)
-		public void Issue3761Test1([DataSources(TestProvName.AllYdb, TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2005, TestProvName.AllSybase, TestProvName.AllPostgreSQL93Minus)] string context)
+		public void Issue3761Test1([DataSources(TestProvName.AllYdb, TestProvName.AllNativeAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2005, TestProvName.AllSybase, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable<Issue3761Table>();
@@ -2728,7 +2725,7 @@ namespace Tests.Linq
 
 		[Test]
 		// PostgreSQL 9.4+ (make_timestamp); GROUPING SETS 9.5+
-		public void Issue3761Test2([DataSources(TestProvName.AllYdb, TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2005, TestProvName.AllPostgreSQL93Minus)] string context)
+		public void Issue3761Test2([DataSources(TestProvName.AllYdb, TestProvName.AllNativeAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2005, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable<Issue3761Table>();
@@ -2935,7 +2932,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue4098([DataSources(TestProvName.AllAccess)] string context)
+		public void Issue4098([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -3874,7 +3871,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InsertFirstFromGroup([DataSources(false, TestProvName.AllFirebird, TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		public void InsertFirstFromGroup([DataSources(false, TestProvName.AllFirebird, TestProvName.AllMySql57, TestProvName.AllNativeAccess, TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -4013,7 +4010,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ThrowsRequiredOuterJoins(TestProvName.AllAccess, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3, TestProvName.AllSybase)]
+		[ThrowsRequiredOuterJoins(TestProvName.AllNativeAccess, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3, TestProvName.AllSybase)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5317")]
 		public void Issue5317Test([DataSources] string context)
 		{

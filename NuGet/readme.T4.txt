@@ -18,7 +18,7 @@ Follow the next steps to create a data model from your existing database:
 4. See how to configure T4 template in the LinqToDB.Templates folder / README.md file
    or at https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB.Templates/README.md
 
-5. See more at https://linq2db.github.io/articles/T4.html
+5. See more at https://linq2db.github.io/articles/t4.html
 
 
 If you use database scaffolding, consider migration to the scaffolding tool https://www.nuget.org/packages/linq2db.cli

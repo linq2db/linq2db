@@ -2,7 +2,5 @@
 
 namespace LinqToDB.DataProvider.SqlCe
 {
-	public interface ISqlCeSpecificQueryable<out TSource> : IQueryable<TSource>
-	{
-	}
+	public interface ISqlCeSpecificQueryable<out TSource> : IQueryable<TSource>;
 }

@@ -928,6 +928,7 @@ namespace Tests.Data
 		// SQLCE : System.Data.SqlServerCe
 		// SQLITE: Microsoft.Data.Sqlite (prior to v2.1.0)
 		// SYBASE: AdoNetCore.AseClient
+		// ACCESS: LibRed.Ado
 		[Test]
 		public void MARS_MultipleDataReadersOnSameCommand_Supported(
 			[IncludeDataSources(false,
@@ -935,7 +936,8 @@ namespace Tests.Data
 				ProviderName.SqlCe,
 				// depends on connection pool size
 				//ProviderName.ClickHouseDriver,
-				ProviderName.SybaseManaged)] string context)
+				ProviderName.SybaseManaged,
+				TestProvName.AllAccessLibRed)] string context)
 		{
 			using var db = GetDataConnection(context);
 			if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
@@ -984,7 +986,8 @@ namespace Tests.Data
 				ProviderName.SqlCe,
 				ProviderName.SQLiteMS,
 				ProviderName.SybaseManaged,
-				TestProvName.AllDuckDB)] string context)
+				TestProvName.AllDuckDB,
+				TestProvName.AllAccessLibRed)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{

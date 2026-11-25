@@ -81,7 +81,8 @@ let TestDecimalOptionRoundtrip (db : IDataContext) =
                      where (r.Id = 2)
                      exactlyOne }
 
-    Assert.That(r1.Value, Is.EqualTo(Some 12.34m))
+    Assert.That(r1.Value.IsSome, Is.True)
+    Assert.That(r1.Value.Value, Is.EqualTo(12.34m).Within(Tests.Model.FloatingPoint.Delta))
     Assert.That(r2.Value, Is.EqualTo None)
 
 // A complex (record) element type - not a scalar in MappingSchema.Default.

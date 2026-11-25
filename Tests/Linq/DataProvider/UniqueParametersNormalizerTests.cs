@@ -150,7 +150,7 @@ namespace Tests.DataProvider
 			}
 
 			// Expect an InvalidOperationException when sending "abcd" an additional time
-			Assert.Throws<InvalidOperationException>(() => normalizer.Normalize(inputString));
+			Assert.That(() => normalizer.Normalize(inputString), Throws.TypeOf<InvalidOperationException>());
 		}
 
 		// Test sending strings with a variety of uppercase, lowercase, numbers, $ and _ characters

@@ -199,6 +199,44 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test]
+		public void PivotOperatorsOverADbSet([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider, false);
+
+			var unpivoted = ctx.Products
+				.Unpivot((p, name, value) => new { p.ProductId, Name = name, Value = value }, p => p.UnitsInStock, p => p.UnitsOnOrder)
+				.Count();
+
+			unpivoted.ShouldBe(ctx.Products.Count(p => p.UnitsInStock != null) + ctx.Products.Count(p => p.UnitsOnOrder != null));
+
+			var pivotQuery = ctx.Products
+				.GroupBy(p => p.SupplierId)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(p => p.Discontinued, new[] { false, true })
+						.Cell(rows => rows.Count())
+						.AsDictionary(),
+				});
+
+			// The pivot lives inside a projection EF executes itself, so linq2db has to take the query over.
+			var pivoted = pivotQuery
+				.ToLinqToDB()
+				.ToArray();
+
+			pivoted.Length.ShouldBe(ctx.Products.Select(p => p.SupplierId).Distinct().Count());
+			pivoted.ShouldAllBe(r => r.Cells.Store.Count == 2);
+
+			Action withoutLinqToDB = () => pivotQuery.ToArray();
+
+			withoutLinqToDB
+				.ShouldThrow<InvalidOperationException>()
+				.Message
+				.ShouldContain(nameof(LinqExtensions.Pivot));
+		}
+
+		[Test]
 		public void TestTransformationTable([EFDataSources] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
@@ -298,7 +336,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			}
 		}
 
-#if EF10
+#if EF10_OR_GREATER
 		[Test]
 		public void TestNamedQueryFilter_AppliesAll([EFDataSources] string provider)
 		{
@@ -484,17 +522,17 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			using var ctx = new SQLServerNorthwindContext(optionsBuilder.Options);
 			ctx.Database.EnsureCreated();
 
-			Assert.Throws<LinqToDBForEFToolsException>(() =>
+			Assert.That(() =>
 			{
 				ctx.Products.ToLinqToDB().ToArray();
-			});
+			}, Throws.TypeOf<LinqToDBForEFToolsException>());
 
-			Assert.Throws<LinqToDBForEFToolsException>(() =>
+			Assert.That(() =>
 			{
 				ctx.Products
 					.Where(so => so.ProductId == -1)
 					.Delete();
-			});
+			}, Throws.TypeOf<LinqToDBForEFToolsException>());
 		}
 
 		[Test]
@@ -672,7 +710,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			using var ctx = CreateContext(provider);
 
 			var id = 1;
+			// EF Core 11 obsoletes FromSqlInterpolated in favour of FromSql; it is still callable, and
+			// this test exists to cover what users call, so it keeps testing it until EF removes it.
+#pragma warning disable CS0618 // Type or member is obsolete
 			var query = ctx.Categories.FromSqlInterpolated($"SELECT * FROM [dbo].[Categories] WHERE CategoryId = {id}");
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			var efResult = await query.AsNoTracking().ToArrayAsyncEF();
 			var linq2dbResult = await query.ToArrayAsyncLinqToDB();
@@ -684,9 +726,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			using var ctx = CreateContext(provider);
 
 			var id = 1;
+#pragma warning disable CS0618 // Type or member is obsolete
 			var query = from c1 in ctx.Categories
 						from c2 in ctx.Categories.FromSqlInterpolated($"SELECT * FROM [dbo].[Categories] WHERE CategoryId = {id}")
 						select c2;
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			var efResult = await query.AsNoTracking().ToArrayAsyncEF();
 			var linq2dbResult = await query.AsNoTracking().ToArrayAsyncLinqToDB();
@@ -812,11 +856,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				var query = from p in ctx.Products
 							select SQLServerNorthwindContext.ProcessLong(commandExecutionTime);
 
-				var exception = Assert.Throws<Microsoft.Data.SqlClient.SqlException>(() =>
+				Assert.That(() =>
 					{
 						var result = query.ToLinqToDB().First();
-					})!;
-				Assert.That(timeoutErrorCode, Is.EqualTo(exception.Number));
+					},
+					Throws.TypeOf<Microsoft.Data.SqlClient.SqlException>().With.Property(nameof(Microsoft.Data.SqlClient.SqlException.Number)).EqualTo(timeoutErrorCode));
 			}
 			finally
 			{
