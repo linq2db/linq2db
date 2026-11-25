@@ -220,7 +220,7 @@ F# generation emits idiomatic code:
 
 - entities as records with mapping attributes on fields;
 - nullable scalar columns as `'T option`;
-- nullable scalar parameters and results of scalar and table function wrappers, and results of aggregate function
+- nullable scalar parameters of scalar and table function wrappers, and results of scalar and aggregate function
   wrappers, as `Nullable<T>` / nullable strings, because their values reach the database without a column mapping
   ([#6443](https://github.com/linq2db/linq2db/issues/6443)); aggregate value selectors and stored procedure
   wrappers keep `'T option`. Pass an option column to such a parameter as `row.Column.Value`: it translates to the
