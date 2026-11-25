@@ -229,7 +229,7 @@ namespace LinqToDB.Remote
 				{
 					ret = ProcessDataReaderWrapper(query, db, rd, cancellationToken);
 				}
-				catch (OperationCanceledException)
+				catch (Exception) when (IsCancelled(cancellationToken))
 				{
 					// Stop the command before the reader is disposed: some providers otherwise read the
 					// remaining rows to the end on dispose, which is exactly the work the caller cancelled.
@@ -242,6 +242,13 @@ namespace LinqToDB.Remote
 			catch (Exception exception)
 			{
 				HandleException(exception);
+
+				// A provider may report the command it stopped for the caller's token with an error of its own, from a
+				// read or from the disposal of the reader (MySqlConnector kills the query, and the next Read fails with
+				// "Query execution was interrupted"): the caller cancelled, so the call ends as cancelled.
+				if (exception is not OperationCanceledException && IsCancelled(cancellationToken))
+					throw new OperationCanceledException(exception.Message, exception, cancellationToken);
+
 				throw;
 			}
 		}
@@ -285,6 +292,14 @@ namespace LinqToDB.Remote
 		}
 
 		#endregion
+
+		// Whether a failure came after the caller cancelled the call, which then decides how the failure is reported.
+		static bool IsCancelled(CancellationToken cancellationToken)
+		{
+#pragma warning disable RS0030 // The cancellation has happened already: there is nothing to throw here, only a failure to classify.
+			return cancellationToken.IsCancellationRequested;
+#pragma warning restore RS0030
+		}
 
 		static void CancelCommand(DataReaderWrapper rd)
 		{

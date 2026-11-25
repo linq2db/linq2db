@@ -1655,8 +1655,8 @@ namespace Tests.Remote
 
 			await using var db = new InProcessConfigurationContext(context);
 
-			// Twelve copies of Person cross joined: millions of rows, which the server reads for far longer than the
-			// token lets it.
+			// Thirteen copies of Person cross joined: tens of millions of rows, which take far longer to read than the
+			// test allows. A provider that reads the rest of the result when its reader is disposed would take as long.
 			var rows =
 				from p1  in db.GetTable<Model.Person>()
 				from p2  in db.GetTable<Model.Person>()
@@ -1670,16 +1670,24 @@ namespace Tests.Remote
 				from p10 in db.GetTable<Model.Person>()
 				from p11 in db.GetTable<Model.Person>()
 				from p12 in db.GetTable<Model.Person>()
+				from p13 in db.GetTable<Model.Person>()
 				select p1.ID;
 
 			using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
 
+			var sw          = Stopwatch.StartNew();
+			var cancelledAt = TimeSpan.Zero;
+
+			using var registration = cts.Token.Register(() => cancelledAt = sw.Elapsed);
+
 			var query = CatchAsync(() => rows.ToListAsync(cts.Token));
 
-			(await WaitAsync(query, TimeSpan.FromSeconds(30))).ShouldBeTrue("the server kept reading rows after the call was cancelled");
+			(await WaitAsync(query, WaitLimit)).ShouldBeTrue("the server kept reading rows after the call was cancelled");
 
 			var error = await query;
 			error.ShouldBeAssignableTo<OperationCanceledException>(error?.ToString());
+
+			(sw.Elapsed - cancelledAt).ShouldBeLessThan(Prompt, "the server read the rest of the result after the call was cancelled");
 
 			var count = db
 				.GetTable<Model.Person>()
