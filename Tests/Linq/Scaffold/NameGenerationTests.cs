@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text;
 
 using LinqToDB.Naming;
@@ -127,7 +126,9 @@ namespace Tests.Scaffold
 
 			var generator = new TestModelGenerator { IsParameter = isParameter };
 
-			generator.ToValidNameDefault(name, true).ShouldBe(expected);
+			generator
+				.ToValidNameDefault(name, true)
+				.ShouldBe(expected);
 		}
 	}
 }
