@@ -37,7 +37,9 @@ namespace Tests.UserTests
 		{
 			get
 			{
+#pragma warning disable CA2263 // Prefer generic overload when type is known
 				var values = Enum.GetValues(typeof(DateTimeQuantifiers)).Cast<int>().OrderBy(_ => _).Cast<DateTimeQuantifiers>().ToArray();
+#pragma warning restore CA2263 // Prefer generic overload when type is known
 
 				for (var i = 0; values[i] != DateTimeQuantifiers.Fraction1; i++)
 				{

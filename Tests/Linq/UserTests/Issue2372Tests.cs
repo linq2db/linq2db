@@ -50,7 +50,9 @@ namespace Tests.UserTests
 				});
 				ms2.SetConverter<string, InventoryResourceStatus>((txt) =>
 				{
+#pragma warning disable CA2263 // Prefer generic overload when type is known
 					return (InventoryResourceStatus)Enum.Parse(typeof(InventoryResourceStatus), txt, true);
+#pragma warning restore CA2263 // Prefer generic overload when type is known
 				});
 
 				var fmb2 = new FluentMappingBuilder(ms2);

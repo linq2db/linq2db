@@ -63,7 +63,9 @@ namespace Tests.UserTests
 			{
 				if (string.IsNullOrEmpty(txt))
 					return null;
+#pragma warning disable CA2263 // Prefer generic overload when type is known
 				return (Test?)Enum.Parse(typeof(Test), txt, true);
+#pragma warning restore CA2263 // Prefer generic overload when type is known
 			});
 
 			using (var db = GetDataContext(context, ms))
