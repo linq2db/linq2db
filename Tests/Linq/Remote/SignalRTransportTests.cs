@@ -1550,6 +1550,18 @@ namespace Tests.Remote
 
 			(await WithinLimit(first.GetTable<Item>().CountAsync())).ShouldBe(1);
 			(await WithinLimit(second.GetTable<Item>().CountAsync())).ShouldBe(0);
+
+			// The context factory of the first registration uses that registration's hub too, not the last one.
+			await using var fromFactory = scope.ServiceProvider
+				.GetRequiredService<IDataContextFactory<ClientContext>>()
+				.CreateDataContext();
+
+			var factoryCount = fromFactory
+				.GetTable<Item>()
+				.CountAsync();
+
+			(await WithinLimit(factoryCount))
+				.ShouldBe(1);
 		}
 
 		sealed class ClientContext(SignalRLinqServiceClient client) : SignalRDataContext(client, o => o.UseConfiguration(Configuration));
