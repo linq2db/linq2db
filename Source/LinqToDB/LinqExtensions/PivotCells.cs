@@ -18,8 +18,10 @@ namespace LinqToDB
 	/// A result type can declare the member as <see cref="IReadOnlyDictionary{TKey,TValue}"/>. That view follows the
 	/// dictionary contract: its indexer throws <see cref="KeyNotFoundException"/> for a name no cell carries, where
 	/// <c>cells[name]</c> on this type returns <see langword="null"/>. Read as <see langword="dynamic"/>, a name no cell
-	/// carries throws the runtime binder's exception. In a query, a cell is a column:
-	/// <c>Sql.Property&lt;decimal?&gt;(row.Cells, "Y2010")</c> filters or orders on it.
+	/// carries throws the runtime binder's exception. In a query, a cell is a column: <c>row.Cells.Get&lt;decimal?&gt;("Y2010")</c>
+	/// or <c>(decimal?)row.Cells["Y2010"]</c> filters, orders or unpivots on it when the member is typed
+	/// <see cref="PivotCells"/>. A member typed <see cref="IReadOnlyDictionary{TKey,TValue}"/> reaches the interface's
+	/// indexer, which is not translated; <c>Sql.Property&lt;decimal?&gt;(row.Cells, "Y2010")</c> reads the cell either way.
 	/// </remarks>
 	[SuppressMessage("Naming", "CA1710:Identifiers should have correct suffix", Justification = "named for its pivot role; the dictionary view is secondary")]
 	public sealed class PivotCells : DynamicObject, IReadOnlyDictionary<string, object?>

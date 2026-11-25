@@ -148,12 +148,13 @@ namespace LinqToDB.Internal.Linq.Builder
 		// member was renamed by the mapping.
 		static string GetPhysicalColumnName(LambdaExpression column, Type sourceType, MappingSchema mappingSchema)
 		{
-			var memberName = GetColumnName(column);
+			var (path, memberName) = GetColumnName(column);
 
-			return mappingSchema.GetEntityDescriptor(sourceType)[memberName]?.ColumnName ?? memberName;
+			// A path the mapping does not carry - a member of a projected object, a pivot cell - is named by its own member.
+			return mappingSchema.GetEntityDescriptor(sourceType)[path]?.ColumnName ?? memberName;
 		}
 
-		static string GetColumnName(LambdaExpression column)
+		static (string path, string memberName) GetColumnName(LambdaExpression column)
 		{
 			var body = column.Body;
 
@@ -164,7 +165,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				throw new LinqToDBException(ErrorHelper.Pivot.Error_UnpivotColumnSelector);
 
 			// A complex column is keyed by its full member path, as the entity descriptor keys it.
-			var path = member.Member.Name;
+			var memberName = member.Member.Name;
+			var path       = memberName;
 
 			while (member.Expression is MemberExpression parent)
 			{
@@ -172,7 +174,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				path   = member.Member.Name + "." + path;
 			}
 
-			return path;
+			return (path, memberName);
 		}
 
 		sealed class UnpivotInfo

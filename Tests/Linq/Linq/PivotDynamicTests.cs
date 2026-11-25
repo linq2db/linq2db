@@ -657,6 +657,97 @@ namespace Tests.Linq
 			Occurrences(sql, "WHEN").ShouldBe(2);
 		}
 
+		/// <summary>
+		/// <see cref="PivotCells.Get{T}"/> and the indexer read a cell in a query as <c>Sql.Property</c> does, when the
+		/// member is typed <see cref="PivotCells"/>.
+		/// </summary>
+		[Test]
+		public void ComposesThroughTheCellsMembers([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var query = t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000, 2010 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				})
+				.Where(r => r.Cells.Get<decimal?>("Y2010") >= 15)
+				.OrderByDescending(r => (decimal?)r.Cells["Y2010"])
+				.Select(r => new { r.Key, Y2010 = r.Cells.Get<decimal?>("Y2010") });
+
+			var result = query.ToList();
+
+			result.Count.ShouldBe(2);
+			result[0].Key.ShouldBe("A");
+			result[0].Y2010.ShouldBe(20m);
+			result[1].Key.ShouldBe("B");
+			result[1].Y2010.ShouldBe(15m);
+		}
+
+		/// <summary>A pivot's cells unpivot under the names the pivot gave them, not the path that reaches them.</summary>
+		[Test]
+		public void UnpivotsTheCellsUnderTheirOwnNames([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var result = t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000, 2010 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				})
+				.Unpivot(
+					(row, name, value) => new { row.Key, Name = name, Value = value },
+					x => Sql.Property<decimal?>(x.Cells, "Y2000"),
+					x => Sql.Property<decimal?>(x.Cells, "Y2010"))
+				.ToArray()
+				.OrderBy(r => r.Key, StringComparer.Ordinal)
+				.ThenBy(r => r.Name, StringComparer.Ordinal)
+				.Select(r => (r.Key, r.Name, r.Value));
+
+			result.ShouldBe(new (string, string, decimal?)[] { ("A", "Y2000", 10m), ("A", "Y2010", 20m), ("B", "Y2000", 5m), ("B", "Y2010", 15m) });
+		}
+
+		/// <summary>A pivot's cells unpivot through the indexer as through <c>Sql.Property</c>.</summary>
+		[Test]
+		public void UnpivotsTheCellsThroughTheIndexer([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var result = t
+				.GroupBy(x => x.Category)
+				.Select(g => new
+				{
+					g.Key,
+					Cells = g
+						.Pivot(x => x.Year, new[] { 2000, 2010 })
+						.Cell(rows => rows.Sum(x => x.Amount), Year)
+						.AsDictionary(),
+				})
+				.Unpivot(
+					(row, name, value) => new { row.Key, Name = name, Value = value },
+					x => (decimal?)x.Cells["Y2000"],
+					x => (decimal?)x.Cells["Y2010"])
+				.ToArray()
+				.OrderBy(r => r.Key, StringComparer.Ordinal)
+				.ThenBy(r => r.Name, StringComparer.Ordinal)
+				.Select(r => (r.Key, r.Name, r.Value));
+
+			result.ShouldBe(new (string, string, decimal?)[] { ("A", "Y2000", 10m), ("A", "Y2010", 20m), ("B", "Y2000", 5m), ("B", "Y2010", 15m) });
+		}
+
 		/// <summary>The cells go into a member of an anonymous type, which cannot carry a dynamic-columns store.</summary>
 		[Test]
 		public void PivotsIntoAnAnonymousType([DataSources] string context)

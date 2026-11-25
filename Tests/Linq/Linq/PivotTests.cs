@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 
 using LinqToDB;
@@ -706,6 +707,27 @@ namespace Tests.Linq
 				.Select(r => (r.Name, r.Value));
 
 			result.ShouldBe(new (string, decimal?)[] { ("ROOT_AMT", 10m), ("SHIP_AMT", 20m), ("BILL_AMT", 30m) });
+		}
+
+		/// <summary>
+		/// A member of a projected object has no column of its own in the source's mapping, so it reads as its member
+		/// name rather than as the path that reaches it.
+		/// </summary>
+		[Test]
+		public void UnpivotNameColumnOfAProjectedMemberUsesTheMemberName([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(QuarterlySales.Data);
+
+			var result = t
+				.Select(x => new { x.Id, Inner = new { x.Q1, x.Q2 } })
+				.Unpivot((row, name, value) => new { row.Id, Name = name, Value = value }, x => x.Inner.Q1, x => x.Inner.Q2)
+				.ToArray()
+				.Where(r => r.Id == 1)
+				.OrderBy(r => r.Name, StringComparer.Ordinal)
+				.Select(r => (r.Name, r.Value));
+
+			result.ShouldBe(new (string, decimal?)[] { ("Q1", 10m), ("Q2", 20m) });
 		}
 
 		/// <summary>
