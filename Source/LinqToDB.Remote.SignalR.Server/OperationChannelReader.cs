@@ -179,9 +179,19 @@ namespace LinqToDB.Remote.SignalR
 			registration.Dispose();
 		}
 
+		// Runs inside Signal/R's own cancellation (the stream token, ConnectionAborted), together with every callback
+		// registered on the operation's token.
 		void Cancel()
 		{
-			_cts.Cancel();
+			try
+			{
+				_cts.Cancel();
+			}
+			catch (AggregateException)
+			{
+				// Every callback has run: a failing cancel callback of a provider must not surface in Signal/R's
+				// dispatcher, and the operation reports its own outcome.
+			}
 		}
 
 		void ReleaseRegistrations()

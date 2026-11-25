@@ -155,6 +155,46 @@ namespace Tests.Remote
 			sw.Elapsed.ShouldBeLessThan(Prompt);
 		}
 
+		// A provider's cancel callback that throws runs inside Signal/R's own cancellation of the stream: the call still
+		// ends as cancelled, and the connection serves the next call.
+		[Test]
+		public async Task FailingCancelCallbackLeavesTheConnectionUsable()
+		{
+			var service = new ScriptedLinqService
+			{
+				Behavior = static async (_, cancellationToken) =>
+				{
+					using var registration = cancellationToken.Register(static () => throw new InvalidOperationException("The provider failed to cancel."));
+
+					await Task.Delay(Timeout.Infinite, cancellationToken);
+					return "never";
+				},
+			};
+
+			using var host = TestHost.Start<ScriptedHub>(services => services.AddSingleton<ILinqService>(service));
+
+			var hubConnection = await host.ConnectAsync();
+			await using var owner = Own(hubConnection);
+
+			var client = (ILinqService)new SignalRLinqServiceClient(hubConnection);
+
+			using var cts = new CancellationTokenSource();
+
+			var call = CatchAsync(() => client.ExecuteReaderAsync(Configuration, "query", cts.Token));
+
+			(await service.WaitStartedAsync(WaitLimit)).ShouldBeTrue("the call did not reach the server");
+
+			cts.Cancel();
+
+			(await WithinLimit(call)).ShouldBeAssignableTo<OperationCanceledException>();
+			(await service.WaitFinishedAsync(WaitLimit)).ShouldBeTrue("the server call did not end");
+
+			service.Behavior = static (_, _) => Task.FromResult("next");
+
+			(await WithinLimit(client.ExecuteReaderAsync(Configuration, "query"))).ShouldBe("next");
+			hubConnection.State.ShouldBe(HubConnectionState.Connected);
+		}
+
 		[Test]
 		public async Task DisconnectCancelsTheServerCall()
 		{
