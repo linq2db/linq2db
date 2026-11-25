@@ -34,6 +34,19 @@ type RequiredColumnRow =
     { [<PrimaryKey; Column>] Id   : int
       Note : string option }
 
+[<Table("OptionExplicitColumnTable")>]
+type ExplicitColumnRow =
+    { [<PrimaryKey; Column>]                                              Id     : int
+      [<Column("MiddleName", DataType = DataType.NVarChar, Length = 50)>] Middle : string option }
+
+let VerifyExplicitColumnPreserved (db : IDataContext) =
+    let ed  = db.MappingSchema.GetEntityDescriptor(typeof<ExplicitColumnRow>)
+    let col = ed.Columns |> Seq.find (fun c -> c.MemberName = "Middle")
+    Assert.That(col.ColumnName, Is.EqualTo "MiddleName")
+    Assert.That(col.DataType,   Is.EqualTo DataType.NVarChar)
+    Assert.That(col.Length,     Is.EqualTo(System.Nullable 50))
+    Assert.That(col.CanBeNull,  Is.True)
+
 let VerifyUnattributedOptionIsColumn (db : IDataContext) =
     let ed = db.MappingSchema.GetEntityDescriptor(typeof<RequiredColumnRow>)
     Assert.That(ed.Columns |> Seq.exists (fun c -> c.MemberName = "Note"), Is.True)
