@@ -665,13 +665,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				var prefix = Environment.NewLine;
 
 				if (StringBuilder.Length > len)
-				{
-					var buffer = new char[StringBuilder.Length - len];
-
-					StringBuilder.CopyTo(len, buffer, 0, StringBuilder.Length - len);
-
-					prefix += new string(buffer);
-				}
+					prefix += StringBuilder.ToString(len, StringBuilder.Length - len);
 
 				BuildQueryExtensions(StringBuilder, statement.SelectQuery.SqlQueryExtensions, null, prefix, Environment.NewLine, Sql.QueryExtensionScope.SubQueryHint);
 			}

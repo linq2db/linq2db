@@ -407,11 +407,11 @@ namespace Tests.Extensions
 			using var db = CreateConnection(version);
 			var table = db.GetTable<LockRow>();
 			var sql = table
-				.SubQueryHint("  for\tupdate NOWAIT")
+				.SubQueryHint("  for\t\u00a0update NOWAIT")
 				.ToSqlQuery()
 				.Sql;
-			sql.ShouldContain("for\tupdate NOWAIT");
-			foreach (var hint in new[] { "FOR SHARE", "FOR KEY SHARE", "FOR NO KEY UPDATE" })
+			sql.ShouldContain("for\t\u00a0update NOWAIT");
+			foreach (var hint in new[] { "FOR SHARE", "FOR KEY SHARE", "FOR NO KEY UPDATE", "FORUPDATE", "FOR UPDATE_X", "FOR UPDAT" })
 				Assert.That(() => table.SubQueryHint(hint).ToSqlQuery(), Throws.TypeOf<LinqToDBException>().With.Message.Contains("Oracle only supports FOR UPDATE"));
 			Assert.That(() => table.SubQueryHint("/* FOR UPDATE */").ToSqlQuery(), Throws.TypeOf<LinqToDBException>());
 		}
