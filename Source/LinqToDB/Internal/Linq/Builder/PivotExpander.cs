@@ -24,7 +24,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	{
 		static readonly MethodInfo _expandMethod = typeof(PivotExpander).GetMethod(nameof(Expand), BindingFlags.Static | BindingFlags.NonPublic)!;
 
-		static readonly ConstructorInfo _cellsConstructor = typeof(PivotCells).GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic, null, Type.EmptyTypes, null)!;
+		static readonly ConstructorInfo _cellsConstructor = typeof(PivotCells).GetConstructorEx(BindingFlags.Instance | BindingFlags.NonPublic)!;
 
 		// A real member wins the lookup, so a cell named after one would be shadowed rather than reachable. Methods and
 		// the indexer do not take part in that lookup.
