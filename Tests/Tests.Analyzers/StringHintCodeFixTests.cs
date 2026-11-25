@@ -1249,5 +1249,49 @@ namespace Tests.Analyzers
 
 			await VerifyAsync(source, source, SqlServerRestrictedKey);
 		}
+
+		// Fix-All computes every rewrite against the original document and drops one whose edit overlaps another's: a
+		// chain's outer hint encloses the inner one, so one pass rewrites the inner hint only. The outer hint then binds
+		// the provider's own overload and is still reported, now with an exact rewrite (no second AsSqlServer()).
+		[Test]
+		public async Task FixAllOnChainedHintsRewritesTheInnerHint()
+		{
+			await VerifyAsync(
+				"""
+				using LinqToDB;
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var r = t.[|TableHint("NOLOCK")|].[|TableHint("READPAST")|];
+					}
+				}
+				""",
+				"""
+				using LinqToDB;
+				using LinqToDB.DataProvider.SqlServer;
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var r = t.AsSqlServer().WithNoLock().[|TableHint("READPAST")|];
+					}
+				}
+				""",
+				SqlServerRestrictedKey,
+				static test =>
+				{
+					test.NumberOfIncrementalIterations  = 1;
+					test.NumberOfFixAllIterations       = 1;
+					test.FixedState.MarkupHandling      = MarkupMode.Allow;
+					test.BatchFixedState.MarkupHandling = MarkupMode.Allow;
+				});
+		}
 	}
 }
