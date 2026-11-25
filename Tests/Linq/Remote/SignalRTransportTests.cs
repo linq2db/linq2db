@@ -1582,7 +1582,9 @@ namespace Tests.Remote
 			var hubConnection = await host.ConnectAsync();
 
 			await using (Own(hubConnection))
-			await using (var db = new SignalRDataContext(hubConnection, o => o.UseConfiguration(Configuration + ".PostgreSQL")))
+			// The client keeps the server's provider information per configuration string for the whole process: one
+			// string per database, so that each PostgreSQL version gets its own.
+			await using (var db = new SignalRDataContext(hubConnection, o => o.UseConfiguration(Configuration + ".Database." + context)))
 			{
 				using var noBaseline = new DisableBaseline("polls pg_stat_activity: the number of polls depends on timing");
 				using var admin      = GetDataConnection(context);
@@ -1638,7 +1640,58 @@ namespace Tests.Remote
 			error.ShouldBeAssignableTo<OperationCanceledException>(error?.ToString());
 		}
 
-		sealed class InProcessConfigurationContext(string target) : RemoteDataContextBase(new DataOptions().UseConfiguration(Configuration + ".InProcess"))
+		// A large result cancelled midway: the command is cancelled before its reader is disposed, the call fails with
+		// OperationCanceledException rather than with the provider's report of the cancelled command (which some
+		// providers raise when the reader is disposed), and the pooled connection serves the next query.
+		[Test]
+		public async Task CancelledReadOfALargeResultLeavesTheConnectionUsable([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllSqlServer, TestProvName.AllMySql)] string context)
+		{
+			using var noBaseline = new DisableBaseline("the number of rows read before the cancellation depends on timing");
+
+			int expected;
+
+			using (var admin = GetDataConnection(context))
+				expected = admin.GetTable<Model.Person>().Count();
+
+			await using var db = new InProcessConfigurationContext(context);
+
+			// Twelve copies of Person cross joined: millions of rows, which the server reads for far longer than the
+			// token lets it.
+			var rows =
+				from p1  in db.GetTable<Model.Person>()
+				from p2  in db.GetTable<Model.Person>()
+				from p3  in db.GetTable<Model.Person>()
+				from p4  in db.GetTable<Model.Person>()
+				from p5  in db.GetTable<Model.Person>()
+				from p6  in db.GetTable<Model.Person>()
+				from p7  in db.GetTable<Model.Person>()
+				from p8  in db.GetTable<Model.Person>()
+				from p9  in db.GetTable<Model.Person>()
+				from p10 in db.GetTable<Model.Person>()
+				from p11 in db.GetTable<Model.Person>()
+				from p12 in db.GetTable<Model.Person>()
+				select p1.ID;
+
+			using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+
+			var query = CatchAsync(() => rows.ToListAsync(cts.Token));
+
+			(await WaitAsync(query, TimeSpan.FromSeconds(30))).ShouldBeTrue("the server kept reading rows after the call was cancelled");
+
+			var error = await query;
+			error.ShouldBeAssignableTo<OperationCanceledException>(error?.ToString());
+
+			var count = db
+				.GetTable<Model.Person>()
+				.CountAsync();
+
+			(await WithinLimit(count))
+				.ShouldBe(expected);
+		}
+
+		// Keyed by its target: the client keeps the server's provider information per configuration string for the whole
+		// process, so a string shared with another database would give this context that database's provider.
+		sealed class InProcessConfigurationContext(string target) : RemoteDataContextBase(new DataOptions().UseConfiguration(Configuration + ".InProcess." + target))
 		{
 			protected override ILinqService GetClient()
 			{
