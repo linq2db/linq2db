@@ -48,6 +48,6 @@ namespace LinqToDB
 			this            IGrouping<TKey, TSource> source,
 			                Func<TSource, TFor>      forColumn,
 			[InstantHandle] IEnumerable<TFor>        values)
-			=> throw new LinqToDBException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_QueryMarkerInvoked, nameof(Pivot)));
+			=> throw new LinqToDBException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Error_QueryMarkerInvoked, nameof(Pivot)));
 	}
 }

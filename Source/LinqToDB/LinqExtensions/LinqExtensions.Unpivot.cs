@@ -259,6 +259,6 @@ namespace LinqToDB
 			LambdaExpression                    resultSelector,
 			[SqlQueryDependent] string[]        names,
 			Expression<Func<TSource, TValue>>[] columns)
-			=> throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_QueryMarkerInvoked, nameof(UnpivotMulti)));
+			=> throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Error_QueryMarkerInvoked, nameof(UnpivotMulti)));
 	}
 }

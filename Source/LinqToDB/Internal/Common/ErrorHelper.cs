@@ -27,6 +27,7 @@
 		public const string Error_DistinctByRequiresOrderBy        = "DistinctBy requires at least one ordering key.";
 		public const string Error_LinqToDBQueryExpected            = "Linq To DB query expected";
 		public const string Error_EnumerationNotStarted            = "Enumeration not started.";
+		public const string Error_QueryMarkerInvoked               = "{0} is a query marker and must not be invoked directly.";
 
 		public const string Error_WindowFunctionsInSearchCondition                = "Window functions cannot be used in search condition.";
 		public const string Error_WindowFunction_PercentRank                      = "PERCENT_RANK is not supported by current provider.";
@@ -169,17 +170,20 @@
 			public const string Error_SkipInUpdate = "Feature not supported by database: Skip in UPDATE.";
 		}
 
+		public static class DynamicColumns
+		{
+			public const string Error_DynamicColumnShadowsMember = "Dynamic column name '{0}' collides with a member of '{1}', which would be resolved instead of the generated column.";
+			public const string Error_NoDynamicColumnsStore      = "Type '{0}' has no member marked with DynamicColumnsStoreAttribute, so its initializer cannot set a dynamic column.";
+		}
+
 		public static class Pivot
 		{
-			public const string Error_QueryMarkerInvoked            = "{0} is a query marker and must not be invoked directly.";
 			public const string Error_UnpivotNeedsColumn            = "An unpivot needs at least one column.";
 			public const string Error_UnpivotEmptyColumnName        = "Column name at index {0} is empty.";
 			public const string Error_UnpivotColumnSelector         = "Unpivot column selector must be a simple member access (e.g. x => x.Jan).";
 			public const string Error_UnpivotNeedsColumnGroup       = "An unpivot needs at least one column group.";
 			public const string Error_UnpivotEmptyGroupName         = "Column group name at index {0} is empty.";
 			public const string Error_UnpivotNullGroupColumn        = "Column group '{0}' has a null column selector.";
-			public const string Error_DynamicColumnShadowsMember    = "Dynamic column name '{0}' collides with a member of '{1}', which would be resolved instead of the generated column.";
-			public const string Error_NoDynamicColumnsStore         = "Type '{0}' has no member marked with DynamicColumnsStoreAttribute, so the generated columns would have nowhere to go.";
 			public const string Error_PivotTerminalNotAMember       = "'{0}' must be the value of a member or a constructor argument in the projection.";
 			public const string Error_PivotChainNotFromGroup        = "'{0}' must be called on a chain started by Pivot on a group.";
 			public const string Error_PivotNoTerminal               = "A pivot of a group must end in AsDictionary, AsDynamic or Select.";

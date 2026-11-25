@@ -7,8 +7,10 @@ LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLMappingSchema.PostgreSQL11Ma
 LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLMappingSchema.PostgreSQL11MappingSchema.PostgreSQL11MappingSchema() -> void
 LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLMappingSchema.PostgreSQL12MappingSchema
 LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLMappingSchema.PostgreSQL12MappingSchema.PostgreSQL12MappingSchema() -> void
-const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_DynamicColumnShadowsMember = "Dynamic column name '{0}' collides with a member of '{1}', which would be resolved instead of the generated column." -> string!
-const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_NoDynamicColumnsStore = "Type '{0}' has no member marked with DynamicColumnsStoreAttribute, so the generated columns would have nowhere to go." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.DynamicColumns.Error_DynamicColumnShadowsMember = "Dynamic column name '{0}' collides with a member of '{1}', which would be resolved instead of the generated column." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.DynamicColumns.Error_NoDynamicColumnsStore = "Type '{0}' has no member marked with DynamicColumnsStoreAttribute, so its initializer cannot set a dynamic column." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_QueryMarkerInvoked = "{0} is a query marker and must not be invoked directly." -> string!
+LinqToDB.Internal.Common.ErrorHelper.DynamicColumns
 const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_PivotAggregateNotInline = "A pivot cell's aggregate must be written as an inline lambda; pass one built elsewhere through Cells and PivotCell.Create." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_PivotArgumentNull = "The pivot's {0} is null." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_PivotCellNotFound = "No pivot cell is named '{0}'." -> string!
@@ -22,7 +24,6 @@ const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_PivotReadsQueryParameter 
 const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_PivotSelectAfterCells = "Select projects each pivoted value itself, so it cannot follow Cell or Cells." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_PivotTerminalNotAMember = "'{0}' must be the value of a member or a constructor argument in the projection." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_PivotValueEmptyName = "Pivot value '{0}' produced an empty column name." -> string!
-const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_QueryMarkerInvoked = "{0} is a query marker and must not be invoked directly." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_UnpivotColumnSelector = "Unpivot column selector must be a simple member access (e.g. x => x.Jan)." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_UnpivotEmptyColumnName = "Column name at index {0} is empty." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Pivot.Error_UnpivotEmptyGroupName = "Column group name at index {0} is empty." -> string!

@@ -1078,7 +1078,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				// Construction would otherwise drop the dynamic assignments silently.
 				if (MappingSchema.GetEntityDescriptor(node.Type).DynamicColumnSetter == null)
-					throw new LinqToDBException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_NoDynamicColumnsStore, node.Type.Name));
+					throw new LinqToDBException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.DynamicColumns.Error_NoDynamicColumnsStore, node.Type.Name));
 
 				// A dynamic column has no real setter, so the raw MemberInit compiles to invalid IL; the generic
 				// constructor writes it through the type's dynamic-columns store.

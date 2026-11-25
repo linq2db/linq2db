@@ -152,7 +152,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						throw new LinqToDBException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_PivotDuplicateName, name));
 
 					if (_cellsMembers.Contains(name!))
-						throw new LinqToDBException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_DynamicColumnShadowsMember, name, nameof(PivotCells)));
+						throw new LinqToDBException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.DynamicColumns.Error_DynamicColumnShadowsMember, name, nameof(PivotCells)));
 
 					var body = template.Aggregate.GetBody(RowsOf(value));
 

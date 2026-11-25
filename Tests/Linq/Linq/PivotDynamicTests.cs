@@ -872,7 +872,7 @@ namespace Tests.Linq
 
 			act.ShouldThrow<LinqToDBException>()
 				.Message
-				.ShouldBe(Message(ErrorHelper.Pivot.Error_DynamicColumnShadowsMember, nameof(PivotCells.Store), nameof(PivotCells)));
+				.ShouldBe(Message(ErrorHelper.DynamicColumns.Error_DynamicColumnShadowsMember, nameof(PivotCells.Store), nameof(PivotCells)));
 		}
 
 		// Call-site guards: each throws while the query is built, before any SQL.
@@ -1814,7 +1814,7 @@ namespace Tests.Linq
 			pivot
 				.ShouldThrow<LinqToDBException>()
 				.Message
-				.ShouldBe(Message(ErrorHelper.Pivot.Error_QueryMarkerInvoked, nameof(LinqExtensions.Pivot)));
+				.ShouldBe(Message(ErrorHelper.Error_QueryMarkerInvoked, nameof(LinqExtensions.Pivot)));
 
 			// No instance can be had in memory, since Pivot throws; one is made here only to reach the members.
 			var builder = (PivotBuilder<Sales, int>)Activator.CreateInstance(typeof(PivotBuilder<Sales, int>), nonPublic: true)!;
@@ -1833,7 +1833,7 @@ namespace Tests.Linq
 				invoke
 					.ShouldThrow<LinqToDBException>()
 					.Message
-					.ShouldBe(Message(ErrorHelper.Pivot.Error_QueryMarkerInvoked, name));
+					.ShouldBe(Message(ErrorHelper.Error_QueryMarkerInvoked, name));
 			}
 
 			PivotCell<Sales, int>

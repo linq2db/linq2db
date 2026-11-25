@@ -467,7 +467,7 @@ namespace Tests.Linq
 			Action act = () => query.ToList();
 
 			act.ShouldThrow<LinqToDBException>()
-				.Message.ShouldBe(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_NoDynamicColumnsStore, nameof(PersonWithoutDynamicStore)));
+				.Message.ShouldBe(string.Format(CultureInfo.InvariantCulture, ErrorHelper.DynamicColumns.Error_NoDynamicColumnsStore, nameof(PersonWithoutDynamicStore)));
 		}
 
 		[Test]

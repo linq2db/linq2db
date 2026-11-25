@@ -88,6 +88,6 @@ namespace LinqToDB
 			=> throw InvokedInMemory(nameof(Select));
 
 		static LinqToDBException InvokedInMemory(string member)
-			=> new(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Pivot.Error_QueryMarkerInvoked, member));
+			=> new(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Error_QueryMarkerInvoked, member));
 	}
 }
