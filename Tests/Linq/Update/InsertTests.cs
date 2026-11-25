@@ -639,6 +639,7 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsForProvider("System.Data.Odbc.OdbcException", TestProvName.AllAccessOdbc, ErrorMessage = "Syntax error (missing operator)")]
 		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb, ErrorMessage = "Syntax error (missing operator)")]
+		[ThrowsForProvider("IBM.Data.Db2.DB2Exception", TestProvName.AllInformix, ErrorMessage = "A syntax error has occurred")]
 		public void InsertConcat([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
