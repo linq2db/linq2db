@@ -76,7 +76,7 @@ namespace LinqToDB.Analyzers.CodeFixes
 			foreach (var fix in fixes)
 			{
 				var title = fix.GenericOverload
-					? string.Format(CultureInfo.InvariantCulture, "Use {0} typed hint {1}() (applies to {0} only)", fix.Provider, fix.Helper)
+					? string.Format(CultureInfo.InvariantCulture, "Use {0} typed hint {1}() (applies to {0} only, as do text hints chained after it)", fix.Provider, fix.Helper)
 					: string.Format(CultureInfo.InvariantCulture, "Use typed hint {0}()", fix.Helper);
 
 				var captured = fix;

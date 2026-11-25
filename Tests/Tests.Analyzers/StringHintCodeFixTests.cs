@@ -1143,5 +1143,46 @@ namespace Tests.Analyzers
 				""",
 				SqlServerRestrictedKey);
 		}
+
+		// The rewrite gives the chain the provider's type, so a later text hint binds the provider's own overload and is
+		// emitted on that provider only; the title says so.
+		[Test]
+		public async Task RestrictingRewriteRestrictsTheTextHintsChainedAfterIt()
+		{
+			await VerifyAsync(
+				"""
+				using LinqToDB;
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var r = t.[|TableHint("NOLOCK")|].TableHint("INDEX(IX_PROBE)");
+					}
+				}
+				""",
+				"""
+				using LinqToDB;
+				using LinqToDB.DataProvider.SqlServer;
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var r = t.AsSqlServer().WithNoLock().TableHint("INDEX(IX_PROBE)");
+					}
+				}
+				""",
+				SqlServerRestrictedKey,
+				static test =>
+				{
+					test.CodeActionVerifier = static (action, verifier) =>
+						verifier.Equal("Use SQL Server typed hint WithNoLock() (applies to SQL Server only, as do text hints chained after it)", action.Title);
+				});
+		}
 	}
 }
