@@ -295,6 +295,7 @@
 				"files": [
 					"api/**/*.{md,yml}",
 					"articles/**/*.{md,yml}",
+					"documentation/**/*.{md,yml}",
 					"toc.yml",
 					"*.md"
 				]
@@ -306,7 +307,7 @@
 					"images/**",
 					"**.png",
 					"**.jpg",
-					"articles/cli-help.txt",
+					"documentation/cli-help.txt",
 					".nojekyll"
 				]
 			}
@@ -322,7 +323,15 @@
 			"_appFaviconPath": "images/icon.ico",
 			"_enableSearch": true,
 			"_disableNewTab": false,
-			"_disableContribution": true
+			"_gitContribute": {
+				"repo": "https://github.com/linq2db/docs",
+				"branch": "master"
+			}
+		},
+		"fileMetadata": {
+			"_disableContribution": {
+				"api/**/**.yml": true
+			}
 		},
 		"fileMetadataFiles": [],
 		"template": [

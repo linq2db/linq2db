@@ -1,3 +1,5 @@
+- name: Documentation
+  href: documentation/
 - name: Articles
   href: articles/
 - name: API Documentation
