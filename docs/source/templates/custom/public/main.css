@@ -126,7 +126,19 @@
 	box-shadow: 0 20px 60px rgba(0,0,0,0.3);
 }
 
-.demo-radio { display: none; }
+/* Visually hidden but focusable: display:none would take the radios out of the tab order */
+.demo-radio {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	padding: 0;
+	border: 0;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
 
 .demo-tabs {
 	display: flex;
@@ -165,6 +177,18 @@
 #demo-tab-7:checked ~ .demo-tabs label[for="demo-tab-7"] {
 	color: #a8b4ff;
 	border-bottom-color: #667eea;
+}
+
+/* Keyboard focus on the hidden radio shows on its label */
+#demo-tab-1:focus-visible ~ .demo-tabs label[for="demo-tab-1"],
+#demo-tab-2:focus-visible ~ .demo-tabs label[for="demo-tab-2"],
+#demo-tab-3:focus-visible ~ .demo-tabs label[for="demo-tab-3"],
+#demo-tab-4:focus-visible ~ .demo-tabs label[for="demo-tab-4"],
+#demo-tab-5:focus-visible ~ .demo-tabs label[for="demo-tab-5"],
+#demo-tab-6:focus-visible ~ .demo-tabs label[for="demo-tab-6"],
+#demo-tab-7:focus-visible ~ .demo-tabs label[for="demo-tab-7"] {
+	outline: 2px solid #a8b4ff;
+	outline-offset: -2px;
 }
 
 /* Panel visibility via :checked */

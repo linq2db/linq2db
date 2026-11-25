@@ -23,7 +23,7 @@ _disableContribution: true
 </div>
 </div>
 <div class="col-lg-6">
-<div class="demo-container">
+<div class="demo-container" role="radiogroup" aria-label="Code examples">
 <input type="radio" name="demo-tab" id="demo-tab-1" class="demo-radio" checked />
 <input type="radio" name="demo-tab" id="demo-tab-2" class="demo-radio" />
 <input type="radio" name="demo-tab" id="demo-tab-3" class="demo-radio" />
