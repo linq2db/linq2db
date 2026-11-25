@@ -119,7 +119,7 @@ namespace LinqToDB.Internal.DataProvider
 			if (providerName == null)
 				return;
 
-			var set = _reservedWords.GetOrAdd(providerName, new HashSet<string>(StringComparer.OrdinalIgnoreCase));
+			var set = _reservedWords.GetOrAdd(providerName, static _ => new HashSet<string>(StringComparer.OrdinalIgnoreCase));
 
 			lock (set)
 				set.Add(word);

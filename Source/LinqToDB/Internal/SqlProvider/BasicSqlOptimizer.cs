@@ -2185,6 +2185,13 @@ namespace LinqToDB.Internal.SqlProvider
 					if (isMutable2 && exprExpr.Expr2.ShouldCheckForNull(nullability))
 						return true;
 
+					// A predicate compared with a parameter folds to the predicate or its negation once the value is read,
+					// which only a per-run render can do (SqlExpressionOptimizerVisitor.VisitExprExprPredicate).
+					if (exprExpr is { Operator: SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual, UnknownAsValue: null }
+						&& (exprExpr.Expr1 is ISqlPredicate && exprExpr.Expr2 is not ISqlPredicate && isMutable2
+							|| exprExpr.Expr2 is ISqlPredicate && exprExpr.Expr1 is not ISqlPredicate && isMutable1))
+						return true;
+
 					return false;
 				}
 				case QueryElementType.IsDistinctPredicate:
@@ -2272,57 +2279,6 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 
 			return newStatement;
-		}
-
-		public virtual void ConvertSkipTake(NullabilityContext nullability, MappingSchema mappingSchema, DataOptions dataOptions,
-			SelectQuery selectQuery, OptimizationContext optimizationContext, out ISqlExpression? takeExpr,
-			out ISqlExpression? skipExpr)
-		{
-			// make skip take as parameters or evaluate otherwise
-
-			takeExpr = optimizationContext.Optimize(selectQuery.Select.TakeValue, nullability, false);
-			skipExpr = optimizationContext.Optimize(selectQuery.Select.SkipValue, nullability, false);
-
-			if (takeExpr != null)
-			{
-				var supportsParameter = SqlProviderFlags.GetAcceptsTakeAsParameterFlag(selectQuery);
-
-				if (supportsParameter)
-				{
-					if (takeExpr.ElementType is not QueryElementType.SqlParameter and not QueryElementType.SqlValue)
-					{
-						var takeValue = takeExpr.EvaluateExpression(optimizationContext.EvaluationContext)!;
-						var takeParameter = new SqlParameter(new DbDataType(takeValue.GetType()), "take", takeValue)
-						{
-							IsQueryParameter = dataOptions.LinqOptions.ParameterizeTakeSkip && !QueryHelper.NeedParameterInlining(takeExpr),
-						};
-						takeExpr = takeParameter;
-					}
-				}
-				else if (takeExpr.ElementType != QueryElementType.SqlValue)
-					takeExpr = new SqlValue(takeExpr.EvaluateExpression(optimizationContext.EvaluationContext)!);
-			}
-
-			if (skipExpr != null)
-			{
-				var supportsParameter = SqlProviderFlags.GetIsSkipSupportedFlag(selectQuery.Select.TakeValue)
-										&& SqlProviderFlags.AcceptsTakeAsParameter;
-
-				if (supportsParameter)
-				{
-					if (skipExpr.ElementType is not QueryElementType.SqlParameter and not QueryElementType.SqlValue)
-					{
-						var skipValue = skipExpr.EvaluateExpression(optimizationContext.EvaluationContext)!;
-						var skipParameter = new SqlParameter(new DbDataType(skipValue.GetType()), "skip", skipValue)
-						{
-							IsQueryParameter = dataOptions.LinqOptions.ParameterizeTakeSkip && !QueryHelper.NeedParameterInlining(skipExpr),
-						};
-						skipExpr = skipParameter;
-					}
-				}
-				else if (skipExpr.ElementType != QueryElementType.SqlValue)
-					skipExpr = new SqlValue(skipExpr.EvaluateExpression(optimizationContext.EvaluationContext)!);
-			}
 		}
 
 		/// <summary>

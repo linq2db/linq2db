@@ -28,7 +28,7 @@ namespace Tests.Analyzers
 			{
 				TestCode             = source,
 				FixedCode            = fixedSource,
-				ReferenceAssemblies  = ReferenceAssemblies.Net.Net80,
+				ReferenceAssemblies  = TestReferenceAssemblies.Default,
 				CodeFixTestBehaviors = behaviors,
 			};
 
@@ -57,7 +57,7 @@ namespace Tests.Analyzers
 		{
 			var test = new CSharpCodeFixTest<TAnalyzer, TCodeFix, DefaultVerifier>
 			{
-				ReferenceAssemblies  = ReferenceAssemblies.Net.Net80,
+				ReferenceAssemblies  = TestReferenceAssemblies.Default,
 				CodeFixTestBehaviors = behaviors,
 			};
 

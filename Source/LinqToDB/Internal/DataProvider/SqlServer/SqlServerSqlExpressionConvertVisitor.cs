@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
 
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Internal.DataProvider.Translation;
@@ -237,7 +239,226 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			if (operands != null)
 				element = new SqlConcatExpression(element.PreserveNull, operands);
 
+			if (WidenLongNonUnicodeBesideUnicode(element.Expressions, concatenation: true) is { } widened)
+				element = new SqlConcatExpression(element.PreserveNull, widened);
+
 			return base.ConvertConcat(element);
+		}
+
+		// A Unicode operand turns the concatenation nvarchar, and SQL Server then cuts a non-Unicode operand longer than
+		// 4000 characters when converting it, and the running result at 4000 characters until an operand of a MAX type
+		// joins it. So such an operand is cast to NVarChar(Max) itself, and when the operands before the first MAX one
+		// can still add up to more, so is the leftmost one that is not a literal, which makes every step MAX. A Unicode
+		// argument turns REPLACE nvarchar too, but its result is not the sum of its arguments: only the first cast applies.
+		ISqlExpression[]? WidenLongNonUnicodeBesideUnicode(ISqlExpression[] expressions, bool concatenation)
+		{
+			var shapes        = new StringOperandShape[expressions.Length];
+			var hasUnicode    = false;
+			var hasNonUnicode = false;
+
+			for (var i = 0; i < shapes.Length; i++)
+			{
+				shapes[i] = MeasureStringOperand(expressions[i]);
+
+				hasUnicode    |= shapes[i].Unicode;
+				hasNonUnicode |= shapes[i].NonUnicode;
+			}
+
+			if (!hasUnicode || !hasNonUnicode)
+				return null;
+
+			var maxType = new DbDataType(typeof(string), DataType.NVarChar, null, -1);
+
+			ISqlExpression[]? operands = null;
+
+			for (var i = 0; i < shapes.Length; i++)
+			{
+				if (shapes[i] is { Unicode: false, Length: > 4000 } && expressions[i] is not SqlValue)
+				{
+					operands    ??= (ISqlExpression[])expressions.Clone();
+					operands[i] =   PseudoFunctions.MakeCast(operands[i], maxType);
+					shapes[i]   =   shapes[i] with { Length = null };
+				}
+			}
+
+			if (!concatenation)
+				return operands;
+
+			var length = 0L;
+
+			foreach (var shape in shapes)
+			{
+				if (shape.Length == null)
+					break;
+
+				length += shape.Length.Value;
+			}
+
+			if (length > 4000)
+			{
+				var first = Array.FindIndex(expressions, e => e is not SqlValue);
+
+				if (first >= 0 && shapes[first].Length != null)
+				{
+					operands        ??= (ISqlExpression[])expressions.Clone();
+					operands[first] =   PseudoFunctions.MakeCast(operands[first], maxType);
+				}
+			}
+
+			return operands;
+		}
+
+		readonly record struct StringOperandShape(bool Unicode, bool NonUnicode, long? Length);
+
+		// Looks through the nodes that have no string type of their own - a nested concatenation, a subquery column, a
+		// condition - since the string default (NVarChar) would count them as Unicode, and a condition's first branch
+		// is not its type on SQL Server. A null length is a MAX type; a parameter or an operand of unknown length counts
+		// as one character, as its value is not known here.
+		StringOperandShape MeasureStringOperand(ISqlExpression expr)
+		{
+			switch (expr)
+			{
+				case SqlConcatExpression concat:
+					return Combine(concat.Expressions, sum: true);
+				case SqlColumn column:
+					return MeasureStringOperand(column.Expression);
+				case SqlNullabilityExpression nullability:
+					return MeasureStringOperand(nullability.SqlExpression);
+				case SqlCoalesceExpression coalesce:
+					return Combine(coalesce.Expressions, sum: false);
+				// The base visitor lowers a coalesce to this function, typed from its first operand, before the
+				// concatenation around it is measured.
+				case SqlFunction { Name: "Coalesce" } coalesceFunction:
+					return Combine(coalesceFunction.Parameters, sum: false);
+				// These return their first argument's type and at most its length, but are typed by their method's
+				// return type, the string default.
+				case SqlFunction { Parameters: [var argument, ..] } function when _typePreservingFunctions.Contains(function.Name):
+					return MeasureStringOperand(argument);
+				// REPLACE holds its value's data, nvarchar when any argument is Unicode, whatever type it was declared with, so
+				// one over a parameter or an untyped function is not taken for an expression of unknown type.
+				case SqlFunction { Name: "Replace", Parameters: [var value, ..] } replace:
+				{
+					var shape = MeasureStringOperand(value);
+
+					if (!shape.Unicode && Array.Exists(replace.Parameters, p => MeasureStringOperand(p).Unicode))
+						shape = shape with { Unicode = true };
+
+					return replace.Type.Length > 0 ? shape with { Length = replace.Type.Length } : shape;
+				}
+				case SqlConditionExpression condition:
+					return Combine([condition.TrueValue, condition.FalseValue], sum: false);
+				case SqlCaseExpression caseExpression:
+				{
+					var branches = new List<ISqlExpression>(caseExpression.Cases.Count + 1);
+
+					foreach (var item in caseExpression.Cases)
+						branches.Add(item.ResultExpression);
+
+					if (caseExpression.ElseExpression != null)
+						branches.Add(caseExpression.ElseExpression);
+
+					return Combine(branches, sum: false);
+				}
+			}
+
+			var type       = QueryHelper.GetDbDataType(expr, MappingSchema);
+			var unicode    = QueryHelper.IsUnicode(type.DataType);
+			var nonUnicode = !unicode;
+
+			// A string function returns its first argument's type, while its declared type was copied at translation, before
+			// that argument could turn Unicode here (a REPLACE with a Unicode argument).
+			if (!unicode && type.DataType is DataType.Char or DataType.VarChar or DataType.Text
+				&& expr is SqlFunction { Parameters: [var first, ..] } && MeasureStringOperand(first) is { Unicode: true } firstShape)
+				(unicode, nonUnicode) = (true, firstShape.NonUnicode);
+
+			// Any other function or expression typed only by the string default is judged by its string arguments.
+			if (type == MappingSchema.GetDbDataType(typeof(string)))
+			{
+				switch (expr)
+				{
+					case SqlFunction function:
+						return MeasureByStringArguments(function.Parameters);
+					case SqlExpression expression:
+						return MeasureByStringArguments(expression.Parameters);
+				}
+			}
+
+			if (type.Length == null && GetDbTypeLength(type.DbType) is { } dbTypeLength)
+				type = type.WithLength(dbTypeLength);
+
+			long? length = expr switch
+			{
+				SqlValue { Value: string value }               => value.Length,
+				SqlParameter                                   => 1,
+				_ when type.Length == -1                       => null,
+				_ when type.Length > 0                         => type.Length,
+				_                                              => 1,
+			};
+
+			return new(unicode, nonUnicode, length);
+		}
+
+		static readonly HashSet<string> _typePreservingFunctions = new(StringComparer.OrdinalIgnoreCase)
+		{
+			"Upper", "Lower", "LTrim", "RTrim", "Trim", "Left", "Right", "Reverse", PseudoFunctions.TO_UPPER, PseudoFunctions.TO_LOWER,
+		};
+
+		// A column mapped with only a DbType has its length there: `varchar(3000)` is 3000, `varchar(max)` is -1.
+		static int? GetDbTypeLength(string? dbType)
+		{
+			if (dbType == null)
+				return null;
+
+			var open  = dbType.IndexOf('(', StringComparison.Ordinal);
+			var close = dbType.IndexOf(')', StringComparison.Ordinal);
+
+			if (open < 0 || close < open)
+				return null;
+
+			var value = dbType.Substring(open + 1, close - open - 1).Trim();
+
+			if (value.Equals("max", StringComparison.OrdinalIgnoreCase))
+				return -1;
+
+			return int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var length) && length > 0 ? length : null;
+		}
+
+		// With no Unicode argument such a function counts as the longest non-Unicode value short of MAX, since it can outgrow
+		// its arguments (SPACE, STUFF), and with only Unicode ones as the longest of them, a MAX one as 4000 since the function
+		// need not return MAX (JSON_VALUE). With both it is Unicode unless its longest argument is too long for nvarchar or a
+		// MAX one: ISNULL returns its varchar value, which is then cast on its own.
+		StringOperandShape MeasureByStringArguments(ISqlExpression[] arguments)
+		{
+			var shape = Combine(Array.FindAll(arguments, a => QueryHelper.GetDbDataType(a, MappingSchema).IsTextType()), sum: false);
+
+			return shape switch
+			{
+				{ Unicode: false }    => new(Unicode: false, NonUnicode: true,  Length: 8000),
+				{ NonUnicode: false } => shape with { Length = shape.Length ?? 4000 },
+				{ Length: <= 4000 }   => shape,
+				_                     => new(Unicode: false, NonUnicode: true,  Length: shape.Length ?? 8000),
+			};
+		}
+
+		StringOperandShape Combine(IEnumerable<ISqlExpression> operands, bool sum)
+		{
+			var   unicode    = false;
+			var   nonUnicode = false;
+			long? length     = 0;
+
+			foreach (var operand in operands)
+			{
+				var shape = MeasureStringOperand(operand);
+
+				unicode    |= shape.Unicode;
+				nonUnicode |= shape.NonUnicode;
+
+				length = length == null || shape.Length == null
+					? null
+					: sum ? length + shape.Length : Math.Max(length.Value, shape.Length.Value);
+			}
+
+			return new(unicode, nonUnicode, length);
 		}
 
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
@@ -371,9 +592,65 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 					return Factory.Sub(func.Type, valueLength, Factory.Value(func.Type, 1));
 	}
+
+				case PseudoFunctions.REPLACE:
+				{
+					var parameters = WidenLongNonUnicodeBesideUnicode(func.Parameters, concatenation: false) ?? func.Parameters;
+					var type       = func.Type;
+
+					// A Unicode argument turns REPLACE nvarchar. A value of unknown length takes the nvarchar(4000) the server
+					// returns, which an enclosing concatenation measures rather than counting it as one character.
+					if (type.DataType is DataType.Char or DataType.VarChar && Array.Exists(func.Parameters, p => MeasureStringOperand(p).Unicode))
+					{
+						var length = ReferenceEquals(parameters[0], func.Parameters[0]) ? type.Length ?? 4000 : -1;
+
+						type = new DbDataType(typeof(string), DataType.NVarChar, null, length);
+					}
+
+					if (!ReferenceEquals(parameters, func.Parameters) || type != func.Type)
+					{
+						func = new SqlFunction(type, func.Name, func.Flags, func.NullabilityType, func.CanBeNullNullable, parameters)
+						{
+							DoNotOptimize = func.DoNotOptimize,
+						};
+					}
+
+					break;
+				}
 }
 
 			return base.ConvertSqlFunction(func);
+		}
+
+		public override ISqlExpression ConvertDefaultValue(SqlDefaultValueExpression expression)
+		{
+			var least   = LeastDate(expression.Type);
+			var lowered = (least == null ? null : RaiseDefaultDate(expression, least.Value)) ?? base.ConvertDefaultValue(expression);
+
+			// date, datetime2 and every type with a least date write a DateTimeOffset through LocalDateTime, which moves with the
+			// time zone, clamped or not.
+			return lowered is SqlValue { Value: DateTimeOffset dateTimeOffset } && (least != null || expression.Type.DataType is DataType.Date or DataType.DateTime2)
+				? new SqlValue(expression.Type.WithSystemType(typeof(DateTime)), dateTimeOffset.DateTime)
+				: lowered;
+		}
+
+		// The least date of the type the mapping schema's converters write a date as, where it is later than 0001-01-01: a text
+		// type is a string, date and datetime2 hold 0001-01-01 from 2008 on and so does the datetimeoffset an offset outside the
+		// datetime family is written as, and everything else is written as datetime.
+		DateTime? LeastDate(DbDataType type)
+		{
+			var v2008Plus = _sqlServerVersion >= SqlServerVersion.v2008;
+
+			return type.DataType switch
+			{
+				DataType.Char or DataType.VarChar or DataType.Text or DataType.NChar or DataType.NVarChar or DataType.NText => null,
+
+				DataType.SmallDateTime                                                             => new DateTime(1900, 1, 1),
+				DataType.DateTime                                                                  => new DateTime(1753, 1, 1),
+				DataType.Date or DataType.DateTime2 when v2008Plus                                 => null,
+				_ when v2008Plus && type.SystemType.UnwrapNullableType() == typeof(DateTimeOffset) => null,
+				_                                                                                  => new DateTime(1753, 1, 1),
+			};
 		}
 
 		protected override ISqlExpression WrapColumnExpression(ISqlExpression expr)

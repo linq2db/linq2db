@@ -14,6 +14,7 @@ namespace Tests.UserTests
 {
 	// disabled providers cannot handle concurrent queries well
 	[TestFixture]
+	[NoBaselines("Multi-threading")]
 	public class Issue1398Tests : TestBase
 	{
 		[Table("Animals")]
@@ -59,14 +60,13 @@ namespace Tests.UserTests
 		// TODO: disabled providers lacks connections
 		// Access: works, but unstable due to lock conflicts in access
 		[Test]
-		public void TestInsert([DataSources(false, TestProvName.AllAccess, TestProvName.AllFirebird, TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllOracle12, TestProvName.AllSQLiteClassic)] string context)
+		public void TestInsert([DataSources(false, TestProvName.AllNativeAccess, TestProvName.AllFirebird, TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllOracle12, TestProvName.AllSQLiteClassic)] string context)
 		{
 			const int recordsCount = 20;
 
 			// sqlite connection pooling is not compatible with tested template
 			SQLiteTools.ClearAllPools(provider: null);
 
-			using (new DisableBaseline("Multi-threading"))
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<InsertTable>())
 			{
@@ -102,7 +102,6 @@ namespace Tests.UserTests
 			var mammals  = new[] { "Elephant", "Cat" };
 			var reptiles = new[] { "Snake", "Lizard" };
 
-			using (new DisableBaseline("Multi-threading"))
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Animal>())
 			using (db.CreateLocalTable<AnimalUpdate>())

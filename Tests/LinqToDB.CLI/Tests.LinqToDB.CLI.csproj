@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<AssemblyName>linq2db.CLI.Tests</AssemblyName>
-		<TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
-		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">net10.0</TargetFrameworks>
+		<TargetFrameworks>$(ToolTargetFrameworks)</TargetFrameworks>
+		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">$(LatestTargetFramework)</TargetFrameworks>
 		<OutputType>Exe</OutputType>
 		<EnableNUnitRunner>true</EnableNUnitRunner>
 	</PropertyGroup>
@@ -11,6 +11,12 @@
 		<Compile Remove="$(MSBuildThisFileDirectory)..\..\Source\Shared\*.cs" />
 
 		<ProjectReference Include="..\..\Source\LinqToDB.CLI\LinqToDB.CLI.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- The example credentials CLI (a file-based app) and its documentation; the tests run the example. -->
+		<None Include="..\..\Source\LinqToDB.CLI\CredentialsCli\secrethelper.cs" Link="CredentialsCli\secrethelper.cs" CopyToOutputDirectory="PreserveNewest" />
+		<None Include="..\..\Source\LinqToDB.CLI\CREDENTIALS-CLI.md"               Link="CredentialsCli\CREDENTIALS-CLI.md" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 
 	<ItemGroup>

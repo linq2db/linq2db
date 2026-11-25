@@ -10,7 +10,5 @@ namespace LinqToDB.Internal.Linq
 	/// <remarks>
 	///     Implementers must be immutable and provide value-based equality.
 	/// </remarks>
-	public interface IExpressionCacheKey
-	{
-	}
+	public interface IExpressionCacheKey;
 }

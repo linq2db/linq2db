@@ -7,6 +7,7 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Access;
 using LinqToDB.DataProvider.Informix;
+using LinqToDB.DataProvider.MySql;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.SchemaProvider;
 
@@ -15,11 +16,10 @@ using NUnit.Framework;
 using Tests;
 using Tests.Model;
 
-// for unknown reason order doesn't help on ubuntu 18, so namespace were removed and class name changed to be first in
-// sort order
+// No namespace and the `a_` prefix make this fixture sort first, so a serial run executes `CreateDatabase` before
+// the other tests (parallel runs wait on it through `CustomTestContext.EnsureDatabaseReady`); don't rename or move it.
 [TestFixture]
 [Category(TestCategory.Create)]
-[Order(-1)]
 // ReSharper disable once InconsistentNaming
 // ReSharper disable once TestClassNameSuffixWarning
 public class a_CreateData : TestBase
@@ -248,14 +248,15 @@ public class a_CreateData : TestBase
 		RunScript(script.ConfigString, script.Divider, script.Name, script.Action, script.Database);
 	}
 
-	[Test, Order(0)]
+	[Test]
 	public void CreateDatabase([CreateDatabaseSources] string context)
 	{
 		switch (context)
 		{
 			case string when context.IsAnyOf(TestProvName.AllFirebird)    : RunScript(context,          "COMMIT;", "Firebird", FirebirdAction);    break;
 			case string when context.IsAnyOf(TestProvName.AllPostgreSQL)  : RunScript(context,          "\nGO\n",  "PostgreSQL");                  break;
-			case string when context.IsAnyOf(TestProvName.AllMySql)       : RunScript(context,          "\nGO\n",  "MySql");                       break;
+			case string when context.IsAnyOf(TestProvName.AllMySql)       : EnsureMySqlDatabase(context);
+			                                                                RunScript(context,          "\nGO\n",  "MySql");                       break;
 			case string when context.IsAnyOf(TestProvName.AllSqlServer)   : RunScript(context,          "\nGO\n",  "SqlServer");                   break;
 			case string when context.IsAnyOf(TestProvName.AllSQLiteBase)  : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);
 			                                                                RunScript(context+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction);      break;
@@ -270,6 +271,8 @@ public class a_CreateData : TestBase
 			                                                                RunScript(context+ ".Data", "\nGO\n",  "Access",   AccessAction);      break;
 			case string when context.IsAnyOf(TestProvName.AllAccessOdbc)  : RunScript(context,          "\nGO\n",  "Access",   AccessODBCAction);
 			                                                                RunScript(context+ ".Data", "\nGO\n",  "Access",   AccessODBCAction);  break;
+			case string when context.IsAnyOf(TestProvName.AllAccessLibRed): RunScript(context,          "\nGO\n",  "Access",   AccessLibRedAction);
+			                                                                RunScript(context+ ".Data", "\nGO\n",  "Access",   AccessLibRedAction); break;
 			case ProviderName.SqlCe                                       : RunScript(context,          "\nGO\n",  "SqlCe");
 			                                                                RunScript(context+ ".Data", "\nGO\n",  "SqlCe");                       break;
 			case string when context.IsAnyOf(TestProvName.AllClickHouse)  : RunScript(context,          "\nGO\n",  "ClickHouse");                  break;
@@ -285,6 +288,30 @@ public class a_CreateData : TestBase
 
 				throw new InvalidOperationException(context);
 		}
+
+		CaptureReferenceData(context);
+	}
+
+	// MySql.sql drops the database its own connection names, so an interrupted run would fail every later one at open.
+	// Raw ADO on an explicit provider: resolving the configuration's provider here would cache MariaDB's detection fallback.
+	static void EnsureMySqlDatabase(string context)
+	{
+		var builder = new DbConnectionStringBuilder { ConnectionString = GetConnectionString(context) };
+
+		if (!builder.TryGetValue("Database", out var database) && !builder.TryGetValue("Initial Catalog", out database))
+			return;
+
+		builder.Remove("Database");
+		builder.Remove("Initial Catalog");
+
+		var provider = MySqlTools.GetDataProvider(MySqlVersion.MySql57, context.IsAnyOf(TestProvName.AllMySqlData) ? MySqlProvider.MySqlData : MySqlProvider.MySqlConnector);
+
+		using var cn = provider.CreateConnection(builder.ConnectionString);
+		cn.Open();
+
+		using var cmd = cn.CreateCommand();
+		cmd.CommandText = $"CREATE DATABASE IF NOT EXISTS `{database}`";
+		cmd.ExecuteNonQuery();
 	}
 
 	static void AccessODBCAction(DbConnection connection)
@@ -321,9 +348,12 @@ public class a_CreateData : TestBase
 			});
 	}
 
-	static void AccessAction(DbConnection connection)
+	static void AccessAction      (DbConnection connection) => AccessNamedParametersAction(connection, AccessProvider.OleDb);
+	static void AccessLibRedAction(DbConnection connection) => AccessNamedParametersAction(connection, AccessProvider.LibRed);
+
+	static void AccessNamedParametersAction(DbConnection connection, AccessProvider provider)
 	{
-		using var conn = AccessTools.CreateDataConnection(connection, provider: AccessProvider.OleDb);
+		using var conn = AccessTools.CreateDataConnection(connection, provider: provider);
 		conn.Execute(@"
 				INSERT INTO AllTypes
 				(

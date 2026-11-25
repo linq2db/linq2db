@@ -4,6 +4,7 @@ open Tests.FSharp.Issue4132
 
 open LinqToDB
 open LinqToDB.Data
+open LinqToDB.Mapping
 open Tests
 open NUnit.Framework
 
@@ -109,5 +110,42 @@ let UpdateNoOpExcludesPrimaryKey (db : DataConnection) (assertSql : bool) =
                       where (r.Id = 1)
                       exactlyOne }
     Assert.That(row.Text,   Is.EqualTo "before")
+    Assert.That(row.Number, Is.EqualTo 5)
+    Assert.That(row.Id,     Is.EqualTo 1)
+
+// static let bindings take CompilationMapping sequence numbers ahead of the record fields
+[<Table>]
+type StaticLetTable =
+    { [<PrimaryKey>]
+      Id: int
+      [<Column>]
+      Number: int
+      [<Column>]
+      Text: string
+      [<Column>]
+      Note: string }
+
+    static let defaultNote = "note"
+    static member DefaultNote = defaultNote
+
+let UpdateWithStaticLet (db : DataConnection) (assertSql : bool) =
+    use table = db.CreateLocalTable<StaticLetTable>()
+    table.Insert(fun () -> { Id = 1; Number = 5; Text = "before"; Note = StaticLetTable.DefaultNote }) |> ignore
+
+    table.Update((fun row -> row.Id = 1), (fun row -> { row with StaticLetTable.Text = "after" })) |> ignore
+
+    if assertSql then
+        let updateSql = nonNull db.LastQuery
+        let setClause = setClauseOf updateSql
+        Assert.That(setClause, Does.Contain "[Text]")
+        Assert.That(setClause, Does.Not.Contain "[Number]")
+        Assert.That(setClause, Does.Not.Contain "[Note]")
+        Assert.That(setClause, Does.Not.Contain "[Id]")
+
+    let row = query { for r in db.GetTable<StaticLetTable>() do
+                      where (r.Id = 1)
+                      exactlyOne }
+    Assert.That(row.Text,   Is.EqualTo "after")
+    Assert.That(row.Note,   Is.EqualTo "note")
     Assert.That(row.Number, Is.EqualTo 5)
     Assert.That(row.Id,     Is.EqualTo 1)

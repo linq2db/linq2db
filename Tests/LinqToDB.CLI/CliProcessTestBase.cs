@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
@@ -57,9 +58,18 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		protected static Task<CliProcessResult> RunCliProcess(params string[] arguments)
-			=> RunCliProcess(TimeSpan.FromSeconds(20), arguments);
+			=> RunCliProcessCore(null, DefaultTimeout, arguments);
 
-		protected static async Task<CliProcessResult> RunCliProcess(TimeSpan timeout, params string[] arguments)
+		protected static Task<CliProcessResult> RunCliProcess(TimeSpan timeout, params string[] arguments)
+			=> RunCliProcessCore(null, timeout, arguments);
+
+		/// <summary>Runs the CLI in a new process with extra environment variables (<see langword="null"/> removes one).</summary>
+		protected static Task<CliProcessResult> RunCliProcess(IReadOnlyDictionary<string, string?>? environment, params string[] arguments)
+			=> RunCliProcessCore(environment, DefaultTimeout, arguments);
+
+		static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(20);
+
+		static async Task<CliProcessResult> RunCliProcessCore(IReadOnlyDictionary<string, string?>? environment, TimeSpan timeout, string[] arguments)
 		{
 			var cliAssembly = Path.Combine(AppContext.BaseDirectory, "dotnet-linq2db.dll");
 
@@ -77,6 +87,10 @@ namespace Tests.LinqToDB.CLI
 
 			foreach (var argument in arguments)
 				startInfo.ArgumentList.Add(argument);
+
+			if (environment != null)
+				foreach (var variable in environment)
+					startInfo.Environment[variable.Key] = variable.Value;
 
 			using var process = Process.Start(startInfo) ?? throw new InvalidOperationException("Cannot start CLI process.");
 

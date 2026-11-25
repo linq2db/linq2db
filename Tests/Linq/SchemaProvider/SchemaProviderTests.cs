@@ -10,6 +10,8 @@ using LinqToDB.SchemaProvider;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.SchemaProvider
 {
 	[TestFixture]
@@ -263,24 +265,21 @@ namespace Tests.SchemaProvider
 		[Test]
 		public void IncludeExcludeSchemaTest([DataSources(false)] string context)
 		{
-			using (new DisableBaseline("TODO: exclude schema list is not stable, db2 schema provider needs refactoring", GetProviderName(context, out var _) == ProviderName.DB2))
-			using (var conn = GetDataConnection(context))
-			{
-				var exclude = conn.DataProvider.GetSchemaProvider()
-					.GetSchema(conn, new GetSchemaOptions {ExcludedSchemas = new string?[] { null }})
-					.Tables.Select(_ => _.SchemaName)
-					.Distinct()
-					.ToList();
-				exclude.Add(null);
-				exclude.Add("");
+			using var conn = GetDataConnection(context);
+			var exclude = conn.DataProvider.GetSchemaProvider()
+				.GetSchema(conn, new GetSchemaOptions {ExcludedSchemas = new string?[] { null }})
+				.Tables.Select(_ => _.SchemaName)
+				.Distinct()
+				.ToList();
+			exclude.Add(null);
+			exclude.Add("");
 
-				var schema1 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, new GetSchemaOptions {ExcludedSchemas = exclude.ToArray()});
-				var schema2 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, new GetSchemaOptions {IncludedSchemas = new []{ "IncludeExcludeSchemaTest" } });
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(schema1.Tables, Is.Empty);
-					Assert.That(schema2.Tables, Is.Empty);
-				}
+			var schema1 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, new GetSchemaOptions {ExcludedSchemas = exclude.ToArray()});
+			var schema2 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, new GetSchemaOptions {IncludedSchemas = new []{ "IncludeExcludeSchemaTest" } });
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(schema1.Tables, Is.Empty);
+				Assert.That(schema2.Tables, Is.Empty);
 			}
 		}
 
@@ -484,6 +483,78 @@ namespace Tests.SchemaProvider
 			var       pk       = table.Columns.FirstOrDefault(t => t.IsPrimaryKey);
 
 			Assert.That(pk, Is.Not.Null);
+		}
+
+		[Table("LibRedSchemaTypes")]
+		sealed class LibRedSchemaTypesTable
+		{
+			[Column] public int Id { get; set; }
+		}
+
+		// ACCDB-only types (an .mdb refuses BIGINT and DATETIME2) and a Yes/No column declared NULL, which Access
+		// cannot store as NULL
+		[Test]
+		public void AccessLibRedColumnTypes([IncludeDataSources(TestProvName.AccessLibRedAccdb)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			string[] views = ["LibRedSchemaTypesOuter", "LibRedSchemaTypesInner", "LibRedSchemaTypesPlain"];
+
+			// leftovers of an interrupted run
+			foreach (var view in views)
+			{
+				try
+				{
+					db.Execute($"DROP VIEW [{view}]");
+				}
+				catch (Exception)
+				{
+				}
+			}
+
+			db.DropTable<LibRedSchemaTypesTable>(throwExceptionIfNotExists: false);
+
+			db.Execute("CREATE TABLE [LibRedSchemaTypes] ([Id] INT, [Big] BIGINT, [Stamp] DATETIME2, [Flag] BIT NULL)");
+			// an outer join can read a Yes/No column as NULL, yet LibRed, OLE DB and ODBC all report it not nullable
+			db.Execute("CREATE VIEW [LibRedSchemaTypesOuter] AS SELECT [t].[Flag] FROM [LibRedSchemaTypes] [s] LEFT JOIN [LibRedSchemaTypes] [t] ON [s].[Id] = [t].[Big]");
+			db.Execute("CREATE VIEW [LibRedSchemaTypesInner] AS SELECT [t].[Flag] FROM [LibRedSchemaTypes] [s] INNER JOIN [LibRedSchemaTypes] [t] ON [s].[Id] = [t].[Big]");
+			db.Execute("CREATE VIEW [LibRedSchemaTypesPlain] AS SELECT [Flag] FROM [LibRedSchemaTypes]");
+
+			try
+			{
+				var schema = db.DataProvider
+					.GetSchemaProvider()
+					.GetSchema(db, new GetSchemaOptions { GetProcedures = false });
+
+				var columns = schema.Tables
+					.Single(t => t.TableName == "LibRedSchemaTypes")
+					.Columns
+					.ToDictionary(c => c.ColumnName);
+
+				columns["Big"].DataType.ShouldBe(DataType.Int64);
+				columns["Big"].SystemType.ShouldBe(typeof(long));
+				columns["Stamp"].DataType.ShouldBe(DataType.DateTime2);
+				columns["Stamp"].SystemType.ShouldBe(typeof(DateTime));
+				columns["Flag"].IsNullable.ShouldBeFalse();
+				columns["Flag"].MemberType.ShouldBe("bool");
+
+				foreach (var view in views)
+				{
+					var flag = schema.Tables
+						.Single(t => t.TableName == view)
+						.Columns
+						.Single(c => c.ColumnName == "Flag");
+
+					flag.IsNullable.ShouldBeFalse(view);
+					flag.MemberType.ShouldBe("bool", view);
+				}
+			}
+			finally
+			{
+				foreach (var view in views)
+					db.Execute($"DROP VIEW [{view}]");
+				db.DropTable<LibRedSchemaTypesTable>();
+			}
 		}
 	}
 }

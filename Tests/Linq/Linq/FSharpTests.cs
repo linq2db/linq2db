@@ -21,6 +21,13 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void LoadSingleWithStaticLet([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.WhereTest.LoadSingleWithStaticLet(db);
+		}
+
+		[Test]
 		public void RecordParametersMapping([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -57,6 +64,18 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 			FSharp.WhereTest.RecordProjectionAll(db);
+
+			if (db is DataConnection dc)
+			{
+				Assert.That(dc.LastQuery, Contains.Substring("WHERE"));
+			}
+		}
+
+		[Test]
+		public void RecordProjectionWithStaticLet([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.WhereTest.RecordProjectionWithStaticLet(db);
 
 			if (db is DataConnection dc)
 			{
@@ -359,6 +378,13 @@ namespace Tests.Linq
 			FSharp.Issue5598.UpdateNoOpExcludesPrimaryKey(db, false);
 		}
 
+		[Test]
+		public void UpdateWithStaticLet([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.Issue5598.UpdateWithStaticLet(db, true);
+		}
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
 		public void Issue1813Test1([DataSources] string context)
 		{
@@ -510,6 +536,16 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 			FSharp.OptionQueryTests.Value(db).ShouldBe(1);
+		}
+
+		[Test(Description = "F# option .Value compared to a plain column is not refused as divergent storage")]
+		public void OptionQuery_ValueComparedToColumn([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			FSharp.OptionQueryTests
+				.ValueComparedToColumn(db)
+				.ShouldBe([4]);
 		}
 
 		[Test(Description = "F# option .Value in a projection translates to the underlying column")]
@@ -695,6 +731,16 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 			FSharp.DuQueryTests.OptionValueProjection(db).ShouldBe(new[] { 10 });
+		}
+
+		[Test(Description = "F# option-of-union .Value compared to a union column is not refused as divergent storage")]
+		public void DuQuery_OptionValueComparedToUnionColumn([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			FSharp.DuQueryTests
+				.OptionValueComparedToUnionColumn(db)
+				.ShouldBe([1]);
 		}
 
 		[Test(Description = "F# single-case DU column round-trips and equality translates to SQL")]

@@ -1,0 +1,18 @@
+- name: Release Notes
+  href: https://github.com/linq2db/linq2db/wiki/Releases-and-Roadmap
+- name: Get Started
+  href: get-started/toc.yml
+- name: General Topics
+  href: general/toc.yml
+- name: SQL
+  href: sql/toc.yml
+- name: How To
+  href: how-to/toc.yml
+- name: CLI Scaffold Tool
+  href: cli.md
+- name: T4 Templates (Obsoleted)
+  href: t4.md
+- name: FAQ
+  href: faq.md
+- name: Project
+  href: project/toc.yml

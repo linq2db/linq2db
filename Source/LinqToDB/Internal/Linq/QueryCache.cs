@@ -1004,20 +1004,23 @@ namespace LinqToDB.Internal.Linq
 			return baseTimeoutTicks * multiplier;
 		}
 
+		// Integer-only: hosts that unmask FPU exceptions (C++Builder, Delphi) crash the x86 JIT
+		// on a double compared against long.MaxValue (#6042).
 		static long ToStopwatchTicks(TimeSpan value)
 		{
 			if (value <= TimeSpan.Zero)
 				return 0;
 
-			var ticks = value.TotalSeconds * Stopwatch.Frequency;
+			var frequency = Stopwatch.Frequency;
+			var seconds   = value.Ticks / TimeSpan.TicksPerSecond;
+			var remainder = value.Ticks % TimeSpan.TicksPerSecond;
 
-			if (ticks >= long.MaxValue)
+			if (seconds > long.MaxValue / frequency)
 				return long.MaxValue;
 
-			if (ticks <= 0)
-				return 0;
+			var fraction = (remainder * frequency + TimeSpan.TicksPerSecond - 1) / TimeSpan.TicksPerSecond;
 
-			return (long)Math.Ceiling(ticks);
+			return SaturatingAdd(seconds * frequency, fraction);
 		}
 
 		static long SaturatingAdd(long left, long right)

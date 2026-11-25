@@ -951,18 +951,18 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 			static float StringToFloat(string raw)
 			{
-				if (string.Equals(raw, "-inf", StringComparison.Ordinal)) return float.NegativeInfinity;
-				if (string.Equals(raw, "inf", StringComparison.Ordinal)) return float.PositiveInfinity;
-				if (string.Equals(raw, "nan", StringComparison.Ordinal)) return float.NaN;
+				if (string.Equals(raw, "-inf", StringComparison.Ordinal)) return FloatingPointHelper.SingleNegativeInfinity;
+				if (string.Equals(raw, "inf", StringComparison.Ordinal)) return FloatingPointHelper.SinglePositiveInfinity;
+				if (string.Equals(raw, "nan", StringComparison.Ordinal)) return FloatingPointHelper.SingleNaN;
 
 				return float.Parse(raw, CultureInfo.InvariantCulture);
 			}
 
 			static double StringToDouble(string raw)
 			{
-				if (string.Equals(raw, "-inf", StringComparison.Ordinal)) return double.NegativeInfinity;
-				if (string.Equals(raw, "inf", StringComparison.Ordinal)) return double.PositiveInfinity;
-				if (string.Equals(raw, "nan", StringComparison.Ordinal)) return double.NaN;
+				if (string.Equals(raw, "-inf", StringComparison.Ordinal)) return FloatingPointHelper.DoubleNegativeInfinity;
+				if (string.Equals(raw, "inf", StringComparison.Ordinal)) return FloatingPointHelper.DoublePositiveInfinity;
+				if (string.Equals(raw, "nan", StringComparison.Ordinal)) return FloatingPointHelper.DoubleNaN;
 
 				return double.Parse(raw, CultureInfo.InvariantCulture);
 			}

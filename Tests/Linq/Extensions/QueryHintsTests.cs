@@ -14,7 +14,7 @@ namespace Tests.Extensions
 	public class QueryHintsTests : TestBase
 	{
 		[Test]
-		public void Comment([DataSources(TestProvName.AllAccess, TestProvName.AllMySql)] string context)
+		public void Comment([DataSources(TestProvName.AllNativeAccess, TestProvName.AllMySql)] string context)
 		{
 			using var db = GetDataContext(context);
 			db.QueryHints.Add("---");
@@ -57,9 +57,9 @@ namespace Tests.Extensions
 
 		[Repeat(100)]
 		[Test]
+		[NoBaselines("multi-threading")]
 		public void Issue3137([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using var _ = new DisableBaseline("multi-threading");
 			var rnd = new Random();
 
 			const int runs = 10;

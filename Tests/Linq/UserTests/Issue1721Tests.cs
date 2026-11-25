@@ -50,7 +50,7 @@ namespace Tests.UserTests
 			string createSQL = "";
 			using (var db = (DataConnection)GetDataContext(context))
 			{
-				Assert.DoesNotThrow(() => createSQL = GetCreateTableSQL<I1721Model>(db));
+				createSQL = GetCreateTableSQL<I1721Model>(db);
 			}
 
 			// Parse field name and data type from SQL.
