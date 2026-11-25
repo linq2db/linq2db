@@ -1250,11 +1250,36 @@ namespace Tests.Analyzers
 			await VerifyAsync(source, source, SqlServerRestrictedKey);
 		}
 
-		// Fix-All computes every rewrite against the original document and drops one whose edit overlaps another's: a
-		// chain's outer hint encloses the inner one, so one pass rewrites the inner hint only. The outer hint then binds
-		// the provider's own overload and is still reported, now with an exact rewrite (no second AsSqlServer()).
+		// Fix-All rewrites a document's hints in one pass: the outer hint's receiver is the inner rewrite, which already has
+		// the provider's type, so the chain gets one AsSqlServer(). Fixed one at a time, the second hint becomes an exact
+		// rewrite (ChainedHintsFixedOneAfterAnotherShareOneAsCall).
+		[TestCase("t.[|TableHint(\"NOLOCK\")|].[|TableHint(\"READPAST\")|]", "t.AsSqlServer().WithNoLock().[|TableHint(\"READPAST\")|]", "t.AsSqlServer().WithNoLock().WithReadPast()")]
+		[TestCase("t\n\t\t\t.[|TableHint(\"NOLOCK\")|]\n\t\t\t.[|TableHint(\"READPAST\")|]", "t\n\t\t\t.AsSqlServer().WithNoLock()\n\t\t\t.[|TableHint(\"READPAST\")|]", "t\n\t\t\t.AsSqlServer().WithNoLock()\n\t\t\t.WithReadPast()")]
+		public async Task FixAllOnChainedHintsSharesOneAsCall(string chain, string fixedOnce, string fixedAll)
+		{
+			static string Source(string expression, bool withUsing)
+			{
+				return (withUsing ? "using LinqToDB;\nusing LinqToDB.DataProvider.SqlServer;\n" : "using LinqToDB;\n")
+					+ "\nclass Row { }\n\nclass C\n{\n\tvoid M(ITable<Row> t)\n\t{\n\t\tvar r = " + expression + ";\n\t}\n}\n";
+			}
+
+			await VerifyAsync(
+				Source(chain, withUsing: false),
+				Source(fixedOnce, withUsing: true),
+				SqlServerRestrictedKey,
+				test =>
+				{
+					// One restricting fix; the second hint then binds the provider's own overload (an exact rewrite).
+					test.NumberOfIncrementalIterations = 1;
+					test.FixedState.MarkupHandling     = MarkupMode.Allow;
+					test.BatchFixedCode                = Source(fixedAll, withUsing: true);
+					test.NumberOfFixAllIterations      = 1;
+				});
+		}
+
+		// The chain initializes a var local that is written later: the local keeps the chain's original type.
 		[Test]
-		public async Task FixAllOnChainedHintsRewritesTheInnerHint()
+		public async Task ChainedInitializerWrittenLaterKeepsTheTableType()
 		{
 			await VerifyAsync(
 				"""
@@ -1266,7 +1291,8 @@ namespace Tests.Analyzers
 				{
 					void M(ITable<Row> t)
 					{
-						var r = t.[|TableHint("NOLOCK")|].[|TableHint("READPAST")|];
+						var q = t.[|TableHint("NOLOCK")|].TableHint("INDEX(IX_1)");
+						q = t;
 					}
 				}
 				""",
@@ -1280,18 +1306,261 @@ namespace Tests.Analyzers
 				{
 					void M(ITable<Row> t)
 					{
-						var r = t.AsSqlServer().WithNoLock().[|TableHint("READPAST")|];
+						ITable<Row> q = t.AsSqlServer().WithNoLock().TableHint("INDEX(IX_1)");
+						q = t;
+					}
+				}
+				""",
+				SqlServerRestrictedKey);
+		}
+
+		// A generic method infers its type argument from the call: no restricting rewrite. A chain that ends in another
+		// type (ToList()) passes the same type either way, so the rewrite is offered there.
+		[Test]
+		public async Task GenericArgumentGetsNoRestrictingRewriteUnlessTheChainChangesType()
+		{
+			await VerifyAsync(
+				"""
+				using System.Collections.Generic;
+				using System.Linq;
+
+				using LinqToDB;
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var a = Pick(t.[|TableHint("NOLOCK")|]);
+						var b = Pick(t.[|TableHint("READPAST")|].ToList());
+					}
+
+					static T Pick<T>(T value)
+					{
+						return value;
+					}
+				}
+				""",
+				"""
+				using System.Collections.Generic;
+				using System.Linq;
+
+				using LinqToDB;
+				using LinqToDB.DataProvider.SqlServer;
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var a = Pick(t.[|TableHint("NOLOCK")|]);
+						var b = Pick(t.AsSqlServer().WithReadPast().ToList());
+					}
+
+					static T Pick<T>(T value)
+					{
+						return value;
 					}
 				}
 				""",
 				SqlServerRestrictedKey,
 				static test =>
 				{
-					test.NumberOfIncrementalIterations  = 1;
-					test.NumberOfFixAllIterations       = 1;
-					test.FixedState.MarkupHandling      = MarkupMode.Allow;
-					test.BatchFixedState.MarkupHandling = MarkupMode.Allow;
+					test.FixedState.MarkupHandling = MarkupMode.Allow;
 				});
+		}
+
+		// A #define inside the conditional block that encloses the declarations must precede every using (CS1032), so the
+		// using goes after it, inside the block.
+		[Test]
+		public async Task DefineInsideAnOpenConditionalBlockStaysAboveTheUsing()
+		{
+			await VerifyAsync(
+				"""
+				#if DEBUG
+				#define MODERN
+				class Row { }
+
+				class C
+				{
+					void M(LinqToDB.ITable<Row> t)
+					{
+						var r = t.[|TableHint("NOLOCK")|];
+					}
+				}
+				#endif
+				""",
+				"""
+				#if DEBUG
+				#define MODERN
+				using LinqToDB.DataProvider.SqlServer;
+
+				class Row { }
+
+				class C
+				{
+					void M(LinqToDB.ITable<Row> t)
+					{
+						var r = t.AsSqlServer().WithNoLock();
+					}
+				}
+				#endif
+				""",
+				SqlServerRestrictedKey,
+				static test =>
+				{
+					DefineDebug(test);
+					AddGlobalLinqToDBUsing(test);
+				});
+		}
+
+		// Existing usings inside a conditional block: the new one goes after the block's #endif.
+		[Test]
+		public async Task NewUsingGoesAfterAConditionalBlockOfUsings()
+		{
+			await VerifyAsync(
+				"""
+				using System;
+				#if DEBUG
+				using LinqToDB;
+				#endif
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var r = t.[|TableHint("NOLOCK")|];
+					}
+				}
+				""",
+				"""
+				using System;
+				#if DEBUG
+				using LinqToDB;
+				#endif
+				using LinqToDB.DataProvider.SqlServer;
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var r = t.AsSqlServer().WithNoLock();
+					}
+				}
+				""",
+				SqlServerRestrictedKey,
+				DefineDebug);
+		}
+
+		// The sorted place is inside a conditional block in the middle of the usings: the new using goes in front of it.
+		[Test]
+		public async Task NewUsingStaysOutOfAConditionalBlockInTheMiddle()
+		{
+			await VerifyAsync(
+				"""
+				using System;
+				#if DEBUG
+				using LinqToDB;
+				using LinqToDB.Linq;
+				#endif
+				using LinqToDB.Mapping;
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var r = t.[|TableHint("NOLOCK")|];
+					}
+				}
+				""",
+				"""
+				using System;
+				using LinqToDB.DataProvider.SqlServer;
+				#if DEBUG
+				using LinqToDB;
+				using LinqToDB.Linq;
+				#endif
+				using LinqToDB.Mapping;
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var r = t.AsSqlServer().WithNoLock();
+					}
+				}
+				""",
+				SqlServerRestrictedKey,
+				DefineDebug);
+		}
+
+		// A comment right above the #if that encloses the declarations stays with the header, above the new using.
+		[Test]
+		public async Task CommentAboveAnOpenConditionalBlockStaysInTheHeader()
+		{
+			await VerifyAsync(
+				"""
+				// header
+				#if NOPE
+				class Other { }
+				#else
+				class Row { }
+
+				class C
+				{
+					void M(LinqToDB.ITable<Row> t)
+					{
+						var r = t.[|TableHint("NOLOCK")|];
+					}
+				}
+				#endif
+				""",
+				"""
+				// header
+				using LinqToDB.DataProvider.SqlServer;
+
+				#if NOPE
+				class Other { }
+				#else
+				class Row { }
+
+				class C
+				{
+					void M(LinqToDB.ITable<Row> t)
+					{
+						var r = t.AsSqlServer().WithNoLock();
+					}
+				}
+				#endif
+				""",
+				SqlServerRestrictedKey,
+				AddGlobalLinqToDBUsing);
+		}
+
+		static void AddGlobalLinqToDBUsing(CSharpCodeFixTest<StringHintAnalyzer, StringHintCodeFixProvider, DefaultVerifier> test)
+		{
+			test.TestState.Sources.Add(("/0/GlobalUsings.cs", "global using LinqToDB;"));
+			test.FixedState.Sources.Add(("/0/GlobalUsings.cs", "global using LinqToDB;"));
+		}
+
+		static void DefineDebug(CSharpCodeFixTest<StringHintAnalyzer, StringHintCodeFixProvider, DefaultVerifier> test)
+		{
+			test.SolutionTransforms.Add(static (solution, projectId) =>
+			{
+				var options = (CSharpParseOptions)solution.GetProject(projectId)!.ParseOptions!;
+
+				return solution.WithProjectParseOptions(projectId, options.WithPreprocessorSymbols("DEBUG"));
+			});
 		}
 	}
 }
