@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Threading;
@@ -16,24 +15,20 @@ using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Http;
 #endif
 
-using LinqToDB.Internal.Extensions;
-
 namespace LinqToDB.Remote.SignalR
 {
 	/// <summary>
 	/// Signal/R hub that serves linq2db remote data contexts (<c>SignalRDataContext</c>).
 	/// <para>
-	/// Every remote call from a 6.7.0 or later client is a Signal/R streaming invocation, so cancelling the call on the
-	/// client, or losing the connection, cancels it on the server: a running command is cancelled where the database
-	/// provider supports it, and reading the result stops at the next row. Results are sent as one or more stream items.
+	/// Every remote call is a Signal/R streaming invocation, so cancelling the call on the client, or losing the
+	/// connection, cancels it on the server: a running command is cancelled where the database provider supports it,
+	/// and reading the result stops at the next row. Results are sent as one or more stream items.
 	/// </para>
 	/// <para>
 	/// To validate or authorize calls, decorate the <see cref="ILinqService"/> the hub uses
 	/// (<see cref="CreateLinqService"/>, or <c>ILinqService&lt;T&gt;</c> registered in DI for
 	/// <see cref="LinqToDBHub{T}"/>): the decorator sees every call together with its cancellation token.
-	/// Class-level <c>[Authorize]</c> on a derived hub applies to all hub methods. Overrides of the obsolete methods
-	/// that serve clients older than 6.7.0 do not see the calls of newer clients: such a hub refuses those calls
-	/// (see <see cref="GetInfoAsync"/>).
+	/// Class-level <c>[Authorize]</c> on a derived hub applies to all hub methods.
 	/// </para>
 	/// </summary>
 	public class LinqToDBHub : Hub
@@ -50,18 +45,6 @@ namespace LinqToDB.Remote.SignalR
 		// for every call and a hub may create its options itself. Never disposed: without AvailableWaitHandle a
 		// SemaphoreSlim holds no unmanaged resources, and an operation finishing late may still release it.
 		static readonly ConcurrentDictionary<(Type HubType, int MaxConcurrentCalls),SemaphoreSlim> _globalLimiters = new();
-
-		// The obsolete methods only clients older than 6.7.0 call, and per hub type the ones it overrides (null: none).
-		static readonly (string Name, Type[] Parameters)[] _legacyMethods =
-		[
-			("GetInfoAsync",         [typeof(string)]),
-			("ExecuteNonQueryAsync", [typeof(string), typeof(string)]),
-			("ExecuteScalarAsync",   [typeof(string), typeof(string)]),
-			("ExecuteReaderAsync",   [typeof(string), typeof(string)]),
-			("ExecuteBatchAsync",    [typeof(string), typeof(string)]),
-		];
-
-		static readonly ConcurrentDictionary<Type,string?> _legacyOverrides = new();
 
 		readonly LinqToDBHubOptions? _options;
 
@@ -151,59 +134,6 @@ namespace LinqToDB.Remote.SignalR
 		}
 
 		/// <summary>
-		/// Returns the server's configuration information to a client older than 6.7.0, which calls it as a plain
-		/// invocation. Such a call honours the hub's concurrency limits, and only a lost connection cancels it.
-		/// <para>
-		/// 6.7.0 and later clients never call this method or the other obsolete ones. A hub that overrides any of them
-		/// refuses the calls of those clients with a <see cref="HubException"/>, so that the override is not bypassed:
-		/// move its logic into an <see cref="ILinqService"/> decorator (<see cref="CreateLinqService"/>, or
-		/// <c>ILinqService&lt;T&gt;</c> in DI) or a class-level <c>[Authorize]</c>, which apply to the calls of every client.
-		/// </para>
-		/// </summary>
-		[Obsolete("Serves clients older than 6.7.0 only. 6.7.0 and later clients call GetInfoStream, which a hub that overrides this method refuses: move the override's logic into an ILinqService decorator. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		public virtual Task<LinqServiceInfo> GetInfoAsync(string? configuration)
-		{
-			return InvokeOperation((service, cancellationToken) => service.GetInfoAsync(configuration, cancellationToken));
-		}
-
-		/// <summary>
-		/// Executes a non-query command for a client older than 6.7.0 (see <see cref="GetInfoAsync"/>).
-		/// </summary>
-		[Obsolete("Serves clients older than 6.7.0 only. 6.7.0 and later clients call ExecuteNonQueryStream, which a hub that overrides this method refuses: move the override's logic into an ILinqService decorator. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		public virtual Task<int> ExecuteNonQueryAsync(string? configuration, string queryData)
-		{
-			return InvokeOperation((service, cancellationToken) => service.ExecuteNonQueryAsync(configuration, queryData, cancellationToken));
-		}
-
-		/// <summary>
-		/// Executes a scalar query for a client older than 6.7.0 (see <see cref="GetInfoAsync"/>).
-		/// </summary>
-		[Obsolete("Serves clients older than 6.7.0 only. 6.7.0 and later clients call ExecuteScalarStream, which a hub that overrides this method refuses: move the override's logic into an ILinqService decorator. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		public virtual Task<string?> ExecuteScalarAsync(string? configuration, string queryData)
-		{
-			return InvokeOperation((service, cancellationToken) => service.ExecuteScalarAsync(configuration, queryData, cancellationToken));
-		}
-
-		/// <summary>
-		/// Executes a query for a client older than 6.7.0 (see <see cref="GetInfoAsync"/>). The result is sent as one
-		/// message.
-		/// </summary>
-		[Obsolete("Serves clients older than 6.7.0 only. 6.7.0 and later clients call ExecuteReaderStream, which a hub that overrides this method refuses: move the override's logic into an ILinqService decorator. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		public virtual Task<string> ExecuteReaderAsync(string? configuration, string queryData)
-		{
-			return InvokeOperation((service, cancellationToken) => service.ExecuteReaderAsync(configuration, queryData, cancellationToken));
-		}
-
-		/// <summary>
-		/// Executes a batch of commands in a transaction for a client older than 6.7.0 (see <see cref="GetInfoAsync"/>).
-		/// </summary>
-		[Obsolete("Serves clients older than 6.7.0 only. 6.7.0 and later clients call ExecuteBatchStream, which a hub that overrides this method refuses: move the override's logic into an ILinqService decorator. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		public virtual Task<int> ExecuteBatchAsync(string? configuration, string queryData)
-		{
-			return InvokeOperation((service, cancellationToken) => service.ExecuteBatchAsync(configuration, queryData, cancellationToken));
-		}
-
-		/// <summary>
 		/// Returns the largest message, in bytes, this hub accepts from a client, or -1 when the server sets no limit
 		/// or cannot tell (the legacy .NET Framework / .NET Standard server). The client checks its requests against
 		/// it before sending: Signal/R closes the whole connection on an oversized message.
@@ -232,40 +162,7 @@ namespace LinqToDB.Remote.SignalR
 
 		ChannelReader<T> StartOperation<T>(Func<ILinqService,CancellationToken,Task<IReadOnlyList<T>>> operation)
 		{
-			// A 6.7.0 or later client never calls the obsolete methods, so an override of them (validation, authorization)
-			// would be bypassed without a trace: refuse the call instead.
-			if (_legacyOverrides.GetOrAdd(GetType(), FindLegacyOverrides) is { } overrides)
-				throw new HubException(
-					$"{GetType().Name} overrides {overrides}, which only clients older than 6.7.0 call. The call is refused so that "
-					+ "the override is not bypassed: move its logic into an ILinqService decorator (CreateLinqService() or "
-					+ "ILinqService<T> in DI) or a class-level [Authorize], and remove the override.");
-
 			return new OperationChannelReader<T>(PrepareOperation(operation), Context.ConnectionAborted);
-		}
-
-#if NET8_0_OR_GREATER
-		[UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "MapHub<THub> keeps the public methods of the hub type: Signal/R dispatches calls to them by reflection.")]
-#endif
-		static string? FindLegacyOverrides(Type hubType)
-		{
-			List<string>? names = null;
-
-			foreach (var (name, parameters) in _legacyMethods)
-			{
-				var method = hubType.GetMethodEx(name, BindingFlags.Public | BindingFlags.Instance, parameters);
-
-				if (method != null && method.DeclaringType != typeof(LinqToDBHub))
-					(names ??= []).Add(name);
-			}
-
-			return names == null ? null : string.Join(", ", names);
-		}
-
-		// A plain invocation of a client older than 6.7.0 carries no cancellation of its own: only a lost connection
-		// cancels it.
-		Task<TResult> InvokeOperation<TResult>(Func<ILinqService,CancellationToken,Task<TResult>> operation)
-		{
-			return PrepareOperation(operation)(Context.ConnectionAborted);
 		}
 
 		// Everything that needs the hub is read now: a stream runs the operation after its hub method has returned.

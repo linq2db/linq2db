@@ -34,7 +34,7 @@ builder.Services.Configure<LinqToDBHubOptions>(o =>
 app.MapHub<LinqToDBHub<IMyDataContext>>("/hub/linq2db");
 ```
 
-Every call from a 6.7.0 or later client is a Signal/R streaming invocation:
+Every call is a Signal/R streaming invocation:
 
 - Cancelling a query on the client cancels it on the server: while the command executes through the provider's
   cancellation, while rows are read at the next row. Serializing and sending a result that was already read is not
@@ -53,17 +53,6 @@ options to the base constructor to have them on every transport.
 
 `TransferInternalExceptionToClient` works on .NET 8+ servers. The legacy (.NET Framework / .NET Standard) Signal/R
 server drops error text unless `HubOptions.EnableDetailedErrors` is set, which exposes the errors of all hub methods.
-
-The hub protocol changed in 6.7.0. The hub still serves older clients through its obsolete `GetInfoAsync` /
-`Execute*Async` methods, with the same concurrency limits, but their calls are cancelled only by a lost connection and
-their results are sent as one message; update clients to 6.7.0 or later to get cancellation and chunked results.
-
-A 6.7.0 or later client never calls those methods, so an override of them in a derived hub (validation, authorization,
-a method-level `[Authorize]`) would not apply to its calls. Such a hub refuses the calls of 6.7.0 and later clients
-with a `HubException` that names the overriding methods (the legacy server sends its text to the client only with
-`HubOptions.EnableDetailedErrors`), and keeps serving older clients through the overrides. Move that logic into an
-`ILinqService` decorator (`CreateLinqService()` or `ILinqService<T>` in DI) or a class-level `[Authorize]`, which
-apply to the calls of every client, and remove the overrides before updating the clients.
 
 ## Other Transports
 
