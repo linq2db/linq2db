@@ -28,11 +28,15 @@ static LinqToDB.LinqExtensions.QueryBatchAsync<T1, T2, T3, T4, T5, T6, T7>(this 
 static readonly LinqToDB.Internal.Reflection.Methods.LinqToDB.QueryBatch -> System.Reflection.MethodInfo!
 static LinqToDB.LinqExtensions.CreateQueryBatch(this LinqToDB.IDataContext! dataContext) -> LinqToDB.QueryBatchBuilder!
 LinqToDB.QueryBatchBuilder
-LinqToDB.QueryBatchBuilder.Set<T>(System.Linq.Expressions.Expression<System.Func<T>!>! query, System.Action<T>! setter) -> void
+LinqToDB.QueryBatchBuilder.AddRequest<T>(System.Linq.Expressions.Expression<System.Func<T>!>! query) -> LinqToDB.QueryBatchResult<T>!
+LinqToDB.QueryBatchBuilder.AddRequest<T>(System.Linq.Expressions.Expression<System.Func<T>!>! query, System.Action<T>! setter) -> void
 LinqToDB.QueryBatchBuilder.Execute() -> void
 LinqToDB.QueryBatchBuilder.ExecuteAsync(System.Threading.CancellationToken token = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+LinqToDB.QueryBatchResult<T>
+LinqToDB.QueryBatchResult<T>.Value.get -> T
 const LinqToDB.Internal.Common.ErrorHelper.Error_QueryHints_In_QueryBatch = "QueryBatch cannot run while the context has pending QueryHints or NextQueryHints." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_Subquery_in_Fromless_Select = "Provider does not support subqueries in a SELECT without a FROM clause." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_QueryBatch_TaskPart = "A query batch part cannot hold an expression that may create a task: it could run a separate query outside the batch." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_QueryBatch_NotExecuted = "The query batch has not been executed." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_QueryBatch_AlreadyExecuted = "The query batch has already been executed." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_QueryBatch_Running = "The query batch is being executed." -> string!

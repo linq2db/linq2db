@@ -455,10 +455,12 @@ namespace LinqToDB
 		/// var page  = new Page&lt;Product&gt;();
 		/// var batch = db.CreateQueryBatch();
 		///
-		/// batch.Set(() => db.Products.Count(),                                             v => page.Total = v);
-		/// batch.Set(() => db.Products.OrderBy(p => p.Id).Skip(skip).Take(take).ToList(), v => page.Rows  = v);
+		/// var total = batch.AddRequest(() => db.Products.Count());
+		/// batch.AddRequest(() => db.Products.OrderBy(p => p.Id).Skip(skip).Take(take).ToList(), v => page.Rows = v);
 		///
 		/// await batch.ExecuteAsync(cancellationToken);
+		///
+		/// page.Total = total.Value;
 		/// </code>
 		/// </example>
 		/// <param name="dataContext">Database connection context the parts are read through.</param>

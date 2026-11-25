@@ -15,8 +15,8 @@ namespace LinqToDB
 {
 	/// <summary>
 	/// Collects reads from any number of call sites, runs them as one command, as one
-	/// <see cref="LinqExtensions.QueryBatch{T}(IDataContext, Expression{Func{T}})"/> call, and hands each value to its setter.
-	/// Created by <see cref="LinqExtensions.CreateQueryBatch(IDataContext)"/>.
+	/// <see cref="LinqExtensions.QueryBatch{T}(IDataContext, Expression{Func{T}})"/> call, and hands each value to its result or
+	/// its setter. Created by <see cref="LinqExtensions.CreateQueryBatch(IDataContext)"/>.
 	/// </summary>
 	/// <remarks>
 	/// <para>
@@ -35,14 +35,15 @@ namespace LinqToDB
 	/// </para>
 	/// <para>
 	/// Every part is read before any setter runs, so a part that reads what a setter assigns sees the value it had before the
-	/// batch was executed. The setters then run in the order their parts were added, synchronously, where the execution
+	/// batch was executed, and a part that reads a <see cref="QueryBatchResult{T}.Value"/> of the same batch fails the batch.
+	/// Then every result is set, and the setters run in the order their parts were added, synchronously, where the execution
 	/// completes; an asynchronous lambda passed as a setter is not awaited.
 	/// </para>
 	/// <para>
 	/// A batch is executed once. The parts are read as one result, so a part that fails fails the whole batch; a batch that
-	/// failed before its setters ran has assigned nothing and can be executed again, in the transaction of its context as that
-	/// transaction stands. Once the setters run the batch is executed: a setter that throws ends the run, and the setters after
-	/// it do not run. Executing an empty batch sends nothing.
+	/// failed before its setters ran has set no result and assigned nothing, and can be executed again, in the transaction of
+	/// its context as that transaction stands. Once the setters run the batch is executed and every result is set: a setter
+	/// that throws ends the run, and the setters after it do not run. Executing an empty batch sends nothing.
 	/// </para>
 	/// <para>
 	/// A batch is not thread-safe.
@@ -57,15 +58,37 @@ namespace LinqToDB
 			Executed,
 		}
 
-		readonly IDataContext           _dataContext;
-		readonly List<LambdaExpression> _parts   = new();
-		readonly List<Action<object?>>  _setters = new();
+		readonly IDataContext                                   _dataContext;
+		readonly List<LambdaExpression>                         _parts = new();
+		readonly List<(Action<object?> Deliver, bool IsResult)> _sinks = new();
 
 		State _state;
 
 		internal QueryBatchBuilder(IDataContext dataContext)
 		{
 			_dataContext = dataContext;
+		}
+
+		/// <summary>
+		/// Adds a read to the batch and returns the result that receives its value.
+		/// </summary>
+		/// <typeparam name="T">Type of the value.</typeparam>
+		/// <param name="query">The read, written as a selector of
+		/// <see cref="LinqExtensions.QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.</param>
+		/// <returns>The result, readable after the batch is executed.</returns>
+		/// <exception cref="ArgumentNullException"><paramref name="query"/> is <see langword="null"/>.</exception>
+		/// <exception cref="ArgumentException">An expression in <paramref name="query"/> may create a task, which could run a query
+		/// outside the batch. Reading a task held by a captured variable is allowed.</exception>
+		/// <exception cref="InvalidOperationException">The batch has been executed or is being executed.</exception>
+		public QueryBatchResult<T> AddRequest<T>(Expression<Func<T>> query)
+		{
+			ArgumentNullException.ThrowIfNull(query);
+
+			var result = new QueryBatchResult<T>();
+
+			AddPart(query, result.SetValue, isResult: true);
+
+			return result;
 		}
 
 		/// <summary>
@@ -80,11 +103,16 @@ namespace LinqToDB
 		/// <exception cref="ArgumentException">An expression in <paramref name="query"/> may create a task, which could run a query
 		/// outside the batch. Reading a task held by a captured variable is allowed.</exception>
 		/// <exception cref="InvalidOperationException">The batch has been executed or is being executed.</exception>
-		public void Set<T>(Expression<Func<T>> query, Action<T> setter)
+		public void AddRequest<T>(Expression<Func<T>> query, Action<T> setter)
 		{
 			ArgumentNullException.ThrowIfNull(query);
 			ArgumentNullException.ThrowIfNull(setter);
 
+			AddPart(query, value => setter((T)value!), isResult: false);
+		}
+
+		void AddPart(LambdaExpression query, Action<object?> deliver, bool isResult)
+		{
 			ThrowIfNotPending();
 
 			// The rule the QueryBatch node enforces when the batch is built; checked here so the part is never kept.
@@ -92,11 +120,11 @@ namespace LinqToDB
 				throw new ArgumentException(ErrorHelper.Error_QueryBatch_TaskPart, nameof(query));
 
 			_parts.Add(query);
-			_setters.Add(value => setter((T)value!));
+			_sinks.Add((deliver, isResult));
 		}
 
 		/// <summary>
-		/// Executes the batch and hands every value to its setter.
+		/// Executes the batch, sets every result and hands every other value to its setter.
 		/// </summary>
 		/// <exception cref="InvalidOperationException">The batch has been executed or is being executed, or a part's
 		/// <c>First()</c> or <c>Single()</c> failed as described for
@@ -134,11 +162,11 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes the batch asynchronously and hands every value to its setter.
+		/// Executes the batch asynchronously, sets every result and hands every other value to its setter.
 		/// </summary>
 		/// <param name="token">Optional asynchronous operation cancellation token. A token cancelled before the call sends
 		/// nothing.</param>
-		/// <returns>A task that completes when every setter has run.</returns>
+		/// <returns>A task that completes when every result is set and every setter has run.</returns>
 		/// <exception cref="InvalidOperationException">The batch has been executed or is being executed, or a part's
 		/// <c>First()</c> or <c>Single()</c> failed as described for
 		/// <see cref="LinqExtensions.QueryBatch{T}(IDataContext, Expression{Func{T}})"/>.</exception>
@@ -175,25 +203,35 @@ namespace LinqToDB
 			Deliver(values);
 		}
 
-		// The batch is executed before the first setter runs, so a setter that throws ends a run that is not repeated.
+		// The batch is executed and every result set before the first setter runs, so a setter reads any result, and a setter
+		// that throws ends a run that is not repeated and leaves no result unset.
 		void Deliver(object?[] values)
 		{
-			var setters = _setters.ToArray();
+			var sinks = _sinks.ToArray();
 
 			Complete();
 
-			for (var i = 0; i < setters.Length; i++)
-				setters[i](values[i]);
+			for (var i = 0; i < sinks.Length; i++)
+			{
+				if (sinks[i].IsResult)
+					sinks[i].Deliver(values[i]);
+			}
+
+			for (var i = 0; i < sinks.Length; i++)
+			{
+				if (!sinks[i].IsResult)
+					sinks[i].Deliver(values[i]);
+			}
 		}
 
-		// Single use: once executed, the parts and the setters are never read again, so a batch kept after the run pins neither
-		// the parts' captured closures nor the setters' targets.
+		// Single use: once executed, the parts and the sinks are never read again, so a batch kept after the run pins neither the
+		// parts' captured closures nor the results and the setters' targets.
 		void Complete()
 		{
 			_state = State.Executed;
 
 			_parts.Clear();
-			_setters.Clear();
+			_sinks.Clear();
 		}
 
 		void ThrowIfNotPending()
@@ -220,7 +258,7 @@ namespace LinqToDB
 		// Seven values per tuple, the rest in the nested tuple of its Rest field.
 		object?[] ReadValues(object? tuple)
 		{
-			var values = new object?[_setters.Count];
+			var values = new object?[_parts.Count];
 			var holder = tuple!;
 
 			for (var i = 0; i < values.Length; i++)

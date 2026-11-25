@@ -81,7 +81,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				throw new LinqToDBException(ErrorHelper.Error_QueryBatch_TaskPart);
 		}
 
-		// Shared with QueryBatchBuilder.Set, which refuses the same parts when they are added.
+		// Shared with QueryBatchBuilder.AddRequest, which refuses the same parts when they are added.
 		internal static bool CreatesTask(Expression body)
 		{
 			return body.Find(static e => IsTask(e.Type) && !IsHeldTask(e)) != null;
