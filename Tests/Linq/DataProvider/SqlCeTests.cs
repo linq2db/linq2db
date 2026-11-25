@@ -605,9 +605,9 @@ namespace Tests.DataProvider
 
 		#region 4574
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4574")]
+		[NoBaselines("Guid.New")]
 		public void Issue4574Test([IncludeDataSources(ProviderName.SqlCe)] string context, [Values] BulkCopyType copyType)
 		{
-			using var _ = new DisableBaseline("Guid.New");
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue4574Table>();
 

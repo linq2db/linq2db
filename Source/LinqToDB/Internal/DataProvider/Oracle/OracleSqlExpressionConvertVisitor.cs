@@ -20,6 +20,15 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		{
 		}
 
+		// A zone-less literal beside a TIMESTAMP WITH TIME ZONE column is converted in the session's zone (and a DateTime one is first
+		// moved by ToUniversalTime), so the default of a DateTime mapped to DateTimeOffset is written with its offset.
+		public override ISqlExpression ConvertDefaultValue(SqlDefaultValueExpression expression)
+		{
+			return expression.Value is DateTime dateTime && expression.Type.DataType == DataType.DateTimeOffset
+				? new SqlValue(expression.Type.WithSystemType(typeof(DateTimeOffset)), new DateTimeOffset(dateTime.Ticks, TimeSpan.Zero))
+				: base.ConvertDefaultValue(expression);
+		}
+
 		/// <summary>
 		/// Oracle's <c>TRUNC</c> already is truncation toward zero, the semantic the base composes <c>FLOOR</c>
 		/// and <c>CEILING</c> to reach - and Oracle spells the second one <c>CEIL</c>, so that composition does

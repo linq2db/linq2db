@@ -265,17 +265,13 @@ namespace LinqToDB
 
 		public interface IMultiInsertSource<TSource>
 			: IMultiInsertInto<TSource>
-			, IMultiInsertWhen<TSource>
-		{ }
+			, IMultiInsertWhen<TSource>;
 
-		public interface IMultiInsertInto<TSource>
-		{ }
+		public interface IMultiInsertInto<TSource>;
 
-		public interface IMultiInsertWhen<TSource> : IMultiInsertElse<TSource>
-		{ }
+		public interface IMultiInsertWhen<TSource> : IMultiInsertElse<TSource>;
 
-		public interface IMultiInsertElse<TSource>
-		{ }
+		public interface IMultiInsertElse<TSource>;
 
 		internal sealed class MultiInsertQuery<TSource> : IMultiInsertSource<TSource>
 		{

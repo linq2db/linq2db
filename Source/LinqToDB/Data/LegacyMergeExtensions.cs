@@ -13,7 +13,7 @@ namespace LinqToDB.Data
 	/// <summary>
 	/// Contains extension methods for <see cref="DataConnection"/> class.
 	/// </summary>
-	[Obsolete("Legacy Merge API obsoleted and not recommended for use. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/LegacyMergeExtensions.cs.")]
+	[Obsolete("Legacy Merge API obsoleted and not recommended for use. See migration guide https://linq2db.github.io/articles/sql/merge/merge-api-migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/LegacyMergeExtensions.cs.")]
 	public static class LegacyMergeExtensions
 	{
 		private static bool MergeWithUpdate<T>(ITable<T> table)

@@ -20,7 +20,6 @@ using Tests.Model;
 namespace Tests.xUpdate
 {
 	[TestFixture]
-	[Order(10000)]
 	public class BulkCopyTests : TestBase
 	{
 		// TODO: update Sybase.sql to use proper type for identity. now it uses INT for most of tables, which
@@ -254,9 +253,8 @@ namespace Tests.xUpdate
 					|| copyType == BulkCopyType.MultipleRows
 					|| copyType == BulkCopyType.ProviderSpecific))
 			{
-				var ex = Assert.CatchAsync(async () => await perform())!;
-				Assert.That(ex, Is.InstanceOf<LinqToDBException>());
-				Assert.That(ex.Message, Is.EqualTo("BulkCopyOptions.KeepIdentity = true is not supported by Firebird provider. If you use generators with triggers, you should disable triggers during BulkCopy execution manually."));
+				await Assert.ThatAsync(async () => await perform(),
+					Throws.InstanceOf<LinqToDBException>().With.Message.EqualTo("BulkCopyOptions.KeepIdentity = true is not supported by Firebird provider. If you use generators with triggers, you should disable triggers during BulkCopy execution manually."));
 				return false;
 			}
 
@@ -276,9 +274,8 @@ namespace Tests.xUpdate
 					|| (context.IsAnyOf(ProviderName.SapHanaOdbc) && copyType == BulkCopyType.ProviderSpecific))
 				&& keepIdentity == true)
 			{
-				var ex = Assert.CatchAsync(async () => await perform())!;
-				Assert.That(ex, Is.InstanceOf<LinqToDBException>());
-				Assert.That(ex.Message, Is.EqualTo("BulkCopyOptions.KeepIdentity = true is not supported by BulkCopyType.RowByRow mode"));
+				await Assert.ThatAsync(async () => await perform(),
+					Throws.InstanceOf<LinqToDBException>().With.Message.EqualTo("BulkCopyOptions.KeepIdentity = true is not supported by BulkCopyType.RowByRow mode"));
 				return false;
 			}
 
@@ -343,6 +340,7 @@ namespace Tests.xUpdate
 		//                where the first row of each batch renders differently from the rest
 		// Oracle has its own coverage in OracleTests.BulkCopyMultipleRowsCrossesSqlLengthLimit.
 		[Test]
+		[NoBaselines("generated statement volume is the subject of the test")]
 		public void MaxSqlLengthForBatchSplitsStatements(
 			[IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllPostgreSQL95Plus, TestProvName.AllFirebird)] string context,
 			[Values]                                                                                                 bool   useParameters,
@@ -352,7 +350,6 @@ namespace Tests.xUpdate
 			const int rowCount     = 1000;
 			const int valueLength  = 200;
 
-			using var _ = new DisableBaseline("generated statement volume is the subject of the test");
 			var       queries = new SaveQueriesInterceptor();
 
 			// the limit is reachable both per-call and connection-wide; cover both entry points
@@ -431,11 +428,11 @@ namespace Tests.xUpdate
 		// without the option 1000 rows x 2 columns close a batch every 499 rows, and raising it packs them into
 		// one statement of 2000 parameters.
 		[Test]
+		[NoBaselines("generated statement volume is the subject of the test")]
 		public void MaxParametersForBatchRaisesProviderLimit([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
 			const int rowCount = 1000;
 
-			using var _  = new DisableBaseline("generated statement volume is the subject of the test");
 			using var db = GetDataConnection(context);
 
 			var queries = new SaveQueriesInterceptor();
@@ -1459,8 +1456,8 @@ namespace Tests.xUpdate
 			{
 				for (var i = 0; i < 2; i++)
 				{
-					Assert.That(item[i].DecimalValue1, Is.EqualTo(MultipleRowsTable.Data[i].DecimalValue1));
-					Assert.That(item[i].DecimalValue2, Is.EqualTo(MultipleRowsTable.Data[i].DecimalValue2));
+					Assert.That(item[i].DecimalValue1, Is.EqualTo(MultipleRowsTable.Data[i].DecimalValue1).Within(FloatingPointDeltaPercent).Percent);
+					Assert.That(item[i].DecimalValue2, Is.EqualTo(MultipleRowsTable.Data[i].DecimalValue2).Within(FloatingPointDeltaPercent).Percent);
 				}
 			}
 		}

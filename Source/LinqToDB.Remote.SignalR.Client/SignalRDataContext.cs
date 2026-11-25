@@ -29,13 +29,31 @@ namespace LinqToDB.Remote.SignalR
 		}
 
 		/// <summary>
-		/// Creates instance of http-based remote data context.
+		/// Creates instance of Signal/R-based remote data context over a hub connection the caller owns.
+		/// The context never stops or disposes <paramref name="hubConnection"/>, so one connection can serve
+		/// any number of contexts.
 		/// </summary>
-		/// <param name="optionBuilder"></param>
+		/// <param name="hubConnection">Hub connection to use. The caller starts it and disposes it.</param>
+		/// <param name="optionBuilder">Optional data options configuration callback.</param>
 		public SignalRDataContext(HubConnection hubConnection, Func<DataOptions,DataOptions>? optionBuilder = null)
+			: this(hubConnection, disposeHubConnection: false, optionBuilder)
+		{
+		}
+
+		/// <summary>
+		/// Creates instance of Signal/R-based remote data context over a hub connection.
+		/// </summary>
+		/// <param name="hubConnection">Hub connection to use.</param>
+		/// <param name="disposeHubConnection">
+		/// When <see langword="true"/>, the context takes ownership of <paramref name="hubConnection"/> and disposes
+		/// it when the context is disposed. When <see langword="false"/>, the caller keeps ownership.
+		/// </param>
+		/// <param name="optionBuilder">Optional data options configuration callback.</param>
+		public SignalRDataContext(HubConnection hubConnection, bool disposeHubConnection, Func<DataOptions,DataOptions>? optionBuilder = null)
 			: this(new SignalRLinqServiceClient(hubConnection), optionBuilder)
 		{
-			_ownedHubConnection = hubConnection;
+			if (disposeHubConnection)
+				_ownedHubConnection = hubConnection;
 		}
 
 		#endregion

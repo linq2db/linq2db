@@ -1,7 +1,7 @@
 # MCP Registry publication for linq2db.cli.
 #
 # Hooked to release publication rather than the `release` branch push. The registry verifies
-# ownership by reading the *published* nupkg's README - Azure's nuget-job.yml owns that push - so
+# ownership by reading the *published* nupkg's README - build.yml's publish-nuget job owns that push - so
 # the package must be live and served by nuget.org before this can succeed.
 #
 # The wait step polls exactly what the registry's validator reads: the ReadmeUriTemplate/6.13.0
@@ -34,8 +34,6 @@ jobs:
   publish:
     name: Publish to MCP Registry
     runs-on: ubuntu-24.04
-    # A prerelease must not claim the registry version. A manual dispatch is always deliberate.
-    if: ${{ github.event_name == 'workflow_dispatch' || !github.event.release.prerelease }}
     timeout-minutes: 40
 
     env:

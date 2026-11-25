@@ -11,19 +11,8 @@ docker run -e ACCEPT_EULA=Y -e SA_PASSWORD=Password12! -p 1419:1433 --name sql20
 call wait sql2019 "Recovery is complete"
 
 REM create test databases
-REM docker exec sql2019 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData;"
-REM docker exec sql2019 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestDataMS;"
-
-docker exec sql2019 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData COLLATE Latin1_General_CS_AS WITH CATALOG_COLLATION = SQL_Latin1_General_CP1_CI_AS;"
-docker exec sql2019 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestDataMS COLLATE Latin1_General_CS_AS WITH CATALOG_COLLATION = SQL_Latin1_General_CP1_CI_AS;"
-
-docker exec sql2019 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestDataSA;"
-docker exec sql2019 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestDataMSSA;"
-
-docker exec sql2019 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q "sp_configure 'contained database authentication', 1;"
-docker exec sql2019 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q "RECONFIGURE;"
-docker exec sql2019 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestDataContained CONTAINMENT = PARTIAL;"
-docker exec sql2019 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestDataMSContained CONTAINMENT = PARTIAL;"
+docker exec sql2019 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData;"
+docker exec sql2019 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestDataMS;"
 
 docker exec sql2019 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q "CREATE DATABASE Northwind;"
 docker exec sql2019 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q "CREATE DATABASE NorthwindMS;"

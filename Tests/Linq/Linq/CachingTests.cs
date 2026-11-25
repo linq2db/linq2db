@@ -105,14 +105,15 @@ namespace Tests.Linq
 				// SQL Server doesn't support AVG(time)
 				//"AVG",
 				"COUNT"
-			)] string funcName,
-			[Values(
-				nameof(ALLTYPE.TIMEDATATYPE)
-			)] string fieldName)
+			)] string funcName)
 		{
+			const string fieldName = "timeDataType";
+
 			using var db = GetDataContext(context);
 			var query =
-					from t in db.GetTable<ALLTYPE>()
+					from t in db
+						.GetTable<ALLTYPE>()
+						.TableName("AllTypes")
 					from c in db.GetTable<Child>()
 					select new
 					{
@@ -211,7 +212,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void TakeHint(
-			[IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context,
+			[IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse, TestProvName.AllAccessLibRed)] string context,
 			[Values(TakeHints.Percent, TakeHints.WithTies, TakeHints.Percent | TakeHints.WithTies)] TakeHints takeHint)
 		{
 			if (takeHint.HasFlag(TakeHints.Percent) && context.IsAnyOf(TestProvName.AllClickHouse))

@@ -40,12 +40,10 @@ namespace Tests
 			if (TestContext.CurrentContext.Result.FailCount > 0)
 				return;
 
-			if (TestConfiguration.BaselinesPath != null)
-			{
-				var baseline = CustomTestContext.Get().Get<StringBuilder>(CustomTestContext.BASELINE);
-				if (baseline != null)
-					BaselinesWriter.Write(TestConfiguration.BaselinesPath, baseline.ToString(), isRemote, providerSuffix);
-			}
+			// direct and remote SQL are compared on every run; files are written only when a baselines path is set
+			var baseline = CustomTestContext.Get().Get<StringBuilder>(CustomTestContext.BASELINE);
+			if (baseline != null)
+				BaselinesWriter.Write(TestConfiguration.BaselinesPath, baseline.ToString(), isRemote, providerSuffix);
 		}
 	}
 }

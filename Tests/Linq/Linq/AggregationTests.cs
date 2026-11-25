@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -65,6 +68,33 @@ namespace Tests.Linq
 			};
 		}
 
+		// Unmapped element type, as in the reported shape: a Count sent to SQL has no column to materialise it from.
+		sealed class Payload;
+
+		sealed class PayloadCollection : Collection<Payload>;
+
+		[Table]
+		sealed class CountTarget
+		{
+			[PrimaryKey] public int Id         { get; set; }
+			[Column]     public int EmptyCount { get; set; }
+			[Column]     public int ItemsCount { get; set; }
+		}
+
+		[Table]
+		sealed class ParentRow
+		{
+			[Column, PrimaryKey] public int Id { get; set; }
+		}
+
+		[Table]
+		sealed class Row
+		{
+			[Column, PrimaryKey] public int     Id       { get; set; }
+			[Column]             public int     ParentId { get; set; }
+			[Column]             public decimal Value    { get; set; }
+		}
+
 		#endregion
 
 		[Test]
@@ -87,6 +117,91 @@ namespace Tests.Linq
 				};
 
 			AssertQuery(query);
+		}
+
+		// SqlCe: seeding the decimal rows overflows in BulkCopy (#4438).
+		[ThrowsRequiresCorrelatedSubquery]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6210")]
+		public async Task SumClampedValues(
+			[DataSources(ProviderName.SqlCe)] string context,
+			[Values] bool useSelector)
+		{
+			using var db      = GetDataContext(context);
+			using var parents = db.CreateLocalTable(new[]
+			{
+				new ParentRow { Id = 1 },
+				new ParentRow { Id = 2 },
+				new ParentRow { Id = 3 },
+			});
+			using var rows = db.CreateLocalTable(new[]
+			{
+				new Row { Id = 1, ParentId = 1, Value =    5.5m  },
+				new Row { Id = 2, ParentId = 1, Value = -100m    },
+				new Row { Id = 3, ParentId = 1, Value =    2.25m },
+				new Row { Id = 4, ParentId = 1, Value =    0m    },
+				new Row { Id = 5, ParentId = 2, Value =   -4m    },
+			});
+
+			var query = useSelector
+				? parents.OrderBy(parent => parent.Id)
+					.Select(parent => rows
+						.Where(row => row.ParentId == parent.Id)
+						.Sum(row => Math.Max(0m, row.Value)))
+				: parents.OrderBy(parent => parent.Id)
+					.Select(parent => rows
+						.Where(row => row.ParentId == parent.Id)
+						.Select(row => Math.Max(0m, row.Value))
+						.Sum());
+
+			var totals = await query.ToListAsync();
+
+			// Mixed values, only negative values, and no rows must all use LINQ Sum semantics.
+			// Rounded rather than compared within a delta, so the totals stay ordered by parent: AseClient on
+			// .NET 11 reads 7.75 as 7.7500000000000001613292832525 (AseClient#240).
+			totals.Select(t => Math.Round(t, 10)).ShouldBe([7.75m, 0m, 0m]);
+		}
+
+		// SqlCe: seeding the decimal rows overflows in BulkCopy (#4438).
+		[ThrowsRequiresCorrelatedSubquery]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6210")]
+		public async Task SumClampedValuesPreservesOuterOperators(
+			[DataSources(ProviderName.SqlCe)] string context,
+			[Values] bool applyFilter)
+		{
+			using var db      = GetDataContext(context);
+			using var parents = db.CreateLocalTable(new[]
+			{
+				new ParentRow { Id = 1 },
+				new ParentRow { Id = 2 },
+				new ParentRow { Id = 3 },
+			});
+			using var rows = db.CreateLocalTable(new[]
+			{
+				new Row { Id = 1, ParentId = 1, Value =    5.5m  },
+				new Row { Id = 2, ParentId = 1, Value = -100m    },
+				new Row { Id = 3, ParentId = 1, Value =    2.25m },
+				new Row { Id = 4, ParentId = 1, Value =    0m    },
+				new Row { Id = 5, ParentId = 2, Value =   -4m    },
+			});
+
+			var query = applyFilter
+				? parents.OrderBy(parent => parent.Id)
+					.Select(parent => rows
+						.Where(row => row.ParentId == parent.Id)
+						.Select(row => Math.Max(0m, row.Value))
+						.Where(value => value > 3m)
+						.Sum())
+				: parents.OrderBy(parent => parent.Id)
+					.Select(parent => rows
+						.Where(row => row.ParentId == parent.Id)
+						.Select(row => Math.Max(0m, row.Value))
+						.Select(value => value + 1m)
+						.Sum());
+
+			var totals   = await query.ToListAsync();
+			var expected = applyFilter ? new[] { 5.5m, 0m, 0m } : new[] { 11.75m, 1m, 0m };
+
+			totals.Select(t => Math.Round(t, 10)).ShouldBe(expected);
 		}
 
 		class User
@@ -236,6 +351,53 @@ namespace Tests.Linq
 			rows.ShouldBeEmpty();
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5557")]
+		public void ClosureCollectionCountInInsertSetter([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<CountTarget>();
+
+			var empty = new PayloadCollection();
+			var items = new PayloadCollection { new Payload(), new Payload() };
+
+			table.Insert(() => new CountTarget
+			{
+				Id         = 1,
+				EmptyCount = empty.Count,
+				ItemsCount = items.Count,
+			});
+
+			LastQuery!.ShouldNotContain("COUNT(", Case.Insensitive);
+
+			var record = table.Single();
+
+			record.EmptyCount.ShouldBe(0);
+			record.ItemsCount.ShouldBe(2);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5557")]
+		public void ClosureCollectionCountInWhere([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[]
+			{
+				new CountTarget { Id = 1, EmptyCount = 0, ItemsCount = 2 },
+				new CountTarget { Id = 2, EmptyCount = 1, ItemsCount = 2 },
+			});
+
+			var empty = new PayloadCollection();
+			var items = new PayloadCollection { new Payload(), new Payload() };
+
+			var ids = table
+				.Where(t => t.ItemsCount == items.Count && t.EmptyCount == empty.Count)
+				.Select(t => t.Id)
+				.ToArray();
+
+			LastQuery!.ShouldNotContain("COUNT(", Case.Insensitive);
+
+			ids.ShouldBe(new[] { 1 });
+		}
+
 		// MIN/MAX over a boolean is folded to 1/0 and the function retyped, because MAX(bit) / max(boolean) is
 		// invalid on most providers. The argument may arrive as a bare predicate or already folded to a value
 		// (a ternary): both have to end up as a single CASE, and the result must still read back as a bool.
@@ -332,6 +494,217 @@ namespace Tests.Linq
 			// grouped without one, and ClickHouse aggregates in parallel, so a positional match would hold by
 			// accident. What is asserted is that the addend keeps its own scale, which is per-value.
 			shifted.ShouldBe(sums.Select(s => s + 0.00005m), ignoreOrder: true);
+		}
+
+		sealed class DecimalIdentityConverter() : ValueConverter<decimal, decimal>(v => v, v => v, false);
+
+		sealed class ScaledDecimalRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Decimal, Precision = 18, Scale = 2)]
+			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Decimal64, Precision = 18, Scale = 2)]
+			public decimal Value { get; set; }
+
+			[Column(DataType = DataType.Decimal, Precision = 18, Scale = 2), ValueConverter(ConverterType = typeof(DecimalIdentityConverter))]
+			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Decimal64, Precision = 18, Scale = 2)]
+			public decimal Converted { get; set; }
+		}
+
+		/// <summary>
+		/// A literal finer than an aggregated column's scale keeps its digits when compared with the aggregate, and so does
+		/// a captured list beside an aggregate over a column with a value converter: MAX is a computed value with no stored
+		/// scale to match.
+		/// </summary>
+		/// <remarks>
+		/// A literal compared with an aggregate over the converted column is not asserted: it is written in the column's
+		/// terms, and ClickHouse narrows it while YDB refuses it, on master too.
+		/// <para>
+		/// SqlCe is left out because it compares a decimal literal at the other side's scale (#6062).
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void LiteralComparedWithAggregateKeepsItsOwnScale([DataSources(TestProvName.AllSqlCe)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new ScaledDecimalRow { Id = 1, Value = 1.00m, Converted = 1.00m } });
+
+			var finer = new[] { 1.004m };
+
+			var equal = t
+				.GroupBy(r => r.Id)
+				.Count(g => g.Max(r => r.Value) == 1.004m);
+
+			equal.ShouldBe(0);
+
+			var below = t
+				.GroupBy(r => r.Id)
+				.Count(g => g.Max(r => r.Value) < 1.004m);
+
+			below.ShouldBe(1);
+
+			var convertedCaptured = t
+				.GroupBy(r => r.Id)
+				.Count(g => finer.Contains(g.Max(r => r.Converted)));
+
+			convertedCaptured.ShouldBe(0);
+		}
+
+		sealed class ComputedDecimalRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Decimal, Precision = 18, Scale = 12)]
+			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Decimal64, Precision = 18, Scale = 12)]
+			public decimal Fine { get; set; }
+
+			[Column(DataType = DataType.Decimal, Precision = 18, Scale = 2)]
+			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Decimal64, Precision = 18, Scale = 2)]
+			public decimal Wide { get; set; }
+
+			[Column(DataType = DataType.Decimal, Precision = 18, Scale = 0)]
+			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Decimal64, Precision = 18, Scale = 0)]
+			public decimal Whole { get; set; }
+
+			public static readonly ComputedDecimalRow[] Data =
+			[
+				new() { Id = 1, Fine = 1.000000000005m, Wide = 12345678901234.50m, Whole = 5m },
+			];
+		}
+
+		/// <summary>
+		/// A literal compared with a computed decimal - a function, a conditional, an aggregate - keeps its digits when
+		/// the computed value's own type holds them, whether that type is finer or wider than the provider's default
+		/// decimal.
+		/// </summary>
+		/// <remarks>
+		/// <c>Fine</c> has more fraction digits than ClickHouse's and YDB's default decimal, <c>Wide</c> more integer
+		/// digits than YDB's. The last arm is an edge of the widening: a literal's trailing zeros must not widen it.
+		/// </remarks>
+		[Test]
+		public void ComputedDecimalComparedWithLiteralKeepsItsDigits([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(ComputedDecimalRow.Data);
+
+			var fineAbs = t.Count(r => Math.Abs(r.Fine) == 1.000000000005m);
+
+			fineAbs.ShouldBe(1);
+
+			var fineConditional = t.Count(r => (r.Id > 0 ? r.Fine : -r.Fine) == 1.000000000005m);
+
+			fineConditional.ShouldBe(1);
+
+			var fineMax = t
+				.GroupBy(r => r.Id)
+				.Count(g => g.Max(r => r.Fine) == 1.000000000005m);
+
+			fineMax.ShouldBe(1);
+
+			var wideAbs = t.Count(r => Math.Abs(r.Wide) == 12345678901234.50m);
+
+			wideAbs.ShouldBe(1);
+
+			var wideConditional = t.Count(r => (r.Id > 0 ? r.Wide : -r.Wide) == 12345678901234.50m);
+
+			wideConditional.ShouldBe(1);
+
+			var wideMax = t
+				.GroupBy(r => r.Id)
+				.Count(g => g.Max(r => r.Wide) == 12345678901234.50m);
+
+			wideMax.ShouldBe(1);
+
+			var wholeTrailingZeros = t.Count(r => Math.Abs(r.Whole) == 5.00m);
+
+			wholeTrailingZeros.ShouldBe(1);
+		}
+
+		/// <summary>
+		/// A literal finer than a computed decimal that is nearly full compares without overflowing.
+		/// </summary>
+		/// <remarks>
+		/// On ClickHouse the literal must not stay in the operand's <c>Decimal64</c> family once its scale is raised.
+		/// Firebird is left out: it overflows aligning a nearly full <c>DECIMAL(18,2)</c> to a finer scale, on master too
+		/// ("numeric value is out of range", measured on Firebird 3 and 5).
+		/// </remarks>
+		[Test]
+		public void FinerLiteralBesideNearFullDecimalDoesNotOverflow([DataSources(TestProvName.AllFirebird)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(ComputedDecimalRow.Data);
+
+			var wideMaxFinerLiteral = t
+				.GroupBy(r => r.Id)
+				.Count(g => g.Max(r => r.Wide) == 1.000001m);
+
+			wideMaxFinerLiteral.ShouldBe(0);
+		}
+
+		sealed class ClickHouseDecimal32Row
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Decimal32, Precision = 9, Scale = 2)]
+			public decimal Value { get; set; }
+		}
+
+		/// <summary>
+		/// A literal finer than a nearly full computed ClickHouse <c>Decimal32</c> compares without overflowing, as one
+		/// beside a <c>Decimal64</c> does.
+		/// </summary>
+		[Test]
+		public void FinerLiteralBesideNearFullClickHouseDecimal32([IncludeDataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new ClickHouseDecimal32Row { Id = 1, Value = 9999999.99m } });
+
+			var maxFinerLiteral = t
+				.GroupBy(r => r.Id)
+				.Count(g => g.Max(r => r.Value) == 1.004m);
+
+			maxFinerLiteral.ShouldBe(0);
+		}
+
+		sealed class YdbWideDecimalRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Decimal, Precision = 35, Scale = 2)]
+			public decimal Value { get; set; }
+		}
+
+		/// <summary>
+		/// A literal finer than a computed decimal at YDB's precision limit is compared rather than refused.
+		/// </summary>
+		/// <remarks>
+		/// YDB only: YQL refuses a decimal type above 35 digits, so widening a <c>Decimal(35,2)</c> operand for the
+		/// literal's third fraction digit must stop at the limit.
+		/// </remarks>
+		[Test]
+		public void ComputedDecimalAtTheYdbPrecisionLimit([IncludeDataSources(TestProvName.AllYdb)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[]
+			{
+				new YdbWideDecimalRow { Id = 1, Value = 1.00m              },
+				new YdbWideDecimalRow { Id = 2, Value = 12345678901234.50m },
+			});
+
+			var finer = t.Count(r => Math.Abs(r.Value) == 1.004m);
+
+			finer.ShouldBe(0);
+
+			// The literal is typed narrower than the column here; the wide row must still compare as itself.
+			var notFiner = t.Count(r => Math.Abs(r.Value) != 1.004m);
+
+			notFiner.ShouldBe(2);
+
+			var finerCaptured = new[] { 1.004m };
+
+			var finerInList = t.Count(r => finerCaptured.Contains(Math.Abs(r.Value)));
+
+			finerInList.ShouldBe(0);
 		}
 	}
 }

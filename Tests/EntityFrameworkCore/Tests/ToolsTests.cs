@@ -298,7 +298,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			}
 		}
 
-#if EF10
+#if EF10_OR_GREATER
 		[Test]
 		public void TestNamedQueryFilter_AppliesAll([EFDataSources] string provider)
 		{
@@ -484,17 +484,17 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			using var ctx = new SQLServerNorthwindContext(optionsBuilder.Options);
 			ctx.Database.EnsureCreated();
 
-			Assert.Throws<LinqToDBForEFToolsException>(() =>
+			Assert.That(() =>
 			{
 				ctx.Products.ToLinqToDB().ToArray();
-			});
+			}, Throws.TypeOf<LinqToDBForEFToolsException>());
 
-			Assert.Throws<LinqToDBForEFToolsException>(() =>
+			Assert.That(() =>
 			{
 				ctx.Products
 					.Where(so => so.ProductId == -1)
 					.Delete();
-			});
+			}, Throws.TypeOf<LinqToDBForEFToolsException>());
 		}
 
 		[Test]
@@ -672,7 +672,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			using var ctx = CreateContext(provider);
 
 			var id = 1;
+			// EF Core 11 obsoletes FromSqlInterpolated in favour of FromSql; it is still callable, and
+			// this test exists to cover what users call, so it keeps testing it until EF removes it.
+#pragma warning disable CS0618 // Type or member is obsolete
 			var query = ctx.Categories.FromSqlInterpolated($"SELECT * FROM [dbo].[Categories] WHERE CategoryId = {id}");
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			var efResult = await query.AsNoTracking().ToArrayAsyncEF();
 			var linq2dbResult = await query.ToArrayAsyncLinqToDB();
@@ -684,9 +688,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			using var ctx = CreateContext(provider);
 
 			var id = 1;
+#pragma warning disable CS0618 // Type or member is obsolete
 			var query = from c1 in ctx.Categories
 						from c2 in ctx.Categories.FromSqlInterpolated($"SELECT * FROM [dbo].[Categories] WHERE CategoryId = {id}")
 						select c2;
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			var efResult = await query.AsNoTracking().ToArrayAsyncEF();
 			var linq2dbResult = await query.AsNoTracking().ToArrayAsyncLinqToDB();
@@ -812,11 +818,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				var query = from p in ctx.Products
 							select SQLServerNorthwindContext.ProcessLong(commandExecutionTime);
 
-				var exception = Assert.Throws<Microsoft.Data.SqlClient.SqlException>(() =>
+				Assert.That(() =>
 					{
 						var result = query.ToLinqToDB().First();
-					})!;
-				Assert.That(timeoutErrorCode, Is.EqualTo(exception.Number));
+					},
+					Throws.TypeOf<Microsoft.Data.SqlClient.SqlException>().With.Property(nameof(Microsoft.Data.SqlClient.SqlException.Number)).EqualTo(timeoutErrorCode));
 			}
 			finally
 			{
@@ -842,10 +848,10 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 #if !NETFRAMEWORK
 		[Test]
+		[NoBaselines("Use of DateTime.UtcNow")]
 		public void TestTemporalTables([EFDataSources] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
-			using var _ = new DisableBaseline("Use of DateTime.UtcNow");
 
 			var query1 = ctx.Products.TemporalAsOf(DateTime.UtcNow);
 			var query2 = ctx.Products.TemporalFromTo(DateTime.UtcNow.AddDays(-1), DateTime.UtcNow);

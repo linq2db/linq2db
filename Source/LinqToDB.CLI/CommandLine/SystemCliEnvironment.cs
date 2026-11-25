@@ -94,7 +94,20 @@ namespace LinqToDB.CommandLine
 			return true;
 		}
 
-		public ICredentialStore CredentialStore { get; } = WindowsCredentialStore.Instance;
+		public ICredentialStore CredentialStore => WindowsCredentialStore.Instance;
+
+		public ICredentialStore CreateLocalCredentialStore(string directory)
+		{
+			return new LocalCredentialStore(directory, Environment.GetEnvironmentVariable("USERPROFILE"));
+		}
+
+		public ICredentialStore CreateCredentialsCliStore(CredentialsCliSettings settings)
+		{
+			// A credentials CLI may prompt (keyring unlock, pinentry) only when a user sits at the console.
+			var interactive = !Console.IsInputRedirected;
+
+			return new CredentialsCliStore(new CredentialsCliProcessRunner(settings, interactive));
+		}
 
 		public string? ReadLine()
 		{

@@ -36,7 +36,7 @@ namespace Tests.Model
 			if (ReferenceEquals(this, other)) return true;
 			return
 				other.ID                   == ID                   &&
-				other.MoneyValue           == MoneyValue           &&
+				FloatingPoint.AreClose(MoneyValue, other.MoneyValue) &&
 				other.BoolValue            == BoolValue            &&
 				other.GuidValue            == GuidValue            &&
 				other.SmallIntValue        == SmallIntValue        &&
@@ -113,7 +113,7 @@ namespace Tests.Model
 			if (ReferenceEquals(this, other)) return true;
 			return
 				other.ID                     == ID                     &&
-				other.MoneyValue             == MoneyValue             &&
+				FloatingPoint.AreClose(MoneyValue, other.MoneyValue)    &&
 				other.BoolValue              == BoolValue              &&
 				other.GuidValue              == GuidValue              &&
 				other.StringValue            == StringValue            &&

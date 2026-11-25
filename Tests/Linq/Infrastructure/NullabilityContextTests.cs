@@ -107,12 +107,11 @@ namespace Tests.Infrastructure
 			var aliasesContext    = new AliasesContext();
 
 			var optimizationContext = new OptimizationContext(evaluationContext, dataOptions, dataProvider.SqlProviderFlags, dataProvider.MappingSchema, optimizer, convertVisitor, factory, false,
-				true,
 				static () => NoopQueryParametersNormalizer.Instance);
 
 			var sqlBuilder = dataProvider.CreateSqlBuilder(dataProvider.MappingSchema, dataOptions);
 
-			sqlBuilder.BuildSql(0, new SqlSelectStatement(selectQuery), stringBuilder, optimizationContext, aliasesContext, null, 0);
+			sqlBuilder.BuildSql(new SqlSelectStatement(selectQuery), stringBuilder, optimizationContext, aliasesContext, null, 0);
 
 			return stringBuilder.ToString();
 		}

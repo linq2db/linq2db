@@ -33,7 +33,7 @@ namespace LinqToDB.Analyzers.CodeFixes
 			("linq2db." + WindowFunctionApiAnalyzer.DiagnosticId + ".apply_fix_on_return_type_mismatch").ToLowerInvariant();
 
 		/// <inheritdoc/>
-		public override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(WindowFunctionApiAnalyzer.DiagnosticId);
+		public override ImmutableArray<string> FixableDiagnosticIds => [WindowFunctionApiAnalyzer.DiagnosticId];
 
 		// A custom document-based Fix-All rather than WellKnownFixAllProviders.BatchFixer: BatchFixer computes each
 		// fix against the *original* tree and merges the results, so when several diagnostics sit physically close

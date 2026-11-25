@@ -2,7 +2,5 @@
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	public interface ISqlServerSpecificQueryable<out TSource> : IExpressionQuery<TSource>
-	{
-	}
+	public interface ISqlServerSpecificQueryable<out TSource> : IExpressionQuery<TSource>;
 }

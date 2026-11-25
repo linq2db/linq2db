@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
 using LinqToDB.Expressions;
 using LinqToDB.Interceptors;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Interceptors;
@@ -468,7 +470,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			TypeAccessor                                      typeAccessor,
 			ConstructorInfo?                                  constructorInfo,
 			SqlGenericConstructorExpression                   constructorExpression,
-			List<SqlGenericConstructorExpression.Assignment>? missed)
+			List<SqlGenericConstructorExpression.Assignment>? missed,
+			ref string?                                       failureReason)
 		{
 			NewExpression newExpression;
 
@@ -605,9 +608,21 @@ namespace LinqToDB.Internal.Linq.Builder
 				return null;
 			}
 
+			// Referencing a dynamic column in a query needs no store; materializing one does.
+			// Fail softly: projection merging probes construction without materializing anything.
+			if (dynamicProperties != null && ed.DynamicColumnSetter == null)
+			{
+				failureReason = string.Format(
+					CultureInfo.InvariantCulture,
+					ErrorHelper.Error_DynamicColumns_NoSetter,
+					typeAccessor.Type.Name,
+					string.Join(", ", dynamicProperties.Select(static d => d.MemberInfo.Name)));
+				return null;
+			}
+
 			Expression result = Expression.MemberInit(newExpression, bindings);
 
-			if (additionalSteps != null || (dynamicProperties?.Count > 0 && ed.DynamicColumnSetter != null))
+			if (additionalSteps != null || dynamicProperties?.Count > 0)
 			{
 				var generator   = new ExpressionGenerator();
 				var objVariable = generator.AssignToVariable(result, "obj");
@@ -928,7 +943,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (constructorExpression.Constructor != null)
 			{
-				var instantiation = TryWithConstructor(typeAccessor, constructorExpression.Constructor, constructorExpression, null);
+				var instantiation = TryWithConstructor(typeAccessor, constructorExpression.Constructor, constructorExpression, null, ref failureReason);
 				if (instantiation != null)
 					return instantiation;
 			}
@@ -941,7 +956,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					: null;
 
 				var instantiation = TryWithConstructor(typeAccessor, constructor,
-					constructorExpression, unset);
+					constructorExpression, unset, ref failureReason);
 				if (instantiation != null)
 					return instantiation;
 
@@ -954,7 +969,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (constructType.IsValueType)
 			{
 				failureReason = null;
-				return TryWithConstructor(typeAccessor, null, constructorExpression, null);
+				return TryWithConstructor(typeAccessor, null, constructorExpression, null, ref failureReason);
 			}
 
 			return null;

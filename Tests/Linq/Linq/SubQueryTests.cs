@@ -200,7 +200,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllAccess, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_Skip_in_Subquery)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllNativeAccess, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_Skip_in_Subquery)]
 		public void DerivedSkipTake([DataSources]
 			string context)
 		{
@@ -209,7 +209,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ObjectCompare([DataSources(TestProvName.AllAccess)] string context)
+		public void ObjectCompare([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -238,7 +238,7 @@ namespace Tests.Linq
 			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			TestProvName.AllSapHana,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			TestProvName.AllOracle,
 			TestProvName.AllMySql,
 			ProviderName.DB2)]
@@ -261,7 +261,7 @@ namespace Tests.Linq
 			TestProvName.AllMySql,
 			TestProvName.AllSybase,
 			TestProvName.AllSapHana,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			TestProvName.AllOracle,
 			ProviderName.DB2)]
 			string context)
@@ -315,7 +315,7 @@ namespace Tests.Linq
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery]
 		public void SubSub2([DataSources(
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.DB2,
 			TestProvName.AllOracle,
 			TestProvName.AllSybase,
@@ -1108,7 +1108,7 @@ namespace Tests.Linq
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4347")]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		public void Issue4347Test1([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllMariaDB)] string context)
+		public void Issue4347Test1([DataSources(TestProvName.AllNativeAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllMariaDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t1 = db.CreateLocalTable<TransactionEntity>();
@@ -1130,7 +1130,7 @@ namespace Tests.Linq
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4347")]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		public void Issue4347Test2([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllMariaDB)] string context)
+		public void Issue4347Test2([DataSources(TestProvName.AllNativeAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllMariaDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t1 = db.CreateLocalTable<TransactionEntity>();
@@ -1304,7 +1304,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void PreserveOrderInSubqueryWithWindowFunction_NoOrdering([DataSources(TestProvName.AllAccess, ProviderName.SqlCe, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase)] string context)
+		public void PreserveOrderInSubqueryWithWindowFunction_NoOrdering([DataSources(TestProvName.AllNativeAccess, ProviderName.SqlCe, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);
 
