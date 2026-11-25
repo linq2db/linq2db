@@ -14,7 +14,7 @@ namespace LinqToDB.Remote.SignalR
 	/// connection was lost fail and are never sent again.
 	/// <para>
 	/// <see cref="ServiceConfigurationExtensions.AddLinqToDBSignalRDataContext{TContext}(Microsoft.Extensions.DependencyInjection.IServiceCollection, Uri, Func{SignalRLinqServiceClient, TContext}, Action{LinqToDBSignalRClientOptions}?)"/>
-	/// registers one as a singleton shared by all contexts; use <see cref="SignalRLinqServiceClient(LinqToDBSignalRConnection)"/>
+	/// registers one as a singleton per registered context type, shared by all contexts of that type; use <see cref="SignalRLinqServiceClient(LinqToDBSignalRConnection)"/>
 	/// to use one without DI.
 	/// </para>
 	/// </summary>
