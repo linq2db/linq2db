@@ -633,7 +633,7 @@ namespace Tests.DataProvider
 		}
 
 		[ActiveIssue(2107, ErrorMessage = "Assert.That(result.DateTime.Kind, Is.EqualTo(DateTimeKind.Local))",
-			Details = "Issue number taken from the test's own Description. A Utc value stored in a TEXT column comes back with the wrong Kind; the value itself round-trips, so only that half of #2107 is left.")]
+			Details = "Issue number taken from the test's own Description. A Utc value stored in a TEXT column comes back with the wrong Kind; off UTC hosts it also comes back as the stored wall-clock time rather than local time. Both checks share one assert scope, so the Kind failure is reported on any host timezone.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2107")]
 		public void DateTimeRoundtrip_InsertUtc(
 			[IncludeDataSources(TestProvName.AllSQLite)] string context,
@@ -688,10 +688,14 @@ namespace Tests.DataProvider
 
 			if (kind == DateTimeKind.Utc)
 			{
-				// utc values returned as local
-				Assert.That(result.DateTime, Is.EqualTo(dt.ToLocalTime()));
-				// local/unspecified values returned as unspecified (makes sense)
-				Assert.That(result.DateTime.Kind, Is.EqualTo(DateTimeKind.Local));
+				// both checks in one scope: off UTC the value check fails too, and must not hide the Kind failure
+				using (Assert.EnterMultipleScope())
+				{
+					// utc values returned as local
+					Assert.That(result.DateTime, Is.EqualTo(dt.ToLocalTime()));
+					// local/unspecified values returned as unspecified (makes sense)
+					Assert.That(result.DateTime.Kind, Is.EqualTo(DateTimeKind.Local));
+				}
 			}
 			else
 			{
@@ -762,10 +766,14 @@ namespace Tests.DataProvider
 
 			if (kind == DateTimeKind.Utc)
 			{
-				// utc values returned as local
-				Assert.That(result.DateTime, Is.EqualTo(dt.ToLocalTime()));
-				// local/unspecified values returned as unspecified (makes sense)
-				Assert.That(result.DateTime.Kind, Is.EqualTo(DateTimeKind.Local));
+				// both checks in one scope: off UTC the value check fails too, and must not hide the Kind failure
+				using (Assert.EnterMultipleScope())
+				{
+					// utc values returned as local
+					Assert.That(result.DateTime, Is.EqualTo(dt.ToLocalTime()));
+					// local/unspecified values returned as unspecified (makes sense)
+					Assert.That(result.DateTime.Kind, Is.EqualTo(DateTimeKind.Local));
+				}
 			}
 			else
 			{
