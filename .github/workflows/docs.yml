@@ -54,8 +54,8 @@ jobs:
         run: |
           # on its own line, so a failing diff fails this job (and the build then runs) instead of reading as "no docs change"
           files=$(git -c core.quotePath=off diff --name-only --no-renames "$BASE...$HEAD")
-          # README.md / CONTRIBUTING.md are included into the site; Roslyn, SDK, TFM and output-path settings feed docfx metadata
-          if grep -qE '^(docs/|README\.md$|CONTRIBUTING\.md$|Directory\.(Build|Packages)\.props$|global\.json$|Source/Analyzers\.Common\.props$|Source/.*Directory\.Build\.props$|\.github/workflows/docs\.yml$)' <<< "$files"; then
+          # CONTRIBUTING.md is included into the site; Roslyn, SDK, TFM and output-path settings feed docfx metadata
+          if grep -qE '^(docs/|CONTRIBUTING\.md$|Directory\.(Build|Packages)\.props$|global\.json$|Source/Analyzers\.Common\.props$|Source/.*Directory\.Build\.props$|\.github/workflows/docs\.yml$)' <<< "$files"; then
             echo "docs=true" >> "$GITHUB_OUTPUT"
           else
             echo "docs=false" >> "$GITHUB_OUTPUT"
