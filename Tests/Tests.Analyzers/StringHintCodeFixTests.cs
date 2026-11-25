@@ -307,7 +307,6 @@ namespace Tests.Analyzers
 				""",
 				SqlServerRestrictedKey);
 		}
-	
 
 		[Test]
 		public async Task NamedReorderedArgumentsUseTheBoundReceiver()
@@ -451,7 +450,7 @@ namespace Tests.Analyzers
 				""",
 				SqlServerRestrictedKey);
 		}
-	
+
 		[Test]
 		public async Task FixAllFromAnExactRewriteLeavesGenericCallsAlone()
 		{
@@ -545,7 +544,7 @@ namespace Tests.Analyzers
 					test.FixedState.MarkupHandling = MarkupMode.Allow;
 				});
 		}
-	
+
 		// A generic overload returns ITable<T> / IQueryable<T>, the typed helper the provider's type. A var local written
 		// again after its declaration keeps the original type, or the later assignment would no longer compile.
 		[Test]
@@ -699,7 +698,7 @@ namespace Tests.Analyzers
 
 			await VerifyAsync(source, source, SqlServerRestrictedKey);
 		}
-	
+
 		// The SDK writes implicit and <Using> imports to GlobalUsings.g.cs as `global using global::X;`.
 		[Test]
 		public async Task SdkGlobalUsingsWithTheGlobalAliasAreNotAddedAgain()
@@ -781,7 +780,7 @@ namespace Tests.Analyzers
 				""",
 				SqlServerRestrictedKey);
 		}
-	
+
 		// With no using in the file, the new directive goes below the file header: a #define after it would not compile.
 		[Test]
 		public async Task FirstUsingGoesBelowTheFileHeader()
@@ -864,7 +863,7 @@ namespace Tests.Analyzers
 				""",
 				SqlServerRestrictedKey);
 		}
-	
+
 		// A doc comment on the first declaration stays on it.
 		[Test]
 		public async Task FirstUsingGoesAboveTheFirstDeclarationsDocComment()
@@ -903,7 +902,7 @@ namespace Tests.Analyzers
 					test.FixedState.Sources.Add(("/0/GlobalUsings.cs", "global using LinqToDB;"));
 				});
 		}
-	
+
 		// Fixed one after the other, the second hint already sits on the provider's receiver after the first rewrite, so
 		// it binds the provider's own overload and the exact rewrite adds no second AsSqlServer().
 		[Test]
@@ -946,7 +945,7 @@ namespace Tests.Analyzers
 					test.CodeFixTestBehaviors         |= CodeFixTestBehaviors.SkipFixAllCheck;
 				});
 		}
-	
+
 		// Each occurrence adds the same using; Fix-All merges them into one.
 		[Test]
 		public async Task FixAllAddsTheUsingOnce()
