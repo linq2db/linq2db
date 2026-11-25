@@ -471,15 +471,29 @@ namespace LinqToDB.Analyzers.CodeFixes
 			return unit.WithUsings(usings.Insert(index, directive));
 		}
 
-		// The file header is the leading trivia up to its last blank line or preprocessor directive.
+		// The file header is the leading trivia up to its last blank line or preprocessor directive. A conditional block
+		// that is still open at the first token encloses the declarations, so the header ends before it: a using inside
+		// it would exist in one configuration only. A block closed within the header stays part of it.
 		static int GetHeaderEnd(SyntaxTriviaList trivia)
 		{
 			var end       = 0;
 			var lineEmpty = true;
+			var depth     = 0;
+			var endAtOpen = -1;
 
 			for (var i = 0; i < trivia.Count; i++)
 			{
 				var item = trivia[i];
+
+				if (item.IsKind(SyntaxKind.IfDirectiveTrivia))
+				{
+					if (depth++ == 0)
+						endAtOpen = end;
+				}
+				else if (item.IsKind(SyntaxKind.EndIfDirectiveTrivia) && depth > 0)
+				{
+					depth--;
+				}
 
 				if (item.IsDirective)
 				{
@@ -500,7 +514,7 @@ namespace LinqToDB.Analyzers.CodeFixes
 				}
 			}
 
-			return end;
+			return depth > 0 ? endAtOpen : end;
 		}
 
 		static bool IsSystemDirective(UsingDirectiveSyntax directive)

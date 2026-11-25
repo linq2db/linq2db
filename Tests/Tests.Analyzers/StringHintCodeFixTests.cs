@@ -7,6 +7,7 @@ using LinqToDB.Analyzers;
 using LinqToDB.Analyzers.CodeFixes;
 
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 
@@ -985,6 +986,109 @@ namespace Tests.Analyzers
 				{
 					test.NumberOfIncrementalIterations = 2;
 					test.NumberOfFixAllIterations      = 1;
+				});
+		}
+
+		// A conditional block around the declarations is not part of the file header: a using inside it would exist in
+		// one configuration only.
+		[Test]
+		public async Task FirstUsingGoesAboveAConditionalBlock()
+		{
+			await VerifyAsync(
+				"""
+				#if DEBUG
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var r = t.[|TableHint("NOLOCK")|];
+					}
+				}
+				#endif
+				""",
+				"""
+				using LinqToDB.DataProvider.SqlServer;
+
+				#if DEBUG
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var r = t.AsSqlServer().WithNoLock();
+					}
+				}
+				#endif
+				""",
+				SqlServerRestrictedKey,
+				static test =>
+				{
+					test.TestState.Sources.Add(("/0/GlobalUsings.cs", "global using LinqToDB;"));
+					test.FixedState.Sources.Add(("/0/GlobalUsings.cs", "global using LinqToDB;"));
+					test.SolutionTransforms.Add(static (solution, projectId) =>
+					{
+						var options = (CSharpParseOptions)solution.GetProject(projectId)!.ParseOptions!;
+
+						return solution.WithProjectParseOptions(projectId, options.WithPreprocessorSymbols("DEBUG"));
+					});
+				});
+		}
+
+		// A conditional block closed before the first declaration is part of the header; the one still open after it is not.
+		[Test]
+		public async Task ConditionalBlockClosedInTheHeaderStaysInIt()
+		{
+			await VerifyAsync(
+				"""
+				#if NET
+				#define MODERN
+				#endif
+
+				#if DEBUG
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var r = t.[|TableHint("NOLOCK")|];
+					}
+				}
+				#endif
+				""",
+				"""
+				#if NET
+				#define MODERN
+				#endif
+
+				using LinqToDB.DataProvider.SqlServer;
+
+				#if DEBUG
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var r = t.AsSqlServer().WithNoLock();
+					}
+				}
+				#endif
+				""",
+				SqlServerRestrictedKey,
+				static test =>
+				{
+					test.TestState.Sources.Add(("/0/GlobalUsings.cs", "global using LinqToDB;"));
+					test.FixedState.Sources.Add(("/0/GlobalUsings.cs", "global using LinqToDB;"));
+					test.SolutionTransforms.Add(static (solution, projectId) =>
+					{
+						var options = (CSharpParseOptions)solution.GetProject(projectId)!.ParseOptions!;
+
+						return solution.WithProjectParseOptions(projectId, options.WithPreprocessorSymbols("DEBUG"));
+					});
 				});
 		}
 	}
