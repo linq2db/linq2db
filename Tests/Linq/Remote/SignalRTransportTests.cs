@@ -757,16 +757,15 @@ namespace Tests.Remote
 		}
 
 #if NET9_0_OR_GREATER
-		// With tracing on, the .NET 9+ client adds trace context headers to every invocation. A request the size check
-		// lets through must still fit with them, or the server closes the connection after all. Untraced, the same
-		// request fits.
+		// With tracing on, the .NET 9+ client adds trace context headers to every invocation. A request that fits the
+		// limit only without them must be refused before sending, or the server closes the connection after all.
 		[Test]
-		public async Task RequestSizeCheckLeavesRoomForTraceHeaders([Values] bool traced)
+		public async Task RequestSizeCheckLeavesRoomForTraceHeaders()
 		{
 			var queryData = new string('a', 20_000);
 			var frame     = new System.Buffers.ArrayBufferWriter<byte>();
 
-			// The longest invocation id the client generates: a request of exactly this frame passes the check.
+			// The longest invocation id the client generates: without the headers, a request of this frame would fit.
 			new JsonHubProtocol().WriteMessage(new StreamInvocationMessage("2147483647", "ExecuteNonQueryStream", [Configuration, queryData]), frame);
 
 			var service = new ScriptedLinqService { Behavior = static (query, _) => Task.FromResult(query) };
@@ -778,7 +777,7 @@ namespace Tests.Remote
 			using var listener = new ActivityListener
 			{
 				ShouldListenTo = static source => source.Name == "Microsoft.AspNetCore.SignalR.Client",
-				Sample         = (ref options) => traced && options.Parent.TraceId == traceId ? ActivitySamplingResult.AllDataAndRecorded : ActivitySamplingResult.None,
+				Sample         = (ref options) => options.Parent.TraceId == traceId ? ActivitySamplingResult.AllDataAndRecorded : ActivitySamplingResult.None,
 			};
 
 			ActivitySource.AddActivityListener(listener);
@@ -788,8 +787,32 @@ namespace Tests.Remote
 
 			var error = await CatchAsync(() => ((ILinqService)new SignalRLinqServiceClient(hubConnection)).ExecuteNonQueryAsync(Configuration, queryData));
 
-			// Refused before sending, or sent within the limit; never a closed connection.
-			(error is null or LinqToDBException).ShouldBeTrue(error?.ToString());
+			error.ShouldBeOfType<LinqToDBException>(error?.ToString());
+			service.Calls.ShouldBe(0);
+			hubConnection.State.ShouldBe(HubConnectionState.Connected);
+		}
+
+		// The control: without a current activity the check reserves the fixed room for a traceparent and no more, so
+		// a request that fits with that room is sent.
+		[Test]
+		public async Task RequestSizeCheckReservesOnlyTheTraceparentWithoutAnActivity()
+		{
+			var queryData = new string('a', 20_000);
+			var frame     = new System.Buffers.ArrayBufferWriter<byte>();
+
+			new JsonHubProtocol().WriteMessage(new StreamInvocationMessage("2147483647", "ExecuteNonQueryStream", [Configuration, queryData]), frame);
+
+			var service = new ScriptedLinqService { Behavior = static (query, _) => Task.FromResult(query) };
+			using var host = TestHost.Start<ScriptedHub>(services => services.AddSingleton<ILinqService>(service), perHub: hub => hub.MaximumReceiveMessageSize = frame.WrittenCount + 128);
+
+			Activity.Current.ShouldBeNull();
+
+			var hubConnection = await host.ConnectAsync();
+			await using var owner = Own(hubConnection);
+
+			(await WithinLimit(((ILinqService)new SignalRLinqServiceClient(hubConnection)).ExecuteNonQueryAsync(Configuration, queryData))).ShouldBe(queryData.Length);
+
+			service.Calls.ShouldBe(1);
 			hubConnection.State.ShouldBe(HubConnectionState.Connected);
 		}
 
