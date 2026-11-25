@@ -24,8 +24,8 @@ db.GetTable<Order>().Where(o => o.Total > 100).AsSqlServer().OptionRecompile()  
 - On a bare `ITable<T>` the marker returns the table type, which has only table helpers. For query, join and
   scope helpers call the marker on a query (after `.Where(...)` or `.AsQueryable()`).
 - Scope forms apply a table hint to every table of the query they are called on: `WithNoLockInScope()`,
-  `FullInScopeHint()`. Call them after the joins. Known limitation (issue #4321): tables joined only through an
-  association in the final `Select` do not get the hint.
+  `FullInScopeHint()`. Call them after the joins. Known limitation ([linq2db#4321](https://github.com/linq2db/linq2db/issues/4321)):
+  tables joined only through an association in the final `Select` do not get the hint.
 - Hints for several providers can be chained; only the active provider's hints are emitted.
 - DB2, Firebird, Informix, SAP HANA, Sybase ASE and DuckDB have no hint helpers.
 
