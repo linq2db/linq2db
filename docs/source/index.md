@@ -58,7 +58,7 @@ _disableContribution: true
     };</pre>
 </div>
 <div class="demo-pane">
-<div class="demo-pane-label">Generated SQL</div>
+<div class="demo-pane-label">Generated SQL · SQLite</div>
 <pre class="demo-code demo-sql"><span class="code-keyword">SELECT</span>
     [p].[Name],
     [p].[Price]
@@ -87,7 +87,7 @@ _disableContribution: true
     };</pre>
 </div>
 <div class="demo-pane">
-<div class="demo-pane-label">Generated SQL</div>
+<div class="demo-pane-label">Generated SQL · SQLite</div>
 <pre class="demo-code demo-sql"><span class="code-keyword">SELECT</span>
     [p].[Name],
     [a_Category].[Name],
@@ -128,22 +128,22 @@ _disableContribution: true
     };</pre>
 </div>
 <div class="demo-pane">
-<div class="demo-pane-label">Generated SQL</div>
+<div class="demo-pane-label">Generated SQL · SQLite</div>
 <pre class="demo-code demo-sql"><span class="code-keyword">SELECT</span>
     [t1].[Name],
     [t1].[total]
 <span class="code-keyword">FROM</span>
     (
         <span class="code-keyword">SELECT</span>
-            (
+            <span class="code-type">Coalesce</span>((
                 <span class="code-keyword">SELECT</span> <span class="code-type">SUM</span>(
-                    <span class="code-type">CAST</span>([oi].[Quantity]
+                    <span class="code-type">CAST</span>([a_OrderItems].[Quantity]
                       <span class="code-keyword">AS</span> Decimal)
-                    * [oi].[UnitPrice])
-                <span class="code-keyword">FROM</span> [OrderItems] [oi]
+                    * [a_OrderItems].[UnitPrice])
+                <span class="code-keyword">FROM</span> [OrderItems] [a_OrderItems]
                 <span class="code-keyword">WHERE</span>
-                    [p].[Id] = [oi].[ProductId]
-            ) <span class="code-keyword">as</span> [total],
+                    [p].[Id] = [a_OrderItems].[ProductId]
+            ), <span class="code-number">0</span>) <span class="code-keyword">as</span> [total],
             [p].[Name]
         <span class="code-keyword">FROM</span>
             [Products] [p]
@@ -182,7 +182,7 @@ _disableContribution: true
     };</pre>
 </div>
 <div class="demo-pane">
-<div class="demo-pane-label">Generated SQL</div>
+<div class="demo-pane-label">Generated SQL · SQLite</div>
 <pre class="demo-code demo-sql"><span class="code-keyword">WITH</span> [TopProducts]
     ([CategoryId], [Name], [Price])
 <span class="code-keyword">AS</span>
@@ -197,7 +197,7 @@ _disableContribution: true
 <span class="code-keyword">SELECT</span>
     [tp].[Name],
     [tp].[Price],
-    [c].[Name],
+    [c_1].[Name],
     (
         <span class="code-keyword">SELECT</span> <span class="code-type">COUNT</span>(*)
         <span class="code-keyword">FROM</span> [TopProducts] [t1]
@@ -206,8 +206,8 @@ _disableContribution: true
     )
 <span class="code-keyword">FROM</span>
     [TopProducts] [tp]
-    <span class="code-keyword">INNER JOIN</span> [Categories] [c]
-        <span class="code-keyword">ON</span> [tp].[CategoryId] = [c].[Id]</pre>
+    <span class="code-keyword">INNER JOIN</span> [Categories] [c_1]
+        <span class="code-keyword">ON</span> [tp].[CategoryId] = [c_1].[Id]</pre>
 </div>
 </div>
 </div>
@@ -235,7 +235,7 @@ _disableContribution: true
     };</pre>
 </div>
 <div class="demo-pane">
-<div class="demo-pane-label">Generated SQL</div>
+<div class="demo-pane-label">Generated SQL · SQLite</div>
 <pre class="demo-code demo-sql"><span class="code-keyword">SELECT</span>
     [p].[Name],
     [p].[Price],
@@ -279,10 +279,11 @@ _disableContribution: true
     .Merge();</pre>
 </div>
 <div class="demo-pane">
-<div class="demo-pane-label">Generated SQL</div>
-<pre class="demo-code demo-sql"><span class="code-keyword">MERGE INTO</span> [Products] [Target]
+<div class="demo-pane-label">Generated SQL · SQL Server</div>
+<pre class="demo-code demo-sql"><span class="code-keyword">SET IDENTITY_INSERT</span> [Products] <span class="code-keyword">ON</span>
+<span class="code-keyword">MERGE INTO</span> [Products] [Target]
 <span class="code-keyword">USING</span> (<span class="code-keyword">VALUES</span>
-    (<span class="code-number">1</span>,N<span class="code-string">'Laptop'</span>,<span class="code-number">999</span>,<span class="code-number">1</span>),
+    (<span class="code-number">1</span>,N<span class="code-string">'Laptop'</span>,<span class="code-type">CAST</span>(<span class="code-number">999</span> <span class="code-keyword">AS</span> Decimal(<span class="code-number">3</span>, <span class="code-number">0</span>)),<span class="code-number">1</span>),
     (<span class="code-number">2</span>,N<span class="code-string">'Tablet'</span>,<span class="code-number">499</span>,<span class="code-number">1</span>)
 ) [Source]
 ([Id],[Name],[Price],[CategoryId])
@@ -299,7 +300,8 @@ _disableContribution: true
      [Source].[Name],
      [Source].[Price],
      [Source].[CategoryId])
-;</pre>
+;
+<span class="code-keyword">SET IDENTITY_INSERT</span> [Products] <span class="code-keyword">OFF</span></pre>
 </div>
 </div>
 </div>
@@ -314,7 +316,7 @@ _disableContribution: true
     .Select(i =&gt; <span class="code-keyword">new</span> { Id = i });
 &#10;<span class="code-keyword">using var</span> tmp =
     db.CreateTempTable(
-        <span class="code-string">"#FilterIds"</span>, ids);
+        <span class="code-string">"FilterIds"</span>, ids);
 &#10;<span class="code-comment">// Join temp table in LINQ query</span>
 <span class="code-keyword">var</span> query =
     <span class="code-keyword">from</span> p <span class="code-keyword">in</span> db.GetTable&lt;<span class="code-type">Product</span>&gt;()
@@ -328,24 +330,28 @@ _disableContribution: true
     };</pre>
 </div>
 <div class="demo-pane">
-<div class="demo-pane-label">Generated SQL</div>
+<div class="demo-pane-label">Generated SQL · SQLite</div>
 <pre class="demo-code demo-sql"><span class="code-comment">-- 1. CREATE TABLE</span>
-<span class="code-keyword">CREATE TABLE</span> [#FilterIds]
+<span class="code-keyword">CREATE TEMPORARY TABLE</span> temp.[FilterIds]
 (
-    [Id] int <span class="code-keyword">NOT NULL</span>
+    [Id] <span class="code-type">INTEGER</span> <span class="code-keyword">NOT NULL</span>
 )
-&#10;<span class="code-comment">-- 2. BulkCopy 500 rows</span>
+&#10;<span class="code-comment">-- 2. BulkCopy 500 rows (abbreviated)</span>
+<span class="code-keyword">INSERT INTO</span> temp.[FilterIds] ([Id])
+<span class="code-keyword">VALUES</span>
+    (<span class="code-number">1</span>), (<span class="code-number">2</span>), …, (<span class="code-number">500</span>)
 &#10;<span class="code-comment">-- 3. Query joins temp table</span>
 <span class="code-keyword">SELECT</span>
     [p].[Name],
     [p].[Price]
 <span class="code-keyword">FROM</span>
     [Products] [p]
-    <span class="code-keyword">INNER JOIN</span> [#FilterIds] [t]
+    <span class="code-keyword">INNER JOIN</span> temp.[FilterIds] [t]
         <span class="code-keyword">ON</span> [p].[Id] = [t].[Id]
 <span class="code-keyword">ORDER BY</span>
     [p].[Name]
-&#10;<span class="code-comment">-- 4. Dispose drops table</span></pre>
+&#10;<span class="code-comment">-- 4. Dispose drops table</span>
+<span class="code-keyword">DROP TABLE IF EXISTS</span> temp.[FilterIds]</pre>
 </div>
 </div>
 </div>
