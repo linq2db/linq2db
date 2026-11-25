@@ -10,7 +10,5 @@ namespace LinqToDB.Internal.Mapping
 	/// Value stored through such converter is commensurable with value of a column without conversion, so query
 	/// builder doesn't refuse to combine them in database.
 	/// </remarks>
-	public interface IStorageTransparentConverter
-	{
-	}
+	public interface IStorageTransparentConverter;
 }

@@ -1444,9 +1444,10 @@ namespace Tests.Data
 			using var db = GetDataContext(context);
 			db.AddInterceptor(new TestExceptionInterceptor());
 
-			Assert.Throws<TestException>(() =>
+			Assert.That(() =>
 				db.GetTable<InterceptorsTestsTable>()
-					.Insert(() => new InterceptorsTestsTable()));
+					.Insert(() => new InterceptorsTestsTable()),
+				Throws.TypeOf<TestException>());
 		}
 
 		[Test]
@@ -1455,8 +1456,9 @@ namespace Tests.Data
 			using var db = GetDataContext(context);
 			db.AddInterceptor(new TestExceptionInterceptor());
 
-			Assert.Throws<TestException>(() =>
-				db.GetTable<InterceptorsTestsTable>().Count());
+			Assert.That(() =>
+				db.GetTable<InterceptorsTestsTable>().Count(),
+				Throws.TypeOf<TestException>());
 		}
 
 		[Test]
@@ -1465,8 +1467,9 @@ namespace Tests.Data
 			using var db = GetDataContext(context);
 			db.AddInterceptor(new TestExceptionInterceptor());
 
-			Assert.Throws<TestException>(() =>
-				db.GetTable<InterceptorsTestsTable>().ToList());
+			Assert.That(() =>
+				db.GetTable<InterceptorsTestsTable>().ToList(),
+				Throws.TypeOf<TestException>());
 		}
 
 		// The combined eager-loading engine executes a multi-statement group via ADO.NET DbBatch on batch-capable providers
@@ -1476,7 +1479,7 @@ namespace Tests.Data
 		// UseCombinedCommands is forced on because it is off by default in 6.x - without it the batch templates are never
 		// rendered, the eager load runs sequentially, and both tests pass while testing the plain ExecuteReader path.
 		[Test]
-		public void EagerLoadExceptionIntercepted([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySqlConnector)] string context)
+		public void EagerLoadExceptionIntercepted([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySql)] string context)
 		{
 			var commands = new List<string>();
 
@@ -1500,7 +1503,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task EagerLoadExceptionInterceptedAsync([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySqlConnector)] string context)
+		public async Task EagerLoadExceptionInterceptedAsync([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySql)] string context)
 		{
 			var commands = new List<string>();
 

@@ -1119,8 +1119,8 @@ namespace LinqToDB.Internal.Linq
 
 			// Master switch (off by default in 6.x): combining is observable, not merely faster — it changes the emitted SQL
 			// and the ADO.NET path it travels. Provider capability is checked on top of it, never instead of it. A QueryBatch
-			// query is the per-call opt-in, so it stands in for the switch.
-			if (!dataContext.Options.LinqOptions.UseCombinedCommands && !query.CombinedCommandsRequested)
+			// query is the per-call opt-in, so it stands in for the switch where the provider vouches for every connection.
+			if (query.CombinedCommandsRequested ? !CanCombineQueryBatch(dataContext) : !dataContext.Options.LinqOptions.UseCombinedCommands)
 				return null;
 
 			if (!CanCombineCommands(dataContext))
@@ -1165,6 +1165,14 @@ namespace LinqToDB.Internal.Linq
 			return canRenderDirectly
 				&& dataContext.SqlProviderFlags.IsMultiStatementBatchSupported
 				&& dataContext.SqlProviderFlags.IsMultipleResultSetsSupported;
+		}
+
+		// A QueryBatch is its own opt-in, except where the provider's support depends on the connection string: there only the
+		// option vouches for it. The option is part of the query cache key, so a build may rely on it.
+		internal static bool CanCombineQueryBatch(IDataContext dataContext)
+		{
+			return CanCombineCommands(dataContext)
+				&& (dataContext.Options.LinqOptions.UseCombinedCommands || !dataContext.SqlProviderFlags.IsMultiStatementBatchConnectionDependent);
 		}
 
 		static IResultEnumerable<T> ExecuteQuery<T>(

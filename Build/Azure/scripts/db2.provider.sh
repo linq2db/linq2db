@@ -2,16 +2,10 @@
 # Not -v: it echoes sourced files' text into step output, where the Azure agent parses any
 # task.setvariable it finds - including one merely mentioned in a comment. Failed build 23225.
 
-# Net.IBM.Data.Db2-lnx ships one TFM build per major version (9.x -> net8.0, 10.x -> net10.0).
-# The version picked here MUST match Net.IBM.Data.Db2-lnx in Directory.Packages.props for this TFM
+# The version picked here MUST match Net.IBM.Data.Db2-lnx in Directory.Packages.props
 # so the swapped-in linux DLL matches the assembly the tests were compiled against.
-# Bump these in lockstep with Directory.Packages.props.
-TFM=$(basename "$(dirname "$(dirname "$PWD")")")
-if [ "$TFM" = "net10.0" ]; then
-	DB2_PKG_VERSION=10.0.0.200
-else
-	DB2_PKG_VERSION=9.0.0.400
-fi
+# Bump it in lockstep with Directory.Packages.props.
+DB2_PKG_VERSION=10.0.0.400
 
 rm -rf ./clidriver/*
 if [ $? != 0 ]; then exit 1; fi

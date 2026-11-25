@@ -93,11 +93,13 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
-			// A strict scalar read may need a marker of its row, which only an outer join leaves when the source is empty.
+			// A strict read may need a marker of its row, which only an outer join leaves when the source is empty. An entity
+			// part of the batch row needs none: finding nothing empties the row, which the batch's own Single refuses.
 			if (buildInfo.Parent != null
 				&& methodKind is MethodKind.First or MethodKind.Single
 				&& builder.GetTranslationModifier().StrictElementOperators
-				&& builder.MappingSchema.IsScalarType(methodCall.Type))
+				&& (builder.MappingSchema.IsScalarType(methodCall.Type)
+					|| buildInfo.Parent is not ScalarSelectBuilder.ScalarSelectContext { IsQueryBatch: true }))
 			{
 				cardinality |= SourceCardinality.Zero;
 			}

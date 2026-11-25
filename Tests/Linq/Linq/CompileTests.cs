@@ -68,8 +68,10 @@ namespace Tests.Linq
 
 			using var db = GetDataContext(context);
 
-			query(db, 3).ShouldBe(Parent.Count(p => p.ParentID >= 3));
-			query(db, 5).ShouldBe(Parent.Count(p => p.ParentID >= 5));
+			query(db, 3)
+				.ShouldBe(Parent.Count(p => p.ParentID >= 3));
+			query(db, 5)
+				.ShouldBe(Parent.Count(p => p.ParentID >= 5));
 		}
 
 		[Test]
@@ -168,7 +170,7 @@ namespace Tests.Linq
 				query(db).ToList();
 		}
 
-		[Test, Order(100)]
+		[Test]
 		[NoBaselines("Multi-threading")]
 		public void ConcurrentTest1([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -199,7 +201,7 @@ namespace Tests.Linq
 				Assert.That(results[i, 1], Is.EqualTo(results[i, 0]));
 		}
 
-		[Test, Order(100)]
+		[Test]
 		[NoBaselines("Multi-threading")]
 		public void ConcurrentTestWithOptmization([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -836,15 +838,13 @@ namespace Tests.Linq
 
 			using var db = GetDataContext(context);
 
-			var ex = Assert.Throws<LinqToDBException>(() => query(db, 1));
-
-			using (Assert.EnterMultipleScope())
-			{
-				// Both halves matter: the declared type is what tells the reader which annotation to change,
-				// and the advice is what tells them what to change it to.
-				Assert.That(ex!.Message, Contains.Substring("ILoadWithQueryable"));
-				Assert.That(ex.Message,  Contains.Substring("IQueryable<T>"));
-			}
+			// Both halves matter: the declared type is what tells the reader which annotation to change,
+			// and the advice is what tells them what to change it to.
+			Assert.That(
+				() => query(db, 1),
+				Throws.TypeOf<LinqToDBException>()
+					.With.Message.Contains("ILoadWithQueryable")
+					.And.Message.Contains("IQueryable<T>"));
 		}
 
 		[Table]
@@ -1147,9 +1147,9 @@ namespace Tests.Linq
 			// values in the compiled table's cache key, the way materialised dependent arguments already are.
 			// The type alone does not identify the decline - LinqToDBException is what a mapping, provider or
 			// unrelated build failure raises too, so the message is what pins it to the builder.
-			var ex = Assert.Throws<LinqToDBException>(() => query(db, 1).ToList());
-
-			Assert.That(ex!.Message, Contains.Substring("could not be converted to SQL."));
+			Assert.That(
+				() => query(db, 1).ToList(),
+				Throws.TypeOf<LinqToDBException>().With.Message.Contains("could not be converted to SQL."));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/5844#issuecomment-5538235961")]

@@ -62,13 +62,14 @@ namespace Tests
 		/// <summary>
 		/// Whether a <see cref="LinqExtensions.QueryBatch{T}(IDataContext, System.Linq.Expressions.Expression{System.Func{T}})"/>
 		/// with at least one collection runs as one command on this context: <see cref="UsesCombinedEagerLoading"/> without
-		/// the option, which <c>QueryBatch</c> does not consult.
+		/// the option, which <c>QueryBatch</c> consults only where the provider's support depends on the connection string.
 		/// </summary>
 		public static bool UsesCombinedQueryBatch(this IDataContext db)
 		{
 			return db is DataConnection or DataContext
 				&& db.SqlProviderFlags.IsMultiStatementBatchSupported
-				&& db.SqlProviderFlags.IsMultipleResultSetsSupported;
+				&& db.SqlProviderFlags.IsMultipleResultSetsSupported
+				&& (db.Options.LinqOptions.UseCombinedCommands || !db.SqlProviderFlags.IsMultiStatementBatchConnectionDependent);
 		}
 	}
 }

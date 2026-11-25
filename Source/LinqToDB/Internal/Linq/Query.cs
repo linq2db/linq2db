@@ -184,7 +184,7 @@ namespace LinqToDB.Internal.Linq
 		internal Harvester[]? HarvestersArray => _harvesters;
 
 		// Set for a QueryBatch query: the call itself is the opt-in that LinqOptions.UseCombinedCommands otherwise
-		// stands for, so the combined gate does not consult the option for it.
+		// stands for, except where the provider's support depends on the connection string (QueryRunner.CanCombineQueryBatch).
 		internal bool CombinedCommandsRequested { get; set; }
 
 		// Query hints belong to one command, and a batch chooses its statements when it is built, before it can see them.

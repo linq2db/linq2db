@@ -10,6 +10,7 @@
 		public const string Error_Correlated_Subqueries_Level      = "Provider does not support correlated subqueries in more than {0} level.";
 		public const string Error_OUTER_Joins                      = "Provider does not support CROSS/OUTER/LATERAL joins.";
 		public const string Error_Subquery_in_Column               = "Provider does not support columns with subqueries.";
+		public const string Error_Subquery_in_Fromless_Select      = "Provider does not support subqueries in a SELECT without a FROM clause.";
 		public const string Error_Take_in_Subquery                 = "Provider does not support Take value in subquery.";
 		public const string Error_Take_in_Correlated_Subquery      = "Provider does not support Take value in correlated subquery.";
 		public const string Error_Join_Without_Condition           = "Provider does not support JOIN without condition.";
@@ -27,13 +28,13 @@
 		public const string Error_DistinctByRequiresOrderBy        = "DistinctBy requires at least one ordering key.";
 		public const string Error_LinqToDBQueryExpected            = "Linq To DB query expected";
 		public const string Error_EnumerationNotStarted            = "Enumeration not started.";
-		public const string Error_OutputQuery_EagerLoad            = "The output of InsertWithOutputQuery cannot be read by a query that runs as a separate statement, such as an eager-loaded child query or a collection inside a batch, and eager-loaded children must be matched to it by simple key comparisons. Execute the output query on its own, then load the children or run the batch from the returned records.";
+		public const string Error_OutputQuery_EagerLoad           = "The output of InsertWithOutputQuery cannot be read by a query that runs as a separate statement, such as an eager-loaded child query or a collection inside a batch, and eager-loaded children must be matched to it by simple key comparisons. Execute the output query on its own, then load the children or run the batch from the returned records.";
 		public const string Error_OutputQuery_NotSupported         = "Provider does not support using the output of a data-modifying statement (INSERT ... RETURNING/OUTPUT) as a query source. Execute the statement with InsertWithOutput and compose the returned records on the client instead.";
 		public const string Error_OutputQuery_Projection           = "The output of InsertWithOutputQuery was shaped beyond a plain projection inside the data-modifying statement (a join, filter, grouping or ordering), which the database cannot express. This is an internal error, please report it.";
 		public const string Error_OutputQuery_Correlated           = "InsertWithOutputQuery cannot depend on the rows of the enclosing query: the insert runs once per statement, not once per row. Build its source and values without referencing the enclosing query, and join the output back to that query instead.";
 		public const string Error_OutputQuery_Duplicated           = "InsertWithOutputQuery produced more than one data-modifying statement for one call, which would run the insert more than once. This is an internal error, please report it.";
 		public const string Error_OutputQuery_NotTranslated        = "InsertWithOutputQuery produced no data-modifying statement for one call, so the insert would not run. This is an internal error, please report it.";
-		public const string Error_QueryHints_In_QueryBatch         = "QueryBatch does not support query hints.";
+		public const string Error_QueryHints_In_QueryBatch         = "QueryBatch cannot run while the context has pending QueryHints or NextQueryHints.";
 		public const string Error_QueryBatch_TaskPart              = "A query batch part cannot hold an expression that may create a task: it could run a separate query outside the batch.";
 
 		public const string Error_WindowFunctionsInSearchCondition                = "Window functions cannot be used in search condition.";

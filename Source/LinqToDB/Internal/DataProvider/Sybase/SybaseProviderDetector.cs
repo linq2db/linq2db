@@ -42,7 +42,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 		public override IDataProvider GetDataProvider(ConnectionOptions options, SybaseProvider provider, NoDialect version)
 		{
-			provider = DetectProvider(options, SybaseProvider.AutoDetect);
+			provider = DetectProvider(options, provider);
 
 			return provider switch
 			{

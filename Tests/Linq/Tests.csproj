@@ -30,6 +30,11 @@
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />
 	</ItemGroup>
 
+	<!-- From net11 that framework supplies it, so the Tests-wide pin is pruned and fails a net11-only restore (NU1510). -->
+	<ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net11.0'))">
+		<PackageReference Remove="System.Security.Cryptography.Pkcs" />
+	</ItemGroup>
+
 	<ItemGroup>
 		<PackageReference Include="Sap.Data.Hana.Net.v10.0" Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
 	</ItemGroup>

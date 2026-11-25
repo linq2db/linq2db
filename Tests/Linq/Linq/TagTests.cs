@@ -15,7 +15,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public class TagTests : TestBase
 	{
-		public const string NOT_SUPPORTED = TestProvName.AllAccess;
+		public const string NOT_SUPPORTED = TestProvName.AllNativeAccess;
 
 		[Test]
 		public void Test_OneLineComment([DataSources(NOT_SUPPORTED)] string context)
@@ -95,12 +95,12 @@ namespace Tests.Linq
 		public void Test_Null([DataSources(NOT_SUPPORTED)] string context)
 		{
 			using var db = GetDataContext(context);
-			Assert.Throws<ArgumentNullException>(() =>
+			Assert.That(() =>
 			{
 				var query =
 					from x in db.Person.TagQuery(null!)
 					select x;
-			});
+			}, Throws.TypeOf<ArgumentNullException>());
 		}
 
 		[Test]

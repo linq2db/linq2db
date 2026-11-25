@@ -197,13 +197,18 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return new SqlBinaryExpression(dbDataType, x, "+", y, Precedence.Additive);
 		}
 
-		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
 		public static ISqlExpression Binary(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, string operation, ISqlExpression y)
+		{
+			return factory.Binary(dbDataType, x, operation, y, Precedence.Additive);
+		}
+
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
+		public static ISqlExpression Binary(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, string operation, ISqlExpression y, int precedence)
 		{
 			if (dbDataType.SystemType == typeof(string) && (string.Equals(operation, "+", StringComparison.Ordinal) || string.Equals(operation, "||", StringComparison.Ordinal)))
 				throw new InvalidOperationException("String concatenation must use factory.Concat(...) so it produces SqlConcatExpression. factory.Binary is for non-concat operations.");
 
-			return new SqlBinaryExpression(dbDataType, x, operation, y, Precedence.Additive);
+			return new SqlBinaryExpression(dbDataType, x, operation, y, precedence);
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]

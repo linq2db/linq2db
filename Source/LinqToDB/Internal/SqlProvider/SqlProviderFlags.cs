@@ -806,6 +806,22 @@ namespace LinqToDB.Internal.SqlProvider
 		public int MaxCombinedCommandParameters { get; set; }
 
 		/// <summary>
+		/// Indicates that <see cref="IsMultiStatementBatchSupported"/> holds only for some connection strings (MySql.Data with
+		/// <c>AllowBatch=false</c> rejects several statements in one command), so statements are combined only where
+		/// <see cref="LinqOptions.UseCombinedCommands"/> asks for it and never because a <c>QueryBatch</c> requests it.
+		/// Default: <see langword="false"/>.
+		/// </summary>
+		[DataMember(Order = 85)]
+		public bool IsMultiStatementBatchConnectionDependent { get; set; }
+
+		/// <summary>
+		/// Indicates that a subquery in a column needs its enclosing <c>SELECT</c> to have a <c>FROM</c> clause: the provider
+		/// rejects <c>SELECT (SELECT ...)</c> on its own. Default: <see langword="false"/>.
+		/// </summary>
+		[DataMember(Order = 86)]
+		public bool IsFromRequiredForSubQueryColumn { get; set; }
+
+		/// <summary>
 		/// Provider can use the rows returned by an <c>INSERT</c> statement (<c>INSERT ... RETURNING</c> / <c>OUTPUT</c>)
 		/// as a query source inside the same SQL statement, e.g. PostgreSQL data-modifying CTE
 		/// (<c>WITH t AS (INSERT ... RETURNING ...) SELECT ... FROM t</c>).
@@ -817,7 +833,7 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </para>
 		/// Default: <see langword="false"/>.
 		/// </summary>
-		[DataMember(Order = 85), DefaultValue(false)]
+		[DataMember(Order = 87), DefaultValue(false)]
 		public bool IsInsertOutputQuerySupported { get; set; }
 
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
@@ -926,6 +942,8 @@ namespace LinqToDB.Internal.SqlProvider
 				^ MaxCombinedCommandLength                             .GetHashCode()
 				^ MaxStatementsPerCombinedGroup                        .GetHashCode()
 				^ MaxCombinedCommandParameters                         .GetHashCode()
+				^ IsMultiStatementBatchConnectionDependent             .GetHashCode()
+				^ IsFromRequiredForSubQueryColumn                      .GetHashCode()
 				^ IsInsertOutputQuerySupported                         .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
 	}
@@ -1015,6 +1033,8 @@ namespace LinqToDB.Internal.SqlProvider
 				&& MaxCombinedCommandLength                              == other.MaxCombinedCommandLength
 				&& MaxStatementsPerCombinedGroup                         == other.MaxStatementsPerCombinedGroup
 				&& MaxCombinedCommandParameters                          == other.MaxCombinedCommandParameters
+				&& IsMultiStatementBatchConnectionDependent              == other.IsMultiStatementBatchConnectionDependent
+				&& IsFromRequiredForSubQueryColumn                       == other.IsFromRequiredForSubQueryColumn
 				&& IsInsertOutputQuerySupported                          == other.IsInsertOutputQuerySupported
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
