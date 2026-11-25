@@ -12,7 +12,6 @@ _disableContribution: true
 <div class="container-xxl">
 <div class="row align-items-center g-5">
 <div class="col-lg-6">
-<a href="https://dotnetfoundation.org/" class="landing-badge mb-3"><i class="bi bi-patch-check-fill"></i> .NET Foundation Member</a>
 <h1 class="landing-title">Data access<br/>made <span class="landing-accent">simple</span></h1>
 <p class="landing-subtitle">The fastest LINQ database access library. A lightweight, type-safe layer between your POCO objects and your database with full SQL support.</p>
 <div class="landing-actions">

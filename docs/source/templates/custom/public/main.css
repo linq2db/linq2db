@@ -30,30 +30,6 @@
 	z-index: 1;
 }
 
-.landing-badge {
-	display: inline-block;
-	padding: 0.35rem 1rem;
-	border-radius: 2rem;
-	font-size: 0.85rem;
-	font-weight: 500;
-	letter-spacing: 0.02em;
-	background: rgba(255,255,255,0.1);
-	border: 1px solid rgba(255,255,255,0.15);
-	color: #a8b4ff;
-	text-decoration: none;
-	transition: background 0.2s, border-color 0.2s;
-}
-
-.landing-badge:hover {
-	background: rgba(255,255,255,0.15);
-	border-color: rgba(255,255,255,0.25);
-	color: #c0caff;
-}
-
-.landing-badge i {
-	margin-right: 0.3rem;
-}
-
 .landing-title {
 	font-size: 3rem;
 	font-weight: 800;
