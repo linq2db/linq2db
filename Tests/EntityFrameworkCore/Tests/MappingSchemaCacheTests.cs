@@ -47,6 +47,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				// per context — the scenario where linq2db's model-instance-keyed schema
 				// cache misses. With provider caching on, EF shares one model and the bug hides.
 				.EnableServiceProviderCaching(false)
+				.ConfigureWarnings(w => w.Ignore(CoreEventId.ManyServiceProvidersCreatedWarning))
 				.UseSqlite("Data Source=:memory:")
 				.Options;
 
@@ -194,6 +195,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				using (var ctx = new RetentionContext(
 					new DbContextOptionsBuilder<RetentionContext>()
 						.EnableServiceProviderCaching(false)
+						.ConfigureWarnings(w => w.Ignore(CoreEventId.ManyServiceProvidersCreatedWarning))
 						.UseApplicationServiceProvider(services)
 						.UseSqlite("Data Source=:memory:")
 						.Options))
