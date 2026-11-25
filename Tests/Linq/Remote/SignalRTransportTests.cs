@@ -1777,6 +1777,55 @@ namespace Tests.Remote
 				.ShouldBe(expected);
 		}
 
+		// The other side of the cancelled read: a provider error raised while the rows are read, with a token that never
+		// fires, stays the provider's error, and the pooled connection serves the next query.
+		[Test]
+		public async Task ReadErrorWithoutCancellationKeepsTheProvidersException([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllSqlServer, TestProvName.AllMySql, TestProvName.AllSQLite)] string context)
+		{
+			using var noBaseline = new DisableBaseline("provider-specific SQL that fails midway");
+
+			const string Digits = "(SELECT 0 AS d UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9)";
+			const string Numbers = "(SELECT a.d + b.d * 10 + c.d * 100 AS n FROM " + Digits + " a, " + Digits + " b, " + Digits + " c) t";
+
+			// Each statement returns rows first and fails at a row in the middle.
+			string failing;
+			string next;
+
+			if (context.Contains("PostgreSQL", StringComparison.Ordinal))
+			{
+				failing = "SELECT 1 / (g - 50000) AS \"Value\" FROM generate_series(1, 100000) g";
+				next    = "SELECT 2 AS \"Value\"";
+			}
+			else
+			{
+				failing = context.Contains("SqlServer", StringComparison.Ordinal)
+					? "SELECT 1 / (n - 50000) AS Value FROM (SELECT TOP 100000 ROW_NUMBER() OVER (ORDER BY (SELECT 1)) AS n FROM sys.all_objects a CROSS JOIN sys.all_objects b) t"
+					: context.Contains("MySql", StringComparison.Ordinal)
+						? "SELECT IF(t.n = 500, (SELECT 1 UNION ALL SELECT 2), t.n) AS Value FROM " + Numbers
+						: "SELECT CASE WHEN t.n = 500 THEN abs(-9223372036854775807 - 1 + t.n - t.n) ELSE t.n END AS Value FROM " + Numbers;
+				next    = "SELECT 2 AS Value";
+			}
+
+			await using var db = new InProcessConfigurationContext(context);
+
+			using var cts = new CancellationTokenSource();
+
+			var rows = db.FromSql<SleepRow>(failing);
+
+			await Assert.ThatAsync(
+				() => rows.ToListAsync(cts.Token),
+				Throws.InstanceOf<Exception>().And.Not.InstanceOf<OperationCanceledException>());
+
+			var result = await db
+				.FromSql<SleepRow>(next)
+				.ToListAsync();
+
+			result
+				.Single()
+				.Value
+				.ShouldBe(2);
+		}
+
 		// Keyed by its target: the client keeps the server's provider information per configuration string for the whole
 		// process, so a string shared with another database would give this context that database's provider.
 		sealed class InProcessConfigurationContext(string target) : RemoteDataContextBase(new DataOptions().UseConfiguration(Configuration + ".InProcess." + target))
