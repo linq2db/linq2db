@@ -19,8 +19,8 @@ using Shouldly;
 namespace Tests.LinqToDB.CLI
 {
 	/// <summary>
-	/// Pins the Windows impersonation boundary: configuration, provider loading, SQL validation and code
-	/// loading run under the original process account; provider version detection, connection opening and
+	/// Pins the Windows impersonation boundary: configuration, external provider loading and SQL validation
+	/// run under the original process account; provider version detection, connection opening and
 	/// SQL execution run in the impersonation session. The session is the test environment's recorder, so
 	/// these run on any OS.
 	/// </summary>
