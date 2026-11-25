@@ -78,76 +78,6 @@ namespace Tests.Linq
 				select t);
 		}
 
-		[Test]
-		[ThrowsRequiresCorrelatedSubquery]
-		public void Issue75Test([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			var result = db.Child.Select(c => new
-			{
-				c.ChildID,
-				c.ParentID,
-				CountChildren  = db.Child.Count(c2 => c2.ParentID == c.ParentID),
-				CountChildren2 = db.Child.Count(c2 => c2.ParentID == c.ParentID),
-				HasChildren    = db.Child.Any  (c2 => c2.ParentID == c.ParentID),
-				HasChildren2   = db.Child.Any  (c2 => c2.ParentID == c.ParentID),
-				AllChildren    = db.Child.All  (c2 => c2.ParentID == c.ParentID),
-				AllChildrenMin = db.Child.Where(c2 => c2.ParentID == c.ParentID).Min(c2 => c2.ChildID),
-				AllChildrenMax = db.Child.Where(c2 => c2.ParentID == c.ParentID).Max(c2 => c2.ChildID)
-			});
-
-			result =
-				from child in result
-				join parent in db.Parent on child.ParentID equals parent.ParentID
-				where parent.Value1 < 7
-				select child;
-
-			var expected = Child.Select(c => new
-			{
-				c.ChildID,
-				c.ParentID,
-				CountChildren  = Child.Count(c2 => c2.ParentID == c.ParentID),
-				CountChildren2 = Child.Count(c2 => c2.ParentID == c.ParentID),
-				HasChildren    = Child.Any  (c2 => c2.ParentID == c.ParentID),
-				HasChildren2   = Child.Any  (c2 => c2.ParentID == c.ParentID),
-				AllChildren    = Child.All  (c2 => c2.ParentID == c.ParentID),
-				AllChildrenMin = Child.Where(c2 => c2.ParentID == c.ParentID).Min(c2 => c2.ChildID),
-				AllChildrenMax = Child.Where(c2 => c2.ParentID == c.ParentID).Max(c2 => c2.ChildID)
-			});
-
-			expected =
-				from child in expected
-				join parent in Parent on child.ParentID equals parent.ParentID
-				where parent.Value1 < 7
-				select child;
-
-			AreEqual(expected, result);
-		}
-
-		[Test]
-		public void Issue424Test1([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-
-			AssertQuery(db.Parent.Distinct().OrderBy(_ => _.ParentID).Take(1));
-		}
-
-		[Test]
-		public void Issue424Test2([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-
-			AssertQuery(db.Parent.Distinct().OrderBy(_ => _.ParentID).Skip(1).Take(1));
-		}
-
-		[Test]
-		public void Issue424Test3([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-
-			AssertQuery(db.Parent.Distinct().OrderByDescending(_ => _.ParentID).Skip(1).Take(1));
-		}
-
 		// https://github.com/linq2db/linq2db/issues/498
 		//
 		[Test()]
@@ -177,54 +107,6 @@ namespace Tests.Linq
 
 			var sql = r.ToSqlQuery().Sql;
 			Assert.That(sql, Does.Contain("INNER"));
-		}
-
-		[Test]
-		public void Issue528Test1([DataSources] string context)
-		{
-			//using (new AllowMultipleQuery())
-			using var db = GetDataContext(context, o => o.UseGuardGrouping(false));
-			var expected =    Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _.ToList() });
-			var result   = db.Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _.ToList() });
-
-			foreach (var re in result)
-			{
-				var ex = expected.Single(_ => _.Key == re.Key);
-
-				AreEqual(ex.Data, re.Data);
-			}
-		}
-
-		[Test]
-		public void Issue528Test2([DataSources] string context)
-		{
-			//using (new AllowMultipleQuery())
-			using var db = GetDataContext(context, o => o.UseGuardGrouping(false));
-			var expected =    Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _.ToList() }).ToList();
-			var result   = db.Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _.ToList() }).ToList();
-
-			foreach (var re in result)
-			{
-				var ex = expected.Single(_ => _.Key == re.Key);
-
-				AreEqual(ex.Data, re.Data);
-			}
-		}
-
-		[Test]
-		public void Issue528Test3([DataSources] string context)
-		{
-			//using (new AllowMultipleQuery())
-			using var db = GetDataContext(context, o => o.UseGuardGrouping(false));
-			var expected =    Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _ });
-			var result   = db.Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _ });
-
-			foreach (var re in result)
-			{
-				var ex = expected.Single(_ => _.Key == re.Key);
-
-				AreEqual(ex.Data.ToList(), re.Data.ToList());
-			}
 		}
 
 		public class PersonWrapper

@@ -1302,8 +1302,8 @@ namespace Tests.Linq
 			};
 		}
 
-		[Test]
-		public void Issue1732Lag([DataSources(
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1732")]
+		public void LagWithDefaultValue([DataSources(
 			TestProvName.AllSqlServer2008Minus,
 			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
@@ -1347,8 +1347,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Issue1732Lead([DataSources(
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1732")]
+		public void LeadWithDefaultValue([DataSources(
 			TestProvName.AllSqlServer2008Minus,
 			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
@@ -1500,8 +1500,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Issue1732FirstValue([DataSources(
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1732")]
+		public void FirstValueRespectNulls([DataSources(
 			TestProvName.AllSqlServer2008Minus,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
@@ -1539,8 +1539,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Issue1732LastValue([DataSources(
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1732")]
+		public void LastValueRespectNulls([DataSources(
 			TestProvName.AllSqlServer2008Minus,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
@@ -1578,8 +1578,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Issue1732NthValue([DataSources(
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1732")]
+		public void NthValueFromFirstRespectNulls([DataSources(
 			TestProvName.AllSqlServer,
 			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
@@ -1627,7 +1627,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		sealed class Issue1799Table1
+		sealed class ProcessEventRecord
 		{
 			[PrimaryKey] public int      EventUser { get; set; }
 			[PrimaryKey] public int      ProcessID { get; set; }
@@ -1635,21 +1635,21 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		sealed class Issue1799Table2
+		sealed class UserGroupsRecord
 		{
 			[PrimaryKey] public int     UserId     { get; set; }
 			[Column] public string? UserGroups { get; set; }
 		}
 
 		[Table]
-		sealed class Issue1799Table3
+		sealed class ProcessNameRecord
 		{
 			[PrimaryKey] public int     ProcessID   { get; set; }
 			[Column] public string? ProcessName { get; set; }
 		}
 
-		[Test]
-		public void Issue1799Test1([DataSources(
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1799")]
+		public void LagDateDiffFilteredGroupedJoins([DataSources(
 			TestProvName.AllSqlServer2008Minus,
 			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
@@ -1661,12 +1661,12 @@ namespace Tests.Linq
 			TestProvName.AllMySql57)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable<Issue1799Table1>())
-			using (db.CreateLocalTable<Issue1799Table2>())
-			using (db.CreateLocalTable<Issue1799Table3>())
+			using (db.CreateLocalTable<ProcessEventRecord>())
+			using (db.CreateLocalTable<UserGroupsRecord>())
+			using (db.CreateLocalTable<ProcessNameRecord>())
 			{
 				var query =
-					from x in db.GetTable<Issue1799Table1>()
+					from x in db.GetTable<ProcessEventRecord>()
 					select new
 					{
 						User = x.EventUser,
@@ -1685,8 +1685,8 @@ namespace Tests.Linq
 				query = query.Where(q => q.Diff > 0 && q.Diff <= 5);
 
 				var finalQuery = from q in query
-								 from u in db.GetTable<Issue1799Table2>().InnerJoin(u => u.UserId == q.User)
-								 from p in db.GetTable<Issue1799Table3>().InnerJoin(p => p.ProcessID == q.Proc)
+								 from u in db.GetTable<UserGroupsRecord>().InnerJoin(u => u.UserId == q.User)
+								 from p in db.GetTable<ProcessNameRecord>().InnerJoin(p => p.ProcessID == q.Proc)
 								 group q by new { q.User, u.UserGroups, p.ProcessName }
 								 into g
 								 select new
@@ -1703,8 +1703,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Issue2842Test1([DataSources(
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2842")]
+		public void RankOverBooleanOrderKey([DataSources(
 			TestProvName.AllNativeAccess,
 			ProviderName.Firebird25,
 			TestProvName.AllMySql57,
@@ -1729,14 +1729,14 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		sealed class Issue5123Left
+		sealed class RowNumberLeftRecord
 		{
 			[PrimaryKey] public int Id    { get; set; }
 			[Column]     public int Group { get; set; }
 		}
 
 		[Table]
-		sealed class Issue5123Right
+		sealed class RowNumberRightRecord
 		{
 			[PrimaryKey] public int     Id      { get; set; }
 			[Column]     public string? Payload { get; set; }
@@ -1749,8 +1749,8 @@ namespace Tests.Linq
 		// the reporter's project - it is an error here - so the same join-driven nullability is expressed through
 		// a nullable payload column: it is non-null in every seeded right row, so the check is false exactly for
 		// the rows the LEFT JOIN did not match.
-		[Test]
-		public void Issue5123Test([DataSources(
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5123")]
+		public void RowNumberOverLeftJoinNullCheckKey([DataSources(
 			TestProvName.AllNativeAccess,
 			ProviderName.Firebird25,
 			TestProvName.AllMySql57,
@@ -1759,14 +1759,14 @@ namespace Tests.Linq
 		{
 			var left = new[]
 			{
-				new Issue5123Left { Id = 1, Group = 1 },
-				new Issue5123Left { Id = 2, Group = 1 },
-				new Issue5123Left { Id = 3, Group = 1 },
+				new RowNumberLeftRecord { Id = 1, Group = 1 },
+				new RowNumberLeftRecord { Id = 2, Group = 1 },
+				new RowNumberLeftRecord { Id = 3, Group = 1 },
 			};
 
 			// Only Id 1 has a match. The matched row therefore has the *lowest* Id, so the predicate ordering and
 			// the Id ordering disagree - which is what makes the assertion below able to detect a constant fold.
-			var right = new[] { new Issue5123Right { Id = 1, Payload = "matched" } };
+			var right = new[] { new RowNumberRightRecord { Id = 1, Payload = "matched" } };
 
 			using var db      = GetDataContext(context);
 			using var tLeft   = db.CreateLocalTable(left);
@@ -1790,8 +1790,8 @@ namespace Tests.Linq
 			result.Single(r => r.Id == 1).RowNum.ShouldBe(3);
 		}
 
-		[Test]
-		public void Issue2842Test2([DataSources(
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2842")]
+		public void RankOverConditionalOrderKey([DataSources(
 			TestProvName.AllNativeAccess,
 			ProviderName.Firebird25,
 			TestProvName.AllMySql57,
@@ -1811,8 +1811,8 @@ namespace Tests.Linq
 				.ToList();
 		}
 
-		[Test]
-		public void Issue1799Test2([DataSources(
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1799")]
+		public void LagDateDiffGroupedJoins([DataSources(
 			TestProvName.AllSqlServer2008Minus,
 			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
@@ -1824,12 +1824,12 @@ namespace Tests.Linq
 			TestProvName.AllMySql57)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable<Issue1799Table1>())
-			using (db.CreateLocalTable<Issue1799Table2>())
-			using (db.CreateLocalTable<Issue1799Table3>())
+			using (db.CreateLocalTable<ProcessEventRecord>())
+			using (db.CreateLocalTable<UserGroupsRecord>())
+			using (db.CreateLocalTable<ProcessNameRecord>())
 			{
 				var query =
-					from x in db.GetTable<Issue1799Table1>()
+					from x in db.GetTable<ProcessEventRecord>()
 					select new
 					{
 						User = x.EventUser,
@@ -1849,8 +1849,8 @@ namespace Tests.Linq
 				//query = query.Where(q => q.Diff > 0 && q.Diff <= 5);
 
 				var finalQuery = from q in query
-								 from u in db.GetTable<Issue1799Table2>().InnerJoin(u => u.UserId == q.User)
-								 from p in db.GetTable<Issue1799Table3>().InnerJoin(p => p.ProcessID == q.Proc)
+								 from u in db.GetTable<UserGroupsRecord>().InnerJoin(u => u.UserId == q.User)
+								 from p in db.GetTable<ProcessNameRecord>().InnerJoin(p => p.ProcessID == q.Proc)
 								 group q by new { q.User, u.UserGroups, p.ProcessName }
 								 into g
 								 select new
@@ -1881,7 +1881,7 @@ namespace Tests.Linq
 			TestProvName.AllMariaDB)] string context)
 		{
 			// #3423: LEAD and LAG `default` parameter can be a type other than int.
-			var data = new Issue1799Table3[]
+			var data = new ProcessNameRecord[]
 			{
 				new() { ProcessID = 1, ProcessName = "One" },
 				new() { ProcessID = 2, ProcessName = "Two" },
@@ -1911,7 +1911,7 @@ namespace Tests.Linq
 			ProviderName.Firebird25,
 			TestProvName.AllMySql57)] string context)
 		{
-			var data = new Issue1799Table3[]
+			var data = new ProcessNameRecord[]
 			{
 				new() { ProcessID = 1, ProcessName = "One" },
 				new() { ProcessID = 2, ProcessName = "Two" },
@@ -2016,7 +2016,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3373")]
-		public void Issue3373Test([DataSources(TestProvName.AllMySql57, ProviderName.Firebird25, TestProvName.AllSqlServer2008Minus, TestProvName.AllSybase, TestProvName.AllNativeAccess, ProviderName.Firebird, ProviderName.SqlCe)] string context)
+		public void SumOverConditionalListContains([DataSources(TestProvName.AllMySql57, ProviderName.Firebird25, TestProvName.AllSqlServer2008Minus, TestProvName.AllSybase, TestProvName.AllNativeAccess, ProviderName.Firebird, ProviderName.SqlCe)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2065,8 +2065,7 @@ namespace Tests.Linq
 				 .ToArray();
 		}
 
-		#region Issue 4870
-		sealed class Issue4870Document
+		sealed class AggregatedJsonDocument
 		{
 			public int      Id               { get; set; }
 			public int      TemplateId       { get; set; }
@@ -2079,42 +2078,42 @@ namespace Tests.Linq
 
 		[Sql.Expression("concat('{{',string_agg(concat('\"', {0}, '\"', ': {{', '\"DateCreated\":\"', cast({2} as datetime2), '\", \"Link\":\"', {3}, '\",\"fields\":',  {1}), '}},'), '}}}}') ", ServerSideOnly = true, IsAggregate = true, ArgIndices = new[] { 1, 2, 3, 4 })]
 		static JObject AggregateDocumentFields(
-			IEnumerable<Issue4870Document> objs,
-			Expression<Func<Issue4870Document, int?>> templateId,
-			Expression<Func<Issue4870Document, JObject>> fieldResultsJson,
-			Expression<Func<Issue4870Document, DateTime?>> DateCreated,
-			Expression<Func<Issue4870Document, string>> Link)
+			IEnumerable<AggregatedJsonDocument> objs,
+			Expression<Func<AggregatedJsonDocument, int?>> templateId,
+			Expression<Func<AggregatedJsonDocument, JObject>> fieldResultsJson,
+			Expression<Func<AggregatedJsonDocument, DateTime?>> DateCreated,
+			Expression<Func<AggregatedJsonDocument, string>> Link)
 		{
 			throw new ServerSideOnlyException(nameof(AggregateDocumentFields));
 		}
 
 		[Sql.Expression("concat('{{',string_agg(concat('\"', {1}, '\"', ': {{', '\"DateCreated\":\"', cast({3} as datetime2), '\", \"Link\":\"', {4}, '\",\"fields\":',  {2}), '}},'), '}}}}') ", ServerSideOnly = true, IsAggregate = true)]
 		static JObject AggregateDocumentFieldsNoIndeces(
-			IEnumerable<Issue4870Document> objs,
-			Expression<Func<Issue4870Document, int?>> templateId,
-			Expression<Func<Issue4870Document, JObject>> fieldResultsJson,
-			Expression<Func<Issue4870Document, DateTime?>> DateCreated,
-			Expression<Func<Issue4870Document, string>> Link)
+			IEnumerable<AggregatedJsonDocument> objs,
+			Expression<Func<AggregatedJsonDocument, int?>> templateId,
+			Expression<Func<AggregatedJsonDocument, JObject>> fieldResultsJson,
+			Expression<Func<AggregatedJsonDocument, DateTime?>> DateCreated,
+			Expression<Func<AggregatedJsonDocument, string>> Link)
 		{
 			throw new ServerSideOnlyException(nameof(AggregateDocumentFieldsNoIndeces));
 		}
 
 		[Sql.Extension("concat('{{',string_agg(concat('\"', {templateId}, '\"', ': {{', '\"DateCreated\":\"', cast({DateCreated} as datetime2), '\", \"Link\":\"', {Link}, '\",\"fields\":',  {fieldResultsJson}), '}},'), '}}}}') ", ServerSideOnly = true, IsAggregate = true)]
 		static JObject AggregateDocumentFieldsExtension(
-			IEnumerable<Issue4870Document> objs,
-			[ExprParameter] Expression<Func<Issue4870Document, int?>> templateId,
-			[ExprParameter] Expression<Func<Issue4870Document, JObject>> fieldResultsJson,
-			[ExprParameter] Expression<Func<Issue4870Document, DateTime?>> DateCreated,
-			[ExprParameter] Expression<Func<Issue4870Document, string>> Link)
+			IEnumerable<AggregatedJsonDocument> objs,
+			[ExprParameter] Expression<Func<AggregatedJsonDocument, int?>> templateId,
+			[ExprParameter] Expression<Func<AggregatedJsonDocument, JObject>> fieldResultsJson,
+			[ExprParameter] Expression<Func<AggregatedJsonDocument, DateTime?>> DateCreated,
+			[ExprParameter] Expression<Func<AggregatedJsonDocument, string>> Link)
 		{
 			throw new ServerSideOnlyException(nameof(AggregateDocumentFieldsExtension));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4870")]
-		public void Issue4870Test_Original([IncludeDataSources(true, TestProvName.AllSqlServer2017Plus)] string context)
+		public void RankWithCustomAggregateArgIndices([IncludeDataSources(true, TestProvName.AllSqlServer2017Plus)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue4870Document>();
+			using var tb = db.CreateLocalTable<AggregatedJsonDocument>();
 
 			var documentRank = tb
 				.Select(dr => new
@@ -2142,10 +2141,10 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4870")]
-		public void Issue4870Test_NoArgIndeces([IncludeDataSources(true, TestProvName.AllSqlServer2017Plus)] string context)
+		public void RankWithCustomAggregateNoArgIndices([IncludeDataSources(true, TestProvName.AllSqlServer2017Plus)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue4870Document>();
+			using var tb = db.CreateLocalTable<AggregatedJsonDocument>();
 
 			var documentRank = tb
 				.Select(dr => new
@@ -2173,10 +2172,10 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4870")]
-		public void Issue4870Test_Extension([IncludeDataSources(true, TestProvName.AllSqlServer2017Plus)] string context)
+		public void RankWithCustomAggregateExtension([IncludeDataSources(true, TestProvName.AllSqlServer2017Plus)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue4870Document>();
+			using var tb = db.CreateLocalTable<AggregatedJsonDocument>();
 
 			var documentRank = tb
 				.Select(dr => new
@@ -2204,10 +2203,10 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4870")]
-		public void Issue4870Test_ExistingApi([IncludeDataSources(true, TestProvName.AllSqlServer2017Plus)] string context)
+		public void RankWithBuiltInStringAggregate([IncludeDataSources(true, TestProvName.AllSqlServer2017Plus)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue4870Document>();
+			using var tb = db.CreateLocalTable<AggregatedJsonDocument>();
 
 			var documentRank = tb
 				.Select(dr => new
@@ -2233,7 +2232,6 @@ namespace Tests.Linq
 
 			documentCombinedJson.ToArray();
 		}
-		#endregion
 
 		// These legacy-analytic NULLS tests run on the full analytic provider set (SupportsAnalyticFunctionsContext),
 		// excluding SQL Server 2005/2008 which have no aggregate window functions (SUM() OVER (ORDER BY ...)). A
